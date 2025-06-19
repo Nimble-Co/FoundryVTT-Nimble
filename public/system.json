@@ -1,100 +1,109 @@
 {
-	"id": "nimble",
-	"title": "Nimble v2",
-	"description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
-	"version": "0.1.0",
-	"authors": [
-		{
-			"name": "Phillip Best",
-			"url": "https://bio.link/philbest",
-			"email": "me@phillip.best",
-			"discord": "philbest",
-			"ko-fi": "philbest",
-			"patreon": "ForgemasterModules"
-		},
-		{
-			"name": "NekroDarkmoon",
-			"url": "https://github.com/NekroDarkmoon/",
-			"discord": "nekrodarkmoon",
-			"ko-fi": "nekrodarkmoon",
-			"patreon": "ForgemasterModules"
-		}
-	],
-	"scripts": [],
-	"esmodules": ["nimble.js"],
-	"styles": ["nimble.css"],
-	"socket": true,
-	"languages": [
-		{
-			"lang": "en",
-			"name": "English",
-			"path": "lang/en.json"
-		}
-	],
-	"grid": {
-		"distance": 1,
-		"units": "square",
-		"type": 1
-	},
-	"primaryTokenAttribute": "attributes.hp",
-	"secondaryTokenAttribute": null,
-	"compatibility": {
-		"minimum": "13",
-		"verified": "13",
-		"maximum": "13"
-	},
-	"background": "systems/nimble/assets/banners/manticoreFight.webp",
-	"url": "https://github.com/Nimble-Co/FoundryVTT-Nimble",
-	"manifest": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/latest/download/system.json",
-	"download": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/download/0.1.0/nimble.zip",
-	"documentTypes": {
-		"ActiveEffect": {
-			"condition": {}
-		},
-		"Actor": {
-			"character": {
-				"htmlFields": [],
-				"filePathFields": {}
-			},
-			"minion": {
-				"htmlFields": [],
-				"filePathFields": {}
-			},
-			"npc": {
-				"htmlFields": [],
-				"filePathFields": {}
-			},
-			"soloMonster": {
-				"htmlFields": [],
-				"filePathFields": {}
-			}
-		},
-		"ChatMessage": {
-			"abilityCheck": {},
-			"boon": {},
-			"feature": {},
-			"damage": {},
-			"object": {},
-			"levelUpSummary": {},
-			"savingThrow": {},
-			"skillCheck": {},
-			"spell": {}
-		},
-		"Combatant": {
-			"character": {},
-			"npc": {},
-			"soloMonster": {}
-		},
-		"Item": {
-			"background": {},
-			"boon": {},
-			"class": {},
-			"feature": {},
-			"monsterFeature": {},
-			"object": {},
-			"ancestry": {},
-			"spell": {},
-			"subclass": {}
-		}
-	}
+  "id": "nimble",
+  "title": "Nimble v2",
+  "description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Phillip Best",
+      "url": "https://bio.link/philbest",
+      "email": "me@phillip.best",
+      "discord": "philbest",
+      "ko-fi": "philbest",
+      "patreon": "ForgemasterModules"
+    },
+    {
+      "name": "NekroDarkmoon",
+      "url": "https://github.com/NekroDarkmoon/",
+      "discord": "nekrodarkmoon",
+      "ko-fi": "nekrodarkmoon",
+      "patreon": "ForgemasterModules"
+    }
+  ],
+  "scripts": [],
+  "esmodules": ["nimble.js"],
+  "styles": ["nimble.css"],
+  "socket": true,
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "grid": {
+    "distance": 1,
+    "units": "square",
+    "type": 1
+  },
+  "primaryTokenAttribute": "attributes.hp",
+  "secondaryTokenAttribute": null,
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13",
+    "maximum": "13"
+  },
+  "background": "systems/nimble/assets/banners/manticoreFight.webp",
+  "url": "https://github.com/Nimble-Co/FoundryVTT-Nimble",
+  "manifest": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/latest/download/system.json",
+  "download": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/download/0.1.0/nimble.zip",
+  "documentTypes": {
+    "ActiveEffect": {
+      "condition": {}
+    },
+    "Actor": {
+      "character": {
+        "htmlFields": [],
+        "filePathFields": {}
+      },
+      "minion": {
+        "htmlFields": [],
+        "filePathFields": {}
+      },
+      "npc": {
+        "htmlFields": [],
+        "filePathFields": {}
+      },
+      "soloMonster": {
+        "htmlFields": [],
+        "filePathFields": {}
+      }
+    },
+    "ChatMessage": {
+      "abilityCheck": {},
+      "boon": {},
+      "feature": {},
+      "damage": {},
+      "object": {},
+      "levelUpSummary": {},
+      "savingThrow": {},
+      "skillCheck": {},
+      "spell": {}
+    },
+    "Combatant": {
+      "character": {},
+      "npc": {},
+      "soloMonster": {}
+    },
+    "Item": {
+      "background": {},
+      "boon": {},
+      "class": {},
+      "feature": {},
+      "monsterFeature": {},
+      "object": {},
+      "ancestry": {},
+      "spell": {},
+      "subclass": {}
+    }
+  },
+  "packs": [
+    {
+      "name": "nimble-items",
+      "label": "A5E Items",
+      "path": "packs/items.db",
+      "type": "Item",
+      "system": "nimble"
+    }
+  ]
 }

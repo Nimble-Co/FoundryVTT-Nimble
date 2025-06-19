@@ -1,0 +1,120 @@
+{
+	"name": "Spear",
+	"type": "object",
+	"img": "icons/weapons/polearms/spear-flared-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "iRVuywoznjR9UjTZ",
+					"type": "damage",
+					"damageType": "piercing",
+					"formula": "1d10+@strength",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"miss": [
+							{
+								"id": "sDNR1cYvutbp5E7f",
+								"type": "note",
+								"noteType": "warning",
+								"text": "MISS",
+								"parentContext": "miss",
+								"parentNode": "iRVuywoznjR9UjTZ"
+							}
+						],
+						"criticalHit": [
+							{
+								"id": "fuTPPhWMmNLOkOKm",
+								"type": "note",
+								"noteType": "warning",
+								"text": "CRIT",
+								"parentContext": "criticalHit",
+								"parentNode": "iRVuywoznjR9UjTZ"
+							}
+						],
+						"hit": [
+							{
+								"id": "3ZXDsVlm4CewZUg3",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "iRVuywoznjR9UjTZ"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": false,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<p></p><table><tbody><tr><td data-colwidth=\"93\"><p><strong>Damage</strong></p></td><td><p>1d10+STR Piercing</p></td></tr><tr><td data-colwidth=\"93\"><p><strong>Properties</strong></p></td><td><p>2 Handed, Reach 2</p></td></tr><tr><td data-colwidth=\"93\"><p><strong>Cost</strong></p></td><td><p>60 gp</p></td></tr></tbody></table>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "weapon",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": 2
+			},
+			"selected": [
+				"twoHanded",
+				"reach"
+			],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.344",
+		"systemId": "nimble",
+		"systemVersion": "0.1.0",
+		"createdTime": 1750307763085,
+		"modifiedTime": 1750307763085,
+		"lastModifiedBy": "rOTRHON0UVnNo8GT"
+	},
+	"_id": "C0so9dsrC4Qx5ASE"
+}

@@ -1,0 +1,129 @@
+{
+	"folder": null,
+	"name": "Sickle",
+	"type": "object",
+	"img": "icons/weapons/sickles/sickle-curved.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "U6gCmj6bnwqPWkjK",
+					"type": "damage",
+					"damageType": "slashing",
+					"formula": "1d4+ @dexterity",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"miss": [
+							{
+								"id": "wyJeQ3cEP7HwthIL",
+								"type": "note",
+								"noteType": "warning",
+								"text": "MISS",
+								"parentContext": "miss",
+								"parentNode": "U6gCmj6bnwqPWkjK"
+							}
+						],
+						"criticalHit": [
+							{
+								"id": "4f0FYhB63n3tbTzZ",
+								"type": "note",
+								"noteType": "warning",
+								"text": "CRIT",
+								"parentContext": "criticalHit",
+								"parentNode": "U6gCmj6bnwqPWkjK"
+							},
+							{
+								"id": "k8N1yLZnT8u1D3Lh",
+								"type": "damage",
+								"damageType": "slashing",
+								"formula": "1d4",
+								"parentContext": "criticalHit",
+								"parentNode": "U6gCmj6bnwqPWkjK",
+								"ignoreArmor": true,
+								"on": {}
+							}
+						],
+						"hit": [
+							{
+								"id": "YM9qF9KBde4Grudd",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "U6gCmj6bnwqPWkjK"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": false,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<table><tbody><tr><td data-colwidth=\"91\"><p><strong>Damage</strong></p></td><td><p>1d4+Dex Slashing</p></td></tr><tr><td data-colwidth=\"91\"><p><strong>Properties</strong></p></td><td><p>Vicious</p></td></tr><tr><td data-colwidth=\"91\"><p><strong>Cost</strong></p></td><td><p>10 gp</p></td></tr></tbody></table>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "weapon",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"vicious"
+			],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.344",
+		"systemId": "nimble",
+		"systemVersion": "0.1.0",
+		"createdTime": 1750307763085,
+		"modifiedTime": 1750307763085,
+		"lastModifiedBy": "rOTRHON0UVnNo8GT"
+	},
+	"_id": "iud9Mx0BMWcnfwya"
+}

@@ -1,12 +1,9 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable import/extensions */
-/* eslint-disable no-console */
-import path from 'path';
-import fs from 'fs';
+import path from "path";
+import fs from "fs";
 
-import { fileURLToPath } from 'url';
-import { globSync } from 'glob';
-import { getProperty, setProperty } from '../helpers.mjs';
+import { fileURLToPath } from "url";
+import { globSync } from "glob";
+import { getProperty, setProperty } from "../helpers.mjs";
 
 export default class IdBuilder {
   constructor() {
@@ -14,7 +11,7 @@ export default class IdBuilder {
       Actor: new Set(),
       Item: new Set(),
       Journal: new Set(),
-      RollTable: new Set()
+      RollTable: new Set(),
     };
 
     this.mappedIds = 0;
@@ -26,17 +23,19 @@ export default class IdBuilder {
   }
 
   loadIds() {
-    const dirName = fileURLToPath(new URL('.', import.meta.url));
-    const dataPath = path.resolve(dirName, '../../packs');
-    const dirPaths = fs.readdirSync(dataPath).map((p) => path.resolve(dirName, dataPath, p));
+    const dirName = fileURLToPath(new URL(".", import.meta.url));
+    const dataPath = path.resolve(dirName, "../../packs");
+    const dirPaths = fs
+      .readdirSync(dataPath)
+      .map((p) => path.resolve(dirName, dataPath, p));
 
-    const savedIdsPath = path.resolve(dirName, '../../packs/ids.json');
+    const savedIdsPath = path.resolve(dirName, "../../packs/ids.json");
     const savedIdData = JSON.parse(
-      fs.readFileSync(savedIdsPath, { encoding: 'utf-8' }).toString()
+      fs.readFileSync(savedIdsPath, { encoding: "utf-8" }).toString(),
     );
 
     dirPaths.forEach((folder) => {
-      if (folder.endsWith('json')) return;
+      if (folder.endsWith("json")) return;
 
       const fileNames = globSync(`${folder}//**/*.json`);
 
@@ -44,7 +43,9 @@ export default class IdBuilder {
         let jsonData;
 
         try {
-          jsonData = JSON.parse(fs.readFileSync(file, { encoding: 'utf-8' }).toString());
+          jsonData = JSON.parse(
+            fs.readFileSync(file, { encoding: "utf-8" }).toString(),
+          );
         } catch (err) {
           console.error(err);
           console.warn(`[ERROR] - ${file} failed to parse.`);
@@ -80,11 +81,9 @@ export default class IdBuilder {
 
           // Update file
           jsonData._id = id;
-          fs.writeFileSync(
-            file,
-            JSON.stringify(jsonData, null, '\t'),
-            { encoding: 'utf-8' }
-          );
+          fs.writeFileSync(file, JSON.stringify(jsonData, null, "\t"), {
+            encoding: "utf-8",
+          });
 
           this.ids[docType].add(id);
         } else {
@@ -103,19 +102,20 @@ export default class IdBuilder {
       // TODO: Delete non existent keys
 
       // Sort ids key
-      const replacer = (_, value) => (value instanceof Object && !(value instanceof Array)
-        ? Object.keys(value)
-          .sort()
-          .reduce((sorted, key) => {
-            sorted[key] = value[key];
-            return sorted;
-          }, {})
-        : value);
+      const replacer = (_, value) =>
+        value instanceof Object && !(value instanceof Array)
+          ? Object.keys(value)
+              .sort()
+              .reduce((sorted, key) => {
+                sorted[key] = value[key];
+                return sorted;
+              }, {})
+          : value;
 
       fs.writeFileSync(
         savedIdsPath,
-        JSON.stringify(savedIdData, replacer, '\t'),
-        { encoding: 'utf-8' }
+        JSON.stringify(savedIdData, replacer, "\t"),
+        { encoding: "utf-8" },
       );
     }
   }
@@ -136,10 +136,10 @@ export default class IdBuilder {
    * @returns { "Actor" | "Item" | "Journal" | "RollTable" | null}
    */
   static documentType(doc) {
-    if (IdBuilder.#isActor(doc)) return 'Actor';
-    if (IdBuilder.#isItem(doc)) return 'Item';
-    if (IdBuilder.#isJournal(doc)) return 'Journal';
-    if (IdBuilder.#isRollTable(doc)) return 'RollTable';
+    if (IdBuilder.#isActor(doc)) return "Actor";
+    if (IdBuilder.#isItem(doc)) return "Item";
+    if (IdBuilder.#isJournal(doc)) return "Journal";
+    if (IdBuilder.#isRollTable(doc)) return "RollTable";
     return null;
   }
 
@@ -150,9 +150,9 @@ export default class IdBuilder {
   static getIdKey(filePath) {
     const parts = filePath.split(path.sep);
     parts.shift();
-    parts.push(parts.pop().replace('.json', ''));
+    parts.push(parts.pop().replace(".json", ""));
 
-    return parts.join('.');
+    return parts.join(".");
   }
 
   /**
@@ -160,13 +160,14 @@ export default class IdBuilder {
    * @returns {string}
    */
   static randomId(length = 16) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     const cutoff = 0x100000000 - (0x100000000 % chars.length);
     const random = new Uint32Array(length);
     do {
       crypto.getRandomValues(random);
     } while (random.some((x) => x >= cutoff));
-    let id = '';
+    let id = "";
     for (let i = 0; i < length; i += 1) id += chars[random[i] % chars.length];
     return id;
   }
@@ -176,7 +177,12 @@ export default class IdBuilder {
    * @returns {boolean}
    */
   static #isActor(doc) {
-    return ('system' in doc && doc.system && 'items' in doc && Array.isArray(doc.items));
+    return (
+      "system" in doc &&
+      doc.system &&
+      "items" in doc &&
+      Array.isArray(doc.items)
+    );
   }
 
   /**
@@ -185,7 +191,10 @@ export default class IdBuilder {
    */
   static #isItem(doc) {
     return (
-      'system' in doc && doc.system && !IdBuilder.#isActor(doc) && !('text' in doc)
+      "system" in doc &&
+      doc.system &&
+      !IdBuilder.#isActor(doc) &&
+      !("text" in doc)
     );
   }
 
@@ -194,7 +203,7 @@ export default class IdBuilder {
    * @returns {boolean}
    */
   static #isJournal(doc) {
-    return 'pages' in doc;
+    return "pages" in doc;
   }
 
   /**
@@ -202,6 +211,6 @@ export default class IdBuilder {
    * @returns {boolean}
    */
   static #isRollTable(doc) {
-    return 'results' in doc;
+    return "results" in doc;
   }
 }

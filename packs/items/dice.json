@@ -1,0 +1,84 @@
+{
+	"folder": null,
+	"name": "Dice",
+	"type": "object",
+	"img": "icons/sundries/gaming/dice-pair-white-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "RAsz3ciDF657237P",
+					"type": "healing",
+					"healingType": "healing",
+					"formula": "4d8+8",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<table><tbody><tr><td data-colwidth=\"104\"><p><strong>Properties</strong></p></td><td><p>LOTS of fun.</p></td></tr><tr><td data-colwidth=\"104\"><p><strong>Cost</strong></p></td><td><p>5 sp</p></td></tr></tbody></table>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": true,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.344",
+		"systemId": "nimble",
+		"systemVersion": "0.1.0",
+		"createdTime": 1750307763085,
+		"modifiedTime": 1750307763085,
+		"lastModifiedBy": "rOTRHON0UVnNo8GT"
+	},
+	"_id": "Faeb9yutGkdftgDw"
+}

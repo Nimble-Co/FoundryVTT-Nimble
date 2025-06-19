@@ -1,0 +1,121 @@
+{
+	"name": "Crossbow",
+	"type": "object",
+	"img": "icons/weapons/crossbows/crossbow-simple-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "iRVuywoznjR9UjTZ",
+					"type": "damage",
+					"damageType": "piercing",
+					"formula": "4d4+@dexterity",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"miss": [
+							{
+								"id": "KKit6R69EJ3rLX32",
+								"type": "note",
+								"noteType": "warning",
+								"text": "MISS",
+								"parentContext": "miss",
+								"parentNode": "iRVuywoznjR9UjTZ"
+							}
+						],
+						"criticalHit": [
+							{
+								"id": "o9apVugoXkshJpNI",
+								"type": "note",
+								"noteType": "warning",
+								"text": "CRIT",
+								"parentContext": "criticalHit",
+								"parentNode": "iRVuywoznjR9UjTZ"
+							}
+						],
+						"hit": [
+							{
+								"id": "3ZXDsVlm4CewZUg3",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "iRVuywoznjR9UjTZ"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": false,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<table><tbody><tr><td data-colwidth=\"93\"><p><strong>Damage</strong></p></td><td><p>4d4+Dex Piercing</p></td></tr><tr><td data-colwidth=\"93\"><p><strong>Properties</strong></p></td><td><p>2-Handed, Load: 1 action, Range 8</p></td></tr><tr><td data-colwidth=\"93\"><p><strong>Cost</strong></p></td><td><p>60 gp</p></td></tr></tbody></table>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "weapon",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 8
+			},
+			"reach": {
+				"min": 1,
+				"max": 2
+			},
+			"selected": [
+				"range",
+				"twoHanded",
+				"load"
+			],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.344",
+		"systemId": "nimble",
+		"systemVersion": "0.1.0",
+		"createdTime": 1750307763085,
+		"modifiedTime": 1750307763085,
+		"lastModifiedBy": "rOTRHON0UVnNo8GT"
+	},
+	"_id": "Ltar2ofaIRO3gP1E"
+}
