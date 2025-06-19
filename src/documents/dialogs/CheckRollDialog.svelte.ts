@@ -1,67 +1,81 @@
-import { SvelteApplicationMixin, type Configuration } from '#lib/SvelteApplicationMixin.svelte.js';
-import CheckRollDialogComponent from '../../view/dialogs/CheckRollDialog.svelte';
+import {
+  SvelteApplicationMixin,
+  type SvelteApplicationRenderContext,
+} from "#lib/SvelteApplicationMixin.svelte.js";
+import CheckRollDialogComponent from "../../view/dialogs/CheckRollDialog.svelte";
 
 const { ApplicationV2 } = foundry.applications.api;
 
-export default class CheckRollDialog extends SvelteApplicationMixin(ApplicationV2) {
-	declare promise: Promise<any>;
+export default class CheckRollDialog extends SvelteApplicationMixin(
+  ApplicationV2,
+) {
+  declare promise: Promise<any>;
 
-	declare resolve: any;
+  declare resolve: any;
 
-	constructor(actor, title, data = {}, options = {} as Configuration) {
-		super(
-			foundry.utils.mergeObject(options, {
-				document: actor,
-				svelte: {
-					document: actor,
-					component: CheckRollDialogComponent,
-				},
-				window: {
-					title,
-				},
-			}),
-		);
+  protected root;
 
-		this.props = {
-			actor,
-			dialog: this,
-			...data,
-		};
+  data: any;
 
-		this.promise = new Promise((resolve) => {
-			this.resolve = resolve;
-		});
-	}
+  actor: Actor;
 
-	static override DEFAULT_OPTIONS = foundry.utils.mergeObject(
-		super.DEFAULT_OPTIONS,
-		{
-			classes: ['nimble-sheet'],
-			window: {
-				icon: 'fa-solid fa-dice-d20',
-			},
-			position: {
-				width: 576,
-				height: 'auto',
-			},
-			actions: {},
-		},
-		{ inplace: false },
-	);
+  constructor(
+    actor,
+    title,
+    data = {},
+    options = {} as SvelteApplicationRenderContext,
+  ) {
+    super(
+      foundry.utils.mergeObject(options, {
+        document: actor,
+        window: {
+          title,
+        },
+      }),
+    );
 
-	async submit(results) {
-		this.#resolvePromise(results);
-		return super.close();
-	}
+    this.root = CheckRollDialogComponent;
+    this.actor = actor;
+    this.data = data;
 
-	override async close(options) {
-		this.#resolvePromise(null);
-		return super.close(options);
-	}
+    this.promise = new Promise((resolve) => {
+      this.resolve = resolve;
+    });
+  }
 
-	#resolvePromise(data) {
-		if (this.resolve) {
-			this.resolve(data);
-		}
-	}
+  static override DEFAULT_OPTIONS = {
+    classes: ["nimble-sheet"],
+    window: {
+      icon: "fa-solid fa-dice-d20",
+    },
+    position: {
+      width: 576,
+      height: "auto",
+    },
+    actions: {},
+  };
+
+  protected override async _prepareContext() {
+    return {
+      actor: this.actor,
+      dialog: this,
+      ...this.data,
+    };
+  }
+
+  async submit(results) {
+    this.#resolvePromise(results);
+    return super.close();
+  }
+
+  override async close(options) {
+    this.#resolvePromise(null);
+    return super.close(options);
+  }
+
+  #resolvePromise(data) {
+    if (this.resolve) {
+      this.resolve(data);
+    }
+  }
 }

@@ -1,71 +1,87 @@
-import type { DeepPartial } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
-import { SvelteApplicationMixin, type Configuration } from '#lib/SvelteApplicationMixin.svelte.js';
+import type { DeepPartial } from "@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts";
+import {
+  SvelteApplicationMixin,
+  type SvelteApplicationRenderContext,
+} from "#lib/SvelteApplicationMixin.svelte.js";
 
 const { ApplicationV2 } = foundry.applications.api;
 
-export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2) {
-	documentData: any;
+export default class GenericDialog extends SvelteApplicationMixin(
+  ApplicationV2,
+) {
+  documentData: any;
 
-	promise: Promise<any>;
+  promise: Promise<any>;
 
-	resolve: any;
+  resolve: any;
 
-	constructor(title, component, data: Record<string, any> = {}, options = {} as Configuration) {
-		super(
-			foundry.utils.mergeObject(options, {
-				svelte: {
-					component,
-				},
-				position: {
-					width: options.width ?? 288,
-				},
-				window: {
-					icon: options.icon ?? 'fa-solid fa-note',
-					title,
-				},
-			}),
-		);
+  data: any;
 
-		this.props = {
-			dialog: this,
-			...data,
-		};
+  protected root;
 
-		this.promise = new Promise((resolve) => {
-			this.resolve = resolve;
-		});
-	}
+  constructor(
+    title,
+    component,
+    data: Record<string, any> = {},
+    options = {} as SvelteApplicationRenderContext,
+  ) {
+    super(
+      foundry.utils.mergeObject(options, {
+        position: {
+          width: options.width ?? 288,
+        },
+        window: {
+          icon: options.icon ?? "fa-solid fa-note",
+          title,
+        },
+      }),
+    );
 
-	static override DEFAULT_OPTIONS = foundry.utils.mergeObject(
-		super.DEFAULT_OPTIONS,
-		{
-			classes: ['nimble-sheet'],
-			position: {
-				height: 'auto',
-			},
-			actions: {},
-		},
-		{ inplace: false },
-	);
+    this.root = component;
+    this.data = data;
 
-	protected override close(
-		options?: foundry.applications.api.ApplicationV2.ClosingOptions,
-	): Promise<void>;
-	protected override close(options?: DeepPartial<ApplicationV2.ClosingOptions>): Promise<this>;
-	protected override close(options?: unknown): Promise<void> | Promise<this> | void {
-		this.#resolvePromise(null);
-		super.close();
-	}
+    this.promise = new Promise((resolve) => {
+      this.resolve = resolve;
+    });
+  }
 
-	/**
-	 * Resolves the dialog's promise and closes it.
-	 */
-	submit(results: Record<string, any>) {
-		this.#resolvePromise(results);
-		return super.close();
-	}
+  static override DEFAULT_OPTIONS = {
+    classes: ["nimble-sheet"],
+    position: {
+      height: "auto",
+    },
+    actions: {},
+  };
 
-	#resolvePromise(data: Record<string, any> | null) {
-		if (this.resolve) this.resolve(data);
-	}
+  protected override async _prepareContext() {
+    return {
+      dialog: this,
+      ...this.data,
+    };
+  }
+
+  protected override close(
+    options?: foundry.applications.api.ApplicationV2.ClosingOptions,
+  ): Promise<void>;
+  protected override close(
+    options?: DeepPartial<ApplicationV2.ClosingOptions>,
+  ): Promise<this>;
+  protected override close(
+    options?: unknown,
+  ): Promise<void> | Promise<this> | void {
+    this.#resolvePromise(null);
+    super.close();
+  }
+
+  /**
+   * Resolves the dialog's promise and closes it.
+   */
+  submit(results: Record<string, any>) {
+    this.#resolvePromise(results);
+    return super.close();
+  }
+
+  #resolvePromise(data: Record<string, any> | null) {
+    if (this.resolve) this.resolve(data);
+  }
 }
