@@ -1,122 +1,85 @@
-import type {
-  AnyObject, ConstructorOf, DeepPartial, Mixin
-} from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
-import type ApplicationV2 from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/client-esm/applications/api/application.d.mts';
+import * as svelte from "svelte";
 
-import { mount, unmount } from 'svelte';
+interface SvelteApplicationRenderContext {
+  /** State data tracked by the root component: objects herein must be plain object. */
+  state: object;
+  /** This application instance */
+  foundryApp: SvelteApplication;
+}
 
-function SvelteApplicationMixin<
-  BaseClass extends new (...args: any[]) => ApplicationV2.Any
->(BaseApplication: BaseClass) {
-  // @ts-expect-error
-  class SvelteApplication<
-    // BaseClass is the class being mixed. This is given by `HandlebarsApplicationMixin`.
-    BaseClassI extends ConstructorOf<ApplicationV2<any, any, any>> = BaseClass,
-    // These type parameters should _never_ be explicitly assigned to. They're
-    // simply a way to make types more readable so that their names show up in
-    // intellisense instead of a transformation of `BaseClass`.
-    out RenderOptions extends ApplicationV2.RenderOptions = BaseClassI extends ConstructorOf<
-      ApplicationV2.Internal<any, infer _RenderOptions, any>
-    >
-    ? _RenderOptions
-    : never,
-    out RenderContext extends AnyObject = BaseClassI extends ConstructorOf<
-      ApplicationV2.Internal<any, any, infer _RenderContext>
-    >
-    ? _RenderContext
-    : never,
-  > extends BaseApplication {
-    declare props: Record<string, any>;
+function SvelteApplicationMixin(Base) {
+  abstract class SvelteApplication extends Base {
+    #customHTMLTags = Object.values(foundry.applications.elements).reduce(
+      (acc, E) => {
+        const { tagName } = E;
+        if (!tagName) return acc;
+        acc.push(tagName.toUpperCase());
+        return acc;
+      },
+      [] as string[],
+    );
 
-    #componentInstance: Record<string, any> | null = null;
+    static override DEFAULT_OPTIONS = {
+      classes: ["a5e"],
+    };
 
-    #svelteData: SvelteApplicationSvelteOptions;
+    protected abstract root: svelte.Component<any>;
 
-    constructor(...args: any[]) {
-      const { svelte, ...options }: Configuration = args[0];
-      super(options);
+    protected $state = $state({});
 
-      // Check for svelte data
-      if (!svelte) throw Error('No Svelte data found.');
+    #mount: object = {};
 
-      // Check if a component exists to initialize
-      const { component } = svelte;
-      if (!component) throw new Error('No Component Found.');
-
-      this.#svelteData = svelte;
-    }
-
-    override async close(
-      options: DeepPartial<SvelteApplicationMixin.ClosingOptions> = {}
-    ): Promise<this> {
-      // Destroy Component instance
-      if (this.#componentInstance) {
-        unmount(this.#componentInstance);
-        this.#componentInstance = null;
-      }
-
-      options.animate = false;
-      return super.close(options);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    override async _prepareContext(options: SvelteApplicationMixin.RenderOptions) {
-      const context: Record<string, any> = {
-        ...await super._prepareContext(options)
-      };
+    protected override async _renderHTML(context: any) {
       return context;
     }
 
-    override async _renderHTML(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      context: RenderContext,
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      options: DeepPartial<RenderOptions>
-    ): Promise<any> {
-      // Update context for props
-
-      return '';
+    protected override _replaceHTML(
+      result: SvelteApplicationRenderContext,
+      content: HTMLElement,
+      options: any,
+    ) {
+      Object.assign(this.$state, result.state);
+      if (options.isFirstRender) {
+        this.#mount = svelte.mount(this.root, {
+          target: content,
+          props: { ...result, state: this.$state },
+        });
+      }
     }
 
-    override _replaceHTML() { }
+    protected override _onClose(options: any) {
+      super._onClose(options);
+      svelte.unmount(this.#mount, { outro: true });
+    }
 
-    override async _renderFrame(options: SvelteApplicationMixin.RenderOptions) {
-      const context = $state({ ...(await this._prepareContext(options)) });
-      const frame = await super._renderFrame(options);
+    override _onChangeForm(
+      formConfig: foundry.applications.api.ApplicationV2.FormConfiguration,
+      event: Event | SubmitEvent,
+    ) {
+      super._onChangeForm(formConfig, event);
 
-      const target = this.hasFrame ? frame.querySelector('.window-content') : frame;
-      if (!target) return frame;
+      if (event.type !== "change") return;
+      if (!this.document) return;
 
-      const { component } = this.#svelteData ?? {};
-      if (!component) return frame;
+      const { target } = event;
+      if (!target) return;
 
-      target.innerHTML = '';
-      this.#componentInstance = mount(component, {
-        target,
-        props: { ...this.props, context }
-      });
+      // @ts-expect-error
+      if (!this.#customHTMLTags.includes(target.tagName)) return;
 
-      return frame;
+      // @ts-expect-error
+      const value = target._getValue();
+
+      // @ts-expect-error
+      this.document.update({ [target.name]: value });
     }
   }
 
-  return SvelteApplication as Mixin<typeof SvelteApplication<BaseClass>, BaseClass>;
+  return SvelteApplication;
 }
 
-export type SvelteApplicationSvelteOptions = {
-  component: any
-} & Record<string, unknown>;
+type SvelteApplication = InstanceType<
+  ReturnType<typeof SvelteApplicationMixin>
+>;
 
-export type Configuration = (foundry.applications.api.ApplicationV2.Configuration
-  | foundry.applications.api.DialogV2.Configuration
-  | foundry.applications.api.DocumentSheetV2.Configuration
-) & {
-  svelte: SvelteApplicationSvelteOptions;
-};
-
-declare namespace SvelteApplicationMixin {
-  type RenderOptions = foundry.applications.api.ApplicationV2.RenderOptions;
-  type ClosingOptions = foundry.applications.api.ApplicationV2.ClosingOptions;
-}
-
-export { SvelteApplicationMixin };
+export { SvelteApplicationMixin, type SvelteApplicationRenderContext };
