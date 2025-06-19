@@ -100,7 +100,7 @@
   "packs": [
     {
       "name": "nimble-items",
-      "label": "A5E Items",
+      "label": "Nimble Items",
       "path": "packs/items.db",
       "type": "Item",
       "system": "nimble"
