@@ -1,70 +1,81 @@
-import { SvelteApplicationMixin, type Configuration } from '#lib/SvelteApplicationMixin.svelte.js';
-import { SvelteItemSheet } from '#lib/SvelteItemSheet.svelte.js';
-import SpellSheetComponent from '../../view/sheets/SpellSheet.svelte';
+import {
+  SvelteApplicationMixin,
+  type SvelteApplicationRenderContext,
+} from "#lib/SvelteApplicationMixin.svelte.js";
+import SpellSheetComponent from "../../view/sheets/SpellSheet.svelte";
 
-export default class SpellSheet extends SvelteApplicationMixin(SvelteItemSheet) {
-	constructor(item, options = {} as Configuration) {
-		super(
-			foundry.utils.mergeObject(options, {
-				document: item.document,
-				svelte: {
-					document: item.document,
-					component: SpellSheetComponent,
-				},
-			}),
-		);
+export default class SpellSheet extends SvelteApplicationMixin(
+  foundry.applications.sheets.ItemSheetV2,
+) {
+  protected root;
 
-		this.props = {
-			item: item.document,
-			sheet: this,
-		};
-	}
+  constructor(item, options = {} as SvelteApplicationRenderContext) {
+    super(
+      foundry.utils.mergeObject(options, {
+        document: item.document,
+      }),
+    );
 
-	static override DEFAULT_OPTIONS = foundry.utils.mergeObject(
-		super.DEFAULT_OPTIONS,
-		{
-			classes: ['nimble-sheet', 'nimble-sheet--spell'],
-			window: {
-				icon: 'fa-solid fa-hand-sparkles',
-			},
-			position: {
-				width: 288,
-				height: 'auto',
-			},
-			actions: {},
-		},
-		{ inplace: false },
-	);
+    this.root = SpellSheetComponent;
+  }
 
-	async toggleSpellSchoolOption(selectedSchool: string | number): Promise<void> {
-		if (typeof selectedSchool === 'number') return;
+  static override DEFAULT_OPTIONS = {
+    classes: ["nimble-sheet", "nimble-sheet--spell"],
+    window: {
+      icon: "fa-solid fa-hand-sparkles",
+    },
+    position: {
+      width: 288,
+      height: "auto",
+    },
+    actions: {},
+  };
 
-		await this.document.update({
-			'system.school': this.document.system.school === selectedSchool ? '' : selectedSchool,
-		});
-	}
+  protected override async _prepareContext() {
+    return {
+      item: this.item,
+      sheet: this,
+    };
+  }
 
-	async toggleSpellTierOption(selectedTier: string | number): Promise<void> {
-		if (typeof selectedTier === 'string') selectedTier = Number.parseInt(selectedTier, 10);
-		await this.document.update({ 'system.tier': selectedTier });
-	}
+  async toggleSpellSchoolOption(
+    selectedSchool: string | number,
+  ): Promise<void> {
+    if (typeof selectedSchool === "number") return;
 
-	async toggleSpellPropertyOption(selectedProperty: string): Promise<void> {
-		const selectedProperties = new Set(this.document.system.properties.selected);
+    await this.document.update({
+      "system.school":
+        this.document.system.school === selectedSchool ? "" : selectedSchool,
+    });
+  }
 
-		if (selectedProperties.has(selectedProperty)) selectedProperties.delete(selectedProperty);
-		else {
-			if (selectedProperty === 'range' && selectedProperties.has('reach')) {
-				selectedProperties.delete('reach');
-			}
+  async toggleSpellTierOption(selectedTier: string | number): Promise<void> {
+    if (typeof selectedTier === "string")
+      selectedTier = Number.parseInt(selectedTier, 10);
+    await this.document.update({ "system.tier": selectedTier });
+  }
 
-			if (selectedProperty === 'reach' && selectedProperties.has('range')) {
-				selectedProperties.delete('range');
-			}
+  async toggleSpellPropertyOption(selectedProperty: string): Promise<void> {
+    const selectedProperties = new Set(
+      this.document.system.properties.selected,
+    );
 
-			selectedProperties.add(selectedProperty);
-		}
+    if (selectedProperties.has(selectedProperty))
+      selectedProperties.delete(selectedProperty);
+    else {
+      if (selectedProperty === "range" && selectedProperties.has("reach")) {
+        selectedProperties.delete("reach");
+      }
 
-		await this.document.update({ 'system.properties.selected': selectedProperties });
-	}
+      if (selectedProperty === "reach" && selectedProperties.has("range")) {
+        selectedProperties.delete("range");
+      }
+
+      selectedProperties.add(selectedProperty);
+    }
+
+    await this.document.update({
+      "system.properties.selected": selectedProperties,
+    });
+  }
 }

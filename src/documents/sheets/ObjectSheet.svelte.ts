@@ -1,38 +1,40 @@
-import { SvelteApplicationMixin, type Configuration } from '#lib/SvelteApplicationMixin.svelte.js';
-import { SvelteItemSheet } from '#lib/SvelteItemSheet.svelte.js';
-import ObjectSheetComponent from '../../view/sheets/ObjectSheet.svelte';
+import {
+  SvelteApplicationMixin,
+  type SvelteApplicationRenderContext,
+} from "#lib/SvelteApplicationMixin.svelte.js";
+import ObjectSheetComponent from "../../view/sheets/ObjectSheet.svelte";
 
-export default class ObjectSheet extends SvelteApplicationMixin(SvelteItemSheet) {
-	constructor(item, options = {} as Configuration) {
-		super(
-			foundry.utils.mergeObject(options, {
-				document: item.document,
-				svelte: {
-					document: item.document,
-					component: ObjectSheetComponent,
-				},
-			}),
-		);
+export default class ObjectSheet extends SvelteApplicationMixin(
+  foundry.applications.sheets.ItemSheetV2,
+) {
+  protected root;
 
-		this.props = {
-			item: this.document,
-			sheet: this,
-		};
-	}
+  constructor(item, options = {} as SvelteApplicationRenderContext) {
+    super(
+      foundry.utils.mergeObject(options, {
+        document: item.document,
+      }),
+    );
 
-	static override DEFAULT_OPTIONS = foundry.utils.mergeObject(
-		super.DEFAULT_OPTIONS,
-		{
-			classes: ['nimble-sheet'],
-			window: {
-				icon: 'fa-solid fa-crown',
-			},
-			position: {
-				width: 288,
-				height: 'auto',
-			},
-			actions: {},
-		},
-		{ inplace: false },
-	);
+    this.root = ObjectSheetComponent;
+  }
+
+  static override DEFAULT_OPTIONS = {
+    classes: ["nimble-sheet"],
+    window: {
+      icon: "fa-solid fa-crown",
+    },
+    position: {
+      width: 288,
+      height: "auto",
+    },
+    actions: {},
+  };
+
+  protected override async _prepareContext() {
+    return {
+      item: this.item,
+      sheet: this,
+    };
+  }
 }

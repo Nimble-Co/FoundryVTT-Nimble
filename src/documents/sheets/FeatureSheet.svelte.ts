@@ -1,38 +1,46 @@
-import { SvelteApplicationMixin, type Configuration } from '#lib/SvelteApplicationMixin.svelte.js';
-import { SvelteItemSheet } from '#lib/SvelteItemSheet.svelte.js';
-import FeatureSheetComponent from '../../view/sheets/FeatureSheet.svelte';
+import {
+  SvelteApplicationMixin,
+  type SvelteApplicationRenderContext,
+} from "#lib/SvelteApplicationMixin.svelte.js";
+import { SvelteItemSheet } from "#lib/SvelteItemSheet.svelte.js";
+import FeatureSheetComponent from "../../view/sheets/FeatureSheet.svelte";
 
-export default class FeatureSheet extends SvelteApplicationMixin(SvelteItemSheet) {
-	constructor(item, options = {} as Configuration) {
-		super(
-			foundry.utils.mergeObject(options, {
-				document: item.document,
-				svelte: {
-					document: item.document,
-					component: FeatureSheetComponent,
-				},
-			}),
-		);
+export default class FeatureSheet extends SvelteApplicationMixin(
+  foundry.applications.sheets.ItemSheetV2,
+) {
+  protected root;
 
-		this.props = {
-			item: this.document,
-			sheet: this,
-		};
-	}
+  constructor(item, options = {} as SvelteApplicationRenderContext) {
+    super(
+      foundry.utils.mergeObject(options, {
+        document: item.document,
+      }),
+    );
 
-	static override DEFAULT_OPTIONS = foundry.utils.mergeObject(
-		super.DEFAULT_OPTIONS,
-		{
-			classes: ['nimble-sheet'],
-			window: {
-				icon: 'fa-solid fa-user',
-			},
-			position: {
-				width: 288,
-				height: 'auto',
-			},
-			actions: {},
-		},
-		{ inplace: false },
-	);
+    this.root = FeatureSheetComponent;
+
+    this.props = {
+      item: this.document,
+      sheet: this,
+    };
+  }
+
+  static override DEFAULT_OPTIONS = {
+    classes: ["nimble-sheet"],
+    window: {
+      icon: "fa-solid fa-user",
+    },
+    position: {
+      width: 288,
+      height: "auto",
+    },
+    actions: {},
+  };
+
+  protected override async _prepareContext() {
+    return {
+      item: this.item,
+      sheet: this,
+    };
+  }
 }
