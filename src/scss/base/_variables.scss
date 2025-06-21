@@ -1,100 +1,106 @@
 :root {
-  /** FONTS **/
-  --nimble-primary-font: "Roboto Condensed", sans-serif;
-  --nimble-mono-font: "Source Code Pro", mono;
+    /** FONTS **/
+    --nimble-primary-font: "Roboto Condensed", sans-serif;
+    --nimble-mono-font: "Source Code Pro", mono;
 
-  /** TEXT SIZEs **/
-  --nimble-xxs-text: 0.579rem;
-  --nimble-xs-text: 0.694rem;
-  --nimble-sm-text: 0.833rem;
-  --nimble-md-text: 1rem;
-  --nimble-lg-text: 1.2rem;
-  --nimble-xl-text: 1.44rem;
-  --nimble-xxl-text: 1.728rem;
-  --nimble-xxxl-text: 2.074rem;
+    /** TEXT SIZEs **/
+    --nimble-xxs-text: 0.579rem;
+    --nimble-xs-text: 0.694rem;
+    --nimble-sm-text: 0.833rem;
+    --nimble-md-text: 1rem;
+    --nimble-lg-text: 1.2rem;
+    --nimble-xl-text: 1.44rem;
+    --nimble-xxl-text: 1.728rem;
+    --nimble-xxxl-text: 2.074rem;
 
-  --nimble-base-font-size: 16px;
+    --nimble-base-font-size: 16px;
 
-  /** TEXT COLORS **/
-  --nimble-dark-text-color: hsl(50, 14%, 9%);
-  --nimble-light-text-color: hsl(38, 38%, 94%);
-  --nimble-medium-text-color: hsl(50, 14%, 35%);
+    /** TEXT COLORS **/
+    --nimble-dark-text-color: hsl(50, 14%, 9%);
+    --nimble-light-text-color: hsl(38, 38%, 94%);
+    --nimble-medium-text-color: hsl(50, 14%, 35%);
 
-  --nimble-dark-text-hover-color: hsl(50, 14%, 9%);
-  --nimble-light-text-hover-color: hsl(38, 38%, 94%);
-  --nimble-medium-text-hover-color: hsl(50, 14%, 44%);
+    --nimble-dark-text-hover-color: hsl(50, 14%, 9%);
+    --nimble-light-text-hover-color: hsl(38, 38%, 94%);
+    --nimble-medium-text-hover-color: hsl(50, 14%, 44%);
 
-  --nimble-dark-text-glow-color: hsl(0, 66%, 53%);
+    --nimble-dark-text-glow-color: hsl(0, 66%, 53%);
 
-  --nimble-code-editor-text-color: hsl(38, 38%, 94%);
-  --nimble-code-text-color: hsl(217, 34%, 88%);
-  --nimble-code-operator-color: hsl(169, 56%, 68%);
-  --nimble-code-wrapping-brace-color: hsl(51, 100%, 50%);
-  --nimble-code-type-color: hsl(77, 67%, 68%);
+    --nimble-code-editor-text-color: hsl(38, 38%, 94%);
+    --nimble-code-text-color: hsl(217, 34%, 88%);
+    --nimble-code-operator-color: hsl(169, 56%, 68%);
+    --nimble-code-wrapping-brace-color: hsl(51, 100%, 50%);
+    --nimble-code-type-color: hsl(77, 67%, 68%);
 
-  --nimble-navigation-text-color: hsl(38, 38%, 94%);
-  --nimble-navigation-active-text-color: hsl(38, 38%, 94%);
+    --nimble-navigation-text-color: hsl(38, 38%, 94%);
+    --nimble-navigation-active-text-color: hsl(38, 38%, 94%);
 
-  --nimble-secondary-navigation-text-color: var(--nimble-medium-text-color);
-  --nimble-secondary-navigation-active-text-color: hsl(1, 51%, 34%);
+    --nimble-secondary-navigation-text-color: var(--nimble-medium-text-color);
+    --nimble-secondary-navigation-active-text-color: hsl(1, 51%, 34%);
 
-  --nimble-search-input-border-color: hsl(41, 18%, 54%);
-  --nimble-currency-input-border-color: var(--nimble-search-input-border-color);
-  --nimble-dark-input-text-color: var(--nimble-light-text-color);
+    --nimble-search-input-border-color: hsl(41, 18%, 54%);
+    --nimble-currency-input-border-color: var(
+        --nimble-search-input-border-color
+    );
+    --nimble-dark-input-text-color: var(--nimble-light-text-color);
 
-  /** NOTIFICATION COLORS  **/
-  --nimble-warning-background-color: hsla(45, 100%, 52%, 0.6);
-  --nimble-warning-border-color: hsl(33, 50%, 65%);
-  --nimble-warning-icon-background-color: var(--nimble-light-text-color);
-  --nimble-warning-icon-color: hsl(33, 100%, 35%);
+    /** NOTIFICATION COLORS  **/
+    --nimble-warning-background-color: hsla(45, 100%, 52%, 0.6);
+    --nimble-warning-border-color: hsl(33, 50%, 65%);
+    --nimble-warning-icon-background-color: var(--nimble-light-text-color);
+    --nimble-warning-icon-color: hsl(33, 100%, 35%);
 
-  /** OTHER COLORS **/
-  --nimble-box-color: hsl(41, 18%, 54%);
-  --nimble-box-shadow: 0 0 6px hsla(0, 0%, 0%, 0.2);
-  --nimble-navigation-box-shadow: 0 0 10px #2e4246 inset, var(--nimble-box-shadow);
-  --nimble-accent-color-values: 223, 14%, 45%;
-  --nimble-accent-color: hsl(var(--nimble-accent-color-values));
-  --nimble-box-background-color: hsl(48, 17%, 97%);
-  --nimble-hp-bar-background: hsl(0, 0%, 24%);
-  --nimble-range-slider-handle-color: hsl(223, 14%, 35%);
-  --nimble-image-background-color: #494949;
+    /** OTHER COLORS **/
+    --nimble-box-color: hsl(41, 18%, 54%);
+    --nimble-box-shadow: 0 0 6px hsla(0, 0%, 0%, 0.2);
+    --nimble-navigation-box-shadow:
+        0 0 10px #2e4246 inset, var(--nimble-box-shadow);
+    --nimble-accent-color-values: 223, 14%, 45%;
+    --nimble-accent-color: hsl(var(--nimble-accent-color-values));
+    --nimble-box-background-color: hsl(48, 17%, 97%);
+    --nimble-selected-tag-text-color: white;
+    --nimble-selected-tag-background-color: hsl(293 10% 35% / 1);
+    --nimble-hp-bar-background: hsl(0, 0%, 24%);
+    --nimble-range-slider-handle-color: hsl(223, 14%, 35%);
+    --nimble-image-background-color: #494949;
 
-  --nimble-roll-success-background-color: hsl(105, 16%, 62%);
-  --nimble-roll-success-color: hsl(109, 76%, 18%);
-  --nimble-roll-failure-background-color: hsl(0, 66%, 83%);
-  --nimble-roll-failure-color: hsl(1, 100%, 33%);
+    --nimble-roll-success-background-color: hsl(105, 16%, 62%);
+    --nimble-roll-success-color: hsl(109, 76%, 18%);
+    --nimble-roll-failure-background-color: hsl(0, 66%, 83%);
+    --nimble-roll-failure-color: hsl(1, 100%, 33%);
 
-  --nimble-condition-hud-disabled-color: hsl(130, 42%, 44%);
-  --nimble-condition-hud-selected-color: hsl(130, 63%, 51%);
-  --nimble-condition-hud-clear-all-color: hsl(0, 58%, 35%);
+    --nimble-condition-hud-disabled-color: hsl(130, 42%, 44%);
+    --nimble-condition-hud-selected-color: hsl(130, 63%, 51%);
+    --nimble-condition-hud-clear-all-color: hsl(0, 58%, 35%);
 
-  --nimble-sheet-background: hsl(0, 0%, 96%);
-  --nimble-card-border-color: hsla(41, 18%, 54%, 25%);
-  --nimble-card-box-shadow: hsla(0, 0%, 0%, 0.24) 0 3px 8px;
+    --nimble-sheet-background: hsl(0, 0%, 96%);
+    --nimble-card-border-color: hsla(41, 18%, 54%, 25%);
+    --nimble-card-box-shadow: hsla(0, 0%, 0%, 0.24) 0 3px 8px;
 
-  --nimble-code-editor-background-color: hsl(0, 0%, 24%);
-  --nimble-navigation-border-color: hsl(150, 3%, 25%);
-  --nimble-navigation-background-color: hsl(0, 0%, 24%);
-  --nimble-navigation-button-box-shadow: 0 0 0 1px #e9d7a1, 0 0 0 2px #956d58, 0 3px 5px rgba(0, 0, 0, 0.4);
+    --nimble-code-editor-background-color: hsl(0, 0%, 24%);
+    --nimble-navigation-border-color: hsl(150, 3%, 25%);
+    --nimble-navigation-background-color: hsl(0, 0%, 24%);
+    --nimble-navigation-button-box-shadow:
+        0 0 0 1px #e9d7a1, 0 0 0 2px #956d58, 0 3px 5px rgba(0, 0, 0, 0.4);
 
-  --nimble-ac-border-color: hsl(41, 18%, 54%);
-  --nimble-initiative-border-color: hsl(41, 18%, 54%);
-  --nimble-icon-button-border-color: hsl(41, 18%, 54%);
+    --nimble-ac-border-color: hsl(41, 18%, 54%);
+    --nimble-initiative-border-color: hsl(41, 18%, 54%);
+    --nimble-icon-button-border-color: hsl(41, 18%, 54%);
 
-  --nimble-defeated-combatant-name-color: hsl(1, 75%, 60%);
+    --nimble-defeated-combatant-name-color: hsl(1, 75%, 60%);
 
-  --nimble-checkbox-checked-color: var(--nimble-hp-bar-background);
-  --nimble-checkbox-checkmark-color: var(--nimble-light-text-color);
+    --nimble-checkbox-checked-color: var(--nimble-hp-bar-background);
+    --nimble-checkbox-checkmark-color: var(--nimble-light-text-color);
 
-  --nimble-overhang-button-background: hsl(0, 0%, 24%);
-  --nimble-overhang-button-hover-background: #842c2b;
-  --nimble-overhang-button-text-color: hsl(36, 53%, 80%);
+    --nimble-overhang-button-background: hsl(0, 0%, 24%);
+    --nimble-overhang-button-hover-background: #842c2b;
+    --nimble-overhang-button-text-color: hsl(36, 53%, 80%);
 
-  --nimble-hint-background-color: hsla(223, 14%, 45%, 0.1);
-  --nimble-hint-border-color: var(--nimble-card-border-color);
-  --nimble-hint-icon-color: hsl(0, 0%, 24%);
+    --nimble-hint-background-color: hsla(223, 14%, 45%, 0.1);
+    --nimble-hint-border-color: var(--nimble-card-border-color);
+    --nimble-hint-icon-color: hsl(0, 0%, 24%);
 
-  /** ANIMATION **/
-  --nimble-standard-transition: all 0.15s ease-in-out;
-  --nimble-slow-transition: all 0.25s ease-in-out;
+    /** ANIMATION **/
+    --nimble-standard-transition: all 0.15s ease-in-out;
+    --nimble-slow-transition: all 0.25s ease-in-out;
 }
