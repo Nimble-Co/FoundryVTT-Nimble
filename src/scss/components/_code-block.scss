@@ -16,6 +16,8 @@
         /* min-height: var(--nimble-code-editor-min-height, 14rem); */
         border: 1px solid hsl(41, 18%, 54%);
         resize: none;
+        color: var(--nimble-code-editor-text-color);
+        font-family: var(--nimble-mono-font);
 
         &:focus {
             box-shadow: none;
