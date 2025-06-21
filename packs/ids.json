@@ -1,4 +1,14 @@
 {
+  "ancestries": {
+    "dwarf": "hyVaEOLNSagYECwm",
+    "human": "11SKfGVV3ZWHquUb"
+  },
+  "backgrounds": {
+    "back-out-of-retirement": "ICTvjd73DqAbMMs5"
+  },
+  "boons": {
+    "alert": "qpJQlnrcWFgG0AkD"
+  },
   "items": {
     "adventurers-garb": "DXhGt9gl06dqAOkY",
     "battleaxe": "ErNlUZPMQIK6OzvW",
@@ -75,5 +85,14 @@
     "vial-of-pitch": "tebfZbQQ0WNJHYzh",
     "wooden-buckler": "108gED69VejsZ3AL",
     "wyrmhide": "3ECx9MbAshiyVQPy"
+  },
+  "monsters": {
+    "bugbear": "Co4Y5ZwlVDQg7Xzi",
+    "goblin": "oMhCCNe5Z2jaG85c",
+    "goblin-minion": "e5E0U0WblbdVSVgS",
+    "goblin-taskmaster": "VuRJY3Hh576ogOI4"
+  },
+  "spells": {
+    "arc-lightning": "5Vt9jacjQXx14Bhg"
   }
 }

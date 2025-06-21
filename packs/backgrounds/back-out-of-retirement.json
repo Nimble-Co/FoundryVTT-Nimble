@@ -1,0 +1,41 @@
+{
+	"name": "Back Out of Retirement",
+	"type": "background",
+	"img": "icons/environment/settlement/blacksmith.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "maxWounds",
+				"disabled": false,
+				"id": "WFInD4PHMq5LSi0E",
+				"identifier": "",
+				"label": "These Old Bones",
+				"predicate": {},
+				"priority": 1,
+				"value": "-1"
+			}
+		],
+		"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">You’ve forgotten more than most adventurers these days know! Talk with your GM, what made you come out of retirement?</span></p><ul><li><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\"><strong>Let’s see if I remember how to do this...</strong>You may gain 1 Wound to use an ability or cast a spell as if you were 1 level higher. </span></p></li><li><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\"><strong>These old bones.</strong> Your age has long since started to show. –1 max Wounds.</span></p></li></ul>"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.344",
+		"systemId": "nimble",
+		"systemVersion": "0.1.0",
+		"createdTime": 1750477523973,
+		"modifiedTime": 1750477617774,
+		"lastModifiedBy": "rOTRHON0UVnNo8GT",
+		"exportSource": {
+			"worldId": "nimble-dev",
+			"uuid": "Item.CRWFitPm2tRFsHoO",
+			"coreVersion": "13.344",
+			"systemId": "nimble",
+			"systemVersion": "0.1.0"
+		}
+	},
+	"_id": "ICTvjd73DqAbMMs5"
+}

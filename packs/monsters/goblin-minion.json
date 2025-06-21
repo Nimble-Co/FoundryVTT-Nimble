@@ -1,0 +1,268 @@
+{
+	"name": "Goblin Minion",
+	"type": "minion",
+	"folder": null,
+	"img": "icons/svg/mystery-man.svg",
+	"system": {
+		"attributes": {
+			"armor": "none",
+			"damageResistances": [],
+			"damageVulnerabilities": [],
+			"damageImmunities": []
+		},
+		"description": "<p><strong>Minions.</strong> Minions are low-threat monsters that are easy to kill individually but dangerous in numbers.They add dynamic movement and excitement to battles without bogging down gameplay. Minions have:</p><p><strong>• No HP to Track.</strong> Any damage kills a minion.</p><p><strong>• Easy Attacks.</strong> Each minion attacks with a single damage die, cannot crit, and misses on a roll of 1.</p><p><strong>• Simplified Defense:</strong> When multiple minions attack a single target, their damage is combined and counts as a single attack, so heroes can Defend or Interpose against them all at once.</p>",
+		"details": {
+			"creatureType": "Goblin",
+			"level": "1/4",
+			"sizeCategory": "small"
+		},
+		"attackSequence": "",
+		"savingThrows": {
+			"strength": {
+				"defaultRollMode": 0,
+				"mod": 0
+			},
+			"dexterity": {
+				"defaultRollMode": 0,
+				"mod": 0
+			},
+			"intelligence": {
+				"defaultRollMode": 0,
+				"mod": 0
+			},
+			"will": {
+				"defaultRollMode": 0,
+				"mod": 0
+			}
+		}
+	},
+	"prototypeToken": {
+		"name": "New Actor",
+		"displayName": 0,
+		"actorLink": false,
+		"appendNumber": false,
+		"prependAdjective": false,
+		"width": 1,
+		"height": 1,
+		"texture": {
+			"src": "icons/svg/mystery-man.svg",
+			"anchorX": 0.5,
+			"anchorY": 0.5,
+			"offsetX": 0,
+			"offsetY": 0,
+			"fit": "contain",
+			"scaleX": 1,
+			"scaleY": 1,
+			"rotation": 0,
+			"tint": "#ffffff",
+			"alphaThreshold": 0.75
+		},
+		"hexagonalShape": 0,
+		"lockRotation": false,
+		"rotation": 0,
+		"alpha": 1,
+		"disposition": -1,
+		"displayBars": 0,
+		"bar1": {
+			"attribute": "attributes.hp"
+		},
+		"bar2": {
+			"attribute": null
+		},
+		"light": {
+			"negative": false,
+			"priority": 0,
+			"alpha": 0.5,
+			"angle": 360,
+			"bright": 0,
+			"color": null,
+			"coloration": 1,
+			"dim": 0,
+			"attenuation": 0.5,
+			"luminosity": 0.5,
+			"saturation": 0,
+			"contrast": 0,
+			"shadows": 0,
+			"animation": {
+				"type": null,
+				"speed": 5,
+				"intensity": 5,
+				"reverse": false
+			},
+			"darkness": {
+				"min": 0,
+				"max": 1
+			}
+		},
+		"sight": {
+			"enabled": false,
+			"range": 0,
+			"angle": 360,
+			"visionMode": "basic",
+			"color": null,
+			"attenuation": 0.1,
+			"brightness": 0,
+			"saturation": 0,
+			"contrast": 0
+		},
+		"detectionModes": [],
+		"occludable": {
+			"radius": 0
+		},
+		"ring": {
+			"enabled": false,
+			"colors": {
+				"ring": null,
+				"background": null
+			},
+			"effects": 1,
+			"subject": {
+				"scale": 1,
+				"texture": null
+			}
+		},
+		"flags": {},
+		"randomImg": false
+	},
+	"items": [
+		{
+			"name": "Haha, Missed Me!",
+			"type": "monsterFeature",
+			"_id": "vY8ilLIFghkS0rFS",
+			"img": "icons/svg/item-bag.svg",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p><span style=\"font-family: 'Roboto Condensed', sans-serif\">Whenever an attack misses you, deal 1 psychic damage in return.</span></p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"compendiumSource": null,
+				"duplicateSource": null,
+				"coreVersion": "12.331",
+				"systemId": "nimble",
+				"systemVersion": "0.1.0",
+				"createdTime": 1741220946825,
+				"modifiedTime": 1741221085960,
+				"lastModifiedBy": "Cks0hmp8lQssldFV"
+			}
+		},
+		{
+			"name": "Stab",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "action"
+					},
+					"effects": [
+						{
+							"id": "cdCRnxvepj81QIpD",
+							"type": "damage",
+							"damageType": "piercing",
+							"formula": "1d6",
+							"parentContext": null,
+							"parentNode": null,
+							"canCrit": false,
+							"canMiss": true,
+							"on": {
+								"hit": [
+									{
+										"id": "B28xGxzpeFdmj8YD",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "cdCRnxvepj81QIpD"
+									}
+								]
+							}
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>1d6 (follows minion rules).</p>",
+				"isAttack": true
+			},
+			"_id": "ZsSfV4kC4UDIBwYL",
+			"img": "icons/svg/item-bag.svg",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"compendiumSource": null,
+				"duplicateSource": null,
+				"coreVersion": "12.331",
+				"systemId": "nimble",
+				"systemVersion": "0.1.0",
+				"createdTime": 1741221106112,
+				"modifiedTime": 1741305703720,
+				"lastModifiedBy": "Cks0hmp8lQssldFV"
+			}
+		}
+	],
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "12.331",
+		"systemId": "nimble",
+		"systemVersion": "0.1.0",
+		"createdTime": 1741220894456,
+		"modifiedTime": 1741223133567,
+		"lastModifiedBy": "Cks0hmp8lQssldFV"
+	},
+	"_id": "e5E0U0WblbdVSVgS"
+}

@@ -1,0 +1,105 @@
+{
+	"name": "Arc Lightning",
+	"type": "spell",
+	"img": "icons/magic/lightning/bolts-forked-large-blue-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "Next closest to initial target",
+				"quantity": 2,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "EyFEspjlj7QyvY7k",
+					"type": "damage",
+					"damageType": "lightning",
+					"formula": "3d8",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"miss": [
+							{
+								"id": "1gwU3ZieJJEXnDbd",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "miss",
+								"parentNode": "EyFEspjlj7QyvY7k"
+							}
+						],
+						"hit": [
+							{
+								"id": "BDFV4lVPj9cGIjsq",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "EyFEspjlj7QyvY7k"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 2,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">The bolt also damages the next closest creature to your target. On miss: the lightning fails to find ground and strikes you instead.</span></p><p></p><blockquote><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\"><strong>Next Closest.</strong> If you or an ally is the next closest, they are hit! If 2 creatures are equally close, the GM can roll for it or select the one wearing the most metal</span></p></blockquote>",
+			"higherLevelEffect": "<p>+4 Damage</p>"
+		},
+		"properties": {
+			"range": {
+				"min": 1,
+				"max": 12
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"range"
+			]
+		},
+		"school": "lightning",
+		"tier": 1
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.344",
+		"systemId": "nimble",
+		"systemVersion": "0.1.0",
+		"createdTime": 1750475702978,
+		"modifiedTime": 1750476504421,
+		"lastModifiedBy": "rOTRHON0UVnNo8GT",
+		"exportSource": {
+			"worldId": "nimble-dev",
+			"uuid": "Item.BGzuesxJ8mwHkgFe",
+			"coreVersion": "13.344",
+			"systemId": "nimble",
+			"systemVersion": "0.1.0"
+		}
+	},
+	"_id": "5Vt9jacjQXx14Bhg"
+}

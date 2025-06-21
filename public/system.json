@@ -99,9 +99,65 @@
   },
   "packs": [
     {
+      "name": "nimble-ancestries",
+      "label": "Nimble Ancestries",
+      "path": "packs/ancestries.db",
+      "type": "Item",
+      "system": "nimble"
+    },
+    {
+      "name": "nimble-backgrounds",
+      "label": "Nimble Backgrounds",
+      "path": "packs/backgrounds.db",
+      "type": "Item",
+      "system": "nimble"
+    },
+    {
+      "name": "nimble-boons",
+      "label": "Nimble Boons",
+      "path": "packs/boons.db",
+      "type": "Item",
+      "system": "nimble"
+    },
+    {
+      "name": "nimble-classes",
+      "label": "Nimble Classes",
+      "path": "packs/classes.db",
+      "type": "Item",
+      "system": "nimble"
+    },
+    {
+      "name": "nimble-class-features",
+      "label": "Nimble Class Features",
+      "path": "packs/classFeatures.db",
+      "type": "Item",
+      "system": "nimble"
+    },
+    {
       "name": "nimble-items",
       "label": "Nimble Items",
       "path": "packs/items.db",
+      "type": "Item",
+      "system": "nimble"
+    },
+    {
+      "name": "nimble-monsters",
+      "label": "Nimble Monsters",
+      "path": "packs/monsters.db",
+      "type": "Actor",
+      "system": "nimble"
+    },
+    {
+      "name": "nimble-spells",
+      "label": "Nimble Spells",
+      "path": "packs/spells.db",
+      "type": "Item",
+      "system": "nimble"
+    },
+    {
+      "name": "nimble-sub-classes",
+      "label": "Nimble Sub Classes",
+      "path": "packs/subClasses.db",
       "type": "Item",
       "system": "nimble"
     }

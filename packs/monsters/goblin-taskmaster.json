@@ -1,0 +1,456 @@
+{
+	"name": "Goblin Taskmaster",
+	"type": "npc",
+	"folder": null,
+	"img": "icons/svg/mystery-man.svg",
+	"system": {
+		"attributes": {
+			"armor": "medium",
+			"damageResistances": [],
+			"damageVulnerabilities": [],
+			"damageImmunities": [],
+			"hp": {
+				"max": 30,
+				"temp": 0,
+				"value": 30
+			}
+		},
+		"description": "<p><strong>• Stab.</strong> 1d6+2 (or Shoot, Range 8). Then:</p><p><strong>• Get in here!</strong> Call a goblin minion to the fight.</p>",
+		"details": {
+			"creatureType": "Goblin",
+			"isFlunky": false,
+			"level": "2",
+			"sizeCategory": "small"
+		},
+		"attackSequence": "",
+		"savingThrows": {
+			"strength": {
+				"defaultRollMode": 0,
+				"mod": 0
+			},
+			"dexterity": {
+				"defaultRollMode": 0,
+				"mod": 0
+			},
+			"intelligence": {
+				"defaultRollMode": 0,
+				"mod": 0
+			},
+			"will": {
+				"defaultRollMode": 0,
+				"mod": 0
+			}
+		}
+	},
+	"prototypeToken": {
+		"name": "New Actor",
+		"displayName": 0,
+		"actorLink": false,
+		"appendNumber": false,
+		"prependAdjective": false,
+		"width": 1,
+		"height": 1,
+		"texture": {
+			"src": "icons/svg/mystery-man.svg",
+			"anchorX": 0.5,
+			"anchorY": 0.5,
+			"offsetX": 0,
+			"offsetY": 0,
+			"fit": "contain",
+			"scaleX": 1,
+			"scaleY": 1,
+			"rotation": 0,
+			"tint": "#ffffff",
+			"alphaThreshold": 0.75
+		},
+		"hexagonalShape": 0,
+		"lockRotation": false,
+		"rotation": 0,
+		"alpha": 1,
+		"disposition": -1,
+		"displayBars": 0,
+		"bar1": {
+			"attribute": "attributes.hp"
+		},
+		"bar2": {
+			"attribute": null
+		},
+		"light": {
+			"negative": false,
+			"priority": 0,
+			"alpha": 0.5,
+			"angle": 360,
+			"bright": 0,
+			"color": null,
+			"coloration": 1,
+			"dim": 0,
+			"attenuation": 0.5,
+			"luminosity": 0.5,
+			"saturation": 0,
+			"contrast": 0,
+			"shadows": 0,
+			"animation": {
+				"type": null,
+				"speed": 5,
+				"intensity": 5,
+				"reverse": false
+			},
+			"darkness": {
+				"min": 0,
+				"max": 1
+			}
+		},
+		"sight": {
+			"enabled": false,
+			"range": 0,
+			"angle": 360,
+			"visionMode": "basic",
+			"color": null,
+			"attenuation": 0.1,
+			"brightness": 0,
+			"saturation": 0,
+			"contrast": 0
+		},
+		"detectionModes": [],
+		"occludable": {
+			"radius": 0
+		},
+		"ring": {
+			"enabled": false,
+			"colors": {
+				"ring": null,
+				"background": null
+			},
+			"effects": 1,
+			"subject": {
+				"scale": 1,
+				"texture": null
+			}
+		},
+		"flags": {},
+		"randomImg": false
+	},
+	"items": [
+		{
+			"name": "Haha, Missed Me!",
+			"type": "monsterFeature",
+			"_id": "QHhxFYRYqrFty6ze",
+			"img": "icons/svg/item-bag.svg",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p> Whenever an attack misses you, deal 1 psychic damage in return.</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"compendiumSource": null,
+				"duplicateSource": null,
+				"coreVersion": "12.331",
+				"systemId": "nimble",
+				"systemVersion": "0.1.0",
+				"createdTime": 1741221672535,
+				"modifiedTime": 1741221688999,
+				"lastModifiedBy": "Cks0hmp8lQssldFV"
+			}
+		},
+		{
+			"name": "Stab",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "stabby",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "action"
+					},
+					"effects": [
+						{
+							"id": "tZvNaOay3yXLljF1",
+							"type": "damage",
+							"damageType": "piercing",
+							"formula": "1d6+2",
+							"parentContext": null,
+							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
+							"on": {
+								"hit": [
+									{
+										"id": "SGg8dN8H84Uf06TD",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "tZvNaOay3yXLljF1"
+									}
+								]
+							},
+							"ignoreAllies": false
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "line",
+						"width": 1
+					}
+				},
+				"description": "<p>1d6+2</p>",
+				"isAttack": true
+			},
+			"_id": "7CSzii90Be52yJVt",
+			"img": "icons/svg/item-bag.svg",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"compendiumSource": null,
+				"duplicateSource": null,
+				"coreVersion": "12.331",
+				"systemId": "nimble",
+				"systemVersion": "0.1.0",
+				"createdTime": 1741221702209,
+				"modifiedTime": 1741304764834,
+				"lastModifiedBy": "Cks0hmp8lQssldFV"
+			}
+		},
+		{
+			"name": "Shoot",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "action"
+					},
+					"effects": [
+						{
+							"id": "xEcfW2dTBFD9Nkfm",
+							"type": "damage",
+							"damageType": "piercing",
+							"formula": "1d6+2",
+							"parentContext": null,
+							"parentNode": null,
+							"on": {
+								"hit": [
+									{
+										"id": "YtllR6Ph6iVAuUSc",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "xEcfW2dTBFD9Nkfm"
+									}
+								]
+							},
+							"canCrit": true,
+							"canMiss": true
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>1d6+2</p>",
+				"isAttack": true
+			},
+			"_id": "Wn2YgRjZJkRGWOIH",
+			"img": "icons/svg/item-bag.svg",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"compendiumSource": null,
+				"duplicateSource": null,
+				"coreVersion": "12.331",
+				"systemId": "nimble",
+				"systemVersion": "0.1.0",
+				"createdTime": 1741221738328,
+				"modifiedTime": 1741304022423,
+				"lastModifiedBy": "Cks0hmp8lQssldFV"
+			}
+		},
+		{
+			"name": "Meat Shield",
+			"type": "monsterFeature",
+			"_id": "skpEttI7TiDFSy42",
+			"img": "icons/svg/item-bag.svg",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Can force other goblins to Interpose for him.</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"compendiumSource": null,
+				"duplicateSource": null,
+				"coreVersion": "12.331",
+				"systemId": "nimble",
+				"systemVersion": "0.1.0",
+				"createdTime": 1741221832756,
+				"modifiedTime": 1741222522669,
+				"lastModifiedBy": "Cks0hmp8lQssldFV"
+			}
+		},
+		{
+			"name": "Get in here!",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p> Call a goblin minion to the fight.</p>",
+				"isAttack": true
+			},
+			"_id": "QUlSOf0UDlHsxdlv",
+			"img": "icons/svg/item-bag.svg",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"compendiumSource": null,
+				"duplicateSource": null,
+				"coreVersion": "12.331",
+				"systemId": "nimble",
+				"systemVersion": "0.1.0",
+				"createdTime": 1741221878118,
+				"modifiedTime": 1741221900752,
+				"lastModifiedBy": "Cks0hmp8lQssldFV"
+			}
+		}
+	],
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "12.331",
+		"systemId": "nimble",
+		"systemVersion": "0.1.0",
+		"createdTime": 1741221644587,
+		"modifiedTime": 1741305191269,
+		"lastModifiedBy": "Cks0hmp8lQssldFV"
+	},
+	"_id": "VuRJY3Hh576ogOI4"
+}
