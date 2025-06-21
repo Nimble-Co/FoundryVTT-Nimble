@@ -1,64 +1,70 @@
 <script>
-import filterItems from '../../dataPreparationHelpers/filterItems.js';
-import { getContext } from 'svelte';
-import localize from '../../../utils/localize.js';
-import { metadata } from '../../../models/chat/common.js';
-import prepareObjectTooltip from '../../dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js';
-import sortItems from '../../../utils/sortItems.js';
+    import filterItems from "../../dataPreparationHelpers/filterItems.js";
+    import { getContext } from "svelte";
+    import localize from "../../../utils/localize.js";
+    import { metadata } from "../../../models/chat/common.js";
+    import prepareObjectTooltip from "../../dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js";
+    import sortItems from "../../../utils/sortItems.js";
 
-import SearchBar from '../components/SearchBar.svelte';
+    import SearchBar from "../components/SearchBar.svelte";
 
-async function configureItem(event, id) {
-	event.stopPropagation();
+    async function configureItem(event, id) {
+        event.stopPropagation();
 
-	await actor.configureItem(id);
-}
+        await actor.configureItem(id);
+    }
 
-async function createItem(event) {
-	event.stopPropagation();
+    async function createItem(event) {
+        event.stopPropagation();
 
-	await actor.createItem({ name: 'New Object', type: 'object' });
-}
+        await actor.createItem({ name: "New Object", type: "object" });
+    }
 
-async function deleteItem(event, id) {
-	event.stopPropagation();
+    async function deleteItem(event, id) {
+        event.stopPropagation();
 
-	await actor.deleteItem(id);
-}
+        await actor.deleteItem(id);
+    }
 
-function getObjectMetadata(item) {
-	return null;
-}
+    function getObjectMetadata(item) {
+        return null;
+    }
 
-function groupItemsByType(items) {
-	return items.reduce((categories, item) => {
-		const { objectType } = item.reactive.system;
+    function groupItemsByType(items) {
+        return items.reduce((categories, item) => {
+            const { objectType } = item.reactive.system;
 
-		categories[objectType] ??= [];
-		categories[objectType].push(item);
+            categories[objectType] ??= [];
+            categories[objectType].push(item);
 
-		return categories;
-	}, {});
-}
+            return categories;
+        }, {});
+    }
 
-const { objectTypeHeadings } = CONFIG.NIMBLE;
+    const { objectTypeHeadings } = CONFIG.NIMBLE;
 
-let actor = getContext('actor');
-let sheet = getContext('application');
-let searchTerm = $state('');
+    let actor = getContext("actor");
+    let sheet = getContext("application");
+    let searchTerm = $state("");
 
-let totalInventorySlots = $derived(actor.reactive.system.inventory.totalSlots ?? 0);
-let usedInventorySlots = $derived(actor.reactive.system.inventory.usedSlots ?? 0);
-let items = $derived(filterItems(actor.reactive, ['object'], searchTerm));
-let categorizedItems = $derived(groupItemsByType(items));
+    let totalInventorySlots = $derived(
+        actor.reactive.system.inventory.totalSlots ?? 0,
+    );
+    let usedInventorySlots = $derived(
+        actor.reactive.system.inventory.usedSlots ?? 0,
+    );
+    let items = $derived(filterItems(actor.reactive, ["object"], searchTerm));
+    let categorizedItems = $derived(groupItemsByType(items));
 
-// Currency
-let currency = $derived(actor.reactive?.system?.currency);
+    // Currency
+    let currency = $derived(actor.reactive?.system?.currency);
 
-// Settings
-let flags = $derived(actor.reactive.flags.nimble);
-let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
-let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
+    // Settings
+    let flags = $derived(actor.reactive.flags.nimble);
+    let showEmbeddedDocumentImages = $derived(
+        flags?.showEmbeddedDocumentImages ?? true,
+    );
+    let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
 </script>
 
 <header class="nimble-sheet__static nimble-sheet__static--inventory">
@@ -104,7 +110,9 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                 class="nimble-currency-field"
                 value={denomination.value}
                 onchange={({ target }) =>
-                    actor.update({ [`system.currency.${key}.value`]: target.value })}
+                    actor.update({
+                        [`system.currency.${key}.value`]: target.value,
+                    })}
             />
         </label>
     {/each}
@@ -161,7 +169,8 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                                 data-button-variant="icon"
                                 type="button"
                                 aria-label="Configure {item.name}"
-                                onclick={(event) => configureItem(event, item._id)}
+                                onclick={(event) =>
+                                    configureItem(event, item._id)}
                             >
                                 <i class="fa-solid fa-edit"></i>
                             </button>
