@@ -1,40 +1,38 @@
 <script lang="ts">
-import type { NimbleBaseItem } from '../../../documents/item/base.js';
+    import type { NimbleBaseItem } from "../../../documents/item/base.js";
 
-function updateRule(event: Event, ruleId: string): void {
-	const target = event.target as HTMLTextAreaElement | null;
+    function updateRule(event: Event, ruleId: string): void {
+        const target = event.target as HTMLTextAreaElement | null;
 
-	if (!target) return;
+        if (!target) return;
 
-	item.rules.updateRule(ruleId, target?.value);
-}
+        item.rules.updateRule(ruleId, target?.value);
+    }
 
-import { getContext } from 'svelte';
+    import { getContext } from "svelte";
 
-import overrideTextAreaBehavior from '../../../utils/overrideTextAreaBehavior.js';
+    import overrideTextAreaBehavior from "../../../utils/overrideTextAreaBehavior.js";
 
-const { ruleTypes } = CONFIG.NIMBLE;
+    const { ruleTypes } = CONFIG.NIMBLE;
 
-let item: NimbleBaseItem = getContext('document');
-let rules = $derived(item.reactive.system.rules);
+    let item: NimbleBaseItem = getContext("document");
+    let rules = $derived(item.reactive.rules);
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--item">
-    {#each rules as rule (rule.id)}
+    {#each rules as [ruleId, rule] (ruleId)}
         {@const { tooltipInfo, ...ruleData } = rule}
 
         <div class="nimble-code-block nimble-code-block--rule">
             <header class="nimble-section-header">
-                <h4
-                    class="nimble-heading"
-                    data-heading-variant="section"
-                >
-                    {rule.label || "New Rule"} ({ruleTypes[rule.type] ?? rule.type})
+                <h4 class="nimble-heading" data-heading-variant="section">
+                    {rule.label || "New Rule"} ({ruleTypes[rule.type] ??
+                        rule.type})
                 </h4>
 
                 <i
                     class="nimble-rule-help-icon fa-solid fa-circle-question"
-                    data-tooltip={tooltipInfo}
+                    data-tooltip={tooltipInfo()}
                     data-tooltip-direction="UP"
                     data-tooltip-class="nimble-tooltip"
                 >
@@ -45,7 +43,9 @@ let rules = $derived(item.reactive.system.rules);
                     data-button-variant="icon"
                     aria-label="Delete Rule"
                     data-tooltip="Delete Rule"
-                    onclick={() => { item.rules.deleteRule(rule.id) }}
+                    onclick={() => {
+                        item.rules.deleteRule(ruleId);
+                    }}
                 >
                     <i class="fa-solid fa-trash"></i>
                 </button>
@@ -59,7 +59,7 @@ let rules = $derived(item.reactive.system.rules);
                 autocomplete="off"
                 spellcheck={false}
                 wrap="soft"
-                onchange={(event) => updateRule(event, rule.id)}
+                onchange={(event) => updateRule(event, ruleId)}
                 onkeydown={overrideTextAreaBehavior}
             ></textarea>
         </div>
@@ -77,7 +77,8 @@ let rules = $derived(item.reactive.system.rules);
 
     {#each Object.entries(ruleTypes) as [ruleKey, label]}
         <button
-            class="nimble-button" data-button-variant="basic"
+            class="nimble-button"
+            data-button-variant="basic"
             aria-label="Add Rule"
             onclick={() => item.rules.addRule({ type: ruleKey })}
         >
