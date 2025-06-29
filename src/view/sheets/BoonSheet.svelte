@@ -1,47 +1,62 @@
 <script>
-import { setContext } from 'svelte';
-import localize from '../../utils/localize.js';
-import updateDocumentImage from '../handlers/updateDocumentImage.js';
+    import { setContext } from "svelte";
+    import localize from "../../utils/localize.js";
+    import updateDocumentImage from "../handlers/updateDocumentImage.js";
 
-import Editor from './components/Editor.svelte';
-import ItemHeader from './components/ItemHeader.svelte';
-import ItemMacroTab from './pages/ItemMacroTab.svelte';
-import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
-import ItemRulesTab from './pages/ItemRulesTab.svelte';
+    import Editor from "./components/Editor.svelte";
+    import ItemHeader from "./components/ItemHeader.svelte";
+    import ItemMacroTab from "./pages/ItemMacroTab.svelte";
+    import PrimaryNavigation from "../components/PrimaryNavigation.svelte";
+    import ItemRulesTab from "./pages/ItemRulesTab.svelte";
+    import TagGroup from "../components/TagGroup.svelte";
 
-let { item, sheet } = $props();
+    function getBoonTypeOptions() {
+        return Object.entries(boonTypes).map(([key, boonType]) => ({
+            label: boonType,
+            value: key,
+        }));
+    }
 
-const navigation = [
-	{
-		component: descriptionTab,
-		icon: 'fa-solid fa-file-lines',
-		tooltip: 'Description',
-		name: 'description',
-	},
-	{
-		component: configTab,
-		icon: 'fa-solid fa-gears',
-		tooltip: 'Config',
-		name: 'config',
-	},
-	{
-		component: rulesTab,
-		icon: 'fa-solid fa-bolt',
-		tooltip: 'Rules',
-		name: 'rules',
-	},
-	{
-		component: macroTab,
-		icon: 'fa-solid fa-terminal',
-		tooltip: 'Macro',
-		name: 'macro',
-	},
-];
+    function updateBoonType(newSelection) {
+        item.update({
+            "system.boonType": newSelection,
+        });
+    }
 
-let currentTab = $state(navigation[0]);
+    let { item, sheet } = $props();
 
-setContext('document', item);
-setContext('application', sheet);
+    const navigation = [
+        {
+            component: descriptionTab,
+            icon: "fa-solid fa-file-lines",
+            tooltip: "Description",
+            name: "description",
+        },
+        {
+            component: configTab,
+            icon: "fa-solid fa-gears",
+            tooltip: "Config",
+            name: "config",
+        },
+        {
+            component: rulesTab,
+            icon: "fa-solid fa-bolt",
+            tooltip: "Rules",
+            name: "rules",
+        },
+        {
+            component: macroTab,
+            icon: "fa-solid fa-terminal",
+            tooltip: "Macro",
+            name: "macro",
+        },
+    ];
+
+    let currentTab = $state(navigation[0]);
+    const { boonTypes } = CONFIG.NIMBLE;
+
+    setContext("document", item);
+    setContext("application", sheet);
 </script>
 
 {#snippet configTab()}
@@ -59,6 +74,26 @@ setContext('application', sheet);
                 onchange={({ target }) =>
                     item.update({ "system.identifier": target.value })}
             />
+        </div>
+
+        <div>
+            <header class="nimble-section-header">
+                <h3 class="nimble-heading" data-heading-variant="section">
+                    General Configuration
+                </h3>
+            </header>
+
+            <div class="nimble-field nimble-field--column">
+                <span class="nimble-heading" data-heading-variant="field">
+                    Object Type
+                </span>
+
+                <TagGroup
+                    options={getBoonTypeOptions()}
+                    selectedOptions={[item.reactive.system.boonType]}
+                    toggleOption={updateBoonType}
+                />
+            </div>
         </div>
     </section>
 {/snippet}

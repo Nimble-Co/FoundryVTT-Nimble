@@ -63,6 +63,11 @@
       "shield": "Shield",
       "shieldPlural": "Shields"
     },
+    "boonTypes": {
+      "minor": "Minor",
+      "major": "Major",
+      "epic": "Epic"
+    },
     "classes": {
       "berserker": "Berserker",
       "cheat": "Cheat",

@@ -69,6 +69,12 @@ const armorTypesPlural = {
   shield: "NIMBLE.armorTypes.shieldPlural",
 };
 
+const boonTypes = {
+  minor: "NIMBLE.boonTypes.minor",
+  major: "NIMBLE.boonTypes.major",
+  epic: "NIMBLE.boonTypes.epic",
+};
+
 const classBanners = {
   berserker: "systems/nimble/assets/classImages/berserker.webp",
   cheat: "systems/nimble/assets/classImages/cheat.webp",
@@ -429,6 +435,7 @@ const NIMBLE = {
   actorTypeBanners,
   armorTypes,
   armorTypesPlural,
+  boonTypes,
   classBanners,
   classes,
   damageTypes,
