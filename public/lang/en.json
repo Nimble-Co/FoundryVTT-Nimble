@@ -247,12 +247,16 @@
     "objectTypes": {
       "armor": "Armor",
       "shield": "Shield",
-      "weapon": "Weapon"
+      "weapon": "Weapon",
+      "consumable": "Consumable",
+      "misc": "Miscellaneous"
     },
     "objectTypeHeadings": {
       "armor": "Armor",
       "shield": "Shields",
-      "weapon": "Weapons"
+      "weapon": "Weapons",
+      "consumable": "Consumables",
+      "misc": "Miscellaneous"
     },
     "prompts": {
       "changeActorImage": "Change Actor Image",
