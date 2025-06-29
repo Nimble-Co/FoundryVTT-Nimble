@@ -2,7 +2,7 @@
   "id": "nimble",
   "title": "Nimble v2",
   "description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "authors": [
     {
       "name": "Phillip Best",
@@ -46,7 +46,7 @@
   "background": "systems/nimble/assets/banners/manticoreFight.webp",
   "url": "https://github.com/Nimble-Co/FoundryVTT-Nimble",
   "manifest": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/latest/download/system.json",
-  "download": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/download/0.1.1/nimble.zip",
+  "download": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/download/0.1.2/nimble.zip",
   "documentTypes": {
     "ActiveEffect": {
       "condition": {}
