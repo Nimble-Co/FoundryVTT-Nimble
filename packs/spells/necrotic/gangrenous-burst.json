@@ -1,0 +1,90 @@
+{
+	"folder": null,
+	"name": "Gangrenous Burst",
+	"type": "spell",
+	"img": "icons/magic/unholy/strike-beam-blood-large-red-purple.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "Attacked",
+				"quantity": 2,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "MQqUHJbhAIT0dnwT",
+					"type": "savingThrow",
+					"savingThrowType": "strength",
+					"parentContext": null,
+					"parentNode": null,
+					"saveType": "strength",
+					"on": {
+						"failedSave": [
+							{
+								"id": "jzwoyVS12oyagYY5",
+								"type": "damage",
+								"damageType": "necrotic",
+								"formula": "3d20",
+								"parentContext": "failedSave",
+								"parentNode": "MQqUHJbhAIT0dnwT",
+								"ignoreArmor": true
+							}
+						]
+					},
+					"sharedRolls": []
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td><p><strong>2 Actions, AoE</strong></p></td></tr><tr><td><p><strong>Reach:</strong> Up to 8.</p></td></tr><tr><td><p>Other damaged creatures must make a <strong>STR save</strong> or take <strong>3d20</strong> damage (ignoring armor), half on save.</p></td></tr><tr><td><p>The save is rolled with disadvantage while Bloodied.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+10 damage.</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 8
+			},
+			"reach": {
+				"min": 1,
+				"max": 8
+			},
+			"selected": [
+				"reach"
+			]
+		},
+		"school": "necrotic",
+		"tier": 5
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233793718,
+		"modifiedTime": 1751233834013,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "hpE7Leu6VvGHgYW5"
+}

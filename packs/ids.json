@@ -93,6 +93,107 @@
 		"goblin-taskmaster": "VuRJY3Hh576ogOI4"
 	},
 	"spells": {
-		"arc-lightning": "5Vt9jacjQXx14Bhg"
+		"fire": {
+			"dragonform": "Iz0S3otichUrGSfH",
+			"enchant-weapon": "ZPGz8EiVxGobHTA0",
+			"fiery-embrace": "Ue4K4FcSM43UiwvO",
+			"flame-barrier": "QHRQ64MP6g21jB6D",
+			"flame-dart": "VEWU8TrhUO8uzW3g",
+			"hearts-fire": "Do8MHuJawXWuCYtt",
+			"ignite": "FL6JcWWzAjdMchhJ",
+			"living-inferno": "1JKFzgOBWjaF9jKz",
+			"pyroclasm": "merFlbZYKSiTvPUN"
+		},
+		"ice": {
+			"arctic-annihilation": "VLIazApgexmgcL6o",
+			"arctic-blast": "ndZMXifo0h3H4lUU",
+			"cryosleep": "IXTKhehuF0IH2Zr6",
+			"frost-shield": "ISzKsGL3SwlppROJ",
+			"glacier-strike": "uxf7FdBdcfvY4de0",
+			"ice-lance": "JNL3lBasYi7xADaU",
+			"rimeblades": "jtP6RWVS9waevGMX",
+			"shatter": "YgZwzCSYhDlz6KrF",
+			"snowblind": "NtKDIbOngvctYnv6"
+		},
+		"lightning": {
+			"alacrity": "3I0ZyYA1IphjlLOO",
+			"arc-lightning": "pLUyI3NQBJ6FV1mq",
+			"electrickery": "Fg36f576R4CRtxWV",
+			"electrocharge": "MwkUXnY5tySoeSgz",
+			"overload": "WLZxd5rhzyHiOK1L",
+			"ride-the-lightning": "OXPmekuZjcR10E7i",
+			"seething-storm": "96VXY2ogu8nW39GI",
+			"stormlash": "rVbKA6efN5UQx0M6",
+			"zap": "r434oYTu9Y2MoMXg"
+		},
+		"necrotic": {
+			"creeping-death": "8nGPr8wiB4JSFgku",
+			"dread-visage": "mdPEulO0vYNyuGIx",
+			"entice": "tCWjGhhwNsxZ3uct",
+			"gangrenous-burst": "hpE7Leu6VvGHgYW5",
+			"greater-shadow": "Oe41zMBUmMcNGZjE",
+			"shadow-blast": "9TNPdOXlCcGgxw6r",
+			"shadow-trap": "aoCnJhoJji5s5Etf",
+			"summon-shadow": "ho2KADcmQWWTeYR0",
+			"unspeakable-word": "VIyLo7aKq3eK9H0K",
+			"vampiric-greed": "XPu8GnsQLbeEVLqT",
+			"withering-touch": "ntXSUrRq4vttsbYj"
+		},
+		"radiant": {
+			"condemn": "R6wJqcJMCoewJjvj",
+			"heal": "G1vO6HQCJ9wpzKQu",
+			"lifebinding-spirit": "KICmDNpyNoMuZ20E",
+			"rebuke": "ywmGdNVAVyRZEDlq",
+			"redeem": "dHdZrBxIFRFkLvBm",
+			"sacrifice": "eVPQKqknnySsIxtp",
+			"shield-of-justice": "eHlQWinSO4CXyqZ8",
+			"true-strike": "ogD7UlftJVBkzpSn",
+			"vengeance": "C0TMU6el43PzVsp0",
+			"warding-bond": "iL26UVOBVgarmeFH"
+		},
+		"secret": {
+			"cryotomb": "gDg4NlUQHWqbu9tV",
+			"greater-windform": "21OMcsYYwn5C7CLR",
+			"hearth-and-home": "Mkw21dquWBdFBG9Y",
+			"lesser-windform": "eX8CJssX3F2vqFi1",
+			"memory-veil": "PeLuUpKawDLOPHhv",
+			"radiant-bond": "pGCVd6N7Ed0AeEBE",
+			"revive": "iFCKExxkdI48bWxH",
+			"sparkfetch": "GXxJYF05KxMKG4bM",
+			"speak-with-dead": "JQPywIEOHDp0dPYS",
+			"teleport": "np6pQWIzyOomWi7B"
+		},
+		"utility": {
+			"beautify": "Bl4w343YQKXukTyg",
+			"bond-of-peace": "iTCGTLVJpvcqdhl0",
+			"chillcraft": "OlTD2wN7iFmfQBO6",
+			"false-face": "TxNe460JPki8GIrP",
+			"feather-fall": "aPIbkbmWDkJ7FS6S",
+			"fire-step": "qDWGffncCQ2zMMxJ",
+			"firebrand": "9UcVjKvpgCd9cGRS",
+			"gravecraft": "qWi0uWQ0greUm2ti",
+			"helpful-gust": "rwR9CiuaoAHYTZ0F",
+			"ice-disk": "rm6mYiLVcyCOCDU8",
+			"kindle": "EgNOezAX2Rgk37z0",
+			"light": "QrXNbshrTiqWWUE9",
+			"spark-buddy": "AkR9wtNuCC5ZDjTR",
+			"spark-step": "iEMOyGlDIeT62HH0",
+			"tempests-command": "nfGGcIqpeT1GVIw4",
+			"thought-leech": "MbF31rAL95Ms5rg9",
+			"wind-whisper": "BQyelahm9E6P7wEB",
+			"wintry-scrying": "EvjAbsZTHzXcs8tg"
+		},
+		"wind": {
+			"barrier-of-wind": "TFGQ4Ulp8JoT4HpL",
+			"blustery-gale": "WNaMNGjxVJdaArBF",
+			"boisterous-winds": "VUAcS7huPbffPGMk",
+			"breath-of-life": "LZT7jCwyeSBzGyyP",
+			"eye-of-the-storm": "THXoV00xH0Gf4CxG",
+			"fly": "DHEl4NDcNMu2ZAj0",
+			"razor-wind": "N9DAEOBnY6QyW7VM",
+			"thousand-cuts": "UZCSfngNtbXATH3B",
+			"updraft": "rxzdEK621oVYuWQ8",
+			"vicious-mockery": "kTJSEElZSzeOMXBO"
+		}
 	}
 }

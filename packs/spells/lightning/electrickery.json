@@ -1,0 +1,78 @@
+{
+	"name": "Electrickery",
+	"type": "spell",
+	"img": "icons/magic/lightning/bolts-strike-salvo-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "When an ally is attacked.",
+				"quantity": 3,
+				"type": "action",
+				"isReaction": true
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "prv0LubBM4zhJV4X",
+					"type": "savingThrow",
+					"savingThrowType": "strength",
+					"sharedRolls": [],
+					"on": {},
+					"parentContext": null,
+					"parentNode": null,
+					"saveType": "will"
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>3 Actions, 2 Targets</strong></p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Range: 8</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reaction: </strong>When an ally is attacked.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>Choose another creature within Range to swap places with your ally on a failed WIL save (they become the new target). </p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>Costs 1 Action while Charged, ending the condition.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+2 Range.</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 8
+			},
+			"reach": {
+				"min": 1,
+				"max": 2
+			},
+			"selected": [
+				"range"
+			]
+		},
+		"school": "lightning",
+		"tier": 4
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233551956,
+		"modifiedTime": 1751233585748,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "Fg36f576R4CRtxWV"
+}

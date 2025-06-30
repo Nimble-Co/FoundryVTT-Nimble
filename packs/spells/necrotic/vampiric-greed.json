@@ -1,0 +1,97 @@
+{
+	"folder": null,
+	"name": "Vampiric Greed",
+	"type": "spell",
+	"img": "icons/magic/perception/eye-winged-pink.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "Attacked",
+				"quantity": 2,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "7wgbaCLGRVQDTEpy",
+					"type": "damage",
+					"damageType": "necrotic",
+					"formula": "4d12",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": false,
+					"on": {
+						"hit": [
+							{
+								"id": "JeRAFUXZteYotazu",
+								"type": "savingThrow",
+								"savingThrowType": "strength",
+								"parentContext": "hit",
+								"parentNode": "7wgbaCLGRVQDTEpy",
+								"saveType": "strength",
+								"on": {},
+								"sharedRolls": []
+							},
+							{
+								"id": "neke5oDTT2ggFGZg",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "7wgbaCLGRVQDTEpy"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td><p><strong>2 Actions, AoE</strong></p></td></tr><tr><td><p>Gain 1 Wound. 4d12 to all adjacent creatures, and heal HP equal to the damage done.</p></td></tr><tr><td><p>Any surviving creatures make a STR save. Gain 1 additional Wound for each creature that saves.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p>+1 DC.</p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 8
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": []
+		},
+		"school": "necrotic",
+		"tier": 3
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233793718,
+		"modifiedTime": 1751233828166,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "XPu8GnsQLbeEVLqT"
+}

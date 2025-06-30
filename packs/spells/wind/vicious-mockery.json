@@ -1,0 +1,116 @@
+{
+	"name": "Vicious Mockery",
+	"type": "spell",
+	"img": "icons/magic/control/mouth-smile-deception-purple.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "6pEXpZ8znbQP6LiP",
+					"type": "damage",
+					"damageType": "psychic",
+					"formula": "1d4 +@intelligence",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"hit": [
+							{
+								"id": "IU4d6Xdpr2nATt3g",
+								"type": "condition",
+								"condition": "taunted",
+								"parentContext": "hit",
+								"parentNode": "6pEXpZ8znbQP6LiP"
+							},
+							{
+								"id": "ODalIwchGK1gVvib",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "6pEXpZ8znbQP6LiP"
+							}
+						],
+						"criticalHit": [
+							{
+								"id": "enoNfbb3InpTsMUg",
+								"type": "note",
+								"noteType": "warning",
+								"text": "CRIT",
+								"parentContext": "criticalHit",
+								"parentNode": "6pEXpZ8znbQP6LiP"
+							}
+						],
+						"miss": [
+							{
+								"id": "Ez4BB3Ntj11plTuN",
+								"type": "note",
+								"noteType": "warning",
+								"text": "MISS",
+								"parentContext": "miss",
+								"parentNode": "6pEXpZ8znbQP6LiP"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action, Single Target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Range: </strong>12</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage: </strong>1d4+INT psychic (ignoring armor).</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>On hit:</strong> the target is Taunted during their next turn.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+2 damage every 5 levels.</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 12
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"range"
+			]
+		},
+		"school": "wind",
+		"tier": 0
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233627716,
+		"modifiedTime": 1751233675883,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "kTJSEElZSzeOMXBO"
+}

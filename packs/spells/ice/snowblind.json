@@ -1,0 +1,116 @@
+{
+	"name": "Snowblind",
+	"type": "spell",
+	"img": "icons/magic/water/ice-snowman.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "6pEXpZ8znbQP6LiP",
+					"type": "damage",
+					"damageType": "cold",
+					"formula": "1d6",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"hit": [
+							{
+								"id": "H8EN9zVubJKOLvHA",
+								"type": "condition",
+								"condition": "blinded",
+								"parentContext": "hit",
+								"parentNode": "6pEXpZ8znbQP6LiP"
+							},
+							{
+								"id": "ODalIwchGK1gVvib",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "6pEXpZ8znbQP6LiP"
+							}
+						],
+						"criticalHit": [
+							{
+								"id": "enoNfbb3InpTsMUg",
+								"type": "note",
+								"noteType": "warning",
+								"text": "CRIT",
+								"parentContext": "criticalHit",
+								"parentNode": "6pEXpZ8znbQP6LiP"
+							}
+						],
+						"miss": [
+							{
+								"id": "Ez4BB3Ntj11plTuN",
+								"type": "note",
+								"noteType": "warning",
+								"text": "MISS",
+								"parentContext": "miss",
+								"parentNode": "6pEXpZ8znbQP6LiP"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action, Single Target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach: </strong>1</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage: </strong>1d6.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>On hit: </strong>Blinded until the end of their next turn.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<p></p><table><tbody><tr><td><p><strong>+3 damage every 5 levels.</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 12
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"reach"
+			]
+		},
+		"school": "ice",
+		"tier": 0
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233460588,
+		"modifiedTime": 1751233482596,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "NtKDIbOngvctYnv6"
+}

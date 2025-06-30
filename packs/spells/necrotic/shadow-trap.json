@@ -1,0 +1,75 @@
+{
+	"folder": null,
+	"name": "Shadow Trap",
+	"type": "spell",
+	"img": "icons/magic/unholy/barrier-fire-pink.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 2,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "minute"
+			},
+			"effects": [
+				{
+					"id": "egIi60fgbgO5hvFH",
+					"type": "condition",
+					"condition": "concentration",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td><p><strong>2 Actions, Single Target</strong></p></td></tr><tr><td><p><strong>Concentration:</strong> Up to 1 minute.</p></td></tr><tr><td><p>The next creature to move adjacent to you suffers <strong>3d12</strong> damage; if Small or Tiny, it is also <strong>Restrained</strong> by shadowy tendrils for as long as you maintain concentration or until they escape.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p>+1 size category, +1d12 damage when they escape.</p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 8
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"concentration"
+			]
+		},
+		"school": "necrotic",
+		"tier": 1
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233793718,
+		"modifiedTime": 1751233815047,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "aoCnJhoJji5s5Etf"
+}

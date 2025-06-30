@@ -1,0 +1,74 @@
+{
+	"name": "Frost Shield",
+	"type": "spell",
+	"img": "icons/magic/water/barrier-ice-shield.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "When attacked",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": true
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "jp65MQRRustJoDbN",
+					"type": "healing",
+					"healingType": "tempHealing",
+					"formula": "2*@intelligence",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action, Self</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reaction: </strong>When attacked, Gain 2×KEY temp HP and Defend for free. The ice melts and these temp HP are lost at the start of your next turn.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Upcast: </strong>+2×KEY temp HP.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p>+2×KEY temp HP.</p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 12
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": []
+		},
+		"school": "ice",
+		"tier": 1
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233460588,
+		"modifiedTime": 1751233485748,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "ISzKsGL3SwlppROJ"
+}

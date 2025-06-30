@@ -1,0 +1,67 @@
+{
+	"folder": null,
+	"name": "Chillcraft",
+	"type": "spell",
+	"img": "icons/magic/water/barrier-ice-water-cube.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td><p><strong>1 Action</strong></p></td></tr><tr><td><p><strong>Chill.</strong> Harmlessly freeze, thaw, or move a bath-sized amount of water near you. OR:</p></td></tr><tr><td><p><strong>Craft.</strong> Conjure a sheet of opaque, mirror-like, or transparent ice the size of a window or small door.</p></td></tr></tbody></table>",
+			"higherLevelEffect": ""
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"utilitySpell"
+			]
+		},
+		"school": "ice",
+		"tier": 0
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233983792,
+		"modifiedTime": 1751234009681,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "OlTD2wN7iFmfQBO6"
+}

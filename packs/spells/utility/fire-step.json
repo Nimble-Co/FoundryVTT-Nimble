@@ -1,0 +1,67 @@
+{
+	"folder": null,
+	"name": "Fire Step",
+	"type": "spell",
+	"img": "icons/magic/fire/explosion-flame-lightning-strike.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "minute",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td><p><strong>Self, Casting Time: 1 min.</strong></p></td></tr><tr><td><p>Teleport to a fire source you can see.</p></td></tr></tbody></table>",
+			"higherLevelEffect": ""
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"utilitySpell"
+			]
+		},
+		"school": "fire",
+		"tier": 0
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233983792,
+		"modifiedTime": 1751233997606,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "qDWGffncCQ2zMMxJ"
+}

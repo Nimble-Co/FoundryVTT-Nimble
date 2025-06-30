@@ -1,0 +1,110 @@
+{
+	"folder": null,
+	"name": "Entice",
+	"type": "spell",
+	"img": "icons/magic/unholy/hand-light-pink.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "pJVehDWw1M3Synrn",
+					"type": "damage",
+					"damageType": "necrotic",
+					"formula": "1d4",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"ignoreArmor": true,
+					"on": {
+						"miss": [
+							{
+								"id": "E7yispzLzN1URgkq",
+								"type": "note",
+								"noteType": "warning",
+								"text": "MISS",
+								"parentContext": "miss",
+								"parentNode": "pJVehDWw1M3Synrn"
+							}
+						],
+						"criticalHit": [
+							{
+								"id": "vB3XYSWn5AbwIPfj",
+								"type": "note",
+								"noteType": "warning",
+								"text": "CRIT",
+								"parentContext": "criticalHit",
+								"parentNode": "pJVehDWw1M3Synrn"
+							}
+						],
+						"hit": [
+							{
+								"id": "JblzdTySMXn5cVZP",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "pJVehDWw1M3Synrn"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td><p><strong>1 Action, Single Target</strong></p></td></tr><tr><td><p><strong>Range: 8.</strong></p></td></tr><tr><td><p><strong>Damage:</strong> 1d4 (ignoring armor).</p></td></tr><tr><td><p><strong>On hit:</strong> target moves 2 spaces closer to you.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p><strong>Increment the die size 1 step every 5 levels (d6 » d8 » d10 » d12).</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 8
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"range"
+			]
+		},
+		"school": "necrotic",
+		"tier": 0
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233793718,
+		"modifiedTime": 1751233806104,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "tCWjGhhwNsxZ3uct"
+}

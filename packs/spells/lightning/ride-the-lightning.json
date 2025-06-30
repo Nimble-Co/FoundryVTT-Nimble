@@ -1,0 +1,107 @@
+{
+	"name": "Ride the Lightning",
+	"type": "spell",
+	"img": "icons/magic/lightning/bolt-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "When an ally is attacked.",
+				"quantity": 3,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "Z0pDW8XaeZPeKJyR",
+					"type": "damage",
+					"damageType": "lightning",
+					"formula": "(1d8*10)+1d8",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": false,
+					"on": {
+						"hit": [
+							{
+								"id": "sklq8bAt2H8fc8lm",
+								"type": "savingThrow",
+								"savingThrowType": "strength",
+								"parentContext": "hit",
+								"parentNode": "Z0pDW8XaeZPeKJyR",
+								"saveType": "strength",
+								"on": {
+									"failedSave": [
+										{
+											"id": "RPmekslPbF0Hwizv",
+											"type": "condition",
+											"condition": "prone",
+											"parentContext": "failedSave",
+											"parentNode": "sklq8bAt2H8fc8lm"
+										}
+									]
+								},
+								"sharedRolls": []
+							},
+							{
+								"id": "LDFDknoBkLBNhPnk",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "Z0pDW8XaeZPeKJyR"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>3 Actions, AoE</strong></p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>Teleport up to 12 spaces away to a spot you can see (if a willing creature is there, swap places with them).</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>Adjacent creatures take d88 damage. Surviving creatures must make a STR save or be hurled back 3 spaces, knocked Prone, and deafened for 1 day.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>D88.</strong> Roll 2d8. The leftmost die is the tens place, and the second is the ones (e.g., 4 and 5 deal 45 damage).</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+1 DC.</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 8
+			},
+			"reach": {
+				"min": 1,
+				"max": 2
+			},
+			"selected": []
+		},
+		"school": "lightning",
+		"tier": 6
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233551956,
+		"modifiedTime": 1751233589450,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "OXPmekuZjcR10E7i"
+}

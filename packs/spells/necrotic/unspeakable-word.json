@@ -1,0 +1,90 @@
+{
+	"folder": null,
+	"name": "Unspeakable Word",
+	"type": "spell",
+	"img": "icons/magic/symbols/rune-sigil-black-pink.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "Attacked",
+				"quantity": 2,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "xFH2PgXT97EPr8jr",
+					"type": "savingThrow",
+					"savingThrowType": "strength",
+					"parentContext": null,
+					"parentNode": null,
+					"saveType": "intelligence",
+					"on": {
+						"failedSave": [
+							{
+								"id": "UYavQJvOx4gcSfbg",
+								"type": "damage",
+								"damageType": "necrotic",
+								"formula": "max((1d6*10),(1d6*10))+1d6",
+								"parentContext": "failedSave",
+								"parentNode": "xFH2PgXT97EPr8jr",
+								"ignoreArmor": true
+							}
+						]
+					},
+					"sharedRolls": []
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td><p><strong>2 Actions, Special</strong></p></td></tr><tr><td><p><strong>Reach:</strong> 8.</p></td></tr><tr><td><p><strong>Damage:</strong> d66 (with advantage, ignoring armor, does not miss or crit) on a failed INT save.</p></td></tr><tr><td><p>Target rolls with disadvantage if Bloodied or Frightened. On a success, you both take half of this damage instead.</p></td></tr><tr><td><p><strong>D66 with advantage.</strong> Roll 3d6 and drop the lowest die. The leftmost die is the tens place, and the second is the ones (e.g., 2, 3, and 4 deals 34 damage).</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p>+1 DC, +10 damage.</p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 8
+			},
+			"reach": {
+				"min": 1,
+				"max": 8
+			},
+			"selected": [
+				"reach"
+			]
+		},
+		"school": "necrotic",
+		"tier": 6
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233793718,
+		"modifiedTime": 1751233837551,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "VIyLo7aKq3eK9H0K"
+}

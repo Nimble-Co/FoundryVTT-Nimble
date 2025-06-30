@@ -1,0 +1,101 @@
+{
+	"name": "Pyroclasm",
+	"type": "spell",
+	"img": "icons/magic/fire/barrier-wall-explosion-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "Attacked",
+				"quantity": 2,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "oxqXAFiQHWjMWDWg",
+					"type": "savingThrow",
+					"savingThrowType": "strength",
+					"parentContext": null,
+					"parentNode": null,
+					"saveType": "dexterity",
+					"on": {
+						"passedSave": [
+							{
+								"id": "3E4OHFWXMprTJpgE",
+								"type": "note",
+								"noteType": "flavor",
+								"text": "Half damage on save. ",
+								"parentContext": "passedSave",
+								"parentNode": "oxqXAFiQHWjMWDWg"
+							}
+						],
+						"failedSave": [
+							{
+								"id": "Hu4R2ygwKhl9UR0E",
+								"type": "damage",
+								"damageType": "fire",
+								"formula": "2d20+10",
+								"parentContext": "failedSave",
+								"parentNode": "oxqXAFiQHWjMWDWg",
+								"ignoreArmor": true,
+								"on": {}
+							}
+						]
+					},
+					"sharedRolls": []
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"103,0\"><p><strong>Tier 4, 2 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"103,0\" colspan=\"2\"><p><strong>Reach: </strong>3.</p></td></tr><tr><td data-colwidth=\"103,0\" colspan=\"2\"><p><strong>Damage: </strong>Others within Reach take <strong>2d20+10 damage</strong> (ignoring armor) on a failed DEX save. Half damage on save. Smoldering creatures fail.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<p></p><table><tbody><tr><td><p><strong>+1 Reach, +2 damage.</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 1,
+				"max": 1
+			},
+			"reach": {
+				"min": 1,
+				"max": 3
+			},
+			"selected": [
+				"reach"
+			]
+		},
+		"school": "fire",
+		"tier": 4
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233382414,
+		"modifiedTime": 1751233416453,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "merFlbZYKSiTvPUN"
+}

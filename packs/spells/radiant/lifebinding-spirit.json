@@ -1,0 +1,65 @@
+{
+	"name": "Lifebinding Spirit",
+	"type": "spell",
+	"img": "icons/creatures/mammals/rabbit-movement-glowing-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "A diamond  worth at least 10,000 gp",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>Summon a spirit companion that follows you and is immune to harm. It lasts until you cast this spell again, take a Safe Rest, or it heals a number of times equal to the mana spent summoning it.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Action:</strong> It attacks or heals a creature within Reach 4. It attacks for 1d6+WIL radiant damage (ignoring armor), or heals for the same amount.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p><strong>Increment its die size by 1 (max d12), +1 healing use.</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 12
+			},
+			"reach": {
+				"min": 1,
+				"max": 4
+			},
+			"selected": []
+		},
+		"school": "radiant",
+		"tier": 1
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233710382,
+		"modifiedTime": 1751233757065,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "KICmDNpyNoMuZ20E"
+}

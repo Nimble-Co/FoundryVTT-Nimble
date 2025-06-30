@@ -1,0 +1,67 @@
+{
+	"folder": null,
+	"name": "Ice Disk",
+	"type": "spell",
+	"img": "icons/magic/water/snowflake-ice-snow-white.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "minute",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td><p><strong>Casting Time: 1 min</strong></p></td></tr><tr><td><p>Conjure a disk of ice that floats just above the ground and follows you. It can carry up to 250 lbs./115 kg of weight for 1 hour or until you cast this spell again.</p></td></tr></tbody></table>",
+			"higherLevelEffect": ""
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"utilitySpell"
+			]
+		},
+		"school": "ice",
+		"tier": 0
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233983792,
+		"modifiedTime": 1751234006617,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "rm6mYiLVcyCOCDU8"
+}

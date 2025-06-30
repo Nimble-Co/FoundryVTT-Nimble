@@ -1,0 +1,65 @@
+{
+	"name": "Redeem",
+	"type": "spell",
+	"img": "icons/magic/holy/chalice-glowing-gold.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "A diamond  worth at least 10,000 gp",
+				"quantity": 1,
+				"type": "special",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Casting Time:</strong> 24 hours.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Requires:</strong> A diamond worth at least 10,000 gp, which this spell consumes.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>Revive any number of deceased creatures you choose—within 1 mile—that have died in the past year, provided they have not died of old age or been revived with this spell before.</p></td></tr></tbody></table>",
+			"higherLevelEffect": ""
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 12
+			},
+			"reach": {
+				"min": 1,
+				"max": 4
+			},
+			"selected": []
+		},
+		"school": "radiant",
+		"tier": 9
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233710382,
+		"modifiedTime": 1751233753462,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "dHdZrBxIFRFkLvBm"
+}

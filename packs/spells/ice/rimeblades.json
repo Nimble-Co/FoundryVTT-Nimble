@@ -1,0 +1,90 @@
+{
+	"name": "Rimeblades",
+	"type": "spell",
+	"img": "icons/magic/water/projectile-needles-salvo-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": true,
+			"cost": {
+				"details": "",
+				"quantity": 3,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "minute"
+			},
+			"effects": [
+				{
+					"id": "6pEXpZ8znbQP6LiP",
+					"type": "damage",
+					"damageType": "cold",
+					"formula": "2d6",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": false,
+					"on": {
+						"hit": [
+							{
+								"id": "ODalIwchGK1gVvib",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "6pEXpZ8znbQP6LiP"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>3 Actions, AoE</strong></p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Concentration:</strong> Up to 1 minute.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach:</strong> 12.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>Conjure razor-sharp icy spikes in 5 contiguous spaces within Reach; this area is difficult terrain. Creatures that enter these spaces (or who are in the area when you conjure them) suffer 2d6 damage for each space they touch</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p>+1 space, +1 damage.</p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 12
+			},
+			"reach": {
+				"min": 1,
+				"max": 12
+			},
+			"selected": [
+				"concentration",
+				"reach"
+			]
+		},
+		"school": "ice",
+		"tier": 4
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233460588,
+		"modifiedTime": 1751233497273,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "jtP6RWVS9waevGMX"
+}

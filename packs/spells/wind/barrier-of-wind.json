@@ -1,0 +1,65 @@
+{
+	"name": "Barrier of Wind",
+	"type": "spell",
+	"img": "icons/magic/air/wind-swirl-gray-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "When attacked at Range.",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": true
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "round"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action, Self</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reaction: </strong>When attacked at Range. Defend for free. Ranged attacks have disadvantage against you this round (including the triggering attack).</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+3 Armor.</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 6
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": []
+		},
+		"school": "wind",
+		"tier": 2
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233627716,
+		"modifiedTime": 1751233652411,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "TFGQ4Ulp8JoT4HpL"
+}

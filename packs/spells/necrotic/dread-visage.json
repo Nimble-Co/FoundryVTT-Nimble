@@ -1,0 +1,114 @@
+{
+	"folder": null,
+	"name": "Dread Visage",
+	"type": "spell",
+	"img": "icons/magic/unholy/hands-circle-light-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "Attacked",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": true
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "minute"
+			},
+			"effects": [
+				{
+					"id": "OafObDpPG61HaLlo",
+					"type": "condition",
+					"condition": "frightened",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "6QvkMIw5PbhBn0pO",
+					"type": "damage",
+					"damageType": "necrotic",
+					"formula": "1d12",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"miss": [
+							{
+								"id": "KHwFZkHjkDV1JWUL",
+								"type": "note",
+								"noteType": "warning",
+								"text": "MISS",
+								"parentContext": "miss",
+								"parentNode": "6QvkMIw5PbhBn0pO"
+							}
+						],
+						"criticalHit": [
+							{
+								"id": "Ub1liA2sh7t8CFZu",
+								"type": "note",
+								"noteType": "warning",
+								"text": "CRIT",
+								"parentContext": "criticalHit",
+								"parentNode": "6QvkMIw5PbhBn0pO"
+							}
+						],
+						"hit": [
+							{
+								"id": "FA8JXTxV92LO7v9m",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "6QvkMIw5PbhBn0pO"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td><p><strong>1 Action, Self</strong></p></td></tr><tr><td><p><strong>Reaction:</strong> When attacked, Defend for free. Melee attackers are Frightened of you and suffer 1d12 damage if they attack you this round.</p></td></tr><tr><td><p>Costs 2 mana less while dying.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+2 damage, +2 armor.</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 8
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": []
+		},
+		"school": "necrotic",
+		"tier": 2
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233793718,
+		"modifiedTime": 1751233823070,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "mdPEulO0vYNyuGIx"
+}

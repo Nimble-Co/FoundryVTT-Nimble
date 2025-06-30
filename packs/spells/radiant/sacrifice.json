@@ -1,0 +1,76 @@
+{
+	"name": "Sacrifice",
+	"type": "spell",
+	"img": "icons/magic/holy/yin-yang-balance-symbol.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "Attacked",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "VEUyfeQ31UYnYvw4",
+					"type": "healing",
+					"healingType": "healing",
+					"formula": "@attributes.hp.max",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action, Special</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach:</strong> 4.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>Reduce yourself to 0 HP. You cannot have more than 0 HP until you Safe Rest. Heal a number of HP equal to your maximum HP, divided as you choose to any other creatures within Reach.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>You may revive a creature that has died in the past minute if you give them at least 20 HP (also healing 2 Wounds from them), provided they have not been revived with this spell before.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p>+4 Reach.</p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 12
+			},
+			"reach": {
+				"min": 1,
+				"max": 4
+			},
+			"selected": [
+				"reach"
+			]
+		},
+		"school": "radiant",
+		"tier": 6
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233710382,
+		"modifiedTime": 1751233751159,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "eVPQKqknnySsIxtp"
+}
