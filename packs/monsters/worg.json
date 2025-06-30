@@ -1,6 +1,6 @@
 {
-	"name": "Goblin Minion",
-	"type": "minion",
+	"name": "Worg",
+	"type": "npc",
 	"folder": null,
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
@@ -9,12 +9,18 @@
 			"damageResistances": [],
 			"damageVulnerabilities": [],
 			"damageImmunities": [],
-			"sizeCategory": "small"
+			"hp": {
+				"max": 28,
+				"temp": 0,
+				"value": 28
+			},
+			"sizeCategory": "large"
 		},
 		"description": "",
 		"details": {
 			"creatureType": "",
-			"level": "1/4"
+			"isFlunky": false,
+			"level": "1"
 		},
 		"attackSequence": "",
 		"savingThrows": {
@@ -37,11 +43,11 @@
 		}
 	},
 	"prototypeToken": {
-		"name": "Goblin Minion",
+		"name": "Worg",
 		"displayName": 50,
 		"actorLink": false,
-		"width": 0.5,
-		"height": 0.5,
+		"width": 2,
+		"height": 2,
 		"texture": {
 			"src": "icons/svg/mystery-man.svg",
 			"anchorX": 0.5,
@@ -59,7 +65,7 @@
 		"rotation": 0,
 		"alpha": 1,
 		"disposition": -1,
-		"displayBars": 0,
+		"displayBars": 40,
 		"bar1": {
 			"attribute": "attributes.hp"
 		},
@@ -132,9 +138,9 @@
 	},
 	"items": [
 		{
-			"name": "Haha, Missed Me!",
+			"name": "Savage.",
 			"type": "monsterFeature",
-			"_id": "cOFgqzqJUvJXfoWk",
+			"_id": "GZDj8Md6Qk0EnkSo",
 			"img": "icons/svg/item-bag.svg",
 			"system": {
 				"macro": "",
@@ -166,7 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
+				"description": "<p>Always crits when attacking a Grappled creature.</p>",
 				"isAction": false,
 				"isAttack": false
 			},
@@ -178,13 +184,13 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750887484827,
-				"modifiedTime": 1750887495156,
+				"createdTime": 1751092616274,
+				"modifiedTime": 1751092624346,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
-			"name": "Stab.",
+			"name": "Rip Apart (2×).",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -206,25 +212,32 @@
 					},
 					"effects": [
 						{
-							"id": "CJDFJ2ogQxqEkNau",
+							"id": "WIitUxydTMHoKk4X",
 							"type": "damage",
 							"damageType": "piercing",
-							"formula": "1d6",
+							"formula": "1d6+2",
 							"parentContext": null,
 							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
 							"on": {
 								"hit": [
 									{
-										"id": "wr2BQarhUS56eBkg",
+										"id": "mTkP3zNn54FYCjGS",
+										"type": "condition",
+										"condition": "grappled",
+										"parentContext": "hit",
+										"parentNode": "WIitUxydTMHoKk4X"
+									},
+									{
+										"id": "FzyPPwv4oxdGmm1T",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "CJDFJ2ogQxqEkNau"
+										"parentNode": "WIitUxydTMHoKk4X"
 									}
 								]
-							},
-							"canCrit": false,
-							"canMiss": true
+							}
 						}
 					],
 					"showDescription": true,
@@ -239,11 +252,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6 (follows minion rules).</p>",
+				"description": "<p>1d6+2. On hit: Grappled (escape DC 10).</p>",
 				"isAttack": true
 			},
-			"_id": "8Zvy33f0c5AquKMu",
-			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
+			"_id": "JcCc6HxV4C4k5jR5",
+			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
@@ -252,8 +265,8 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750887504053,
-				"modifiedTime": 1750887548837,
+				"createdTime": 1751092633078,
+				"modifiedTime": 1751092693208,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		}
@@ -264,9 +277,9 @@
 		"coreVersion": "13.345",
 		"systemId": "nimble",
 		"systemVersion": "0.1.1",
-		"createdTime": 1750887443427,
-		"modifiedTime": 1750888573101,
+		"createdTime": 1751092534190,
+		"modifiedTime": 1751092755303,
 		"lastModifiedBy": "s1s8bTinDwlgd282"
 	},
-	"_id": "KCZqQUfTuczLNEA3"
+	"_id": "CnjRxzi5UaRzrObt"
 }

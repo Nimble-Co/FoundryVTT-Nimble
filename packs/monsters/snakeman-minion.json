@@ -1,5 +1,5 @@
 {
-	"name": "Goblin Minion",
+	"name": "Snakeman Minion",
 	"type": "minion",
 	"folder": null,
 	"img": "icons/svg/mystery-man.svg",
@@ -9,7 +9,7 @@
 			"damageResistances": [],
 			"damageVulnerabilities": [],
 			"damageImmunities": [],
-			"sizeCategory": "small"
+			"sizeCategory": "medium"
 		},
 		"description": "",
 		"details": {
@@ -37,11 +37,11 @@
 		}
 	},
 	"prototypeToken": {
-		"name": "Goblin Minion",
+		"name": "Snakeman Minion",
 		"displayName": 50,
 		"actorLink": false,
-		"width": 0.5,
-		"height": 0.5,
+		"width": 1,
+		"height": 1,
 		"texture": {
 			"src": "icons/svg/mystery-man.svg",
 			"anchorX": 0.5,
@@ -132,59 +132,7 @@
 	},
 	"items": [
 		{
-			"name": "Haha, Missed Me!",
-			"type": "monsterFeature",
-			"_id": "cOFgqzqJUvJXfoWk",
-			"img": "icons/svg/item-bag.svg",
-			"system": {
-				"macro": "",
-				"identifier": "",
-				"rules": [],
-				"activation": {
-					"acquireTargetsFromTemplate": false,
-					"cost": {
-						"details": "",
-						"quantity": 1,
-						"type": "none",
-						"isReaction": false
-					},
-					"duration": {
-						"details": "",
-						"quantity": 1,
-						"type": "none"
-					},
-					"effects": [],
-					"showDescription": true,
-					"targets": {
-						"count": 1,
-						"restrictions": ""
-					},
-					"template": {
-						"length": 1,
-						"radius": 1,
-						"shape": "",
-						"width": 1
-					}
-				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
-				"isAction": false,
-				"isAttack": false
-			},
-			"effects": [],
-			"folder": null,
-			"sort": 0,
-			"flags": {},
-			"_stats": {
-				"coreVersion": "13.345",
-				"systemId": "nimble",
-				"systemVersion": "0.1.1",
-				"createdTime": 1750887484827,
-				"modifiedTime": 1750887495156,
-				"lastModifiedBy": "s1s8bTinDwlgd282"
-			}
-		},
-		{
-			"name": "Stab.",
+			"name": "Strike.",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -206,25 +154,34 @@
 					},
 					"effects": [
 						{
-							"id": "CJDFJ2ogQxqEkNau",
+							"id": "Cih6Cm8XoauLM2HA",
 							"type": "damage",
 							"damageType": "piercing",
 							"formula": "1d6",
 							"parentContext": null,
 							"parentNode": null,
+							"canCrit": false,
+							"canMiss": true,
 							"on": {
+								"criticalHit": [
+									{
+										"id": "IUSZgqqnVD7ev728",
+										"type": "condition",
+										"condition": "grappled",
+										"parentContext": "criticalHit",
+										"parentNode": "Cih6Cm8XoauLM2HA"
+									}
+								],
 								"hit": [
 									{
-										"id": "wr2BQarhUS56eBkg",
+										"id": "NQJu3sG6VuD9u9Tw",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "CJDFJ2ogQxqEkNau"
+										"parentNode": "Cih6Cm8XoauLM2HA"
 									}
 								]
-							},
-							"canCrit": false,
-							"canMiss": true
+							}
 						}
 					],
 					"showDescription": true,
@@ -239,11 +196,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6 (follows minion rules).</p>",
+				"description": "<p>1d6 melee/ranged (follows minion rules).</p><p></p>",
 				"isAttack": true
 			},
-			"_id": "8Zvy33f0c5AquKMu",
-			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
+			"_id": "hUxZRnXtiZ5dHmnE",
+			"img": "icons/skills/melee/hand-grip-sword-orange.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
@@ -252,8 +209,8 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750887504053,
-				"modifiedTime": 1750887548837,
+				"createdTime": 1750891124337,
+				"modifiedTime": 1750891323339,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		}
@@ -264,9 +221,9 @@
 		"coreVersion": "13.345",
 		"systemId": "nimble",
 		"systemVersion": "0.1.1",
-		"createdTime": 1750887443427,
-		"modifiedTime": 1750888573101,
+		"createdTime": 1750891011622,
+		"modifiedTime": 1750891046906,
 		"lastModifiedBy": "s1s8bTinDwlgd282"
 	},
-	"_id": "KCZqQUfTuczLNEA3"
+	"_id": "vSrolkz0JjAqA1fw"
 }

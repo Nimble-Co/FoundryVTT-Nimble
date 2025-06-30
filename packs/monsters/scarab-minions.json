@@ -1,5 +1,5 @@
 {
-	"name": "Goblin Minion",
+	"name": "Scarab Minions",
 	"type": "minion",
 	"folder": null,
 	"img": "icons/svg/mystery-man.svg",
@@ -9,12 +9,12 @@
 			"damageResistances": [],
 			"damageVulnerabilities": [],
 			"damageImmunities": [],
-			"sizeCategory": "small"
+			"sizeCategory": "medium"
 		},
 		"description": "",
 		"details": {
 			"creatureType": "",
-			"level": "1/4"
+			"level": "1/3"
 		},
 		"attackSequence": "",
 		"savingThrows": {
@@ -37,11 +37,11 @@
 		}
 	},
 	"prototypeToken": {
-		"name": "Goblin Minion",
+		"name": "Scarab Minions",
 		"displayName": 50,
 		"actorLink": false,
-		"width": 0.5,
-		"height": 0.5,
+		"width": 1,
+		"height": 1,
 		"texture": {
 			"src": "icons/svg/mystery-man.svg",
 			"anchorX": 0.5,
@@ -59,7 +59,7 @@
 		"rotation": 0,
 		"alpha": 1,
 		"disposition": -1,
-		"displayBars": 0,
+		"displayBars": 40,
 		"bar1": {
 			"attribute": "attributes.hp"
 		},
@@ -132,59 +132,7 @@
 	},
 	"items": [
 		{
-			"name": "Haha, Missed Me!",
-			"type": "monsterFeature",
-			"_id": "cOFgqzqJUvJXfoWk",
-			"img": "icons/svg/item-bag.svg",
-			"system": {
-				"macro": "",
-				"identifier": "",
-				"rules": [],
-				"activation": {
-					"acquireTargetsFromTemplate": false,
-					"cost": {
-						"details": "",
-						"quantity": 1,
-						"type": "none",
-						"isReaction": false
-					},
-					"duration": {
-						"details": "",
-						"quantity": 1,
-						"type": "none"
-					},
-					"effects": [],
-					"showDescription": true,
-					"targets": {
-						"count": 1,
-						"restrictions": ""
-					},
-					"template": {
-						"length": 1,
-						"radius": 1,
-						"shape": "",
-						"width": 1
-					}
-				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
-				"isAction": false,
-				"isAttack": false
-			},
-			"effects": [],
-			"folder": null,
-			"sort": 0,
-			"flags": {},
-			"_stats": {
-				"coreVersion": "13.345",
-				"systemId": "nimble",
-				"systemVersion": "0.1.1",
-				"createdTime": 1750887484827,
-				"modifiedTime": 1750887495156,
-				"lastModifiedBy": "s1s8bTinDwlgd282"
-			}
-		},
-		{
-			"name": "Stab.",
+			"name": "Bite.",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -206,7 +154,7 @@
 					},
 					"effects": [
 						{
-							"id": "CJDFJ2ogQxqEkNau",
+							"id": "9iHAWK4dJt8G31Mg",
 							"type": "damage",
 							"damageType": "piercing",
 							"formula": "1d6",
@@ -215,15 +163,15 @@
 							"on": {
 								"hit": [
 									{
-										"id": "wr2BQarhUS56eBkg",
+										"id": "x6XyDGcdgBB22Mtn",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "CJDFJ2ogQxqEkNau"
+										"parentNode": "9iHAWK4dJt8G31Mg"
 									}
 								]
 							},
-							"canCrit": false,
+							"canCrit": true,
 							"canMiss": true
 						}
 					],
@@ -239,11 +187,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6 (follows minion rules).</p>",
+				"description": "<p>1d6 (Follows Minion Rules)</p>",
 				"isAttack": true
 			},
-			"_id": "8Zvy33f0c5AquKMu",
-			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
+			"_id": "YSVWtxhFLeDr3zqY",
+			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
@@ -251,9 +199,9 @@
 			"_stats": {
 				"coreVersion": "13.345",
 				"systemId": "nimble",
-				"systemVersion": "0.1.1",
-				"createdTime": 1750887504053,
-				"modifiedTime": 1750887548837,
+				"systemVersion": "0.1.2",
+				"createdTime": 1751202506407,
+				"modifiedTime": 1751202561973,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		}
@@ -263,10 +211,10 @@
 	"_stats": {
 		"coreVersion": "13.345",
 		"systemId": "nimble",
-		"systemVersion": "0.1.1",
-		"createdTime": 1750887443427,
-		"modifiedTime": 1750888573101,
+		"systemVersion": "0.1.2",
+		"createdTime": 1751202389959,
+		"modifiedTime": 1751202604412,
 		"lastModifiedBy": "s1s8bTinDwlgd282"
 	},
-	"_id": "KCZqQUfTuczLNEA3"
+	"_id": "34sqnNwhGhVQvZPD"
 }

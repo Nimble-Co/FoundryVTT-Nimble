@@ -13,14 +13,14 @@
 				"max": 15,
 				"temp": 0,
 				"value": 15
-			}
+			},
+			"sizeCategory": "small"
 		},
 		"description": "",
 		"details": {
-			"creatureType": "Goblin",
+			"creatureType": "",
 			"isFlunky": false,
-			"level": "1/3",
-			"sizeCategory": "small"
+			"level": "1/3"
 		},
 		"attackSequence": "",
 		"savingThrows": {
@@ -43,13 +43,11 @@
 		}
 	},
 	"prototypeToken": {
-		"name": "New Actor",
-		"displayName": 0,
+		"name": "Goblin",
+		"displayName": 50,
 		"actorLink": false,
-		"appendNumber": false,
-		"prependAdjective": false,
-		"width": 1,
-		"height": 1,
+		"width": 0.5,
+		"height": 0.5,
 		"texture": {
 			"src": "icons/svg/mystery-man.svg",
 			"anchorX": 0.5,
@@ -63,8 +61,7 @@
 			"tint": "#ffffff",
 			"alphaThreshold": 0.75
 		},
-		"hexagonalShape": 0,
-		"lockRotation": false,
+		"lockRotation": true,
 		"rotation": 0,
 		"alpha": 1,
 		"disposition": -1,
@@ -121,18 +118,27 @@
 				"ring": null,
 				"background": null
 			},
-			"effects": 1,
+			"effects": 0,
 			"subject": {
 				"scale": 1,
 				"texture": null
 			}
 		},
+		"turnMarker": {
+			"mode": 1,
+			"animation": null,
+			"src": null,
+			"disposition": false
+		},
+		"movementAction": null,
 		"flags": {},
-		"randomImg": false
+		"randomImg": false,
+		"appendNumber": false,
+		"prependAdjective": false
 	},
 	"items": [
 		{
-			"name": "Stab",
+			"name": "Stab.",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -144,7 +150,8 @@
 					"cost": {
 						"details": "",
 						"quantity": 1,
-						"type": "none"
+						"type": "none",
+						"isReaction": false
 					},
 					"duration": {
 						"details": "",
@@ -153,25 +160,25 @@
 					},
 					"effects": [
 						{
-							"id": "xrBePQCSuk24DDGC",
+							"id": "hvsTu0L4c2z5hcvj",
 							"type": "damage",
 							"damageType": "piercing",
 							"formula": "1d6+2",
 							"parentContext": null,
 							"parentNode": null,
-							"canCrit": true,
-							"canMiss": true,
 							"on": {
 								"hit": [
 									{
-										"id": "nASP13PFwjHQmksw",
+										"id": "qDn9c5FzpDxys9du",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "xrBePQCSuk24DDGC"
+										"parentNode": "hvsTu0L4c2z5hcvj"
 									}
 								]
-							}
+							},
+							"canCrit": true,
+							"canMiss": true
 						}
 					],
 					"showDescription": true,
@@ -186,30 +193,28 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+2</p>",
+				"description": "<p>1d6+2.</p>",
 				"isAttack": true
 			},
-			"_id": "ivIadV0dot7DoT2U",
-			"img": "icons/svg/item-bag.svg",
+			"_id": "fOOzxyGOVkLS4KTp",
+			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
 			"_stats": {
-				"compendiumSource": null,
-				"duplicateSource": null,
-				"coreVersion": "12.331",
+				"coreVersion": "13.345",
 				"systemId": "nimble",
-				"systemVersion": "0.1.0",
-				"createdTime": 1741220309451,
-				"modifiedTime": 1741305727617,
-				"lastModifiedBy": "Cks0hmp8lQssldFV"
+				"systemVersion": "0.1.1",
+				"createdTime": 1750887573856,
+				"modifiedTime": 1750887687008,
+				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
 			"name": "Haha, Missed Me!",
 			"type": "monsterFeature",
-			"_id": "CAyp0hHy5XnjH3r1",
+			"_id": "YAfZLITdjAyMsDkh",
 			"img": "icons/svg/item-bag.svg",
 			"system": {
 				"macro": "",
@@ -220,7 +225,8 @@
 					"cost": {
 						"details": "",
 						"quantity": 1,
-						"type": "none"
+						"type": "none",
+						"isReaction": false
 					},
 					"duration": {
 						"details": "",
@@ -249,18 +255,16 @@
 			"sort": 0,
 			"flags": {},
 			"_stats": {
-				"compendiumSource": null,
-				"duplicateSource": null,
-				"coreVersion": "12.331",
+				"coreVersion": "13.345",
 				"systemId": "nimble",
-				"systemVersion": "0.1.0",
-				"createdTime": 1741220384453,
-				"modifiedTime": 1741220429937,
-				"lastModifiedBy": "Cks0hmp8lQssldFV"
+				"systemVersion": "0.1.1",
+				"createdTime": 1750887606710,
+				"modifiedTime": 1750887619767,
+				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
-			"name": "Shoot (Range 8)",
+			"name": "Shoot.",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -272,7 +276,8 @@
 					"cost": {
 						"details": "",
 						"quantity": 1,
-						"type": "none"
+						"type": "none",
+						"isReaction": false
 					},
 					"duration": {
 						"details": "",
@@ -281,7 +286,7 @@
 					},
 					"effects": [
 						{
-							"id": "kAAaytQCJnSZAgQJ",
+							"id": "diy2Oybe2imbKeg4",
 							"type": "damage",
 							"damageType": "piercing",
 							"formula": "1d6+2",
@@ -290,11 +295,11 @@
 							"on": {
 								"hit": [
 									{
-										"id": "d0jtxeziUxu2stjS",
+										"id": "KBipiCluOZmfC22w",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "kAAaytQCJnSZAgQJ"
+										"parentNode": "diy2Oybe2imbKeg4"
 									}
 								]
 							},
@@ -310,40 +315,38 @@
 					"template": {
 						"length": 1,
 						"radius": 1,
-						"shape": "line",
+						"shape": "",
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+2</p>",
+				"description": "<p>(Range 8) 1d6+2.</p>",
 				"isAttack": true
 			},
-			"_id": "MI8Vm0JbDZMV11bG",
-			"img": "icons/svg/item-bag.svg",
+			"_id": "KC9zg4AXVhHnLZE1",
+			"img": "icons/weapons/bows/longbow-recurve-skull-brown.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
 			"_stats": {
-				"compendiumSource": null,
-				"duplicateSource": null,
-				"coreVersion": "12.331",
+				"coreVersion": "13.345",
 				"systemId": "nimble",
-				"systemVersion": "0.1.0",
-				"createdTime": 1741220443316,
-				"modifiedTime": 1741305826336,
-				"lastModifiedBy": "Cks0hmp8lQssldFV"
+				"systemVersion": "0.1.1",
+				"createdTime": 1750887692324,
+				"modifiedTime": 1750887770689,
+				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		}
 	],
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "12.331",
+		"coreVersion": "13.345",
 		"systemId": "nimble",
-		"systemVersion": "0.1.0",
-		"createdTime": 1741220271972,
-		"modifiedTime": 1741223182068,
-		"lastModifiedBy": "Cks0hmp8lQssldFV"
+		"systemVersion": "0.1.1",
+		"createdTime": 1750887567413,
+		"modifiedTime": 1750888573113,
+		"lastModifiedBy": "s1s8bTinDwlgd282"
 	},
-	"_id": "oMhCCNe5Z2jaG85c"
+	"_id": "65v4ZutYxq6hlTog"
 }

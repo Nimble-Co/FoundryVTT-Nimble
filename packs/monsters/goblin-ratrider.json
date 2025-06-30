@@ -1,11 +1,11 @@
 {
-	"name": "Goblin Taskmaster",
+	"name": "Goblin Ratrider",
 	"type": "npc",
 	"folder": null,
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {
-			"armor": "medium",
+			"armor": "none",
 			"damageResistances": [],
 			"damageVulnerabilities": [],
 			"damageImmunities": [],
@@ -14,7 +14,7 @@
 				"temp": 0,
 				"value": 30
 			},
-			"sizeCategory": "small"
+			"sizeCategory": "medium"
 		},
 		"description": "",
 		"details": {
@@ -43,11 +43,11 @@
 		}
 	},
 	"prototypeToken": {
-		"name": "Goblin Taskmaster",
+		"name": "Goblin Rathrider",
 		"displayName": 50,
 		"actorLink": false,
-		"width": 0.5,
-		"height": 0.5,
+		"width": 1,
+		"height": 1,
 		"texture": {
 			"src": "icons/svg/mystery-man.svg",
 			"anchorX": 0.5,
@@ -140,7 +140,7 @@
 		{
 			"name": "Haha, Missed Me!",
 			"type": "monsterFeature",
-			"_id": "UVNyhHRwTZbmJcGX",
+			"_id": "aTjIL20VyLtSRa2y",
 			"img": "icons/svg/item-bag.svg",
 			"system": {
 				"macro": "",
@@ -184,15 +184,15 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750888091269,
-				"modifiedTime": 1750888099860,
+				"createdTime": 1750888465745,
+				"modifiedTime": 1750888474000,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
-			"name": "Meat Shield.",
+			"name": "CHAAARGE!",
 			"type": "monsterFeature",
-			"_id": "E9oFUhnyB7PssXIs",
+			"_id": "KUok8po5LnIHUZBr",
 			"img": "icons/svg/item-bag.svg",
 			"system": {
 				"macro": "",
@@ -224,7 +224,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Can force other goblins to Interpose for him.</p>",
+				"description": "<p>If you move at least 4 spaces in a straight line, attack with advantage once.</p>",
 				"isAction": false,
 				"isAttack": false
 			},
@@ -236,13 +236,13 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750888105760,
-				"modifiedTime": 1750888113903,
+				"createdTime": 1750888481137,
+				"modifiedTime": 1750888491557,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
-			"name": "Stab.",
+			"name": "Bite & Stab (2×).",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -264,25 +264,34 @@
 					},
 					"effects": [
 						{
-							"id": "jFHfeWS5Z880NFHX",
+							"id": "oC8imxDwrY0Cb8OG",
 							"type": "damage",
 							"damageType": "piercing",
 							"formula": "1d6+2",
 							"parentContext": null,
 							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
 							"on": {
+								"criticalHit": [
+									{
+										"id": "2WK593YRmeuloA29",
+										"type": "condition",
+										"condition": "prone",
+										"parentContext": "criticalHit",
+										"parentNode": "oC8imxDwrY0Cb8OG"
+									}
+								],
 								"hit": [
 									{
-										"id": "m0WzqeoXO5G3WoyU",
+										"id": "uZloarDvV99pKcLl",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "jFHfeWS5Z880NFHX"
+										"parentNode": "oC8imxDwrY0Cb8OG"
 									}
 								]
-							},
-							"canCrit": true,
-							"canMiss": true
+							}
 						}
 					],
 					"showDescription": true,
@@ -297,11 +306,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+2. Then use Get in Here</p>",
+				"description": "<p>1d6+2. On crit: Prone.</p>",
 				"isAttack": true
 			},
-			"_id": "fTsj4kFUR54hs0AA",
-			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
+			"_id": "Wy7ikl5qUSIMLNsK",
+			"img": "icons/weapons/swords/shortsword-simple.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
@@ -310,134 +319,8 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750888128822,
-				"modifiedTime": 1750888193908,
-				"lastModifiedBy": "s1s8bTinDwlgd282"
-			}
-		},
-		{
-			"name": "Shoot.",
-			"type": "monsterFeature",
-			"system": {
-				"isAction": true,
-				"macro": "",
-				"identifier": "",
-				"rules": [],
-				"activation": {
-					"acquireTargetsFromTemplate": false,
-					"cost": {
-						"details": "",
-						"quantity": 1,
-						"type": "none",
-						"isReaction": false
-					},
-					"duration": {
-						"details": "",
-						"quantity": 1,
-						"type": "action"
-					},
-					"effects": [
-						{
-							"id": "ab7sEVun1tBJ760k",
-							"type": "damage",
-							"damageType": "piercing",
-							"formula": "1d6+2",
-							"parentContext": null,
-							"parentNode": null,
-							"on": {
-								"hit": [
-									{
-										"id": "tqSXtj4gSBf0fNkW",
-										"type": "damageOutcome",
-										"outcome": "fullDamage",
-										"parentContext": "hit",
-										"parentNode": "ab7sEVun1tBJ760k"
-									}
-								]
-							},
-							"canCrit": true,
-							"canMiss": true
-						}
-					],
-					"showDescription": true,
-					"targets": {
-						"count": 1,
-						"restrictions": ""
-					},
-					"template": {
-						"length": 1,
-						"radius": 1,
-						"shape": "",
-						"width": 1
-					}
-				},
-				"description": "<p>(Range 8) 1d6+2. Then use Get in Here</p>",
-				"isAttack": true
-			},
-			"_id": "jGabap8BaH0gqUKp",
-			"img": "icons/weapons/bows/longbow-recurve-skull-brown.webp",
-			"effects": [],
-			"folder": null,
-			"sort": 0,
-			"flags": {},
-			"_stats": {
-				"coreVersion": "13.345",
-				"systemId": "nimble",
-				"systemVersion": "0.1.1",
-				"createdTime": 1750888210001,
-				"modifiedTime": 1750888269934,
-				"lastModifiedBy": "s1s8bTinDwlgd282"
-			}
-		},
-		{
-			"name": "Get in here!",
-			"type": "monsterFeature",
-			"system": {
-				"isAction": true,
-				"macro": "",
-				"identifier": "",
-				"rules": [],
-				"activation": {
-					"acquireTargetsFromTemplate": false,
-					"cost": {
-						"details": "",
-						"quantity": 1,
-						"type": "none",
-						"isReaction": false
-					},
-					"duration": {
-						"details": "",
-						"quantity": 1,
-						"type": "none"
-					},
-					"effects": [],
-					"showDescription": true,
-					"targets": {
-						"count": 1,
-						"restrictions": ""
-					},
-					"template": {
-						"length": 1,
-						"radius": 1,
-						"shape": "",
-						"width": 1
-					}
-				},
-				"description": "<p>Call a goblin minion to the fight.</p>",
-				"isAttack": false
-			},
-			"_id": "rkjPMI3oZQdXCchG",
-			"img": "icons/svg/item-bag.svg",
-			"effects": [],
-			"folder": null,
-			"sort": 0,
-			"flags": {},
-			"_stats": {
-				"coreVersion": "13.345",
-				"systemId": "nimble",
-				"systemVersion": "0.1.1",
-				"createdTime": 1750888301552,
-				"modifiedTime": 1750888318519,
+				"createdTime": 1750888499434,
+				"modifiedTime": 1750888550081,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		}
@@ -447,10 +330,10 @@
 	"_stats": {
 		"coreVersion": "13.345",
 		"systemId": "nimble",
-		"systemVersion": "0.1.1",
-		"createdTime": 1750888035429,
-		"modifiedTime": 1750888573126,
+		"systemVersion": "0.1.2",
+		"createdTime": 1750888346519,
+		"modifiedTime": 1751183210371,
 		"lastModifiedBy": "s1s8bTinDwlgd282"
 	},
-	"_id": "XkaTxC6xYSk2kPVV"
+	"_id": "SM6NlZaQdKqFN2AD"
 }

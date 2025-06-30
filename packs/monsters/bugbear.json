@@ -13,14 +13,14 @@
 				"max": 30,
 				"temp": 0,
 				"value": 30
-			}
+			},
+			"sizeCategory": "medium"
 		},
 		"description": "",
 		"details": {
-			"creatureType": "Bugbear",
+			"creatureType": "",
 			"isFlunky": false,
-			"level": "2",
-			"sizeCategory": "medium"
+			"level": "2"
 		},
 		"attackSequence": "",
 		"savingThrows": {
@@ -43,11 +43,9 @@
 		}
 	},
 	"prototypeToken": {
-		"name": "New Actor",
-		"displayName": 0,
+		"name": "Bugbear",
+		"displayName": 50,
 		"actorLink": false,
-		"appendNumber": false,
-		"prependAdjective": false,
 		"width": 1,
 		"height": 1,
 		"texture": {
@@ -63,8 +61,7 @@
 			"tint": "#ffffff",
 			"alphaThreshold": 0.75
 		},
-		"hexagonalShape": 0,
-		"lockRotation": false,
+		"lockRotation": true,
 		"rotation": 0,
 		"alpha": 1,
 		"disposition": -1,
@@ -121,20 +118,29 @@
 				"ring": null,
 				"background": null
 			},
-			"effects": 1,
+			"effects": 0,
 			"subject": {
 				"scale": 1,
 				"texture": null
 			}
 		},
+		"turnMarker": {
+			"mode": 1,
+			"animation": null,
+			"src": null,
+			"disposition": false
+		},
+		"movementAction": null,
 		"flags": {},
-		"randomImg": false
+		"randomImg": false,
+		"appendNumber": false,
+		"prependAdjective": false
 	},
 	"items": [
 		{
-			"name": "Haha, Missed Me!",
+			"name": "Haha, Missed",
 			"type": "monsterFeature",
-			"_id": "ry0P048Gkih3RAXJ",
+			"_id": "umsJ1qRrwU7YiYnQ",
 			"img": "icons/svg/item-bag.svg",
 			"system": {
 				"macro": "",
@@ -145,7 +151,8 @@
 					"cost": {
 						"details": "",
 						"quantity": 1,
-						"type": "none"
+						"type": "none",
+						"isReaction": false
 					},
 					"duration": {
 						"details": "",
@@ -165,7 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
+				"description": "<p>Me! Whenever an attack misses you, deal 1 psychic damage in return.</p>",
 				"isAction": false,
 				"isAttack": false
 			},
@@ -174,18 +181,16 @@
 			"sort": 0,
 			"flags": {},
 			"_stats": {
-				"compendiumSource": null,
-				"duplicateSource": null,
-				"coreVersion": "12.331",
+				"coreVersion": "13.345",
 				"systemId": "nimble",
-				"systemVersion": "0.1.0",
-				"createdTime": 1741221430868,
-				"modifiedTime": 1741221471729,
-				"lastModifiedBy": "Cks0hmp8lQssldFV"
+				"systemVersion": "0.1.1",
+				"createdTime": 1750887818217,
+				"modifiedTime": 1750887827171,
+				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
-			"name": "Cleave",
+			"name": "Cleave.",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -197,7 +202,8 @@
 					"cost": {
 						"details": "",
 						"quantity": 1,
-						"type": "none"
+						"type": "none",
+						"isReaction": false
 					},
 					"duration": {
 						"details": "",
@@ -206,7 +212,7 @@
 					},
 					"effects": [
 						{
-							"id": "FIo7w5z4518HHrvl",
+							"id": "xTsclYNHtE6l8PXb",
 							"type": "damage",
 							"damageType": "slashing",
 							"formula": "2d6+4",
@@ -215,11 +221,11 @@
 							"on": {
 								"hit": [
 									{
-										"id": "2s5Rwd56n997e2db",
+										"id": "opddUfKdFj5HFi7m",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "FIo7w5z4518HHrvl"
+										"parentNode": "xTsclYNHtE6l8PXb"
 									}
 								]
 							},
@@ -239,28 +245,26 @@
 						"width": 1
 					}
 				},
-				"description": "<p>2d6+4</p>",
+				"description": "<p>2d6+4.</p>",
 				"isAttack": true
 			},
-			"_id": "cfmF7ybGjAxAOzLg",
-			"img": "icons/svg/item-bag.svg",
+			"_id": "rrtftYg2p0JUlFiK",
+			"img": "icons/skills/melee/hand-grip-sword-orange.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
 			"_stats": {
-				"compendiumSource": null,
-				"duplicateSource": null,
-				"coreVersion": "12.331",
+				"coreVersion": "13.345",
 				"systemId": "nimble",
-				"systemVersion": "0.1.0",
-				"createdTime": 1741221510457,
-				"modifiedTime": 1741305583160,
-				"lastModifiedBy": "Cks0hmp8lQssldFV"
+				"systemVersion": "0.1.1",
+				"createdTime": 1750887837365,
+				"modifiedTime": 1750887913416,
+				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
-			"name": "Javelin (Range 8)",
+			"name": "Javelins.",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -272,14 +276,37 @@
 					"cost": {
 						"details": "",
 						"quantity": 1,
-						"type": "none"
+						"type": "none",
+						"isReaction": false
 					},
 					"duration": {
 						"details": "",
 						"quantity": 1,
-						"type": "none"
+						"type": "action"
 					},
-					"effects": [],
+					"effects": [
+						{
+							"id": "rMxbcgqqZcFR6SPt",
+							"type": "damage",
+							"damageType": "acid",
+							"formula": "1d6+2",
+							"parentContext": null,
+							"parentNode": null,
+							"on": {
+								"hit": [
+									{
+										"id": "q55Rb1XPTbghkbPw",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "rMxbcgqqZcFR6SPt"
+									}
+								]
+							},
+							"canCrit": true,
+							"canMiss": true
+						}
+					],
 					"showDescription": true,
 					"targets": {
 						"count": 1,
@@ -292,36 +319,34 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+2</p>",
+				"description": "<p>(Rangew 8) 1d6+2.</p>",
 				"isAttack": true
 			},
-			"_id": "c0DOYbUYm5OHw1Ec",
-			"img": "icons/svg/item-bag.svg",
+			"_id": "DxTWZ7IBcWsbWceI",
+			"img": "icons/weapons/polearms/javelin-simple.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
 			"flags": {},
 			"_stats": {
-				"compendiumSource": null,
-				"duplicateSource": null,
-				"coreVersion": "12.331",
+				"coreVersion": "13.345",
 				"systemId": "nimble",
-				"systemVersion": "0.1.0",
-				"createdTime": 1741221559057,
-				"modifiedTime": 1741223265895,
-				"lastModifiedBy": "Cks0hmp8lQssldFV"
+				"systemVersion": "0.1.1",
+				"createdTime": 1750887920494,
+				"modifiedTime": 1750887992148,
+				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		}
 	],
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "12.331",
+		"coreVersion": "13.345",
 		"systemId": "nimble",
-		"systemVersion": "0.1.0",
-		"createdTime": 1741221392171,
-		"modifiedTime": 1741221627078,
-		"lastModifiedBy": "Cks0hmp8lQssldFV"
+		"systemVersion": "0.1.1",
+		"createdTime": 1750887791083,
+		"modifiedTime": 1750888573120,
+		"lastModifiedBy": "s1s8bTinDwlgd282"
 	},
-	"_id": "Co4Y5ZwlVDQg7Xzi"
+	"_id": "yH8XeTPk9s5OMRmX"
 }

@@ -1,26 +1,26 @@
 {
-	"name": "Goblin Taskmaster",
+	"name": "Elder Ooze",
 	"type": "npc",
 	"folder": null,
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {
-			"armor": "medium",
+			"armor": "none",
 			"damageResistances": [],
 			"damageVulnerabilities": [],
 			"damageImmunities": [],
 			"hp": {
-				"max": 30,
+				"max": 150,
 				"temp": 0,
-				"value": 30
+				"value": 150
 			},
-			"sizeCategory": "small"
+			"sizeCategory": "huge"
 		},
 		"description": "",
 		"details": {
 			"creatureType": "",
 			"isFlunky": false,
-			"level": "2"
+			"level": "12"
 		},
 		"attackSequence": "",
 		"savingThrows": {
@@ -43,11 +43,11 @@
 		}
 	},
 	"prototypeToken": {
-		"name": "Goblin Taskmaster",
+		"name": "Elder Ooze",
 		"displayName": 50,
 		"actorLink": false,
-		"width": 0.5,
-		"height": 0.5,
+		"width": 3,
+		"height": 3,
 		"texture": {
 			"src": "icons/svg/mystery-man.svg",
 			"anchorX": 0.5,
@@ -65,7 +65,7 @@
 		"rotation": 0,
 		"alpha": 1,
 		"disposition": -1,
-		"displayBars": 0,
+		"displayBars": 40,
 		"bar1": {
 			"attribute": "attributes.hp"
 		},
@@ -138,9 +138,9 @@
 	},
 	"items": [
 		{
-			"name": "Haha, Missed Me!",
+			"name": "Digestive Touch.",
 			"type": "monsterFeature",
-			"_id": "UVNyhHRwTZbmJcGX",
+			"_id": "Njlwa6Bizmi15hZI",
 			"img": "icons/svg/item-bag.svg",
 			"system": {
 				"macro": "",
@@ -172,7 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
+				"description": "<p>Contact with an ooze inflicts the Digested condition: they dealan additional X damage for each time the target has been Digested this encounter.</p>",
 				"isAction": false,
 				"isAttack": false
 			},
@@ -184,15 +184,15 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750888091269,
-				"modifiedTime": 1750888099860,
+				"createdTime": 1751090761547,
+				"modifiedTime": 1751090776506,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
-			"name": "Meat Shield.",
+			"name": "Goopy.",
 			"type": "monsterFeature",
-			"_id": "E9oFUhnyB7PssXIs",
+			"_id": "BrLpLftiYFBD9h1D",
 			"img": "icons/svg/item-bag.svg",
 			"system": {
 				"macro": "",
@@ -224,7 +224,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Can force other goblins to Interpose for him.</p>",
+				"description": "<p>When crit or dealt any slashing damage: summon X ooze minions (size: d6); their attacks inflict Digested.</p>",
 				"isAction": false,
 				"isAttack": false
 			},
@@ -236,13 +236,13 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750888105760,
-				"modifiedTime": 1750888113903,
+				"createdTime": 1751090785439,
+				"modifiedTime": 1751090795872,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
-			"name": "Stab.",
+			"name": "Acidic Touch (3×).",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -264,20 +264,20 @@
 					},
 					"effects": [
 						{
-							"id": "jFHfeWS5Z880NFHX",
+							"id": "aoUHHGnpQ7pplv8d",
 							"type": "damage",
-							"damageType": "piercing",
-							"formula": "1d6+2",
+							"damageType": "acid",
+							"formula": "1d6+6",
 							"parentContext": null,
 							"parentNode": null,
 							"on": {
 								"hit": [
 									{
-										"id": "m0WzqeoXO5G3WoyU",
+										"id": "EZ2MPobXw0m0a9Lr",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "jFHfeWS5Z880NFHX"
+										"parentNode": "aoUHHGnpQ7pplv8d"
 									}
 								]
 							},
@@ -297,11 +297,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+2. Then use Get in Here</p>",
+				"description": "<p>(Reach 3) 1d6+6.</p>",
 				"isAttack": true
 			},
-			"_id": "fTsj4kFUR54hs0AA",
-			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
+			"_id": "UuN36DCcrhSizcts",
+			"img": "icons/magic/acid/dissolve-bone-white.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
@@ -310,134 +310,8 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750888128822,
-				"modifiedTime": 1750888193908,
-				"lastModifiedBy": "s1s8bTinDwlgd282"
-			}
-		},
-		{
-			"name": "Shoot.",
-			"type": "monsterFeature",
-			"system": {
-				"isAction": true,
-				"macro": "",
-				"identifier": "",
-				"rules": [],
-				"activation": {
-					"acquireTargetsFromTemplate": false,
-					"cost": {
-						"details": "",
-						"quantity": 1,
-						"type": "none",
-						"isReaction": false
-					},
-					"duration": {
-						"details": "",
-						"quantity": 1,
-						"type": "action"
-					},
-					"effects": [
-						{
-							"id": "ab7sEVun1tBJ760k",
-							"type": "damage",
-							"damageType": "piercing",
-							"formula": "1d6+2",
-							"parentContext": null,
-							"parentNode": null,
-							"on": {
-								"hit": [
-									{
-										"id": "tqSXtj4gSBf0fNkW",
-										"type": "damageOutcome",
-										"outcome": "fullDamage",
-										"parentContext": "hit",
-										"parentNode": "ab7sEVun1tBJ760k"
-									}
-								]
-							},
-							"canCrit": true,
-							"canMiss": true
-						}
-					],
-					"showDescription": true,
-					"targets": {
-						"count": 1,
-						"restrictions": ""
-					},
-					"template": {
-						"length": 1,
-						"radius": 1,
-						"shape": "",
-						"width": 1
-					}
-				},
-				"description": "<p>(Range 8) 1d6+2. Then use Get in Here</p>",
-				"isAttack": true
-			},
-			"_id": "jGabap8BaH0gqUKp",
-			"img": "icons/weapons/bows/longbow-recurve-skull-brown.webp",
-			"effects": [],
-			"folder": null,
-			"sort": 0,
-			"flags": {},
-			"_stats": {
-				"coreVersion": "13.345",
-				"systemId": "nimble",
-				"systemVersion": "0.1.1",
-				"createdTime": 1750888210001,
-				"modifiedTime": 1750888269934,
-				"lastModifiedBy": "s1s8bTinDwlgd282"
-			}
-		},
-		{
-			"name": "Get in here!",
-			"type": "monsterFeature",
-			"system": {
-				"isAction": true,
-				"macro": "",
-				"identifier": "",
-				"rules": [],
-				"activation": {
-					"acquireTargetsFromTemplate": false,
-					"cost": {
-						"details": "",
-						"quantity": 1,
-						"type": "none",
-						"isReaction": false
-					},
-					"duration": {
-						"details": "",
-						"quantity": 1,
-						"type": "none"
-					},
-					"effects": [],
-					"showDescription": true,
-					"targets": {
-						"count": 1,
-						"restrictions": ""
-					},
-					"template": {
-						"length": 1,
-						"radius": 1,
-						"shape": "",
-						"width": 1
-					}
-				},
-				"description": "<p>Call a goblin minion to the fight.</p>",
-				"isAttack": false
-			},
-			"_id": "rkjPMI3oZQdXCchG",
-			"img": "icons/svg/item-bag.svg",
-			"effects": [],
-			"folder": null,
-			"sort": 0,
-			"flags": {},
-			"_stats": {
-				"coreVersion": "13.345",
-				"systemId": "nimble",
-				"systemVersion": "0.1.1",
-				"createdTime": 1750888301552,
-				"modifiedTime": 1750888318519,
+				"createdTime": 1751090813271,
+				"modifiedTime": 1751090853070,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		}
@@ -448,9 +322,9 @@
 		"coreVersion": "13.345",
 		"systemId": "nimble",
 		"systemVersion": "0.1.1",
-		"createdTime": 1750888035429,
-		"modifiedTime": 1750888573126,
+		"createdTime": 1751090708603,
+		"modifiedTime": 1751090810223,
 		"lastModifiedBy": "s1s8bTinDwlgd282"
 	},
-	"_id": "XkaTxC6xYSk2kPVV"
+	"_id": "U25uyWMvjGSMFAkX"
 }

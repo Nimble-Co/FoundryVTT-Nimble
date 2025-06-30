@@ -1,6 +1,6 @@
 {
-	"name": "Goblin Minion",
-	"type": "minion",
+	"name": "Ghoul",
+	"type": "npc",
 	"folder": null,
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
@@ -9,12 +9,18 @@
 			"damageResistances": [],
 			"damageVulnerabilities": [],
 			"damageImmunities": [],
-			"sizeCategory": "small"
+			"hp": {
+				"max": 20,
+				"temp": 0,
+				"value": 20
+			},
+			"sizeCategory": "medium"
 		},
 		"description": "",
 		"details": {
 			"creatureType": "",
-			"level": "1/4"
+			"isFlunky": false,
+			"level": "1"
 		},
 		"attackSequence": "",
 		"savingThrows": {
@@ -37,11 +43,11 @@
 		}
 	},
 	"prototypeToken": {
-		"name": "Goblin Minion",
+		"name": "Ghoul",
 		"displayName": 50,
 		"actorLink": false,
-		"width": 0.5,
-		"height": 0.5,
+		"width": 1,
+		"height": 1,
 		"texture": {
 			"src": "icons/svg/mystery-man.svg",
 			"anchorX": 0.5,
@@ -59,7 +65,7 @@
 		"rotation": 0,
 		"alpha": 1,
 		"disposition": -1,
-		"displayBars": 0,
+		"displayBars": 40,
 		"bar1": {
 			"attribute": "attributes.hp"
 		},
@@ -132,9 +138,9 @@
 	},
 	"items": [
 		{
-			"name": "Haha, Missed Me!",
+			"name": "Unliving, Undying.",
 			"type": "monsterFeature",
-			"_id": "cOFgqzqJUvJXfoWk",
+			"_id": "eqEUYKE1Ew5oaVGF",
 			"img": "icons/svg/item-bag.svg",
 			"system": {
 				"macro": "",
@@ -166,7 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
+				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
 				"isAction": false,
 				"isAttack": false
 			},
@@ -177,14 +183,14 @@
 			"_stats": {
 				"coreVersion": "13.345",
 				"systemId": "nimble",
-				"systemVersion": "0.1.1",
-				"createdTime": 1750887484827,
-				"modifiedTime": 1750887495156,
+				"systemVersion": "0.1.2",
+				"createdTime": 1751183551792,
+				"modifiedTime": 1751183558378,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
-			"name": "Stab.",
+			"name": "Sickening Claw.",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -206,25 +212,32 @@
 					},
 					"effects": [
 						{
-							"id": "CJDFJ2ogQxqEkNau",
+							"id": "rCgoHtvBWhXjhtES",
 							"type": "damage",
 							"damageType": "piercing",
-							"formula": "1d6",
+							"formula": "1d4+8",
 							"parentContext": null,
 							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
 							"on": {
 								"hit": [
 									{
-										"id": "wr2BQarhUS56eBkg",
+										"id": "5qaHVGcnIxyL1y7M",
+										"type": "condition",
+										"condition": "dazed",
+										"parentContext": "hit",
+										"parentNode": "rCgoHtvBWhXjhtES"
+									},
+									{
+										"id": "X48BBY2jxDCawynj",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "CJDFJ2ogQxqEkNau"
+										"parentNode": "rCgoHtvBWhXjhtES"
 									}
 								]
-							},
-							"canCrit": false,
-							"canMiss": true
+							}
 						}
 					],
 					"showDescription": true,
@@ -239,11 +252,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6 (follows minion rules).</p>",
+				"description": "<p>1d4+8. On damage: Dazed.</p>",
 				"isAttack": true
 			},
-			"_id": "8Zvy33f0c5AquKMu",
-			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
+			"_id": "GP65jvncWt5ktWv9",
+			"img": "icons/svg/item-bag.svg",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
@@ -251,9 +264,9 @@
 			"_stats": {
 				"coreVersion": "13.345",
 				"systemId": "nimble",
-				"systemVersion": "0.1.1",
-				"createdTime": 1750887504053,
-				"modifiedTime": 1750887548837,
+				"systemVersion": "0.1.2",
+				"createdTime": 1751183567564,
+				"modifiedTime": 1751183616575,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		}
@@ -263,10 +276,10 @@
 	"_stats": {
 		"coreVersion": "13.345",
 		"systemId": "nimble",
-		"systemVersion": "0.1.1",
-		"createdTime": 1750887443427,
-		"modifiedTime": 1750888573101,
+		"systemVersion": "0.1.2",
+		"createdTime": 1751183514539,
+		"modifiedTime": 1751183539839,
 		"lastModifiedBy": "s1s8bTinDwlgd282"
 	},
-	"_id": "KCZqQUfTuczLNEA3"
+	"_id": "1sz3bC7wjQsmM0jX"
 }

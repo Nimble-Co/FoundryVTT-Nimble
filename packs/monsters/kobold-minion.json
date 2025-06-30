@@ -1,5 +1,5 @@
 {
-	"name": "Goblin Minion",
+	"name": "Kobold Minion",
 	"type": "minion",
 	"folder": null,
 	"img": "icons/svg/mystery-man.svg",
@@ -37,7 +37,7 @@
 		}
 	},
 	"prototypeToken": {
-		"name": "Goblin Minion",
+		"name": "Kobold Minion",
 		"displayName": 50,
 		"actorLink": false,
 		"width": 0.5,
@@ -132,9 +132,9 @@
 	},
 	"items": [
 		{
-			"name": "Haha, Missed Me!",
+			"name": "Nooooo!",
 			"type": "monsterFeature",
-			"_id": "cOFgqzqJUvJXfoWk",
+			"_id": "J7n5esMxG3M9yeFd",
 			"img": "icons/svg/item-bag.svg",
 			"system": {
 				"macro": "",
@@ -166,7 +166,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
+				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>",
 				"isAction": false,
 				"isAttack": false
 			},
@@ -178,8 +178,8 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750887484827,
-				"modifiedTime": 1750887495156,
+				"createdTime": 1750884146192,
+				"modifiedTime": 1750884155794,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
@@ -206,20 +206,20 @@
 					},
 					"effects": [
 						{
-							"id": "CJDFJ2ogQxqEkNau",
+							"id": "OMwoB7nGsV7WQ4un",
 							"type": "damage",
 							"damageType": "piercing",
-							"formula": "1d6",
+							"formula": "1d4",
 							"parentContext": null,
 							"parentNode": null,
 							"on": {
 								"hit": [
 									{
-										"id": "wr2BQarhUS56eBkg",
+										"id": "jlub9AY1v1cK9Q4n",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "CJDFJ2ogQxqEkNau"
+										"parentNode": "OMwoB7nGsV7WQ4un"
 									}
 								]
 							},
@@ -239,11 +239,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6 (follows minion rules).</p>",
+				"description": "<p>1d4 (follows minion rules).</p>",
 				"isAttack": true
 			},
-			"_id": "8Zvy33f0c5AquKMu",
-			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
+			"_id": "l2NJD7TZtzgpNaDq",
+			"img": "icons/weapons/daggers/dagger-crooked-black.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
@@ -252,8 +252,8 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750887504053,
-				"modifiedTime": 1750887548837,
+				"createdTime": 1750884161907,
+				"modifiedTime": 1750884229697,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		}
@@ -264,9 +264,9 @@
 		"coreVersion": "13.345",
 		"systemId": "nimble",
 		"systemVersion": "0.1.1",
-		"createdTime": 1750887443427,
-		"modifiedTime": 1750888573101,
+		"createdTime": 1750884121751,
+		"modifiedTime": 1750886403019,
 		"lastModifiedBy": "s1s8bTinDwlgd282"
 	},
-	"_id": "KCZqQUfTuczLNEA3"
+	"_id": "137WDRxufmgbjx9u"
 }

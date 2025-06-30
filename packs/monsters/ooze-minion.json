@@ -1,5 +1,5 @@
 {
-	"name": "Goblin Minion",
+	"name": "Ooze Minion",
 	"type": "minion",
 	"folder": null,
 	"img": "icons/svg/mystery-man.svg",
@@ -14,7 +14,7 @@
 		"description": "",
 		"details": {
 			"creatureType": "",
-			"level": "1/4"
+			"level": "1"
 		},
 		"attackSequence": "",
 		"savingThrows": {
@@ -37,7 +37,7 @@
 		}
 	},
 	"prototypeToken": {
-		"name": "Goblin Minion",
+		"name": "Ooze Minion",
 		"displayName": 50,
 		"actorLink": false,
 		"width": 0.5,
@@ -132,9 +132,9 @@
 	},
 	"items": [
 		{
-			"name": "Haha, Missed Me!",
+			"name": "Digestive Touch.",
 			"type": "monsterFeature",
-			"_id": "cOFgqzqJUvJXfoWk",
+			"_id": "T70WIXYMcD22yvoJ",
 			"img": "icons/svg/item-bag.svg",
 			"system": {
 				"macro": "",
@@ -166,7 +166,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
+				"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>",
 				"isAction": false,
 				"isAttack": false
 			},
@@ -178,13 +178,13 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750887484827,
-				"modifiedTime": 1750887495156,
+				"createdTime": 1751090934638,
+				"modifiedTime": 1751090944399,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
-			"name": "Stab.",
+			"name": "Acidic Touch.",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -206,20 +206,20 @@
 					},
 					"effects": [
 						{
-							"id": "CJDFJ2ogQxqEkNau",
+							"id": "z4FgHzWB7hMZ0DAq",
 							"type": "damage",
-							"damageType": "piercing",
+							"damageType": "acid",
 							"formula": "1d6",
 							"parentContext": null,
 							"parentNode": null,
 							"on": {
 								"hit": [
 									{
-										"id": "wr2BQarhUS56eBkg",
+										"id": "HuESQvpysFKfN7Dd",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "CJDFJ2ogQxqEkNau"
+										"parentNode": "z4FgHzWB7hMZ0DAq"
 									}
 								]
 							},
@@ -227,7 +227,7 @@
 							"canMiss": true
 						}
 					],
-					"showDescription": true,
+					"showDescription": false,
 					"targets": {
 						"count": 1,
 						"restrictions": ""
@@ -239,11 +239,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6 (follows minion rules).</p>",
+				"description": "<p>1d6 (Follows minion rules)</p>",
 				"isAttack": true
 			},
-			"_id": "8Zvy33f0c5AquKMu",
-			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
+			"_id": "prrTBzJt3WBAdlVc",
+			"img": "icons/svg/item-bag.svg",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
@@ -252,8 +252,8 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750887504053,
-				"modifiedTime": 1750887548837,
+				"createdTime": 1751090947890,
+				"modifiedTime": 1751091476846,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		}
@@ -264,9 +264,9 @@
 		"coreVersion": "13.345",
 		"systemId": "nimble",
 		"systemVersion": "0.1.1",
-		"createdTime": 1750887443427,
-		"modifiedTime": 1750888573101,
+		"createdTime": 1751090908256,
+		"modifiedTime": 1751091027584,
 		"lastModifiedBy": "s1s8bTinDwlgd282"
 	},
-	"_id": "KCZqQUfTuczLNEA3"
+	"_id": "3xCIKi1kmor4M8da"
 }

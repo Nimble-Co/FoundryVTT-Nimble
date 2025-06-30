@@ -1,26 +1,26 @@
 {
-	"name": "Goblin Taskmaster",
+	"name": "Bulette",
 	"type": "npc",
 	"folder": null,
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {
-			"armor": "medium",
+			"armor": "heavy",
 			"damageResistances": [],
 			"damageVulnerabilities": [],
 			"damageImmunities": [],
 			"hp": {
-				"max": 30,
+				"max": 74,
 				"temp": 0,
-				"value": 30
+				"value": 74
 			},
-			"sizeCategory": "small"
+			"sizeCategory": "large"
 		},
 		"description": "",
 		"details": {
 			"creatureType": "",
 			"isFlunky": false,
-			"level": "2"
+			"level": "10"
 		},
 		"attackSequence": "",
 		"savingThrows": {
@@ -43,11 +43,11 @@
 		}
 	},
 	"prototypeToken": {
-		"name": "Goblin Taskmaster",
+		"name": "Bulette",
 		"displayName": 50,
 		"actorLink": false,
-		"width": 0.5,
-		"height": 0.5,
+		"width": 2,
+		"height": 2,
 		"texture": {
 			"src": "icons/svg/mystery-man.svg",
 			"anchorX": 0.5,
@@ -65,7 +65,7 @@
 		"rotation": 0,
 		"alpha": 1,
 		"disposition": -1,
-		"displayBars": 0,
+		"displayBars": 40,
 		"bar1": {
 			"attribute": "attributes.hp"
 		},
@@ -138,10 +138,10 @@
 	},
 	"items": [
 		{
-			"name": "Haha, Missed Me!",
+			"name": "Burst Forth!",
 			"type": "monsterFeature",
-			"_id": "UVNyhHRwTZbmJcGX",
-			"img": "icons/svg/item-bag.svg",
+			"_id": "RGJHZfPYg3wJm6Jm",
+			"img": "icons/creatures/claws/claw-straight-brown.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",
@@ -172,7 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
+				"description": "<p>Combat with a Bulette starts with the heaviest character making a DC 14 DEX save or they are Grappled (escape DC 14) and take 1d12+20 damage (half on save).</p>",
 				"isAction": false,
 				"isAttack": false
 			},
@@ -184,65 +184,13 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750888091269,
-				"modifiedTime": 1750888099860,
+				"createdTime": 1751147581560,
+				"modifiedTime": 1751147634787,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
-			"name": "Meat Shield.",
-			"type": "monsterFeature",
-			"_id": "E9oFUhnyB7PssXIs",
-			"img": "icons/svg/item-bag.svg",
-			"system": {
-				"macro": "",
-				"identifier": "",
-				"rules": [],
-				"activation": {
-					"acquireTargetsFromTemplate": false,
-					"cost": {
-						"details": "",
-						"quantity": 1,
-						"type": "none",
-						"isReaction": false
-					},
-					"duration": {
-						"details": "",
-						"quantity": 1,
-						"type": "none"
-					},
-					"effects": [],
-					"showDescription": true,
-					"targets": {
-						"count": 1,
-						"restrictions": ""
-					},
-					"template": {
-						"length": 1,
-						"radius": 1,
-						"shape": "",
-						"width": 1
-					}
-				},
-				"description": "<p>Can force other goblins to Interpose for him.</p>",
-				"isAction": false,
-				"isAttack": false
-			},
-			"effects": [],
-			"folder": null,
-			"sort": 0,
-			"flags": {},
-			"_stats": {
-				"coreVersion": "13.345",
-				"systemId": "nimble",
-				"systemVersion": "0.1.1",
-				"createdTime": 1750888105760,
-				"modifiedTime": 1750888113903,
-				"lastModifiedBy": "s1s8bTinDwlgd282"
-			}
-		},
-		{
-			"name": "Stab.",
+			"name": "Drag Below.",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -264,20 +212,20 @@
 					},
 					"effects": [
 						{
-							"id": "jFHfeWS5Z880NFHX",
+							"id": "S3XxFn6UghQV7nJ3",
 							"type": "damage",
-							"damageType": "piercing",
-							"formula": "1d6+2",
+							"damageType": "slashing",
+							"formula": "2d12",
 							"parentContext": null,
 							"parentNode": null,
 							"on": {
 								"hit": [
 									{
-										"id": "m0WzqeoXO5G3WoyU",
+										"id": "imhkeO14gdvCMIMw",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "jFHfeWS5Z880NFHX"
+										"parentNode": "S3XxFn6UghQV7nJ3"
 									}
 								]
 							},
@@ -297,11 +245,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+2. Then use Get in Here</p>",
+				"description": "<p>(A Grappled creature) 2d12 then drag below and burrow away.</p>",
 				"isAttack": true
 			},
-			"_id": "fTsj4kFUR54hs0AA",
-			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
+			"_id": "Dq94VBAmPvgcuPs2",
+			"img": "icons/svg/item-bag.svg",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
@@ -310,13 +258,13 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750888128822,
-				"modifiedTime": 1750888193908,
+				"createdTime": 1751147674639,
+				"modifiedTime": 1751147709723,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
-			"name": "Shoot.",
+			"name": "Leap & Bite.",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -338,25 +286,32 @@
 					},
 					"effects": [
 						{
-							"id": "ab7sEVun1tBJ760k",
+							"id": "eQA79Plmpu3LiriV",
 							"type": "damage",
 							"damageType": "piercing",
-							"formula": "1d6+2",
+							"formula": "1d12+20",
 							"parentContext": null,
 							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
 							"on": {
 								"hit": [
 									{
-										"id": "tqSXtj4gSBf0fNkW",
+										"id": "sI4bftk6HCjQt0KG",
+										"type": "condition",
+										"condition": "grappled",
+										"parentContext": "hit",
+										"parentNode": "eQA79Plmpu3LiriV"
+									},
+									{
+										"id": "dnjCW2hZTTVnXfHZ",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "ab7sEVun1tBJ760k"
+										"parentNode": "eQA79Plmpu3LiriV"
 									}
 								]
-							},
-							"canCrit": true,
-							"canMiss": true
+							}
 						}
 					],
 					"showDescription": true,
@@ -371,11 +326,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 8) 1d6+2. Then use Get in Here</p>",
+				"description": "<p>(If not grappling) leap 6, and attack for 1d12+20. On hit: Grappled.</p>",
 				"isAttack": true
 			},
-			"_id": "jGabap8BaH0gqUKp",
-			"img": "icons/weapons/bows/longbow-recurve-skull-brown.webp",
+			"_id": "oS2F3rcfuaVeHyHm",
+			"img": "icons/creatures/abilities/mouth-teeth-sharp.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
@@ -384,60 +339,8 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750888210001,
-				"modifiedTime": 1750888269934,
-				"lastModifiedBy": "s1s8bTinDwlgd282"
-			}
-		},
-		{
-			"name": "Get in here!",
-			"type": "monsterFeature",
-			"system": {
-				"isAction": true,
-				"macro": "",
-				"identifier": "",
-				"rules": [],
-				"activation": {
-					"acquireTargetsFromTemplate": false,
-					"cost": {
-						"details": "",
-						"quantity": 1,
-						"type": "none",
-						"isReaction": false
-					},
-					"duration": {
-						"details": "",
-						"quantity": 1,
-						"type": "none"
-					},
-					"effects": [],
-					"showDescription": true,
-					"targets": {
-						"count": 1,
-						"restrictions": ""
-					},
-					"template": {
-						"length": 1,
-						"radius": 1,
-						"shape": "",
-						"width": 1
-					}
-				},
-				"description": "<p>Call a goblin minion to the fight.</p>",
-				"isAttack": false
-			},
-			"_id": "rkjPMI3oZQdXCchG",
-			"img": "icons/svg/item-bag.svg",
-			"effects": [],
-			"folder": null,
-			"sort": 0,
-			"flags": {},
-			"_stats": {
-				"coreVersion": "13.345",
-				"systemId": "nimble",
-				"systemVersion": "0.1.1",
-				"createdTime": 1750888301552,
-				"modifiedTime": 1750888318519,
+				"createdTime": 1751147722778,
+				"modifiedTime": 1751147831203,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		}
@@ -448,9 +351,9 @@
 		"coreVersion": "13.345",
 		"systemId": "nimble",
 		"systemVersion": "0.1.1",
-		"createdTime": 1750888035429,
-		"modifiedTime": 1750888573126,
+		"createdTime": 1751147539434,
+		"modifiedTime": 1751147578733,
 		"lastModifiedBy": "s1s8bTinDwlgd282"
 	},
-	"_id": "XkaTxC6xYSk2kPVV"
+	"_id": "w464OFhPTQGwLFZp"
 }

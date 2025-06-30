@@ -1,6 +1,6 @@
 {
-	"name": "Goblin Minion",
-	"type": "minion",
+	"name": "Bandit Hunter",
+	"type": "npc",
 	"folder": null,
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
@@ -9,12 +9,18 @@
 			"damageResistances": [],
 			"damageVulnerabilities": [],
 			"damageImmunities": [],
-			"sizeCategory": "small"
+			"hp": {
+				"max": 22,
+				"temp": 0,
+				"value": 22
+			},
+			"sizeCategory": "medium"
 		},
 		"description": "",
 		"details": {
 			"creatureType": "",
-			"level": "1/4"
+			"isFlunky": false,
+			"level": "1"
 		},
 		"attackSequence": "",
 		"savingThrows": {
@@ -37,11 +43,11 @@
 		}
 	},
 	"prototypeToken": {
-		"name": "Goblin Minion",
+		"name": "Bandit Hunter",
 		"displayName": 50,
 		"actorLink": false,
-		"width": 0.5,
-		"height": 0.5,
+		"width": 1,
+		"height": 1,
 		"texture": {
 			"src": "icons/svg/mystery-man.svg",
 			"anchorX": 0.5,
@@ -59,7 +65,7 @@
 		"rotation": 0,
 		"alpha": 1,
 		"disposition": -1,
-		"displayBars": 0,
+		"displayBars": 40,
 		"bar1": {
 			"attribute": "attributes.hp"
 		},
@@ -132,9 +138,9 @@
 	},
 	"items": [
 		{
-			"name": "Haha, Missed Me!",
+			"name": "Parry.",
 			"type": "monsterFeature",
-			"_id": "cOFgqzqJUvJXfoWk",
+			"_id": "NFRLh7UPQCBjMfHR",
 			"img": "icons/svg/item-bag.svg",
 			"system": {
 				"macro": "",
@@ -166,7 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
+				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
 				"isAction": false,
 				"isAttack": false
 			},
@@ -178,13 +184,13 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750887484827,
-				"modifiedTime": 1750887495156,
+				"createdTime": 1750889319090,
+				"modifiedTime": 1750889326218,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		},
 		{
-			"name": "Stab.",
+			"name": "Battlebow.",
 			"type": "monsterFeature",
 			"system": {
 				"isAction": true,
@@ -206,24 +212,24 @@
 					},
 					"effects": [
 						{
-							"id": "CJDFJ2ogQxqEkNau",
+							"id": "i1NzgWsASg6VcBrW",
 							"type": "damage",
-							"damageType": "piercing",
-							"formula": "1d6",
+							"damageType": "acid",
+							"formula": "2d8+2",
 							"parentContext": null,
 							"parentNode": null,
 							"on": {
 								"hit": [
 									{
-										"id": "wr2BQarhUS56eBkg",
+										"id": "ZKgiyOyeaAUUfGdG",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
-										"parentNode": "CJDFJ2ogQxqEkNau"
+										"parentNode": "i1NzgWsASg6VcBrW"
 									}
 								]
 							},
-							"canCrit": false,
+							"canCrit": true,
 							"canMiss": true
 						}
 					],
@@ -239,11 +245,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6 (follows minion rules).</p>",
+				"description": "<p>(Range 12) 2d8+2 .</p>",
 				"isAttack": true
 			},
-			"_id": "8Zvy33f0c5AquKMu",
-			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
+			"_id": "y4nMPW04rliUSw52",
+			"img": "icons/weapons/bows/longbow-leather-green.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
@@ -252,8 +258,8 @@
 				"coreVersion": "13.345",
 				"systemId": "nimble",
 				"systemVersion": "0.1.1",
-				"createdTime": 1750887504053,
-				"modifiedTime": 1750887548837,
+				"createdTime": 1750889334844,
+				"modifiedTime": 1750889394458,
 				"lastModifiedBy": "s1s8bTinDwlgd282"
 			}
 		}
@@ -264,9 +270,9 @@
 		"coreVersion": "13.345",
 		"systemId": "nimble",
 		"systemVersion": "0.1.1",
-		"createdTime": 1750887443427,
-		"modifiedTime": 1750888573101,
+		"createdTime": 1750889296449,
+		"modifiedTime": 1751042207567,
 		"lastModifiedBy": "s1s8bTinDwlgd282"
 	},
-	"_id": "KCZqQUfTuczLNEA3"
+	"_id": "ZlCEjSKWexX3OOYz"
 }
