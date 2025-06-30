@@ -1,422 +1,423 @@
 {
-  "TYPES": {
-    "Actor": {
-      "character": "Player Character",
-      "minion": "Minion",
-      "npc": "Non-Player Character",
-      "soloMonster": "Solo Monster"
-    },
-    "Item": {
-      "background": "Background",
-      "boon": "Boon",
-      "class": "Class",
-      "feature": "Feature",
-      "monsterFeature": "Monster Feature",
-      "object": "Object",
-      "ancestry": "Ancestry",
-      "spell": "Spell",
-      "subclass": "Subclass"
-    }
-  },
-  "NIMBLE": {
-    "abilityScores": {
-      "strength": "Strength",
-      "dexterity": "Dexterity",
-      "constitution": "Constitution",
-      "intelligence": "Intelligence",
-      "will": "Will"
-    },
-    "abilityScoreAbbreviations": {
-      "strength": "Str",
-      "dexterity": "Dex",
-      "constitution": "Con",
-      "intelligence": "Int",
-      "will": "Wil"
-    },
-    "activationCosts": {
-      "action": "Action",
-      "minute": "Minute",
-      "hour": "Hour",
-      "none": "None",
-      "special": "Special",
-      "turn": "Turn"
-    },
-    "activationCostsPlural": {
-      "action": "Actions",
-      "minute": "Minutes",
-      "hour": "Hours",
-      "turn": "Turns"
-    },
-    "armorEffects": {
-      "none": "<p>None</p>",
-      "medium": "<p>Monsters with Medium Armor ignore all damage modifiers from stats and other effects, taking damage from the sum of the dice only.</p>",
-      "heavy": "<p>Monsters with Heavy Armor ignore damage modifiers and take half the sum of the dice (rounding up).</p>"
-    },
-    "armorTypes": {
-      "heavy": "Heavy",
-      "leather": "Leather",
-      "none": "None",
-      "mail": "Mail",
-      "medium": "Medium",
-      "plate": "Plate",
-      "cloth": "Cloth",
-      "shield": "Shield",
-      "shieldPlural": "Shields"
-    },
-    "boonTypes": {
-      "minor": "Minor",
-      "major": "Major",
-      "epic": "Epic"
-    },
-    "classes": {
-      "berserker": "Berserker",
-      "cheat": "Cheat",
-      "commander": "Commander",
-      "hunter": "Hunter",
-      "mage": "Mage",
-      "oathsworn": "Oathsworn",
-      "shadowmancer": "Shadowmancer",
-      "shepherd": "Shepherd",
-      "songweaver": "Songweaver",
-      "stormshifter": "Stormshifter",
-      "zephyr": "Zephyr"
-    },
-    "conditions": {
-      "blinded": "Blinded",
-      "bloodied": "Bloodied",
-      "concentration": "Concentration",
-      "charged": "Charged",
-      "charmed": "Charmed",
-      "confused": "Confused",
-      "dazed": "Dazed",
-      "dead": "Dead",
-      "despair": "Despair",
-      "distracted": "Distracted",
-      "dying": "Dying",
-      "frightened": "Frightened",
-      "grappled": "Grappled",
-      "hampered": "Hampered",
-      "incapacitated": "Incapacitated",
-      "invisible": "Invisible",
-      "paralyzed": "Paralyzed",
-      "petrified": "Petrified",
-      "poisoned": "Poisoned",
-      "prone": "Prone",
-      "restrained": "Restrained",
-      "riding": "Riding",
-      "silenced": "Silenced",
-      "slowed": "Slowed",
-      "smoldering": "Smoldering",
-      "stunned": "Stunned",
-      "taunted": "Taunted",
-      "unconscious": "Unconscious",
-      "wounded": "Wounded"
-    },
-    "conditionDescriptions": {
-      "blinded": "<p>Can't see. Attacks against you have advantage, and your attacks have disadvantage.</p>",
-      "bloodied": "<p>At half HP or less.</p>",
-      "charged": "<p>Whenever you take lightning damage you are Charged for 1 minute.</p>",
-      "charmed": "<p>Sees the charmer as an ally. Charmer has advantage on social interactions with you.</p>",
-      "concentration": "<p>Can only Concentrate on 1 thing at a time. DC 10 STR save when crit or lose concentration.</p>",
-      "confused": "<p>The GM spends your next action.</p>",
-      "dazed": "<p><b>Heroes:</b> lose 1 action.</p> <p><b>Monsters:</b> can perform one less action on their next turn.</p>",
-      "dead": "<p>You die when you have taken 6 Wounds (unless you have an ability that changes this number). There are ways to revive a hero who has died, but they are rare and often come at a very steep cost.</p>",
-      "despair": "<p>Disdvantage on the next attack you make in this encounter.</p>",
-      "distracted": "<p>A target is distracted if it is adjacent to or Taunted by an ally, or if it cannot see you.</p>",
-      "dying": "<p>At 0HP. Taking damage while dying causes 2 Wounds, a crit causes 3 instead.</p>",
-      "frightened": "<p>Disadvantage on rolls when source of fear is nearby; speed halved when moving closer to it.</p>",
-      "grappled": "<p>Cannot move. Attacks against you have advantage.</p>",
-      "hampered": "<p>Any creature with their actions or movement reduce (e.g. Dazed, Grappled, Prone, Difficult Terrain).</p>",
-      "incapacitated": "<p>Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
-      "invisible": "<p>Cannot be seen. Your attacks have advantage, and attacks against you have disadvantage.</p>",
-      "paralyzed": "<p>Incapacitated. Can’t do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
-      "petrified": "<p>Incapacitated. You have all the benefits and drawbacks of being a rock! Immune to most damage except from large explosions, picks, or similar tools.</p>",
-      "poisoned": "<p>Disadvantage on rolls.</p>",
-      "prone": "<p>Movement costs twice as much, and disadvantage on attacks. Melee attacks against you have advantage; Ranged have disadvantage. Spend 3 spaces of your Speed to stand up.</p>",
-      "restrained": "<p>Cannot move. Attacks against you have advantage.</p>",
-      "riding": "<p>You move with the creature you are riding. Any attacks that miss you, strike them.</p>",
-      "silenced": "<p>Cannot cast spells or use other abilities that require speaking (e.g. Commander's Orders).</p>",
-      "slowed": "<p>Speed halved during your next turn.</p>",
-      "smoldering": "<p>Some fire spells can inflict the Smoldering condition and gain additional destructive effects against Smoldering enemies.</p>",
-      "stunned": "<p>Incapacitated. Can’t do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
-      "taunted": "<p>Disadvantage on attacks except against the most recent taunter.</p>",
-      "unconscious": "<p>Incapacitated. Can’t do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
-      "wounded": "<p>Has any Wounds (typically 6 Wounds and a hero is dead).</p>"
-    },
-    "currency": {
-      "cp": "Copper",
-      "sp": "Silver",
-      "gp": "Gold"
-    },
-    "currencyAbbreviations": {
-      "cp": "cp",
-      "sp": "sp",
-      "gp": "gp"
-    },
-    "damageTypes": {
-      "acid": "Acid",
-      "bludgeoning": "Bludgeoning",
-      "cold": "Cold",
-      "fire": "Fire",
-      "force": "Force",
-      "lightning": "Lightning",
-      "necrotic": "Necrotic",
-      "piercing": "Piercing",
-      "poison": "Poison",
-      "psychic": "Psychic",
-      "radiant": "Radiant",
-      "slashing": "Slashing",
-      "thunder": "Thunder",
-      "unknown": "Unknown Type"
-    },
-    "durations": {
-      "action": "Action",
-      "minute": "Minute",
-      "hour": "Hour",
-      "none": "None",
-      "round": "Round",
-      "special": "Special",
-      "turn": "Turn"
-    },
-    "durationsPlural": {
-      "action": "Actions",
-      "minute": "Minutes",
-      "hour": "Hours",
-      "round": "Rounds",
-      "turn": "Turns"
-    },
-    "effectApplications": {
-      "always": "Always",
-      "hit": "Hit",
-      "miss": "Miss",
-      "failedSave": "Failed Save",
-      "successfulSave": "Successful Save"
-    },
-    "effectTypes": {
-      "condition": "Condition",
-      "damage": "Damage",
-      "healing": "Healing"
-    },
-    "featureTypes": {
-      "ancestry": "Ancestry",
-      "background": "Background",
-      "boon": "Boon",
-      "class": "Class"
-    },
-    "featureTypeHeadings": {
-      "ancestry": "Ancestry",
-      "background": "Background",
-      "boon": "Boons",
-      "feature": "Class Features"
-    },
-    "healingTypes": {
-      "healing": "Healing",
-      "tempHealing": "Temporary Healing"
-    },
-    "languages": {
-      "common": "Common",
-      "celestial": "Celestial",
-      "deepSpeak": "Deep Speak",
-      "draconic": "Draconic",
-      "dwarvish": "Dwarvish",
-      "elvish": "Elvish",
-      "goblin": "Goblin",
-      "infernal": "Infernal",
-      "thievesCant": "Thieves' Cant",
-      "primordial": "Primordial"
-    },
-    "languageHints": {
-      "common": "Most creatures speak this somewhat.",
-      "celestial": "Typically spoken by Celestial beings.",
-      "deepSpeak": "Spoken by underworld dwellers.",
-      "draconic": "Typically spoken by Dragons, Dragonkin, and Kobolds.",
-      "dwarvish": "Typically spoken by Dwarves, Gnomes, and Giants.",
-      "elvish": "Typically spoken by Elves, Fey, and Sylvan.",
-      "goblin": "Typically spoken by Goblins and Orcs.",
-      "infernal": "Typically spoken by various Fiends.",
-      "thievesCant": "Typically known by scoundrels.",
-      "primordial": "Spoken by Elementals and Ancient Beings."
-    },
-    "modifiers": {
-      "abilityCheck": "{ability} Mod",
-      "savingThrow": "{saveType} Mod",
-      "skillCheck": "{skill} Mod"
-    },
-    "movementTypes": {
-      "burrow": "Burrowing",
-      "climb": "Climbing",
-      "fly": "Flying",
-      "swim": "Swimming",
-      "walk": "Walking"
-    },
-    "objectTypes": {
-      "armor": "Armor",
-      "shield": "Shield",
-      "weapon": "Weapon",
-      "consumable": "Consumable",
-      "misc": "Miscellaneous"
-    },
-    "objectTypeHeadings": {
-      "armor": "Armor",
-      "shield": "Shields",
-      "weapon": "Weapons",
-      "consumable": "Consumables",
-      "misc": "Miscellaneous"
-    },
-    "prompts": {
-      "changeActorImage": "Change Actor Image",
-      "changeBoonImage": "Change Boon Image",
-      "changeClassImage": "Change Class Image",
-      "changeFeatureImage": "Change Feature Image",
-      "changeItemImage": "Change Item Image",
-      "changeSpellImage": "Change Spell Image",
-      "changeSubclassImage": "Change Subclass Image",
-      "configureAbilityScores": "Configure Ability Scores",
-      "configureArmorProficiencies": "Configure Armor Proficiencies",
-      "configureLanguageProficiencies": "Configure Language Proficiencies",
-      "configureMovement": "Configure Movement",
-      "configureSkills": "Configure Skills",
-      "configureWeaponProficiencies": "Configure Weapon Proficiencies",
-      "editRoll": "Edit Roll",
-      "levelUp": "Level Up",
-      "safeRest": "Safe Rest",
-      "rollAbilityCheck": "Roll Ability Check",
-      "rollAbilityCheckSpecific": "Roll {ability} Check",
-      "rollInitiative": "Roll Initiative",
-      "rollSavingThrow": "Roll Saving Throw",
-      "rollSavingThrowSpecific": "Roll {save} Saving Throw",
-      "rollSkillCheck": "Roll Skill Check",
-      "rollSkillCheckSpecific": "Roll {skill} Check",
-      "fieldRest": "Field Rest"
-    },
-    "properties": {
-      "concentration": "Concentration",
-      "light": "Light",
-      "reach": "Reach",
-      "range": "Range",
-      "load": "Load",
-      "thrown": "Thrown",
-      "twoHanded": "2-Handed",
-      "utilitySpell": "Utility",
-      "vicious": "Vicious"
-    },
-    "restTypes": {
-      "safeRest": "Safe Rest",
-      "fieldRest": "Field Rest"
-    },
-    "ruleTypes": {
-      "abilityBonus": "Stat Bonus",
-      "armorClass": "Armor Class",
-      "grantItem": "Item",
-      "initiativeBonus": "Initiative Bonus",
-      "maxHitDice": "Hit Dice",
-      "maxHpBonus": "Hit Points",
-      "maxWounds": "Wounds",
-      "note": "Note",
-      "skillBonus": "Skill Bonus"
-    },
-    "savingThrows": {
-      "strength": "Strength",
-      "dexterity": "Dexterity",
-      "intelligence": "Intelligence",
-      "will": "Will"
-    },
-    "savingThrowAbbreviations": {
-      "strength": "Str",
-      "dexterity": "Dex",
-      "intelligence": "Int",
-      "will": "Wil"
-    },
-    "sizeCategories": {
-      "gargantuan": "Gargantuan",
-      "huge": "Huge",
-      "large": "Large",
-      "medium": "Medium",
-      "small": "Small",
-      "tiny": "Tiny"
-    },
-    "skills": {
-      "arcana": "Arcana",
-      "examination": "Examination",
-      "influence": "Influence",
-      "insight": "Insight",
-      "might": "Might",
-      "lore": "Lore",
-      "naturecraft": "Naturecraft",
-      "perception": "Perception",
-      "finesse": "Finesse",
-      "stealth": "Stealth"
-    },
-    "spells": {
-      "schools": {
-        "fire": "Fire",
-        "ice": "Ice",
-        "lightning": "Lightning",
-        "necrotic": "Necrotic",
-        "radiant": "Radiant",
-        "wind": "Wind"
-      },
-      "tierHeadings": {
-        "tier0": "Cantrips and Utility Spells",
-        "tier1": "Tier 1 Spells",
-        "tier2": "Tier 2 Spells",
-        "tier3": "Tier 3 Spells",
-        "tier4": "Tier 4 Spells",
-        "tier5": "Tier 5 Spells",
-        "tier6": "Tier 6 Spells",
-        "tier7": "Tier 7 Spells",
-        "tier8": "Tier 8 Spells",
-        "tier9": "Tier 9 Spells"
-      },
-      "tiers": {
-        "tier0": "Cantrip",
-        "tier1": "Tier 1",
-        "tier2": "Tier 2",
-        "tier3": "Tier 3",
-        "tier4": "Tier 4",
-        "tier5": "Tier 5",
-        "tier6": "Tier 6",
-        "tier7": "Tier 7",
-        "tier8": "Tier 8",
-        "tier9": "Tier 9"
-      }
-    },
-    "statArrays": {
-      "balanced": "Balanced",
-      "minMax": "Min-Max",
-      "standard": "Standard"
-    },
-    "sheets": {
-      "background": "Nimble Background Sheet",
-      "boon": "Nimble Boon Sheet",
-      "class": "Nimble Class Sheet",
-      "feature": "Nimble Feature Sheet",
-      "monsterFeature": "Nimble Monster Feature Sheet",
-      "npc": "Nimble NPC Sheet",
-      "object": "Nimble Object Sheet",
-      "playerCharacter": "Nimble Player Character Sheet",
-      "ancestry": "Nimble Ancestry Sheet",
-      "soloMonster": "Nimble Solo Monster Sheet",
-      "spell": "Nimble Spell Sheet",
-      "subclass": "Nimble Subclass Sheet"
-    },
-    "templateShapes": {
-      "circle": "Circle",
-      "cone": "Cone",
-      "emanation": "Emanation",
-      "line": "Line",
-      "square": "Square"
-    },
-    "timeUnits": {
-      "action": "action",
-      "day": "day",
-      "hour": "hour",
-      "minute": "minute",
-      "round": "round",
-      "turn": "turn"
-    },
-    "ui": {
-      "clearAll": "Clear All"
-    }
-  }
+	"TYPES": {
+		"Actor": {
+			"character": "Player Character",
+			"minion": "Minion",
+			"npc": "Non-Player Character",
+			"soloMonster": "Solo Monster"
+		},
+		"Item": {
+			"background": "Background",
+			"boon": "Boon",
+			"class": "Class",
+			"feature": "Feature",
+			"monsterFeature": "Monster Feature",
+			"object": "Object",
+			"ancestry": "Ancestry",
+			"spell": "Spell",
+			"subclass": "Subclass"
+		}
+	},
+	"NIMBLE": {
+		"abilityScores": {
+			"strength": "Strength",
+			"dexterity": "Dexterity",
+			"constitution": "Constitution",
+			"intelligence": "Intelligence",
+			"will": "Will"
+		},
+		"abilityScoreAbbreviations": {
+			"strength": "Str",
+			"dexterity": "Dex",
+			"constitution": "Con",
+			"intelligence": "Int",
+			"will": "Wil"
+		},
+		"activationCosts": {
+			"action": "Action",
+			"minute": "Minute",
+			"hour": "Hour",
+			"none": "None",
+			"special": "Special",
+			"turn": "Turn"
+		},
+		"activationCostsPlural": {
+			"action": "Actions",
+			"minute": "Minutes",
+			"hour": "Hours",
+			"turn": "Turns"
+		},
+		"armorEffects": {
+			"none": "<p>None</p>",
+			"medium": "<p>Monsters with Medium Armor ignore all damage modifiers from stats and other effects, taking damage from the sum of the dice only.</p>",
+			"heavy": "<p>Monsters with Heavy Armor ignore damage modifiers and take half the sum of the dice (rounding up).</p>"
+		},
+		"armorTypes": {
+			"heavy": "Heavy",
+			"leather": "Leather",
+			"none": "None",
+			"mail": "Mail",
+			"medium": "Medium",
+			"plate": "Plate",
+			"cloth": "Cloth",
+			"shield": "Shield",
+			"shieldPlural": "Shields"
+		},
+		"boonTypes": {
+			"minor": "Minor",
+			"major": "Major",
+			"epic": "Epic"
+		},
+		"classes": {
+			"berserker": "Berserker",
+			"cheat": "Cheat",
+			"commander": "Commander",
+			"hunter": "Hunter",
+			"mage": "Mage",
+			"oathsworn": "Oathsworn",
+			"shadowmancer": "Shadowmancer",
+			"shepherd": "Shepherd",
+			"songweaver": "Songweaver",
+			"stormshifter": "Stormshifter",
+			"zephyr": "Zephyr"
+		},
+		"conditions": {
+			"blinded": "Blinded",
+			"bloodied": "Bloodied",
+			"concentration": "Concentration",
+			"charged": "Charged",
+			"charmed": "Charmed",
+			"confused": "Confused",
+			"dazed": "Dazed",
+			"dead": "Dead",
+			"despair": "Despair",
+			"distracted": "Distracted",
+			"dying": "Dying",
+			"frightened": "Frightened",
+			"grappled": "Grappled",
+			"hampered": "Hampered",
+			"incapacitated": "Incapacitated",
+			"invisible": "Invisible",
+			"paralyzed": "Paralyzed",
+			"petrified": "Petrified",
+			"poisoned": "Poisoned",
+			"prone": "Prone",
+			"restrained": "Restrained",
+			"riding": "Riding",
+			"silenced": "Silenced",
+			"slowed": "Slowed",
+			"smoldering": "Smoldering",
+			"stunned": "Stunned",
+			"taunted": "Taunted",
+			"unconscious": "Unconscious",
+			"wounded": "Wounded"
+		},
+		"conditionDescriptions": {
+			"blinded": "<p>Can't see. Attacks against you have advantage, and your attacks have disadvantage.</p>",
+			"bloodied": "<p>At half HP or less.</p>",
+			"charged": "<p>Whenever you take lightning damage you are Charged for 1 minute.</p>",
+			"charmed": "<p>Sees the charmer as an ally. Charmer has advantage on social interactions with you.</p>",
+			"concentration": "<p>Can only Concentrate on 1 thing at a time. DC 10 STR save when crit or lose concentration.</p>",
+			"confused": "<p>The GM spends your next action.</p>",
+			"dazed": "<p><b>Heroes:</b> lose 1 action.</p> <p><b>Monsters:</b> can perform one less action on their next turn.</p>",
+			"dead": "<p>You die when you have taken 6 Wounds (unless you have an ability that changes this number). There are ways to revive a hero who has died, but they are rare and often come at a very steep cost.</p>",
+			"despair": "<p>Disdvantage on the next attack you make in this encounter.</p>",
+			"distracted": "<p>A target is distracted if it is adjacent to or Taunted by an ally, or if it cannot see you.</p>",
+			"dying": "<p>At 0HP. Taking damage while dying causes 2 Wounds, a crit causes 3 instead.</p>",
+			"frightened": "<p>Disadvantage on rolls when source of fear is nearby; speed halved when moving closer to it.</p>",
+			"grappled": "<p>Cannot move. Attacks against you have advantage.</p>",
+			"hampered": "<p>Any creature with their actions or movement reduce (e.g. Dazed, Grappled, Prone, Difficult Terrain).</p>",
+			"incapacitated": "<p>Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
+			"invisible": "<p>Cannot be seen. Your attacks have advantage, and attacks against you have disadvantage.</p>",
+			"paralyzed": "<p>Incapacitated. Can’t do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
+			"petrified": "<p>Incapacitated. You have all the benefits and drawbacks of being a rock! Immune to most damage except from large explosions, picks, or similar tools.</p>",
+			"poisoned": "<p>Disadvantage on rolls.</p>",
+			"prone": "<p>Movement costs twice as much, and disadvantage on attacks. Melee attacks against you have advantage; Ranged have disadvantage. Spend 3 spaces of your Speed to stand up.</p>",
+			"restrained": "<p>Cannot move. Attacks against you have advantage.</p>",
+			"riding": "<p>You move with the creature you are riding. Any attacks that miss you, strike them.</p>",
+			"silenced": "<p>Cannot cast spells or use other abilities that require speaking (e.g. Commander's Orders).</p>",
+			"slowed": "<p>Speed halved during your next turn.</p>",
+			"smoldering": "<p>Some fire spells can inflict the Smoldering condition and gain additional destructive effects against Smoldering enemies.</p>",
+			"stunned": "<p>Incapacitated. Can’t do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
+			"taunted": "<p>Disadvantage on attacks except against the most recent taunter.</p>",
+			"unconscious": "<p>Incapacitated. Can’t do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
+			"wounded": "<p>Has any Wounds (typically 6 Wounds and a hero is dead).</p>"
+		},
+		"currency": {
+			"cp": "Copper",
+			"sp": "Silver",
+			"gp": "Gold"
+		},
+		"currencyAbbreviations": {
+			"cp": "cp",
+			"sp": "sp",
+			"gp": "gp"
+		},
+		"damageTypes": {
+			"acid": "Acid",
+			"bludgeoning": "Bludgeoning",
+			"cold": "Cold",
+			"fire": "Fire",
+			"force": "Force",
+			"lightning": "Lightning",
+			"necrotic": "Necrotic",
+			"piercing": "Piercing",
+			"poison": "Poison",
+			"psychic": "Psychic",
+			"radiant": "Radiant",
+			"slashing": "Slashing",
+			"thunder": "Thunder",
+			"unknown": "Unknown Type"
+		},
+		"durations": {
+			"action": "Action",
+			"minute": "Minute",
+			"hour": "Hour",
+			"none": "None",
+			"round": "Round",
+			"special": "Special",
+			"turn": "Turn"
+		},
+		"durationsPlural": {
+			"action": "Actions",
+			"minute": "Minutes",
+			"hour": "Hours",
+			"round": "Rounds",
+			"turn": "Turns"
+		},
+		"effectApplications": {
+			"always": "Always",
+			"hit": "Hit",
+			"miss": "Miss",
+			"failedSave": "Failed Save",
+			"successfulSave": "Successful Save"
+		},
+		"effectTypes": {
+			"condition": "Condition",
+			"damage": "Damage",
+			"healing": "Healing"
+		},
+		"featureTypes": {
+			"ancestry": "Ancestry",
+			"background": "Background",
+			"boon": "Boon",
+			"class": "Class"
+		},
+		"featureTypeHeadings": {
+			"ancestry": "Ancestry",
+			"background": "Background",
+			"boon": "Boons",
+			"feature": "Class Features"
+		},
+		"healingTypes": {
+			"healing": "Healing",
+			"tempHealing": "Temporary Healing"
+		},
+		"languages": {
+			"common": "Common",
+			"celestial": "Celestial",
+			"deepSpeak": "Deep Speak",
+			"draconic": "Draconic",
+			"dwarvish": "Dwarvish",
+			"elvish": "Elvish",
+			"goblin": "Goblin",
+			"infernal": "Infernal",
+			"thievesCant": "Thieves' Cant",
+			"primordial": "Primordial"
+		},
+		"languageHints": {
+			"common": "Most creatures speak this somewhat.",
+			"celestial": "Typically spoken by Celestial beings.",
+			"deepSpeak": "Spoken by underworld dwellers.",
+			"draconic": "Typically spoken by Dragons, Dragonkin, and Kobolds.",
+			"dwarvish": "Typically spoken by Dwarves, Gnomes, and Giants.",
+			"elvish": "Typically spoken by Elves, Fey, and Sylvan.",
+			"goblin": "Typically spoken by Goblins and Orcs.",
+			"infernal": "Typically spoken by various Fiends.",
+			"thievesCant": "Typically known by scoundrels.",
+			"primordial": "Spoken by Elementals and Ancient Beings."
+		},
+		"modifiers": {
+			"abilityCheck": "{ability} Mod",
+			"savingThrow": "{saveType} Mod",
+			"skillCheck": "{skill} Mod"
+		},
+		"movementTypes": {
+			"burrow": "Burrowing",
+			"climb": "Climbing",
+			"fly": "Flying",
+			"swim": "Swimming",
+			"walk": "Walking"
+		},
+		"objectTypes": {
+			"armor": "Armor",
+			"shield": "Shield",
+			"weapon": "Weapon",
+			"consumable": "Consumable",
+			"misc": "Miscellaneous"
+		},
+		"objectTypeHeadings": {
+			"armor": "Armor",
+			"shield": "Shields",
+			"weapon": "Weapons",
+			"consumable": "Consumables",
+			"misc": "Miscellaneous"
+		},
+		"prompts": {
+			"changeActorImage": "Change Actor Image",
+			"changeBoonImage": "Change Boon Image",
+			"changeClassImage": "Change Class Image",
+			"changeFeatureImage": "Change Feature Image",
+			"changeItemImage": "Change Item Image",
+			"changeSpellImage": "Change Spell Image",
+			"changeSubclassImage": "Change Subclass Image",
+			"configureAbilityScores": "Configure Ability Scores",
+			"configureArmorProficiencies": "Configure Armor Proficiencies",
+			"configureLanguageProficiencies": "Configure Language Proficiencies",
+			"configureMovement": "Configure Movement",
+			"configureSkills": "Configure Skills",
+			"configureWeaponProficiencies": "Configure Weapon Proficiencies",
+			"editRoll": "Edit Roll",
+			"levelUp": "Level Up",
+			"safeRest": "Safe Rest",
+			"rollAbilityCheck": "Roll Ability Check",
+			"rollAbilityCheckSpecific": "Roll {ability} Check",
+			"rollInitiative": "Roll Initiative",
+			"rollSavingThrow": "Roll Saving Throw",
+			"rollSavingThrowSpecific": "Roll {save} Saving Throw",
+			"rollSkillCheck": "Roll Skill Check",
+			"rollSkillCheckSpecific": "Roll {skill} Check",
+			"fieldRest": "Field Rest"
+		},
+		"properties": {
+			"concentration": "Concentration",
+			"light": "Light",
+			"reach": "Reach",
+			"range": "Range",
+			"load": "Load",
+			"thrown": "Thrown",
+			"twoHanded": "2-Handed",
+			"utilitySpell": "Utility",
+			"vicious": "Vicious"
+		},
+		"restTypes": {
+			"safeRest": "Safe Rest",
+			"fieldRest": "Field Rest"
+		},
+		"ruleTypes": {
+			"abilityBonus": "Stat Bonus",
+			"armorClass": "Armor Class",
+			"grantItem": "Item",
+			"grantProficiency": "Proficiency",
+			"initiativeBonus": "Initiative Bonus",
+			"maxHitDice": "Hit Dice",
+			"maxHpBonus": "Hit Points",
+			"maxWounds": "Wounds",
+			"note": "Note",
+			"skillBonus": "Skill Bonus"
+		},
+		"savingThrows": {
+			"strength": "Strength",
+			"dexterity": "Dexterity",
+			"intelligence": "Intelligence",
+			"will": "Will"
+		},
+		"savingThrowAbbreviations": {
+			"strength": "Str",
+			"dexterity": "Dex",
+			"intelligence": "Int",
+			"will": "Wil"
+		},
+		"sizeCategories": {
+			"gargantuan": "Gargantuan",
+			"huge": "Huge",
+			"large": "Large",
+			"medium": "Medium",
+			"small": "Small",
+			"tiny": "Tiny"
+		},
+		"skills": {
+			"arcana": "Arcana",
+			"examination": "Examination",
+			"influence": "Influence",
+			"insight": "Insight",
+			"might": "Might",
+			"lore": "Lore",
+			"naturecraft": "Naturecraft",
+			"perception": "Perception",
+			"finesse": "Finesse",
+			"stealth": "Stealth"
+		},
+		"spells": {
+			"schools": {
+				"fire": "Fire",
+				"ice": "Ice",
+				"lightning": "Lightning",
+				"necrotic": "Necrotic",
+				"radiant": "Radiant",
+				"wind": "Wind"
+			},
+			"tierHeadings": {
+				"tier0": "Cantrips and Utility Spells",
+				"tier1": "Tier 1 Spells",
+				"tier2": "Tier 2 Spells",
+				"tier3": "Tier 3 Spells",
+				"tier4": "Tier 4 Spells",
+				"tier5": "Tier 5 Spells",
+				"tier6": "Tier 6 Spells",
+				"tier7": "Tier 7 Spells",
+				"tier8": "Tier 8 Spells",
+				"tier9": "Tier 9 Spells"
+			},
+			"tiers": {
+				"tier0": "Cantrip",
+				"tier1": "Tier 1",
+				"tier2": "Tier 2",
+				"tier3": "Tier 3",
+				"tier4": "Tier 4",
+				"tier5": "Tier 5",
+				"tier6": "Tier 6",
+				"tier7": "Tier 7",
+				"tier8": "Tier 8",
+				"tier9": "Tier 9"
+			}
+		},
+		"statArrays": {
+			"balanced": "Balanced",
+			"minMax": "Min-Max",
+			"standard": "Standard"
+		},
+		"sheets": {
+			"background": "Nimble Background Sheet",
+			"boon": "Nimble Boon Sheet",
+			"class": "Nimble Class Sheet",
+			"feature": "Nimble Feature Sheet",
+			"monsterFeature": "Nimble Monster Feature Sheet",
+			"npc": "Nimble NPC Sheet",
+			"object": "Nimble Object Sheet",
+			"playerCharacter": "Nimble Player Character Sheet",
+			"ancestry": "Nimble Ancestry Sheet",
+			"soloMonster": "Nimble Solo Monster Sheet",
+			"spell": "Nimble Spell Sheet",
+			"subclass": "Nimble Subclass Sheet"
+		},
+		"templateShapes": {
+			"circle": "Circle",
+			"cone": "Cone",
+			"emanation": "Emanation",
+			"line": "Line",
+			"square": "Square"
+		},
+		"timeUnits": {
+			"action": "action",
+			"day": "day",
+			"hour": "hour",
+			"minute": "minute",
+			"round": "round",
+			"turn": "turn"
+		},
+		"ui": {
+			"clearAll": "Clear All"
+		}
+	}
 }
