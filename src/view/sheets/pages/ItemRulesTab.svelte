@@ -16,12 +16,13 @@
     const { ruleTypes } = CONFIG.NIMBLE;
 
     let item: NimbleBaseItem = getContext("document");
-    let rules = $derived(item.reactive.rules);
+    let rules = $derived(item.reactive.system.rules);
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--item">
-    {#each rules as [ruleId, rule] (ruleId)}
-        {@const { tooltipInfo, ...ruleData } = rule}
+    {#each rules as rule (rule.id)}
+        {@const { ...ruleData } = rule}
+        {@const { tooltipInfo } = item.rules.get(rule.id)}
 
         <div class="nimble-code-block nimble-code-block--rule">
             <header class="nimble-section-header">
@@ -44,7 +45,7 @@
                     aria-label="Delete Rule"
                     data-tooltip="Delete Rule"
                     onclick={() => {
-                        item.rules.deleteRule(ruleId);
+                        item.rules.deleteRule(rule.id);
                     }}
                 >
                     <i class="fa-solid fa-trash"></i>
@@ -59,33 +60,36 @@
                 autocomplete="off"
                 spellcheck={false}
                 wrap="soft"
-                onchange={(event) => updateRule(event, ruleId)}
+                onchange={(event) => updateRule(event, rule.id)}
                 onkeydown={overrideTextAreaBehavior}
+                disabled={item.isEmbedded}
             ></textarea>
         </div>
     {/each}
 </section>
 
-<footer class="nimble-sheet__footer nimble-sheet__footer--rules">
-    <h4
-        class="nimble-heading"
-        data-heading-variant="section"
-        style="grid-column: 1 / -1;"
-    >
-        Add Rule
-    </h4>
-
-    {#each Object.entries(ruleTypes) as [ruleKey, label]}
-        <button
-            class="nimble-button"
-            data-button-variant="basic"
-            aria-label="Add Rule"
-            onclick={() => item.rules.addRule({ type: ruleKey })}
+{#if !item.isEmbedded}
+    <footer class="nimble-sheet__footer nimble-sheet__footer--rules">
+        <h4
+            class="nimble-heading"
+            data-heading-variant="section"
+            style="grid-column: 1 / -1;"
         >
-            {label}
-        </button>
-    {/each}
-</footer>
+            Add Rule
+        </h4>
+
+        {#each Object.entries(ruleTypes) as [ruleKey, label]}
+            <button
+                class="nimble-button"
+                data-button-variant="basic"
+                aria-label="Add Rule"
+                onclick={() => item.rules.addRule({ type: ruleKey })}
+            >
+                {label}
+            </button>
+        {/each}
+    </footer>
+{/if}
 
 <style lang="scss">
     .nimble-sheet__body {
