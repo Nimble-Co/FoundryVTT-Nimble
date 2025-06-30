@@ -1,0 +1,87 @@
+{
+	"folder": null,
+	"name": "Dragonscale",
+	"type": "object",
+	"img": "icons/equipment/chest/breastplate-layered-gold.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "armorClass",
+				"disabled": false,
+				"id": "aBxD6FcGcVlxwLxM",
+				"identifier": "dragonscale",
+				"label": "Dragonscale",
+				"predicate": {},
+				"priority": 1,
+				"formula": "15 + min(@dexterity,2)-@dexterity",
+				"mode": "add"
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<table><tbody><tr><td data-colwidth=\"127\"><p><strong>Type</strong></p></td><td><p>Mail </p></td></tr><tr><td data-colwidth=\"127\"><p><strong>Requirement</strong></p></td><td><p>4 STR</p></td></tr><tr><td data-colwidth=\"127\"><p><strong>Armor</strong></p></td><td><p>15+DEX (max 2)</p></td></tr><tr><td data-colwidth=\"127\"><p><strong>Cost</strong></p></td><td><p>3000 gp</p></td></tr></tbody></table>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "armor",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.1",
+		"createdTime": 1750884155873,
+		"modifiedTime": 1750884157836,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "j2aRVSozXiIZfj7y"
+}

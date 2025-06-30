@@ -1,0 +1,87 @@
+{
+	"folder": null,
+	"name": "Iron Shield",
+	"type": "object",
+	"img": "icons/equipment/shield/heater-steel-worn.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "armorClass",
+				"disabled": false,
+				"id": "0HIt7IHHSVwQ2qNY",
+				"identifier": "iron-shield",
+				"label": "Iron Shield",
+				"predicate": {},
+				"priority": 2,
+				"formula": "4",
+				"mode": "add"
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<table><tbody><tr><td><p><strong>Type</strong></p></td><td><p>Shield</p></td></tr><tr><td><p><strong>Requirement</strong></p></td><td><p>2 STR</p></td></tr><tr><td><p><strong>Armor</strong></p></td><td><p>4</p></td></tr><tr><td><p><strong>Cost</strong></p></td><td><p>80 gp</p></td></tr></tbody></table>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "shield",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.1",
+		"createdTime": 1750884210290,
+		"modifiedTime": 1750884211665,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "jBG6IrYWBnSHWmdj"
+}

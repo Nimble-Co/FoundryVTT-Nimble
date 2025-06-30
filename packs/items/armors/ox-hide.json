@@ -1,0 +1,87 @@
+{
+	"folder": null,
+	"name": "Ox Hide",
+	"type": "object",
+	"img": "icons/equipment/chest/breastplate-layered-leather-stitched.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "armorClass",
+				"disabled": false,
+				"id": "sBs5aSWol6uB5dSR",
+				"identifier": "ox-hide",
+				"label": "Ox Hide",
+				"predicate": {},
+				"priority": 1,
+				"formula": "4",
+				"mode": "add"
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<table><tbody><tr><td><p><strong>Type</strong></p></td><td><p>Leather</p></td></tr><tr><td><p><strong>Armor</strong></p></td><td><p>4+DEX</p></td></tr><tr><td><p><strong>Cost</strong></p></td><td><p>45 gp</p></td></tr></tbody></table>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "armor",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.1",
+		"createdTime": 1750884060343,
+		"modifiedTime": 1750884060343,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "ysAlwyX3jdyeBn9e"
+}

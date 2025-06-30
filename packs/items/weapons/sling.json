@@ -1,0 +1,131 @@
+{
+	"name": "Sling",
+	"type": "object",
+	"img": "icons/weapons/slings/slingshot-wood.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "iRVuywoznjR9UjTZ",
+					"type": "damage",
+					"damageType": "bludgeoning",
+					"formula": "1d4+@dexterity",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"miss": [
+							{
+								"id": "ZyVdohWekZjGyeZT",
+								"type": "note",
+								"noteType": "warning",
+								"text": "MISS",
+								"parentContext": "miss",
+								"parentNode": "iRVuywoznjR9UjTZ"
+							}
+						],
+						"criticalHit": [
+							{
+								"id": "IvD7hhD8dGX9hr84",
+								"type": "note",
+								"noteType": "warning",
+								"text": "CRIT",
+								"parentContext": "criticalHit",
+								"parentNode": "iRVuywoznjR9UjTZ"
+							},
+							{
+								"id": "R0cGF71afkJNvVdS",
+								"type": "damage",
+								"damageType": "bludgeoning",
+								"formula": "1d4",
+								"parentContext": "criticalHit",
+								"parentNode": "iRVuywoznjR9UjTZ",
+								"ignoreArmor": true,
+								"on": {}
+							}
+						],
+						"hit": [
+							{
+								"id": "3ZXDsVlm4CewZUg3",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "iRVuywoznjR9UjTZ"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": false,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<p></p><table><tbody><tr><td data-colwidth=\"93\"><p><strong>Damage</strong></p></td><td><p>1d4+DEX Bludgeoning</p></td></tr><tr><td data-colwidth=\"93\"><p><strong>Properties</strong></p></td><td><p>2 Handed, Range 12, Vicious</p></td></tr><tr><td data-colwidth=\"93\"><p><strong>Cost</strong></p></td><td><p>4 gp</p></td></tr></tbody></table>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "weapon",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 12
+			},
+			"reach": {
+				"min": 1,
+				"max": 2
+			},
+			"selected": [
+				"twoHanded",
+				"range",
+				"vicious"
+			],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.2",
+		"createdTime": 1751233105327,
+		"modifiedTime": 1751233237289,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "YjGUoWybYcwxI2Ky"
+}
