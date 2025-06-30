@@ -49,19 +49,18 @@ export default class IdBuilder {
 
 				if (!jsonData) continue;
 
-				const originalId = jsonData._id;
-
 				const docType = IdBuilder.documentType(jsonData);
 				if (!docType) {
 					console.warn(`[ERROR] - ${file} doesn't have a valid type.`);
 					continue;
 				}
 
-				if (!originalId) {
-					let id;
+				const originalId = jsonData._id;
+				const idPath = IdBuilder.getIdKey(file);
+				const existingId = getProperty(savedIdData, idPath);
 
-					const idPath = IdBuilder.getIdKey(file);
-					const existingId = getProperty(savedIdData, idPath);
+				if (!originalId || existingId !== originalId) {
+					let id;
 
 					if (existingId) {
 						id = existingId;
@@ -98,7 +97,7 @@ export default class IdBuilder {
 
 			// Sort ids key
 			const replacer = (_, value) =>
-				value instanceof Object && !(value instanceof Array)
+				value instanceof Object && !Array.isArray(value)
 					? Object.keys(value)
 							.sort()
 							.reduce((sorted, key) => {
