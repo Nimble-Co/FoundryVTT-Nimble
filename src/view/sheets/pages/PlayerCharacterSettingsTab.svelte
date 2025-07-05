@@ -1,30 +1,36 @@
 <script>
-import { getContext } from 'svelte';
+    import { getContext } from "svelte";
 
-function updateBonusInventorySlots(newValue) {
-	if (newValue < 0) return;
+    function updateBonusInventorySlots(newValue) {
+        if (newValue < 0) return;
 
-	actor.update({ 'system.inventory.bonusSlots': newValue });
-}
+        actor.update({ "system.inventory.bonusSlots": newValue });
+    }
 
-let actor = getContext('actor');
-let flags = $derived(actor.reactive.flags.nimble);
+    let actor = getContext("actor");
+    let flags = $derived(actor.reactive.flags.nimble);
 
-let automaticallyExecuteAvailableMacros = $derived(
-	flags?.automaticallyExecuteAvailableMacros ?? true,
-);
+    let automaticallyExecuteAvailableMacros = $derived(
+        flags?.automaticallyExecuteAvailableMacros ?? true,
+    );
 
-let actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
-let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
-let actorImageScale = $derived(flags?.actorImageScale ?? 100);
+    let actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
+    let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
+    let actorImageScale = $derived(flags?.actorImageScale ?? 100);
 
-let bonusInventorySlots = $derived(actor.reactive?.system?.inventory?.bonusSlots ?? 0);
+    let bonusInventorySlots = $derived(
+        actor.reactive?.system?.inventory?.bonusSlots ?? 0,
+    );
 
-let compactSkillsView = $derived(flags?.compactSkillsView ?? true);
-let includeCurrencyBulk = $derived(flags?.includeCurrencyBulk ?? true);
-let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
-let showPassiveSkillScores = $derived(flags?.showPassiveSkillScores ?? false);
-let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
+    let compactSkillsView = $derived(flags?.compactSkillsView ?? true);
+    let includeCurrencyBulk = $derived(flags?.includeCurrencyBulk ?? true);
+    let showEmbeddedDocumentImages = $derived(
+        flags?.showEmbeddedDocumentImages ?? true,
+    );
+    let showPassiveSkillScores = $derived(
+        flags?.showPassiveSkillScores ?? false,
+    );
+    let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
@@ -48,7 +54,11 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                     type="number"
                     value={actorImageXOffset}
                     onchange={({ target }) =>
-                        actor.setFlag("nimble", "actorImageXOffset", target.value)}
+                        actor.setFlag(
+                            "nimble",
+                            "actorImageXOffset",
+                            target.value,
+                        )}
                 />
             </label>
 
@@ -64,7 +74,11 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                     type="number"
                     value={actorImageYOffset}
                     onchange={({ target }) =>
-                        actor.setFlag("nimble", "actorImageYOffset", target.value)}
+                        actor.setFlag(
+                            "nimble",
+                            "actorImageYOffset",
+                            target.value,
+                        )}
                 />
             </label>
 
@@ -80,7 +94,11 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                     type="number"
                     value={actorImageScale}
                     onchange={({ target }) =>
-                        actor.setFlag("nimble", "actorImageScale", target.value)}
+                        actor.setFlag(
+                            "nimble",
+                            "actorImageScale",
+                            target.value,
+                        )}
                 />
             </label>
         </div>
@@ -115,10 +133,16 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                 type="checkbox"
                 checked={showEmbeddedDocumentImages}
                 onchange={({ target }) =>
-                    actor.setFlag("nimble", "showEmbeddedDocumentImages", target.checked)}
+                    actor.setFlag(
+                        "nimble",
+                        "showEmbeddedDocumentImages",
+                        target.checked,
+                    )}
             />
 
-            <span class="nimble-field__label"> Show Embedded Document Images </span>
+            <span class="nimble-field__label">
+                Show Embedded Document Images
+            </span>
         </label>
     </section>
 
@@ -134,7 +158,11 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                 type="checkbox"
                 checked={trackInventorySlots}
                 onchange={({ target }) =>
-                    actor.setFlag("nimble", "trackInventorySlots", target.checked)}
+                    actor.setFlag(
+                        "nimble",
+                        "trackInventorySlots",
+                        target.checked,
+                    )}
             />
 
             <span class="nimble-field__label"> Track Inventory Slots </span>
@@ -146,7 +174,11 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                     type="checkbox"
                     checked={includeCurrencyBulk}
                     onchange={({ target }) =>
-                        actor.setFlag("nimble", "includeCurrencyBulk", target.checked)}
+                        actor.setFlag(
+                            "nimble",
+                            "includeCurrencyBulk",
+                            target.checked,
+                        )}
                 />
 
                 <span class="nimble-field__label">
@@ -157,12 +189,14 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
             <div class="nimble-field">
                 <div class="nimble-editable-numeric-field">
                     <button
-                        class="nimble-button fa-solid fa-minus"
+                        class="nimble-button"
                         data-button-variant="basic"
                         type="button"
                         aria-label="Decrement Bonus Inventory Slots"
-                        onclick={() => updateBonusInventorySlots(bonusInventorySlots - 1)}
+                        onclick={() =>
+                            updateBonusInventorySlots(bonusInventorySlots - 1)}
                     >
+                        <i class="fa-solid fa-minus"></i>
                     </button>
 
                     <span class="nimble-editable-numeric-field__value">
@@ -170,12 +204,14 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                     </span>
 
                     <button
-                        class="nimble-button fa-solid fa-plus"
+                        class="nimble-button"
                         data-button-variant="basic"
                         type="button"
                         aria-label="Increment Bonus Inventory Slots"
-                        onclick={() => updateBonusInventorySlots(bonusInventorySlots + 1)}
+                        onclick={() =>
+                            updateBonusInventorySlots(bonusInventorySlots + 1)}
                     >
+                        <i class="fa-solid fa-plus"></i>
                     </button>
                 </div>
 
@@ -196,10 +232,16 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                 type="checkbox"
                 checked={compactSkillsView}
                 onchange={({ target }) =>
-                    actor.setFlag("nimble", "compactSkillsView", target.checked)}
+                    actor.setFlag(
+                        "nimble",
+                        "compactSkillsView",
+                        target.checked,
+                    )}
             />
 
-            <span class="nimble-field__label"> Use Two-Column Skills View </span>
+            <span class="nimble-field__label">
+                Use Two-Column Skills View
+            </span>
         </label>
 
         <label class="nimble-field">
@@ -207,7 +249,11 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                 type="checkbox"
                 checked={showPassiveSkillScores}
                 onchange={({ target }) =>
-                    actor.setFlag("nimble", "showPassiveSkillScores", target.checked)}
+                    actor.setFlag(
+                        "nimble",
+                        "showPassiveSkillScores",
+                        target.checked,
+                    )}
             />
 
             <span class="nimble-field__label"> Show Passive Skill Scores </span>
