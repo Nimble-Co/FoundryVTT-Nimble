@@ -1,0 +1,51 @@
+{
+	"folder": null,
+	"name": "That's all you got?!",
+	"type": "feature",
+	"img": "icons/skills/melee/maneuver-sword-katana-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "When you are attacked",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When you are attacked, you may expend 1 or more Fury Dice to reduce the damage taken by STR+DEX for each die spent.</p>",
+		"featureType": "class",
+		"class": ""
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.3",
+		"createdTime": 1751493718847,
+		"modifiedTime": 1751494471598,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "4oQQtqOhqe9KO5g9"
+}

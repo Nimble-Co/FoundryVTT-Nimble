@@ -1,71 +1,71 @@
 <script>
-import { setContext } from 'svelte';
-import localize from '../../utils/localize.js';
-import updateDocumentImage from '../handlers/updateDocumentImage.js';
+    import { setContext } from "svelte";
+    import localize from "../../utils/localize.js";
+    import updateDocumentImage from "../handlers/updateDocumentImage.js";
 
-import Editor from './components/Editor.svelte';
-import ItemActivationConfigTab from './pages/ItemActivationConfigTab.svelte';
-import ItemHeader from './components/ItemHeader.svelte';
-import ItemMacroTab from './pages/ItemMacroTab.svelte';
-import ItemRulesTab from './pages/ItemRulesTab.svelte';
-import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
-import TagGroup from '../components/TagGroup.svelte';
-import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
+    import Editor from "./components/Editor.svelte";
+    import ItemActivationConfigTab from "./pages/ItemActivationConfigTab.svelte";
+    import ItemHeader from "./components/ItemHeader.svelte";
+    import ItemMacroTab from "./pages/ItemMacroTab.svelte";
+    import ItemRulesTab from "./pages/ItemRulesTab.svelte";
+    import PrimaryNavigation from "../components/PrimaryNavigation.svelte";
+    import TagGroup from "../components/TagGroup.svelte";
+    import { ItemActivationManager } from "../../managers/ItemActivationManager.js";
 
-function getFeatureTypeOptions() {
-	return Object.entries(featureTypes).map(([key, featureType]) => ({
-		label: featureType,
-		value: key,
-	}));
-}
+    function getFeatureTypeOptions() {
+        return Object.entries(featureTypes).map(([key, featureType]) => ({
+            label: featureType,
+            value: key,
+        }));
+    }
 
-function updateFeatureType(newSelection) {
-	item.update({
-		'system.featureType': newSelection,
-	});
-}
+    function updateFeatureType(newSelection) {
+        item.update({
+            "system.featureType": newSelection,
+        });
+    }
 
-const { featureTypes } = CONFIG.NIMBLE;
+    const { featureTypes } = CONFIG.NIMBLE;
 
-let { item, sheet } = $props();
+    let { item, sheet } = $props();
 
-const navigation = [
-	{
-		component: descriptionTab,
-		icon: 'fa-solid fa-file-lines',
-		tooltip: 'Description',
-		name: 'description',
-	},
-	{
-		component: configTab,
-		icon: 'fa-solid fa-gears',
-		tooltip: 'Config',
-		name: 'config',
-	},
-	{
-		component: activationConfigTab,
-		icon: 'fa-solid fa-play',
-		tooltip: 'Activation',
-		name: 'activationConfig',
-	},
-	{
-		component: rulesTab,
-		icon: 'fa-solid fa-bolt',
-		tooltip: 'Rules',
-		name: 'rules',
-	},
-	{
-		component: macroTab,
-		icon: 'fa-solid fa-terminal',
-		tooltip: 'Macro',
-		name: 'macro',
-	},
-];
+    const navigation = [
+        {
+            component: descriptionTab,
+            icon: "fa-solid fa-file-lines",
+            tooltip: "Description",
+            name: "description",
+        },
+        {
+            component: configTab,
+            icon: "fa-solid fa-gears",
+            tooltip: "Config",
+            name: "config",
+        },
+        {
+            component: activationConfigTab,
+            icon: "fa-solid fa-play",
+            tooltip: "Activation",
+            name: "activationConfig",
+        },
+        {
+            component: rulesTab,
+            icon: "fa-solid fa-bolt",
+            tooltip: "Rules",
+            name: "rules",
+        },
+        {
+            component: macroTab,
+            icon: "fa-solid fa-terminal",
+            tooltip: "Macro",
+            name: "macro",
+        },
+    ];
 
-let currentTab = $state(navigation[0]);
+    let currentTab = $state(navigation[0]);
 
-setContext('document', item);
-setContext('application', sheet);
+    setContext("document", item);
+    setContext("application", sheet);
 </script>
 
 {#snippet activationConfigTab()}
@@ -102,6 +102,21 @@ setContext('application', sheet);
                 toggleOption={updateFeatureType}
             />
         </div>
+
+        {#if item.reactive.system.featureType === "class"}
+            <div>
+                <header class="nimble-section-header">
+                    <h3 class="nimble-heading">Class Identifier</h3>
+                </header>
+
+                <input
+                    type="text"
+                    value={item.reactive.system.class || ""}
+                    onchange={({ target }) =>
+                        item.update({ "system.class": target.value })}
+                />
+            </div>
+        {/if}
     </section>
 {/snippet}
 

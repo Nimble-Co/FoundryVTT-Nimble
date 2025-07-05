@@ -9,6 +9,40 @@
 	"boons": {
 		"alert": "qpJQlnrcWFgG0AkD"
 	},
+	"bulk-tasks-export-berserker": {
+		"berserker": "AGbtO4rbxhKn04Cn"
+	},
+	"classFeatures": {
+		"berserker": {
+			"bloodlust": "mYlWqEHXJ2Q13aSU",
+			"boundless-rage": "A6kBal1K8wU3o7jP",
+			"deep-rage": "Mbiu4fS3NVbXGVFq",
+			"enduring-rage": "Gf9B97Ch6gn0CeU0",
+			"intensifying-fury": "eedQA69WSnBTEC2y",
+			"intensifying-fury-2": "dzpf2fD0oiTeeck8",
+			"intensifying-fury-3": "iHJiiB2MsdCCxtkk",
+			"intensifying-fury-4": "InC4P6dt7dVRLdrt",
+			"intensifying-fury-5": "Wl2hMSrqnWBEo48b",
+			"one-with-the-ancients": "Ymmp3NQ0ZiVEscta",
+			"rage": "GjPt8evcIoVuQ6zg",
+			"rage-2": "cFS7ueRR7cJRLJQi",
+			"savageArsenal": {
+				"death-blow": "Dh6d5Ck3AAiRwQLB",
+				"deathless-rage": "TlypDcFgcmWK8Vpu",
+				"eager-for-battle": "ZEWdAtTukOhYFFLm",
+				"into-the-fray": "rlNrdFJy8waDYVkt",
+				"mighty-endurance": "yuoyO3fArF6Lc9pp",
+				"more-blood": "yUO65iWvr1NuJoQH",
+				"rampage": "ucJYSFE6x1a7G3Ko",
+				"swift-fury": "0mqEGhkAP8NlDPzg",
+				"thunderous-steps": "Ecmnf0pXwd511FKP",
+				"unstoppable-force": "sqxZQNNB9qeK8OQy",
+				"whirlwind": "kzVOQCSwuKKZuVCM",
+				"youre-next": "BwBEwpLxb8sUfbw4"
+			},
+			"thats-all-you-got": "4oQQtqOhqe9KO5g9"
+		}
+	},
 	"items": {
 		"armors": {
 			"adventurers-garb": "Bdm2ynI2J7Xt9FNf",

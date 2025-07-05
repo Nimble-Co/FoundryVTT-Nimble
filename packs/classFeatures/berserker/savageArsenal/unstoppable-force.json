@@ -1,0 +1,51 @@
+{
+	"folder": null,
+	"name": "Unstoppable Force",
+	"type": "feature",
+	"img": "icons/weapons/axes/axe-double-short-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>While Dying and Raging, taking damage causes 1 Wound (instead of 2) and critical hits inflict 2 Wounds (instead of 3).</p>",
+		"featureType": "class",
+		"class": ""
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.345",
+		"systemId": "nimble",
+		"systemVersion": "0.1.3",
+		"createdTime": 1751496627519,
+		"modifiedTime": 1751497043174,
+		"lastModifiedBy": "CF9Izu3tcbY6qcfp"
+	},
+	"_id": "sqxZQNNB9qeK8OQy"
+}
