@@ -10,7 +10,6 @@
     import ItemRulesTab from "./pages/ItemRulesTab.svelte";
     import PrimaryNavigation from "../components/PrimaryNavigation.svelte";
     import TagGroup from "../components/TagGroup.svelte";
-    import { ItemActivationManager } from "../../managers/ItemActivationManager.js";
 
     function getFeatureTypeOptions() {
         return Object.entries(featureTypes).map(([key, featureType]) => ({
@@ -114,6 +113,19 @@
                     value={item.reactive.system.class || ""}
                     onchange={({ target }) =>
                         item.update({ "system.class": target.value })}
+                />
+            </div>
+
+            <div>
+                <header class="nimble-section-header">
+                    <h3 class="nimble-heading">Group Identifier</h3>
+                </header>
+
+                <input
+                    type="text"
+                    value={item.reactive.system.group || ""}
+                    onchange={({ target }) =>
+                        item.update({ "system.group": target.value })}
                 />
             </div>
         {/if}
