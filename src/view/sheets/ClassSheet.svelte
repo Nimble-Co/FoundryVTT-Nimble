@@ -203,6 +203,23 @@
         <section>
             <header class="nimble-section-header">
                 <h3 class="nimble-heading" data-heading-variant="field">
+                    Class Complexity
+                </h3>
+            </header>
+
+            <input
+                type="number"
+                value={item.reactive.system.complexity || 1}
+                onchange={({ currentTarget }) =>
+                    item.update({
+                        "system.complexity": Number(currentTarget.value),
+                    })}
+            />
+        </section>
+
+        <section>
+            <header class="nimble-section-header">
+                <h3 class="nimble-heading" data-heading-variant="field">
                     Key Stats
                 </h3>
             </header>
