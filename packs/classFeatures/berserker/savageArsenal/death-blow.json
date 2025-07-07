@@ -4,6 +4,7 @@
 	"type": "feature",
 	"img": "icons/weapons/axes/axe-double-short-orange.webp",
 	"system": {
+		"group": "savage-arsenal",
 		"macro": "",
 		"identifier": "",
 		"rules": [],

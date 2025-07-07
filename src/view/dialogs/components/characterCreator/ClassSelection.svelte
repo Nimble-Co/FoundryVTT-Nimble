@@ -1,16 +1,16 @@
 <script>
-import { getContext } from 'svelte';
+    import { getContext } from "svelte";
 
-import DocumentCard from './DocumentCard.svelte';
-import Hint from '../../../components/Hint.svelte';
+    import DocumentCard from "./DocumentCard.svelte";
+    import Hint from "../../../components/Hint.svelte";
 
-let { active, classes, selectedClass = $bindable() } = $props();
+    let { active, classes, selectedClass = $bindable() } = $props();
 
-const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
-const dialog = getContext('dialog');
+    const CHARACTER_CREATION_STAGES = getContext("CHARACTER_CREATION_STAGES");
+    const dialog = getContext("dialog");
 
-const hintText =
-	'Each class represents a different character archetype, and your choice of class will greatly determine the major capabilities and play style of you character. Choose one from the following list.';
+    const hintText =
+        "Each class represents a different character archetype, and your choice of class will greatly determine the major capabilities and play style of you character. Choose one from the following list.";
 </script>
 
 {#snippet classCard(characterClass)}
@@ -115,6 +115,8 @@ const hintText =
         --nimble-heading-size: var(--nimble-md-text);
         --nimble-heading-justification: center;
         --nimble-heading-margin: 0.5rem 0 0.25rem 0;
+
+        overflow-y: hidden;
     }
 
     .nimble-card__complexity {
@@ -128,5 +130,6 @@ const hintText =
 
     .nimble-list-option {
         display: contents;
+        overflow-y: hidden;
     }
 </style>
