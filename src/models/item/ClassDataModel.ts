@@ -44,7 +44,10 @@ const schema = () => ({
 		options: [1, 2, 3],
 	}),
 	description: new fields.HTMLField({ required: true, initial: '', nullable: false }),
-	groupIdentifier: new fields.StringField({ required: true, initial: '', nullable: false }),
+	groupIdentifiers: new fields.ArrayField(
+		new fields.StringField({ required: true, initial: '', nullable: false }),
+		{ required: true, initial: [], nullable: false },
+	),
 	keyAbilityScores: new fields.ArrayField(
 		new fields.StringField({ required: true, initial: '', nullable: false }),
 		{ required: true, initial: [], nullable: false },
