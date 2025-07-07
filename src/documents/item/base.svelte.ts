@@ -242,7 +242,8 @@ class NimbleBaseItem extends Item {
 		const outputSources = items.map((i) => i._source);
 
 		// Process rules
-		for (const item of items) {
+		for (const item of [...items]) {
+			item?.prepareActorData?.();
 			const itemSource = item._source;
 			const rules = [...item.rules.values()];
 			1;
