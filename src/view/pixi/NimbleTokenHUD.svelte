@@ -1,36 +1,38 @@
 <script>
-import localize from '../../utils/localize.js';
-const { HUD, token } = $props();
+    import localize from "../../utils/localize.js";
+    const { HUD, token } = $props();
 
-function toggleStatusEffect(statusId) {
-	const actor = HUD.actor;
-	if (!actor) return;
+    function toggleStatusEffect(statusId) {
+        const actor = HUD.actor;
+        if (!actor) return;
 
-	const overlay = overlayStatuses.has(statusId);
-	actor.toggleStatusEffect(statusId, { overlay });
-}
+        const overlay = overlayStatuses.has(statusId);
+        actor.toggleStatusEffect(statusId, { overlay });
+    }
 
-async function clearAll(event) {
-	event.preventDefault();
-	event.stopPropagation();
+    async function clearAll(event) {
+        event.preventDefault();
+        event.stopPropagation();
 
-	const removals = [];
-	const conditions = CONFIG.statusEffects;
+        const removals = [];
+        const conditions = CONFIG.statusEffects;
 
-	for (const condition of conditions) {
-		const existing = HUD.actor.effects.reduce((arr, e) => {
-			if (e.statuses.size === 1 && e.statuses.has(condition.id)) arr.push(e.id);
-			return arr;
-		}, []);
+        for (const condition of conditions) {
+            const existing = HUD.actor.effects.reduce((arr, e) => {
+                if (e.statuses.size === 1 && e.statuses.has(condition.id))
+                    arr.push(e.id);
+                return arr;
+            }, []);
 
-		if (existing.length) removals.push(...existing);
-	}
+            if (existing.length) removals.push(...existing);
+        }
 
-	await HUD.actor.deleteEmbeddedDocuments('ActiveEffect', removals);
-}
+        await HUD.actor.deleteEmbeddedDocuments("ActiveEffect", removals);
+    }
 
-const statusEffects = CONFIG.statusEffects;
-const { active: activeStatuses, overlay: overlayStatuses } = HUD.actor?.conditionsMetadata;
+    const statusEffects = CONFIG.statusEffects;
+    const { active: activeStatuses, overlay: overlayStatuses } =
+        HUD.actor?.conditionsMetadata;
 </script>
 
 <div class="status-effects-container">
@@ -38,9 +40,16 @@ const { active: activeStatuses, overlay: overlayStatuses } = HUD.actor?.conditio
         <button
             class="condition-container"
             class:active={activeStatuses.has(effect.id)}
-            onclick={() => toggleStatusEffect(effect.id)}
+            onpointerdown={(e) => {
+                e.preventDefault();
+                toggleStatusEffect(effect.id);
+            }}
         >
-            <img src={effect.img} alt={effect.name} data-status-id={effect.id} />
+            <img
+                src={effect.img}
+                alt={effect.name}
+                data-status-id={effect.id}
+            />
 
             <h3 class="condition-title">
                 {effect.name}
@@ -71,6 +80,7 @@ const { active: activeStatuses, overlay: overlayStatuses } = HUD.actor?.conditio
             h3 {
                 font-weight: bold;
                 color: var(--nimble-condition-hud-selected-color);
+                margin: 0;
             }
         }
     }
@@ -96,8 +106,8 @@ const { active: activeStatuses, overlay: overlayStatuses } = HUD.actor?.conditio
         }
 
         h3 {
-            height: 1rem;
             border: none;
+            margin: 0;
         }
 
         img {
@@ -115,7 +125,7 @@ const { active: activeStatuses, overlay: overlayStatuses } = HUD.actor?.conditio
         bottom: 100%;
         right: -1px;
         padding: 0.25em;
-        color: var(--nimble-light-text-color);
+        color: var(--nimble-dark-text-color);
         border: none;
         border-radius: 4px 4px 0 0;
         background-color: black;
@@ -124,7 +134,10 @@ const { active: activeStatuses, overlay: overlayStatuses } = HUD.actor?.conditio
         transition: var(--nimble-standard-transition);
 
         &:hover {
-            color: lighten-color(var(--nimble-condition-hud-clear-all-color), 15);
+            color: lighten-color(
+                var(--nimble-condition-hud-clear-all-color),
+                15
+            );
             box-shadow: none;
         }
     }
