@@ -210,6 +210,19 @@ export class NimbleCharacter extends NimbleBaseActor {
 	getUsedInventorySlots(): number {
 		let totalBulk = 0;
 
+		// Get total bulk from items
+		const items = this.items.filter((i) => i.isType('object') && i.system.slotsRequired > 0);
+
+		let seenSmallItems = false;
+		items.forEach((item) => {
+			const itemBulk = item.system.slotsRequired;
+			if (Number.isInteger(itemBulk)) totalBulk += itemBulk;
+			else seenSmallItems = true;
+		});
+
+		// If there are any small items, count them as 1 bulk
+		if (seenSmallItems) totalBulk += 1;
+
 		if (this.getFlag('nimble', 'includeCurrencyBulk') ?? true) {
 			const totalCoinage = Object.values(this.system.currency).reduce(
 				(totalCurrencyBulk, { value }) => totalCurrencyBulk + value,
@@ -217,7 +230,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 			) as number;
 
 			// Coins consume 1 bulk per full 500 units
-			totalBulk = Math.floor(totalCoinage / 500);
+			totalBulk += Math.floor(totalCoinage / 500);
 		}
 
 		return totalBulk;
