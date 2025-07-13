@@ -226,6 +226,18 @@ export class NimbleCharacter extends NimbleBaseActor {
 	prepareClassData(actorData: NimbleCharacterData): void {
 		// Prepare Max Hp
 		this._prepareHitPoints(actorData);
+
+		// Prepare Proficiencies
+		const classes = Object.values(this.classes ?? {});
+
+		if (classes.length !== 0) {
+			classes.forEach((cls) => {
+				cls.grantedArmorProficiencies.forEach((a) => actorData.proficiencies.armor.add(a));
+				cls.grantedWeaponProficiencies.forEach((w) => {
+					if (!actorData.proficiencies.weapons.includes(w)) actorData.proficiencies.weapons.push(w);
+				});
+			});
+		}
 	}
 
 	_prepareHitPoints(actorData: NimbleCharacterData): void {

@@ -1,286 +1,283 @@
-import { ClassResourceManager } from "../../managers/ClassResourceManager.js";
-import type { NimbleClassData } from "../../models/item/ClassDataModel.js";
-import type { NimbleCharacter } from "../actor/character.js";
+import { ClassResourceManager } from '../../managers/ClassResourceManager.js';
+import type { NimbleClassData } from '../../models/item/ClassDataModel.js';
+import type { NimbleCharacter } from '../actor/character.js';
 
-import { NimbleBaseItem } from "./base.svelte.js";
+import { NimbleBaseItem } from './base.svelte.js';
 
 export class NimbleClassItem extends NimbleBaseItem {
-  declare ASI: Record<string, number>;
+	declare ASI: Record<string, number>;
 
-  declare hitDice: { size: number; total: number };
+	declare hitDice: { size: number; total: number };
 
-  declare maxHp: number;
+	declare maxHp: number;
 
-  declare resources: ClassResourceManager;
+	declare resources: ClassResourceManager;
 
-  declare system: NimbleClassData;
+	declare system: NimbleClassData;
 
-  /** ------------------------------------------------------ */
-  /**                 Data Prep Functions                    */
-  /** ------------------------------------------------------ */
-  override prepareBaseData(): void {
-    super.prepareBaseData();
+	/** ------------------------------------------------------ */
+	/**                       Getters                          */
+	/** ------------------------------------------------------ */
+	get grantedArmorProficiencies(): string[] {
+		return this.system.armorProficiencies;
+	}
 
-    // Prepare Resource
-    this.resources = new ClassResourceManager(this);
+	get grantedWeaponProficiencies(): string[] {
+		return this.system.weaponProficiencies;
+	}
 
-    this.ASI = Object.entries(this.system.abilityScoreData ?? {}).reduce(
-      (acc, [level, data]) => {
-        if (data.type !== "statIncrease") return acc;
-        if (Number.parseInt(level, 10) > this.system.classLevel) return acc;
-        if (data.value.length === 0) return acc;
+	/** ------------------------------------------------------ */
+	/**                 Data Prep Functions                    */
+	/** ------------------------------------------------------ */
+	override prepareBaseData(): void {
+		super.prepareBaseData();
 
-        acc[data.value] ??= 0;
-        acc[data.value] += 1;
+		// Prepare Resource
+		this.resources = new ClassResourceManager(this);
 
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
+		this.ASI = Object.entries(this.system.abilityScoreData ?? {}).reduce(
+			(acc, [level, data]) => {
+				if (data.type !== 'statIncrease') return acc;
+				if (Number.parseInt(level, 10) > this.system.classLevel) return acc;
+				if (data.value.length === 0) return acc;
 
-    this.maxHp =
-      CONFIG.NIMBLE.startingHpByHitDieSize[this.system.hitDieSize] +
-      this.system.hpData.reduce((acc, value) => acc + value, 0);
+				acc[data.value] ??= 0;
+				acc[data.value] += 1;
 
-    this.hitDice = {
-      size: this.system.hitDieSize,
-      total: this.system.classLevel,
-    };
-  }
+				return acc;
+			},
+			{} as Record<string, number>,
+		);
 
-  override _populateBaseTags(): void {
-    super._populateBaseTags();
+		this.maxHp =
+			CONFIG.NIMBLE.startingHpByHitDieSize[this.system.hitDieSize] +
+			this.system.hpData.reduce((acc, value) => acc + value, 0);
 
-    this.tags.add(`class:${this.identifier}`);
-    this.tags.add(`level:class:${this.system.classLevel}`);
-  }
+		this.hitDice = {
+			size: this.system.hitDieSize,
+			total: this.system.classLevel,
+		};
+	}
 
-  override prepareDerivedData(): void {
-    super.prepareDerivedData();
-  }
+	override _populateBaseTags(): void {
+		super._populateBaseTags();
 
-  override _populateDerivedTags(): void {
-    super._populateDerivedTags();
-  }
+		this.tags.add(`class:${this.identifier}`);
+		this.tags.add(`level:class:${this.system.classLevel}`);
+	}
 
-  override async prepareChatCardData() {
-    const description = await TextEditor.enrichHTML(this.system.description);
+	override prepareDerivedData(): void {
+		super.prepareDerivedData();
+	}
 
-    return {
-      author: game.user?.id,
-      flavor: `${this.actor?.name}: ${this.name}`,
-      type: "feature",
-      system: {
-        description: description || "No description available.",
-        featureType: this.type,
-        name: this.name,
-      },
-    };
-  }
+	override _populateDerivedTags(): void {
+		super._populateDerivedTags();
+	}
 
-  /** ------------------------------------------------------ */
-  //                 Document Update Hooks
-  /** ------------------------------------------------------ */
-  override async _preCreate(data, options, user) {
-    // Set Defaults
-    foundry.utils.setProperty(data, "system.classLevel", 1);
-    foundry.utils.setProperty(data, "system.hpData", []);
+	override async prepareChatCardData() {
+		const description = await TextEditor.enrichHTML(this.system.description);
 
-    // Special workflow if this class is being created on an actor.
-    if (this.isEmbedded) {
-      const actor = this.parent as NimbleCharacter;
-      const actorUpdates = {};
-      let proceedWithCreate = true;
+		return {
+			author: game.user?.id,
+			flavor: `${this.actor?.name}: ${this.name}`,
+			type: 'feature',
+			system: {
+				description: description || 'No description available.',
+				featureType: this.type,
+				name: this.name,
+			},
+		};
+	}
 
-      if (Object.keys(actor.classes).length) return false;
+	/** ------------------------------------------------------ */
+	//                 Document Update Hooks
+	/** ------------------------------------------------------ */
+	override async _preCreate(data, options, user) {
+		// Set Defaults
+		foundry.utils.setProperty(data, 'system.classLevel', 1);
+		foundry.utils.setProperty(data, 'system.hpData', []);
 
-      // Set up as starting class
-      if (!actor.system.classData.startingClass) {
-        actorUpdates["system.classData.startingClass"] = this.identifier;
-      }
+		// Special workflow if this class is being created on an actor.
+		if (this.isEmbedded) {
+			const actor = this.parent as NimbleCharacter;
+			const actorUpdates = {};
+			let proceedWithCreate = true;
 
-      const startingHp =
-        CONFIG.NIMBLE.startingHpByHitDieSize[this.system.hitDieSize];
-      actorUpdates["system.attributes.hp.value"] = startingHp ?? 0;
+			if (Object.keys(actor.classes).length) return false;
 
-      // Add HitDice Data to actor
-      const existingHitDice = foundry.utils.getProperty(
-        actor,
-        `system.attributes.hitDice.${this.system.hitDieSize}`,
-      );
-      if (!existingHitDice) {
-        actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}`] = {
-          current: 1,
-          origin: [this.identifier],
-        };
-      } else {
-        actorUpdates[
-          `system.attributes.hitDice.${this.system.hitDieSize}.origin`
-        ] = [...existingHitDice.origin, this.identifier];
-      }
+			// Set up as starting class
+			if (!actor.system.classData.startingClass) {
+				actorUpdates['system.classData.startingClass'] = this.identifier;
+			}
 
-      // Tell the actor what level this class was gained at
-      const existingLevels =
-        foundry.utils.getProperty(actor, "system.classData.levels") ?? [];
-      existingLevels.push(this.identifier);
+			const startingHp = CONFIG.NIMBLE.startingHpByHitDieSize[this.system.hitDieSize];
+			actorUpdates['system.attributes.hp.value'] = startingHp ?? 0;
 
-      actorUpdates["system.classData.levels"] = existingLevels;
+			// Add HitDice Data to actor
+			const existingHitDice = foundry.utils.getProperty(
+				actor,
+				`system.attributes.hitDice.${this.system.hitDieSize}`,
+			);
+			if (!existingHitDice) {
+				actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}`] = {
+					current: 1,
+					origin: [this.identifier],
+				};
+			} else {
+				actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}.origin`] = [
+					...existingHitDice.origin,
+					this.identifier,
+				];
+			}
 
-      // Update existing level if available
-      const existingClass = actor.classes[this.identifier];
+			// Tell the actor what level this class was gained at
+			const existingLevels = foundry.utils.getProperty(actor, 'system.classData.levels') ?? [];
+			existingLevels.push(this.identifier);
 
-      if (existingClass) {
-        // await existingClass.update({ 'system.classLevel': existingClass.system.classLevel + 1 });
-        proceedWithCreate = false;
-      }
+			actorUpdates['system.classData.levels'] = existingLevels;
 
-      this.updateSource(data);
+			// Update existing level if available
+			const existingClass = actor.classes[this.identifier];
 
-      if (proceedWithCreate) {
-        await super._preCreate(data, options, user);
-      }
+			if (existingClass) {
+				// await existingClass.update({ 'system.classLevel': existingClass.system.classLevel + 1 });
+				proceedWithCreate = false;
+			}
 
-      await actor.update(actorUpdates);
+			this.updateSource(data);
 
-      return proceedWithCreate;
-    }
+			if (proceedWithCreate) {
+				await super._preCreate(data, options, user);
+			}
 
-    this.updateSource(data);
-    await super._preCreate(data, options, user);
-    return true;
-  }
+			await actor.update(actorUpdates);
 
-  override async _preUpdate(changed, options, userId) {
-    await super._preUpdate(changed, options, userId);
+			return proceedWithCreate;
+		}
 
-    if (!this.isEmbedded) return;
+		this.updateSource(data);
+		await super._preCreate(data, options, user);
+		return true;
+	}
 
-    const actor = this.parent as NimbleCharacter;
-    const actorUpdates = {};
+	override async _preUpdate(changed, options, userId) {
+		await super._preUpdate(changed, options, userId);
 
-    if (changed.name) {
-      const existingLevels =
-        foundry.utils.getProperty(actor, "system.classData.levels") ?? [];
-      const newIdentifier = changed.name.slugify({ strict: true });
+		if (!this.isEmbedded) return;
 
-      actorUpdates["system.classData.levels"] = existingLevels.reduce(
-        (ids, id: string) => {
-          if (id === this.identifier) ids.push(newIdentifier);
-          else ids.push(id);
+		const actor = this.parent as NimbleCharacter;
+		const actorUpdates = {};
 
-          return ids;
-        },
-        [],
-      );
+		if (changed.name) {
+			const existingLevels = foundry.utils.getProperty(actor, 'system.classData.levels') ?? [];
+			const newIdentifier = changed.name.slugify({ strict: true });
 
-      if (actor.system.classData.startingClass === this.identifier) {
-        actorUpdates["system.classData.startingClass"] = newIdentifier;
-      }
+			actorUpdates['system.classData.levels'] = existingLevels.reduce((ids, id: string) => {
+				if (id === this.identifier) ids.push(newIdentifier);
+				else ids.push(id);
 
-      if (!changed?.system?.hitDieSize) {
-        const existingHitDice =
-          foundry.utils.getProperty(
-            actor,
-            `system.attributes.hitDice.${this.system.hitDieSize}.origin`,
-          ) ?? [];
+				return ids;
+			}, []);
 
-        actorUpdates[
-          `system.attributes.hitDice.${this.system.hitDieSize}.origin`
-        ] = existingHitDice.reduce((ids, id: string) => {
-          if (id === this.identifier) ids.push(newIdentifier);
-          else ids.push(id);
+			if (actor.system.classData.startingClass === this.identifier) {
+				actorUpdates['system.classData.startingClass'] = newIdentifier;
+			}
 
-          return ids;
-        }, []);
-      }
-    }
+			if (!changed?.system?.hitDieSize) {
+				const existingHitDice =
+					foundry.utils.getProperty(
+						actor,
+						`system.attributes.hitDice.${this.system.hitDieSize}.origin`,
+					) ?? [];
 
-    if (changed?.system?.hitDieSize) {
-      const existingHitDice =
-        foundry.utils.getProperty(
-          actor,
-          `system.attributes.hitDice.${this.system.hitDieSize}.origin`,
-        ) ?? [];
+				actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}.origin`] =
+					existingHitDice.reduce((ids, id: string) => {
+						if (id === this.identifier) ids.push(newIdentifier);
+						else ids.push(id);
 
-      const existingHitDiceCount = existingHitDice.length ?? 0;
+						return ids;
+					}, []);
+			}
+		}
 
-      const existingHitDiceSansCurrentClass = existingHitDice.filter(
-        (id: string) => this.identifier !== id,
-      );
+		if (changed?.system?.hitDieSize) {
+			const existingHitDice =
+				foundry.utils.getProperty(
+					actor,
+					`system.attributes.hitDice.${this.system.hitDieSize}.origin`,
+				) ?? [];
 
-      const postFilterHitDiceCount = existingHitDiceSansCurrentClass.length;
-      const hitDiceCountDifference =
-        existingHitDiceCount - postFilterHitDiceCount;
+			const existingHitDiceCount = existingHitDice.length ?? 0;
 
-      if (hitDiceCountDifference > 0) {
-        const existingNewHitDice =
-          foundry.utils.getProperty(
-            actor,
-            `system.attributes.hitDice.${changed.system.hitDieSize}.origin`,
-          ) ?? [];
+			const existingHitDiceSansCurrentClass = existingHitDice.filter(
+				(id: string) => this.identifier !== id,
+			);
 
-        actorUpdates[
-          `system.attributes.hitDice.${changed.system.hitDieSize}.origin`
-        ] = existingNewHitDice.concat(
-          Array(hitDiceCountDifference).fill(
-            changed?.name?.slugify({ strict: true }) ?? this.identifier,
-          ),
-        );
+			const postFilterHitDiceCount = existingHitDiceSansCurrentClass.length;
+			const hitDiceCountDifference = existingHitDiceCount - postFilterHitDiceCount;
 
-        actorUpdates[
-          `system.attributes.hitDice.${this.system.hitDieSize}.origin`
-        ] = existingHitDiceSansCurrentClass;
-      }
-    }
+			if (hitDiceCountDifference > 0) {
+				const existingNewHitDice =
+					foundry.utils.getProperty(
+						actor,
+						`system.attributes.hitDice.${changed.system.hitDieSize}.origin`,
+					) ?? [];
 
-    actor.update(actorUpdates);
-  }
+				actorUpdates[`system.attributes.hitDice.${changed.system.hitDieSize}.origin`] =
+					existingNewHitDice.concat(
+						Array(hitDiceCountDifference).fill(
+							changed?.name?.slugify({ strict: true }) ?? this.identifier,
+						),
+					);
 
-  override _onCreate(data, options, userId) {
-    super._onCreate(data, options, userId);
-  }
+				actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}.origin`] =
+					existingHitDiceSansCurrentClass;
+			}
+		}
 
-  override _onUpdate(changed, options, userId) {
-    super._onUpdate(changed, options, userId);
-  }
+		actor.update(actorUpdates);
+	}
 
-  override _onDelete(options, userId: string) {
-    super._onDelete(options, userId);
+	override _onCreate(data, options, userId) {
+		super._onCreate(data, options, userId);
+	}
 
-    // Update actor data
-    if (this.isEmbedded) {
-      const actor = this.parent as NimbleCharacter;
-      const actorUpdates = {};
+	override _onUpdate(changed, options, userId) {
+		super._onUpdate(changed, options, userId);
+	}
 
-      if (actor.system.classData.startingClass === this.identifier) {
-        actorUpdates["system.classData.startingClass"] = null;
-      }
+	override _onDelete(options, userId: string) {
+		super._onDelete(options, userId);
 
-      // Remove hitDice information
-      const existingHitDice = foundry.utils.getProperty(
-        actor,
-        `system.attributes.hitDice.${this.system.hitDieSize}`,
-      );
+		// Update actor data
+		if (this.isEmbedded) {
+			const actor = this.parent as NimbleCharacter;
+			const actorUpdates = {};
 
-      if (existingHitDice.origin?.length > 1) {
-        actorUpdates[
-          `system.attributes.hitDice.${this.system.hitDieSize}.origin`
-        ] = existingHitDice.origin.filter(
-          (id: string) => this.identifier !== id,
-        );
-      } else {
-        actorUpdates[`system.attributes.hitDice.-=${this.system.hitDieSize}`] =
-          null;
-      }
+			if (actor.system.classData.startingClass === this.identifier) {
+				actorUpdates['system.classData.startingClass'] = null;
+			}
 
-      // Remove Levels information
-      const existingLevels =
-        foundry.utils.getProperty(actor, "system.classData.levels") ?? [];
-      actorUpdates["system.classData.levels"] = existingLevels.filter(
-        (id: string) => id !== this.identifier,
-      );
+			// Remove hitDice information
+			const existingHitDice = foundry.utils.getProperty(
+				actor,
+				`system.attributes.hitDice.${this.system.hitDieSize}`,
+			);
 
-      actor.update(actorUpdates);
-    }
-  }
+			if (existingHitDice.origin?.length > 1) {
+				actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}.origin`] =
+					existingHitDice.origin.filter((id: string) => this.identifier !== id);
+			} else {
+				actorUpdates[`system.attributes.hitDice.-=${this.system.hitDieSize}`] = null;
+			}
+
+			// Remove Levels information
+			const existingLevels = foundry.utils.getProperty(actor, 'system.classData.levels') ?? [];
+			actorUpdates['system.classData.levels'] = existingLevels.filter(
+				(id: string) => id !== this.identifier,
+			);
+
+			actor.update(actorUpdates);
+		}
+	}
 }

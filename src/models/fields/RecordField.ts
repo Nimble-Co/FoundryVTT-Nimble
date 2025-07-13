@@ -146,7 +146,7 @@ class RecordField<
 		options?: foundry.data.fields.DataField.CleanOptions,
 	): InitializedType {
 		for (const [key, value] of Object.entries(values)) {
-			if (k.startsWith('-=')) return;
+			if (key.startsWith('-=')) return;
 			values[key] = this.valueField.clean(value, options);
 		}
 
