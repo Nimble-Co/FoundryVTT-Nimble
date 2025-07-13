@@ -1,99 +1,105 @@
 <script>
-import filterItems from '../../dataPreparationHelpers/filterItems.js';
-import { getContext } from 'svelte';
-import prepareAncestryTooltip from '../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js';
-import prepareClassTooltip from '../../dataPreparationHelpers/documentTooltips/prepareClassTooltip.js';
-import prepareSubclassTooltip from '../../dataPreparationHelpers/documentTooltips/prepareSubclassTooltip.js';
-import prepareBoonTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBoonTooltip.js';
-import prepareBackgroundTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBackgroundTooltip.js';
-import prepareFeatureTooltip from '../../dataPreparationHelpers/documentTooltips/prepareFeatureTooltip.js';
-import sortItems from '../../../utils/sortItems.js';
+    import filterItems from "../../dataPreparationHelpers/filterItems.js";
+    import { getContext } from "svelte";
+    import prepareAncestryTooltip from "../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js";
+    import prepareClassTooltip from "../../dataPreparationHelpers/documentTooltips/prepareClassTooltip.js";
+    import prepareSubclassTooltip from "../../dataPreparationHelpers/documentTooltips/prepareSubclassTooltip.js";
+    import prepareBoonTooltip from "../../dataPreparationHelpers/documentTooltips/prepareBoonTooltip.js";
+    import prepareBackgroundTooltip from "../../dataPreparationHelpers/documentTooltips/prepareBackgroundTooltip.js";
+    import prepareFeatureTooltip from "../../dataPreparationHelpers/documentTooltips/prepareFeatureTooltip.js";
+    import sortItems from "../../../utils/sortItems.js";
 
-import SearchBar from '../components/SearchBar.svelte';
+    import SearchBar from "../components/SearchBar.svelte";
 
-async function configureItem(event, id) {
-	event.stopPropagation();
+    async function configureItem(event, id) {
+        event.stopPropagation();
 
-	await actor.configureItem(id);
-}
+        await actor.configureItem(id);
+    }
 
-async function createItem(event) {
-	event.stopPropagation();
+    async function createItem(event) {
+        event.stopPropagation();
 
-	await actor.createItem({ name: 'New Feature', type: 'feature' });
-}
+        await actor.createItem({ name: "New Feature", type: "feature" });
+    }
 
-async function deleteItem(event, id) {
-	event.stopPropagation();
+    async function deleteItem(event, id) {
+        event.stopPropagation();
 
-	await actor.deleteItem(id);
-}
+        await actor.deleteItem(id);
+    }
 
-function getFeatureMetadata(item) {
-	return null;
-}
+    function getFeatureMetadata(item) {
+        return null;
+    }
 
-function groupItemsByType(items) {
-	return items.reduce((categories, item) => {
-		const { type: itemType } = item.reactive;
+    function groupItemsByType(items) {
+        return items.reduce((categories, item) => {
+            const { type: itemType } = item.reactive;
 
-		categories[itemType] ??= [];
-		categories[itemType].push(item);
+            categories[itemType] ??= [];
+            categories[itemType].push(item);
 
-		return categories;
-	}, {});
-}
+            return categories;
+        }, {});
+    }
 
-function groupSubclassesByParentClass(subclasses) {
-	return subclasses.reduce((categories, subclass) => {
-		const { parentClass } = subclass.reactive.system;
+    function groupSubclassesByParentClass(subclasses) {
+        return subclasses.reduce((categories, subclass) => {
+            const { parentClass } = subclass.reactive.system;
 
-		categories[parentClass] ??= [];
-		categories[parentClass].push(subclass);
+            categories[parentClass] ??= [];
+            categories[parentClass].push(subclass);
 
-		return categories;
-	}, {});
-}
+            return categories;
+        }, {});
+    }
 
-function prepareItemTooltip(item) {
-	switch (item.type) {
-		case 'ancestry':
-			return prepareAncestryTooltip(item);
-		case 'background':
-			return prepareBackgroundTooltip(item);
-		case 'boon':
-			return prepareBoonTooltip(item);
-		case 'class':
-			return prepareClassTooltip(item);
-		case 'feature':
-			return prepareFeatureTooltip(item);
-		case 'subclass':
-			return prepareSubclassTooltip(item);
-		default:
-			return null;
-	}
-}
+    function prepareItemTooltip(item) {
+        switch (item.type) {
+            case "ancestry":
+                return prepareAncestryTooltip(item);
+            case "background":
+                return prepareBackgroundTooltip(item);
+            case "boon":
+                return prepareBoonTooltip(item);
+            case "class":
+                return prepareClassTooltip(item);
+            case "feature":
+                return prepareFeatureTooltip(item);
+            case "subclass":
+                return prepareSubclassTooltip(item);
+            default:
+                return null;
+        }
+    }
 
-function sortItemCategories([categoryA], [categoryB]) {
-	return validTypes.indexOf(categoryA) - validTypes.indexOf(categoryB);
-}
+    function sortItemCategories([categoryA], [categoryB]) {
+        return validTypes.indexOf(categoryA) - validTypes.indexOf(categoryB);
+    }
 
-// IMPORTANT: The order of these strings is used for sorting purposes.
-const validTypes = ['feature', 'boon', 'ancestry', 'background', 'class'];
-const { featureTypeHeadings } = CONFIG.NIMBLE;
+    // IMPORTANT: The order of these strings is used for sorting purposes.
+    const validTypes = ["feature", "boon", "ancestry", "background", "class"];
+    const { featureTypeHeadings } = CONFIG.NIMBLE;
 
-let actor = getContext('actor');
-let sheet = getContext('application');
+    let actor = getContext("actor");
+    let sheet = getContext("application");
 
-let searchTerm = $state('');
-let items = $derived(filterItems(actor.reactive, validTypes, searchTerm));
-let categorizedItems = $derived(groupItemsByType(items));
-let subclasses = $derived(filterItems(actor.reactive, 'subclass', searchTerm));
-let categorizedSubclasses = $derived(groupSubclassesByParentClass(subclasses));
+    let searchTerm = $state("");
+    let items = $derived(filterItems(actor.reactive, validTypes, searchTerm));
+    let categorizedItems = $derived(groupItemsByType(items));
+    let subclasses = $derived(
+        filterItems(actor.reactive, "subclass", searchTerm),
+    );
+    let categorizedSubclasses = $derived(
+        groupSubclassesByParentClass(subclasses),
+    );
 
-// Settings
-let flags = $derived(actor.reactive.flags.nimble);
-let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
+    // Settings
+    let flags = $derived(actor.reactive.flags.nimble);
+    let showEmbeddedDocumentImages = $derived(
+        flags?.showEmbeddedDocumentImages ?? true,
+    );
 </script>
 
 <header class="nimble-sheet__static nimble-sheet__static--features">
@@ -160,7 +166,8 @@ let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? t
                                 data-button-variant="icon"
                                 type="button"
                                 aria-label="Configure {item.reactive.name}"
-                                onclick={(event) => configureItem(event, item._id)}
+                                onclick={(event) =>
+                                    configureItem(event, item._id)}
                             >
                                 <i class="fa-solid fa-edit"></i>
                             </button>
@@ -194,8 +201,10 @@ let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? t
                                     data-tooltip-direction="LEFT"
                                     draggable="true"
                                     role="button"
-                                    ondragstart={(event) => sheet._onDragStart(event)}
-                                    onclick={() => actor.activateItem(subclass._id)}
+                                    ondragstart={(event) =>
+                                        sheet._onDragStart(event)}
+                                    onclick={() =>
+                                        actor.activateItem(subclass._id)}
                                 >
                                     {#if showEmbeddedDocumentImages}
                                         <img
@@ -216,18 +225,20 @@ let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? t
                                         class="nimble-button"
                                         data-button-variant="icon"
                                         type="button"
-                                        aria-label="Configure {subclass.reactive.name}"
+                                        aria-label="Configure {subclass.reactive
+                                            .name}"
                                         onclick={(event) =>
                                             configureItem(event, subclass._id)}
                                     >
-                                            <i class="fa-solid fa-edit"></i>
+                                        <i class="fa-solid fa-edit"></i>
                                     </button>
 
                                     <button
                                         class="nimble-button"
                                         data-button-variant="icon"
                                         type="button"
-                                        aria-label="Delete {subclass.reactive.name}"
+                                        aria-label="Delete {subclass.reactive
+                                            .name}"
                                         onclick={(event) =>
                                             deleteItem(event, subclass._id)}
                                     >

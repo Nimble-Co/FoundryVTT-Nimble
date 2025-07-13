@@ -235,6 +235,7 @@
         margin: 0.25rem 0 0 0;
         padding: 0;
         list-style: none;
+        width: 100%;
     }
 
     .nimble-currency-wrapper {
