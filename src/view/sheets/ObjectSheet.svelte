@@ -171,6 +171,27 @@
                     ></i>
                 </span>
             </label>
+
+            <div class="nimble-field nimble-field--column">
+                <span class="nimble-heading" data-heading-variant="field">
+                    Inventory Slots
+
+                    <i
+                        class="nimble-field__hint-icon fa-solid fa-circle-info"
+                        data-tooltip="Enter a decimal value to count towards one slot for small related items."
+                        data-tooltip-direction="UP"
+                    ></i>
+                </span>
+
+                <input
+                    type="number"
+                    value={item.reactive.system.slotsRequired || 0}
+                    onchange={({ target }) =>
+                        item.update({
+                            "system.slotsRequired": target.value,
+                        })}
+                />
+            </div>
         </div>
 
         {#if objectType === "weapon"}

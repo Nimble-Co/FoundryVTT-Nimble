@@ -24,7 +24,7 @@ const schema = () => ({
 	}),
 	slotsRequired: new fields.NumberField({
 		required: true,
-		initial: 1,
+		initial: 0,
 		min: 0,
 		nullable: false,
 	}),
