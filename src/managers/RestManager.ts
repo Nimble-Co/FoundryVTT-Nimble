@@ -117,7 +117,13 @@ class RestManager {
 		}
 	}
 
-	#restoreMana() {}
+	#restoreMana() {
+		const { current, max } = this.#actor.system.resources.mana;
+		if (current < max) {
+			this.#updates.actor['system.resources.mana'] = { current: max };
+			this.#summary.push(`Restored ${max - current} mana.`);
+		}
+	}
 
 	#restoreWounds() {
 		const { value } = this.#actor.system.attributes.wounds;
