@@ -38,4 +38,24 @@ export class NimbleObjectItem extends NimbleBaseItem {
 			type: 'object',
 		};
 	}
+
+	/** ------------------------------------------------------ */
+	//                 Document Update Hooks
+	/** ------------------------------------------------------ */
+	override async _preCreate(data, options, user) {
+		// Update quantity if object already exists and is stackable
+		if (this.isEmbedded && this.system.stackable) {
+			const existing = this.actor?.items.find(
+				(i) => i.name === this.name && i.type === 'object' && i.system.stackable,
+			);
+
+			if (!existing) return super._preCreate(data, options, user);
+
+			// Update existing item quantity
+			existing.update({ 'system.quantity': existing.system.quantity + 1 });
+			return false;
+		}
+
+		return super._preCreate(data, options, user);
+	}
 }
