@@ -1,67 +1,71 @@
 <script lang="ts">
-// Types
-import type { NimbleCharacter } from '../../../documents/actor/character.js';
+    // Types
+    import type { NimbleCharacter } from "../../../documents/actor/character.js";
 
-// Helper Functions
-import { getContext } from 'svelte';
-import localize from '../../../utils/localize.js';
-import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
+    // Helper Functions
+    import { getContext } from "svelte";
+    import localize from "../../../utils/localize.js";
+    import replaceHyphenWithMinusSign from "../../dataPreparationHelpers/replaceHyphenWithMinusSign.js";
 
-// Components
-import AbilityScores from '../components/AbilityScores.svelte';
-import ArmorClass from '../components/ArmorClass.svelte';
-import SavingThrows from '../components/SavingThrows.svelte';
-import Skills from '../components/Skills.svelte';
+    // Components
+    import AbilityScores from "../components/AbilityScores.svelte";
+    import ArmorClass from "../components/ArmorClass.svelte";
+    import SavingThrows from "../components/SavingThrows.svelte";
+    import Skills from "../components/Skills.svelte";
 
-function getArmorProficiencies(proficiencies: Set<string>) {
-	return [...proficiencies]
-		.map((key): string => armorTypesPlural[key] ?? key)
-		.sort((a, b) => a.localeCompare(b));
-}
+    function getArmorProficiencies(proficiencies: Set<string>) {
+        return [...proficiencies]
+            .map((key): string => armorTypesPlural[key] ?? key)
+            .sort((a, b) => a.localeCompare(b));
+    }
 
-function getLanguageProficiencies(proficiencies: Set<string>) {
-	return [...proficiencies]
-		.map((key): string => languages[key] ?? key)
-		.sort((a, b) => a.localeCompare(b));
-}
+    function getLanguageProficiencies(proficiencies: Set<string>) {
+        return [...proficiencies]
+            .map((key): string => languages[key] ?? key)
+            .sort((a, b) => a.localeCompare(b));
+    }
 
-function getMovementLabels(movementModes: Record<string, number>) {
-	return Object.entries(movementModes)
-		.reduce((modes: string[], [key, value]): string[] => {
-			if (value) {
-				const movementType = localize(movementTypes[key] ?? key);
-				modes.push(`${movementType}: ${value} squares`);
-			}
+    function getMovementLabels(movementModes: Record<string, number>) {
+        return Object.entries(movementModes)
+            .reduce((modes: string[], [key, value]): string[] => {
+                if (value) {
+                    const movementType = localize(movementTypes[key] ?? key);
+                    modes.push(`${movementType}: ${value} spaces`);
+                }
 
-			return modes;
-		}, [])
-		.sort((a, b) => a.localeCompare(b));
-}
+                return modes;
+            }, [])
+            .sort((a, b) => a.localeCompare(b));
+    }
 
-function getWeaponProficiencies(proficiencies: Set<string>) {
-	return [...proficiencies];
-}
+    function getWeaponProficiencies(proficiencies: Set<string>) {
+        return [...proficiencies];
+    }
 
-const { armorTypesPlural, languages, movementTypes } = CONFIG.NIMBLE;
+    const { armorTypesPlural, languages, movementTypes } = CONFIG.NIMBLE;
 
-let actor: NimbleCharacter = getContext('actor');
-let skills = $derived(actor.reactive.system.skills);
-let abilities = $derived(actor.reactive.system.abilities);
-let characterSavingThrows = $derived(actor.reactive.system.savingThrows);
-let initiative = $derived(actor.reactive.system.attributes.initiative.mod);
+    let actor: NimbleCharacter = getContext("actor");
+    let skills = $derived(actor.reactive.system.skills);
+    let abilities = $derived(actor.reactive.system.abilities);
+    let characterSavingThrows = $derived(actor.reactive.system.savingThrows);
+    let initiative = $derived(actor.reactive.system.attributes.initiative.mod);
 
-let movementModes = $derived(getMovementLabels(actor.reactive.system.attributes.movement));
+    let movementModes = $derived(
+        getMovementLabels(actor.reactive.system.attributes.movement),
+    );
 
-// Proficiencies
-let armorProficiencies = $derived(getArmorProficiencies(actor.reactive.system.proficiencies.armor));
+    // Proficiencies
+    let armorProficiencies = $derived(
+        getArmorProficiencies(actor.reactive.system.proficiencies.armor),
+    );
 
-let languageProficiencies = $derived(
-	getLanguageProficiencies(actor.reactive.system.proficiencies.languages),
-);
+    let languageProficiencies = $derived(
+        getLanguageProficiencies(actor.reactive.system.proficiencies.languages),
+    );
 
-let weaponProficiencies = $derived(
-	getWeaponProficiencies(actor.reactive.system.proficiencies.weapons),
-);
+    let weaponProficiencies = $derived(
+        getWeaponProficiencies(actor.reactive.system.proficiencies.weapons),
+    );
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
@@ -70,8 +74,14 @@ let weaponProficiencies = $derived(
 
         <SavingThrows {characterSavingThrows} />
 
-        <section class="nimble-other-attribute-wrapper" style="grid-area: initiative;">
-            <header class="nimble-section-header" data-header-alignment="center">
+        <section
+            class="nimble-other-attribute-wrapper"
+            style="grid-area: initiative;"
+        >
+            <header
+                class="nimble-section-header"
+                data-header-alignment="center"
+            >
                 <h3 class="nimble-heading" data-heading-variant="section">
                     Initiative
                 </h3>
@@ -79,21 +89,29 @@ let weaponProficiencies = $derived(
 
             <div class="nimble-initiative">
                 {replaceHyphenWithMinusSign(
-                    new Intl.NumberFormat("en-US", { signDisplay: "always" }).format(
-                        initiative,
-                    ),
+                    new Intl.NumberFormat("en-US", {
+                        signDisplay: "always",
+                    }).format(initiative),
                 )}
             </div>
         </section>
 
-        <section class="nimble-other-attribute-wrapper" style="grid-area: armor;">
-            <header class="nimble-section-header" data-header-alignment="center">
+        <section
+            class="nimble-other-attribute-wrapper"
+            style="grid-area: armor;"
+        >
+            <header
+                class="nimble-section-header"
+                data-header-alignment="center"
+            >
                 <h3 class="nimble-heading" data-heading-variant="section">
                     Armor
                 </h3>
             </header>
 
-            <ArmorClass armorClass={actor.reactive.system.attributes.armor.value} />
+            <ArmorClass
+                armorClass={actor.reactive.system.attributes.armor.value}
+            />
         </section>
     </div>
 
@@ -104,10 +122,7 @@ let weaponProficiencies = $derived(
 
         <section>
             <header class="nimble-section-header">
-                <h3
-                    class="nimble-heading"
-                    data-heading-variant="section"
-                >
+                <h3 class="nimble-heading" data-heading-variant="section">
                     {heading}
                 </h3>
 

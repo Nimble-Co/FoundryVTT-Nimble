@@ -1,7 +1,7 @@
 <script>
-let { document } = $props();
+    let { document } = $props();
 
-const { movementTypes } = CONFIG.NIMBLE;
+    const { movementTypes } = CONFIG.NIMBLE;
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--movement-config">
@@ -26,7 +26,8 @@ const { movementTypes } = CONFIG.NIMBLE;
                             value={distance}
                             onchange={({ target }) =>
                                 document.update({
-                                    [`system.attributes.movement.${key}`]: target.value,
+                                    [`system.attributes.movement.${key}`]:
+                                        target.value,
                                 })}
                         />
                     </td>
@@ -35,7 +36,7 @@ const { movementTypes } = CONFIG.NIMBLE;
         </tbody>
     </table>
 
-    <aside>Note: All measurements are given in grid squares.</aside>
+    <aside>Note: All measurements are given in grid spaces.</aside>
 </section>
 
 <style lang="scss">

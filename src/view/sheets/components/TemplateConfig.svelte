@@ -1,24 +1,24 @@
 <script>
-import { getContext } from 'svelte';
-import TagGroup from '../../components/TagGroup.svelte';
+    import { getContext } from "svelte";
+    import TagGroup from "../../components/TagGroup.svelte";
 
-function getTemplateShapeOptions() {
-	return Object.entries(templateShapes).map(([key, label]) => ({
-		label,
-		value: key,
-	}));
-}
+    function getTemplateShapeOptions() {
+        return Object.entries(templateShapes).map(([key, label]) => ({
+            label,
+            value: key,
+        }));
+    }
 
-const { templateShapes } = CONFIG.NIMBLE;
-const templateShapeOptions = getTemplateShapeOptions();
+    const { templateShapes } = CONFIG.NIMBLE;
+    const templateShapeOptions = getTemplateShapeOptions();
 
-let { activationData, toggleTemplateShapeOption } = $props();
+    let { activationData, toggleTemplateShapeOption } = $props();
 
-let document = getContext('document');
-let templateShape = $derived(activationData.template.shape);
-let templateLength = $derived(activationData.template.length);
-let templateRadius = $derived(activationData.template.radius);
-let templateWidth = $derived(activationData.template.width);
+    let document = getContext("document");
+    let templateShape = $derived(activationData.template.shape);
+    let templateLength = $derived(activationData.template.length);
+    let templateRadius = $derived(activationData.template.radius);
+    let templateWidth = $derived(activationData.template.width);
 </script>
 
 {#snippet templateSizeField(label, value, updatePath)}
@@ -40,7 +40,10 @@ let templateWidth = $derived(activationData.template.width);
 
 <section>
     <header class="nimble-section-header" style="margin-block-start: 0.5rem;">
-        <h3 class="nimble-heading nimble-field__label" data-heading-variant="field">
+        <h3
+            class="nimble-heading nimble-field__label"
+            data-heading-variant="field"
+        >
             Template Shape
         </h3>
     </header>
@@ -56,7 +59,7 @@ let templateWidth = $derived(activationData.template.width);
     <div style="display: flex; gap: 0.5rem; margin-top: 0.625rem;">
         {#if templateShape === "cone" || templateShape === "line"}
             {@render templateSizeField(
-                "Length (squares)",
+                "Length (spaces)",
                 templateLength,
                 "system.activation.template.length",
             )}
@@ -64,7 +67,7 @@ let templateWidth = $derived(activationData.template.width);
 
         {#if templateShape === "circle" || templateShape === "emanation"}
             {@render templateSizeField(
-                "Radius (squares)",
+                "Radius (spaces)",
                 templateRadius,
                 "system.activation.template.radius",
             )}
@@ -72,7 +75,7 @@ let templateWidth = $derived(activationData.template.width);
 
         {#if templateShape === "line" || templateShape === "square"}
             {@render templateSizeField(
-                "Width (squares)",
+                "Width (spaces)",
                 templateWidth,
                 "system.activation.template.width",
             )}
