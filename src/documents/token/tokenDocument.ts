@@ -43,4 +43,16 @@ export class NimbleTokenDocument extends TokenDocument {
 
 		return combat.createEmbeddedDocuments('Combatant', createData);
 	}
+
+	override getBarAttribute(barName: string, options) {
+		const attribute = super.getBarAttribute(barName, options);
+		if (!attribute) return null;
+
+		const isMana = attribute.attribute === 'resources.mana';
+		if (isMana) {
+			attribute.editable = true;
+		}
+
+		return attribute;
+	}
 }

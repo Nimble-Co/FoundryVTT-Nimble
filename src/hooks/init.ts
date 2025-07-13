@@ -32,6 +32,7 @@ import { PrimaryDie } from '../dice/terms/PrimaryDie.js';
 
 import { NimbleTemplateLayer } from '../canvas/layers/templateLayer.js';
 
+import { trackableAttributes } from '../documents/actor/trackableAttributes.ts';
 import registerCustomEnrichers from '../enrichers/registerCustomEnrichers.js';
 
 import { NIMBLE_GAME } from '../game.js';
@@ -56,6 +57,9 @@ export default function init() {
 	CONFIG.Dice.rolls.push(DamageRoll);
 	CONFIG.Dice.rolls.push(NimbleRoll);
 	CONFIG.Dice.types.push(PrimaryDie);
+
+	// Adds Scene data
+	CONFIG.Actor.trackableAttributes = trackableAttributes;
 
 	// Add/Update Layers
 	CONFIG.Canvas.layers.templates.layerClass = NimbleTemplateLayer;

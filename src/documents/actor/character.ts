@@ -149,6 +149,10 @@ export class NimbleCharacter extends NimbleBaseActor {
 		// Prepare Class Data
 		this.prepareClassData(actorData);
 
+		// Prepare max Mana
+		actorData.resources.mana.value = actorData.resources.mana.current;
+		actorData.resources.mana.max = actorData.resources.mana.baseMax;
+
 		// Prepare Inventory Slots
 		const baseInventorySlots = 10 + actorData.abilities.strength.mod;
 		const bonusInventorySlots = actorData.inventory.bonusSlots;
@@ -592,6 +596,28 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		const manager = new RestManager(this, restData);
 		await manager.rest();
+	}
+
+	/** ------------------------------------------------------ */
+	/**                 Special Overrides                      */
+	/** ------------------------------------------------------ */
+	override async modifyTokenAttribute(
+		attribute: string,
+		value: number,
+		isDelta = false,
+		isBar?: boolean,
+	): Promise<this> {
+		if (attribute === 'resources.mana') {
+			// Special handling for mana
+			const currentMana = this.system.resources.mana.current;
+			const newMana = isDelta ? currentMana + value : value;
+
+			await this.update({ 'system.resources.mana.current': newMana });
+			return this;
+		}
+
+		// Default behavior for other attributes
+		return super.modifyTokenAttribute(attribute, value, isDelta, isBar);
 	}
 
 	/** ------------------------------------------------------ */
