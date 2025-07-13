@@ -16,6 +16,10 @@ import SubclassSheet from './documents/sheets/SubclassSheet.svelte.js';
 import { ConditionManager } from './managers/ConditionManager.js';
 import { ModifierManager } from './managers/ModifierManager.js';
 
+// Macros
+import { activateItemMacro } from './macros/activateItemMacro.ts';
+import { createMacro } from './macros/createMacro.ts';
+
 const managers = {
 	ConditionManager,
 	ModifierManager,
@@ -44,7 +48,10 @@ const NIMBLE_GAME = {
 		...NIMBLE.Item.documentClasses,
 	},
 	dialogs: {},
-	macros: {},
+	macros: {
+		activateItemMacro,
+		createMacro,
+	},
 	managers,
 	migrations: {},
 	utils: {},

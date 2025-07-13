@@ -8,6 +8,8 @@ import ready from './hooks/ready.js';
 import renderChatMessage from './hooks/renderChatMessage.js';
 import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 
+import { hotbarDrop } from './hooks/hotBarDrop.ts';
+
 /** ----------------------------------- */
 //                Hooks
 /** ----------------------------------- */
@@ -19,3 +21,5 @@ Hooks.once('i18nInit', i18nInit);
 Hooks.on('canvasInit', canvasInit);
 Hooks.on('renderChatMessage', renderChatMessage);
 Hooks.on('renderNimbleTokenHUD', renderNimbleTokenHUD);
+
+Hooks.on('hotbarDrop', hotbarDrop);
