@@ -126,7 +126,7 @@ class RestManager {
 			value: Math.max(value - 1, 0),
 		};
 
-		this.#summary.push(`Recovered 1 wound.`);
+		if (value !== 0) this.#summary.push('Recovered 1 wound.');
 	}
 }
 
