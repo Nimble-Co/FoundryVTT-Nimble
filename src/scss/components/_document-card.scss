@@ -21,6 +21,16 @@
     cursor: pointer;
     transition: var(--nimble-standard-transition);
 
+    &--actor-inventory {
+        grid-template-areas:
+            "img name quantity configureButton deleteButton"
+            "img name quantity configureButton deleteButton";
+        grid-template-columns:
+            2rem minmax(0, 1fr)
+            fit-content fit-content fit-content;
+        grid-template-rows: repeat(2, max-content);
+    }
+
     &--character-creator {
         --nimble-card-image-filter: grayscale(60%);
         --nimble-card-image-height: 2.5rem;
@@ -85,6 +95,14 @@
 
         grid-template-areas: "img name configureButton deleteButton";
         grid-template-rows: max-content;
+    }
+
+    &--no-meta.nimble-document-card--actor-inventory {
+        grid-template-areas: "img name quantity configureButton deleteButton";
+        grid-template-columns: 2rem minmax(
+                0,
+                1fr
+            ) fit-content fit-content fit-content;
     }
 
     &--no-meta.nimble-document-card--character-creator {
@@ -233,5 +251,16 @@
         line-height: 1;
         color: var(--nimble-card-text-color);
         overflow: hidden;
+    }
+
+    &__quantity {
+        grid-area: quantity;
+        font-size: var(--nimble-xs-text);
+        color: var(--nimble-dark-text-color);
+        font-weight: 500;
+        width: 2.5rem;
+        text-align: center;
+        line-height: 1;
+        height: 1.5rem;
     }
 }

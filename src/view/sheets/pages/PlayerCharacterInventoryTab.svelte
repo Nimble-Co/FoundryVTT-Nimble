@@ -136,7 +136,7 @@
                     <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
                     <!-- svelte-ignore  a11y_click_events_have_key_events -->
                     <li
-                        class="nimble-document-card"
+                        class="nimble-document-card nimble-document-card--actor-inventory"
                         class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
                         class:nimble-document-card--no-meta={!metadata}
                         data-item-id={item._id}
@@ -163,6 +163,18 @@
                             >
                                 {item.reactive.name}
                             </h4>
+
+                            <input
+                                class="nimble-document-card__quantity"
+                                type="number"
+                                value={item.reactive.system.quantity || 1}
+                                min="0"
+                                step="1"
+                                onchange={({ currentTarget }) =>
+                                    actor.updateItem(item._id, {
+                                        "system.quantity": currentTarget.value,
+                                    })}
+                            />
 
                             <button
                                 class="nimble-button"
