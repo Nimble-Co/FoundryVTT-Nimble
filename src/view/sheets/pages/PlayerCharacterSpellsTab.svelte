@@ -183,6 +183,7 @@
 
     // Content State
     let currentMana = $derived(actor.reactive.system.resources.mana.current);
+    let baseMaxMana = $derived(actor.reactive.system.resources.mana.baseMax);
     let maxMana = $derived(actor.reactive.system.resources.mana.max);
     let searchTerm = $state("");
     let spells = $derived(filterItems(actor.reactive, ["spell"], searchTerm));
@@ -352,7 +353,7 @@
                 <input
                     class="nimble-hit-points__input nimble-hit-points__input--max-hp"
                     type="number"
-                    value={maxMana}
+                    value={maxMana || baseMaxMana}
                     onchange={({ target }) =>
                         updateMaxMana?.(Number(target.value))}
                 />

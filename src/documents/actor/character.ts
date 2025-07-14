@@ -279,6 +279,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 	_prepareMaxMana(actorData: NimbleCharacterData): number {
 		const classes = Object.values(this.classes ?? {});
 		if (classes.length === 0) return actorData.resources.mana.baseMax;
+		if (this.levels.character === 1) return actorData.resources.mana.baseMax;
 
 		let maxMana = actorData.resources.mana.baseMax;
 

@@ -1,0 +1,130 @@
+{
+	"name": "Mage",
+	"type": "class",
+	"img": "systems/nimble/assets/classImages/mage.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "RlovOOJ96156Tx6d",
+				"identifier": "",
+				"label": "Starting Gear - Adventurer’s Garb",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.Bdm2ynI2J7Xt9FNf"
+			},
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "5GIJtU8YR9jvjUgR",
+				"identifier": "",
+				"label": "Starting Gear - Staff",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.eqFoSxHnz5UxtHKd"
+			},
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "3lMJVgiPy1ApYosr",
+				"identifier": "",
+				"label": "Starting Gear - Soap",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.Bc2LSulAmIfQvIBz"
+			}
+		],
+		"armorProficiencies": [
+			"cloth"
+		],
+		"classLevel": 1,
+		"complexity": 3,
+		"description": "<p>Elemental power flows through all things… find it, study it, and harness it. A mage is bestowed their first strand of the Tapestry at birth; however, true mastery eludes those who idly rest upon this innate endowment. Instead, they diligently refine their natural gifts through scholarly pursuit, with tomes and parchments as their companions, alongside the sage counsel of a seasoned mentor or three! Yes, this is the chosen path of those who would wield authority over the elements.</p><p>Comprehending the tapestry of mana is no trivial endeavor—it will yield its arcane secrets only to the earnest seeker of knowledge. Yet, once the adept learns to discern the subtleties of its intricate patterns as it unfurls and meanders into the ethereal expanse—it is in that moment the apprentice truly ascends to the mantle of mage. What makes a Mage:</p><ul><li><p><strong>Spellshaper.</strong> Customize the spells you cast: stretch time, gain extra-dimensional vision, or echo cast multiple spells! </p></li><li><p><strong>Elemental Mastery.</strong> Harness the power of the elements, whether raining down fire from the heavens, freezing enemies in their tracks, or striking with thunderous bolts of lightning. </p></li><li><p><strong>Chaos or Control.</strong> Will you snatch control of the frayed tapestry of mana or lean into the forces of chaos? What awaits you… Diamond Skin? Elemental Entanglement? Liquefy Legs?</p></li></ul>",
+		"groupIdentifiers": [
+			"spellshaper"
+		],
+		"keyAbilityScores": [
+			"intelligence",
+			"will"
+		],
+		"hitDieSize": 6,
+		"hpData": [],
+		"savingThrows": {
+			"advantage": "intelligence",
+			"disadvantage": "strength"
+		},
+		"abilityScoreData": {
+			"4": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"5": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			},
+			"8": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"9": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			},
+			"12": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"13": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			},
+			"16": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"17": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			}
+		},
+		"mana": {
+			"formula": "(max(@intelligence, 0) * 3) + @level",
+			"recovery": "safeRest"
+		},
+		"resources": [],
+		"weaponProficiencies": [
+			"Blades",
+			"Staves",
+			"Wands"
+		]
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.344",
+		"systemId": "nimble",
+		"systemVersion": "0.1.5",
+		"createdTime": 1752458964995,
+		"modifiedTime": 1752459384581,
+		"lastModifiedBy": "rOTRHON0UVnNo8GT"
+	},
+	"_id": "jhCQ6AjlskmZCIly"
+}

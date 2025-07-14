@@ -1,0 +1,152 @@
+{
+	"name": "Cheat",
+	"type": "class",
+	"img": "systems/nimble/assets/classImages/cheat.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "Xq37u4uHsbeedAwP",
+				"identifier": "",
+				"label": "Starting Gear - Dagger",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.O1sCIVQKfAqSlDT5"
+			},
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "snAchOLX0tw5RXZZ",
+				"identifier": "",
+				"label": "Starting Gear - Dagger",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.O1sCIVQKfAqSlDT5"
+			},
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "E03k5BMWwovDzg4h",
+				"identifier": "",
+				"label": "Starting Gear - Sling",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.YjGUoWybYcwxI2Ky"
+			},
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "FbAthK91SIYxVFg8",
+				"identifier": "",
+				"label": "Starting Gear - Cheap Hides",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.zA3N93almf9RSt34"
+			},
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "7aVEzhtJ2a8RIcvo",
+				"identifier": "",
+				"label": "Starting Gear - Chalk",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.ryRt6TtOU0xqxlvP"
+			}
+		],
+		"armorProficiencies": [
+			"leather"
+		],
+		"classLevel": 1,
+		"complexity": 1,
+		"description": "<p>Cloak and dagger… and dagger. The common Cheat doesn’t call herself a Cheat, of course—rather, a street smart rogue, a survivalist, or a liberator of unused goods. They are masters of stealth, pick pocketing, and smooth talking. Some of the more vicious ilk are masters of death-dealing as well. </p><p>Cheats can be found in every city and byway under countless different names, but they all believe something similar: It’s a cruel, merciless world, and those who aim to survive don’t have time for silly things like “morals” or “honor.” Those are luxuries of the rich and powerful. Honor gets you killed—survival is about taking what you want, when you can. As The Cheat, you can: </p><ul><li><p><strong>Break the rules!</strong> You can change the dice you roll to whatever numbers suit you best! </p></li><li><p><strong>Sneak in and backstab</strong> enemies with devastating critical hits, taking down even huge, heavily–armored foes with a single blow!</p></li><li><p><strong>Fight dirty</strong> with pocket sand, low blows, and vicious blades. When things get out of hand, disappear into the night, and live to cheat another day!</p></li></ul>",
+		"groupIdentifiers": [
+			"underhanded-abilities"
+		],
+		"keyAbilityScores": [
+			"dexterity",
+			"intelligence"
+		],
+		"hitDieSize": 6,
+		"hpData": [],
+		"savingThrows": {
+			"advantage": "dexterity",
+			"disadvantage": "will"
+		},
+		"abilityScoreData": {
+			"4": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"5": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			},
+			"8": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"9": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			},
+			"12": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"13": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			},
+			"16": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"17": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			}
+		},
+		"mana": {
+			"formula": "",
+			"recovery": "safeRest"
+		},
+		"resources": [],
+		"weaponProficiencies": [
+			"Dexterity Weapons"
+		]
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.344",
+		"systemId": "nimble",
+		"systemVersion": "0.1.5",
+		"createdTime": 1752457995371,
+		"modifiedTime": 1752458438790,
+		"lastModifiedBy": "rOTRHON0UVnNo8GT"
+	},
+	"_id": "sbwmwT5py0HixFTU"
+}

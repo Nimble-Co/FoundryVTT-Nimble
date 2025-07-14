@@ -81,7 +81,7 @@ const schema = () => ({
 	}),
 	mana: new fields.SchemaField({
 		formula: new fields.StringField({ required: true, initial: '', nullable: false }),
-		recovery: new fields.StringField({ required: true, initial: '', nullable: false }),
+		recovery: new fields.StringField({ required: true, initial: 'safeRest', nullable: false }),
 	}),
 	resources: new fields.ArrayField(new fields.ObjectField({ required: true, nullable: false }), {
 		required: true,
