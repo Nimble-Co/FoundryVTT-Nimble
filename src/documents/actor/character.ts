@@ -12,6 +12,7 @@ import { RestManager } from '../../managers/RestManager.js';
 
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import getRollFormula from '../../utils/getRollFormula.js';
+import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
 
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
@@ -151,7 +152,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		// Prepare max Mana
 		actorData.resources.mana.value = actorData.resources.mana.current;
-		actorData.resources.mana.max = actorData.resources.mana.baseMax;
+		actorData.resources.mana.max = this._prepareMaxMana(actorData);
 
 		// Prepare Inventory Slots
 		const baseInventorySlots = 10 + actorData.abilities.strength.mod;
@@ -273,6 +274,21 @@ export class NimbleCharacter extends NimbleBaseActor {
 		}, {});
 
 		this.levels = { character, classes };
+	}
+
+	_prepareMaxMana(actorData: NimbleCharacterData): number {
+		const classes = Object.values(this.classes ?? {});
+		if (classes.length === 0) return actorData.resources.mana.baseMax;
+
+		let maxMana = actorData.resources.mana.baseMax;
+
+		classes.forEach((cls) => {
+			const manaFormula = cls.system.mana.formula;
+			const resolvedValue = getDeterministicBonus(manaFormula, this.getRollData())!;
+			maxMana += resolvedValue;
+		});
+
+		return maxMana;
 	}
 
 	_prepareArmorClass(): void {
@@ -405,6 +421,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 		const highestKeyAbility = Math.max(...keyAbilities.map((key) => abilities[key]?.mod ?? 0));
 
 		data.key = highestKeyAbility;
+
+		data.level = this.levels.character ?? 1;
 
 		return data;
 	}

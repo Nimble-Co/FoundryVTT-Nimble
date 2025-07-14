@@ -73,6 +73,13 @@
         }));
     }
 
+    function prepareManaRecoveryTypeOptions() {
+        return Object.entries(manaRecoveryTypes).map(([key, label]) => ({
+            label,
+            value: key,
+        }));
+    }
+
     function prepareSavingThrowTagOptions() {
         return Object.entries(savingThrows).map(([key, label]) => ({
             label,
@@ -111,6 +118,12 @@
     async function toggleHitDieSize(hitDie) {
         await item.update({
             "system.hitDieSize": hitDie,
+        });
+    }
+
+    async function toggleManaRecoveryType(recoveryType) {
+        await item.update({
+            "system.mana.recovery": recoveryType,
         });
     }
 
@@ -153,12 +166,14 @@
         },
     ];
 
-    const { abilityScores, armorTypesPlural, savingThrows } = CONFIG.NIMBLE;
+    const { abilityScores, armorTypesPlural, manaRecoveryTypes, savingThrows } =
+        CONFIG.NIMBLE;
 
     const abilityScoreOptions = prepareAbilityScoreTagOptions();
     const armorOptions = prepareArmorOptions();
     const hitDieOptions = prepareHitDieTagOptions();
     const savingThrowOptions = prepareSavingThrowTagOptions();
+    const manaRecoveryOptions = prepareManaRecoveryTypeOptions();
 
     let currentTab = $state(navigation[0]);
     let resources = $derived(item.reactive.system.resources);
@@ -174,6 +189,7 @@
 
     let hitDieSize = $derived(item.reactive.system.hitDieSize);
     let keyAbilityScores = $derived(item.reactive.system.keyAbilityScores);
+    let manaRecoveryType = $derived(item.reactive.system.mana.recovery);
     let weaponProficiencies = $derived(
         item.reactive.system.weaponProficiencies,
     );
@@ -281,6 +297,39 @@
                 --nimble-tag-group-grid-columns="repeat(7, 1fr)"
             />
         </section>
+
+        <section>
+            <header class="nimble-section-header">
+                <h3 class="nimble-heading" data-heading-variant="field">
+                    Mana Formula
+                </h3>
+            </header>
+
+            <input
+                type="text"
+                value={item.reactive.system.mana.formula || ""}
+                onchange={({ currentTarget }) =>
+                    item.update({ "system.mana.formula": currentTarget.value })}
+            />
+        </section>
+
+        {#if item.reactive.system.mana.formula.length}
+            <section>
+                <header class="nimble-section-header">
+                    <h3 class="nimble-heading" data-heading-variant="field">
+                        Mana Recovery
+                    </h3>
+                </header>
+
+                <TagGroup
+                    grid={true}
+                    options={manaRecoveryOptions}
+                    selectedOptions={[manaRecoveryType]}
+                    toggleOption={toggleManaRecoveryType}
+                    --nimble-tag-group-grid-columns="repeat(3, 1fr)"
+                />
+            </section>
+        {/if}
 
         <section>
             <header class="nimble-section-header">

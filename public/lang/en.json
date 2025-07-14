@@ -242,6 +242,11 @@
 			"savingThrow": "{saveType} Mod",
 			"skillCheck": "{skill} Mod"
 		},
+		"manaRecoveryTypes": {
+			"fieldRest": "Field Rest",
+			"safeRest": "Safe Rest",
+			"initiative": "Initiative"
+		},
 		"movementTypes": {
 			"burrow": "Burrowing",
 			"climb": "Climbing",

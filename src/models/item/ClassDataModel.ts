@@ -79,6 +79,10 @@ const schema = () => ({
 		16: abilityScoreSchema('primary'),
 		17: abilityScoreSchema('secondary'),
 	}),
+	mana: new fields.SchemaField({
+		formula: new fields.StringField({ required: true, initial: '', nullable: false }),
+		recovery: new fields.StringField({ required: true, initial: '', nullable: false }),
+	}),
 	resources: new fields.ArrayField(new fields.ObjectField({ required: true, nullable: false }), {
 		required: true,
 		nullable: false,

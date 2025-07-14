@@ -6,23 +6,12 @@
 		"macro": "",
 		"identifier": "",
 		"rules": [],
-		"armorProficiencies": [
-			"plate",
-			"mail",
-			"leather",
-			"cloth",
-			"shield"
-		],
+		"armorProficiencies": ["plate", "mail", "leather", "cloth", "shield"],
 		"classLevel": 1,
 		"complexity": 2,
 		"description": "<p>Faithful guardian, protector, and avenger of the weak. Choose between the merciless Oath of Vengeance and the vigilant Oath of Refuge.</p>",
-		"groupIdentifiers": [
-			"sacred-decree"
-		],
-		"keyAbilityScores": [
-			"strength",
-			"will"
-		],
+		"groupIdentifiers": ["sacred-decree"],
+		"keyAbilityScores": ["strength", "will"],
 		"hitDieSize": 10,
 		"hpData": [],
 		"savingThrows": {
@@ -220,44 +209,9 @@
 					"19": "95",
 					"20": "100"
 				}
-			},
-			{
-				"type": "mana",
-				"identifier": "mana",
-				"name": "Mana",
-				"consumable": false,
-				"recovery": {
-					"on": "safeRest"
-				},
-				"value": 0,
-				"max": "0",
-				"levels": {
-					"1": "0",
-					"2": "2+@will",
-					"3": "3+@will",
-					"4": "4+@will",
-					"5": "5+@will",
-					"6": "6+@will",
-					"7": "7+@will",
-					"8": "8+@will",
-					"9": "9+@will",
-					"10": "10+@will",
-					"11": "11+@will",
-					"12": "12+@will",
-					"13": "13+@will",
-					"14": "14+@will",
-					"15": "15+@will",
-					"16": "16+@will",
-					"17": "17+@will",
-					"18": "18+@will",
-					"19": "19+@will",
-					"20": "20+@will"
-				}
 			}
 		],
-		"weaponProficiencies": [
-			"STR Weapons"
-		]
+		"weaponProficiencies": ["STR Weapons"]
 	},
 	"effects": [],
 	"folder": null,

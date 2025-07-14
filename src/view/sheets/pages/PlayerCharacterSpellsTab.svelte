@@ -1,180 +1,194 @@
 <script>
-import filterItems from '../../dataPreparationHelpers/filterItems.js';
-import { getContext } from 'svelte';
-import prepareSpellTooltip from '../../dataPreparationHelpers/documentTooltips/prepareSpellTooltip';
-import sortItems from '../../../utils/sortItems.js';
+    import filterItems from "../../dataPreparationHelpers/filterItems.js";
+    import { getContext } from "svelte";
+    import prepareSpellTooltip from "../../dataPreparationHelpers/documentTooltips/prepareSpellTooltip";
+    import sortItems from "../../../utils/sortItems.js";
 
-import SearchBar from '../components/SearchBar.svelte';
-import SecondaryNavigation from '../../components/SecondaryNavigation.svelte';
+    import SearchBar from "../components/SearchBar.svelte";
+    import SecondaryNavigation from "../../components/SecondaryNavigation.svelte";
 
-async function configureItem(event, id) {
-	event.stopPropagation();
+    async function configureItem(event, id) {
+        event.stopPropagation();
 
-	await actor.configureItem(id);
-}
+        await actor.configureItem(id);
+    }
 
-async function createItem(event) {
-	event.stopPropagation();
+    async function createItem(event) {
+        event.stopPropagation();
 
-	await actor.createItem({ name: 'New Spell', type: 'spell' });
-}
+        await actor.createItem({ name: "New Spell", type: "spell" });
+    }
 
-async function deleteItem(event, id) {
-	event.stopPropagation();
+    async function deleteItem(event, id) {
+        event.stopPropagation();
 
-	await actor.deleteItem(id);
+        await actor.deleteItem(id);
 
-	if (foundry.utils.isEmpty(visibleSpells)) {
-		currentTab = subNavigation[0];
-	}
-}
+        if (foundry.utils.isEmpty(visibleSpells)) {
+            currentTab = subNavigation[0];
+        }
+    }
 
-function getSpellMetadata(spell) {
-	const activationType = spell.reactive.system.activation.cost.type;
-	const activationCost = spell.reactive.system.activation.cost.quantity;
-	const activationCostDetails = spell.reactive.system.activation.cost.details;
+    function getSpellMetadata(spell) {
+        const activationType = spell.reactive.system.activation.cost.type;
+        const activationCost = spell.reactive.system.activation.cost.quantity;
+        const activationCostDetails =
+            spell.reactive.system.activation.cost.details;
 
-	if (!activationType || activationType === 'none') return null;
+        if (!activationType || activationType === "none") return null;
 
-	if (['action', 'minute', 'hour'].includes(activationType)) {
-		const activationTypeLabel =
-			activationCost > 1
-				? activationCostTypesPlural[activationType]
-				: activationCostTypes[activationType];
+        if (["action", "minute", "hour"].includes(activationType)) {
+            const activationTypeLabel =
+                activationCost > 1
+                    ? activationCostTypesPlural[activationType]
+                    : activationCostTypes[activationType];
 
-		return `${activationCost || 1} ${activationTypeLabel}`;
-	}
+            return `${activationCost || 1} ${activationTypeLabel}`;
+        }
 
-	if (activationType === 'reaction') {
-		let label = activationCostTypes[activationType];
+        if (activationType === "reaction") {
+            let label = activationCostTypes[activationType];
 
-		if (activationCostDetails) {
-			label += ` <i
+            if (activationCostDetails) {
+                label += ` <i
                     class="nimble-document-card__meta-icon fa-solid fa-circle-info"
                     data-tooltip="Reaction Trigger: ${activationCostDetails}"
                     data-tooltip-direction="UP"
                 ></i>`;
-		}
+            }
 
-		return label;
-	}
+            return label;
+        }
 
-	if (activationType === 'special') {
-		let label = activationCostTypes[activationType];
+        if (activationType === "special") {
+            let label = activationCostTypes[activationType];
 
-		if (activationCostDetails) {
-			label += ` <i
+            if (activationCostDetails) {
+                label += ` <i
                     class="nimble-document-card__meta-icon fa-solid fa-circle-info"
                     data-tooltip="${activationCostDetails}"
                     data-tooltip-direction="UP"
                 ></i>`;
-		}
+            }
 
-		return label;
-	}
+            return label;
+        }
 
-	return null;
-}
+        return null;
+    }
 
-function getSpellSchoolTabs(spells) {
-	const actorSpellSchools = spells.reduce((relevantSpellSchools, spell) => {
-		if (spell.system.school) relevantSpellSchools.add(spell.system.school);
+    function getSpellSchoolTabs(spells) {
+        const actorSpellSchools = spells.reduce(
+            (relevantSpellSchools, spell) => {
+                if (spell.system.school)
+                    relevantSpellSchools.add(spell.system.school);
 
-		return relevantSpellSchools;
-	}, new Set());
+                return relevantSpellSchools;
+            },
+            new Set(),
+        );
 
-	if (actorSpellSchools.size < 2) return [];
+        if (actorSpellSchools.size < 2) return [];
 
-	return Object.entries(spellSchools).reduce(
-		(spellSchoolTabs, [key, label]) => {
-			if (actorSpellSchools.has(key)) {
-				spellSchoolTabs.push({
-					icon: spellSchoolIcons[key],
-					name: key,
-					tooltip: label,
-				});
-			}
+        return Object.entries(spellSchools).reduce(
+            (spellSchoolTabs, [key, label]) => {
+                if (actorSpellSchools.has(key)) {
+                    spellSchoolTabs.push({
+                        icon: spellSchoolIcons[key],
+                        name: key,
+                        tooltip: label,
+                    });
+                }
 
-			return spellSchoolTabs;
-		},
-		[
-			{
-				icon: 'fa-solid fa-grip',
-				name: 'all',
-				tooltip: 'All',
-			},
-		],
-	);
-}
+                return spellSchoolTabs;
+            },
+            [
+                {
+                    icon: "fa-solid fa-grip",
+                    name: "all",
+                    tooltip: "All",
+                },
+            ],
+        );
+    }
 
-function getVisibleSpells(spells, tabName) {
-	if (!tabName || tabName === 'all') return groupSpellsByTier(spells);
+    function getVisibleSpells(spells, tabName) {
+        if (!tabName || tabName === "all") return groupSpellsByTier(spells);
 
-	const spellsOfSpecifiedSchool = spells.filter(
-		(spell) => spell.reactive.system.school === tabName,
-	);
+        const spellsOfSpecifiedSchool = spells.filter(
+            (spell) => spell.reactive.system.school === tabName,
+        );
 
-	const spellsByTier = groupSpellsByTier(spellsOfSpecifiedSchool);
+        const spellsByTier = groupSpellsByTier(spellsOfSpecifiedSchool);
 
-	if (currentTab.name && currentTab.name !== 'all' && foundry.utils.isEmpty(spellsByTier)) {
-		currentTab = subNavigation[0];
+        if (
+            currentTab.name &&
+            currentTab.name !== "all" &&
+            foundry.utils.isEmpty(spellsByTier)
+        ) {
+            currentTab = subNavigation[0];
 
-		if (currentTab.name && currentTab.name !== 'all') {
-			return getVisibleSpells(spells, 'all');
-		}
-	}
+            if (currentTab.name && currentTab.name !== "all") {
+                return getVisibleSpells(spells, "all");
+            }
+        }
 
-	return spellsByTier;
-}
+        return spellsByTier;
+    }
 
-function groupSpellsByTier(spells) {
-	return spells.reduce((tiers, spell) => {
-		const utilitySpell = spell.reactive.system.properties.selected.includes('utilitySpell');
+    function groupSpellsByTier(spells) {
+        return spells.reduce((tiers, spell) => {
+            const utilitySpell =
+                spell.reactive.system.properties.selected.includes(
+                    "utilitySpell",
+                );
 
-		const tier = utilitySpell ? 0 : spell.reactive.system.tier;
+            const tier = utilitySpell ? 0 : spell.reactive.system.tier;
 
-		tiers[tier] ??= [];
-		tiers[tier].push(spell);
+            tiers[tier] ??= [];
+            tiers[tier].push(spell);
 
-		return tiers;
-	}, {});
-}
+            return tiers;
+        }, {});
+    }
 
-async function updateCurrentMana(newValue) {
-	await actor.update({
-		'system.resources.mana.current': newValue,
-	});
-}
+    async function updateCurrentMana(newValue) {
+        await actor.update({
+            "system.resources.mana.current": newValue,
+        });
+    }
 
-async function updateMaxMana(newValue) {
-	await actor.update({
-		'system.resources.mana.baseMax': newValue,
-	});
-}
+    async function updateMaxMana(newValue) {
+        await actor.update({
+            "system.resources.mana.baseMax": newValue,
+        });
+    }
 
-const {
-	activationCostTypes,
-	activationCostTypesPlural,
-	spellSchools,
-	spellSchoolIcons,
-	spellTierHeadings,
-} = CONFIG.NIMBLE;
+    const {
+        activationCostTypes,
+        activationCostTypesPlural,
+        spellSchools,
+        spellSchoolIcons,
+        spellTierHeadings,
+    } = CONFIG.NIMBLE;
 
-let actor = getContext('actor');
-let sheet = getContext('application');
+    let actor = getContext("actor");
+    let sheet = getContext("application");
 
-// Settings
-let flags = $derived(actor.reactive.flags.nimble);
-let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
+    // Settings
+    let flags = $derived(actor.reactive.flags.nimble);
+    let showEmbeddedDocumentImages = $derived(
+        flags?.showEmbeddedDocumentImages ?? true,
+    );
 
-// Content State
-let currentMana = $derived(actor.reactive.system.resources.mana.current);
-let maxMana = $derived(actor.reactive.system.resources.mana.baseMax);
-let searchTerm = $state('');
-let spells = $derived(filterItems(actor.reactive, ['spell'], searchTerm));
-let subNavigation = $derived(getSpellSchoolTabs(spells));
-let currentTab = $state(null);
-let visibleSpells = $derived(getVisibleSpells(spells, currentTab?.name));
+    // Content State
+    let currentMana = $derived(actor.reactive.system.resources.mana.current);
+    let maxMana = $derived(actor.reactive.system.resources.mana.max);
+    let searchTerm = $state("");
+    let spells = $derived(filterItems(actor.reactive, ["spell"], searchTerm));
+    let subNavigation = $derived(getSpellSchoolTabs(spells));
+    let currentTab = $state(null);
+    let visibleSpells = $derived(getVisibleSpells(spells, currentTab?.name));
 </script>
 
 <SecondaryNavigation bind:currentTab {subNavigation} />

@@ -44,40 +44,6 @@ abstract class NimbleBaseResource<
 
 /** ---------------------------------------------------------- */
 
-function manaResourceSchema() {
-	const { fields } = foundry.data;
-
-	return {
-		value: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
-		max: new fields.StringField({ required: true, nullable: false, initial: '' }),
-		type: new fields.StringField({ required: true, nullable: false, initial: 'mana' }),
-		levels: new fields.SchemaField(
-			Array.from({ length: 20 }, (_, i) => i + 1).reduce((acc, level) => {
-				acc[level] = new fields.StringField({ required: true, initial: '' });
-				return acc;
-			}, {}),
-		),
-	};
-}
-
-declare namespace NimbleManaResource {
-	type Schema = NimbleBaseResource.Schema & ReturnType<typeof manaResourceSchema>;
-}
-
-class NimbleManaResource<
-	Schema extends NimbleManaResource.Schema,
-	Parent extends foundry.abstract.DataModel.Any = InstanceType<typeof NimbleClassItem>,
-> extends NimbleBaseResource<Schema, Parent> {
-	static override defineSchema(): NimbleManaResource.Schema {
-		return {
-			...super.defineSchema(),
-			...manaResourceSchema(),
-		};
-	}
-}
-
-/** ---------------------------------------------------------- */
-
 function numericalResourceSchema() {
 	const { fields } = foundry.data;
 
@@ -222,13 +188,6 @@ export const ResourceDataModels = {
 	counter: NimbleCounterResource,
 	dice: NimbleDiceResource,
 	numerical: NimbleNumericalResource,
-	mana: NimbleManaResource,
 } as const;
 
-export {
-	NimbleBaseResource,
-	NimbleCounterResource,
-	NimbleDiceResource,
-	NimbleNumericalResource,
-	NimbleManaResource,
-};
+export { NimbleBaseResource, NimbleCounterResource, NimbleDiceResource, NimbleNumericalResource };
