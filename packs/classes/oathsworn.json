@@ -1,0 +1,274 @@
+{
+	"name": "Oathsworn",
+	"type": "class",
+	"img": "systems/nimble/assets/classImages/oathsworn.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"armorProficiencies": [
+			"plate",
+			"mail",
+			"leather",
+			"cloth",
+			"shield"
+		],
+		"classLevel": 1,
+		"complexity": 2,
+		"description": "<p>Faithful guardian, protector, and avenger of the weak. Choose between the merciless Oath of Vengeance and the vigilant Oath of Refuge.</p>",
+		"groupIdentifiers": [
+			"sacred-decree"
+		],
+		"keyAbilityScores": [
+			"strength",
+			"will"
+		],
+		"hitDieSize": 10,
+		"hpData": [],
+		"savingThrows": {
+			"advantage": "strength",
+			"disadvantage": "dexterity"
+		},
+		"abilityScoreData": {
+			"4": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"5": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			},
+			"8": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"9": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			},
+			"12": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"13": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			},
+			"16": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"17": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			}
+		},
+		"resources": [
+			{
+				"type": "dice",
+				"identifier": "judgement",
+				"name": "Judgement Dice",
+				"consumable": false,
+				"recovery": {
+					"on": "safeRest"
+				},
+				"faces": 6,
+				"quantity": 2,
+				"modifiers": "",
+				"isPool": false,
+				"poolQuantity": 0,
+				"levels": {
+					"1": {
+						"face": 6,
+						"quantity": 2,
+						"modifiers": ""
+					},
+					"2": {
+						"face": 6,
+						"quantity": 2,
+						"modifiers": ""
+					},
+					"3": {
+						"face": 8,
+						"quantity": 2,
+						"modifiers": ""
+					},
+					"4": {
+						"face": 8,
+						"quantity": 2,
+						"modifiers": ""
+					},
+					"5": {
+						"face": 10,
+						"quantity": 2,
+						"modifiers": ""
+					},
+					"6": {
+						"face": 10,
+						"quantity": 2,
+						"modifiers": ""
+					},
+					"7": {
+						"face": 10,
+						"quantity": 2,
+						"modifiers": ""
+					},
+					"8": {
+						"face": 12,
+						"quantity": 2,
+						"modifiers": ""
+					},
+					"9": {
+						"face": 12,
+						"quantity": 2,
+						"modifiers": ""
+					},
+					"10": {
+						"face": 20,
+						"quantity": 2,
+						"modifiers": ""
+					},
+					"11": {
+						"face": 20,
+						"quantity": 2,
+						"modifiers": ""
+					},
+					"12": {
+						"face": 20,
+						"quantity": 2,
+						"modifiers": ""
+					},
+					"13": {
+						"face": 20,
+						"quantity": 2,
+						"modifiers": ""
+					},
+					"14": {
+						"face": 20,
+						"quantity": 3,
+						"modifiers": ""
+					},
+					"15": {
+						"face": 20,
+						"quantity": 3,
+						"modifiers": ""
+					},
+					"16": {
+						"face": 20,
+						"quantity": 3,
+						"modifiers": ""
+					},
+					"17": {
+						"face": 20,
+						"quantity": 3,
+						"modifiers": ""
+					},
+					"18": {
+						"face": 20,
+						"quantity": 3,
+						"modifiers": ""
+					},
+					"19": {
+						"face": 20,
+						"quantity": 3,
+						"modifiers": ""
+					},
+					"20": {
+						"face": 20,
+						"quantity": 3,
+						"modifiers": ""
+					}
+				}
+			},
+			{
+				"type": "numerical",
+				"identifier": "loh",
+				"name": "Lay On Hands",
+				"consumable": false,
+				"recovery": {
+					"on": "safeRest"
+				},
+				"value": 5,
+				"max": "@classData.levels.length*5",
+				"levels": {
+					"1": "5",
+					"2": "10",
+					"3": "15",
+					"4": "20",
+					"5": "25",
+					"6": "30",
+					"7": "35",
+					"8": "40",
+					"9": "45",
+					"10": "50",
+					"11": "55",
+					"12": "60",
+					"13": "65",
+					"14": "70",
+					"15": "75",
+					"16": "80",
+					"17": "85",
+					"18": "90",
+					"19": "95",
+					"20": "100"
+				}
+			},
+			{
+				"type": "mana",
+				"identifier": "mana",
+				"name": "Mana",
+				"consumable": false,
+				"recovery": {
+					"on": "safeRest"
+				},
+				"value": 0,
+				"max": "0",
+				"levels": {
+					"1": "0",
+					"2": "2+@will",
+					"3": "3+@will",
+					"4": "4+@will",
+					"5": "5+@will",
+					"6": "6+@will",
+					"7": "7+@will",
+					"8": "8+@will",
+					"9": "9+@will",
+					"10": "10+@will",
+					"11": "11+@will",
+					"12": "12+@will",
+					"13": "13+@will",
+					"14": "14+@will",
+					"15": "15+@will",
+					"16": "16+@will",
+					"17": "17+@will",
+					"18": "18+@will",
+					"19": "19+@will",
+					"20": "20+@will"
+				}
+			}
+		],
+		"weaponProficiencies": [
+			"STR Weapons"
+		]
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.346",
+		"systemId": "nimble",
+		"systemVersion": "0.1.3",
+		"createdTime": 1751645977478,
+		"modifiedTime": 1751645977478,
+		"lastModifiedBy": "I9n5H887okQ3oYXV"
+	},
+	"_id": "NBnrpkQfiha8LEPK"
+}
