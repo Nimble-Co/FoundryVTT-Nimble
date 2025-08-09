@@ -24,7 +24,7 @@
 					"id": "jp65MQRRustJoDbN",
 					"type": "healing",
 					"healingType": "tempHealing",
-					"formula": "2*@intelligence",
+					"formula": "2*@key",
 					"parentContext": null,
 					"parentNode": null
 				}

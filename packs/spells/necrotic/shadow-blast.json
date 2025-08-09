@@ -25,7 +25,7 @@
 					"id": "pJVehDWw1M3Synrn",
 					"type": "damage",
 					"damageType": "necrotic",
-					"formula": "1d12+@intelligence",
+					"formula": "1d12+@key",
 					"parentContext": null,
 					"parentNode": null,
 					"canCrit": true,
@@ -89,9 +89,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "necrotic",
 		"tier": 0
