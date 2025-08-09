@@ -24,7 +24,7 @@
 					"id": "CPtKrB9JJLGwBCas",
 					"type": "healing",
 					"healingType": "healing",
-					"formula": "1d6+@will",
+					"formula": "1d6+@key",
 					"parentContext": null,
 					"parentNode": null
 				}
@@ -54,9 +54,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "radiant",
 		"tier": 1
