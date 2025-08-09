@@ -38,8 +38,8 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 			rollMode: options.visibilityMode ?? 'gmroll',
 			system: {
 				actorName: this.name,
-				description: drawback,
-				img: this.img,
+				description: this.system.bloodiedEffect.description,
+				image: "icons/svg/blood.svg",
 				name: 'Bloodied',
 				permissions: this.permission,
 			},
@@ -66,8 +66,8 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 			rollMode: options.visibilityMode ?? 'gmroll',
 			system: {
 				actorName: this.name,
-				description: drawback,
-				img: this.img,
+				description: this.system.lastStandEffect.description,
+				image: "icons/svg/skull.svg",
 				name: 'Last Stand',
 				permissions: this.permission,
 			},
