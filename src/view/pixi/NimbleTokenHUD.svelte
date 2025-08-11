@@ -19,8 +19,12 @@
 
         for (const condition of conditions) {
             const existing = HUD.actor.effects.reduce((arr, e) => {
-                if (e.statuses.size === 1 && e.statuses.has(condition.id))
+                if (e.statuses.has(condition.id)) {
+                    if (condition._id && e.id !== condition._id) {
+                        return arr;
+                    }
                     arr.push(e.id);
+                }
                 return arr;
             }, []);
 
