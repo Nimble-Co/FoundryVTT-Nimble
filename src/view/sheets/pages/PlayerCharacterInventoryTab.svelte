@@ -1,70 +1,83 @@
 <script>
-    import filterItems from "../../dataPreparationHelpers/filterItems.js";
-    import { getContext } from "svelte";
-    import localize from "../../../utils/localize.js";
-    import { metadata } from "../../../models/chat/common.js";
-    import prepareObjectTooltip from "../../dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js";
-    import sortItems from "../../../utils/sortItems.js";
+import filterItems from '../../dataPreparationHelpers/filterItems.js';
+import { getContext } from 'svelte';
+import localize from '../../../utils/localize.js';
+import { metadata } from '../../../models/chat/common.js';
+import prepareObjectTooltip from '../../dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js';
+import sortItems from '../../../utils/sortItems.js';
+import { RulesManager } from '../../../managers/RulesManager.js';
 
-    import SearchBar from "../components/SearchBar.svelte";
+import SearchBar from '../components/SearchBar.svelte';
 
-    async function configureItem(event, id) {
-        event.stopPropagation();
+async function configureItem(event, id) {
+	event.stopPropagation();
 
-        await actor.configureItem(id);
-    }
+	await actor.configureItem(id);
+}
 
-    async function createItem(event) {
-        event.stopPropagation();
+async function toggleArmor(event, rules, itemId) {
+	event.stopPropagation();
+	let armorRule = rules.getRuleOfType('armorClass');
+	armorRule.disabled = !armorRule.disabled;
+	await rules.updateRule(armorRule.id, armorRule);
+	if (armorRule.disabled) itemsWithDisabledArmor.push(itemId);
+	else {
+		const index = itemsWithDisabledArmor.indexOf(itemId);
+		if (index > -1) itemsWithDisabledArmor.splice(index, 1);
+	}
+}
 
-        await actor.createItem({ name: "New Object", type: "object" });
-    }
+async function createItem(event) {
+	event.stopPropagation();
 
-    async function deleteItem(event, id) {
-        event.stopPropagation();
+	await actor.createItem({ name: 'New Object', type: 'object' });
+}
 
-        await actor.deleteItem(id);
-    }
+async function deleteItem(event, id) {
+	event.stopPropagation();
 
-    function getObjectMetadata(item) {
-        return null;
-    }
+	await actor.deleteItem(id);
+}
 
-    function groupItemsByType(items) {
-        return items.reduce((categories, item) => {
-            const { objectType } = item.reactive.system;
+function getObjectMetadata(item) {
+	return null;
+}
 
-            categories[objectType] ??= [];
-            categories[objectType].push(item);
+function groupItemsByType(items) {
+	return items.reduce((categories, item) => {
+		const { objectType } = item.reactive.system;
 
-            return categories;
-        }, {});
-    }
+		categories[objectType] ??= [];
+		categories[objectType].push(item);
 
-    const { objectTypeHeadings } = CONFIG.NIMBLE;
+		return categories;
+	}, {});
+}
 
-    let actor = getContext("actor");
-    let sheet = getContext("application");
-    let searchTerm = $state("");
+const { objectTypeHeadings } = CONFIG.NIMBLE;
 
-    let totalInventorySlots = $derived(
-        actor.reactive.system.inventory.totalSlots ?? 0,
-    );
-    let usedInventorySlots = $derived(
-        actor.reactive.system.inventory.usedSlots ?? 0,
-    );
-    let items = $derived(filterItems(actor.reactive, ["object"], searchTerm));
-    let categorizedItems = $derived(groupItemsByType(items));
+let actor = getContext('actor');
+let sheet = getContext('application');
+let searchTerm = $state('');
 
-    // Currency
-    let currency = $derived(actor.reactive?.system?.currency);
+let totalInventorySlots = $derived(actor.reactive.system.inventory.totalSlots ?? 0);
+let usedInventorySlots = $derived(actor.reactive.system.inventory.usedSlots ?? 0);
+let items = $derived(filterItems(actor.reactive, ['object'], searchTerm));
+let categorizedItems = $derived(groupItemsByType(items));
+let itemsWithDisabledArmor = $derived(
+	items
+		.filter((i) => RulesManager.hasRuleOfType(i, 'armorClass'))
+		.filter((i) => RulesManager.getRuleOfType(i, 'armorClass').disabled)
+		.map((i) => i.id),
+);
 
-    // Settings
-    let flags = $derived(actor.reactive.flags.nimble);
-    let showEmbeddedDocumentImages = $derived(
-        flags?.showEmbeddedDocumentImages ?? true,
-    );
-    let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
+// Currency
+let currency = $derived(actor.reactive?.system?.currency);
+
+// Settings
+let flags = $derived(actor.reactive.flags.nimble);
+let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
+let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
 </script>
 
 <header class="nimble-sheet__static nimble-sheet__static--inventory">
@@ -132,6 +145,7 @@
             <ul class="nimble-item-list">
                 {#each sortItems(itemCategory) as item (item._id)}
                     {@const metadata = getObjectMetadata(item)}
+                    {@const rules = new RulesManager(item)}
 
                     <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
                     <!-- svelte-ignore  a11y_click_events_have_key_events -->
@@ -164,6 +178,25 @@
                                 {item.reactive.name}
                             </h4>
 
+                            {#if rules.hasRuleOfType('armorClass')}
+
+                            <button
+                                class="nimble-button"
+                                data-button-variant="icon"
+                                type="button"
+                                aria-label="Toggle armor rule of {item.name}"
+                                onclick={(event) =>
+                                    toggleArmor(event, rules, item._id)}
+                            >
+                                {#if itemsWithDisabledArmor.includes(item._id)}
+                                <i class="fa-regular fa-circle"></i>
+                                {:else}
+                                <i class="fa-solid fa-circle"></i>
+                                {/if}
+                            </button>
+
+                            {:else}
+
                             <input
                                 class="nimble-document-card__quantity"
                                 type="number"
@@ -175,6 +208,8 @@
                                         "system.quantity": currentTarget.value,
                                     })}
                             />
+
+                            {/if}
 
                             <button
                                 class="nimble-button"
