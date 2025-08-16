@@ -1,5 +1,7 @@
 export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.TypeNames, 'base'>;
+import type { EffectNode } from '#types/effectTree.js';
 
+import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { createSubscriber } from 'svelte/reactivity';
 
 interface NimbleChatMessage<
@@ -79,6 +81,20 @@ class NimbleChatMessage extends ChatMessage {
 		return this;
 	}
 
+	get effectNodes(): EffectNode[][] {
+		if (!this.isType('feature') && !this.isType('object') && !this.isType('spell')) return;
+
+		const contexts: string[] = [];
+
+		if (this.system.isCritical) contexts.push('criticalHit', 'hit');
+		else if (this.system.isMiss) contexts.push('miss');
+		else contexts.push('hit');
+
+		const effects = this.system.activation.effects || [];
+		const nodes = getRelevantNodes(effects, contexts);
+		return nodes;
+	}
+
 	/** ------------------------------------------------------ */
 	/**                     Data Prep                          */
 	/** ------------------------------------------------------ */
@@ -126,6 +142,22 @@ class NimbleChatMessage extends ChatMessage {
 		]);
 
 		return this.update({ 'system.targets': [...targets] });
+	}
+
+	async applyDamage(value, options) {
+		const targets = this.system.targets || [];
+
+		targets.forEach((uuid) => {
+			const token = fromUuidSync(uuid);
+			if (!token) return;
+
+			const actor = token.actor;
+			if (!actor) return;
+
+			console.log(actor);
+			console.log(value);
+			// actor.applyDamage(value, options);
+		});
 	}
 
 	async removeTarget(targetId) {
