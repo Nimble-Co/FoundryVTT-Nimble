@@ -107,8 +107,9 @@ class RestManager {
 	#restoreHitPoints() {
 		const { value, max, temp } = this.#actor.system.attributes.hp;
 
+		this.#updates.actor['system.attributes.hp'] = { value: max, temp: 0 };
+
 		if (max > value) {
-			this.#updates.actor['system.attributes.hp'] = { value: max, temp: 0 };
 			this.#summary.push(`Restored ${max - value} hp.`);
 		}
 
