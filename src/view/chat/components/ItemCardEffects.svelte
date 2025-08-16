@@ -1,37 +1,32 @@
 <script>
-import { getContext } from 'svelte';
-import { getRelevantNodes } from '../../dataPreparationHelpers/effectTree/getRelevantNodes.js';
-import { getNodeComponent } from '../../dataPreparationHelpers/effectTree/getNodeComponent.js';
+    import { getContext } from "svelte";
+    import { getNodeComponent } from "../../dataPreparationHelpers/effectTree/getNodeComponent.js";
 
-function getContexts() {
-	const contexts = [];
+    let messageDocument = getContext("messageDocument");
+    let { activation, isCritical, isMiss } = $derived(
+        messageDocument.reactive.system,
+    );
+    let effects = $derived(activation.effects);
 
-	if (isCritical) contexts.push('criticalHit', 'hit');
-	else if (isMiss) contexts.push('miss');
-	else contexts.push('hit');
-
-	return contexts;
-}
-
-let messageDocument = getContext('messageDocument');
-let { activation, isCritical, isMiss } = $derived(messageDocument.reactive.system);
-let effects = $derived(activation.effects);
+    let nodes = messageDocument.effectNodes;
 </script>
 
-{#each getRelevantNodes(effects, getContexts()) as nodeGroup}
+{#each nodes as nodeGroup}
     {#if nodeGroup.length}
         <section
             class="nimble-card-section"
-            class:nimble-card-section--conditions={nodeGroup.find(node => node.type === 'condition')}
+            class:nimble-card-section--conditions={nodeGroup.find(
+                (node) => node.type === "condition",
+            )}
         >
             {#each nodeGroup as node}
                 {@const Component = getNodeComponent(node.type)}
 
-                {#if node.type === 'condition'}
-                    <Component {node}/>
+                {#if node.type === "condition"}
+                    <Component {node} />
                 {:else}
                     <section class="nimble-effect">
-                        <Component {node}/>
+                        <Component {node} />
                     </section>
                 {/if}
             {/each}

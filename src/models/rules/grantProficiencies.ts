@@ -15,7 +15,7 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'languages',
-			choices: ['armors', 'languages', 'weapons'],
+			choices: ['armor', 'languages', 'weapons'],
 		}),
 		values: new fields.ArrayField(
 			new fields.StringField({
@@ -45,7 +45,7 @@ class GrantProficiencyRule extends NimbleBaseRule<GrantProficiencyRule.Schema> {
 		return super.tooltipInfo(
 			new Map([
 				['values', 'string[]'],
-				['propertyType', 'armors | languages | weapons'],
+				['propertyType', 'armor | languages | weapons'],
 			]),
 		);
 	}
