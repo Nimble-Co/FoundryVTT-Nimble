@@ -66,8 +66,8 @@ let items = $derived(filterItems(actor.reactive, ['object'], searchTerm));
 let categorizedItems = $derived(groupItemsByType(items));
 let itemsWithDisabledArmor = $derived(
 	items
-		.filter((i) => RulesManager.hasRuleOfType(i, 'armorClass'))
-		.filter((i) => RulesManager.getRuleOfType(i, 'armorClass').disabled)
+		.filter((i) => new RulesManager(i).hasRuleOfType('armorClass'))
+		.filter((i) => new RulesManager(i).getRuleOfType('armorClass').disabled)
 		.map((i) => i.id),
 );
 
@@ -193,7 +193,7 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                                 {:else}
                                 <i class="fa-solid fa-circle"></i>
                                 {/if}
-                            </button>
+                                </button>
 
                             {:else}
 

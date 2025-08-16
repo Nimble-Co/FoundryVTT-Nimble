@@ -46,11 +46,11 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	}
 
 	hasRuleOfType(type: string) {
-		return RulesManager.hasRuleOfType(this.#item, type);
+		return this.#item.system.rules.some((r) => r.type === type);
 	}
 
 	getRuleOfType(type: string) {
-		return RulesManager.getRuleOfType(this.#item, type);
+		return this.#item.system.rules.find((r) => r.type === type);
 	}
 
 	async deleteRule(id: string) {
@@ -122,14 +122,6 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 
 		const rule = new Cls(data, { parent: item });
 		return rule;
-	}
-
-	static hasRuleOfType(item: NimbleBaseItem, type: string) {
-		return item.system.rules.some((r) => r.type === type);
-	}
-
-	static getRuleOfType(item: NimbleBaseItem, type: string) {
-		return item.system.rules.find((r) => r.type === type);
 	}
 
 	static async deleteRule(item: NimbleBaseItem, id: string) {
