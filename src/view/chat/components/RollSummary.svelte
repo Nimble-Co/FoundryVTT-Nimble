@@ -1,5 +1,9 @@
 <script>
-let { label, subheading, tooltip, total } = $props();
+    import { getContext } from "svelte";
+
+    let { label, subheading, tooltip, total, type, options } = $props();
+
+    const messageDocument = getContext("messageDocument");
 </script>
 
 <div class="roll" class:roll--no-subheading={!subheading}>
@@ -19,6 +23,19 @@ let { label, subheading, tooltip, total } = $props();
             {subheading}
         </span>
     {/if}
+
+    <!-- {#if type === "damage"}
+        <button
+            class="nimble-button nimble-button--apply-damage"
+            aria-label="Apply Damage"
+            data-tooltip="Apply Damage"
+            data-button-variant="icon"
+            data-tooltip-direction="UP"
+            onclick={() => messageDocument.applyDamage(total, options)}
+        >
+            <i class="fa-solid fa-check"></i>
+        </button>
+    {/if} -->
 </div>
 
 <style lang="scss">
@@ -70,5 +87,17 @@ let { label, subheading, tooltip, total } = $props();
             border: 1px solid var(--nimble-card-border-color);
             border-radius: 4px;
         }
+    }
+
+    .nimble-button--apply-damage {
+        grid-area: editButton;
+        width: 2.25rem;
+        height: 2.25rem;
+        padding: 0;
+        font-size: var(--nimble-lg-text);
+        color: var(--nimble-primary-color);
+        background-color: transparent;
+        border-radius: 4px;
+        border: 1px solid var(--nimble-card-border-color);
     }
 </style>
