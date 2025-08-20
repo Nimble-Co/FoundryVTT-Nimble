@@ -33,6 +33,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 	originalFormula: string;
 
+	primaryDie: PrimaryDie | undefined = undefined;
+
 	constructor(formula: string, data?: foundry.dice.Roll.Data, options?: DamageRoll.Options) {
 		super(formula, data, options);
 
@@ -65,6 +67,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			if (firstDieTerm) {
 				const { number = 1, faces } = firstDieTerm;
 
+				let primaryTerm: PrimaryDie;
+
 				if (number > 1) {
 					// Reduce number of original term by one
 					firstDieTerm.number = number - 1;
@@ -74,7 +78,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					this.terms.unshift(operatorTerm);
 
 					// Create Primary Term
-					const primaryTerm = new PrimaryDie({
+					primaryTerm = new PrimaryDie({
 						number: 1 + Math.abs(rollMode),
 						faces,
 						options: { flavor: 'Primary Die' },
@@ -88,7 +92,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 					this.terms.unshift(primaryTerm);
 				} else {
-					const primaryTerm = new PrimaryDie({
+					primaryTerm = new PrimaryDie({
 						number: 1,
 						faces: firstDieTerm.faces,
 					});
@@ -107,10 +111,29 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					if (idx !== -1) this.terms[idx] = primaryTerm;
 				}
 
+				this.primaryDie = primaryTerm;
+
 				// Alter formula
 				this.resetFormula();
 			}
 		}
+	}
+
+	/** ------------------------------------------------------ */
+	/**                       Helpers                          */
+	/** ------------------------------------------------------ */
+	updatePrimaryTerm(dieSize: number) {
+		if (!this.primaryDie) return;
+
+		const primaryTerm = this.terms.find((t) => t instanceof PrimaryDie);
+		if (!primaryTerm) {
+			ui.notifications?.error(`No primary die term found in roll ${this.formula}`);
+			return;
+		}
+
+		primaryTerm.faces = dieSize;
+		this.primaryDie = primaryTerm;
+		this.resetFormula();
 	}
 
 	/** ------------------------------------------------------ */
