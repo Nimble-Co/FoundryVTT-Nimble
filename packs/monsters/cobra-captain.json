@@ -162,7 +162,7 @@
 						{
 							"id": "fxsF2KOot7K6Y4ca",
 							"type": "damage",
-							"damageType": "acid",
+							"damageType": "slashing",
 							"formula": "1d6+6",
 							"parentContext": null,
 							"parentNode": null,

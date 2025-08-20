@@ -8,7 +8,7 @@ import NimbleSkillCheckCard from '../view/chat/SkillCheckCard.svelte';
 import NimbleSpellCard from '../view/chat/SpellCard.svelte';
 import NimbleLevelUpSummaryCard from '../view/chat/LevelUpSummaryCard.svelte';
 
-export default function renderChatMessage(message, html) {
+export default function renderChatMessageHTML(message, html) {
 	let component;
 	const target = $(html)[0];
 

@@ -55,7 +55,7 @@ class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 		// TODO: Check if it's actually an item
 		if (!grantedItem) return;
 
-		// if (!this.test()) return;
+		if (!this.test()) return;
 
 		const existingItem = this.actor.items.find((i) => i.sourceId === uuid);
 		if (!this.allowDuplicate && existingItem) {

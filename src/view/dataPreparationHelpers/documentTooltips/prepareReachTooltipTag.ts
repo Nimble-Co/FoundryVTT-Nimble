@@ -4,6 +4,6 @@ export default function prepareReachTooltipTag(item) {
 	const reachComponents = Object.values(item.system.properties.reach).filter(Boolean).join('–');
 
 	return {
-		label: reachComponents ? `${propertyLabel}: ${reachComponents} squares` : propertyLabel,
+		label: reachComponents ? `${propertyLabel}: ${reachComponents} spaces` : propertyLabel,
 	};
 }

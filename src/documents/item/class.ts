@@ -75,7 +75,7 @@ export class NimbleClassItem extends NimbleBaseItem {
 	}
 
 	override async prepareChatCardData() {
-		const description = await TextEditor.enrichHTML(this.system.description);
+		const description = await foundry.applications.ux.TextEditor.implementation.enrichHTML(this.system.description);
 
 		return {
 			author: game.user?.id,

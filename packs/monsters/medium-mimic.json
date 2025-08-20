@@ -266,7 +266,7 @@
 						{
 							"id": "yIczxXrDo2v8CNpw",
 							"type": "damage",
-							"damageType": "acid",
+							"damageType": "bludgeoning",
 							"formula": "1d8",
 							"parentContext": null,
 							"parentNode": null,

@@ -33,7 +33,7 @@
 	],
 	"grid": {
 		"distance": 1,
-		"units": "square",
+		"units": "spaces",
 		"type": 1
 	},
 	"primaryTokenAttribute": "attributes.hp",

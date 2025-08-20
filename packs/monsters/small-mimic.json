@@ -340,7 +340,7 @@
 						{
 							"id": "30UpXWSdJcQqdQPq",
 							"type": "damage",
-							"damageType": "acid",
+							"damageType": "bludgeoning",
 							"formula": "1d6",
 							"parentContext": null,
 							"parentNode": null,

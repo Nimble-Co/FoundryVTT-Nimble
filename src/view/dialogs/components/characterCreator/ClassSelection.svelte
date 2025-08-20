@@ -31,7 +31,7 @@
                 {characterClass.name}
             </h4>
 
-            {#await TextEditor.enrichHTML(characterClass.system?.description) then description}
+            {#await foundry.applications.ux.TextEditor.implementation.enrichHTML(characterClass.system?.description) then description}
                 <div class="nimble-card__description">
                     {@html description || "<p>No Description Available</p>"}
                 </div>

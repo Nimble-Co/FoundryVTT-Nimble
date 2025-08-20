@@ -10,7 +10,7 @@ export function createDamageNode(
 	const data: DamageNode = {
 		id: newNodeId,
 		type: 'damage',
-		damageType: 'acid',
+		damageType: 'bludgeoning',
 		formula: '',
 		parentContext: context,
 		parentNode,

@@ -55,7 +55,7 @@ let hasUses = false;
         </header>
 
         <div class="nimble-monster-feature-text">
-            {#await TextEditor.enrichHTML(item?.reactive?.system?.description ?? "") then description}
+            {#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item?.reactive?.system?.description ?? "") then description}
                 {@html description}
             {/await}
         </div>

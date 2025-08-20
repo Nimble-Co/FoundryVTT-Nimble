@@ -64,7 +64,7 @@ onDestroy(() => {
                 document={actor}
             />
         {:else}
-            {#await TextEditor.enrichHTML(actor.reactive.system?.attackSequence) then attackSequence}
+            {#await foundry.applications.ux.TextEditor.implementation.enrichHTML(actor.reactive.system?.attackSequence) then attackSequence}
                 {#if attackSequence}
                     <div class="nimble-monster-feature-text">
                         {@html attackSequence}
