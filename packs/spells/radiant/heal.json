@@ -54,7 +54,9 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": ["reach"]
+			"selected": [
+				"reach"
+			]
 		},
 		"school": "radiant",
 		"tier": 1

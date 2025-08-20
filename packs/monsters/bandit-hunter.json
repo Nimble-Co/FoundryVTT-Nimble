@@ -214,7 +214,7 @@
 						{
 							"id": "i1NzgWsASg6VcBrW",
 							"type": "damage",
-							"damageType": "acid",
+							"damageType": "piercing",
 							"formula": "2d8+2",
 							"parentContext": null,
 							"parentNode": null,
