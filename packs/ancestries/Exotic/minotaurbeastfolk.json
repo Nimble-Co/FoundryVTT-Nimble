@@ -1,0 +1,25 @@
+{
+	"name": "Minotaur/Beastfolk",
+	"type": "ancestry",
+	"img": "icons/creatures/abilities/bull-head-horns-glowing.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Minotaur and other Beastfolk embody a primal connection to The Wild, combining strength with natural agility. Their powerful build allows them to move swiftly, whether repositioning to outflank foes or charging in with unstoppable force.</p><hr><p><strong>Charge</strong> </p><p>When you move at least 4 spaces, you can push a creature in your path. Medium: 1 space; Small/Tiny: up to 2 spaces. 1/turn.</p>",
+		"exotic": true,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756507833025,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "jbcwVS5hxMgDSdUQ"
+}

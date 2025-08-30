@@ -1,0 +1,36 @@
+{
+	"name": "Dwarf",
+	"type": "ancestry",
+	"img": "icons/commodities/stone/boulder-grey-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "maxWounds",
+				"disabled": false,
+				"id": "v5rARnVgo5eGgtcJ",
+				"identifier": "",
+				"label": "stout",
+				"predicate": {},
+				"priority": 1,
+				"value": "1"
+			}
+		],
+		"description": "<p>Dwarf, in the old language, means “stone.” You are resilient, solid, stout. Even when driven to exhaustion, you will not falter. Forgoing speed, you are gifted with physical vitality and a belly that can handle the finest (and worst) consumables this world has to offer.</p><hr><p><strong>Stout</strong></p><p>+2 max Hit Dice [M]</p><p>+1 max Wounds [A]</p><p>-1 Speed [M]</p><p>You know Dwarvish if your INT is not negative [M]</p>",
+		"exotic": false,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448231080,
+		"modifiedTime": 1756512827623,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "gS0m5gOpsYzFoPc6"
+}

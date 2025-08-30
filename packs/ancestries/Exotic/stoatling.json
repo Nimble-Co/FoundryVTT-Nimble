@@ -1,0 +1,25 @@
+{
+	"name": "Stoatling",
+	"type": "ancestry",
+	"img": "icons/commodities/claws/claw-bear-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Stoatlings may be small, but they’re far from weak. With fierce determination and warrior hearts, they can take down foes many times their size. Their agility and tenacity let them exploit larger enemies’ weaknesses, turning their size into a lethal advantage.</p><hr><p><strong>Small But Ferocious</strong> </p><p>Whenever you make a single-target attack against a creature larger than you, roll 1 additional d6 for each size category it is larger. They do the same.</p>",
+		"exotic": false,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756513223725,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "gM03JFi6joqcq7AI"
+}
