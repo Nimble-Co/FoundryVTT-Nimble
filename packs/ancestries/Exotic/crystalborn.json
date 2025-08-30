@@ -1,0 +1,25 @@
+{
+	"name": "Crystalborn",
+	"type": "ancestry",
+	"img": "icons/commodities/gems/gem-cluster-purple.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Formed from living crystal, the Crystalborn are beings of dazzling beauty and otherworldly toughness. Their translucent bodies refract light and sound, granting them unique abilities in combat.</p><hr><p><strong>Reflective Aura</strong> </p><p>When you Defend, gain KEY armor and deal KEY damage back to the attacker. 1/encounter.</p>",
+		"exotic": true,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756504864999,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "CMhHBD7MLZgK8o2I"
+}

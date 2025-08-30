@@ -1,0 +1,37 @@
+{
+	"name": "Turtlefolk",
+	"type": "ancestry",
+	"img": "icons/creatures/reptiles/turtle-shell-glowing-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "armorClass",
+				"disabled": false,
+				"id": "ODF6VnVsmfBrfFtp",
+				"identifier": "",
+				"label": "Slow but Steady",
+				"predicate": {},
+				"priority": 1,
+				"formula": "+4",
+				"mode": "add"
+			}
+		],
+		"description": "<p>Turtlefolk take their time in everything they do; they are patient, sturdy, and slow to anger. They rely on their thick shells for protection, making them difficult to harm, but their cautious movements come at the cost of speed.</p><hr><p><strong>Slow & Steady</strong></p><p>+4 Armor [A]</p><p>–2 speed [M]</p>",
+		"exotic": true,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756513280565,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "1XtBW6Qu8PlmZ1uD"
+}
