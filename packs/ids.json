@@ -1,11 +1,11 @@
 {
 	"ancestries": {
 		"Common": {
-			"dwarf": "gS0m5gOpsYzFoPc6",
+			"dwarf": "hyVaEOLNSagYECwm",
 			"elf": "b7MDkSugU1E1TOhj",
 			"gnome": "pOBaPdMcLBTCbLNw",
 			"halfling": "KYRRFekLA0Ipuxgt",
-			"human": "EOtVU6EcRN8CAxCm"
+			"human": "11SKfGVV3ZWHquUb"
 		},
 		"Exotic": {
 			"birdfolk": "G7uhni6XZkQV5VQi",
@@ -27,9 +27,7 @@
 			"stoatling": "gM03JFi6joqcq7AI",
 			"turtlefolk": "1XtBW6Qu8PlmZ1uD",
 			"wyrdling": "XpGSoVhViJkf66WP"
-		},
-		"dwarf": "hyVaEOLNSagYECwm",
-		"human": "11SKfGVV3ZWHquUb"
+		}
 	},
 	"backgrounds": {
 		"back-out-of-retirement": "ICTvjd73DqAbMMs5"
