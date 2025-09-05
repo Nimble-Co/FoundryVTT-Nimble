@@ -1,0 +1,36 @@
+{
+	"name": "Planarbeing",
+	"type": "ancestry",
+	"img": "icons/creatures/magical/construct-golem-stone-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "maxWounds",
+				"disabled": false,
+				"id": "fbhC9ohclITGwSq3",
+				"identifier": "",
+				"label": "Planeshift",
+				"predicate": {},
+				"priority": 1,
+				"value": "-2"
+			}
+		],
+		"description": "<p>You are not from this plane of existence—your soul is not as strongly tethered to it as others. But with this vulnerability comes power, the ability to temporarily shift from one plane to another in times of dire need.</p><hr><p><strong>Planeshift</strong> </p><p>Whenever you Defend, you can gain 1 Wound to temporarily phase out of the material plane and ignore the damage. </p><p>–2 max Wounds. [A]</p>",
+		"exotic": true,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756511690195,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "PEDssoxr48uRKcel"
+}

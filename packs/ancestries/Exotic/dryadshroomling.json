@@ -1,0 +1,25 @@
+{
+	"name": "Dryad/Shroomling",
+	"type": "ancestry",
+	"img": "icons/commodities/flowers/flowers-cherry-white.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Tied to the natural world, Dryads and Shroomlings embody the balance between flora and fauna. Their unique physiology releases toxic spores when harmed, providing a natural defense against thosewho dare to harm them.</p><hr><p><strong>Danger Pollen/Spores</strong> </p><p>Whenever an enemy causes you one or more Wounds, you excrete soporific spores: all adjacent enemies are Dazed. </p><p>You know Elvish if your INT is not negative. [M]</p>",
+		"exotic": false,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756505822706,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "IYDJe9IZi1VSUHPS"
+}

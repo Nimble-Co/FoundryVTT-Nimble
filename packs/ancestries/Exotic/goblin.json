@@ -1,0 +1,25 @@
+{
+	"name": "Goblin",
+	"type": "ancestry",
+	"img": "icons/commodities/biological/hand-clawed-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Green, cunning, and perpetually vilified, Goblins thrive on the edge of chaos. For a Goblin, vanishing into the shadows is not just a skill—it’s an identity. After all, what kind of Goblin would you be if you couldn’t slip away unnoticed?</p><hr><p><strong>Skedaddle</strong> </p><p>Can move 2 spaces for free after you become the target of an attack or negative effect (after damage, ignoring difficult terrain). </p><p>You know Goblin if your INT is not negative. [M]</p>",
+		"exotic": true,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756506786458,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "IVgTJcGcBmH7xCB7"
+}

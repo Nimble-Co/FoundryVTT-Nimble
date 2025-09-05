@@ -1,0 +1,25 @@
+{
+	"name": "Celestial",
+	"type": "ancestry",
+	"img": "icons/magic/holy/angel-winged-humanoid-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Descendants of divine beings, Celestials carry an aura of nobility and grace. Their innate connection to the higher planes allows them to resist the effects of misfortune, standing strong where others may falter.</p><hr><p><strong>Highborn</strong> </p><p>Your disadvantaged save is Neutral instead. [M]</p><p>You know Celestial if your INT isn’t negative. [M]</p>",
+		"exotic": true,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756504497952,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "puHj7KBjvyb5mVHA"
+}

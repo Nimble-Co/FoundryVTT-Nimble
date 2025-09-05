@@ -1,0 +1,25 @@
+{
+	"name": "Elf",
+	"type": "ancestry",
+	"img": "icons/consumables/plants/dried-leaf-stem-twig-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Elves epitomize swiftness and grace. Their tall, slender forms belie their innate speed, grace, and wit. Formidable in both diplomacy and combat, elves strike swiftly, often preventing the worst by acting first.</p><hr><p><strong>Lithe</strong></p><p>Advantage on Initiative [M]</p><p>+1 Speed [M]</p><p>You know Elvish if your INT is not negative [M]</p>",
+		"exotic": false,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448231080,
+		"modifiedTime": 1756500892207,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "b7MDkSugU1E1TOhj"
+}

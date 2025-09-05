@@ -1,0 +1,25 @@
+{
+	"name": "Bunbun",
+	"type": "ancestry",
+	"img": "icons/creatures/mammals/rabbit-movement-glowing-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Bunbun are agile and unpredictable, using their powerful legs to leap great distances and catch foes off guard. Facing a Bunbun means contending with an opponent who can strike from unexpected angles and swiftly reposition themselves in the heat of battle.</p><hr><p><strong>Bunny Legs</strong> </p><p>Before Interposing or after Defending (after damage), hop up to your Speed in any direction for free, 1/encounter.</p>",
+		"exotic": true,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756504596317,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "H1B0wnT9GKexRhyG"
+}
