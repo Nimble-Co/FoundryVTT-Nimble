@@ -52,7 +52,7 @@ export class ConditionManager {
 			}
 
 			// Add an enriched version of the condition to the data
-			data.enriched = await TextEditor.enrichHTML(`[[/condition condition=${id}]]`);
+			data.enriched = await foundry.applications.ux.TextEditor.implementation.enrichHTML(`[[/condition condition=${id}]]`);
 
 			this.#conditions.set(id, data);
 		});

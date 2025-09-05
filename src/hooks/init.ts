@@ -67,87 +67,87 @@ export default function init() {
 	game.nimble = NIMBLE_GAME;
 
 	// Set tooltips to animate faster
-	TooltipManager.TOOLTIP_ACTIVATION_MS = 100;
+	foundry.helpers.interaction.TooltipManager.implementation.TOOLTIP_ACTIVATION_MS = 100;
 
 	registerCustomEnrichers();
 
 	// Sheet registration
-	Actors.unregisterSheet('core', ActorSheet);
+	foundry.documents.collections.Actors.unregisterSheet('core', foundry.appv1.sheets.ActorSheet);
 
-	Actors.registerSheet('nimble', NPCSheet, {
+	foundry.documents.collections.Actors.registerSheet('nimble', NPCSheet, {
 		types: ['npc'],
 		makeDefault: true,
 		label: 'NIMBLE.sheets.npc',
 	});
 
-	Actors.registerSheet('nimble', PlayerCharacterSheet, {
+	foundry.documents.collections.Actors.registerSheet('nimble', PlayerCharacterSheet, {
 		types: ['character'],
 		makeDefault: true,
 		label: 'NIMBLE.sheets.playerCharacter',
 	});
 
-	Actors.registerSheet('nimble', NPCSheet, {
+	foundry.documents.collections.Actors.registerSheet('nimble', NPCSheet, {
 		types: ['soloMonster'],
 		makeDefault: true,
 		label: 'NIMBLE.sheets.npc',
 	});
 
-	Actors.registerSheet('nimble', NPCSheet, {
+	foundry.documents.collections.Actors.registerSheet('nimble', NPCSheet, {
 		types: ['minion'],
 		makeDefault: true,
 		label: 'NIMBLE.sheets.npc',
 	});
 
-	Items.unregisterSheet('core', ItemSheet);
+	foundry.documents.collections.Items.unregisterSheet('core', foundry.appv1.sheets.ItemSheet);
 
-	Items.registerSheet('nimble', BackgroundSheet, {
+	foundry.documents.collections.Items.registerSheet('nimble', BackgroundSheet, {
 		types: ['background'],
 		makeDefault: true,
 		label: 'NIMBLE.sheets.background',
 	});
 
-	Items.registerSheet('nimble', BoonSheet, {
+	foundry.documents.collections.Items.registerSheet('nimble', BoonSheet, {
 		types: ['boon'],
 		makeDefault: true,
 		label: 'NIMBLE.sheets.boon',
 	});
-	Items.registerSheet('nimble', ClassSheet, {
+	foundry.documents.collections.Items.registerSheet('nimble', ClassSheet, {
 		types: ['class'],
 		makeDefault: true,
 		label: 'NIMBLE.sheets.class',
 	});
 
-	Items.registerSheet('nimble', FeatureSheet, {
+	foundry.documents.collections.Items.registerSheet('nimble', FeatureSheet, {
 		types: ['feature'],
 		makeDefault: true,
 		label: 'NIMBLE.sheets.feature',
 	});
 
-	Items.registerSheet('nimble', MonsterFeatureSheet, {
+	foundry.documents.collections.Items.registerSheet('nimble', MonsterFeatureSheet, {
 		types: ['monsterFeature'],
 		makeDefault: true,
 		label: 'NIMBLE.sheets.monsterFeature',
 	});
 
-	Items.registerSheet('nimble', ObjectSheet, {
+	foundry.documents.collections.Items.registerSheet('nimble', ObjectSheet, {
 		types: ['object'],
 		makeDefault: true,
 		label: 'NIMBLE.sheets.object',
 	});
 
-	Items.registerSheet('nimble', AncestrySheet, {
+	foundry.documents.collections.Items.registerSheet('nimble', AncestrySheet, {
 		types: ['ancestry'],
 		makeDefault: true,
 		label: 'NIMBLE.sheets.ancestry',
 	});
 
-	Items.registerSheet('nimble', SpellSheet, {
+	foundry.documents.collections.Items.registerSheet('nimble', SpellSheet, {
 		types: ['spell'],
 		makeDefault: true,
 		label: 'NIMBLE.sheets.spell',
 	});
 
-	Items.registerSheet('nimble', SubclassSheet, {
+	foundry.documents.collections.Items.registerSheet('nimble', SubclassSheet, {
 		types: ['subclass'],
 		makeDefault: true,
 		label: 'NIMBLE.sheets.subclass',
