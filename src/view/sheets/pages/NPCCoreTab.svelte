@@ -223,14 +223,16 @@ onDestroy(() => {
                         </header>
 
                         {#if bloodiedEffectInEditMode}
-                            <Editor
-                                editorOptions={{ compact: true, toggled: false, height: 100 }}
-                                field="system.bloodiedEffect.description"
-                                content={actor.reactive.system.bloodiedEffect.description}
-                                document={actor}
-                            />
+                            {#key actor.reactive.system.bloodiedEffect.description}
+                                <Editor
+                                    editorOptions={{ compact: true, toggled: false, height: 100 }}
+                                    field="system.bloodiedEffect.description"
+                                    content={actor.reactive.system.bloodiedEffect.description}
+                                    document={actor}
+                                />
+                            {/key}
                         {:else}
-                            {#await foundry.applications.ux.TextEditor.implementation.enrichHTML(actor.reactive?.system?.bloodiedEffect?.description) then bloodiedDescription}
+                            {#await TextEditor.enrichHTML(actor.reactive?.system?.bloodiedEffect?.description) then bloodiedDescription}
                                 {#if bloodiedDescription}
                                     <div class="nimble-monster-feature-text">
                                         {@html bloodiedDescription}
@@ -272,14 +274,16 @@ onDestroy(() => {
                         </header>
 
                         {#if lastStandEffectInEditMode}
-                            <Editor
-                                editorOptions={{ compact: true, toggled: false, height: 100 }}
-                                field="system.lastStandEffect.description"
-                                content={actor.reactive.system.lastStandEffect.description}
-                                document={actor}
-                            />
+                            {#key actor.reactive.system.lastStandEffect.description}
+                                <Editor
+                                    editorOptions={{ compact: true, toggled: false, height: 100 }}
+                                    field="system.lastStandEffect.description"
+                                    content={actor.reactive.system.lastStandEffect.description}
+                                    document={actor}
+                                />
+                            {/key}
                         {:else}
-                            {#await foundry.applications.ux.TextEditor.implementation.enrichHTML(actor.reactive?.system?.lastStandEffect.description) then lastStandDescription}
+                            {#await TextEditor.enrichHTML(actor.reactive?.system?.lastStandEffect.description) then lastStandDescription}
                                 {#if lastStandDescription}
                                     <div class="nimble-monster-feature-text">
                                         {@html lastStandDescription}
