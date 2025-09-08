@@ -209,32 +209,45 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	getUsedInventorySlots(): number {
-		let totalBulk = 0;
-
-		// Get total bulk from items
-		const items = this.items.filter((i) => i.isType('object') && i.system.slotsRequired > 0);
-
-		let seenSmallItems = false;
-		items.forEach((item) => {
-			const itemBulk = item.system.slotsRequired;
-			if (Number.isInteger(itemBulk)) totalBulk += itemBulk;
-			else seenSmallItems = true;
+		let slotsRequiredSum = 0;
+		let smallObjectsCarried = false;
+		const objects = this.items.filter((i) => i.isType('object'));
+		// Sum up each object
+		objects.forEach((object) => {
+			switch (object.system.objectSizeType) {
+				case 'slots':
+					slotsRequiredSum += object.system.slotsRequired;
+					break;
+				case 'stackable': {
+					const slotsRequiredByStack = Math.ceil(object.system.quantity / object.system.stackSize);
+					slotsRequiredSum += slotsRequiredByStack;
+					break;
+				}
+				case 'smallSized':
+					smallObjectsCarried = true;
+					break;
+				default:
+					console.log(
+						"Can't calculate slots used for object size type",
+						object.system.objectSizeType,
+					);
+			}
 		});
-
-		// If there are any small items, count them as 1 bulk
-		if (seenSmallItems) totalBulk += 1;
-
+		// round up to account for half used slots e.g. a single potion
+		slotsRequiredSum = Math.ceil(slotsRequiredSum);
+		// add one slots for all small stuff
+		if (smallObjectsCarried) slotsRequiredSum += 1;
+		// account for coinage
 		if (this.getFlag('nimble', 'includeCurrencyBulk') ?? true) {
 			const totalCoinage = Object.values(this.system.currency).reduce(
 				(totalCurrencyBulk, { value }) => totalCurrencyBulk + value,
 				0,
 			) as number;
 
-			// Coins consume 1 bulk per full 500 units
-			totalBulk += Math.floor(totalCoinage / 500);
+			// Coins consume 1 slot per full 500 units
+			slotsRequiredSum += Math.floor(totalCoinage / 500);
 		}
-
-		return totalBulk;
+		return slotsRequiredSum;
 	}
 
 	prepareClassData(actorData: NimbleCharacterData): void {

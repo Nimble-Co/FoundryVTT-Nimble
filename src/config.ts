@@ -265,6 +265,12 @@ const npcArmorTypeAbbreviations = {
 	heavy: 'H',
 };
 
+const objectSizeTypes = {
+	slots: 'NIMBLE.objectSizeTypes.slots',
+	stackable: 'NIMBLE.objectSizeTypes.stackable',
+	smallSized: 'NIMBLE.objectSizeTypes.smallSized',
+};
+
 const objectTypeHeadings = {
 	armor: 'NIMBLE.objectTypeHeadings.armor',
 	shield: 'NIMBLE.objectTypeHeadings.shield',
@@ -463,6 +469,7 @@ const NIMBLE = {
 	npcArmorIcons,
 	npcArmorTypes,
 	npcArmorTypeAbbreviations,
+	objectSizeTypes,
 	objectTypeHeadings,
 	objectTypes,
 	restTypes,

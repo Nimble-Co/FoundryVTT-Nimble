@@ -1,4 +1,5 @@
 import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
+import type { NimbleBaseRule } from '../../models/rules/base.ts';
 
 import { NimbleBaseItem } from './base.svelte.js';
 
@@ -57,5 +58,16 @@ export class NimbleObjectItem extends NimbleBaseItem {
 		}
 
 		return super._preCreate(data, options, user);
+	}
+
+	/** ------------------------------------------------------ */
+	//                 Data Functions
+	/** ------------------------------------------------------ */
+
+	toggleArmor(): void {
+		if (this.rules.hasRuleOfType('armorClass')) {
+			const rule: NimbleBaseRule = this.rules.getRuleOfType(type);
+			rule.disabled = !rule.disabled;
+		}
 	}
 }
