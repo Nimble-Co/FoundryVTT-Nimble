@@ -2,7 +2,7 @@ import createEnricherButton from './createEnricherButton.js';
 
 export default function enrichSavingThrow(
 	args: Record<string, string>,
-	options?: TextEditor.EnrichmentOptions,
+	options?: foundry.applications.ux.TextEditor.implementation.EnrichmentOptions,
 ) {
 	const { enricherType } = args;
 

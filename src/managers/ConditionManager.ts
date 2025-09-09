@@ -1,6 +1,13 @@
 import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
 import localize from '../utils/localize.js';
 
+export interface ConditionTriggerConfig {
+	triggeredBy: readonly string[];
+	priority: number;
+	stackable: boolean;
+	autoRemove: boolean;
+}
+
 export interface Condition {
 	_id?: string;
 	id: string;
@@ -52,7 +59,14 @@ export class ConditionManager {
 			}
 
 			// Add an enriched version of the condition to the data
-			data.enriched = await TextEditor.enrichHTML(`[[/condition condition=${id}]]`);
+			try {
+				data.enriched =
+					(await (foundry.applications as any).ux?.TextEditor?.implementation?.enrichHTML?.(
+						`[[/condition condition=${id}]]`,
+					)) || `[[/condition condition=${id}]]`;
+			} catch (error) {
+				data.enriched = `[[/condition condition=${id}]]`;
+			}
 
 			this.#conditions.set(id, data);
 		});
@@ -95,7 +109,7 @@ export class ConditionManager {
 
 				activeConditions.add(statusId);
 
-				if (effect.getFlag('core', 'overlay')) overlayConditions.add(statusId);
+				if ((effect as any).getFlag('core', 'overlay')) overlayConditions.add(statusId);
 			});
 		});
 
@@ -109,5 +123,89 @@ export class ConditionManager {
 		return [...this.#conditions.values()].map((condition) => {
 			return { label: condition.name, value: condition.id };
 		});
+	}
+
+	/**
+	 * Get conditions that should be automatically triggered when the given conditions are applied
+	 * @param appliedConditionIds - Array of condition IDs being applied
+	 * @param actor - The actor the conditions are being applied to
+	 * @returns Array of condition IDs that should be automatically applied
+	 */
+	getTriggeredConditions(appliedConditionIds: string[], actor: NimbleBaseActor): string[] {
+		const { conditionTriggerRelationships = {} } = CONFIG.NIMBLE;
+		const triggeredConditions: string[] = [];
+
+		// Check each potential target condition (like hampered)
+		for (const [targetCondition, config] of Object.entries(conditionTriggerRelationships)) {
+			const typedConfig = config as ConditionTriggerConfig;
+
+			// Skip if target condition already exists and isn't stackable
+			if (!typedConfig.stackable && actor.statuses.has(targetCondition)) continue;
+
+			// Check if any applied conditions trigger this target condition
+			const hasTriggeredCondition = appliedConditionIds.some((conditionId) =>
+				typedConfig.triggeredBy.includes(conditionId),
+			);
+
+			if (hasTriggeredCondition) {
+				triggeredConditions.push(targetCondition);
+			}
+		}
+
+		return triggeredConditions.sort((a, b) => {
+			const configA = (conditionTriggerRelationships as any)[a] as ConditionTriggerConfig;
+			const configB = (conditionTriggerRelationships as any)[b] as ConditionTriggerConfig;
+			return (configA?.priority ?? 999) - (configB?.priority ?? 999);
+		});
+	}
+
+	/**
+	 * Get automatic conditions that should be removed when the given conditions are removed
+	 * @param removedConditionIds - Array of condition IDs being removed
+	 * @param actor - The actor the conditions are being removed from
+	 * @returns Array of condition IDs that should be automatically removed
+	 */
+	getConditionsToRemove(removedConditionIds: string[], actor: NimbleBaseActor): string[] {
+		const { conditionTriggerRelationships = {} } = CONFIG.NIMBLE;
+		const conditionsToRemove: string[] = [];
+
+		// Check each automatic condition that might need removal
+		for (const [targetCondition, config] of Object.entries(conditionTriggerRelationships)) {
+			const typedConfig = config as ConditionTriggerConfig;
+
+			if (!typedConfig.autoRemove) continue;
+			if (!actor.statuses.has(targetCondition)) continue;
+
+			// Check if any removed conditions were triggers for this target condition
+			const removedATrigger = removedConditionIds.some((conditionId) =>
+				typedConfig.triggeredBy.includes(conditionId),
+			);
+
+			if (removedATrigger) {
+				conditionsToRemove.push(targetCondition);
+			}
+		}
+
+		return conditionsToRemove;
+	}
+
+	/**
+	 * Check if an automatically applied condition should be removed
+	 * @param conditionId - The condition ID to check
+	 * @param actor - The actor to check
+	 * @returns True if the condition should be removed, false otherwise
+	 */
+	shouldRemoveTriggeredCondition(conditionId: string, actor: NimbleBaseActor): boolean {
+		const { conditionTriggerRelationships = {} } = CONFIG.NIMBLE as any;
+		const config = conditionTriggerRelationships[conditionId] as ConditionTriggerConfig;
+
+		if (!config || !config.autoRemove) return false;
+
+		// Check if any trigger conditions still exist
+		const stillHasTrigger = config.triggeredBy.some((triggerConditionId) =>
+			actor.statuses.has(triggerConditionId as string),
+		);
+
+		return !stillHasTrigger;
 	}
 }

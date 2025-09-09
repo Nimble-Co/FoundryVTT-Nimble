@@ -232,7 +232,7 @@ onDestroy(() => {
                                 />
                             {/key}
                         {:else}
-                            {#await TextEditor.enrichHTML(actor.reactive?.system?.bloodiedEffect?.description) then bloodiedDescription}
+                            {#await foundry.applications.ux.TextEditor.implementation.enrichHTML(actor.reactive?.system?.bloodiedEffect?.description) then bloodiedDescription}
                                 {#if bloodiedDescription}
                                     <div class="nimble-monster-feature-text">
                                         {@html bloodiedDescription}
@@ -283,7 +283,7 @@ onDestroy(() => {
                                 />
                             {/key}
                         {:else}
-                            {#await TextEditor.enrichHTML(actor.reactive?.system?.lastStandEffect.description) then lastStandDescription}
+                            {#await foundry.applications.ux.TextEditor.implementation.enrichHTML(actor.reactive?.system?.lastStandEffect.description) then lastStandDescription}
                                 {#if lastStandDescription}
                                     <div class="nimble-monster-feature-text">
                                         {@html lastStandDescription}
