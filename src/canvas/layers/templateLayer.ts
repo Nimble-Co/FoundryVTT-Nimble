@@ -1,4 +1,4 @@
-class NimbleTemplateLayer extends TemplateLayer {
+class NimbleTemplateLayer extends foundry.canvas.layers.TemplateLayer {
 	#previewListeners: any = null;
 
 	async createPreview(data: Record<string, unknown>): Promise<any> {

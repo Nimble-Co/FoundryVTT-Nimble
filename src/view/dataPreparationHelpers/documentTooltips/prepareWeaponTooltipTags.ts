@@ -18,7 +18,7 @@ export default function prepareWeaponTooltipTags(weapon: NimbleObjectItem): stri
 		if (curr === 'range') acc.push(prepareRangeTooltipTag(weapon));
 		else if (curr === 'reach') acc.push(prepareReachTooltipTag(weapon));
 		else if (curr === 'thrown') {
-			acc.push({ label: thrownRange ? `${propertyLabel}: ${thrownRange} squares` : propertyLabel });
+			acc.push({ label: thrownRange ? `${propertyLabel}: ${thrownRange} spaces` : propertyLabel });
 		} else if (curr === 'twoHanded') {
 			if (strengthRequirement.overridesTwoHanded) {
 				acc.push({

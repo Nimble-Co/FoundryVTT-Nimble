@@ -2,7 +2,7 @@
 import { onMount } from 'svelte';
 
 type EditorOptions = foundry.applications.elements.HTMLProseMirrorElement.ProseMirrorInputConfig;
-type EnrichOptions = TextEditor.EnrichmentOptions;
+type EnrichOptions = foundry.applications.ux.TextEditor.implementation.EnrichmentOptions;
 
 interface Props {
 	content: string;
@@ -48,7 +48,7 @@ let proseMirrorElem: HTMLElement;
 
 // Create Editor element and assign it
 onMount(async () => {
-	const enriched = await TextEditor.enrichHTML(content, enrichOptions);
+	const enriched = await foundry.applications.ux.TextEditor.implementation.enrichHTML(content, enrichOptions);
 
 	const element = foundry.applications.elements.HTMLProseMirrorElement.create(
 		foundry.utils.mergeObject(editorOptions, { enriched }),

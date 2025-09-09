@@ -3,7 +3,7 @@ import localize from '../utils/localize.js';
 
 export default function enrichCondition(
 	args: Record<string, string>,
-	options?: TextEditor.EnrichmentOptions,
+	options?: foundry.applications.ux.TextEditor.implementation.EnrichmentOptions,
 ) {
 	const { conditions, conditionDescriptions } = CONFIG.NIMBLE;
 	const { enricherType, condition: conditionKey } = args;

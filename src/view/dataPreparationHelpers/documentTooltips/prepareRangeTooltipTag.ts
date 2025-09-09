@@ -4,6 +4,6 @@ export default function prepareRangeTooltipTag(item) {
 	const rangeComponents = Object.values(item.system.properties.range).filter(Boolean).join('–');
 
 	return {
-		label: rangeComponents ? `${propertyLabel}: ${rangeComponents} squares` : propertyLabel,
+		label: rangeComponents ? `${propertyLabel}: ${rangeComponents} spaces` : propertyLabel,
 	};
 }
