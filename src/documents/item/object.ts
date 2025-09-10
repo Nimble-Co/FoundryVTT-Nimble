@@ -44,10 +44,15 @@ export class NimbleObjectItem extends NimbleBaseItem {
 	//                 Document Update Hooks
 	/** ------------------------------------------------------ */
 	override async _preCreate(data, options, user) {
-		// Update quantity if object already exists and is stackable
-		if (this.isEmbedded && this.system.stackable) {
+		// Update quantity if object already exists and is stackable or smallSized
+		const objectSizeTypesWithQuantity = new Set(['stackable', 'smallSized']);
+		if (this.isEmbedded && objectSizeTypesWithQuantity.has(this.system.objectSizeType)) {
 			const existing = this.actor?.items.find(
-				(i) => i.name === this.name && i.type === 'object' && i.system.stackable,
+				(i) =>
+					i instanceof NimbleObjectItem &&
+					i.name === this.name &&
+					i.type === 'object' &&
+					objectSizeTypesWithQuantity.has(i.system.objectSizeType),
 			);
 
 			if (!existing) return super._preCreate(data, options, user);
