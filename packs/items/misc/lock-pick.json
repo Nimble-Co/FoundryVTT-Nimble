@@ -42,7 +42,9 @@
 		"objectType": "misc",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
+		"objectSizeType": "smallSized",
 		"slotsRequired": 1,
+		"stackSize": 2,
 		"stackable": true,
 		"properties": {
 			"range": {
