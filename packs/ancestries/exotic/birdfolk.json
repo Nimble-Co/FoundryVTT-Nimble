@@ -1,0 +1,25 @@
+{
+	"name": "Birdfolk",
+	"type": "ancestry",
+	"img": "icons/creatures/birds/corvid-call-sound-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Birdfolk find sanctuary not in stone or chains, but within the boundless expanse of the sky. However, the gift of flight comes at a cost—hollow bones, and commensurate frailty.</p><hr><p><strong>Hollow Bones</strong></p><p>You have a fly Speed as long as you are wearing armor no heavier than Leather. </p><p>Crits against you are Vicious (the attacker rolls 1 additional die). </p><p>Forced movement moves you twice as far.</p>",
+		"exotic": true,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756504614389,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "G7uhni6XZkQV5VQi"
+}

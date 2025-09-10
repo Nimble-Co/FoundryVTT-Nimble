@@ -19,14 +19,14 @@ let spellTier = $derived(item.reactive.system.tier);
             </h3>
         </header>
 
-        {#await TextEditor.enrichHTML(baseEffectDescription) then baseEffect}
+        {#await foundry.applications.ux.TextEditor.implementation.enrichHTML(baseEffectDescription) then baseEffect}
             <div class="nimble-summary__description">
                 {@html baseEffect || "No description available"}
             </div>
         {/await}
     </section>
 
-    {#await TextEditor.enrichHTML(higherLevelEffectDescription) then higherLevelEffect}
+    {#await foundry.applications.ux.TextEditor.implementation.enrichHTML(higherLevelEffectDescription) then higherLevelEffect}
         {#if higherLevelEffect}
             <section>
                 <header class="nimble-section-header">

@@ -1,0 +1,25 @@
+{
+	"name": "Fiendkin",
+	"type": "ancestry",
+	"img": "icons/creatures/unholy/demon-horned-winged-laughing.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Said to have been born from the union of man and fiend, or from a cursed bloodline, Fiendkin often find themselves outcasts in society. Yet, they embody determination in the face of adversity. Their ancestors didn’t emerge from the depths of the Everflame to succumb to minor setbacks!</p><hr><p><strong>Flameborn</strong> </p><p>1 of your neutral saves is advantaged instead. [M]</p><p>You know Infernal if your INT is not negative. [M]</p>",
+		"exotic": true,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756506049615,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "gn0l7830gS0VVQfb"
+}

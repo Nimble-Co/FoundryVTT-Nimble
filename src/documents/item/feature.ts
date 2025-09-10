@@ -17,7 +17,7 @@ export class NimbleFeatureItem extends NimbleBaseItem {
 
   override async prepareChatCardData() {
     const showDescription = this.system.activation.showDescription;
-    const description = await TextEditor.enrichHTML(this.system.description);
+    const description = await foundry.applications.ux.TextEditor.implementation.enrichHTML(this.system.description);
     console.log(description);
 
     return {

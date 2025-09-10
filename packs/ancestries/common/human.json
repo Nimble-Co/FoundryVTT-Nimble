@@ -1,0 +1,58 @@
+{
+	"name": "Human",
+	"type": "ancestry",
+	"img": "icons/environment/people/commoner.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "skillBonus",
+				"disabled": false,
+				"id": "gMJvC5XPYlun1NT3",
+				"identifier": "human-skills",
+				"label": "Skill Bonus for Human",
+				"predicate": {},
+				"priority": 1,
+				"value": "+1",
+				"skills": [
+					"arcana",
+					"examination",
+					"finesse",
+					"influence",
+					"insight",
+					"lore",
+					"might",
+					"naturecraft",
+					"perception",
+					"stealth"
+				]
+			},
+			{
+				"type": "initiativeBonus",
+				"disabled": false,
+				"id": "AuTpcB2psoXIJESI",
+				"identifier": "human-init",
+				"label": "Human Initiative bonus",
+				"predicate": {},
+				"priority": 1,
+				"value": "+1"
+			}
+		],
+		"description": "<p>Found in every terrain and environment, their curiosity and ambition drive them to explore</p><p>every corner of the world, making them a ubiquitous and versatile race.</p><hr><p><strong>Tenacious</strong></p><p>+1 to all skills and initiative [A]</p>",
+		"exotic": false,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448231080,
+		"modifiedTime": 1756448252427,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "11SKfGVV3ZWHquUb"
+}
