@@ -83,7 +83,9 @@
 		"objectType": "weapon",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"slotsRequired": 1,
+		"objectSizeType": "slots",
+		"slotsRequired": 2,
+		"stackSize": 2,
 		"stackable": false,
 		"properties": {
 			"range": {
@@ -94,9 +96,7 @@
 				"min": 1,
 				"max": 2
 			},
-			"selected": [
-				"twoHanded"
-			],
+			"selected": ["twoHanded"],
 			"strengthRequirement": {
 				"value": 2,
 				"overridesTwoHanded": true

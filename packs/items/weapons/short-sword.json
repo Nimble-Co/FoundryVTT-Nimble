@@ -84,7 +84,9 @@
 		"objectType": "weapon",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
+		"objectSizeType": "slots",
 		"slotsRequired": 1,
+		"stackSize": 2,
 		"stackable": false,
 		"properties": {
 			"range": {
@@ -95,9 +97,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"light"
-			],
+			"selected": ["light"],
 			"strengthRequirement": {
 				"value": null,
 				"overridesTwoHanded": false
