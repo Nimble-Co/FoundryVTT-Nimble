@@ -97,7 +97,10 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": ["light", "thrown"],
+			"selected": [
+				"light",
+				"thrown"
+			],
 			"strengthRequirement": {
 				"value": null,
 				"overridesTwoHanded": false

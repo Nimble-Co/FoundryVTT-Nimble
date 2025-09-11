@@ -106,7 +106,11 @@
 				"min": 1,
 				"max": 2
 			},
-			"selected": ["twoHanded", "range", "vicious"],
+			"selected": [
+				"twoHanded",
+				"range",
+				"vicious"
+			],
 			"strengthRequirement": {
 				"value": null,
 				"overridesTwoHanded": false

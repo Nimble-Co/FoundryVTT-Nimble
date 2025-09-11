@@ -97,7 +97,9 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": ["twoHanded"],
+			"selected": [
+				"twoHanded"
+			],
 			"strengthRequirement": {
 				"value": null,
 				"overridesTwoHanded": false
