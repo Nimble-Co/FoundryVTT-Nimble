@@ -1,0 +1,446 @@
+{
+	"name": "Nalzar, Apex Predator",
+	"type": "soloMonster",
+	"folder": null,
+	"img": "systems/nimble/assets/legendaryMonsterImages/core/nalzar.webp",
+	"system": {
+		"attributes": {
+			"armor": "medium",
+			"damageResistances": [],
+			"damageVulnerabilities": [],
+			"damageImmunities": [],
+			"hp": {
+				"max": 180,
+				"temp": 0,
+				"value": 180
+			},
+			"sizeCategory": "large"
+		},
+		"description": "",
+		"details": {
+			"creatureType": "Grey Drake",
+			"level": "6"
+		},
+		"bloodiedEffect": {
+			"description": "<p>At 90 HP, her Wing Buffet Range and DC increase by 2.</p>"
+		},
+		"lastStandEffect": {
+			"description": "<p>Nalzar is dying! 60 more damage and she dies. Until then, each turn, she moves 6, then uses Devour (ignoring the Prone requirement).</p>"
+		},
+		"attackSequence": "<p>After each Hero's turn, choose one:</p>",
+		"savingThrows": {
+			"strength": {
+				"defaultRollMode": 1,
+				"mod": 0
+			},
+			"dexterity": {
+				"defaultRollMode": 1,
+				"mod": 0
+			},
+			"intelligence": {
+				"defaultRollMode": 0,
+				"mod": 0
+			},
+			"will": {
+				"defaultRollMode": 0,
+				"mod": 0
+			}
+		}
+	},
+	"prototypeToken": {
+		"name": "Nalzar, Apex Predator",
+		"displayName": 50,
+		"actorLink": false,
+		"width": 2,
+		"height": 2,
+		"texture": {
+			"src": "icons/svg/mystery-man.svg",
+			"anchorX": 0.5,
+			"anchorY": 0.5,
+			"offsetX": 0,
+			"offsetY": 0,
+			"fit": "contain",
+			"scaleX": 1,
+			"scaleY": 1,
+			"rotation": 0,
+			"tint": "#ffffff",
+			"alphaThreshold": 0.75
+		},
+		"lockRotation": true,
+		"rotation": 0,
+		"alpha": 1,
+		"disposition": -1,
+		"displayBars": 40,
+		"bar1": {
+			"attribute": "attributes.hp"
+		},
+		"bar2": {
+			"attribute": null
+		},
+		"light": {
+			"negative": false,
+			"priority": 0,
+			"alpha": 0.5,
+			"angle": 360,
+			"bright": 0,
+			"color": null,
+			"coloration": 1,
+			"dim": 0,
+			"attenuation": 0.5,
+			"luminosity": 0.5,
+			"saturation": 0,
+			"contrast": 0,
+			"shadows": 0,
+			"animation": {
+				"type": null,
+				"speed": 5,
+				"intensity": 5,
+				"reverse": false
+			},
+			"darkness": {
+				"min": 0,
+				"max": 1
+			}
+		},
+		"sight": {
+			"enabled": false,
+			"range": 0,
+			"angle": 360,
+			"visionMode": "basic",
+			"color": null,
+			"attenuation": 0.1,
+			"brightness": 0,
+			"saturation": 0,
+			"contrast": 0
+		},
+		"detectionModes": [],
+		"occludable": {
+			"radius": 0
+		},
+		"ring": {
+			"enabled": false,
+			"colors": {
+				"ring": null,
+				"background": null
+			},
+			"effects": 0,
+			"subject": {
+				"scale": 1,
+				"texture": null
+			}
+		},
+		"turnMarker": {
+			"mode": 1,
+			"animation": null,
+			"src": null,
+			"disposition": false
+		},
+		"movementAction": null,
+		"flags": {},
+		"randomImg": false,
+		"appendNumber": false,
+		"prependAdjective": false
+	},
+	"items": [
+		{
+			"name": "Tail Swipe.",
+			"type": "monsterFeature",
+			"_id": "WGWffq4kSNprRmwC",
+			"img": "icons/creatures/abilities/tail-swipe-green.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "action"
+					},
+					"effects": [
+						{
+							"id": "zp5I17UCFzX7evU7",
+							"type": "condition",
+							"condition": "prone",
+							"parentContext": null,
+							"parentNode": null
+						},
+						{
+							"id": "7Xvl3e22HkkWcTGi",
+							"type": "condition",
+							"condition": "hampered",
+							"parentContext": null,
+							"parentNode": null
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>When dealt slashing or lightning damage: knock a hero within 3 spaces Prone.</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"name": "Torn Wings.",
+			"type": "monsterFeature",
+			"_id": "Q9DJkTaj6HFyDHPc",
+			"img": "icons/creatures/abilities/wing-batlike-purple-blue.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Each slashing crit reduces the Wing Buffet DC by 1.</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"name": "Devour.",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "action"
+					},
+					"effects": [
+						{
+							"id": "ciP0EPTD552Nd10d",
+							"type": "damage",
+							"damageType": "piercing",
+							"formula": "4d12+6",
+							"parentContext": null,
+							"parentNode": null,
+							"on": {
+								"hit": [
+									{
+										"id": "diVY8XwN7xP0AdpL",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "ciP0EPTD552Nd10d"
+									}
+								]
+							},
+							"canCrit": true,
+							"canMiss": true
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>(Prone creatures only, Reach 2) 4d12+6.</p>",
+				"isAttack": true
+			},
+			"_id": "hI2su2eXaXAyRbEV",
+			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757830695921
+			}
+		},
+		{
+			"name": "Wing Buffet.",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": true,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "action"
+					},
+					"effects": [
+						{
+							"id": "v4oK83P3T0FV2HFm",
+							"type": "damage",
+							"damageType": "bludgeoning",
+							"formula": "1d12",
+							"parentContext": null,
+							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
+							"on": {
+								"hit": [
+									{
+										"id": "YTx4LQ3vKGMlvnq6",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "v4oK83P3T0FV2HFm"
+									}
+								]
+							}
+						},
+						{
+							"id": "XSsMqXrm3eke0Gj6",
+							"type": "savingThrow",
+							"savingThrowType": "strength",
+							"parentContext": null,
+							"parentNode": null,
+							"saveType": "strength",
+							"saveDC": "14",
+							"on": {
+								"failedSave": [
+									{
+										"id": "LwJ8iS6H76SUg9YT",
+										"type": "condition",
+										"condition": "hampered",
+										"parentContext": "failedSave",
+										"parentNode": "XSsMqXrm3eke0Gj6"
+									},
+									{
+										"id": "0Oh2HN5dMuWgedki",
+										"type": "condition",
+										"condition": "prone",
+										"parentContext": "failedSave",
+										"parentNode": "XSsMqXrm3eke0Gj6"
+									}
+								]
+							},
+							"sharedRolls": []
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 8,
+						"radius": 1,
+						"shape": "cone",
+						"width": 1
+					}
+				},
+				"description": "<p>Fly 8, then land. Cone 8: 1d12, then DC 14 STR save or also knocked Prone (advantage if behind cover or another hero).</p>",
+				"isAttack": true
+			},
+			"_id": "engJrYwHNhUUoJ0h",
+			"img": "icons/commodities/biological/wing-green.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757830815274
+			}
+		}
+	],
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1757363288011,
+		"modifiedTime": 1757830629057,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "nHmhDIozM5iowqpT"
+}

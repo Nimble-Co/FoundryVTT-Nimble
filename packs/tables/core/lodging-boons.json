@@ -1,0 +1,189 @@
+{
+	"name": "Lodging Boons",
+	"img": "icons/environment/settlement/house-city.webp",
+	"description": "",
+	"results": [
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				1,
+				1
+			],
+			"_id": "IMlxO1m8mUPYSMnr",
+			"name": "Recover 2 additional Wounds",
+			"img": "icons/magic/life/cross-worn-green.webp",
+			"description": "",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": null
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				2,
+				2
+			],
+			"_id": "tQI0aNZ9lzyWEZAY",
+			"name": "Gain LVL temp HP",
+			"img": "icons/consumables/potions/bottle-corked-red.webp",
+			"description": "",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": null
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				3,
+				3
+			],
+			"_id": "sSsIvfSNkmNyaLOD",
+			"name": "Gain KEY temp Hit Dice",
+			"img": "icons/sundries/gaming/dice-pair-white-green.webp",
+			"description": "",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": null
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				4,
+				4
+			],
+			"_id": "KcKq1nzQmhXJE8gF",
+			"name": "+1 Speed",
+			"img": "icons/skills/movement/feet-winged-boots-glowing-yellow.webp",
+			"description": "",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": null
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				5,
+				5
+			],
+			"_id": "tLSIioewyWZm5fWa",
+			"name": "Inspired (reroll any die, once)",
+			"img": "icons/magic/light/explosion-beam-impact-silhouette.webp",
+			"description": "",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": null
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				6,
+				6
+			],
+			"_id": "FaKCBXJW0jkwSC0G",
+			"name": "Advantage vs. Fear/Charm/Etc.",
+			"img": "icons/magic/control/fear-fright-mask-orange.webp",
+			"description": "",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": null
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				7,
+				7
+			],
+			"_id": "CqxgwJX2RD8o6qDZ",
+			"name": "Learn an important rumor",
+			"img": "icons/skills/social/diplomacy-handshake.webp",
+			"description": "",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": null
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				8,
+				8
+			],
+			"_id": "4yWZ6hbGpYl5Nok1",
+			"name": "+KEY mana",
+			"img": "icons/magic/light/explosion-star-blue-large.webp",
+			"description": "",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": null
+			},
+			"documentUuid": null
+		}
+	],
+	"replacement": true,
+	"displayRoll": true,
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757297320594,
+		"modifiedTime": 1757300738061,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"formula": "1d8",
+	"_id": "uY19drrdnfMziTSo"
+}

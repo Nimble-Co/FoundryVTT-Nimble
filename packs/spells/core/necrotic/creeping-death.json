@@ -1,0 +1,89 @@
+{
+	"folder": null,
+	"name": "Creeping Death",
+	"type": "spell",
+	"img": "icons/magic/unholy/silhouette-robe-evil-glow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "Attacked",
+				"quantity": 3,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "3mt7Bbpth4XNX1tg",
+					"type": "damage",
+					"damageType": "necrotic",
+					"formula": "4d20",
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "PlsN92sNuHU692ge",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "3mt7Bbpth4XNX1tg"
+							}
+						]
+					},
+					"canCrit": false,
+					"canMiss": false
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td><p><strong>3 Actions, AoE</strong></p></td></tr><tr><td><p><strong>Reach:</strong> 8.</p></td></tr><tr><td><p><strong>Damage:</strong> 4d20.</p></td></tr><tr><td><p>If this kills the creature, it violently erupts and you <strong>MUST</strong> deal the same amount of damage to another creature within 8 spaces of it that has not yet been damaged by this effect. Repeat until a creature survives this damage or no other creatures are within Reach.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+1d20 damage.</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 8
+			},
+			"reach": {
+				"min": 1,
+				"max": 8
+			},
+			"selected": [
+				"reach"
+			]
+		},
+		"school": "necrotic",
+		"tier": 7
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1757108643602,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "8nGPr8wiB4JSFgku"
+}

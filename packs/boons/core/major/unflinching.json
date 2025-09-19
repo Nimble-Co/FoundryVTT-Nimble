@@ -1,0 +1,24 @@
+{
+	"folder": null,
+	"name": "Unflinching",
+	"type": "boon",
+	"img": "icons/magic/perception/eye-ringed-glow-angry-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Your focus is unbroken even in the face of danger. Advantage on Concentration checks. [M]</span></p>",
+		"boonType": "major"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757285942275,
+		"modifiedTime": 1757292455603,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "QdL25uJIZYoMUPJs"
+}

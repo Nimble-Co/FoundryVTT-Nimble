@@ -1,0 +1,68 @@
+{
+	"folder": null,
+	"name": "Spark Step",
+	"type": "spell",
+	"img": "icons/magic/movement/trail-streak-zigzag-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td><p><strong>1 Action, Self</strong></p></td></tr><tr><td><p><strong>Range:</strong> 4.</p></td></tr><tr><td><p>Teleport to a metal object.</p></td></tr></tbody></table>",
+			"higherLevelEffect": ""
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 4
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"utilitySpell",
+				"range"
+			]
+		},
+		"school": "lightning",
+		"tier": 0
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1757109144941,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "iEMOyGlDIeT62HH0"
+}

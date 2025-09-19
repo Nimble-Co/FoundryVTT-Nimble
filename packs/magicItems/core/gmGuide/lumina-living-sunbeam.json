@@ -1,0 +1,75 @@
+{
+	"folder": null,
+	"name": "Lumina, Living Sunbeam",
+	"type": "object",
+	"img": "icons/magic/light/explosion-star-large-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<p>A small, radiant orb of light, about the size of an apple, with a gentle, warm glow that pulses with life and a perpetually cheerful expression. She is a one-time use item that, when activated as an action, will deal [[/r (@level)d6]]{LVL d6} radiant damage to all enemies within 6 spaces and heal allies in the area for the same amount. Until then, she hovers around her owner, spreading warmth and light, and offering encouragement.</p>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "consumable",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756840278525,
+		"modifiedTime": 1756958394820,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "p6EPhzwmIw0ahmV7"
+}

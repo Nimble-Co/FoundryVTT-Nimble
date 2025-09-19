@@ -1,0 +1,783 @@
+{
+	"name": "Caerys, the Hollow Star",
+	"type": "soloMonster",
+	"folder": null,
+	"img": "systems/nimble/assets/legendaryMonsterImages/core/caerys.webp",
+	"system": {
+		"attributes": {
+			"armor": "heavy",
+			"damageResistances": [],
+			"damageVulnerabilities": [],
+			"damageImmunities": [],
+			"hp": {
+				"max": 620,
+				"temp": 0,
+				"value": 620
+			},
+			"sizeCategory": "gargantuan"
+		},
+		"description": "",
+		"details": {
+			"creatureType": "World-Ending Cataclysm",
+			"level": "20"
+		},
+		"bloodiedEffect": {
+			"description": "<p>At 310 HP, Gravitational Mastery. Move ALL objects and creatures within 16 spaces anywhere else within the area. Gravitational Lensing. The hero with the most HP is marked by Caerys. She takes half damage from all sources, her mark takes the other half. This lasts until the mark drops to 0 HP.</p>"
+		},
+		"lastStandEffect": {
+			"description": "<p>Use Gravitational Mastery, then Caerys is dying! 200 more damage and she dies. Until then she chooses twice each turn. If still alive after 1 round: Reset Time: she resets back to full HP.</p>"
+		},
+		"attackSequence": "<p>After each hero’s turn, choose 1 not yet chosen (reset when all have been chosen):</p>",
+		"savingThrows": {
+			"strength": {
+				"defaultRollMode": 3,
+				"mod": 0
+			},
+			"dexterity": {
+				"defaultRollMode": 3,
+				"mod": 0
+			},
+			"intelligence": {
+				"defaultRollMode": 3,
+				"mod": 0
+			},
+			"will": {
+				"defaultRollMode": 3,
+				"mod": 0
+			}
+		}
+	},
+	"prototypeToken": {
+		"name": "Caerys, the Hollow Star",
+		"displayName": 50,
+		"actorLink": false,
+		"width": 1,
+		"height": 1,
+		"texture": {
+			"src": "icons/svg/mystery-man.svg",
+			"anchorX": 0.5,
+			"anchorY": 0.5,
+			"offsetX": 0,
+			"offsetY": 0,
+			"fit": "contain",
+			"scaleX": 1,
+			"scaleY": 1,
+			"rotation": 0,
+			"tint": "#ffffff",
+			"alphaThreshold": 0.75
+		},
+		"lockRotation": true,
+		"rotation": 0,
+		"alpha": 1,
+		"disposition": -1,
+		"displayBars": 50,
+		"bar1": {
+			"attribute": "attributes.hp"
+		},
+		"bar2": {
+			"attribute": null
+		},
+		"light": {
+			"negative": false,
+			"priority": 0,
+			"alpha": 0.5,
+			"angle": 360,
+			"bright": 0,
+			"color": null,
+			"coloration": 1,
+			"dim": 0,
+			"attenuation": 0.5,
+			"luminosity": 0.5,
+			"saturation": 0,
+			"contrast": 0,
+			"shadows": 0,
+			"animation": {
+				"type": null,
+				"speed": 5,
+				"intensity": 5,
+				"reverse": false
+			},
+			"darkness": {
+				"min": 0,
+				"max": 1
+			}
+		},
+		"sight": {
+			"enabled": false,
+			"range": 0,
+			"angle": 360,
+			"visionMode": "basic",
+			"color": null,
+			"attenuation": 0.1,
+			"brightness": 0,
+			"saturation": 0,
+			"contrast": 0
+		},
+		"detectionModes": [],
+		"occludable": {
+			"radius": 0
+		},
+		"ring": {
+			"enabled": false,
+			"colors": {
+				"ring": null,
+				"background": null
+			},
+			"effects": 0,
+			"subject": {
+				"scale": 1,
+				"texture": null
+			}
+		},
+		"turnMarker": {
+			"mode": 1,
+			"animation": null,
+			"src": null,
+			"disposition": false
+		},
+		"movementAction": null,
+		"flags": {},
+		"randomImg": false,
+		"appendNumber": false,
+		"prependAdjective": false
+	},
+	"items": [
+		{
+			"name": "Ravages of Time",
+			"type": "monsterFeature",
+			"_id": "iVZKZ8LKb98YCI7w",
+			"img": "icons/magic/time/hourglass-brown-orange.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>At the beginning of each round, all heroes suffer 1 Wound</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757808973490,
+				"modifiedTime": 1757809144962,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Slipstream",
+			"type": "monsterFeature",
+			"_id": "ytlLL5rYPVF7MGGY",
+			"img": "icons/magic/movement/trail-streak-zigzag-yellow.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>3/encounter when she would suffer any negative effect she can swap places with a creature of her choice making them the target instead. All heroes recover 1 Wound.</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757809329676,
+				"modifiedTime": 1757809604823,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Wormhole",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [
+						{
+							"id": "kMMOTNlE3gc8QPwO",
+							"type": "damage",
+							"damageType": "bludgeoning",
+							"formula": "3d20",
+							"parentContext": null,
+							"parentNode": null,
+							"on": {
+								"hit": [
+									{
+										"id": "7RlLDptjF6P4H6Pl",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "kMMOTNlE3gc8QPwO"
+									}
+								]
+							},
+							"canCrit": true,
+							"canMiss": true
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Teleport 12. 3d20 to a creature adjacent to where you began or ended.</p>",
+				"isAttack": true
+			},
+			"_id": "QgFFZaVxOtw8eJ1D",
+			"img": "icons/magic/sonic/explosion-impact-shock-wave.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757809977643,
+				"modifiedTime": 1757810525467,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Immensity",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [
+						{
+							"id": "q20U5ghtUs4RbwzR",
+							"type": "savingThrow",
+							"savingThrowType": "strength",
+							"parentContext": null,
+							"parentNode": null,
+							"saveType": "strength",
+							"saveDC": "20",
+							"on": {
+								"failedSave": [
+									{
+										"id": "2WccWFEj0QTmBLfP",
+										"type": "condition",
+										"condition": "prone",
+										"parentContext": "failedSave",
+										"parentNode": "q20U5ghtUs4RbwzR"
+									}
+								]
+							},
+							"sharedRolls": [
+								{
+									"id": "k1oi8cKrCy0rKtOr",
+									"type": "damage",
+									"damageType": "bludgeoning",
+									"formula": "3d20",
+									"parentContext": "sharedRolls",
+									"parentNode": "q20U5ghtUs4RbwzR",
+									"on": {
+										"failedSave": [
+											{
+												"id": "devxf3Wq27h2ouJn",
+												"type": "damageOutcome",
+												"outcome": "fullDamage",
+												"parentContext": "failedSave",
+												"parentNode": "k1oi8cKrCy0rKtOr"
+											}
+										],
+										"passedSave": [
+											{
+												"id": "lgEK1simV1O1dVVW",
+												"type": "damageOutcome",
+												"outcome": "halfDamage",
+												"parentContext": "passedSave",
+												"parentNode": "k1oi8cKrCy0rKtOr"
+											}
+										]
+									}
+								}
+							]
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>(Reach 12) DC 20 STR save (disadvantage if within Reach 4) or suffer 3d20 damage and Prone. Half on save.</p>",
+				"isAttack": true
+			},
+			"_id": "3ZLbCogTJylv3j6P",
+			"img": "icons/magic/defensive/barrier-shield-dome-blue-purple.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757810149178,
+				"modifiedTime": 1757810514043,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Glimpse Your End",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [
+						{
+							"id": "aIBlZ7tsC4YTyKyT",
+							"type": "savingThrow",
+							"savingThrowType": "strength",
+							"parentContext": null,
+							"parentNode": null,
+							"saveType": "will",
+							"saveDC": "20",
+							"on": {
+								"failedSave": [
+									{
+										"id": "wpLzOmDXriXEKt1Y",
+										"type": "note",
+										"noteType": "general",
+										"text": "DOOMED: Concentration ends, the next damage roll against you is maximized",
+										"parentContext": "failedSave",
+										"parentNode": "aIBlZ7tsC4YTyKyT"
+									}
+								]
+							},
+							"sharedRolls": []
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>DC 20 WIL save or DOOMED: Concentration ends, the next damage roll against you is maximized.</p>",
+				"isAttack": true
+			},
+			"_id": "J5368jkxadVt0eOg",
+			"img": "icons/magic/death/skull-humanoid-white-red.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757810529180,
+				"modifiedTime": 1757810710451,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Plasma Storm",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [
+						{
+							"id": "g8nyLDD2EKXHEM7l",
+							"type": "savingThrow",
+							"savingThrowType": "strength",
+							"parentContext": null,
+							"parentNode": null,
+							"saveType": "dexterity",
+							"saveDC": "20",
+							"sharedRolls": [
+								{
+									"id": "2fU9e4UeMjNFb9jM",
+									"type": "damage",
+									"damageType": "fire",
+									"formula": "2d20",
+									"parentContext": "sharedRolls",
+									"parentNode": "g8nyLDD2EKXHEM7l",
+									"on": {
+										"failedSave": [
+											{
+												"id": "uBDhCngMqsFvehOH",
+												"type": "damageOutcome",
+												"outcome": "fullDamage",
+												"parentContext": "failedSave",
+												"parentNode": "2fU9e4UeMjNFb9jM"
+											}
+										],
+										"passedSave": [
+											{
+												"id": "kUjkvb4x8tBUfGS3",
+												"type": "damageOutcome",
+												"outcome": "halfDamage",
+												"parentContext": "passedSave",
+												"parentNode": "2fU9e4UeMjNFb9jM"
+											}
+										]
+									}
+								},
+								{
+									"id": "Zg1CkhKobBh5isJ6",
+									"type": "damage",
+									"damageType": "lightning",
+									"formula": "2d20",
+									"parentContext": "sharedRolls",
+									"parentNode": "g8nyLDD2EKXHEM7l",
+									"on": {
+										"failedSave": [
+											{
+												"id": "c7Cg94fdgVZVnlZq",
+												"type": "damageOutcome",
+												"outcome": "fullDamage",
+												"parentContext": "failedSave",
+												"parentNode": "Zg1CkhKobBh5isJ6"
+											}
+										],
+										"passedSave": [
+											{
+												"id": "40XV1QRAJepkEVAT",
+												"type": "damageOutcome",
+												"outcome": "halfDamage",
+												"parentContext": "passedSave",
+												"parentNode": "Zg1CkhKobBh5isJ6"
+											}
+										]
+									}
+								}
+							],
+							"on": {}
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 6,
+						"shape": "circle",
+						"width": 1
+					}
+				},
+				"description": "<p>Reach 6, DC 20 DEX save or 2d20 lightning and 2d20 fire damage. Half on save.</p>",
+				"isAttack": true
+			},
+			"_id": "hgBOVY7Fj3Js7yzX",
+			"img": "icons/magic/lightning/bolt-strike-smoke-yellow.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757810716334,
+				"modifiedTime": 1757811157894,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Singularity",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [
+						{
+							"id": "Z1vqnAROGa2U9Awi",
+							"type": "damage",
+							"damageType": "bludgeoning",
+							"formula": "5d20",
+							"parentContext": null,
+							"parentNode": null,
+							"on": {
+								"hit": [
+									{
+										"id": "oVyvQ6HDIH9bWGz6",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "Z1vqnAROGa2U9Awi"
+									}
+								]
+							},
+							"canCrit": true,
+							"canMiss": true
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Reach 2, 5d20 bludgeoning damage.</p>",
+				"isAttack": true
+			},
+			"_id": "cKsrqvN2JNjZ9oTq",
+			"img": "icons/magic/air/wind-vortex-swirl-blue.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757810963421,
+				"modifiedTime": 1757811245784,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Almighty Push & Pull",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [
+						{
+							"id": "ZJ5et9yz2pEaIiEG",
+							"type": "savingThrow",
+							"savingThrowType": "strength",
+							"parentContext": null,
+							"parentNode": null,
+							"saveType": "strength",
+							"saveDC": "20",
+							"on": {
+								"failedSave": [
+									{
+										"id": "2vMSIx9xR56C9DGJ",
+										"type": "note",
+										"noteType": "warning",
+										"text": "Launched 20 ft. into the air. REPEAT until target saves. Fall damage is 1d20 for every 10 ft.",
+										"parentContext": "failedSave",
+										"parentNode": "ZJ5et9yz2pEaIiEG"
+									}
+								]
+							},
+							"sharedRolls": []
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>(Range 12) DC 20 STR save or be launched 20 ft. into the air, repeat until the target saves. Fall damage for this attack is 1d20 for every 10 ft. fallen.</p>",
+				"isAttack": true
+			},
+			"_id": "MfLJ3aDYoCtnItjm",
+			"img": "icons/magic/movement/trail-streak-impact-blue.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757811239739,
+				"modifiedTime": 1757811445583,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		}
+	],
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1757363288011,
+		"modifiedTime": 1757809971536,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "SILDSex9MI5AuAs7"
+}

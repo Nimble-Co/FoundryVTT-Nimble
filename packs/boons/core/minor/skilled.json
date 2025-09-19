@@ -1,0 +1,24 @@
+{
+	"name": "Skilled",
+	"type": "boon",
+	"img": "icons/skills/trades/woodcutting-logging-saw.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>+1 skill point. [M]</p>",
+		"boonType": "minor"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757284157169,
+		"modifiedTime": 1757288873400,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "Hf8lKcgJLG8OXgxj"
+}

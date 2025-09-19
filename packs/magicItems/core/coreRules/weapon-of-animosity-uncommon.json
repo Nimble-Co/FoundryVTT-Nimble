@@ -1,0 +1,107 @@
+{
+	"folder": null,
+	"name": "Weapon of Animosity - Uncommon",
+	"type": "object",
+	"img": "icons/skills/melee/strike-weapons-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "action"
+			},
+			"effects": [
+				{
+					"id": "rOipEWnQVocKkpkg",
+					"type": "damage",
+					"damageType": "force",
+					"formula": "1d4",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"miss": [
+							{
+								"id": "ly4Jdw7GEkH8c5Os",
+								"type": "note",
+								"noteType": "reminder",
+								"text": "Wielder takes the damage from the animosity die",
+								"parentContext": "miss",
+								"parentNode": "rOipEWnQVocKkpkg"
+							}
+						],
+						"hit": [
+							{
+								"id": "rrrlIbpEiB30NQHa",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "rOipEWnQVocKkpkg"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<p><strong>Rarity:</strong> Uncommon</p><p><strong>Damage:</strong> x + 1d4</p><hr><p>Whenever you attack with this weapon, roll an additional animosity die. The weapon deals that much additional damage to your target on a hit. Whenever this weapon misses, you take that damage instead.</p>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "weapon",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756840141542,
+		"modifiedTime": 1757022401855,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "yuPm7JcEozVmhfd3"
+}

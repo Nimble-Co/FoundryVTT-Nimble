@@ -1,0 +1,75 @@
+{
+	"name": "Fly",
+	"type": "spell",
+	"img": "icons/magic/control/debuff-energy-hold-levitate-blue-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "When attacked at Range.",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "minute"
+			},
+			"effects": [
+				{
+					"id": "B7rec2cRfIdgOFVb",
+					"type": "condition",
+					"condition": "concentration",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action, Single Target+</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Concentration:</strong> Up to 10 minutes.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>Touch a creature, grant a flying speed of 12.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+1 target.</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 6
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"concentration"
+			]
+		},
+		"school": "wind",
+		"tier": 3
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1757108766252,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "DHEl4NDcNMu2ZAj0"
+}

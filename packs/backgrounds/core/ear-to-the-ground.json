@@ -1,0 +1,23 @@
+{
+	"folder": null,
+	"name": "Ear to the Ground",
+	"type": "background",
+	"img": "icons/sundries/documents/envelope-sealed-red-white.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Advantage on checks to know or obtain gossip for events that will soon happen or have happened less than 1 year ago.</p>"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756606137903,
+		"modifiedTime": 1757283399382,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "Y67H9tl5yXszpuyr"
+}

@@ -1,0 +1,246 @@
+{
+	"name": "Ettercap",
+	"type": "npc",
+	"folder": null,
+	"img": "icons/svg/mystery-man.svg",
+	"system": {
+		"attributes": {
+			"armor": "none",
+			"damageResistances": [],
+			"damageVulnerabilities": [],
+			"damageImmunities": [],
+			"hp": {
+				"max": 49,
+				"temp": 0,
+				"value": 49
+			},
+			"sizeCategory": "medium"
+		},
+		"description": "",
+		"details": {
+			"creatureType": "",
+			"isFlunky": false,
+			"level": "4"
+		},
+		"attackSequence": "",
+		"savingThrows": {
+			"strength": {
+				"defaultRollMode": 0,
+				"mod": 0
+			},
+			"dexterity": {
+				"defaultRollMode": 0,
+				"mod": 0
+			},
+			"intelligence": {
+				"defaultRollMode": 0,
+				"mod": 0
+			},
+			"will": {
+				"defaultRollMode": 0,
+				"mod": 0
+			}
+		}
+	},
+	"prototypeToken": {
+		"name": "Ettercap",
+		"displayName": 50,
+		"actorLink": false,
+		"width": 1,
+		"height": 1,
+		"texture": {
+			"src": "icons/svg/mystery-man.svg",
+			"anchorX": 0.5,
+			"anchorY": 0.5,
+			"offsetX": 0,
+			"offsetY": 0,
+			"fit": "contain",
+			"scaleX": 1,
+			"scaleY": 1,
+			"rotation": 0,
+			"tint": "#ffffff",
+			"alphaThreshold": 0.75
+		},
+		"lockRotation": true,
+		"rotation": 0,
+		"alpha": 1,
+		"disposition": -1,
+		"displayBars": 40,
+		"bar1": {
+			"attribute": "attributes.hp"
+		},
+		"bar2": {
+			"attribute": null
+		},
+		"light": {
+			"negative": false,
+			"priority": 0,
+			"alpha": 0.5,
+			"angle": 360,
+			"bright": 0,
+			"color": null,
+			"coloration": 1,
+			"dim": 0,
+			"attenuation": 0.5,
+			"luminosity": 0.5,
+			"saturation": 0,
+			"contrast": 0,
+			"shadows": 0,
+			"animation": {
+				"type": null,
+				"speed": 5,
+				"intensity": 5,
+				"reverse": false
+			},
+			"darkness": {
+				"min": 0,
+				"max": 1
+			}
+		},
+		"sight": {
+			"enabled": false,
+			"range": 0,
+			"angle": 360,
+			"visionMode": "basic",
+			"color": null,
+			"attenuation": 0.1,
+			"brightness": 0,
+			"saturation": 0,
+			"contrast": 0
+		},
+		"detectionModes": [],
+		"occludable": {
+			"radius": 0
+		},
+		"ring": {
+			"enabled": false,
+			"colors": {
+				"ring": null,
+				"background": null
+			},
+			"effects": 0,
+			"subject": {
+				"scale": 1,
+				"texture": null
+			}
+		},
+		"turnMarker": {
+			"mode": 1,
+			"animation": null,
+			"src": null,
+			"disposition": false
+		},
+		"movementAction": null,
+		"flags": {},
+		"randomImg": false,
+		"appendNumber": false,
+		"prependAdjective": false
+	},
+	"items": [
+		{
+			"name": "Web Garrote.",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "action"
+					},
+					"effects": [
+						{
+							"id": "3c21wnL6rWn5YikO",
+							"type": "damage",
+							"damageType": "bludgeoning",
+							"formula": "1d8+2",
+							"parentContext": null,
+							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
+							"on": {
+								"hit": [
+									{
+										"id": "gfmvkiuQsUQbZaXK",
+										"type": "condition",
+										"condition": "hampered",
+										"parentContext": "hit",
+										"parentNode": "3c21wnL6rWn5YikO"
+									},
+									{
+										"id": "Qt5yk5Gne9Sjso6i",
+										"type": "condition",
+										"condition": "grappled",
+										"parentContext": "hit",
+										"parentNode": "3c21wnL6rWn5YikO"
+									},
+									{
+										"id": "iB2BKnJVGJiX7KYP",
+										"type": "condition",
+										"condition": "silenced",
+										"parentContext": "hit",
+										"parentNode": "3c21wnL6rWn5YikO"
+									},
+									{
+										"id": "PhGoPOuGMduE4eoX",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "3c21wnL6rWn5YikO"
+									}
+								]
+							}
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>1d8+2. On hit: Grappled (escape DC 13), Silenced until target escapes. </p><p>(Silenced. Cannot cast spells or use other abilities that require speaking (e.g. Commander’s Orders).)</p>",
+				"isAttack": true
+			},
+			"_id": "5LBNwGAHn4Jw3c6U",
+			"img": "icons/creatures/webs/webthin-blue.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757563684422
+			}
+		}
+	],
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757309494940,
+		"modifiedTime": 1757309576664,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "R24pjE8ntXNVd1Ah"
+}

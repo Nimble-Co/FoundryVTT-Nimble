@@ -1,0 +1,37 @@
+{
+	"folder": null,
+	"name": "Wild One",
+	"type": "background",
+	"img": "icons/commodities/flowers/blooms-pink.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "skillBonus",
+				"disabled": false,
+				"id": "e8gGmiz25ntJ21JB",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"value": "1",
+				"skills": [
+					"naturecraft"
+				]
+			}
+		],
+		"description": "<p>Whether it is the sticks or flowers in your hair, your smell, or the way you carry yourself, wild creatures are less frightened of you and more willing to aid you. +1 Naturecraft. While Field Resting, roll your Hit Dice with advantage while in the wild.</p><hr><p>+1 Naturecraft [A]</p>"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756615104967,
+		"modifiedTime": 1757283399382,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "LWkH3GfYt0uU8qDj"
+}

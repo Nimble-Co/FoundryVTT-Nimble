@@ -1,0 +1,23 @@
+{
+	"folder": null,
+	"name": "Survivalist",
+	"type": "background",
+	"img": "icons/consumables/vegetable/root-potato-sprout-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>You never run out of your own personal rations. Anything can be food if you try hard enough! Advantage against poison saves. +1 max Hit Die.</p><hr><p>+1 max Hit Die [M]</p>"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756615801964,
+		"modifiedTime": 1757283399382,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "qKknqLqzT7BReZul"
+}

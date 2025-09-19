@@ -1,0 +1,35 @@
+{
+	"folder": null,
+	"name": "Epic Foresight",
+	"type": "boon",
+	"img": "icons/magic/perception/eye-ringed-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "initiativeBonus",
+				"disabled": false,
+				"id": "r6m83LTgaj4N4N5s",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"value": "5"
+			}
+		],
+		"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">Gain +5 to Initiative rolls [A] </span></p><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">and advantage on your first attack each encounter. [M]</span></p>",
+		"boonType": "epic"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757286050065,
+		"modifiedTime": 1757293043817,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "KdQYkgJPBNrYQg1T"
+}

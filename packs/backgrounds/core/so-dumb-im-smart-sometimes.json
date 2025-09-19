@@ -1,0 +1,23 @@
+{
+	"folder": null,
+	"name": "So Dumb I'm Smart Sometimes",
+	"type": "background",
+	"img": "icons/commodities/biological/organ-brain-pink.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>(Req. 0 or negative INT at character creation.) </p><p>Reroll an INT-related skill check, 1/day. </p><p>Reroll a failed INT save with advantage, 1/Safe Rest.</p>"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756619421715,
+		"modifiedTime": 1757283399382,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "BYLPmm5MwufOYWac"
+}
