@@ -32,6 +32,13 @@
 					"on": {
 						"miss": [
 							{
+								"id": "Pmhtpe4dlXnWJXyH",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "miss",
+								"parentNode": "6pEXpZ8znbQP6LiP"
+							},
+							{
 								"id": "jQIcokXHNNnWh5vd",
 								"type": "condition",
 								"condition": "charged",
@@ -107,9 +114,9 @@
 	"_stats": {
 		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.1.8",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757185039799,
+		"modifiedTime": 1758388196844,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "pLUyI3NQBJ6FV1mq"
