@@ -51,8 +51,8 @@
 		"name": "Caerys, the Hollow Star",
 		"displayName": 50,
 		"actorLink": false,
-		"width": 1,
-		"height": 1,
+		"width": 4,
+		"height": 4,
 		"texture": {
 			"src": "icons/svg/mystery-man.svg",
 			"anchorX": 0.5,
