@@ -94,5 +94,6 @@
   "vim.handleKeys": {
     "<C-p>": false,
   },
-  "typescript.tsdk": "node_modules\\typescript\\lib"
+	"typescript.tsdk": "node_modules\\typescript\\lib",
+	"editor.insertSpaces": false
 }

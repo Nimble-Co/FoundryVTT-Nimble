@@ -1,0 +1,36 @@
+{
+	"folder": null,
+	"name": "Battle Hardened",
+	"type": "boon",
+	"img": "icons/magic/defensive/armor-shield-barrier-steel.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "armorClass",
+				"disabled": false,
+				"id": "tdUPglnA581ju9KW",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"formula": "2",
+				"mode": "add"
+			}
+		],
+		"description": "<p>+2 Armor. [A]</p>",
+		"boonType": "major"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757285942275,
+		"modifiedTime": 1757289784196,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "EzG3EBYDZNPKI2AS"
+}

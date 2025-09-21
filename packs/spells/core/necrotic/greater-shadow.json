@@ -1,0 +1,65 @@
+{
+	"folder": null,
+	"name": "Greater Shadow",
+	"type": "spell",
+	"img": "icons/magic/perception/shadow-stealth-eyes-purple.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "Attacked",
+				"quantity": 2,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td><p><strong>2 Actions</strong></p></td></tr><tr><td><p>Summon a 5d12 <strong>Greater Shadow</strong> minion (max 1) adjacent to you. When it dies, it explodes into <strong>5 shadow minions</strong> (see Summon Shadow). Place them anywhere within 8 spaces.</p></td></tr><tr><td><p></p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+1d12 damage, +1 shadow minion on explosion.</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 8
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": []
+		},
+		"school": "necrotic",
+		"tier": 4
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1757222782877,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "Oe41zMBUmMcNGZjE"
+}

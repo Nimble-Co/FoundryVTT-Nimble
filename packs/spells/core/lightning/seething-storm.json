@@ -1,0 +1,97 @@
+{
+	"name": "Seething Storm",
+	"type": "spell",
+	"img": "icons/magic/lightning/bolts-salvo-clouds-sky.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": true,
+			"cost": {
+				"details": "",
+				"quantity": 3,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "minute"
+			},
+			"effects": [
+				{
+					"id": "6pEXpZ8znbQP6LiP",
+					"type": "damage",
+					"damageType": "lightning",
+					"formula": "(1d8*10)+1d8",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": false,
+					"on": {
+						"hit": [
+							{
+								"id": "ODalIwchGK1gVvib",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "6pEXpZ8znbQP6LiP"
+							}
+						]
+					}
+				},
+				{
+					"id": "Z609aBIYuy8DuptT",
+					"type": "condition",
+					"condition": "concentration",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 12,
+				"radius": 1,
+				"shape": "line",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>3 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Concentration:</strong> Up to 1 minute.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Reach:</strong> 4.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>You become a cloud of tempestuous storm. You can fly, move for free 1/round, and attacks against you are made with disadvantage.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><ul><li><p>At the end of each of your turns, strike up to 4 creatures within Reach with a bolt of lightning for [[/r (1d8*10)+1d8]]{d88} damage (a creature can only be struck 1/round).</p></li></ul></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><ul><li><p>+2 Reach and number of bolts each round. Costs 3 actions each round to maintain.</p></li></ul></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>Once you cast this spell, you must Safe Rest for 1 week before you can use it again.</p></td></tr></tbody></table>",
+			"higherLevelEffect": ""
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 12
+			},
+			"reach": {
+				"min": 1,
+				"max": 4
+			},
+			"selected": [
+				"concentration",
+				"reach"
+			]
+		},
+		"school": "lightning",
+		"tier": 9
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1757140999966,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "96VXY2ogu8nW39GI"
+}

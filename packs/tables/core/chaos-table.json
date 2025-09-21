@@ -1,0 +1,461 @@
+{
+	"name": "Chaos Table",
+	"img": "icons/magic/light/explosion-impact-purple.webp",
+	"description": "<h6><strong>Unless otherwise noted, ongoing effects last for up to 1 minute or until Chaos is triggered again.</strong></h6>",
+	"results": [
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				1,
+				1
+			],
+			"_id": "4pclmXhEjiw0PblN",
+			"name": "Elemental Eruption",
+			"img": "icons/magic/fire/explosion-fireball-medium-purple-orange.webp",
+			"description": "<p>Creatures within 6 spaces of you must make a DEX save or take INT d10 fire damage on a failure, half on save. You fail the save.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302352476
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				2,
+				2
+			],
+			"_id": "js3uyAs0CP5zDHJK",
+			"name": "Backfire",
+			"img": "icons/magic/sonic/explosion-shock-wave-teal.webp",
+			"description": "<p>Suffer 1 Wound. The spell you just cast also targets you (or an enemy if it was a beneficial spell).</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302348817
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				3,
+				3
+			],
+			"_id": "54ODa7XWGrOgcU3t",
+			"name": "Aww, Nuts!",
+			"img": "icons/consumables/nuts/acorn-glowing-brown.webp",
+			"description": "<p>You polymorph into a cute squirrel until you take damage. Your TOP priority is to find acorns (squirrels can’t cast spells).</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757301138540
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				4,
+				4
+			],
+			"_id": "nij3W2UjjjPUIKLa",
+			"name": "Summon Aetherlings",
+			"img": "icons/creatures/magical/spirit-undead-ghost-purple.webp",
+			"description": "<p>At the end of each of your turns, summon INT hostile aetherling minions adjacent to you that act immediately after you (size: d6).</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302339406
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				5,
+				5
+			],
+			"_id": "MOnvOMk3UXY82isZ",
+			"name": "Graviturgical Grace",
+			"img": "icons/magic/movement/chevrons-down-yellow.webp",
+			"description": "<p>A random enemy is pulled adjacent to you at the end of each of your turns.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302335794
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				6,
+				6
+			],
+			"_id": "KhUhJYt0kMHOA8rI",
+			"name": "Liquefy Legs",
+			"img": "icons/magic/water/wave-water-blue.webp",
+			"description": "<p>You fall Prone, cannot stand, and your speed becomes 0 while out of water.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302332284
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				7,
+				7
+			],
+			"_id": "JqDvl32ryloMqXYW",
+			"name": "Elemental Entanglement",
+			"img": "icons/magic/control/debuff-energy-snare-green.webp",
+			"description": "<p>An enemy controls 1 Action for you at the start of each of your turns.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302325266
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				8,
+				8
+			],
+			"_id": "7lQcYnM3HOtUFARe",
+			"name": "Ethereal Cocoon",
+			"img": "icons/magic/earth/orb-stone-smoke-teal.webp",
+			"description": "<p>You are enveloped in a magical cocoon until the end of your next turn. You fall Prone, are unable to move or speak, and are immune to damage. You must spend all of your Actions casting cantrips at the nearest creature.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302320819
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				9,
+				9
+			],
+			"_id": "S84omYE48ojDBYoY",
+			"name": "Manastorm",
+			"img": "icons/magic/lightning/bolts-forked-large-orange-purple.webp",
+			"description": "<p>The last spell you cast is cast again for free, against a random target.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302316799
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				10,
+				10
+			],
+			"_id": "CmulzbXuhXjKiJoy",
+			"name": "Reality Warp",
+			"img": "icons/magic/air/air-burst-spiral-pink.webp",
+			"description": "<p>Everywhere around you within 6 spaces is difficult terrain.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302311612
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				11,
+				11
+			],
+			"_id": "MVJnwMvbp3vlSrKC",
+			"name": "Displacement",
+			"img": "icons/magic/movement/trail-streak-zigzag-yellow.webp",
+			"description": "<p>Teleport. [[/r 1d4]]:</p><ol><li><p>The worst place! (GM's choice)</p></li><li><p>UP! 6 spaces (3d6 falling damage)</p></li><li><p>Player’s choice, 6 spaces</p></li><li><p>Player’s choice, 12 spaces</p></li></ol>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302300332
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				12,
+				12
+			],
+			"_id": "DNrUW9tq11q4iQga",
+			"name": "Chaos Step",
+			"img": "icons/magic/movement/trail-streak-pink.webp",
+			"description": "<p>Swap places with any creature you can see.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302395493
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				13,
+				13
+			],
+			"_id": "QZUrzh6DIPDsKojb",
+			"name": "Mindfire",
+			"img": "icons/magic/fire/projectile-fireball-purple.webp",
+			"description": "<p>The dumbest enemy within 16 spaces takes INT d6 psychic damage (ignoring armor), and gains the Smoldering condition.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302425204
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				14,
+				14
+			],
+			"_id": "ddrC2Zb6tCBEu9kT",
+			"name": "Emerge Beautiful",
+			"img": "icons/creatures/abilities/wings-birdlike-blue.webp",
+			"description": "<p>You sprout butterfly wings from your back; gain a flying speed.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302490305
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				15,
+				15
+			],
+			"_id": "IPgASrUp5X3ub10P",
+			"name": "Unbiggen",
+			"img": "icons/environment/creatures/bug-ant-red.webp",
+			"description": "<p>Your size is halved. Gain advantage on Stealth checks, and attacks against you are made with disadvantage.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302752184
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				16,
+				16
+			],
+			"_id": "tSLvOGbLasWBpPvp",
+			"name": "Embiggen",
+			"img": "icons/creatures/magical/construct-iron-stomping-yellow.webp",
+			"description": "<p>Your size is doubled. Gain INT d10 Temp HP and advantage on STR saves instead of disadvantage.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302755741
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				17,
+				17
+			],
+			"_id": "BuzXATnqFCFrx2Ut",
+			"name": "Awakening",
+			"img": "icons/magic/perception/eye-ringed-glow-angry-small-teal.webp",
+			"description": "<p>A 3rd eye appears on your fore head. Gain advantage on the Assess action and all attacks.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302846332
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				18,
+				18
+			],
+			"_id": "rnxCUdgId5d8upRt",
+			"name": "Diamond Skin",
+			"img": "icons/magic/earth/strike-fist-stone-gray.webp",
+			"description": "<p>Multiply your Armor by INT; you can Defend for free each round.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302952446
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				19,
+				19
+			],
+			"_id": "dTqMvbKw83q4wmya",
+			"name": "Mighty Mana",
+			"img": "icons/magic/fire/projectile-meteor-salvo-heavy-teal.webp",
+			"description": "<p>Your spells (including the one that triggered this effect) are empowered and are cast as if you spent 2 additional mana on them (ignoring your natural max).</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757302965659
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				20,
+				20
+			],
+			"_id": "7VRNZ7u1jTndWBl8",
+			"name": "Elemental Overload",
+			"img": "icons/svg/d20-black.svg",
+			"description": "<p>Enemies within 12 spaces of you take INT d8 lightning damage. You regain INT mana at the end of your turns (this mana expires at the end of combat if unused).</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757303088857
+			},
+			"documentUuid": null
+		}
+	],
+	"replacement": true,
+	"displayRoll": true,
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757297320594,
+		"modifiedTime": 1757303076865,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"formula": "1d20",
+	"_id": "88iUQ5pgXNwl72uJ"
+}

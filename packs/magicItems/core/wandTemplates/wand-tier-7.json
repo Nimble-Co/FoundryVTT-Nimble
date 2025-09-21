@@ -1,0 +1,75 @@
+{
+	"folder": null,
+	"name": "Wand - Tier 7",
+	"type": "object",
+	"img": "icons/weapons/wands/wand-carved-pink.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Rarity</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong></span></p><p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Spell level</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> Tier 7</span></p><p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Charges</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> </span></p><p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Recharge:</strong> </span></p><hr><p>Like spell scrolls, these can be used to cast spells without consuming mana and do not require magical ability. Unlike spell scrolls, wands can be recharged and used again. Characters proficient with wands can use one from any spell school, spending only the normal amount of actions to cast the spell.</p><p>Characters not proficient with wands must succeed on a DC 10+spell tier Arcana check to successfully cast the spell. Success or failure, the charge is spent.</p>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "misc",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756840357603,
+		"modifiedTime": 1756946177601,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "yEmt39lpNbZl7Hxb"
+}

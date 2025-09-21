@@ -1,0 +1,34 @@
+{
+	"folder": null,
+	"name": "Devoted Protector",
+	"type": "background",
+	"img": "icons/equipment/shield/heater-wooden-sword-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "maxWounds",
+				"disabled": false,
+				"id": "SjzXlgusu0bgvTmU",
+				"identifier": "",
+				"label": "Devoted Protector",
+				"predicate": {},
+				"priority": 1,
+				"value": "+3"
+			}
+		],
+		"description": "<p>Choose 1 ally in your party. You can survive +3 max Wounds as long as they are nearby. Whenever they take a Wound, you do too.</p><hr><p>+3 Max Wounds [A]</p>"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756598603054,
+		"modifiedTime": 1757283399382,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "fcMLk5Vbhk0Cc9Dv"
+}

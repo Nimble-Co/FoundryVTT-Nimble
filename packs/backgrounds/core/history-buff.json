@@ -1,0 +1,23 @@
+{
+	"folder": null,
+	"name": "History Buff",
+	"type": "background",
+	"img": "icons/sundries/books/book-open-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Advantage on all Lore checks related to knowledge about items, facts, or events that happened more than 100 years ago.</p>"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756617016316,
+		"modifiedTime": 1757283399382,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "N39t0wQbYX5whLhq"
+}

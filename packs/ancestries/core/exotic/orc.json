@@ -1,0 +1,39 @@
+{
+	"name": "Orc",
+	"type": "ancestry",
+	"img": "icons/equipment/shield/heater-wooden-brown-axe.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "skillBonus",
+				"disabled": false,
+				"id": "FDQIIE9eJorL65lg",
+				"identifier": "",
+				"label": "Relentless",
+				"predicate": {},
+				"priority": 1,
+				"value": "",
+				"skills": [
+					"might"
+				]
+			}
+		],
+		"description": "<p>Just when you think you’ve bested a mighty Orc, you’ve merely succeeded in rousing their anger. Engaging in combat with an Orc is no endeavor for the weak-willed. While others may cower before death’s approach, Orcs boldly defy its grasp.</p><hr><p><strong>Relentless</strong> </p><p>When you would drop to 0 HP, you may set your HP to LVL instead, 1/Safe Rest. </p><p>+1 Might. [A]</p><p>You know Goblin if your INT is not negative (but you call it Orcish, of course). [M]</p>",
+		"exotic": true,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756511060189,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "5fC0JgKQhm8QSQoL"
+}

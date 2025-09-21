@@ -1,0 +1,24 @@
+{
+	"name": "Feisty",
+	"type": "boon",
+	"img": "icons/magic/life/heart-area-circle-red-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>+1 max Hit Die. [M]</p>",
+		"boonType": "minor"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757284157169,
+		"modifiedTime": 1757288589207,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "hwsW6FVmgWRpIbgW"
+}

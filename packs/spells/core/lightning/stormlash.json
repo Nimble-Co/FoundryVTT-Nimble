@@ -1,0 +1,114 @@
+{
+	"name": "Stormlash",
+	"type": "spell",
+	"img": "icons/magic/lightning/bolt-strike-clouds-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": true,
+			"cost": {
+				"details": "",
+				"quantity": 2,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "6pEXpZ8znbQP6LiP",
+					"type": "damage",
+					"damageType": "lightning",
+					"formula": "3d8+4",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": false,
+					"on": {
+						"hit": [
+							{
+								"id": "IwddxkKmamMGEjCs",
+								"type": "savingThrow",
+								"savingThrowType": "strength",
+								"parentContext": "hit",
+								"parentNode": "6pEXpZ8znbQP6LiP",
+								"saveType": "strength",
+								"on": {
+									"failedSave": [
+										{
+											"id": "JWrZ7yNewPNQFKf1",
+											"type": "condition",
+											"condition": "dazed",
+											"parentContext": "failedSave",
+											"parentNode": "IwddxkKmamMGEjCs"
+										},
+										{
+											"id": "sJk9jpZjgofUGgng",
+											"type": "condition",
+											"condition": "incapacitated",
+											"parentContext": "failedSave",
+											"parentNode": "IwddxkKmamMGEjCs"
+										}
+									]
+								},
+								"sharedRolls": []
+							},
+							{
+								"id": "ODalIwchGK1gVvib",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "6pEXpZ8znbQP6LiP"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 12,
+				"radius": 1,
+				"shape": "line",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Line: </strong>12</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage: </strong>3d8+4 (ignoring metal armor).</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>Surviving creatures are Dazed on a failed STR save, or Incapacitated instead for 1 of their turns if they fail by 5 or more. Creatures with a large amount of metal (e.g., armor or a longsword) roll with disadvantage.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+4 damage</strong></p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 12
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": []
+		},
+		"school": "lightning",
+		"tier": 3
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1757109186305,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "rVbKA6efN5UQx0M6"
+}

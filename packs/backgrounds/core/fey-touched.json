@@ -1,0 +1,23 @@
+{
+	"folder": null,
+	"name": "Fey Touched",
+	"type": "background",
+	"img": "icons/magic/light/hand-sparks-smoke-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>You take half damage from all magical effects, double from weapons made of metal (before armor is applied).</p>"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756615511849,
+		"modifiedTime": 1757283399382,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "90q2BRCaqWIL7Bxz"
+}
