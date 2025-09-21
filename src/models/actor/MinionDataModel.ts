@@ -20,6 +20,11 @@ const MinionSchema = () => ({
 			new fields.StringField({ required: true, nullable: false }),
 			{ required: true, nullable: false, initial: [] },
 		),
+		hp: new fields.SchemaField({
+			max: new fields.NumberField({ required: true, initial: 1, nullable: false }),
+			temp: new fields.NumberField({ required: true, initial: 0, nullable: false }),
+			value: new fields.NumberField({ required: true, initial: 1, nullable: false }),
+		}),
 		sizeCategory: new fields.StringField({
 			required: true,
 			nullable: false,
