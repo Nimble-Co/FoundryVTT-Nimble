@@ -1,0 +1,75 @@
+{
+	"folder": null,
+	"name": "Wand of Dread Visage",
+	"type": "object",
+	"img": "icons/weapons/wands/wand-gem-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "When attacked",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": true
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Rarity</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> Uncommon</span></p><p><strong>Spell Level</strong>: Tier 2</p><p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Charges</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> 2</span></p><p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Recharge</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> Place the wand in a freshly slain corpse. Leave it until only bones remain.</span></p><hr><p><strong>Actions:</strong> 1</p><p>Reaction: When attacked, Defend for free. Melee attackers are Frightened of you and suffer [[/r 1d12]] damage if they attack you this round.</p>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "misc",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756840335321,
+		"modifiedTime": 1756934071458,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "IwuNoIFhINDZmrGg"
+}

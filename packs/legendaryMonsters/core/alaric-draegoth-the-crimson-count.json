@@ -1,0 +1,540 @@
+{
+	"name": "Alaric Draegoth, the Crimson Count",
+	"type": "soloMonster",
+	"folder": null,
+	"img": "systems/nimble/assets/legendaryMonsterImages/core/alaric.webp",
+	"system": {
+		"attributes": {
+			"armor": "none",
+			"damageResistances": [],
+			"damageVulnerabilities": [],
+			"damageImmunities": [],
+			"hp": {
+				"max": 320,
+				"temp": 0,
+				"value": 320
+			},
+			"sizeCategory": "medium"
+		},
+		"description": "",
+		"details": {
+			"creatureType": "Vampire Lord",
+			"level": "16"
+		},
+		"bloodiedEffect": {
+			"description": "<p>At 160 HP, gain Mistform. Not vulnerable to radiant. Bat Decoy. Whenever Alaric would take damage, instead first swap places with a bat minion, 1/round.</p>"
+		},
+		"lastStandEffect": {
+			"description": "<p>Alaric is dying! 160 more damage and he dies. Until then, his Sanguine Cloak, attacks, and bats roll d20s instead of d10s.</p>"
+		},
+		"attackSequence": "<p>After each hero's turn, summon 1 Blood Bat minion (d10) within 8 spaces, then choose 1:</p>",
+		"savingThrows": {
+			"strength": {
+				"defaultRollMode": 2,
+				"mod": 0
+			},
+			"dexterity": {
+				"defaultRollMode": 2,
+				"mod": 0
+			},
+			"intelligence": {
+				"defaultRollMode": 2,
+				"mod": 0
+			},
+			"will": {
+				"defaultRollMode": 2,
+				"mod": 0
+			}
+		}
+	},
+	"prototypeToken": {
+		"name": "Alaric Draegoth, the Crimson Count",
+		"displayName": 50,
+		"actorLink": false,
+		"width": 1,
+		"height": 1,
+		"texture": {
+			"src": "icons/svg/mystery-man.svg",
+			"anchorX": 0.5,
+			"anchorY": 0.5,
+			"offsetX": 0,
+			"offsetY": 0,
+			"fit": "contain",
+			"scaleX": 1,
+			"scaleY": 1,
+			"rotation": 0,
+			"tint": "#ffffff",
+			"alphaThreshold": 0.75
+		},
+		"lockRotation": true,
+		"rotation": 0,
+		"alpha": 1,
+		"disposition": -1,
+		"displayBars": 40,
+		"bar1": {
+			"attribute": "attributes.hp"
+		},
+		"bar2": {
+			"attribute": null
+		},
+		"light": {
+			"negative": false,
+			"priority": 0,
+			"alpha": 0.5,
+			"angle": 360,
+			"bright": 0,
+			"color": null,
+			"coloration": 1,
+			"dim": 0,
+			"attenuation": 0.5,
+			"luminosity": 0.5,
+			"saturation": 0,
+			"contrast": 0,
+			"shadows": 0,
+			"animation": {
+				"type": null,
+				"speed": 5,
+				"intensity": 5,
+				"reverse": false
+			},
+			"darkness": {
+				"min": 0,
+				"max": 1
+			}
+		},
+		"sight": {
+			"enabled": false,
+			"range": 0,
+			"angle": 360,
+			"visionMode": "basic",
+			"color": null,
+			"attenuation": 0.1,
+			"brightness": 0,
+			"saturation": 0,
+			"contrast": 0
+		},
+		"detectionModes": [],
+		"occludable": {
+			"radius": 0
+		},
+		"ring": {
+			"enabled": false,
+			"colors": {
+				"ring": null,
+				"background": null
+			},
+			"effects": 0,
+			"subject": {
+				"scale": 1,
+				"texture": null
+			}
+		},
+		"turnMarker": {
+			"mode": 1,
+			"animation": null,
+			"src": null,
+			"disposition": false
+		},
+		"movementAction": null,
+		"flags": {},
+		"randomImg": false,
+		"appendNumber": false,
+		"prependAdjective": false
+	},
+	"items": [
+		{
+			"name": "Sanguine Cloak",
+			"type": "monsterFeature",
+			"_id": "rH0UhF5lWRdv7FTg",
+			"img": "icons/equipment/back/cloak-collared-red-gold.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>(1/turn) Deal [[/r 1d10]] necrotic damage whenever you are hit, the attack is reduced by this amount.</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757807150226,
+				"modifiedTime": 1757807308525,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Sunscorn",
+			"type": "monsterFeature",
+			"_id": "GHplzXUDPPuk7j5l",
+			"img": "icons/magic/light/beam-rays-orange.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Vulnerable to radiant. After taking radiant damage, use Beguile as a Reaction, they roll with disadvantage.</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757807352153,
+				"modifiedTime": 1757807448297,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Blood Bat",
+			"type": "monsterFeature",
+			"_id": "GcbogoFZvEQ65Mmq",
+			"img": "icons/creatures/mammals/bat-movement-flying-purple.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero’s turn, summon 1 blood bat minion (d10) within 8 spaces, then choose 1 action</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757807555775,
+				"modifiedTime": 1757807636422,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Ebonfang",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [
+						{
+							"id": "cQYL8RTdiT3Qn4Sr",
+							"type": "damage",
+							"damageType": "slashing",
+							"formula": "1d10+15",
+							"parentContext": null,
+							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
+							"on": {
+								"hit": [
+									{
+										"id": "3WDhouiKqzL4ZjL0",
+										"type": "condition",
+										"condition": "bloodied",
+										"parentContext": "hit",
+										"parentNode": "cQYL8RTdiT3Qn4Sr"
+									},
+									{
+										"id": "u81tJyjvCH2uXpv9",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "cQYL8RTdiT3Qn4Sr"
+									}
+								]
+							}
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Deal 1d10+15 damage, your target is considered Bloodied for 1 round. Fly 8 before or after attacking.</p>",
+				"isAttack": true
+			},
+			"_id": "pm7AVHiCb0C7lHqK",
+			"img": "icons/weapons/swords/greatsword-crossguard-flanged-red.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757807649306,
+				"modifiedTime": 1757808063171,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Beguile",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [
+						{
+							"id": "aFniZwcm1eNQhnHK",
+							"type": "savingThrow",
+							"savingThrowType": "strength",
+							"parentContext": null,
+							"parentNode": null,
+							"saveType": "will",
+							"saveDC": "18",
+							"on": {},
+							"sharedRolls": []
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>If no creature is Beguiled, Beguile a target on a failed DC 18 WIL save (w/ disadvantage if Bloodied). </p><p><strong>Beguiled.</strong> Dazed. Cannot Defend or allow anyone to Interpose for you. Damage ends.</p>",
+				"isAttack": true
+			},
+			"_id": "49Lf23xPbGSi5MTR",
+			"img": "icons/magic/control/debuff-energy-hold-pink.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757807844354,
+				"modifiedTime": 1757810387442,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Beckon & Bite",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [
+						{
+							"id": "07fst3GTNWcE7DmN",
+							"type": "damage",
+							"damageType": "piercing",
+							"formula": "2d10+30",
+							"parentContext": null,
+							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
+							"on": {
+								"hit": [
+									{
+										"id": "KkeJewYy1khsshFx",
+										"type": "note",
+										"noteType": "warning",
+										"text": "Take 1 Wound!",
+										"parentContext": "hit",
+										"parentNode": "07fst3GTNWcE7DmN"
+									},
+									{
+										"id": "2mgiqu9DKdUdBtrr",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "07fst3GTNWcE7DmN"
+									}
+								]
+							}
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Move a Beguiled creature adjacent to you and bite them: 2d10+30 damage and 1 Wound.</p>",
+				"isAttack": true
+			},
+			"_id": "NMZj4KGiElpDARFM",
+			"img": "icons/creatures/abilities/mouth-teeth-human.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757808054786,
+				"modifiedTime": 1757808218760,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		}
+	],
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1757363288011,
+		"modifiedTime": 1757809910109,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "mrYNYPRzZ13prqSg"
+}

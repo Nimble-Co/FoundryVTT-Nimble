@@ -1,0 +1,75 @@
+{
+	"folder": null,
+	"name": "Elderwyrm’s Majesty",
+	"type": "object",
+	"img": "icons/weapons/wands/wand-gem-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 5,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Rarity</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> Legendary</span></p><p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Spell level</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> Tier 9</span></p><p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Charges</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> 1</span></p><p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Recharge</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> Give an ancient dragon a gift it truly desires.</span></p><hr><p><strong>Actions:</strong> 5</p><p>Transform into a Huge dragon. Gain 3 actions, a fly speed of 12, LVL Armor, 10×LVL temp HP, and:</p><ul><li><p>Tooth & Claw. Action: (Reach 2) [[/r 1d20+@level]]{1d20+LVL} damage (ignoring armor). Inflicts smoldering.</p></li><li><p>Immolating Breath. 2 Actions: (Reach: Cone 8). DC 20 DEX save, [[/r (@key)d20]]{KEY d20} damage, half on save. Smoldering targets fail.</p></li></ul><p>You can maintain this form for as long as the temp HP granted by this spell remain (max. 10 minutes). When it ends, you drop to 0 HP.</p>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "misc",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756840335321,
+		"modifiedTime": 1757024084891,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "kXytTrvhKd0HYiMw"
+}

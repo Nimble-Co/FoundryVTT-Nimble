@@ -1,0 +1,45 @@
+{
+	"folder": null,
+	"name": "Fearless",
+	"type": "background",
+	"img": "icons/environment/people/charge.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "initiativeBonus",
+				"disabled": false,
+				"id": "jN8kRbadqNmZRcH4",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"value": "1"
+			},
+			{
+				"type": "armorClass",
+				"disabled": false,
+				"id": "2mMkyOd8387fwXcT",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"formula": "-1",
+				"mode": "add"
+			}
+		],
+		"description": "<p>You are immune to the Frightened condition. +1 Initiative. –1 Armor.</p><hr><p>+1 Initiative [A]</p><p>-1 Armor [A]</p>"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756619062970,
+		"modifiedTime": 1757283399382,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "880Dzk9FfksUwlCB"
+}

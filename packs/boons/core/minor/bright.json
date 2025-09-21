@@ -1,0 +1,24 @@
+{
+	"name": "Bright",
+	"type": "boon",
+	"img": "icons/sundries/lights/lantern-iron-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>+1 max mana. [M]</p>",
+		"boonType": "minor"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757284157169,
+		"modifiedTime": 1757286739967,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "adoGK8eg8Rom81kZ"
+}

@@ -1,0 +1,23 @@
+{
+	"folder": null,
+	"name": "Accidental Acrobat",
+	"type": "background",
+	"img": "icons/creatures/amphibians/frog-water-teal.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>(Req. 0 or negative DEX at character creation.) Whenever you fail a DEX-related roll (e.g., DEX attack, DEX save, Stealth check, Finesse check), you may roll again. If you still fail, the consequences are BAD.</p>"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756620356717,
+		"modifiedTime": 1757283399382,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "f0NwBPv4wuUA8FlA"
+}

@@ -1,0 +1,23 @@
+{
+	"folder": null,
+	"name": "Academy Dropout",
+	"type": "background",
+	"img": "icons/magic/light/projectile-beam-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>School just isn’t for everyone! You learn by experience in the real world (or at least that’s what you tell yourself). Learn any 1 Utility Spell.</p>"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756605390885,
+		"modifiedTime": 1757283399382,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "clmBGzCc3KMXgEdU"
+}

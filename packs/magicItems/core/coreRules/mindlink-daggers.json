@@ -1,0 +1,100 @@
+{
+	"folder": null,
+	"name": "Mindlink Daggers",
+	"type": "object",
+	"img": "icons/weapons/daggers/dagger-ritual-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "64EYZhFwL5NYkuyo",
+					"type": "damage",
+					"damageType": "piercing",
+					"formula": "1d4+@dexterity",
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "u0omD1sIFAaQiRzN",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "64EYZhFwL5NYkuyo"
+							}
+						]
+					},
+					"canCrit": true,
+					"canMiss": true
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>Rarity:</strong> Rare</span></p><p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>Damage:</strong> 1d4+DEX Piercing</span></p><hr><p>A matched pair of slender, silver daggers with intertwining runes. Enables the sharing of thoughts between any who holds (or is stabbed by) one.</p>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "weapon",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 2,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"light",
+				"thrown"
+			],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756840141542,
+		"modifiedTime": 1756956458960,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "3tFYs9Jq7fVcOhkA"
+}

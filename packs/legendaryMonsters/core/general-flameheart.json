@@ -1,0 +1,405 @@
+{
+	"name": "General Flameheart",
+	"type": "soloMonster",
+	"folder": null,
+	"img": "systems/nimble/assets/legendaryMonsterImages/core/flameheart.webp",
+	"system": {
+		"attributes": {
+			"armor": "heavy",
+			"damageResistances": [],
+			"damageVulnerabilities": [],
+			"damageImmunities": [],
+			"hp": {
+				"max": 175,
+				"temp": 0,
+				"value": 175
+			},
+			"sizeCategory": "huge"
+		},
+		"description": "",
+		"details": {
+			"creatureType": "Flame Titan",
+			"level": "8"
+		},
+		"bloodiedEffect": {
+			"description": "<p>At 87 HP, on his next turn, he uses Molten Fury a number of times equal to half the number of heroes (rounded up).</p>"
+		},
+		"lastStandEffect": {
+			"description": "<p>Flameheart is dying! 80 more damage and he dies. Until then, the area of his attacks increase to a 3×3 square.</p>"
+		},
+		"attackSequence": "<p>After each Hero's turn, choose one:</p>",
+		"savingThrows": {
+			"strength": {
+				"defaultRollMode": 1,
+				"mod": 0
+			},
+			"dexterity": {
+				"defaultRollMode": 0,
+				"mod": 0
+			},
+			"intelligence": {
+				"defaultRollMode": 0,
+				"mod": 0
+			},
+			"will": {
+				"defaultRollMode": 1,
+				"mod": 0
+			}
+		}
+	},
+	"prototypeToken": {
+		"name": "General Flameheart",
+		"displayName": 50,
+		"actorLink": false,
+		"width": 3,
+		"height": 3,
+		"texture": {
+			"src": "icons/svg/mystery-man.svg",
+			"anchorX": 0.5,
+			"anchorY": 0.5,
+			"offsetX": 0,
+			"offsetY": 0,
+			"fit": "contain",
+			"scaleX": 1,
+			"scaleY": 1,
+			"rotation": 0,
+			"tint": "#ffffff",
+			"alphaThreshold": 0.75
+		},
+		"lockRotation": true,
+		"rotation": 0,
+		"alpha": 1,
+		"disposition": -1,
+		"displayBars": 40,
+		"bar1": {
+			"attribute": "attributes.hp"
+		},
+		"bar2": {
+			"attribute": null
+		},
+		"light": {
+			"negative": false,
+			"priority": 0,
+			"alpha": 0.5,
+			"angle": 360,
+			"bright": 0,
+			"color": null,
+			"coloration": 1,
+			"dim": 0,
+			"attenuation": 0.5,
+			"luminosity": 0.5,
+			"saturation": 0,
+			"contrast": 0,
+			"shadows": 0,
+			"animation": {
+				"type": null,
+				"speed": 5,
+				"intensity": 5,
+				"reverse": false
+			},
+			"darkness": {
+				"min": 0,
+				"max": 1
+			}
+		},
+		"sight": {
+			"enabled": false,
+			"range": 0,
+			"angle": 360,
+			"visionMode": "basic",
+			"color": null,
+			"attenuation": 0.1,
+			"brightness": 0,
+			"saturation": 0,
+			"contrast": 0
+		},
+		"detectionModes": [],
+		"occludable": {
+			"radius": 0
+		},
+		"ring": {
+			"enabled": false,
+			"colors": {
+				"ring": null,
+				"background": null
+			},
+			"effects": 0,
+			"subject": {
+				"scale": 1,
+				"texture": null
+			}
+		},
+		"turnMarker": {
+			"mode": 1,
+			"animation": null,
+			"src": null,
+			"disposition": false
+		},
+		"movementAction": null,
+		"flags": {},
+		"randomImg": false,
+		"appendNumber": false,
+		"prependAdjective": false
+	},
+	"items": [
+		{
+			"name": "Cinder Armor.",
+			"type": "monsterFeature",
+			"_id": "G43UlStv6c0Z8eX0",
+			"img": "icons/equipment/chest/breastplate-layered-gilded-orange.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Immune to fire. When damaged, deal 5 fire damage to all adjacent creatures.</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757823683920
+			}
+		},
+		{
+			"name": "Extinguish Flame.",
+			"type": "monsterFeature",
+			"_id": "q7MgfclRQ5WmvAYL",
+			"img": "icons/magic/water/pseudopod-swirl-blue.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Cold or radiant crits extinguish all areas ignited by Molten Fury and suppress Cinder Armor for 1 turn.</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757823761680
+			}
+		},
+		{
+			"name": "Inferno Cleave.",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": true,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "action"
+					},
+					"effects": [
+						{
+							"id": "RLtD32mWcw2KvHVQ",
+							"type": "damage",
+							"damageType": "fire",
+							"formula": "2d10+10",
+							"parentContext": null,
+							"parentNode": null,
+							"on": {
+								"hit": [
+									{
+										"id": "xLxVMCYhLoE8z5XU",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "RLtD32mWcw2KvHVQ"
+									}
+								]
+							},
+							"canCrit": true,
+							"canMiss": true
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "square",
+						"width": 2
+					}
+				},
+				"description": "<p>Move 8 then strike a 2×2 square area for 2d10+10 fire damage.</p>",
+				"isAttack": true
+			},
+			"_id": "wZ2XUxCUeWVdEwZu",
+			"img": "icons/magic/fire/dagger-rune-enchant-flame-strong-red.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757823789232
+			}
+		},
+		{
+			"name": "Molten Fury.",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": true,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "action"
+					},
+					"effects": [
+						{
+							"id": "G4bAlvlvOY8jsyfz",
+							"type": "damage",
+							"damageType": "fire",
+							"formula": "2d10+10",
+							"parentContext": null,
+							"parentNode": null,
+							"on": {
+								"hit": [
+									{
+										"id": "LQGsLV8jKzJ1A4YW",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "G4bAlvlvOY8jsyfz"
+									}
+								]
+							},
+							"canCrit": true,
+							"canMiss": true
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 2,
+						"shape": "square",
+						"width": 2
+					}
+				},
+				"description": "<p>Lob a molten fireball at the furthest hero not already in the flames, igniting a 2×2 square area. Creatures there take 2d10+10 damage; and another 10 damage at the end of each of their turns if they remain in the area.</p>",
+				"isAttack": true
+			},
+			"_id": "ngX5c4NLFel44iPI",
+			"img": "icons/magic/fire/projectile-fireball-smoke-large-orange.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757823846058
+			}
+		}
+	],
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1757363288011,
+		"modifiedTime": 1757824137786,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "JZ9lUy4rwuTBCa6t"
+}

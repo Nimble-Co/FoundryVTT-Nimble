@@ -1,0 +1,23 @@
+{
+	"folder": null,
+	"name": "What? I've Been Around",
+	"type": "background",
+	"img": "icons/skills/social/diplomacy-handshake.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>1/per location (or at the GM’s discretion). You happen to know JUST the person who has the information you’re looking for, or could get you out of a jam, and… Roll [[/r 1d20]]:</p><ul><li><p>1–5. They want you DEAD.</p></li><li><p>6–12. You owe them money.</p></li><li><p>13–19. They can be convinced to help you..</p></li><li><p>20. They are your biggest fan/are madly in love with you.</p></li></ul>"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756614750502,
+		"modifiedTime": 1757283399382,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "k4RUe5UyKDVveWc0"
+}

@@ -1,0 +1,23 @@
+{
+	"folder": null,
+	"name": "Acrobat",
+	"type": "background",
+	"img": "icons/skills/movement/feet-winged-boots-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Can be thrown by a larger ally, REALLY far. Half damage from falling and forced movement.</p>"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756614871027,
+		"modifiedTime": 1757283399382,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "FfbvkpxgIPfS01Sf"
+}

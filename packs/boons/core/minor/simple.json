@@ -1,0 +1,24 @@
+{
+	"name": "Simple",
+	"type": "boon",
+	"img": "icons/magic/control/debuff-energy-hold-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>+1 VS Charm effects. [M]</p>",
+		"boonType": "minor"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757284157169,
+		"modifiedTime": 1757288806434,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "sg8vNCOuUk4jwwNX"
+}

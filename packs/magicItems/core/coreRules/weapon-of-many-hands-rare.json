@@ -1,0 +1,75 @@
+{
+	"folder": null,
+	"name": "Weapon of Many Hands - Rare",
+	"type": "object",
+	"img": "icons/skills/melee/hand-grip-staff-yellow-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<p><strong>Rarity:</strong> Rare</p><p><strong>Damage:</strong> </p><hr><p>While equipped, this weapon grants the wearer two additional arms. The wearer can use the extra arms to perform any task their normal hands can do (wield equipment, Grapple enemies, climb, etc.) but does not allow the wearer to perform actions any faster. These extra appendages may be horrifying to people in polite society.</p>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "weapon",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756840141542,
+		"modifiedTime": 1757021689281,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "jz2iteYOJdO4F4LP"
+}

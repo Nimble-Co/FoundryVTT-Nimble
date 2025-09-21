@@ -1,0 +1,600 @@
+{
+	"name": "Gloomwing the Cruel",
+	"type": "soloMonster",
+	"folder": null,
+	"img": "systems/nimble/assets/legendaryMonsterImages/core/gloomwing.webp",
+	"system": {
+		"attributes": {
+			"armor": "heavy",
+			"damageResistances": [],
+			"damageVulnerabilities": [],
+			"damageImmunities": [],
+			"hp": {
+				"max": 320,
+				"temp": 0,
+				"value": 320
+			},
+			"sizeCategory": "huge"
+		},
+		"description": "",
+		"details": {
+			"creatureType": "Rot Dragon",
+			"level": "15"
+		},
+		"bloodiedEffect": {
+			"description": "<p>At 160 HP Gloomwing’s Rot Breath recharges.</p>"
+		},
+		"lastStandEffect": {
+			"description": "<p>Gloomwing is dying! 150 more damage and he dies. Until then, the damage and range of His Aura of Rot is doubled.</p>"
+		},
+		"attackSequence": "<p>After each hero’s turn, choose one:</p>",
+		"savingThrows": {
+			"strength": {
+				"defaultRollMode": 2,
+				"mod": 0
+			},
+			"dexterity": {
+				"defaultRollMode": 2,
+				"mod": 0
+			},
+			"intelligence": {
+				"defaultRollMode": 2,
+				"mod": 0
+			},
+			"will": {
+				"defaultRollMode": 2,
+				"mod": 0
+			}
+		}
+	},
+	"prototypeToken": {
+		"name": "Gloomwing the Cruel",
+		"displayName": 50,
+		"actorLink": false,
+		"width": 3,
+		"height": 3,
+		"texture": {
+			"src": "icons/svg/mystery-man.svg",
+			"anchorX": 0.5,
+			"anchorY": 0.5,
+			"offsetX": 0,
+			"offsetY": 0,
+			"fit": "contain",
+			"scaleX": 1,
+			"scaleY": 1,
+			"rotation": 0,
+			"tint": "#ffffff",
+			"alphaThreshold": 0.75
+		},
+		"lockRotation": true,
+		"rotation": 0,
+		"alpha": 1,
+		"disposition": -1,
+		"displayBars": 40,
+		"bar1": {
+			"attribute": "attributes.hp"
+		},
+		"bar2": {
+			"attribute": null
+		},
+		"light": {
+			"negative": false,
+			"priority": 0,
+			"alpha": 0.5,
+			"angle": 360,
+			"bright": 0,
+			"color": null,
+			"coloration": 1,
+			"dim": 0,
+			"attenuation": 0.5,
+			"luminosity": 0.5,
+			"saturation": 0,
+			"contrast": 0,
+			"shadows": 0,
+			"animation": {
+				"type": null,
+				"speed": 5,
+				"intensity": 5,
+				"reverse": false
+			},
+			"darkness": {
+				"min": 0,
+				"max": 1
+			}
+		},
+		"sight": {
+			"enabled": false,
+			"range": 0,
+			"angle": 360,
+			"visionMode": "basic",
+			"color": null,
+			"attenuation": 0.1,
+			"brightness": 0,
+			"saturation": 0,
+			"contrast": 0
+		},
+		"detectionModes": [],
+		"occludable": {
+			"radius": 0
+		},
+		"ring": {
+			"enabled": false,
+			"colors": {
+				"ring": null,
+				"background": null
+			},
+			"effects": 0,
+			"subject": {
+				"scale": 1,
+				"texture": null
+			}
+		},
+		"turnMarker": {
+			"mode": 1,
+			"animation": null,
+			"src": null,
+			"disposition": false
+		},
+		"movementAction": null,
+		"flags": {},
+		"randomImg": false,
+		"appendNumber": false,
+		"prependAdjective": false
+	},
+	"items": [
+		{
+			"name": "Aura of Rot",
+			"type": "monsterFeature",
+			"_id": "XZdqCZtoUxFRfwjT",
+			"img": "icons/magic/acid/dissolve-pool-bubbles.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Creatures within 6 spaces take 5 necrotic damage at the end of their turns.</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757823954653,
+				"modifiedTime": 1757824021736,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Light Sensitivity",
+			"type": "monsterFeature",
+			"_id": "vWkTDgOoFSqNVE59",
+			"img": "icons/magic/light/beam-explosion-orange.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Radiant damage suppresses Aura of Rot until the end of the next hero’s turn.</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757824026066,
+				"modifiedTime": 1757824085548,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Rot Breath (1 use)",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": true,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [
+						{
+							"id": "cdMn884JTaizvyNP",
+							"type": "savingThrow",
+							"savingThrowType": "strength",
+							"parentContext": null,
+							"parentNode": null,
+							"saveType": "dexterity",
+							"saveDC": "17",
+							"sharedRolls": [
+								{
+									"id": "VMlxi2Mnt3WN00qh",
+									"type": "damage",
+									"damageType": "necrotic",
+									"formula": "8d10",
+									"parentContext": "sharedRolls",
+									"parentNode": "cdMn884JTaizvyNP",
+									"on": {
+										"failedSave": [
+											{
+												"id": "oWbb17FcfRcjUmOM",
+												"type": "damageOutcome",
+												"outcome": "fullDamage",
+												"parentContext": "failedSave",
+												"parentNode": "VMlxi2Mnt3WN00qh"
+											}
+										],
+										"passedSave": [
+											{
+												"id": "zeJ1yofGxerBizGt",
+												"type": "damageOutcome",
+												"outcome": "halfDamage",
+												"parentContext": "passedSave",
+												"parentNode": "VMlxi2Mnt3WN00qh"
+											}
+										]
+									}
+								}
+							],
+							"on": {}
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 8,
+						"radius": 1,
+						"shape": "cone",
+						"width": 1
+					}
+				},
+				"description": "<p>Fly 10, then (Cone 8) DC 17 DEX save or 8d10 necrotic, half on save.</p>",
+				"isAttack": true
+			},
+			"_id": "l74D3jyZAvvmnjwN",
+			"img": "icons/magic/air/fog-gas-smoke-dense-green.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757824089749,
+				"modifiedTime": 1757824927748,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Bite",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [
+						{
+							"id": "1yb9MSLKYNSB1QyZ",
+							"type": "damage",
+							"damageType": "piercing",
+							"formula": "3d10",
+							"parentContext": null,
+							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
+							"on": {
+								"hit": [
+									{
+										"id": "XRHnZGUNfC9e3MR8",
+										"type": "note",
+										"noteType": "warning",
+										"text": "IF DAMAGED: \nCruelty’s Gift: Healing is halved and Vulnerable to necrotic damage. Healing ends.",
+										"parentContext": "hit",
+										"parentNode": "1yb9MSLKYNSB1QyZ"
+									},
+									{
+										"id": "4G0UObzkhcItWCcR",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "1yb9MSLKYNSB1QyZ"
+									}
+								]
+							}
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>(Reach 2) Move 6, then 3d10. On damage: Cruelty’s Gift.</p><p><strong>(Cruelty’s Gift:</strong> Healing is halved and Vulnerable to necrotic damage. Healing ends.)</p>",
+				"isAttack": true
+			},
+			"_id": "aTN2JXVETU0GKQYl",
+			"img": "icons/creatures/abilities/mouth-teeth-sharp.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757824933273,
+				"modifiedTime": 1757825117606,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Claws",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [
+						{
+							"id": "uR1oCwQwmnvr6O3c",
+							"type": "damage",
+							"damageType": "slashing",
+							"formula": "3d10",
+							"parentContext": null,
+							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
+							"on": {
+								"hit": [
+									{
+										"id": "O4pGST3EeXUry7BX",
+										"type": "damage",
+										"damageType": "necrotic",
+										"formula": "10",
+										"parentContext": "hit",
+										"parentNode": "uR1oCwQwmnvr6O3c"
+									},
+									{
+										"id": "9Pz3zqmQTOQDYoPS",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "uR1oCwQwmnvr6O3c"
+									}
+								]
+							}
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>(Reach 2) 3d10 slashing +10 necrotic.</p>",
+				"isAttack": true
+			},
+			"_id": "r4WCZtq4bx1srya9",
+			"img": "icons/creatures/claws/claw-curved-jagged-gray.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757825142349,
+				"modifiedTime": 1757825376310,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"name": "Tail",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [
+						{
+							"id": "R7zJHvHucNdN76x6",
+							"type": "damage",
+							"damageType": "bludgeoning",
+							"formula": "1d10",
+							"parentContext": null,
+							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
+							"on": {
+								"hit": [
+									{
+										"id": "DLd43OjPsflxIYJO",
+										"type": "note",
+										"noteType": "warning",
+										"text": "Knocked back spaces equal to damage dealt.",
+										"parentContext": "hit",
+										"parentNode": "R7zJHvHucNdN76x6"
+									},
+									{
+										"id": "PSN81xMiyVBHYkOW",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "R7zJHvHucNdN76x6"
+									}
+								]
+							}
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>(Reach 4) 1d10, and knocked back that many spaces.</p>",
+				"isAttack": true
+			},
+			"_id": "7oI0VE1lQYamCLTF",
+			"img": "icons/commodities/biological/stinger-insect-grey.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"createdTime": 1757825226275,
+				"modifiedTime": 1757825326275,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		}
+	],
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1757363288011,
+		"modifiedTime": 1757824724394,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "n6suthbw9UWnOpex"
+}

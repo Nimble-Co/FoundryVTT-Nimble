@@ -1,0 +1,67 @@
+{
+	"folder": null,
+	"name": "Tempest’s Command",
+	"type": "spell",
+	"img": "icons/magic/sonic/explosion-impact-shock-wave.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td><p><strong>1 Action</strong></p></td></tr><tr><td><p><strong>Dispel</strong> a minor magical effect, or temporarily suppress a stronger one (the more powerful an enchantment, the shorter the duration). OR:</p></td></tr><tr><td><p><strong>Voice of Thunder.</strong> Your eyes glow and your voice is amplified to a booming, thunder-like volume for 1 min.</p></td></tr></tbody></table>",
+			"higherLevelEffect": ""
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 4
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [
+				"utilitySpell"
+			]
+		},
+		"school": "lightning",
+		"tier": 0
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1757109246719,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "nfGGcIqpeT1GVIw4"
+}

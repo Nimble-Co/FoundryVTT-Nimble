@@ -1,0 +1,483 @@
+{
+	"name": "Florindris, Bane of the Forest",
+	"type": "soloMonster",
+	"folder": null,
+	"img": "systems/nimble/assets/legendaryMonsterImages/core/florindris.webp",
+	"system": {
+		"attributes": {
+			"armor": "medium",
+			"damageResistances": [],
+			"damageVulnerabilities": [],
+			"damageImmunities": [],
+			"hp": {
+				"max": 200,
+				"temp": 0,
+				"value": 200
+			},
+			"sizeCategory": "large"
+		},
+		"description": "",
+		"details": {
+			"creatureType": "Floral Dragon",
+			"level": "7"
+		},
+		"bloodiedEffect": {
+			"description": "<p>At 100 HP, enemies within Reach 12 gain Thornblight, and Petal Storm recharges, .</p>"
+		},
+		"lastStandEffect": {
+			"description": "<p>Florindris is dying! 70 more damage and she dies. Until then, Aura of Wind and Gust move creatures twice as far.</p>"
+		},
+		"attackSequence": "<p>After each hero’s turn, choose one:</p>",
+		"savingThrows": {
+			"strength": {
+				"defaultRollMode": 1,
+				"mod": 0
+			},
+			"dexterity": {
+				"defaultRollMode": 1,
+				"mod": 0
+			},
+			"intelligence": {
+				"defaultRollMode": 1,
+				"mod": 0
+			},
+			"will": {
+				"defaultRollMode": 1,
+				"mod": 0
+			}
+		}
+	},
+	"prototypeToken": {
+		"name": "Florindris, Bane of the Forest",
+		"displayName": 50,
+		"actorLink": false,
+		"width": 2,
+		"height": 2,
+		"texture": {
+			"src": "icons/svg/mystery-man.svg",
+			"anchorX": 0.5,
+			"anchorY": 0.5,
+			"offsetX": 0,
+			"offsetY": 0,
+			"fit": "contain",
+			"scaleX": 1,
+			"scaleY": 1,
+			"rotation": 0,
+			"tint": "#ffffff",
+			"alphaThreshold": 0.75
+		},
+		"lockRotation": true,
+		"rotation": 0,
+		"alpha": 1,
+		"disposition": -1,
+		"displayBars": 40,
+		"bar1": {
+			"attribute": "attributes.hp"
+		},
+		"bar2": {
+			"attribute": null
+		},
+		"light": {
+			"negative": false,
+			"priority": 0,
+			"alpha": 0.5,
+			"angle": 360,
+			"bright": 0,
+			"color": null,
+			"coloration": 1,
+			"dim": 0,
+			"attenuation": 0.5,
+			"luminosity": 0.5,
+			"saturation": 0,
+			"contrast": 0,
+			"shadows": 0,
+			"animation": {
+				"type": null,
+				"speed": 5,
+				"intensity": 5,
+				"reverse": false
+			},
+			"darkness": {
+				"min": 0,
+				"max": 1
+			}
+		},
+		"sight": {
+			"enabled": false,
+			"range": 0,
+			"angle": 360,
+			"visionMode": "basic",
+			"color": null,
+			"attenuation": 0.1,
+			"brightness": 0,
+			"saturation": 0,
+			"contrast": 0
+		},
+		"detectionModes": [],
+		"occludable": {
+			"radius": 0
+		},
+		"ring": {
+			"enabled": false,
+			"colors": {
+				"ring": null,
+				"background": null
+			},
+			"effects": 0,
+			"subject": {
+				"scale": 1,
+				"texture": null
+			}
+		},
+		"turnMarker": {
+			"mode": 1,
+			"animation": null,
+			"src": null,
+			"disposition": false
+		},
+		"movementAction": null,
+		"flags": {},
+		"randomImg": false,
+		"appendNumber": false,
+		"prependAdjective": false
+	},
+	"items": [
+		{
+			"name": "Aura of Wind.",
+			"type": "monsterFeature",
+			"_id": "th8IlFXgj1fLHZvh",
+			"img": "icons/magic/air/fog-gas-smoke-swirling-yellow.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Ranged attacks against you have disadvantage. End of turn: push adjacent creatures 2 spaces away.</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757823230583
+			}
+		},
+		{
+			"name": "Wither",
+			"type": "monsterFeature",
+			"_id": "0f4hLLO0J9QHAWwI",
+			"img": "icons/magic/nature/root-vines-silhouette-teal.webp",
+			"system": {
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Resistant to necrotic damage, but it suppresses Aura of Wind for 1 turn.</p>",
+				"isAction": false,
+				"isAttack": false
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757823309288
+			}
+		},
+		{
+			"name": "Petal Storm. (1 use)",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": true,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "action"
+					},
+					"effects": [
+						{
+							"id": "sEd9SUKZgwyZ5Eog",
+							"type": "savingThrow",
+							"savingThrowType": "strength",
+							"parentContext": null,
+							"parentNode": null,
+							"saveType": "dexterity",
+							"saveDC": "13",
+							"sharedRolls": [
+								{
+									"id": "6hWswDAtEEl6idrf",
+									"type": "damage",
+									"damageType": "slashing",
+									"formula": "3d10+10",
+									"parentContext": "sharedRolls",
+									"parentNode": "sEd9SUKZgwyZ5Eog",
+									"on": {
+										"failedSave": [
+											{
+												"id": "hqIT3cZ3JmowG5YV",
+												"type": "damageOutcome",
+												"outcome": "fullDamage",
+												"parentContext": "failedSave",
+												"parentNode": "6hWswDAtEEl6idrf"
+											}
+										],
+										"passedSave": [
+											{
+												"id": "N1ZBDglGKbHZEFND",
+												"type": "damageOutcome",
+												"outcome": "halfDamage",
+												"parentContext": "passedSave",
+												"parentNode": "6hWswDAtEEl6idrf"
+											}
+										]
+									}
+								}
+							],
+							"on": {}
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 8,
+						"shape": "emanation",
+						"width": 1
+					}
+				},
+				"description": "<p>3d10+10 damage to all enemies within Reach 8, half on a DC 13 DEX save.</p>",
+				"isAttack": true
+			},
+			"_id": "r5mtMav2sJzLJmI1",
+			"img": "icons/magic/nature/lotus-glow-pink.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757823396099
+			}
+		},
+		{
+			"name": "Rend.",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "action"
+					},
+					"effects": [
+						{
+							"id": "PczhKrdoKmlEYkH4",
+							"type": "damage",
+							"damageType": "slashing",
+							"formula": "1d10+10",
+							"parentContext": null,
+							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
+							"on": {
+								"hit": [
+									{
+										"id": "WxBagpKEM7C39fY4",
+										"type": "note",
+										"noteType": "warning",
+										"text": "Gain Thornblight.\nThornblight: Suffer 5 damage for each space you are forcibly moved.\nMagical healing ends this effect.",
+										"parentContext": "hit",
+										"parentNode": "PczhKrdoKmlEYkH4"
+									},
+									{
+										"id": "hDvFyUDeDDV09nEK",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "PczhKrdoKmlEYkH4"
+									}
+								]
+							}
+						}
+					],
+					"showDescription": true,
+					"targets": {
+						"count": 2,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>Fly 10 before or after attacking. (Reach 2) 1d10+10 damage to up to 2 targets within reach. On hit: Gain Thornblight.</p>",
+				"isAttack": true
+			},
+			"_id": "jspwozF2CfOXKGyE",
+			"img": "icons/creatures/claws/claw-hooked-purple.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757823517825
+			}
+		},
+		{
+			"name": "Gust.",
+			"type": "monsterFeature",
+			"system": {
+				"isAction": true,
+				"macro": "",
+				"identifier": "",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "action"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>(Reach 8) Move a target 1d10 spaces.</p>",
+				"isAttack": true
+			},
+			"_id": "DhwTOdyGujurHfOj",
+			"img": "icons/magic/air/fog-gas-smoke-dense-blue.webp",
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1757823586921
+			}
+		}
+	],
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1757363288011,
+		"modifiedTime": 1757824176174,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "91He6bIh0M7nRt2C"
+}
