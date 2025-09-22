@@ -45,6 +45,14 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		return RulesManager.addRule(this.#item, data, options);
 	}
 
+	hasRuleOfType(type: string) {
+		return this.#item.system.rules.some((r) => r.type === type);
+	}
+
+	getRuleOfType(type: string) {
+		return this.#item.system.rules.find((r) => r.type === type);
+	}
+
 	async deleteRule(id: string) {
 		return RulesManager.deleteRule(this.#item, id);
 	}

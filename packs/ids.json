@@ -1,7 +1,33 @@
 {
 	"ancestries": {
-		"dwarf": "hyVaEOLNSagYECwm",
-		"human": "11SKfGVV3ZWHquUb"
+		"common": {
+			"dwarf": "hyVaEOLNSagYECwm",
+			"elf": "b7MDkSugU1E1TOhj",
+			"gnome": "pOBaPdMcLBTCbLNw",
+			"halfling": "KYRRFekLA0Ipuxgt",
+			"human": "11SKfGVV3ZWHquUb"
+		},
+		"exotic": {
+			"birdfolk": "G7uhni6XZkQV5VQi",
+			"bunbun": "H1B0wnT9GKexRhyG",
+			"celestial": "puHj7KBjvyb5mVHA",
+			"changeling": "IaJujyjdf7HYDacv",
+			"crystalborn": "CMhHBD7MLZgK8o2I",
+			"dragonborn": "JZYAZ7p2cumgRSyC",
+			"dryadshroomling": "IYDJe9IZi1VSUHPS",
+			"fiendkin": "gn0l7830gS0VVQfb",
+			"goblin": "IVgTJcGcBmH7xCB7",
+			"half-giant": "4mRJcQgWmQ1fnsys",
+			"kobold": "oiEF0p8oGIFBtUf3",
+			"minotaurbeastfolk": "jbcwVS5hxMgDSdUQ",
+			"oozelingconstruct": "jYafwBbK4DVALpBf",
+			"orc": "5fC0JgKQhm8QSQoL",
+			"planarbeing": "PEDssoxr48uRKcel",
+			"ratfolk": "FbOJ9FMfpoAhDZll",
+			"stoatling": "gM03JFi6joqcq7AI",
+			"turtlefolk": "1XtBW6Qu8PlmZ1uD",
+			"wyrdling": "XpGSoVhViJkf66WP"
+		}
 	},
 	"backgrounds": {
 		"back-out-of-retirement": "ICTvjd73DqAbMMs5"

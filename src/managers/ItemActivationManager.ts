@@ -9,6 +9,8 @@ class ItemActivationManager {
 
 	#options: ItemActivationManager.ActivationOptions;
 
+	activationData: any;
+
 	constructor(item: NimbleBaseItem, options: ItemActivationManager.ActivationOptions) {
 		this.#item = item;
 		this.#options = options;
