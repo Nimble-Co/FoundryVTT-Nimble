@@ -178,8 +178,7 @@
 					}
 				},
 				"description": "<p>When damaged, enemies within 2 spaces make a STR save (DC equal to the higher of 10 or the damage done). On a failure, they must spend their next action vomiting, and they cannot take reactions this round.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -248,8 +247,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move 6. 4d6 damage, up to 2 adjacent creatures.</p>",
-				"isAttack": true
+				"description": "<p>Move 6. 4d6 damage, up to 2 adjacent creatures.</p>"
 			},
 			"_id": "bF81HUOt0AEo855I",
 			"img": "icons/creatures/invertebrates/beetle-stag-yellow-green.webp",

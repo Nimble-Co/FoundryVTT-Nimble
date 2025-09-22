@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\">When an ally within 2 spaces dies, attack once for free.</span></p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -243,8 +242,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d4+2</p>",
-				"isAttack": true
+				"description": "<p>1d4+2</p>"
 			},
 			"_id": "cupMiVpar86V6Ddl",
 			"img": "icons/weapons/daggers/dagger-crooked-black.webp",
@@ -315,8 +313,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 8) 1d4+2.</p>",
-				"isAttack": true
+				"description": "<p>(Range 8) 1d4+2.</p>"
 			},
 			"_id": "lm6IcEYhEdNQJ9MJ",
 			"img": "icons/weapons/slings/slingshot-wood.webp",

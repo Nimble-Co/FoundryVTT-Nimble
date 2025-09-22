@@ -171,8 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p><strong>Then choose 1</strong></p>",
-				"isAttack": false
+				"description": "<p><strong>Then choose 1</strong></p>"
 			},
 			"_id": "JyzNugiIZQ2of8AX",
 			"img": "icons/svg/item-bag.svg",
@@ -258,8 +257,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 6) 1d8+2. On hit: Restrained</p><p>(escape DC 12, or any slashing/fire damage). </p>",
-				"isAttack": true
+				"description": "<p>(Range 6) 1d8+2. On hit: Restrained</p><p>(escape DC 12, or any slashing/fire damage). </p>"
 			},
 			"_id": "j7fwFMyGdcMkc9nc",
 			"img": "icons/creatures/webs/web-clumped-blue.webp",
@@ -337,8 +335,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Hampered target) 3d8+6 and Poisoned (magical healing ends).</p>",
-				"isAttack": true
+				"description": "<p>(Hampered target) 3d8+6 and Poisoned (magical healing ends).</p>"
 			},
 			"_id": "CAnnWPITXttRlM6P",
 			"img": "icons/creatures/abilities/fang-tooth-poison-green.webp",

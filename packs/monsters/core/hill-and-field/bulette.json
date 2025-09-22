@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>Combat with a Bulette starts with the heaviest character making a DC 14 DEX save or they are Grappled (escape DC 14) and take 1d12+20 damage (half on save).</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -243,8 +242,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(A Grappled creature) 2d12 then drag below and burrow away. OR</p>",
-				"isAttack": true
+				"description": "<p>(A Grappled creature) 2d12 then drag below and burrow away. OR</p>"
 			},
 			"_id": "Dq94VBAmPvgcuPs2",
 			"img": "icons/environment/wilderness/terrain-rocky-ground.webp",
@@ -323,8 +321,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(If not grappling) leap 6, and attack for 1d12+20. On hit: Grappled.</p>",
-				"isAttack": true
+				"description": "<p>(If not grappling) leap 6, and attack for 1d12+20. On hit: Grappled.</p>"
 			},
 			"_id": "oS2F3rcfuaVeHyHm",
 			"img": "icons/creatures/abilities/mouth-teeth-sharp.webp",

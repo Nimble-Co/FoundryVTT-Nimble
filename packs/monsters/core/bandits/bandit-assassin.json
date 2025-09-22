@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -223,8 +222,7 @@
 					}
 				},
 				"description": "<p>You are invisible until you attack.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -300,8 +298,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d8+2. On damage: Dazed.</p>",
-				"isAttack": true
+				"description": "<p>1d8+2. On damage: Dazed.</p>"
 			},
 			"_id": "E60UdXxj5NhOhoKP",
 			"img": "icons/weapons/daggers/dagger-poisoned.webp",

@@ -171,8 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "",
-				"isAttack": false
+				"description": ""
 			},
 			"_id": "tRkkNhPErjlpdu9s",
 			"img": "icons/svg/item-bag.svg",
@@ -223,8 +222,7 @@
 					}
 				},
 				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -307,8 +305,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 3) 2d6+10. On damage: Prone.</p>",
-				"isAttack": true
+				"description": "<p>(Reach 3) 2d6+10. On damage: Prone.</p>"
 			},
 			"_id": "GHBtSPT1dK9s7nQ4",
 			"img": "icons/magic/nature/root-vine-wood-blue.webp",
@@ -380,8 +377,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Hampered target) 2d6+20.</p>",
-				"isAttack": true
+				"description": "<p>(Hampered target) 2d6+20.</p>"
 			},
 			"_id": "xwKspcaO6xxT5nyc",
 			"img": "icons/magic/nature/root-vine-hand-strike.webp",

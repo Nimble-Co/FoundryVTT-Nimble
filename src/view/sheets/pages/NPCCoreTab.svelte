@@ -4,7 +4,6 @@ import { getContext, onDestroy } from 'svelte';
 import ArmorClass from '../components/ArmorClass.svelte';
 import Editor from '../components/Editor.svelte';
 import MonsterFeature from '../components/MonsterFeature.svelte';
-import NPCAttacks from '../components/NPCAttacks.svelte';
 import SavingThrows from '../components/SavingThrows.svelte';
 
 function getArmorClassLabel(armor) {
@@ -54,15 +53,7 @@ let features = $derived.by(() =>
 );
 
 let actions = $derived.by(() =>
-	actor.reactive.items.filter(
-		(item) => item.reactive.system.isAction && !item.reactive.system.isAttack,
-	),
-);
-
-let attacks = $derived.by(() =>
-	actor.reactive.items.filter(
-		(item) => item.reactive.system.isAction && item.reactive.system.isAttack,
-	),
+	actor.reactive.items.filter((item) => item.reactive.system.isAction),
 );
 
 let bloodiedEffectInEditMode = $state(false);
@@ -184,8 +175,6 @@ onDestroy(() => {
             {#each actions as item (item._id)}
                 <MonsterFeature {item} />
             {/each}
-
-            <NPCAttacks {attacks} />
         </ul>
     </section>
 

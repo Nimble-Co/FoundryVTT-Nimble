@@ -178,8 +178,7 @@
 					}
 				},
 				"description": "<p>Creatures she hits are entangled in a sticky web (Dazed).</p><p>Flammable Webs. Fire critical hits suppress the Broodmother’s Weave Web for 1 turn.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -248,8 +247,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 2) 2d8+8 damage. Then skitter away up to 8 spaces.</p>",
-				"isAttack": true
+				"description": "<p>(Reach 2) 2d8+8 damage. Then skitter away up to 8 spaces.</p>"
 			},
 			"_id": "uR2LgC5MQnJqTlmY",
 			"img": "icons/creatures/abilities/tail-strike-bone-orange.webp",
@@ -299,8 +297,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Summon spiderling minions (1/hero, size:d8); they act only when commanded.</p>",
-				"isAttack": true
+				"description": "<p>Summon spiderling minions (1/hero, size:d8); they act only when commanded.</p>"
 			},
 			"_id": "kSOMGGAzgut6zVGb",
 			"img": "icons/creatures/invertebrates/spider-dotted-green.webp",
@@ -350,8 +347,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Command all of your spiderling minions to move up to 6 spaces and attack once each.</p>",
-				"isAttack": true
+				"description": "<p>Command all of your spiderling minions to move up to 6 spaces and attack once each.</p>"
 			},
 			"_id": "3T6uoxWsUus6ePig",
 			"img": "icons/consumables/food/plate-fish-bowl-bones-brown.webp",

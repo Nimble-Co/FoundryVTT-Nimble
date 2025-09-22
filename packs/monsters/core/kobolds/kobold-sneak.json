@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -223,8 +222,7 @@
 					}
 				},
 				"description": "<p>When an ally dies, you may move up to 6 spaces before using your Nooooo! ability.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -293,8 +291,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\">1d4+2</span></p>",
-				"isAttack": true
+				"description": "<p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\">1d4+2</span></p>"
 			},
 			"_id": "lCrjlIMCcsxtUblh",
 			"img": "icons/weapons/daggers/dagger-crooked-black.webp",
@@ -365,8 +362,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\">(Range 8) 1d4+2.</span></p>",
-				"isAttack": true
+				"description": "<p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\">(Range 8) 1d4+2.</span></p>"
 			},
 			"_id": "jaGVyQTrr4zDbUYM",
 			"img": "icons/weapons/slings/slingshot-wood.webp",

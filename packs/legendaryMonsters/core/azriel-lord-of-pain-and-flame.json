@@ -178,8 +178,7 @@
 					}
 				},
 				"description": "<p>Crits against Azriel are Vicious, he deals damage equal to the crit dice back to the attacker.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -263,8 +262,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move 6. (Reach 6) 3d12 damage. On hit: Grappled and pulled adjacent to Azriel (escape DC 17 STR, DEX, or until he uses the whip again).</p>",
-				"isAttack": true
+				"description": "<p>Move 6. (Reach 6) 3d12 damage. On hit: Grappled and pulled adjacent to Azriel (escape DC 17 STR, DEX, or until he uses the whip again).</p>"
 			},
 			"_id": "YjDDY4UdbPtstgDS",
 			"img": "icons/weapons/misc/whip-red-yellow.webp",
@@ -335,8 +333,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>3d12+10 fire damage to all creatures within Reach 2.</p>",
-				"isAttack": true
+				"description": "<p>3d12+10 fire damage to all creatures within Reach 2.</p>"
 			},
 			"_id": "VT3sWm8M4hO4Zkao",
 			"img": "icons/magic/fire/dagger-rune-enchant-flame-strong-red.webp",

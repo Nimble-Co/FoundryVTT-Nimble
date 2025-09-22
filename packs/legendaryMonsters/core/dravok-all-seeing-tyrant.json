@@ -178,8 +178,7 @@
 					}
 				},
 				"description": "<p>Dravok makes all saves with +1 Advantage, attacks against him have Disadvantage.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -230,8 +229,7 @@
 					}
 				},
 				"description": "<p>Taking more than 12 piercing or slashing damage: Dravok’s plans are FLAWED! (until the end of the next hero’s turn.)</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -317,8 +315,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>3d6. On hit: Dazed, exchange places with target.</p>",
-				"isAttack": true
+				"description": "<p>3d6. On hit: Dazed, exchange places with target.</p>"
 			},
 			"_id": "hm0nvCYJy2i4fCDa",
 			"img": "icons/magic/light/beam-rays-blue-large.webp",
@@ -369,8 +366,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Permanently Dazed. Healing ends. (3 stacks, Petrified).</p>",
-				"isAttack": true
+				"description": "<p>Permanently Dazed. Healing ends. (3 stacks, Petrified).</p>"
 			},
 			"_id": "En4fdOj40xF7Q1mj",
 			"img": "icons/magic/light/beam-rays-yellow-blue-large.webp",
@@ -451,8 +447,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>5d10 psychic damage & Terrified: </p><p>(You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok’s plans are FLAWED.)</p>",
-				"isAttack": true
+				"description": "<p>5d10 psychic damage & Terrified: </p><p>(You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok’s plans are FLAWED.)</p>"
 			},
 			"_id": "x3uAQ8Y4Pog85I7f",
 			"img": "icons/magic/light/beam-rays-red-large.webp",
@@ -533,8 +528,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>2d6 damage. Push that many spaces. Knocked Prone on 7+.</p>",
-				"isAttack": true
+				"description": "<p>2d6 damage. Push that many spaces. Knocked Prone on 7+.</p>"
 			},
 			"_id": "9yLALKx55vnxvfb5",
 			"img": "icons/magic/light/beam-rays-teal-purple-large.webp",
@@ -618,8 +612,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>DC 16 WIL save or you spend 3 Actions attacking with or moving them, 2 actions on save. (Cannot spend resources, they regain spent actions afterward.)</p>",
-				"isAttack": true
+				"description": "<p>DC 16 WIL save or you spend 3 Actions attacking with or moving them, 2 actions on save. (Cannot spend resources, they regain spent actions afterward.)</p>"
 			},
 			"_id": "nQ1CO1Ge9FGgwUpm",
 			"img": "icons/magic/light/beam-rays-magenta-large.webp",
@@ -703,8 +696,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>DC 16 STR save or drop to 0 HP. On save, gain 1 Wound. If a Dying creature fails this, they die.</p>",
-				"isAttack": true
+				"description": "<p>DC 16 STR save or drop to 0 HP. On save, gain 1 Wound. If a Dying creature fails this, they die.</p>"
 			},
 			"_id": "ML4LADhsYE5Dvpog",
 			"img": "icons/magic/light/beam-rays-green-large.webp",
@@ -785,8 +777,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Melee attack. 4d4, EVERY die can crit and is Vicious</p>",
-				"isAttack": true
+				"description": "<p>Melee attack. 4d4, EVERY die can crit and is Vicious</p>"
 			},
 			"_id": "PpZr6xGfBDyQptL3",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-red.webp",

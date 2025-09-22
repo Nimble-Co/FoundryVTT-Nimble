@@ -178,8 +178,7 @@
 					}
 				},
 				"description": "<p>Bludgeoning damage or any crit cause bones to splinter off and animate, forming a d10 minion.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -229,8 +228,7 @@
 					}
 				},
 				"description": "<p>Resistant to piercing, vulnerable to bludgeoning.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -308,8 +306,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 4) 1d4+30 damage. On hit: Knockback 6.</p>",
-				"isAttack": true
+				"description": "<p>(Reach 4) 1d4+30 damage. On hit: Knockback 6.</p>"
 			},
 			"_id": "SdltF0h07pyt8QgI",
 			"img": "icons/weapons/swords/greatsword-guard-split-eyes.webp",
@@ -395,8 +392,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move up to 10 spaces. Deal 1d4+20 damage to up to 2 targets along the path. On hit: Prone.</p>",
-				"isAttack": true
+				"description": "<p>Move up to 10 spaces. Deal 1d4+20 damage to up to 2 targets along the path. On hit: Prone.</p>"
 			},
 			"_id": "ekNtNgYbJXn9Lv7b",
 			"img": "icons/skills/movement/feet-bladed-boots-fire.webp",
@@ -469,8 +465,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>The 2 furthest heroes make a DC 16 STR save or are moved adjacent to Titan.</p>",
-				"isAttack": true
+				"description": "<p>The 2 furthest heroes make a DC 16 STR save or are moved adjacent to Titan.</p>"
 			},
 			"_id": "J3uKzVH5MXvS6fAo",
 			"img": "icons/magic/control/debuff-energy-hold-teal-blue.webp",

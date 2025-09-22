@@ -200,8 +200,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d4+4. On damage: Grappled</p>",
-				"isAttack": true
+				"description": "<p>1d4+4. On damage: Grappled</p>"
 			},
 			"_id": "wgiL9nmnsFME5ufI",
 			"img": "icons/creatures/abilities/mouth-teeth-human.webp",
@@ -253,8 +252,7 @@
 					}
 				},
 				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,

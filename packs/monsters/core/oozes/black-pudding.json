@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -223,8 +222,7 @@
 					}
 				},
 				"description": "<p>When crit or dealt any slashing damage: summon X ooze minions (size: d6); their attacks inflict Digested.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -293,8 +291,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 2) 1d6+5.</p>",
-				"isAttack": true
+				"description": "<p>(Reach 2) 1d6+5.</p>"
 			},
 			"_id": "pSer5OrAlQQaynxi",
 			"img": "icons/magic/acid/dissolve-bone-white.webp",

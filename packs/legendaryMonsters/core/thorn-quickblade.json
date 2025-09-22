@@ -178,8 +178,7 @@
 					}
 				},
 				"description": "<p>When crit, make a Heart Piercer or Stormquill attack in return.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -249,8 +248,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move 4, 4d4+10 damage (Range 8).</p>",
-				"isAttack": true
+				"description": "<p>Move 4, 4d4+10 damage (Range 8).</p>"
 			},
 			"_id": "PAvmy2NNVCMdVhCN",
 			"img": "icons/weapons/crossbows/crossbow-blue.webp",
@@ -338,8 +336,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move 8, 2d4+3 damage. On crit: Dazed.</p>",
-				"isAttack": true
+				"description": "<p>Move 8, 2d4+3 damage. On crit: Dazed.</p>"
 			},
 			"_id": "35HP1npCJHxMtbS1",
 			"img": "icons/skills/melee/hand-grip-sword-red.webp",

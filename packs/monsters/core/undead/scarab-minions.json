@@ -187,8 +187,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6 (Follows Minion Rules)</p>",
-				"isAttack": true
+				"description": "<p>1d6 (Follows Minion Rules)</p>"
 			},
 			"_id": "YSVWtxhFLeDr3zqY",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

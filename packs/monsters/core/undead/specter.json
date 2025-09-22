@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -243,8 +242,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d4. On damage: set HP to 0.</p>",
-				"isAttack": true
+				"description": "<p>1d4. On damage: set HP to 0.</p>"
 			},
 			"_id": "N6LmAkgoBvuEbTkC",
 			"img": "icons/magic/unholy/hand-claw-fog-green.webp",

@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -252,8 +251,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d4+8. On crit: Prone.</p>",
-				"isAttack": true
+				"description": "<p>1d4+8. On crit: Prone.</p>"
 			},
 			"_id": "ZAqWQDdjFoTJZgI2",
 			"img": "icons/weapons/clubs/club-simple-black.webp",

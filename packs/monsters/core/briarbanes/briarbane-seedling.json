@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -243,8 +242,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 6) 2d6+2</p>",
-				"isAttack": true
+				"description": "<p>(Range 6) 2d6+2</p>"
 			},
 			"_id": "sPTJe9LmX6pLFYIY",
 			"img": "icons/consumables/nuts/nut-spiked-shell.webp",

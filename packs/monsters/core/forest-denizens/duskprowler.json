@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>Attacks against the Duskprowler have Disadvantage 2. Damage supresses this effect until the end of the next hero’s turn.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -243,8 +242,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>2d8+2.</p>",
-				"isAttack": true
+				"description": "<p>2d8+2.</p>"
 			},
 			"_id": "ByG4q6Lo6Yup8vBh",
 			"img": "icons/skills/melee/blood-slash-foam-red.webp",

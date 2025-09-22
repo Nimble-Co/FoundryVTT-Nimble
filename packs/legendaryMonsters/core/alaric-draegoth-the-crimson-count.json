@@ -178,8 +178,7 @@
 					}
 				},
 				"description": "<p>(1/turn) Deal [[/r 1d10]] necrotic damage whenever you are hit, the attack is reduced by this amount.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -230,8 +229,7 @@
 					}
 				},
 				"description": "<p>Vulnerable to radiant. After taking radiant damage, use Beguile as a Reaction, they roll with disadvantage.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -282,8 +280,7 @@
 					}
 				},
 				"description": "<p>After each hero’s turn, summon 1 blood bat minion (d10) within 8 spaces, then choose 1 action</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -361,8 +358,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Deal 1d10+15 damage, your target is considered Bloodied for 1 round. Fly 8 before or after attacking.</p>",
-				"isAttack": true
+				"description": "<p>Deal 1d10+15 damage, your target is considered Bloodied for 1 round. Fly 8 before or after attacking.</p>"
 			},
 			"_id": "pm7AVHiCb0C7lHqK",
 			"img": "icons/weapons/swords/greatsword-crossguard-flanged-red.webp",
@@ -425,8 +421,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>If no creature is Beguiled, Beguile a target on a failed DC 18 WIL save (w/ disadvantage if Bloodied). </p><p><strong>Beguiled.</strong> Dazed. Cannot Defend or allow anyone to Interpose for you. Damage ends.</p>",
-				"isAttack": true
+				"description": "<p>If no creature is Beguiled, Beguile a target on a failed DC 18 WIL save (w/ disadvantage if Bloodied). </p><p><strong>Beguiled.</strong> Dazed. Cannot Defend or allow anyone to Interpose for you. Damage ends.</p>"
 			},
 			"_id": "49Lf23xPbGSi5MTR",
 			"img": "icons/magic/control/debuff-energy-hold-pink.webp",
@@ -507,8 +502,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move a Beguiled creature adjacent to you and bite them: 2d10+30 damage and 1 Wound.</p>",
-				"isAttack": true
+				"description": "<p>Move a Beguiled creature adjacent to you and bite them: 2d10+30 damage and 1 Wound.</p>"
 			},
 			"_id": "NMZj4KGiElpDARFM",
 			"img": "icons/creatures/abilities/mouth-teeth-human.webp",

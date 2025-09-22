@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>The first time this dies, reset to 1 HP instead  (excluding minions).</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -243,8 +242,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 8) 1d4+3 </p>",
-				"isAttack": true
+				"description": "<p>(Range 8) 1d4+3 </p>"
 			},
 			"_id": "v51T31rbVBmmZo8p",
 			"img": "icons/weapons/bows/shortbow-recurve-bone.webp",

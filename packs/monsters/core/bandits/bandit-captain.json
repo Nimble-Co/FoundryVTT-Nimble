@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -243,8 +242,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d8+1</p>",
-				"isAttack": true
+				"description": "<p>1d8+1</p>"
 			},
 			"_id": "ctlUHuAQri7RksZe",
 			"img": "icons/skills/melee/hand-grip-sword-white-brown.webp",
@@ -315,8 +313,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 8) 1d8+1</p>",
-				"isAttack": true
+				"description": "<p>(Range 8) 1d8+1</p>"
 			},
 			"_id": "g8YMHgwfenVirn6Y",
 			"img": "icons/weapons/bows/longbow-leather-green.webp",

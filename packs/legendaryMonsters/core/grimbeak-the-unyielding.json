@@ -178,8 +178,7 @@
 					}
 				},
 				"description": "<p>Treat the highest die rolled as the Primary Die. On crit: knock Prone.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -271,8 +270,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>All enemies within reach 12 suffer 2d6 damage (ignoring armor). DC 11 WIL save or become Frightened for 1 round.</p>",
-				"isAttack": true
+				"description": "<p>All enemies within reach 12 suffer 2d6 damage (ignoring armor). DC 11 WIL save or become Frightened for 1 round.</p>"
 			},
 			"_id": "RJV5MKgumWqo5XIY",
 			"img": "icons/creatures/abilities/bear-roar-bite-brown.webp",
@@ -344,8 +342,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Attack for 2d6+10 damage.</p>",
-				"isAttack": true
+				"description": "<p>Attack for 2d6+10 damage.</p>"
 			},
 			"_id": "PI8o8vl7IYJfCvI6",
 			"img": "icons/creatures/claws/claw-bear-paw-swipe-red.webp",
@@ -417,8 +414,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move 8. Attack for 2d6 damage.</p>",
-				"isAttack": true
+				"description": "<p>Move 8. Attack for 2d6 damage.</p>"
 			},
 			"_id": "SSQGS8TLrViOEAuh",
 			"img": "icons/creatures/abilities/bear-roar-bite-brown-green.webp",

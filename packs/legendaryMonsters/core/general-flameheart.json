@@ -178,8 +178,7 @@
 					}
 				},
 				"description": "<p>Immune to fire. When damaged, deal 5 fire damage to all adjacent creatures.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -229,8 +228,7 @@
 					}
 				},
 				"description": "<p>Cold or radiant crits extinguish all areas ignited by Molten Fury and suppress Cinder Armor for 1 turn.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -300,8 +298,7 @@
 						"width": 2
 					}
 				},
-				"description": "<p>Move 8 then strike a 2×2 square area for 2d10+10 fire damage.</p>",
-				"isAttack": true
+				"description": "<p>Move 8 then strike a 2×2 square area for 2d10+10 fire damage.</p>"
 			},
 			"_id": "wZ2XUxCUeWVdEwZu",
 			"img": "icons/magic/fire/dagger-rune-enchant-flame-strong-red.webp",
@@ -373,8 +370,7 @@
 						"width": 2
 					}
 				},
-				"description": "<p>Lob a molten fireball at the furthest hero not already in the flames, igniting a 2×2 square area. Creatures there take 2d10+10 damage; and another 10 damage at the end of each of their turns if they remain in the area.</p>",
-				"isAttack": true
+				"description": "<p>Lob a molten fireball at the furthest hero not already in the flames, igniting a 2×2 square area. Creatures there take 2d10+10 damage; and another 10 damage at the end of each of their turns if they remain in the area.</p>"
 			},
 			"_id": "ngX5c4NLFel44iPI",
 			"img": "icons/magic/fire/projectile-fireball-smoke-large-orange.webp",

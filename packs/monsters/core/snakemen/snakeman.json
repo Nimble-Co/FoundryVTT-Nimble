@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>On melee crit: Grapple (escape DC 10).</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -243,8 +242,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+6</p>",
-				"isAttack": true
+				"description": "<p>1d6+6</p>"
 			},
 			"_id": "iU1BAlui58lpH31U",
 			"img": "icons/skills/melee/hand-grip-sword-strike-orange.webp",
@@ -315,8 +313,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 8) 1d6+6 </p>",
-				"isAttack": true
+				"description": "<p>(Range 8) 1d6+6 </p>"
 			},
 			"_id": "HAwzrIkXLFFxeQTY",
 			"img": "icons/svg/item-bag.svg",

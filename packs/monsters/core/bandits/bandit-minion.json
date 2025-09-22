@@ -167,8 +167,7 @@
 					}
 				},
 				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -237,8 +236,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d8 (follows minion rules).</p>",
-				"isAttack": true
+				"description": "<p>1d8 (follows minion rules).</p>"
 			},
 			"_id": "FGOBvn3AHWMX09L2",
 			"img": "icons/weapons/swords/sword-guard.webp",

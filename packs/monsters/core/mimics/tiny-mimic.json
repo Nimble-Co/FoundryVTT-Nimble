@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>Mimics always start first and heroes roll Initiative with disadvantage.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -250,8 +249,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d4 (escape DC 9), OR</p>",
-				"isAttack": true
+				"description": "<p>1d4 (escape DC 9), OR</p>"
 			},
 			"_id": "23FHpmDUgXKOMS5J",
 			"img": "icons/creatures/slimes/slime-movement-dripping-pseudopods-green.webp",
@@ -303,8 +301,7 @@
 					}
 				},
 				"description": "<p>Mimic hits also Grapple and can Grapple any number of creatures. When crit: release 1 creature (attacker’s choice).</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -373,8 +370,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(a Grappled creature) 1d12.</p>",
-				"isAttack": true
+				"description": "<p>(a Grappled creature) 1d12.</p>"
 			},
 			"_id": "YhfvvifKOyCbBzAe",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

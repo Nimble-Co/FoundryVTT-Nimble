@@ -207,8 +207,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 6) 1d6+2. On hit: Grappled (escape DC 12, or any fire or slashing damage).</p>",
-				"isAttack": true
+				"description": "<p>(Reach 6) 1d6+2. On hit: Grappled (escape DC 12, or any fire or slashing damage).</p>"
 			},
 			"_id": "xagsCn01Ajm8lQ7S",
 			"img": "icons/magic/nature/root-vine-entangle-foot-green.webp",
@@ -260,8 +259,7 @@
 					}
 				},
 				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,

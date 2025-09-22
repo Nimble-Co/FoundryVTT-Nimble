@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>Advantage against Bloodied creatures.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -221,8 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>2 allies can move. Then:</p>",
-				"isAttack": false
+				"description": "<p>2 allies can move. Then:</p>"
 			},
 			"_id": "vsXCPn8oD3fElmiq",
 			"img": "icons/environment/people/charge.webp",
@@ -294,8 +292,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d10</p>",
-				"isAttack": true
+				"description": "<p>1d10</p>"
 			},
 			"_id": "DuOtsm2fzv3aUd0T",
 			"img": "icons/skills/melee/blade-tip-chipped-blood-red.webp",

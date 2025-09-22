@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>Does not die at 0 HP. Only fire, radiant, or a crit while at 0 HP can kill it.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -221,8 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "",
-				"isAttack": false
+				"description": ""
 			},
 			"_id": "xHKXANPad6Z22qFQ",
 			"img": "icons/svg/item-bag.svg",
@@ -302,8 +300,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 2) 1d4+10. On crit: Prone.</p>",
-				"isAttack": true
+				"description": "<p>(Reach 2) 1d4+10. On crit: Prone.</p>"
 			},
 			"_id": "zxkIrJoeB1BqZPdz",
 			"img": "icons/skills/melee/strike-slashes-red.webp",
@@ -374,8 +371,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(A Prone creature) 1d4+20.</p>",
-				"isAttack": true
+				"description": "<p>(A Prone creature) 1d4+20.</p>"
 			},
 			"_id": "BalmxpW2pCV83I8P",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

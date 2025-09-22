@@ -187,8 +187,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d8, follow minion rules</p>",
-				"isAttack": true
+				"description": "<p>1d8, follow minion rules</p>"
 			},
 			"_id": "Cj1TDs9fwpjaj3NK",
 			"img": "icons/creatures/abilities/fang-tooth-venomous.webp",

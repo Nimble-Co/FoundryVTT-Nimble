@@ -178,8 +178,7 @@
 					}
 				},
 				"description": "<p>Whenever Ravager is crit, he can fly 10.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -249,8 +248,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Reach 3, 5d12 damage.</p>",
-				"isAttack": true
+				"description": "<p>Reach 3, 5d12 damage.</p>"
 			},
 			"_id": "XQZe73BXr65Lfgql",
 			"img": "icons/creatures/abilities/stinger-poison-green.webp",
@@ -321,8 +319,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Attack for 1d12+20 damage.</p>",
-				"isAttack": true
+				"description": "<p>Attack for 1d12+20 damage.</p>"
 			},
 			"_id": "vpJXS7vET9FrEPNc",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
@@ -393,8 +390,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Fly 10, attack for 1d12+6 damage.</p>",
-				"isAttack": true
+				"description": "<p>Fly 10, attack for 1d12+6 damage.</p>"
 			},
 			"_id": "hvZLdMbWjqjnGfIo",
 			"img": "icons/creatures/claws/claw-hooked-curved.webp",

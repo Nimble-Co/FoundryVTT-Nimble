@@ -198,8 +198,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move 6, then 2d6. On damage: move target to an unoccupied space within 10 spaces.</p>",
-				"isAttack": true
+				"description": "<p>Move 6, then 2d6. On damage: move target to an unoccupied space within 10 spaces.</p>"
 			},
 			"_id": "cVE3FkUPijy51yGA",
 			"img": "icons/magic/nature/root-vine-coiled-crook.webp",

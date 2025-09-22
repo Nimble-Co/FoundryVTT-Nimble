@@ -178,8 +178,7 @@
 					}
 				},
 				"description": "<p>Ranged attacks against you have disadvantage. End of turn: push adjacent creatures 2 spaces away.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -229,8 +228,7 @@
 					}
 				},
 				"description": "<p>Resistant to necrotic damage, but it suppresses Aura of Wind for 1 turn.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -319,8 +317,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>3d10+10 damage to all enemies within Reach 8, half on a DC 13 DEX save.</p>",
-				"isAttack": true
+				"description": "<p>3d10+10 damage to all enemies within Reach 8, half on a DC 13 DEX save.</p>"
 			},
 			"_id": "r5mtMav2sJzLJmI1",
 			"img": "icons/magic/nature/lotus-glow-pink.webp",
@@ -400,8 +397,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Fly 10 before or after attacking. (Reach 2) 1d10+10 damage to up to 2 targets within reach. On hit: Gain Thornblight.</p>",
-				"isAttack": true
+				"description": "<p>Fly 10 before or after attacking. (Reach 2) 1d10+10 damage to up to 2 targets within reach. On hit: Gain Thornblight.</p>"
 			},
 			"_id": "jspwozF2CfOXKGyE",
 			"img": "icons/creatures/claws/claw-hooked-purple.webp",
@@ -451,8 +447,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 8) Move a target 1d10 spaces.</p>",
-				"isAttack": true
+				"description": "<p>(Reach 8) Move a target 1d10 spaces.</p>"
 			},
 			"_id": "DhwTOdyGujurHfOj",
 			"img": "icons/magic/air/fog-gas-smoke-dense-blue.webp",

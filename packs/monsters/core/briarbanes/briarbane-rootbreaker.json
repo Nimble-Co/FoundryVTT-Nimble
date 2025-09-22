@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -243,8 +242,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>3d6+6. On crit: knockback 2.</p>",
-				"isAttack": true
+				"description": "<p>3d6+6. On crit: knockback 2.</p>"
 			},
 			"_id": "aLz2P0WiZ89kWDPl",
 			"img": "icons/magic/nature/root-vine-wood-blue.webp",

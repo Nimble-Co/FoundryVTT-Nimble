@@ -187,8 +187,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d10, follow minion rules</p>",
-				"isAttack": true
+				"description": "<p>1d10, follow minion rules</p>"
 			},
 			"_id": "kAeu8ZS6bngfV9sy",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
@@ -260,8 +259,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d20, follow minion rules</p>",
-				"isAttack": true
+				"description": "<p>1d20, follow minion rules</p>"
 			},
 			"_id": "wClQm66JGiyBb0Le",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

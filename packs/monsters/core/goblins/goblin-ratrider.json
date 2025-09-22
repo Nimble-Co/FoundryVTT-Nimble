@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -223,8 +222,7 @@
 					}
 				},
 				"description": "<p>If you move at least 4 spaces in a straight line, attack with advantage once.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -302,8 +300,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+2. On crit: Prone.</p>",
-				"isAttack": true
+				"description": "<p>1d6+2. On crit: Prone.</p>"
 			},
 			"_id": "Wy7ikl5qUSIMLNsK",
 			"img": "icons/weapons/swords/shortsword-simple.webp",

@@ -178,8 +178,7 @@
 					}
 				},
 				"description": "<p>Whenever Vael would fail a save or take 20 or more damage, he may sacrifice his Lifebinding Spirit, Bane, instead. He spends his next turn moving up to 6 spaces and summoning Bane.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -268,8 +267,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 12, undamaged target) DC 14 WIL save or 5d12 damage. Half on save.</p>",
-				"isAttack": true
+				"description": "<p>(Range 12, undamaged target) DC 14 WIL save or 5d12 damage. Half on save.</p>"
 			},
 			"_id": "2Xu8lZ5BZgnDdXQR",
 			"img": "icons/magic/death/skull-energy-light-white.webp",
@@ -349,8 +347,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 8) 2d12+6. Double damage against those behind cover. 1/round you may swap places with them.</p>",
-				"isAttack": true
+				"description": "<p>(Range 8) 2d12+6. Double damage against those behind cover. 1/round you may swap places with them.</p>"
 			},
 			"_id": "gmN8a0IWnGj2I2M7",
 			"img": "icons/magic/death/skull-flames-white-blue.webp",
@@ -457,8 +454,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d4+2. On hit: DC 14 WIL save or Dazed and Frightened. Then move 6.</p>",
-				"isAttack": true
+				"description": "<p>1d4+2. On hit: DC 14 WIL save or Dazed and Frightened. Then move 6.</p>"
 			},
 			"_id": "LgV2WNS9WEm6x0Y1",
 			"img": "icons/magic/death/skull-energy-light-purple.webp",

@@ -81,21 +81,7 @@ setContext('application', sheet);
             List feature under actions
         </label>
 
-        {#if item.reactive.system.isAction}
-            <label class="nimble-field">
-                <input
-                    type="checkbox"
-                    checked={item.reactive.system.isAttack}
-                    onchange={({ target }) =>
-                        item.update({
-                            "system.isAttack": (target as HTMLInputElement)
-                                .checked,
-                        })}
-                />
 
-                List feature under attacks
-            </label>
-        {/if}
     </section>
 {/snippet}
 

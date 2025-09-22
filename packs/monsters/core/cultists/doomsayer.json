@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -223,8 +222,7 @@
 					}
 				},
 				"description": "<p>Disadvantage on the next attack you make this encounter.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -271,8 +269,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Concentration) Reduce all damage done to allies who can hear you to 1. OR</p>",
-				"isAttack": true
+				"description": "<p>(Concentration) Reduce all damage done to allies who can hear you to 1. OR</p>"
 			},
 			"_id": "9lTLZiZDGpSR0UoY",
 			"img": "icons/magic/unholy/silhouette-light-fire-blue.webp",
@@ -344,8 +341,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>2d6 psychic damage to all enemies who can hear you.</p>",
-				"isAttack": true
+				"description": "<p>2d6 psychic damage to all enemies who can hear you.</p>"
 			},
 			"_id": "rwfl1Hr5919crz04",
 			"img": "icons/magic/unholy/strike-body-life-soul-green.webp",

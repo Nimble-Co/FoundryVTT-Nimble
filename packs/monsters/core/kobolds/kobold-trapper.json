@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -224,8 +223,7 @@
 					}
 				},
 				"description": "<p>When an enemy moves adjacent to you or an ally, they trigger one of your traps! (1/encounter each).</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -294,8 +292,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 8) 1d4+2.</p>",
-				"isAttack": true
+				"description": "<p>(Range 8) 1d4+2.</p>"
 			},
 			"_id": "NdIsX1LiS4tHYzfo",
 			"img": "icons/environment/creatures/bug-scorpion-silver.webp",
@@ -366,8 +363,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Deal 5d4 damage (doesn’t miss). Half as</p><p>much to ALL adjacent creatures.</p>",
-				"isAttack": false
+				"description": "<p>Deal 5d4 damage (doesn’t miss). Half as</p><p>much to ALL adjacent creatures.</p>"
 			},
 			"_id": "UOfb5oxZN2KhFedb",
 			"img": "icons/creatures/invertebrates/bee-yellow.webp",
@@ -425,8 +421,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Restrained! (Escape DC 10)</p>",
-				"isAttack": false
+				"description": "<p>Restrained! (Escape DC 10)</p>"
 			},
 			"_id": "32UcKER1GRaKPLcD",
 			"img": "icons/tools/fishing/net-simple-tan.webp",

@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -223,8 +222,7 @@
 					}
 				},
 				"description": "<p>Disadvantage on the next attack you make this encounter.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -300,8 +298,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>If undamaged, attack self for 2 damage. Adjacent enemies are inflicted with Despair. OR</p>",
-				"isAttack": true
+				"description": "<p>If undamaged, attack self for 2 damage. Adjacent enemies are inflicted with Despair. OR</p>"
 			},
 			"_id": "ft187LYF1CK3SovV",
 			"img": "icons/skills/melee/blade-tip-chipped-blood-red.webp",
@@ -393,8 +390,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Contested STR check or Grappled (reroll to escape, or any radiant damage); if successful, deal 3d6+6 psychic damage (cannot be Defended or Interposed against).</p>",
-				"isAttack": true
+				"description": "<p>Contested STR check or Grappled (reroll to escape, or any radiant damage); if successful, deal 3d6+6 psychic damage (cannot be Defended or Interposed against).</p>"
 			},
 			"_id": "hiGWXOMmLSUL84RY",
 			"img": "icons/magic/control/hypnosis-mesmerism-swirl.webp",

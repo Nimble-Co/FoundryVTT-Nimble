@@ -173,8 +173,7 @@
 					}
 				},
 				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -245,8 +244,7 @@
 					}
 				},
 				"description": "<p>On death: 4d6 acid damage to ALL adjacent creatures.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -322,8 +320,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>DC 12 DEX save or Grappled.</p>",
-				"isAttack": false
+				"description": "<p>DC 12 DEX save or Grappled.</p>"
 			},
 			"_id": "h0qvQ7hA6kTuBPDI",
 			"img": "icons/magic/nature/root-vine-fire-entangled-hand.webp",

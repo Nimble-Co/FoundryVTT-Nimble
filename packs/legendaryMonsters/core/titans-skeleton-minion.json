@@ -187,8 +187,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d10, follows minion rules</p>",
-				"isAttack": true
+				"description": "<p>1d10, follows minion rules</p>"
 			},
 			"_id": "gRK9r9Obv8VKxE5r",
 			"img": "icons/magic/death/hand-undead-skeleton-fire-green.webp",

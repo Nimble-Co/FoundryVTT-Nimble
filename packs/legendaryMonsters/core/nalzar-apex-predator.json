@@ -193,8 +193,7 @@
 					}
 				},
 				"description": "<p>When dealt slashing or lightning damage: knock a hero within 3 spaces Prone.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -243,8 +242,7 @@
 					}
 				},
 				"description": "<p>Each slashing crit reduces the Wing Buffet DC by 1.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -313,8 +311,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Prone creatures only, Reach 2) 4d12+6.</p>",
-				"isAttack": true
+				"description": "<p>(Prone creatures only, Reach 2) 4d12+6.</p>"
 			},
 			"_id": "hI2su2eXaXAyRbEV",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
@@ -414,8 +411,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Fly 8, then land. Cone 8: 1d12, then DC 14 STR save or also knocked Prone (advantage if behind cover or another hero).</p>",
-				"isAttack": true
+				"description": "<p>Fly 8, then land. Cone 8: 1d12, then DC 14 STR save or also knocked Prone (advantage if behind cover or another hero).</p>"
 			},
 			"_id": "engJrYwHNhUUoJ0h",
 			"img": "icons/commodities/biological/wing-green.webp",

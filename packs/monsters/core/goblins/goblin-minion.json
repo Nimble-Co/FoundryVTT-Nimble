@@ -167,8 +167,7 @@
 					}
 				},
 				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -237,8 +236,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6 (follows minion rules).</p>",
-				"isAttack": true
+				"description": "<p>1d6 (follows minion rules).</p>"
 			},
 			"_id": "8Zvy33f0c5AquKMu",
 			"img": "icons/weapons/swords/shortsword-guard-worn.webp",

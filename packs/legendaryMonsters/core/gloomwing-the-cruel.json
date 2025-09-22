@@ -178,8 +178,7 @@
 					}
 				},
 				"description": "<p>Creatures within 6 spaces take 5 necrotic damage at the end of their turns.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -230,8 +229,7 @@
 					}
 				},
 				"description": "<p>Radiant damage suppresses Aura of Rot until the end of the next hero’s turn.</p>",
-				"isAction": false,
-				"isAttack": false
+				"isAction": false
 			},
 			"effects": [],
 			"folder": null,
@@ -321,8 +319,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Fly 10, then (Cone 8) DC 17 DEX save or 8d10 necrotic, half on save.</p>",
-				"isAttack": true
+				"description": "<p>Fly 10, then (Cone 8) DC 17 DEX save or 8d10 necrotic, half on save.</p>"
 			},
 			"_id": "l74D3jyZAvvmnjwN",
 			"img": "icons/magic/air/fog-gas-smoke-dense-green.webp",
@@ -403,8 +400,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 2) Move 6, then 3d10. On damage: Cruelty’s Gift.</p><p><strong>(Cruelty’s Gift:</strong> Healing is halved and Vulnerable to necrotic damage. Healing ends.)</p>",
-				"isAttack": true
+				"description": "<p>(Reach 2) Move 6, then 3d10. On damage: Cruelty’s Gift.</p><p><strong>(Cruelty’s Gift:</strong> Healing is halved and Vulnerable to necrotic damage. Healing ends.)</p>"
 			},
 			"_id": "aTN2JXVETU0GKQYl",
 			"img": "icons/creatures/abilities/mouth-teeth-sharp.webp",
@@ -485,8 +481,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 2) 3d10 slashing +10 necrotic.</p>",
-				"isAttack": true
+				"description": "<p>(Reach 2) 3d10 slashing +10 necrotic.</p>"
 			},
 			"_id": "r4WCZtq4bx1srya9",
 			"img": "icons/creatures/claws/claw-curved-jagged-gray.webp",
@@ -567,8 +562,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 4) 1d10, and knocked back that many spaces.</p>",
-				"isAttack": true
+				"description": "<p>(Reach 4) 1d10, and knocked back that many spaces.</p>"
 			},
 			"_id": "7oI0VE1lQYamCLTF",
 			"img": "icons/commodities/biological/stinger-insect-grey.webp",

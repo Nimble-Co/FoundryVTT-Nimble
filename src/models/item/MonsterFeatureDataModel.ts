@@ -6,7 +6,6 @@ const { fields } = foundry.data;
 const schema = () => ({
 	description: new fields.HTMLField({ required: true, initial: '', nullable: false }),
 	isAction: new fields.BooleanField({ required: true, initial: false, nullable: false }),
-	isAttack: new fields.BooleanField({ required: true, initial: false, nullable: false }),
 });
 
 declare namespace NimbleMonsterFeatureData {
