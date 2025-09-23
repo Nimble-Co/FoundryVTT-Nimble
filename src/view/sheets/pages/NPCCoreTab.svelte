@@ -22,6 +22,7 @@ function handleEditorSave(event, updatePath, editState) {
 
 	bloodiedEffectInEditMode = false;
 	lastStandEffectInEditMode = false;
+	actionHintInEditMode = false;
 }
 
 function updateArmorCategory(direction) {
@@ -58,6 +59,7 @@ let actions = $derived.by(() =>
 
 let bloodiedEffectInEditMode = $state(false);
 let lastStandEffectInEditMode = $state(false);
+let actionHintInEditMode = $state(false);
 
 document.addEventListener('click', (event) =>
 	handleEditorSave(event, 'system.bloodiedEffect.description', bloodiedEffectInEditMode),
@@ -67,7 +69,12 @@ document.addEventListener('click', (event) =>
 	handleEditorSave(event, 'system.lastStandEffect.description', lastStandEffectInEditMode),
 );
 
+document.addEventListener('click', (event) =>
+	handleEditorSave(event, 'system.actionHint', actionHintInEditMode),
+);
+
 onDestroy(() => {
+	document.removeEventListener('click', handleEditorSave);
 	document.removeEventListener('click', handleEditorSave);
 	document.removeEventListener('click', handleEditorSave);
 	document.removeEventListener('click', handleEditorSave);
@@ -143,16 +150,50 @@ onDestroy(() => {
     </section>
 
     <section class="nimble-monster-sheet-section">
+		{#if actor.reactive.type === "soloMonster"}
+			<header class="nimble-section-header">
+				<h4 class="nimble-heading" data-heading-variant="section">
+					Activation
+				</h4>
+				{#if !actionHintInEditMode}
+					{#key actor.reactive.system.actionHint}
+						<button
+							class="nimble-button nimble-monster-feature-edit-button"
+							data-button-variant="icon"
+							type="button"
+							aria-label="Edit"
+							data-tooltip="Edit"
+							onclick={() => (actionHintInEditMode = true)}
+						>
+							<i class="fa-solid fa-edit"></i>
+						</button>
+					{/key}
+				{/if}
+			</header>
+			{#if actionHintInEditMode}
+				{#key actor.reactive.system.actionHint}
+					<Editor
+						editorOptions={{ compact: true, toggled: false, height: 80 }}
+						field="system.actionHint"
+						content={actor.reactive.system.actionHint || "After each hero's turn, choose one."}
+						document={actor}
+					/>
+				{/key}
+			{:else}
+				<div class="nimble-monster-feature-text-with-button">
+					{#await TextEditor.enrichHTML(actor.reactive?.system?.actionHint || "After each hero's turn, choose one.") then hintText}
+						{#if hintText}
+							<div class="nimble-monster-feature-text">
+								{@html hintText}
+							</div>
+						{/if}
+					{/await}
+				</div>
+			{/if}
+	{/if}
         <header class="nimble-section-header" data-header-variant="monster-actions">
             <h4 class="nimble-heading" data-heading-variant="section">
                 Actions
-
-                {#if actor.reactive.type === "soloMonster"}
-                    <i
-                        class="nimble-monster-heading__icon fa-solid fa-circle-question"
-                        data-tooltip="After each hero's turn, choose one."
-                    ></i>
-                {/if}
             </h4>
 
             <button
