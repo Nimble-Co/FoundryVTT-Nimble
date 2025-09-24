@@ -233,6 +233,13 @@ const manaRecoveryTypes = {
 	initiative: 'NIMBLE.manaRecoveryTypes.initiative',
 };
 
+const monsterFeatureTypes = {
+	feature: 'NIMBLE.monsterFeatureTypes.feature',
+	action: 'NIMBLE.monsterFeatureTypes.action',
+	bloodied: 'NIMBLE.monsterFeatureTypes.bloodied',
+	lastStand: 'NIMBLE.monsterFeatureTypes.lastStand',
+};
+
 const movementTypes = {
 	burrow: 'NIMBLE.movementTypes.burrow',
 	climb: 'NIMBLE.movementTypes.climb',
@@ -458,6 +465,7 @@ const NIMBLE = {
 	languageHints,
 	languageImages,
 	manaRecoveryTypes,
+	monsterFeatureTypes,
 	movementTypes,
 	npcArmorEffects,
 	npcArmorIcons,

@@ -5,7 +5,77 @@ import ArmorClass from '../components/ArmorClass.svelte';
 import Editor from '../components/Editor.svelte';
 import MonsterFeature from '../components/MonsterFeature.svelte';
 import SavingThrows from '../components/SavingThrows.svelte';
+import sortItems from '../../../utils/sortItems.js';
 
+import SearchBar from '../components/SearchBar.svelte';
+
+async function configureItem(event, id) {
+	event.stopPropagation();
+
+	await actor.configureItem(id);
+}
+
+async function createItem(event) {
+	event.stopPropagation();
+
+	await actor.createItem({ name: 'New Feature', type: 'monsterFeature' });
+}
+
+async function deleteItem(event, id) {
+	event.stopPropagation();
+
+	await actor.deleteItem(id);
+}
+
+function groupItemsByType(items) {
+	return items.reduce((categories, item) => {
+		const itemType = mapMonsterFeatureToType(item);
+		categories[itemType] ??= [];
+		categories[itemType].push(item);
+		return categories;
+	}, {});
+}
+
+function sortItemCategories([categoryA], [categoryB]) {
+	return validTypes.indexOf(categoryA) - validTypes.indexOf(categoryB);
+}
+
+const validTypes = ['feature', 'action', 'bloodied', 'lastStand'];
+const { monsterFeatureTypes } = CONFIG.NIMBLE;
+
+function filterMonsterFeatures(actor, searchTerm) {
+	return actor.items.filter((item) => {
+		if (!validTypes.includes(item.system?.subtype)) return false;
+
+		if (!searchTerm) return true;
+		return item.name.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase());
+	});
+}
+
+function mapMonsterFeatureToType(item) {
+	return item.system?.subtype || 'feature';
+}
+
+function prepareItemTooltip(item) {
+	return null;
+}
+
+function getFeatureMetadata(item) {
+	return null;
+}
+
+function getMonsterFeatureIcon(categoryName) {
+	switch (categoryName) {
+		case 'bloodied':
+			return 'fa-solid fa-droplet';
+		case 'last stand':
+			return 'fa-solid fa-skull';
+		case 'action':
+			return 'fa-solid fa-bolt';
+		default:
+			return 'fa-solid fa-message';
+	}
+}
 function getArmorClassLabel(armor) {
 	return npcArmorTypeAbbreviations[armor] ?? '-';
 }
@@ -61,22 +131,18 @@ let bloodiedEffectInEditMode = $state(false);
 let lastStandEffectInEditMode = $state(false);
 let actionHintInEditMode = $state(false);
 
-document.addEventListener('click', (event) =>
-	handleEditorSave(event, 'system.bloodiedEffect.description', bloodiedEffectInEditMode),
-);
+let searchTerm = $state('');
+let items = $derived(filterMonsterFeatures(actor.reactive, searchTerm));
+let categorizedItems = $derived(groupItemsByType(items));
 
-document.addEventListener('click', (event) =>
-	handleEditorSave(event, 'system.lastStandEffect.description', lastStandEffectInEditMode),
-);
+let flags = $derived(actor.reactive.flags.nimble);
+let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
 document.addEventListener('click', (event) =>
 	handleEditorSave(event, 'system.actionHint', actionHintInEditMode),
 );
 
 onDestroy(() => {
-	document.removeEventListener('click', handleEditorSave);
-	document.removeEventListener('click', handleEditorSave);
-	document.removeEventListener('click', handleEditorSave);
 	document.removeEventListener('click', handleEditorSave);
 });
 </script>
@@ -122,103 +188,122 @@ onDestroy(() => {
             </button>
         </section>
     </section>
+	<header class="nimble-sheet__static nimble-sheet__static--features">
+		<div class="nimble-search-wrapper">
+			<SearchBar bind:searchTerm />
 
-    <section class="nimble-monster-sheet-section">
-        <header class="nimble-section-header" data-header-variant="monster-actions">
-            <h4 class="nimble-heading" data-heading-variant="section">
-                Features
-            </h4>
-
-            <button
-                class="nimble-button"
-                data-button-variant="icon"
-                type="button"
-                data-tooltip="Create New Feature"
-                aria-label="Create New Feature"
-                onclick={() =>
-                    actor.createItem({ name: "New Feature", type: "monsterFeature" })}
-            >
-                <i class="fa-solid fa-square-plus"></i>
-            </button>
-        </header>
-
-        <ul class="nimble-monster-list">
-            {#each features as item (item._id)}
-                <MonsterFeature {item} />
-            {/each}
-        </ul>
-    </section>
-
-    <section class="nimble-monster-sheet-section">
-		{#if actor.reactive.type === "soloMonster"}
-			<header class="nimble-section-header">
-				<h4 class="nimble-heading" data-heading-variant="section">
-					Activation
-				</h4>
-				{#if !actionHintInEditMode}
-					{#key actor.reactive.system.actionHint}
-						<button
-							class="nimble-button nimble-monster-feature-edit-button"
-							data-button-variant="icon"
-							type="button"
-							aria-label="Edit"
-							data-tooltip="Edit"
-							onclick={() => (actionHintInEditMode = true)}
-						>
-							<i class="fa-solid fa-edit"></i>
-						</button>
-					{/key}
+			<button
+				class="nimble-button fa-solid fa-plus"
+				data-button-variant="basic"
+				type="button"
+				aria-label="Create Feature"
+				data-tooltip="Create Feature"
+				onclick={createItem}
+			></button>
+		</div>
+	</header>
+	<section class="nimble-sheet__body nimble-sheet__body--player-character">
+		{#each Object.entries(categorizedItems).sort(sortItemCategories) as [categoryName, itemCategory]}
+			<div>
+				<header>
+					<h3 class="nimble-heading" data-heading-variant="section">
+						{monsterFeatureTypes[categoryName] ?? categoryName}
+					</h3>
+				</header>
+				{#if (categoryName === "action" && actor.reactive.type === "soloMonster")}
+					{#if actionHintInEditMode}
+						{#key actor.reactive.system.actionHint}
+							<Editor
+								editorOptions={{ compact: true, toggled: false, height: 80 }}
+								field="system.actionHint"
+								content={actor.reactive.system.actionHint || "After each hero's turn, choose one."}
+								document={actor}
+							/>
+						{/key}
+					{:else}
+						<div class="nimble-monster-feature-text-with-button" style="display: flex; align-items: center; gap: 0.5rem;">
+							{#await TextEditor.enrichHTML(actor.reactive?.system?.actionHint || "After each hero's turn, choose one.") then hintText}
+								{#if hintText}
+									<div class="nimble-monster-feature-text">
+										{@html hintText}
+									</div>
+								{/if}
+							{/await}
+							{#if !actionHintInEditMode}
+								{#key actor.reactive.system.actionHint}
+									<button
+										class="nimble-button nimble-monster-feature-edit-button"
+										data-button-variant="icon"
+										type="button"
+										aria-label="Edit"
+										data-tooltip="Edit"
+										onclick={() => (actionHintInEditMode = true)}
+									>
+										<i class="fa-solid fa-edit"></i>
+									</button>
+								{/key}
+							{/if}
+						</div>
+					{/if}
 				{/if}
-			</header>
-			{#if actionHintInEditMode}
-				{#key actor.reactive.system.actionHint}
-					<Editor
-						editorOptions={{ compact: true, toggled: false, height: 80 }}
-						field="system.actionHint"
-						content={actor.reactive.system.actionHint || "After each hero's turn, choose one."}
-						document={actor}
-					/>
-				{/key}
-			{:else}
-				<div class="nimble-monster-feature-text-with-button">
-					{#await TextEditor.enrichHTML(actor.reactive?.system?.actionHint || "After each hero's turn, choose one.") then hintText}
-						{#if hintText}
-							<div class="nimble-monster-feature-text">
-								{@html hintText}
-							</div>
-						{/if}
-					{/await}
-				</div>
-			{/if}
-	{/if}
-        <header class="nimble-section-header" data-header-variant="monster-actions">
-            <h4 class="nimble-heading" data-heading-variant="section">
-                Actions
-            </h4>
 
-            <button
-                class="nimble-button"
-                data-button-variant="icon"
-                aria-label="Create New Feature"
-                data-tooltip="Create New Feature"
-                onclick={() =>
-                    actor.createItem({
-                        name: "New Feature",
-                        type: "monsterFeature",
-                        system: { isAction: true },
-                    })}
-            >
-                <i class="fa-solid fa-square-plus"></i>
-            </button>
-        </header>
+				<ul class="nimble-item-list">
+					{#each sortItems(itemCategory) as item (item.reactive._id)}
+						{@const metadata = getFeatureMetadata(item)}
+						<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
+						<!-- svelte-ignore  a11y_click_events_have_key_events -->
+						<li class="nimble-document-card nimble-document-card--no-meta"
+							class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
+							class:nimble-document-card--no-meta={!metadata}
+							data-item-id={item.reactive._id}
+							data-tooltip={prepareItemTooltip(item)}
+							data-tooltip-class="nimble-tooltip nimble-tooltip--item"
+							data-tooltip-direction="LEFT"
+							draggable="true"
+							role="button"
+							ondragstart={(event) => sheet._onDragStart(event)}
+							onclick={() => actor.activateItem(item.reactive._id)}
+						>
+							<header class="u-semantic-only">
+								{#if showEmbeddedDocumentImages}
+									<img class="nimble-document-card__img"
+										src={item.reactive.img}
+										alt={item.reactive.name} />
+								{/if}
 
-        <ul class="nimble-monster-list">
-            {#each actions as item (item._id)}
-                <MonsterFeature {item} />
-            {/each}
-        </ul>
-    </section>
+								<h4 class="nimble-document-card__name nimble-heading"
+									data-heading-variant="item">
+									{item.reactive.name}
+								</h4>
 
+								<button
+									class="nimble-button"
+									data-button-variant="icon"
+									type="button"
+									aria-label="Configure {item.reactive.name}"
+									onclick={(event) =>
+										configureItem(event, item._id)}
+								>
+									<i class="fa-solid fa-edit"></i>
+								</button>
+
+								<button
+									class="nimble-button"
+									data-button-variant="icon"
+									type="button"
+									aria-label="Delete {item.reactive.name}"
+									onclick={(event) => deleteItem(event, item._id)}
+								>
+									<i class="fa-solid fa-trash"></i>
+								</button>
+							</header>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/each}
+	</section>
+<!--
     {#if actor.type === "soloMonster"}
         <section class="nimble-monster-sheet-section">
             <ol class="nimble-monster-list">
@@ -326,9 +411,27 @@ onDestroy(() => {
             </ol>
         </section>
     {/if}
+-->
 </section>
 
 <style lang="scss">
+
+	.nimble-item-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        margin: 0.25rem 0 0 0;
+        padding: 0;
+        list-style: none;
+    }
+	.nimble-search-wrapper {
+        --nimble-button-min-width: 2.25rem;
+
+        grid-area: search;
+        display: flex;
+        gap: 0.375rem;
+        width: 100%;
+    }
     .nimble-other-attribute-wrapper {
         position: relative;
 
@@ -399,21 +502,6 @@ onDestroy(() => {
 
         &:not(:last-of-type) {
             border-bottom: 1px solid hsl(41, 18%, 54%, 25%);
-        }
-    }
-
-    .nimble-monster-heading__icon {
-        color: inherit;
-        font-size: var(--nimble-sm-text);
-        transform: translateY(-1px);
-        opacity: 0.65;
-
-        &--bloodied,
-        &--last-stand {
-            color: var(--nimble-dark-text-color);
-            font-size: var(--nimble-xs-text);
-            margin-inline-end: 0.125rem;
-            cursor: inherit;
         }
     }
 </style>
