@@ -21,13 +21,7 @@
 			"creatureType": "Dumb Ogre",
 			"level": "2"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 37 HP, Pudge’s damage increases to 1d12+2.</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Pudge is dying! 20 more damage and he dies. Until then, Pudge can move 6 spaces, and use Grab & Throw each turn.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, choose one:</p>",
+		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -327,6 +321,108 @@
 				"systemVersion": "0.1.8",
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
 				"modifiedTime": 1757911016091
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,3155"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "be8aca8f-aab3-4a8d-9e5d-db684a1c95a6",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 37 HP, Pudge's damage increases to 1d12+2.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,3155"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "5dcc2b1e-2677-41ab-badc-af03a03952c9",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Pudge is dying! 20 more damage and he dies. Until then, Pudge can move 6 spaces, and use Grab & Throw each turn.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

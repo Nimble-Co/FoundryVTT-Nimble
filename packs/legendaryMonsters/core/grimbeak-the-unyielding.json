@@ -21,12 +21,6 @@
 			"creatureType": "Owlbear",
 			"level": "3"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 50 HP, Savage Screech recharges.</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Grimbeak is dying! 30 more damage and she dies. Until then, her Attacks use d10s instead of d6s.</p>"
-		},
 		"attackSequence": "<p>After each Hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
@@ -428,6 +422,108 @@
 				"systemVersion": "0.1.8",
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
 				"modifiedTime": 1757829574052
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,13964"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "a588f10a-2111-4abc-b124-49303ea3bda9",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 50 HP, Savage Screech recharges.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,13964"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "f6403cae-a9ab-4764-8061-6ef066ff8002",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Grimbeak is dying! 30 more damage and she dies. Until then, her Attacks use d10s instead of d6s.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

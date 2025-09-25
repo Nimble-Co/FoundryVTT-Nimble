@@ -21,13 +21,7 @@
 			"creatureType": "Floral Dragon",
 			"level": "7"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 100 HP, enemies within Reach 12 gain Thornblight, and Petal Storm recharges, .</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Florindris is dying! 70 more damage and she dies. Until then, Aura of Wind and Gust move creatures twice as far.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, choose one:</p>",
+		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -282,22 +276,10 @@
 									"parentNode": "sEd9SUKZgwyZ5Eog",
 									"on": {
 										"failedSave": [
-											{
-												"id": "hqIT3cZ3JmowG5YV",
-												"type": "damageOutcome",
-												"outcome": "fullDamage",
-												"parentContext": "failedSave",
-												"parentNode": "6hWswDAtEEl6idrf"
-											}
+											"@{id=hqIT3cZ3JmowG5YV; type=damageOutcome; outcome=fullDamage; parentContext=failedSave; parentNode=6hWswDAtEEl6idrf}"
 										],
 										"passedSave": [
-											{
-												"id": "N1ZBDglGKbHZEFND",
-												"type": "damageOutcome",
-												"outcome": "halfDamage",
-												"parentContext": "passedSave",
-												"parentNode": "6hWswDAtEEl6idrf"
-											}
+											"@{id=N1ZBDglGKbHZEFND; type=damageOutcome; outcome=halfDamage; parentContext=passedSave; parentNode=6hWswDAtEEl6idrf}"
 										]
 									}
 								}
@@ -461,6 +443,108 @@
 				"systemVersion": "0.1.7",
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
 				"modifiedTime": 1757823586921
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,00052"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "59c82eef-fb4a-45cc-8ca9-dfad561920f6",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 100 HP, enemies within Reach 12 gain Thornblight, and Petal Storm recharges, .</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,00152"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "75308d57-8dae-4fd4-ba94-1df3162c1a35",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Florindris is dying! 70 more damage and she dies. Until then, Aura of Wind and Gust move creatures twice as far.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

@@ -21,13 +21,7 @@
 			"creatureType": "Manticore",
 			"level": "5"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 65 HP, his Venomous Stinger recharges.</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>The Ravager is dying! 40 more damage and he dies. Until then, the first time each turn he takes damage, he uses Claw.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, choose one:</p>",
+		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -403,6 +397,108 @@
 				"systemId": "nimble",
 				"systemVersion": "0.1.7",
 				"lastModifiedBy": null
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,40131"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "eaf87f2e-3f4c-42a6-96ad-4874548b80f7",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 65 HP, his Venomous Stinger recharges.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,40131"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "b9d201b4-35bb-43b7-93fb-f6a4daff0008",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>The Ravager is dying! 40 more damage and he dies. Until then, the first time each turn he takes damage, he uses Claw.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

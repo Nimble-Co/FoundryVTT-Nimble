@@ -21,13 +21,7 @@
 			"creatureType": "Matriarch of Spiders",
 			"level": "6"
 		},
-		"bloodiedEffect": {
-			"description": "<p><strong>\"Avenge Your Queen, My Brood!\"</strong> At 80 HP, summon 3 spiderling minions/hero anywhere within Reach 8.</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Aranya is dying! 40 more damage and she dies. Until then, Hatch Brood after each of her turns.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, choose one:</p>",
+		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -177,7 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Creatures she hits are entangled in a sticky web (Dazed).</p><p>Flammable Webs. Fire critical hits suppress the Broodmother’s Weave Web for 1 turn.</p>",
+				"description": "<p>Creatures she hits are entangled in a sticky web (Dazed).</p><p>Flammable Webs. Fire critical hits suppress the Broodmother's Weave Web for 1 turn.</p>",
 				"isAction": false
 			},
 			"effects": [],
@@ -361,6 +355,108 @@
 				"systemVersion": "0.1.8",
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
 				"modifiedTime": 1757911418059
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,35764"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "bb5b92bd-494e-43cf-aef5-0be145190dd4",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p><strong>\"Avenge Your Queen, My Brood!\"</strong> At 80 HP, summon 3 spiderling minions/hero anywhere within Reach 8.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,35764"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "945879cd-6d54-42e9-8e51-c5721e820377",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Aranya is dying! 40 more damage and she dies. Until then, Hatch Brood after each of her turns.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

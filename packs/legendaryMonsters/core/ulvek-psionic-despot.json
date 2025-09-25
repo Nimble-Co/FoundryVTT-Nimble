@@ -1,5 +1,5 @@
 {
-	"name": "Ul’vek, Psionic Despot",
+	"name": "Ul'vek, Psionic Despot",
 	"type": "soloMonster",
 	"folder": null,
 	"img": "systems/nimble/assets/legendaryMonsterImages/core/ulvek.webp",
@@ -21,13 +21,7 @@
 			"creatureType": "Brain-Eating Aberration",
 			"level": "11"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 150 HP gain Illusory Shift. Reaction, when attacked (1 use): Swap places with a Dominated creature, making them the new target of the attack</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Ul’ is dying! 110 more damage and he dies. Until then, Dominated no longer ends on taking damage. Every hero makes a WIL save or become Dominated.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, choose one:</p>",
+		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 0,
@@ -48,7 +42,7 @@
 		}
 	},
 	"prototypeToken": {
-		"name": "Ul’vek, Psionic Despot",
+		"name": "Ul'vek, Psionic Despot",
 		"displayName": 50,
 		"actorLink": false,
 		"width": 1,
@@ -177,7 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever Ul’ would fail a save or take more than 30 damage while he has a creature Dominated, he may avoid the attack instead, but all Dominated creatures come to their senses.</p>",
+				"description": "<p>Whenever Ul' would fail a save or take more than 30 damage while he has a creature Dominated, he may avoid the attack instead, but all Dominated creatures come to their senses.</p>",
 				"isAction": false
 			},
 			"effects": [],
@@ -250,7 +244,7 @@
 										"id": "jW8eaqaYxEhyTZzU",
 										"type": "note",
 										"noteType": "warning",
-										"text": "Dominated: Rolls are made with disadvantage while Dominated. Ul’ spend your first action on each of your turns, moving, making a weapon attack, or casting a cantrip. Damage ends.",
+										"text": "Dominated: Rolls are made with disadvantage while Dominated. Ul' spend your first action on each of your turns, moving, making a weapon attack, or casting a cantrip. Damage ends.",
 										"parentContext": "failedSave",
 										"parentNode": "U5zHDdQC8EF5I0uv"
 									}
@@ -322,7 +316,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Rolls are made with disadvantage while Dominated. Ul’ spend your first action on each of your turns, moving, making a weapon attack, or casting a cantrip. Damage ends.</p>",
+				"description": "<p>Rolls are made with disadvantage while Dominated. Ul' spend your first action on each of your turns, moving, making a weapon attack, or casting a cantrip. Damage ends.</p>",
 				"isAction": false
 			},
 			"effects": [],
@@ -488,6 +482,108 @@
 				"systemVersion": "0.1.8",
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
 				"modifiedTime": 1757913299002
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,54186"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "0f8b03a6-47d2-4b88-9ff7-fd75eb51b14e",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 150 HP gain Illusory Shift. Reaction, when attacked (1 use): Swap places with a Dominated creature, making them the new target of the attack</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,54186"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "6dbaa555-898c-4801-b7dd-6b6a18a4622e",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Ul' is dying! 110 more damage and he dies. Until then, Dominated no longer ends on taking damage. Every hero makes a WIL save or become Dominated.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

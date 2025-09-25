@@ -21,13 +21,7 @@
 			"creatureType": "Bug Druid",
 			"level": "3"
 		},
-		"bloodiedEffect": {
-			"description": "<p>When Kelebek is reduced to 30 HP, Poppy always Interposes for him.</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>When Poppy dies, the room is filled with noxious gas: all heroes have a maximum of 2 actions each turn.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, choose Kelebek OR Poppy to act.</p>",
+		"attackSequence": "<p>After each hero's turn, choose Kelebek OR Poppy to act.</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 0,
@@ -212,6 +206,108 @@
 				"systemVersion": "0.1.8",
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
 				"modifiedTime": 1757830258013
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,18448"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "d881b9ce-c57b-4691-a2c7-b6c0d5faff79",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>When Kelebek is reduced to 30 HP, Poppy always Interposes for him.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,18448"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "91fb836b-288c-4d6c-92da-390b053ebcb9",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>When Poppy dies, the room is filled with noxious gas: all heroes have a maximum of 2 actions each turn.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

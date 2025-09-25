@@ -21,13 +21,7 @@
 			"creatureType": "Rot Dragon",
 			"level": "15"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 160 HP Gloomwing’s Rot Breath recharges.</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Gloomwing is dying! 150 more damage and he dies. Until then, the damage and range of His Aura of Rot is doubled.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, choose one:</p>",
+		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 2,
@@ -228,7 +222,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Radiant damage suppresses Aura of Rot until the end of the next hero’s turn.</p>",
+				"description": "<p>Radiant damage suppresses Aura of Rot until the end of the next hero's turn.</p>",
 				"isAction": false
 			},
 			"effects": [],
@@ -284,22 +278,10 @@
 									"parentNode": "cdMn884JTaizvyNP",
 									"on": {
 										"failedSave": [
-											{
-												"id": "oWbb17FcfRcjUmOM",
-												"type": "damageOutcome",
-												"outcome": "fullDamage",
-												"parentContext": "failedSave",
-												"parentNode": "VMlxi2Mnt3WN00qh"
-											}
+											"@{id=oWbb17FcfRcjUmOM; type=damageOutcome; outcome=fullDamage; parentContext=failedSave; parentNode=VMlxi2Mnt3WN00qh}"
 										],
 										"passedSave": [
-											{
-												"id": "zeJ1yofGxerBizGt",
-												"type": "damageOutcome",
-												"outcome": "halfDamage",
-												"parentContext": "passedSave",
-												"parentNode": "VMlxi2Mnt3WN00qh"
-											}
+											"@{id=zeJ1yofGxerBizGt; type=damageOutcome; outcome=halfDamage; parentContext=passedSave; parentNode=VMlxi2Mnt3WN00qh}"
 										]
 									}
 								}
@@ -373,7 +355,7 @@
 										"id": "XRHnZGUNfC9e3MR8",
 										"type": "note",
 										"noteType": "warning",
-										"text": "IF DAMAGED: \nCruelty’s Gift: Healing is halved and Vulnerable to necrotic damage. Healing ends.",
+										"text": "IF DAMAGED: \nCruelty's Gift: Healing is halved and Vulnerable to necrotic damage. Healing ends.",
 										"parentContext": "hit",
 										"parentNode": "1yb9MSLKYNSB1QyZ"
 									},
@@ -400,7 +382,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 2) Move 6, then 3d10. On damage: Cruelty’s Gift.</p><p><strong>(Cruelty’s Gift:</strong> Healing is halved and Vulnerable to necrotic damage. Healing ends.)</p>"
+				"description": "<p>(Reach 2) Move 6, then 3d10. On damage: Cruelty's Gift.</p><p><strong>(Cruelty's Gift:</strong> Healing is halved and Vulnerable to necrotic damage. Healing ends.)</p>"
 			},
 			"_id": "aTN2JXVETU0GKQYl",
 			"img": "icons/creatures/abilities/mouth-teeth-sharp.webp",
@@ -577,6 +559,108 @@
 				"createdTime": 1757825226275,
 				"modifiedTime": 1757825326275,
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,09232"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "9571d149-5c18-47ed-b5a9-4cae87b6af65",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 160 HP Gloomwing's Rot Breath recharges.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,09332"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "b605db11-88b7-4530-aa11-61b6ef395829",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Gloomwing is dying! 150 more damage and he dies. Until then, the damage and range of His Aura of Rot is doubled.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

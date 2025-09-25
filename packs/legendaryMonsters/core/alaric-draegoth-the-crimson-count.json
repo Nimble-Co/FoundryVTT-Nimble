@@ -21,12 +21,6 @@
 			"creatureType": "Vampire Lord",
 			"level": "16"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 160 HP, gain Mistform. Not vulnerable to radiant. Bat Decoy. Whenever Alaric would take damage, instead first swap places with a bat minion, 1/round.</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Alaric is dying! 160 more damage and he dies. Until then, his Sanguine Cloak, attacks, and bats roll d20s instead of d10s.</p>"
-		},
 		"attackSequence": "<p>After each hero's turn, summon 1 Blood Bat minion (d10) within 8 spaces, then choose 1:</p>",
 		"savingThrows": {
 			"strength": {
@@ -279,7 +273,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>After each hero’s turn, summon 1 blood bat minion (d10) within 8 spaces, then choose 1 action</p>",
+				"description": "<p>After each hero's turn, summon 1 blood bat minion (d10) within 8 spaces, then choose 1 action</p>",
 				"isAction": false
 			},
 			"effects": [],
@@ -517,6 +511,108 @@
 				"createdTime": 1757808054786,
 				"modifiedTime": 1757808218760,
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805482,78482"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "5c7dafa0-56e4-48f6-8b88-d3e8f2567a1d",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 160 HP, gain Mistform. Not vulnerable to radiant. Bat Decoy. Whenever Alaric would take damage, instead first swap places with a bat minion, 1/round.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805482,78782"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "db041a32-58d9-4de3-bec5-b1fe4af52757",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Alaric is dying! 160 more damage and he dies. Until then, his Sanguine Cloak, attacks, and bats roll d20s instead of d10s.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

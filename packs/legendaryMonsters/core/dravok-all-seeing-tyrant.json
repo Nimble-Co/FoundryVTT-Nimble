@@ -21,13 +21,7 @@
 			"creatureType": "Aberration, all TEETH & EYES",
 			"level": "12"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 110 HP, use Petrification Ray against every enemy. His save DC increases to 18</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Dravok is dying! 70 more damage and he dies. Until then, each turn he will move or use Warping Ray and then <strong>Devastation Beam</strong>. [[/r 2d12+20]] in a 10 space long, 2 space wide line.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, Move 6 and then either use <strong>Eye Ray</strong> (Range 10, [[/r 1d6]]{randomly chosen ray} then choose target) OR <strong>Terrible Maw</strong>. </p>",
+		"attackSequence": "<p>After each hero's turn, Move 6 and then either use <strong>Eye Ray</strong> (Range 10, [[/r 1d6]]{randomly chosen ray} then choose target) OR <strong>Terrible Maw</strong>. </p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 0,
@@ -228,7 +222,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Taking more than 12 piercing or slashing damage: Dravok’s plans are FLAWED! (until the end of the next hero’s turn.)</p>",
+				"description": "<p>Taking more than 12 piercing or slashing damage: Dravok's plans are FLAWED! (until the end of the next hero's turn.)</p>",
 				"isAction": false
 			},
 			"effects": [],
@@ -420,7 +414,7 @@
 										"id": "5qyte95rBYaomW24",
 										"type": "note",
 										"noteType": "warning",
-										"text": "TERRIFIED: You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok’s plans are FLAWED.",
+										"text": "TERRIFIED: You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok's plans are FLAWED.",
 										"parentContext": "hit",
 										"parentNode": "hp79M6PwhC6h3dXu"
 									},
@@ -447,7 +441,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>5d10 psychic damage & Terrified: </p><p>(You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok’s plans are FLAWED.)</p>"
+				"description": "<p>5d10 psychic damage & Terrified: </p><p>(You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok's plans are FLAWED.)</p>"
 			},
 			"_id": "x3uAQ8Y4Pog85I7f",
 			"img": "icons/magic/light/beam-rays-red-large.webp",
@@ -792,6 +786,108 @@
 				"createdTime": 1757821859105,
 				"modifiedTime": 1757822797708,
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805482,95302"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "2e548fc4-7119-4d5d-9f1d-accc11a36251",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 110 HP, use Petrification Ray against every enemy. His save DC increases to 18</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805482,95302"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "f4270f1d-7776-47e2-b56e-879850a8d7f9",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Dravok is dying! 70 more damage and he dies. Until then, each turn he will move or use Warping Ray and then <strong>Devastation Beam</strong>. [[/r 2d12+20]] in a 10 space long, 2 space wide line.</p>",
+				"macro": "",
+				"isAction": false,
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],
