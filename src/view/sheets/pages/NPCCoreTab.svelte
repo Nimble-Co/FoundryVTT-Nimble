@@ -92,7 +92,7 @@ function handleEditorSave(event, updatePath, editState) {
 
 	bloodiedEffectInEditMode = false;
 	lastStandEffectInEditMode = false;
-	actionHintInEditMode = false;
+	attackSequenceInEditMode = false;
 }
 
 function updateArmorCategory(direction) {
@@ -129,7 +129,7 @@ let actions = $derived.by(() =>
 
 let bloodiedEffectInEditMode = $state(false);
 let lastStandEffectInEditMode = $state(false);
-let actionHintInEditMode = $state(false);
+let attackSequenceInEditMode = $state(false);
 
 let searchTerm = $state('');
 let items = $derived(filterMonsterFeatures(actor.reactive, searchTerm));
@@ -139,7 +139,7 @@ let flags = $derived(actor.reactive.flags.nimble);
 let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
 document.addEventListener('click', (event) =>
-	handleEditorSave(event, 'system.actionHint', actionHintInEditMode),
+	handleEditorSave(event, 'system.attackSequence', attackSequenceInEditMode),
 );
 
 onDestroy(() => {
@@ -211,33 +211,33 @@ onDestroy(() => {
 					</h3>
 				</header>
 				{#if (categoryName === "action" && actor.reactive.type === "soloMonster")}
-					{#if actionHintInEditMode}
-						{#key actor.reactive.system.actionHint}
+					{#if attackSequenceInEditMode}
+						{#key actor.reactive.system.attackSequence}
 							<Editor
 								editorOptions={{ compact: true, toggled: false, height: 80 }}
-								field="system.actionHint"
-								content={actor.reactive.system.actionHint || "After each hero's turn, choose one."}
+								field="system.attackSequence"
+								content={actor.reactive.system.attackSequence || "After each hero's turn, choose one."}
 								document={actor}
 							/>
 						{/key}
 					{:else}
 						<div class="nimble-monster-feature-text-with-button" style="display: flex; align-items: center; gap: 0.5rem;">
-							{#await TextEditor.enrichHTML(actor.reactive?.system?.actionHint || "After each hero's turn, choose one.") then hintText}
+							{#await TextEditor.enrichHTML(actor.reactive?.system?.attackSequence || "After each hero's turn, choose one.") then hintText}
 								{#if hintText}
 									<div class="nimble-monster-feature-text">
 										{@html hintText}
 									</div>
 								{/if}
 							{/await}
-							{#if !actionHintInEditMode}
-								{#key actor.reactive.system.actionHint}
+							{#if !attackSequenceInEditMode}
+								{#key actor.reactive.system.attackSequence}
 									<button
 										class="nimble-button nimble-monster-feature-edit-button"
 										data-button-variant="icon"
 										type="button"
 										aria-label="Edit"
 										data-tooltip="Edit"
-										onclick={() => (actionHintInEditMode = true)}
+										onclick={() => (attackSequenceInEditMode = true)}
 									>
 										<i class="fa-solid fa-edit"></i>
 									</button>
