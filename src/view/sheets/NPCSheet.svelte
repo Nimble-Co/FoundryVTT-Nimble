@@ -15,18 +15,18 @@ function getHitPointPercentage(currentHP, maxHP) {
 
 function prepareMonsterMetadata() {
 	if (actor.reactive.type === 'soloMonster') {
-		return `Level ${actor.reactive.system.details.level ?? 1} Solo ${actor.reactive.system.details.creatureType}, Size: ${actor.reactive.system.attributes.sizeCategory}`;
+		return `${actor.reactive.system.attributes.sizeCategory} Level ${actor.reactive.system.details.level ?? 1} Solo ${actor.reactive.system.details.creatureType}`;
 	}
 
 	if (actor.reactive.type === 'minion') {
-		return `Level ${actor.reactive.system.details.level ?? 1} ${actor.reactive.system.details.creatureType} Minion, Size: ${actor.reactive.system.attributes.sizeCategory}`;
+		return `${actor.reactive.system.attributes.sizeCategory} Level ${actor.reactive.system.details.level ?? 1} ${actor.reactive.system.details.creatureType} Minion}`;
 	}
 
 	if (actor.reactive.system.details.isFlunky) {
-		return `Level ${actor.reactive.system.details.level ?? 1} ${actor.reactive.system.details.creatureType} Flunky, Size: ${actor.reactive.system.attributes.sizeCategory}`;
+		return `${actor.reactive.system.attributes.sizeCategory} Level ${actor.reactive.system.details.level ?? 1} ${actor.reactive.system.details.creatureType} Flunky}`;
 	}
 
-	return `Level ${actor.reactive.system.details.level ?? 1} ${actor.reactive.system.details.creatureType}, Size: ${actor.reactive.system.attributes.sizeCategory}`;
+	return `${actor.reactive.system.attributes.sizeCategory} Level ${actor.reactive.system.details.level ?? 1} ${actor.reactive.system.details.creatureType}}`;
 }
 
 function updateCurrentHP(newValue) {
