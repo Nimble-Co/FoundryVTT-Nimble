@@ -7,7 +7,6 @@ import MonsterFeature from '../components/MonsterFeature.svelte';
 import SavingThrows from '../components/SavingThrows.svelte';
 import sortItems from '../../../utils/sortItems.js';
 
-import SearchBar from '../components/SearchBar.svelte';
 import prepareMonsterFeatureTooltip from '../../dataPreparationHelpers/documentTooltips/prepareMonsterFeatureTooltip.js';
 
 async function configureItem(event, id) {
@@ -44,12 +43,11 @@ function sortItemCategories([categoryA], [categoryB]) {
 const validTypes = ['feature', 'action', 'bloodied', 'lastStand'];
 const { monsterFeatureTypes } = CONFIG.NIMBLE;
 
-function filterMonsterFeatures(actor, searchTerm) {
+function filterMonsterFeatures(actor) {
 	return actor.items.filter((item) => {
 		if (!validTypes.includes(item.system?.subtype)) return false;
 
-		if (!searchTerm) return true;
-		return item.name.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase());
+		return item.name.toLocaleLowerCase();
 	});
 }
 
@@ -137,8 +135,7 @@ let bloodiedEffectInEditMode = $state(false);
 let lastStandEffectInEditMode = $state(false);
 let attackSequenceInEditMode = $state(false);
 
-let searchTerm = $state('');
-let items = $derived(filterMonsterFeatures(actor.reactive, searchTerm));
+let items = $derived(filterMonsterFeatures(actor.reactive));
 let categorizedItems = $derived(groupItemsByType(items));
 
 let flags = $derived(actor.reactive.flags.nimble);
@@ -195,18 +192,7 @@ onDestroy(() => {
         </section>
     </section>
 	<header class="nimble-sheet__static nimble-sheet__static--features">
-		<div class="nimble-search-wrapper">
-			<SearchBar bind:searchTerm />
 
-			<button
-				class="nimble-button fa-solid fa-plus"
-				data-button-variant="basic"
-				type="button"
-				aria-label="Create Feature"
-				data-tooltip="Create Feature"
-				onclick={createItem}
-			></button>
-		</div>
 	</header>
 	<section class="nimble-sheet__body nimble-sheet__body--player-character">
 		{#each Object.entries(categorizedItems).sort(sortItemCategories) as [categoryName, itemCategory]}
@@ -214,6 +200,16 @@ onDestroy(() => {
 				<header>
 					<h3 class="nimble-heading" data-heading-variant="section">
 						{monsterFeatureTypes[categoryName] ?? categoryName}
+						{#if (categoryName === "feature")}
+							<button
+								class="nimble-button fa-solid fa-plus"
+								data-button-variant="basic"
+								type="button"
+								aria-label="Create Feature"
+								data-tooltip="Create Feature"
+								onclick={createItem}
+							></button>
+						{/if}
 					</h3>
 				</header>
 				{#if (categoryName === "action" && actor.reactive.type === "soloMonster")}
@@ -320,14 +316,6 @@ onDestroy(() => {
         margin: 0.25rem 0 0 0;
         padding: 0;
         list-style: none;
-    }
-	.nimble-search-wrapper {
-        --nimble-button-min-width: 2.25rem;
-
-        grid-area: search;
-        display: flex;
-        gap: 0.375rem;
-        width: 100%;
     }
     .nimble-other-attribute-wrapper {
         position: relative;
