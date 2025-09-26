@@ -8,6 +8,7 @@ import SavingThrows from '../components/SavingThrows.svelte';
 import sortItems from '../../../utils/sortItems.js';
 
 import SearchBar from '../components/SearchBar.svelte';
+import prepareMonsterFeatureTooltip from '../../dataPreparationHelpers/documentTooltips/prepareMonsterFeatureTooltip.js';
 
 async function configureItem(event, id) {
 	event.stopPropagation();
@@ -57,7 +58,12 @@ function mapMonsterFeatureToType(item) {
 }
 
 function prepareItemTooltip(item) {
-	return null;
+	switch (item.type) {
+		case 'monsterFeature':
+			return prepareMonsterFeatureTooltip(item);
+		default:
+			return null;
+	}
 }
 
 function getFeatureMetadata(item) {
@@ -468,26 +474,6 @@ onDestroy(() => {
 
         &:hover {
             color: var(--nimble-primary-color);
-        }
-    }
-
-    .nimble-monster-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        list-style: none;
-        margin: 0;
-        padding: 0;
-
-        &__item {
-            --nimble-button-font-size: var(--nimble-sm-text);
-            --nimble-button-opacity: 0;
-            --nimble-button-padding: 0;
-            --nimble-button-icon-y-nudge: -1px;
-
-            &:hover {
-                --nimble-button-opacity: 1;
-            }
         }
     }
 
