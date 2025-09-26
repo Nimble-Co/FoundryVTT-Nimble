@@ -7,8 +7,6 @@ import MonsterFeature from '../components/MonsterFeature.svelte';
 import SavingThrows from '../components/SavingThrows.svelte';
 import sortItems from '../../../utils/sortItems.js';
 
-import prepareMonsterFeatureTooltip from '../../dataPreparationHelpers/documentTooltips/prepareMonsterFeatureTooltip.js';
-
 async function configureItem(event, id) {
 	event.stopPropagation();
 
@@ -56,12 +54,7 @@ function mapMonsterFeatureToType(item) {
 }
 
 function prepareItemTooltip(item) {
-	switch (item.type) {
-		case 'monsterFeature':
-			return prepareMonsterFeatureTooltip(item);
-		default:
-			return null;
-	}
+	return null;
 }
 
 function getFeatureMetadata(item) {
@@ -300,6 +293,15 @@ onDestroy(() => {
 								</button>
 							</header>
 						</li>
+						<div class="nimble-monster-feature-text" style="display: felx; align-items: center; gap: 0.5rem;">
+							{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.system.description) then featureDescription}
+								{#if featureDescription}
+									<div class="nimble-monster-feature-text">
+										{@html featureDescription}
+									</div>
+								{/if}
+							{/await}
+						</div>
 					{/each}
 				</ul>
 			</div>
