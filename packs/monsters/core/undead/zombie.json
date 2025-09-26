@@ -141,7 +141,6 @@
 			"name": "Crunch.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -200,7 +199,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d4+4. On damage: Grappled</p>"
+				"description": "<p>1d4+4. On damage: Grappled</p>",
+				"subtype": "action"
 			},
 			"_id": "wgiL9nmnsFME5ufI",
 			"img": "icons/creatures/abilities/mouth-teeth-human.webp",
@@ -251,8 +251,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
-				"isAction": false
+				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
 			},
 			"effects": [],
 			"folder": null,

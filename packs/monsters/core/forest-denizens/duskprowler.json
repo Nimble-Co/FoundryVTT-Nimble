@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Attacks against the Duskprowler have Disadvantage 2. Damage supresses this effect until the end of the next hero’s turn.</p>",
-				"isAction": false
+				"description": "<p>Attacks against the Duskprowler have Disadvantage 2. Damage supresses this effect until the end of the next hero’s turn.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Ravage (2×).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -242,7 +240,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>2d8+2.</p>"
+				"description": "<p>2d8+2.</p>",
+				"subtype": "action"
 			},
 			"_id": "ByG4q6Lo6Yup8vBh",
 			"img": "icons/skills/melee/blood-slash-foam-red.webp",

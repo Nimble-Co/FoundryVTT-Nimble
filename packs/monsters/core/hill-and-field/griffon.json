@@ -202,7 +202,7 @@
 					}
 				},
 				"description": "<p>2d6+10, on hit: Grappled (escape DC 14), OR</p>",
-				"isAction": true
+				"subtype": "action"
 			},
 			"effects": [],
 			"folder": null,
@@ -220,7 +220,6 @@
 			"name": "Fly & Drop.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -272,7 +271,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(if grappling) Fly upward 12 and release (6d6 fall damage).</p>"
+				"description": "<p>(if grappling) Fly upward 12 and release (6d6 fall damage).</p>",
+				"subtype": "action"
 			},
 			"_id": "zbemqzkdyuTuPIBf",
 			"img": "icons/commodities/biological/wing-bird-white.webp",

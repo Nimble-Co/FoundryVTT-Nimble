@@ -171,8 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever Ravager is crit, he can fly 10.</p>",
-				"isAction": false
+				"description": "<p>Whenever Ravager is crit, he can fly 10.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Venomous Stinger. (1 use)",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -242,7 +240,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Reach 3, 5d12 damage.</p>"
+				"description": "<p>Reach 3, 5d12 damage.</p>",
+				"subtype": "action"
 			},
 			"_id": "XQZe73BXr65Lfgql",
 			"img": "icons/creatures/abilities/stinger-poison-green.webp",
@@ -261,7 +260,6 @@
 			"name": "Ravage.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -313,7 +311,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Attack for 1d12+20 damage.</p>"
+				"description": "<p>Attack for 1d12+20 damage.</p>",
+				"subtype": "action"
 			},
 			"_id": "vpJXS7vET9FrEPNc",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
@@ -332,7 +331,6 @@
 			"name": "Claw.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -384,7 +382,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Fly 10, attack for 1d12+6 damage.</p>"
+				"description": "<p>Fly 10, attack for 1d12+6 damage.</p>",
+				"subtype": "action"
 			},
 			"_id": "hvZLdMbWjqjnGfIo",
 			"img": "icons/creatures/claws/claw-hooked-curved.webp",
@@ -418,7 +417,6 @@
 			"system": {
 				"description": "<p>At 65 HP, his Venomous Stinger recharges.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -469,7 +467,6 @@
 			"system": {
 				"description": "<p>The Ravager is dying! 40 more damage and he dies. Until then, the first time each turn he takes damage, he uses Claw.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {

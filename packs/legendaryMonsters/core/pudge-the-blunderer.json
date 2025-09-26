@@ -140,7 +140,6 @@
 			"name": "Move & Smack.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -206,7 +205,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move 8, attack for 1d8+2. On damage: Prone.</p>"
+				"description": "<p>Move 8, attack for 1d8+2. On damage: Prone.</p>",
+				"subtype": "action"
 			},
 			"_id": "Egw0SfukBFY6ug6C",
 			"img": "icons/weapons/clubs/club-banded-brown.webp",
@@ -225,7 +225,6 @@
 			"name": "Grab & Throw.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -307,7 +306,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d8+2, on damage: they are thrown at another hero within 6 spaces. Both make a DC 12 DEX save or take 1d8+2 damage and are knocked Prone, half damage on save.</p>"
+				"description": "<p>1d8+2, on damage: they are thrown at another hero within 6 spaces. Both make a DC 12 DEX save or take 1d8+2 damage and are knocked Prone, half damage on save.</p>",
+				"subtype": "action"
 			},
 			"_id": "SKhOQ3JXY1aE3RK2",
 			"img": "icons/skills/melee/unarmed-punch-fist.webp",
@@ -342,7 +342,6 @@
 			"system": {
 				"description": "<p>At 37 HP, Pudge's damage increases to 1d12+2.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -393,7 +392,6 @@
 			"system": {
 				"description": "<p>Pudge is dying! 20 more damage and he dies. Until then, Pudge can move 6 spaces, and use Grab & Throw each turn.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {

@@ -140,7 +140,6 @@
 			"name": "Vinelash.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -192,7 +191,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move 6, then 2d6. On damage: move target to an unoccupied space within 10 spaces.</p>"
+				"description": "<p>Move 6, then 2d6. On damage: move target to an unoccupied space within 10 spaces.</p>",
+				"subtype": "action"
 			},
 			"_id": "cVE3FkUPijy51yGA",
 			"img": "icons/magic/nature/root-vine-coiled-crook.webp",
@@ -227,7 +227,6 @@
 			"system": {
 				"description": "<p>When Kelebek is reduced to 30 HP, Poppy always Interposes for him.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -278,7 +277,6 @@
 			"system": {
 				"description": "<p>When Poppy dies, the room is filled with noxious gas: all heroes have a maximum of 2 actions each turn.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {

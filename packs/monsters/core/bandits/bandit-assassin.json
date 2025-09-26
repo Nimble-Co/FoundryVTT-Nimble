@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
-				"isAction": false
+				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -221,8 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>You are invisible until you attack.</p>",
-				"isAction": false
+				"description": "<p>You are invisible until you attack.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -239,7 +237,6 @@
 			"name": "Poison Blade (2×).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -298,7 +295,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d8+2. On damage: Dazed.</p>"
+				"description": "<p>1d8+2. On damage: Dazed.</p>",
+				"subtype": "action"
 			},
 			"_id": "E60UdXxj5NhOhoKP",
 			"img": "icons/weapons/daggers/dagger-poisoned.webp",

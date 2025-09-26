@@ -171,8 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Creatures she hits are entangled in a sticky web (Dazed).</p><p>Flammable Webs. Fire critical hits suppress the Broodmother's Weave Web for 1 turn.</p>",
-				"isAction": false
+				"description": "<p>Creatures she hits are entangled in a sticky web (Dazed).</p><p>Flammable Webs. Fire critical hits suppress the Broodmother's Weave Web for 1 turn.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -189,7 +188,6 @@
 			"name": "Impale.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -241,7 +239,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 2) 2d8+8 damage. Then skitter away up to 8 spaces.</p>"
+				"description": "<p>(Reach 2) 2d8+8 damage. Then skitter away up to 8 spaces.</p>",
+				"subtype": "action"
 			},
 			"_id": "uR2LgC5MQnJqTlmY",
 			"img": "icons/creatures/abilities/tail-strike-bone-orange.webp",
@@ -261,7 +260,6 @@
 			"name": "Hatch Brood.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -291,7 +289,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Summon spiderling minions (1/hero, size:d8); they act only when commanded.</p>"
+				"description": "<p>Summon spiderling minions (1/hero, size:d8); they act only when commanded.</p>",
+				"subtype": "action"
 			},
 			"_id": "kSOMGGAzgut6zVGb",
 			"img": "icons/creatures/invertebrates/spider-dotted-green.webp",
@@ -311,7 +310,6 @@
 			"name": "Dinner Time!",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -341,7 +339,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Command all of your spiderling minions to move up to 6 spaces and attack once each.</p>"
+				"description": "<p>Command all of your spiderling minions to move up to 6 spaces and attack once each.</p>",
+				"subtype": "action"
 			},
 			"_id": "3T6uoxWsUus6ePig",
 			"img": "icons/consumables/food/plate-fish-bowl-bones-brown.webp",
@@ -376,7 +375,6 @@
 			"system": {
 				"description": "<p><strong>\"Avenge Your Queen, My Brood!\"</strong> At 80 HP, summon 3 spiderling minions/hero anywhere within Reach 8.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -427,7 +425,6 @@
 			"system": {
 				"description": "<p>Aranya is dying! 40 more damage and she dies. Until then, Hatch Brood after each of her turns.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {

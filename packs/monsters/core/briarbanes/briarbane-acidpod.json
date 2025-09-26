@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>",
-				"isAction": false
+				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -243,8 +242,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On death: 4d6 acid damage to ALL adjacent creatures.</p>",
-				"isAction": false
+				"description": "<p>On death: 4d6 acid damage to ALL adjacent creatures.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -261,7 +259,6 @@
 			"name": "Grab.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -320,7 +317,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>DC 12 DEX save or Grappled.</p>"
+				"description": "<p>DC 12 DEX save or Grappled.</p>",
+				"subtype": "action"
 			},
 			"_id": "h0qvQ7hA6kTuBPDI",
 			"img": "icons/magic/nature/root-vine-fire-entangled-hand.webp",

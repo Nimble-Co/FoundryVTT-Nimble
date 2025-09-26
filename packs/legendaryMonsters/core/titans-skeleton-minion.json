@@ -135,7 +135,6 @@
 			"name": "Attack",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -187,7 +186,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d10, follows minion rules</p>"
+				"description": "<p>1d10, follows minion rules</p>",
+				"subtype": "action"
 			},
 			"_id": "gRK9r9Obv8VKxE5r",
 			"img": "icons/magic/death/hand-undead-skeleton-fire-green.webp",

@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Melee attackers take 3 damage.</p>",
-				"isAction": false
+				"description": "<p>Melee attackers take 3 damage.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Claws (2×).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -242,7 +240,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+6. OR</p>"
+				"description": "<p>1d6+6. OR</p>",
+				"subtype": "action"
 			},
 			"_id": "X7bq5EGbjHYQC3lH",
 			"img": "icons/creatures/claws/claw-straight-orange.webp",
@@ -262,7 +261,6 @@
 			"name": "Shoot Spine.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -314,7 +312,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 12) 1d6+6.</p>"
+				"description": "<p>(Range 12) 1d6+6.</p>",
+				"subtype": "action"
 			},
 			"_id": "1gUd0eDfiQ6FBFR9",
 			"img": "icons/creatures/abilities/tail-strike-bone-orange.webp",

@@ -171,8 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When damaged, enemies within 2 spaces make a STR save (DC equal to the higher of 10 or the damage done). On a failure, they must spend their next action vomiting, and they cannot take reactions this round.</p>",
-				"isAction": false
+				"description": "<p>When damaged, enemies within 2 spaces make a STR save (DC equal to the higher of 10 or the damage done). On a failure, they must spend their next action vomiting, and they cannot take reactions this round.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -189,7 +188,6 @@
 			"name": "Crushing Mandibles.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -241,7 +239,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move 6. 4d6 damage, up to 2 adjacent creatures.</p>"
+				"description": "<p>Move 6. 4d6 damage, up to 2 adjacent creatures.</p>",
+				"subtype": "action"
 			},
 			"_id": "bF81HUOt0AEo855I",
 			"img": "icons/creatures/invertebrates/beetle-stag-yellow-green.webp",
@@ -276,7 +275,6 @@
 			"system": {
 				"description": "<p>When Kelebek is reduced to 30 HP, Poppy always Interposes for him</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -327,7 +325,6 @@
 			"system": {
 				"description": "<p>When Poppy dies, the room is filled with noxious gas: all heroes have a maximum of 2 actions each turn.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {

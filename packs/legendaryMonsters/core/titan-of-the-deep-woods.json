@@ -171,8 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Bludgeoning damage or any crit cause bones to splinter off and animate, forming a d10 minion.</p>",
-				"isAction": false
+				"description": "<p>Bludgeoning damage or any crit cause bones to splinter off and animate, forming a d10 minion.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -221,8 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Resistant to piercing, vulnerable to bludgeoning.</p>",
-				"isAction": false
+				"description": "<p>Resistant to piercing, vulnerable to bludgeoning.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -240,7 +238,6 @@
 			"name": "Devastating Strike.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -300,7 +297,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 4) 1d4+30 damage. On hit: Knockback 6.</p>"
+				"description": "<p>(Reach 4) 1d4+30 damage. On hit: Knockback 6.</p>",
+				"subtype": "action"
 			},
 			"_id": "SdltF0h07pyt8QgI",
 			"img": "icons/weapons/swords/greatsword-guard-split-eyes.webp",
@@ -320,7 +318,6 @@
 			"name": "Crushing Stomp.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -386,7 +383,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move up to 10 spaces. Deal 1d4+20 damage to up to 2 targets along the path. On hit: Prone.</p>"
+				"description": "<p>Move up to 10 spaces. Deal 1d4+20 damage to up to 2 targets along the path. On hit: Prone.</p>",
+				"subtype": "action"
 			},
 			"_id": "ekNtNgYbJXn9Lv7b",
 			"img": "icons/skills/movement/feet-bladed-boots-fire.webp",
@@ -406,7 +404,6 @@
 			"name": "Beckoning Doom.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -459,7 +456,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>The 2 furthest heroes make a DC 16 STR save or are moved adjacent to Titan.</p>"
+				"description": "<p>The 2 furthest heroes make a DC 16 STR save or are moved adjacent to Titan.</p>",
+				"subtype": "action"
 			},
 			"_id": "J3uKzVH5MXvS6fAo",
 			"img": "icons/magic/control/debuff-energy-hold-teal-blue.webp",
@@ -494,7 +492,6 @@
 			"system": {
 				"description": "",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -545,7 +542,6 @@
 			"system": {
 				"description": "<p><strong>Shattered Legion.</strong> At 0 HP Titan collapses into 4 skeleton minions/hero (d10 sized). If any remain, they reassemble into the Titan the next evening.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {

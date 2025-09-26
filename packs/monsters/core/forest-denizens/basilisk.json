@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Creatures Dazed by the Basilisk remain so for 10 minutes. Dazed 3 times = Petrified.</p>",
-				"isAction": false
+				"description": "<p>Creatures Dazed by the Basilisk remain so for 10 minutes. Dazed 3 times = Petrified.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Stone Gaze.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -235,7 +233,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Daze 1 creature within sight, then</p>"
+				"description": "<p>Daze 1 creature within sight, then</p>",
+				"subtype": "action"
 			},
 			"_id": "TWonhyB7gWas4zsh",
 			"img": "icons/magic/perception/eye-ringed-glow-angry-small-teal.webp",
@@ -254,7 +253,6 @@
 			"name": "Envenom.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -306,7 +304,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d8+10, advantage vs Dazed targets.</p>"
+				"description": "<p>1d8+10, advantage vs Dazed targets.</p>",
+				"subtype": "action"
 			},
 			"_id": "mzXBeSIiHeaAVFb1",
 			"img": "icons/creatures/abilities/fang-tooth-venomous.webp",

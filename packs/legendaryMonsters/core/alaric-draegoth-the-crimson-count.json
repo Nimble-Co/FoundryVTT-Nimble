@@ -171,8 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(1/turn) Deal [[/r 1d10]] necrotic damage whenever you are hit, the attack is reduced by this amount.</p>",
-				"isAction": false
+				"description": "<p>(1/turn) Deal [[/r 1d10]] necrotic damage whenever you are hit, the attack is reduced by this amount.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -222,8 +221,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Vulnerable to radiant. After taking radiant damage, use Beguile as a Reaction, they roll with disadvantage.</p>",
-				"isAction": false
+				"description": "<p>Vulnerable to radiant. After taking radiant damage, use Beguile as a Reaction, they roll with disadvantage.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -273,8 +271,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>After each hero's turn, summon 1 blood bat minion (d10) within 8 spaces, then choose 1 action</p>",
-				"isAction": false
+				"description": "<p>After each hero's turn, summon 1 blood bat minion (d10) within 8 spaces, then choose 1 action</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -293,7 +290,6 @@
 			"name": "Ebonfang",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -352,7 +348,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Deal 1d10+15 damage, your target is considered Bloodied for 1 round. Fly 8 before or after attacking.</p>"
+				"description": "<p>Deal 1d10+15 damage, your target is considered Bloodied for 1 round. Fly 8 before or after attacking.</p>",
+				"subtype": "action"
 			},
 			"_id": "pm7AVHiCb0C7lHqK",
 			"img": "icons/weapons/swords/greatsword-crossguard-flanged-red.webp",
@@ -373,7 +370,6 @@
 			"name": "Beguile",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -415,7 +411,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>If no creature is Beguiled, Beguile a target on a failed DC 18 WIL save (w/ disadvantage if Bloodied). </p><p><strong>Beguiled.</strong> Dazed. Cannot Defend or allow anyone to Interpose for you. Damage ends.</p>"
+				"description": "<p>If no creature is Beguiled, Beguile a target on a failed DC 18 WIL save (w/ disadvantage if Bloodied). </p><p><strong>Beguiled.</strong> Dazed. Cannot Defend or allow anyone to Interpose for you. Damage ends.</p>",
+				"subtype": "action"
 			},
 			"_id": "49Lf23xPbGSi5MTR",
 			"img": "icons/magic/control/debuff-energy-hold-pink.webp",
@@ -436,7 +433,6 @@
 			"name": "Beckon & Bite",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -496,7 +492,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move a Beguiled creature adjacent to you and bite them: 2d10+30 damage and 1 Wound.</p>"
+				"description": "<p>Move a Beguiled creature adjacent to you and bite them: 2d10+30 damage and 1 Wound.</p>",
+				"subtype": "action"
 			},
 			"_id": "NMZj4KGiElpDARFM",
 			"img": "icons/creatures/abilities/mouth-teeth-human.webp",
@@ -532,7 +529,6 @@
 			"system": {
 				"description": "<p>At 160 HP, gain Mistform. Not vulnerable to radiant. Bat Decoy. Whenever Alaric would take damage, instead first swap places with a bat minion, 1/round.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -583,7 +579,6 @@
 			"system": {
 				"description": "<p>Alaric is dying! 160 more damage and he dies. Until then, his Sanguine Cloak, attacks, and bats roll d20s instead of d10s.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {

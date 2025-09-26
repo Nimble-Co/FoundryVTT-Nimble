@@ -171,8 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Treat the highest die rolled as the Primary Die. On crit: knock Prone.</p>",
-				"isAction": false
+				"description": "<p>Treat the highest die rolled as the Primary Die. On crit: knock Prone.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Savage Screech. (1 use)",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -264,7 +262,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>All enemies within reach 12 suffer 2d6 damage (ignoring armor). DC 11 WIL save or become Frightened for 1 round.</p>"
+				"description": "<p>All enemies within reach 12 suffer 2d6 damage (ignoring armor). DC 11 WIL save or become Frightened for 1 round.</p>",
+				"subtype": "action"
 			},
 			"_id": "RJV5MKgumWqo5XIY",
 			"img": "icons/creatures/abilities/bear-roar-bite-brown.webp",
@@ -284,7 +283,6 @@
 			"name": "Rend & Tear.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -336,7 +334,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Attack for 2d6+10 damage.</p>"
+				"description": "<p>Attack for 2d6+10 damage.</p>",
+				"subtype": "action"
 			},
 			"_id": "PI8o8vl7IYJfCvI6",
 			"img": "icons/creatures/claws/claw-bear-paw-swipe-red.webp",
@@ -356,7 +355,6 @@
 			"name": "Beak.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -408,7 +406,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move 8. Attack for 2d6 damage.</p>"
+				"description": "<p>Move 8. Attack for 2d6 damage.</p>",
+				"subtype": "action"
 			},
 			"_id": "SSQGS8TLrViOEAuh",
 			"img": "icons/creatures/abilities/bear-roar-bite-brown-green.webp",
@@ -443,7 +442,6 @@
 			"system": {
 				"description": "<p>At 50 HP, Savage Screech recharges.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -494,7 +492,6 @@
 			"system": {
 				"description": "<p>Grimbeak is dying! 30 more damage and she dies. Until then, her Attacks use d10s instead of d6s.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {

@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>",
-				"isAction": false
+				"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Oblation of Blood!",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -249,7 +247,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>If undamaged, attack self for 2 damage. Adjacent enemies are inflicted with Despair. OR</p>"
+				"description": "<p>If undamaged, attack self for 2 damage. Adjacent enemies are inflicted with Despair. OR</p>",
+				"subtype": "action"
 			},
 			"_id": "DvozhthCCeIOv4gI",
 			"img": "icons/skills/melee/blade-tip-chipped-blood-red.webp",
@@ -269,7 +268,6 @@
 			"name": "Dreadful Blade.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -321,7 +319,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+6. OR</p>"
+				"description": "<p>1d6+6. OR</p>",
+				"subtype": "action"
 			},
 			"_id": "gByFUCm3ALqG4Rmh",
 			"img": "icons/weapons/daggers/dagger-jagged-handguard-black.webp",
@@ -341,7 +340,6 @@
 			"name": "Blood Boil.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -393,7 +391,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 12, Bloodied creature) 3d6+6.</p>"
+				"description": "<p>(Range 12, Bloodied creature) 3d6+6.</p>",
+				"subtype": "action"
 			},
 			"_id": "eJT4i0U2zvqJ3tij",
 			"img": "icons/skills/wounds/blood-drip-droplet-red.webp",
@@ -444,8 +443,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Disadvantage on the next attack you make this encounter.</p>",
-				"isAction": false
+				"description": "<p>Disadvantage on the next attack you make this encounter.</p>"
 			},
 			"effects": [],
 			"folder": null,

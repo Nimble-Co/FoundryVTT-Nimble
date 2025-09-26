@@ -171,8 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever Ul' would fail a save or take more than 30 damage while he has a creature Dominated, he may avoid the attack instead, but all Dominated creatures come to their senses.</p>",
-				"isAction": false
+				"description": "<p>Whenever Ul' would fail a save or take more than 30 damage while he has a creature Dominated, he may avoid the attack instead, but all Dominated creatures come to their senses.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Dominate.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -265,7 +263,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(If no creatures are Dominated) Choose half of the heroes to suffer 2d12 psychic damage (ignoring armor). DC 15 WIL save or Dominated as well.</p>"
+				"description": "<p>(If no creatures are Dominated) Choose half of the heroes to suffer 2d12 psychic damage (ignoring armor). DC 15 WIL save or Dominated as well.</p>",
+				"subtype": "action"
 			},
 			"_id": "itWFRq2OCLJXMoGN",
 			"img": "icons/magic/control/debuff-energy-hold-levitate-pink.webp",
@@ -316,8 +315,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Rolls are made with disadvantage while Dominated. Ul' spend your first action on each of your turns, moving, making a weapon attack, or casting a cantrip. Damage ends.</p>",
-				"isAction": false
+				"description": "<p>Rolls are made with disadvantage while Dominated. Ul' spend your first action on each of your turns, moving, making a weapon attack, or casting a cantrip. Damage ends.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -334,7 +332,6 @@
 			"name": "Consume.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -386,7 +383,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Dominated creature) Contested DEX or STR check, on success: Grappled and 6d12. Cannot be Defended or Interposed against.</p>"
+				"description": "<p>(Dominated creature) Contested DEX or STR check, on success: Grappled and 6d12. Cannot be Defended or Interposed against.</p>",
+				"subtype": "action"
 			},
 			"_id": "ahBtNfFFrLm9hITw",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-needles-purple.webp",
@@ -405,7 +403,6 @@
 			"name": "Control.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -468,7 +465,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Teleport 8. (Reach 8) DC 15 WIL save, force an enemy to spend one Action to make a weapon attack or cast a cantrip. On save, they attack with disadvantage.</p>"
+				"description": "<p>Teleport 8. (Reach 8) DC 15 WIL save, force an enemy to spend one Action to make a weapon attack or cast a cantrip. On save, they attack with disadvantage.</p>",
+				"subtype": "action"
 			},
 			"_id": "g8iXvv4kfJOpATGy",
 			"img": "icons/magic/control/energy-stream-link-large-teal.webp",
@@ -503,7 +501,6 @@
 			"system": {
 				"description": "<p>At 150 HP gain Illusory Shift. Reaction, when attacked (1 use): Swap places with a Dominated creature, making them the new target of the attack</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -554,7 +551,6 @@
 			"system": {
 				"description": "<p>Ul' is dying! 110 more damage and he dies. Until then, Dominated no longer ends on taking damage. Every hero makes a WIL save or become Dominated.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {

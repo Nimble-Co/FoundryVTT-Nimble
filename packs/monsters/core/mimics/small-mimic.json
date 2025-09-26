@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Mimics always start first and heroes roll Initiative with disadvantage.</p>",
-				"isAction": false
+				"description": "<p>Mimics always start first and heroes roll Initiative with disadvantage.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -221,8 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Mimic hits also Grapple and can Grapple any number of creatures. When crit: release 1 creature (attacker’s choice).</p>",
-				"isAction": false
+				"description": "<p>Mimic hits also Grapple and can Grapple any number of creatures. When crit: release 1 creature (attacker’s choice).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -239,7 +237,6 @@
 			"name": "Pseudopod.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -298,7 +295,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6 (escape DC 11), OR</p>"
+				"description": "<p>1d6 (escape DC 11), OR</p>",
+				"subtype": "action"
 			},
 			"_id": "bBQb7DA9kZJqF818",
 			"img": "icons/creatures/slimes/slime-movement-dripping-pseudopods-green.webp",
@@ -318,7 +316,6 @@
 			"name": "Bite.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -370,7 +367,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(a Grappled creature) 1d20</p>"
+				"description": "<p>(a Grappled creature) 1d20</p>",
+				"subtype": "action"
 			},
 			"_id": "vDv4H1BhOUNIpmss",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

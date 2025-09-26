@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>",
-				"isAction": false
+				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Thorn Seed.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -242,7 +240,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 6) 2d6+2</p>"
+				"description": "<p>(Range 6) 2d6+2</p>",
+				"subtype": "action"
 			},
 			"_id": "sPTJe9LmX6pLFYIY",
 			"img": "icons/consumables/nuts/nut-spiked-shell.webp",

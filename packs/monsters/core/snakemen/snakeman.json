@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On melee crit: Grapple (escape DC 10).</p>",
-				"isAction": false
+				"description": "<p>On melee crit: Grapple (escape DC 10).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Slash.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -242,7 +240,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+6</p>"
+				"description": "<p>1d6+6</p>",
+				"subtype": "action"
 			},
 			"_id": "iU1BAlui58lpH31U",
 			"img": "icons/skills/melee/hand-grip-sword-strike-orange.webp",
@@ -261,7 +260,6 @@
 			"name": "Spit.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -313,7 +311,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 8) 1d6+6 </p>"
+				"description": "<p>(Range 8) 1d6+6 </p>",
+				"subtype": "action"
 			},
 			"_id": "HAwzrIkXLFFxeQTY",
 			"img": "icons/svg/item-bag.svg",

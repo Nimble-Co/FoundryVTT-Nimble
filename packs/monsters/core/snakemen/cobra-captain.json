@@ -141,7 +141,6 @@
 			"name": "Slash (2×).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -193,7 +192,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+6</p>"
+				"description": "<p>1d6+6</p>",
+				"subtype": "action"
 			},
 			"_id": "uOG7P8qgm3DeZ8U6",
 			"img": "icons/skills/melee/hand-grip-sword-strike-orange.webp",
@@ -213,7 +213,6 @@
 			"name": "Spit (2x).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -265,7 +264,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 8) 1d6+6</p>"
+				"description": "<p>(Range 8) 1d6+6</p>",
+				"subtype": "action"
 			},
 			"_id": "vtqCvuOxekpmHFwS",
 			"img": "icons/magic/acid/projectile-smoke-glowing.webp",
@@ -316,8 +316,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On melee crit: Grapple (escape DC 10).</p>",
-				"isAction": false
+				"description": "<p>On melee crit: Grapple (escape DC 10).</p>"
 			},
 			"effects": [],
 			"folder": null,

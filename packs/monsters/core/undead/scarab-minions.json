@@ -135,7 +135,6 @@
 			"name": "Bite.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -187,7 +186,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6 (Follows Minion Rules)</p>"
+				"description": "<p>1d6 (Follows Minion Rules)</p>",
+				"subtype": "action"
 			},
 			"_id": "YSVWtxhFLeDr3zqY",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

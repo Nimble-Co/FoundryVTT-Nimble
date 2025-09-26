@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Deal 1d12 damage back (ignores metal armor) .</p>",
-				"isAction": false
+				"description": "<p>Deal 1d12 damage back (ignores metal armor) .</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Shocking Bite.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -242,7 +240,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d12+5 (ignores metal armor).</p>"
+				"description": "<p>1d12+5 (ignores metal armor).</p>",
+				"subtype": "action"
 			},
 			"_id": "KGJkhtd6bkomZYzN",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-red.webp",

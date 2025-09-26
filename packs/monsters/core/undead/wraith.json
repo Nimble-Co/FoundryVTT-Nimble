@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
-				"isAction": false
+				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Soul Rend (2×).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -242,7 +240,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 8) 1d4+10. On damage: deal 1 Wound.</p>"
+				"description": "<p>(Range 8) 1d4+10. On damage: deal 1 Wound.</p>",
+				"subtype": "action"
 			},
 			"_id": "UEgopPxDF0zhCRak",
 			"img": "icons/magic/unholy/hand-light-pink.webp",

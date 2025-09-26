@@ -141,7 +141,6 @@
 			"name": "Decaying Swipe (2×).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -193,7 +192,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d4+10. On damage: knockback Primary Die spaces.</p>"
+				"description": "<p>1d4+10. On damage: knockback Primary Die spaces.</p>",
+				"subtype": "action"
 			},
 			"_id": "6zl9z3OSaVfTob8C",
 			"img": "icons/weapons/clubs/club-simple-barbed.webp",
@@ -244,8 +244,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
-				"isAction": false
+				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
 			},
 			"effects": [],
 			"folder": null,

@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
-				"isAction": false
+				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Slice (3x).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -242,7 +240,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d8+1</p>"
+				"description": "<p>1d8+1</p>",
+				"subtype": "action"
 			},
 			"_id": "ctlUHuAQri7RksZe",
 			"img": "icons/skills/melee/hand-grip-sword-white-brown.webp",
@@ -261,7 +260,6 @@
 			"name": "Shoot (3x)",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -313,7 +311,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 8) 1d8+1</p>"
+				"description": "<p>(Range 8) 1d8+1</p>",
+				"subtype": "action"
 			},
 			"_id": "g8YMHgwfenVirn6Y",
 			"img": "icons/weapons/bows/longbow-leather-green.webp",

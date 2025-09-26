@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
-				"isAction": false
+				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -221,8 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Can force other goblins to Interpose for him.</p>",
-				"isAction": false
+				"description": "<p>Can force other goblins to Interpose for him.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -239,7 +237,6 @@
 			"name": "Stab.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -291,7 +288,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+2. Then use Get in Here</p>"
+				"description": "<p>1d6+2. Then use Get in Here</p>",
+				"subtype": "action"
 			},
 			"_id": "fTsj4kFUR54hs0AA",
 			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
@@ -310,7 +308,6 @@
 			"name": "Shoot.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -362,7 +359,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 8) 1d6+2. Then use Get in Here</p>"
+				"description": "<p>(Range 8) 1d6+2. Then use Get in Here</p>",
+				"subtype": "action"
 			},
 			"_id": "jGabap8BaH0gqUKp",
 			"img": "icons/weapons/bows/longbow-recurve-skull-brown.webp",
@@ -381,7 +379,6 @@
 			"name": "Get in here!",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -411,7 +408,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Call a goblin minion to the fight.</p>"
+				"description": "<p>Call a goblin minion to the fight.</p>",
+				"subtype": "action"
 			},
 			"_id": "rkjPMI3oZQdXCchG",
 			"img": "icons/svg/item-bag.svg",

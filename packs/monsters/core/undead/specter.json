@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
-				"isAction": false
+				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Deathly Touch.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -242,7 +240,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d4. On damage: set HP to 0.</p>"
+				"description": "<p>1d4. On damage: set HP to 0.</p>",
+				"subtype": "action"
 			},
 			"_id": "N6LmAkgoBvuEbTkC",
 			"img": "icons/magic/unholy/hand-claw-fog-green.webp",

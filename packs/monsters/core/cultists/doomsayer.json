@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>",
-				"isAction": false
+				"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -221,8 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Disadvantage on the next attack you make this encounter.</p>",
-				"isAction": false
+				"description": "<p>Disadvantage on the next attack you make this encounter.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -239,7 +237,6 @@
 			"name": "Feverish Chant.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -269,7 +266,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Concentration) Reduce all damage done to allies who can hear you to 1. OR</p>"
+				"description": "<p>(Concentration) Reduce all damage done to allies who can hear you to 1. OR</p>",
+				"subtype": "action"
 			},
 			"_id": "9lTLZiZDGpSR0UoY",
 			"img": "icons/magic/unholy/silhouette-light-fire-blue.webp",
@@ -289,7 +287,6 @@
 			"name": "Ecstatic Ravings.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -341,7 +338,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>2d6 psychic damage to all enemies who can hear you.</p>"
+				"description": "<p>2d6 psychic damage to all enemies who can hear you.</p>",
+				"subtype": "action"
 			},
 			"_id": "rwfl1Hr5919crz04",
 			"img": "icons/magic/unholy/strike-body-life-soul-green.webp",

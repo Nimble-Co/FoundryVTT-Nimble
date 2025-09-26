@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
-				"isAction": false
+				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Stab.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -242,7 +240,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d8+1.</p>"
+				"description": "<p>1d8+1.</p>",
+				"subtype": "action"
 			},
 			"_id": "uNfshX8vXZNzyIUL",
 			"img": "icons/weapons/swords/sword-guard-brown.webp",
@@ -262,7 +261,6 @@
 			"name": "Shoot.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -314,7 +312,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 8) 1d8+1</p>"
+				"description": "<p>(Range 8) 1d8+1</p>",
+				"subtype": "action"
 			},
 			"_id": "lmcAuroisKX8reRN",
 			"img": "icons/weapons/bows/longbow-leather-green.webp",

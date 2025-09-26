@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
-				"isAction": false
+				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Greatclub (2×).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -251,7 +249,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d4+8. On crit: Prone.</p>"
+				"description": "<p>1d4+8. On crit: Prone.</p>",
+				"subtype": "action"
 			},
 			"_id": "ZAqWQDdjFoTJZgI2",
 			"img": "icons/weapons/clubs/club-simple-black.webp",

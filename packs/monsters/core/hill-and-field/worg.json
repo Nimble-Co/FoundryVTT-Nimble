@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Always crits when attacking a Grappled creature.</p>",
-				"isAction": false
+				"description": "<p>Always crits when attacking a Grappled creature.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Rip Apart (2×).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -249,7 +247,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d6+2. On hit: Grappled (escape DC 10).</p>"
+				"description": "<p>1d6+2. On hit: Grappled (escape DC 10).</p>",
+				"subtype": "action"
 			},
 			"_id": "JcCc6HxV4C4k5jR5",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

@@ -186,8 +186,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When dealt slashing or lightning damage: knock a hero within 3 spaces Prone.</p>",
-				"isAction": false
+				"description": "<p>When dealt slashing or lightning damage: knock a hero within 3 spaces Prone.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -235,8 +234,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Each slashing crit reduces the Wing Buffet DC by 1.</p>",
-				"isAction": false
+				"description": "<p>Each slashing crit reduces the Wing Buffet DC by 1.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -253,7 +251,6 @@
 			"name": "Devour.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -305,7 +302,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Prone creatures only, Reach 2) 4d12+6.</p>"
+				"description": "<p>(Prone creatures only, Reach 2) 4d12+6.</p>",
+				"subtype": "action"
 			},
 			"_id": "hI2su2eXaXAyRbEV",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
@@ -325,7 +323,6 @@
 			"name": "Wing Buffet.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -405,7 +402,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Fly 8, then land. Cone 8: 1d12, then DC 14 STR save or also knocked Prone (advantage if behind cover or another hero).</p>"
+				"description": "<p>Fly 8, then land. Cone 8: 1d12, then DC 14 STR save or also knocked Prone (advantage if behind cover or another hero).</p>",
+				"subtype": "action"
 			},
 			"_id": "engJrYwHNhUUoJ0h",
 			"img": "icons/commodities/biological/wing-green.webp",
@@ -440,7 +438,6 @@
 			"system": {
 				"description": "<p>At 90 HP, her Wing Buffet Range and DC increase by 2.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -491,7 +488,6 @@
 			"system": {
 				"description": "<p>Nalzar is dying! 60 more damage and she dies. Until then, each turn, she moves 6, then uses Devour (ignoring the Prone requirement).</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {

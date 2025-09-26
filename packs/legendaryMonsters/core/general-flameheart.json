@@ -171,8 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Immune to fire. When damaged, deal 5 fire damage to all adjacent creatures.</p>",
-				"isAction": false
+				"description": "<p>Immune to fire. When damaged, deal 5 fire damage to all adjacent creatures.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -221,8 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Cold or radiant crits extinguish all areas ignited by Molten Fury and suppress Cinder Armor for 1 turn.</p>",
-				"isAction": false
+				"description": "<p>Cold or radiant crits extinguish all areas ignited by Molten Fury and suppress Cinder Armor for 1 turn.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -240,7 +238,6 @@
 			"name": "Inferno Cleave.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -292,7 +289,8 @@
 						"width": 2
 					}
 				},
-				"description": "<p>Move 8 then strike a 2??2 square area for 2d10+10 fire damage.</p>"
+				"description": "<p>Move 8 then strike a 2??2 square area for 2d10+10 fire damage.</p>",
+				"subtype": "action"
 			},
 			"_id": "wZ2XUxCUeWVdEwZu",
 			"img": "icons/magic/fire/dagger-rune-enchant-flame-strong-red.webp",
@@ -312,7 +310,6 @@
 			"name": "Molten Fury.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -364,7 +361,8 @@
 						"width": 2
 					}
 				},
-				"description": "<p>Lob a molten fireball at the furthest hero not already in the flames, igniting a 2??2 square area. Creatures there take 2d10+10 damage; and another 10 damage at the end of each of their turns if they remain in the area.</p>"
+				"description": "<p>Lob a molten fireball at the furthest hero not already in the flames, igniting a 2??2 square area. Creatures there take 2d10+10 damage; and another 10 damage at the end of each of their turns if they remain in the area.</p>",
+				"subtype": "action"
 			},
 			"_id": "ngX5c4NLFel44iPI",
 			"img": "icons/magic/fire/projectile-fireball-smoke-large-orange.webp",
@@ -399,7 +397,6 @@
 			"system": {
 				"description": "<p>At 87 HP, on his next turn, he uses Molten Fury a number of times equal to half the number of heroes (rounded up).</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -450,7 +447,6 @@
 			"system": {
 				"description": "<p>Flameheart is dying! 80 more damage and he dies. Until then, the area of his attacks increase to a 3??3 square.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {

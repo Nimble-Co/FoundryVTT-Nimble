@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>",
-				"isAction": false
+				"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -221,8 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Disadvantage on the next attack you make this encounter.</p>",
-				"isAction": false
+				"description": "<p>Disadvantage on the next attack you make this encounter.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -239,7 +237,6 @@
 			"name": "Oblation of Blood!",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -298,7 +295,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>If undamaged, attack self for 2 damage. Adjacent enemies are inflicted with Despair. OR</p>"
+				"description": "<p>If undamaged, attack self for 2 damage. Adjacent enemies are inflicted with Despair. OR</p>",
+				"subtype": "action"
 			},
 			"_id": "ft187LYF1CK3SovV",
 			"img": "icons/skills/melee/blade-tip-chipped-blood-red.webp",
@@ -318,7 +316,6 @@
 			"name": "Whispers of Madness.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -390,7 +387,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Contested STR check or Grappled (reroll to escape, or any radiant damage); if successful, deal 3d6+6 psychic damage (cannot be Defended or Interposed against).</p>"
+				"description": "<p>Contested STR check or Grappled (reroll to escape, or any radiant damage); if successful, deal 3d6+6 psychic damage (cannot be Defended or Interposed against).</p>",
+				"subtype": "action"
 			},
 			"_id": "hiGWXOMmLSUL84RY",
 			"img": "icons/magic/control/hypnosis-mesmerism-swirl.webp",

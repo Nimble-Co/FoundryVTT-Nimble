@@ -171,8 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Dravok makes all saves with +1 Advantage, attacks against him have Disadvantage.</p>",
-				"isAction": false
+				"description": "<p>Dravok makes all saves with +1 Advantage, attacks against him have Disadvantage.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -222,8 +221,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Taking more than 12 piercing or slashing damage: Dravok's plans are FLAWED! (until the end of the next hero's turn.)</p>",
-				"isAction": false
+				"description": "<p>Taking more than 12 piercing or slashing damage: Dravok's plans are FLAWED! (until the end of the next hero's turn.)</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -242,7 +240,6 @@
 			"name": "1. Warping Ray",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -309,7 +306,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>3d6. On hit: Dazed, exchange places with target.</p>"
+				"description": "<p>3d6. On hit: Dazed, exchange places with target.</p>",
+				"subtype": "action"
 			},
 			"_id": "hm0nvCYJy2i4fCDa",
 			"img": "icons/magic/light/beam-rays-blue-large.webp",
@@ -330,7 +328,6 @@
 			"name": "2. Petrification Ray",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -360,7 +357,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Permanently Dazed. Healing ends. (3 stacks, Petrified).</p>"
+				"description": "<p>Permanently Dazed. Healing ends. (3 stacks, Petrified).</p>",
+				"subtype": "action"
 			},
 			"_id": "En4fdOj40xF7Q1mj",
 			"img": "icons/magic/light/beam-rays-yellow-blue-large.webp",
@@ -381,7 +379,6 @@
 			"name": "3. Terror Ray",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -441,7 +438,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>5d10 psychic damage & Terrified: </p><p>(You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok's plans are FLAWED.)</p>"
+				"description": "<p>5d10 psychic damage & Terrified: </p><p>(You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok's plans are FLAWED.)</p>",
+				"subtype": "action"
 			},
 			"_id": "x3uAQ8Y4Pog85I7f",
 			"img": "icons/magic/light/beam-rays-red-large.webp",
@@ -462,7 +460,6 @@
 			"name": "4. Gravitation Ray",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -522,7 +519,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>2d6 damage. Push that many spaces. Knocked Prone on 7+.</p>"
+				"description": "<p>2d6 damage. Push that many spaces. Knocked Prone on 7+.</p>",
+				"subtype": "action"
 			},
 			"_id": "9yLALKx55vnxvfb5",
 			"img": "icons/magic/light/beam-rays-teal-purple-large.webp",
@@ -543,7 +541,6 @@
 			"name": "5. Charm Ray",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -606,7 +603,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>DC 16 WIL save or you spend 3 Actions attacking with or moving them, 2 actions on save. (Cannot spend resources, they regain spent actions afterward.)</p>"
+				"description": "<p>DC 16 WIL save or you spend 3 Actions attacking with or moving them, 2 actions on save. (Cannot spend resources, they regain spent actions afterward.)</p>",
+				"subtype": "action"
 			},
 			"_id": "nQ1CO1Ge9FGgwUpm",
 			"img": "icons/magic/light/beam-rays-magenta-large.webp",
@@ -627,7 +625,6 @@
 			"name": "6. Death Ray",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -690,7 +687,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>DC 16 STR save or drop to 0 HP. On save, gain 1 Wound. If a Dying creature fails this, they die.</p>"
+				"description": "<p>DC 16 STR save or drop to 0 HP. On save, gain 1 Wound. If a Dying creature fails this, they die.</p>",
+				"subtype": "action"
 			},
 			"_id": "ML4LADhsYE5Dvpog",
 			"img": "icons/magic/light/beam-rays-green-large.webp",
@@ -711,7 +709,6 @@
 			"name": "Terrible Maw",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -771,7 +768,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Melee attack. 4d4, EVERY die can crit and is Vicious</p>"
+				"description": "<p>Melee attack. 4d4, EVERY die can crit and is Vicious</p>",
+				"subtype": "action"
 			},
 			"_id": "PpZr6xGfBDyQptL3",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-red.webp",
@@ -807,7 +805,6 @@
 			"system": {
 				"description": "<p>At 110 HP, use Petrification Ray against every enemy. His save DC increases to 18</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -858,7 +855,6 @@
 			"system": {
 				"description": "<p>Dravok is dying! 70 more damage and he dies. Until then, each turn he will move or use Warping Ray and then <strong>Devastation Beam</strong>. [[/r 2d12+20]] in a 10 space long, 2 space wide line.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {

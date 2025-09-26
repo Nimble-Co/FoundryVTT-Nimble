@@ -172,8 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
-				"isAction": false
+				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Battlebow.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -242,7 +240,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>2d8+2 (Range 12)</p>"
+				"description": "<p>2d8+2 (Range 12)</p>",
+				"subtype": "action"
 			},
 			"_id": "y4nMPW04rliUSw52",
 			"img": "icons/weapons/bows/longbow-leather-green.webp",

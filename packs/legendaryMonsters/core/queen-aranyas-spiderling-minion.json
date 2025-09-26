@@ -135,7 +135,6 @@
 			"name": "Bite",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -187,7 +186,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>1d8, follow minion rules</p>"
+				"description": "<p>1d8, follow minion rules</p>",
+				"subtype": "action"
 			},
 			"_id": "Cj1TDs9fwpjaj3NK",
 			"img": "icons/creatures/abilities/fang-tooth-venomous.webp",

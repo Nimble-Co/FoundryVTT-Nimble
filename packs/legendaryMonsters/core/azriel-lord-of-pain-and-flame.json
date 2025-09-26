@@ -171,8 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Crits against Azriel are Vicious, he deals damage equal to the crit dice back to the attacker.</p>",
-				"isAction": false
+				"description": "<p>Crits against Azriel are Vicious, he deals damage equal to the crit dice back to the attacker.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -190,7 +189,6 @@
 			"name": "Crackling Whip.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -256,7 +254,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Move 6. (Reach 6) 3d12 damage. On hit: Grappled and pulled adjacent to Azriel (escape DC 17 STR, DEX, or until he uses the whip again).</p>"
+				"description": "<p>Move 6. (Reach 6) 3d12 damage. On hit: Grappled and pulled adjacent to Azriel (escape DC 17 STR, DEX, or until he uses the whip again).</p>",
+				"subtype": "action"
 			},
 			"_id": "YjDDY4UdbPtstgDS",
 			"img": "icons/weapons/misc/whip-red-yellow.webp",
@@ -275,7 +274,6 @@
 			"name": "Doom Sword.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -327,7 +325,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>3d12+10 fire damage to all creatures within Reach 2.</p>"
+				"description": "<p>3d12+10 fire damage to all creatures within Reach 2.</p>",
+				"subtype": "action"
 			},
 			"_id": "VT3sWm8M4hO4Zkao",
 			"img": "icons/magic/fire/dagger-rune-enchant-flame-strong-red.webp",
@@ -361,7 +360,6 @@
 			"system": {
 				"description": "<p>At 160 HP, Azriel can use Crackling Whip twice each turn.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -412,7 +410,6 @@
 			"system": {
 				"description": "<p><strong>YES, MORE PAIN!</strong> Azriel is dying! 180 more damage and he dies. Until then, EVERY hit against him is a crit.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {

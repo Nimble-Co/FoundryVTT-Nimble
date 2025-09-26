@@ -171,8 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>At the beginning of each round, all heroes suffer 1 Wound</p>",
-				"isAction": false
+				"description": "<p>At the beginning of each round, all heroes suffer 1 Wound</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -222,8 +221,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>3/encounter when she would suffer any negative effect she can swap places with a creature of her choice making them the target instead. All heroes recover 1 Wound.</p>",
-				"isAction": false
+				"description": "<p>3/encounter when she would suffer any negative effect she can swap places with a creature of her choice making them the target instead. All heroes recover 1 Wound.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -242,7 +240,6 @@
 			"name": "Wormhole",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -294,7 +291,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Teleport 12. 3d20 to a creature adjacent to where you began or ended.</p>"
+				"description": "<p>Teleport 12. 3d20 to a creature adjacent to where you began or ended.</p>",
+				"subtype": "action"
 			},
 			"_id": "QgFFZaVxOtw8eJ1D",
 			"img": "icons/magic/sonic/explosion-impact-shock-wave.webp",
@@ -315,7 +313,6 @@
 			"name": "Immensity",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -384,7 +381,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Reach 12) DC 20 STR save (disadvantage if within Reach 4) or suffer 3d20 damage and Prone. Half on save.</p>"
+				"description": "<p>(Reach 12) DC 20 STR save (disadvantage if within Reach 4) or suffer 3d20 damage and Prone. Half on save.</p>",
+				"subtype": "action"
 			},
 			"_id": "3ZLbCogTJylv3j6P",
 			"img": "icons/magic/defensive/barrier-shield-dome-blue-purple.webp",
@@ -405,7 +403,6 @@
 			"name": "Glimpse Your End",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -458,7 +455,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>DC 20 WIL save or DOOMED: Concentration ends, the next damage roll against you is maximized.</p>"
+				"description": "<p>DC 20 WIL save or DOOMED: Concentration ends, the next damage roll against you is maximized.</p>",
+				"subtype": "action"
 			},
 			"_id": "J5368jkxadVt0eOg",
 			"img": "icons/magic/death/skull-humanoid-white-red.webp",
@@ -479,7 +477,6 @@
 			"name": "Plasma Storm",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -554,7 +551,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Reach 6, DC 20 DEX save or 2d20 lightning and 2d20 fire damage. Half on save.</p>"
+				"description": "<p>Reach 6, DC 20 DEX save or 2d20 lightning and 2d20 fire damage. Half on save.</p>",
+				"subtype": "action"
 			},
 			"_id": "hgBOVY7Fj3Js7yzX",
 			"img": "icons/magic/lightning/bolt-strike-smoke-yellow.webp",
@@ -575,7 +573,6 @@
 			"name": "Singularity",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -627,7 +624,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Reach 2, 5d20 bludgeoning damage.</p>"
+				"description": "<p>Reach 2, 5d20 bludgeoning damage.</p>",
+				"subtype": "action"
 			},
 			"_id": "cKsrqvN2JNjZ9oTq",
 			"img": "icons/magic/air/wind-vortex-swirl-blue.webp",
@@ -648,7 +646,6 @@
 			"name": "Almighty Push & Pull",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -701,7 +698,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(Range 12) DC 20 STR save or be launched 20 ft. into the air, repeat until the target saves. Fall damage for this attack is 1d20 for every 10 ft. fallen.</p>"
+				"description": "<p>(Range 12) DC 20 STR save or be launched 20 ft. into the air, repeat until the target saves. Fall damage for this attack is 1d20 for every 10 ft. fallen.</p>",
+				"subtype": "action"
 			},
 			"_id": "MfLJ3aDYoCtnItjm",
 			"img": "icons/magic/movement/trail-streak-impact-blue.webp",
@@ -737,7 +735,6 @@
 			"system": {
 				"description": "<p>At 310 HP, Gravitational Mastery. Move ALL objects and creatures within 16 spaces anywhere else within the area. Gravitational Lensing. The hero with the most HP is marked by Caerys. She takes half damage from all sources, her mark takes the other half. This lasts until the mark drops to 0 HP.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
@@ -788,7 +785,6 @@
 			"system": {
 				"description": "<p>Use Gravitational Mastery, then Caerys is dying! 200 more damage and she dies. Until then she chooses twice each turn. If still alive after 1 round: Reset Time: she resets back to full HP.</p>",
 				"macro": "",
-				"isAction": false,
 				"identifier": "",
 				"activation": {
 					"cost": {
