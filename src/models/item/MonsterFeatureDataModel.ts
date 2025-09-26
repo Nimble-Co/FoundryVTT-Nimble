@@ -12,7 +12,6 @@ const MONSTER_FEATURE_SUBTYPES = {
 
 const schema = () => ({
 	description: new fields.HTMLField({ required: true, initial: '', nullable: false }),
-	isAction: new fields.BooleanField({ required: true, initial: false, nullable: false }),
 	subtype: new fields.StringField({
 		required: true,
 		initial: 'feature',
@@ -41,10 +40,6 @@ class NimbleMonsterFeatureData extends NimbleBaseItemData<
 			...activation(),
 			...schema(),
 		};
-	}
-	/** @inheritDoc */
-	static prepareDerivedData(item: any) {
-		item.system.isAction = item.system.subtype === 'action';
 	}
 }
 
