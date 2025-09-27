@@ -1,0 +1,75 @@
+{
+	"folder": null,
+	"name": "Wand of Ride the Lightning",
+	"type": "object",
+	"img": "icons/weapons/wands/wand-gem-violet.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 3,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Rarity</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> Very Rare</span></p><p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Spell level</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> Tier 6</span></p><p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Charges</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> 2</span></p><p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: var(--nimble-primary-font); margin-block: 0px\"><strong>Recharge</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> Place at the highest point within 1 mile. Retrieve after 3 thunderstorms.</span></p><hr><p><strong>Actions:</strong> 3</p><p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\">Teleport up to 12 spaces away to a spot you can see (if a willing creature is there, swap  places with them). Adjacent creatures take [[/r (1d8*10)+1d8]]{d88} damage. Surviving creatures must make a STR save or be hurled back 3 spaces, knocked  Prone, and deafened for 1 day.</span></p>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "misc",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756840335321,
+		"modifiedTime": 1756935833671,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "yigWacRAsbiWexnC"
+}

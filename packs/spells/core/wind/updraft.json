@@ -1,0 +1,88 @@
+{
+	"name": "Updraft",
+	"type": "spell",
+	"img": "icons/magic/air/wind-tornado-wall-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": true,
+			"cost": {
+				"details": "",
+				"quantity": 3,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "bv9dQDoYrnkRHcIG",
+					"type": "savingThrow",
+					"savingThrowType": "strength",
+					"parentContext": null,
+					"parentNode": null,
+					"saveType": "dexterity",
+					"on": {
+						"failedSave": [
+							{
+								"id": "FsA5UEn8fbp3FVO7",
+								"type": "condition",
+								"condition": "prone",
+								"parentContext": "failedSave",
+								"parentNode": "bv9dQDoYrnkRHcIG"
+							}
+						]
+					},
+					"sharedRolls": []
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "square",
+				"width": 5
+			}
+		},
+		"description": {
+			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>3 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach: 12.</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>Enemies within a 5×5 area must repeat a DEX save until they succeed. For each time they failed they suffer 1d6 falling damage and land prone.</p></td></tr></tbody></table>",
+			"higherLevelEffect": "<table><tbody><tr><td><p>+2 Range, +1 area.</p></td></tr></tbody></table>"
+		},
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": 12
+			},
+			"reach": {
+				"min": 1,
+				"max": 12
+			},
+			"selected": [
+				"reach"
+			]
+		},
+		"school": "wind",
+		"tier": 5
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757106811491,
+		"modifiedTime": 1757109332665,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "rxzdEK621oVYuWQ8"
+}

@@ -137,6 +137,20 @@
 			"system": "nimble"
 		},
 		{
+			"name": "nimble-legendary-monsters",
+			"label": "Nimble Legendary Monsters",
+			"path": "packs/legendaryMonsters.db",
+			"type": "Actor",
+			"system": "nimble"
+		},
+		{
+			"name": "nimble-magic-items",
+			"label": "Nimble Magic Items",
+			"path": "packs/magicItems.db",
+			"type": "Item",
+			"system": "nimble"
+		},
+		{
 			"name": "nimble-monsters",
 			"label": "Nimble Monsters",
 			"path": "packs/monsters.db",
@@ -155,6 +169,13 @@
 			"label": "Nimble Sub Classes",
 			"path": "packs/subClasses.db",
 			"type": "Item",
+			"system": "nimble"
+		},
+		{
+			"name": "nimble-tables",
+			"label": "Nimble Tables",
+			"path": "packs/tables.db",
+			"type": "RollTable",
 			"system": "nimble"
 		}
 	],

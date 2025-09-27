@@ -1,0 +1,37 @@
+{
+	"folder": null,
+	"name": "Raised by Goblins",
+	"type": "background",
+	"img": "icons/commodities/bones/bones-stack-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "grantProficiency",
+				"disabled": false,
+				"id": "BzISAKJPXpZ2cfuJ",
+				"identifier": "",
+				"label": "",
+				"predicate": {},
+				"priority": 1,
+				"proficiencyType": "languages",
+				"values": [
+					"Goblin"
+				]
+			}
+		],
+		"description": "<p>You speak Goblin natively (much better than one who has learned it later in life). You automatically notice and can avoid crudely- made traps and have advantage to notice and disarm more sophisticated traps.</p><hr><p>You speak Goblin [A]</p>"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756616739062,
+		"modifiedTime": 1757283399382,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "23N0Ls6BDBC7b6Lm"
+}

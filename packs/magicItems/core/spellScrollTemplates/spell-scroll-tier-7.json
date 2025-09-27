@@ -1,0 +1,75 @@
+{
+	"folder": null,
+	"name": "Spell Scroll - Tier 7",
+	"type": "object",
+	"img": "icons/sundries/scrolls/scroll-bound-black-tan.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<p><strong>Spell level</strong>. Tier 7</p><hr><p>Spell scrolls are single-use inscribed magical spells. Casting a spell with a spell scroll does not cost mana, nor does it require magical ability. Anyone who can read the language the scroll is written in can utilize it. Reading one aloud takes the same number of actions the spell normally takes and consumes the scroll.</p><p>A character must succeed on a DC 10 Arcana check to cast it successfully if they do not already know a spell from that school; on a failure, it is wasted.</p>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "consumable",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756840307351,
+		"modifiedTime": 1756840321622,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "n8I8eqs8zYv67NA7"
+}

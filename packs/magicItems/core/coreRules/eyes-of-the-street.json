@@ -1,0 +1,75 @@
+{
+	"name": "Eyes of the Street",
+	"type": "object",
+	"img": "icons/equipment/head/goggles-leather-grey.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<p><span style=\"box-sizing: border-box; scrollbar-width: thin; scrollbar-color: var(--color-scrollbar) var(--color-scrollbar-track); font-family: &#x27;Roboto Condensed&#x27;, sans-serif; margin-block: 0px; color: rgb(231, 209, 177); font-size: 13.328px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(25, 24, 33); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial\"><strong>Rarity</strong></span><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\"><strong>:</strong> Uncommon</span></p><hr><p>A pair of goggles covered in muck that you can’t ever clean off completely. While wearing them, you can look at a rat or a pigeon to gain the ability to see and hear through its senses for 10 minutes. Once you use this ability, you must whisper a secret to the goggles before you can use them again. That secret always seems to become a local rumor before too long….</p>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "misc",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756840141542,
+		"modifiedTime": 1756955500533,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "QquArQNbzmNgchsl"
+}

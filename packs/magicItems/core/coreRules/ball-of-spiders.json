@@ -1,0 +1,75 @@
+{
+	"folder": null,
+	"name": "Ball of Spiders",
+	"type": "object",
+	"img": "icons/creatures/invertebrates/spider-skull-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": {
+			"public": "<p><strong>Rarity</strong>: Uncommon</p><hr><p>A black, palm-sized ball with faintly writhing patterns etched into its surface.</p><p><strong>Action:</strong> Throw this ball up to 6 spaces. Upon impact, it shatters, releasing a swarm of harmless but horrifyingly realistic spectral spiders that cover a 2x2 area. Creatures in the area must make a WIL save or be Frightened until the end of their next turn. Once used, the ball reforms at the next Safe Rest.</p>",
+			"unidentified": "",
+			"secret": ""
+		},
+		"identified": true,
+		"objectType": "misc",
+		"quantity": 1,
+		"unidentifiedName": "Unidentified Object",
+		"slotsRequired": 1,
+		"stackable": false,
+		"properties": {
+			"range": {
+				"min": 2,
+				"max": null
+			},
+			"reach": {
+				"min": 1,
+				"max": null
+			},
+			"selected": [],
+			"strengthRequirement": {
+				"value": null,
+				"overridesTwoHanded": false
+			},
+			"thrownRange": 4
+		}
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756840141542,
+		"modifiedTime": 1756955360807,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "aWMZHKVqyl7LNdH5"
+}

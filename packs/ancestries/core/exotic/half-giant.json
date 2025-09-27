@@ -1,0 +1,39 @@
+{
+	"name": "Half-Giant",
+	"type": "ancestry",
+	"img": "icons/magic/control/buff-strength-muscle-damage-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "skillBonus",
+				"disabled": false,
+				"id": "eJoTbJqZZAqwHrZ2",
+				"identifier": "",
+				"label": "Strength of Stone",
+				"predicate": {},
+				"priority": 1,
+				"value": "2",
+				"skills": [
+					"might"
+				]
+			}
+		],
+		"description": "<p>Towering beings whose strength is as immovable as the mountains they call home. Their sheer size and resilience make them fearsome opponents, capable of surviving even devastating blows.</p><hr><p><strong>Strength of Stone</strong> </p><p>Force an enemy to reroll a crit against you, 1/encounter. </p><p>+2 Might. [A]</p><p>You know Dwarvish if your INT is not negative. [M]</p>",
+		"exotic": true,
+		"size": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1756448281398,
+		"modifiedTime": 1756512807820,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "4mRJcQgWmQ1fnsys"
+}

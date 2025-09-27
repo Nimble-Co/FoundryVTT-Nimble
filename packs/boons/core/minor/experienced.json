@@ -1,0 +1,36 @@
+{
+	"name": "Experienced",
+	"type": "boon",
+	"img": "icons/skills/melee/unarmed-punch-fist.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "maxHpBonus",
+				"disabled": false,
+				"id": "Hoih5pGNkt7JYgDz",
+				"identifier": "",
+				"label": "experienced-hp",
+				"predicate": {},
+				"priority": 1,
+				"value": "4",
+				"perLevel": false
+			}
+		],
+		"description": "<p>+4 HP. [M]</p>",
+		"boonType": "minor"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757284157169,
+		"modifiedTime": 1757287532259,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "j6VZHTv4hkbv4vJ3"
+}
