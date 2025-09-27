@@ -189,7 +189,7 @@ onDestroy(() => {
 	</header>
 	<section class="nimble-sheet__body nimble-sheet__body--player-character">
 		{#each Object.entries(categorizedItems).sort(sortItemCategories) as [categoryName, itemCategory]}
-			<div>
+			<section class="nimble-monster-sheet-section">
 				<header>
 					<h3 class="nimble-heading" data-heading-variant="section">
 						{monsterFeatureTypes[categoryName] ?? categoryName}
@@ -304,7 +304,7 @@ onDestroy(() => {
 						</div>
 					{/each}
 				</ul>
-			</div>
+			</section>
 		{/each}
 	</section>
 </section>
