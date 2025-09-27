@@ -156,7 +156,6 @@ let actions = $derived.by(() =>
 let bloodiedEffectInEditMode = $state(false);
 let lastStandEffectInEditMode = $state(false);
 let attackSequenceInEditMode = $state(false);
-let collapsedStates = $state({});
 
 let items = $derived(filterMonsterFeatures(actor.reactive));
 let categorizedItems = $derived(groupItemsByType(items));
@@ -219,6 +218,7 @@ onDestroy(() => {
 	</header>
 	<section class="nimble-sheet__body nimble-sheet__body--player-character">
 		{#each Object.entries(categorizedItems).sort(sortItemCategories) as [categoryName, itemCategory]}
+			{@const allCollapsed = items.every(item => item.flags.nimble?.collapsed)}
 			<section class="nimble-monster-sheet-section">
 				<header>
 					<h3 class="nimble-heading" data-heading-variant="section">
@@ -232,6 +232,19 @@ onDestroy(() => {
 								data-tooltip="Create Feature"
 								onclick={createItem}
 							></button>
+							<button
+								class="nimble-button"
+								data-button-variant="basic"
+								type="button"
+								aria-label={allCollapsed ? "Expand all descriptions" : "Collapse all descriptions"}
+								data-tooltip={allCollapsed ? "Expand all descriptions" : "Collapse all descriptions"}
+								onclick={() => {
+									const newState = !allCollapsed;
+									items.forEach(item => item.update({ 'flags.nimble.collapsed': newState }));
+								}}
+							>
+								<i class="fa-solid {allCollapsed ? 'fa-expand' : 'fa-compress'}"></i>
+							</button>
 						{/if}
 					</h3>
 				</header>
@@ -275,7 +288,7 @@ onDestroy(() => {
 				<ul class="nimble-item-list" ondragover={(event) => { if (event.dataTransfer.types.includes('nimble/reorder')) event.preventDefault(); }}>
 					{#each sortItems(itemCategory) as item (item.reactive._id)}
 						{@const metadata = getFeatureMetadata(item)}
-						{@const isCollapsed = collapsedStates[item._id] ?? false}
+						{@const isCollapsed = item.reactive.flags.nimble?.collapsed ?? false}
 						<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
 						<!-- svelte-ignore  a11y_click_events_have_key_events -->
 						<li class="nimble-document-card nimble-document-card--no-meta nimble-document-card--monster-sheet"
@@ -309,7 +322,7 @@ onDestroy(() => {
 										data-button-variant="icon"
 										type="button"
 										aria-label="Collapse description for {item.reactive.name}"
-										onclick={(event) => { event.stopPropagation(); collapsedStates[item._id] = true; }}
+										onclick={(event) => { event.stopPropagation(); item.update({ 'flags.nimble.collapsed': true }); }}
 									>
 										<i class="fa-solid fa-chevron-up"></i>
 									</button>
@@ -319,7 +332,7 @@ onDestroy(() => {
 										data-button-variant="icon"
 										type="button"
 										aria-label="Reveal description for {item.reactive.name}"
-										onclick={(event) => { event.stopPropagation(); collapsedStates[item._id] = false; }}
+										onclick={(event) => { event.stopPropagation(); item.update({ 'flags.nimble.collapsed': false }); }}
 									>
 										<i class="fa-solid fa-chevron-down"></i>
 									</button>
