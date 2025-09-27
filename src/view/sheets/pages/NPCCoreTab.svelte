@@ -221,7 +221,7 @@ onDestroy(() => {
 			{@const allCollapsed = items.every(item => item.flags.nimble?.collapsed)}
 			<section class="nimble-monster-sheet-section">
 				<header>
-					<h3 class="nimble-heading" data-heading-variant="section">
+					<h4 class="nimble-heading" data-heading-variant="section">
 						{monsterFeatureTypes[categoryName] ?? categoryName}
 						{#if (categoryName === "feature")}
 							<button
@@ -246,7 +246,7 @@ onDestroy(() => {
 								<i class="fa-solid {allCollapsed ? 'fa-expand' : 'fa-compress'}"></i>
 							</button>
 						{/if}
-					</h3>
+					</h4>
 				</header>
 				{#if (categoryName === "action" && actor.reactive.type === "soloMonster")}
 					{#if attackSequenceInEditMode}
@@ -428,7 +428,7 @@ onDestroy(() => {
     }
 
     .nimble-monster-sheet-section {
-        padding: 0.5rem;
+        padding: 0 0.5rem 0.5rem 0;
 
         &--defences {
             display: grid;
