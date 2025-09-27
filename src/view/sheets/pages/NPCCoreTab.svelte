@@ -73,6 +73,34 @@ function getMonsterFeatureIcon(categoryName) {
 			return 'fa-solid fa-message';
 	}
 }
+
+async function handleDrop(event, targetId) {
+	const draggedId = event.dataTransfer.getData('nimble/reorder');
+	if (!draggedId) return;
+
+	event.preventDefault();
+
+	const draggedItem = actor.items.get(draggedId);
+	const targetItem = actor.items.get(targetId);
+	if (!draggedItem || !targetItem) return;
+
+	const draggedCategory = mapMonsterFeatureToType(draggedItem);
+	const targetCategory = mapMonsterFeatureToType(targetItem);
+	if (draggedCategory !== targetCategory) return;
+
+	const categoryItems = categorizedItems[draggedCategory];
+	const draggedIndex = categoryItems.findIndex((item) => item._id === draggedId);
+	const targetIndex = categoryItems.findIndex((item) => item._id === targetId);
+	if (draggedIndex === -1 || targetIndex === -1) return;
+
+	const newItems = [...categoryItems];
+	newItems.splice(draggedIndex, 1);
+	newItems.splice(targetIndex, 0, draggedItem);
+
+	const updates = newItems.map((item, index) => ({ _id: item._id, sort: index * 10000 }));
+	await actor.updateEmbeddedDocuments('Item', updates);
+}
+
 function getArmorClassLabel(armor) {
 	return npcArmorTypeAbbreviations[armor] ?? '-';
 }
@@ -242,7 +270,7 @@ onDestroy(() => {
 					{/if}
 				{/if}
 
-				<ul class="nimble-item-list">
+				<ul class="nimble-item-list" ondragover={(event) => { if (event.dataTransfer.types.includes('nimble/reorder')) event.preventDefault(); }}>
 					{#each sortItems(itemCategory) as item (item.reactive._id)}
 						{@const metadata = getFeatureMetadata(item)}
 						<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
@@ -256,7 +284,8 @@ onDestroy(() => {
 							data-tooltip-direction="LEFT"
 							draggable="true"
 							role="button"
-							ondragstart={(event) => sheet._onDragStart(event)}
+							ondragstart={(event) => { event.dataTransfer.setData('nimble/reorder', item._id); sheet._onDragStart(event); }}
+							ondrop={(event) => handleDrop(event, item._id)}
 							onclick={() => actor.activateItem(item.reactive._id)}
 						>
 							<header class="u-semantic-only">
