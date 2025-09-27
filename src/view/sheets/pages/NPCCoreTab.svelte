@@ -6,6 +6,7 @@ import Editor from '../components/Editor.svelte';
 import MonsterFeature from '../components/MonsterFeature.svelte';
 import SavingThrows from '../components/SavingThrows.svelte';
 import sortItems from '../../../utils/sortItems.js';
+import { FALSE, TRUE } from 'sass';
 
 async function configureItem(event, id) {
 	event.stopPropagation();
@@ -155,6 +156,7 @@ let actions = $derived.by(() =>
 let bloodiedEffectInEditMode = $state(false);
 let lastStandEffectInEditMode = $state(false);
 let attackSequenceInEditMode = $state(false);
+let collapsedStates = $state({});
 
 let items = $derived(filterMonsterFeatures(actor.reactive));
 let categorizedItems = $derived(groupItemsByType(items));
@@ -273,9 +275,10 @@ onDestroy(() => {
 				<ul class="nimble-item-list" ondragover={(event) => { if (event.dataTransfer.types.includes('nimble/reorder')) event.preventDefault(); }}>
 					{#each sortItems(itemCategory) as item (item.reactive._id)}
 						{@const metadata = getFeatureMetadata(item)}
+						{@const isCollapsed = collapsedStates[item._id] ?? false}
 						<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
 						<!-- svelte-ignore  a11y_click_events_have_key_events -->
-						<li class="nimble-document-card nimble-document-card--no-meta"
+						<li class="nimble-document-card nimble-document-card--no-meta nimble-document-card--monster-sheet"
 							class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
 							class:nimble-document-card--no-meta={!metadata}
 							data-item-id={item.reactive._id}
@@ -300,6 +303,28 @@ onDestroy(() => {
 									{item.reactive.name}
 								</h4>
 
+								{#if !isCollapsed}
+									<button
+										class="nimble-button"
+										data-button-variant="icon"
+										type="button"
+										aria-label="Collapse description for {item.reactive.name}"
+										onclick={(event) => { event.stopPropagation(); collapsedStates[item._id] = true; }}
+									>
+										<i class="fa-solid fa-chevron-up"></i>
+									</button>
+								{:else}
+									<button
+										class="nimble-button"
+										data-button-variant="icon"
+										type="button"
+										aria-label="Reveal description for {item.reactive.name}"
+										onclick={(event) => { event.stopPropagation(); collapsedStates[item._id] = false; }}
+									>
+										<i class="fa-solid fa-chevron-down"></i>
+									</button>
+								{/if}
+
 								<button
 									class="nimble-button"
 									data-button-variant="icon"
@@ -322,15 +347,17 @@ onDestroy(() => {
 								</button>
 							</header>
 						</li>
-						<div class="nimble-monster-feature-text" style="display: felx; align-items: center; gap: 0.5rem;">
-							{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.system.description) then featureDescription}
-								{#if featureDescription}
-									<div class="nimble-monster-feature-text">
-										{@html featureDescription}
-									</div>
-								{/if}
-							{/await}
-						</div>
+						{#if !isCollapsed}
+							<div class="nimble-monster-feature-text" style="display: flex; align-items: center; gap: 0.5rem;">
+								{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.system.description) then featureDescription}
+									{#if featureDescription}
+										<div class="nimble-monster-feature-text">
+											{@html featureDescription}
+										</div>
+									{/if}
+								{/await}
+							</div>
+						{/if}
 					{/each}
 				</ul>
 			</section>
