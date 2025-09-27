@@ -75,7 +75,7 @@
 			}
 		},
 		"description": {
-			"public": "<table><tbody><tr><td data-colwidth=\"93\"><p><strong>Damage</strong></p></td><td><p>4d4+Dex Piercing</p></td></tr><tr><td data-colwidth=\"93\"><p><strong>Properties</strong></p></td><td><p>2-Handed, Load: 1 action, Range 8</p></td></tr><tr><td data-colwidth=\"93\"><p><strong>Cost</strong></p></td><td><p>60 gp</p></td></tr></tbody></table>",
+			"public": "<p><strong>Damage:</strong> 4d4+Dex Piercing</p><p><strong>Properties:</strong> 2-Handed, Load: 1 action, Range 8</p><p><strong>Cost:</strong> 60 gp</p>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -86,7 +86,6 @@
 		"objectSizeType": "slots",
 		"slotsRequired": 2,
 		"stackSize": 2,
-		"stackable": false,
 		"properties": {
 			"range": {
 				"min": 2,

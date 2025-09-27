@@ -110,15 +110,6 @@ let strengthRequirementOverridesTwoHanded = $derived(
 );
 
 let objectType = $derived(item.reactive.system.objectType);
-
-function getObjectSizeTypeBackwardsCompatible() {
-	if (typeof item.system.objectSizeType === 'undefined') {
-		if (item.system.stackable) updateObjectSizeType('stackable');
-		else if (Number.isInteger(item.system.slotsRequired)) updateObjectSizeType('slots');
-		else updateObjectSizeType('smallSized');
-	}
-}
-getObjectSizeTypeBackwardsCompatible();
 let objectSizeType = $derived(item.reactive.system.objectSizeType);
 
 setContext('document', item);

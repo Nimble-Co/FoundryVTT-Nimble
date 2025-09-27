@@ -46,7 +46,7 @@
 			}
 		},
 		"description": {
-			"public": "<table><tbody><tr><td><p><strong>Type</strong></p></td><td><p>Shield</p></td></tr><tr><td><p><strong>Requirement</strong></p></td><td><p>3 STR</p></td></tr><tr><td><p><strong>Armor</strong></p></td><td><p>8</p></td></tr><tr><td><p><strong>Cost</strong></p></td><td><p>9000 gp</p></td></tr></tbody></table>",
+			"public": "<p><strong>Type:</strong> Shield</p><p><strong>Requirement:</strong> 3 STR</p><p><strong>Armor:</strong> 8</p><p><strong>Cost:</strong> 9000 gp</p>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -57,7 +57,6 @@
 		"objectSizeType": "slots",
 		"slotsRequired": 1,
 		"stackSize": 2,
-		"stackable": false,
 		"properties": {
 			"range": {
 				"min": 2,

@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"public": "<table><tbody><tr><td data-colwidth=\"104\"><p><strong>Properties</strong></p></td><td><p>Like rope, but stronger (and heavy).</p></td></tr><tr><td data-colwidth=\"104\"><p><strong>Cost</strong></p></td><td><p>50 gp</p></td></tr></tbody></table>",
+			"public": "<p><strong>Properties:</strong> Like rope, but stronger (and heavy).</p><p><strong>Cost:</strong> 50 gp</p>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -45,7 +45,6 @@
 		"objectSizeType": "slots",
 		"slotsRequired": 1,
 		"stackSize": 2,
-		"stackable": true,
 		"properties": {
 			"range": {
 				"min": 2,

@@ -64,8 +64,9 @@
 		"objectType": "weapon",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"slotsRequired": 2,
-		"stackable": false,
+		"objectSizeType": "slots",
+		"slotsRequired": 1,
+		"stackSize": 2,
 		"properties": {
 			"range": {
 				"min": 2,
