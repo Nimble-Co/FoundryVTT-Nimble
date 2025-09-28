@@ -23,7 +23,6 @@ import CharacterStatConfigDialog from '../../view/dialogs/CharacterStatConfigDia
 import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/CharacterWeaponProficienciesConfigDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
-import { log } from 'node:console';
 
 export class NimbleCharacter extends NimbleBaseActor {
 	declare _ancestry: NimbleAncestryItem | undefined;
