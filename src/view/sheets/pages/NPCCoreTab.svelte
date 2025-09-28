@@ -234,6 +234,7 @@ onDestroy(() => {
 							></button>
 							<button
 								class="nimble-button"
+								style="margin-left: auto;"
 								data-button-variant="basic"
 								type="button"
 								aria-label={allCollapsed ? "Expand all descriptions" : "Collapse all descriptions"}
