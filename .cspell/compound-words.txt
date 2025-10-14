@@ -1,0 +1,10 @@
+# Compound words and concatenated terms
+batlike
+crosshairs
+introend
+introstart
+outroend
+outrostart
+oozelingconstruct
+tradesmanartisan
+webthin

@@ -532,7 +532,7 @@ let savingThrowOptions = prepareSavingThrowOptions(savingThrows);
                             {#each Object.entries(healingTypes) as [value, label]}
                                 <option
                                     {value}
-                                    selected={value === node.healingtType}
+                                    selected={value === node.healingType}
                                     >{label}</option
                                 >
                             {/each}

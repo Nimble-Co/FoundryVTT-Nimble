@@ -1,0 +1,27 @@
+# Technical and coding terms
+colwidth
+darkmode
+defaultchecked
+defaultvalue
+disablepictureinpicture
+disableremoteplayback
+esmodules
+fvtt
+gmroll
+hotbar
+hoverable
+inplace
+numberlike
+nums
+occludable
+pixi
+placeables
+popout
+prelocalize
+quadtree
+runed
+srcobject
+sublist
+unsub
+vtta
+vttsb

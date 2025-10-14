@@ -1,7 +1,7 @@
 {
 	"name": "Ratfolk",
 	"type": "ancestry",
-	"img": "icons/creatures/mammals/rodent-rat-diseaed-gray.webp",
+	"img": "icons/creatures/mammals/rodent-rat-diseased-gray.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",

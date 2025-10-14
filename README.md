@@ -22,7 +22,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ### Nimble 3rd Party Creator License
 #### Terms
 You may create and publish original works based on or compatible with Nimble (the ‘System’) without Nimble Co.’s prior approval and retain all profits.
-- You may use and reference this book’s text in your original products (adventures, classes, subclasses, monsters, suppleents, etc.). Copying large portions of text verbatim with little or no added value does not qualify as an original product. For additional FAQ see [nimbleRPG.com/creators](nimbleRPG.com/creators).
+
+- You may use and reference this book’s text in your original products (adventures, classes, subclasses, monsters, supplements, etc.). Copying large portions of text verbatim with little or no added value does not qualify as an original product. For additional FAQ see [nimbleRPG.com/creators](nimbleRPG.com/creators).
 - You may not use the System’s art or logo but may use theNimble compatibility logo ([nimbleRPG.com/creators](nimbleRPG.com/creators)).
 
 #### Restrictions
