@@ -432,6 +432,123 @@
 			"round": "round",
 			"turn": "turn"
 		},
+		"settings": {
+			"uiMenu": {
+				"name": "UI Settings",
+				"label": "Configure UI Settings"
+			},
+			"languagesMenu": {
+				"name": "In-Game Languages",
+				"label": "Configure In-Game Languages"
+			},
+			"optionalRulesMenu": {
+				"name": "Optional Rules",
+				"label": "Configure Optional Rules"
+			},
+			"multiclassing": {
+				"name": "Allow Multiclassing",
+				"hint": "Enables the optional multiclass rule allowing heroes to take levels in different classes when leveling up."
+			},
+			"largeGroups": {
+				"name": "Limit Actions for Large Groups",
+				"hint": "Sets each hero's actions to 2 when the group size exceeds 6."
+			},
+			"fastResting": {
+				"name": "Enable Fast Resting",
+				"hint": "Safe Rests fully heal all Wounds for a faster-paced, heroic game."
+			},
+			"criticalHealing": {
+				"name": "Enable Critical Healing",
+				"hint": "Treats healing rolls like attacks — max rolls explode, ones fail."
+			},
+			"thrownPotions": {
+				"name": "Enable Thrown Potions",
+				"hint": "Allows throwing potions like ranged attacks (Range 8, half effect)."
+			},
+			"suckerPunch": {
+				"name": "Enable Sucker Punch Rule",
+				"hint": "Standing from Prone provokes opportunity attacks."
+			},
+			"inspiration": {
+				"name": "Enable Inspiration",
+				"hint": "Grants rerolls for memorable or role-played moments."
+			},
+			"keyStatSwap": {
+				"name": "Allow Key Stat Swapping",
+				"hint": "Enables swapping primary/secondary stats for class flexibility."
+			},
+			"complexCharacters": {
+				"name": "Allow Complex Characters",
+				"hint": "Permits heroes to pick 2 backgrounds and/or ancestry bonuses."
+			},
+			"customWeaponDice": {
+				"name": "Enable Custom Weapon Dice",
+				"hint": "Allows alternative dice combinations that total equivalent sizes."
+			},
+			"measurementSystem": {
+				"name": "Measurement Style",
+				"hint": "Choose how range and distance are measured in the game.",
+				"choices": {
+					"grid": "Grid (ft.)",
+					"metric": "Metric (m)",
+					"abstract": "Abstract (Close/Mid/Far)"
+				}
+			},
+			"grittyDying": {
+				"name": "Gritty Dying Variant",
+				"hint": "Optional lethality variant: reduce the max number of Wounds heroes can sustain.",
+				"choices": {
+					"off": "Off (Standard 6 Wounds)",
+					"cap5": "5 Wounds Maximum",
+					"cap4": "4 Wounds Maximum",
+					"cap3": "3 Wounds Maximum",
+					"cap2": "2 Wounds Maximum",
+					"cap1": "1 Wound Maximum (Very Lethal)"
+				}
+			},
+			"grittyDyingPenalty": {
+				"name": "Wounds Penalty",
+				"hint": "Each Wound imposes a cumulative –1 penalty to specified rolls.",
+				"choices": {
+					"off": "Off (No Penalty)",
+					"skillChecks": "Skill Checks Only",
+					"saves": "Saving Throws Only",
+					"allRolls": "All Rolls"
+				}
+			},
+			"conditionHUD": {
+				"name": "Condition HUD",
+				"hint": "Enables a quick-access HUD to apply Nimble conditions."
+			},
+			"reactionPrompts": {
+				"name": "Reaction Prompts",
+				"hint": "Displays contextual buttons for Defend, Interpose, Help, and Opportunity Attacks."
+			},
+			"assessHelper": {
+				"name": "Assess Action Helper",
+				"hint": "Adds DC 12 Assess automation with question/advantage prompts."
+			},
+			"displayConditionsIcons": {
+				"name": "Show Condition Icons",
+				"hint": "Renders condition icons on tokens."
+			},
+			"showSkillTooltips": {
+				"name": "Show Skill Tooltips",
+				"hint": "Displays skill explanations when hovering over skill names."
+			},
+			"showBoons": {
+				"name": "Show Lodging Boons",
+				"hint": "Shows minor/major lodging boons in character sheets and rest dialogs."
+			},
+			"debugLogs": {
+				"name": "Enable Debug Logging",
+				"hint": "Outputs rule processing and condition data to the console."
+			},
+			"languageSet": {
+				"name": "Available Languages",
+				"hint": "Determines languages selectable in character creation."
+			}
+		},
 		"ui": {
 			"clearAll": "Clear All"
 		}
