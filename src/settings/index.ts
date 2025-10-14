@@ -1,12 +1,13 @@
-import { SystemSettings } from './SystemSettings.js';
+// import { SystemSettings } from './SystemSettings';
 
 export default function registerSystemSettings() {
-	game.settings.registerMenu('nimble', 'SystemSettings', {
-		name: 'System Settings',
-		label: 'Configure System Settings',
-		icon: 'fas fa bars',
-		// @ts-expect-error
-		type: SystemSettings,
-		restricted: false,
-	});
+	// System Settings menu - Coming Soon (Work in Progress)
+	// TODO: Implement system settings dialog
+	// game.settings.registerMenu('nimble', 'SystemSettings', {
+	// 	name: 'System Settings',
+	// 	label: 'System Settings',
+	// 	icon: 'fas fa-bars',
+	// 	type: SystemSettings,
+	// 	restricted: false,
+	// });
 }
