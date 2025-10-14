@@ -9,12 +9,14 @@ namespace RulesManager {
 }
 class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	#item: NimbleBaseItem;
+  rulesTypeMap: Map<string, InstanceType<typeof NimbleBaseRule>>;
 
 	constructor(item: NimbleBaseItem) {
 		super();
 
 		this.#item = item;
 		const dataModels = CONFIG.NIMBLE.ruleDataModels;
+		this.rulesTypeMap = new Map();
 
 		item.system.rules.forEach((source: any) => {
 			const Cls = dataModels[source.type];
@@ -29,6 +31,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 			try {
 				const rule = new Cls(source, { parent: item, strict: true });
 				this.set(rule.id, rule);
+				this.rulesTypeMap.set(source.type, rule);
 			} catch (err) {
 				// eslint-disable-next-line no-console
 				console.warn(`Nimble | Rule ${source.id} on ${item.name}(${item.uuid}) is malformed.`);
@@ -46,11 +49,11 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	}
 
 	hasRuleOfType(type: string) {
-		return this.#item.system.rules.some((r) => r.type === type);
+		return this.rulesTypeMap.has(type);
 	}
 
 	getRuleOfType(type: string) {
-		return this.#item.system.rules.find((r) => r.type === type);
+		return this.rulesTypeMap.get(type);
 	}
 
 	async deleteRule(id: string) {

@@ -20,10 +20,9 @@ async function toggleArmor(event, rules, itemId) {
 	let armorRule = rules.getRuleOfType('armorClass');
 	armorRule.disabled = !armorRule.disabled;
 	await rules.updateRule(armorRule.id, armorRule);
-	if (armorRule.disabled) itemsWithDisabledArmor.push(itemId);
+	if (armorRule.disabled) itemsWithDisabledArmor[itemId] = true;
 	else {
-		const index = itemsWithDisabledArmor.indexOf(itemId);
-		if (index > -1) itemsWithDisabledArmor.splice(index, 1);
+		itemsWithDisabledArmor[itemId] = false;
 	}
 }
 
@@ -67,11 +66,9 @@ let categorizedItems = $derived(groupItemsByType(items));
 let itemsWithDisabledArmor = $derived(
 	items.reduce((acc, item) => {
         const armorClassRule = new RulesManager(item).getRuleOfType('armorClass');
-		if (armorClassRule && armorClassRule.disabled) {
-			acc.push(item.id);
-		}
+		acc[item.id] = armorClassRule && armorClassRule.disabled;
 		return acc;
-	}, [])
+	}, {})
 );
 
 // Currency
@@ -181,6 +178,7 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                                 {item.reactive.name}
                             </h4>
 
+
                             {#if rules.hasRuleOfType('armorClass')}
 
                             <button
@@ -191,7 +189,7 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                                 onclick={(event) =>
                                     toggleArmor(event, rules, item._id)}
                             >
-                                {#if itemsWithDisabledArmor.includes(item._id)}
+                                {#if itemsWithDisabledArmor[item._id]}
                                 <i class="fa-regular fa-circle"></i>
                                 {:else}
                                 <i class="fa-solid fa-circle"></i>
