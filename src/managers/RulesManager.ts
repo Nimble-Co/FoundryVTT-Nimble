@@ -74,6 +74,8 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 			}
 		} else updateData = data;
 
+		this.rulesTypeMap.set(updateData.type, updateData as InstanceType<typeof NimbleBaseRule>);
+
 		await this.#item.update({
 			'system.rules': this.#item.system.rules.map((r) => (r.id === id ? updateData : r)),
 		});

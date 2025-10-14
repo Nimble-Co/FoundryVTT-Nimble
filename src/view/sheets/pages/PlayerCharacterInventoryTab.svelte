@@ -63,9 +63,14 @@ let totalInventorySlots = $derived(actor.reactive.system.inventory.totalSlots ??
 let usedInventorySlots = $derived(actor.reactive.system.inventory.usedSlots ?? 0);
 let items = $derived(filterItems(actor.reactive, ['object'], searchTerm));
 let categorizedItems = $derived(groupItemsByType(items));
+let itemRulesManagers = $derived(items.reduce((acc, item) => {
+	acc[item.id] = new RulesManager(item);
+	return acc;
+}, {}));
+
 let itemsWithDisabledArmor = $derived(
 	items.reduce((acc, item) => {
-        const armorClassRule = new RulesManager(item).getRuleOfType('armorClass');
+        const armorClassRule = itemsRulesManagers[item.id].getRuleOfType('armorClass');
 		acc[item.id] = armorClassRule && armorClassRule.disabled;
 		return acc;
 	}, {})
@@ -145,7 +150,7 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
             <ul class="nimble-item-list">
                 {#each sortItems(itemCategory) as item (item._id)}
                     {@const metadata = getObjectMetadata(item)}
-                    {@const rules = new RulesManager(item)}
+                    {@const rules = itemRulesManagers[item.id]}
 
                     <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
                     <!-- svelte-ignore  a11y_click_events_have_key_events -->
@@ -186,8 +191,13 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                                 data-button-variant="icon"
                                 type="button"
                                 aria-label="Toggle armor rule of {item.name}"
-                                onclick={(event) =>
-                                    toggleArmor(event, rules, item._id)}
+                                onclick={(event) => {
+                                    event.stopPropagation();
+                                    const armorRule = rules.getRuleOfType('armorClass');
+                                    armorRule.disabled = !armorRule.disabled;
+                                    rules.updateRule(armorRule.id, armorRule);
+                                    itemsWithDisabledArmor[item._id] = armorRule.disabled;
+                                }}
                             >
                                 {#if itemsWithDisabledArmor[item._id]}
                                 <i class="fa-regular fa-circle"></i>
