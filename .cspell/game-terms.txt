@@ -113,6 +113,7 @@ planarbeing
 pseudopods
 quickblade
 unheld
+mindlink
 
 # Creatures
 Aetherling
