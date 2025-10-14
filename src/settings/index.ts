@@ -1,13 +1,26 @@
-// import { SystemSettings } from './SystemSettings';
+const { ApplicationV2 } = foundry.applications.api;
+
+/**
+ * Placeholder class for the upcoming System Settings feature
+ */
+class SystemSettingsPlaceholder extends ApplicationV2 {
+	constructor() {
+		super({});
+	}
+
+	override async render(): Promise<this> {
+		ui.notifications?.info('System Settings - Coming Soon!');
+		return this;
+	}
+}
 
 export default function registerSystemSettings() {
-	// System Settings menu - Coming Soon (Work in Progress)
-	// TODO: Implement system settings dialog
-	// game.settings.registerMenu('nimble', 'SystemSettings', {
-	// 	name: 'System Settings',
-	// 	label: 'System Settings',
-	// 	icon: 'fas fa-bars',
-	// 	type: SystemSettings,
-	// 	restricted: false,
-	// });
+	game.settings.registerMenu('nimble', 'SystemSettings', {
+		name: 'System Settings',
+		label: 'Coming Soon...',
+		icon: 'fas fa-bars',
+		// @ts-expect-error - Using placeholder until full implementation
+		type: SystemSettingsPlaceholder,
+		restricted: false,
+	});
 }
