@@ -15,11 +15,10 @@ class SystemSettingsPlaceholder extends ApplicationV2 {
 }
 
 export default function registerSystemSettings() {
-	game.settings.registerMenu('nimble', 'SystemSettings', {
+	(game as any).settings.registerMenu('nimble', 'SystemSettings', {
 		name: 'System Settings',
 		label: 'Coming Soon...',
 		icon: 'fas fa-bars',
-		// @ts-expect-error - Using placeholder until full implementation
 		type: SystemSettingsPlaceholder,
 		restricted: false,
 	});
