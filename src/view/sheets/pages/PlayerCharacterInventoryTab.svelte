@@ -65,10 +65,13 @@ let usedInventorySlots = $derived(actor.reactive.system.inventory.usedSlots ?? 0
 let items = $derived(filterItems(actor.reactive, ['object'], searchTerm));
 let categorizedItems = $derived(groupItemsByType(items));
 let itemsWithDisabledArmor = $derived(
-	items
-		.filter((i) => new RulesManager(i).hasRuleOfType('armorClass'))
-		.filter((i) => new RulesManager(i).getRuleOfType('armorClass').disabled)
-		.map((i) => i.id),
+	items.reduce((acc, item) => {
+        const armorClassRules = new RulesManager(item).getRuleOfType('armorClass');
+		if (armorClassRules && armorClassRules.disabled) {
+			acc.push(item.id);
+		}
+		return acc;
+	}, [])
 );
 
 // Currency
