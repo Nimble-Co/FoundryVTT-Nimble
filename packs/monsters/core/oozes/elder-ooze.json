@@ -172,7 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Contact with an ooze inflicts the Digested condition: they dealan additional X damage for each time the target has been Digested this encounter.</p>",
+				"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>",
 				"isAction": false,
 				"isAttack": false
 			},

@@ -121,7 +121,7 @@
 			"confused": "<p>The GM spends your next action.</p>",
 			"dazed": "<p><b>Heroes:</b> lose 1 action.</p> <p><b>Monsters:</b> can perform one less action on their next turn.</p>",
 			"dead": "<p>You die when you have taken 6 Wounds (unless you have an ability that changes this number). There are ways to revive a hero who has died, but they are rare and often come at a very steep cost.</p>",
-			"despair": "<p>Disdvantage on the next attack you make in this encounter.</p>",
+			"despair": "<p>Disadvantage on the next attack you make in this encounter.</p>",
 			"distracted": "<p>A target is distracted if it is adjacent to or Taunted by an ally, or if it cannot see you.</p>",
 			"dying": "<p>At 0HP. Taking damage while dying causes 2 Wounds, a crit causes 3 instead.</p>",
 			"frightened": "<p>Disadvantage on rolls when source of fear is nearby; speed halved when moving closer to it.</p>",
