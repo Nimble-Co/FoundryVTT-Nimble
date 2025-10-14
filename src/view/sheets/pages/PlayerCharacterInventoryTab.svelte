@@ -15,17 +15,6 @@ async function configureItem(event, id) {
 	await actor.configureItem(id);
 }
 
-async function toggleArmor(event, rules, itemId) {
-	event.stopPropagation();
-	let armorRule = rules.getRuleOfType('armorClass');
-	armorRule.disabled = !armorRule.disabled;
-	await rules.updateRule(armorRule.id, armorRule);
-	if (armorRule.disabled) itemsWithDisabledArmor[itemId] = true;
-	else {
-		itemsWithDisabledArmor[itemId] = false;
-	}
-}
-
 async function createItem(event) {
 	event.stopPropagation();
 
