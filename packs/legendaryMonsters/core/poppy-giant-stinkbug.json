@@ -21,13 +21,7 @@
 			"creatureType": "",
 			"level": "3"
 		},
-		"bloodiedEffect": {
-			"description": "<p>When Kelebek is reduced to 30 HP, Poppy always Interposes for him</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>When Poppy dies, the room is filled with noxious gas: all heroes have a maximum of 2 actions each turn.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, choose Kelebek OR Poppy to act.</p>",
+		"attackSequence": "<p>After each hero's turn, choose Kelebek OR Poppy to act.</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -177,9 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When damaged, enemies within 2 spaces make a STR save (DC equal to the higher of 10 or the damage done). On a failure, they must spend their next action vomiting, and they cannot take reactions this round.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>When damaged, enemies within 2 spaces make a STR save (DC equal to the higher of 10 or the damage done). On a failure, they must spend their next action vomiting, and they cannot take reactions this round.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -196,7 +188,6 @@
 			"name": "Crushing Mandibles.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -249,7 +240,7 @@
 					}
 				},
 				"description": "<p>Move 6. 4d6 damage, up to 2 adjacent creatures.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "bF81HUOt0AEo855I",
 			"img": "icons/creatures/invertebrates/beetle-stag-yellow-green.webp",
@@ -263,6 +254,106 @@
 				"systemVersion": "0.1.8",
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
 				"modifiedTime": 1757830524283
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,27172"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "340f7bd5-dd51-4253-b5ca-f832823f74bd",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>When Kelebek is reduced to 30 HP, Poppy always Interposes for him</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,27172"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "b1be64e0-3a52-49f0-9e68-4a5472e77288",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>When Poppy dies, the room is filled with noxious gas: all heroes have a maximum of 2 actions each turn.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

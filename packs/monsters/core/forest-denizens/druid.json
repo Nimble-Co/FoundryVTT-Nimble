@@ -141,7 +141,6 @@
 			"name": "Beastshift.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -194,7 +193,7 @@
 					}
 				},
 				"description": "<p>+4 speed, gain Medium armor this round. 4d4+10, OR</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "79PyImNg7bNW6XFp",
 			"img": "icons/creatures/abilities/bear-roar-bite-brown-green.webp",
@@ -214,7 +213,6 @@
 			"name": "Hurricane.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -267,7 +265,7 @@
 					}
 				},
 				"description": "<p> (Reach 3) 4d4+10 to all enemies within reach. On damage: move targets anywhere else in Reach.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "3WjkcCDGptqobRPc",
 			"img": "icons/magic/air/wind-tornado-funnel-gray.webp",

@@ -172,9 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -223,9 +221,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When an enemy moves adjacent to you or an ally, they trigger one of your traps! (1/encounter each).</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>When an enemy moves adjacent to you or an ally, they trigger one of your traps! (1/encounter each).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -242,7 +238,6 @@
 			"name": "Throw Scorpion (2×).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -295,7 +290,7 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d4+2.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "NdIsX1LiS4tHYzfo",
 			"img": "icons/environment/creatures/bug-scorpion-silver.webp",
@@ -314,7 +309,6 @@
 			"name": "[Trap] - BEEES!",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -367,7 +361,7 @@
 					}
 				},
 				"description": "<p>Deal 5d4 damage (doesn’t miss). Half as</p><p>much to ALL adjacent creatures.</p>",
-				"isAttack": false
+				"subtype": "action"
 			},
 			"_id": "UOfb5oxZN2KhFedb",
 			"img": "icons/creatures/invertebrates/bee-yellow.webp",
@@ -387,7 +381,6 @@
 			"name": "[Trap] - HIDDEN NET!",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -426,7 +419,7 @@
 					}
 				},
 				"description": "<p>Restrained! (Escape DC 10)</p>",
-				"isAttack": false
+				"subtype": "action"
 			},
 			"_id": "32UcKER1GRaKPLcD",
 			"img": "icons/tools/fishing/net-simple-tan.webp",

@@ -172,9 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>The first time this dies, reset to 1 HP instead  (excluding minions).</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>The first time this dies, reset to 1 HP instead  (excluding minions).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -191,7 +189,6 @@
 			"name": "Grave Arrow.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -244,7 +241,7 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d4+3 </p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "v51T31rbVBmmZo8p",
 			"img": "icons/weapons/bows/shortbow-recurve-bone.webp",

@@ -132,9 +132,13 @@ let actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
 let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 let actorImageScale = $derived(flags?.actorImageScale ?? 100);
 
-let metaData = $derived(
-	prepareCharacterMetadata(classItem, subclassItem, ancestryItem, sizeCategory),
-);
+let metaData = $derived.by(() => {
+	const c = actor.reactive.items.find((i) => i.type === 'class') ?? null;
+	const sub = actor.reactive.items.find((i) => i.type === 'subclass') ?? null;
+	const anc = actor.reactive.items.find((i) => i.type === 'ancestry') ?? null;
+	const size = actor.reactive.system.attributes.sizeCategory;
+	return prepareCharacterMetadata(c, sub, anc, size);
+});
 
 setContext('actor', actor);
 setContext('document', actor);
@@ -263,6 +267,18 @@ setContext('application', sheet);
         type="button"
     >
         <i class="fa-solid fa-arrow-up-right-dots"></i>
+    </button>
+
+    <button
+        class="nimble-button"
+        data-button-variant="overhang"
+        aria-label="Revert Last Level Up"
+        data-tooltip="Revert Last Level Up"
+        onclick={() => actor.revertLastLevelUp()}
+        disabled={actor.reactive.system.levelUpHistory.length === 0}
+        type="button"
+    >
+        <i class="fa-solid fa-undo"></i>
     </button>
 
     <button

@@ -172,9 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -222,9 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Adjacent allies gain Medium Armor.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Adjacent allies gain Medium Armor.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -241,7 +237,6 @@
 			"name": "Stab (2×).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -294,7 +289,7 @@
 					}
 				},
 				"description": "<p> 1d4+2</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "CthIJDXdIQJm2Eqo",
 			"img": "icons/weapons/daggers/dagger-crooked-black.webp",
@@ -313,7 +308,6 @@
 			"name": "Sling (2x).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -366,7 +360,7 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d4+2.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "frF59tiZfqobmiMc",
 			"img": "icons/weapons/slings/slingshot-wood.webp",

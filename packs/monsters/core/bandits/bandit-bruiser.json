@@ -172,9 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -191,7 +189,6 @@
 			"name": "Bash.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -244,7 +241,7 @@
 					}
 				},
 				"description": "<p>2d8+4</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "WbRmNXJFvfQQNqL7",
 			"img": "icons/skills/melee/strike-club-red.webp",

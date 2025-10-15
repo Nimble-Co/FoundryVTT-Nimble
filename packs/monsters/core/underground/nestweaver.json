@@ -141,7 +141,6 @@
 			"name": "Summon 2 spider minions (d8)",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -172,7 +171,7 @@
 					}
 				},
 				"description": "<p><strong>Then choose 1</strong></p>",
-				"isAttack": false
+				"subtype": "action"
 			},
 			"_id": "JyzNugiIZQ2of8AX",
 			"img": "icons/svg/item-bag.svg",
@@ -192,7 +191,6 @@
 			"name": "Shoot Web.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -259,7 +257,7 @@
 					}
 				},
 				"description": "<p>(Range 6) 1d8+2. On hit: Restrained</p><p>(escape DC 12, or any slashing/fire damage). </p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "j7fwFMyGdcMkc9nc",
 			"img": "icons/creatures/webs/web-clumped-blue.webp",
@@ -278,7 +276,6 @@
 			"name": "Bite.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -338,7 +335,7 @@
 					}
 				},
 				"description": "<p>(Hampered target) 3d8+6 and Poisoned (magical healing ends).</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "CAnnWPITXttRlM6P",
 			"img": "icons/creatures/abilities/fang-tooth-poison-green.webp",

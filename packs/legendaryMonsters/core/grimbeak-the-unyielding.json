@@ -21,12 +21,6 @@
 			"creatureType": "Owlbear",
 			"level": "3"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 50 HP, Savage Screech recharges.</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Grimbeak is dying! 30 more damage and she dies. Until then, her Attacks use d10s instead of d6s.</p>"
-		},
 		"attackSequence": "<p>After each Hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
@@ -177,9 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Treat the highest die rolled as the Primary Die. On crit: knock Prone.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Treat the highest die rolled as the Primary Die. On crit: knock Prone.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -197,7 +189,6 @@
 			"name": "Savage Screech. (1 use)",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -272,7 +263,7 @@
 					}
 				},
 				"description": "<p>All enemies within reach 12 suffer 2d6 damage (ignoring armor). DC 11 WIL save or become Frightened for 1 round.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "RJV5MKgumWqo5XIY",
 			"img": "icons/creatures/abilities/bear-roar-bite-brown.webp",
@@ -292,7 +283,6 @@
 			"name": "Rend & Tear.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -345,7 +335,7 @@
 					}
 				},
 				"description": "<p>Attack for 2d6+10 damage.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "PI8o8vl7IYJfCvI6",
 			"img": "icons/creatures/claws/claw-bear-paw-swipe-red.webp",
@@ -365,7 +355,6 @@
 			"name": "Beak.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -418,7 +407,7 @@
 					}
 				},
 				"description": "<p>Move 8. Attack for 2d6 damage.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "SSQGS8TLrViOEAuh",
 			"img": "icons/creatures/abilities/bear-roar-bite-brown-green.webp",
@@ -432,6 +421,106 @@
 				"systemVersion": "0.1.8",
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
 				"modifiedTime": 1757829574052
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,13964"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "a588f10a-2111-4abc-b124-49303ea3bda9",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 50 HP, Savage Screech recharges.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,13964"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "f6403cae-a9ab-4764-8061-6ef066ff8002",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Grimbeak is dying! 30 more damage and she dies. Until then, her Attacks use d10s instead of d6s.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

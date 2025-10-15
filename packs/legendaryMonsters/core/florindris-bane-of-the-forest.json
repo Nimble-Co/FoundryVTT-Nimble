@@ -21,13 +21,7 @@
 			"creatureType": "Floral Dragon",
 			"level": "7"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 100 HP, enemies within Reach 12 gain Thornblight, and Petal Storm recharges, .</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Florindris is dying! 70 more damage and she dies. Until then, Aura of Wind and Gust move creatures twice as far.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, choose one:</p>",
+		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -177,9 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Ranged attacks against you have disadvantage. End of turn: push adjacent creatures 2 spaces away.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Ranged attacks against you have disadvantage. End of turn: push adjacent creatures 2 spaces away.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -228,9 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Resistant to necrotic damage, but it suppresses Aura of Wind for 1 turn.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Resistant to necrotic damage, but it suppresses Aura of Wind for 1 turn.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -248,7 +238,6 @@
 			"name": "Petal Storm. (1 use)",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -284,22 +273,10 @@
 									"parentNode": "sEd9SUKZgwyZ5Eog",
 									"on": {
 										"failedSave": [
-											{
-												"id": "hqIT3cZ3JmowG5YV",
-												"type": "damageOutcome",
-												"outcome": "fullDamage",
-												"parentContext": "failedSave",
-												"parentNode": "6hWswDAtEEl6idrf"
-											}
+											"@{id=hqIT3cZ3JmowG5YV; type=damageOutcome; outcome=fullDamage; parentContext=failedSave; parentNode=6hWswDAtEEl6idrf}"
 										],
 										"passedSave": [
-											{
-												"id": "N1ZBDglGKbHZEFND",
-												"type": "damageOutcome",
-												"outcome": "halfDamage",
-												"parentContext": "passedSave",
-												"parentNode": "6hWswDAtEEl6idrf"
-											}
+											"@{id=N1ZBDglGKbHZEFND; type=damageOutcome; outcome=halfDamage; parentContext=passedSave; parentNode=6hWswDAtEEl6idrf}"
 										]
 									}
 								}
@@ -320,7 +297,7 @@
 					}
 				},
 				"description": "<p>3d10+10 damage to all enemies within Reach 8, half on a DC 13 DEX save.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "r5mtMav2sJzLJmI1",
 			"img": "icons/magic/nature/lotus-glow-pink.webp",
@@ -340,7 +317,6 @@
 			"name": "Rend.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -401,7 +377,7 @@
 					}
 				},
 				"description": "<p>Fly 10 before or after attacking. (Reach 2) 1d10+10 damage to up to 2 targets within reach. On hit: Gain Thornblight.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "jspwozF2CfOXKGyE",
 			"img": "icons/creatures/claws/claw-hooked-purple.webp",
@@ -421,7 +397,6 @@
 			"name": "Gust.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -452,7 +427,7 @@
 					}
 				},
 				"description": "<p>(Reach 8) Move a target 1d10 spaces.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "DhwTOdyGujurHfOj",
 			"img": "icons/magic/air/fog-gas-smoke-dense-blue.webp",
@@ -466,6 +441,106 @@
 				"systemVersion": "0.1.7",
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
 				"modifiedTime": 1757823586921
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,00052"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "59c82eef-fb4a-45cc-8ca9-dfad561920f6",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 100 HP, enemies within Reach 12 gain Thornblight, and Petal Storm recharges, .</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,00152"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "75308d57-8dae-4fd4-ba94-1df3162c1a35",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Florindris is dying! 70 more damage and she dies. Until then, Aura of Wind and Gust move creatures twice as far.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

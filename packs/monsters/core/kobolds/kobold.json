@@ -172,9 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\">When an ally within 2 spaces dies, attack once for free.</span></p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\">When an ally within 2 spaces dies, attack once for free.</span></p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -191,7 +189,6 @@
 			"name": "Stab.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -244,7 +241,7 @@
 					}
 				},
 				"description": "<p>1d4+2</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "cupMiVpar86V6Ddl",
 			"img": "icons/weapons/daggers/dagger-crooked-black.webp",
@@ -263,7 +260,6 @@
 			"name": "Sling",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -316,7 +312,7 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d4+2.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "lm6IcEYhEdNQJ9MJ",
 			"img": "icons/weapons/slings/slingshot-wood.webp",

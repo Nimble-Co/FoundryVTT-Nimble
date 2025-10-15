@@ -21,13 +21,7 @@
 			"creatureType": "Skeleton",
 			"level": "10"
 		},
-		"bloodiedEffect": {
-			"description": ""
-		},
-		"lastStandEffect": {
-			"description": "<p><strong>Shattered Legion.</strong> At 0 HP Titan collapses into 4 skeleton minions/hero (d10 sized). If any remain, they reassemble into the Titan the next evening.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, choose 1:</p>",
+		"attackSequence": "<p>After each hero's turn, choose 1:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 3,
@@ -177,9 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Bludgeoning damage or any crit cause bones to splinter off and animate, forming a d10 minion.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Bludgeoning damage or any crit cause bones to splinter off and animate, forming a d10 minion.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -228,9 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Resistant to piercing, vulnerable to bludgeoning.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Resistant to piercing, vulnerable to bludgeoning.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -248,7 +238,6 @@
 			"name": "Devastating Strike.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -309,7 +298,7 @@
 					}
 				},
 				"description": "<p>(Reach 4) 1d4+30 damage. On hit: Knockback 6.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "SdltF0h07pyt8QgI",
 			"img": "icons/weapons/swords/greatsword-guard-split-eyes.webp",
@@ -329,7 +318,6 @@
 			"name": "Crushing Stomp.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -396,7 +384,7 @@
 					}
 				},
 				"description": "<p>Move up to 10 spaces. Deal 1d4+20 damage to up to 2 targets along the path. On hit: Prone.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "ekNtNgYbJXn9Lv7b",
 			"img": "icons/skills/movement/feet-bladed-boots-fire.webp",
@@ -416,7 +404,6 @@
 			"name": "Beckoning Doom.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -470,7 +457,7 @@
 					}
 				},
 				"description": "<p>The 2 furthest heroes make a DC 16 STR save or are moved adjacent to Titan.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "J3uKzVH5MXvS6fAo",
 			"img": "icons/magic/control/debuff-energy-hold-teal-blue.webp",
@@ -484,6 +471,106 @@
 				"systemVersion": "0.1.8",
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
 				"modifiedTime": 1757912512802
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,4851"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "d70b6f69-7c6f-4749-a733-25028b6b910c",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,4861"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "3b65b99a-27bd-4cba-896e-285e699f7be7",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p><strong>Shattered Legion.</strong> At 0 HP Titan collapses into 4 skeleton minions/hero (d10 sized). If any remain, they reassemble into the Titan the next evening.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

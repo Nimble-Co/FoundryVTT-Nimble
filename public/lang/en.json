@@ -247,6 +247,12 @@
 			"safeRest": "Safe Rest",
 			"initiative": "Initiative"
 		},
+		"monsterFeatureTypes": {
+			"feature": "Feature",
+			"action": "Action",
+			"bloodied": "Bloodied",
+			"lastStand": "Last Stand"
+		},
 		"movementTypes": {
 			"burrow": "Burrowing",
 			"climb": "Climbing",

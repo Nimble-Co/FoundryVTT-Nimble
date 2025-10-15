@@ -141,7 +141,6 @@
 			"name": "Pluck Up.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -201,7 +200,7 @@
 					}
 				},
 				"description": "<p>(Reach 4, target up to 2 creatures) 3d12+20. On hit: Grappled (escape DC 18), OR</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "L1b44vWpUyZjAmhV",
 			"img": "icons/creatures/claws/claw-talons-glowing-orange.webp",
@@ -221,7 +220,6 @@
 			"name": "Crush & Drop.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -274,7 +272,7 @@
 					}
 				},
 				"description": "<p>Fly upward 20 spaces, deal 20 damage to Grappled creatures, then release (10d6 fall damage).</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "519nuiB1EL4jeZjC",
 			"img": "icons/commodities/biological/wing-bird-white.webp",

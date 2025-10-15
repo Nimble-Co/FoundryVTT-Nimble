@@ -172,9 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -191,7 +189,6 @@
 			"name": "Sickening Claw.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -251,7 +248,7 @@
 					}
 				},
 				"description": "<p>1d4+8. On damage: Dazed.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "GP65jvncWt5ktWv9",
 			"img": "icons/creatures/claws/claw-hooked-barbed.webp",

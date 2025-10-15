@@ -172,9 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -191,7 +189,6 @@
 			"name": "Slam.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -244,7 +241,7 @@
 					}
 				},
 				"description": "<p>3d6+6. On crit: knockback 2.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "aLz2P0WiZ89kWDPl",
 			"img": "icons/magic/nature/root-vine-wood-blue.webp",

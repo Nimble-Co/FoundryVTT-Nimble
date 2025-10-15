@@ -172,9 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -191,7 +189,6 @@
 			"name": "Scarab Swarm.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -222,7 +219,7 @@
 					}
 				},
 				"description": "<p> Summon 10 scarab minions (d6) within 6 spaces. Then:</p>",
-				"isAttack": false
+				"subtype": "action"
 			},
 			"_id": "cxszktFTWB2MjjFn",
 			"img": "icons/creatures/invertebrates/beetle-stag-yellow-green.webp",
@@ -241,7 +238,6 @@
 			"name": "Slam (2×).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -301,7 +297,7 @@
 					}
 				},
 				"description": "<p>1d4+20. On damage: Dazed.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "o43Db4G2VbkFun8G",
 			"img": "icons/magic/unholy/hand-claw-glow-orange.webp",
@@ -352,9 +348,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When crit: DC 20 INT save, or suffer 1 Wound.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>When crit: DC 20 INT save, or suffer 1 Wound.</p>"
 			},
 			"effects": [],
 			"folder": null,
