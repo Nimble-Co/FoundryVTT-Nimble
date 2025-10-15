@@ -497,7 +497,7 @@
         </button>
     </section>
 
-    <ItemHeader {item} placeholder="Ckass Name" />
+    <ItemHeader {item} placeholder="Class Name" />
 </header>
 
 <PrimaryNavigation bind:currentTab {navigation} />

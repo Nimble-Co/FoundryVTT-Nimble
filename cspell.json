@@ -1,5 +1,80 @@
 {
+  "caseSensitive": false,
+  "dictionaries": [
+    "en_US",
+    "softwareTerms",
+    "svelte",
+    "typescript",
+    "npm",
+    "node",
+    "html",
+    "html-symbol-entities",
+    "css",
+    "fonts",
+    "bash",
+    "filetypes",
+    "misc",
+    "creators",
+    "compound-words",
+    "fonts-and-assets",
+    "game-terms",
+    "technical-terms"
+  ],
+  "dictionaryDefinitions": [
+    {
+      "name": "creators",
+      "path": "./.cspell/creators.txt",
+      "addWords": true,
+      "supportNonStrictSearches": true
+    },
+    {
+      "name": "compound-words",
+      "path": "./.cspell/compound-words.txt",
+      "addWords": true,
+      "supportNonStrictSearches": true
+    },
+    {
+      "name": "fonts-and-assets",
+      "path": "./.cspell/fonts-and-assets.txt",
+      "addWords": true,
+      "supportNonStrictSearches": true
+    },
+    {
+      "name": "game-terms",
+      "path": "./.cspell/game-terms.txt",
+      "addWords": true,
+      "supportNonStrictSearches": true
+    },
+    {
+      "name": "technical-terms",
+      "path": "./.cspell/technical-terms.txt",
+      "addWords": true,
+      "supportNonStrictSearches": true
+    }
+  ],
+  "ignoreRegExpList": [
+    "/\\b[a-zA-Z0-9]{16}\\b/g",
+    "/\\b[A-Z]{4,10}\\b/g"
+  ],
+  "ignorePaths": [
+    "dist/**",
+    "build/**",
+    "node_modules/**"
+  ],
+  "ignoreWords": [
+    "appv",
+    "Arrr",
+    "aymy",
+    "BEEES",
+    "cbild",
+    "CHAAARGE",
+    "ekabin",
+    "hicw",
+    "Mersenne"
+  ],
   "words": [
-    "stackable"
+    "stackable",
+    "naïvely",
+    "Hexa"
   ]
 }

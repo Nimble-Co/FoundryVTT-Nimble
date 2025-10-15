@@ -1,0 +1,3 @@
+# Font and file-related terms
+wght
+xmark

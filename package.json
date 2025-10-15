@@ -12,7 +12,8 @@
 		"format": "npx @biomejs/biome format --write ./src/",
 		"lint": "npx @biomejs/biome lint ./src/",
 		"lint-fix": "npx @biomejs/biome lint --write ./src/",
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"spell-check": "npx cspell -c ./cspell.json lint . --words-only | sort -u"
 	},
 	"imports": {
 		"#lib/*": "./lib/*",

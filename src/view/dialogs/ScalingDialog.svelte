@@ -24,7 +24,7 @@ function updateScalingFormula(node, level, formula) {
 
 const tabs = [
 	{
-		value: 'characterlevel',
+		value: 'characterLevel',
 		label: 'Scale by Level',
 		component: CharacterLevelScaling,
 	},

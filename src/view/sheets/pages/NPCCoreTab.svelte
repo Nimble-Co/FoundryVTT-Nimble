@@ -173,7 +173,7 @@ onDestroy(() => {
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--npc">
-    <section class="nimble-monster-sheet-section nimble-monster-sheet-section--defences">
+    <section class="nimble-monster-sheet-section nimble-monster-sheet-section--defenses">
         <SavingThrows characterSavingThrows={actor.reactive.system.savingThrows} />
 
         <section class="nimble-other-attribute-wrapper" style="grid-area: armor;">
@@ -431,7 +431,7 @@ onDestroy(() => {
     .nimble-monster-sheet-section {
         padding: 0 0.5rem 0.5rem 0;
 
-        &--defences {
+        &--defenses {
             display: grid;
             grid-template-columns: 1fr 4.2rem;
             grid-template-areas: "savingThrows armor";

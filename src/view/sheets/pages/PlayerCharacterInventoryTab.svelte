@@ -1,8 +1,8 @@
 <script>
 import filterItems from '../../dataPreparationHelpers/filterItems.js';
 import { getContext } from 'svelte';
+import { SvelteMap } from 'svelte/reactivity';
 import localize from '../../../utils/localize.js';
-import { metadata } from '../../../models/chat/common.js';
 import prepareObjectTooltip from '../../dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js';
 import sortItems from '../../../utils/sortItems.js';
 import { RulesManager } from '../../../managers/RulesManager.js';
@@ -13,18 +13,6 @@ async function configureItem(event, id) {
 	event.stopPropagation();
 
 	await actor.configureItem(id);
-}
-
-async function toggleArmor(event, rules, itemId) {
-	event.stopPropagation();
-	let armorRule = rules.getRuleOfType('armorClass');
-	armorRule.disabled = !armorRule.disabled;
-	await rules.updateRule(armorRule.id, armorRule);
-	if (armorRule.disabled) itemsWithDisabledArmor.push(itemId);
-	else {
-		const index = itemsWithDisabledArmor.indexOf(itemId);
-		if (index > -1) itemsWithDisabledArmor.splice(index, 1);
-	}
 }
 
 async function createItem(event) {
@@ -64,12 +52,23 @@ let totalInventorySlots = $derived(actor.reactive.system.inventory.totalSlots ??
 let usedInventorySlots = $derived(actor.reactive.system.inventory.usedSlots ?? 0);
 let items = $derived(filterItems(actor.reactive, ['object'], searchTerm));
 let categorizedItems = $derived(groupItemsByType(items));
-let itemsWithDisabledArmor = $derived(
-	items
-		.filter((i) => new RulesManager(i).hasRuleOfType('armorClass'))
-		.filter((i) => new RulesManager(i).getRuleOfType('armorClass').disabled)
-		.map((i) => i.id),
-);
+
+let itemRulesManagers = new SvelteMap();
+let itemsWithDisabledArmor = new SvelteMap();
+
+$effect(() => {
+	// Rebuild the maps when items change
+	items.forEach((item) => {
+		const rulesManager = new RulesManager(item);
+		itemRulesManagers.set(item.id, rulesManager);
+
+		const armorClassRule = rulesManager.getRuleOfType('armorClass');
+		const isDisabled = armorClassRule?.disabled ?? false;
+
+		itemsWithDisabledArmor.set(item.id, isDisabled);
+	});
+
+});
 
 // Currency
 let currency = $derived(actor.reactive?.system?.currency);
@@ -81,7 +80,8 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
 </script>
 
 <header class="nimble-sheet__static nimble-sheet__static--inventory">
-    <!-- <div class="nimble-hand-contents">
+    <!--
+    <div class="nimble-hand-contents">
         <i
             class="nimble-hand-contents__background-icon fa-solid fa-hand fa-flip-horizontal"
         ></i>
@@ -145,7 +145,7 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
             <ul class="nimble-item-list">
                 {#each sortItems(itemCategory) as item (item._id)}
                     {@const metadata = getObjectMetadata(item)}
-                    {@const rules = new RulesManager(item)}
+                    {@const rules = itemRulesManagers.get(item.id)}
 
                     <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
                     <!-- svelte-ignore  a11y_click_events_have_key_events -->
@@ -178,17 +178,29 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                                 {item.reactive.name}
                             </h4>
 
-                            {#if rules.hasRuleOfType('armorClass')}
+
+                            {#if rules && rules.hasRuleOfType('armorClass')}
 
                             <button
                                 class="nimble-button"
                                 data-button-variant="icon"
                                 type="button"
                                 aria-label="Toggle armor rule of {item.name}"
-                                onclick={(event) =>
-                                    toggleArmor(event, rules, item._id)}
+                                onclick={async (event) => {
+                                    event.stopPropagation();
+                                    const armorRule = rules.getRuleOfType('armorClass');
+                                    const newDisabledState = !armorRule.disabled;
+
+                                    const updateData = {
+                                        ...armorRule.toObject(),
+                                        disabled: newDisabledState
+                                    };
+
+                                    await rules.updateRule(armorRule.id, updateData);
+                                    itemsWithDisabledArmor.set(item.id, newDisabledState);
+                                }}
                             >
-                                {#if itemsWithDisabledArmor.includes(item._id)}
+                                {#if itemsWithDisabledArmor.get(item.id)}
                                 <i class="fa-regular fa-circle"></i>
                                 {:else}
                                 <i class="fa-solid fa-circle"></i>
