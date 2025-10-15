@@ -9,10 +9,14 @@
 
     --nimble-content-grid-columns: 1fr;
 
-  max-height: min(55rem, 98vh);
     background: var(--nimble-sheet-background);
     border: 0;
     font-size: var(--nimble-base-font-size) !important;
+
+    .window-resize-handle {
+        z-index: 200 !important;
+        pointer-events: all !important;
+    }
 
     *:not(.fa-classic, .fa-light, .fa-regular, .fa-solid, .fa-thin, .fal, .far, .fas, .fat) {
         font-family: var(--nimble-primary-font);
@@ -36,24 +40,26 @@
 
             .controls-dropdown {
                 border-radius: 4px;
-                z-index: 2;
+                z-index: 100;
             }
 
             .window-content {
                 display: grid;
-                grid-template-rows: repeat(3, max-content);
+                grid-template-rows: max-content max-content max-content max-content 1fr max-content;
                 grid-template-areas: var(--nimble-content-grid-areas);
                 grid-template-columns: var(--nimble-content-grid-columns);
-                grid-template-rows: max-content;
                 margin-block-start: calc(var(--header-height) * -1);
                 overflow-y: hidden;
+                height: 100%;
+                position: relative;
             }
 
             .window-header {
                 justify-content: flex-end;
                 background: transparent;
                 border: 0;
-                z-index: 2;
+                z-index: 10;
+                position: relative;
 
                 .header-control {
                 background: rgba(0, 0, 0, 0.4);
@@ -93,15 +99,18 @@
             }
 
             .window-content {
+                grid-template-rows: max-content max-content max-content max-content 1fr max-content;
+
                 &::before {
                     content: "";
                     height: 100%;
                     width: 100%;
                     grid-area: header-start / header-start / footer-end / footer-end;
                     background: var(--nimble-sheet-background);
-                    z-index: 0;
+                    z-index: 1;
                     border: 0;
                     border-radius: 6px;
+                    position: relative;
                 }
             }
 
@@ -118,7 +127,8 @@
 
     &__header {
         grid-area: header;
-        z-index: 1;
+        z-index: 3;
+        position: relative;
 
         &--character-creator {
             padding: 0.5rem 0.75rem;
@@ -149,11 +159,14 @@
     &__body {
         grid-area: body;
         min-height: 6rem;
-        flex-grow: 0;
+        flex-grow: 1;
         overflow: auto;
-        z-index: 1;
+        z-index: 2;
+        position: relative;
         padding: 0.5rem;
         padding-block-start: var(--nimble-sheet-body-padding-block-start, 0.25rem);
+        display: flex;
+        flex-direction: column;
 
         &--item {
             --nimble-header-margin-block-end: 0.375rem;
@@ -201,7 +214,8 @@
     &__footer {
         grid-area: footer;
         flex-grow: 0;
-        z-index: 1;
+        z-index: 2;
+        position: relative;
         padding: 0.5rem;
         border-top: 1px solid hsla(41, 18%, 54%, 25%);
 
@@ -233,7 +247,8 @@
 
     &__navigation {
         grid-area: navigation;
-        z-index: 1;
+        z-index: 2;
+        position: relative;
     }
 
     &__sidebar {
@@ -248,7 +263,8 @@
 
     &__static {
         grid-area: static;
-        z-index: 1;
+        z-index: 2;
+        position: relative;
         padding: var(--nimble-sheet-static-padding-block-start, 0.25rem) 0.5rem 0.75rem 0.5rem;
 
         &--features,

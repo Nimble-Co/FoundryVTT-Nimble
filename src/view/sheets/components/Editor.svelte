@@ -28,7 +28,6 @@ editorOptions = foundry.utils.mergeObject(
 		compact: false,
 		documentUUID: document.uuid,
 		editable: true,
-		height: 200,
 		toggled: true,
 		value: content,
 	},
@@ -58,7 +57,33 @@ onMount(async () => {
 });
 </script>
 
-<div bind:this={proseMirrorElem}></div>
+<div bind:this={proseMirrorElem} class="nimble-editor-wrapper"></div>
 
 <style lang="scss">
+.nimble-editor-wrapper {
+	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 200px;
+
+	:global(prose-mirror) {
+		flex-grow: 1;
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	:global(.editor-container) {
+		flex-grow: 1;
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	:global(.editor-content) {
+		flex-grow: 1;
+		overflow-y: auto;
+		min-height: 150px;
+	}
+}
 </style>

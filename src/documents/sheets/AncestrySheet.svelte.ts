@@ -1,45 +1,45 @@
 import {
-  SvelteApplicationMixin,
-  type SvelteApplicationRenderContext,
-} from "#lib/SvelteApplicationMixin.svelte.js";
-import { SvelteItemSheet } from "#lib/SvelteItemSheet.svelte.js";
-import AncestrySheetComponent from "../../view/sheets/AncestrySheet.svelte";
+	SvelteApplicationMixin,
+	type SvelteApplicationRenderContext,
+} from '#lib/SvelteApplicationMixin.svelte.js';
+import AncestrySheetComponent from '../../view/sheets/AncestrySheet.svelte';
 
 export default class AncestrySheet extends SvelteApplicationMixin(
-  foundry.applications.sheets.ItemSheetV2,
+	foundry.applications.sheets.ItemSheetV2,
 ) {
-  protected root;
+	protected root;
 
-  constructor(item, options = {} as SvelteApplicationRenderContext) {
-    super(
-      foundry.utils.mergeObject(options, {
-        document: item.document,
-      }),
-    );
+	constructor(item, options = {} as SvelteApplicationRenderContext) {
+		super(
+			foundry.utils.mergeObject(options, {
+				document: item.document,
+			}),
+		);
 
-    this.root = AncestrySheetComponent;
+		this.root = AncestrySheetComponent;
 
-    this.props = {
-      item: this.document,
-      sheet: this,
-    };
-  }
+		this.props = {
+			item: this.document,
+			sheet: this,
+		};
+	}
 
-  static override DEFAULT_OPTIONS = {
-    classes: ["nimble-sheet"],
-    window: {
-      icon: "fa-solid fa-user",
-    },
-    position: {
-      width: 288,
-      height: "auto",
-    },
-  };
+	static override DEFAULT_OPTIONS = {
+		classes: ['nimble-sheet'],
+		window: {
+			icon: 'fa-solid fa-user',
+			resizable: true,
+		},
+		position: {
+			width: 288,
+			height: 400,
+		},
+	};
 
-  protected override async _prepareContext() {
-    return {
-      item: this.item,
-      sheet: this,
-    };
-  }
+	protected override async _prepareContext() {
+		return {
+			item: this.item,
+			sheet: this,
+		};
+	}
 }

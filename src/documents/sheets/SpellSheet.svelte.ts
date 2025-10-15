@@ -1,81 +1,75 @@
 import {
-  SvelteApplicationMixin,
-  type SvelteApplicationRenderContext,
-} from "#lib/SvelteApplicationMixin.svelte.js";
-import SpellSheetComponent from "../../view/sheets/SpellSheet.svelte";
+	SvelteApplicationMixin,
+	type SvelteApplicationRenderContext,
+} from '#lib/SvelteApplicationMixin.svelte.js';
+import SpellSheetComponent from '../../view/sheets/SpellSheet.svelte';
 
 export default class SpellSheet extends SvelteApplicationMixin(
-  foundry.applications.sheets.ItemSheetV2,
+	foundry.applications.sheets.ItemSheetV2,
 ) {
-  protected root;
+	protected root;
 
-  constructor(item, options = {} as SvelteApplicationRenderContext) {
-    super(
-      foundry.utils.mergeObject(options, {
-        document: item.document,
-      }),
-    );
+	constructor(item, options = {} as SvelteApplicationRenderContext) {
+		super(
+			foundry.utils.mergeObject(options, {
+				document: item.document,
+			}),
+		);
 
-    this.root = SpellSheetComponent;
-  }
+		this.root = SpellSheetComponent;
+	}
 
-  static override DEFAULT_OPTIONS = {
-    classes: ["nimble-sheet", "nimble-sheet--spell"],
-    window: {
-      icon: "fa-solid fa-hand-sparkles",
-    },
-    position: {
-      width: 288,
-      height: "auto",
-    },
-    actions: {},
-  };
+	static override DEFAULT_OPTIONS = {
+		classes: ['nimble-sheet', 'nimble-sheet--spell'],
+		window: {
+			icon: 'fa-solid fa-hand-sparkles',
+			resizable: true,
+		},
+		position: {
+			width: 288,
+			height: 400,
+		},
+		actions: {},
+	};
 
-  protected override async _prepareContext() {
-    return {
-      item: this.item,
-      sheet: this,
-    };
-  }
+	protected override async _prepareContext() {
+		return {
+			item: this.item,
+			sheet: this,
+		};
+	}
 
-  async toggleSpellSchoolOption(
-    selectedSchool: string | number,
-  ): Promise<void> {
-    if (typeof selectedSchool === "number") return;
+	async toggleSpellSchoolOption(selectedSchool: string | number): Promise<void> {
+		if (typeof selectedSchool === 'number') return;
 
-    await this.document.update({
-      "system.school":
-        this.document.system.school === selectedSchool ? "" : selectedSchool,
-    });
-  }
+		await this.document.update({
+			'system.school': this.document.system.school === selectedSchool ? '' : selectedSchool,
+		});
+	}
 
-  async toggleSpellTierOption(selectedTier: string | number): Promise<void> {
-    if (typeof selectedTier === "string")
-      selectedTier = Number.parseInt(selectedTier, 10);
-    await this.document.update({ "system.tier": selectedTier });
-  }
+	async toggleSpellTierOption(selectedTier: string | number): Promise<void> {
+		if (typeof selectedTier === 'string') selectedTier = Number.parseInt(selectedTier, 10);
+		await this.document.update({ 'system.tier': selectedTier });
+	}
 
-  async toggleSpellPropertyOption(selectedProperty: string): Promise<void> {
-    const selectedProperties = new Set(
-      this.document.system.properties.selected,
-    );
+	async toggleSpellPropertyOption(selectedProperty: string): Promise<void> {
+		const selectedProperties = new Set(this.document.system.properties.selected);
 
-    if (selectedProperties.has(selectedProperty))
-      selectedProperties.delete(selectedProperty);
-    else {
-      if (selectedProperty === "range" && selectedProperties.has("reach")) {
-        selectedProperties.delete("reach");
-      }
+		if (selectedProperties.has(selectedProperty)) selectedProperties.delete(selectedProperty);
+		else {
+			if (selectedProperty === 'range' && selectedProperties.has('reach')) {
+				selectedProperties.delete('reach');
+			}
 
-      if (selectedProperty === "reach" && selectedProperties.has("range")) {
-        selectedProperties.delete("range");
-      }
+			if (selectedProperty === 'reach' && selectedProperties.has('range')) {
+				selectedProperties.delete('range');
+			}
 
-      selectedProperties.add(selectedProperty);
-    }
+			selectedProperties.add(selectedProperty);
+		}
 
-    await this.document.update({
-      "system.properties.selected": selectedProperties,
-    });
-  }
+		await this.document.update({
+			'system.properties.selected': selectedProperties,
+		});
+	}
 }
