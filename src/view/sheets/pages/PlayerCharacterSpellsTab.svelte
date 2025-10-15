@@ -237,7 +237,7 @@
                         class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
                         class:nimble-document-card--no-meta={!meta}
                         data-item-id={spell._id}
-                        data-tooltip={prepareSpellTooltip(spell)}
+                        data-tooltip={prepareSpellTooltip(spell.reactive)}
                         data-tooltip-class="nimble-tooltip nimble-tooltip--item"
                         data-tooltip-direction="LEFT"
                         draggable="true"

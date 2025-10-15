@@ -1,82 +1,87 @@
 <script>
-import filterItems from '../../dataPreparationHelpers/filterItems.js';
-import { getContext } from 'svelte';
-import { SvelteMap } from 'svelte/reactivity';
-import localize from '../../../utils/localize.js';
-import prepareObjectTooltip from '../../dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js';
-import sortItems from '../../../utils/sortItems.js';
-import { RulesManager } from '../../../managers/RulesManager.js';
+    import filterItems from "../../dataPreparationHelpers/filterItems.js";
+    import { getContext } from "svelte";
+    import { SvelteMap } from "svelte/reactivity";
+    import localize from "../../../utils/localize.js";
+    import prepareObjectTooltip from "../../dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js";
+    import sortItems from "../../../utils/sortItems.js";
+    import { RulesManager } from "../../../managers/RulesManager.js";
 
-import SearchBar from '../components/SearchBar.svelte';
+    import SearchBar from "../components/SearchBar.svelte";
 
-async function configureItem(event, id) {
-	event.stopPropagation();
+    async function configureItem(event, id) {
+        event.stopPropagation();
 
-	await actor.configureItem(id);
-}
+        await actor.configureItem(id);
+    }
 
-async function createItem(event) {
-	event.stopPropagation();
+    async function createItem(event) {
+        event.stopPropagation();
 
-	await actor.createItem({ name: 'New Object', type: 'object' });
-}
+        await actor.createItem({ name: "New Object", type: "object" });
+    }
 
-async function deleteItem(event, id) {
-	event.stopPropagation();
+    async function deleteItem(event, id) {
+        event.stopPropagation();
 
-	await actor.deleteItem(id);
-}
+        await actor.deleteItem(id);
+    }
 
-function getObjectMetadata(item) {
-	return null;
-}
+    function getObjectMetadata(item) {
+        return null;
+    }
 
-function groupItemsByType(items) {
-	return items.reduce((categories, item) => {
-		const { objectType } = item.reactive.system;
+    function groupItemsByType(items) {
+        return items.reduce((categories, item) => {
+            const { objectType } = item.reactive.system;
 
-		categories[objectType] ??= [];
-		categories[objectType].push(item);
+            categories[objectType] ??= [];
+            categories[objectType].push(item);
 
-		return categories;
-	}, {});
-}
+            return categories;
+        }, {});
+    }
 
-const { objectTypeHeadings } = CONFIG.NIMBLE;
+    const { objectTypeHeadings } = CONFIG.NIMBLE;
 
-let actor = getContext('actor');
-let sheet = getContext('application');
-let searchTerm = $state('');
+    let actor = getContext("actor");
+    let sheet = getContext("application");
+    let searchTerm = $state("");
 
-let totalInventorySlots = $derived(actor.reactive.system.inventory.totalSlots ?? 0);
-let usedInventorySlots = $derived(actor.reactive.system.inventory.usedSlots ?? 0);
-let items = $derived(filterItems(actor.reactive, ['object'], searchTerm));
-let categorizedItems = $derived(groupItemsByType(items));
+    let totalInventorySlots = $derived(
+        actor.reactive.system.inventory.totalSlots ?? 0,
+    );
+    let usedInventorySlots = $derived(
+        actor.reactive.system.inventory.usedSlots ?? 0,
+    );
+    let items = $derived(filterItems(actor.reactive, ["object"], searchTerm));
+    let categorizedItems = $derived(groupItemsByType(items));
 
-let itemRulesManagers = new SvelteMap();
-let itemsWithDisabledArmor = new SvelteMap();
+    let itemRulesManagers = new SvelteMap();
+    let itemsWithDisabledArmor = new SvelteMap();
 
-$effect(() => {
-	// Rebuild the maps when items change
-	items.forEach((item) => {
-		const rulesManager = new RulesManager(item);
-		itemRulesManagers.set(item.id, rulesManager);
+    $effect(() => {
+        // Rebuild the maps when items change
+        items.forEach((item) => {
+            const rulesManager = new RulesManager(item);
+            itemRulesManagers.set(item.id, rulesManager);
 
-		const armorClassRule = rulesManager.getRuleOfType('armorClass');
-		const isDisabled = armorClassRule?.disabled ?? false;
+            const armorClassRule = rulesManager.getRuleOfType("armorClass");
+            const isDisabled = armorClassRule?.disabled ?? false;
 
-		itemsWithDisabledArmor.set(item.id, isDisabled);
-	});
+            itemsWithDisabledArmor.set(item.id, isDisabled);
+        });
+    });
 
-});
+    // Currency
+    let currency = $derived(actor.reactive?.system?.currency);
 
-// Currency
-let currency = $derived(actor.reactive?.system?.currency);
-
-// Settings
-let flags = $derived(actor.reactive.flags.nimble);
-let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
-let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
+    // Settings
+    let flags = $derived(actor.reactive.flags.nimble);
+    let showEmbeddedDocumentImages = $derived(
+        flags?.showEmbeddedDocumentImages ?? true,
+    );
+    let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
 </script>
 
 <header class="nimble-sheet__static nimble-sheet__static--inventory">
@@ -154,7 +159,7 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                         class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
                         class:nimble-document-card--no-meta={!metadata}
                         data-item-id={item._id}
-                        data-tooltip={prepareObjectTooltip(item)}
+                        data-tooltip={prepareObjectTooltip(item.reactive)}
                         data-tooltip-class="nimble-tooltip nimble-tooltip--item"
                         data-tooltip-direction="LEFT"
                         draggable="true"
@@ -178,49 +183,53 @@ let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
                                 {item.reactive.name}
                             </h4>
 
+                            {#if rules && rules.hasRuleOfType("armorClass")}
+                                <button
+                                    class="nimble-button"
+                                    data-button-variant="icon"
+                                    type="button"
+                                    aria-label="Toggle armor rule of {item.name}"
+                                    onclick={async (event) => {
+                                        event.stopPropagation();
+                                        const armorRule =
+                                            rules.getRuleOfType("armorClass");
+                                        const newDisabledState =
+                                            !armorRule.disabled;
 
-                            {#if rules && rules.hasRuleOfType('armorClass')}
+                                        const updateData = {
+                                            ...armorRule.toObject(),
+                                            disabled: newDisabledState,
+                                        };
 
-                            <button
-                                class="nimble-button"
-                                data-button-variant="icon"
-                                type="button"
-                                aria-label="Toggle armor rule of {item.name}"
-                                onclick={async (event) => {
-                                    event.stopPropagation();
-                                    const armorRule = rules.getRuleOfType('armorClass');
-                                    const newDisabledState = !armorRule.disabled;
-
-                                    const updateData = {
-                                        ...armorRule.toObject(),
-                                        disabled: newDisabledState
-                                    };
-
-                                    await rules.updateRule(armorRule.id, updateData);
-                                    itemsWithDisabledArmor.set(item.id, newDisabledState);
-                                }}
-                            >
-                                {#if itemsWithDisabledArmor.get(item.id)}
-                                <i class="fa-regular fa-circle"></i>
-                                {:else}
-                                <i class="fa-solid fa-circle"></i>
-                                {/if}
+                                        await rules.updateRule(
+                                            armorRule.id,
+                                            updateData,
+                                        );
+                                        itemsWithDisabledArmor.set(
+                                            item.id,
+                                            newDisabledState,
+                                        );
+                                    }}
+                                >
+                                    {#if itemsWithDisabledArmor.get(item.id)}
+                                        <i class="fa-regular fa-circle"></i>
+                                    {:else}
+                                        <i class="fa-solid fa-circle"></i>
+                                    {/if}
                                 </button>
-
                             {:else}
-
-                            <input
-                                class="nimble-document-card__quantity"
-                                type="number"
-                                value={item.reactive.system.quantity || 1}
-                                min="0"
-                                step="1"
-                                onchange={({ currentTarget }) =>
-                                    actor.updateItem(item._id, {
-                                        "system.quantity": currentTarget.value,
-                                    })}
-                            />
-
+                                <input
+                                    class="nimble-document-card__quantity"
+                                    type="number"
+                                    value={item.reactive.system.quantity || 1}
+                                    min="0"
+                                    step="1"
+                                    onchange={({ currentTarget }) =>
+                                        actor.updateItem(item._id, {
+                                            "system.quantity":
+                                                currentTarget.value,
+                                        })}
+                                />
                             {/if}
 
                             <button

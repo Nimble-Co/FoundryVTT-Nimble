@@ -58,17 +58,17 @@
     function prepareItemTooltip(item) {
         switch (item.type) {
             case "ancestry":
-                return prepareAncestryTooltip(item);
+                return prepareAncestryTooltip(item.reactive);
             case "background":
-                return prepareBackgroundTooltip(item);
+                return prepareBackgroundTooltip(item.reactive);
             case "boon":
-                return prepareBoonTooltip(item);
+                return prepareBoonTooltip(item.reactive);
             case "class":
-                return prepareClassTooltip(item);
+                return prepareClassTooltip(item.reactive);
             case "feature":
-                return prepareFeatureTooltip(item);
+                return prepareFeatureTooltip(item.reactive);
             case "subclass":
-                return prepareSubclassTooltip(item);
+                return prepareSubclassTooltip(item.reactive);
             default:
                 return null;
         }
