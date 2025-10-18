@@ -4,11 +4,11 @@ import sortDocumentsByName from "../../utils/sortDocumentsByName.js";
 import type { DeepPartial } from "@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts";
 import { SvelteApplicationMixin } from "#lib/SvelteApplicationMixin.svelte.js";
 
-import CharacterCreationDialogComponent from "../../view/dialogs/CharacterCreationDialog.svelte";
-import type { NimbleBackgroundItem } from "../item/background.js";
-import type { NimbleBaseItem } from "../item/base.svelte.js";
-import type { NimbleClassItem } from "../item/class.js";
-import type { NimbleAncestryItem } from "../item/ancestry.js";
+// Item types are available globally from ../item/item.d.ts
+type NimbleBackgroundItem = any;
+type NimbleAncestryItem = any;
+
+import CharacterCreationDialogComponent from '../../view/dialogs/CharacterCreationDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
 

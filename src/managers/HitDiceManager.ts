@@ -1,4 +1,4 @@
-import type { NimbleCharacter } from '../documents/actor/character.js';
+// NimbleCharacter type is available globally from ../documents/actor/actor.d.ts
 
 class HitDiceManager {
 	#actor: NimbleCharacter;
@@ -108,9 +108,9 @@ class HitDiceManager {
 	}
 
 	async #rollHitDice(
-		dieSize: number,
-		currentCount: number,
-		quantity: number,
+		_dieSize: number,
+		_currentCount: number,
+		_quantity: number,
 		formula: string,
 	): Promise<{ hookData: any; chatData: any }> {
 		const roll = await new Roll(formula).roll();
@@ -118,7 +118,7 @@ class HitDiceManager {
 		// const title = 'THIS IS A HIT DICE ROLL';
 		const chatData = {
 			author: game.user?.id,
-			// @ts-ignore
+			// @ts-expect-error
 			speaker: ChatMessage.getSpeaker({ actor: this.#actor }),
 			sound: CONFIG.sounds.dice,
 			rolls: [roll],

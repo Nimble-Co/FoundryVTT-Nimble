@@ -1,4 +1,4 @@
-import type { NimbleBaseItem } from '../documents/item/base.svelte.js';
+// NimbleBaseItem type is available globally from ../documents/item/item.d.ts
 import type { NimbleBaseRule } from '../models/rules/base.js';
 
 namespace RulesManager {

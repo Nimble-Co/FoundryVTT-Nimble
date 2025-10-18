@@ -1,4 +1,4 @@
-import type { NimbleCharacter } from '../documents/actor/character.js';
+// NimbleCharacter type is available globally from ../documents/actor/actor.d.ts
 
 class RestManager {
 	#actor: NimbleCharacter;

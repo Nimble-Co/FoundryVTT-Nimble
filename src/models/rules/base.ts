@@ -1,8 +1,19 @@
 import { PredicateField } from '../fields/PredicateField.js';
-import type { NimbleBaseActor } from '../../documents/actor/base.svelte.js';
-import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import type { Predicate } from '../../etc/Predicate.js';
+
+// Forward declarations to avoid circular dependencies
+interface NimbleBaseActor extends Actor {
+	getDomain(): Set<string>;
+	getRollData(): Record<string, any>;
+}
+
+interface NimbleBaseItem extends Item {
+	getDomain(): Set<string>;
+	uuid: string;
+	name: string;
+	actor: NimbleBaseActor;
+}
 
 function schema() {
 	const { fields } = foundry.data;

@@ -1,4 +1,4 @@
-import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
+// NimbleBaseActor type is available globally from ../documents/actor/actor.d.ts
 
 import constructD20RollFormula from '../dice/constructD20RollFormula.js';
 import { ModifierManager } from '../managers/ModifierManager.js';

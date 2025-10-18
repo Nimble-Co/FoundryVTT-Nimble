@@ -1,5 +1,4 @@
-import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
-import type { NimbleBaseItem } from '../documents/item/base.svelte.js';
+// NimbleBaseActor and NimbleBaseItem types are available globally from .d.ts files
 
 import constructD20Term from './constructD20Term.js';
 import simplifyOperatorTerms from './simplifyOperatorTerms.js';
@@ -38,7 +37,7 @@ export default function constructD20RollFormula({
 
 			try {
 				modifier = new Roll(value.toString(), rollData);
-			} catch (err) {
+			} catch (_err) {
 				return null;
 			}
 

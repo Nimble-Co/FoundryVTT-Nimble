@@ -1,10 +1,10 @@
 import getDeterministicBonus from '../dice/getDeterministicBonus.js';
-import type { NimbleClassItem } from '../documents/item/class.js';
-import type { NimbleSubclassItem } from '../documents/item/subclass.js';
 import {
 	type NimbleBaseResource,
 	ResourceDataModels,
 } from '../models/item/components/ClassResourceDataModel.js';
+
+// NimbleClassItem and NimbleSubclassItem types are available globally from ../documents/item/item.d.ts
 
 class ClassResourceManager extends Map<string, InstanceType<typeof NimbleBaseResource>> {
 	item: NimbleClassItem | NimbleSubclassItem;
@@ -76,11 +76,11 @@ class ClassResourceManager extends Map<string, InstanceType<typeof NimbleBaseRes
 				value = getDeterministicBonus(
 					rawValue as string,
 					// TODO: Types - Remove when types are fixed
-					// @ts-ignore
+					// @ts-expect-error
 					doc.getRollData(this.item),
 					{ strict: true },
 				);
-			} catch (e) {
+			} catch (_e) {
 				value = rawValue;
 			}
 

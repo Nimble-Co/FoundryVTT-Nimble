@@ -1,9 +1,19 @@
 import type BaseUser from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/documents/user.d.mts';
-import type { ActorRollOptions } from './actorData.js';
+import type { ActorRollOptions } from './actorInterfaces.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { NimbleAncestryItem } from '../item/ancestry.js';
 import type { NimbleBackgroundItem } from '../item/background.js';
-import type { NimbleClassItem } from '../item/class.js';
+
+// Forward declaration to avoid circular dependency with item/class.ts
+interface NimbleClassItem extends Item {
+	identifier: string;
+	system: any;
+	ASI?: Record<string, number>;
+	hitDice?: { size: number; total: number };
+	maxHp?: number;
+	grantedArmorProficiencies?: string[];
+	grantedWeaponProficiencies?: string[];
+}
 
 import { NimbleBaseActor } from './base.svelte.js';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
@@ -646,7 +656,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		// Revert abilities
 		if (Object.keys(lastHistory.abilityIncreases).length > 0) {
-			const abilityKey = Object.keys(lastHistory.abilityIncreases)[0];
+			const _abilityKey = Object.keys(lastHistory.abilityIncreases)[0];
 			itemUpdates[`system.abilityScoreData.${lastHistory.level}.value`] = null;
 		}
 

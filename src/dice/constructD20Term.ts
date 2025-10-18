@@ -1,4 +1,4 @@
-import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
+// NimbleBaseActor type is available globally from ../documents/actor/actor.d.ts
 
 export type d20TermOptions = {
 	actor: NimbleBaseActor;
