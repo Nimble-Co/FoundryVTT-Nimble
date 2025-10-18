@@ -1,32 +1,45 @@
 <script>
 import { setContext } from 'svelte';
 import localize from '../../utils/localize.js';
+import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 import updateDocumentImage from '../handlers/updateDocumentImage.js';
-
 import HitPointBar from './components/HitPointBar.svelte';
+import NPCCoreTab from './pages/NPCCoreTab.svelte';
 import NPCNotesTab from './pages/NPCNotesTab.svelte';
 import NPCSettingsTab from './pages/NPCSettingsTab.svelte';
-import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
-import NPCCoreTab from './pages/NPCCoreTab.svelte';
 
 function getHitPointPercentage(currentHP, maxHP) {
 	return Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100);
 }
 
 function prepareMonsterMetadata() {
-	if (actor.reactive.type === 'soloMonster') {
-		return `Level ${actor.reactive.system.details.level ?? 1} Solo ${actor.reactive.system.attributes.sizeCategory} ${actor.reactive.system.details.creatureType}`;
+	const {
+		system: {
+			type,
+			attributes: {
+				sizeCategory,
+			},
+			details: {
+				level,
+				creatureType,
+				isFlunky
+			}
+		}
+	} = actor.reactive;
+
+	if (type === 'soloMonster') {
+		return `Level ${level ?? 1} Solo ${sizeCategory} ${creatureType}`;
 	}
 
-	if (actor.reactive.type === 'minion') {
-		return `Level ${actor.reactive.system.details.level ?? 1} ${actor.reactive.system.attributes.sizeCategory} ${actor.reactive.system.details.creatureType} Minion}`;
+	if (type === 'minion') {
+		return `Level ${level ?? 1} ${sizeCategory} ${creatureType} Minion`;
 	}
 
-	if (actor.reactive.system.details.isFlunky) {
-		return `Level ${actor.reactive.system.details.level ?? 1} ${actor.reactive.system.attributes.sizeCategory} ${actor.reactive.system.details.creatureType} Flunky}`;
+	if (isFlunky) {
+		return `Level ${level ?? 1} ${sizeCategory} ${creatureType} Flunky`;
 	}
 
-	return `Level ${actor.reactive.system.details.level ?? 1} ${actor.reactive.system.attributes.sizeCategory} ${actor.reactive.system.details.creatureType}}`;
+	return `Level ${level ?? 1} ${sizeCategory} ${creatureType}`;
 }
 
 function updateCurrentHP(newValue) {
