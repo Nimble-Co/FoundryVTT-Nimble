@@ -12,25 +12,35 @@ function getHitPointPercentage(currentHP, maxHP) {
 	return Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100);
 }
 
+const sizeLabels = {
+	tiny: 'Tiny',
+	small: 'Small',
+	medium: 'Medium',
+	large: 'Large',
+	huge: 'Huge',
+	gargantuan: 'Gargantuan',
+};
+
 function prepareMonsterMetadata() {
 	const actorDetails = actor.reactive.system.details;
 	const actorAttributes = actor.reactive.system.attributes;
 	const monsterType = actor.reactive.type;
 	const monsterLevel = actorDetails.level ?? 1;
+	const sizeCategory = sizeLabels[actorAttributes.sizeCategory] ?? actorAttributes.sizeCategory;
 
 	if (monsterType === 'soloMonster') {
-		return `Level ${monsterLevel} Solo ${actorAttributes.sizeCategory} ${actorDetails.creatureType}`;
+		return `Level ${monsterLevel} Solo ${sizeCategory} ${actorDetails.creatureType}`;
 	}
 
 	if (monsterType === 'minion') {
-		return `Level ${monsterLevel} ${actorAttributes.sizeCategory} ${actorDetails.creatureType} Minion`;
+		return `Level ${monsterLevel} ${sizeCategory} ${actorDetails.creatureType} Minion`;
 	}
 
 	if (actorDetails.isFlunky) {
-		return `Level ${monsterLevel} ${actorAttributes.sizeCategory} ${actorDetails.creatureType} Flunky`;
+		return `Level ${monsterLevel} ${sizeCategory} ${actorDetails.creatureType} Flunky`;
 	}
 
-	return `Level ${monsterLevel} ${actorAttributes.sizeCategory} ${actorDetails.creatureType}`;
+	return `Level ${monsterLevel} ${sizeCategory} ${actorDetails.creatureType}`;
 }
 
 function updateCurrentHP(newValue) {
