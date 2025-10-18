@@ -3,11 +3,11 @@
  */
 
 declare interface NimbleBaseRule {
-	disabled: boolean;
-	priority: number;
-	prePrepareData?(): void;
-	afterPrepareData?(): void;
-	preCreate?(args: Record<string, any>): Promise<void>;
-	toObject?(): any;
-	tooltipInfo?(): string;
-}
+		disabled: boolean;
+		priority: number;
+		prePrepareData?(): void;
+		afterPrepareData?(): void;
+		preCreate?(args: Record<string, any>): Promise<void>;
+		toObject?(): any;
+		tooltipInfo?(): string;
+	}
