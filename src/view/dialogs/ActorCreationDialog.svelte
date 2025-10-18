@@ -13,9 +13,9 @@ delete documentClasses.base;
         {#each Object.keys(documentClasses) as actorType}
             {@const actorTypeName = localize(`TYPES.Actor.${actorType}`)}
 
-            <li class="nimble-actor-type-list__option">
+            <li class="nimble-actor-type-list__option nimble-card">
                 <button
-                    class="nimble-card"
+                    class="nimble-card__button"
                     onclick={() => dialog.submit.call(dialog, actorType)}
                 >
                     <img
@@ -36,18 +36,29 @@ delete documentClasses.base;
 <style lang="scss">
     article {
         padding: 1rem;
+		height: 100%;
     }
 
     .nimble-actor-type-list {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: minmax(0, 1fr);
         gap: 0.5rem;
         margin: 0;
         padding: 0;
         list-style: none;
+        height: 100%;
 
         &__option {
-            display: contents;
+            height: 100%;
+            min-height: 0;
+            padding: 0;
+
+            button {
+                width: 100%;
+                height: 100%;
+                padding: 0;
+            }
         }
     }
 
@@ -56,9 +67,9 @@ delete documentClasses.base;
             "img"
             "title";
         --nimble-card-column-dimensions: 1fr;
-        --nimble-card-row-dimensions: repeat(10rem, 1fr);
+        --nimble-card-row-dimensions: 1fr auto;
         --nimble-card-width: 100%;
-        --nimble-card-image-height: 10rem;
+        --nimble-card-image-height: 100%;
         --nimble-card-image-width: 100%;
         --nimble-card-image-bl-border-radius: 0;
         --nimble-card-image-tr-border-radius: 4px;
@@ -71,4 +82,15 @@ delete documentClasses.base;
         --nimble-heading-padding: 0.5rem;
         --nimble-heading-size: var(--nimble-md-text);
     }
+	.nimble-card__button {
+		display: flex;
+		flex-direction: column;
+
+		.nimble-card__img {
+			flex: 1;
+			min-height: 0;
+			object-fit: cover;
+			max-height: calc(100% - 16px);
+		}
+	}
 </style>
