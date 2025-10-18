@@ -18,7 +18,7 @@ import type { SystemActorTypes, ActorRollOptions, CheckRollDialogData } from './
 // The actual classes are defined in item/base.svelte.ts and models/rules/base.ts
 interface NimbleBaseItem extends Item {
 	type: string;
-	rules: Map<string, any>;
+	rules: RulesManagerInterface;
 	prepareActorData?(): void;
 }
 

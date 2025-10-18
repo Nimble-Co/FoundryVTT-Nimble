@@ -5,7 +5,7 @@
 declare interface NimbleBaseItem extends Item {
 	type: string;
 	parent: NimbleBaseActor | null;
-	rules: Map<string, any>;
+	rules: RulesManagerInterface;
 	prepareActorData?(): void;
 }
 

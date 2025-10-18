@@ -34,7 +34,7 @@ interface NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> {
 class NimbleBaseItem extends Item {
 	declare initialized: boolean;
 
-	declare rules: any; // Loaded dynamically to avoid circular dependency
+	declare rules: RulesManagerInterface;
 
 	tags: Set<string> = new Set();
 
