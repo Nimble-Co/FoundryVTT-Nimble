@@ -13,33 +13,24 @@ function getHitPointPercentage(currentHP, maxHP) {
 }
 
 function prepareMonsterMetadata() {
-	const {
-		system: {
-			type,
-			attributes: {
-				sizeCategory,
-			},
-			details: {
-				level,
-				creatureType,
-				isFlunky
-			}
-		}
-	} = actor.reactive;
+	const actorDetails = actor.reactive.system.details;
+	const actorAttributes = actor.reactive.system.attributes;
+	const monsterType = actor.reactive.type;
+	const monsterLevel = actorDetails.level ?? 1;
 
-	if (type === 'soloMonster') {
-		return `Level ${level ?? 1} Solo ${sizeCategory} ${creatureType}`;
+	if (monsterType === 'soloMonster') {
+		return `Level ${monsterLevel} Solo ${actorAttributes.sizeCategory} ${actorDetails.creatureType}`;
 	}
 
-	if (type === 'minion') {
-		return `Level ${level ?? 1} ${sizeCategory} ${creatureType} Minion`;
+	if (monsterType === 'minion') {
+		return `Level ${monsterLevel} ${actorAttributes.sizeCategory} ${actorDetails.creatureType} Minion`;
 	}
 
-	if (isFlunky) {
-		return `Level ${level ?? 1} ${sizeCategory} ${creatureType} Flunky`;
+	if (actorDetails.isFlunky) {
+		return `Level ${monsterLevel} ${actorAttributes.sizeCategory} ${actorDetails.creatureType} Flunky`;
 	}
 
-	return `Level ${level ?? 1} ${sizeCategory} ${creatureType}`;
+	return `Level ${monsterLevel} ${actorAttributes.sizeCategory} ${actorDetails.creatureType}`;
 }
 
 function updateCurrentHP(newValue) {
