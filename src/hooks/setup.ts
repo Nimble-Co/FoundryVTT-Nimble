@@ -89,11 +89,11 @@ export default function setup() {
 			};
 		}
 
-		// Compendium
-		if (foundry.applications.sheets.CompendiumDirectory) {
-			const originalDefaultOptions =
-				foundry.applications.sheets.CompendiumDirectory.DEFAULT_OPTIONS;
-			foundry.applications.sheets.CompendiumDirectory.DEFAULT_OPTIONS = {
+
+		// Compendium Pack Browser (individual pack content browser)
+		if (foundry.applications.sheets?.Compendium) {
+			const originalDefaultOptions = foundry.applications.sheets.Compendium.DEFAULT_OPTIONS;
+			foundry.applications.sheets.Compendium.DEFAULT_OPTIONS = {
 				...originalDefaultOptions,
 				window: {
 					...originalDefaultOptions.window,
