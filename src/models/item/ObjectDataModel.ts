@@ -34,7 +34,6 @@ const schema = () => ({
 		min: 0,
 		nullable: false,
 	}),
-	stackable: new fields.BooleanField({ required: true, initial: false, nullable: false }),
 	stackSize: new fields.NumberField({
 		required: true,
 		initial: 2,
