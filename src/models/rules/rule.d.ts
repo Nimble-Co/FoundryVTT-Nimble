@@ -2,7 +2,6 @@
  * Type declarations for Nimble rule types to prevent circular dependencies
  */
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare interface NimbleBaseRule<Schema = any, Parent = any> {
 	disabled: boolean;
 	priority: number;
