@@ -75,22 +75,18 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 	}
 
 	override async afterDelete() {
-		console.log('1');
 		if (this.invalid) return;
 
 		const { actor, item } = this;
-		console.log('2');
 		if (!actor || !item) return;
 
 		const formula = this.perLevel ? `${this.value} * @level` : this.value;
 
 		const addedHp = getDeterministicBonus(formula, actor.getRollData());
-		console.log('3');
 		if (!addedHp) return;
 
 		const { bonus } = actor.system.attributes.hp;
 		actor.update({ 'system.attributes.hp.bonus': bonus - addedHp });
-		console.log('4');
 	}
 }
 
