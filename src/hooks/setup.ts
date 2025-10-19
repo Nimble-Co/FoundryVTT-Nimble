@@ -51,6 +51,25 @@ export default function setup() {
 			};
 		}
 
+		if (foundry.applications.sheets.PlaylistConfig) {
+			const originalDefaultOptions =
+				foundry.applications.sheets.PlaylistConfig.DEFAULT_OPTIONS;
+			foundry.applications.sheets.PlaylistConfig.DEFAULT_OPTIONS = {
+				...originalDefaultOptions,
+				window: {
+					...originalDefaultOptions.window,
+					resizable: true,
+				},
+				position: {
+					...originalDefaultOptions.position,
+					height:
+						originalDefaultOptions.position?.height === 'auto'
+							? 400
+							: originalDefaultOptions.position?.height,
+				},
+			};
+		}
+
 		// Scene Configuration
 		if (foundry.applications.sheets.SceneConfig) {
 			const originalDefaultOptions = foundry.applications.sheets.SceneConfig.DEFAULT_OPTIONS;
