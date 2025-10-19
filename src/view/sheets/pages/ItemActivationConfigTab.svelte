@@ -1,5 +1,5 @@
 <script>
-    import { getContext, onDestroy, setContext } from "svelte";
+    import { getContext, setContext } from "svelte";
 
     import ItemActivationCoreConfigTab from "./ItemActivationCoreConfigTab.svelte";
     import ItemActivationEffectsConfigTab from "./ItemActivationEffectsConfigTab.svelte";
@@ -26,18 +26,6 @@
 
     let application = getContext("application");
     let currentTab = $state(subNavigation[0]);
-
-    $effect(() => {
-        if (currentTab.label === "Effects") {
-            application.setPosition({ width: 464 });
-        } else {
-            application.setPosition({ width: 288 });
-        }
-    });
-
-    onDestroy(() => {
-        application.setPosition({ width: 288 });
-    });
 </script>
 
 <SecondaryNavigation bind:currentTab {subNavigation} />
