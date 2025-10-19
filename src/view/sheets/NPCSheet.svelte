@@ -21,27 +21,6 @@ const sizeLabels = {
 	gargantuan: 'Gargantuan',
 };
 
-function prepareMonsterMetadata() {
-	const actorDetails = actor.reactive.system.details;
-	const actorAttributes = actor.reactive.system.attributes;
-	const monsterType = actor.reactive.type;
-	const monsterLevel = actorDetails.level ?? 1;
-	const sizeCategory = sizeLabels[actorAttributes.sizeCategory] ?? actorAttributes.sizeCategory;
-
-	if (monsterType === 'soloMonster') {
-		return `Level ${monsterLevel} Solo ${sizeCategory} ${actorDetails.creatureType}`;
-	}
-
-	if (monsterType === 'minion') {
-		return `Level ${monsterLevel} ${sizeCategory} ${actorDetails.creatureType} Minion`;
-	}
-
-	if (actorDetails.isFlunky) {
-		return `Level ${monsterLevel} ${sizeCategory} ${actorDetails.creatureType} Flunky`;
-	}
-
-	return `Level ${monsterLevel} ${sizeCategory} ${actorDetails.creatureType}`;
-}
 
 function updateCurrentHP(newValue) {
 	actor.update({ 'system.attributes.hp.value': newValue });
@@ -92,7 +71,27 @@ const navigation = [
 ];
 
 let currentTab = $state(navigation[0]);
-let monsterMetadata = $derived(prepareMonsterMetadata() ?? '');
+let monsterMetadata = $derived.by(() => {
+	let actorDetails = actor.reactive.system.details;
+	let actorAttributes = actor.reactive.system.attributes;
+	let monsterType = actor.reactive.type;
+	let monsterLevel = actorDetails.level ?? 1;
+	let sizeCategory = actorAttributes.sizeCategory ? game.i18n.localize(CONFIG.NIMBLE.sizeCategories[actorAttributes.sizeCategory]) : null;
+
+	if (monsterType === 'soloMonster') {
+		return `Level ${monsterLevel} Solo ${sizeCategory} ${actorDetails.creatureType}`;
+	}
+
+	if (monsterType === 'minion') {
+		return `Level ${monsterLevel} ${sizeCategory} ${actorDetails.creatureType} Minion`;
+	}
+
+	if (actorDetails.isFlunky) {
+		return `Level ${monsterLevel} ${sizeCategory} ${actorDetails.creatureType} Flunky`;
+	}
+
+	return `Level ${monsterLevel} ${sizeCategory} ${actorDetails.creatureType}`;
+});
 
 // Flags
 let flags = $derived(actor.reactive.flags.nimble);
