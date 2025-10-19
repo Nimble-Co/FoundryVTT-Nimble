@@ -12,16 +12,6 @@ function getHitPointPercentage(currentHP, maxHP) {
 	return Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100);
 }
 
-const sizeLabels = {
-	tiny: 'Tiny',
-	small: 'Small',
-	medium: 'Medium',
-	large: 'Large',
-	huge: 'Huge',
-	gargantuan: 'Gargantuan',
-};
-
-
 function updateCurrentHP(newValue) {
 	actor.update({ 'system.attributes.hp.value': newValue });
 }
