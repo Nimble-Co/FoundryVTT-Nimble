@@ -163,6 +163,8 @@ let categorizedItems = $derived(groupItemsByType(items));
 let flags = $derived(actor.reactive.flags.nimble);
 let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
+let allCollapsed = $derived(items.every(item => item.flags?.nimble?.collapsed));
+
 document.addEventListener('click', (event) =>
 	handleEditorSave(event, 'system.attackSequence', attackSequenceInEditMode),
 );
@@ -214,41 +216,42 @@ onDestroy(() => {
         </section>
     </section>
 	<header class="nimble-sheet__static nimble-sheet__static--features">
-
+		<h4 class="nimble-heading" data-heading-variant="section">
+			Features
+			<button
+				class="nimble-button fa-solid fa-plus"
+				data-button-variant="basic"
+				type="button"
+				aria-label="Create Feature"
+				data-tooltip="Create Feature"
+				onclick={createItem}
+			></button>
+			<button
+				class="nimble-button"
+				style="margin-left: auto;"
+				data-button-variant="basic"
+				type="button"
+				aria-label={allCollapsed ? "Expand all descriptions" : "Collapse all descriptions"}
+				data-tooltip={allCollapsed ? "Expand all descriptions" : "Collapse all descriptions"}
+				onclick={() => {
+					const newState = !allCollapsed;
+					items.forEach(item => item.update({ 'flags.nimble.collapsed': newState }));
+				}}
+			>
+				<i class="fa-solid {allCollapsed ? 'fa-expand' : 'fa-compress'}"></i>
+			</button>
+		</h4>
 	</header>
-	<section class="nimble-sheet__body nimble-sheet__body--player-character">
+	<section>
 		{#each Object.entries(categorizedItems).sort(sortItemCategories) as [categoryName, itemCategory]}
-			{@const allCollapsed = items.every(item => item.flags.nimble?.collapsed)}
 			<section class="nimble-monster-sheet-section">
-				<header>
-					<h4 class="nimble-heading" data-heading-variant="section">
-						{monsterFeatureTypes[categoryName] ?? categoryName}
-						{#if (categoryName === "feature")}
-							<button
-								class="nimble-button fa-solid fa-plus"
-								data-button-variant="basic"
-								type="button"
-								aria-label="Create Feature"
-								data-tooltip="Create Feature"
-								onclick={createItem}
-							></button>
-							<button
-								class="nimble-button"
-								style="margin-left: auto;"
-								data-button-variant="basic"
-								type="button"
-								aria-label={allCollapsed ? "Expand all descriptions" : "Collapse all descriptions"}
-								data-tooltip={allCollapsed ? "Expand all descriptions" : "Collapse all descriptions"}
-								onclick={() => {
-									const newState = !allCollapsed;
-									items.forEach(item => item.update({ 'flags.nimble.collapsed': newState }));
-								}}
-							>
-								<i class="fa-solid {allCollapsed ? 'fa-expand' : 'fa-compress'}"></i>
-							</button>
-						{/if}
-					</h4>
-				</header>
+				{#if categoryName != "feature"}
+					<header>
+						<h4 class="nimble-heading" data-heading-variant="section">
+							{monsterFeatureTypes[categoryName] ?? categoryName}
+						</h4>
+					</header>
+				{/if}
 				{#if (categoryName === "action" && actor.reactive.type === "soloMonster")}
 					{#if attackSequenceInEditMode}
 						{#key actor.reactive.system.attackSequence}
