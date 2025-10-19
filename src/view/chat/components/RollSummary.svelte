@@ -89,15 +89,15 @@
         }
     }
 
-    .nimble-button--apply-damage {
-        grid-area: editButton;
-        width: 2.25rem;
-        height: 2.25rem;
-        padding: 0;
-        font-size: var(--nimble-lg-text);
-        color: var(--nimble-primary-color);
-        background-color: transparent;
-        border-radius: 4px;
-        border: 1px solid var(--nimble-card-border-color);
-    }
+    // .nimble-button--apply-damage {
+    //     grid-area: editButton;
+    //     width: 2.25rem;
+    //     height: 2.25rem;
+    //     padding: 0;
+    //     font-size: var(--nimble-lg-text);
+    //     color: var(--nimble-primary-color);
+    //     background-color: transparent;
+    //     border-radius: 4px;
+    //     border: 1px solid var(--nimble-card-border-color);
+    // }
 </style>
