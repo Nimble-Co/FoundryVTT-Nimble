@@ -38,11 +38,15 @@ declare namespace NimbleBaseRule {
 
 abstract class NimbleBaseRule<
 	Schema extends NimbleBaseRule.Schema,
-	Parent extends foundry.abstract.DataModel.Any = InstanceType<typeof NimbleBaseItem>,
-> extends foundry.abstract.DataModel<Schema, Parent> {
+	Parent extends foundry.abstract.DataModel.Any = NimbleBaseItem,
+> extends foundry.abstract.DataModel<Schema, Parent> implements NimbleBaseRule<Schema, Parent> {
 	declare type: string;
 
-	// @ts-expect-error
+	/**
+	 * Override predicate type - we use a custom Predicate class instead of
+	 * Foundry's inferred schema type for better type safety and functionality
+	 */
+	// @ts-expect-error - Intentional type override for custom Predicate implementation
 	declare predicate: Predicate;
 
 	constructor(
@@ -157,35 +161,6 @@ abstract class NimbleBaseRule<
 		const data = this.toJSON();
 		return JSON.stringify(data, null, 2);
 	}
-}
-
-interface NimbleBaseRule<
-	Schema extends NimbleBaseRule.Schema,
-	Parent extends foundry.abstract.DataModel.Any = InstanceType<typeof NimbleBaseItem>,
-> extends foundry.abstract.DataModel<Schema, Parent> {
-	prePrepareData?(): void;
-
-	afterPrepareData?(): void;
-
-	preRoll?(): void;
-
-	afterRoll?(): void;
-
-	preCreate?(args: Record<string, any>): Promise<void>;
-
-	afterCreate?(): void;
-
-	preDelete?(): void;
-
-	afterDelete?(): void;
-
-	preUpdate?(changes: Record<string, unknown>): void;
-
-	afterUpdate?(changes: Record<string, unknown>): void;
-
-	preUpdateActor?(
-		changes: Record<string, unknown>,
-	): Promise<{ create?: any[]; delete?: string[] } | undefined>;
 }
 
 export { NimbleBaseRule };

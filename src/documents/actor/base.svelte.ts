@@ -17,13 +17,6 @@ interface NimbleBaseItem extends Item {
 	prepareActorData?(): void;
 }
 
-interface NimbleBaseRule {
-	disabled: boolean;
-	priority: number;
-	prePrepareData?(): void;
-	afterPrepareData?(): void;
-}
-
 interface NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> {
 	type: ActorType;
 	system: DataModelConfig['Actor'][ActorType];
@@ -33,7 +26,7 @@ interface NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes>
 class NimbleBaseActor extends Actor {
 	declare initialized: boolean;
 
-	declare rules: InstanceType<typeof NimbleBaseRule>[];
+	declare rules: NimbleBaseRule[];
 
 	#subscribe: any;
 
