@@ -1,5 +1,4 @@
 import type { NimbleMinionData } from '../../models/actor/MinionDataModel.js';
-import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import { NimbleBaseActor } from './base.svelte.js';
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
 
@@ -28,6 +27,8 @@ export class NimbleMinion extends NimbleBaseActor {
 	}
 
 	async editMetadata() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.metaConfig ??= new GenericDialog(
 			`${this.name}: Configuration`,
 			NPCMetaConfigDialog,

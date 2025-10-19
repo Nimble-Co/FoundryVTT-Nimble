@@ -31,7 +31,6 @@ import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementC
 import CharacterSkillsConfigDialog from '../../view/dialogs/CharacterSkillsConfigDialog.svelte';
 import CharacterStatConfigDialog from '../../view/dialogs/CharacterStatConfigDialog.svelte';
 import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/CharacterWeaponProficienciesConfigDialog.svelte';
-import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
 
 export class NimbleCharacter extends NimbleBaseActor {
@@ -355,6 +354,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	/** ------------------------------------------------------ */
 
 	async configureAbilityScores() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.configureAbilityScores ??= new GenericDialog(
 			`${this.name}: Configure Ability Scores`,
 			CharacterStatConfigDialog,
@@ -366,6 +367,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureArmorProficiencies() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.configureArmorProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Armor Proficiencies`,
 			CharacterArmorProficienciesConfigDialog,
@@ -377,6 +380,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureLanguageProficiencies() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.configureLanguageProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Language Proficiencies`,
 			CharacterLanguageProficienciesConfigDialog,
@@ -388,6 +393,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureMovement() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.configureMovement ??= new GenericDialog(
 			`${this.name}: Configure Movement Speeds`,
 			CharacterMovementConfigDialog,
@@ -399,6 +406,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureWeaponProficiencies() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.configureWeaponProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Weapon Proficiencies`,
 			CharacterWeaponProficienciesConfigDialog,
@@ -410,6 +419,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureSkills() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.configureSkills ??= new GenericDialog(
 			`${this.name}: Configure Skills`,
 			CharacterSkillsConfigDialog,
@@ -549,6 +560,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 		const currentClassLevel = characterClass.system.classLevel;
 
 		if (currentClassLevel >= 20) return;
+
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
 
 		const dialog = new GenericDialog(
 			`${this.name}: Level Up Dialog`,
@@ -719,6 +732,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 			restData = restOptions;
 		} else {
 			// Launch Config Dialog
+			const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 			const dialog = new GenericDialog(
 				'Field Rest Dialog',
 				FieldRestDialog,
