@@ -413,8 +413,6 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureHitPoints() {
-		const oldMaxHp = this.system.attributes.hp.max;
-		const oldCurrentHp = this.system.attributes.hp.value;
 		const dialog = new GenericDialog(
 			`${this.name}: Configure Hit Points`,
 			EditHitPointsDialog,
@@ -432,8 +430,9 @@ export class NimbleCharacter extends NimbleBaseActor {
 			}
 			// Update bonus
 			await this.update({ 'system.attributes.hp.bonus': result.bonus });
-			// If HP was at max, keep it at new max
-			if (oldCurrentHp === oldMaxHp) {
+
+			// If HP is now greater then max, reduce it
+			if (this.system.attributes.hp.value > this.system.attributes.hp.max) {
 				await this.update({ 'system.attributes.hp.value': this.system.attributes.hp.max });
 			}
 		}
