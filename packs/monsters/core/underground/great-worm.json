@@ -172,9 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Advantage against creatures that moved since the worm’s last turn.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Advantage against creatures that moved since the worm’s last turn.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -191,7 +189,6 @@
 			"name": "Crush.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -245,7 +242,7 @@
 					}
 				},
 				"description": "<p>Creatures in a 2×6 area take 50 damage on a failed DC 18 DEX save. (Creatures who fail can spend 1 Action to dive out of the way instead of taking this damage. They move half their speed and land Prone.) OR</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "Ju4wpMJ6PgxJ2dus",
 			"img": "icons/magic/sonic/explosion-impact-shock-wave.webp",
@@ -265,7 +262,6 @@
 			"name": "Bite/Swallow.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -318,7 +314,7 @@
 					}
 				},
 				"description": "<p>1d4+40. On crit: Swallowed. (Swallowed. You take 20 damage at the start of your turn. Your attacks cannot miss and ignore armor.)</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "y6ehHXM8WKOXUyUl",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-needles-purple.webp",

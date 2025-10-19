@@ -21,13 +21,7 @@
 			"creatureType": "Luminary of Malice",
 			"level": "9"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 125 HP, Vael gains the reaction Shield of Cruelty. (1 time use) If Vael would be damaged, instead he may reflect that much radiant damage back at the attacker</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Vael is dying! 90 more damage and he dies. Until then, he gains Heavy Armor, the hero that most recently damaged him is reduced to 0 HP, and Bane is sacrificed into a Vengeful Spirit. It deals 1d12+6 necrotic damage to creatures within reach 3 at the end of each of his turns.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, Bane attacks for [[/r 1d12+6]] then Vael chooses one:</p>",
+		"attackSequence": "<p>After each hero's turn, Bane attacks for [[/r 1d12+6]] then Vael chooses one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 0,
@@ -177,9 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever Vael would fail a save or take 20 or more damage, he may sacrifice his Lifebinding Spirit, Bane, instead. He spends his next turn moving up to 6 spaces and summoning Bane.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Whenever Vael would fail a save or take 20 or more damage, he may sacrifice his Lifebinding Spirit, Bane, instead. He spends his next turn moving up to 6 spaces and summoning Bane.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -197,7 +189,6 @@
 			"name": "DOOM.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -234,22 +225,10 @@
 									"parentNode": "gMA6miL1QWbAFXoG",
 									"on": {
 										"failedSave": [
-											{
-												"id": "7AcIWAWByLZbXRAE",
-												"type": "damageOutcome",
-												"outcome": "fullDamage",
-												"parentContext": "failedSave",
-												"parentNode": "JHaRq74Dz2HeF2h8"
-											}
+											"@{id=7AcIWAWByLZbXRAE; type=damageOutcome; outcome=fullDamage; parentContext=failedSave; parentNode=JHaRq74Dz2HeF2h8}"
 										],
 										"passedSave": [
-											{
-												"id": "kHlmgug6mnPj4s6j",
-												"type": "damageOutcome",
-												"outcome": "halfDamage",
-												"parentContext": "passedSave",
-												"parentNode": "JHaRq74Dz2HeF2h8"
-											}
+											"@{id=kHlmgug6mnPj4s6j; type=damageOutcome; outcome=halfDamage; parentContext=passedSave; parentNode=JHaRq74Dz2HeF2h8}"
 										]
 									}
 								}
@@ -269,7 +248,7 @@
 					}
 				},
 				"description": "<p>(Range 12, undamaged target) DC 14 WIL save or 5d12 damage. Half on save.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "2Xu8lZ5BZgnDdXQR",
 			"img": "icons/magic/death/skull-energy-light-white.webp",
@@ -286,10 +265,9 @@
 			}
 		},
 		{
-			"name": "Veilwalker’s Rebuke.",
+			"name": "Veilwalker's Rebuke.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -350,7 +328,7 @@
 					}
 				},
 				"description": "<p>(Range 8) 2d12+6. Double damage against those behind cover. 1/round you may swap places with them.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "gmN8a0IWnGj2I2M7",
 			"img": "icons/magic/death/skull-flames-white-blue.webp",
@@ -367,10 +345,9 @@
 			}
 		},
 		{
-			"name": "Cruelty’s Edge.",
+			"name": "Cruelty's Edge.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -408,29 +385,7 @@
 										"saveType": "will",
 										"saveDC": "14",
 										"on": {
-											"failedSave": [
-												{
-													"id": "UrTZ73jHk9HAvQzt",
-													"type": "condition",
-													"condition": "dazed",
-													"parentContext": "failedSave",
-													"parentNode": "9lU7mLOLojuA9QOc"
-												},
-												{
-													"id": "0JyPWDBJQX9e7ATR",
-													"type": "condition",
-													"condition": "frightened",
-													"parentContext": "failedSave",
-													"parentNode": "9lU7mLOLojuA9QOc"
-												},
-												{
-													"id": "3W97K2Eavor1yKIp",
-													"type": "condition",
-													"condition": "hampered",
-													"parentContext": "failedSave",
-													"parentNode": "9lU7mLOLojuA9QOc"
-												}
-											]
+											"failedSave": "  "
 										},
 										"sharedRolls": []
 									},
@@ -458,7 +413,7 @@
 					}
 				},
 				"description": "<p>1d4+2. On hit: DC 14 WIL save or Dazed and Frightened. Then move 6.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "LgV2WNS9WEm6x0Y1",
 			"img": "icons/magic/death/skull-energy-light-purple.webp",
@@ -472,6 +427,106 @@
 				"systemVersion": "0.1.8",
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
 				"modifiedTime": 1757915380898
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,58367"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "f2ce6412-52a6-4c15-9b44-521730dc093f",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 125 HP, Vael gains the reaction Shield of Cruelty. (1 time use) If Vael would be damaged, instead he may reflect that much radiant damage back at the attacker</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,58367"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "ea913d0a-8694-47b4-b958-2cf7a77bd98f",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Vael is dying! 90 more damage and he dies. Until then, he gains Heavy Armor, the hero that most recently damaged him is reduced to 0 HP, and Bane is sacrificed into a Vengeful Spirit. It deals 1d12+6 necrotic damage to creatures within reach 3 at the end of each of his turns.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

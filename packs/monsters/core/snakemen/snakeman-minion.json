@@ -135,7 +135,6 @@
 			"name": "Strike.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -197,7 +196,7 @@
 					}
 				},
 				"description": "<p>1d6 melee/ranged (follows minion rules).</p><p></p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "hUxZRnXtiZ5dHmnE",
 			"img": "icons/skills/melee/hand-grip-sword-orange.webp",
@@ -247,9 +246,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On melee crit: Grapple (escape DC 10).</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>On melee crit: Grapple (escape DC 10).</p>"
 			},
 			"effects": [],
 			"folder": null,

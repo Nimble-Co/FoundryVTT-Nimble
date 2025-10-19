@@ -141,7 +141,6 @@
 			"name": "Latch On.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -194,7 +193,7 @@
 					}
 				},
 				"description": "<p>1d4+2. On hit: Latched On.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "l66Nk0l8QuZL4Oi1",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
@@ -245,9 +244,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Attacks against stirges are made with disadvantage.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Attacks against stirges are made with disadvantage.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -295,9 +292,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>You move where your target moves until either dies. Your attacks can’t miss or be defended/Interposed against. Attacks that miss you damage your target instead.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>You move where your target moves until either dies. Your attacks can’t miss or be defended/Interposed against. Attacks that miss you damage your target instead.</p>"
 			},
 			"effects": [],
 			"folder": null,

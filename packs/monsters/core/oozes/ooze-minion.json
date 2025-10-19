@@ -166,9 +166,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -185,7 +183,6 @@
 			"name": "Acidic Touch.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -238,7 +235,7 @@
 					}
 				},
 				"description": "<p>1d6 (Follows minion rules)</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "prrTBzJt3WBAdlVc",
 			"img": "icons/magic/acid/dissolve-bone-white.webp",

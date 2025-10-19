@@ -21,13 +21,7 @@
 			"creatureType": "Balor Feeling Hot & Spicy",
 			"level": "14"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 160 HP, Azriel can use Crackling Whip twice each turn.</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p><strong>YES, MORE PAIN!</strong> Azriel is dying! 180 more damage and he dies. Until then, EVERY hit against him is a crit.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, choose 1:</p>",
+		"attackSequence": "<p>After each hero's turn, choose 1:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -177,9 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Crits against Azriel are Vicious, he deals damage equal to the crit dice back to the attacker.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Crits against Azriel are Vicious, he deals damage equal to the crit dice back to the attacker.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -197,7 +189,6 @@
 			"name": "Crackling Whip.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -264,7 +255,7 @@
 					}
 				},
 				"description": "<p>Move 6. (Reach 6) 3d12 damage. On hit: Grappled and pulled adjacent to Azriel (escape DC 17 STR, DEX, or until he uses the whip again).</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "YjDDY4UdbPtstgDS",
 			"img": "icons/weapons/misc/whip-red-yellow.webp",
@@ -283,7 +274,6 @@
 			"name": "Doom Sword.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -336,7 +326,7 @@
 					}
 				},
 				"description": "<p>3d12+10 fire damage to all creatures within Reach 2.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "VT3sWm8M4hO4Zkao",
 			"img": "icons/magic/fire/dagger-rune-enchant-flame-strong-red.webp",
@@ -349,6 +339,106 @@
 				"systemId": "nimble",
 				"systemVersion": "0.1.7",
 				"lastModifiedBy": null
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805482,85645"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "5f63e5b5-4479-4e7d-a2ff-d1dfd67fbf71",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 160 HP, Azriel can use Crackling Whip twice each turn.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805482,85645"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "80a02375-1361-4edc-ae3a-53cf46c335ca",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p><strong>YES, MORE PAIN!</strong> Azriel is dying! 180 more damage and he dies. Until then, EVERY hit against him is a crit.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

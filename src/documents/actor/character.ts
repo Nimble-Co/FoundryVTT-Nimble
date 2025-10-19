@@ -599,6 +599,78 @@ export class NimbleCharacter extends NimbleBaseActor {
 			}
 		});
 
+		// Record level up history
+		const historyEntry = {
+			level: currentClassLevel + 1,
+			hpIncrease: hp,
+			abilityIncreases: dialogData.selectedAbilityScore,
+			skillIncreases: dialogData.skillPointChanges,
+			hitDieAdded: true,
+			classIdentifier: characterClass.identifier,
+		};
+
+		actorUpdates['system.levelUpHistory'] = [...this.system.levelUpHistory, historyEntry];
+
+		await this.updateItem(characterClass.id!, itemUpdates);
+		await this.update(actorUpdates);
+		this.sheet?.render(true);
+	}
+
+	async revertLastLevelUp() {
+		if (this.system.levelUpHistory.length === 0) return;
+
+		const lastHistory = this.system.levelUpHistory[this.system.levelUpHistory.length - 1];
+		const characterClass = this.classes[lastHistory.classIdentifier];
+
+		if (!characterClass) return;
+
+		const actorUpdates: Record<string, any> = {};
+		const itemUpdates: Record<string, any> = {};
+
+		// Revert HP
+		actorUpdates['system.attributes.hp.value'] =
+			this.system.attributes.hp.value - lastHistory.hpIncrease;
+
+		// Revert hit dice
+		if (lastHistory.hitDieAdded) {
+			const classHitDieSize = characterClass.system.hitDieSize;
+			const currentHitDice =
+				this.system.attributes.hitDice[classHitDieSize.toString()]?.current ?? 0;
+			const maxHitDice = this.system.attributes.hitDice?.[classHitDieSize.toString()]?.origin ?? [];
+
+			actorUpdates[`system.attributes.hitDice.${classHitDieSize}`] = {
+				origin: maxHitDice.slice(0, -1),
+				current: currentHitDice - 1,
+			};
+		}
+
+		// Revert abilities
+		if (Object.keys(lastHistory.abilityIncreases).length > 0) {
+			const abilityKey = Object.keys(lastHistory.abilityIncreases)[0];
+			itemUpdates[`system.abilityScoreData.${lastHistory.level}.value`] = null;
+		}
+
+		// Revert skills
+		Object.entries(lastHistory.skillIncreases).forEach(([skill, change]) => {
+			if (change) {
+				const path = `system.skills.${skill}.points`;
+				const current = this.system.skills[skill].points;
+				actorUpdates[path] = current - change;
+			}
+		});
+
+		// Revert class level
+		itemUpdates['system.classLevel'] = characterClass.system.classLevel - 1;
+
+		// Revert hpData
+		itemUpdates['system.hpData'] = characterClass.system.hpData.slice(0, -1);
+
+		// Revert levels
+		actorUpdates['system.classData.levels'] = this.system.classData.levels.slice(0, -1);
+
+		// Remove from history
+		actorUpdates['system.levelUpHistory'] = this.system.levelUpHistory.slice(0, -1);
+
 		await this.updateItem(characterClass.id!, itemUpdates);
 		await this.update(actorUpdates);
 	}

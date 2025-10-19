@@ -172,9 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Does not die at 0 HP. Only fire, radiant, or a crit while at 0 HP can kill it.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Does not die at 0 HP. Only fire, radiant, or a crit while at 0 HP can kill it.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -191,7 +189,6 @@
 			"name": "Choose twice:",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -222,7 +219,7 @@
 					}
 				},
 				"description": "",
-				"isAttack": false
+				"subtype": "action"
 			},
 			"_id": "xHKXANPad6Z22qFQ",
 			"img": "icons/svg/item-bag.svg",
@@ -241,7 +238,6 @@
 			"name": "Claws.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -303,7 +299,7 @@
 					}
 				},
 				"description": "<p>(Reach 2) 1d4+10. On crit: Prone.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "zxkIrJoeB1BqZPdz",
 			"img": "icons/skills/melee/strike-slashes-red.webp",
@@ -322,7 +318,6 @@
 			"name": "Bite.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -375,7 +370,7 @@
 					}
 				},
 				"description": "<p>(A Prone creature) 1d4+20.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "BalmxpW2pCV83I8P",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

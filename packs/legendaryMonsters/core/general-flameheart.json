@@ -21,12 +21,6 @@
 			"creatureType": "Flame Titan",
 			"level": "8"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 87 HP, on his next turn, he uses Molten Fury a number of times equal to half the number of heroes (rounded up).</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Flameheart is dying! 80 more damage and he dies. Until then, the area of his attacks increase to a 3×3 square.</p>"
-		},
 		"attackSequence": "<p>After each Hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
@@ -177,9 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Immune to fire. When damaged, deal 5 fire damage to all adjacent creatures.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Immune to fire. When damaged, deal 5 fire damage to all adjacent creatures.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -228,9 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Cold or radiant crits extinguish all areas ignited by Molten Fury and suppress Cinder Armor for 1 turn.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Cold or radiant crits extinguish all areas ignited by Molten Fury and suppress Cinder Armor for 1 turn.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -248,7 +238,6 @@
 			"name": "Inferno Cleave.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -300,8 +289,8 @@
 						"width": 2
 					}
 				},
-				"description": "<p>Move 8 then strike a 2×2 square area for 2d10+10 fire damage.</p>",
-				"isAttack": true
+				"description": "<p>Move 8 then strike a 2??2 square area for 2d10+10 fire damage.</p>",
+				"subtype": "action"
 			},
 			"_id": "wZ2XUxCUeWVdEwZu",
 			"img": "icons/magic/fire/dagger-rune-enchant-flame-strong-red.webp",
@@ -321,7 +310,6 @@
 			"name": "Molten Fury.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -373,8 +361,8 @@
 						"width": 2
 					}
 				},
-				"description": "<p>Lob a molten fireball at the furthest hero not already in the flames, igniting a 2×2 square area. Creatures there take 2d10+10 damage; and another 10 damage at the end of each of their turns if they remain in the area.</p>",
-				"isAttack": true
+				"description": "<p>Lob a molten fireball at the furthest hero not already in the flames, igniting a 2??2 square area. Creatures there take 2d10+10 damage; and another 10 damage at the end of each of their turns if they remain in the area.</p>",
+				"subtype": "action"
 			},
 			"_id": "ngX5c4NLFel44iPI",
 			"img": "icons/magic/fire/projectile-fireball-smoke-large-orange.webp",
@@ -388,6 +376,106 @@
 				"systemVersion": "0.1.8",
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
 				"modifiedTime": 1757823846058
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,04665"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "4e02e5be-07ff-4f5a-a191-2263be02793d",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 87 HP, on his next turn, he uses Molten Fury a number of times equal to half the number of heroes (rounded up).</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,04665"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "ffb57979-9339-4809-8d89-806f9e150b7a",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Flameheart is dying! 80 more damage and he dies. Until then, the area of his attacks increase to a 3??3 square.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

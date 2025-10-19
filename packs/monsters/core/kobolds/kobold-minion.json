@@ -166,9 +166,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -185,7 +183,6 @@
 			"name": "Stab.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -238,7 +235,7 @@
 					}
 				},
 				"description": "<p>1d4 (follows minion rules).</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "l2NJD7TZtzgpNaDq",
 			"img": "icons/weapons/daggers/dagger-crooked-black.webp",

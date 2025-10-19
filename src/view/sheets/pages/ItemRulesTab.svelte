@@ -65,6 +65,14 @@
                 disabled={item.isEmbedded}
             ></textarea>
         </div>
+    {:else}
+        <p style="padding: 1rem; text-align: center; color: var(--color-text-dark-secondary);">
+            {#if item.isEmbedded}
+                This item has no rules. Items owned by actors cannot have rules added or modified. To add rules, edit this item in a compendium or create a new unowned item.
+            {:else}
+                No rules defined for this item. Use the buttons below to add rules.
+            {/if}
+        </p>
     {/each}
 </section>
 

@@ -135,7 +135,6 @@
 			"name": "Bite",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -188,7 +187,7 @@
 					}
 				},
 				"description": "<p>1d10, follow minion rules</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "kAeu8ZS6bngfV9sy",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
@@ -208,7 +207,6 @@
 			"name": "Bite - Last Stand",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -261,7 +259,7 @@
 					}
 				},
 				"description": "<p>1d20, follow minion rules</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "wClQm66JGiyBb0Le",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

@@ -21,12 +21,6 @@
 			"creatureType": "Grey Drake",
 			"level": "6"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 90 HP, her Wing Buffet Range and DC increase by 2.</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Nalzar is dying! 60 more damage and she dies. Until then, each turn, she moves 6, then uses Devour (ignoring the Prone requirement).</p>"
-		},
 		"attackSequence": "<p>After each Hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
@@ -192,9 +186,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When dealt slashing or lightning damage: knock a hero within 3 spaces Prone.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>When dealt slashing or lightning damage: knock a hero within 3 spaces Prone.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -242,9 +234,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Each slashing crit reduces the Wing Buffet DC by 1.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Each slashing crit reduces the Wing Buffet DC by 1.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -261,7 +251,6 @@
 			"name": "Devour.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -314,7 +303,7 @@
 					}
 				},
 				"description": "<p>(Prone creatures only, Reach 2) 4d12+6.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "hI2su2eXaXAyRbEV",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
@@ -334,7 +323,6 @@
 			"name": "Wing Buffet.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -415,7 +403,7 @@
 					}
 				},
 				"description": "<p>Fly 8, then land. Cone 8: 1d12, then DC 14 STR save or also knocked Prone (advantage if behind cover or another hero).</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "engJrYwHNhUUoJ0h",
 			"img": "icons/commodities/biological/wing-green.webp",
@@ -429,6 +417,106 @@
 				"systemVersion": "0.1.8",
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
 				"modifiedTime": 1757830815274
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,22752"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "97001259-7985-42d4-a1e7-f8015fa785cb",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 90 HP, her Wing Buffet Range and DC increase by 2.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,22752"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "474dae47-c5ca-4b62-a7b6-ac64df6137c5",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Nalzar is dying! 60 more damage and she dies. Until then, each turn, she moves 6, then uses Devour (ignoring the Prone requirement).</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

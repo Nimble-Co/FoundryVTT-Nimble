@@ -21,12 +21,6 @@
 			"creatureType": "Vampire Lord",
 			"level": "16"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 160 HP, gain Mistform. Not vulnerable to radiant. Bat Decoy. Whenever Alaric would take damage, instead first swap places with a bat minion, 1/round.</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Alaric is dying! 160 more damage and he dies. Until then, his Sanguine Cloak, attacks, and bats roll d20s instead of d10s.</p>"
-		},
 		"attackSequence": "<p>After each hero's turn, summon 1 Blood Bat minion (d10) within 8 spaces, then choose 1:</p>",
 		"savingThrows": {
 			"strength": {
@@ -177,9 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>(1/turn) Deal [[/r 1d10]] necrotic damage whenever you are hit, the attack is reduced by this amount.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>(1/turn) Deal [[/r 1d10]] necrotic damage whenever you are hit, the attack is reduced by this amount.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -229,9 +221,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Vulnerable to radiant. After taking radiant damage, use Beguile as a Reaction, they roll with disadvantage.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Vulnerable to radiant. After taking radiant damage, use Beguile as a Reaction, they roll with disadvantage.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -281,9 +271,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>After each hero’s turn, summon 1 blood bat minion (d10) within 8 spaces, then choose 1 action</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>After each hero's turn, summon 1 blood bat minion (d10) within 8 spaces, then choose 1 action</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -302,7 +290,6 @@
 			"name": "Ebonfang",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -362,7 +349,7 @@
 					}
 				},
 				"description": "<p>Deal 1d10+15 damage, your target is considered Bloodied for 1 round. Fly 8 before or after attacking.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "pm7AVHiCb0C7lHqK",
 			"img": "icons/weapons/swords/greatsword-crossguard-flanged-red.webp",
@@ -383,7 +370,6 @@
 			"name": "Beguile",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -426,7 +412,7 @@
 					}
 				},
 				"description": "<p>If no creature is Beguiled, Beguile a target on a failed DC 18 WIL save (w/ disadvantage if Bloodied). </p><p><strong>Beguiled.</strong> Dazed. Cannot Defend or allow anyone to Interpose for you. Damage ends.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "49Lf23xPbGSi5MTR",
 			"img": "icons/magic/control/debuff-energy-hold-pink.webp",
@@ -447,7 +433,6 @@
 			"name": "Beckon & Bite",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -508,7 +493,7 @@
 					}
 				},
 				"description": "<p>Move a Beguiled creature adjacent to you and bite them: 2d10+30 damage and 1 Wound.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "NMZj4KGiElpDARFM",
 			"img": "icons/creatures/abilities/mouth-teeth-human.webp",
@@ -523,6 +508,106 @@
 				"createdTime": 1757808054786,
 				"modifiedTime": 1757808218760,
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805482,78482"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "5c7dafa0-56e4-48f6-8b88-d3e8f2567a1d",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 160 HP, gain Mistform. Not vulnerable to radiant. Bat Decoy. Whenever Alaric would take damage, instead first swap places with a bat minion, 1/round.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805482,78782"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "db041a32-58d9-4de3-bec5-b1fe4af52757",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Alaric is dying! 160 more damage and he dies. Until then, his Sanguine Cloak, attacks, and bats roll d20s instead of d10s.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

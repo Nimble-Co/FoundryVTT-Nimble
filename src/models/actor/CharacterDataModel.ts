@@ -306,6 +306,41 @@ const characterSchema = () => ({
 			}),
 		}),
 	}),
+	levelUpHistory: new fields.ArrayField(
+		new fields.SchemaField({
+			level: new fields.NumberField({
+				required: true,
+				initial: 1,
+				integer: true,
+				nullable: false,
+			}),
+			hpIncrease: new fields.NumberField({
+				required: true,
+				initial: 0,
+				integer: true,
+				nullable: false,
+			}),
+			abilityIncreases: new RecordField(
+				new fields.StringField({ required: true, initial: '', nullable: false }),
+				new fields.NumberField({ required: true, initial: 0, integer: true, nullable: false }),
+			),
+			skillIncreases: new RecordField(
+				new fields.StringField({ required: true, initial: '', nullable: false }),
+				new fields.NumberField({ required: true, initial: 0, integer: true, nullable: false }),
+			),
+			hitDieAdded: new fields.BooleanField({
+				required: true,
+				initial: false,
+				nullable: false,
+			}),
+			classIdentifier: new fields.StringField({
+				required: true,
+				initial: '',
+				nullable: false,
+			}),
+		}),
+		{ required: true, nullable: false, initial: () => [] },
+	),
 	skills: new fields.SchemaField(
 		Object.keys(CONFIG.NIMBLE.skills ?? {}).reduce((skills, skillKey) => {
 			skills[skillKey] = new fields.SchemaField({

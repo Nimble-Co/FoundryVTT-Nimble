@@ -141,7 +141,6 @@
 			"name": "Smash (2×).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -194,7 +193,7 @@
 					}
 				},
 				"description": "<p>(Reach 2) 1d6+15. OR</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "7xaQQr4LP7FqSHPi",
 			"img": "icons/weapons/clubs/club-banded-barbed-black.webp",
@@ -245,9 +244,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On hit: Knockback Primary Die spaces.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>On hit: Knockback Primary Die spaces.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -264,7 +261,6 @@
 			"name": "Boulder!",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -317,7 +313,7 @@
 					}
 				},
 				"description": "<p>(Range 12) 1d6+20</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "7PkhnQwkVDCwQkoX",
 			"img": "icons/environment/wilderness/terrain-rocks-brown.webp",

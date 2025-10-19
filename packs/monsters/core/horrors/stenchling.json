@@ -194,9 +194,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On Death: 2d6 poison damage to enemies within Reach 2.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>On Death: 2d6 poison damage to enemies within Reach 2.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -213,7 +211,6 @@
 			"name": "Bite.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -266,7 +263,7 @@
 					}
 				},
 				"description": "<p>2d6.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "qOWtkVDKgAUR5Ccu",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-red.webp",

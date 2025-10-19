@@ -166,9 +166,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -185,7 +183,6 @@
 			"name": "Stab",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -238,7 +235,7 @@
 					}
 				},
 				"description": "<p>1d8 (follows minion rules).</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "FGOBvn3AHWMX09L2",
 			"img": "icons/weapons/swords/sword-guard.webp",

@@ -21,13 +21,7 @@
 			"creatureType": "Aberration, all TEETH & EYES",
 			"level": "12"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 110 HP, use Petrification Ray against every enemy. His save DC increases to 18</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Dravok is dying! 70 more damage and he dies. Until then, each turn he will move or use Warping Ray and then <strong>Devastation Beam</strong>. [[/r 2d12+20]] in a 10 space long, 2 space wide line.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, Move 6 and then either use <strong>Eye Ray</strong> (Range 10, [[/r 1d6]]{randomly chosen ray} then choose target) OR <strong>Terrible Maw</strong>. </p>",
+		"attackSequence": "<p>After each hero's turn, Move 6 and then either use <strong>Eye Ray</strong> (Range 10, [[/r 1d6]]{randomly chosen ray} then choose target) OR <strong>Terrible Maw</strong>. </p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 0,
@@ -177,9 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Dravok makes all saves with +1 Advantage, attacks against him have Disadvantage.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Dravok makes all saves with +1 Advantage, attacks against him have Disadvantage.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -229,9 +221,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Taking more than 12 piercing or slashing damage: Dravok’s plans are FLAWED! (until the end of the next hero’s turn.)</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Taking more than 12 piercing or slashing damage: Dravok's plans are FLAWED! (until the end of the next hero's turn.)</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -250,7 +240,6 @@
 			"name": "1. Warping Ray",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -318,7 +307,7 @@
 					}
 				},
 				"description": "<p>3d6. On hit: Dazed, exchange places with target.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "hm0nvCYJy2i4fCDa",
 			"img": "icons/magic/light/beam-rays-blue-large.webp",
@@ -339,7 +328,6 @@
 			"name": "2. Petrification Ray",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -370,7 +358,7 @@
 					}
 				},
 				"description": "<p>Permanently Dazed. Healing ends. (3 stacks, Petrified).</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "En4fdOj40xF7Q1mj",
 			"img": "icons/magic/light/beam-rays-yellow-blue-large.webp",
@@ -391,7 +379,6 @@
 			"name": "3. Terror Ray",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -424,7 +411,7 @@
 										"id": "5qyte95rBYaomW24",
 										"type": "note",
 										"noteType": "warning",
-										"text": "TERRIFIED: You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok’s plans are FLAWED.",
+										"text": "TERRIFIED: You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok's plans are FLAWED.",
 										"parentContext": "hit",
 										"parentNode": "hp79M6PwhC6h3dXu"
 									},
@@ -451,8 +438,8 @@
 						"width": 1
 					}
 				},
-				"description": "<p>5d10 psychic damage & Terrified: </p><p>(You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok’s plans are FLAWED.)</p>",
-				"isAttack": true
+				"description": "<p>5d10 psychic damage & Terrified: </p><p>(You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok's plans are FLAWED.)</p>",
+				"subtype": "action"
 			},
 			"_id": "x3uAQ8Y4Pog85I7f",
 			"img": "icons/magic/light/beam-rays-red-large.webp",
@@ -473,7 +460,6 @@
 			"name": "4. Gravitation Ray",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -534,7 +520,7 @@
 					}
 				},
 				"description": "<p>2d6 damage. Push that many spaces. Knocked Prone on 7+.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "9yLALKx55vnxvfb5",
 			"img": "icons/magic/light/beam-rays-teal-purple-large.webp",
@@ -555,7 +541,6 @@
 			"name": "5. Charm Ray",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -619,7 +604,7 @@
 					}
 				},
 				"description": "<p>DC 16 WIL save or you spend 3 Actions attacking with or moving them, 2 actions on save. (Cannot spend resources, they regain spent actions afterward.)</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "nQ1CO1Ge9FGgwUpm",
 			"img": "icons/magic/light/beam-rays-magenta-large.webp",
@@ -640,7 +625,6 @@
 			"name": "6. Death Ray",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -704,7 +688,7 @@
 					}
 				},
 				"description": "<p>DC 16 STR save or drop to 0 HP. On save, gain 1 Wound. If a Dying creature fails this, they die.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "ML4LADhsYE5Dvpog",
 			"img": "icons/magic/light/beam-rays-green-large.webp",
@@ -725,7 +709,6 @@
 			"name": "Terrible Maw",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -786,7 +769,7 @@
 					}
 				},
 				"description": "<p>Melee attack. 4d4, EVERY die can crit and is Vicious</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "PpZr6xGfBDyQptL3",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-red.webp",
@@ -801,6 +784,106 @@
 				"createdTime": 1757821859105,
 				"modifiedTime": 1757822797708,
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805482,95302"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "2e548fc4-7119-4d5d-9f1d-accc11a36251",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 110 HP, use Petrification Ray against every enemy. His save DC increases to 18</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805482,95302"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "f4270f1d-7776-47e2-b56e-879850a8d7f9",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Dravok is dying! 70 more damage and he dies. Until then, each turn he will move or use Warping Ray and then <strong>Devastation Beam</strong>. [[/r 2d12+20]] in a 10 space long, 2 space wide line.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

@@ -172,9 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On melee crit: Grapple (escape DC 10).</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>On melee crit: Grapple (escape DC 10).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -191,7 +189,6 @@
 			"name": "Crush.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -244,7 +241,7 @@
 					}
 				},
 				"description": "<p>2d6+20. Advantage vs. smaller creatures.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "Fh17GpWpLrxaPugM",
 			"img": "icons/creatures/reptiles/snake-fangs-bite-green.webp",

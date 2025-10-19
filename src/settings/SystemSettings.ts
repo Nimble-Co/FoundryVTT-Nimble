@@ -1,24 +1,12 @@
-import { SvelteApplicationMixin, type Configuration } from '#lib/SvelteApplicationMixin.svelte.js';
+import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 import SystemSettingsDialog from '../view/dialogs/SystemSettingsDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
 
 export class SystemSettings extends SvelteApplicationMixin(ApplicationV2) {
-	constructor(options = {} as Configuration) {
-		super(
-			foundry.utils.mergeObject(options, {
-				svelte: {
-					component: SystemSettingsDialog,
-				},
-			}),
-		);
+	root = SystemSettingsDialog;
 
-		this.props = {
-			dialog: this,
-		};
-	}
-
-	static DEFAULT_OPTIONS = foundry.utils.mergeObject(
+	static override DEFAULT_OPTIONS = foundry.utils.mergeObject(
 		super.DEFAULT_OPTIONS,
 		{
 			id: `app-${Math.random().toString(36).substring(2, 9)}`,
@@ -36,10 +24,21 @@ export class SystemSettings extends SvelteApplicationMixin(ApplicationV2) {
 		{ inplace: false },
 	);
 
-	getSettings() {
-		const allSettings = game.settings.settings;
-		const nimbleSettings = [...allSettings].filter(([id]) => id.startsWith('nimble.'));
+	async _prepareContext() {
+		return {
+			dialog: this,
+		};
+	}
 
-		return new Map(nimbleSettings);
+	getSettings() {
+		const nimbleSettings = new Map();
+		const gameSettings = (game as any).settings;
+
+		for (const [id, setting] of gameSettings.settings) {
+			if (id.startsWith('nimble.')) {
+				nimbleSettings.set(id, setting);
+			}
+		}
+		return nimbleSettings;
 	}
 }

@@ -36,6 +36,13 @@ const navigation = [
 	},
 ];
 
+const subtypeOptions = [
+	{ value: 'feature', label: 'Feature' },
+	{ value: 'action', label: 'Action' },
+	{ value: 'bloodied', label: 'Bloodied' },
+	{ value: 'lastStand', label: 'Last Stand' },
+];
+
 let currentTab = $state(navigation[0]);
 
 let { item, sheet } = $props();
@@ -68,34 +75,22 @@ setContext('application', sheet);
             />
         </label>
 
-        <label class="nimble-field">
-            <input
-                type="checkbox"
-                checked={item.reactive.system.isAction}
-                onchange={({ target }) =>
+        <div class="form-group">
+			<label
+				class="nimble-field nimble-field--full-width"
+            	data-field-variant="stacked"
+			>
+				Subtype
+				<select name="system.subtype" value={item.system.subtype} onchange={({ target }) =>
                     item.update({
-                        "system.isAction": (target as HTMLInputElement).checked,
-                    })}
-            />
-
-            List feature under actions
-        </label>
-
-        {#if item.reactive.system.isAction}
-            <label class="nimble-field">
-                <input
-                    type="checkbox"
-                    checked={item.reactive.system.isAttack}
-                    onchange={({ target }) =>
-                        item.update({
-                            "system.isAttack": (target as HTMLInputElement)
-                                .checked,
-                        })}
-                />
-
-                List feature under attacks
-            </label>
-        {/if}
+                        "system.subtype": (target as monsterFeatureTypesHTMLInputElement).value,
+                    })}>
+					{#each subtypeOptions as option}
+						<option value={option.value}>{option.label}</option>
+					{/each}
+				</select>
+			</label>
+		</div>
     </section>
 {/snippet}
 

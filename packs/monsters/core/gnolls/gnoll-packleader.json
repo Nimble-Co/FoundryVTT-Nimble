@@ -172,9 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Advantage against Bloodied creatures.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Advantage against Bloodied creatures.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -191,7 +189,6 @@
 			"name": "Bark Orders.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -222,7 +219,7 @@
 					}
 				},
 				"description": "<p>2 allies can move. Then:</p>",
-				"isAttack": false
+				"subtype": "action"
 			},
 			"_id": "vsXCPn8oD3fElmiq",
 			"img": "icons/environment/people/charge.webp",
@@ -242,7 +239,6 @@
 			"name": "Ravage (3×).",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -295,7 +291,7 @@
 					}
 				},
 				"description": "<p>1d10</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "DuOtsm2fzv3aUd0T",
 			"img": "icons/skills/melee/blade-tip-chipped-blood-red.webp",

@@ -21,13 +21,7 @@
 			"creatureType": "Manticore",
 			"level": "5"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 65 HP, his Venomous Stinger recharges.</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>The Ravager is dying! 40 more damage and he dies. Until then, the first time each turn he takes damage, he uses Claw.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, choose one:</p>",
+		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -177,9 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever Ravager is crit, he can fly 10.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Whenever Ravager is crit, he can fly 10.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -197,7 +189,6 @@
 			"name": "Venomous Stinger. (1 use)",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -250,7 +241,7 @@
 					}
 				},
 				"description": "<p>Reach 3, 5d12 damage.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "XQZe73BXr65Lfgql",
 			"img": "icons/creatures/abilities/stinger-poison-green.webp",
@@ -269,7 +260,6 @@
 			"name": "Ravage.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -322,7 +312,7 @@
 					}
 				},
 				"description": "<p>Attack for 1d12+20 damage.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "vpJXS7vET9FrEPNc",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
@@ -341,7 +331,6 @@
 			"name": "Claw.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -394,7 +383,7 @@
 					}
 				},
 				"description": "<p>Fly 10, attack for 1d12+6 damage.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "hvZLdMbWjqjnGfIo",
 			"img": "icons/creatures/claws/claw-hooked-curved.webp",
@@ -407,6 +396,106 @@
 				"systemId": "nimble",
 				"systemVersion": "0.1.7",
 				"lastModifiedBy": null
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,40131"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "eaf87f2e-3f4c-42a6-96ad-4874548b80f7",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 65 HP, his Venomous Stinger recharges.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805483,40131"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "b9d201b4-35bb-43b7-93fb-f6a4daff0008",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>The Ravager is dying! 40 more damage and he dies. Until then, the first time each turn he takes damage, he uses Claw.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

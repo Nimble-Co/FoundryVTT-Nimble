@@ -172,9 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Cloakers always start first and heroes roll Initiative with disadvantage.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Cloakers always start first and heroes roll Initiative with disadvantage.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -222,9 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>You take half damage from attacks while grappling a creature (they take the other half).</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>You take half damage from attacks while grappling a creature (they take the other half).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -241,7 +237,6 @@
 			"name": "Wrap.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -308,7 +303,7 @@
 					}
 				},
 				"description": "<p>2d10+20. On Hit: Grappled (escape DC 16). OR</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "TRT44zWDEobdx3S9",
 			"img": "icons/magic/control/debuff-chains-shackle-movement-red.webp",
@@ -328,7 +323,6 @@
 			"name": "Horrifying Wail.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -381,7 +375,7 @@
 					}
 				},
 				"description": "<p>DC 16 WIL save, or creatures within 6 spaces are Frightened and must spend 1 Action moving as far away as possible.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "nEzel3FmAenjmI53",
 			"img": "icons/magic/death/skeleton-skull-soul-blue.webp",

@@ -21,13 +21,7 @@
 			"creatureType": "World-Ending Cataclysm",
 			"level": "20"
 		},
-		"bloodiedEffect": {
-			"description": "<p>At 310 HP, Gravitational Mastery. Move ALL objects and creatures within 16 spaces anywhere else within the area. Gravitational Lensing. The hero with the most HP is marked by Caerys. She takes half damage from all sources, her mark takes the other half. This lasts until the mark drops to 0 HP.</p>"
-		},
-		"lastStandEffect": {
-			"description": "<p>Use Gravitational Mastery, then Caerys is dying! 200 more damage and she dies. Until then she chooses twice each turn. If still alive after 1 round: Reset Time: she resets back to full HP.</p>"
-		},
-		"attackSequence": "<p>After each hero’s turn, choose 1 not yet chosen (reset when all have been chosen):</p>",
+		"attackSequence": "<p>After each hero's turn, choose 1 not yet chosen (reset when all have been chosen):</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 3,
@@ -177,9 +171,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>At the beginning of each round, all heroes suffer 1 Wound</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>At the beginning of each round, all heroes suffer 1 Wound</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -229,9 +221,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>3/encounter when she would suffer any negative effect she can swap places with a creature of her choice making them the target instead. All heroes recover 1 Wound.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>3/encounter when she would suffer any negative effect she can swap places with a creature of her choice making them the target instead. All heroes recover 1 Wound.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -250,7 +240,6 @@
 			"name": "Wormhole",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -303,7 +292,7 @@
 					}
 				},
 				"description": "<p>Teleport 12. 3d20 to a creature adjacent to where you began or ended.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "QgFFZaVxOtw8eJ1D",
 			"img": "icons/magic/sonic/explosion-impact-shock-wave.webp",
@@ -324,7 +313,6 @@
 			"name": "Immensity",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -371,22 +359,10 @@
 									"parentNode": "q20U5ghtUs4RbwzR",
 									"on": {
 										"failedSave": [
-											{
-												"id": "devxf3Wq27h2ouJn",
-												"type": "damageOutcome",
-												"outcome": "fullDamage",
-												"parentContext": "failedSave",
-												"parentNode": "k1oi8cKrCy0rKtOr"
-											}
+											"@{id=devxf3Wq27h2ouJn; type=damageOutcome; outcome=fullDamage; parentContext=failedSave; parentNode=k1oi8cKrCy0rKtOr}"
 										],
 										"passedSave": [
-											{
-												"id": "lgEK1simV1O1dVVW",
-												"type": "damageOutcome",
-												"outcome": "halfDamage",
-												"parentContext": "passedSave",
-												"parentNode": "k1oi8cKrCy0rKtOr"
-											}
+											"@{id=lgEK1simV1O1dVVW; type=damageOutcome; outcome=halfDamage; parentContext=passedSave; parentNode=k1oi8cKrCy0rKtOr}"
 										]
 									}
 								}
@@ -406,7 +382,7 @@
 					}
 				},
 				"description": "<p>(Reach 12) DC 20 STR save (disadvantage if within Reach 4) or suffer 3d20 damage and Prone. Half on save.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "3ZLbCogTJylv3j6P",
 			"img": "icons/magic/defensive/barrier-shield-dome-blue-purple.webp",
@@ -427,7 +403,6 @@
 			"name": "Glimpse Your End",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -481,7 +456,7 @@
 					}
 				},
 				"description": "<p>DC 20 WIL save or DOOMED: Concentration ends, the next damage roll against you is maximized.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "J5368jkxadVt0eOg",
 			"img": "icons/magic/death/skull-humanoid-white-red.webp",
@@ -502,7 +477,6 @@
 			"name": "Plasma Storm",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -538,22 +512,10 @@
 									"parentNode": "g8nyLDD2EKXHEM7l",
 									"on": {
 										"failedSave": [
-											{
-												"id": "uBDhCngMqsFvehOH",
-												"type": "damageOutcome",
-												"outcome": "fullDamage",
-												"parentContext": "failedSave",
-												"parentNode": "2fU9e4UeMjNFb9jM"
-											}
+											"@{id=uBDhCngMqsFvehOH; type=damageOutcome; outcome=fullDamage; parentContext=failedSave; parentNode=2fU9e4UeMjNFb9jM}"
 										],
 										"passedSave": [
-											{
-												"id": "kUjkvb4x8tBUfGS3",
-												"type": "damageOutcome",
-												"outcome": "halfDamage",
-												"parentContext": "passedSave",
-												"parentNode": "2fU9e4UeMjNFb9jM"
-											}
+											"@{id=kUjkvb4x8tBUfGS3; type=damageOutcome; outcome=halfDamage; parentContext=passedSave; parentNode=2fU9e4UeMjNFb9jM}"
 										]
 									}
 								},
@@ -566,22 +528,10 @@
 									"parentNode": "g8nyLDD2EKXHEM7l",
 									"on": {
 										"failedSave": [
-											{
-												"id": "c7Cg94fdgVZVnlZq",
-												"type": "damageOutcome",
-												"outcome": "fullDamage",
-												"parentContext": "failedSave",
-												"parentNode": "Zg1CkhKobBh5isJ6"
-											}
+											"@{id=c7Cg94fdgVZVnlZq; type=damageOutcome; outcome=fullDamage; parentContext=failedSave; parentNode=Zg1CkhKobBh5isJ6}"
 										],
 										"passedSave": [
-											{
-												"id": "40XV1QRAJepkEVAT",
-												"type": "damageOutcome",
-												"outcome": "halfDamage",
-												"parentContext": "passedSave",
-												"parentNode": "Zg1CkhKobBh5isJ6"
-											}
+											"@{id=40XV1QRAJepkEVAT; type=damageOutcome; outcome=halfDamage; parentContext=passedSave; parentNode=Zg1CkhKobBh5isJ6}"
 										]
 									}
 								}
@@ -602,7 +552,7 @@
 					}
 				},
 				"description": "<p>Reach 6, DC 20 DEX save or 2d20 lightning and 2d20 fire damage. Half on save.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "hgBOVY7Fj3Js7yzX",
 			"img": "icons/magic/lightning/bolt-strike-smoke-yellow.webp",
@@ -623,7 +573,6 @@
 			"name": "Singularity",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -676,7 +625,7 @@
 					}
 				},
 				"description": "<p>Reach 2, 5d20 bludgeoning damage.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "cKsrqvN2JNjZ9oTq",
 			"img": "icons/magic/air/wind-vortex-swirl-blue.webp",
@@ -697,7 +646,6 @@
 			"name": "Almighty Push & Pull",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -751,7 +699,7 @@
 					}
 				},
 				"description": "<p>(Range 12) DC 20 STR save or be launched 20 ft. into the air, repeat until the target saves. Fall damage for this attack is 1d20 for every 10 ft. fallen.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "MfLJ3aDYoCtnItjm",
 			"img": "icons/magic/movement/trail-streak-impact-blue.webp",
@@ -766,6 +714,106 @@
 				"createdTime": 1757811239739,
 				"modifiedTime": 1757811445583,
 				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805482,9035"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Bloodied",
+			"img": "icons/svg/blood.svg",
+			"_id": "ffa7f136-0b03-444d-abf2-bb21471a28dc",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>At 310 HP, Gravitational Mastery. Move ALL objects and creatures within 16 spaces anywhere else within the area. Gravitational Lensing. The hero with the most HP is marked by Caerys. She takes half damage from all sources, her mark takes the other half. This lasts until the mark drops to 0 HP.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "bloodied"
+			}
+		},
+		{
+			"type": "monsterFeature",
+			"_stats": {
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.8",
+				"modifiedTime": "1758805482,9035"
+			},
+			"effects": [],
+			"flags": {},
+			"name": "Last Stand",
+			"img": "icons/svg/skull.svg",
+			"_id": "0e194fa0-b50d-4913-8bdf-f01069cdc182",
+			"folder": null,
+			"sort": 0,
+			"system": {
+				"description": "<p>Use Gravitational Mastery, then Caerys is dying! 200 more damage and she dies. Until then she chooses twice each turn. If still alive after 1 round: Reset Time: she resets back to full HP.</p>",
+				"macro": "",
+				"identifier": "",
+				"activation": {
+					"cost": {
+						"isReaction": false,
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"duration": {
+						"quantity": 1,
+						"details": "",
+						"type": "none"
+					},
+					"template": {
+						"radius": 1,
+						"width": 1,
+						"shape": "",
+						"length": 1
+					},
+					"effects": [],
+					"acquireTargetsFromTemplate": false,
+					"showDescription": true
+				},
+				"rules": [],
+				"subtype": "lastStand"
 			}
 		}
 	],

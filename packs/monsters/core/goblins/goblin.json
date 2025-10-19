@@ -141,7 +141,6 @@
 			"name": "Stab.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -194,7 +193,7 @@
 					}
 				},
 				"description": "<p>1d6+2.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "fOOzxyGOVkLS4KTp",
 			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
@@ -244,9 +243,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
-				"isAction": false,
-				"isAttack": false
+				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -263,7 +260,6 @@
 			"name": "Shoot.",
 			"type": "monsterFeature",
 			"system": {
-				"isAction": true,
 				"macro": "",
 				"identifier": "",
 				"rules": [],
@@ -316,7 +312,7 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d6+2.</p>",
-				"isAttack": true
+				"subtype": "action"
 			},
 			"_id": "KC9zg4AXVhHnLZE1",
 			"img": "icons/weapons/bows/longbow-recurve-skull-brown.webp",
