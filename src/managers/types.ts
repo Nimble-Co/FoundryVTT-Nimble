@@ -17,7 +17,6 @@ export namespace ItemActivationManager {
 
 export namespace RulesManager {
 	export interface AddOptions {
-		/** Update the parent item. Default `true` */
 		update?: boolean;
 	}
 }

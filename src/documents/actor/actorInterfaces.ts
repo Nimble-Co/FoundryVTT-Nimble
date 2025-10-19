@@ -1,6 +1,5 @@
 /**
  * Type interfaces for actors to break circular dependencies
- * These are pure type definitions with no imports from documents
  */
 
 export type SystemActorTypes = Exclude<foundry.documents.BaseActor.TypeNames, 'base'>;

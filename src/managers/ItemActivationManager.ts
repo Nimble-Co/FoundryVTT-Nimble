@@ -3,8 +3,6 @@ import { DamageRoll } from '../dice/DamageRoll.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
-// NimbleBaseItem type is available globally from ../documents/item/item.d.ts
-
 class ItemActivationManager {
 	#item: NimbleBaseItem;
 

@@ -1,5 +1,3 @@
-// NimbleBaseActor and NimbleBaseItem types are available globally from .d.ts files
-
 import constructD20Term from './constructD20Term.js';
 import simplifyOperatorTerms from './simplifyOperatorTerms.js';
 

@@ -1,5 +1,3 @@
-// NimbleCharacter type is available globally from ../documents/actor/actor.d.ts
-
 class HitDiceManager {
 	#actor: NimbleCharacter;
 

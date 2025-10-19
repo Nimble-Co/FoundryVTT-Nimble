@@ -1,5 +1,4 @@
 /* eslint-disable max-classes-per-file */
-// NimbleClassItem type is available globally from ../../../documents/item/item.d.ts
 import { isValidDiceModifier } from '../../../utils/isValidDiceModifier.js';
 import { identifier } from '../../common.js';
 

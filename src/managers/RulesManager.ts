@@ -1,9 +1,7 @@
-// NimbleBaseItem type is available globally from ../documents/item/item.d.ts
 import type { NimbleBaseRule } from '../models/rules/base.js';
 
 namespace RulesManager {
 	export interface AddOptions {
-		/** Update the parent item. Default `true` */
 		update?: boolean;
 	}
 }

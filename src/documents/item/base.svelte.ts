@@ -11,9 +11,7 @@ export type { SystemItemTypes } from './itemInterfaces.js';
 import type { SystemItemTypes } from './itemInterfaces.js';
 
 // Forward declaration to avoid circular dependency
-// The actual NimbleBaseActor is defined in actor/base.svelte.ts
 interface NimbleBaseActor extends Actor {
-	type: string;
 	getDomain(): Set<string>;
 	getRollData(item?: any): Record<string, any>;
 }

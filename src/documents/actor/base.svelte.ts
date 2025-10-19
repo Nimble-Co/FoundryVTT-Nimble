@@ -9,14 +9,10 @@ import calculateRollMode from '../../utils/calculateRollMode.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { createSubscriber } from 'svelte/reactivity';
 
-// Dialogs are dynamically imported where needed to avoid circular dependencies
-
 export type { SystemActorTypes, ActorRollOptions, CheckRollDialogData } from './actorInterfaces.ts';
 
 // Forward declarations to avoid circular dependencies
-// The actual classes are defined in item/base.svelte.ts and models/rules/base.ts
 interface NimbleBaseItem extends Item {
-	type: string;
 	rules: RulesManagerInterface;
 	prepareActorData?(): void;
 }
