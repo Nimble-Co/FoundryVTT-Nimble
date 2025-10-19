@@ -90,7 +90,7 @@ let weight = $derived(details?.weight ?? '');
         </label>
 
         {#key actor.reactive.system.details.notes}
-            <div style="grid-area: notes;">
+            <div class="nimble-notes-section" style="grid-area: notes;">
                 <header class="nimble-section-header">
                     <h4 class="nimble-heading" data-heading-variant="section">
                         Notes
@@ -115,8 +115,9 @@ let weight = $derived(details?.weight ?? '');
             "age height"
             "weight gender"
             "notes notes";
-        grid-template-rows: repeat(3, min-content);
+        grid-template-rows: auto auto 1fr;
         gap: 0.5rem;
+        height: 100%;
     }
 
     .nimble-details-field {
@@ -129,6 +130,23 @@ let weight = $derived(details?.weight ?? '');
         &--column {
             flex-direction: column;
             align-items: flex-start;
+        }
+    }
+
+    .nimble-notes-section {
+		display: block;
+        height: 100%;
+		align-content: flex-start;
+		grid-area: notes;
+
+        :global(prose-mirror) {
+            height: 100%;
+        }
+
+        :global(.editor-content) {
+            height: 100%;
+            overflow-y: auto;
+			padding-bottom: 15px !important;
         }
     }
 </style>

@@ -53,7 +53,17 @@ onMount(async () => {
 		foundry.utils.mergeObject(editorOptions, { enriched }),
 	);
 
-	proseMirrorElem.outerHTML = element.outerHTML;
+	// Listen for save events from ProseMirror and update the document
+	element.addEventListener('save', (event: Event) => {
+		const target = event.target as any;
+		if (target?._getValue) {
+			const value = target._getValue();
+			document.update({ [field]: value });
+		}
+	});
+
+	// Properly insert the element to maintain event bubbling
+	proseMirrorElem.replaceWith(element);
 });
 </script>
 
@@ -61,29 +71,29 @@ onMount(async () => {
 
 <style lang="scss">
 .nimble-editor-wrapper {
-	flex-grow: 1;
-	display: flex;
-	flex-direction: column;
-	min-height: 200px;
+	height: 100%;
+	display: block;
 
 	:global(prose-mirror) {
-		flex-grow: 1;
-		display: flex;
-		flex-direction: column;
 		height: 100%;
+		display: block;
 	}
 
 	:global(.editor-container) {
-		flex-grow: 1;
+		height: 100%;
 		display: flex;
 		flex-direction: column;
-		height: 100%;
 	}
 
 	:global(.editor-content) {
-		flex-grow: 1;
+		height: 100%;
 		overflow-y: auto;
-		min-height: 150px;
+		flex: 1;
+		padding-bottom: 15px !important;
+	}
+
+	:global(.editor-menu) {
+		flex-shrink: 0;
 	}
 }
 </style>
