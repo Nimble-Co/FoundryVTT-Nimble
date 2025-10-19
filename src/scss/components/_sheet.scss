@@ -118,6 +118,10 @@
                 padding-inline-end: 0.5rem;
                 margin-inline-end: 3rem;
             }
+
+            .window-resize-handle {
+                right: var(--nimble-sheet-sidebar-width) !important;
+            }
         }
     }
 
