@@ -10,7 +10,6 @@
 		"target": "ES2023",
 		"types": ["@league-of-foundry-developers/foundry-vtt-types"],
 		"paths": {
-			"types/*": ["./types/*"],
 			"#lib/*": ["./lib/*"],
 			"#managers/*": ["./src/managers/*"],
 			"#stores/*": ["./src/stores/*"],

@@ -16,7 +16,6 @@
 		"spell-check": "npx cspell -c ./cspell.json lint . --words-only | sort -u"
 	},
 	"imports": {
-		"types/*": "./types/*",
 		"#lib/*": "./lib/*",
 		"#managers/*": "./src/managers/*",
 		"#stores/*": "./src/stores/*",

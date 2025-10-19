@@ -656,7 +656,6 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		// Revert abilities
 		if (Object.keys(lastHistory.abilityIncreases).length > 0) {
-			const _abilityKey = Object.keys(lastHistory.abilityIncreases)[0];
 			itemUpdates[`system.abilityScoreData.${lastHistory.level}.value`] = null;
 		}
 

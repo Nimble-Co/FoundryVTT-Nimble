@@ -11,8 +11,7 @@ import { createSubscriber } from 'svelte/reactivity';
 
 // Dialogs are dynamically imported where needed to avoid circular dependencies
 
-export type { SystemActorTypes, ActorRollOptions, CheckRollDialogData } from './actorInterfaces.js';
-import type { SystemActorTypes, ActorRollOptions, CheckRollDialogData } from './actorInterfaces.js';
+export type { SystemActorTypes, ActorRollOptions, CheckRollDialogData } from './actorInterfaces.ts';
 
 // Forward declarations to avoid circular dependencies
 // The actual classes are defined in item/base.svelte.ts and models/rules/base.ts
