@@ -1,5 +1,5 @@
 import type BaseUser from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/documents/user.d.mts';
-import type { ActorRollOptions } from './actorInterfaces.js';
+import type { ActorRollOptions } from './actorInterfaces.ts';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { NimbleAncestryItem } from '../item/ancestry.js';
 import type { NimbleBackgroundItem } from '../item/background.js';
