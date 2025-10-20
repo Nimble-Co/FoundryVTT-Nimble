@@ -106,17 +106,17 @@ class HitDiceManager {
 	}
 
 	async #rollHitDice(
-		_dieSize: number,
-		_currentCount: number,
-		_quantity: number,
+		dieSize: number,
+		currentCount: number,
+		quantity: number,
 		formula: string,
 	): Promise<{ hookData: any; chatData: any }> {
-		const roll = await new Roll(formula).roll();
+		const rollFormula = formula ? formula : dieSize > 0 && quantity > 0 ? `${quantity}d${dieSize}` : '';
+		const roll = rollFormula ? await new Roll(rollFormula).roll() : await new Roll('0').roll();
 
 		// const title = 'THIS IS A HIT DICE ROLL';
 		const chatData = {
 			author: game.user?.id,
-			// @ts-expect-error
 			speaker: ChatMessage.getSpeaker({ actor: this.#actor }),
 			sound: CONFIG.sounds.dice,
 			rolls: [roll],

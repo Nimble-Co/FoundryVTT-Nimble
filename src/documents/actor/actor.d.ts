@@ -10,5 +10,14 @@ declare interface NimbleBaseActor extends Actor {
 
 declare interface NimbleCharacter extends NimbleBaseActor {
 	type: 'character';
-	system: any;
+	classes: Record<string, NimbleClassItem>;
+	update(changes: Record<string, any>): Promise<void>;
+	applyHealing(healing: number, healingType?: string): Promise<void>;
+	system: {
+		attributes: {
+			hp: {
+				max: number;
+			};
+		};
+	};
 }
