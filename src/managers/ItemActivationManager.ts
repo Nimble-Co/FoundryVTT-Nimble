@@ -3,6 +3,7 @@ import { DamageRoll } from '../dice/DamageRoll.js';
 import type { NimbleBaseItem } from '../documents/item/base.svelte.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
+import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 
 class ItemActivationManager {
 	#item: NimbleBaseItem;
@@ -34,16 +35,41 @@ class ItemActivationManager {
 		let dialogData: ItemActivationManager.DialogData;
 
 		if (options.fastForward) {
-			dialogData = {};
+			dialogData = { rollMode: 0 };
 		} else {
-			dialogData = this.#getDefaultDialogData(rollOptions);
+			// Check if there are damage or healing effects that require rolling
+			const effects = this.activationData?.effects ?? [];
+			const hasRolls = flattenEffectsTree(effects).some(node => node.type === 'damage' || node.type === 'healing');
+
+			if (hasRolls) {
+				const dialog = new ItemActivationConfigDialog(
+					this.actor,
+					this.#item,
+					`Activate ${this.#item.name}`,
+					rollOptions,
+				);
+				await dialog.render(true);
+				const result = await dialog.promise;
+				if (result) {
+					dialogData = result;
+				} else {
+					// If dialog is cancelled, don't roll
+					dialogData = { rollMode: undefined };
+				}
+			} else {
+				// No rolls needed, use default
+				dialogData = this.#getDefaultDialogData(rollOptions);
+			}
 		}
 
 		// Get Targets
 		// @ts-ignore
 		const targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
 
-		const rolls = await this.#getRolls(dialogData);
+		let rolls: (Roll | DamageRoll)[] = [];
+		if (dialogData.rollMode !== undefined) { // Only roll if dialog was not cancelled
+			rolls = await this.#getRolls(dialogData);
+		}
 
 		// Get template data
 		const templateData = this.#getTemplateData();
@@ -51,7 +77,7 @@ class ItemActivationManager {
 		return { rolls, activation: this.activationData };
 	}
 
-	async #getRolls(dialogData: ItemActivationManager.DialogData): (Roll | DamageRoll)[] {
+	async #getRolls(dialogData: ItemActivationManager.DialogData): Promise<(Roll | DamageRoll)[]> {
 		if (['ancestry', 'background', 'boon', 'class', 'subclass'].includes(this.#item.type))
 			return [];
 
@@ -66,17 +92,19 @@ class ItemActivationManager {
 
 				if (node.type === 'damage' && !foundDamageRoll) {
 					const { canCrit, canMiss } = node;
-					node.rollMode = dialogData.rollMode;
+					node.rollMode = dialogData.rollMode ?? 0;
 
-					roll = new DamageRoll(node.formula, this.actor.getRollData(), {
+					const formula = node.formula;
+
+					roll = new DamageRoll(formula, this.actor.getRollData(), {
 						canCrit,
 						canMiss,
 						rollMode: node.rollMode,
-					});
+					} as any);
 
 					foundDamageRoll = true;
 				} else {
-					roll = new Roll(node.formula || '0', this.actor.getRollData());
+					roll = new Roll(node.formula || '0', this.actor.getRollData()) as any;
 				}
 
 				await roll.evaluate();
@@ -188,7 +216,7 @@ namespace ItemActivationManager {
 	}
 
 	export interface DialogData {
-		rollMode: number;
+		rollMode: number | undefined;
 	}
 }
 
