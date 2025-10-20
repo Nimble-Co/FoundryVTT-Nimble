@@ -94,7 +94,8 @@ class ItemActivationManager {
 					const { canCrit, canMiss } = node;
 					node.rollMode = dialogData.rollMode ?? 0;
 
-					const formula = node.formula;
+					// Use modified formula if provided
+					const formula = dialogData.rollFormula || node.formula;
 
 					roll = new DamageRoll(formula, this.actor.getRollData(), {
 						canCrit,
@@ -217,6 +218,8 @@ namespace ItemActivationManager {
 
 	export interface DialogData {
 		rollMode: number | undefined;
+		rollFormula?: string;
+		bonus?: number;
 	}
 }
 
