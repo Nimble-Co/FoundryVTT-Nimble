@@ -42,10 +42,6 @@ abstract class NimbleBaseRule<
 > extends foundry.abstract.DataModel<Schema, Parent> implements NimbleBaseRule<Schema, Parent> {
 	declare type: string;
 
-	/**
-	 * Override predicate type - we use a custom Predicate class instead of
-	 * Foundry's inferred schema type for better type safety and functionality
-	 */
 	// @ts-expect-error - Intentional type override for custom Predicate implementation
 	declare predicate: Predicate;
 
