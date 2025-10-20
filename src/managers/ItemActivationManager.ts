@@ -4,6 +4,7 @@ import type { NimbleBaseItem } from '../documents/item/base.svelte.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
+import { keyPressStore } from '../stores/keyPressStore.js';
 
 class ItemActivationManager {
 	#item: NimbleBaseItem;
@@ -42,20 +43,33 @@ class ItemActivationManager {
 			const hasRolls = flattenEffectsTree(effects).some(node => node.type === 'damage' || node.type === 'healing');
 
 			if (hasRolls) {
-				const dialog = new ItemActivationConfigDialog(
-					this.actor,
-					this.#item,
-					`Activate ${this.#item.name}`,
-					rollOptions,
-				);
-				await dialog.render(true);
-				const result = await dialog.promise;
-				if (result) {
-					dialogData = result;
+				// Check if Alt is pressed to skip dialog
+				let altPressed = false;
+				const unsubscribe = keyPressStore.subscribe(state => {
+					altPressed = state.alt;
+				});
+
+				if (altPressed) {
+					// Skip dialog, use default
+					dialogData = this.#getDefaultDialogData(rollOptions);
 				} else {
-					// If dialog is cancelled, don't roll
-					dialogData = { rollMode: undefined };
+					const dialog = new ItemActivationConfigDialog(
+						this.actor,
+						this.#item,
+						`Activate ${this.#item.name}`,
+						rollOptions,
+					);
+					await dialog.render(true);
+					const result = await dialog.promise;
+					if (result) {
+						dialogData = result;
+					} else {
+						// If dialog is cancelled, don't roll
+						dialogData = { rollMode: undefined };
+					}
 				}
+
+				unsubscribe();
 			} else {
 				// No rolls needed, use default
 				dialogData = this.#getDefaultDialogData(rollOptions);
@@ -219,7 +233,6 @@ namespace ItemActivationManager {
 	export interface DialogData {
 		rollMode: number | undefined;
 		rollFormula?: string;
-		bonus?: number;
 	}
 }
 
