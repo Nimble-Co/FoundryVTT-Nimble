@@ -12,7 +12,7 @@
 		"editor.defaultFormatter": "sibiraj-s.vscode-scss-formatter"
 	},
 	"[svelte]": {
-		"editor.defaultFormatter": "biomejs.biome",
+		"editor.defaultFormatter": "svelte.svelte-vscode",
 		"editor.tabSize": 4
 	},
 	"[typescript]": {
@@ -39,7 +39,8 @@
 	],
 	"css.validate": false,
 	"editor.codeActionsOnSave": {
-		"quickfix.biome": "explicit",
+		"source.organizeImports.biome": "explicit",
+		"source.fixAll.biome": "explicit",
 		"source.fixAll.stylelint": "explicit"
 	},
 	"editor.defaultFormatter": "biomejs.biome",

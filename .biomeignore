@@ -1,0 +1,2 @@
+# Ignore Svelte files - use Prettier for these
+**/*.svelte

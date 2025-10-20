@@ -1,0 +1,21 @@
+# Ignore build artifacts
+dist/
+node_modules/
+public/packs/
+
+# Ignore generated files
+*.js.map
+
+# Ignore non-code files
+*.md
+*.json
+!package.json
+
+# Ignore files handled by biome
+**/*.ts
+**/*.js
+**/*.svelte.ts
+**/*.json
+**/*.jsonc
+**/*.md
+**/*.scss
