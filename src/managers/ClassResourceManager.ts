@@ -4,8 +4,6 @@ import {
 	ResourceDataModels,
 } from '../models/item/components/ClassResourceDataModel.js';
 
-// NimbleClassItem and NimbleSubclassItem types are available globally from ../documents/item/item.d.ts
-
 class ClassResourceManager extends Map<string, InstanceType<typeof NimbleBaseResource>> {
 	item: NimbleClassItem | NimbleSubclassItem;
 

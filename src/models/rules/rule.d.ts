@@ -3,6 +3,7 @@
  */
 
 declare interface NimbleBaseRule<Schema = any, Parent = any> {
+	actor: NimbleCharacter;
 	disabled: boolean;
 	priority: number;
 	prePrepareData?(): void;
