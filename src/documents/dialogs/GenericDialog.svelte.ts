@@ -1,8 +1,8 @@
-import type { DeepPartial } from "@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts";
+import type { DeepPartial } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
 import {
-  SvelteApplicationMixin,
-  type SvelteApplicationRenderContext,
-} from "#lib/SvelteApplicationMixin.svelte.js";
+	SvelteApplicationMixin,
+	type SvelteApplicationRenderContext,
+} from '#lib/SvelteApplicationMixin.svelte.js';
 
 const { ApplicationV2 } = foundry.applications.api;
 

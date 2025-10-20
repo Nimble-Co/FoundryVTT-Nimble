@@ -52,8 +52,7 @@ export default function setup() {
 		}
 
 		if (foundry.applications.sheets.PlaylistConfig) {
-			const originalDefaultOptions =
-				foundry.applications.sheets.PlaylistConfig.DEFAULT_OPTIONS;
+			const originalDefaultOptions = foundry.applications.sheets.PlaylistConfig.DEFAULT_OPTIONS;
 			foundry.applications.sheets.PlaylistConfig.DEFAULT_OPTIONS = {
 				...originalDefaultOptions,
 				window: {
@@ -88,7 +87,6 @@ export default function setup() {
 				},
 			};
 		}
-
 
 		// Compendium Pack Browser (individual pack content browser)
 		if (foundry.applications.sheets?.Compendium) {
