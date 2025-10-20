@@ -89,7 +89,7 @@ onMount(async () => {
 		height: 100%;
 		overflow-y: auto;
 		flex: 1;
-		padding-bottom: 15px !important;
+		padding-bottom: 1rem !important;
 	}
 
 	:global(.editor-menu) {

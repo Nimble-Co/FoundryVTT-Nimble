@@ -146,7 +146,7 @@ let weight = $derived(details?.weight ?? '');
         :global(.editor-content) {
             height: 100%;
             overflow-y: auto;
-			padding-bottom: 15px !important;
+			padding-bottom: 1rem !important;
         }
     }
 </style>

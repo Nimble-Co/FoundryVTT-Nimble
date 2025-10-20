@@ -81,7 +81,7 @@ let currentTab = $state(subNavigation[0]);
         :global(.editor-content) {
             height: 100%;
             overflow-y: auto;
-			padding-bottom: 15px !important;
+			padding-bottom: 1rem !important;
         }
     }
 

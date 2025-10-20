@@ -44,6 +44,6 @@ let actor = getContext('actor');
     :global(.nimble-sheet__body--notes .editor-content) {
         height: 100% !important;
         overflow-y: auto !important;
-		padding-bottom: 15px !important;
+		padding-bottom: 1rem !important;
     }
 </style>
