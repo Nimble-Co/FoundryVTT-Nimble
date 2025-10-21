@@ -4,7 +4,6 @@ import sortDocumentsByName from "../../utils/sortDocumentsByName.js";
 import type { DeepPartial } from "@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts";
 import { SvelteApplicationMixin } from "#lib/SvelteApplicationMixin.svelte.js";
 
-// Item types are available globally from ../item/item.d.ts
 type NimbleBackgroundItem = any;
 type NimbleAncestryItem = any;
 
