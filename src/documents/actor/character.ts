@@ -1,9 +1,19 @@
 import type BaseUser from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/documents/user.d.mts';
-import type { ActorRollOptions } from './actorData.js';
+import type { ActorRollOptions } from './actorInterfaces.ts';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { NimbleAncestryItem } from '../item/ancestry.js';
 import type { NimbleBackgroundItem } from '../item/background.js';
-import type { NimbleClassItem } from '../item/class.js';
+
+// Forward declaration to avoid circular dependency with item/class.ts
+interface NimbleClassItem extends Item {
+	identifier: string;
+	system: any;
+	ASI?: Record<string, number>;
+	hitDice?: { size: number; total: number };
+	maxHp?: number;
+	grantedArmorProficiencies?: string[];
+	grantedWeaponProficiencies?: string[];
+}
 
 import { NimbleBaseActor } from './base.svelte.js';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
@@ -347,6 +357,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	/** ------------------------------------------------------ */
 
 	async configureAbilityScores() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.configureAbilityScores ??= new GenericDialog(
 			`${this.name}: Configure Ability Scores`,
 			CharacterStatConfigDialog,
@@ -358,6 +370,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureArmorProficiencies() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.configureArmorProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Armor Proficiencies`,
 			CharacterArmorProficienciesConfigDialog,
@@ -369,6 +383,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureLanguageProficiencies() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.configureLanguageProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Language Proficiencies`,
 			CharacterLanguageProficienciesConfigDialog,
@@ -380,6 +396,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureMovement() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.configureMovement ??= new GenericDialog(
 			`${this.name}: Configure Movement Speeds`,
 			CharacterMovementConfigDialog,
@@ -391,6 +409,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureWeaponProficiencies() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.configureWeaponProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Weapon Proficiencies`,
 			CharacterWeaponProficienciesConfigDialog,
@@ -402,6 +422,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureSkills() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.configureSkills ??= new GenericDialog(
 			`${this.name}: Configure Skills`,
 			CharacterSkillsConfigDialog,
@@ -569,6 +591,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		if (currentClassLevel >= 20) return;
 
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		const dialog = new GenericDialog(
 			`${this.name}: Level Up Dialog`,
 			CharacterLevelUpDialog,
@@ -675,7 +699,6 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		// Revert abilities
 		if (Object.keys(lastHistory.abilityIncreases).length > 0) {
-			const abilityKey = Object.keys(lastHistory.abilityIncreases)[0];
 			itemUpdates[`system.abilityScoreData.${lastHistory.level}.value`] = null;
 		}
 
@@ -739,6 +762,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 			restData = restOptions;
 		} else {
 			// Launch Config Dialog
+			const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 			const dialog = new GenericDialog(
 				'Field Rest Dialog',
 				FieldRestDialog,

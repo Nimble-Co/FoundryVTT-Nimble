@@ -1,8 +1,7 @@
 import type { DeepPartial } from "@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts";
 import { SvelteApplicationMixin } from "#lib/SvelteApplicationMixin.svelte.js";
 
-import ActorCreationDialogComponent from "../../view/dialogs/ActorCreationDialog.svelte";
-import CharacterCreationDialog from "./CharacterCreationDialog.svelte.js";
+import ActorCreationDialogComponent from '../../view/dialogs/ActorCreationDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
 
@@ -58,6 +57,7 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(
     const { documentClasses } = CONFIG.NIMBLE.Actor;
 
     if (actorType === "character") {
+      const { default: CharacterCreationDialog } = await import('./CharacterCreationDialog.svelte.js');
       const characterCreationDialog = new CharacterCreationDialog();
       characterCreationDialog.render(true);
     } else {

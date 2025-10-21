@@ -1,5 +1,5 @@
-import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
-import type { NimbleBaseItem } from '../documents/item/base.svelte.js';
+// NimbleBaseActor and NimbleBaseItem types are available globally from .d.ts files
+
 import localize from '../utils/localize.js';
 
 declare namespace ModifierManager {
