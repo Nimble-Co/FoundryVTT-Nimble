@@ -163,7 +163,7 @@ let categorizedItems = $derived(groupItemsByType(items));
 let flags = $derived(actor.reactive.flags.nimble);
 let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
-let allCollapsed = $derived(items.every(item => item.flags?.nimble?.collapsed));
+let allCollapsed = $derived(items.every(item => item.reactive.flags.nimble.collapsed));
 
 document.addEventListener('click', (event) =>
 	handleEditorSave(event, 'system.attackSequence', attackSequenceInEditMode),
