@@ -31,6 +31,8 @@ import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementC
 import CharacterSkillsConfigDialog from '../../view/dialogs/CharacterSkillsConfigDialog.svelte';
 import CharacterStatConfigDialog from '../../view/dialogs/CharacterStatConfigDialog.svelte';
 import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/CharacterWeaponProficienciesConfigDialog.svelte';
+import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
+import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
 
 export class NimbleCharacter extends NimbleBaseActor {
@@ -280,7 +282,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 		const classes = Object.values(this.classes ?? {});
 		if (classes.length === 0) return;
 
-		actorData.attributes.hp.max = classes.reduce((acc, classData) => acc + classData.maxHp, 0);
+		actorData.attributes.hp.max =
+			classes.reduce((acc, classData) => acc + classData.maxHp, 0) + actorData.attributes.hp.bonus;
 	}
 
 	_prepareLevelData(): void {
@@ -429,6 +432,33 @@ export class NimbleCharacter extends NimbleBaseActor {
 		);
 
 		await this.#dialogs.configureSkills.render(true);
+	}
+
+	async configureHitPoints() {
+		const dialog = new GenericDialog(
+			`${this.name}: Configure Hit Points`,
+			EditHitPointsDialog,
+			{ document: this },
+			{ icon: 'fa-solid fa-heart', width: 250 },
+		);
+
+		await dialog.render(true);
+		const result = await dialog.promise;
+
+		if (result === null) {
+			return
+		}
+		// Update class items
+		for (const clsUpdate of result.classUpdates) {
+			await this.updateItem(clsUpdate.id, { 'system.hpData': clsUpdate.hpData });
+		}
+		// Update bonus
+		await this.update({ 'system.attributes.hp.bonus': result.bonus });
+
+		// If HP is now greater then max, reduce it
+		if (this.system.attributes.hp.value > this.system.attributes.hp.max) {
+			await this.update({ 'system.attributes.hp.value': this.system.attributes.hp.max });
+		}
 	}
 
 	/** ------------------------------------------------------ */
