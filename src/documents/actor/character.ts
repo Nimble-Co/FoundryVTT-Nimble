@@ -423,18 +423,19 @@ export class NimbleCharacter extends NimbleBaseActor {
 		await dialog.render(true);
 		const result = await dialog.promise;
 
-		if (result) {
-			// Update class items
-			for (const clsUpdate of result.classUpdates) {
-				await this.updateItem(clsUpdate.id, { 'system.hpData': clsUpdate.hpData });
-			}
-			// Update bonus
-			await this.update({ 'system.attributes.hp.bonus': result.bonus });
+		if (result === null) {
+			return
+		}
+		// Update class items
+		for (const clsUpdate of result.classUpdates) {
+			await this.updateItem(clsUpdate.id, { 'system.hpData': clsUpdate.hpData });
+		}
+		// Update bonus
+		await this.update({ 'system.attributes.hp.bonus': result.bonus });
 
-			// If HP is now greater then max, reduce it
-			if (this.system.attributes.hp.value > this.system.attributes.hp.max) {
-				await this.update({ 'system.attributes.hp.value': this.system.attributes.hp.max });
-			}
+		// If HP is now greater then max, reduce it
+		if (this.system.attributes.hp.value > this.system.attributes.hp.max) {
+			await this.update({ 'system.attributes.hp.value': this.system.attributes.hp.max });
 		}
 	}
 
