@@ -9,7 +9,7 @@ declare interface NimbleBaseItem extends Item {
 	prepareActorData?(): void;
 }
 
-declare interface NimbleClassItem extends Item {
+declare interface NimbleClassItem extends NimbleBaseItem {
 	type: 'class';
 	identifier: string;
 	system: any;
@@ -20,8 +20,18 @@ declare interface NimbleClassItem extends Item {
 	grantedWeaponProficiencies?: string[];
 }
 
-declare interface NimbleSubclassItem extends Item {
+declare interface NimbleSubclassItem extends NimbleBaseItem {
 	type: 'subclass';
 	identifier: string;
+	system: any;
+}
+
+declare interface NimbleAncestryItem extends NimbleBaseItem {
+	type: 'ancestry';
+	system: any;
+}
+
+declare interface NimbleBackgroundItem extends NimbleBaseItem {
+	type: 'background';
 	system: any;
 }

@@ -4,9 +4,6 @@ import sortDocumentsByName from "../../utils/sortDocumentsByName.js";
 import type { DeepPartial } from "@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts";
 import { SvelteApplicationMixin } from "#lib/SvelteApplicationMixin.svelte.js";
 
-type NimbleBackgroundItem = any;
-type NimbleAncestryItem = any;
-
 import CharacterCreationDialogComponent from '../../view/dialogs/CharacterCreationDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -135,9 +132,10 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(
 
     for (const ancestry of ancestryOptions) {
       if (!ancestry) continue;
+						const ancestryItem = ancestry as NimbleAncestryItem;
 
-      if (ancestry.system.exotic) exoticAncestries.push(ancestry);
-      else coreAncestries.push(ancestry);
+						if (ancestryItem.system.exotic) exoticAncestries.push(ancestryItem);
+						else coreAncestries.push(ancestryItem);
     }
 
     return {
@@ -166,9 +164,9 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(
   async prepareBackgroundOptions(): Promise<NimbleBackgroundItem[]> {
     const compendiumChoices = getChoicesFromCompendium("background");
 
-    const documents = await Promise.all(
-      compendiumChoices.map((uuid) => fromUuid(uuid)),
-    );
+    const documents = (await Promise.all(compendiumChoices.map((uuid) => fromUuid(uuid)))).filter(
+					(d): d is NimbleBackgroundItem => d !== null,
+				);
 
     return sortDocumentsByName(documents);
   }
@@ -187,9 +185,9 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(
   async prepareClassOptions(): Promise<NimbleClassItem[]> {
     const compendiumChoices = getChoicesFromCompendium("class");
 
-    const documents = await Promise.all(
-      compendiumChoices.map((uuid) => fromUuid(uuid)),
-    );
+    const documents = (await Promise.all(compendiumChoices.map((uuid) => fromUuid(uuid)))).filter(
+					(d): d is NimbleClassItem => d !== null,
+				);
 
     return sortDocumentsByName(documents);
   }
