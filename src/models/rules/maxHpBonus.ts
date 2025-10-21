@@ -32,8 +32,7 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	override async preCreate(args): Promise<void> {
+	async preCreate(): Promise<void> {
 		if (this.invalid) return;
 
 		const { actor } = this;
@@ -49,7 +48,7 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		actor.update({ 'system.attributes.hp.max': max + addedHp });
 	}
 
-	override async preUpdate(changes: Record<string, unknown>) {
+	async preUpdate(changes: Record<string, unknown>) {
 		if (this.invalid) return;
 
 		const { actor, item } = this;
@@ -74,7 +73,7 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		actor.update({ 'system.attributes.hp.max': max + addedHp });
 	}
 
-	override afterDelete() {
+	afterDelete() {
 		if (this.invalid) return;
 
 		const { actor, item } = this;

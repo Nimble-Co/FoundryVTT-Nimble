@@ -1,6 +1,5 @@
 import type { EffectNode } from '#types/effectTree.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
-import type { NimbleBaseItem } from '../documents/item/base.svelte.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
@@ -40,13 +39,13 @@ class ItemActivationManager {
 		}
 
 		// Get Targets
-		// @ts-ignore
-		const targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
+		// @ts-expect-error
+		const _targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
 
 		const rolls = await this.#getRolls(dialogData);
 
 		// Get template data
-		const templateData = this.#getTemplateData();
+		const _templateData = this.#getTemplateData();
 
 		return { rolls, activation: this.activationData };
 	}
