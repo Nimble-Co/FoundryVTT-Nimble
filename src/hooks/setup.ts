@@ -2,242 +2,76 @@ import registerKeybindings from '../registerKeyBindings.js';
 import registerSystemSettings from '../settings/index.js';
 import { preparePackIndexes } from '../utils/preparePackIndexes.js';
 
+/**
+ * Helper function to make an ApplicationV2 class resizable.
+ * Modifies the DEFAULT_OPTIONS to enable window resizing without changing other defaults.
+ * @param appClass - The ApplicationV2 class to modify
+ * @returns true if successful, false otherwise
+ */
+function makeApplicationResizable(appClass: any): boolean {
+	try {
+		if (!appClass?.DEFAULT_OPTIONS) {
+			return false;
+		}
+
+		const originalDefaultOptions = appClass.DEFAULT_OPTIONS;
+
+		// Validate the structure before modifying
+		if (typeof originalDefaultOptions !== 'object') {
+			console.warn(
+				`Nimble: Unable to modify ${appClass.name} - unexpected DEFAULT_OPTIONS structure`,
+			);
+			return false;
+		}
+
+		appClass.DEFAULT_OPTIONS = {
+			...originalDefaultOptions,
+			window: {
+				...(originalDefaultOptions.window || {}),
+				resizable: true,
+			},
+		};
+
+		return true;
+	} catch (error) {
+		console.error(`Nimble: Error making ${appClass?.name} resizable:`, error);
+		return false;
+	}
+}
+
 export default function setup() {
-	preparePackIndexes();
 	registerKeybindings();
 	registerSystemSettings();
+	preparePackIndexes();
 
 	game.nimble.conditions.initialize();
 
-	if (foundry.applications?.sheets) {
-		// Make all FoundryVTT core applications resizable
-		// This must be done in setup hook after ApplicationV2 classes are available
-		// Card Stacks/Decks
-		if (foundry.applications.sheets.CardsConfig) {
-			const originalDefaultOptions = foundry.applications.sheets.CardsConfig.DEFAULT_OPTIONS;
-			foundry.applications.sheets.CardsConfig.DEFAULT_OPTIONS = {
-				...originalDefaultOptions,
-				window: {
-					...originalDefaultOptions.window,
-					resizable: true,
-				},
-				position: {
-					...originalDefaultOptions.position,
-					height:
-						originalDefaultOptions.position?.height === 'auto'
-							? 500
-							: originalDefaultOptions.position?.height,
-				},
-			};
-		}
+	if (!foundry.applications?.sheets) {
+		console.warn('Nimble: ApplicationV2 sheets not available, skipping resizable configuration');
+		return;
+	}
 
-		// Playlist Sounds
-		if (foundry.applications.sheets.PlaylistSoundConfig) {
-			const originalDefaultOptions =
-				foundry.applications.sheets.PlaylistSoundConfig.DEFAULT_OPTIONS;
-			foundry.applications.sheets.PlaylistSoundConfig.DEFAULT_OPTIONS = {
-				...originalDefaultOptions,
-				window: {
-					...originalDefaultOptions.window,
-					resizable: true,
-				},
-				position: {
-					...originalDefaultOptions.position,
-					height:
-						originalDefaultOptions.position?.height === 'auto'
-							? 400
-							: originalDefaultOptions.position?.height,
-				},
-			};
-		}
+	// Make FoundryVTT core dialog windows resizable
+	// This must be done in setup hook after ApplicationV2 classes are available
+	const configurableApps = [
+		'CardsConfig', // Card Stacks/Decks
+		'PlaylistSoundConfig', // Playlist Sounds
+		'PlaylistConfig', // Playlist Configuration
+		'SceneConfig', // Scene Configuration
+		'Compendium', // Compendium Pack Dialog
+		'SceneDirectory', // Scene Directory Dialog
+		'ActorDirectory', // Actors Directory Dialog
+		'ItemDirectory', // Items Directory Dialog
+		'JournalDirectory', // Journal Directory Dialog
+		'RollTableDirectory', // Rollable Tables Directory Dialog
+		'PlaylistDirectory', // Playlists Directory Dialog
+		'CardsDirectory', // Cards Directory Dialog
+	] as const;
 
-		if (foundry.applications.sheets.PlaylistConfig) {
-			const originalDefaultOptions = foundry.applications.sheets.PlaylistConfig.DEFAULT_OPTIONS;
-			foundry.applications.sheets.PlaylistConfig.DEFAULT_OPTIONS = {
-				...originalDefaultOptions,
-				window: {
-					...originalDefaultOptions.window,
-					resizable: true,
-				},
-				position: {
-					...originalDefaultOptions.position,
-					height:
-						originalDefaultOptions.position?.height === 'auto'
-							? 400
-							: originalDefaultOptions.position?.height,
-				},
-			};
-		}
-
-		// Scene Configuration
-		if (foundry.applications.sheets.SceneConfig) {
-			const originalDefaultOptions = foundry.applications.sheets.SceneConfig.DEFAULT_OPTIONS;
-			foundry.applications.sheets.SceneConfig.DEFAULT_OPTIONS = {
-				...originalDefaultOptions,
-				window: {
-					...originalDefaultOptions.window,
-					resizable: true,
-				},
-				position: {
-					...originalDefaultOptions.position,
-					height:
-						originalDefaultOptions.position?.height === 'auto'
-							? 600
-							: originalDefaultOptions.position?.height,
-				},
-			};
-		}
-
-		// Compendium Pack Browser (individual pack content browser)
-		if (foundry.applications.sheets?.Compendium) {
-			const originalDefaultOptions = foundry.applications.sheets.Compendium.DEFAULT_OPTIONS;
-			foundry.applications.sheets.Compendium.DEFAULT_OPTIONS = {
-				...originalDefaultOptions,
-				window: {
-					...originalDefaultOptions.window,
-					resizable: true,
-				},
-				position: {
-					...originalDefaultOptions.position,
-					height:
-						originalDefaultOptions.position?.height === 'auto'
-							? 600
-							: originalDefaultOptions.position?.height,
-				},
-			};
-		}
-
-		// Scene Directory (sidebar list)
-		if (foundry.applications.sheets.SceneDirectory) {
-			const originalDefaultOptions = foundry.applications.sheets.SceneDirectory.DEFAULT_OPTIONS;
-			foundry.applications.sheets.SceneDirectory.DEFAULT_OPTIONS = {
-				...originalDefaultOptions,
-				window: {
-					...originalDefaultOptions.window,
-					resizable: true,
-				},
-				position: {
-					...originalDefaultOptions.position,
-					height:
-						originalDefaultOptions.position?.height === 'auto'
-							? 600
-							: originalDefaultOptions.position?.height,
-				},
-			};
-		}
-
-		// Actors Directory (sidebar list)
-		if (foundry.applications.sheets.ActorDirectory) {
-			const originalDefaultOptions = foundry.applications.sheets.ActorDirectory.DEFAULT_OPTIONS;
-			foundry.applications.sheets.ActorDirectory.DEFAULT_OPTIONS = {
-				...originalDefaultOptions,
-				window: {
-					...originalDefaultOptions.window,
-					resizable: true,
-				},
-				position: {
-					...originalDefaultOptions.position,
-					height:
-						originalDefaultOptions.position?.height === 'auto'
-							? 600
-							: originalDefaultOptions.position?.height,
-				},
-			};
-		}
-
-		// Items Directory (sidebar list)
-		if (foundry.applications.sheets.ItemDirectory) {
-			const originalDefaultOptions = foundry.applications.sheets.ItemDirectory.DEFAULT_OPTIONS;
-			foundry.applications.sheets.ItemDirectory.DEFAULT_OPTIONS = {
-				...originalDefaultOptions,
-				window: {
-					...originalDefaultOptions.window,
-					resizable: true,
-				},
-				position: {
-					...originalDefaultOptions.position,
-					height:
-						originalDefaultOptions.position?.height === 'auto'
-							? 600
-							: originalDefaultOptions.position?.height,
-				},
-			};
-		}
-
-		// Journal Directory (sidebar list)
-		if (foundry.applications.sheets.JournalDirectory) {
-			const originalDefaultOptions = foundry.applications.sheets.JournalDirectory.DEFAULT_OPTIONS;
-			foundry.applications.sheets.JournalDirectory.DEFAULT_OPTIONS = {
-				...originalDefaultOptions,
-				window: {
-					...originalDefaultOptions.window,
-					resizable: true,
-				},
-				position: {
-					...originalDefaultOptions.position,
-					height:
-						originalDefaultOptions.position?.height === 'auto'
-							? 600
-							: originalDefaultOptions.position?.height,
-				},
-			};
-		}
-
-		// Rollable Tables Directory (sidebar list)
-		if (foundry.applications.sheets.RollTableDirectory) {
-			const originalDefaultOptions = foundry.applications.sheets.RollTableDirectory.DEFAULT_OPTIONS;
-			foundry.applications.sheets.RollTableDirectory.DEFAULT_OPTIONS = {
-				...originalDefaultOptions,
-				window: {
-					...originalDefaultOptions.window,
-					resizable: true,
-				},
-				position: {
-					...originalDefaultOptions.position,
-					height:
-						originalDefaultOptions.position?.height === 'auto'
-							? 600
-							: originalDefaultOptions.position?.height,
-				},
-			};
-		}
-
-		// Playlists Directory (sidebar list)
-		if (foundry.applications.sheets.PlaylistDirectory) {
-			const originalDefaultOptions = foundry.applications.sheets.PlaylistDirectory.DEFAULT_OPTIONS;
-			foundry.applications.sheets.PlaylistDirectory.DEFAULT_OPTIONS = {
-				...originalDefaultOptions,
-				window: {
-					...originalDefaultOptions.window,
-					resizable: true,
-				},
-				position: {
-					...originalDefaultOptions.position,
-					height:
-						originalDefaultOptions.position?.height === 'auto'
-							? 600
-							: originalDefaultOptions.position?.height,
-				},
-			};
-		}
-
-		// Cards Directory (sidebar list)
-		if (foundry.applications.sheets.CardsDirectory) {
-			const originalDefaultOptions = foundry.applications.sheets.CardsDirectory.DEFAULT_OPTIONS;
-			foundry.applications.sheets.CardsDirectory.DEFAULT_OPTIONS = {
-				...originalDefaultOptions,
-				window: {
-					...originalDefaultOptions.window,
-					resizable: true,
-				},
-				position: {
-					...originalDefaultOptions.position,
-					height:
-						originalDefaultOptions.position?.height === 'auto'
-							? 600
-							: originalDefaultOptions.position?.height,
-				},
-			};
+	for (const className of configurableApps) {
+		const appClass = foundry.applications.sheets[className];
+		if (appClass) {
+			makeApplicationResizable(appClass);
 		}
 	}
 }
