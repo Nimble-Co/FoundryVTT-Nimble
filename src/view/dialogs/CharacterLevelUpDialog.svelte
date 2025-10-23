@@ -2,6 +2,9 @@
 	import generateBlankSkillSet from '../../utils/generateBlankSkillSet.js';
 	import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
 
+	import getSubclassChoices from '../../utils/getSubclassChoices.js';
+	import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
+
 	import AbilityScoreIncrease from './components/levelUpHelper/AbilityScoreIncrease.svelte';
 	import HitPointSelection from './components/levelUpHelper/HitPointSelection.svelte';
 	import SkillPointAssignment from './components/levelUpHelper/SkillPointAssignment.svelte';
@@ -23,6 +26,10 @@
 	let boons = getChoicesFromCompendium('boon');
 	let subclasses = $state([]);
 
+	const characterClass = Object.values(document.classes)?.[0];
+	const level = characterClass?.system?.classLevel;
+	const levelingTo = level + 1;
+
 	// Load subclass documents from compendium
 	Promise.all(getChoicesFromCompendium('subclass').map((uuid) => fromUuid(uuid))).then(
 		(documents) => {
@@ -42,10 +49,6 @@
 	let selectedSubclass = $state(null);
 	let skillPointChanges = $state(generateBlankSkillSet());
 
-	const characterClass = Object.values(document.classes)?.[0];
-	const level = characterClass?.system?.classLevel;
-	const levelingTo = level + 1;
-
 	let hasStatIncrease = $state(false);
 
 	let hasSkillPointChanges = $derived.by(() => {
@@ -62,6 +65,13 @@
 			(selectedSubclass || levelingTo !== 3)
 		);
 	});
+
+	// Load subclasses filtered by parent class when leveling to 3
+	if (levelingTo === 3 && characterClass) {
+		getSubclassChoices(characterClass.identifier).then((choices) => {
+			subclasses = choices;
+		});
+	}
 </script>
 
 <section class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.75rem;">

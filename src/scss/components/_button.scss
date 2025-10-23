@@ -154,6 +154,28 @@
     }
   }
 
+  &[data-button-variant="full-width"] {
+    display: flex;
+    width: 100%;
+    padding: 0.5rem 0.25rem;
+    color: var(--nimble-overhang-button-text-color);
+    border: 1px solid hsl(41, 18%, 54%);
+    border-radius: 4px;
+    background-color: var(--nimble-overhang-button-background);
+    line-height: 1;
+    transition: var(--nimble-slow-transition);
+    opacity: 1;
+
+    &:hover {
+      background-color: var(--nimble-overhang-button-hover-background);
+      color: #fff;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+
   &[data-enricher-type="condition"] {
     color: #199356;
   }

@@ -2,6 +2,7 @@ import type BaseUser from '@league-of-foundry-developers/foundry-vtt-types/src/f
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { NimbleAncestryItem } from '../item/ancestry.js';
 import type { NimbleBackgroundItem } from '../item/background.js';
+import type { NimbleSubclassItem } from '../item/subclass.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 
 // Forward declaration to avoid circular dependency with item/class.ts
@@ -653,6 +654,24 @@ export class NimbleCharacter extends NimbleBaseActor {
 			}
 		});
 
+		// Add selected subclass if available
+		const subclass = dialogData.selectedSubclass as NimbleSubclassItem;
+
+		if (subclass) {
+			if (subclass.system.parentClass === characterClass.identifier) {
+				// Check if this subclass is actually for this class
+				// Create a copy of the subclass for the character
+				const subclassData = subclass.toObject();
+				subclassData._stats.compendiumSource = subclass.uuid;
+
+				await this.createEmbeddedDocuments('Item', [subclassData]);
+			} else {
+				ui.notifications?.warn(
+					`The selected subclass "${subclass.name}" is not compatible with your ${characterClass.name} class.`,
+				);
+			}
+		}
+
 		// Record level up history
 		const historyEntry = {
 			level: nextClassLevel,
@@ -711,6 +730,18 @@ export class NimbleCharacter extends NimbleBaseActor {
 				actorUpdates[path] = current - change;
 			}
 		});
+
+		// Remove all subclasses if reverting from level 3
+		if (lastHistory.level <= 3) {
+			const subclasses = this.items.filter((i) => i.type === 'subclass');
+
+			if (subclasses.length > 0) {
+				const subclassIds = subclasses.map((s) => s.id).filter((id): id is string => id !== null);
+				if (subclassIds.length > 0) {
+					await this.deleteEmbeddedDocuments('Item', subclassIds);
+				}
+			}
+		}
 
 		// Revert class level
 		itemUpdates['system.classLevel'] = characterClass.system.classLevel - 1;
