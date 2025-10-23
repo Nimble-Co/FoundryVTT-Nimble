@@ -178,7 +178,9 @@ class NimbleCombat extends Combat {
 
 	async _onDrop(event: DragEvent & { target: EventTarget & HTMLElement }) {
 		event.preventDefault();
-		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(event) as unknown as Record<string, string>;
+		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(
+			event,
+		) as unknown as Record<string, string>;
 
 		const { combatants } = this;
 

@@ -8,7 +8,7 @@ export namespace RulesManager {
 
 class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	#item: NimbleBaseItem;
-  rulesTypeMap: Map<string, InstanceType<typeof NimbleBaseRule>>;
+	rulesTypeMap: Map<string, InstanceType<typeof NimbleBaseRule>>;
 
 	constructor(item: NimbleBaseItem) {
 		super();
