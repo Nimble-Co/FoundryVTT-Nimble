@@ -9,7 +9,7 @@ import { preparePackIndexes } from '../utils/preparePackIndexes.js';
  * @param appClass - The ApplicationV2 class to modify
  * @returns true if successful, false otherwise
  */
-function makeApplicationResizable(appClass: any): boolean {
+function makeApplicationDialogResizable(appClass: any): boolean {
 	try {
 		if (!appClass?.DEFAULT_OPTIONS) {
 			return false;
@@ -70,9 +70,9 @@ export default function setup() {
 	] as const;
 
 	for (const className of configurableApps) {
-		const appClass = foundry.applications.sheets[className];
+		const appClass = foundry.applications.sheets?.[className];
 		if (appClass) {
-			makeApplicationResizable(appClass);
+			makeApplicationDialogResizable(appClass);
 		}
 	}
 }
