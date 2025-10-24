@@ -14,6 +14,7 @@ declare namespace DamageRoll {
 		damageType?: string;
 		fumbleThreshold?: number;
 		rollMode: number;
+		primaryDieValue: number;
 	}
 
 	type Evaluated<T extends DamageRoll> = T & {
@@ -90,6 +91,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					// Add Explosion after adv/div has been calculated
 					primaryTerm.modifiers.push('x');
 
+					if (options.primaryDieValue) {
+						primaryTerm.results = [
+							{ result: options.primaryDieValue, active: true },
+						];
+					}
+
 					this.terms.unshift(primaryTerm);
 				} else {
 					primaryTerm = new PrimaryDie({
@@ -105,6 +112,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 					// Add Explosion for critical after adv/dis
 					primaryTerm.modifiers.push('x');
+
+					if (options.primaryDieValue) {
+						primaryTerm.results = [
+							{ result: options.primaryDieValue, active: true },
+						];
+					}
 
 					// Update term
 					const idx = this.terms.findIndex((t) => t instanceof Terms.Die);

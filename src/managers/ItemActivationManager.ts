@@ -113,6 +113,7 @@ class ItemActivationManager {
 						canCrit,
 						canMiss,
 						rollMode: node.rollMode,
+						primaryDieValue: dialogData.primaryDieValue,
 					} as any);
 
 					foundDamageRoll = true;
@@ -231,6 +232,7 @@ namespace ItemActivationManager {
 	export interface DialogData {
 		rollMode: number | undefined;
 		rollFormula?: string;
+		primaryDieValue?: number;
 	}
 }
 
