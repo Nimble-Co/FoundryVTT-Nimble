@@ -21,6 +21,9 @@ let modifiedFormula = $derived(() => {
 	if (situational_modifiers !== "") {
 		formula += "+" + situational_modifiers;
 	}
+	if (primary_die_value == null) {
+		return formula;
+	}
 	const roll = new Roll(formula);
 	const terms = roll.terms;
 
@@ -62,21 +65,23 @@ let rollFormula = $derived(
 <article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
     <RollModeConfig bind:selectedRollMode />
 
-    <div class="nimble-roll-modifiers">
-        <label>
-            situational modifiers:
-            <input type="string" bind:value={situational_modifiers} placeholder="0" />
-        </label>
+    <div class="nimble-roll-modifiers-container">
+        <div class="nimble-roll-modifiers">
+            <label>
+                situational modifiers:
+                <input type="string" bind:value={situational_modifiers} placeholder="0" />
+            </label>
+        </div>
+
+        <div class="nimble-roll-modifiers">
+            <label>
+                set primary die:
+                <input type="number" bind:value={primary_die_value} placeholder="0" />
+            </label>
+        </div>
     </div>
 
-	<div class="nimble-roll-modifiers">
-        <label>
-            set primary die:
-            <input type="number" bind:value={primary_die_value} placeholder="0" />
-        </label>
-    </div>
-
-    <div class="nimble-roll-formula">{rollFormula}</div>
+    <div class="nimble-roll-formula">{Roll.replaceFormulaData(modifiedFormula(), actor.getRollData(item))}</div>
 </article>
 
 <footer class="nimble-sheet__footer">
@@ -91,7 +96,7 @@ let rollFormula = $derived(
 					return;
 				}
 			}
-			if(primary_die_value !== null) {
+			if(primary_die_value != null) {
 				const roll = new Roll(damageFormula());
 				const terms = roll.terms;
 				const firstDieIndex = terms.findIndex(t => t instanceof Die);
@@ -118,21 +123,28 @@ let rollFormula = $derived(
         --nimble-button-width: 100%
     }
 
+    .nimble-roll-modifiers-container {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
     .nimble-roll-modifiers {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
-        margin-top: 1rem;
+        gap: 0.25rem;
+        flex: 1;
 
         label {
             display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
+            align-items: center;
+            gap: 0.5rem;
 
             input {
                 padding: 0.5rem;
                 border: 1px solid var(--nimble-border-color);
                 border-radius: var(--nimble-border-radius);
+				flex: 1;
             }
         }
     }
