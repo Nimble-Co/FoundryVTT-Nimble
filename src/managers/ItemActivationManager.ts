@@ -65,7 +65,7 @@ class ItemActivationManager {
 						dialogData = result;
 					} else {
 						// If dialog is cancelled, don't roll
-						dialogData = { rollMode: undefined };
+						return { activation:null, rolls:null};
 					}
 				}
 
@@ -81,9 +81,7 @@ class ItemActivationManager {
 		const targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
 
 		let rolls: (Roll | DamageRoll)[] = [];
-		if (dialogData.rollMode !== undefined) { // Only roll if dialog was not cancelled
-			rolls = await this.#getRolls(dialogData);
-		}
+		rolls = await this.#getRolls(dialogData);
 
 		// Get template data
 		const templateData = this.#getTemplateData();
