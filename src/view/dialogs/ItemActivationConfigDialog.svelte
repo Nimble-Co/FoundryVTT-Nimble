@@ -5,8 +5,9 @@ import getRollFormula from '../../utils/getRollFormula.js';
 
 let { actor, dialog, item, ...data } = $props();
 let selectedRollMode = $state(Math.clamp(data.rollMode ?? 0, -6, 6));
-let situational_modifiers = $state("");
-let primary_die_value = $state();
+let situationalModifiers = $state("");
+let primaryDieValue = $state();
+let primaryDieModifier = $state();
 
 // Get the damage formula from the item's activation effects
 let damageFormula = $state(() => {
@@ -15,11 +16,11 @@ let damageFormula = $state(() => {
 	return damageEffect?.formula || '0';
 });
 
-// Modify the formula by adding the situational_modifiers
+// Modify the formula by adding the situationalModifiers
 let modifiedFormula = $derived(() => {
 	let formula = damageFormula();
-	if (situational_modifiers !== "") {
-		formula += "+" + situational_modifiers;
+	if (situationalModifiers !== "") {
+		formula += "+" + situationalModifiers;
 	}
 	return formula;
 });
@@ -29,7 +30,6 @@ let rollFormula = $derived(
 		...data,
 		rollMode: selectedRollMode,
 		formula: modifiedFormula(),
-		primaryDie: primary_die_value
 	}),
 );
 </script>
@@ -41,14 +41,22 @@ let rollFormula = $derived(
         <div class="nimble-roll-modifiers">
             <label>
                 situational modifiers:
-                <input type="string" bind:value={situational_modifiers} placeholder="0" />
+                <input type="string" bind:value={situationalModifiers} placeholder="0" />
             </label>
         </div>
-
+	</div>
+	<div class="nimble-roll-modifiers-container">
         <div class="nimble-roll-modifiers">
             <label>
                 set primary die:
-                <input type="number" bind:value={primary_die_value} placeholder="0" />
+                <input type="number" bind:value={primaryDieValue} placeholder="0" />
+            </label>
+        </div>
+
+		<div class="nimble-roll-modifiers">
+            <label>
+                primary die modifier:
+                <input type="number" bind:value={primaryDieModifier} placeholder="0" disabled={primaryDieValue !== undefined}/>
             </label>
         </div>
     </div>
@@ -61,18 +69,18 @@ let rollFormula = $derived(
         class="nimble-button"
         data-button-variant="basic"
         onclick={() => {
-			if(situational_modifiers !== ""){
-				const isValid = Roll.validate(situational_modifiers);
+			if(situationalModifiers !== ""){
+				const isValid = Roll.validate(situationalModifiers);
 				if (!isValid) {
 					ui.notifications?.warn("❌ Invalid dice formula in the situational modifiers!");
 					return;
 				}
 			}
-			if(primary_die_value != null) {
+			if(primaryDieValue != null) {
 				const roll = new Roll(damageFormula());
 				const terms = roll.terms;
 				const firstDieIndex = terms.findIndex(t => t instanceof foundry.dice.terms.Die);
-				if (primary_die_value > terms[firstDieIndex].faces || primary_die_value < 0){
+				if (primaryDieValue > terms[firstDieIndex].faces || primaryDieValue < 0){
 					ui.notifications?.warn("❌ Invalid value for primary die!");
 					return;
 				}
@@ -80,8 +88,9 @@ let rollFormula = $derived(
 			dialog.submit({
 				rollMode: selectedRollMode,
 				rollFormula: modifiedFormula(),
-				situational_modifiers,
-				primaryDieValue: primary_die_value
+				situationalModifiers,
+				primaryDieValue: primaryDieValue,
+				primaryDieModifier: primaryDieModifier,
 			});
 			}}
     >

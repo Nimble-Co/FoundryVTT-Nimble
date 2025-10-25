@@ -114,6 +114,7 @@ class ItemActivationManager {
 						canMiss,
 						rollMode: node.rollMode,
 						primaryDieValue: dialogData.primaryDieValue,
+						primaryDieModifier: dialogData.primaryDieValue,
 					} as any);
 
 					foundDamageRoll = true;
