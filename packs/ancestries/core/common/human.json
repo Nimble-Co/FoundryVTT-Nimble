@@ -41,7 +41,9 @@
 		],
 		"description": "<p>Found in every terrain and environment, their curiosity and ambition drive them to explore</p><p>every corner of the world, making them a ubiquitous and versatile race.</p><hr><p><strong>Tenacious</strong></p><p>+1 to all skills and initiative [A]</p>",
 		"exotic": false,
-		"size": []
+		"size": [
+			"medium"
+		]
 	},
 	"effects": [],
 	"folder": null,

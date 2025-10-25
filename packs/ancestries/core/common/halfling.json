@@ -22,7 +22,9 @@
 		],
 		"description": "<p>Kind of like a human, but smaller (except for the feet). Where does our luck come from? Well…you know what they say about rabbit feet? Well, we’ve got feet for days compared to them. Imagine the amount of luck you could fit into these bad boys!</p><hr><p><strong>Elusive</strong></p><p>+1 to Stealth [A]</p><p>If you fail a save, you can succeed instead, 1/Safe Rest </p>",
 		"exotic": false,
-		"size": []
+		"size": [
+			"small"
+		]
 	},
 	"effects": [],
 	"folder": null,

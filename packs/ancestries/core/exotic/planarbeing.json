@@ -19,7 +19,9 @@
 		],
 		"description": "<p>You are not from this plane of existence—your soul is not as strongly tethered to it as others. But with this vulnerability comes power, the ability to temporarily shift from one plane to another in times of dire need.</p><hr><p><strong>Planeshift</strong> </p><p>Whenever you Defend, you can gain 1 Wound to temporarily phase out of the material plane and ignore the damage. </p><p>–2 max Wounds. [A]</p>",
 		"exotic": true,
-		"size": []
+		"size": [
+			"medium"
+		]
 	},
 	"effects": [],
 	"folder": null,

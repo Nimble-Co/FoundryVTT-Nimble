@@ -20,7 +20,10 @@
 		],
 		"description": "<p>Turtlefolk take their time in everything they do; they are patient, sturdy, and slow to anger. They rely on their thick shells for protection, making them difficult to harm, but their cautious movements come at the cost of speed.</p><hr><p><strong>Slow & Steady</strong></p><p>+4 Armor [A]</p><p>–2 speed [M]</p>",
 		"exotic": true,
-		"size": []
+		"size": [
+			"small",
+			"medium"
+		]
 	},
 	"effects": [],
 	"folder": null,
