@@ -29,12 +29,17 @@ let {
 	chooseBoon = $bindable(),
 	selectedAbilityScore = $bindable(),
 	selectedBoon = $bindable(),
+	hasStatIncrease = $bindable(),
 } = $props();
 
 const { abilityScores } = CONFIG.NIMBLE;
 
 const statIncreaseType = getStatIncreaseType(characterClass);
 const statOptions = getStatIncreaseOptions(characterClass, statIncreaseType);
+
+$effect(() => {
+	hasStatIncrease = statIncreaseType && statOptions.length && characterClass;
+});
 </script>
 
 {#if statIncreaseType && statOptions.length && characterClass}
