@@ -4,20 +4,6 @@ import SystemSettingsDialog from '../view/dialogs/SystemSettingsDialog.svelte';
 const { ApplicationV2 } = foundry.applications.api;
 
 export class SystemSettings extends SvelteApplicationMixin(ApplicationV2) {
-	constructor(options = {} as Configuration) {
-		super(
-			foundry.utils.mergeObject(options, {
-				svelte: {
-					component: SystemSettingsDialog,
-				},
-			}),
-		);
-
-		this.props = {
-			dialog: this,
-		};
-	}
-
 	static override DEFAULT_OPTIONS = foundry.utils.mergeObject(
 		super.DEFAULT_OPTIONS,
 		{
