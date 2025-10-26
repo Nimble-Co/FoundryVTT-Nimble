@@ -49,7 +49,7 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 			resizable: true,
 		},
 		position: {
-			height: 400,
+			height: 'auto',
 		},
 		actions: {},
 	};

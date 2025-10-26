@@ -44,12 +44,12 @@ export default class CheckRollDialog extends SvelteApplicationMixin(ApplicationV
 		},
 		position: {
 			width: 576,
-			height: 400,
+			height: 'auto',
 		},
 		actions: {},
 	};
 
-	protected override async _prepareContext() {
+	protected async _prepareContext() {
 		return {
 			actor: this.actor,
 			dialog: this,
@@ -62,7 +62,7 @@ export default class CheckRollDialog extends SvelteApplicationMixin(ApplicationV
 		return super.close();
 	}
 
-	override async close(options) {
+	async close(options) {
 		this.#resolvePromise(null);
 		return super.close(options);
 	}

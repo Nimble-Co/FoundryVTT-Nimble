@@ -27,12 +27,12 @@ export default class SpellSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 288,
-			height: 400,
+			height: 'auto',
 		},
 		actions: {},
 	};
 
-	protected override async _prepareContext() {
+	protected async _prepareContext() {
 		return {
 			item: this.item,
 			sheet: this,
@@ -48,8 +48,9 @@ export default class SpellSheet extends SvelteApplicationMixin(
 	}
 
 	async toggleSpellTierOption(selectedTier: string | number): Promise<void> {
-		if (typeof selectedTier === 'string') selectedTier = Number.parseInt(selectedTier, 10);
-		await this.document.update({ 'system.tier': selectedTier });
+		let selectedTierNumber = selectedTier;
+		if (typeof selectedTier === 'string') selectedTierNumber = Number.parseInt(selectedTier, 10);
+		await this.document.update({ 'system.tier': selectedTierNumber });
 	}
 
 	async toggleSpellPropertyOption(selectedProperty: string): Promise<void> {

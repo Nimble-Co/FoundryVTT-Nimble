@@ -31,11 +31,10 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 		window: {
 			icon: 'fa-solid fa-user',
 			resizable: true,
-			title: 'Create Actor',
 		},
 		position: {
 			width: 508,
-			height: 470,
+			height: 'auto',
 		},
 	};
 

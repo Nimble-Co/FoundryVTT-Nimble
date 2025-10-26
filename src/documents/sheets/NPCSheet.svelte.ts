@@ -2,9 +2,8 @@ import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
-import type { NimbleNPC } from '../actor/npc.js';
-
 import NPCSheetComponent from '../../view/sheets/NPCSheet.svelte';
+import type { NimbleNPC } from '../actor/npc.js';
 
 export default class NPCSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ActorSheetV2,
@@ -16,7 +15,6 @@ export default class NPCSheet extends SvelteApplicationMixin(
 	protected root;
 
 	constructor(actor: { document: NimbleNPC }, options = {} as SvelteApplicationRenderContext) {
-		// @ts-expect-error
 		super(
 			foundry.utils.mergeObject(options, {
 				document: actor.document,
@@ -41,11 +39,11 @@ export default class NPCSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 288,
-			height: 600,
+			height: 'auto',
 		},
 	};
 
-	protected override async _prepareContext() {
+	protected async _prepareContext() {
 		return {
 			actor: this.actor,
 			sheet: this,

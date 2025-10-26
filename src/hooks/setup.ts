@@ -1,4 +1,3 @@
-// @ts-nocheck - Foundry type definition circular references
 import registerKeybindings from '../registerKeyBindings.js';
 import registerSystemSettings from '../settings/index.js';
 import { preparePackIndexes } from '../utils/preparePackIndexes.js';

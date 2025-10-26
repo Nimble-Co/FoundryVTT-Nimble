@@ -30,7 +30,7 @@ export class SystemSettings extends SvelteApplicationMixin(ApplicationV2) {
 			},
 			position: {
 				width: 640,
-				height: 500,
+				height: 'auto',
 			},
 			actions: {},
 		},

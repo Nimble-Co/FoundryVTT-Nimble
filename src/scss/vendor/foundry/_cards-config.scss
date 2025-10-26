@@ -3,7 +3,6 @@
 	// Target both v1 and v2 application classes
 	.application.sheet.cards-config,
 	.application.cards-config {
-
 		// Make the details tab fill available height
 		.tab[data-tab="details"] {
 			height: 100%;
@@ -29,7 +28,6 @@
 				}
 			}
 		}
-
 
 		// Keep the form footer (buttons) at the bottom
 		.form-footer,

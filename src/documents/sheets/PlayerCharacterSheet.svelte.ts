@@ -19,7 +19,6 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		actor: { document: NimbleCharacter },
 		options = {} as SvelteApplicationRenderContext,
 	) {
-		// @ts-expect-error
 		super(
 			foundry.utils.mergeObject(options, {
 				document: actor.document,
@@ -35,7 +34,6 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		};
 	}
 
-	// @ts-expect-error
 	static override DEFAULT_OPTIONS = {
 		classes: ['nimble-sheet', 'nimble-sheet--player-character'],
 		window: {
@@ -44,11 +42,11 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 336,
-			height: 600,
+			height: 'auto',
 		},
 	};
 
-	protected override async _prepareContext() {
+	protected async _prepareContext() {
 		return {
 			actor: this.actor,
 			sheet: this,

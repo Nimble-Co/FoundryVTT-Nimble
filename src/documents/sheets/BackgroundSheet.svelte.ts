@@ -1,4 +1,4 @@
-import { SvelteApplicationMixin, type Configuration } from '#lib/SvelteApplicationMixin.svelte.js';
+import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 import { SvelteItemSheet } from '#lib/SvelteItemSheet.svelte.js';
 
 import BackgroundSheetComponent from '../../view/sheets/BackgroundSheet.svelte';
@@ -6,7 +6,7 @@ import BackgroundSheetComponent from '../../view/sheets/BackgroundSheet.svelte';
 export default class BackgroundSheet extends SvelteApplicationMixin(SvelteItemSheet) {
 	protected root;
 
-	constructor(item, options = {} as Configuration) {
+	constructor(item, options = {} as any) {
 		super(
 			foundry.utils.mergeObject(options, {
 				document: item.document,
@@ -24,12 +24,12 @@ export default class BackgroundSheet extends SvelteApplicationMixin(SvelteItemSh
 		},
 		position: {
 			width: 288,
-			height: 400,
+			height: 'auto',
 		},
 		actions: {},
 	};
 
-	protected override async _prepareContext() {
+	protected async _prepareContext() {
 		return {
 			item: this.item,
 			sheet: this,

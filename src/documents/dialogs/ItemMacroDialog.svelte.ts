@@ -35,12 +35,12 @@ export default class ItemMacroDialog extends SvelteApplicationMixin(ApplicationV
 		},
 		position: {
 			width: 576,
-			height: 600,
+			height: 'auto',
 		},
 		actions: {},
 	};
 
-	protected override async _prepareContext() {
+	protected async _prepareContext() {
 		return {
 			item: this.item,
 			dialog: this,

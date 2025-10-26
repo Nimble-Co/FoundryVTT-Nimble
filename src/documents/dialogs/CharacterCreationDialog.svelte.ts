@@ -4,11 +4,6 @@ import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
 import sortDocumentsByName from '../../utils/sortDocumentsByName.js';
 import CharacterCreationDialogComponent from '../../view/dialogs/CharacterCreationDialog.svelte';
 
-import type { NimbleAncestryItem } from '../item/ancestry.js';
-import type { NimbleBackgroundItem } from '../item/background.js';
-import type { NimbleBaseItem } from '../item/base.svelte.js';
-import type { NimbleClassItem } from '../item/class.js';
-
 const { ApplicationV2 } = foundry.applications.api;
 
 export default class CharacterCreationDialog extends SvelteApplicationMixin(ApplicationV2) {
@@ -34,6 +29,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		window: {
 			icon: 'fa-solid fa-user',
 			title: 'Character Creation Helper',
+			resizable: true,
 		},
 		position: {
 			height: 'auto',
@@ -108,8 +104,8 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		return super.close();
 	}
 
-	override async close(
-		options?: DeepPartial<SvelteApplicationMixin.ClosingOptions>,
+	async close(
+		options?: DeepPartial<foundry.applications.api.ApplicationV2.ClosingOptions>,
 	): Promise<this> {
 		return super.close(options);
 	}
@@ -119,19 +115,26 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		const exoticAncestries: NimbleAncestryItem[] = [];
 
 		const ancestryOptions = await Promise.all(
-			getChoicesFromCompendium('ancestry').map((uuid) => fromUuid(uuid)),
+			getChoicesFromCompendium('ancestry').map(
+				(uuid) => fromUuid(uuid) as Promise<NimbleAncestryItem | null>,
+			),
 		);
 
 		for (const ancestry of ancestryOptions) {
 			if (!ancestry) continue;
+			const ancestryItem = ancestry as NimbleAncestryItem;
 
-			if (ancestry.system.exotic) exoticAncestries.push(ancestry);
+			if (ancestryItem.system.exotic) exoticAncestries.push(ancestry);
 			else coreAncestries.push(ancestry);
 		}
 
 		return {
-			core: sortDocumentsByName(coreAncestries),
-			exotic: sortDocumentsByName(exoticAncestries),
+			core: sortDocumentsByName(
+				coreAncestries as ({ name?: string } | null)[],
+			) as NimbleAncestryItem[],
+			exotic: sortDocumentsByName(
+				exoticAncestries as ({ name?: string } | null)[],
+			) as NimbleAncestryItem[],
 		};
 	}
 
@@ -154,7 +157,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 		const documents = await Promise.all(compendiumChoices.map((uuid) => fromUuid(uuid)));
 
-		return sortDocumentsByName(documents);
+		return sortDocumentsByName(documents as ({ name?: string } | null)[]) as NimbleBackgroundItem[];
 	}
 
 	prepareBonusLanguageOptions() {
@@ -173,6 +176,6 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 		const documents = await Promise.all(compendiumChoices.map((uuid) => fromUuid(uuid)));
 
-		return sortDocumentsByName(documents);
+		return sortDocumentsByName(documents as ({ name?: string } | null)[]) as NimbleClassItem[];
 	}
 }

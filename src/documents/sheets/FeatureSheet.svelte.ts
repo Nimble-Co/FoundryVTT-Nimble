@@ -32,12 +32,12 @@ export default class FeatureSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 288,
-			height: 400,
+			height: 'auto',
 		},
 		actions: {},
 	};
 
-	protected override async _prepareContext() {
+	protected async _prepareContext() {
 		return {
 			item: this.item,
 			sheet: this,
