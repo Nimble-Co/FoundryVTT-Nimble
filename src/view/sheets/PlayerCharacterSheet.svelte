@@ -155,8 +155,7 @@ setContext('application', sheet);
                 <li class="nimble-wounds-list__item">
                     <button
                         class="nimble-wounds-list__button"
-                        class:nimble-wounds-list__button--active={wounds.value >
-                            i}
+                        class:nimble-wounds-list__button--active={wounds.value > i}
                         type="button"
                         data-tooltip="Toggle Wound"
                         data-tooltip-direction="LEFT"
