@@ -46,7 +46,7 @@ function canSubtract(skill, skillKey) {
 function getSubtractTooltip(skill, skillKey) {
 	if (skill.points + skillPointChanges[skillKey] < 1) return 'Skill points can’t go below 0.';
 	if (skillPointChanges[skillKey] === -1) return 'Already marked to transfer 1 point.';
-	if (Object.values(skillPointChanges).some((value) => value === 1)) return '';
+	if (skillPointAdded) return '';
 	if (skillPointRemoved) return 'Only one transfer per level-up.';
 
 	return '';
