@@ -30,6 +30,21 @@ const abilityScoreAbbreviations: Record<abilityKey, string> = {
 	will: 'NIMBLE.abilityScoreAbbreviations.will',
 };
 
+const abilityScoreTooltips = {
+	advantageOnSave: 'NIMBLE.abilityScoreTooltips.advantageOnSave',
+	disadvantageOnSave: 'NIMBLE.abilityScoreTooltips.disadvantageOnSave',
+	keyStat: 'NIMBLE.abilityScoreTooltips.keyStat',
+	editStats: 'NIMBLE.abilityScoreTooltips.editStats',
+};
+
+const abilityScoreControls = {
+	confirmStatAssignments: 'NIMBLE.abilityScoreControls.confirmStatAssignments',
+};
+
+const characterCreationStages = {
+	stepFiveStats: 'NIMBLE.characterCreationStages.stepFiveStats',
+};
+
 const activationCostTypes = {
 	action: 'NIMBLE.activationCosts.action',
 	minute: 'NIMBLE.activationCosts.minute',
@@ -449,6 +464,9 @@ const NIMBLE = {
 	// Config
 	abilityScores,
 	abilityScoreAbbreviations,
+	abilityScoreTooltips,
+	abilityScoreControls,
+	characterCreationStages,
 	activationCostTypes,
 	activationCostTypesPlural,
 	actorTypeBanners,
