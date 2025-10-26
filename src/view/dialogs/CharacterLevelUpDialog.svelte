@@ -9,7 +9,7 @@ import SubclassSelection from './components/levelUpHelper/SubclassSelection.svel
 
 function submit() {
 	dialog.submit({
-		selectedAbilityScore,
+		selectedAbilityScore: selectedAbilityScores,
 		selectedSubclass,
 		skillPointChanges,
 		takeAverageHp: hitPointRollSelection === 'average',
@@ -31,7 +31,7 @@ Promise.all(getChoicesFromCompendium('subclass').map((uuid) => fromUuid(uuid)))
 
 let chooseBoon = $state(false);
 let hitPointRollSelection = $state('roll');
-let selectedAbilityScore = $state(null);
+let selectedAbilityScores = $state(null);
 let selectedBoon = $state(null);
 let selectedSubclass = $state(null);
 let skillPointChanges = $state(generateBlankSkillSet());
@@ -60,7 +60,7 @@ let isComplete = $derived.by(() => {
         {document}
         {levelingTo}
         bind:chooseBoon
-        bind:selectedAbilityScore
+        bind:selectedAbilityScores
         bind:selectedBoon
 		bind:hasStatIncrease
     />
@@ -68,7 +68,7 @@ let isComplete = $derived.by(() => {
     <SkillPointAssignment
         {chooseBoon}
         {document}
-        {selectedAbilityScore}
+        selectedAbilityScore={selectedAbilityScores}
         bind:skillPointChanges
     />
 
