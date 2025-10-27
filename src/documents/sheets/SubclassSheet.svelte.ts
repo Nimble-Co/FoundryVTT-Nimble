@@ -23,10 +23,7 @@ export default class SubclassSheet extends SvelteApplicationMixin(
 		classes: ['nimble-sheet'],
 		window: {
 			icon: 'fa-solid fa-user',
-<<<<<<< HEAD
 			resizable: true,
-=======
->>>>>>> d905bfc (Add subclass selection UI and prevent errors from compendium)
 		},
 		position: {
 			width: 288,
@@ -35,11 +32,7 @@ export default class SubclassSheet extends SvelteApplicationMixin(
 		actions: {},
 	};
 
-<<<<<<< HEAD
 	protected async _prepareContext() {
-=======
-	protected override async _prepareContext() {
->>>>>>> d905bfc (Add subclass selection UI and prevent errors from compendium)
 		return {
 			item: this.item,
 			sheet: this,
