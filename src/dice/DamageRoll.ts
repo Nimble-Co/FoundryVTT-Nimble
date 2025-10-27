@@ -14,6 +14,8 @@ declare namespace DamageRoll {
 		damageType?: string;
 		fumbleThreshold?: number;
 		rollMode: number;
+		primaryDieValue: number;
+		primaryDieModifier: number;
 	}
 
 	type Evaluated<T extends DamageRoll> = T & {
@@ -90,6 +92,31 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					// Add Explosion after adv/div has been calculated
 					primaryTerm.modifiers.push('x');
 
+					if (options.primaryDieValue) {
+						primaryTerm.results = [
+							{ result: options.primaryDieValue, active: true },
+						];
+					}
+
+					if (options.primaryDieModifier && faces) {
+						const baseResult = Math.ceil(Math.random() * faces);
+						let modifiedResult = baseResult + options.primaryDieModifier;
+						if (modifiedResult > faces) {
+							primaryTerm.results = [
+								{ result: faces, active: true },
+							];
+							// Add excess as a separate numeric term
+							const excess = modifiedResult - faces;
+							const excessTerm = new Terms.NumericTerm({ number: excess });
+							const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
+							this.terms.splice(this.terms.indexOf(primaryTerm) + 1, 0, operatorTermExcess, excessTerm);
+						} else {
+							primaryTerm.results = [
+								{ result: modifiedResult, active: true },
+							];
+						}
+					}
+
 					this.terms.unshift(primaryTerm);
 				} else {
 					primaryTerm = new PrimaryDie({
@@ -105,6 +132,31 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 					// Add Explosion for critical after adv/dis
 					primaryTerm.modifiers.push('x');
+
+					if (options.primaryDieValue) {
+						primaryTerm.results = [
+							{ result: options.primaryDieValue, active: true },
+						];
+					}
+
+					if (options.primaryDieModifier && faces) {
+						const baseResult = Math.ceil(Math.random() * faces);
+						let modifiedResult = baseResult + options.primaryDieModifier;
+						if (modifiedResult > faces) {
+							primaryTerm.results = [
+								{ result: faces, active: true },
+							];
+							// Add excess as a separate numeric term
+							const excess = modifiedResult - faces;
+							const excessTerm = new Terms.NumericTerm({ number: excess });
+							const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
+							this.terms.splice(this.terms.indexOf(primaryTerm) + 1, 0, operatorTermExcess, excessTerm);
+						} else {
+							primaryTerm.results = [
+								{ result: modifiedResult, active: true },
+							];
+						}
+					}
 
 					// Update term
 					const idx = this.terms.findIndex((t) => t instanceof Terms.Die);

@@ -147,6 +147,9 @@ class NimbleBaseItem extends Item {
 
 		const manager = new ItemActivationManager(this, options);
 		const { activation, rolls } = await manager.getData();
+		if (activation === null || rolls === null) {
+			return null;
+		}
 		const { isCritical, isMiss } = rolls.find((roll) => roll instanceof DamageRoll) ?? {};
 
 		const chatData = foundry.utils.mergeObject(

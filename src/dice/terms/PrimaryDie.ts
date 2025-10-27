@@ -3,6 +3,11 @@ declare namespace PrimaryDie {
 }
 
 class PrimaryDie extends foundry.dice.terms.Die {
+	constructor(termData: foundry.dice.terms.Die.TermData) {
+		super(termData);
+		if (!this.modifiers) this.modifiers = [];
+	}
+
 	get exploded() {
 		if (!this._evaluated) return undefined;
 		return this.results.some((r) => r.exploded);
