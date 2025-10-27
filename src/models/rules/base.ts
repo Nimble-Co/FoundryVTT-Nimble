@@ -1,19 +1,8 @@
 import { PredicateField } from '../fields/PredicateField.js';
+import type { NimbleBaseActor } from '../../documents/actor/base.svelte.js';
+import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import type { Predicate } from '../../etc/Predicate.js';
-
-// Forward declarations to avoid circular dependencies
-interface NimbleBaseActor extends Actor {
-	getDomain(): Set<string>;
-	getRollData(): Record<string, any>;
-}
-
-interface NimbleBaseItem extends Item {
-	getDomain(): Set<string>;
-	uuid: string;
-	name: string;
-	actor: NimbleBaseActor;
-}
 
 function schema() {
 	const { fields } = foundry.data;
@@ -38,11 +27,11 @@ declare namespace NimbleBaseRule {
 
 abstract class NimbleBaseRule<
 	Schema extends NimbleBaseRule.Schema,
-	Parent extends foundry.abstract.DataModel.Any = NimbleBaseItem,
-> extends foundry.abstract.DataModel<Schema, Parent> implements NimbleBaseRule<Schema, Parent> {
+	Parent extends foundry.abstract.DataModel.Any = InstanceType<typeof NimbleBaseItem>,
+> extends foundry.abstract.DataModel<Schema, Parent> {
 	declare type: string;
 
-	// @ts-expect-error - Intentional type override for custom Predicate implementation
+	// @ts-expect-error
 	declare predicate: Predicate;
 
 	constructor(
@@ -157,6 +146,35 @@ abstract class NimbleBaseRule<
 		const data = this.toJSON();
 		return JSON.stringify(data, null, 2);
 	}
+}
+
+interface NimbleBaseRule<
+	Schema extends NimbleBaseRule.Schema,
+	Parent extends foundry.abstract.DataModel.Any = InstanceType<typeof NimbleBaseItem>,
+> extends foundry.abstract.DataModel<Schema, Parent> {
+	prePrepareData?(): void;
+
+	afterPrepareData?(): void;
+
+	preRoll?(): void;
+
+	afterRoll?(): void;
+
+	preCreate?(args: Record<string, any>): Promise<void>;
+
+	afterCreate?(): void;
+
+	preDelete?(): void;
+
+	afterDelete?(): void;
+
+	preUpdate?(changes: Record<string, unknown>): void;
+
+	afterUpdate?(changes: Record<string, unknown>): void;
+
+	preUpdateActor?(
+		changes: Record<string, unknown>,
+	): Promise<{ create?: any[]; delete?: string[] } | undefined>;
 }
 
 export { NimbleBaseRule };

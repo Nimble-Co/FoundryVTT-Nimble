@@ -1,5 +1,4 @@
 import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
-import type { NimbleBaseRule } from '../../models/rules/base.ts';
 
 import { NimbleBaseItem } from './base.svelte.js';
 
@@ -44,15 +43,10 @@ export class NimbleObjectItem extends NimbleBaseItem {
 	//                 Document Update Hooks
 	/** ------------------------------------------------------ */
 	override async _preCreate(data, options, user) {
-		// Update quantity if object already exists and is stackable or smallSized
-		const objectSizeTypesWithQuantity = new Set(['stackable', 'smallSized']);
-		if (this.isEmbedded && objectSizeTypesWithQuantity.has(this.system.objectSizeType)) {
+		// Update quantity if object already exists and is stackable
+		if (this.isEmbedded && this.system.stackable) {
 			const existing = this.actor?.items.find(
-				(i) =>
-					i instanceof NimbleObjectItem &&
-					i.name === this.name &&
-					i.type === 'object' &&
-					objectSizeTypesWithQuantity.has(i.system.objectSizeType),
+				(i) => i.name === this.name && i.type === 'object' && i.system.stackable,
 			);
 
 			if (!existing) return super._preCreate(data, options, user);
@@ -63,16 +57,5 @@ export class NimbleObjectItem extends NimbleBaseItem {
 		}
 
 		return super._preCreate(data, options, user);
-	}
-
-	/** ------------------------------------------------------ */
-	//                 Data Functions
-	/** ------------------------------------------------------ */
-
-	toggleArmor(): void {
-		if (this.rules.hasRuleOfType('armorClass')) {
-			const rule: NimbleBaseRule = this.rules.getRuleOfType(type);
-			rule.disabled = !rule.disabled;
-		}
 	}
 }

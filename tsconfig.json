@@ -10,12 +10,7 @@
 		"target": "ES2023",
 		"types": ["@league-of-foundry-developers/foundry-vtt-types"],
 		"paths": {
-			"#lib/*": ["./lib/*"],
-			"#managers/*": ["./src/managers/*"],
-			"#stores/*": ["./src/stores/*"],
-			"#types/*": ["./types/*"],
-			"#utils/*": ["./src/utils/*"],
-			"#view/*": ["./src/view/*"]
+			"types/*": ["./types/*"]
 		},
 		/**
       Svelte Preprocess cannot figure out whether you have a value or a type, so tell TypeScript

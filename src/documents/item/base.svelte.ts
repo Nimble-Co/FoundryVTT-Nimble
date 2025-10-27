@@ -1,25 +1,21 @@
-
+import type BaseUser from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/documents/user.d.mts';
 import type Document from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/abstract/document.d.mts';
 import type { DatabaseOperationsFor } from '@league-of-foundry-developers/foundry-vtt-types/src/types/helperTypes.d.mts';
 import type { InexactPartial } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { NimbleBaseActor } from '../actor/base.svelte.js';
+
 import { createSubscriber } from 'svelte/reactivity';
 import { RulesManager } from '../../managers/RulesManager.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 
-export type { SystemItemTypes } from './itemInterfaces.js';
-import type { SystemItemTypes } from './itemInterfaces.js';
+export type SystemItemTypes = Exclude<foundry.documents.BaseItem.TypeNames, 'base'>;
 
-// Forward declaration to avoid circular dependency
-interface NimbleBaseActor extends Actor {
-	getDomain(): Set<string>;
-	getRollData(item?: any): Record<string, any>;
-}
-
+// @ts-ignore - Ignore infinite type check
 interface NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> {
 	type: ItemType;
 	system: DataModelConfig['Item'][ItemType];
-	parent: NimbleBaseActor | null;
+	parent: NimbleBaseActor;
 
 	prepareActorData?(): void;
 	prepareChatCardData(options);
@@ -32,7 +28,7 @@ interface NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> {
 class NimbleBaseItem extends Item {
 	declare initialized: boolean;
 
-	declare rules: RulesManagerInterface;
+	declare rules: RulesManager;
 
 	tags: Set<string> = new Set();
 
@@ -232,7 +228,7 @@ class NimbleBaseItem extends Item {
 		// TODO: Migrate older versions here
 
 		const actor = operation?.parent;
-		if (!actor) return Item.createDocuments(data, operation);
+		if (!actor) return super.createDocuments(data, operation);
 
 		const items = itemSources.map((s) => {
 			if (!(operation?.keepId || operation?.keepEmbeddedIds)) s._id = foundry.utils.randomID();
@@ -263,7 +259,7 @@ class NimbleBaseItem extends Item {
 		}
 
 		// @ts-expect-error
-		return Item.createDocuments(outputSources, operation);
+		return super.createDocuments(outputSources, operation);
 	}
 
 	override toObject(source = true) {

@@ -86,7 +86,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Damage:</strong> 1d4+Dex Slashing</p><p><strong>Properties:</strong> Vicious</p><p><strong>Cost:</strong> 10 gp</p>",
+			"public": "<table><tbody><tr><td data-colwidth=\"91\"><p><strong>Damage</strong></p></td><td><p>1d4+Dex Slashing</p></td></tr><tr><td data-colwidth=\"91\"><p><strong>Properties</strong></p></td><td><p>Vicious</p></td></tr><tr><td data-colwidth=\"91\"><p><strong>Cost</strong></p></td><td><p>10 gp</p></td></tr></tbody></table>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -94,9 +94,8 @@
 		"objectType": "weapon",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "slots",
 		"slotsRequired": 1,
-		"stackSize": 2,
+		"stackable": false,
 		"properties": {
 			"range": {
 				"min": 2,

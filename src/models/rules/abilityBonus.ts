@@ -36,7 +36,7 @@ class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
 		);
 	}
 
-	prePrepareData(): void {
+	override prePrepareData(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
 

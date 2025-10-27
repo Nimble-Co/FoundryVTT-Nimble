@@ -46,7 +46,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Type:</strong> Cloth</p><p><strong>Armor:</strong> 3+DEX</p><p><strong>Cost:</strong> 100 gp</p>",
+			"public": "<table><tbody><tr><td><p><strong>Type</strong></p></td><td><p>Cloth</p></td></tr><tr><td><p><strong>Armor</strong></p></td><td><p>3+DEX</p></td></tr><tr><td><p><strong>Cost</strong></p></td><td><p>100 gp</p></td></tr></tbody></table>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -54,9 +54,8 @@
 		"objectType": "armor",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "slots",
 		"slotsRequired": 1,
-		"stackSize": 2,
+		"stackable": false,
 		"properties": {
 			"range": {
 				"min": 2,

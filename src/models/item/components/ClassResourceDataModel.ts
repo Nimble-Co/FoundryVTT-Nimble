@@ -1,4 +1,5 @@
 /* eslint-disable max-classes-per-file */
+import type { NimbleClassItem } from '../../../documents/item/class.js';
 import { isValidDiceModifier } from '../../../utils/isValidDiceModifier.js';
 import { identifier } from '../../common.js';
 
@@ -69,7 +70,7 @@ class NimbleNumericalResource<
 > extends NimbleBaseResource<Schema, Parent> {
 	static override defineSchema(): NimbleNumericalResource.Schema {
 		return {
-			...NimbleBaseResource.defineSchema(),
+			...super.defineSchema(),
 			...numericalResourceSchema(),
 		};
 	}
@@ -103,7 +104,7 @@ class NimbleCounterResource<
 > extends NimbleBaseResource<Schema, Parent> {
 	static override defineSchema(): NimbleCounterResource.Schema {
 		return {
-			...NimbleBaseResource.defineSchema(),
+			...super.defineSchema(),
 			...counterResourceSchema(),
 		};
 	}
@@ -156,7 +157,7 @@ class NimbleDiceResource<
 
 	static override defineSchema(): NimbleDiceResource.Schema {
 		return {
-			...NimbleBaseResource.defineSchema(),
+			...super.defineSchema(),
 			...diceResourceSchema(),
 		};
 	}

@@ -110,11 +110,6 @@ const characterSchema = () => ({
 				initial: 0,
 				nullable: false,
 			}),
-			bonus: new fields.NumberField({
-				required: true,
-				initial: 0,
-				nullable: false,
-			}),
 		}),
 		hitDice: new RecordField(
 			new fields.StringField({ required: true, initial: '', nullable: false }),

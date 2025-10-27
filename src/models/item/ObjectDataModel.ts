@@ -22,24 +22,13 @@ const schema = () => ({
 		initial: 'Unidentified Object',
 		nullable: false,
 	}),
-	objectSizeType: new fields.StringField({
-		required: true,
-		initial: 'slots',
-		nullable: false,
-		options: ['slots', 'stackable', 'smallSized'],
-	}),
 	slotsRequired: new fields.NumberField({
 		required: true,
 		initial: 0,
 		min: 0,
 		nullable: false,
 	}),
-	stackSize: new fields.NumberField({
-		required: true,
-		initial: 2,
-		min: 2,
-		nullable: false,
-	}),
+	stackable: new fields.BooleanField({ required: true, initial: false, nullable: false }),
 	properties: new fields.SchemaField({
 		...baseProperties(),
 		selected: new fields.ArrayField(

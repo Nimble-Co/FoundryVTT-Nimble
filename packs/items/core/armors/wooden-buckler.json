@@ -46,7 +46,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Type:</strong> Shield</p><p><strong>Armor:</strong> 2</p><p><strong>Cost:</strong> 5 gp</p>",
+			"public": "<table><tbody><tr><td><p><strong>Type</strong></p></td><td><p>Shield</p></td></tr><tr><td><p><strong>Armor</strong></p></td><td><p>2</p></td></tr><tr><td><p><strong>Cost</strong></p></td><td><p>5 gp</p></td></tr></tbody></table>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -54,9 +54,8 @@
 		"objectType": "shield",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "slots",
 		"slotsRequired": 1,
-		"stackSize": 2,
+		"stackable": false,
 		"properties": {
 			"range": {
 				"min": 2,

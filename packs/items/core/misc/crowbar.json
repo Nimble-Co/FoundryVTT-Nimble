@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Properties:</strong> It’s LIKE a key.</p><p><strong>Cost:</strong> 2 gp</p>",
+			"public": "<table><tbody><tr><td data-colwidth=\"104\"><p><strong>Properties</strong></p></td><td><p>It’s LIKE a key.</p></td></tr><tr><td data-colwidth=\"104\"><p><strong>Cost</strong></p></td><td><p>2 gp</p></td></tr></tbody></table>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -42,9 +42,8 @@
 		"objectType": "misc",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "slots",
 		"slotsRequired": 1,
-		"stackSize": 2,
+		"stackable": true,
 		"properties": {
 			"range": {
 				"min": 2,

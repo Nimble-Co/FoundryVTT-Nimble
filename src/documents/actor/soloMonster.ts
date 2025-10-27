@@ -1,5 +1,6 @@
 import type { NimbleSoloMonsterData } from '../../models/actor/SoloMonsterDataModel.js';
 import { NimbleBaseActor } from './base.svelte.js';
+import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
 
 export class NimbleSoloMonster extends NimbleBaseActor {
@@ -80,8 +81,6 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 	}
 
 	async editMetadata() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.metaConfig ??= new GenericDialog(
 			`${this.name}: Configuration`,
 			NPCMetaConfigDialog,

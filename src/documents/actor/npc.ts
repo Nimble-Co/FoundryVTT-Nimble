@@ -1,4 +1,5 @@
 import type { NimbleNPCData } from '../../models/actor/NPCDataModel.js';
+import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
 import { NimbleBaseActor } from './base.svelte.js';
 
@@ -25,8 +26,6 @@ export class NimbleNPC extends NimbleBaseActor {
 	}
 
 	async editMetadata() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.metaConfig ??= new GenericDialog(
 			`${this.name}: Configuration`,
 			NPCMetaConfigDialog,

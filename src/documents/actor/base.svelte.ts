@@ -4,29 +4,40 @@ import type {
 	DeepPartial,
 	InexactPartial,
 } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { ActorRollOptions } from './actorData.js';
+import type { NimbleBaseItem } from '../item/base.svelte.js';
+import type { NimbleBaseRule } from '../../models/rules/base.js';
+
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
+
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { createSubscriber } from 'svelte/reactivity';
 
-export type { SystemActorTypes, ActorRollOptions, CheckRollDialogData } from './actorInterfaces.ts';
+import ActorCreationDialog from '../dialogs/ActorCreationDialog.svelte.js';
+import ActorSavingThrowConfigDialog from '../../view/dialogs/ActorSavingThrowConfigDialog.svelte';
+import CheckRollDialog from '../dialogs/CheckRollDialog.svelte.js';
+import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 
-// Forward declarations to avoid circular dependencies
-interface NimbleBaseItem extends Item {
-	rules: RulesManagerInterface;
-	prepareActorData?(): void;
-}
+export type SystemActorTypes = Exclude<foundry.documents.BaseActor.TypeNames, 'base'>;
 
+// @ts-ignore - Ignoring infinite error
 interface NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> {
 	type: ActorType;
 	system: DataModelConfig['Actor'][ActorType];
 	items: foundry.abstract.EmbeddedCollection<NimbleBaseItem, Actor.ConfiguredInstance>;
 }
 
+export interface CheckRollDialogData extends ActorRollOptions {
+	abilityKey?: abilityKey | undefined;
+	saveKey?: saveKey | undefined;
+	skillKey?: skillKey | undefined;
+}
+
 class NimbleBaseActor extends Actor {
 	declare initialized: boolean;
 
-	declare rules: NimbleBaseRule[];
+	declare rules: InstanceType<typeof NimbleBaseRule>[];
 
 	#subscribe: any;
 
@@ -84,7 +95,6 @@ class NimbleBaseActor extends Actor {
 			...options
 		} = context;
 
-		const { default: ActorCreationDialog } = await import('../dialogs/ActorCreationDialog.svelte.js');
 		const dialog = new ActorCreationDialog(
 			{
 				...data,
@@ -199,11 +209,6 @@ class NimbleBaseActor extends Actor {
 	/** ------------------------------------------------------ */
 
 	async configureSavingThrows() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-		const { default: ActorSavingThrowConfigDialog } = await import(
-			'../../view/dialogs/ActorSavingThrowConfigDialog.svelte'
-		);
-
 		const dialog = new GenericDialog(
 			`${this.name}: Configure Saving Throws`,
 			ActorSavingThrowConfigDialog,
@@ -512,7 +517,6 @@ class NimbleBaseActor extends Actor {
 				return null;
 		}
 
-		const { default: CheckRollDialog } = await import('../dialogs/CheckRollDialog.svelte.js');
 		const dialog = new CheckRollDialog(this, title, { ...data, type });
 
 		await dialog.render(true);

@@ -1,19 +1,9 @@
 import type BaseUser from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/documents/user.d.mts';
-import type { ActorRollOptions } from './actorInterfaces.ts';
+import type { ActorRollOptions } from './actorData.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { NimbleAncestryItem } from '../item/ancestry.js';
 import type { NimbleBackgroundItem } from '../item/background.js';
-
-// Forward declaration to avoid circular dependency with item/class.ts
-interface NimbleClassItem extends Item {
-	identifier: string;
-	system: any;
-	ASI?: Record<string, number>;
-	hitDice?: { size: number; total: number };
-	maxHp?: number;
-	grantedArmorProficiencies?: string[];
-	grantedWeaponProficiencies?: string[];
-}
+import type { NimbleClassItem } from '../item/class.js';
 
 import { NimbleBaseActor } from './base.svelte.js';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
@@ -31,7 +21,6 @@ import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementC
 import CharacterSkillsConfigDialog from '../../view/dialogs/CharacterSkillsConfigDialog.svelte';
 import CharacterStatConfigDialog from '../../view/dialogs/CharacterStatConfigDialog.svelte';
 import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/CharacterWeaponProficienciesConfigDialog.svelte';
-import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
 
@@ -220,45 +209,32 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	getUsedInventorySlots(): number {
-		let slotsRequiredSum = 0;
-		let smallObjectsCarried = false;
-		const objects = this.items.filter((i) => i.isType('object'));
-		// Sum up each object
-		objects.forEach((object) => {
-			switch (object.system.objectSizeType) {
-				case 'slots':
-					slotsRequiredSum += object.system.slotsRequired;
-					break;
-				case 'stackable': {
-					const slotsRequiredByStack = Math.ceil(object.system.quantity / object.system.stackSize);
-					slotsRequiredSum += slotsRequiredByStack;
-					break;
-				}
-				case 'smallSized':
-					smallObjectsCarried = true;
-					break;
-				default:
-					console.log(
-						"Can't calculate slots used for object size type",
-						object.system.objectSizeType,
-					);
-			}
+		let totalBulk = 0;
+
+		// Get total bulk from items
+		const items = this.items.filter((i) => i.isType('object') && i.system.slotsRequired > 0);
+
+		let seenSmallItems = false;
+		items.forEach((item) => {
+			const itemBulk = item.system.slotsRequired;
+			if (Number.isInteger(itemBulk)) totalBulk += itemBulk;
+			else seenSmallItems = true;
 		});
-		// round up to account for half used slots e.g. a single potion
-		slotsRequiredSum = Math.ceil(slotsRequiredSum);
-		// add one slots for all small stuff
-		if (smallObjectsCarried) slotsRequiredSum += 1;
-		// account for coinage
+
+		// If there are any small items, count them as 1 bulk
+		if (seenSmallItems) totalBulk += 1;
+
 		if (this.getFlag('nimble', 'includeCurrencyBulk') ?? true) {
 			const totalCoinage = Object.values(this.system.currency).reduce(
 				(totalCurrencyBulk, { value }) => totalCurrencyBulk + value,
 				0,
 			) as number;
 
-			// Coins consume 1 slot per full 500 units
-			slotsRequiredSum += Math.floor(totalCoinage / 500);
+			// Coins consume 1 bulk per full 500 units
+			totalBulk += Math.floor(totalCoinage / 500);
 		}
-		return slotsRequiredSum;
+
+		return totalBulk;
 	}
 
 	prepareClassData(actorData: NimbleCharacterData): void {
@@ -282,8 +258,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 		const classes = Object.values(this.classes ?? {});
 		if (classes.length === 0) return;
 
-		actorData.attributes.hp.max =
-			classes.reduce((acc, classData) => acc + classData.maxHp, 0) + actorData.attributes.hp.bonus;
+		actorData.attributes.hp.max = classes.reduce((acc, classData) => acc + classData.maxHp, 0);
 	}
 
 	_prepareLevelData(): void {
@@ -357,8 +332,6 @@ export class NimbleCharacter extends NimbleBaseActor {
 	/** ------------------------------------------------------ */
 
 	async configureAbilityScores() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.configureAbilityScores ??= new GenericDialog(
 			`${this.name}: Configure Ability Scores`,
 			CharacterStatConfigDialog,
@@ -370,8 +343,6 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureArmorProficiencies() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.configureArmorProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Armor Proficiencies`,
 			CharacterArmorProficienciesConfigDialog,
@@ -383,8 +354,6 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureLanguageProficiencies() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.configureLanguageProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Language Proficiencies`,
 			CharacterLanguageProficienciesConfigDialog,
@@ -396,8 +365,6 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureMovement() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.configureMovement ??= new GenericDialog(
 			`${this.name}: Configure Movement Speeds`,
 			CharacterMovementConfigDialog,
@@ -409,8 +376,6 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureWeaponProficiencies() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.configureWeaponProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Weapon Proficiencies`,
 			CharacterWeaponProficienciesConfigDialog,
@@ -422,8 +387,6 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureSkills() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.configureSkills ??= new GenericDialog(
 			`${this.name}: Configure Skills`,
 			CharacterSkillsConfigDialog,
@@ -432,33 +395,6 @@ export class NimbleCharacter extends NimbleBaseActor {
 		);
 
 		await this.#dialogs.configureSkills.render(true);
-	}
-
-	async configureHitPoints() {
-		const dialog = new GenericDialog(
-			`${this.name}: Configure Hit Points`,
-			EditHitPointsDialog,
-			{ document: this },
-			{ icon: 'fa-solid fa-heart', width: 250 },
-		);
-
-		await dialog.render(true);
-		const result = await dialog.promise;
-
-		if (result === null) {
-			return
-		}
-		// Update class items
-		for (const clsUpdate of result.classUpdates) {
-			await this.updateItem(clsUpdate.id, { 'system.hpData': clsUpdate.hpData });
-		}
-		// Update bonus
-		await this.update({ 'system.attributes.hp.bonus': result.bonus });
-
-		// If HP is now greater then max, reduce it
-		if (this.system.attributes.hp.value > this.system.attributes.hp.max) {
-			await this.update({ 'system.attributes.hp.value': this.system.attributes.hp.max });
-		}
 	}
 
 	/** ------------------------------------------------------ */
@@ -591,8 +527,6 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		if (currentClassLevel >= 20) return;
 
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		const dialog = new GenericDialog(
 			`${this.name}: Level Up Dialog`,
 			CharacterLevelUpDialog,
@@ -699,6 +633,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		// Revert abilities
 		if (Object.keys(lastHistory.abilityIncreases).length > 0) {
+			const abilityKey = Object.keys(lastHistory.abilityIncreases)[0];
 			itemUpdates[`system.abilityScoreData.${lastHistory.level}.value`] = null;
 		}
 
@@ -762,8 +697,6 @@ export class NimbleCharacter extends NimbleBaseActor {
 			restData = restOptions;
 		} else {
 			// Launch Config Dialog
-			const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 			const dialog = new GenericDialog(
 				'Field Rest Dialog',
 				FieldRestDialog,

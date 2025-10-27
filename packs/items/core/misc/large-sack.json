@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Properties:</strong> Like a BIG pocket.</p><p><strong>Cost:</strong> 5 sp</p>",
+			"public": "<table><tbody><tr><td data-colwidth=\"104\"><p><strong>Properties</strong></p></td><td><p>Like a BIG pocket.</p></td></tr><tr><td data-colwidth=\"104\"><p><strong>Cost</strong></p></td><td><p>5 sp</p></td></tr></tbody></table>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -42,9 +42,8 @@
 		"objectType": "misc",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "slots",
 		"slotsRequired": 1,
-		"stackSize": 2,
+		"stackable": true,
 		"properties": {
 			"range": {
 				"min": 2,

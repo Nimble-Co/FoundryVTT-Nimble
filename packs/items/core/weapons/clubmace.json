@@ -76,7 +76,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Damage:</strong> 1d6+STR Bludgeoning</p><p><strong>Properties:</strong> -</p><p><strong>Cost</strong> 2 gp</p>",
+			"public": "<table><tbody><tr><td data-colwidth=\"91\"><p><strong>Damage</strong></p></td><td><p>1d6+STR Bludgeoning</p></td></tr><tr><td data-colwidth=\"91\"><p><strong>Properties</strong></p></td><td><p style=\"\">-</p></td></tr><tr><td data-colwidth=\"91\"><p><strong>Cost</strong></p></td><td><p style=\"\">2 gp</p></td></tr></tbody></table>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -84,9 +84,8 @@
 		"objectType": "weapon",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "slots",
 		"slotsRequired": 1,
-		"stackSize": 2,
+		"stackable": false,
 		"properties": {
 			"range": {
 				"min": 2,

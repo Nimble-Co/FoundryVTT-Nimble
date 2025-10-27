@@ -260,11 +260,6 @@
 			"swim": "Swimming",
 			"walk": "Walking"
 		},
-		"objectSizeTypes": {
-			"slots": "Slots required",
-			"stackable": "Stackable",
-			"smallSized": "Small"
-		},
 		"objectTypes": {
 			"armor": "Armor",
 			"shield": "Shield",

@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Properties:</strong> Metal spikes, for sealing doors.</p><p><strong>Cost:</strong> 5 gp</p>",
+			"public": "<table><tbody><tr><td data-colwidth=\"104\"><p><strong>Properties</strong></p></td><td><p>Metal spikes, for sealing doors.</p></td></tr><tr><td data-colwidth=\"104\"><p><strong>Cost</strong></p></td><td><p>5 gp</p></td></tr></tbody></table>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -42,9 +42,8 @@
 		"objectType": "misc",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "smallSized",
 		"slotsRequired": 1,
-		"stackSize": 2,
+		"stackable": true,
 		"properties": {
 			"range": {
 				"min": 2,

@@ -76,7 +76,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Damage:</strong> 1d4+Dex Piercing</p><p><strong>Properties:</strong> Light, Thrown 4</p><p><strong>Cost:</strong> 3 gp</p>",
+			"public": "<table><tbody><tr><td data-colwidth=\"96\"><p><strong>Damage</strong></p></td><td><p>1d4+Dex Piercing</p></td></tr><tr><td data-colwidth=\"96\"><p><strong>Properties</strong></p></td><td><p>Light, Thrown 4</p></td></tr><tr><td data-colwidth=\"96\"><p><strong>Cost</strong></p></td><td><p>3 gp</p></td></tr></tbody></table>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -84,9 +84,8 @@
 		"objectType": "weapon",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "slots",
 		"slotsRequired": 1,
-		"stackSize": 2,
+		"stackable": false,
 		"properties": {
 			"range": {
 				"min": 2,

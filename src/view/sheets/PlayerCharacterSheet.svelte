@@ -209,17 +209,6 @@ setContext('application', sheet);
             {:else if wounds.value > 0}
                 <span class="nimble-wounds-label">({wounds.value} Wounds)</span>
             {/if}
-			<button
-				class="nimble-button"
-				data-button-variant="icon"
-				type="button"
-				aria-label="Configure Hit Points"
-				data-tooltip="Configure Hit Points"
-				onclick={() =>
-					actor.configureHitPoints()}
-			>
-				<i class="fa-solid fa-edit"></i>
-			</button>
         </h3>
 
         <HitPointBar
@@ -399,14 +388,5 @@ setContext('application', sheet);
 
     .nimble-wounds-label {
         margin-inline-start: 0.25rem;
-    }
-
-    .nimble-heading--hp .nimble-button {
-        opacity: 0;
-        transition: opacity 0.2s ease-in-out;
-    }
-
-    .nimble-heading--hp:hover .nimble-button {
-        opacity: 1;
     }
 </style>

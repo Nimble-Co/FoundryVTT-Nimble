@@ -5,7 +5,7 @@ function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		value: new fields.StringField({ required: true, nullable: false, initial: '' }),
 		perLevel: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'maxHpBonus' }),
 	};
@@ -26,29 +26,30 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 	override tooltipInfo(): string {
 		return super.tooltipInfo(
 			new Map([
-				['value', 'number'],
+				['value', 'string'],
 				['perLevel', 'boolean'],
 			]),
 		);
 	}
 
-	async preCreate(): Promise<void> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	override async preCreate(args): Promise<void> {
 		if (this.invalid) return;
 
 		const { actor } = this;
 		if (!actor) return;
 
-		// Update actor bonus hp
+		// Update actor max hp
 		const formula = this.perLevel ? `${this.value} * @level` : this.value;
 
 		const addedHp = getDeterministicBonus(formula, actor.getRollData());
 		if (!addedHp) return;
 
-		const { bonus } = actor.system.attributes.hp;
-		actor.update({ 'system.attributes.hp.bonus': bonus + addedHp });
+		const { max } = actor.system.attributes.hp;
+		actor.update({ 'system.attributes.hp.max': max + addedHp });
 	}
 
-	async preUpdate(changes: Record<string, unknown>) {
+	override async preUpdate(changes: Record<string, unknown>) {
 		if (this.invalid) return;
 
 		const { actor, item } = this;
@@ -69,11 +70,11 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		const addedHp = getDeterministicBonus(formula, actor.getRollData());
 		if (!addedHp) return;
 
-		const { bonus } = actor.system.attributes.hp;
-		actor.update({ 'system.attributes.hp.bonus': bonus + addedHp });
+		const { max } = actor.system.attributes.hp;
+		actor.update({ 'system.attributes.hp.max': max + addedHp });
 	}
 
-	afterDelete() {
+	override afterDelete() {
 		if (this.invalid) return;
 
 		const { actor, item } = this;
@@ -84,8 +85,8 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		const addedHp = getDeterministicBonus(formula, actor.getRollData());
 		if (!addedHp) return;
 
-		const { bonus } = actor.system.attributes.hp;
-		actor.update({ 'system.attributes.hp.bonus': bonus - addedHp });
+		const { max } = actor.system.attributes.hp;
+		actor.update({ 'system.attributes.hp.max': Math.max(max - addedHp, 0) });
 	}
 }
 

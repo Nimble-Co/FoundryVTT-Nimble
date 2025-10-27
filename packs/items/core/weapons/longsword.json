@@ -76,7 +76,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Damage:</strong> 1d8+STR Slashing</p><p><strong>Properties:</strong> 2-Handed (1-Handed: Req. 2 STR)</p><p><strong>Cost:</strong> 60 gp</p>",
+			"public": "<table><tbody><tr><td data-colwidth=\"91\"><p><strong>Damage</strong></p></td><td><p>1d8+STR Slashing</p></td></tr><tr><td data-colwidth=\"91\"><p><strong>Properties</strong></p></td><td><p style=\"\">2-Handed (1-Handed: Req. 2 STR)</p></td></tr><tr><td data-colwidth=\"91\"><p><strong>Cost</strong></p></td><td><p style=\"\">60 gp</p></td></tr></tbody></table>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -84,9 +84,8 @@
 		"objectType": "weapon",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "slots",
-		"slotsRequired": 2,
-		"stackSize": 2,
+		"slotsRequired": 1,
+		"stackable": false,
 		"properties": {
 			"range": {
 				"min": 2,

@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Properties:</strong> Sticky, and VERY flammable.</p><p><strong>Cost:</strong> 2 gp</p>",
+			"public": "<table><tbody><tr><td data-colwidth=\"104\"><p><strong>Properties</strong></p></td><td><p>Sticky, and VERY flammable.</p></td></tr><tr><td data-colwidth=\"104\"><p><strong>Cost</strong></p></td><td><p>2 gp</p></td></tr></tbody></table>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -42,9 +42,8 @@
 		"objectType": "misc",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "slots",
-		"slotsRequired": 0.5,
-		"stackSize": 2,
+		"slotsRequired": 1,
+		"stackable": true,
 		"properties": {
 			"range": {
 				"min": 2,

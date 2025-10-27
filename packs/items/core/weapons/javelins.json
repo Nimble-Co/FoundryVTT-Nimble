@@ -75,7 +75,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Damage:</strong> 1d6+STR Piercing</p><p><strong>Properties:</strong> Range 8, Stack of 4</p><p><strong>Cost:</strong> 20 gp</p>",
+			"public": "<p></p><table><tbody><tr><td data-colwidth=\"93\"><p><strong>Damage</strong></p></td><td><p>1d6+STR Piercing</p></td></tr><tr><td data-colwidth=\"93\"><p><strong>Properties</strong></p></td><td><p>Range 8, Stack of 4</p></td></tr><tr><td data-colwidth=\"93\"><p><strong>Cost</strong></p></td><td><p>20 gp</p></td></tr></tbody></table>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -83,9 +83,8 @@
 		"objectType": "weapon",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "stackable",
 		"slotsRequired": 1,
-		"stackSize": 4,
+		"stackable": false,
 		"properties": {
 			"range": {
 				"min": 2,

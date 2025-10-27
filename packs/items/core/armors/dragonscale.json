@@ -46,7 +46,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Type:</strong> Mail</p><p><strong>Requirement:</strong> 4 STR</p><p><strong>Armor:</strong> 15+DEX (max 2)</p><p><strong>Cost:</strong> 3000 gp</p>",
+			"public": "<table><tbody><tr><td data-colwidth=\"127\"><p><strong>Type</strong></p></td><td><p>Mail </p></td></tr><tr><td data-colwidth=\"127\"><p><strong>Requirement</strong></p></td><td><p>4 STR</p></td></tr><tr><td data-colwidth=\"127\"><p><strong>Armor</strong></p></td><td><p>15+DEX (max 2)</p></td></tr><tr><td data-colwidth=\"127\"><p><strong>Cost</strong></p></td><td><p>3000 gp</p></td></tr></tbody></table>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -54,9 +54,8 @@
 		"objectType": "armor",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "slots",
 		"slotsRequired": 1,
-		"stackSize": 2,
+		"stackable": false,
 		"properties": {
 			"range": {
 				"min": 2,

@@ -1,15 +1,32 @@
 <script>
 import { setContext } from 'svelte';
 import localize from '../../utils/localize.js';
-import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 import updateDocumentImage from '../handlers/updateDocumentImage.js';
+
 import HitPointBar from './components/HitPointBar.svelte';
-import NPCCoreTab from './pages/NPCCoreTab.svelte';
 import NPCNotesTab from './pages/NPCNotesTab.svelte';
 import NPCSettingsTab from './pages/NPCSettingsTab.svelte';
+import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
+import NPCCoreTab from './pages/NPCCoreTab.svelte';
 
 function getHitPointPercentage(currentHP, maxHP) {
 	return Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100);
+}
+
+function prepareMonsterMetadata() {
+	if (actor.reactive.type === 'soloMonster') {
+		return `Level ${actor.reactive.system.details.level ?? 1} Solo ${actor.reactive.system.attributes.sizeCategory} ${actor.reactive.system.details.creatureType}`;
+	}
+
+	if (actor.reactive.type === 'minion') {
+		return `Level ${actor.reactive.system.details.level ?? 1} ${actor.reactive.system.attributes.sizeCategory} ${actor.reactive.system.details.creatureType} Minion}`;
+	}
+
+	if (actor.reactive.system.details.isFlunky) {
+		return `Level ${actor.reactive.system.details.level ?? 1} ${actor.reactive.system.attributes.sizeCategory} ${actor.reactive.system.details.creatureType} Flunky}`;
+	}
+
+	return `Level ${actor.reactive.system.details.level ?? 1} ${actor.reactive.system.attributes.sizeCategory} ${actor.reactive.system.details.creatureType}}`;
 }
 
 function updateCurrentHP(newValue) {
@@ -61,27 +78,7 @@ const navigation = [
 ];
 
 let currentTab = $state(navigation[0]);
-let monsterMetadata = $derived.by(() => {
-	let actorDetails = actor.reactive.system.details;
-	let actorAttributes = actor.reactive.system.attributes;
-	let monsterType = actor.reactive.type;
-	let monsterLevel = actorDetails.level ?? 1;
-	let sizeCategory = actorAttributes.sizeCategory ? game.i18n.localize(CONFIG.NIMBLE.sizeCategories[actorAttributes.sizeCategory]) : null;
-
-	if (monsterType === 'soloMonster') {
-		return `Level ${monsterLevel} Solo ${sizeCategory} ${actorDetails.creatureType}`;
-	}
-
-	if (monsterType === 'minion') {
-		return `Level ${monsterLevel} ${sizeCategory} ${actorDetails.creatureType} Minion`;
-	}
-
-	if (actorDetails.isFlunky) {
-		return `Level ${monsterLevel} ${sizeCategory} ${actorDetails.creatureType} Flunky`;
-	}
-
-	return `Level ${monsterLevel} ${sizeCategory} ${actorDetails.creatureType}`;
-});
+let monsterMetadata = $derived(prepareMonsterMetadata() ?? '');
 
 // Flags
 let flags = $derived(actor.reactive.flags.nimble);
