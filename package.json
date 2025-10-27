@@ -17,6 +17,7 @@
 		"lint": "npm run lint:svelte ; npx @biomejs/biome lint ./src/",
 		"lint-fix": "npm run lint:svelte-fix ; npx @biomejs/biome lint --write ./src/",
 		"check:svelte": "svelte-check --tsconfig ./tsconfig.json",
+		"madge-test": "madge --circular ./src/",
 		"type-check": "tsc --noEmit",
 		"spell-check": "npx cspell -c ./cspell.json lint . --words-only | sort -u"
 	},
