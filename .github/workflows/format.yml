@@ -13,6 +13,11 @@ jobs:
     steps:
       - name: checkout code
         uses: actions/checkout@v4
+<<<<<<< HEAD
+=======
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+>>>>>>> 23255f4 (Updates format workflow)
 
       - name: install node
         uses: actions/setup-node@v4
@@ -36,3 +41,9 @@ jobs:
 
       - name: Run format
         run: npm run format
+
+      - name: Commit formatted changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'Format code with Prettier'
+          branch: ${{ github.head_ref }} # For PRs
