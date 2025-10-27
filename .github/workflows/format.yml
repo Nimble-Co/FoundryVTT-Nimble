@@ -13,10 +13,12 @@ jobs:
     steps:
       - name: checkout code
         uses: actions/checkout@v4
+
       - name: install node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node_version }}
+
       - name: Cache Node.js modules
         uses: actions/cache@v3
         with:
@@ -25,7 +27,12 @@ jobs:
           restore-keys: |
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
+
+      - name: Install dependencies
+        run: npm ci --cache .npm --prefer-offline
+
       - name: Setup Biome
         uses: biomejs/setup-biome@v2
-      - name: Run Biome CI checks
+
+      - name: Run format
         run: npm run format
