@@ -1,18 +1,18 @@
 <script>
-import { getContext } from 'svelte';
+	import { getContext } from 'svelte';
 
-let item = getContext('document');
+	let item = getContext('document');
 
-let baseEffectDescription = $derived(item.reactive.system.description.baseEffect);
+	let baseEffectDescription = $derived(item.reactive.system.description.baseEffect);
 
-let higherLevelEffectDescription = $derived(item.reactive.system.description.higherLevelEffect);
+	let higherLevelEffectDescription = $derived(item.reactive.system.description.higherLevelEffect);
 
-let isUtilitySpell = $derived(item.reactive.system.utility);
-let spellTier = $derived(item.reactive.system.tier);
+	let isUtilitySpell = $derived(item.reactive.system.utility);
+	let spellTier = $derived(item.reactive.system.tier);
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--item">
-    <section>
+    <section class="nimble-spell-description-content">
         <header class="nimble-section-header">
             <h3 class="nimble-heading" data-heading-variant="section">
                 Base Spell Effect
@@ -28,7 +28,7 @@ let spellTier = $derived(item.reactive.system.tier);
 
     {#await foundry.applications.ux.TextEditor.implementation.enrichHTML(higherLevelEffectDescription) then higherLevelEffect}
         {#if higherLevelEffect}
-            <section>
+            <section class="nimble-spell-description-content">
                 <header class="nimble-section-header">
                     <h4 class="nimble-heading" data-heading-variant="section">
                         {#if isUtilitySpell || spellTier === 0}
@@ -48,11 +48,39 @@ let spellTier = $derived(item.reactive.system.tier);
 </section>
 
 <style lang="scss">
-    .nimble-summary__description {
-        font-size: var(--nimble-sm-text);
+	:global(.nimble-sheet__body--item) {
+		height: 100%;
+  	}
 
-        :global(*:first-child) {
-            margin-block-start: 0;
-        }
-    }
+	.nimble-sheet__body {
+		overflow: auto !important;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.nimble-spell-description-content {
+		display: block;
+		height: auto;
+		align-content: flex-start;
+
+		:global(prose-mirror) {
+			height: 100%;
+		}
+
+		:global(.editor-content) {
+			height: 100%;
+			overflow-y: auto;
+			padding-bottom: 1rem !important;
+		}
+
+		.nimble-summary__description {
+			font-size: var(--nimble-sm-text);
+
+			:global(*:first-child) {
+				margin-block-start: 0;
+			}
+		}
+	}
+
 </style>

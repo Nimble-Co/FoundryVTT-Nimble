@@ -1,12 +1,12 @@
-<script>
+<script lang="ts">
+import { FALSE, TRUE } from 'sass';
 import { getContext, onDestroy } from 'svelte';
-
+import sortItems from '../../../utils/sortItems.js';
 import ArmorClass from '../components/ArmorClass.svelte';
 import Editor from '../components/Editor.svelte';
 import MonsterFeature from '../components/MonsterFeature.svelte';
+import MovementSpeed from '../components/MovementSpeed.svelte';
 import SavingThrows from '../components/SavingThrows.svelte';
-import sortItems from '../../../utils/sortItems.js';
-import { FALSE, TRUE } from 'sass';
 
 async function configureItem(event, id) {
 	event.stopPropagation();
@@ -215,7 +215,8 @@ onDestroy(() => {
             </button>
         </section>
     </section>
-	<header class="nimble-sheet__static nimble-sheet__static--features">
+
+  <header class="nimble-sheet__static nimble-sheet__static--features">
 		<h4 class="nimble-heading" data-heading-variant="section">
 			Features
 			<button
@@ -242,7 +243,11 @@ onDestroy(() => {
 			</button>
 		</h4>
 	</header>
-	<section>
+
+	
+	{#if Object.entries(categorizedItems).length > 0}
+	<section class="nimble-sheet__body nimble-sheet__body--player-character">
+
 		{#each Object.entries(categorizedItems).sort(sortItemCategories) as [categoryName, itemCategory]}
 			<section class="nimble-monster-sheet-section">
 				{#if categoryName != "feature"}
@@ -380,6 +385,10 @@ onDestroy(() => {
 			</section>
 		{/each}
 	</section>
+	{/if}
+	<section class="nimble-monster-sheet-section">
+		<MovementSpeed {actor} showDefaultSpeed={false} />
+	</section>
 </section>
 
 <style lang="scss">
@@ -432,7 +441,7 @@ onDestroy(() => {
     }
 
     .nimble-monster-sheet-section {
-        padding: 0 0.5rem 0.5rem 0;
+        padding: 0.5rem;
 
         &--defenses {
             display: grid;

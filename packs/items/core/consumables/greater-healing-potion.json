@@ -43,7 +43,7 @@
 			}
 		},
 		"description": {
-			"public": "<table><tbody><tr><td><p><strong>Properties</strong></p></td><td><p>(action) Heal 3d6+6 HP</p></td></tr><tr><td><p><strong>Cost</strong></p></td><td><p>150 gp</p></td></tr></tbody></table>",
+			"public": "<p><strong>Properties:</strong> (action) Heal 3d6+6 HP</p><p><strong>Cost:</strong> 150 gp</p>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -51,8 +51,9 @@
 		"objectType": "consumable",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"slotsRequired": 1,
-		"stackable": true,
+		"objectSizeType": "slots",
+		"slotsRequired": 0.5,
+		"stackSize": 2,
 		"properties": {
 			"range": {
 				"min": 2,

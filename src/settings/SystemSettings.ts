@@ -4,8 +4,6 @@ import SystemSettingsDialog from '../view/dialogs/SystemSettingsDialog.svelte';
 const { ApplicationV2 } = foundry.applications.api;
 
 export class SystemSettings extends SvelteApplicationMixin(ApplicationV2) {
-	root = SystemSettingsDialog;
-
 	static override DEFAULT_OPTIONS = foundry.utils.mergeObject(
 		super.DEFAULT_OPTIONS,
 		{
@@ -14,6 +12,7 @@ export class SystemSettings extends SvelteApplicationMixin(ApplicationV2) {
 			classes: ['nimble-sheet'],
 			window: {
 				icon: 'fa-solid fa-cog',
+				resizable: true,
 			},
 			position: {
 				width: 640,
@@ -23,6 +22,7 @@ export class SystemSettings extends SvelteApplicationMixin(ApplicationV2) {
 		},
 		{ inplace: false },
 	);
+	root = SystemSettingsDialog;
 
 	async _prepareContext() {
 		return {

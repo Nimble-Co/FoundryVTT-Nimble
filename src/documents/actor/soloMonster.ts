@@ -1,7 +1,7 @@
 import type { NimbleSoloMonsterData } from '../../models/actor/SoloMonsterDataModel.js';
-import { NimbleBaseActor } from './base.svelte.js';
-import GenericDialog from '../dialogs/GenericDialog.svelte.js';
+import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementConfigDialog.svelte';
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
+import { NimbleBaseActor } from './base.svelte.js';
 
 export class NimbleSoloMonster extends NimbleBaseActor {
 	declare system: NimbleSoloMonsterData;
@@ -39,7 +39,7 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 			system: {
 				actorName: this.name,
 				description: this.system.bloodiedEffect.description,
-				image: "icons/svg/blood.svg",
+				image: 'icons/svg/blood.svg',
 				name: 'Bloodied',
 				permissions: this.permission,
 			},
@@ -67,7 +67,7 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 			system: {
 				actorName: this.name,
 				description: this.system.lastStandEffect.description,
-				image: "icons/svg/skull.svg",
+				image: 'icons/svg/skull.svg',
 				name: 'Last Stand',
 				permissions: this.permission,
 			},
@@ -81,6 +81,8 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 	}
 
 	async editMetadata() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.metaConfig ??= new GenericDialog(
 			`${this.name}: Configuration`,
 			NPCMetaConfigDialog,
@@ -88,5 +90,18 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 		);
 
 		this.#dialogs.metaConfig.render(true);
+	}
+
+	async configureMovement() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
+		this.#dialogs.configureMovement ??= new GenericDialog(
+			`${this.name}: Configure Movement Speeds`,
+			CharacterMovementConfigDialog,
+			{ document: this },
+			{ icon: 'fa-solid fa-person-running', width: 600 },
+		);
+
+		await this.#dialogs.configureMovement.render(true);
 	}
 }

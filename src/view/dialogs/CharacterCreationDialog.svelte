@@ -290,6 +290,7 @@ $effect(() => {
         active={stage === CHARACTER_CREATION_STAGES.STATS}
         bind:bonusLanguages
         {selectedArray}
+		{selectedClass}
         bind:selectedAbilityScores
     />
 

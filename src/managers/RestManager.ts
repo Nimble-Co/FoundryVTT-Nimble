@@ -1,5 +1,3 @@
-import type { NimbleCharacter } from '../documents/actor/character.js';
-
 class RestManager {
 	#actor: NimbleCharacter;
 

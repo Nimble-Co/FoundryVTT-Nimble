@@ -33,6 +33,18 @@
 			"intelligence": "Int",
 			"will": "Wil"
 		},
+		"abilityScoreTooltips": {
+			"advantageOnSave": "Advantage on Save",
+			"disadvantageOnSave": "Disadvantage on Save",
+			"keyStat": "Key Stat",
+			"editStats": "Edit Stats"
+		},
+		"abilityScoreControls": {
+			"confirmStatAssignments": "Confirm Stat Assignments"
+		},
+		"characterCreationStages": {
+			"stepFiveStats": "Step 5. Assign Ability Scores"
+		},
 		"activationCosts": {
 			"action": "Action",
 			"minute": "Minute",
@@ -259,6 +271,11 @@
 			"fly": "Flying",
 			"swim": "Swimming",
 			"walk": "Walking"
+		},
+		"objectSizeTypes": {
+			"slots": "Slots required",
+			"stackable": "Stackable",
+			"smallSized": "Small"
 		},
 		"objectTypes": {
 			"armor": "Armor",

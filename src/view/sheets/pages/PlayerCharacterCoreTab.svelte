@@ -1,71 +1,53 @@
 <script lang="ts">
-    // Types
-    import type { NimbleCharacter } from "../../../documents/actor/character.js";
+// Types
 
-    // Helper Functions
-    import { getContext } from "svelte";
-    import localize from "../../../utils/localize.js";
-    import replaceHyphenWithMinusSign from "../../dataPreparationHelpers/replaceHyphenWithMinusSign.js";
+// Helper Functions
+import { getContext } from 'svelte';
+import type { NimbleCharacter } from '../../../documents/actor/character.js';
+import localize from '../../../utils/localize.js';
+import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
-    // Components
-    import AbilityScores from "../components/AbilityScores.svelte";
-    import ArmorClass from "../components/ArmorClass.svelte";
-    import SavingThrows from "../components/SavingThrows.svelte";
-    import Skills from "../components/Skills.svelte";
+// Components
+import AbilityScores from '../components/AbilityScores.svelte';
+import ArmorClass from '../components/ArmorClass.svelte';
+import MovementSpeed from '../components/MovementSpeed.svelte';
+import SavingThrows from '../components/SavingThrows.svelte';
+import Skills from '../components/Skills.svelte';
 
-    function getArmorProficiencies(proficiencies: Set<string>) {
-        return [...proficiencies]
-            .map((key): string => armorTypesPlural[key] ?? key)
-            .sort((a, b) => a.localeCompare(b));
-    }
+function getArmorProficiencies(proficiencies: Set<string>) {
+	return [...proficiencies]
+		.map((key): string => armorTypesPlural[key] ?? key)
+		.sort((a, b) => a.localeCompare(b));
+}
 
-    function getLanguageProficiencies(proficiencies: Set<string>) {
-        return [...proficiencies]
-            .map((key): string => languages[key] ?? key)
-            .sort((a, b) => a.localeCompare(b));
-    }
+function getLanguageProficiencies(proficiencies: Set<string>) {
+	return [...proficiencies]
+		.map((key): string => languages[key] ?? key)
+		.sort((a, b) => a.localeCompare(b));
+}
 
-    function getMovementLabels(movementModes: Record<string, number>) {
-        return Object.entries(movementModes)
-            .reduce((modes: string[], [key, value]): string[] => {
-                if (value) {
-                    const movementType = localize(movementTypes[key] ?? key);
-                    modes.push(`${movementType}: ${value} spaces`);
-                }
+function getWeaponProficiencies(proficiencies: Set<string>) {
+	return [...proficiencies];
+}
 
-                return modes;
-            }, [])
-            .sort((a, b) => a.localeCompare(b));
-    }
+const { armorTypesPlural, languages, movementTypes } = CONFIG.NIMBLE;
 
-    function getWeaponProficiencies(proficiencies: Set<string>) {
-        return [...proficiencies];
-    }
+let actor: NimbleCharacter = getContext('actor');
+let skills = $derived(actor.reactive.system.skills);
+let abilities = $derived(actor.reactive.system.abilities);
+let characterSavingThrows = $derived(actor.reactive.system.savingThrows);
+let initiative = $derived(actor.reactive.system.attributes.initiative.mod);
 
-    const { armorTypesPlural, languages, movementTypes } = CONFIG.NIMBLE;
+// Proficiencies
+let armorProficiencies = $derived(getArmorProficiencies(actor.reactive.system.proficiencies.armor));
 
-    let actor: NimbleCharacter = getContext("actor");
-    let skills = $derived(actor.reactive.system.skills);
-    let abilities = $derived(actor.reactive.system.abilities);
-    let characterSavingThrows = $derived(actor.reactive.system.savingThrows);
-    let initiative = $derived(actor.reactive.system.attributes.initiative.mod);
+let languageProficiencies = $derived(
+	getLanguageProficiencies(actor.reactive.system.proficiencies.languages),
+);
 
-    let movementModes = $derived(
-        getMovementLabels(actor.reactive.system.attributes.movement),
-    );
-
-    // Proficiencies
-    let armorProficiencies = $derived(
-        getArmorProficiencies(actor.reactive.system.proficiencies.armor),
-    );
-
-    let languageProficiencies = $derived(
-        getLanguageProficiencies(actor.reactive.system.proficiencies.languages),
-    );
-
-    let weaponProficiencies = $derived(
-        getWeaponProficiencies(actor.reactive.system.proficiencies.weapons),
-    );
+let weaponProficiencies = $derived(
+	getWeaponProficiencies(actor.reactive.system.proficiencies.weapons),
+);
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
@@ -117,7 +99,9 @@
 
     <Skills {skills} />
 
-    {#each [{ heading: "Movement", configMethod: actor.configureMovement.bind(actor), content: movementModes, prompt: "configureMovement" }, { heading: "Language Proficiencies", configMethod: actor.configureLanguageProficiencies.bind(actor), content: languageProficiencies, prompt: "configureLanguageProficiencies" }, { heading: "Armor Proficiencies", configMethod: actor.configureArmorProficiencies.bind(actor), content: armorProficiencies, prompt: "configureArmorProficiencies" }, { heading: "Weapon Proficiencies", configMethod: actor.configureWeaponProficiencies.bind(actor), content: weaponProficiencies.filter((weapon) => weapon.trim().length > 0), prompt: "configureWeaponProficiencies" }] as { heading, configMethod, content, prompt }}
+	<MovementSpeed {actor} showDefaultSpeed={true} />
+
+    {#each [{ heading: "Language Proficiencies", configMethod: actor.configureLanguageProficiencies.bind(actor), content: languageProficiencies, prompt: "configureLanguageProficiencies" }, { heading: "Armor Proficiencies", configMethod: actor.configureArmorProficiencies.bind(actor), content: armorProficiencies, prompt: "configureArmorProficiencies" }, { heading: "Weapon Proficiencies", configMethod: actor.configureWeaponProficiencies.bind(actor), content: weaponProficiencies.filter((weapon) => weapon.trim().length > 0), prompt: "configureWeaponProficiencies" }] as { heading, configMethod, content, prompt }}
         {@const tooltip = localize(`NIMBLE.prompts.${prompt}`)}
 
         <section>

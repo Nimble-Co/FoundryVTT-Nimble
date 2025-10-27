@@ -1,5 +1,3 @@
-import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
-
 export type d20TermOptions = {
 	actor: NimbleBaseActor;
 	minRoll: number;

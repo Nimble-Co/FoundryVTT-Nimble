@@ -30,6 +30,21 @@ const abilityScoreAbbreviations: Record<abilityKey, string> = {
 	will: 'NIMBLE.abilityScoreAbbreviations.will',
 };
 
+const abilityScoreTooltips = {
+	advantageOnSave: 'NIMBLE.abilityScoreTooltips.advantageOnSave',
+	disadvantageOnSave: 'NIMBLE.abilityScoreTooltips.disadvantageOnSave',
+	keyStat: 'NIMBLE.abilityScoreTooltips.keyStat',
+	editStats: 'NIMBLE.abilityScoreTooltips.editStats',
+};
+
+const abilityScoreControls = {
+	confirmStatAssignments: 'NIMBLE.abilityScoreControls.confirmStatAssignments',
+};
+
+const characterCreationStages = {
+	stepFiveStats: 'NIMBLE.characterCreationStages.stepFiveStats',
+};
+
 const activationCostTypes = {
 	action: 'NIMBLE.activationCosts.action',
 	minute: 'NIMBLE.activationCosts.minute',
@@ -272,6 +287,12 @@ const npcArmorTypeAbbreviations = {
 	heavy: 'H',
 };
 
+const objectSizeTypes = {
+	slots: 'NIMBLE.objectSizeTypes.slots',
+	stackable: 'NIMBLE.objectSizeTypes.stackable',
+	smallSized: 'NIMBLE.objectSizeTypes.smallSized',
+};
+
 const objectTypeHeadings = {
 	armor: 'NIMBLE.objectTypeHeadings.armor',
 	shield: 'NIMBLE.objectTypeHeadings.shield',
@@ -443,6 +464,9 @@ const NIMBLE = {
 	// Config
 	abilityScores,
 	abilityScoreAbbreviations,
+	abilityScoreTooltips,
+	abilityScoreControls,
+	characterCreationStages,
 	activationCostTypes,
 	activationCostTypesPlural,
 	actorTypeBanners,
@@ -471,6 +495,7 @@ const NIMBLE = {
 	npcArmorIcons,
 	npcArmorTypes,
 	npcArmorTypeAbbreviations,
+	objectSizeTypes,
 	objectTypeHeadings,
 	objectTypes,
 	restTypes,

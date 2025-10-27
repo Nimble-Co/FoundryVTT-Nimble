@@ -1,7 +1,7 @@
 import type { NimbleMinionData } from '../../models/actor/MinionDataModel.js';
-import GenericDialog from '../dialogs/GenericDialog.svelte.js';
-import { NimbleBaseActor } from './base.svelte.js';
+import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementConfigDialog.svelte';
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
+import { NimbleBaseActor } from './base.svelte.js';
 
 export class NimbleMinion extends NimbleBaseActor {
 	declare system: NimbleMinionData;
@@ -28,6 +28,8 @@ export class NimbleMinion extends NimbleBaseActor {
 	}
 
 	async editMetadata() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
 		this.#dialogs.metaConfig ??= new GenericDialog(
 			`${this.name}: Configuration`,
 			NPCMetaConfigDialog,
@@ -35,5 +37,18 @@ export class NimbleMinion extends NimbleBaseActor {
 		);
 
 		this.#dialogs.metaConfig.render(true);
+	}
+
+	async configureMovement() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
+		this.#dialogs.configureMovement ??= new GenericDialog(
+			`${this.name}: Configure Movement Speeds`,
+			CharacterMovementConfigDialog,
+			{ document: this },
+			{ icon: 'fa-solid fa-person-running', width: 600 },
+		);
+
+		await this.#dialogs.configureMovement.render(true);
 	}
 }
