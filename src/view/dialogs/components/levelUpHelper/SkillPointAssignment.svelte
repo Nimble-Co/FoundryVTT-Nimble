@@ -1,21 +1,36 @@
 <script>
+import Hint from '../../../components/Hint.svelte';
 import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
-import Hint from '../../../components/Hint.svelte';
 
 function canAdd(skill, skillKey) {
-	const skillPointRemoved = Object.values(skillPointChanges).some((value) => value === -1);
-	const skillPointAdded = Object.values(skillPointChanges).some((value) => value >= 1);
-
-	const quantityOfSkillsWithPointsAdded = Object.values(skillPointChanges).reduce((count, mod) =>
+	let quantityOfSkillsWithPointsAdded = Object.values(skillPointChanges).reduce((count, mod) =>
 		mod > 0 ? count + mod : count,
 	);
 
+	// skill points capped at 12
+	if (skill.points >= 12 && skillPointChanges[skillKey] !== -1) return false;
 	if (skillPointRemoved && skillPointChanges[skillKey] === 2) return false;
 	if (!skillPointRemoved && skillPointAdded) return false;
 	if (quantityOfSkillsWithPointsAdded === 2) return false;
+	if (totalSkillAssignments === 1) return false;
 
 	return true;
+}
+
+function getAddTooltip(skill, skillKey) {
+	let quantityOfSkillsWithPointsAdded = Object.values(skillPointChanges).reduce((count, mod) =>
+		mod > 0 ? count + mod : count,
+	);
+
+	// skill points capped at 12
+	if (skill.points >= 12 && skillPointChanges[skillKey] !== -1) return 'Max skill bonus is +12.';
+	if (skillPointRemoved && skillPointChanges[skillKey] === 2) return 'Only 1 new point and 1 transfer are allowed per level-up.';
+	if (!skillPointRemoved && skillPointAdded) return 'Reduce another skill first to add a skill point.';
+	if (quantityOfSkillsWithPointsAdded === 2) return 'Limit reached: Only 1 new point and 1 transfer are allowed per level-up.';
+	if (totalSkillAssignments === 1) return 'Only 1 new point and 1 transfer are allowed per level-up.';
+
+	return '';
 }
 
 function canSubtract(skill, skillKey) {
@@ -26,6 +41,15 @@ function canSubtract(skill, skillKey) {
 	if (Object.values(skillPointChanges).some((value) => value === -1)) return false;
 
 	return true;
+}
+
+function getSubtractTooltip(skill, skillKey) {
+	if (skill.points + skillPointChanges[skillKey] < 1) return 'Skill points can’t go below 0.';
+	if (skillPointChanges[skillKey] === -1) return 'Already marked to transfer 1 point.';
+	if (skillPointAdded) return '';
+	if (skillPointRemoved) return 'Only one transfer per level-up.';
+
+	return '';
 }
 
 function getSkillMod(skill, skillKey, change) {
@@ -46,6 +70,10 @@ let {
 	selectedBoon,
 	skillPointChanges = $bindable(),
 } = $props();
+
+let totalSkillAssignments = $derived.by(() => Object.values(skillPointChanges).reduce((count, mod) => count + mod, 0));
+let skillPointRemoved = $derived.by(() => Object.values(skillPointChanges).some((value) => value === -1));
+let skillPointAdded = $derived.by(() => Object.values(skillPointChanges).some((value) => value >= 1));
 
 const { defaultSkillAbilities, skills } = CONFIG.NIMBLE;
 
@@ -89,6 +117,7 @@ const hintText =
                             data-button-variant="basic"
                             disabled={!canSubtract(skill, key)}
                             aria-label="Decrement Skill Points"
+							data-tooltip={getSubtractTooltip(skill, key)}
                             onclick={() => skillPointChanges[key]--}
                         >
                             -
@@ -104,6 +133,7 @@ const hintText =
                             data-button-variant="basic"
                             disabled={!canAdd(skill, key)}
                             aria-label="Increment Skill Points"
+							data-tooltip={getAddTooltip(skill, key)}
                             onclick={() => skillPointChanges[key]++}
                         >
                             +
@@ -131,6 +161,11 @@ const hintText =
 
         text-align: center;
         vertical-align: middle;
+
+		.nimble-button[disabled] {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
 
         thead {
             text-align: center;
