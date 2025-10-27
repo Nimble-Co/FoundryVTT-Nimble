@@ -1,8 +1,8 @@
 import type BaseUser from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/documents/user.d.mts';
-import type { ActorRollOptions } from './actorInterfaces.ts';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import type { NimbleAncestryItem } from '../item/ancestry.js';
 import type { NimbleBackgroundItem } from '../item/background.js';
+import type { ActorRollOptions } from './actorInterfaces.ts';
 
 // Forward declaration to avoid circular dependency with item/class.ts
 interface NimbleClassItem extends Item {
@@ -15,15 +15,13 @@ interface NimbleClassItem extends Item {
 	grantedWeaponProficiencies?: string[];
 }
 
-import { NimbleBaseActor } from './base.svelte.js';
+import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { HitDiceManager } from '../../managers/HitDiceManager.js';
 import { RestManager } from '../../managers/RestManager.js';
 
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import getRollFormula from '../../utils/getRollFormula.js';
-import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
-
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
 import CharacterLevelUpDialog from '../../view/dialogs/CharacterLevelUpDialog.svelte';
@@ -32,8 +30,9 @@ import CharacterSkillsConfigDialog from '../../view/dialogs/CharacterSkillsConfi
 import CharacterStatConfigDialog from '../../view/dialogs/CharacterStatConfigDialog.svelte';
 import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/CharacterWeaponProficienciesConfigDialog.svelte';
 import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
-import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
+import GenericDialog from '../dialogs/GenericDialog.svelte.js';
+import { NimbleBaseActor } from './base.svelte.js';
 
 export class NimbleCharacter extends NimbleBaseActor {
 	declare _ancestry: NimbleAncestryItem | undefined;
@@ -446,7 +445,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 		const result = await dialog.promise;
 
 		if (result === null) {
-			return
+			return;
 		}
 		// Update class items
 		for (const clsUpdate of result.classUpdates) {
@@ -593,8 +592,10 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
 
+		const nextClassLevel = currentClassLevel + 1;
+
 		const dialog = new GenericDialog(
-			`${this.name}: Level Up Dialog`,
+			`${this.name}: Level Up (${currentClassLevel} → ${nextClassLevel})`,
 			CharacterLevelUpDialog,
 			{ document: this },
 			{ icon: 'fa-solid fa-arrow-up-right-dots', width: 600 },
@@ -606,7 +607,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 		if (!dialogData) return;
 
 		const actorUpdates = {};
-		const itemUpdates = { 'system.classLevel': currentClassLevel + 1 };
+		const itemUpdates = { 'system.classLevel': nextClassLevel };
 
 		const classHitDieSize = characterClass.system.hitDieSize;
 		const currentHitDice = this.system.attributes.hitDice[classHitDieSize.toString()]?.current;
@@ -627,7 +628,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 		itemUpdates['system.hpData'] = [...characterClass.system.hpData, hp];
 
 		if (dialogData.selectedAbilityScore) {
-			itemUpdates[`system.abilityScoreData.${currentClassLevel + 1}.value`] =
+			itemUpdates[`system.abilityScoreData.${nextClassLevel}.value`] =
 				dialogData.selectedAbilityScore;
 		}
 
@@ -654,7 +655,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		// Record level up history
 		const historyEntry = {
-			level: currentClassLevel + 1,
+			level: nextClassLevel,
 			hpIncrease: hp,
 			abilityIncreases: dialogData.selectedAbilityScore,
 			skillIncreases: dialogData.skillPointChanges,
