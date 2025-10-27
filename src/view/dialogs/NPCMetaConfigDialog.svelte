@@ -1,5 +1,7 @@
-<script>
+<script lang="ts">
+import localize from '../../utils/localize.js';
 import TagGroup from '../components/TagGroup.svelte';
+import MovementSpeed from '../sheets/components/MovementSpeed.svelte';
 
 function prepareSizeCategoryOptions() {
 	return Object.entries(sizeCategories).map(([key, value]) => ({
@@ -63,6 +65,8 @@ let { actor } = $props();
             </h3>
         </label>
     {/if}
+
+	<MovementSpeed {actor} showDefaultSpeed={true} />
 </section>
 
 <style>

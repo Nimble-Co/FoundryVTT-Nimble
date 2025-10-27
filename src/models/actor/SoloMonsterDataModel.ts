@@ -31,6 +31,43 @@ const soloMonsterSchema = () => ({
 			initial: 'medium',
 			options: ['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan'],
 		}),
+		movement: new fields.SchemaField({
+			burrow: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+				min: 0,
+			}),
+			climb: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+				min: 0,
+			}),
+			fly: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+				min: 0,
+			}),
+			swim: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+				min: 0,
+			}),
+			walk: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 6,
+				integer: true,
+				min: 0,
+			}),
+		}),
 	}),
 	description: new fields.HTMLField({ required: true, nullable: false, initial: '' }),
 	details: new fields.SchemaField({

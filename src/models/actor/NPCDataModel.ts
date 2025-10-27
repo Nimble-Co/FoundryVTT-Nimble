@@ -25,6 +25,43 @@ const NPCSchema = () => ({
 			temp: new fields.NumberField({ required: true, initial: 0, nullable: false }),
 			value: new fields.NumberField({ required: true, initial: 10, nullable: false }),
 		}),
+		movement: new fields.SchemaField({
+			burrow: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+				min: 0,
+			}),
+			climb: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+				min: 0,
+			}),
+			fly: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+				min: 0,
+			}),
+			swim: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 0,
+				integer: true,
+				min: 0,
+			}),
+			walk: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 6,
+				integer: true,
+				min: 0,
+			}),
+		}),
 		sizeCategory: new fields.StringField({
 			required: true,
 			nullable: false,
