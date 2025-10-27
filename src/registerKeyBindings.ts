@@ -1,4 +1,4 @@
-import { SystemSettings } from './settings/SystemSettings.js';
+import { SystemSettings } from './settings/SystemSettings.svelte.js';
 
 export default function registerKeybindings() {
 	game.keybindings.register('nimble', 'system-settings-open-close', {
