@@ -163,7 +163,7 @@ let categorizedItems = $derived(groupItemsByType(items));
 let flags = $derived(actor.reactive.flags.nimble);
 let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
-let allCollapsed = $derived(items.every(item => item.reactive.flags.nimble.collapsed));
+let allCollapsed = $derived(items.every(item => item.reactive.flags.nimble?.collapsed ?? true));
 
 document.addEventListener('click', (event) =>
 	handleEditorSave(event, 'system.attackSequence', attackSequenceInEditMode),
@@ -244,7 +244,6 @@ onDestroy(() => {
 		</h4>
 	</header>
 
-	
 	{#if Object.entries(categorizedItems).length > 0}
 	<section class="nimble-sheet__body nimble-sheet__body--player-character">
 
