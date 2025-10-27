@@ -1,224 +1,224 @@
 <script>
-import { setContext } from 'svelte';
+		import { setContext } from 'svelte';
 
-import generateBlankAttributeSet from '../../utils/generateBlankAttributeSet.js';
-import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
-import scrollIntoView from '../../utils/scrollIntoView.js';
+		import generateBlankAttributeSet from '../../utils/generateBlankAttributeSet.js';
+		import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
+		import scrollIntoView from '../../utils/scrollIntoView.js';
 
-import AncestrySelection from './components/characterCreator/AncestrySelection.svelte';
-import AncestrySizeSelection from './components/characterCreator/AncestrySizeSelection.svelte';
-import BackgroundSelection from './components/characterCreator/BackgroundSelection.svelte';
-import BonusLanguageSelection from './components/characterCreator/BonusLanguageSelection.svelte';
-import ClassSelection from './components/characterCreator/ClassSelection.svelte';
-import SkillPointAssignment from './components/characterCreator/SkillPointAssignment.svelte';
-import StatArraySelection from './components/characterCreator/StatArraySelection.svelte';
-import StatAssignment from './components/characterCreator/StatAssignment.svelte';
+		import AncestrySelection from './components/characterCreator/AncestrySelection.svelte';
+		import AncestrySizeSelection from './components/characterCreator/AncestrySizeSelection.svelte';
+		import BackgroundSelection from './components/characterCreator/BackgroundSelection.svelte';
+		import BonusLanguageSelection from './components/characterCreator/BonusLanguageSelection.svelte';
+		import ClassSelection from './components/characterCreator/ClassSelection.svelte';
+		import SkillPointAssignment from './components/characterCreator/SkillPointAssignment.svelte';
+		import StatArraySelection from './components/characterCreator/StatArraySelection.svelte';
+		import StatAssignment from './components/characterCreator/StatAssignment.svelte';
 
-const CHARACTER_CREATION_STAGES = {
-	CLASS: 0,
-	ANCESTRY: '1a',
-	ANCESTRY_SIZE: '1b',
-	BACKGROUND: 2,
-	ARRAY: 3,
-	STATS: 4,
-	SKILLS: 5,
-	LANGUAGES: 6,
-	SUBMIT: 7,
-};
+		const CHARACTER_CREATION_STAGES = {
+			CLASS: 0,
+			ANCESTRY: '1a',
+			ANCESTRY_SIZE: '1b',
+			BACKGROUND: 2,
+			ARRAY: 3,
+			STATS: 4,
+			SKILLS: 5,
+			LANGUAGES: 6,
+			SUBMIT: 7,
+		};
 
-function getAbilityBonuses(ancestry, background, characterClass) {
-	const abilityKeys = Object.keys(CONFIG.NIMBLE.abilityScores);
+		function getAbilityBonuses(ancestry, background, characterClass) {
+			const abilityKeys = Object.keys(CONFIG.NIMBLE.abilityScores);
 
-	const rules = [
-		...(ancestry?.rules?.values() ?? []),
-		...(background?.rules?.values() ?? []),
-		...(characterClass?.rules?.values() ?? []),
-	];
+		const rules = [
+			...(ancestry?.rules?.values() ?? []),
+			...(background?.rules?.values() ?? []),
+			...(characterClass?.rules?.values() ?? []),
+		];
 
-	if (!rules.length) return null;
+		if (!rules.length) return null;
 
-	const statBonusRules = rules.filter((rule) => rule.type === 'abilityBonus');
+		const statBonusRules = rules.filter((rule) => rule.type === 'abilityBonus');
 
-	if (!rules.length) return null;
+		if (!rules.length) return null;
 
-	const bonuses = new Map(abilityKeys.map((key) => [key, 0]));
+		const bonuses = new Map(abilityKeys.map((key) => [key, 0]));
 
-	statBonusRules.forEach((rule) => {
-		let targetAbilities = rule.abilities;
+		statBonusRules.forEach((rule) => {
+			let targetAbilities = rule.abilities;
 
-		if (!targetAbilities.length) return;
-		if (targetAbilities.includes('all')) targetAbilities = abilityKeys;
+			if (!targetAbilities.length) return;
+			if (targetAbilities.includes('all')) targetAbilities = abilityKeys;
 
-		const bonus = getDeterministicBonus(rule.value, {});
+			const bonus = getDeterministicBonus(rule.value, {});
 
-		targetAbilities.forEach((abilityKey) => {
-			bonuses.set(abilityKey, bonuses.get(abilityKey) + Number.parseInt(bonus, 10));
+			targetAbilities.forEach((abilityKey) => {
+				bonuses.set(abilityKey, bonuses.get(abilityKey) + Number.parseInt(bonus, 10));
+			});
 		});
-	});
 
-	return bonuses;
-}
+		return bonuses;
+	}
 
-function getSkillBonuses(ancestry, background, characterClass) {
-	const skillKeys = Object.keys(CONFIG.NIMBLE.skills);
+		function getSkillBonuses(ancestry, background, characterClass) {
+			const skillKeys = Object.keys(CONFIG.NIMBLE.skills);
 
-	const rules = [
-		...(ancestry?.rules?.values() ?? []),
-		...(background?.rules?.values() ?? []),
-		...(characterClass?.rules?.values() ?? []),
-	];
+		const rules = [
+			...(ancestry?.rules?.values() ?? []),
+			...(background?.rules?.values() ?? []),
+			...(characterClass?.rules?.values() ?? []),
+		];
 
-	const skillBonusRules = rules.filter((rule) => rule.type === 'skillBonus');
+		const skillBonusRules = rules.filter((rule) => rule.type === 'skillBonus');
 
-	if (!rules.length) return null;
+		if (!rules.length) return null;
 
-	const bonuses = new Map(skillKeys.map((key) => [key, 0]));
+		const bonuses = new Map(skillKeys.map((key) => [key, 0]));
 
-	skillBonusRules.forEach((rule) => {
-		let targetSkills = rule.skills;
+		skillBonusRules.forEach((rule) => {
+			let targetSkills = rule.skills;
 
-		if (!targetSkills.length) return;
-		if (targetSkills.includes('all')) targetSkills = skillKeys;
+			if (!targetSkills.length) return;
+			if (targetSkills.includes('all')) targetSkills = skillKeys;
 
-		const bonus = getDeterministicBonus(rule.value, {});
+			const bonus = getDeterministicBonus(rule.value, {});
 
-		targetSkills.forEach((skillKey) => {
-			bonuses.set(skillKey, bonuses.get(skillKey) + Number.parseInt(bonus, 10));
+			targetSkills.forEach((skillKey) => {
+				bonuses.set(skillKey, bonuses.get(skillKey) + Number.parseInt(bonus, 10));
+			});
 		});
-	});
 
-	return bonuses;
-}
-
-function getCurrentStage(
-	selectedClass,
-	selectedAncestry,
-	selectedAncestrySize,
-	selectedBackground,
-	selectedArray,
-	selectedAbilityScores,
-	remainingSkillPoints,
-	bonusLanguages,
-) {
-	const classOptionCount = classOptions.then((classes) => classes.length);
-
-	const ancestryCount = ancestryOptions
-		.then((x) => Object.values(x))
-		.then((x) => x.reduce((count, category) => count + category.length, 0));
-
-	const backgroundCount = backgroundOptions.then((backgrounds) => backgrounds.length);
-
-	if (classOptionCount && !selectedClass) return CHARACTER_CREATION_STAGES.CLASS;
-
-	if (ancestryCount && !selectedAncestry) {
-		return CHARACTER_CREATION_STAGES.ANCESTRY;
+		return bonuses;
 	}
 
-	if (selectedAncestry?.system?.size?.length > 1 && !selectedAncestrySize) {
-		return CHARACTER_CREATION_STAGES.ANCESTRY_SIZE;
+		function getCurrentStage(
+			selectedClass,
+			selectedAncestry,
+			selectedAncestrySize,
+			selectedBackground,
+			selectedArray,
+			selectedAbilityScores,
+			remainingSkillPoints,
+			bonusLanguages,
+		) {
+			const classOptionCount = classOptions.then((classes) => classes.length);
+
+		const ancestryCount = ancestryOptions
+			.then((x) => Object.values(x))
+			.then((x) => x.reduce((count, category) => count + category.length, 0));
+
+		const backgroundCount = backgroundOptions.then((backgrounds) => backgrounds.length);
+
+		if (classOptionCount && !selectedClass) return CHARACTER_CREATION_STAGES.CLASS;
+
+		if (ancestryCount && !selectedAncestry) {
+			return CHARACTER_CREATION_STAGES.ANCESTRY;
+		}
+
+		if (selectedAncestry?.system?.size?.length > 1 && !selectedAncestrySize) {
+			return CHARACTER_CREATION_STAGES.ANCESTRY_SIZE;
+		}
+
+		if (backgroundCount && !selectedBackground) {
+			return CHARACTER_CREATION_STAGES.BACKGROUND;
+		}
+
+		if (!selectedArray) return CHARACTER_CREATION_STAGES.ARRAY;
+
+		const hasUnassignedAbilityScores = Object.values(selectedAbilityScores).some(
+			(mod) => mod === null,
+		);
+
+		if (hasUnassignedAbilityScores) return CHARACTER_CREATION_STAGES.STATS;
+		if (remainingSkillPoints) return CHARACTER_CREATION_STAGES.SKILLS;
+
+		const intelligenceModifier = selectedArray.array?.[selectedAbilityScores.intelligence];
+
+		if (
+			!remainingSkillPoints &&
+			intelligenceModifier > 0 &&
+			bonusLanguages.length < intelligenceModifier
+		) {
+			return CHARACTER_CREATION_STAGES.LANGUAGES;
+		}
+
+		return CHARACTER_CREATION_STAGES.SUBMIT;
 	}
 
-	if (backgroundCount && !selectedBackground) {
-		return CHARACTER_CREATION_STAGES.BACKGROUND;
-	}
+		function submit() {
+			dialog.submit({
+				name,
+				origins: {
+					background: selectedBackground,
+					characterClass: selectedClass,
+					ancestry: selectedAncestry,
+				},
+				abilityScores: Object.entries(selectedAbilityScores).reduce(
+					(assignedScores, [abilityKey, index]) => {
+						assignedScores[`${abilityKey}.baseValue`] = selectedArray?.array?.[index] ?? 0;
+						return assignedScores;
+					},
+					{},
+				),
+				sizeCategory: selectedAncestrySize,
+				skills: Object.entries(assignedSkillPoints).reduce((assignedPoints, [skillKey, points]) => {
+					assignedPoints[`${skillKey}.points`] = points;
+					return assignedPoints;
+				}, {}),
+				languages: ['common', ...bonusLanguages],
+			});
+		}
 
-	if (!selectedArray) return CHARACTER_CREATION_STAGES.ARRAY;
+		let {
+			ancestryOptions,
+			backgroundOptions,
+			bonusLanguageOptions,
+			classOptions,
+			dialog,
+			statArrayOptions,
+		} = $props();
+		const { prepareArrayOptions, prepareBonusLanguageOptions } = dialog;
 
-	const hasUnassignedAbilityScores = Object.values(selectedAbilityScores).some(
-		(mod) => mod === null,
-	);
+		let assignedSkillPoints = $state({});
+		let bonusLanguages = $state([]);
+		let selectedAbilityScores = $state(generateBlankAttributeSet());
+		let name = $state('');
+		let selectedArray = $state(null);
+		let selectedBackground = $state('');
+		let selectedClass = $state('');
+		let selectedAncestry = $state('');
+		let selectedAncestrySize = $state('medium');
 
-	if (hasUnassignedAbilityScores) return CHARACTER_CREATION_STAGES.STATS;
-	if (remainingSkillPoints) return CHARACTER_CREATION_STAGES.SKILLS;
+		let abilityBonuses = $derived(
+			getAbilityBonuses(selectedAncestry, selectedBackground, selectedClass),
+		);
 
-	const intelligenceModifier = selectedArray.array?.[selectedAbilityScores.intelligence];
+		let skillBonuses = $derived(getSkillBonuses(selectedAncestry, selectedBackground, selectedClass));
 
-	if (
-		!remainingSkillPoints &&
-		intelligenceModifier > 0 &&
-		bonusLanguages.length < intelligenceModifier
-	) {
-		return CHARACTER_CREATION_STAGES.LANGUAGES;
-	}
+		let remainingSkillPoints = $derived(
+			4 - Object.values(assignedSkillPoints).reduce((a, b) => a + b, 0),
+		);
 
-	return CHARACTER_CREATION_STAGES.SUBMIT;
-}
+		let stage = $derived(
+			getCurrentStage(
+				selectedClass,
+				selectedAncestry,
+				selectedAncestrySize,
+				selectedBackground,
+				selectedArray,
+				selectedAbilityScores,
+				remainingSkillPoints,
+				bonusLanguages,
+			),
+		);
 
-function submit() {
-	dialog.submit({
-		name,
-		origins: {
-			background: selectedBackground,
-			characterClass: selectedClass,
-			ancestry: selectedAncestry,
-		},
-		abilityScores: Object.entries(selectedAbilityScores).reduce(
-			(assignedScores, [abilityKey, index]) => {
-				assignedScores[`${abilityKey}.baseValue`] = selectedArray?.array?.[index] ?? 0;
-				return assignedScores;
-			},
-			{},
-		),
-		sizeCategory: selectedAncestrySize,
-		skills: Object.entries(assignedSkillPoints).reduce((assignedPoints, [skillKey, points]) => {
-			assignedPoints[`${skillKey}.points`] = points;
-			return assignedPoints;
-		}, {}),
-		languages: ['common', ...bonusLanguages],
-	});
-}
+		let stageNumber = $derived(stage.toString().match(/\d+/)[0]);
 
-let {
-	ancestryOptions,
-	backgroundOptions,
-	bonusLanguageOptions,
-	classOptions,
-	dialog,
-	statArrayOptions,
-} = $props();
-const { prepareArrayOptions, prepareBonusLanguageOptions } = dialog;
+		setContext('dialog', dialog);
+		setContext('CHARACTER_CREATION_STAGES', CHARACTER_CREATION_STAGES);
 
-let assignedSkillPoints = $state({});
-let bonusLanguages = $state([]);
-let selectedAbilityScores = $state(generateBlankAttributeSet());
-let name = $state('');
-let selectedArray = $state(null);
-let selectedBackground = $state('');
-let selectedClass = $state('');
-let selectedAncestry = $state('');
-let selectedAncestrySize = $state('medium');
-
-let abilityBonuses = $derived(
-	getAbilityBonuses(selectedAncestry, selectedBackground, selectedClass),
-);
-
-let skillBonuses = $derived(getSkillBonuses(selectedAncestry, selectedBackground, selectedClass));
-
-let remainingSkillPoints = $derived(
-	4 - Object.values(assignedSkillPoints).reduce((a, b) => a + b, 0),
-);
-
-let stage = $derived(
-	getCurrentStage(
-		selectedClass,
-		selectedAncestry,
-		selectedAncestrySize,
-		selectedBackground,
-		selectedArray,
-		selectedAbilityScores,
-		remainingSkillPoints,
-		bonusLanguages,
-	),
-);
-
-let stageNumber = $derived(stage.toString().match(/\d+/)[0]);
-
-setContext('dialog', dialog);
-setContext('CHARACTER_CREATION_STAGES', CHARACTER_CREATION_STAGES);
-
-$effect(() => {
-	scrollIntoView(`${dialog.id}-stage-${stage}`);
-});
+		$effect(() => {
+			scrollIntoView(`${dialog.id}-stage-${stage}`);
+		});
 </script>
 
 <header class="nimble-sheet__header nimble-sheet__header--character-creator">

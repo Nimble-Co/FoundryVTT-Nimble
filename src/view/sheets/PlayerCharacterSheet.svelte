@@ -1,15 +1,14 @@
 <script>
 import { setContext } from 'svelte';
 import localize from '../../utils/localize.js';
+import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 import updateDocumentImage from '../handlers/updateDocumentImage.js';
-
 import HitPointBar from './components/HitPointBar.svelte';
 import PlayerCharacterBioTab from './pages/PlayerCharacterBioTab.svelte';
 import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';
 import PlayerCharacterFeaturesTab from './pages/PlayerCharacterFeaturesTab.svelte';
 import PlayerCharacterInventoryTab from './pages/PlayerCharacterInventoryTab.svelte';
 import PlayerCharacterSettingsTab from './pages/PlayerCharacterSettingsTab.svelte';
-import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 import PlayerCharacterSpellsTab from './pages/PlayerCharacterSpellsTab.svelte';
 
 function getHitPointPercentage(currentHP, maxHP) {
@@ -156,8 +155,7 @@ setContext('application', sheet);
                 <li class="nimble-wounds-list__item">
                     <button
                         class="nimble-wounds-list__button"
-                        class:nimble-wounds-list__button--active={wounds.value >
-                            i}
+                        class:nimble-wounds-list__button--active={wounds.value > i}
                         type="button"
                         data-tooltip="Toggle Wound"
                         data-tooltip-direction="LEFT"
@@ -193,7 +191,7 @@ setContext('application', sheet);
     </div>
 
     <section
-        class="nimble-monster-sheet-section nimble-monster-sheet-section--defense"
+        class="nimble-character-sheet-section nimble-character-sheet-section--defense"
     >
         <h3 class="nimble-heading nimble-heading--hp">
             Hit Points
@@ -256,8 +254,19 @@ setContext('application', sheet);
         />
 
         {#if metaData}
-            <h4 class="nimble-monster-meta">
+            <h4 class="nimble-character-meta">
                 {metaData}
+
+				<button
+					class="nimble-button"
+					type="button"
+					data-button-variant="icon"
+					aria-label="Edit"
+					data-tooltip="Edit"
+					onclick={() => actor.editMetadata()}
+				>
+					<i class="fa-solid fa-edit"></i>
+				</button>
             </h4>
         {/if}
     </div>
@@ -325,7 +334,7 @@ setContext('application', sheet);
         padding: 0.75rem 0.5rem 0.375rem 0.5rem;
     }
 
-    .nimble-monster-meta {
+    .nimble-character-meta {
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -343,7 +352,30 @@ setContext('application', sheet);
         }
     }
 
-    .nimble-monster-sheet-section {
+	.nimble-character-meta {
+        --nimble-button-font-size: var(--nimble-sm-text);
+        --nimble-button-opacity: 0;
+        --nimble-button-padding: 0;
+        --nimble-button-icon-y-nudge: -1px;
+
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        font-size: var(--nimble-sm-text);
+        font-weight: 500;
+        font-synthesis: none;
+        border: 0;
+        color: var(--nimble-medium-text-color);
+        text-shadow: none;
+
+        &:hover {
+            --nimble-button-opacity: 1;
+        }
+    }
+
+    .nimble-character-sheet-section {
         padding: 0.5rem;
 
         &:not(:last-of-type) {

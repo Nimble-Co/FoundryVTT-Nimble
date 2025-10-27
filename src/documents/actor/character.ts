@@ -15,11 +15,11 @@ interface NimbleClassItem extends Item {
 	grantedWeaponProficiencies?: string[];
 }
 
+import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { HitDiceManager } from '../../managers/HitDiceManager.js';
 import { RestManager } from '../../managers/RestManager.js';
-
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
@@ -817,5 +817,17 @@ export class NimbleCharacter extends NimbleBaseActor {
 		this.updateSource({ prototypeToken });
 
 		return super._preCreate(data, options, user);
+	}
+
+	async editMetadata() {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+
+		this.#dialogs.metaConfig ??= new GenericDialog(
+			`${this.name}: Configuration`,
+			CharacterMetaConfigDialog,
+			{ actor: this },
+		);
+
+		this.#dialogs.metaConfig.render(true);
 	}
 }

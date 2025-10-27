@@ -8,7 +8,9 @@
 		"rules": [],
 		"description": "<p>Ratfolk are survivors, thriving in the shadows of society where others fear to tread. Agile, resourceful, and fiercely loyal to their own, they have a knack for turning scraps into solutions.</p><hr><p><strong>Scurry</strong> </p><p>Gain +2 armor if you moved on your last turn. [M]</p>",
 		"exotic": true,
-		"size": []
+		"size": [
+			"small"
+		]
 	},
 	"effects": [],
 	"folder": null,
