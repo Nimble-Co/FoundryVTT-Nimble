@@ -25,22 +25,22 @@
 
 	let boons = getChoicesFromCompendium('boon');
 	let subclasses = $state([]);
+	let hasSubclassSelection = levelingTo === 3;
 
 	const characterClass = Object.values(document.classes)?.[0];
 	const level = characterClass?.system?.classLevel;
 	const levelingTo = level + 1;
 
-	// Load subclass documents from compendium
-	Promise.all(getChoicesFromCompendium('subclass').map((uuid) => fromUuid(uuid))).then(
-		(documents) => {
-			subclasses = documents.filter(
-				(d) =>
-					d !== null &&
-					d.system.parentClass ===
-						(characterClass?.identifier || characterClass.name.toLocaleLowerCase()),
-			);
-		},
-	);
+	// Load subclasses filtered by parent class when leveling to 3
+	$effect(() => {
+		if (hasSubclassSelection && characterClass) {
+			console.log('Loading subclasses for identifier:', characterClass.identifier);
+			getSubclassChoices(characterClass.identifier).then((choices) => {
+				console.log('Subclasses loaded:', choices);
+				subclasses = choices;
+			});
+		}
+	});
 
 	let chooseBoon = $state(false);
 	let hitPointRollSelection = $state('roll');
@@ -51,8 +51,8 @@
 
 	let hasStatIncrease = $state(false);
 
-	let hasSkillPointChanges = $derived.by(() => {
-		return Object.values(skillPointChanges).reduce((acc, change) => acc + (change ?? 0), 0) > 0;
+	let skillPointChangesAssigned = $derived.by(() => {
+		return Object.values(skillPointChanges).reduce((acc, change) => acc + (change ?? 0), 0) === 1;
 	});
 
 	let isComplete = $derived.by(() => {
@@ -61,17 +61,10 @@
 				? selectedAbilityScores?.length === 2
 				: selectedAbilityScores) ||
 				!hasStatIncrease) &&
-			hasSkillPointChanges &&
-			(selectedSubclass || levelingTo !== 3)
+			skillPointChangesAssigned &&
+			(selectedSubclass || !hasSubclassSelection)
 		);
 	});
-
-	// Load subclasses filtered by parent class when leveling to 3
-	if (levelingTo === 3 && characterClass) {
-		getSubclassChoices(characterClass.identifier).then((choices) => {
-			subclasses = choices;
-		});
-	}
 </script>
 
 <section class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.75rem;">
