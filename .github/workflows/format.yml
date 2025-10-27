@@ -25,7 +25,7 @@ jobs:
           restore-keys: |
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
-      - name: Setup Biome
-        uses: biomejs/setup-biome@v2
-      - name: Run Biome CI checks
+      - name: Install dependencies
+        run: npm ci --cache .npm --prefer-offline
+      - name: Run format
         run: npm run format
