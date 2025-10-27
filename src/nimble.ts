@@ -7,6 +7,7 @@ import setup from './hooks/setup.js';
 import ready from './hooks/ready.js';
 import renderChatMessageHTML from './hooks/renderChatMessage.js';
 import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
+import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 
 import { hotbarDrop } from './hooks/hotBarDrop.ts';
 
@@ -21,5 +22,11 @@ Hooks.once('i18nInit', i18nInit);
 Hooks.on('canvasInit', canvasInit);
 Hooks.on('renderChatMessageHTML', renderChatMessageHTML);
 Hooks.on('renderNimbleTokenHUD', renderNimbleTokenHUD);
+
+// Automatic condition application hooks
+Hooks.on('preCreateActiveEffect', handleAutomaticConditionApplication.preCreate);
+Hooks.on('preDeleteActiveEffect', handleAutomaticConditionApplication.preDelete);
+Hooks.on('createActiveEffect', handleAutomaticConditionApplication.postCreate);
+Hooks.on('deleteActiveEffect', handleAutomaticConditionApplication.postDelete);
 
 Hooks.on('hotbarDrop', hotbarDrop);
