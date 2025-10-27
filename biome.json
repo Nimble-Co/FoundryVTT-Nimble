@@ -1,7 +1,10 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.2.4/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.3.1/schema.json",
 	"vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
-	"files": { "ignoreUnknown": false, "includes": ["**"] },
+	"files": {
+		"ignoreUnknown": false,
+		"includes": ["**", "!!**/dist"]
+	},
 	"formatter": {
 		"enabled": true,
 		"includes": ["**/*.json", "**/*.jsonc", "**/*.ts", "**/*.js"],
@@ -34,7 +37,7 @@
 				"noExplicitAny": "off"
 			}
 		},
-		"includes": ["**", "!**/dist/**/*", "!**/src/nimble.js", "!**/public/**/*"]
+		"includes": ["**", "!!**/dist/**/*", "!**/src/nimble.js", "!**/public/**/*"]
 	},
 	"json": {
 		"formatter": {
