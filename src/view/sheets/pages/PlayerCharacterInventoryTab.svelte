@@ -229,7 +229,8 @@
                                             "system.quantity":
                                                 currentTarget.value,
                                         })}
-                                />
+                                    disabled={item.system.objectSizeType==='slots'}
+                            />
                             {/if}
 
                             <button

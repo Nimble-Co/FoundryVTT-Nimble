@@ -4,8 +4,6 @@ import { createEffectNode } from '../../../utils/treeManipulation/createEffectNo
 import { deleteEffectNode } from '../../../utils/treeManipulation/deleteEffectNode.js';
 import { updateEffectNode } from '../../../utils/treeManipulation/updateEffectNode.js';
 
-import GenericDialog from '../../../documents/dialogs/GenericDialog.svelte.js';
-
 import ScalingDialog from '../../dialogs/ScalingDialog.svelte';
 import TagGroup from '../../components/TagGroup.svelte';
 
@@ -82,7 +80,9 @@ function getValidActionConsequences(node) {
 	return [];
 }
 
-function openScalingDialog(item, node) {
+async function openScalingDialog(item, node) {
+	const { default: GenericDialog } = await import('../../../documents/dialogs/GenericDialog.svelte.js');
+
 	const dialog = new GenericDialog(`${item.name}: Roll Scaling Dialog`, ScalingDialog, {
 		item,
 		node,

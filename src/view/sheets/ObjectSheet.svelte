@@ -1,113 +1,119 @@
 <script>
-    import { setContext } from "svelte";
-    import localize from "../../utils/localize.js";
-    import updateDocumentImage from "../handlers/updateDocumentImage.js";
+import { setContext } from 'svelte';
+import localize from '../../utils/localize.js';
+import updateDocumentImage from '../handlers/updateDocumentImage.js';
 
-    import ItemActivationConfigTab from "./pages/ItemActivationConfigTab.svelte";
-    import ItemHeader from "./components/ItemHeader.svelte";
-    import ItemMacroTab from "./pages/ItemMacroTab.svelte";
-    import ItemRulesTab from "./pages/ItemRulesTab.svelte";
-    import PrimaryNavigation from "../components/PrimaryNavigation.svelte";
-    import ObjectDescriptionTab from "./pages/ObjectDescriptionTab.svelte";
-    import RangeConfig from "./components/RangeConfig.svelte";
-    import ReachConfig from "./components/ReachConfig.svelte";
-    import TagGroup from "../components/TagGroup.svelte";
+import ItemActivationConfigTab from './pages/ItemActivationConfigTab.svelte';
+import ItemHeader from './components/ItemHeader.svelte';
+import ItemMacroTab from './pages/ItemMacroTab.svelte';
+import ItemRulesTab from './pages/ItemRulesTab.svelte';
+import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
+import ObjectDescriptionTab from './pages/ObjectDescriptionTab.svelte';
+import RangeConfig from './components/RangeConfig.svelte';
+import ReachConfig from './components/ReachConfig.svelte';
+import TagGroup from '../components/TagGroup.svelte';
 
-    function getObjectTypeOptions() {
-        return Object.entries(objectTypes).map(([key, objectType]) => ({
-            label: objectType,
-            value: key,
-        }));
-    }
+function getObjectTypeOptions() {
+	return Object.entries(objectTypes).map(([key, objectType]) => ({
+		label: objectType,
+		value: key,
+	}));
+}
 
-    function getWeaponPropertyOptions() {
-        return Object.entries(weaponProperties).map(
-            ([key, weaponProperty]) => ({
-                label: weaponProperty,
-                value: key,
-            }),
-        );
-    }
+function getObjectSizeTypeOptions() {
+	return Object.entries(objectSizeTypes).map(([key, objectSizeType]) => ({
+		label: objectSizeType,
+		value: key,
+	}));
+}
 
-    function updateObjectType(newSelection) {
-        item.update({
-            "system.objectType": newSelection,
-        });
-    }
+function getWeaponPropertyOptions() {
+	return Object.entries(weaponProperties).map(([key, weaponProperty]) => ({
+		label: weaponProperty,
+		value: key,
+	}));
+}
 
-    function updateWeaponProperties(newSelection) {
-        const currentProperties =
-            item.reactive?.system?.properties?.selected ?? [];
+function updateObjectType(newSelection) {
+	item.update({
+		'system.objectType': newSelection,
+	});
+}
 
-        if (currentProperties.includes(newSelection)) {
-            item.update({
-                "system.properties.selected": currentProperties.filter(
-                    (property) => property !== newSelection,
-                ),
-            });
+function updateObjectSizeType(newSelection) {
+	item.update({
+		'system.objectSizeType': newSelection,
+	});
+}
 
-            return;
-        }
+function updateWeaponProperties(newSelection) {
+	const currentProperties = item.reactive?.system?.properties?.selected ?? [];
 
-        item.update({
-            "system.properties.selected": [...currentProperties, newSelection],
-        });
-    }
+	if (currentProperties.includes(newSelection)) {
+		item.update({
+			'system.properties.selected': currentProperties.filter(
+				(property) => property !== newSelection,
+			),
+		});
 
-    const { objectTypes, weaponProperties } = CONFIG.NIMBLE;
+		return;
+	}
 
-    let { item, sheet } = $props();
+	item.update({
+		'system.properties.selected': [...currentProperties, newSelection],
+	});
+}
 
-    const navigation = [
-        {
-            component: descriptionTab,
-            icon: "fa-solid fa-file-lines",
-            tooltip: "Description",
-            name: "description",
-        },
-        {
-            component: configTab,
-            icon: "fa-solid fa-gears",
-            tooltip: "Config",
-            name: "config",
-        },
-        {
-            component: activationConfigTab,
-            icon: "fa-solid fa-play",
-            tooltip: "Activation",
-            name: "activationConfig",
-        },
-        {
-            component: rulesTab,
-            icon: "fa-solid fa-bolt",
-            tooltip: "Rules",
-            name: "rules",
-        },
-        {
-            component: macroTab,
-            icon: "fa-solid fa-terminal",
-            tooltip: "Macro",
-            name: "macro",
-        },
-    ];
+const { objectTypes, objectSizeTypes, weaponProperties } = CONFIG.NIMBLE;
 
-    let currentTab = $state(navigation[0]);
-    let thrownRange = $derived(
-        item.reactive.system.properties.thrownRange ?? 0,
-    );
+let { item, sheet } = $props();
 
-    let strengthRequirement = $derived(
-        item.reactive.system.properties.strengthRequirement.value ?? 0,
-    );
-    let strengthRequirementOverridesTwoHanded = $derived(
-        item.reactive.system.properties.strengthRequirement.overridesTwoHanded,
-    );
+const navigation = [
+	{
+		component: descriptionTab,
+		icon: 'fa-solid fa-file-lines',
+		tooltip: 'Description',
+		name: 'description',
+	},
+	{
+		component: configTab,
+		icon: 'fa-solid fa-gears',
+		tooltip: 'Config',
+		name: 'config',
+	},
+	{
+		component: activationConfigTab,
+		icon: 'fa-solid fa-play',
+		tooltip: 'Activation',
+		name: 'activationConfig',
+	},
+	{
+		component: rulesTab,
+		icon: 'fa-solid fa-bolt',
+		tooltip: 'Rules',
+		name: 'rules',
+	},
+	{
+		component: macroTab,
+		icon: 'fa-solid fa-terminal',
+		tooltip: 'Macro',
+		name: 'macro',
+	},
+];
 
-    let objectType = $derived(item.reactive.system.objectType);
-    let stackable = $derived(item.reactive.system.stackable);
+let currentTab = $state(navigation[0]);
+let thrownRange = $derived(item.reactive.system.properties.thrownRange ?? 0);
 
-    setContext("document", item);
-    setContext("application", sheet);
+let strengthRequirement = $derived(item.reactive.system.properties.strengthRequirement.value ?? 0);
+let strengthRequirementOverridesTwoHanded = $derived(
+	item.reactive.system.properties.strengthRequirement.overridesTwoHanded,
+);
+
+let objectType = $derived(item.reactive.system.objectType);
+let objectSizeType = $derived(item.reactive.system.objectSizeType);
+
+setContext('document', item);
+setContext('application', sheet);
 </script>
 
 {#snippet activationConfigTab()}
@@ -150,27 +156,19 @@
                 />
             </div>
 
-            <label class="nimble-field">
-                <input
-                    type="checkbox"
-                    checked={stackable}
-                    onchange={({ target }) =>
-                        item.update({ "system.stackable": target.checked })}
-                />
-
-                <span
-                    class="nimble-heading nimble-field__label"
-                    data-heading-variant="field"
-                >
-                    Stackable
-
-                    <i
-                        class="nimble-field__hint-icon fa-solid fa-circle-info"
-                        data-tooltip="Stackable objects can share an inventory slot."
-                        data-tooltip-direction="UP"
-                    ></i>
+            <div class="nimble-field nimble-field--column">
+                <span class="nimble-heading" data-heading-variant="field">
+                    Object Size Type
                 </span>
-            </label>
+
+                <TagGroup
+                    options={getObjectSizeTypeOptions()}
+                    selectedOptions={[item.reactive.system.objectSizeType]}
+                    toggleOption={updateObjectSizeType}
+                />
+            </div>
+
+            {#if objectSizeType === 'slots'}
 
             <div class="nimble-field nimble-field--column">
                 <span class="nimble-heading" data-heading-variant="field">
@@ -178,7 +176,7 @@
 
                     <i
                         class="nimble-field__hint-icon fa-solid fa-circle-info"
-                        data-tooltip="Enter a decimal value to count towards one slot for small related items."
+                        data-tooltip="How many slots this item takes up. Enter 0.5 for potions."
                         data-tooltip-direction="UP"
                     ></i>
                 </span>
@@ -190,8 +188,40 @@
                         item.update({
                             "system.slotsRequired": target.value,
                         })}
+                    disabled={objectSizeType != "slots"}
                 />
             </div>
+
+            {/if}
+
+            {#if objectSizeType === 'stackable'}
+
+            <div class="nimble-field nimble-field--column">
+                <span class="nimble-heading" data-heading-variant="field">
+                    Stack Size
+
+                    <i
+                        class="nimble-field__hint-icon fa-solid fa-circle-info"
+                        data-tooltip="How many of this item can fit into a single stack."
+                        data-tooltip-direction="UP"
+                    ></i>
+                </span>
+
+                <input
+                    type="number"
+                    min="2"
+                    step="1"
+                    value={item.reactive.system.stackSize || 2}
+                    onchange={({ target }) =>
+                        item.update({
+                            "system.stackSize": target.value,
+                        })}
+                    disabled={objectSizeType != "stackable"}
+                />
+            </div>
+
+            {/if}
+
         </div>
 
         {#if objectType === "weapon"}

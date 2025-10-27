@@ -1,12 +1,11 @@
-import type { NimbleBaseItem } from '../documents/item/base.svelte.js';
 import type { NimbleBaseRule } from '../models/rules/base.js';
 
-namespace RulesManager {
+export namespace RulesManager {
 	export interface AddOptions {
-		/** Update the parent item. Default `true` */
 		update?: boolean;
 	}
 }
+
 class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	#item: NimbleBaseItem;
   rulesTypeMap: Map<string, InstanceType<typeof NimbleBaseRule>>;
