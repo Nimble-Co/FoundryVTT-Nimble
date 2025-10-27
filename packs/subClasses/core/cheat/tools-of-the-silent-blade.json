@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Tools of the Silent Blade",
+	"type": "subclass",
+	"img": "systems/nimble/assets/classImages/cheat.webp",
+	"system": {
+		"macro": "",
+		"identifier": "tools-of-the-silent-blade",
+		"rules": [],
+		"description": "<h3>Level 3</h3><p><strong>Amidst All This Commotion...</strong> If a creature dies while you Sneak Attack them, you may turn Invisible until you attack again or until the beginning of your next turn.</p><p><strong>Leave No Trace.</strong> Advantage on Stealth checks when you are at full health.</p><h3>Level 7</h3><p><strong>Cunning Strike.</strong> (2/encounter) When you land a Sneak Attack, you may force the target to make a STR save (DC 10+INT). On a failure, instead of rolling your Sneak Attack dice, they deal the maximum amount of damage (if your target saves, regain 1 use).</p><h3>Level 11</h3><p><strong>Professional Skulker.</strong> Gain a climbing speed and advantage on Stealth checks (replaces Leave No Trace).</p><h3>Level 15</h3><p><strong>KILL.</strong> When you crit an enemy with fewer max HP than you, it dies.</p>",
+		"parentClass": "cheat",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.344",
+		"systemId": "nimble",
+		"systemVersion": "0.1.5",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	},
+	"_id": "JXZgERx81RLnN2l2"
+}
