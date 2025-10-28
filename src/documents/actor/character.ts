@@ -1,26 +1,10 @@
 import type BaseUser from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/documents/user.d.mts';
-import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
-import type { NimbleAncestryItem } from '../item/ancestry.js';
-import type { NimbleBackgroundItem } from '../item/background.js';
-import type { NimbleSubclassItem } from '../item/subclass.js';
-import type { ActorRollOptions } from './actorInterfaces.ts';
-
-// Forward declaration to avoid circular dependency with item/class.ts
-interface NimbleClassItem extends Item {
-	identifier: string;
-	system: any;
-	ASI?: Record<string, number>;
-	hitDice?: { size: number; total: number };
-	maxHp?: number;
-	grantedArmorProficiencies?: string[];
-	grantedWeaponProficiencies?: string[];
-}
-
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { HitDiceManager } from '../../managers/HitDiceManager.js';
 import { RestManager } from '../../managers/RestManager.js';
+import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
@@ -33,6 +17,9 @@ import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/Charact
 import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
+import type { NimbleAncestryItem } from '../item/ancestry.js';
+import type { NimbleBackgroundItem } from '../item/background.js';
+import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
 
 export class NimbleCharacter extends NimbleBaseActor {
