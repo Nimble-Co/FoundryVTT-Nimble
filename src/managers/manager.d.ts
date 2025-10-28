@@ -10,4 +10,3 @@ declare interface RulesManagerInterface extends Map<string, NimbleBaseRule> {
 	deleteRule(id: string): Promise<any>;
 	updateRule(id: string, data: string | Record<string, any>): Promise<boolean>;
 }
-

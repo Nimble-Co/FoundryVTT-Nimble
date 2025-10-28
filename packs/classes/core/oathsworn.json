@@ -4,7 +4,7 @@
 	"img": "systems/nimble/assets/classImages/oathsworn.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
+		"identifier": "oathsworn",
 		"rules": [],
 		"armorProficiencies": [
 			"plate",
