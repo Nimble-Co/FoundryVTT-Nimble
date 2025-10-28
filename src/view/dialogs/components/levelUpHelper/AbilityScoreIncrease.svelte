@@ -81,7 +81,9 @@
 							type="checkbox"
 							name="{document.id}-stat-increase"
 							value={abilityKey}
-							disabled={!isSelected && selectedAbilityScores.length === 2}
+							disabled={!isSelected &&
+								Array.isArray(selectedAbilityScores) &&
+								selectedAbilityScores.length === 2}
 							bind:group={selectedAbilityScores}
 						/>
 					{:else}
