@@ -1,4 +1,3 @@
-import { SvelteActorSheet } from '#lib/SvelteActorSheet.svelte.js';
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
@@ -20,9 +19,8 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		actor: { document: NimbleCharacter },
 		options = {} as SvelteApplicationRenderContext,
 	) {
-		// @ts-expect-error - Type mismatch with SvelteApplicationMixin
+		// @ts-expect-error - ActorSheetV2 expects different constructor signature
 		super(
-			// @ts-expect-error
 			foundry.utils.mergeObject(options, {
 				document: actor.document,
 			}),
@@ -37,7 +35,6 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		};
 	}
 
-	// @ts-expect-error
 	static override DEFAULT_OPTIONS = {
 		classes: ['nimble-sheet', 'nimble-sheet--player-character'],
 		window: {
@@ -60,72 +57,60 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	/**
 	 * Attach drop event listener for drag and drop functionality
 	 */
-	// @ts-expect-error
 	protected _attachFrameListeners() {
-		// @ts-expect-error
 		super._attachFrameListeners();
 	}
 
 	/**
 	 * Handle drop events on the character sheet
 	 */
-	async _onDrop(event: DragEvent) {
+	async _onDropItem(event: DragEvent, data: Record<string, unknown>) {
 		event.preventDefault();
 		event.stopPropagation();
 
-		// @ts-expect-error - TextEditor is a global FoundryVTT class
-		const data = TextEditor.getDragEventData(event) as unknown as Record<string, unknown>;
 		const actor = this.document as NimbleCharacter;
 
 		// @ts-expect-error - Hooks.call has complex typing
 		const allowed = Hooks.call('dropActorSheetData', actor, this, data);
 		if (allowed === false) return false;
 
-		// Handle different data types
-		switch (data.type) {
-			case 'Item':
-				return this._onDropItem(event, data);
-			default:
-				return false;
+		if (!this.document.isOwner) {
+			return false;
 		}
-	}
-
-	/**
-	 * Handle item drops
-	 */
-	async _onDropItem(event: DragEvent, data: Record<string, unknown>) {
-		if (!this.document.isOwner) return false;
 
 		// @ts-expect-error
 		const item = await Item.implementation.fromDropData(data);
 		const itemData = item.toObject();
 
-		// Preserve the UUID from the source document
 		if (item.uuid && !itemData.uuid) {
+			// Preserve the UUID from the source document
 			itemData.uuid = item.uuid;
 		}
 
 		// Handle item sorting within the same Actor
-		if (this.document.uuid === item.actor?.uuid) return this._onSortItem(event, itemData);
+		const keepId = !this.actor.items.has(item.id);
+		if (!keepId) {
+			return this._onSortItem(event, itemData);
+		}
 
-		// Create the owned item
-		return this._onDropItemCreate(itemData, event);
-	}
-
-	/**
-	 * Handle sorting items within the same actor
-	 */
-	_onSortItem(event: DragEvent, itemData: any) {
-		// For now, just create the item - sorting can be implemented later if needed
-		return this._onDropItemCreate([itemData], event);
-	}
-
-	/**
-	 * Override item drop to validate subclass requirements
-	 */
-	async _onDropItemCreate(itemData, event) {
 		// Handle arrays
-		const items = itemData instanceof Array ? itemData : [itemData];
+		const items = Array.isArray(itemData) ? itemData : [itemData];
+
+		// Check if any item is a subclass
+		const hasSubclass = items.some((item: any) => item.type === 'subclass');
+
+		if (hasSubclass) {
+			// Use special subclass creation logic that includes validation
+			return this._onDropSubclassCreate(items);
+		} else {
+			// Create regular items
+			return this.actor.createEmbeddedDocuments('Item', items);
+		}
+	}
+
+	async _onDropSubclassCreate(itemData: any) {
+		// Handle arrays
+		const items = Array.isArray(itemData) ? itemData : [itemData];
 		const actor = this.document as NimbleCharacter;
 
 		// Validate each item
@@ -176,7 +161,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 
 					// Show confirmation dialog
 					const confirmed = await foundry.applications.api.DialogV2.confirm({
-						content: `<p>You already have the <strong>${existingSubclass.name}</strong> subclass. Do you want to replace it with <strong>${subclass.name}</strong>?</p>`,
+						content: `<p>You already have the <strong>${existingSubclass.name}</strong> subclass.<br />Do you want to replace it with <strong>${subclass.name}</strong>?</p>`,
 						rejectClose: false,
 						modal: true,
 					});
