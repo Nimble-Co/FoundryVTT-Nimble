@@ -10,11 +10,19 @@ jobs:
   format:
     name: Format Code
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: checkout code
+      - name: checkout code (same-repo PRs)
+        if: github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: checkout code (fork PRs)
+        if: github.event.pull_request.head.repo.full_name != github.repository
+        uses: actions/checkout@v4
 
       - name: install node
         uses: actions/setup-node@v4
@@ -36,11 +44,23 @@ jobs:
       - name: Setup Biome
         uses: biomejs/setup-biome@v2
 
-      - name: Run format
+      - name: Run format (same-repo PRs)
+        if: github.event.pull_request.head.repo.full_name == github.repository
         run: npm run format
 
-      - name: Commit formatted changes
+      - name: Commit formatted changes (same-repo PRs)
+        if: github.event.pull_request.head.repo.full_name == github.repository
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: 'Format code with Prettier'
-          branch: ${{ github.head_ref }} # For PRs
+          commit_message: 'Format code with Biome'
+          branch: ${{ github.head_ref }}
+
+      - name: Check format (fork PRs)
+        if: github.event.pull_request.head.repo.full_name != github.repository
+        run: |
+          npm run format
+          if ! git diff --exit-code; then
+            echo "❌ Code is not formatted. Please run 'npm run format' locally and commit the changes."
+            exit 1
+          fi
+          echo "✅ Code is properly formatted."
