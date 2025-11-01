@@ -19,7 +19,8 @@
 		"check:svelte": "svelte-check --tsconfig ./tsconfig.json",
 		"madge-test": "madge --circular ./src/",
 		"type-check": "tsc --noEmit",
-		"spell-check": "npx cspell -c ./cspell.json lint . --words-only | sort -u"
+		"spell-check": "npx cspell -c ./cspell.json lint . --words-only | sort -u",
+		"prepare": "husky"
 	},
 	"imports": {
 		"#lib/*": "./lib/*",
@@ -80,6 +81,8 @@
 		"eslint-plugin-svelte": "^3.12.5",
 		"glob": "^11.0.3",
 		"globals": "^16.4.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.2.6",
 		"madge": "^8.0.0",
 		"postcss": "^8.5.6",
 		"prettier": "^3.6.2",
@@ -96,5 +99,9 @@
 		"svelte": "^5.42.2",
 		"svelte-preprocess": "^6.0.3",
 		"typescript": "^5.9.3"
+	},
+	"lint-staged": {
+		"*.{ts,mts,js,mjs}": "npx @biomejs/biome format --write",
+		"*.svelte": "npx prettier --write"
 	}
 }
