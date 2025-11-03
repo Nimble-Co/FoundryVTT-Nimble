@@ -58,11 +58,14 @@ function prepareAbilityScoreComponents(abilityScores, characterClass) {
 						return levels;
 					}
 
+					// Handle both single values and arrays (for capstone)
+					const selectedValues = Array.isArray(value) ? value : [value];
+
 					levels.push({
 						label,
 						level,
 						data: Object.keys(abilityScores).reduce((acc, key) => {
-							acc[key] = key === value;
+							acc[key] = selectedValues.includes(key);
 							return acc;
 						}, {}),
 						type: statIncreaseType,
@@ -81,6 +84,37 @@ function prepareAbilityScoreComponents(abilityScores, characterClass) {
 function toggleStatIncreaseOption(level, key) {
 	if (!characterClass) return;
 
+	const currentData = characterClass.system.abilityScoreData?.[level];
+	if (!currentData) return;
+
+	const { value, statIncreaseType } = currentData;
+
+	// For capstone, toggle between adding/removing from array (max 2)
+	if (statIncreaseType === 'capstone') {
+		let newValue;
+
+		if (!value || value.length === 0) {
+			newValue = [key];
+		} else if (Array.isArray(value)) {
+			if (value.includes(key)) {
+				newValue = value.filter(k => k !== key);
+			} else if (value.length < 2) {
+				newValue = [...value, key];
+			} else {
+				// Already have 2 selected, replace the first one
+				newValue = [value[1], key];
+			}
+		} else {
+			// Value is a string, convert to array
+			newValue = value === key ? [] : [value, key];
+		}
+
+		return document.updateItem(characterClass._id, {
+			[`system.abilityScoreData.${level}.value`]: newValue,
+		});
+	}
+
+	// For normal stat increases, just set the single value
 	return document.updateItem(characterClass._id, {
 		[`system.abilityScoreData.${level}.value`]: key,
 	});
@@ -114,9 +148,11 @@ let baseStatsMatchCoreArray = $derived(checkBaseStatsMatchCoreArray(characterAbi
 
 {#snippet abilityToggle(level, type, key, active)}
     {@const validityTest =
-        type === "primary"
-            ? keyAbilityScores.includes(key)
-            : !keyAbilityScores.includes(key)}
+        type === "capstone"
+            ? true
+            : type === "primary"
+                ? keyAbilityScores.includes(key)
+                : !keyAbilityScores.includes(key)}
 
     <td>
         {#if validityTest}

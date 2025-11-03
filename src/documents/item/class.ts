@@ -1,8 +1,7 @@
+import { ClassResourceManager } from '../../managers/ClassResourceManager.js';
 import type { NimbleClassData } from '../../models/item/ClassDataModel.js';
 import type { NimbleCharacter } from '../actor/character.js';
-
 import { NimbleBaseItem } from './base.svelte.js';
-import { ClassResourceManager } from '../../managers/ClassResourceManager.js';
 
 export class NimbleClassItem extends NimbleBaseItem {
 	declare ASI: Record<string, number>;
@@ -41,8 +40,13 @@ export class NimbleClassItem extends NimbleBaseItem {
 				if (Number.parseInt(level, 10) > this.system.classLevel) return acc;
 				if (data.value.length === 0) return acc;
 
-				acc[data.value] ??= 0;
-				acc[data.value] += 1;
+				// Handle both single ability scores and arrays (for capstone)
+				const values = Array.isArray(data.value) ? data.value : [data.value];
+
+				for (const abilityKey of values) {
+					acc[abilityKey] ??= 0;
+					acc[abilityKey] += 1;
+				}
 
 				return acc;
 			},

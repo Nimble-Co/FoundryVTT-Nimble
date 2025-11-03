@@ -78,6 +78,7 @@ const schema = () => ({
 		13: abilityScoreSchema('secondary'),
 		16: abilityScoreSchema('primary'),
 		17: abilityScoreSchema('secondary'),
+		20: abilityScoreSchema('capstone'),
 	}),
 	mana: new fields.SchemaField({
 		formula: new fields.StringField({ required: true, initial: '', nullable: false }),
@@ -107,7 +108,7 @@ class NimbleClassData extends NimbleBaseItemData<
 	/** @inheritDoc */
 	static override defineSchema(): NimbleClassData.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseItemData.defineSchema(),
 			...schema(),
 		};
 	}
