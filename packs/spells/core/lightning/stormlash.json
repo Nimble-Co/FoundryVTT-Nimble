@@ -82,8 +82,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Line: </strong>12</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage: </strong>3d8+4 (ignoring metal armor).</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>Surviving creatures are Dazed on a failed STR save, or Incapacitated instead for 1 of their turns if they fail by 5 or more. Creatures with a large amount of metal (e.g., armor or a longsword) roll with disadvantage.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+4 damage</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Line</strong>: 12. <strong>Damage</strong>: 3d8+4 (ignoring metal armor). Surviving creatures are Dazed on a failed STR save, or Incapacitated instead for 1 of their turns if they fail by 5 or more. Creatures with a large amount of metal (e.g., armor or a longsword) roll with disadvantage.</p>",
+			"higherLevelEffect": "<p>+4 damage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -103,11 +103,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757109186305,
+		"modifiedTime": 1762390368943,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "rVbKA6efN5UQx0M6"

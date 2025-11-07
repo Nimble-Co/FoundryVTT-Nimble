@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Explosive Judgment",
+	"type": "feature",
+	"img": "icons/magic/fire/explosion-fireball-large-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 2,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>(1/encounter) 2 actions: Expend your Judgment Dice, deal that much radiant damage to all enemies in your aura.</p>",
+		"featureType": "class",
+		"class": "oathsworn",
+		"group": "sacred-decree"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761626237386,
+		"modifiedTime": 1761626329879,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "8TlDAeJ5nIZbJk3E"
+}

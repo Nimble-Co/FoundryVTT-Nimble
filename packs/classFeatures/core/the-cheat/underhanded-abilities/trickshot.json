@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Trickshot",
+	"type": "feature",
+	"img": "icons/magic/air/air-smoke-casting.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When you throw a dagger, it returns back to your hand at the end of your turn. On a hit, it ricochets to another creature within 2 spaces, dealing half as much damage to them. </p>",
+		"featureType": "class",
+		"class": "cheat",
+		"group": "underhanded-abilities"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1759472840774,
+		"modifiedTime": 1759472954515,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "gCkxDNXKLhgO3EU8"
+}

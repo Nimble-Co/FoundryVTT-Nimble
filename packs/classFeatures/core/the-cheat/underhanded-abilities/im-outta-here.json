@@ -1,0 +1,60 @@
+{
+	"folder": null,
+	"name": "I’m Outta Here!",
+	"type": "feature",
+	"img": "icons/magic/air/air-smoke-casting.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "r0SdddFiFFB0FHbH",
+					"type": "condition",
+					"condition": "invisible",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When an ally within 4 spaces is crit, you may turn invisible until the end of your next turn and then move up to half your speed for free. </p>",
+		"featureType": "class",
+		"class": "cheat",
+		"group": "underhanded-abilities"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1759472840774,
+		"modifiedTime": 1759472947071,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "e0gtFwx7E4LpFUUs"
+}

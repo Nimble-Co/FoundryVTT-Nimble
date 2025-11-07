@@ -41,8 +41,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions , Multi-target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach: 12.</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Concentration:</strong> Up to 1 minute. You and up to 12 allies within <strong>Reach 12</strong> gain: Ranged attacks have disadvantage against you, a flying speed of 12, and can move for free 1/round.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p>+1 minute or +2 targets.</p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions , Multi-target</strong></p><p><strong>Concentration</strong>: Up to 1 minute. You and up to 12 allies within Reach 12 gain: Ranged attacks have disadvantage against you, a flying speed of 12, and can move for free 1/round.</p>",
+			"higherLevelEffect": "<p>+1 minute or +2 targets.</p>"
 		},
 		"properties": {
 			"range": {
@@ -65,11 +65,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757227360473,
+		"modifiedTime": 1762393945467,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "VUAcS7huPbffPGMk"

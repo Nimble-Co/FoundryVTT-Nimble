@@ -55,8 +55,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>3 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Range: </strong>12</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage:</strong> d66 bludgeoning to creatures in a 3×3 area. Creatures adjacent to that area take half as much. The entire area permanently becomes difficult terrain.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p></p></td></tr></tbody></table>",
-			"higherLevelEffect": "<p></p><table><tbody><tr><td><p>+1 initial area.</p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>3 Actions, AoE</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: d66 bludgeoning to creatures in a 3×3 area. Creatures adjacent to that area take half as much. The entire area permanently becomes difficult terrain.</p>",
+			"higherLevelEffect": "<p>+1 initial area.</p>"
 		},
 		"properties": {
 			"range": {
@@ -78,11 +78,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757136780964,
+		"modifiedTime": 1762379323779,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "uxf7FdBdcfvY4de0"

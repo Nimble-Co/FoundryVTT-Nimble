@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Stormcaller",
+	"type": "feature",
+	"img": "icons/magic/lightning/bolts-salvo-clouds-sky.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Learn a Utility Spell from each spell school you know.</p><hr><p>Level 6: Choose a 2nd of each</p><p>Level 11: Choose a 3rd of each</p>",
+		"featureType": "class",
+		"class": "stormshifter",
+		"group": "stormshifter-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762032515591,
+		"modifiedTime": 1762032625837,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "M6VmaCjk44IS7VDn"
+}

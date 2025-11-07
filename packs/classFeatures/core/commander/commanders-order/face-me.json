@@ -1,0 +1,60 @@
+{
+	"name": "Face Me!",
+	"type": "feature",
+	"img": "icons/magic/control/fear-fright-mask-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "ally is crit within 12 spaces",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": true
+			},
+			"duration": {
+				"details": "until you drop to 0 HP",
+				"quantity": 1,
+				"type": "special"
+			},
+			"effects": [
+				{
+					"id": "mgQHszIXhFjne2XK",
+					"type": "condition",
+					"condition": "taunted",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p><strong>Reaction</strong> (after an ally is crit within 12 spaces): Taunt that enemy until you drop to 0 HP.</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "commanders-orders"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760399261232,
+		"modifiedTime": 1760399274224,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "iNq4GHvFeLz45fl1"
+}

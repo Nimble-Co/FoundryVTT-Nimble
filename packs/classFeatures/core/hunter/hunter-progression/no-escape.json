@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "No Escape",
+	"type": "feature",
+	"img": "icons/weapons/bows/shortbow-white.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Whenever you see one or more allies make an opportunity attack, you may also make a ranged opportunity attack against the same target.</p>",
+		"featureType": "class",
+		"class": "hunter",
+		"group": "hunter-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761433334528,
+		"modifiedTime": 1761434322156,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "yJqf7nEqz1UBi03b"
+}

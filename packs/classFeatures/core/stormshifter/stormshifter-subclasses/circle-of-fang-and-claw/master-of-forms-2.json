@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Master of Forms (2)",
+	"type": "feature",
+	"img": "icons/creatures/magical/spirit-undead-winged-ghost.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>You can Beastshift 2 additional times per Safe Rest. Choose 2 additional Chimeric Boons. Your Direbeast forms can have 3 at a time.</p>",
+		"featureType": "class",
+		"class": "stormshifter",
+		"group": "circle-of-fang-and-claw"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762039669255,
+		"modifiedTime": 1762039763845,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "zwUQKK1sZgMlm2wE"
+}

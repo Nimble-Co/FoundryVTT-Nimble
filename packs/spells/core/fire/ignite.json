@@ -55,8 +55,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions, Single Target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Range: </strong>8</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage:</strong> 4d10 to a smoldering target, ending the condition on hit.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p>+10 damage</p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Range</strong>: 8. <strong>Damage</strong>: 4d10 to a Smoldering target, ending the condition on hit.</p>",
+			"higherLevelEffect": "<p>+10 damage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -78,11 +78,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757137007260,
+		"modifiedTime": 1762377549274,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "FL6JcWWzAjdMchhJ"

@@ -89,8 +89,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions, Single Target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Range: </strong>12</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage:</strong> 3d8</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>The bolt also damages the next closest creature to your target.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>On miss:</strong> the lightning fails to find ground, and strikes you instead.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p></p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+4 damage</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: 3d8. The bolt also damages the next closest creature to your target. On miss: the lightning fails to find ground and strikes you instead.</p>",
+			"higherLevelEffect": "<p>+4 damage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -112,11 +112,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.8",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1758388196844,
+		"modifiedTime": 1762382006864,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "pLUyI3NQBJ6FV1mq"

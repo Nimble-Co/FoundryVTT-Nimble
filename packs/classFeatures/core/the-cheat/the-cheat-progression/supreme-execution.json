@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Supreme Execution",
+	"type": "feature",
+	"img": "icons/weapons/daggers/dagger-crooked-ice-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When you attack with a blade, you do not require targets to be Distracted to trigger Vicious Opportunist.</p><hr><p>+1 to any 2 of your stats. </p>",
+		"featureType": "class",
+		"class": "the-cheat",
+		"group": "the-cheat-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1759473072720,
+		"modifiedTime": 1761528553527,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "SAsHW8p9yrwDrxUg"
+}

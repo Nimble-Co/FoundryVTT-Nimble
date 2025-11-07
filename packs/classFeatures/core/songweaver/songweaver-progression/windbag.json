@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Windbag",
+	"type": "feature",
+	"img": "icons/magic/air/air-smoke-casting.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "An ally makes a roll",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": true
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Choose 1 Utility Spell from each spell school you know.</p><hr><p>Level 6: One additional utility spell per school</p><p>Level 14: All utility spells from your schools</p>",
+		"featureType": "class",
+		"class": "songweaver",
+		"group": "songweaver-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761888982208,
+		"modifiedTime": 1761889276925,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "fg1cWHw1YLF2Mcc0"
+}

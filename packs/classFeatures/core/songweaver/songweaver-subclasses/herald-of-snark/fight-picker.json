@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Fight Picker",
+	"type": "feature",
+	"img": "icons/magic/control/buff-strength-muscle-damage-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>(1/turn) When an enemy is damaged by your Vicious Mockery, you may have one of your allies Taunt them until the end of the enemy’s turn instead.</p>",
+		"featureType": "class",
+		"class": "songweaver",
+		"group": "herald-of-snark"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761948366981,
+		"modifiedTime": 1761948648392,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "tW3RuzQKPncYXwqh"
+}

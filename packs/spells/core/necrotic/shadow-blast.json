@@ -77,8 +77,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td><p><strong>1 Action, Single Target</strong></p></td></tr><tr><td><p><strong>Range: 8.</strong></p></td></tr><tr><td><p><strong>Damage:</strong> 1d12+KEY. 1/round.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+1d12 every 5 levels</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Range</strong>: 8. <strong>Damage</strong>: 1d12+KEY. 1/round.</p>",
+			"higherLevelEffect": "<p>+1d12 every 5 levels.</p>"
 		},
 		"properties": {
 			"range": {
@@ -99,11 +99,11 @@
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757282840136,
+		"modifiedTime": 1762391246179,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "9TNPdOXlCcGgxw6r"

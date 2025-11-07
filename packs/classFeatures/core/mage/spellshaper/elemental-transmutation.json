@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Elemental Transmutation",
+	"type": "feature",
+	"img": "icons/magic/light/hand-sparks-glow-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>(1 mana) Change the damage type of a spell to: Fire, Ice, Lightning, Necrotic, or Radiant.</p>",
+		"featureType": "class",
+		"class": "mage",
+		"group": "spellshaper"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761539279093,
+		"modifiedTime": 1761539429464,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "bXbjMCnoGhSaJpE1"
+}

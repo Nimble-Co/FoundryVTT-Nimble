@@ -34,8 +34,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td><p><strong>1 Action</strong></p></td></tr><tr><td><p>Summon a shadow minion within Reach 1 (you can summon a max of INT or LVL minions this way, whichever is lower). Your shadow minions follow the normal minion rules: they have 1 HP, no damage bonus, and do not crit. They abandon you immediately outside of combat.</p></td></tr><tr><td><p><strong>Action:</strong> (1/turn) you may command ALL of your minions to move up to 6 then attack (Reach 1, d12 each)</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+1 Reach every 5 levels.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>1 Action</strong></p><p>Summon a shadow minion within Reach 1 (you can summon a max of INT or LVL minions this way, whichever is lower). Your shadow minions follow the normal minion rules: they have 1 HP, no damage bonus, and do not crit. They abandon you immediately outside of combat. </p><p><strong>Action</strong>: (1/turn) you may command ALL of your minions to move up to 6 then attack (Reach 1, d12 each).</p>",
+			"higherLevelEffect": "<p>+1 Reach every 5 levels.</p>"
 		},
 		"properties": {
 			"range": {
@@ -56,11 +56,11 @@
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757224199980,
+		"modifiedTime": 1762391420641,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "ho2KADcmQWWTeYR0"

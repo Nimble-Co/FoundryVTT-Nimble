@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Unfailing Courage",
+	"type": "feature",
+	"img": "icons/skills/melee/hand-grip-hammer-spiked-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Your presence inspires others to feats of heroism and courage heard of only in legend. Your Songweaver’s Inspiration allows your target to roll with advantage.</p>",
+		"featureType": "class",
+		"class": "songweaver",
+		"group": "herald-of-courage"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761949002622,
+		"modifiedTime": 1761949102225,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "KkWqpX2MaeXJAj6W"
+}

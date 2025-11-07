@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td><p><strong>1 Action, Single Target</strong></p></td></tr><tr><td><p><strong>Reach: 6.</strong></p></td></tr><tr><td><p><strong>Reaction:</strong> When a creature falls, cause them to gently float to the ground, unharmed.</p></td></tr></tbody></table>",
+			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Reach</strong>: 6. <strong>Reaction</strong>: When a creature falls, cause them to gently float to the ground, unharmed.</p>",
 			"higherLevelEffect": ""
 		},
 		"properties": {
@@ -57,11 +57,11 @@
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757108730859,
+		"modifiedTime": 1762395556627,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "aPIbkbmWDkJ7FS6S"

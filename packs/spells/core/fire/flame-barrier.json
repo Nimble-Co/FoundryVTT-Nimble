@@ -33,8 +33,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"104,0\"><p><strong>1 Action, Self</strong></p></td></tr><tr><td data-colwidth=\"104,0\" colspan=\"2\"><p><strong>Reaction: </strong>When attacked, Defend for free. Until the start of your next turn, melee attackers against you take KEY damage (ignoring armor) and gain Smoldering.</p></td></tr><tr><td data-colwidth=\"104,0\" colspan=\"2\"><p><strong>Defend: </strong>If you’ve already Defended this round, you can’t use abilities requiring it again (even for free).</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p>+KEY damage</p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>1 Action, Self</strong></p><p><strong>Reaction:</strong> When attacked, Defend for free. Until the start of your next turn, melee attackers against you take KEY damage (ignoring armor) and gain Smoldering.</p>",
+			"higherLevelEffect": "<p>+KEY damage</p>"
 		},
 		"properties": {
 			"range": {
@@ -54,11 +54,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757112900926,
+		"modifiedTime": 1762377175337,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "QHRQ64MP6g21jB6D"

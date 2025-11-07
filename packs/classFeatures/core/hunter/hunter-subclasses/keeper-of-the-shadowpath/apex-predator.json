@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Apex Predator",
+	"type": "feature",
+	"img": "icons/skills/melee/strike-spear-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>You may use your Primal Predator ability twice each encounter. Gain 1 Thrill of the Hunt charge when you roll Initiative.</p>",
+		"featureType": "class",
+		"class": "hunter",
+		"group": "keeper-of-the-shadowpath"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761434673708,
+		"modifiedTime": 1761442711338,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "krKkYldIiY2pnLVe"
+}

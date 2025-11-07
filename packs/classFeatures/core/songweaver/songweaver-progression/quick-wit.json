@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Quick Wit",
+	"type": "feature",
+	"img": "icons/tools/scribal/ink-quill-pink.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "An ally makes a roll",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": true
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When you roll Initiative, you may regain 2 spent uses of your Songweaver’s Inspiration (these expire at the end of combat if left unused).</p>",
+		"featureType": "class",
+		"class": "songweaver",
+		"group": "songweaver-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761888922468,
+		"modifiedTime": 1761888970682,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "jBfbkX4fDvOKsoFD"
+}

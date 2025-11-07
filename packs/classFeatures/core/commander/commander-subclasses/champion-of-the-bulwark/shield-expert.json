@@ -1,0 +1,52 @@
+{
+	"name": "Shield Expert",
+	"type": "feature",
+	"img": "icons/equipment/shield/buckler-wooden-boss-glowing-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>While wearing a shield, you may Defend 2× each round. The first time each round you block all of the damage from an attack, you may make an opportunity attack against the attacker for free.</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "champion-of-the-bulwark"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760400818103,
+		"modifiedTime": 1760401000725,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "O0iwveCk3zoyRuF9"
+}

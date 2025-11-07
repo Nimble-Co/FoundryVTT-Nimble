@@ -1,0 +1,52 @@
+{
+	"name": "Captain of Legions",
+	"type": "feature",
+	"img": "icons/commodities/treasure/medal-ribbon-gold-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>+1 to any 2 of your stats.</p><p>The first time each encounter you use Coordinated Strike, EVERY ally within 12 spaces gains +1 action (replaces Unparalleled Tactics).</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "commander-progression"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760384468062,
+		"modifiedTime": 1761434356267,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "6AU1FinuUY8l1JKj"
+}

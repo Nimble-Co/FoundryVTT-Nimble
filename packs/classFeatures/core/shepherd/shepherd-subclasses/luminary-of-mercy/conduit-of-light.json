@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Conduit of Light",
+	"type": "feature",
+	"img": "icons/magic/light/beam-horizon-strike-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When an effect caused by you would heal HP, you may expend 1 use of Searing Light to heal (or damage, ignoring armor) another target within 6 spaces of yourself for the same amount.</p>",
+		"featureType": "class",
+		"class": "shepherd",
+		"group": "luminary-of-mercy"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761720081208,
+		"modifiedTime": 1761884622766,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "ZnU832j5D1mVVCrt"
+}

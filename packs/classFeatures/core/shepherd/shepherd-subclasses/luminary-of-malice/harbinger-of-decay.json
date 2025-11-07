@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Harbinger of Decay",
+	"type": "feature",
+	"img": "icons/environment/creatures/bug-centipede-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Vibrant colors and lovely smells are suppressed near you. Foods spoil more rapidly in your presence, and you frequently awaken to flies wherever you lodge. You may have your Lifebinding Spirit shift into a deathly version of itself (a zombie dog, a devious imp, etc.) and have its damage type become necrotic.</p>",
+		"featureType": "class",
+		"class": "shepherd",
+		"group": "luminary-of-malice"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761720707463,
+		"modifiedTime": 1761884652464,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "8TKYhT9t9TsELuj7"
+}

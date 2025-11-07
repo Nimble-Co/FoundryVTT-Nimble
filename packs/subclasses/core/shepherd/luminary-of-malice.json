@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Luminary of Malice",
+	"type": "subclass",
+	"img": "icons/magic/death/hand-withered-gray.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Soul Reaper</strong>. When you use Searing Light to harm an enemy, make a 2nd enemy within range take the same amount of damage (ignoring armor).</p><p><strong>Harbinger of Decay</strong>. Vibrant colors and lovely smells are suppressed near you. Foods spoil more rapidly in your presence, and you frequently awaken to flies wherever you lodge. You may have your Lifebinding Spirit shift into a deathly version of itself (a zombie dog, a devious imp, etc.) and have its damage type become necrotic.</p><p>LEVEL 7 </p><p><strong>Veilwalker’s Blessing</strong>. (1/Safe Rest) Reaction (when you would drop to 0 HP): Drop to 1 HP instead and force an enemy within 6 spaces to make a STR save. On a failure, they become Bloodied, or if they are already Bloodied, they drop to 0 HP.</p><p>LEVEL 11 </p><p><strong>Deathbringer’s Touch</strong>. Your first melee attack each round against a Bloodied creature is an automatic critical hit. Your Lifebinding Spirit deals additional damage equal to your STR.</p><p>LEVEL 15 </p><p><strong>Conduit of Death</strong>. Your Veilwalker’s Blessing ability recharges when you roll Initiative. This charge is lost if unspent at the end of combat.</p>",
+		"parentClass": "shepherd",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761713849315,
+		"modifiedTime": 1761714023578,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "q31xGnq04YCpwvGN"
+}

@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Small - Keen Eyes",
+	"type": "feature",
+	"img": "icons/creatures/eyes/humanoid-single-red-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>(1/encounter) Mark a target for free. </p><hr><p>Level 7: 2/encounter</p><p>Level 11: 3/encounter.</p>",
+		"featureType": "class",
+		"class": "hunter",
+		"group": "beastmaster"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762155335410,
+		"modifiedTime": 1762156198025,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "00HPS1fSEtILkMxc"
+}

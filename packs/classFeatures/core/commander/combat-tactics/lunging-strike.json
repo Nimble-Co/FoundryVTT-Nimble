@@ -1,0 +1,75 @@
+{
+	"name": "Lunging Strike",
+	"type": "feature",
+	"img": "icons/skills/melee/spear-tips-three-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "XBG95BPpRB6MAyw8",
+					"type": "damage",
+					"damageType": "acid",
+					"formula": "0",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": false,
+					"on": {
+						"hit": [
+							{
+								"id": "NXsbvppkgMQJxeDe",
+								"type": "note",
+								"noteType": "flavor",
+								"text": "Combat tactics: 1/attack, you can expend a Combat Die to add one of the following effects to your attack.",
+								"parentContext": "hit",
+								"parentNode": "XBG95BPpRB6MAyw8"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Gain +1 Reach on an attack and deal extra damage equal to 2× a roll of your Combat Die.</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "combat-tactics"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760399866961,
+		"modifiedTime": 1760400027193,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "5I3ulG74pLtLRBut"
+}

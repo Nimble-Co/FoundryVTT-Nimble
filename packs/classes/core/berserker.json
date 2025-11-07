@@ -1,7 +1,7 @@
 {
 	"name": "Berserker",
 	"type": "class",
-	"img": "icons/weapons/axes/axe-double-short-orange.webp",
+	"img": "systems/nimble/assets/classImages/berserker.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -34,7 +34,7 @@
 		"armorProficiencies": [],
 		"classLevel": 1,
 		"complexity": 2,
-		"description": "<h3>Wrath and Ruin. </h3><p>The Berserker is destruction. He knows not fatigue nor caution—both surely driven away from him in a relentless fury. Those of barbaric nature are said to eat only the dust of war and drink naught but the blood of those felled by their own hand. </p><p>Death is no stranger, for it is said that even death fears to take a Berserker before his battle Rage is satiated. Once a Berserker has begun to fight, he only grows stronger, fueled by battle-lust and an unending Rage. The deadliest among them is not the well-rested, but those who are pushed to the brink through combat. It matters not what a Berserker takes up, be it axe or sword; flesh will be hewn from bone and heads from shoulders. Many have caved under the Berserker’s primal might—sword and spell are but straw in the wake of unbridled Rage. As a Berserker, you can: </p><p><strong>•Become a raging, damage-dealing machine.</strong> Greet death as an old friend and keep on fighting! </p><p><strong>•Increase your damage to unbelievable levels.</strong> The longer a fight goes on, the more your Rage intensifies, allowing you to deal out incredible amounts of brutality. </p><p><strong>•Use your Savage Arsenal.</strong> Choose abilities to crush your foes and laugh in the face of death!</p>",
+		"description": "<p>Wrath and Ruin. The Berserker is destruction. He knows not fatigue nor caution—both surely driven away from him in a relentless fury. Those of barbaric nature are said to eat only the dust of war and drink naught but the blood of those felled by their own hand.</p><p>Death is no stranger, for it is said that even death fears to take a Berserker before his battle Rage is satiated. Once a Berserker has begun to fight, he only grows stronger, fueled by battle-lust and an unending Rage. The deadliest among them is not the wellrested, but those who are pushed to the brink through combat. It matters not what a Berserker takes up, be it axe or sword; flesh will be hewn from bone and heads from shoulders. Many have caved under the Berserker’s primal might—sword and spell are but straw in the wake of unbridled Rage. As a Berserker, you can:</p><p><strong>•Become a raging, damage-dealing machine.</strong> Greet death as an old friend and keep on fighting!</p><p><strong>•Increase your damage to unbelievable levels.</strong> The longer a fight goes on, the more your Rage intensifies, allowing you to deal out incredible amounts of brutality.</p><p><strong>•Use your Savage Arsenal.</strong> Choose abilities to crush your foes and laugh in the face of death!</p>",
 		"keyAbilityScores": [
 			"strength",
 			"dexterity"
@@ -85,11 +85,6 @@
 				"value": "",
 				"type": "statIncrease",
 				"statIncreaseType": "secondary"
-			},
-			"20": {
-				"value": "",
-				"type": "statIncrease",
-				"statIncreaseType": "capstone"
 			}
 		},
 		"resources": [],
@@ -97,26 +92,24 @@
 			"All STR Weapons"
 		],
 		"groupIdentifiers": [
-			"savage-arsenal"
-		]
+			"savage-arsenal",
+			"berserker-progression"
+		],
+		"mana": {
+			"formula": "",
+			"recovery": "safeRest"
+		}
 	},
 	"effects": [],
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.344",
+		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.3",
-		"createdTime": 1751865597085,
-		"modifiedTime": 1751866957312,
-		"lastModifiedBy": "rOTRHON0UVnNo8GT",
-		"exportSource": {
-			"worldId": "nimble-dev",
-			"uuid": "Item.CsWI6wBrrqIO2JYV",
-			"coreVersion": "13.344",
-			"systemId": "nimble",
-			"systemVersion": "0.1.3"
-		}
+		"systemVersion": "0.1.9",
+		"createdTime": 1759180642328,
+		"modifiedTime": 1762029595169,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "MPy0RiYf0bW0Gdlf"
 }

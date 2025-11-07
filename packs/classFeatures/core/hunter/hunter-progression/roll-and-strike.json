@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Roll & Strike",
+	"type": "feature",
+	"img": "icons/skills/melee/strike-dagger-blood-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Action: If you have no Thrill of the Hunt charges, move up to your speed toward your quarry. If you end adjacent to them, make a melee attack against them for free.</p>",
+		"featureType": "class",
+		"class": "hunter",
+		"group": "hunter-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761433334528,
+		"modifiedTime": 1761437635271,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "GsvjYgKhH4FoogG0"
+}

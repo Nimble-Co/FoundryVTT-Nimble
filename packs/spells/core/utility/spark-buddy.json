@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td><p><strong>Casting Time: 1 min</strong></p></td></tr><tr><td><p>Conjure a Tiny (squirrel-sized) electrical helper for up to 1 hour. It can fetch Tiny objects (~1 lb./500 g max), open unlocked doors, illuminate a small area, or deliver a harmless shock.</p></td></tr><tr><td><p>If it takes damage or moves further than 6 spaces away from you, it dissipates into sparks.</p></td></tr></tbody></table>",
+			"baseEffect": "<p><strong>Casting Time: 1 min</strong></p><p>Conjure a Tiny (squirrel-sized) electrical helper for up to 1 hour. It can fetch Tiny objects (~1 lb./500 g max), open unlocked doors, illuminate a small area, or deliver a harmless shock. If it takes damage or moves further than 6 spaces away from you, it dissipates into sparks.</p>",
 			"higherLevelEffect": ""
 		},
 		"properties": {
@@ -56,11 +56,11 @@
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757109142819,
+		"modifiedTime": 1762396085757,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "AkR9wtNuCC5ZDjTR"

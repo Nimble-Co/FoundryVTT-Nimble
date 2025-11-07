@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Stretch Time",
+	"type": "feature",
+	"img": "icons/magic/time/hourglass-tilted-glowing-gold.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>(2 mana) Reduce the action cost of a spell by 1 (min 1).</p>",
+		"featureType": "class",
+		"class": "mage",
+		"group": "spellshaper"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761539734464,
+		"modifiedTime": 1761539792451,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "dMwDq07sogyaZnBd"
+}

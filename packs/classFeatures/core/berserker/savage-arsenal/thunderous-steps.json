@@ -1,0 +1,74 @@
+{
+	"folder": null,
+	"name": "Thunderous Steps",
+	"type": "feature",
+	"img": "icons/weapons/axes/axe-double-short-orange.webp",
+	"system": {
+		"group": "savage-arsenal",
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "U8uA8afkQkT2RPQ7",
+					"type": "damage",
+					"damageType": "bludgeoning",
+					"formula": "@strength",
+					"parentContext": null,
+					"parentNode": null,
+					"on": {
+						"hit": [
+							{
+								"id": "yvH1KLAo4ATtYr6U",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "U8uA8afkQkT2RPQ7"
+							}
+						]
+					},
+					"canCrit": false,
+					"canMiss": false
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>After moving at least 4 spaces while Raging, you may deal STR Bludgeoning damage to all adjacent creatures where you stop.</p>",
+		"featureType": "class",
+		"class": ""
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1759180745583,
+		"modifiedTime": 1759463812325,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "Ecmnf0pXwd511FKP"
+}

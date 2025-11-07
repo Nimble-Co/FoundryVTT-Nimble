@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Gran Gran (NOT a hag)",
+	"type": "feature",
+	"img": "icons/consumables/grains/donut-baked-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 3,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When resting, you may summon her for 1 hour to soothe your wounds (and hassle you for not eating enough). She bakes and hands out pastries equal to your WIL+INT. Eating one recovers one mana, Hit Die, or Wound. Eat them while they’re warm! They expire in 10 minutes.</p>",
+		"featureType": "class",
+		"class": "songweaver",
+		"group": "a-people-person"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761947609724,
+		"modifiedTime": 1761947855219,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "dlU1fK7RgIyYZQea"
+}

@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Shadowfrost",
+	"type": "feature",
+	"img": "icons/magic/water/projectile-ice-teardrop.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p><span style=\"color: rgb(231, 209, 177); font-family: &#x27;Roboto Condensed&#x27;, sans-serif; font-size: 13.328px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(25, 24, 33); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none\">Your Shadow Blast also Slows. You can cast Cryosleep or Rimeblades without Pilfering Power by expending 10 temp HP. Choose 1 Ice Utility Spell.</span></p>",
+		"featureType": "class",
+		"class": "shadowmancer",
+		"group": "pact-of-the-abyssal-depths"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761632918003,
+		"modifiedTime": 1761884480548,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "qihi3i4aGFMlvg00"
+}

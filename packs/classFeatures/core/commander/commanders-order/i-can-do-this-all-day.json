@@ -1,0 +1,80 @@
+{
+	"name": "I Can Do This ALL DAY!",
+	"type": "feature",
+	"img": "icons/magic/earth/strike-body-stone-crumble.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "maxHitDice",
+				"name": "New Rule 1"
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "when you would drop to 0 HP",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": true
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "KhEc8kQgCffaPLYS",
+					"type": "damage",
+					"damageType": "acid",
+					"formula": "0",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": true,
+					"on": {
+						"hit": [
+							{
+								"id": "O0SxGYEXguqDORKt",
+								"type": "note",
+								"noteType": "reminder",
+								"text": "set HP = sum rolled Hit dice",
+								"parentContext": "hit",
+								"parentNode": "KhEc8kQgCffaPLYS"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when you would drop to 0 HP): You may expend any number of Hit Dice and set your HP to the sum rolled instead (do not add your STR). </p><p></p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "commanders-orders"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760399261232,
+		"modifiedTime": 1760399279868,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "sYJ4IREnwdrhzp8E"
+}

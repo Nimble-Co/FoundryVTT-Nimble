@@ -34,8 +34,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td><p><strong>2 Actions</strong></p></td></tr><tr><td><p>Summon a 5d12 <strong>Greater Shadow</strong> minion (max 1) adjacent to you. When it dies, it explodes into <strong>5 shadow minions</strong> (see Summon Shadow). Place them anywhere within 8 spaces.</p></td></tr><tr><td><p></p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+1d12 damage, +1 shadow minion on explosion.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions</strong></p><p>Summon a 5d12 Greater Shadow minion (max 1) adjacent to you. When it dies, it explodes into 5 shadow minions (see Summon Shadow). Place them anywhere within 8 spaces.</p>",
+			"higherLevelEffect": "<p>+1d12 damage, +1 shadow minion on explosion.</p>"
 		},
 		"properties": {
 			"range": {
@@ -54,11 +54,11 @@
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757222782877,
+		"modifiedTime": 1762391187323,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "Oe41zMBUmMcNGZjE"

@@ -1,0 +1,75 @@
+{
+	"name": "Hold the Line!",
+	"type": "feature",
+	"img": "icons/environment/people/infantry-army.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "when an ally drops to 0 HP",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": true
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "XH1nYBQmTOcSGSOD",
+					"type": "damage",
+					"damageType": "acid",
+					"formula": "0",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": false,
+					"on": {
+						"hit": [
+							{
+								"id": "uC0AteQ0SifbYMh7",
+								"type": "note",
+								"noteType": "warning",
+								"text": "Set their HP to 3× your LVL.",
+								"parentContext": "hit",
+								"parentNode": "XH1nYBQmTOcSGSOD"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. (M)</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "commanders-orders"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760399261232,
+		"modifiedTime": 1760399556162,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "9BEzKcYWuIcKtmie"
+}

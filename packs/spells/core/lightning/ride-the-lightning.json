@@ -75,8 +75,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>3 Actions, AoE</strong></p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>Teleport up to 12 spaces away to a spot you can see (if a willing creature is there, swap places with them).</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>Adjacent creatures take d88 damage. Surviving creatures must make a STR save or be hurled back 3 spaces, knocked Prone, and deafened for 1 day.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p></p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+1 DC.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>3 Actions, AoE</strong></p><p>Teleport up to 12 spaces away to a spot you can see (if a willing creature is there, swap places with them). Adjacent creatures take d88 damage. Surviving creatures must make a STR save or be hurled back 3 spaces, knocked Prone, and deafened for 1 day. </p>",
+			"higherLevelEffect": "<p>+1 DC.</p>"
 		},
 		"properties": {
 			"range": {
@@ -96,11 +96,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757140606084,
+		"modifiedTime": 1762389449603,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "OXPmekuZjcR10E7i"

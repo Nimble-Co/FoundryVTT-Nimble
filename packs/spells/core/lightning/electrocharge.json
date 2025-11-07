@@ -48,8 +48,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions, Single Target</strong></p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Concentration:</strong> Up to 1 minute.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>A creature you touch gains the Charged condition, +1 max action, +5 armor, 2x speed, and advantage on DEX saves.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+4 Range.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Concentration</strong>: Up to 1 minute. A creature you touch gains the Charged condition, +1 max action, +5 armor, 2x speed, and advantage on DEX saves.</p>",
+			"higherLevelEffect": "<p>+4 Range.</p>"
 		},
 		"properties": {
 			"range": {
@@ -71,11 +71,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757108693539,
+		"modifiedTime": 1762389204322,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "MwkUXnY5tySoeSgz"

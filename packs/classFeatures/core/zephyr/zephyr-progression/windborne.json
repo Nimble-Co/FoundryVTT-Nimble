@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Windborne",
+	"type": "feature",
+	"img": "icons/magic/movement/trail-streak-zigzag-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>+1 to any 2 of your stats. +1 additional burst of speed when you roll Initiative. Permanently gain 1 action (while Dying, you have a max of 2 actions).</p>",
+		"featureType": "class",
+		"class": "zephyr",
+		"group": "zephyr-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762055670526,
+		"modifiedTime": 1762055801458,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "v4ihiCbIfuwNmx4v"
+}

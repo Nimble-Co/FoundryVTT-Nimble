@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Cheat!",
+	"type": "feature",
+	"img": "icons/sundries/gaming/playing-cards.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>You’re a well–rounded cheater. Gain the following abilities:</p><p>• <em>(1/round)</em> You may either Move or Hide for free. </p><p>• (1/day) You may change any skill check to 10+INT. </p><p>• If you roll less than 10 on Initiative, you may change it to 10 instead.</p><p>• You may gain advantage on skill checks while playing any games, competitions, or placing wagers. If you’re caught though… </p>",
+		"featureType": "class",
+		"class": "the-cheat",
+		"group": "the-cheat-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1759473072720,
+		"modifiedTime": 1761528522242,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "6hqJxGuTsQnL21zP"
+}

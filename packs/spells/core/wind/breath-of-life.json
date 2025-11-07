@@ -42,8 +42,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action, Single Target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Range: </strong>6</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>Restore 1 HP to a Dying creature.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+2 Range every 5 levels.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Range</strong>: 6. Restore 1 HP to a Dying creature.</p>",
+			"higherLevelEffect": "<p>+2 Range every 5 levels.</p>"
 		},
 		"properties": {
 			"range": {
@@ -65,11 +65,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757227460604,
+		"modifiedTime": 1762394084299,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "LZT7jCwyeSBzGyyP"

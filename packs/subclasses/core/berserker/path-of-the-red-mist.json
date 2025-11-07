@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Path of the Red Mist",
+	"type": "subclass",
+	"img": "icons/skills/melee/strike-sword-blood-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Blood Frenzy.</strong> <em>(1/turn)</em> While Raging, whenever you crit or kill an enemy, change 1 Fury Die to the maximum.</p><p><strong>Savage Awareness.</strong> Advantage on Perception checks to notice or track down blood. Blindsight 2 while Raging: you ignore the Blinded condition and can see through darkness and Invisibility within that Range.</p><p>LEVEL 7 </p><p><strong>Unstoppable Brutality.</strong> While Raging, you may gain 1 Wound to reroll any attack or save.</p><p>LEVEL 11 </p><p><strong>Opportunistic Frenzy.</strong> While Raging, you can make opportunity attacks without disadvantage, and you may make them whenever an enemy enters your melee weapon’s reach.</p><p>LEVEL 15 </p><p><strong>Onslaught.</strong> While Raging, gain +2 speed. <em>(1/round)</em> you may move for free.</p>",
+		"parentClass": "berserker",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1759470801821,
+		"modifiedTime": 1761528177435,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "IWCzLfTgOZCINGWK"
+}

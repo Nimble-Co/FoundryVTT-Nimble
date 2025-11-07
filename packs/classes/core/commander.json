@@ -52,7 +52,9 @@
 		"description": "<p>Soldier… Warrior… Fearless Leader. Among the most skilled soldiers in the world, Commanders are masters of every weapon and form of close combat. A small cohort of soldiers led by a trained Commander is more feared than innumerable legions without one.</p><p>An “empire” isn’t an Empire until they have their own academy of command: Famed schools where these supremely capable soldiers are trained in battlefield tactics and leadership. Commanders are defined by their:</p><ul><li><p><strong>Tactical Commands.</strong> Issue powerful orders to your allies, bolstering their abilities, and coordinate devastating strikes among yourselves. Command the battlefield with precision and skill, turning the tide of any battle in your favor. </p></li><li><p><strong>Weapon Mastery.</strong> Exert mastery over all weapon types, wielding them with deadly efficiency. Your versatility ensures victory against any foe. </p></li><li><p><strong>Strategic Leadership.</strong> Exploit your tactical prowess to outwit and outmaneuver foes, leading your party to triumph through cunning strategy and decisive action.</p></li></ul>",
 		"groupIdentifiers": [
 			"commanders-orders",
-			"combat-tactics"
+			"combat-tactics",
+			"weapon-mastery",
+			"commander-progression"
 		],
 		"keyAbilityScores": [
 			"strength",
@@ -104,11 +106,6 @@
 				"value": "",
 				"type": "statIncrease",
 				"statIncreaseType": "secondary"
-			},
-			"20": {
-				"value": "",
-				"type": "statIncrease",
-				"statIncreaseType": "capstone"
 			}
 		},
 		"mana": {
@@ -124,12 +121,12 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.344",
+		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.5",
-		"createdTime": 1752458503255,
-		"modifiedTime": 1752459372779,
-		"lastModifiedBy": "rOTRHON0UVnNo8GT"
+		"systemVersion": "0.1.9",
+		"createdTime": 1759180642328,
+		"modifiedTime": 1761713150617,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "qNGB5Ye94C9Z7b4i"
 }

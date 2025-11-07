@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Oath of Refuge",
+	"type": "subclass",
+	"img": "icons/skills/melee/shield-block-bash-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Aura of Refuge.</strong> Your shields gain +WIL armor and count as your spellcasting focus. Gain an aura with a Reach of 4; you can Interpose for an ally anywhere within your aura.</p><p>LEVEL 7 </p><p><strong>Face Me, Foul Creature!</strong> When you Interpose, the attacking enemy is also Taunted by you until the end of their next turn.</p><p>LEVEL 11 </p><p><strong>Glorious Reprieve.</strong> You and allies in your aura cannot drop below 1 HP. Whenever this triggers, they gain 1 Wound instead (heroes still die at max Wounds).</p><p>LEVEL 15 </p><p><strong>Divine Grace.</strong> You are resistant to all damage while Interposing.</p>",
+		"parentClass": "oathsworn",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761623327519,
+		"modifiedTime": 1761883584998,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "DN0a2Kd6zthckU1n"
+}

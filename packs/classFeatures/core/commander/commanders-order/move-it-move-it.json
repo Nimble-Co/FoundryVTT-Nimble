@@ -1,0 +1,82 @@
+{
+	"name": "Move it! Move it!",
+	"type": "feature",
+	"img": "icons/skills/movement/feet-winged-boots-glowing-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "When you roll Initiative",
+				"quantity": 1,
+				"type": "special",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "round"
+			},
+			"effects": [
+				{
+					"id": "Wyn3mgAxSL4q7pMp",
+					"type": "damage",
+					"damageType": "thunder",
+					"formula": "1d20+@attributes.initiative.mod",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": false,
+					"on": {
+						"hit": [
+							{
+								"id": "2MD4a4v9xBkLj9Ra",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "Wyn3mgAxSL4q7pMp"
+							},
+							{
+								"id": "JyS0bPpvH6ttPAoG",
+								"type": "note",
+								"noteType": "flavor",
+								"text": "You can use this value as an advantage in your initiative. ",
+								"parentContext": "hit",
+								"parentNode": "Wyn3mgAxSL4q7pMp"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When you roll Initiative you may give yourself and an ally advantage on the roll and +3 speed for 1 round. </p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "commanders-orders"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760399261232,
+		"modifiedTime": 1760399284818,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "x9VscDoB05eIwoL0"
+}

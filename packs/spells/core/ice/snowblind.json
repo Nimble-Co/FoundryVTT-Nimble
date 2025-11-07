@@ -82,8 +82,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action, Single Target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach: </strong>1</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage:</strong> 1d6.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>On hit: </strong>Blinded until the end of their next turn.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<p></p><table><tbody><tr><td><p><strong>+3 damage every 5 levels.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Reach</strong>: 1. <strong>Damage</strong>: 1d6. On hit: Blinded until the end of their next turn.</p>",
+			"higherLevelEffect": "<p>+3 damage every 5 levels.</p>"
 		},
 		"properties": {
 			"range": {
@@ -105,11 +105,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757282271084,
+		"modifiedTime": 1762380375286,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "NtKDIbOngvctYnv6"

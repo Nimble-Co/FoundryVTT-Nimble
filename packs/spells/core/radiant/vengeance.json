@@ -75,8 +75,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions, Single Target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach:</strong> 1.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Damage:</strong> 1d100, to a creature that attacked a Dying ally or reduced one to 0 HP since your last turn.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+1 Reach, roll w/ advantage.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Reach</strong>: 1. <strong>Damage</strong>: 1d100, to a creature that attacked a Dying ally or reduced one to 0 HP since your last turn.</p>",
+			"higherLevelEffect": "<p>+1 Reach, roll w/ advantage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -98,11 +98,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757225757122,
+		"modifiedTime": 1762393025860,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "C0TMU6el43PzVsp0"

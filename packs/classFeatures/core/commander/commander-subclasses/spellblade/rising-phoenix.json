@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Rising Phoenix",
+	"type": "feature",
+	"img": "icons/magic/fire/projectile-wave-arrow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "when you would drop to 0 HP",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": true
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>(Replaces: I Can Do This ALL DAY!)</p><p>(1/encounter) Reaction, (when you would drop to 0 HP): You may expend any number of Hit Dice, set your HP to the sum rolled instead, and deal that much fire damage to each enemy within 2 spaces of you. They gain the Smoldering condition.</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "spellblade"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762150048699,
+		"modifiedTime": 1762150138831,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "k4Do4QKCYg68ThuR"
+}

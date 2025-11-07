@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Greedy pact",
+	"type": "feature",
+	"img": "icons/magic/light/hand-sparks-smoke-teal.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When you would take damage from Pilfer Power, make a STR save:</p><ul><li><p>1–9: Suffer damage as normal.</p></li><li><p>10–19: Suffer only 10 HP of damage. </p></li><li><p>20+: Suffer no damage and cast the spell as if it were 1 tier higher</p></li></ul>",
+		"featureType": "class",
+		"class": "shadowmancer",
+		"group": "shadowmancer-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761632619594,
+		"modifiedTime": 1761708547036,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "eX8zZ1EnqDssqGuD"
+}

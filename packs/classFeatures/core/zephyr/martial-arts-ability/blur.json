@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Blur",
+	"type": "feature",
+	"img": "icons/skills/movement/figure-running-gray.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>(1/encounter) When you Defend, you may first move up to half your speed away, taking no damage if you are now out of range or have Full Cover.</p>",
+		"featureType": "class",
+		"class": "zephyr",
+		"group": "martial-arts-ability"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762056201833,
+		"modifiedTime": 1762056268726,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "KjoswYrEObwj21q8"
+}

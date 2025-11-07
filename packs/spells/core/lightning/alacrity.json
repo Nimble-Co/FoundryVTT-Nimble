@@ -41,8 +41,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action, Self</strong></p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Range: 4</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reaction: </strong>When attacked. Defend for free. After damage is dealt, you gain the Charged condition then teleport anywhere within Range.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+4 Range.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>1 Action, Self</strong></p><p><strong>Range</strong>: 4. Reaction: When attacked. Defend for free. After damage is dealt, you gain the Charged condition then teleport anywhere within Range.</p>",
+			"higherLevelEffect": "<p>+4 Range.</p>"
 		},
 		"properties": {
 			"range": {
@@ -64,11 +64,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757135447265,
+		"modifiedTime": 1762381856748,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "3I0ZyYA1IphjlLOO"

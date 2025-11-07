@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Gaze of Two Minds",
+	"type": "feature",
+	"img": "icons/creatures/eyes/humanoid-single-purple-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Touch a willing creature and perceive through its senses instead of your own for as long as you hold concentration.</p>",
+		"featureType": "class",
+		"class": "shadowmancer",
+		"group": "lesser-invocations"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761632837434,
+		"modifiedTime": 1761710177375,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "wujyMeASu33vf8pZ"
+}

@@ -33,7 +33,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Casting Time:</strong> 24 hours.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Requires:</strong> A diamond worth at least 10,000 gp, which this spell consumes.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>Revive any number of deceased creatures you choose—within 1 mile—that have died in the past year, provided they have not died of old age or been revived with this spell before.</p></td></tr></tbody></table>",
+			"baseEffect": "<p><strong>AoE</strong></p><p><strong>Casting Time:</strong> 24 hours. <strong>Requires:</strong> A diamond worth at least 10,000 gp, which this spell consumes. Revive any number of deceased creatures you choose—within 1 mile—that have died in the past year, provided they have not died of old age or been revived with this spell before.</p>",
 			"higherLevelEffect": ""
 		},
 		"properties": {
@@ -54,11 +54,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757108987365,
+		"modifiedTime": 1762392527378,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "dHdZrBxIFRFkLvBm"

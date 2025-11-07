@@ -57,8 +57,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td><p><strong>2 Actions, AoE</strong></p></td></tr><tr><td><p><strong>Reach:</strong> Up to 8.</p></td></tr><tr><td><p>Other damaged creatures must make a <strong>STR save</strong> or take <strong>3d20</strong> damage (ignoring armor), half on save.</p></td></tr><tr><td><p>The save is rolled with disadvantage while Bloodied.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+10 damage.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Reach</strong>: Up to 8. Other damaged creatures must make a STR save or take 3d20 damage (ignoring armor), half on save. The save is rolled with disadvantage while Bloodied.</p>",
+			"higherLevelEffect": "<p>+10 damage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -79,11 +79,11 @@
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757108774627,
+		"modifiedTime": 1762390993566,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "hpE7Leu6VvGHgYW5"

@@ -33,7 +33,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"104,0\"><p><strong>5 Actions, Self</strong></p></td></tr><tr><td data-colwidth=\"104,0\" colspan=\"2\"><p>Transform into a Huge dragon. Gain 3 actions, a f ly speed of 12, LVL Armor, 10×LVL temp HP, and:</p></td></tr><tr><td data-colwidth=\"104,0\" colspan=\"2\"><ul><li><p><strong>Tooth & Claw.</strong> Action: (Reach 2) [[/r 1d20+@level]]{1d20+LVL} damage (ignoring armor). Inflicts Smoldering.</p></li></ul></td></tr><tr><td colspan=\"2\" data-colwidth=\"104,0\"><ul><li><p><strong>Immolating Breath.</strong> 2 Actions: (Reach: Cone 8). DC 20 DEX save, [[/r (@key)d20]]{KEY d20} damage, half on save. Smoldering targets fail.</p></li></ul></td></tr><tr><td colspan=\"2\" data-colwidth=\"104,0\"><p>You can maintain this form for as long as the temp HP granted by this spell remain (max. 10 minutes). When it ends, you drop to 0 HP.</p></td></tr></tbody></table>",
+			"baseEffect": "<p><strong>5 Actions, Self</strong></p><p>Transform into a Huge dragon. Gain 3 actions, a fly speed of 12, LVL Armor, 10×LVL temp HP, and:</p><p>• <strong>Tooth & Claw</strong>. Action: (Reach 2) 1d20+LVL damage (ignoring armor). Inflicts Smoldering.</p><p>• <strong>Immolating Breath</strong>. 2 Actions: (Reach: Cone 8). DC 20 DEX save, KEY d20 damage, half on save. Smoldering targets fail.</p><hr><p>You can maintain this form for as long as the temp HP granted by this spell remain (max. 10 minutes). When it ends, you drop to 0 HP.</p><p></p>",
 			"higherLevelEffect": ""
 		},
 		"properties": {
@@ -54,11 +54,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757111577687,
+		"modifiedTime": 1762376853009,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "Iz0S3otichUrGSfH"

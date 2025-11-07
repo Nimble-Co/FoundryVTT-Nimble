@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Echo Casting",
+	"type": "feature",
+	"img": "icons/magic/sonic/projectile-sound-rings-wave.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>(2×mana, min. 1 mana) When you cast a tiered, single-target spell, you may cast a copy of that spell on a 2nd target for free.</p>",
+		"featureType": "class",
+		"class": "mage",
+		"group": "spellshaper"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761538956665,
+		"modifiedTime": 1761539138633,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "GG1Y3gliH3DQ9UZS"
+}

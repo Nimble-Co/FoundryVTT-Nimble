@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Conduit of Shadow",
+	"type": "feature",
+	"img": "icons/magic/unholy/hands-cloud-light-pink.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Your Patron grants you knowledge of:</p><p>@UUID[Compendium.nimble.nimble-spells.Item.9TNPdOXlCcGgxw6r]{Shadow Blast}</p><p>@UUID[Compendium.nimble.nimble-spells.Item.ho2KADcmQWWTeYR0]{Summon Shadow}</p>",
+		"featureType": "class",
+		"class": "shadowmancer",
+		"group": "shadowmancer-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761632619594,
+		"modifiedTime": 1761709209177,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "WXoGNl27TocLhXcK"
+}

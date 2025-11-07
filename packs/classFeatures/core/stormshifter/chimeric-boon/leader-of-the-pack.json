@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Leader of the Pack",
+	"type": "feature",
+	"img": "icons/creatures/mammals/humanoid-wolf-dog-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Advantage against fear and charm effects for yourself and allies within 6 spaces.</p>",
+		"featureType": "class",
+		"class": "stormshifter",
+		"group": "chimeric-boon"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762036788706,
+		"modifiedTime": 1762036865893,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "YpD4LhH2PfOOHGjk"
+}

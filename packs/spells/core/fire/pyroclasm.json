@@ -67,8 +67,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"103,0\"><p><strong>Tier 4, 2 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"103,0\" colspan=\"2\"><p><strong>Reach: </strong>3.</p></td></tr><tr><td data-colwidth=\"103,0\" colspan=\"2\"><p><strong>Damage: </strong>Others within Reach take 2d20+10 damage (ignoring armor) on a failed DEX save. Half damage on save. Smoldering creatures fail.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<p></p><table><tbody><tr><td><p><strong>+1 Reach, +2 damage.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Reach:</strong> 3. Others within Reach take 2d20+10 damage (ignoring armor) on a failed DEX save. Half damage on save. Smoldering creatures fail.</p>",
+			"higherLevelEffect": "<p>+1 Reach, +2 damage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -90,11 +90,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757136980636,
+		"modifiedTime": 1762377726427,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "merFlbZYKSiTvPUN"

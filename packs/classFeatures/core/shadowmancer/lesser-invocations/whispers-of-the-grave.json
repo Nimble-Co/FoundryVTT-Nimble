@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Whispers of the Grave",
+	"type": "feature",
+	"img": "icons/magic/unholy/hand-fire-skeleton-pink.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p><em>(1/day)</em> You can ask a dead creature 3 yes/no questions. It can never be questioned this way again.</p>",
+		"featureType": "class",
+		"class": "shadowmancer",
+		"group": "lesser-invocations"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761632837434,
+		"modifiedTime": 1761710575756,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "NeSyvsNLIbllvVX2"
+}

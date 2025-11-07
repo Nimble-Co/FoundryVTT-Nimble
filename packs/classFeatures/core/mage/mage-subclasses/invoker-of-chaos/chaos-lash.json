@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Chaos Lash",
+	"type": "feature",
+	"img": "icons/magic/control/energy-stream-link-large-teal.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>(1/encounter) Reaction (when an enemy moves adjacent to you): They are pushed back 2 spaces, and on a failed WIL save, knocked Prone as well. Invoke Chaos.</p>",
+		"featureType": "class",
+		"class": "mage",
+		"group": "invoker-of-chaos"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761541083172,
+		"modifiedTime": 1761884040592,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "g7lFxdEnjQtedrkN"
+}

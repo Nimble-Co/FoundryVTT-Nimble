@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Invoker of Control",
+	"type": "subclass",
+	"img": "icons/skills/melee/unarmed-punch-fist.webp",
+	"system": {
+		"macro": "",
+		"identifier": "control",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Force of Will.</strong> (1/round) On your turn, you may Demand Control: Choose 1 option from the Control Table which you haven't chosen yet; resets when you roll Initiative, or when you have chosen all options once.</p><p><strong>Deny Fate.</strong> Whenever you miss with a spell or an effect you cause is saved against, you MUST Demand Control.</p><p>LEVEL 7 </p><p><strong>At Any Cost.</strong> Learn 1 cantrip and 1 tiered spell from the Necrotic school.</p><p><strong>Nullify.</strong> (1/encounter) Ignore all disadvantage and other negative effects on your next action this turn, then Demand Control.</p><p>LEVEL 11 </p><p><strong>Steel Will.</strong> (1/Safe Rest) Whenever you would fail a save, you may succeed instead. Whenever you roll a 1 on an Elemental Surge die, you may reroll it once.</p><p>LEVEL 15 </p><p><strong>Supreme Control.</strong> Whenever you Demand Control, you may choose to trigger the selected option twice. You may Demand Control as a Reaction.</p>",
+		"parentClass": "mage",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761527423417,
+		"modifiedTime": 1761529245089,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "z9e6kfg68COw9TM3"
+}

@@ -165,9 +165,9 @@
 			"system": "nimble"
 		},
 		{
-			"name": "nimble-sub-classes",
-			"label": "Nimble Sub Classes",
-			"path": "packs/subClasses.db",
+			"name": "nimble-subclasses",
+			"label": "Nimble Subclasses",
+			"path": "packs/subclasses.db",
 			"type": "Item",
 			"system": "nimble"
 		},

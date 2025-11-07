@@ -33,8 +33,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>Summon a spirit companion that follows you and is immune to harm. It lasts until you cast this spell again, take a Safe Rest, or it heals a number of times equal to the mana spent summoning it.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Action:</strong> It attacks or heals a creature within Reach 4. It attacks for 1d6+WIL radiant damage (ignoring armor), or heals for the same amount.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>Increment its die size by 1 (max d12), +1 healing use.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>1 Action</strong></p><p>Summon a spirit companion that follows you and is immune to harm. It lasts until you cast this spell again, take a Safe Rest, or it heals a number of times equal to the mana spent summoning it.</p><p><strong>Action</strong>: It attacks or heals a creature within Reach 4. It attacks for 1d6+WIL radiant damage (ignoring armor), or heals for the same amount.</p>",
+			"higherLevelEffect": "<p>Increment its die size by 1 (max d12), +1 healing use.</p>"
 		},
 		"properties": {
 			"range": {
@@ -54,11 +54,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757108837901,
+		"modifiedTime": 1762392386966,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "KICmDNpyNoMuZ20E"

@@ -63,8 +63,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach: </strong>12</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>Creatures in a 2×2 area within Reach are Dazed. On a failed STR save, they fall asleep instead, becoming Incapacitated until their next two turns have passed, until damaged, or until an ally uses an action to wake them.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p>+1 area, +1 turn asleep.</p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Reach</strong>: 12. Creatures in a 2×2 area within Reach are Dazed. On a failed STR save, they fall asleep instead, becoming Incapacitated until their next two turns have passed, until damaged, or until an ally uses an action to wake them.</p>",
+			"higherLevelEffect": "<p>+1 area, +1 turn asleep.</p>"
 		},
 		"properties": {
 			"range": {
@@ -86,11 +86,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757119465646,
+		"modifiedTime": 1762378638479,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "IXTKhehuF0IH2Zr6"

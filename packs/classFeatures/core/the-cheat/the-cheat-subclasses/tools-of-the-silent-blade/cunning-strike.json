@@ -1,0 +1,85 @@
+{
+	"folder": null,
+	"name": "Cunning Strike",
+	"type": "feature",
+	"img": "icons/weapons/daggers/dagger-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "1 Use",
+				"quantity": 1,
+				"type": "special",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "ePNURkryI1sqKPP8",
+					"type": "savingThrow",
+					"savingThrowType": "strength",
+					"parentContext": null,
+					"parentNode": null,
+					"saveType": "strength",
+					"on": {
+						"passedSave": [
+							{
+								"id": "kinxaTHt0Wm3ADEr",
+								"type": "note",
+								"noteType": "general",
+								"text": "Regain 1 Use",
+								"parentContext": "passedSave",
+								"parentNode": "ePNURkryI1sqKPP8"
+							}
+						],
+						"failedSave": [
+							{
+								"id": "RZIR2ELTluJxgd84",
+								"type": "note",
+								"noteType": "general",
+								"text": "Sneak Attack do maximum amout of Damge",
+								"parentContext": "failedSave",
+								"parentNode": "ePNURkryI1sqKPP8"
+							}
+						]
+					},
+					"sharedRolls": [],
+					"saveDC": "10"
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p><em>(2/encounter)</em> When you land a Sneak Attack, you may force the target to make a STR save (DC 10+INT). On a failure, instead of rolling your Sneak Attack dice, they deal the maximum amount of damage (if your target saves, regain 1 use). </p>",
+		"featureType": "class",
+		"class": "the-cheat",
+		"group": "tools-of-the-silent-blade"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1759472970824,
+		"modifiedTime": 1761528973764,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "jKWdnAj0kXxd2aN0"
+}

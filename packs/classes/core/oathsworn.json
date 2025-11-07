@@ -5,7 +5,56 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "XpYiFwNphnNycy9H",
+				"identifier": "",
+				"label": "Starting Gear - Mace",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.8cTFT4FrrpdAiENQ"
+			},
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "MDmSWBjYPu3V5M7K",
+				"identifier": "",
+				"label": "Starting Gear - Rusty Mail",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": ""
+			},
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "s6DyG4L5D8mYhGRN",
+				"identifier": "",
+				"label": "Starting Gear - Wooden Buckler",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": ""
+			},
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "Mp9xoLFryf74mdK1",
+				"identifier": "",
+				"label": "Starting Gear - Manacles",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.ObibU3UhmYIgJzf5"
+			}
+		],
 		"armorProficiencies": [
 			"plate",
 			"mail",
@@ -15,9 +64,10 @@
 		],
 		"classLevel": 1,
 		"complexity": 2,
-		"description": "<p>Faithful guardian, protector, and avenger of the weak. Choose between the merciless Oath of Vengeance and the vigilant Oath of Refuge.</p>",
+		"description": "<p>I will protect my companions and vanquish evil at all costs. Various orders of these zealous, holy warriors have attained great physical and radiant strength through absolute devotion to a higher power in the form of oaths. Through their strength, both physical and radiant, nothing can sway them from their hunger for justice and their fervent pursuit and hatred of evil.</p><p>The mark of a true Oathsworn, however, is their willingness to lay down their life for their friends. As an Oathwsorn, you can:</p><p>• <strong>Defend with Devotion.</strong> Shield your allies from harm and channel righteous judgment. The more you face evil, the more potent your strikes become.</p><p>• <strong>Divinely Protect.</strong> Stand as a bastion of defense, safeguarding allies even from afar. Your presence brings justice to every corner of the realm.</p><p>• <strong>Shine as a Beacon of Virtue.</strong> Mend wounds, discern truth from ill intent, and inspire others to embrace your noble cause with unwavering conviction.</p>",
 		"groupIdentifiers": [
-			"sacred-decree"
+			"sacred-decree",
+			"oathsworn-progression"
 		],
 		"keyAbilityScores": [
 			"strength",
@@ -73,11 +123,6 @@
 				"value": "",
 				"type": "statIncrease",
 				"statIncreaseType": "secondary"
-			},
-			"20": {
-				"value": "",
-				"type": "statIncrease",
-				"statIncreaseType": "capstone"
 			}
 		},
 		"resources": [
@@ -239,12 +284,12 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.346",
+		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.3",
-		"createdTime": 1751645977478,
-		"modifiedTime": 1751645977478,
-		"lastModifiedBy": "I9n5H887okQ3oYXV"
+		"systemVersion": "0.1.9",
+		"createdTime": 1759180642328,
+		"modifiedTime": 1762031559673,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "NBnrpkQfiha8LEPK"
 }

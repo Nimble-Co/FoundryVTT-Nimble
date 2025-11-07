@@ -1,0 +1,52 @@
+{
+	"name": "Vicious Opportunist",
+	"type": "feature",
+	"img": "icons/skills/melee/weapons-crossed-swords-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p><em>(1/turn)</em> When you hit a Distracted target with a melee attack, you may change the Primary Die roll to whatever you like (changing it to the max value counts as a crit). </p><hr><p><span style=\"color: rgb(231, 209, 177); font-family: &#x27;Roboto Condensed&#x27;, sans-serif; font-size: 13.328px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(25, 24, 33); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none\">Distracted. A target is Distracted if it is adjacent to or Taunted by an ally, or if it cannot see you.</span></p>",
+		"featureType": "class",
+		"class": "the-cheat",
+		"group": "the-cheat-progression"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1759473072720,
+		"modifiedTime": 1761528694985,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "kHjJhTZEQcdbUMbb"
+}

@@ -1,0 +1,83 @@
+{
+	"name": "Field Medic",
+	"type": "feature",
+	"img": "icons/magic/life/cross-worn-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 10,
+				"type": "minute",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "iLb1tYfLk8DZypkn",
+					"type": "healing",
+					"healingType": "healing",
+					"formula": "@examination",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "nf3Bq7Mu65OWbwuG",
+					"type": "damage",
+					"damageType": "acid",
+					"formula": "0",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": false,
+					"on": {
+						"hit": [
+							{
+								"id": "A0krnEBgerU3KhXA",
+								"type": "note",
+								"noteType": "reminder",
+								"text": "Examination bonus",
+								"parentContext": "hit",
+								"parentNode": "nf3Bq7Mu65OWbwuG"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "emanation",
+				"width": 1
+			}
+		},
+		"description": "<p><strong>Field Medic.</strong> Roll 1 additional die for any health potion you administer.</p><p>Whenever you or an ally spends any number of Hit Dice to recover HP, if you spent at least ten minutes examining their wounds, they can add your Examination bonus to the HP recovered.</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "commander-progression"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760384468062,
+		"modifiedTime": 1761434359360,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "KyQivlTfzYYudgsT"
+}

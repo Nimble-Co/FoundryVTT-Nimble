@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Tracker’s Intuition",
+	"type": "feature",
+	"img": "icons/creatures/fish/deepsea-creature-glowing-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>You can discern the events of a past encounter by studying tracks and other subtle environmental clues, accurately determining the kind and amount of creatures, their direction, key actions, and passage of time.</p>",
+		"featureType": "class",
+		"class": "hunter",
+		"group": "hunter-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761433334528,
+		"modifiedTime": 1761434326691,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "SeYaFPTHc7H0p4Ns"
+}

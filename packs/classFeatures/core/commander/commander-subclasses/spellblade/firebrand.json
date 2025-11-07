@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Firebrand",
+	"type": "feature",
+	"img": "icons/magic/fire/dagger-rune-enchant-flame-strong-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When you roll Initiative you may cast Enchant Weapon for free (can be upcast as normal by spending additional mana).</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "spellblade"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762150299373,
+		"modifiedTime": 1762150347433,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "k8CKWZXbSRAa0yO4"
+}
