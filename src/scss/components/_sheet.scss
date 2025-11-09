@@ -1,286 +1,286 @@
 .system-nimble .nimble-sheet {
-  --nimble-content-grid-areas: "header" "primaryNavigation" "secondaryNavigation" "static" "body" "footer";
+	--nimble-content-grid-areas: "header" "primaryNavigation" "secondaryNavigation" "static" "body" "footer";
 
-  --nimble-content-grid-columns: 1fr;
+	--nimble-content-grid-columns: 1fr;
 
-  background: var(--nimble-sheet-background);
-  border: 0;
-  font-size: var(--nimble-base-font-size) !important;
+	background: var(--nimble-sheet-background);
+	border: 0;
+	font-size: var(--nimble-base-font-size) !important;
 
-  .window-resize-handle {
-    z-index: 200 !important;
-    pointer-events: all !important;
-  }
+	.window-resize-handle {
+		z-index: 200 !important;
+		pointer-events: all !important;
+	}
 
-  *:not(.fa-classic, .fa-light, .fa-regular, .fa-solid, .fa-thin, .fal, .far, .fas, .fat) {
-    font-family: var(--nimble-primary-font);
-  }
+	*:not(.fa-classic, .fa-light, .fa-regular, .fa-solid, .fa-thin, .fal, .far, .fas, .fat) {
+		font-family: var(--nimble-primary-font);
+	}
 
-  &:has(.nimble-secondary-navigation) {
-    --nimble-sheet-body-padding-block-start: 0.5rem;
-    --nimble-sheet-static-padding-block-start: 0.5rem;
-  }
+	&:has(.nimble-secondary-navigation) {
+		--nimble-sheet-body-padding-block-start: 0.5rem;
+		--nimble-sheet-static-padding-block-start: 0.5rem;
+	}
 
-  &:has(.nimble-sheet__static) {
-    --nimble-sheet-body-padding-block-start: 0;
-  }
+	&:has(.nimble-sheet__static) {
+		--nimble-sheet-body-padding-block-start: 0;
+	}
 
-  &--item,
-  &--npc,
-  &--player-character {
-    &:not(.minimized) {
-      box-shadow: none;
-      filter: drop-shadow(0 0 10px #000);
+	&--item,
+	&--npc,
+	&--player-character {
+		&:not(.minimized) {
+			box-shadow: none;
+			filter: drop-shadow(0 0 10px #000);
 
-      .controls-dropdown {
-        border-radius: 4px;
-        z-index: 100;
-      }
+			.controls-dropdown {
+				border-radius: 4px;
+				z-index: 100;
+			}
 
-      .window-content {
-        display: grid;
-        grid-template-rows: max-content max-content max-content max-content 1fr max-content;
-        grid-template-areas: var(--nimble-content-grid-areas);
-        grid-template-columns: var(--nimble-content-grid-columns);
-        margin-block-start: calc(var(--header-height) * -1);
-        overflow-y: hidden;
-        height: 100%;
-        position: relative;
-      }
+			.window-content {
+				display: grid;
+				grid-template-rows: max-content max-content max-content max-content 1fr max-content;
+				grid-template-areas: var(--nimble-content-grid-areas);
+				grid-template-columns: var(--nimble-content-grid-columns);
+				margin-block-start: calc(var(--header-height) * -1);
+				overflow-y: hidden;
+				height: 100%;
+				position: relative;
+			}
 
-      .window-header {
-        justify-content: flex-end;
-        background: transparent;
-        border: 0;
-        z-index: 10;
-        position: relative;
+			.window-header {
+				justify-content: flex-end;
+				background: transparent;
+				border: 0;
+				z-index: 10;
+				position: relative;
 
-        .header-control {
-          background: rgba(0, 0, 0, 0.4);
-          backdrop-filter: blur(2px);
-        }
-      }
+				.header-control {
+					background: rgba(0, 0, 0, 0.4);
+					backdrop-filter: blur(2px);
+				}
+			}
 
-      .window-icon,
-      .window-title {
-        display: none;
-      }
-    }
-  }
+			.window-icon,
+			.window-title {
+				display: none;
+			}
+		}
+	}
 
-  &--player-character {
-    --nimble-sheet-sidebar-width: 3rem;
+	&--player-character {
+		--nimble-sheet-sidebar-width: 3rem;
 
-    --nimble-content-grid-areas: "header sidebar" "primaryNavigation sidebar" "secondaryNavigation sidebar"
-      "static sidebar" "body sidebar" "footer sidebar";
+		--nimble-content-grid-areas: "header sidebar" "primaryNavigation sidebar" "secondaryNavigation sidebar"
+			"static sidebar" "body sidebar" "footer sidebar";
 
-    --nimble-content-grid-columns: 1fr var(--nimble-sheet-sidebar-width);
-    --nimble-sheet-body-padding-block-start: 0.5rem;
+		--nimble-content-grid-columns: 1fr var(--nimble-sheet-sidebar-width);
+		--nimble-sheet-body-padding-block-start: 0.5rem;
 
-    &:not(.minimized) {
-      min-width: 336px;
-      background: transparent;
-      border: 0;
-      overflow: visible;
+		&:not(.minimized) {
+			min-width: 336px;
+			background: transparent;
+			border: 0;
+			overflow: visible;
 
-      .controls-dropdown {
-        right: 2rem;
-      }
+			.controls-dropdown {
+				right: 2rem;
+			}
 
-      .window-content {
-        grid-template-rows: max-content max-content max-content max-content 1fr max-content;
+			.window-content {
+				grid-template-rows: max-content max-content max-content max-content 1fr max-content;
 
-        &::before {
-          content: "";
-          height: 100%;
-          width: 100%;
-          grid-area: header-start / header-start / footer-end / footer-end;
-          background: var(--nimble-sheet-background);
-          z-index: 1;
-          border: 0;
-          border-radius: 6px;
-          position: relative;
-        }
-      }
+				&::before {
+					content: "";
+					height: 100%;
+					width: 100%;
+					grid-area: header-start / header-start / footer-end / footer-end;
+					background: var(--nimble-sheet-background);
+					z-index: 1;
+					border: 0;
+					border-radius: 6px;
+					position: relative;
+				}
+			}
 
-      .window-header {
-        padding-inline-end: 0.5rem;
-        margin-inline-end: 3rem;
-      }
+			.window-header {
+				padding-inline-end: 0.5rem;
+				margin-inline-end: 3rem;
+			}
 
-      .window-resize-handle {
-        right: var(--nimble-sheet-sidebar-width) !important;
-      }
-    }
-  }
+			.window-resize-handle {
+				right: var(--nimble-sheet-sidebar-width) !important;
+			}
+		}
+	}
 
-  .window-content {
-    padding: 0;
-  }
+	.window-content {
+		padding: 0;
+	}
 
-  &__header {
-    grid-area: header;
-    z-index: 3;
-    position: relative;
+	&__header {
+		grid-area: header;
+		z-index: 3;
+		position: relative;
 
-    &--character-creator {
-      padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid hsla(41, 18%, 54%, 0.25);
-    }
+		&--character-creator {
+			padding: 0.5rem 0.75rem;
+			border-bottom: 1px solid hsla(41, 18%, 54%, 0.25);
+		}
 
-    &--item {
-      display: flex;
-    }
+		&--item {
+			display: flex;
+		}
 
-    &--item,
-    &--spell {
-      align-items: center;
-      gap: 0 0.5rem;
-      padding: 0.5rem 0.5rem 0;
-    }
+		&--item,
+		&--spell {
+			align-items: center;
+			gap: 0 0.5rem;
+			padding: 0.5rem 0.5rem 0;
+		}
 
-    &--spell {
-      display: grid;
-      grid-template-columns: min-content 1fr;
-      grid-template-rows: repeat(2, max-content);
-      grid-template-areas:
-        "img name"
-        "img metadata";
-    }
-  }
+		&--spell {
+			display: grid;
+			grid-template-columns: min-content 1fr;
+			grid-template-rows: repeat(2, max-content);
+			grid-template-areas:
+				"img name"
+				"img metadata";
+		}
+	}
 
-  &__body {
-    grid-area: body;
-    min-height: 6rem;
-    flex-grow: 1;
-    overflow: auto;
-    z-index: 2;
-    position: relative;
-    padding: 0.5rem;
-    padding-block-start: var(--nimble-sheet-body-padding-block-start, 0.25rem);
-    display: flex;
-    flex-direction: column;
+	&__body {
+		grid-area: body;
+		min-height: 6rem;
+		flex-grow: 1;
+		overflow: auto;
+		z-index: 2;
+		position: relative;
+		padding: 0.5rem;
+		padding-block-start: var(--nimble-sheet-body-padding-block-start, 0.25rem);
+		display: flex;
+		flex-direction: column;
 
-    &--item {
-      --nimble-header-margin-block-end: 0.375rem;
-      --nimble-button-icon-y-nudge: 0;
+		&--item {
+			--nimble-header-margin-block-end: 0.375rem;
+			--nimble-button-icon-y-nudge: 0;
 
-      display: flex;
-      flex-direction: column;
-      gap: var(--nimble-sheet-body-gap, 0.75rem);
-    }
+			display: flex;
+			flex-direction: column;
+			gap: var(--nimble-sheet-body-gap, 0.75rem);
+		}
 
-    &--ability-score-config,
-    &--skill-config,
-    &--movement-config {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      padding: 0.75rem;
-    }
+		&--ability-score-config,
+		&--skill-config,
+		&--movement-config {
+			display: flex;
+			flex-direction: column;
+			gap: 0.75rem;
+			padding: 0.75rem;
+		}
 
-    &--character-creator {
-      display: flex;
-      flex-direction: column;
-      padding: 0 0.75rem 0.5rem;
-    }
+		&--character-creator {
+			display: flex;
+			flex-direction: column;
+			padding: 0 0.75rem 0.5rem;
+		}
 
-    &--npc {
-      padding: 0;
-    }
+		&--npc {
+			padding: 0;
+		}
 
-    &--player-character {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      overflow-y: auto !important;
-      overflow-x: hidden !important;
-    }
+		&--player-character {
+			display: flex;
+			flex-direction: column;
+			gap: 0.75rem;
+			overflow-y: auto !important;
+			overflow-x: hidden !important;
+		}
 
-    &--proficiency-config {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      min-height: unset;
-      padding: 0.75rem;
-    }
-  }
+		&--proficiency-config {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+			min-height: unset;
+			padding: 0.75rem;
+		}
+	}
 
-  &__footer {
-    grid-area: footer;
-    flex-grow: 0;
-    z-index: 2;
-    position: relative;
-    padding: 0.5rem;
-    border-top: 1px solid hsla(41, 18%, 54%, 25%);
+	&__footer {
+		grid-area: footer;
+		flex-grow: 0;
+		z-index: 2;
+		position: relative;
+		padding: 0.5rem;
+		border-top: 1px solid hsla(41, 18%, 54%, 25%);
 
-    &--character-creator {
-      display: flex;
-      gap: 0.5rem 0.75rem;
-    }
+		&--character-creator {
+			display: flex;
+			gap: 0.5rem 0.75rem;
+		}
 
-    &--inventory {
-      display: grid;
-      grid-template-columns: max-content 1fr;
-      grid-template-rows: max-content;
-      grid-auto-flow: column;
-      align-items: center;
-      justify-items: start;
-      gap: 1rem;
-      font-size: var(--nimble-sm-text);
-      font-weight: 500;
-    }
+		&--inventory {
+			display: grid;
+			grid-template-columns: max-content 1fr;
+			grid-template-rows: max-content;
+			grid-auto-flow: column;
+			align-items: center;
+			justify-items: start;
+			gap: 1rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 500;
+		}
 
-    &--rules {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: max-content;
-      gap: 0.25rem;
-      font-size: var(--nimble-sm-text);
-    }
-  }
+		&--rules {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			grid-template-rows: max-content;
+			gap: 0.25rem;
+			font-size: var(--nimble-sm-text);
+		}
+	}
 
-  &__navigation {
-    grid-area: navigation;
-    z-index: 2;
-    position: relative;
-  }
+	&__navigation {
+		grid-area: navigation;
+		z-index: 2;
+		position: relative;
+	}
 
-  &__sidebar {
-    grid-area: sidebar;
-    height: 15rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.75rem;
-    width: 100%;
-  }
+	&__sidebar {
+		grid-area: sidebar;
+		height: 15rem;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: 0.75rem;
+		width: 100%;
+	}
 
-  &__static {
-    grid-area: static;
-    z-index: 2;
-    position: relative;
-    padding: var(--nimble-sheet-static-padding-block-start, 0.25rem) 0.5rem 0.75rem 0.5rem;
+	&__static {
+		grid-area: static;
+		z-index: 2;
+		position: relative;
+		padding: var(--nimble-sheet-static-padding-block-start, 0.25rem) 0.5rem 0.75rem 0.5rem;
 
-    &--features,
-    &--inventory {
-      display: grid;
+		&--features,
+		&--inventory {
+			display: grid;
 
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: max-content;
-      align-items: center;
-      justify-items: center;
-      gap: 0.5rem;
-    }
+			grid-template-columns: repeat(3, 1fr);
+			grid-template-rows: max-content;
+			align-items: center;
+			justify-items: center;
+			gap: 0.5rem;
+		}
 
-    &--features {
-      grid-template-areas: "search search search";
-    }
+		&--features {
+			grid-template-areas: "search search search";
+		}
 
-    &--inventory {
-      grid-template-areas:
-        "search search search"
-        "copper silver gold";
-    }
-  }
+		&--inventory {
+			grid-template-areas:
+				"search search search"
+				"copper silver gold";
+		}
+	}
 }
