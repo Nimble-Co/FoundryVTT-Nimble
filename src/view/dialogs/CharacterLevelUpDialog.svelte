@@ -23,13 +23,13 @@
 
 	let { document, dialog, ...data } = $props();
 
-	let boons = getChoicesFromCompendium('boon');
-	let subclasses = $state([]);
-	let hasSubclassSelection = levelingTo === 3;
-
 	const characterClass = Object.values(document.classes)?.[0];
 	const level = characterClass?.system?.classLevel;
 	const levelingTo = level + 1;
+
+	let boons = getChoicesFromCompendium('boon');
+	let subclasses = $state([]);
+	let hasSubclassSelection = levelingTo === 3;
 
 	// Load subclasses filtered by parent class when leveling to 3
 	$effect(() => {
