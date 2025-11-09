@@ -107,7 +107,7 @@
 			}
 		},
 		"mana": {
-			"formula": "(max(@dexterity, 0)",
+			"formula": "(max(@dexterity, 0))",
 			"recovery": "safeRest"
 		},
 		"resources": [],
