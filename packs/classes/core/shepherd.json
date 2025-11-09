@@ -5,7 +5,7 @@
 	"img": "systems/nimble/assets/classImages/shepherd.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
+		"identifier": "shepherd",
 		"rules": [
 			{
 				"type": "grantItem",
@@ -56,21 +56,12 @@
 				"uuid": "Compendium.nimble.nimble-items.Item.sA48zduVIzZpOsY6"
 			}
 		],
-		"armorProficiencies": [
-			"mail",
-			"shield"
-		],
+		"armorProficiencies": ["mail", "shield"],
 		"classLevel": 1,
 		"complexity": 2,
 		"description": "<p>Let all who are afflicted come. I will mend thy bones and soothe thy wounds. Thou shalt revere the gifts of life and death, neither of which is ever given or taken. Rather, we are all souls merely journeying between this realm and that of the beyond. But alas, often do these wandering souls find themselves bereft of guidance. Thus falls upon the Shepherd the solemn duty—to be a beacon of light to those ensnared in darkness, and darkness to those who, in hubris, deem themselves to be the light.</p><p>For many, the journey of service is a difficult path—yet, in this task we are not solitary. Our Lifebinding Spirits, the steadfast companions of our faith, are bound beside us, comforting and aiding us in the stewardship we’ve been given. As a Shepherd, you:</p><p>• <strong>Embrace the Balance</strong>. Embody the forces of Life and Death, wielding spells from your chosen domains. As you walk the path of balance, ponder which way the scales shall tip: towards healing or harm?</p><p>• <strong>Lead a Faithful Companion</strong>. Summon a Lifebinding spirit to your side, providing invaluable support in battle. Whether bolstering allies with healing or smiting foes with righteous fury, your spirit companion stands ready to aid in the struggle.</p>",
-		"groupIdentifiers": [
-			"shepherd-progression",
-			"sacred-graces"
-		],
-		"keyAbilityScores": [
-			"strength",
-			"will"
-		],
+		"groupIdentifiers": ["shepherd-progression", "sacred-graces"],
+		"keyAbilityScores": ["strength", "will"],
 		"hitDieSize": 10,
 		"hpData": [],
 		"savingThrows": {
@@ -129,10 +120,7 @@
 			"recovery": "safeRest"
 		},
 		"resources": [],
-		"weaponProficiencies": [
-			"STR Weapons",
-			"Wands"
-		]
+		"weaponProficiencies": ["STR Weapons", "Wands"]
 	},
 	"effects": [],
 	"flags": {},
@@ -144,5 +132,5 @@
 		"modifiedTime": 1762031738353,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "iFSLPRcOwlQjISyK"
+	"_id": "LrkpvL4DR7OgNEho"
 }

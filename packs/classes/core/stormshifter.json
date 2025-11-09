@@ -5,7 +5,7 @@
 	"img": "systems/nimble/assets/classImages/stormshifter.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
+		"identifier": "stormshifter",
 		"rules": [
 			{
 				"type": "grantItem",
@@ -44,22 +44,12 @@
 				"uuid": "Compendium.nimble.nimble-items.Item.kc9nmzlNv6yecQoJ"
 			}
 		],
-		"armorProficiencies": [
-			"cloth",
-			"leather"
-		],
+		"armorProficiencies": ["cloth", "leather"],
 		"classLevel": 1,
 		"complexity": 3,
 		"description": "<p>The trees whisper their excitement, the clouds sing with glee. Rejoice! The Master of Storm & Fang arrives. All who would seek passage through the ancient grove, heed this warning: Do not provoke the forest or its inhabitants. Beseech for passage humbly, even if its guardian is unseen, rest assured that</p><p>you… are not.</p><p>Those who traverse the woodlands may feel the vigilant gaze of a Stormshifter upon them. Legend speaks of an ancient union between mortal and dryad, birthing beings capable of wielding lightning and tempests as others wield blade and shield. This is but half the tale. </p><p>Wanderers recount encounters with beings, some wise and benevolent, others fearsome, with claws that sparked with lightning and pelts sharp as daggers. They are as one with storm and beast, embodying the serene beauty and raw power of nature’s grace. As a Stormshifter, you can:</p><p>• <strong>Aid your allies</strong> in whatever role is most needed.</p><p>• <strong>Wade into the fray</strong> as a shapeshifted beast ranging from friendly to vicious, indomitable, or HORRIBLE.</p><p>• <strong>Cast powerful spells</strong> from a distance to strike down, control, mend, and more.</p>",
-		"groupIdentifiers": [
-			"stormshifter-progression",
-			"direbeast-forms",
-			"chimeric-boons"
-		],
-		"keyAbilityScores": [
-			"dexterity",
-			"will"
-		],
+		"groupIdentifiers": ["stormshifter-progression", "direbeast-forms", "chimeric-boons"],
+		"keyAbilityScores": ["dexterity", "will"],
 		"hitDieSize": 8,
 		"hpData": [],
 		"savingThrows": {
@@ -118,10 +108,7 @@
 			"recovery": "safeRest"
 		},
 		"resources": [],
-		"weaponProficiencies": [
-			"Staves",
-			"Wands"
-		]
+		"weaponProficiencies": ["Staves", "Wands"]
 	},
 	"effects": [],
 	"flags": {},
@@ -133,5 +120,5 @@
 		"modifiedTime": 1762032139880,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "4dQHSsfkmHH3Zn3c"
+	"_id": "cZsVdJr29Z0Ynl6N"
 }
