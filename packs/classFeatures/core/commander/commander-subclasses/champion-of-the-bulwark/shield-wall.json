@@ -1,0 +1,52 @@
+{
+	"name": "Shield Wall",
+	"type": "feature",
+	"img": "icons/environment/people/infantry.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p> Allies within 2 spaces gain ALL the benefits of the shield you have equipped.</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "champion-of-the-bulwark"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760400818103,
+		"modifiedTime": 1760400951517,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "RyjuRfo5qRR8GFml"
+}

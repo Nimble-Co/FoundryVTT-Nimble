@@ -1,0 +1,25 @@
+{
+	"name": "Path of the Mountainheart",
+	"type": "subclass",
+	"img": "icons/environment/wilderness/cave-entrance-vulcano.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Stone’s Resilience.</strong> Whenever you expend Fury Dice to reduce incoming damage, add the value of the die to the amount reduced.</p><p><strong>Mountainous Tenacity.</strong> Whenever you expend your Hit Dice to recover HP, for every 10 HP you would recover, you may heal 1 Wound instead.</p><p>LEVEL 7 </p><p><strong>Unbreakable.</strong> (1/encounter) While Raging, if you would suffer your last Wound or other negative condition of your choice, you don’t.</p><p>LEVEL 11 </p><p><strong>Titan’s Fury.</strong> After you miss an attack or are crit by an enemy, Rage for free.</p><p>LEVEL 15 </p><p><strong>Mountain’s Endurance.</strong> While Dying, if an attack against you would be a crit, the attack is rerolled instead (when-crit abilities, such as Titan’s Fury, still trigger).</p>",
+		"parentClass": "berserker",
+		"resources": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1759469507947,
+		"modifiedTime": 1761528140286,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "pjTz6Mh72ieBTyKS"
+}

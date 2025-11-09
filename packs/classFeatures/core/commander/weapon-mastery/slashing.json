@@ -1,0 +1,52 @@
+{
+	"name": "Slashing",
+	"type": "feature",
+	"img": "icons/weapons/axes/axe-double-white-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Your attacks with slashing weapons cannot miss unarmored enemies. </p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "weapon-mastery"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760399170426,
+		"modifiedTime": 1760399198732,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "vahUZIJY59MJaKQP"
+}

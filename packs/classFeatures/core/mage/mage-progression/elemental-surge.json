@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Elemental Surge",
+	"type": "feature",
+	"img": "icons/magic/light/beams-explosion-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>A surge of adrenaline and your attunement with the elements grants you additional power as combat begins. When you roll Initiative, regain WIL mana (this expires at the end of combat if unused).</p><hr><p>Level 10: WIL+1d4 mana</p><p>Level 17: WIL+2d4 mana</p>",
+		"featureType": "class",
+		"class": "mage",
+		"group": "mage-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761538391818,
+		"modifiedTime": 1761538854361,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "F8GZjiNa1xhcDSlg"
+}

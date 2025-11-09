@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Reaver",
+	"type": "subclass",
+	"img": "icons/magic/unholy/silhouette-robe-evil-glow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p><strong>Hollow One</strong>. Cut off from your patron, you can no longer cast Shadow Blast and you can no longer cast tiered spells using Pilfered Power. However, as a parting token, you have stolen a secret from your patron: The magical Bonescythe, a weapon of sinew and bone, infused with shadowy magic.</p><p><strong>Bonescythe</strong>. Action: Summon a magical Bonescythe, a melee weapon: 2d12 slashing+DEX necrotic damage to each die (Reach: 2). It shatters after you hit with it (or when combat ends). Any Invocations affecting Shadow Blast affect your Bonescythe Instead.</p><p><strong>High Levels</strong>. Every 5 levels, add 1 extra damage die (Level 5: 3d12, Level 10: 4d12, etc.).</p><p>LEVEL 3 </p><p><strong>Shadow Exploit</strong>. Sacrifice a shadow minion to cast a spell at the highest tier you have unlocked. Each subsequent spell you cast in this encounter costs 1 additional minion.</p><p><strong>Martyr Spawn</strong>. Whenever you Defend, you can sacrifice a shadow minion to take no damage.</p><p>LEVEL 7 </p><p><strong>Grim Harrow</strong>. When you strike with your Bonescythe, you may divide the dice as you choose amongst any number of adjacent targets within Reach.</p><p><strong>Reap</strong>. When your Bonescythe crits, or kills a creature, summon a shadow minion for free.</p><p>LEVEL 11 </p><p><strong>My Blood, My Power</strong>. You may take 1 Wound to cast a tiered spell you know at the highest tier you have unlocked.</p><p><strong>Otherworldly Might.</strong> Advantage on concentration checks if you have any shadow minions.</p><p>LEVEL 15 </p><p><strong>I’m the Patron Now!</strong> Summon 2 shadow minions for free when you roll Initiative.</p>",
+		"parentClass": "shadowmancer",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762151009346,
+		"modifiedTime": 1762151258297,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "qepbtwzIh1mCv0fM"
+}

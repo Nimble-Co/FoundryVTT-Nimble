@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Windstrider",
+	"type": "feature",
+	"img": "icons/skills/movement/ball-spinning-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>If you move through the space of a willing creature while using Windstep, they can move with you and choose any space adjacent to your path of movement to end in.</p>",
+		"featureType": "class",
+		"class": "zephyr",
+		"group": "martial-arts-ability"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762059047320,
+		"modifiedTime": 1762059179303,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "0sQS2VWcJI1hBmZ8"
+}

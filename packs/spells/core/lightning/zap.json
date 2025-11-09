@@ -89,8 +89,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action, Single Target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Range: </strong>12</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage: </strong>2d8.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>On miss:</strong> the lightning fails to find ground, and strikes you instead.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+6 damage every 5 levels.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: 2d8. On miss: the lightning fails to find ground, and strikes you instead.</p>",
+			"higherLevelEffect": "<p>+6 damage every 5 levels.</p>"
 		},
 		"properties": {
 			"range": {
@@ -112,11 +112,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.8",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1758388261436,
+		"modifiedTime": 1762390495277,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "r434oYTu9Y2MoMXg"

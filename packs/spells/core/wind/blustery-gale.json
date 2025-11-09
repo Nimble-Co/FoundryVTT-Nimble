@@ -75,8 +75,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions, Single Target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Range: </strong>12</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage: </strong>3d4 bludgeoning, advantage against flying, Small, or Tiny targets.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>On hit:</strong> Move a Med target 2 spaces away; Small/Tiny twice as far; Large half as far (round down). For each die you would roll due to forced movement from this spell, deal +5 damage instead.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+1 movement.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: 3d4 bludgeoning, advantage against flying, Small, or Tiny targets. On hit: Move a Med target 2 spaces away; Small/Tiny twice as far; Large half as far (round down). For each die you would roll due to forced movement from this spell, deal +5 damage instead.</p>",
+			"higherLevelEffect": "<p>+1 movement.</p>"
 		},
 		"properties": {
 			"range": {
@@ -98,11 +98,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757226862113,
+		"modifiedTime": 1762393842668,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "WNaMNGjxVJdaArBF"

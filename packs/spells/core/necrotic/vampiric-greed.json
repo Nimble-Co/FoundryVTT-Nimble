@@ -66,8 +66,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td><p><strong>2 Actions, AoE</strong></p></td></tr><tr><td><p>Gain 1 Wound. 4d12 to all adjacent creatures, and heal HP equal to the damage done.</p></td></tr><tr><td><p>Any surviving creatures make a STR save. Gain 1 additional Wound for each creature that saves.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p>+1 DC.</p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p>Gain 1 Wound. 4d12 to all adjacent creatures, and heal HP equal to the damage done. Any surviving creatures make a STR save. Gain 1 additional Wound for each creature that saves.</p>",
+			"higherLevelEffect": "<p>+1 DC.</p>"
 		},
 		"properties": {
 			"range": {
@@ -86,11 +86,11 @@
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757109348049,
+		"modifiedTime": 1762391653133,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "XPu8GnsQLbeEVLqT"

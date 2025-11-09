@@ -1,0 +1,75 @@
+{
+	"name": "Sweeping Strike",
+	"type": "feature",
+	"img": "icons/skills/melee/strike-sword-slashing-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 2,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "RxCoShYLT1TasXls",
+					"type": "damage",
+					"damageType": "acid",
+					"formula": "0",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": false,
+					"on": {
+						"hit": [
+							{
+								"id": "Prn094f0MIvEpsDS",
+								"type": "note",
+								"noteType": "flavor",
+								"text": "Combat tactics: 1/attack, you can expend a Combat Die to add one of the following effects to your attack.",
+								"parentContext": "hit",
+								"parentNode": "RxCoShYLT1TasXls"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p><strong>2 actions:</strong> Select any contiguous area within your weapon’s Reach and damage ALL targets there. This attack does not miss on a 1. </p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "combat-tactics"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760399866961,
+		"modifiedTime": 1760399889418,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "a4y6d9VDchbMKrJn"
+}

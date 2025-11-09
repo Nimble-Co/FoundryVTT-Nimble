@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Archmage",
+	"type": "feature",
+	"img": "icons/equipment/head/hat-pointed-leather-black-glowing.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>+1 to any 2 of your stats. The first tiered spell you cast each encounter costs 1 action less and 5 fewer mana.</p>",
+		"featureType": "class",
+		"class": "mage",
+		"group": "mage-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761538481445,
+		"modifiedTime": 1761538528894,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "BTDicAEAllu2bkVj"
+}

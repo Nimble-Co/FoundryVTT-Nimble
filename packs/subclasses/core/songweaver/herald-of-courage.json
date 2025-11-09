@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Herald of Courage",
+	"type": "subclass",
+	"img": "icons/skills/melee/unarmed-punch-fist-yellow-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Inspiring Presence</strong>. Whenever you use Songweaver’s Inspiration, your allies within 12 spaces who can hear you gain WIL temp HP.</p><p>LEVEL 7 </p><p><strong>Unfailing Courage</strong>. Your presence inspires others to feats of heroism and courage heard of only in legend. Your Songweaver’s Inspiration allows your target to roll with advantage.</p><p>LEVEL 11 </p><p><strong>Fire in my Bones</strong>. Your Songweaver’s Inspiration also grants your target 1 additional action.</p><p>LEVEL 15 </p><p><strong>Chorus of Champions</strong>. (1/encounter) Free Reaction: Give all party members 1 action.</p>",
+		"parentClass": "songweaver",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761886301006,
+		"modifiedTime": 1761887345963,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "mZ7v0aIsV0fO8RP9"
+}

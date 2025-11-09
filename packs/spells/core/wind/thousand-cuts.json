@@ -55,8 +55,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>3 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach: 12.</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage:</strong> d44 slashing damage (roll with advantage), also damages enemies within Reach 1 of your target.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>D44 with advantage.</strong> Roll 3d4 and drop the lowest die. The leftmost die is the tens place, and the second is the ones (e.g., 2, 3, and 4 deals 34 damage).</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p>+1 Reach.</p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>3 Actions, AoE</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: d44 slashing damage (roll with advantage), also damages enemies within Reach 1 of your target.</p>",
+			"higherLevelEffect": "<p>+1 Reach</p>"
 		},
 		"properties": {
 			"range": {
@@ -78,11 +78,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757228103621,
+		"modifiedTime": 1762394983765,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "UZCSfngNtbXATH3B"

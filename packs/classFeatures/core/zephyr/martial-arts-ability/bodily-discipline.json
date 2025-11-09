@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Bodily Discipline",
+	"type": "feature",
+	"img": "icons/magic/holy/meditation-chi-focus-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>You may spend 1 action to end any non-Wound condition on yourself.</p>",
+		"featureType": "class",
+		"class": "zephyr",
+		"group": "martial-arts-ability"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762056273496,
+		"modifiedTime": 1762056356702,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "cBUKS89VW7iX3ypv"
+}

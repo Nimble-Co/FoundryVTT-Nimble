@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Mal, the Malevolent Imp",
+	"type": "feature",
+	"img": "icons/creatures/unholy/demon-fanged-horned-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 3,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Summon a tiny fiend for 1 night. He can find out dangerous information you have no right to know! Or “take care” of a problem with only the slightest chance of things going wrong. Make an Influence check to convince him to help you (advantage if you ask him to do something he would find mischievous or fun; with disadvantage if it is something he would find good or menial).</p>",
+		"featureType": "class",
+		"class": "songweaver",
+		"group": "a-people-person"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761947417997,
+		"modifiedTime": 1761947591683,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "abIU97U8yyMSPj3p"
+}

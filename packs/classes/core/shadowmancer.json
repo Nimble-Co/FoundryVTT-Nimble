@@ -1,0 +1,131 @@
+{
+	"name": "Shadowmancer",
+	"type": "class",
+	"img": "systems/nimble/assets/classImages/shadowmancer.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "TOAqDkFTAzzpv9Vg",
+				"identifier": "",
+				"label": "Starting Gear - Adventurer's Garb",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.Bdm2ynI2J7Xt9FNf"
+			},
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "OPZVHdSIbz3TtVLi",
+				"identifier": "",
+				"label": "Starting Gear - Sickle",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.XsT9DWdPp0ZhnOZR"
+			},
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "dxrfmlZuGwUgIvKF",
+				"identifier": "",
+				"label": "Starting Gear - Shovel",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.9hggZlqj29JHZncD"
+			}
+		],
+		"armorProficiencies": [
+			"cloth"
+		],
+		"classLevel": 1,
+		"complexity": 3,
+		"description": "<p>Totally NOT evil. Why would you even say that? Great power sometimes comes from… horrible places. But what’s the alternative, spend our entire lives… STUDYING?! Now that’s horrible. Who’d want to waste their lives reading books—learning magic the hard way? Work SMART, not hard. Just scheme up a way to take what you need from someone who won’t miss it—ancient horrors don’t guard their power nearly as well as you’d think! And if there’s power just laying around, it’d be dumb of me to not use it, really. So what if I wear black and have to occasionally sacrifice an animal here and there while chanting? Does that automatically mean I’m evil? *Pfft,* hardly! Not every ANCIENT HORROR is the same; that’s like saying crow black and spider black are the same. Okay, bad examples, but the point stands. If you’re tired of swinging swords around and getting sweaty like a peasant, just summon a horde of shadow minions to do your bidding. They’re always eager to serve! As a Shadowmancer: </p><ul><li><p><strong>Unspeakable Power Awaits.</strong> Use your cunning to forge pacts with ancient, unfathomable entities, drawing upon their incomprehensible power to crush foes and bend the shadows to your will.</p></li><li><p><strong>Master Shadow Minions.</strong> Summon legions of shadowy minions to overwhelm your adversaries and bolster your magical abilities. Let them swarm your foes, serving as both sword and fodder in your quest for dominance.</p></li></ul>",
+		"groupIdentifiers": [
+			"lesser-invocations",
+			"greater-invocations",
+			"shadowmancer-progression"
+		],
+		"keyAbilityScores": [
+			"intelligence",
+			"dexterity"
+		],
+		"hitDieSize": 8,
+		"hpData": [],
+		"savingThrows": {
+			"advantage": "intelligence",
+			"disadvantage": "will"
+		},
+		"abilityScoreData": {
+			"4": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"5": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			},
+			"8": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"9": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			},
+			"12": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"13": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			},
+			"16": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "primary"
+			},
+			"17": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "secondary"
+			}
+		},
+		"mana": {
+			"formula": "(max(@dexterity, 0))",
+			"recovery": "safeRest"
+		},
+		"resources": [],
+		"weaponProficiencies": [
+			"Blades",
+			"Wands"
+		]
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761632559988,
+		"modifiedTime": 1761713536915,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "xfwQiIupABgyzq3o"
+}

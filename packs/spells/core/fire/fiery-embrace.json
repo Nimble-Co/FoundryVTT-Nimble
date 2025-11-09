@@ -41,8 +41,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Concentration: </strong>Up to 1 minute.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>Reach: 8.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>While within Reach: 1 ally gains the effects of Enchant Weapon. Enemies gain Smoldering, lose damage resistance, and their damage immunity is reduced to resistance.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<p></p><table><tbody><tr><td><p>+1 ally.</p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Concentration</strong>: Up to 1 minute. <strong>Reach</strong>: 8. While within Reach: 1 ally gains the effects of Enchant Weapon. Enemies gain Smoldering, lose damage resistance, and their damage immunity is reduced to resistance.</p>",
+			"higherLevelEffect": "<p>+1 ally</p>"
 		},
 		"properties": {
 			"range": {
@@ -65,11 +65,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757108733858,
+		"modifiedTime": 1762377083592,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "Ue4K4FcSM43UiwvO"

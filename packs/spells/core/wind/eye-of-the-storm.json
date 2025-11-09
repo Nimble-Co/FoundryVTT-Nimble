@@ -65,8 +65,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach: 3.</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage:</strong> 4d4+10 bludgeoning to enemies within Reach.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>You may place surviving creatures anywhere within 1 space of the storm’s Reach on a failed STR save.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+1 Reach.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Reach</strong>: 3. <strong>Damage</strong>: 4d4+10 bludgeoning to enemies within Reach. You may place surviving creatures anywhere within 1 space of the storm’s Reach on a failed STR save.</p>",
+			"higherLevelEffect": "<p>+1 Reach.</p>"
 		},
 		"properties": {
 			"range": {
@@ -88,11 +88,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757108716074,
+		"modifiedTime": 1762394724714,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "THXoV00xH0Gf4CxG"

@@ -1,0 +1,60 @@
+{
+	"folder": null,
+	"name": "Escape Plan",
+	"type": "feature",
+	"img": "icons/magic/perception/shadow-stealth-eyes-purple.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "1 Use, (1/ Safe Rest)",
+				"quantity": 1,
+				"type": "special",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "minute"
+			},
+			"effects": [
+				{
+					"id": "5eSopLu5pAtjC1eH",
+					"type": "condition",
+					"condition": "invisible",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p><em>(1/Safe Rest)</em> When you would drop to 0 HP or gain a Wound, you don’t. Instead, you turn Invisible for 1 minute or until you attack. </p>",
+		"featureType": "class",
+		"class": "the-cheat",
+		"group": "tools-of-the-scoundrel"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1759473005844,
+		"modifiedTime": 1761884758050,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "KoXl36kUXwhsa87p"
+}

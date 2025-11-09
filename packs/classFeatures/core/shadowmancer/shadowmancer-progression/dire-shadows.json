@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Dire Shadows",
+	"type": "feature",
+	"img": "icons/creatures/unholy/demon-horned-black-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Attacks against your shadow minions are made with disadvantage. They take no damage from successful saves.</p>",
+		"featureType": "class",
+		"class": "shadowmancer",
+		"group": "shadowmancer-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761632619594,
+		"modifiedTime": 1761632732286,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "cEeqXZHwdlwH0kpm"
+}

@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td><p><strong>1 Action</strong></p></td></tr><tr><td><p><strong>Dispel</strong> a minor magical effect, or temporarily suppress a stronger one (the more powerful an enchantment, the shorter the duration). OR:</p></td></tr><tr><td><p><strong>Voice of Thunder.</strong> Your eyes glow and your voice is amplified to a booming, thunder-like volume for 1 min.</p></td></tr></tbody></table>",
+			"baseEffect": "<p><strong>1 Action</strong></p><p><strong>Dispel</strong> a minor magical effect, or temporarily suppress a stronger one (the more powerful an enchantment, the shorter the duration). OR:</p><p><strong>Voice of Thunder</strong>. Your eyes glow and your voice is amplified to a booming, thunder-like volume for 1 min.</p>",
 			"higherLevelEffect": ""
 		},
 		"properties": {
@@ -56,11 +56,11 @@
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757109246719,
+		"modifiedTime": 1762396302067,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "nfGGcIqpeT1GVIw4"

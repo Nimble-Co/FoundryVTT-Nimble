@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Supreme Control",
+	"type": "feature",
+	"img": "icons/magic/nature/beam-hand-leaves-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Whenever you Demand Control, you may choose to trigger the selected option twice. You may Demand Control as a Reaction.</p>",
+		"featureType": "class",
+		"class": "mage",
+		"group": "invoker-of-control"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761544686125,
+		"modifiedTime": 1761883961953,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "cCqrZ6XZBRiMhwdh"
+}

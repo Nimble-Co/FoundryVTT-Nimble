@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Heroic Ballad",
+	"type": "feature",
+	"img": "icons/tools/instruments/harp-lap-brown.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>+2 max Songweaver’s Inspiration charges. When used to reroll an ally’s attack, your Songweaver’s Inspiration also grants them +WIL damage on the attack.</p>",
+		"featureType": "class",
+		"class": "songweaver",
+		"group": "lyrical-weaponry"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761889653942,
+		"modifiedTime": 1761889917593,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "99gdSBTmxCWmKTgZ"
+}

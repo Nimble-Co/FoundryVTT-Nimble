@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Healing Salve",
+	"type": "feature",
+	"img": "icons/consumables/potions/bottle-round-corked-orante-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Action: Heal yourself or an adjacent creature WIL d6 HP. Only you or another experienced Herbalist may administer these, and they expire whenever you Safe Rest.</p>",
+		"featureType": "class",
+		"class": "hunter",
+		"group": "keeper-of-the-wildheart"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761434687869,
+		"modifiedTime": 1761444621781,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "RLfAF3ftarBZBFF2"
+}

@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Paragon of Virtue",
+	"type": "feature",
+	"img": "icons/skills/social/diplomacy-handshake.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Advantage on Influence checks to convince someone when you are forthrightly telling the truth, disadvantage when misleading.</p>",
+		"featureType": "class",
+		"class": "oathsworn",
+		"group": "oathsworn-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761625093328,
+		"modifiedTime": 1761625153183,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "TIiGVGorAAIwq6sV"
+}

@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Shining Mandate",
+	"type": "feature",
+	"img": "icons/skills/melee/strike-hammer-destructive-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>The first time each round you are attacked while you already have Judgment Dice, select an ally within your aura to roll one and apply it to their next attack. You have advantage on skill checks to see through illusions.</p>",
+		"featureType": "class",
+		"class": "oathsworn",
+		"group": "sacred-decree"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761626927792,
+		"modifiedTime": 1761627042501,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "KqEsj4GVzZOPzEgu"
+}

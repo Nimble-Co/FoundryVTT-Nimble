@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Keeper of the Wildheart",
+	"type": "subclass",
+	"img": "icons/magic/nature/root-vines-face-glow-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Impressive Form.</strong> +5 max HP. Upgrade your Hit Dice to d10s. I Have the High Ground. When you roll Initiative or gain one or more Thrill of the Hunt charges, move up to half your speed for free, ignoring difficult terrain.</p><p>LEVEL 7 </p><p><strong>Resourceful Herbalist.</strong> Whenever you Safe Rest in a location near where plants or fungi can grow, you may spend a day collecting healing herbs to craft a number of Healing Salves equal to your WIL. Healing Salve. Action: Heal yourself or an adjacent creature WIL d6 HP. Only you or another experienced Herbalist may administer these, and they expire whenever you Safe Rest.</p><p>LEVEL 11 </p><p><strong>Ha! I’m Over Here!</strong> <em>(1/Safe Rest)</em> If an attack would cause you to drop to 0 HP, you instead move up to your speed away and take no damage.</p><p>LEVEL 15 </p><p><strong>Unparalleled Survivalist.</strong> Gain +WIL armor. When you attack with a ranged weapon, you may first move half your speed for free.</p>",
+		"parentClass": "hunter",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761434687869,
+		"modifiedTime": 1761527690224,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "SeivpPtF053ilLXu"
+}

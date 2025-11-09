@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Shadow Rush",
+	"type": "feature",
+	"img": "icons/magic/fire/explosion-fireball-medium-purple-pink.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When your shadow minions attack, instead of rolling damage, you may have any of them deal the max amount, then die.</p>",
+		"featureType": "class",
+		"class": "shadowmancer",
+		"group": "greater-invocations"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761632783894,
+		"modifiedTime": 1761710855728,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "3jOQK87BBM5woiYT"
+}

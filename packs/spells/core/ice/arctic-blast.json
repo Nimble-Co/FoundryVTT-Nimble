@@ -75,8 +75,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach: Cone </strong>4</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage: </strong>4d6+10 damage.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>This area is difficult terrain until the end of your next turn. Surviving creatures must make a STR save or be frozen in place (Restrained) until the end of their next turn; creatures already Hampered are Incapacitated for 1 turn instead.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<p></p><table><tbody><tr><td><p><strong>+1 Reach.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Reach</strong>: Cone 4. <strong>Damage</strong>: 4d6+10 damage. This area is difficult terrain until the end of your next turn. Surviving creatures must make a STR save or be frozen in place (Restrained) until the end of their next turn; creatures already Hampered are Incapacitated for 1 turn instead.</p>",
+			"higherLevelEffect": "<p>+1 Reach</p>"
 		},
 		"properties": {
 			"range": {
@@ -98,11 +98,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757136881568,
+		"modifiedTime": 1762378377533,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "ndZMXifo0h3H4lUU"

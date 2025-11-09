@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Oath of Vengeance",
+	"type": "subclass",
+	"img": "icons/skills/melee/hand-grip-sword-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Aura of Zeal.</strong> Whenever you roll Judgment Dice, roll 1 more. Gain an aura with a Reach of 4. Your Radiant Judgment also triggers when an ally within your aura is attacked while you have no Judgment Dice.</p><p>LEVEL 7 </p><p><strong>Avenger.</strong> Whenever you or an ally within your aura gain any Wounds, change up to that many Judgment Dice to their max. Then, move up to half your speed for free.</p><p><strong>LEVEL 11</strong> </p><p><strong>Unerring Judgment.</strong> Increase your primary die rolls on melee attacks by 1 whenever you you have Judgment Dice.</p><p>LEVEL 15 </p><p><strong>Maximum Judgment.</strong> Whenever you are attacked, set a Judgment Die to its max.</p>",
+		"parentClass": "oathsworn",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761622907040,
+		"modifiedTime": 1761623162088,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "fckNYu70sPhp2Kv9"
+}

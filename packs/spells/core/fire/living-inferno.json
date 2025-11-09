@@ -33,8 +33,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"104,0\"><p><strong>3 Actions, Self</strong></p></td></tr><tr><td data-colwidth=\"104,0\" colspan=\"2\"><p>Gain the effects of Flame Barrier until your next turn. At the end of this turn and your next turn, cast Pyroclasm for free.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p>Upcast Flame Barrier and Pyroclasm.</p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>3 Actions, Self</strong></p><p>Gain the effects of Flame Barrier until your next turn. At the end of this turn and your next turn, cast Pyroclasm for free.</p>",
+			"higherLevelEffect": "<p>Upcast Flame Barrier and Pyroclasm</p>"
 		},
 		"properties": {
 			"range": {
@@ -54,11 +54,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757108915756,
+		"modifiedTime": 1762377652968,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "1JKFzgOBWjaF9jKz"

@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Circle of Sky & Storm",
+	"type": "subclass",
+	"img": "icons/magic/lightning/bolt-strike-clouds-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Deepening Study</strong>. Choose the Ice or Radiant school to learn.</p><p><strong>Creature of the Fey</strong>. You may cast spells while Beastshifted.</p><p><strong>Attuned to Nature</strong>. (1/day) Add LVL to any skill check related to nature or weather.</p><p>LEVEL 7 </p><p><strong>Raging Tempest</strong>. Whenever you crit with a tiered spell, you may cast a cantrip for free from a school you know and haven’t cast any spells from this turn (at the same level of dis/advantage).</p><p>LEVEL 11 </p><p><strong>Primordial Force</strong>. Spending 2+ mana on a spell grants an additional effect:</p><p>• <strong>Ice</strong>. Gain WIL temp HP.</p><p>• <strong>Lightning</strong>. Deal additional damage equal to your WIL.</p><p>• <strong>Radiant</strong>. You may heal a creature within 6 spaces WIL HP.</p><p>• <strong>Wind</strong>. Gain a flying speed this turn. Move up to 6 spaces for free.</p><p>LEVEL 15 </p><p><strong>Master of Storm</strong>. You can concentrate on 1 lightning spell and 1 wind spell at the same time. (1/Safe Rest) You can cast Ride the Lightning for 0 mana.</p>",
+		"parentClass": "stormshifter",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762037361954,
+		"modifiedTime": 1762037521818,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "jx8crUzyWgeUkxUr"
+}

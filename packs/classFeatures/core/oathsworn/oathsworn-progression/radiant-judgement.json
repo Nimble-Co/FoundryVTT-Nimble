@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Radiant Judgement",
+	"type": "feature",
+	"img": "icons/skills/melee/strike-sword-slashing-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Whenever an enemy attacks you, if you have no Judgment Dice, roll your Judgment dice (2d6). On your next melee attack this encounter, if you hit, deal that much additional radiant damage. The dice are expended whether you hit or miss.</p><hr><p>Level 3: Judgement Dice become d8s</p><p>Level 5: Judgement Dice become d10s</p><p>Level 8: Judgement Dice become d12s</p><p>Level 10: Judgement Dice become d20s</p><p>Level 14: Whenever you roll Judgement Dice, roll 1 more</p>",
+		"featureType": "class",
+		"class": "oathsworn",
+		"group": "oathsworn-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761624053545,
+		"modifiedTime": 1761624279636,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "qiQeJrIxla9y6XY0"
+}

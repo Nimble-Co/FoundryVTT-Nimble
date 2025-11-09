@@ -57,8 +57,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td><p><strong>2 Actions, Special</strong></p></td></tr><tr><td><p><strong>Reach:</strong> 8.</p></td></tr><tr><td><p><strong>Damage:</strong> d66 (with advantage, ignoring armor, does not miss or crit) on a failed INT save.</p></td></tr><tr><td><p>Target rolls with disadvantage if Bloodied or Frightened. On a success, you both take half of this damage instead.</p></td></tr><tr><td><p></p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p>+1 DC, +10 damage.</p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, Special</strong></p><p><strong>Reach</strong>: 8. <strong>Damage</strong>: d66 (with advantage, ignoring armor, does not miss or crit) on a failed INT save. Target rolls with disadvantage if Bloodied or Frightened. On a success, you both take half of this damage instead.</p>",
+			"higherLevelEffect": "<p>+1 DC, +10 damage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -79,11 +79,11 @@
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757224292678,
+		"modifiedTime": 1762391585888,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "VIyLo7aKq3eK9H0K"

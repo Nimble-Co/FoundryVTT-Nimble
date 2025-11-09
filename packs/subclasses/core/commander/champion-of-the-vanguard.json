@@ -1,0 +1,25 @@
+{
+	"name": "Champion of the Vanguard",
+	"type": "subclass",
+	"img": "icons/environment/people/charge.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Advance!</strong> (1/round) After you move toward an enemy, gain advantage on the first melee attack you make against it. When you use your Coordinated Strike, you and all allies within 12 spaces can first move up to half their speed for free.</p><p>LEVEL 7 </p><p><strong>Experienced Commander.</strong> Your Coordinated Strike may target 1 additional ally. Gain +1 use of Coordinated Strike/Safe Rest.</p><p>LEVEL 11 </p><p><strong>Survey the Battlefield.</strong> When you roll Initiative, regain 1 use of Coordinated Strike. +1 max Combat Dice.</p><p>LEVEL 15 </p><p><strong>As One!</strong> Attacks made with your Coordinated Strike also grant advantage and ignore all disadvantage. Your chosen allies gain 1 additional action to use on their next turn.</p>",
+		"parentClass": "commander",
+		"resources": []
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1760382176039,
+		"modifiedTime": 1761527831485,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "yOiaaw2UjlXDQVfC"
+}

@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Bonescythe",
+	"type": "feature",
+	"img": "icons/weapons/sickles/scythe-bone-green-fire.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Action: Summon a magical Bonescythe, a melee weapon: 2d12 slashing+DEX necrotic damage to each die (Reach: 2). It shatters after you hit with it (or when combat ends). Any Invocations affecting Shadow Blast affect your Bonescythe Instead.</p><p>High Levels. Every 5 levels, add 1 extra damage die (Level 5: 3d12, Level 10: 4d12, etc.).</p>",
+		"featureType": "class",
+		"class": "shadowmancer",
+		"group": "reaver"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762152295181,
+		"modifiedTime": 1762152398736,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "MxCKm6hlaJqSSG8o"
+}

@@ -84,7 +84,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action, Single Target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Range: </strong>12</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage: </strong>1d4 slashing (Vicious: roll 1 additional die whenever you roll crit damage). </p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>Also damages up to 1 adjacent target.</p></td></tr></tbody></table>",
+			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: 1d4 slashing (Vicious: roll 1 additional die whenever you roll crit damage). Also damages up to 1 adjacent target.</p>",
 			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+2 damage every 5 levels.</strong></p></td></tr></tbody></table>"
 		},
 		"properties": {
@@ -107,11 +107,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757282399829,
+		"modifiedTime": 1762394885170,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "N9DAEOBnY6QyW7VM"

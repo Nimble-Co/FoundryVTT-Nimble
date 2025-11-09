@@ -1,0 +1,52 @@
+{
+	"name": "As One!",
+	"type": "feature",
+	"img": "icons/skills/melee/weapons-crossed-swords-white-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Attacks made with your Coordinated Strike also grant advantage and ignore all disadvantage. Your chosen allies gain 1 additional action to use on their next turn.</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "champion-of-the-vanguard"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760400066843,
+		"modifiedTime": 1760400470675,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "tl9VgnTSZegiQLyp"
+}

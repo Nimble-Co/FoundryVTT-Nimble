@@ -1,0 +1,104 @@
+{
+	"name": "Commanding Presence",
+	"type": "feature",
+	"img": "icons/magic/sonic/scream-wail-shout-teal.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "7PnCCAempcQf8NJd",
+					"type": "damage",
+					"damageType": "psychic",
+					"formula": "10+@strength",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": false,
+					"on": {
+						"hit": [
+							{
+								"id": "tQt7Kx8gVfpwCBjN",
+								"type": "note",
+								"noteType": "warning",
+								"text": "\n\nDC 10+STR (below)",
+								"parentContext": "hit",
+								"parentNode": "7PnCCAempcQf8NJd"
+							},
+							{
+								"id": "63I1XqUXoUQvy4GU",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "7PnCCAempcQf8NJd"
+							}
+						]
+					}
+				},
+				{
+					"id": "7JvhPSrNy39dL4jM",
+					"type": "damage",
+					"damageType": "acid",
+					"formula": "0",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"hit": [
+							{
+								"id": "IsAy46e12s3J0Ao1",
+								"type": "note",
+								"noteType": "flavor",
+								"text": "Combat tactics: 1/attack, you can expend a Combat Die to add one of the following effects to your attack.",
+								"parentContext": "hit",
+								"parentNode": "7JvhPSrNy39dL4jM"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p><strong>Action:</strong> Shout a command up to 2 words long at an enemy. On a failed WIL save (DC 10+STR), they must spend their entire next turn obeying it to the best of their ability, provided it is not obviously harmful to themselves. They then become immune to this effect for 1 day.</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "combat-tactics"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760399866961,
+		"modifiedTime": 1760399991551,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "cmrCy26QPZrZ0eFN"
+}

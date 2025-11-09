@@ -84,8 +84,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions, Single Target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Range: </strong>12</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage:</strong> 3d6. If any die rolls the max against a Hampered target, this counts as a crit.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>On crit: </strong>+20 damage.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Hampered.</strong> Any creature with actions or movement reduced; e.g., Dazed, Slowed, Grappled, Restrained, Prone, in Difficult Terrain.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p>Increase the result of ANY die by 1. +5 damage on crit.</p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: 3d6. If any die rolls the max against a Hampered target, this counts as a crit. On crit: +20 damage. </p>",
+			"higherLevelEffect": "<p>Increase the result of ANY die by 1. +5 damage on crit.</p>"
 		},
 		"properties": {
 			"range": {
@@ -107,11 +107,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757136229064,
+		"modifiedTime": 1762379987603,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "YgZwzCSYhDlz6KrF"

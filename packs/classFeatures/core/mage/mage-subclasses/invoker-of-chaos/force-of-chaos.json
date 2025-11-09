@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Force of Chaos",
+	"type": "feature",
+	"img": "icons/magic/air/wind-vortex-swirl-purple.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Whenever you cast a spell, you can choose to spend 1 less mana. Whenever you do this and whenever you crit, Invoke Chaos: Roll on the Chaos Table.</p>",
+		"featureType": "class",
+		"class": "mage",
+		"group": "invoker-of-chaos"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761540819964,
+		"modifiedTime": 1761884035346,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "bEm55OIxwJdzzn8m"
+}

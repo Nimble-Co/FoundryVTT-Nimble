@@ -1,0 +1,65 @@
+{
+	"name": "Fit for Any Battlefield",
+	"type": "feature",
+	"img": "icons/equipment/head/greathelm-banded-steel.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "OCPNZWXtQjoVmJsW",
+				"identifier": "Commander-lvl3-Choose a Combat Tactic",
+				"label": "Choose a Combat Tactic",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Item.iICGKEwphgLbJY8i"
+			}
+		],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When you roll Initiative, gain STR Combat Dice.<em>(1/attack)</em> You may expend a Combat Die to perform a special maneuver. Combat Dice are lost when combat ends.</p><hr><p>Levels  6, 8, 10, 12, 16:</p><p>Choose 1 Combat Ability and gain +1 Max Combat Dice</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "commander-progression"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760384468062,
+		"modifiedTime": 1761434361014,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "JiNcaklfRjgJ7e5W"
+}

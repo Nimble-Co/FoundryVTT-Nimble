@@ -1,0 +1,113 @@
+{
+	"name": "Control Table",
+	"img": "icons/skills/melee/unarmed-punch-fist.webp",
+	"description": "",
+	"results": [
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				1,
+				1
+			],
+			"_id": "4lmNM49YEJXPRNso",
+			"name": "I INSIST",
+			"img": "icons/magic/air/air-smoke-casting.webp",
+			"description": "<p>Cast a cantrip for free, ignoring all disadvantage; it cannot miss.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.9",
+				"createdTime": 1761545193949,
+				"modifiedTime": 1761545667580,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				2,
+				2
+			],
+			"_id": "xKVtXKzsEgq9KmMI",
+			"name": "ELEMENTAL AFFLICTION",
+			"img": "icons/magic/fire/flame-burning-campfire-rocks.webp",
+			"description": "<p>A creature of your choice within 12 spaces gains the Charged, Smoldering, or Slowed condition.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.9",
+				"createdTime": 1761545200790,
+				"modifiedTime": 1761545857460,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				3,
+				3
+			],
+			"_id": "WNMnMtSVJEqNpB5m",
+			"name": "NO",
+			"img": "icons/magic/control/debuff-chains-shackles-movement-blue.webp",
+			"description": "<p>Choose a creature; it cannot harm a creature of your choice during its next turn.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.9",
+				"createdTime": 1761545201569,
+				"modifiedTime": 1761545929427,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			},
+			"documentUuid": null
+		},
+		{
+			"type": "text",
+			"weight": 1,
+			"range": [
+				4,
+				4
+			],
+			"_id": "KwKENKzXKHJqoUHe",
+			"name": "LOSE CONTROL",
+			"img": "icons/magic/lightning/bolt-strike-embers-teal.webp",
+			"description": "<p>Do ALL of the above, but the GM chooses each time.</p>",
+			"drawn": false,
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.9",
+				"createdTime": 1761545202334,
+				"modifiedTime": 1761547125744,
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+			},
+			"documentUuid": null
+		}
+	],
+	"replacement": true,
+	"displayRoll": true,
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761544957136,
+		"modifiedTime": 1761547374250,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"formula": "",
+	"_id": "XSAoyDZqU9HLkxgb"
+}

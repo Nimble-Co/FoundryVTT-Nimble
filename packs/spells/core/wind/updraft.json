@@ -54,8 +54,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>3 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach: 12.</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>Enemies within a 5×5 area must repeat a DEX save until they succeed. For each time they failed they suffer 1d6 falling damage and land prone.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p>+2 Range, +1 area.</p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>3 Actions, AoE</strong></p><p><strong>Reach</strong>: 12. Enemies within a 5×5 area must repeat a DEX save until they succeed. For each time they failed they suffer 1d6 falling damage and land prone.</p>",
+			"higherLevelEffect": "<p>+2 Range, +1 area.</p>"
 		},
 		"properties": {
 			"range": {
@@ -77,11 +77,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757109332665,
+		"modifiedTime": 1762395154309,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "rxzdEK621oVYuWQ8"

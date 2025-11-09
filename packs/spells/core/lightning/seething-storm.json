@@ -62,7 +62,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>3 Actions, AoE</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Concentration:</strong> Up to 1 minute.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Reach:</strong> 4.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>You become a cloud of tempestuous storm. You can fly, move for free 1/round, and attacks against you are made with disadvantage.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><ul><li><p>At the end of each of your turns, strike up to 4 creatures within Reach with a bolt of lightning for [[/r (1d8*10)+1d8]]{d88} damage (a creature can only be struck 1/round).</p></li></ul></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><ul><li><p>+2 Reach and number of bolts each round. Costs 3 actions each round to maintain.</p></li></ul></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>Once you cast this spell, you must Safe Rest for 1 week before you can use it again.</p></td></tr></tbody></table>",
+			"baseEffect": "<p><strong>3 Actions, AoE</strong></p><p><strong>Concentration</strong>: Up to 1 minute. Reach: 4. You become a cloud of tempestuous storm. You can fly, move for free 1/round, and attacks against you are made with disadvantage.</p><p>• At the end of each of your turns, strike up to 4 creatures within Reach with a bolt of lightning for d88 damage (a creature can only be struck 1/round).</p><p>• +2 Reach and number of bolts each round. Costs 3 actions each round to maintain.</p><p>Once you cast this spell, you must Safe Rest for 1 week before you can use it again.</p>",
 			"higherLevelEffect": ""
 		},
 		"properties": {
@@ -86,11 +86,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757140999966,
+		"modifiedTime": 1762390276941,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "96VXY2ogu8nW39GI"

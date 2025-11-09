@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Circle of Fang & Claw",
+	"type": "subclass",
+	"img": "icons/magic/nature/wolf-paw-glow-large-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Swiftshift</strong>. When you roll Initiative, you may Beastshift or move for free. While transformed, you may shift between different Direbeast forms for free (and as a reaction by spending 1 mana); however, Beastshifting for free does not grant any temp HP.</p><p><strong>Windborne Protector</strong>. (1/encounter) Reaction: when an enemy attacks, spend 2 mana to shift into a Fearsome Beast. Then you may Interpose from up to 12 spaces away and Defend for free (if you have not yet done so this round).</p><p><strong>Friend of Beasts</strong>. Beasts will not attack you until you first harm them. You may transform into harmless beasts without spending a Beastshift charge.</p><p>LEVEL 7 </p><p><strong>Unleash the Beast</strong>. (1/encounter) When you miss, you can crit instead.</p><p><strong>Storm Wake</strong>. (1/encounter) Action: Spend 3 mana to shift into a Beast of the Pack, then teleport in a straight line up to 12 spaces away, unerringly dealing WIL d8 lightning damage to any creatures you choose adjacent to your path.</p><p>LEVEL 11 </p><p><strong>Master of Forms</strong>. Your shapeshift forms can have 2 Chimeric Boons at a time.</p><p><strong>Venomous Gaze</strong>. (1/encounter) Action: Spend 2 mana to shift into a Beast of Nightmares. Then entice a creature within 12 spaces to move 2×WIL spaces closer to you on a failed WIL save (they roll with disadvantage and must repeat until they save or can move no further). If they end up in the same space as you, you may Sting them for free.</p><p>LEVEL 15 </p><p><strong>Master of Forms (2)</strong>. You can Beastshift 2 additional times per Safe Rest. Choose 2 additional Chimeric Boons. Your Direbeast forms can have 3 at a time.</p>",
+		"parentClass": "stormshifter",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762037543590,
+		"modifiedTime": 1762037779978,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "myK1IWFNGeqUFfF4"
+}

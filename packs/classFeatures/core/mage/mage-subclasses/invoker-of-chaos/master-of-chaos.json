@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Master of Chaos",
+	"type": "feature",
+	"img": "icons/magic/light/explosion-glow-spiral-teal.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Whenever you Invoke Chaos, roll with advantage.</p>",
+		"featureType": "class",
+		"class": "mage",
+		"group": "invoker-of-chaos"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761541454829,
+		"modifiedTime": 1761884030240,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "1y5lwLW6BVGoi6dJ"
+}

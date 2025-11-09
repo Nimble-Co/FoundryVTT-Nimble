@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td><p><strong>1 Action</strong></p></td></tr><tr><td><p><strong>Chill.</strong> Harmlessly freeze, thaw, or move a bath-sized amount of water near you. OR:</p></td></tr><tr><td><p><strong>Craft.</strong> Conjure a sheet of opaque, mirror-like, or transparent ice the size of a window or small door.</p></td></tr></tbody></table>",
+			"baseEffect": "<p><strong>1 Action</strong></p><p><strong>Chill</strong>. Harmlessly freeze, thaw, or move a bath-sized amount of water near you. OR: </p><p><strong>Craft</strong>. Conjure a sheet of opaque, mirror-like, or transparent ice the size of a window or small door.</p>",
 			"higherLevelEffect": ""
 		},
 		"properties": {
@@ -56,11 +56,11 @@
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757108636863,
+		"modifiedTime": 1762395432701,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "OlTD2wN7iFmfQBO6"

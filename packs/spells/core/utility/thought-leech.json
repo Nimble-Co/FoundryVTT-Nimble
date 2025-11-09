@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td><p>1 Action</p></td></tr><tr><td><p><strong>Reach: 6.</strong></p></td></tr><tr><td><p>Read the surface thoughts of a creature within Reach. Creatures can sense you doing this and may not like it.</p></td></tr></tbody></table>",
+			"baseEffect": "<p><strong>1 Action</strong></p><p><strong>Reach</strong>: 6. Read the surface thoughts of a creature within Reach. Creatures can sense you doing this and may not like it.</p>",
 			"higherLevelEffect": ""
 		},
 		"properties": {
@@ -57,11 +57,11 @@
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757264673749,
+		"modifiedTime": 1762396383833,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "MbF31rAL95Ms5rg9"

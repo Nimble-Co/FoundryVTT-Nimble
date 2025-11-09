@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Versatile Bowmaster",
+	"type": "feature",
+	"img": "icons/weapons/bows/shortbow-arrows-black.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Whenever you attack with a Longbow, you may roll 2d4 instead of 1d8; or with a Crossbow, 2d8 instead of 4d4.</p>",
+		"featureType": "class",
+		"class": "hunter",
+		"group": "hunter-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761433334528,
+		"modifiedTime": 1761434327793,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "gIiIeUH88mxDBDAV"
+}

@@ -50,7 +50,8 @@
 		"complexity": 3,
 		"description": "<p>Elemental power flows through all things… find it, study it, and harness it. A mage is bestowed their first strand of the Tapestry at birth; however, true mastery eludes those who idly rest upon this innate endowment. Instead, they diligently refine their natural gifts through scholarly pursuit, with tomes and parchments as their companions, alongside the sage counsel of a seasoned mentor or three! Yes, this is the chosen path of those who would wield authority over the elements.</p><p>Comprehending the tapestry of mana is no trivial endeavor—it will yield its arcane secrets only to the earnest seeker of knowledge. Yet, once the adept learns to discern the subtleties of its intricate patterns as it unfurls and meanders into the ethereal expanse—it is in that moment the apprentice truly ascends to the mantle of mage. What makes a Mage:</p><ul><li><p><strong>Spellshaper.</strong> Customize the spells you cast: stretch time, gain extra-dimensional vision, or echo cast multiple spells! </p></li><li><p><strong>Elemental Mastery.</strong> Harness the power of the elements, whether raining down fire from the heavens, freezing enemies in their tracks, or striking with thunderous bolts of lightning. </p></li><li><p><strong>Chaos or Control.</strong> Will you snatch control of the frayed tapestry of mana or lean into the forces of chaos? What awaits you… Diamond Skin? Elemental Entanglement? Liquefy Legs?</p></li></ul>",
 		"groupIdentifiers": [
-			"spellshaper"
+			"spellshaper",
+			"mage-progression"
 		],
 		"keyAbilityScores": [
 			"intelligence",
@@ -102,11 +103,6 @@
 				"value": "",
 				"type": "statIncrease",
 				"statIncreaseType": "secondary"
-			},
-			"20": {
-				"value": "",
-				"type": "statIncrease",
-				"statIncreaseType": "capstone"
 			}
 		},
 		"mana": {
@@ -124,12 +120,12 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.344",
+		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.5",
-		"createdTime": 1752458964995,
-		"modifiedTime": 1752459384581,
-		"lastModifiedBy": "rOTRHON0UVnNo8GT"
+		"systemVersion": "0.1.9",
+		"createdTime": 1759180642328,
+		"modifiedTime": 1761713032318,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "jhCQ6AjlskmZCIly"
 }

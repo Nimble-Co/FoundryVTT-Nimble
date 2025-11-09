@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Keeper of the Shadowpath",
+	"type": "subclass",
+	"img": "icons/magic/nature/stealth-hide-eyes-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Ambusher.</strong> When you roll Initiative, you may use Hunter’s Mark for free. Gain advantage on the first attack you make each encounter. Skilled Tracker. You have advantage on skill checks to track creatures. Skilled Navigator. You cannot become lost by nonmagical means.</p><p>LEVEL 7 </p><p><strong>Primal Predator.</strong> <em>(1/encounter)</em> Your weapon attacks ignore cover and armor this turn.</p><p>LEVEL 11 </p><p><strong>Pack Hunter.</strong> Whenever you mark a creature, you may also mark another creature within 6 spaces of them for free.</p><p>LEVEL 15 </p><p><strong>Apex Predator.</strong> You may use your Primal Predator ability twice each encounter. Gain 1 Thrill of the Hunt charge when you roll Initiative.</p>",
+		"parentClass": "hunter",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761434673708,
+		"modifiedTime": 1761527733013,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "ICBH9CYEZie6IAh5"
+}

@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Wind Spellcasting and...",
+	"type": "feature",
+	"img": "icons/magic/air/fog-gas-smoke-blue-gray.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>You know cantrips from the Wind school and 1 other school of your choice. You also know the cantrip Vicious Mockery:</p><p><strong>Vicious Mockery.</strong> (Wind cantrip) Action: Range: 12. Damage: 1d4+INT psychic (ignoring armor). On hit: the target is Taunted during their next turn. High Levels: +2 damage every 5 levels.</p>",
+		"featureType": "class",
+		"class": "songweaver",
+		"group": "songweaver-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761887437684,
+		"modifiedTime": 1761887543569,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "4jKHYa0ZPYXjliJo"
+}

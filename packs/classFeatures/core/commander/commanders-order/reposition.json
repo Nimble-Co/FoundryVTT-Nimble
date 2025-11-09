@@ -1,0 +1,52 @@
+{
+	"name": "Reposition!",
+	"type": "feature",
+	"img": "icons/skills/movement/arrow-upward-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "on an ally’s turn",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": true
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "action"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p><strong>Action/Reaction</strong> (on an ally’s turn): Command 1 ally to move up to their speed (or 2 allies up to half their speed) for free.</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "commanders-orders"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760399261232,
+		"modifiedTime": 1760399287579,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "hWrYsftBYW68IXzv"
+}

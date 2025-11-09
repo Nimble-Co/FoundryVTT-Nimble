@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Bring the Pain",
+	"type": "feature",
+	"img": "icons/skills/wounds/injury-triple-slash-bleed.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>(1/round) You may turn any melee attack against you into a crit. Whenever you are crit, reduce the damage by half. The attacker takes the same amount of damage you took (ignoring armor). You may suffer 1 Wound to double the damage the enemy takes.</p>",
+		"featureType": "class",
+		"class": "zephyr",
+		"group": "way-of-pain"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762059304164,
+		"modifiedTime": 1762059421388,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "BO7a86IEU7Gf3iNr"
+}

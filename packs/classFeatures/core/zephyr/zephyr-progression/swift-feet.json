@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Swift Feet",
+	"type": "feature",
+	"img": "icons/skills/movement/feet-winged-sandals-tan.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>While unarmored, gain +2 speed and +LVL Initiative.</p><hr><p>Level 9: +2 additional speed while unarmored.</p>",
+		"featureType": "class",
+		"class": "zephyr",
+		"group": "zephyr-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762053422455,
+		"modifiedTime": 1762054913974,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "idKzxuxGapLyV4sP"
+}

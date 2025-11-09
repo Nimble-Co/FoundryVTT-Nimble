@@ -55,8 +55,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>3 Actions, AoE</strong></p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Concentration:</strong> Up to 1 minute.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach:</strong> 12.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p>Conjure razor-sharp icy spikes in 5 contiguous spaces within Reach; this area is difficult terrain. Creatures that enter these spaces (or who are in the area when you conjure them) suffer [[/r 2d6]] damage for each space they touch</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p>+1 space, +1 damage.</p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>3 Actions, AoE</strong></p><p><strong>Concentration</strong>: Up to 1 minute. <strong>Reach</strong>: 12. Conjure razor-sharp icy spikes in 5 contiguous spaces within Reach; this area is difficult terrain. Creatures that enter these spaces (or who are in the area when you conjure them) suffer 2d6 damage for each space they touch.</p>",
+			"higherLevelEffect": "<p>+1 space, +1 damage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -79,11 +79,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757121520160,
+		"modifiedTime": 1762379750948,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "jtP6RWVS9waevGMX"

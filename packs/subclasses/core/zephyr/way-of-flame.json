@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Way of Flame",
+	"type": "subclass",
+	"img": "icons/magic/fire/flame-burning-earth-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Exploding Soul</strong>. (1/round) On your turn, you may suffer a Wound. Whenever you gain a Wound, deal STR+Wounds damage to any creatures you choose within 2 spaces (ignoring armor) and give them the Smoldering condition.</p><p>LEVEL 7 </p><p><strong>Blazing Speed</strong>. Gain +2 speed while using Windstep. After you cease movement with Windstep, enemies you passed through take STR+DEX fire damage. You may have Smoldering enemies take double, ending the condition.</p><p>LEVEL 11 </p><p><strong>Chain Reaction</strong>. (1/turn) When you crit, deal fire damage equal to your STR+Wounds to creatures of your choice within 2 spaces of your target. Repeat any number of times, targeting creatures not yet damaged by this effect within 2 spaces of any already damaged.</p><p>LEVEL 15 </p><p><strong>Burning Soul</strong>. Double any fire damage you deal.</p>",
+		"parentClass": "zephyr",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762052940431,
+		"modifiedTime": 1762053127067,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "HButxteZAsjduzNb"
+}

@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Pact of the Abyssal Depths",
+	"type": "subclass",
+	"img": "icons/magic/water/beam-ice-impact.webp",
+	"system": {
+		"macro": "",
+		"identifier": "abyssal-depths",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Master of Nightfrost.</strong> Your Patron grants you knowledge of Ice spells. Gain the ability to breathe underwater. Your shadow minions become beings of nightfrost. Your shadow blast and minions can deal cold or necrotic damage, and whenever they would crit, you gain INT+LVL temp HP.</p><p>LEVEL 7 </p><p><strong>Shadowfrost.</strong> Your Shadow Blast also Slows. You can cast Cryosleep or Rimeblades without Pilfering Power by expending 10 temp HP. Choose 1 Ice Utility Spell.</p><p>LEVEL 11 </p><p><strong>Glacial Resilience.</strong> (1/Safe Rest) Reaction (whenever you are attacked or would gain a condition), gain 10×LVL temp HP and end ALL negative conditions on yourself. At the end of your next turn, any remaining temp HP are lost.</p><p>LEVEL 15 </p><p><strong>Cryomancer’s Reprisal.</strong> Pay half your max HP to cast ANY Ice spell. After casting an Ice spell in this way, you gain an invisible aura: the next creature that hits you with a melee attack this encounter takes cold damage equal to half the HP you spent on this casting.</p>",
+		"parentClass": "shadowmancer",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761632918003,
+		"modifiedTime": 1761711979258,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "b3pxhSwgIHW5MB1f"
+}

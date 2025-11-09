@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "That all you got?!",
+	"type": "feature",
+	"img": "icons/skills/melee/maneuver-sword-katana-yellow.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "When you are attacked",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When you are attacked, you may expend 1 or more Fury Dice to reduce the damage taken by STR+DEX for each die spent.</p>",
+		"featureType": "class",
+		"class": "berserker",
+		"group": "berserker-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1759180745583,
+		"modifiedTime": 1761434417498,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "4oQQtqOhqe9KO5g9"
+}

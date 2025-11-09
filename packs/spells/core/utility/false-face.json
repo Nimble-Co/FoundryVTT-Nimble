@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td><p><strong>Casting Time: 1 min</strong></p></td></tr><tr><td><p>Change your appearance to look like someone else for 10 minutes. Requires a piece of them.</p></td></tr></tbody></table>",
+			"baseEffect": "<p><strong>Casting Time: 1 min</strong></p><p>Change your appearance to look like someone else for 10 minutes. Requires a piece of them.</p>",
 			"higherLevelEffect": ""
 		},
 		"properties": {
@@ -56,11 +56,11 @@
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757108721581,
+		"modifiedTime": 1762395517584,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "TxNe460JPki8GIrP"

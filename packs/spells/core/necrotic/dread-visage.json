@@ -83,8 +83,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td><p><strong>1 Action, Self</strong></p></td></tr><tr><td><p><strong>Reaction:</strong> When attacked, Defend for free. Melee attackers are Frightened of you and suffer 1d12 damage if they attack you this round.</p></td></tr><tr><td><p>Costs 2 mana less while dying.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+2 damage, +2 armor.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>Action, Self</strong></p><p><strong>Reaction</strong>: When attacked, Defend for free. Melee attackers are Frightened of you and suffer 1d12 damage if they attack you this round. Costs 2 mana less while dying.</p>",
+			"higherLevelEffect": "<p>+2 damage, +2 armor.</p>"
 		},
 		"properties": {
 			"range": {
@@ -103,11 +103,11 @@
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757108682019,
+		"modifiedTime": 1762390803396,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "mdPEulO0vYNyuGIx"

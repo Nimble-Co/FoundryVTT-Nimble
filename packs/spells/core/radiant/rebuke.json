@@ -66,8 +66,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>1 Action, Single Target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach: </strong>4.</p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Damage: </strong>1d6 (ignoring armor), does not miss. </p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2×</strong> damage against undead or cowardly (those Frightened or behind cover).</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+2 damage every 5 levels.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Reach</strong>: 4. <strong>Damage</strong>: 1d6 (ignoring armor), does not miss. 2× damage against undead or cowardly (those Frightened or behind cover).</p>",
+			"higherLevelEffect": "<p>+2 damage every 5 levels.</p>"
 		},
 		"properties": {
 			"range": {
@@ -89,11 +89,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757282420618,
+		"modifiedTime": 1762392458202,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "ywmGdNVAVyRZEDlq"

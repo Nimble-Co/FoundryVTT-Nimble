@@ -55,8 +55,8 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<table><tbody><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>2 Actions, Single Target</strong></p></td></tr><tr><td data-colwidth=\"102,0\" colspan=\"2\"><p><strong>Reach:</strong> 4.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p><strong>Damage:</strong> 30.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>Can only target an enemy that crit you or an ally since your last turn. Cannot be reduced by any means.</p></td></tr><tr><td colspan=\"2\" data-colwidth=\"102,0\"><p>The next attack against that enemy is made with advantage.</p></td></tr></tbody></table>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+1 Reach, +1 advantage.</strong></p></td></tr></tbody></table>"
+			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Reach</strong>: 4. <strong>Damage</strong>: 30. Can only target an enemy that crit you or an ally since your last turn. Cannot be reduced by any means. The next attack against that enemy is made with advantage.</p>",
+			"higherLevelEffect": "<p>+1 Reach, +1 advantage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -78,11 +78,11 @@
 	"folder": null,
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.350",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
+		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1757108639994,
+		"modifiedTime": 1762392198943,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "R6wJqcJMCoewJjvj"

@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Way of Pain",
+	"type": "subclass",
+	"img": "icons/skills/wounds/injury-face-impact-orange.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Bring the Pain</strong>. (1/round) You may turn any melee attack against you into a crit. Whenever you are crit, reduce the damage by half. The attacker takes the same amount of damage you took (ignoring armor). You may suffer 1 Wound to double the damage the enemy takes.</p><p>LEVEL 7 </p><p><strong>Share My Pain</strong>. Your Swiftstrike can also target a 2nd creature within Reach 2.</p><p>LEVEL 11 </p><p><strong>Pain Sharpens the Mind</strong>. While you are Bloodied, gain advantage on the first attack you make each turn, and on all saves.</p><p>LEVEL 15 </p><p><strong>Echoed Agony</strong>. Your Swiftstrike can also target a 3rd creature within Reach 4.</p>",
+		"parentClass": "zephyr",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762052758617,
+		"modifiedTime": 1762052930224,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "fbyjj2xzqIzgbnoO"
+}

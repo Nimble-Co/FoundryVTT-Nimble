@@ -1,0 +1,25 @@
+{
+	"folder": null,
+	"name": "Luminary of Mercy",
+	"type": "subclass",
+	"img": "icons/magic/holy/barrier-shield-winged-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>LEVEL 3 </p><p><strong>Merciful Healing</strong>. When an effect caused by you heals a Dying creature, they are healed for twice as much. (1/round) Your Lifebinding Spirit can act for free while you are Dying.</p><p><strong>Life is Beautiful</strong>. Harmless and lovely creatures such as butterflies and humming birds are attracted to your presence and often follow you. Flowers bloom more vibrantly in your presence.</p><p>LEVEL 7 </p><p><strong>Conduit of Light</strong>. When an effect caused by you would heal HP, you may expend 1 use of Searing Light to heal (or damage, ignoring armor) another target within 6 spaces of yourself for the same amount.</p><p>LEVEL 11 </p><p><strong>Powerful Healer</strong>. (WIL times/Safe Rest) Whenever you would roll dice to heal damage, you may instead heal the max amount you could roll, or give that many temp HP.</p><p>LEVEL 15 </p><p><strong>Empowered Conduit</strong>. Your Conduit of Light may target 1 additional creature. Regain 1 charge of Searing Light when you roll Initiative (this expires if unspent at the end of combat).</p>",
+		"parentClass": "shepherd",
+		"resources": []
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761713631783,
+		"modifiedTime": 1761713844455,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "7L90YX8TTOrK1yVm"
+}

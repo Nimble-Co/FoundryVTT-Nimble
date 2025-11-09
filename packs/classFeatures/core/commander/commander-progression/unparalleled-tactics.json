@@ -1,0 +1,52 @@
+{
+	"name": "Unparalleled Tactics",
+	"type": "feature",
+	"img": "icons/commodities/treasure/medal-ribbon-silver-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>The first time each encounter you use Coordinated Strike, an ally who can hear you also gains 1 action to use on their next turn.</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "commander-progression"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760384468062,
+		"modifiedTime": 1761434364570,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "4rNlmYcLNjOtywZn"
+}

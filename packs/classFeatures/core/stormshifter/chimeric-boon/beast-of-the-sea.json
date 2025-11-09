@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Beast of the Sea",
+	"type": "feature",
+	"img": "icons/creatures/fish/fish-marlin-swordfight-blue.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Can move, breathe, and fight underwater without penalty.</p>",
+		"featureType": "class",
+		"class": "stormshifter",
+		"group": "chimeric-boon"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762035750813,
+		"modifiedTime": 1762036073195,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "0AOfYzkPdS9fS8E0"
+}

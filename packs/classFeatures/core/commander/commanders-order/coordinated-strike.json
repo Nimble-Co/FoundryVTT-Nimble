@@ -1,0 +1,75 @@
+{
+	"name": "Coordinated Strike!",
+	"type": "feature",
+	"img": "icons/skills/melee/unarmed-punch-fist-white.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": true,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [
+				{
+					"id": "YnNEXga2R6LAEvlb",
+					"type": "damage",
+					"damageType": "acid",
+					"formula": "0",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": false,
+					"on": {
+						"hit": [
+							{
+								"id": "0gbDXjqJDZcUxjNB",
+								"type": "note",
+								"noteType": "reminder",
+								"text": "You can do this INT times/Safe Rest.",
+								"parentContext": "hit",
+								"parentNode": "YnNEXga2R6LAEvlb"
+							}
+						]
+					}
+				}
+			],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "square",
+				"width": 6
+			}
+		},
+		"description": "<p><em>(1/round)</em> <strong>Free action:</strong> you and an ally within 6 spaces both immediately make a weapon attack or cast a cantrip for free. You can do this INT times/Safe Rest. </p>",
+		"featureType": "class",
+		"class": "commnder",
+		"group": "commanders-orders"
+	},
+	"effects": [],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760399261232,
+		"modifiedTime": 1760399270709,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "6xpILHYt5KTSnTtd"
+}

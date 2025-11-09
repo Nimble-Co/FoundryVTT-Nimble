@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Grim Harrow",
+	"type": "feature",
+	"img": "icons/magic/acid/projectile-stream-bubbles.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>When you strike with your Bonescythe, you may divide the dice as you choose amongst any number of adjacent targets within Reach.</p>",
+		"featureType": "class",
+		"class": "shadowmancer",
+		"group": "reaver"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762152972139,
+		"modifiedTime": 1762153027297,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "fFrCgIQX8mfmHKUB"
+}

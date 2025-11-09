@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Beastshift",
+	"type": "feature",
+	"img": "icons/creatures/birds/corvid-watchful-glowing-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "action",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Action: You can transform into a harmless beast (squirrel, pigeon, etc.). While transformed, you can speak with animals. This form lasts until you drop to 0 HP, cast a spell, or if you end it on your turn for free. You have DEX Beastshift charges; they reset on a Safe Rest.</p>",
+		"featureType": "class",
+		"class": "stormshifter",
+		"group": "stormshifter-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1762032245652,
+		"modifiedTime": 1762032346135,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "lerWY2A6JkebdDFf"
+}

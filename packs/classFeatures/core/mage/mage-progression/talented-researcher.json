@@ -1,0 +1,52 @@
+{
+	"folder": null,
+	"name": "Talented Researcher",
+	"type": "feature",
+	"img": "icons/sundries/books/book-embossed-jewel-gold-purple.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>Gain advantage on Arcana or Lore checks when you have access to a large amount of books and time to study them.</p>",
+		"featureType": "class",
+		"class": "mage",
+		"group": "mage-progression"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.9",
+		"createdTime": 1761538211311,
+		"modifiedTime": 1761538269667,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "WN4gldrDqbvGcNOl"
+}
