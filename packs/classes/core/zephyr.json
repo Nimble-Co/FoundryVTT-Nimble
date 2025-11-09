@@ -78,6 +78,11 @@
 				"value": "",
 				"type": "statIncrease",
 				"statIncreaseType": "secondary"
+			},
+			"20": {
+				"value": "",
+				"type": "statIncrease",
+				"statIncreaseType": "capstone"
 			}
 		},
 		"mana": {
