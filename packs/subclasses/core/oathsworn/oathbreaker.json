@@ -2,24 +2,24 @@
 	"folder": null,
 	"name": "Oathbreaker",
 	"type": "subclass",
-	"img": "systems/nimble/assets/classImages/oathsworn.webp",
+	"img": "icons/magic/unholy/hand-weapon-glow-black-green.webp",
 	"system": {
 		"macro": "",
-		"identifier": "oathbreaker",
+		"identifier": "",
 		"rules": [],
-		"description": "<h2>— FALLEN, SEEKING REDEMPTION —</h2><h3>Level 3</h3><p><strong>Dark Benediction.</strong> Fallen from the light, but not entirely. You lose access to the following Radiant spells: True Strike, Heal, and Warding Bond; and gain access to the following Necrotic spells: Entice, Shadowtrap, and Dread Visage. Whenever you can choose a Utility Spell, you may choose a Radiant or Necrotic one.</p><p><strong>Paragon of Power.</strong> (Replaces Paragon of Virtue) Advantage on Might checks when attempting to intimidate others.</p><p><strong>Aura of Suffering.</strong> You gain an aura with a Reach of 4 and can Interpose for an ally anywhere within your aura; however, your Radiant Judgment ability no longer triggers when attacked. Instead, it triggers whenever you could Interpose but don't.</p><p><strong>We All Suffer.</strong> Gain +2 max Wounds. When an ally within your aura would gain any Wounds or fail a save, you may suffer the effect instead and trigger your Radiant Judgment ability.</p><p><strong>Bring Me Your Pain.</strong> Reaction (When a willing ally within your aura would drop to 0 HP): Switch HP with them (if your current HP is higher than their max HP, they gain Temp HP equal to the difference), dropping to 0 hp and gaining the Wound instead.</p><h3>Level 7</h3><p><strong>Torment.</strong> Your Lay on Hands heals you for twice as much, and others for half as much. When you deal damage, you can expend healing power from your Lay on Hands pool to increase the damage dealt by an amount equal to the points spent (ignoring armor).</p><h3>Level 11</h3><p><strong>Exploit.</strong> Reaction (whenever an ally within your aura Defends), you may expend your Judgment Dice to force an enemy within your Aura to Interpose (a creature cannot interpose against its own attack).</p><h3>Level 15</h3><p><strong>Bloody Terror.</strong> Attacks against you gain 1 instance of disadvantage for each Wound you have (max 3).</p>",
+		"description": "<p><strong>Dark Benediction</strong>. Fallen from the light, but not entirely. You lose access to the following Radiant spells: True Strike, Heal, and Warding Bond; and gain access to the following Necrotic spells: Entice, Shadowtrap, and Dread Visage. Whenever you can choose a Utility Spell, you may choose a Radiant or Necrotic one.</p><p><strong>Paragon of Power</strong>. (Replaces Paragon of Virtue) Advantage on Might checks when attempting to intimidate others.</p><p><strong>Aura of Suffering</strong>. You gain an aura with a Reach of 4 and can Interpose for an ally anywhere within your aura; however, your Radiant Judgment ability no longer triggers when attacked. Instead, it triggers whenever you could Interpose but don’t.</p><p>LEVEL 3</p><p><strong>We All Suffer</strong>. Gain +2 max Wounds. When an ally within your aura would gain any Wounds or fail a save, you may suffer the effect instead and trigger your Radiant Judgment ability.</p><p><strong>Bring Me Your Pain</strong>. Reaction (When a willing ally within your aura would drop to 0 HP): Switch HP with them (if your current HP is higher than their max HP, they gain Temp HP equal to the difference), dropping to 0 hp and gaining the Wound instead.</p><p>LEVEL 7</p><p><strong>Torment</strong>. Your Lay on Hands heals you for twice as much, and others for half as much. When you deal damage, you can expend healing power from your Lay on Hands pool to increase the damage dealt by an amount equal to the points spent (ignoring armor).</p><p>LEVEL 11</p><p><strong>Exploit</strong>. Reaction (whenever an ally within your aura Defends), you may expend your Judgment Dice to force an enemy within your Aura to Interpose (a creature cannot interpose against its own attack).</p><p>LEVEL 15</p><p><strong>Bloody Terror</strong>. Attacks against you gain 1 instance of disadvantage for each Wound you have (max 3).</p>",
 		"parentClass": "oathsworn",
 		"resources": []
 	},
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.344",
+		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.5",
-		"createdTime": null,
-		"modifiedTime": null,
-		"lastModifiedBy": null
+		"systemVersion": "0.1.9",
+		"createdTime": 1762127106308,
+		"modifiedTime": 1762132639417,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "LK5ynbkkd5PQJyQ9"
+	"_id": "6GcIftCB3eOk0jEj"
 }

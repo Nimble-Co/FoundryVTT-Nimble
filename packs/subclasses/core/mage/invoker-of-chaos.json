@@ -2,24 +2,24 @@
 	"folder": null,
 	"name": "Invoker of Chaos",
 	"type": "subclass",
-	"img": "systems/nimble/assets/classImages/mage.webp",
+	"img": "icons/magic/light/explosion-impact-purple.webp",
 	"system": {
 		"macro": "",
-		"identifier": "invoker-of-chaos",
+		"identifier": "chaos",
 		"rules": [],
-		"description": "<h3>Level 3</h3><p><strong>Force of Chaos.</strong> Whenever you cast a spell, you can choose to spend 1 less mana. Whenever you do this and whenever you crit, Invoke Chaos: Roll on the Chaos Table.</p><p><em>Where's the Chaos Table?</em> It's a secret for the GM only! Suffice it to say, rolling a 1 is really bad, but rolling a 20 is AWESOME—but if you're sure you want to spoil it, you can find it on the back inside cover of the GM's Guide. Let chaos reign!</p><h3>Level 7</h3><p><strong>Tempest Mage.</strong> Learn 1 cantrip and 1 tiered spell from the Wind school.</p><p><strong>Chaos Lash.</strong> (1/encounter) Reaction (when an enemy moves adjacent to you): They are pushed back 2 spaces, and on a failed WIL save, knocked Prone as well. Invoke Chaos.</p><h3>Level 11</h3><p><strong>Thrive in Chaos.</strong> Whenever you Invoke Chaos, you may roll twice and cause both effects. (1/Safe Rest) You may choose which roll to use instead.</p><h3>Level 15</h3><p><strong>Master of Chaos.</strong> Whenever you Invoke Chaos, roll with advantage.</p>",
+		"description": "<p>LEVEL 3 </p><p><strong>Force of Chaos</strong>. Whenever you cast a spell, you can choose to spend 1 less mana. Whenever you do this and whenever you crit, Invoke Chaos: Roll on the Chaos Table.</p><p>LEVEL 7</p><p><strong>Tempest Mage.</strong> Learn 1 cantrip and 1 tiered spell from the Wind school.</p><p><strong>Chaos Lash.</strong> (1/encounter) Reaction (when an enemy moves adjacent to you): They are pushed back 2 spaces, and on a failed WIL save, knocked Prone as well. Invoke Chaos.</p><p>LEVEL 11 </p><p><strong>Thrive in Chaos</strong>. Whenever you Invoke Chaos, you may roll twice and cause both effects. (1/Safe Rest) You may choose which roll to use instead.</p><p>LEVEL 15 </p><p><strong>Master of Chaos.</strong> Whenever you Invoke Chaos, roll with advantage.</p>",
 		"parentClass": "mage",
 		"resources": []
 	},
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.344",
+		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.5",
-		"createdTime": null,
-		"modifiedTime": null,
-		"lastModifiedBy": null
+		"systemVersion": "0.1.9",
+		"createdTime": 1761527184804,
+		"modifiedTime": 1761529248230,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "gLnTy5JNfC9Qyjob"
+	"_id": "58r5iO7h0lyo6DfE"
 }
