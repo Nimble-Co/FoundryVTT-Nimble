@@ -52,6 +52,7 @@
 	let skillPointChanges = $state(generateBlankSkillSet());
 
 	let hasStatIncrease = $state(false);
+	let hasSkillPointsOverCap = $state(false);
 
 	let skillPointChangesAssigned = $derived.by(() => {
 		return Object.values(skillPointChanges).reduce((acc, change) => acc + (change ?? 0), 0) === 1;
@@ -64,6 +65,7 @@
 				: selectedAbilityScores) ||
 				!hasStatIncrease) &&
 			skillPointChangesAssigned &&
+			!hasSkillPointsOverCap &&
 			(selectedSubclass || !hasSubclassSelection)
 		);
 	});
@@ -89,6 +91,8 @@
 		{selectedBoon}
 		selectedAbilityScore={selectedAbilityScores}
 		bind:skillPointChanges
+		bind:selectedAbilityScores
+		bind:hasSkillPointsOverCap
 	/>
 
 	{#if levelingTo === 3 && subclasses.length}
@@ -100,8 +104,16 @@
 	<button
 		class="nimble-button"
 		data-button-variant="basic"
-		aria-label={!isComplete ? 'Complete all selections before submitting' : 'Submit'}
-		data-tooltip={!isComplete ? 'Complete all selections before submitting' : ''}
+		aria-label={!isComplete
+			? hasSkillPointsOverCap
+				? 'A skill would exceed the 12 point cap'
+				: 'Complete all selections before submitting'
+			: 'Submit'}
+		data-tooltip={!isComplete
+			? hasSkillPointsOverCap
+				? 'One or more skills would exceed the 12 point cap. Please reallocate skill points before submitting.'
+				: 'Complete all selections before submitting'
+			: ''}
 		onclick={submit}
 		disabled={!isComplete}
 	>
