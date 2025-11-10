@@ -3,7 +3,6 @@
 	import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
 
 	import getSubclassChoices from '../../utils/getSubclassChoices.js';
-	import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
 	import AbilityScoreIncrease from './components/levelUpHelper/AbilityScoreIncrease.svelte';
 	import HitPointSelection from './components/levelUpHelper/HitPointSelection.svelte';
@@ -19,24 +18,27 @@
 		});
 	}
 
-	const { defaultSkillAbilities, skills } = CONFIG.NIMBLE;
-
 	let { document, dialog, ...data } = $props();
 
-	const characterClass = Object.values(document.classes)?.[0];
-	const level = characterClass?.system?.classLevel;
+	const characterClass: NimbleClassItem | undefined = Object.values(document.classes)[0] as
+		| NimbleClassItem
+		| undefined;
+	const level = characterClass?.system?.classLevel ?? 1;
 	const levelingTo = level + 1;
 
 	let boons = getChoicesFromCompendium('boon');
-	let subclasses = $state([]);
+	let subclasses: Array<{
+		uuid: string;
+		name: string;
+		img: string;
+		system: { parentClass: string };
+	}> = $state([]);
 	let hasSubclassSelection = levelingTo === 3;
 
 	// Load subclasses filtered by parent class when leveling to 3
 	$effect(() => {
 		if (hasSubclassSelection && characterClass) {
-			console.log('Loading subclasses for identifier:', characterClass.identifier);
 			getSubclassChoices(characterClass.identifier).then((choices) => {
-				console.log('Subclasses loaded:', choices);
 				subclasses = choices;
 			});
 		}
@@ -44,7 +46,7 @@
 
 	let chooseBoon = $state(false);
 	let hitPointRollSelection = $state('roll');
-	let selectedAbilityScores = $state(null);
+	let selectedAbilityScores: string[] | string | null = $state(null);
 	let selectedBoon = $state(null);
 	let selectedSubclass = $state(null);
 	let skillPointChanges = $state(generateBlankSkillSet());
@@ -81,7 +83,13 @@
 		bind:hasStatIncrease
 	/>
 
-	<SkillPointAssignment {chooseBoon} {document} {selectedAbilityScores} bind:skillPointChanges />
+	<SkillPointAssignment
+		{chooseBoon}
+		{document}
+		{selectedBoon}
+		selectedAbilityScore={selectedAbilityScores}
+		bind:skillPointChanges
+	/>
 
 	{#if levelingTo === 3 && subclasses.length}
 		<SubclassSelection {subclasses} bind:selectedSubclass />
