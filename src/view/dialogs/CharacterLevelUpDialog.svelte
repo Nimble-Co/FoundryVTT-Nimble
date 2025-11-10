@@ -47,6 +47,7 @@
 	let chooseBoon = $state(false);
 	let hitPointRollSelection = $state('roll');
 	let selectedAbilityScores: string[] | string | null = $state(null);
+	let lastSelectedAbilityScores: string[] | string | null = $state(null);
 	let selectedBoon = $state(null);
 	let selectedSubclass = $state(null);
 	let skillPointChanges = $state(generateBlankSkillSet());
@@ -58,14 +59,35 @@
 		return Object.values(skillPointChanges).reduce((acc, change) => acc + (change ?? 0), 0) === 1;
 	});
 
+	$effect(() => {
+		if (!lastSelectedAbilityScores) {
+			lastSelectedAbilityScores = selectedAbilityScores;
+			return;
+		}
+
+		// check if values are different
+		let hasChangedAbilityScore = Array.isArray(selectedAbilityScores)
+			? JSON.stringify(lastSelectedAbilityScores) !== JSON.stringify(selectedAbilityScores)
+			: lastSelectedAbilityScores !== selectedAbilityScores;
+
+		if (hasChangedAbilityScore) {
+			skillPointChanges = generateBlankSkillSet();
+			lastSelectedAbilityScores = selectedAbilityScores;
+		}
+	});
+
 	let isComplete = $derived.by(() => {
-		return (
-			((Array.isArray(selectedAbilityScores)
+		const overMax = skillPointsOverMax;
+
+		const abilityScoreComplete =
+			(Array.isArray(selectedAbilityScores)
 				? selectedAbilityScores?.length === 2
-				: selectedAbilityScores) ||
-				!hasStatIncrease) &&
+				: selectedAbilityScores) || !hasStatIncrease;
+
+		return (
+			abilityScoreComplete &&
 			skillPointChangesAssigned &&
-			!skillPointsOverMax &&
+			!overMax &&
 			(selectedSubclass || !hasSubclassSelection)
 		);
 	});

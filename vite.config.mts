@@ -1,8 +1,9 @@
+import path from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { sveltePreprocess } from 'svelte-preprocess';
-import path from 'node:path';
+import { defineConfig } from 'vitest/config';
 
-const config = {
+const config = defineConfig({
 	root: 'src/',
 	base: '/systems/nimble/',
 	publicDir: path.resolve(__dirname, 'public'),
@@ -19,10 +20,10 @@ const config = {
 		},
 	},
 	build: {
+		reportCompressedSize: true,
 		outDir: path.resolve(__dirname, 'dist'),
 		emptyOutDir: true,
 		sourcemap: true,
-		brotliSize: true,
 		lib: {
 			name: 'Nimble 2',
 			entry: path.resolve(__dirname, 'src/nimble.ts'),
@@ -54,6 +55,29 @@ const config = {
 			},
 		}),
 	],
-};
+	test: {
+		globals: true,
+		environment: 'happy-dom',
+		include: ['src/**/*.{test,spec}.{js,ts}'],
+		root: '.',
+		setupFiles: ['./tests/setup.ts'],
+		server: {
+			deps: {
+				inline: ['svelte'],
+			},
+		},
+	},
+	resolve: {
+		conditions: ['browser'],
+		alias: {
+			'#lib': path.resolve(__dirname, 'lib'),
+			'#managers': path.resolve(__dirname, 'src/managers'),
+			'#stores': path.resolve(__dirname, 'src/stores'),
+			'#types': path.resolve(__dirname, 'types'),
+			'#utils': path.resolve(__dirname, 'src/utils'),
+			'#view': path.resolve(__dirname, 'src/view'),
+		},
+	},
+});
 
 export default config;
