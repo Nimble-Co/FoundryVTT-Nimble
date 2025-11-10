@@ -80,7 +80,7 @@
 		selectedBoon,
 		selectedAbilityScores = $bindable(),
 		skillPointChanges = $bindable(),
-		hasSkillPointsOverCap = $bindable(),
+		skillPointsOverMax = $bindable(),
 	} = $props();
 
 	let remainingSkillPoints = $derived.by(
@@ -99,11 +99,11 @@
 	// Check if any skill would exceed the 12 point cap after applying ability bonuses and skill point changes
 	$effect(() => {
 		if (!document?.reactive?.system?.skills) {
-			hasSkillPointsOverCap = false;
+			skillPointsOverMax = false;
 			return;
 		}
 
-		hasSkillPointsOverCap = Object.entries(document.reactive.system.skills).some(
+		skillPointsOverMax = Object.entries(document.reactive.system.skills).some(
 			([skillKey, skill]) => {
 				const defaultAbility = defaultSkillAbilities[skillKey];
 				const skillPointChange = skillPointChanges[skillKey] ?? 0;
@@ -212,7 +212,7 @@
 							<span class="nimble-skill-point-delta">
 								({replaceHyphenWithMinusSign(
 									new Intl.NumberFormat('en-US', { signDisplay: 'always' }).format(
-										skillPointChanges?.[key] ?? 0 + abilityBonus,
+										parseInt(skillPointChanges?.[key] ?? 0) + abilityBonus,
 									),
 								)})
 							</span>

@@ -367,13 +367,13 @@
 		"skills": {
 			"arcana": "Arcana",
 			"examination": "Examination",
+			"finesse": "Finesse",
 			"influence": "Influence",
 			"insight": "Insight",
-			"might": "Might",
 			"lore": "Lore",
+			"might": "Might",
 			"naturecraft": "Naturecraft",
 			"perception": "Perception",
-			"finesse": "Finesse",
 			"stealth": "Stealth"
 		},
 		"spells": {
