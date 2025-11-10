@@ -84,7 +84,9 @@ class NimbleBaseActor extends Actor {
 			...options
 		} = context;
 
-		const { default: ActorCreationDialog } = await import('../dialogs/ActorCreationDialog.svelte.js');
+		const { default: ActorCreationDialog } = await import(
+			'../dialogs/ActorCreationDialog.svelte.js'
+		);
 		const dialog = new ActorCreationDialog(
 			{
 				...data,
