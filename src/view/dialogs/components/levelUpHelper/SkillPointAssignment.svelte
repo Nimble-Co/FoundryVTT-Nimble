@@ -1,4 +1,5 @@
 <script>
+	import localize from '../../../../utils/localize.js';
 	import Hint from '../../../components/Hint.svelte';
 	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
