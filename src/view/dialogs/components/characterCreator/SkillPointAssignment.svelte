@@ -1,5 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
+	import localize from '../../../../utils/localize.js';
 	import Hint from '../../../components/Hint.svelte';
 	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
@@ -40,7 +41,14 @@
 		assignedSkillPoints = tempAssignedSkillPoints;
 	}
 
-	const { abilityScoreAbbreviations, defaultSkillAbilities, skills } = CONFIG.NIMBLE;
+	const {
+		abilityScoreAbbreviations,
+		characterCreationStages,
+		defaultSkillAbilities,
+		hints,
+		skills,
+		skillPointAssignment,
+	} = CONFIG.NIMBLE;
 
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
