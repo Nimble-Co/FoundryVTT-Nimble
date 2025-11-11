@@ -463,14 +463,24 @@ const hints = {
 };
 
 const skillPointAssignment = {
-	skill: 'NIMBLE.skillPointAssignments.skill',
-	abilityMod: 'NIMBLE.skillPointAssignments.abilityMod',
-	skillBonus: 'NIMBLE.skillPointAssignments.skillBonus',
-	skillPoints: 'NIMBLE.skillPointAssignments.skillPoints',
-	total: 'NIMBLE.skillPointAssignments.total',
-	decrementSkillPoints: 'NIMBLE.skillPointAssignments.decrementSkillPoints',
-	incrementSkillPoints: 'NIMBLE.skillPointAssignments.incrementSkillPoints',
-	editSkillPoints: 'NIMBLE.skillPointAssignments.editSkillPoints',
+	decrementSkillPoints: 'NIMBLE.skillPointAssignment.decrementSkillPoints',
+	incrementSkillPoints: 'NIMBLE.skillPointAssignment.incrementSkillPoints',
+	skill: 'NIMBLE.skillPointAssignment.skill',
+	abilityMod: 'NIMBLE.skillPointAssignment.abilityMod',
+	skillBonus: 'NIMBLE.skillPointAssignment.skillBonus',
+	skillPoints: 'NIMBLE.skillPointAssignment.skillPoints',
+	editSkillPoints: 'NIMBLE.skillPointAssignment.editSkillPoints',
+	confirmSkillPointAssignments: 'NIMBLE.skillPointAssignment.confirmSkillPointAssignments',
+	pointsRemaining: 'NIMBLE.skillPointAssignment.pointsRemaining',
+	maxSkillBonus: 'NIMBLE.skillPointAssignment.maxSkillBonus',
+	onlyOneNewPointAndOneTransferAllowed:
+		'NIMBLE.skillPointAssignment.onlyOneNewPointAndOneTransferAllowed',
+	reduceAnotherSkillFirstToAddSkillPoint:
+		'NIMBLE.skillPointAssignment.reduceAnotherSkillFirstToAddSkillPoint',
+	limitReached: 'NIMBLE.skillPointAssignment.limitReached',
+	skillPointsCantGoBelowZero: 'NIMBLE.skillPointAssignment.skillPointsCantGoBelowZero',
+	alreadyMarkedToTransferOnePoint: 'NIMBLE.skillPointAssignment.alreadyMarkedToTransferOnePoint',
+	onlyOneTransferPerLevelUp: 'NIMBLE.skillPointAssignment.onlyOneTransferPerLevelUp',
 };
 
 const data = {
