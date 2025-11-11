@@ -43,7 +43,8 @@
 			"confirmStatAssignments": "Confirm Stat Assignments"
 		},
 		"characterCreationStages": {
-			"stepFiveStats": "Step 5. Assign Ability Scores"
+			"stepFiveStats": "Step 5. Assign Ability Scores",
+			"stepSixSkills": "Step 6. Assign Skill Points"
 		},
 		"activationCosts": {
 			"action": "Action",
@@ -316,6 +317,40 @@
 			"rollSkillCheck": "Roll Skill Check",
 			"rollSkillCheckSpecific": "Roll {skill} Check",
 			"fieldRest": "Field Rest"
+		},
+		"hints": {
+			"skillPointAssignment": "You may assign a single skill point to a skill of your choice. In addition, you may transfer one of your assigned skill points to another skill of your choice.",
+			"characterCreationSkillPointAssignment": "You can now assign 4 skills points to increase the modifiers for your skills."
+		},
+		"levelUpDialog": {
+			"skillPointsOverMax": "One or more skills would exceed the 12 point cap. Please reallocate skill points before submitting.",
+			"completeAllSelections": "Complete all selections before submitting",
+			"skillPointsOverMaxTooltip": "A skill would exceed the 12 point cap",
+			"completeAllSelectionsTooltip": "Complete all selections before submitting"
+		},
+		"skillPointAssignment": {
+			"decrementSkillPoints": "Decrement Skill Points",
+			"incrementSkillPoints": "Increment Skill Points",
+			"skill": "Skill",
+			"abilityMod": "Ability Mod",
+			"skillBonus": "Skill Bonus",
+			"skillPoints": "Skill Points",
+			"editSkillPoints": "Edit Skill Points",
+			"confirmSkillPointAssignments": "Confirm Skill Point Assignments",
+			"pointsRemaining": "({remainingSkillPoints} Points Remaining)",
+			"maxSkillBonus": "Max skill bonus is +12.",
+			"onlyOneNewPointAndOneTransferAllowed": "Only 1 new point and 1 transfer are allowed per level-up.",
+			"reduceAnotherSkillFirstToAddSkillPoint": "Reduce another skill first to add a skill point.",
+			"limitReached": "Limit reached: Only 1 new point and 1 transfer are allowed per level-up.",
+			"skillPointsCantGoBelowZero": "Skill points can’t go below 0.",
+			"alreadyMarkedToTransferOnePoint": "Already marked to transfer 1 point.",
+			"onlyOneTransferPerLevelUp": "Only one transfer per level-up."
+		},
+		"forms": {
+			"submit": "Submit"
+		},
+		"data": {
+			"total": "Total"
 		},
 		"properties": {
 			"concentration": "Concentration",

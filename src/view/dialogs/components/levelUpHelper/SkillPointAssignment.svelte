@@ -2,7 +2,10 @@
 	import Hint from '../../../components/Hint.svelte';
 	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
-	function canAdd(skill, skillKey, skillMod) {
+	const { data, ruleTypes, defaultSkillAbilities, skills, hints, skillPointAssignment } =
+		CONFIG.NIMBLE;
+
+	function canAdd(skillKey, skillMod) {
 		let quantityOfSkillsWithPointsAdded = Object.values(skillPointChanges).reduce((count, mod) =>
 			mod > 0 ? count + mod : count,
 		);
@@ -17,26 +20,25 @@
 		return true;
 	}
 
-	function getAddTooltip(skill, skillKey, skillMod) {
+	function getAddTooltip(skillKey, skillMod) {
 		let quantityOfSkillsWithPointsAdded = Object.values(skillPointChanges).reduce((count, mod) =>
 			mod > 0 ? count + mod : count,
 		);
 
 		// skill points capped at 12
-		if (skillMod >= 12) return 'Max skill bonus is +12.';
+		if (skillMod >= 12) return skillPointAssignment.maxSkillBonus;
 		if (skillPointRemoved && skillPointChanges[skillKey] === 2)
-			return 'Only 1 new point and 1 transfer are allowed per level-up.';
+			return skillPointAssignment.onlyOneNewPointAndOneTransferAllowed;
 		if (!skillPointRemoved && skillPointAdded)
-			return 'Reduce another skill first to add a skill point.';
-		if (quantityOfSkillsWithPointsAdded === 2)
-			return 'Limit reached: Only 1 new point and 1 transfer are allowed per level-up.';
+			return skillPointAssignment.reduceAnotherSkillFirstToAddSkillPoint;
+		if (quantityOfSkillsWithPointsAdded === 2) return skillPointAssignment.limitReached;
 		if (totalSkillAssignments === 1)
-			return 'Only 1 new point and 1 transfer are allowed per level-up.';
+			return skillPointAssignment.onlyOneNewPointAndOneTransferAllowed;
 
 		return '';
 	}
 
-	function canSubtract(skill, skillKey, skillMod) {
+	function canSubtract(skillKey, skillMod) {
 		let skillPointChange = parseInt(skillPointChanges[skillKey] ?? 0, 10);
 		if (skillMod < 1) return false;
 		if (skillPointAdded && skillPointChange > 0) return true;
@@ -48,12 +50,12 @@
 		return true;
 	}
 
-	function getSubtractTooltip(skill, skillKey, skillMod) {
+	function getSubtractTooltip(skillKey, skillMod) {
 		let skillPointChange = parseInt(skillPointChanges[skillKey] ?? 0, 10);
-		if (skillMod < 1) return 'Skill points can’t go below 0.';
+		if (skillMod < 1) return skillPointAssignment.skillPointsCantGoBelowZero;
 		if (skillPointAdded && skillPointChange > 0) return '';
-		if (skillPointChange === -1) return 'Already marked to transfer 1 point.';
-		if (skillPointRemoved) return 'Only one transfer per level-up.';
+		if (skillPointChange === -1) return skillPointAssignment.alreadyMarkedToTransferOnePoint;
+		if (skillPointRemoved) return skillPointAssignment.onlyOneTransferPerLevelUp;
 
 		return '';
 	}
@@ -140,30 +142,27 @@
 			},
 		);
 	});
-
-	const { defaultSkillAbilities, skills } = CONFIG.NIMBLE;
-
-	const hintText =
-		'You may assign a single skill point to a skill of your choice. In addition, you may transfer one of your assigned skill points to another skill of your choice.';
 </script>
 
 <section>
 	<header class="nimble-section-header">
 		<h3 class="nimble-heading" data-heading-variant="section">
-			Skill Points ({remainingSkillPoints} Points Remaining)
+			{localize('NIMBLE.skillPointAssignment.pointsRemaining', {
+				remainingSkillPoints: remainingSkillPoints,
+			})}
 		</h3>
 	</header>
 
-	<Hint {hintText} />
+	<Hint hintText={hints.skillPointAssignment} />
 
 	<table class="nimble-skill-config-table">
 		<thead>
 			<tr>
-				<th>Skill</th>
-				<th>Ability Mod</th>
-				<th>Skill Bonus</th>
-				<th>Skill Points</th>
-				<th>Total</th>
+				<th>{skillPointAssignment.skill}</th>
+				<th>{skillPointAssignment.abilityMod}</th>
+				<th>{ruleTypes.skillBonus}</th>
+				<th>{skillPointAssignment.skillPoints}</th>
+				<th>{data.total}</th>
 			</tr>
 		</thead>
 
@@ -194,9 +193,9 @@
 							class="nimble-button"
 							style="grid-area: decrementButton;"
 							data-button-variant="basic"
-							disabled={!canSubtract(skill, key, skillMod)}
-							aria-label="Decrement Skill Points"
-							data-tooltip={getSubtractTooltip(skill, key, skillMod)}
+							disabled={!canSubtract(key, skillMod)}
+							aria-label={skillPointAssignment.decrementSkillPoints}
+							data-tooltip={getSubtractTooltip(key, skillMod)}
 							onclick={() => {
 								if (Number.isInteger(skillPointChanges[key])) {
 									skillPointChanges[key]--;
@@ -216,9 +215,9 @@
 							class="nimble-button"
 							style="grid-area: incrementButton;"
 							data-button-variant="basic"
-							disabled={!canAdd(skill, key, skillMod)}
-							aria-label="Increment Skill Points"
-							data-tooltip={getAddTooltip(skill, key, skillMod)}
+							disabled={!canAdd(key, skillMod)}
+							aria-label={skillPointAssignment.incrementSkillPoints}
+							data-tooltip={getAddTooltip(key, skillMod)}
 							onclick={() => {
 								if (Number.isInteger(skillPointChanges[key])) {
 									skillPointChanges[key]++;

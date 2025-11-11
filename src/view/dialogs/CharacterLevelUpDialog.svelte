@@ -9,6 +9,8 @@
 	import SkillPointAssignment from './components/levelUpHelper/SkillPointAssignment.svelte';
 	import SubclassSelection from './components/levelUpHelper/SubclassSelection.svelte';
 
+	const { forms, levelUpDialog } = CONFIG.NIMBLE;
+
 	function submit() {
 		dialog.submit({
 			selectedAbilityScore: selectedAbilityScores,
@@ -18,11 +20,35 @@
 		});
 	}
 
+	function getSubmitButtonTooltip() {
+		if (!isComplete) {
+			if (skillPointsOverMax) {
+				return levelUpDialog.skillPointsOverMax;
+			} else {
+				return levelUpDialog.completeAllSelections;
+			}
+		}
+
+		return '';
+	}
+
+	function getSubmitButtonAriaLabel() {
+		if (!isComplete) {
+			if (skillPointsOverMax) {
+				return levelUpDialog.skillPointsOverMaxTooltip;
+			} else {
+				return levelUpDialog.completeAllSelectionsTooltip;
+			}
+		}
+
+		return forms.submit;
+	}
+
 	let { document, dialog, ...data } = $props();
 
-	const characterClass: NimbleClassItem | undefined = Object.values(document.classes)[0] as
-		| NimbleClassItem
-		| undefined;
+	const characterClass: NimbleClassItem | undefined = document?.classes
+		? (Object.values(document.classes)[0] as NimbleClassItem | undefined)
+		: undefined;
 	const level = characterClass?.system?.classLevel ?? 1;
 	const levelingTo = level + 1;
 
@@ -126,20 +152,12 @@
 	<button
 		class="nimble-button"
 		data-button-variant="basic"
-		aria-label={!isComplete
-			? skillPointsOverMax
-				? 'A skill would exceed the 12 point cap'
-				: 'Complete all selections before submitting'
-			: 'Submit'}
-		data-tooltip={!isComplete
-			? skillPointsOverMax
-				? 'One or more skills would exceed the 12 point cap. Please reallocate skill points before submitting.'
-				: 'Complete all selections before submitting'
-			: ''}
+		aria-label={getSubmitButtonAriaLabel()}
+		data-tooltip={getSubmitButtonTooltip()}
 		onclick={submit}
 		disabled={!isComplete}
 	>
-		Submit
+		{forms.submit}
 	</button>
 </footer>
 

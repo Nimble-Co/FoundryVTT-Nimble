@@ -457,25 +457,57 @@ const weaponProperties = {
 	vicious: 'NIMBLE.properties.vicious',
 };
 
+const hints = {
+	skillPointAssignment: 'NIMBLE.hints.skillPointAssignment',
+	characterCreationSkillPointAssignment: 'NIMBLE.hints.characterCreationSkillPointAssignment',
+};
+
+const skillPointAssignment = {
+	skill: 'NIMBLE.skillPointAssignments.skill',
+	abilityMod: 'NIMBLE.skillPointAssignments.abilityMod',
+	skillBonus: 'NIMBLE.skillPointAssignments.skillBonus',
+	skillPoints: 'NIMBLE.skillPointAssignments.skillPoints',
+	total: 'NIMBLE.skillPointAssignments.total',
+	decrementSkillPoints: 'NIMBLE.skillPointAssignments.decrementSkillPoints',
+	incrementSkillPoints: 'NIMBLE.skillPointAssignments.incrementSkillPoints',
+	editSkillPoints: 'NIMBLE.skillPointAssignments.editSkillPoints',
+};
+
+const data = {
+	total: 'NIMBLE.data.total',
+};
+
+const forms = {
+	submit: 'NIMBLE.forms.submit',
+};
+
+const levelUpDialog = {
+	skillPointsOverMax: 'NIMBLE.levelUpDialog.skillPointsOverMax',
+	completeAllSelections: 'NIMBLE.levelUpDialog.completeAllSelections',
+	skillPointsOverMaxTooltip: 'NIMBLE.levelUpDialog.skillPointsOverMaxTooltip',
+	completeAllSelectionsTooltip: 'NIMBLE.levelUpDialog.completeAllSelectionsTooltip',
+};
+
 const NIMBLE = {
 	// Constants
 	ROLL_MODE,
 
 	// Config
-	abilityScores,
 	abilityScoreAbbreviations,
-	abilityScoreTooltips,
 	abilityScoreControls,
-	characterCreationStages,
+	abilityScores,
+	abilityScoreTooltips,
 	activationCostTypes,
 	activationCostTypesPlural,
 	actorTypeBanners,
 	armorTypes,
 	armorTypesPlural,
 	boonTypes,
+	characterCreationStages,
 	classBanners,
 	classes,
 	damageTypes,
+	data,
 	defaultSkillAbilities,
 	durationTypes,
 	durationTypesPlural,
@@ -483,34 +515,38 @@ const NIMBLE = {
 	effectTypes,
 	featureTypeHeadings,
 	featureTypes,
+	forms,
 	genericProperties,
 	healingTypes,
-	languages,
+	hints,
 	languageHints,
 	languageImages,
+	languages,
+	levelUpDialog,
 	manaRecoveryTypes,
 	monsterFeatureTypes,
 	movementTypes,
 	npcArmorEffects,
 	npcArmorIcons,
-	npcArmorTypes,
 	npcArmorTypeAbbreviations,
+	npcArmorTypes,
 	objectSizeTypes,
 	objectTypeHeadings,
 	objectTypes,
 	restTypes,
-	savingThrows,
 	savingThrowAbbreviations,
+	savingThrows,
 	sizeCategories,
+	skillPointAssignment,
 	skills,
 	spellProperties,
-	spellSchools,
 	spellSchoolIcons,
+	spellSchools,
 	spellTierHeadings,
 	spellTiers,
 	startingHpByHitDieSize,
-	statArrays,
 	statArrayModifiers,
+	statArrays,
 	templateShapes,
 	timeUnits,
 	weaponAttributes,

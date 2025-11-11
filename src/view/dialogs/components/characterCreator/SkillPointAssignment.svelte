@@ -45,7 +45,7 @@
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
 
-	const hintText = 'You can now assign 4 skills points to increase the modifiers for your skills.';
+	const hintText = hints.characterCreationSkillPointAssignment;
 
 	let tempAssignedSkillPoints = $state({});
 
@@ -125,16 +125,18 @@
 >
 	<header class="nimble-section-header" data-header-variant="character-creator">
 		<h3 class="nimble-heading" data-heading-variant="section">
-			Step 6. Assign Skill Points
+			{characterCreationStages.stepSixSkills}
 
 			{#if active}
-				({remainingTempSkillPoints} Points Remaining)
+				{localize('NIMBLE.skillPointAssignment.pointsRemaining', {
+					remainingSkillPoints: remainingTempSkillPoints,
+				})}
 			{:else if remainingSkillPoints === 0 && allAbilityScoresAssigned}
 				<button
 					class="nimble-button"
 					data-button-variant="icon"
-					aria-label="Edit Skill Points"
-					data-tooltip="Edit Skill Points"
+					aria-label={skillPointAssignment.editSkillPoints}
+					data-tooltip={skillPointAssignment.editSkillPoints}
 					onclick={() => (assignedSkillPoints = {})}
 				>
 					<i class="fa-solid fa-edit"></i>
@@ -161,7 +163,7 @@
 
 	{#if active && remainingTempSkillPoints < 1}
 		<button class="nimble-button" data-button-variant="basic" onclick={lockInSkillPoints}>
-			Confirm Skill Point Assignments
+			{skillPointAssignment.confirmSkillPointAssignments}
 		</button>
 	{/if}
 </section>

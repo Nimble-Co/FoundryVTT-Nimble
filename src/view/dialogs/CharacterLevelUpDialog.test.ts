@@ -1,90 +1,12 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { createMockCharacterDocument, createMockDialog } from '../../../tests/fixtures/index.js';
 import CharacterLevelUpDialog from './CharacterLevelUpDialog.svelte';
 
-/**
- * Component Tests for CharacterLevelUpDialog
- *
- * These tests verify the actual UI behavior of the CharacterLevelUpDialog component,
- * including user interactions, form validation, and button states.
- */
-
-// Extend CONFIG mock with ability scores
-(globalThis as any).CONFIG.NIMBLE.abilityScores = {
-	strength: 'Strength',
-	dexterity: 'Dexterity',
-	intelligence: 'Intelligence',
-	will: 'Will',
-};
-
-(globalThis as any).CONFIG.NIMBLE.abilityScoreAbbreviations = {
-	strength: 'STR',
-	dexterity: 'DEX',
-	intelligence: 'INT',
-	will: 'WIL',
-};
-
 describe('CharacterLevelUpDialog Component', () => {
-	// Mock document with character data
-	const createMockDocument = (overrides = {}) => ({
-		id: 'test-character-id',
-		classes: {
-			warrior: {
-				system: {
-					classLevel: 1,
-					abilityScoreData: {
-						2: { statIncreaseType: 'primary' },
-						4: { statIncreaseType: 'primary' },
-						6: { statIncreaseType: 'secondary' },
-						8: { statIncreaseType: 'primary' },
-						10: { statIncreaseType: 'capstone' },
-					},
-					keyAbilityScores: ['strength', 'dexterity'],
-				},
-				identifier: 'warrior',
-			},
-		},
-		system: {
-			abilities: {
-				strength: { value: 10, mod: 3 },
-				dexterity: { value: 10, mod: 2 },
-				intelligence: { value: 10, mod: 1 },
-				will: { value: 10, mod: 1 },
-			},
-		},
-		reactive: {
-			system: {
-				abilities: {
-					strength: { value: 10, mod: 3 },
-					dexterity: { value: 10, mod: 2 },
-					intelligence: { value: 10, mod: 1 },
-					will: { value: 10, mod: 1 },
-				},
-				skills: {
-					might: { points: 12, bonus: 0, mod: 12 },
-					finesse: { points: 5, bonus: 0, mod: 7 },
-					arcana: { points: 3, bonus: 0, mod: 4 },
-					examination: { points: 2, bonus: 0, mod: 3 },
-					influence: { points: 1, bonus: 0, mod: 2 },
-					insight: { points: 1, bonus: 0, mod: 2 },
-					lore: { points: 0, bonus: 0, mod: 1 },
-					naturecraft: { points: 0, bonus: 0, mod: 1 },
-					perception: { points: 1, bonus: 0, mod: 2 },
-					stealth: { points: 0, bonus: 0, mod: 2 },
-				},
-			},
-		},
-		...overrides,
-	});
-
-	const createMockDialog = () => ({
-		submit: vi.fn(),
-		close: vi.fn(),
-	});
-
 	describe('Ability Score Increase Causing Skill Over Max', () => {
 		it('should disable submit when selecting strength pushes might over 12', async () => {
-			const document = createMockDocument();
+			const document = createMockCharacterDocument();
 			const dialog = createMockDialog();
 
 			const { container } = render(CharacterLevelUpDialog, {
@@ -190,7 +112,7 @@ describe('CharacterLevelUpDialog Component', () => {
 
 		it('should enable submit when skill allocation is valid', async () => {
 			// Create document where Might is at 11, so selecting Strength brings it to 12 (valid)
-			const document = createMockDocument({
+			const document = createMockCharacterDocument({
 				system: {
 					abilities: {
 						strength: { value: 10, mod: 3 },
@@ -253,7 +175,7 @@ describe('CharacterLevelUpDialog Component', () => {
 		});
 
 		it('should re-enable submit when user changes ability selection to resolve over-max', async () => {
-			const document = createMockDocument();
+			const document = createMockCharacterDocument();
 			const dialog = createMockDialog();
 
 			render(CharacterLevelUpDialog, {
@@ -307,7 +229,7 @@ describe('CharacterLevelUpDialog Component', () => {
 
 	describe('Submit Button States', () => {
 		it('should be disabled when no ability score selected', async () => {
-			const document = createMockDocument();
+			const document = createMockCharacterDocument();
 			const dialog = createMockDialog();
 
 			render(CharacterLevelUpDialog, {
@@ -334,7 +256,7 @@ describe('CharacterLevelUpDialog Component', () => {
 		});
 
 		it('should be disabled when no skill points assigned', async () => {
-			const document = createMockDocument();
+			const document = createMockCharacterDocument();
 			const dialog = createMockDialog();
 
 			render(CharacterLevelUpDialog, {
@@ -357,7 +279,7 @@ describe('CharacterLevelUpDialog Component', () => {
 		});
 
 		it('should be enabled when all requirements met', async () => {
-			const document = createMockDocument({
+			const document = createMockCharacterDocument({
 				system: {
 					abilities: {
 						strength: { value: 10, mod: 3 },
@@ -423,7 +345,7 @@ describe('CharacterLevelUpDialog Component', () => {
 
 	describe('Skill Point Reset on Ability Change', () => {
 		it('should reset skill points when ability selection changes', async () => {
-			const document = createMockDocument({
+			const document = createMockCharacterDocument({
 				reactive: {
 					system: {
 						abilities: {
@@ -491,7 +413,7 @@ describe('CharacterLevelUpDialog Component', () => {
 
 	describe('Level 3 Subclass Selection', () => {
 		it('should require subclass selection at level 3', async () => {
-			const document = createMockDocument({
+			const document = createMockCharacterDocument({
 				classes: {
 					warrior: {
 						system: {
