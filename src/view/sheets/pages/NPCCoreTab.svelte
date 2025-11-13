@@ -576,7 +576,14 @@
 		margin: 0;
 		padding: 1rem 0;
 		border-top: 1px solid var(--color-border);
-		border-bottom: 0;
+		border-bottom: 1px solid var(--color-border);
+		// Sticky positioning: sticks to top when scrolling, unsticks when section scrolls past
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		background: var(--nimble-sheet-background);
+		// Add a subtle shadow when sticky to show it's "floating"
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
 		.nimble-heading {
 			font-size: var(--nimble-md-text);
