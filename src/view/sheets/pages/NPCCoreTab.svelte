@@ -41,7 +41,6 @@
 	}
 
 	const validTypes = ['feature', 'action', 'bloodied', 'lastStand'];
-	const { monsterFeatureTypes } = CONFIG.NIMBLE;
 
 	function filterMonsterFeatures(actor) {
 		return actor.items.filter((item) => {
@@ -153,7 +152,7 @@
 		}
 	}
 
-	const { npcArmorTypeAbbreviations } = CONFIG.NIMBLE;
+	const { npcArmorTypeAbbreviations, creatureFeatures, monsterFeatureTypes } = CONFIG.NIMBLE;
 
 	let actor = getContext('actor');
 	let sheet = getContext('application');
@@ -273,33 +272,35 @@
 					onclick={createItem}
 				></button>
 			{/if}
-			<span
-				class="nimble-button"
-				style="margin-left: auto;"
-				role="button"
-				tabindex="0"
-				data-button-variant="icon"
-				aria-label={allCollapsed ? 'Expand all descriptions' : 'Collapse all descriptions'}
-				data-tooltip={allCollapsed ? 'Expand all descriptions' : 'Collapse all descriptions'}
-				onclick={() => {
-					const newState = !allCollapsed;
-					items.forEach((item) => toggleItemCollapsed(item, newState));
-				}}
-				onkeydown={(event) => {
-					if (event.key === 'Enter' || event.key === ' ') {
-						event.preventDefault();
+			{#if Object.entries(categorizedItems).length > 0}
+				<span
+					class="nimble-button"
+					style="margin-left: auto;"
+					role="button"
+					tabindex="0"
+					data-button-variant="icon"
+					aria-label={allCollapsed ? 'Expand all descriptions' : 'Collapse all descriptions'}
+					data-tooltip={allCollapsed ? 'Expand all descriptions' : 'Collapse all descriptions'}
+					onclick={() => {
 						const newState = !allCollapsed;
 						items.forEach((item) => toggleItemCollapsed(item, newState));
-					}
-				}}
-			>
-				<i class="fa-solid {allCollapsed ? 'fa-expand' : 'fa-compress'}"></i>
-			</span>
+					}}
+					onkeydown={(event) => {
+						if (event.key === 'Enter' || event.key === ' ') {
+							event.preventDefault();
+							const newState = !allCollapsed;
+							items.forEach((item) => toggleItemCollapsed(item, newState));
+						}
+					}}
+				>
+					<i class="fa-solid {allCollapsed ? 'fa-expand' : 'fa-compress'}"></i>
+				</span>
+			{/if}
 		</h4>
 	</header>
 
-	{#if Object.entries(categorizedItems).length > 0}
-		<section class="nimble-sheet__body nimble-sheet__body--player-character">
+	<section class="nimble-sheet__body nimble-sheet__body--player-character">
+		{#if Object.entries(categorizedItems).length > 0}
 			{#each Object.entries(categorizedItems).sort(sortItemCategories) as [categoryName, itemCategory]}
 				<section class="nimble-monster-sheet-section">
 					{#if categoryName != 'feature'}
@@ -317,7 +318,7 @@
 										editorOptions={{ compact: true, toggled: false, height: 150 }}
 										field="system.attackSequence"
 										content={actor.reactive.system.attackSequence ||
-											"After each hero's turn, choose one."}
+											creatureFeatures.actionSequence}
 										document={actor}
 									/>
 								</div>
@@ -506,8 +507,12 @@
 					</ul>
 				</section>
 			{/each}
-		</section>
-	{/if}
+		{:else}
+			<section class="nimble-monster-sheet-section">
+				<p>{creatureFeatures.noFeatures}</p>
+			</section>
+		{/if}
+	</section>
 	<section class="nimble-monster-sheet-section">
 		<MovementSpeed {actor} showDefaultSpeed={false} />
 	</section>
@@ -560,10 +565,9 @@
 		border-radius: 0 0 4px 4px;
 	}
 
+	// Category name header (Actions, Bloodied, Last Stand)
 	.nimble-monster-category-header {
-		margin-left: 0;
-		margin-right: 0;
-		margin-bottom: 1rem;
+		margin: 0.5rem 0;
 
 		.nimble-heading {
 			font-size: var(--nimble-md-text);
@@ -612,7 +616,7 @@
 	}
 
 	.nimble-monster-sheet-section {
-		padding: 0.5rem;
+		padding: 0.25rem 0.5rem 0.25rem;
 
 		&--defenses {
 			display: grid;
@@ -621,15 +625,24 @@
 		}
 
 		&:not(:last-of-type) {
+			padding: 0.25rem 0.5rem 0.75rem;
 			border-bottom: 1px solid hsl(41, 18%, 54%, 25%);
 		}
+	}
+
+	.nimble-sheet__body--player-character {
+		gap: 0.25rem;
 	}
 
 	:global(.system-nimble) {
 		.nimble-sheet__static {
 			padding: 0.25rem 1rem !important;
 		}
+		// Features header
 		:global(.nimble-sheet__static--npc-features) {
+			border-bottom: 1px solid var(--color-border);
+			margin: 0.5rem 0;
+
 			.nimble-heading {
 				display: flex;
 				align-items: center;
@@ -638,7 +651,6 @@
 				font-size: var(--nimble-md-text);
 				font-weight: 700;
 				letter-spacing: 0.02em;
-				margin-bottom: 0;
 			}
 		}
 	}

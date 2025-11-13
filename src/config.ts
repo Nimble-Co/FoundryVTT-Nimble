@@ -498,6 +498,11 @@ const levelUpDialog = {
 	completeAllSelectionsTooltip: 'NIMBLE.levelUpDialog.completeAllSelectionsTooltip',
 };
 
+const creatureFeatures = {
+	noFeatures: 'NIMBLE.creatureFeatures.noFeatures',
+	actionSequence: 'NIMBLE.creatureFeatures.actionSequence',
+};
+
 const NIMBLE = {
 	// Constants
 	ROLL_MODE,
@@ -516,6 +521,7 @@ const NIMBLE = {
 	characterCreationStages,
 	classBanners,
 	classes,
+	creatureFeatures,
 	damageTypes,
 	data,
 	defaultSkillAbilities,
