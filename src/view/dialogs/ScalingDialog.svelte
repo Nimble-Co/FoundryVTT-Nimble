@@ -1,123 +1,113 @@
 <script>
-import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
-import { updateEffectNode } from '../../utils/treeManipulation/updateEffectNode.js';
+	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
+	import { updateEffectNode } from '../../utils/treeManipulation/updateEffectNode.js';
 
-import TagGroup from '../components/TagGroup.svelte';
+	import TagGroup from '../components/TagGroup.svelte';
 
-function getNearestScalingFormulaForCharacterLevel(node, level) {
-	if (level === 1) {
-		return node.formula;
+	function getNearestScalingFormulaForCharacterLevel(node, level) {
+		if (level === 1) {
+			return node.formula;
+		}
 	}
-}
 
-function toggleTab(value) {
-	currentTab = tabs.find((tab) => tab.value === value);
-}
-
-function updateScalingFormula(node, level, formula) {
-	if (level === 1) {
-		updateEffectNode(item, effects, node, 'formula', formula);
-	} else {
-		updateEffectNode(item, effects, node, `scaling.${level}.formula`, formula);
+	function toggleTab(value) {
+		currentTab = tabs.find((tab) => tab.value === value);
 	}
-}
 
-const tabs = [
-	{
-		value: 'characterLevel',
-		label: 'Scale by Level',
-		component: CharacterLevelScaling,
-	},
-];
+	function updateScalingFormula(node, level, formula) {
+		if (level === 1) {
+			updateEffectNode(item, effects, node, 'formula', formula);
+		} else {
+			updateEffectNode(item, effects, node, `scaling.${level}.formula`, formula);
+		}
+	}
 
-let { item, node } = $props();
+	const tabs = [
+		{
+			value: 'characterLevel',
+			label: 'Scale by Level',
+			component: CharacterLevelScaling,
+		},
+	];
 
-if (item?.type === 'spell') {
-	tabs.push({
-		value: 'spellLevel',
-		label: 'Scale by Spell Level',
-		component: SpellLevelScaling,
-	});
-}
+	let { item, node } = $props();
 
-let effects = $derived(item.reactive.system.activation.effects);
+	if (item?.type === 'spell') {
+		tabs.push({
+			value: 'spellLevel',
+			label: 'Scale by Spell Level',
+			component: SpellLevelScaling,
+		});
+	}
 
-let currentTab = $derived(tabs.find((tab) => tab.value === node?.scaling?.type) ?? tabs[0]);
+	let effects = $derived(item.reactive.system.activation.effects);
+
+	let currentTab = $derived(tabs.find((tab) => tab.value === node?.scaling?.type) ?? tabs[0]);
 </script>
 
 {#snippet CharacterLevelScaling(item, node)}
-    <header class="nimble-section-header">
-        <h2 class="nimble-heading" data-heading-variant="section">
-            Scaling by Character Level
-        </h2>
-    </header>
+	<header class="nimble-section-header">
+		<h2 class="nimble-heading" data-heading-variant="section">Scaling by Character Level</h2>
+	</header>
 
-    <table>
-        <thead>
-            <tr>
-                <th style="width: fit-content;"> Level </th>
+	<table>
+		<thead>
+			<tr>
+				<th style="width: fit-content;"> Level </th>
 
-                <th style="width: max-content"> Formula </th>
-            </tr>
-        </thead>
+				<th style="width: max-content"> Formula </th>
+			</tr>
+		</thead>
 
-        <tbody>
-            {#each { length: 20 }, index}
-                {@const level = index + 1}
+		<tbody>
+			{#each { length: 20 }, index}
+				{@const level = index + 1}
 
-                <tr>
-                    <td>Level {level}</td>
+				<tr>
+					<td>Level {level}</td>
 
-                    <td>
-                        <input
-                            type="text"
-                            value={getNearestScalingFormulaForCharacterLevel(
-                                node,
-                                level,
-                            )}
-                            onchange={({ target }) =>
-                                updateScalingFormula(node, level, target.value)}
-                        />
-                    </td>
-                </tr>
-            {/each}
-        </tbody>
-    </table>
+					<td>
+						<input
+							type="text"
+							value={getNearestScalingFormulaForCharacterLevel(node, level)}
+							onchange={({ target }) => updateScalingFormula(node, level, target.value)}
+						/>
+					</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
 {/snippet}
 
 {#snippet SpellLevelScaling(item, node)}{/snippet}
 
 <section class="nimble-sheet__body nimble-sheet__body--item">
-    {#if tabs.length > 1}
-        <TagGroup
-            options={tabs}
-            selectedOptions={[currentTab.value]}
-            toggleOption={toggleTab}
-        />
-    {/if}
+	{#if tabs.length > 1}
+		<TagGroup options={tabs} selectedOptions={[currentTab.value]} toggleOption={toggleTab} />
+	{/if}
 
-    {@render currentTab.component(item, node)}
+	{@render currentTab.component(item, node)}
 </section>
 
 <style>
-    .nimble-sheet__body {
-        --nimble-sheet-body-padding-block-start: 0.5rem;
-    }
+	.nimble-sheet__body {
+		--nimble-sheet-body-padding-block-start: 0.5rem;
+	}
 
-    header {
-        margin-block-start: 0.5rem;
-    }
+	header {
+		margin-block-start: 0.5rem;
+	}
 
-    table {
-        table-layout: auto !important;
+	table {
+		table-layout: auto !important;
 
-        th:last-child,
-        td:last-child {
-            padding-inline: 0.25rem;
-        }
+		th:last-child,
+		td:last-child {
+			padding-inline: 0.25rem;
+		}
 
-        th {
-            text-align: center;
-        }
-    }
+		th {
+			text-align: center;
+		}
+	}
 </style>

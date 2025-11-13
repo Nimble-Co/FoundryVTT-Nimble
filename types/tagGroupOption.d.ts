@@ -1,7 +1,7 @@
 interface TagGroupOption {
-  label: string;
-  value: string | number;
-  icon?: string;
-  tooltip?: string;
-  tooltipClass?: string;
+	label: string;
+	value: string | number;
+	icon?: string;
+	tooltip?: string;
+	tooltipClass?: string;
 }

@@ -39,12 +39,14 @@ class ItemActivationManager {
 		} else {
 			// Check if there are damage or healing effects that require rolling
 			const effects = this.activationData?.effects ?? [];
-			const hasRolls = flattenEffectsTree(effects).some(node => node.type === 'damage' || node.type === 'healing');
+			const hasRolls = flattenEffectsTree(effects).some(
+				(node) => node.type === 'damage' || node.type === 'healing',
+			);
 
 			if (hasRolls) {
 				// Check if Alt is pressed to skip dialog
 				let altPressed = false;
-				const unsubscribe = keyPressStore.subscribe(state => {
+				const unsubscribe = keyPressStore.subscribe((state) => {
 					altPressed = state.alt;
 				});
 
@@ -64,7 +66,7 @@ class ItemActivationManager {
 						dialogData = result;
 					} else {
 						// If dialog is cancelled, don't roll
-						return { activation:null, rolls:null};
+						return { activation: null, rolls: null };
 					}
 				}
 

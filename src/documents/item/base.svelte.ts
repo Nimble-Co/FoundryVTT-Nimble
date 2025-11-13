@@ -1,4 +1,3 @@
-
 import type Document from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/abstract/document.d.mts';
 import type { DatabaseOperationsFor } from '@league-of-foundry-developers/foundry-vtt-types/src/types/helperTypes.d.mts';
 import type { InexactPartial } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';

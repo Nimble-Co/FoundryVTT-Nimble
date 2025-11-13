@@ -1,50 +1,50 @@
 <script>
-const startingHpByHitDie = {
-	6: 10,
-	8: 13,
-	10: 17,
-	12: 20,
-};
-
-function submit() {
-	const updates = {
-		classUpdates: classHpData.map((cls) => ({
-			id: cls.id,
-			hpData: cls.hpData,
-		})),
-		bonus: hpBonus,
+	const startingHpByHitDie = {
+		6: 10,
+		8: 13,
+		10: 17,
+		12: 20,
 	};
-	dialog.submit(updates);
-}
 
-let { document, dialog } = $props();
+	function submit() {
+		const updates = {
+			classUpdates: classHpData.map((cls) => ({
+				id: cls.id,
+				hpData: cls.hpData,
+			})),
+			bonus: hpBonus,
+		};
+		dialog.submit(updates);
+	}
 
-let classHpData = $state([]);
-let hpBonus = $state(document.system.attributes.hp.bonus || 0);
+	let { document, dialog } = $props();
 
-$effect(() => {
-	classHpData = Object.values(document.classes ?? {}).map((cls) => ({
-		id: cls.id,
-		name: cls.name,
-		hitDie: cls.system.hitDieSize,
-		startingHp: startingHpByHitDie[cls.system.hitDieSize] || 0,
-		hpData: [...cls.system.hpData],
-		maxHp: cls.maxHp,
-	}));
-});
+	let classHpData = $state([]);
+	let hpBonus = $state(document.system.attributes.hp.bonus || 0);
 
-function updateHpData(classIndex, levelIndex, value) {
-	classHpData[classIndex].hpData[levelIndex] = Number.parseInt(value) || 0;
-	// Recalculate maxHp for that class
-	const cls = classHpData[classIndex];
-	cls.maxHp = cls.startingHp + cls.hpData.reduce((acc, val) => acc + val, 0);
-	classHpData = [...classHpData]; // Trigger reactivity
-}
+	$effect(() => {
+		classHpData = Object.values(document.classes ?? {}).map((cls) => ({
+			id: cls.id,
+			name: cls.name,
+			hitDie: cls.system.hitDieSize,
+			startingHp: startingHpByHitDie[cls.system.hitDieSize] || 0,
+			hpData: [...cls.system.hpData],
+			maxHp: cls.maxHp,
+		}));
+	});
 
-let totalMaxHp = $derived.by(() => {
-	const classTotal = classHpData.reduce((acc, cls) => acc + cls.maxHp, 0);
-	return classTotal + hpBonus;
-});
+	function updateHpData(classIndex, levelIndex, value) {
+		classHpData[classIndex].hpData[levelIndex] = Number.parseInt(value) || 0;
+		// Recalculate maxHp for that class
+		const cls = classHpData[classIndex];
+		cls.maxHp = cls.startingHp + cls.hpData.reduce((acc, val) => acc + val, 0);
+		classHpData = [...classHpData]; // Trigger reactivity
+	}
+
+	let totalMaxHp = $derived.by(() => {
+		const classTotal = classHpData.reduce((acc, cls) => acc + cls.maxHp, 0);
+		return classTotal + hpBonus;
+	});
 </script>
 
 <section class="nimble-sheet__body">
@@ -73,10 +73,7 @@ let totalMaxHp = $derived.by(() => {
 	<div class="bonus-section">
 		<label>
 			Static HP Bonus:
-			<input
-				type="number"
-				bind:value={hpBonus}
-			/>
+			<input type="number" bind:value={hpBonus} />
 		</label>
 	</div>
 
@@ -86,13 +83,7 @@ let totalMaxHp = $derived.by(() => {
 </section>
 
 <footer class="nimble-sheet__footer">
-	<button
-		class="nimble-button"
-		data-button-variant="basic"
-		onclick={submit}
-	>
-		Submit
-	</button>
+	<button class="nimble-button" data-button-variant="basic" onclick={submit}> Submit </button>
 </footer>
 
 <style lang="scss">
@@ -128,7 +119,7 @@ let totalMaxHp = $derived.by(() => {
 	}
 
 	.nimble-sheet__footer {
-        --nimble-button-padding: 0.5rem 1rem;
-        --nimble-button-width: 100%;
-    }
+		--nimble-button-padding: 0.5rem 1rem;
+		--nimble-button-width: 100%;
+	}
 </style>

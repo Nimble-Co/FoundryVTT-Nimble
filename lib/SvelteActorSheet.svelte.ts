@@ -172,7 +172,9 @@ class SvelteActorSheet<
 	}
 
 	async _onDrop(event: SvelteActorSheet.DropEvent) {
-		const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(event) as unknown as Record<string, unknown>;
+		const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(
+			event,
+		) as unknown as Record<string, unknown>;
 		const actor = this.document;
 
 		const allowed = Hooks.call('dropActorSheetData', actor, this, data);

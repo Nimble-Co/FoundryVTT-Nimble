@@ -8,11 +8,12 @@
 	// Check if movement is the default (walk=6, all others=0)
 	let isDefaultMovement = $derived.by(() => {
 		const movement = actor.reactive.system.attributes.movement;
-		const isDefault = movement.walk === 6
-			&& movement.burrow === 0
-			&& movement.climb === 0
-			&& movement.fly === 0
-			&& movement.swim === 0;
+		const isDefault =
+			movement.walk === 6 &&
+			movement.burrow === 0 &&
+			movement.climb === 0 &&
+			movement.fly === 0 &&
+			movement.swim === 0;
 		return isDefault;
 	});
 
@@ -36,8 +37,7 @@
 </script>
 
 {#if shouldShowMovement}
-
-	{#each [{ heading: "Movement", configMethod: actor.configureMovement.bind(actor), content: movementModes, prompt: "configureMovement" }] as { heading, configMethod, content, prompt }}
+	{#each [{ heading: 'Movement', configMethod: actor.configureMovement.bind(actor), content: movementModes, prompt: 'configureMovement' }] as { heading, configMethod, content, prompt }}
 		{@const tooltip = localize(`NIMBLE.prompts.${prompt}`)}
 
 		<section>
@@ -73,13 +73,13 @@
 
 <style>
 	.nimble-proficiency-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.25rem 1ch;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-        font-size: var(--nimble-sm-text);
-        font-weight: 500;
-    }
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 1ch;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-size: var(--nimble-sm-text);
+		font-weight: 500;
+	}
 </style>
