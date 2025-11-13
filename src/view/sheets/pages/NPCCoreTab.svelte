@@ -408,9 +408,7 @@
 										sheet._onDragStart(event);
 									}}
 									ondrop={(event) => handleDrop(event, item.reactive._id)}
-									onclick={() => {
-										if (isEditable) actor.activateItem(item.reactive._id);
-									}}
+									onclick={() => actor.activateItem(item.reactive._id)}
 								>
 									<header class="u-semantic-only">
 										{#if showEmbeddedDocumentImages}
