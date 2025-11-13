@@ -93,27 +93,26 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					primaryTerm.modifiers.push('x');
 
 					if (options.primaryDieValue) {
-						primaryTerm.results = [
-							{ result: options.primaryDieValue, active: true },
-						];
+						primaryTerm.results = [{ result: options.primaryDieValue, active: true }];
 					}
 
 					if (options.primaryDieModifier && faces) {
 						const baseResult = Math.ceil(Math.random() * faces);
 						let modifiedResult = baseResult + options.primaryDieModifier;
 						if (modifiedResult > faces) {
-							primaryTerm.results = [
-								{ result: faces, active: true },
-							];
+							primaryTerm.results = [{ result: faces, active: true }];
 							// Add excess as a separate numeric term
 							const excess = modifiedResult - faces;
 							const excessTerm = new Terms.NumericTerm({ number: excess });
 							const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
-							this.terms.splice(this.terms.indexOf(primaryTerm) + 1, 0, operatorTermExcess, excessTerm);
+							this.terms.splice(
+								this.terms.indexOf(primaryTerm) + 1,
+								0,
+								operatorTermExcess,
+								excessTerm,
+							);
 						} else {
-							primaryTerm.results = [
-								{ result: modifiedResult, active: true },
-							];
+							primaryTerm.results = [{ result: modifiedResult, active: true }];
 						}
 					}
 
@@ -134,27 +133,26 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					primaryTerm.modifiers.push('x');
 
 					if (options.primaryDieValue) {
-						primaryTerm.results = [
-							{ result: options.primaryDieValue, active: true },
-						];
+						primaryTerm.results = [{ result: options.primaryDieValue, active: true }];
 					}
 
 					if (options.primaryDieModifier && faces) {
 						const baseResult = Math.ceil(Math.random() * faces);
 						let modifiedResult = baseResult + options.primaryDieModifier;
 						if (modifiedResult > faces) {
-							primaryTerm.results = [
-								{ result: faces, active: true },
-							];
+							primaryTerm.results = [{ result: faces, active: true }];
 							// Add excess as a separate numeric term
 							const excess = modifiedResult - faces;
 							const excessTerm = new Terms.NumericTerm({ number: excess });
 							const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
-							this.terms.splice(this.terms.indexOf(primaryTerm) + 1, 0, operatorTermExcess, excessTerm);
+							this.terms.splice(
+								this.terms.indexOf(primaryTerm) + 1,
+								0,
+								operatorTermExcess,
+								excessTerm,
+							);
 						} else {
-							primaryTerm.results = [
-								{ result: modifiedResult, active: true },
-							];
+							primaryTerm.results = [{ result: modifiedResult, active: true }];
 						}
 					}
 

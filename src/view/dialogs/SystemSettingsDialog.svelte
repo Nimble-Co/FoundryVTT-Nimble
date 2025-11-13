@@ -1,9 +1,9 @@
 <script lang="ts">
-import type { SystemSettings } from '../../settings/SystemSettings.js';
+	import type { SystemSettings } from '../../settings/SystemSettings.js';
 
-import { setContext } from 'svelte';
+	import { setContext } from 'svelte';
 
-const { dialog }: { dialog: SystemSettings } = $props();
+	const { dialog }: { dialog: SystemSettings } = $props();
 
-const settings = dialog.getSettings();
+	const settings = dialog.getSettings();
 </script>

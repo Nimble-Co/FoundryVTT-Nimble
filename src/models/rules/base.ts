@@ -37,9 +37,12 @@ declare namespace NimbleBaseRule {
 }
 
 abstract class NimbleBaseRule<
-	Schema extends NimbleBaseRule.Schema,
-	Parent extends foundry.abstract.DataModel.Any = NimbleBaseItem,
-> extends foundry.abstract.DataModel<Schema, Parent> implements NimbleBaseRule<Schema, Parent> {
+		Schema extends NimbleBaseRule.Schema,
+		Parent extends foundry.abstract.DataModel.Any = NimbleBaseItem,
+	>
+	extends foundry.abstract.DataModel<Schema, Parent>
+	implements NimbleBaseRule<Schema, Parent>
+{
 	declare type: string;
 
 	// @ts-expect-error - Intentional type override for custom Predicate implementation

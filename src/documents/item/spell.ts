@@ -20,7 +20,9 @@ export class NimbleSpellItem extends NimbleBaseItem {
 
 	override async prepareChatCardData() {
 		const showDescription = this.system.activation.showDescription;
-		const baseEffect = await foundry.applications.ux.TextEditor.implementation.enrichHTML(this.system.description.baseEffect);
+		const baseEffect = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
+			this.system.description.baseEffect,
+		);
 
 		const higherLevelEffect = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
 			this.system.description.higherLevelEffect,

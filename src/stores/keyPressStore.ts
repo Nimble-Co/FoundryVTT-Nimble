@@ -17,7 +17,7 @@ export const keyPressStore = writable<KeyPressState>(initialState);
 // Initialize event listeners
 if (typeof window !== 'undefined') {
 	window.addEventListener('keydown', (event) => {
-		keyPressStore.update(state => ({
+		keyPressStore.update((state) => ({
 			...state,
 			ctrl: event.ctrlKey,
 			shift: event.shiftKey,
@@ -26,7 +26,7 @@ if (typeof window !== 'undefined') {
 	});
 
 	window.addEventListener('keyup', (event) => {
-		keyPressStore.update(state => ({
+		keyPressStore.update((state) => ({
 			...state,
 			ctrl: event.ctrlKey,
 			shift: event.shiftKey,

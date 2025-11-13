@@ -3,5 +3,5 @@
  * @internal
  */
 export type InexactPartial<T> = {
-  [P in keyof T]?: T[P] | undefined;
+	[P in keyof T]?: T[P] | undefined;
 };

@@ -29,74 +29,73 @@
 </script>
 
 <section class="subclass-selection">
-    <header>
-        <h3 class="nimble-heading" data-heading-variant="section">Subclass</h3>
-    </header>
+	<header>
+		<h3 class="nimble-heading" data-heading-variant="section">Subclass</h3>
+	</header>
 
-    {#if subclasses.length > 0}
-        <ul class="nimble-document-list">
-            {#each subclasses as subclass}
+	{#if subclasses.length > 0}
+		<ul class="nimble-document-list">
+			{#each subclasses as subclass}
 				{#if subclass?.uuid === selectedSubclass?.uuid || !selectedSubclass}
 					<li class="u-semantic-only subclass-item">
 						<div
-								class="subclass-row"
-								class:selected={subclass?.uuid === selectedSubclass?.uuid}
-								class:expanded={expandedSubclassUuid === subclass.uuid}
-								onclick={() => toggleExpanded(subclass.uuid)}
-								role="button"
-								tabindex="0"
-								onkeydown={(e) => e.key === 'Enter' && toggleExpanded(subclass.uuid)}
+							class="subclass-row"
+							class:selected={subclass?.uuid === selectedSubclass?.uuid}
+							class:expanded={expandedSubclassUuid === subclass.uuid}
+							onclick={() => toggleExpanded(subclass.uuid)}
+							role="button"
+							tabindex="0"
+							onkeydown={(e) => e.key === 'Enter' && toggleExpanded(subclass.uuid)}
 						>
-								{#if subclass?.uuid !== selectedSubclass?.uuid}
-									<i class="fa-solid fa-chevron-up expand-arrow"></i>
-								{/if}
-								<img
-										class="subclass-row__img"
-										src={subclass.img || 'icons/svg/item-bag.svg'}
-										alt={subclass.name}
-										onerror={(e) => {subclass.img = 'icons/svg/item-bag.svg'}}
-								/>
+							{#if subclass?.uuid !== selectedSubclass?.uuid}
+								<i class="fa-solid fa-chevron-up expand-arrow"></i>
+							{/if}
+							<img
+								class="subclass-row__img"
+								src={subclass.img || 'icons/svg/item-bag.svg'}
+								alt={subclass.name}
+								onerror={(e) => {
+									subclass.img = 'icons/svg/item-bag.svg';
+								}}
+							/>
 
-								<h4
-										class="subclass-row__name nimble-heading"
-										data-heading-variant="item"
-								>
-										{subclass.name}
-								</h4>
-								<button
-										class="view-details-button"
-										onclick={(e) => viewSubclass(subclass.uuid, e)}
-										title="View Details"
-										aria-label="View {subclass.name} details"
-								>
-										<i class="fa-solid fa-book-open"></i>
-								</button>
+							<h4 class="subclass-row__name nimble-heading" data-heading-variant="item">
+								{subclass.name}
+							</h4>
+							<button
+								class="view-details-button"
+								onclick={(e) => viewSubclass(subclass.uuid, e)}
+								title="View Details"
+								aria-label="View {subclass.name} details"
+							>
+								<i class="fa-solid fa-book-open"></i>
+							</button>
 						</div>
 
 						{#if expandedSubclassUuid === subclass.uuid}
-								<div class="accordion-content">
-										<div class="description">
-												{@html expandedSubclassData?.system?.description || 'Loading...'}
-										</div>
-										<button
-												class="nimble-button"
-												data-button-variant="full-width"
-												type="button"
-												onclick={(e) => confirmSelection(subclass.uuid, e)}
-										>
-												Confirm Selection
-										</button>
+							<div class="accordion-content">
+								<div class="description">
+									{@html expandedSubclassData?.system?.description || 'Loading...'}
 								</div>
+								<button
+									class="nimble-button"
+									data-button-variant="full-width"
+									type="button"
+									onclick={(e) => confirmSelection(subclass.uuid, e)}
+								>
+									Confirm Selection
+								</button>
+							</div>
 						{/if}
 					</li>
 				{/if}
-            {/each}
-        </ul>
-    {:else}
-        <p class="nimble-hint">
-            No subclasses available for this class. You may need to create or import subclass items.
-        </p>
-    {/if}
+			{/each}
+		</ul>
+	{:else}
+		<p class="nimble-hint">
+			No subclasses available for this class. You may need to create or import subclass items.
+		</p>
+	{/if}
 </section>
 
 <style lang="scss">

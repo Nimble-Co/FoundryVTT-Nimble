@@ -19,11 +19,14 @@ export class NimbleObjectItem extends NimbleBaseItem {
 
 	override async prepareChatCardData(options) {
 		const showDescription = this.system.activation.showDescription;
-		const publicDescription = await foundry.applications.ux.TextEditor.implementation.enrichHTML(this.system.description.public);
-
-		const unidentifiedDescription = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-			this.system.description.unidentified,
+		const publicDescription = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
+			this.system.description.public,
 		);
+
+		const unidentifiedDescription =
+			await foundry.applications.ux.TextEditor.implementation.enrichHTML(
+				this.system.description.unidentified,
+			);
 
 		return {
 			system: {
