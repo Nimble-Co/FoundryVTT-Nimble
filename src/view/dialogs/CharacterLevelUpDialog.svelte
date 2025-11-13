@@ -9,6 +9,8 @@
 	import SkillPointAssignment from './components/levelUpHelper/SkillPointAssignment.svelte';
 	import SubclassSelection from './components/levelUpHelper/SubclassSelection.svelte';
 
+	const { forms, levelUpDialog } = CONFIG.NIMBLE;
+
 	function submit() {
 		dialog.submit({
 			selectedAbilityScore: selectedAbilityScores,
@@ -18,11 +20,35 @@
 		});
 	}
 
+	function getSubmitButtonTooltip() {
+		if (!isComplete) {
+			if (skillPointsOverMax) {
+				return levelUpDialog.skillPointsOverMax;
+			} else {
+				return levelUpDialog.completeAllSelections;
+			}
+		}
+
+		return '';
+	}
+
+	function getSubmitButtonAriaLabel() {
+		if (!isComplete) {
+			if (skillPointsOverMax) {
+				return levelUpDialog.skillPointsOverMaxTooltip;
+			} else {
+				return levelUpDialog.completeAllSelectionsTooltip;
+			}
+		}
+
+		return forms.submit;
+	}
+
 	let { document, dialog, ...data } = $props();
 
-	const characterClass: NimbleClassItem | undefined = Object.values(document.classes)[0] as
-		| NimbleClassItem
-		| undefined;
+	const characterClass: NimbleClassItem | undefined = document?.classes
+		? (Object.values(document.classes)[0] as NimbleClassItem | undefined)
+		: undefined;
 	const level = characterClass?.system?.classLevel ?? 1;
 	const levelingTo = level + 1;
 
@@ -47,23 +73,47 @@
 	let chooseBoon = $state(false);
 	let hitPointRollSelection = $state('roll');
 	let selectedAbilityScores: string[] | string | null = $state(null);
+	let lastSelectedAbilityScores: string[] | string | null = $state(null);
 	let selectedBoon = $state(null);
 	let selectedSubclass = $state(null);
 	let skillPointChanges = $state(generateBlankSkillSet());
 
 	let hasStatIncrease = $state(false);
+	let skillPointsOverMax = $state(false);
 
 	let skillPointChangesAssigned = $derived.by(() => {
 		return Object.values(skillPointChanges).reduce((acc, change) => acc + (change ?? 0), 0) === 1;
 	});
 
+	$effect(() => {
+		if (!lastSelectedAbilityScores) {
+			lastSelectedAbilityScores = selectedAbilityScores;
+			return;
+		}
+
+		// check if values are different
+		let hasChangedAbilityScore = Array.isArray(selectedAbilityScores)
+			? JSON.stringify(lastSelectedAbilityScores) !== JSON.stringify(selectedAbilityScores)
+			: lastSelectedAbilityScores !== selectedAbilityScores;
+
+		if (hasChangedAbilityScore) {
+			skillPointChanges = generateBlankSkillSet();
+			lastSelectedAbilityScores = selectedAbilityScores;
+		}
+	});
+
 	let isComplete = $derived.by(() => {
-		return (
-			((Array.isArray(selectedAbilityScores)
+		const overMax = skillPointsOverMax;
+
+		const abilityScoreComplete =
+			(Array.isArray(selectedAbilityScores)
 				? selectedAbilityScores?.length === 2
-				: selectedAbilityScores) ||
-				!hasStatIncrease) &&
+				: selectedAbilityScores) || !hasStatIncrease;
+
+		return (
+			abilityScoreComplete &&
 			skillPointChangesAssigned &&
+			!overMax &&
 			(selectedSubclass || !hasSubclassSelection)
 		);
 	});
@@ -89,6 +139,8 @@
 		{selectedBoon}
 		selectedAbilityScore={selectedAbilityScores}
 		bind:skillPointChanges
+		bind:selectedAbilityScores
+		bind:skillPointsOverMax
 	/>
 
 	{#if levelingTo === 3 && subclasses.length}
@@ -100,12 +152,12 @@
 	<button
 		class="nimble-button"
 		data-button-variant="basic"
-		aria-label={!isComplete ? 'Complete all selections before submitting' : 'Submit'}
-		data-tooltip={!isComplete ? 'Complete all selections before submitting' : ''}
+		aria-label={getSubmitButtonAriaLabel()}
+		data-tooltip={getSubmitButtonTooltip()}
 		onclick={submit}
 		disabled={!isComplete}
 	>
-		Submit
+		{forms.submit}
 	</button>
 </footer>
 

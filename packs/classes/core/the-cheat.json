@@ -4,7 +4,7 @@
 	"img": "systems/nimble/assets/classImages/the-cheat.webp",
 	"system": {
 		"macro": "",
-		"identifier": "cheat",
+		"identifier": "the-cheat",
 		"rules": [
 			{
 				"type": "grantItem",

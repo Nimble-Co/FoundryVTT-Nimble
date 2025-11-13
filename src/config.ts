@@ -457,25 +457,67 @@ const weaponProperties = {
 	vicious: 'NIMBLE.properties.vicious',
 };
 
+const hints = {
+	skillPointAssignment: 'NIMBLE.hints.skillPointAssignment',
+	characterCreationSkillPointAssignment: 'NIMBLE.hints.characterCreationSkillPointAssignment',
+};
+
+const skillPointAssignment = {
+	decrementSkillPoints: 'NIMBLE.skillPointAssignment.decrementSkillPoints',
+	incrementSkillPoints: 'NIMBLE.skillPointAssignment.incrementSkillPoints',
+	skill: 'NIMBLE.skillPointAssignment.skill',
+	abilityMod: 'NIMBLE.skillPointAssignment.abilityMod',
+	skillBonus: 'NIMBLE.skillPointAssignment.skillBonus',
+	skillPoints: 'NIMBLE.skillPointAssignment.skillPoints',
+	editSkillPoints: 'NIMBLE.skillPointAssignment.editSkillPoints',
+	confirmSkillPointAssignments: 'NIMBLE.skillPointAssignment.confirmSkillPointAssignments',
+	pointsRemaining: 'NIMBLE.skillPointAssignment.pointsRemaining',
+	maxSkillBonus: 'NIMBLE.skillPointAssignment.maxSkillBonus',
+	onlyOneNewPointAndOneTransferAllowed:
+		'NIMBLE.skillPointAssignment.onlyOneNewPointAndOneTransferAllowed',
+	reduceAnotherSkillFirstToAddSkillPoint:
+		'NIMBLE.skillPointAssignment.reduceAnotherSkillFirstToAddSkillPoint',
+	limitReached: 'NIMBLE.skillPointAssignment.limitReached',
+	skillPointsCantGoBelowZero: 'NIMBLE.skillPointAssignment.skillPointsCantGoBelowZero',
+	alreadyMarkedToTransferOnePoint: 'NIMBLE.skillPointAssignment.alreadyMarkedToTransferOnePoint',
+	onlyOneTransferPerLevelUp: 'NIMBLE.skillPointAssignment.onlyOneTransferPerLevelUp',
+};
+
+const data = {
+	total: 'NIMBLE.data.total',
+};
+
+const forms = {
+	submit: 'NIMBLE.forms.submit',
+};
+
+const levelUpDialog = {
+	skillPointsOverMax: 'NIMBLE.levelUpDialog.skillPointsOverMax',
+	completeAllSelections: 'NIMBLE.levelUpDialog.completeAllSelections',
+	skillPointsOverMaxTooltip: 'NIMBLE.levelUpDialog.skillPointsOverMaxTooltip',
+	completeAllSelectionsTooltip: 'NIMBLE.levelUpDialog.completeAllSelectionsTooltip',
+};
+
 const NIMBLE = {
 	// Constants
 	ROLL_MODE,
 
 	// Config
-	abilityScores,
 	abilityScoreAbbreviations,
-	abilityScoreTooltips,
 	abilityScoreControls,
-	characterCreationStages,
+	abilityScores,
+	abilityScoreTooltips,
 	activationCostTypes,
 	activationCostTypesPlural,
 	actorTypeBanners,
 	armorTypes,
 	armorTypesPlural,
 	boonTypes,
+	characterCreationStages,
 	classBanners,
 	classes,
 	damageTypes,
+	data,
 	defaultSkillAbilities,
 	durationTypes,
 	durationTypesPlural,
@@ -483,34 +525,38 @@ const NIMBLE = {
 	effectTypes,
 	featureTypeHeadings,
 	featureTypes,
+	forms,
 	genericProperties,
 	healingTypes,
-	languages,
+	hints,
 	languageHints,
 	languageImages,
+	languages,
+	levelUpDialog,
 	manaRecoveryTypes,
 	monsterFeatureTypes,
 	movementTypes,
 	npcArmorEffects,
 	npcArmorIcons,
-	npcArmorTypes,
 	npcArmorTypeAbbreviations,
+	npcArmorTypes,
 	objectSizeTypes,
 	objectTypeHeadings,
 	objectTypes,
 	restTypes,
-	savingThrows,
 	savingThrowAbbreviations,
+	savingThrows,
 	sizeCategories,
+	skillPointAssignment,
 	skills,
 	spellProperties,
-	spellSchools,
 	spellSchoolIcons,
+	spellSchools,
 	spellTierHeadings,
 	spellTiers,
 	startingHpByHitDieSize,
-	statArrays,
 	statArrayModifiers,
+	statArrays,
 	templateShapes,
 	timeUnits,
 	weaponAttributes,
