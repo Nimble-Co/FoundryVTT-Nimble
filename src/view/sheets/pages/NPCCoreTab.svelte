@@ -324,8 +324,10 @@
 								</div>
 							{/key}
 						{:else}
-							<div class="nimble-monster-feature-header">
-								{#await TextEditor.enrichHTML(actor.reactive?.system?.attackSequence || "After each hero's turn, choose one.") then hintText}
+							<div
+								class="nimble-monster-feature-header nimble-monster-feature-header--attack-sequence"
+							>
+								{#await TextEditor.enrichHTML(actor.reactive?.system?.attackSequence || creatureFeatures.actionSequence) then hintText}
 									{#if hintText}
 										<div class="nimble-monster-feature-header__text">
 											{@html hintText}
@@ -512,9 +514,10 @@
 				<p>{creatureFeatures.noFeatures}</p>
 			</section>
 		{/if}
-	</section>
-	<section class="nimble-monster-sheet-section">
-		<MovementSpeed {actor} showDefaultSpeed={false} />
+
+		<section class="nimble-monster-sheet-section">
+			<MovementSpeed {actor} showDefaultSpeed={false} />
+		</section>
 	</section>
 </section>
 
@@ -523,7 +526,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.125rem;
-		margin: 0.125rem 0 0 0;
+		margin: 0;
 		padding: 0;
 		list-style: none;
 	}
@@ -533,19 +536,22 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.5rem 0.75rem;
-		margin: 0.25rem 0 0 0;
+		margin: 0;
 		font-weight: 600;
-		font-size: 1rem;
 		line-height: 1.5;
 		color: var(--nimble-text-color);
 		background: hsl(41, 18%, 54%, 15%);
 		border: 1px solid hsl(41, 18%, 54%, 25%);
 		border-bottom: none;
 		border-radius: 4px 4px 0 0;
-		font-size: var(--nimble-md-text);
+		font-size: var(--nimble-lg-text);
 
 		&__text {
 			flex: 1;
+		}
+
+		&--attack-sequence {
+			font-size: var(--nimble-md-text);
 		}
 
 		// First card after a header should connect seamlessly
@@ -567,7 +573,10 @@
 
 	// Category name header (Actions, Bloodied, Last Stand)
 	.nimble-monster-category-header {
-		margin: 0.5rem 0;
+		margin: 0;
+		padding: 1rem 0;
+		border-top: 1px solid var(--color-border);
+		border-bottom: 0;
 
 		.nimble-heading {
 			font-size: var(--nimble-md-text);
@@ -618,15 +627,20 @@
 	.nimble-monster-sheet-section {
 		padding: 0.25rem 0.5rem 0.25rem;
 
+		&:first-of-type {
+			padding: 0.75rem 0.5rem 0.75rem !important;
+		}
+		&:not(:last-of-type) {
+			padding: 0 0.5rem 0.75rem;
+		}
+		&:last-of-type {
+			padding: 0 0.5rem 0.75rem;
+		}
+
 		&--defenses {
 			display: grid;
 			grid-template-columns: 1fr 4.2rem;
 			grid-template-areas: 'savingThrows armor';
-		}
-
-		&:not(:last-of-type) {
-			padding: 0.25rem 0.5rem 0.75rem;
-			border-bottom: 1px solid hsl(41, 18%, 54%, 25%);
 		}
 	}
 
@@ -636,19 +650,22 @@
 
 	:global(.system-nimble) {
 		.nimble-sheet__static {
-			padding: 0.25rem 1rem !important;
 		}
 		// Features header
+		// Font size for "Features" heading is defined here (line ~654)
+		// This styles the h4.nimble-heading inside the header at line ~263
 		:global(.nimble-sheet__static--npc-features) {
+			border-top: 1px solid var(--color-border);
 			border-bottom: 1px solid var(--color-border);
-			margin: 0.5rem 0;
+			margin: 0;
+			padding: 0.5rem 1rem !important;
 
 			.nimble-heading {
 				display: flex;
 				align-items: center;
 				gap: 0.5rem;
 				width: 100%;
-				font-size: var(--nimble-md-text);
+				font-size: var(--nimble-lg-text);
 				font-weight: 700;
 				letter-spacing: 0.02em;
 			}
