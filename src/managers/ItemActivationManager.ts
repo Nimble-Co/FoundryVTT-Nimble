@@ -1,9 +1,11 @@
 import type { EffectNode } from '#types/effectTree.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
-import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
-import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
+import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
+import getRollFormula from '../utils/getRollFormula.js';
+import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
+import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
 class ItemActivationManager {
 	#item: NimbleBaseItem;
@@ -100,7 +102,30 @@ class ItemActivationManager {
 		let foundDamageRoll = false;
 
 		for (const node of flattenEffectsTree(effects)) {
-			if (node.type === 'damage' || node.type === 'healing') {
+			if (node.type === 'savingThrow') {
+				// Handle saving throw rolls
+				if (!this.actor) continue;
+
+				// Use saveType if available, otherwise fall back to savingThrowType
+				const saveKey = (node as any).saveType || node.savingThrowType;
+				const rollMode = dialogData.rollMode ?? 0;
+
+				const rollFormula = getRollFormula(this.actor, {
+					saveKey,
+					rollMode,
+					type: 'savingThrow',
+				});
+
+				const roll = new NimbleRoll(rollFormula, {
+					...this.actor.getRollData(),
+					prompted: false,
+					respondentId: this.actor?.token?.uuid ?? this.actor.uuid,
+				} as Record<string, any>);
+
+				await roll.evaluate();
+				(node as any).roll = roll.toJSON();
+				rolls.push(roll);
+			} else if (node.type === 'damage' || node.type === 'healing') {
 				let roll: Roll | DamageRoll;
 
 				if (node.type === 'damage' && !foundDamageRoll) {

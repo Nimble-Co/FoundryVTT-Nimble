@@ -1,4 +1,5 @@
 <script>
+	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 
 	let { actor, dialog, item, ...data } = $props();
@@ -7,20 +8,71 @@
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
 
-	// Get the damage formula from the item's activation effects
-	let damageFormula = $state(() => {
+	const { damageTypes } = CONFIG.NIMBLE;
+
+	// Get all damage effects from the item's activation effects
+	// This searches recursively through the effects tree, including sharedRolls
+	let damageEffects = $state(() => {
 		const effects = item.system.activation?.effects ?? [];
-		const damageEffect = effects.find((e) => e.type === 'damage');
-		return damageEffect?.formula || '0';
+		const allDamageEffects = [];
+
+		// Flatten the tree to get all effects including those in sharedRolls
+		const flattened = flattenEffectsTree(effects);
+		for (const effect of flattened) {
+			if (effect.type === 'damage') {
+				allDamageEffects.push({
+					formula: effect.formula || '0',
+					damageType: effect.damageType,
+				});
+			}
+		}
+
+		// Also check sharedRolls directly (before flattening removes them)
+		// This ensures we catch all damage effects in sharedRolls
+		for (const effect of effects) {
+			if (effect.type === 'savingThrow' && effect.sharedRolls) {
+				for (const sharedRoll of effect.sharedRolls) {
+					if (sharedRoll.type === 'damage') {
+						// Check if we already have this damage effect
+						const exists = allDamageEffects.some(
+							(d) => d.formula === sharedRoll.formula && d.damageType === sharedRoll.damageType,
+						);
+						if (!exists) {
+							allDamageEffects.push({
+								formula: sharedRoll.formula || '0',
+								damageType: sharedRoll.damageType,
+							});
+						}
+					}
+				}
+			}
+		}
+
+		// If still no damage effects found, return a default one
+		if (allDamageEffects.length === 0) {
+			return [{ formula: '0' }];
+		}
+
+		return allDamageEffects;
 	});
 
-	// Modify the formula by adding the situationalModifiers
-	let modifiedFormula = $derived(() => {
-		let formula = damageFormula();
-		if (situationalModifiers !== '') {
-			formula += `+${situationalModifiers}`;
-		}
-		return formula;
+	// Get the first damage formula for backward compatibility (used in validation)
+	let damageFormula = $derived(() => {
+		return damageEffects()[0]?.formula || '0';
+	});
+
+	// Modify formulas by adding the situationalModifiers
+	let modifiedFormulas = $derived(() => {
+		return damageEffects().map((effect) => {
+			let formula = effect.formula;
+			if (situationalModifiers !== '') {
+				formula += '+' + situationalModifiers;
+			}
+			return {
+				formula,
+				damageType: effect.damageType,
+			};
+		});
 	});
 </script>
 
@@ -56,8 +108,19 @@
 		</div>
 	</div>
 
-	<div class="nimble-roll-formula">
-		{Roll.replaceFormulaData(modifiedFormula(), actor.getRollData(item))}
+	<div class="nimble-roll-formulas">
+		{#each modifiedFormulas() as damageEffect}
+			<div class="nimble-roll-formula">
+				{#if damageEffect.damageType}
+					<span class="nimble-roll-formula__type">
+						{game.i18n.localize(damageTypes[damageEffect.damageType] || damageEffect.damageType)}:
+					</span>
+				{/if}
+				<span class="nimble-roll-formula__formula">
+					{Roll.replaceFormulaData(damageEffect.formula, actor.getRollData(item))}
+				</span>
+			</div>
+		{/each}
 	</div>
 </article>
 
@@ -84,7 +147,7 @@
 			}
 			dialog.submit({
 				rollMode: selectedRollMode,
-				rollFormula: modifiedFormula(),
+				rollFormula: modifiedFormulas()[0]?.formula || '0',
 				situationalModifiers,
 				primaryDieValue: primaryDieValue,
 				primaryDieModifier: primaryDieModifier,
@@ -125,6 +188,35 @@
 				border-radius: var(--nimble-border-radius);
 				flex: 1;
 			}
+		}
+	}
+
+	.nimble-roll-formulas {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.5rem;
+		margin-top: 1rem;
+	}
+
+	.nimble-roll-formula {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		background: var(--nimble-background-color-secondary);
+		border-radius: 9999px;
+		white-space: nowrap;
+
+		&__type {
+			font-weight: 600;
+			color: var(--nimble-text-color-primary);
+		}
+
+		&__formula {
+			font-family: var(--nimble-font-family-mono);
+			color: var(--nimble-text-color-secondary);
 		}
 	}
 </style>

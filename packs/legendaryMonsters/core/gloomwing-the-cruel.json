@@ -275,15 +275,30 @@
 									"parentNode": "cdMn884JTaizvyNP",
 									"on": {
 										"failedSave": [
-											"@{id=oWbb17FcfRcjUmOM; type=damageOutcome; outcome=fullDamage; parentContext=failedSave; parentNode=VMlxi2Mnt3WN00qh}"
+											{
+												"id": "oWbb17FcfRcjUmOM",
+												"type": "damageOutcome",
+												"outcome": "fullDamage",
+												"parentContext": "failedSave",
+												"parentNode": "VMlxi2Mnt3WN00qh"
+											}
 										],
 										"passedSave": [
-											"@{id=zeJ1yofGxerBizGt; type=damageOutcome; outcome=halfDamage; parentContext=passedSave; parentNode=VMlxi2Mnt3WN00qh}"
+											{
+												"id": "zeJ1yofGxerBizGt",
+												"type": "damageOutcome",
+												"outcome": "halfDamage",
+												"parentContext": "passedSave",
+												"parentNode": "VMlxi2Mnt3WN00qh"
+											}
 										]
 									}
 								}
 							],
-							"on": {}
+							"on": {
+								"failedSave": [],
+								"passedSave": []
+							}
 						}
 					],
 					"showDescription": true,
