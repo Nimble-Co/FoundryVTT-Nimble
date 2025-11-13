@@ -262,7 +262,7 @@
 		},
 		"monsterFeatureTypes": {
 			"feature": "Feature",
-			"action": "Action",
+			"action": "Actions",
 			"bloodied": "Bloodied",
 			"lastStand": "Last Stand"
 		},
@@ -378,6 +378,10 @@
 			"maxWounds": "Wounds",
 			"note": "Note",
 			"skillBonus": "Skill Bonus"
+		},
+		"creatureFeatures": {
+			"noFeatures": "No features yet.",
+			"actionSequence": "After each hero's turn, choose one."
 		},
 		"savingThrows": {
 			"strength": "Strength",
