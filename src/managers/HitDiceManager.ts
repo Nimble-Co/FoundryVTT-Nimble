@@ -79,9 +79,9 @@ class HitDiceManager {
 	}
 
 	async rollHitDice(dieSize?: number, quantity?: number, maximize?: boolean): Promise<any> {
-		const dSize = dieSize ?? this.largest;
-		const dQuantity = quantity ?? 1;
-		const maximizeDie = maximize ?? false;
+		const dSize = dieSize || this.largest;
+		const dQuantity = quantity || 1;
+		const maximizeDie = maximize || false;
 
 		const current = this.getHitDieData(dSize)?.current ?? 0;
 		if (current < dQuantity) return null;
