@@ -4,12 +4,12 @@ import type {
 	DeepPartial,
 	InexactPartial,
 } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import { createSubscriber } from 'svelte/reactivity';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import getRollFormula from '../../utils/getRollFormula.js';
-import { createSubscriber } from 'svelte/reactivity';
 
-export type { SystemActorTypes, ActorRollOptions, CheckRollDialogData } from './actorInterfaces.ts';
+export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
 
 // Forward declarations to avoid circular dependencies
 interface NimbleBaseItem extends Item {
@@ -141,7 +141,9 @@ class NimbleBaseActor extends Actor {
 		super.prepareData();
 
 		// Call Rule Hooks
-		this.rules.forEach((rule) => rule.afterPrepareData?.());
+		this.rules.forEach((rule) => {
+			rule.afterPrepareData?.();
+		});
 	}
 
 	override prepareBaseData(): void {
@@ -189,7 +191,9 @@ class NimbleBaseActor extends Actor {
 		super.prepareDerivedData();
 
 		// Call rule hooks
-		this.rules.forEach((rule) => rule.prePrepareData?.());
+		this.rules.forEach((rule) => {
+			rule.prePrepareData?.();
+		});
 
 		this._populateDerivedTags();
 	}

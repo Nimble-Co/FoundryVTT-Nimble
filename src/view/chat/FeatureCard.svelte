@@ -6,7 +6,6 @@
 	import CardHeader from './components/CardHeader.svelte';
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
 	import Targets from './components/Targets.svelte';
-	import TemplateSection from './components/TemplateSection.svelte';
 
 	function getCardSubheading(activation, isCritical, isMiss) {
 		if (!activation) return null;

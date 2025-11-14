@@ -34,7 +34,9 @@ class MigrationRunnerBase {
 		};
 
 		const originalSources: Map<string, any> = new Map();
-		original.forEach((source) => originalSources.set(source._id, source));
+		original.forEach((source) => {
+			originalSources.set(source._id, source);
+		});
 
 		updated.forEach((source) => {
 			const originalSource = originalSources.get(source._id);
@@ -49,7 +51,9 @@ class MigrationRunnerBase {
 			}
 		});
 
-		originalSources.forEach((source) => diffs.deleted.push(source._id));
+		originalSources.forEach((source) => {
+			diffs.deleted.push(source._id);
+		});
 
 		return diffs;
 	}

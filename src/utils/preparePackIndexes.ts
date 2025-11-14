@@ -56,7 +56,7 @@ export function preparePackIndexes() {
 	});
 }
 
-// @ts-ignore
+// @ts-expect-error
 type Pack = CompendiumCollection<CompendiumCollection.Metadata>;
 
 export function createAncestryIndex(pack: any, options: Record<string, any>) {

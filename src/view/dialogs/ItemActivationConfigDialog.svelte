@@ -1,8 +1,6 @@
 <script>
 	import RollModeConfig from './components/RollModeConfig.svelte';
 
-	import getRollFormula from '../../utils/getRollFormula.js';
-
 	let { actor, dialog, item, ...data } = $props();
 	let selectedRollMode = $state(Math.clamp(data.rollMode ?? 0, -6, 6));
 	let situationalModifiers = $state('');
@@ -20,18 +18,10 @@
 	let modifiedFormula = $derived(() => {
 		let formula = damageFormula();
 		if (situationalModifiers !== '') {
-			formula += '+' + situationalModifiers;
+			formula += `+${situationalModifiers}`;
 		}
 		return formula;
 	});
-
-	let rollFormula = $derived(
-		getRollFormula(actor, {
-			...data,
-			rollMode: selectedRollMode,
-			formula: modifiedFormula(),
-		}),
-	);
 </script>
 
 <article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">

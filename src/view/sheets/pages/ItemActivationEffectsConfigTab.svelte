@@ -3,9 +3,8 @@
 	import { createEffectNode } from '../../../utils/treeManipulation/createEffectNode.js';
 	import { deleteEffectNode } from '../../../utils/treeManipulation/deleteEffectNode.js';
 	import { updateEffectNode } from '../../../utils/treeManipulation/updateEffectNode.js';
-
-	import ScalingDialog from '../../dialogs/ScalingDialog.svelte';
 	import TagGroup from '../../components/TagGroup.svelte';
+	import ScalingDialog from '../../dialogs/ScalingDialog.svelte';
 
 	function getNodeOptions(node) {
 		// Define available options for different node types

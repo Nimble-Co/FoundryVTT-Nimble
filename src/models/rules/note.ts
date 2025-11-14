@@ -27,7 +27,7 @@ declare namespace NoteRule {
 class NoteRule extends NimbleBaseRule<NoteRule.Schema> {
 	static override defineSchema(): NoteRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}

@@ -54,11 +54,11 @@
 		return item.system?.subtype || 'feature';
 	}
 
-	function prepareItemTooltip(item) {
+	function prepareItemTooltip(_item) {
 		return null;
 	}
 
-	function getFeatureMetadata(item) {
+	function getFeatureMetadata(_item) {
 		return null;
 	}
 
@@ -117,7 +117,7 @@
 		return npcArmorTypeAbbreviations[armor] ?? '-';
 	}
 
-	function handleEditorSave(event, updatePath, editState) {
+	function handleEditorSave(event, updatePath, _editState) {
 		const target = event.target;
 
 		if (!target) return;

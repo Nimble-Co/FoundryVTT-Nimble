@@ -8,6 +8,28 @@ import svelteParser from 'svelte-eslint-parser';
 export default [
 	js.configs.recommended,
 	{
+		files: ['**/*.{ts,js}'],
+		languageOptions: {
+			parser: tsparser,
+		},
+		plugins: {
+			'@typescript-eslint': tseslint,
+		},
+		rules: {
+			...tseslint.configs.recommended.rules,
+			'no-unused-vars': 'off',
+			'@typescript-eslint/no-unused-vars': [
+				'warn',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_',
+					destructuredArrayIgnorePattern: '^_',
+				},
+			],
+		},
+	},
+	{
 		files: ['**/*.svelte'],
 		languageOptions: {
 			parser: svelteParser,
@@ -38,6 +60,15 @@ export default [
 			...tseslint.configs.recommended.rules,
 			// Add your custom rules here
 			'no-unused-vars': 'off', // Turn off for Svelte files as it has false positives with reactive statements
+			'@typescript-eslint/no-unused-vars': [
+				'warn',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_',
+					destructuredArrayIgnorePattern: '^_',
+				},
+			],
 		},
 	},
 ];

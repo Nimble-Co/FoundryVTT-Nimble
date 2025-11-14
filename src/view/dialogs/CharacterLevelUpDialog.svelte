@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { NimbleClassItem } from '../../documents/item/class.js';
 	import generateBlankSkillSet from '../../utils/generateBlankSkillSet.js';
 	import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
 
@@ -44,7 +45,7 @@
 		return forms.submit;
 	}
 
-	let { document, dialog, ...data } = $props();
+	let { document, dialog } = $props();
 
 	const characterClass: NimbleClassItem | undefined = document?.classes
 		? (Object.values(document.classes)[0] as NimbleClassItem | undefined)

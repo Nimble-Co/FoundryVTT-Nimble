@@ -1,10 +1,9 @@
 <script>
 	import { getContext } from 'svelte';
-	import prepareAncestryMetadata from '../../../dataPreparationHelpers/metaData/prepareAncestryMetadata.js';
-	import prepareAncestryTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js';
-
-	import DocumentCard from './DocumentCard.svelte';
 	import Hint from '../../../components/Hint.svelte';
+	import prepareAncestryTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js';
+	import prepareAncestryMetadata from '../../../dataPreparationHelpers/metaData/prepareAncestryMetadata.js';
+	import DocumentCard from './DocumentCard.svelte';
 
 	async function handleAncestrySelection(ancestry) {
 		selectedAncestry = await fromUuid(ancestry.uuid);
@@ -101,7 +100,6 @@
 			hintType="warning"
 		/>
 	{:else if selectedAncestry}
-		{@const metadata = selectedAncestrySize}
 		{@const tooltip = prepareAncestryTooltip(selectedAncestry)}
 
 		<DocumentCard

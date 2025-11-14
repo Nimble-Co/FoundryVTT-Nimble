@@ -1,12 +1,11 @@
 <script>
 	import { setContext } from 'svelte';
 	import localize from '../../utils/localize.js';
+	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
-
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
-	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 
 	const navigation = [
 		{

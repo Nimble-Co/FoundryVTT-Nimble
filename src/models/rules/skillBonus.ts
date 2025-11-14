@@ -21,7 +21,7 @@ declare namespace SkillBonusRule {
 class SkillBonusRule extends NimbleBaseRule<SkillBonusRule.Schema> {
 	static override defineSchema(): SkillBonusRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}

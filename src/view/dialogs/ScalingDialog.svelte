@@ -1,5 +1,4 @@
 <script>
-	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 	import { updateEffectNode } from '../../utils/treeManipulation/updateEffectNode.js';
 
 	import TagGroup from '../components/TagGroup.svelte';
@@ -45,7 +44,7 @@
 	let currentTab = $derived(tabs.find((tab) => tab.value === node?.scaling?.type) ?? tabs[0]);
 </script>
 
-{#snippet CharacterLevelScaling(item, node)}
+{#snippet CharacterLevelScaling(_item, _node)}
 	<header class="nimble-section-header">
 		<h2 class="nimble-heading" data-heading-variant="section">Scaling by Character Level</h2>
 	</header>
@@ -79,7 +78,7 @@
 	</table>
 {/snippet}
 
-{#snippet SpellLevelScaling(item, node)}{/snippet}
+{#snippet SpellLevelScaling(_item, _node)}{/snippet}
 
 <section class="nimble-sheet__body nimble-sheet__body--item">
 	{#if tabs.length > 1}

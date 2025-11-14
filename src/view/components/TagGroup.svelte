@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { TagGroupOption } from '#types/tagGroupOption.js';
+
 	interface props {
 		disabled?: boolean;
 		grid?: boolean;

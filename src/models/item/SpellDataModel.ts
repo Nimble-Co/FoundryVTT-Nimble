@@ -43,7 +43,7 @@ class NimbleSpellData extends NimbleBaseItemData<
 	/** @inheritDoc */
 	static override defineSchema(): NimbleSpellData.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseItemData.defineSchema(),
 			...activation(),
 			...schema(),
 		};

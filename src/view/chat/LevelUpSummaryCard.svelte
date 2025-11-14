@@ -10,7 +10,7 @@
 	let { messageDocument } = $props();
 	let { system, rolls } = messageDocument;
 
-	const { actorName, actorType, currentClassLevel, takeAverageHp, permissions } = system;
+	const { actorType, currentClassLevel, takeAverageHp, permissions } = system;
 
 	const headerBackgroundColor = messageDocument.author.color;
 	const headerTextColor = calculateHeaderTextColor(headerBackgroundColor);

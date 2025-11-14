@@ -1,5 +1,4 @@
 <script lang="ts">
-	import localize from '../../utils/localize.js';
 	import TagGroup from '../components/TagGroup.svelte';
 	import MovementSpeed from '../sheets/components/MovementSpeed.svelte';
 

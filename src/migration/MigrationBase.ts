@@ -1,4 +1,10 @@
-interface MigrationBase {
+abstract class MigrationBase {
+	static readonly version: number;
+
+	readonly version: number = MigrationBase.version;
+
+	requiresFlush = false;
+
 	updateActor?(source: any): Promise<void>;
 
 	updateItem?(source: any, parent?: any): Promise<void>;
@@ -18,14 +24,6 @@ interface MigrationBase {
 	updateUser?(source: any): Promise<void>;
 
 	migrate?(): Promise<void>;
-}
-
-abstract class MigrationBase {
-	static readonly version: number;
-
-	readonly version: number = MigrationBase.version;
-
-	requiresFlush = false;
 }
 
 export { MigrationBase };

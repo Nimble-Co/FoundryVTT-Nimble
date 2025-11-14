@@ -175,7 +175,6 @@
 		dialog,
 		statArrayOptions,
 	} = $props();
-	const { prepareArrayOptions, prepareBonusLanguageOptions } = dialog;
 
 	let assignedSkillPoints = $state({});
 	let bonusLanguages = $state([]);

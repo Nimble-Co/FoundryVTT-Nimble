@@ -1,7 +1,6 @@
 <script>
-	import TemplateConfig from '../components/TemplateConfig.svelte';
-
 	import { getContext } from 'svelte';
+	import TemplateConfig from '../components/TemplateConfig.svelte';
 
 	async function toggleTemplateShapeOption(selectedShape) {
 		await document.update({ 'system.activation.template.shape': selectedShape });

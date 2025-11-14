@@ -1,5 +1,6 @@
 <script>
 	import localize from '../../utils/localize.js';
+
 	const { HUD, token } = $props();
 
 	function toggleStatusEffect(statusId) {
@@ -35,7 +36,7 @@
 	}
 
 	const statusEffects = CONFIG.statusEffects;
-	const { active: activeStatuses, overlay: overlayStatuses } = HUD.actor?.conditionsMetadata;
+	const { active: activeStatuses, overlay: overlayStatuses } = HUD?.actor?.conditionsMetadata ?? {};
 </script>
 
 <div class="status-effects-container">

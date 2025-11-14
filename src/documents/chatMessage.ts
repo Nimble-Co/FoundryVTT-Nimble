@@ -1,8 +1,8 @@
 export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.TypeNames, 'base'>;
-import type { EffectNode } from '#types/effectTree.js';
 
-import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import { createSubscriber } from 'svelte/reactivity';
+import type { EffectNode } from '#types/effectTree.js';
+import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 
 interface NimbleChatMessage<
 	ChatMessageType extends SystemChatMessageTypes = SystemChatMessageTypes,
@@ -82,7 +82,7 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	get effectNodes(): EffectNode[][] {
-		if (!this.isType('feature') && !this.isType('object') && !this.isType('spell')) return;
+		if (!this.isType('feature') && !this.isType('object') && !this.isType('spell')) return [];
 
 		const contexts: string[] = [];
 

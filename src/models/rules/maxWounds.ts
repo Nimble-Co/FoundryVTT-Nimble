@@ -16,7 +16,7 @@ declare namespace MaxWoundsRule {
 class MaxWoundsRule extends NimbleBaseRule<MaxWoundsRule.Schema> {
 	static override defineSchema(): MaxWoundsRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}

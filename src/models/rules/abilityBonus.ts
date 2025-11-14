@@ -22,7 +22,7 @@ declare namespace AbilityBonusRule {
 class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
 	static override defineSchema(): AbilityBonusRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}

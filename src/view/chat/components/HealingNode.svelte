@@ -3,7 +3,7 @@
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
 	const messageDocument = getContext('messageDocument');
-	const { actorType, permissions, rollMode } = messageDocument.system;
+	const { actorType, permissions } = messageDocument.system;
 	const { healingTypes } = CONFIG.NIMBLE;
 
 	let { node } = $props();

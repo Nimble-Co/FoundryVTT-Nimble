@@ -57,7 +57,7 @@ class SvelteActorSheet<
 	 * If this sheet manages the ActorDelta of an unlinked Token, reference that Token document.
 	 */
 	get token(): TokenDocument | null {
-		// @ts-ignore Too Deep
+		// @ts-expect-error Too Deep
 		return this.document.token || null;
 	}
 
@@ -91,12 +91,15 @@ class SvelteActorSheet<
 	static #onConfigurePrototypeToken(this: SvelteActorSheet, event: PointerEvent) {
 		event.preventDefault();
 		const renderOptions = {
-			left: Math.max(this.position.left - 560 - 10, 10),
-			top: this.position.top,
+			left: Math.max(SvelteActorSheet.position.left - 560 - 10, 10),
+			top: SvelteActorSheet.position.top,
 		};
 
 		// eslint-disable-next-line new-cap
-		new CONFIG.Token.prototypeSheetClass(this.actor.prototypeToken, renderOptions).render(true);
+		new CONFIG.Token.prototypeSheetClass(
+			SvelteActorSheet.actor.prototypeToken,
+			renderOptions,
+		).render(true);
 	}
 
 	/* -------------------------------------------- */
@@ -107,7 +110,7 @@ class SvelteActorSheet<
 	 * @param {PointerEvent} event
 	 */
 	static #onShowPortraitArtwork(this: SvelteActorSheet, event: PointerEvent) {
-		const { img, name, uuid } = this.actor;
+		const { img, name, uuid } = SvelteActorSheet.actor;
 		new ImagePopout(img || '', { title: name, uuid }).render(true);
 	}
 
@@ -119,7 +122,7 @@ class SvelteActorSheet<
 	 * @param {PointerEvent} event
 	 */
 	static #onShowTokenArtwork(this: SvelteActorSheet, event: PointerEvent) {
-		const { prototypeToken, name, uuid } = this.actor;
+		const { prototypeToken, name, uuid } = SvelteActorSheet.actor;
 		new ImagePopout(prototypeToken.texture.src || '', { title: name, uuid }).render(true);
 	}
 

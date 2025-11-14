@@ -27,7 +27,7 @@
 		await actor.deleteItem(id);
 	}
 
-	function getObjectMetadata(item) {
+	function getObjectMetadata(_item) {
 		return null;
 	}
 

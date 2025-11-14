@@ -20,7 +20,7 @@ class NimbleBackgroundData extends NimbleBaseItemData<
 	/** @inheritDoc */
 	static override defineSchema(): NimbleBackgroundData.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseItemData.defineSchema(),
 			...schema,
 		};
 	}

@@ -38,7 +38,7 @@ export function findNodesByContexts(
 
 		if (node.type === 'damage' && node.on) {
 			for (const key in node.on) {
-				if (Object.prototype.hasOwnProperty.call(node.on, key)) {
+				if (Object.hasOwn(node.on, key)) {
 					for (const childNode of node.on[key]) {
 						traverse(childNode);
 					}

@@ -1,13 +1,18 @@
 <script lang="ts">
+	import type Document from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/abstract/document.d.mts';
 	import { onMount } from 'svelte';
 
 	type EditorOptions = foundry.applications.elements.HTMLProseMirrorElement.ProseMirrorInputConfig;
 	type EnrichOptions = foundry.applications.ux.TextEditor.implementation.EnrichmentOptions;
 
+	interface ProseMirrorElement extends HTMLElement {
+		_getValue?(): string;
+	}
+
 	interface Props {
 		content: string;
 		field: string;
-		document: any;
+		document: Document;
 		editorOptions?: EditorOptions;
 		enrichOptions?: EnrichOptions;
 	}
@@ -58,7 +63,7 @@
 
 		// Listen for save events from ProseMirror and update the document
 		element.addEventListener('save', (event: Event) => {
-			const target = event.target as any;
+			const target = event.target as ProseMirrorElement;
 			if (target?._getValue) {
 				const value = target._getValue();
 				document.update({ [field]: value });

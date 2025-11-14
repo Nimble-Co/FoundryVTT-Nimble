@@ -22,7 +22,7 @@ declare namespace ArmorClassRule {
 class ArmorClassRule extends NimbleBaseRule<ArmorClassRule.Schema> {
 	static override defineSchema(): ArmorClassRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}

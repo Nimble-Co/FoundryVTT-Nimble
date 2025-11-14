@@ -9,7 +9,9 @@ export class NimbleSpellItem extends NimbleBaseItem {
 		super._populateBaseTags();
 
 		if (this.system.school) this.tags.add(`school:${this.system.school}`);
-		this.system.properties.selected?.forEach((p) => this.tags.add(`property:${p}`));
+		this.system.properties.selected?.forEach((p) => {
+			this.tags.add(`property:${p}`);
+		});
 
 		if (!this.tags.has('property:utility')) this.tags.add(`tier:${this.system.tier}`);
 	}
