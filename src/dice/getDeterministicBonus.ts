@@ -19,8 +19,7 @@ export default function getDeterministicBonus(
 	if (typeof formula === 'string' && formula.trim() === '') return 0;
 	if (typeof formula === 'number' && formula === 0) return 0;
 
-	let formulaString = formula;
-	if (typeof formula === 'number') formulaString = formula.toString();
+	const formulaString = typeof formula === 'number' ? formula.toString() : formula;
 
 	const optionSet = {
 		...options,
@@ -34,7 +33,7 @@ export default function getDeterministicBonus(
 		roll = new Roll(formulaString, rollData);
 		if (!Roll.validate(roll.formula)) throw Error('Invalid roll formula');
 	} catch (_error) {
-		ui.notifications?.error(`Invalid roll formula: ${formula}`);
+		ui.notifications?.error(`Invalid roll formula: ${formulaString}`);
 		return null;
 	}
 
