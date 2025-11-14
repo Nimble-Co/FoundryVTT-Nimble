@@ -109,6 +109,16 @@ export default function registerConditionsConfig() {
 
 	const conditionOverlayConditions = new Set(['dead', 'unconscious']);
 
+	// New: Automatic condition trigger relationships
+	const conditionTriggerRelationships = {
+		hampered: {
+			triggeredBy: ['dazed', 'grappled', 'prone', 'slowed', 'restrained'] as const,
+			priority: 1,
+			stackable: false,
+			autoRemove: true,
+		},
+	} as const;
+
 	return {
 		conditions,
 		conditionAliasedConditions,
@@ -117,5 +127,6 @@ export default function registerConditionsConfig() {
 		conditionLinkedConditions,
 		conditionStackableConditions,
 		conditionOverlayConditions,
+		conditionTriggerRelationships,
 	};
 }
