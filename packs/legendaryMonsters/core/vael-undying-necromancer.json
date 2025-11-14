@@ -214,7 +214,10 @@
 							"parentNode": null,
 							"saveType": "will",
 							"saveDC": "14",
-							"on": {},
+							"on": {
+								"failedSave": [],
+								"passedSave": []
+							},
 							"sharedRolls": [
 								{
 									"id": "JHaRq74Dz2HeF2h8",
@@ -225,10 +228,22 @@
 									"parentNode": "gMA6miL1QWbAFXoG",
 									"on": {
 										"failedSave": [
-											"@{id=7AcIWAWByLZbXRAE; type=damageOutcome; outcome=fullDamage; parentContext=failedSave; parentNode=JHaRq74Dz2HeF2h8}"
+											{
+												"id": "7AcIWAWByLZbXRAE",
+												"type": "damageOutcome",
+												"outcome": "fullDamage",
+												"parentContext": "failedSave",
+												"parentNode": "JHaRq74Dz2HeF2h8"
+											}
 										],
 										"passedSave": [
-											"@{id=kHlmgug6mnPj4s6j; type=damageOutcome; outcome=halfDamage; parentContext=passedSave; parentNode=JHaRq74Dz2HeF2h8}"
+											{
+												"id": "kHlmgug6mnPj4s6j",
+												"type": "damageOutcome",
+												"outcome": "halfDamage",
+												"parentContext": "passedSave",
+												"parentNode": "JHaRq74Dz2HeF2h8"
+											}
 										]
 									}
 								}
@@ -385,7 +400,7 @@
 										"saveType": "will",
 										"saveDC": "14",
 										"on": {
-											"failedSave": "  "
+											"failedSave": []
 										},
 										"sharedRolls": []
 									},
