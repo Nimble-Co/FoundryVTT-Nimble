@@ -25,7 +25,7 @@ export class NimbleCombatant extends Combatant {
 		return this;
 	}
 
-	override async _preCreate(data, options, userId) {
+	override async _preCreate(data, _options, _userId) {
 		if (data.type === 'character') return;
 
 		this.updateSource({ initiative: 0 });
@@ -34,13 +34,10 @@ export class NimbleCombatant extends Combatant {
 	override getInitiativeRoll(formula: string | undefined, rollOptions: Record<string, any> = {}) {
 		const { actor } = this;
 
-		if (!formula) {
-			if (!actor) formula = '0';
-			else formula = actor._getInitiativeFormula(rollOptions);
-		}
+		const initiativeFormula = formula ?? actor?._getInitiativeFormula(rollOptions) ?? '0';
 
 		const rollData = actor?.getRollData() || {};
-		return Roll.create(formula!, rollData);
+		return Roll.create(initiativeFormula, rollData);
 	}
 
 	override async rollInitiative(

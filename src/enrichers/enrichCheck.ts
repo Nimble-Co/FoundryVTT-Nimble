@@ -2,7 +2,7 @@ import createEnricherButton from './createEnricherButton.js';
 
 export default function enrichCheck(
 	args: Record<string, string>,
-	options?: foundry.applications.ux.TextEditor.implementation.EnrichmentOptions,
+	_options?: foundry.applications.ux.TextEditor.implementation.EnrichmentOptions,
 ) {
 	const { enricherType } = args;
 

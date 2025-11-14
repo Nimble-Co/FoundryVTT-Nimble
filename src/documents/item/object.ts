@@ -19,7 +19,7 @@ export class NimbleObjectItem extends NimbleBaseItem {
 		super._populateDerivedTags();
 	}
 
-	override async prepareChatCardData(options) {
+	override async prepareChatCardData(_options) {
 		const showDescription = this.system.activation.showDescription;
 		const publicDescription = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
 			this.system.description.public,

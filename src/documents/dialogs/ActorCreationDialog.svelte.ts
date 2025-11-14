@@ -15,7 +15,7 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 
 	protected root;
 
-	constructor(data = {}, { parent = null, pack = null, ...options } = {}) {
+	constructor(data = {}, { parent = null, pack = null, ..._options } = {}) {
 		super();
 
 		this.root = ActorCreationDialogComponent;

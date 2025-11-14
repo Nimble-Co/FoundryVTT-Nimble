@@ -117,17 +117,7 @@
 	);
 
 	let classItem = $derived(actor.reactive.items.find((item) => item.type === 'class') ?? null);
-
-	let subclassItem = $derived(
-		actor.reactive.items.find((item) => item.type === 'subclass') ?? null,
-	);
-
-	let ancestryItem = $derived(
-		actor.reactive.items.find((item) => item.type === 'ancestry') ?? null,
-	);
-
 	let wounds = $derived(actor.reactive.system.attributes.wounds);
-	let sizeCategory = $derived(actor.reactive.system.attributes.sizeCategory);
 
 	// Flags
 	let flags = $derived(actor.reactive.flags.nimble);

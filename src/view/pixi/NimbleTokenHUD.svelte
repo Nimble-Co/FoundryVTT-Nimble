@@ -1,7 +1,7 @@
 <script>
 	import localize from '../../utils/localize.js';
 
-	const { HUD, token } = $props();
+	const { HUD } = $props();
 
 	function toggleStatusEffect(statusId) {
 		const actor = HUD.actor;

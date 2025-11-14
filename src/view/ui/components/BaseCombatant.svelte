@@ -78,7 +78,6 @@
 
 	let { active, children, combatant } = $props();
 
-	let isOwner = combatant?.actor?.testUserPermission(game.user, 'OWNER');
 	let isObserver = combatant?.actor?.testUserPermission(game.user, 'OBSERVER');
 </script>
 

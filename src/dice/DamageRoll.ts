@@ -60,7 +60,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/**                  Data Prep Helpers                     */
 	/** ------------------------------------------------------ */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	_preProcessFormula(formula: string, data: DamageRoll.Data, options: DamageRoll.Options) {
+	_preProcessFormula(_formula: string, _data: DamageRoll.Data, options: DamageRoll.Options) {
 		// Separate out the primary die
 		if (options.canCrit) {
 			const { rollMode = 0 } = options;
@@ -224,8 +224,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	static override fromData(data: Record<string, any>): DamageRoll {
-		// @ts-expect-error
-		const roll = super.fromData(data) as unknown as DamageRoll;
+		const roll = DamageRoll.fromData(data) as unknown as DamageRoll;
 
 		roll.originalFormula = data.originalFormula;
 		roll._formula = DamageRoll.getFormula(roll.terms);

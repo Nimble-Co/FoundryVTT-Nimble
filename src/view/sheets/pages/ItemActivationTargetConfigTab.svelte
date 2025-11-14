@@ -7,7 +7,6 @@
 	}
 
 	let document = getContext('document');
-	let application = getContext('application');
 	let activationData = $derived(document.reactive.system.activation);
 	let targetCount = $derived(activationData.targets.count);
 	let targetRestrictions = $derived(activationData.targets.restrictions);

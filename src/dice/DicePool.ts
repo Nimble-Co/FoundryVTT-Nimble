@@ -1,5 +1,3 @@
-import { PrimaryDie } from './terms/PrimaryDie.ts';
-
 declare namespace NimbleDicePool {
 	interface Data extends foundry.dice.Roll.Data {}
 

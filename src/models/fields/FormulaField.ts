@@ -35,7 +35,7 @@ class FormulaField<
 	}
 
 	static override get _defaults() {
-		return foundry.utils.mergeObject(super._defaults, {
+		return foundry.utils.mergeObject(foundry.data.fields.StringField._defaults, {
 			deterministic: false,
 		});
 	}

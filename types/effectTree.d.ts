@@ -1,5 +1,3 @@
-import type { AnyObject } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
-
 type EffectNode =
 	| ConditionNode
 	| DamageNode

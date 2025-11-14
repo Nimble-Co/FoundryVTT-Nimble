@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop */
-/* eslint-disable no-console */
 import type { MigrationBase } from './MigrationBase.js';
 
 interface CollectionDiff<T = any> {
@@ -18,8 +17,8 @@ class MigrationRunnerBase {
 	static MINIMUM_SAFE_VERSION = 0;
 
 	constructor(migrations?: MigrationBase[]) {
-		if (!migrations) migrations = [];
-		this.migrations = migrations.sort((a, b) => a.version - b.version);
+		if (!migrations) this.migrations = [];
+		else this.migrations = migrations.sort((a, b) => a.version - b.version);
 	}
 
 	needsMigration(currentVersion: number): boolean {
@@ -90,7 +89,7 @@ class MigrationRunnerBase {
 		}
 
 		if ('game' in globalThis) {
-			const latestMigration = migrations.at(-1)!;
+			const _latestMigration = migrations.at(-1)!;
 			// TODO: Update schema
 		}
 
@@ -199,19 +198,19 @@ class MigrationRunnerBase {
 	}
 
 	// TODO: Update this
-	#updateSchemaRecord(schema = {}, latestMigration = null) {
-		if (!('game' in globalThis && latestMigration)) return;
+	// #updateSchemaRecord(schema = {}, latestMigration = null) {
+	// 	if (!('game' in globalThis && latestMigration)) return;
 
-		const fromVersion = typeof schema?.version === 'number' ? schema.version : null;
-		schema.version = latestMigration?.version;
-		schema.lastMigration = {
-			version: {
-				schema: fromVersion,
-				foundry: game.version,
-				system: game.system.version,
-			},
-		};
-	}
+	// 	const fromVersion = typeof schema?.version === 'number' ? schema.version : null;
+	// 	schema.version = latestMigration?.version;
+	// 	schema.lastMigration = {
+	// 		version: {
+	// 			schema: fromVersion,
+	// 			foundry: game.version,
+	// 			system: game.system.version,
+	// 		},
+	// 	};
+	// }
 }
 
 export { MigrationRunnerBase };

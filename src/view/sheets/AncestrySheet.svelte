@@ -28,7 +28,7 @@
 		},
 	];
 
-	let { item, sheet, context } = $props();
+	let { item, sheet } = $props();
 	let currentTab = $state(navigation[0]);
 
 	let exoticAncestry = $derived(item.reactive.system.exotic);

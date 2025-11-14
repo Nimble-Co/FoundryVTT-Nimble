@@ -2,11 +2,12 @@ import type Document from '@league-of-foundry-developers/foundry-vtt-types/src/f
 import type { DatabaseOperationsFor } from '@league-of-foundry-developers/foundry-vtt-types/src/types/helperTypes.d.mts';
 import type { InexactPartial } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
 import { createSubscriber } from 'svelte/reactivity';
-import { RulesManager } from '../../managers/RulesManager.js';
-import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
+import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
+import { RulesManager } from '../../managers/RulesManager.js';
 
 export type { SystemItemTypes } from './itemInterfaces.js';
+
 import type { SystemItemTypes } from './itemInterfaces.js';
 
 // Forward declaration to avoid circular dependency
@@ -15,7 +16,7 @@ interface NimbleBaseActor extends Actor {
 	getRollData(item?: any): Record<string, any>;
 }
 
-interface NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> {
+export interface NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> {
 	type: ItemType;
 	system: DataModelConfig['Item'][ItemType];
 	parent: NimbleBaseActor | null;

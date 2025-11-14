@@ -17,7 +17,7 @@ interface NimbleBaseItem extends Item {
 	prepareActorData?(): void;
 }
 
-interface NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> {
+export interface NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> {
 	type: ActorType;
 	system: DataModelConfig['Actor'][ActorType];
 	items: foundry.abstract.EmbeddedCollection<NimbleBaseItem, Actor.ConfiguredInstance>;
@@ -227,19 +227,19 @@ class NimbleBaseActor extends Actor {
 	async applyHealing(healing: number, healingType?: string) {
 		const updates = {};
 		const { value, max, temp } = this.system.attributes.hp;
-		healing = Math.floor(healing);
+		const healingAmount = Math.floor(healing);
 
 		if (healingType === 'temporaryHealing') {
-			if (healing <= temp) {
+			if (healingAmount <= temp) {
 				ui.notifications.warn('Temporary hit points were not granted to {this.name}. ', {
 					localize: true,
 				});
 				return;
 			}
 
-			updates['system.attributes.hp.temp'] = healing;
+			updates['system.attributes.hp.temp'] = healingAmount;
 		} else {
-			updates['system.attributes.hp.value'] = Math.clamp(value + healing, value, max);
+			updates['system.attributes.hp.value'] = Math.clamp(value + healingAmount, value, max);
 		}
 
 		// TODO: Add cascading numbers
@@ -351,17 +351,13 @@ class NimbleBaseActor extends Actor {
 			options.rollMode,
 		);
 
-		let rollData;
-
-		if (options.skipRollDialog) {
-			rollData = await this.getDefaultAbilityCheckData(abilityKey, baseRollMode, options);
-		} else {
-			rollData = await this.showCheckRollDialog('abilityCheck', {
-				...options,
-				abilityKey,
-				rollMode: baseRollMode,
-			});
-		}
+		const rollData = await (options.skipRollDialog
+			? this.getDefaultAbilityCheckData(abilityKey, baseRollMode, options)
+			: this.showCheckRollDialog('abilityCheck', {
+					...options,
+					abilityKey,
+					rollMode: baseRollMode,
+				}));
 
 		if (!rollData) return { roll: null, rollData: null };
 
@@ -442,17 +438,13 @@ class NimbleBaseActor extends Actor {
 			options.rollMode,
 		);
 
-		let rollData;
-
-		if (options.skipRollDialog) {
-			rollData = await this.getDefaultSavingThrowData(saveKey, baseRollMode, options);
-		} else {
-			rollData = await this.showCheckRollDialog('savingThrow', {
-				...options,
-				saveKey,
-				rollMode: baseRollMode,
-			});
-		}
+		const rollData = options.skipRollDialog
+			? this.getDefaultSavingThrowData(saveKey, baseRollMode, options)
+			: await this.showCheckRollDialog('savingThrow', {
+					...options,
+					saveKey,
+					rollMode: baseRollMode,
+				});
 
 		if (!rollData) return { roll: null, rollData: null };
 
@@ -540,13 +532,11 @@ class NimbleBaseActor extends Actor {
 	}
 
 	_getInitiativeFormula(rollOptions: Record<string, any>): string {
-		rollOptions ??= {};
-
 		if (!this.isType('character')) {
 			return '0';
 		}
 
-		const rollMode = rollOptions.rollMode ?? 1;
+		const rollMode = rollOptions?.rollMode ?? 1;
 		let modifiers = '';
 
 		if (rollMode > 1) modifiers = `kh${rollMode - 1}`;

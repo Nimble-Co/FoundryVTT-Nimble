@@ -1,6 +1,5 @@
-import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
-
 import { createSubscriber } from 'svelte/reactivity';
+import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
 
 class NimbleCombat extends Combat {
 	#subscribe;
@@ -98,7 +97,7 @@ class NimbleCombat extends Combat {
 		},
 	) {
 		// Structure Input data
-		ids = typeof ids === 'string' ? [ids] : ids;
+		const combatantIds = typeof ids === 'string' ? [ids] : ids;
 		const currentId = this.combatant?.id;
 		const chatRollMode = game.settings.get('core', 'rollMode');
 
@@ -106,7 +105,7 @@ class NimbleCombat extends Combat {
 		const updates: Record<string, any>[] = [];
 		const messages: any[] = [];
 
-		for await (const [i, id] of ids.entries()) {
+		for await (const [i, id] of combatantIds.entries()) {
 			// Get Combatant data (non-strictly)
 			const combatant = this.combatants.get(id);
 			const combatantUpdates = { _id: id, initiative: 0 };

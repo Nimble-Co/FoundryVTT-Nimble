@@ -43,7 +43,7 @@ class PredicateStatementField<
 		});
 	}
 
-	protected override _validateType(value: InitializedType): boolean {
+	protected override _validateType(_value: InitializedType): boolean {
 		// return StatementValidator.isStatement(value);
 		return true;
 	}

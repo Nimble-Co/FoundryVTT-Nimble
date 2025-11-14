@@ -1,7 +1,4 @@
 <script>
-	import { getContext } from 'svelte';
-
-	let actor = getContext('actor');
 	let { armorClass } = $props();
 </script>
 

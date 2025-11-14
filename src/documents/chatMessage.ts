@@ -4,7 +4,7 @@ import { createSubscriber } from 'svelte/reactivity';
 import type { EffectNode } from '#types/effectTree.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 
-interface NimbleChatMessage<
+export interface NimbleChatMessage<
 	ChatMessageType extends SystemChatMessageTypes = SystemChatMessageTypes,
 > {
 	type: ChatMessageType;
@@ -12,14 +12,10 @@ interface NimbleChatMessage<
 }
 
 class NimbleChatMessage extends ChatMessage {
-	#dialogs;
-
 	#subscribe;
 
 	constructor(data, context) {
 		super(data, context);
-
-		this.#dialogs = [];
 
 		this.#subscribe = createSubscriber((update) => {
 			const updateActorHook = Hooks.on('updateActor', (triggeringDocument, _, { diff }) => {
@@ -144,7 +140,7 @@ class NimbleChatMessage extends ChatMessage {
 		return this.update({ 'system.targets': [...targets] });
 	}
 
-	async applyDamage(value, options) {
+	async applyDamage(value, _options) {
 		const targets = this.system.targets || [];
 
 		targets.forEach((uuid) => {

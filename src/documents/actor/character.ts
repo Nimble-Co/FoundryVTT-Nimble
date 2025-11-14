@@ -521,17 +521,13 @@ export class NimbleCharacter extends NimbleBaseActor {
 			options.rollMode,
 		);
 
-		let rollData;
-
-		if (options.skipRollDialog) {
-			rollData = await this.getDefaultSkillCheckData(skillKey, baseRollMode, options);
-		} else {
-			rollData = await this.showCheckRollDialog('skillCheck', {
-				...options,
-				skillKey,
-				rollMode: baseRollMode,
-			});
-		}
+		const rollData = await (options.skipRollDialog
+			? this.getDefaultSkillCheckData(skillKey, baseRollMode, options)
+			: this.showCheckRollDialog('skillCheck', {
+					...options,
+					skillKey,
+					rollMode: baseRollMode,
+				}));
 
 		if (!rollData) return { roll: null, rollData: null };
 

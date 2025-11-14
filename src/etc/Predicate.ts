@@ -34,7 +34,8 @@ class Predicate extends Map<string, Statement> {
 		}
 
 		const domainArray = Array.from(domain);
-		const pattern = new RegExp(String.raw`^${key}:([^:]+)$`);
+		const escapedKey = String(key).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		const pattern = new RegExp(`^${escapedKey}:([^:]+)$`);
 
 		const values = domainArray.reduce((acc, s) => {
 			const value = pattern.exec(s)?.[1];
@@ -53,7 +54,9 @@ class Predicate extends Map<string, Statement> {
 
 	#getDomainValues(key: string, domain: Set<string>) {
 		const domainArray = Array.from(domain);
-		const pattern = new RegExp(String.raw`^${key}:([^:]+)$`);
+		const escapedKey = String(key).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+		const pattern = new RegExp(`^${escapedKey}:([^:]+)$`);
+
 		const values = domainArray.reduce((acc, s) => {
 			const value = pattern.exec(s)?.[1];
 			if (value === undefined) return acc;

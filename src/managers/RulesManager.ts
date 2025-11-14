@@ -43,20 +43,12 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	/** ------------------------------------------------------ */
 	/**                       Helpers                          */
 	/** ------------------------------------------------------ */
-	async addRule(data: Record<string, any>, options: RulesManager.AddOptions = {}) {
-		return RulesManager.addRule(this.#item, data, options);
-	}
-
 	hasRuleOfType(type: string) {
 		return this.rulesTypeMap.has(type);
 	}
 
 	getRuleOfType(type: string) {
 		return this.rulesTypeMap.get(type);
-	}
-
-	async deleteRule(id: string) {
-		return RulesManager.deleteRule(this.#item, id);
 	}
 
 	async updateRule(id: string, data: string | Record<string, any>) {
@@ -80,6 +72,20 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		});
 
 		return true;
+	}
+
+	async deleteRule(id: string) {
+		return RulesManager.deleteRule(this.#item, id);
+	}
+
+	static async deleteRule(item: NimbleBaseItem, id: string) {
+		return item.update({
+			'system.rules': item.system.rules?.filter((r) => r.id !== id) ?? [],
+		});
+	}
+
+	async addRule(data: Record<string, any>, options: RulesManager.AddOptions = {}) {
+		return RulesManager.addRule(this.#item, data, options);
 	}
 
 	/** ------------------------------------------------------ */
@@ -126,12 +132,6 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 
 		const rule = new Cls(data, { parent: item });
 		return rule;
-	}
-
-	static async deleteRule(item: NimbleBaseItem, id: string) {
-		return item.update({
-			'system.rules': item.system.rules?.filter((r) => r.id !== id) ?? [],
-		});
 	}
 }
 
