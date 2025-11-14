@@ -25,7 +25,7 @@ class NimbleAncestryData extends NimbleBaseItemData<
 	/** @inheritDoc */
 	static override defineSchema(): NimbleAncestryData.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseItemData.defineSchema(),
 			...schema,
 		};
 	}

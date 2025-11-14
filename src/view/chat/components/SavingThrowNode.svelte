@@ -38,7 +38,6 @@
 	let { node } = $props();
 
 	const effects = getContext('effects');
-	const messageDocument = getContext('messageDocument');
 </script>
 
 <header class="nimble-section-header">

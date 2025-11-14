@@ -13,7 +13,7 @@
 	const headerTextColor = calculateHeaderTextColor(headerBackgroundColor);
 
 	const { savingThrows } = CONFIG.NIMBLE;
-	const { actorName, actorType, permissions, rollMode, saveKey } = system;
+	const { actorType, permissions, rollMode, saveKey } = system;
 
 	const label = `${savingThrows[saveKey]} Saving Throw`;
 </script>

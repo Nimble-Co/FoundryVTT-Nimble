@@ -25,7 +25,7 @@ class NimbleSubclassData extends NimbleBaseItemData<
 	/** @inheritDoc */
 	static override defineSchema(): NimbleSubclassData.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseItemData.defineSchema(),
 			...schema,
 		};
 	}

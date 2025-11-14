@@ -1,7 +1,6 @@
 <script>
 	import { setContext } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
-	import localize from '../../utils/localize';
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';
@@ -18,25 +17,15 @@
 		return 'Hit';
 	}
 
-	function getSpellSchoolLabel(school) {
-		return localize(spellSchools[school] ?? '');
-	}
-
-	function getSpellTierLabel(tier) {
-		return localize(spellTiers[tier] ?? '');
-	}
-
 	function getUpcastingDescriptionLabel(tier, higherLevelEffectDescription) {
 		if (!higherLevelEffectDescription) return null;
 		if (tier === 0) return 'At Higher Levels';
 		return 'Upcasting';
 	}
 
-	const { spellSchools, spellTiers } = CONFIG.NIMBLE;
-
 	let { messageDocument } = $props();
 
-	let { activation, description, image, isCritical, isMiss, school, spellName, tier } = $derived(
+	let { activation, description, image, isCritical, isMiss, spellName, tier } = $derived(
 		messageDocument.reactive.system,
 	);
 
@@ -44,8 +33,6 @@
 	let headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 	let subheading = $derived(getCardSubheading(activation, isCritical, isMiss));
 
-	let tierLabel = $derived(getSpellTierLabel(tier));
-	let spellSchoolLabel = $derived(getSpellSchoolLabel(school));
 	let upcastingLabel = $derived(getUpcastingDescriptionLabel(tier, description.higherLevelEffect));
 
 	setContext('messageDocument', messageDocument);

@@ -1,7 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
-	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
 	let { characterSavingThrows } = $props();
 

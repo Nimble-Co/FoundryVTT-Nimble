@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
-
-	import BaseCombatant from './components/BaseCombatant.svelte';
-	import PlayerCharacterCombatant from './components/PlayerCharacterCombatant.svelte';
-	import CombatTrackerControls from './components/CombatTrackerControls.svelte';
 	import type { NimbleCombat } from '../../documents/combat/combat.svelte.js';
+	import BaseCombatant from './components/BaseCombatant.svelte';
+	import CombatTrackerControls from './components/CombatTrackerControls.svelte';
+	import PlayerCharacterCombatant from './components/PlayerCharacterCombatant.svelte';
 
 	function getCombatantComponent(combatant) {
 		switch (combatant.type) {
@@ -31,11 +30,11 @@
 		return (game.combat as NimbleCombat)?.startCombat();
 	}
 
-	const createCombat = Hooks.on('createCombat', (combat) => {
+	const createCombat = Hooks.on('createCombat', (_combat) => {
 		currentCombat = (game.combat as NimbleCombat) ?? null;
 	});
 
-	const deleteCombat = Hooks.on('deleteCombat', (combat) => {
+	const deleteCombat = Hooks.on('deleteCombat', (_combat) => {
 		currentCombat = (game.combat as NimbleCombat) ?? null;
 	});
 

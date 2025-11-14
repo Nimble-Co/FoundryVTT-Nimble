@@ -17,7 +17,7 @@ declare namespace MaxHitDiceRule {
 class MaxHitDiceRule extends NimbleBaseRule<MaxHitDiceRule.Schema> {
 	static override defineSchema(): MaxHitDiceRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}

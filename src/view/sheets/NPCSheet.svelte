@@ -1,6 +1,5 @@
 <script>
 	import { setContext } from 'svelte';
-	import localize from '../../utils/localize.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import HitPointBar from './components/HitPointBar.svelte';
@@ -25,8 +24,6 @@
 	}
 
 	let { actor } = $props();
-
-	const { npcArmorTypes } = CONFIG.NIMBLE;
 
 	let isBloodied = $derived.by(() => {
 		if (actor.type === 'minion') return false;

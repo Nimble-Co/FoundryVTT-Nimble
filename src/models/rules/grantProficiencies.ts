@@ -36,7 +36,7 @@ declare namespace GrantProficiencyRule {
 class GrantProficiencyRule extends NimbleBaseRule<GrantProficiencyRule.Schema> {
 	static override defineSchema(): GrantProficiencyRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}

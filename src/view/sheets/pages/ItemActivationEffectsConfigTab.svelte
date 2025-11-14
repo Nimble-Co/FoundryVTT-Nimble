@@ -3,8 +3,6 @@
 	import { createEffectNode } from '../../../utils/treeManipulation/createEffectNode.js';
 	import { deleteEffectNode } from '../../../utils/treeManipulation/deleteEffectNode.js';
 	import { updateEffectNode } from '../../../utils/treeManipulation/updateEffectNode.js';
-
-	import ScalingDialog from '../../dialogs/ScalingDialog.svelte';
 	import TagGroup from '../../components/TagGroup.svelte';
 
 	function getNodeOptions(node) {
@@ -87,18 +85,18 @@
 		return [];
 	}
 
-	async function openScalingDialog(item, node) {
-		const { default: GenericDialog } = await import(
-			'../../../documents/dialogs/GenericDialog.svelte.js'
-		);
+	// async function openScalingDialog(item, node) {
+	// 	const { default: GenericDialog } = await import(
+	// 		'../../../documents/dialogs/GenericDialog.svelte.js'
+	// 	);
 
-		const dialog = new GenericDialog(`${item.name}: Roll Scaling Dialog`, ScalingDialog, {
-			item,
-			node,
-		});
+	// 	const dialog = new GenericDialog(`${item.name}: Roll Scaling Dialog`, ScalingDialog, {
+	// 		item,
+	// 		node,
+	// 	});
 
-		dialog.render(true);
-	}
+	// 	dialog.render(true);
+	// }
 
 	function prepareSavingThrowOptions(savingThrows) {
 		return Object.entries(savingThrows).map(([key, value]) => ({
@@ -372,7 +370,7 @@
 	</li>
 {/snippet}
 
-{#snippet HealingNode(node, parentNode = null)}
+{#snippet HealingNode(node, _parentNode = null)}
 	<li data-node-id={node.id}>
 		<header>
 			<h4 class="nimble-heading" data-heading-variant="field">Healing</h4>
@@ -441,7 +439,7 @@
 	</li>
 {/snippet}
 
-{#snippet SaveNode(node, parentNode = null)}
+{#snippet SaveNode(node, _parentNode = null)}
 	<li data-node-id={node.id}>
 		<details open>
 			<summary class="nimble-tree-node-summary">
@@ -583,7 +581,7 @@
 	</li>
 {/snippet}
 
-{#snippet ConditionNode(node, parentNode = null)}
+{#snippet ConditionNode(node, _parentNode = null)}
 	<li data-node-id={node.id}>
 		<header>
 			<h4 class="nimble-heading" data-heading-variant="field">Status Condition</h4>
@@ -661,7 +659,7 @@
 	</li>
 {/snippet}
 
-{#snippet TextNode(node, parentNode = null)}
+{#snippet TextNode(node, _parentNode = null)}
 	<li data-node-id={node.id}>
 		<header>
 			<h4 class="nimble-heading" data-heading-variant="field">Note</h4>

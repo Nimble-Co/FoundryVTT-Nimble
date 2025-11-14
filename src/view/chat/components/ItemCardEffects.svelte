@@ -3,8 +3,6 @@
 	import { getNodeComponent } from '../../dataPreparationHelpers/effectTree/getNodeComponent.js';
 
 	let messageDocument = getContext('messageDocument');
-	let { activation, isCritical, isMiss } = $derived(messageDocument.reactive.system);
-	let effects = $derived(activation.effects);
 
 	let nodes = messageDocument.effectNodes;
 </script>

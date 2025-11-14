@@ -54,7 +54,7 @@
 								class="subclass-row__img"
 								src={subclass.img || 'icons/svg/item-bag.svg'}
 								alt={subclass.name}
-								onerror={(e) => {
+								onerror={(_e) => {
 									subclass.img = 'icons/svg/item-bag.svg';
 								}}
 							/>

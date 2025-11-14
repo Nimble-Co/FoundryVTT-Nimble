@@ -98,9 +98,15 @@ export class NimbleCharacter extends NimbleBaseActor {
 		super._populateBaseTags();
 
 		// Add proficiencies
-		this.system.proficiencies.armor.forEach((a) => this.tags.add(`proficiency:armor:${a}`));
-		this.system.proficiencies.languages.forEach((l) => this.tags.add(`proficiency:language:${l}`));
-		this.system.proficiencies.weapons.forEach((w) => this.tags.add(`proficiency:weapon:${w}`));
+		this.system.proficiencies.armor.forEach((a) => {
+			this.tags.add(`proficiency:armor:${a}`);
+		});
+		this.system.proficiencies.languages.forEach((l) => {
+			this.tags.add(`proficiency:language:${l}`);
+		});
+		this.system.proficiencies.weapons.forEach((w) => {
+			this.tags.add(`proficiency:weapon:${w}`);
+		});
 	}
 
 	override prepareDerivedData(): void {
@@ -257,7 +263,9 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		if (classes.length !== 0) {
 			classes.forEach((cls) => {
-				cls.grantedArmorProficiencies.forEach((a) => actorData.proficiencies.armor.add(a));
+				cls.grantedArmorProficiencies.forEach((a) => {
+					actorData.proficiencies.armor.add(a);
+				});
 				cls.grantedWeaponProficiencies.forEach((w) => {
 					if (!actorData.proficiencies.weapons.includes(w)) actorData.proficiencies.weapons.push(w);
 				});
@@ -513,17 +521,13 @@ export class NimbleCharacter extends NimbleBaseActor {
 			options.rollMode,
 		);
 
-		let rollData;
-
-		if (options.skipRollDialog) {
-			rollData = await this.getDefaultSkillCheckData(skillKey, baseRollMode, options);
-		} else {
-			rollData = await this.showCheckRollDialog('skillCheck', {
-				...options,
-				skillKey,
-				rollMode: baseRollMode,
-			});
-		}
+		const rollData = await (options.skipRollDialog
+			? this.getDefaultSkillCheckData(skillKey, baseRollMode, options)
+			: this.showCheckRollDialog('skillCheck', {
+					...options,
+					skillKey,
+					rollMode: baseRollMode,
+				}));
 
 		if (!rollData) return { roll: null, rollData: null };
 

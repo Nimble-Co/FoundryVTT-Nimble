@@ -34,7 +34,7 @@
 	});
 
 	function updateHpData(classIndex, levelIndex, value) {
-		classHpData[classIndex].hpData[levelIndex] = Number.parseInt(value) || 0;
+		classHpData[classIndex].hpData[levelIndex] = Number.parseInt(value, 10) || 0;
 		// Recalculate maxHp for that class
 		const cls = classHpData[classIndex];
 		cls.maxHp = cls.startingHp + cls.hpData.reduce((acc, val) => acc + val, 0);

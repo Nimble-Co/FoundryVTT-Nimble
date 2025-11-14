@@ -1,22 +1,24 @@
 <script lang="ts">
-	function endCombat(): Promise<any> {
-		return game.combat?.endCombat();
+	import type { NimbleCombat } from '../../../documents/combat/combat.svelte.js';
+
+	function endCombat(): Promise<NimbleCombat> | undefined {
+		return (game.combat as NimbleCombat | undefined)?.endCombat();
 	}
 
-	function rewindRound(): Promise<any> {
-		return game.combat?.previousRound();
+	function rewindRound(): Promise<NimbleCombat> | undefined {
+		return (game.combat as NimbleCombat | undefined)?.previousRound();
 	}
 
-	function rewindTurn(): Promise<any> {
-		return game.combat?.previousTurn();
+	function rewindTurn(): Promise<NimbleCombat> | undefined {
+		return (game.combat as NimbleCombat | undefined)?.previousTurn();
 	}
 
-	function startNextRound(): Promise<any> {
-		return game.combat?.nextRound();
+	function startNextRound(): Promise<NimbleCombat> | undefined {
+		return (game.combat as NimbleCombat | undefined)?.nextRound();
 	}
 
-	function startNextTurn(): Promise<any> {
-		return game.combat?.nextTurn();
+	function startNextTurn(): Promise<NimbleCombat> | undefined {
+		return (game.combat as NimbleCombat | undefined)?.nextTurn();
 	}
 </script>
 

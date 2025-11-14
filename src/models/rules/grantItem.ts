@@ -19,7 +19,7 @@ declare namespace ItemGrantRule {
 class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 	static override defineSchema(): ItemGrantRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}

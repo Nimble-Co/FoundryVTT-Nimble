@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { setContext } from 'svelte';
 	import localize from '../../utils/localize.js';
-	import updateDocumentImage from '../handlers/updateDocumentImage.js';
-
-	import Editor from './components/Editor.svelte';
-	import ItemActivationConfigTab from './pages/ItemActivationConfigTab.svelte';
-	import ItemHeader from './components/ItemHeader.svelte';
-	import ItemMacroTab from './pages/ItemMacroTab.svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
+	import updateDocumentImage from '../handlers/updateDocumentImage.js';
+	import Editor from './components/Editor.svelte';
+	import ItemHeader from './components/ItemHeader.svelte';
+	import ItemActivationConfigTab from './pages/ItemActivationConfigTab.svelte';
+	import ItemMacroTab from './pages/ItemMacroTab.svelte';
 
 	const navigation = [
 		{
@@ -78,7 +77,7 @@
 					value={item.system.subtype}
 					onchange={({ target }) =>
 						item.update({
-							'system.subtype': (target as monsterFeatureTypesHTMLInputElement).value,
+							'system.subtype': (target as HTMLSelectElement).value,
 						})}
 				>
 					{#each subtypeOptions as option}

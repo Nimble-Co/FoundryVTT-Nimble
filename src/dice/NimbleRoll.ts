@@ -41,7 +41,7 @@ class NimbleRoll extends foundry.dice.Roll<NimbleRoll.Data> {
 	/**                    Static Methods                      */
 	/** ------------------------------------------------------ */
 	static fromRoll(roll: any) {
-		const newRoll = new this(roll.formula, roll.data, roll.options);
+		const newRoll = new NimbleRoll(roll.formula, roll.data, roll.options);
 		Object.assign(newRoll, roll);
 		return newRoll;
 	}

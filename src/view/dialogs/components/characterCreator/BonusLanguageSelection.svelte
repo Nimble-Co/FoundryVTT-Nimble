@@ -61,7 +61,6 @@
 	let remainingTempLanguagePicks = $derived(intelligenceModifier - tempBonusLanguages.length);
 
 	$effect(() => {
-		bonusLanguages;
 		tempBonusLanguages = [];
 	});
 </script>

@@ -18,7 +18,7 @@ declare namespace MaxHpBonusRule {
 class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 	static override defineSchema(): MaxHpBonusRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}

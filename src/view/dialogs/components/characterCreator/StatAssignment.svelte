@@ -8,7 +8,7 @@
 		const modifierIndex = Number.parseInt(event.dataTransfer.getData('modifier'), 10);
 
 		const existingModifier = Object.entries(tempSelectedAbilityScores).find(
-			([_, value]) => value === modifierIndex,
+			([, value]) => value === modifierIndex,
 		);
 
 		if (existingModifier) {
@@ -66,8 +66,6 @@
 	}
 
 	$effect(() => {
-		selectedAbilityScores;
-
 		tempSelectedAbilityScores = generateBlankAttributeSet();
 		bonusLanguages = [];
 	});

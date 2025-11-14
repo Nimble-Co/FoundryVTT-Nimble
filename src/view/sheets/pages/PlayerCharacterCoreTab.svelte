@@ -30,7 +30,7 @@
 		return [...proficiencies];
 	}
 
-	const { armorTypesPlural, languages, movementTypes } = CONFIG.NIMBLE;
+	const { armorTypesPlural, languages } = CONFIG.NIMBLE;
 
 	let actor: NimbleCharacter = getContext('actor');
 	let skills = $derived(actor.reactive.system.skills);

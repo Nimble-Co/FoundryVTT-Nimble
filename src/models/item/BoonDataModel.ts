@@ -29,7 +29,7 @@ class NimbleBoonData extends NimbleBaseItemData<
 	/** @inheritDoc */
 	static override defineSchema(): NimbleBoonData.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseItemData.defineSchema(),
 			...schema,
 		};
 	}

@@ -80,9 +80,9 @@ class RestManager {
 	#consumeHitDice() {
 		const { selectedHitDice, makeCamp = false } = this.#data;
 
-		Object.entries(selectedHitDice ?? {}).forEach(([size, quantity]) =>
-			this.#actor.HitDiceManager.rollHitDice(Number(size), quantity, makeCamp),
-		);
+		Object.entries(selectedHitDice ?? {}).forEach(([size, quantity]) => {
+			this.#actor.HitDiceManager.rollHitDice(Number(size), quantity, makeCamp);
+		});
 	}
 
 	/** ------------------------------------------ */

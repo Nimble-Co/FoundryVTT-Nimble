@@ -79,24 +79,24 @@ class HitDiceManager {
 	}
 
 	async rollHitDice(dieSize?: number, quantity?: number, maximize?: boolean): Promise<any> {
-		if (!dieSize) dieSize = this.largest;
-		if (!quantity) quantity = 1;
-		if (!maximize) maximize = false;
+		const dSize = dieSize || this.largest;
+		const dQuantity = quantity || 1;
+		const maximizeDie = maximize || false;
 
-		const current = this.getHitDieData(dieSize)?.current ?? 0;
-		if (current < quantity) return null;
+		const current = this.getHitDieData(dSize)?.current ?? 0;
+		if (current < dQuantity) return null;
 
 		const strMod = this.#actor.system.abilities.strength.mod ?? 0;
 
-		const formula = maximize
-			? `${quantity * dieSize} + ${strMod * quantity}`
-			: `${quantity}d${dieSize} + ${strMod * quantity}`;
+		const formula = maximizeDie
+			? `${dQuantity * dSize} + ${strMod * dQuantity}`
+			: `${dQuantity}d${dSize} + ${strMod * dQuantity}`;
 
 		// Roll Formula
-		const { chatData } = await this.#rollHitDice(dieSize, current, quantity, formula);
+		const { chatData } = await this.#rollHitDice(dSize, current, dQuantity, formula);
 
 		this.#actor.update({
-			[`system.attributes.hitDice.${dieSize}.current`]: Math.max(current - quantity, 0),
+			[`system.attributes.hitDice.${dSize}.current`]: Math.max(current - dQuantity, 0),
 		});
 
 		const chatCard = await ChatMessage.create(chatData);
@@ -107,7 +107,7 @@ class HitDiceManager {
 
 	async #rollHitDice(
 		dieSize: number,
-		currentCount: number,
+		_currentCount: number,
 		quantity: number,
 		formula: string,
 	): Promise<{ hookData: any; chatData: any }> {

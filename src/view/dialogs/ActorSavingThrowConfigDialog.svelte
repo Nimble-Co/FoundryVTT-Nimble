@@ -14,7 +14,7 @@
 
 	const { savingThrows } = CONFIG.NIMBLE;
 
-	let { document, documentData } = $props();
+	let { document } = $props();
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--ability-score-config">

@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
 /* eslint-disable no-await-in-loop */
-import type { MigrationBase } from './MigrationBase.js';
-import { MigrationRunnerBase } from './MigrationRunnerBase.js';
 
 import localize from '../utils/localize.js';
+import type { MigrationBase } from './MigrationBase.js';
+import { MigrationRunnerBase } from './MigrationRunnerBase.js';
 
 class MigrationRunner extends MigrationRunnerBase {
 	override needsMigration(): boolean {
@@ -12,10 +12,10 @@ class MigrationRunner extends MigrationRunnerBase {
 
 	static async ensureSchemaVersion(document: any, migrations: MigrationBase[]): Promise<void> {
 		if (migrations.length === 0) return;
-		const currentVersion = this.LATEST_SCHEMA_VERSION;
+		const currentVersion = MigrationRunner.LATEST_SCHEMA_VERSION;
 
 		if ((Number(document.migrationVersion) || 0) < currentVersion) {
-			const runner = new this(migrations);
+			const runner = new MigrationRunner(migrations);
 			const source = document._source;
 
 			const updated = await (async () => {
@@ -364,10 +364,18 @@ class MigrationRunner extends MigrationRunnerBase {
 		// Update tiny docs
 		const promises: Promise<unknown>[] = [];
 
-		game.journal.forEach((e) => promises.push(this.#migrateJournalEntry(e, migrations)));
-		game.macros.forEach((m) => promises.push(this.#migrateMacro(m, migrations)));
-		game.tables.forEach((t) => promises.push(this.#migrateTable(t, migrations)));
-		game.users.forEach((u) => promises.push(this.#migrateUser(u, migrations)));
+		game.journal.forEach((e) => {
+			promises.push(this.#migrateJournalEntry(e, migrations));
+		});
+		game.macros.forEach((m) => {
+			promises.push(this.#migrateMacro(m, migrations));
+		});
+		game.tables.forEach((t) => {
+			promises.push(this.#migrateTable(t, migrations));
+		});
+		game.users.forEach((u) => {
+			promises.push(this.#migrateUser(u, migrations));
+		});
 
 		// General Free Form Updates
 		migrations.forEach((m) => {
@@ -388,7 +396,7 @@ class MigrationRunner extends MigrationRunnerBase {
 				const deltaSource = token.delta?._source;
 				const hasMigratableData =
 					(!!deltaSource && !!deltaSource.flags?.nimble) ||
-					((deltaSource ?? {}).items ?? []).length > 0 ||
+					(deltaSource?.items ?? []).length > 0 ||
 					Object.keys(deltaSource?.system ?? {}).length > 0;
 
 				if (actor.isToken) {

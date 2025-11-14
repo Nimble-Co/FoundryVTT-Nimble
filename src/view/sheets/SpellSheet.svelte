@@ -1,21 +1,20 @@
 <script lang="ts">
 	import { setContext } from 'svelte';
-
+	import type { NimbleSpellItem } from '../../documents/item/spell.js';
+	import type SpellSheet from '../../documents/sheets/SpellSheet.svelte.js';
+	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import prepareSpellMetaData from '../dataPreparationHelpers/metaData/prepareSpellMetadata.js';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
-
-	import ItemActivationConfigTab from './pages/ItemActivationConfigTab.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
+	import ItemActivationConfigTab from './pages/ItemActivationConfigTab.svelte';
 	import ItemMacroTab from './pages/ItemMacroTab.svelte';
-	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import SpellConfigTab from './pages/SpellConfigTab.svelte';
 	import SpellDescriptionTab from './pages/SpellDescriptionTab.svelte';
 	import SpellSummaryTab from './pages/SpellSummaryTab.svelte';
-	import type { NimbleSpellItem } from '../../documents/item/spell.js';
 
 	interface Props {
 		item: NimbleSpellItem;
-		sheet: any;
+		sheet: SpellSheet;
 	}
 
 	const navigation = [

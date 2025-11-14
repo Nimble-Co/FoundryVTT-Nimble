@@ -10,14 +10,16 @@ export class NimbleObjectItem extends NimbleBaseItem {
 		super._populateBaseTags();
 
 		this.tags.add(`objectType:${this.system.objectType}`);
-		this.system.properties.selected?.forEach((p) => this.tags.add(`property:${p}`));
+		this.system.properties.selected?.forEach((p) => {
+			this.tags.add(`property:${p}`);
+		});
 	}
 
 	override _populateDerivedTags(): void {
 		super._populateDerivedTags();
 	}
 
-	override async prepareChatCardData(options) {
+	override async prepareChatCardData(_options) {
 		const showDescription = this.system.activation.showDescription;
 		const publicDescription = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
 			this.system.description.public,

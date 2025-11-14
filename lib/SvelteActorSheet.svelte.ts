@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type {
 	AnyObject,
 	EmptyObject,
@@ -57,7 +56,7 @@ class SvelteActorSheet<
 	 * If this sheet manages the ActorDelta of an unlinked Token, reference that Token document.
 	 */
 	get token(): TokenDocument | null {
-		// @ts-ignore Too Deep
+		// @ts-expect-error Too Deep
 		return this.document.token || null;
 	}
 
@@ -91,12 +90,14 @@ class SvelteActorSheet<
 	static #onConfigurePrototypeToken(this: SvelteActorSheet, event: PointerEvent) {
 		event.preventDefault();
 		const renderOptions = {
-			left: Math.max(this.position.left - 560 - 10, 10),
-			top: this.position.top,
+			left: Math.max(SvelteActorSheet.position.left - 560 - 10, 10),
+			top: SvelteActorSheet.position.top,
 		};
 
-		// eslint-disable-next-line new-cap
-		new CONFIG.Token.prototypeSheetClass(this.actor.prototypeToken, renderOptions).render(true);
+		new CONFIG.Token.prototypeSheetClass(
+			SvelteActorSheet.actor.prototypeToken,
+			renderOptions,
+		).render(true);
 	}
 
 	/* -------------------------------------------- */
@@ -106,8 +107,8 @@ class SvelteActorSheet<
 	 * @this {ActorSheetV2}
 	 * @param {PointerEvent} event
 	 */
-	static #onShowPortraitArtwork(this: SvelteActorSheet, event: PointerEvent) {
-		const { img, name, uuid } = this.actor;
+	static #onShowPortraitArtwork(this: SvelteActorSheet, _event: PointerEvent) {
+		const { img, name, uuid } = SvelteActorSheet.actor;
 		new ImagePopout(img || '', { title: name, uuid }).render(true);
 	}
 
@@ -118,8 +119,8 @@ class SvelteActorSheet<
 	 * @this {ActorSheetV2}
 	 * @param {PointerEvent} event
 	 */
-	static #onShowTokenArtwork(this: SvelteActorSheet, event: PointerEvent) {
-		const { prototypeToken, name, uuid } = this.actor;
+	static #onShowTokenArtwork(this: SvelteActorSheet, _event: PointerEvent) {
+		const { prototypeToken, name, uuid } = SvelteActorSheet.actor;
 		new ImagePopout(prototypeToken.texture.src || '', { title: name, uuid }).render(true);
 	}
 
@@ -138,11 +139,10 @@ class SvelteActorSheet<
 		const target = event.currentTarget as HTMLLIElement;
 		if (!target) return;
 
-		// @ts-expect-error
 		if ('link' in (event.target?.dataset ?? {})) return;
 
 		// Create drag data
-		let dragData;
+		let dragData: unknown;
 
 		// Owned Items
 		if (target.dataset.itemId) {
@@ -195,13 +195,11 @@ class SvelteActorSheet<
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async _onDropActiveEffect(event, data) {
+	async _onDropActiveEffect(_event, _data) {
 		//
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async _onDropActor(event: SvelteActorSheet.DropEvent, data: Record<string, unknown>) {
+	async _onDropActor(_event: SvelteActorSheet.DropEvent, _data: Record<string, unknown>) {
 		if (!this.document.isOwner) return false;
 		return true;
 	}
@@ -220,15 +218,13 @@ class SvelteActorSheet<
 		return this._onDropItemCreate(itemData, event);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async _onDropFolder(event, data) {
+	async _onDropFolder(_event, _data) {
 		//
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async _onDropItemCreate(itemData, event: SvelteActorSheet.DropEvent) {
-		itemData = itemData instanceof Array ? itemData : [itemData];
-		return this.document.createEmbeddedDocuments('Item', itemData);
+	async _onDropItemCreate(itemData, _event: SvelteActorSheet.DropEvent) {
+		const itemDataForCreation = Array.isArray(itemData) ? itemData : [itemData];
+		return this.document.createEmbeddedDocuments('Item', itemDataForCreation);
 	}
 
 	_onSortItem(event: SvelteActorSheet.DropEvent, itemData) {

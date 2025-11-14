@@ -80,7 +80,6 @@
 	}
 
 	let {
-		chooseBoon,
 		document,
 		selectedBoon,
 		selectedAbilityScores = $bindable(),

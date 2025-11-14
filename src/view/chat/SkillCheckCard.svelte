@@ -13,7 +13,7 @@
 	const headerTextColor = calculateHeaderTextColor(headerBackgroundColor);
 
 	const { skills } = CONFIG.NIMBLE;
-	const { actorName, actorType, permissions, rollMode, skillKey } = system;
+	const { actorType, permissions, rollMode, skillKey } = system;
 
 	const label = `${skills[skillKey]} Check`;
 </script>

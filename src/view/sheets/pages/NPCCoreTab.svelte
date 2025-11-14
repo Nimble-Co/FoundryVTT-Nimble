@@ -1,11 +1,9 @@
 <script lang="ts">
-	import { FALSE, TRUE } from 'sass';
 	import { getContext, onDestroy } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import sortItems from '../../../utils/sortItems.js';
 	import ArmorClass from '../components/ArmorClass.svelte';
 	import Editor from '../components/Editor.svelte';
-	import MonsterFeature from '../components/MonsterFeature.svelte';
 	import MovementSpeed from '../components/MovementSpeed.svelte';
 	import SavingThrows from '../components/SavingThrows.svelte';
 
@@ -54,11 +52,11 @@
 		return item.system?.subtype || 'feature';
 	}
 
-	function prepareItemTooltip(item) {
+	function prepareItemTooltip(_item) {
 		return null;
 	}
 
-	function getFeatureMetadata(item) {
+	function getFeatureMetadata(_item) {
 		return null;
 	}
 
@@ -73,18 +71,18 @@
 		return !hasDescription && !hasEffects;
 	}
 
-	function getMonsterFeatureIcon(categoryName) {
-		switch (categoryName) {
-			case 'bloodied':
-				return 'fa-solid fa-droplet';
-			case 'last stand':
-				return 'fa-solid fa-skull';
-			case 'action':
-				return 'fa-solid fa-bolt';
-			default:
-				return 'fa-solid fa-message';
-		}
-	}
+	// function getMonsterFeatureIcon(categoryName) {
+	// 	switch (categoryName) {
+	// 		case 'bloodied':
+	// 			return 'fa-solid fa-droplet';
+	// 		case 'last stand':
+	// 			return 'fa-solid fa-skull';
+	// 		case 'action':
+	// 			return 'fa-solid fa-bolt';
+	// 		default:
+	// 			return 'fa-solid fa-message';
+	// 	}
+	// }
 
 	async function handleDrop(event, targetId) {
 		const draggedId = event.dataTransfer.getData('nimble/reorder');
@@ -117,7 +115,7 @@
 		return npcArmorTypeAbbreviations[armor] ?? '-';
 	}
 
-	function handleEditorSave(event, updatePath, editState) {
+	function handleEditorSave(event, updatePath, _editState) {
 		const target = event.target;
 
 		if (!target) return;
@@ -127,8 +125,8 @@
 
 		if (editor?.dataset?.documentUUID !== actor.uuid) return;
 
-		bloodiedEffectInEditMode = false;
-		lastStandEffectInEditMode = false;
+		// bloodiedEffectInEditMode = false;
+		// lastStandEffectInEditMode = false;
 		attackSequenceInEditMode = false;
 	}
 
@@ -193,16 +191,8 @@
 		return item.reactive.flags.nimble?.collapsed ?? false;
 	}
 
-	let features = $derived.by(() =>
-		actor.reactive.items.filter((item) => !item.reactive.system.isAction),
-	);
-
-	let actions = $derived.by(() =>
-		actor.reactive.items.filter((item) => item.reactive.system.isAction),
-	);
-
-	let bloodiedEffectInEditMode = $state(false);
-	let lastStandEffectInEditMode = $state(false);
+	// let bloodiedEffectInEditMode = $state(false);
+	// let lastStandEffectInEditMode = $state(false);
 	let attackSequenceInEditMode = $state(false);
 
 	let items = $derived(filterMonsterFeatures(actor.reactive));

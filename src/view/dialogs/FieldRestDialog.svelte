@@ -94,7 +94,7 @@
 			<h3 class="nimble-heading" data-heading-variant="section">Hit Dice Selection</h3>
 		</header>
 
-		{#each Object.entries(hitDice) as [die, { current, total }]}
+		{#each Object.entries(hitDice) as [die, { total }]}
 			<div class="nimble-hit-die">
 				<button class="nimble-hit-die__button" onclick={() => incrementHitDie(Number(die))}>
 					d{die}

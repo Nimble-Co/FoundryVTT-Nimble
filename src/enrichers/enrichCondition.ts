@@ -1,9 +1,9 @@
-import createEnricherButton from './createEnricherButton.js';
 import localize from '../utils/localize.js';
+import createEnricherButton from './createEnricherButton.js';
 
 export default function enrichCondition(
 	args: Record<string, string>,
-	options?: foundry.applications.ux.TextEditor.implementation.EnrichmentOptions,
+	_options?: foundry.applications.ux.TextEditor.implementation.EnrichmentOptions,
 ) {
 	const { conditions, conditionDescriptions } = CONFIG.NIMBLE;
 	const { enricherType, condition: conditionKey } = args;

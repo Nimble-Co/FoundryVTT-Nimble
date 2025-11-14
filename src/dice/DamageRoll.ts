@@ -60,7 +60,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/**                  Data Prep Helpers                     */
 	/** ------------------------------------------------------ */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	_preProcessFormula(formula: string, data: DamageRoll.Data, options: DamageRoll.Options) {
+	_preProcessFormula(_formula: string, _data: DamageRoll.Data, options: DamageRoll.Options) {
 		// Separate out the primary die
 		if (options.canCrit) {
 			const { rollMode = 0 } = options;
@@ -98,7 +98,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 					if (options.primaryDieModifier && faces) {
 						const baseResult = Math.ceil(Math.random() * faces);
-						let modifiedResult = baseResult + options.primaryDieModifier;
+						const modifiedResult = baseResult + options.primaryDieModifier;
 						if (modifiedResult > faces) {
 							primaryTerm.results = [{ result: faces, active: true }];
 							// Add excess as a separate numeric term
@@ -138,7 +138,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 					if (options.primaryDieModifier && faces) {
 						const baseResult = Math.ceil(Math.random() * faces);
-						let modifiedResult = baseResult + options.primaryDieModifier;
+						const modifiedResult = baseResult + options.primaryDieModifier;
 						if (modifiedResult > faces) {
 							primaryTerm.results = [{ result: faces, active: true }];
 							// Add excess as a separate numeric term
@@ -218,17 +218,16 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/**                    Static Methods                      */
 	/** ------------------------------------------------------ */
 	static fromRoll(roll: any) {
-		const newRoll = new this(roll.formula, roll.data, roll.options);
+		const newRoll = new DamageRoll(roll.formula, roll.data, roll.options);
 		Object.assign(newRoll, roll);
 		return newRoll;
 	}
 
 	static override fromData(data: Record<string, any>): DamageRoll {
-		// @ts-expect-error
-		const roll = super.fromData(data) as unknown as DamageRoll;
+		const roll = DamageRoll.fromData(data) as unknown as DamageRoll;
 
 		roll.originalFormula = data.originalFormula;
-		roll._formula = this.getFormula(roll.terms);
+		roll._formula = DamageRoll.getFormula(roll.terms);
 
 		// Populate data
 		if (data.evaluated ?? true) {

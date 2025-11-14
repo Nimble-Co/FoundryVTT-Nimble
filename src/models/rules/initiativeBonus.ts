@@ -16,7 +16,7 @@ declare namespace InitiativeBonusRule {
 class InitiativeBonusRule extends NimbleBaseRule<InitiativeBonusRule.Schema> {
 	static override defineSchema(): InitiativeBonusRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}

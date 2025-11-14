@@ -26,7 +26,6 @@
 	}
 
 	let {
-		boons,
 		characterClass,
 		document,
 		levelingTo,

@@ -1,7 +1,7 @@
 <script>
 	import { setContext } from 'svelte';
-	import { getRollModeSummary } from '../dataPreparationHelpers/getRollModeSummary.js';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
+	import { getRollModeSummary } from '../dataPreparationHelpers/getRollModeSummary.js';
 	import prepareRollTooltip from '../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
 	import CardHeader from './components/CardHeader.svelte';
@@ -14,7 +14,7 @@
 	const headerTextColor = calculateHeaderTextColor(headerBackgroundColor);
 
 	const { abilityScores } = CONFIG.NIMBLE;
-	const { abilityKey, actorName, actorType, permissions, rollMode } = system;
+	const { abilityKey, actorType, permissions, rollMode } = system;
 
 	const label = `${abilityScores[abilityKey]} Check`;
 

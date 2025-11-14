@@ -1,5 +1,5 @@
 export class NimbleTokenDocument extends TokenDocument {
-	static getCombatantType(token): string {}
+	static getCombatantType(_token): string {}
 
 	static override async createCombatants(tokens, { combat }: { combat?: any } = {}) {
 		// Identify the target Combat encounter

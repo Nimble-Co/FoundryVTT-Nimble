@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/// <reference types="@league-of-foundry-developers/foundry-vtt-types" />
 const PACK_DATA_CONFIG = {
 	background: {
 		packs: ['nimble.nimble-backgrounds'],
@@ -56,52 +56,51 @@ export function preparePackIndexes() {
 	});
 }
 
-// @ts-ignore
 type Pack = CompendiumCollection<CompendiumCollection.Metadata>;
 
-export function createAncestryIndex(pack: any, options: Record<string, any>) {
+export function createAncestryIndex(pack: Pack, _options: Record<string, any>) {
 	pack.getIndex({
 		fields: ['system.description', 'system.exotic', 'system.size'],
 	});
 }
 
-export function createBackgroundIndex(pack: any, options: Record<string, any>) {
+export function createBackgroundIndex(pack: Pack, _options: Record<string, any>) {
 	pack.getIndex({
 		fields: ['system.category', 'system.description'],
 	});
 }
 
-export function createBoonIndex(pack: any, options: Record<string, any>) {
+export function createBoonIndex(pack: Pack, _options: Record<string, any>) {
 	pack.getIndex({
 		fields: ['system.description'],
 	});
 }
 
-export function createClassIndex(pack: any, options: Record<string, any>) {
+export function createClassIndex(pack: Pack, _options: Record<string, any>) {
 	pack.getIndex({
 		fields: ['system.complexity', 'system.description'],
 	});
 }
 
-export function createFeatureIndex(pack: any, options: Record<string, any>) {
+export function createFeatureIndex(pack: Pack, _options: Record<string, any>) {
 	pack.getIndex({
 		fields: ['system.description'],
 	});
 }
 
-export function createObjectIndex(pack: any, options: Record<string, any>) {
+export function createObjectIndex(pack: Pack, _options: Record<string, any>) {
 	pack.getIndex({
 		fields: ['system.description'],
 	});
 }
 
-export function createSpellIndex(pack: any, options: Record<string, any>) {
+export function createSpellIndex(pack: Pack, _options: Record<string, any>) {
 	pack.getIndex({
 		fields: ['system.description'],
 	});
 }
 
-export function createSubclassIndex(pack: any, options: Record<string, any>) {
+export function createSubclassIndex(pack: Pack, _options: Record<string, any>) {
 	pack.getIndex({
 		fields: ['system.description'],
 	});

@@ -36,7 +36,7 @@ class NimbleMonsterFeatureData extends NimbleBaseItemData<
 	/** @inheritDoc */
 	static override defineSchema(): NimbleMonsterFeatureData.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseItemData.defineSchema(),
 			...activation(),
 			...schema(),
 		};
