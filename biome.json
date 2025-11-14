@@ -22,7 +22,10 @@
 			"complexity": {
 				"noForEach": "off"
 			},
-			"correctness": { "noInvalidUseBeforeDeclaration": "off" },
+			"correctness": {
+				"noInvalidUseBeforeDeclaration": "off",
+				"noUnusedVariables": "error"
+			},
 			"performance": {
 				"noDelete": "off"
 			},
