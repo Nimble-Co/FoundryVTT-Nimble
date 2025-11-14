@@ -66,7 +66,7 @@
 		return damageEffects().map((effect) => {
 			let formula = effect.formula;
 			if (situationalModifiers !== '') {
-				formula += '+' + situationalModifiers;
+				formula += `+${situationalModifiers}`;
 			}
 			return {
 				formula,
