@@ -13,9 +13,9 @@ export const handleAutomaticConditionApplication = {
 	 */
 	preCreate: async (
 		document: ActiveEffect,
-		data: any,
+		_data: any,
 		options: AutomaticConditionContext,
-		userId: string,
+		_userId: string,
 	) => {
 		if (!document.parent || document.parent.documentName !== 'Actor') return;
 
@@ -42,7 +42,7 @@ export const handleAutomaticConditionApplication = {
 	postCreate: async (
 		document: ActiveEffect,
 		options: AutomaticConditionContext,
-		userId: string,
+		_userId: string,
 	) => {
 		if (!options.automaticConditionsToApply) return;
 
@@ -64,7 +64,11 @@ export const handleAutomaticConditionApplication = {
 	/**
 	 * Before deleting an ActiveEffect, check if automatic conditions should be removed
 	 */
-	preDelete: async (document: ActiveEffect, options: AutomaticConditionContext, userId: string) => {
+	preDelete: async (
+		_document: ActiveEffect,
+		_options: AutomaticConditionContext,
+		_userId: string,
+	): Promise<void> => {
 		// Note: PreDelete is kept for consistency but no longer stores data in options
 	},
 
@@ -73,8 +77,8 @@ export const handleAutomaticConditionApplication = {
 	 */
 	postDelete: async (
 		document: ActiveEffect,
-		options: AutomaticConditionContext,
-		userId: string,
+		_options: AutomaticConditionContext,
+		_userId: string,
 	) => {
 		try {
 			const actor = document.parent as NimbleBaseActor;

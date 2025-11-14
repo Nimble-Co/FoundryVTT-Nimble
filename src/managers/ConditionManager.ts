@@ -64,7 +64,7 @@ export class ConditionManager {
 					(await (foundry.applications as any).ux?.TextEditor?.implementation?.enrichHTML?.(
 						`[[/condition condition=${id}]]`,
 					)) || `[[/condition condition=${id}]]`;
-			} catch (error) {
+			} catch (_error) {
 				data.enriched = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
 					`[[/condition condition=${id}]]`,
 				);
