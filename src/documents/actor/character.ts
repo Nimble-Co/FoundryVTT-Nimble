@@ -1,6 +1,6 @@
 import type BaseUser from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/documents/user.d.mts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
-import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
+import getDeterministicBonus from '../../dice/getDeterministicBonus';
 import { NimbleRoll } from '../../dice/NimbleRoll';
 import { HitDiceManager } from '../../managers/HitDiceManager';
 import { RestManager } from '../../managers/RestManager';
@@ -19,7 +19,7 @@ import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte';
 import type { NimbleAncestryItem } from '../item/ancestry';
 import type { NimbleBackgroundItem } from '../item/background';
-import type { ActorRollOptions } from './actorInterfaces.ts';
+import type { ActorRollOptions } from './actorInterfaces';
 import { NimbleBaseActor } from './base.svelte';
 
 export class NimbleCharacter extends NimbleBaseActor {

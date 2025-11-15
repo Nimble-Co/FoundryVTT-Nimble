@@ -25,7 +25,7 @@ declare namespace DamageRoll {
 	};
 }
 
-// @ts-expect-error
+// @ts-expect-error - DamageRoll is a custom roll type
 class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	declare options: DamageRoll.Options;
 

@@ -1,7 +1,7 @@
 <script>
 	import { setContext } from 'svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
-	import updateDocumentImage from '../handlers/updateDocumentImage';
+	import updateDocumentImage from '../handlers/updateDocumentImage.ts';
 	import HitPointBar from './components/HitPointBar.svelte';
 	import NPCCoreTab from './pages/NPCCoreTab.svelte';
 	import NPCNotesTab from './pages/NPCNotesTab.svelte';

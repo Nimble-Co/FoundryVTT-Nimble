@@ -1,7 +1,7 @@
 import { AbilityBonusRule } from '../models/rules/abilityBonus';
 import { ArmorClassRule } from '../models/rules/armorClass';
 import { ItemGrantRule } from '../models/rules/grantItem';
-import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
+import { GrantProficiencyRule } from '../models/rules/grantProficiencies';
 import { InitiativeBonusRule } from '../models/rules/initiativeBonus';
 import { MaxHitDiceRule } from '../models/rules/maxHitDice';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus';
