@@ -1,4 +1,4 @@
-import type { ActionConsequence, EffectNode } from '#types/effectTree.js';
+import type { ActionConsequence, EffectNode } from '#types/effectTree';
 
 export function flattenEffectsTree(
 	nodes: EffectNode[],

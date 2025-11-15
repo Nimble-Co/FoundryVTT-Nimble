@@ -1,7 +1,7 @@
-import type { EffectNode } from '#types/effectTree.js';
-import { findNodesByContexts } from '../../../utils/treeManipulation/findNodesByContexts.js';
-import { groupNodes } from './groupNodes.js';
-import { processNodes } from './processNodes.js';
+import type { EffectNode } from '#types/effectTree';
+import { findNodesByContexts } from '../../../utils/treeManipulation/findNodesByContexts';
+import { groupNodes } from './groupNodes';
+import { processNodes } from './processNodes';
 
 export function getRelevantNodes(
 	effects: EffectNode[],

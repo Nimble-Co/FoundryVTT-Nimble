@@ -1,5 +1,5 @@
-import type { EffectNode } from '#types/effectTree.js';
-import { flattenEffectsTree } from '../../../utils/treeManipulation/flattenEffectsTree.js';
+import type { EffectNode } from '#types/effectTree';
+import { flattenEffectsTree } from '../../../utils/treeManipulation/flattenEffectsTree';
 
 export function processNodes(effects: EffectNode[], relevantNodes: EffectNode[]) {
 	const nodes = foundry.utils.deepClone(relevantNodes);

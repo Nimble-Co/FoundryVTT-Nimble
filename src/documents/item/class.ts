@@ -1,7 +1,7 @@
-import { ClassResourceManager } from '../../managers/ClassResourceManager.js';
-import type { NimbleClassData } from '../../models/item/ClassDataModel.js';
-import type { NimbleCharacter } from '../actor/character.js';
-import { NimbleBaseItem } from './base.svelte.js';
+import { ClassResourceManager } from '../../managers/ClassResourceManager';
+import type { NimbleClassData } from '../../models/item/ClassDataModel';
+import type { NimbleCharacter } from '../actor/character';
+import { NimbleBaseItem } from './base.svelte';
 
 export class NimbleClassItem extends NimbleBaseItem {
 	declare ASI: Record<string, number>;

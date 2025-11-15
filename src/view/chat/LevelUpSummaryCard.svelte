@@ -1,7 +1,7 @@
 <script>
 	import { setContext } from 'svelte';
-	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
-	import prepareRollTooltip from '../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
+	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor';
+	import prepareRollTooltip from '../dataPreparationHelpers/rollTooltips/prepareRollTooltip';
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';

@@ -1,6 +1,6 @@
 <script>
 	import { setContext } from 'svelte';
-	import updateDocumentImage from '../handlers/updateDocumentImage.js';
+	import updateDocumentImage from '../handlers/updateDocumentImage';
 
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';

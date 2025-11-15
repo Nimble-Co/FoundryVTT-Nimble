@@ -1,7 +1,7 @@
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
-} from '#lib/SvelteApplicationMixin.svelte.js';
+} from '#lib/SvelteApplicationMixin.svelte';
 import SubclassSheetComponent from '../../view/sheets/SubclassSheet.svelte';
 
 export default class SubclassSheet extends SvelteApplicationMixin(

@@ -1,13 +1,13 @@
-import { createConditionNode } from './createConditionNode.js';
-import { createDamageNode } from './createDamageNode.js';
-import { createDamageOutcomeNode } from './createDamageOutcomeNode.js';
-import { createHealingNode } from './createHealingNode.js';
-import { createSavingThrowNode } from './createSavingThrowNode.js';
-import { createTextNode } from './createTextNode.js';
-import { flattenEffectsTree } from './flattenEffectsTree.js';
-import { reconstructEffectsTree } from './reconstructEffectsTree.js';
-import type { NimbleBoonItem } from '../../documents/item/boon.js';
-import type { EffectNode } from '#types/effectTree.js';
+import { createConditionNode } from './createConditionNode';
+import { createDamageNode } from './createDamageNode';
+import { createDamageOutcomeNode } from './createDamageOutcomeNode';
+import { createHealingNode } from './createHealingNode';
+import { createSavingThrowNode } from './createSavingThrowNode';
+import { createTextNode } from './createTextNode';
+import { flattenEffectsTree } from './flattenEffectsTree';
+import { reconstructEffectsTree } from './reconstructEffectsTree';
+import type { NimbleBoonItem } from '../../documents/item/boon';
+import type { EffectNode } from '#types/effectTree';
 
 export async function createEffectNode(
 	document: NimbleBoonItem,

@@ -3,5 +3,5 @@
  * Import from here for consistent data across all tests
  */
 
-export * from './characters.js';
-export * from './dialogs.js';
+export * from './characters';
+export * from './dialogs';

@@ -1,4 +1,4 @@
-import prepareRollTooltipDiceResults from './prepareRollTooltipDiceResults.js';
+import prepareRollTooltipDiceResults from './prepareRollTooltipDiceResults';
 
 export default function prepareRollTooltipRollParts(roll) {
 	return roll.dice.reduce((acc, part) => {

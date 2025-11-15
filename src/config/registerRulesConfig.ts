@@ -1,13 +1,13 @@
-import { AbilityBonusRule } from '../models/rules/abilityBonus.js';
-import { ArmorClassRule } from '../models/rules/armorClass.js';
-import { ItemGrantRule } from '../models/rules/grantItem.js';
+import { AbilityBonusRule } from '../models/rules/abilityBonus';
+import { ArmorClassRule } from '../models/rules/armorClass';
+import { ItemGrantRule } from '../models/rules/grantItem';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
-import { InitiativeBonusRule } from '../models/rules/initiativeBonus.js';
-import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
-import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
-import { MaxWoundsRule } from '../models/rules/maxWounds.js';
-import { NoteRule } from '../models/rules/note.js';
-import { SkillBonusRule } from '../models/rules/skillBonus.js';
+import { InitiativeBonusRule } from '../models/rules/initiativeBonus';
+import { MaxHitDiceRule } from '../models/rules/maxHitDice';
+import { MaxHpBonusRule } from '../models/rules/maxHpBonus';
+import { MaxWoundsRule } from '../models/rules/maxWounds';
+import { NoteRule } from '../models/rules/note';
+import { SkillBonusRule } from '../models/rules/skillBonus';
 
 export default function registerRulesConfig() {
 	const ruleTypes = {

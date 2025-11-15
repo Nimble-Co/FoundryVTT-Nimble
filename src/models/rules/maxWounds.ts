@@ -1,4 +1,4 @@
-import { NimbleBaseRule } from './base.js';
+import { NimbleBaseRule } from './base';
 
 function schema() {
 	const { fields } = foundry.data;

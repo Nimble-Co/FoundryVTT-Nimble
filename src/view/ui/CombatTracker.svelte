@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
-	import type { NimbleCombat } from '../../documents/combat/combat.svelte.js';
+	import type { NimbleCombat } from '../../documents/combat/combat.svelte';
 	import BaseCombatant from './components/BaseCombatant.svelte';
 	import CombatTrackerControls from './components/CombatTrackerControls.svelte';
 	import PlayerCharacterCombatant from './components/PlayerCharacterCombatant.svelte';

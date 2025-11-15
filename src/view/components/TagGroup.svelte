@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { TagGroupOption } from '#types/tagGroupOption.js';
+	import type { TagGroupOption } from '#types/tagGroupOption';
 
 	interface props {
 		disabled?: boolean;

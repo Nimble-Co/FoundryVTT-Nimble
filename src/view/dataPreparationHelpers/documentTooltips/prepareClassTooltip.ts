@@ -1,8 +1,8 @@
-import prepareClassMetadata from '../metaData/prepareClassMetadata.js';
-import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription.js';
-import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader.js';
+import prepareClassMetadata from '../metaData/prepareClassMetadata';
+import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription';
+import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader';
 
-import type { NimbleClassItem } from '../../../documents/item/class.js';
+import type { NimbleClassItem } from '../../../documents/item/class';
 
 export default function prepareAncestryTooltip(characterClass: NimbleClassItem): string {
 	const metadata = prepareClassMetadata(characterClass);

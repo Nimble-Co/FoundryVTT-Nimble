@@ -1,8 +1,8 @@
-import prepareFeatureMetadata from '../metaData/prepareFeatureMetadata.js';
-import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription.js';
-import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader.js';
+import prepareFeatureMetadata from '../metaData/prepareFeatureMetadata';
+import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription';
+import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader';
 
-import type { NimbleFeatureItem } from '../../../documents/item/feature.js';
+import type { NimbleFeatureItem } from '../../../documents/item/feature';
 
 export default function prepareFeatureTooltip(feature: NimbleFeatureItem): string {
 	const metadata = prepareFeatureMetadata(feature);

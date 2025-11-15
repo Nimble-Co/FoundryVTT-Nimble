@@ -1,7 +1,7 @@
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
-} from '#lib/SvelteApplicationMixin.svelte.js';
+} from '#lib/SvelteApplicationMixin.svelte';
 import MonsterFeatureSheetComponent from '../../view/sheets/MonsterFeatureSheet.svelte';
 
 export default class MonsterFeatureSheet extends SvelteApplicationMixin(

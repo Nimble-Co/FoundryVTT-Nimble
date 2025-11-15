@@ -1,4 +1,4 @@
-import { NimbleConditionEffectData } from './conditionDataModel.js';
+import { NimbleConditionEffectData } from './conditionDataModel';
 
 const activeEffectDataModels = {
 	condition: NimbleConditionEffectData,

@@ -1,5 +1,5 @@
-import type { DamageNode } from '#types/effectTree.js';
-import { createDamageOutcomeNode } from './createDamageOutcomeNode.js';
+import type { DamageNode } from '#types/effectTree';
+import { createDamageOutcomeNode } from './createDamageOutcomeNode';
 
 export function createDamageNode(
 	parentNode: string | null = null,

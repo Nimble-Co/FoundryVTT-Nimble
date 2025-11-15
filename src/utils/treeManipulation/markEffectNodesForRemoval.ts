@@ -1,4 +1,4 @@
-import type { EffectNode } from '#types/effectTree.js';
+import type { EffectNode } from '#types/effectTree';
 
 export function markEffectNodesForRemoval(nodeId: string, flattened: EffectNode[]): Set<string> {
 	const nodesToRemove: Set<string> = new Set();

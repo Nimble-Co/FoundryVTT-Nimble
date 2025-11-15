@@ -1,5 +1,5 @@
 <script>
-	import localize from '../../utils/localize.js';
+	import localize from '../../utils/localize';
 
 	const { HUD } = $props();
 

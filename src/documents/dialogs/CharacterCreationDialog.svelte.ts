@@ -1,7 +1,7 @@
 import type { DeepPartial } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
-import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
-import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
-import sortDocumentsByName from '../../utils/sortDocumentsByName.js';
+import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte';
+import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium';
+import sortDocumentsByName from '../../utils/sortDocumentsByName';
 import CharacterCreationDialogComponent from '../../view/dialogs/CharacterCreationDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;

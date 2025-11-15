@@ -1,13 +1,13 @@
 <script>
 	import { getContext } from 'svelte';
-	import sortItems from '../../../utils/sortItems.js';
-	import prepareAncestryTooltip from '../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js';
-	import prepareBackgroundTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBackgroundTooltip.js';
-	import prepareBoonTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBoonTooltip.js';
-	import prepareClassTooltip from '../../dataPreparationHelpers/documentTooltips/prepareClassTooltip.js';
-	import prepareFeatureTooltip from '../../dataPreparationHelpers/documentTooltips/prepareFeatureTooltip.js';
-	import prepareSubclassTooltip from '../../dataPreparationHelpers/documentTooltips/prepareSubclassTooltip.js';
-	import filterItems from '../../dataPreparationHelpers/filterItems.js';
+	import sortItems from '../../../utils/sortItems';
+	import prepareAncestryTooltip from '../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip';
+	import prepareBackgroundTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBackgroundTooltip';
+	import prepareBoonTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBoonTooltip';
+	import prepareClassTooltip from '../../dataPreparationHelpers/documentTooltips/prepareClassTooltip';
+	import prepareFeatureTooltip from '../../dataPreparationHelpers/documentTooltips/prepareFeatureTooltip';
+	import prepareSubclassTooltip from '../../dataPreparationHelpers/documentTooltips/prepareSubclassTooltip';
+	import filterItems from '../../dataPreparationHelpers/filterItems';
 
 	import SearchBar from '../components/SearchBar.svelte';
 

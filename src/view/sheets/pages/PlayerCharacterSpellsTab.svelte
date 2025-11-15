@@ -1,8 +1,8 @@
 <script>
-	import filterItems from '../../dataPreparationHelpers/filterItems.js';
+	import filterItems from '../../dataPreparationHelpers/filterItems';
 	import { getContext } from 'svelte';
 	import prepareSpellTooltip from '../../dataPreparationHelpers/documentTooltips/prepareSpellTooltip';
-	import sortItems from '../../../utils/sortItems.js';
+	import sortItems from '../../../utils/sortItems';
 
 	import SearchBar from '../components/SearchBar.svelte';
 	import SecondaryNavigation from '../../components/SecondaryNavigation.svelte';

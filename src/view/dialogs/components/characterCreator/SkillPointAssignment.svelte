@@ -1,8 +1,8 @@
 <script>
 	import { getContext } from 'svelte';
-	import localize from '../../../../utils/localize.js';
+	import localize from '../../../../utils/localize';
 	import Hint from '../../../components/Hint.svelte';
-	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
+	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign';
 
 	let {
 		abilityBonuses,

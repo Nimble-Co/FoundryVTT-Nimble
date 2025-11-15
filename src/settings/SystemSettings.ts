@@ -1,4 +1,4 @@
-import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
+import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte';
 import SystemSettingsDialog from '../view/dialogs/SystemSettingsDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;

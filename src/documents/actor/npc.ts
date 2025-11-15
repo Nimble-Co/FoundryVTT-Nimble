@@ -1,7 +1,7 @@
-import type { NimbleNPCData } from '../../models/actor/NPCDataModel.js';
+import type { NimbleNPCData } from '../../models/actor/NPCDataModel';
 import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementConfigDialog.svelte';
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
-import { NimbleBaseActor } from './base.svelte.js';
+import { NimbleBaseActor } from './base.svelte';
 
 export class NimbleNPC extends NimbleBaseActor {
 	declare system: NimbleNPCData;

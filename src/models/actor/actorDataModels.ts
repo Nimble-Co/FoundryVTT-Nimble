@@ -1,7 +1,7 @@
-import { NimbleCharacterData } from './CharacterDataModel.js';
-import { NimbleNPCData } from './NPCDataModel.js';
-import { NimbleMinionData } from './MinionDataModel.js';
-import { NimbleSoloMonsterData } from './SoloMonsterDataModel.js';
+import { NimbleCharacterData } from './CharacterDataModel';
+import { NimbleNPCData } from './NPCDataModel';
+import { NimbleMinionData } from './MinionDataModel';
+import { NimbleSoloMonsterData } from './SoloMonsterDataModel';
 
 const actorDataModels = {
 	character: NimbleCharacterData,

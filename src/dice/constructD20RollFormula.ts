@@ -1,6 +1,6 @@
 import type foundry from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/foundry.d.mts';
-import constructD20Term from './constructD20Term.js';
-import simplifyOperatorTerms from './simplifyOperatorTerms.js';
+import constructD20Term from './constructD20Term';
+import simplifyOperatorTerms from './simplifyOperatorTerms';
 
 export type D20RollOptions = {
 	actor: NimbleBaseActor;

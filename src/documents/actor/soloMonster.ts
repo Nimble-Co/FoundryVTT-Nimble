@@ -1,7 +1,7 @@
-import type { NimbleSoloMonsterData } from '../../models/actor/SoloMonsterDataModel.js';
+import type { NimbleSoloMonsterData } from '../../models/actor/SoloMonsterDataModel';
 import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementConfigDialog.svelte';
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
-import { NimbleBaseActor } from './base.svelte.js';
+import { NimbleBaseActor } from './base.svelte';
 
 export class NimbleSoloMonster extends NimbleBaseActor {
 	declare system: NimbleSoloMonsterData;

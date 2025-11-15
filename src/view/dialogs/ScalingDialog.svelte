@@ -1,5 +1,5 @@
 <script>
-	import { updateEffectNode } from '../../utils/treeManipulation/updateEffectNode.js';
+	import { updateEffectNode } from '../../utils/treeManipulation/updateEffectNode';
 
 	import TagGroup from '../components/TagGroup.svelte';
 

@@ -1,4 +1,4 @@
-import type { NimbleBaseRule } from '../models/rules/base.js';
+import type { NimbleBaseRule } from '../models/rules/base';
 
 export namespace RulesManager {
 	export interface AddOptions {

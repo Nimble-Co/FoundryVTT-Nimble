@@ -1,5 +1,5 @@
 <script>
-	import localize from '../../utils/localize.js';
+	import localize from '../../utils/localize';
 
 	function isCurrentTab() {
 		if (!currentTab?.name) return index === 0;

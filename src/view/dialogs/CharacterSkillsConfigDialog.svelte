@@ -1,5 +1,5 @@
 <script>
-	import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
+	import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign';
 
 	function incrementSkillPoints(skillKey, skill) {
 		const newValue = skill.points + 1;

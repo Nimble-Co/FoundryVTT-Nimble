@@ -1,8 +1,8 @@
-import prepareBackgroundMetadata from '../metaData/prepareBackgroundMetadata.js';
-import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription.js';
-import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader.js';
+import prepareBackgroundMetadata from '../metaData/prepareBackgroundMetadata';
+import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription';
+import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader';
 
-import type { NimbleBackgroundItem } from '../../../documents/item/background.js';
+import type { NimbleBackgroundItem } from '../../../documents/item/background';
 
 export default function prepareBackgroundTooltip(background: NimbleBackgroundItem): string {
 	const metadata = prepareBackgroundMetadata(background);

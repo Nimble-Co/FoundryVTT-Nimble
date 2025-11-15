@@ -1,7 +1,7 @@
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
-} from '#lib/SvelteApplicationMixin.svelte.js';
+} from '#lib/SvelteApplicationMixin.svelte';
 import SpellSheetComponent from '../../view/sheets/SpellSheet.svelte';
 
 export default class SpellSheet extends SvelteApplicationMixin(

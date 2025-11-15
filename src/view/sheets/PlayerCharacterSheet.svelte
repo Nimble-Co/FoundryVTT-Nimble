@@ -1,8 +1,8 @@
 <script>
 	import { setContext } from 'svelte';
-	import localize from '../../utils/localize.js';
+	import localize from '../../utils/localize';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
-	import updateDocumentImage from '../handlers/updateDocumentImage.js';
+	import updateDocumentImage from '../handlers/updateDocumentImage';
 	import HitPointBar from './components/HitPointBar.svelte';
 	import PlayerCharacterBioTab from './pages/PlayerCharacterBioTab.svelte';
 	import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';

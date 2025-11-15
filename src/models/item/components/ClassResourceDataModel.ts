@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
-import { isValidDiceModifier } from '../../../utils/isValidDiceModifier.js';
-import { identifier } from '../../common.js';
+import { isValidDiceModifier } from '../../../utils/isValidDiceModifier';
+import { identifier } from '../../common';
 
 /** ---------------------------------------------------------- */
 

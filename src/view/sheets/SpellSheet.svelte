@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { setContext } from 'svelte';
-	import type { NimbleSpellItem } from '../../documents/item/spell.js';
-	import type SpellSheet from '../../documents/sheets/SpellSheet.svelte.js';
+	import type { NimbleSpellItem } from '../../documents/item/spell';
+	import type SpellSheet from '../../documents/sheets/SpellSheet.svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
-	import prepareSpellMetaData from '../dataPreparationHelpers/metaData/prepareSpellMetadata.js';
-	import updateDocumentImage from '../handlers/updateDocumentImage.js';
+	import prepareSpellMetaData from '../dataPreparationHelpers/metaData/prepareSpellMetadata';
+	import updateDocumentImage from '../handlers/updateDocumentImage';
 	import ItemHeader from './components/ItemHeader.svelte';
 	import ItemActivationConfigTab from './pages/ItemActivationConfigTab.svelte';
 	import ItemMacroTab from './pages/ItemMacroTab.svelte';

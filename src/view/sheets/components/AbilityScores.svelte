@@ -1,7 +1,7 @@
 <script>
 	import { getContext } from 'svelte';
-	import localize from '../../../utils/localize.js';
-	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
+	import localize from '../../../utils/localize';
+	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign';
 
 	let { abilities } = $props();
 

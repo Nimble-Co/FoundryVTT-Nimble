@@ -1,7 +1,7 @@
 <script>
 	import { getContext } from 'svelte';
 	import Hint from '../../../components/Hint.svelte';
-	import prepareBackgroundTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareBackgroundTooltip.js';
+	import prepareBackgroundTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareBackgroundTooltip';
 	import DocumentCard from './DocumentCard.svelte';
 
 	let { active, backgrounds, selectedBackground = $bindable() } = $props();

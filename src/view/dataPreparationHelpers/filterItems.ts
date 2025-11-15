@@ -1,5 +1,5 @@
-import type { NimbleCharacter } from '../../documents/actor/character.js';
-import type { NimbleBaseItem, SystemItemTypes } from '../../documents/item/base.svelte.js';
+import type { NimbleCharacter } from '../../documents/actor/character';
+import type { NimbleBaseItem, SystemItemTypes } from '../../documents/item/base.svelte';
 
 export default function filterItems(
 	actor: NimbleCharacter,

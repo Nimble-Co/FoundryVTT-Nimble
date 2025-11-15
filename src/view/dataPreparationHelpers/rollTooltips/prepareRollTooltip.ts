@@ -1,6 +1,6 @@
-import getTooltipPermissions from './getTooltipPermissions.js';
-import prepareRollTooltipFormula from './prepareRollTooltipFormula.js';
-import prepareRollTooltipRollParts from './prepareRollTooltipParts.js';
+import getTooltipPermissions from './getTooltipPermissions';
+import prepareRollTooltipFormula from './prepareRollTooltipFormula';
+import prepareRollTooltipRollParts from './prepareRollTooltipParts';
 
 export default function prepareRollTooltip(actorType, permissions, roll) {
 	if (!getTooltipPermissions(actorType, permissions)) return null;

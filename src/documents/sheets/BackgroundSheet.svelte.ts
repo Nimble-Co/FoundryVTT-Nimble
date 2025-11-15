@@ -1,5 +1,5 @@
-import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
-import { SvelteItemSheet } from '#lib/SvelteItemSheet.svelte.js';
+import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte';
+import { SvelteItemSheet } from '#lib/SvelteItemSheet.svelte';
 
 import BackgroundSheetComponent from '../../view/sheets/BackgroundSheet.svelte';
 

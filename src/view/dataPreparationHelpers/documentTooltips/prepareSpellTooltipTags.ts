@@ -1,6 +1,6 @@
-import prepareEmbeddedDocumentTooltipTags from './prepareEmbeddedDocumentTooltipTags.js';
-import prepareRangeTooltipTag from './prepareRangeTooltipTag.js';
-import prepareReachTooltipTag from './prepareReachTooltipTag.js';
+import prepareEmbeddedDocumentTooltipTags from './prepareEmbeddedDocumentTooltipTags';
+import prepareRangeTooltipTag from './prepareRangeTooltipTag';
+import prepareReachTooltipTag from './prepareReachTooltipTag';
 
 export default function prepareSpellTooltipTags(spell) {
 	const { spellProperties } = CONFIG.NIMBLE;

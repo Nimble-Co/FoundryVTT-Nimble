@@ -2,13 +2,13 @@ import type Document from '@league-of-foundry-developers/foundry-vtt-types/src/f
 import type { DatabaseOperationsFor } from '@league-of-foundry-developers/foundry-vtt-types/src/types/helperTypes.d.mts';
 import type { InexactPartial } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
 import { createSubscriber } from 'svelte/reactivity';
-import { DamageRoll } from '../../dice/DamageRoll.js';
-import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
-import { RulesManager } from '../../managers/RulesManager.js';
+import { DamageRoll } from '../../dice/DamageRoll';
+import { ItemActivationManager } from '../../managers/ItemActivationManager';
+import { RulesManager } from '../../managers/RulesManager';
 
-export type { SystemItemTypes } from './itemInterfaces.js';
+export type { SystemItemTypes } from './itemInterfaces';
 
-import type { SystemItemTypes } from './itemInterfaces.js';
+import type { SystemItemTypes } from './itemInterfaces';
 
 // Forward declaration to avoid circular dependency
 interface NimbleBaseActor extends Actor {

@@ -1,5 +1,5 @@
-import type { EffectNode } from '#types/effectTree.js';
-import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
+import type { EffectNode } from '#types/effectTree';
+import type { NimbleBaseItem } from '../../documents/item/base.svelte';
 
 export async function updateEffectNode(
 	document: NimbleBaseItem,

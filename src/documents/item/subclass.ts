@@ -1,8 +1,8 @@
-import type { NimbleClassItem } from './class.js';
-import type { NimbleSubclassData } from '../../models/item/SubclassDataModel.js';
+import type { NimbleClassItem } from './class';
+import type { NimbleSubclassData } from '../../models/item/SubclassDataModel';
 
-import { NimbleBaseItem } from './base.svelte.js';
-import { ClassResourceManager } from '../../managers/ClassResourceManager.js';
+import { NimbleBaseItem } from './base.svelte';
+import { ClassResourceManager } from '../../managers/ClassResourceManager';
 
 export class NimbleSubclassItem extends NimbleBaseItem {
 	declare class: NimbleClassItem | null;

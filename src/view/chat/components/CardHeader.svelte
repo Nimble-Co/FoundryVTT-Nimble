@@ -1,5 +1,5 @@
 <script>
-	import calculateHeaderTextColor from '../../dataPreparationHelpers/calculateHeaderTextColor.js';
+	import calculateHeaderTextColor from '../../dataPreparationHelpers/calculateHeaderTextColor';
 
 	const { messageDocument } = $props();
 

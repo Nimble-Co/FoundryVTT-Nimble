@@ -1,9 +1,9 @@
-import prepareObjectMetadata from '../metaData/prepareObjectMetadata.js';
-import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription.js';
-import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader.js';
-import prepareWeaponTooltipTags from './prepareWeaponTooltipTags.js';
+import prepareObjectMetadata from '../metaData/prepareObjectMetadata';
+import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription';
+import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader';
+import prepareWeaponTooltipTags from './prepareWeaponTooltipTags';
 
-import type { NimbleObjectItem } from '../../../documents/item/object.js';
+import type { NimbleObjectItem } from '../../../documents/item/object';
 
 export default function prepareObjectTooltip(item: NimbleObjectItem): string {
 	const metadata = prepareObjectMetadata(item);

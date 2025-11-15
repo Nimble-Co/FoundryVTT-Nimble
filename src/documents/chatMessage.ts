@@ -1,7 +1,7 @@
 export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.TypeNames, 'base'>;
 
 import { createSubscriber } from 'svelte/reactivity';
-import type { EffectNode } from '#types/effectTree.js';
+import type { EffectNode } from '#types/effectTree';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 
 export interface NimbleChatMessage<

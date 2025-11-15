@@ -1,12 +1,12 @@
 import type BaseUser from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/documents/user.d.mts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
-import { NimbleRoll } from '../../dice/NimbleRoll.js';
-import { HitDiceManager } from '../../managers/HitDiceManager.js';
-import { RestManager } from '../../managers/RestManager.js';
-import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
-import calculateRollMode from '../../utils/calculateRollMode.js';
-import getRollFormula from '../../utils/getRollFormula.js';
+import { NimbleRoll } from '../../dice/NimbleRoll';
+import { HitDiceManager } from '../../managers/HitDiceManager';
+import { RestManager } from '../../managers/RestManager';
+import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel';
+import calculateRollMode from '../../utils/calculateRollMode';
+import getRollFormula from '../../utils/getRollFormula';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
 import CharacterLevelUpDialog from '../../view/dialogs/CharacterLevelUpDialog.svelte';
@@ -16,11 +16,11 @@ import CharacterStatConfigDialog from '../../view/dialogs/CharacterStatConfigDia
 import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/CharacterWeaponProficienciesConfigDialog.svelte';
 import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
-import GenericDialog from '../dialogs/GenericDialog.svelte.js';
-import type { NimbleAncestryItem } from '../item/ancestry.js';
-import type { NimbleBackgroundItem } from '../item/background.js';
+import GenericDialog from '../dialogs/GenericDialog.svelte';
+import type { NimbleAncestryItem } from '../item/ancestry';
+import type { NimbleBackgroundItem } from '../item/background';
 import type { ActorRollOptions } from './actorInterfaces.ts';
-import { NimbleBaseActor } from './base.svelte.js';
+import { NimbleBaseActor } from './base.svelte';
 
 export class NimbleCharacter extends NimbleBaseActor {
 	declare _ancestry: NimbleAncestryItem | undefined;

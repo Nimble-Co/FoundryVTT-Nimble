@@ -1,4 +1,4 @@
-import type { EffectNode } from '#types/effectTree.d.js';
+import type { EffectNode } from '#types/effectTree.d';
 
 /**
  * Traverses the tree and collects nodes based on the specified contexts.

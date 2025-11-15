@@ -1,5 +1,5 @@
-import { activation } from '../item/common.js';
-import { targets, metadata } from './common.js';
+import { activation } from '../item/common';
+import { targets, metadata } from './common';
 
 const { fields } = foundry.data;
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { NimbleBaseItem } from '../../../documents/item/base.js';
+	import type { NimbleBaseItem } from '../../../documents/item/base';
 
 	function updateRule(event: Event, ruleId: string): void {
 		const target = event.target as HTMLTextAreaElement | null;
@@ -11,7 +11,7 @@
 
 	import { getContext } from 'svelte';
 
-	import overrideTextAreaBehavior from '../../../utils/overrideTextAreaBehavior.js';
+	import overrideTextAreaBehavior from '../../../utils/overrideTextAreaBehavior';
 
 	const { ruleTypes } = CONFIG.NIMBLE;
 

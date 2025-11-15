@@ -1,6 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
-	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
+	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip';
 
 	import RollSummary from './RollSummary.svelte';
 

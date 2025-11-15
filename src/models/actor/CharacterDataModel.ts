@@ -1,5 +1,5 @@
-import { RecordField } from '../fields/RecordField.js';
-import { abilities, savingThrows } from './common.js';
+import { RecordField } from '../fields/RecordField';
+import { abilities, savingThrows } from './common';
 
 const { fields } = foundry.data;
 

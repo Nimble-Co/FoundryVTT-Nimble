@@ -2,7 +2,7 @@ import type { DeepPartial } from '@league-of-foundry-developers/foundry-vtt-type
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
-} from '#lib/SvelteApplicationMixin.svelte.js';
+} from '#lib/SvelteApplicationMixin.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
 

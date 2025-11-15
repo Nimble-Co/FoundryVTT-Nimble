@@ -1,7 +1,7 @@
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
-} from '#lib/SvelteApplicationMixin.svelte.js';
+} from '#lib/SvelteApplicationMixin.svelte';
 import BoonSheetComponent from '../../view/sheets/BoonSheet.svelte';
 
 export default class BoonSheet extends SvelteApplicationMixin(

@@ -1,4 +1,4 @@
-import type { EffectNode } from '#types/effectTree.js';
+import type { EffectNode } from '#types/effectTree';
 
 export function groupNodes(nodes: EffectNode[]) {
 	const damageNodes: EffectNode[] = [];

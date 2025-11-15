@@ -3,7 +3,7 @@ import type {
 	EmptyObject,
 } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
 
-import { SvelteDocumentSheet } from './SvelteDocumentSheet.svelte.js';
+import { SvelteDocumentSheet } from './SvelteDocumentSheet.svelte';
 
 class SvelteItemSheet<
 	D extends Item.ConfiguredInstance = Item.ConfiguredInstance,

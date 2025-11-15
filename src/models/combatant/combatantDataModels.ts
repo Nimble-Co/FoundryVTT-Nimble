@@ -1,6 +1,6 @@
-import { NimbleCharacterCombatantData } from './CharacterCombatantDataModel.js';
-import { NimbleNPCCombatantData } from './NPCCombatantDataModel.js';
-import { NimbleSoloMonsterCombatantData } from './SoloMonsterCombatantDataModel.js';
+import { NimbleCharacterCombatantData } from './CharacterCombatantDataModel';
+import { NimbleNPCCombatantData } from './NPCCombatantDataModel';
+import { NimbleSoloMonsterCombatantData } from './SoloMonsterCombatantDataModel';
 
 const actorDataModels = {
 	character: NimbleCharacterCombatantData,

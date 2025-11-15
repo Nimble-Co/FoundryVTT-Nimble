@@ -1,10 +1,10 @@
-import { NimbleAbilityCheckCardData } from './AbilityCheckCardDataModel.js';
-import { NimbleFeatureCardData } from './FeatureCardDataModel.js';
-import { NimbleLevelUpSummaryCardData } from './LevelUpSummaryCardDataModel.js';
-import { NimbleObjectCardData } from './ObjectCardDataModel.js';
-import { NimbleSavingThrowCardData } from './SavingThrowCardDataModel.js';
-import { NimbleSkillCheckCardData } from './SkillCheckCardDataModel.js';
-import { NimbleSpellCardData } from './SpellCardDataModel.js';
+import { NimbleAbilityCheckCardData } from './AbilityCheckCardDataModel';
+import { NimbleFeatureCardData } from './FeatureCardDataModel';
+import { NimbleLevelUpSummaryCardData } from './LevelUpSummaryCardDataModel';
+import { NimbleObjectCardData } from './ObjectCardDataModel';
+import { NimbleSavingThrowCardData } from './SavingThrowCardDataModel';
+import { NimbleSkillCheckCardData } from './SkillCheckCardDataModel';
+import { NimbleSpellCardData } from './SpellCardDataModel';
 
 const chatDataModels = {
 	abilityCheck: NimbleAbilityCheckCardData,

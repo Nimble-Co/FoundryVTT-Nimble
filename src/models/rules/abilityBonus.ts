@@ -1,5 +1,5 @@
-import type { NimbleCharacter } from '../../documents/actor/character.js';
-import { NimbleBaseRule } from './base.js';
+import type { NimbleCharacter } from '../../documents/actor/character';
+import { NimbleBaseRule } from './base';
 
 function schema() {
 	const { fields } = foundry.data;

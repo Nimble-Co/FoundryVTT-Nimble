@@ -1,11 +1,11 @@
 <script>
 	import { getContext } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import { RulesManager } from '../../../managers/RulesManager.js';
-	import localize from '../../../utils/localize.js';
-	import sortItems from '../../../utils/sortItems.js';
-	import prepareObjectTooltip from '../../dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js';
-	import filterItems from '../../dataPreparationHelpers/filterItems.js';
+	import { RulesManager } from '../../../managers/RulesManager';
+	import localize from '../../../utils/localize';
+	import sortItems from '../../../utils/sortItems';
+	import prepareObjectTooltip from '../../dataPreparationHelpers/documentTooltips/prepareObjectTooltip';
+	import filterItems from '../../dataPreparationHelpers/filterItems';
 
 	import SearchBar from '../components/SearchBar.svelte';
 

@@ -1,9 +1,9 @@
-import type { EffectNode } from '#types/effectTree.js';
-import { DamageRoll } from '../dice/DamageRoll.js';
-import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
-import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
-import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
-import { keyPressStore } from '../stores/keyPressStore.js';
+import type { EffectNode } from '#types/effectTree';
+import { DamageRoll } from '../dice/DamageRoll';
+import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree';
+import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree';
+import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte';
+import { keyPressStore } from '../stores/keyPressStore';
 
 class ItemActivationManager {
 	#item: NimbleBaseItem;

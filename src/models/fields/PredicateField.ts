@@ -1,8 +1,8 @@
 import type DataModel from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/abstract/data.d.mts';
 import type { AnyObject } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
 
-import { Predicate } from '../../etc/Predicate.js';
-import { isPlainObject } from '../../utils/isPlainObject.js';
+import { Predicate } from '../../etc/Predicate';
+import { isPlainObject } from '../../utils/isPlainObject';
 
 // class PredicateField<
 //   const EFT extends PredicateStatementField = PredicateStatementField,

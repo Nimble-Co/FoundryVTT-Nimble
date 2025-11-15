@@ -1,8 +1,8 @@
-import prepareSubclassMetadata from '../metaData/prepareSubclassMetadata.js';
-import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription.js';
-import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader.js';
+import prepareSubclassMetadata from '../metaData/prepareSubclassMetadata';
+import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription';
+import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader';
 
-import type { NimbleSubclassItem } from '../../../documents/item/subclass.js';
+import type { NimbleSubclassItem } from '../../../documents/item/subclass';
 
 export default function prepareAncestryTooltip(subclass: NimbleSubclassItem): string {
 	const metadata = prepareSubclassMetadata(subclass);

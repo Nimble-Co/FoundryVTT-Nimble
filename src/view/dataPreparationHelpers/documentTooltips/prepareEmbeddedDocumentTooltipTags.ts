@@ -1,4 +1,4 @@
-import localize from '../../../utils/localize.js';
+import localize from '../../../utils/localize';
 
 export default function prepareEmbeddedDocumentTooltipTags(tags: TooltipTag[]): string | null {
 	if (!tags.length) return null;

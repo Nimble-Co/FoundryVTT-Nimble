@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable max-len */
-import type { SimpleMerge } from './helpers.js';
+import type { SimpleMerge } from './helpers';
 
 declare namespace RecordField {
 	type Options<IValueField> = DataFieldOptions<Record<string, BaseAssignmentType<IValueField>>>;

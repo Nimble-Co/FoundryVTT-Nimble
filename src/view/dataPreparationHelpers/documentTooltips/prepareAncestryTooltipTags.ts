@@ -1,6 +1,6 @@
-import type { NimbleAncestryItem } from '../../../documents/item/ancestry.js';
+import type { NimbleAncestryItem } from '../../../documents/item/ancestry';
 
-import prepareEmbeddedDocumentTooltipTags from './prepareEmbeddedDocumentTooltipTags.js';
+import prepareEmbeddedDocumentTooltipTags from './prepareEmbeddedDocumentTooltipTags';
 
 export default function prepareAncestryTooltipTags(ancestry: NimbleAncestryItem): string | null {
 	const tags: TooltipTag[] = [];

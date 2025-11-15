@@ -1,7 +1,7 @@
-import type { NimbleMinionData } from '../../models/actor/MinionDataModel.js';
+import type { NimbleMinionData } from '../../models/actor/MinionDataModel';
 import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementConfigDialog.svelte';
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
-import { NimbleBaseActor } from './base.svelte.js';
+import { NimbleBaseActor } from './base.svelte';
 
 export class NimbleMinion extends NimbleBaseActor {
 	declare system: NimbleMinionData;

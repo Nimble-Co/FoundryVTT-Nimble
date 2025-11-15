@@ -1,7 +1,7 @@
-import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
+import type { NimbleObjectData } from '../../models/item/ObjectDataModel';
 import type { NimbleBaseRule } from '../../models/rules/base.ts';
 
-import { NimbleBaseItem } from './base.svelte.js';
+import { NimbleBaseItem } from './base.svelte';
 
 export class NimbleObjectItem extends NimbleBaseItem {
 	declare system: NimbleObjectData;

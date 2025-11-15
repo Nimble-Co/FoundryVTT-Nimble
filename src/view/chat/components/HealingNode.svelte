@@ -1,6 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
-	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
+	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip';
 
 	const messageDocument = getContext('messageDocument');
 	const { actorType, permissions } = messageDocument.system;

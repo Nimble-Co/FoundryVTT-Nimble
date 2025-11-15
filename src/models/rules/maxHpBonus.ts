@@ -1,5 +1,5 @@
-import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
-import { NimbleBaseRule } from './base.js';
+import getDeterministicBonus from '../../dice/getDeterministicBonus';
+import { NimbleBaseRule } from './base';
 
 function schema() {
 	const { fields } = foundry.data;

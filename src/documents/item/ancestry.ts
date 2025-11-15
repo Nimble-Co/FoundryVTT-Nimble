@@ -1,6 +1,6 @@
-import type { NimbleAncestryData } from '../../models/item/AncestryDataModel.js';
+import type { NimbleAncestryData } from '../../models/item/AncestryDataModel';
 
-import { NimbleBaseItem } from './base.svelte.js';
+import { NimbleBaseItem } from './base.svelte';
 
 export class NimbleAncestryItem extends NimbleBaseItem {
 	declare system: NimbleAncestryData;
