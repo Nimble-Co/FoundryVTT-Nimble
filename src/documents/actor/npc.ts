@@ -26,7 +26,7 @@ export class NimbleNPC extends NimbleBaseActor {
 	}
 
 	async editMetadata() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte');
 
 		this.#dialogs.metaConfig ??= new GenericDialog(
 			`${this.name}: Configuration`,
@@ -38,7 +38,7 @@ export class NimbleNPC extends NimbleBaseActor {
 	}
 
 	async configureMovement() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte');
 
 		this.#dialogs.configureMovement ??= new GenericDialog(
 			`${this.name}: Configure Movement Speeds`,

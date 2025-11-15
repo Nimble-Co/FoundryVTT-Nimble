@@ -9,7 +9,7 @@ import { NimbleRoll } from '../../dice/NimbleRoll';
 import calculateRollMode from '../../utils/calculateRollMode';
 import getRollFormula from '../../utils/getRollFormula';
 
-export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
+export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces';
 
 // Forward declarations to avoid circular dependencies
 interface NimbleBaseItem extends Item {
@@ -84,9 +84,7 @@ class NimbleBaseActor extends Actor {
 			...options
 		} = context;
 
-		const { default: ActorCreationDialog } = await import(
-			'../dialogs/ActorCreationDialog.svelte.js'
-		);
+		const { default: ActorCreationDialog } = await import('../dialogs/ActorCreationDialog.svelte');
 		const dialog = new ActorCreationDialog(
 			{
 				...data,
@@ -205,7 +203,7 @@ class NimbleBaseActor extends Actor {
 	/** ------------------------------------------------------ */
 
 	async configureSavingThrows() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte');
 		const { default: ActorSavingThrowConfigDialog } = await import(
 			'../../view/dialogs/ActorSavingThrowConfigDialog.svelte'
 		);
@@ -510,7 +508,7 @@ class NimbleBaseActor extends Actor {
 				return null;
 		}
 
-		const { default: CheckRollDialog } = await import('../dialogs/CheckRollDialog.svelte.js');
+		const { default: CheckRollDialog } = await import('../dialogs/CheckRollDialog.svelte');
 		const dialog = new CheckRollDialog(this, title, { ...data, type });
 
 		await dialog.render(true);

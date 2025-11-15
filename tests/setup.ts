@@ -29,11 +29,11 @@ const langData = JSON.parse(readFileSync(join(process.cwd(), 'public/lang/en.jso
 (globalThis as any).CONFIG = configStructure;
 
 // Import and call init() to set up CONFIG.NIMBLE and other config
-const init = (await import('../src/hooks/init.js')).default;
+const init = (await import('../src/hooks/init')).default;
 init();
 
 // Import and call i18nInit() to translate all CONFIG.NIMBLE strings
-const i18nInit = (await import('../src/hooks/i18nInit.js')).default;
+const i18nInit = (await import('../src/hooks/i18nInit')).default;
 i18nInit();
 
 // Cleanup after each test

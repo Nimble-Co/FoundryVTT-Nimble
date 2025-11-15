@@ -1,6 +1,6 @@
 import type BaseUser from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/documents/user.d.mts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
-import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
+import getDeterministicBonus from '../../dice/getDeterministicBonus';
 import { NimbleRoll } from '../../dice/NimbleRoll';
 import { HitDiceManager } from '../../managers/HitDiceManager';
 import { RestManager } from '../../managers/RestManager';
@@ -19,7 +19,7 @@ import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte';
 import type { NimbleAncestryItem } from '../item/ancestry';
 import type { NimbleBackgroundItem } from '../item/background';
-import type { ActorRollOptions } from './actorInterfaces.ts';
+import type { ActorRollOptions } from './actorInterfaces';
 import { NimbleBaseActor } from './base.svelte';
 
 export class NimbleCharacter extends NimbleBaseActor {
@@ -352,7 +352,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 	/** ------------------------------------------------------ */
 
 	async configureAbilityScores() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte');
 
 		this.#dialogs.configureAbilityScores ??= new GenericDialog(
 			`${this.name}: Configure Ability Scores`,
@@ -365,7 +365,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureArmorProficiencies() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte');
 
 		this.#dialogs.configureArmorProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Armor Proficiencies`,
@@ -378,7 +378,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureLanguageProficiencies() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte');
 
 		this.#dialogs.configureLanguageProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Language Proficiencies`,
@@ -391,7 +391,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureMovement() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte');
 
 		this.#dialogs.configureMovement ??= new GenericDialog(
 			`${this.name}: Configure Movement Speeds`,
@@ -404,7 +404,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureWeaponProficiencies() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte');
 
 		this.#dialogs.configureWeaponProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Weapon Proficiencies`,
@@ -417,7 +417,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async configureSkills() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte');
 
 		this.#dialogs.configureSkills ??= new GenericDialog(
 			`${this.name}: Configure Skills`,
@@ -582,7 +582,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		if (currentClassLevel >= 20) return;
 
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte');
 
 		const nextClassLevel = currentClassLevel + 1;
 
@@ -785,7 +785,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 			restData = restOptions;
 		} else {
 			// Launch Config Dialog
-			const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+			const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte');
 
 			const dialog = new GenericDialog(
 				'Field Rest Dialog',
@@ -842,7 +842,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async editMetadata() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte');
 
 		this.#dialogs.metaConfig ??= new GenericDialog(
 			`${this.name}: Configuration`,

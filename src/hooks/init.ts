@@ -1,41 +1,33 @@
+import { NimbleTemplateLayer } from '../canvas/layers/templateLayer';
 import { NIMBLE } from '../config';
-
-import activeEffectDataModels from '../models/activeEffect/activeEffectDataModels';
-import actorDataModels from '../models/actor/actorDataModels';
-import chatDataModels from '../models/chat/chatDataModels';
-import combatantDataModels from '../models/combatant/combatantDataModels';
-import itemDataModels from '../models/item/itemDataModels';
-
+import { DamageRoll } from '../dice/DamageRoll';
+import { NimbleRoll } from '../dice/NimbleRoll';
+import { PrimaryDie } from '../dice/terms/PrimaryDie';
 import ActorProxy from '../documents/actor/actorProxy';
-import ItemProxy from '../documents/item/itemProxy';
+import { trackableAttributes } from '../documents/actor/trackableAttributes';
 import { NimbleChatMessage } from '../documents/chatMessage';
 import { NimbleCombat } from '../documents/combat/combat.svelte';
 import { NimbleCombatant } from '../documents/combatant/combatant.svelte';
-import { NimbleTokenDocument } from '../documents/token/tokenDocument';
-
-import PlayerCharacterSheet from '../documents/sheets/PlayerCharacterSheet.svelte';
-import NPCSheet from '../documents/sheets/NPCSheet.svelte';
-
+import ItemProxy from '../documents/item/itemProxy';
+import AncestrySheet from '../documents/sheets/AncestrySheet.svelte';
 import BackgroundSheet from '../documents/sheets/BackgroundSheet.svelte';
 import BoonSheet from '../documents/sheets/BoonSheet.svelte';
 import ClassSheet from '../documents/sheets/ClassSheet.svelte';
 import FeatureSheet from '../documents/sheets/FeatureSheet.svelte';
 import MonsterFeatureSheet from '../documents/sheets/MonsterFeatureSheet.svelte';
+import NPCSheet from '../documents/sheets/NPCSheet.svelte';
 import ObjectSheet from '../documents/sheets/ObjectSheet.svelte';
-import AncestrySheet from '../documents/sheets/AncestrySheet.svelte';
+import PlayerCharacterSheet from '../documents/sheets/PlayerCharacterSheet.svelte';
 import SpellSheet from '../documents/sheets/SpellSheet.svelte';
 import SubclassSheet from '../documents/sheets/SubclassSheet.svelte';
-
-import { DamageRoll } from '../dice/DamageRoll';
-import { NimbleRoll } from '../dice/NimbleRoll';
-import { PrimaryDie } from '../dice/terms/PrimaryDie';
-
-import { NimbleTemplateLayer } from '../canvas/layers/templateLayer';
-
-import { trackableAttributes } from '../documents/actor/trackableAttributes.ts';
+import { NimbleTokenDocument } from '../documents/token/tokenDocument';
 import registerCustomEnrichers from '../enrichers/registerCustomEnrichers';
-
 import { NIMBLE_GAME } from '../game';
+import activeEffectDataModels from '../models/activeEffect/activeEffectDataModels';
+import actorDataModels from '../models/actor/actorDataModels';
+import chatDataModels from '../models/chat/chatDataModels';
+import combatantDataModels from '../models/combatant/combatantDataModels';
+import itemDataModels from '../models/item/itemDataModels';
 
 export default function init() {
 	CONFIG.NIMBLE = NIMBLE;

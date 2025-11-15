@@ -1,4 +1,4 @@
-import { NIMBLE } from '../../config.ts';
+import { NIMBLE } from '../../config';
 
 const base = {
 	bar: ['attributes.hp'],
