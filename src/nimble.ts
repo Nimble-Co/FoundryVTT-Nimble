@@ -1,13 +1,14 @@
 import './scss/main.scss';
 
 import canvasInit from './hooks/canvasInit';
-import { hotbarDrop } from './hooks/hotBarDrop';
-import i18nInit from './hooks/i18nInit';
 import init from './hooks/init';
+import i18nInit from './hooks/i18nInit';
+import setup from './hooks/setup';
 import ready from './hooks/ready';
 import renderChatMessageHTML from './hooks/renderChatMessage';
 import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD';
-import setup from './hooks/setup';
+
+import { hotbarDrop } from './hooks/hotBarDrop.ts';
 
 /** ----------------------------------- */
 //                Hooks

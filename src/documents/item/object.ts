@@ -1,5 +1,5 @@
 import type { NimbleObjectData } from '../../models/item/ObjectDataModel';
-import type { NimbleBaseRule } from '../../models/rules/base';
+import type { NimbleBaseRule } from '../../models/rules/base.ts';
 
 import { NimbleBaseItem } from './base.svelte';
 

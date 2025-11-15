@@ -1,7 +1,7 @@
 <script>
-	import localize from '../../../../utils/localize';
+	import localize from '../../../../utils/localize.js';
 	import Hint from '../../../components/Hint.svelte';
-	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign';
+	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
 	const { data, ruleTypes, defaultSkillAbilities, skills, hints, skillPointAssignment } =
 		CONFIG.NIMBLE;

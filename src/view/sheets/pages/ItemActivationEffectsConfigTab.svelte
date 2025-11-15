@@ -87,7 +87,7 @@
 
 	// async function openScalingDialog(item, node) {
 	// 	const { default: GenericDialog } = await import(
-	// 		'../../../documents/dialogs/GenericDialog.svelte'
+	// 		'../../../documents/dialogs/GenericDialog.svelte.js'
 	// 	);
 
 	// 	const dialog = new GenericDialog(`${item.name}: Roll Scaling Dialog`, ScalingDialog, {
