@@ -1,9 +1,9 @@
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
-} from '#lib/SvelteApplicationMixin.svelte.js';
+} from '#lib/SvelteApplicationMixin.svelte';
 import NPCSheetComponent from '../../view/sheets/NPCSheet.svelte';
-import type { NimbleNPC } from '../actor/npc.js';
+import type { NimbleNPC } from '../actor/npc';
 
 export default class NPCSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ActorSheetV2,

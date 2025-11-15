@@ -1,31 +1,31 @@
 // Actors
-import { NimbleBaseActor } from '../documents/actor/base.svelte.js';
-import { NimbleCharacter } from '../documents/actor/character.js';
-import { NimbleMinion } from '../documents/actor/minion.js';
-import { NimbleNPC } from '../documents/actor/npc.js';
-import { NimbleSoloMonster } from '../documents/actor/soloMonster.js';
+import { NimbleBaseActor } from '../documents/actor/base.svelte';
+import { NimbleCharacter } from '../documents/actor/character';
+import { NimbleMinion } from '../documents/actor/minion';
+import { NimbleNPC } from '../documents/actor/npc';
+import { NimbleSoloMonster } from '../documents/actor/soloMonster';
 
 // Combat
-import { NimbleCombat } from '../documents/combat/combat.svelte.js';
-import { NimbleCombatant } from '../documents/combatant/combatant.svelte.js';
+import { NimbleCombat } from '../documents/combat/combat.svelte';
+import { NimbleCombatant } from '../documents/combatant/combatant.svelte';
 
 // Chat Messages
-import { NimbleChatMessage } from '../documents/chatMessage.js';
+import { NimbleChatMessage } from '../documents/chatMessage';
 
 // Items
-import { NimbleBackgroundItem } from '../documents/item/background.js';
-import { NimbleBaseItem } from '../documents/item/base.svelte.js';
-import { NimbleBoonItem } from '../documents/item/boon.js';
-import { NimbleClassItem } from '../documents/item/class.js';
-import { NimbleFeatureItem } from '../documents/item/feature.js';
-import { NimbleMonsterFeatureItem } from '../documents/item/monsterFeature.js';
-import { NimbleObjectItem } from '../documents/item/object.js';
-import { NimbleAncestryItem } from '../documents/item/ancestry.js';
-import { NimbleSpellItem } from '../documents/item/spell.js';
-import { NimbleSubclassItem } from '../documents/item/subclass.js';
+import { NimbleBackgroundItem } from '../documents/item/background';
+import { NimbleBaseItem } from '../documents/item/base.svelte';
+import { NimbleBoonItem } from '../documents/item/boon';
+import { NimbleClassItem } from '../documents/item/class';
+import { NimbleFeatureItem } from '../documents/item/feature';
+import { NimbleMonsterFeatureItem } from '../documents/item/monsterFeature';
+import { NimbleObjectItem } from '../documents/item/object';
+import { NimbleAncestryItem } from '../documents/item/ancestry';
+import { NimbleSpellItem } from '../documents/item/spell';
+import { NimbleSubclassItem } from '../documents/item/subclass';
 
 // Tokens
-import { NimbleTokenDocument } from '../documents/token/tokenDocument.js';
+import { NimbleTokenDocument } from '../documents/token/tokenDocument';
 
 export default function registerDocumentConfig() {
 	return {

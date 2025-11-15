@@ -1,4 +1,4 @@
-import { NimbleBaseItemData } from './BaseItemDataModel.js';
+import { NimbleBaseItemData } from './BaseItemDataModel';
 
 const { fields } = foundry.data;
 

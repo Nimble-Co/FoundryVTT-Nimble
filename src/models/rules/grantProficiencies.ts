@@ -1,5 +1,5 @@
-import type { NimbleCharacter } from '../../documents/actor/character.ts';
-import { NimbleBaseRule } from './base.ts';
+import type { NimbleCharacter } from '../../documents/actor/character';
+import { NimbleBaseRule } from './base';
 
 const PROFICIENCY_TYPE_MAPPING = {
 	armors: 'armorTypes',

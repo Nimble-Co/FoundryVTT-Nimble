@@ -1,7 +1,7 @@
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
-} from '#lib/SvelteApplicationMixin.svelte.js';
+} from '#lib/SvelteApplicationMixin.svelte';
 import CheckRollDialogComponent from '../../view/dialogs/CheckRollDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;

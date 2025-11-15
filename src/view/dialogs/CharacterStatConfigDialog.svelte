@@ -1,6 +1,6 @@
 <script>
-	import arraysAreEqual from '../../utils/arraysAreEqual.js';
-	import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
+	import arraysAreEqual from '../../utils/arraysAreEqual';
+	import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign';
 
 	function checkBaseStatsMatchCoreArray(characterAbilityScores) {
 		const baseScores = Object.values(characterAbilityScores).map(({ baseValue }) => baseValue);

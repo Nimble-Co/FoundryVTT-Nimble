@@ -1,5 +1,5 @@
-import constructD20RollFormula from '../dice/constructD20RollFormula.js';
-import { ModifierManager } from '../managers/ModifierManager.js';
+import constructD20RollFormula from '../dice/constructD20RollFormula';
+import { ModifierManager } from '../managers/ModifierManager';
 
 export default function getRollFormula(
 	actor: NimbleBaseActor,

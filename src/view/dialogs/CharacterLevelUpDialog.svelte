@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type { NimbleClassItem } from '../../documents/item/class.js';
-	import generateBlankSkillSet from '../../utils/generateBlankSkillSet.js';
-	import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
+	import type { NimbleClassItem } from '../../documents/item/class';
+	import generateBlankSkillSet from '../../utils/generateBlankSkillSet';
+	import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium';
 
-	import getSubclassChoices from '../../utils/getSubclassChoices.js';
+	import getSubclassChoices from '../../utils/getSubclassChoices';
 
 	import AbilityScoreIncrease from './components/levelUpHelper/AbilityScoreIncrease.svelte';
 	import HitPointSelection from './components/levelUpHelper/HitPointSelection.svelte';

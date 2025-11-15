@@ -9,7 +9,7 @@ import {
 	createGameMock,
 	foundryApiMocks,
 	globalFoundryMocks,
-} from './mocks/foundry.js';
+} from './mocks/foundry';
 
 // Mock Foundry global object required setup before importing config
 // CRITICAL: These document classes must be mocked BEFORE any code tries to extend them

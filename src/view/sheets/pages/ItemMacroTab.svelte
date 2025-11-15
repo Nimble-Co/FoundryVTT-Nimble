@@ -1,8 +1,8 @@
 <script>
 	import { getContext } from 'svelte';
 
-	import ItemMacroDialog from '../../../documents/dialogs/ItemMacroDialog.svelte.js';
-	import overrideTextAreaBehavior from '../../../utils/overrideTextAreaBehavior.js';
+	import ItemMacroDialog from '../../../documents/dialogs/ItemMacroDialog.svelte';
+	import overrideTextAreaBehavior from '../../../utils/overrideTextAreaBehavior';
 
 	function openMacroSheet() {
 		const dialog = new ItemMacroDialog(document);

@@ -1,5 +1,5 @@
-import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
-import { NimbleBaseRule } from './base.js';
+import type { NimbleBaseItem } from '../../documents/item/base.svelte';
+import { NimbleBaseRule } from './base';
 
 function schema() {
 	const { fields } = foundry.data;

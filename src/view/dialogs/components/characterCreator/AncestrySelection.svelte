@@ -1,8 +1,8 @@
 <script>
 	import { getContext } from 'svelte';
 	import Hint from '../../../components/Hint.svelte';
-	import prepareAncestryTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js';
-	import prepareAncestryMetadata from '../../../dataPreparationHelpers/metaData/prepareAncestryMetadata.js';
+	import prepareAncestryTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip';
+	import prepareAncestryMetadata from '../../../dataPreparationHelpers/metaData/prepareAncestryMetadata';
 	import DocumentCard from './DocumentCard.svelte';
 
 	async function handleAncestrySelection(ancestry) {

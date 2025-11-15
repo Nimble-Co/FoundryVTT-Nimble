@@ -1,5 +1,5 @@
 <script lang="ts">
-	import localize from '../../../utils/localize.js';
+	import localize from '../../../utils/localize';
 
 	const { movementTypes } = CONFIG.NIMBLE;
 

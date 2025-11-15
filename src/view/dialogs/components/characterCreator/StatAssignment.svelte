@@ -1,8 +1,8 @@
 <script>
 	import { getContext } from 'svelte';
-	import generateBlankAttributeSet from '../../../../utils/generateBlankAttributeSet.js';
+	import generateBlankAttributeSet from '../../../../utils/generateBlankAttributeSet';
 	import Hint from '../../../components/Hint.svelte';
-	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
+	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign';
 
 	function handleAbilityModifierDrop(event, abilityKey) {
 		const modifierIndex = Number.parseInt(event.dataTransfer.getData('modifier'), 10);

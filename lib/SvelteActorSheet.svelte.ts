@@ -2,9 +2,9 @@ import type {
 	AnyObject,
 	EmptyObject,
 } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
-import type { NimbleBaseItem } from '../src/documents/item/base.svelte.js';
+import type { NimbleBaseItem } from '../src/documents/item/base.svelte';
 
-import { SvelteDocumentSheet } from './SvelteDocumentSheet.svelte.js';
+import { SvelteDocumentSheet } from './SvelteDocumentSheet.svelte';
 
 class SvelteActorSheet<
 	D extends Actor.ConfiguredInstance = Actor.ConfiguredInstance,

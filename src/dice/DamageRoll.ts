@@ -1,6 +1,6 @@
-import type { InexactPartial } from '#types/utils.js';
+import type { InexactPartial } from '#types/utils';
 
-import { PrimaryDie } from './terms/PrimaryDie.js';
+import { PrimaryDie } from './terms/PrimaryDie';
 
 const Terms = foundry.dice.terms;
 
@@ -25,7 +25,7 @@ declare namespace DamageRoll {
 	};
 }
 
-// @ts-expect-error
+// @ts-expect-error - DamageRoll is a custom roll type
 class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	declare options: DamageRoll.Options;
 

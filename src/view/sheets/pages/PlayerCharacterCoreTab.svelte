@@ -3,9 +3,9 @@
 
 	// Helper Functions
 	import { getContext } from 'svelte';
-	import type { NimbleCharacter } from '../../../documents/actor/character.js';
-	import localize from '../../../utils/localize.js';
-	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
+	import type { NimbleCharacter } from '../../../documents/actor/character';
+	import localize from '../../../utils/localize';
+	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign';
 
 	// Components
 	import AbilityScores from '../components/AbilityScores.svelte';

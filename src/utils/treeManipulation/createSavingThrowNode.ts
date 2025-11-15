@@ -1,4 +1,4 @@
-import type { SavingThrowNode } from '#types/effectTree.js';
+import type { SavingThrowNode } from '#types/effectTree';
 
 export function createSavingThrowNode(
 	parentNode: string | null = null,

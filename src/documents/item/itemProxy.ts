@@ -1,4 +1,4 @@
-import { NimbleBaseItem } from './base.svelte.js';
+import { NimbleBaseItem } from './base.svelte';
 
 export default new Proxy(NimbleBaseItem, {
 	construct(_target, args) {

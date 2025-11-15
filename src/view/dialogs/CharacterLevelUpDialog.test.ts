@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
-import { createMockCharacterDocument, createMockDialog } from '../../../tests/fixtures/index.js';
+import { createMockCharacterDocument, createMockDialog } from '../../../tests/fixtures/index';
 import CharacterLevelUpDialog from './CharacterLevelUpDialog.svelte';
 
 describe('CharacterLevelUpDialog Component', () => {

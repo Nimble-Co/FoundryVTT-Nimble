@@ -1,8 +1,8 @@
 <script>
 	import { setContext } from 'svelte';
-	import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
-	import generateBlankAttributeSet from '../../utils/generateBlankAttributeSet.js';
-	import scrollIntoView from '../../utils/scrollIntoView.js';
+	import getDeterministicBonus from '../../dice/getDeterministicBonus';
+	import generateBlankAttributeSet from '../../utils/generateBlankAttributeSet';
+	import scrollIntoView from '../../utils/scrollIntoView';
 
 	import AncestrySelection from './components/characterCreator/AncestrySelection.svelte';
 	import AncestrySizeSelection from './components/characterCreator/AncestrySizeSelection.svelte';

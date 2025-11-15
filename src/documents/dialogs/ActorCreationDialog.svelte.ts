@@ -1,8 +1,8 @@
 import type { DeepPartial } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
-import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
+import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte';
 
 import ActorCreationDialogComponent from '../../view/dialogs/ActorCreationDialog.svelte';
-import CharacterCreationDialog from './CharacterCreationDialog.svelte.js';
+import CharacterCreationDialog from './CharacterCreationDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
 

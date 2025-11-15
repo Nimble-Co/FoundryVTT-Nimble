@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { NimbleCharacter } from '../../documents/actor/character.js';
-	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
+	import type { NimbleCharacter } from '../../documents/actor/character';
+	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte';
 
 	interface Props {
 		document: NimbleCharacter;

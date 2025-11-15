@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getContext, onDestroy } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import sortItems from '../../../utils/sortItems.js';
+	import sortItems from '../../../utils/sortItems';
 	import ArmorClass from '../components/ArmorClass.svelte';
 	import Editor from '../components/Editor.svelte';
 	import MovementSpeed from '../components/MovementSpeed.svelte';

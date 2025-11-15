@@ -1,6 +1,6 @@
-import type { MigrationBase } from './MigrationBase.js';
-import { MigrationRunner } from './MigrationRunner.js';
-import * as Migrations from './migrations/index.js';
+import type { MigrationBase } from './MigrationBase';
+import { MigrationRunner } from './MigrationRunner';
+import * as Migrations from './migrations/index';
 
 const list: { new (): MigrationBase; version: number }[] = Object.values(Migrations);
 

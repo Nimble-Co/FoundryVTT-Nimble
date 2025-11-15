@@ -1,4 +1,4 @@
-import type { TextNode } from '#types/effectTree.d.js';
+import type { TextNode } from '#types/effectTree.d';
 
 export function createTextNode(
 	parentNode: string | null = null,

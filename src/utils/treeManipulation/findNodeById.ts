@@ -1,4 +1,4 @@
-import type { EffectNode } from '#types/effectTree.js';
+import type { EffectNode } from '#types/effectTree';
 
 export function findNodeById(nodes: EffectNode[], id: string): EffectNode | null {
 	for (const node of nodes) {

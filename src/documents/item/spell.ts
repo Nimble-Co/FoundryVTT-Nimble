@@ -1,6 +1,6 @@
-import type { NimbleSpellData } from '../../models/item/SpellDataModel.js';
+import type { NimbleSpellData } from '../../models/item/SpellDataModel';
 
-import { NimbleBaseItem } from './base.svelte.js';
+import { NimbleBaseItem } from './base.svelte';
 
 export class NimbleSpellItem extends NimbleBaseItem {
 	declare system: NimbleSpellData;

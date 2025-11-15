@@ -1,4 +1,4 @@
-import type { EffectNode } from '#types/effectTree.js';
+import type { EffectNode } from '#types/effectTree';
 
 export function reconstructEffectsTree(flattened: EffectNode[]) {
 	const rootNodes: EffectNode[] = [];

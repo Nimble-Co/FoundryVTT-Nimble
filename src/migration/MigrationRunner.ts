@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
 /* eslint-disable no-await-in-loop */
 
-import localize from '../utils/localize.js';
-import type { MigrationBase } from './MigrationBase.js';
-import { MigrationRunnerBase } from './MigrationRunnerBase.js';
+import localize from '../utils/localize';
+import type { MigrationBase } from './MigrationBase';
+import { MigrationRunnerBase } from './MigrationRunnerBase';
 
 class MigrationRunner extends MigrationRunnerBase {
 	override needsMigration(): boolean {

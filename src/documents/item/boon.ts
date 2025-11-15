@@ -1,6 +1,6 @@
-import type { NimbleBoonData } from '../../models/item/BoonDataModel.js';
+import type { NimbleBoonData } from '../../models/item/BoonDataModel';
 
-import { NimbleBaseItem } from './base.svelte.js';
+import { NimbleBaseItem } from './base.svelte';
 
 export class NimbleBoonItem extends NimbleBaseItem {
 	declare system: NimbleBoonData;

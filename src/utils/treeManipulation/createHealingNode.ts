@@ -1,4 +1,4 @@
-import type { HealingNode } from '#types/effectTree.js';
+import type { HealingNode } from '#types/effectTree';
 
 export function createHealingNode(
 	parentNode: string | null = null,

@@ -1,4 +1,4 @@
-import { attackSequence, savingThrows } from './common.js';
+import { attackSequence, savingThrows } from './common';
 
 const { fields } = foundry.data;
 

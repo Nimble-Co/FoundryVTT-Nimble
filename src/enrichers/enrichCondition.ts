@@ -1,5 +1,5 @@
-import localize from '../utils/localize.js';
-import createEnricherButton from './createEnricherButton.js';
+import localize from '../utils/localize';
+import createEnricherButton from './createEnricherButton';
 
 export default function enrichCondition(
 	args: Record<string, string>,

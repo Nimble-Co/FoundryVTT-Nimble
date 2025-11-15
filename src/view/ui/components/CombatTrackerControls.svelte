@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { NimbleCombat } from '../../../documents/combat/combat.svelte.js';
+	import type { NimbleCombat } from '../../../documents/combat/combat.svelte';
 
 	function endCombat(): Promise<NimbleCombat> | undefined {
 		return (game.combat as NimbleCombat | undefined)?.endCombat();

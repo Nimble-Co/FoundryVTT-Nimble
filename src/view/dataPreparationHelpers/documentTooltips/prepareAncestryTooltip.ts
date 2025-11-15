@@ -1,9 +1,9 @@
-import prepareAncestryMetadata from '../metaData/prepareAncestryMetadata.js';
-import prepareAncestryTooltipTags from './prepareAncestryTooltipTags.js';
-import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription.js';
-import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader.js';
+import prepareAncestryMetadata from '../metaData/prepareAncestryMetadata';
+import prepareAncestryTooltipTags from './prepareAncestryTooltipTags';
+import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription';
+import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader';
 
-import type { NimbleAncestryItem } from '../../../documents/item/ancestry.js';
+import type { NimbleAncestryItem } from '../../../documents/item/ancestry';
 
 export default function prepareAncestryTooltip(ancestry: NimbleAncestryItem): string {
 	const metadata = prepareAncestryMetadata(ancestry);

@@ -1,12 +1,12 @@
-import { NimbleBackgroundData } from './BackgroundDataModel.js';
-import { NimbleBoonData } from './BoonDataModel.js';
-import { NimbleClassData } from './ClassDataModel.js';
-import { NimbleFeatureData } from './FeatureDataModel.js';
-import { NimbleMonsterFeatureData } from './MonsterFeatureDataModel.js';
-import { NimbleObjectData } from './ObjectDataModel.js';
-import { NimbleAncestryData } from './AncestryDataModel.js';
-import { NimbleSpellData } from './SpellDataModel.js';
-import { NimbleSubclassData } from './SubclassDataModel.js';
+import { NimbleBackgroundData } from './BackgroundDataModel';
+import { NimbleBoonData } from './BoonDataModel';
+import { NimbleClassData } from './ClassDataModel';
+import { NimbleFeatureData } from './FeatureDataModel';
+import { NimbleMonsterFeatureData } from './MonsterFeatureDataModel';
+import { NimbleObjectData } from './ObjectDataModel';
+import { NimbleAncestryData } from './AncestryDataModel';
+import { NimbleSpellData } from './SpellDataModel';
+import { NimbleSubclassData } from './SubclassDataModel';
 
 const itemDataModels = {
 	background: NimbleBackgroundData,

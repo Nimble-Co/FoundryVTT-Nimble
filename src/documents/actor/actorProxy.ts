@@ -1,4 +1,4 @@
-import { NimbleBaseActor } from './base.svelte.js';
+import { NimbleBaseActor } from './base.svelte';
 
 /** A `Proxy` to to get Foundry to construct `NimbleActor` subclasses */
 export default new Proxy(NimbleBaseActor, {

@@ -1,4 +1,4 @@
-import { metadata } from './common.js';
+import { metadata } from './common';
 
 const { fields } = foundry.data;
 

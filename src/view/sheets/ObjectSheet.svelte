@@ -1,7 +1,7 @@
 <script>
 	import { setContext } from 'svelte';
-	import localize from '../../utils/localize.js';
-	import updateDocumentImage from '../handlers/updateDocumentImage.js';
+	import localize from '../../utils/localize';
+	import updateDocumentImage from '../handlers/updateDocumentImage';
 
 	import ItemActivationConfigTab from './pages/ItemActivationConfigTab.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';

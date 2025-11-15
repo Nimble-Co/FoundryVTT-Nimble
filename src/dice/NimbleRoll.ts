@@ -1,4 +1,4 @@
-import type { InexactPartial } from '#types/utils.js';
+import type { InexactPartial } from '#types/utils';
 
 declare namespace NimbleRoll {
 	interface Data extends foundry.dice.Roll.Data {

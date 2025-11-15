@@ -1,41 +1,33 @@
-import { NIMBLE } from '../config.js';
-
-import activeEffectDataModels from '../models/activeEffect/activeEffectDataModels.js';
-import actorDataModels from '../models/actor/actorDataModels.js';
-import chatDataModels from '../models/chat/chatDataModels.js';
-import combatantDataModels from '../models/combatant/combatantDataModels.js';
-import itemDataModels from '../models/item/itemDataModels.js';
-
-import ActorProxy from '../documents/actor/actorProxy.js';
-import ItemProxy from '../documents/item/itemProxy.js';
-import { NimbleChatMessage } from '../documents/chatMessage.js';
-import { NimbleCombat } from '../documents/combat/combat.svelte.js';
-import { NimbleCombatant } from '../documents/combatant/combatant.svelte.js';
-import { NimbleTokenDocument } from '../documents/token/tokenDocument.js';
-
-import PlayerCharacterSheet from '../documents/sheets/PlayerCharacterSheet.svelte.js';
-import NPCSheet from '../documents/sheets/NPCSheet.svelte.js';
-
-import BackgroundSheet from '../documents/sheets/BackgroundSheet.svelte.js';
-import BoonSheet from '../documents/sheets/BoonSheet.svelte.js';
-import ClassSheet from '../documents/sheets/ClassSheet.svelte.js';
-import FeatureSheet from '../documents/sheets/FeatureSheet.svelte.js';
-import MonsterFeatureSheet from '../documents/sheets/MonsterFeatureSheet.svelte.js';
-import ObjectSheet from '../documents/sheets/ObjectSheet.svelte.js';
-import AncestrySheet from '../documents/sheets/AncestrySheet.svelte.js';
-import SpellSheet from '../documents/sheets/SpellSheet.svelte.js';
-import SubclassSheet from '../documents/sheets/SubclassSheet.svelte.js';
-
-import { DamageRoll } from '../dice/DamageRoll.js';
-import { NimbleRoll } from '../dice/NimbleRoll.js';
-import { PrimaryDie } from '../dice/terms/PrimaryDie.js';
-
-import { NimbleTemplateLayer } from '../canvas/layers/templateLayer.js';
-
-import { trackableAttributes } from '../documents/actor/trackableAttributes.ts';
-import registerCustomEnrichers from '../enrichers/registerCustomEnrichers.js';
-
-import { NIMBLE_GAME } from '../game.js';
+import { NimbleTemplateLayer } from '../canvas/layers/templateLayer';
+import { NIMBLE } from '../config';
+import { DamageRoll } from '../dice/DamageRoll';
+import { NimbleRoll } from '../dice/NimbleRoll';
+import { PrimaryDie } from '../dice/terms/PrimaryDie';
+import ActorProxy from '../documents/actor/actorProxy';
+import { trackableAttributes } from '../documents/actor/trackableAttributes';
+import { NimbleChatMessage } from '../documents/chatMessage';
+import { NimbleCombat } from '../documents/combat/combat.svelte';
+import { NimbleCombatant } from '../documents/combatant/combatant.svelte';
+import ItemProxy from '../documents/item/itemProxy';
+import AncestrySheet from '../documents/sheets/AncestrySheet.svelte';
+import BackgroundSheet from '../documents/sheets/BackgroundSheet.svelte';
+import BoonSheet from '../documents/sheets/BoonSheet.svelte';
+import ClassSheet from '../documents/sheets/ClassSheet.svelte';
+import FeatureSheet from '../documents/sheets/FeatureSheet.svelte';
+import MonsterFeatureSheet from '../documents/sheets/MonsterFeatureSheet.svelte';
+import NPCSheet from '../documents/sheets/NPCSheet.svelte';
+import ObjectSheet from '../documents/sheets/ObjectSheet.svelte';
+import PlayerCharacterSheet from '../documents/sheets/PlayerCharacterSheet.svelte';
+import SpellSheet from '../documents/sheets/SpellSheet.svelte';
+import SubclassSheet from '../documents/sheets/SubclassSheet.svelte';
+import { NimbleTokenDocument } from '../documents/token/tokenDocument';
+import registerCustomEnrichers from '../enrichers/registerCustomEnrichers';
+import { NIMBLE_GAME } from '../game';
+import activeEffectDataModels from '../models/activeEffect/activeEffectDataModels';
+import actorDataModels from '../models/actor/actorDataModels';
+import chatDataModels from '../models/chat/chatDataModels';
+import combatantDataModels from '../models/combatant/combatantDataModels';
+import itemDataModels from '../models/item/itemDataModels';
 
 export default function init() {
 	CONFIG.NIMBLE = NIMBLE;

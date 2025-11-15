@@ -1,6 +1,6 @@
-import { PredicateField } from '../fields/PredicateField.js';
-import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
-import type { Predicate } from '../../etc/Predicate.js';
+import { PredicateField } from '../fields/PredicateField';
+import getDeterministicBonus from '../../dice/getDeterministicBonus';
+import type { Predicate } from '../../etc/Predicate';
 
 // Forward declarations to avoid circular dependencies
 interface NimbleBaseActor extends Actor {

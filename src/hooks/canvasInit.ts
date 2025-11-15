@@ -1,4 +1,4 @@
-import { NimbleTokenHUD } from '../pixi/NimbleTokenHUD.js';
+import { NimbleTokenHUD } from '../pixi/NimbleTokenHUD';
 
 export default function canvasInit() {
 	// @ts-expect-error

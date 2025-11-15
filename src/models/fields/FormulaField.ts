@@ -1,4 +1,4 @@
-import type { SimpleMerge } from './helpers.js';
+import type { SimpleMerge } from './helpers';
 
 declare namespace FormulaField {
 	type DefaultOptions = SimpleMerge<

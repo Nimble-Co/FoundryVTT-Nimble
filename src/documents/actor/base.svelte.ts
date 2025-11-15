@@ -5,11 +5,11 @@ import type {
 	InexactPartial,
 } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
 import { createSubscriber } from 'svelte/reactivity';
-import { NimbleRoll } from '../../dice/NimbleRoll.js';
-import calculateRollMode from '../../utils/calculateRollMode.js';
-import getRollFormula from '../../utils/getRollFormula.js';
+import { NimbleRoll } from '../../dice/NimbleRoll';
+import calculateRollMode from '../../utils/calculateRollMode';
+import getRollFormula from '../../utils/getRollFormula';
 
-export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
+export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces';
 
 // Forward declarations to avoid circular dependencies
 interface NimbleBaseItem extends Item {

@@ -1,7 +1,7 @@
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
-} from '#lib/SvelteApplicationMixin.svelte.js';
+} from '#lib/SvelteApplicationMixin.svelte';
 import FeatureSheetComponent from '../../view/sheets/FeatureSheet.svelte';
 
 export default class FeatureSheet extends SvelteApplicationMixin(

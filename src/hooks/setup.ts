@@ -1,6 +1,6 @@
-import registerKeybindings from '../registerKeyBindings.js';
-import registerSystemSettings from '../settings/index.js';
-import { preparePackIndexes } from '../utils/preparePackIndexes.js';
+import registerKeybindings from '../registerKeyBindings';
+import registerSystemSettings from '../settings/index';
+import { preparePackIndexes } from '../utils/preparePackIndexes';
 
 /**
  * Helper function to make an ApplicationV2 class resizable.

@@ -1,5 +1,5 @@
 import { createSubscriber } from 'svelte/reactivity';
-import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
+import type { NimbleCombatant } from '../combatant/combatant.svelte';
 
 class NimbleCombat extends Combat {
 	#subscribe;

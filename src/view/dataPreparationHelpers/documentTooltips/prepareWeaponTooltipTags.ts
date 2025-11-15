@@ -1,8 +1,8 @@
-import prepareEmbeddedDocumentTooltipTags from './prepareEmbeddedDocumentTooltipTags.js';
-import prepareRangeTooltipTag from './prepareRangeTooltipTag.js';
+import prepareEmbeddedDocumentTooltipTags from './prepareEmbeddedDocumentTooltipTags';
+import prepareRangeTooltipTag from './prepareRangeTooltipTag';
 
-import type { NimbleObjectItem } from '../../../documents/item/object.js';
-import prepareReachTooltipTag from './prepareReachTooltipTag.js';
+import type { NimbleObjectItem } from '../../../documents/item/object';
+import prepareReachTooltipTag from './prepareReachTooltipTag';
 
 export default function prepareWeaponTooltipTags(weapon: NimbleObjectItem): string | null {
 	if (foundry.utils.isEmpty(weapon)) return null;

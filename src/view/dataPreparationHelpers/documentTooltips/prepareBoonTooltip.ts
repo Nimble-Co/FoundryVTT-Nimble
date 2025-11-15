@@ -1,8 +1,8 @@
-import prepareBoonMetadata from '../metaData/prepareBoonMetadata.js';
-import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription.js';
-import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader.js';
+import prepareBoonMetadata from '../metaData/prepareBoonMetadata';
+import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription';
+import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader';
 
-import type { NimbleBoonItem } from '../../../documents/item/boon.js';
+import type { NimbleBoonItem } from '../../../documents/item/boon';
 
 export default function prepareBoonTooltip(boon: NimbleBoonItem): string {
 	const components: (string | null)[] = [];

@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import type { MigrationBase } from './MigrationBase.js';
+import type { MigrationBase } from './MigrationBase';
 
 interface CollectionDiff<T = any> {
 	inserted: T[];

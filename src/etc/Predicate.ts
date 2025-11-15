@@ -1,4 +1,4 @@
-import { isPlainObject } from '../utils/isPlainObject.js';
+import { isPlainObject } from '../utils/isPlainObject';
 
 const BINARY_PROPS = new Set(['equal', 'max', 'min']);
 

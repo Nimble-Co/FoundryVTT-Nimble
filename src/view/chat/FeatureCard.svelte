@@ -1,6 +1,6 @@
 <script>
 	import { setContext } from 'svelte';
-	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
+	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor';
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';

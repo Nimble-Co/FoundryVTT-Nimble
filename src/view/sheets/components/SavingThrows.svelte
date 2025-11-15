@@ -1,6 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
-	import localize from '../../../utils/localize.js';
+	import localize from '../../../utils/localize';
 
 	let { characterSavingThrows } = $props();
 

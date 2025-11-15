@@ -1,9 +1,9 @@
-import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription.js';
-import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader.js';
-import prepareSpellMetadata from '../metaData/prepareSpellMetadata.js';
-import prepareSpellTooltipTags from './prepareSpellTooltipTags.js';
+import prepareEmbeddedDocumentTooltipDescription from './prepareEmbeddedDocumentTooltipDescription';
+import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentTooltipHeader';
+import prepareSpellMetadata from '../metaData/prepareSpellMetadata';
+import prepareSpellTooltipTags from './prepareSpellTooltipTags';
 
-import type { NimbleSpellItem } from '../../../documents/item/spell.js';
+import type { NimbleSpellItem } from '../../../documents/item/spell';
 
 export default function prepareSpellTooltip(spell: NimbleSpellItem): string {
 	const metadata = prepareSpellMetadata(spell, true);

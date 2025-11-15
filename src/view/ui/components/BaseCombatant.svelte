@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import { draggable } from '../../../actions/draggable.svelte.js';
+	import { draggable } from '../../../actions/draggable.svelte';
 
 	import HitPointBar from '../../sheets/components/HitPointBar.svelte';
 

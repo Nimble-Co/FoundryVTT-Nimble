@@ -1,4 +1,4 @@
-import parseEnricherInput from './parseEnricherInput.js';
+import parseEnricherInput from './parseEnricherInput';
 
 export default function registerCustomEnrichers() {
 	const enricherTypes = ['check', 'savingThrow', 'condition'];

@@ -1,7 +1,7 @@
-import enrichCheck from './enrichCheck.js';
-import enrichCondition from './enrichCondition.js';
-import enrichSavingThrow from './enrichSavingThrow.js';
-import parseEnricherArguments from './parseEnricherArguments.js';
+import enrichCheck from './enrichCheck';
+import enrichCondition from './enrichCondition';
+import enrichSavingThrow from './enrichSavingThrow';
+import parseEnricherArguments from './parseEnricherArguments';
 
 export default async function parseEnricherInput(
 	match: RegExpMatchArray,

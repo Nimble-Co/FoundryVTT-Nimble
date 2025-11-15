@@ -1,5 +1,5 @@
-import { identifier } from '../common.js';
-import { rules } from './common.js';
+import { identifier } from '../common';
+import { rules } from './common';
 
 function baseItemSchema() {
 	const { fields } = foundry.data;

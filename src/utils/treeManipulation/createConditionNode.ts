@@ -1,4 +1,4 @@
-import type { ConditionNode } from '#types/effectTree.js';
+import type { ConditionNode } from '#types/effectTree';
 
 /**
  * Creates a new ConditionNode object.

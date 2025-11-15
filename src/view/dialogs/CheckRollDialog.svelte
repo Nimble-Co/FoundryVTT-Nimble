@@ -1,7 +1,7 @@
 <script>
 	import RollModeConfig from './components/RollModeConfig.svelte';
 
-	import getRollFormula from '../../utils/getRollFormula.js';
+	import getRollFormula from '../../utils/getRollFormula';
 
 	let { actor, dialog, ...data } = $props();
 	let selectedRollMode = $state(Math.clamp(data.rollMode ?? 0, -6, 6));

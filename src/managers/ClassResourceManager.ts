@@ -1,8 +1,8 @@
-import getDeterministicBonus from '../dice/getDeterministicBonus.js';
+import getDeterministicBonus from '../dice/getDeterministicBonus';
 import {
 	type NimbleBaseResource,
 	ResourceDataModels,
-} from '../models/item/components/ClassResourceDataModel.js';
+} from '../models/item/components/ClassResourceDataModel';
 
 class ClassResourceManager extends Map<string, InstanceType<typeof NimbleBaseResource>> {
 	item: NimbleClassItem | NimbleSubclassItem;

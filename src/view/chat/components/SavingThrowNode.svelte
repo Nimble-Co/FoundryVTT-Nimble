@@ -1,7 +1,7 @@
 <script>
 	import { getContext } from 'svelte';
-	import { getNodeComponent } from '../../dataPreparationHelpers/effectTree/getNodeComponent.js';
-	import { getRelevantNodes } from '../../dataPreparationHelpers/effectTree/getRelevantNodes.js';
+	import { getNodeComponent } from '../../dataPreparationHelpers/effectTree/getNodeComponent';
+	import { getRelevantNodes } from '../../dataPreparationHelpers/effectTree/getRelevantNodes';
 
 	function getSavingThrowLabel(saveType) {
 		switch (saveType) {

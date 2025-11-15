@@ -1,10 +1,10 @@
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
-} from '#lib/SvelteApplicationMixin.svelte.js';
+} from '#lib/SvelteApplicationMixin.svelte';
 import PlayerCharacterSheetComponent from '../../view/sheets/PlayerCharacterSheet.svelte';
 
-import type { NimbleCharacter } from '../actor/character.js';
+import type { NimbleCharacter } from '../actor/character';
 
 export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ActorSheetV2,

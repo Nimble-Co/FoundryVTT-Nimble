@@ -1,6 +1,6 @@
-import type { NimbleBackgroundData } from '../../models/item/BackgroundDataModel.js';
+import type { NimbleBackgroundData } from '../../models/item/BackgroundDataModel';
 
-import { NimbleBaseItem } from './base.svelte.js';
+import { NimbleBaseItem } from './base.svelte';
 
 export class NimbleBackgroundItem extends NimbleBaseItem {
 	declare system: NimbleBackgroundData;

@@ -1,6 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
-	import { getNodeComponent } from '../../dataPreparationHelpers/effectTree/getNodeComponent.js';
+	import { getNodeComponent } from '../../dataPreparationHelpers/effectTree/getNodeComponent';
 
 	let messageDocument = getContext('messageDocument');
 

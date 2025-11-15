@@ -1,4 +1,4 @@
-import type { NimbleAncestryItem } from '../../../documents/item/ancestry.js';
+import type { NimbleAncestryItem } from '../../../documents/item/ancestry';
 
 export default function prepareAncestryMetadata(ancestry: NimbleAncestryItem): string {
 	const { sizeCategories } = CONFIG.NIMBLE;

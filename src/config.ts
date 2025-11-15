@@ -1,7 +1,7 @@
-import registerConditionsConfig from './config/registerConditionsConfig.js';
-import registerDocumentConfig from './config/registerDocumentConfig.js';
-import registerPredicateConfig from './config/registerPredicateConfig.js';
-import registerRulesConfig from './config/registerRulesConfig.js';
+import registerConditionsConfig from './config/registerConditionsConfig';
+import registerDocumentConfig from './config/registerDocumentConfig';
+import registerPredicateConfig from './config/registerPredicateConfig';
+import registerRulesConfig from './config/registerRulesConfig';
 
 /** --------------------------------------------- */
 /**                 CONSTANTS                     */

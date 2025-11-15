@@ -1,5 +1,5 @@
 <script>
-	import localize from '../../utils/localize.js';
+	import localize from '../../utils/localize';
 
 	let { dialog } = $props();
 	const { Actor, actorTypeBanners } = CONFIG.NIMBLE;

@@ -1,4 +1,4 @@
-import createEnricherButton from './createEnricherButton.js';
+import createEnricherButton from './createEnricherButton';
 
 export default function enrichSavingThrow(
 	args: Record<string, string>,

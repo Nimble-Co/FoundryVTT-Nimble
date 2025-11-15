@@ -1,6 +1,6 @@
-import type { NimbleMonsterFeatureData } from '../../models/item/MonsterFeatureDataModel.js';
+import type { NimbleMonsterFeatureData } from '../../models/item/MonsterFeatureDataModel';
 
-import { NimbleBaseItem } from './base.svelte.js';
+import { NimbleBaseItem } from './base.svelte';
 
 export class NimbleMonsterFeatureItem extends NimbleBaseItem {
 	declare system: NimbleMonsterFeatureData;

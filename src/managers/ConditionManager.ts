@@ -1,5 +1,5 @@
-import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
-import localize from '../utils/localize.js';
+import type { NimbleBaseActor } from '../documents/actor/base.svelte';
+import localize from '../utils/localize';
 
 export interface Condition {
 	_id?: string;

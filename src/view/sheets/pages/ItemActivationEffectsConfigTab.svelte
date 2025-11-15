@@ -1,8 +1,8 @@
 <script>
 	import { getContext } from 'svelte';
-	import { createEffectNode } from '../../../utils/treeManipulation/createEffectNode.js';
-	import { deleteEffectNode } from '../../../utils/treeManipulation/deleteEffectNode.js';
-	import { updateEffectNode } from '../../../utils/treeManipulation/updateEffectNode.js';
+	import { createEffectNode } from '../../../utils/treeManipulation/createEffectNode';
+	import { deleteEffectNode } from '../../../utils/treeManipulation/deleteEffectNode';
+	import { updateEffectNode } from '../../../utils/treeManipulation/updateEffectNode';
 	import TagGroup from '../../components/TagGroup.svelte';
 
 	function getNodeOptions(node) {

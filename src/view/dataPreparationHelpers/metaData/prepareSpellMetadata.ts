@@ -1,4 +1,4 @@
-import type { NimbleSpellItem } from '../../../documents/item/spell.js';
+import type { NimbleSpellItem } from '../../../documents/item/spell';
 
 export default function prepareSpellMetadata(spell: NimbleSpellItem, includeIcon = false): string {
 	const { spellSchools, spellSchoolIcons, spellTiers } = CONFIG.NIMBLE;

@@ -1,4 +1,4 @@
-import type { DamageOutcomeNode } from '#types/effectTree.js';
+import type { DamageOutcomeNode } from '#types/effectTree';
 
 export function createDamageOutcomeNode(parentNode: string, context: string): DamageOutcomeNode {
 	let outcome: 'fullDamage' | 'halfDamage' = 'fullDamage';

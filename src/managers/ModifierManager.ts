@@ -1,6 +1,6 @@
 // NimbleBaseActor and NimbleBaseItem types are available globally from .d.ts files
 
-import localize from '../utils/localize.js';
+import localize from '../utils/localize';
 
 declare namespace ModifierManager {
 	interface RollDataOptions {

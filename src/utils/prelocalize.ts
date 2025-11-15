@@ -1,4 +1,4 @@
-import localize from './localize.js';
+import localize from './localize';
 
 export function prelocalize(input: unknown): unknown {
 	if (typeof input === 'string') return localize(input);

@@ -1,5 +1,5 @@
-import { NimbleBaseItemData } from './BaseItemDataModel.js';
-import { activation } from './common.js';
+import { NimbleBaseItemData } from './BaseItemDataModel';
+import { activation } from './common';
 
 const { fields } = foundry.data;
 
