@@ -224,15 +224,16 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	static override fromData(data: Record<string, any>): DamageRoll {
-		const roll = DamageRoll.fromData(data) as unknown as DamageRoll;
+		// Call parent class's fromData to avoid infinite recursion
+		const roll = super.fromData(data) as unknown as DamageRoll;
 
 		roll.originalFormula = data.originalFormula;
 		roll._formula = DamageRoll.getFormula(roll.terms);
 
-		// Populate data
 		if (data.evaluated ?? true) {
-			roll.isCritical = data.options.isCritical;
-			roll.isMiss = data.options.isMiss;
+			// Populate data - check both top level and options
+			roll.isCritical = data.isCritical ?? data.options?.isCritical;
+			roll.isMiss = data.isMiss ?? data.options?.isMiss;
 		}
 
 		return roll as DamageRoll;
