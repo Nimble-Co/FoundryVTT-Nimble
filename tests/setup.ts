@@ -9,6 +9,7 @@ import {
 	createGameMock,
 	foundryApiMocks,
 	globalFoundryMocks,
+	MockRollConstructor,
 } from './mocks/foundry.js';
 
 // Mock Foundry global object required setup before importing config
@@ -17,7 +18,14 @@ import {
 Object.assign(globalThis, globalFoundryMocks);
 
 // Mock foundry object for utilities and APIs
+// foundryApiMocks already includes a trackable Roll mock
 (globalThis as any).foundry = foundryApiMocks;
+
+// Also set Roll on globalThis for compatibility
+(globalThis as any).Roll = foundryApiMocks.dice.Roll;
+
+// Store the constructor on globalThis so tests can reset the mock if needed
+(globalThis as any).__MockRollConstructor = MockRollConstructor;
 
 // Load language file for i18n localization
 const langData = JSON.parse(readFileSync(join(process.cwd(), 'public/lang/en.json'), 'utf-8'));

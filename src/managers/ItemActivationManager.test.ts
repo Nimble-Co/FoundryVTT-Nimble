@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-// @ts-expect-error - effectTree.d.ts is not a module but contains type definitions
 import type { EffectNode } from '#types/effectTree.js';
-import { createTrackableRollMock } from '../../tests/mocks/foundry.js';
+import { MockRollConstructor } from '../../tests/mocks/foundry.js';
+import type { NimbleBaseActor } from '../documents/actor/base.svelte.ts';
+import type { NimbleBaseItem } from '../documents/item/base.svelte.ts';
 import { ItemActivationManager, testDependencies } from './ItemActivationManager.js';
 
 const mockReconstructEffectsTree = vi.fn();
@@ -31,7 +32,7 @@ const MockNimbleRoll = vi.fn(function (this: any, _formula: string, _data?: unkn
 Object.setPrototypeOf(MockNimbleRoll, Function.prototype);
 
 const MockDamageRoll = vi.fn(function (
-	this: any,
+	this: vi.Mocked<typeof DamageRoll>,
 	_formula: string,
 	_data?: unknown,
 	_options?: unknown,
@@ -85,22 +86,11 @@ function createMockConstructorImplementation(mockInstance: any) {
 	};
 }
 
-// Create a trackable Roll mock for this test file
-// This allows us to verify Roll constructor calls while using shared infrastructure
-const { MockRoll, MockRollConstructor } = createTrackableRollMock();
-
-// Override foundry.dice.Roll and global Roll with our trackable mock
-// Note: setup.ts already sets up foundry and game, but we need a trackable version here
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(globalThis as any).foundry.dice.Roll = MockRoll;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(globalThis as any).Roll = MockRoll;
+const MockRoll = (globalThis as any).foundry.dice.Roll as ReturnType<typeof vi.fn>;
 
 describe('ItemActivationManager.#getRolls', () => {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let mockItem: any;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let mockActor: any;
+	let mockItem: vi.Mocked<NimbleBaseItem>;
+	let mockActor: vi.Mocked<NimbleBaseActor>;
 	let manager: ItemActivationManager;
 
 	beforeEach(() => {

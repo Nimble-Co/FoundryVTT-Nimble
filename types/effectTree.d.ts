@@ -1,4 +1,4 @@
-type EffectNode =
+export type EffectNode =
 	| ConditionNode
 	| DamageNode
 	| DamageOutcomeNode
@@ -6,7 +6,7 @@ type EffectNode =
 	| SavingThrowNode
 	| TextNode;
 
-type ActionConsequence = {
+export type ActionConsequence = {
 	criticalHit?: EffectNode[];
 	hit?: EffectNode[];
 	failedSave?: EffectNode[];
@@ -15,7 +15,7 @@ type ActionConsequence = {
 	passedSave?: EffectNode[];
 };
 
-type ConditionNode = {
+export type ConditionNode = {
 	id: string;
 	type: 'condition';
 	condition: string;
@@ -23,7 +23,7 @@ type ConditionNode = {
 	parentNode: string | null;
 };
 
-type DamageNode = {
+export type DamageNode = {
 	id: string;
 	type: 'damage';
 	damageType: string;
@@ -39,7 +39,7 @@ type DamageNode = {
 	rollMode?: number;
 };
 
-type DamageOutcomeNode = {
+export type DamageOutcomeNode = {
 	id: string;
 	type: 'damageOutcome';
 	damageType?: string;
@@ -51,7 +51,7 @@ type DamageOutcomeNode = {
 	parentNode: string;
 };
 
-type HealingNode = {
+export type HealingNode = {
 	id: string;
 	type: 'healing';
 	healingType: 'healing' | 'temporaryHealing';
@@ -61,7 +61,7 @@ type HealingNode = {
 	roll?: Record<string, any>;
 };
 
-type SavingThrowNode = {
+export type SavingThrowNode = {
 	id: string;
 	type: 'savingThrow';
 	saveDC?: number;
@@ -72,7 +72,7 @@ type SavingThrowNode = {
 	parentNode: string | null;
 };
 
-type TextNode = {
+export type TextNode = {
 	id: string;
 	type: 'note';
 	noteType: 'flavor' | 'general' | 'reminder' | 'warning';
