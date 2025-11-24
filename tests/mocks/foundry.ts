@@ -81,57 +81,96 @@ export const globalFoundryMocks = {
 	localize: (key: string) => key,
 };
 
+/**
+ * Creates a trackable Roll mock that can be used with vi.fn() to track constructor calls
+ * This is useful for tests that need to verify Roll constructor invocations
+ * @returns An object with the mock function and the constructor function for resetting
+ */
+export function createTrackableRollMock() {
+	class MockRollClass {
+		formula: string;
+		data?: unknown;
+		options: any;
+		terms: any[];
+		toJSON: ReturnType<typeof vi.fn>;
+		_evaluated?: boolean;
+		_total?: number;
+
+		constructor(formula: string, data?: any, options?: any) {
+			this.formula = formula;
+			this.data = data ?? {};
+			this.options = options ?? {};
+			this.terms = [];
+			this.toJSON = vi.fn().mockReturnValue({ total: 0 });
+		}
+
+		static getFormula(terms: any[]): string {
+			// Simple implementation that reconstructs formula from terms
+			if (!terms || terms.length === 0) return '';
+			return terms
+				.map((term) => {
+					if (term.operator) return term.operator;
+					if (term.number && term.faces) return `${term.number}d${term.faces}`;
+					if (term.number !== undefined) return String(term.number);
+					return '';
+				})
+				.filter(Boolean)
+				.join('');
+		}
+
+		static fromData(data: Record<string, any>) {
+			const roll = new MockRollClass(data.formula, data.data, data.options);
+			if (data.terms) roll.terms = data.terms;
+			// Preserve other properties that might be in the data object
+			if (data._evaluated !== undefined) roll._evaluated = data._evaluated;
+			if (data._total !== undefined) roll._total = data._total;
+			if (data.total !== undefined) roll._total = data.total;
+			return roll;
+		}
+
+		async evaluate() {
+			this._evaluated = true;
+			this._total ??= 0;
+			return this;
+		}
+	}
+
+	// Create a tracked constructor function that works with 'new'
+	function MockRollConstructor(this: any, formula: string, data?: any, options?: any) {
+		const instance = new MockRollClass(formula, data, options);
+		if (this && typeof this === 'object' && this !== globalThis) {
+			// Called with 'new' - assign to this
+			Object.assign(this, instance);
+			return this;
+		}
+		// Called without 'new', return new instance
+		return instance;
+	}
+
+	// Make it a vi.fn() so we can track calls and override implementations
+	const MockRoll = vi.fn(MockRollConstructor) as any;
+	// Set up prototype so 'new' works correctly
+	MockRoll.prototype = MockRollClass.prototype;
+	// Add static methods
+	MockRoll.getFormula = MockRollClass.getFormula;
+	MockRoll.fromData = MockRollClass.fromData;
+	// Make it constructable
+	Object.setPrototypeOf(MockRoll, Function.prototype);
+
+	return { MockRoll, MockRollConstructor };
+}
+
+// Create the trackable Roll mock for use in foundryApiMocks
+const { MockRoll: trackableRollMock, MockRollConstructor: trackableRollConstructor } =
+	createTrackableRollMock();
+
+// Export the constructor so tests can reset the mock if needed
+export const MockRollConstructor = trackableRollConstructor;
+
 // Foundry API object mocks
 export const foundryApiMocks = {
 	dice: {
-		Roll: class Roll {
-			formula: string;
-			data: any;
-			options: any;
-			terms: any[] = [];
-			_total?: number;
-			_evaluated = false;
-
-			constructor(formula: string, data?: any, options?: any) {
-				this.formula = formula;
-				this.data = data ?? {};
-				this.options = options ?? {};
-			}
-
-			async evaluate() {
-				this._evaluated = true;
-				this._total ??= 0;
-				return this;
-			}
-
-			toJSON() {
-				return {
-					formula: this.formula,
-					data: this.data,
-					options: this.options,
-				};
-			}
-
-			static fromData(data: Record<string, any>) {
-				const roll = new Roll(data.formula, data.data, data.options);
-				if (data.terms) roll.terms = data.terms;
-				return roll;
-			}
-
-			static getFormula(terms: any[]): string {
-				// Simple implementation that reconstructs formula from terms
-				if (!terms || terms.length === 0) return '';
-				return terms
-					.map((term) => {
-						if (term.operator) return term.operator;
-						if (term.number && term.faces) return `${term.number}d${term.faces}`;
-						if (term.number !== undefined) return String(term.number);
-						return '';
-					})
-					.filter(Boolean)
-					.join('');
-			}
-		},
+		Roll: trackableRollMock,
 		terms: {
 			Die: class Die {
 				faces?: number;
@@ -393,66 +432,6 @@ export function createGameMock(langData: any) {
 			},
 		},
 	};
-}
-
-/**
- * Creates a trackable Roll mock that can be used with vi.fn() to track constructor calls
- * This is useful for tests that need to verify Roll constructor invocations
- * @returns An object with the mock function and the constructor function for resetting
- */
-export function createTrackableRollMock() {
-	class MockRollClass {
-		formula: string;
-		data?: unknown;
-		terms: any[];
-		evaluate: ReturnType<typeof vi.fn>;
-		toJSON: ReturnType<typeof vi.fn>;
-
-		constructor(formula: string, data?: unknown) {
-			this.formula = formula;
-			this.data = data;
-			// Create mock terms array - each term needs operator and options
-			this.terms = [
-				{
-					operator: undefined,
-					options: {},
-					constructor: { name: 'DieTerm' },
-				},
-			];
-			this.evaluate = vi.fn().mockResolvedValue(undefined);
-			this.toJSON = vi.fn().mockReturnValue({ total: 0 });
-		}
-
-		static getFormula(_terms: any[]): string {
-			return '1d20';
-		}
-
-		static evaluate = vi.fn().mockResolvedValue(undefined);
-	}
-
-	// Create a tracked constructor function that works with 'new'
-	function MockRollConstructor(this: any, formula: string, data?: unknown) {
-		const instance = new MockRollClass(formula, data);
-		if (this && typeof this === 'object' && this !== globalThis) {
-			// Called with 'new' - assign to this
-			Object.assign(this, instance);
-			return this;
-		}
-		// Called without 'new', return new instance
-		return instance;
-	}
-
-	// Make it a vi.fn() so we can track calls and override implementations
-	const MockRoll = vi.fn(MockRollConstructor) as any;
-	// Set up prototype so 'new' works correctly
-	MockRoll.prototype = MockRollClass.prototype;
-	// Add static method
-	MockRoll.getFormula = MockRollClass.getFormula;
-	MockRoll.evaluate = MockRollClass.evaluate;
-	// Make it constructable
-	Object.setPrototypeOf(MockRoll, Function.prototype);
-
-	return { MockRoll, MockRollConstructor };
 }
 
 // CONFIG initialization structure
