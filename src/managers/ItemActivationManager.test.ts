@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import type { EffectNode } from '#types/effectTree.js';
 import { MockRollConstructor } from '../../tests/mocks/foundry.js';
 import type { NimbleBaseActor } from '../documents/actor/base.svelte.ts';
@@ -9,15 +9,17 @@ const mockReconstructEffectsTree = vi.fn();
 const mockGetRollFormula = vi.fn();
 
 // Mock dependencies - create the mock inside the factory
-const MockNimbleRoll = vi.fn(function (this: any, _formula: string, _data?: unknown) {
+const MockNimbleRoll = vi.fn(function (
+	this: Mock<typeof NimbleRoll>,
+	_formula: string,
+	_data?: unknown,
+) {
 	// Always create the instance with required methods
 	const instance = {
 		evaluate: vi.fn().mockResolvedValue(undefined),
 		toJSON: vi.fn().mockReturnValue({ total: 0 }),
 	};
 
-	// Use new.target to detect if called with 'new'
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	if (new.target !== undefined) {
 		// Called with 'new' - assign properties to 'this' and return 'this'
 		this.evaluate = instance.evaluate;
@@ -32,7 +34,7 @@ const MockNimbleRoll = vi.fn(function (this: any, _formula: string, _data?: unkn
 Object.setPrototypeOf(MockNimbleRoll, Function.prototype);
 
 const MockDamageRoll = vi.fn(function (
-	this: vi.Mocked<typeof DamageRoll>,
+	this: Mock<typeof DamageRoll>,
 	_formula: string,
 	_data?: unknown,
 	_options?: unknown,
@@ -43,8 +45,6 @@ const MockDamageRoll = vi.fn(function (
 		toJSON: vi.fn().mockReturnValue({ total: 0 }),
 	};
 
-	// Use new.target to detect if called with 'new'
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	if (new.target !== undefined) {
 		// Called with 'new' - assign properties to 'this' and return 'this'
 		this.evaluate = instance.evaluate;
@@ -72,8 +72,11 @@ vi.doMock('../documents/dialogs/ItemActivationConfigDialog.svelte.js', () => ({
 }));
 
 // Helper function to create a mock implementation that handles 'new' correctly
-function createMockConstructorImplementation(mockInstance: any) {
-	return function (this: any) {
+function createMockConstructorImplementation(mockInstance: {
+	evaluate: Mock<() => void>;
+	toJSON: Mock<() => void>;
+}) {
+	return function (this: Mock<typeof NimbleRoll> | Mock<typeof DamageRoll>) {
 		// If 'this' exists and is an object (called with 'new'), assign to it
 		if (this && typeof this === 'object' && this !== globalThis) {
 			this.evaluate = mockInstance.evaluate;
@@ -86,11 +89,13 @@ function createMockConstructorImplementation(mockInstance: any) {
 	};
 }
 
-const MockRoll = (globalThis as any).foundry.dice.Roll as ReturnType<typeof vi.fn>;
+const MockRoll = (
+	globalThis as unknown as { foundry: { dice: { Roll: ReturnType<typeof vi.fn> } } }
+).foundry.dice.Roll;
 
 describe('ItemActivationManager.#getRolls', () => {
-	let mockItem: vi.Mocked<NimbleBaseItem>;
-	let mockActor: vi.Mocked<NimbleBaseActor>;
+	let mockItem: NimbleBaseItem;
+	let mockActor: NimbleBaseActor;
 	let manager: ItemActivationManager;
 
 	beforeEach(() => {
@@ -111,10 +116,10 @@ describe('ItemActivationManager.#getRolls', () => {
 		// Set default implementations for overrides
 		mockReconstructEffectsTree.mockImplementation((effects) => effects || []);
 		Object.assign(testDependencies, {
-			NimbleRoll: MockNimbleRoll as any,
-			DamageRoll: MockDamageRoll as any,
-			getRollFormula: mockGetRollFormula as any,
-			reconstructEffectsTree: mockReconstructEffectsTree as any,
+			NimbleRoll: MockNimbleRoll,
+			DamageRoll: MockDamageRoll,
+			getRollFormula: mockGetRollFormula,
+			reconstructEffectsTree: mockReconstructEffectsTree,
 		});
 
 		// Create mock actor
@@ -199,7 +204,7 @@ describe('ItemActivationManager.#getRolls', () => {
 			const mockToJSON = vi.fn().mockReturnValue({ total: 15 });
 			// Override NimbleRoll mock for this test
 			vi.mocked(NimbleRoll).mockImplementation(function (
-				this: any,
+				this: unknown,
 				_formula: string,
 				_data?: unknown,
 			) {
@@ -261,10 +266,7 @@ describe('ItemActivationManager.#getRolls', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 12 }),
 			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			vi.mocked(NimbleRoll).mockImplementation(
-				createMockConstructorImplementation(mockRoll as any),
-			);
+			vi.mocked(NimbleRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
 
 			await manager.getData();
 
@@ -294,10 +296,7 @@ describe('ItemActivationManager.#getRolls', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 10 }),
 			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			vi.mocked(NimbleRoll).mockImplementation(
-				createMockConstructorImplementation(mockRoll as any),
-			);
+			vi.mocked(NimbleRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
 
 			await manager.getData();
 
@@ -327,10 +326,7 @@ describe('ItemActivationManager.#getRolls', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 8 }),
 			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			vi.mocked(NimbleRoll).mockImplementation(
-				createMockConstructorImplementation(mockRoll as any),
-			);
+			vi.mocked(NimbleRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
 
 			await manager.getData();
 
@@ -386,10 +382,7 @@ describe('ItemActivationManager.#getRolls', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 15 }),
 			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			vi.mocked(NimbleRoll).mockImplementation(
-				createMockConstructorImplementation(mockRoll as any),
-			);
+			vi.mocked(NimbleRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
 
 			await manager.getData();
 
@@ -424,10 +417,7 @@ describe('ItemActivationManager.#getRolls', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 4 }),
 			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			vi.mocked(DamageRoll).mockImplementation(
-				createMockConstructorImplementation(mockRoll as any),
-			);
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
 
 			const result = await manager.getData();
 
@@ -469,10 +459,7 @@ describe('ItemActivationManager.#getRolls', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 8 }),
 			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			vi.mocked(DamageRoll).mockImplementation(
-				createMockConstructorImplementation(mockRoll as any),
-			);
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
 
 			// Note: rollFormula would need to be passed through getData, but since fastForward
 			// uses default dialogData, we test the node formula path
@@ -512,10 +499,7 @@ describe('ItemActivationManager.#getRolls', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 6 }),
 			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			vi.mocked(DamageRoll).mockImplementation(
-				createMockConstructorImplementation(mockRoll as any),
-			);
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
 
 			// Note: primaryDieValue would need to be passed through dialog, but fastForward
 			// uses default dialogData, so we test the default path
@@ -570,10 +554,7 @@ describe('ItemActivationManager.#getRolls', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 3 }),
 			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			vi.mocked(DamageRoll).mockImplementation(
-				createMockConstructorImplementation(mockDamageRoll as any),
-			);
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockDamageRoll));
 			MockRoll.mockImplementation(function (this: any) {
 				return mockRegularRoll;
 			});
@@ -599,7 +580,7 @@ describe('ItemActivationManager.#getRolls', () => {
 				canMiss: false,
 				parentContext: null,
 				parentNode: null,
-			} as EffectNode;
+			} as unknown as EffectNode;
 
 			manager.activationData = { effects: [damageNode] };
 			// Use real flattenEffectsTree - no need to mock it
@@ -610,10 +591,7 @@ describe('ItemActivationManager.#getRolls', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 0 }),
 			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			vi.mocked(DamageRoll).mockImplementation(
-				createMockConstructorImplementation(mockRoll as any),
-			);
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
 
 			await manager.getData();
 
@@ -651,7 +629,7 @@ describe('ItemActivationManager.#getRolls', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 5 }),
 			};
-			MockRoll.mockImplementation(function (this: any) {
+			MockRoll.mockImplementation(function (this: unknown) {
 				return mockRoll;
 			});
 
@@ -666,14 +644,14 @@ describe('ItemActivationManager.#getRolls', () => {
 
 		it('should use default formula "0" when healing formula is missing', async () => {
 			manager = new ItemActivationManager(mockItem, { fastForward: true });
-			const healingNode: EffectNode = {
+			const healingNode = {
 				id: 'healing-1',
 				type: 'healing',
 				healingType: 'healing',
 				formula: undefined,
 				parentContext: null,
 				parentNode: null,
-			} as EffectNode;
+			} as unknown as EffectNode;
 
 			manager.activationData = { effects: [healingNode] };
 			// Use real flattenEffectsTree - no need to mock it
@@ -683,7 +661,7 @@ describe('ItemActivationManager.#getRolls', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 0 }),
 			};
-			MockRoll.mockImplementation(function (this: any) {
+			MockRoll.mockImplementation(function (this: unknown) {
 				return mockRoll;
 			});
 
@@ -741,15 +719,11 @@ describe('ItemActivationManager.#getRolls', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 3 }),
 			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			vi.mocked(NimbleRoll).mockImplementation(
-				createMockConstructorImplementation(mockSavingThrowRoll as any),
+				createMockConstructorImplementation(mockSavingThrowRoll),
 			);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			vi.mocked(DamageRoll).mockImplementation(
-				createMockConstructorImplementation(mockDamageRoll as any),
-			);
-			MockRoll.mockImplementation(function (this: any) {
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockDamageRoll));
+			MockRoll.mockImplementation(function (this: unknown) {
 				return mockHealingRoll;
 			});
 
@@ -779,17 +753,13 @@ describe('ItemActivationManager.#getRolls', () => {
 			// Use real flattenEffectsTree - no need to mock it
 
 			const updatedNode = { ...damageNode, roll: { total: 4 } };
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			mockReconstructEffectsTree.mockReturnValue([updatedNode] as any);
+			mockReconstructEffectsTree.mockReturnValue([updatedNode]);
 
 			const mockRoll = {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 4 }),
 			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			vi.mocked(DamageRoll).mockImplementation(
-				createMockConstructorImplementation(mockRoll as any),
-			);
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
 
 			await manager.getData();
 
@@ -840,10 +810,7 @@ describe('ItemActivationManager.#getRolls', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 4 }),
 			};
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			vi.mocked(DamageRoll).mockImplementation(
-				createMockConstructorImplementation(mockRoll as any),
-			);
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
 
 			await manager.getData();
 
