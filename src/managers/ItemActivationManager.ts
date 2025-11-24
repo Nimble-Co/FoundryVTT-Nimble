@@ -7,6 +7,16 @@ import getRollFormula from '../utils/getRollFormula.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
+// Dependencies are grouped to allow tests to override them without relying on module mocking.
+const dependencies = {
+	NimbleRoll,
+	DamageRoll,
+	getRollFormula,
+	reconstructEffectsTree,
+};
+
+export const testDependencies = dependencies;
+
 class ItemActivationManager {
 	#item: NimbleBaseItem;
 
@@ -37,7 +47,7 @@ class ItemActivationManager {
 		let dialogData: ItemActivationManager.DialogData;
 
 		if (options.fastForward) {
-			dialogData = { rollMode: 0 };
+			dialogData = { rollMode: options.rollMode ?? 0 };
 		} else {
 			// Check if there are damage or healing effects that require rolling
 			const effects = this.activationData?.effects ?? [];
@@ -110,13 +120,13 @@ class ItemActivationManager {
 				const saveKey = (node as any).saveType || node.savingThrowType;
 				const rollMode = dialogData.rollMode ?? 0;
 
-				const rollFormula = getRollFormula(this.actor, {
+				const rollFormula = dependencies.getRollFormula(this.actor, {
 					saveKey,
 					rollMode,
 					type: 'savingThrow',
 				});
 
-				const roll = new NimbleRoll(rollFormula, {
+				const roll = new dependencies.NimbleRoll(rollFormula, {
 					...this.actor.getRollData(),
 					prompted: false,
 					respondentId: this.actor?.token?.uuid ?? this.actor.uuid,
@@ -135,7 +145,7 @@ class ItemActivationManager {
 					// Use modified formula if provided
 					const formula = dialogData.rollFormula || node.formula;
 
-					roll = new DamageRoll(formula, this.actor.getRollData(), {
+					roll = new dependencies.DamageRoll(formula, this.actor.getRollData(), {
 						canCrit,
 						canMiss,
 						rollMode: node.rollMode,
@@ -157,7 +167,7 @@ class ItemActivationManager {
 		}
 
 		// Updating the effects tree this way ensures that the changes above are reflected in the activation data.
-		this.activationData.effects = reconstructEffectsTree(updatedEffects);
+		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
 
 		return rolls;
 	}
