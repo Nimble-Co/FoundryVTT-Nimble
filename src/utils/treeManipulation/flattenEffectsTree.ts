@@ -1,7 +1,10 @@
 import type { ActionConsequence, EffectNode } from '#types/effectTree.js';
 
+/**
+ * Parses a string reference (format: `@{key=value; key2=value2}`) into an EffectNode.
+ * Automatically converts values to numbers, booleans, or null when appropriate.
+ */
 function parseStringReference(ref: string): EffectNode | null {
-	// Parse string references like "@{id=devxf3Wq27h2ouJn; type=damageOutcome; outcome=fullDamage; parentContext=failedSave; parentNode=k1oi8cKrCy0rKtOr}"
 	if (!ref.startsWith('@{') || !ref.endsWith('}')) return null;
 
 	const content = ref.slice(2, -1); // Remove "@{" and "}"
@@ -23,6 +26,9 @@ function parseStringReference(ref: string): EffectNode | null {
 	return node as EffectNode;
 }
 
+/**
+ * Converts string references (format: `@{key=value}`) in an array to EffectNode objects.
+ */
 function resolveNodeArray(nodeArray: any[]): EffectNode[] {
 	return nodeArray.map((item) => {
 		if (typeof item === 'string' && item.startsWith('@{')) {
@@ -33,6 +39,11 @@ function resolveNodeArray(nodeArray: any[]): EffectNode[] {
 	});
 }
 
+/**
+ * Flattens a hierarchical tree of effect nodes into a single array.
+ * Recursively processes nested nodes in `on` and `sharedRolls` properties,
+ * sets `parentNode` and `parentContext` on each node, and removes nested structures.
+ */
 export function flattenEffectsTree(
 	nodes: (EffectNode | string)[],
 	parentNode: string | null = null,
