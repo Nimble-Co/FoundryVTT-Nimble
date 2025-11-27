@@ -1,9 +1,21 @@
 import type { EffectNode } from '#types/effectTree.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
-import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
-import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
+import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
+import getRollFormula from '../utils/getRollFormula.js';
+import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
+import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
+
+// Dependencies are grouped to allow tests to override them without relying on module mocking.
+const dependencies = {
+	NimbleRoll,
+	DamageRoll,
+	getRollFormula,
+	reconstructEffectsTree,
+};
+
+export const testDependencies = dependencies;
 
 class ItemActivationManager {
 	#item: NimbleBaseItem;
@@ -35,7 +47,7 @@ class ItemActivationManager {
 		let dialogData: ItemActivationManager.DialogData;
 
 		if (options.fastForward) {
-			dialogData = { rollMode: 0 };
+			dialogData = { rollMode: options.rollMode ?? 0 };
 		} else {
 			// Check if there are damage or healing effects that require rolling
 			const effects = this.activationData?.effects ?? [];
@@ -100,7 +112,30 @@ class ItemActivationManager {
 		let foundDamageRoll = false;
 
 		for (const node of flattenEffectsTree(effects)) {
-			if (node.type === 'damage' || node.type === 'healing') {
+			if (node.type === 'savingThrow') {
+				// Handle saving throw rolls
+				if (!this.actor) continue;
+
+				// Use saveType if available, otherwise fall back to savingThrowType
+				const saveKey = (node as any).saveType || node.savingThrowType;
+				const rollMode = dialogData.rollMode ?? 0;
+
+				const rollFormula = dependencies.getRollFormula(this.actor, {
+					saveKey,
+					rollMode,
+					type: 'savingThrow',
+				});
+
+				const roll = new dependencies.NimbleRoll(rollFormula, {
+					...this.actor.getRollData(),
+					prompted: false,
+					respondentId: this.actor?.token?.uuid ?? this.actor.uuid,
+				} as Record<string, any>);
+
+				await roll.evaluate();
+				(node as any).roll = roll.toJSON();
+				rolls.push(roll);
+			} else if (node.type === 'damage' || node.type === 'healing') {
 				let roll: Roll | DamageRoll;
 
 				if (node.type === 'damage' && !foundDamageRoll) {
@@ -110,7 +145,7 @@ class ItemActivationManager {
 					// Use modified formula if provided
 					const formula = dialogData.rollFormula || node.formula;
 
-					roll = new DamageRoll(formula, this.actor.getRollData(), {
+					roll = new dependencies.DamageRoll(formula, this.actor.getRollData(), {
 						canCrit,
 						canMiss,
 						rollMode: node.rollMode,
@@ -132,7 +167,7 @@ class ItemActivationManager {
 		}
 
 		// Updating the effects tree this way ensures that the changes above are reflected in the activation data.
-		this.activationData.effects = reconstructEffectsTree(updatedEffects);
+		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
 
 		return rolls;
 	}
