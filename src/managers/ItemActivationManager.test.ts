@@ -93,7 +93,7 @@ const MockRoll = (
 	globalThis as unknown as { foundry: { dice: { Roll: ReturnType<typeof vi.fn> } } }
 ).foundry.dice.Roll;
 
-describe('ItemActivationManager.#getRolls', () => {
+describe('ItemActivationManager.getData (rolls)', () => {
 	let mockItem: NimbleBaseItem;
 	let mockActor: NimbleBaseActor;
 	let manager: ItemActivationManager;
