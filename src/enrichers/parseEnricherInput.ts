@@ -5,7 +5,7 @@ import parseEnricherArguments from './parseEnricherArguments.js';
 
 export default async function parseEnricherInput(
 	match: RegExpMatchArray,
-	options?: foundry.applications.ux.TextEditor.implementation.EnrichmentOptions,
+	options?: foundry.applications.ux.TextEditor.EnrichmentOptions,
 ): Promise<HTMLElement | null> {
 	const { enricherType, argString } = match.groups as { enricherType: string; argString: string };
 

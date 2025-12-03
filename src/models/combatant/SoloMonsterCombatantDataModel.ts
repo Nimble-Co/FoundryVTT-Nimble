@@ -5,14 +5,15 @@ const nimbleSoloMonsterCombatantSchema = () => ({
 });
 
 declare namespace NimbleSoloMonsterCombatantData {
-	type Schema = DataSchema & ReturnType<typeof nimbleSoloMonsterCombatantSchema>;
+	type Schema = foundry.data.fields.DataSchema &
+		ReturnType<typeof nimbleSoloMonsterCombatantSchema>;
 	interface BaseData extends Record<string, unknown> {}
 	interface DerivedData extends Record<string, unknown> {}
 }
 
 class NimbleSoloMonsterCombatantData extends foundry.abstract.TypeDataModel<
 	NimbleSoloMonsterCombatantData.Schema,
-	ChatMessage.ConfiguredInstance,
+	Combatant,
 	NimbleSoloMonsterCombatantData.BaseData,
 	NimbleSoloMonsterCombatantData.DerivedData
 > {

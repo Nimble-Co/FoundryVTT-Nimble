@@ -23,18 +23,18 @@ const itemDataModels = {
 export default itemDataModels;
 
 // Merge types into fvtt-types
-declare global {
+declare module 'fvtt-types/configuration' {
 	interface DataModelConfig {
 		Item: {
-			background: NimbleBackgroundData;
-			boon: NimbleBoonData;
-			class: NimbleClassData;
-			feature: NimbleFeatureData;
-			monsterFeature: NimbleMonsterFeatureData;
-			object: NimbleObjectData;
-			ancestry: NimbleAncestryData;
-			spell: NimbleSpellData;
-			subclass: NimbleSubclassData;
+			background: typeof NimbleBackgroundData;
+			boon: typeof NimbleBoonData;
+			class: typeof NimbleClassData;
+			feature: typeof NimbleFeatureData;
+			monsterFeature: typeof NimbleMonsterFeatureData;
+			object: typeof NimbleObjectData;
+			ancestry: typeof NimbleAncestryData;
+			spell: typeof NimbleSpellData;
+			subclass: typeof NimbleSubclassData;
 		};
 	}
 }

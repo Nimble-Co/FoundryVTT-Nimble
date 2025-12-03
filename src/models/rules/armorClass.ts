@@ -1,5 +1,14 @@
 import { NimbleBaseRule } from './base.js';
 
+// Interface for character system with armor attributes
+interface CharacterSystemWithArmor {
+	attributes: {
+		armor: {
+			components: { mode: string; priority: number; source: string; value: number }[];
+		};
+	};
+}
+
 function schema() {
 	const { fields } = foundry.data;
 
@@ -20,18 +29,21 @@ declare namespace ArmorClassRule {
 }
 
 class ArmorClassRule extends NimbleBaseRule<ArmorClassRule.Schema> {
+	declare formula: string;
+	declare mode: 'add' | 'multiply' | 'override';
+
 	static override defineSchema(): ArmorClassRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}
 
-	override afterPrepareData(): void {
+	afterPrepareData(): void {
 		if (this.invalid) return;
 
 		const { actor } = this;
-		if (!actor || !actor.isType('character')) return;
+		if (!actor || actor.type !== 'character') return;
 
 		const value = this.resolveFormula(this.formula);
 		if (!value) return;
@@ -43,7 +55,8 @@ class ArmorClassRule extends NimbleBaseRule<ArmorClassRule.Schema> {
 			value,
 		};
 
-		actor.system.attributes.armor.components.push(part);
+		const system = actor.system as unknown as CharacterSystemWithArmor;
+		system.attributes.armor.components.push(part);
 	}
 
 	override tooltipInfo(): string {

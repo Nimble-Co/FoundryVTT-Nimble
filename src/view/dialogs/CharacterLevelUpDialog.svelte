@@ -8,7 +8,7 @@
 	import SubclassSelection from './components/levelUpHelper/SubclassSelection.svelte';
 
 	function submit() {
-		dialog.submit({
+		dialog.submitDialog({
 			selectedAbilityScore: selectedAbilityScores,
 			selectedSubclass,
 			skillPointChanges,
@@ -16,9 +16,10 @@
 		});
 	}
 
-	const { defaultSkillAbilities, skills } = CONFIG.NIMBLE;
+	const { defaultSkillAbilities: _defaultSkillAbilities, skills: _skills } = CONFIG.NIMBLE;
 
 	let { document, dialog, ...data } = $props();
+	const _data = data;
 
 	let boons = getChoicesFromCompendium('boon');
 	let subclasses = $state([]);

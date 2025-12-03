@@ -60,7 +60,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/**                  Data Prep Helpers                     */
 	/** ------------------------------------------------------ */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	_preProcessFormula(formula: string, data: DamageRoll.Data, options: DamageRoll.Options) {
+	_preProcessFormula(_formula: string, _data: DamageRoll.Data, options: DamageRoll.Options) {
 		// Separate out the primary die
 		if (options.canCrit) {
 			const { rollMode = 0 } = options;
@@ -82,7 +82,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					// Create Primary Term
 					primaryTerm = new PrimaryDie({
 						number: 1 + Math.abs(rollMode),
-						faces,
+						faces: faces ?? 6,
 						options: { flavor: 'Primary Die' },
 					});
 
@@ -93,27 +93,26 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					primaryTerm.modifiers.push('x');
 
 					if (options.primaryDieValue) {
-						primaryTerm.results = [
-							{ result: options.primaryDieValue, active: true },
-						];
+						primaryTerm.results = [{ result: options.primaryDieValue, active: true }];
 					}
 
 					if (options.primaryDieModifier && faces) {
 						const baseResult = Math.ceil(Math.random() * faces);
-						let modifiedResult = baseResult + options.primaryDieModifier;
+						const modifiedResult = baseResult + options.primaryDieModifier;
 						if (modifiedResult > faces) {
-							primaryTerm.results = [
-								{ result: faces, active: true },
-							];
+							primaryTerm.results = [{ result: faces, active: true }];
 							// Add excess as a separate numeric term
 							const excess = modifiedResult - faces;
 							const excessTerm = new Terms.NumericTerm({ number: excess });
 							const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
-							this.terms.splice(this.terms.indexOf(primaryTerm) + 1, 0, operatorTermExcess, excessTerm);
+							this.terms.splice(
+								this.terms.indexOf(primaryTerm) + 1,
+								0,
+								operatorTermExcess,
+								excessTerm,
+							);
 						} else {
-							primaryTerm.results = [
-								{ result: modifiedResult, active: true },
-							];
+							primaryTerm.results = [{ result: modifiedResult, active: true }];
 						}
 					}
 
@@ -121,7 +120,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				} else {
 					primaryTerm = new PrimaryDie({
 						number: 1,
-						faces: firstDieTerm.faces,
+						faces: firstDieTerm.faces ?? 6,
 					});
 
 					// Add rollMode
@@ -134,27 +133,26 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					primaryTerm.modifiers.push('x');
 
 					if (options.primaryDieValue) {
-						primaryTerm.results = [
-							{ result: options.primaryDieValue, active: true },
-						];
+						primaryTerm.results = [{ result: options.primaryDieValue, active: true }];
 					}
 
 					if (options.primaryDieModifier && faces) {
 						const baseResult = Math.ceil(Math.random() * faces);
-						let modifiedResult = baseResult + options.primaryDieModifier;
+						const modifiedResult = baseResult + options.primaryDieModifier;
 						if (modifiedResult > faces) {
-							primaryTerm.results = [
-								{ result: faces, active: true },
-							];
+							primaryTerm.results = [{ result: faces, active: true }];
 							// Add excess as a separate numeric term
 							const excess = modifiedResult - faces;
 							const excessTerm = new Terms.NumericTerm({ number: excess });
 							const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
-							this.terms.splice(this.terms.indexOf(primaryTerm) + 1, 0, operatorTermExcess, excessTerm);
+							this.terms.splice(
+								this.terms.indexOf(primaryTerm) + 1,
+								0,
+								operatorTermExcess,
+								excessTerm,
+							);
 						} else {
-							primaryTerm.results = [
-								{ result: modifiedResult, active: true },
-							];
+							primaryTerm.results = [{ result: modifiedResult, active: true }];
 						}
 					}
 
@@ -220,22 +218,25 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/**                    Static Methods                      */
 	/** ------------------------------------------------------ */
 	static fromRoll(roll: any) {
-		const newRoll = new this(roll.formula, roll.data, roll.options);
+		const newRoll = new DamageRoll(roll.formula, roll.data, roll.options);
 		Object.assign(newRoll, roll);
 		return newRoll;
 	}
 
-	static override fromData(data: Record<string, any>): DamageRoll {
-		// @ts-expect-error
-		const roll = super.fromData(data) as unknown as DamageRoll;
+	static override fromData(data: Record<string, unknown>): DamageRoll {
+		// @ts-expect-error - Roll.fromData exists on the parent class
+		const roll = (Roll as { fromData: (data: Record<string, unknown>) => Roll }).fromData(
+			data,
+		) as unknown as DamageRoll;
 
-		roll.originalFormula = data.originalFormula;
-		roll._formula = this.getFormula(roll.terms);
+		roll.originalFormula = data.originalFormula as string;
+		roll._formula = DamageRoll.getFormula(roll.terms);
 
 		// Populate data
 		if (data.evaluated ?? true) {
-			roll.isCritical = data.options.isCritical;
-			roll.isMiss = data.options.isMiss;
+			const options = data.options as { isCritical?: boolean; isMiss?: boolean } | undefined;
+			roll.isCritical = options?.isCritical;
+			roll.isMiss = options?.isMiss;
 		}
 
 		return roll as DamageRoll;

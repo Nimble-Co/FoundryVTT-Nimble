@@ -1,4 +1,4 @@
-import type { DeepPartial } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { DeepPartial } from 'fvtt-types/utils';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 
 import ActorCreationDialogComponent from '../../view/dialogs/ActorCreationDialog.svelte';
@@ -7,15 +7,20 @@ import CharacterCreationDialog from './CharacterCreationDialog.svelte.js';
 const { ApplicationV2 } = foundry.applications.api;
 
 export default class ActorCreationDialog extends SvelteApplicationMixin(ApplicationV2) {
-	declare data: any;
+	declare data: Record<string, unknown>;
 
-	declare parent: any;
+	declare parent: Actor | null;
 
-	declare pack: any;
+	declare pack: string | null;
+
+	declare props: Record<string, unknown>;
 
 	protected root;
 
-	constructor(data = {}, { parent = null, pack = null, ...options } = {}) {
+	constructor(
+		data = {},
+		{ parent = null, pack = null } = {} as { parent?: Actor | null; pack?: string | null },
+	) {
 		super();
 
 		this.root = ActorCreationDialogComponent;
@@ -38,13 +43,14 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 		},
 	};
 
-	protected async _prepareContext() {
+	// @ts-expect-error - Override with simplified context
+	protected override async _prepareContext() {
 		return {
 			dialog: this,
 		};
 	}
 
-	async submit(actorType: string) {
+	async submitActorType(actorType: string) {
 		const { documentClasses } = CONFIG.NIMBLE.Actor;
 
 		if (actorType === 'character') {
@@ -60,7 +66,9 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 		return super.close();
 	}
 
-	async close(options?: DeepPartial<foundry.applications.api.ApplicationV2.ClosingOptions>) {
+	override async close(
+		options?: DeepPartial<foundry.applications.api.ApplicationV2.ClosingOptions>,
+	) {
 		return super.close(options);
 	}
 }

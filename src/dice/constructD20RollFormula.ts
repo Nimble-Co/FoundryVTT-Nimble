@@ -3,9 +3,9 @@ import simplifyOperatorTerms from './simplifyOperatorTerms.js';
 
 export type D20RollOptions = {
 	actor: NimbleBaseActor;
-	item?: NimbleBaseItem | undefined;
+	item?: Item;
 	minRoll: number;
-	modifiers: { label: string; value: number }[];
+	modifiers: { label?: string; value: number | string }[];
 	rollMode: number;
 };
 
@@ -31,10 +31,10 @@ export default function constructD20RollFormula({
 		...(modifiers ?? []).map(({ label, value }) => {
 			if (!value || value === 0) return null;
 
-			let modifier;
+			let modifier: Roll<Record<string, unknown>>;
 
 			try {
-				modifier = new Roll(value.toString(), rollData);
+				modifier = new Roll(value.toString(), rollData as Record<string, unknown>);
 			} catch (_err) {
 				return null;
 			}

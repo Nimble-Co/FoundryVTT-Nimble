@@ -1,5 +1,6 @@
-import type BaseUser from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/documents/user.d.mts';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
+import type { NimbleClassData } from '../../models/item/ClassDataModel.js';
+import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
 import type { NimbleAncestryItem } from '../item/ancestry.js';
 import type { NimbleBackgroundItem } from '../item/background.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
@@ -7,12 +8,12 @@ import type { ActorRollOptions } from './actorInterfaces.ts';
 // Forward declaration to avoid circular dependency with item/class.ts
 interface NimbleClassItem extends Item {
 	identifier: string;
-	system: any;
-	ASI?: Record<string, number>;
-	hitDice?: { size: number; total: number };
-	maxHp?: number;
-	grantedArmorProficiencies?: string[];
-	grantedWeaponProficiencies?: string[];
+	system: NimbleClassData;
+	ASI: Record<string, number>;
+	hitDice: { size: number; total: number };
+	maxHp: number;
+	grantedArmorProficiencies: string[];
+	grantedWeaponProficiencies: string[];
 }
 
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
@@ -110,9 +111,15 @@ export class NimbleCharacter extends NimbleBaseActor {
 		super._populateBaseTags();
 
 		// Add proficiencies
-		this.system.proficiencies.armor.forEach((a) => this.tags.add(`proficiency:armor:${a}`));
-		this.system.proficiencies.languages.forEach((l) => this.tags.add(`proficiency:language:${l}`));
-		this.system.proficiencies.weapons.forEach((w) => this.tags.add(`proficiency:weapon:${w}`));
+		for (const a of this.system.proficiencies.armor) {
+			this.tags.add(`proficiency:armor:${a}`);
+		}
+		for (const l of this.system.proficiencies.languages) {
+			this.tags.add(`proficiency:language:${l}`);
+		}
+		for (const w of this.system.proficiencies.weapons) {
+			this.tags.add(`proficiency:weapon:${w}`);
+		}
 	}
 
 	override prepareDerivedData(): void {
@@ -224,12 +231,13 @@ export class NimbleCharacter extends NimbleBaseActor {
 		const objects = this.items.filter((i) => i.isType('object'));
 		// Sum up each object
 		objects.forEach((object) => {
-			switch (object.system.objectSizeType) {
+			const objectSystem = object.system as NimbleObjectData;
+			switch (objectSystem.objectSizeType) {
 				case 'slots':
-					slotsRequiredSum += object.system.slotsRequired;
+					slotsRequiredSum += objectSystem.slotsRequired;
 					break;
 				case 'stackable': {
-					const slotsRequiredByStack = Math.ceil(object.system.quantity / object.system.stackSize);
+					const slotsRequiredByStack = Math.ceil(objectSystem.quantity / objectSystem.stackSize);
 					slotsRequiredSum += slotsRequiredByStack;
 					break;
 				}
@@ -239,7 +247,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 				default:
 					console.log(
 						"Can't calculate slots used for object size type",
-						object.system.objectSizeType,
+						objectSystem.objectSizeType,
 					);
 			}
 		});
@@ -248,11 +256,16 @@ export class NimbleCharacter extends NimbleBaseActor {
 		// add one slots for all small stuff
 		if (smallObjectsCarried) slotsRequiredSum += 1;
 		// account for coinage
-		if (this.getFlag('nimble', 'includeCurrencyBulk') ?? true) {
+		if (
+			((this.flags as Record<string, Record<string, unknown>>).nimble?.includeCurrencyBulk as
+				| boolean
+				| undefined) ??
+			true
+		) {
 			const totalCoinage = Object.values(this.system.currency).reduce(
 				(totalCurrencyBulk, { value }) => totalCurrencyBulk + value,
 				0,
-			) as number;
+			);
 
 			// Coins consume 1 slot per full 500 units
 			slotsRequiredSum += Math.floor(totalCoinage / 500);
@@ -268,12 +281,14 @@ export class NimbleCharacter extends NimbleBaseActor {
 		const classes = Object.values(this.classes ?? {});
 
 		if (classes.length !== 0) {
-			classes.forEach((cls) => {
-				cls.grantedArmorProficiencies.forEach((a) => actorData.proficiencies.armor.add(a));
-				cls.grantedWeaponProficiencies.forEach((w) => {
+			for (const cls of classes) {
+				for (const a of cls.grantedArmorProficiencies) {
+					actorData.proficiencies.armor.add(a);
+				}
+				for (const w of cls.grantedWeaponProficiencies) {
 					if (!actorData.proficiencies.weapons.includes(w)) actorData.proficiencies.weapons.push(w);
-				});
-			});
+				}
+			}
 		}
 	}
 
@@ -448,15 +463,17 @@ export class NimbleCharacter extends NimbleBaseActor {
 			return;
 		}
 		// Update class items
-		for (const clsUpdate of result.classUpdates) {
+		for (const clsUpdate of result.classUpdates as Array<{ id: string; hpData: number[] }>) {
 			await this.updateItem(clsUpdate.id, { 'system.hpData': clsUpdate.hpData });
 		}
 		// Update bonus
-		await this.update({ 'system.attributes.hp.bonus': result.bonus });
+		await this.update({ 'system.attributes.hp.bonus': result.bonus } as Record<string, unknown>);
 
 		// If HP is now greater then max, reduce it
 		if (this.system.attributes.hp.value > this.system.attributes.hp.max) {
-			await this.update({ 'system.attributes.hp.value': this.system.attributes.hp.max });
+			await this.update({
+				'system.attributes.hp.value': this.system.attributes.hp.max,
+			} as Record<string, unknown>);
 		}
 	}
 
@@ -525,7 +542,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 			options.rollMode,
 		);
 
-		let rollData;
+		let rollData: { rollFormula: string; rollMode: number; visibilityMode?: string } | null;
 
 		if (options.skipRollDialog) {
 			rollData = await this.getDefaultSkillCheckData(skillKey, baseRollMode, options);
@@ -623,7 +640,13 @@ export class NimbleCharacter extends NimbleBaseActor {
 		await roll.evaluate();
 		const hp = roll.total!;
 
-		this.outputLevelUpSummary({ currentClassLevel, ...dialogData }, roll);
+		this.outputLevelUpSummary(
+			{
+				currentClassLevel,
+				takeAverageHp: (dialogData.takeAverageHp as boolean) ?? false,
+			},
+			roll,
+		);
 
 		itemUpdates['system.hpData'] = [...characterClass.system.hpData, hp];
 
@@ -644,14 +667,16 @@ export class NimbleCharacter extends NimbleBaseActor {
 			characterClass.identifier,
 		];
 
-		Object.entries(dialogData.skillPointChanges).forEach(([skillKey, change]) => {
-			if (change) {
-				const path = `system.skills.${skillKey}.points`;
-				const currentPoints = this.system.skills[skillKey].points;
+		Object.entries(dialogData.skillPointChanges as Record<string, number>).forEach(
+			([skillKey, change]) => {
+				if (change) {
+					const path = `system.skills.${skillKey}.points`;
+					const currentPoints = this.system.skills[skillKey].points;
 
-				actorUpdates[path] = currentPoints + change;
-			}
-		});
+					actorUpdates[path] = currentPoints + change;
+				}
+			},
+		);
 
 		// Record level up history
 		const historyEntry = {
@@ -728,7 +753,10 @@ export class NimbleCharacter extends NimbleBaseActor {
 		await this.update(actorUpdates);
 	}
 
-	async outputLevelUpSummary(data, roll: Roll | undefined) {
+	async outputLevelUpSummary(
+		data: { currentClassLevel: number; takeAverageHp: boolean },
+		roll: Roll | undefined,
+	) {
 		const rolls = roll ? [roll] : [];
 		const { currentClassLevel, takeAverageHp } = data;
 		console.log('currentClassLevel', currentClassLevel);
@@ -738,7 +766,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this.name}: Level Up Summary`,
-			type: 'levelUpSummary',
+			type: 'levelUpSummary' as const,
 			rolls,
 			system: {
 				actorName: this?.name ?? game?.user?.name ?? '',
@@ -749,9 +777,11 @@ export class NimbleCharacter extends NimbleBaseActor {
 			},
 		};
 
-		ChatMessage.applyRollMode(chatData, game.settings.get('core', 'rollMode'));
-		// @ts-expect-error
-		const chatCard = await ChatMessage.create(chatData);
+		ChatMessage.applyRollMode(
+			chatData as unknown as ChatMessage.CreateData,
+			game.settings.get('core', 'rollMode') as ChatMessage.PassableRollMode,
+		);
+		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 
 		return chatCard ?? null;
 	}
@@ -790,13 +820,13 @@ export class NimbleCharacter extends NimbleBaseActor {
 		value: number,
 		isDelta = false,
 		isBar?: boolean,
-	): Promise<this> {
+	): Promise<this | undefined> {
 		if (attribute === 'resources.mana') {
 			// Special handling for mana
 			const currentMana = this.system.resources.mana.current;
 			const newMana = isDelta ? currentMana + value : value;
 
-			await this.update({ 'system.resources.mana.current': newMana });
+			await this.update({ 'system.resources.mana.current': newMana } as Record<string, unknown>);
 			return this;
 		}
 
@@ -807,16 +837,21 @@ export class NimbleCharacter extends NimbleBaseActor {
 	/** ------------------------------------------------------ */
 	/**                         CRUD                           */
 	/** ------------------------------------------------------ */
-	override async _preCreate(
-		data: foundry.documents.BaseActor.ConstructorData,
-		options: Actor.DatabaseOperations['create'],
-		user: BaseUser,
+	protected override async _preCreate(
+		data: Parameters<Actor['_preCreate']>[0],
+		options: Parameters<Actor['_preCreate']>[1],
+		user: Parameters<Actor['_preCreate']>[2],
 	): Promise<boolean | undefined> {
 		// Player character configuration
-		const prototypeToken = { vision: true, actorLink: true, disposition: 1 };
+		const prototypeToken = {
+			vision: true,
+			actorLink: true,
+			disposition: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
+		};
 		this.updateSource({ prototypeToken });
 
-		return super._preCreate(data, options, user);
+		const result = await super._preCreate(data, options, user);
+		return result ?? undefined;
 	}
 
 	async editMetadata() {

@@ -1,3 +1,5 @@
+import type { NimbleCharacter } from '../documents/actor/character.js';
+
 class RestManager {
 	#actor: NimbleCharacter;
 
@@ -7,7 +9,7 @@ class RestManager {
 
 	#summary: string[];
 
-	#updates: { actor: Record<string, any>; items: any[] };
+	#updates: { actor: Record<string, unknown>; items: Record<string, unknown>[] };
 
 	constructor(actor: NimbleCharacter, data: RestManager.Data) {
 		this.#actor = actor;
@@ -62,7 +64,6 @@ class RestManager {
 
 			const content = `<div> <ul> ${innerContent} </ul> </div>`;
 
-			// @ts-expect-error
 			await ChatMessage.create({
 				author: game.user?.id,
 				speaker: ChatMessage.getSpeaker({ actor: this.#actor }),
@@ -80,9 +81,9 @@ class RestManager {
 	#consumeHitDice() {
 		const { selectedHitDice, makeCamp = false } = this.#data;
 
-		Object.entries(selectedHitDice ?? {}).forEach(([size, quantity]) =>
-			this.#actor.HitDiceManager.rollHitDice(Number(size), quantity, makeCamp),
-		);
+		for (const [size, quantity] of Object.entries(selectedHitDice ?? {})) {
+			this.#actor.HitDiceManager.rollHitDice(Number(size), quantity, makeCamp);
+		}
 	}
 
 	/** ------------------------------------------ */

@@ -11,7 +11,7 @@ export default function getRollFormula(
 		actor,
 		rollMode: rollData.rollMode ?? CONFIG.NIMBLE.ROLL_MODE.NORMAL,
 		minRoll: rollData.minRoll ?? 1,
-		item: rollData.item ?? undefined,
+		item: (rollData.item as Item | undefined) ?? undefined,
 		modifiers: modifierManager.getModifiers(),
 	}).rollFormula;
 }

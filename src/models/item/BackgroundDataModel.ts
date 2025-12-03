@@ -8,8 +8,10 @@ const schema = {
 
 declare namespace NimbleBackgroundData {
 	type Schema = NimbleBaseItemData.Schema & typeof schema;
-	type BaseData = NimbleBaseItemData.BaseData;
-	type DerivedData = NimbleBaseItemData.DerivedData;
+	/** Base data derived from the schema */
+	type BaseData = foundry.data.fields.SchemaField.InitializedData<Schema>;
+	/** Additional derived/computed data */
+	type DerivedData = Record<string, never>;
 }
 
 class NimbleBackgroundData extends NimbleBaseItemData<
@@ -20,7 +22,7 @@ class NimbleBackgroundData extends NimbleBaseItemData<
 	/** @inheritDoc */
 	static override defineSchema(): NimbleBackgroundData.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseItemData.defineSchema(),
 			...schema,
 		};
 	}

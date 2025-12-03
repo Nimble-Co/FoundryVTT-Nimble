@@ -1,6 +1,20 @@
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { NimbleBaseRule } from './base.js';
 
+// Interface for actor system with hp attributes
+interface ActorHpSystem {
+	attributes: {
+		hp: {
+			bonus: number;
+		};
+	};
+}
+
+// Interface for class item system
+interface ClassItemSystem {
+	classLevel: number;
+}
+
 function schema() {
 	const { fields } = foundry.data;
 
@@ -13,12 +27,15 @@ function schema() {
 
 declare namespace MaxHpBonusRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
+	type BaseData = foundry.data.fields.SchemaField.InitializedData<Schema>;
 }
 
 class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
+	declare value: number;
+	declare perLevel: boolean;
 	static override defineSchema(): MaxHpBonusRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}
@@ -44,8 +61,9 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		const addedHp = getDeterministicBonus(formula, actor.getRollData());
 		if (!addedHp) return;
 
-		const { bonus } = actor.system.attributes.hp;
-		actor.update({ 'system.attributes.hp.bonus': bonus + addedHp });
+		const actorSystem = actor.system as unknown as ActorHpSystem;
+		const { bonus } = actorSystem.attributes.hp;
+		actor.update({ 'system.attributes.hp.bonus': bonus + addedHp } as Record<string, unknown>);
 	}
 
 	async preUpdate(changes: Record<string, unknown>) {
@@ -53,15 +71,16 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 
 		const { actor, item } = this;
 		if (!actor || !item) return;
-		if (!item.isType('class')) return;
+		if (item.type !== 'class') return;
 
 		if (!this.perLevel) return;
 
 		// Return if update doesn't pertain to level
 		const keys = Object.keys(foundry.utils.flattenObject(changes));
+		const itemSystem = item.system as unknown as ClassItemSystem;
 		if (
 			!keys.includes('system.classLevel') ||
-			changes['system.classLevel'] === item.system.classLevel
+			changes['system.classLevel'] === itemSystem.classLevel
 		)
 			return;
 
@@ -69,8 +88,9 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		const addedHp = getDeterministicBonus(formula, actor.getRollData());
 		if (!addedHp) return;
 
-		const { bonus } = actor.system.attributes.hp;
-		actor.update({ 'system.attributes.hp.bonus': bonus + addedHp });
+		const actorSystem = actor.system as unknown as ActorHpSystem;
+		const { bonus } = actorSystem.attributes.hp;
+		actor.update({ 'system.attributes.hp.bonus': bonus + addedHp } as Record<string, unknown>);
 	}
 
 	afterDelete() {
@@ -84,8 +104,9 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		const addedHp = getDeterministicBonus(formula, actor.getRollData());
 		if (!addedHp) return;
 
-		const { bonus } = actor.system.attributes.hp;
-		actor.update({ 'system.attributes.hp.bonus': bonus - addedHp });
+		const actorSystem = actor.system as unknown as ActorHpSystem;
+		const { bonus } = actorSystem.attributes.hp;
+		actor.update({ 'system.attributes.hp.bonus': bonus - addedHp } as Record<string, unknown>);
 	}
 }
 

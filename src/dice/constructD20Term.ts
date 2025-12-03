@@ -6,7 +6,15 @@ export type d20TermOptions = {
 
 export default function constructD20Term(
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	{ actor, minRoll, rollMode }: { actor: NimbleBaseActor; minRoll: number; rollMode: number },
+	{
+		actor: _actor,
+		minRoll,
+		rollMode,
+	}: {
+		actor: NimbleBaseActor;
+		minRoll: number;
+		rollMode: number;
+	},
 ) {
 	let d20Term = '1d20';
 

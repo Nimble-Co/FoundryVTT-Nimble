@@ -83,16 +83,19 @@ const soloMonsterSchema = () => ({
 });
 
 declare namespace NimbleSoloMonsterData {
-	type Schema = DataSchema & ReturnType<typeof savingThrows> & ReturnType<typeof soloMonsterSchema>;
-
-	interface BaseData extends Record<string, any> {}
-
-	interface DerivedData extends Record<string, any> {}
+	type Schema = foundry.data.fields.DataSchema &
+		ReturnType<typeof attackSequence> &
+		ReturnType<typeof savingThrows> &
+		ReturnType<typeof soloMonsterSchema>;
+	/** Base data derived from the schema */
+	type BaseData = foundry.data.fields.SchemaField.InitializedData<Schema>;
+	/** Additional derived/computed data - empty for SoloMonster */
+	type DerivedData = Record<string, never>;
 }
 
 class NimbleSoloMonsterData extends foundry.abstract.TypeDataModel<
 	NimbleSoloMonsterData.Schema,
-	Actor.ConfiguredInstance,
+	Actor,
 	NimbleSoloMonsterData.BaseData,
 	NimbleSoloMonsterData.DerivedData
 > {

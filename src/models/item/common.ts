@@ -1,5 +1,3 @@
-import { FormulaField } from '../fields/FormulaField.js';
-
 const { fields } = foundry.data;
 
 export const rules = () => ({

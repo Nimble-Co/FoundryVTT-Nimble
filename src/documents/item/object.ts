@@ -1,7 +1,11 @@
+import type { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
-import type { NimbleBaseRule } from '../../models/rules/base.ts';
-
 import { NimbleBaseItem } from './base.svelte.js';
+
+// Interface for rule with disabled property
+interface ToggleableRule {
+	disabled: boolean;
+}
 
 export class NimbleObjectItem extends NimbleBaseItem {
 	declare system: NimbleObjectData;
@@ -10,20 +14,27 @@ export class NimbleObjectItem extends NimbleBaseItem {
 		super._populateBaseTags();
 
 		this.tags.add(`objectType:${this.system.objectType}`);
-		this.system.properties.selected?.forEach((p) => this.tags.add(`property:${p}`));
+		if (this.system.properties.selected) {
+			for (const p of this.system.properties.selected) {
+				this.tags.add(`property:${p}`);
+			}
+		}
 	}
 
 	override _populateDerivedTags(): void {
 		super._populateDerivedTags();
 	}
 
-	override async prepareChatCardData(options) {
+	override async prepareChatCardData(_options: ItemActivationManager.ActivationOptions) {
 		const showDescription = this.system.activation.showDescription;
-		const publicDescription = await foundry.applications.ux.TextEditor.implementation.enrichHTML(this.system.description.public);
-
-		const unidentifiedDescription = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-			this.system.description.unidentified,
+		const publicDescription = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
+			this.system.description.public as string,
 		);
+
+		const unidentifiedDescription =
+			await foundry.applications.ux.TextEditor.implementation.enrichHTML(
+				this.system.description.unidentified as string,
+			);
 
 		return {
 			system: {
@@ -58,7 +69,11 @@ export class NimbleObjectItem extends NimbleBaseItem {
 			if (!existing) return super._preCreate(data, options, user);
 
 			// Update existing item quantity
-			existing.update({ 'system.quantity': existing.system.quantity + 1 });
+			const existingObject = existing as NimbleObjectItem;
+			existingObject.update({ 'system.quantity': existingObject.system.quantity + 1 } as Record<
+				string,
+				unknown
+			>);
 			return false;
 		}
 
@@ -71,8 +86,10 @@ export class NimbleObjectItem extends NimbleBaseItem {
 
 	toggleArmor(): void {
 		if (this.rules.hasRuleOfType('armorClass')) {
-			const rule: NimbleBaseRule = this.rules.getRuleOfType(type);
-			rule.disabled = !rule.disabled;
+			const rule = this.rules.getRuleOfType('armorClass') as ToggleableRule | undefined;
+			if (rule) {
+				rule.disabled = !rule.disabled;
+			}
 		}
 	}
 }

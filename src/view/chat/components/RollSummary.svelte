@@ -1,9 +1,9 @@
 <script>
 	import { getContext } from 'svelte';
 
-	let { label, subheading, tooltip, total, type, options } = $props();
+	let { label, subheading, tooltip, total, type: _type, options: _options } = $props();
 
-	const messageDocument = getContext('messageDocument');
+	const _messageDocument = getContext('messageDocument');
 </script>
 
 <div class="roll" class:roll--no-subheading={!subheading}>

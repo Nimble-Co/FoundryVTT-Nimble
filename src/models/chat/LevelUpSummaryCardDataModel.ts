@@ -9,7 +9,7 @@ const levelUpSummaryCardSchema = () => ({
 });
 
 declare namespace NimbleLevelUpSummaryCardData {
-	type Schema = DataSchema &
+	type Schema = foundry.data.fields.DataSchema &
 		ReturnType<typeof activation> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof levelUpSummaryCardSchema>;
@@ -19,7 +19,7 @@ declare namespace NimbleLevelUpSummaryCardData {
 
 class NimbleLevelUpSummaryCardData extends foundry.abstract.TypeDataModel<
 	NimbleLevelUpSummaryCardData.Schema,
-	ChatMessage.ConfiguredInstance,
+	ChatMessage,
 	NimbleLevelUpSummaryCardData.BaseData,
 	NimbleLevelUpSummaryCardData.DerivedData
 > {

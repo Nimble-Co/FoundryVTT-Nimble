@@ -1,10 +1,15 @@
 declare namespace PrimaryDie {
-	interface TermData extends foundry.dice.terms.Die.TermData {}
+	interface TermData {
+		number?: number;
+		faces?: number;
+		modifiers?: string[];
+		options?: { flavor?: string };
+	}
 }
 
 class PrimaryDie extends foundry.dice.terms.Die {
-	constructor(termData: foundry.dice.terms.Die.TermData) {
-		super(termData);
+	constructor(termData: PrimaryDie.TermData) {
+		super(termData as foundry.dice.terms.Die.TermData);
 		if (!this.modifiers) this.modifiers = [];
 	}
 

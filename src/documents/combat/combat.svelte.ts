@@ -2,6 +2,31 @@ import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
 
 import { createSubscriber } from 'svelte/reactivity';
 
+// Augment HookConfig to include Combatant document hooks
+declare module 'fvtt-types/configuration' {
+	interface HookConfig {
+		createCombatant: [document: Combatant, options: { diff?: boolean }, userId: string];
+		deleteCombatant: [document: Combatant, options: { diff?: boolean }, userId: string];
+		updateCombatant: [
+			document: Combatant,
+			changes: Record<string, unknown>,
+			options: { diff?: boolean },
+			userId: string,
+		];
+	}
+}
+
+// Interface for combatant system with actions
+interface CombatantActionsSystem {
+	actions: {
+		base: {
+			current: number;
+			max: number;
+		};
+	};
+	sort: number;
+}
+
 class NimbleCombat extends Combat {
 	#subscribe;
 
@@ -13,17 +38,20 @@ class NimbleCombat extends Combat {
 				if (combat.id === this.id) update();
 			});
 
-			const combatantHooks = ['create', 'delete', 'update'].reduce(
-				(hooks, hookType) => {
-					hooks[hookType] = Hooks.on(`${hookType}Combatant`, (combatant, _, { diff }) => {
-						if (diff === false) return;
-						if (combatant.parent?.id === this.id) update();
-					});
-
-					return hooks;
-				},
-				{} as Record<string, number>,
-			);
+			const combatantHooks = {
+				create: Hooks.on('createCombatant', (combatant, options) => {
+					if ((options as { diff?: boolean }).diff === false) return;
+					if (combatant.parent?.id === this.id) update();
+				}),
+				delete: Hooks.on('deleteCombatant', (combatant, options) => {
+					if ((options as { diff?: boolean }).diff === false) return;
+					if (combatant.parent?.id === this.id) update();
+				}),
+				update: Hooks.on('updateCombatant', (combatant, _changes, options) => {
+					if ((options as { diff?: boolean }).diff === false) return;
+					if (combatant.parent?.id === this.id) update();
+				}),
+			};
 
 			return () => {
 				Hooks.off('updateCombat', updateCombat);
@@ -40,35 +68,37 @@ class NimbleCombat extends Combat {
 		return this;
 	}
 
-	override async _onEndTurn(combatant) {
-		await super._onEndTurn(combatant);
+	protected override async _onEndTurn(
+		combatant: Combatant.Implementation,
+		context: Combat.TurnEventContext,
+	): Promise<void> {
+		await super._onEndTurn(combatant, context);
 
 		if (combatant.type === 'character') {
+			const combatantSystem = combatant.system as unknown as CombatantActionsSystem;
 			await combatant.update({
-				'system.actions.base.current': combatant.system.actions.base.max,
-			});
+				'system.actions.base.current': combatantSystem.actions.base.max,
+			} as Record<string, unknown>);
 		} else if (combatant.type === 'soloMonster') {
 			console.log('SOLO MONSTER');
 		}
 	}
 
-	override async _onEndRound() {
+	override async _onEndRound(): Promise<void> {
 		const skippedCombatants = this.turns.slice(this.previous?.turn ?? 0);
 
-		await this.updateEmbeddedDocuments(
-			'Combatant',
-			skippedCombatants.reduce((updates, currentCombatant) => {
-				if (currentCombatant.type === 'character') {
-					// @ts-expect-error
-					updates.push({
-						_id: currentCombatant.id,
-						'system.actions.base.current': currentCombatant.system.actions.base.max,
-					});
-				}
+		const updates: Record<string, unknown>[] = [];
+		for (const currentCombatant of skippedCombatants) {
+			if (currentCombatant.type === 'character') {
+				const combatantSystem = currentCombatant.system as unknown as CombatantActionsSystem;
+				updates.push({
+					_id: currentCombatant.id,
+					'system.actions.base.current': combatantSystem.actions.base.max,
+				});
+			}
+		}
 
-				return updates;
-			}, []),
-		);
+		await this.updateEmbeddedDocuments('Combatant', updates as Combatant.UpdateData[]);
 	}
 
 	async updateCombatant(
@@ -90,37 +120,35 @@ class NimbleCombat extends Combat {
 
 	override async rollInitiative(
 		ids: string | string[],
-		{ formula = null, updateTurn = true, messageOptions = {}, rollOptions = {} } = {} as {
-			formula: string | null;
-			updateTurn: boolean;
-			messageOptions: Record<string, any>;
-			rollOptions: Record<string, any>;
-		},
-	) {
+		options?: Combat.InitiativeOptions,
+	): Promise<this> {
+		const { formula, updateTurn = true, messageOptions = {} } = options ?? {};
+		const messageOpts = messageOptions as Record<string, unknown> & { rollMode?: string };
 		// Structure Input data
-		ids = typeof ids === 'string' ? [ids] : ids;
+		const idArray = typeof ids === 'string' ? [ids] : ids;
 		const currentId = this.combatant?.id;
 		const chatRollMode = game.settings.get('core', 'rollMode');
 
 		// Iterate over Combatants, performing an initiative roll for each
-		const updates: Record<string, any>[] = [];
-		const messages: any[] = [];
+		const updates: Record<string, unknown>[] = [];
+		const messages: Record<string, unknown>[] = [];
 
-		for await (const [i, id] of ids.entries()) {
+		for await (const [i, id] of idArray.entries()) {
 			// Get Combatant data (non-strictly)
 			const combatant = this.combatants.get(id);
-			const combatantUpdates = { _id: id, initiative: 0 };
+			const combatantUpdates: Record<string, unknown> = { _id: id, initiative: 0 };
 			if (!combatant?.isOwner) continue;
 
 			// Produce an initiative roll for the Combatant
-			const roll = combatant.getInitiativeRoll(formula, rollOptions);
+			const roll = combatant.getInitiativeRoll(formula ?? undefined);
 			await roll.evaluate();
 
 			if (combatant.type === 'character') {
 				const actionPath = 'system.actions.base.current';
+				const total = roll.total ?? 0;
 
-				if (roll?.total >= 20) combatantUpdates[actionPath] = 3;
-				else if (roll?.total >= 10) combatantUpdates[actionPath] = 2;
+				if (total >= 20) combatantUpdates[actionPath] = 3;
+				else if (total >= 10) combatantUpdates[actionPath] = 2;
 				else combatantUpdates[actionPath] = 1;
 			}
 
@@ -132,21 +160,23 @@ class NimbleCombat extends Combat {
 					speaker: ChatMessage.getSpeaker({
 						actor: combatant.actor,
 						token: combatant.token,
-						alias: combatant.name,
+						alias: combatant.name ?? '',
 					}),
-					flavor: game.i18n.format('COMBAT.RollsInitiative', { name: combatant.name }),
+					flavor: game.i18n.format('COMBAT.RollsInitiative', { name: combatant.name ?? '' }),
 					flags: { 'core.initiativeRoll': true },
 				},
-				messageOptions,
+				messageOpts,
 			);
-			const chatData = await roll.toMessage(messageData, { create: false });
+			const chatData = (await roll.toMessage(messageData as ChatMessage.CreateData, {
+				create: false,
+			})) as Record<string, unknown>;
 
 			// If the combatant is hidden, use a private roll unless an alternative rollMode
 			// was explicitly requested
 			// eslint-disable-next-line no-nested-ternary
-			chatData.rollMode =
-				'rollMode' in messageOptions
-					? messageOptions.rollMode
+			(chatData as Record<string, unknown>).rollMode =
+				'rollMode' in messageOpts
+					? messageOpts.rollMode
 					: combatant.hidden
 						? CONST.DICE_ROLL_MODES.PRIVATE
 						: chatRollMode;
@@ -169,28 +199,34 @@ class NimbleCombat extends Combat {
 		return this;
 	}
 
-	override _sortCombatants(a, b) {
-		const sa = a.system.sort;
-		const sb = b.system.sort;
+	override _sortCombatants(a: Combatant, b: Combatant): number {
+		const aSystem = a.system as unknown as CombatantActionsSystem;
+		const bSystem = b.system as unknown as CombatantActionsSystem;
+		const sa = aSystem.sort;
+		const sb = bSystem.sort;
 
 		return sa - sb;
 	}
 
-	async _onDrop(event: DragEvent & { target: EventTarget & HTMLElement }) {
+	async _onDrop(
+		event: DragEvent & { target: EventTarget & HTMLElement },
+	): Promise<Combatant[] | false> {
 		event.preventDefault();
-		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(event) as unknown as Record<string, string>;
+		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(
+			event,
+		) as unknown as Record<string, string>;
 
 		const { combatants } = this;
 
-		const source = fromUuidSync(dropData.uuid);
+		const source = fromUuidSync(dropData.uuid as `Combatant.${string}`);
 		if (!source) return false;
 
-		const dropTarget = event.target!.closest('[data-combatant-id]');
+		const dropTarget = event.target.closest('[data-combatant-id]') as HTMLElement | null;
 		if (!dropTarget) return false;
 
-		const target = combatants.get(dropTarget.dataset.combatantId);
+		const target = combatants.get(dropTarget.dataset.combatantId ?? '');
 
-		if (source.id === target.id) return false;
+		if (!target || source.id === target.id) return false;
 
 		const siblings = this.turns.filter((c) => c.id !== source.id);
 
@@ -207,15 +243,18 @@ class NimbleCombat extends Combat {
 		});
 
 		const updateData = sortUpdates.map((u) => {
-			const { update } = u;
+			const update = u.update as Record<string, unknown>;
 			update._id = u.target?.id;
 			return update;
 		});
 
-		const updates = await this.updateEmbeddedDocuments('Combatant', updateData);
+		const updates = await this.updateEmbeddedDocuments(
+			'Combatant',
+			updateData as Combatant.UpdateData[],
+		);
 		this.turns = this.setupTurns();
 
-		return updates;
+		return updates ?? [];
 	}
 }
 

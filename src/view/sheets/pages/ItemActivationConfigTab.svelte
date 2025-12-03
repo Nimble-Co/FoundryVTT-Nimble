@@ -1,5 +1,5 @@
 <script>
-	import { getContext, setContext } from 'svelte';
+	import { getContext } from 'svelte';
 
 	import ItemActivationCoreConfigTab from './ItemActivationCoreConfigTab.svelte';
 	import ItemActivationEffectsConfigTab from './ItemActivationEffectsConfigTab.svelte';
@@ -24,7 +24,7 @@
 		},
 	];
 
-	let application = getContext('application');
+	let _application = getContext('application');
 	let currentTab = $state(subNavigation[0]);
 </script>
 

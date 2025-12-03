@@ -2,7 +2,7 @@
  * Type interfaces for actors to break circular dependencies
  */
 
-export type SystemActorTypes = Exclude<foundry.documents.BaseActor.TypeNames, 'base'>;
+export type SystemActorTypes = Exclude<Actor.SubType, 'base'>;
 
 export interface ActorRollOptions {
 	prompted?: boolean | undefined;

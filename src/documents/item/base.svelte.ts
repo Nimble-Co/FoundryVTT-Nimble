@@ -1,28 +1,28 @@
-
-import type Document from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/abstract/document.d.mts';
-import type { DatabaseOperationsFor } from '@league-of-foundry-developers/foundry-vtt-types/src/types/helperTypes.d.mts';
-import type { InexactPartial } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { InexactPartial } from 'fvtt-types/utils';
 import { createSubscriber } from 'svelte/reactivity';
-import { RulesManager } from '../../managers/RulesManager.js';
-import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
+import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
+import { RulesManager } from '../../managers/RulesManager.js';
+import type { NimbleBaseItemData } from '../../models/item/BaseItemDataModel.js';
 
 export type { SystemItemTypes } from './itemInterfaces.js';
+
 import type { SystemItemTypes } from './itemInterfaces.js';
 
 // Forward declaration to avoid circular dependency
-interface NimbleBaseActor extends Actor {
+interface NimbleBaseActorInterface extends Actor {
+	initialized: boolean;
 	getDomain(): Set<string>;
-	getRollData(item?: any): Record<string, any>;
+	getRollData(item?: Record<string, unknown>): Record<string, unknown>;
 }
 
-interface NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> {
-	type: ItemType;
-	system: DataModelConfig['Item'][ItemType];
-	parent: NimbleBaseActor | null;
-
-	prepareActorData?(): void;
-	prepareChatCardData(options);
+/** System data interface for NimbleBaseItem */
+interface NimbleItemSystemData extends NimbleBaseItemData.BaseData {
+	identifier: string;
+	macro: string;
+	activation?: {
+		effects: unknown[];
+	};
 }
 
 /**
@@ -30,6 +30,19 @@ interface NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> {
  * @extends {Item}
  */
 class NimbleBaseItem extends Item {
+	declare parent: NimbleBaseActorInterface | null;
+
+	// @ts-expect-error - Override system type for NimbleBaseItem
+	declare system: NimbleItemSystemData;
+
+	prepareActorData?(): void;
+
+	async prepareChatCardData(
+		_options: ItemActivationManager.ActivationOptions,
+	): Promise<Record<string, unknown>> {
+		return {};
+	}
+
 	declare initialized: boolean;
 
 	declare rules: RulesManagerInterface;
@@ -57,7 +70,9 @@ class NimbleBaseItem extends Item {
 	/** ------------------------------------------------------ */
 	/**                    Type Helpers                        */
 	/** ------------------------------------------------------ */
-	isType<TypeName extends SystemItemTypes>(type: TypeName): this is NimbleBaseItem<TypeName> {
+	isType<TypeName extends SystemItemTypes>(
+		type: TypeName,
+	): this is NimbleBaseItem & { type: TypeName } {
 		return type === (this.type as SystemItemTypes);
 	}
 
@@ -162,27 +177,28 @@ class NimbleBaseItem extends Item {
 				rolls,
 				rollMode: options.visibilityMode ?? game.settings.get('core', 'rollMode'),
 				system: {
-					actorName: this.actor.name,
-					actorType: this.actor.type,
+					actorName: this.actor?.name ?? '',
+					actorType: this.actor?.type ?? '',
 					activation,
 					image: this.img || 'icons/svg/item-bag.svg',
 					isCritical,
 					isMiss,
 					permissions: this.permission,
 					rollMode: options.rollMode ?? 0,
-					targets: Array.from(game.user.targets.map((token) => token.document.uuid)),
+					targets: Array.from(game.user?.targets.map((token) => token.document.uuid) ?? []),
 				},
-				type: 'base',
+				type: 'base' as const,
 			},
 			await this.prepareChatCardData(options),
 		);
 
 		ChatMessage.applyRollMode(
-			chatData,
-			options.visibilityMode ?? game.settings.get('core', 'rollMode'),
+			chatData as unknown as ChatMessage.CreateData,
+			(options.visibilityMode ??
+				game.settings.get('core', 'rollMode')) as ChatMessage.PassableRollMode,
 		);
 
-		const chatCard = await ChatMessage.create(chatData);
+		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 		return chatCard ?? null;
 	}
 
@@ -215,46 +231,38 @@ class NimbleBaseItem extends Item {
 	/** ------------------------------------------------------ */
 	/**                    Document CRUD                       */
 	/** ------------------------------------------------------ */
-	static override async createDocuments<
-		T extends Document.AnyConstructor,
-		Temporary extends boolean | undefined,
-	>(
-		this: T,
-		data: Array<
-			foundry.data.fields.SchemaField.AssignmentType<InstanceType<T>['schema']['fields']> &
-				Record<string, unknown>
-		>,
-		operation?: InexactPartial<
-			Omit<DatabaseOperationsFor<T['metadata']['name'], 'create'>, 'data'>
-		> & {
+	static override async createDocuments(
+		data: Array<Record<string, unknown>>,
+		operation?: InexactPartial<Item.Database.Create> & {
 			temporary?: boolean | undefined;
 		},
-	): Promise<Document.ToStoredIf<T, Temporary>[] | undefined> {
+	): Promise<Item[] | undefined> {
 		const itemSources = data.map((d) => (d instanceof NimbleBaseItem ? d.toObject() : d));
 
 		// TODO: Migrate older versions here
 
 		const actor = operation?.parent;
-		if (!actor) return Item.createDocuments(data, operation);
+		if (!actor) return Item.createDocuments(data as Item.CreateData[], operation);
 
 		const items = itemSources.map((s) => {
-			if (!(operation?.keepId || operation?.keepEmbeddedIds)) s._id = foundry.utils.randomID();
+			if (!(operation?.keepId || operation?.keepEmbeddedIds))
+				(s as Record<string, unknown>)._id = foundry.utils.randomID();
 
 			// eslint-disable-next-line new-cap
-			return new CONFIG.Item.documentClass(s, {
+			return new CONFIG.Item.documentClass(s as Item.CreateData, {
 				parent: actor,
-			}) as NimbleBaseItem;
+			}) as unknown as NimbleBaseItem;
 		});
 
 		const outputSources = items.map((i) => i._source);
 
 		// Process rules
-		for (const item of [...items]) {
+		for await (const item of [...items]) {
 			item?.prepareActorData?.();
 			const itemSource = item._source;
 			const rules = [...item.rules.values()];
-			1;
-			for (const rule of rules) {
+
+			for await (const rule of rules) {
 				// eslint-disable-next-line no-await-in-loop
 				await rule.preCreate?.({
 					itemSource,
@@ -265,8 +273,7 @@ class NimbleBaseItem extends Item {
 			}
 		}
 
-		// @ts-expect-error
-		return Item.createDocuments(outputSources, operation);
+		return Item.createDocuments(outputSources as Item.CreateData[], operation);
 	}
 
 	override toObject(source = true) {
@@ -276,11 +283,14 @@ class NimbleBaseItem extends Item {
 
 		return foundry.utils.mergeObject(data, {
 			identifier: this.identifier,
-			rules: Array.from(this.rules).reduce((rules, [id, rule]) => {
-				rules[id] = rule.toObject();
-				rules[id].tooltipInfo = rule.tooltipInfo();
-				return rules;
-			}, {}),
+			rules: Array.from(this.rules).reduce(
+				(rules, [id, rule]) => {
+					rules[id] = rule.toObject();
+					rules[id].tooltipInfo = rule.tooltipInfo?.() ?? {};
+					return rules;
+				},
+				{} as Record<string, Record<string, unknown>>,
+			),
 		});
 	}
 }

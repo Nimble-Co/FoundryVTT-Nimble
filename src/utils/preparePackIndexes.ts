@@ -1,4 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+// Foundry supports dotted path notation for getIndex fields (e.g., 'system.description'),
+// but the TypeScript definitions only allow top-level keys. This type provides a workaround.
+type GetIndexOptions =
+	foundry.documents.collections.CompendiumCollection.GetIndexOptions<'Item'> & {
+		fields?: string[];
+	};
+
 const PACK_DATA_CONFIG = {
 	background: {
 		packs: ['nimble.nimble-backgrounds'],
@@ -56,53 +62,74 @@ export function preparePackIndexes() {
 	});
 }
 
-// @ts-ignore
-type Pack = CompendiumCollection<CompendiumCollection.Metadata>;
-
-export function createAncestryIndex(pack: any, options: Record<string, any>) {
+export function createAncestryIndex(
+	pack: CompendiumCollection<'Item'>,
+	_options?: Record<string, unknown>,
+) {
 	pack.getIndex({
 		fields: ['system.description', 'system.exotic', 'system.size'],
-	});
+	} as GetIndexOptions);
 }
 
-export function createBackgroundIndex(pack: any, options: Record<string, any>) {
+export function createBackgroundIndex(
+	pack: CompendiumCollection<'Item'>,
+	_options?: Record<string, unknown>,
+) {
 	pack.getIndex({
 		fields: ['system.category', 'system.description'],
-	});
+	} as GetIndexOptions);
 }
 
-export function createBoonIndex(pack: any, options: Record<string, any>) {
+export function createBoonIndex(
+	pack: CompendiumCollection<'Item'>,
+	_options?: Record<string, unknown>,
+) {
 	pack.getIndex({
 		fields: ['system.description'],
-	});
+	} as GetIndexOptions);
 }
 
-export function createClassIndex(pack: any, options: Record<string, any>) {
+export function createClassIndex(
+	pack: CompendiumCollection<'Item'>,
+	_options?: Record<string, unknown>,
+) {
 	pack.getIndex({
 		fields: ['system.complexity', 'system.description'],
-	});
+	} as GetIndexOptions);
 }
 
-export function createFeatureIndex(pack: any, options: Record<string, any>) {
+export function createFeatureIndex(
+	pack: CompendiumCollection<'Item'>,
+	_options?: Record<string, unknown>,
+) {
 	pack.getIndex({
 		fields: ['system.description'],
-	});
+	} as GetIndexOptions);
 }
 
-export function createObjectIndex(pack: any, options: Record<string, any>) {
+export function createObjectIndex(
+	pack: CompendiumCollection<'Item'>,
+	_options?: Record<string, unknown>,
+) {
 	pack.getIndex({
 		fields: ['system.description'],
-	});
+	} as GetIndexOptions);
 }
 
-export function createSpellIndex(pack: any, options: Record<string, any>) {
+export function createSpellIndex(
+	pack: CompendiumCollection<'Item'>,
+	_options?: Record<string, unknown>,
+) {
 	pack.getIndex({
 		fields: ['system.description'],
-	});
+	} as GetIndexOptions);
 }
 
-export function createSubclassIndex(pack: any, options: Record<string, any>) {
+export function createSubclassIndex(
+	pack: CompendiumCollection<'Item'>,
+	_options?: Record<string, unknown>,
+) {
 	pack.getIndex({
 		fields: ['system.description'],
-	});
+	} as GetIndexOptions);
 }

@@ -26,7 +26,7 @@
 	}
 
 	let {
-		boons,
+		boons: _boons,
 		characterClass,
 		document,
 		levelingTo,

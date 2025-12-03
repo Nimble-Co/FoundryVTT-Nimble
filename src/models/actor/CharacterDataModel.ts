@@ -381,12 +381,14 @@ const characterSchema = () => ({
 });
 
 declare namespace NimbleCharacterData {
-	type Schema = DataSchema &
+	type Schema = foundry.data.fields.DataSchema &
 		ReturnType<typeof abilities> &
 		ReturnType<typeof savingThrows> &
 		ReturnType<typeof characterSchema>;
-	interface BaseData extends Record<string, unknown> {}
-	interface DerivedData extends Record<string, unknown> {
+	/** Base data derived from the schema */
+	type BaseData = foundry.data.fields.SchemaField.InitializedData<Schema>;
+	/** Additional derived/computed data */
+	type DerivedData = {
 		attributes: {
 			initiative: {
 				mod: number;
@@ -399,12 +401,18 @@ declare namespace NimbleCharacterData {
 			totalSlots: number;
 			usedSlots: number;
 		};
-	}
+		resources: {
+			mana: {
+				value: number;
+				max: number;
+			};
+		};
+	};
 }
 
 class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 	NimbleCharacterData.Schema,
-	Actor.ConfiguredInstance,
+	Actor,
 	NimbleCharacterData.BaseData,
 	NimbleCharacterData.DerivedData
 > {

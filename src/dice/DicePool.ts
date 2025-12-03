@@ -1,5 +1,3 @@
-import { PrimaryDie } from './terms/PrimaryDie.ts';
-
 declare namespace NimbleDicePool {
 	interface Data extends foundry.dice.Roll.Data {}
 
@@ -23,8 +21,8 @@ class NimbleDicePool extends foundry.dice.Roll {
 
 	originalFormula: string;
 
-	constructor(formula: string, data?: NimbleDicePool.Data, options?: NimbleDicePool.Options) {
-		super(formula, data, options);
+	constructor(formula: string, data?: foundry.dice.Roll.Data, options?: NimbleDicePool.Options) {
+		super(formula, data as never, options);
 
 		// Set Pool Data
 		this.originalFormula = formula;
@@ -120,7 +118,11 @@ class NimbleDicePool extends foundry.dice.Roll {
 	}
 
 	resetPool() {
-		const clean = new NimbleDicePool(this.originalFormula, this.data, this.options);
+		const clean = new NimbleDicePool(
+			this.originalFormula,
+			this.data as unknown as foundry.dice.Roll.Data,
+			this.options,
+		);
 		this.terms = clean.terms;
 		this.dieSizes = clean.dieSizes;
 		this.numDice = clean.numDice;

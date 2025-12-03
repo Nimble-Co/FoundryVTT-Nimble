@@ -78,16 +78,19 @@ const NPCSchema = () => ({
 });
 
 declare namespace NimbleNPCData {
-	type Schema = DataSchema & ReturnType<typeof savingThrows> & ReturnType<typeof NPCSchema>;
-
-	interface BaseData extends Record<string, any> {}
-
-	interface DerivedData extends Record<string, any> {}
+	type Schema = foundry.data.fields.DataSchema &
+		ReturnType<typeof attackSequence> &
+		ReturnType<typeof savingThrows> &
+		ReturnType<typeof NPCSchema>;
+	/** Base data derived from the schema */
+	type BaseData = foundry.data.fields.SchemaField.InitializedData<Schema>;
+	/** Additional derived/computed data - empty for NPC */
+	type DerivedData = Record<string, never>;
 }
 
 class NimbleNPCData extends foundry.abstract.TypeDataModel<
 	NimbleNPCData.Schema,
-	Actor.ConfiguredInstance,
+	Actor,
 	NimbleNPCData.BaseData,
 	NimbleNPCData.DerivedData
 > {

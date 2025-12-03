@@ -3,6 +3,12 @@ import type { NimbleClassData } from '../../models/item/ClassDataModel.js';
 import type { NimbleCharacter } from '../actor/character.js';
 import { NimbleBaseItem } from './base.svelte.js';
 
+// Interface for hit dice data
+interface HitDiceData {
+	current: number;
+	origin: string[];
+}
+
 export class NimbleClassItem extends NimbleBaseItem {
 	declare ASI: Record<string, number>;
 
@@ -12,7 +18,7 @@ export class NimbleClassItem extends NimbleBaseItem {
 
 	declare resources: ClassResourceManager;
 
-	declare system: NimbleClassData;
+	declare system: NimbleClassData.BaseData;
 
 	/** ------------------------------------------------------ */
 	/**                       Getters                          */
@@ -79,7 +85,9 @@ export class NimbleClassItem extends NimbleBaseItem {
 	}
 
 	override async prepareChatCardData() {
-		const description = await foundry.applications.ux.TextEditor.implementation.enrichHTML(this.system.description);
+		const description = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
+			this.system.description,
+		);
 
 		return {
 			author: game.user?.id,
@@ -121,7 +129,7 @@ export class NimbleClassItem extends NimbleBaseItem {
 			const existingHitDice = foundry.utils.getProperty(
 				actor,
 				`system.attributes.hitDice.${this.system.hitDieSize}`,
-			);
+			) as HitDiceData | undefined;
 			if (!existingHitDice) {
 				actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}`] = {
 					current: 1,
@@ -135,7 +143,8 @@ export class NimbleClassItem extends NimbleBaseItem {
 			}
 
 			// Tell the actor what level this class was gained at
-			const existingLevels = foundry.utils.getProperty(actor, 'system.classData.levels') ?? [];
+			const existingLevels =
+				(foundry.utils.getProperty(actor, 'system.classData.levels') as string[] | undefined) ?? [];
 			existingLevels.push(this.identifier);
 
 			actorUpdates['system.classData.levels'] = existingLevels;
@@ -173,29 +182,33 @@ export class NimbleClassItem extends NimbleBaseItem {
 		const actorUpdates = {};
 
 		if (changed.name) {
-			const existingLevels = foundry.utils.getProperty(actor, 'system.classData.levels') ?? [];
-			const newIdentifier = changed.name.slugify({ strict: true });
+			const existingLevels =
+				(foundry.utils.getProperty(actor, 'system.classData.levels') as string[] | undefined) ?? [];
+			const newIdentifier = (changed.name as string).slugify({ strict: true });
 
-			actorUpdates['system.classData.levels'] = existingLevels.reduce((ids, id: string) => {
-				if (id === this.identifier) ids.push(newIdentifier);
-				else ids.push(id);
+			actorUpdates['system.classData.levels'] = existingLevels.reduce(
+				(ids: string[], id: string) => {
+					if (id === this.identifier) ids.push(newIdentifier);
+					else ids.push(id);
 
-				return ids;
-			}, []);
+					return ids;
+				},
+				[],
+			);
 
 			if (actor.system.classData.startingClass === this.identifier) {
 				actorUpdates['system.classData.startingClass'] = newIdentifier;
 			}
 
-			if (!changed?.system?.hitDieSize) {
+			if (!(changed as { system?: { hitDieSize?: number } })?.system?.hitDieSize) {
 				const existingHitDice =
-					foundry.utils.getProperty(
+					(foundry.utils.getProperty(
 						actor,
 						`system.attributes.hitDice.${this.system.hitDieSize}.origin`,
-					) ?? [];
+					) as string[] | undefined) ?? [];
 
 				actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}.origin`] =
-					existingHitDice.reduce((ids, id: string) => {
+					existingHitDice.reduce((ids: string[], id: string) => {
 						if (id === this.identifier) ids.push(newIdentifier);
 						else ids.push(id);
 
@@ -204,14 +217,15 @@ export class NimbleClassItem extends NimbleBaseItem {
 			}
 		}
 
-		if (changed?.system?.hitDieSize) {
+		const changedWithSystem = changed as { name?: string; system?: { hitDieSize?: number } };
+		if (changedWithSystem?.system?.hitDieSize) {
 			const existingHitDice =
-				foundry.utils.getProperty(
+				(foundry.utils.getProperty(
 					actor,
 					`system.attributes.hitDice.${this.system.hitDieSize}.origin`,
-				) ?? [];
+				) as string[] | undefined) ?? [];
 
-			const existingHitDiceCount = existingHitDice.length ?? 0;
+			const existingHitDiceCount = existingHitDice.length;
 
 			const existingHitDiceSansCurrentClass = existingHitDice.filter(
 				(id: string) => this.identifier !== id,
@@ -222,15 +236,15 @@ export class NimbleClassItem extends NimbleBaseItem {
 
 			if (hitDiceCountDifference > 0) {
 				const existingNewHitDice =
-					foundry.utils.getProperty(
+					(foundry.utils.getProperty(
 						actor,
-						`system.attributes.hitDice.${changed.system.hitDieSize}.origin`,
-					) ?? [];
+						`system.attributes.hitDice.${changedWithSystem.system.hitDieSize}.origin`,
+					) as string[] | undefined) ?? [];
 
-				actorUpdates[`system.attributes.hitDice.${changed.system.hitDieSize}.origin`] =
+				actorUpdates[`system.attributes.hitDice.${changedWithSystem.system.hitDieSize}.origin`] =
 					existingNewHitDice.concat(
 						Array(hitDiceCountDifference).fill(
-							changed?.name?.slugify({ strict: true }) ?? this.identifier,
+							changedWithSystem?.name?.slugify({ strict: true }) ?? this.identifier,
 						),
 					);
 
@@ -266,9 +280,9 @@ export class NimbleClassItem extends NimbleBaseItem {
 			const existingHitDice = foundry.utils.getProperty(
 				actor,
 				`system.attributes.hitDice.${this.system.hitDieSize}`,
-			);
+			) as HitDiceData | undefined;
 
-			if (existingHitDice.origin?.length > 1) {
+			if (existingHitDice?.origin?.length && existingHitDice.origin.length > 1) {
 				actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}.origin`] =
 					existingHitDice.origin.filter((id: string) => this.identifier !== id);
 			} else {
@@ -276,7 +290,8 @@ export class NimbleClassItem extends NimbleBaseItem {
 			}
 
 			// Remove Levels information
-			const existingLevels = foundry.utils.getProperty(actor, 'system.classData.levels') ?? [];
+			const existingLevels =
+				(foundry.utils.getProperty(actor, 'system.classData.levels') as string[] | undefined) ?? [];
 			actorUpdates['system.classData.levels'] = existingLevels.filter(
 				(id: string) => id !== this.identifier,
 			);

@@ -1,85 +1,88 @@
-import * as svelte from "svelte";
+import * as svelte from 'svelte';
 
 interface SvelteApplicationRenderContext {
-  /** State data tracked by the root component: objects herein must be plain object. */
-  state: object;
-  /** This application instance */
-  foundryApp: SvelteApplication;
+	/** State data tracked by the root component: objects herein must be plain object. */
+	state: object;
+	/** This application instance */
+	foundryApp: SvelteApplication;
 }
 
-function SvelteApplicationMixin(Base) {
-  abstract class SvelteApplication extends Base {
-    #customHTMLTags = Object.values(foundry.applications.elements).reduce(
-      (acc, E) => {
-        const { tagName } = E;
-        if (!tagName) return acc;
-        acc.push(tagName.toUpperCase());
-        return acc;
-      },
-      [] as string[],
-    );
+// Constructor type for the base class that includes static members
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ApplicationV2Constructor = abstract new (
+	...args: any[]
+) => foundry.applications.api.ApplicationV2;
 
-    static override DEFAULT_OPTIONS = {
-      classes: ["a5e"],
-    };
+function SvelteApplicationMixin<TBase extends ApplicationV2Constructor>(Base: TBase) {
+	abstract class SvelteApplication extends Base {
+		// Document property for form applications
+		declare document?: foundry.abstract.Document.Any;
 
-    protected abstract root: svelte.Component<any>;
+		/** Props passed to the Svelte root component */
+		props: Record<string, unknown> = {};
 
-    protected $state = $state({});
+		#customHTMLTags = Object.values(foundry.applications.elements).reduce((acc, E) => {
+			const { tagName } = E;
+			if (!tagName) return acc;
+			acc.push(tagName.toUpperCase());
+			return acc;
+		}, [] as string[]);
 
-    #mount: object = {};
+		protected abstract root: svelte.Component<Record<string, unknown>>;
 
-    protected override async _renderHTML(context: any) {
-      return context;
-    }
+		protected $state = $state({});
 
-    protected override _replaceHTML(
-      result: SvelteApplicationRenderContext,
-      content: HTMLElement,
-      options: any,
-    ) {
-      Object.assign(this.$state, result.state);
-      if (options.isFirstRender) {
-        this.#mount = svelte.mount(this.root, {
-          target: content,
-          props: { ...result, state: this.$state },
-        });
-      }
-    }
+		#mount: object = {};
 
-    protected override _onClose(options: any) {
-      super._onClose(options);
-      svelte.unmount(this.#mount, { outro: true });
-    }
+		protected override async _renderHTML(context: any) {
+			return context;
+		}
 
-    override _onChangeForm(
-      formConfig: foundry.applications.api.ApplicationV2.FormConfiguration,
-      event: Event | SubmitEvent,
-    ) {
-      super._onChangeForm(formConfig, event);
+		protected override _replaceHTML(
+			result: SvelteApplicationRenderContext,
+			content: HTMLElement,
+			options: any,
+		) {
+			Object.assign(this.$state, result.state);
+			if (options.isFirstRender) {
+				this.#mount = svelte.mount(this.root, {
+					target: content,
+					props: { ...result, state: this.$state },
+				});
+			}
+		}
 
-      if (event.type !== "change") return;
-      if (!this.document) return;
+		protected override _onClose(options: any) {
+			super._onClose(options);
+			svelte.unmount(this.#mount, { outro: true });
+		}
 
-      const { target } = event;
-      if (!target) return;
+		override _onChangeForm(
+			formConfig: foundry.applications.api.ApplicationV2.FormConfiguration,
+			event: Event | SubmitEvent,
+		) {
+			super._onChangeForm(formConfig, event);
 
-      // @ts-expect-error
-      if (!this.#customHTMLTags.includes(target.tagName)) return;
+			if (event.type !== 'change') return;
+			if (!this.document) return;
 
-      // @ts-expect-error
-      const value = target._getValue();
+			const { target } = event;
+			if (!target) return;
 
-      // @ts-expect-error
-      this.document.update({ [target.name]: value });
-    }
-  }
+			// @ts-expect-error
+			if (!this.#customHTMLTags.includes(target.tagName)) return;
 
-  return SvelteApplication;
+			// @ts-expect-error
+			const value = target._getValue();
+
+			// @ts-expect-error
+			this.document.update({ [target.name]: value });
+		}
+	}
+
+	return SvelteApplication;
 }
 
-type SvelteApplication = InstanceType<
-  ReturnType<typeof SvelteApplicationMixin>
->;
+type SvelteApplication = InstanceType<ReturnType<typeof SvelteApplicationMixin>>;
 
 export { SvelteApplicationMixin, type SvelteApplicationRenderContext };

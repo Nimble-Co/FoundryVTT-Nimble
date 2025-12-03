@@ -8,9 +8,21 @@ import NimbleSkillCheckCard from '../view/chat/SkillCheckCard.svelte';
 import NimbleSpellCard from '../view/chat/SpellCard.svelte';
 import NimbleLevelUpSummaryCard from '../view/chat/LevelUpSummaryCard.svelte';
 
-export default function renderChatMessageHTML(message, html) {
-	let component;
-	const target = $(html)[0];
+type SvelteComponent =
+	| typeof NimbleAbilityCheckCard
+	| typeof NimbleObjectCard
+	| typeof NimbleFeatureCard
+	| typeof NimbleSavingThrowCard
+	| typeof NimbleSkillCheckCard
+	| typeof NimbleSpellCard
+	| typeof NimbleLevelUpSummaryCard;
+
+export default function renderChatMessageHTML(
+	message: ChatMessage & { type: string; _svelteComponent?: object },
+	html: HTMLElement,
+) {
+	let component: SvelteComponent | undefined;
+	const target = html;
 
 	if (!target) return;
 
@@ -41,8 +53,8 @@ export default function renderChatMessageHTML(message, html) {
 	}
 
 	target.classList.add('nimble-chat-card');
-	$(html).find('.message-header')[0]?.remove();
-	$(html).find('.message-content')[0]?.remove();
+	target.querySelector('.message-header')?.remove();
+	target.querySelector('.message-content')?.remove();
 
 	message._svelteComponent = mount(component, {
 		target,

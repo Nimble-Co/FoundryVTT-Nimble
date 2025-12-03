@@ -8,7 +8,7 @@ const abilityCheckCardSchema = () => ({
 });
 
 declare namespace NimbleAbilityCheckCardData {
-	type Schema = DataSchema &
+	type Schema = foundry.data.fields.DataSchema &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof abilityCheckCardSchema>;
 	interface BaseData extends Record<string, unknown> {}
@@ -17,7 +17,7 @@ declare namespace NimbleAbilityCheckCardData {
 
 class NimbleAbilityCheckCardData extends foundry.abstract.TypeDataModel<
 	NimbleAbilityCheckCardData.Schema,
-	ChatMessage.ConfiguredInstance,
+	ChatMessage,
 	NimbleAbilityCheckCardData.BaseData,
 	NimbleAbilityCheckCardData.DerivedData
 > {

@@ -70,7 +70,6 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.1",
-		"@league-of-foundry-developers/foundry-vtt-types": "github:League-of-Foundry-Developers/foundry-vtt-types#173495578eb85f9ce3dddb7f37b9bf2a1b537488",
 		"@sveltejs/vite-plugin-svelte": "6.2.1",
 		"@tsconfig/svelte": "^5.0.5",
 		"@types/node": "^24.9.1",
@@ -79,6 +78,7 @@
 		"classic-level": "^1.4.1",
 		"eslint": "^9.38.0",
 		"eslint-plugin-svelte": "^3.12.5",
+		"fvtt-types": "npm:@league-of-foundry-developers/foundry-vtt-types@^13.345.1",
 		"glob": "^11.0.3",
 		"globals": "^16.4.0",
 		"husky": "^9.1.7",

@@ -34,7 +34,7 @@ class Predicate extends Map<string, Statement> {
 		}
 
 		const domainArray = Array.from(domain);
-		const pattern = new RegExp(String.raw`^${key}:([^:]+)$`);
+		const pattern = new RegExp(`^${key}:([^:]+)$`);
 
 		const values = domainArray.reduce((acc, s) => {
 			const value = pattern.exec(s)?.[1];
@@ -53,7 +53,7 @@ class Predicate extends Map<string, Statement> {
 
 	#getDomainValues(key: string, domain: Set<string>) {
 		const domainArray = Array.from(domain);
-		const pattern = new RegExp(String.raw`^${key}:([^:]+)$`);
+		const pattern = new RegExp(`^${key}:([^:]+)$`);
 		const values = domainArray.reduce((acc, s) => {
 			const value = pattern.exec(s)?.[1];
 			if (value === undefined) return acc;
@@ -153,9 +153,9 @@ class Predicate extends Map<string, Statement> {
 	/** Validators                                     */
 	/** ---------------------------------------------- */
 	static isStatement(statement: unknown): statement is PredicateStatement {
-		if (isPlainObject(statement)) return this.isBinaryOperation(statement);
-		if (Array.isArray(statement)) return this.isArrayOperation(statement);
-		if (typeof statement === 'string') return this.isAtomicOperation(statement);
+		if (isPlainObject(statement)) return Predicate.isBinaryOperation(statement);
+		if (Array.isArray(statement)) return Predicate.isArrayOperation(statement);
+		if (typeof statement === 'string') return Predicate.isAtomicOperation(statement);
 
 		return false;
 	}
@@ -201,4 +201,4 @@ type Statement = AtomicOperation | BinaryOperation | ArrayOperation;
 type PredicateStatement = [string, Statement];
 type RawPredicate = Record<string, Statement>;
 
-export { Predicate };
+export { Predicate, type RawPredicate };

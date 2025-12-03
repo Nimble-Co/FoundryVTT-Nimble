@@ -11,19 +11,21 @@ function baseItemSchema() {
 }
 
 declare namespace NimbleBaseItemData {
-	type Schema = DataSchema &
+	type Schema = foundry.data.fields.DataSchema &
 		ReturnType<typeof baseItemSchema> &
 		ReturnType<typeof identifier> &
 		ReturnType<typeof rules>;
-	interface BaseData extends Record<string, unknown> {}
-	interface DerivedData extends Record<string, unknown> {}
+	/** Base data derived from the schema */
+	type BaseData = foundry.data.fields.SchemaField.InitializedData<Schema>;
+	/** Additional derived/computed data */
+	type DerivedData = Record<string, never>;
 }
 
 class NimbleBaseItemData<
 	Schema extends NimbleBaseItemData.Schema,
 	BaseData extends NimbleBaseItemData.BaseData,
 	DerivedData extends NimbleBaseItemData.DerivedData,
-> extends foundry.abstract.TypeDataModel<Schema, Item.ConfiguredInstance, BaseData, DerivedData> {
+> extends foundry.abstract.TypeDataModel<Schema, Item, BaseData, DerivedData> {
 	/** @inheritDoc */
 	static override defineSchema(): NimbleBaseItemData.Schema {
 		return {

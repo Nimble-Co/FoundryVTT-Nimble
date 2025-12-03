@@ -8,14 +8,16 @@ const savingThrowCardSchema = () => ({
 });
 
 declare namespace NimbleSavingThrowCardData {
-	type Schema = DataSchema & ReturnType<typeof metadata> & ReturnType<typeof savingThrowCardSchema>;
+	type Schema = foundry.data.fields.DataSchema &
+		ReturnType<typeof metadata> &
+		ReturnType<typeof savingThrowCardSchema>;
 	interface BaseData extends Record<string, unknown> {}
 	interface DerivedData extends Record<string, unknown> {}
 }
 
 class NimbleSavingThrowCardData extends foundry.abstract.TypeDataModel<
 	NimbleSavingThrowCardData.Schema,
-	ChatMessage.ConfiguredInstance,
+	ChatMessage,
 	NimbleSavingThrowCardData.BaseData,
 	NimbleSavingThrowCardData.DerivedData
 > {

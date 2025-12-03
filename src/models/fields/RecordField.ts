@@ -2,8 +2,15 @@
 /* eslint-disable max-len */
 import type { SimpleMerge } from './helpers.js';
 
+// Validation options interface
+interface RecordValidationOptions {
+	partial?: boolean;
+}
+
 declare namespace RecordField {
-	type Options<IValueField> = DataFieldOptions<Record<string, BaseAssignmentType<IValueField>>>;
+	type Options<IValueField> = foundry.data.fields.DataField.Options<
+		Record<string, BaseAssignmentType<IValueField>>
+	>;
 
 	type BaseAssignmentType<AssignmentElementType> =
 		foundry.data.fields.ArrayField.BaseAssignmentType<AssignmentElementType>;
@@ -117,13 +124,13 @@ class RecordField<
 	}
 
 	// eslint-disable-next-line consistent-return
-	_validateValues(values, options = {}) {
+	_validateValues(values: Record<string, unknown>, options: RecordValidationOptions = {}) {
 		const ValidationFailure = foundry.data.validation.DataModelValidationFailure;
 		const failures = new ValidationFailure();
 
 		for (const [key, value] of Object.entries(values)) {
 			// If this is a deletion key for a partial update, skip
-			if (key.startsWith('-=') && options?.partial) continue;
+			if (key.startsWith('-=') && options.partial) continue;
 
 			const keyFailure = this.keyField.validate(key, options);
 			if (keyFailure) {
@@ -145,9 +152,9 @@ class RecordField<
 		values: InitializedType,
 		options?: foundry.data.fields.DataField.CleanOptions,
 	): InitializedType {
-		for (const [key, value] of Object.entries(values)) {
-			if (key.startsWith('-=')) return;
-			values[key] = this.valueField.clean(value, options);
+		for (const [key, value] of Object.entries(values as object)) {
+			if (key.startsWith('-=')) continue;
+			(values as Record<string, unknown>)[key] = this.valueField.clean(value, options);
 		}
 
 		return values;
@@ -155,15 +162,18 @@ class RecordField<
 
 	override _validateType(
 		values: InitializedType,
-		options: foundry.data.fields.DataField.ValidationOptions<foundry.data.fields.DataField.Any> = {},
-	): boolean | undefined {
+		options?: Record<string, unknown>,
+	): boolean | foundry.data.validation.DataModelValidationFailure | undefined {
 		if (!(values instanceof Object)) {
 			return new foundry.data.validation.DataModelValidationFailure({
 				message: 'must be an Object',
 			});
 		}
 
-		return this._validateValues(values, options);
+		return this._validateValues(
+			values as Record<string, unknown>,
+			options as RecordValidationOptions,
+		);
 	}
 
 	override initialize(

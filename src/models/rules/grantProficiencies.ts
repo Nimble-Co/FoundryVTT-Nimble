@@ -36,7 +36,7 @@ declare namespace GrantProficiencyRule {
 class GrantProficiencyRule extends NimbleBaseRule<GrantProficiencyRule.Schema> {
 	static override defineSchema(): GrantProficiencyRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}
@@ -50,7 +50,7 @@ class GrantProficiencyRule extends NimbleBaseRule<GrantProficiencyRule.Schema> {
 		);
 	}
 
-	override afterPrepareData(): void {
+	afterPrepareData(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
 

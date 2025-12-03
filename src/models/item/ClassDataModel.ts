@@ -96,8 +96,10 @@ const schema = () => ({
 
 declare namespace NimbleClassData {
 	type Schema = NimbleBaseItemData.Schema & ReturnType<typeof schema>;
-	type BaseData = NimbleBaseItemData.BaseData;
-	type DerivedData = NimbleBaseItemData.DerivedData;
+	/** Base data derived from the schema */
+	type BaseData = foundry.data.fields.SchemaField.InitializedData<Schema>;
+	/** Additional derived/computed data */
+	type DerivedData = Record<string, never>;
 }
 
 class NimbleClassData extends NimbleBaseItemData<

@@ -1,5 +1,8 @@
 import type { SimpleMerge } from './helpers.js';
 
+// Type alias for DataField options
+type DataFieldOptions<T> = foundry.data.fields.DataField.Options<T>;
+
 declare namespace PredicateStatementField {
 	type DefaultOptions = SimpleMerge<
 		foundry.data.fields.DataField.DefaultOptions,
@@ -43,12 +46,13 @@ class PredicateStatementField<
 		});
 	}
 
-	protected override _validateType(value: InitializedType): boolean {
+	protected override _validateType(_value: InitializedType): boolean {
 		// return StatementValidator.isStatement(value);
 		return true;
 	}
 
 	/** No casting is available for a predicate statement */
+	// @ts-expect-error - _cast has a different signature in base class
 	protected _cast(value: AssignmentType): InitializedType {
 		return value as unknown as InitializedType;
 	}

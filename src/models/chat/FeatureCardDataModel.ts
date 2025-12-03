@@ -13,7 +13,7 @@ const featureCardSchema = () => ({
 });
 
 declare namespace NimbleFeatureCardData {
-	type Schema = DataSchema &
+	type Schema = foundry.data.fields.DataSchema &
 		ReturnType<typeof activation> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof featureCardSchema> &
@@ -24,7 +24,7 @@ declare namespace NimbleFeatureCardData {
 
 class NimbleFeatureCardData extends foundry.abstract.TypeDataModel<
 	NimbleFeatureCardData.Schema,
-	ChatMessage.ConfiguredInstance,
+	ChatMessage,
 	NimbleFeatureCardData.BaseData,
 	NimbleFeatureCardData.DerivedData
 > {

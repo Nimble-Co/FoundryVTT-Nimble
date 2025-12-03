@@ -77,16 +77,19 @@ const MinionSchema = () => ({
 });
 
 declare namespace NimbleMinionData {
-	type Schema = DataSchema & ReturnType<typeof savingThrows> & ReturnType<typeof MinionSchema>;
-
-	interface BaseData extends Record<string, any> {}
-
-	interface DerivedData extends Record<string, any> {}
+	type Schema = foundry.data.fields.DataSchema &
+		ReturnType<typeof attackSequence> &
+		ReturnType<typeof savingThrows> &
+		ReturnType<typeof MinionSchema>;
+	/** Base data derived from the schema */
+	type BaseData = foundry.data.fields.SchemaField.InitializedData<Schema>;
+	/** Additional derived/computed data - empty for Minion */
+	type DerivedData = Record<string, never>;
 }
 
 class NimbleMinionData extends foundry.abstract.TypeDataModel<
 	NimbleMinionData.Schema,
-	Actor.ConfiguredInstance,
+	Actor,
 	NimbleMinionData.BaseData,
 	NimbleMinionData.DerivedData
 > {

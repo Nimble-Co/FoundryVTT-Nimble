@@ -26,7 +26,7 @@ const spellCardSchema = () => ({
 });
 
 declare namespace NimbleSpellCardData {
-	type Schema = DataSchema &
+	type Schema = foundry.data.fields.DataSchema &
 		ReturnType<typeof activation> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof spellCardSchema> &
@@ -37,7 +37,7 @@ declare namespace NimbleSpellCardData {
 
 class NimbleSpellCardData extends foundry.abstract.TypeDataModel<
 	NimbleSpellCardData.Schema,
-	ChatMessage.ConfiguredInstance,
+	ChatMessage,
 	NimbleSpellCardData.BaseData,
 	NimbleSpellCardData.DerivedData
 > {

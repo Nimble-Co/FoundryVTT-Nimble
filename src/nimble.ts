@@ -20,6 +20,6 @@ Hooks.once('i18nInit', i18nInit);
 
 Hooks.on('canvasInit', canvasInit);
 Hooks.on('renderChatMessageHTML', renderChatMessageHTML);
-Hooks.on('renderNimbleTokenHUD', renderNimbleTokenHUD);
+Hooks.on('renderNimbleTokenHUD' as 'renderTokenHUD', renderNimbleTokenHUD);
 
 Hooks.on('hotbarDrop', hotbarDrop);

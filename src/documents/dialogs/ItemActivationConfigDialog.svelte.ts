@@ -1,86 +1,107 @@
+import type { DeepPartial } from 'fvtt-types/utils';
 import {
-  SvelteApplicationMixin,
-  type SvelteApplicationRenderContext,
-} from "#lib/SvelteApplicationMixin.svelte.js";
-import ItemActivationConfigDialogComponent from "../../view/dialogs/ItemActivationConfigDialog.svelte";
+	SvelteApplicationMixin,
+	type SvelteApplicationRenderContext,
+} from '#lib/SvelteApplicationMixin.svelte.js';
+import ItemActivationConfigDialogComponent from '../../view/dialogs/ItemActivationConfigDialog.svelte';
 
 const { ApplicationV2 } = foundry.applications.api;
 
-export default class ItemActivationConfigDialog extends SvelteApplicationMixin(
-  ApplicationV2,
-) {
-  declare promise: Promise<any>;
+/** Render context for item activation config dialog */
+interface ItemActivationConfigRenderContext
+	extends foundry.applications.api.ApplicationV2.RenderContext {
+	actor: Actor;
+	item: Item;
+	dialog: ItemActivationConfigDialog;
+	[key: string]: unknown;
+}
 
-  declare resolve: any;
+/** Results from item activation config submission */
+interface ItemActivationConfigResults {
+	rollMode?: number;
+	rollFormula?: string;
+	primaryDieValue?: number;
+	[key: string]: unknown;
+}
 
-  protected root;
+export default class ItemActivationConfigDialog extends SvelteApplicationMixin(ApplicationV2) {
+	declare promise: Promise<ItemActivationConfigResults | null>;
 
-  data: any;
+	declare resolve: (value: ItemActivationConfigResults | null) => void;
 
-  actor: Actor;
+	protected root = ItemActivationConfigDialogComponent;
 
-  item: any;
+	data: Record<string, unknown>;
 
-  constructor(
-    actor,
-    item,
-    title,
-    data = {},
-    options = {} as SvelteApplicationRenderContext,
-  ) {
-    super(
-      foundry.utils.mergeObject(options, {
-        document: actor,
-        window: {
-          title,
-        },
-      }),
-    );
+	actor: Actor;
 
-    this.root = ItemActivationConfigDialogComponent;
-    this.actor = actor;
-    this.item = item;
-    this.data = data;
+	item: Item;
 
-    this.promise = new Promise((resolve) => {
-      this.resolve = resolve;
-    });
-  }
+	constructor(
+		actor: Actor,
+		item: Item,
+		title: string,
+		data: Record<string, unknown> = {},
+		options = {} as SvelteApplicationRenderContext,
+	) {
+		super(
+			foundry.utils.mergeObject(options, {
+				document: actor,
+				window: {
+					title,
+				},
+			}) as Record<string, unknown>,
+		);
 
-  static override DEFAULT_OPTIONS = {
-    classes: ["nimble-sheet"],
-    window: {
-      icon: "fa-solid fa-dice-d20",
-    },
-    position: {
-      width: 576,
-      height: "auto",
-    },
-    actions: {},
-  };
+		this.actor = actor;
+		this.item = item;
+		this.data = data;
 
-  protected async _prepareContext() {
-    return {
-      actor: this.actor,
-      item: this.item,
-      dialog: this,
-      ...this.data,
-    };
-  }
+		this.promise = new Promise((resolve) => {
+			this.resolve = resolve;
+		});
+	}
 
-  async submit(results) {
-    this.#resolvePromise(results);
-    return super.close();
-  }
+	static override DEFAULT_OPTIONS = {
+		classes: ['nimble-sheet'],
+		window: {
+			icon: 'fa-solid fa-dice-d20',
+		},
+		position: {
+			width: 576,
+			height: 'auto' as const,
+		},
+		actions: {},
+	};
 
-  async close(options) {
-    this.#resolvePromise(null);
-    return super.close(options);
-  }
+	protected override async _prepareContext(
+		_options: DeepPartial<foundry.applications.api.ApplicationV2.RenderOptions> & {
+			isFirstRender: boolean;
+		},
+	): Promise<ItemActivationConfigRenderContext> {
+		return {
+			actor: this.actor,
+			item: this.item,
+			dialog: this,
+			...this.data,
+		};
+	}
 
-  #resolvePromise(data) {
-    if (this.resolve) {
-      this.resolve(data);
-    }
-  }
+	async submitConfig(results: ItemActivationConfigResults): Promise<this> {
+		this.#resolvePromise(results);
+		return super.close();
+	}
+
+	override async close(
+		options?: DeepPartial<foundry.applications.api.ApplicationV2.ClosingOptions>,
+	): Promise<this> {
+		this.#resolvePromise(null);
+		return super.close(options);
+	}
+
+	#resolvePromise(data: ItemActivationConfigResults | null): void {
+		if (this.resolve) {
+			this.resolve(data);
+		}
+	}
 }

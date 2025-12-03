@@ -2,4 +2,4 @@
  * Type interfaces for items to break circular dependencies
  */
 
-export type SystemItemTypes = Exclude<foundry.documents.BaseItem.TypeNames, 'base'>;
+export type SystemItemTypes = Exclude<Item.SubType, 'base'>;

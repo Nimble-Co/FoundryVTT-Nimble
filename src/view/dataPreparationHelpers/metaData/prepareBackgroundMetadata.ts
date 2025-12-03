@@ -1,5 +1,5 @@
 import type { NimbleBackgroundItem } from '../../../documents/item/background.js';
 
-export default function prepareBackgroundMetadata(background: NimbleBackgroundItem): string {
+export default function prepareBackgroundMetadata(_background: NimbleBackgroundItem): string {
 	return '';
 }

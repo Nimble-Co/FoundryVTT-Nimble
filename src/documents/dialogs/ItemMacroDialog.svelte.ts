@@ -9,22 +9,27 @@ const { ApplicationV2 } = foundry.applications.api;
 export default class ItemMacroDialog extends SvelteApplicationMixin(ApplicationV2) {
 	item: Item;
 
-	data: any;
+	data: Record<string, unknown>;
 
 	protected root = ItemMacroDialogComponent;
 
-	constructor(item, data = {}, options = {} as SvelteApplicationRenderContext) {
+	constructor(
+		item: Item,
+		data: Record<string, unknown> = {},
+		options = {} as SvelteApplicationRenderContext,
+	) {
 		super(
 			foundry.utils.mergeObject(options, {
 				document: item,
 				window: {
 					title: `${item.name}: Macro Configuration`,
 				},
-			}),
+			}) as Record<string, unknown>,
 		);
 
 		this.data = data;
 		this.item = item;
+		this.props = { item, dialog: this, ...data };
 	}
 
 	static override DEFAULT_OPTIONS = {
@@ -35,16 +40,8 @@ export default class ItemMacroDialog extends SvelteApplicationMixin(ApplicationV
 		},
 		position: {
 			width: 576,
-			height: 'auto',
+			height: 'auto' as const,
 		},
 		actions: {},
 	};
-
-	protected async _prepareContext() {
-		return {
-			item: this.item,
-			dialog: this,
-			...this.data,
-		};
-	}
 }

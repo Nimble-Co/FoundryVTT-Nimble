@@ -5,17 +5,29 @@ import { MigrationRunnerBase } from './MigrationRunnerBase.js';
 
 import localize from '../utils/localize.js';
 
+// Helper to get nimble settings with proper typing
+function getNimbleSetting<T>(key: string): T {
+	return (game.settings as { get(module: string, key: string): unknown }).get('nimble', key) as T;
+}
+
+// Helper to set nimble settings with proper typing
+async function setNimbleSetting(key: string, value: unknown): Promise<unknown> {
+	return (
+		game.settings as { set(module: string, key: string, value: unknown): Promise<unknown> }
+	).set('nimble', key, value);
+}
+
 class MigrationRunner extends MigrationRunnerBase {
 	override needsMigration(): boolean {
-		return super.needsMigration(game.settings.get('nimble', 'worldSchemaVersion') as number);
+		return super.needsMigration(getNimbleSetting<number>('worldSchemaVersion'));
 	}
 
 	static async ensureSchemaVersion(document: any, migrations: MigrationBase[]): Promise<void> {
 		if (migrations.length === 0) return;
-		const currentVersion = this.LATEST_SCHEMA_VERSION;
+		const currentVersion = MigrationRunner.LATEST_SCHEMA_VERSION;
 
 		if ((Number(document.migrationVersion) || 0) < currentVersion) {
-			const runner = new this(migrations);
+			const runner = new MigrationRunner(migrations);
 			const source = document._source;
 
 			const updated = await (async () => {
@@ -329,9 +341,10 @@ class MigrationRunner extends MigrationRunnerBase {
 
 	async runCompendiumMigration(
 		migrations: MigrationBase[],
-		pack: CompendiumCollection<CompendiumCollection.Metadata>,
+		pack: CompendiumCollection.Any,
 	): Promise<void> {
-		if (!['Adventure', 'Actor', 'Item'].includes(pack.documentName)) return;
+		const docName = pack.documentName as string;
+		if (!['Adventure', 'Actor', 'Item'].includes(docName)) return;
 
 		// TODO: Progress Marker
 
@@ -341,7 +354,7 @@ class MigrationRunner extends MigrationRunnerBase {
 		const wasLocked = pack.locked;
 		if (wasLocked) await pack.configure({ locked: false });
 
-		if (pack.documentName === 'Adventure') {
+		if (docName === 'Adventure') {
 			await this.#migrateAdventureDocuments(pack, migrations);
 		} else {
 			await this.#migrateDocuments(pack, migrations);
@@ -364,15 +377,23 @@ class MigrationRunner extends MigrationRunnerBase {
 		// Update tiny docs
 		const promises: Promise<unknown>[] = [];
 
-		game.journal.forEach((e) => promises.push(this.#migrateJournalEntry(e, migrations)));
-		game.macros.forEach((m) => promises.push(this.#migrateMacro(m, migrations)));
-		game.tables.forEach((t) => promises.push(this.#migrateTable(t, migrations)));
-		game.users.forEach((u) => promises.push(this.#migrateUser(u, migrations)));
+		for (const e of game.journal) {
+			promises.push(this.#migrateJournalEntry(e, migrations));
+		}
+		for (const m of game.macros) {
+			promises.push(this.#migrateMacro(m, migrations));
+		}
+		for (const t of game.tables) {
+			promises.push(this.#migrateTable(t, migrations));
+		}
+		for (const u of game.users) {
+			promises.push(this.#migrateUser(u, migrations));
+		}
 
 		// General Free Form Updates
-		migrations.forEach((m) => {
+		for (const m of migrations) {
 			if (m.migrate) promises.push(m.migrate());
-		});
+		}
 
 		await Promise.allSettled(promises);
 
@@ -385,10 +406,12 @@ class MigrationRunner extends MigrationRunnerBase {
 				const wasSuccess = !!(await this.#migrateSceneToken(token, migrations));
 				if (!wasSuccess) continue;
 
-				const deltaSource = token.delta?._source;
+				const deltaSource = token.delta?._source as
+					| { flags?: Record<string, unknown>; items?: unknown[]; system?: Record<string, unknown> }
+					| undefined;
 				const hasMigratableData =
-					(!!deltaSource && !!deltaSource.flags?.nimble) ||
-					((deltaSource ?? {}).items ?? []).length > 0 ||
+					(!!deltaSource && !!(deltaSource.flags as Record<string, unknown> | undefined)?.nimble) ||
+					(deltaSource?.items ?? []).length > 0 ||
 					Object.keys(deltaSource?.system ?? {}).length > 0;
 
 				if (actor.isToken) {
@@ -409,14 +432,15 @@ class MigrationRunner extends MigrationRunnerBase {
 		// Migrate compendiums
 		for (const pack of game.packs) {
 			if (pack.metadata.packageType !== 'world') continue;
-			if (!['Actor', 'Item'].includes(pack.documentName)) continue;
+			const packDocName = pack.documentName as string;
+			if (!['Actor', 'Item'].includes(packDocName)) continue;
 
 			ui.notifications.info(
 				localize('NIMBLE.migration.compendium.starting', { packName: pack.metadata.label }),
 			);
 
 			console.info(`Nimble | Migrating ${pack.index.size} documents in ${pack.metadata.id}.`);
-			await this.runCompendiumMigration(migrations, pack);
+			await this.runCompendiumMigration(migrations, pack as CompendiumCollection.Any);
 			ui.notifications.info(
 				localize('NIMBLE.migration.compendium.finished', { packName: pack.metadata.label }),
 			);
@@ -426,7 +450,7 @@ class MigrationRunner extends MigrationRunnerBase {
 	async runMigration(force = false): Promise<void> {
 		const migrationVersion = {
 			latest: MigrationRunner.LATEST_SCHEMA_VERSION,
-			current: game.settings.get('nimble', 'worldSchemaVersion') as number,
+			current: getNimbleSetting<number>('worldSchemaVersion'),
 		};
 
 		const systemVersion = game.system.version;
@@ -450,7 +474,7 @@ class MigrationRunner extends MigrationRunnerBase {
 			if (phase.length > 0) await this.runMigrations(phase);
 		}
 
-		await game.settings.set('nimble', 'worldSchemaVersion', migrationVersion.latest);
+		await setNimbleSetting('worldSchemaVersion', migrationVersion.latest);
 	}
 }
 

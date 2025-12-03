@@ -1,6 +1,19 @@
 import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
 import { NimbleBaseRule } from './base.js';
 
+// Interface for preCreate arguments
+interface PreCreateArgs {
+	itemSource: { _id?: string };
+	pendingItems: Item.Source[];
+	operation: { keepId?: boolean };
+	tempItems: Item[];
+}
+
+// Interface for item with grantedBy property
+interface GrantableItem extends Item {
+	grantedBy?: Item;
+}
+
 function schema() {
 	const { fields } = foundry.data;
 
@@ -17,9 +30,14 @@ declare namespace ItemGrantRule {
 }
 
 class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
+	declare allowDuplicate: boolean;
+	declare inMemoryOnly: boolean;
+	declare uuid: string;
+	declare grantedId: string;
+
 	static override defineSchema(): ItemGrantRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}
@@ -34,7 +52,7 @@ class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 		);
 	}
 
-	override async preCreate(args): Promise<void> {
+	async preCreate(args: PreCreateArgs): Promise<void> {
 		if (this.inMemoryOnly || this.invalid) return;
 
 		const { itemSource, pendingItems, operation } = args;
@@ -44,7 +62,7 @@ class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 
 		const grantedItem = await (async () => {
 			try {
-				return (await fromUuid(uuid)) as NimbleBaseItem;
+				return (await fromUuid(uuid as `Item.${string}`)) as NimbleBaseItem | null;
 			} catch (e) {
 				// eslint-disable-next-line no-console
 				console.error(e);
@@ -57,7 +75,9 @@ class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 
 		if (!this.test()) return;
 
-		const existingItem = this.actor.items.find((i) => i.sourceId === uuid);
+		const existingItem = this.actor?.items.find(
+			(i) => (i as unknown as NimbleBaseItem).sourceId === uuid,
+		);
 		if (!this.allowDuplicate && existingItem) {
 			// TODO: Warn user and update grant
 
@@ -65,12 +85,15 @@ class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 		}
 
 		itemSource._id ??= foundry.utils.randomID();
-		const grantedSource = grantedItem.toObject();
+		const grantedSource = grantedItem.toObject() as Item.Source & {
+			system: { rules?: Array<{ type: string }> };
+		};
 		grantedSource._id = foundry.utils.randomID();
 
-		if (this.item.sourceId === (grantedSource._stats.compendiumSource ?? '')) {
-			// @ts-expect-error
-			grantedSource.system.rules = grantedSource.system.rules.filter((r) => r.type !== 'GrantItem');
+		const itemSourceId = (this.item as unknown as NimbleBaseItem | undefined)?.sourceId;
+		if (itemSourceId === (grantedSource._stats.compendiumSource ?? '')) {
+			const filteredRules = grantedSource.system.rules?.filter((r) => r.type !== 'GrantItem') ?? [];
+			grantedSource.system.rules = filteredRules as typeof grantedSource.system.rules;
 		}
 
 		// TODO: Effects
@@ -79,7 +102,9 @@ class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 
 		// TODO: Apply Alteration
 
-		const tempGranted = new Item(foundry.utils.deepClone(grantedSource), { parent: this.actor });
+		const tempGranted = new Item(foundry.utils.deepClone(grantedSource), {
+			parent: this.actor,
+		}) as GrantableItem;
 		tempGranted.grantedBy = this.item;
 
 		// TODO: Do data prep and rule prep for tempGranted
@@ -91,7 +116,6 @@ class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 		args.tempItems.push(tempGranted);
 		// TODO: Set class and feature predication
 
-		// @ts-expect-error
 		this.grantedId = grantedSource._id;
 		operation.keepId = true;
 

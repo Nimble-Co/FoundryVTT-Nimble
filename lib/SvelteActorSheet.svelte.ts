@@ -1,14 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import type {
-	AnyObject,
-	EmptyObject,
-} from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { AnyObject, EmptyObject } from 'fvtt-types/utils';
 import type { NimbleBaseItem } from '../src/documents/item/base.svelte.js';
 
 import { SvelteDocumentSheet } from './SvelteDocumentSheet.svelte.js';
 
 class SvelteActorSheet<
-	D extends Actor.ConfiguredInstance = Actor.ConfiguredInstance,
+	D extends Actor = Actor,
 	RenderContext extends AnyObject = EmptyObject,
 	Configuration extends SvelteActorSheet.Configuration<D> = SvelteActorSheet.Configuration<D>,
 	RenderOptions extends SvelteActorSheet.RenderOptions = SvelteActorSheet.RenderOptions,
@@ -73,7 +70,7 @@ class SvelteActorSheet<
 		// Token image
 		const pt = this.actor.prototypeToken;
 		const tex = pt.texture.src || '';
-		if (pt.randomImg || [null, undefined, CONST.DEFAULT_TOKEN].includes(tex)) {
+		if (pt.randomImg || tex === null || tex === undefined || tex === CONST.DEFAULT_TOKEN) {
 			controls.findSplice((c) => c.action === 'showTokenArtwork');
 		}
 		return controls;
@@ -96,7 +93,11 @@ class SvelteActorSheet<
 		};
 
 		// eslint-disable-next-line new-cap
-		new CONFIG.Token.prototypeSheetClass(this.actor.prototypeToken, renderOptions).render(true);
+		const SheetClass = CONFIG.Token.prototypeSheetClass as unknown as new (
+			token: Actor['prototypeToken'],
+			options?: Record<string, unknown>,
+		) => Application;
+		new SheetClass(this.actor.prototypeToken, renderOptions).render(true);
 	}
 
 	/* -------------------------------------------- */
@@ -107,8 +108,8 @@ class SvelteActorSheet<
 	 * @param {PointerEvent} event
 	 */
 	static #onShowPortraitArtwork(this: SvelteActorSheet, event: PointerEvent) {
-		const { img, name, uuid } = this.actor;
-		new ImagePopout(img || '', { title: name, uuid }).render(true);
+		const { img } = this.actor;
+		new ImagePopout({ src: img || '' }).render(true);
 	}
 
 	/* -------------------------------------------- */
@@ -119,8 +120,8 @@ class SvelteActorSheet<
 	 * @param {PointerEvent} event
 	 */
 	static #onShowTokenArtwork(this: SvelteActorSheet, event: PointerEvent) {
-		const { prototypeToken, name, uuid } = this.actor;
-		new ImagePopout(prototypeToken.texture.src || '', { title: name, uuid }).render(true);
+		const { prototypeToken } = this.actor;
+		new ImagePopout({ src: prototypeToken.texture.src || '' }).render(true);
 	}
 
 	/* -------------------------------------------- */
@@ -172,10 +173,17 @@ class SvelteActorSheet<
 	}
 
 	async _onDrop(event: SvelteActorSheet.DropEvent) {
-		const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(event) as unknown as Record<string, unknown>;
+		const data = foundry.applications.ux.TextEditor.implementation.getDragEventData(
+			event,
+		) as unknown as Record<string, unknown>;
 		const actor = this.document;
 
-		const allowed = Hooks.call('dropActorSheetData', actor, this, data);
+		const allowed = (Hooks.call as (hook: string, ...args: unknown[]) => boolean)(
+			'dropActorSheetData',
+			actor,
+			this,
+			data,
+		);
 		if (allowed === false) return false;
 
 		// Handle different data types

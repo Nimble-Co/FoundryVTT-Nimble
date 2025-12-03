@@ -5,14 +5,14 @@ const nimbleNPCCombatantSchema = () => ({
 });
 
 declare namespace NimbleNPCCombatantData {
-	type Schema = DataSchema & ReturnType<typeof nimbleNPCCombatantSchema>;
+	type Schema = foundry.data.fields.DataSchema & ReturnType<typeof nimbleNPCCombatantSchema>;
 	interface BaseData extends Record<string, unknown> {}
 	interface DerivedData extends Record<string, unknown> {}
 }
 
 class NimbleNPCCombatantData extends foundry.abstract.TypeDataModel<
 	NimbleNPCCombatantData.Schema,
-	ChatMessage.ConfiguredInstance,
+	Combatant,
 	NimbleNPCCombatantData.BaseData,
 	NimbleNPCCombatantData.DerivedData
 > {

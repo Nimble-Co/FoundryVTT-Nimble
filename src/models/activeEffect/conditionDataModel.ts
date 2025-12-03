@@ -26,14 +26,14 @@ const conditionSchema = () => ({
 });
 
 declare namespace NimbleConditionEffectData {
-	type Schema = DataSchema & ReturnType<typeof conditionSchema>;
+	type Schema = foundry.data.fields.DataSchema & ReturnType<typeof conditionSchema>;
 	interface BaseData extends Record<string, unknown> {}
 	interface DerivedData extends Record<string, unknown> {}
 }
 
 class NimbleConditionEffectData extends foundry.abstract.TypeDataModel<
 	NimbleConditionEffectData.Schema,
-	ChatMessage.ConfiguredInstance,
+	ActiveEffect,
 	NimbleConditionEffectData.BaseData,
 	NimbleConditionEffectData.DerivedData
 > {

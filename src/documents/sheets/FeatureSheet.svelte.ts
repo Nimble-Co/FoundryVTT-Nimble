@@ -32,15 +32,8 @@ export default class FeatureSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 288,
-			height: 'auto',
+			height: 'auto' as const,
 		},
 		actions: {},
 	};
-
-	protected async _prepareContext() {
-		return {
-			item: this.item,
-			sheet: this,
-		};
-	}
 }

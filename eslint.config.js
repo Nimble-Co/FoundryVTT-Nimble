@@ -38,6 +38,14 @@ export default [
 			...tseslint.configs.recommended.rules,
 			// Add your custom rules here
 			'no-unused-vars': 'off', // Turn off for Svelte files as it has false positives with reactive statements
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_',
+				},
+			],
 		},
 	},
 ];

@@ -9,9 +9,7 @@ import type { NimbleCharacter } from '../actor/character.js';
 export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ActorSheetV2,
 ) {
-	public actor: Actor;
-
-	public declare options: any;
+	declare props: Record<string, unknown>;
 
 	protected root;
 
@@ -22,11 +20,10 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		super(
 			foundry.utils.mergeObject(options, {
 				document: actor.document,
-			}),
+			}) as Record<string, unknown>,
 		);
 
 		this.root = PlayerCharacterSheetComponent;
-		this.actor = actor.document.isToken ? actor.document.parent?.actor : actor.document;
 
 		this.props = {
 			actor: this.document,
@@ -46,7 +43,8 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		},
 	};
 
-	protected async _prepareContext() {
+	// @ts-expect-error - Override with simplified context
+	protected override async _prepareContext() {
 		return {
 			actor: this.actor,
 			sheet: this,

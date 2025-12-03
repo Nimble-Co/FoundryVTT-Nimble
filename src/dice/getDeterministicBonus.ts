@@ -12,30 +12,27 @@
  */
 export default function getDeterministicBonus(
 	formula: string | number,
-	rollData: Record<string, any> = {},
+	rollData: Record<string, unknown> = {},
 	options: { strict?: boolean } = {},
 ): number | null {
 	if (formula === null || formula === undefined) return null;
 	if (typeof formula === 'string' && formula.trim() === '') return 0;
 	if (typeof formula === 'number' && formula === 0) return 0;
 
-	// eslint-disable-next-line no-param-reassign
-	if (typeof formula === 'number') formula = formula.toString();
-
-	// eslint-disable-next-line no-param-reassign
-	options.strict ??= false;
+	const formulaStr = typeof formula === 'number' ? formula.toString() : formula;
+	const opts = { strict: options.strict ?? false };
 
 	let roll: foundry.dice.Roll;
 
 	try {
 		// @ts-expect-error
-		roll = new Roll(formula, rollData);
+		roll = new Roll(formulaStr, rollData);
 		if (!Roll.validate(roll.formula)) throw Error('Invalid roll formula');
-	} catch (error) {
-		ui.notifications?.error(`Invalid roll formula: ${formula}`);
+	} catch (_error) {
+		ui.notifications?.error(`Invalid roll formula: ${formulaStr}`);
 		return null;
 	}
 
-	const result = roll.evaluateSync({ strict: options.strict });
+	const result = roll.evaluateSync({ strict: opts.strict });
 	return result.total ?? 0;
 }

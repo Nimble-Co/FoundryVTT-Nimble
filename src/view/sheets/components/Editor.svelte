@@ -7,7 +7,7 @@
 	interface Props {
 		content: string;
 		field: string;
-		document: any;
+		document: foundry.abstract.Document.Any;
 		editorOptions?: EditorOptions;
 		enrichOptions?: EnrichOptions;
 	}
@@ -58,7 +58,7 @@
 
 		// Listen for save events from ProseMirror and update the document
 		element.addEventListener('save', (event: Event) => {
-			const target = event.target as any;
+			const target = event.target as { _getValue?: () => string };
 			if (target?._getValue) {
 				const value = target._getValue();
 				document.update({ [field]: value });

@@ -1,57 +1,46 @@
-import type { SimpleMerge } from './helpers.js';
-
-declare namespace FormulaField {
-	type DefaultOptions = SimpleMerge<
-		foundry.data.fields.StringField.DefaultOptions,
-		{
-			deterministic: false;
-		}
-	>;
-
-	interface Options extends StringFieldOptions {
-		deterministic?: boolean | undefined;
-	}
+// Custom field options with deterministic flag
+interface FormulaFieldOptions {
+	required?: boolean;
+	nullable?: boolean;
+	initial?: string;
+	blank?: boolean;
+	deterministic?: boolean;
 }
 
-class FormulaField<
-	const Options extends FormulaField.Options = FormulaField.DefaultOptions,
-	const AssignmentType = foundry.data.fields.StringField.AssignmentType<Options>,
-	const InitializedType = foundry.data.fields.StringField.InitializedType<Options>,
-	const PersistedType extends
-		| string
-		| null
-		| undefined = foundry.data.fields.StringField.AssignmentType<Options>,
-> extends foundry.data.fields.StringField<Options, AssignmentType, InitializedType, PersistedType> {
+const StringField = foundry.data.fields.StringField;
+
+class FormulaField extends StringField {
 	/**
 	 * Is this formula deterministic?
 	 * @defaultValue `false`
 	 */
 	deterministic: boolean;
 
-	constructor(options?: Options) {
-		super(options);
+	constructor(options?: FormulaFieldOptions) {
+		super(options as foundry.data.fields.StringField.DefaultOptions);
 
 		this.deterministic = options?.deterministic ?? false;
 	}
 
-	static override get _defaults() {
-		return foundry.utils.mergeObject(super._defaults, {
+	static override get _defaults(): Record<string, unknown> {
+		return foundry.utils.mergeObject(StringField._defaults, {
 			deterministic: false,
 		});
 	}
 
 	override _validateType(
-		value: InitializedType,
-		options?: foundry.data.fields.DataField.ValidationOptions<foundry.data.fields.DataField.Any>,
+		value: string,
+		options?: Record<string, unknown>,
 	): boolean | foundry.data.validation.DataModelValidationFailure | undefined {
-		Roll.validate(value as string);
+		Roll.validate(value);
 
 		if (this.deterministic) {
-			const roll = new Roll(value as string);
+			const roll = new Roll(value);
 			if (!roll.isDeterministic) throw new Error('must not contain dice terms');
 		}
 
-		super._validateType(value, options);
+		const result = super._validateType(value, options);
+		return result ?? undefined;
 	}
 }
 

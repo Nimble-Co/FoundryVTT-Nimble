@@ -9,14 +9,15 @@ export default class SubclassSheet extends SvelteApplicationMixin(
 ) {
 	protected root;
 
-	constructor(item, options = {} as SvelteApplicationRenderContext) {
+	constructor(item: { document: Item }, options = {} as SvelteApplicationRenderContext) {
 		super(
 			foundry.utils.mergeObject(options, {
 				document: item.document,
-			}),
+			}) as Record<string, unknown>,
 		);
 
 		this.root = SubclassSheetComponent;
+		this.props = { item: this.document, sheet: this };
 	}
 
 	static override DEFAULT_OPTIONS = {
@@ -27,15 +28,8 @@ export default class SubclassSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 288,
-			height: 'auto',
+			height: 'auto' as const,
 		},
 		actions: {},
 	};
-
-	protected async _prepareContext() {
-		return {
-			item: this.item,
-			sheet: this,
-		};
-	}
 }

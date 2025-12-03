@@ -3,12 +3,20 @@ import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementC
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
 import { NimbleBaseActor } from './base.svelte.js';
 
+// Interface for feature activation options
+interface FeatureActivationOptions {
+	visibilityMode?: string;
+}
+
 export class NimbleSoloMonster extends NimbleBaseActor {
 	declare system: NimbleSoloMonsterData;
 
-	#dialogs: Record<string, any>;
+	#dialogs: Record<string, unknown>;
 
-	constructor(data, context) {
+	constructor(
+		data?: Actor.CreateData,
+		context?: foundry.abstract.Document.ConstructionContext<Actor.Parent>,
+	) {
 		super(data, context);
 
 		this.#dialogs = {};
@@ -27,7 +35,9 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 		super.prepareDerivedData();
 	}
 
-	async activateBloodiedFeature(options = {}) {
+	async activateBloodiedFeature(
+		options: FeatureActivationOptions = {},
+	): Promise<ChatMessage | null> {
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this?.name}: Bloodied`,
@@ -44,18 +54,21 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 				permissions: this.permission,
 			},
 			type: 'feature',
-		};
+		} as Record<string, unknown>;
 
 		ChatMessage.applyRollMode(
-			chatData,
-			options.visibilityMode ?? game.settings.get('core', 'rollMode'),
+			chatData as ChatMessage.CreateData,
+			(options.visibilityMode ??
+				game.settings.get('core', 'rollMode')) as foundry.CONST.DICE_ROLL_MODES,
 		);
 
-		const chatCard = await ChatMessage.create(chatData);
+		const chatCard = await ChatMessage.create(chatData as ChatMessage.CreateData);
 		return chatCard ?? null;
 	}
 
-	async activateLastStandFeature(options = {}) {
+	async activateLastStandFeature(
+		options: FeatureActivationOptions = {},
+	): Promise<ChatMessage | null> {
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this?.name}: Last Stand`,
@@ -72,15 +85,18 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 				permissions: this.permission,
 			},
 			type: 'feature',
-		};
+		} as Record<string, unknown>;
 
-		ChatMessage.applyRollMode(chatData, options.visibilityMode ?? 'gmroll');
+		ChatMessage.applyRollMode(
+			chatData as ChatMessage.CreateData,
+			(options.visibilityMode ?? 'gmroll') as foundry.CONST.DICE_ROLL_MODES,
+		);
 
-		const chatCard = await ChatMessage.create(chatData);
+		const chatCard = await ChatMessage.create(chatData as ChatMessage.CreateData);
 		return chatCard ?? null;
 	}
 
-	async editMetadata() {
+	async editMetadata(): Promise<void> {
 		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
 
 		this.#dialogs.metaConfig ??= new GenericDialog(
@@ -89,10 +105,11 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 			{ actor: this },
 		);
 
-		this.#dialogs.metaConfig.render(true);
+		const dialog = this.#dialogs.metaConfig as { render(force?: boolean): void };
+		dialog.render(true);
 	}
 
-	async configureMovement() {
+	async configureMovement(): Promise<void> {
 		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
 
 		this.#dialogs.configureMovement ??= new GenericDialog(
@@ -102,6 +119,7 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 			{ icon: 'fa-solid fa-person-running', width: 600 },
 		);
 
-		await this.#dialogs.configureMovement.render(true);
+		const dialog = this.#dialogs.configureMovement as { render(force?: boolean): Promise<void> };
+		await dialog.render(true);
 	}
 }

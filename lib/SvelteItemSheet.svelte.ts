@@ -1,12 +1,9 @@
-import type {
-	AnyObject,
-	EmptyObject,
-} from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { AnyObject, EmptyObject } from 'fvtt-types/utils';
 
 import { SvelteDocumentSheet } from './SvelteDocumentSheet.svelte.js';
 
 class SvelteItemSheet<
-	D extends Item.ConfiguredInstance = Item.ConfiguredInstance,
+	D extends Item = Item,
 	RenderContext extends AnyObject = EmptyObject,
 	Configuration extends SvelteItemSheet.Configuration<D> = SvelteItemSheet.Configuration<D>,
 	RenderOptions extends SvelteItemSheet.RenderOptions = SvelteItemSheet.RenderOptions,
@@ -24,7 +21,7 @@ class SvelteItemSheet<
 	/**
 	 * The Actor instance which owns this Item, if any.
 	 */
-	get actor(): Actor.ConfiguredInstance | null {
+	get actor(): Actor | null {
 		return this.document.actor;
 	}
 }

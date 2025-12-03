@@ -8,22 +8,14 @@ import type { NimbleNPC } from '../actor/npc.js';
 export default class NPCSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ActorSheetV2,
 ) {
-	public actor: Actor;
-
-	public declare options: any;
-
-	protected root;
+	protected root = NPCSheetComponent;
 
 	constructor(actor: { document: NimbleNPC }, options = {} as SvelteApplicationRenderContext) {
 		super(
 			foundry.utils.mergeObject(options, {
 				document: actor.document,
-			}),
+			}) as Record<string, unknown>,
 		);
-
-		this.root = NPCSheetComponent;
-
-		this.actor = actor.document.isToken ? actor.document.parent?.actor : actor.document;
 
 		this.props = {
 			actor: this.document,
@@ -39,14 +31,7 @@ export default class NPCSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 288,
-			height: 'auto',
+			height: 'auto' as const,
 		},
 	};
-
-	protected async _prepareContext() {
-		return {
-			actor: this.actor,
-			sheet: this,
-		};
-	}
 }

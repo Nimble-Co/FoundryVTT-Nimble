@@ -4,28 +4,26 @@ import SystemSettingsDialog from '../view/dialogs/SystemSettingsDialog.svelte';
 const { ApplicationV2 } = foundry.applications.api;
 
 export class SystemSettings extends SvelteApplicationMixin(ApplicationV2) {
-	static override DEFAULT_OPTIONS = foundry.utils.mergeObject(
-		super.DEFAULT_OPTIONS,
-		{
-			id: `app-${Math.random().toString(36).substring(2, 9)}`,
+	static override DEFAULT_OPTIONS = {
+		id: `app-${Math.random().toString(36).substring(2, 9)}`,
+		classes: ['nimble-sheet'],
+		window: {
+			icon: 'fa-solid fa-cog',
 			title: 'Configure System Settings',
-			classes: ['nimble-sheet'],
-			window: {
-				icon: 'fa-solid fa-cog',
-				resizable: true,
-			},
-			position: {
-				width: 640,
-				height: 'auto',
-			},
-			actions: {},
+			resizable: true,
 		},
-		{ inplace: false },
-	);
-	root = SystemSettingsDialog;
+		position: {
+			width: 640,
+			height: 'auto' as const,
+		},
+		actions: {},
+	};
 
-	async _prepareContext() {
-		return {
+	protected root = SystemSettingsDialog;
+
+	constructor() {
+		super();
+		this.props = {
 			dialog: this,
 		};
 	}

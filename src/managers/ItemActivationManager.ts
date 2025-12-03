@@ -4,6 +4,7 @@ import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
+import type { NimbleBaseItem } from '../documents/item/base.svelte.js';
 
 class ItemActivationManager {
 	#item: NimbleBaseItem;
@@ -39,12 +40,14 @@ class ItemActivationManager {
 		} else {
 			// Check if there are damage or healing effects that require rolling
 			const effects = this.activationData?.effects ?? [];
-			const hasRolls = flattenEffectsTree(effects).some(node => node.type === 'damage' || node.type === 'healing');
+			const hasRolls = flattenEffectsTree(effects).some(
+				(node) => node.type === 'damage' || node.type === 'healing',
+			);
 
 			if (hasRolls) {
 				// Check if Alt is pressed to skip dialog
 				let altPressed = false;
-				const unsubscribe = keyPressStore.subscribe(state => {
+				const unsubscribe = keyPressStore.subscribe((state) => {
 					altPressed = state.alt;
 				});
 
@@ -52,19 +55,27 @@ class ItemActivationManager {
 					// Skip dialog, use default
 					dialogData = this.#getDefaultDialogData(rollOptions);
 				} else {
-					const dialog = new ItemActivationConfigDialog(
-						this.actor,
-						this.#item,
-						`Activate ${this.#item.name}`,
-						rollOptions,
-					);
-					await dialog.render(true);
-					const result = await dialog.promise;
-					if (result) {
-						dialogData = result;
+					if (!this.actor) {
+						dialogData = this.#getDefaultDialogData(rollOptions);
 					} else {
-						// If dialog is cancelled, don't roll
-						return { activation:null, rolls:null};
+						const dialog = new ItemActivationConfigDialog(
+							this.actor as unknown as Actor,
+							this.#item as unknown as Item,
+							`Activate ${this.#item.name}`,
+							rollOptions,
+						);
+						await dialog.render(true);
+						const result = await dialog.promise;
+						if (result) {
+							dialogData = {
+								rollMode: result.rollMode ?? 0,
+								rollFormula: result.rollFormula,
+								primaryDieValue: result.primaryDieValue,
+							};
+						} else {
+							// If dialog is cancelled, don't roll
+							return { activation: null, rolls: null };
+						}
 					}
 				}
 
@@ -76,8 +87,7 @@ class ItemActivationManager {
 		}
 
 		// Get Targets
-		// @ts-expect-error
-		const _targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
+		const _targets = Array.from(game.user?.targets ?? []).map((t) => t.document.uuid);
 
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData);
@@ -108,17 +118,21 @@ class ItemActivationManager {
 					// Use modified formula if provided
 					const formula = dialogData.rollFormula || node.formula;
 
-					roll = new DamageRoll(formula, this.actor.getRollData(), {
-						canCrit,
-						canMiss,
-						rollMode: node.rollMode,
-						primaryDieValue: dialogData.primaryDieValue,
-						primaryDieModifier: dialogData.primaryDieValue,
-					} as any);
+					roll = new DamageRoll(
+						formula,
+						(this.actor?.getRollData() ?? {}) as unknown as foundry.dice.Roll.Data,
+						{
+							canCrit,
+							canMiss,
+							rollMode: node.rollMode,
+							primaryDieValue: dialogData.primaryDieValue,
+							primaryDieModifier: dialogData.primaryDieValue,
+						} as any,
+					);
 
 					foundDamageRoll = true;
 				} else {
-					roll = new Roll(node.formula || '0', this.actor.getRollData()) as any;
+					roll = new Roll(node.formula || '0', this.actor?.getRollData() ?? {}) as Roll;
 				}
 
 				await roll.evaluate();
@@ -150,8 +164,11 @@ class ItemActivationManager {
 	#getTemplateData() {
 		const item = this.#item;
 		const { activation } = item.system ?? {};
-		const { template } = activation ?? {};
-		const { shape } = template ?? {};
+		const activationWithTemplate = activation as
+			| { template?: { shape?: string; radius?: number; length?: number; width?: number } }
+			| undefined;
+		const template = activationWithTemplate?.template;
+		const shape = template?.shape;
 
 		if (!shape) return undefined;
 

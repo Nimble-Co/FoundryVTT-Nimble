@@ -32,14 +32,7 @@ export default class AncestrySheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 288,
-			height: 'auto',
+			height: 'auto' as const,
 		},
 	};
-
-	protected async _prepareContext() {
-		return {
-			item: this.item,
-			sheet: this,
-		};
-	}
 }

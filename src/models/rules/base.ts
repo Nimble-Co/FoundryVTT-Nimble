@@ -32,27 +32,37 @@ function schema() {
 	};
 }
 
+// Type alias for the base schema
+type BaseRuleSchema = ReturnType<typeof schema>;
+
 declare namespace NimbleBaseRule {
-	type Schema = DataSchema & ReturnType<typeof schema>;
+	type Schema = BaseRuleSchema;
 }
 
 abstract class NimbleBaseRule<
-	Schema extends NimbleBaseRule.Schema,
-	Parent extends foundry.abstract.DataModel.Any = NimbleBaseItem,
-> extends foundry.abstract.DataModel<Schema, Parent> implements NimbleBaseRule<Schema, Parent> {
+		Schema extends NimbleBaseRule.Schema,
+		Parent extends foundry.abstract.DataModel.Any = NimbleBaseItem,
+	>
+	extends foundry.abstract.DataModel<Schema, Parent>
+	implements NimbleBaseRule<Schema, Parent>
+{
 	declare type: string;
+	declare disabled: boolean;
+	declare id: string;
+	declare identifier: string;
+	declare label: string;
+	declare priority: number;
 
-	// @ts-expect-error - Intentional type override for custom Predicate implementation
 	declare predicate: Predicate;
 
 	constructor(
 		source: foundry.data.fields.SchemaField.InnerAssignmentType<Schema>,
-		options?: foundry.abstract.DataModel.ConstructorOptions<Parent>,
+		options?: { parent?: Parent; strict?: boolean },
 	) {
+		// @ts-expect-error - Schema type flexibility needed for DataModel construction
 		super(source, { parent: options?.parent, strict: options?.strict ?? true });
 
 		if (this.invalid) {
-			// @ts-expect-error
 			this.disabled = true;
 		}
 	}
@@ -118,10 +128,9 @@ abstract class NimbleBaseRule<
 		return data;
 	}
 
-	override validate(options: Record<string, any> = {}): boolean {
+	override validate(options: Record<string, unknown> = {}): boolean {
 		try {
-			// @ts-expect-error
-			return super.validate(options);
+			return super.validate(options) as boolean;
 		} catch (err) {
 			if (err instanceof foundry.data.validation.DataModelValidationError) {
 				const message = err.message.replace(

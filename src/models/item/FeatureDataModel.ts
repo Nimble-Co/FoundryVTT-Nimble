@@ -14,8 +14,10 @@ declare namespace NimbleFeatureData {
 	type Schema = NimbleBaseItemData.Schema &
 		ReturnType<typeof activation> &
 		ReturnType<typeof schema>;
-	type BaseData = NimbleBaseItemData.BaseData;
-	type DerivedData = NimbleBaseItemData.DerivedData;
+	/** Base data derived from the schema */
+	type BaseData = foundry.data.fields.SchemaField.InitializedData<Schema>;
+	/** Additional derived/computed data */
+	type DerivedData = Record<string, never>;
 }
 
 class NimbleFeatureData extends NimbleBaseItemData<
@@ -26,7 +28,7 @@ class NimbleFeatureData extends NimbleBaseItemData<
 	/** @inheritDoc */
 	static override defineSchema(): NimbleFeatureData.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseItemData.defineSchema(),
 			...activation(),
 			...schema(),
 		};

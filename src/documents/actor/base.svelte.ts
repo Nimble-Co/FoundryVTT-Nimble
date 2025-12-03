@@ -1,29 +1,50 @@
-import type { DatabaseCreateOperation } from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/abstract/_types.d.mts';
-import type Document from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/abstract/document.d.mts';
-import type {
-	DeepPartial,
-	InexactPartial,
-} from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { createSubscriber } from 'svelte/reactivity';
+import type { SystemActorTypes, ActorRollOptions, CheckRollDialogData } from './actorInterfaces.js';
+import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
+import type { NimbleNPCData } from '../../models/actor/NPCDataModel.js';
+import type { NimbleMinionData } from '../../models/actor/MinionDataModel.js';
+import type { NimbleSoloMonsterData } from '../../models/actor/SoloMonsterDataModel.js';
 
-export type { SystemActorTypes, ActorRollOptions, CheckRollDialogData } from './actorInterfaces.ts';
+// Augment HookConfig to include Item document hooks
+declare module 'fvtt-types/configuration' {
+	interface HookConfig {
+		createItem: [document: Item, options: { diff?: boolean }, userId: string];
+		deleteItem: [document: Item, options: { diff?: boolean }, userId: string];
+		updateItem: [
+			document: Item,
+			changes: Record<string, unknown>,
+			options: { diff?: boolean },
+			userId: string,
+		];
+	}
+}
+
+export type { SystemActorTypes, ActorRollOptions, CheckRollDialogData } from './actorInterfaces.js';
+
+/** Union type of all Nimble actor system data models */
+type NimbleActorSystemData =
+	| NimbleCharacterData.BaseData
+	| NimbleNPCData.BaseData
+	| NimbleMinionData.BaseData
+	| NimbleSoloMonsterData.BaseData;
 
 // Forward declarations to avoid circular dependencies
 interface NimbleBaseItem extends Item {
 	rules: RulesManagerInterface;
+	identifier: string;
+	hasMacro?: () => boolean;
+	activate?: (options?: ActorRollOptions) => Promise<void>;
+	isType<T extends Item.SubType>(type: T): boolean;
 	prepareActorData?(): void;
 }
 
-interface NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> {
-	type: ActorType;
-	system: DataModelConfig['Actor'][ActorType];
-	items: foundry.abstract.EmbeddedCollection<NimbleBaseItem, Actor.ConfiguredInstance>;
-}
-
 class NimbleBaseActor extends Actor {
+	// @ts-expect-error - Override system type for NimbleBaseActor
+	declare system: NimbleActorSystemData;
+	declare items: foundry.abstract.EmbeddedCollection<NimbleBaseItem, Actor>;
 	declare initialized: boolean;
 
 	declare rules: NimbleBaseRule[];
@@ -43,18 +64,20 @@ class NimbleBaseActor extends Actor {
 				if (triggeringDocument._id === this.id) update();
 			});
 
-			const embeddedItemHooks = ['create', 'delete', 'update'].reduce(
-				(hooks, hookType) => {
-					hooks[hookType] = Hooks.on(`${hookType}Item`, (triggeringDocument, _, { diff }) => {
-						if (diff === false) return;
-
-						if (triggeringDocument?.actor?._id === this.id) update();
-					});
-
-					return hooks;
-				},
-				{} as Record<string, number>,
-			);
+			const embeddedItemHooks = {
+				create: Hooks.on('createItem', (triggeringDocument, options) => {
+					if ((options as { diff?: boolean }).diff === false) return;
+					if (triggeringDocument?.actor?._id === this.id) update();
+				}),
+				delete: Hooks.on('deleteItem', (triggeringDocument, options) => {
+					if ((options as { diff?: boolean }).diff === false) return;
+					if (triggeringDocument?.actor?._id === this.id) update();
+				}),
+				update: Hooks.on('updateItem', (triggeringDocument, _changes, options) => {
+					if ((options as { diff?: boolean }).diff === false) return;
+					if (triggeringDocument?.actor?._id === this.id) update();
+				}),
+			};
 
 			return () => {
 				Hooks.off('updateActor', updateActorHook);
@@ -65,26 +88,19 @@ class NimbleBaseActor extends Actor {
 		});
 	}
 
-	static override async createDialog<T extends Document.AnyConstructor>(
-		this: T,
-		data?: DeepPartial<Document.ConstructorDataFor<T> & Record<string, unknown>>,
-		context?: Pick<DatabaseCreateOperation<InstanceType<T>>, 'parent' | 'pack'> &
-			InexactPartial<
-				DialogOptions & {
-					/** A restriction the selectable sub-types of the Dialog. */
-					types: string[];
-				}
-			>,
-	): Promise<Document.ToConfiguredInstance<T> | null | undefined> {
-		const {
-			// @ts-expect-error
-			parent,
-			pack,
-			types,
-			...options
-		} = context;
+	static override async createDialog(
+		data?: Actor.CreateDialogData,
+		createOptions?: Actor.Database.DialogCreateOptions,
+		options?: Actor.CreateDialogOptions,
+	): Promise<Actor.Stored | null | undefined> {
+		const createOpts = createOptions as
+			| { parent?: Actor.Parent; pack?: string | null; types?: string[] }
+			| undefined;
+		const { parent = null, pack = null, types } = createOpts ?? {};
 
-		const { default: ActorCreationDialog } = await import('../dialogs/ActorCreationDialog.svelte.js');
+		const { default: ActorCreationDialog } = await import(
+			'../dialogs/ActorCreationDialog.svelte.js'
+		);
 		const dialog = new ActorCreationDialog(
 			{
 				...data,
@@ -92,17 +108,18 @@ class NimbleBaseActor extends Actor {
 				pack,
 				types,
 			},
-			{ ...options },
+			{ ...options } as Record<string, unknown>,
 		);
 
-		// @ts-expect-error
-		return dialog.render(true);
+		return dialog.render(true) as unknown as Promise<Actor.Stored | null | undefined>;
 	}
 
 	/** ------------------------------------------------------ */
 	/**                    Type Helpers                        */
 	/** ------------------------------------------------------ */
-	isType<TypeName extends SystemActorTypes>(type: TypeName): this is NimbleBaseActor<TypeName> {
+	isType<TypeName extends SystemActorTypes>(
+		type: TypeName,
+	): this is NimbleBaseActor & { type: TypeName } {
 		return type === (this.type as SystemActorTypes);
 	}
 
@@ -119,8 +136,9 @@ class NimbleBaseActor extends Actor {
 		return this;
 	}
 
-	get sourceId(): string {
-		return this._stats.compendiumSource || this.flags?.core?.source || undefined;
+	get sourceId(): string | undefined {
+		const flags = this.flags as Record<string, Record<string, unknown>> | undefined;
+		return this._stats.compendiumSource || (flags?.core?.source as string | undefined) || undefined;
 	}
 
 	/** ------------------------------------------------------ */
@@ -139,7 +157,9 @@ class NimbleBaseActor extends Actor {
 		super.prepareData();
 
 		// Call Rule Hooks
-		this.rules.forEach((rule) => rule.afterPrepareData?.());
+		for (const rule of this.rules) {
+			rule.afterPrepareData?.();
+		}
 	}
 
 	override prepareBaseData(): void {
@@ -187,7 +207,9 @@ class NimbleBaseActor extends Actor {
 		super.prepareDerivedData();
 
 		// Call rule hooks
-		this.rules.forEach((rule) => rule.prePrepareData?.());
+		for (const rule of this.rules) {
+			rule.prePrepareData?.();
+		}
 
 		this._populateDerivedTags();
 	}
@@ -208,8 +230,7 @@ class NimbleBaseActor extends Actor {
 			`${this.name}: Configure Saving Throws`,
 			ActorSavingThrowConfigDialog,
 			{ document: this },
-			// @ts-expect-error
-			{ icon: 'fa-solid fa-shield', width: 600 },
+			{ icon: 'fa-solid fa-shield', width: 600 } as Record<string, unknown>,
 		);
 
 		await dialog.render(true);
@@ -219,21 +240,21 @@ class NimbleBaseActor extends Actor {
 	/**                Data Update Helpers                     */
 	/** ------------------------------------------------------ */
 	async applyHealing(healing: number, healingType?: string) {
-		const updates = {};
+		const updates: Record<string, number> = {};
 		const { value, max, temp } = this.system.attributes.hp;
-		healing = Math.floor(healing);
+		const healingAmount = Math.floor(healing);
 
 		if (healingType === 'temporaryHealing') {
-			if (healing <= temp) {
+			if (healingAmount <= temp) {
 				ui.notifications.warn('Temporary hit points were not granted to {this.name}. ', {
 					localize: true,
 				});
 				return;
 			}
 
-			updates['system.attributes.hp.temp'] = healing;
+			updates['system.attributes.hp.temp'] = healingAmount;
 		} else {
-			updates['system.attributes.hp.value'] = Math.clamp(value + healing, value, max);
+			updates['system.attributes.hp.value'] = Math.clamp(value + healingAmount, value, max);
 		}
 
 		// TODO: Add cascading numbers
@@ -309,11 +330,13 @@ class NimbleBaseActor extends Actor {
 			return null;
 		}
 
-		if (this.getFlag('nimble', 'automaticallyExecuteAvailableMacros') ?? true) {
-			options.executeMacro ??= item?.hasMacro;
+		const flags = this.flags as Record<string, Record<string, unknown>> | undefined;
+		if ((flags?.nimble?.automaticallyExecuteAvailableMacros as boolean | undefined) ?? true) {
+			options.executeMacro ??= item?.hasMacro?.();
 		}
 
-		return item.activate(options);
+		const result = await item.activate?.(options);
+		return result as unknown as ChatMessage | null;
 	}
 
 	async rollAbilityCheckToChat(
@@ -325,7 +348,7 @@ class NimbleBaseActor extends Actor {
 
 		if (!roll) return null;
 
-		const chatData = await this.prepareAbilityCheckChatCardData(abilityKey, roll, {
+		const chatData = await this.prepareAbilityCheckChatCardData(abilityKey, roll as Roll, {
 			...options,
 			rollMode,
 		});
@@ -339,13 +362,14 @@ class NimbleBaseActor extends Actor {
 	}
 
 	async rollAbilityCheck(abilityKey: abilityKey, options: ActorRollOptions = {}) {
+		const characterSystem = this.system as NimbleCharacterData.BaseData;
 		const baseRollMode = calculateRollMode(
-			this.isType('character') ? (this.system.abilities[abilityKey].defaultRollMode ?? 0) : 0,
+			this.isType('character') ? (characterSystem.abilities[abilityKey].defaultRollMode ?? 0) : 0,
 			options.rollModeModifier,
 			options.rollMode,
 		);
 
-		let rollData;
+		let rollData: { rollFormula: string; rollMode: number; visibilityMode?: string } | null;
 
 		if (options.skipRollDialog) {
 			rollData = await this.getDefaultAbilityCheckData(abilityKey, baseRollMode, options);
@@ -375,7 +399,7 @@ class NimbleBaseActor extends Actor {
 		rollMode: number,
 		options = {} as ActorRollOptions,
 	) {
-		const rollFormula = getRollFormula(this, {
+		const rollFormula = getRollFormula(this as unknown as globalThis.NimbleBaseActor, {
 			abilityKey,
 			rollMode,
 			situationalMods: options.situationalMods ?? '',
@@ -436,7 +460,7 @@ class NimbleBaseActor extends Actor {
 			options.rollMode,
 		);
 
-		let rollData;
+		let rollData: { rollFormula: string; rollMode: number; visibilityMode?: string } | null;
 
 		if (options.skipRollDialog) {
 			rollData = await this.getDefaultSavingThrowData(saveKey, baseRollMode, options);
@@ -462,7 +486,7 @@ class NimbleBaseActor extends Actor {
 	}
 
 	getDefaultSavingThrowData(saveKey: saveKey, rollMode: number, options = {} as ActorRollOptions) {
-		const rollFormula = getRollFormula(this, {
+		const rollFormula = getRollFormula(this as unknown as globalThis.NimbleBaseActor, {
 			saveKey,
 			rollMode,
 			situationalMods: options.situationalMods ?? '',
@@ -513,7 +537,7 @@ class NimbleBaseActor extends Actor {
 		}
 
 		const { default: CheckRollDialog } = await import('../dialogs/CheckRollDialog.svelte.js');
-		const dialog = new CheckRollDialog(this, title, { ...data, type });
+		const dialog = new CheckRollDialog(this as unknown as Actor, title, { ...data, type });
 
 		await dialog.render(true);
 		const dialogData = await dialog.promise;
@@ -533,21 +557,21 @@ class NimbleBaseActor extends Actor {
 		});
 	}
 
-	_getInitiativeFormula(rollOptions: Record<string, any>): string {
-		rollOptions ??= {};
-
+	_getInitiativeFormula(rollOptions: Record<string, unknown> = {}): string {
 		if (!this.isType('character')) {
 			return '0';
 		}
 
-		const rollMode = rollOptions.rollMode ?? 1;
+		const characterSystem = this.system as NimbleCharacterData.BaseData &
+			NimbleCharacterData.DerivedData;
+		const rollMode = (rollOptions.rollMode as number | undefined) ?? 1;
 		let modifiers = '';
 
 		if (rollMode > 1) modifiers = `kh${rollMode - 1}`;
 		else if (rollMode < 0) modifiers = `kl${Math.abs(rollMode) - 1}`;
 		else modifiers = '';
 
-		const bonus = this.system.attributes.initiative.mod || '';
+		const bonus = characterSystem.attributes.initiative.mod || '';
 
 		if (!bonus) return `${rollMode}d20${modifiers}`;
 
@@ -557,28 +581,43 @@ class NimbleBaseActor extends Actor {
 	/** ------------------------------------------------------ */
 	/**                         CRUD                           */
 	/** ------------------------------------------------------ */
-	override async _preUpdate(
-		changes: foundry.documents.BaseActor.ConstructorData,
-		options: any,
-		user: foundry.documents.BaseUser,
-	) {
+	protected override async _preUpdate(
+		changes: Parameters<Actor['_preUpdate']>[0],
+		options: Parameters<Actor['_preUpdate']>[1],
+		user: Parameters<Actor['_preUpdate']>[2],
+	): Promise<boolean | undefined> {
 		// If hp drops below 0, set the value to 0.
-		if (foundry.utils.getProperty(changes, 'system.attributes.hp.value') < 0) {
-			foundry.utils.setProperty(changes, 'system.attributes.hp.value', 0);
+		const hpValue = foundry.utils.getProperty(changes, 'system.attributes.hp.value') as
+			| number
+			| undefined;
+		if (hpValue !== undefined && hpValue < 0) {
+			foundry.utils.setProperty(
+				changes as Record<string, unknown>,
+				'system.attributes.hp.value',
+				0,
+			);
 		}
 
 		// If temp hp drops to or below 0, set the value to 0.
-		if (foundry.utils.getProperty(changes, 'system.attributes.hp.temp') < 0) {
-			foundry.utils.setProperty(changes, 'system.attributes.hp.temp', 0);
+		const tempValue = foundry.utils.getProperty(changes, 'system.attributes.hp.temp') as
+			| number
+			| undefined;
+		if (tempValue !== undefined && tempValue < 0) {
+			foundry.utils.setProperty(changes as Record<string, unknown>, 'system.attributes.hp.temp', 0);
 		}
 
 		// If Image is changed, change prototype token as well
-		const img = foundry.utils.getProperty(changes, 'img');
+		const img = foundry.utils.getProperty(changes, 'img') as string | undefined;
 		if (img) {
-			foundry.utils.setProperty(changes, 'prototypeToken.texture.src', img);
+			foundry.utils.setProperty(
+				changes as Record<string, unknown>,
+				'prototypeToken.texture.src',
+				img,
+			);
 		}
 
-		return super._preUpdate(changes, options, user);
+		const result = await super._preUpdate(changes, options, user);
+		return result ?? undefined;
 	}
 }
 

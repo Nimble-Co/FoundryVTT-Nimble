@@ -13,12 +13,13 @@ const actorDataModels = {
 export default actorDataModels;
 
 // Merge types into fvtt-types
-declare global {
+declare module 'fvtt-types/configuration' {
 	interface DataModelConfig {
 		Actor: {
-			character: NimbleCharacterData;
-			npc: NimbleNPCData;
-			soloMonster: NimbleSoloMonsterData;
+			character: typeof NimbleCharacterData;
+			npc: typeof NimbleNPCData;
+			minion: typeof NimbleMinionData;
+			soloMonster: typeof NimbleSoloMonsterData;
 		};
 	}
 }

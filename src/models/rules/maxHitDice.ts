@@ -1,5 +1,11 @@
 import { NimbleBaseRule } from './base.js';
 
+// Interface for hit dice data from actor system
+interface HitDiceData {
+	bonus?: number;
+	origin?: string[];
+}
+
 function schema() {
 	const { fields } = foundry.data;
 
@@ -15,9 +21,11 @@ declare namespace MaxHitDiceRule {
 }
 
 class MaxHitDiceRule extends NimbleBaseRule<MaxHitDiceRule.Schema> {
+	declare value: string;
+	declare dieSize: number;
 	static override defineSchema(): MaxHitDiceRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}
@@ -31,22 +39,28 @@ class MaxHitDiceRule extends NimbleBaseRule<MaxHitDiceRule.Schema> {
 		);
 	}
 
-	override prePrepareData(): void {
+	prePrepareData(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
 
 		const { actor } = item;
-		if (!actor.isType('character')) return;
+		if (actor.type !== 'character') return;
 
 		const { dieSize } = this;
 		const value = this.resolveFormula(this.value) ?? 0;
 
-		const hitDiceData =
-			foundry.utils.getProperty(actor.system, `attributes.hitDice.${dieSize}`) ?? {};
+		const hitDiceData = (foundry.utils.getProperty(
+			actor.system as object,
+			`attributes.hitDice.${dieSize}`,
+		) ?? {}) as HitDiceData;
 
 		const modifiedValue = (hitDiceData.bonus ?? 0) + value;
-		foundry.utils.setProperty(actor.system, `attributes.hitDice.${dieSize}.bonus`, modifiedValue);
-		foundry.utils.setProperty(actor.system, `attributes.hitDice.${dieSize}.origin`, [
+		foundry.utils.setProperty(
+			actor.system as object,
+			`attributes.hitDice.${dieSize}.bonus`,
+			modifiedValue,
+		);
+		foundry.utils.setProperty(actor.system as object, `attributes.hitDice.${dieSize}.origin`, [
 			...(hitDiceData.origin ?? []),
 			this.label,
 		]);

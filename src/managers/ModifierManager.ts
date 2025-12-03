@@ -2,6 +2,18 @@
 
 import localize from '../utils/localize.js';
 
+// Interface for character system data with abilities and skills
+interface CharacterSystemData {
+	abilities: Record<string, { mod?: number }>;
+	skills: Record<string, { mod?: number }>;
+	savingThrows: Record<string, { mod?: number }>;
+}
+
+// Interface for actor system data with saving throws
+interface ActorSystemData {
+	savingThrows: Record<string, { mod?: number }>;
+}
+
 declare namespace ModifierManager {
 	interface RollDataOptions {
 		abilityKey?: string;
@@ -44,12 +56,14 @@ class ModifierManager {
 	/**               Handlers                 */
 	/** -------------------------------------- */
 
-	#getAbilityCheckModifiers() {
-		if (this.actor.isType('soloMonster')) {
-			return [this.#getSituationalModifiers()];
+	#getAbilityCheckModifiers(): ModifierManager.Modifier[] {
+		if (this.actor.type === 'soloMonster') {
+			const mod = this.#getSituationalModifiers();
+			return mod ? [mod] : [];
 		}
 
-		return [this.#getAbilityModifier(), this.#getSituationalModifiers()];
+		const mods = [this.#getAbilityModifier(), this.#getSituationalModifiers()];
+		return mods.filter((m): m is ModifierManager.Modifier => m !== null);
 	}
 
 	#getSavingThrowModifiers() {
@@ -64,16 +78,18 @@ class ModifierManager {
 	/**         Ability Modifiers              */
 	/** -------------------------------------- */
 	#getAbilityModifier(): ModifierManager.Modifier | null {
-		if (!this.actor.isType('character')) return null;
+		if (this.actor.type !== 'character') return null;
 
 		const { abilityKey } = this.rollData;
 		if (!abilityKey) return null;
 
+		const system = this.actor.system as unknown as CharacterSystemData;
+		const modValue = system.abilities[abilityKey]?.mod;
 		return {
 			label: localize('NIMBLE.modifiers.abilityCheck', {
 				ability: CONFIG.NIMBLE.abilityScores[abilityKey] ?? abilityKey,
 			}),
-			value: this.actor.system.abilities[abilityKey]?.mod ?? null,
+			value: modValue ?? 0,
 		};
 	}
 
@@ -84,11 +100,13 @@ class ModifierManager {
 		const { saveKey } = this.rollData;
 		if (!saveKey) return null;
 
+		const system = this.actor.system as unknown as ActorSystemData;
+		const modValue = system.savingThrows[saveKey]?.mod;
 		return {
 			label: localize('NIMBLE.modifiers.savingThrow', {
 				saveType: CONFIG.NIMBLE.savingThrows[saveKey] ?? saveKey,
 			}),
-			value: this.actor.system.savingThrows[saveKey]?.mod ?? null,
+			value: modValue ?? 0,
 		};
 	}
 
@@ -96,16 +114,18 @@ class ModifierManager {
 	/**         Skill Check Modifiers          */
 	/** -------------------------------------- */
 	#getSkillCheckModifier() {
-		if (!this.actor.isType('character')) return null;
+		if (this.actor.type !== 'character') return null;
 
 		const { skillKey } = this.rollData;
 		if (!skillKey) return null;
 
+		const system = this.actor.system as unknown as CharacterSystemData;
+		const modValue = system.skills[skillKey]?.mod;
 		return {
 			label: localize('NIMBLE.modifiers.skillCheck', {
 				skill: CONFIG.NIMBLE.skills[skillKey] ?? skillKey,
 			}),
-			value: this.actor.system.skills[skillKey]?.mod ?? null,
+			value: modValue ?? 0,
 		};
 	}
 

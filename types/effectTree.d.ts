@@ -1,4 +1,4 @@
-import type { AnyObject } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { AnyObject } from 'fvtt-types/utils';
 
 type EffectNode =
 	| ConditionNode

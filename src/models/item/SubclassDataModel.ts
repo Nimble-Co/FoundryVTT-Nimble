@@ -13,8 +13,10 @@ const schema = {
 
 declare namespace NimbleSubclassData {
 	type Schema = NimbleBaseItemData.Schema & typeof schema;
-	type BaseData = NimbleBaseItemData.BaseData;
-	type DerivedData = NimbleBaseItemData.DerivedData;
+	/** Base data derived from the schema */
+	type BaseData = foundry.data.fields.SchemaField.InitializedData<Schema>;
+	/** Additional derived/computed data */
+	type DerivedData = Record<string, never>;
 }
 
 class NimbleSubclassData extends NimbleBaseItemData<
@@ -25,7 +27,7 @@ class NimbleSubclassData extends NimbleBaseItemData<
 	/** @inheritDoc */
 	static override defineSchema(): NimbleSubclassData.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseItemData.defineSchema(),
 			...schema,
 		};
 	}

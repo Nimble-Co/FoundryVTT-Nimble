@@ -3,9 +3,8 @@
 import fs from 'fs';
 import path from 'path';
 import url from 'url';
-
-import Pack from './lib/Pack.mjs';
 import IdBuilder from './lib/IdBuilder.mjs';
+import Pack from './lib/Pack.mjs';
 
 // ---------------------------------------------------
 //
@@ -16,18 +15,24 @@ console.log('[INFO] - Starting build process.');
 const dirName = url.fileURLToPath(new URL('.', import.meta.url));
 const dataPath = path.resolve(dirName, '../packs');
 const dirPaths = fs.readdirSync(dataPath)
-  .map((name) => path.resolve(dirName, dataPath, name));
+  .map((name) => path.resolve(dataPath, name))
+  .filter((filePath) => {
+    // Filter out hidden files (like .DS_Store) and JSON files
+    const basename = path.basename(filePath);
+    if (basename.startsWith('.') || basename.endsWith('.json')) {
+      return false;
+    }
+    // Only process directories
+    const stats = fs.statSync(filePath);
+    return stats.isDirectory();
+  });
 
 console.log('[INFO] - Validating and Updating document ids.');
 const idBuilder = new IdBuilder();
 idBuilder.loadIds();
 
-console.log(`[INFO] - Loading ${dirPaths.length - 1} packs.`);
-const packs = dirPaths.reduce((acc, pack) => {
-  if (pack.endsWith('json')) return acc;
-  acc.push(Pack.loadJSONFiles(pack));
-  return acc;
-}, []);
+console.log(`[INFO] - Loading ${dirPaths.length} packs.`);
+const packs = dirPaths.map((pack) => Pack.loadJSONFiles(pack));
 
 console.log(`[INFO] - Loaded ${packs.length} packs.`);
 

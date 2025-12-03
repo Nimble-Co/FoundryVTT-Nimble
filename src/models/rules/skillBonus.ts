@@ -21,7 +21,7 @@ declare namespace SkillBonusRule {
 class SkillBonusRule extends NimbleBaseRule<SkillBonusRule.Schema> {
 	static override defineSchema(): SkillBonusRule.Schema {
 		return {
-			...super.defineSchema(),
+			...NimbleBaseRule.defineSchema(),
 			...schema(),
 		};
 	}
@@ -35,7 +35,7 @@ class SkillBonusRule extends NimbleBaseRule<SkillBonusRule.Schema> {
 		);
 	}
 
-	override prePrepareData(): void {
+	prePrepareData(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
 

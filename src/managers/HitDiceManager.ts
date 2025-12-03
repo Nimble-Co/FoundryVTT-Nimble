@@ -1,3 +1,5 @@
+import type { NimbleCharacter } from '../documents/actor/character.js';
+
 class HitDiceManager {
 	#actor: NimbleCharacter;
 
@@ -24,7 +26,10 @@ class HitDiceManager {
 			const size = Number(die);
 			if (!size || Number.isNaN(size)) return;
 
-			const bonus = this.#actor.system.attributes.hitDice[size]?.bonus ?? 0;
+			const hitDiceData = this.#actor.system.attributes.hitDice[size] as
+				| { current: number; origin: string[]; bonus?: number }
+				| undefined;
+			const bonus = hitDiceData?.bonus ?? 0;
 			this.#max += bonus;
 			if (!this.dieSizes.has(size)) this.#value += data.current ?? 0;
 			this.dieSizes.add(size);
@@ -58,7 +63,8 @@ class HitDiceManager {
 
 		// Factor in bonuses
 		for (const [die, data] of Object.entries(this.#actor.system.attributes.hitDice ?? {})) {
-			const bonus = data.bonus ?? 0;
+			const hitDiceData = data as { current: number; origin: string[]; bonus?: number };
+			const bonus = hitDiceData.bonus ?? 0;
 
 			// Add current to obj
 			foundry.utils.setProperty(hitDiceByClass, `${die}.current`, data.current ?? 0);
@@ -78,25 +84,29 @@ class HitDiceManager {
 		return this.#actor.system.attributes.hitDice[size] ?? undefined;
 	}
 
-	async rollHitDice(dieSize?: number, quantity?: number, maximize?: boolean): Promise<any> {
-		if (!dieSize) dieSize = this.largest;
-		if (!quantity) quantity = 1;
-		if (!maximize) maximize = false;
+	async rollHitDice(
+		dieSize?: number,
+		quantity?: number,
+		maximize?: boolean,
+	): Promise<ChatMessage | null | undefined> {
+		const dieSizeToUse = dieSize ?? this.largest;
+		const quantityToUse = quantity ?? 1;
+		const maximizeToUse = maximize ?? false;
 
-		const current = this.getHitDieData(dieSize)?.current ?? 0;
-		if (current < quantity) return null;
+		const current = this.getHitDieData(dieSizeToUse)?.current ?? 0;
+		if (current < quantityToUse) return null;
 
 		const strMod = this.#actor.system.abilities.strength.mod ?? 0;
 
-		const formula = maximize
-			? `${quantity * dieSize} + ${strMod * quantity}`
-			: `${quantity}d${dieSize} + ${strMod * quantity}`;
+		const formula = maximizeToUse
+			? `${quantityToUse * dieSizeToUse} + ${strMod * quantityToUse}`
+			: `${quantityToUse}d${dieSizeToUse} + ${strMod * quantityToUse}`;
 
 		// Roll Formula
-		const { chatData } = await this.#rollHitDice(dieSize, current, quantity, formula);
+		const { chatData } = await this.#rollHitDice(dieSizeToUse, current, quantityToUse, formula);
 
 		this.#actor.update({
-			[`system.attributes.hitDice.${dieSize}.current`]: Math.max(current - quantity, 0),
+			[`system.attributes.hitDice.${dieSizeToUse}.current`]: Math.max(current - quantityToUse, 0),
 		});
 
 		const chatCard = await ChatMessage.create(chatData);
@@ -107,11 +117,15 @@ class HitDiceManager {
 
 	async #rollHitDice(
 		dieSize: number,
-		currentCount: number,
+		_currentCount: number,
 		quantity: number,
 		formula: string,
-	): Promise<{ hookData: any; chatData: any }> {
-		const rollFormula = formula ? formula : dieSize > 0 && quantity > 0 ? `${quantity}d${dieSize}` : '';
+	): Promise<{ hookData: Record<string, unknown>; chatData: ChatMessage.CreateData }> {
+		const rollFormula = formula
+			? formula
+			: dieSize > 0 && quantity > 0
+				? `${quantity}d${dieSize}`
+				: '';
 		const roll = rollFormula ? await new Roll(rollFormula).roll() : await new Roll('0').roll();
 
 		// const title = 'THIS IS A HIT DICE ROLL';
@@ -121,7 +135,7 @@ class HitDiceManager {
 			sound: CONFIG.sounds.dice,
 			rolls: [roll],
 			system: {}, // TODO: Update this
-			type: 'base',
+			type: 'base' as const,
 		};
 
 		const hpDelta = Math.max(roll.total, 0);
@@ -131,7 +145,7 @@ class HitDiceManager {
 
 		const hookData = {}; // TODO: Update
 
-		return { hookData, chatData };
+		return { hookData, chatData: chatData as unknown as ChatMessage.CreateData };
 	}
 
 	getUpdateData({ upperLimit = 0, restoreLargest = true }: UpdateDataOptions = {}) {

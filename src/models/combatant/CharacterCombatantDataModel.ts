@@ -35,14 +35,14 @@ const nimbleCharacterCombatantSchema = () => ({
 });
 
 declare namespace NimbleCharacterCombatantData {
-	type Schema = DataSchema & ReturnType<typeof nimbleCharacterCombatantSchema>;
+	type Schema = foundry.data.fields.DataSchema & ReturnType<typeof nimbleCharacterCombatantSchema>;
 	interface BaseData extends Record<string, unknown> {}
 	interface DerivedData extends Record<string, unknown> {}
 }
 
 class NimbleCharacterCombatantData extends foundry.abstract.TypeDataModel<
 	NimbleCharacterCombatantData.Schema,
-	ChatMessage.ConfiguredInstance,
+	Combatant,
 	NimbleCharacterCombatantData.BaseData,
 	NimbleCharacterCombatantData.DerivedData
 > {

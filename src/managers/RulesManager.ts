@@ -1,4 +1,5 @@
 import type { NimbleBaseRule } from '../models/rules/base.js';
+import type { NimbleBaseItem } from '../documents/item/base.svelte.js';
 
 export namespace RulesManager {
 	export interface AddOptions {
@@ -8,7 +9,7 @@ export namespace RulesManager {
 
 class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	#item: NimbleBaseItem;
-  rulesTypeMap: Map<string, InstanceType<typeof NimbleBaseRule>>;
+	rulesTypeMap: Map<string, InstanceType<typeof NimbleBaseRule>>;
 
 	constructor(item: NimbleBaseItem) {
 		super();
@@ -17,8 +18,8 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		const dataModels = CONFIG.NIMBLE.ruleDataModels;
 		this.rulesTypeMap = new Map();
 
-		item.system.rules.forEach((source: any) => {
-			const Cls = dataModels[source.type];
+		item.system.rules.forEach((source: Record<string, unknown>) => {
+			const Cls = dataModels[source.type as string];
 			if (!Cls) {
 				// eslint-disable-next-line no-console
 				console.warn(
@@ -30,7 +31,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 			try {
 				const rule = new Cls(source, { parent: item, strict: true });
 				this.set(rule.id, rule);
-				this.rulesTypeMap.set(source.type, rule);
+				this.rulesTypeMap.set(source.type as string, rule);
 			} catch (err) {
 				// eslint-disable-next-line no-console
 				console.warn(`Nimble | Rule ${source.id} on ${item.name}(${item.uuid}) is malformed.`);
@@ -43,10 +44,6 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	/** ------------------------------------------------------ */
 	/**                       Helpers                          */
 	/** ------------------------------------------------------ */
-	async addRule(data: Record<string, any>, options: RulesManager.AddOptions = {}) {
-		return RulesManager.addRule(this.#item, data, options);
-	}
-
 	hasRuleOfType(type: string) {
 		return this.rulesTypeMap.has(type);
 	}
@@ -55,12 +52,8 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		return this.rulesTypeMap.get(type);
 	}
 
-	async deleteRule(id: string) {
-		return RulesManager.deleteRule(this.#item, id);
-	}
-
-	async updateRule(id: string, data: string | Record<string, any>) {
-		let updateData: Record<string, any>;
+	async updateRule(id: string, data: string | Record<string, unknown>) {
+		let updateData: Record<string, unknown>;
 
 		if (typeof data === 'string') {
 			try {
@@ -73,21 +66,28 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 			}
 		} else updateData = data;
 
-		this.rulesTypeMap.set(updateData.type, updateData as InstanceType<typeof NimbleBaseRule>);
+		this.rulesTypeMap.set(
+			updateData.type as string,
+			updateData as unknown as InstanceType<typeof NimbleBaseRule>,
+		);
 
 		await this.#item.update({
 			'system.rules': this.#item.system.rules.map((r) => (r.id === id ? updateData : r)),
-		});
+		} as Record<string, unknown>);
 
 		return true;
 	}
 
 	/** ------------------------------------------------------ */
-	/**                   Static Methods                       */
+	/**                   Add/Delete Rules                     */
 	/** ------------------------------------------------------ */
+	async addRule(data: Record<string, unknown>, options: RulesManager.AddOptions = {}) {
+		return RulesManager.addRule(this.#item, data, options);
+	}
+
 	static async addRule(
 		item: NimbleBaseItem,
-		data: Record<string, any>,
+		data: Record<string, unknown>,
 		options: RulesManager.AddOptions = {},
 	) {
 		const existingRules = item.system.rules;
@@ -117,7 +117,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 			return undefined;
 		}
 
-		const Cls = dataModels[type];
+		const Cls = dataModels[type as string];
 		if (!Cls) {
 			// eslint-disable-next-line no-console
 			console.error('Nimble | Rule is not of a recognizable type.');
@@ -128,10 +128,14 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		return rule;
 	}
 
+	async deleteRule(id: string) {
+		return RulesManager.deleteRule(this.#item, id);
+	}
+
 	static async deleteRule(item: NimbleBaseItem, id: string) {
 		return item.update({
 			'system.rules': item.system.rules?.filter((r) => r.id !== id) ?? [],
-		});
+		} as Record<string, unknown>);
 	}
 }
 

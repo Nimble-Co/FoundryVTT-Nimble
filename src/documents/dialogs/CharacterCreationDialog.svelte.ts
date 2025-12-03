@@ -1,4 +1,4 @@
-import type { DeepPartial } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { DeepPartial } from 'fvtt-types/utils';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
 import sortDocumentsByName from '../../utils/sortDocumentsByName.js';
@@ -6,22 +6,55 @@ import CharacterCreationDialogComponent from '../../view/dialogs/CharacterCreati
 
 const { ApplicationV2 } = foundry.applications.api;
 
+/** Render context for character creation dialog */
+interface CharacterCreationRenderContext
+	extends foundry.applications.api.ApplicationV2.RenderContext {
+	ancestryOptions: Promise<Record<'core' | 'exotic', NimbleAncestryItem[]>>;
+	backgroundOptions: Promise<NimbleBackgroundItem[]>;
+	bonusLanguageOptions: { value: string; label: string; tooltip: string }[];
+	classOptions: Promise<NimbleClassItem[]>;
+	statArrayOptions: { key: string; array: number[]; name: string }[];
+	dialog: CharacterCreationDialog;
+}
+
+// Interface for submission results
+interface CharacterCreationResults {
+	name?: string;
+	origins?: {
+		background?: { uuid: string };
+		characterClass?: { uuid: string };
+		ancestry?: { uuid: string };
+	};
+	sizeCategory?: string;
+	abilityScores?: Record<string, number>;
+	skills?: Record<string, unknown>;
+	languages?: string[];
+}
+
+// Interface for origin items that can be used with createEmbeddedDocuments
+interface OriginItemSource {
+	_stats: { compendiumSource?: string };
+	toObject(): Item.Source;
+}
+
 export default class CharacterCreationDialog extends SvelteApplicationMixin(ApplicationV2) {
-	data: Record<string, any>;
-	parent: any;
-	pack: any;
+	data: Record<string, unknown>;
+	parent: Actor | null;
+	pack: string | null;
 
-	protected root;
+	protected root: typeof CharacterCreationDialogComponent;
 
-	constructor(data = {}, { parent = null, pack = null, ...options } = {}) {
-		super(foundry.utils.mergeObject(options, {}));
+	constructor(
+		data: Record<string, unknown> = {},
+		{ parent = null, pack = null }: { parent?: Actor | null; pack?: string | null } = {},
+	) {
+		super();
 
 		this.root = CharacterCreationDialogComponent;
 
 		this.data = data;
 		this.parent = parent;
 		this.pack = pack;
-		// this.options = foundry.utils.mergeObject(this.options, options, { overwrite: false });
 	}
 
 	static override DEFAULT_OPTIONS = {
@@ -32,14 +65,18 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			resizable: true,
 		},
 		position: {
-			height: 'auto',
+			height: 'auto' as const,
 			top: 5,
 			width: 608,
 		},
 		actions: {},
 	};
 
-	protected async _prepareContext() {
+	protected override async _prepareContext(
+		_options: DeepPartial<foundry.applications.api.ApplicationV2.RenderOptions> & {
+			isFirstRender: boolean;
+		},
+	): Promise<CharacterCreationRenderContext> {
 		const ancestryOptions = this.prepareAncestryOptions();
 		const backgroundOptions = this.prepareBackgroundOptions();
 		const bonusLanguageOptions = this.prepareBonusLanguageOptions();
@@ -56,55 +93,62 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		};
 	}
 
-	async submit(results) {
+	async submitCharacter(results: CharacterCreationResults): Promise<this> {
 		const actor = await Actor.create(
 			{ name: results.name || 'New Character', type: 'character' },
 			{ renderSheet: true },
 		);
 
 		const { background, characterClass, ancestry } = results?.origins ?? {};
-		const originDocuments: NimbleBaseItem[] = [];
+		const originSources: Item.Source[] = [];
 
-		const backgroundDocument = (await fromUuid(background?.uuid)) as NimbleBackgroundItem | null;
-		const classDocument = (await fromUuid(characterClass?.uuid)) as NimbleClassItem | null;
-		const ancestryDocument = (await fromUuid(ancestry?.uuid)) as NimbleAncestryItem | null;
+		const backgroundDocument = background?.uuid
+			? ((await fromUuid(background.uuid as `Item.${string}`)) as OriginItemSource | null)
+			: null;
+		const classDocument = characterClass?.uuid
+			? ((await fromUuid(characterClass.uuid as `Item.${string}`)) as
+					| (OriginItemSource & NimbleClassItem)
+					| null)
+			: null;
+		const ancestryDocument = ancestry?.uuid
+			? ((await fromUuid(ancestry.uuid as `Item.${string}`)) as OriginItemSource | null)
+			: null;
 
-		if (backgroundDocument) {
-			backgroundDocument._stats.compendiumSource = background.uuid;
-			originDocuments.push(backgroundDocument);
+		if (backgroundDocument && background?.uuid) {
+			const source = backgroundDocument.toObject();
+			source._stats.compendiumSource = background.uuid;
+			originSources.push(source);
 		}
 
-		if (classDocument) {
-			classDocument._stats.compendiumSource = characterClass.uuid;
-			originDocuments.push(classDocument);
+		if (classDocument && characterClass?.uuid) {
+			const source = classDocument.toObject();
+			source._stats.compendiumSource = characterClass.uuid;
+			originSources.push(source);
 		}
 
-		if (ancestryDocument) {
-			ancestryDocument._stats.compendiumSource = ancestry.uuid;
-			originDocuments.push(ancestryDocument);
+		if (ancestryDocument && ancestry?.uuid) {
+			const source = ancestryDocument.toObject();
+			source._stats.compendiumSource = ancestry.uuid;
+			originSources.push(source);
 		}
 
-		actor?.createEmbeddedDocuments('Item', originDocuments);
+		await actor?.createEmbeddedDocuments('Item', originSources as Item.CreateData[]);
 
 		await actor?.update({
-			system: {
-				'attributes.sizeCategory': results.sizeCategory,
-				abilities: results.abilityScores ?? {},
-				skills: results.skills ?? {},
-				savingThrows: {
-					[`${classDocument?.system.savingThrows.advantage}.defaultRollMode`]: 1,
-					[`${classDocument?.system.savingThrows.disadvantage}.defaultRollMode`]: -1,
-				},
-				proficiencies: {
-					languages: results.languages,
-				},
+			'system.attributes.sizeCategory': results.sizeCategory,
+			'system.abilities': results.abilityScores ?? {},
+			'system.skills': results.skills ?? {},
+			'system.savingThrows': {
+				[`${classDocument?.system.savingThrows.advantage}.defaultRollMode`]: 1,
+				[`${classDocument?.system.savingThrows.disadvantage}.defaultRollMode`]: -1,
 			},
-		});
+			'system.proficiencies.languages': results.languages,
+		} as Record<string, unknown>);
 
 		return super.close();
 	}
 
-	async close(
+	override async close(
 		options?: DeepPartial<foundry.applications.api.ApplicationV2.ClosingOptions>,
 	): Promise<this> {
 		return super.close(options);
@@ -116,7 +160,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 		const ancestryOptions = await Promise.all(
 			getChoicesFromCompendium('ancestry').map(
-				(uuid) => fromUuid(uuid) as Promise<NimbleAncestryItem | null>,
+				(uuid) => fromUuid(uuid as `Item.${string}`) as Promise<NimbleAncestryItem | null>,
 			),
 		);
 
@@ -155,7 +199,9 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	async prepareBackgroundOptions(): Promise<NimbleBackgroundItem[]> {
 		const compendiumChoices = getChoicesFromCompendium('background');
 
-		const documents = await Promise.all(compendiumChoices.map((uuid) => fromUuid(uuid)));
+		const documents = await Promise.all(
+			compendiumChoices.map((uuid) => fromUuid(uuid as `Item.${string}`)),
+		);
 
 		return sortDocumentsByName(documents as ({ name?: string } | null)[]) as NimbleBackgroundItem[];
 	}
@@ -174,7 +220,9 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	async prepareClassOptions(): Promise<NimbleClassItem[]> {
 		const compendiumChoices = getChoicesFromCompendium('class');
 
-		const documents = await Promise.all(compendiumChoices.map((uuid) => fromUuid(uuid)));
+		const documents = await Promise.all(
+			compendiumChoices.map((uuid) => fromUuid(uuid as `Item.${string}`)),
+		);
 
 		return sortDocumentsByName(documents as ({ name?: string } | null)[]) as NimbleClassItem[];
 	}

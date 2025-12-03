@@ -52,7 +52,9 @@ export class ConditionManager {
 			}
 
 			// Add an enriched version of the condition to the data
-			data.enriched = await foundry.applications.ux.TextEditor.implementation.enrichHTML(`[[/condition condition=${id}]]`);
+			data.enriched = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
+				`[[/condition condition=${id}]]`,
+			);
 
 			this.#conditions.set(id, data);
 		});
@@ -95,7 +97,13 @@ export class ConditionManager {
 
 				activeConditions.add(statusId);
 
-				if (effect.getFlag('core', 'overlay')) overlayConditions.add(statusId);
+				if (
+					(effect as { getFlag: (scope: string, key: string) => boolean | undefined }).getFlag(
+						'core',
+						'overlay',
+					)
+				)
+					overlayConditions.add(statusId);
 			});
 		});
 

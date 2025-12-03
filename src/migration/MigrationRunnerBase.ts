@@ -18,8 +18,8 @@ class MigrationRunnerBase {
 	static MINIMUM_SAFE_VERSION = 0;
 
 	constructor(migrations?: MigrationBase[]) {
-		if (!migrations) migrations = [];
-		this.migrations = migrations.sort((a, b) => a.version - b.version);
+		const migrationsToUse = migrations ?? [];
+		this.migrations = migrationsToUse.sort((a, b) => a.version - b.version);
 	}
 
 	needsMigration(currentVersion: number): boolean {
@@ -34,9 +34,11 @@ class MigrationRunnerBase {
 		};
 
 		const originalSources: Map<string, any> = new Map();
-		original.forEach((source) => originalSources.set(source._id, source));
+		for (const source of original) {
+			originalSources.set(source._id, source);
+		}
 
-		updated.forEach((source) => {
+		for (const source of updated) {
 			const originalSource = originalSources.get(source._id);
 			if (originalSource) {
 				if (JSON.stringify(originalSource) !== JSON.stringify(source)) {
@@ -47,9 +49,11 @@ class MigrationRunnerBase {
 			} else {
 				diffs.inserted.push(source);
 			}
-		});
+		}
 
-		originalSources.forEach((source) => diffs.deleted.push(source._id));
+		for (const source of originalSources.values()) {
+			diffs.deleted.push(source._id);
+		}
 
 		return diffs;
 	}
@@ -86,7 +90,7 @@ class MigrationRunnerBase {
 		}
 
 		if ('game' in globalThis) {
-			const latestMigration = migrations.at(-1)!;
+			const _latestMigration = migrations.at(-1)!;
 			// TODO: Update schema
 		}
 
@@ -192,21 +196,6 @@ class MigrationRunnerBase {
 		}
 
 		return userData;
-	}
-
-	// TODO: Update this
-	#updateSchemaRecord(schema = {}, latestMigration = null) {
-		if (!('game' in globalThis && latestMigration)) return;
-
-		const fromVersion = typeof schema?.version === 'number' ? schema.version : null;
-		schema.version = latestMigration?.version;
-		schema.lastMigration = {
-			version: {
-				schema: fromVersion,
-				foundry: game.version,
-				system: game.system.version,
-			},
-		};
 	}
 }
 
