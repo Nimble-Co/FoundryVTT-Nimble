@@ -4,16 +4,24 @@ import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
-import type { NimbleBaseItem } from '../documents/item/base.svelte.js';
+
+// Use interface to avoid circular dependency with base.svelte.ts
+interface NimbleBaseItemInterface {
+	actor: Actor | null;
+	name: string;
+	system: { activation?: { effects?: unknown[] } };
+	type: string;
+	getRollData(): Record<string, unknown>;
+}
 
 class ItemActivationManager {
-	#item: NimbleBaseItem;
+	#item: NimbleBaseItemInterface;
 
 	#options: ItemActivationManager.ActivationOptions;
 
 	activationData: any;
 
-	constructor(item: NimbleBaseItem, options: ItemActivationManager.ActivationOptions) {
+	constructor(item: NimbleBaseItemInterface, options: ItemActivationManager.ActivationOptions) {
 		this.#item = item;
 		this.#options = options;
 

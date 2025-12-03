@@ -1,5 +1,12 @@
 import type { NimbleBaseRule } from '../models/rules/base.js';
-import type { NimbleBaseItem } from '../documents/item/base.svelte.js';
+
+// Use interface to avoid circular dependency with base.svelte.ts
+interface NimbleBaseItemInterface {
+	name: string;
+	uuid: string;
+	system: { rules: Array<Record<string, unknown>> };
+	update(data: Record<string, unknown>): Promise<this | undefined>;
+}
 
 export namespace RulesManager {
 	export interface AddOptions {
@@ -8,10 +15,10 @@ export namespace RulesManager {
 }
 
 class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
-	#item: NimbleBaseItem;
+	#item: NimbleBaseItemInterface;
 	rulesTypeMap: Map<string, InstanceType<typeof NimbleBaseRule>>;
 
-	constructor(item: NimbleBaseItem) {
+	constructor(item: NimbleBaseItemInterface) {
 		super();
 
 		this.#item = item;
@@ -86,7 +93,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	}
 
 	static async addRule(
-		item: NimbleBaseItem,
+		item: NimbleBaseItemInterface,
 		data: Record<string, unknown>,
 		options: RulesManager.AddOptions = {},
 	) {
@@ -101,12 +108,11 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 
 		if (options.update) {
 			await item.update({
-				// @ts-expect-error
 				'system.rules': [...existingRules, data],
 			});
 
-			const existingIds = existingRules.map((r) => r.id);
-			return item.system.rules.filter((r) => !existingIds.includes(r.id))?.[0];
+			const existingIds = existingRules.map((r) => r.id as string);
+			return item.system.rules.filter((r) => !existingIds.includes(r.id as string))?.[0];
 		}
 
 		const dataModels = CONFIG.NIMBLE.ruleDataModels;
@@ -132,7 +138,7 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		return RulesManager.deleteRule(this.#item, id);
 	}
 
-	static async deleteRule(item: NimbleBaseItem, id: string) {
+	static async deleteRule(item: NimbleBaseItemInterface, id: string) {
 		return item.update({
 			'system.rules': item.system.rules?.filter((r) => r.id !== id) ?? [],
 		} as Record<string, unknown>);

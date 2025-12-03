@@ -1,7 +1,19 @@
-import type { NimbleCharacter } from '../documents/actor/character.js';
+// Use interface to avoid circular dependency with character.ts
+interface NimbleCharacterInterface {
+	classes: Record<string, { hitDice: { size: number; total: number }; identifier: string }>;
+	system: {
+		attributes: {
+			hitDice: Record<number, { current: number; origin: string[]; bonus?: number }>;
+			hp: { max: number };
+		};
+		abilities: { strength: { mod: number } };
+	};
+	applyHealing(amount: number): void;
+	update(data: Record<string, unknown>): Promise<this | undefined>;
+}
 
 class HitDiceManager {
-	#actor: NimbleCharacter;
+	#actor: NimbleCharacterInterface;
 
 	#max = 0;
 
@@ -9,7 +21,7 @@ class HitDiceManager {
 
 	dieSizes = new Set<number>();
 
-	constructor(actor: NimbleCharacter) {
+	constructor(actor: NimbleCharacterInterface) {
 		this.#actor = actor;
 
 		Object.values(this.#actor.classes).forEach((cls) => {
@@ -131,7 +143,7 @@ class HitDiceManager {
 		// const title = 'THIS IS A HIT DICE ROLL';
 		const chatData = {
 			author: game.user?.id,
-			speaker: ChatMessage.getSpeaker({ actor: this.#actor }),
+			speaker: ChatMessage.getSpeaker({ actor: this.#actor as unknown as Actor }),
 			sound: CONFIG.sounds.dice,
 			rolls: [roll],
 			system: {}, // TODO: Update this

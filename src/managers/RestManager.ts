@@ -1,7 +1,32 @@
-import type { NimbleCharacter } from '../documents/actor/character.js';
+import type { UpdateDataOptions } from './HitDiceManager.js';
+
+// Use interface to avoid circular dependency with character.ts
+interface NimbleCharacterInterface {
+	HitDiceManager: {
+		rollHitDice(
+			size: number,
+			quantity: number,
+			maximize: boolean,
+		): Promise<ChatMessage | null | undefined>;
+		getUpdateData(options: UpdateDataOptions): {
+			updates: Record<string, unknown>;
+			recoveredData: Record<string, number>;
+		};
+	};
+	system: {
+		attributes: {
+			hp: { value: number; max: number; temp: number };
+			wounds: { value: number };
+		};
+		abilities: { strength: { mod: number } };
+		resources: { mana: { current: number; max: number } };
+	};
+	update(data: Record<string, unknown>): Promise<this | undefined>;
+	updateEmbeddedDocuments(type: string, data: Record<string, unknown>[]): Promise<unknown>;
+}
 
 class RestManager {
-	#actor: NimbleCharacter;
+	#actor: NimbleCharacterInterface;
 
 	#data: RestManager.Data;
 
@@ -11,7 +36,7 @@ class RestManager {
 
 	#updates: { actor: Record<string, unknown>; items: Record<string, unknown>[] };
 
-	constructor(actor: NimbleCharacter, data: RestManager.Data) {
+	constructor(actor: NimbleCharacterInterface, data: RestManager.Data) {
 		this.#actor = actor;
 		this.#summary = [];
 		this.#restType = data.restType || 'field';
@@ -66,7 +91,7 @@ class RestManager {
 
 			await ChatMessage.create({
 				author: game.user?.id,
-				speaker: ChatMessage.getSpeaker({ actor: this.#actor }),
+				speaker: ChatMessage.getSpeaker({ actor: this.#actor as unknown as Actor }),
 				content,
 				type: 'base',
 			});
