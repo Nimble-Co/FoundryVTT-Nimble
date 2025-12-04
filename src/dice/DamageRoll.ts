@@ -224,18 +224,59 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	static override fromData(data: Record<string, any>): DamageRoll {
-		const roll = DamageRoll.fromData(data) as unknown as DamageRoll;
+		// Temporarily remove the class property to avoid infinite recursion
+		// when calling the parent's fromData method
+		const dataWithoutClass = { ...data };
+		delete dataWithoutClass.class;
 
-		roll.originalFormula = data.originalFormula;
-		roll._formula = DamageRoll.getFormula(roll.terms);
+		// Call parent's fromData with the class property removed
+		// This creates a base Roll instance that we'll convert to DamageRoll
+		const baseRoll = foundry.dice.Roll.fromData(dataWithoutClass);
 
-		// Populate data
-		if (data.evaluated ?? true) {
-			roll.isCritical = data.options.isCritical;
-			roll.isMiss = data.options.isMiss;
+		// Create a new DamageRoll instance
+		// Use originalFormula if available, otherwise fall back to formula
+		const formula = data.originalFormula ?? data.formula ?? baseRoll.formula;
+		const roll = new DamageRoll(
+			formula,
+			data.data ?? baseRoll.data,
+			data.options ?? baseRoll.options,
+		);
+
+		if (baseRoll.terms && baseRoll.terms.length > 0) {
+			// Restore terms from baseRoll (which has properly reconstructed term instances)
+			// or from data if baseRoll doesn't have terms
+			// This overwrites what the constructor did, which is important because
+			// the constructor runs preprocessing that modifies terms
+			roll.terms = baseRoll.terms;
+		} else if (data.terms && Array.isArray(data.terms)) {
+			roll.terms = data.terms;
 		}
 
-		return roll as DamageRoll;
+		// Restore evaluated state
+		const baseRollEvaluated = (baseRoll as any)._evaluated;
+		if (data.evaluated || baseRollEvaluated) {
+			roll._evaluated = true;
+			roll._total = data.total ?? data._total ?? (baseRoll as any)._total;
+		}
+
+		// Restore custom properties
+		roll.originalFormula = data.originalFormula ?? formula;
+		roll._formula = data._formula ?? DamageRoll.getFormula(roll.terms);
+
+		if (data.evaluated ?? true) {
+			roll.isCritical = data.isCritical ?? data.options?.isCritical;
+			roll.isMiss = data.isMiss ?? data.options?.isMiss;
+		}
+
+		if (roll.terms) {
+			// Restore primaryDie if it exists in terms
+			const primaryTerm = roll.terms.find((t: any) => t instanceof PrimaryDie);
+			if (primaryTerm) {
+				roll.primaryDie = primaryTerm;
+			}
+		}
+
+		return roll;
 	}
 }
 

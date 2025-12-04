@@ -347,7 +347,8 @@
 										"parentContext": "failedSave",
 										"parentNode": "q20U5ghtUs4RbwzR"
 									}
-								]
+								],
+								"passedSave": []
 							},
 							"sharedRolls": [
 								{
@@ -359,10 +360,22 @@
 									"parentNode": "q20U5ghtUs4RbwzR",
 									"on": {
 										"failedSave": [
-											"@{id=devxf3Wq27h2ouJn; type=damageOutcome; outcome=fullDamage; parentContext=failedSave; parentNode=k1oi8cKrCy0rKtOr}"
+											{
+												"id": "devxf3Wq27h2ouJn",
+												"type": "damageOutcome",
+												"outcome": "fullDamage",
+												"parentContext": "failedSave",
+												"parentNode": "k1oi8cKrCy0rKtOr"
+											}
 										],
 										"passedSave": [
-											"@{id=lgEK1simV1O1dVVW; type=damageOutcome; outcome=halfDamage; parentContext=passedSave; parentNode=k1oi8cKrCy0rKtOr}"
+											{
+												"id": "lgEK1simV1O1dVVW",
+												"type": "damageOutcome",
+												"outcome": "halfDamage",
+												"parentContext": "passedSave",
+												"parentNode": "k1oi8cKrCy0rKtOr"
+											}
 										]
 									}
 								}
@@ -512,10 +525,22 @@
 									"parentNode": "g8nyLDD2EKXHEM7l",
 									"on": {
 										"failedSave": [
-											"@{id=uBDhCngMqsFvehOH; type=damageOutcome; outcome=fullDamage; parentContext=failedSave; parentNode=2fU9e4UeMjNFb9jM}"
+											{
+												"id": "uBDhCngMqsFvehOH",
+												"type": "damageOutcome",
+												"outcome": "fullDamage",
+												"parentContext": "failedSave",
+												"parentNode": "2fU9e4UeMjNFb9jM"
+											}
 										],
 										"passedSave": [
-											"@{id=kUjkvb4x8tBUfGS3; type=damageOutcome; outcome=halfDamage; parentContext=passedSave; parentNode=2fU9e4UeMjNFb9jM}"
+											{
+												"id": "kUjkvb4x8tBUfGS3",
+												"type": "damageOutcome",
+												"outcome": "halfDamage",
+												"parentContext": "passedSave",
+												"parentNode": "2fU9e4UeMjNFb9jM"
+											}
 										]
 									}
 								},
@@ -528,15 +553,30 @@
 									"parentNode": "g8nyLDD2EKXHEM7l",
 									"on": {
 										"failedSave": [
-											"@{id=c7Cg94fdgVZVnlZq; type=damageOutcome; outcome=fullDamage; parentContext=failedSave; parentNode=Zg1CkhKobBh5isJ6}"
+											{
+												"id": "c7Cg94fdgVZVnlZq",
+												"type": "damageOutcome",
+												"outcome": "fullDamage",
+												"parentContext": "failedSave",
+												"parentNode": "Zg1CkhKobBh5isJ6"
+											}
 										],
 										"passedSave": [
-											"@{id=40XV1QRAJepkEVAT; type=damageOutcome; outcome=halfDamage; parentContext=passedSave; parentNode=Zg1CkhKobBh5isJ6}"
+											{
+												"id": "40XV1QRAJepkEVAT",
+												"type": "damageOutcome",
+												"outcome": "halfDamage",
+												"parentContext": "passedSave",
+												"parentNode": "Zg1CkhKobBh5isJ6"
+											}
 										]
 									}
 								}
 							],
-							"on": {}
+							"on": {
+								"failedSave": [],
+								"passedSave": []
+							}
 						}
 					],
 					"showDescription": true,
