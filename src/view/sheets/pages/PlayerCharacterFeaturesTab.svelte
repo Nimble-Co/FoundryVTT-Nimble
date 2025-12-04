@@ -29,7 +29,7 @@
 		await actor.deleteItem(id);
 	}
 
-	function getFeatureMetadata(item) {
+	function getFeatureMetadata(_item) {
 		return null;
 	}
 

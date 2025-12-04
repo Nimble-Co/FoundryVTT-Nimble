@@ -10,11 +10,12 @@ export default async function prepareEmbeddedDocumentTooltipDescription(
 
 	const TextEditor = (foundry.applications as any).ux?.TextEditor;
 	if (!TextEditor) return null;
-	const enrichOptions: any = {
+
+	const enrichOptions = {
 		secrets: document?.isOwner || game.user?.isGM,
 		rollData: document?.isEmbedded ? document.actor?.getRollData() : document?.getRollData(),
 		relativeTo: document,
-	};
+	} as EnrichOptions;
 
 	const enriched = await TextEditor.implementation.enrichHTML(source, enrichOptions);
 
