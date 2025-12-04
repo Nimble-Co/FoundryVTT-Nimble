@@ -4,15 +4,16 @@ import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentToolt
 
 import type { NimbleBoonItem } from '../../../documents/item/boon.js';
 
-export default function prepareBoonTooltip(boon: NimbleBoonItem): string {
+export default async function prepareBoonTooltip(boon: NimbleBoonItem): Promise<string> {
 	const components: (string | null)[] = [];
 	const metadata = prepareBoonMetadata(boon);
 
 	components.push(
 		prepareEmbeddedDocumentTooltipHeader(boon, metadata),
-		prepareEmbeddedDocumentTooltipDescription(
+		await prepareEmbeddedDocumentTooltipDescription(
 			boon.system?.description || 'No description available.',
 			'Boon Description',
+			boon,
 		),
 	);
 

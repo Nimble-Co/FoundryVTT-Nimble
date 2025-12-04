@@ -4,14 +4,17 @@ import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentToolt
 
 import type { NimbleClassItem } from '../../../documents/item/class.js';
 
-export default function prepareAncestryTooltip(characterClass: NimbleClassItem): string {
+export default async function prepareAncestryTooltip(
+	characterClass: NimbleClassItem,
+): Promise<string> {
 	const metadata = prepareClassMetadata(characterClass);
 
 	const components = [
 		prepareEmbeddedDocumentTooltipHeader(characterClass, metadata),
-		prepareEmbeddedDocumentTooltipDescription(
+		await prepareEmbeddedDocumentTooltipDescription(
 			characterClass.system?.description || 'No description available.',
 			'Class Description',
+			characterClass,
 		),
 	];
 

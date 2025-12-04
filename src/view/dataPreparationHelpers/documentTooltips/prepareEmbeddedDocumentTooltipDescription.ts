@@ -1,9 +1,22 @@
+type EnrichOptions = foundry.applications.ux.TextEditor.implementation.EnrichmentOptions;
+
 // eslint-disable-next-line max-len
-export default function prepareEmbeddedDocumentTooltipDescription(
+export default async function prepareEmbeddedDocumentTooltipDescription(
 	source: string | undefined,
-	heading,
-): string | null {
+	heading: string,
+	document?: any,
+): Promise<string | null> {
 	if (!source) return null;
+
+	const TextEditor = (foundry.applications as any).ux?.TextEditor;
+	if (!TextEditor) return null;
+	const enrichOptions: any = {
+		secrets: document?.isOwner || game.user?.isGM,
+		rollData: document?.isEmbedded ? document.actor?.getRollData() : document?.getRollData(),
+		relativeTo: document,
+	};
+
+	const enriched = await TextEditor.implementation.enrichHTML(source, enrichOptions);
 
 	return `<section>
     <header>
@@ -12,7 +25,7 @@ export default function prepareEmbeddedDocumentTooltipDescription(
       </h4>
 
       <div class="nimble-tooltip__description-wrapper">
-        ${source}
+        ${enriched}
       </div>
   </section>`;
 }

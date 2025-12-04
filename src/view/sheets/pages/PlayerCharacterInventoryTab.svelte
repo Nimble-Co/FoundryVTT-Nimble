@@ -27,7 +27,7 @@
 		await actor.deleteItem(id);
 	}
 
-	function getObjectMetadata(_item) {
+	function getObjectMetadata(item) {
 		return null;
 	}
 
@@ -47,6 +47,32 @@
 	let actor = getContext('actor');
 	let sheet = getContext('application');
 	let searchTerm = $state('');
+
+	const tooltipCache = new Map();
+
+	async function getObjectTooltip(item) {
+		const cacheKey = item.reactive._id;
+		if (tooltipCache.has(cacheKey)) {
+			return tooltipCache.get(cacheKey);
+		}
+
+		const tooltip = await prepareObjectTooltip(item.reactive);
+		if (tooltip) {
+			tooltipCache.set(cacheKey, tooltip);
+		}
+		return tooltip || '';
+	}
+
+	function handleTooltipMouseEnter(event, item) {
+		const element = event.currentTarget;
+		if (!tooltipCache.has(item.reactive._id)) {
+			getObjectTooltip(item).then((tooltip) => {
+				if (tooltip) {
+					element.setAttribute('data-tooltip', tooltip);
+				}
+			});
+		}
+	}
 
 	let totalInventorySlots = $derived(actor.reactive.system.inventory.totalSlots ?? 0);
 	let usedInventorySlots = $derived(actor.reactive.system.inventory.usedSlots ?? 0);
@@ -153,9 +179,10 @@
 						class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
 						class:nimble-document-card--no-meta={!metadata}
 						data-item-id={item._id}
-						data-tooltip={prepareObjectTooltip(item.reactive)}
+						data-tooltip={tooltipCache.get(item.reactive._id) || ''}
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 						data-tooltip-direction="LEFT"
+						onmouseenter={(event) => handleTooltipMouseEnter(event, item)}
 						draggable="true"
 						role="button"
 						ondragstart={(event) => sheet._onDragStart(event)}

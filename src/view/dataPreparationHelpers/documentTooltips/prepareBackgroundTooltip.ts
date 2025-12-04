@@ -4,14 +4,17 @@ import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentToolt
 
 import type { NimbleBackgroundItem } from '../../../documents/item/background.js';
 
-export default function prepareBackgroundTooltip(background: NimbleBackgroundItem): string {
+export default async function prepareBackgroundTooltip(
+	background: NimbleBackgroundItem,
+): Promise<string> {
 	const metadata = prepareBackgroundMetadata(background);
 
 	const components = [
 		prepareEmbeddedDocumentTooltipHeader(background, metadata),
-		prepareEmbeddedDocumentTooltipDescription(
+		await prepareEmbeddedDocumentTooltipDescription(
 			background.system?.description || 'No description available.',
 			'Background Description',
+			background,
 		),
 	];
 

@@ -5,7 +5,7 @@ import prepareWeaponTooltipTags from './prepareWeaponTooltipTags.js';
 
 import type { NimbleObjectItem } from '../../../documents/item/object.js';
 
-export default function prepareObjectTooltip(item: NimbleObjectItem): string {
+export default async function prepareObjectTooltip(item: NimbleObjectItem): Promise<string> {
 	const metadata = prepareObjectMetadata(item);
 
 	const components: (string | null)[] = [prepareEmbeddedDocumentTooltipHeader(item, metadata)];
@@ -13,9 +13,10 @@ export default function prepareObjectTooltip(item: NimbleObjectItem): string {
 	if (item.system.objectType === 'weapon') components.push(prepareWeaponTooltipTags(item));
 
 	components.push(
-		prepareEmbeddedDocumentTooltipDescription(
+		await prepareEmbeddedDocumentTooltipDescription(
 			item.system?.description?.public || 'No description available.',
 			'Item Description',
+			item,
 		),
 	);
 
