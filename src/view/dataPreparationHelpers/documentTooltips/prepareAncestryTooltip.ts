@@ -5,15 +5,18 @@ import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentToolt
 
 import type { NimbleAncestryItem } from '../../../documents/item/ancestry.js';
 
-export default function prepareAncestryTooltip(ancestry: NimbleAncestryItem): string {
+export default async function prepareAncestryTooltip(
+	ancestry: NimbleAncestryItem,
+): Promise<string> {
 	const metadata = prepareAncestryMetadata(ancestry);
 
 	const components = [
 		prepareEmbeddedDocumentTooltipHeader(ancestry, metadata),
 		prepareAncestryTooltipTags(ancestry),
-		prepareEmbeddedDocumentTooltipDescription(
+		await prepareEmbeddedDocumentTooltipDescription(
 			ancestry.system?.description || 'No description available.',
 			'Ancestry Description',
+			ancestry,
 		),
 	];
 

@@ -4,14 +4,15 @@ import prepareEmbeddedDocumentTooltipHeader from './prepareEmbeddedDocumentToolt
 
 import type { NimbleFeatureItem } from '../../../documents/item/feature.js';
 
-export default function prepareFeatureTooltip(feature: NimbleFeatureItem): string {
+export default async function prepareFeatureTooltip(feature: NimbleFeatureItem): Promise<string> {
 	const metadata = prepareFeatureMetadata(feature);
 
 	const components = [
 		prepareEmbeddedDocumentTooltipHeader(feature, metadata),
-		prepareEmbeddedDocumentTooltipDescription(
+		await prepareEmbeddedDocumentTooltipDescription(
 			feature.system?.description || 'No description available.',
 			'Feature Description',
+			feature,
 		),
 	];
 

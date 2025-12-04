@@ -5,20 +5,22 @@ import prepareSpellTooltipTags from './prepareSpellTooltipTags.js';
 
 import type { NimbleSpellItem } from '../../../documents/item/spell.js';
 
-export default function prepareSpellTooltip(spell: NimbleSpellItem): string {
+export default async function prepareSpellTooltip(spell: NimbleSpellItem): Promise<string> {
 	const metadata = prepareSpellMetadata(spell, true);
 	const properties = spell?.system?.properties?.selected ?? [];
 
 	const components = [
 		prepareEmbeddedDocumentTooltipHeader(spell, metadata),
 		prepareSpellTooltipTags(spell),
-		prepareEmbeddedDocumentTooltipDescription(
+		await prepareEmbeddedDocumentTooltipDescription(
 			spell.system?.description?.baseEffect || 'No description available.',
 			'Spell Description',
+			spell,
 		),
-		prepareEmbeddedDocumentTooltipDescription(
+		await prepareEmbeddedDocumentTooltipDescription(
 			properties.includes('utilitySpell') ? '' : spell.system?.description?.higherLevelEffect,
 			spell?.system?.tier > 0 ? 'Upcast' : 'Higher Level Effect',
+			spell,
 		),
 	];
 

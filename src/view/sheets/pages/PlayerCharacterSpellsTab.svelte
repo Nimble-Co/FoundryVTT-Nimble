@@ -176,6 +176,32 @@
 	let subNavigation = $derived(getSpellSchoolTabs(spells));
 	let currentTab = $state(null);
 	let visibleSpells = $derived(getVisibleSpells(spells, currentTab?.name));
+
+	const tooltipCache = new Map();
+
+	async function getSpellTooltip(spell) {
+		const cacheKey = spell.reactive._id;
+		if (tooltipCache.has(cacheKey)) {
+			return tooltipCache.get(cacheKey);
+		}
+
+		const tooltip = await prepareSpellTooltip(spell.reactive);
+		if (tooltip) {
+			tooltipCache.set(cacheKey, tooltip);
+		}
+		return tooltip || '';
+	}
+
+	function handleTooltipMouseEnter(event, spell) {
+		const element = event.currentTarget;
+		if (!tooltipCache.has(spell.reactive._id)) {
+			getSpellTooltip(spell).then((tooltip) => {
+				if (tooltip) {
+					element.setAttribute('data-tooltip', tooltip);
+				}
+			});
+		}
+	}
 </script>
 
 <SecondaryNavigation bind:currentTab {subNavigation} />
@@ -218,9 +244,10 @@
 						class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
 						class:nimble-document-card--no-meta={!meta}
 						data-item-id={spell._id}
-						data-tooltip={prepareSpellTooltip(spell.reactive)}
+						data-tooltip={tooltipCache.get(spell.reactive._id) || ''}
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 						data-tooltip-direction="LEFT"
+						onmouseenter={(event) => handleTooltipMouseEnter(event, spell)}
 						draggable="true"
 						role="button"
 						ondragstart={(event) => sheet._onDragStart(event)}
