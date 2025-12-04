@@ -152,17 +152,7 @@
 					{featureTypeHeadings[categoryName] ?? categoryName}
 				</h3>
 			</header>
-	{#each Object.entries(categorizedItems).sort(sortItemCategories) as [categoryName, itemCategory]}
-		<div>
-			<header>
-				<h3 class="nimble-heading" data-heading-variant="section">
-					{featureTypeHeadings[categoryName] ?? categoryName}
-				</h3>
-			</header>
 
-			<ul class="nimble-item-list">
-				{#each sortItems(itemCategory) as item (item.reactive._id)}
-					{@const metadata = getFeatureMetadata(item)}
 			<ul class="nimble-item-list">
 				{#each sortItems(itemCategory) as item (item.reactive._id)}
 					{@const metadata = getFeatureMetadata(item)}
@@ -229,22 +219,6 @@
 							</button>
 						</header>
 					</li>
-							<button
-								class="nimble-button"
-								data-button-variant="icon"
-								type="button"
-								aria-label="Delete {item.reactive.name}"
-								onclick={(event) => deleteItem(event, item._id)}
-							>
-								<i class="fa-solid fa-trash"></i>
-							</button>
-						</header>
-					</li>
-
-					{#if categoryName === 'class' && categorizedSubclasses[item.reactive.system.identifier]?.length}
-						<ul class="nimble-item-list nimble-item-list--sublist">
-							{#each categorizedSubclasses[item.reactive.system.identifier] as subclass}
-								{@const metadata = getFeatureMetadata(subclass)}
 					{#if categoryName === 'class' && categorizedSubclasses[item.reactive.system.identifier]?.length}
 						<ul class="nimble-item-list nimble-item-list--sublist">
 							{#each categorizedSubclasses[item.reactive.system.identifier] as subclass}
