@@ -1,9 +1,9 @@
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable max-len */
 import type { SimpleMerge } from './helpers.js';
 
 declare namespace RecordField {
-	type Options<IValueField> = DataFieldOptions<Record<string, BaseAssignmentType<IValueField>>>;
+	type Options<IValueField> = foundry.data.fields.DataField.Options<
+		Record<string, BaseAssignmentType<IValueField>>
+	>;
 
 	type BaseAssignmentType<AssignmentElementType> =
 		foundry.data.fields.ArrayField.BaseAssignmentType<AssignmentElementType>;
@@ -103,7 +103,7 @@ class RecordField<
 		this.valueField = valueField;
 	}
 
-	_isValidKeyFieldType(keyField) {
+	_isValidKeyFieldType(keyField: IKeyField): boolean {
 		if (
 			keyField instanceof foundry.data.fields.StringField ||
 			keyField instanceof foundry.data.fields.NumberField
@@ -116,14 +116,16 @@ class RecordField<
 		return false;
 	}
 
-	// eslint-disable-next-line consistent-return
-	_validateValues(values, options = {}) {
+	_validateValues(
+		values: Record<string, PersistedElementType>,
+		options: foundry.data.fields.DataField.ValidationOptions & { partial?: boolean } = {},
+	): foundry.data.validation.DataModelValidationFailure | undefined {
 		const ValidationFailure = foundry.data.validation.DataModelValidationFailure;
 		const failures = new ValidationFailure();
 
 		for (const [key, value] of Object.entries(values)) {
 			// If this is a deletion key for a partial update, skip
-			if (key.startsWith('-=') && options?.partial) continue;
+			if (key.startsWith('-=') && options.partial) continue;
 
 			const keyFailure = this.keyField.validate(key, options);
 			if (keyFailure) {
@@ -139,15 +141,18 @@ class RecordField<
 		if (failures.elements.length) {
 			return failures;
 		}
+
+		return undefined;
 	}
 
 	override _cleanType(
 		values: InitializedType,
 		options?: foundry.data.fields.DataField.CleanOptions,
 	): InitializedType {
-		for (const [key, value] of Object.entries(values)) {
-			if (key.startsWith('-=')) return;
-			values[key] = this.valueField.clean(value, options);
+		const mutableValues = values as Record<string, InitializedElementType>;
+		for (const [key, value] of Object.entries(mutableValues)) {
+			if (key.startsWith('-=')) continue;
+			mutableValues[key] = this.valueField.clean(value, options);
 		}
 
 		return values;
@@ -155,15 +160,19 @@ class RecordField<
 
 	override _validateType(
 		values: InitializedType,
-		options: foundry.data.fields.DataField.ValidationOptions<foundry.data.fields.DataField.Any> = {},
-	): boolean | undefined {
+		options: foundry.data.fields.DataField.ValidationOptions & { partial?: boolean } = {},
+	): void {
 		if (!(values instanceof Object)) {
-			return new foundry.data.validation.DataModelValidationFailure({
+			throw new foundry.data.validation.DataModelValidationFailure({
 				message: 'must be an Object',
 			});
 		}
 
-		return this._validateValues(values, options);
+		const failure = this._validateValues(
+			values as object as Record<string, PersistedElementType>,
+			options,
+		);
+		if (failure) throw failure;
 	}
 
 	override initialize(

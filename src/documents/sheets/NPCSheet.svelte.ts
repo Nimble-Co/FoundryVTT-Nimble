@@ -8,11 +8,11 @@ import type { NimbleNPC } from '../actor/npc.js';
 export default class NPCSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ActorSheetV2,
 ) {
-	public actor: Actor;
-
-	public declare options: any;
+	protected _actor: Actor;
 
 	protected root;
+
+	protected props: { actor: Actor; sheet: NPCSheet };
 
 	constructor(actor: { document: NimbleNPC }, options = {} as SvelteApplicationRenderContext) {
 		super(
@@ -23,12 +23,18 @@ export default class NPCSheet extends SvelteApplicationMixin(
 
 		this.root = NPCSheetComponent;
 
-		this.actor = actor.document.isToken ? actor.document.parent?.actor : actor.document;
+		this._actor = actor.document.isToken
+			? (actor.document.parent?.actor ?? actor.document)
+			: actor.document;
 
 		this.props = {
 			actor: this.document,
 			sheet: this,
 		};
+	}
+
+	override get actor(): Actor {
+		return this._actor;
 	}
 
 	static override DEFAULT_OPTIONS = {
@@ -39,14 +45,18 @@ export default class NPCSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 288,
-			height: 'auto',
+			height: 'auto' as const,
 		},
 	};
 
-	protected async _prepareContext() {
+	protected override async _prepareContext(
+		options: Parameters<foundry.applications.sheets.ActorSheetV2['_prepareContext']>[0],
+	): ReturnType<foundry.applications.sheets.ActorSheetV2['_prepareContext']> {
+		const context = await super._prepareContext(options);
 		return {
-			actor: this.actor,
+			...context,
+			actor: this._actor,
 			sheet: this,
-		};
+		} as object as Awaited<ReturnType<foundry.applications.sheets.ActorSheetV2['_prepareContext']>>;
 	}
 }

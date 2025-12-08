@@ -14,5 +14,5 @@ export async function updateEffectNode(
 
 	document.update({
 		'system.activation.effects': tree,
-	});
+	} as object as Record<string, unknown>);
 }

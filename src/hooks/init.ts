@@ -39,23 +39,24 @@ import { NIMBLE_GAME } from '../game.js';
 
 export default function init() {
 	CONFIG.NIMBLE = NIMBLE;
-	CONFIG.Actor.documentClass = ActorProxy;
-	CONFIG.Combat.documentClass = NimbleCombat;
-	CONFIG.Combatant.documentClass = NimbleCombatant;
-	CONFIG.ChatMessage.documentClass = NimbleChatMessage;
-	CONFIG.Item.documentClass = ItemProxy;
-	CONFIG.Token.documentClass = NimbleTokenDocument;
+	CONFIG.Actor.documentClass = ActorProxy as typeof CONFIG.Actor.documentClass;
+	CONFIG.Combat.documentClass = NimbleCombat as typeof CONFIG.Combat.documentClass;
+	CONFIG.Combatant.documentClass = NimbleCombatant as typeof CONFIG.Combatant.documentClass;
+	CONFIG.ChatMessage.documentClass = NimbleChatMessage as typeof CONFIG.ChatMessage.documentClass;
+	CONFIG.Item.documentClass = ItemProxy as typeof CONFIG.Item.documentClass;
+	CONFIG.Token.documentClass = NimbleTokenDocument as typeof CONFIG.Token.documentClass;
 
 	// Add data models
-	CONFIG.ActiveEffect.dataModels = activeEffectDataModels;
-	CONFIG.Actor.dataModels = actorDataModels;
-	CONFIG.ChatMessage.dataModels = chatDataModels;
-	CONFIG.Combatant.dataModels = combatantDataModels;
-	CONFIG.Item.dataModels = itemDataModels;
+	CONFIG.ActiveEffect.dataModels =
+		activeEffectDataModels as object as typeof CONFIG.ActiveEffect.dataModels;
+	CONFIG.Actor.dataModels = actorDataModels as object as typeof CONFIG.Actor.dataModels;
+	CONFIG.ChatMessage.dataModels = chatDataModels as object as typeof CONFIG.ChatMessage.dataModels;
+	CONFIG.Combatant.dataModels = combatantDataModels as object as typeof CONFIG.Combatant.dataModels;
+	CONFIG.Item.dataModels = itemDataModels as object as typeof CONFIG.Item.dataModels;
 
 	// Add Dice
-	CONFIG.Dice.rolls.push(DamageRoll);
-	CONFIG.Dice.rolls.push(NimbleRoll);
+	CONFIG.Dice.rolls.push(DamageRoll as (typeof CONFIG.Dice.rolls)[number]);
+	CONFIG.Dice.rolls.push(NimbleRoll as (typeof CONFIG.Dice.rolls)[number]);
 	CONFIG.Dice.types.push(PrimaryDie);
 
 	// Adds Scene data
@@ -71,85 +72,145 @@ export default function init() {
 
 	registerCustomEnrichers();
 
+	// Sheet registration types
+	type ActorSheetConstructor = Parameters<
+		typeof foundry.documents.collections.Actors.registerSheet
+	>[1];
+	type ItemSheetConstructor = Parameters<
+		typeof foundry.documents.collections.Items.registerSheet
+	>[1];
+
 	// Sheet registration
 	foundry.documents.collections.Actors.unregisterSheet('core', foundry.appv1.sheets.ActorSheet);
 
-	foundry.documents.collections.Actors.registerSheet('nimble', NPCSheet, {
-		types: ['npc'],
-		makeDefault: true,
-		label: 'NIMBLE.sheets.npc',
-	});
+	foundry.documents.collections.Actors.registerSheet(
+		'nimble',
+		NPCSheet as unknown as ActorSheetConstructor,
+		{
+			types: ['npc'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.npc',
+		},
+	);
 
-	foundry.documents.collections.Actors.registerSheet('nimble', PlayerCharacterSheet, {
-		types: ['character'],
-		makeDefault: true,
-		label: 'NIMBLE.sheets.playerCharacter',
-	});
+	foundry.documents.collections.Actors.registerSheet(
+		'nimble',
+		PlayerCharacterSheet as unknown as ActorSheetConstructor,
+		{
+			types: ['character'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.playerCharacter',
+		},
+	);
 
-	foundry.documents.collections.Actors.registerSheet('nimble', NPCSheet, {
-		types: ['soloMonster'],
-		makeDefault: true,
-		label: 'NIMBLE.sheets.npc',
-	});
+	foundry.documents.collections.Actors.registerSheet(
+		'nimble',
+		NPCSheet as unknown as ActorSheetConstructor,
+		{
+			types: ['soloMonster'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.npc',
+		},
+	);
 
-	foundry.documents.collections.Actors.registerSheet('nimble', NPCSheet, {
-		types: ['minion'],
-		makeDefault: true,
-		label: 'NIMBLE.sheets.npc',
-	});
+	foundry.documents.collections.Actors.registerSheet(
+		'nimble',
+		NPCSheet as unknown as ActorSheetConstructor,
+		{
+			types: ['minion'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.npc',
+		},
+	);
 
 	foundry.documents.collections.Items.unregisterSheet('core', foundry.appv1.sheets.ItemSheet);
 
-	foundry.documents.collections.Items.registerSheet('nimble', BackgroundSheet, {
-		types: ['background'],
-		makeDefault: true,
-		label: 'NIMBLE.sheets.background',
-	});
+	foundry.documents.collections.Items.registerSheet(
+		'nimble',
+		BackgroundSheet as unknown as ItemSheetConstructor,
+		{
+			types: ['background'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.background',
+		},
+	);
 
-	foundry.documents.collections.Items.registerSheet('nimble', BoonSheet, {
-		types: ['boon'],
-		makeDefault: true,
-		label: 'NIMBLE.sheets.boon',
-	});
-	foundry.documents.collections.Items.registerSheet('nimble', ClassSheet, {
-		types: ['class'],
-		makeDefault: true,
-		label: 'NIMBLE.sheets.class',
-	});
+	foundry.documents.collections.Items.registerSheet(
+		'nimble',
+		BoonSheet as unknown as ItemSheetConstructor,
+		{
+			types: ['boon'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.boon',
+		},
+	);
+	foundry.documents.collections.Items.registerSheet(
+		'nimble',
+		ClassSheet as unknown as ItemSheetConstructor,
+		{
+			types: ['class'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.class',
+		},
+	);
 
-	foundry.documents.collections.Items.registerSheet('nimble', FeatureSheet, {
-		types: ['feature'],
-		makeDefault: true,
-		label: 'NIMBLE.sheets.feature',
-	});
+	foundry.documents.collections.Items.registerSheet(
+		'nimble',
+		FeatureSheet as unknown as ItemSheetConstructor,
+		{
+			types: ['feature'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.feature',
+		},
+	);
 
-	foundry.documents.collections.Items.registerSheet('nimble', MonsterFeatureSheet, {
-		types: ['monsterFeature'],
-		makeDefault: true,
-		label: 'NIMBLE.sheets.monsterFeature',
-	});
+	foundry.documents.collections.Items.registerSheet(
+		'nimble',
+		MonsterFeatureSheet as unknown as ItemSheetConstructor,
+		{
+			types: ['monsterFeature'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.monsterFeature',
+		},
+	);
 
-	foundry.documents.collections.Items.registerSheet('nimble', ObjectSheet, {
-		types: ['object'],
-		makeDefault: true,
-		label: 'NIMBLE.sheets.object',
-	});
+	foundry.documents.collections.Items.registerSheet(
+		'nimble',
+		ObjectSheet as unknown as ItemSheetConstructor,
+		{
+			types: ['object'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.object',
+		},
+	);
 
-	foundry.documents.collections.Items.registerSheet('nimble', AncestrySheet, {
-		types: ['ancestry'],
-		makeDefault: true,
-		label: 'NIMBLE.sheets.ancestry',
-	});
+	foundry.documents.collections.Items.registerSheet(
+		'nimble',
+		AncestrySheet as unknown as ItemSheetConstructor,
+		{
+			types: ['ancestry'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.ancestry',
+		},
+	);
 
-	foundry.documents.collections.Items.registerSheet('nimble', SpellSheet, {
-		types: ['spell'],
-		makeDefault: true,
-		label: 'NIMBLE.sheets.spell',
-	});
+	foundry.documents.collections.Items.registerSheet(
+		'nimble',
+		SpellSheet as unknown as ItemSheetConstructor,
+		{
+			types: ['spell'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.spell',
+		},
+	);
 
-	foundry.documents.collections.Items.registerSheet('nimble', SubclassSheet, {
-		types: ['subclass'],
-		makeDefault: true,
-		label: 'NIMBLE.sheets.subclass',
-	});
+	foundry.documents.collections.Items.registerSheet(
+		'nimble',
+		SubclassSheet as unknown as ItemSheetConstructor,
+		{
+			types: ['subclass'],
+			makeDefault: true,
+			label: 'NIMBLE.sheets.subclass',
+		},
+	);
 }

@@ -2,7 +2,11 @@
  * Type interfaces for actors to break circular dependencies
  */
 
-export type SystemActorTypes = Exclude<foundry.documents.BaseActor.TypeNames, 'base'>;
+import type { AbilityKeyType } from '#types/abilityKey.js';
+import type { SaveKeyType } from '#types/saveKey.js';
+import type { SkillKeyType } from '#types/skillKey.js';
+
+export type SystemActorTypes = Exclude<foundry.documents.BaseActor.SubType, 'base'>;
 
 export interface ActorRollOptions {
 	prompted?: boolean | undefined;
@@ -15,7 +19,7 @@ export interface ActorRollOptions {
 }
 
 export interface CheckRollDialogData extends ActorRollOptions {
-	abilityKey?: abilityKey | undefined;
-	saveKey?: saveKey | undefined;
-	skillKey?: skillKey | undefined;
+	abilityKey?: AbilityKeyType | undefined;
+	saveKey?: SaveKeyType | undefined;
+	skillKey?: SkillKeyType | undefined;
 }

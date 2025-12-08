@@ -1,11 +1,11 @@
-import { PredicateField } from '../fields/PredicateField.js';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import type { Predicate } from '../../etc/Predicate.js';
+import { PredicateField } from '../fields/PredicateField.js';
 
 // Forward declarations to avoid circular dependencies
 interface NimbleBaseActor extends Actor {
 	getDomain(): Set<string>;
-	getRollData(): Record<string, any>;
+	getRollData(): Record<string, unknown>;
 }
 
 interface NimbleBaseItem extends Item {
@@ -13,6 +13,8 @@ interface NimbleBaseItem extends Item {
 	uuid: string;
 	name: string;
 	actor: NimbleBaseActor;
+	sourceId: string | undefined;
+	grantedBy: NimbleBaseItem | null;
 }
 
 function schema() {
@@ -33,29 +35,42 @@ function schema() {
 }
 
 declare namespace NimbleBaseRule {
-	type Schema = DataSchema & ReturnType<typeof schema>;
+	type Schema = foundry.data.fields.DataSchema & ReturnType<typeof schema>;
+}
+
+interface PreCreateArgs {
+	itemSource: foundry.data.fields.SchemaField.AssignmentData<Item.Schema> & { _id?: string };
+	pendingItems: Array<foundry.data.fields.SchemaField.AssignmentData<Item.Schema>>;
+	tempItems: Item[];
+	operation: { keepId?: boolean };
 }
 
 abstract class NimbleBaseRule<
-		Schema extends NimbleBaseRule.Schema,
-		Parent extends foundry.abstract.DataModel.Any = NimbleBaseItem,
-	>
-	extends foundry.abstract.DataModel<Schema, Parent>
-	implements NimbleBaseRule<Schema, Parent>
-{
+	Schema extends NimbleBaseRule.Schema = NimbleBaseRule.Schema,
+	Parent extends foundry.abstract.DataModel.Any = foundry.abstract.DataModel.Any,
+> extends foundry.abstract.DataModel<Schema, Parent> {
 	declare type: string;
 
-	// @ts-expect-error - Intentional type override for custom Predicate implementation
-	declare predicate: Predicate;
+	declare disabled: boolean;
+
+	declare id: string;
+
+	declare identifier: string;
+
+	declare label: string;
+
+	declare priority: number;
 
 	constructor(
-		source: foundry.data.fields.SchemaField.InnerAssignmentType<Schema>,
-		options?: foundry.abstract.DataModel.ConstructorOptions<Parent>,
+		source: foundry.data.fields.SchemaField.CreateData<Schema>,
+		options?: { parent?: Parent; strict?: boolean },
 	) {
-		super(source, { parent: options?.parent, strict: options?.strict ?? true });
+		super(source, {
+			parent: options?.parent,
+			strict: options?.strict ?? true,
+		} as foundry.abstract.DataModel.ConstructionContext<Parent>);
 
 		if (this.invalid) {
-			// @ts-expect-error
 			this.disabled = true;
 		}
 	}
@@ -67,7 +82,6 @@ abstract class NimbleBaseRule<
 	}
 
 	// get uuid(): string {
-	//   // @ts-expect-error
 	//   return `${this.parent.uuid}.${this.id}`;
 	// }
 
@@ -76,21 +90,20 @@ abstract class NimbleBaseRule<
 	}
 
 	get item(): NimbleBaseItem {
-		// @ts-expect-error
-		return this.parent;
+		return this.parent as object as NimbleBaseItem;
 	}
 
 	tooltipInfo(props?: Map<string, string>): string {
-		const sortedProps: Map<string, string> = new Map(
-			// @ts-expect-error
-			[
-				['disabled', 'boolean'],
-				['label', 'string'],
-				['priority', 'number'],
-				['type', 'string'],
-				...(props ?? []),
-			].sort((a, b) => a[0].localeCompare(b[0])),
+		const baseProps: [string, string][] = [
+			['disabled', 'boolean'],
+			['label', 'string'],
+			['priority', 'number'],
+			['type', 'string'],
+		];
+		const allProps = [...baseProps, ...(props ?? new Map<string, string>())].sort((a, b) =>
+			a[0].localeCompare(b[0]),
 		);
+		const sortedProps: Map<string, string> = new Map(allProps);
 
 		const propData = [...sortedProps.entries()].map(
 			([prop, type]) => `
@@ -123,7 +136,6 @@ abstract class NimbleBaseRule<
 
 	override validate(options: Record<string, any> = {}): boolean {
 		try {
-			// @ts-expect-error
 			return super.validate(options);
 		} catch (err) {
 			if (err instanceof foundry.data.validation.DataModelValidationError) {
@@ -139,21 +151,39 @@ abstract class NimbleBaseRule<
 		}
 	}
 
+	protected get _predicate(): Predicate {
+		return (this as object as { predicate: Predicate }).predicate;
+	}
+
 	protected test(passedDomain?: string[] | Set<string>): boolean {
 		if (this.disabled) return false;
-		if (this.predicate.size === 0) return false;
+		if (this._predicate.size === 0) return false;
 
 		const domain = new Set<string>([
 			...(passedDomain ?? this.actor?.getDomain() ?? []),
 			...(this.item.getDomain() ?? []),
 		]);
 
-		return this.predicate.test(domain);
+		return this._predicate.test(domain);
 	}
 
 	protected resolveFormula(formula: string) {
 		const value = getDeterministicBonus(formula, this.actor?.getRollData() ?? {});
 		return value;
+	}
+
+	/**
+	 * Hook called during item pre-creation. Override in subclasses to implement rule-specific logic.
+	 */
+	async preCreate(_args: PreCreateArgs): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/**
+	 * Hook called after data preparation. Override in subclasses to implement rule-specific logic.
+	 */
+	afterPrepareData(): void {
+		// Default implementation does nothing
 	}
 
 	override toString() {
@@ -162,4 +192,4 @@ abstract class NimbleBaseRule<
 	}
 }
 
-export { NimbleBaseRule };
+export { NimbleBaseRule, type PreCreateArgs };

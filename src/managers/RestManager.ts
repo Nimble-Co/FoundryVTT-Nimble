@@ -1,5 +1,14 @@
+import type { HitDiceManager } from './HitDiceManager.js';
+
+// Uses NimbleCharacterInterface ambient type from actor.d.ts
+
+/** Extended NimbleCharacter interface for RestManager */
+interface RestableCharacter extends NimbleCharacterInterface {
+	HitDiceManager: HitDiceManager;
+}
+
 class RestManager {
-	#actor: NimbleCharacter;
+	#actor: RestableCharacter;
 
 	#data: RestManager.Data;
 
@@ -7,9 +16,9 @@ class RestManager {
 
 	#summary: string[];
 
-	#updates: { actor: Record<string, any>; items: any[] };
+	#updates: { actor: Record<string, unknown>; items: Record<string, unknown>[] };
 
-	constructor(actor: NimbleCharacter, data: RestManager.Data) {
+	constructor(actor: RestableCharacter, data: RestManager.Data) {
 		this.#actor = actor;
 		this.#summary = [];
 		this.#restType = data.restType || 'field';
@@ -62,10 +71,9 @@ class RestManager {
 
 			const content = `<div> <ul> ${innerContent} </ul> </div>`;
 
-			// @ts-expect-error
 			await ChatMessage.create({
 				author: game.user?.id,
-				speaker: ChatMessage.getSpeaker({ actor: this.#actor }),
+				speaker: ChatMessage.getSpeaker({ actor: this.#actor as object as Actor }),
 				content,
 				type: 'base',
 			});

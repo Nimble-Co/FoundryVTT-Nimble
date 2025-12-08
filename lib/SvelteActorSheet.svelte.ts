@@ -1,13 +1,10 @@
-import type {
-	AnyObject,
-	EmptyObject,
-} from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { AnyObject, EmptyObject } from 'fvtt-types/utils';
 import type { NimbleBaseItem } from '../src/documents/item/base.svelte.js';
 
 import { SvelteDocumentSheet } from './SvelteDocumentSheet.svelte.js';
 
 class SvelteActorSheet<
-	D extends Actor.ConfiguredInstance = Actor.ConfiguredInstance,
+	D extends Actor.Implementation = Actor.Implementation,
 	RenderContext extends AnyObject = EmptyObject,
 	Configuration extends SvelteActorSheet.Configuration<D> = SvelteActorSheet.Configuration<D>,
 	RenderOptions extends SvelteActorSheet.RenderOptions = SvelteActorSheet.RenderOptions,
@@ -56,7 +53,6 @@ class SvelteActorSheet<
 	 * If this sheet manages the ActorDelta of an unlinked Token, reference that Token document.
 	 */
 	get token(): TokenDocument | null {
-		// @ts-expect-error Too Deep
 		return this.document.token || null;
 	}
 
@@ -67,12 +63,13 @@ class SvelteActorSheet<
 
 		// Portrait image
 		const { img } = this.actor;
-		if (img === CONST.DEFAULT_TOKEN) controls.findSplice((c) => c.action === 'showPortraitArtwork');
+		if (img === (CONST.DEFAULT_TOKEN as string))
+			controls.findSplice((c) => c.action === 'showPortraitArtwork');
 
 		// Token image
 		const pt = this.actor.prototypeToken;
 		const tex = pt.texture.src || '';
-		if (pt.randomImg || [null, undefined, CONST.DEFAULT_TOKEN].includes(tex)) {
+		if (pt.randomImg || [null, undefined, CONST.DEFAULT_TOKEN as string].includes(tex)) {
 			controls.findSplice((c) => c.action === 'showTokenArtwork');
 		}
 		return controls;
@@ -90,14 +87,19 @@ class SvelteActorSheet<
 	static #onConfigurePrototypeToken(this: SvelteActorSheet, event: PointerEvent) {
 		event.preventDefault();
 		const renderOptions = {
-			left: Math.max(SvelteActorSheet.position.left - 560 - 10, 10),
-			top: SvelteActorSheet.position.top,
+			// biome-ignore lint/complexity/noThisInStatic: Foundry action callbacks bind this at runtime
+			left: Math.max((this.position.left ?? 0) - 560 - 10, 10),
+			// biome-ignore lint/complexity/noThisInStatic: Foundry action callbacks bind this at runtime
+			top: this.position.top,
 		};
 
-		new CONFIG.Token.prototypeSheetClass(
-			SvelteActorSheet.actor.prototypeToken,
-			renderOptions,
-		).render(true);
+		const SheetClass = CONFIG.Token.prototypeSheetClass as unknown as new (
+			token: foundry.data.PrototypeToken,
+			options: { left: number; top: number | undefined },
+		) => { render(force?: boolean): void };
+
+		// biome-ignore lint/complexity/noThisInStatic: Foundry action callbacks bind this at runtime
+		new SheetClass(this.actor.prototypeToken, renderOptions).render(true);
 	}
 
 	/* -------------------------------------------- */
@@ -108,20 +110,26 @@ class SvelteActorSheet<
 	 * @param {PointerEvent} event
 	 */
 	static #onShowPortraitArtwork(this: SvelteActorSheet, _event: PointerEvent) {
-		const { img, name, uuid } = SvelteActorSheet.actor;
-		new ImagePopout(img || '', { title: name, uuid }).render(true);
+		// biome-ignore lint/complexity/noThisInStatic: Foundry action callbacks bind this at runtime
+		const { img, name, uuid } = this.actor;
+		new ImagePopout({ src: img || '', uuid, window: { title: name } }).render(true);
 	}
 
 	/* -------------------------------------------- */
 
 	/**
-	 * Handle header control button clicks to display actor portrait artwork.
+	 * Handle header control button clicks to display actor prototype token artwork.
 	 * @this {ActorSheetV2}
 	 * @param {PointerEvent} event
 	 */
 	static #onShowTokenArtwork(this: SvelteActorSheet, _event: PointerEvent) {
-		const { prototypeToken, name, uuid } = SvelteActorSheet.actor;
-		new ImagePopout(prototypeToken.texture.src || '', { title: name, uuid }).render(true);
+		// biome-ignore lint/complexity/noThisInStatic: Foundry action callbacks bind this at runtime
+		const { prototypeToken, name, uuid } = this.actor;
+		new ImagePopout({
+			src: prototypeToken.texture.src || '',
+			uuid,
+			window: { title: name },
+		}).render(true);
 	}
 
 	/* -------------------------------------------- */
@@ -139,7 +147,7 @@ class SvelteActorSheet<
 		const target = event.currentTarget as HTMLLIElement;
 		if (!target) return;
 
-		if ('link' in (event.target?.dataset ?? {})) return;
+		if ('link' in ((event.target as HTMLElement)?.dataset ?? {})) return;
 
 		// Create drag data
 		let dragData: unknown;
@@ -166,8 +174,7 @@ class SvelteActorSheet<
 		super._attachFrameListeners();
 
 		if (this.options.tag === 'form') {
-			// @ts-expect-error
-			this.element.addEventListener('drop', this._onDrop.bind(this));
+			this.element.addEventListener('drop', this._onDrop.bind(this) as unknown as EventListener);
 		}
 	}
 
@@ -177,7 +184,12 @@ class SvelteActorSheet<
 		) as unknown as Record<string, unknown>;
 		const actor = this.document;
 
-		const allowed = Hooks.call('dropActorSheetData', actor, this, data);
+		const allowed = Hooks.call(
+			'dropActorSheetData',
+			actor,
+			this as unknown as foundry.applications.sheets.ActorSheetV2.Any,
+			data as foundry.appv1.sheets.ActorSheet.DropData,
+		);
 		if (allowed === false) return false;
 
 		// Handle different data types
@@ -207,12 +219,12 @@ class SvelteActorSheet<
 	async _onDropItem(event: SvelteActorSheet.DropEvent, data: Record<string, unknown>) {
 		if (!this.document.isOwner) return false;
 
-		// @ts-expect-error
 		const item = (await Item.implementation.fromDropData(data)) as NimbleBaseItem;
 		const itemData = item.toObject();
 
-		// Handle item sorting within the same Actor
-		if (this.document.uuid === item.actor?.uuid) return this._onSortItem(event, itemData);
+		if (this.document.uuid === item.actor?.uuid) {
+			return this._onSortItem(event, { _id: itemData._id as string });
+		}
 
 		// Create the owned item
 		return this._onDropItemCreate(itemData, event);
@@ -227,35 +239,39 @@ class SvelteActorSheet<
 		return this.document.createEmbeddedDocuments('Item', itemDataForCreation);
 	}
 
-	_onSortItem(event: SvelteActorSheet.DropEvent, itemData) {
+	_onSortItem(event: SvelteActorSheet.DropEvent, itemData: { _id: string }) {
 		// Get the drag source and drop target
 		const { items } = this.document;
 		const source = items.get(itemData._id);
 		if (!source) return false;
 
-		// @ts-expect-error
-		const dropTarget = event.target!.closest('[data-item-id]');
+		const dropTarget = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-item-id]');
 		if (!dropTarget) return false;
 
-		const target = items.get(dropTarget.dataset.itemId);
+		const target = items.get(dropTarget.dataset.itemId ?? '');
 
 		// Don't sort on yourself
 		if (source.id === target?.id) return false;
 
 		// Identify sibling items based on adjacent HTML elements
-		const siblings: any[] = [];
-		for (const el of dropTarget.parentElement.children) {
-			const siblingId = el.dataset.itemId;
-			if (siblingId && siblingId !== source.id) siblings.push(items.get(el.dataset.itemId));
+		type SortableItem = Item.Implementation & { id: string };
+		const siblings: SortableItem[] = [];
+		for (const el of Array.from(dropTarget.parentElement?.children ?? [])) {
+			const siblingId = (el as HTMLElement).dataset.itemId;
+			const siblingItem = siblingId ? items.get(siblingId) : undefined;
+			if (siblingItem?.id && siblingId !== source.id) siblings.push(siblingItem as SortableItem);
 		}
 
 		// Perform the sort
-		const sortUpdates = SortingHelpers.performIntegerSort(source, { target, siblings });
+		const sortUpdates = SortingHelpers.performIntegerSort(source as SortableItem, {
+			target: target as SortableItem | null,
+			siblings,
+		});
 		const updateData = sortUpdates.map((u) => {
-			const { update } = u;
-			// @ts-expect-error
-			update._id = u.target?._id;
-			return update;
+			return {
+				_id: u.target.id,
+				sort: u.update.sort,
+			};
 		});
 
 		// Perform the update

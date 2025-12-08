@@ -1,4 +1,8 @@
-import type BaseUser from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/documents/user.d.mts';
+import type { NimbleAncestryItem } from '#documents/item/ancestry.js';
+import type { NimbleBackgroundItem } from '#documents/item/background.js';
+import type { NimbleClassItem } from '#documents/item/class.js';
+import type { NimbleSubclassItem } from '#documents/item/subclass.js';
+import type { SkillKeyType } from '#types/skillKey.js';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
@@ -17,12 +21,27 @@ import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/Charact
 import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
-import type { NimbleAncestryItem } from '../item/ancestry.js';
-import type { NimbleBackgroundItem } from '../item/background.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
 
-export class NimbleCharacter extends NimbleBaseActor {
+// Note: NimbleClassItem, NimbleSubclassItem, NimbleAncestryItem, NimbleBackgroundItem
+// are ambient types declared in src/documents/item/item.d.ts
+
+/** Extended dialog result type for configuring hit points */
+interface ConfigureHitPointsResult {
+	classUpdates: Array<{ id: string; hpData: number[] }>;
+	bonus: number;
+}
+
+/** Level up dialog result data */
+interface LevelUpDialogData {
+	takeAverageHp: boolean;
+	selectedAbilityScore: string | null;
+	skillPointChanges: Record<string, number>;
+	selectedSubclass: NimbleSubclassItem | null;
+}
+
+export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	declare _ancestry: NimbleAncestryItem | undefined;
 
 	declare _background: NimbleBackgroundItem | undefined;
@@ -35,9 +54,9 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 	declare HitDiceManager: HitDiceManager;
 
-	#dialogs: Record<string, any>;
+	#dialogs: Record<string, GenericDialog>;
 
-	constructor(data, context) {
+	constructor(data: Actor.CreateData, context?: Actor.ConstructionContext) {
 		super(data, context);
 
 		this.#dialogs = {};
@@ -59,15 +78,19 @@ export class NimbleCharacter extends NimbleBaseActor {
 		return this._background;
 	}
 
-	get classes() {
+	get classes(): Record<string, NimbleClassItem> {
 		if (this._classes !== undefined) return this._classes;
 
-		this._classes = this.items.reduce((acc, item) => {
-			if (!item.isType('class')) return acc;
+		this._classes = this.items.reduce(
+			(acc, item) => {
+				if (!item.isType('class')) return acc;
 
-			acc[item.identifier] = item;
-			return acc;
-		}, {});
+				// Cast to ambient NimbleClassItem type (from item.d.ts)
+				acc[item.identifier] = item as unknown as NimbleClassItem;
+				return acc;
+			},
+			{} as Record<string, NimbleClassItem>,
+		);
 
 		return this._classes;
 	}
@@ -112,8 +135,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	override prepareDerivedData(): void {
 		super.prepareDerivedData();
 
-		// Setup Managers
-		this.HitDiceManager = new HitDiceManager(this);
+		// Setup Managers - cast to NimbleCharacterInterface to satisfy type requirements
+		this.HitDiceManager = new HitDiceManager(this as unknown as NimbleCharacterInterface);
 
 		const actorData = this.system;
 		const { defaultSkillAbilities } = CONFIG.NIMBLE;
@@ -215,9 +238,11 @@ export class NimbleCharacter extends NimbleBaseActor {
 	getUsedInventorySlots(): number {
 		let slotsRequiredSum = 0;
 		let smallObjectsCarried = false;
-		const objects = this.items.filter((i) => i.isType('object'));
 		// Sum up each object
-		objects.forEach((object) => {
+		this.items.forEach((item) => {
+			if (!item.isType('object')) return;
+			// Cast to NimbleObjectItem (ambient type from item.d.ts)
+			const object = item as unknown as NimbleObjectItem;
 			switch (object.system.objectSizeType) {
 				case 'slots':
 					slotsRequiredSum += object.system.slotsRequired;
@@ -438,7 +463,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 		);
 
 		await dialog.render(true);
-		const result = await dialog.promise;
+		const result = (await dialog.promise) as ConfigureHitPointsResult | null;
 
 		if (result === null) {
 			return;
@@ -447,12 +472,14 @@ export class NimbleCharacter extends NimbleBaseActor {
 		for (const clsUpdate of result.classUpdates) {
 			await this.updateItem(clsUpdate.id, { 'system.hpData': clsUpdate.hpData });
 		}
-		// Update bonus
-		await this.update({ 'system.attributes.hp.bonus': result.bonus });
+		// Update bonus - use Record cast to allow string keys
+		await this.update({ 'system.attributes.hp.bonus': result.bonus } as Record<string, unknown>);
 
 		// If HP is now greater then max, reduce it
 		if (this.system.attributes.hp.value > this.system.attributes.hp.max) {
-			await this.update({ 'system.attributes.hp.value': this.system.attributes.hp.max });
+			await this.update({
+				'system.attributes.hp.value': this.system.attributes.hp.max,
+			} as Record<string, unknown>);
 		}
 	}
 
@@ -491,7 +518,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 	/**                    Roll Methods                        */
 	/** ------------------------------------------------------ */
 	async rollSkillCheckToChat(
-		skillKey: skillKey,
+		skillKey: SkillKeyType,
 		options: ActorRollOptions = {},
 	): Promise<ChatMessage | null> {
 		const { roll, rollData } = await this.rollSkillCheck(skillKey, options);
@@ -499,22 +526,21 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		if (!roll) return null;
 
-		const chatData = await this.prepareSkillCheckChatCardData(
-			skillKey,
-			// @ts-expect-error
-			roll,
-			{ ...options, rollMode },
-		);
+		const chatData = await this.prepareSkillCheckChatCardData(skillKey, roll, {
+			...options,
+			rollMode,
+		});
 
-		// @ts-expect-error
-		ChatMessage.applyRollMode(chatData, visibilityMode ?? game.settings.get('core', 'rollMode'));
-		// @ts-expect-error
-		const chatCard = await ChatMessage.create(chatData);
+		ChatMessage.applyRollMode(
+			chatData as unknown as ChatMessage.CreateData,
+			visibilityMode ?? game.settings.get('core', 'rollMode'),
+		);
+		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 
 		return chatCard ?? null;
 	}
 
-	async rollSkillCheck(skillKey: skillKey, options: ActorRollOptions = {}) {
+	async rollSkillCheck(skillKey: SkillKeyType, options: ActorRollOptions = {}) {
 		const baseRollMode = calculateRollMode(
 			this.system.skills[skillKey].defaultRollMode ?? 0,
 			options.rollModeModifier,
@@ -535,14 +561,18 @@ export class NimbleCharacter extends NimbleBaseActor {
 			...this.getRollData(),
 			prompted: options.prompted ?? false,
 			respondentId: this.uuid,
-		} as Record<string, any>);
+		} as NimbleRoll.Data);
 
 		await roll.evaluate();
 
 		return { roll, rollData };
 	}
 
-	getDefaultSkillCheckData(skillKey: skillKey, rollMode: number, options = {} as ActorRollOptions) {
+	getDefaultSkillCheckData(
+		skillKey: SkillKeyType,
+		rollMode: number,
+		options = {} as ActorRollOptions,
+	) {
 		const rollFormula = getRollFormula(this, {
 			skillKey,
 			rollMode,
@@ -554,8 +584,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 	}
 
 	async prepareSkillCheckChatCardData(
-		skillKey: skillKey,
-		roll: Roll,
+		skillKey: SkillKeyType,
+		roll: NimbleRoll,
 		options = { rollMode: 0 } as ActorRollOptions,
 	) {
 		return {
@@ -598,8 +628,9 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		if (!dialogData) return;
 
-		const actorUpdates = {};
-		const itemUpdates = { 'system.classLevel': nextClassLevel };
+		const typedDialogData = dialogData as unknown as LevelUpDialogData;
+		const actorUpdates: Record<string, unknown> = {};
+		const itemUpdates: Record<string, unknown> = { 'system.classLevel': nextClassLevel };
 
 		const classHitDieSize = characterClass.system.hitDieSize;
 		const currentHitDice = this.system.attributes.hitDice[classHitDieSize.toString()]?.current;
@@ -608,20 +639,20 @@ export class NimbleCharacter extends NimbleBaseActor {
 
 		let formula: string;
 
-		if (dialogData.takeAverageHp) formula = Math.ceil((classHitDieSize + 1) / 2).toString();
+		if (typedDialogData.takeAverageHp) formula = Math.ceil((classHitDieSize + 1) / 2).toString();
 		else formula = `2d${classHitDieSize}kh`;
 
 		const roll = new Roll(formula);
 		await roll.evaluate();
 		const hp = roll.total!;
 
-		this.outputLevelUpSummary({ currentClassLevel, ...dialogData }, roll);
+		this.outputLevelUpSummary({ currentClassLevel, ...typedDialogData }, roll);
 
 		itemUpdates['system.hpData'] = [...characterClass.system.hpData, hp];
 
-		if (dialogData.selectedAbilityScore) {
+		if (typedDialogData.selectedAbilityScore) {
 			itemUpdates[`system.abilityScoreData.${nextClassLevel}.value`] =
-				dialogData.selectedAbilityScore;
+				typedDialogData.selectedAbilityScore;
 		}
 
 		actorUpdates['system.attributes.hp.value'] = currentHp + hp;
@@ -636,7 +667,7 @@ export class NimbleCharacter extends NimbleBaseActor {
 			characterClass.identifier,
 		];
 
-		Object.entries(dialogData.skillPointChanges).forEach(([skillKey, change]) => {
+		Object.entries(typedDialogData.skillPointChanges).forEach(([skillKey, change]) => {
 			if (change) {
 				const path = `system.skills.${skillKey}.points`;
 				const currentPoints = this.system.skills[skillKey].points;
@@ -646,14 +677,15 @@ export class NimbleCharacter extends NimbleBaseActor {
 		});
 
 		// Add selected subclass if available
-		const subclass = dialogData.selectedSubclass as NimbleSubclassItem;
+		const subclass = typedDialogData.selectedSubclass;
 
 		if (subclass) {
 			if (subclass.system.parentClass === characterClass.identifier) {
 				// Check if this subclass is actually for this class
 				// Create a copy of the subclass for the character
 				const subclassData = subclass.toObject();
-				subclassData._stats.compendiumSource = subclass.uuid;
+				(subclassData as { _stats: { compendiumSource?: string } })._stats.compendiumSource =
+					subclass.uuid;
 
 				await this.createEmbeddedDocuments('Item', [subclassData]);
 			} else {
@@ -667,8 +699,8 @@ export class NimbleCharacter extends NimbleBaseActor {
 		const historyEntry = {
 			level: nextClassLevel,
 			hpIncrease: hp,
-			abilityIncreases: dialogData.selectedAbilityScore,
-			skillIncreases: dialogData.skillPointChanges,
+			abilityIncreases: typedDialogData.selectedAbilityScore,
+			skillIncreases: typedDialogData.skillPointChanges,
 			hitDieAdded: true,
 			classIdentifier: characterClass.identifier,
 		};
@@ -771,9 +803,11 @@ export class NimbleCharacter extends NimbleBaseActor {
 			},
 		};
 
-		ChatMessage.applyRollMode(chatData, game.settings.get('core', 'rollMode'));
-		// @ts-expect-error
-		const chatCard = await ChatMessage.create(chatData);
+		ChatMessage.applyRollMode(
+			chatData as unknown as ChatMessage.CreateData,
+			game.settings.get('core', 'rollMode') as CONST.DICE_ROLL_MODES,
+		);
+		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 
 		return chatCard ?? null;
 	}
@@ -800,7 +834,11 @@ export class NimbleCharacter extends NimbleBaseActor {
 			restData = { ...dialogData, restType: restOptions.restType } as RestManager.Data;
 		}
 
-		const manager = new RestManager(this, restData);
+		// Cast to RestableCharacter interface (extends NimbleCharacterInterface with HitDiceManager)
+		const manager = new RestManager(
+			this as unknown as NimbleCharacterInterface & { HitDiceManager: HitDiceManager },
+			restData,
+		);
 		await manager.rest();
 	}
 
@@ -812,31 +850,33 @@ export class NimbleCharacter extends NimbleBaseActor {
 		value: number,
 		isDelta = false,
 		isBar?: boolean,
-	): Promise<this> {
+	): Promise<this | undefined> {
 		if (attribute === 'resources.mana') {
 			// Special handling for mana
 			const currentMana = this.system.resources.mana.current;
 			const newMana = isDelta ? currentMana + value : value;
 
-			await this.update({ 'system.resources.mana.current': newMana });
+			await this.update({ 'system.resources.mana.current': newMana } as Record<string, unknown>);
 			return this;
 		}
 
 		// Default behavior for other attributes
-		return super.modifyTokenAttribute(attribute, value, isDelta, isBar);
+		const result = await super.modifyTokenAttribute(attribute, value, isDelta, isBar);
+		return result as this | undefined;
 	}
 
 	/** ------------------------------------------------------ */
 	/**                         CRUD                           */
 	/** ------------------------------------------------------ */
-	override async _preCreate(
-		data: foundry.documents.BaseActor.ConstructorData,
-		options: Actor.DatabaseOperations['create'],
-		user: BaseUser,
-	): Promise<boolean | undefined> {
+	protected override async _preCreate(
+		data: Actor.CreateData,
+		options: Actor.Database.PreCreateOptions,
+		user: User.Implementation,
+		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
+	): Promise<boolean | void> {
 		// Player character configuration
 		const prototypeToken = { vision: true, actorLink: true, disposition: 1 };
-		this.updateSource({ prototypeToken });
+		this.updateSource({ prototypeToken } as Record<string, unknown>);
 
 		return super._preCreate(data, options, user);
 	}

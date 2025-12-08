@@ -204,4 +204,4 @@ type Statement = AtomicOperation | BinaryOperation | ArrayOperation;
 type PredicateStatement = [string, Statement];
 type RawPredicate = Record<string, Statement>;
 
-export { Predicate };
+export { Predicate, type RawPredicate };

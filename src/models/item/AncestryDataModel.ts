@@ -22,6 +22,12 @@ class NimbleAncestryData extends NimbleBaseItemData<
 	NimbleAncestryData.BaseData,
 	NimbleAncestryData.DerivedData
 > {
+	declare description: string;
+
+	declare exotic: boolean;
+
+	declare size: string[];
+
 	/** @inheritDoc */
 	static override defineSchema(): NimbleAncestryData.Schema {
 		return {

@@ -31,7 +31,7 @@ declare interface NimbleClassItem extends NimbleBaseItem<'class'> {
 		classLevel: number;
 		hitDieSize: number;
 		hpData: number[];
-		resources: any[];
+		resources: object[];
 		savingThrows: {
 			advantage: string;
 			disadvantage: string;
@@ -40,11 +40,11 @@ declare interface NimbleClassItem extends NimbleBaseItem<'class'> {
 			formula: string;
 		};
 		keyAbilityScores: string[];
-		[key: string]: any;
+		[key: string]: unknown;
 	};
-	ASI?: Record<string, number>;
-	hitDice?: { size: number; total: number };
-	maxHp?: number;
+	ASI: Record<string, number>;
+	hitDice: { size: number; total: number };
+	maxHp: number;
 	grantedArmorProficiencies: string[];
 	grantedWeaponProficiencies: string[];
 }
@@ -79,4 +79,36 @@ declare interface NimbleAncestryItem extends NimbleBaseItem<'ancestry'> {
 declare interface NimbleBackgroundItem extends NimbleBaseItem<'background'> {
 	type: 'background';
 	system: Record<string, unknown>;
+}
+
+/**
+ * Object item - extends base with object-specific properties.
+ */
+declare interface NimbleObjectItem extends NimbleBaseItem<'object'> {
+	type: 'object';
+	system: {
+		objectSizeType: 'slots' | 'stackable' | 'smallSized';
+		slotsRequired: number;
+		quantity: number;
+		stackSize: number;
+		objectType: string;
+		identified: boolean;
+		unidentifiedName: string;
+		description: {
+			public: string;
+			unidentified: string;
+			secret: string;
+		};
+		properties: {
+			reach: number;
+			range: number;
+			selected: string[];
+			strengthRequirement: {
+				value: number | null;
+				overridesTwoHanded: boolean;
+			};
+			thrownRange: number;
+		};
+		[key: string]: unknown;
+	};
 }

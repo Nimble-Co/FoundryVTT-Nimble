@@ -15,8 +15,9 @@ class SystemSettingsPlaceholder extends ApplicationV2 {
 }
 
 export default function registerSystemSettings() {
-	(game as any).settings.registerMenu('nimble', 'SystemSettings', {
+	game.settings.registerMenu('nimble', 'SystemSettings', {
 		name: 'System Settings',
+		hint: 'Configure system settings for the Nimble RPG system',
 		label: 'Coming Soon...',
 		icon: 'fas fa-bars',
 		type: SystemSettingsPlaceholder,

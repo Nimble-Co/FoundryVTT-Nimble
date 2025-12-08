@@ -1,8 +1,5 @@
-import path from 'path';
-
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { ClassicLevel } from 'classic-level';
-// eslint-disable-next-line import/extensions
+import path from 'path';
 import systemJSON from '../../public/system.json' with { type: 'json'};
 
 export default class LevelDatabase extends ClassicLevel {

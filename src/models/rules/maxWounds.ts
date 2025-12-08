@@ -25,14 +25,15 @@ class MaxWoundsRule extends NimbleBaseRule<MaxWoundsRule.Schema> {
 		return super.tooltipInfo(new Map([['value', 'string']]));
 	}
 
-	override prePrepareData(): void {
+	prePrepareData(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
 
 		const { actor } = item;
 		const value = this.resolveFormula(this.value) ?? 0;
-		const originalValue: number =
-			foundry.utils.getProperty(actor.system, 'attributes.wounds.bonus') ?? 0;
+		const originalValue =
+			(foundry.utils.getProperty(actor.system, 'attributes.wounds.bonus') as number | undefined) ??
+			0;
 
 		const modifiedValue = originalValue + value;
 		foundry.utils.setProperty(actor.system, 'attributes.wounds.bonus', modifiedValue);

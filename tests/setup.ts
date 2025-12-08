@@ -19,22 +19,24 @@ Object.assign(globalThis, globalFoundryMocks);
 
 // Mock foundry object for utilities and APIs
 // foundryApiMocks already includes a trackable Roll mock
-(globalThis as any).foundry = foundryApiMocks;
+(globalThis as object as { foundry: typeof foundryApiMocks }).foundry = foundryApiMocks;
 
 // Also set Roll on globalThis for compatibility
-(globalThis as any).Roll = foundryApiMocks.dice.Roll;
+(globalThis as object as { Roll: typeof foundryApiMocks.dice.Roll }).Roll =
+	foundryApiMocks.dice.Roll;
 
 // Store the constructor on globalThis so tests can reset the mock if needed
-(globalThis as any).__MockRollConstructor = MockRollConstructor;
+globalThis.__MockRollConstructor = MockRollConstructor;
 
 // Load language file for i18n localization
 const langData = JSON.parse(readFileSync(join(process.cwd(), 'public/lang/en.json'), 'utf-8'));
 
 // Mock Foundry game object with localization functionality
-(globalThis as any).game = createGameMock(langData);
+(globalThis as object as { game: ReturnType<typeof createGameMock> }).game =
+	createGameMock(langData);
 
 // Initialize CONFIG with required properties before calling init()
-(globalThis as any).CONFIG = configStructure;
+(globalThis as object as { CONFIG: typeof configStructure }).CONFIG = configStructure;
 
 // Import and call init() to set up CONFIG.NIMBLE and other config
 const init = (await import('../src/hooks/init.js')).default;

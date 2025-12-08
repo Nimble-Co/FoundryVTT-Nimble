@@ -1,4 +1,3 @@
-import type foundry from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/foundry.d.mts';
 import constructD20Term from './constructD20Term.js';
 import simplifyOperatorTerms from './simplifyOperatorTerms.js';
 
@@ -6,7 +5,7 @@ export type D20RollOptions = {
 	actor: NimbleBaseActor;
 	item?: NimbleBaseItem | undefined;
 	minRoll: number;
-	modifiers: { label: string; value: number }[];
+	modifiers: { label?: string | undefined; value: number | string }[];
 	rollMode: number;
 };
 
@@ -25,18 +24,17 @@ export default function constructD20RollFormula({
 	modifiers,
 	rollMode,
 }: D20RollOptions) {
-	const rollData: Record<string, any> = actor.getRollData(item);
+	const rollData = actor.getRollData(item);
 
 	const parts = [
 		constructD20Term({ actor, minRoll, rollMode }),
 		...(modifiers ?? []).map(({ label, value }) => {
 			if (!value || value === 0) return null;
 
-			let modifier: foundry.dice.Roll;
+			let modifier: Roll<Record<string, unknown>>;
 
 			try {
-				// @ts-expect-error - Roll is a global from Foundry VTT
-				modifier = new Roll(value.toString(), rollData);
+				modifier = new Roll(value.toString(), rollData) as Roll<Record<string, unknown>>;
 			} catch (_err) {
 				return null;
 			}
@@ -51,10 +49,8 @@ export default function constructD20RollFormula({
 
 	const formula = parts.filter((part) => part && part !== '0').join(' + ');
 
-	// @ts-expect-error - Roll is a global from Foundry VTT
 	const { terms } = new Roll(formula, rollData);
 	const simplifiedTerms = simplifyOperatorTerms(terms);
 
-	// @ts-expect-error - Roll is a global from Foundry VTT
 	return { rollFormula: Roll.getFormula(simplifiedTerms) };
 }

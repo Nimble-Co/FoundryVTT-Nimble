@@ -8,9 +8,19 @@ import svelteParser from 'svelte-eslint-parser';
 export default [
 	js.configs.recommended,
 	{
-		files: ['**/*.{ts,js}'],
+		files: [
+			'src/**/*.{ts,js}',
+			'lib/**/*.{ts,js}',
+			'types/**/*.{ts,js}',
+			'build/**/*.{ts,js}',
+			'tests/**/*.{ts,js}',
+		],
 		languageOptions: {
 			parser: tsparser,
+			parserOptions: {
+				project: './tsconfig.json',
+				tsconfigRootDir: import.meta.dirname,
+			},
 			globals: {
 				...globals.browser,
 				// Foundry VTT globals
@@ -28,6 +38,10 @@ export default [
 				Combat: 'readonly',
 				Combatant: 'readonly',
 				TokenDocument: 'readonly',
+				Actor: 'readonly',
+				Item: 'readonly',
+				CONST: 'readonly',
+				console: 'readonly',
 			},
 		},
 		plugins: {
@@ -48,11 +62,14 @@ export default [
 		},
 	},
 	{
-		files: ['**/*.svelte'],
+		files: ['src/**/*.svelte', 'lib/**/*.svelte'],
 		languageOptions: {
 			parser: svelteParser,
 			parserOptions: {
 				parser: tsparser,
+				project: './tsconfig.json',
+				tsconfigRootDir: import.meta.dirname,
+				extraFileExtensions: ['.svelte'],
 			},
 			globals: {
 				...globals.browser,

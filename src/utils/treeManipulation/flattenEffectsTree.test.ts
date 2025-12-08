@@ -1,6 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import type { EffectNode } from '#types/effectTree.js';
+import type { DamageNode, EffectNode, SavingThrowNode } from '#types/effectTree.js';
 import { flattenEffectsTree } from './flattenEffectsTree.js';
+
+/** Extended type for parsed effect nodes that may have arbitrary properties */
+type ParsedEffectNode = EffectNode & Record<string, unknown>;
+
+/** Test input type that allows string references in effect arrays */
+type TestEffectNode = Omit<DamageNode, 'on'> & {
+	on?: {
+		criticalHit?: (EffectNode | string)[];
+		hit?: (EffectNode | string)[];
+		failedSave?: (EffectNode | string)[];
+		failedSaveBy?: Record<number, (EffectNode | string)[]>;
+		miss?: (EffectNode | string)[];
+		passedSave?: (EffectNode | string)[];
+	};
+};
+
+type TestSavingThrowNode = Omit<SavingThrowNode, 'on' | 'sharedRolls'> & {
+	on?: {
+		criticalHit?: (EffectNode | string)[];
+		hit?: (EffectNode | string)[];
+		failedSave?: (EffectNode | string)[];
+		failedSaveBy?: Record<number, (EffectNode | string)[]>;
+		miss?: (EffectNode | string)[];
+		passedSave?: (EffectNode | string)[];
+	};
+	sharedRolls?: (DamageNode | string)[];
+};
 
 describe('flattenEffectsTree', () => {
 	describe('Edge cases: empty/null input', () => {
@@ -53,8 +80,8 @@ describe('flattenEffectsTree', () => {
 				saveDC: 15,
 				value: 42,
 			});
-			expect(typeof result[0].saveDC).toBe('number');
-			expect(typeof result[0].value).toBe('number');
+			expect(typeof (result[0] as SavingThrowNode).saveDC).toBe('number');
+			expect(typeof (result[0] as ParsedEffectNode).value).toBe('number');
 		});
 
 		it('should convert boolean strings to booleans in string references', () => {
@@ -68,8 +95,8 @@ describe('flattenEffectsTree', () => {
 				canCrit: true,
 				canMiss: false,
 			});
-			expect(typeof result[0].canCrit).toBe('boolean');
-			expect(typeof result[0].canMiss).toBe('boolean');
+			expect(typeof (result[0] as DamageNode).canCrit).toBe('boolean');
+			expect(typeof (result[0] as DamageNode).canMiss).toBe('boolean');
 		});
 
 		it('should convert "null" string to null in string references', () => {
@@ -82,7 +109,7 @@ describe('flattenEffectsTree', () => {
 				type: 'condition',
 				value: null,
 			});
-			expect(result[0].value).toBeNull();
+			expect((result[0] as ParsedEffectNode).value).toBeNull();
 		});
 
 		it.each([
@@ -515,7 +542,7 @@ describe('flattenEffectsTree', () => {
 		});
 
 		it('should handle on property with string references', () => {
-			const input: EffectNode[] = [
+			const input: TestEffectNode[] = [
 				{
 					id: 'dmg1',
 					type: 'damage',
@@ -528,7 +555,7 @@ describe('flattenEffectsTree', () => {
 					parentNode: null,
 				},
 			];
-			const result = flattenEffectsTree(input);
+			const result = flattenEffectsTree(input as unknown as (EffectNode | string)[]);
 
 			expect(result).toHaveLength(2);
 			expect(result[1]).toMatchObject({
@@ -541,7 +568,7 @@ describe('flattenEffectsTree', () => {
 		});
 
 		it('should handle on property with mixed string references and objects', () => {
-			const input: EffectNode[] = [
+			const input: TestEffectNode[] = [
 				{
 					id: 'dmg1',
 					type: 'damage',
@@ -564,7 +591,7 @@ describe('flattenEffectsTree', () => {
 					parentNode: null,
 				},
 			];
-			const result = flattenEffectsTree(input);
+			const result = flattenEffectsTree(input as unknown as (EffectNode | string)[]);
 
 			expect(result).toHaveLength(3);
 			expect(result[1]).toMatchObject({
@@ -641,7 +668,7 @@ describe('flattenEffectsTree', () => {
 		});
 
 		it('should handle sharedRolls with string references', () => {
-			const input: EffectNode[] = [
+			const input: TestSavingThrowNode[] = [
 				{
 					id: 'save1',
 					type: 'savingThrow',
@@ -651,7 +678,7 @@ describe('flattenEffectsTree', () => {
 					parentNode: null,
 				},
 			];
-			const result = flattenEffectsTree(input);
+			const result = flattenEffectsTree(input as unknown as (EffectNode | string)[]);
 
 			expect(result).toHaveLength(2);
 			expect(result[1]).toMatchObject({
@@ -871,7 +898,7 @@ describe('flattenEffectsTree', () => {
 		});
 
 		it('should handle mixed string references and objects in nested structures', () => {
-			const input: EffectNode[] = [
+			const input: TestEffectNode[] = [
 				{
 					id: 'dmg1',
 					type: 'damage',
@@ -890,14 +917,14 @@ describe('flattenEffectsTree', () => {
 								},
 								parentContext: null,
 								parentNode: null,
-							},
+							} as unknown as EffectNode,
 						],
 					},
 					parentContext: null,
 					parentNode: null,
 				},
 			];
-			const result = flattenEffectsTree(input);
+			const result = flattenEffectsTree(input as unknown as (EffectNode | string)[]);
 
 			expect(result).toHaveLength(4);
 			expect(result[0]).toMatchObject({ id: 'dmg1' });
@@ -1118,7 +1145,7 @@ describe('flattenEffectsTree', () => {
 				id: 'test',
 				value: 0,
 			});
-			expect(typeof result[0].value).toBe('number');
+			expect(typeof (result[0] as ParsedEffectNode).value).toBe('number');
 		});
 
 		it('should handle string reference with negative numbers', () => {
@@ -1130,7 +1157,7 @@ describe('flattenEffectsTree', () => {
 				id: 'test',
 				value: -5,
 			});
-			expect(typeof result[0].value).toBe('number');
+			expect(typeof (result[0] as ParsedEffectNode).value).toBe('number');
 		});
 
 		it('should handle string reference with decimal numbers', () => {
@@ -1142,7 +1169,7 @@ describe('flattenEffectsTree', () => {
 				id: 'test',
 				value: 3.14,
 			});
-			expect(typeof result[0].value).toBe('number');
+			expect(typeof (result[0] as ParsedEffectNode).value).toBe('number');
 		});
 	});
 });

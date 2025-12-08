@@ -27,18 +27,21 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 		super.prepareDerivedData();
 	}
 
-	async activateBloodiedFeature(options = {}) {
+	async activateBloodiedFeature(options: { visibilityMode?: string } = {}) {
+		type SoloMonsterSystem = NimbleSoloMonsterData & {
+			bloodiedEffect?: { description: string };
+		};
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this?.name}: Bloodied`,
 			speaker: ChatMessage.getSpeaker({ actor: this }),
 			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 			sound: CONFIG.sounds.dice,
-			rolls: [],
+			rolls: [] as Roll[],
 			rollMode: options.visibilityMode ?? 'gmroll',
 			system: {
 				actorName: this.name,
-				description: this.system.bloodiedEffect.description,
+				description: (this.system as SoloMonsterSystem).bloodiedEffect?.description ?? '',
 				image: 'icons/svg/blood.svg',
 				name: 'Bloodied',
 				permissions: this.permission,
@@ -47,26 +50,30 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 		};
 
 		ChatMessage.applyRollMode(
-			chatData,
-			options.visibilityMode ?? game.settings.get('core', 'rollMode'),
+			chatData as unknown as ChatMessage.CreateData,
+			(options.visibilityMode ??
+				game.settings.get('core', 'rollMode')) as foundry.CONST.DICE_ROLL_MODES,
 		);
 
-		const chatCard = await ChatMessage.create(chatData);
+		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 		return chatCard ?? null;
 	}
 
-	async activateLastStandFeature(options = {}) {
+	async activateLastStandFeature(options: { visibilityMode?: string } = {}) {
+		type SoloMonsterSystem = NimbleSoloMonsterData & {
+			lastStandEffect?: { description: string };
+		};
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this?.name}: Last Stand`,
 			speaker: ChatMessage.getSpeaker({ actor: this }),
 			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 			sound: CONFIG.sounds.dice,
-			rolls: [],
+			rolls: [] as Roll[],
 			rollMode: options.visibilityMode ?? 'gmroll',
 			system: {
 				actorName: this.name,
-				description: this.system.lastStandEffect.description,
+				description: (this.system as SoloMonsterSystem).lastStandEffect?.description ?? '',
 				image: 'icons/svg/skull.svg',
 				name: 'Last Stand',
 				permissions: this.permission,
@@ -74,9 +81,12 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 			type: 'feature',
 		};
 
-		ChatMessage.applyRollMode(chatData, options.visibilityMode ?? 'gmroll');
+		ChatMessage.applyRollMode(
+			chatData as unknown as ChatMessage.CreateData,
+			(options.visibilityMode ?? 'gmroll') as foundry.CONST.DICE_ROLL_MODES,
+		);
 
-		const chatCard = await ChatMessage.create(chatData);
+		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 		return chatCard ?? null;
 	}
 

@@ -65,11 +65,14 @@ export type SavingThrowNode = {
 	id: string;
 	type: 'savingThrow';
 	saveDC?: number;
+	/** @deprecated Use savingThrowType instead */
+	saveType?: 'strength' | 'dexterity' | 'intelligence' | 'will';
 	savingThrowType: 'strength' | 'dexterity' | 'intelligence' | 'will';
 	sharedRolls?: DamageNode[];
 	on?: ActionConsequence;
 	parentContext: string | null;
 	parentNode: string | null;
+	roll?: Record<string, unknown>;
 };
 
 export type TextNode = {

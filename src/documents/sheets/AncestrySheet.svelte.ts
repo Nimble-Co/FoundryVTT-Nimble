@@ -18,7 +18,7 @@ export default class AncestrySheet extends SvelteApplicationMixin(
 
 		this.root = AncestrySheetComponent;
 
-		this.props = {
+		(this as object as { props: Record<string, unknown> }).props = {
 			item: this.document,
 			sheet: this,
 		};
@@ -32,14 +32,20 @@ export default class AncestrySheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 288,
-			height: 'auto',
+			height: 'auto' as const,
 		},
 	};
 
-	protected async _prepareContext() {
+	protected override async _prepareContext(
+		_options: Parameters<foundry.applications.sheets.ItemSheetV2['_prepareContext']>[0],
+	): ReturnType<foundry.applications.sheets.ItemSheetV2['_prepareContext']> {
 		return {
 			item: this.item,
 			sheet: this,
-		};
+		} as object as ReturnType<
+			foundry.applications.sheets.ItemSheetV2['_prepareContext']
+		> extends Promise<infer T>
+			? T
+			: never;
 	}
 }

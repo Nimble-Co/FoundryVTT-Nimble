@@ -6,6 +6,6 @@ export default function generateBlankSkillSet() {
 			acc[skillKey] = null;
 			return acc;
 		},
-		{} as Record<skillKey, null>,
+		{} as Record<string, null>,
 	);
 }

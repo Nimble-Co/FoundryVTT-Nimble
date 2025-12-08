@@ -1,55 +1,80 @@
-import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EffectNode } from '#types/effectTree.js';
 import { MockRollConstructor } from '../../tests/mocks/foundry.js';
-import type { NimbleBaseActor } from '../documents/actor/base.svelte.ts';
-import type { NimbleBaseItem } from '../documents/item/base.svelte.ts';
 import { ItemActivationManager, testDependencies } from './ItemActivationManager.js';
+
+/** Mock roll instance interface */
+interface MockRollInstance {
+	evaluate: ReturnType<typeof vi.fn>;
+	toJSON: ReturnType<typeof vi.fn>;
+}
+
+/** Mock actor interface for testing */
+interface MockActor {
+	uuid: string;
+	token: { uuid: string } | null;
+	getRollData: ReturnType<typeof vi.fn>;
+	system: {
+		savingThrows: {
+			strength: { mod: number };
+			dexterity: { mod: number };
+			will: { mod: number };
+			intelligence: { mod: number };
+		};
+	};
+}
+
+/** Mock item interface for testing */
+interface MockItem {
+	type: string;
+	name: string;
+	actor: MockActor | null;
+	system: {
+		activation: {
+			effects: EffectNode[];
+		};
+	};
+}
 
 const mockReconstructEffectsTree = vi.fn();
 const mockGetRollFormula = vi.fn();
 
 // Mock dependencies - create the mock inside the factory
-const MockNimbleRoll = vi.fn(function (
-	this: Mock<typeof NimbleRoll>,
-	_formula: string,
-	_data?: unknown,
-) {
-	// Always create the instance with required methods
-	const instance = {
-		evaluate: vi.fn().mockResolvedValue(undefined),
-		toJSON: vi.fn().mockReturnValue({ total: 0 }),
-	};
+function createMockRollConstructor() {
+	return vi.fn(function (rollInstance: MockRollInstance, _formula: string, _data?: unknown) {
+		const instance: MockRollInstance = {
+			evaluate: vi.fn().mockResolvedValue(undefined),
+			toJSON: vi.fn().mockReturnValue({ total: 0 }),
+		};
 
-	if (new.target !== undefined) {
-		// Called with 'new' - assign properties to 'this' and return 'this'
-		this.evaluate = instance.evaluate;
-		this.toJSON = instance.toJSON;
-		return this;
-	}
+		if (new.target !== undefined) {
+			// Called with 'new' - assign properties to 'this' and return 'this'
+			Object.assign(rollInstance, instance);
+			return rollInstance;
+		}
 
-	// Called without 'new', return the instance
-	return instance;
-});
-// Make it constructable
-Object.setPrototypeOf(MockNimbleRoll, Function.prototype);
+		// Called without 'new', return the instance
+		return instance;
+	});
+}
+
+const MockNimbleRoll = createMockRollConstructor();
 
 const MockDamageRoll = vi.fn(function (
-	this: Mock<typeof DamageRoll>,
+	rollInstance: MockRollInstance,
 	_formula: string,
 	_data?: unknown,
 	_options?: unknown,
 ) {
-	// Always create the instance with required methods
-	const instance = {
+	const instance: MockRollInstance = {
 		evaluate: vi.fn().mockResolvedValue(undefined),
 		toJSON: vi.fn().mockReturnValue({ total: 0 }),
 	};
 
 	if (new.target !== undefined) {
 		// Called with 'new' - assign properties to 'this' and return 'this'
-		this.evaluate = instance.evaluate;
-		this.toJSON = instance.toJSON;
-		return this;
+		Object.assign(rollInstance, instance);
+		return rollInstance;
 	}
 
 	// Called without 'new', return the instance
@@ -72,15 +97,10 @@ vi.doMock('../documents/dialogs/ItemActivationConfigDialog.svelte.js', () => ({
 }));
 
 // Helper function to create a mock implementation that handles 'new' correctly
-function createMockConstructorImplementation(mockInstance: {
-	evaluate: Mock<() => void>;
-	toJSON: Mock<() => void>;
-}) {
-	return function (this: Mock<typeof NimbleRoll> | Mock<typeof DamageRoll>) {
-		// If 'this' exists and is an object (called with 'new'), assign to it
-		if (this && typeof this === 'object' && this !== globalThis) {
-			this.evaluate = mockInstance.evaluate;
-			this.toJSON = mockInstance.toJSON;
+function createMockConstructorImplementation(mockInstance: MockRollInstance) {
+	return (rollInstance: MockRollInstance) => {
+		if (rollInstance && typeof rollInstance === 'object') {
+			Object.assign(rollInstance, mockInstance);
 			return mockInstance;
 		}
 
@@ -94,18 +114,16 @@ const MockRoll = (
 ).foundry.dice.Roll;
 
 describe('ItemActivationManager.getData (rolls)', () => {
-	let mockItem: NimbleBaseItem;
-	let mockActor: NimbleBaseActor;
+	let mockItem: MockItem;
+	let mockActor: MockActor;
 	let manager: ItemActivationManager;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockGetRollFormula.mockReturnValue('1d20');
-		// Ensure game.user.targets exists (setup.ts creates game but may not have targets)
-		// @ts-expect-error - game is a global mock in tests
-		if (!globalThis.game.user.targets) {
-			// @ts-expect-error - game is a global mock in tests
-			globalThis.game.user.targets = [];
+		const gameGlobal = globalThis as unknown as { game: { user: { targets: unknown[] } } };
+		if (!gameGlobal.game?.user?.targets) {
+			gameGlobal.game.user.targets = [];
 		}
 		MockNimbleRoll.mockClear();
 		MockDamageRoll.mockClear();
@@ -114,7 +132,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		// Reset reconstructEffectsTree mock - clear call history
 		mockReconstructEffectsTree.mockReset();
 		// Set default implementations for overrides
-		mockReconstructEffectsTree.mockImplementation((effects) => effects || []);
+		mockReconstructEffectsTree.mockImplementation((effects: EffectNode[]) => effects || []);
 		Object.assign(testDependencies, {
 			NimbleRoll: MockNimbleRoll,
 			DamageRoll: MockDamageRoll,
@@ -151,8 +169,11 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			},
 		};
 
-		// Create manager instance
-		manager = new ItemActivationManager(mockItem, {});
+		// Create manager instance - cast mock to expected type
+		manager = new ItemActivationManager(
+			mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+			{},
+		);
 	});
 
 	describe('Item types that return empty array', () => {
@@ -160,7 +181,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			'should return empty array for %s item type',
 			async (itemType) => {
 				mockItem.type = itemType;
-				manager = new ItemActivationManager(mockItem, { fastForward: true });
+				manager = new ItemActivationManager(
+					mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+					{ fastForward: true },
+				);
 
 				const result = await manager.getData();
 
@@ -172,7 +196,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 	describe('Items with no effects', () => {
 		it('should return empty array when activationData has no effects', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			manager.activationData = { effects: [] };
 			// Set up mock for reconstructEffectsTree
 			mockReconstructEffectsTree.mockReturnValue([]);
@@ -185,7 +212,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 	describe('Saving throw effects', () => {
 		it('should create NimbleRoll for saving throw effect with savingThrowType', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			const savingThrowNode: EffectNode = {
 				id: 'save-1',
 				type: 'savingThrow',
@@ -203,28 +233,26 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			const mockEvaluate = vi.fn().mockResolvedValue(undefined);
 			const mockToJSON = vi.fn().mockReturnValue({ total: 15 });
 			// Override NimbleRoll mock for this test
-			vi.mocked(NimbleRoll).mockImplementation(function (
-				this: unknown,
-				_formula: string,
-				_data?: unknown,
-			) {
-				const instance = {
-					evaluate: mockEvaluate,
-					toJSON: mockToJSON,
-				};
-				// If called with 'new', assign to this
-				if (
-					this &&
-					typeof this === 'object' &&
-					this !== globalThis &&
-					(typeof global === 'undefined' || this !== global)
-				) {
-					Object.assign(this, instance);
-					return this;
-				}
-				// Called without 'new', return new instance
-				return instance;
-			});
+			vi.mocked(NimbleRoll).mockImplementation(
+				(rollInstance: unknown, _formula: string, _data?: unknown) => {
+					const instance = {
+						evaluate: mockEvaluate,
+						toJSON: mockToJSON,
+					};
+					if (
+						rollInstance &&
+						typeof rollInstance === 'object' &&
+						rollInstance !== globalThis &&
+						(typeof global === 'undefined' || rollInstance !== global)
+					) {
+						// If called with 'new', assign to this
+						Object.assign(rollInstance, instance);
+						return rollInstance;
+					}
+					// Called without 'new', return new instance
+					return instance;
+				},
+			);
 
 			const result = await manager.getData();
 
@@ -247,7 +275,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 
 		it('should use saveType if available instead of savingThrowType', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true, rollMode: 0 });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true, rollMode: 0 },
+			);
 			const savingThrowNode: EffectNode & { saveType?: string } = {
 				id: 'save-1',
 				type: 'savingThrow',
@@ -278,7 +309,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 
 		it('should use rollMode from dialogData', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true, rollMode: 2 });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true, rollMode: 2 },
+			);
 			const savingThrowNode: EffectNode = {
 				id: 'save-1',
 				type: 'savingThrow',
@@ -308,7 +342,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 
 		it('should use default rollMode 0 when not provided in dialogData', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			const savingThrowNode: EffectNode = {
 				id: 'save-1',
 				type: 'savingThrow',
@@ -339,7 +376,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 		it('should skip saving throw when actor is null', async () => {
 			mockItem.actor = null;
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 
 			const savingThrowNode: EffectNode = {
 				id: 'save-1',
@@ -363,7 +403,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		it('should use actor.uuid when token is not available', async () => {
 			mockActor.token = null;
 			mockItem.actor = mockActor;
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 
 			const savingThrowNode: EffectNode = {
 				id: 'save-1',
@@ -397,7 +440,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 	describe('Damage effects', () => {
 		it('should create DamageRoll for first damage effect', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			const damageNode: EffectNode = {
 				id: 'damage-1',
 				type: 'damage',
@@ -439,7 +485,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 
 		it('should use rollFormula from dialogData if provided', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			const damageNode: EffectNode = {
 				id: 'damage-1',
 				type: 'damage',
@@ -479,7 +528,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 
 		it('should pass primaryDieValue from dialogData', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			const damageNode: EffectNode = {
 				id: 'damage-1',
 				type: 'damage',
@@ -519,7 +571,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 
 		it('should create regular Roll for subsequent damage effects', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			const firstDamageNode: EffectNode = {
 				id: 'damage-1',
 				type: 'damage',
@@ -555,9 +610,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				toJSON: vi.fn().mockReturnValue({ total: 3 }),
 			};
 			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockDamageRoll));
-			MockRoll.mockImplementation(function (this: any) {
-				return mockRegularRoll;
-			});
+			MockRoll.mockImplementation((_: any) => mockRegularRoll);
 
 			const result = await manager.getData();
 
@@ -570,7 +623,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 
 		it('should use default formula "0" when formula is missing', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			const damageNode: EffectNode = {
 				id: 'damage-2',
 				type: 'damage',
@@ -611,7 +667,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 	describe('Healing effects', () => {
 		it('should create regular Roll for healing effect', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			const healingNode: EffectNode = {
 				id: 'healing-1',
 				type: 'healing',
@@ -643,7 +702,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 
 		it('should use default formula "0" when healing formula is missing', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			const healingNode = {
 				id: 'healing-1',
 				type: 'healing',
@@ -673,7 +735,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 	describe('Mixed effects', () => {
 		it('should handle multiple different effect types', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			const savingThrowNode: EffectNode = {
 				id: 'save-1',
 				type: 'savingThrow',
@@ -737,7 +802,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 
 		it('should update activationData.effects with reconstructed tree', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			const damageNode: EffectNode = {
 				id: 'damage-1',
 				type: 'damage',
@@ -770,7 +838,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 	describe('Edge cases', () => {
 		it('should handle effects with no roll types (condition, note, etc.)', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			const conditionNode: EffectNode = {
 				id: 'condition-1',
 				type: 'condition',
@@ -792,7 +863,10 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 
 		it('should handle damage node without canCrit and canMiss properties', async () => {
-			manager = new ItemActivationManager(mockItem, { fastForward: true });
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
 			const damageNode: EffectNode = {
 				id: 'damage-1',
 				type: 'damage',

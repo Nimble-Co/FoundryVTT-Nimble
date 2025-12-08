@@ -144,7 +144,7 @@
 	}
 
 	function submit() {
-		dialog.submit({
+		dialog.submitCharacterCreation({
 			name,
 			origins: {
 				background: selectedBackground,

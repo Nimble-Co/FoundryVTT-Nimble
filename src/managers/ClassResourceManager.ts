@@ -1,21 +1,45 @@
 import getDeterministicBonus from '../dice/getDeterministicBonus.js';
 import {
 	type NimbleBaseResource,
+	type NimbleDiceResource,
 	ResourceDataModels,
 } from '../models/item/components/ClassResourceDataModel.js';
 
-class ClassResourceManager extends Map<string, InstanceType<typeof NimbleBaseResource>> {
-	item: NimbleClassItem | NimbleSubclassItem;
+type ResourceInstance = InstanceType<typeof NimbleBaseResource>;
+
+interface ResourceSource {
+	type: string;
+	identifier?: string;
+	name?: string;
+}
+
+interface ClassResourceItem {
+	name: string;
+	uuid: string;
+	isEmbedded: boolean;
+	type: string;
+	parent: NimbleBaseActor | null;
+	system: {
+		classLevel?: number;
+		resources: object[];
+	};
+	class?: { system: { classLevel: number } } | null;
+	getRollData?(item?: unknown): Record<string, unknown>;
+	update(data: Record<string, unknown>): Promise<unknown>;
+}
+
+class ClassResourceManager extends Map<string, ResourceInstance> {
+	item: ClassResourceItem;
 
 	rollData: Record<string, number | string> = {};
 
-	constructor(item: NimbleClassItem | NimbleSubclassItem) {
+	constructor(item: ClassResourceItem) {
 		super();
 
 		this.item = item;
 
-		item.system.resources.forEach((source: any) => {
-			const Cls = ResourceDataModels[source.type];
+		(item.system.resources as ResourceSource[]).forEach((source) => {
+			const Cls = ResourceDataModels[source.type as keyof typeof ResourceDataModels];
 			if (!Cls) {
 				// eslint-disable-next-line no-console
 				console.warn(
@@ -25,8 +49,17 @@ class ClassResourceManager extends Map<string, InstanceType<typeof NimbleBaseRes
 			}
 
 			try {
-				const resource = new Cls(source, { parent: item, strict: true });
-				this.set(resource.identifier || resource.name.slugify({ strict: true }), resource);
+				const ResourceClass = Cls as unknown as new (
+					source: ResourceSource,
+					options: { parent: ClassResourceItem; strict: boolean },
+				) => ResourceInstance;
+				const resource = new ResourceClass(source, { parent: item, strict: true });
+				const key =
+					resource.identifier ||
+					(resource.name as string)?.slugify?.({ strict: true }) ||
+					source.identifier ||
+					'';
+				this.set(key, resource);
 			} catch (err) {
 				// eslint-disable-next-line no-console
 				console.warn(
@@ -40,9 +73,9 @@ class ClassResourceManager extends Map<string, InstanceType<typeof NimbleBaseRes
 
 	get level(): number | null {
 		const { item } = this;
-		if (item.isType('class')) return item.system.classLevel;
+		if (item.type === 'class') return item.system.classLevel ?? null;
 
-		const cls = (this.item as NimbleSubclassItem).class;
+		const cls = item.class;
 		if (!cls) return null;
 
 		return cls.system.classLevel;
@@ -59,23 +92,24 @@ class ClassResourceManager extends Map<string, InstanceType<typeof NimbleBaseRes
 		[...this.entries()].forEach(([id, resource]) => {
 			let rawValue: string;
 			if (resource.type === 'dice') {
-				// TODO: Get this based on level
-				rawValue = resource.formula() || '';
+				const diceResource = resource as InstanceType<typeof NimbleDiceResource>;
+				rawValue = diceResource.formula || '';
 			} else {
-				// @ts-expect-error
-				rawValue = resource.levels?.[level] || '';
+				const resourceWithLevels = resource as ResourceInstance & {
+					levels?: Record<number, string>;
+				};
+				const levelValue = resourceWithLevels.levels?.[level];
+				rawValue = typeof levelValue === 'string' ? levelValue : '';
 			}
 
 			let value: string | number | null = null;
 
 			try {
 				const doc = this.item.isEmbedded ? (this.item.parent ?? this.item) : this.item;
-
+				const rollDataSource = doc as { getRollData?(item?: unknown): Record<string, unknown> };
 				value = getDeterministicBonus(
 					rawValue as string,
-					// TODO: Types - Remove when types are fixed
-					// @ts-expect-error
-					doc.getRollData(this.item),
+					rollDataSource.getRollData?.(this.item) ?? {},
 					{ strict: true },
 				);
 			} catch (_e) {
@@ -88,7 +122,7 @@ class ClassResourceManager extends Map<string, InstanceType<typeof NimbleBaseRes
 		});
 	}
 
-	async add(data: Record<string, any> = {}) {
+	async add(data: Record<string, unknown> = {}) {
 		if (!data.name) {
 			const count = [...this].reduce(
 				(acc, [, { name }]) => (name === 'New Resource' ? acc + 1 : acc),
@@ -105,10 +139,10 @@ class ClassResourceManager extends Map<string, InstanceType<typeof NimbleBaseRes
 	}
 
 	async remove(identifier: string) {
-		const filteredArray = this.item.system.resources.filter(
-			(resource: any) =>
+		const filteredArray = (this.item.system.resources as ResourceSource[]).filter(
+			(resource) =>
 				resource.identifier !== identifier ||
-				resource.name.slugify({ strict: true }) !== identifier,
+				(resource.name as string | undefined)?.slugify?.({ strict: true }) !== identifier,
 		);
 
 		await this.item.update({
@@ -123,4 +157,4 @@ class ClassResourceManager extends Map<string, InstanceType<typeof NimbleBaseRes
 	}
 }
 
-export { ClassResourceManager };
+export { ClassResourceManager, type ClassResourceItem };

@@ -1,6 +1,5 @@
 import type { NimbleBaseItem } from '../../../documents/item/base.svelte.js';
 
-// eslint-disable-next-line max-len
 export default function prepareEmbeddedDocumentTooltipHeader(
 	item: NimbleBaseItem,
 	metadata: string,
