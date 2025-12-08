@@ -5,6 +5,7 @@
 
 # Node Modules
 node_modules/
+.npm/
 dist/
 
 # OS Specific
