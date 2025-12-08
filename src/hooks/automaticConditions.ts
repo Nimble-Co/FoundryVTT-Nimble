@@ -13,10 +13,10 @@ export const handleAutomaticConditionApplication = {
 	 */
 	preCreate: async (
 		document: ActiveEffect,
-		_data: any,
-		options: AutomaticConditionContext,
+		_data: ActiveEffect.CreateData,
+		options: ActiveEffect.Database.PreCreateOptions & AutomaticConditionContext,
 		_userId: string,
-	) => {
+	): Promise<boolean | undefined> => {
 		if (!document.parent || document.parent.documentName !== 'Actor') return;
 
 		try {
@@ -25,7 +25,7 @@ export const handleAutomaticConditionApplication = {
 
 			// Check what conditions should be automatically applied
 			const triggeredConditions =
-				(game as any).nimble?.conditions?.getTriggeredConditions?.(conditionIds, actor) || [];
+				game.nimble?.conditions?.getTriggeredConditions?.(conditionIds, actor) || [];
 
 			if (triggeredConditions.length > 0) {
 				// Mark this operation to prevent loops
@@ -41,9 +41,9 @@ export const handleAutomaticConditionApplication = {
 	 */
 	postCreate: async (
 		document: ActiveEffect,
-		options: AutomaticConditionContext,
+		options: ActiveEffect.Database.CreateOptions & AutomaticConditionContext,
 		_userId: string,
-	) => {
+	): Promise<void> => {
 		if (!options.automaticConditionsToApply) return;
 
 		try {
@@ -54,7 +54,7 @@ export const handleAutomaticConditionApplication = {
 				await actor.toggleStatusEffect(conditionId, {
 					overlay: false,
 					automaticConditionSource: document.id,
-				} as any);
+				} as object as { overlay: boolean });
 			}
 		} catch (error) {
 			console.warn('Error in automatic condition postCreate:', error);
@@ -66,10 +66,11 @@ export const handleAutomaticConditionApplication = {
 	 */
 	preDelete: async (
 		_document: ActiveEffect,
-		_options: AutomaticConditionContext,
+		_options: ActiveEffect.Database.PreDeleteOptions & AutomaticConditionContext,
 		_userId: string,
-	): Promise<void> => {
+	): Promise<boolean | undefined> => {
 		// Note: PreDelete is kept for consistency but no longer stores data in options
+		return undefined;
 	},
 
 	/**
@@ -77,25 +78,23 @@ export const handleAutomaticConditionApplication = {
 	 */
 	postDelete: async (
 		document: ActiveEffect,
-		_options: AutomaticConditionContext,
+		_options: ActiveEffect.Database.DeleteOptions & AutomaticConditionContext,
 		_userId: string,
-	) => {
+	): Promise<void> => {
 		try {
 			const actor = document.parent as NimbleBaseActor;
 			const conditionIds = Array.from(document.statuses);
 
 			// Recalculate what automatic conditions should be removed
 			const conditionsToRemove =
-				(game as any).nimble?.conditions?.getConditionsToRemove?.(conditionIds, actor) || [];
+				game.nimble?.conditions?.getConditionsToRemove?.(conditionIds, actor) || [];
 
 			// Remove automatic conditions that are no longer needed
 			for (const conditionId of conditionsToRemove) {
-				if (
-					(game as any).nimble?.conditions?.shouldRemoveTriggeredCondition?.(conditionId, actor)
-				) {
+				if (game.nimble?.conditions?.shouldRemoveTriggeredCondition?.(conditionId, actor)) {
 					await actor.toggleStatusEffect(conditionId, {
 						active: false,
-					} as any);
+					});
 				}
 			}
 		} catch (error) {

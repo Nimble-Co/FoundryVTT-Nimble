@@ -34,6 +34,10 @@ declare namespace GrantProficiencyRule {
 }
 
 class GrantProficiencyRule extends NimbleBaseRule<GrantProficiencyRule.Schema> {
+	declare proficiencyType: 'armor' | 'languages' | 'weapons';
+
+	declare values: string[];
+
 	static override defineSchema(): GrantProficiencyRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),

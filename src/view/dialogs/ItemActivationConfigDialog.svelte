@@ -145,7 +145,7 @@
 					return;
 				}
 			}
-			dialog.submit({
+			dialog.submitActivation({
 				rollMode: selectedRollMode,
 				rollFormula: modifiedFormulas()[0]?.formula || '0',
 				situationalModifiers,

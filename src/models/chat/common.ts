@@ -5,7 +5,7 @@ export const metadata = () => ({
 	actorType: new fields.StringField({ required: true, initial: '', nullable: false }),
 	image: new fields.StringField({ required: true, initial: '', nullable: false }),
 	permissions: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
-	rollMode: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+	rollMode: new fields.NumberField({ required: true, nullable: false, initial: 0, integer: true }),
 });
 
 export const targets = () => ({

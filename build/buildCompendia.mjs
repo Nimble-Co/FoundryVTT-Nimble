@@ -1,11 +1,9 @@
-/* eslint-disable import/extensions */
 /* eslint-disable no-console */
 import fs from 'fs';
 import path from 'path';
 import url from 'url';
-
-import Pack from './lib/Pack.mjs';
 import IdBuilder from './lib/IdBuilder.mjs';
+import Pack from './lib/Pack.mjs';
 
 // ---------------------------------------------------
 //

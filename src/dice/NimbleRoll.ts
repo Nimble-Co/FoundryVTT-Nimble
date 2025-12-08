@@ -1,9 +1,8 @@
-import type { InexactPartial } from '#types/utils.js';
-
 declare namespace NimbleRoll {
 	interface Data extends foundry.dice.Roll.Data {
 		prompted?: boolean;
 		respondentId?: string | null;
+		[key: string]: unknown;
 	}
 
 	interface Options extends foundry.dice.Roll.Options {}
@@ -15,15 +14,9 @@ declare namespace NimbleRoll {
 	};
 }
 
-// @ts-expect-error
 class NimbleRoll extends foundry.dice.Roll<NimbleRoll.Data> {
-	constructor(
-		formula: string,
-		data?: InexactPartial<NimbleRoll.Data>,
-		options?: NimbleRoll.Options,
-	) {
-		// @ts-expect-error
-		super(formula, data, options);
+	constructor(formula: string, data?: NimbleRoll.Data, options?: NimbleRoll.Options) {
+		super(formula, data ?? ({} as NimbleRoll.Data), options);
 
 		// Setup Defaults
 		this.data.prompted ??= false;
@@ -40,8 +33,12 @@ class NimbleRoll extends foundry.dice.Roll<NimbleRoll.Data> {
 	/** ------------------------------------------------------ */
 	/**                    Static Methods                      */
 	/** ------------------------------------------------------ */
-	static fromRoll(roll: any) {
-		const newRoll = new NimbleRoll(roll.formula, roll.data, roll.options);
+	static fromRoll(roll: Roll): NimbleRoll {
+		const newRoll = new NimbleRoll(
+			roll.formula,
+			roll.data as object as NimbleRoll.Data,
+			roll.options,
+		);
 		Object.assign(newRoll, roll);
 		return newRoll;
 	}

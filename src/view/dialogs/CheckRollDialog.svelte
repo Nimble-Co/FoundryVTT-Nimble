@@ -24,7 +24,7 @@
 	<button
 		class="nimble-button"
 		data-button-variant="basic"
-		onclick={() => dialog.submit({ rollMode: selectedRollMode[0], rollFormula })}
+		onclick={() => dialog.submitRoll({ rollMode: selectedRollMode[0], rollFormula })}
 	>
 		<i class="nimble-button__icon fa-solid fa-dice-d20"></i>
 		Roll

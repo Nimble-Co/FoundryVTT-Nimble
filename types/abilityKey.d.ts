@@ -1,1 +1,1 @@
-type abilityKey = 'strength' | 'dexterity' | 'intelligence' | 'will';
+export type AbilityKeyType = 'strength' | 'dexterity' | 'intelligence' | 'will';

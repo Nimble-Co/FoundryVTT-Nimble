@@ -23,6 +23,24 @@ class NimbleFeatureData extends NimbleBaseItemData<
 	NimbleFeatureData.BaseData,
 	NimbleFeatureData.DerivedData
 > {
+	declare description: string;
+
+	declare featureType: string;
+
+	declare class: string;
+
+	declare group: string;
+
+	declare activation: {
+		showDescription: boolean;
+		acquireTargetsFromTemplate: boolean;
+		cost: { details: string; quantity: number; type: string; isReaction: boolean };
+		duration: { details: string; quantity: number; type: string };
+		effects: Record<string, unknown>[];
+		targets: { count: number; restrictions: string };
+		template: { length: number; radius: number; shape: string; width: number };
+	};
+
 	/** @inheritDoc */
 	static override defineSchema(): NimbleFeatureData.Schema {
 		return {

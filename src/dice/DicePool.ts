@@ -1,5 +1,7 @@
 declare namespace NimbleDicePool {
-	interface Data extends foundry.dice.Roll.Data {}
+	interface Data extends foundry.dice.Roll.Data {
+		[key: string]: unknown;
+	}
 
 	interface Options extends foundry.dice.Roll.Options {
 		label: string;
@@ -12,7 +14,7 @@ declare namespace NimbleDicePool {
 	};
 }
 
-class NimbleDicePool extends foundry.dice.Roll {
+class NimbleDicePool extends foundry.dice.Roll<NimbleDicePool.Data> {
 	declare options: NimbleDicePool.Options;
 
 	dieSizes: Map<number, number>;
@@ -22,7 +24,7 @@ class NimbleDicePool extends foundry.dice.Roll {
 	originalFormula: string;
 
 	constructor(formula: string, data?: NimbleDicePool.Data, options?: NimbleDicePool.Options) {
-		super(formula, data, options);
+		super(formula, data ?? ({} as NimbleDicePool.Data), options);
 
 		// Set Pool Data
 		this.originalFormula = formula;
@@ -66,8 +68,7 @@ class NimbleDicePool extends foundry.dice.Roll {
 				return this.formula;
 			}
 
-			// @ts-expect-error
-			term.number += value;
+			term.number = (term.number ?? 0) + value;
 			this.dieSizes.set(dieSize, this.dieSizes.get(dieSize)! + value);
 			this.numDice += value;
 			this.resetFormula();
@@ -102,13 +103,11 @@ class NimbleDicePool extends foundry.dice.Roll {
 			return this.formula;
 		}
 
-		// @ts-expect-error
-		if (term.number <= value) {
+		if ((term.number ?? 0) <= value) {
 			this.terms = this.terms.filter((t) => t !== term);
 			this.dieSizes.delete(dieSize);
 		} else {
-			// @ts-expect-error
-			term.number -= value;
+			term.number = (term.number ?? 0) - value;
 			this.dieSizes.set(dieSize, this.dieSizes.get(dieSize)! - value);
 		}
 

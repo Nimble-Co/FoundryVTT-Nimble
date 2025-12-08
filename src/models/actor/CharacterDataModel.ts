@@ -1,3 +1,7 @@
+import type { AbilityKeyType } from '#types/abilityKey.js';
+import type { SaveKeyType } from '#types/saveKey.js';
+import type { SkillKeyType } from '#types/skillKey.js';
+
 import { RecordField } from '../fields/RecordField.js';
 import { abilities, savingThrows } from './common.js';
 
@@ -380,6 +384,59 @@ const characterSchema = () => ({
 	) as unknown as SkillsSchema,
 });
 
+/** Type definitions for skill data */
+interface SkillData {
+	bonus: number;
+	defaultRollMode: number;
+	mod: number;
+	points: number;
+}
+
+/** Type definitions for ability data */
+interface AbilityData {
+	baseValue: number;
+	bonus: number;
+	defaultRollMode: number;
+	mod: number;
+}
+
+/** Type definitions for saving throw data */
+interface SavingThrowData {
+	defaultRollMode: number;
+	mod: number;
+}
+
+/** Type definitions for hit dice record entry */
+interface HitDiceData {
+	current: number;
+	origin: string[];
+	bonus?: number;
+}
+
+/** Type definitions for currency entry */
+interface CurrencyData {
+	label: string;
+	value: number;
+}
+
+/** Type definitions for armor component */
+interface ArmorComponent {
+	mode: 'add' | 'multiply' | 'override';
+	priority: number;
+	source: string;
+	value: number;
+}
+
+/** Level up history entry */
+interface LevelUpHistoryEntry {
+	level: number;
+	hpIncrease: number;
+	abilityIncreases: Record<string, number>;
+	skillIncreases: Record<string, number>;
+	hitDieAdded: boolean;
+	classIdentifier: string;
+}
+
 declare namespace NimbleCharacterData {
 	type Schema = DataSchema &
 		ReturnType<typeof abilities> &
@@ -388,6 +445,13 @@ declare namespace NimbleCharacterData {
 	interface BaseData extends Record<string, unknown> {}
 	interface DerivedData extends Record<string, unknown> {
 		attributes: {
+			armor: {
+				hint: string;
+				value: number;
+			};
+			hp: {
+				max: number;
+			};
 			initiative: {
 				mod: number;
 			};
@@ -399,6 +463,12 @@ declare namespace NimbleCharacterData {
 			totalSlots: number;
 			usedSlots: number;
 		};
+		resources: {
+			mana: {
+				value: number;
+				max: number;
+			};
+		};
 	}
 }
 
@@ -408,6 +478,79 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 	NimbleCharacterData.BaseData,
 	NimbleCharacterData.DerivedData
 > {
+	// Schema-defined properties
+	declare abilities: Record<AbilityKeyType, AbilityData>;
+	declare attributes: {
+		armor: {
+			baseValue: string;
+			components: ArmorComponent[];
+			hint: string;
+			value: number;
+		};
+		hp: {
+			max: number;
+			temp: number;
+			value: number;
+			bonus: number;
+		};
+		hitDice: Record<string, HitDiceData>;
+		initiative: {
+			bonuses: string;
+			mod: number;
+		};
+		movement: {
+			burrow: number;
+			climb: number;
+			fly: number;
+			swim: number;
+			walk: number;
+		};
+		sizeCategory: string;
+		wounds: {
+			bonus: number;
+			value: number;
+			max: number;
+		};
+	};
+	declare classData: {
+		startingClass: string | null;
+		levels: string[];
+	};
+	declare currency: {
+		cp: CurrencyData;
+		sp: CurrencyData;
+		gp: CurrencyData;
+	};
+	declare details: {
+		age: string;
+		notes: string;
+		gender: string;
+		height: string;
+		weight: string;
+	};
+	declare inventory: {
+		bonusSlots: number;
+		totalSlots: number;
+		usedSlots: number;
+	};
+	declare proficiencies: {
+		armor: Set<string>;
+		languages: Set<string>;
+		weapons: string[];
+	};
+	declare resources: {
+		inspiration: boolean;
+		mana: {
+			current: number;
+			baseMax: number;
+			value: number;
+			max: number;
+		};
+	};
+	declare levelUpHistory: LevelUpHistoryEntry[];
+	declare savingThrows: Record<SaveKeyType, SavingThrowData>;
+	declare skills: Record<SkillKeyType, SkillData>;
+
 	static override defineSchema(): NimbleCharacterData.Schema {
 		return {
 			...characterSchema(),

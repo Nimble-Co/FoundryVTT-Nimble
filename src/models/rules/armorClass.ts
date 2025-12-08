@@ -31,7 +31,7 @@ class ArmorClassRule extends NimbleBaseRule<ArmorClassRule.Schema> {
 		if (this.invalid) return;
 
 		const { actor } = this;
-		if (!actor || !actor.isType('character')) return;
+		if (!actor || actor.type !== 'character') return;
 
 		const value = this.resolveFormula(this.formula);
 		if (!value) return;
@@ -43,7 +43,9 @@ class ArmorClassRule extends NimbleBaseRule<ArmorClassRule.Schema> {
 			value,
 		};
 
-		actor.system.attributes.armor.components.push(part);
+		(
+			actor.system as object as { attributes: { armor: { components: object[] } } }
+		).attributes.armor.components.push(part);
 	}
 
 	override tooltipInfo(): string {

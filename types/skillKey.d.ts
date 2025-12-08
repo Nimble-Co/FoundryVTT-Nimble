@@ -1,4 +1,4 @@
-type skillKey =
+export type SkillKeyType =
 	| 'arcana'
 	| 'examination'
 	| 'finesse'

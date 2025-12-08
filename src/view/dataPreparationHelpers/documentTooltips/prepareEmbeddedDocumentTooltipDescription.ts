@@ -1,6 +1,7 @@
-type EnrichOptions = foundry.applications.ux.TextEditor.implementation.EnrichmentOptions;
+type EnrichOptions = Parameters<
+	(typeof foundry.applications.ux.TextEditor.implementation)['enrichHTML']
+>[1];
 
-// eslint-disable-next-line max-len
 export default async function prepareEmbeddedDocumentTooltipDescription(
 	source: string | undefined,
 	heading: string,
@@ -8,7 +9,7 @@ export default async function prepareEmbeddedDocumentTooltipDescription(
 ): Promise<string | null> {
 	if (!source) return null;
 
-	const TextEditor = (foundry.applications as any).ux?.TextEditor;
+	const TextEditor = foundry.applications.ux?.TextEditor;
 	if (!TextEditor) return null;
 
 	const enrichOptions = {

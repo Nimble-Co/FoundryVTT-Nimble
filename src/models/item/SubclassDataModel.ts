@@ -22,6 +22,11 @@ class NimbleSubclassData extends NimbleBaseItemData<
 	NimbleSubclassData.BaseData,
 	NimbleSubclassData.DerivedData
 > {
+	// Schema-defined properties
+	declare description: string;
+	declare parentClass: string;
+	declare resources: Record<string, unknown>[];
+
 	/** @inheritDoc */
 	static override defineSchema(): NimbleSubclassData.Schema {
 		return {

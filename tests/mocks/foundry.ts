@@ -136,19 +136,23 @@ export function createTrackableRollMock() {
 	}
 
 	// Create a tracked constructor function that works with 'new'
-	function MockRollConstructor(this: any, formula: string, data?: any, options?: any) {
+	function MockRollConstructor(rollConstructor: any, formula: string, data?: any, options?: any) {
 		const instance = new MockRollClass(formula, data, options);
-		if (this && typeof this === 'object' && this !== globalThis) {
+		if (rollConstructor && typeof rollConstructor === 'object' && rollConstructor !== globalThis) {
 			// Called with 'new' - assign to this
-			Object.assign(this, instance);
-			return this;
+			Object.assign(rollConstructor, instance);
+			return rollConstructor;
 		}
 		// Called without 'new', return new instance
 		return instance;
 	}
 
 	// Make it a vi.fn() so we can track calls and override implementations
-	const MockRoll = vi.fn(MockRollConstructor) as any;
+	const MockRoll = vi.fn(MockRollConstructor) as ReturnType<typeof vi.fn> & {
+		prototype: typeof MockRollClass.prototype;
+		getFormula: typeof MockRollClass.getFormula;
+		fromData: typeof MockRollClass.fromData;
+	};
 	// Set up prototype so 'new' works correctly
 	MockRoll.prototype = MockRollClass.prototype;
 	// Add static methods
@@ -234,12 +238,12 @@ export const foundryApiMocks = {
 	},
 	documents: {
 		BaseActor: {
-			ConstructorData: {} as any,
+			ConstructorData: {},
 		},
 		BaseItem: {
-			TypeNames: {} as any,
+			TypeNames: {},
 		},
-		BaseUser: {} as any,
+		BaseUser: {},
 		collections: {
 			Actors: {
 				unregisterSheet: vi.fn(),
@@ -287,14 +291,14 @@ export const foundryApiMocks = {
 				implementation: {
 					enrichHTML: vi.fn((html: string) => Promise.resolve(html)),
 					getDragEventData: vi.fn(),
-					EnrichmentOptions: {} as any,
+					EnrichmentOptions: {},
 				},
 			},
 		},
 		elements: {
 			HTMLProseMirrorElement: {
 				create: vi.fn(),
-				ProseMirrorInputConfig: {} as any,
+				ProseMirrorInputConfig: {},
 				tagName: 'html-prose-mirror',
 			},
 		},
@@ -391,7 +395,9 @@ export function createGameMock(langData: any) {
 				return value || key; // Return key if not found
 			},
 			format: (key: string, data?: Record<string, string>) => {
-				let translated = (globalThis as any).game.i18n.localize(key);
+				let translated = (
+					globalThis as object as { game: { i18n: { localize(key: string): string } } }
+				).game.i18n.localize(key);
 				// Simple replacement for format strings like {remainingSkillPoints}
 				if (data) {
 					for (const [k, v] of Object.entries(data)) {

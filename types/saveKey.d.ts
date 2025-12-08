@@ -1,1 +1,1 @@
-type saveKey = 'strength' | 'dexterity' | 'intelligence' | 'will';
+export type SaveKeyType = 'strength' | 'dexterity' | 'intelligence' | 'will';

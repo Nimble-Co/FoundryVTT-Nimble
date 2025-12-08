@@ -4,15 +4,7 @@ export type d20TermOptions = {
 	rollMode: number;
 };
 
-export default function constructD20Term({
-	_actor,
-	minRoll,
-	rollMode,
-}: {
-	_actor: NimbleBaseActor;
-	minRoll: number;
-	rollMode: number;
-}) {
+export default function constructD20Term({ actor: _actor, minRoll, rollMode }: d20TermOptions) {
 	let d20Term = '1d20';
 
 	if (rollMode > 0) d20Term = `${rollMode + 1}d20`;

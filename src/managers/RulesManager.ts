@@ -6,6 +6,22 @@ export namespace RulesManager {
 	}
 }
 
+/** Interface for item system data that includes rules */
+interface ItemSystemWithRules {
+	rules: RuleSource[];
+}
+
+interface RuleSource {
+	id: string;
+	type: string;
+	[key: string]: string | number | boolean | object | null | undefined;
+}
+
+/** Helper to get system data with rules */
+function getSystemWithRules(item: NimbleBaseItem): ItemSystemWithRules {
+	return item.system as object as ItemSystemWithRules;
+}
+
 class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	#item: NimbleBaseItem;
 	rulesTypeMap: Map<string, InstanceType<typeof NimbleBaseRule>>;
@@ -17,7 +33,8 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		const dataModels = CONFIG.NIMBLE.ruleDataModels;
 		this.rulesTypeMap = new Map();
 
-		item.system.rules.forEach((source: any) => {
+		const system = getSystemWithRules(item);
+		system.rules.forEach((source) => {
 			const Cls = dataModels[source.type];
 			if (!Cls) {
 				// eslint-disable-next-line no-console
@@ -51,8 +68,8 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		return this.rulesTypeMap.get(type);
 	}
 
-	async updateRule(id: string, data: string | Record<string, any>) {
-		let updateData: Record<string, any>;
+	async updateRule(id: string, data: string | Record<string, unknown>) {
+		let updateData: Record<string, unknown>;
 
 		if (typeof data === 'string') {
 			try {
@@ -65,11 +82,15 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 			}
 		} else updateData = data;
 
-		this.rulesTypeMap.set(updateData.type, updateData as InstanceType<typeof NimbleBaseRule>);
+		this.rulesTypeMap.set(
+			updateData.type as string,
+			updateData as object as InstanceType<typeof NimbleBaseRule>,
+		);
 
+		const system = getSystemWithRules(this.#item);
 		await this.#item.update({
-			'system.rules': this.#item.system.rules.map((r) => (r.id === id ? updateData : r)),
-		});
+			'system.rules': system.rules.map((r) => (r.id === id ? updateData : r)),
+		} as Record<string, unknown>);
 
 		return true;
 	}
@@ -79,12 +100,13 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	}
 
 	static async deleteRule(item: NimbleBaseItem, id: string) {
+		const system = getSystemWithRules(item);
 		return item.update({
-			'system.rules': item.system.rules?.filter((r) => r.id !== id) ?? [],
-		});
+			'system.rules': system.rules?.filter((r) => r.id !== id) ?? [],
+		} as Record<string, unknown>);
 	}
 
-	async addRule(data: Record<string, any>, options: RulesManager.AddOptions = {}) {
+	async addRule(data: Record<string, unknown>, options: RulesManager.AddOptions = {}) {
 		return RulesManager.addRule(this.#item, data, options);
 	}
 
@@ -93,10 +115,11 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	/** ------------------------------------------------------ */
 	static async addRule(
 		item: NimbleBaseItem,
-		data: Record<string, any>,
+		data: Record<string, unknown>,
 		options: RulesManager.AddOptions = {},
 	) {
-		const existingRules = item.system.rules;
+		const system = getSystemWithRules(item);
+		const existingRules = system.rules;
 		const size: number = existingRules.length;
 
 		// Set defaults
@@ -107,17 +130,17 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 
 		if (options.update) {
 			await item.update({
-				// @ts-expect-error
 				'system.rules': [...existingRules, data],
-			});
+			} as Record<string, unknown>);
 
 			const existingIds = existingRules.map((r) => r.id);
-			return item.system.rules.filter((r) => !existingIds.includes(r.id))?.[0];
+			const updatedSystem = getSystemWithRules(item);
+			return updatedSystem.rules.filter((r) => !existingIds.includes(r.id))?.[0];
 		}
 
 		const dataModels = CONFIG.NIMBLE.ruleDataModels;
-		const { type } = data;
-		if (!type) {
+		const type = data.type;
+		if (!type || typeof type !== 'string') {
 			// eslint-disable-next-line no-console
 			console.error('Nimble | Rule does not have a type.');
 			return undefined;

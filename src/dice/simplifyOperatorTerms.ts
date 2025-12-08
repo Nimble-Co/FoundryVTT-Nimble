@@ -7,7 +7,7 @@
  * @param {Array<RollTerm>} terms An array of RollTerm objects that form a valid roll formula.
  * @returns {Array<RollTerm>} A new array of RollTerm objects.
  */
-export default function simplifyOperatorTerms(terms: any[]) {
+export default function simplifyOperatorTerms(terms) {
 	const Terms = foundry.dice.terms;
 
 	return terms.reduce((acc, term, i) => {
@@ -30,5 +30,5 @@ export default function simplifyOperatorTerms(terms: any[]) {
 		else if (!ops.has('+')) acc.push(term);
 
 		return acc;
-	}, [] as any[]);
+	}, []);
 }
