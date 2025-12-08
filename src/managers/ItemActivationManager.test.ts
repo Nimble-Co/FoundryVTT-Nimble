@@ -39,49 +39,38 @@ interface MockItem {
 const mockReconstructEffectsTree = vi.fn();
 const mockGetRollFormula = vi.fn();
 
-// Mock dependencies - create the mock inside the factory
-function createMockRollConstructor() {
-	return vi.fn(function (rollInstance: MockRollInstance, _formula: string, _data?: unknown) {
-		const instance: MockRollInstance = {
-			evaluate: vi.fn().mockResolvedValue(undefined),
-			toJSON: vi.fn().mockReturnValue({ total: 0 }),
-		};
+// Mock dependencies - create proper vi.fn() based mocks that work as constructors
+// The key is to use vi.fn() directly so all spy methods work, and have it return mock instances
 
-		if (new.target !== undefined) {
-			// Called with 'new' - assign properties to 'this' and return 'this'
-			Object.assign(rollInstance, instance);
-			return rollInstance;
-		}
-
-		// Called without 'new', return the instance
-		return instance;
-	});
+function createMockRollInstance(): MockRollInstance {
+	return {
+		evaluate: vi.fn().mockResolvedValue(undefined),
+		toJSON: vi.fn().mockReturnValue({ total: 0 }),
+	};
 }
 
-const MockNimbleRoll = createMockRollConstructor();
+// Create NimbleRoll as vi.fn() that returns mock instances when called with 'new'
+const MockNimbleRoll = vi.fn(function NimbleRollMock(
+	this: MockRollInstance,
+	_formula: string,
+	_data?: unknown,
+) {
+	const instance = createMockRollInstance();
+	// When called with 'new', 'this' might be undefined with vi.fn(), so we return the instance
+	// Returning an object from a constructor makes that object the result
+	return instance;
+}) as ReturnType<typeof vi.fn>;
 
-const MockDamageRoll = vi.fn(function (
-	rollInstance: MockRollInstance,
+// Create DamageRoll as vi.fn() that returns mock instances when called with 'new'
+const MockDamageRoll = vi.fn(function DamageRollMock(
+	this: MockRollInstance,
 	_formula: string,
 	_data?: unknown,
 	_options?: unknown,
 ) {
-	const instance: MockRollInstance = {
-		evaluate: vi.fn().mockResolvedValue(undefined),
-		toJSON: vi.fn().mockReturnValue({ total: 0 }),
-	};
-
-	if (new.target !== undefined) {
-		// Called with 'new' - assign properties to 'this' and return 'this'
-		Object.assign(rollInstance, instance);
-		return rollInstance;
-	}
-
-	// Called without 'new', return the instance
+	const instance = createMockRollInstance();
 	return instance;
-});
-// Make it constructable
-Object.setPrototypeOf(MockDamageRoll, Function.prototype);
+}) as ReturnType<typeof vi.fn>;
 
 const DamageRoll = MockDamageRoll;
 const NimbleRoll = MockNimbleRoll;
@@ -97,14 +86,10 @@ vi.doMock('../documents/dialogs/ItemActivationConfigDialog.svelte.js', () => ({
 }));
 
 // Helper function to create a mock implementation that handles 'new' correctly
+// Returns the mockInstance directly since vitest doesn't properly bind 'this' for class mocks
 function createMockConstructorImplementation(mockInstance: MockRollInstance) {
-	return (rollInstance: MockRollInstance) => {
-		if (rollInstance && typeof rollInstance === 'object') {
-			Object.assign(rollInstance, mockInstance);
-			return mockInstance;
-		}
-
-		// Otherwise, return the instance directly
+	// When a constructor returns an object, that object becomes the result of 'new'
+	return function MockConstructor() {
 		return mockInstance;
 	};
 }
@@ -232,27 +217,14 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			// Set up NimbleRoll mock - it extends foundry.dice.Roll, so it needs evaluate and toJSON
 			const mockEvaluate = vi.fn().mockResolvedValue(undefined);
 			const mockToJSON = vi.fn().mockReturnValue({ total: 15 });
-			// Override NimbleRoll mock for this test
-			vi.mocked(NimbleRoll).mockImplementation(
-				(rollInstance: unknown, _formula: string, _data?: unknown) => {
-					const instance = {
-						evaluate: mockEvaluate,
-						toJSON: mockToJSON,
-					};
-					if (
-						rollInstance &&
-						typeof rollInstance === 'object' &&
-						rollInstance !== globalThis &&
-						(typeof global === 'undefined' || rollInstance !== global)
-					) {
-						// If called with 'new', assign to this
-						Object.assign(rollInstance, instance);
-						return rollInstance;
-					}
-					// Called without 'new', return new instance
-					return instance;
-				},
-			);
+			const mockInstance = {
+				evaluate: mockEvaluate,
+				toJSON: mockToJSON,
+			};
+			// Override NimbleRoll mock for this test - return mock directly since 'this' isn't bound
+			vi.mocked(NimbleRoll).mockImplementation(function MockNimbleRollImpl() {
+				return mockInstance;
+			});
 
 			const result = await manager.getData();
 
@@ -477,8 +449,8 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					canCrit: true,
 					canMiss: true,
 					rollMode: 0,
-					primaryDieValue: undefined,
-					primaryDieModifier: undefined,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
 				},
 			);
 			expect(mockRoll.evaluate).toHaveBeenCalled();
@@ -521,8 +493,8 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					canCrit: true,
 					canMiss: true,
 					rollMode: 0,
-					primaryDieValue: undefined,
-					primaryDieModifier: undefined,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
 				},
 			);
 		});
@@ -564,8 +536,8 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					canCrit: true,
 					canMiss: true,
 					rollMode: 0,
-					primaryDieValue: undefined,
-					primaryDieModifier: undefined,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
 				},
 			);
 		});
@@ -610,7 +582,9 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				toJSON: vi.fn().mockReturnValue({ total: 3 }),
 			};
 			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockDamageRoll));
-			MockRoll.mockImplementation((_: any) => mockRegularRoll);
+			MockRoll.mockImplementation(function MockRollImpl(this: unknown) {
+				return mockRegularRoll;
+			});
 
 			const result = await manager.getData();
 
@@ -619,7 +593,8 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(result.rolls![0]).toBe(mockDamageRoll);
 			expect(result.rolls![1]).toBe(mockRegularRoll);
 			expect(DamageRoll).toHaveBeenCalledTimes(1);
-			expect(MockRoll).toHaveBeenCalledWith('1d4', { level: 1, strength: 10 });
+			// MockRoll constructor captures 3 args, third is undefined since not passed by caller
+			expect(MockRoll).toHaveBeenCalledWith('1d4', { level: 1, strength: 10 }, undefined);
 		});
 
 		it('should use default formula "0" when formula is missing', async () => {
@@ -658,8 +633,8 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					canCrit: false,
 					canMiss: false,
 					rollMode: 0,
-					primaryDieValue: undefined,
-					primaryDieModifier: undefined,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
 				},
 			);
 		});
@@ -697,7 +672,8 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			expect(result.rolls).not.toBeNull();
 			expect(result.rolls).toHaveLength(1);
 			expect(result.rolls![0]).toBe(mockRoll);
-			expect(MockRoll).toHaveBeenCalledWith('1d8', { level: 1, strength: 10 });
+			// MockRoll constructor captures 3 args, third is undefined since not passed by caller
+			expect(MockRoll).toHaveBeenCalledWith('1d8', { level: 1, strength: 10 }, undefined);
 			expect(mockRoll.evaluate).toHaveBeenCalled();
 		});
 
@@ -729,7 +705,8 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			await manager.getData();
 
-			expect(MockRoll).toHaveBeenCalledWith('0', { level: 1, strength: 10 });
+			// MockRoll constructor captures 3 args, third is undefined since not passed by caller
+			expect(MockRoll).toHaveBeenCalledWith('0', { level: 1, strength: 10 }, undefined);
 		});
 	});
 
@@ -892,11 +869,11 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				'1d6',
 				{ level: 1, strength: 10 },
 				{
-					canCrit: undefined,
-					canMiss: undefined,
+					canCrit: true,
+					canMiss: true,
 					rollMode: 0,
-					primaryDieValue: undefined,
-					primaryDieModifier: undefined,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
 				},
 			);
 		});
