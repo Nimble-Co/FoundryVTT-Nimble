@@ -291,9 +291,11 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		roll._formula = data._formula ?? DamageRoll.getFormula(roll.terms);
 
 		if (data.evaluated ?? true) {
-			const opts = data.options as Partial<DamageRoll.Options> | undefined;
-			roll.isCritical = data.isCritical ?? opts?.canCrit;
-			roll.isMiss = data.isMiss ?? opts?.canMiss;
+			const opts = data.options as
+				| (Partial<DamageRoll.Options> & { isCritical?: boolean; isMiss?: boolean })
+				| undefined;
+			roll.isCritical = data.isCritical ?? opts?.isCritical;
+			roll.isMiss = data.isMiss ?? opts?.isMiss;
 		}
 
 		if (roll.terms) {
