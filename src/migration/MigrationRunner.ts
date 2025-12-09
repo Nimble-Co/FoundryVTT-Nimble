@@ -1,13 +1,26 @@
-/* eslint-disable no-console */
-/* eslint-disable no-await-in-loop */
-
 import localize from '../utils/localize.js';
 import type { MigrationBase } from './MigrationBase.js';
 import { MigrationRunnerBase } from './MigrationRunnerBase.js';
 
+/** Extended CompendiumCollection interface with runtime properties */
+interface CompendiumPack {
+	documentName: string;
+	locked: boolean;
+	metadata: { id: string; label: string; packageType: string };
+	index: { size: number };
+	getDocuments(): Promise<foundry.abstract.Document.Any[]>;
+	configure(options: { locked: boolean }): Promise<void>;
+	contents: foundry.abstract.Document.Any[];
+}
+
 class MigrationRunner extends MigrationRunnerBase {
 	override needsMigration(): boolean {
-		return super.needsMigration(game.settings.get('nimble', 'worldSchemaVersion') as number);
+		return super.needsMigration(
+			game.settings.get(
+				'nimble' as 'core',
+				'worldSchemaVersion' as 'rollMode',
+			) as unknown as number,
+		);
 	}
 
 	static async ensureSchemaVersion(document: any, migrations: MigrationBase[]): Promise<void> {
@@ -327,10 +340,7 @@ class MigrationRunner extends MigrationRunnerBase {
 		}
 	}
 
-	async runCompendiumMigration(
-		migrations: MigrationBase[],
-		pack: CompendiumCollection<CompendiumCollection.Metadata>,
-	): Promise<void> {
+	async runCompendiumMigration(migrations: MigrationBase[], pack: CompendiumPack): Promise<void> {
 		if (!['Adventure', 'Actor', 'Item'].includes(pack.documentName)) return;
 
 		// TODO: Progress Marker
@@ -424,7 +434,7 @@ class MigrationRunner extends MigrationRunnerBase {
 			);
 
 			console.info(`Nimble | Migrating ${pack.index.size} documents in ${pack.metadata.id}.`);
-			await this.runCompendiumMigration(migrations, pack);
+			await this.runCompendiumMigration(migrations, pack as unknown as CompendiumPack);
 			ui.notifications.info(
 				localize('NIMBLE.migration.compendium.finished', { packName: pack.metadata.label }),
 			);
@@ -434,7 +444,10 @@ class MigrationRunner extends MigrationRunnerBase {
 	async runMigration(force = false): Promise<void> {
 		const migrationVersion = {
 			latest: MigrationRunner.LATEST_SCHEMA_VERSION,
-			current: game.settings.get('nimble', 'worldSchemaVersion') as number,
+			current: game.settings.get(
+				'nimble' as 'core',
+				'worldSchemaVersion' as 'rollMode',
+			) as unknown as number,
 		};
 
 		const systemVersion = game.system.version;
@@ -458,7 +471,11 @@ class MigrationRunner extends MigrationRunnerBase {
 			if (phase.length > 0) await this.runMigrations(phase);
 		}
 
-		await game.settings.set('nimble', 'worldSchemaVersion', migrationVersion.latest);
+		await game.settings.set(
+			'nimble' as 'core',
+			'worldSchemaVersion' as 'rollMode',
+			migrationVersion.latest as unknown as foundry.CONST.DICE_ROLL_MODES,
+		);
 	}
 }
 

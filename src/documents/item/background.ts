@@ -25,12 +25,17 @@ export class NimbleBackgroundItem extends NimbleBaseItem {
 	/** ------------------------------------------------------ */
 	//                 Document Update Hooks
 	/** ------------------------------------------------------ */
-	override async _preCreate(data, options, user) {
+	override async _preCreate(
+		data: Item.CreateData,
+		options: Item.Database.PreCreateOptions,
+		user: User,
+	) {
 		if (this.isEmbedded) {
 			const actor = this.parent;
-			if (!actor.isType('character')) return false;
+			if (!actor || actor.type !== 'character') return false;
 
-			const existingBackground = actor.background;
+			const existingBackground = (actor as object as { background?: NimbleBackgroundItem })
+				.background;
 			if (existingBackground) await existingBackground.delete();
 		}
 

@@ -61,7 +61,7 @@ export class ConditionManager {
 			// Add an enriched version of the condition to the data
 			try {
 				data.enriched =
-					(await (foundry.applications as any).ux?.TextEditor?.implementation?.enrichHTML?.(
+					(await foundry.applications.ux?.TextEditor?.implementation?.enrichHTML?.(
 						`[[/condition condition=${id}]]`,
 					)) || `[[/condition condition=${id}]]`;
 			} catch (_error) {
@@ -85,7 +85,6 @@ export class ConditionManager {
 			const aid = a.name !== undefined ? localize(a.name) : a.id || a;
 			const bid = b.name !== undefined ? localize(b.name) : b.id || b;
 
-			// eslint-disable-next-line no-nested-ternary
 			return aid > bid ? 1 : aid < bid ? -1 : 0;
 		});
 	}
@@ -111,7 +110,13 @@ export class ConditionManager {
 
 				activeConditions.add(statusId);
 
-				if (effect.getFlag('core', 'overlay')) overlayConditions.add(statusId);
+				if (
+					(effect as object as { getFlag(scope: string, key: string): unknown }).getFlag(
+						'core',
+						'overlay',
+					)
+				)
+					overlayConditions.add(statusId);
 			});
 		});
 
@@ -155,8 +160,8 @@ export class ConditionManager {
 		}
 
 		return triggeredConditions.sort((a, b) => {
-			const configA = (conditionTriggerRelationships as any)[a] as ConditionTriggerConfig;
-			const configB = (conditionTriggerRelationships as any)[b] as ConditionTriggerConfig;
+			const configA = conditionTriggerRelationships[a] as ConditionTriggerConfig;
+			const configB = conditionTriggerRelationships[b] as ConditionTriggerConfig;
 			return (configA?.priority ?? 999) - (configB?.priority ?? 999);
 		});
 	}
@@ -198,7 +203,7 @@ export class ConditionManager {
 	 * @returns True if the condition should be removed, false otherwise
 	 */
 	shouldRemoveTriggeredCondition(conditionId: string, actor: NimbleBaseActor): boolean {
-		const { conditionTriggerRelationships = {} } = CONFIG.NIMBLE as any;
+		const { conditionTriggerRelationships = {} } = CONFIG.NIMBLE;
 		const config = conditionTriggerRelationships[conditionId] as ConditionTriggerConfig;
 
 		if (!config || !config.autoRemove) return false;

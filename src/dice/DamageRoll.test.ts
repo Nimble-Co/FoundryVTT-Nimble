@@ -51,7 +51,7 @@ describe('DamageRoll.fromData', () => {
 
 			const roll = DamageRoll.fromData(data);
 
-			expect(roll._formula).toBe('1d6');
+			expect((roll as object as { _formula: string })._formula).toBe('1d6');
 		});
 	});
 
@@ -468,7 +468,7 @@ describe('DamageRoll.fromData', () => {
 
 			const roll = DamageRoll.fromData(data);
 
-			expect(roll._formula).toBe('');
+			expect((roll as object as { _formula: string })._formula).toBe('');
 		});
 
 		it('should handle complex formula with multiple terms', () => {
@@ -488,7 +488,7 @@ describe('DamageRoll.fromData', () => {
 
 			const roll = DamageRoll.fromData(data);
 
-			expect(roll._formula).toBe('1d6+2');
+			expect((roll as object as { _formula: string })._formula).toBe('1d6+2');
 			expect(roll.originalFormula).toBe('1d6+2');
 		});
 

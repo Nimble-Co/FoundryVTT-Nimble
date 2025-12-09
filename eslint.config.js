@@ -8,9 +8,38 @@ import svelteParser from 'svelte-eslint-parser';
 export default [
 	js.configs.recommended,
 	{
-		files: ['**/*.{ts,js}'],
+		files: [
+			'src/**/*.{ts,js}',
+			'lib/**/*.{ts,js}',
+			'types/**/*.{ts,js}',
+			'build/**/*.{ts,js}',
+			'tests/**/*.{ts,js}',
+		],
 		languageOptions: {
 			parser: tsparser,
+			parserOptions: {
+				project: './tsconfig.json',
+				tsconfigRootDir: import.meta.dirname,
+			},
+			globals: {
+				...globals.browser,
+				// Foundry VTT globals
+				game: 'readonly',
+				CONFIG: 'readonly',
+				foundry: 'readonly',
+				canvas: 'readonly',
+				ui: 'readonly',
+				Hooks: 'readonly',
+				Roll: 'readonly',
+				fromUuid: 'readonly',
+				sheet: 'readonly',
+				TextEditor: 'readonly',
+				Actor: 'readonly',
+				Item: 'readonly',
+				ChatMessage: 'readonly',
+				CONST: 'readonly',
+				console: 'readonly',
+			},
 		},
 		plugins: {
 			'@typescript-eslint': tseslint,
@@ -30,11 +59,14 @@ export default [
 		},
 	},
 	{
-		files: ['**/*.svelte'],
+		files: ['src/**/*.svelte', 'lib/**/*.svelte'],
 		languageOptions: {
 			parser: svelteParser,
 			parserOptions: {
 				parser: tsparser,
+				project: './tsconfig.json',
+				tsconfigRootDir: import.meta.dirname,
+				extraFileExtensions: ['.svelte'],
 			},
 			globals: {
 				...globals.browser,

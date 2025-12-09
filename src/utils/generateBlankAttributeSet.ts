@@ -6,6 +6,6 @@ export default function generateBlankAttributeSet() {
 			acc[abilityKey] = null;
 			return acc;
 		},
-		{} as Record<abilityKey, null>,
+		{} as Record<string, null>,
 	);
 }

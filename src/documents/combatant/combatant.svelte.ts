@@ -31,10 +31,20 @@ export class NimbleCombatant extends Combatant {
 		this.updateSource({ initiative: 0 });
 	}
 
-	override getInitiativeRoll(formula: string | undefined, rollOptions: Record<string, any> = {}) {
+	override getInitiativeRoll(
+		formula: string | undefined,
+		rollOptions: Record<string, string | number | boolean> = {},
+	) {
 		const { actor } = this;
 
-		const initiativeFormula = formula ?? actor?._getInitiativeFormula(rollOptions) ?? '0';
+		const initiativeFormula =
+			formula ??
+			(
+				actor as object as {
+					_getInitiativeFormula?(opts: Record<string, string | number | boolean>): string;
+				}
+			)?._getInitiativeFormula?.(rollOptions) ??
+			'0';
 
 		const rollData = actor?.getRollData() || {};
 		return Roll.create(initiativeFormula, rollData);

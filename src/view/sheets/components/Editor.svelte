@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type Document from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/abstract/document.d.mts';
 	import { onMount } from 'svelte';
 
 	type EditorOptions = foundry.applications.elements.HTMLProseMirrorElement.ProseMirrorInputConfig;
@@ -12,7 +11,7 @@
 	interface Props {
 		content: string;
 		field: string;
-		document: Document;
+		document: foundry.abstract.Document.Any;
 		editorOptions?: EditorOptions;
 		enrichOptions?: EnrichOptions;
 	}

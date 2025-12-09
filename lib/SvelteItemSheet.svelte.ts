@@ -1,7 +1,4 @@
-import type {
-	AnyObject,
-	EmptyObject,
-} from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { AnyObject, EmptyObject } from 'fvtt-types/utils';
 
 import { SvelteDocumentSheet } from './SvelteDocumentSheet.svelte.js';
 

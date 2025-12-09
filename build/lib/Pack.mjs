@@ -1,13 +1,8 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable import/extensions */
-/* eslint-disable no-console */
 import fs from 'fs';
-import path from 'path';
-
 import { globSync } from 'glob';
-// eslint-disable-next-line import/no-named-as-default, import/no-named-as-default-member
-import LevelDatabase from './LevelDB.mjs';
+import path from 'path';
 import systemJSON from '../../public/system.json' with { type: 'json'};
+import LevelDatabase from './LevelDB.mjs';
 
 export default class Pack {
   static #PACK_DEST = path.resolve(process.cwd(), 'public/packs');

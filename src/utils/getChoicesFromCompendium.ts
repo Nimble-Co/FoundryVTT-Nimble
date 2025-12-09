@@ -3,7 +3,7 @@ export default function getChoicesFromCompendium(documentType: string): string[]
 
 	for (const pack of game.packs) {
 		for (const document of pack.index) {
-			if (document.type !== documentType) continue;
+			if ((document as object as { type?: string }).type !== documentType) continue;
 
 			documentIDs.push(document.uuid);
 		}
