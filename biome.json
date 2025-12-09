@@ -3,7 +3,8 @@
 	"vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
 	"files": {
 		"ignoreUnknown": false,
-		"includes": ["**", "!!**/dist"]
+		"includes": ["**", "!!**/dist"],
+		"ignore": ["**/*.svelte"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -49,23 +50,6 @@
 			"indentWidth": 2
 		}
 	},
-	"overrides": [
-		{
-			"includes": ["**/*.svelte"],
-			"linter": {
-				"rules": {
-					"correctness": {
-						"noUnusedVariables": "off",
-						"noUnusedImports": "off"
-					},
-					"style": {
-						"useConst": "off",
-						"useImportType": "off"
-					}
-				}
-			}
-		}
-	],
 	"javascript": {
 		"formatter": {
 			"arrowParentheses": "always",
