@@ -4,36 +4,31 @@ on:
   release:
     types: [published]
 
+env:
+  node_version: 22
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [22.x]
-
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    # Node
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+    - name: Use Node.js ${{ env.node_version }}
+      uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: ${{ env.node_version }}
 
-    # Cache npm dependencies
-    - name: Cache NPM Dependencies
-      id: cache-npm
-      uses: actions/cache@v3
+    - name: Cache Node.js modules
+      uses: actions/cache@v4
       with:
-        path: node_modules/
-        key: npm-${{ hashFiles('package-lock.json') }}
+        path: .npm
+        key: npm-release-${{ github.sha }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          npm-dev-
 
-    # Install npm dependencies
     - name: Install Dependencies
-      if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
-      run: |
-        npm i --force
+      run: npm ci --cache .npm --prefer-offline
 
     # Builds Packs
     - name: Build System

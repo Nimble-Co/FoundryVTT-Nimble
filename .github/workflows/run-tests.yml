@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+env:
+  node_version: 22
+
 jobs:
   test:
     name: Run Tests
@@ -16,11 +19,19 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: ${{ env.node_version }}
+
+      - name: Cache Node.js modules
+        uses: actions/cache@v4
+        with:
+          path: .npm
+          key: npm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-${{ github.head_ref }}-
+            npm-dev-
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --cache .npm --prefer-offline
 
       - name: Run tests
         run: npm test
