@@ -198,15 +198,6 @@
 							>
 								<i class="fa-solid fa-edit"></i>
 							</button>
-							<button
-								class="nimble-button"
-								data-button-variant="icon"
-								type="button"
-								aria-label="Configure {item.reactive.name}"
-								onclick={(event) => configureItem(event, item._id)}
-							>
-								<i class="fa-solid fa-edit"></i>
-							</button>
 
 							<button
 								class="nimble-button"
