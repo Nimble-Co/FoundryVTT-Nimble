@@ -1,5 +1,5 @@
 ---
-name: checks
+name: Code quality checks
 
 on: # yamllint disable-line rule:truthy
   - pull_request
@@ -19,14 +19,14 @@ jobs:
         with:
           node-version: ${{ env.node_version }}
       - name: Cache Node.js modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .npm
-          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: npm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - run: npm ci
+            npm-${{ github.head_ref }}-
+            npm-dev-
+      - run: npm ci --cache .npm --prefer-offline
       - name: compile typescript
         run: npm run type-check
 
@@ -40,13 +40,35 @@ jobs:
         with:
           node-version: ${{ env.node_version }}
       - name: Cache Node.js modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .npm
-          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: npm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - run: npm ci
+            npm-${{ github.head_ref }}-
+            npm-dev-
+      - run: npm ci --cache .npm --prefer-offline
       - name: Run Svelte and Biome linters
         run: npm run lint
+
+  circular-deps:
+    name: Circular Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: install node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.node_version }}
+      - name: Cache Node.js modules
+        uses: actions/cache@v4
+        with:
+          path: .npm
+          key: npm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            npm-${{ github.head_ref }}-
+            npm-dev-
+      - run: npm ci --cache .npm --prefer-offline
+      - name: Check circular dependencies
+        run: npm run madge-test
