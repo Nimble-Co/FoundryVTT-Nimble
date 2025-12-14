@@ -395,6 +395,7 @@
 		text-shadow: 0 0 4px hsl(41, 18%, 54%);
 
 		&__bar {
+			flex: 1;
 			position: relative;
 			overflow: hidden;
 
