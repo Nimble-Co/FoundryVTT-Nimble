@@ -114,10 +114,12 @@
 			in:slide={{ axis: 'y', delay: 200 }}
 			out:fade={{ delay: 0 }}
 		>
-			{#if currentCombat?.reactive?.round === 0}
+			{#if currentCombat?.reactive?.round === 0 && game.user!.isGM}
 				<button class="nimble-combat-tracker__start-button" onclick={startCombat}>
 					Start Combat
 				</button>
+			{:else if currentCombat?.reactive?.round === 0}
+				<h2 class="nimble-combat-tracker__heading">Combat Not Started</h2>
 			{:else}
 				<h2 class="nimble-combat-tracker__heading">
 					Round {currentCombat?.reactive?.round}
@@ -145,7 +147,7 @@
 			{/each}
 		</ol>
 
-		{#if currentCombat?.reactive?.combatants.some((combatant) => combatant.initiative === null)}
+		{#if game.user!.isGM && currentCombat?.reactive?.combatants.some((combatant) => combatant.initiative === null)}
 			<footer class="nimble-combat-tracker__footer">
 				<div class="nimble-combat-tracker__footer-roll-container">
 					<button

@@ -30,6 +30,31 @@
 		return [...proficiencies];
 	}
 
+	async function rollInitiative() {
+		// Check if there's an active combat on the current scene with this character
+		const combat = game.combats?.viewed;
+		const combatant =
+			combat?.scene?.id === canvas.scene?.id
+				? combat.combatants.find((c) => c.actorId === actor.id)
+				: null;
+
+		// If character is in combat and hasn't rolled initiative yet, apply to combat
+		if (combatant && combatant.initiative === null) {
+			await combat.rollInitiative([combatant.id]);
+			return;
+		}
+
+		// Otherwise, just roll initiative to chat without applying to combat
+		const roll = Roll.create(actor._getInitiativeFormula({}), actor.getRollData());
+		await roll.evaluate();
+
+		await roll.toMessage({
+			speaker: ChatMessage.getSpeaker({ actor }),
+			flavor: game.i18n.format('COMBAT.RollsInitiative', { name: actor.name }),
+			flags: { 'core.initiativeRoll': true },
+		});
+	}
+
 	const { armorTypesPlural, languages } = CONFIG.NIMBLE;
 
 	let actor: NimbleCharacter = getContext('actor');
@@ -63,13 +88,19 @@
 				<h3 class="nimble-heading" data-heading-variant="section">Initiative</h3>
 			</header>
 
-			<div class="nimble-initiative">
+			<button
+				class="nimble-initiative"
+				type="button"
+				aria-label={localize('NIMBLE.prompts.rollInitiative')}
+				data-tooltip="NIMBLE.prompts.rollInitiative"
+				onclick={rollInitiative}
+			>
 				{replaceHyphenWithMinusSign(
 					new Intl.NumberFormat('en-US', {
 						signDisplay: 'always',
 					}).format(initiative),
 				)}
-			</div>
+			</button>
 		</section>
 
 		<section class="nimble-other-attribute-wrapper" style="grid-area: armor;">
@@ -126,11 +157,21 @@
 		justify-content: center;
 		width: 2.25rem;
 		height: 2.25rem;
+		margin: 0;
+		padding: 0;
 		font-size: var(--nimble-md-text);
 		font-weight: 900;
 		color: var(--nimble-dark-input-text-color);
 		background-color: var(--nimble-hp-bar-background);
 		border: 2px solid var(--nimble-initiative-border-color);
+		cursor: pointer;
+		transition: var(--nimble-standard-transition);
+
+		&:hover,
+		&:focus {
+			border-color: var(--color-border-highlight);
+			box-shadow: 0 0 6px var(--color-border-highlight);
+		}
 	}
 
 	.nimble-attributes-wrapper {

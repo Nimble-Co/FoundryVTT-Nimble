@@ -89,6 +89,10 @@
 
     --nimble-defeated-combatant-name-color: hsl(1, 75%, 60%);
 
+    /** COMBAT TRACKER **/
+    --nimble-combat-tracker-text-color: var(--nimble-dark-text-color);
+    --nimble-combat-tracker-background: hsla(0, 0%, 100%, 0.85);
+
     --nimble-checkbox-checked-color: var(--nimble-hp-bar-background);
     --nimble-checkbox-checkmark-color: var(--nimble-light-text-color);
 

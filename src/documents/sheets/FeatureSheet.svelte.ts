@@ -31,7 +31,7 @@ export default class FeatureSheet extends SvelteApplicationMixin(
 			resizable: true,
 		},
 		position: {
-			width: 288,
+			width: 400,
 			height: 'auto',
 		},
 		actions: {},
