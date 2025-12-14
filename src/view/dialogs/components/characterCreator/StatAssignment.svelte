@@ -297,11 +297,6 @@
 		&--key {
 			border: 2px solid hsl(43, 50%, 45%);
 			box-shadow: var(--nimble-box-shadow);
-			background: linear-gradient(
-				135deg,
-				var(--nimble-card-background-color, hsl(0, 0%, 20%)) 0%,
-				hsla(43, 30%, 20%, 0.3) 100%
-			);
 		}
 
 		&__indicator {

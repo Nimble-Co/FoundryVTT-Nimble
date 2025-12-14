@@ -16,7 +16,14 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 	protected root;
 
 	constructor(data = {}, { parent = null, pack = null, ..._options } = {}) {
-		super();
+		const width = 508;
+		super({
+			position: {
+				width,
+				top: Math.round(window.innerHeight * 0.1),
+				left: Math.round((window.innerWidth - width) / 2),
+			},
+		});
 
 		this.root = ActorCreationDialogComponent;
 
@@ -33,7 +40,6 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 			resizable: true,
 		},
 		position: {
-			width: 508,
 			height: 'auto',
 		},
 	};

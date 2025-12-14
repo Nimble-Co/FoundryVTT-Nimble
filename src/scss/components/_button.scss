@@ -158,17 +158,17 @@
     display: flex;
     width: 100%;
     padding: 0.5rem 0.25rem;
-    color: var(--nimble-overhang-button-text-color);
-    border: 1px solid hsl(41, 18%, 54%);
+    border: 0;
     border-radius: 4px;
-    background-color: var(--nimble-overhang-button-background);
+    background-color: var(--nimble-basic-button-background-color, var(--button-background-color));
+    font-weight: 500;
     line-height: 1;
     transition: var(--nimble-slow-transition);
     opacity: 1;
 
     &:hover {
-      background-color: var(--nimble-overhang-button-hover-background);
-      color: #fff;
+      color: var(--nimble-navigation-active-text-color);
+      background-color: var(--nimble-navigation-background-color);
     }
 
     &:disabled {
