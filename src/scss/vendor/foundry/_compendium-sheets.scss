@@ -48,6 +48,11 @@
       overflow-y: auto;
     }
 
+    // Allow item sheets to scroll through content
+    .nimble-sheet__body.nimble-sheet__body--item {
+      overflow-y: auto;
+    }
+
     // Allow the nested body section with player-character class (used in NPC sheets) to scroll
     .nimble-sheet__body--npc .nimble-sheet__body.nimble-sheet__body--player-character {
       overflow-y: auto;
