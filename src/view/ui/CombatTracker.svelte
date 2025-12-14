@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
 	import type { NimbleCombat } from '../../documents/combat/combat.svelte.js';
 	import BaseCombatant from './components/BaseCombatant.svelte';
@@ -15,43 +15,97 @@
 		}
 	}
 
+	function updateCurrentCombat() {
+		const viewedCombat = game.combats.viewed as NimbleCombat | null;
+
+		if (!viewedCombat) {
+			currentCombat = null;
+			return;
+		}
+
+		if (!canvas.scene || viewedCombat.scene?.id !== canvas.scene.id) {
+			currentCombat = null;
+			return;
+		}
+
+		if (viewedCombat.combatants.size === 0) {
+			currentCombat = null;
+			return;
+		}
+
+		currentCombat = viewedCombat;
+	}
+
 	async function _onDrop(event: DragEvent & { currentTarget: EventTarget & HTMLOListElement }) {
 		event.preventDefault();
-		await (game.combat as NimbleCombat)?._onDrop(event);
+		await currentCombat?._onDrop(event);
 	}
 
 	function rollInitiativeForAll(event) {
 		event.preventDefault();
-		(game.combat as NimbleCombat)?.rollAll();
+		currentCombat?.rollAll();
 	}
 
 	function startCombat(event): Promise<NimbleCombat> | undefined {
 		event.preventDefault();
-		return (game.combat as NimbleCombat)?.startCombat();
+		return currentCombat?.startCombat();
 	}
 
-	const createCombat = Hooks.on('createCombat', (_combat) => {
-		currentCombat = (game.combat as NimbleCombat) ?? null;
-	});
+	let currentCombat: NimbleCombat | null = $state(null);
 
-	const deleteCombat = Hooks.on('deleteCombat', (_combat) => {
-		currentCombat = (game.combat as NimbleCombat) ?? null;
-	});
+	let createCombatHook: number | undefined;
+	let deleteCombatHook: number | undefined;
+	let updateCombatHook: number | undefined;
+	let createCombatantHook: number | undefined;
+	let deleteCombatantHook: number | undefined;
+	let renderSceneNavigationHook: number | undefined;
+	let canvasReadyHook: number | undefined;
 
-	const renderSceneNavigation = Hooks.on('renderSceneNavigation', () => {
-		currentCombat = (game.combat as NimbleCombat) ?? null;
+	onMount(() => {
+		updateCurrentCombat();
+
+		createCombatHook = Hooks.on('createCombat', (_combat) => {
+			updateCurrentCombat();
+		});
+
+		deleteCombatHook = Hooks.on('deleteCombat', (_combat) => {
+			updateCurrentCombat();
+		});
+
+		updateCombatHook = Hooks.on('updateCombat', (_combat) => {
+			updateCurrentCombat();
+		});
+
+		createCombatantHook = Hooks.on('createCombatant', () => {
+			updateCurrentCombat();
+		});
+
+		deleteCombatantHook = Hooks.on('deleteCombatant', () => {
+			updateCurrentCombat();
+		});
+
+		renderSceneNavigationHook = Hooks.on('renderSceneNavigation', () => {
+			updateCurrentCombat();
+		});
+
+		canvasReadyHook = Hooks.on('canvasReady', () => {
+			updateCurrentCombat();
+		});
 	});
 
 	onDestroy(() => {
-		Hooks.off('createCombat', createCombat);
-		Hooks.off('deleteCombat', deleteCombat);
-		Hooks.off('renderSceneNavigation', renderSceneNavigation);
+		if (createCombatHook !== undefined) Hooks.off('createCombat', createCombatHook);
+		if (deleteCombatHook !== undefined) Hooks.off('deleteCombat', deleteCombatHook);
+		if (updateCombatHook !== undefined) Hooks.off('updateCombat', updateCombatHook);
+		if (createCombatantHook !== undefined) Hooks.off('createCombatant', createCombatantHook);
+		if (deleteCombatantHook !== undefined) Hooks.off('deleteCombatant', deleteCombatantHook);
+		if (renderSceneNavigationHook !== undefined)
+			Hooks.off('renderSceneNavigation', renderSceneNavigationHook);
+		if (canvasReadyHook !== undefined) Hooks.off('canvasReady', canvasReadyHook);
 	});
-
-	let currentCombat: NimbleCombat | null = $state(null);
 </script>
 
-{#if currentCombat?.reactive?.active}
+{#if currentCombat}
 	<section class="nimble-combat-tracker" transition:slide={{ axis: 'x' }}>
 		<header
 			class="nimble-combat-tracker__header"
