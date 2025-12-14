@@ -14,18 +14,26 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	protected root;
 
 	constructor(data = {}, { parent = null, pack = null, ...options } = {}) {
-		super(foundry.utils.mergeObject(options, {}));
+		const width = 608;
+		super(
+			foundry.utils.mergeObject(options, {
+				position: {
+					width,
+					top: Math.round(window.innerHeight * 0.1),
+					left: Math.round((window.innerWidth - width) / 2),
+				},
+			}),
+		);
 
 		this.root = CharacterCreationDialogComponent;
 
 		this.data = data;
 		this.parent = parent;
 		this.pack = pack;
-		// this.options = foundry.utils.mergeObject(this.options, options, { overwrite: false });
 	}
 
 	static override DEFAULT_OPTIONS = {
-		classes: ['nimble-sheet'],
+		classes: ['nimble-sheet', 'nimble-dialog'],
 		window: {
 			icon: 'fa-solid fa-user',
 			title: 'Character Creation Helper',
@@ -33,8 +41,6 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		},
 		position: {
 			height: 'auto',
-			top: 5,
-			width: 608,
 		},
 		actions: {},
 	};

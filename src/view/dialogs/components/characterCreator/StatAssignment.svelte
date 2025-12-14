@@ -66,6 +66,8 @@
 	}
 
 	$effect(() => {
+		// Reset temp assignments when selectedArray changes
+		selectedArray;
 		tempSelectedAbilityScores = generateBlankAttributeSet();
 		bonusLanguages = [];
 	});
@@ -103,7 +105,17 @@
 				<li
 					class="nimble-cc-ability-score"
 					class:nimble-cc-ability-score--key={isKey}
-					ondrop={(event) => handleAbilityModifierDrop(event, abilityKey)}
+					ondrop={(event) => {
+						event.currentTarget.classList.remove('nimble-cc-ability-score--drag-over');
+						handleAbilityModifierDrop(event, abilityKey);
+					}}
+					ondragover={(event) => {
+						event.preventDefault();
+						event.currentTarget.classList.add('nimble-cc-ability-score--drag-over');
+					}}
+					ondragleave={(event) => {
+						event.currentTarget.classList.remove('nimble-cc-ability-score--drag-over');
+					}}
 					data-tooltip={isKey ? abilityScoreTooltips.keyStat : null}
 					data-tooltip-class="nimble-tooltip nimble-tooltip--key-ability"
 					data-tooltip-direction="UP"
@@ -137,10 +149,14 @@
 								e.dataTransfer.setData('modifier', arrayIndex);
 							}}
 						>
-							{replaceHyphenWithMinusSign(selectedArray?.array?.[arrayIndex] ?? '')}
+							<i class="fa-solid fa-grip-vertical drag-icon"></i>
+							<span>{replaceHyphenWithMinusSign(selectedArray?.array?.[arrayIndex] ?? '')}</span>
 						</div>
 					{:else}
-						-
+						<div class="nimble-cc-ability-score__drop-zone">
+							<i class="fa-solid fa-arrow-down drop-icon"></i>
+							<span class="drop-text">Drop here</span>
+						</div>
 					{/if}
 
 					<div
@@ -172,7 +188,8 @@
 								e.dataTransfer.setData('modifier', modifierIndex);
 							}}
 						>
-							{replaceHyphenWithMinusSign(modifier)}
+							<i class="fa-solid fa-grip-vertical drag-icon"></i>
+							<span class="modifier-value">{replaceHyphenWithMinusSign(modifier)}</span>
 						</li>
 					{/if}
 				{/each}
@@ -264,15 +281,48 @@
 
 	.nimble-array-value-list__option {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		align-items: center;
+		justify-content: center;
+		position: relative;
 		margin: 0;
-		background: var(--nimble-card-background-color, unset);
-		border: 1px solid var(--nimble-card-border-color, hsl(41, 18%, 54%));
+		padding: 0.5rem;
+		background-color: var(--nimble-box-background-color, var(--nimble-card-background-color));
+		border: 2px solid var(--nimble-card-border-color, hsl(41, 18%, 54%));
 		box-shadow: var(--nimble-box-shadow);
 		border-radius: 4px;
 		cursor: grab;
 		font-size: var(--nimble-md-text);
+		font-weight: 600;
+		transition: var(--nimble-standard-transition);
+
+		&:hover {
+			border-color: var(--nimble-accent-color);
+			box-shadow:
+				var(--nimble-box-shadow),
+				0 0 6px color-mix(in srgb, var(--nimble-accent-color) 50%, transparent);
+			transform: scale(1.05);
+
+			.drag-icon {
+				opacity: 1;
+			}
+		}
+
+		&:active {
+			cursor: grabbing;
+		}
+
+		.drag-icon {
+			position: absolute;
+			left: 0.5rem;
+			font-size: 0.75rem;
+			opacity: 0.6;
+			transition: opacity 0.2s ease;
+		}
+
+		.modifier-value {
+			font-weight: 600;
+		}
 	}
 
 	.nimble-cc-ability-score {
@@ -283,12 +333,16 @@
 		flex-direction: column;
 		align-items: center;
 		background: var(--nimble-card-background-color, unset);
-		border: 1px solid var(--nimble-card-border-color, hsl(41, 18%, 54%));
+		border: 2px solid var(--nimble-card-border-color, hsl(41, 18%, 54%));
 		box-shadow: var(--nimble-box-shadow);
 		border-radius: 4px;
 		font-size: var(--nimble-md-text);
 		cursor: auto;
 		position: relative;
+		transition:
+			border-color 0.2s ease,
+			background-color 0.2s ease,
+			box-shadow 0.2s ease;
 
 		&:hover {
 			text-shadow: none;
@@ -297,11 +351,19 @@
 		&--key {
 			border: 2px solid hsl(43, 50%, 45%);
 			box-shadow: var(--nimble-box-shadow);
-			background: linear-gradient(
-				135deg,
-				var(--nimble-card-background-color, hsl(0, 0%, 20%)) 0%,
-				hsla(43, 30%, 20%, 0.3) 100%
+		}
+
+		&--drag-over {
+			border-color: var(--nimble-accent-color);
+			background: color-mix(
+				in srgb,
+				var(--nimble-accent-color) 15%,
+				var(--nimble-card-background-color, transparent)
 			);
+			box-shadow:
+				var(--nimble-box-shadow),
+				0 0 12px color-mix(in srgb, var(--nimble-accent-color) 60%, transparent),
+				inset 0 0 8px color-mix(in srgb, var(--nimble-accent-color) 20%, transparent);
 		}
 
 		&__indicator {
@@ -339,13 +401,91 @@
 			}
 		}
 
-		&__value {
+		&__drop-zone {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 0.125rem;
 			width: 100%;
+			padding: 0.25rem;
+			border: 2px dashed var(--nimble-card-border-color, hsl(41, 18%, 54%));
+			border-radius: 4px;
+			opacity: 0.4;
+			transition: var(--nimble-standard-transition);
+
+			.drop-icon {
+				font-size: 0.75rem;
+			}
+
+			.drop-text {
+				font-size: 0.625rem;
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
+			}
+		}
+
+		&--drag-over &__drop-zone {
+			opacity: 1;
+			border-color: var(--nimble-accent-color);
+			background-color: color-mix(in srgb, var(--nimble-accent-color) 20%, transparent);
+			animation: pulse 1s ease-in-out infinite;
+		}
+
+		@keyframes pulse {
+			0%,
+			100% {
+				transform: scale(1);
+			}
+			50% {
+				transform: scale(1.05);
+			}
+		}
+
+		&__value {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			position: relative;
+			width: 100%;
+			padding: 0.25rem;
 			text-align: center;
 			cursor: grab;
+			font-weight: 600;
+			background-color: var(--nimble-box-background-color, var(--nimble-card-background-color));
+			border-radius: 4px;
+
+			.drag-icon {
+				position: absolute;
+				left: 0.25rem;
+				font-size: 0.625rem;
+				opacity: 0.5;
+				transition: opacity 0.2s ease;
+			}
+
+			&:hover {
+				background-color: color-mix(
+					in srgb,
+					var(--nimble-accent-color) 20%,
+					var(--nimble-box-background-color, transparent)
+				);
+
+				.drag-icon {
+					opacity: 1;
+				}
+			}
 
 			&--no-drag {
 				cursor: auto;
+				background-color: transparent;
+
+				&:hover {
+					background-color: transparent;
+				}
+
+				.drag-icon {
+					display: none;
+				}
 			}
 		}
 	}
