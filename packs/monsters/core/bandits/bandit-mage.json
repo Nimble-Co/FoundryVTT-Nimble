@@ -14,7 +14,14 @@
 				"temp": 0,
 				"value": 41
 			},
-			"sizeCategory": "medium"
+			"sizeCategory": "medium",
+			"movement": {
+				"burrow": 0,
+				"climb": 0,
+				"fly": 0,
+				"swim": 0,
+				"walk": 6
+			}
 		},
 		"description": "",
 		"details": {
@@ -172,17 +179,23 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
+				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
+				"subtype": "feature"
 			},
 			"effects": [],
 			"folder": null,
 			"sort": 0,
-			"flags": {},
+			"flags": {
+				"nimble": {
+					"collapsed": true
+				}
+			},
 			"_stats": {
-				"coreVersion": "13.347",
+				"coreVersion": "13.350",
 				"systemId": "nimble",
-				"systemVersion": "0.1.7",
-				"lastModifiedBy": null
+				"systemVersion": "0.3.0",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1765688642868
 			}
 		},
 		{
@@ -220,17 +233,23 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When damaged, teleport up to 4 spaces.</p>"
+				"description": "<p>When damaged, teleport up to 4 spaces.</p>",
+				"subtype": "feature"
 			},
 			"effects": [],
 			"folder": null,
 			"sort": 0,
-			"flags": {},
+			"flags": {
+				"nimble": {
+					"collapsed": true
+				}
+			},
 			"_stats": {
-				"coreVersion": "13.347",
+				"coreVersion": "13.350",
 				"systemId": "nimble",
-				"systemVersion": "0.1.7",
-				"lastModifiedBy": null
+				"systemVersion": "0.3.0",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1765688642878
 			}
 		},
 		{
@@ -266,13 +285,19 @@
 							"on": {
 								"miss": [
 									{
-										"id": "bXmuezNLqS5Emz5w",
-										"type": "damage",
-										"damageType": "lightning",
-										"formula": "3d8",
+										"id": "Ecg4Hxa8qLJPzobf",
+										"type": "note",
+										"noteType": "warning",
+										"text": "Damage self!",
 										"parentContext": "miss",
-										"parentNode": "AShON8zq6ZQLOce8",
-										"ignoreAllies": false
+										"parentNode": "AShON8zq6ZQLOce8"
+									},
+									{
+										"id": "x8e6cQRA69wZZQjO",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "miss",
+										"parentNode": "AShON8zq6ZQLOce8"
 									}
 								],
 								"hit": [
@@ -307,12 +332,17 @@
 			"effects": [],
 			"folder": null,
 			"sort": 0,
-			"flags": {},
+			"flags": {
+				"nimble": {
+					"collapsed": true
+				}
+			},
 			"_stats": {
-				"coreVersion": "13.347",
+				"coreVersion": "13.350",
 				"systemId": "nimble",
-				"systemVersion": "0.1.7",
-				"lastModifiedBy": null
+				"systemVersion": "0.3.0",
+				"lastModifiedBy": "zvcmZ9cAKxekqF5X",
+				"modifiedTime": 1765688642882
 			}
 		}
 	],
@@ -321,9 +351,9 @@
 	"_stats": {
 		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
-		"createdTime": 1757303577463,
-		"modifiedTime": 1757312682491,
+		"systemVersion": "0.1.9",
+		"createdTime": 1762234601027,
+		"modifiedTime": 1762234601027,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
 	"_id": "DO4C8oN9LxSqK6XG"

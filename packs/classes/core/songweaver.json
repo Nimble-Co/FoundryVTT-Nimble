@@ -56,12 +56,22 @@
 				"uuid": "Compendium.nimble.nimble-items.Item.6u0lORebcaYqjAEb"
 			}
 		],
-		"armorProficiencies": ["cloth", "leather"],
+		"armorProficiencies": [
+			"cloth",
+			"leather"
+		],
 		"classLevel": 1,
 		"complexity": 3,
 		"description": "<p>Just TRY and resist my charm… wait—NO, don’t! Each Songweaver holds a spark granted to them by a muse at birth; a spark which fuels their creative energy and flows forth in the form of a sharp wit, relentless humor, or moving art.</p><p>The power of a Songweaver’s spark is also evident in their powerful sway over others. Songweavers can bolster and infuse courage in their allies, or… make their enemies’ brains leak out through their ears. The Songweaver can bring a whole new meaning to verbal abuse! They can even redirect the (often justified) attacks of others, in order to protect their own moneymakers. As a Songweaver, you can:</p><p>• <strong>Charm</strong> the hapless people you meet and inspire your allies to reach fantastic new heights of heroism!</p><p>• <strong>Use your Lyrical Weaponry</strong> and powerful charisma to dominate enemies and call special friends to aid you in your journeys and battles. You can even redirect attacks away from yourself and make enemies attack their own allies!</p><p>• <strong>Control the Battlefield</strong> with a chord of chaos, a rad heroic ballad, or a debilitating rhapsody; make your allies and enemies alike dance to your tune!</p>",
-		"groupIdentifiers": ["songweaver-progression", "lyrical-weaponry", "a-people-person"],
-		"keyAbilityScores": ["will", "intelligence"],
+		"groupIdentifiers": [
+			"songweaver-progression",
+			"lyrical-weaponry",
+			"a-people-person"
+		],
+		"keyAbilityScores": [
+			"will",
+			"intelligence"
+		],
 		"hitDieSize": 8,
 		"hpData": [],
 		"savingThrows": {
@@ -120,7 +130,10 @@
 			"recovery": "safeRest"
 		},
 		"resources": [],
-		"weaponProficiencies": ["DEX Weapons", "Wands"]
+		"weaponProficiencies": [
+			"DEX Weapons",
+			"Wands"
+		]
 	},
 	"effects": [],
 	"flags": {},
@@ -132,5 +145,5 @@
 		"modifiedTime": 1762031914948,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "izfDfdfmGSlswOE8"
+	"_id": "bl92GuARoUMmKVdw"
 }
