@@ -1,5 +1,6 @@
 .system-nimble .nimble-sheet .nimble-code-block {
     flex-shrink: 0;
+    width: 100%;
     min-height: var(--nimble-code-editor-min-height, 10rem);
     padding: var(--nimble-code-editor-padding, 0.5rem);
     font-family: var(--nimble-mono-font);

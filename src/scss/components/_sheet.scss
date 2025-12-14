@@ -168,6 +168,7 @@
 			display: flex;
 			flex-direction: column;
 			gap: var(--nimble-sheet-body-gap, 0.75rem);
+			overflow: auto;
 		}
 
 		&--ability-score-config,
