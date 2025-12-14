@@ -1,11 +1,11 @@
 .system-nimble .nimble-sheet .nimble-secondary-navigation {
   grid-area: secondaryNavigation;
   position: relative;
-  margin: -1rem 0.25rem 0.5rem;
+  margin: -1rem 0.25rem 0;
   padding-inline: 0;
   padding-block-start: 0.125rem;
   border-bottom: 0;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--nimble-secondary-navigation-background, rgba(255, 255, 255, 0.1));
   box-shadow: var(--nimble-card-box-shadow);
   z-index: 0;
 }
@@ -35,8 +35,13 @@
     cursor: pointer;
     transition: var(--nimble-standard-transition);
 
+    i {
+      color: inherit;
+    }
+
     &:focus,
     &:hover {
+      color: var(--nimble-secondary-navigation-active-text-color);
       border: 0;
       border-right: var(--nimble-secondary-navigation-item-border, 0);
       outline: 0;

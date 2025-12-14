@@ -37,6 +37,7 @@
 
     --nimble-secondary-navigation-text-color: var(--nimble-medium-text-color);
     --nimble-secondary-navigation-active-text-color: hsl(1, 51%, 34%);
+    --nimble-secondary-navigation-background: rgba(0, 0, 0, 0.05);
 
     --nimble-search-input-border-color: hsl(41, 18%, 54%);
     --nimble-currency-input-border-color: var(
@@ -63,6 +64,7 @@
     --nimble-hp-bar-background: hsl(0, 0%, 24%);
     --nimble-range-slider-handle-color: hsl(223, 14%, 35%);
     --nimble-image-background-color: #494949;
+    --nimble-basic-button-background-color: hsl(41, 18%, 80%);
 
     --nimble-roll-success-background-color: hsl(105, 16%, 62%);
     --nimble-roll-success-color: hsl(109, 76%, 18%);
@@ -92,6 +94,11 @@
     /** COMBAT TRACKER **/
     --nimble-combat-tracker-text-color: var(--nimble-dark-text-color);
     --nimble-combat-tracker-background: hsla(0, 0%, 100%, 0.85);
+
+    /** INPUT FIELDS **/
+    --nimble-input-background-color: hsla(0, 0%, 100%, 0.5);
+    --nimble-input-border-color: hsl(41, 18%, 54%);
+    --nimble-input-focus-border-color: var(--color-border-highlight);
 
     --nimble-checkbox-checked-color: var(--nimble-hp-bar-background);
     --nimble-checkbox-checkmark-color: var(--nimble-light-text-color);

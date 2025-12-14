@@ -333,12 +333,20 @@
 		font-weight: 500;
 		text-align: center;
 		padding: 0 0.125rem;
-		border: 0;
+		color: var(--nimble-dark-text-color);
+		background-color: var(--nimble-input-background-color, transparent);
+		border: 1px solid var(--nimble-input-border-color, transparent);
+		border-radius: 2px;
 		outline: none;
 		box-shadow: none;
 
+		&::placeholder {
+			color: var(--nimble-medium-text-color);
+		}
+
 		&:active,
 		&:focus {
+			border-color: var(--nimble-input-focus-border-color, var(--color-border-highlight));
 			outline: none;
 			box-shadow: none;
 		}

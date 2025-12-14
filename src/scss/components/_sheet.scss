@@ -7,6 +7,25 @@
 	border: 0;
 	font-size: var(--nimble-base-font-size) !important;
 
+	// Global input styling for proper dark/light mode support
+	input,
+	textarea,
+	select {
+		color: var(--nimble-dark-text-color);
+		background-color: var(--nimble-input-background-color, transparent);
+		border: 1px solid var(--nimble-input-border-color, transparent);
+		border-radius: 2px;
+
+		&::placeholder {
+			color: var(--nimble-medium-text-color);
+		}
+
+		&:focus {
+			border-color: var(--nimble-input-focus-border-color, var(--color-border-highlight));
+			outline: none;
+		}
+	}
+
 	.window-resize-handle {
 		z-index: 200 !important;
 		pointer-events: all !important;
@@ -18,7 +37,7 @@
 
 	&:has(.nimble-secondary-navigation) {
 		--nimble-sheet-body-padding-block-start: 0.5rem;
-		--nimble-sheet-static-padding-block-start: 0.5rem;
+		--nimble-sheet-static-padding-block-start: 0.25rem;
 	}
 
 	&:has(.nimble-sheet__static) {

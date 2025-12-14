@@ -101,6 +101,14 @@
 			flex-direction: column;
 			align-items: flex-start;
 		}
+
+		input {
+			color: var(--nimble-dark-text-color);
+
+			&::placeholder {
+				color: var(--nimble-medium-text-color);
+			}
+		}
 	}
 
 	.nimble-notes-section {

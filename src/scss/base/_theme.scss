@@ -5,6 +5,10 @@
   --nimble-combat-tracker-text-color: hsl(38, 38%, 94%);
   --nimble-combat-tracker-background: hsla(0, 0%, 0%, 0.85);
 
+  /** INPUT FIELDS **/
+  --nimble-input-background-color: hsla(0, 0%, 0%, 0.3);
+  --nimble-input-border-color: hsl(293, 10%, 40%);
+
   /** TEXT COLORS **/
   --nimble-dark-text-color: hsl(36, 53%, 80%);
   --nimble-dark-text-hover-color: hsl(36, 58%, 90%);
@@ -15,6 +19,7 @@
   --nimble-navigation-active-text-color: hsl(38, 38%, 94%);
   --nimble-secondary-navigation-text-color: hsl(36, 53%, 80%);
   --nimble-secondary-navigation-active-text-color: hsl(36, 58%, 90%);
+  --nimble-secondary-navigation-background: rgba(255, 255, 255, 0.1);
   --nimble-sidebar-text-color: hsl(36, 53%, 80%);
   --nimble-code-editor-text-color: hsl(217, 34%, 88%);
 

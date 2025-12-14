@@ -31,12 +31,14 @@
     padding: var(--nimble-button-padding, 0.125rem 0.25rem);
     font-size: var(--nimble-button-font-size, var(--nimble-sm-text));
     font-weight: 500;
+    color: var(--nimble-dark-text-color);
     background-color: var(--nimble-basic-button-background-color, var(--button-background-color));
     border: 0;
 
     &:hover {
-      color: var(--nimble-navigation-active-text-color);
-      background-color: var(--nimble-navigation-background-color);
+      color: var(--nimble-dark-text-hover-color);
+      background-color: var(--nimble-basic-button-background-color);
+      filter: brightness(1.1);
     }
   }
 
@@ -160,6 +162,7 @@
     padding: 0.5rem 0.25rem;
     border: 0;
     border-radius: 4px;
+    color: var(--nimble-dark-text-color);
     background-color: var(--nimble-basic-button-background-color, var(--button-background-color));
     font-weight: 500;
     line-height: 1;
@@ -167,8 +170,9 @@
     opacity: 1;
 
     &:hover {
-      color: var(--nimble-navigation-active-text-color);
-      background-color: var(--nimble-navigation-background-color);
+      color: var(--nimble-dark-text-hover-color);
+      background-color: var(--nimble-basic-button-background-color);
+      filter: brightness(1.1);
     }
 
     &:disabled {
