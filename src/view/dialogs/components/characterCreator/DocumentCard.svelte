@@ -1,14 +1,25 @@
 <script>
-	let { document, handler, metadata, tooltip, ...attributes } = $props();
+	let { document, handler, metadata, getTooltip, ...attributes } = $props();
+
+	let tooltipContent = $state('');
+
+	async function handleMouseEnter(event) {
+		if (tooltipContent || !getTooltip) return;
+
+		const content = await getTooltip(document);
+		tooltipContent = content;
+		event.currentTarget.setAttribute('data-tooltip', content);
+	}
 </script>
 
 <button
 	class="nimble-card"
 	{...attributes}
-	data-tooltip={tooltip}
+	data-tooltip={tooltipContent}
 	data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 	data-tooltip-direction="RIGHT"
 	onclick={() => handler?.(document)}
+	onmouseenter={handleMouseEnter}
 >
 	<img class="nimble-card__img" src={document.img} alt={document.name} />
 

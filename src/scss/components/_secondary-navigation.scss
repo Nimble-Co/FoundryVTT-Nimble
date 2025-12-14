@@ -1,71 +1,86 @@
 .system-nimble .nimble-sheet .nimble-secondary-navigation {
-  grid-area: secondaryNavigation;
-  position: relative;
-  margin: -1rem 0.25rem 0.5rem;
-  padding-inline: 0;
-  padding-block-start: 0.125rem;
-  border-bottom: 0;
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: var(--nimble-card-box-shadow);
-  z-index: 0;
+	grid-area: secondaryNavigation;
+	position: relative;
+	// Primary nav already provides top spacing; we only want horizontal gutter.
+	// Avoid negative margin so we don't overlap the primary navigation.
+	margin: 0 0.25rem;
+	padding-inline: 0;
+	padding-block-start: 0.125rem;
+	border-bottom: 0;
+	background: var(--nimble-secondary-navigation-background, rgba(255, 255, 255, 0.1));
+	box-shadow: var(--nimble-card-box-shadow);
+	// Must be above the sheet background (::before) layer.
+	z-index: 2;
 }
 
 .system-nimble .nimble-secondary-navigation-list,
 .system-nimble .nimble-sheet .nimble-secondary-navigation-list {
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+	display: flex;
+	align-items: center;
+	justify-content: space-evenly;
+	margin: 0;
+	padding: 0;
+	list-style: none;
 
-  &__button {
-    position: relative;
-    width: 100%;
-    margin-block: 0.65rem 0.55rem;
-    padding: 0.25rem 0;
-    color: var(--nimble-secondary-navigation-text-color);
-    font-weight: 600;
-    line-height: 1;
-    text-align: center;
-    border: 0;
-    border-right: var(--nimble-secondary-navigation-item-border, 0);
-    border-radius: 0;
-    background: transparent;
-    cursor: pointer;
-    transition: var(--nimble-standard-transition);
+	&__button {
+		position: relative;
+		width: 100%;
+		margin-block: 0.65rem 0.55rem;
+		padding: 0.25rem 0;
+		color: var(--nimble-secondary-navigation-text-color);
+		font-weight: 600;
+		line-height: 1;
+		text-align: center;
+		border: 0;
+		border-right: var(--nimble-secondary-navigation-item-border, 0);
+		border-radius: 0;
+		background: transparent;
+		cursor: pointer;
+		transition: var(--nimble-standard-transition);
 
-    &:focus,
-    &:hover {
-      border: 0;
-      border-right: var(--nimble-secondary-navigation-item-border, 0);
-      outline: 0;
-      box-shadow: none;
-    }
+		i {
+			color: inherit;
+			transform-origin: center;
+			transition: transform 120ms ease;
+		}
 
-    &--active {
-      color: var(--nimble-secondary-navigation-active-text-color);
+		&:focus,
+		&:hover {
+			color: var(--nimble-secondary-navigation-active-text-color);
+			border: 0;
+			border-right: var(--nimble-secondary-navigation-item-border, 0);
+			outline: 0;
+			box-shadow: none;
+		}
 
-      &::after {
-        content: "";
-        position: absolute;
-        bottom: -0.55rem;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 0;
-        height: 0;
-        border-left: 5px solid transparent;
-        border-right: 5px solid transparent;
-        border-bottom: 5px solid var(--nimble-secondary-navigation-active-text-color);
-      }
-    }
-  }
+		&:focus i,
+		&:hover i {
+			transform: scale(1.15);
+		}
 
-  &__item {
-    display: contents;
+		&--active {
+			color: var(--nimble-secondary-navigation-active-text-color);
 
-    &:not(:last-of-type) {
-      --nimble-secondary-navigation-item-border: 1px solid rgba(120, 100, 82, 0.5);
-    }
-  }
+			&::after {
+				content: "";
+				position: absolute;
+				bottom: -0.55rem;
+				left: 50%;
+				transform: translateX(-50%);
+				width: 0;
+				height: 0;
+				border-left: 5px solid transparent;
+				border-right: 5px solid transparent;
+				border-bottom: 5px solid var(--nimble-secondary-navigation-active-text-color);
+			}
+		}
+	}
+
+	&__item {
+		display: contents;
+
+		&:not(:last-of-type) {
+			--nimble-secondary-navigation-item-border: 1px solid rgba(120, 100, 82, 0.5);
+		}
+	}
 }

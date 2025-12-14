@@ -353,7 +353,7 @@
 			box-shadow: var(--nimble-box-shadow);
 		}
 
-		&--drag-over {
+		&:global(.nimble-cc-ability-score--drag-over) {
 			border-color: var(--nimble-accent-color);
 			background: color-mix(
 				in srgb,
@@ -425,7 +425,7 @@
 			}
 		}
 
-		&--drag-over &__drop-zone {
+		&:global(.nimble-cc-ability-score--drag-over) &__drop-zone {
 			opacity: 1;
 			border-color: var(--nimble-accent-color);
 			background-color: color-mix(in srgb, var(--nimble-accent-color) 20%, transparent);
@@ -481,10 +481,6 @@
 
 				&:hover {
 					background-color: transparent;
-				}
-
-				.drag-icon {
-					display: none;
 				}
 			}
 		}

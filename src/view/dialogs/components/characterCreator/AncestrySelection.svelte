@@ -78,7 +78,6 @@
 				<ul class="nimble-document-list">
 					{#each options as ancestry}
 						{@const metadata = prepareAncestryMetadata(ancestry)}
-						{@const tooltip = prepareAncestryTooltip(ancestry)}
 
 						<li class="u-semantic-only">
 							<DocumentCard
@@ -86,7 +85,7 @@
 								document={ancestry}
 								handler={handleAncestrySelection}
 								{metadata}
-								{tooltip}
+								getTooltip={prepareAncestryTooltip}
 							/>
 						</li>
 					{/each}
@@ -100,13 +99,11 @@
 			hintType="warning"
 		/>
 	{:else if selectedAncestry}
-		{@const tooltip = prepareAncestryTooltip(selectedAncestry)}
-
 		<DocumentCard
 			document={selectedAncestry}
 			handler={null}
 			data-card-option="non-clickable"
-			{tooltip}
+			getTooltip={prepareAncestryTooltip}
 		/>
 	{/if}
 </section>

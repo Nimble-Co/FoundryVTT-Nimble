@@ -197,7 +197,7 @@
 	}
 
 	.accordion-content {
-		background: var(--nimble-box-background-color);
+		background: transparent;
 		border: 1px solid var(--nimble-card-border-color);
 		border-top: none;
 		border-radius: 0 0 4px 4px;
