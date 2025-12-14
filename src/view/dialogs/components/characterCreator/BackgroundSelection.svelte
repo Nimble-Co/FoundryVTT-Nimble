@@ -40,13 +40,11 @@
 
 		<ul class="nimble-document-list">
 			{#each backgrounds as background}
-				{@const tooltip = prepareBackgroundTooltip(background)}
-
 				<li class="u-semantic-only">
 					<DocumentCard
 						document={background}
 						handler={async (background) => (selectedBackground = await fromUuid(background.uuid))}
-						{tooltip}
+						getTooltip={prepareBackgroundTooltip}
 					/>
 				</li>
 			{/each}
@@ -58,13 +56,11 @@
 			hintType="warning"
 		/>
 	{:else if selectedBackground}
-		{@const tooltip = prepareBackgroundTooltip(selectedBackground)}
-
 		<DocumentCard
 			document={selectedBackground}
 			handler={null}
 			data-card-option="non-clickable"
-			{tooltip}
+			getTooltip={prepareBackgroundTooltip}
 		/>
 	{/if}
 </section>
