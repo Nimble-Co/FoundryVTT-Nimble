@@ -1,6 +1,10 @@
 //** FOUNDRY DARK THEME **/
 
 .theme-dark {
+  /** COMBAT TRACKER **/
+  --nimble-combat-tracker-text-color: hsl(38, 38%, 94%);
+  --nimble-combat-tracker-background: hsla(0, 0%, 0%, 0.85);
+
   /** TEXT COLORS **/
   --nimble-dark-text-color: hsl(36, 53%, 80%);
   --nimble-dark-text-hover-color: hsl(36, 58%, 90%);
