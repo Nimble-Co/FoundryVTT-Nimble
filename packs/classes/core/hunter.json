@@ -55,12 +55,20 @@
 				"uuid": "Compendium.nimble.nimble-items.Item.ueO8AjVL8kQ1Up1I"
 			}
 		],
-		"armorProficiencies": ["leather"],
+		"armorProficiencies": [
+			"leather"
+		],
 		"classLevel": 1,
 		"complexity": 2,
 		"description": "<p>Respect the forest and her children, and she will bestow upon you many gifts. Long before the first stones of the grand kingdoms had been laid, there was The Wild. We Hunters called groves and fields home, just as the elk and boar still do. We have trained our minds and hearts as much as we have trained with bows.</p><p>For, there is great danger in becoming a Hunter: the intoxicating Thrill of the Hunt that washes over your body when stalking prey. Be warned—do not allow it to settle into your heart. For no true Hunter takes without recognizing what they have first been given: a soul, a meal… warmth, all at a cost—a life. And that should not be taken lightly. Wherever you roam, be it city or glade, mountain or valley, as long as The Wild is tenderly tucked into the depths of your heart, you will always be a Hunter. May your arrows strike true and your bowstrings never break.</p><p>Hunters Are:</p><ul><li><p><strong>Relentless Trackers.</strong> As an expert survivalist, you mark your prey, becoming a shadow in pursuit, relentless and precise.</p></li><li><p><strong>Masters of the Wild.</strong> Harness the Thrill of the Hunt to outwit your targets—set decoys, spring traps, and strike with lethal efficiency.</p></li><li><p><strong>Deadly from Afar or Up Close.</strong> Whether you’re raining arrows from a distance or closing in for a personal takedown, your prey won’t escape your reach.</p></li></ul>",
-		"groupIdentifiers": ["thrill-of-the-hunt", "hunter-progression"],
-		"keyAbilityScores": ["dexterity", "will"],
+		"groupIdentifiers": [
+			"thrill-of-the-hunt",
+			"hunter-progression"
+		],
+		"keyAbilityScores": [
+			"dexterity",
+			"will"
+		],
 		"hitDieSize": 8,
 		"hpData": [],
 		"savingThrows": {
@@ -119,7 +127,9 @@
 			"recovery": "safeRest"
 		},
 		"resources": [],
-		"weaponProficiencies": ["DEX Weapons"]
+		"weaponProficiencies": [
+			"DEX Weapons"
+		]
 	},
 	"effects": [],
 	"folder": null,
@@ -132,5 +142,5 @@
 		"modifiedTime": 1761713550534,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "J2kzmfmh7im3gY1v"
+	"_id": "UTilC0I4lzqv46rb"
 }
