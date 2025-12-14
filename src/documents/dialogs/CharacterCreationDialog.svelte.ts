@@ -25,7 +25,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	}
 
 	static override DEFAULT_OPTIONS = {
-		classes: ['nimble-sheet'],
+		classes: ['nimble-sheet', 'nimble-dialog'],
 		window: {
 			icon: 'fa-solid fa-user',
 			title: 'Character Creation Helper',
@@ -33,7 +33,6 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		},
 		position: {
 			height: 'auto',
-			top: 5,
 			width: 608,
 		},
 		actions: {},

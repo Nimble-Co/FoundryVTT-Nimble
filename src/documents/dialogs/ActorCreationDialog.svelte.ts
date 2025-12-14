@@ -27,7 +27,7 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 	}
 
 	static override DEFAULT_OPTIONS = {
-		classes: ['nimble-sheet'],
+		classes: ['nimble-sheet', 'nimble-dialog'],
 		window: {
 			icon: 'fa-solid fa-user',
 			resizable: true,

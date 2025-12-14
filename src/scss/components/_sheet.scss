@@ -285,3 +285,25 @@
 		}
 	}
 }
+
+.system-nimble .nimble-dialog {
+	max-height: 80vh;
+	top: 10vh !important;
+
+	.window-content {
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		max-height: calc(80vh - var(--header-height, 30px));
+	}
+
+	.nimble-sheet__body {
+		flex: 1;
+		overflow-y: auto;
+		min-height: 0;
+	}
+
+	.nimble-sheet__footer {
+		flex-shrink: 0;
+	}
+}
