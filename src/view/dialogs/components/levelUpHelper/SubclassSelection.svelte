@@ -119,18 +119,22 @@
 		padding: 0.5rem;
 		position: relative;
 		cursor: pointer;
-		background: var(--nimble-color-bg-secondary, #2a2a2a);
-		border: 1px solid var(--nimble-color-border, #444);
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 4px;
 		transition: all 0.3s ease;
 
 		&:hover {
-			border-color: var(--nimble-color-primary, #4a90e2);
+			border-color: var(--nimble-accent-color);
 		}
 
 		&.selected {
-			border-color: var(--nimble-color-primary, #4a90e2);
-			background: rgba(74, 144, 226, 0.1);
+			border-color: var(--nimble-accent-color);
+			background: color-mix(
+				in srgb,
+				var(--nimble-accent-color) 10%,
+				var(--nimble-box-background-color)
+			);
 		}
 
 		&.expanded {
@@ -145,7 +149,7 @@
 		.expand-arrow {
 			font-size: 0.875rem;
 			transition: transform 0.3s ease;
-			color: var(--nimble-color-text-secondary, #999);
+			color: var(--nimble-medium-text-color);
 		}
 
 		.subclass-row__img {
@@ -174,17 +178,16 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: rgba(0, 0, 0, 0.5);
-		border: 1px solid rgba(255, 255, 255, 0.2);
+		background: var(--nimble-accent-color);
+		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 4px;
-		color: white;
+		color: var(--nimble-light-text-color);
 		cursor: pointer;
 		transition: all 0.2s ease;
 		z-index: 1;
 
 		&:hover {
-			background: rgba(0, 0, 0, 0.7);
-			border-color: rgba(255, 255, 255, 0.4);
+			filter: brightness(1.2);
 			transform: scale(1.05);
 		}
 
@@ -194,8 +197,8 @@
 	}
 
 	.accordion-content {
-		background: var(--nimble-color-bg-secondary, #2a2a2a);
-		border: 1px solid var(--nimble-color-border, #444);
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-card-border-color);
 		border-top: none;
 		border-radius: 0 0 4px 4px;
 		padding: 1rem;
