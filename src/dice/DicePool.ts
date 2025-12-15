@@ -23,8 +23,12 @@ class NimbleDicePool extends foundry.dice.Roll<NimbleDicePool.Data> {
 
 	originalFormula: string;
 
-	constructor(formula: string, data?: NimbleDicePool.Data, options?: NimbleDicePool.Options) {
-		super(formula, data ?? ({} as NimbleDicePool.Data), options);
+	constructor(
+		formula: string,
+		data: NimbleDicePool.Data = {} as NimbleDicePool.Data,
+		options?: NimbleDicePool.Options,
+	) {
+		super(formula, data, options);
 
 		// Set Pool Data
 		this.originalFormula = formula;
