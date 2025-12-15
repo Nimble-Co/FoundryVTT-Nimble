@@ -6,6 +6,8 @@ interface PreviewListeners {
 	cancel: (event: Event) => void;
 }
 
+import { canvasDragPan } from '../../utils/canvasInternal.js';
+
 class NimbleTemplateLayer extends foundry.canvas.layers.TemplateLayer {
 	#previewListeners: PreviewListeners | null = null;
 
@@ -32,9 +34,7 @@ class NimbleTemplateLayer extends foundry.canvas.layers.TemplateLayer {
 				const now = Date.now();
 				if (now - lastMove <= 30) return;
 
-				(
-					canvas as object as { _onDragCanvasPan(e: PIXI.FederatedPointerEvent): void }
-				)._onDragCanvasPan(event);
+				canvasDragPan(event);
 				const dest = event.getLocalPosition(this);
 
 				if (event.shiftKey) {
