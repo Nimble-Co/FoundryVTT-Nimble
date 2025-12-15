@@ -1,3 +1,4 @@
+import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import type { Predicate } from '../../etc/Predicate.js';
 import { PredicateField } from '../fields/PredicateField.js';
@@ -5,7 +6,7 @@ import { PredicateField } from '../fields/PredicateField.js';
 // Forward declarations to avoid circular dependencies
 interface NimbleBaseActor extends Actor {
 	getDomain(): Set<string>;
-	getRollData(): Record<string, unknown>;
+	getRollData(): NimbleRollData;
 }
 
 interface NimbleBaseItem extends Item {

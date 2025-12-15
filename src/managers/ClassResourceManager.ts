@@ -1,3 +1,4 @@
+import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../dice/getDeterministicBonus.js';
 import {
 	type NimbleBaseResource,
@@ -13,6 +14,11 @@ interface ResourceSource {
 	name?: string;
 }
 
+type ResourceDataPrimitive = string | number | boolean | null | undefined;
+interface ResourceData {
+	[key: string]: ResourceDataPrimitive | ResourceData | ResourceDataPrimitive[] | ResourceData[];
+}
+
 interface ClassResourceItem {
 	name: string;
 	uuid: string;
@@ -24,8 +30,8 @@ interface ClassResourceItem {
 		resources: object[];
 	};
 	class?: { system: { classLevel: number } } | null;
-	getRollData?(item?: unknown): Record<string, unknown>;
-	update(data: Record<string, unknown>): Promise<unknown>;
+	getRollData?(item?: Item.Implementation): NimbleRollData;
+	update(data: Item.UpdateData): Promise<Item.Implementation | undefined>;
 }
 
 class ClassResourceManager extends Map<string, ResourceInstance> {
@@ -41,7 +47,6 @@ class ClassResourceManager extends Map<string, ResourceInstance> {
 		(item.system.resources as ResourceSource[]).forEach((source) => {
 			const Cls = ResourceDataModels[source.type as keyof typeof ResourceDataModels];
 			if (!Cls) {
-				// eslint-disable-next-line no-console
 				console.warn(
 					`Nimble | Resource ${source.identifier} on ${item.name}(${item.uuid}) is not of a recognizable type.`,
 				);
@@ -61,11 +66,9 @@ class ClassResourceManager extends Map<string, ResourceInstance> {
 					'';
 				this.set(key, resource);
 			} catch (err) {
-				// eslint-disable-next-line no-console
 				console.warn(
 					`Nimble | Resource ${source.identifier} on ${item.name}(${item.uuid}) is malformed.`,
 				);
-				// eslint-disable-next-line no-console
 				console.error(err);
 			}
 		});
@@ -106,12 +109,10 @@ class ClassResourceManager extends Map<string, ResourceInstance> {
 
 			try {
 				const doc = this.item.isEmbedded ? (this.item.parent ?? this.item) : this.item;
-				const rollDataSource = doc as { getRollData?(item?: unknown): Record<string, unknown> };
-				value = getDeterministicBonus(
-					rawValue as string,
-					rollDataSource.getRollData?.(this.item) ?? {},
-					{ strict: true },
-				);
+				const rollDataSource = doc as { getRollData(): NimbleRollData };
+				value = getDeterministicBonus(rawValue as string, rollDataSource.getRollData(), {
+					strict: true,
+				});
 			} catch (_e) {
 				value = rawValue;
 			}
@@ -122,7 +123,7 @@ class ClassResourceManager extends Map<string, ResourceInstance> {
 		});
 	}
 
-	async add(data: Record<string, unknown> = {}) {
+	async add(data: ResourceData = {}) {
 		if (!data.name) {
 			const count = [...this].reduce(
 				(acc, [, { name }]) => (name === 'New Resource' ? acc + 1 : acc),
@@ -133,9 +134,11 @@ class ClassResourceManager extends Map<string, ResourceInstance> {
 			else data.name = 'New Resource';
 		}
 
-		await this.item.update({
+		type ResourcesUpdate = { 'system.resources': object[] };
+		const updateData: Item.UpdateData & ResourcesUpdate = {
 			'system.resources': [...this.item.system.resources, data],
-		});
+		};
+		await this.item.update(updateData);
 	}
 
 	async remove(identifier: string) {
@@ -145,15 +148,19 @@ class ClassResourceManager extends Map<string, ResourceInstance> {
 				(resource.name as string | undefined)?.slugify?.({ strict: true }) !== identifier,
 		);
 
-		await this.item.update({
+		type ResourcesUpdate = { 'system.resources': object[] };
+		const updateData: Item.UpdateData & ResourcesUpdate = {
 			'system.resources': filteredArray,
-		});
+		};
+		await this.item.update(updateData);
 	}
 
 	async removeAll() {
-		await this.item.update({
+		type ResourcesUpdate = { 'system.resources': object[] };
+		const updateData: Item.UpdateData & ResourcesUpdate = {
 			'system.resources': [],
-		});
+		};
+		await this.item.update(updateData);
 	}
 }
 

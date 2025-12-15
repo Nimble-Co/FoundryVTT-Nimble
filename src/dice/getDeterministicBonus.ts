@@ -10,9 +10,13 @@
  * @returns The resulting deterministic bonus, or null is one could not be
  *          calculated.
  */
+import type { NimbleRollData } from '#types/rollData.d.ts';
+
+type DeterministicBonusRollData = NimbleRollData;
+
 export default function getDeterministicBonus(
 	formula: string | number,
-	rollData: Record<string, unknown> = {},
+	rollData: DeterministicBonusRollData = {},
 	options: { strict?: boolean } = {},
 ): number | null {
 	if (formula === null || formula === undefined) return null;
@@ -26,10 +30,10 @@ export default function getDeterministicBonus(
 		strict: options.strict ?? false,
 	};
 
-	let roll: Roll<Record<string, unknown>>;
+	let roll: Roll<DeterministicBonusRollData>;
 
 	try {
-		roll = new Roll<Record<string, unknown>>(formulaString, rollData);
+		roll = new Roll<DeterministicBonusRollData>(formulaString, rollData);
 		if (!Roll.validate(roll.formula)) throw Error('Invalid roll formula');
 	} catch (_error) {
 		ui.notifications?.error(`Invalid roll formula: ${formulaString}`);

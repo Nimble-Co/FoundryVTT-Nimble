@@ -70,16 +70,14 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 			});
 
 			const embeddedItemHooks = {
-				create: Hooks.on('createItem', (doc, options) => {
-					if ((options as { diff?: boolean }).diff === false) return;
+				create: Hooks.on('createItem', (doc) => {
 					if (doc?.actor?.id === this.id) update();
 				}),
-				delete: Hooks.on('deleteItem', (doc, options) => {
-					if ((options as { diff?: boolean }).diff === false) return;
+				delete: Hooks.on('deleteItem', (doc) => {
 					if (doc?.actor?.id === this.id) update();
 				}),
-				update: Hooks.on('updateItem', (doc, _change, options) => {
-					if ((options as { diff?: boolean }).diff === false) return;
+				update: Hooks.on('updateItem', (doc, _change, { diff }) => {
+					if (diff === false) return;
 					if (doc?.actor?.id === this.id) update();
 				}),
 			};
