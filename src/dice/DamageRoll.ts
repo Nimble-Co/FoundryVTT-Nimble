@@ -91,7 +91,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 				if (number > 1) {
 					// Reduce number of original term by one
-					(firstDieTerm as { number: number }).number = (number ?? 1) - 1;
+					firstDieTerm.number = (number ?? 1) - 1;
 
 					// Add Operator Term before Primary Term
 					const operatorTerm = new Terms.OperatorTerm({ operator: '+' });
@@ -144,7 +144,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					} as object as foundry.dice.terms.Die.TermData);
 
 					// Add rollMode
-					(primaryTerm as { number: number }).number = (number ?? 1) + Math.abs(rollMode);
+					primaryTerm.number = (number ?? 1) + Math.abs(rollMode);
 
 					if (rollMode > 0) primaryTerm.modifiers.push('kh');
 					else if (rollMode < 0) primaryTerm.modifiers.push('kl');
@@ -275,11 +275,10 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		// Create a new DamageRoll instance
 		// Use originalFormula if available, otherwise fall back to formula
 		const formula = data.originalFormula ?? data.formula ?? baseRoll.formula;
-		const roll = new DamageRoll(
-			formula,
-			data.data ?? {},
-			(data.options as DamageRoll.Options | undefined) ?? (baseRoll.options as DamageRoll.Options),
-		);
+		const options = (data.options ?? baseRoll.options) as DamageRoll.Options;
+		const damageData = data.data ?? {};
+
+		const roll = new DamageRoll(formula, damageData, options);
 
 		if (baseRoll.terms && baseRoll.terms.length > 0) {
 			// Restore terms from baseRoll (which has properly reconstructed term instances)
@@ -294,7 +293,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		// Restore evaluated state using public methods
 		const baseRollTotal = baseRoll.total;
 		if (data.evaluated || baseRollTotal !== undefined) {
-			DamageRoll._setEvaluatedState(roll, data.total ?? data._total ?? baseRollTotal ?? 0);
+			const damageTotal = data.total ?? data._total ?? baseRollTotal ?? 0;
+			DamageRoll._setEvaluatedState(roll, damageTotal);
 		}
 
 		// Restore custom properties
