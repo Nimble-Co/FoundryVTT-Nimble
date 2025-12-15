@@ -56,6 +56,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 	primaryDie: PrimaryDie | undefined = undefined;
 
+	override _formula: string = '';
+
 	constructor(formula: string, data: DamageRoll.Data = {}, options?: DamageRoll.Options) {
 		super(formula, data, options);
 
@@ -64,6 +66,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		this.options.canMiss ??= true;
 		this.options.rollMode ??= 0;
 		this.originalFormula = formula;
+		this._formula = formula;
 
 		if (!this.options.canCrit) this.isCritical = false;
 		if (!this.options.canMiss) this.isMiss = false;
