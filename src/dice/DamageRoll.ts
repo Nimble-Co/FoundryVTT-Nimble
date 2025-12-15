@@ -1,4 +1,4 @@
-import type { FixedInstanceType } from 'fvtt-types/utils';
+import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { InexactPartial } from '#types/utils.js';
 
 import { PrimaryDie } from './terms/PrimaryDie.js';
@@ -21,13 +21,13 @@ declare namespace DamageRoll {
 
 	interface SerializedData {
 		formula: string;
-		terms?: foundry.dice.Roll.Data['terms'] | object[];
+		terms?: foundry.dice.Roll.Data['terms'] | foundry.dice.terms.RollTerm[] | object[];
 		results?: Array<number | string>;
 		total?: number | null;
 		class?: string;
 		data?: Data;
 		options?:
-			| Partial<Options>
+			| (Partial<Options> & { isCritical?: boolean; isMiss?: boolean })
 			| Record<string, boolean | number | string | null | undefined>
 			| null;
 		originalFormula?: string;
@@ -237,6 +237,29 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** ------------------------------------------------------ */
 	/**                    Static Methods                      */
 	/** ------------------------------------------------------ */
+	private static _isRollTermArray(
+		terms: DamageRoll.SerializedData['terms'],
+	): terms is foundry.dice.terms.RollTerm[] {
+		return Array.isArray(terms) && terms.every((t) => t instanceof foundry.dice.terms.RollTerm);
+	}
+
+	private static _setEvaluatedState(roll: DamageRoll, total: number): void {
+		const internals = roll as object as { _evaluated: boolean; _total: number };
+		internals._evaluated = true;
+		internals._total = total;
+	}
+
+	private static _baseRollFromSerializedData(data: DamageRoll.SerializedData): Roll<AnyObject> {
+		// Temporarily remove the class property to avoid infinite recursion
+		// when calling the parent's fromData method
+		const dataWithoutClass = { ...data };
+		delete dataWithoutClass.class;
+
+		// Foundry's Roll.fromData is typed as `Roll.Data`, but at runtime it accepts the broader
+		// serialized shapes we store (including reconstructed term instances).
+		return foundry.dice.Roll.fromData(dataWithoutClass as object as foundry.dice.Roll.Data);
+	}
+
 	static fromRoll(roll) {
 		const newRoll = new DamageRoll(roll.formula, roll.data, roll.options);
 		Object.assign(newRoll, roll);
@@ -247,23 +270,14 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		this: T,
 		data: DamageRoll.SerializedData,
 	): FixedInstanceType<T> {
-		// Temporarily remove the class property to avoid infinite recursion
-		// when calling the parent's fromData method
-		const dataWithoutClass = { ...data };
-		delete dataWithoutClass.class;
-
-		// Call parent's fromData with the class property removed
-		// This creates a base Roll instance that we'll convert to DamageRoll
-		const baseRoll = foundry.dice.Roll.fromData(
-			dataWithoutClass as object as foundry.dice.Roll.Data,
-		);
+		const baseRoll = DamageRoll._baseRollFromSerializedData(data);
 
 		// Create a new DamageRoll instance
 		// Use originalFormula if available, otherwise fall back to formula
 		const formula = data.originalFormula ?? data.formula ?? baseRoll.formula;
 		const roll = new DamageRoll(
 			formula,
-			data.data ?? (baseRoll.data as object as DamageRoll.Data),
+			data.data ?? {},
 			(data.options as DamageRoll.Options | undefined) ?? (baseRoll.options as DamageRoll.Options),
 		);
 
@@ -273,17 +287,14 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			// This overwrites what the constructor did, which is important because
 			// the constructor runs preprocessing that modifies terms
 			roll.terms = baseRoll.terms;
-		} else if (data.terms && Array.isArray(data.terms)) {
-			roll.terms = data.terms as object as foundry.dice.terms.RollTerm[];
+		} else if (DamageRoll._isRollTermArray(data.terms)) {
+			roll.terms = data.terms;
 		}
 
 		// Restore evaluated state using public methods
 		const baseRollTotal = baseRoll.total;
 		if (data.evaluated || baseRollTotal !== undefined) {
-			// Mark as evaluated through internal property access
-			(roll as object as { _evaluated: boolean })._evaluated = true;
-			(roll as object as { _total: number })._total =
-				data.total ?? data._total ?? baseRollTotal ?? 0;
+			DamageRoll._setEvaluatedState(roll, data.total ?? data._total ?? baseRollTotal ?? 0);
 		}
 
 		// Restore custom properties
@@ -291,11 +302,17 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		roll._formula = data._formula ?? DamageRoll.getFormula(roll.terms);
 
 		if (data.evaluated ?? true) {
-			const opts = data.options as
-				| (Partial<DamageRoll.Options> & { isCritical?: boolean; isMiss?: boolean })
-				| undefined;
-			roll.isCritical = data.isCritical ?? opts?.isCritical;
-			roll.isMiss = data.isMiss ?? opts?.isMiss;
+			const opts = data.options;
+			const optCritical =
+				typeof opts === 'object' && opts !== null && typeof opts.isCritical === 'boolean'
+					? opts.isCritical
+					: undefined;
+			const optMiss =
+				typeof opts === 'object' && opts !== null && typeof opts.isMiss === 'boolean'
+					? opts.isMiss
+					: undefined;
+			roll.isCritical = data.isCritical ?? optCritical;
+			roll.isMiss = data.isMiss ?? optMiss;
 		}
 
 		if (roll.terms) {
