@@ -273,7 +273,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	/** ------------------------------------------------------ */
 	/**                  Data Functions                        */
 	/** ------------------------------------------------------ */
-	override getRollData(): Record<string, unknown> {
+	override getRollData(_item?: Item.Implementation): Record<string, unknown> {
 		const data = { ...super.getRollData() } as Record<string, unknown>;
 		const systemData = this.system as unknown as BaseActorSystemData;
 		const savingThrows = systemData.savingThrows ?? {};

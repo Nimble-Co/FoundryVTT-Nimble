@@ -486,7 +486,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	/** ------------------------------------------------------ */
 	/**                    Data Methods                        */
 	/** ------------------------------------------------------ */
-	override getRollData(): Record<string, any> {
+	override getRollData(_item?: Item.Implementation): Record<string, any> {
 		const data = { ...super.getRollData() } as Record<string, any>;
 
 		const { abilities, skills } = this.system;

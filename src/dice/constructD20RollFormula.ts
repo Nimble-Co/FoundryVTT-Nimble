@@ -31,19 +31,17 @@ export default function constructD20RollFormula({
 		...(modifiers ?? []).map(({ label, value }) => {
 			if (!value || value === 0) return null;
 
-			let modifier: Roll<Record<string, unknown>>;
-
 			try {
-				modifier = new Roll(value.toString(), rollData) as Roll<Record<string, unknown>>;
+				const modifier = new Roll(value.toString(), rollData);
+
+				modifier.terms.forEach((m) => {
+					if (m.constructor.name !== 'OperatorTerm') m.options.flavor ??= label;
+				});
+
+				return modifier.formula;
 			} catch (_err) {
 				return null;
 			}
-
-			modifier.terms.forEach((m) => {
-				if (m.constructor.name !== 'OperatorTerm') m.options.flavor ??= label;
-			});
-
-			return modifier.formula;
 		}),
 	];
 

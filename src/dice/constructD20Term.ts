@@ -1,5 +1,5 @@
 export type d20TermOptions = {
-	actor: NimbleBaseActor;
+	actor: Actor;
 	minRoll: number;
 	rollMode: number;
 };
