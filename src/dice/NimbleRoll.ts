@@ -1,11 +1,12 @@
+import type { NimbleRollData } from '#types/rollData.d.ts';
+
 declare namespace NimbleRoll {
-	interface Data extends foundry.dice.Roll.Data {
+	type Data = NimbleRollData & {
 		prompted?: boolean;
 		respondentId?: string | null;
-		[key: string]: unknown;
-	}
+	};
 
-	interface Options extends foundry.dice.Roll.Options {}
+	type Options = foundry.dice.Roll.Options;
 
 	type Evaluated<T extends NimbleRoll> = T & {
 		_evaluated: true;
@@ -15,8 +16,8 @@ declare namespace NimbleRoll {
 }
 
 class NimbleRoll extends foundry.dice.Roll<NimbleRoll.Data> {
-	constructor(formula: string, data?: NimbleRoll.Data, options?: NimbleRoll.Options) {
-		super(formula, data ?? ({} as NimbleRoll.Data), options);
+	constructor(formula: string, data: NimbleRoll.Data = {}, options?: NimbleRoll.Options) {
+		super(formula, data, options);
 
 		// Setup Defaults
 		this.data.prompted ??= false;
@@ -33,12 +34,8 @@ class NimbleRoll extends foundry.dice.Roll<NimbleRoll.Data> {
 	/** ------------------------------------------------------ */
 	/**                    Static Methods                      */
 	/** ------------------------------------------------------ */
-	static fromRoll(roll: Roll): NimbleRoll {
-		const newRoll = new NimbleRoll(
-			roll.formula,
-			roll.data as object as NimbleRoll.Data,
-			roll.options,
-		);
+	static fromRoll<D extends NimbleRoll.Data>(roll: Roll<D>): NimbleRoll {
+		const newRoll = new NimbleRoll(roll.formula, roll.data, roll.options);
 		Object.assign(newRoll, roll);
 		return newRoll;
 	}
