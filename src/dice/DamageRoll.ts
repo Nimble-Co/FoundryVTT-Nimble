@@ -106,7 +106,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 						faces: faces ?? 6,
 						modifiers: [],
 						options: { flavor: 'Primary Die' },
-					} as object as foundry.dice.terms.Die.TermData);
+					});
 
 					if (rollMode > 0) primaryTerm.modifiers.push('kh');
 					else if (rollMode < 0) primaryTerm.modifiers.push('kl');
@@ -144,7 +144,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 						number: 1,
 						faces: firstDieTerm.faces ?? 6,
 						modifiers: [],
-					} as object as foundry.dice.terms.Die.TermData);
+					});
 
 					// Add rollMode
 					primaryTerm.number = (number ?? 1) + Math.abs(rollMode);

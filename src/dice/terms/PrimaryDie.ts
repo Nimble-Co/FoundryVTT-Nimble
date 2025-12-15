@@ -1,9 +1,11 @@
+import type { InexactPartial } from 'fvtt-types/utils';
+
 declare namespace PrimaryDie {
 	interface TermData extends foundry.dice.terms.Die.TermData {}
 }
 
 class PrimaryDie extends foundry.dice.terms.Die {
-	constructor(termData: foundry.dice.terms.Die.TermData) {
+	constructor(termData?: InexactPartial<PrimaryDie.TermData>) {
 		super(termData);
 		if (!this.modifiers) this.modifiers = [];
 	}
