@@ -1,5 +1,6 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
+import { SystemSettings } from '../../settings/SystemSettings.js';
 
 /** Combatant system data with actions */
 interface CombatantSystemWithActions {
@@ -114,7 +115,7 @@ class NimbleCombat extends Combat {
 			formula = null,
 			updateTurn = true,
 			messageOptions = {},
-			rollOptions: _rollOptions = {},
+			rollOptions: rollOptions = {},
 		} = options ?? {};
 
 		// Structure Input data
@@ -133,7 +134,7 @@ class NimbleCombat extends Combat {
 			if (!combatant?.isOwner) continue;
 
 			// Produce an initiative roll for the Combatant
-			const roll = combatant.getInitiativeRoll(formula ?? undefined);
+			const roll = combatant.getInitiativeRoll(formula ?? undefined, rollOptions);
 			await roll.evaluate();
 
 			if (combatant.type === 'character') {
@@ -237,9 +238,10 @@ class NimbleCombat extends Combat {
 		});
 
 		const updateData = sortUpdates.map((u) => {
+			const { update } = u;
 			return {
+				...update,
 				_id: u.target.id,
-				'system.sort': u.update['system.sort'],
 			};
 		});
 
