@@ -32,7 +32,7 @@ Hooks.on('hotbarDrop', hotbarDrop);
 
 // Refresh tokens when combat ends to remove turn indicators
 Hooks.on('deleteCombat', () => {
-	if (!canvas.ready) return;
+	if (!canvas?.ready || !canvas?.tokens) return;
 
 	// Refresh all tokens on the canvas to clear turn indicators
 	for (const token of canvas.tokens.placeables) {

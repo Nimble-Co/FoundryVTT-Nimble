@@ -11,6 +11,24 @@ export default [
 		files: ['**/*.{ts,js}'],
 		languageOptions: {
 			parser: tsparser,
+			globals: {
+				...globals.browser,
+				// Foundry VTT globals
+				game: 'readonly',
+				CONFIG: 'readonly',
+				foundry: 'readonly',
+				canvas: 'readonly',
+				ui: 'readonly',
+				Hooks: 'readonly',
+				Roll: 'readonly',
+				fromUuid: 'readonly',
+				sheet: 'readonly',
+				TextEditor: 'readonly',
+				ChatMessage: 'readonly',
+				Combat: 'readonly',
+				Combatant: 'readonly',
+				TokenDocument: 'readonly',
+			},
 		},
 		plugins: {
 			'@typescript-eslint': tseslint,
@@ -49,6 +67,7 @@ export default [
 				fromUuid: 'readonly',
 				sheet: 'readonly',
 				TextEditor: 'readonly',
+				ChatMessage: 'readonly',
 			},
 		},
 		plugins: {

@@ -66,8 +66,8 @@
 	}
 
 	$effect(() => {
-		// Reset temp assignments when selectedArray changes
-		selectedArray;
+		// Reset temp assignments when `selectedArray` changes.
+		void selectedArray;
 		tempSelectedAbilityScores = generateBlankAttributeSet();
 		bonusLanguages = [];
 	});

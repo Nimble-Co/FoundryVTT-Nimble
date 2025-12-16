@@ -65,11 +65,11 @@
 	async function pingCombatantToken(event) {
 		event.preventDefault();
 
-		if (!canvas.ready || combatant.sceneId !== canvas.scene.id) return;
+		if (!canvas?.ready || combatant.sceneId !== canvas?.scene?.id) return;
 
 		const token = combatant.token?.object;
 
-		if (!token.visible) {
+		if (!token?.visible) {
 			return ui.notifications.warn(game.i18n.localize('COMBAT.WarnNonVisibleToken'));
 		}
 
