@@ -4,9 +4,12 @@
 
 	import HitPointBar from '../../sheets/components/HitPointBar.svelte';
 
-	function deleteCombatant(event) {
+	async function deleteCombatant(event: MouseEvent) {
 		event.preventDefault();
-		combatant.delete();
+		const combatantDoc = game.combat?.combatants?.get(combatant._id);
+		if (combatantDoc) {
+			await combatantDoc.delete();
+		}
 	}
 
 	async function panToCombatant(event) {
@@ -76,7 +79,8 @@
 		await canvas.ping(token.center);
 	}
 
-	let { active, children, combatant } = $props();
+	// `children` is optional: some combatant rows render no extra controls/content.
+	let { active, children = undefined, combatant } = $props();
 
 	let isObserver = combatant?.actor?.testUserPermission(game.user, 'OBSERVER');
 </script>

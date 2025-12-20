@@ -1,11 +1,11 @@
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
-import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
-import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import canvasInit from './hooks/canvasInit.js';
+import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
 import init from './hooks/init.js';
 import ready from './hooks/ready.js';
 import renderChatMessageHTML from './hooks/renderChatMessage.js';
+import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import setup from './hooks/setup.js';
 import './scss/main.scss';
 

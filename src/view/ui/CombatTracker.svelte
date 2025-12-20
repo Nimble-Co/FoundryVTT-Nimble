@@ -1,12 +1,43 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
-	import type { NimbleCombat } from '../../documents/combat/combat.svelte.js';
 	import BaseCombatant from './components/BaseCombatant.svelte';
 	import CombatTrackerControls from './components/CombatTrackerControls.svelte';
 	import PlayerCharacterCombatant from './components/PlayerCharacterCombatant.svelte';
 
-	function getCombatantComponent(combatant) {
+	type CombatWithDrop = Combat & {
+		_onDrop?: (
+			event: DragEvent & { target: EventTarget & HTMLElement },
+		) => Promise<void | boolean | Combatant.Implementation[]>;
+	};
+
+	function getCombatForCurrentScene(): Combat | null {
+		const sceneId = canvas.scene?.id;
+
+		const activeCombat = game.combat;
+		// Show active combat if it has combatants and either:
+		// - matches the current scene, OR
+		// - has no scene association (scene-less combat)
+		if (activeCombat && activeCombat.combatants.size > 0) {
+			const combatSceneId = activeCombat.scene?.id;
+			if (!combatSceneId || combatSceneId === sceneId) {
+				return activeCombat;
+			}
+		}
+
+		const viewedCombat = game.combats.viewed ?? null;
+		// Same logic for viewed combat
+		if (viewedCombat && viewedCombat.combatants.size > 0) {
+			const combatSceneId = viewedCombat.scene?.id;
+			if (!combatSceneId || combatSceneId === sceneId) {
+				return viewedCombat;
+			}
+		}
+
+		return null;
+	}
+
+	function getCombatantComponent(combatant: Combatant.Implementation) {
 		switch (combatant.type) {
 			case 'character':
 				return PlayerCharacterCombatant;
@@ -16,42 +47,33 @@
 	}
 
 	function updateCurrentCombat() {
-		const viewedCombat = game.combats.viewed as NimbleCombat | null;
-
-		if (!viewedCombat) {
-			currentCombat = null;
-			return;
-		}
-
-		if (!canvas.scene || viewedCombat.scene?.id !== canvas.scene.id) {
-			currentCombat = null;
-			return;
-		}
-
-		if (viewedCombat.combatants.size === 0) {
-			currentCombat = null;
-			return;
-		}
-
-		currentCombat = viewedCombat;
+		currentCombat = getCombatForCurrentScene();
+		version++;
 	}
 
-	async function _onDrop(event: DragEvent & { currentTarget: EventTarget & HTMLOListElement }) {
+	async function _onDrop(event: DragEvent) {
 		event.preventDefault();
-		await currentCombat?._onDrop(event);
+		if (!(event.target instanceof HTMLElement)) return;
+
+		const combat = currentCombat as CombatWithDrop | null;
+		if (typeof combat?._onDrop !== 'function') return;
+		await combat._onDrop(event as DragEvent & { target: EventTarget & HTMLElement });
 	}
 
-	function rollInitiativeForAll(event) {
+	function rollInitiativeForAll(event: MouseEvent) {
 		event.preventDefault();
 		currentCombat?.rollAll();
 	}
 
-	function startCombat(event): Promise<NimbleCombat> | undefined {
+	function startCombat(event: MouseEvent): Promise<Combat> | undefined {
 		event.preventDefault();
 		return currentCombat?.startCombat();
 	}
 
-	let currentCombat: NimbleCombat | null = $state(null);
+	let currentCombat: Combat | null = $state(null);
+	// Version counter to force re-renders when combat data changes
+	// (since the Combat object reference may stay the same)
+	let version = $state(0);
 
 	let createCombatHook: number | undefined;
 	let deleteCombatHook: number | undefined;
@@ -76,6 +98,11 @@
 			updateCurrentCombat();
 		});
 
+		// Some cores fire a dedicated hook when combat begins; ensure we update for that too.
+		const combatStartHook = Hooks.on('combatStart', () => {
+			updateCurrentCombat();
+		});
+
 		createCombatantHook = Hooks.on('createCombatant', () => {
 			updateCurrentCombat();
 		});
@@ -91,6 +118,8 @@
 		canvasReadyHook = Hooks.on('canvasReady', () => {
 			updateCurrentCombat();
 		});
+
+		return () => Hooks.off('combatStart', combatStartHook);
 	});
 
 	onDestroy(() => {
@@ -110,44 +139,46 @@
 		<header
 			class="nimble-combat-tracker__header"
 			class:nimble-combat-tracker__header--no-controls={!game.user!.isGM}
-			class:nimble-combat-tracker__header--not-started={currentCombat?.reactive?.round === 0}
+			class:nimble-combat-tracker__header--not-started={currentCombat?.round === 0}
 			in:slide={{ axis: 'y', delay: 200 }}
 			out:fade={{ delay: 0 }}
 		>
-			{#if currentCombat?.reactive?.round === 0 && game.user!.isGM}
+			{#if currentCombat?.round === 0 && game.user!.isGM}
 				<button class="nimble-combat-tracker__start-button" onclick={startCombat}>
 					Start Combat
 				</button>
-			{:else if currentCombat?.reactive?.round === 0}
+			{:else if currentCombat?.round === 0}
 				<h2 class="nimble-combat-tracker__heading">Combat Not Started</h2>
 			{:else}
 				<h2 class="nimble-combat-tracker__heading">
-					Round {currentCombat?.reactive?.round}
+					Round {currentCombat?.round}
 				</h2>
 			{/if}
 
-			{#if currentCombat?.reactive?.round !== 0 && game.user!.isGM}
+			{#if currentCombat?.round !== 0 && game.user!.isGM}
 				<CombatTrackerControls />
 			{/if}
 		</header>
 
 		<ol class="nimble-combatants" ondrop={(event) => _onDrop(event)} out:fade={{ delay: 0 }}>
-			{#each currentCombat?.reactive?.turns as combatant, index (combatant._id)}
-				{@const CombatantComponent = getCombatantComponent(combatant)}
+			{#key version}
+				{#each currentCombat?.turns as combatant, index (combatant.id)}
+					{@const CombatantComponent = getCombatantComponent(combatant)}
 
-				{#if combatant.visible}
-					<li class="nimble-combatants__item">
-						<CombatantComponent
-							active={currentCombat.reactive?.combatant?.id === combatant.id}
-							{combatant}
-							{index}
-						/>
-					</li>
-				{/if}
-			{/each}
+					{#if combatant.visible}
+						<li class="nimble-combatants__item">
+							<CombatantComponent
+								active={currentCombat.combatant?.id === combatant.id}
+								{combatant}
+								{index}
+							/>
+						</li>
+					{/if}
+				{/each}
+			{/key}
 		</ol>
 
-		{#if game.user!.isGM && currentCombat?.reactive?.combatants.some((combatant) => combatant.initiative === null)}
+		{#if game.user!.isGM && currentCombat?.combatants.contents.some((combatant) => combatant.initiative === null)}
 			<footer class="nimble-combat-tracker__footer">
 				<div class="nimble-combat-tracker__footer-roll-container">
 					<button
