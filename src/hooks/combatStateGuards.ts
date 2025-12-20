@@ -10,7 +10,7 @@
  * - Re-syncing the client's viewed combat to the active combat for the current canvas scene.
  */
 let didRegisterCombatStateGuards = false;
-type HookRegistration = { hook: string; id: number };
+type HookRegistration = { hook: Hooks.HookName; id: number };
 let hookIds: HookRegistration[] = [];
 
 type ViewCombatFn = (combat: Combat | null, options?: { render?: boolean }) => void;

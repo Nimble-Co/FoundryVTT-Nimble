@@ -85,6 +85,12 @@ export default [
 				sheet: 'readonly',
 				TextEditor: 'readonly',
 				ChatMessage: 'readonly',
+				Combat: 'readonly',
+				Combatant: 'readonly',
+				TokenDocument: 'readonly',
+				Actor: 'readonly',
+				Item: 'readonly',
+				CONST: 'readonly',
 			},
 		},
 		plugins: {

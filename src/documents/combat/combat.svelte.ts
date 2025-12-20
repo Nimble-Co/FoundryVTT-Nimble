@@ -1,6 +1,5 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
-import { SystemSettings } from '../../settings/SystemSettings.js';
 
 /** Combatant system data with actions */
 interface CombatantSystemWithActions {
@@ -111,12 +110,7 @@ class NimbleCombat extends Combat {
 		ids: string | string[],
 		options?: Combat.InitiativeOptions & { rollOptions?: Record<string, unknown> },
 	): Promise<this> {
-		const {
-			formula = null,
-			updateTurn = true,
-			messageOptions = {},
-			rollOptions: rollOptions = {},
-		} = options ?? {};
+		const { formula = null, updateTurn = true, messageOptions = {} } = options ?? {};
 
 		// Structure Input data
 		const combatantIds = typeof ids === 'string' ? [ids] : ids;
@@ -134,7 +128,7 @@ class NimbleCombat extends Combat {
 			if (!combatant?.isOwner) continue;
 
 			// Produce an initiative roll for the Combatant
-			const roll = combatant.getInitiativeRoll(formula ?? undefined, rollOptions);
+			const roll = combatant.getInitiativeRoll(formula ?? undefined);
 			await roll.evaluate();
 
 			if (combatant.type === 'character') {
