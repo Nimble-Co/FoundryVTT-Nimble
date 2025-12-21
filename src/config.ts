@@ -1,3 +1,6 @@
+import type { AbilityKeyType } from '#types/abilityKey.js';
+import type { SaveKeyType } from '#types/saveKey.js';
+import type { SkillKeyType } from '#types/skillKey.js';
 import registerConditionsConfig from './config/registerConditionsConfig.js';
 import registerDocumentConfig from './config/registerDocumentConfig.js';
 import registerPredicateConfig from './config/registerPredicateConfig.js';
@@ -16,14 +19,14 @@ const ROLL_MODE = {
 /**                 CONFIG                        */
 /** --------------------------------------------- */
 
-const abilityScores: Record<abilityKey, string> = {
+const abilityScores: Record<AbilityKeyType, string> = {
 	strength: 'NIMBLE.abilityScores.strength',
 	dexterity: 'NIMBLE.abilityScores.dexterity',
 	intelligence: 'NIMBLE.abilityScores.intelligence',
 	will: 'NIMBLE.abilityScores.will',
 };
 
-const abilityScoreAbbreviations: Record<abilityKey, string> = {
+const abilityScoreAbbreviations: Record<AbilityKeyType, string> = {
 	strength: 'NIMBLE.abilityScoreAbbreviations.strength',
 	dexterity: 'NIMBLE.abilityScoreAbbreviations.dexterity',
 	intelligence: 'NIMBLE.abilityScoreAbbreviations.intelligence',
@@ -134,7 +137,7 @@ const damageTypes = {
 	thunder: 'NIMBLE.damageTypes.thunder',
 };
 
-const defaultSkillAbilities: Record<skillKey, abilityKey> = {
+const defaultSkillAbilities: Record<SkillKeyType, AbilityKeyType> = {
 	arcana: 'intelligence',
 	examination: 'intelligence',
 	finesse: 'dexterity',
@@ -314,14 +317,14 @@ const restTypes = {
 	safeRest: 'NIMBLE.restTypes.safeRest',
 };
 
-const savingThrows: Record<saveKey, string> = {
+const savingThrows: Record<SaveKeyType, string> = {
 	strength: 'NIMBLE.savingThrows.strength',
 	dexterity: 'NIMBLE.savingThrows.dexterity',
 	intelligence: 'NIMBLE.savingThrows.intelligence',
 	will: 'NIMBLE.savingThrows.will',
 };
 
-const savingThrowAbbreviations: Record<saveKey, string> = {
+const savingThrowAbbreviations: Record<SaveKeyType, string> = {
 	strength: 'NIMBLE.savingThrowAbbreviations.strength',
 	dexterity: 'NIMBLE.savingThrowAbbreviations.dexterity',
 	intelligence: 'NIMBLE.savingThrowAbbreviations.intelligence',
@@ -337,7 +340,7 @@ const sizeCategories = {
 	gargantuan: 'NIMBLE.sizeCategories.gargantuan',
 };
 
-const skills: Record<skillKey, string> = {
+const skills: Record<SkillKeyType, string> = {
 	arcana: 'NIMBLE.skills.arcana',
 	examination: 'NIMBLE.skills.examination',
 	influence: 'NIMBLE.skills.influence',

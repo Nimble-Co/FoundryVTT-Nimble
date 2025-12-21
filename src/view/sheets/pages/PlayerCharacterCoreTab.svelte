@@ -14,32 +14,38 @@
 	import SavingThrows from '../components/SavingThrows.svelte';
 	import Skills from '../components/Skills.svelte';
 
-	function getArmorProficiencies(proficiencies: Set<string>) {
+	function getArmorProficiencies(proficiencies: Iterable<string>) {
 		return [...proficiencies]
 			.map((key): string => armorTypesPlural[key] ?? key)
 			.sort((a, b) => a.localeCompare(b));
 	}
 
-	function getLanguageProficiencies(proficiencies: Set<string>) {
+	function getLanguageProficiencies(proficiencies: Iterable<string>) {
 		return [...proficiencies]
 			.map((key): string => languages[key] ?? key)
 			.sort((a, b) => a.localeCompare(b));
 	}
 
-	function getWeaponProficiencies(proficiencies: Set<string>) {
+	function getWeaponProficiencies(proficiencies: Iterable<string>) {
 		return [...proficiencies];
 	}
 
 	async function rollInitiative() {
 		// Check if there's an active combat on the current scene with this character
 		const combat = game.combats?.viewed;
+		if (!combat) {
+			// Not currently in a combat encounter.
+			return;
+		}
+
+		const sceneId = canvas.scene?.id;
+		if (!sceneId) return;
+
 		const combatant =
-			combat?.scene?.id === canvas.scene?.id
-				? combat.combatants.find((c) => c.actorId === actor.id)
-				: null;
+			combat.scene?.id === sceneId ? combat.combatants.find((c) => c.actorId === actor.id) : null;
 
 		// If character is in combat and hasn't rolled initiative yet, apply to combat
-		if (combatant && combatant.initiative === null) {
+		if (combatant && combatant.initiative === null && combatant.id) {
 			await combat.rollInitiative([combatant.id]);
 			return;
 		}
@@ -51,7 +57,7 @@
 		await roll.toMessage({
 			speaker: ChatMessage.getSpeaker({ actor }),
 			flavor: game.i18n.format('COMBAT.RollsInitiative', { name: actor.name }),
-			flags: { 'core.initiativeRoll': true },
+			flags: { core: { initiativeRoll: true } },
 		});
 	}
 

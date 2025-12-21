@@ -48,7 +48,11 @@ export class NimbleObjectItem extends NimbleBaseItem {
 	/** ------------------------------------------------------ */
 	//                 Document Update Hooks
 	/** ------------------------------------------------------ */
-	override async _preCreate(data, options, user) {
+	override async _preCreate(
+		data: Item.CreateData,
+		options: Item.Database.PreCreateOptions,
+		user: User,
+	) {
 		// Update quantity if object already exists and is stackable or smallSized
 		const objectSizeTypesWithQuantity = new Set(['stackable', 'smallSized']);
 		if (this.isEmbedded && objectSizeTypesWithQuantity.has(this.system.objectSizeType)) {
@@ -58,12 +62,14 @@ export class NimbleObjectItem extends NimbleBaseItem {
 					i.name === this.name &&
 					i.type === 'object' &&
 					objectSizeTypesWithQuantity.has(i.system.objectSizeType),
-			);
+			) as NimbleObjectItem | undefined;
 
 			if (!existing) return super._preCreate(data, options, user);
 
 			// Update existing item quantity
-			existing.update({ 'system.quantity': existing.system.quantity + 1 });
+			(existing as object as { update(data: object): void }).update({
+				'system.quantity': existing.system.quantity + 1,
+			});
 			return false;
 		}
 
@@ -76,8 +82,10 @@ export class NimbleObjectItem extends NimbleBaseItem {
 
 	toggleArmor(): void {
 		if (this.rules.hasRuleOfType('armorClass')) {
-			const rule: NimbleBaseRule = this.rules.getRuleOfType(type);
-			rule.disabled = !rule.disabled;
+			const rule = this.rules.getRuleOfType('armorClass') as NimbleBaseRule | undefined;
+			if (rule) {
+				rule.disabled = !rule.disabled;
+			}
 		}
 	}
 }

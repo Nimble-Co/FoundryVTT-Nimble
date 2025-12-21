@@ -17,6 +17,8 @@ class NimbleBackgroundData extends NimbleBaseItemData<
 	NimbleBackgroundData.BaseData,
 	NimbleBackgroundData.DerivedData
 > {
+	declare description: string;
+
 	/** @inheritDoc */
 	static override defineSchema(): NimbleBackgroundData.Schema {
 		return {

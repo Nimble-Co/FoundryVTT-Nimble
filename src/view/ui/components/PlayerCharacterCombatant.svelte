@@ -28,12 +28,12 @@
 		});
 	}
 
-	let { active, combatant, index } = $props();
+	let { active, combatant } = $props();
 	let isOwner = combatant.actor?.testUserPermission(game.user, 'OWNER');
 	let isObserver = combatant.actor?.testUserPermission(game.user, 'OBSERVER');
 </script>
 
-<BaseCombatant {active} {combatant} {index}>
+<BaseCombatant {active} {combatant}>
 	{#if combatant.reactive.initiative === null}
 		{#if isOwner}
 			<div class="nimble-combatant-actions">

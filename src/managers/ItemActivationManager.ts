@@ -28,7 +28,9 @@ class ItemActivationManager {
 		this.#item = item;
 		this.#options = options;
 
-		this.activationData = foundry.utils.deepClone(item.system.activation ?? {});
+		this.activationData = foundry.utils.deepClone(
+			(item.system as { activation?: Record<string, unknown> }).activation ?? {},
+		);
 	}
 
 	get actor() {
@@ -90,7 +92,6 @@ class ItemActivationManager {
 		}
 
 		// Get Targets
-		// @ts-expect-error
 		const _targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
 
 		let rolls: (Roll | DamageRoll)[] = [];
@@ -117,10 +118,10 @@ class ItemActivationManager {
 				if (!this.actor) continue;
 
 				// Use saveType if available, otherwise fall back to savingThrowType
-				const saveKey = (node as any).saveType || node.savingThrowType;
+				const saveKey = node.saveType || node.savingThrowType;
 				const rollMode = dialogData.rollMode ?? 0;
 
-				const rollFormula = dependencies.getRollFormula(this.actor, {
+				const rollFormula = dependencies.getRollFormula(this.actor as unknown as NimbleBaseActor, {
 					saveKey,
 					rollMode,
 					type: 'savingThrow',
@@ -130,11 +131,11 @@ class ItemActivationManager {
 					...this.actor.getRollData(),
 					prompted: false,
 					respondentId: this.actor?.token?.uuid ?? this.actor.uuid,
-				} as Record<string, any>);
+				} as NimbleRoll.Data);
 
 				await roll.evaluate();
-				(node as any).roll = roll.toJSON();
-				rolls.push(roll);
+				node.roll = roll.toJSON() as Record<string, unknown>;
+				rolls.push(roll as unknown as Roll);
 			} else if (node.type === 'damage' || node.type === 'healing') {
 				let roll: Roll | DamageRoll;
 
@@ -145,21 +146,25 @@ class ItemActivationManager {
 					// Use modified formula if provided
 					const formula = dialogData.rollFormula || node.formula;
 
-					roll = new dependencies.DamageRoll(formula, this.actor.getRollData(), {
-						canCrit,
-						canMiss,
-						rollMode: node.rollMode,
-						primaryDieValue: dialogData.primaryDieValue,
-						primaryDieModifier: dialogData.primaryDieModifier,
-					} as any);
+					roll = new dependencies.DamageRoll(
+						formula,
+						this.actor!.getRollData() as DamageRoll.Data,
+						{
+							canCrit: canCrit ?? true,
+							canMiss: canMiss ?? true,
+							rollMode: node.rollMode ?? 0,
+							primaryDieValue: dialogData.primaryDieValue ?? 0,
+							primaryDieModifier: Number(dialogData.primaryDieModifier) || 0,
+						},
+					);
 
 					foundDamageRoll = true;
 				} else {
-					roll = new Roll(node.formula || '0', this.actor.getRollData()) as any;
+					roll = new Roll(node.formula || '0', this.actor!.getRollData()) as Roll;
 				}
 
 				await roll.evaluate();
-				node.roll = roll.toJSON();
+				node.roll = roll.toJSON() as Record<string, unknown>;
 				rolls.push(roll);
 			}
 
@@ -186,8 +191,14 @@ class ItemActivationManager {
 
 	#getTemplateData() {
 		const item = this.#item;
-		const { activation } = item.system ?? {};
-		const { template } = activation ?? {};
+		interface TemplateShape {
+			shape?: string;
+			radius?: number;
+			length?: number;
+			width?: number;
+		}
+		const { activation } = (item.system as { activation?: { template?: TemplateShape } }) ?? {};
+		const template = activation?.template;
 		const { shape } = template ?? {};
 
 		if (!shape) return undefined;
@@ -203,7 +214,7 @@ class ItemActivationManager {
 			return {
 				...templateData,
 				direction: 0,
-				distance: template.radius || 1,
+				distance: template?.radius || 1,
 				t: 'circle',
 			};
 		}
@@ -213,17 +224,17 @@ class ItemActivationManager {
 				...templateData,
 				angle: CONFIG.MeasuredTemplate.defaults.angle,
 				direction: 0,
-				distance: template.length || 1,
+				distance: template?.length || 1,
 				t: 'cone',
 			};
 		}
 
 		if (shape === 'emanation') {
-			const radiusFunc = (t) => {
-				const radius = template.radius || 1;
-				const tokenSize = Math.max(t.document.width, t.document.height);
+			const templateRadius = template?.radius || 1;
+			const radiusFunc = (t: Token) => {
+				const tokenSize = Math.max(t.document.width as number, t.document.height as number);
 				const scaleBy = tokenSize / 2;
-				return radius + scaleBy;
+				return templateRadius + scaleBy;
 			};
 
 			return {
@@ -238,14 +249,14 @@ class ItemActivationManager {
 			return {
 				...templateData,
 				direction: 0,
-				distance: template.length || 1,
+				distance: template?.length || 1,
 				t: 'ray',
-				width: template.width || 1,
+				width: template?.width || 1,
 			};
 		}
 
 		if (shape === 'square') {
-			const width = template.width || 1;
+			const width = template?.width || 1;
 			return {
 				...templateData,
 				direction: 45,
@@ -270,6 +281,7 @@ namespace ItemActivationManager {
 		rollMode: number | undefined;
 		rollFormula?: string;
 		primaryDieValue?: number;
+		primaryDieModifier?: string;
 	}
 }
 

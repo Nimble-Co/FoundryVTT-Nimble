@@ -25,12 +25,16 @@ export class NimbleAncestryItem extends NimbleBaseItem {
 	/** ------------------------------------------------------ */
 	//                 Document Update Hooks
 	/** ------------------------------------------------------ */
-	override async _preCreate(data, options, user) {
+	override async _preCreate(
+		data: Item.CreateData,
+		options: Item.Database.PreCreateOptions,
+		user: User,
+	) {
 		if (this.isEmbedded) {
 			const actor = this.parent;
-			if (!actor.isType('character')) return false;
+			if (!actor || actor.type !== 'character') return false;
 
-			const existingAncestry = actor.ancestry;
+			const existingAncestry = (actor as object as { ancestry?: NimbleAncestryItem }).ancestry;
 			if (existingAncestry) await existingAncestry.delete();
 		}
 

@@ -85,6 +85,40 @@ class NimbleObjectData extends NimbleBaseItemData<
 	NimbleObjectData.BaseData,
 	NimbleObjectData.DerivedData
 > {
+	// Schema-defined properties
+	declare activation: {
+		showDescription: boolean;
+		acquireTargetsFromTemplate: boolean;
+		cost: { details: string; quantity: number; type: string; isReaction: boolean };
+		duration: { details: string; quantity: number; type: string };
+		effects: Record<string, unknown>[];
+		targets: { count: number; restrictions: string };
+		template: { length: number; radius: number; shape: string; width: number };
+	};
+
+	declare description: {
+		public: string;
+		unidentified: string;
+		secret: string;
+	};
+	declare identified: boolean;
+	declare objectType: string;
+	declare quantity: number;
+	declare unidentifiedName: string;
+	declare objectSizeType: 'slots' | 'stackable' | 'smallSized';
+	declare slotsRequired: number;
+	declare stackSize: number;
+	declare properties: {
+		reach: { min: number; max: number | null };
+		range: { min: number; max: number | null };
+		selected: string[];
+		strengthRequirement: {
+			value: number | null;
+			overridesTwoHanded: boolean;
+		};
+		thrownRange: number;
+	};
+
 	/** @inheritDoc */
 	static override defineSchema(): NimbleObjectData.Schema {
 		return {

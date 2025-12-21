@@ -1,8 +1,4 @@
-import type {
-	AnyObject,
-	DeepPartial,
-	EmptyObject,
-} from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { AnyObject, DeepPartial, EmptyObject } from 'fvtt-types/utils';
 
 const { DocumentSheetV2 } = foundry.applications.api;
 
@@ -20,7 +16,7 @@ class SvelteDocumentSheet<
 	}, [] as string[]);
 
 	protected override async _prepareContext(
-		options: DeepPartial<RenderOptions>,
+		options: DeepPartial<RenderOptions> & { isFirstRender: boolean },
 	): Promise<RenderContext> {
 		const context = {
 			...(await super._prepareContext(options)),
@@ -30,7 +26,7 @@ class SvelteDocumentSheet<
 			),
 		};
 
-		return context;
+		return context as object as RenderContext;
 	}
 
 	override _onChangeForm(
@@ -45,14 +41,18 @@ class SvelteDocumentSheet<
 		const { target } = event;
 		if (!target) return;
 
-		// @ts-expect-error
-		if (!this.#customHTMLTags.includes(target.tagName)) return;
+		const htmlTarget = target as HTMLElement & {
+			tagName: string;
+			name: string;
+			_getValue(): unknown;
+		};
+		if (!this.#customHTMLTags.includes(htmlTarget.tagName)) return;
 
-		// @ts-expect-error
-		const value = target._getValue();
+		const value = htmlTarget._getValue();
 
-		// @ts-expect-error
-		this.document.update({ [target.name]: value });
+		(this.document as object as { update(data: object): void }).update({
+			[htmlTarget.name]: value,
+		});
 	}
 }
 

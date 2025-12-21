@@ -1,4 +1,4 @@
-export function draggable(node: HTMLElement, data: any) {
+export function draggable(node: HTMLElement, data) {
 	let state = $state(data);
 
 	node.draggable = true;

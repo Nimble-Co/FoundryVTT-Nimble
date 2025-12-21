@@ -55,6 +55,7 @@
 		"**/*.log*": true,
 		"**/dist": true
 	},
+	"eslint.validate": ["javascript", "svelte"],
 	"files.associations": {
 		".babelrc": "jsonc",
 		".eslintrc": "jsonc",

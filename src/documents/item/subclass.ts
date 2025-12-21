@@ -1,8 +1,11 @@
-import type { NimbleClassItem } from './class.js';
+import {
+	ClassResourceManager,
+	type ClassResourceItem,
+} from '../../managers/ClassResourceManager.js';
 import type { NimbleSubclassData } from '../../models/item/SubclassDataModel.js';
 
 import { NimbleBaseItem } from './base.svelte.js';
-import { ClassResourceManager } from '../../managers/ClassResourceManager.js';
+import type { NimbleClassItem } from './class.js';
 
 export class NimbleSubclassItem extends NimbleBaseItem {
 	declare class: NimbleClassItem | null;
@@ -17,7 +20,7 @@ export class NimbleSubclassItem extends NimbleBaseItem {
 	override prepareBaseData(): void {
 		super.prepareBaseData();
 
-		this.resources = new ClassResourceManager(this);
+		this.resources = new ClassResourceManager(this as unknown as ClassResourceItem);
 	}
 
 	override async prepareChatCardData() {

@@ -27,34 +27,42 @@ export default class SpellSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 288,
-			height: 'auto',
+			height: 'auto' as const,
 		},
 		actions: {},
 	};
 
-	protected async _prepareContext() {
+	protected override async _prepareContext(
+		_options: Parameters<foundry.applications.sheets.ItemSheetV2['_prepareContext']>[0],
+	): ReturnType<foundry.applications.sheets.ItemSheetV2['_prepareContext']> {
 		return {
 			item: this.item,
 			sheet: this,
-		};
+		} as object as ReturnType<
+			foundry.applications.sheets.ItemSheetV2['_prepareContext']
+		> extends Promise<infer T>
+			? T
+			: never;
 	}
 
 	async toggleSpellSchoolOption(selectedSchool: string | number): Promise<void> {
 		if (typeof selectedSchool === 'number') return;
 
+		const system = this.document.system as { school?: string };
 		await this.document.update({
-			'system.school': this.document.system.school === selectedSchool ? '' : selectedSchool,
-		});
+			'system.school': system.school === selectedSchool ? '' : selectedSchool,
+		} as object);
 	}
 
 	async toggleSpellTierOption(selectedTier: string | number): Promise<void> {
 		let selectedTierNumber = selectedTier;
 		if (typeof selectedTier === 'string') selectedTierNumber = Number.parseInt(selectedTier, 10);
-		await this.document.update({ 'system.tier': selectedTierNumber });
+		await this.document.update({ 'system.tier': selectedTierNumber } as object);
 	}
 
 	async toggleSpellPropertyOption(selectedProperty: string): Promise<void> {
-		const selectedProperties = new Set(this.document.system.properties.selected);
+		const system = this.document.system as { properties?: { selected?: string[] } };
+		const selectedProperties = new Set(system.properties?.selected ?? []);
 
 		if (selectedProperties.has(selectedProperty)) selectedProperties.delete(selectedProperty);
 		else {
@@ -71,6 +79,6 @@ export default class SpellSheet extends SvelteApplicationMixin(
 
 		await this.document.update({
 			'system.properties.selected': selectedProperties,
-		});
+		} as object);
 	}
 }

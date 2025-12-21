@@ -24,15 +24,21 @@ export class SystemSettings extends SvelteApplicationMixin(ApplicationV2) {
 	);
 	root = SystemSettingsDialog;
 
-	async _prepareContext() {
+	protected override async _prepareContext(
+		_options: Parameters<foundry.applications.api.ApplicationV2['_prepareContext']>[0],
+	): ReturnType<foundry.applications.api.ApplicationV2['_prepareContext']> {
 		return {
 			dialog: this,
-		};
+		} as object as ReturnType<
+			foundry.applications.api.ApplicationV2['_prepareContext']
+		> extends Promise<infer T>
+			? T
+			: never;
 	}
 
 	getSettings() {
 		const nimbleSettings = new Map();
-		const gameSettings = (game as any).settings;
+		const gameSettings = game.settings;
 
 		for (const [id, setting] of gameSettings.settings) {
 			if (id.startsWith('nimble.')) {

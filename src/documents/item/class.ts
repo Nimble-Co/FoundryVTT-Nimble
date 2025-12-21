@@ -1,4 +1,7 @@
-import { ClassResourceManager } from '../../managers/ClassResourceManager.js';
+import {
+	ClassResourceManager,
+	type ClassResourceItem,
+} from '../../managers/ClassResourceManager.js';
 import type { NimbleClassData } from '../../models/item/ClassDataModel.js';
 import type { NimbleCharacter } from '../actor/character.js';
 import { NimbleBaseItem } from './base.svelte.js';
@@ -31,8 +34,7 @@ export class NimbleClassItem extends NimbleBaseItem {
 	override prepareBaseData(): void {
 		super.prepareBaseData();
 
-		// Prepare Resource
-		this.resources = new ClassResourceManager(this);
+		this.resources = new ClassResourceManager(this as unknown as ClassResourceItem);
 
 		this.ASI = Object.entries(this.system.abilityScoreData ?? {}).reduce(
 			(acc, [level, data]) => {
@@ -123,7 +125,7 @@ export class NimbleClassItem extends NimbleBaseItem {
 			const existingHitDice = foundry.utils.getProperty(
 				actor,
 				`system.attributes.hitDice.${this.system.hitDieSize}`,
-			);
+			) as { current: number; origin: string[] } | undefined;
 			if (!existingHitDice) {
 				actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}`] = {
 					current: 1,
@@ -137,7 +139,8 @@ export class NimbleClassItem extends NimbleBaseItem {
 			}
 
 			// Tell the actor what level this class was gained at
-			const existingLevels = foundry.utils.getProperty(actor, 'system.classData.levels') ?? [];
+			const existingLevels =
+				(foundry.utils.getProperty(actor, 'system.classData.levels') as string[] | undefined) ?? [];
 			existingLevels.push(this.identifier);
 
 			actorUpdates['system.classData.levels'] = existingLevels;
@@ -175,15 +178,19 @@ export class NimbleClassItem extends NimbleBaseItem {
 		const actorUpdates = {};
 
 		if (changed.name) {
-			const existingLevels = foundry.utils.getProperty(actor, 'system.classData.levels') ?? [];
+			const existingLevels =
+				(foundry.utils.getProperty(actor, 'system.classData.levels') as string[] | undefined) ?? [];
 			const newIdentifier = changed.name.slugify({ strict: true });
 
-			actorUpdates['system.classData.levels'] = existingLevels.reduce((ids, id: string) => {
-				if (id === this.identifier) ids.push(newIdentifier);
-				else ids.push(id);
+			actorUpdates['system.classData.levels'] = existingLevels.reduce(
+				(ids: string[], id: string) => {
+					if (id === this.identifier) ids.push(newIdentifier);
+					else ids.push(id);
 
-				return ids;
-			}, []);
+					return ids;
+				},
+				[],
+			);
 
 			if (actor.system.classData.startingClass === this.identifier) {
 				actorUpdates['system.classData.startingClass'] = newIdentifier;
@@ -191,27 +198,27 @@ export class NimbleClassItem extends NimbleBaseItem {
 
 			if (!changed?.system?.hitDieSize) {
 				const existingHitDice =
-					foundry.utils.getProperty(
+					(foundry.utils.getProperty(
 						actor,
 						`system.attributes.hitDice.${this.system.hitDieSize}.origin`,
-					) ?? [];
+					) as string[] | undefined) ?? [];
 
 				actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}.origin`] =
-					existingHitDice.reduce((ids, id: string) => {
+					existingHitDice.reduce((ids: string[], id: string) => {
 						if (id === this.identifier) ids.push(newIdentifier);
 						else ids.push(id);
 
 						return ids;
-					}, []);
+					}, [] as string[]);
 			}
 		}
 
 		if (changed?.system?.hitDieSize) {
 			const existingHitDice =
-				foundry.utils.getProperty(
+				(foundry.utils.getProperty(
 					actor,
 					`system.attributes.hitDice.${this.system.hitDieSize}.origin`,
-				) ?? [];
+				) as string[] | undefined) ?? [];
 
 			const existingHitDiceCount = existingHitDice.length ?? 0;
 
@@ -224,10 +231,10 @@ export class NimbleClassItem extends NimbleBaseItem {
 
 			if (hitDiceCountDifference > 0) {
 				const existingNewHitDice =
-					foundry.utils.getProperty(
+					(foundry.utils.getProperty(
 						actor,
 						`system.attributes.hitDice.${changed.system.hitDieSize}.origin`,
-					) ?? [];
+					) as string[] | undefined) ?? [];
 
 				actorUpdates[`system.attributes.hitDice.${changed.system.hitDieSize}.origin`] =
 					existingNewHitDice.concat(
@@ -268,9 +275,9 @@ export class NimbleClassItem extends NimbleBaseItem {
 			const existingHitDice = foundry.utils.getProperty(
 				actor,
 				`system.attributes.hitDice.${this.system.hitDieSize}`,
-			);
+			) as { current: number; origin: string[] } | undefined;
 
-			if (existingHitDice.origin?.length > 1) {
+			if (existingHitDice?.origin?.length && existingHitDice.origin.length > 1) {
 				actorUpdates[`system.attributes.hitDice.${this.system.hitDieSize}.origin`] =
 					existingHitDice.origin.filter((id: string) => this.identifier !== id);
 			} else {
@@ -278,7 +285,8 @@ export class NimbleClassItem extends NimbleBaseItem {
 			}
 
 			// Remove Levels information
-			const existingLevels = foundry.utils.getProperty(actor, 'system.classData.levels') ?? [];
+			const existingLevels =
+				(foundry.utils.getProperty(actor, 'system.classData.levels') as string[] | undefined) ?? [];
 			actorUpdates['system.classData.levels'] = existingLevels.filter(
 				(id: string) => id !== this.identifier,
 			);

@@ -1,4 +1,4 @@
-import type { DeepPartial } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { DeepPartial } from 'fvtt-types/utils';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 
 import ActorCreationDialogComponent from '../../view/dialogs/ActorCreationDialog.svelte';
@@ -7,13 +7,15 @@ import CharacterCreationDialog from './CharacterCreationDialog.svelte.js';
 const { ApplicationV2 } = foundry.applications.api;
 
 export default class ActorCreationDialog extends SvelteApplicationMixin(ApplicationV2) {
-	declare data: any;
+	declare data: Record<string, unknown>;
 
-	declare parent: any;
+	declare parent: unknown;
 
-	declare pack: any;
+	declare pack: unknown;
 
 	protected root;
+
+	protected props: { dialog: ActorCreationDialog };
 
 	constructor(data = {}, { parent = null, pack = null, ..._options } = {}) {
 		const width = 508;
@@ -40,33 +42,40 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 			resizable: true,
 		},
 		position: {
-			height: 'auto',
+			width: 508,
+			height: 'auto' as const,
 		},
 	};
 
-	protected async _prepareContext() {
+	protected override async _prepareContext(
+		_options: DeepPartial<foundry.applications.api.ApplicationV2.RenderOptions> & {
+			isFirstRender: boolean;
+		},
+	) {
 		return {
 			dialog: this,
-		};
+		} as foundry.applications.api.ApplicationV2.RenderContext;
 	}
 
-	async submit(actorType: string) {
+	async submitActorType(actorType: 'base' | 'character' | 'npc' | 'soloMonster' | 'minion') {
 		const { documentClasses } = CONFIG.NIMBLE.Actor;
 
 		if (actorType === 'character') {
 			const characterCreationDialog = new CharacterCreationDialog();
 			characterCreationDialog.render(true);
 		} else {
-			documentClasses[actorType].create(
-				{ name: 'New Actor', type: actorType, ...this.data },
-				{ pack: this.pack, parent: this.parent, renderSheet: true },
+			(documentClasses as Record<string, typeof Actor>)[actorType].create(
+				{ name: 'New Actor', type: actorType, ...this.data } as object as Actor.CreateData,
+				{ pack: this.pack, parent: this.parent, renderSheet: true } as object,
 			);
 		}
 
 		return super.close();
 	}
 
-	async close(options?: DeepPartial<foundry.applications.api.ApplicationV2.ClosingOptions>) {
+	override async close(
+		options?: DeepPartial<foundry.applications.api.ApplicationV2.ClosingOptions>,
+	) {
 		return super.close(options);
 	}
 }

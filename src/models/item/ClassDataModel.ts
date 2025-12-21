@@ -94,6 +94,13 @@ const schema = () => ({
 	),
 });
 
+/** Type for ability score data entry */
+interface AbilityScoreDataEntry {
+	value: string;
+	type: 'statIncrease' | 'boon';
+	statIncreaseType: 'primary' | 'secondary' | 'capstone';
+}
+
 declare namespace NimbleClassData {
 	type Schema = NimbleBaseItemData.Schema & ReturnType<typeof schema>;
 	type BaseData = NimbleBaseItemData.BaseData;
@@ -105,6 +112,37 @@ class NimbleClassData extends NimbleBaseItemData<
 	NimbleClassData.BaseData,
 	NimbleClassData.DerivedData
 > {
+	// Schema-defined properties
+	declare armorProficiencies: string[];
+	declare classLevel: number;
+	declare complexity: number;
+	declare description: string;
+	declare groupIdentifiers: string[];
+	declare keyAbilityScores: string[];
+	declare hitDieSize: number;
+	declare hpData: number[];
+	declare savingThrows: {
+		advantage: string;
+		disadvantage: string;
+	};
+	declare abilityScoreData: {
+		4: AbilityScoreDataEntry;
+		5: AbilityScoreDataEntry;
+		8: AbilityScoreDataEntry;
+		9: AbilityScoreDataEntry;
+		12: AbilityScoreDataEntry;
+		13: AbilityScoreDataEntry;
+		16: AbilityScoreDataEntry;
+		17: AbilityScoreDataEntry;
+		20: AbilityScoreDataEntry;
+	};
+	declare mana: {
+		formula: string;
+		recovery: string;
+	};
+	declare resources: Record<string, unknown>[];
+	declare weaponProficiencies: string[];
+
 	/** @inheritDoc */
 	static override defineSchema(): NimbleClassData.Schema {
 		return {
