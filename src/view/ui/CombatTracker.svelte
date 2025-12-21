@@ -11,30 +11,55 @@
 		) => Promise<void | boolean | Combatant.Implementation[]>;
 	};
 
+	function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
+		// Try multiple ways to get the combatant's scene ID
+		// 1. Direct sceneId property
+		if (combatant.sceneId) return combatant.sceneId;
+		// 2. Token's parent scene
+		if (combatant.token?.parent?.id) return combatant.token.parent.id;
+		// 3. Check if token document exists on current scene
+		const sceneId = canvas.scene?.id;
+		if (sceneId && combatant.tokenId) {
+			const tokenDoc = canvas.scene?.tokens?.get(combatant.tokenId);
+			if (tokenDoc) return sceneId;
+		}
+		return undefined;
+	}
+
+	function hasCombatantsForScene(combat: Combat, sceneId: string): boolean {
+		return combat.combatants.contents.some((c) => getCombatantSceneId(c) === sceneId);
+	}
+
+	function getCombatantsForScene(
+		combat: Combat | null,
+		sceneId: string | undefined,
+	): Combatant.Implementation[] {
+		if (!sceneId || !combat) return [];
+
+		// Filter turns to only include those from the current scene
+		// Filter out invisible combatants and ensure each has a valid _id for keying
+		return combat.turns.filter(
+			(c) => getCombatantSceneId(c) === sceneId && c.visible && c._id != null,
+		);
+	}
+
 	function getCombatForCurrentScene(): Combat | null {
 		const sceneId = canvas.scene?.id;
+		if (!sceneId) return null;
 
+		// Find combats that have combatants belonging to the current scene
+		const combatsForScene = game.combats.contents.filter(
+			(combat) => combat.combatants.size > 0 && hasCombatantsForScene(combat, sceneId),
+		);
+
+		// Prefer the active combat if it has combatants for this scene
 		const activeCombat = game.combat;
-		// Show active combat if it has combatants and either:
-		// - matches the current scene, OR
-		// - has no scene association (scene-less combat)
-		if (activeCombat && activeCombat.combatants.size > 0) {
-			const combatSceneId = activeCombat.scene?.id;
-			if (!combatSceneId || combatSceneId === sceneId) {
-				return activeCombat;
-			}
+		if (activeCombat && combatsForScene.includes(activeCombat)) {
+			return activeCombat;
 		}
 
-		const viewedCombat = game.combats.viewed ?? null;
-		// Same logic for viewed combat
-		if (viewedCombat && viewedCombat.combatants.size > 0) {
-			const combatSceneId = viewedCombat.scene?.id;
-			if (!combatSceneId || combatSceneId === sceneId) {
-				return viewedCombat;
-			}
-		}
-
-		return null;
+		// Otherwise return the first combat that has combatants for this scene
+		return combatsForScene[0] ?? null;
 	}
 
 	function getCombatantComponent(combatant: Combatant.Implementation) {
@@ -47,8 +72,15 @@
 	}
 
 	function updateCurrentCombat() {
-		currentCombat = getCombatForCurrentScene();
-		version++;
+		// Use queueMicrotask to ensure Foundry's data is fully updated
+		// before we read it, and to batch Svelte's reactivity updates
+		queueMicrotask(() => {
+			const combat = getCombatForCurrentScene();
+			const sceneId = canvas.scene?.id;
+			currentCombat = combat;
+			sceneCombatants = getCombatantsForScene(combat, sceneId);
+			version++;
+		});
 	}
 
 	async function _onDrop(event: DragEvent) {
@@ -71,6 +103,8 @@
 	}
 
 	let currentCombat: Combat | null = $state(null);
+	// Combatants filtered to only those belonging to the current scene
+	let sceneCombatants: Combatant.Implementation[] = $state([]);
 	// Version counter to force re-renders when combat data changes
 	// (since the Combat object reference may stay the same)
 	let version = $state(0);
@@ -80,8 +114,11 @@
 	let updateCombatHook: number | undefined;
 	let createCombatantHook: number | undefined;
 	let deleteCombatantHook: number | undefined;
+	let updateCombatantHook: number | undefined;
 	let renderSceneNavigationHook: number | undefined;
 	let canvasReadyHook: number | undefined;
+	let canvasTearDownHook: number | undefined;
+	let updateSceneHook: number | undefined;
 
 	onMount(() => {
 		updateCurrentCombat();
@@ -111,11 +148,27 @@
 			updateCurrentCombat();
 		});
 
+		updateCombatantHook = Hooks.on('updateCombatant', () => {
+			updateCurrentCombat();
+		});
+
 		renderSceneNavigationHook = Hooks.on('renderSceneNavigation', () => {
 			updateCurrentCombat();
 		});
 
 		canvasReadyHook = Hooks.on('canvasReady', () => {
+			updateCurrentCombat();
+		});
+
+		// Clear combat tracker when leaving a scene
+		canvasTearDownHook = Hooks.on('canvasTearDown', () => {
+			currentCombat = null;
+			sceneCombatants = [];
+			version++;
+		});
+
+		// Update when a scene is activated or viewed
+		updateSceneHook = Hooks.on('updateScene', () => {
 			updateCurrentCombat();
 		});
 
@@ -128,9 +181,12 @@
 		if (updateCombatHook !== undefined) Hooks.off('updateCombat', updateCombatHook);
 		if (createCombatantHook !== undefined) Hooks.off('createCombatant', createCombatantHook);
 		if (deleteCombatantHook !== undefined) Hooks.off('deleteCombatant', deleteCombatantHook);
+		if (updateCombatantHook !== undefined) Hooks.off('updateCombatant', updateCombatantHook);
 		if (renderSceneNavigationHook !== undefined)
 			Hooks.off('renderSceneNavigation', renderSceneNavigationHook);
 		if (canvasReadyHook !== undefined) Hooks.off('canvasReady', canvasReadyHook);
+		if (canvasTearDownHook !== undefined) Hooks.off('canvasTearDown', canvasTearDownHook);
+		if (updateSceneHook !== undefined) Hooks.off('updateScene', updateSceneHook);
 	});
 </script>
 
@@ -162,23 +218,20 @@
 
 		<ol class="nimble-combatants" ondrop={(event) => _onDrop(event)} out:fade={{ delay: 0 }}>
 			{#key version}
-				{#each currentCombat?.turns as combatant, index (combatant.id)}
+				{#each sceneCombatants as combatant (combatant._id)}
 					{@const CombatantComponent = getCombatantComponent(combatant)}
 
-					{#if combatant.visible}
-						<li class="nimble-combatants__item">
-							<CombatantComponent
-								active={currentCombat.combatant?.id === combatant.id}
-								{combatant}
-								{index}
-							/>
-						</li>
-					{/if}
+					<li class="nimble-combatants__item">
+						<CombatantComponent
+							active={currentCombat?.combatant?.id === combatant.id}
+							{combatant}
+						/>
+					</li>
 				{/each}
 			{/key}
 		</ol>
 
-		{#if game.user!.isGM && currentCombat?.combatants.contents.some((combatant) => combatant.initiative === null)}
+		{#if game.user!.isGM && sceneCombatants.some((combatant) => combatant.initiative === null)}
 			<footer class="nimble-combat-tracker__footer">
 				<div class="nimble-combat-tracker__footer-roll-container">
 					<button

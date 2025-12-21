@@ -15,15 +15,18 @@ export class NimbleTokenDocument extends TokenDocument {
 		tokens: TokenDocument[],
 		{ combat }: { combat?: Combat | null } = {},
 	): Promise<Combatant[]> {
+		// Get the current scene ID - this is the authoritative source
+		const currentSceneId = canvas.scene?.id;
+		if (!currentSceneId) throw new Error('No active scene');
+
 		// Identify the target Combat encounter
 		let targetCombat: Combat | undefined = combat ?? game.combats.viewed ?? undefined;
 
-		if (!targetCombat) {
+		// If no combat exists or the viewed combat is for a different scene, create a new one
+		if (!targetCombat || (targetCombat.scene?.id && targetCombat.scene.id !== currentSceneId)) {
 			if (game.user.isGM) {
 				const cls = getDocumentClass('Combat');
-				const sceneId = canvas.scene?.id;
-				if (!sceneId) throw new Error('No active scene');
-				targetCombat = await cls.create({ scene: sceneId, active: true }, { render: false });
+				targetCombat = await cls.create({ scene: currentSceneId, active: true });
 			} else throw new Error(game.i18n.localize('COMBAT.NoneActive'));
 		}
 
@@ -47,10 +50,13 @@ export class NimbleTokenDocument extends TokenDocument {
 					break;
 			}
 
+			// Use token.parent?.id if available, otherwise fall back to current scene ID
+			const tokenSceneId = token.parent?.id ?? currentSceneId;
+
 			arr.push({
 				type: combatantType,
 				tokenId: token.id ?? '',
-				sceneId: token.parent?.id ?? '',
+				sceneId: tokenSceneId,
 				actorId: token.actorId ?? '',
 				hidden: token.hidden ?? false,
 			});

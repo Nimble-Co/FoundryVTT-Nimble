@@ -36,7 +36,9 @@
 	}
 
 	const statusEffects = CONFIG.statusEffects;
-	const { active: activeStatuses, overlay: overlayStatuses } = HUD?.actor?.conditionsMetadata ?? {};
+	const conditionsMetadata = HUD?.actor?.conditionsMetadata;
+	const activeStatuses = conditionsMetadata?.active ?? new Set();
+	const overlayStatuses = conditionsMetadata?.overlay ?? new Set();
 </script>
 
 <div class="status-effects-container">

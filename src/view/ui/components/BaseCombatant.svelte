@@ -6,7 +6,9 @@
 
 	async function deleteCombatant(event: MouseEvent) {
 		event.preventDefault();
-		const combatantDoc = game.combat?.combatants?.get(combatant._id);
+		// Use combatant.parent to get the correct combat (not game.combat which may be different)
+		const parentCombat = combatant.parent as Combat | null;
+		const combatantDoc = parentCombat?.combatants?.get(combatant._id);
 		if (combatantDoc) {
 			await combatantDoc.delete();
 		}
@@ -91,7 +93,9 @@
 	data-combatant-id={combatant._id}
 	onmouseenter={(event) => handleTokenHighlight(event, 'enter')}
 	onmouseleave={(event) => handleTokenHighlight(event, 'leave')}
-	use:draggable={JSON.stringify(game.combat?.combatants?.get(combatant._id)?.toDragData() ?? {})}
+	use:draggable={JSON.stringify(
+		(combatant.parent as Combat | null)?.combatants?.get(combatant._id)?.toDragData() ?? {},
+	)}
 	in:fade={{ delay: 200 }}
 	out:fade={{ delay: 0 }}
 >
@@ -101,9 +105,9 @@
 	>
 		<img
 			class="nimble-combatant__image"
-			class:nimble-combatant__image--muted={combatant.reactive.defeated ||
-				combatant.reactive.hidden}
-			src={combatant.reactive.img ?? 'icons/svg/mystery-man.svg'}
+			class:nimble-combatant__image--muted={combatant.reactive?.defeated ||
+				combatant.reactive?.hidden}
+			src={combatant.reactive?.img ?? 'icons/svg/mystery-man.svg'}
 			alt="Combatant art"
 		/>
 
@@ -112,7 +116,7 @@
 				{#if game.user.isGM}
 					<button
 						class="nimble-combatant-controls-overlay__button"
-						class:nimble-combatant-controls-overlay__button--active={combatant.reactive.hidden}
+						class:nimble-combatant-controls-overlay__button--active={combatant.reactive?.hidden}
 						type="button"
 						aria-label="Toggle combatant visibility"
 						data-tooltip="Toggle combatant visibility"
@@ -123,7 +127,7 @@
 
 					<button
 						class="nimble-combatant-controls-overlay__button"
-						class:nimble-combatant-controls-overlay__button--active={combatant.reactive.defeated}
+						class:nimble-combatant-controls-overlay__button--active={combatant.reactive?.defeated}
 						type="button"
 						aria-label="Mark combatant as defeated"
 						data-tooltip="Mark combatant as defeated"
@@ -182,7 +186,7 @@
 		</div>
 	</div>
 
-	{#if isObserver}
+	{#if isObserver && combatant.actor?.reactive?.system?.attributes?.hp}
 		{@const currentHP = combatant.actor.reactive.system.attributes.hp.value}
 		{@const maxHP = combatant.actor.reactive.system.attributes.hp.max}
 		{@const isBloodied = currentHP < maxHP / 2}
@@ -202,11 +206,13 @@
 	<header class="nimble-combatant__header">
 		<h3
 			class="nimble-combatant__heading"
-			class:nimble-combatant__heading--defeated={combatant.reactive.defeated}
+			class:nimble-combatant__heading--defeated={combatant.reactive?.defeated}
 		>
-			{combatant.token?.actor?.reactive.name ??
-				combatant.token?.reactive.name ??
-				combatant.reactive.name}
+			{combatant.token?.actor?.reactive?.name ??
+				combatant.token?.reactive?.name ??
+				combatant.reactive?.name ??
+				combatant.name ??
+				'Unknown'}
 		</h3>
 	</header>
 
