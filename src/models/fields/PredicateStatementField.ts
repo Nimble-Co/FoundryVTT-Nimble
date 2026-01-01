@@ -11,18 +11,18 @@ declare namespace PredicateStatementField {
 		}
 	>;
 
-	type MergedOptions<Options extends DataFieldOptions<string>> = SimpleMerge<
+	type MergedOptions<Options extends foundry.data.fields.DataField.Options<string>> = SimpleMerge<
 		DefaultOptions,
 		Options
 	>;
 
-	type AssignmentType<Opts extends DataFieldOptions<string>> =
+	type AssignmentType<Opts extends foundry.data.fields.DataField.Options<string>> =
 		foundry.data.fields.DataField.DerivedAssignmentType<string, MergedOptions<Opts>>;
 
-	type InitializedType<Opts extends DataFieldOptions<string>> =
+	type InitializedType<Opts extends foundry.data.fields.DataField.Options<string>> =
 		foundry.data.fields.DataField.DerivedInitializedType<string, MergedOptions<Opts>>;
 
-	type PersistedType<Opts extends DataFieldOptions<string>> =
+	type PersistedType<Opts extends foundry.data.fields.DataField.Options<string>> =
 		foundry.data.fields.DataField.DerivedInitializedType<string, MergedOptions<Opts>>;
 }
 
@@ -49,8 +49,8 @@ class PredicateStatementField<
 	}
 
 	/** No casting is available for a predicate statement */
-	protected _cast(value: AssignmentType): InitializedType {
-		return value as unknown as InitializedType;
+	protected override _cast(value: unknown): AssignmentType {
+		return value as object as AssignmentType;
 	}
 
 	protected override _cleanType(value: InitializedType): InitializedType {

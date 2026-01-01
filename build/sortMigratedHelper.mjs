@@ -1,9 +1,8 @@
-/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-console */
 import * as fs from 'fs/promises';
-import path from 'path';
-import JSZip from 'jszip';
 import { globSync } from 'glob';
+import JSZip from 'jszip';
+import path from 'path';
 import { createInterface } from 'readline/promises';
 
 const PACK_DEST = './packs';

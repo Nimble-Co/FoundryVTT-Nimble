@@ -1,4 +1,4 @@
-import type { DeepPartial } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { DeepPartial } from 'fvtt-types/utils';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
 import sortDocumentsByName from '../../utils/sortDocumentsByName.js';
@@ -33,19 +33,23 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	}
 
 	static override DEFAULT_OPTIONS = {
-		classes: ['nimble-sheet', 'nimble-dialog'],
+		classes: ['nimble-sheet'],
 		window: {
 			icon: 'fa-solid fa-user',
 			title: 'Character Creation Helper',
 			resizable: true,
 		},
 		position: {
-			height: 'auto',
+			height: 'auto' as const,
+			top: 5,
+			width: 608,
 		},
 		actions: {},
 	};
 
-	protected async _prepareContext() {
+	protected override async _prepareContext(
+		_options: Parameters<foundry.applications.api.ApplicationV2['_prepareContext']>[0],
+	): ReturnType<foundry.applications.api.ApplicationV2['_prepareContext']> {
 		const ancestryOptions = this.prepareAncestryOptions();
 		const backgroundOptions = this.prepareBackgroundOptions();
 		const bonusLanguageOptions = this.prepareBonusLanguageOptions();
@@ -59,40 +63,65 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			classOptions,
 			statArrayOptions,
 			dialog: this,
-		};
+		} as object as ReturnType<
+			foundry.applications.api.ApplicationV2['_prepareContext']
+		> extends Promise<infer T>
+			? T
+			: never;
 	}
 
-	async submit(results) {
+	async submitCharacterCreation(results: {
+		name?: string;
+		sizeCategory?: string;
+		abilityScores?: Record<string, number>;
+		skills?: Record<string, number>;
+		languages?: string[];
+		origins?: {
+			background?: { uuid?: string };
+			characterClass?: { uuid?: string };
+			ancestry?: { uuid?: string };
+		};
+	}) {
 		const actor = await Actor.create(
 			{ name: results.name || 'New Character', type: 'character' },
 			{ renderSheet: true },
 		);
 
 		const { background, characterClass, ancestry } = results?.origins ?? {};
-		const originDocuments: NimbleBaseItem[] = [];
 
-		const backgroundDocument = (await fromUuid(background?.uuid)) as NimbleBackgroundItem | null;
-		const classDocument = (await fromUuid(characterClass?.uuid)) as NimbleClassItem | null;
-		const ancestryDocument = (await fromUuid(ancestry?.uuid)) as NimbleAncestryItem | null;
+		const backgroundDocument = background?.uuid
+			? ((await fromUuid(background.uuid as `Item.${string}`)) as NimbleBackgroundItem | null)
+			: null;
+		const classDocument = characterClass?.uuid
+			? ((await fromUuid(characterClass.uuid as `Item.${string}`)) as NimbleClassItem | null)
+			: null;
+		const ancestryDocument = ancestry?.uuid
+			? ((await fromUuid(ancestry.uuid as `Item.${string}`)) as NimbleAncestryItem | null)
+			: null;
 
-		if (backgroundDocument) {
-			backgroundDocument._stats.compendiumSource = background.uuid;
-			originDocuments.push(backgroundDocument);
+		const originDocumentSources: Item.CreateData[] = [];
+
+		if (backgroundDocument && background?.uuid) {
+			const source = backgroundDocument.toObject();
+			source._stats.compendiumSource = background.uuid;
+			originDocumentSources.push(source as object as Item.CreateData);
 		}
 
-		if (classDocument) {
-			classDocument._stats.compendiumSource = characterClass.uuid;
-			originDocuments.push(classDocument);
+		if (classDocument && characterClass?.uuid) {
+			const source = classDocument.toObject();
+			source._stats.compendiumSource = characterClass.uuid;
+			originDocumentSources.push(source as object as Item.CreateData);
 		}
 
-		if (ancestryDocument) {
-			ancestryDocument._stats.compendiumSource = ancestry.uuid;
-			originDocuments.push(ancestryDocument);
+		if (ancestryDocument && ancestry?.uuid) {
+			const source = ancestryDocument.toObject();
+			source._stats.compendiumSource = ancestry.uuid;
+			originDocumentSources.push(source as object as Item.CreateData);
 		}
 
-		actor?.createEmbeddedDocuments('Item', originDocuments);
+		actor?.createEmbeddedDocuments('Item', originDocumentSources);
 
-		await actor?.update({
+		const updateData: Record<string, unknown> = {
 			system: {
 				'attributes.sizeCategory': results.sizeCategory,
 				abilities: results.abilityScores ?? {},
@@ -105,12 +134,13 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 					languages: results.languages,
 				},
 			},
-		});
+		};
+		await actor?.update(updateData);
 
 		return super.close();
 	}
 
-	async close(
+	override async close(
 		options?: DeepPartial<foundry.applications.api.ApplicationV2.ClosingOptions>,
 	): Promise<this> {
 		return super.close(options);
@@ -121,8 +151,8 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		const exoticAncestries: NimbleAncestryItem[] = [];
 
 		const ancestryOptions = await Promise.all(
-			getChoicesFromCompendium('ancestry').map(
-				(uuid) => fromUuid(uuid) as Promise<NimbleAncestryItem | null>,
+			getChoicesFromCompendium('ancestry').map((uuid) =>
+				fromUuid(uuid as `Item.${string}`).then((doc) => doc as NimbleAncestryItem | null),
 			),
 		);
 
@@ -161,7 +191,9 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	async prepareBackgroundOptions(): Promise<NimbleBackgroundItem[]> {
 		const compendiumChoices = getChoicesFromCompendium('background');
 
-		const documents = await Promise.all(compendiumChoices.map((uuid) => fromUuid(uuid)));
+		const documents = await Promise.all(
+			compendiumChoices.map((uuid) => fromUuid(uuid as `Item.${string}`)),
+		);
 
 		return sortDocumentsByName(documents as ({ name?: string } | null)[]) as NimbleBackgroundItem[];
 	}
@@ -180,7 +212,9 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	async prepareClassOptions(): Promise<NimbleClassItem[]> {
 		const compendiumChoices = getChoicesFromCompendium('class');
 
-		const documents = await Promise.all(compendiumChoices.map((uuid) => fromUuid(uuid)));
+		const documents = await Promise.all(
+			compendiumChoices.map((uuid) => fromUuid(uuid as `Item.${string}`)),
+		);
 
 		return sortDocumentsByName(documents as ({ name?: string } | null)[]) as NimbleClassItem[];
 	}

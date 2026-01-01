@@ -40,6 +40,28 @@ class NimbleSpellData extends NimbleBaseItemData<
 	NimbleSpellData.BaseData,
 	NimbleSpellData.DerivedData
 > {
+	declare activation: {
+		showDescription: boolean;
+		acquireTargetsFromTemplate: boolean;
+		cost: { details: string; quantity: number; type: string; isReaction: boolean };
+		duration: { details: string; quantity: number; type: string };
+		effects: Record<string, unknown>[];
+		targets: { count: number; restrictions: string };
+		template: { length: number; radius: number; shape: string; width: number };
+	};
+
+	declare description: { baseEffect: string; higherLevelEffect: string };
+
+	declare properties: {
+		selected: string[];
+		range: { min: number; max: number | null };
+		reach: { min: number; max: number | null };
+	};
+
+	declare school: string;
+
+	declare tier: number;
+
 	/** @inheritDoc */
 	static override defineSchema(): NimbleSpellData.Schema {
 		return {

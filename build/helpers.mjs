@@ -1,4 +1,3 @@
-/* eslint-disable no-param-reassign */
 /**
    * A helper function which searches through an object to retrieve a value by a string key.
    * The method also supports arrays if the provided key is an integer index of the array.
@@ -38,8 +37,7 @@ export function setProperty(object, key, value) {
     const parts = key.split('.');
     key = parts.pop();
     target = parts.reduce((o, i) => {
-      // eslint-disable-next-line no-prototype-builtins
-      if (!o.hasOwnProperty(i)) o[i] = {};
+      if (!Object.hasOwn(o, i)) o[i] = {};
       return o[i];
     }, object);
   }

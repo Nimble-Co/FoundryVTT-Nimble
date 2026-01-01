@@ -14,6 +14,8 @@ declare namespace InitiativeBonusRule {
 }
 
 class InitiativeBonusRule extends NimbleBaseRule<InitiativeBonusRule.Schema> {
+	declare value: string;
+
 	static override defineSchema(): InitiativeBonusRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -31,7 +33,14 @@ class InitiativeBonusRule extends NimbleBaseRule<InitiativeBonusRule.Schema> {
 
 		const { actor } = item;
 		const value = this.resolveFormula(this.value) ?? 0;
-		const originalValue = actor.system.attributes.initiative.mod ?? 0;
+
+		interface ActorAttributes {
+			attributes: {
+				initiative: { mod?: number };
+			};
+		}
+		const actorSystem = actor.system as object as ActorAttributes;
+		const originalValue = actorSystem.attributes.initiative.mod ?? 0;
 		const modifiedValue = originalValue + value;
 
 		foundry.utils.setProperty(actor.system, 'attributes.initiative.mod', modifiedValue);

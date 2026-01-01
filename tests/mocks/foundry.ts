@@ -87,44 +87,58 @@ export const globalFoundryMocks = {
  * @returns An object with the mock function and the constructor function for resetting
  */
 export function createTrackableRollMock() {
+	// Use a proper class that can be extended by DamageRoll etc.
 	class MockRollClass {
 		formula: string;
 		data?: unknown;
-		options: any;
-		terms: any[];
-		toJSON: ReturnType<typeof vi.fn>;
+		options: Record<string, unknown>;
+		terms: unknown[];
 		_evaluated?: boolean;
 		_total?: number;
+		_formula?: string;
 
-		constructor(formula: string, data?: any, options?: any) {
+		constructor(formula: string, data?: unknown, options?: Record<string, unknown>) {
 			this.formula = formula;
 			this.data = data ?? {};
 			this.options = options ?? {};
 			this.terms = [];
-			this.toJSON = vi.fn().mockReturnValue({ total: 0 });
+			this._formula = formula;
 		}
 
-		static getFormula(terms: any[]): string {
+		toJSON() {
+			return { total: this._total ?? 0, formula: this.formula };
+		}
+
+		resetFormula() {
+			this._formula = MockRollClass.getFormula(this.terms);
+		}
+
+		static getFormula(terms: unknown[]): string {
 			// Simple implementation that reconstructs formula from terms
 			if (!terms || terms.length === 0) return '';
 			return terms
 				.map((term) => {
-					if (term.operator) return term.operator;
-					if (term.number && term.faces) return `${term.number}d${term.faces}`;
-					if (term.number !== undefined) return String(term.number);
+					const t = term as Record<string, unknown>;
+					if (t.operator) return t.operator;
+					if (t.number && t.faces) return `${t.number}d${t.faces}`;
+					if (t.number !== undefined) return String(t.number);
 					return '';
 				})
 				.filter(Boolean)
 				.join('');
 		}
 
-		static fromData(data: Record<string, any>) {
-			const roll = new MockRollClass(data.formula, data.data, data.options);
-			if (data.terms) roll.terms = data.terms;
+		static fromData(data: Record<string, unknown>) {
+			const roll = new MockRollClass(
+				data.formula as string,
+				data.data as unknown,
+				data.options as Record<string, unknown>,
+			);
+			if (data.terms) roll.terms = data.terms as unknown[];
 			// Preserve other properties that might be in the data object
-			if (data._evaluated !== undefined) roll._evaluated = data._evaluated;
-			if (data._total !== undefined) roll._total = data._total;
-			if (data.total !== undefined) roll._total = data.total;
+			if (data._evaluated !== undefined) roll._evaluated = data._evaluated as boolean;
+			if (data._total !== undefined) roll._total = data._total as number;
+			if (data.total !== undefined) roll._total = data.total as number;
 			return roll;
 		}
 
@@ -133,31 +147,87 @@ export function createTrackableRollMock() {
 			this._total ??= 0;
 			return this;
 		}
-	}
 
-	// Create a tracked constructor function that works with 'new'
-	function MockRollConstructor(this: any, formula: string, data?: any, options?: any) {
-		const instance = new MockRollClass(formula, data, options);
-		if (this && typeof this === 'object' && this !== globalThis) {
-			// Called with 'new' - assign to this
-			Object.assign(this, instance);
-			return this;
+		get total(): number | undefined {
+			return this._total;
 		}
-		// Called without 'new', return new instance
-		return instance;
 	}
 
-	// Make it a vi.fn() so we can track calls and override implementations
-	const MockRoll = vi.fn(MockRollConstructor) as any;
-	// Set up prototype so 'new' works correctly
-	MockRoll.prototype = MockRollClass.prototype;
-	// Add static methods
+	// Store reference to the original class and a custom implementation
+	let customImplementation: ((...args: unknown[]) => unknown) | null = null;
+
+	// Create a wrapper that tracks constructor calls while preserving class behavior
+	const constructorSpy = vi.fn();
+
+	// Use a proper class to wrap MockRollClass so it can be extended
+	const MockRoll = class MockRoll extends MockRollClass {
+		constructor(formula: string, data?: unknown, options?: Record<string, unknown>) {
+			// Track the call
+			constructorSpy(formula, data, options);
+			// If there's a custom implementation, call it and potentially use its return value
+			if (customImplementation) {
+				const result = customImplementation.call(undefined, formula, data, options);
+				// If the implementation returns an object, use that as the instance
+				if (result && typeof result === 'object') {
+					// Skip super() call by returning the custom object
+					// This is a trick: we call super() but then override everything
+					super(formula, data, options);
+					return result as MockRoll;
+				}
+			}
+			super(formula, data, options);
+		}
+	} as unknown as typeof MockRollClass & ReturnType<typeof vi.fn>;
+
+	// Copy static methods
 	MockRoll.getFormula = MockRollClass.getFormula;
 	MockRoll.fromData = MockRollClass.fromData;
-	// Make it constructable
-	Object.setPrototypeOf(MockRoll, Function.prototype);
 
-	return { MockRoll, MockRollConstructor };
+	// Add vi.fn() mock methods by copying them from the spy
+	// This allows tests to use mockImplementation, mockClear, etc.
+	Object.defineProperty(MockRoll, 'mock', {
+		get: () => constructorSpy.mock,
+	});
+
+	// Mark as a mock function so vitest recognizes it as a spy
+	Object.defineProperty(MockRoll, '_isMockFunction', {
+		value: true,
+		writable: false,
+	});
+
+	// Copy other necessary properties from the spy for vitest compatibility
+	(MockRoll as ReturnType<typeof vi.fn>).mockClear = () => {
+		constructorSpy.mockClear();
+		return MockRoll as ReturnType<typeof vi.fn>;
+	};
+	(MockRoll as ReturnType<typeof vi.fn>).mockReset = () => {
+		constructorSpy.mockReset();
+		customImplementation = null;
+		return MockRoll as ReturnType<typeof vi.fn>;
+	};
+	(MockRoll as ReturnType<typeof vi.fn>).mockImplementation = (
+		impl: (...args: unknown[]) => unknown,
+	) => {
+		customImplementation = impl;
+		return MockRoll as ReturnType<typeof vi.fn>;
+	};
+	(MockRoll as ReturnType<typeof vi.fn>).mockName = (name: string) => {
+		constructorSpy.mockName(name);
+		return MockRoll as ReturnType<typeof vi.fn>;
+	};
+	(MockRoll as ReturnType<typeof vi.fn>).getMockName = () => {
+		return constructorSpy.getMockName();
+	};
+	(MockRoll as ReturnType<typeof vi.fn>).mockReturnThis = () => {
+		return MockRoll as ReturnType<typeof vi.fn>;
+	};
+
+	// Store reference to constructor function for backward compatibility
+	function MockRollConstructor(formula: string, data?: unknown, options?: Record<string, unknown>) {
+		return new MockRoll(formula, data, options);
+	}
+
+	return { MockRoll: MockRoll as unknown as ReturnType<typeof vi.fn>, MockRollConstructor };
 }
 
 // Create the trackable Roll mock for use in foundryApiMocks
@@ -234,12 +304,12 @@ export const foundryApiMocks = {
 	},
 	documents: {
 		BaseActor: {
-			ConstructorData: {} as any,
+			ConstructorData: {},
 		},
 		BaseItem: {
-			TypeNames: {} as any,
+			TypeNames: {},
 		},
-		BaseUser: {} as any,
+		BaseUser: {},
 		collections: {
 			Actors: {
 				unregisterSheet: vi.fn(),
@@ -287,14 +357,14 @@ export const foundryApiMocks = {
 				implementation: {
 					enrichHTML: vi.fn((html: string) => Promise.resolve(html)),
 					getDragEventData: vi.fn(),
-					EnrichmentOptions: {} as any,
+					EnrichmentOptions: {},
 				},
 			},
 		},
 		elements: {
 			HTMLProseMirrorElement: {
 				create: vi.fn(),
-				ProseMirrorInputConfig: {} as any,
+				ProseMirrorInputConfig: {},
 				tagName: 'html-prose-mirror',
 			},
 		},
@@ -391,7 +461,9 @@ export function createGameMock(langData: any) {
 				return value || key; // Return key if not found
 			},
 			format: (key: string, data?: Record<string, string>) => {
-				let translated = (globalThis as any).game.i18n.localize(key);
+				let translated = (
+					globalThis as object as { game: { i18n: { localize(key: string): string } } }
+				).game.i18n.localize(key);
 				// Simple replacement for format strings like {remainingSkillPoints}
 				if (data) {
 					for (const [k, v] of Object.entries(data)) {

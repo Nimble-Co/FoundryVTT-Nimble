@@ -1,7 +1,6 @@
-import type DataModel from '@league-of-foundry-developers/foundry-vtt-types/src/foundry/common/abstract/data.d.mts';
-import type { AnyObject } from '@league-of-foundry-developers/foundry-vtt-types/src/types/utils.d.mts';
+import type { AnyObject } from 'fvtt-types/utils';
 
-import { Predicate } from '../../etc/Predicate.js';
+import { Predicate, type RawPredicate } from '../../etc/Predicate.js';
 import { isPlainObject } from '../../utils/isPlainObject.js';
 
 // class PredicateField<
@@ -18,7 +17,6 @@ import { isPlainObject } from '../../utils/isPlainObject.js';
 // > extends foundry.data.fields.ArrayField<EFT> {
 //   constructor(options = {}) {
 //     super(
-//       // @ts-expect-error
 //       new PredicateStatementField(),
 //       {
 //         label: 'Nimble.RuleEditor.General.Predicate',
@@ -41,11 +39,13 @@ import { isPlainObject } from '../../utils/isPlainObject.js';
 class PredicateField extends foundry.data.fields.ObjectField {
 	override initialize(
 		value: AnyObject,
-		model: DataModel.Any,
+		model: foundry.abstract.DataModel.Any,
 		options?: AnyObject,
 	): AnyObject | (() => AnyObject | null) {
 		const pred = super.initialize(value, model, options);
-		return isPlainObject(pred) ? new Predicate(value) : pred;
+		return isPlainObject(pred)
+			? (new Predicate(value as object as RawPredicate) as object as AnyObject)
+			: pred;
 	}
 }
 

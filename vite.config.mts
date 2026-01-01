@@ -11,7 +11,13 @@ const config = defineConfig({
 		port: 30001,
 		open: true,
 		proxy: {
-			'^(/systems/nimble/(assets|style.css))': 'http://localhost:30000',
+			// Explicit paths (Vite proxy keys are path prefixes; regex-like strings don't always match)
+			'/systems/nimble/nimble.css': 'http://localhost:30000',
+			'/systems/nimble/style.css': 'http://localhost:30000',
+			'/systems/nimble/assets': 'http://localhost:30000',
+			// During dev, Foundry loads the system stylesheet from system.json ("nimble.css").
+			// Proxy it (and assets) back to the Foundry server.
+			'^/systems/nimble/(assets|nimble\\.css|style\\.css)': 'http://localhost:30000',
 			'^(?!/systems/nimble)': 'http://localhost:30000',
 			'/socket.io': {
 				target: 'ws://localhost:30000',

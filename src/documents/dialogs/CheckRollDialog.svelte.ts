@@ -44,25 +44,31 @@ export default class CheckRollDialog extends SvelteApplicationMixin(ApplicationV
 		},
 		position: {
 			width: 576,
-			height: 'auto',
+			height: 'auto' as const,
 		},
 		actions: {},
 	};
 
-	protected async _prepareContext() {
+	protected override async _prepareContext(
+		_options: Parameters<foundry.applications.api.ApplicationV2['_prepareContext']>[0],
+	): ReturnType<foundry.applications.api.ApplicationV2['_prepareContext']> {
 		return {
 			actor: this.actor,
 			dialog: this,
 			...this.data,
-		};
+		} as object as ReturnType<
+			foundry.applications.api.ApplicationV2['_prepareContext']
+		> extends Promise<infer T>
+			? T
+			: never;
 	}
 
-	async submit(results) {
+	async submitRoll(results: Record<string, unknown>) {
 		this.#resolvePromise(results);
 		return super.close();
 	}
 
-	async close(options) {
+	override async close(options?: Parameters<foundry.applications.api.ApplicationV2['close']>[0]) {
 		this.#resolvePromise(null);
 		return super.close(options);
 	}

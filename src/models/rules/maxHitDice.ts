@@ -15,6 +15,10 @@ declare namespace MaxHitDiceRule {
 }
 
 class MaxHitDiceRule extends NimbleBaseRule<MaxHitDiceRule.Schema> {
+	declare dieSize: number;
+
+	declare value: string;
+
 	static override defineSchema(): MaxHitDiceRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -31,18 +35,18 @@ class MaxHitDiceRule extends NimbleBaseRule<MaxHitDiceRule.Schema> {
 		);
 	}
 
-	override prePrepareData(): void {
+	prePrepareData(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
 
 		const { actor } = item;
-		if (!actor.isType('character')) return;
+		if (actor.type !== 'character') return;
 
 		const { dieSize } = this;
 		const value = this.resolveFormula(this.value) ?? 0;
 
-		const hitDiceData =
-			foundry.utils.getProperty(actor.system, `attributes.hitDice.${dieSize}`) ?? {};
+		const hitDiceData = (foundry.utils.getProperty(actor.system, `attributes.hitDice.${dieSize}`) ??
+			{}) as { bonus?: number; origin?: string[] };
 
 		const modifiedValue = (hitDiceData.bonus ?? 0) + value;
 		foundry.utils.setProperty(actor.system, `attributes.hitDice.${dieSize}.bonus`, modifiedValue);

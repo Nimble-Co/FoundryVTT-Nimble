@@ -1,33 +1,47 @@
-export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.TypeNames, 'base'>;
+export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.SubType, 'base'>;
 
 import { createSubscriber } from 'svelte/reactivity';
 import type { EffectNode } from '#types/effectTree.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 
-export interface NimbleChatMessage<
-	ChatMessageType extends SystemChatMessageTypes = SystemChatMessageTypes,
-> {
-	type: ChatMessageType;
-	system: DataModelConfig['ChatMessage'][ChatMessageType];
+/** Types for activation cards that have targets and effects */
+type ActivationCardTypes = 'feature' | 'object' | 'spell';
+
+/** System data for activation cards */
+interface ActivationCardSystemData {
+	targets: string[];
+	isCritical: boolean;
+	isMiss: boolean;
+	activation: {
+		effects: unknown[];
+		[key: string]: unknown;
+	};
+	[key: string]: unknown;
 }
 
 class NimbleChatMessage extends ChatMessage {
-	#subscribe;
+	declare type: SystemChatMessageTypes;
 
-	constructor(data, context) {
+	#subscribe: ReturnType<typeof createSubscriber>;
+
+	constructor(data: ChatMessage.CreateData, context?: ChatMessage.ConstructionContext) {
 		super(data, context);
 
 		this.#subscribe = createSubscriber((update) => {
-			const updateActorHook = Hooks.on('updateActor', (triggeringDocument, _, { diff }) => {
-				if (diff === false) return;
+			const updateActorHook = Hooks.on('updateActor', (triggeringDocument, _change, options) => {
+				if ((options as { diff?: boolean }).diff === false) return;
 
 				let requiresUpdate = false;
 
-				if (this.isType('feature') || this.isType('object') || this.isType('spell')) {
-					const dependentTokens = triggeringDocument?.getDependentTokens() ?? [];
+				if (this.isActivationCard()) {
+					const actorWithTokens = triggeringDocument as {
+						getDependentTokens?(): { uuid: string }[];
+					};
+					const dependentTokens = actorWithTokens.getDependentTokens?.() ?? [];
+					const systemData = this.system as ActivationCardSystemData;
 
 					for (const token of dependentTokens) {
-						if (this.system.targets?.includes(token?.uuid)) requiresUpdate = true;
+						if (systemData.targets?.includes(token.uuid)) requiresUpdate = true;
 					}
 				}
 
@@ -36,15 +50,15 @@ class NimbleChatMessage extends ChatMessage {
 
 			const updateChatMessageHook = Hooks.on(
 				'updateChatMessage',
-				(triggeringDocument, _, { diff }) => {
-					if (diff === false) return;
+				(triggeringDocument, _change, options) => {
+					if ((options as { diff?: boolean }).diff === false) return;
 					if (triggeringDocument._id === this.id) update();
 				},
 			);
 
-			const updateUserHook = Hooks.on('updateUser', (triggeringDocument, _, { diff }) => {
-				if (diff === false) return;
-				if (triggeringDocument._id === this.author.id) update();
+			const updateUserHook = Hooks.on('updateUser', (triggeringDocument, _change, options) => {
+				if ((options as { diff?: boolean }).diff === false) return;
+				if (triggeringDocument._id === this.author?.id) update();
 			});
 
 			return () => {
@@ -58,16 +72,19 @@ class NimbleChatMessage extends ChatMessage {
 	/** ------------------------------------------------------ */
 	/**                    Type Helpers                        */
 	/** ------------------------------------------------------ */
-	isType<TypeName extends SystemChatMessageTypes>(
-		type: TypeName,
-	): this is NimbleChatMessage<TypeName> {
-		return type === (this.type as SystemChatMessageTypes);
+	isType<TypeName extends SystemChatMessageTypes>(type: TypeName): boolean {
+		return type === this.type;
+	}
+
+	/** Check if this chat message is an activation card type (feature, object, or spell) */
+	isActivationCard(): this is NimbleChatMessage & { system: ActivationCardSystemData } {
+		return (this.activationCardTypes as string[]).includes(this.type);
 	}
 
 	/** ------------------------------------------------------ */
 	/**                       Getters                          */
 	/** ------------------------------------------------------ */
-	get activationCardTypes() {
+	get activationCardTypes(): ActivationCardTypes[] {
 		return ['feature', 'object', 'spell'];
 	}
 
@@ -78,15 +95,16 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	get effectNodes(): EffectNode[][] {
-		if (!this.isType('feature') && !this.isType('object') && !this.isType('spell')) return [];
+		if (!this.isActivationCard()) return [];
 
 		const contexts: string[] = [];
+		const systemData = this.system as ActivationCardSystemData;
 
-		if (this.system.isCritical) contexts.push('criticalHit', 'hit');
-		else if (this.system.isMiss) contexts.push('miss');
+		if (systemData.isCritical) contexts.push('criticalHit', 'hit');
+		else if (systemData.isMiss) contexts.push('miss');
 		else contexts.push('hit');
 
-		const effects = this.system.activation.effects || [];
+		const effects = (systemData.activation.effects || []) as EffectNode[];
 		const nodes = getRelevantNodes(effects, contexts);
 		return nodes;
 	}
@@ -98,54 +116,63 @@ class NimbleChatMessage extends ChatMessage {
 		super.prepareDerivedData();
 	}
 
-	async addSelectedTokensAsTargets() {
-		if (!this.activationCardTypes.includes(this.type)) {
-			ui.notifications.warn('Cannot open a target management window for this message type.');
+	async addSelectedTokensAsTargets(): Promise<ChatMessage | undefined> {
+		if (!this.isActivationCard()) {
+			ui.notifications?.warn('Cannot open a target management window for this message type.');
 			return;
 		}
 
 		const selectedTokens = canvas.tokens?.controlled ?? [];
 
 		if (!selectedTokens.length) {
-			ui.notifications.error('No tokens selected');
+			ui.notifications?.error('No tokens selected');
 			return;
 		}
 
 		return this.#addTargets(selectedTokens);
 	}
 
-	async addTargetedTokensAsTargets() {
-		if (!this.activationCardTypes.includes(this.type)) {
-			ui.notifications.warn('Cannot open a target management window for this message type.');
+	async addTargetedTokensAsTargets(): Promise<ChatMessage | undefined> {
+		if (!this.isActivationCard()) {
+			ui.notifications?.warn('Cannot open a target management window for this message type.');
 			return;
 		}
 
-		const targetedTokens = Array.from(game.user.targets) ?? [];
+		const targetedTokens = Array.from(game.user?.targets ?? []);
 
 		if (!targetedTokens.length) {
-			ui.notifications.error('No tokens targeted');
+			ui.notifications?.error('No tokens targeted');
 			return;
 		}
 
 		return this.#addTargets(targetedTokens);
 	}
 
-	async #addTargets(newTargets) {
-		const existingTargets = this.system.targets || [];
+	async #addTargets(newTargets: Token[]): Promise<ChatMessage | undefined> {
+		if (!this.isActivationCard()) return;
+
+		const systemData = this.system as ActivationCardSystemData;
+		const existingTargets = systemData.targets || [];
 		const targets = new Set([
 			...existingTargets,
 			...newTargets.map((token) => token.document.uuid),
 		]);
 
-		return this.update({ 'system.targets': [...targets] });
+		return this.update({
+			system: { targets: [...targets] },
+		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
-	async applyDamage(value, _options) {
-		const targets = this.system.targets || [];
+	async applyDamage(value: number, _options?: Record<string, unknown>): Promise<void> {
+		if (!this.isActivationCard()) return;
+
+		const systemData = this.system as ActivationCardSystemData;
+		const targets = systemData.targets || [];
 
 		targets.forEach((uuid) => {
-			const token = fromUuidSync(uuid);
-			if (!token) return;
+			// UUIDs are stored as strings like "Scene.xxx.Token.yyy"
+			const token = fromUuidSync<TokenDocument>(uuid);
+			if (!token || !('actor' in token)) return;
 
 			const actor = token.actor;
 			if (!actor) return;
@@ -156,16 +183,19 @@ class NimbleChatMessage extends ChatMessage {
 		});
 	}
 
-	async removeTarget(targetId) {
-		if (!this.activationCardTypes.includes(this.type)) {
-			ui.notifications.warn('Cannot open a target management window for this message type.');
+	async removeTarget(targetId: string): Promise<ChatMessage | undefined> {
+		if (!this.isActivationCard()) {
+			ui.notifications?.warn('Cannot open a target management window for this message type.');
 			return;
 		}
 
-		const existingTargets = this.system.targets || [];
+		const systemData = this.system as ActivationCardSystemData;
+		const existingTargets = systemData.targets || [];
 		const targets = existingTargets.filter((id) => id !== targetId);
 
-		this.update({ 'system.targets': targets });
+		return this.update({
+			system: { targets },
+		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 }
 

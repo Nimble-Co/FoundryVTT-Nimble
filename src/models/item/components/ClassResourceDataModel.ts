@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import { isValidDiceModifier } from '../../../utils/isValidDiceModifier.js';
 import { identifier } from '../../common.js';
 
@@ -18,21 +17,14 @@ function baseResourceSchema() {
 }
 
 declare namespace NimbleBaseResource {
-	type Schema = DataSchema & ReturnType<typeof baseResourceSchema>;
+	type Schema = foundry.data.fields.DataSchema & ReturnType<typeof baseResourceSchema>;
 }
 
 abstract class NimbleBaseResource<
 	Schema extends NimbleBaseResource.Schema,
-	Parent extends foundry.abstract.DataModel.Any = InstanceType<typeof NimbleClassItem>,
+	Parent extends foundry.abstract.DataModel.Any = NimbleClassItem,
 > extends foundry.abstract.DataModel<Schema, Parent> {
 	declare type: string;
-
-	constructor(
-		source: foundry.data.fields.SchemaField.InnerAssignmentType<Schema>,
-		options?: foundry.abstract.DataModel.ConstructorOptions<Parent>,
-	) {
-		super(source, { parent: options?.parent, strict: options?.strict ?? true });
-	}
 
 	static override defineSchema(): NimbleBaseResource.Schema {
 		return {
@@ -65,7 +57,7 @@ declare namespace NimbleNumericalResource {
 
 class NimbleNumericalResource<
 	Schema extends NimbleNumericalResource.Schema,
-	Parent extends foundry.abstract.DataModel.Any = InstanceType<typeof NimbleClassItem>,
+	Parent extends foundry.abstract.DataModel.Any = NimbleClassItem,
 > extends NimbleBaseResource<Schema, Parent> {
 	static override defineSchema(): NimbleNumericalResource.Schema {
 		return {
@@ -99,7 +91,7 @@ declare namespace NimbleCounterResource {
 
 class NimbleCounterResource<
 	Schema extends NimbleCounterResource.Schema,
-	Parent extends foundry.abstract.DataModel.Any = InstanceType<typeof NimbleClassItem>,
+	Parent extends foundry.abstract.DataModel.Any = NimbleClassItem,
 > extends NimbleBaseResource<Schema, Parent> {
 	static override defineSchema(): NimbleCounterResource.Schema {
 		return {
@@ -146,7 +138,7 @@ declare namespace NimbleDiceResource {
 
 class NimbleDiceResource<
 	Schema extends NimbleDiceResource.Schema,
-	Parent extends foundry.abstract.DataModel.Any = InstanceType<typeof NimbleClassItem>,
+	Parent extends foundry.abstract.DataModel.Any = NimbleClassItem,
 > extends NimbleBaseResource<Schema, Parent> {
 	declare faces: number;
 

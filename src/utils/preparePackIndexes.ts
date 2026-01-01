@@ -1,4 +1,3 @@
-/// <reference types="@league-of-foundry-developers/foundry-vtt-types" />
 const PACK_DATA_CONFIG = {
 	background: {
 		packs: ['nimble.nimble-backgrounds'],
@@ -42,8 +41,9 @@ export function preparePackIndexes() {
 		const documentType = pack.metadata.type;
 		if (!documentType) return;
 
-		// @ts-expect-error
-		const indexTypes: string[] = [...pack.index].map((i) => i.type).filter(Boolean);
+		const indexTypes: string[] = [...pack.index]
+			.map((i) => (i as object as { type?: string }).type)
+			.filter(Boolean) as string[];
 		if (!indexTypes.every((type) => indexTypes[0] === type)) return;
 
 		const indexType = indexTypes[0];
@@ -56,7 +56,7 @@ export function preparePackIndexes() {
 	});
 }
 
-type Pack = CompendiumCollection<CompendiumCollection.Metadata>;
+type Pack = CompendiumCollection;
 
 export function createAncestryIndex(pack: Pack, _options: Record<string, any>) {
 	pack.getIndex({

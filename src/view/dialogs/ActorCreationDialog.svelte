@@ -14,7 +14,10 @@
 			{@const actorTypeName = localize(`TYPES.Actor.${actorType}`)}
 
 			<li class="nimble-actor-type-list__option nimble-card">
-				<button class="nimble-card__button" onclick={() => dialog.submit.call(dialog, actorType)}>
+				<button
+					class="nimble-card__button"
+					onclick={() => dialog.submitActorType.call(dialog, actorType)}
+				>
 					<img class="nimble-card__img" src={actorTypeBanners[actorType]} alt={actorTypeName} />
 
 					<h3 class="nimble-card__title nimble-heading" data-heading-variant="section">

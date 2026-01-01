@@ -61,7 +61,7 @@ export async function createEffectNode(
 
 	document.update({
 		'system.activation.effects': reconstructEffectsTree(flattened),
-	});
+	} as object as Record<string, unknown>);
 
 	const creationButtons = targetElement.closest('div');
 	if (creationButtons) {

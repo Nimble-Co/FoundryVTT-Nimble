@@ -9,30 +9,34 @@ import type { NimbleCharacter } from '../actor/character.js';
 export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ActorSheetV2,
 ) {
-	public actor: Actor;
-
-	public declare options: any;
+	protected _actor: Actor;
 
 	protected root;
+
+	protected props: { actor: Actor; sheet: PlayerCharacterSheet };
 
 	constructor(
 		actor: { document: NimbleCharacter },
 		options = {} as SvelteApplicationRenderContext,
 	) {
-		// @ts-expect-error - ActorSheetV2 expects different constructor signature
 		super(
 			foundry.utils.mergeObject(options, {
 				document: actor.document,
-			}),
+			}) as ConstructorParameters<typeof foundry.applications.sheets.ActorSheetV2>[0],
 		);
 
 		this.root = PlayerCharacterSheetComponent;
-		this.actor = actor.document.isToken ? actor.document.parent?.actor : actor.document;
+		const resolvedActor = actor.document.isToken ? actor.document.parent?.actor : actor.document;
+		this._actor = resolvedActor ?? actor.document;
 
 		this.props = {
 			actor: this.document,
 			sheet: this,
 		};
+	}
+
+	override get actor(): Actor {
+		return this._actor;
 	}
 
 	static override DEFAULT_OPTIONS = {
@@ -43,21 +47,25 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 336,
-			height: 'auto',
+			height: 'auto' as const,
 		},
 	};
 
-	protected async _prepareContext() {
+	protected override async _prepareContext(
+		options: Parameters<foundry.applications.sheets.ActorSheetV2['_prepareContext']>[0],
+	): ReturnType<foundry.applications.sheets.ActorSheetV2['_prepareContext']> {
+		const context = await super._prepareContext(options);
 		return {
-			actor: this.actor,
+			...context,
+			actor: this._actor,
 			sheet: this,
-		};
+		} as object as Awaited<ReturnType<foundry.applications.sheets.ActorSheetV2['_prepareContext']>>;
 	}
 
 	/**
 	 * Attach drop event listener for drag and drop functionality
 	 */
-	protected _attachFrameListeners() {
+	protected override _attachFrameListeners() {
 		super._attachFrameListeners();
 	}
 
@@ -70,17 +78,23 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 
 		const actor = this.document as NimbleCharacter;
 
-		// @ts-expect-error - Hooks.call has complex typing
-		const allowed = Hooks.call('dropActorSheetData', actor, this, data);
+		const allowed = Hooks.call(
+			'dropActorSheetData',
+			actor,
+			this as unknown as foundry.applications.sheets.ActorSheetV2.Any,
+			data as foundry.appv1.sheets.ActorSheet.DropData,
+		);
 		if (allowed === false) return false;
 
 		if (!this.document.isOwner) {
 			return false;
 		}
 
-		// @ts-expect-error
 		const item = await Item.implementation.fromDropData(data);
-		const itemData = item.toObject();
+		if (!item) return false;
+		const itemData = item.toObject() as ReturnType<Item.Implementation['toObject']> & {
+			uuid?: string;
+		};
 
 		if (item.uuid && !itemData.uuid) {
 			// Preserve the UUID from the source document
@@ -88,9 +102,12 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		}
 
 		// Handle item sorting within the same Actor
-		const keepId = !this.actor.items.has(item.id);
+		const keepId = !this._actor.items.has(item.id ?? '');
 		if (!keepId) {
-			return this._onSortItem(event, itemData);
+			return (this as object as { _onSortItem(e: DragEvent, d: object): void })._onSortItem(
+				event,
+				itemData,
+			);
 		}
 
 		// Handle arrays
@@ -104,7 +121,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			return this._onDropSubclassCreate(items);
 		} else {
 			// Create regular items
-			return this.actor.createEmbeddedDocuments('Item', items);
+			return this._actor.createEmbeddedDocuments('Item', items);
 		}
 	}
 
@@ -119,7 +136,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		for (const item of items) {
 			// Check if it's a subclass
 			if (item.type === 'subclass') {
-				const subclass = item as any;
+				const subclass = item;
 				const parentClass = subclass.system?.parentClass;
 
 				// Check if character level is >= 3
@@ -145,13 +162,17 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 				}
 
 				// Check if character already has a subclass for this class
+				type SubclassSystem = { parentClass?: string; identifier?: string };
 				const existingSubclass = actor.items.find(
-					(i) => i.type === 'subclass' && (i.system as any)?.parentClass === parentClass,
+					(i) =>
+						i.type === 'subclass' &&
+						(i.system as unknown as SubclassSystem)?.parentClass === parentClass,
 				);
 
 				if (existingSubclass) {
 					// Check if it's the exact same subclass (compare by system.identifier)
-					const existingIdentifier = existingSubclass.system?.identifier;
+					const existingIdentifier = (existingSubclass.system as unknown as SubclassSystem)
+						?.identifier;
 					const newIdentifier = subclass.system?.identifier;
 
 					if (existingIdentifier && newIdentifier && existingIdentifier === newIdentifier) {

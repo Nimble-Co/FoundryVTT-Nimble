@@ -16,5 +16,5 @@ export async function deleteEffectNode(
 		'system.activation.effects': reconstructEffectsTree(
 			flattened.filter((node) => !nodesToRemove.has(node.id)),
 		),
-	});
+	} as object as Record<string, unknown>);
 }

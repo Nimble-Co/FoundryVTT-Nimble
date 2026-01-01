@@ -18,7 +18,7 @@ export default class FeatureSheet extends SvelteApplicationMixin(
 
 		this.root = FeatureSheetComponent;
 
-		this.props = {
+		(this as object as { props: Record<string, unknown> }).props = {
 			item: this.document,
 			sheet: this,
 		};
@@ -32,15 +32,21 @@ export default class FeatureSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 400,
-			height: 'auto',
+			height: 'auto' as const,
 		},
 		actions: {},
 	};
 
-	protected async _prepareContext() {
+	protected override async _prepareContext(
+		_options: Parameters<foundry.applications.sheets.ItemSheetV2['_prepareContext']>[0],
+	): ReturnType<foundry.applications.sheets.ItemSheetV2['_prepareContext']> {
 		return {
 			item: this.item,
 			sheet: this,
-		};
+		} as object as ReturnType<
+			foundry.applications.sheets.ItemSheetV2['_prepareContext']
+		> extends Promise<infer T>
+			? T
+			: never;
 	}
 }

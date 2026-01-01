@@ -1,5 +1,5 @@
 class HitDiceManager {
-	#actor: NimbleCharacter;
+	#actor: NimbleCharacterInterface;
 
 	#max = 0;
 
@@ -7,7 +7,7 @@ class HitDiceManager {
 
 	dieSizes = new Set<number>();
 
-	constructor(actor: NimbleCharacter) {
+	constructor(actor: NimbleCharacterInterface) {
 		this.#actor = actor;
 
 		Object.values(this.#actor.classes).forEach((cls) => {
@@ -121,7 +121,7 @@ class HitDiceManager {
 		// const title = 'THIS IS A HIT DICE ROLL';
 		const chatData = {
 			author: game.user?.id,
-			speaker: ChatMessage.getSpeaker({ actor: this.#actor }),
+			speaker: ChatMessage.getSpeaker({ actor: this.#actor as object as Actor }),
 			sound: CONFIG.sounds.dice,
 			rolls: [roll],
 			system: {}, // TODO: Update this

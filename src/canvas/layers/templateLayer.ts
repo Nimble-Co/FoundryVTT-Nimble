@@ -1,7 +1,17 @@
-class NimbleTemplateLayer extends foundry.canvas.layers.TemplateLayer {
-	#previewListeners: any = null;
+interface PreviewListeners {
+	move: (event: PIXI.FederatedPointerEvent) => void;
+	wheelAbortController: AbortController;
+	wheel: (event: Event) => void;
+	click: (event: Event) => void;
+	cancel: (event: Event) => void;
+}
 
-	async createPreview(data: Record<string, unknown>): Promise<any> {
+import { canvasDragPan } from '../../utils/canvasInternal.js';
+
+class NimbleTemplateLayer extends foundry.canvas.layers.TemplateLayer {
+	#previewListeners: PreviewListeners | null = null;
+
+	async createPreview(data: Record<string, unknown>): Promise<MeasuredTemplate> {
 		const initialLayer = canvas.activeLayer;
 		const preview = await this._createPreview(
 			{ ...data, ...canvas.mousePosition },
@@ -12,17 +22,19 @@ class NimbleTemplateLayer extends foundry.canvas.layers.TemplateLayer {
 		return preview;
 	}
 
-	#activatePreviewListeners(initialLayer, preview) {
+	#activatePreviewListeners(
+		initialLayer: foundry.canvas.layers.CanvasLayer | null,
+		preview: MeasuredTemplate,
+	) {
 		let lastMove = Date.now();
 
-		const listeners = {
+		const listeners: PreviewListeners = {
 			move: (event) => {
 				event.stopPropagation();
 				const now = Date.now();
 				if (now - lastMove <= 30) return;
 
-				// @ts-expect-error
-				canvas._onDragCanvasPan(event);
+				canvasDragPan(event);
 				const dest = event.getLocalPosition(this);
 
 				if (event.shiftKey) {
@@ -92,7 +104,7 @@ class NimbleTemplateLayer extends foundry.canvas.layers.TemplateLayer {
 		});
 	}
 
-	#deactivatePreviewListeners(initialLayer) {
+	#deactivatePreviewListeners(initialLayer: foundry.canvas.layers.CanvasLayer | null) {
 		if (this.#previewListeners) {
 			canvas.stage?.off('mousemove', this.#previewListeners.move);
 			canvas.stage?.off('mousedown', this.#previewListeners.click);
@@ -101,7 +113,9 @@ class NimbleTemplateLayer extends foundry.canvas.layers.TemplateLayer {
 			this.#previewListeners = null;
 		}
 
-		if (initialLayer !== this) initialLayer?.activate();
+		if (initialLayer !== this && initialLayer && 'activate' in initialLayer) {
+			(initialLayer as foundry.canvas.layers.InteractionLayer).activate();
+		}
 	}
 }
 
