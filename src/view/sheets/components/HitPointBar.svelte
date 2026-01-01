@@ -51,6 +51,7 @@
 				class="nimble-hit-points__input nimble-hit-points__input--current-hp"
 				type="number"
 				value={currentHP}
+				max={maxHP}
 				onchange={({ target }) => updateCurrentHP?.(Number((target as HTMLInputElement).value))}
 				disabled={disableControls}
 			/>
@@ -166,12 +167,20 @@
 
 		&__input--temp-hp[type] {
 			width: var(--nimble-temp-hp-field-width, 6ch);
-			color: hsl(219, 90%, 80%);
-			text-shadow: 0 0 4px hsl(0, 0%, 100%, 0.2);
 		}
 
 		&__temp {
 			border-left: 1px dashed hsl(41, 18%, 54%);
+
+			&--has-value {
+				background: linear-gradient(to right, hsl(219, 47%, 30%) 0%, hsl(219, 47%, 50%) 100%);
+				border-radius: 0 4px 4px 0;
+
+				.nimble-hit-points__input--temp-hp[type] {
+					color: #fff;
+					text-shadow: 0 0 4px hsl(219, 50%, 20%);
+				}
+			}
 		}
 	}
 </style>
