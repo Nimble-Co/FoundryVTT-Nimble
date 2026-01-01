@@ -103,47 +103,120 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 		const originDocumentSources: Item.CreateData[] = [];
 
-		// Helper function to disable grantItem rules if gold was chosen
-		const processOriginSource = (
-			source: ReturnType<Item['toObject']>,
-			uuid: string,
-		): Item.CreateData => {
-			source._stats.compendiumSource = uuid;
-
-			// If gold was chosen, disable all grantItem rules
-			if (startingEquipmentChoice === 'gold') {
-				const systemWithRules = source.system as {
-					rules?: Array<{ type: string; disabled: boolean }>;
-				};
-				if (systemWithRules.rules) {
-					systemWithRules.rules = systemWithRules.rules.map((rule) => {
-						if (rule.type === 'grantItem') {
-							return { ...rule, disabled: true };
-						}
-						return rule;
-					});
-				}
-			}
-
-			return source as object as Item.CreateData;
-		};
-
 		if (backgroundDocument && background?.uuid) {
 			const source = backgroundDocument.toObject();
-			originDocumentSources.push(processOriginSource(source, background.uuid));
+			source._stats.compendiumSource = background.uuid;
+			originDocumentSources.push(source as object as Item.CreateData);
 		}
 
 		if (classDocument && characterClass?.uuid) {
 			const source = classDocument.toObject();
-			originDocumentSources.push(processOriginSource(source, characterClass.uuid));
+			source._stats.compendiumSource = characterClass.uuid;
+			originDocumentSources.push(source as object as Item.CreateData);
 		}
 
 		if (ancestryDocument && ancestry?.uuid) {
 			const source = ancestryDocument.toObject();
-			originDocumentSources.push(processOriginSource(source, ancestry.uuid));
+			source._stats.compendiumSource = ancestry.uuid;
+			originDocumentSources.push(source as object as Item.CreateData);
 		}
 
 		await actor?.createEmbeddedDocuments('Item', originDocumentSources);
+
+		// Handle starting equipment choice
+		if (startingEquipmentChoice === 'equipment') {
+			// Collect grantItem rules from class, background, and ancestry to get starting equipment
+			const equipmentSources: Item.CreateData[] = [];
+			const originDocuments = [classDocument, backgroundDocument, ancestryDocument].filter(
+				Boolean,
+			) as Array<NimbleClassItem | NimbleBackgroundItem | NimbleAncestryItem>;
+
+			for (const originDoc of originDocuments) {
+				const systemWithRules = originDoc.system as {
+					rules?: Array<{ type: string; disabled: boolean; uuid?: string; label?: string }>;
+				};
+
+				if (!systemWithRules.rules) continue;
+
+				for (const rule of systemWithRules.rules) {
+					if (rule.type === 'grantItem' && !rule.disabled && rule.uuid) {
+						try {
+							// Parse the compendium UUID to get pack and document ID
+							// Format: Compendium.system.packName.DocumentType.documentId
+							const uuidParts = rule.uuid.split('.');
+
+							if (uuidParts[0] === 'Compendium' && uuidParts.length >= 5) {
+								const packKey = `${uuidParts[1]}.${uuidParts[2]}`;
+								const documentId = uuidParts[4];
+
+								const pack = game.packs.get(packKey);
+
+								if (pack) {
+									await pack.getIndex();
+
+									// First try to get by ID
+									let equipmentItem = await pack.getDocument(documentId);
+
+									// If not found by ID, the compendium IDs might have been regenerated
+									// Try to find by name from the rule label (e.g., "Starting Gear - Battle Axe" -> "Battleaxe")
+									if (!equipmentItem && rule.label) {
+										// Extract item name from label (e.g., "Starting Gear - Battle Axe" -> "Battle Axe")
+										const labelParts = rule.label.split(' - ');
+										const itemName = labelParts.length > 1 ? labelParts[1] : rule.label;
+
+										// Search the index for a matching name
+										for (const [id, entry] of pack.index.entries()) {
+											const entryName = (entry as { name?: string }).name?.toLowerCase() ?? '';
+											const searchName = itemName.toLowerCase().replace(/\s+/g, '');
+											const entryNameNormalized = entryName.replace(/\s+/g, '');
+
+											if (
+												entryNameNormalized === searchName ||
+												entryName.includes(searchName) ||
+												searchName.includes(entryNameNormalized)
+											) {
+												equipmentItem = await pack.getDocument(id);
+												break;
+											}
+										}
+									}
+
+									if (equipmentItem && equipmentItem instanceof Item) {
+										const equipmentSource = equipmentItem.toObject();
+										equipmentSource._stats.compendiumSource = rule.uuid;
+										equipmentSources.push(equipmentSource as object as Item.CreateData);
+									} else {
+										console.warn(
+											`[CharacterCreation] Equipment item not found for rule: ${rule.label}`,
+										);
+									}
+								} else {
+									console.warn(`[CharacterCreation] Pack not found: ${packKey}`);
+								}
+							} else {
+								// Try direct fromUuid for non-compendium items
+								const equipmentItem = await fromUuid(rule.uuid as `Item.${string}`);
+
+								if (equipmentItem && equipmentItem instanceof Item) {
+									const equipmentSource = equipmentItem.toObject();
+									equipmentSource._stats.compendiumSource = rule.uuid;
+									equipmentSources.push(equipmentSource as object as Item.CreateData);
+								}
+							}
+						} catch (e) {
+							console.warn(
+								`[CharacterCreation] Failed to fetch starting equipment item: ${rule.uuid}`,
+								e,
+							);
+						}
+					}
+				}
+			}
+
+			if (equipmentSources.length > 0) {
+				await actor?.createEmbeddedDocuments('Item', equipmentSources);
+			}
+		}
 
 		const updateData: Record<string, unknown> = {
 			system: {
