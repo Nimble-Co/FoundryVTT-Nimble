@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Melee attackers take 3 damage.</p>"
+				"description": "<p>Melee attackers take 3 damage.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -241,7 +245,11 @@
 					}
 				},
 				"description": "<p>1d6+6. OR</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "X7bq5EGbjHYQC3lH",
 			"img": "icons/creatures/claws/claw-straight-orange.webp",
@@ -313,7 +321,11 @@
 					}
 				},
 				"description": "<p>(Range 12) 1d6+6.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "range",
+					"distance": 12
+				}
 			},
 			"_id": "1gUd0eDfiQ6FBFR9",
 			"img": "icons/creatures/abilities/tail-strike-bone-orange.webp",

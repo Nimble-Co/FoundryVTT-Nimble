@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Creatures Dazed by the Basilisk remain so for 10 minutes. Dazed 3 times = Petrified.</p>"
+				"description": "<p>Creatures Dazed by the Basilisk remain so for 10 minutes. Dazed 3 times = Petrified.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -234,7 +238,11 @@
 					}
 				},
 				"description": "<p>Daze 1 creature within sight, then</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "TWonhyB7gWas4zsh",
 			"img": "icons/magic/perception/eye-ringed-glow-angry-small-teal.webp",
@@ -305,7 +313,11 @@
 					}
 				},
 				"description": "<p>1d8+10, advantage vs Dazed targets.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "mzXBeSIiHeaAVFb1",
 			"img": "icons/creatures/abilities/fang-tooth-venomous.webp",

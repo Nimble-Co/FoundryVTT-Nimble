@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Does not die at 0 HP. Only fire, radiant, or a crit while at 0 HP can kill it.</p>"
+				"description": "<p>Does not die at 0 HP. Only fire, radiant, or a crit while at 0 HP can kill it.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -219,7 +223,11 @@
 					}
 				},
 				"description": "",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "xHKXANPad6Z22qFQ",
 			"img": "icons/svg/item-bag.svg",
@@ -299,7 +307,11 @@
 					}
 				},
 				"description": "<p>(Reach 2) 1d4+10. On crit: Prone.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "reach",
+					"distance": 2
+				}
 			},
 			"_id": "zxkIrJoeB1BqZPdz",
 			"img": "icons/skills/melee/strike-slashes-red.webp",
@@ -370,7 +382,11 @@
 					}
 				},
 				"description": "<p>(A Prone creature) 1d4+20.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "BalmxpW2pCV83I8P",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

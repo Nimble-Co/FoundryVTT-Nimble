@@ -193,7 +193,11 @@
 					}
 				},
 				"description": "<p>1d4+10. On damage: knockback Primary Die spaces.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "6zl9z3OSaVfTob8C",
 			"img": "icons/weapons/clubs/club-simple-barbed.webp",
@@ -244,7 +248,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
+				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,

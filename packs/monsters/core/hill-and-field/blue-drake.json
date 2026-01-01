@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Deal 1d12 damage back (ignores metal armor) .</p>"
+				"description": "<p>Deal 1d12 damage back (ignores metal armor) .</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -241,7 +245,11 @@
 					}
 				},
 				"description": "<p>1d12+5 (ignores metal armor).</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "KGJkhtd6bkomZYzN",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-red.webp",

@@ -194,7 +194,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Enemies make a DC 15 WIL save at the start of their turns or Confused this turn. Gain advantage 1 on the save for each failure this encounter. </p><p>(<strong>Confused.</strong> The GM Spends your next action)</p>"
+				"description": "<p>Enemies make a DC 15 WIL save at the start of their turns or Confused this turn. Gain advantage 1 on the save for each failure this encounter. </p><p>(<strong>Confused.</strong> The GM Spends your next action)</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -264,7 +268,11 @@
 					}
 				},
 				"description": "<p>1d10+10 damage.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "FPzJetsm7x4Ikz2S",
 			"img": "icons/creatures/claws/claw-hooked-purple.webp",

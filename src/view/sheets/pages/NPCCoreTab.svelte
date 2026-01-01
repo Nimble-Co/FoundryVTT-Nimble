@@ -60,6 +60,15 @@
 		return null;
 	}
 
+	function getReachRangeLabel(item) {
+		const props = item.reactive?.system?.properties;
+		if (!props?.selected) return null;
+
+		if (props.selected === 'melee') return 'Melee';
+		const label = props.selected === 'reach' ? 'Reach' : 'Range';
+		return `${label} ${props.distance}`;
+	}
+
 	function isHeaderItem(item) {
 		// Check if this item should be rendered as a header instead of a card
 		// Header items have no description and no activation effects
@@ -416,6 +425,12 @@
 											{item.reactive.name}
 										</h4>
 
+										{#if getReachRangeLabel(item)}
+											<span class="nimble-document-card__reach-range">
+												{getReachRangeLabel(item)}
+											</span>
+										{/if}
+
 										{#if !getItemCollapsed(item)}
 											<span
 												class="nimble-button"
@@ -510,6 +525,16 @@
 </section>
 
 <style lang="scss">
+	.nimble-document-card__reach-range {
+		font-size: var(--nimble-sm-text);
+		font-weight: 500;
+		color: var(--nimble-muted-text-color, hsl(41, 18%, 40%));
+		padding: 0.125rem 0.375rem;
+		background: hsl(41, 18%, 54%, 15%);
+		border-radius: 3px;
+		white-space: nowrap;
+	}
+
 	.nimble-item-list {
 		display: flex;
 		flex-direction: column;

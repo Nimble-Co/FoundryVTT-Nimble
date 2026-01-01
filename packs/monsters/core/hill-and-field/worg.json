@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Always crits when attacking a Grappled creature.</p>"
+				"description": "<p>Always crits when attacking a Grappled creature.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -248,7 +252,11 @@
 					}
 				},
 				"description": "<p>1d6+2. On hit: Grappled (escape DC 10).</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "JcCc6HxV4C4k5jR5",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

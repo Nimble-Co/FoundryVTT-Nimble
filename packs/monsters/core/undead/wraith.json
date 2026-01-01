@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
+				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -241,7 +245,11 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d4+10. On damage: deal 1 Wound.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "range",
+					"distance": 8
+				}
 			},
 			"_id": "UEgopPxDF0zhCRak",
 			"img": "icons/magic/unholy/hand-light-pink.webp",

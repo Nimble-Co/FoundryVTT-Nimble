@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On melee crit: Grapple (escape DC 10).</p>"
+				"description": "<p>On melee crit: Grapple (escape DC 10).</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -241,7 +245,11 @@
 					}
 				},
 				"description": "<p>2d6+20. Advantage vs. smaller creatures.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "Fh17GpWpLrxaPugM",
 			"img": "icons/creatures/reptiles/snake-fangs-bite-green.webp",
