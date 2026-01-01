@@ -1,6 +1,6 @@
 {
 	"name": "nimble",
-	"version": "0.1.0",
+	"version": "0.3.1",
 	"description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
 	"main": "nimble.mjs",
 	"type": "module",
@@ -24,7 +24,8 @@
 		"test:watch": "vitest",
 		"test:ui": "vitest --ui",
 		"test:coverage": "vitest run --coverage",
-		"prepare": "husky"
+		"prepare": "husky",
+		"release": "node build/release.mjs"
 	},
 	"imports": {
 		"#documents/*": "./src/documents/*",
