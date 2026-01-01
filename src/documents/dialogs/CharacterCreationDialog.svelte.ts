@@ -76,6 +76,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		abilityScores?: Record<string, number>;
 		skills?: Record<string, number>;
 		languages?: string[];
+		startingEquipmentChoice?: 'equipment' | 'gold';
 		origins?: {
 			background?: { uuid?: string };
 			characterClass?: { uuid?: string };
@@ -88,6 +89,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		);
 
 		const { background, characterClass, ancestry } = results?.origins ?? {};
+		const startingEquipmentChoice = results?.startingEquipmentChoice ?? 'equipment';
 
 		const backgroundDocument = background?.uuid
 			? ((await fromUuid(background.uuid as `Item.${string}`)) as NimbleBackgroundItem | null)
@@ -101,25 +103,47 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 		const originDocumentSources: Item.CreateData[] = [];
 
+		// Helper function to disable grantItem rules if gold was chosen
+		const processOriginSource = (
+			source: ReturnType<Item['toObject']>,
+			uuid: string,
+		): Item.CreateData => {
+			source._stats.compendiumSource = uuid;
+
+			// If gold was chosen, disable all grantItem rules
+			if (startingEquipmentChoice === 'gold') {
+				const systemWithRules = source.system as {
+					rules?: Array<{ type: string; disabled: boolean }>;
+				};
+				if (systemWithRules.rules) {
+					systemWithRules.rules = systemWithRules.rules.map((rule) => {
+						if (rule.type === 'grantItem') {
+							return { ...rule, disabled: true };
+						}
+						return rule;
+					});
+				}
+			}
+
+			return source as object as Item.CreateData;
+		};
+
 		if (backgroundDocument && background?.uuid) {
 			const source = backgroundDocument.toObject();
-			source._stats.compendiumSource = background.uuid;
-			originDocumentSources.push(source as object as Item.CreateData);
+			originDocumentSources.push(processOriginSource(source, background.uuid));
 		}
 
 		if (classDocument && characterClass?.uuid) {
 			const source = classDocument.toObject();
-			source._stats.compendiumSource = characterClass.uuid;
-			originDocumentSources.push(source as object as Item.CreateData);
+			originDocumentSources.push(processOriginSource(source, characterClass.uuid));
 		}
 
 		if (ancestryDocument && ancestry?.uuid) {
 			const source = ancestryDocument.toObject();
-			source._stats.compendiumSource = ancestry.uuid;
-			originDocumentSources.push(source as object as Item.CreateData);
+			originDocumentSources.push(processOriginSource(source, ancestry.uuid));
 		}
 
-		actor?.createEmbeddedDocuments('Item', originDocumentSources);
+		await actor?.createEmbeddedDocuments('Item', originDocumentSources);
 
 		const updateData: Record<string, unknown> = {
 			system: {
@@ -135,6 +159,12 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 				},
 			},
 		};
+
+		// If gold was chosen, add 50 gp to the character
+		if (startingEquipmentChoice === 'gold') {
+			(updateData.system as Record<string, unknown>)['currency.gp.value'] = 50;
+		}
+
 		await actor?.update(updateData);
 
 		return super.close();
