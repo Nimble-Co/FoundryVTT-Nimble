@@ -143,7 +143,7 @@
 		const hitDiceAttr = actor.reactive.system.attributes.hitDice;
 		const classes = actor.reactive.items.filter((i) => i.type === 'class');
 
-		// Build bySize from classes and bonuses
+		// Build bySize from classes, bonuses, and temp
 		const bySize = {};
 
 		// Add from classes
@@ -155,12 +155,13 @@
 			bySize[size].current = hitDiceAttr[size]?.current ?? 0;
 		}
 
-		// Add bonuses
+		// Add bonuses and temp
 		for (const [die, data] of Object.entries(hitDiceAttr ?? {})) {
 			const bonus = data.bonus ?? 0;
-			if (bonus > 0 || bySize[die]) {
+			const temp = data.temp ?? 0;
+			if (bonus > 0 || temp > 0 || bySize[die]) {
 				bySize[die] ??= { current: data.current ?? 0, total: 0 };
-				bySize[die].total += bonus;
+				bySize[die].total += bonus + temp;
 				bySize[die].current = data.current ?? 0;
 			}
 		}
@@ -265,6 +266,16 @@
 		<h3 class="nimble-heading nimble-heading--hit-dice">
 			Hit Dice
 			<i class="fa-solid fa-heart-circle-plus"></i>
+			<button
+				class="nimble-button"
+				data-button-variant="icon"
+				type="button"
+				aria-label="Configure Hit Dice"
+				data-tooltip="Configure Hit Dice"
+				onclick={() => actor.configureHitDice()}
+			>
+				<i class="fa-solid fa-edit"></i>
+			</button>
 		</h3>
 
 		<HitDiceBar
@@ -454,5 +465,14 @@
 
 	.nimble-heading--hit-dice {
 		grid-area: hitDiceHeading;
+
+		.nimble-button {
+			opacity: 0;
+			transition: opacity 0.2s ease-in-out;
+		}
+
+		&:hover .nimble-button {
+			opacity: 1;
+		}
 	}
 </style>

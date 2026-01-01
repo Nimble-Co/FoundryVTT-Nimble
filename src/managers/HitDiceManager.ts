@@ -19,13 +19,14 @@ class HitDiceManager {
 			this.dieSizes.add(size);
 		});
 
-		// Account for bonuses
+		// Account for bonuses and temp hit dice
 		Object.entries(this.#actor.system.attributes.hitDice ?? {}).forEach(([die, data]) => {
 			const size = Number(die);
 			if (!size || Number.isNaN(size)) return;
 
-			const bonus = this.#actor.system.attributes.hitDice[size]?.bonus ?? 0;
-			this.#max += bonus;
+			const bonus = data.bonus ?? 0;
+			const temp = data.temp ?? 0;
+			this.#max += bonus + temp;
 			if (!this.dieSizes.has(size)) this.#value += data.current ?? 0;
 			this.dieSizes.add(size);
 		});
@@ -56,18 +57,19 @@ class HitDiceManager {
 			return acc;
 		}, {});
 
-		// Factor in bonuses
+		// Factor in bonuses and temp
 		for (const [die, data] of Object.entries(this.#actor.system.attributes.hitDice ?? {})) {
 			const bonus = data.bonus ?? 0;
+			const temp = data.temp ?? 0;
 
 			// Add current to obj
 			foundry.utils.setProperty(hitDiceByClass, `${die}.current`, data.current ?? 0);
 
-			// Update total with bonus
+			// Update total with bonus and temp
 			foundry.utils.setProperty(
 				hitDiceByClass,
 				`${die}.total`,
-				bonus + (hitDiceByClass[die]?.total ?? 0),
+				bonus + temp + (hitDiceByClass[die]?.total ?? 0),
 			);
 		}
 

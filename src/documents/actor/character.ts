@@ -18,6 +18,7 @@ import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementC
 import CharacterSkillsConfigDialog from '../../view/dialogs/CharacterSkillsConfigDialog.svelte';
 import CharacterStatConfigDialog from '../../view/dialogs/CharacterStatConfigDialog.svelte';
 import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/CharacterWeaponProficienciesConfigDialog.svelte';
+import EditHitDiceDialog from '../../view/dialogs/EditHitDiceDialog.svelte';
 import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
@@ -31,6 +32,12 @@ import { NimbleBaseActor } from './base.svelte.js';
 interface ConfigureHitPointsResult {
 	classUpdates: Array<{ id: string; hpData: number[] }>;
 	bonus: number;
+}
+
+/** Extended dialog result type for configuring hit dice */
+interface ConfigureHitDiceResult {
+	bonusUpdates: Record<string, { bonus: number }>;
+	tempUpdates: Record<string, { temp: number }>;
 }
 
 /** Level up dialog result data */
@@ -481,6 +488,38 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				'system.attributes.hp.value': this.system.attributes.hp.max,
 			} as Record<string, unknown>);
 		}
+	}
+
+	async configureHitDice() {
+		const dialog = new GenericDialog(
+			`${this.name}: Configure Hit Dice`,
+			EditHitDiceDialog,
+			{ document: this },
+			{ icon: 'fa-solid fa-dice-d20', width: 420 },
+		);
+
+		await dialog.render(true);
+		const result = (await dialog.promise) as ConfigureHitDiceResult | null;
+
+		if (result === null) {
+			return;
+		}
+
+		const updates: Record<string, unknown> = {};
+
+		// Apply bonus updates
+		for (const [size, data] of Object.entries(result.bonusUpdates)) {
+			const existingData = this.system.attributes.hitDice[size] ?? { origin: [], current: 0 };
+			updates[`system.attributes.hitDice.${size}.bonus`] = data.bonus;
+			updates[`system.attributes.hitDice.${size}.origin`] = existingData.origin ?? [];
+		}
+
+		// Apply temp updates
+		for (const [size, data] of Object.entries(result.tempUpdates)) {
+			updates[`system.attributes.hitDice.${size}.temp`] = data.temp;
+		}
+
+		await this.update(updates);
 	}
 
 	async updateCurrentHitDice(newTotal: number) {
