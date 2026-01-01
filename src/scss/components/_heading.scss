@@ -46,6 +46,7 @@
   }
 
   &--armor,
+  &--hit-dice,
   &--hp {
     text-transform: uppercase;
     color: #fff;
@@ -53,7 +54,8 @@
     padding-block-end: 0.25rem;
   }
 
-  &--armor {
+  &--armor,
+  &--hit-dice {
     justify-content: center;
   }
 

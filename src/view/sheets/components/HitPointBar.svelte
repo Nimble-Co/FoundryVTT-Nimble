@@ -6,6 +6,10 @@
 		compact?: boolean;
 		tempHP?: number;
 		showTempHP?: boolean;
+		disableMaxHPEdit?: boolean;
+		updateCurrentHP?: (value: number) => void;
+		updateMaxHP?: (value: number) => void;
+		updateTempHP?: (value: number) => void;
 	}
 
 	interface WithoutControls extends BaseProps {
@@ -14,9 +18,9 @@
 
 	interface WithControls extends BaseProps {
 		disableControls?: false;
-		updateCurrentHP: (value: number) => void;
-		updateMaxHP: (value: number) => void;
-		updateTempHP: (value: number) => void;
+		updateCurrentHP: NonNullable<BaseProps['updateCurrentHP']>;
+		updateMaxHP: NonNullable<BaseProps['updateMaxHP']>;
+		updateTempHP: NonNullable<BaseProps['updateTempHP']>;
 	}
 
 	type Props = WithControls | WithoutControls;
@@ -28,6 +32,7 @@
 		tempHP = 0,
 		compact = false,
 		disableControls = false,
+		disableMaxHPEdit = false,
 		showTempHP = true,
 		updateCurrentHP,
 		updateMaxHP,
@@ -55,13 +60,13 @@
 				type="number"
 				value={maxHP}
 				onchange={({ target }) => updateMaxHP?.(Number((target as HTMLInputElement).value))}
-				disabled={disableControls}
+				disabled={disableControls || disableMaxHPEdit}
 			/>
 		</div>
 	</div>
 
 	{#if showTempHP}
-		<div class="nimble-hit-points__temp">
+		<div class="nimble-hit-points__temp" class:nimble-hit-points__temp--has-value={tempHP > 0}>
 			<input
 				class="nimble-hit-points__input nimble-hit-points__input--temp-hp"
 				type="number"

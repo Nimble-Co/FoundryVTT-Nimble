@@ -4,6 +4,7 @@
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import HitPointBar from './components/HitPointBar.svelte';
+	import HitDiceBar from './components/HitDiceBar.svelte';
 	import PlayerCharacterBioTab from './pages/PlayerCharacterBioTab.svelte';
 	import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';
 	import PlayerCharacterFeaturesTab from './pages/PlayerCharacterFeaturesTab.svelte';
@@ -61,6 +62,10 @@
 		actor.update({
 			'system.attributes.hp.temp': newValue,
 		});
+	}
+
+	async function updateCurrentHitDice(newValue) {
+		await actor.updateCurrentHitDice(newValue);
 	}
 
 	let { actor, sheet } = $props();
@@ -131,6 +136,44 @@
 		const anc = actor.reactive.items.find((i) => i.type === 'ancestry') ?? null;
 		const size = actor.reactive.system.attributes.sizeCategory;
 		return prepareCharacterMetadata(c, sub, anc, size);
+	});
+
+	// Reactive hit dice computations
+	let hitDiceData = $derived.by(() => {
+		const hitDiceAttr = actor.reactive.system.attributes.hitDice;
+		const classes = actor.reactive.items.filter((i) => i.type === 'class');
+
+		// Build bySize from classes and bonuses
+		const bySize = {};
+
+		// Add from classes
+		for (const cls of classes) {
+			const size = cls.system.hitDieSize;
+			const classLevel = cls.system.classLevel;
+			bySize[size] ??= { current: 0, total: 0 };
+			bySize[size].total += classLevel;
+			bySize[size].current = hitDiceAttr[size]?.current ?? 0;
+		}
+
+		// Add bonuses
+		for (const [die, data] of Object.entries(hitDiceAttr ?? {})) {
+			const bonus = data.bonus ?? 0;
+			if (bonus > 0 || bySize[die]) {
+				bySize[die] ??= { current: data.current ?? 0, total: 0 };
+				bySize[die].total += bonus;
+				bySize[die].current = data.current ?? 0;
+			}
+		}
+
+		// Calculate totals
+		let value = 0;
+		let max = 0;
+		for (const data of Object.values(bySize)) {
+			value += data.current;
+			max += data.total;
+		}
+
+		return { bySize, value, max };
 	});
 
 	setContext('actor', actor);
@@ -216,18 +259,20 @@
 			{updateCurrentHP}
 			{updateMaxHP}
 			{updateTempHP}
+			disableMaxHPEdit={true}
 		/>
 
-		<h3 class="nimble-heading nimble-heading--armor">
+		<h3 class="nimble-heading nimble-heading--hit-dice">
 			Hit Dice
 			<i class="fa-solid fa-heart-circle-plus"></i>
 		</h3>
 
-		<div class="nimble-monster-span nimble-monster-input--armor">
-			<span>{actor.HitDiceManager.value}</span>
-			/
-			<span>{actor.HitDiceManager.max}</span>
-		</div>
+		<HitDiceBar
+			value={hitDiceData.value}
+			max={hitDiceData.max}
+			bySize={hitDiceData.bySize}
+			{updateCurrentHitDice}
+		/>
 	</section>
 
 	<div class="nimble-player-character-header">
@@ -379,41 +424,14 @@
 		&--defense {
 			position: relative;
 			display: grid;
-			grid-template-columns: 1fr max-content;
+			// Keep the hit dice column compact so HP stays the primary bar.
+			grid-template-columns: 1fr auto;
 			grid-template-areas:
-				'hpHeading armorHeading'
-				'hpBar armorInput';
+				'hpHeading hitDiceHeading'
+				'hpBar hitDiceBar';
 			grid-gap: 0 0.125rem;
 			margin-block-start: -2.25rem;
 			margin-inline: 0.25rem;
-		}
-	}
-
-	.nimble-monster-input--armor {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.75rem;
-		width: 12ch;
-		font-size: var(--nimble-sm-text);
-		font-weight: 600;
-		text-align: center;
-		text-shadow: 0 0 4px hsl(41, 18%, 54%);
-		text-transform: uppercase;
-		line-height: 1;
-		color: #fff;
-		background: transparent;
-		background-color: var(--nimble-hp-bar-background);
-		border: 1px solid hsl(41, 18%, 54%);
-		border-radius: 4px;
-		box-shadow: var(--nimble-card-box-shadow);
-
-		&:active,
-		&:focus,
-		&:hover {
-			border: 1px solid hsl(41, 18%, 54%);
-			outline: none;
-			box-shadow: var(--nimble-card-box-shadow);
 		}
 	}
 
@@ -421,12 +439,20 @@
 		margin-inline-start: 0.25rem;
 	}
 
-	.nimble-heading--hp .nimble-button {
-		opacity: 0;
-		transition: opacity 0.2s ease-in-out;
+	.nimble-heading--hp {
+		grid-area: hpHeading;
+
+		.nimble-button {
+			opacity: 0;
+			transition: opacity 0.2s ease-in-out;
+		}
+
+		&:hover .nimble-button {
+			opacity: 1;
+		}
 	}
 
-	.nimble-heading--hp:hover .nimble-button {
-		opacity: 1;
+	.nimble-heading--hit-dice {
+		grid-area: hitDiceHeading;
 	}
 </style>

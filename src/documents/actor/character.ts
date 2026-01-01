@@ -483,6 +483,54 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		}
 	}
 
+	async updateCurrentHitDice(newTotal: number) {
+		const bySize = this.HitDiceManager.bySize;
+		const currentTotal = this.HitDiceManager.value;
+		const maxTotal = this.HitDiceManager.max;
+
+		// Clamp the new value
+		const clampedTotal = Math.max(0, Math.min(newTotal, maxTotal));
+		const delta = clampedTotal - currentTotal;
+
+		if (delta === 0) return;
+
+		const updates: Record<string, unknown> = {};
+
+		// Sort die sizes: largest first for restoring, smallest first for spending
+		const sizes = Object.keys(bySize)
+			.map(Number)
+			.sort((a, b) => (delta > 0 ? b - a : a - b));
+
+		let remaining = Math.abs(delta);
+
+		for (const size of sizes) {
+			if (remaining <= 0) break;
+
+			const { current, total } = bySize[size];
+
+			if (delta > 0) {
+				// Restoring dice - add up to max for this size
+				const canAdd = total - current;
+				const toAdd = Math.min(canAdd, remaining);
+				if (toAdd > 0) {
+					updates[`system.attributes.hitDice.${size}.current`] = current + toAdd;
+					remaining -= toAdd;
+				}
+			} else {
+				// Spending dice - remove from current
+				const toRemove = Math.min(current, remaining);
+				if (toRemove > 0) {
+					updates[`system.attributes.hitDice.${size}.current`] = current - toRemove;
+					remaining -= toRemove;
+				}
+			}
+		}
+
+		if (Object.keys(updates).length > 0) {
+			await this.update(updates);
+		}
+	}
+
 	/** ------------------------------------------------------ */
 	/**                    Data Methods                        */
 	/** ------------------------------------------------------ */
