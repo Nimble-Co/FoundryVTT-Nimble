@@ -196,7 +196,11 @@
 					}
 				},
 				"description": "<p>1d6 melee/ranged (follows minion rules).</p><p></p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "hUxZRnXtiZ5dHmnE",
 			"img": "icons/skills/melee/hand-grip-sword-orange.webp",
@@ -246,7 +250,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On melee crit: Grapple (escape DC 10).</p>"
+				"description": "<p>On melee crit: Grapple (escape DC 10).</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,

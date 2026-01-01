@@ -193,7 +193,11 @@
 					}
 				},
 				"description": "<p>1d6+6</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "uOG7P8qgm3DeZ8U6",
 			"img": "icons/skills/melee/hand-grip-sword-strike-orange.webp",
@@ -265,7 +269,11 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d6+6</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "range",
+					"distance": 8
+				}
 			},
 			"_id": "vtqCvuOxekpmHFwS",
 			"img": "icons/magic/acid/projectile-smoke-glowing.webp",
@@ -316,7 +324,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On melee crit: Grapple (escape DC 10).</p>"
+				"description": "<p>On melee crit: Grapple (escape DC 10).</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,

@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Me! Whenever an attack misses you, deal 1 psychic damage in return.</p>"
+				"description": "<p>Me! Whenever an attack misses you, deal 1 psychic damage in return.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -241,7 +245,11 @@
 					}
 				},
 				"description": "<p>2d6+4. OR</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "rrtftYg2p0JUlFiK",
 			"img": "icons/skills/melee/hand-grip-sword-orange.webp",
@@ -313,7 +321,11 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d6+2.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "range",
+					"distance": 8
+				}
 			},
 			"_id": "DxTWZ7IBcWsbWceI",
 			"img": "icons/weapons/polearms/javelin-simple.webp",

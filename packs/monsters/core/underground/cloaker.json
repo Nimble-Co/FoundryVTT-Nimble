@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Cloakers always start first and heroes roll Initiative with disadvantage.</p>"
+				"description": "<p>Cloakers always start first and heroes roll Initiative with disadvantage.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -220,7 +224,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>You take half damage from attacks while grappling a creature (they take the other half).</p>"
+				"description": "<p>You take half damage from attacks while grappling a creature (they take the other half).</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -303,7 +311,11 @@
 					}
 				},
 				"description": "<p>2d10+20. On Hit: Grappled (escape DC 16). OR</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "TRT44zWDEobdx3S9",
 			"img": "icons/magic/control/debuff-chains-shackle-movement-red.webp",
@@ -375,7 +387,11 @@
 					}
 				},
 				"description": "<p>DC 16 WIL save, or creatures within 6 spaces are Frightened and must spend 1 Action moving as far away as possible.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "nEzel3FmAenjmI53",
 			"img": "icons/magic/death/skeleton-skull-soul-blue.webp",

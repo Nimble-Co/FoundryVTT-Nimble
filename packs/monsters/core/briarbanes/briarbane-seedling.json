@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>"
+				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -241,7 +245,11 @@
 					}
 				},
 				"description": "<p>(Range 6) 2d6+2</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "range",
+					"distance": 6
+				}
 			},
 			"_id": "sPTJe9LmX6pLFYIY",
 			"img": "icons/consumables/nuts/nut-spiked-shell.webp",

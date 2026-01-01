@@ -10,6 +10,18 @@
 	let activationData = $derived(document.reactive.system.activation);
 	let targetCount = $derived(activationData.targets.count);
 	let targetRestrictions = $derived(activationData.targets.restrictions);
+
+	// Reach/Range support for MonsterFeature items
+	let isMonsterFeature = $derived(document.type === 'monsterFeature');
+	let selectedAttackType = $derived(document.reactive.system.properties?.selected || '');
+	let distance = $derived(document.reactive.system.properties?.distance ?? 1);
+
+	const attackTypeOptions = [
+		{ value: '', label: 'None' },
+		{ value: 'melee', label: 'Melee' },
+		{ value: 'reach', label: 'Reach' },
+		{ value: 'range', label: 'Range' },
+	];
 </script>
 
 <section>
@@ -63,16 +75,62 @@
 				value={targetRestrictions}
 				onchange={({ target }) =>
 					document.update({
-						'system.activation.cost.details': target?.value,
+						'system.activation.targets.restrictions': target?.value,
 					})}
 			/>
 		</label>
 	</div>
+
+	{#if isMonsterFeature}
+		<div class="attack-type-row">
+			<label>
+				<header class="nimble-section-header">
+					<h4 class="nimble-heading" data-heading-variant="field">Attack Type</h4>
+				</header>
+
+				<select
+					value={selectedAttackType}
+					onchange={({ target }) =>
+						document.update({
+							'system.properties.selected': target?.value,
+						})}
+				>
+					{#each attackTypeOptions as option}
+						<option value={option.value}>{option.label}</option>
+					{/each}
+				</select>
+			</label>
+
+			{#if selectedAttackType === 'reach' || selectedAttackType === 'range'}
+				<label>
+					<header class="nimble-section-header">
+						<h4 class="nimble-heading" data-heading-variant="field">Distance</h4>
+					</header>
+
+					<input
+						type="number"
+						min="1"
+						value={distance}
+						onchange={({ target }) =>
+							document.update({
+								'system.properties.distance': target?.value,
+							})}
+					/>
+				</label>
+			{/if}
+		</div>
+	{/if}
 </section>
 
 <style>
 	input[type='number'] {
 		width: 10ch;
 		text-align: center;
+	}
+
+	.attack-type-row {
+		display: flex;
+		gap: 0.5rem;
+		margin-block-start: 0.5rem;
 	}
 </style>
