@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Mimics always start first and heroes roll Initiative with disadvantage.</p>"
+				"description": "<p>Mimics always start first and heroes roll Initiative with disadvantage.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -220,7 +224,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Mimic hits also Grapple and can Grapple any number of creatures. When crit: release 1 creature (attacker's choice).</p>"
+				"description": "<p>Mimic hits also Grapple and can Grapple any number of creatures. When crit: release 1 creature (attacker's choice).</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -296,7 +304,11 @@
 					}
 				},
 				"description": "<p>1d6 (escape DC 11), OR</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "bBQb7DA9kZJqF818",
 			"img": "icons/creatures/slimes/slime-movement-dripping-pseudopods-green.webp",
@@ -368,7 +380,11 @@
 					}
 				},
 				"description": "<p>(a Grappled creature) 1d20</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "vDv4H1BhOUNIpmss",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

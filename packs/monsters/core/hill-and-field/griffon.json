@@ -202,7 +202,11 @@
 					}
 				},
 				"description": "<p>2d6+10, on hit: Grappled (escape DC 14), OR</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -272,7 +276,11 @@
 					}
 				},
 				"description": "<p>(if grappling) Fly upward 12 and release (6d6 fall damage).</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "zbemqzkdyuTuPIBf",
 			"img": "icons/commodities/biological/wing-bird-white.webp",

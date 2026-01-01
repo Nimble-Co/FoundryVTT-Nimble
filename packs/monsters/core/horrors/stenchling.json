@@ -194,7 +194,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On Death: 2d6 poison damage to enemies within Reach 2.</p>"
+				"description": "<p>On Death: 2d6 poison damage to enemies within Reach 2.</p>",
+				"properties": {
+					"selected": "reach",
+					"distance": 2
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -263,7 +267,11 @@
 					}
 				},
 				"description": "<p>2d6.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "qOWtkVDKgAUR5Ccu",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-red.webp",

@@ -166,7 +166,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>"
+				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -235,7 +239,11 @@
 					}
 				},
 				"description": "<p>1d4 (follows minion rules).</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "l2NJD7TZtzgpNaDq",
 			"img": "icons/weapons/daggers/dagger-crooked-black.webp",

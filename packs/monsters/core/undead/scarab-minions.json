@@ -187,7 +187,11 @@
 					}
 				},
 				"description": "<p>1d6 (Follows Minion Rules)</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "YSVWtxhFLeDr3zqY",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

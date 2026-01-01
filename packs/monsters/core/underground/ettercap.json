@@ -214,7 +214,11 @@
 					}
 				},
 				"description": "<p>1d8+2. On hit: Grappled (escape DC 13), Silenced until target escapes. </p><p>(Silenced. Cannot cast spells or use other abilities that require speaking (e.g. Commander's Orders).)</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "5LBNwGAHn4Jw3c6U",
 			"img": "icons/creatures/webs/webthin-blue.webp",

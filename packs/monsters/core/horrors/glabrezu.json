@@ -207,7 +207,11 @@
 					}
 				},
 				"description": "<p>(Reach 2) 3d6+10. On damage: Grappled (escape DC 17). If the same creature is Grappled by both of the glabrezu's claws, it must escape from each of them separately. OR</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "reach",
+					"distance": 2
+				}
 			},
 			"_id": "faCrvNI9LXhe7JFR",
 			"img": "icons/creatures/claws/claw-hooked-barbed.webp",
@@ -279,7 +283,11 @@
 					}
 				},
 				"description": "<p>(A creature Grappled by both of the glabrezu's claws) 50 unpreventable damage. If the target is at 0 HP: DC 17 STR save or be torn in two, dying instantly.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "5tNWq4cESyZwixsz",
 			"img": "icons/magic/death/grave-tombstone-glow-teal.webp",

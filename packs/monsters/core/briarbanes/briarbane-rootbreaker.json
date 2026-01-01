@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>"
+				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -241,7 +245,11 @@
 					}
 				},
 				"description": "<p>3d6+6. On crit: knockback 2.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "aLz2P0WiZ89kWDPl",
 			"img": "icons/magic/nature/root-vine-wood-blue.webp",

@@ -166,7 +166,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>"
+				"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -235,7 +239,11 @@
 					}
 				},
 				"description": "<p>1d6 (Follows minion rules)</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "prrTBzJt3WBAdlVc",
 			"img": "icons/magic/acid/dissolve-bone-white.webp",

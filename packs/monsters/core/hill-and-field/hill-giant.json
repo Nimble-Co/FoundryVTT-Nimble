@@ -193,7 +193,11 @@
 					}
 				},
 				"description": "<p>(Reach 2) 1d6+15. OR</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "reach",
+					"distance": 2
+				}
 			},
 			"_id": "7xaQQr4LP7FqSHPi",
 			"img": "icons/weapons/clubs/club-banded-barbed-black.webp",
@@ -244,7 +248,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On hit: Knockback Primary Die spaces.</p>"
+				"description": "<p>On hit: Knockback Primary Die spaces.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -313,7 +321,11 @@
 					}
 				},
 				"description": "<p>(Range 12) 1d6+20</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "range",
+					"distance": 12
+				}
 			},
 			"_id": "7PkhnQwkVDCwQkoX",
 			"img": "icons/environment/wilderness/terrain-rocks-brown.webp",

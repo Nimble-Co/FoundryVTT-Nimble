@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>"
+				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -220,7 +224,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Adjacent allies gain Medium Armor.</p>"
+				"description": "<p>Adjacent allies gain Medium Armor.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -289,7 +297,11 @@
 					}
 				},
 				"description": "<p> 1d4+2</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "CthIJDXdIQJm2Eqo",
 			"img": "icons/weapons/daggers/dagger-crooked-black.webp",
@@ -360,7 +372,11 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d4+2.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "range",
+					"distance": 8
+				}
 			},
 			"_id": "frF59tiZfqobmiMc",
 			"img": "icons/weapons/slings/slingshot-wood.webp",

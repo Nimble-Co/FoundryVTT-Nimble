@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>"
+				"description": "<p>While not at max HP, make all rolls with advantage. Your crits also inflict Despair.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -248,7 +252,11 @@
 					}
 				},
 				"description": "<p>If undamaged, attack self for 2 damage. Adjacent enemies are inflicted with Despair. OR</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "DvozhthCCeIOv4gI",
 			"img": "icons/skills/melee/blade-tip-chipped-blood-red.webp",
@@ -320,7 +328,11 @@
 					}
 				},
 				"description": "<p>1d6+6. OR</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "gByFUCm3ALqG4Rmh",
 			"img": "icons/weapons/daggers/dagger-jagged-handguard-black.webp",
@@ -392,7 +404,11 @@
 					}
 				},
 				"description": "<p>(Range 12, Bloodied creature) 3d6+6.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "range",
+					"distance": 12
+				}
 			},
 			"_id": "eJT4i0U2zvqJ3tij",
 			"img": "icons/skills/wounds/blood-drip-droplet-red.webp",
@@ -443,7 +459,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Disadvantage on the next attack you make this encounter.</p>"
+				"description": "<p>Disadvantage on the next attack you make this encounter.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,

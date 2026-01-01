@@ -195,7 +195,11 @@
 					}
 				},
 				"description": "<p>1d10, OR</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -265,7 +269,11 @@
 					}
 				},
 				"description": "<p>(Range 12) 1d10</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "range",
+					"distance": 12
+				}
 			},
 			"_id": "5L8Pz3wZfdAVd8DW",
 			"img": "icons/weapons/bows/longbow-leather-green.webp",
@@ -315,7 +323,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Advantage against Bloodied creatures. </p>"
+				"description": "<p>Advantage against Bloodied creatures. </p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,

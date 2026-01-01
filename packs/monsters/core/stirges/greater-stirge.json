@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Attacks against stirges are made with disadvantage.</p>"
+				"description": "<p>Attacks against stirges are made with disadvantage.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -220,7 +224,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>You move where your target moves until either dies. Your attacks can't miss or be defended/Interposed against. Attacks that miss you damage your target instead.</p>"
+				"description": "<p>You move where your target moves until either dies. Your attacks can't miss or be defended/Interposed against. Attacks that miss you damage your target instead.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -289,7 +297,11 @@
 					}
 				},
 				"description": "<p>1d12+10. On hit: Latched On.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "pWc85JwDpY2dh2uZ",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

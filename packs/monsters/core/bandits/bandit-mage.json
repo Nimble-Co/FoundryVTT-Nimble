@@ -180,7 +180,11 @@
 					}
 				},
 				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
-				"subtype": "feature"
+				"subtype": "feature",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -234,7 +238,11 @@
 					}
 				},
 				"description": "<p>When damaged, teleport up to 4 spaces.</p>",
-				"subtype": "feature"
+				"subtype": "feature",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -325,7 +333,11 @@
 					}
 				},
 				"description": "<p>(Range 12) 3d8. Also strikes the next closest creature. On miss: damage self instead.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "range",
+					"distance": 12
+				}
 			},
 			"_id": "FryCaexPd3KabiZt",
 			"img": "icons/magic/lightning/bolt-blue.webp",

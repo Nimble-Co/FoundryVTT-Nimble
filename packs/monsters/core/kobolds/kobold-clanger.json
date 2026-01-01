@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Allies who hear your clanging, roll 1 additional die whenever they attack.</p>"
+				"description": "<p>Allies who hear your clanging, roll 1 additional die whenever they attack.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,

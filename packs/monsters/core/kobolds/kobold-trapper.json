@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>"
+				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -221,7 +225,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When an enemy moves adjacent to you or an ally, they trigger one of your traps! (1/encounter each).</p>"
+				"description": "<p>When an enemy moves adjacent to you or an ally, they trigger one of your traps! (1/encounter each).</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -290,7 +298,11 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d4+2.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "range",
+					"distance": 8
+				}
 			},
 			"_id": "NdIsX1LiS4tHYzfo",
 			"img": "icons/environment/creatures/bug-scorpion-silver.webp",
@@ -361,7 +373,11 @@
 					}
 				},
 				"description": "<p>Deal 5d4 damage (doesn't miss). Half as</p><p>much to ALL adjacent creatures.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "UOfb5oxZN2KhFedb",
 			"img": "icons/creatures/invertebrates/bee-yellow.webp",
@@ -419,7 +435,11 @@
 					}
 				},
 				"description": "<p>Restrained! (Escape DC 10)</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "32UcKER1GRaKPLcD",
 			"img": "icons/tools/fishing/net-simple-tan.webp",

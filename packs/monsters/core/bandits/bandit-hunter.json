@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
+				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -241,7 +245,11 @@
 					}
 				},
 				"description": "<p>2d8+2 (Range 12)</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "range",
+					"distance": 12
+				}
 			},
 			"_id": "y4nMPW04rliUSw52",
 			"img": "icons/weapons/bows/longbow-leather-green.webp",

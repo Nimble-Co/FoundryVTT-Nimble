@@ -172,7 +172,11 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
+				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"effects": [],
 			"folder": null,
@@ -241,7 +245,11 @@
 					}
 				},
 				"description": "<p>1d8+1.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "",
+					"distance": 1
+				}
 			},
 			"_id": "uNfshX8vXZNzyIUL",
 			"img": "icons/weapons/swords/sword-guard-brown.webp",
@@ -313,7 +321,11 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d8+1</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"properties": {
+					"selected": "range",
+					"distance": 8
+				}
 			},
 			"_id": "lmcAuroisKX8reRN",
 			"img": "icons/weapons/bows/longbow-leather-green.webp",
