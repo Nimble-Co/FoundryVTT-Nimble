@@ -25,9 +25,13 @@
 	type Props = WithControls | WithoutControls;
 
 	let { value, max, bySize, disableControls = false, updateCurrentHitDice }: Props = $props();
+
+	// Only show label if there's exactly one die size
+	let dieSizes = $derived(Object.keys(bySize).filter((size) => bySize[size].total > 0));
+	let showLabel = $derived(dieSizes.length === 1);
 </script>
 
-<div class="nimble-hit-dice-bar">
+<div class="nimble-hit-dice-bar" class:nimble-hit-dice-bar--no-label={!showLabel}>
 	<div
 		class="nimble-hit-dice-bar__fill"
 		style="--nimble-hit-dice-percentage: {max > 0
@@ -54,12 +58,9 @@
 			/>
 		</span>
 	</div>
-	<span class="nimble-hit-dice-bar__label">
-		{#each Object.keys(bySize).sort((a, b) => Number(b) - Number(a)) as size, i}
-			{#if i > 0},
-			{/if}d{size}
-		{/each}
-	</span>
+	{#if showLabel}
+		<span class="nimble-hit-dice-bar__label">d{dieSizes[0]}</span>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -71,13 +72,22 @@
 		display: flex;
 		align-items: stretch;
 		flex-wrap: nowrap;
-		width: fit-content;
 		max-width: 7rem;
 		border: var(--nimble-hp-bar-border-thickness, 1px) solid hsl(41, 18%, 54%);
 		border-radius: 4px;
 		box-shadow: var(--nimble-card-box-shadow);
 		font-weight: 600;
 		text-shadow: 0 0 4px hsl(41, 18%, 54%);
+
+		&--no-label {
+			.nimble-hit-dice-bar__fill {
+				border-radius: 3px;
+
+				&::before {
+					border-radius: 3px;
+				}
+			}
+		}
 
 		&__fill {
 			position: relative;

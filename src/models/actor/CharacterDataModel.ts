@@ -128,6 +128,16 @@ const characterSchema = () => ({
 					nullable: false,
 					initial: 0,
 				}),
+				bonus: new fields.NumberField({
+					required: false,
+					nullable: false,
+					initial: 0,
+				}),
+				temp: new fields.NumberField({
+					required: false,
+					nullable: false,
+					initial: 0,
+				}),
 				origin: new fields.ArrayField(
 					new fields.StringField({
 						required: true,
@@ -411,6 +421,7 @@ interface HitDiceData {
 	current: number;
 	origin: string[];
 	bonus?: number;
+	temp?: number;
 }
 
 /** Type definitions for currency entry */
