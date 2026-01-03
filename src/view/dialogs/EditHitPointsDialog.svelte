@@ -134,9 +134,9 @@
 		flex-direction: column;
 		gap: 0.75rem;
 		padding: 0.75rem;
-		background: var(--nimble-input-background-color, hsl(41, 18%, 92%));
+		background: var(--nimble-box-background-color);
 		border-radius: 6px;
-		border: 1px solid hsl(41, 18%, 80%);
+		border: 1px solid var(--nimble-card-border-color);
 	}
 
 	.hp-class-header {
@@ -144,15 +144,16 @@
 		align-items: center;
 		justify-content: space-between;
 		padding-bottom: 0.5rem;
-		border-bottom: 1px solid hsl(41, 18%, 75%);
+		border-bottom: 1px solid var(--nimble-card-border-color);
 	}
 
 	.hp-class-die {
 		padding: 0.25rem 0.5rem;
 		font-size: var(--nimble-sm-text);
 		font-weight: 700;
-		color: hsl(139, 40%, 30%);
-		background: hsl(139, 30%, 85%);
+		color: var(--nimble-dark-text-color);
+		background: var(--nimble-input-background-color);
+		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 4px;
 	}
 
@@ -167,13 +168,22 @@
 		flex-direction: column;
 		align-items: center;
 		padding: 0.5rem;
-		background: hsl(41, 18%, 97%);
+		background: var(--nimble-input-background-color);
 		border-radius: 4px;
-		border: 1px solid hsl(41, 18%, 85%);
+		border: 1px solid var(--nimble-card-border-color);
 
 		&--highlight {
-			background: hsl(139, 30%, 92%);
-			border-color: hsl(139, 30%, 70%);
+			background: linear-gradient(to bottom, hsl(139, 35%, 40%), hsl(139, 40%, 50%));
+			border-color: hsl(139, 35%, 35%);
+
+			.hp-stat__label {
+				color: hsl(139, 30%, 95%);
+			}
+
+			.hp-stat__value {
+				color: #fff;
+				text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+			}
 		}
 
 		&__label {
@@ -217,9 +227,9 @@
 		align-items: center;
 		gap: 0.125rem;
 		padding: 0.375rem;
-		background: hsl(41, 18%, 97%);
+		background: var(--nimble-input-background-color);
 		border-radius: 4px;
-		border: 1px solid hsl(41, 18%, 85%);
+		border: 1px solid var(--nimble-card-border-color);
 
 		&__label {
 			font-size: var(--nimble-xs-text);
@@ -233,9 +243,10 @@
 			font-size: var(--nimble-sm-text);
 			font-weight: 600;
 			text-align: center;
-			border: 1px solid hsl(41, 18%, 70%);
+			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
-			background: #fff;
+			background: var(--nimble-input-background-color);
+			color: var(--nimble-dark-text-color);
 
 			&:focus {
 				outline: 2px solid hsl(139, 50%, 50%);
@@ -250,9 +261,9 @@
 		flex-direction: column;
 		gap: 0.5rem;
 		padding: 0.75rem;
-		background: hsl(45, 40%, 92%);
+		background: var(--nimble-box-background-color);
 		border-radius: 6px;
-		border: 1px solid hsl(45, 40%, 75%);
+		border: 1px solid var(--nimble-card-border-color);
 	}
 
 	.hp-bonus-row {
@@ -274,9 +285,10 @@
 		font-size: var(--nimble-sm-text);
 		font-weight: 600;
 		text-align: center;
-		border: 1px solid hsl(45, 40%, 60%);
+		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 4px;
-		background: #fff;
+		background: var(--nimble-input-background-color);
+		color: var(--nimble-dark-text-color);
 
 		&:focus {
 			outline: 2px solid hsl(45, 60%, 50%);

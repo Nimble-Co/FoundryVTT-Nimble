@@ -92,7 +92,7 @@
 
 		grid-area: hpBar;
 		display: flex;
-		align-items: center;
+		align-items: stretch;
 		flex-wrap: nowrap;
 		background-color: var(--nimble-hp-bar-background);
 		border: var(--nimble-hp-bar-border-thickness, 1px) solid hsl(41, 18%, 54%);
@@ -110,6 +110,8 @@
 		&__bar {
 			position: relative;
 			overflow: hidden;
+			display: flex;
+			align-items: center;
 
 			&::before {
 				content: '';

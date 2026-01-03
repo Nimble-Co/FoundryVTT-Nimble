@@ -18,6 +18,7 @@ import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementC
 import CharacterSkillsConfigDialog from '../../view/dialogs/CharacterSkillsConfigDialog.svelte';
 import CharacterStatConfigDialog from '../../view/dialogs/CharacterStatConfigDialog.svelte';
 import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/CharacterWeaponProficienciesConfigDialog.svelte';
+import EditCurrentHitDiceDialog from '../../view/dialogs/EditCurrentHitDiceDialog.svelte';
 import EditHitDiceDialog from '../../view/dialogs/EditHitDiceDialog.svelte';
 import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
@@ -46,6 +47,11 @@ interface RollHitDiceResult {
 	selections: Record<string, number>;
 	addStrBonus: boolean;
 	applyToHP: boolean;
+}
+
+/** Edit current hit dice dialog result data */
+interface EditCurrentHitDiceResult {
+	currentValues: Record<string, number>;
 }
 
 /** Level up dialog result data */
@@ -470,11 +476,11 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	async configureHitPoints() {
-		const dialog = new GenericDialog(
+		const dialog = GenericDialog.getOrCreate(
 			`${this.name}: Configure Hit Points`,
 			EditHitPointsDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-heart', width: 250 },
+			{ icon: 'fa-solid fa-heart', width: 250, uniqueId: `${this.id}-configure-hp` },
 		);
 
 		await dialog.render(true);
@@ -499,11 +505,11 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	async configureHitDice() {
-		const dialog = new GenericDialog(
+		const dialog = GenericDialog.getOrCreate(
 			`${this.name}: Configure Hit Dice`,
 			EditHitDiceDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-dice-d20', width: 420 },
+			{ icon: 'fa-solid fa-dice-d20', width: 420, uniqueId: `${this.id}-configure-hd` },
 		);
 
 		await dialog.render(true);
@@ -556,12 +562,38 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		await this.update(updates);
 	}
 
+	async editCurrentHitDice() {
+		const dialog = GenericDialog.getOrCreate(
+			`${this.name}: Edit Current Hit Dice`,
+			EditCurrentHitDiceDialog,
+			{ document: this },
+			{ icon: 'fa-solid fa-dice-d20', width: 340, uniqueId: `${this.id}-edit-current-hd` },
+		);
+
+		await dialog.render(true);
+		const result = (await dialog.promise) as EditCurrentHitDiceResult | null;
+
+		if (result === null || !result.currentValues) {
+			return;
+		}
+
+		const { currentValues } = result;
+
+		// Build updates for each die size
+		const updates: Record<string, unknown> = {};
+		for (const [size, value] of Object.entries(currentValues)) {
+			updates[`system.attributes.hitDice.${size}.current`] = value;
+		}
+
+		await this.update(updates);
+	}
+
 	async rollHitDice() {
-		const dialog = new GenericDialog(
+		const dialog = GenericDialog.getOrCreate(
 			`${this.name}: Roll Hit Dice`,
 			RollHitDiceDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-dice-d20', width: 320 },
+			{ icon: 'fa-solid fa-dice-d20', width: 320, uniqueId: `${this.id}-roll-hd` },
 		);
 
 		await dialog.render(true);
@@ -638,21 +670,76 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		}
 		const diceSummary = diceParts.join(' + ');
 
-		let content = `<div class="nimble-hit-dice-roll">`;
-		content += `<p class="nimble-hit-dice-roll__dice"><strong>Hit Dice:</strong> ${diceSummary}</p>`;
-
-		if (addStrBonus) {
-			const strMod = this.system.abilities.strength.mod;
-			const totalDice = Object.values(selections).reduce((sum, count) => sum + count, 0);
-			const strBonus = totalDice * strMod;
-			content += `<p class="nimble-hit-dice-roll__str"><strong>STR Bonus:</strong> +${strBonus} (${strMod} per die)</p>`;
+		// Extract individual dice results from the roll
+		const diceResults: { size: number; results: number[]; total: number }[] = [];
+		for (const term of roll.terms) {
+			if (term instanceof foundry.dice.terms.Die) {
+				const dieTerm = term as foundry.dice.terms.Die;
+				if (!dieTerm.faces) continue;
+				const results = dieTerm.results.map((r) => r.result);
+				diceResults.push({
+					size: dieTerm.faces,
+					results,
+					total: results.reduce((sum, v) => sum + v, 0),
+				});
+			}
 		}
 
+		// Sort by die size descending for display
+		diceResults.sort((a, b) => b.size - a.size);
+
+		// Calculate STR bonus
+		const strMod = this.system.abilities.strength.mod;
+		const totalDice = Object.values(selections).reduce((sum, count) => sum + count, 0);
+		const strBonus = addStrBonus ? totalDice * strMod : 0;
+
+		let content = `<div class="nimble-hit-dice-roll">`;
+
+		// Main result header with total
+		content += `<div class="nimble-hit-dice-roll__header">`;
+		content += `<span class="nimble-hit-dice-roll__label">Hit Dice Recovery</span>`;
+		content += `<span class="nimble-hit-dice-roll__total">${roll.total}</span>`;
+		content += `</div>`;
+
+		// Expandable dice details
+		content += `<details class="nimble-hit-dice-roll__details">`;
+		content += `<summary class="nimble-hit-dice-roll__summary">${diceSummary}${addStrBonus ? ` + ${strBonus}` : ''}</summary>`;
+		content += `<div class="nimble-hit-dice-roll__breakdown">`;
+
+		// Show each die type with individual results
+		for (const dieGroup of diceResults) {
+			const resultsStr = dieGroup.results
+				.map((r) => `<span class="nimble-hit-dice-roll__die-result">${r}</span>`)
+				.join(' ');
+			content += `<div class="nimble-hit-dice-roll__die-group">`;
+			content += `<span class="nimble-hit-dice-roll__die-type">d${dieGroup.size}</span>`;
+			content += `<span class="nimble-hit-dice-roll__die-results">${resultsStr}</span>`;
+			content += `<span class="nimble-hit-dice-roll__die-subtotal">= ${dieGroup.total}</span>`;
+			content += `</div>`;
+		}
+
+		// Show STR bonus if applicable
+		if (addStrBonus) {
+			content += `<div class="nimble-hit-dice-roll__die-group nimble-hit-dice-roll__die-group--bonus">`;
+			content += `<span class="nimble-hit-dice-roll__die-type">STR</span>`;
+			content += `<span class="nimble-hit-dice-roll__die-results">${strMod} × ${totalDice}</span>`;
+			content += `<span class="nimble-hit-dice-roll__die-subtotal">= ${strBonus}</span>`;
+			content += `</div>`;
+		}
+
+		content += `</div>`; // breakdown
+		content += `</details>`;
+
+		// HP healing status
 		if (applyToHP) {
 			if (healingApplied > 0) {
-				content += `<p class="nimble-hit-dice-roll__healing"><strong>HP Restored:</strong> ${healingApplied}</p>`;
+				content += `<div class="nimble-hit-dice-roll__healing">`;
+				content += `<i class="fa-solid fa-heart"></i> Healed ${healingApplied} HP`;
+				content += `</div>`;
 			} else {
-				content += `<p class="nimble-hit-dice-roll__healing"><em>Already at max HP</em></p>`;
+				content += `<div class="nimble-hit-dice-roll__healing nimble-hit-dice-roll__healing--full">`;
+				content += `<i class="fa-solid fa-heart"></i> Already at max HP`;
+				content += `</div>`;
 			}
 		}
 
