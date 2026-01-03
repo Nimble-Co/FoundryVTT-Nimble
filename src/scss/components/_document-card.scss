@@ -110,7 +110,7 @@
 	}
 
 	&--no-meta.nimble-document-card--monster-sheet {
-		grid-template-areas: "img name collaps configureButton deleteButton";
+		grid-template-areas: "img name collapsed configureButton deleteButton";
 	}
 
 	&--selected {
