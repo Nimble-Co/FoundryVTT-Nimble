@@ -11,6 +11,7 @@
 		max: number;
 		bySize: HitDiceBySize;
 		updateCurrentHitDice?: (value: number) => void | Promise<void>;
+		rollHitDice?: () => void | Promise<void>;
 	}
 
 	interface WithoutControls extends BaseProps {
@@ -24,14 +25,39 @@
 
 	type Props = WithControls | WithoutControls;
 
-	let { value, max, bySize, disableControls = false, updateCurrentHitDice }: Props = $props();
+	let {
+		value,
+		max,
+		bySize,
+		disableControls = false,
+		updateCurrentHitDice,
+		rollHitDice,
+	}: Props = $props();
 
-	// Only show label if there's exactly one die size
+	// Track pending updates to prevent race conditions
+	let isUpdating = $state(false);
+
+	async function handleUpdateCurrentHitDice(newValue: number) {
+		isUpdating = true;
+		try {
+			await updateCurrentHitDice?.(newValue);
+		} finally {
+			isUpdating = false;
+		}
+	}
+
+	async function handleRollHitDice() {
+		if (isUpdating) return;
+		await rollHitDice?.();
+	}
+
+	// Show label for all cases - single die shows size (d8), multiple shows d20 icon
 	let dieSizes = $derived(Object.keys(bySize).filter((size) => bySize[size].total > 0));
-	let showLabel = $derived(dieSizes.length === 1);
+	let hasSingleDieSize = $derived(dieSizes.length === 1);
+	let hasMultipleDieSizes = $derived(dieSizes.length > 1);
 </script>
 
-<div class="nimble-hit-dice-bar" class:nimble-hit-dice-bar--no-label={!showLabel}>
+<div class="nimble-hit-dice-bar" class:nimble-hit-dice-bar--no-label={dieSizes.length === 0}>
 	<div
 		class="nimble-hit-dice-bar__fill"
 		style="--nimble-hit-dice-percentage: {max > 0
@@ -47,7 +73,7 @@
 				{value}
 				disabled={disableControls}
 				onchange={(event) =>
-					updateCurrentHitDice?.(Number((event.currentTarget as HTMLInputElement).value))}
+					handleUpdateCurrentHitDice(Number((event.currentTarget as HTMLInputElement).value))}
 			/>
 			/
 			<input
@@ -58,8 +84,26 @@
 			/>
 		</span>
 	</div>
-	{#if showLabel}
-		<span class="nimble-hit-dice-bar__label">d{dieSizes[0]}</span>
+	{#if hasSingleDieSize}
+		<button
+			class="nimble-hit-dice-bar__label"
+			type="button"
+			disabled={isUpdating}
+			onclick={handleRollHitDice}
+			data-tooltip="Roll Hit Dice"
+		>
+			d{dieSizes[0]}
+		</button>
+	{:else if hasMultipleDieSizes}
+		<button
+			class="nimble-hit-dice-bar__label"
+			type="button"
+			disabled={isUpdating}
+			onclick={handleRollHitDice}
+			data-tooltip="Roll Hit Dice"
+		>
+			<i class="fa-solid fa-dice-d20"></i>
+		</button>
 	{/if}
 </div>
 
@@ -164,9 +208,20 @@
 			color: hsl(45, 80%, 75%);
 			text-shadow: 0 0 4px hsl(0, 0%, 0%, 0.3);
 			background: hsl(45, 30%, 25%);
+			border: none;
 			border-left: 1px solid hsl(41, 18%, 54%);
 			border-radius: 0 3px 3px 0;
 			white-space: nowrap;
+			cursor: pointer;
+			transition: background-color 0.15s ease-in-out;
+
+			&:hover {
+				background: hsl(45, 35%, 32%);
+			}
+
+			&:active {
+				background: hsl(45, 40%, 38%);
+			}
 		}
 	}
 </style>

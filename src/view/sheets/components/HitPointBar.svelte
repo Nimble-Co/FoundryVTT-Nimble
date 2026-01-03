@@ -67,12 +67,18 @@
 	</div>
 
 	{#if showTempHP}
-		<div class="nimble-hit-points__temp" class:nimble-hit-points__temp--has-value={tempHP > 0}>
+		<div
+			class="nimble-hit-points__temp"
+			class:nimble-hit-points__temp--has-value={tempHP > 0}
+			data-tooltip="Temp HP"
+		>
 			<input
 				class="nimble-hit-points__input nimble-hit-points__input--temp-hp"
 				type="number"
+				min="0"
 				value={tempHP}
-				onchange={({ target }) => updateTempHP?.(Number((target as HTMLInputElement).value))}
+				onchange={({ target }) =>
+					updateTempHP?.(Math.max(0, Number((target as HTMLInputElement).value)))}
 				disabled={disableControls}
 			/>
 		</div>
