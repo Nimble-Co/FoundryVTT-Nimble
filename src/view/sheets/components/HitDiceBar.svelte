@@ -11,6 +11,7 @@
 		max: number;
 		bySize: HitDiceBySize;
 		updateCurrentHitDice?: (value: number) => void | Promise<void>;
+		editCurrentHitDice?: () => void | Promise<void>;
 		rollHitDice?: () => void | Promise<void>;
 	}
 
@@ -21,6 +22,7 @@
 	interface WithControls extends BaseProps {
 		disableControls?: false;
 		updateCurrentHitDice: NonNullable<BaseProps['updateCurrentHitDice']>;
+		editCurrentHitDice: NonNullable<BaseProps['editCurrentHitDice']>;
 	}
 
 	type Props = WithControls | WithoutControls;
@@ -31,6 +33,7 @@
 		bySize,
 		disableControls = false,
 		updateCurrentHitDice,
+		editCurrentHitDice,
 		rollHitDice,
 	}: Props = $props();
 
@@ -51,6 +54,11 @@
 		await rollHitDice?.();
 	}
 
+	async function handleEditCurrentHitDice() {
+		if (isUpdating) return;
+		await editCurrentHitDice?.();
+	}
+
 	// Show label for all cases - single die shows size (d8), multiple shows d20 icon
 	let dieSizes = $derived(Object.keys(bySize).filter((size) => bySize[size].total > 0));
 	let hasSingleDieSize = $derived(dieSizes.length === 1);
@@ -64,46 +72,52 @@
 			? Math.clamp(0, Math.round((value / max) * 100), 100)
 			: 0}%"
 	>
-		<span class="nimble-hit-dice-bar__values">
-			<input
-				class="nimble-hit-dice-bar__input nimble-hit-dice-bar__input--current"
-				type="number"
-				min="0"
-				{max}
-				{value}
-				disabled={disableControls}
-				onchange={(event) =>
-					handleUpdateCurrentHitDice(Number((event.currentTarget as HTMLInputElement).value))}
-			/>
-			/
-			<input
-				class="nimble-hit-dice-bar__input nimble-hit-dice-bar__input--max"
-				type="number"
-				value={max}
-				disabled
-			/>
-		</span>
+		{#if hasMultipleDieSizes}
+			<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+			<span
+				class="nimble-hit-dice-bar__values nimble-hit-dice-bar__values--clickable"
+				onclick={handleEditCurrentHitDice}
+				data-tooltip="Edit Current Hit Dice"
+			>
+				{value} / {max}
+			</span>
+		{:else}
+			<span class="nimble-hit-dice-bar__values">
+				<input
+					class="nimble-hit-dice-bar__input nimble-hit-dice-bar__input--current"
+					type="number"
+					min="0"
+					{max}
+					{value}
+					disabled={disableControls}
+					onchange={(event) =>
+						handleUpdateCurrentHitDice(Number((event.currentTarget as HTMLInputElement).value))}
+				/>
+				/
+				<input
+					class="nimble-hit-dice-bar__input nimble-hit-dice-bar__input--max"
+					type="number"
+					value={max}
+					disabled
+				/>
+			</span>
+		{/if}
 	</div>
-	{#if hasSingleDieSize}
-		<button
+	{#if hasSingleDieSize || hasMultipleDieSizes}
+		<div
 			class="nimble-hit-dice-bar__label"
-			type="button"
-			disabled={isUpdating}
-			onclick={handleRollHitDice}
+			role="button"
+			tabindex="0"
 			data-tooltip="Roll Hit Dice"
-		>
-			d{dieSizes[0]}
-		</button>
-	{:else if hasMultipleDieSizes}
-		<button
-			class="nimble-hit-dice-bar__label"
-			type="button"
-			disabled={isUpdating}
 			onclick={handleRollHitDice}
-			data-tooltip="Roll Hit Dice"
+			onkeydown={(e) => e.key === 'Enter' && handleRollHitDice()}
 		>
-			<i class="fa-solid fa-dice-d20"></i>
-		</button>
+			{#if hasSingleDieSize}
+				d{dieSizes[0]}
+			{:else}
+				<i class="fa-solid fa-dice-d20"></i>
+			{/if}
+		</div>
 	{/if}
 </div>
 
@@ -117,6 +131,7 @@
 		align-items: stretch;
 		flex-wrap: nowrap;
 		max-width: 7rem;
+		background-color: var(--nimble-hp-bar-background);
 		border: var(--nimble-hp-bar-border-thickness, 1px) solid hsl(41, 18%, 54%);
 		border-radius: 4px;
 		box-shadow: var(--nimble-card-box-shadow);
@@ -139,8 +154,6 @@
 			flex: 1;
 			display: flex;
 			align-items: center;
-			background-color: var(--nimble-hp-bar-background);
-			border-radius: 3px 0 0 3px;
 
 			&::before {
 				content: '';
@@ -169,6 +182,17 @@
 			font-weight: var(--nimble-hit-point-input-font-weight);
 			color: #fff;
 			z-index: 5;
+
+			&--clickable {
+				justify-content: center;
+				cursor: pointer;
+
+				&:hover {
+					text-shadow:
+						0 0 4px hsl(41, 18%, 54%),
+						0 0 8px rgba(255, 255, 255, 0.4);
+				}
+			}
 		}
 
 		&__input[type] {
@@ -177,7 +201,8 @@
 			flex: 1;
 			width: auto;
 			min-width: 0;
-			font: inherit;
+			font-size: var(--nimble-hit-point-input-text-size);
+			font-weight: var(--nimble-hit-point-input-font-weight);
 			text-align: end;
 			text-shadow: inherit;
 			color: inherit;
@@ -202,14 +227,13 @@
 		&__label {
 			display: flex;
 			align-items: center;
+			border-left: 1px solid hsl(41, 18%, 54%);
 			padding-inline: 0.375rem;
 			font-size: var(--nimble-xs-text);
 			font-weight: 700;
 			color: hsl(45, 80%, 75%);
 			text-shadow: 0 0 4px hsl(0, 0%, 0%, 0.3);
 			background: hsl(45, 30%, 25%);
-			border: none;
-			border-left: 1px solid hsl(41, 18%, 54%);
 			border-radius: 0 3px 3px 0;
 			white-space: nowrap;
 			cursor: pointer;

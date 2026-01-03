@@ -427,18 +427,18 @@
 
 	.hd-section {
 		padding: 0.625rem;
-		background: var(--nimble-input-background-color, hsl(41, 18%, 92%));
-		border: 1px solid hsl(41, 18%, 80%);
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 6px;
 
 		&--bonus {
-			background: hsl(45, 35%, 94%);
-			border-color: hsl(45, 35%, 75%);
+			background: var(--nimble-box-background-color);
+			border-color: var(--nimble-card-border-color);
 		}
 
 		&--temp {
-			background: hsl(200, 35%, 94%);
-			border-color: hsl(200, 35%, 75%);
+			background: var(--nimble-box-background-color);
+			border-color: var(--nimble-card-border-color);
 		}
 	}
 
@@ -464,24 +464,24 @@
 		display: flex;
 		flex-direction: column;
 		padding: 0.5rem 0.75rem;
-		background: hsl(41, 18%, 97%);
-		border: 1px solid hsl(41, 18%, 80%);
+		background: var(--nimble-input-background-color);
+		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 6px;
 		min-width: 4.5rem;
 
 		&--class {
-			background: hsl(45, 45%, 92%);
-			border-color: hsl(45, 40%, 70%);
+			background: var(--nimble-input-background-color);
+			border-color: var(--nimble-card-border-color);
 		}
 
 		&--bonus {
-			background: hsl(45, 50%, 90%);
-			border-color: hsl(45, 45%, 65%);
+			background: var(--nimble-input-background-color);
+			border-color: var(--nimble-card-border-color);
 		}
 
 		&--temp {
-			background: hsl(200, 45%, 92%);
-			border-color: hsl(200, 40%, 70%);
+			background: var(--nimble-input-background-color);
+			border-color: var(--nimble-card-border-color);
 		}
 
 		&__main {
@@ -524,8 +524,8 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 0.375rem 0.5rem;
-		background: rgba(255, 255, 255, 0.5);
-		border: 1px dashed hsl(41, 18%, 75%);
+		background: var(--nimble-input-background-color);
+		border: 1px dashed var(--nimble-card-border-color);
 		border-radius: 6px;
 
 		&__text {
@@ -543,16 +543,16 @@
 		font-size: var(--nimble-sm-text);
 		font-weight: 600;
 		color: var(--nimble-dark-text-color);
-		background: #fff;
-		border: 1px solid hsl(41, 18%, 70%);
+		background: var(--nimble-input-background-color);
+		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 4px;
 		cursor: pointer;
 		transition: all 0.15s ease;
 
 		&:hover:not(:disabled) {
-			background: hsl(139, 35%, 92%);
-			border-color: hsl(139, 35%, 55%);
-			color: hsl(139, 40%, 25%);
+			background: hsl(45, 50%, 85%);
+			border-color: hsl(45, 50%, 50%);
+			color: hsl(45, 50%, 20%);
 		}
 
 		&:disabled {
@@ -570,10 +570,10 @@
 
 	.hd-dropdown {
 		min-width: 5rem;
-		background: #fff;
-		border: 1px solid hsl(41, 18%, 70%);
+		background: var(--nimble-box-background-color, hsl(48, 17%, 97%));
+		border: 1px solid var(--nimble-card-border-color, hsla(41, 18%, 54%, 25%));
 		border-radius: 6px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 		overflow: hidden;
 
 		&--fixed {
@@ -589,9 +589,9 @@
 			gap: 0.5rem;
 			width: 100%;
 			padding: 0.5rem 0.75rem;
-			font-size: var(--nimble-sm-text);
+			font-size: var(--nimble-sm-text, 0.833rem);
 			font-weight: 600;
-			color: var(--nimble-dark-text-color);
+			color: var(--nimble-dark-text-color, hsl(50, 14%, 9%));
 			background: transparent;
 			border: none;
 			cursor: pointer;
@@ -599,14 +599,14 @@
 			transition: background 0.1s ease;
 
 			&:hover {
-				background: hsl(41, 18%, 95%);
+				background: var(--nimble-input-background-color, hsla(0, 0%, 100%, 0.5));
 			}
 
 			&--class {
-				background: hsl(45, 45%, 95%);
+				background: var(--nimble-input-background-color, hsla(0, 0%, 100%, 0.5));
 
 				&:hover {
-					background: hsl(45, 45%, 90%);
+					background: var(--nimble-box-background-color, hsl(48, 17%, 97%));
 				}
 			}
 		}
@@ -617,8 +617,8 @@
 			text-transform: uppercase;
 			letter-spacing: 0.03em;
 			padding: 0.125rem 0.375rem;
-			background: hsl(45, 50%, 80%);
-			color: hsl(45, 50%, 25%);
+			background: hsl(45, 50%, 55%);
+			color: #fff;
 			border-radius: 3px;
 		}
 	}
@@ -635,18 +635,18 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.375rem 0.5rem;
-		background: #fff;
-		border: 1px solid hsl(41, 18%, 75%);
+		background: var(--nimble-input-background-color);
+		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 6px;
 
 		&--bonus {
-			background: hsl(45, 50%, 95%);
-			border-color: hsl(45, 45%, 65%);
+			background: var(--nimble-input-background-color);
+			border-color: var(--nimble-card-border-color);
 		}
 
 		&--temp {
-			background: hsl(200, 45%, 95%);
-			border-color: hsl(200, 40%, 65%);
+			background: var(--nimble-input-background-color);
+			border-color: var(--nimble-card-border-color);
 		}
 
 		&__die {
@@ -667,6 +667,7 @@
 			text-align: center;
 			font-size: var(--nimble-base-text);
 			font-weight: 700;
+			color: var(--nimble-dark-text-color);
 		}
 	}
 
@@ -678,14 +679,15 @@
 		height: 1.375rem;
 		padding: 0;
 		font-size: 0.5rem;
-		border: 1px solid hsl(41, 18%, 70%);
+		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 4px;
-		background: #fff;
+		background: var(--nimble-input-background-color);
+		color: var(--nimble-dark-text-color);
 		cursor: pointer;
 		transition: all 0.15s ease;
 
 		&:hover:not(:disabled) {
-			background: hsl(41, 18%, 92%);
+			background: var(--nimble-box-background-color);
 		}
 
 		&:disabled {

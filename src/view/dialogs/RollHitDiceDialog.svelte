@@ -190,13 +190,13 @@
 			align-items: center;
 			gap: 0.75rem;
 			padding: 0.5rem;
-			background: var(--nimble-card-background);
+			background: var(--nimble-box-background-color);
+			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
-			box-shadow: var(--nimble-card-box-shadow);
 
 			&--depleted {
 				opacity: 0.6;
-				background: var(--nimble-card-background-muted, hsl(0, 0%, 90%));
+				background: var(--nimble-input-background-color);
 			}
 		}
 
@@ -205,12 +205,13 @@
 			text-align: center;
 			font-size: var(--nimble-sm-text);
 			font-style: italic;
-			color: var(--nimble-muted-text-color, hsl(0, 0%, 50%));
+			color: var(--nimble-medium-text-color);
 		}
 
 		&__die-label {
 			font-weight: 700;
 			font-size: var(--nimble-md-text);
+			color: var(--nimble-dark-text-color);
 			text-align: center;
 		}
 
@@ -233,7 +234,7 @@
 				opacity: 1;
 				cursor: default;
 				pointer-events: none;
-				color: var(--nimble-muted-text-color, hsl(0, 0%, 50%));
+				color: var(--nimble-medium-text-color);
 			}
 		}
 
@@ -241,6 +242,10 @@
 			width: 3rem;
 			text-align: center;
 			font-weight: 600;
+			background: var(--nimble-input-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			color: var(--nimble-dark-text-color);
 		}
 
 		&__available-group {
@@ -258,19 +263,20 @@
 		&__max-btn {
 			font-size: var(--nimble-xs-text);
 			font-weight: 600;
-			color: var(--nimble-link-color, hsl(210, 60%, 45%));
+			color: var(--nimble-dark-text-color);
 			white-space: nowrap;
-			background: none;
-			border: 1px solid currentColor;
+			background: var(--nimble-input-background-color);
+			border: 1px solid var(--nimble-card-border-color);
 			padding: 0.125rem 0.375rem;
 			border-radius: 3px;
 			cursor: pointer;
 			transition:
 				background-color 0.15s ease-in-out,
-				color 0.15s ease-in-out;
+				border-color 0.15s ease-in-out;
 
 			&:hover:not(:disabled) {
-				background: var(--nimble-link-color, hsl(210, 60%, 45%));
+				background: hsl(45, 50%, 50%);
+				border-color: hsl(45, 50%, 40%);
 				color: #fff;
 			}
 
@@ -283,7 +289,7 @@
 		&__options {
 			margin-block-start: 1rem;
 			padding-block-start: 0.75rem;
-			border-top: 1px solid var(--nimble-border-color);
+			border-top: 1px solid var(--nimble-card-border-color);
 		}
 
 		&__checkbox-label {
@@ -292,6 +298,7 @@
 			gap: 0.5rem;
 			cursor: pointer;
 			font-size: var(--nimble-sm-text);
+			color: var(--nimble-dark-text-color);
 
 			input[type='checkbox'] {
 				width: 1rem;

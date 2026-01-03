@@ -10,9 +10,14 @@ interface GenericDialogOptions {
 	icon?: string;
 	/** Width of the dialog in pixels */
 	width?: number;
+	/** Unique ID for singleton behavior - only one dialog with this ID can be open at a time */
+	uniqueId?: string;
 }
 
 export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2) {
+	/** Registry of open singleton dialogs by uniqueId */
+	static #openDialogs: Map<string, GenericDialog> = new Map();
+
 	documentData: Record<string, unknown> = {};
 
 	promise: Promise<Record<string, unknown> | null>;
@@ -22,6 +27,8 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 	data: Record<string, unknown>;
 
 	override root: svelte.Component<Record<string, never>>;
+
+	#uniqueId: string | null = null;
 
 	constructor(
 		title: string,
@@ -46,10 +53,31 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 
 		this.root = component;
 		this.data = data;
+		this.#uniqueId = options.uniqueId ?? null;
 
 		this.promise = new Promise((resolve) => {
 			this.resolve = resolve;
 		});
+	}
+
+	/**
+	 * Get or create a singleton dialog. If a dialog with the given uniqueId already exists,
+	 * it will be brought to focus and returned. Otherwise, a new dialog is created.
+	 */
+	static getOrCreate(
+		title: string,
+		component: svelte.Component<Record<string, never>>,
+		data: Record<string, unknown> = {},
+		options: GenericDialogOptions & { uniqueId: string },
+	): GenericDialog {
+		const existing = GenericDialog.#openDialogs.get(options.uniqueId);
+		if (existing?.rendered) {
+			existing.bringToFront();
+			return existing;
+		}
+
+		const dialog = new GenericDialog(title, component, data, options);
+		return dialog;
 	}
 
 	static override DEFAULT_OPTIONS = {
@@ -74,9 +102,24 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 		} as foundry.applications.api.ApplicationV2.RenderContext;
 	}
 
+	override async render(
+		options?: boolean | DeepPartial<foundry.applications.api.ApplicationV2.RenderOptions>,
+		_options?: DeepPartial<foundry.applications.api.ApplicationV2.RenderOptions>,
+	): Promise<this> {
+		// Register singleton dialog before rendering
+		if (this.#uniqueId) {
+			GenericDialog.#openDialogs.set(this.#uniqueId, this);
+		}
+		return super.render(options as boolean, _options);
+	}
+
 	override close(
 		options?: DeepPartial<foundry.applications.api.ApplicationV2.ClosingOptions>,
 	): Promise<this> {
+		// Unregister singleton dialog on close
+		if (this.#uniqueId) {
+			GenericDialog.#openDialogs.delete(this.#uniqueId);
+		}
 		this.#resolvePromise(null);
 		return super.close(options);
 	}
@@ -85,6 +128,10 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 	 * Resolves the dialog's promise and closes it.
 	 */
 	override async submit(results?: Record<string, unknown>): Promise<void> {
+		// Unregister singleton dialog on submit
+		if (this.#uniqueId) {
+			GenericDialog.#openDialogs.delete(this.#uniqueId);
+		}
 		this.#resolvePromise(results ?? null);
 		await super.close();
 	}
