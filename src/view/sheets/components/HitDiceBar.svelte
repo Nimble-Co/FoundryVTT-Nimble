@@ -78,6 +78,10 @@
 				class="nimble-hit-dice-bar__values nimble-hit-dice-bar__values--clickable"
 				onclick={handleEditCurrentHitDice}
 				data-tooltip="Edit Current Hit Dice"
+				aria-label="Edit Current Hit Dice"
+				role="button"
+				tabindex="0"
+				onkeydown={(e) => e.key === 'Enter' && handleEditCurrentHitDice()}
 			>
 				{value} / {max}
 			</span>
