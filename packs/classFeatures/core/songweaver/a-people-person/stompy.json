@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>3 actions: Summon a huge hill giant for 1 round. As he enters the battlefield adjacent to you, use</p><p><strong>Stompy’s Stomp</strong>: Make a DC 10 Influence check. On a success, he moves 6 spaces in a direction you choose; on a failure, he moves towards YOU instead (\"YOU NOT FRIEND!\"). He deals everything in his path damage equal to LVL+Influence check. ANY creature within 6 spaces of Stompy can use this ability once instead of an attack.</p>",
+		"description": "<p>3 actions: Summon a huge hill giant for 1 round. As he enters the battlefield adjacent to you, use</p><p><strong>Stompy's Stomp</strong>: Make a DC 10 Influence check. On a success, he moves 6 spaces in a direction you choose; on a failure, he moves towards YOU instead (\"YOU NOT FRIEND!\"). He deals everything in his path damage equal to LVL+Influence check. ANY creature within 6 spaces of Stompy can use this ability once instead of an attack.</p>",
 		"featureType": "class",
 		"class": "songweaver",
 		"group": "a-people-person"

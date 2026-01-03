@@ -142,7 +142,7 @@
 			"hampered": "<p>Any creature with their actions or movement reduce (e.g. Dazed, Grappled, Prone, Difficult Terrain).</p>",
 			"incapacitated": "<p>Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"invisible": "<p>Cannot be seen. Your attacks have advantage, and attacks against you have disadvantage.</p>",
-			"paralyzed": "<p>Incapacitated. Can’t do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
+			"paralyzed": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"petrified": "<p>Incapacitated. You have all the benefits and drawbacks of being a rock! Immune to most damage except from large explosions, picks, or similar tools.</p>",
 			"poisoned": "<p>Disadvantage on rolls.</p>",
 			"prone": "<p>Movement costs twice as much, and disadvantage on attacks. Melee attacks against you have advantage; Ranged have disadvantage. Spend 3 spaces of your Speed to stand up.</p>",
@@ -151,9 +151,9 @@
 			"silenced": "<p>Cannot cast spells or use other abilities that require speaking (e.g. Commander's Orders).</p>",
 			"slowed": "<p>Speed halved during your next turn.</p>",
 			"smoldering": "<p>Some fire spells can inflict the Smoldering condition and gain additional destructive effects against Smoldering enemies.</p>",
-			"stunned": "<p>Incapacitated. Can’t do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
+			"stunned": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"taunted": "<p>Disadvantage on attacks except against the most recent taunter.</p>",
-			"unconscious": "<p>Incapacitated. Can’t do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
+			"unconscious": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"wounded": "<p>Has any Wounds (typically 6 Wounds and a hero is dead).</p>"
 		},
 		"currency": {
@@ -342,7 +342,7 @@
 			"onlyOneNewPointAndOneTransferAllowed": "Only 1 new point and 1 transfer are allowed per level-up.",
 			"reduceAnotherSkillFirstToAddSkillPoint": "Reduce another skill first to add a skill point.",
 			"limitReached": "Limit reached: Only 1 new point and 1 transfer are allowed per level-up.",
-			"skillPointsCantGoBelowZero": "Skill points can’t go below 0.",
+			"skillPointsCantGoBelowZero": "Skill points can't go below 0.",
 			"alreadyMarkedToTransferOnePoint": "Already marked to transfer 1 point.",
 			"onlyOneTransferPerLevelUp": "Only one transfer per level-up."
 		},

@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>+1 to any 2 of your stats. Your Songweaver’s Inspiration cannot fail (your target succeeds).</p>",
+		"description": "<p>+1 to any 2 of your stats. Your Songweaver's Inspiration cannot fail (your target succeeds).</p>",
 		"featureType": "class",
 		"class": "songweaver",
 		"group": "songweaver-progression"

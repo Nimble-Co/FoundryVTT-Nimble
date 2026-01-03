@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Rarity:</strong> Uncommon</p><p><strong>Spell level:</strong> Cantrip</p><p><strong>Charges:</strong> 3</p><p><strong>Recharge:</strong> Heat the wand in a blacksmith’s forge until it glows, then quench it in oil.</p><hr><p><strong>Actions:</strong> 1</p><p>Teleport to a fire source you can see.</p>",
+			"public": "<p><strong>Rarity:</strong> Uncommon</p><p><strong>Spell level:</strong> Cantrip</p><p><strong>Charges:</strong> 3</p><p><strong>Recharge:</strong> Heat the wand in a blacksmith's forge until it glows, then quench it in oil.</p><hr><p><strong>Actions:</strong> 1</p><p>Teleport to a fire source you can see.</p>",
 			"unidentified": "",
 			"secret": ""
 		},

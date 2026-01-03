@@ -7,7 +7,7 @@
 		"macro": "",
 		"identifier": "red-dragon",
 		"rules": [],
-		"description": "<p>LEVEL 3 </p><p><strong>Draconic Crimson Rite.</strong> Your Patron grants you knowledge of Fire spells. Your shadow minions become flaming dragon wyrmling shadows. Your Shadow Blast and minions can deal fire or necrotic damage and inflict Smoldering whenever they would crit.</p><p>LEVEL 7 </p><p><strong>We’ll ALL Burn!</strong> You may cast Pyroclasm without Pilfering Power by including yourself in the damage. You have advantage on the save. Choose 1 Fire Utility Spell.</p><p>LEVEL 11 </p><p><strong>Heart of Burning Fire.</strong> Regain 1 use of Pilfered Power each time you roll Initiative. This expires at the end of combat if unused.</p><p>LEVEL 15 </p><p><strong>Enveloped by the Master.</strong> Gain 1d4 Wounds to cast Dragonform.</p>",
+		"description": "<p>LEVEL 3 </p><p><strong>Draconic Crimson Rite.</strong> Your Patron grants you knowledge of Fire spells. Your shadow minions become flaming dragon wyrmling shadows. Your Shadow Blast and minions can deal fire or necrotic damage and inflict Smoldering whenever they would crit.</p><p>LEVEL 7 </p><p><strong>We'll ALL Burn!</strong> You may cast Pyroclasm without Pilfering Power by including yourself in the damage. You have advantage on the save. Choose 1 Fire Utility Spell.</p><p>LEVEL 11 </p><p><strong>Heart of Burning Fire.</strong> Regain 1 use of Pilfered Power each time you roll Initiative. This expires at the end of combat if unused.</p><p>LEVEL 15 </p><p><strong>Enveloped by the Master.</strong> Gain 1d4 Wounds to cast Dragonform.</p>",
 		"parentClass": "shadowmancer",
 		"resources": []
 	},

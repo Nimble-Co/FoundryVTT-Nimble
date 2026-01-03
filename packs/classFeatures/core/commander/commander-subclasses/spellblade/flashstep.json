@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>(Replaces: Reposition!)</p><p>Action/Reaction (on an ally’s turn): Command 1 ally to move up to their speed (or 2 allies up to half their speed) for free. You may exchange places with one of them.</p>",
+		"description": "<p>(Replaces: Reposition!)</p><p>Action/Reaction (on an ally's turn): Command 1 ally to move up to their speed (or 2 allies up to half their speed) for free. You may exchange places with one of them.</p>",
 		"featureType": "class",
 		"class": "commander",
 		"group": "spellblade"

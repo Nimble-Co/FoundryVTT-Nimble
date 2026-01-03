@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>You unlock tier 1 Fire, Ice, and Lightning spells and gain a mana pool to cast these spells. This mana pool’s maximum is always equal to (INT×3)+LVL and recharges on a Safe Rest.</p><hr><p>Level 4: Tier 2</p><p>Level 6: Tier 3</p><p>Level 8: Tier 4</p><p>Level 10: Tier 5</p><p>Level 12: Tier 6</p><p>Level 14: Tier 7</p><p>Level 16: Tier 8</p><p>Level 18: Tier 9</p>",
+		"description": "<p>You unlock tier 1 Fire, Ice, and Lightning spells and gain a mana pool to cast these spells. This mana pool's maximum is always equal to (INT×3)+LVL and recharges on a Safe Rest.</p><hr><p>Level 4: Tier 2</p><p>Level 6: Tier 3</p><p>Level 8: Tier 4</p><p>Level 10: Tier 5</p><p>Level 12: Tier 6</p><p>Level 14: Tier 7</p><p>Level 16: Tier 8</p><p>Level 18: Tier 9</p>",
 		"featureType": "class",
 		"class": "mage",
 		"group": "mage-progression"

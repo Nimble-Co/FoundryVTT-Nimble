@@ -20,7 +20,7 @@
 				]
 			}
 		],
-		"description": "<p>Just when you think you’ve bested a mighty Orc, you’ve merely succeeded in rousing their anger. Engaging in combat with an Orc is no endeavor for the weak-willed. While others may cower before death’s approach, Orcs boldly defy its grasp.</p><hr><p><strong>Relentless</strong> </p><p>When you would drop to 0 HP, you may set your HP to LVL instead, 1/Safe Rest. </p><p>+1 Might. [A]</p><p>You know Goblin if your INT is not negative (but you call it Orcish, of course). [M]</p>",
+		"description": "<p>Just when you think you've bested a mighty Orc, you've merely succeeded in rousing their anger. Engaging in combat with an Orc is no endeavor for the weak-willed. While others may cower before death's approach, Orcs boldly defy its grasp.</p><hr><p><strong>Relentless</strong> </p><p>When you would drop to 0 HP, you may set your HP to LVL instead, 1/Safe Rest. </p><p>+1 Might. [A]</p><p>You know Goblin if your INT is not negative (but you call it Orcish, of course). [M]</p>",
 		"exotic": true,
 		"size": [
 			"medium"

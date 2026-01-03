@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>(1/day) By meditating for at least 10 minutes, you can project an ethereal version of yourself up to 30 ft. away, passing through solid objects or barriers. You see through your projection’s eyes, and it is visible to other creatures as a translucent version of yourself. It cannot interact physically with the environment but can move freely within the distance limit and lasts for up to 10 minutes.</p>",
+		"description": "<p>(1/day) By meditating for at least 10 minutes, you can project an ethereal version of yourself up to 30 ft. away, passing through solid objects or barriers. You see through your projection's eyes, and it is visible to other creatures as a translucent version of yourself. It cannot interact physically with the environment but can move freely within the distance limit and lasts for up to 10 minutes.</p>",
 		"featureType": "class",
 		"class": "zephyr",
 		"group": "zephyr-progression"
