@@ -21,6 +21,7 @@ import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/Charact
 import EditHitDiceDialog from '../../view/dialogs/EditHitDiceDialog.svelte';
 import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
+import RollHitDiceDialog from '../../view/dialogs/RollHitDiceDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
@@ -38,6 +39,13 @@ interface ConfigureHitPointsResult {
 interface ConfigureHitDiceResult {
 	bonusUpdates: Record<string, { bonus: number }>;
 	tempUpdates: Record<string, { temp: number }>;
+}
+
+/** Roll hit dice dialog result data */
+interface RollHitDiceResult {
+	selections: Record<string, number>;
+	addStrBonus: boolean;
+	applyToHP: boolean;
 }
 
 /** Level up dialog result data */
@@ -507,6 +515,13 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		const updates: Record<string, unknown> = {};
 
+		// Calculate class contributions per die size
+		const classContributions: Record<string, number> = {};
+		for (const cls of Object.values(this.classes)) {
+			const size = cls.hitDice.size;
+			classContributions[size] = (classContributions[size] ?? 0) + cls.hitDice.total;
+		}
+
 		// Apply bonus updates
 		for (const [size, data] of Object.entries(result.bonusUpdates)) {
 			const existingData = this.system.attributes.hitDice[size] ?? { origin: [], current: 0 };
@@ -519,7 +534,144 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			updates[`system.attributes.hitDice.${size}.temp`] = data.temp;
 		}
 
+		// Clamp current hit dice if they exceed the new max for each size
+		const allSizes = new Set([
+			...Object.keys(result.bonusUpdates),
+			...Object.keys(result.tempUpdates),
+			...Object.keys(classContributions),
+		]);
+
+		for (const size of allSizes) {
+			const classTotal = classContributions[size] ?? 0;
+			const newBonus = result.bonusUpdates[size]?.bonus ?? 0;
+			const newTemp = result.tempUpdates[size]?.temp ?? 0;
+			const newMax = classTotal + newBonus + newTemp;
+
+			const currentValue = this.system.attributes.hitDice[size]?.current ?? 0;
+			if (currentValue > newMax) {
+				updates[`system.attributes.hitDice.${size}.current`] = newMax;
+			}
+		}
+
 		await this.update(updates);
+	}
+
+	async rollHitDice() {
+		const dialog = new GenericDialog(
+			`${this.name}: Roll Hit Dice`,
+			RollHitDiceDialog,
+			{ document: this },
+			{ icon: 'fa-solid fa-dice-d20', width: 320 },
+		);
+
+		await dialog.render(true);
+		const result = (await dialog.promise) as RollHitDiceResult | null;
+
+		if (result === null || !result.selections) {
+			return;
+		}
+
+		const { selections, addStrBonus, applyToHP } = result;
+
+		// Build the roll formula from selections
+		const rollParts: string[] = [];
+		for (const [size, count] of Object.entries(selections)) {
+			if (count > 0) {
+				rollParts.push(`${count}d${size}`);
+			}
+		}
+
+		if (rollParts.length === 0) {
+			return;
+		}
+
+		// Add STR modifier for each die rolled (if enabled)
+		const totalDice = Object.values(selections).reduce((sum, count) => sum + count, 0);
+		const strMod = this.system.abilities.strength.mod;
+		const strBonus = addStrBonus ? totalDice * strMod : 0;
+		const formula = addStrBonus ? `${rollParts.join(' + ')} + ${strBonus}` : rollParts.join(' + ');
+
+		const roll = new NimbleRoll(formula, this.getRollData() as NimbleRoll.Data);
+		await roll.evaluate();
+
+		// Update hit dice counts
+		const updates: Record<string, unknown> = {};
+		for (const [size, count] of Object.entries(selections)) {
+			if (count > 0) {
+				const currentDice = this.system.attributes.hitDice[size]?.current ?? 0;
+				updates[`system.attributes.hitDice.${size}.current`] = Math.max(0, currentDice - count);
+			}
+		}
+
+		await this.update(updates);
+
+		// Apply healing to HP if enabled
+		let healingApplied = 0;
+		if (applyToHP && roll.total) {
+			const currentHP = this.system.attributes.hp.value;
+			const maxHP = this.system.attributes.hp.max;
+			const newHP = Math.min(currentHP + roll.total, maxHP);
+			healingApplied = newHP - currentHP;
+
+			if (healingApplied > 0) {
+				await this.update({ 'system.attributes.hp.value': newHP } as Record<string, unknown>);
+			}
+		}
+
+		// Output to chat
+		await this.outputHitDiceRoll(roll, selections, addStrBonus, applyToHP, healingApplied);
+	}
+
+	async outputHitDiceRoll(
+		roll: NimbleRoll,
+		selections: Record<string, number>,
+		addStrBonus: boolean,
+		applyToHP: boolean,
+		healingApplied: number,
+	) {
+		// Build dice summary string
+		const diceParts: string[] = [];
+		for (const [size, count] of Object.entries(selections)) {
+			if (count > 0) {
+				diceParts.push(`${count}d${size}`);
+			}
+		}
+		const diceSummary = diceParts.join(' + ');
+
+		let content = `<div class="nimble-hit-dice-roll">`;
+		content += `<p class="nimble-hit-dice-roll__dice"><strong>Hit Dice:</strong> ${diceSummary}</p>`;
+
+		if (addStrBonus) {
+			const strMod = this.system.abilities.strength.mod;
+			const totalDice = Object.values(selections).reduce((sum, count) => sum + count, 0);
+			const strBonus = totalDice * strMod;
+			content += `<p class="nimble-hit-dice-roll__str"><strong>STR Bonus:</strong> +${strBonus} (${strMod} per die)</p>`;
+		}
+
+		if (applyToHP) {
+			if (healingApplied > 0) {
+				content += `<p class="nimble-hit-dice-roll__healing"><strong>HP Restored:</strong> ${healingApplied}</p>`;
+			} else {
+				content += `<p class="nimble-hit-dice-roll__healing"><em>Already at max HP</em></p>`;
+			}
+		}
+
+		content += `</div>`;
+
+		const chatData = {
+			author: game.user?.id,
+			flavor: `${this.name}: Hit Dice Roll`,
+			content,
+			rolls: [roll],
+			speaker: ChatMessage.getSpeaker({ actor: this }),
+		};
+
+		ChatMessage.applyRollMode(
+			chatData as unknown as ChatMessage.CreateData,
+			game.settings.get('core', 'rollMode') as CONST.DICE_ROLL_MODES,
+		);
+
+		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	}
 
 	async updateCurrentHitDice(newTotal: number) {

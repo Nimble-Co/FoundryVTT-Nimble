@@ -68,6 +68,10 @@
 		await actor.updateCurrentHitDice(newValue);
 	}
 
+	async function rollHitDice() {
+		await actor.rollHitDice();
+	}
+
 	let { actor, sheet } = $props();
 
 	const navigation = $state([
@@ -283,6 +287,7 @@
 			max={hitDiceData.max}
 			bySize={hitDiceData.bySize}
 			{updateCurrentHitDice}
+			{rollHitDice}
 		/>
 	</section>
 
