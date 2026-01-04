@@ -293,7 +293,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -303,11 +305,7 @@
 					}
 				},
 				"description": "<p>2d10+20. On Hit: Grappled (escape DC 16). OR</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "TRT44zWDEobdx3S9",
 			"img": "icons/magic/control/debuff-chains-shackle-movement-red.webp",
@@ -369,7 +367,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -379,11 +379,7 @@
 					}
 				},
 				"description": "<p>DC 16 WIL save, or creatures within 6 spaces are Frightened and must spend 1 Action moving as far away as possible.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "nEzel3FmAenjmI53",
 			"img": "icons/magic/death/skeleton-skull-soul-blue.webp",

@@ -279,7 +279,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -289,11 +291,7 @@
 					}
 				},
 				"description": "<p> 1d4+2</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "CthIJDXdIQJm2Eqo",
 			"img": "icons/weapons/daggers/dagger-crooked-black.webp",
@@ -354,7 +352,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "range",
+						"distance": 8
 					},
 					"template": {
 						"length": 1,
@@ -364,11 +364,7 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d4+2.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "range",
-					"distance": 8
-				}
+				"subtype": "action"
 			},
 			"_id": "frF59tiZfqobmiMc",
 			"img": "icons/weapons/slings/slingshot-wood.webp",

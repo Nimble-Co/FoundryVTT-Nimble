@@ -209,7 +209,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -219,11 +221,7 @@
 					}
 				},
 				"description": "",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "xHKXANPad6Z22qFQ",
 			"img": "icons/svg/item-bag.svg",
@@ -293,7 +291,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "reach",
+						"distance": 2
 					},
 					"template": {
 						"length": 1,
@@ -303,11 +303,7 @@
 					}
 				},
 				"description": "<p>(Reach 2) 1d4+10. On crit: Prone.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "reach",
-					"distance": 2
-				}
+				"subtype": "action"
 			},
 			"_id": "zxkIrJoeB1BqZPdz",
 			"img": "icons/skills/melee/strike-slashes-red.webp",
@@ -368,7 +364,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -378,11 +376,7 @@
 					}
 				},
 				"description": "<p>(A Prone creature) 1d4+20.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "BalmxpW2pCV83I8P",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

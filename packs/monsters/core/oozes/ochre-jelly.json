@@ -279,7 +279,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -289,11 +291,7 @@
 					}
 				},
 				"description": "<p>1d6+3.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "Ikl1SI6YzJDWDVkv",
 			"img": "icons/magic/acid/dissolve-bone-white.webp",

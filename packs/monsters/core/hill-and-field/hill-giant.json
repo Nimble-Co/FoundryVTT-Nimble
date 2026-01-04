@@ -183,7 +183,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "reach",
+						"distance": 2
 					},
 					"template": {
 						"length": 1,
@@ -193,11 +195,7 @@
 					}
 				},
 				"description": "<p>(Reach 2) 1d6+15. OR</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "reach",
-					"distance": 2
-				}
+				"subtype": "action"
 			},
 			"_id": "7xaQQr4LP7FqSHPi",
 			"img": "icons/weapons/clubs/club-banded-barbed-black.webp",
@@ -307,7 +305,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "range",
+						"distance": 12
 					},
 					"template": {
 						"length": 1,
@@ -317,11 +317,7 @@
 					}
 				},
 				"description": "<p>(Range 12) 1d6+20</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "range",
-					"distance": 12
-				}
+				"subtype": "action"
 			},
 			"_id": "7PkhnQwkVDCwQkoX",
 			"img": "icons/environment/wilderness/terrain-rocks-brown.webp",

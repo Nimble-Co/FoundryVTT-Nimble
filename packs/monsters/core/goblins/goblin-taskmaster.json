@@ -279,7 +279,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -289,11 +291,7 @@
 					}
 				},
 				"description": "<p>1d6+2. Then use Get in Here</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "fTsj4kFUR54hs0AA",
 			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
@@ -354,7 +352,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "range",
+						"distance": 8
 					},
 					"template": {
 						"length": 1,
@@ -364,11 +364,7 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d6+2. Then use Get in Here</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "range",
-					"distance": 8
-				}
+				"subtype": "action"
 			},
 			"_id": "jGabap8BaH0gqUKp",
 			"img": "icons/weapons/bows/longbow-recurve-skull-brown.webp",
@@ -407,7 +403,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -417,11 +415,7 @@
 					}
 				},
 				"description": "<p>Call a goblin minion to the fight.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "rkjPMI3oZQdXCchG",
 			"img": "icons/svg/item-bag.svg",

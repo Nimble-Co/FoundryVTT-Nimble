@@ -183,7 +183,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -193,11 +195,7 @@
 					}
 				},
 				"description": "<p>1d6+6</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "uOG7P8qgm3DeZ8U6",
 			"img": "icons/skills/melee/hand-grip-sword-strike-orange.webp",
@@ -259,7 +257,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "range",
+						"distance": 8
 					},
 					"template": {
 						"length": 1,
@@ -269,11 +269,7 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d6+6</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "range",
-					"distance": 8
-				}
+				"subtype": "action"
 			},
 			"_id": "vtqCvuOxekpmHFwS",
 			"img": "icons/magic/acid/projectile-smoke-glowing.webp",

@@ -183,7 +183,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -193,11 +195,7 @@
 					}
 				},
 				"description": "<p>1d4+10. On damage: knockback Primary Die spaces.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "6zl9z3OSaVfTob8C",
 			"img": "icons/weapons/clubs/club-simple-barbed.webp",

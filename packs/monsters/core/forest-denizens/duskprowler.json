@@ -231,7 +231,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -241,11 +243,7 @@
 					}
 				},
 				"description": "<p>2d8+2.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "ByG4q6Lo6Yup8vBh",
 			"img": "icons/skills/melee/blood-slash-foam-red.webp",

@@ -240,7 +240,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -250,11 +252,7 @@
 					}
 				},
 				"description": "<p>1d4+8. On crit: Prone.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "ZAqWQDdjFoTJZgI2",
 			"img": "icons/weapons/clubs/club-simple-black.webp",

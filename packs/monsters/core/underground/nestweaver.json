@@ -161,7 +161,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -171,11 +173,7 @@
 					}
 				},
 				"description": "<p><strong>Then choose 1</strong></p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "JyzNugiIZQ2of8AX",
 			"img": "icons/svg/item-bag.svg",
@@ -251,7 +249,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "range",
+						"distance": 6
 					},
 					"template": {
 						"length": 1,
@@ -261,11 +261,7 @@
 					}
 				},
 				"description": "<p>(Range 6) 1d8+2. On hit: Restrained</p><p>(escape DC 12, or any slashing/fire damage). </p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "range",
-					"distance": 6
-				}
+				"subtype": "action"
 			},
 			"_id": "j7fwFMyGdcMkc9nc",
 			"img": "icons/creatures/webs/web-clumped-blue.webp",
@@ -333,7 +329,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -343,11 +341,7 @@
 					}
 				},
 				"description": "<p>(Hampered target) 3d8+6 and Poisoned (magical healing ends).</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "CAnnWPITXttRlM6P",
 			"img": "icons/creatures/abilities/fang-tooth-poison-green.webp",

@@ -279,7 +279,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "reach",
+						"distance": 2
 					},
 					"template": {
 						"length": 1,
@@ -289,11 +291,7 @@
 					}
 				},
 				"description": "<p>(Reach 2) 1d6+5.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "reach",
-					"distance": 2
-				}
+				"subtype": "action"
 			},
 			"_id": "pSer5OrAlQQaynxi",
 			"img": "icons/magic/acid/dissolve-bone-white.webp",

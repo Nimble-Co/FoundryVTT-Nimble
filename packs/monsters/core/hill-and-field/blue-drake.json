@@ -231,7 +231,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -241,11 +243,7 @@
 					}
 				},
 				"description": "<p>1d12+5 (ignores metal armor).</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "KGJkhtd6bkomZYzN",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-red.webp",

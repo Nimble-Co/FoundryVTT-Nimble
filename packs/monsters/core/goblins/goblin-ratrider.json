@@ -288,7 +288,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -298,11 +300,7 @@
 					}
 				},
 				"description": "<p>1d6+2. On crit: Prone.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "Wy7ikl5qUSIMLNsK",
 			"img": "icons/weapons/swords/shortsword-simple.webp",

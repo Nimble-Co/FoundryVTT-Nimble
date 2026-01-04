@@ -280,7 +280,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "range",
+						"distance": 8
 					},
 					"template": {
 						"length": 1,
@@ -290,11 +292,7 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d4+2.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "range",
-					"distance": 8
-				}
+				"subtype": "action"
 			},
 			"_id": "NdIsX1LiS4tHYzfo",
 			"img": "icons/environment/creatures/bug-scorpion-silver.webp",
@@ -355,7 +353,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -365,11 +365,7 @@
 					}
 				},
 				"description": "<p>Deal 5d4 damage (doesn't miss). Half as</p><p>much to ALL adjacent creatures.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "UOfb5oxZN2KhFedb",
 			"img": "icons/creatures/invertebrates/bee-yellow.webp",
@@ -417,7 +413,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -427,11 +425,7 @@
 					}
 				},
 				"description": "<p>Restrained! (Escape DC 10)</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "32UcKER1GRaKPLcD",
 			"img": "icons/tools/fishing/net-simple-tan.webp",

@@ -177,7 +177,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -187,11 +189,7 @@
 					}
 				},
 				"description": "<p>1d6 (Follows Minion Rules)</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "YSVWtxhFLeDr3zqY",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

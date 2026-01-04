@@ -231,7 +231,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "range",
+						"distance": 8
 					},
 					"template": {
 						"length": 1,
@@ -241,11 +243,7 @@
 					}
 				},
 				"description": "<p>(Range 8) 1d4+10. On damage: deal 1 Wound.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "range",
-					"distance": 8
-				}
+				"subtype": "action"
 			},
 			"_id": "UEgopPxDF0zhCRak",
 			"img": "icons/magic/unholy/hand-light-pink.webp",

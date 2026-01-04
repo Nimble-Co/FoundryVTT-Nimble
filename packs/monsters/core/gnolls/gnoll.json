@@ -185,7 +185,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -195,11 +197,7 @@
 					}
 				},
 				"description": "<p>1d10, OR</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"effects": [],
 			"folder": null,
@@ -259,7 +257,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "range",
+						"distance": 12
 					},
 					"template": {
 						"length": 1,
@@ -269,11 +269,7 @@
 					}
 				},
 				"description": "<p>(Range 12) 1d10</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "range",
-					"distance": 12
-				}
+				"subtype": "action"
 			},
 			"_id": "5L8Pz3wZfdAVd8DW",
 			"img": "icons/weapons/bows/longbow-leather-green.webp",

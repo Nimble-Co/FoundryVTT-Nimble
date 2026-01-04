@@ -190,7 +190,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -200,11 +202,7 @@
 					}
 				},
 				"description": "<p>1d4+4. On damage: Grappled</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "wgiL9nmnsFME5ufI",
 			"img": "icons/creatures/abilities/mouth-teeth-human.webp",

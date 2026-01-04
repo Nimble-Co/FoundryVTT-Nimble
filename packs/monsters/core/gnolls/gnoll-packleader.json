@@ -209,7 +209,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -219,11 +221,7 @@
 					}
 				},
 				"description": "<p>2 allies can move. Then:</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "vsXCPn8oD3fElmiq",
 			"img": "icons/environment/people/charge.webp",
@@ -285,7 +283,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -295,11 +295,7 @@
 					}
 				},
 				"description": "<p>1d10</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "DuOtsm2fzv3aUd0T",
 			"img": "icons/skills/melee/blade-tip-chipped-blood-red.webp",

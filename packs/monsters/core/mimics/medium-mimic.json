@@ -287,7 +287,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -297,11 +299,7 @@
 					}
 				},
 				"description": "<p>1d8 (escape DC 13), OR</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "GioUoGGdddQJJuC2",
 			"img": "icons/creatures/slimes/slime-movement-dripping-pseudopods-green.webp",
@@ -363,7 +361,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -373,11 +373,7 @@
 					}
 				},
 				"description": "<p>(a Grappled creature) 2d20.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "MhJ1Y2gZ5lGjhmXi",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

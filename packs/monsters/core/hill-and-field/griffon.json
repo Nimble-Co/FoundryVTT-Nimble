@@ -192,7 +192,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -202,11 +204,7 @@
 					}
 				},
 				"description": "<p>2d6+10, on hit: Grappled (escape DC 14), OR</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"effects": [],
 			"folder": null,
@@ -266,7 +264,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -276,11 +276,7 @@
 					}
 				},
 				"description": "<p>(if grappling) Fly upward 12 and release (6d6 fall damage).</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "zbemqzkdyuTuPIBf",
 			"img": "icons/commodities/biological/wing-bird-white.webp",

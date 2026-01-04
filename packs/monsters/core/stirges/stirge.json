@@ -183,7 +183,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -193,11 +195,7 @@
 					}
 				},
 				"description": "<p>1d4+2. On hit: Latched On.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "l66Nk0l8QuZL4Oi1",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",

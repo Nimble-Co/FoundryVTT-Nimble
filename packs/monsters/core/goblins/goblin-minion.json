@@ -225,7 +225,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -235,11 +237,7 @@
 					}
 				},
 				"description": "<p>1d6 (follows minion rules).</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "8Zvy33f0c5AquKMu",
 			"img": "icons/weapons/swords/shortsword-guard-worn.webp",
