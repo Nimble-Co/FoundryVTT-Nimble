@@ -230,7 +230,7 @@
 <header class="nimble-sheet__header nimble-sheet__header--character-creator">
 	<label class="nimble-field nimble-field--full-width" data-field-variant="stacked">
 		<span class="nimble-heading nimble-field__label" data-heading-variant="field">
-			Character Name
+			{game.i18n.localize(CONFIG.NIMBLE.characterCreation.characterName)}
 		</span>
 
 		<input
@@ -238,7 +238,7 @@
 			spellcheck="false"
 			type="text"
 			bind:value={name}
-			placeholder="New Character"
+			placeholder={game.i18n.localize(CONFIG.NIMBLE.characterCreation.newCharacterPlaceholder)}
 		/>
 	</label>
 </header>
@@ -330,12 +330,12 @@
 		class="nimble-button"
 		data-button-variant="basic"
 		data-tooltip={stage !== CHARACTER_CREATION_STAGES['SUBMIT']
-			? 'Some character creation steps have not been completed.'
+			? game.i18n.localize(CONFIG.NIMBLE.characterCreation.incompleteStepsWarning)
 			: null}
 		data-tooltip-direction="UP"
 		onclick={submit}
 	>
-		Create Character
+		{game.i18n.localize(CONFIG.NIMBLE.characterCreation.createCharacter)}
 
 		{#if stage !== CHARACTER_CREATION_STAGES['SUBMIT']}
 			<i class="nimble-button__icon fa-solid fa-triangle-exclamation" data-icon-style="warning"></i>
