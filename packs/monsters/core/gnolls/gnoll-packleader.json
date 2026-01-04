@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Advantage against Bloodied creatures.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Advantage against Bloodied creatures.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -225,7 +221,7 @@
 				"description": "<p>2 allies can move. Then:</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},
@@ -301,7 +297,7 @@
 				"description": "<p>1d10</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

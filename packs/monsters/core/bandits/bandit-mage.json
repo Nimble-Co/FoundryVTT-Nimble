@@ -180,11 +180,7 @@
 					}
 				},
 				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
-				"subtype": "feature",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"subtype": "feature"
 			},
 			"effects": [],
 			"folder": null,
@@ -238,11 +234,7 @@
 					}
 				},
 				"description": "<p>When damaged, teleport up to 4 spaces.</p>",
-				"subtype": "feature",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"subtype": "feature"
 			},
 			"effects": [],
 			"folder": null,

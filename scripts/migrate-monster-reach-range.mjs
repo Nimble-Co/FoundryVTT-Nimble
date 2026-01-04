@@ -60,22 +60,31 @@ function migrateMonsterFile(filePath) {
 		for (const item of monster.items) {
 			if (item.type !== 'monsterFeature') continue;
 
+			const isAction = item.system?.subtype === 'action';
+
+			// Only add properties to action subtypes
+			if (!isAction) {
+				// Remove properties if they were incorrectly added to non-actions
+				if (item.system.properties) {
+					delete item.system.properties;
+					modified = true;
+					console.log(`  ${item.name}: removed properties (not an action)`);
+				}
+				continue;
+			}
+
 			const description = item.system?.description || '';
 			const parsed = parseReachRange(description);
-			const isAction = item.system?.subtype === 'action';
 
 			// Determine the selected type:
 			// - If reach/range found in description, use that
-			// - If it's an action without reach/range, default to melee
-			// - Otherwise (passive features), leave empty
-			let selected = '';
+			// - Otherwise default to melee
+			let selected = 'melee';
 			let distance = 1;
 
 			if (parsed) {
 				selected = parsed.selected;
 				distance = parsed.value;
-			} else if (isAction) {
-				selected = 'melee';
 			}
 
 			// Add or update properties field
@@ -83,14 +92,12 @@ function migrateMonsterFile(filePath) {
 				!item.system.properties ||
 				item.system.properties.range !== undefined ||
 				item.system.properties.reach !== undefined ||
-				(isAction && item.system.properties.selected === '');
+				item.system.properties.selected === '';
 
 			if (needsUpdate) {
 				item.system.properties = { selected, distance };
 				modified = true;
-				if (selected) {
-					console.log(`  ${item.name}: ${selected}${distance > 1 ? ' ' + distance : ''}`);
-				}
+				console.log(`  ${item.name}: ${selected}${distance > 1 ? ' ' + distance : ''}`);
 			}
 		}
 	}

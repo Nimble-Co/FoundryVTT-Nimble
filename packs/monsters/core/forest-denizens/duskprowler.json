@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Attacks against the Duskprowler have Disadvantage 2. Damage suppresses this effect until the end of the next hero's turn.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Attacks against the Duskprowler have Disadvantage 2. Damage suppresses this effect until the end of the next hero's turn.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -247,7 +243,7 @@
 				"description": "<p>2d8+2.</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

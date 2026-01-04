@@ -173,7 +173,7 @@
 				"description": "<p><strong>Then choose 1</strong></p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},
@@ -345,7 +345,7 @@
 				"description": "<p>(Hampered target) 3d8+6 and Poisoned (magical healing ends).</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

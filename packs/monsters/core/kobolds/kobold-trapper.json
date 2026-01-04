@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -225,11 +221,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When an enemy moves adjacent to you or an ally, they trigger one of your traps! (1/encounter each).</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>When an enemy moves adjacent to you or an ally, they trigger one of your traps! (1/encounter each).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -375,7 +367,7 @@
 				"description": "<p>Deal 5d4 damage (doesn't miss). Half as</p><p>much to ALL adjacent creatures.</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},
@@ -437,7 +429,7 @@
 				"description": "<p>Restrained! (Escape DC 10)</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

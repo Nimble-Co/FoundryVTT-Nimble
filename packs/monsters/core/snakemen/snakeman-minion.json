@@ -198,7 +198,7 @@
 				"description": "<p>1d6 melee/ranged (follows minion rules).</p><p></p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},
@@ -250,11 +250,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On melee crit: Grapple (escape DC 10).</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>On melee crit: Grapple (escape DC 10).</p>"
 			},
 			"effects": [],
 			"folder": null,

@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>The first time this dies, reset to 1 HP instead (excluding minions).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -225,7 +221,7 @@
 				"description": "<p> Summon 10 scarab minions (d6) within 6 spaces. Then:</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},
@@ -307,7 +303,7 @@
 				"description": "<p>1d4+20. On damage: Dazed.</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},
@@ -360,11 +356,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When crit: DC 20 INT save, or suffer 1 Wound.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>When crit: DC 20 INT save, or suffer 1 Wound.</p>"
 			},
 			"effects": [],
 			"folder": null,

@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\">When an ally within 2 spaces dies, attack once for free.</span></p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p><span style=\"font-family: &#x27;Roboto Condensed&#x27;, sans-serif\">When an ally within 2 spaces dies, attack once for free.</span></p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -247,7 +243,7 @@
 				"description": "<p>1d4+2</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

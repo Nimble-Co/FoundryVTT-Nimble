@@ -194,11 +194,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On Death: 2d6 poison damage to enemies within Reach 2.</p>",
-				"properties": {
-					"selected": "reach",
-					"distance": 2
-				}
+				"description": "<p>On Death: 2d6 poison damage to enemies within Reach 2.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -269,7 +265,7 @@
 				"description": "<p>2d6.</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

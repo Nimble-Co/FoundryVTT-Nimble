@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>When an ally within 2 spaces dies, attack once for free.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -224,11 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Adjacent allies gain Medium Armor.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Adjacent allies gain Medium Armor.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -299,7 +291,7 @@
 				"description": "<p> 1d4+2</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

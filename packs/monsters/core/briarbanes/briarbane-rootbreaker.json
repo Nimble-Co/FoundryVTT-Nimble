@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -247,7 +243,7 @@
 				"description": "<p>3d6+6. On crit: knockback 2.</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

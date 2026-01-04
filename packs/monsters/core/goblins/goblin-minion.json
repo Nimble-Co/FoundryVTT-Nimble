@@ -166,11 +166,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -241,7 +237,7 @@
 				"description": "<p>1d6 (follows minion rules).</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

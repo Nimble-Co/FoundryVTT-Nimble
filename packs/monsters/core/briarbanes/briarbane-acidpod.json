@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Damage degrades Armor 1 step: Heavy » Medium » None.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -246,11 +242,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On death: 4d6 acid damage to ALL adjacent creatures.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>On death: 4d6 acid damage to ALL adjacent creatures.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -328,7 +320,7 @@
 				"description": "<p>DC 12 DEX save or Grappled.</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

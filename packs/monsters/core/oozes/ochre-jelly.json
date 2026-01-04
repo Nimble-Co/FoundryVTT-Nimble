@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Contact with an ooze inflicts the Digested condition: they deal an additional X damage for each time the target has been Digested this encounter.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -224,11 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>When crit or dealt any slashing damage: summon X ooze minions (size: d6); their attacks inflict Digested.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>When crit or dealt any slashing damage: summon X ooze minions (size: d6); their attacks inflict Digested.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -299,7 +291,7 @@
 				"description": "<p>1d6+3.</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

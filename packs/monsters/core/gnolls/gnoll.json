@@ -197,7 +197,7 @@
 				"description": "<p>1d10, OR</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},
@@ -323,11 +323,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Advantage against Bloodied creatures. </p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Advantage against Bloodied creatures. </p>"
 			},
 			"effects": [],
 			"folder": null,

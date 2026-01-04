@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Creatures Dazed by the Basilisk remain so for 10 minutes. Dazed 3 times = Petrified.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Creatures Dazed by the Basilisk remain so for 10 minutes. Dazed 3 times = Petrified.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -240,7 +236,7 @@
 				"description": "<p>Daze 1 creature within sight, then</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},
@@ -315,7 +311,7 @@
 				"description": "<p>1d8+10, advantage vs Dazed targets.</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

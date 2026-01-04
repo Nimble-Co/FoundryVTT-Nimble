@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Does not die at 0 HP. Only fire, radiant, or a crit while at 0 HP can kill it.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Does not die at 0 HP. Only fire, radiant, or a crit while at 0 HP can kill it.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -225,7 +221,7 @@
 				"description": "",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},
@@ -384,7 +380,7 @@
 				"description": "<p>(A Prone creature) 1d4+20.</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

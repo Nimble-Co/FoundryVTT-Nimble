@@ -195,7 +195,7 @@
 				"description": "<p>1d4+2. On hit: Latched On.</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},
@@ -248,11 +248,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Attacks against stirges are made with disadvantage.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Attacks against stirges are made with disadvantage.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -300,11 +296,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>You move where your target moves until either dies. Your attacks can't miss or be defended/Interposed against. Attacks that miss you damage your target instead.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>You move where your target moves until either dies. Your attacks can't miss or be defended/Interposed against. Attacks that miss you damage your target instead.</p>"
 			},
 			"effects": [],
 			"folder": null,

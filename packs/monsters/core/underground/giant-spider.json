@@ -292,7 +292,7 @@
 				"description": "<p>(Hampered target) 2d8+4, Poisoned (magical</p><p>healing ends).</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

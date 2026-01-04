@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Treat attacks against you that roll 2 as a miss.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -224,11 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>You are invisible until you attack.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>You are invisible until you attack.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -306,7 +298,7 @@
 				"description": "<p>1d8+2. On damage: Dazed.</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

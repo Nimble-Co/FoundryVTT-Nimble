@@ -216,7 +216,7 @@
 				"description": "<p>1d8+2. On hit: Grappled (escape DC 13), Silenced until target escapes. </p><p>(Silenced. Cannot cast spells or use other abilities that require speaking (e.g. Commander's Orders).)</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

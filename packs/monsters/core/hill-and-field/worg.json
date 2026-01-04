@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Always crits when attacking a Grappled creature.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Always crits when attacking a Grappled creature.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -254,7 +250,7 @@
 				"description": "<p>1d6+2. On hit: Grappled (escape DC 10).</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

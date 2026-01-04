@@ -278,7 +278,7 @@
 				"description": "<p>Fly upward 20 spaces, deal 20 damage to Grappled creatures, then release (10d6 fall damage).</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

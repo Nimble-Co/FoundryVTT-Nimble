@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Whenever an attack misses you, deal 1 psychic damage in return.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -224,11 +220,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>If you move at least 4 spaces in a straight line, attack with advantage once.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>If you move at least 4 spaces in a straight line, attack with advantage once.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -308,7 +300,7 @@
 				"description": "<p>1d6+2. On crit: Prone.</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

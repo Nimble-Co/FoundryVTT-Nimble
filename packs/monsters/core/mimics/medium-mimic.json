@@ -172,11 +172,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Mimics always start first and heroes roll Initiative with disadvantage.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Mimics always start first and heroes roll Initiative with disadvantage.</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -225,11 +221,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Mimic hits also Grapple and can Grapple any number of creatures. When crit: release 1 creature (attacker's choice).</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>Mimic hits also Grapple and can Grapple any number of creatures. When crit: release 1 creature (attacker's choice).</p>"
 			},
 			"effects": [],
 			"folder": null,
@@ -307,7 +299,7 @@
 				"description": "<p>1d8 (escape DC 13), OR</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},
@@ -383,7 +375,7 @@
 				"description": "<p>(a Grappled creature) 2d20.</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

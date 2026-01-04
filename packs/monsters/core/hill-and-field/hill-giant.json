@@ -248,11 +248,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>On hit: Knockback Primary Die spaces.</p>",
-				"properties": {
-					"selected": "",
-					"distance": 1
-				}
+				"description": "<p>On hit: Knockback Primary Die spaces.</p>"
 			},
 			"effects": [],
 			"folder": null,

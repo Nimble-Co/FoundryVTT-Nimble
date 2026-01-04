@@ -204,7 +204,7 @@
 				"description": "<p>2d6+10, on hit: Grappled (escape DC 14), OR</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},
@@ -278,7 +278,7 @@
 				"description": "<p>(if grappling) Fly upward 12 and release (6d6 fall damage).</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},

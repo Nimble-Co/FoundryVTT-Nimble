@@ -195,7 +195,7 @@
 				"description": "<p>+4 speed, gain Medium armor this round. 4d4+10, OR</p>",
 				"subtype": "action",
 				"properties": {
-					"selected": "",
+					"selected": "melee",
 					"distance": 1
 				}
 			},
