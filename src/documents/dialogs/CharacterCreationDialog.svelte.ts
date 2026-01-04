@@ -126,7 +126,8 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		// Handle starting equipment choice
 		if (startingEquipmentChoice === 'equipment') {
 			// Collect grantItem rules from class, background, and ancestry to get starting equipment
-			const equipmentSources: Item.CreateData[] = [];
+			// Use a Map to track items by UUID and consolidate duplicates
+			const equipmentByUuid = new Map<string, { source: Item.CreateData; count: number }>();
 			const originDocuments = [classDocument, backgroundDocument, ancestryDocument].filter(
 				Boolean,
 			) as Array<NimbleClassItem | NimbleBackgroundItem | NimbleAncestryItem>;
@@ -156,6 +157,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 									// First try to get by ID
 									let equipmentItem = await pack.getDocument(documentId);
+									let resolvedUuid = rule.uuid;
 
 									// If not found by ID, the compendium IDs might have been regenerated
 									// Try to find by name from the rule label (e.g., "Starting Gear - Battle Axe" -> "Battleaxe")
@@ -176,15 +178,26 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 												searchName.includes(entryNameNormalized)
 											) {
 												equipmentItem = await pack.getDocument(id);
+												// Update resolved UUID to the found item
+												resolvedUuid = `Compendium.${packKey}.Item.${id}`;
 												break;
 											}
 										}
 									}
 
 									if (equipmentItem && equipmentItem instanceof Item) {
-										const equipmentSource = equipmentItem.toObject();
-										equipmentSource._stats.compendiumSource = rule.uuid;
-										equipmentSources.push(equipmentSource as object as Item.CreateData);
+										// Check if we already have this item, if so increment count
+										const existing = equipmentByUuid.get(resolvedUuid);
+										if (existing) {
+											existing.count += 1;
+										} else {
+											const equipmentSource = equipmentItem.toObject();
+											equipmentSource._stats.compendiumSource = rule.uuid;
+											equipmentByUuid.set(resolvedUuid, {
+												source: equipmentSource as object as Item.CreateData,
+												count: 1,
+											});
+										}
 									} else {
 										console.warn(
 											`[CharacterCreation] Equipment item not found for rule: ${rule.label}`,
@@ -198,9 +211,17 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 								const equipmentItem = await fromUuid(rule.uuid as `Item.${string}`);
 
 								if (equipmentItem && equipmentItem instanceof Item) {
-									const equipmentSource = equipmentItem.toObject();
-									equipmentSource._stats.compendiumSource = rule.uuid;
-									equipmentSources.push(equipmentSource as object as Item.CreateData);
+									const existing = equipmentByUuid.get(rule.uuid);
+									if (existing) {
+										existing.count += 1;
+									} else {
+										const equipmentSource = equipmentItem.toObject();
+										equipmentSource._stats.compendiumSource = rule.uuid;
+										equipmentByUuid.set(rule.uuid, {
+											source: equipmentSource as object as Item.CreateData,
+											count: 1,
+										});
+									}
 								}
 							}
 						} catch (e) {
@@ -211,6 +232,19 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 						}
 					}
 				}
+			}
+
+			// Convert the map to an array, setting quantity for items with count > 1
+			const equipmentSources: Item.CreateData[] = [];
+			for (const { source, count } of equipmentByUuid.values()) {
+				if (count > 1) {
+					// Set the quantity on the item's system data
+					const sourceWithSystem = source as Item.CreateData & { system?: { quantity?: number } };
+					if (sourceWithSystem.system) {
+						sourceWithSystem.system.quantity = count;
+					}
+				}
+				equipmentSources.push(source);
 			}
 
 			if (equipmentSources.length > 0) {
