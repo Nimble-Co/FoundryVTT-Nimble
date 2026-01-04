@@ -13,8 +13,8 @@
 
 	// Reach/Range support for MonsterFeature items
 	let isMonsterFeature = $derived(document.type === 'monsterFeature');
-	let selectedAttackType = $derived(document.reactive.system.properties?.selected || '');
-	let distance = $derived(document.reactive.system.properties?.distance ?? 1);
+	let selectedAttackType = $derived(activationData.targets?.attackType || '');
+	let distance = $derived(activationData.targets?.distance ?? 1);
 
 	const attackTypeOptions = [
 		{ value: '', label: game.i18n.localize('NIMBLE.itemConfig.attackTypes.none') },
@@ -102,7 +102,7 @@
 					value={selectedAttackType}
 					onchange={({ target }) =>
 						document.update({
-							'system.properties.selected': target?.value,
+							'system.activation.targets.attackType': target?.value,
 						})}
 				>
 					{#each attackTypeOptions as option}
@@ -125,7 +125,7 @@
 						value={distance}
 						onchange={({ target }) =>
 							document.update({
-								'system.properties.distance': target?.value,
+								'system.activation.targets.distance': target?.value,
 							})}
 					/>
 				</label>

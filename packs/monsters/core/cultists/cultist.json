@@ -238,7 +238,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -248,11 +250,7 @@
 					}
 				},
 				"description": "<p>If undamaged, attack self for 2 damage. Adjacent enemies are inflicted with Despair. OR</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "DvozhthCCeIOv4gI",
 			"img": "icons/skills/melee/blade-tip-chipped-blood-red.webp",
@@ -314,7 +312,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -324,11 +324,7 @@
 					}
 				},
 				"description": "<p>1d6+6. OR</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "gByFUCm3ALqG4Rmh",
 			"img": "icons/weapons/daggers/dagger-jagged-handguard-black.webp",
@@ -390,7 +386,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "range",
+						"distance": 12
 					},
 					"template": {
 						"length": 1,
@@ -400,11 +398,7 @@
 					}
 				},
 				"description": "<p>(Range 12, Bloodied creature) 3d6+6.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "range",
-					"distance": 12
-				}
+				"subtype": "action"
 			},
 			"_id": "eJT4i0U2zvqJ3tij",
 			"img": "icons/skills/wounds/blood-drip-droplet-red.webp",

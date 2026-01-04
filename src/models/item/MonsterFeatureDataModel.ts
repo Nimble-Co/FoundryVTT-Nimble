@@ -12,22 +12,6 @@ const MONSTER_FEATURE_SUBTYPES = {
 
 const schema = () => ({
 	description: new fields.HTMLField({ required: true, initial: '', nullable: false }),
-	properties: new fields.SchemaField({
-		selected: new fields.StringField({
-			required: true,
-			nullable: false,
-			blank: true,
-			initial: '',
-			choices: ['', 'melee', 'reach', 'range'],
-		}),
-		distance: new fields.NumberField({
-			required: true,
-			nullable: false,
-			initial: 1,
-			min: 1,
-			integer: true,
-		}),
-	}),
 	subtype: new fields.StringField({
 		required: true,
 		initial: 'feature',

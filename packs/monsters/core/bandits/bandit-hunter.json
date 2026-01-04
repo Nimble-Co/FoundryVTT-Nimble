@@ -231,7 +231,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "range",
+						"distance": 12
 					},
 					"template": {
 						"length": 1,
@@ -241,11 +243,7 @@
 					}
 				},
 				"description": "<p>2d8+2 (Range 12)</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "range",
-					"distance": 12
-				}
+				"subtype": "action"
 			},
 			"_id": "y4nMPW04rliUSw52",
 			"img": "icons/weapons/bows/longbow-leather-green.webp",

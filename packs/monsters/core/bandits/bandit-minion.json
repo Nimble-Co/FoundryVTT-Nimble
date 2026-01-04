@@ -225,7 +225,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -235,11 +237,7 @@
 					}
 				},
 				"description": "<p>1d8 (follows minion rules).</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "FGOBvn3AHWMX09L2",
 			"img": "icons/weapons/swords/sword-guard.webp",

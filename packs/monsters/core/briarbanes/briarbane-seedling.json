@@ -231,7 +231,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "range",
+						"distance": 6
 					},
 					"template": {
 						"length": 1,
@@ -241,11 +243,7 @@
 					}
 				},
 				"description": "<p>(Range 6) 2d6+2</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "range",
-					"distance": 6
-				}
+				"subtype": "action"
 			},
 			"_id": "sPTJe9LmX6pLFYIY",
 			"img": "icons/consumables/nuts/nut-spiked-shell.webp",

@@ -315,7 +315,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "range",
+						"distance": 12
 					},
 					"template": {
 						"length": 1,
@@ -325,11 +327,7 @@
 					}
 				},
 				"description": "<p>(Range 12) 3d8. Also strikes the next closest creature. On miss: damage self instead.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "range",
-					"distance": 12
-				}
+				"subtype": "action"
 			},
 			"_id": "FryCaexPd3KabiZt",
 			"img": "icons/magic/lightning/bolt-blue.webp",

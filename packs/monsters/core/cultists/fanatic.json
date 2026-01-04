@@ -286,7 +286,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -296,11 +298,7 @@
 					}
 				},
 				"description": "<p>If undamaged, attack self for 2 damage. Adjacent enemies are inflicted with Despair. OR</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "ft187LYF1CK3SovV",
 			"img": "icons/skills/melee/blade-tip-chipped-blood-red.webp",
@@ -382,7 +380,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -392,11 +392,7 @@
 					}
 				},
 				"description": "<p>Contested STR check or Grappled (reroll to escape, or any radiant damage); if successful, deal 3d6+6 psychic damage (cannot be Defended or Interposed against).</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "hiGWXOMmLSUL84RY",
 			"img": "icons/magic/control/hypnosis-mesmerism-swirl.webp",

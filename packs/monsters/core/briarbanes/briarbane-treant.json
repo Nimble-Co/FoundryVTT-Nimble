@@ -161,7 +161,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -171,11 +173,7 @@
 					}
 				},
 				"description": "",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "tRkkNhPErjlpdu9s",
 			"img": "icons/svg/item-bag.svg",
@@ -298,7 +296,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "reach",
+						"distance": 3
 					},
 					"template": {
 						"length": 1,
@@ -308,11 +308,7 @@
 					}
 				},
 				"description": "<p>(Reach 3) 2d6+10. On damage: Prone.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "reach",
-					"distance": 3
-				}
+				"subtype": "action"
 			},
 			"_id": "GHBtSPT1dK9s7nQ4",
 			"img": "icons/magic/nature/root-vine-wood-blue.webp",
@@ -374,7 +370,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -384,11 +382,7 @@
 					}
 				},
 				"description": "<p>(Hampered target) 2d6+20.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "xwKspcaO6xxT5nyc",
 			"img": "icons/magic/nature/root-vine-hand-strike.webp",

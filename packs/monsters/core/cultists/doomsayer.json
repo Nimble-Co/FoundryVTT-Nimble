@@ -257,7 +257,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -267,11 +269,7 @@
 					}
 				},
 				"description": "<p>(Concentration) Reduce all damage done to allies who can hear you to 1. OR</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "9lTLZiZDGpSR0UoY",
 			"img": "icons/magic/unholy/silhouette-light-fire-blue.webp",
@@ -333,7 +331,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -343,11 +343,7 @@
 					}
 				},
 				"description": "<p>2d6 psychic damage to all enemies who can hear you.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "rwfl1Hr5919crz04",
 			"img": "icons/magic/unholy/strike-body-life-soul-green.webp",

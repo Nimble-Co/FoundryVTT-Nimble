@@ -224,7 +224,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -234,11 +236,7 @@
 					}
 				},
 				"description": "<p>Daze 1 creature within sight, then</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "TWonhyB7gWas4zsh",
 			"img": "icons/magic/perception/eye-ringed-glow-angry-small-teal.webp",
@@ -299,7 +297,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "melee",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -309,11 +309,7 @@
 					}
 				},
 				"description": "<p>1d8+10, advantage vs Dazed targets.</p>",
-				"subtype": "action",
-				"properties": {
-					"selected": "melee",
-					"distance": 1
-				}
+				"subtype": "action"
 			},
 			"_id": "mzXBeSIiHeaAVFb1",
 			"img": "icons/creatures/abilities/fang-tooth-venomous.webp",

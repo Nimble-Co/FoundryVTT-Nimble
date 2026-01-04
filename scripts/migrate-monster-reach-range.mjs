@@ -7,7 +7,7 @@
 import { readFileSync, writeFileSync, readdirSync, statSync } from 'fs';
 import { join, relative } from 'path';
 
-const MONSTERS_DIR = 'packs/monsters';
+const MONSTERS_DIRS = ['packs/monsters', 'packs/legendaryMonsters'];
 
 // Regex patterns to extract reach/range from descriptions
 const REACH_PATTERN = /\(?\s*Reach\s+(\d+)\s*\)?/i;
@@ -62,13 +62,20 @@ function migrateMonsterFile(filePath) {
 
 			const isAction = item.system?.subtype === 'action';
 
-			// Only add properties to action subtypes
+			// Remove old properties field if it exists (migrating to new location)
+			if (item.system.properties) {
+				delete item.system.properties;
+				modified = true;
+			}
+
+			// Only add attackType/distance to action subtypes
 			if (!isAction) {
-				// Remove properties if they were incorrectly added to non-actions
-				if (item.system.properties) {
-					delete item.system.properties;
+				// Ensure activation.targets exists but without attackType for non-actions
+				if (item.system.activation?.targets?.attackType) {
+					delete item.system.activation.targets.attackType;
+					delete item.system.activation.targets.distance;
 					modified = true;
-					console.log(`  ${item.name}: removed properties (not an action)`);
+					console.log(`  ${item.name}: removed attackType (not an action)`);
 				}
 				continue;
 			}
@@ -76,28 +83,34 @@ function migrateMonsterFile(filePath) {
 			const description = item.system?.description || '';
 			const parsed = parseReachRange(description);
 
-			// Determine the selected type:
+			// Determine the attack type:
 			// - If reach/range found in description, use that
 			// - Otherwise default to melee
-			let selected = 'melee';
+			let attackType = 'melee';
 			let distance = 1;
 
 			if (parsed) {
-				selected = parsed.selected;
+				attackType = parsed.selected;
 				distance = parsed.value;
 			}
 
-			// Add or update properties field
-			const needsUpdate =
-				!item.system.properties ||
-				item.system.properties.range !== undefined ||
-				item.system.properties.reach !== undefined ||
-				item.system.properties.selected === '';
+			// Ensure activation.targets exists
+			if (!item.system.activation) {
+				item.system.activation = {};
+			}
+			if (!item.system.activation.targets) {
+				item.system.activation.targets = {};
+			}
+
+			// Add or update attackType and distance in activation.targets
+			const targets = item.system.activation.targets;
+			const needsUpdate = targets.attackType !== attackType || targets.distance !== distance;
 
 			if (needsUpdate) {
-				item.system.properties = { selected, distance };
+				targets.attackType = attackType;
+				targets.distance = distance;
 				modified = true;
-				console.log(`  ${item.name}: ${selected}${distance > 1 ? ' ' + distance : ''}`);
+				console.log(`  ${item.name}: ${attackType}${distance > 1 ? ' ' + distance : ''}`);
 			}
 		}
 	}
@@ -113,19 +126,22 @@ function migrateMonsterFile(filePath) {
 function main() {
 	console.log('Migrating monster reach/range properties...\n');
 
-	const jsonFiles = getAllJsonFiles(MONSTERS_DIR);
 	let modifiedCount = 0;
 
-	for (const filePath of jsonFiles) {
-		const relativePath = relative(process.cwd(), filePath);
-		console.log(`Processing: ${relativePath}`);
+	for (const dir of MONSTERS_DIRS) {
+		const jsonFiles = getAllJsonFiles(dir);
 
-		try {
-			if (migrateMonsterFile(filePath)) {
-				modifiedCount++;
+		for (const filePath of jsonFiles) {
+			const relativePath = relative(process.cwd(), filePath);
+			console.log(`Processing: ${relativePath}`);
+
+			try {
+				if (migrateMonsterFile(filePath)) {
+					modifiedCount++;
+				}
+			} catch (error) {
+				console.error(`  Error: ${error.message}`);
 			}
-		} catch (error) {
-			console.error(`  Error: ${error.message}`);
 		}
 	}
 

@@ -61,12 +61,12 @@
 	}
 
 	function getReachRangeLabel(item) {
-		const props = item.reactive?.system?.properties;
-		if (!props?.selected) return null;
+		const targets = item.reactive?.system?.activation?.targets;
+		if (!targets?.attackType) return null;
 
-		if (props.selected === 'melee') return game.i18n.localize('NIMBLE.npcSheet.melee');
-		const key = props.selected === 'reach' ? 'NIMBLE.npcSheet.reach' : 'NIMBLE.npcSheet.range';
-		return game.i18n.format(key, { distance: props.distance });
+		if (targets.attackType === 'melee') return game.i18n.localize('NIMBLE.npcSheet.melee');
+		const key = targets.attackType === 'reach' ? 'NIMBLE.npcSheet.reach' : 'NIMBLE.npcSheet.range';
+		return game.i18n.format(key, { distance: targets.distance });
 	}
 
 	function isHeaderItem(item) {
