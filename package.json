@@ -19,7 +19,7 @@
 		"check:svelte": "svelte-check --tsconfig ./tsconfig.json",
 		"madge-test": "madge --circular ./src/",
 		"type-check": "tsc --noEmit",
-		"check": "npm run format && npm run lint && npm run madge-test && npm run type-check",
+		"check": "npm run format && npm run lint && npm run madge-test && npm run type-check && npm run test",
 		"spell-check": "npx cspell -c ./cspell.json lint . --words-only | sort -u",
 		"test": "vitest run",
 		"test:watch": "vitest",

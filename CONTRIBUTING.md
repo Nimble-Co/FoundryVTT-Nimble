@@ -41,7 +41,7 @@
 - **`npm run lint`** - Lint code with Biome
 - **`npm run lint-fix`** - Auto-fix linting issues
 - **`npm run type-check`** - Run TypeScript type checking
-- **`npm run check`** - Run all checks (format, lint, circular dependencies, type-check)
+- **`npm run check`** - Run all checks (format, lint, circular dependencies, type-check, tests)
 
 ## 📁 Project Structure
 
@@ -142,7 +142,7 @@ The system integrates deeply with FoundryVTT through:
 
 - Use TypeScript for all new code
 - Follow the existing code style and patterns
-- Run `npm run check` before committing (formats, lints, checks for circular dependencies, and type-checks)
+- Run `npm run check` before committing (formats, lints, checks for circular dependencies, type-checks, and runs tests)
 - Test your changes in FoundryVTT
 - Update documentation as needed
 
