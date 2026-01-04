@@ -17,10 +17,18 @@ export default class IdBuilder {
 
 		this.mappedIds = 0;
 		this.generatedIds = 0;
+		this.updatedReferences = 0;
+
+		// Track old → new ID mappings for updating references
+		this.idMigrations = new Map();
 	}
 
 	get summary() {
-		return `Generated ${this.generatedIds} ids and fixed ${this.mappedIds} ids.`;
+		let msg = `Generated ${this.generatedIds} ids and fixed ${this.mappedIds} ids.`;
+		if (this.updatedReferences > 0) {
+			msg += ` Updated ${this.updatedReferences} UUID references.`;
+		}
+		return msg;
 	}
 
 	loadIds() {
@@ -65,9 +73,19 @@ export default class IdBuilder {
 					if (existingId) {
 						id = existingId;
 						this.mappedIds += 1;
+
+						// Track the ID migration if original ID exists and differs
+						if (originalId && originalId !== existingId) {
+							this.idMigrations.set(originalId, existingId);
+						}
 					} else {
 						id = this.generateId(docType);
 						this.generatedIds += 1;
+
+						// Track the ID migration if original ID exists
+						if (originalId) {
+							this.idMigrations.set(originalId, id);
+						}
 
 						// Update save data
 						setProperty(savedIdData, idPath, id);
@@ -110,6 +128,12 @@ export default class IdBuilder {
 				encoding: 'utf-8',
 			});
 		}
+
+		// Update UUID references if any IDs changed
+		if (this.idMigrations.size > 0) {
+			console.log(`[INFO] - Migrating ${this.idMigrations.size} ID references...`);
+			this.updateUuidReferences(dataPath);
+		}
 	}
 
 	/**
@@ -121,6 +145,46 @@ export default class IdBuilder {
 		let id = IdBuilder.randomId();
 		while (this.ids[type]?.has(id)) id = IdBuilder.randomId();
 		return id;
+	}
+
+	/**
+	 * Scan all JSON files and update UUID references when IDs have changed
+	 * @param {string} dataPath - Path to the packs directory
+	 */
+	updateUuidReferences(dataPath) {
+		const fileNames = globSync(`${dataPath}/**/*.json`);
+
+		// UUID pattern: Compendium.nimble.nimble-{pack}.{DocType}.{id}
+		const uuidPattern =
+			/Compendium\.nimble\.nimble-[^.]+\.(Item|Actor|JournalEntry|RollTable)\.([A-Za-z0-9]{16})/g;
+
+		for (const file of fileNames) {
+			// Skip ids.json
+			if (file.endsWith('ids.json')) continue;
+
+			let content;
+			try {
+				content = fs.readFileSync(file, { encoding: 'utf-8' });
+			} catch (err) {
+				continue;
+			}
+
+			let modified = false;
+			const updatedContent = content.replace(uuidPattern, (match, docType, id) => {
+				if (this.idMigrations.has(id)) {
+					const newId = this.idMigrations.get(id);
+					modified = true;
+					this.updatedReferences += 1;
+					return match.replace(id, newId);
+				}
+				return match;
+			});
+
+			if (modified) {
+				fs.writeFileSync(file, updatedContent, { encoding: 'utf-8' });
+				console.log(`[INFO] - Updated UUID references in ${path.basename(file)}`);
+			}
+		}
 	}
 
 	/**

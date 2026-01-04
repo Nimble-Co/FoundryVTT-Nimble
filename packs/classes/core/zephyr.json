@@ -18,6 +18,18 @@
 				"allowDuplicate": true,
 				"inMemoryOnly": false,
 				"uuid": "Compendium.nimble.nimble-items.Item.eqFoSxHnz5UxtHKd"
+			},
+			{
+				"type": "grantItem",
+				"disabled": false,
+				"id": "TravelRobesSandals",
+				"identifier": "",
+				"label": "Starting Gear - Traveling Robes & Sandals",
+				"predicate": {},
+				"priority": 1,
+				"allowDuplicate": true,
+				"inMemoryOnly": false,
+				"uuid": "Compendium.nimble.nimble-items.Item.3C6CwgrjVrWvNMhk"
 			}
 		],
 		"armorProficiencies": [],

@@ -10,6 +10,7 @@
 	import BonusLanguageSelection from './components/characterCreator/BonusLanguageSelection.svelte';
 	import ClassSelection from './components/characterCreator/ClassSelection.svelte';
 	import SkillPointAssignment from './components/characterCreator/SkillPointAssignment.svelte';
+	import StartingEquipmentSelection from './components/characterCreator/StartingEquipmentSelection.svelte';
 	import StatArraySelection from './components/characterCreator/StatArraySelection.svelte';
 	import StatAssignment from './components/characterCreator/StatAssignment.svelte';
 
@@ -18,11 +19,12 @@
 		ANCESTRY: '1a',
 		ANCESTRY_SIZE: '1b',
 		BACKGROUND: 2,
-		ARRAY: 3,
-		STATS: 4,
-		SKILLS: 5,
-		LANGUAGES: 6,
-		SUBMIT: 7,
+		STARTING_EQUIPMENT: 3,
+		ARRAY: 4,
+		STATS: 5,
+		SKILLS: 6,
+		LANGUAGES: 7,
+		SUBMIT: 8,
 	};
 
 	function getAbilityBonuses(ancestry, background, characterClass) {
@@ -94,6 +96,7 @@
 		selectedAncestry,
 		selectedAncestrySize,
 		selectedBackground,
+		startingEquipmentChoice,
 		selectedArray,
 		selectedAbilityScores,
 		remainingSkillPoints,
@@ -120,6 +123,8 @@
 		if (backgroundCount && !selectedBackground) {
 			return CHARACTER_CREATION_STAGES.BACKGROUND;
 		}
+
+		if (!startingEquipmentChoice) return CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT;
 
 		if (!selectedArray) return CHARACTER_CREATION_STAGES.ARRAY;
 
@@ -151,6 +156,7 @@
 				characterClass: selectedClass,
 				ancestry: selectedAncestry,
 			},
+			startingEquipmentChoice,
 			abilityScores: Object.entries(selectedAbilityScores).reduce(
 				(assignedScores, [abilityKey, index]) => {
 					assignedScores[`${abilityKey}.baseValue`] = selectedArray?.array?.[index] ?? 0;
@@ -185,6 +191,7 @@
 	let selectedClass = $state('');
 	let selectedAncestry = $state('');
 	let selectedAncestrySize = $state('medium');
+	let startingEquipmentChoice = $state(null);
 
 	let abilityBonuses = $derived(
 		getAbilityBonuses(selectedAncestry, selectedBackground, selectedClass),
@@ -202,6 +209,7 @@
 			selectedAncestry,
 			selectedAncestrySize,
 			selectedBackground,
+			startingEquipmentChoice,
 			selectedArray,
 			selectedAbilityScores,
 			remainingSkillPoints,
@@ -222,7 +230,7 @@
 <header class="nimble-sheet__header nimble-sheet__header--character-creator">
 	<label class="nimble-field nimble-field--full-width" data-field-variant="stacked">
 		<span class="nimble-heading nimble-field__label" data-heading-variant="field">
-			Character Name
+			{game.i18n.localize(CONFIG.NIMBLE.characterCreation.characterName)}
 		</span>
 
 		<input
@@ -230,7 +238,7 @@
 			spellcheck="false"
 			type="text"
 			bind:value={name}
-			placeholder="New Character"
+			placeholder={game.i18n.localize(CONFIG.NIMBLE.characterCreation.newCharacterPlaceholder)}
 		/>
 	</label>
 </header>
@@ -270,6 +278,13 @@
 		/>
 	{/await}
 
+	<StartingEquipmentSelection
+		active={stage === CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT}
+		{selectedClass}
+		{selectedBackground}
+		bind:startingEquipmentChoice
+	/>
+
 	<StatArraySelection
 		active={stage === CHARACTER_CREATION_STAGES.ARRAY}
 		bind:bonusLanguages
@@ -308,19 +323,19 @@
 
 <footer class="nimble-sheet__footer nimble-sheet__footer--character-creator">
 	<div class="nimble-progress-bar nimble-progress-bar--stage-{stageNumber}">
-		<span class="nimble-progress-bar__label"> {stageNumber} / 7 </span>
+		<span class="nimble-progress-bar__label"> {stageNumber} / 8 </span>
 	</div>
 
 	<button
 		class="nimble-button"
 		data-button-variant="basic"
 		data-tooltip={stage !== CHARACTER_CREATION_STAGES['SUBMIT']
-			? 'Some character creation steps have not been completed.'
+			? game.i18n.localize(CONFIG.NIMBLE.characterCreation.incompleteStepsWarning)
 			: null}
 		data-tooltip-direction="UP"
 		onclick={submit}
 	>
-		Create Character
+		{game.i18n.localize(CONFIG.NIMBLE.characterCreation.createCharacter)}
 
 		{#if stage !== CHARACTER_CREATION_STAGES['SUBMIT']}
 			<i class="nimble-button__icon fa-solid fa-triangle-exclamation" data-icon-style="warning"></i>
@@ -345,7 +360,7 @@
 
 	.nimble-progress-bar {
 		display: grid;
-		grid-template-columns: repeat(7, 1fr);
+		grid-template-columns: repeat(8, 1fr);
 		position: relative;
 		overflow: hidden;
 		flex-grow: 1;
@@ -365,7 +380,7 @@
 			width: 0;
 		}
 
-		@for $i from 1 through 7 {
+		@for $i from 1 through 8 {
 			&--stage-#{$i}::after {
 				grid-column-end: $i + 1;
 			}

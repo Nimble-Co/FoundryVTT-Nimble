@@ -45,7 +45,28 @@ const abilityScoreControls = {
 };
 
 const characterCreationStages = {
+	stepFourStartingEquipment: 'NIMBLE.characterCreationStages.stepFourStartingEquipment',
 	stepFiveStats: 'NIMBLE.characterCreationStages.stepFiveStats',
+};
+
+const startingEquipment = {
+	editSelection: 'NIMBLE.startingEquipment.editSelection',
+	hint: 'NIMBLE.startingEquipment.hint',
+	equipmentTitle: 'NIMBLE.startingEquipment.equipmentTitle',
+	equipmentDescription: 'NIMBLE.startingEquipment.equipmentDescription',
+	unknownItem: 'NIMBLE.startingEquipment.unknownItem',
+	noEquipmentDefined: 'NIMBLE.startingEquipment.noEquipmentDefined',
+	goldTitle: 'NIMBLE.startingEquipment.goldTitle',
+	goldDescription: 'NIMBLE.startingEquipment.goldDescription',
+	equipmentSelected: 'NIMBLE.startingEquipment.equipmentSelected',
+	goldSelected: 'NIMBLE.startingEquipment.goldSelected',
+};
+
+const characterCreation = {
+	characterName: 'NIMBLE.characterCreation.characterName',
+	newCharacterPlaceholder: 'NIMBLE.characterCreation.newCharacterPlaceholder',
+	incompleteStepsWarning: 'NIMBLE.characterCreation.incompleteStepsWarning',
+	createCharacter: 'NIMBLE.characterCreation.createCharacter',
 };
 
 const activationCostTypes = {
@@ -521,6 +542,7 @@ const NIMBLE = {
 	armorTypes,
 	armorTypesPlural,
 	boonTypes,
+	characterCreation,
 	characterCreationStages,
 	classBanners,
 	classes,
@@ -559,6 +581,7 @@ const NIMBLE = {
 	skillPointAssignment,
 	skills,
 	spellProperties,
+	startingEquipment,
 	spellSchoolIcons,
 	spellSchools,
 	spellTierHeadings,

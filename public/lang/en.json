@@ -43,8 +43,27 @@
 			"confirmStatAssignments": "Confirm Stat Assignments"
 		},
 		"characterCreationStages": {
+			"stepFourStartingEquipment": "Step 4. Starting Equipment",
 			"stepFiveStats": "Step 5. Assign Ability Scores",
 			"stepSixSkills": "Step 6. Assign Skill Points"
+		},
+		"startingEquipment": {
+			"editSelection": "Edit Starting Equipment Selection",
+			"hint": "Heroes start with the equipment listed for their class and background OR 50 gp to buy their starting equipment.",
+			"equipmentTitle": "Starting Equipment",
+			"equipmentDescription": "Receive the following items:",
+			"unknownItem": "Unknown Item",
+			"noEquipmentDefined": "No starting equipment defined",
+			"goldTitle": "Starting Gold",
+			"goldDescription": "Receive 50 gp to purchase your own equipment",
+			"equipmentSelected": "Starting Equipment Selected",
+			"goldSelected": "Starting Gold (50 gp) Selected"
+		},
+		"characterCreation": {
+			"characterName": "Character Name",
+			"newCharacterPlaceholder": "New Character",
+			"incompleteStepsWarning": "Some character creation steps have not been completed.",
+			"createCharacter": "Create Character"
 		},
 		"activationCosts": {
 			"action": "Action",

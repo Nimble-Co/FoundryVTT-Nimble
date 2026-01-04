@@ -158,7 +158,8 @@ abstract class NimbleBaseRule<
 
 	protected test(passedDomain?: string[] | Set<string>): boolean {
 		if (this.disabled) return false;
-		if (this._predicate.size === 0) return false;
+		// Empty predicate means "no conditions" = always pass
+		if (this._predicate.size === 0) return true;
 
 		const domain = new Set<string>([
 			...(passedDomain ?? this.actor?.getDomain() ?? []),
