@@ -13,6 +13,7 @@ interface HitDiceEntry {
 	current: number;
 	origin: string[];
 	bonus?: number;
+	temp?: number;
 }
 
 /** Interface for character actors used by managers */
