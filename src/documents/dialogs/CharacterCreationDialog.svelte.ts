@@ -89,7 +89,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		);
 
 		const { background, characterClass, ancestry } = results?.origins ?? {};
-		const startingEquipmentChoice = results?.startingEquipmentChoice ?? 'equipment';
+		const startingEquipmentChoice = results?.startingEquipmentChoice;
 
 		const backgroundDocument = background?.uuid
 			? ((await fromUuid(background.uuid as `Item.${string}`)) as NimbleBackgroundItem | null)
@@ -103,154 +103,42 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 
 		const originDocumentSources: Item.CreateData[] = [];
 
-		if (backgroundDocument && background?.uuid) {
-			const source = backgroundDocument.toObject();
-			source._stats.compendiumSource = background.uuid;
-			originDocumentSources.push(source as object as Item.CreateData);
-		}
+		// Helper to process origin document sources
+		const processOriginSource = (
+			doc: NimbleBackgroundItem | NimbleClassItem | NimbleAncestryItem | null,
+			uuid: string | undefined,
+		) => {
+			if (!doc || !uuid) return;
 
-		if (classDocument && characterClass?.uuid) {
-			const source = classDocument.toObject();
-			source._stats.compendiumSource = characterClass.uuid;
-			originDocumentSources.push(source as object as Item.CreateData);
-		}
+			const source = doc.toObject();
+			source._stats.compendiumSource = uuid;
 
-		if (ancestryDocument && ancestry?.uuid) {
-			const source = ancestryDocument.toObject();
-			source._stats.compendiumSource = ancestry.uuid;
-			originDocumentSources.push(source as object as Item.CreateData);
-		}
-
-		await actor?.createEmbeddedDocuments('Item', originDocumentSources);
-
-		// Handle starting equipment choice
-		if (startingEquipmentChoice === 'equipment') {
-			// Collect grantItem rules from class, background, and ancestry to get starting equipment
-			// Use a Map to track items by UUID and consolidate duplicates
-			const equipmentByUuid = new Map<string, { source: Item.CreateData; count: number }>();
-			const originDocuments = [classDocument, backgroundDocument, ancestryDocument].filter(
-				Boolean,
-			) as Array<NimbleClassItem | NimbleBackgroundItem | NimbleAncestryItem>;
-
-			for (const originDoc of originDocuments) {
-				const systemWithRules = originDoc.system as {
-					rules?: Array<{ type: string; disabled: boolean; uuid?: string; label?: string }>;
+			// Only grant starting equipment if explicitly chosen during character creation
+			// If gold was chosen or choice wasn't made (early exit), disable grantItem rules
+			if (startingEquipmentChoice !== 'equipment') {
+				const systemWithRules = source.system as {
+					rules?: Array<{ type: string; disabled: boolean }>;
 				};
-
-				if (!systemWithRules.rules) continue;
-
-				for (const rule of systemWithRules.rules) {
-					if (rule.type === 'grantItem' && !rule.disabled && rule.uuid) {
-						try {
-							// Parse the compendium UUID to get pack and document ID
-							// Format: Compendium.system.packName.DocumentType.documentId
-							const uuidParts = rule.uuid.split('.');
-
-							if (uuidParts[0] === 'Compendium' && uuidParts.length >= 5) {
-								const packKey = `${uuidParts[1]}.${uuidParts[2]}`;
-								const documentId = uuidParts[4];
-
-								const pack = game.packs.get(packKey);
-
-								if (pack) {
-									await pack.getIndex();
-
-									// First try to get by ID
-									let equipmentItem = await pack.getDocument(documentId);
-									let resolvedUuid = rule.uuid;
-
-									// If not found by ID, the compendium IDs might have been regenerated
-									// Try to find by name from the rule label (e.g., "Starting Gear - Battle Axe" -> "Battleaxe")
-									if (!equipmentItem && rule.label) {
-										// Extract item name from label (e.g., "Starting Gear - Battle Axe" -> "Battle Axe")
-										const labelParts = rule.label.split(' - ');
-										const itemName = labelParts.length > 1 ? labelParts[1] : rule.label;
-
-										// Search the index for a matching name
-										for (const [id, entry] of pack.index.entries()) {
-											const entryName = (entry as { name?: string }).name?.toLowerCase() ?? '';
-											const searchName = itemName.toLowerCase().replace(/\s+/g, '');
-											const entryNameNormalized = entryName.replace(/\s+/g, '');
-
-											if (
-												entryNameNormalized === searchName ||
-												entryName.includes(searchName) ||
-												searchName.includes(entryNameNormalized)
-											) {
-												equipmentItem = await pack.getDocument(id);
-												// Update resolved UUID to the found item
-												resolvedUuid = `Compendium.${packKey}.Item.${id}`;
-												break;
-											}
-										}
-									}
-
-									if (equipmentItem && equipmentItem instanceof Item) {
-										// Check if we already have this item, if so increment count
-										const existing = equipmentByUuid.get(resolvedUuid);
-										if (existing) {
-											existing.count += 1;
-										} else {
-											const equipmentSource = equipmentItem.toObject();
-											equipmentSource._stats.compendiumSource = rule.uuid;
-											equipmentByUuid.set(resolvedUuid, {
-												source: equipmentSource as object as Item.CreateData,
-												count: 1,
-											});
-										}
-									} else {
-										console.warn(
-											`[CharacterCreation] Equipment item not found for rule: ${rule.label}`,
-										);
-									}
-								} else {
-									console.warn(`[CharacterCreation] Pack not found: ${packKey}`);
-								}
-							} else {
-								// Try direct fromUuid for non-compendium items
-								const equipmentItem = await fromUuid(rule.uuid as `Item.${string}`);
-
-								if (equipmentItem && equipmentItem instanceof Item) {
-									const existing = equipmentByUuid.get(rule.uuid);
-									if (existing) {
-										existing.count += 1;
-									} else {
-										const equipmentSource = equipmentItem.toObject();
-										equipmentSource._stats.compendiumSource = rule.uuid;
-										equipmentByUuid.set(rule.uuid, {
-											source: equipmentSource as object as Item.CreateData,
-											count: 1,
-										});
-									}
-								}
-							}
-						} catch (e) {
-							console.warn(
-								`[CharacterCreation] Failed to fetch starting equipment item: ${rule.uuid}`,
-								e,
-							);
+				if (systemWithRules.rules) {
+					for (const rule of systemWithRules.rules) {
+						if (rule.type === 'grantItem') {
+							rule.disabled = true;
 						}
 					}
 				}
 			}
 
-			// Convert the map to an array, setting quantity for items with count > 1
-			const equipmentSources: Item.CreateData[] = [];
-			for (const { source, count } of equipmentByUuid.values()) {
-				if (count > 1) {
-					// Set the quantity on the item's system data
-					const sourceWithSystem = source as Item.CreateData & { system?: { quantity?: number } };
-					if (sourceWithSystem.system) {
-						sourceWithSystem.system.quantity = count;
-					}
-				}
-				equipmentSources.push(source);
-			}
+			originDocumentSources.push(source as object as Item.CreateData);
+		};
 
-			if (equipmentSources.length > 0) {
-				await actor?.createEmbeddedDocuments('Item', equipmentSources);
-			}
-		}
+		processOriginSource(backgroundDocument, background?.uuid);
+		processOriginSource(classDocument, characterClass?.uuid);
+		processOriginSource(ancestryDocument, ancestry?.uuid);
+
+		// When origin documents are added, the system automatically processes grantItem rules
+		// If equipment was chosen, items will be granted automatically
+		// If gold was chosen, grantItem rules were disabled above so no items are granted
+		await actor?.createEmbeddedDocuments('Item', originDocumentSources);
 
 		const updateData: Record<string, unknown> = {
 			system: {
