@@ -6,7 +6,8 @@ export default async function updateDocumentImage(
 ) {
 	// Add support for tokenizer
 	if (game.modules.get('vtta-tokenizer')?.active && !options.shiftKey) {
-		if (['character', 'soloMonster'].includes(document.type)) {
+		if (['character', 'soloMonster', 'npc', 'minion'].includes(document.type)) {
+			// eslint-disable-next-line no-undef
 			Tokenizer?.tokenizeActor?.(document as Actor);
 			return null;
 		}

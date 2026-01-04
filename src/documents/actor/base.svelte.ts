@@ -527,10 +527,14 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 
 		switch (type) {
 			case 'abilityCheck':
-				title = `${this.name}: Configure ${CONFIG.NIMBLE.abilityScores[data?.abilityKey ?? '']} Ability Check`;
+				title = `${this.name}: Configure ${
+					CONFIG.NIMBLE.abilityScores[data?.abilityKey ?? '']
+				} Ability Check`;
 				break;
 			case 'savingThrow':
-				title = `${this.name}: Configure ${CONFIG.NIMBLE.savingThrows[data?.saveKey ?? '']} Saving Throw`;
+				title = `${this.name}: Configure ${
+					CONFIG.NIMBLE.savingThrows[data?.saveKey ?? '']
+				} Saving Throw`;
 				break;
 			case 'skillCheck':
 				title = `${this.name}: Configure ${CONFIG.NIMBLE.skills[data?.skillKey ?? '']} Skill Check`;
@@ -604,7 +608,10 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		// If Image is changed, change prototype token as well
 		const img = foundry.utils.getProperty(changesObj, 'img');
 		if (img) {
-			foundry.utils.setProperty(changesObj, 'prototypeToken.texture.src', img);
+			// we don't update the token image if the tokenizer module is installed & active
+			if (game.modules.get('tokenizer')?.active === false) {
+				foundry.utils.setProperty(changes, 'prototypeToken.texture.src', img);
+			}
 		}
 
 		return super._preUpdate(changes, options, user);
