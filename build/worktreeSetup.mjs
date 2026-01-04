@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -77,9 +78,68 @@ function pathExists(targetPath) {
 }
 
 /**
- * Setup the symlink to FoundryVTT
+ * Prompt user with a menu of options
+ * @param {string} title - Title for the prompt box
+ * @param {string[]} infoLines - Additional info lines to display
+ * @param {Array<{key: string, label: string, destructive?: boolean}>} options - Menu options
+ * @returns {Promise<string>} - The selected option key
  */
-function setupSymlink() {
+async function promptUser(title, infoLines, options) {
+	const rl = readline.createInterface({
+		input: process.stdin,
+		output: process.stdout,
+	});
+
+	const maxWidth = Math.max(
+		title.length,
+		...infoLines.map((l) => l.length),
+		...options.map((o) => `  ${o.key}. ${o.label}`.length),
+	);
+	const boxWidth = maxWidth + 4;
+
+	console.log('');
+	console.log(`╔${'═'.repeat(boxWidth)}╗`);
+	console.log(`║  ${title.padEnd(boxWidth - 2)}║`);
+	for (const line of infoLines) {
+		console.log(`║  ${line.padEnd(boxWidth - 2)}║`);
+	}
+	console.log(`╚${'═'.repeat(boxWidth)}╝`);
+	console.log('');
+	console.log('What would you like to do?');
+	console.log('');
+
+	for (const option of options) {
+		const label = option.destructive ? `${option.label} (DESTRUCTIVE)` : option.label;
+		console.log(`  ${option.key}. ${label}`);
+	}
+
+	console.log('');
+
+	return new Promise((resolve) => {
+		const validKeys = options.map((o) => o.key);
+
+		const askQuestion = () => {
+			rl.question('> ', (answer) => {
+				const trimmed = answer.trim();
+				if (validKeys.includes(trimmed)) {
+					rl.close();
+					resolve(trimmed);
+				} else {
+					console.log(`Please enter one of: ${validKeys.join(', ')}`);
+					askQuestion();
+				}
+			});
+		};
+
+		askQuestion();
+	});
+}
+
+/**
+ * Setup the symlink to FoundryVTT
+ * @returns {Promise<void>}
+ */
+async function setupSymlink() {
 	const foundryDataPath = getFoundryDataPath();
 	const systemsPath = path.join(foundryDataPath, 'systems');
 	const targetSymlinkPath = path.join(systemsPath, SYSTEM_NAME);
@@ -118,12 +178,67 @@ function setupSymlink() {
 				console.log('Symlink already exists and points to this dist folder.');
 				return;
 			}
-			console.log(`Replacing existing symlink (was: ${currentTarget})`);
-			fs.unlinkSync(targetSymlinkPath);
+
+			// Symlink exists but points elsewhere - ask user what to do
+			const choice = await promptUser(
+				'Existing symlink detected',
+				[`Location: ${targetSymlinkPath}`, `Currently points to: ${currentTarget}`],
+				[
+					{ key: '1', label: 'Replace symlink (point to this worktree)' },
+					{ key: '2', label: 'Skip (keep existing symlink)' },
+					{ key: '3', label: 'Cancel setup' },
+				],
+			);
+
+			switch (choice) {
+				case '1':
+					console.log('Removing existing symlink...');
+					fs.unlinkSync(targetSymlinkPath);
+					break;
+				case '2':
+					console.log('Skipping symlink setup.');
+					return;
+				case '3':
+					console.log('Setup cancelled.');
+					process.exit(0);
+			}
 		} else {
-			console.error(`\nA file or directory already exists at: ${targetSymlinkPath}`);
-			console.error('Please remove it manually before running this script.');
-			process.exit(1);
+			// Real file or directory exists - ask user what to do
+			const stats = fs.lstatSync(targetSymlinkPath);
+			const typeLabel = stats.isDirectory() ? 'directory' : 'file';
+			const backupPath = `${targetSymlinkPath}.backup`;
+
+			const choice = await promptUser(
+				`Existing ${typeLabel} detected`,
+				[`Location: ${targetSymlinkPath}`],
+				[
+					{ key: '1', label: `Delete ${typeLabel} and create symlink`, destructive: true },
+					{ key: '2', label: `Backup to ${SYSTEM_NAME}.backup and create symlink` },
+					{ key: '3', label: 'Skip (keep existing)' },
+					{ key: '4', label: 'Cancel setup' },
+				],
+			);
+
+			switch (choice) {
+				case '1':
+					console.log(`Deleting existing ${typeLabel}...`);
+					fs.rmSync(targetSymlinkPath, { recursive: true, force: true });
+					break;
+				case '2':
+					if (pathExists(backupPath)) {
+						console.log(`Removing old backup at ${backupPath}...`);
+						fs.rmSync(backupPath, { recursive: true, force: true });
+					}
+					console.log(`Backing up to ${backupPath}...`);
+					fs.renameSync(targetSymlinkPath, backupPath);
+					break;
+				case '3':
+					console.log('Skipping symlink setup.');
+					return;
+				case '4':
+					console.log('Setup cancelled.');
+					process.exit(0);
+			}
 		}
 	}
 
@@ -140,7 +255,7 @@ function setupSymlink() {
 /**
  * Main setup function
  */
-function setup() {
+async function setup() {
 	console.log('');
 	console.log('╔════════════════════════════════════════╗');
 	console.log('║     Worktree Setup for FoundryVTT      ║');
@@ -153,7 +268,7 @@ function setup() {
 	runCommand('npm run build', 'Building system and compendia');
 
 	// Step 3: Setup symlink
-	setupSymlink();
+	await setupSymlink();
 
 	console.log('');
 	console.log('╔════════════════════════════════════════╗');
