@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Whenever you make your first melee attack each round, you may add your Lifebinding Spirit’s damage to the attack.</p>",
+		"description": "<p>Whenever you make your first melee attack each round, you may add your Lifebinding Spirit's damage to the attack.</p>",
 		"featureType": "class",
 		"class": "shepherd",
 		"group": "sacred-grace"

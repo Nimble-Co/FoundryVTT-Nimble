@@ -41,7 +41,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p><em>(2/encounter—you’ve got to collect more sand!)</em> When you Defend against a melee attack, Blind the attacker until the start of their next turn and force them to reroll the attack (Blinded creatures attack with disadvantage). [M]</p>",
+		"description": "<p><em>(2/encounter—you've got to collect more sand!)</em> When you Defend against a melee attack, Blind the attacker until the start of their next turn and force them to reroll the attack (Blinded creatures attack with disadvantage). [M]</p>",
 		"featureType": "class",
 		"class": "the-cheat",
 		"group": "tools-of-the-scoundrel"

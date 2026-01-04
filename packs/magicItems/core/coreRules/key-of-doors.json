@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Rarity:</strong> Very Rare</p><hr><p>Insert this key into any locked door to open it, not to the room beyond, but to any doorway you’ve previously walked through while holding this item.</p>",
+			"public": "<p><strong>Rarity:</strong> Very Rare</p><hr><p>Insert this key into any locked door to open it, not to the room beyond, but to any doorway you've previously walked through while holding this item.</p>",
 			"unidentified": "",
 			"secret": ""
 		},

@@ -65,7 +65,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Reach</strong>: 3. <strong>Damage</strong>: 4d4+10 bludgeoning to enemies within Reach. You may place surviving creatures anywhere within 1 space of the storm’s Reach on a failed STR save.</p>",
+			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Reach</strong>: 3. <strong>Damage</strong>: 4d4+10 bludgeoning to enemies within Reach. You may place surviving creatures anywhere within 1 space of the storm's Reach on a failed STR save.</p>",
 			"higherLevelEffect": "<p>+1 Reach.</p>"
 		},
 		"properties": {

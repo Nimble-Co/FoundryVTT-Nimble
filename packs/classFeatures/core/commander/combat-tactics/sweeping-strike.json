@@ -55,7 +55,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p><strong>2 actions:</strong> Select any contiguous area within your weapon’s Reach and damage ALL targets there. This attack does not miss on a 1. </p>",
+		"description": "<p><strong>2 actions:</strong> Select any contiguous area within your weapon's Reach and damage ALL targets there. This attack does not miss on a 1. </p>",
 		"featureType": "class",
 		"class": "commander",
 		"group": "combat-tactics"

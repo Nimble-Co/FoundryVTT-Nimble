@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p><em>(1/encounter)</em> Attacks you make this round don’t miss, you crit on 1 less than normally needed, and you gain LVL temp HP. </p>",
+		"description": "<p><em>(1/encounter)</em> Attacks you make this round don't miss, you crit on 1 less than normally needed, and you gain LVL temp HP. </p>",
 		"featureType": "class",
 		"class": "the-cheat",
 		"group": "tools-of-the-scoundrel"

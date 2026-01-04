@@ -1,8 +1,8 @@
 {
 	"folder": null,
-	"name": "How’d YOU get here?!",
+	"name": "Professional Skulker",
 	"type": "feature",
-	"img": "icons/magic/air/air-smoke-casting.webp",
+	"img": "icons/creatures/abilities/cougar-roar-rush-orange.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -11,8 +11,8 @@
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
-				"quantity": 2,
-				"type": "action",
+				"quantity": 1,
+				"type": "none",
 				"isReaction": false
 			},
 			"duration": {
@@ -33,20 +33,20 @@
 				"width": 1
 			}
 		},
-		"description": "<p>2 actions: “Teleport” up to 4 spaces away, adjacent to a Distracted target, and make a melee attack against them. If you crit, you may \"teleport\" again. </p>",
+		"description": "<p>Gain a climbing speed and advantage on Stealth checks (replaces Leave No Trace). </p>",
 		"featureType": "class",
-		"class": "cheat",
-		"group": "underhanded-abilities"
+		"class": "the-cheat",
+		"group": "tools-of-the-silent-blade"
 	},
 	"effects": [],
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.8",
-		"createdTime": 1759472840774,
-		"modifiedTime": 1759472945773,
+		"systemVersion": "0.1.9",
+		"createdTime": 1759472970824,
+		"modifiedTime": 1761884710469,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "bgmLWfuqmytGV3k3"
+	"_id": "TK1grqUU5J2YGObe"
 }

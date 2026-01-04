@@ -360,7 +360,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>Deal 5d4 damage (doesn’t miss). Half as</p><p>much to ALL adjacent creatures.</p>",
+				"description": "<p>Deal 5d4 damage (doesn't miss). Half as</p><p>much to ALL adjacent creatures.</p>",
 				"subtype": "action"
 			},
 			"_id": "UOfb5oxZN2KhFedb",

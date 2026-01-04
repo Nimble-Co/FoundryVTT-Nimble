@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>You gain an aura with a Reach of 4 and can Interpose for an ally anywhere within your aura; however, your Radiant Judgment ability no longer triggers when attacked. Instead, it triggers whenever you could Interpose but don’t.</p>",
+		"description": "<p>You gain an aura with a Reach of 4 and can Interpose for an ally anywhere within your aura; however, your Radiant Judgment ability no longer triggers when attacked. Instead, it triggers whenever you could Interpose but don't.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
 		"group": "oathbreaker"

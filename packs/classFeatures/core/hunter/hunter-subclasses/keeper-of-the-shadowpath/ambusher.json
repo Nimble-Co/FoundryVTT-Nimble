@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>When you roll Initiative, you may use Hunter’s Mark for free. Gain advantage on the first attack you make each encounter.</p>",
+		"description": "<p>When you roll Initiative, you may use Hunter's Mark for free. Gain advantage on the first attack you make each encounter.</p>",
 		"featureType": "class",
 		"class": "hunter",
 		"group": "keeper-of-the-shadowpath"

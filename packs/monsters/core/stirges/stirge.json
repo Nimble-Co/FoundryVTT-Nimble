@@ -292,7 +292,7 @@
 						"width": 1
 					}
 				},
-				"description": "<p>You move where your target moves until either dies. Your attacks can’t miss or be defended/Interposed against. Attacks that miss you damage your target instead.</p>"
+				"description": "<p>You move where your target moves until either dies. Your attacks can't miss or be defended/Interposed against. Attacks that miss you damage your target instead.</p>"
 			},
 			"effects": [],
 			"folder": null,

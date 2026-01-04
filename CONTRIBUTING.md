@@ -41,6 +41,7 @@
 - **`npm run lint`** - Lint code with Biome
 - **`npm run lint-fix`** - Auto-fix linting issues
 - **`npm run type-check`** - Run TypeScript type checking
+- **`npm run check`** - Run all checks (format, lint, circular dependencies, type-check, tests)
 
 ## 📁 Project Structure
 
@@ -127,18 +128,21 @@ The system integrates deeply with FoundryVTT through:
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Make your changes and ensure tests pass
-4. Format and lint your code: `npm run format && npm run lint-fix`
-5. Commit your changes: `git commit -am 'Add some feature'`
-6. Push to the branch: `git push origin feature/your-feature`
-7. Submit a pull request
+2. Ensure you're on the `dev` branch: `git checkout dev`
+3. Create a feature branch from `dev`: `git checkout -b feature/your-feature`
+4. Make your changes and ensure tests pass
+5. Run checks before committing: `npm run check`
+6. Commit your changes: `git commit -am 'Add some feature'`
+7. Push to the branch: `git push origin feature/your-feature`
+8. Submit a pull request **against the `dev` branch**
+
+> **Note:** All development work should branch from `dev` and all pull requests should target `dev`. The `main` branch is reserved for releases.
 
 ### Development Guidelines
 
 - Use TypeScript for all new code
 - Follow the existing code style and patterns
-- Run `npm run type-check` before committing
+- Run `npm run check` before committing (formats, lints, checks for circular dependencies, type-checks, and runs tests)
 - Test your changes in FoundryVTT
 - Update documentation as needed
 
@@ -147,3 +151,31 @@ The system integrates deeply with FoundryVTT through:
 1. Build the system: `npm run build`
 2. Copy the `dist/` folder to your FoundryVTT `systems/nimble/` directory
 3. Restart FoundryVTT or reload the system
+
+## 📚 External Documentation
+
+### Everyday Knowledge
+
+Used directly and frequently while working in the codebase.
+
+- **TypeScript Docs**: <https://www.typescriptlang.org/docs/>
+  Language reference for typing, generics, and strict mode used across the project.
+- **Svelte Docs**: <https://svelte.dev/docs>
+  UI framework for character sheets and dialogs. Reactivity and component lifecycle.
+- **FoundryVTT API**: <https://foundryvtt.com/api/>
+  Core Foundry classes, hooks, sheets, dialogs, combat, and system integration.
+- **FoundryVTT Community Wiki**: <https://foundryvtt.wiki/en/home>
+  Practical guides, patterns, common pitfalls, and system-level behavior not always obvious from the API docs.
+- **FoundryVTT TypeScript Types**: <https://github.com/League-of-Foundry-Developers/foundry-vtt-types>
+  Type definitions for Foundry APIs. Required for TypeScript safety and IDE autocomplete.
+
+### Occasional Reference
+
+Only needed when working in specific areas or diagnosing issues.
+
+- **Vite Guide**: <https://vite.dev/guide/>
+  Build tool and dev server for local development and bundling.
+- **Biome**: <https://biomejs.dev/>
+  Formatter and linter enforcing code style and consistency.
+- **Vitest**: <https://vitest.dev/>
+  Unit testing framework used for system tests.

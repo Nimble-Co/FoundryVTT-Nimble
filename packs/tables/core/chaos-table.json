@@ -57,7 +57,7 @@
 			"_id": "54ODa7XWGrOgcU3t",
 			"name": "Aww, Nuts!",
 			"img": "icons/consumables/nuts/acorn-glowing-brown.webp",
-			"description": "<p>You polymorph into a cute squirrel until you take damage. Your TOP priority is to find acorns (squirrels can’t cast spells).</p>",
+			"description": "<p>You polymorph into a cute squirrel until you take damage. Your TOP priority is to find acorns (squirrels can't cast spells).</p>",
 			"drawn": false,
 			"flags": {},
 			"_stats": {
@@ -233,7 +233,7 @@
 			"_id": "MVJnwMvbp3vlSrKC",
 			"name": "Displacement",
 			"img": "icons/magic/movement/trail-streak-zigzag-yellow.webp",
-			"description": "<p>Teleport. [[/r 1d4]]:</p><ol><li><p>The worst place! (GM's choice)</p></li><li><p>UP! 6 spaces (3d6 falling damage)</p></li><li><p>Player’s choice, 6 spaces</p></li><li><p>Player’s choice, 12 spaces</p></li></ol>",
+			"description": "<p>Teleport. [[/r 1d4]]:</p><ol><li><p>The worst place! (GM's choice)</p></li><li><p>UP! 6 spaces (3d6 falling damage)</p></li><li><p>Player's choice, 6 spaces</p></li><li><p>Player's choice, 12 spaces</p></li></ol>",
 			"drawn": false,
 			"flags": {},
 			"_stats": {

@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Whenever you use Songweaver’s Inspiration, your allies within 12 spaces who can hear you gain WIL temp HP.</p>",
+		"description": "<p>Whenever you use Songweaver's Inspiration, your allies within 12 spaces who can hear you gain WIL temp HP.</p>",
 		"featureType": "class",
 		"class": "songweaver",
 		"group": "herald-of-courage"

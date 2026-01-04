@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>You’re a well–rounded cheater. Gain the following abilities:</p><p>• <em>(1/round)</em> You may either Move or Hide for free. </p><p>• (1/day) You may change any skill check to 10+INT. </p><p>• If you roll less than 10 on Initiative, you may change it to 10 instead.</p><p>• You may gain advantage on skill checks while playing any games, competitions, or placing wagers. If you’re caught though… </p>",
+		"description": "<p>You're a well–rounded cheater. Gain the following abilities:</p><p>• <em>(1/round)</em> You may either Move or Hide for free. </p><p>• (1/day) You may change any skill check to 10+INT. </p><p>• If you roll less than 10 on Initiative, you may change it to 10 instead.</p><p>• You may gain advantage on skill checks while playing any games, competitions, or placing wagers. If you're caught though… </p>",
 		"featureType": "class",
 		"class": "the-cheat",
 		"group": "the-cheat-progression"

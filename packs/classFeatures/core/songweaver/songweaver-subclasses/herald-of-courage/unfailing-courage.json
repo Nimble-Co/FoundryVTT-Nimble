@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Your presence inspires others to feats of heroism and courage heard of only in legend. Your Songweaver’s Inspiration allows your target to roll with advantage.</p>",
+		"description": "<p>Your presence inspires others to feats of heroism and courage heard of only in legend. Your Songweaver's Inspiration allows your target to roll with advantage.</p>",
 		"featureType": "class",
 		"class": "songweaver",
 		"group": "herald-of-courage"

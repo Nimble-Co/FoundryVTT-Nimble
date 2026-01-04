@@ -1,3 +1,31 @@
 # Font and file-related terms
 wght
 xmark
+
+# Icon Names
+barbute
+broadhead
+coinpouch
+colllecting
+corvid
+crossguard
+diseaed
+debuff
+deepsea
+dreamcatcher
+greathelm
+handguard
+icecicle
+katana
+lockpicks
+orante
+pendeloque
+polearm
+polearms
+pseudopods
+rivited
+shorthammer
+shortsword
+smithing
+swordfight
+vulcano
