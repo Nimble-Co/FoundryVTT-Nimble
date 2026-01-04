@@ -64,9 +64,9 @@
 		const props = item.reactive?.system?.properties;
 		if (!props?.selected) return null;
 
-		if (props.selected === 'melee') return 'Melee';
-		const label = props.selected === 'reach' ? 'Reach' : 'Range';
-		return `${label} ${props.distance}`;
+		if (props.selected === 'melee') return game.i18n.localize('NIMBLE.npcSheet.melee');
+		const key = props.selected === 'reach' ? 'NIMBLE.npcSheet.reach' : 'NIMBLE.npcSheet.range';
+		return game.i18n.format(key, { distance: props.distance });
 	}
 
 	function isHeaderItem(item) {
@@ -227,7 +227,9 @@
 
 		<section class="nimble-other-attribute-wrapper" style="grid-area: armor;">
 			<header class="nimble-section-header" data-header-alignment="center">
-				<h3 class="nimble-heading" data-heading-variant="section">Armor</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{game.i18n.localize('NIMBLE.npcSheet.armor')}
+				</h3>
 			</header>
 
 			<ArmorClass armorClass={getArmorClassLabel(actor.reactive.system.attributes.armor)} />
@@ -236,8 +238,8 @@
 				class="nimble-button nimble-armor-config-button nimble-armor-config-button--decrement"
 				data-button-variant="basic"
 				type="button"
-				aria-label="Decrease Armor"
-				data-tooltip="Decrease Armor"
+				aria-label={game.i18n.localize('NIMBLE.npcSheet.decreaseArmor')}
+				data-tooltip={game.i18n.localize('NIMBLE.npcSheet.decreaseArmor')}
 				disabled={actor.reactive.system.armor === 'none'}
 				onclick={() => updateArmorCategory('decrease')}
 			>
@@ -248,8 +250,8 @@
 				class="nimble-button nimble-armor-config-button nimble-armor-config-button--increment"
 				data-button-variant="basic"
 				type="button"
-				aria-label="Increase Armor"
-				data-tooltip="Increase Armor"
+				aria-label={game.i18n.localize('NIMBLE.npcSheet.increaseArmor')}
+				data-tooltip={game.i18n.localize('NIMBLE.npcSheet.increaseArmor')}
 				disabled={actor.reactive.system.armor === 'heavy'}
 				onclick={() => updateArmorCategory('increase')}
 			>
@@ -260,14 +262,14 @@
 
 	<header class="nimble-sheet__static nimble-sheet__static--npc-features">
 		<h4 class="nimble-heading" data-heading-variant="section">
-			Features
+			{game.i18n.localize('NIMBLE.npcSheet.features')}
 			{#if isEditable}
 				<button
 					class="nimble-button fa-solid fa-plus"
 					data-button-variant="basic"
 					type="button"
-					aria-label="Create Feature"
-					data-tooltip="Create Feature"
+					aria-label={game.i18n.localize('NIMBLE.npcSheet.createFeature')}
+					data-tooltip={game.i18n.localize('NIMBLE.npcSheet.createFeature')}
 					onclick={createItem}
 				></button>
 			{/if}
@@ -278,8 +280,12 @@
 					role="button"
 					tabindex="0"
 					data-button-variant="icon"
-					aria-label={allCollapsed ? 'Expand all descriptions' : 'Collapse all descriptions'}
-					data-tooltip={allCollapsed ? 'Expand all descriptions' : 'Collapse all descriptions'}
+					aria-label={allCollapsed
+						? game.i18n.localize('NIMBLE.npcSheet.expandAllDescriptions')
+						: game.i18n.localize('NIMBLE.npcSheet.collapseAllDescriptions')}
+					data-tooltip={allCollapsed
+						? game.i18n.localize('NIMBLE.npcSheet.expandAllDescriptions')
+						: game.i18n.localize('NIMBLE.npcSheet.collapseAllDescriptions')}
 					onclick={() => {
 						const newState = !allCollapsed;
 						items.forEach((item) => toggleItemCollapsed(item, newState));
@@ -339,8 +345,8 @@
 											class="nimble-button"
 											data-button-variant="icon"
 											type="button"
-											aria-label="Edit Attack Sequence"
-											data-tooltip="Edit Attack Sequence"
+											aria-label={game.i18n.localize('NIMBLE.npcSheet.editAttackSequence')}
+											data-tooltip={game.i18n.localize('NIMBLE.npcSheet.editAttackSequence')}
 											onclick={() => (attackSequenceInEditMode = true)}
 										>
 											<i class="fa-solid fa-edit"></i>
@@ -368,7 +374,9 @@
 											class="nimble-button"
 											data-button-variant="icon"
 											type="button"
-											aria-label="Configure {item.reactive.name}"
+											aria-label={game.i18n.format('NIMBLE.npcSheet.configureItem', {
+												name: item.reactive.name,
+											})}
 											onclick={(event) => {
 												event.stopPropagation();
 												configureItem(event, item.reactive._id);
@@ -380,7 +388,9 @@
 											class="nimble-button"
 											data-button-variant="icon"
 											type="button"
-											aria-label="Delete {item.reactive.name}"
+											aria-label={game.i18n.format('NIMBLE.npcSheet.deleteItem', {
+												name: item.reactive.name,
+											})}
 											onclick={(event) => {
 												event.stopPropagation();
 												deleteItem(event, item.reactive._id);
@@ -437,7 +447,9 @@
 												role="button"
 												tabindex="0"
 												data-button-variant="icon"
-												aria-label="Collapse description for {item.reactive.name}"
+												aria-label={game.i18n.format('NIMBLE.npcSheet.collapseDescription', {
+													name: item.reactive.name,
+												})}
 												onclick={(event) => {
 													console.log('collapsing description for', item.reactive.name);
 													event.stopPropagation();
@@ -458,7 +470,9 @@
 												role="button"
 												tabindex="0"
 												data-button-variant="icon"
-												aria-label="Reveal description for {item.reactive.name}"
+												aria-label={game.i18n.format('NIMBLE.npcSheet.revealDescription', {
+													name: item.reactive.name,
+												})}
 												onclick={(event) => {
 													console.log('revealing description for', item.reactive.name);
 													event.stopPropagation();
@@ -480,7 +494,9 @@
 												class="nimble-button"
 												data-button-variant="icon"
 												type="button"
-												aria-label="Configure {item.reactive.name}"
+												aria-label={game.i18n.format('NIMBLE.npcSheet.configureItem', {
+													name: item.reactive.name,
+												})}
 												onclick={(event) => configureItem(event, item.reactive._id)}
 											>
 												<i class="fa-solid fa-edit"></i>
@@ -490,7 +506,9 @@
 												class="nimble-button"
 												data-button-variant="icon"
 												type="button"
-												aria-label="Delete {item.reactive.name}"
+												aria-label={game.i18n.format('NIMBLE.npcSheet.deleteItem', {
+													name: item.reactive.name,
+												})}
 												onclick={(event) => deleteItem(event, item.reactive._id)}
 											>
 												<i class="fa-solid fa-trash"></i>

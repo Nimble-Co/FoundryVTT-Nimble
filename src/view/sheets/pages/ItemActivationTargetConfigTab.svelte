@@ -17,16 +17,18 @@
 	let distance = $derived(document.reactive.system.properties?.distance ?? 1);
 
 	const attackTypeOptions = [
-		{ value: '', label: 'None' },
-		{ value: 'melee', label: 'Melee' },
-		{ value: 'reach', label: 'Reach' },
-		{ value: 'range', label: 'Range' },
+		{ value: '', label: game.i18n.localize('NIMBLE.itemConfig.attackTypes.none') },
+		{ value: 'melee', label: game.i18n.localize('NIMBLE.itemConfig.attackTypes.melee') },
+		{ value: 'reach', label: game.i18n.localize('NIMBLE.itemConfig.attackTypes.reach') },
+		{ value: 'range', label: game.i18n.localize('NIMBLE.itemConfig.attackTypes.range') },
 	];
 </script>
 
 <section>
 	<header class="nimble-section-header">
-		<h4 class="nimble-heading" data-heading-variant="section">Targets</h4>
+		<h4 class="nimble-heading" data-heading-variant="section">
+			{game.i18n.localize('NIMBLE.itemConfig.targets')}
+		</h4>
 	</header>
 
 	<label class="nimble-field">
@@ -39,7 +41,9 @@
 				})}
 		/>
 
-		<span class="nimble-field__label"> Acquire targets from template </span>
+		<span class="nimble-field__label"
+			>{game.i18n.localize('NIMBLE.itemConfig.acquireTargetsFromTemplate')}</span
+		>
 	</label>
 
 	{#if activationData.acquireTargetsFromTemplate}
@@ -50,7 +54,9 @@
 		{#if !activationData.acquireTargetsFromTemplate}
 			<label>
 				<header class="nimble-section-header">
-					<h4 class="nimble-heading" data-heading-variant="field">Target Count</h4>
+					<h4 class="nimble-heading" data-heading-variant="field">
+						{game.i18n.localize('NIMBLE.itemConfig.targetCount')}
+					</h4>
 				</header>
 
 				<input
@@ -67,7 +73,9 @@
 
 		<label style="flex-grow: 1;">
 			<header class="nimble-section-header">
-				<h4 class="nimble-heading" data-heading-variant="field">Target Restrictions</h4>
+				<h4 class="nimble-heading" data-heading-variant="field">
+					{game.i18n.localize('NIMBLE.itemConfig.targetRestrictions')}
+				</h4>
 			</header>
 
 			<input
@@ -85,7 +93,9 @@
 		<div class="attack-type-row">
 			<label>
 				<header class="nimble-section-header">
-					<h4 class="nimble-heading" data-heading-variant="field">Attack Type</h4>
+					<h4 class="nimble-heading" data-heading-variant="field">
+						{game.i18n.localize('NIMBLE.itemConfig.attackType')}
+					</h4>
 				</header>
 
 				<select
@@ -104,7 +114,9 @@
 			{#if selectedAttackType === 'reach' || selectedAttackType === 'range'}
 				<label>
 					<header class="nimble-section-header">
-						<h4 class="nimble-heading" data-heading-variant="field">Distance</h4>
+						<h4 class="nimble-heading" data-heading-variant="field">
+							{game.i18n.localize('NIMBLE.itemConfig.distance')}
+						</h4>
 					</header>
 
 					<input
