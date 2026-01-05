@@ -331,7 +331,7 @@
 							<div
 								class="nimble-monster-feature-header nimble-monster-feature-header--attack-sequence"
 							>
-								{#await TextEditor.enrichHTML(actor.reactive?.system?.attackSequence || creatureFeatures.actionSequence) then hintText}
+								{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(actor.reactive?.system?.attackSequence || creatureFeatures.actionSequence) then hintText}
 									{#if hintText}
 										<div class="nimble-monster-feature-header__text">
 											{@html hintText}
