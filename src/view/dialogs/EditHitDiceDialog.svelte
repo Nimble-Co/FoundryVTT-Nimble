@@ -210,8 +210,7 @@
 	});
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-<article class="nimble-sheet__body" onclick={handleClickOutside}>
+<div class="nimble-sheet__body" role="presentation" onclick={handleClickOutside}>
 	<!-- Current Hit Dice Overview -->
 	<section class="hd-section">
 		<header class="hd-header">
@@ -269,6 +268,9 @@
 								class="hd-btn hd-btn--minus"
 								type="button"
 								onclick={() => updateBonusDie(index, -1)}
+								aria-label={game.i18n.format('NIMBLE.hitDice.decreaseBonusDie', {
+									size: entry.size,
+								})}
 							>
 								<i class="fa-solid fa-minus"></i>
 							</button>
@@ -277,6 +279,9 @@
 								class="hd-btn hd-btn--plus"
 								type="button"
 								onclick={() => updateBonusDie(index, 1)}
+								aria-label={game.i18n.format('NIMBLE.hitDice.increaseBonusDie', {
+									size: entry.size,
+								})}
 							>
 								<i class="fa-solid fa-plus"></i>
 							</button>
@@ -289,6 +294,7 @@
 						class="hd-add-btn hd-add-btn--small"
 						type="button"
 						onclick={(e) => openDropdown(e, 'bonus')}
+						aria-label={CONFIG.NIMBLE.hitDice.addBonusDie}
 					>
 						<i class="fa-solid fa-plus"></i>
 					</button>
@@ -330,6 +336,9 @@
 								class="hd-btn hd-btn--minus"
 								type="button"
 								onclick={() => updateTempDie(index, -1)}
+								aria-label={game.i18n.format('NIMBLE.hitDice.decreaseTempDie', {
+									size: entry.size,
+								})}
 							>
 								<i class="fa-solid fa-minus"></i>
 							</button>
@@ -338,6 +347,9 @@
 								class="hd-btn hd-btn--plus"
 								type="button"
 								onclick={() => updateTempDie(index, 1)}
+								aria-label={game.i18n.format('NIMBLE.hitDice.increaseTempDie', {
+									size: entry.size,
+								})}
 							>
 								<i class="fa-solid fa-plus"></i>
 							</button>
@@ -350,6 +362,7 @@
 						class="hd-add-btn hd-add-btn--small"
 						type="button"
 						onclick={(e) => openDropdown(e, 'temp')}
+						aria-label={CONFIG.NIMBLE.hitDice.addTempDie}
 					>
 						<i class="fa-solid fa-plus"></i>
 					</button>
@@ -363,7 +376,7 @@
 		<span class="hd-total__label">Total Hit Dice</span>
 		<span class="hd-total__value">{totals.max}</span>
 	</section>
-</article>
+</div>
 
 <!-- Fixed position dropdown portal -->
 {#if showBonusDropdown}

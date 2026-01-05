@@ -129,16 +129,20 @@
 									data-button-variant="icon"
 									type="button"
 									disabled
+									aria-label={CONFIG.NIMBLE.hitDice.depleted}
 								>
 									<i class="fa-solid fa-circle-xmark"></i>
 								</button>
-								<span class="nimble-roll-hit-dice-dialog__depleted-text">Depleted</span>
+								<span class="nimble-roll-hit-dice-dialog__depleted-text"
+									>{CONFIG.NIMBLE.hitDice.depleted}</span
+								>
 								<button
 									class="nimble-button nimble-roll-hit-dice-dialog__control-btn"
 									data-button-variant="icon"
 									type="button"
 									disabled
 									style="visibility: hidden;"
+									aria-hidden="true"
 								>
 									<i class="fa-solid fa-plus"></i>
 								</button>

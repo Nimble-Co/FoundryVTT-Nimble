@@ -527,6 +527,37 @@ const creatureFeatures = {
 	actionSequence: 'NIMBLE.creatureFeatures.actionSequence',
 };
 
+const hitDice = {
+	selectToRoll: 'NIMBLE.hitDice.selectToRoll',
+	depleted: 'NIMBLE.hitDice.depleted',
+	removeDie: 'NIMBLE.hitDice.removeDie',
+	addDie: 'NIMBLE.hitDice.addDie',
+	selectAllDie: 'NIMBLE.hitDice.selectAllDie',
+	currentHitDice: 'NIMBLE.hitDice.currentHitDice',
+	currentHitDiceValue: 'NIMBLE.hitDice.currentHitDiceValue',
+	maxHitDice: 'NIMBLE.hitDice.maxHitDice',
+	editCurrentHitDice: 'NIMBLE.hitDice.editCurrentHitDice',
+	rollHitDiceButton: 'NIMBLE.hitDice.rollHitDiceButton',
+	bonusHitDice: 'NIMBLE.hitDice.bonusHitDice',
+	bonusHitDiceHint: 'NIMBLE.hitDice.bonusHitDiceHint',
+	tempHitDice: 'NIMBLE.hitDice.tempHitDice',
+	tempHitDiceHint: 'NIMBLE.hitDice.tempHitDiceHint',
+	noBonusDice: 'NIMBLE.hitDice.noBonusDice',
+	noTempDice: 'NIMBLE.hitDice.noTempDice',
+	addBonusDie: 'NIMBLE.hitDice.addBonusDie',
+	addTempDie: 'NIMBLE.hitDice.addTempDie',
+	decreaseBonusDie: 'NIMBLE.hitDice.decreaseBonusDie',
+	increaseBonusDie: 'NIMBLE.hitDice.increaseBonusDie',
+	decreaseTempDie: 'NIMBLE.hitDice.decreaseTempDie',
+	increaseTempDie: 'NIMBLE.hitDice.increaseTempDie',
+	totalHitDice: 'NIMBLE.hitDice.totalHitDice',
+	saveChanges: 'NIMBLE.hitDice.saveChanges',
+	noHitDiceYet: 'NIMBLE.hitDice.noHitDiceYet',
+	addStrBonus: 'NIMBLE.hitDice.addStrBonus',
+	applyHealingToHP: 'NIMBLE.hitDice.applyHealingToHP',
+	rollHitDice: 'NIMBLE.hitDice.rollHitDice',
+};
+
 const NIMBLE = {
 	// Constants
 	ROLL_MODE,
@@ -560,6 +591,7 @@ const NIMBLE = {
 	genericProperties,
 	healingTypes,
 	hints,
+	hitDice,
 	languageHints,
 	languageImages,
 	languages,

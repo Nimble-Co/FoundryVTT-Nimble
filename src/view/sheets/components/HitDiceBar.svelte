@@ -73,12 +73,11 @@
 			: 0}%"
 	>
 		{#if hasMultipleDieSizes}
-			<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 			<span
 				class="nimble-hit-dice-bar__values nimble-hit-dice-bar__values--clickable"
 				onclick={handleEditCurrentHitDice}
-				data-tooltip="Edit Current Hit Dice"
-				aria-label="Edit Current Hit Dice"
+				data-tooltip={CONFIG.NIMBLE.hitDice.editCurrentHitDice}
+				aria-label={CONFIG.NIMBLE.hitDice.editCurrentHitDice}
 				role="button"
 				tabindex="0"
 				onkeydown={(e) => e.key === 'Enter' && handleEditCurrentHitDice()}
@@ -94,6 +93,7 @@
 					{max}
 					{value}
 					disabled={disableControls}
+					aria-label={CONFIG.NIMBLE.hitDice.currentHitDiceValue}
 					onchange={(event) =>
 						handleUpdateCurrentHitDice(Number((event.currentTarget as HTMLInputElement).value))}
 				/>
@@ -103,6 +103,7 @@
 					type="number"
 					value={max}
 					disabled
+					aria-label={CONFIG.NIMBLE.hitDice.maxHitDice}
 				/>
 			</span>
 		{/if}
@@ -112,7 +113,8 @@
 			class="nimble-hit-dice-bar__label"
 			role="button"
 			tabindex="0"
-			data-tooltip="Roll Hit Dice"
+			aria-label={CONFIG.NIMBLE.hitDice.rollHitDiceButton}
+			data-tooltip={CONFIG.NIMBLE.hitDice.rollHitDiceButton}
 			onclick={handleRollHitDice}
 			onkeydown={(e) => e.key === 'Enter' && handleRollHitDice()}
 		>
