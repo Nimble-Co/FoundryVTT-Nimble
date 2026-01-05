@@ -10,6 +10,20 @@ const featureCardSchema = () => ({
 	isCritical: new fields.BooleanField({ required: true, initial: false, nullable: false }),
 	isMiss: new fields.BooleanField({ required: true, initial: false, nullable: false }),
 	name: new fields.StringField({ required: true, nullable: false }),
+	attackType: new fields.StringField({
+		required: true,
+		nullable: false,
+		blank: true,
+		initial: '',
+		choices: ['', 'reach', 'range'],
+	}),
+	attackDistance: new fields.NumberField({
+		required: true,
+		nullable: false,
+		initial: 1,
+		min: 1,
+		integer: true,
+	}),
 });
 
 declare namespace NimbleFeatureCardData {

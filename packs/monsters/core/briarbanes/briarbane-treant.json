@@ -161,7 +161,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,
@@ -294,7 +296,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "reach",
+						"distance": 3
 					},
 					"template": {
 						"length": 1,
@@ -366,7 +370,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,

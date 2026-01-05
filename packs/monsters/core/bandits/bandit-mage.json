@@ -315,7 +315,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "range",
+						"distance": 12
 					},
 					"template": {
 						"length": 1,

@@ -77,6 +77,20 @@ export const activation = () => ({
 				initial: '',
 				nullable: false,
 			}),
+			attackType: new fields.StringField({
+				required: true,
+				nullable: false,
+				blank: true,
+				initial: '',
+				choices: ['', 'reach', 'range'],
+			}),
+			distance: new fields.NumberField({
+				required: true,
+				nullable: false,
+				initial: 1,
+				min: 1,
+				integer: true,
+			}),
 		}),
 		template: new fields.SchemaField({
 			length: new fields.NumberField({

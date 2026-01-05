@@ -225,7 +225,9 @@
 					"showDescription": false,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "",
+						"distance": 1
 					},
 					"template": {
 						"length": 1,

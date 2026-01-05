@@ -504,6 +504,37 @@
 		},
 		"ui": {
 			"clearAll": "Clear All"
+		},
+		"npcSheet": {
+			"armor": "Armor",
+			"decreaseArmor": "Decrease Armor",
+			"increaseArmor": "Increase Armor",
+			"features": "Features",
+			"createFeature": "Create Feature",
+			"expandAllDescriptions": "Expand all descriptions",
+			"collapseAllDescriptions": "Collapse all descriptions",
+			"editAttackSequence": "Edit Attack Sequence",
+			"configureItem": "Configure {name}",
+			"deleteItem": "Delete {name}",
+			"collapseDescription": "Collapse description for {name}",
+			"revealDescription": "Reveal description for {name}",
+			"melee": "Melee",
+			"reach": "Reach {distance}",
+			"range": "Range {distance}"
+		},
+		"itemConfig": {
+			"targets": "Targets",
+			"acquireTargetsFromTemplate": "Acquire targets from template",
+			"targetCount": "Target Count",
+			"targetRestrictions": "Target Restrictions",
+			"attackType": "Attack Type",
+			"distance": "Distance",
+			"attackTypes": {
+				"none": "None",
+				"melee": "Melee",
+				"reach": "Reach",
+				"range": "Range"
+			}
 		}
 	}
 }

@@ -245,7 +245,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "reach",
+						"distance": 6
 					},
 					"template": {
 						"length": 1,
@@ -316,7 +318,9 @@
 					"showDescription": true,
 					"targets": {
 						"count": 1,
-						"restrictions": ""
+						"restrictions": "",
+						"attackType": "reach",
+						"distance": 2
 					},
 					"template": {
 						"length": 1,

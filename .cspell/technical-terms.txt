@@ -26,3 +26,4 @@ sublist
 unsub
 vtta
 vttsb
+worktree

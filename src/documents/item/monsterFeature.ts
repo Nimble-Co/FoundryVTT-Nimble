@@ -11,12 +11,16 @@ export class NimbleMonsterFeatureItem extends NimbleBaseItem {
 			this.system.description,
 		);
 
+		const targets = this.system.activation.targets;
+
 		return {
 			system: {
 				description: showDescription ? description : '',
 				featureType: this.type,
 				class: '',
 				name: this.name,
+				attackType: targets?.attackType || '',
+				attackDistance: targets?.distance || 1,
 			},
 			type: 'feature',
 		};
