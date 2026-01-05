@@ -17,13 +17,30 @@
 		return 'Hit';
 	}
 
+	function getAttackTypeLabel(attackType, distance) {
+		if (!attackType) return null;
+
+		if (attackType === 'melee') return game.i18n.localize('NIMBLE.npcSheet.melee');
+		const key = attackType === 'reach' ? 'NIMBLE.npcSheet.reach' : 'NIMBLE.npcSheet.range';
+		return game.i18n.format(key, { distance });
+	}
+
 	const { messageDocument } = $props();
 
-	let { activation, name, description, featureType, image, isCritical, isMiss } = $derived(
-		messageDocument.reactive.system,
-	);
+	let {
+		activation,
+		name,
+		description,
+		featureType,
+		image,
+		isCritical,
+		isMiss,
+		attackType,
+		attackDistance,
+	} = $derived(messageDocument.reactive.system);
 
 	let subheading = $derived(getCardSubheading(activation, isCritical, isMiss));
+	let attackTypeLabel = $derived(getAttackTypeLabel(attackType, attackDistance));
 
 	const headerBackgroundColor = messageDocument.reactive.author.color;
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
@@ -43,6 +60,12 @@
 		heading={name}
 		{subheading}
 	/>
+
+	{#if attackTypeLabel}
+		<section class="nimble-card-section nimble-card-section--attack-type">
+			<span class="nimble-attack-type-tag">{attackTypeLabel}</span>
+		</section>
+	{/if}
 
 	{#if featureType === 'feature' || featureType === 'monsterFeature'}
 		<Targets />
@@ -66,6 +89,20 @@
 		&:not(:last-of-type) {
 			border-bottom: 1px solid var(--nimble-card-border-color);
 		}
+
+		&--attack-type {
+			display: flex;
+			gap: 0.25rem;
+		}
+	}
+
+	.nimble-attack-type-tag {
+		font-size: 0.75rem;
+		font-weight: 500;
+		padding: 0.125rem 0.5rem;
+		background: hsl(41, 18%, 54%, 15%);
+		border-radius: 3px;
+		color: var(--nimble-muted-text-color, hsl(41, 18%, 40%));
 	}
 
 	:global(.nimble-card-section--description *:first-child) {
