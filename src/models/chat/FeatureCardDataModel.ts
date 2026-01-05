@@ -15,7 +15,7 @@ const featureCardSchema = () => ({
 		nullable: false,
 		blank: true,
 		initial: '',
-		choices: ['', 'melee', 'reach', 'range'],
+		choices: ['', 'reach', 'range'],
 	}),
 	attackDistance: new fields.NumberField({
 		required: true,

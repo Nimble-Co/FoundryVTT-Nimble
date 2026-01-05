@@ -20,7 +20,6 @@
 	function getAttackTypeLabel(attackType, distance) {
 		if (!attackType) return null;
 
-		if (attackType === 'melee') return game.i18n.localize('NIMBLE.npcSheet.melee');
 		const key = attackType === 'reach' ? 'NIMBLE.npcSheet.reach' : 'NIMBLE.npcSheet.range';
 		return game.i18n.format(key, { distance });
 	}

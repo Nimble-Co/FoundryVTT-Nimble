@@ -83,17 +83,6 @@ function migrateMonsterFile(filePath) {
 			const description = item.system?.description || '';
 			const parsed = parseReachRange(description);
 
-			// Determine the attack type:
-			// - If reach/range found in description, use that
-			// - Otherwise default to melee
-			let attackType = 'melee';
-			let distance = 1;
-
-			if (parsed) {
-				attackType = parsed.selected;
-				distance = parsed.value;
-			}
-
 			// Ensure activation.targets exists
 			if (!item.system.activation) {
 				item.system.activation = {};
@@ -102,15 +91,27 @@ function migrateMonsterFile(filePath) {
 				item.system.activation.targets = {};
 			}
 
-			// Add or update attackType and distance in activation.targets
 			const targets = item.system.activation.targets;
-			const needsUpdate = targets.attackType !== attackType || targets.distance !== distance;
 
-			if (needsUpdate) {
-				targets.attackType = attackType;
-				targets.distance = distance;
-				modified = true;
-				console.log(`  ${item.name}: ${attackType}${distance > 1 ? ' ' + distance : ''}`);
+			// Only add attackType/distance if reach or range is found in description
+			if (parsed) {
+				const needsUpdate =
+					targets.attackType !== parsed.selected || targets.distance !== parsed.value;
+
+				if (needsUpdate) {
+					targets.attackType = parsed.selected;
+					targets.distance = parsed.value;
+					modified = true;
+					console.log(`  ${item.name}: ${parsed.selected} ${parsed.value}`);
+				}
+			} else {
+				// Remove attackType if it was incorrectly set (e.g., to 'melee')
+				if (targets.attackType) {
+					targets.attackType = '';
+					targets.distance = 1;
+					modified = true;
+					console.log(`  ${item.name}: removed attackType (no reach/range in description)`);
+				}
 			}
 		}
 	}

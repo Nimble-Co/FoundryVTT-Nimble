@@ -82,7 +82,7 @@ export const activation = () => ({
 				nullable: false,
 				blank: true,
 				initial: '',
-				choices: ['', 'melee', 'reach', 'range'],
+				choices: ['', 'reach', 'range'],
 			}),
 			distance: new fields.NumberField({
 				required: true,

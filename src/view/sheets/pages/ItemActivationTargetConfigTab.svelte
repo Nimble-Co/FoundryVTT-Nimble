@@ -18,7 +18,6 @@
 
 	const attackTypeOptions = [
 		{ value: '', label: game.i18n.localize('NIMBLE.itemConfig.attackTypes.none') },
-		{ value: 'melee', label: game.i18n.localize('NIMBLE.itemConfig.attackTypes.melee') },
 		{ value: 'reach', label: game.i18n.localize('NIMBLE.itemConfig.attackTypes.reach') },
 		{ value: 'range', label: game.i18n.localize('NIMBLE.itemConfig.attackTypes.range') },
 	];

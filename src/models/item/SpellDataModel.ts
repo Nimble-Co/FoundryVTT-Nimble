@@ -49,7 +49,7 @@ class NimbleSpellData extends NimbleBaseItemData<
 		targets: {
 			count: number;
 			restrictions: string;
-			attackType: '' | 'melee' | 'reach' | 'range';
+			attackType: '' | 'reach' | 'range';
 			distance: number;
 		};
 		template: { length: number; radius: number; shape: string; width: number };

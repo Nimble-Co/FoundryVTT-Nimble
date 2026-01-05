@@ -239,7 +239,7 @@
 					"targets": {
 						"count": 1,
 						"restrictions": "",
-						"attackType": "melee",
+						"attackType": "",
 						"distance": 1
 					},
 					"template": {
@@ -361,7 +361,7 @@
 					"targets": {
 						"count": 1,
 						"restrictions": "",
-						"attackType": "melee",
+						"attackType": "",
 						"distance": 1
 					},
 					"template": {
