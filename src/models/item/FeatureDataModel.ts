@@ -37,7 +37,12 @@ class NimbleFeatureData extends NimbleBaseItemData<
 		cost: { details: string; quantity: number; type: string; isReaction: boolean };
 		duration: { details: string; quantity: number; type: string };
 		effects: Record<string, unknown>[];
-		targets: { count: number; restrictions: string };
+		targets: {
+			count: number;
+			restrictions: string;
+			attackType: '' | 'melee' | 'reach' | 'range';
+			distance: number;
+		};
 		template: { length: number; radius: number; shape: string; width: number };
 	};
 
