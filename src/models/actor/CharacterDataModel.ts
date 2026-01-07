@@ -439,7 +439,6 @@ interface HitDiceData {
 	current: number;
 	origin: string[];
 	bonus?: number;
-	temp?: number;
 }
 
 /** Type definitions for bonus hit dice entry */

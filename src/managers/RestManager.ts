@@ -97,9 +97,10 @@ class RestManager {
 	/** Recovery Methods                           */
 	/** ------------------------------------------ */
 	#restoreHitDice() {
-		const strMod = Math.max(this.#actor.system.abilities.strength.mod, 1);
+		// Safe rest restores ALL hit dice
+		const maxHitDice = this.#actor.HitDiceManager.max;
 		const { updates, recoveredData } = this.#actor.HitDiceManager.getUpdateData({
-			upperLimit: strMod,
+			upperLimit: maxHitDice,
 			restoreLargest: true,
 		});
 

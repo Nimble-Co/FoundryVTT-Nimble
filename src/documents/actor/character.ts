@@ -22,6 +22,7 @@ import EditCurrentHitDiceDialog from '../../view/dialogs/EditCurrentHitDiceDialo
 import EditHitDiceDialog from '../../view/dialogs/EditHitDiceDialog.svelte';
 import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
+import SafeRestDialog from '../../view/dialogs/SafeRestDialog.svelte';
 import RollHitDiceDialog from '../../view/dialogs/RollHitDiceDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
@@ -1151,21 +1152,34 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	async triggerRest(restOptions = {} as RestManager.Data) {
 		let restData: RestManager.Data;
 
-		if (restOptions.skipChatCard || restOptions.restType === 'safe') {
+		if (restOptions.skipChatCard) {
 			restData = restOptions;
-		} else {
-			// Launch Config Dialog
-			const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
-			const dialog = new GenericDialog(
-				'Field Rest Dialog',
-				FieldRestDialog,
+		} else if (restOptions.restType === 'safe') {
+			// Launch Safe Rest Dialog (singleton per actor)
+			const dialog = GenericDialog.getOrCreate(
+				'Safe Rest',
+				SafeRestDialog,
 				{ document: this },
-				{ icon: 'fa-solid fa-hourglass-half' },
+				{ icon: 'fa-solid fa-moon', uniqueId: `safe-rest-${this.uuid}` },
 			);
 
 			await dialog.render(true);
 			const dialogData = await dialog.promise;
+			if (!dialogData) return; // Dialog was closed without submitting
+
+			restData = { ...dialogData, restType: 'safe' } as RestManager.Data;
+		} else {
+			// Launch Field Rest Dialog (singleton per actor)
+			const dialog = GenericDialog.getOrCreate(
+				'Field Rest',
+				FieldRestDialog,
+				{ document: this },
+				{ icon: 'fa-solid fa-hourglass-half', uniqueId: `field-rest-${this.uuid}` },
+			);
+
+			await dialog.render(true);
+			const dialogData = await dialog.promise;
+			if (!dialogData) return; // Dialog was closed without submitting
 
 			restData = { ...dialogData, restType: restOptions.restType } as RestManager.Data;
 		}

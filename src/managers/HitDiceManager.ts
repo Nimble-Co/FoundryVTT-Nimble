@@ -148,7 +148,7 @@ class HitDiceManager {
 		if (!upperLimit) upperLimit = Math.max(Math.floor(this.max / 2), 1) || 1;
 
 		const updates = {};
-		const recovered = 0;
+		let recovered = 0;
 		const recoveredData: Record<string, number> = {};
 
 		const data = Object.entries(this.bySize).sort(([a], [b]) => {
@@ -163,6 +163,7 @@ class HitDiceManager {
 			if (recovered >= upperLimit) return;
 
 			const recoverable = Math.min(consumed, upperLimit - recovered);
+			recovered += recoverable;
 			recoveredData[die] ??= 0;
 			recoveredData[die] += recoverable;
 			updates[`system.attributes.hitDice.${die}.current`] = current + recoverable;
