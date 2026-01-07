@@ -528,7 +528,35 @@
 			"noHitDiceYet": "No hit dice yet.",
 			"addStrBonus": "Add STR bonus ({bonus} per die)",
 			"applyHealingToHP": "Apply healing to HP",
-			"rollHitDice": "Roll {count} Hit {dieWord}"
+			"rollHitDice": "Roll {count} Hit {dieWord}",
+			"max": "Max",
+			"selectAll": "Select all"
+		},
+		"hitPoints": {
+			"startingHp": "Starting HP",
+			"classTotal": "Class Total",
+			"levelUpHpGains": "Level-Up HP Gains",
+			"level": "Lvl {level}",
+			"bonusHp": "Bonus HP",
+			"bonusHpHint": "Static bonus from feats, items, or other sources",
+			"totalMaxHp": "Total Maximum HP",
+			"saveChanges": "Save Changes"
+		},
+		"safeRest": {
+			"recoveryPreview": "Recovery Preview",
+			"hitPoints": "Hit Points",
+			"hpRecovery": "+{amount} HP ({current} → {max})",
+			"alreadyFull": "Already full",
+			"tempHp": "Temp HP",
+			"removed": "-{amount} removed",
+			"hitDice": "Hit Dice",
+			"hitDieRecovery": "+{amount} d{size}",
+			"mana": "Mana",
+			"manaRecovery": "+{amount} ({current} → {max})",
+			"wounds": "Wounds",
+			"noWounds": "No wounds",
+			"wound": "-1 wound ({current} → {next})",
+			"safeRestButton": "Safe Rest"
 		},
 		"npcSheet": {
 			"armor": "Armor",

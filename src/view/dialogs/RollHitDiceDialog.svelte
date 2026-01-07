@@ -57,7 +57,9 @@
 <article class="nimble-sheet__body nimble-roll-hit-dice-dialog">
 	<section>
 		<header class="nimble-section-header">
-			<h3 class="nimble-heading" data-heading-variant="section">Select Hit Dice to Roll</h3>
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{CONFIG.NIMBLE.hitDice.selectToRoll}
+			</h3>
 		</header>
 
 		<div class="nimble-roll-hit-dice-dialog__dice-list">
@@ -77,7 +79,7 @@
 									type="button"
 									disabled={selections[die] <= 0}
 									onclick={() => decrementDie(die)}
-									aria-label="Remove one d{die}"
+									aria-label={game.i18n.format(CONFIG.NIMBLE.hitDice.removeDie, { size: die })}
 								>
 									<i class="fa-solid fa-minus"></i>
 								</button>
@@ -100,7 +102,7 @@
 									type="button"
 									disabled={(selections[die] ?? 0) >= current}
 									onclick={() => incrementDie(die)}
-									aria-label="Add one d{die}"
+									aria-label={game.i18n.format(CONFIG.NIMBLE.hitDice.addDie, { size: die })}
 								>
 									<i class="fa-solid fa-plus"></i>
 								</button>
@@ -116,10 +118,10 @@
 									type="button"
 									disabled={(selections[die] ?? 0) >= current}
 									onclick={() => (selections[die] = current)}
-									aria-label="Select all d{die}"
-									data-tooltip="Select all"
+									aria-label={game.i18n.format(CONFIG.NIMBLE.hitDice.selectAllDie, { size: die })}
+									data-tooltip={CONFIG.NIMBLE.hitDice.selectAll}
 								>
-									Max
+									{CONFIG.NIMBLE.hitDice.max}
 								</button>
 							</div>
 						{:else}
@@ -161,12 +163,16 @@
 	<section class="nimble-roll-hit-dice-dialog__options">
 		<label class="nimble-roll-hit-dice-dialog__checkbox-label">
 			<input type="checkbox" bind:checked={addStrBonus} />
-			<span>Add STR bonus (+{actor.system.abilities.strength.mod} per die)</span>
+			<span
+				>{game.i18n.format(CONFIG.NIMBLE.hitDice.addStrBonus, {
+					bonus: actor.system.abilities.strength.mod,
+				})}</span
+			>
 		</label>
 
 		<label class="nimble-roll-hit-dice-dialog__checkbox-label">
 			<input type="checkbox" bind:checked={applyToHP} />
-			<span>Apply healing to HP</span>
+			<span>{CONFIG.NIMBLE.hitDice.applyHealingToHP}</span>
 		</label>
 	</section>
 </article>
@@ -174,7 +180,10 @@
 <footer class="nimble-sheet__footer">
 	<button class="nimble-button" data-button-variant="basic" onclick={submit} disabled={!canRoll}>
 		<i class="fa-solid fa-dice"></i>
-		Roll {totalSelected} Hit {totalSelected === 1 ? 'Die' : 'Dice'}
+		{game.i18n.format(CONFIG.NIMBLE.hitDice.rollHitDice, {
+			count: totalSelected,
+			dieWord: totalSelected === 1 ? 'Die' : 'Dice',
+		})}
 	</button>
 </footer>
 

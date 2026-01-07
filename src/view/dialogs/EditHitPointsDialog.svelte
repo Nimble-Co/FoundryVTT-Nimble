@@ -59,21 +59,23 @@
 
 			<div class="hp-class-summary">
 				<div class="hp-stat">
-					<span class="hp-stat__label">Starting HP</span>
+					<span class="hp-stat__label">{CONFIG.NIMBLE.hitPoints.startingHp}</span>
 					<span class="hp-stat__value">{cls.startingHp}</span>
 				</div>
 				<div class="hp-stat hp-stat--highlight">
-					<span class="hp-stat__label">Class Total</span>
+					<span class="hp-stat__label">{CONFIG.NIMBLE.hitPoints.classTotal}</span>
 					<span class="hp-stat__value">{cls.maxHp}</span>
 				</div>
 			</div>
 
 			<div class="hp-levels">
-				<span class="hp-levels__header">Level-Up HP Gains</span>
+				<span class="hp-levels__header">{CONFIG.NIMBLE.hitPoints.levelUpHpGains}</span>
 				<div class="hp-levels__grid">
 					{#each cls.hpData as hp, levelIndex}
 						<div class="hp-level-entry">
-							<span class="hp-level-entry__label">Lvl {levelIndex + 2}</span>
+							<span class="hp-level-entry__label"
+								>{game.i18n.format(CONFIG.NIMBLE.hitPoints.level, { level: levelIndex + 2 })}</span
+							>
 							<input
 								class="hp-level-entry__input"
 								type="number"
@@ -93,12 +95,12 @@
 		<header class="nimble-section-header">
 			<h3 class="nimble-heading" data-heading-variant="section">
 				<i class="fa-solid fa-plus-circle"></i>
-				Bonus HP
+				{CONFIG.NIMBLE.hitPoints.bonusHp}
 			</h3>
 		</header>
 		<div class="hp-bonus-row">
 			<label class="hp-bonus-label" for="hp-bonus-input">
-				Static bonus from feats, items, or other sources
+				{CONFIG.NIMBLE.hitPoints.bonusHpHint}
 			</label>
 			<input id="hp-bonus-input" class="hp-bonus-input" type="number" bind:value={hpBonus} />
 		</div>
@@ -106,14 +108,16 @@
 
 	<section class="hp-total-section">
 		<div class="hp-total">
-			<span class="hp-total__label">Total Maximum HP</span>
+			<span class="hp-total__label">{CONFIG.NIMBLE.hitPoints.totalMaxHp}</span>
 			<span class="hp-total__value">{totalMaxHp}</span>
 		</div>
 	</section>
 </article>
 
 <footer class="nimble-sheet__footer">
-	<button class="nimble-button" data-button-variant="basic" onclick={submit}>Save Changes</button>
+	<button class="nimble-button" data-button-variant="basic" onclick={submit}
+		>{CONFIG.NIMBLE.hitPoints.saveChanges}</button
+	>
 </footer>
 
 <style lang="scss">

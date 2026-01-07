@@ -42,61 +42,76 @@
 <article class="nimble-sheet__body">
 	<section>
 		<header class="nimble-section-header">
-			<h3 class="nimble-heading" data-heading-variant="section">Recovery Preview</h3>
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{CONFIG.NIMBLE.safeRest.recoveryPreview}
+			</h3>
 		</header>
 
 		<ul class="nimble-safe-rest-preview">
 			<li class="nimble-safe-rest-preview__item">
-				<span class="nimble-safe-rest-preview__label">Hit Points</span>
+				<span class="nimble-safe-rest-preview__label">{CONFIG.NIMBLE.safeRest.hitPoints}</span>
 				<span class="nimble-safe-rest-preview__value">
 					{#if hpRecovery > 0}
-						+{hpRecovery} HP ({hp.value} → {hp.max})
+						{game.i18n.format(CONFIG.NIMBLE.safeRest.hpRecovery, {
+							amount: hpRecovery,
+							current: hp.value,
+							max: hp.max,
+						})}
 					{:else}
-						Already full
+						{CONFIG.NIMBLE.safeRest.alreadyFull}
 					{/if}
 				</span>
 			</li>
 
 			{#if tempHpLoss > 0}
 				<li class="nimble-safe-rest-preview__item nimble-safe-rest-preview__item--loss">
-					<span class="nimble-safe-rest-preview__label">Temp HP</span>
-					<span class="nimble-safe-rest-preview__value">-{tempHpLoss} removed</span>
+					<span class="nimble-safe-rest-preview__label">{CONFIG.NIMBLE.safeRest.tempHp}</span>
+					<span class="nimble-safe-rest-preview__value"
+						>{game.i18n.format(CONFIG.NIMBLE.safeRest.removed, { amount: tempHpLoss })}</span
+					>
 				</li>
 			{/if}
 
 			<li class="nimble-safe-rest-preview__item">
-				<span class="nimble-safe-rest-preview__label">Hit Dice</span>
+				<span class="nimble-safe-rest-preview__label">{CONFIG.NIMBLE.safeRest.hitDice}</span>
 				<span class="nimble-safe-rest-preview__value">
 					{#if totalHitDiceRecovery > 0}
 						{#each Object.entries(hitDiceRecovery) as [die, amount], i}
 							{#if i > 0},
 							{/if}
-							+{amount} d{die}
+							{game.i18n.format(CONFIG.NIMBLE.safeRest.hitDieRecovery, { amount, size: die })}
 						{/each}
 					{:else}
-						Already full
+						{CONFIG.NIMBLE.safeRest.alreadyFull}
 					{/if}
 				</span>
 			</li>
 
 			<li class="nimble-safe-rest-preview__item">
-				<span class="nimble-safe-rest-preview__label">Mana</span>
+				<span class="nimble-safe-rest-preview__label">{CONFIG.NIMBLE.safeRest.mana}</span>
 				<span class="nimble-safe-rest-preview__value">
 					{#if manaRecovery > 0}
-						+{manaRecovery} ({mana.current} → {mana.max})
+						{game.i18n.format(CONFIG.NIMBLE.safeRest.manaRecovery, {
+							amount: manaRecovery,
+							current: mana.current,
+							max: mana.max,
+						})}
 					{:else}
-						Already full
+						{CONFIG.NIMBLE.safeRest.alreadyFull}
 					{/if}
 				</span>
 			</li>
 
 			<li class="nimble-safe-rest-preview__item">
-				<span class="nimble-safe-rest-preview__label">Wounds</span>
+				<span class="nimble-safe-rest-preview__label">{CONFIG.NIMBLE.safeRest.wounds}</span>
 				<span class="nimble-safe-rest-preview__value">
 					{#if woundRecovery > 0}
-						-1 wound ({wounds.value} → {wounds.value - 1})
+						{game.i18n.format(CONFIG.NIMBLE.safeRest.wound, {
+							current: wounds.value,
+							next: wounds.value - 1,
+						})}
 					{:else}
-						No wounds
+						{CONFIG.NIMBLE.safeRest.noWounds}
 					{/if}
 				</span>
 			</li>
@@ -105,7 +120,9 @@
 </article>
 
 <footer class="nimble-sheet__footer">
-	<button class="nimble-button" data-button-variant="basic" onclick={submit}> Safe Rest </button>
+	<button class="nimble-button" data-button-variant="basic" onclick={submit}>
+		{CONFIG.NIMBLE.safeRest.safeRestButton}
+	</button>
 </footer>
 
 <style lang="scss">
