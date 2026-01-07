@@ -583,6 +583,22 @@ const safeRest = {
 	safeRestButton: 'NIMBLE.safeRest.safeRestButton',
 };
 
+const fieldRest = {
+	restType: 'NIMBLE.fieldRest.restType',
+	catchBreath: 'NIMBLE.fieldRest.catchBreath',
+	catchBreathDescription: 'NIMBLE.fieldRest.catchBreathDescription',
+	makeCamp: 'NIMBLE.fieldRest.makeCamp',
+	makeCampDescription: 'NIMBLE.fieldRest.makeCampDescription',
+	hitDiceToSpend: 'NIMBLE.fieldRest.hitDiceToSpend',
+	decreaseDie: 'NIMBLE.fieldRest.decreaseDie',
+	increaseDie: 'NIMBLE.fieldRest.increaseDie',
+	maxDie: 'NIMBLE.fieldRest.maxDie',
+	max: 'NIMBLE.fieldRest.max',
+	restAndSpendHitDie: 'NIMBLE.fieldRest.restAndSpendHitDie',
+	restAndSpendHitDice: 'NIMBLE.fieldRest.restAndSpendHitDice',
+	restWithoutSpending: 'NIMBLE.fieldRest.restWithoutSpending',
+};
+
 const NIMBLE = {
 	// Constants
 	ROLL_MODE,
@@ -612,6 +628,7 @@ const NIMBLE = {
 	effectTypes,
 	featureTypeHeadings,
 	featureTypes,
+	fieldRest,
 	forms,
 	genericProperties,
 	healingTypes,

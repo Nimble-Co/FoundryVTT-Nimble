@@ -40,7 +40,7 @@
 
 <article class="nimble-sheet__body field-rest-dialog">
 	<section class="field-rest-dialog__section">
-		<h3 class="field-rest-dialog__heading">Rest Type</h3>
+		<h3 class="field-rest-dialog__heading">{CONFIG.NIMBLE.fieldRest.restType}</h3>
 
 		<div class="field-rest-dialog__rest-types">
 			<label class="rest-type-card" class:rest-type-card--active={!makeCamp}>
@@ -53,9 +53,9 @@
 				/>
 				<div class="rest-type-card__header">
 					<i class="rest-type-card__icon fa-solid fa-wind"></i>
-					<span class="rest-type-card__title">Catch Breath</span>
+					<span class="rest-type-card__title">{CONFIG.NIMBLE.fieldRest.catchBreath}</span>
 				</div>
-				<p class="rest-type-card__description">10 min rest. Roll Hit Dice + STR to heal.</p>
+				<p class="rest-type-card__description">{CONFIG.NIMBLE.fieldRest.catchBreathDescription}</p>
 			</label>
 
 			<label class="rest-type-card" class:rest-type-card--active={makeCamp}>
@@ -68,15 +68,15 @@
 				/>
 				<div class="rest-type-card__header">
 					<i class="rest-type-card__icon fa-solid fa-campground"></i>
-					<span class="rest-type-card__title">Make Camp</span>
+					<span class="rest-type-card__title">{CONFIG.NIMBLE.fieldRest.makeCamp}</span>
 				</div>
-				<p class="rest-type-card__description">8 hour rest. Take max Hit Die value + STR.</p>
+				<p class="rest-type-card__description">{CONFIG.NIMBLE.fieldRest.makeCampDescription}</p>
 			</label>
 		</div>
 	</section>
 
 	<section class="field-rest-dialog__section">
-		<h3 class="field-rest-dialog__heading">Hit Dice to Spend</h3>
+		<h3 class="field-rest-dialog__heading">{CONFIG.NIMBLE.fieldRest.hitDiceToSpend}</h3>
 
 		<div class="hit-dice-grid">
 			{#each Object.entries(hitDice) as [die, { current, total }]}
@@ -91,7 +91,7 @@
 							class="hit-die-row__button"
 							onclick={() => decrementHitDie(die)}
 							disabled={selectedHitDice[die] <= 0}
-							aria-label="Decrease d{die}"
+							aria-label={game.i18n.format(CONFIG.NIMBLE.fieldRest.decreaseDie, { size: die })}
 						>
 							<i class="fa-solid fa-minus"></i>
 						</button>
@@ -102,7 +102,7 @@
 							class="hit-die-row__button"
 							onclick={() => incrementHitDie(die)}
 							disabled={selectedHitDice[die] >= current}
-							aria-label="Increase d{die}"
+							aria-label={game.i18n.format(CONFIG.NIMBLE.fieldRest.increaseDie, { size: die })}
 						>
 							<i class="fa-solid fa-plus"></i>
 						</button>
@@ -111,9 +111,9 @@
 							class="hit-die-row__button hit-die-row__button--max"
 							onclick={() => maxHitDie(die)}
 							disabled={selectedHitDice[die] >= current}
-							aria-label="Max d{die}"
+							aria-label={game.i18n.format(CONFIG.NIMBLE.fieldRest.maxDie, { size: die })}
 						>
-							Max
+							{CONFIG.NIMBLE.fieldRest.max}
 						</button>
 					</div>
 				</div>
@@ -125,9 +125,14 @@
 <footer class="nimble-sheet__footer">
 	<button class="nimble-button" data-button-variant="basic" onclick={submit}>
 		{#if totalSelected > 0}
-			Rest & Spend {totalSelected} Hit {totalSelected === 1 ? 'Die' : 'Dice'}
+			{game.i18n.format(
+				totalSelected === 1
+					? CONFIG.NIMBLE.fieldRest.restAndSpendHitDie
+					: CONFIG.NIMBLE.fieldRest.restAndSpendHitDice,
+				{ count: totalSelected },
+			)}
 		{:else}
-			Rest Without Spending Hit Dice
+			{CONFIG.NIMBLE.fieldRest.restWithoutSpending}
 		{/if}
 	</button>
 </footer>

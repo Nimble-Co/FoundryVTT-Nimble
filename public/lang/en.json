@@ -558,6 +558,21 @@
 			"wound": "-1 wound ({current} → {next})",
 			"safeRestButton": "Safe Rest"
 		},
+		"fieldRest": {
+			"restType": "Rest Type",
+			"catchBreath": "Catch Breath",
+			"catchBreathDescription": "10 min rest. Roll Hit Dice + STR to heal.",
+			"makeCamp": "Make Camp",
+			"makeCampDescription": "8 hour rest. Take max Hit Die value + STR.",
+			"hitDiceToSpend": "Hit Dice to Spend",
+			"decreaseDie": "Decrease d{size}",
+			"increaseDie": "Increase d{size}",
+			"maxDie": "Max d{size}",
+			"max": "Max",
+			"restAndSpendHitDie": "Rest & Spend {count} Hit Die",
+			"restAndSpendHitDice": "Rest & Spend {count} Hit Dice",
+			"restWithoutSpending": "Rest Without Spending Hit Dice"
+		},
 		"npcSheet": {
 			"armor": "Armor",
 			"decreaseArmor": "Decrease Armor",
