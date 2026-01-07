@@ -92,7 +92,7 @@
 	// 	}
 	// }
 
-	async function handleDrop(event, targetId) {
+	async function handleDrop(event, targetId, position) {
 		const draggedId = event.dataTransfer.getData('nimble/reorder');
 		if (!draggedId) return;
 
@@ -107,15 +107,28 @@
 		if (draggedCategory !== targetCategory) return;
 
 		const categoryItems = categorizedItems[draggedCategory];
-		const draggedIndex = categoryItems.findIndex((item) => item._id === draggedId);
-		const targetIndex = categoryItems.findIndex((item) => item._id === targetId);
+		const draggedIndex = categoryItems.findIndex((item) => item.reactive._id === draggedId);
+		let targetIndex = categoryItems.findIndex((item) => item.reactive._id === targetId);
 		if (draggedIndex === -1 || targetIndex === -1) return;
+
+		// Adjust target index based on drop position
+		if (position === 'below') {
+			targetIndex += 1;
+		}
+
+		// Adjust for the removal of the dragged item
+		if (draggedIndex < targetIndex) {
+			targetIndex -= 1;
+		}
 
 		const newItems = [...categoryItems];
 		newItems.splice(draggedIndex, 1);
 		newItems.splice(targetIndex, 0, draggedItem);
 
-		const updates = newItems.map((item, index) => ({ _id: item._id, sort: index * 10000 }));
+		const updates = newItems.map((item, index) => ({
+			_id: item.reactive._id,
+			sort: index * 10000,
+		}));
 		await actor.updateEmbeddedDocuments('Item', updates);
 	}
 
@@ -163,7 +176,7 @@
 	let actor = getContext('actor');
 	let sheet = getContext('application');
 
-	// Local state for collapsed items (used when document is not editable)
+	// Local state for collapsed items - always use for immediate UI response
 	let localCollapsedState = new SvelteMap();
 
 	// Check if the actor is editable (not from compendium and user has permission)
@@ -176,32 +189,31 @@
 
 	// Toggle collapsed state for an item
 	function toggleItemCollapsed(item, shouldCollapse) {
-		console.log('setting local collapsed state', item.reactive._id, shouldCollapse);
+		// Always update local state immediately for instant UI response
+		localCollapsedState.set(item.reactive._id, shouldCollapse);
+
+		// Persist to document in background if editable (non-blocking)
 		if (isEditable) {
-			// If editable, persist to document
 			item.reactive.update({ 'flags.nimble.collapsed': shouldCollapse });
-		} else {
-			// If not editable (viewing from compendium), use local state
-			localCollapsedState.set(item.reactive._id, shouldCollapse);
 		}
 	}
 
 	// Get collapsed state for an item
 	function getItemCollapsed(item) {
-		if (!isEditable && localCollapsedState.has(item.reactive._id)) {
-			console.log(
-				'getting local collapsed state',
-				item.reactive._id,
-				localCollapsedState.get(item.reactive._id),
-			);
+		// Always prefer local state for immediate responsiveness
+		if (localCollapsedState.has(item.reactive._id)) {
 			return localCollapsedState.get(item.reactive._id);
 		}
+		// Fall back to document flags
 		return item.reactive.flags.nimble?.collapsed ?? false;
 	}
 
 	// let bloodiedEffectInEditMode = $state(false);
 	// let lastStandEffectInEditMode = $state(false);
 	let attackSequenceInEditMode = $state(false);
+	let dragOverItemId = $state(null);
+	let dragOverPosition = $state(null); // 'above' or 'below'
+	let draggedItemCategory = $state(null); // track category of item being dragged
 
 	let items = $derived(filterMonsterFeatures(actor.reactive));
 	let categorizedItems = $derived(groupItemsByType(items));
@@ -400,130 +412,187 @@
 									{/if}
 								</li>
 							{:else}
-								<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-								<!-- svelte-ignore a11y_click_events_have_key_events -->
-								<li
-									class="nimble-document-card nimble-document-card--no-meta nimble-document-card--monster-sheet"
-									class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
-									class:nimble-document-card--no-meta={!metadata}
-									data-item-id={item.reactive._id}
-									data-tooltip={prepareItemTooltip(item)}
-									data-tooltip-class="nimble-tooltip nimble-tooltip--item"
-									data-tooltip-direction="LEFT"
+								<!-- svelte-ignore a11y_no_static_element_interactions -->
+								<div
+									class="nimble-monster-feature-wrapper"
+									class:nimble-monster-feature-wrapper--drag-over-above={dragOverItemId ===
+										item.reactive._id && dragOverPosition === 'above'}
+									class:nimble-monster-feature-wrapper--drag-over-below={dragOverItemId ===
+										item.reactive._id && dragOverPosition === 'below'}
 									draggable={isEditable}
 									ondragstart={(event) => {
 										event.dataTransfer.setData('nimble/reorder', item.reactive._id);
-										sheet._onDragStart(event);
+										draggedItemCategory = mapMonsterFeatureToType(item);
+										sheet?._onDragStart?.(event);
 									}}
-									ondrop={(event) => handleDrop(event, item.reactive._id)}
-									onclick={() => actor.activateItem(item.reactive._id)}
+									ondragover={(event) => {
+										// Only allow drop if same category
+										const targetCategory = mapMonsterFeatureToType(item);
+										if (draggedItemCategory && draggedItemCategory !== targetCategory) return;
+
+										event.preventDefault();
+										dragOverItemId = item.reactive._id;
+										// Determine if cursor is in top or bottom half
+										const rect = event.currentTarget.getBoundingClientRect();
+										const midpoint = rect.top + rect.height / 2;
+										dragOverPosition = event.clientY < midpoint ? 'above' : 'below';
+									}}
+									ondragleave={(event) => {
+										if (event.currentTarget.contains(event.relatedTarget)) return;
+										if (dragOverItemId === item.reactive._id) {
+											dragOverItemId = null;
+											dragOverPosition = null;
+										}
+									}}
+									ondragend={() => {
+										dragOverItemId = null;
+										dragOverPosition = null;
+										draggedItemCategory = null;
+									}}
+									ondrop={(event) => {
+										const position = dragOverPosition;
+										dragOverItemId = null;
+										dragOverPosition = null;
+										draggedItemCategory = null;
+										handleDrop(event, item.reactive._id, position);
+									}}
 								>
-									<header class="u-semantic-only">
-										{#if showEmbeddedDocumentImages}
-											<img
-												class="nimble-document-card__img"
-												src={item.reactive.img}
-												alt={item.reactive.name}
-											/>
-										{/if}
-
-										<h4
-											class="nimble-document-card__name nimble-heading"
-											data-heading-variant="item"
-										>
-											{item.reactive.name}
-										</h4>
-
-										{#if getReachRangeLabel(item)}
-											<span class="nimble-document-card__reach-range">
-												{getReachRangeLabel(item)}
-											</span>
-										{/if}
-
-										{#if !getItemCollapsed(item)}
-											<span
-												class="nimble-button"
-												role="button"
-												tabindex="0"
-												data-button-variant="icon"
-												aria-label={game.i18n.format('NIMBLE.npcSheet.collapseDescription', {
-													name: item.reactive.name,
-												})}
-												onclick={(event) => {
-													console.log('collapsing description for', item.reactive.name);
-													event.stopPropagation();
-													toggleItemCollapsed(item, true);
-												}}
-												onkeydown={(event) => {
-													if (event.key === 'Space' || event.key === 'Enter' || event.key === ' ') {
-														event.preventDefault();
-														toggleItemCollapsed(item, true);
-													}
-												}}
-											>
-												<i class="fa-solid fa-chevron-up"></i>
-											</span>
-										{:else}
-											<span
-												class="nimble-button"
-												role="button"
-												tabindex="0"
-												data-button-variant="icon"
-												aria-label={game.i18n.format('NIMBLE.npcSheet.revealDescription', {
-													name: item.reactive.name,
-												})}
-												onclick={(event) => {
-													console.log('revealing description for', item.reactive.name);
-													event.stopPropagation();
-													toggleItemCollapsed(item, false);
-												}}
-												onkeydown={(event) => {
-													if (event.key === 'Space' || event.key === 'Enter' || event.key === ' ') {
-														event.preventDefault();
-														toggleItemCollapsed(item, false);
-													}
-												}}
-											>
-												<i class="fa-solid fa-chevron-down"></i>
-											</span>
-										{/if}
-
-										{#if isEditable}
-											<button
-												class="nimble-button"
-												data-button-variant="icon"
-												type="button"
-												aria-label={game.i18n.format('NIMBLE.npcSheet.configureItem', {
-													name: item.reactive.name,
-												})}
-												onclick={(event) => configureItem(event, item.reactive._id)}
-											>
-												<i class="fa-solid fa-edit"></i>
-											</button>
-
-											<button
-												class="nimble-button"
-												data-button-variant="icon"
-												type="button"
-												aria-label={game.i18n.format('NIMBLE.npcSheet.deleteItem', {
-													name: item.reactive.name,
-												})}
-												onclick={(event) => deleteItem(event, item.reactive._id)}
-											>
-												<i class="fa-solid fa-trash"></i>
-											</button>
-										{/if}
-									</header>
-								</li>
-								{#if !getItemCollapsed(item)}
-									<div class="nimble-monster-feature-description">
-										{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.system.description) then featureDescription}
-											{#if featureDescription}
-												{@html featureDescription}
+									<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+									<!-- svelte-ignore a11y_click_events_have_key_events -->
+									<li
+										class="nimble-document-card nimble-document-card--no-meta nimble-document-card--monster-sheet"
+										class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
+										class:nimble-document-card--no-meta={!metadata}
+										data-item-id={item.reactive._id}
+										data-tooltip={prepareItemTooltip(item)}
+										data-tooltip-class="nimble-tooltip nimble-tooltip--item"
+										data-tooltip-direction="LEFT"
+										onclick={() => actor.activateItem(item.reactive._id)}
+									>
+										<header class="u-semantic-only">
+											{#if showEmbeddedDocumentImages}
+												<img
+													class="nimble-document-card__img"
+													src={item.reactive.img}
+													alt={item.reactive.name}
+												/>
 											{/if}
-										{/await}
+
+											<h4
+												class="nimble-document-card__name nimble-heading"
+												data-heading-variant="item"
+											>
+												{item.reactive.name}
+											</h4>
+
+											{#if item.reactive.system?.activation?.effects?.length > 0}
+												<i class="fa-solid fa-dice-d20 nimble-document-card__chat-indicator"></i>
+											{:else}
+												<i class="fa-solid fa-comment nimble-document-card__chat-indicator"></i>
+											{/if}
+
+											<!-- svelte-ignore a11y_no_static_element_interactions -->
+											<span
+												class="nimble-document-card__actions"
+												onclick={(event) => event.stopPropagation()}
+											>
+												{#if getReachRangeLabel(item)}
+													<span class="nimble-document-card__reach-range">
+														{getReachRangeLabel(item)}
+													</span>
+												{/if}
+
+												<span
+													class="nimble-button nimble-collapse-toggle"
+													class:nimble-collapse-toggle--collapsed={getItemCollapsed(item)}
+													role="button"
+													tabindex="0"
+													data-button-variant="icon"
+													aria-label={getItemCollapsed(item)
+														? game.i18n.format('NIMBLE.npcSheet.revealDescription', {
+																name: item.reactive.name,
+															})
+														: game.i18n.format('NIMBLE.npcSheet.collapseDescription', {
+																name: item.reactive.name,
+															})}
+													data-tooltip={getItemCollapsed(item)
+														? creatureFeatures.expand
+														: creatureFeatures.collapse}
+													data-tooltip-direction="DOWN"
+													data-tooltip-class="nimble-tooltip nimble-tooltip--compact"
+													onclick={(event) => {
+														event.stopPropagation();
+														const wasCollapsed = getItemCollapsed(item);
+														toggleItemCollapsed(item, !wasCollapsed);
+														game.tooltip.deactivate();
+														// Reactivate tooltip with updated text
+														requestAnimationFrame(() => {
+															game.tooltip.activate(event.currentTarget, {
+																text: wasCollapsed
+																	? creatureFeatures.collapse
+																	: creatureFeatures.expand,
+																direction: 'DOWN',
+																cssClass: 'nimble-tooltip nimble-tooltip--compact',
+															});
+														});
+													}}
+													onkeydown={(event) => {
+														if (
+															event.key === 'Space' ||
+															event.key === 'Enter' ||
+															event.key === ' '
+														) {
+															event.preventDefault();
+															toggleItemCollapsed(item, !getItemCollapsed(item));
+														}
+													}}
+												>
+													<i class="fa-solid fa-chevron-up"></i>
+												</span>
+
+												{#if isEditable}
+													<button
+														class="nimble-button"
+														data-button-variant="icon"
+														type="button"
+														aria-label={game.i18n.format('NIMBLE.npcSheet.configureItem', {
+															name: item.reactive.name,
+														})}
+														onclick={(event) => configureItem(event, item.reactive._id)}
+													>
+														<i class="fa-solid fa-edit"></i>
+													</button>
+
+													<button
+														class="nimble-button"
+														data-button-variant="icon"
+														type="button"
+														aria-label={game.i18n.format('NIMBLE.npcSheet.deleteItem', {
+															name: item.reactive.name,
+														})}
+														onclick={(event) => deleteItem(event, item.reactive._id)}
+													>
+														<i class="fa-solid fa-trash"></i>
+													</button>
+												{/if}
+											</span>
+										</header>
+									</li>
+									<div
+										class="nimble-monster-feature-description-wrapper"
+										class:nimble-monster-feature-description-wrapper--collapsed={getItemCollapsed(
+											item,
+										)}
+									>
+										<div class="nimble-monster-feature-description">
+											{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.system.description) then featureDescription}
+												{#if featureDescription}
+													{@html featureDescription}
+												{/if}
+											{/await}
+										</div>
 									</div>
-								{/if}
+								</div>
 							{/if}
 						{/each}
 					</ul>
@@ -550,6 +619,91 @@
 		background: hsl(41, 18%, 54%, 15%);
 		border-radius: 3px;
 		white-space: nowrap;
+	}
+
+	.nimble-document-card__actions {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		flex-shrink: 0;
+		// Span all grid rows for full-height click area
+		grid-row: 1 / -1;
+		padding: 0.5rem 0.25rem;
+		margin-top: -0.25rem;
+		margin-bottom: -0.25rem;
+	}
+
+	// Animated collapse toggle caret
+	.nimble-collapse-toggle {
+		i {
+			display: inline-block;
+			transition: transform 250ms ease-out;
+		}
+
+		&--collapsed i {
+			transform: rotateX(180deg);
+		}
+	}
+
+	// Ensure monster sheet cards have a solid background for drag ghost
+	:global(.nimble-document-card--monster-sheet) {
+		background: var(--nimble-card-background-color, hsl(41, 30%, 94%));
+		cursor: pointer;
+	}
+
+	// Roll/Chat indicator icon - always visible, darkens on hover
+	.nimble-document-card__chat-indicator {
+		opacity: 0.3;
+		color: var(--nimble-text-color, currentColor);
+		transition:
+			opacity 150ms ease,
+			color 150ms ease;
+		pointer-events: none;
+		margin-left: auto;
+		padding: 0 0.25rem;
+	}
+
+	// Darken indicator on card hover (when clicking would trigger roll/chat)
+	:global(.nimble-document-card--monster-sheet:hover) .nimble-document-card__chat-indicator {
+		opacity: 1;
+		color: var(--nimble-accent-color, hsl(210, 70%, 50%));
+	}
+
+	// Keep muted when hovering over action buttons (clicking there won't trigger roll/chat)
+	:global(.nimble-document-card--monster-sheet:has(.nimble-document-card__actions:hover))
+		.nimble-document-card__chat-indicator {
+		opacity: 0.3;
+		color: var(--nimble-text-color, currentColor);
+	}
+
+	// Feature wrapper for drag-drop
+	.nimble-monster-feature-wrapper {
+		position: relative;
+	}
+
+	// Drop indicator styling - shows line above or below target
+	.nimble-monster-feature-wrapper--drag-over-above::before {
+		content: '';
+		position: absolute;
+		top: -2px;
+		left: 0;
+		right: 0;
+		height: 4px;
+		background: hsl(145, 80%, 40%);
+		border-radius: 2px;
+		z-index: 10;
+	}
+
+	.nimble-monster-feature-wrapper--drag-over-below::after {
+		content: '';
+		position: absolute;
+		bottom: -2px;
+		left: 0;
+		right: 0;
+		height: 4px;
+		background: hsl(145, 80%, 40%);
+		border-radius: 2px;
+		z-index: 10;
 	}
 
 	.nimble-item-list {
@@ -591,6 +745,10 @@
 		}
 	}
 
+	.nimble-monster-feature-description-wrapper {
+		overflow: hidden;
+	}
+
 	.nimble-monster-feature-description {
 		padding: 0.5rem;
 		margin-top: -0.125rem;
@@ -599,6 +757,24 @@
 		border: 1px solid hsl(41, 18%, 54%, 25%);
 		border-top: none;
 		border-radius: 0 0 4px 4px;
+		overflow: hidden;
+		// Animate all properties
+		transition:
+			max-height 250ms ease-out,
+			padding 250ms ease-out,
+			margin 250ms ease-out,
+			opacity 250ms ease-out,
+			border-color 250ms ease-out;
+		max-height: 500px; // Large enough for most content
+		opacity: 1;
+
+		.nimble-monster-feature-description-wrapper--collapsed & {
+			max-height: 0;
+			padding-block: 0;
+			margin-top: 0;
+			border-color: transparent;
+			opacity: 0;
+		}
 	}
 
 	// Category name header (Actions, Bloodied, Last Stand)

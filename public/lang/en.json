@@ -400,7 +400,9 @@
 		},
 		"creatureFeatures": {
 			"noFeatures": "No features yet.",
-			"actionSequence": "After each hero's turn, choose one."
+			"actionSequence": "After each hero's turn, choose one.",
+			"expand": "Expand",
+			"collapse": "Collapse"
 		},
 		"savingThrows": {
 			"strength": "Strength",

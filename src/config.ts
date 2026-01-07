@@ -525,6 +525,8 @@ const levelUpDialog = {
 const creatureFeatures = {
 	noFeatures: 'NIMBLE.creatureFeatures.noFeatures',
 	actionSequence: 'NIMBLE.creatureFeatures.actionSequence',
+	expand: 'NIMBLE.creatureFeatures.expand',
+	collapse: 'NIMBLE.creatureFeatures.collapse',
 };
 
 const hitDice = {
