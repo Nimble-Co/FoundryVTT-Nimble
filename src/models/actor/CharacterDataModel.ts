@@ -151,11 +151,6 @@ const characterSchema = () => ({
 					nullable: false,
 					initial: 0,
 				}),
-				bonus: new fields.NumberField({
-					required: false,
-					nullable: false,
-					initial: 0,
-				}),
 				origin: new fields.ArrayField(
 					new fields.StringField({
 						required: true,
