@@ -16,6 +16,13 @@ interface HitDiceEntry {
 	temp?: number;
 }
 
+/** Bonus hit die entry type */
+interface BonusHitDieEntry {
+	size: number;
+	value: number;
+	name: string;
+}
+
 /** Interface for character actors used by managers */
 declare interface NimbleCharacterInterface extends NimbleBaseActorInterface {
 	type: 'character';
@@ -30,6 +37,7 @@ declare interface NimbleCharacterInterface extends NimbleBaseActorInterface {
 			will: { mod: number };
 		};
 		attributes: {
+			bonusHitDice: BonusHitDieEntry[];
 			hp: {
 				max: number;
 				value: number;

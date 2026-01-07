@@ -149,9 +149,10 @@
 	// Reactive hit dice computations
 	let hitDiceData = $derived.by(() => {
 		const hitDiceAttr = actor.reactive.system.attributes.hitDice;
+		const bonusHitDice = actor.reactive.system.attributes.bonusHitDice ?? [];
 		const classes = actor.reactive.items.filter((i) => i.type === 'class');
 
-		// Build bySize from classes, bonuses, and temp
+		// Build bySize from classes and bonus hit dice
 		const bySize = {};
 
 		// Add from classes
@@ -163,14 +164,14 @@
 			bySize[size].current = hitDiceAttr[size]?.current ?? 0;
 		}
 
-		// Add bonuses and temp
-		for (const [die, data] of Object.entries(hitDiceAttr ?? {})) {
-			const bonus = data.bonus ?? 0;
-			const temp = data.temp ?? 0;
-			if (bonus > 0 || temp > 0 || bySize[die]) {
-				bySize[die] ??= { current: data.current ?? 0, total: 0 };
-				bySize[die].total += bonus + temp;
-				bySize[die].current = data.current ?? 0;
+		// Add from bonusHitDice array
+		for (const entry of bonusHitDice) {
+			const size = entry.size;
+			bySize[size] ??= { current: hitDiceAttr[size]?.current ?? 0, total: 0 };
+			bySize[size].total += entry.value;
+			// Get current from hitDice record if not already set
+			if (!classes.some((cls) => cls.system.hitDieSize === size)) {
+				bySize[size].current = hitDiceAttr[size]?.current ?? 0;
 			}
 		}
 

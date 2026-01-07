@@ -55,6 +55,29 @@ type SkillsSchema = foundry.data.fields.SchemaField<{
 /** ******************************** */
 const characterSchema = () => ({
 	attributes: new fields.SchemaField({
+		bonusHitDice: new fields.ArrayField(
+			new fields.SchemaField({
+				size: new fields.NumberField({
+					required: true,
+					nullable: false,
+					initial: 8,
+					integer: true,
+				}),
+				value: new fields.NumberField({
+					required: true,
+					nullable: false,
+					initial: 1,
+					integer: true,
+					min: 1,
+				}),
+				name: new fields.StringField({
+					required: true,
+					nullable: false,
+					initial: 'd8',
+				}),
+			}),
+			{ required: true, nullable: false, initial: () => [] },
+		),
 		armor: new fields.SchemaField({
 			baseValue: new fields.StringField({
 				required: true,
@@ -424,6 +447,13 @@ interface HitDiceData {
 	temp?: number;
 }
 
+/** Type definitions for bonus hit dice entry */
+interface BonusHitDieEntry {
+	size: number;
+	value: number;
+	name: string;
+}
+
 /** Type definitions for currency entry */
 interface CurrencyData {
 	label: string;
@@ -498,6 +528,7 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 			hint: string;
 			value: number;
 		};
+		bonusHitDice: BonusHitDieEntry[];
 		hp: {
 			max: number;
 			temp: number;

@@ -11,46 +11,24 @@
 	interface BonusDieEntry {
 		size: number;
 		value: number;
+		name: string;
 	}
 
 	const allDieSizes = [4, 6, 8, 10, 12, 20];
 
 	function submit() {
-		const bonusUpdates: Record<string, { bonus: number }> = {};
-		const tempUpdates: Record<string, { temp: number }> = {};
-
-		// Reset all sizes to 0 first
-		for (const size of allDieSizes) {
-			bonusUpdates[size] = { bonus: 0 };
-			tempUpdates[size] = { temp: 0 };
-		}
-
-		// Apply bonus dice
-		for (const entry of bonusDice) {
-			bonusUpdates[entry.size] = { bonus: entry.value };
-		}
-
-		// Apply temp dice
-		for (const entry of tempDice) {
-			tempUpdates[entry.size] = { temp: entry.value };
-		}
-
-		dialog.submit({ bonusUpdates, tempUpdates });
+		dialog.submit({ bonusDice: [...bonusDice] });
 	}
 
-	function getOrderedDieSizes(excludeExisting: number[], type: 'bonus' | 'temp'): number[] {
-		const existingDice = type === 'bonus' ? bonusDice : tempDice;
-		const usedSizes = new Set(existingDice.map((d) => d.size));
-		const available = allDieSizes.filter((s) => !usedSizes.has(s) && !excludeExisting.includes(s));
-
+	function getOrderedDieSizes(): number[] {
 		// Class die first if available
 		const ordered: number[] = [];
-		if (classDieSize && available.includes(classDieSize)) {
+		if (classDieSize) {
 			ordered.push(classDieSize);
 		}
 
-		// Then lowest to highest, excluding class die
-		available
+		// Then all other sizes lowest to highest, excluding class die
+		allDieSizes
 			.filter((s) => s !== classDieSize)
 			.sort((a, b) => a - b)
 			.forEach((s) => ordered.push(s));
@@ -59,16 +37,11 @@
 	}
 
 	function addBonusDie(size: number) {
-		bonusDice = [...bonusDice, { size, value: 1 }];
-		showBonusDropdown = false;
+		bonusDice = [...bonusDice, { size, value: 1, name: `d${size}` }];
+		showDropdown = false;
 	}
 
-	function addTempDie(size: number) {
-		tempDice = [...tempDice, { size, value: 1 }];
-		showTempDropdown = false;
-	}
-
-	function updateBonusDie(index: number, delta: number) {
+	function updateBonusDieValue(index: number, delta: number) {
 		const newValue = bonusDice[index].value + delta;
 		if (newValue <= 0) {
 			// Remove the entry
@@ -78,14 +51,8 @@
 		}
 	}
 
-	function updateTempDie(index: number, delta: number) {
-		const newValue = tempDice[index].value + delta;
-		if (newValue <= 0) {
-			// Remove the entry
-			tempDice = tempDice.filter((_, i) => i !== index);
-		} else {
-			tempDice[index].value = newValue;
-		}
+	function updateBonusDieName(index: number, name: string) {
+		bonusDice[index].name = name;
 	}
 
 	let { document: actor, dialog }: Props = $props();
@@ -95,23 +62,13 @@
 
 	// Initialize bonus dice from existing data
 	let bonusDice = $state<BonusDieEntry[]>(
-		Object.entries(actor.system.attributes.hitDice)
-			.filter(([_, data]) => (data.bonus ?? 0) > 0)
-			.map(([size, data]) => ({ size: Number(size), value: data.bonus ?? 0 })),
+		actor.system.attributes.bonusHitDice?.map((d: BonusDieEntry) => ({ ...d })) ?? [],
 	);
 
-	// Initialize temp dice from existing data
-	let tempDice = $state<BonusDieEntry[]>(
-		Object.entries(actor.system.attributes.hitDice)
-			.filter(([_, data]) => (data.temp ?? 0) > 0)
-			.map(([size, data]) => ({ size: Number(size), value: data.temp ?? 0 })),
-	);
-
-	let showBonusDropdown = $state(false);
-	let showTempDropdown = $state(false);
+	let showDropdown = $state(false);
 	let dropdownPosition = $state({ top: 0, left: 0 });
 
-	function openDropdown(event: MouseEvent, type: 'bonus' | 'temp') {
+	function openDropdown(event: MouseEvent) {
 		const button = event.currentTarget as HTMLElement;
 		const rect = button.getBoundingClientRect();
 
@@ -120,20 +77,13 @@
 			left: rect.right,
 		};
 
-		if (type === 'bonus') {
-			showBonusDropdown = !showBonusDropdown;
-			showTempDropdown = false;
-		} else {
-			showTempDropdown = !showTempDropdown;
-			showBonusDropdown = false;
-		}
+		showDropdown = !showDropdown;
 	}
 
 	function handleClickOutside(event: MouseEvent) {
 		const target = event.target as HTMLElement;
 		if (!target.closest('.hd-add-btn') && !target.closest('.hd-dropdown')) {
-			showBonusDropdown = false;
-			showTempDropdown = false;
+			showDropdown = false;
 		}
 	}
 
@@ -144,7 +94,7 @@
 			current: number;
 			total: number;
 			source: string;
-			sourceType: 'class' | 'bonus' | 'temp';
+			sourceType: 'class' | 'bonus';
 		}[] = [];
 
 		// Add from classes
@@ -167,32 +117,19 @@
 				size: entry.size,
 				current: entry.value,
 				total: entry.value,
-				source: 'Bonus',
+				source: entry.name,
 				sourceType: 'bonus',
-			});
-		}
-
-		// Add temp dice
-		for (const entry of tempDice) {
-			dice.push({
-				size: entry.size,
-				current: entry.value,
-				total: entry.value,
-				source: 'Temporary',
-				sourceType: 'temp',
 			});
 		}
 
 		return dice;
 	});
 
-	let availableBonusSizes = $derived(getOrderedDieSizes([], 'bonus'));
-	let availableTempSizes = $derived(getOrderedDieSizes([], 'temp'));
+	let availableDieSizes = $derived(getOrderedDieSizes());
 
 	let totals = $derived.by(() => {
 		let fromClasses = 0;
 		let bonus = 0;
-		let temp = 0;
 
 		for (const cls of classes) {
 			fromClasses += cls.system.classLevel ?? 0;
@@ -202,11 +139,7 @@
 			bonus += entry.value;
 		}
 
-		for (const entry of tempDice) {
-			temp += entry.value;
-		}
-
-		return { fromClasses, bonus, temp, max: fromClasses + bonus + temp };
+		return { fromClasses, bonus, max: fromClasses + bonus };
 	});
 </script>
 
@@ -216,7 +149,7 @@
 		<header class="hd-header">
 			<h3 class="nimble-heading" data-heading-variant="section">
 				<i class="fa-solid fa-dice-d20"></i>
-				Current Hit Dice
+				{CONFIG.NIMBLE.hitDice.currentHitDice}
 			</h3>
 		</header>
 
@@ -230,7 +163,7 @@
 					<span class="hd-overview-card__source">{entry.source}</span>
 				</div>
 			{:else}
-				<p class="hd-empty">No hit dice yet.</p>
+				<p class="hd-empty">{CONFIG.NIMBLE.hitDice.noHitDiceYet}</p>
 			{/each}
 		</div>
 	</section>
@@ -240,151 +173,89 @@
 		<header class="hd-header">
 			<h3 class="nimble-heading" data-heading-variant="section">
 				<i class="fa-solid fa-plus-circle"></i>
-				Bonus Hit Dice
+				{CONFIG.NIMBLE.hitDice.bonusHitDice}
 			</h3>
-			<span class="hd-subtitle">Permanent bonuses from boons, ancestries, or features</span>
+			<span class="hd-subtitle">{CONFIG.NIMBLE.hitDice.bonusHitDiceHint}</span>
 		</header>
 
 		{#if bonusDice.length === 0}
 			<div class="hd-empty-state">
-				<span class="hd-empty-state__text">No bonus dice</span>
-				<button
-					class="hd-add-btn"
-					type="button"
-					onclick={(e) => openDropdown(e, 'bonus')}
-					disabled={availableBonusSizes.length === 0}
-				>
+				<span class="hd-empty-state__text">{CONFIG.NIMBLE.hitDice.noBonusDice}</span>
+				<button class="hd-add-btn" type="button" onclick={openDropdown}>
 					<i class="fa-solid fa-plus"></i>
-					Add Bonus Die
+					{CONFIG.NIMBLE.hitDice.addBonusDie}
 				</button>
 			</div>
 		{:else}
 			<div class="hd-dice-list">
 				{#each bonusDice as entry, index}
-					<div class="hd-die-card hd-die-card--bonus">
-						<span class="hd-die-card__die">d{entry.size}</span>
-						<div class="hd-die-card__controls">
-							<button
-								class="hd-btn hd-btn--minus"
-								type="button"
-								onclick={() => updateBonusDie(index, -1)}
-								aria-label={game.i18n.format('NIMBLE.hitDice.decreaseBonusDie', {
-									size: entry.size,
-								})}
-							>
-								<i class="fa-solid fa-minus"></i>
-							</button>
-							<span class="hd-die-card__value">{entry.value}</span>
-							<button
-								class="hd-btn hd-btn--plus"
-								type="button"
-								onclick={() => updateBonusDie(index, 1)}
-								aria-label={game.i18n.format('NIMBLE.hitDice.increaseBonusDie', {
-									size: entry.size,
-								})}
-							>
-								<i class="fa-solid fa-plus"></i>
-							</button>
+					<div class="hd-die-card">
+						<label class="hd-die-card__name-row">
+							<span class="hd-die-card__name-label">{CONFIG.NIMBLE.hitDice.bonusDieName}</span>
+							<input
+								class="hd-die-card__name"
+								type="text"
+								value={entry.name}
+								placeholder="d{entry.size}"
+								onchange={(e) =>
+									updateBonusDieName(index, e.currentTarget.value || `d${entry.size}`)}
+							/>
+						</label>
+						<div class="hd-die-card__bottom-row">
+							<span class="hd-die-card__die">d{entry.size}</span>
+							<div class="hd-die-card__controls">
+								<button
+									class="hd-btn hd-btn--minus"
+									type="button"
+									onclick={() => updateBonusDieValue(index, -1)}
+									aria-label={game.i18n.format('NIMBLE.hitDice.decreaseBonusDie', {
+										size: entry.size,
+									})}
+								>
+									<i class="fa-solid fa-minus"></i>
+								</button>
+								<span class="hd-die-card__value">{entry.value}</span>
+								<button
+									class="hd-btn hd-btn--plus"
+									type="button"
+									onclick={() => updateBonusDieValue(index, 1)}
+									aria-label={game.i18n.format('NIMBLE.hitDice.increaseBonusDie', {
+										size: entry.size,
+									})}
+								>
+									<i class="fa-solid fa-plus"></i>
+								</button>
+							</div>
 						</div>
 					</div>
 				{/each}
 
-				{#if availableBonusSizes.length > 0}
-					<button
-						class="hd-add-btn hd-add-btn--small"
-						type="button"
-						onclick={(e) => openDropdown(e, 'bonus')}
-						aria-label={CONFIG.NIMBLE.hitDice.addBonusDie}
-					>
-						<i class="fa-solid fa-plus"></i>
-					</button>
-				{/if}
-			</div>
-		{/if}
-	</section>
-
-	<!-- Temporary Hit Dice -->
-	<section class="hd-section hd-section--temp">
-		<header class="hd-header">
-			<h3 class="nimble-heading" data-heading-variant="section">
-				<i class="fa-solid fa-hourglass-half"></i>
-				Temporary Hit Dice
-			</h3>
-			<span class="hd-subtitle">Combat-granted HD (Enduring Soul, Temporary Boons)</span>
-		</header>
-
-		{#if tempDice.length === 0}
-			<div class="hd-empty-state">
-				<span class="hd-empty-state__text">No temporary dice</span>
 				<button
-					class="hd-add-btn"
+					class="hd-add-btn hd-add-btn--small"
 					type="button"
-					onclick={(e) => openDropdown(e, 'temp')}
-					disabled={availableTempSizes.length === 0}
+					onclick={openDropdown}
+					aria-label={CONFIG.NIMBLE.hitDice.addBonusDie}
 				>
 					<i class="fa-solid fa-plus"></i>
-					Add Temporary Die
 				</button>
-			</div>
-		{:else}
-			<div class="hd-dice-list">
-				{#each tempDice as entry, index}
-					<div class="hd-die-card hd-die-card--temp">
-						<span class="hd-die-card__die">d{entry.size}</span>
-						<div class="hd-die-card__controls">
-							<button
-								class="hd-btn hd-btn--minus"
-								type="button"
-								onclick={() => updateTempDie(index, -1)}
-								aria-label={game.i18n.format('NIMBLE.hitDice.decreaseTempDie', {
-									size: entry.size,
-								})}
-							>
-								<i class="fa-solid fa-minus"></i>
-							</button>
-							<span class="hd-die-card__value">{entry.value}</span>
-							<button
-								class="hd-btn hd-btn--plus"
-								type="button"
-								onclick={() => updateTempDie(index, 1)}
-								aria-label={game.i18n.format('NIMBLE.hitDice.increaseTempDie', {
-									size: entry.size,
-								})}
-							>
-								<i class="fa-solid fa-plus"></i>
-							</button>
-						</div>
-					</div>
-				{/each}
-
-				{#if availableTempSizes.length > 0}
-					<button
-						class="hd-add-btn hd-add-btn--small"
-						type="button"
-						onclick={(e) => openDropdown(e, 'temp')}
-						aria-label={CONFIG.NIMBLE.hitDice.addTempDie}
-					>
-						<i class="fa-solid fa-plus"></i>
-					</button>
-				{/if}
 			</div>
 		{/if}
 	</section>
 
 	<!-- Total -->
 	<section class="hd-total">
-		<span class="hd-total__label">Total Hit Dice</span>
+		<span class="hd-total__label">{CONFIG.NIMBLE.hitDice.totalHitDice}</span>
 		<span class="hd-total__value">{totals.max}</span>
 	</section>
 </div>
 
 <!-- Fixed position dropdown portal -->
-{#if showBonusDropdown}
+{#if showDropdown}
 	<div
 		class="hd-dropdown hd-dropdown--fixed"
 		style="top: {dropdownPosition.top}px; left: {dropdownPosition.left}px;"
 	>
-		{#each availableBonusSizes as size}
+		{#each availableDieSizes as size}
 			<button
 				class="hd-dropdown__item"
 				class:hd-dropdown__item--class={size === classDieSize}
@@ -400,29 +271,10 @@
 	</div>
 {/if}
 
-{#if showTempDropdown}
-	<div
-		class="hd-dropdown hd-dropdown--fixed"
-		style="top: {dropdownPosition.top}px; left: {dropdownPosition.left}px;"
-	>
-		{#each availableTempSizes as size}
-			<button
-				class="hd-dropdown__item"
-				class:hd-dropdown__item--class={size === classDieSize}
-				type="button"
-				onclick={() => addTempDie(size)}
-			>
-				d{size}
-				{#if size === classDieSize}
-					<span class="hd-dropdown__badge">Class</span>
-				{/if}
-			</button>
-		{/each}
-	</div>
-{/if}
-
 <footer class="nimble-sheet__footer">
-	<button class="nimble-button" data-button-variant="basic" onclick={submit}>Save Changes</button>
+	<button class="nimble-button" data-button-variant="basic" onclick={submit}
+		>{CONFIG.NIMBLE.hitDice.saveChanges}</button
+	>
 </footer>
 
 <style lang="scss">
@@ -443,16 +295,6 @@
 		background: var(--nimble-box-background-color);
 		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 6px;
-
-		&--bonus {
-			background: var(--nimble-box-background-color);
-			border-color: var(--nimble-card-border-color);
-		}
-
-		&--temp {
-			background: var(--nimble-box-background-color);
-			border-color: var(--nimble-card-border-color);
-		}
 	}
 
 	.hd-header {
@@ -481,21 +323,6 @@
 		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 6px;
 		min-width: 4.5rem;
-
-		&--class {
-			background: var(--nimble-input-background-color);
-			border-color: var(--nimble-card-border-color);
-		}
-
-		&--bonus {
-			background: var(--nimble-input-background-color);
-			border-color: var(--nimble-card-border-color);
-		}
-
-		&--temp {
-			background: var(--nimble-input-background-color);
-			border-color: var(--nimble-card-border-color);
-		}
 
 		&__main {
 			display: flex;
@@ -645,28 +472,61 @@
 
 	.hd-die-card {
 		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.375rem 0.5rem;
+		flex-direction: column;
+		gap: 0.375rem;
+		padding: 0.5rem;
 		background: var(--nimble-input-background-color);
 		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 6px;
 
-		&--bonus {
-			background: var(--nimble-input-background-color);
-			border-color: var(--nimble-card-border-color);
+		&__name-row {
+			display: flex;
+			align-items: center;
+			gap: 0.375rem;
+			cursor: text;
 		}
 
-		&--temp {
-			background: var(--nimble-input-background-color);
-			border-color: var(--nimble-card-border-color);
+		&__name-label {
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
+			color: var(--nimble-medium-text-color);
+			white-space: nowrap;
+		}
+
+		&__name {
+			flex: 1;
+			min-width: 0;
+			padding: 0.125rem 0.25rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 500;
+			color: var(--nimble-dark-text-color);
+			background: var(--nimble-box-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 3px;
+
+			&::placeholder {
+				color: var(--nimble-medium-text-color);
+				font-style: italic;
+			}
+
+			&:focus {
+				outline: none;
+				border-color: hsl(45, 50%, 50%);
+			}
+		}
+
+		&__bottom-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 0.5rem;
 		}
 
 		&__die {
 			font-size: var(--nimble-sm-text);
 			font-weight: 700;
-			color: var(--nimble-dark-text-color);
-			min-width: 1.75rem;
+			color: var(--nimble-medium-text-color);
+			white-space: nowrap;
 		}
 
 		&__controls {

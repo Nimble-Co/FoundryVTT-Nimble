@@ -38,8 +38,7 @@ interface ConfigureHitPointsResult {
 
 /** Extended dialog result type for configuring hit dice */
 interface ConfigureHitDiceResult {
-	bonusUpdates: Record<string, { bonus: number }>;
-	tempUpdates: Record<string, { temp: number }>;
+	bonusDice: Array<{ size: number; value: number; name: string }>;
 }
 
 /** Roll hit dice dialog result data */
@@ -519,7 +518,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			return;
 		}
 
-		const updates: Record<string, unknown> = {};
+		const updates: Record<string, unknown> = {
+			'system.attributes.bonusHitDice': result.bonusDice,
+		};
 
 		// Calculate class contributions per die size
 		const classContributions: Record<string, number> = {};
@@ -528,33 +529,42 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			classContributions[size] = (classContributions[size] ?? 0) + cls.hitDice.total;
 		}
 
-		// Apply bonus updates
-		for (const [size, data] of Object.entries(result.bonusUpdates)) {
-			const existingData = this.system.attributes.hitDice[size] ?? { origin: [], current: 0 };
-			updates[`system.attributes.hitDice.${size}.bonus`] = data.bonus;
-			updates[`system.attributes.hitDice.${size}.origin`] = existingData.origin ?? [];
+		// Calculate OLD bonus contributions (before the change)
+		const oldBonusContributions: Record<string, number> = {};
+		for (const entry of this.system.attributes.bonusHitDice ?? []) {
+			oldBonusContributions[entry.size] = (oldBonusContributions[entry.size] ?? 0) + entry.value;
 		}
 
-		// Apply temp updates
-		for (const [size, data] of Object.entries(result.tempUpdates)) {
-			updates[`system.attributes.hitDice.${size}.temp`] = data.temp;
+		// Calculate NEW bonus contributions (after the change)
+		const newBonusContributions: Record<string, number> = {};
+		for (const entry of result.bonusDice) {
+			newBonusContributions[entry.size] = (newBonusContributions[entry.size] ?? 0) + entry.value;
 		}
 
-		// Clamp current hit dice if they exceed the new max for each size
+		// Update current hit dice for each affected size
 		const allSizes = new Set([
-			...Object.keys(result.bonusUpdates),
-			...Object.keys(result.tempUpdates),
+			...Object.keys(oldBonusContributions),
+			...Object.keys(newBonusContributions),
 			...Object.keys(classContributions),
 		]);
 
-		for (const size of allSizes) {
+		for (const sizeStr of allSizes) {
+			const size = sizeStr;
 			const classTotal = classContributions[size] ?? 0;
-			const newBonus = result.bonusUpdates[size]?.bonus ?? 0;
-			const newTemp = result.tempUpdates[size]?.temp ?? 0;
-			const newMax = classTotal + newBonus + newTemp;
+			const oldBonus = oldBonusContributions[size] ?? 0;
+			const newBonus = newBonusContributions[size] ?? 0;
+			const bonusDelta = newBonus - oldBonus;
+			const newMax = classTotal + newBonus;
 
 			const currentValue = this.system.attributes.hitDice[size]?.current ?? 0;
-			if (currentValue > newMax) {
+
+			// If bonus increased, add the new dice as available (increase current)
+			// If bonus decreased, clamp current to new max
+			if (bonusDelta > 0) {
+				// Adding bonus dice - increase current by the amount added
+				updates[`system.attributes.hitDice.${size}.current`] = currentValue + bonusDelta;
+			} else if (currentValue > newMax) {
+				// Removing bonus dice and current exceeds new max - clamp down
 				updates[`system.attributes.hitDice.${size}.current`] = newMax;
 			}
 		}
