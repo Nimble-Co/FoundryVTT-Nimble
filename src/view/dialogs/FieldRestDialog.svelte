@@ -7,24 +7,18 @@
 		dialog: GenericDialog;
 	}
 
-	function prepareFieldRestTypeTooltip() {
-		return `
-    <dl>
-      <div>
-        <dt>Catch Breath</dt>
-        <dd>Requires at least 10 min to tend to your wounds. Expend any number of Hit Dice (roll them and add your STR to each), and regain that many HP.</dd>
-      </div>
-
-      <div>
-        <dt>Make Camp</dt>
-        <dd>If you rest for at least 8 hours with food and sleep, instead of rolling, take the maximum value of each Hit Die you expend (you still add your STR to each).</dd>
-      </div>
-    </dl>
-  `;
+	function incrementHitDie(die: string) {
+		const current = hitDice[die]?.current ?? 0;
+		selectedHitDice = { ...selectedHitDice, [die]: Math.min(selectedHitDice[die] + 1, current) };
 	}
 
-	function incrementHitDie(die: number) {
-		selectedHitDice[die] = Math.min(selectedHitDice[die] + 1, hitDice[die].total);
+	function decrementHitDie(die: string) {
+		selectedHitDice = { ...selectedHitDice, [die]: Math.max(selectedHitDice[die] - 1, 0) };
+	}
+
+	function maxHitDie(die: string) {
+		const current = hitDice[die]?.current ?? 0;
+		selectedHitDice = { ...selectedHitDice, [die]: current };
 	}
 
 	function submit() {
@@ -40,145 +34,279 @@
 
 	let makeCamp = $state(false);
 	let selectedHitDice = $state(Object.fromEntries(Object.keys(hitDice).map((die) => [die, 0])));
+
+	const totalSelected = $derived(Object.values(selectedHitDice).reduce((sum, val) => sum + val, 0));
 </script>
 
-<article class="nimble-sheet__body">
-	<section>
-		<header class="nimble-section-header">
-			<h3 class="nimble-heading" data-heading-variant="section">
-				Field Rest Type
+<article class="nimble-sheet__body field-rest-dialog">
+	<section class="field-rest-dialog__section">
+		<h3 class="field-rest-dialog__heading">{CONFIG.NIMBLE.fieldRest.restType}</h3>
 
-				<i
-					class="nimble-field-rest-types__help fa-solid fa-circle-question"
-					data-tooltip={prepareFieldRestTypeTooltip()}
-					data-tooltip-class="nimble-tooltip nimble-tooltip--field-rest"
-				></i>
-			</h3>
-		</header>
-
-		<div class="nimble-field-rest-types">
-			<label
-				class="nimble-field-rest-types__button"
-				class:nimble-field-rest-types__button--active={!makeCamp}
-			>
-				Catch Breath
-
+		<div class="field-rest-dialog__rest-types">
+			<label class="rest-type-card" class:rest-type-card--active={!makeCamp}>
 				<input
-					class="nimble-field-rest-types__input"
+					class="rest-type-card__input"
 					type="radio"
 					name="{actor.uuid}-field-rest-type"
 					value={false}
 					bind:group={makeCamp}
 				/>
+				<div class="rest-type-card__header">
+					<i class="rest-type-card__icon fa-solid fa-wind"></i>
+					<span class="rest-type-card__title">{CONFIG.NIMBLE.fieldRest.catchBreath}</span>
+				</div>
+				<p class="rest-type-card__description">{CONFIG.NIMBLE.fieldRest.catchBreathDescription}</p>
 			</label>
 
-			<label
-				class="nimble-field-rest-types__button"
-				class:nimble-field-rest-types__button--active={makeCamp}
-			>
-				Make Camp
-
+			<label class="rest-type-card" class:rest-type-card--active={makeCamp}>
 				<input
-					class="nimble-field-rest-types__input"
+					class="rest-type-card__input"
 					type="radio"
 					name="{actor.uuid}-field-rest-type"
 					value={true}
 					bind:group={makeCamp}
 				/>
+				<div class="rest-type-card__header">
+					<i class="rest-type-card__icon fa-solid fa-campground"></i>
+					<span class="rest-type-card__title">{CONFIG.NIMBLE.fieldRest.makeCamp}</span>
+				</div>
+				<p class="rest-type-card__description">{CONFIG.NIMBLE.fieldRest.makeCampDescription}</p>
 			</label>
 		</div>
 	</section>
 
-	<section>
-		<header class="nimble-section-header">
-			<h3 class="nimble-heading" data-heading-variant="section">Hit Dice Selection</h3>
-		</header>
+	<section class="field-rest-dialog__section">
+		<h3 class="field-rest-dialog__heading">{CONFIG.NIMBLE.fieldRest.hitDiceToSpend}</h3>
 
-		{#each Object.entries(hitDice) as [die, { total }]}
-			<div class="nimble-hit-die">
-				<button class="nimble-hit-die__button" onclick={() => incrementHitDie(Number(die))}>
-					d{die}
-				</button>
+		<div class="hit-dice-grid">
+			{#each Object.entries(hitDice) as [die, { current, total }]}
+				<div class="hit-die-row">
+					<div class="hit-die-row__die-label">
+						<span class="hit-die-row__die-size">d{die}</span>
+						<span class="hit-die-row__available">{current} / {total}</span>
+					</div>
 
-				<input
-					style="grid-area: selected; text-align: center;"
-					type="number"
-					min="0"
-					max={total}
-					bind:value={selectedHitDice[die]}
-				/>
+					<div class="hit-die-row__controls">
+						<button
+							class="hit-die-row__button"
+							onclick={() => decrementHitDie(die)}
+							disabled={selectedHitDice[die] <= 0}
+							aria-label={game.i18n.format(CONFIG.NIMBLE.fieldRest.decreaseDie, { size: die })}
+						>
+							<i class="fa-solid fa-minus"></i>
+						</button>
 
-				<span style="grid-area: separator;"> / </span>
+						<span class="hit-die-row__value">{selectedHitDice[die]}</span>
 
-				<span style="grid-area: available;">
-					{total}
-				</span>
-			</div>
-		{/each}
+						<button
+							class="hit-die-row__button"
+							onclick={() => incrementHitDie(die)}
+							disabled={selectedHitDice[die] >= current}
+							aria-label={game.i18n.format(CONFIG.NIMBLE.fieldRest.increaseDie, { size: die })}
+						>
+							<i class="fa-solid fa-plus"></i>
+						</button>
+
+						<button
+							class="hit-die-row__button hit-die-row__button--max"
+							onclick={() => maxHitDie(die)}
+							disabled={selectedHitDice[die] >= current}
+							aria-label={game.i18n.format(CONFIG.NIMBLE.fieldRest.maxDie, { size: die })}
+						>
+							{CONFIG.NIMBLE.fieldRest.max}
+						</button>
+					</div>
+				</div>
+			{/each}
+		</div>
 	</section>
 </article>
 
 <footer class="nimble-sheet__footer">
-	<button class="nimble-button" data-button-variant="basic" onclick={submit}> Field Rest </button>
+	<button class="nimble-button" data-button-variant="basic" onclick={submit}>
+		{#if totalSelected > 0}
+			{game.i18n.format(
+				totalSelected === 1
+					? CONFIG.NIMBLE.fieldRest.restAndSpendHitDie
+					: CONFIG.NIMBLE.fieldRest.restAndSpendHitDice,
+				{ count: totalSelected },
+			)}
+		{:else}
+			{CONFIG.NIMBLE.fieldRest.restWithoutSpending}
+		{/if}
+	</button>
 </footer>
 
 <style lang="scss">
-	.nimble-sheet__body {
-		--nimble-sheet-body-padding-block-start: 0.5rem;
-	}
-
 	.nimble-sheet__footer {
 		--nimble-button-padding: 0.5rem 1rem;
 		--nimble-button-width: 100%;
 	}
 
-	.nimble-hit-die {
-		display: grid;
-		grid-template-columns: max-content 1fr min-content 1fr;
-		grid-template-areas: 'die selected separator available';
-		align-items: center;
-		justify-items: center;
-		gap: 0.75rem;
+	.field-rest-dialog {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+		padding: 1rem;
 
-		&__button {
-			grid-area: die;
-			margin-inline: 0.75rem 0.5rem;
+		&__section {
+			display: flex;
+			flex-direction: column;
+			gap: 0.75rem;
+		}
+
+		&__heading {
+			margin: 0;
+			padding: 0;
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			color: var(--nimble-medium-text-color);
+			border: none;
+		}
+
+		&__rest-types {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 0.75rem;
 		}
 	}
 
-	.nimble-field-rest-types {
+	.rest-type-card {
 		display: flex;
+		flex-direction: column;
 		gap: 0.5rem;
-		margin-block-end: 0.75rem;
-		font-size: var(--nimble-sm-text);
-		font-weight: 500;
+		min-width: 0;
+		padding: 0.75rem;
+		background: var(--nimble-box-background-color);
+		border: 2px solid var(--nimble-card-border-color);
+		border-radius: 6px;
+		cursor: pointer;
+		transition: var(--nimble-standard-transition);
 
-		&__button {
-			display: flex;
-			align-self: center;
-			justify-content: center;
-			gap: 0.5rem;
-			width: fit-content;
-			padding: 0.5rem 1rem;
-			line-height: 1;
-			border: 1px solid black;
-			border-radius: 4px;
-			box-shadow: var(--nimble-card-box-shadow);
-			cursor: pointer;
-			transition: var(--nimble-standard-transition);
-
-			&--active {
-				color: var(--nimble-light-text-color);
-				background: hsl(0, 0%, 24%);
-			}
+		&:hover {
+			border-color: var(--nimble-box-color);
 		}
 
-		&__help {
-			font-size: var(--nimble-xs-text);
+		&--active {
+			border-color: hsl(0, 0%, 24%);
+			background: hsla(0, 0%, 24%, 0.08);
 		}
 
 		&__input {
-			display: none;
+			position: absolute;
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		&__header {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+		}
+
+		&__icon {
+			flex-shrink: 0;
+			font-size: var(--nimble-md-text);
+			color: var(--nimble-medium-text-color);
+
+			.rest-type-card--active & {
+				color: hsl(0, 0%, 24%);
+			}
+		}
+
+		&__title {
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			color: var(--nimble-dark-text-color);
+		}
+
+		&__description {
+			margin: 0;
+			font-size: var(--nimble-sm-text);
+			font-weight: 500;
+			line-height: 1.45;
+			color: var(--nimble-dark-text-color);
+		}
+	}
+
+	.hit-dice-grid {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.hit-die-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.5rem 0.75rem;
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+
+		&__die-label {
+			display: flex;
+			align-items: baseline;
+			gap: 0.5rem;
+		}
+
+		&__die-size {
+			font-size: var(--nimble-md-text);
+			font-weight: 700;
+			color: var(--nimble-dark-text-color);
+		}
+
+		&__available {
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__controls {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+		}
+
+		&__button {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.5rem;
+			height: 1.5rem;
+			padding: 0;
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-dark-text-color);
+			background: var(--nimble-basic-button-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			cursor: pointer;
+			transition: var(--nimble-standard-transition);
+
+			&:hover:not(:disabled) {
+				background: var(--nimble-box-color);
+				color: var(--nimble-light-text-color);
+			}
+
+			&:disabled {
+				opacity: 0.4;
+				cursor: not-allowed;
+			}
+
+			&--max {
+				width: auto;
+				padding: 0 0.5rem;
+				font-weight: 600;
+			}
+		}
+
+		&__value {
+			min-width: 1.5rem;
+			font-size: var(--nimble-md-text);
+			font-weight: 600;
+			text-align: center;
+			color: var(--nimble-dark-text-color);
 		}
 	}
 </style>
