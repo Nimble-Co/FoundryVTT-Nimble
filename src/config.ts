@@ -527,6 +527,62 @@ const creatureFeatures = {
 	actionSequence: 'NIMBLE.creatureFeatures.actionSequence',
 };
 
+const hitDice = {
+	selectToRoll: 'NIMBLE.hitDice.selectToRoll',
+	depleted: 'NIMBLE.hitDice.depleted',
+	removeDie: 'NIMBLE.hitDice.removeDie',
+	addDie: 'NIMBLE.hitDice.addDie',
+	selectAllDie: 'NIMBLE.hitDice.selectAllDie',
+	currentHitDice: 'NIMBLE.hitDice.currentHitDice',
+	currentHitDiceValue: 'NIMBLE.hitDice.currentHitDiceValue',
+	maxHitDice: 'NIMBLE.hitDice.maxHitDice',
+	editCurrentHitDice: 'NIMBLE.hitDice.editCurrentHitDice',
+	rollHitDiceButton: 'NIMBLE.hitDice.rollHitDiceButton',
+	bonusHitDice: 'NIMBLE.hitDice.bonusHitDice',
+	bonusHitDiceHint: 'NIMBLE.hitDice.bonusHitDiceHint',
+	bonusDieName: 'NIMBLE.hitDice.bonusDieName',
+	noBonusDice: 'NIMBLE.hitDice.noBonusDice',
+	addBonusDie: 'NIMBLE.hitDice.addBonusDie',
+	decreaseBonusDie: 'NIMBLE.hitDice.decreaseBonusDie',
+	increaseBonusDie: 'NIMBLE.hitDice.increaseBonusDie',
+	totalHitDice: 'NIMBLE.hitDice.totalHitDice',
+	saveChanges: 'NIMBLE.hitDice.saveChanges',
+	noHitDiceYet: 'NIMBLE.hitDice.noHitDiceYet',
+	addStrBonus: 'NIMBLE.hitDice.addStrBonus',
+	applyHealingToHP: 'NIMBLE.hitDice.applyHealingToHP',
+	rollHitDice: 'NIMBLE.hitDice.rollHitDice',
+	max: 'NIMBLE.hitDice.max',
+	selectAll: 'NIMBLE.hitDice.selectAll',
+};
+
+const hitPoints = {
+	startingHp: 'NIMBLE.hitPoints.startingHp',
+	classTotal: 'NIMBLE.hitPoints.classTotal',
+	levelUpHpGains: 'NIMBLE.hitPoints.levelUpHpGains',
+	level: 'NIMBLE.hitPoints.level',
+	bonusHp: 'NIMBLE.hitPoints.bonusHp',
+	bonusHpHint: 'NIMBLE.hitPoints.bonusHpHint',
+	totalMaxHp: 'NIMBLE.hitPoints.totalMaxHp',
+	saveChanges: 'NIMBLE.hitPoints.saveChanges',
+};
+
+const safeRest = {
+	recoveryPreview: 'NIMBLE.safeRest.recoveryPreview',
+	hitPoints: 'NIMBLE.safeRest.hitPoints',
+	hpRecovery: 'NIMBLE.safeRest.hpRecovery',
+	alreadyFull: 'NIMBLE.safeRest.alreadyFull',
+	tempHp: 'NIMBLE.safeRest.tempHp',
+	removed: 'NIMBLE.safeRest.removed',
+	hitDice: 'NIMBLE.safeRest.hitDice',
+	hitDieRecovery: 'NIMBLE.safeRest.hitDieRecovery',
+	mana: 'NIMBLE.safeRest.mana',
+	manaRecovery: 'NIMBLE.safeRest.manaRecovery',
+	wounds: 'NIMBLE.safeRest.wounds',
+	noWounds: 'NIMBLE.safeRest.noWounds',
+	wound: 'NIMBLE.safeRest.wound',
+	safeRestButton: 'NIMBLE.safeRest.safeRestButton',
+};
+
 const NIMBLE = {
 	// Constants
 	ROLL_MODE,
@@ -560,6 +616,8 @@ const NIMBLE = {
 	genericProperties,
 	healingTypes,
 	hints,
+	hitDice,
+	hitPoints,
 	languageHints,
 	languageImages,
 	languages,
@@ -575,6 +633,7 @@ const NIMBLE = {
 	objectTypeHeadings,
 	objectTypes,
 	restTypes,
+	safeRest,
 	savingThrowAbbreviations,
 	savingThrows,
 	sizeCategories,

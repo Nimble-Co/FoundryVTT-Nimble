@@ -6,6 +6,10 @@
 		compact?: boolean;
 		tempHP?: number;
 		showTempHP?: boolean;
+		disableMaxHPEdit?: boolean;
+		updateCurrentHP?: (value: number) => void;
+		updateMaxHP?: (value: number) => void;
+		updateTempHP?: (value: number) => void;
 	}
 
 	interface WithoutControls extends BaseProps {
@@ -14,9 +18,9 @@
 
 	interface WithControls extends BaseProps {
 		disableControls?: false;
-		updateCurrentHP: (value: number) => void;
-		updateMaxHP: (value: number) => void;
-		updateTempHP: (value: number) => void;
+		updateCurrentHP: NonNullable<BaseProps['updateCurrentHP']>;
+		updateMaxHP: NonNullable<BaseProps['updateMaxHP']>;
+		updateTempHP: NonNullable<BaseProps['updateTempHP']>;
 	}
 
 	type Props = WithControls | WithoutControls;
@@ -28,6 +32,7 @@
 		tempHP = 0,
 		compact = false,
 		disableControls = false,
+		disableMaxHPEdit = false,
 		showTempHP = true,
 		updateCurrentHP,
 		updateMaxHP,
@@ -46,6 +51,7 @@
 				class="nimble-hit-points__input nimble-hit-points__input--current-hp"
 				type="number"
 				value={currentHP}
+				max={maxHP}
 				onchange={({ target }) => updateCurrentHP?.(Number((target as HTMLInputElement).value))}
 				disabled={disableControls}
 			/>
@@ -55,18 +61,24 @@
 				type="number"
 				value={maxHP}
 				onchange={({ target }) => updateMaxHP?.(Number((target as HTMLInputElement).value))}
-				disabled={disableControls}
+				disabled={disableControls || disableMaxHPEdit}
 			/>
 		</div>
 	</div>
 
 	{#if showTempHP}
-		<div class="nimble-hit-points__temp">
+		<div
+			class="nimble-hit-points__temp"
+			class:nimble-hit-points__temp--has-value={tempHP > 0}
+			data-tooltip="Temp HP"
+		>
 			<input
 				class="nimble-hit-points__input nimble-hit-points__input--temp-hp"
 				type="number"
+				min="0"
 				value={tempHP}
-				onchange={({ target }) => updateTempHP?.(Number((target as HTMLInputElement).value))}
+				onchange={({ target }) =>
+					updateTempHP?.(Math.max(0, Number((target as HTMLInputElement).value)))}
 				disabled={disableControls}
 			/>
 		</div>
@@ -80,7 +92,7 @@
 
 		grid-area: hpBar;
 		display: flex;
-		align-items: center;
+		align-items: stretch;
 		flex-wrap: nowrap;
 		background-color: var(--nimble-hp-bar-background);
 		border: var(--nimble-hp-bar-border-thickness, 1px) solid hsl(41, 18%, 54%);
@@ -98,6 +110,8 @@
 		&__bar {
 			position: relative;
 			overflow: hidden;
+			display: flex;
+			align-items: center;
 
 			&::before {
 				content: '';
@@ -161,12 +175,20 @@
 
 		&__input--temp-hp[type] {
 			width: var(--nimble-temp-hp-field-width, 6ch);
-			color: hsl(219, 90%, 80%);
-			text-shadow: 0 0 4px hsl(0, 0%, 100%, 0.2);
 		}
 
 		&__temp {
 			border-left: 1px dashed hsl(41, 18%, 54%);
+
+			&--has-value {
+				background: linear-gradient(to right, hsl(219, 47%, 30%) 0%, hsl(219, 47%, 50%) 100%);
+				border-radius: 0 4px 4px 0;
+
+				.nimble-hit-points__input--temp-hp[type] {
+					color: #fff;
+					text-shadow: 0 0 4px hsl(219, 50%, 20%);
+				}
+			}
 		}
 	}
 </style>

@@ -18,8 +18,12 @@ import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementC
 import CharacterSkillsConfigDialog from '../../view/dialogs/CharacterSkillsConfigDialog.svelte';
 import CharacterStatConfigDialog from '../../view/dialogs/CharacterStatConfigDialog.svelte';
 import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/CharacterWeaponProficienciesConfigDialog.svelte';
+import EditCurrentHitDiceDialog from '../../view/dialogs/EditCurrentHitDiceDialog.svelte';
+import EditHitDiceDialog from '../../view/dialogs/EditHitDiceDialog.svelte';
 import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
+import SafeRestDialog from '../../view/dialogs/SafeRestDialog.svelte';
+import RollHitDiceDialog from '../../view/dialogs/RollHitDiceDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
@@ -31,6 +35,23 @@ import { NimbleBaseActor } from './base.svelte.js';
 interface ConfigureHitPointsResult {
 	classUpdates: Array<{ id: string; hpData: number[] }>;
 	bonus: number;
+}
+
+/** Extended dialog result type for configuring hit dice */
+interface ConfigureHitDiceResult {
+	bonusDice: Array<{ size: number; value: number; name: string }>;
+}
+
+/** Roll hit dice dialog result data */
+interface RollHitDiceResult {
+	selections: Record<string, number>;
+	addStrBonus: boolean;
+	applyToHP: boolean;
+}
+
+/** Edit current hit dice dialog result data */
+interface EditCurrentHitDiceResult {
+	currentValues: Record<string, number>;
 }
 
 /** Level up dialog result data */
@@ -455,11 +476,11 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	async configureHitPoints() {
-		const dialog = new GenericDialog(
+		const dialog = GenericDialog.getOrCreate(
 			`${this.name}: Configure Hit Points`,
 			EditHitPointsDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-heart', width: 250 },
+			{ icon: 'fa-solid fa-heart', width: 250, uniqueId: `${this.id}-configure-hp` },
 		);
 
 		await dialog.render(true);
@@ -480,6 +501,322 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			await this.update({
 				'system.attributes.hp.value': this.system.attributes.hp.max,
 			} as Record<string, unknown>);
+		}
+	}
+
+	async configureHitDice() {
+		const dialog = GenericDialog.getOrCreate(
+			`${this.name}: Configure Hit Dice`,
+			EditHitDiceDialog,
+			{ document: this },
+			{ icon: 'fa-solid fa-dice-d20', width: 420, uniqueId: `${this.id}-configure-hd` },
+		);
+
+		await dialog.render(true);
+		const result = (await dialog.promise) as ConfigureHitDiceResult | null;
+
+		if (result === null) {
+			return;
+		}
+
+		const updates: Record<string, unknown> = {
+			'system.attributes.bonusHitDice': result.bonusDice,
+		};
+
+		// Calculate class contributions per die size
+		const classContributions: Record<string, number> = {};
+		for (const cls of Object.values(this.classes)) {
+			const size = cls.hitDice.size;
+			classContributions[size] = (classContributions[size] ?? 0) + cls.hitDice.total;
+		}
+
+		// Calculate OLD bonus contributions (before the change)
+		const oldBonusContributions: Record<string, number> = {};
+		for (const entry of this.system.attributes.bonusHitDice ?? []) {
+			oldBonusContributions[entry.size] = (oldBonusContributions[entry.size] ?? 0) + entry.value;
+		}
+
+		// Calculate NEW bonus contributions (after the change)
+		const newBonusContributions: Record<string, number> = {};
+		for (const entry of result.bonusDice) {
+			newBonusContributions[entry.size] = (newBonusContributions[entry.size] ?? 0) + entry.value;
+		}
+
+		// Update current hit dice for each affected size
+		const allSizes = new Set([
+			...Object.keys(oldBonusContributions),
+			...Object.keys(newBonusContributions),
+			...Object.keys(classContributions),
+		]);
+
+		for (const sizeStr of allSizes) {
+			const size = sizeStr;
+			const classTotal = classContributions[size] ?? 0;
+			const oldBonus = oldBonusContributions[size] ?? 0;
+			const newBonus = newBonusContributions[size] ?? 0;
+			const bonusDelta = newBonus - oldBonus;
+			const newMax = classTotal + newBonus;
+
+			const currentValue = this.system.attributes.hitDice[size]?.current ?? 0;
+
+			// If bonus increased, add the new dice as available (increase current)
+			// If bonus decreased, clamp current to new max
+			if (bonusDelta > 0) {
+				// Adding bonus dice - increase current by the amount added
+				updates[`system.attributes.hitDice.${size}.current`] = currentValue + bonusDelta;
+			} else if (currentValue > newMax) {
+				// Removing bonus dice and current exceeds new max - clamp down
+				updates[`system.attributes.hitDice.${size}.current`] = newMax;
+			}
+		}
+
+		await this.update(updates);
+	}
+
+	async editCurrentHitDice() {
+		const dialog = GenericDialog.getOrCreate(
+			`${this.name}: Edit Current Hit Dice`,
+			EditCurrentHitDiceDialog,
+			{ document: this },
+			{ icon: 'fa-solid fa-dice-d20', width: 340, uniqueId: `${this.id}-edit-current-hd` },
+		);
+
+		await dialog.render(true);
+		const result = (await dialog.promise) as EditCurrentHitDiceResult | null;
+
+		if (result === null || !result.currentValues) {
+			return;
+		}
+
+		const { currentValues } = result;
+
+		// Build updates for each die size
+		const updates: Record<string, unknown> = {};
+		for (const [size, value] of Object.entries(currentValues)) {
+			updates[`system.attributes.hitDice.${size}.current`] = value;
+		}
+
+		await this.update(updates);
+	}
+
+	async rollHitDice() {
+		const dialog = GenericDialog.getOrCreate(
+			`${this.name}: Roll Hit Dice`,
+			RollHitDiceDialog,
+			{ document: this },
+			{ icon: 'fa-solid fa-dice-d20', width: 320, uniqueId: `${this.id}-roll-hd` },
+		);
+
+		await dialog.render(true);
+		const result = (await dialog.promise) as RollHitDiceResult | null;
+
+		if (result === null || !result.selections) {
+			return;
+		}
+
+		const { selections, addStrBonus, applyToHP } = result;
+
+		// Build the roll formula from selections
+		const rollParts: string[] = [];
+		for (const [size, count] of Object.entries(selections)) {
+			if (count > 0) {
+				rollParts.push(`${count}d${size}`);
+			}
+		}
+
+		if (rollParts.length === 0) {
+			return;
+		}
+
+		// Add STR modifier for each die rolled (if enabled)
+		const totalDice = Object.values(selections).reduce((sum, count) => sum + count, 0);
+		const strMod = this.system.abilities.strength.mod;
+		const strBonus = addStrBonus ? totalDice * strMod : 0;
+		const formula = addStrBonus ? `${rollParts.join(' + ')} + ${strBonus}` : rollParts.join(' + ');
+
+		const roll = new NimbleRoll(formula, this.getRollData() as NimbleRoll.Data);
+		await roll.evaluate();
+
+		// Update hit dice counts
+		const updates: Record<string, unknown> = {};
+		for (const [size, count] of Object.entries(selections)) {
+			if (count > 0) {
+				const currentDice = this.system.attributes.hitDice[size]?.current ?? 0;
+				updates[`system.attributes.hitDice.${size}.current`] = Math.max(0, currentDice - count);
+			}
+		}
+
+		await this.update(updates);
+
+		// Apply healing to HP if enabled
+		let healingApplied = 0;
+		if (applyToHP && roll.total) {
+			const currentHP = this.system.attributes.hp.value;
+			const maxHP = this.system.attributes.hp.max;
+			const newHP = Math.min(currentHP + roll.total, maxHP);
+			healingApplied = newHP - currentHP;
+
+			if (healingApplied > 0) {
+				await this.update({ 'system.attributes.hp.value': newHP } as Record<string, unknown>);
+			}
+		}
+
+		// Output to chat
+		await this.outputHitDiceRoll(roll, selections, addStrBonus, applyToHP, healingApplied);
+	}
+
+	async outputHitDiceRoll(
+		roll: NimbleRoll,
+		selections: Record<string, number>,
+		addStrBonus: boolean,
+		applyToHP: boolean,
+		healingApplied: number,
+	) {
+		// Build dice summary string
+		const diceParts: string[] = [];
+		for (const [size, count] of Object.entries(selections)) {
+			if (count > 0) {
+				diceParts.push(`${count}d${size}`);
+			}
+		}
+		const diceSummary = diceParts.join(' + ');
+
+		// Extract individual dice results from the roll
+		const diceResults: { size: number; results: number[]; total: number }[] = [];
+		for (const term of roll.terms) {
+			if (term instanceof foundry.dice.terms.Die) {
+				const dieTerm = term as foundry.dice.terms.Die;
+				if (!dieTerm.faces) continue;
+				const results = dieTerm.results.map((r) => r.result);
+				diceResults.push({
+					size: dieTerm.faces,
+					results,
+					total: results.reduce((sum, v) => sum + v, 0),
+				});
+			}
+		}
+
+		// Sort by die size descending for display
+		diceResults.sort((a, b) => b.size - a.size);
+
+		// Calculate STR bonus
+		const strMod = this.system.abilities.strength.mod;
+		const totalDice = Object.values(selections).reduce((sum, count) => sum + count, 0);
+		const strBonus = addStrBonus ? totalDice * strMod : 0;
+
+		let content = `<div class="nimble-hit-dice-roll">`;
+
+		// Main result header with total
+		content += `<div class="nimble-hit-dice-roll__header">`;
+		content += `<span class="nimble-hit-dice-roll__label">Hit Dice Recovery</span>`;
+		content += `<span class="nimble-hit-dice-roll__total">${roll.total}</span>`;
+		content += `</div>`;
+
+		// Expandable dice details
+		content += `<details class="nimble-hit-dice-roll__details">`;
+		content += `<summary class="nimble-hit-dice-roll__summary">${diceSummary}${addStrBonus ? ` + ${strBonus}` : ''}</summary>`;
+		content += `<div class="nimble-hit-dice-roll__breakdown">`;
+
+		// Show each die type with individual results
+		for (const dieGroup of diceResults) {
+			const resultsStr = dieGroup.results
+				.map((r) => `<span class="nimble-hit-dice-roll__die-result">${r}</span>`)
+				.join(' ');
+			content += `<div class="nimble-hit-dice-roll__die-group">`;
+			content += `<span class="nimble-hit-dice-roll__die-type">d${dieGroup.size}</span>`;
+			content += `<span class="nimble-hit-dice-roll__die-results">${resultsStr}</span>`;
+			content += `<span class="nimble-hit-dice-roll__die-subtotal">= ${dieGroup.total}</span>`;
+			content += `</div>`;
+		}
+
+		// Show STR bonus if applicable
+		if (addStrBonus) {
+			content += `<div class="nimble-hit-dice-roll__die-group nimble-hit-dice-roll__die-group--bonus">`;
+			content += `<span class="nimble-hit-dice-roll__die-type">STR</span>`;
+			content += `<span class="nimble-hit-dice-roll__die-results">${strMod} × ${totalDice}</span>`;
+			content += `<span class="nimble-hit-dice-roll__die-subtotal">= ${strBonus}</span>`;
+			content += `</div>`;
+		}
+
+		content += `</div>`; // breakdown
+		content += `</details>`;
+
+		// HP healing status
+		if (applyToHP) {
+			if (healingApplied > 0) {
+				content += `<div class="nimble-hit-dice-roll__healing">`;
+				content += `<i class="fa-solid fa-heart"></i> Healed ${healingApplied} HP`;
+				content += `</div>`;
+			} else {
+				content += `<div class="nimble-hit-dice-roll__healing nimble-hit-dice-roll__healing--full">`;
+				content += `<i class="fa-solid fa-heart"></i> Already at max HP`;
+				content += `</div>`;
+			}
+		}
+
+		content += `</div>`;
+
+		const chatData = {
+			author: game.user?.id,
+			flavor: `${this.name}: Hit Dice Roll`,
+			content,
+			rolls: [roll],
+			speaker: ChatMessage.getSpeaker({ actor: this }),
+		};
+
+		ChatMessage.applyRollMode(
+			chatData as unknown as ChatMessage.CreateData,
+			game.settings.get('core', 'rollMode') as CONST.DICE_ROLL_MODES,
+		);
+
+		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+	}
+
+	async updateCurrentHitDice(newTotal: number) {
+		const bySize = this.HitDiceManager.bySize;
+		const currentTotal = this.HitDiceManager.value;
+		const maxTotal = this.HitDiceManager.max;
+
+		// Clamp the new value
+		const clampedTotal = Math.max(0, Math.min(newTotal, maxTotal));
+		const delta = clampedTotal - currentTotal;
+
+		if (delta === 0) return;
+
+		const updates: Record<string, unknown> = {};
+
+		// Sort die sizes: largest first for restoring, smallest first for spending
+		const sizes = Object.keys(bySize)
+			.map(Number)
+			.sort((a, b) => (delta > 0 ? b - a : a - b));
+
+		let remaining = Math.abs(delta);
+
+		for (const size of sizes) {
+			if (remaining <= 0) break;
+
+			const { current, total } = bySize[size];
+
+			if (delta > 0) {
+				// Restoring dice - add up to max for this size
+				const canAdd = total - current;
+				const toAdd = Math.min(canAdd, remaining);
+				if (toAdd > 0) {
+					updates[`system.attributes.hitDice.${size}.current`] = current + toAdd;
+					remaining -= toAdd;
+				}
+			} else {
+				// Spending dice - remove from current
+				const toRemove = Math.min(current, remaining);
+				if (toRemove > 0) {
+					updates[`system.attributes.hitDice.${size}.current`] = current - toRemove;
+					remaining -= toRemove;
+				}
+			}
+		}
+
+		if (Object.keys(updates).length > 0) {
+			await this.update(updates);
 		}
 	}
 
@@ -815,21 +1152,34 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	async triggerRest(restOptions = {} as RestManager.Data) {
 		let restData: RestManager.Data;
 
-		if (restOptions.skipChatCard || restOptions.restType === 'safe') {
+		if (restOptions.skipChatCard) {
 			restData = restOptions;
-		} else {
-			// Launch Config Dialog
-			const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
-			const dialog = new GenericDialog(
-				'Field Rest Dialog',
-				FieldRestDialog,
+		} else if (restOptions.restType === 'safe') {
+			// Launch Safe Rest Dialog (singleton per actor)
+			const dialog = GenericDialog.getOrCreate(
+				'Safe Rest',
+				SafeRestDialog,
 				{ document: this },
-				{ icon: 'fa-solid fa-hourglass-half' },
+				{ icon: 'fa-solid fa-moon', uniqueId: `safe-rest-${this.uuid}` },
 			);
 
 			await dialog.render(true);
 			const dialogData = await dialog.promise;
+			if (!dialogData) return; // Dialog was closed without submitting
+
+			restData = { ...dialogData, restType: 'safe' } as RestManager.Data;
+		} else {
+			// Launch Field Rest Dialog (singleton per actor)
+			const dialog = GenericDialog.getOrCreate(
+				'Field Rest',
+				FieldRestDialog,
+				{ document: this },
+				{ icon: 'fa-solid fa-hourglass-half', uniqueId: `field-rest-${this.uuid}` },
+			);
+
+			await dialog.render(true);
+			const dialogData = await dialog.promise;
+			if (!dialogData) return; // Dialog was closed without submitting
 
 			restData = { ...dialogData, restType: restOptions.restType } as RestManager.Data;
 		}

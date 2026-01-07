@@ -10,25 +10,34 @@ class HitDiceManager {
 	constructor(actor: NimbleCharacterInterface) {
 		this.#actor = actor;
 
+		// Track which sizes we've already counted current for
+		const currentCounted = new Set<number>();
+
+		// Process class hit dice
 		Object.values(this.#actor.classes).forEach((cls) => {
 			const { size } = cls.hitDice;
 			const current = this.#actor.system.attributes.hitDice[size]?.current ?? 0;
 
 			this.#max += cls.hitDice.total;
-			this.#value += current;
+			if (!currentCounted.has(size)) {
+				this.#value += current;
+				currentCounted.add(size);
+			}
 			this.dieSizes.add(size);
 		});
 
-		// Account for bonuses
-		Object.entries(this.#actor.system.attributes.hitDice ?? {}).forEach(([die, data]) => {
-			const size = Number(die);
-			if (!size || Number.isNaN(size)) return;
+		// Account for bonus hit dice from the bonusHitDice array
+		for (const entry of this.#actor.system.attributes.bonusHitDice ?? []) {
+			this.#max += entry.value;
 
-			const bonus = this.#actor.system.attributes.hitDice[size]?.bonus ?? 0;
-			this.#max += bonus;
-			if (!this.dieSizes.has(size)) this.#value += data.current ?? 0;
-			this.dieSizes.add(size);
-		});
+			// If this is a new size not from classes, get its current value
+			if (!currentCounted.has(entry.size)) {
+				const current = this.#actor.system.attributes.hitDice[entry.size]?.current ?? 0;
+				this.#value += current;
+				currentCounted.add(entry.size);
+			}
+			this.dieSizes.add(entry.size);
+		}
 	}
 
 	get max(): number {
@@ -56,19 +65,16 @@ class HitDiceManager {
 			return acc;
 		}, {});
 
-		// Factor in bonuses
-		for (const [die, data] of Object.entries(this.#actor.system.attributes.hitDice ?? {})) {
-			const bonus = data.bonus ?? 0;
+		// Factor in bonus hit dice from the bonusHitDice array
+		for (const entry of this.#actor.system.attributes.bonusHitDice ?? []) {
+			const size = entry.size;
+			hitDiceByClass[size] ??= { current: 0, total: 0 };
+			hitDiceByClass[size].total += entry.value;
 
-			// Add current to obj
-			foundry.utils.setProperty(hitDiceByClass, `${die}.current`, data.current ?? 0);
-
-			// Update total with bonus
-			foundry.utils.setProperty(
-				hitDiceByClass,
-				`${die}.total`,
-				bonus + (hitDiceByClass[die]?.total ?? 0),
-			);
+			// If this size wasn't from a class, get the current value from hitDice record
+			if (!Object.values(this.#actor.classes ?? {}).some((cls) => cls.hitDice.size === size)) {
+				hitDiceByClass[size].current = this.#actor.system.attributes.hitDice[size]?.current ?? 0;
+			}
 		}
 
 		return hitDiceByClass;
@@ -142,7 +148,7 @@ class HitDiceManager {
 		if (!upperLimit) upperLimit = Math.max(Math.floor(this.max / 2), 1) || 1;
 
 		const updates = {};
-		const recovered = 0;
+		let recovered = 0;
 		const recoveredData: Record<string, number> = {};
 
 		const data = Object.entries(this.bySize).sort(([a], [b]) => {
@@ -157,6 +163,7 @@ class HitDiceManager {
 			if (recovered >= upperLimit) return;
 
 			const recoverable = Math.min(consumed, upperLimit - recovered);
+			recovered += recoverable;
 			recoveredData[die] ??= 0;
 			recoveredData[die] += recoverable;
 			updates[`system.attributes.hitDice.${die}.current`] = current + recoverable;
