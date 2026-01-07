@@ -457,98 +457,47 @@
 										handleDrop(event, item.reactive._id, position);
 									}}
 								>
-									<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-									<!-- svelte-ignore a11y_click_events_have_key_events -->
 									<li
 										class="nimble-document-card nimble-document-card--no-meta nimble-document-card--monster-sheet"
 										class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
 										class:nimble-document-card--no-meta={!metadata}
 										data-item-id={item.reactive._id}
-										data-tooltip={prepareItemTooltip(item)}
-										data-tooltip-class="nimble-tooltip nimble-tooltip--item"
-										data-tooltip-direction="LEFT"
-										onclick={() => actor.activateItem(item.reactive._id)}
 									>
 										<header class="u-semantic-only">
-											{#if showEmbeddedDocumentImages}
-												<img
-													class="nimble-document-card__img"
-													src={item.reactive.img}
-													alt={item.reactive.name}
-												/>
-											{/if}
-
-											<h4
-												class="nimble-document-card__name nimble-heading"
-												data-heading-variant="item"
+											<button
+												class="nimble-document-card__content"
+												type="button"
+												data-tooltip={prepareItemTooltip(item)}
+												data-tooltip-class="nimble-tooltip nimble-tooltip--item"
+												data-tooltip-direction="LEFT"
+												onclick={() => actor.activateItem(item.reactive._id)}
 											>
-												{item.reactive.name}
-											</h4>
+												{#if showEmbeddedDocumentImages}
+													<img class="nimble-document-card__img" src={item.reactive.img} alt="" />
+												{/if}
 
-											{#if item.reactive.system?.activation?.effects?.length > 0}
-												<i class="fa-solid fa-dice-d20 nimble-document-card__chat-indicator"></i>
-											{:else}
-												<i class="fa-solid fa-comment nimble-document-card__chat-indicator"></i>
-											{/if}
+												<span class="nimble-document-card__indicator">
+													{#if item.reactive.system?.activation?.effects?.length > 0}
+														<i class="fa-solid fa-dice-d20"></i>
+													{:else}
+														<i class="fa-solid fa-comment"></i>
+													{/if}
+												</span>
 
-											<!-- svelte-ignore a11y_no_static_element_interactions -->
-											<span
-												class="nimble-document-card__actions"
-												onclick={(event) => event.stopPropagation()}
-											>
+												<span
+													class="nimble-document-card__name nimble-heading"
+													data-heading-variant="item"
+												>
+													{item.reactive.name}
+												</span>
+											</button>
+
+											<span class="nimble-document-card__actions">
 												{#if getReachRangeLabel(item)}
 													<span class="nimble-document-card__reach-range">
 														{getReachRangeLabel(item)}
 													</span>
 												{/if}
-
-												<span
-													class="nimble-button nimble-collapse-toggle"
-													class:nimble-collapse-toggle--collapsed={getItemCollapsed(item)}
-													role="button"
-													tabindex="0"
-													data-button-variant="icon"
-													aria-label={getItemCollapsed(item)
-														? game.i18n.format('NIMBLE.npcSheet.revealDescription', {
-																name: item.reactive.name,
-															})
-														: game.i18n.format('NIMBLE.npcSheet.collapseDescription', {
-																name: item.reactive.name,
-															})}
-													data-tooltip={getItemCollapsed(item)
-														? creatureFeatures.expand
-														: creatureFeatures.collapse}
-													data-tooltip-direction="DOWN"
-													data-tooltip-class="nimble-tooltip nimble-tooltip--compact"
-													onclick={(event) => {
-														event.stopPropagation();
-														const wasCollapsed = getItemCollapsed(item);
-														toggleItemCollapsed(item, !wasCollapsed);
-														game.tooltip.deactivate();
-														// Reactivate tooltip with updated text
-														requestAnimationFrame(() => {
-															game.tooltip.activate(event.currentTarget, {
-																text: wasCollapsed
-																	? creatureFeatures.collapse
-																	: creatureFeatures.expand,
-																direction: 'DOWN',
-																cssClass: 'nimble-tooltip nimble-tooltip--compact',
-															});
-														});
-													}}
-													onkeydown={(event) => {
-														if (
-															event.key === 'Space' ||
-															event.key === 'Enter' ||
-															event.key === ' '
-														) {
-															event.preventDefault();
-															toggleItemCollapsed(item, !getItemCollapsed(item));
-														}
-													}}
-												>
-													<i class="fa-solid fa-chevron-up"></i>
-												</span>
 
 												{#if isEditable}
 													<button
@@ -575,6 +524,52 @@
 														<i class="fa-solid fa-trash"></i>
 													</button>
 												{/if}
+
+												<span
+													class="nimble-button nimble-collapse-toggle"
+													class:nimble-collapse-toggle--collapsed={getItemCollapsed(item)}
+													role="button"
+													tabindex="0"
+													data-button-variant="icon"
+													aria-label={getItemCollapsed(item)
+														? game.i18n.format('NIMBLE.npcSheet.revealDescription', {
+																name: item.reactive.name,
+															})
+														: game.i18n.format('NIMBLE.npcSheet.collapseDescription', {
+																name: item.reactive.name,
+															})}
+													data-tooltip={getItemCollapsed(item)
+														? creatureFeatures.expand
+														: creatureFeatures.collapse}
+													data-tooltip-direction="DOWN"
+													data-tooltip-class="nimble-tooltip nimble-tooltip--compact"
+													onclick={(event) => {
+														const wasCollapsed = getItemCollapsed(item);
+														toggleItemCollapsed(item, !wasCollapsed);
+														game.tooltip.deactivate();
+														requestAnimationFrame(() => {
+															game.tooltip.activate(event.currentTarget, {
+																text: wasCollapsed
+																	? creatureFeatures.collapse
+																	: creatureFeatures.expand,
+																direction: 'DOWN',
+																cssClass: 'nimble-tooltip nimble-tooltip--compact',
+															});
+														});
+													}}
+													onkeydown={(event) => {
+														if (
+															event.key === 'Space' ||
+															event.key === 'Enter' ||
+															event.key === ' '
+														) {
+															event.preventDefault();
+															toggleItemCollapsed(item, !getItemCollapsed(item));
+														}
+													}}
+												>
+													<i class="fa-solid fa-chevron-up"></i>
+												</span>
 											</span>
 										</header>
 									</li>
@@ -621,18 +616,6 @@
 		white-space: nowrap;
 	}
 
-	.nimble-document-card__actions {
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
-		flex-shrink: 0;
-		// Span all grid rows for full-height click area
-		grid-row: 1 / -1;
-		padding: 0.5rem 0.25rem;
-		margin-top: -0.25rem;
-		margin-bottom: -0.25rem;
-	}
-
 	// Animated collapse toggle caret
 	.nimble-collapse-toggle {
 		i {
@@ -648,32 +631,11 @@
 	// Ensure monster sheet cards have a solid background for drag ghost
 	:global(.nimble-document-card--monster-sheet) {
 		background: var(--nimble-card-background-color, hsl(41, 30%, 94%));
-		cursor: pointer;
 	}
 
-	// Roll/Chat indicator icon - always visible, darkens on hover
-	.nimble-document-card__chat-indicator {
-		opacity: 0.3;
-		color: var(--nimble-text-color, currentColor);
-		transition:
-			opacity 150ms ease,
-			color 150ms ease;
-		pointer-events: none;
-		margin-left: auto;
-		padding: 0 0.25rem;
-	}
-
-	// Darken indicator on card hover (when clicking would trigger roll/chat)
-	:global(.nimble-document-card--monster-sheet:hover) .nimble-document-card__chat-indicator {
-		opacity: 1;
+	// Darken indicator when hovering the clickable content area
+	:global(.nimble-document-card__content:hover) :global(.nimble-document-card__indicator) {
 		color: var(--nimble-accent-color, hsl(210, 70%, 50%));
-	}
-
-	// Keep muted when hovering over action buttons (clicking there won't trigger roll/chat)
-	:global(.nimble-document-card--monster-sheet:has(.nimble-document-card__actions:hover))
-		.nimble-document-card__chat-indicator {
-		opacity: 0.3;
-		color: var(--nimble-text-color, currentColor);
 	}
 
 	// Feature wrapper for drag-drop
