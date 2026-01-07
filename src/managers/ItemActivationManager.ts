@@ -113,30 +113,7 @@ class ItemActivationManager {
 		let foundDamageRoll = false;
 
 		for (const node of flattenEffectsTree(effects)) {
-			if (node.type === 'savingThrow') {
-				// Handle saving throw rolls
-				if (!this.actor) continue;
-
-				// Use saveType if available, otherwise fall back to savingThrowType
-				const saveKey = node.saveType || node.savingThrowType;
-				const rollMode = dialogData.rollMode ?? 0;
-
-				const rollFormula = dependencies.getRollFormula(this.actor as unknown as NimbleBaseActor, {
-					saveKey,
-					rollMode,
-					type: 'savingThrow',
-				});
-
-				const roll = new dependencies.NimbleRoll(rollFormula, {
-					...this.actor.getRollData(),
-					prompted: false,
-					respondentId: this.actor?.token?.uuid ?? this.actor.uuid,
-				} as NimbleRoll.Data);
-
-				await roll.evaluate();
-				node.roll = roll.toJSON() as Record<string, unknown>;
-				rolls.push(roll as unknown as Roll);
-			} else if (node.type === 'damage' || node.type === 'healing') {
+			if (node.type === 'damage' || node.type === 'healing') {
 				let roll: Roll | DamageRoll;
 
 				if (node.type === 'damage' && !foundDamageRoll) {

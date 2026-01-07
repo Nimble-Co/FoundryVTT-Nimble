@@ -701,7 +701,7 @@
 		}
 
 		// First card after a header should connect seamlessly
-		+ .nimble-document-card {
+		+ .nimble-monster-feature-wrapper > .nimble-document-card {
 			border-top-left-radius: 0;
 			border-top-right-radius: 0;
 		}

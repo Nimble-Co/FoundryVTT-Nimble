@@ -279,13 +279,11 @@
 		font: inherit;
 		overflow: hidden;
 
-		&:focus {
-			outline: none;
-		}
-
+		&:focus,
 		&:focus-visible {
-			outline: 2px solid var(--nimble-accent-color);
-			outline-offset: -2px;
+			outline: none !important;
+			outline-color: transparent !important;
+			box-shadow: none !important;
 		}
 
 		.nimble-document-card__img {
