@@ -21,7 +21,6 @@
 			"creatureType": "Balor Feeling Hot & Spicy",
 			"level": "14"
 		},
-		"attackSequence": "<p>After each hero's turn, choose 1:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -186,6 +185,50 @@
 			}
 		},
 		{
+			"_id": "6SveuPN16tqmyRw8",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, choose 1:</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Crackling Whip.",
 			"type": "monsterFeature",
 			"system": {
@@ -257,7 +300,8 @@
 					}
 				},
 				"description": "<p>Move 6. (Reach 6) 3d12 damage. On hit: Grappled and pulled adjacent to Azriel (escape DC 17 STR, DEX, or until he uses the whip again).</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "6SveuPN16tqmyRw8"
 			},
 			"_id": "YjDDY4UdbPtstgDS",
 			"img": "icons/weapons/misc/whip-red-yellow.webp",
@@ -330,7 +374,8 @@
 					}
 				},
 				"description": "<p>3d12+10 fire damage to all creatures within Reach 2.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "6SveuPN16tqmyRw8"
 			},
 			"_id": "VT3sWm8M4hO4Zkao",
 			"img": "icons/magic/fire/dagger-rune-enchant-flame-strong-red.webp",

@@ -1,3 +1,5 @@
+import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
+
 const { ApplicationV2 } = foundry.applications.api;
 
 /**
@@ -23,4 +25,18 @@ export default function registerSystemSettings() {
 		type: SystemSettingsPlaceholder,
 		restricted: false,
 	});
+
+	// Migration schema version tracking
+	game.settings.register(
+		'nimble' as 'core',
+		'worldSchemaVersion' as 'rollMode',
+		{
+			name: 'World Schema Version',
+			hint: 'Tracks the current migration version of this world',
+			scope: 'world',
+			config: false,
+			type: Number,
+			default: MigrationRunnerBase.MINIMUM_SAFE_VERSION,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
 }

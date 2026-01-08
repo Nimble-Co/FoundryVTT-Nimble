@@ -282,6 +282,14 @@
 		"monsterFeatureTypes": {
 			"feature": "Feature",
 			"action": "Actions",
+			"attackSequence": "Attack Sequence",
+			"bloodied": "Bloodied",
+			"lastStand": "Last Stand"
+		},
+		"monsterFeatureSubtypes": {
+			"feature": "Feature",
+			"action": "Action",
+			"attackSequence": "Attack Sequence",
 			"bloodied": "Bloodied",
 			"lastStand": "Last Stand"
 		},

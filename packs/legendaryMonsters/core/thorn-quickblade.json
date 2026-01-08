@@ -21,7 +21,6 @@
 			"creatureType": "Human Criminal",
 			"level": "4"
 		},
-		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 0,
@@ -186,6 +185,50 @@
 			}
 		},
 		{
+			"_id": "MFMzlm2y1DBiAtmk",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, choose one:</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Stormquill (Crossbow).",
 			"type": "monsterFeature",
 			"system": {
@@ -243,7 +286,8 @@
 					}
 				},
 				"description": "<p>Move 4, 4d4+10 damage (Range 8).</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "MFMzlm2y1DBiAtmk"
 			},
 			"_id": "PAvmy2NNVCMdVhCN",
 			"img": "icons/weapons/crossbows/crossbow-blue.webp",
@@ -333,7 +377,8 @@
 					}
 				},
 				"description": "<p>Move 8, 2d4+3 damage. On crit: Dazed.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "MFMzlm2y1DBiAtmk"
 			},
 			"_id": "35HP1npCJHxMtbS1",
 			"img": "icons/skills/melee/hand-grip-sword-red.webp",

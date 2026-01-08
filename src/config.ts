@@ -275,6 +275,7 @@ const manaRecoveryTypes = {
 const monsterFeatureTypes = {
 	feature: 'NIMBLE.monsterFeatureTypes.feature',
 	action: 'NIMBLE.monsterFeatureTypes.action',
+	attackSequence: 'NIMBLE.monsterFeatureTypes.attackSequence',
 	bloodied: 'NIMBLE.monsterFeatureTypes.bloodied',
 	lastStand: 'NIMBLE.monsterFeatureTypes.lastStand',
 };

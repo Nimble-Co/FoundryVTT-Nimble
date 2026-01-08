@@ -21,7 +21,6 @@
 			"creatureType": "World-Ending Cataclysm",
 			"level": "20"
 		},
-		"attackSequence": "<p>After each hero's turn, choose 1 not yet chosen (reset when all have been chosen):</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 3,
@@ -237,6 +236,50 @@
 			}
 		},
 		{
+			"_id": "Zn7f5wnp84El6IYa",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, choose 1 not yet chosen (reset when all have been chosen):</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Wormhole",
 			"type": "monsterFeature",
 			"system": {
@@ -294,7 +337,8 @@
 					}
 				},
 				"description": "<p>Teleport 12. 3d20 to a creature adjacent to where you began or ended.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "Zn7f5wnp84El6IYa"
 			},
 			"_id": "QgFFZaVxOtw8eJ1D",
 			"img": "icons/magic/sonic/explosion-impact-shock-wave.webp",
@@ -399,7 +443,8 @@
 					}
 				},
 				"description": "<p>(Reach 12) DC 20 STR save (disadvantage if within Reach 4) or suffer 3d20 damage and Prone. Half on save.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "Zn7f5wnp84El6IYa"
 			},
 			"_id": "3ZLbCogTJylv3j6P",
 			"img": "icons/magic/defensive/barrier-shield-dome-blue-purple.webp",
@@ -475,7 +520,8 @@
 					}
 				},
 				"description": "<p>DC 20 WIL save or DOOMED: Concentration ends, the next damage roll against you is maximized.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "Zn7f5wnp84El6IYa"
 			},
 			"_id": "J5368jkxadVt0eOg",
 			"img": "icons/magic/death/skull-humanoid-white-red.webp",
@@ -600,7 +646,8 @@
 					}
 				},
 				"description": "<p>Reach 6, DC 20 DEX save or 2d20 lightning and 2d20 fire damage. Half on save.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "Zn7f5wnp84El6IYa"
 			},
 			"_id": "hgBOVY7Fj3Js7yzX",
 			"img": "icons/magic/lightning/bolt-strike-smoke-yellow.webp",
@@ -675,7 +722,8 @@
 					}
 				},
 				"description": "<p>Reach 2, 5d20 bludgeoning damage.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "Zn7f5wnp84El6IYa"
 			},
 			"_id": "cKsrqvN2JNjZ9oTq",
 			"img": "icons/magic/air/wind-vortex-swirl-blue.webp",
@@ -751,7 +799,8 @@
 					}
 				},
 				"description": "<p>(Range 12) DC 20 STR save or be launched 20 ft. into the air, repeat until the target saves. Fall damage for this attack is 1d20 for every 10 ft. fallen.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "Zn7f5wnp84El6IYa"
 			},
 			"_id": "MfLJ3aDYoCtnItjm",
 			"img": "icons/magic/movement/trail-streak-impact-blue.webp",

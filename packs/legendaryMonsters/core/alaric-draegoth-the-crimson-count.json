@@ -21,7 +21,6 @@
 			"creatureType": "Vampire Lord",
 			"level": "16"
 		},
-		"attackSequence": "<p>After each hero's turn, summon 1 Blood Bat minion (d10) within 8 spaces, then choose 1:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 2,
@@ -287,6 +286,50 @@
 			}
 		},
 		{
+			"_id": "wMGICnS6zJ035Bzl",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, summon 1 Blood Bat minion (d10) within 8 spaces, then choose 1:</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Ebonfang",
 			"type": "monsterFeature",
 			"system": {
@@ -351,7 +394,8 @@
 					}
 				},
 				"description": "<p>Deal 1d10+15 damage, your target is considered Bloodied for 1 round. Fly 8 before or after attacking.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "wMGICnS6zJ035Bzl"
 			},
 			"_id": "pm7AVHiCb0C7lHqK",
 			"img": "icons/weapons/swords/greatsword-crossguard-flanged-red.webp",
@@ -416,7 +460,8 @@
 					}
 				},
 				"description": "<p>If no creature is Beguiled, Beguile a target on a failed DC 18 WIL save (w/ disadvantage if Bloodied). </p><p><strong>Beguiled.</strong> Dazed. Cannot Defend or allow anyone to Interpose for you. Damage ends.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "wMGICnS6zJ035Bzl"
 			},
 			"_id": "49Lf23xPbGSi5MTR",
 			"img": "icons/magic/control/debuff-energy-hold-pink.webp",
@@ -499,7 +544,8 @@
 					}
 				},
 				"description": "<p>Move a Beguiled creature adjacent to you and bite them: 2d10+30 damage and 1 Wound.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "wMGICnS6zJ035Bzl"
 			},
 			"_id": "NMZj4KGiElpDARFM",
 			"img": "icons/creatures/abilities/mouth-teeth-human.webp",

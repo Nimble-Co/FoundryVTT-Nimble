@@ -21,7 +21,6 @@
 			"creatureType": "Bug Druid",
 			"level": "3"
 		},
-		"attackSequence": "<p>After each hero's turn, choose Kelebek OR Poppy to act.</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 0,
@@ -137,6 +136,50 @@
 	},
 	"items": [
 		{
+			"_id": "s001vAAtYrXeH58S",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, choose Kelebek OR Poppy to act.</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Vinelash.",
 			"type": "monsterFeature",
 			"system": {
@@ -194,7 +237,8 @@
 					}
 				},
 				"description": "<p>Move 6, then 2d6. On damage: move target to an unoccupied space within 10 spaces.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "s001vAAtYrXeH58S"
 			},
 			"_id": "cVE3FkUPijy51yGA",
 			"img": "icons/magic/nature/root-vine-coiled-crook.webp",

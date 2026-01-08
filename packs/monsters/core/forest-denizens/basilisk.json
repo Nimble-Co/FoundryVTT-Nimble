@@ -22,7 +22,6 @@
 			"isFlunky": false,
 			"level": "7"
 		},
-		"attackSequence": "",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 0,

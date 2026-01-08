@@ -21,7 +21,6 @@
 			"creatureType": "Skeleton",
 			"level": "10"
 		},
-		"attackSequence": "<p>After each hero's turn, choose 1:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 3,
@@ -235,6 +234,50 @@
 			}
 		},
 		{
+			"_id": "a3hsfp4b8LNkCRFK",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, choose 1:</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Devastating Strike.",
 			"type": "monsterFeature",
 			"system": {
@@ -300,7 +343,8 @@
 					}
 				},
 				"description": "<p>(Reach 4) 1d4+30 damage. On hit: Knockback 6.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "a3hsfp4b8LNkCRFK"
 			},
 			"_id": "SdltF0h07pyt8QgI",
 			"img": "icons/weapons/swords/greatsword-guard-split-eyes.webp",
@@ -388,7 +432,8 @@
 					}
 				},
 				"description": "<p>Move up to 10 spaces. Deal 1d4+20 damage to up to 2 targets along the path. On hit: Prone.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "a3hsfp4b8LNkCRFK"
 			},
 			"_id": "ekNtNgYbJXn9Lv7b",
 			"img": "icons/skills/movement/feet-bladed-boots-fire.webp",
@@ -463,7 +508,8 @@
 					}
 				},
 				"description": "<p>The 2 furthest heroes make a DC 16 STR save or are moved adjacent to Titan.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "a3hsfp4b8LNkCRFK"
 			},
 			"_id": "J3uKzVH5MXvS6fAo",
 			"img": "icons/magic/control/debuff-energy-hold-teal-blue.webp",

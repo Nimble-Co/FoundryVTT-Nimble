@@ -21,7 +21,6 @@
 			"creatureType": "Aberration, all TEETH & EYES",
 			"level": "12"
 		},
-		"attackSequence": "<p>After each hero's turn, Move 6 and then either use <strong>Eye Ray</strong> (Range 10, [[/r 1d6]]{randomly chosen ray} then choose target) OR <strong>Terrible Maw</strong>. </p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 0,
@@ -237,6 +236,50 @@
 			}
 		},
 		{
+			"_id": "pVcPhLdzXc3dG2HC",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, Move 6 and then either use <strong>Eye Ray</strong> (Range 10, [[/r 1d6]]{randomly chosen ray} then choose target) OR <strong>Terrible Maw</strong>. </p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "1. Warping Ray",
 			"type": "monsterFeature",
 			"system": {
@@ -309,7 +352,8 @@
 					}
 				},
 				"description": "<p>3d6. On hit: Dazed, exchange places with target.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "pVcPhLdzXc3dG2HC"
 			},
 			"_id": "hm0nvCYJy2i4fCDa",
 			"img": "icons/magic/light/beam-rays-blue-large.webp",
@@ -362,7 +406,8 @@
 					}
 				},
 				"description": "<p>Permanently Dazed. Healing ends. (3 stacks, Petrified).</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "pVcPhLdzXc3dG2HC"
 			},
 			"_id": "En4fdOj40xF7Q1mj",
 			"img": "icons/magic/light/beam-rays-yellow-blue-large.webp",
@@ -445,7 +490,8 @@
 					}
 				},
 				"description": "<p>5d10 psychic damage & Terrified: </p><p>(You are Frightened, and your screams give allies within 6 disadvantage on rolls. Ends when Dravok's plans are FLAWED.)</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "pVcPhLdzXc3dG2HC"
 			},
 			"_id": "x3uAQ8Y4Pog85I7f",
 			"img": "icons/magic/light/beam-rays-red-large.webp",
@@ -528,7 +574,8 @@
 					}
 				},
 				"description": "<p>2d6 damage. Push that many spaces. Knocked Prone on 7+.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "pVcPhLdzXc3dG2HC"
 			},
 			"_id": "9yLALKx55vnxvfb5",
 			"img": "icons/magic/light/beam-rays-teal-purple-large.webp",
@@ -614,7 +661,8 @@
 					}
 				},
 				"description": "<p>DC 16 WIL save or you spend 3 Actions attacking with or moving them, 2 actions on save. (Cannot spend resources, they regain spent actions afterward.)</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "pVcPhLdzXc3dG2HC"
 			},
 			"_id": "nQ1CO1Ge9FGgwUpm",
 			"img": "icons/magic/light/beam-rays-magenta-large.webp",
@@ -700,7 +748,8 @@
 					}
 				},
 				"description": "<p>DC 16 STR save or drop to 0 HP. On save, gain 1 Wound. If a Dying creature fails this, they die.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "pVcPhLdzXc3dG2HC"
 			},
 			"_id": "ML4LADhsYE5Dvpog",
 			"img": "icons/magic/light/beam-rays-green-large.webp",
@@ -783,7 +832,8 @@
 					}
 				},
 				"description": "<p>Melee attack. 4d4, EVERY die can crit and is Vicious</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "pVcPhLdzXc3dG2HC"
 			},
 			"_id": "PpZr6xGfBDyQptL3",
 			"img": "icons/creatures/abilities/mouth-teeth-rows-red.webp",

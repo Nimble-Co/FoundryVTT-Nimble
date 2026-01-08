@@ -21,7 +21,6 @@
 			"creatureType": "",
 			"level": "3"
 		},
-		"attackSequence": "<p>After each hero's turn, choose Kelebek OR Poppy to act.</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -185,6 +184,50 @@
 			}
 		},
 		{
+			"_id": "GOGdPha1RdldAEfI",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, choose Kelebek OR Poppy to act.</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Crushing Mandibles.",
 			"type": "monsterFeature",
 			"system": {
@@ -242,7 +285,8 @@
 					}
 				},
 				"description": "<p>Move 6. 4d6 damage, up to 2 adjacent creatures.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "GOGdPha1RdldAEfI"
 			},
 			"_id": "bF81HUOt0AEo855I",
 			"img": "icons/creatures/invertebrates/beetle-stag-yellow-green.webp",
