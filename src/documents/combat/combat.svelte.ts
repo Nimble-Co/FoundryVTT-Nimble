@@ -70,6 +70,11 @@ class NimbleCombat extends Combat {
 	}
 
 	override async _onEndRound() {
+		// If it's the first turn of the first round, don't reset actions
+		if (this.round === 1 && this.turn === 0) {
+			return;
+		}
+
 		const skippedCombatants = this.turns.slice(this.previous?.turn ?? 0);
 
 		type CombatantUpdate = { _id: string | null; 'system.actions.base.current': number };
@@ -83,7 +88,6 @@ class NimbleCombat extends Combat {
 						'system.actions.base.current': system.actions.base.max,
 					});
 				}
-
 				return updates;
 			}, []),
 		);
@@ -112,6 +116,7 @@ class NimbleCombat extends Combat {
 	): Promise<this> {
 		const { formula = null, updateTurn = true, messageOptions = {} } = options ?? {};
 
+		console.log('?????');
 		// Structure Input data
 		const combatantIds = typeof ids === 'string' ? [ids] : ids;
 		const currentId = this.combatant?.id;
