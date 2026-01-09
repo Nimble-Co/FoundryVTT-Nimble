@@ -56,6 +56,21 @@ class NimbleCombat extends Combat {
 		return this;
 	}
 
+	override async startCombat(): Promise<this> {
+		const result = await super.startCombat();
+
+		// Roll initiative for any unrolled combatants
+		const unrolled = this.combatants.filter((c) => c.initiative === null && c.type === 'character');
+		if (unrolled.length > 0) {
+			await this.rollInitiative(
+				unrolled.map((c) => c.id).filter((id): id is string => id !== null),
+				{ updateTurn: false },
+			);
+		}
+
+		return result;
+	}
+
 	override async _onEndTurn(combatant: Combatant.Implementation, context: Combat.TurnEventContext) {
 		await super._onEndTurn(combatant, context);
 
@@ -116,7 +131,6 @@ class NimbleCombat extends Combat {
 	): Promise<this> {
 		const { formula = null, updateTurn = true, messageOptions = {} } = options ?? {};
 
-		console.log('?????');
 		// Structure Input data
 		const combatantIds = typeof ids === 'string' ? [ids] : ids;
 		const currentId = this.combatant?.id;
