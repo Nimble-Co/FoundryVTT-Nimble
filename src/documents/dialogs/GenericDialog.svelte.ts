@@ -80,6 +80,24 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 		return dialog;
 	}
 
+	/**
+	 * Check if a dialog with the given uniqueId is currently open.
+	 */
+	static isOpen(uniqueId: string): boolean {
+		const dialog = GenericDialog.#openDialogs.get(uniqueId);
+		return dialog?.rendered ?? false;
+	}
+
+	/**
+	 * Close a dialog by its uniqueId if it exists and is open.
+	 */
+	static async closeById(uniqueId: string): Promise<void> {
+		const dialog = GenericDialog.#openDialogs.get(uniqueId);
+		if (dialog?.rendered) {
+			await dialog.close();
+		}
+	}
+
 	static override DEFAULT_OPTIONS = {
 		classes: ['nimble-sheet', 'nimble-dialog'],
 		window: {

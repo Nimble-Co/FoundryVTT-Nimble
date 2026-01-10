@@ -355,6 +355,20 @@
 			"skillPointsOverMaxTooltip": "A skill would exceed the 12 point cap",
 			"completeAllSelectionsTooltip": "Complete all selections before submitting"
 		},
+		"levelDownDialog": {
+			"level": "Level",
+			"changesToRevert": "Changes to Revert",
+			"hitPoints": "Hit Points",
+			"hp": "HP",
+			"hitDie": "Hit Die",
+			"point": "point",
+			"points": "points",
+			"subclass": "Subclass",
+			"removed": "removed",
+			"warningMessage": "This action will permanently revert the last level up. This cannot be undone.",
+			"confirmLevelDown": "Confirm Level Down",
+			"levelUpInProgress": "Cannot revert level while a level up is in progress."
+		},
 		"skillPointAssignment": {
 			"decrementSkillPoints": "Decrement Skill Points",
 			"incrementSkillPoints": "Increment Skill Points",

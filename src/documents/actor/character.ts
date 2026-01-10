@@ -13,6 +13,7 @@ import calculateRollMode from '../../utils/calculateRollMode.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
+import CharacterLevelDownDialog from '../../view/dialogs/CharacterLevelDownDialog.svelte';
 import CharacterLevelUpDialog from '../../view/dialogs/CharacterLevelUpDialog.svelte';
 import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementConfigDialog.svelte';
 import CharacterSkillsConfigDialog from '../../view/dialogs/CharacterSkillsConfigDialog.svelte';
@@ -940,7 +941,97 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		};
 	}
 
+	/**
+	 * Get the unique dialog ID for level up dialogs for this character.
+	 */
+	getLevelUpDialogId(): string {
+		return `${this.id}-level-up`;
+	}
+
+	/**
+	 * Get the unique dialog ID for level down dialogs for this character.
+	 */
+	getLevelDownDialogId(): string {
+		return `${this.id}-level-down`;
+	}
+
+	/**
+	 * Check if a level up dialog is currently open for this character.
+	 */
+	async isLevelUpInProgress(): Promise<boolean> {
+		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+		return GenericDialog.isOpen(this.getLevelUpDialogId());
+	}
+
+	/**
+	 * Validates that the character's level history is consistent with their current level.
+	 * If the character is beyond level 1 but doesn't have enough level up history entries,
+	 * this will reset them to level 1.
+	 * @returns true if the level was reset, false if no changes were needed
+	 */
+	async validateLevelHistory(): Promise<boolean> {
+		const characterClass = Object.values(this.classes)?.[0];
+
+		if (!characterClass) return false;
+
+		const currentClassLevel = characterClass.system.classLevel;
+		const historyLength = this.system.levelUpHistory.length;
+
+		// Level 1 characters should have 0 history entries
+		// Level 2 should have 1, Level 3 should have 2, etc.
+		const expectedHistoryLength = currentClassLevel - 1;
+
+		if (currentClassLevel > 1 && historyLength < expectedHistoryLength) {
+			ui.notifications?.warn(`${this.name}'s level history is inconsistent. Resetting to level 1.`);
+
+			// Reset to level 1
+			const actorUpdates: Record<string, unknown> = {};
+			const itemUpdates: Record<string, unknown> = {};
+
+			// Reset class level to 1
+			itemUpdates['system.classLevel'] = 1;
+
+			// Clear HP data (keep only the first level HP)
+			itemUpdates['system.hpData'] = characterClass.system.hpData.slice(0, 1);
+
+			// Clear ability score data for all levels except level 1
+			for (let level = 2; level <= currentClassLevel; level++) {
+				itemUpdates[`system.abilityScoreData.${level}.value`] = null;
+			}
+
+			// Clear level up history
+			actorUpdates['system.levelUpHistory'] = [];
+
+			// Reset classData.levels to just the first level
+			actorUpdates['system.classData.levels'] = this.system.classData.levels.slice(0, 1);
+
+			// Remove any subclasses (they require level 3+)
+			const subclasses = this.items.filter((i) => i.type === 'subclass');
+			if (subclasses.length > 0) {
+				const subclassIds = subclasses.map((s) => s.id).filter((id): id is string => id !== null);
+				if (subclassIds.length > 0) {
+					await this.deleteEmbeddedDocuments('Item', subclassIds);
+				}
+			}
+
+			await this.updateItem(characterClass.id!, itemUpdates);
+			await this.update(actorUpdates);
+			this.sheet?.render(true);
+
+			return true;
+		}
+
+		return false;
+	}
+
 	async triggerLevelUp() {
+		// Validate level history before allowing level up
+		const wasReset = await this.validateLevelHistory();
+		if (wasReset) {
+			// Level was reset, don't proceed with level up
+			return;
+		}
+
 		const characterClass = Object.values(this.classes)?.[0];
 
 		if (!characterClass) return;
@@ -951,14 +1042,26 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
 
+		const levelUpDialogId = this.getLevelUpDialogId();
+		const levelDownDialogId = this.getLevelDownDialogId();
+
+		// Close any open level down dialog when starting level up
+		await GenericDialog.closeById(levelDownDialogId);
+
 		const nextClassLevel = currentClassLevel + 1;
 
-		const dialog = new GenericDialog(
+		// Use singleton pattern to prevent multiple level up dialogs
+		const dialog = GenericDialog.getOrCreate(
 			`${this.name}: Level Up (${currentClassLevel} → ${nextClassLevel})`,
 			CharacterLevelUpDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-arrow-up-right-dots', width: 600 },
+			{ icon: 'fa-solid fa-arrow-up-right-dots', width: 600, uniqueId: levelUpDialogId },
 		);
+
+		// If dialog is already rendered, just bring it to front (handled by getOrCreate)
+		if (dialog.rendered) {
+			return;
+		}
 
 		await dialog.render(true);
 		const dialogData = await dialog.promise;
@@ -1047,6 +1150,52 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		await this.updateItem(characterClass.id!, itemUpdates);
 		await this.update(actorUpdates);
 		this.sheet?.render(true);
+	}
+
+	/**
+	 * Opens a confirmation dialog for reverting the last level up.
+	 * This dialog cannot be opened while a level up dialog is in progress.
+	 */
+	async triggerLevelDown() {
+		// Validate level history before allowing level down
+		const wasReset = await this.validateLevelHistory();
+		if (wasReset) {
+			// Level was reset, don't proceed with level down
+			return;
+		}
+
+		// Don't allow level down if no history exists
+		if (this.system.levelUpHistory.length === 0) return;
+
+		// Don't allow level down while level up is in progress
+		if (GenericDialog.isOpen(this.getLevelUpDialogId())) {
+			ui.notifications?.warn(game.i18n.localize('NIMBLE.levelDownDialog.levelUpInProgress'));
+			return;
+		}
+
+		const levelDownDialogId = this.getLevelDownDialogId();
+
+		// Use singleton pattern to prevent multiple level down dialogs
+		const dialog = GenericDialog.getOrCreate(
+			`${this.name}: Revert Level Up`,
+			CharacterLevelDownDialog,
+			{ document: this },
+			{ icon: 'fa-solid fa-undo', width: 400, uniqueId: levelDownDialogId },
+		);
+
+		// If dialog is already rendered, just bring it to front
+		if (dialog.rendered) {
+			return;
+		}
+
+		await dialog.render(true);
+		const dialogData = await dialog.promise;
+
+		// If user confirmed, perform the revert
+		if (dialogData?.confirmed) {
+			await this.revertLastLevelUp();
+			this.sheet?.render(true);
+		}
 	}
 
 	async revertLastLevelUp() {
