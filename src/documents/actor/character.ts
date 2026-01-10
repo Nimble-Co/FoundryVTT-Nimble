@@ -1169,7 +1169,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		// Don't allow level down while level up is in progress
 		if (GenericDialog.isOpen(this.getLevelUpDialogId())) {
-			ui.notifications?.warn('Cannot revert level while a level up is in progress.');
+			ui.notifications?.warn(game.i18n.localize('NIMBLE.levelDownDialog.levelUpInProgress'));
 			return;
 		}
 

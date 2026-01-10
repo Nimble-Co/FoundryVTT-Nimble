@@ -56,16 +56,20 @@
 		<div class="nimble-level-down-info">
 			<h3 class="nimble-heading" data-heading-variant="section">{actor.name}</h3>
 			<p class="nimble-level-transition">
-				<span class="nimble-level-current">Level {currentLevel}</span>
+				<span class="nimble-level-current"
+					>{CONFIG.NIMBLE.levelDownDialog.level} {currentLevel}</span
+				>
 				<i class="fa-solid fa-arrow-right"></i>
-				<span class="nimble-level-new">Level {newLevel}</span>
+				<span class="nimble-level-new">{CONFIG.NIMBLE.levelDownDialog.level} {newLevel}</span>
 			</p>
 		</div>
 	</section>
 
 	<section>
 		<header class="nimble-section-header">
-			<h3 class="nimble-heading" data-heading-variant="section">Changes to Revert</h3>
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{CONFIG.NIMBLE.levelDownDialog.changesToRevert}
+			</h3>
 		</header>
 
 		<ul class="nimble-level-down-preview">
@@ -73,10 +77,11 @@
 				<li class="nimble-level-down-preview__item nimble-level-down-preview__item--loss">
 					<span class="nimble-level-down-preview__label">
 						<i class="fa-solid fa-heart"></i>
-						Hit Points
+						{CONFIG.NIMBLE.levelDownDialog.hitPoints}
 					</span>
 					<span class="nimble-level-down-preview__value">
-						-{lastHistory.hpIncrease} HP
+						-{lastHistory.hpIncrease}
+						{CONFIG.NIMBLE.levelDownDialog.hp}
 					</span>
 				</li>
 			{/if}
@@ -85,7 +90,7 @@
 				<li class="nimble-level-down-preview__item nimble-level-down-preview__item--loss">
 					<span class="nimble-level-down-preview__label">
 						<i class="fa-solid fa-dice-d20"></i>
-						Hit Die
+						{CONFIG.NIMBLE.levelDownDialog.hitDie}
 					</span>
 					<span class="nimble-level-down-preview__value">
 						-1 d{characterClass?.system?.hitDieSize ?? '?'}
@@ -115,7 +120,10 @@
 							{skill.name}
 						</span>
 						<span class="nimble-level-down-preview__value">
-							-{skill.points} point{skill.points !== 1 ? 's' : ''}
+							-{skill.points}
+							{skill.points !== 1
+								? CONFIG.NIMBLE.levelDownDialog.points
+								: CONFIG.NIMBLE.levelDownDialog.point}
 						</span>
 					</li>
 				{/each}
@@ -126,10 +134,11 @@
 					<li class="nimble-level-down-preview__item nimble-level-down-preview__item--warning">
 						<span class="nimble-level-down-preview__label">
 							<i class="fa-solid fa-star"></i>
-							Subclass
+							{CONFIG.NIMBLE.levelDownDialog.subclass}
 						</span>
 						<span class="nimble-level-down-preview__value">
-							{subclass.name} removed
+							{subclass.name}
+							{CONFIG.NIMBLE.levelDownDialog.removed}
 						</span>
 					</li>
 				{/each}
@@ -139,26 +148,21 @@
 
 	<section class="nimble-level-down-warning">
 		<i class="fa-solid fa-triangle-exclamation"></i>
-		<p>This action will permanently revert the last level up. This cannot be undone.</p>
+		<p>{CONFIG.NIMBLE.levelDownDialog.warningMessage}</p>
 	</section>
 </article>
 
 <footer class="nimble-sheet__footer">
-	<button class="nimble-button" data-button-variant="danger" onclick={submit}>
-		Confirm Level Down
+	<button
+		class="nimble-button nimble-button--danger"
+		data-button-variant="full-width"
+		onclick={submit}
+	>
+		{CONFIG.NIMBLE.levelDownDialog.confirmLevelDown}
 	</button>
 </footer>
 
 <style lang="scss">
-	.nimble-sheet__body {
-		--nimble-sheet-body-padding-block-start: 0.5rem;
-	}
-
-	.nimble-sheet__footer {
-		--nimble-button-padding: 0.5rem 1rem;
-		--nimble-button-width: 100%;
-	}
-
 	.nimble-level-down-header {
 		display: flex;
 		align-items: center;
@@ -289,12 +293,12 @@
 		}
 	}
 
-	:global([data-button-variant='danger']) {
-		background: var(--nimble-danger-color, hsl(0, 60%, 50%));
-		color: white;
+	.nimble-button--danger {
+		background-color: var(--nimble-danger-color, hsl(0, 60%, 50%)) !important;
+		color: white !important;
 
 		&:hover:not(:disabled) {
-			background: hsl(0, 60%, 45%);
+			background-color: hsl(0, 60%, 45%) !important;
 		}
 	}
 </style>

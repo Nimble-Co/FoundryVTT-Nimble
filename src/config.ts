@@ -523,6 +523,21 @@ const levelUpDialog = {
 	completeAllSelectionsTooltip: 'NIMBLE.levelUpDialog.completeAllSelectionsTooltip',
 };
 
+const levelDownDialog = {
+	level: 'NIMBLE.levelDownDialog.level',
+	changesToRevert: 'NIMBLE.levelDownDialog.changesToRevert',
+	hitPoints: 'NIMBLE.levelDownDialog.hitPoints',
+	hp: 'NIMBLE.levelDownDialog.hp',
+	hitDie: 'NIMBLE.levelDownDialog.hitDie',
+	point: 'NIMBLE.levelDownDialog.point',
+	points: 'NIMBLE.levelDownDialog.points',
+	subclass: 'NIMBLE.levelDownDialog.subclass',
+	removed: 'NIMBLE.levelDownDialog.removed',
+	warningMessage: 'NIMBLE.levelDownDialog.warningMessage',
+	confirmLevelDown: 'NIMBLE.levelDownDialog.confirmLevelDown',
+	levelUpInProgress: 'NIMBLE.levelDownDialog.levelUpInProgress',
+};
+
 const creatureFeatures = {
 	noFeatures: 'NIMBLE.creatureFeatures.noFeatures',
 	actionSequence: 'NIMBLE.creatureFeatures.actionSequence',
@@ -641,6 +656,7 @@ const NIMBLE = {
 	languageHints,
 	languageImages,
 	languages,
+	levelDownDialog,
 	levelUpDialog,
 	manaRecoveryTypes,
 	monsterFeatureTypes,
