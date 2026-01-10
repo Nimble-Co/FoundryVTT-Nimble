@@ -46,6 +46,11 @@
 	},
 	"authors": [
 		{
+			"name": "Trevor Carlston",
+			"email": "trevlar@questluminary.com",
+			"url": "https://ko-fi.com/questluminary"
+		},
+		{
 			"name": "Phillip Best",
 			"email": "me@phillip.best",
 			"url": "https://bio.link/philbest"
@@ -67,6 +72,10 @@
 		{
 			"type": "individual",
 			"url": "https://ko-fi.com/nekrodarkmoon"
+		},
+		{
+			"type": "individual",
+			"url": "https://ko-fi.com/questluminary"
 		}
 	],
 	"license": "MIT",
