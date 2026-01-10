@@ -190,16 +190,16 @@
 	});
 </script>
 
-{#key version}
-	{#if currentCombat}
-		<section class="nimble-combat-tracker" transition:slide={{ axis: 'x' }}>
-			<header
-				class="nimble-combat-tracker__header"
-				class:nimble-combat-tracker__header--no-controls={!game.user!.isGM}
-				class:nimble-combat-tracker__header--not-started={currentCombat?.round === 0}
-				in:slide={{ axis: 'y', delay: 200 }}
-				out:fade={{ delay: 0 }}
-			>
+{#if currentCombat}
+	<section class="nimble-combat-tracker" transition:slide={{ axis: 'x' }}>
+		<header
+			class="nimble-combat-tracker__header"
+			class:nimble-combat-tracker__header--no-controls={!game.user!.isGM}
+			class:nimble-combat-tracker__header--not-started={currentCombat?.round === 0}
+			in:slide={{ axis: 'y', delay: 200 }}
+			out:fade={{ delay: 0 }}
+		>
+			{#key version}
 				{#if currentCombat?.round === 0 && game.user!.isGM}
 					<button class="nimble-combat-tracker__start-button" onclick={startCombat}>
 						Start Combat
@@ -215,9 +215,11 @@
 				{#if currentCombat?.round !== 0 && game.user!.isGM}
 					<CombatTrackerControls />
 				{/if}
-			</header>
+			{/key}
+		</header>
 
-			<ol class="nimble-combatants" ondrop={(event) => _onDrop(event)} out:fade={{ delay: 0 }}>
+		<ol class="nimble-combatants" ondrop={(event) => _onDrop(event)} out:fade={{ delay: 0 }}>
+			{#key version}
 				{#each sceneCombatants as combatant (combatant._id)}
 					{@const CombatantComponent = getCombatantComponent(combatant)}
 
@@ -228,24 +230,24 @@
 						/>
 					</li>
 				{/each}
-			</ol>
+			{/key}
+		</ol>
 
-			{#if game.user!.isGM && sceneCombatants.some((combatant) => combatant.initiative === null)}
-				<footer class="nimble-combat-tracker__footer">
-					<div class="nimble-combat-tracker__footer-roll-container">
-						<button
-							class="nimble-combat-tracker__footer-button"
-							type="button"
-							aria-label="Roll All"
-							data-tooltip="Roll All"
-							data-tooltip-direction="UP"
-							onclick={(event) => rollInitiativeForAll(event)}
-						>
-							<i class="fa-solid fa-users"></i>
-						</button>
-					</div>
-				</footer>
-			{/if}
-		</section>
-	{/if}
-{/key}
+		{#if game.user!.isGM && sceneCombatants.some((combatant) => combatant.initiative === null)}
+			<footer class="nimble-combat-tracker__footer">
+				<div class="nimble-combat-tracker__footer-roll-container">
+					<button
+						class="nimble-combat-tracker__footer-button"
+						type="button"
+						aria-label="Roll All"
+						data-tooltip="Roll All"
+						data-tooltip-direction="UP"
+						onclick={(event) => rollInitiativeForAll(event)}
+					>
+						<i class="fa-solid fa-users"></i>
+					</button>
+				</div>
+			</footer>
+		{/if}
+	</section>
+{/if}
