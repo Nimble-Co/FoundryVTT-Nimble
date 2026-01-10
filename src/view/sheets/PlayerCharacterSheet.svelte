@@ -349,7 +349,7 @@
 		data-button-variant="overhang"
 		aria-label="Revert Last Level Up"
 		data-tooltip="Revert Last Level Up"
-		onclick={() => actor.revertLastLevelUp()}
+		onclick={() => actor.triggerLevelDown()}
 		disabled={actor.reactive.system.levelUpHistory.length === 0}
 		type="button"
 	>
