@@ -440,29 +440,23 @@
 	<header class="nimble-sheet__static nimble-sheet__static--npc-features">
 		<h4 class="nimble-heading" data-heading-variant="section">
 			<span class="nimble-features-breadcrumb">
-				<span
-					class="nimble-features-breadcrumb__item"
-					class:nimble-features-breadcrumb__item--clickable={visibleCategory}
-					role={visibleCategory ? 'button' : undefined}
-					tabindex={visibleCategory ? 0 : undefined}
-					onclick={() => {
-						if (visibleCategory && scrollContainer) {
-							scrollContainer.scrollTop = 0;
-						}
-					}}
-					onkeydown={(event) => {
-						if (
-							visibleCategory &&
-							scrollContainer &&
-							(event.key === 'Enter' || event.key === ' ')
-						) {
-							event.preventDefault();
-							scrollContainer.scrollTop = 0;
-						}
-					}}
-				>
-					{game.i18n.localize('NIMBLE.npcSheet.features')}
-				</span>
+				{#if visibleCategory}
+					<button
+						class="nimble-features-breadcrumb__item nimble-features-breadcrumb__item--clickable"
+						type="button"
+						onclick={() => {
+							if (scrollContainer) {
+								scrollContainer.scrollTop = 0;
+							}
+						}}
+					>
+						{game.i18n.localize('NIMBLE.npcSheet.features')}
+					</button>
+				{:else}
+					<span class="nimble-features-breadcrumb__item">
+						{game.i18n.localize('NIMBLE.npcSheet.features')}
+					</span>
+				{/if}
 				{#if visibleCategory && visibleCategory !== 'feature'}
 					<span class="nimble-features-breadcrumb__separator">→</span>
 					<span class="nimble-features-breadcrumb__item nimble-features-breadcrumb__item--current">
@@ -604,9 +598,9 @@
 
 {#snippet attackSequenceHeader(item)}
 	{@const itemId = item.reactive?._id || item._id}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="nimble-monster-feature-wrapper nimble-attack-sequence-item"
+		role="group"
 		class:nimble-monster-feature-wrapper--drag-over-above={dragOverItemId === itemId &&
 			dragOverPosition === 'above'}
 		class:nimble-monster-feature-wrapper--drag-over-below={dragOverItemId === itemId &&
@@ -708,9 +702,9 @@
 {/snippet}
 
 {#snippet actionItemCard(item, metadata, parentId)}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="nimble-monster-feature-wrapper"
+		role="group"
 		class:nimble-monster-feature-wrapper--has-parent={parentId}
 		class:nimble-monster-feature-wrapper--drag-over-above={dragOverItemId === item.reactive._id &&
 			dragOverPosition === 'above' &&
@@ -915,9 +909,9 @@
 {/snippet}
 
 {#snippet standardItemCard(item, metadata)}
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="nimble-monster-feature-wrapper"
+		role="group"
 		class:nimble-monster-feature-wrapper--drag-over-above={dragOverItemId === item.reactive._id &&
 			dragOverPosition === 'above'}
 		class:nimble-monster-feature-wrapper--drag-over-below={dragOverItemId === item.reactive._id &&
@@ -1206,10 +1200,6 @@
 			flex: 1;
 		}
 
-		&--attack-sequence {
-			font-size: var(--nimble-md-text);
-		}
-
 		// First card after a header should connect seamlessly
 		+ .nimble-monster-feature-wrapper > .nimble-document-card {
 			border-top-left-radius: 0;
@@ -1304,6 +1294,13 @@
 
 		&__item {
 			&--clickable {
+				// Reset button styles
+				background: none;
+				border: none;
+				padding: 0;
+				margin: 0;
+				font: inherit;
+				color: inherit;
 				cursor: pointer;
 				opacity: 0.7;
 				transition: opacity 150ms ease;
