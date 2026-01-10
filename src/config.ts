@@ -275,6 +275,7 @@ const manaRecoveryTypes = {
 const monsterFeatureTypes = {
 	feature: 'NIMBLE.monsterFeatureTypes.feature',
 	action: 'NIMBLE.monsterFeatureTypes.action',
+	attackSequence: 'NIMBLE.monsterFeatureTypes.attackSequence',
 	bloodied: 'NIMBLE.monsterFeatureTypes.bloodied',
 	lastStand: 'NIMBLE.monsterFeatureTypes.lastStand',
 };
@@ -525,6 +526,8 @@ const levelUpDialog = {
 const creatureFeatures = {
 	noFeatures: 'NIMBLE.creatureFeatures.noFeatures',
 	actionSequence: 'NIMBLE.creatureFeatures.actionSequence',
+	expand: 'NIMBLE.creatureFeatures.expand',
+	collapse: 'NIMBLE.creatureFeatures.collapse',
 };
 
 const hitDice = {

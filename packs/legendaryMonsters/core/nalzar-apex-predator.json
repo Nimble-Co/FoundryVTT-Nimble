@@ -21,7 +21,6 @@
 			"creatureType": "Grey Drake",
 			"level": "6"
 		},
-		"attackSequence": "<p>After each Hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -248,6 +247,50 @@
 			}
 		},
 		{
+			"_id": "ze9raWm5NpnUuBy1",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each Hero's turn, choose one:</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Devour.",
 			"type": "monsterFeature",
 			"system": {
@@ -305,7 +348,8 @@
 					}
 				},
 				"description": "<p>(Prone creatures only, Reach 2) 4d12+6.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "ze9raWm5NpnUuBy1"
 			},
 			"_id": "hI2su2eXaXAyRbEV",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
@@ -407,7 +451,8 @@
 					}
 				},
 				"description": "<p>Fly 8, then land. Cone 8: 1d12, then DC 14 STR save or also knocked Prone (advantage if behind cover or another hero).</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "ze9raWm5NpnUuBy1"
 			},
 			"_id": "engJrYwHNhUUoJ0h",
 			"img": "icons/commodities/biological/wing-green.webp",

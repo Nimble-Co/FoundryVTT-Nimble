@@ -6,6 +6,7 @@ const { fields } = foundry.data;
 const MONSTER_FEATURE_SUBTYPES = {
 	feature: 'NIMBLE.monsterFeatureSubtypes.feature',
 	action: 'NIMBLE.monsterFeatureSubtypes.action',
+	attackSequence: 'NIMBLE.monsterFeatureSubtypes.attackSequence',
 	bloodied: 'NIMBLE.monsterFeatureSubtypes.bloodied',
 	lastStand: 'NIMBLE.monsterFeatureSubtypes.lastStand',
 };
@@ -18,6 +19,8 @@ const schema = () => ({
 		nullable: false,
 		choices: MONSTER_FEATURE_SUBTYPES,
 	}),
+	// Reference to parent attackSequence item (for grouping actions under attack sequences)
+	parentItemId: new fields.StringField({ required: false, initial: '', nullable: true }),
 });
 
 declare namespace NimbleMonsterFeatureData {

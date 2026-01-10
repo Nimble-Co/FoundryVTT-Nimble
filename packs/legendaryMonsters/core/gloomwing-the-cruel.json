@@ -21,7 +21,6 @@
 			"creatureType": "Rot Dragon",
 			"level": "15"
 		},
-		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 2,
@@ -237,6 +236,50 @@
 			}
 		},
 		{
+			"_id": "tzliMYpmJf0evHxV",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, choose one:</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Rot Breath (1 use)",
 			"type": "monsterFeature",
 			"system": {
@@ -316,7 +359,8 @@
 					}
 				},
 				"description": "<p>Fly 10, then (Cone 8) DC 17 DEX save or 8d10 necrotic, half on save.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "tzliMYpmJf0evHxV"
 			},
 			"_id": "l74D3jyZAvvmnjwN",
 			"img": "icons/magic/air/fog-gas-smoke-dense-green.webp",
@@ -399,7 +443,8 @@
 					}
 				},
 				"description": "<p>(Reach 2) Move 6, then 3d10. On damage: Cruelty's Gift.</p><p><strong>(Cruelty's Gift:</strong> Healing is halved and Vulnerable to necrotic damage. Healing ends.)</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "tzliMYpmJf0evHxV"
 			},
 			"_id": "aTN2JXVETU0GKQYl",
 			"img": "icons/creatures/abilities/mouth-teeth-sharp.webp",
@@ -482,7 +527,8 @@
 					}
 				},
 				"description": "<p>(Reach 2) 3d10 slashing +10 necrotic.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "tzliMYpmJf0evHxV"
 			},
 			"_id": "r4WCZtq4bx1srya9",
 			"img": "icons/creatures/claws/claw-curved-jagged-gray.webp",
@@ -565,7 +611,8 @@
 					}
 				},
 				"description": "<p>(Reach 4) 1d10, and knocked back that many spaces.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "tzliMYpmJf0evHxV"
 			},
 			"_id": "7oI0VE1lQYamCLTF",
 			"img": "icons/commodities/biological/stinger-insect-grey.webp",

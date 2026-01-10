@@ -38,6 +38,7 @@
 	const subtypeOptions = [
 		{ value: 'feature', label: 'Feature' },
 		{ value: 'action', label: 'Action' },
+		{ value: 'attackSequence', label: 'Attack Sequence' },
 		{ value: 'bloodied', label: 'Bloodied' },
 		{ value: 'lastStand', label: 'Last Stand' },
 	];
@@ -61,7 +62,7 @@
 
 			<input
 				type="text"
-				value={item.reactive.identifier || ''}
+				value={item.reactive.system.identifier || ''}
 				onchange={({ target }) =>
 					item.update({
 						'system.identifier': (target as HTMLInputElement).value,
@@ -74,7 +75,7 @@
 				Subtype
 				<select
 					name="system.subtype"
-					value={item.system.subtype}
+					value={item.reactive.system.subtype}
 					onchange={({ target }) =>
 						item.update({
 							'system.subtype': (target as HTMLSelectElement).value,

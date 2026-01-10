@@ -21,7 +21,6 @@
 			"creatureType": "Manticore",
 			"level": "5"
 		},
-		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -186,6 +185,50 @@
 			}
 		},
 		{
+			"_id": "96Rm3z5MIae1VMPq",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, choose one:</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Venomous Stinger. (1 use)",
 			"type": "monsterFeature",
 			"system": {
@@ -243,7 +286,8 @@
 					}
 				},
 				"description": "<p>Reach 3, 5d12 damage.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "96Rm3z5MIae1VMPq"
 			},
 			"_id": "XQZe73BXr65Lfgql",
 			"img": "icons/creatures/abilities/stinger-poison-green.webp",
@@ -316,7 +360,8 @@
 					}
 				},
 				"description": "<p>Attack for 1d12+20 damage.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "96Rm3z5MIae1VMPq"
 			},
 			"_id": "vpJXS7vET9FrEPNc",
 			"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
@@ -389,7 +434,8 @@
 					}
 				},
 				"description": "<p>Fly 10, attack for 1d12+6 damage.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "96Rm3z5MIae1VMPq"
 			},
 			"_id": "hvZLdMbWjqjnGfIo",
 			"img": "icons/creatures/claws/claw-hooked-curved.webp",

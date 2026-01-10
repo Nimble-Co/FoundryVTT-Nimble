@@ -21,7 +21,6 @@
 			"creatureType": "Matriarch of Spiders",
 			"level": "6"
 		},
-		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -185,6 +184,50 @@
 			}
 		},
 		{
+			"_id": "vMnwHJO4xUsCHtgk",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, choose one:</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Impale.",
 			"type": "monsterFeature",
 			"system": {
@@ -242,7 +285,8 @@
 					}
 				},
 				"description": "<p>(Reach 2) 2d8+8 damage. Then skitter away up to 8 spaces.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "vMnwHJO4xUsCHtgk"
 			},
 			"_id": "uR2LgC5MQnJqTlmY",
 			"img": "icons/creatures/abilities/tail-strike-bone-orange.webp",
@@ -294,7 +338,8 @@
 					}
 				},
 				"description": "<p>Summon spiderling minions (1/hero, size:d8); they act only when commanded.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "vMnwHJO4xUsCHtgk"
 			},
 			"_id": "kSOMGGAzgut6zVGb",
 			"img": "icons/creatures/invertebrates/spider-dotted-green.webp",
@@ -346,7 +391,8 @@
 					}
 				},
 				"description": "<p>Command all of your spiderling minions to move up to 6 spaces and attack once each.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "vMnwHJO4xUsCHtgk"
 			},
 			"_id": "3T6uoxWsUus6ePig",
 			"img": "icons/consumables/food/plate-fish-bowl-bones-brown.webp",

@@ -21,7 +21,6 @@
 			"creatureType": "Luminary of Malice",
 			"level": "9"
 		},
-		"attackSequence": "<p>After each hero's turn, Bane attacks for [[/r 1d12+6]] then Vael chooses one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 0,
@@ -186,6 +185,50 @@
 			}
 		},
 		{
+			"_id": "AG407FeP14uMJwDU",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, Bane attacks for [[/r 1d12+6]] then Vael chooses one:</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "DOOM.",
 			"type": "monsterFeature",
 			"system": {
@@ -265,7 +308,8 @@
 					}
 				},
 				"description": "<p>(Range 12, undamaged target) DC 14 WIL save or 5d12 damage. Half on save.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "AG407FeP14uMJwDU"
 			},
 			"_id": "2Xu8lZ5BZgnDdXQR",
 			"img": "icons/magic/death/skull-energy-light-white.webp",
@@ -347,7 +391,8 @@
 					}
 				},
 				"description": "<p>(Range 8) 2d12+6. Double damage against those behind cover. 1/round you may swap places with them.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "AG407FeP14uMJwDU"
 			},
 			"_id": "gmN8a0IWnGj2I2M7",
 			"img": "icons/magic/death/skull-flames-white-blue.webp",
@@ -434,7 +479,8 @@
 					}
 				},
 				"description": "<p>1d4+2. On hit: DC 14 WIL save or Dazed and Frightened. Then move 6.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "AG407FeP14uMJwDU"
 			},
 			"_id": "LgV2WNS9WEm6x0Y1",
 			"img": "icons/magic/death/skull-energy-light-purple.webp",

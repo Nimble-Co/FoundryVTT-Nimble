@@ -282,6 +282,14 @@
 		"monsterFeatureTypes": {
 			"feature": "Feature",
 			"action": "Actions",
+			"attackSequence": "Attack Sequence",
+			"bloodied": "Bloodied",
+			"lastStand": "Last Stand"
+		},
+		"monsterFeatureSubtypes": {
+			"feature": "Feature",
+			"action": "Action",
+			"attackSequence": "Attack Sequence",
 			"bloodied": "Bloodied",
 			"lastStand": "Last Stand"
 		},
@@ -400,7 +408,9 @@
 		},
 		"creatureFeatures": {
 			"noFeatures": "No features yet.",
-			"actionSequence": "After each hero's turn, choose one."
+			"actionSequence": "After each hero's turn, choose one.",
+			"expand": "Expand",
+			"collapse": "Collapse"
 		},
 		"savingThrows": {
 			"strength": "Strength",

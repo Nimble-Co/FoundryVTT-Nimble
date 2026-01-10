@@ -21,7 +21,6 @@
 			"creatureType": "Dumb Ogre",
 			"level": "2"
 		},
-		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -137,6 +136,50 @@
 	},
 	"items": [
 		{
+			"_id": "0tiICqWJp7MlCAQ5",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, choose one:</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Move & Smack.",
 			"type": "monsterFeature",
 			"system": {
@@ -208,7 +251,8 @@
 					}
 				},
 				"description": "<p>Move 8, attack for 1d8+2. On damage: Prone.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "0tiICqWJp7MlCAQ5"
 			},
 			"_id": "Egw0SfukBFY6ug6C",
 			"img": "icons/weapons/clubs/club-banded-brown.webp",
@@ -311,7 +355,8 @@
 					}
 				},
 				"description": "<p>1d8+2, on damage: they are thrown at another hero within 6 spaces. Both make a DC 12 DEX save or take 1d8+2 damage and are knocked Prone, half damage on save.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "0tiICqWJp7MlCAQ5"
 			},
 			"_id": "SKhOQ3JXY1aE3RK2",
 			"img": "icons/skills/melee/unarmed-punch-fist.webp",

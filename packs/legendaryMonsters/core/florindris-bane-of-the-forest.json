@@ -21,7 +21,6 @@
 			"creatureType": "Floral Dragon",
 			"level": "7"
 		},
-		"attackSequence": "<p>After each hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -235,6 +234,50 @@
 			}
 		},
 		{
+			"_id": "VIqsbrEafki9owME",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each hero's turn, choose one:</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Petal Storm. (1 use)",
 			"type": "monsterFeature",
 			"system": {
@@ -314,7 +357,8 @@
 					}
 				},
 				"description": "<p>3d10+10 damage to all enemies within Reach 8, half on a DC 13 DEX save.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "VIqsbrEafki9owME"
 			},
 			"_id": "r5mtMav2sJzLJmI1",
 			"img": "icons/magic/nature/lotus-glow-pink.webp",
@@ -396,7 +440,8 @@
 					}
 				},
 				"description": "<p>Fly 10 before or after attacking. (Reach 2) 1d10+10 damage to up to 2 targets within reach. On hit: Gain Thornblight.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "VIqsbrEafki9owME"
 			},
 			"_id": "jspwozF2CfOXKGyE",
 			"img": "icons/creatures/claws/claw-hooked-purple.webp",
@@ -448,7 +493,8 @@
 					}
 				},
 				"description": "<p>(Reach 8) Move a target 1d10 spaces.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "VIqsbrEafki9owME"
 			},
 			"_id": "DhwTOdyGujurHfOj",
 			"img": "icons/magic/air/fog-gas-smoke-dense-blue.webp",

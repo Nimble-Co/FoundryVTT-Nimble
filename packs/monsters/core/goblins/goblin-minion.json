@@ -16,7 +16,6 @@
 			"creatureType": "",
 			"level": "1/4"
 		},
-		"attackSequence": "",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 0,

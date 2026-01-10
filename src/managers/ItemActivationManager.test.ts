@@ -196,7 +196,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 	});
 
 	describe('Saving throw effects', () => {
-		it('should create NimbleRoll for saving throw effect with savingThrowType', async () => {
+		it('should not create rolls for saving throw effects (targets roll from chat)', async () => {
 			manager = new ItemActivationManager(
 				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
 				{ fastForward: true },
@@ -210,80 +210,21 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			} as EffectNode;
 
 			manager.activationData = { effects: [savingThrowNode] };
-			// Use real flattenEffectsTree - no need to mock it
-			vi.mocked(getRollFormula).mockReturnValue('1d20 + 3');
 			mockReconstructEffectsTree.mockReturnValue([savingThrowNode]);
-
-			// Set up NimbleRoll mock - it extends foundry.dice.Roll, so it needs evaluate and toJSON
-			const mockEvaluate = vi.fn().mockResolvedValue(undefined);
-			const mockToJSON = vi.fn().mockReturnValue({ total: 15 });
-			const mockInstance = {
-				evaluate: mockEvaluate,
-				toJSON: mockToJSON,
-			};
-			// Override NimbleRoll mock for this test - return mock directly since 'this' isn't bound
-			vi.mocked(NimbleRoll).mockImplementation(function MockNimbleRollImpl() {
-				return mockInstance;
-			});
 
 			const result = await manager.getData();
 
-			expect(result.rolls).not.toBeNull();
-			expect(result.rolls).toHaveLength(1);
-			expect(result.rolls![0].evaluate).toBe(mockEvaluate);
-			expect(result.rolls![0].toJSON).toBe(mockToJSON);
-			expect(getRollFormula).toHaveBeenCalledWith(mockActor, {
-				saveKey: 'strength',
-				rollMode: 0,
-				type: 'savingThrow',
-			});
-			expect(NimbleRoll).toHaveBeenCalledWith('1d20 + 3', {
-				level: 1,
-				strength: 10,
-				prompted: false,
-				respondentId: 'token-uuid-456',
-			});
-			expect(mockEvaluate).toHaveBeenCalled();
+			// Saving throws should not create rolls during activation
+			// Targets roll their saves from the chat card button instead
+			expect(result.rolls).toEqual([]);
+			expect(getRollFormula).not.toHaveBeenCalled();
+			expect(NimbleRoll).not.toHaveBeenCalled();
 		});
 
-		it('should use saveType if available instead of savingThrowType', async () => {
+		it('should include saving throw node in activation data without roll', async () => {
 			manager = new ItemActivationManager(
 				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
-				{ fastForward: true, rollMode: 0 },
-			);
-			const savingThrowNode: EffectNode & { saveType?: string } = {
-				id: 'save-1',
-				type: 'savingThrow',
-				savingThrowType: 'strength',
-				saveType: 'dexterity',
-				parentContext: null,
-				parentNode: null,
-			};
-
-			manager.activationData = { effects: [savingThrowNode] };
-			// Use real flattenEffectsTree - no need to mock it
-			vi.mocked(getRollFormula).mockReturnValue('1d20 + 2');
-			mockReconstructEffectsTree.mockReturnValue([savingThrowNode]);
-
-			const mockRoll = {
-				evaluate: vi.fn().mockResolvedValue(undefined),
-				toJSON: vi.fn().mockReturnValue({ total: 12 }),
-			};
-			vi.mocked(NimbleRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
-
-			await manager.getData();
-
-			expect(getRollFormula).toHaveBeenCalledWith(mockActor, {
-				saveKey: 'dexterity',
-				rollMode: 0,
-				type: 'savingThrow',
-			});
-		});
-
-		it('should use rollMode from dialogData', async () => {
-			manager = new ItemActivationManager(
-				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
-				{ fastForward: true, rollMode: 2 },
+				{ fastForward: true },
 			);
 			const savingThrowNode: EffectNode = {
 				id: 'save-1',
@@ -294,23 +235,56 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			} as EffectNode;
 
 			manager.activationData = { effects: [savingThrowNode] };
-			// Use real flattenEffectsTree - no need to mock it
-			vi.mocked(getRollFormula).mockReturnValue('1d20 + 1');
 			mockReconstructEffectsTree.mockReturnValue([savingThrowNode]);
+
+			const result = await manager.getData();
+
+			// The activation data should still include the saving throw node
+			// so the chat card can display the save DC and button
+			expect(result.activation).not.toBeNull();
+			expect(mockReconstructEffectsTree).toHaveBeenCalled();
+		});
+	});
+
+	describe('Roll options', () => {
+		it('should use rollMode from dialogData', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true, rollMode: 2 },
+			);
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'fire',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
 
 			const mockRoll = {
 				evaluate: vi.fn().mockResolvedValue(undefined),
-				toJSON: vi.fn().mockReturnValue({ total: 10 }),
+				toJSON: vi.fn().mockReturnValue({ total: 4 }),
 			};
-			vi.mocked(NimbleRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
 
 			await manager.getData();
 
-			expect(getRollFormula).toHaveBeenCalledWith(mockActor, {
-				saveKey: 'will',
-				rollMode: 2,
-				type: 'savingThrow',
-			});
+			expect(DamageRoll).toHaveBeenCalledWith(
+				'1d6',
+				{ level: 1, strength: 10 },
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 2,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
 		});
 
 		it('should use default rollMode 0 when not provided in dialogData', async () => {
@@ -318,58 +292,39 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
 				{ fastForward: true },
 			);
-			const savingThrowNode: EffectNode = {
-				id: 'save-1',
-				type: 'savingThrow',
-				savingThrowType: 'intelligence',
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'fire',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: true,
 				parentContext: null,
 				parentNode: null,
 			} as EffectNode;
 
-			manager.activationData = { effects: [savingThrowNode] };
-			// Use real flattenEffectsTree - no need to mock it
-			vi.mocked(getRollFormula).mockReturnValue('1d20 + 1');
-			mockReconstructEffectsTree.mockReturnValue([savingThrowNode]);
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
 
 			const mockRoll = {
 				evaluate: vi.fn().mockResolvedValue(undefined),
-				toJSON: vi.fn().mockReturnValue({ total: 8 }),
+				toJSON: vi.fn().mockReturnValue({ total: 4 }),
 			};
-			vi.mocked(NimbleRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
 
 			await manager.getData();
 
-			expect(getRollFormula).toHaveBeenCalledWith(mockActor, {
-				saveKey: 'intelligence',
-				rollMode: 0,
-				type: 'savingThrow',
-			});
-		});
-
-		it('should skip saving throw when actor is null', async () => {
-			mockItem.actor = null;
-			manager = new ItemActivationManager(
-				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
-				{ fastForward: true },
+			expect(DamageRoll).toHaveBeenCalledWith(
+				'1d6',
+				{ level: 1, strength: 10 },
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
 			);
-
-			const savingThrowNode: EffectNode = {
-				id: 'save-1',
-				type: 'savingThrow',
-				savingThrowType: 'strength',
-				parentContext: null,
-				parentNode: null,
-			} as EffectNode;
-
-			manager.activationData = { effects: [savingThrowNode] };
-			// Use real flattenEffectsTree - no need to mock it
-			mockReconstructEffectsTree.mockReturnValue([savingThrowNode]);
-
-			const result = await manager.getData();
-
-			expect(result.rolls).toEqual([]);
-			expect(getRollFormula).not.toHaveBeenCalled();
-			expect(NimbleRoll).not.toHaveBeenCalled();
 		});
 
 		it('should use actor.uuid when token is not available', async () => {
@@ -380,33 +335,30 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				{ fastForward: true },
 			);
 
-			const savingThrowNode: EffectNode = {
-				id: 'save-1',
-				type: 'savingThrow',
-				savingThrowType: 'strength',
+			const healingNode: EffectNode = {
+				id: 'healing-1',
+				type: 'healing',
+				healingType: 'healing',
+				formula: '1d8',
 				parentContext: null,
 				parentNode: null,
 			} as EffectNode;
 
-			manager.activationData = { effects: [savingThrowNode] };
-			// Use real flattenEffectsTree - no need to mock it
-			vi.mocked(getRollFormula).mockReturnValue('1d20 + 3');
-			mockReconstructEffectsTree.mockReturnValue([savingThrowNode]);
+			manager.activationData = { effects: [healingNode] };
+			mockReconstructEffectsTree.mockReturnValue([healingNode]);
 
 			const mockRoll = {
 				evaluate: vi.fn().mockResolvedValue(undefined),
-				toJSON: vi.fn().mockReturnValue({ total: 15 }),
+				toJSON: vi.fn().mockReturnValue({ total: 5 }),
 			};
-			vi.mocked(NimbleRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
-
-			await manager.getData();
-
-			expect(NimbleRoll).toHaveBeenCalledWith('1d20 + 3', {
-				level: 1,
-				strength: 10,
-				prompted: false,
-				respondentId: 'actor-uuid-123',
+			MockRoll.mockImplementation(function (this: unknown) {
+				return mockRoll;
 			});
+
+			const result = await manager.getData();
+
+			expect(result.rolls).toHaveLength(1);
+			expect(MockRoll).toHaveBeenCalledWith('1d8', { level: 1, strength: 10 }, undefined);
 		});
 	});
 
@@ -745,14 +697,8 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			} as EffectNode;
 
 			manager.activationData = { effects: [savingThrowNode, damageNode, healingNode] };
-			// Use real flattenEffectsTree - no need to mock it
-			vi.mocked(getRollFormula).mockReturnValue('1d20 + 3');
 			mockReconstructEffectsTree.mockReturnValue([savingThrowNode, damageNode, healingNode]);
 
-			const mockSavingThrowRoll = {
-				evaluate: vi.fn().mockResolvedValue(undefined),
-				toJSON: vi.fn().mockReturnValue({ total: 15 }),
-			};
 			const mockDamageRoll = {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 4 }),
@@ -761,9 +707,6 @@ describe('ItemActivationManager.getData (rolls)', () => {
 				evaluate: vi.fn().mockResolvedValue(undefined),
 				toJSON: vi.fn().mockReturnValue({ total: 3 }),
 			};
-			vi.mocked(NimbleRoll).mockImplementation(
-				createMockConstructorImplementation(mockSavingThrowRoll),
-			);
 			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockDamageRoll));
 			MockRoll.mockImplementation(function (this: unknown) {
 				return mockHealingRoll;
@@ -771,11 +714,13 @@ describe('ItemActivationManager.getData (rolls)', () => {
 
 			const result = await manager.getData();
 
+			// Only damage and healing create rolls; saving throws do not
 			expect(result.rolls).not.toBeNull();
-			expect(result.rolls).toHaveLength(3);
-			expect(result.rolls![0]).toBe(mockSavingThrowRoll);
-			expect(result.rolls![1]).toBe(mockDamageRoll);
-			expect(result.rolls![2]).toBe(mockHealingRoll);
+			expect(result.rolls).toHaveLength(2);
+			expect(result.rolls![0]).toBe(mockDamageRoll);
+			expect(result.rolls![1]).toBe(mockHealingRoll);
+			// Saving throw should not create a roll
+			expect(NimbleRoll).not.toHaveBeenCalled();
 		});
 
 		it('should update activationData.effects with reconstructed tree', async () => {

@@ -7,8 +7,14 @@
     text-align: start;
     color: var(--nimble-dark-text-color);
     background: var(--nimble-sheet-background);
+    border: 1px solid var(--nimble-card-border-color, hsl(41, 18%, 54%));
     border-radius: 4px;
     box-shadow: var(--nimble-box-shadow);
+
+    &--compact {
+        width: fit-content;
+        white-space: nowrap;
+    }
 
     &--field-rest {
         font-size: var(--nimble-sm-text);

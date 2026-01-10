@@ -21,7 +21,6 @@
 			"creatureType": "Flame Titan",
 			"level": "8"
 		},
-		"attackSequence": "<p>After each Hero's turn, choose one:</p>",
 		"savingThrows": {
 			"strength": {
 				"defaultRollMode": 1,
@@ -235,6 +234,50 @@
 			}
 		},
 		{
+			"_id": "fTUYUBDV6kDYnWFM",
+			"name": "Attack Sequence",
+			"type": "monsterFeature",
+			"img": "icons/svg/sword.svg",
+			"system": {
+				"macro": "",
+				"identifier": "attack-sequence",
+				"rules": [],
+				"activation": {
+					"acquireTargetsFromTemplate": false,
+					"cost": {
+						"details": "",
+						"quantity": 1,
+						"type": "none",
+						"isReaction": false
+					},
+					"duration": {
+						"details": "",
+						"quantity": 1,
+						"type": "none"
+					},
+					"effects": [],
+					"showDescription": true,
+					"targets": {
+						"count": 1,
+						"restrictions": ""
+					},
+					"template": {
+						"length": 1,
+						"radius": 1,
+						"shape": "",
+						"width": 1
+					}
+				},
+				"description": "<p>After each Hero's turn, choose one:</p>",
+				"subtype": "attackSequence",
+				"parentItemId": ""
+			},
+			"effects": [],
+			"folder": null,
+			"sort": 0,
+			"flags": {}
+		},
+		{
 			"name": "Inferno Cleave.",
 			"type": "monsterFeature",
 			"system": {
@@ -292,7 +335,8 @@
 					}
 				},
 				"description": "<p>Move 8 then strike a 2??2 square area for 2d10+10 fire damage.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "fTUYUBDV6kDYnWFM"
 			},
 			"_id": "wZ2XUxCUeWVdEwZu",
 			"img": "icons/magic/fire/dagger-rune-enchant-flame-strong-red.webp",
@@ -366,7 +410,8 @@
 					}
 				},
 				"description": "<p>Lob a molten fireball at the furthest hero not already in the flames, igniting a 2??2 square area. Creatures there take 2d10+10 damage; and another 10 damage at the end of each of their turns if they remain in the area.</p>",
-				"subtype": "action"
+				"subtype": "action",
+				"parentItemId": "fTUYUBDV6kDYnWFM"
 			},
 			"_id": "ngX5c4NLFel44iPI",
 			"img": "icons/magic/fire/projectile-fireball-smoke-large-orange.webp",
