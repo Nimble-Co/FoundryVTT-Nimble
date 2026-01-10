@@ -60,7 +60,12 @@ class NimbleCombat extends Combat {
 		const result = await super.startCombat();
 
 		// Roll initiative for any unrolled combatants
-		const unrolled = this.combatants.filter((c) => c.initiative === null && c.type === 'character');
+		const sceneId = this.scene?.id;
+		if (!sceneId) return result;
+
+		const unrolled = this.combatants.filter(
+			(c) => c.initiative === null && c.type === 'character' && c.sceneId === sceneId,
+		);
 		if (unrolled.length > 0) {
 			await this.rollInitiative(
 				unrolled.map((c) => c.id).filter((id): id is string => id !== null),
