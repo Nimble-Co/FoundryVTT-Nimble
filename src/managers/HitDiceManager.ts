@@ -38,6 +38,26 @@ class HitDiceManager {
 			}
 			this.dieSizes.add(entry.size);
 		}
+
+		// Account for bonus hit dice from rules (stored in hitDice[size].bonus)
+		// Rule bonuses add to max; current comes from stored value (restored on rest)
+		for (const [sizeStr, hitDieData] of Object.entries(
+			this.#actor.system.attributes.hitDice ?? {},
+		)) {
+			const size = Number(sizeStr);
+			const bonus = (hitDieData as { bonus?: number }).bonus ?? 0;
+			if (bonus > 0) {
+				this.#max += bonus;
+
+				// If this is a new size not from classes or bonusHitDice array, get stored current
+				if (!currentCounted.has(size)) {
+					const current = this.#actor.system.attributes.hitDice[size]?.current ?? 0;
+					this.#value += current;
+					currentCounted.add(size);
+				}
+				this.dieSizes.add(size);
+			}
+		}
 	}
 
 	get max(): number {
@@ -74,6 +94,30 @@ class HitDiceManager {
 			// If this size wasn't from a class, get the current value from hitDice record
 			if (!Object.values(this.#actor.classes ?? {}).some((cls) => cls.hitDice.size === size)) {
 				hitDiceByClass[size].current = this.#actor.system.attributes.hitDice[size]?.current ?? 0;
+			}
+		}
+
+		// Factor in bonus hit dice from rules (stored in hitDice[size].bonus)
+		// Rule bonuses add to total; current comes from stored value (restored on rest)
+		for (const [sizeStr, hitDieData] of Object.entries(
+			this.#actor.system.attributes.hitDice ?? {},
+		)) {
+			const size = Number(sizeStr);
+			const bonus = (hitDieData as { bonus?: number }).bonus ?? 0;
+			if (bonus > 0) {
+				hitDiceByClass[size] ??= { current: 0, total: 0 };
+				hitDiceByClass[size].total += bonus;
+
+				// If this size wasn't from a class or bonusHitDice array, get stored current
+				const fromClass = Object.values(this.#actor.classes ?? {}).some(
+					(cls) => cls.hitDice.size === size,
+				);
+				const fromBonusArray = (this.#actor.system.attributes.bonusHitDice ?? []).some(
+					(entry) => entry.size === size,
+				);
+				if (!fromClass && !fromBonusArray) {
+					hitDiceByClass[size].current = this.#actor.system.attributes.hitDice[size]?.current ?? 0;
+				}
 			}
 		}
 

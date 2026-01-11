@@ -175,6 +175,24 @@
 			}
 		}
 
+		// Add from rule-based bonuses (hitDice[size].bonus)
+		// Rule bonuses add to total; current comes from stored value (restored on rest)
+		for (const [sizeStr, hitDieData] of Object.entries(hitDiceAttr ?? {})) {
+			const size = Number(sizeStr);
+			const bonus = hitDieData?.bonus ?? 0;
+			if (bonus > 0) {
+				bySize[size] ??= { current: 0, total: 0 };
+				bySize[size].total += bonus;
+
+				// If this size wasn't from a class or bonusHitDice array, get stored current
+				const fromClass = classes.some((cls) => cls.system.hitDieSize === size);
+				const fromBonusArray = bonusHitDice.some((entry) => entry.size === size);
+				if (!fromClass && !fromBonusArray) {
+					bySize[size].current = hitDiceAttr[size]?.current ?? 0;
+				}
+			}
+		}
+
 		// Calculate totals
 		let value = 0;
 		let max = 0;

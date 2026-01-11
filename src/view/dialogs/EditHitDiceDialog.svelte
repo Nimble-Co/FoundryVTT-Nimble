@@ -94,24 +94,23 @@
 			current: number;
 			total: number;
 			source: string;
-			sourceType: 'class' | 'bonus';
+			sourceType: 'class' | 'bonus' | 'rule';
 		}[] = [];
 
-		// Add from classes
+		// Add from classes - show class's own contribution (classLevel/classLevel)
 		for (const cls of classes) {
 			const size = cls.system.hitDieSize;
 			const classLevel = cls.system.classLevel;
-			const current = actor.system.attributes.hitDice[size]?.current ?? 0;
 			dice.push({
 				size,
-				current,
+				current: classLevel,
 				total: classLevel,
 				source: cls.name,
 				sourceType: 'class',
 			});
 		}
 
-		// Add bonus dice
+		// Add bonus dice from user-added bonusHitDice array
 		for (const entry of bonusDice) {
 			dice.push({
 				size: entry.size,
@@ -122,14 +121,48 @@
 			});
 		}
 
+		// Add bonus dice from rules (hitDice[size].contributions)
+		for (const [sizeStr, hitDieData] of Object.entries(actor.system.attributes.hitDice ?? {})) {
+			const data = hitDieData as { contributions?: Array<{ label: string; value: number }> };
+			const contributions = data.contributions ?? [];
+			const size = Number(sizeStr);
+			for (const contribution of contributions) {
+				dice.push({
+					size,
+					current: contribution.value,
+					total: contribution.value,
+					source: contribution.label,
+					sourceType: 'rule',
+				});
+			}
+		}
+
 		return dice;
 	});
 
 	let availableDieSizes = $derived(getOrderedDieSizes());
 
+	// Get rule-based bonus dice for display in Bonus Hit Dice section
+	let ruleContributions = $derived.by(() => {
+		const contributions: Array<{ size: number; value: number; label: string }> = [];
+		for (const [sizeStr, hitDieData] of Object.entries(actor.system.attributes.hitDice ?? {})) {
+			const data = hitDieData as { contributions?: Array<{ label: string; value: number }> };
+			const size = Number(sizeStr);
+			for (const contribution of data.contributions ?? []) {
+				contributions.push({
+					size,
+					value: contribution.value,
+					label: contribution.label,
+				});
+			}
+		}
+		return contributions;
+	});
+
 	let totals = $derived.by(() => {
 		let fromClasses = 0;
 		let bonus = 0;
+		let fromRules = 0;
 
 		for (const cls of classes) {
 			fromClasses += cls.system.classLevel ?? 0;
@@ -139,7 +172,13 @@
 			bonus += entry.value;
 		}
 
-		return { fromClasses, bonus, max: fromClasses + bonus };
+		// Include rule-based bonuses
+		for (const [_sizeStr, hitDieData] of Object.entries(actor.system.attributes.hitDice ?? {})) {
+			const data = hitDieData as { bonus?: number };
+			fromRules += data.bonus ?? 0;
+		}
+
+		return { fromClasses, bonus, fromRules, max: fromClasses + bonus + fromRules };
 	});
 </script>
 
@@ -178,7 +217,7 @@
 			<span class="hd-subtitle">{CONFIG.NIMBLE.hitDice.bonusHitDiceHint}</span>
 		</header>
 
-		{#if bonusDice.length === 0}
+		{#if ruleContributions.length === 0 && bonusDice.length === 0}
 			<div class="hd-empty-state">
 				<span class="hd-empty-state__text">{CONFIG.NIMBLE.hitDice.noBonusDice}</span>
 				<button class="hd-add-btn" type="button" onclick={openDropdown}>
@@ -188,6 +227,22 @@
 			</div>
 		{:else}
 			<div class="hd-dice-list">
+				<!-- Rule-based bonus dice (non-editable) -->
+				{#each ruleContributions as contribution}
+					<div class="hd-die-card hd-die-card--readonly">
+						<div class="hd-die-card__name-row">
+							<span class="hd-die-card__name-label">{CONFIG.NIMBLE.hitDice.bonusDieName}</span>
+							<span class="hd-die-card__name hd-die-card__name--readonly">{contribution.label}</span
+							>
+						</div>
+						<div class="hd-die-card__bottom-row">
+							<span class="hd-die-card__die">d{contribution.size}</span>
+							<span class="hd-die-card__value">{contribution.value}</span>
+						</div>
+					</div>
+				{/each}
+
+				<!-- User-added bonus dice (editable) -->
 				{#each bonusDice as entry, index}
 					<div class="hd-die-card">
 						<label class="hd-die-card__name-row">
@@ -323,6 +378,11 @@
 		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 6px;
 		min-width: 4.5rem;
+
+		&--rule {
+			background: hsl(210, 30%, 95%);
+			border-color: hsl(210, 30%, 70%);
+		}
 
 		&__main {
 			display: flex;
@@ -479,6 +539,11 @@
 		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 6px;
 
+		&--readonly {
+			background: hsl(210, 30%, 95%);
+			border-color: hsl(210, 30%, 70%);
+		}
+
 		&__name-row {
 			display: flex;
 			align-items: center;
@@ -512,6 +577,12 @@
 			&:focus {
 				outline: none;
 				border-color: hsl(45, 50%, 50%);
+			}
+
+			&--readonly {
+				background: transparent;
+				border: none;
+				padding: 0;
 			}
 		}
 
