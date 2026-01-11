@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -96,12 +97,21 @@ function release() {
 	writeJsonFile(PACKAGE_JSON_PATH, packageJson);
 	console.log(`Updated package.json version to ${newVersion}`);
 
+	// Update package-lock.json
+	execSync('npm install --package-lock-only', { cwd: rootDir });
+	console.log(`Updated package-lock.json version to ${newVersion}`);
+
 	// Update system.json
 	systemJson.version = newVersion;
 	systemJson.download = updateDownloadUrl(systemJson.download, newVersion);
 	writeJsonFile(SYSTEM_JSON_PATH, systemJson);
 	console.log(`Updated public/system.json version to ${newVersion}`);
 	console.log(`Updated download URL to ${systemJson.download}`);
+
+	// Create git commit
+	execSync('git add package.json package-lock.json public/system.json', { cwd: rootDir });
+	execSync(`git commit -m "chore(release): v${newVersion}"`, { cwd: rootDir });
+	console.log(`Created commit: chore(release): v${newVersion}`);
 
 	console.log('\nRelease preparation complete!');
 }
