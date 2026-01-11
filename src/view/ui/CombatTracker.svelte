@@ -199,21 +199,23 @@
 			in:slide={{ axis: 'y', delay: 200 }}
 			out:fade={{ delay: 0 }}
 		>
-			{#if currentCombat?.round === 0 && game.user!.isGM}
-				<button class="nimble-combat-tracker__start-button" onclick={startCombat}>
-					Start Combat
-				</button>
-			{:else if currentCombat?.round === 0}
-				<h2 class="nimble-combat-tracker__heading">Combat Not Started</h2>
-			{:else}
-				<h2 class="nimble-combat-tracker__heading">
-					Round {currentCombat?.round}
-				</h2>
-			{/if}
+			{#key version}
+				{#if currentCombat?.round === 0 && game.user!.isGM}
+					<button class="nimble-combat-tracker__start-button" onclick={startCombat}>
+						Start Combat
+					</button>
+				{:else if currentCombat?.round === 0}
+					<h2 class="nimble-combat-tracker__heading">Combat Not Started</h2>
+				{:else}
+					<h2 class="nimble-combat-tracker__heading">
+						Round {currentCombat?.round}
+					</h2>
+				{/if}
 
-			{#if currentCombat?.round !== 0 && game.user!.isGM}
-				<CombatTrackerControls />
-			{/if}
+				{#if currentCombat?.round !== 0 && game.user!.isGM}
+					<CombatTrackerControls />
+				{/if}
+			{/key}
 		</header>
 
 		<ol class="nimble-combatants" ondrop={(event) => _onDrop(event)} out:fade={{ delay: 0 }}>

@@ -56,6 +56,26 @@ class NimbleCombat extends Combat {
 		return this;
 	}
 
+	override async startCombat(): Promise<this> {
+		const result = await super.startCombat();
+
+		// Roll initiative for any unrolled combatants
+		const sceneId = this.scene?.id;
+		if (!sceneId) return result;
+
+		const unrolled = this.combatants.filter(
+			(c) => c.initiative === null && c.type === 'character' && c.sceneId === sceneId,
+		);
+		if (unrolled.length > 0) {
+			await this.rollInitiative(
+				unrolled.map((c) => c.id).filter((id): id is string => id !== null),
+				{ updateTurn: false },
+			);
+		}
+
+		return result;
+	}
+
 	override async _onEndTurn(combatant: Combatant.Implementation, context: Combat.TurnEventContext) {
 		await super._onEndTurn(combatant, context);
 
@@ -70,6 +90,11 @@ class NimbleCombat extends Combat {
 	}
 
 	override async _onEndRound() {
+		// If it's the first turn of the first round, don't reset actions
+		if (this.round === 1 && this.turn === 0) {
+			return;
+		}
+
 		const skippedCombatants = this.turns.slice(this.previous?.turn ?? 0);
 
 		type CombatantUpdate = { _id: string | null; 'system.actions.base.current': number };
@@ -83,7 +108,6 @@ class NimbleCombat extends Combat {
 						'system.actions.base.current': system.actions.base.max,
 					});
 				}
-
 				return updates;
 			}, []),
 		);
