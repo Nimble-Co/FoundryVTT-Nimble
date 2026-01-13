@@ -82,7 +82,7 @@
 	<div class="nimble-roll-modifiers-container">
 		<div class="nimble-roll-modifiers">
 			<label>
-				situational modifiers:
+				Situational modifiers:
 				<input type="string" bind:value={situationalModifiers} placeholder="0" />
 			</label>
 		</div>
@@ -90,19 +90,19 @@
 	<div class="nimble-roll-modifiers-container">
 		<div class="nimble-roll-modifiers">
 			<label>
-				set primary die:
+				Set primary die:
 				<input type="number" bind:value={primaryDieValue} placeholder="0" />
 			</label>
 		</div>
 
 		<div class="nimble-roll-modifiers">
 			<label>
-				primary die modifier:
+				Primary die modifier:
 				<input
 					type="number"
 					bind:value={primaryDieModifier}
 					placeholder="0"
-					disabled={primaryDieValue !== undefined}
+					disabled={primaryDieValue !== undefined ? false : true}
 				/>
 			</label>
 		</div>
