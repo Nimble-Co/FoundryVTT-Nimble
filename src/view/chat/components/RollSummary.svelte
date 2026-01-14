@@ -1,5 +1,5 @@
 <script>
-	let { label, subheading, tooltip, total } = $props();
+	let { label, subheading, tooltip, total, options, showRollDetails } = $props();
 </script>
 
 <div class="roll" class:roll--no-subheading={!subheading}>
@@ -34,7 +34,25 @@
     {/if} -->
 </div>
 
+<!-- TODO: Make a GM only system setting for this -->
+{#if showRollDetails}
+	<div class="roll-details">
+		<span>Primary die value: {options.rollOptions.primaryDieValue}</span>
+		<span>Primary die modifier: {options.rollOptions.primaryDieModifier}</span>
+	</div>
+{/if}
+
 <style lang="scss">
+	.roll-details {
+		border-top: 1px solid var(--nimble-card-border-color);
+		padding-top: 0.5rem;
+		margin-top: 0.5rem;
+		font-size: var(--nimble-xs-text);
+		color: var(--nimble-medium-text-color);
+		display: flex;
+		flex-direction: column;
+	}
+
 	.roll {
 		display: grid;
 		grid-template-areas:
