@@ -72,8 +72,6 @@
 	).hitDiceSizeBonusContributions ?? []) as Array<{ label: string; value: number }>;
 	// Raw class die size (for storage and data operations)
 	const rawClassDieSize = classes.length > 0 ? classes[0].system.hitDieSize : null;
-	// Display class die size (incremented for display)
-	const classDieSize = rawClassDieSize ? incrementDieSize(rawClassDieSize, hitDiceSizeBonus) : null;
 
 	// Initialize bonus dice from existing data
 	let bonusDice = $state<BonusDieEntry[]>(

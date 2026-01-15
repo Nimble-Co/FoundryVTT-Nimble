@@ -1315,7 +1315,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		} else if (restOptions.restType === 'safe') {
 			// Launch Safe Rest Dialog (singleton per actor)
 			const dialog = GenericDialog.getOrCreate(
-				'Safe Rest',
+				game.i18n.format(CONFIG.NIMBLE.safeRest.dialogTitle, { name: this.name }),
 				SafeRestDialog,
 				{ document: this },
 				{ icon: 'fa-solid fa-moon', uniqueId: `safe-rest-${this.uuid}` },

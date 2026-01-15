@@ -64,9 +64,6 @@
 
 	const totalSelected = $derived(Object.values(selectedHitDice).reduce((sum, val) => sum + val, 0));
 
-	// Determine if advantage is active (any toggle is on) - only relevant when not making camp
-	const hasAdvantage = $derived(!makeCamp && Object.values(advantageToggles).some((v) => v));
-
 	// Check if there are any modifiers to display
 	// Show modifiers section if: making camp (shows maximize), always maximize rule, or has advantage rules
 	const hasModifiers = $derived(makeCamp || alwaysMaximize || advantageRules.length > 0);

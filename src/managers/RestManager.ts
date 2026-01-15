@@ -1,4 +1,4 @@
-import type { HitDiceManager } from './HitDiceManager.js';
+import { HitDiceManager } from './HitDiceManager.js';
 
 // Uses NimbleCharacterInterface ambient type from actor.d.ts
 
@@ -26,10 +26,16 @@ class RestManager {
 
 	#updates: { actor: Record<string, unknown>; items: Record<string, unknown>[] };
 
+	// Fresh HitDiceManager instance created at rest time to ensure current data
+	#hitDiceManager: HitDiceManager;
+
 	constructor(actor: RestableCharacter, data: RestManager.Data) {
 		this.#actor = actor;
 		this.#summary = [];
 		this.#restType = data.restType || 'field';
+
+		// Create a fresh HitDiceManager to ensure we read current data
+		this.#hitDiceManager = new HitDiceManager(actor);
 
 		this.#updates = { actor: {}, items: [] };
 		this.#recovery = {
@@ -105,7 +111,7 @@ class RestManager {
 						manaRestored: this.#recovery.manaRestored,
 						woundsRecovered: this.#recovery.woundsRecovered,
 					},
-				});
+				} as unknown as ChatMessage.CreateData);
 			}
 		}
 
@@ -132,19 +138,6 @@ class RestManager {
 				}
 			}
 
-			// Combine all rolls into a single roll for the chat card
-			let combinedRoll: Roll | null = null;
-			if (rolls.length > 0) {
-				// Create a combined roll from all individual rolls
-				const totalFormula = rolls.map((r) => `(${r.formula})`).join(' + ');
-				combinedRoll = Roll.fromTerms([
-					foundry.dice.terms.NumericTerm.fromData({ class: 'NumericTerm', number: totalHealing }),
-				]);
-				// Copy the dice results for tooltip display
-				(combinedRoll as any)._formula = totalFormula;
-				(combinedRoll as any)._total = totalHealing;
-			}
-
 			await ChatMessage.create({
 				author: game.user?.id,
 				speaker: {
@@ -167,7 +160,7 @@ class RestManager {
 					hadAdvantage,
 					advantageSource,
 				},
-			});
+			} as unknown as ChatMessage.CreateData);
 		}
 
 		// TODO: Call Post hook
@@ -221,8 +214,9 @@ class RestManager {
 	/** ------------------------------------------ */
 	#restoreHitDice() {
 		// Safe rest restores ALL hit dice
-		const maxHitDice = this.#actor.HitDiceManager.max;
-		const { updates, recoveredData } = this.#actor.HitDiceManager.getUpdateData({
+		// Use fresh HitDiceManager to ensure current data
+		const maxHitDice = this.#hitDiceManager.max;
+		const { updates, recoveredData } = this.#hitDiceManager.getUpdateData({
 			upperLimit: maxHitDice,
 			restoreLargest: true,
 		});

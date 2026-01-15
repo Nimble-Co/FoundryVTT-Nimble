@@ -587,6 +587,7 @@ const hitPoints = {
 };
 
 const safeRest = {
+	dialogTitle: 'NIMBLE.safeRest.dialogTitle',
 	recoveryPreview: 'NIMBLE.safeRest.recoveryPreview',
 	hitPoints: 'NIMBLE.safeRest.hitPoints',
 	hpRecovery: 'NIMBLE.safeRest.hpRecovery',

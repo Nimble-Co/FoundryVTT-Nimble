@@ -273,16 +273,22 @@
 		<h3 class="nimble-heading nimble-heading--hp">
 			Hit Points
 
-			{#if isBloodied}
-				<i class="fa-solid fa-heart-crack"></i>
-			{:else}
-				<i class="fa-solid fa-heart"></i>
-			{/if}
+			<span data-tooltip={isBloodied ? 'Bloodied' : null}>
+				{#if isBloodied}
+					<i class="fa-solid fa-heart-crack"></i>
+				{:else}
+					<i class="fa-solid fa-heart"></i>
+				{/if}
+			</span>
 
-			{#if wounds.value === 1}
-				<span class="nimble-wounds-label">({wounds.value} Wound)</span>
-			{:else if wounds.value > 0}
-				<span class="nimble-wounds-label">({wounds.value} Wounds)</span>
+			{#if wounds.value > 0}
+				<span
+					class="nimble-wounds-indicator"
+					data-tooltip="{wounds.value} {wounds.value === 1 ? 'Wound' : 'Wounds'}"
+				>
+					<i class="nimble-wounds-list__icon fa-solid fa-droplet"></i>
+					<span class="nimble-wounds-indicator__count">{wounds.value}</span>
+				</span>
 			{/if}
 			<button
 				class="nimble-button"
@@ -492,12 +498,36 @@
 		}
 	}
 
-	.nimble-wounds-label {
+	.nimble-wounds-indicator {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.1875rem;
 		margin-inline-start: 0.25rem;
+		cursor: default;
+
+		&__count {
+			font-weight: 700;
+			font-size: var(--nimble-sm-text);
+			line-height: 1;
+			color: #b01b19;
+			-webkit-text-stroke: 0.5px #fff;
+			filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+		}
+
+		i {
+			// Match the size of the heart icon in the heading
+			font-size: inherit;
+			color: #b01b19;
+			-webkit-text-stroke: 1px #fff;
+			filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+		}
 	}
 
 	.nimble-heading--hp {
 		grid-area: hpHeading;
+		// Prevent wounds label from expanding the heading beyond available space
+		overflow: hidden;
+		min-width: 0;
 
 		.nimble-button {
 			opacity: 0;

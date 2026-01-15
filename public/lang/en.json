@@ -572,6 +572,7 @@
 			"saveChanges": "Save Changes"
 		},
 		"safeRest": {
+			"dialogTitle": "Safe Rest: {name}",
 			"recoveryPreview": "Recovery Preview",
 			"hitPoints": "Hit Points",
 			"hpRecovery": "+{amount} HP ({current} → {max})",
