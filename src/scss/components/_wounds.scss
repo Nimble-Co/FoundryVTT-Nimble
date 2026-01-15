@@ -10,10 +10,12 @@
   padding: 0;
   height: 10.5rem;
   width: fit-content;
+  max-width: calc(100% - 1.25rem);
   background: transparent;
   transform: translateY(-55%);
   z-index: 2;
   pointer-events: none;
+  overflow: hidden;
 
   &--centered {
     justify-content: center;

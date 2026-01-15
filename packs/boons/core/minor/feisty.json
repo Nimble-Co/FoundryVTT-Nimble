@@ -5,7 +5,14 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "maxHitDice",
+				"label": "Feisty",
+				"value": "1",
+				"dieSize": 0
+			}
+		],
 		"description": "<p>+1 max Hit Die. [M]</p>",
 		"boonType": "minor"
 	},

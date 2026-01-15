@@ -11,10 +11,16 @@
 				"disabled": false,
 				"id": "v5rARnVgo5eGgtcJ",
 				"identifier": "",
-				"label": "stout",
+				"label": "Stout",
 				"predicate": {},
 				"priority": 1,
 				"value": "1"
+			},
+			{
+				"type": "maxHitDice",
+				"label": "Stout",
+				"value": "2",
+				"dieSize": 0
 			}
 		],
 		"description": "<p>Dwarf, in the old language, means “stone.” You are resilient, solid, stout. Even when driven to exhaustion, you will not falter. Forgoing speed, you are gifted with physical vitality and a belly that can handle the finest (and worst) consumables this world has to offer.</p><hr><p><strong>Stout</strong></p><p>+2 max Hit Dice [M]</p><p>+1 max Wounds [A]</p><p>-1 Speed [M]</p><p>You know Dwarvish if your INT is not negative [M]</p>",

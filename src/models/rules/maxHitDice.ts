@@ -5,7 +5,8 @@ function schema() {
 
 	return {
 		value: new fields.StringField({ required: true, nullable: false, initial: '' }),
-		dieSize: new fields.NumberField({ required: true, nullable: false, initial: 6 }),
+		// dieSize of 0 means "use the character's class hit die size"
+		dieSize: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'maxHitDice' }),
 	};
 }
@@ -42,18 +43,37 @@ class MaxHitDiceRule extends NimbleBaseRule<MaxHitDiceRule.Schema> {
 		const { actor } = item;
 		if (actor.type !== 'character') return;
 
-		const { dieSize } = this;
+		// If dieSize is 0, use the character's class hit die size
+		let dieSize = this.dieSize;
+		if (dieSize === 0) {
+			// Get class items to find the hit die size
+			const classItems = actor.items.filter((i: Item) => i.type === 'class') as unknown as Array<{
+				system: { hitDieSize: number };
+			}>;
+			if (classItems.length > 0) {
+				dieSize = classItems[0].system.hitDieSize;
+			} else {
+				// No class found, default to d6
+				dieSize = 6;
+			}
+		}
+
 		const value = this.resolveFormula(this.value) ?? 0;
 
 		const hitDiceData = (foundry.utils.getProperty(actor.system, `attributes.hitDice.${dieSize}`) ??
-			{}) as { bonus?: number; origin?: string[] };
+			{}) as { bonus?: number; contributions?: Array<{ label: string; value: number }> };
 
 		const modifiedValue = (hitDiceData.bonus ?? 0) + value;
 		foundry.utils.setProperty(actor.system, `attributes.hitDice.${dieSize}.bonus`, modifiedValue);
-		foundry.utils.setProperty(actor.system, `attributes.hitDice.${dieSize}.origin`, [
-			...(hitDiceData.origin ?? []),
-			this.label,
-		]);
+
+		// Store each rule's contribution separately for display purposes
+		const contributions = hitDiceData.contributions ?? [];
+		contributions.push({ label: this.label, value });
+		foundry.utils.setProperty(
+			actor.system,
+			`attributes.hitDice.${dieSize}.contributions`,
+			contributions,
+		);
 	}
 }
 

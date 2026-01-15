@@ -5,6 +5,7 @@
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import HitPointBar from './components/HitPointBar.svelte';
 	import HitDiceBar from './components/HitDiceBar.svelte';
+	import { incrementDieSize } from '../../managers/HitDiceManager.js';
 	import PlayerCharacterBioTab from './pages/PlayerCharacterBioTab.svelte';
 	import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';
 	import PlayerCharacterFeaturesTab from './pages/PlayerCharacterFeaturesTab.svelte';
@@ -152,26 +153,60 @@
 		const bonusHitDice = actor.reactive.system.attributes.bonusHitDice ?? [];
 		const classes = actor.reactive.items.filter((i) => i.type === 'class');
 
+		// Get hit dice size bonus from rules (e.g., Oozeling's Odd Constitution)
+		const hitDiceSizeBonus = actor.reactive.system.attributes.hitDiceSizeBonus ?? 0;
+
 		// Build bySize from classes and bonus hit dice
 		const bySize = {};
 
-		// Add from classes
+		// Add from classes (apply hitDiceSizeBonus to get effective size)
 		for (const cls of classes) {
-			const size = cls.system.hitDieSize;
+			const baseSize = cls.system.hitDieSize;
+			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
 			const classLevel = cls.system.classLevel;
 			bySize[size] ??= { current: 0, total: 0 };
 			bySize[size].total += classLevel;
 			bySize[size].current = hitDiceAttr[size]?.current ?? 0;
 		}
 
-		// Add from bonusHitDice array
+		// Get effective class sizes (after applying bonus) for later checks
+		const effectiveClassSizes = classes.map((cls) =>
+			incrementDieSize(cls.system.hitDieSize, hitDiceSizeBonus),
+		);
+
+		// Add from bonusHitDice array (apply hitDiceSizeBonus to increment)
 		for (const entry of bonusHitDice) {
-			const size = entry.size;
+			const size = incrementDieSize(entry.size, hitDiceSizeBonus);
 			bySize[size] ??= { current: hitDiceAttr[size]?.current ?? 0, total: 0 };
 			bySize[size].total += entry.value;
 			// Get current from hitDice record if not already set
-			if (!classes.some((cls) => cls.system.hitDieSize === size)) {
+			if (!effectiveClassSizes.includes(size)) {
 				bySize[size].current = hitDiceAttr[size]?.current ?? 0;
+			}
+		}
+
+		// Get effective bonus array sizes (after increment) for later checks
+		const effectiveBonusArraySizes = bonusHitDice.map((entry) =>
+			incrementDieSize(entry.size, hitDiceSizeBonus),
+		);
+
+		// Add from rule-based bonuses (hitDice[size].bonus)
+		// Rule bonuses add to total; current comes from stored value (restored on rest)
+		// Apply hitDiceSizeBonus to increment these dice as well
+		for (const [sizeStr, hitDieData] of Object.entries(hitDiceAttr ?? {})) {
+			const baseSize = Number(sizeStr);
+			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
+			const bonus = hitDieData?.bonus ?? 0;
+			if (bonus > 0) {
+				bySize[size] ??= { current: 0, total: 0 };
+				bySize[size].total += bonus;
+
+				// If this size wasn't from a class or bonusHitDice array (after increment), get stored current
+				const fromClass = effectiveClassSizes.includes(size);
+				const fromBonusArray = effectiveBonusArraySizes.includes(size);
+				if (!fromClass && !fromBonusArray) {
+					bySize[size].current = hitDiceAttr[size]?.current ?? 0;
+				}
 			}
 		}
 
@@ -238,16 +273,22 @@
 		<h3 class="nimble-heading nimble-heading--hp">
 			Hit Points
 
-			{#if isBloodied}
-				<i class="fa-solid fa-heart-crack"></i>
-			{:else}
-				<i class="fa-solid fa-heart"></i>
-			{/if}
+			<span data-tooltip={isBloodied ? 'Bloodied' : null}>
+				{#if isBloodied}
+					<i class="fa-solid fa-heart-crack"></i>
+				{:else}
+					<i class="fa-solid fa-heart"></i>
+				{/if}
+			</span>
 
-			{#if wounds.value === 1}
-				<span class="nimble-wounds-label">({wounds.value} Wound)</span>
-			{:else if wounds.value > 0}
-				<span class="nimble-wounds-label">({wounds.value} Wounds)</span>
+			{#if wounds.value > 0}
+				<span
+					class="nimble-wounds-indicator"
+					data-tooltip="{wounds.value} {wounds.value === 1 ? 'Wound' : 'Wounds'}"
+				>
+					<i class="nimble-wounds-list__icon fa-solid fa-droplet"></i>
+					<span class="nimble-wounds-indicator__count">{wounds.value}</span>
+				</span>
 			{/if}
 			<button
 				class="nimble-button"
@@ -273,14 +314,14 @@
 		/>
 
 		<h3 class="nimble-heading nimble-heading--hit-dice">
-			Hit Dice
+			{CONFIG.NIMBLE.hitDice.heading}
 			<i class="fa-solid fa-heart-circle-plus"></i>
 			<button
 				class="nimble-button"
 				data-button-variant="icon"
 				type="button"
-				aria-label="Configure Hit Dice"
-				data-tooltip="Configure Hit Dice"
+				aria-label={CONFIG.NIMBLE.hitDice.configureHitDice}
+				data-tooltip={CONFIG.NIMBLE.hitDice.configureHitDice}
 				onclick={() => actor.configureHitDice()}
 			>
 				<i class="fa-solid fa-edit"></i>
@@ -457,12 +498,36 @@
 		}
 	}
 
-	.nimble-wounds-label {
+	.nimble-wounds-indicator {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.1875rem;
 		margin-inline-start: 0.25rem;
+		cursor: default;
+
+		&__count {
+			font-weight: 700;
+			font-size: var(--nimble-sm-text);
+			line-height: 1;
+			color: #b01b19;
+			-webkit-text-stroke: 0.5px #fff;
+			filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+		}
+
+		i {
+			// Match the size of the heart icon in the heading
+			font-size: inherit;
+			color: #b01b19;
+			-webkit-text-stroke: 1px #fff;
+			filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+		}
 	}
 
 	.nimble-heading--hp {
 		grid-area: hpHeading;
+		// Prevent wounds label from expanding the heading beyond available space
+		overflow: hidden;
+		min-width: 0;
 
 		.nimble-button {
 			opacity: 0;

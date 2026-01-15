@@ -80,10 +80,12 @@
 		"ChatMessage": {
 			"abilityCheck": {},
 			"boon": {},
-			"feature": {},
 			"damage": {},
-			"object": {},
+			"feature": {},
+			"fieldRest": {},
 			"levelUpSummary": {},
+			"object": {},
+			"safeRest": {},
 			"savingThrow": {},
 			"skillCheck": {},
 			"spell": {}

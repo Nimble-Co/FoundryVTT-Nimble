@@ -1,4 +1,4 @@
-import type { HitDiceManager } from './HitDiceManager.js';
+import { HitDiceManager } from './HitDiceManager.js';
 
 // Uses NimbleCharacterInterface ambient type from actor.d.ts
 
@@ -16,14 +16,35 @@ class RestManager {
 
 	#summary: string[];
 
+	#recovery: {
+		hitDiceRecovered: Record<string, number>;
+		hpRestored: number;
+		tempHpRemoved: number;
+		manaRestored: number;
+		woundsRecovered: number;
+	};
+
 	#updates: { actor: Record<string, unknown>; items: Record<string, unknown>[] };
+
+	// Fresh HitDiceManager instance created at rest time to ensure current data
+	#hitDiceManager: HitDiceManager;
 
 	constructor(actor: RestableCharacter, data: RestManager.Data) {
 		this.#actor = actor;
 		this.#summary = [];
 		this.#restType = data.restType || 'field';
 
+		// Create a fresh HitDiceManager to ensure we read current data
+		this.#hitDiceManager = new HitDiceManager(actor);
+
 		this.#updates = { actor: {}, items: [] };
+		this.#recovery = {
+			hitDiceRecovered: {},
+			hpRestored: 0,
+			tempHpRemoved: 0,
+			manaRestored: 0,
+			woundsRecovered: 0,
+		};
 
 		const defaultData: RestManager.Data = {
 			restType: 'field',
@@ -43,7 +64,7 @@ class RestManager {
 	}
 
 	async rest() {
-		const { skipChatCard } = this.#data;
+		const { skipChatCard, makeCamp = false, activeAdvantageRuleIds = [] } = this.#data;
 
 		if (this.#restType === 'safe') {
 			this.#restoreHitDice();
@@ -52,31 +73,94 @@ class RestManager {
 			this.#restoreWounds();
 		}
 
-		this.#consumeHitDice();
-
 		// TODO: Call Pre Hook
 
-		// TODO: Roll Hit Dice
+		// Roll hit dice and collect results
+		const { rolls, totalHealing, hitDiceSpent } = await this.#consumeHitDice();
 
 		// Update Documents
 		await this.#actor.update(this.#updates.actor);
 		await this.#actor.updateEmbeddedDocuments('Item', this.#updates.items);
 
-		// Broadcast Summary
-		if (this.#summary.length > 0 && !skipChatCard) {
-			let innerContent = '';
-			this.#summary.forEach((i) => {
-				innerContent += `<li>${i}</li>`;
-			});
+		// Broadcast stylized safe rest chat card
+		if (this.#restType === 'safe' && !skipChatCard) {
+			const hasRecovery =
+				Object.keys(this.#recovery.hitDiceRecovered).length > 0 ||
+				this.#recovery.hpRestored > 0 ||
+				this.#recovery.manaRestored > 0 ||
+				this.#recovery.woundsRecovered > 0;
 
-			const content = `<div> <ul> ${innerContent} </ul> </div>`;
+			// Only show chat card if something was recovered
+			if (hasRecovery) {
+				await ChatMessage.create({
+					author: game.user?.id,
+					speaker: {
+						...ChatMessage.getSpeaker({ actor: this.#actor as object as Actor }),
+						alias: this.#actor.name,
+					},
+					type: 'safeRest',
+					system: {
+						actorName: this.#actor.name,
+						actorType: this.#actor.type,
+						image: this.#actor.img,
+						permissions: this.#actor.ownership?.[game.user?.id ?? ''] ?? 0,
+						rollMode: 0,
+						hitDiceRecovered: this.#recovery.hitDiceRecovered,
+						hpRestored: this.#recovery.hpRestored,
+						tempHpRemoved: this.#recovery.tempHpRemoved,
+						manaRestored: this.#recovery.manaRestored,
+						woundsRecovered: this.#recovery.woundsRecovered,
+					},
+				} as unknown as ChatMessage.CreateData);
+			}
+		}
+
+		// Create stylized field rest chat card
+		if (this.#restType === 'field' && !skipChatCard) {
+			// Check modifiers
+			const maximizeFromRules =
+				(this.#actor.system.attributes as { maximizeHitDice?: boolean }).maximizeHitDice ?? false;
+			const wasMaximized = makeCamp || maximizeFromRules;
+			const hadAdvantage = activeAdvantageRuleIds.length > 0;
+
+			// Get advantage source for display
+			let advantageSource: string | null = null;
+			if (hadAdvantage) {
+				const advantageRules =
+					(
+						this.#actor.system.attributes as {
+							hitDiceAdvantageRules?: Array<{ id: string; label: string; condition: string }>;
+						}
+					).hitDiceAdvantageRules ?? [];
+				const activeRule = advantageRules.find((r) => activeAdvantageRuleIds.includes(r.id));
+				if (activeRule) {
+					advantageSource = `${activeRule.label} - ${activeRule.condition}`;
+				}
+			}
 
 			await ChatMessage.create({
 				author: game.user?.id,
-				speaker: ChatMessage.getSpeaker({ actor: this.#actor as object as Actor }),
-				content,
-				type: 'base',
-			});
+				speaker: {
+					...ChatMessage.getSpeaker({ actor: this.#actor as object as Actor }),
+					alias: this.#actor.name,
+				},
+				sound: rolls.length > 0 ? CONFIG.sounds.dice : undefined,
+				rolls: rolls.length > 0 ? rolls : undefined,
+				type: 'fieldRest',
+				system: {
+					actorName: this.#actor.name,
+					actorType: this.#actor.type,
+					image: this.#actor.img,
+					permissions: this.#actor.ownership?.[game.user?.id ?? ''] ?? 0,
+					rollMode: 0,
+					restType: makeCamp ? 'makeCamp' : 'catchBreath',
+					hitDiceSpent,
+					totalHealing,
+					wasMaximized,
+					hadAdvantage,
+					advantageSource,
+				},
+			} as unknown as ChatMessage.CreateData);
 		}
 
 		// TODO: Call Post hook
@@ -85,12 +169,44 @@ class RestManager {
 	/** ------------------------------------------ */
 	/** Consume Methods                            */
 	/** ------------------------------------------ */
-	#consumeHitDice() {
-		const { selectedHitDice, makeCamp = false } = this.#data;
+	async #consumeHitDice(): Promise<{
+		rolls: Roll[];
+		totalHealing: number;
+		hitDiceSpent: Record<string, number>;
+	}> {
+		const { selectedHitDice, makeCamp = false, activeAdvantageRuleIds = [] } = this.#data;
 
-		Object.entries(selectedHitDice ?? {}).forEach(([size, quantity]) => {
-			this.#actor.HitDiceManager.rollHitDice(Number(size), quantity, makeCamp);
-		});
+		// Check if the actor has the maximizeHitDice flag from rules (e.g., Oozeling's Odd Constitution)
+		const maximizeFromRules =
+			(this.#actor.system.attributes as { maximizeHitDice?: boolean }).maximizeHitDice ?? false;
+		const shouldMaximize = makeCamp || maximizeFromRules;
+
+		// Check if any advantage rules are active
+		const hasAdvantage = activeAdvantageRuleIds.length > 0;
+
+		const rolls: Roll[] = [];
+		let totalHealing = 0;
+		const hitDiceSpent: Record<string, number> = {};
+
+		for (const [size, quantity] of Object.entries(selectedHitDice ?? {})) {
+			if (quantity > 0) {
+				hitDiceSpent[size] = quantity;
+				// Skip individual chat messages - we'll create a combined one
+				const result = await this.#actor.HitDiceManager.rollHitDice(
+					Number(size),
+					quantity,
+					shouldMaximize,
+					hasAdvantage,
+					true, // skipChatMessage
+				);
+				if (result) {
+					rolls.push(result.roll);
+					totalHealing += result.healing;
+				}
+			}
+		}
+
+		return { rolls, totalHealing, hitDiceSpent };
 	}
 
 	/** ------------------------------------------ */
@@ -98,8 +214,9 @@ class RestManager {
 	/** ------------------------------------------ */
 	#restoreHitDice() {
 		// Safe rest restores ALL hit dice
-		const maxHitDice = this.#actor.HitDiceManager.max;
-		const { updates, recoveredData } = this.#actor.HitDiceManager.getUpdateData({
+		// Use fresh HitDiceManager to ensure current data
+		const maxHitDice = this.#hitDiceManager.max;
+		const { updates, recoveredData } = this.#hitDiceManager.getUpdateData({
 			upperLimit: maxHitDice,
 			restoreLargest: true,
 		});
@@ -108,6 +225,7 @@ class RestManager {
 
 		Object.entries(recoveredData ?? {}).forEach(([die, amount]) => {
 			this.#summary.push(`Recovered ${amount} hit dice. (d${die})`);
+			this.#recovery.hitDiceRecovered[die] = amount;
 		});
 	}
 
@@ -117,10 +235,12 @@ class RestManager {
 		this.#updates.actor['system.attributes.hp'] = { value: max, temp: 0 };
 
 		if (max > value) {
+			this.#recovery.hpRestored = max - value;
 			this.#summary.push(`Restored ${max - value} hp.`);
 		}
 
 		if (temp > 0) {
+			this.#recovery.tempHpRemoved = temp;
 			this.#summary.push(`Removed ${temp} temporary hp.`);
 		}
 	}
@@ -129,6 +249,7 @@ class RestManager {
 		const { current, max } = this.#actor.system.resources.mana;
 		if (current < max) {
 			this.#updates.actor['system.resources.mana'] = { current: max };
+			this.#recovery.manaRestored = max - current;
 			this.#summary.push(`Restored ${max - current} mana.`);
 		}
 	}
@@ -140,7 +261,10 @@ class RestManager {
 			value: Math.max(value - 1, 0),
 		};
 
-		if (value !== 0) this.#summary.push('Recovered 1 wound.');
+		if (value !== 0) {
+			this.#recovery.woundsRecovered = 1;
+			this.#summary.push('Recovered 1 wound.');
+		}
 	}
 }
 
@@ -150,6 +274,7 @@ declare namespace RestManager {
 		makeCamp?: boolean;
 		skipChatCard: boolean;
 		selectedHitDice?: Record<number, number>;
+		activeAdvantageRuleIds?: string[];
 	}
 }
 

@@ -617,11 +617,20 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		const { selections, addStrBonus, applyToHP } = result;
 
+		// Check if the actor has the maximizeHitDice flag from rules (e.g., Oozeling's Odd Constitution)
+		const maximizeHitDice =
+			(this.system.attributes as { maximizeHitDice?: boolean }).maximizeHitDice ?? false;
+
 		// Build the roll formula from selections
 		const rollParts: string[] = [];
 		for (const [size, count] of Object.entries(selections)) {
 			if (count > 0) {
-				rollParts.push(`${count}d${size}`);
+				if (maximizeHitDice) {
+					// Use maximum value instead of rolling
+					rollParts.push(`${count * Number(size)}`);
+				} else {
+					rollParts.push(`${count}d${size}`);
+				}
 			}
 		}
 
@@ -1306,7 +1315,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		} else if (restOptions.restType === 'safe') {
 			// Launch Safe Rest Dialog (singleton per actor)
 			const dialog = GenericDialog.getOrCreate(
-				'Safe Rest',
+				game.i18n.format(CONFIG.NIMBLE.safeRest.dialogTitle, { name: this.name }),
 				SafeRestDialog,
 				{ document: this },
 				{ icon: 'fa-solid fa-moon', uniqueId: `safe-rest-${this.uuid}` },
@@ -1320,7 +1329,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		} else {
 			// Launch Field Rest Dialog (singleton per actor)
 			const dialog = GenericDialog.getOrCreate(
-				'Field Rest',
+				`${this.name}: Field Rest`,
 				FieldRestDialog,
 				{ document: this },
 				{ icon: 'fa-solid fa-hourglass-half', uniqueId: `field-rest-${this.uuid}` },
