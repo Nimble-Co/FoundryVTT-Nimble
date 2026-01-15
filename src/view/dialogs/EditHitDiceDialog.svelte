@@ -2,6 +2,7 @@
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type { NimbleClassItem } from '../../documents/item/class.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
+	import { incrementDieSize } from '../../managers/HitDiceManager.js';
 
 	interface Props {
 		document: NimbleCharacter;
@@ -21,23 +22,25 @@
 	}
 
 	function getOrderedDieSizes(): number[] {
-		// Class die first if available
+		// Class die first if available (use raw size for ordering)
 		const ordered: number[] = [];
-		if (classDieSize) {
-			ordered.push(classDieSize);
+		if (rawClassDieSize) {
+			ordered.push(rawClassDieSize);
 		}
 
 		// Then all other sizes lowest to highest, excluding class die
 		allDieSizes
-			.filter((s) => s !== classDieSize)
+			.filter((s) => s !== rawClassDieSize)
 			.sort((a, b) => a - b)
 			.forEach((s) => ordered.push(s));
 
 		return ordered;
 	}
 
-	function addBonusDie(size: number) {
-		bonusDice = [...bonusDice, { size, value: 1, name: `d${size}` }];
+	function addBonusDie(rawSize: number) {
+		// Store the RAW size; display will be incremented when shown
+		const displaySize = incrementDieSize(rawSize, hitDiceSizeBonus);
+		bonusDice = [...bonusDice, { size: rawSize, value: 1, name: `d${displaySize}` }];
 		showDropdown = false;
 	}
 
@@ -58,7 +61,19 @@
 	let { document: actor, dialog }: Props = $props();
 
 	const classes = actor.items.filter((i: Item) => i.type === 'class') as NimbleClassItem[];
-	const classDieSize = classes.length > 0 ? classes[0].system.hitDieSize : null;
+	// Get hit dice size bonus from rules (e.g., Oozeling's Odd Constitution)
+	const hitDiceSizeBonus =
+		(actor.system.attributes as { hitDiceSizeBonus?: number }).hitDiceSizeBonus ?? 0;
+	// Get contributions that make up the hit dice size bonus
+	const hitDiceSizeBonusContributions = ((
+		actor.system.attributes as {
+			hitDiceSizeBonusContributions?: Array<{ label: string; value: number }>;
+		}
+	).hitDiceSizeBonusContributions ?? []) as Array<{ label: string; value: number }>;
+	// Raw class die size (for storage and data operations)
+	const rawClassDieSize = classes.length > 0 ? classes[0].system.hitDieSize : null;
+	// Display class die size (incremented for display)
+	const classDieSize = rawClassDieSize ? incrementDieSize(rawClassDieSize, hitDiceSizeBonus) : null;
 
 	// Initialize bonus dice from existing data
 	let bonusDice = $state<BonusDieEntry[]>(
@@ -98,8 +113,9 @@
 		}[] = [];
 
 		// Add from classes - show class's own contribution (classLevel/classLevel)
+		// Apply hitDiceSizeBonus to get effective die size
 		for (const cls of classes) {
-			const size = cls.system.hitDieSize;
+			const size = incrementDieSize(cls.system.hitDieSize, hitDiceSizeBonus);
 			const classLevel = cls.system.classLevel;
 			dice.push({
 				size,
@@ -111,9 +127,10 @@
 		}
 
 		// Add bonus dice from user-added bonusHitDice array
+		// Apply hitDiceSizeBonus to increment these dice as well
 		for (const entry of bonusDice) {
 			dice.push({
-				size: entry.size,
+				size: incrementDieSize(entry.size, hitDiceSizeBonus),
 				current: entry.value,
 				total: entry.value,
 				source: entry.name,
@@ -122,10 +139,12 @@
 		}
 
 		// Add bonus dice from rules (hitDice[size].contributions)
+		// Apply hitDiceSizeBonus to increment these dice as well
 		for (const [sizeStr, hitDieData] of Object.entries(actor.system.attributes.hitDice ?? {})) {
 			const data = hitDieData as { contributions?: Array<{ label: string; value: number }> };
 			const contributions = data.contributions ?? [];
-			const size = Number(sizeStr);
+			const baseSize = Number(sizeStr);
+			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
 			for (const contribution of contributions) {
 				dice.push({
 					size,
@@ -143,11 +162,13 @@
 	let availableDieSizes = $derived(getOrderedDieSizes());
 
 	// Get rule-based bonus dice for display in Bonus Hit Dice section
+	// Apply hitDiceSizeBonus to increment these dice as well
 	let ruleContributions = $derived.by(() => {
 		const contributions: Array<{ size: number; value: number; label: string }> = [];
 		for (const [sizeStr, hitDieData] of Object.entries(actor.system.attributes.hitDice ?? {})) {
 			const data = hitDieData as { contributions?: Array<{ label: string; value: number }> };
-			const size = Number(sizeStr);
+			const baseSize = Number(sizeStr);
+			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
 			for (const contribution of data.contributions ?? []) {
 				contributions.push({
 					size,
@@ -183,6 +204,29 @@
 </script>
 
 <div class="nimble-sheet__body" role="presentation" onclick={handleClickOutside}>
+	<!-- Hit Dice Size Increment Info -->
+	{#if hitDiceSizeBonus > 0}
+		<div class="hd-info-banner">
+			<i class="hd-info-banner__icon fa-solid fa-arrow-up"></i>
+			<div class="hd-info-banner__content">
+				<span class="hd-info-banner__text">
+					{game.i18n.format(CONFIG.NIMBLE.hitDice.hitDiceSizeIncreased, {
+						steps: hitDiceSizeBonus,
+					})}
+				</span>
+				{#if hitDiceSizeBonusContributions.length > 0}
+					<span class="hd-info-banner__sources">
+						{#each hitDiceSizeBonusContributions as contribution, i}
+							{#if i > 0},
+							{/if}
+							{game.i18n.format(CONFIG.NIMBLE.hitDice.fromSource, { source: contribution.label })}
+						{/each}
+					</span>
+				{/if}
+			</div>
+		</div>
+	{/if}
+
 	<!-- Current Hit Dice Overview -->
 	<section class="hd-section">
 		<header class="hd-header">
@@ -244,6 +288,7 @@
 
 				<!-- User-added bonus dice (editable) -->
 				{#each bonusDice as entry, index}
+					{@const displaySize = incrementDieSize(entry.size, hitDiceSizeBonus)}
 					<div class="hd-die-card">
 						<label class="hd-die-card__name-row">
 							<span class="hd-die-card__name-label">{CONFIG.NIMBLE.hitDice.bonusDieName}</span>
@@ -251,20 +296,20 @@
 								class="hd-die-card__name"
 								type="text"
 								value={entry.name}
-								placeholder="d{entry.size}"
+								placeholder="d{displaySize}"
 								onchange={(e) =>
-									updateBonusDieName(index, e.currentTarget.value || `d${entry.size}`)}
+									updateBonusDieName(index, e.currentTarget.value || `d${displaySize}`)}
 							/>
 						</label>
 						<div class="hd-die-card__bottom-row">
-							<span class="hd-die-card__die">d{entry.size}</span>
+							<span class="hd-die-card__die">d{displaySize}</span>
 							<div class="hd-die-card__controls">
 								<button
 									class="hd-btn hd-btn--minus"
 									type="button"
 									onclick={() => updateBonusDieValue(index, -1)}
 									aria-label={game.i18n.format('NIMBLE.hitDice.decreaseBonusDie', {
-										size: entry.size,
+										size: displaySize,
 									})}
 								>
 									<i class="fa-solid fa-minus"></i>
@@ -275,7 +320,7 @@
 									type="button"
 									onclick={() => updateBonusDieValue(index, 1)}
 									aria-label={game.i18n.format('NIMBLE.hitDice.increaseBonusDie', {
-										size: entry.size,
+										size: displaySize,
 									})}
 								>
 									<i class="fa-solid fa-plus"></i>
@@ -310,15 +355,16 @@
 		class="hd-dropdown hd-dropdown--fixed"
 		style="top: {dropdownPosition.top}px; left: {dropdownPosition.left}px;"
 	>
-		{#each availableDieSizes as size}
+		{#each availableDieSizes as rawSize}
+			{@const displaySize = incrementDieSize(rawSize, hitDiceSizeBonus)}
 			<button
 				class="hd-dropdown__item"
-				class:hd-dropdown__item--class={size === classDieSize}
+				class:hd-dropdown__item--class={rawSize === rawClassDieSize}
 				type="button"
-				onclick={() => addBonusDie(size)}
+				onclick={() => addBonusDie(rawSize)}
 			>
-				d{size}
-				{#if size === classDieSize}
+				d{displaySize}
+				{#if rawSize === rawClassDieSize}
 					<span class="hd-dropdown__badge">Class</span>
 				{/if}
 			</button>
@@ -380,8 +426,8 @@
 		min-width: 4.5rem;
 
 		&--rule {
-			background: hsl(210, 30%, 95%);
-			border-color: hsl(210, 30%, 70%);
+			background: var(--nimble-rule-background-color);
+			border-color: var(--nimble-rule-border-color);
 		}
 
 		&__main {
@@ -540,8 +586,8 @@
 		border-radius: 6px;
 
 		&--readonly {
-			background: hsl(210, 30%, 95%);
-			border-color: hsl(210, 30%, 70%);
+			background: var(--nimble-rule-background-color);
+			border-color: var(--nimble-rule-border-color);
 		}
 
 		&__name-row {
@@ -673,6 +719,83 @@
 			font-weight: 700;
 			color: #fff;
 			text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+		}
+	}
+
+	.hd-info-banner {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.625rem;
+		padding: 0.625rem 0.75rem;
+		background: linear-gradient(to right, hsla(45, 60%, 50%, 0.15), hsla(45, 60%, 50%, 0.08));
+		border: 1px solid hsla(45, 60%, 50%, 0.4);
+		border-radius: 6px;
+		margin-bottom: 0.25rem;
+
+		&__icon {
+			flex-shrink: 0;
+			font-size: var(--nimble-md-text);
+			color: hsl(45, 60%, 40%);
+			margin-top: 0.125rem;
+		}
+
+		&__content {
+			display: flex;
+			flex-direction: column;
+			gap: 0.125rem;
+		}
+
+		&__text {
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			color: var(--nimble-dark-text-color);
+		}
+
+		&__sources {
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+			font-style: italic;
+		}
+	}
+
+	:global(.theme-dark) .hd-info-banner {
+		background: linear-gradient(to right, hsla(45, 60%, 50%, 0.2), hsla(45, 60%, 50%, 0.1));
+		border-color: hsla(45, 60%, 50%, 0.5);
+
+		.hd-info-banner__icon {
+			color: hsl(45, 60%, 60%);
+		}
+	}
+
+	/* Dark mode overrides for rule-based hit dice */
+	:global(.theme-dark) {
+		.hd-overview-card--rule {
+			background: hsl(210, 30%, 25%);
+			border-color: hsl(210, 30%, 40%);
+		}
+
+		.hd-overview-card--rule .hd-overview-card__die,
+		.hd-overview-card--rule .hd-overview-card__value {
+			color: hsl(36, 53%, 80%);
+		}
+
+		.hd-overview-card--rule .hd-overview-card__source {
+			color: hsl(0, 0%, 84%);
+		}
+
+		.hd-die-card--readonly {
+			background: hsl(210, 30%, 25%);
+			border-color: hsl(210, 30%, 40%);
+		}
+
+		.hd-die-card--readonly .hd-die-card__name-label,
+		.hd-die-card--readonly .hd-die-card__die {
+			color: hsl(0, 0%, 84%);
+		}
+
+		.hd-die-card--readonly .hd-die-card__name,
+		.hd-die-card--readonly .hd-die-card__value {
+			color: hsl(36, 53%, 80%);
 		}
 	}
 </style>

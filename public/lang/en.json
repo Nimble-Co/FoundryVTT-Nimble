@@ -413,9 +413,12 @@
 			"armorClass": "Armor Class",
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
+			"hitDiceAdvantage": "Hit Dice Advantage",
+			"incrementHitDice": "Increment Hit Dice",
 			"initiativeBonus": "Initiative Bonus",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
+			"maximizeHitDice": "Maximize Hit Dice",
 			"maxWounds": "Wounds",
 			"note": "Note",
 			"skillBonus": "Skill Bonus"
@@ -550,6 +553,8 @@
 			"totalHitDice": "Total Hit Dice",
 			"saveChanges": "Save Changes",
 			"noHitDiceYet": "No hit dice yet.",
+			"hitDiceSizeIncreased": "All hit dice sizes are increased by {steps} step(s)",
+			"fromSource": "from {source}",
 			"addStrBonus": "Add STR bonus ({bonus} per die)",
 			"applyHealingToHP": "Apply healing to HP",
 			"rollHitDice": "Roll {count} Hit {dieWord}",
@@ -595,7 +600,14 @@
 			"max": "Max",
 			"restAndSpendHitDie": "Rest & Spend {count} Hit Die",
 			"restAndSpendHitDice": "Rest & Spend {count} Hit Dice",
-			"restWithoutSpending": "Rest Without Spending Hit Dice"
+			"restWithoutSpending": "Rest Without Spending Hit Dice",
+			"modifiers": "Modifiers",
+			"advantageWhen": "Roll with advantage when {condition}",
+			"maximizeHitDice": "Always maximize Hit Dice",
+			"noModifiers": "No special modifiers",
+			"maximized": "Maximized",
+			"withAdvantage": "With Advantage",
+			"noHitDiceAvailable": "No hit dice available to spend"
 		},
 		"npcSheet": {
 			"armor": "Armor",

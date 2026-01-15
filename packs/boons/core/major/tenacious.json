@@ -6,7 +6,14 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "maxHitDice",
+				"label": "Tenacious",
+				"value": "2",
+				"dieSize": 0
+			}
+		],
 		"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 max Hit Dice. [M]</span></p>",
 		"boonType": "major"
 	},

@@ -5,6 +5,7 @@
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import HitPointBar from './components/HitPointBar.svelte';
 	import HitDiceBar from './components/HitDiceBar.svelte';
+	import { incrementDieSize } from '../../managers/HitDiceManager.js';
 	import PlayerCharacterBioTab from './pages/PlayerCharacterBioTab.svelte';
 	import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';
 	import PlayerCharacterFeaturesTab from './pages/PlayerCharacterFeaturesTab.svelte';
@@ -152,41 +153,57 @@
 		const bonusHitDice = actor.reactive.system.attributes.bonusHitDice ?? [];
 		const classes = actor.reactive.items.filter((i) => i.type === 'class');
 
+		// Get hit dice size bonus from rules (e.g., Oozeling's Odd Constitution)
+		const hitDiceSizeBonus = actor.reactive.system.attributes.hitDiceSizeBonus ?? 0;
+
 		// Build bySize from classes and bonus hit dice
 		const bySize = {};
 
-		// Add from classes
+		// Add from classes (apply hitDiceSizeBonus to get effective size)
 		for (const cls of classes) {
-			const size = cls.system.hitDieSize;
+			const baseSize = cls.system.hitDieSize;
+			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
 			const classLevel = cls.system.classLevel;
 			bySize[size] ??= { current: 0, total: 0 };
 			bySize[size].total += classLevel;
 			bySize[size].current = hitDiceAttr[size]?.current ?? 0;
 		}
 
-		// Add from bonusHitDice array
+		// Get effective class sizes (after applying bonus) for later checks
+		const effectiveClassSizes = classes.map((cls) =>
+			incrementDieSize(cls.system.hitDieSize, hitDiceSizeBonus),
+		);
+
+		// Add from bonusHitDice array (apply hitDiceSizeBonus to increment)
 		for (const entry of bonusHitDice) {
-			const size = entry.size;
+			const size = incrementDieSize(entry.size, hitDiceSizeBonus);
 			bySize[size] ??= { current: hitDiceAttr[size]?.current ?? 0, total: 0 };
 			bySize[size].total += entry.value;
 			// Get current from hitDice record if not already set
-			if (!classes.some((cls) => cls.system.hitDieSize === size)) {
+			if (!effectiveClassSizes.includes(size)) {
 				bySize[size].current = hitDiceAttr[size]?.current ?? 0;
 			}
 		}
 
+		// Get effective bonus array sizes (after increment) for later checks
+		const effectiveBonusArraySizes = bonusHitDice.map((entry) =>
+			incrementDieSize(entry.size, hitDiceSizeBonus),
+		);
+
 		// Add from rule-based bonuses (hitDice[size].bonus)
 		// Rule bonuses add to total; current comes from stored value (restored on rest)
+		// Apply hitDiceSizeBonus to increment these dice as well
 		for (const [sizeStr, hitDieData] of Object.entries(hitDiceAttr ?? {})) {
-			const size = Number(sizeStr);
+			const baseSize = Number(sizeStr);
+			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
 			const bonus = hitDieData?.bonus ?? 0;
 			if (bonus > 0) {
 				bySize[size] ??= { current: 0, total: 0 };
 				bySize[size].total += bonus;
 
-				// If this size wasn't from a class or bonusHitDice array, get stored current
-				const fromClass = classes.some((cls) => cls.system.hitDieSize === size);
-				const fromBonusArray = bonusHitDice.some((entry) => entry.size === size);
+				// If this size wasn't from a class or bonusHitDice array (after increment), get stored current
+				const fromClass = effectiveClassSizes.includes(size);
+				const fromBonusArray = effectiveBonusArraySizes.includes(size);
 				if (!fromClass && !fromBonusArray) {
 					bySize[size].current = hitDiceAttr[size]?.current ?? 0;
 				}

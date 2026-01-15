@@ -16,9 +16,13 @@
 				"predicate": {},
 				"priority": 1,
 				"value": "2",
-				"skills": [
-					"might"
-				]
+				"skills": ["might"]
+			},
+			{
+				"type": "maxHitDice",
+				"label": "Stalwart",
+				"value": "1",
+				"dieSize": 0
 			}
 		],
 		"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+1 max Hit Die. [M]</span></p><p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 Might. [A]</span></p>",

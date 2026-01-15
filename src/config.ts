@@ -571,6 +571,8 @@ const hitDice = {
 	rollHitDice: 'NIMBLE.hitDice.rollHitDice',
 	max: 'NIMBLE.hitDice.max',
 	selectAll: 'NIMBLE.hitDice.selectAll',
+	hitDiceSizeIncreased: 'NIMBLE.hitDice.hitDiceSizeIncreased',
+	fromSource: 'NIMBLE.hitDice.fromSource',
 };
 
 const hitPoints = {
@@ -615,6 +617,13 @@ const fieldRest = {
 	restAndSpendHitDie: 'NIMBLE.fieldRest.restAndSpendHitDie',
 	restAndSpendHitDice: 'NIMBLE.fieldRest.restAndSpendHitDice',
 	restWithoutSpending: 'NIMBLE.fieldRest.restWithoutSpending',
+	modifiers: 'NIMBLE.fieldRest.modifiers',
+	advantageWhen: 'NIMBLE.fieldRest.advantageWhen',
+	maximizeHitDice: 'NIMBLE.fieldRest.maximizeHitDice',
+	noModifiers: 'NIMBLE.fieldRest.noModifiers',
+	maximized: 'NIMBLE.fieldRest.maximized',
+	withAdvantage: 'NIMBLE.fieldRest.withAdvantage',
+	noHitDiceAvailable: 'NIMBLE.fieldRest.noHitDiceAvailable',
 };
 
 const NIMBLE = {

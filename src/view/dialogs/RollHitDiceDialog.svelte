@@ -12,6 +12,13 @@
 	// Get hit dice data - use HitDiceManager which is refreshed on actor update
 	const hitDice = actor.HitDiceManager.bySize;
 
+	// Check if the actor has the maximizeHitDice flag from rules (e.g., Oozeling's Odd Constitution)
+	const maximizeHitDice =
+		(actor.system.attributes as { maximizeHitDice?: boolean }).maximizeHitDice ?? false;
+	const maximizeHitDiceContributions = ((
+		actor.system.attributes as { maximizeHitDiceContributions?: Array<{ label: string }> }
+	).maximizeHitDiceContributions ?? []) as Array<{ label: string }>;
+
 	// Initialize selections to 0 for each die size
 	let selections: Record<string, number> = $state(
 		Object.fromEntries(Object.keys(hitDice).map((die) => [die, 0])),
@@ -175,6 +182,25 @@
 			<span>{CONFIG.NIMBLE.hitDice.applyHealingToHP}</span>
 		</label>
 	</section>
+
+	{#if maximizeHitDice}
+		<section class="nimble-roll-hit-dice-dialog__modifiers">
+			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{CONFIG.NIMBLE.fieldRest.modifiers}
+				</h3>
+			</header>
+			<div class="modifier-item modifier-item--maximize">
+				<i class="modifier-item__icon fa-solid fa-arrow-up"></i>
+				<span class="modifier-item__text">{CONFIG.NIMBLE.fieldRest.maximizeHitDice}</span>
+				{#if maximizeHitDiceContributions.length > 0}
+					<span class="modifier-item__source">
+						({maximizeHitDiceContributions.map((c) => c.label).join(', ')})
+					</span>
+				{/if}
+			</div>
+		</section>
+	{/if}
 </article>
 
 <footer class="nimble-sheet__footer">
@@ -330,6 +356,67 @@
 			align-items: center;
 			justify-content: center;
 			gap: 0.5rem;
+		}
+	}
+
+	.nimble-roll-hit-dice-dialog__modifiers {
+		margin-block-start: 1rem;
+		padding-block-start: 0.75rem;
+		border-top: 1px solid var(--nimble-card-border-color);
+	}
+
+	.modifier-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.625rem;
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 6px;
+
+		&--maximize {
+			background: linear-gradient(
+				135deg,
+				hsla(120, 45%, 45%, 0.15) 0%,
+				hsla(120, 45%, 40%, 0.08) 100%
+			);
+			border-color: hsla(120, 45%, 45%, 0.4);
+		}
+
+		&__icon {
+			font-size: var(--nimble-sm-text);
+			color: hsl(120, 45%, 35%);
+		}
+
+		&__text {
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			color: var(--nimble-dark-text-color);
+		}
+
+		&__source {
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+			font-style: italic;
+		}
+	}
+
+	:global(.theme-dark) .modifier-item {
+		&--maximize {
+			background: linear-gradient(
+				135deg,
+				hsla(120, 45%, 45%, 0.2) 0%,
+				hsla(120, 45%, 40%, 0.1) 100%
+			);
+			border-color: hsla(120, 45%, 45%, 0.5);
+		}
+
+		&--maximize .modifier-item__icon {
+			color: hsl(120, 50%, 55%);
+		}
+
+		&--maximize .modifier-item__text {
+			color: var(--nimble-light-text-color);
 		}
 	}
 </style>
