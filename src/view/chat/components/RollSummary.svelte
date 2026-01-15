@@ -1,5 +1,6 @@
 <script>
 	let { label, subheading, tooltip, total, options, showRollDetails } = $props();
+	const { hitDice } = CONFIG.NIMBLE;
 </script>
 
 <div class="roll" class:roll--no-subheading={!subheading}>
@@ -37,8 +38,8 @@
 <!-- TODO: Make a GM only system setting for this -->
 {#if showRollDetails}
 	<div class="roll-details">
-		<span>Primary die value: {options.rollOptions.primaryDieValue}</span>
-		<span>Primary die modifier: {options.rollOptions.primaryDieModifier}</span>
+		<span>{hitDice.primaryDieValue}: {options.rollOptions.primaryDieValue}</span>
+		<span>{hitDice.primaryDieModifier}: {options.rollOptions.primaryDieModifier}</span>
 	</div>
 {/if}
 

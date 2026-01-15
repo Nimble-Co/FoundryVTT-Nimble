@@ -8,7 +8,7 @@
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
 
-	const { damageTypes } = CONFIG.NIMBLE;
+	const { damageTypes, hitDice } = CONFIG.NIMBLE;
 
 	// Get all damage effects from the item's activation effects
 	// This searches recursively through the effects tree, including sharedRolls
@@ -82,7 +82,7 @@
 	<div class="nimble-roll-modifiers-container">
 		<div class="nimble-roll-modifiers">
 			<label>
-				Situational modifiers:
+				{hitDice.situationalModifiers}:
 				<input type="string" bind:value={situationalModifiers} placeholder="0" />
 			</label>
 		</div>
@@ -90,14 +90,14 @@
 	<div class="nimble-roll-modifiers-container">
 		<div class="nimble-roll-modifiers">
 			<label>
-				Set primary die:
+				{hitDice.setPrimaryDie}:
 				<input type="number" bind:value={primaryDieValue} placeholder="0" />
 			</label>
 		</div>
 
 		<div class="nimble-roll-modifiers">
 			<label>
-				Primary die modifier:
+				{hitDice.setPrimaryDieModifier}:
 				<input
 					type="number"
 					bind:value={primaryDieModifier}
