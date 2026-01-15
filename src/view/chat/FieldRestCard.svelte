@@ -26,8 +26,12 @@
 
 	// Determine rest type label and icon
 	const isMakeCamp = restType === 'makeCamp';
-	const restTypeLabel = isMakeCamp ? 'Made Camp' : 'Caught Breath';
-	const restLabel = `Field Rest: ${restTypeLabel}`;
+	const restTypeLabel = isMakeCamp
+		? CONFIG.NIMBLE.fieldRest.makeCamp
+		: CONFIG.NIMBLE.fieldRest.catchBreath;
+	const restLabel = game.i18n.format(CONFIG.NIMBLE.fieldRest.cardHeading, {
+		restType: restTypeLabel,
+	});
 	const restIcon = isMakeCamp ? 'fa-solid fa-campground' : 'fa-solid fa-wind';
 
 	// Format hit dice spent for display
@@ -53,20 +57,24 @@
 	<section class="nimble-card-section">
 		{#if hitDiceDisplay}
 			<div class="hit-dice-spent">
-				<span class="hit-dice-spent__label">Hit Dice</span>
+				<span class="hit-dice-spent__label">{CONFIG.NIMBLE.fieldRest.hitDice}</span>
 				<span class="hit-dice-spent__value">{hitDiceDisplay}</span>
 			</div>
 		{/if}
 
 		{#if rolls?.length && totalHealing > 0}
 			<RollSummary
-				label="Healing"
-				subheading={wasMaximized ? 'Maximized' : hadAdvantage ? 'With Advantage' : 'Rolled'}
+				label={CONFIG.NIMBLE.fieldRest.healing}
+				subheading={wasMaximized
+					? CONFIG.NIMBLE.fieldRest.maximized
+					: hadAdvantage
+						? CONFIG.NIMBLE.fieldRest.withAdvantage
+						: CONFIG.NIMBLE.fieldRest.rolled}
 				tooltip={rollTooltip}
 				total={totalHealing}
 			/>
 		{:else if !hitDiceDisplay}
-			<div class="no-dice-message">Rested without spending hit dice</div>
+			<div class="no-dice-message">{CONFIG.NIMBLE.fieldRest.restedWithoutSpending}</div>
 		{/if}
 
 		{#if wasMaximized || hadAdvantage}
@@ -74,13 +82,13 @@
 				{#if wasMaximized}
 					<span class="modifier-badge modifier-badge--maximize">
 						<i class="fa-solid fa-arrow-up"></i>
-						Maximized
+						{CONFIG.NIMBLE.fieldRest.maximized}
 					</span>
 				{/if}
 				{#if hadAdvantage}
 					<span class="modifier-badge modifier-badge--advantage">
 						<i class="fa-solid fa-dice-d20"></i>
-						Advantage
+						{CONFIG.NIMBLE.fieldRest.advantage}
 						{#if advantageSource}
 							<span class="modifier-badge__source">({advantageSource})</span>
 						{/if}
@@ -119,7 +127,7 @@
 		&__value {
 			font-size: var(--nimble-sm-text);
 			font-weight: 700;
-			color: var(--nimble-dark-text-color);
+			color: hsl(45, 70%, 40%);
 		}
 	}
 
@@ -181,8 +189,16 @@
 	}
 
 	:global(.theme-dark) .hit-dice-spent {
-		&__value {
-			color: var(--nimble-light-text-color);
+		&__label {
+			color: hsl(0, 0%, 70%);
 		}
+
+		&__value {
+			color: hsl(45, 80%, 60%);
+		}
+	}
+
+	:global(.theme-dark) .no-dice-message {
+		color: hsl(0, 0%, 70%);
 	}
 </style>

@@ -34,8 +34,8 @@
 	<CardBodyHeader
 		fa={true}
 		image="fa-solid fa-bed"
-		heading="Safe Rest"
-		subheading="Full Recovery"
+		heading={CONFIG.NIMBLE.safeRest.cardHeading}
+		subheading={CONFIG.NIMBLE.safeRest.cardSubheading}
 	/>
 
 	<section class="nimble-card-section safe-rest-card">
@@ -44,7 +44,7 @@
 				{#if hpRestored > 0}
 					<div class="recovery-item">
 						<i class="recovery-item__icon fa-solid fa-heart"></i>
-						<span class="recovery-item__label">HP Restored</span>
+						<span class="recovery-item__label">{CONFIG.NIMBLE.safeRest.hpRestored}</span>
 						<span class="recovery-item__value recovery-item__value--hp">+{hpRestored}</span>
 					</div>
 				{/if}
@@ -52,7 +52,7 @@
 				{#if tempHpRemoved > 0}
 					<div class="recovery-item recovery-item--removed">
 						<i class="recovery-item__icon fa-solid fa-heart-crack"></i>
-						<span class="recovery-item__label">Temp HP Removed</span>
+						<span class="recovery-item__label">{CONFIG.NIMBLE.safeRest.tempHpRemoved}</span>
 						<span class="recovery-item__value">-{tempHpRemoved}</span>
 					</div>
 				{/if}
@@ -60,7 +60,7 @@
 				{#if manaRestored > 0}
 					<div class="recovery-item">
 						<i class="recovery-item__icon fa-solid fa-sparkles"></i>
-						<span class="recovery-item__label">Mana Restored</span>
+						<span class="recovery-item__label">{CONFIG.NIMBLE.safeRest.manaRestored}</span>
 						<span class="recovery-item__value recovery-item__value--mana">+{manaRestored}</span>
 					</div>
 				{/if}
@@ -68,7 +68,7 @@
 				{#if hitDiceDisplay}
 					<div class="recovery-item">
 						<i class="recovery-item__icon fa-solid fa-dice-d20"></i>
-						<span class="recovery-item__label">Hit Dice Recovered</span>
+						<span class="recovery-item__label">{CONFIG.NIMBLE.safeRest.hitDiceRecovered}</span>
 						<span class="recovery-item__value recovery-item__value--dice">{hitDiceDisplay}</span>
 					</div>
 				{/if}
@@ -76,13 +76,13 @@
 				{#if woundsRecovered > 0}
 					<div class="recovery-item">
 						<i class="recovery-item__icon fa-solid fa-bandage"></i>
-						<span class="recovery-item__label">Wounds Healed</span>
+						<span class="recovery-item__label">{CONFIG.NIMBLE.safeRest.woundsHealed}</span>
 						<span class="recovery-item__value recovery-item__value--wounds">{woundsRecovered}</span>
 					</div>
 				{/if}
 			</div>
 		{:else}
-			<div class="no-recovery-message">Already fully rested</div>
+			<div class="no-recovery-message">{CONFIG.NIMBLE.safeRest.alreadyFullyRested}</div>
 		{/if}
 	</section>
 </article>
@@ -156,25 +156,29 @@
 
 	:global(.theme-dark) .recovery-item {
 		&__label {
-			color: var(--nimble-light-text-color);
+			color: hsl(0, 0%, 90%);
 		}
 
 		&__value {
 			&--hp {
-				color: hsl(0, 65%, 60%);
+				color: hsl(0, 70%, 65%);
 			}
 
 			&--mana {
-				color: hsl(220, 70%, 65%);
+				color: hsl(220, 75%, 70%);
 			}
 
 			&--dice {
-				color: hsl(45, 70%, 55%);
+				color: hsl(45, 80%, 60%);
 			}
 
 			&--wounds {
-				color: hsl(30, 70%, 60%);
+				color: hsl(30, 75%, 65%);
 			}
 		}
+	}
+
+	:global(.theme-dark) .no-recovery-message {
+		color: hsl(0, 0%, 70%);
 	}
 </style>

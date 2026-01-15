@@ -559,7 +559,9 @@
 			"applyHealingToHP": "Apply healing to HP",
 			"rollHitDice": "Roll {count} Hit {dieWord}",
 			"max": "Max",
-			"selectAll": "Select all"
+			"selectAll": "Select all",
+			"heading": "Hit Dice",
+			"configureHitDice": "Configure Hit Dice"
 		},
 		"hitPoints": {
 			"startingHp": "Starting HP",
@@ -586,7 +588,16 @@
 			"wounds": "Wounds",
 			"noWounds": "No wounds",
 			"wound": "-1 wound ({current} → {next})",
-			"safeRestButton": "Safe Rest"
+			"safeRestButton": "Safe Rest",
+			"allResourcesFull": "All resources are already at full capacity.",
+			"cardHeading": "Safe Rest",
+			"cardSubheading": "Full Recovery",
+			"hpRestored": "HP Restored",
+			"tempHpRemoved": "Temp HP Removed",
+			"manaRestored": "Mana Restored",
+			"hitDiceRecovered": "Hit Dice Recovered",
+			"woundsHealed": "Wounds Healed",
+			"alreadyFullyRested": "Already fully rested"
 		},
 		"fieldRest": {
 			"restType": "Rest Type",
@@ -608,7 +619,13 @@
 			"noModifiers": "No special modifiers",
 			"maximized": "Maximized",
 			"withAdvantage": "With Advantage",
-			"noHitDiceAvailable": "No hit dice available to spend"
+			"noHitDiceAvailable": "No hit dice available to spend",
+			"cardHeading": "Field Rest: {restType}",
+			"hitDice": "Hit Dice",
+			"healing": "Healing",
+			"rolled": "Rolled",
+			"advantage": "Advantage",
+			"restedWithoutSpending": "Rested without spending hit dice"
 		},
 		"npcSheet": {
 			"armor": "Armor",

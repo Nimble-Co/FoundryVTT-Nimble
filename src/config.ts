@@ -573,6 +573,8 @@ const hitDice = {
 	selectAll: 'NIMBLE.hitDice.selectAll',
 	hitDiceSizeIncreased: 'NIMBLE.hitDice.hitDiceSizeIncreased',
 	fromSource: 'NIMBLE.hitDice.fromSource',
+	heading: 'NIMBLE.hitDice.heading',
+	configureHitDice: 'NIMBLE.hitDice.configureHitDice',
 };
 
 const hitPoints = {
@@ -602,6 +604,17 @@ const safeRest = {
 	noWounds: 'NIMBLE.safeRest.noWounds',
 	wound: 'NIMBLE.safeRest.wound',
 	safeRestButton: 'NIMBLE.safeRest.safeRestButton',
+	// Dialog specific
+	allResourcesFull: 'NIMBLE.safeRest.allResourcesFull',
+	// Chat card specific
+	cardHeading: 'NIMBLE.safeRest.cardHeading',
+	cardSubheading: 'NIMBLE.safeRest.cardSubheading',
+	hpRestored: 'NIMBLE.safeRest.hpRestored',
+	tempHpRemoved: 'NIMBLE.safeRest.tempHpRemoved',
+	manaRestored: 'NIMBLE.safeRest.manaRestored',
+	hitDiceRecovered: 'NIMBLE.safeRest.hitDiceRecovered',
+	woundsHealed: 'NIMBLE.safeRest.woundsHealed',
+	alreadyFullyRested: 'NIMBLE.safeRest.alreadyFullyRested',
 };
 
 const fieldRest = {
@@ -625,6 +638,13 @@ const fieldRest = {
 	maximized: 'NIMBLE.fieldRest.maximized',
 	withAdvantage: 'NIMBLE.fieldRest.withAdvantage',
 	noHitDiceAvailable: 'NIMBLE.fieldRest.noHitDiceAvailable',
+	// Chat card specific
+	cardHeading: 'NIMBLE.fieldRest.cardHeading',
+	hitDice: 'NIMBLE.fieldRest.hitDice',
+	healing: 'NIMBLE.fieldRest.healing',
+	rolled: 'NIMBLE.fieldRest.rolled',
+	advantage: 'NIMBLE.fieldRest.advantage',
+	restedWithoutSpending: 'NIMBLE.fieldRest.restedWithoutSpending',
 };
 
 const NIMBLE = {

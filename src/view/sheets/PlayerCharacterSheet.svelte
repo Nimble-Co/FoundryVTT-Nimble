@@ -314,14 +314,14 @@
 		/>
 
 		<h3 class="nimble-heading nimble-heading--hit-dice">
-			Hit Dice
+			{CONFIG.NIMBLE.hitDice.heading}
 			<i class="fa-solid fa-heart-circle-plus"></i>
 			<button
 				class="nimble-button"
 				data-button-variant="icon"
 				type="button"
-				aria-label="Configure Hit Dice"
-				data-tooltip="Configure Hit Dice"
+				aria-label={CONFIG.NIMBLE.hitDice.configureHitDice}
+				data-tooltip={CONFIG.NIMBLE.hitDice.configureHitDice}
 				onclick={() => actor.configureHitDice()}
 			>
 				<i class="fa-solid fa-edit"></i>

@@ -220,7 +220,7 @@
 	{#if !hasAnyRecovery}
 		<div class="safe-rest-dialog__info">
 			<i class="fa-solid fa-circle-check"></i>
-			<span>All resources are already at full capacity.</span>
+			<span>{CONFIG.NIMBLE.safeRest.allResourcesFull}</span>
 		</div>
 	{/if}
 </article>
