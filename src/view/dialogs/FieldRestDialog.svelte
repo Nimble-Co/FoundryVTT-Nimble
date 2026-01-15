@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
+	import { incrementDieSize } from '../../managers/HitDiceManager.js';
 
 	interface HitDiceAdvantageRule {
 		id: string;
@@ -16,11 +17,13 @@
 
 	function incrementHitDie(die: string) {
 		const current = hitDice[die]?.current ?? 0;
-		selectedHitDice = { ...selectedHitDice, [die]: Math.min(selectedHitDice[die] + 1, current) };
+		const currentSelected = selectedHitDice[die] ?? 0;
+		selectedHitDice = { ...selectedHitDice, [die]: Math.min(currentSelected + 1, current) };
 	}
 
 	function decrementHitDie(die: string) {
-		selectedHitDice = { ...selectedHitDice, [die]: Math.max(selectedHitDice[die] - 1, 0) };
+		const currentSelected = selectedHitDice[die] ?? 0;
+		selectedHitDice = { ...selectedHitDice, [die]: Math.max(currentSelected - 1, 0) };
 	}
 
 	function maxHitDie(die: string) {
@@ -43,7 +46,63 @@
 
 	let { document: actor, dialog }: Props = $props();
 
-	const hitDice = actor.HitDiceManager.bySize;
+	// Reactive hit dice computation (mirrors SafeRestDialog pattern)
+	let hitDice = $derived.by(() => {
+		const hitDiceAttr = actor.reactive.system.attributes.hitDice;
+		const bonusHitDice = actor.reactive.system.attributes.bonusHitDice ?? [];
+		const classes = actor.reactive.items.filter((i) => i.type === 'class');
+		const hitDiceSizeBonus = actor.reactive.system.attributes.hitDiceSizeBonus ?? 0;
+
+		const bySize: Record<number, { current: number; total: number }> = {};
+
+		// Add from classes (apply hitDiceSizeBonus to get effective size)
+		for (const cls of classes) {
+			const baseSize = cls.system.hitDieSize;
+			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
+			bySize[size] ??= { current: 0, total: 0 };
+			bySize[size].total += cls.system.classLevel;
+			bySize[size].current = hitDiceAttr[size]?.current ?? 0;
+		}
+
+		// Get effective class sizes (after applying bonus) for later checks
+		const effectiveClassSizes = classes.map((cls) =>
+			incrementDieSize(cls.system.hitDieSize, hitDiceSizeBonus),
+		);
+
+		// Add from bonusHitDice array (apply hitDiceSizeBonus to increment)
+		for (const entry of bonusHitDice) {
+			const size = incrementDieSize(entry.size, hitDiceSizeBonus);
+			bySize[size] ??= { current: hitDiceAttr[size]?.current ?? 0, total: 0 };
+			bySize[size].total += entry.value;
+			if (!effectiveClassSizes.includes(size)) {
+				bySize[size].current = hitDiceAttr[size]?.current ?? 0;
+			}
+		}
+
+		// Get effective bonus array sizes (after increment) for later checks
+		const effectiveBonusArraySizes = bonusHitDice.map((entry) =>
+			incrementDieSize(entry.size, hitDiceSizeBonus),
+		);
+
+		// Add from rule-based bonuses (hitDice[size].bonus)
+		for (const [sizeStr, hitDieData] of Object.entries(hitDiceAttr ?? {})) {
+			const baseSize = Number(sizeStr);
+			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
+			const bonus = hitDieData?.bonus ?? 0;
+			if (bonus > 0) {
+				bySize[size] ??= { current: 0, total: 0 };
+				bySize[size].total += bonus;
+
+				const fromClass = effectiveClassSizes.includes(size);
+				const fromBonusArray = effectiveBonusArraySizes.includes(size);
+				if (!fromClass && !fromBonusArray) {
+					bySize[size].current = hitDiceAttr[size]?.current ?? 0;
+				}
+			}
+		}
+
+		return bySize;
+	});
 
 	// Get hit dice advantage rules from the actor
 	const advantageRules = ((
@@ -55,14 +114,32 @@
 		(actor.system.attributes as { maximizeHitDice?: boolean }).maximizeHitDice ?? false;
 
 	let makeCamp = $state(false);
-	let selectedHitDice = $state(Object.fromEntries(Object.keys(hitDice).map((die) => [die, 0])));
+	let selectedHitDice = $state<Record<string, number>>({});
+
+	// Clamp selected hit dice when current values decrease
+	$effect(() => {
+		for (const [die, data] of Object.entries(hitDice)) {
+			const selected = selectedHitDice[die] ?? 0;
+			if (selected > data.current) {
+				selectedHitDice = { ...selectedHitDice, [die]: data.current };
+			}
+		}
+	});
 
 	// Initialize advantage toggles - all off by default since they're conditional
 	let advantageToggles = $state(
 		Object.fromEntries(advantageRules.map((rule) => [rule.id, false])),
 	) as Record<string, boolean>;
 
-	const totalSelected = $derived(Object.values(selectedHitDice).reduce((sum, val) => sum + val, 0));
+	const totalSelected = $derived(
+		Object.entries(selectedHitDice).reduce((sum, [die, val]) => {
+			// Only count dice that still exist in hitDice
+			if (hitDice[die]) {
+				return sum + val;
+			}
+			return sum;
+		}, 0),
+	);
 
 	// Check if there are any modifiers to display
 	// Show modifiers section if: making camp (shows maximize), always maximize rule, or has advantage rules
@@ -126,19 +203,19 @@
 						<button
 							class="hit-die-row__button"
 							onclick={() => decrementHitDie(die)}
-							disabled={selectedHitDice[die] <= 0}
+							disabled={(selectedHitDice[die] ?? 0) <= 0}
 							aria-label={game.i18n.format(CONFIG.NIMBLE.fieldRest.decreaseDie, { size: die })}
 							data-tooltip={current === 0 ? CONFIG.NIMBLE.fieldRest.noHitDiceAvailable : null}
 						>
 							<i class="fa-solid fa-minus"></i>
 						</button>
 
-						<span class="hit-die-row__value">{selectedHitDice[die]}</span>
+						<span class="hit-die-row__value">{selectedHitDice[die] ?? 0}</span>
 
 						<button
 							class="hit-die-row__button"
 							onclick={() => incrementHitDie(die)}
-							disabled={selectedHitDice[die] >= current}
+							disabled={(selectedHitDice[die] ?? 0) >= current}
 							aria-label={game.i18n.format(CONFIG.NIMBLE.fieldRest.increaseDie, { size: die })}
 							data-tooltip={current === 0 ? CONFIG.NIMBLE.fieldRest.noHitDiceAvailable : null}
 						>
@@ -148,7 +225,7 @@
 						<button
 							class="hit-die-row__button hit-die-row__button--max"
 							onclick={() => maxHitDie(die)}
-							disabled={selectedHitDice[die] >= current}
+							disabled={(selectedHitDice[die] ?? 0) >= current}
 							aria-label={game.i18n.format(CONFIG.NIMBLE.fieldRest.maxDie, { size: die })}
 							data-tooltip={current === 0 ? CONFIG.NIMBLE.fieldRest.noHitDiceAvailable : null}
 						>
