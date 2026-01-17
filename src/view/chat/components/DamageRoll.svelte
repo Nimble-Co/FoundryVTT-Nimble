@@ -16,11 +16,10 @@
 		return '';
 	}
 
-	function getSecondaryInformation(outcome, ignoreArmor, rollMode) {
-		const rollModeSummary = getRollModeSummary(rollMode);
+	function getSecondaryInformation(outcome, ignoreArmor, rollOptions) {
+		const rollModeSummary = getRollModeSummary(rollOptions.rollMode);
 
 		if (outcome === 'fullDamage' && ignoreArmor) return `${rollModeSummary} (Ignores Armor)`;
-
 		if (outcome === 'halfDamage') {
 			if (ignoreArmor) return `${rollModeSummary} (Half Damage, Ignores Armor)`;
 			return `${rollModeSummary} (Half Damage)`;
@@ -32,12 +31,13 @@
 	const { damageTypes } = CONFIG.NIMBLE;
 
 	const messageDocument = getContext('messageDocument');
-	const { actorType, permissions, rollMode } = messageDocument.system;
+	const { actorType, permissions } = messageDocument.system;
 
 	let { damageType, ignoreArmor = false, outcome, roll } = $props();
+	let { options: rollOptions } = $derived(roll);
 	let label = $derived(damageTypes[damageType] ?? '');
 	let multiplier = $derived(getDamageMultiplier(outcome));
-	let secondaryInfo = $derived(getSecondaryInformation(outcome, ignoreArmor, rollMode).trim());
+	let secondaryInfo = $derived(getSecondaryInformation(outcome, ignoreArmor, rollOptions).trim());
 </script>
 
 <RollSummary
@@ -46,5 +46,6 @@
 	subheading={secondaryInfo}
 	total={Math.ceil(roll.total * multiplier)}
 	type="damage"
-	options={{ damageType, ignoreArmor, outcome }}
+	options={{ damageType, ignoreArmor, outcome, rollOptions }}
+	showRollDetails={rollOptions.primaryDieValue != '0' || rollOptions?.primaryDieModifier != '0'}
 />

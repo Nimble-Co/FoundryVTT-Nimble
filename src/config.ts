@@ -575,6 +575,11 @@ const hitDice = {
 	fromSource: 'NIMBLE.hitDice.fromSource',
 	heading: 'NIMBLE.hitDice.heading',
 	configureHitDice: 'NIMBLE.hitDice.configureHitDice',
+	primaryDieValue: 'NIMBLE.hitDice.primaryDieValue',
+	primaryDieModifier: 'NIMBLE.hitDice.primaryDieModifier',
+	setPrimaryDie: 'NIMBLE.hitDice.setPrimaryDie',
+	setPrimaryDieModifier: 'NIMBLE.hitDice.setPrimaryDieModifier',
+	situationalModifiers: 'NIMBLE.hitDice.situationalModifiers',
 };
 
 const hitPoints = {

@@ -561,7 +561,12 @@
 			"max": "Max",
 			"selectAll": "Select all",
 			"heading": "Hit Dice",
-			"configureHitDice": "Configure Hit Dice"
+			"configureHitDice": "Configure Hit Dice",
+			"primaryDieValue": "Primary Die Value",
+			"primaryDieModifier": "Primary Die Modifier",
+			"setPrimaryDie": "Set Primary Die",
+			"setPrimaryDieModifier": "Set Primary Die Modifier",
+			"situationalModifiers": "Situational Modifiers"
 		},
 		"hitPoints": {
 			"startingHp": "Starting HP",
