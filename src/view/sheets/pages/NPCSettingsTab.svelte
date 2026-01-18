@@ -6,6 +6,7 @@
 	let actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
+	let useSeparateTokenImage = $derived(flags?.useSeparateTokenImage ?? false);
 </script>
 
 <section class="nimble-sheet__body">
@@ -51,6 +52,16 @@
 				/>
 			</label>
 		</div>
+
+		<label class="nimble-field">
+			<input
+				type="checkbox"
+				checked={useSeparateTokenImage}
+				onchange={({ target }) => actor.setFlag('nimble', 'useSeparateTokenImage', target.checked)}
+			/>
+
+			<span class="nimble-field__label"> Use Separate Token Image </span>
+		</label>
 	</section>
 </section>
 

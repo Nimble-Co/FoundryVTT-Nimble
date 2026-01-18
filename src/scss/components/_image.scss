@@ -44,7 +44,11 @@
     &--actor,
     &--actor:focus,
     &--actor:hover {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-grow: 1;
+      min-height: 0;
       border-radius: 0;
     }
 
@@ -78,6 +82,21 @@
       scale: var(--nimble-actor-image-scale, 100%);
       object-position: top center;
       height: 100%;
+      transition: clip-path 0.2s ease-in-out, top 0.2s ease-in-out, left 0.2s ease-in-out;
+    }
+
+    &--token-view {
+      // Reset offsets and scale for token view - show the token image as-is
+      top: 0 !important;
+      left: 0 !important;
+      scale: 100% !important;
+      width: auto;
+      max-width: 100%;
+      max-height: 100%;
+      margin: auto;
+      object-position: center;
+      object-fit: contain;
+      aspect-ratio: unset;
     }
 
     &[src$=".svg" i] {
@@ -88,5 +107,33 @@
     &--actor.nimble-icon__image[src$=".svg" i] {
       padding-block-end: 1rem;
     }
+  }
+}
+
+.system-nimble .nimble-image-view-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  margin: 0;
+  background-color: var(--nimble-button-background-color, rgba(0, 0, 0, 0.1));
+  border: 1px solid var(--nimble-border-color, hsl(41, 18%, 54%));
+  border-top: 0;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  color: var(--nimble-text-color);
+  font-size: var(--nimble-sm-text, 0.75rem);
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+
+  &:hover,
+  &:focus {
+    background-color: var(--nimble-button-hover-background-color, rgba(0, 0, 0, 0.2));
+  }
+
+  i {
+    font-size: 0.875em;
   }
 }
