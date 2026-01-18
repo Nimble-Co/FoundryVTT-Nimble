@@ -139,6 +139,14 @@
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
 
+	// Token image
+	let tokenImageSrc = $derived(actor.reactive.prototypeToken?.texture?.src ?? '');
+	let showTokenImage = $state(false);
+	let currentImageSrc = $derived(
+		showTokenImage ? tokenImageSrc || actor.reactive.img : actor.reactive.img,
+	);
+	let currentImageType = $derived(showTokenImage ? 'token' : 'actor');
+
 	let metaData = $derived.by(() => {
 		const c = actor.reactive.items.find((i) => i.type === 'class') ?? null;
 		const sub = actor.reactive.items.find((i) => i.type === 'subclass') ?? null;
@@ -251,14 +259,20 @@
 
 		<button
 			class="nimble-icon__button nimble-icon__button--actor"
-			aria-label={localize('NIMBLE.prompts.changeActorImage')}
-			data-tooltip="NIMBLE.prompts.changeActorImage"
-			onclick={(event) => updateDocumentImage(actor, { shiftKey: event.shiftKey })}
+			aria-label={showTokenImage
+				? localize('NIMBLE.prompts.changeTokenImage')
+				: localize('NIMBLE.prompts.changeActorImage')}
+			data-tooltip={showTokenImage
+				? 'NIMBLE.prompts.changeTokenImage'
+				: 'NIMBLE.prompts.changeActorImage'}
+			onclick={(event) =>
+				updateDocumentImage(actor, { shiftKey: event.shiftKey, imageType: currentImageType })}
 			type="button"
 		>
 			<img
 				class="nimble-icon__image nimble-icon__image--actor"
-				src={actor.reactive.img}
+				class:nimble-icon__image--token-view={showTokenImage}
+				src={currentImageSrc}
 				alt={actor.reactive.name}
 				style="
                     --nimble-actor-image-x-offset: {actorImageXOffset}px;
@@ -373,6 +387,20 @@
 <currentTab.component />
 
 <section class="nimble-sheet__sidebar">
+	<button
+		class="nimble-button"
+		data-button-variant="overhang"
+		aria-label={showTokenImage ? 'Show Actor Image' : 'Show Token Image'}
+		data-tooltip={showTokenImage ? 'Show Actor Image' : 'Show Token Image'}
+		onclick={() => {
+			showTokenImage = !showTokenImage;
+			game.tooltip.deactivate();
+		}}
+		type="button"
+	>
+		<i class="fa-solid {showTokenImage ? 'fa-user' : 'fa-circle-user'}"></i>
+	</button>
+
 	<button
 		class="nimble-button"
 		data-button-variant="overhang"

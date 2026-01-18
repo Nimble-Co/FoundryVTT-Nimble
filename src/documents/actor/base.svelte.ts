@@ -605,11 +605,18 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 			foundry.utils.setProperty(changesObj, 'system.attributes.hp.temp', 0);
 		}
 
-		// If Image is changed, change prototype token as well
+		// If Image is changed, change prototype token as well (unless separate images are enabled)
 		const img = foundry.utils.getProperty(changesObj, 'img');
 		if (img) {
-			// we don't update the token image if the tokenizer module is installed & active
-			if (game.modules.get('tokenizer')?.active === false) {
+			const useSeparateTokenImage =
+				(this.getFlag('nimble', 'useSeparateTokenImage' as never) as boolean) ?? false;
+			const tokenizerActive =
+				game.modules.get('tokenizer')?.active || game.modules.get('vtta-tokenizer')?.active;
+
+			// Don't update the token image if:
+			// - The tokenizer module is installed & active, OR
+			// - The user has enabled separate token images
+			if (!tokenizerActive && !useSeparateTokenImage) {
 				foundry.utils.setProperty(changes, 'prototypeToken.texture.src', img);
 			}
 		}

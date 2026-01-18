@@ -11,6 +11,15 @@
 		return Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100);
 	}
 
+	function handleImageToggleClick() {
+		// If clicking while in token mode and tokenizer is active, trigger tokenizer
+		if (showTokenImage && game.modules.get('vtta-tokenizer')?.active) {
+			updateDocumentImage(actor, { imageType: 'token' });
+		} else {
+			showTokenImage = !showTokenImage;
+		}
+	}
+
 	function updateCurrentHP(newValue) {
 		actor.update({ 'system.attributes.hp.value': newValue });
 	}
@@ -88,6 +97,14 @@
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
 
+	// Token image
+	let tokenImageSrc = $derived(actor.reactive.prototypeToken?.texture?.src ?? '');
+	let showTokenImage = $state(false);
+	let currentImageSrc = $derived(
+		showTokenImage ? tokenImageSrc || actor.reactive.img : actor.reactive.img,
+	);
+	let currentImageType = $derived(showTokenImage ? 'token' : 'actor');
+
 	setContext('actor', actor);
 </script>
 
@@ -95,14 +112,18 @@
 	<section class="nimble-icon nimble-icon--actor">
 		<button
 			class="nimble-icon__button nimble-icon__button--actor"
-			data-tooltip="NIMBLE.prompts.changeActorImage"
+			data-tooltip={showTokenImage
+				? 'NIMBLE.prompts.changeTokenImage'
+				: 'NIMBLE.prompts.changeActorImage'}
 			type="button"
-			aria-label="Change Actor Image"
-			onclick={(event) => updateDocumentImage(actor, { shiftKey: event.shiftKey })}
+			aria-label={showTokenImage ? 'Change Token Image' : 'Change Actor Image'}
+			onclick={(event) =>
+				updateDocumentImage(actor, { shiftKey: event.shiftKey, imageType: currentImageType })}
 		>
 			<img
 				class="nimble-icon__image nimble-icon__image--actor"
-				src={actor.reactive.img}
+				class:nimble-icon__image--token-view={showTokenImage}
+				src={currentImageSrc}
 				alt={actor.reactive.name}
 				style="
                     --nimble-actor-image-x-offset: {actorImageXOffset}px;
@@ -110,6 +131,20 @@
                     --nimble-actor-image-scale: {actorImageScale}%;
                 "
 			/>
+		</button>
+
+		<button
+			class="nimble-image-view-toggle"
+			type="button"
+			aria-label={showTokenImage ? 'Show Actor Image' : 'Show Token Image'}
+			data-tooltip={showTokenImage ? 'Show Actor Image' : 'Show Token Image'}
+			onclick={() => {
+				handleImageToggleClick();
+				game.tooltip.deactivate();
+			}}
+		>
+			<i class="fa-solid {showTokenImage ? 'fa-user' : 'fa-circle-user'}"></i>
+			<span>{showTokenImage ? 'Token' : 'Avatar'}</span>
 		</button>
 	</section>
 
