@@ -69,6 +69,21 @@ const characterCreation = {
 	createCharacter: 'NIMBLE.characterCreation.createCharacter',
 };
 
+const hints = {
+	skillPointAssignment: 'NIMBLE.hints.skillPointAssignment',
+	characterCreationSkillPointAssignment: 'NIMBLE.hints.characterCreationSkillPointAssignment',
+	statAssignment: 'NIMBLE.hints.statAssignment',
+};
+
+const statIncrease = {
+	header: 'NIMBLE.statIncrease.header',
+	capstoneDescription: 'NIMBLE.statIncrease.capstoneDescription',
+};
+
+const sectionHeaders = {
+	stats: 'NIMBLE.sectionHeaders.stats',
+};
+
 const activationCostTypes = {
 	action: 'NIMBLE.activationCosts.action',
 	minute: 'NIMBLE.activationCosts.minute',
@@ -482,11 +497,6 @@ const weaponProperties = {
 	vicious: 'NIMBLE.properties.vicious',
 };
 
-const hints = {
-	skillPointAssignment: 'NIMBLE.hints.skillPointAssignment',
-	characterCreationSkillPointAssignment: 'NIMBLE.hints.characterCreationSkillPointAssignment',
-};
-
 const skillPointAssignment = {
 	decrementSkillPoints: 'NIMBLE.skillPointAssignment.decrementSkillPoints',
 	incrementSkillPoints: 'NIMBLE.skillPointAssignment.incrementSkillPoints',
@@ -707,6 +717,7 @@ const NIMBLE = {
 	safeRest,
 	savingThrowAbbreviations,
 	savingThrows,
+	sectionHeaders,
 	sizeCategories,
 	skillPointAssignment,
 	skills,
@@ -719,6 +730,7 @@ const NIMBLE = {
 	startingHpByHitDieSize,
 	statArrayModifiers,
 	statArrays,
+	statIncrease,
 	templateShapes,
 	timeUnits,
 	weaponAttributes,

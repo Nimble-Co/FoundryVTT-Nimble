@@ -4,6 +4,13 @@
 	import Hint from '../../../components/Hint.svelte';
 	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
+	function formatModifier(value) {
+		if (value === '' || value === null || value === undefined) return '';
+		return replaceHyphenWithMinusSign(
+			new Intl.NumberFormat('en-US', { signDisplay: 'always' }).format(value),
+		);
+	}
+
 	function handleAbilityModifierDrop(event, abilityKey) {
 		const modifierIndex = Number.parseInt(event.dataTransfer.getData('modifier'), 10);
 
@@ -24,14 +31,18 @@
 		selectedAbilityScores = tempSelectedAbilityScores;
 	}
 
-	const { abilityScores, abilityScoreTooltips, abilityScoreControls, characterCreationStages } =
-		CONFIG.NIMBLE;
+	const {
+		abilityScores,
+		abilityScoreTooltips,
+		abilityScoreControls,
+		characterCreationStages,
+		hints,
+	} = CONFIG.NIMBLE;
 	const abilityScoreCount = Object.keys(abilityScores).length;
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
 
-	const hintText =
-		'Below you will find the stat bonuses granted by your selected array. Drag and drop each of these values onto one of the attribute boxes below to assign your ability scores.';
+	const hintText = hints.statAssignment;
 
 	let {
 		active,
@@ -154,7 +165,7 @@
 							}}
 						>
 							<i class="fa-solid fa-grip-vertical drag-icon"></i>
-							<span>{replaceHyphenWithMinusSign(selectedArray?.array?.[arrayIndex] ?? '')}</span>
+							<span>{formatModifier(selectedArray?.array?.[arrayIndex])}</span>
 						</div>
 					{:else}
 						<div class="nimble-cc-ability-score__drop-zone">
@@ -195,7 +206,7 @@
 							}}
 						>
 							<i class="fa-solid fa-grip-vertical drag-icon"></i>
-							<span class="modifier-value">{replaceHyphenWithMinusSign(modifier)}</span>
+							<span class="modifier-value">{formatModifier(modifier)}</span>
 						</li>
 					{/if}
 				{/each}
@@ -229,7 +240,7 @@
 					</header>
 
 					<div class="nimble-cc-ability-score__value nimble-cc-ability-score__value--no-drag">
-						{replaceHyphenWithMinusSign(selectedArray?.array?.[arrayIndex] ?? '')}
+						{formatModifier(selectedArray?.array?.[arrayIndex])}
 					</div>
 
 					<div class="nimble-cc-ability-score__indicators">

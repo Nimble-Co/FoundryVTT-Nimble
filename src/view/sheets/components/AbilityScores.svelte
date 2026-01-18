@@ -5,7 +5,7 @@
 
 	let { abilities } = $props();
 
-	const { abilityScores, abilityScoreAbbreviations } = CONFIG.NIMBLE;
+	const { abilityScores, abilityScoreAbbreviations, sectionHeaders } = CONFIG.NIMBLE;
 	const actor = getContext('actor');
 </script>
 
@@ -34,14 +34,14 @@
 
 <section style="grid-area: abilityScores;">
 	<header class="nimble-section-header">
-		<h3 class="nimble-heading" data-heading-variant="section">Ability Scores</h3>
+		<h3 class="nimble-heading" data-heading-variant="section">{sectionHeaders.stats}</h3>
 
 		<button
 			class="nimble-button"
 			data-button-variant="icon"
 			type="button"
-			data-tooltip="NIMBLE.prompts.configureSkills"
-			aria-label={localize('NIMBLE.prompts.configureSkills')}
+			data-tooltip="NIMBLE.prompts.configureAbilityScores"
+			aria-label={localize('NIMBLE.prompts.configureAbilityScores')}
 			onclick={() => actor.configureAbilityScores()}
 		>
 			<i class="fa-solid fa-edit"></i>

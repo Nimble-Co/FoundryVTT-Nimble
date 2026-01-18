@@ -44,7 +44,7 @@
 		},
 		"characterCreationStages": {
 			"stepFourStartingEquipment": "Step 4. Starting Equipment",
-			"stepFiveStats": "Step 5. Assign Ability Scores",
+			"stepFiveStats": "Step 5. Assign Stats",
 			"stepSixSkills": "Step 6. Assign Skill Points"
 		},
 		"startingEquipment": {
@@ -327,7 +327,7 @@
 			"changeItemImage": "Change Item Image",
 			"changeSpellImage": "Change Spell Image",
 			"changeSubclassImage": "Change Subclass Image",
-			"configureAbilityScores": "Configure Ability Scores",
+			"configureAbilityScores": "Configure Stats",
 			"configureArmorProficiencies": "Configure Armor Proficiencies",
 			"configureLanguageProficiencies": "Configure Language Proficiencies",
 			"configureMovement": "Configure Movement",
@@ -347,7 +347,15 @@
 		},
 		"hints": {
 			"skillPointAssignment": "You may assign a single skill point to a skill of your choice. In addition, you may transfer one of your assigned skill points to another skill of your choice.",
-			"characterCreationSkillPointAssignment": "You can now assign 4 skills points to increase the modifiers for your skills."
+			"characterCreationSkillPointAssignment": "You can now assign 4 skills points to increase the modifiers for your skills.",
+			"statAssignment": "Below you will find the stat bonuses granted by your selected array. Drag and drop each of these values onto one of the attribute boxes below to assign your stats."
+		},
+		"statIncrease": {
+			"header": "Stat Increase",
+			"capstoneDescription": "Select any 2 stats to increase by +1"
+		},
+		"sectionHeaders": {
+			"stats": "Stats"
 		},
 		"levelUpDialog": {
 			"skillPointsOverMax": "One or more skills would exceed the 12 point cap. Please reallocate skill points before submitting.",
