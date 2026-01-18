@@ -202,13 +202,55 @@
 
 	async function handleDrop(event, targetId, position, newParentId) {
 		const draggedId = event.dataTransfer.getData('nimble/reorder');
-		if (!draggedId) return;
+		if (!draggedId) {
+			// No nimble/reorder data - try to handle as a standard Foundry drop
+			const textData = event.dataTransfer.getData('text/plain');
+			if (textData) {
+				try {
+					const data = JSON.parse(textData);
+					if (data.type === 'Item') {
+						event.preventDefault();
+						await sheet?._onDropItem?.(event, data);
+						return;
+					}
+				} catch (error) {
+					console.error('Failed to parse drop data:', error);
+					ui.notifications.error(
+						game.i18n.localize('NIMBLE.npcSheet.dropError') ||
+							'Failed to process dropped item. Please report this issue.',
+					);
+				}
+			}
+			return;
+		}
 
 		event.preventDefault();
 
 		const draggedItem = actor.items.get(draggedId);
 		const targetItem = actor.items.get(targetId);
-		if (!draggedItem || !targetItem) return;
+
+		// If dragged item not found in this actor, it's from another actor - handle as external drop
+		if (!draggedItem) {
+			const textData = event.dataTransfer.getData('text/plain');
+			if (textData) {
+				try {
+					const data = JSON.parse(textData);
+					if (data.type === 'Item') {
+						await sheet?._onDropItem?.(event, data);
+						return;
+					}
+				} catch (error) {
+					console.error('Failed to parse drop data:', error);
+					ui.notifications.error(
+						game.i18n.localize('NIMBLE.npcSheet.dropError') ||
+							'Failed to process dropped item. Please report this issue.',
+					);
+				}
+			}
+			return;
+		}
+
+		if (!targetItem) return;
 
 		// Use category for drag-drop (attackSequence can drag with action)
 		const draggedCategory = mapMonsterFeatureToCategory(draggedItem);
@@ -612,9 +654,11 @@
 		draggable={isEditable}
 		ondragstart={(event) => {
 			event.dataTransfer.setData('nimble/reorder', itemId);
+			// Set standard Foundry drag data for cross-actor transfers
+			const dragData = item.toDragData();
+			event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
 			draggedItemCategory = 'action'; // Use 'action' category for unified drag-drop
 			draggedItemIsAttackSequence = true;
-			sheet?._onDragStart?.(event);
 		}}
 		ondragover={(event) => {
 			// Only allow items from the action category
@@ -723,9 +767,11 @@
 		draggable={isEditable}
 		ondragstart={(event) => {
 			event.dataTransfer.setData('nimble/reorder', item.reactive._id);
+			// Set standard Foundry drag data for cross-actor transfers
+			const dragData = item.toDragData();
+			event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
 			draggedItemCategory = 'action'; // Use unified 'action' category
 			draggedItemIsAttackSequence = false;
-			sheet?._onDragStart?.(event);
 		}}
 		ondragover={(event) => {
 			// Only allow items from the action category
@@ -919,8 +965,10 @@
 		draggable={isEditable}
 		ondragstart={(event) => {
 			event.dataTransfer.setData('nimble/reorder', item.reactive._id);
+			// Set standard Foundry drag data for cross-actor transfers
+			const dragData = item.toDragData();
+			event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
 			draggedItemCategory = mapMonsterFeatureToType(item);
-			sheet?._onDragStart?.(event);
 		}}
 		ondragover={(event) => {
 			const targetCategory = mapMonsterFeatureToType(item);

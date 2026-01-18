@@ -647,7 +647,8 @@
 			"revealDescription": "Reveal description for {name}",
 			"melee": "Melee",
 			"reach": "Reach {distance}",
-			"range": "Range {distance}"
+			"range": "Range {distance}",
+			"dropError": "Failed to process dropped item. Please report this issue."
 		},
 		"itemConfig": {
 			"targets": "Targets",

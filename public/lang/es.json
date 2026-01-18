@@ -355,6 +355,7 @@
 			"createFeature": "Create Feature",
 			"decreaseArmor": "Decrease Armor",
 			"deleteItem": "Delete {name}",
+			"dropError": "Failed to process dropped item. Please report this issue.",
 			"editAttackSequence": "Edit Attack Sequence",
 			"expandAllDescriptions": "Expand all descriptions",
 			"features": "Features",
