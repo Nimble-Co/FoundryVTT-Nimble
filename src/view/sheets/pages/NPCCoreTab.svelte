@@ -213,8 +213,12 @@
 						await sheet?._onDropItem?.(event, data);
 						return;
 					}
-				} catch {
-					// Not valid JSON, ignore
+				} catch (error) {
+					console.error('Failed to parse drop data:', error);
+					ui.notifications.error(
+						game.i18n.localize('NIMBLE.npcSheet.dropError') ||
+							'Failed to process dropped item. Please report this issue.',
+					);
 				}
 			}
 			return;
@@ -235,8 +239,12 @@
 						await sheet?._onDropItem?.(event, data);
 						return;
 					}
-				} catch {
-					// Not valid JSON, ignore
+				} catch (error) {
+					console.error('Failed to parse drop data:', error);
+					ui.notifications.error(
+						game.i18n.localize('NIMBLE.npcSheet.dropError') ||
+							'Failed to process dropped item. Please report this issue.',
+					);
 				}
 			}
 			return;
