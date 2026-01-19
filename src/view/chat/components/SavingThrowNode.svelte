@@ -3,18 +3,20 @@
 	import { getNodeComponent } from '../../dataPreparationHelpers/effectTree/getNodeComponent.js';
 	import { getRelevantNodes } from '../../dataPreparationHelpers/effectTree/getRelevantNodes.js';
 
+	const { saves } = CONFIG.NIMBLE;
+
 	function getSavingThrowLabel(saveType) {
 		switch (saveType) {
 			case 'strength':
-				return 'Strength Saving Throw';
+				return saves.strengthSave;
 			case 'dexterity':
-				return 'Dexterity Saving Throw';
+				return saves.dexteritySave;
 			case 'intelligence':
-				return 'Intelligence Saving Throw';
+				return saves.intelligenceSave;
 			case 'will':
-				return 'Will Saving Throw';
+				return saves.willSave;
 			default:
-				return 'Saving Throw';
+				return saves.save;
 		}
 	}
 
@@ -48,9 +50,9 @@
 	<button
 		class="nimble-button"
 		type="button"
-		aria-label="Roll Saving Throw"
+		aria-label="NIMBLE.prompts.rollSavingThrow"
 		data-button-variant="icon"
-		data-tooltip="Roll Saving Throw"
+		data-tooltip="NIMBLE.prompts.rollSavingThrow"
 		onclick={() => rollSavingThrowForSelectedTokens(node.saveType)}
 	>
 		<i class="fa-solid fa-dice-d20"></i>

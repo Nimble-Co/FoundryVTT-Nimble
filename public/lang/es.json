@@ -412,8 +412,8 @@
 			"rollAbilityCheck": "Roll Ability Check",
 			"rollAbilityCheckSpecific": "Roll {ability} Check",
 			"rollInitiative": "Roll Initiative",
-			"rollSavingThrow": "Roll Saving Throw",
-			"rollSavingThrowSpecific": "Roll {save} Saving Throw",
+			"rollSavingThrow": "Roll Save",
+			"rollSavingThrowSpecific": "Roll {save} Save",
 			"rollSkillCheck": "Roll Skill Check",
 			"rollSkillCheckSpecific": "Roll {skill} Check",
 			"safeRest": "Safe Rest"
@@ -466,6 +466,18 @@
 			"intelligence": "Int",
 			"strength": "Str",
 			"will": "Wil"
+		},
+		"saves": {
+			"save": "Save",
+			"saves": "Saves",
+			"saveType": "Save Type",
+			"advantageSave": "Advantage Save",
+			"disadvantageSave": "Disadvantage Save",
+			"deleteSavePrompt": "Delete save prompt",
+			"strengthSave": "Strength Save",
+			"dexteritySave": "Dexterity Save",
+			"intelligenceSave": "Intelligence Save",
+			"willSave": "Will Save"
 		},
 		"savingThrows": {
 			"dexterity": "Dexterity",

@@ -13,7 +13,7 @@
 
 	let { characterSavingThrows } = $props();
 
-	const { savingThrows, savingThrowAbbreviations } = CONFIG.NIMBLE;
+	const { saves, savingThrows, savingThrowAbbreviations } = CONFIG.NIMBLE;
 	const actor = getContext('actor');
 </script>
 
@@ -55,7 +55,7 @@
 
 <section class="nimble-saving-throws-wrapper" style="grid-area: savingThrows;">
 	<header class="nimble-section-header">
-		<h3 class="nimble-heading" data-heading-variant="section">Saving Throws</h3>
+		<h3 class="nimble-heading" data-heading-variant="section">{saves.saves}</h3>
 
 		<button
 			class="nimble-button"

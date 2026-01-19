@@ -354,6 +354,19 @@ const restTypes = {
 	safeRest: 'NIMBLE.restTypes.safeRest',
 };
 
+const saves = {
+	save: 'NIMBLE.saves.save',
+	saves: 'NIMBLE.saves.saves',
+	saveType: 'NIMBLE.saves.saveType',
+	advantageSave: 'NIMBLE.saves.advantageSave',
+	disadvantageSave: 'NIMBLE.saves.disadvantageSave',
+	deleteSavePrompt: 'NIMBLE.saves.deleteSavePrompt',
+	strengthSave: 'NIMBLE.saves.strengthSave',
+	dexteritySave: 'NIMBLE.saves.dexteritySave',
+	intelligenceSave: 'NIMBLE.saves.intelligenceSave',
+	willSave: 'NIMBLE.saves.willSave',
+};
+
 const savingThrows: Record<SaveKeyType, string> = {
 	strength: 'NIMBLE.savingThrows.strength',
 	dexterity: 'NIMBLE.savingThrows.dexterity',
@@ -715,6 +728,7 @@ const NIMBLE = {
 	objectTypes,
 	restTypes,
 	safeRest,
+	saves,
 	savingThrowAbbreviations,
 	savingThrows,
 	sectionHeaders,

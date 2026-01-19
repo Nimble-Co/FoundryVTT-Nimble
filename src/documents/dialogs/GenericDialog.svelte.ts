@@ -109,6 +109,14 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 		actions: {},
 	};
 
+	/**
+	 * Update the dialog's window title.
+	 * This should be called before render() to ensure the title is updated.
+	 */
+	setTitle(newTitle: string): void {
+		(this.options as { window: { title: string } }).window.title = newTitle;
+	}
+
 	protected override async _prepareContext(
 		_options: DeepPartial<foundry.applications.api.ApplicationV2.RenderOptions> & {
 			isFirstRender: boolean;

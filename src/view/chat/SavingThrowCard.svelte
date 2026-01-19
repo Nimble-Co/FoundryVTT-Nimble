@@ -12,10 +12,10 @@
 	const headerBackgroundColor = messageDocument.author.color;
 	const headerTextColor = calculateHeaderTextColor(headerBackgroundColor);
 
-	const { savingThrows } = CONFIG.NIMBLE;
+	const { saves } = CONFIG.NIMBLE;
 	const { actorType, permissions, rollMode, saveKey } = system;
 
-	const label = `${savingThrows[saveKey]} Saving Throw`;
+	const label = saves[`${saveKey}Save`];
 </script>
 
 <CardHeader {messageDocument} />

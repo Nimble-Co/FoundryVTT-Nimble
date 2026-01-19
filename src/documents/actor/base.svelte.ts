@@ -233,7 +233,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		);
 
 		const dialog = new GenericDialog(
-			`${this.name}: Configure Saving Throws`,
+			`${this.name}: Configure Saves`,
 			ActorSavingThrowConfigDialog,
 			{ document: this },
 			{ icon: 'fa-solid fa-shield', width: 600 },
@@ -506,7 +506,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	) {
 		return {
 			author: game.user?.id,
-			flavor: `${this.name}: ${CONFIG.NIMBLE.savingThrows[saveKey]} Saving Throw`,
+			flavor: `${this.name}: ${CONFIG.NIMBLE.savingThrows[saveKey]} Save`,
 			type: 'savingThrow',
 			rolls: [roll],
 			system: {
@@ -532,9 +532,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 				} Ability Check`;
 				break;
 			case 'savingThrow':
-				title = `${this.name}: Configure ${
-					CONFIG.NIMBLE.savingThrows[data?.saveKey ?? '']
-				} Saving Throw`;
+				title = `${this.name}: Configure ${CONFIG.NIMBLE.savingThrows[data?.saveKey ?? '']} Save`;
 				break;
 			case 'skillCheck':
 				title = `${this.name}: Configure ${CONFIG.NIMBLE.skills[data?.skillKey ?? '']} Skill Check`;

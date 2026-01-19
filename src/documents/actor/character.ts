@@ -410,6 +410,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			{ icon: 'fa-solid fa-wrench', width: 600 },
 		);
 
+		this.#dialogs.configureAbilityScores.setTitle(`${this.name}: Configure Stats`);
 		await this.#dialogs.configureAbilityScores.render(true);
 	}
 
@@ -423,6 +424,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			{ icon: 'fa-solid fa-shield' },
 		);
 
+		this.#dialogs.configureArmorProficiencies.setTitle(
+			`${this.name}: Configure Armor Proficiencies`,
+		);
 		await this.#dialogs.configureArmorProficiencies.render(true);
 	}
 
@@ -436,6 +440,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			{ icon: 'fa-solid fa-language' },
 		);
 
+		this.#dialogs.configureLanguageProficiencies.setTitle(
+			`${this.name}: Configure Language Proficiencies`,
+		);
 		await this.#dialogs.configureLanguageProficiencies.render(true);
 	}
 
@@ -449,6 +456,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			{ icon: 'fa-solid fa-person-running', width: 600 },
 		);
 
+		this.#dialogs.configureMovement.setTitle(`${this.name}: Configure Movement Speeds`);
 		await this.#dialogs.configureMovement.render(true);
 	}
 
@@ -462,6 +470,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			{ icon: 'fa-solid fa-hand-fist' },
 		);
 
+		this.#dialogs.configureWeaponProficiencies.setTitle(
+			`${this.name}: Configure Weapon Proficiencies`,
+		);
 		await this.#dialogs.configureWeaponProficiencies.render(true);
 	}
 
@@ -475,6 +486,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			{ icon: 'fa-solid fa-wrench', width: 600 },
 		);
 
+		this.#dialogs.configureSkills.setTitle(`${this.name}: Configure Skills`);
 		await this.#dialogs.configureSkills.render(true);
 	}
 
@@ -1400,6 +1412,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			{ actor: this },
 		);
 
+		this.#dialogs.metaConfig.setTitle(`${this.name}: Configuration`);
 		this.#dialogs.metaConfig.render(true);
 	}
 }
