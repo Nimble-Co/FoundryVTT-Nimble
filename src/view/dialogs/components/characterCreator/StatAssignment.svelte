@@ -47,8 +47,10 @@
 	let {
 		active,
 		bonusLanguages = $bindable(),
+		selectedAncestry,
 		selectedArray,
 		selectedAbilityScores = $bindable(),
+		selectedAncestrySave,
 		selectedClass,
 	} = $props();
 
@@ -66,13 +68,29 @@
 	let savingThrowAdvantage = $derived(selectedClass?.system?.savingThrows?.advantage ?? null);
 	let savingThrowDisadvantage = $derived(selectedClass?.system?.savingThrows?.disadvantage ?? null);
 
+	// Check if ancestry has a rule that neutralizes the disadvantaged save
+	let ancestryNeutralizesDisadvantage = $derived(() => {
+		const rules = [...(selectedAncestry?.rules?.values() ?? [])];
+		return rules.some(
+			(rule) =>
+				rule.type === 'savingThrowRollMode' &&
+				rule.target === 'disadvantaged' &&
+				rule.value === 0 &&
+				rule.mode === 'set',
+		);
+	});
+
 	function isKeyAbility(abilityKey) {
 		return keyAbilityScores.includes(abilityKey);
 	}
 
 	function getSavingThrowStatus(abilityKey) {
 		if (abilityKey === savingThrowAdvantage) return 'advantage';
-		if (abilityKey === savingThrowDisadvantage) return 'disadvantage';
+		if (abilityKey === selectedAncestrySave) return 'advantage';
+		// Don't show disadvantage if ancestry neutralizes it
+		if (abilityKey === savingThrowDisadvantage && !ancestryNeutralizesDisadvantage()) {
+			return 'disadvantage';
+		}
 		return null;
 	}
 

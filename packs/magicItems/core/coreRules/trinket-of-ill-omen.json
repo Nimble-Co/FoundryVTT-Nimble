@@ -6,7 +6,16 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "savingThrowBonus",
+				"label": "Trinket of Ill Omen",
+				"value": "-1",
+				"savingThrows": [
+					"all"
+				]
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

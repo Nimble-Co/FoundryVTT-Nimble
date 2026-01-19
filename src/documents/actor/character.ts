@@ -178,7 +178,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		// Prepare Saving Throw Data
 		Object.entries(actorData.savingThrows).forEach(([saveKey, save]): void => {
-			save.mod = actorData.abilities[saveKey].mod;
+			const abilityMod = actorData.abilities[saveKey].mod;
+			const saveBonus = save.bonus ?? 0;
+			save.mod = abilityMod + saveBonus;
 		});
 
 		// Prepare Skill Data

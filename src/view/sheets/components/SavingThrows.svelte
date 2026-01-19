@@ -1,6 +1,15 @@
 <script>
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
+	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
+
+	function formatModifier(value) {
+		return replaceHyphenWithMinusSign(
+			new Intl.NumberFormat('en-US', {
+				signDisplay: 'always',
+			}).format(value),
+		);
+	}
 
 	let { characterSavingThrows } = $props();
 
@@ -16,6 +25,7 @@
 	})}
 	{@const rollModeClassModifier = save.defaultRollMode > 0 ? 'advantage' : 'disadvantage'}
 	{@const rollModeIcon = save.defaultRollMode > 0 ? 'fa-circle-plus' : 'fa-circle-minus'}
+	{@const modifier = save.mod ?? 0}
 
 	<button
 		class="nimble-ability-score"
@@ -29,14 +39,15 @@
 		</dt>
 
 		<dd class="nimble-ability-score__value">
-			{#if save.defaultRollMode === 0}
-				<i class="nimble-saving-throw__roll-mode-icon fa-solid fa-circle"></i>
-			{:else}
-				{#each { length: Math.abs(save.defaultRollMode) }}
-					<i
-						class="nimble-saving-throw__roll-mode-icon nimble-saving-throw__roll-mode-icon--{rollModeClassModifier} fa-solid {rollModeIcon}"
-					></i>
-				{/each}
+			{formatModifier(modifier)}
+			{#if save.defaultRollMode !== 0}
+				<span class="nimble-saving-throw__roll-mode">
+					{#each { length: Math.abs(save.defaultRollMode) }}
+						<i
+							class="nimble-saving-throw__roll-mode-icon nimble-saving-throw__roll-mode-icon--{rollModeClassModifier} fa-solid {rollModeIcon}"
+						></i>
+					{/each}
+				</span>
 			{/if}
 		</dd>
 	</button>
@@ -50,8 +61,8 @@
 			class="nimble-button"
 			data-button-variant="icon"
 			type="button"
-			data-tooltip="NIMBLE.prompts.configureSkills"
-			aria-label={localize('NIMBLE.prompts.configureSkills')}
+			data-tooltip="NIMBLE.prompts.configureSavingThrows"
+			aria-label={localize('NIMBLE.prompts.configureSavingThrows')}
 			onclick={() => actor.configureSavingThrows()}
 		>
 			<i class="fa-solid fa-edit"></i>
@@ -67,9 +78,14 @@
 
 <style lang="scss">
 	.nimble-saving-throw {
+		&__roll-mode {
+			display: flex;
+			gap: 0.0625rem;
+		}
+
 		&__roll-mode-icon {
 			margin: 0;
-			font-size: var(--nimble-xs-text);
+			font-size: var(--nimble-xxs-text);
 			color: var(--nimble-medium-text-color);
 
 			&--advantage {

@@ -78,6 +78,12 @@ export const abilities = () => ({
 //        Saving Throws Schema
 /** ******************************** */
 type SavingThrowSchema = foundry.data.fields.SchemaField<{
+	bonus: foundry.data.fields.NumberField<{
+		required: true;
+		initial: 0;
+		nullable: false;
+		integer: true;
+	}>;
 	defaultRollMode: foundry.data.fields.NumberField<{
 		required: true;
 		initial: 0;
@@ -103,6 +109,12 @@ export const savingThrows = () => ({
 	savingThrows: new fields.SchemaField(
 		Object.keys(CONFIG.NIMBLE.savingThrows ?? {}).reduce((saves, saveKey) => {
 			saves[saveKey] = new fields.SchemaField({
+				bonus: new fields.NumberField({
+					required: true,
+					initial: 0,
+					integer: true,
+					nullable: false,
+				}),
 				defaultRollMode: new fields.NumberField({
 					required: true,
 					initial: 0,

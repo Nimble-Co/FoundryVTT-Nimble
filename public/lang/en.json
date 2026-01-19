@@ -331,6 +331,7 @@
 			"configureArmorProficiencies": "Configure Armor Proficiencies",
 			"configureLanguageProficiencies": "Configure Language Proficiencies",
 			"configureMovement": "Configure Movement",
+			"configureSavingThrows": "Configure Saving Throws",
 			"configureSkills": "Configure Skills",
 			"configureWeaponProficiencies": "Configure Weapon Proficiencies",
 			"editRoll": "Edit Roll",
@@ -429,6 +430,8 @@
 			"maximizeHitDice": "Maximize Hit Dice",
 			"maxWounds": "Wounds",
 			"note": "Note",
+			"savingThrowBonus": "Saving Throw Bonus",
+			"savingThrowRollMode": "Saving Throw Roll Mode",
 			"skillBonus": "Skill Bonus"
 		},
 		"creatureFeatures": {

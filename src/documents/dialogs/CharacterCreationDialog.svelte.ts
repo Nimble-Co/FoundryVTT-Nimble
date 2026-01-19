@@ -73,6 +73,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	async submitCharacterCreation(results: {
 		name?: string;
 		sizeCategory?: string;
+		selectedAncestrySave?: string | null;
 		abilityScores?: Record<string, number>;
 		skills?: Record<string, number>;
 		languages?: string[];
@@ -107,6 +108,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		const processOriginSource = (
 			doc: NimbleBackgroundItem | NimbleClassItem | NimbleAncestryItem | null,
 			uuid: string | undefined,
+			isAncestry = false,
 		) => {
 			if (!doc || !uuid) return;
 
@@ -128,12 +130,35 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 				}
 			}
 
+			// If this is an ancestry with a save choice, set the selectedSave on the rule
+			if (isAncestry && results.selectedAncestrySave) {
+				const systemWithRules = source.system as {
+					rules?: Array<{
+						type: string;
+						requiresChoice?: boolean;
+						target?: string;
+						selectedSave?: string;
+					}>;
+				};
+				if (systemWithRules.rules) {
+					for (const rule of systemWithRules.rules) {
+						if (
+							rule.type === 'savingThrowRollMode' &&
+							rule.requiresChoice === true &&
+							rule.target === 'neutral'
+						) {
+							rule.selectedSave = results.selectedAncestrySave;
+						}
+					}
+				}
+			}
+
 			originDocumentSources.push(source as object as Item.CreateData);
 		};
 
 		processOriginSource(backgroundDocument, background?.uuid);
 		processOriginSource(classDocument, characterClass?.uuid);
-		processOriginSource(ancestryDocument, ancestry?.uuid);
+		processOriginSource(ancestryDocument, ancestry?.uuid, true);
 
 		// When origin documents are added, the system automatically processes grantItem rules
 		// If equipment was chosen, items will be granted automatically
@@ -158,6 +183,13 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		// If gold was chosen, add 50 gp to the character
 		if (startingEquipmentChoice === 'gold') {
 			(updateData.system as Record<string, unknown>)['currency.gp.value'] = 50;
+		}
+
+		// If ancestry grants a save choice, apply the selected save's roll mode boost
+		if (results.selectedAncestrySave) {
+			const savingThrowsData = (updateData.system as Record<string, unknown>)
+				.savingThrows as Record<string, number>;
+			savingThrowsData[`${results.selectedAncestrySave}.defaultRollMode`] = 1;
 		}
 
 		await actor?.update(updateData);

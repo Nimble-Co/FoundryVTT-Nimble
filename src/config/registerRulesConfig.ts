@@ -10,6 +10,8 @@ import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
 import { MaximizeHitDiceRule } from '../models/rules/maximizeHitDice.js';
 import { MaxWoundsRule } from '../models/rules/maxWounds.js';
 import { NoteRule } from '../models/rules/note.js';
+import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
+import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SkillBonusRule } from '../models/rules/skillBonus.js';
 
 export default function registerRulesConfig() {
@@ -26,6 +28,8 @@ export default function registerRulesConfig() {
 		maximizeHitDice: 'NIMBLE.ruleTypes.maximizeHitDice',
 		maxWounds: 'NIMBLE.ruleTypes.maxWounds',
 		note: 'NIMBLE.ruleTypes.note',
+		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
+		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
 		skillBonus: 'NIMBLE.ruleTypes.skillBonus',
 	};
 
@@ -42,6 +46,8 @@ export default function registerRulesConfig() {
 		maximizeHitDice: MaximizeHitDiceRule,
 		maxWounds: MaxWoundsRule,
 		note: NoteRule,
+		savingThrowBonus: SavingThrowBonusRule,
+		savingThrowRollMode: SavingThrowRollModeRule,
 		skillBonus: SkillBonusRule,
 	} as const;
 

@@ -17,7 +17,7 @@
 	const CHARACTER_CREATION_STAGES = {
 		CLASS: 0,
 		ANCESTRY: '1a',
-		ANCESTRY_SIZE: '1b',
+		ANCESTRY_OPTIONS: '1b',
 		BACKGROUND: 2,
 		STARTING_EQUIPMENT: 3,
 		ARRAY: 4,
@@ -91,10 +91,40 @@
 		return bonuses;
 	}
 
+	function ancestryRequiresSaveChoice(ancestry) {
+		const rules = [...(ancestry?.rules?.values() ?? [])];
+		if (!rules.length) return false;
+
+		for (const rule of rules) {
+			if (rule.type === 'savingThrowRollMode' && rule.requiresChoice && rule.target === 'neutral') {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	function hasAncestryOptions(ancestry) {
+		const hasSizeChoice = ancestry?.system?.size?.length > 1;
+		const hasSaveChoice = ancestryRequiresSaveChoice(ancestry);
+		return hasSizeChoice || hasSaveChoice;
+	}
+
+	function ancestryOptionsComplete(ancestry, selectedAncestrySize, selectedAncestrySave) {
+		const hasSizeChoice = ancestry?.system?.size?.length > 1;
+		const hasSaveChoice = ancestryRequiresSaveChoice(ancestry);
+
+		if (hasSizeChoice && !selectedAncestrySize) return false;
+		if (hasSaveChoice && !selectedAncestrySave) return false;
+
+		return true;
+	}
+
 	function getCurrentStage(
 		selectedClass,
 		selectedAncestry,
 		selectedAncestrySize,
+		selectedAncestrySave,
 		selectedBackground,
 		startingEquipmentChoice,
 		selectedArray,
@@ -116,8 +146,11 @@
 			return CHARACTER_CREATION_STAGES.ANCESTRY;
 		}
 
-		if (selectedAncestry?.system?.size?.length > 1 && !selectedAncestrySize) {
-			return CHARACTER_CREATION_STAGES.ANCESTRY_SIZE;
+		if (
+			hasAncestryOptions(selectedAncestry) &&
+			!ancestryOptionsComplete(selectedAncestry, selectedAncestrySize, selectedAncestrySave)
+		) {
+			return CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS;
 		}
 
 		if (backgroundCount && !selectedBackground) {
@@ -165,6 +198,7 @@
 				{},
 			),
 			sizeCategory: selectedAncestrySize,
+			selectedAncestrySave,
 			skills: Object.entries(assignedSkillPoints).reduce((assignedPoints, [skillKey, points]) => {
 				assignedPoints[`${skillKey}.points`] = points;
 				return assignedPoints;
@@ -191,6 +225,7 @@
 	let selectedClass = $state('');
 	let selectedAncestry = $state('');
 	let selectedAncestrySize = $state('medium');
+	let selectedAncestrySave = $state(null);
 	let startingEquipmentChoice = $state(null);
 
 	let abilityBonuses = $derived(
@@ -208,6 +243,7 @@
 			selectedClass,
 			selectedAncestry,
 			selectedAncestrySize,
+			selectedAncestrySave,
 			selectedBackground,
 			startingEquipmentChoice,
 			selectedArray,
@@ -224,6 +260,12 @@
 
 	$effect(() => {
 		scrollIntoView(`${dialog.id}-stage-${stage}`);
+	});
+
+	$effect(() => {
+		// Reset ancestry save selection when ancestry changes
+		void selectedAncestry;
+		selectedAncestrySave = null;
 	});
 </script>
 
@@ -265,9 +307,11 @@
 	{/await}
 
 	<AncestrySizeSelection
-		active={stage === CHARACTER_CREATION_STAGES.ANCESTRY_SIZE}
+		active={stage === CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS}
 		{selectedAncestry}
+		{selectedClass}
 		bind:selectedAncestrySize
+		bind:selectedAncestrySave
 	/>
 
 	{#await backgroundOptions then backgrounds}
@@ -296,7 +340,9 @@
 	<StatAssignment
 		active={stage === CHARACTER_CREATION_STAGES.STATS}
 		bind:bonusLanguages
+		{selectedAncestry}
 		{selectedArray}
+		{selectedAncestrySave}
 		{selectedClass}
 		bind:selectedAbilityScores
 	/>
