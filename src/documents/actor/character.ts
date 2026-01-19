@@ -402,7 +402,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
 
 		this.#dialogs.configureAbilityScores ??= new GenericDialog(
-			`${this.name}: Configure Ability Scores`,
+			`${this.name}: Configure Stats`,
 			CharacterStatConfigDialog,
 			{ document: this },
 			{ icon: 'fa-solid fa-wrench', width: 600 },

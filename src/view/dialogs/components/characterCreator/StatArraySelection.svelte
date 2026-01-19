@@ -5,6 +5,12 @@
 
 	import Hint from '../../../components/Hint.svelte';
 
+	function formatModifier(value) {
+		return replaceHyphenWithMinusSign(
+			new Intl.NumberFormat('en-US', { signDisplay: 'always' }).format(value),
+		);
+	}
+
 	function toggleArray(selection) {
 		selectedArray = selection;
 
@@ -46,7 +52,7 @@
 						<ul class="nimble-array-terms">
 							{#each arrayOption.array as modifier}
 								<li class="nimble-array-terms__value">
-									{replaceHyphenWithMinusSign(modifier)}
+									{formatModifier(modifier)}
 								</li>
 							{/each}
 						</ul>
@@ -69,7 +75,7 @@
 					<ul class="nimble-array-terms">
 						{#each selectedArray.array as modifier}
 							<li class="nimble-array-terms__value">
-								{replaceHyphenWithMinusSign(modifier)}
+								{formatModifier(modifier)}
 							</li>
 						{/each}
 					</ul>
@@ -91,6 +97,9 @@
 		line-height: 1;
 
 		&__value {
+			display: flex;
+			align-items: center;
+			justify-content: center;
 			padding: 0.125rem 0.25rem;
 			border: 1px solid var(--nimble-card-border-color, hsl(41, 18%, 54%));
 			border-radius: 4px;

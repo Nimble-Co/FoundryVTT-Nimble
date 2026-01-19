@@ -35,7 +35,7 @@
 		hasStatIncrease = $bindable(),
 	} = $props();
 
-	const { abilityScores } = CONFIG.NIMBLE;
+	const { abilityScores, statIncrease } = CONFIG.NIMBLE;
 
 	const statIncreaseType = getStatIncreaseType(characterClass);
 	const statOptions = getStatIncreaseOptions(characterClass, statIncreaseType);
@@ -55,10 +55,10 @@
 {#if statIncreaseType && statOptions.length && characterClass}
 	<section>
 		<header class="nimble-section-header">
-			<h3 class="nimble-heading" data-heading-variant="section">Stat Increase</h3>
+			<h3 class="nimble-heading" data-heading-variant="section">{statIncrease.header}</h3>
 			{#if capstone}
 				<p class="nimble-stat-selection__description">
-					Select any 2 ability scores to increase by +1
+					{statIncrease.capstoneDescription}
 				</p>
 			{/if}
 		</header>

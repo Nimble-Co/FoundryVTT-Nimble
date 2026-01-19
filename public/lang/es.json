@@ -65,7 +65,7 @@
 			"newCharacterPlaceholder": "New Character"
 		},
 		"characterCreationStages": {
-			"stepFiveStats": "Step 5. Assign Ability Scores",
+			"stepFiveStats": "Step 5. Assign Stats",
 			"stepFourStartingEquipment": "Step 4. Starting Equipment",
 			"stepSixSkills": "Step 6. Assign Skill Points"
 		},
@@ -241,7 +241,15 @@
 		},
 		"hints": {
 			"characterCreationSkillPointAssignment": "You can now assign 4 skills points to increase the modifiers for your skills.",
-			"skillPointAssignment": "You may assign a single skill point to a skill of your choice. In addition, you may transfer one of your assigned skill points to another skill of your choice."
+			"skillPointAssignment": "You may assign a single skill point to a skill of your choice. In addition, you may transfer one of your assigned skill points to another skill of your choice.",
+			"statAssignment": "Below you will find the stat bonuses granted by your selected array. Drag and drop each of these values onto one of the attribute boxes below to assign your stats."
+		},
+		"statIncrease": {
+			"header": "Stat Increase",
+			"capstoneDescription": "Select any 2 stats to increase by +1"
+		},
+		"sectionHeaders": {
+			"stats": "Stats"
 		},
 		"hitDice": {
 			"addBonusDie": "Add Bonus Die",
@@ -392,7 +400,7 @@
 			"changeItemImage": "Change Item Image",
 			"changeSpellImage": "Change Spell Image",
 			"changeSubclassImage": "Change Subclass Image",
-			"configureAbilityScores": "Configure Ability Scores",
+			"configureAbilityScores": "Configure Stats",
 			"configureArmorProficiencies": "Configure Armor Proficiencies",
 			"configureLanguageProficiencies": "Configure Language Proficiencies",
 			"configureMovement": "Configure Movement",

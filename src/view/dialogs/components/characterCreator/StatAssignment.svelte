@@ -4,6 +4,13 @@
 	import Hint from '../../../components/Hint.svelte';
 	import replaceHyphenWithMinusSign from '../../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
+	function formatModifier(value) {
+		if (value === '' || value === null || value === undefined) return '';
+		return replaceHyphenWithMinusSign(
+			new Intl.NumberFormat('en-US', { signDisplay: 'always' }).format(value),
+		);
+	}
+
 	function handleAbilityModifierDrop(event, abilityKey) {
 		const modifierIndex = Number.parseInt(event.dataTransfer.getData('modifier'), 10);
 
@@ -24,14 +31,18 @@
 		selectedAbilityScores = tempSelectedAbilityScores;
 	}
 
-	const { abilityScores, abilityScoreTooltips, abilityScoreControls, characterCreationStages } =
-		CONFIG.NIMBLE;
+	const {
+		abilityScores,
+		abilityScoreTooltips,
+		abilityScoreControls,
+		characterCreationStages,
+		hints,
+	} = CONFIG.NIMBLE;
 	const abilityScoreCount = Object.keys(abilityScores).length;
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
 
-	const hintText =
-		'Below you will find the stat bonuses granted by your selected array. Drag and drop each of these values onto one of the attribute boxes below to assign your ability scores.';
+	const hintText = hints.statAssignment;
 
 	let {
 		active,
@@ -98,13 +109,27 @@
 	{#if active}
 		<Hint {hintText} />
 
+		<aside class="nimble-cc-legend">
+			<div class="nimble-cc-legend__item">
+				<i class="fa-solid fa-star nimble-cc-legend__icon--key"></i>
+				<span>Key Stat</span>
+			</div>
+			<div class="nimble-cc-legend__item">
+				<i class="fa-solid fa-circle-plus nimble-cc-legend__icon--advantage"></i>
+				<span>Adv. on Saves</span>
+			</div>
+			<div class="nimble-cc-legend__item">
+				<i class="fa-solid fa-circle-minus nimble-cc-legend__icon--disadvantage"></i>
+				<span>Dis. on Saves</span>
+			</div>
+		</aside>
+
 		<ul class="nimble-ability-score-list" role="list">
 			{#each Object.entries(tempSelectedAbilityScores) as [abilityKey, arrayIndex]}
 				{@const savingThrowStatus = getSavingThrowStatus(abilityKey)}
 				{@const isKey = isKeyAbility(abilityKey)}
 				<li
 					class="nimble-cc-ability-score"
-					class:nimble-cc-ability-score--key={isKey}
 					ondrop={(event) => {
 						event.currentTarget.classList.remove('nimble-cc-ability-score--drag-over');
 						handleAbilityModifierDrop(event, abilityKey);
@@ -116,26 +141,16 @@
 					ondragleave={(event) => {
 						event.currentTarget.classList.remove('nimble-cc-ability-score--drag-over');
 					}}
-					data-tooltip={isKey ? abilityScoreTooltips.keyStat : null}
-					data-tooltip-class="nimble-tooltip nimble-tooltip--key-ability"
-					data-tooltip-direction="UP"
 				>
-					<div
-						class="nimble-cc-ability-score__indicator nimble-cc-ability-score__indicator--top"
-						class:nimble-cc-ability-score__indicator--advantage={savingThrowStatus === 'advantage'}
-					>
-						<i
-							class="fa-solid fa-caret-up"
-							data-tooltip={savingThrowStatus === 'advantage'
-								? abilityScoreTooltips.advantageOnSave
-								: null}
-							data-tooltip-direction="UP"
-						></i>
-					</div>
-
 					<header class="nimble-cc-ability-score__header">
 						<h4 class="nimble-heading" data-heading-variant="section">
-							{abilityScores[abilityKey]}
+							{#if isKey}<span
+									data-tooltip={abilityScoreTooltips.keyStat}
+									data-tooltip-direction="UP"
+									>{abilityScores[abilityKey]}<sup class="nimble-cc-ability-score__key-star"
+										><i class="fa-solid fa-star"></i></sup
+									></span
+								>{:else}{abilityScores[abilityKey]}{/if}
 						</h4>
 					</header>
 
@@ -150,7 +165,7 @@
 							}}
 						>
 							<i class="fa-solid fa-grip-vertical drag-icon"></i>
-							<span>{replaceHyphenWithMinusSign(selectedArray?.array?.[arrayIndex] ?? '')}</span>
+							<span>{formatModifier(selectedArray?.array?.[arrayIndex])}</span>
 						</div>
 					{:else}
 						<div class="nimble-cc-ability-score__drop-zone">
@@ -159,18 +174,20 @@
 						</div>
 					{/if}
 
-					<div
-						class="nimble-cc-ability-score__indicator nimble-cc-ability-score__indicator--bottom"
-						class:nimble-cc-ability-score__indicator--disadvantage={savingThrowStatus ===
-							'disadvantage'}
-					>
-						<i
-							class="fa-solid fa-caret-down"
-							data-tooltip={savingThrowStatus === 'disadvantage'
-								? abilityScoreTooltips.disadvantageOnSave
-								: null}
-							data-tooltip-direction="DOWN"
-						></i>
+					<div class="nimble-cc-ability-score__indicators">
+						{#if savingThrowStatus === 'advantage'}
+							<i
+								class="nimble-cc-ability-score__indicator nimble-cc-ability-score__indicator--advantage fa-solid fa-circle-plus"
+								data-tooltip={abilityScoreTooltips.advantageOnSave}
+								data-tooltip-direction="UP"
+							></i>
+						{:else if savingThrowStatus === 'disadvantage'}
+							<i
+								class="nimble-cc-ability-score__indicator nimble-cc-ability-score__indicator--disadvantage fa-solid fa-circle-minus"
+								data-tooltip={abilityScoreTooltips.disadvantageOnSave}
+								data-tooltip-direction="UP"
+							></i>
+						{/if}
 					</div>
 				</li>
 			{/each}
@@ -189,7 +206,7 @@
 							}}
 						>
 							<i class="fa-solid fa-grip-vertical drag-icon"></i>
-							<span class="modifier-value">{replaceHyphenWithMinusSign(modifier)}</span>
+							<span class="modifier-value">{formatModifier(modifier)}</span>
 						</li>
 					{/if}
 				{/each}
@@ -209,48 +226,37 @@
 			{#each Object.entries(selectedAbilityScores) as [abilityKey, arrayIndex]}
 				{@const savingThrowStatus = getSavingThrowStatus(abilityKey)}
 				{@const isKey = isKeyAbility(abilityKey)}
-				<li
-					class="nimble-cc-ability-score"
-					class:nimble-cc-ability-score--key={isKey}
-					data-tooltip={isKey ? abilityScoreTooltips.keyStat : null}
-					data-tooltip-class="nimble-tooltip nimble-tooltip--key-ability"
-					data-tooltip-direction="UP"
-				>
-					<div
-						class="nimble-cc-ability-score__indicator nimble-cc-ability-score__indicator--top"
-						class:nimble-cc-ability-score__indicator--advantage={savingThrowStatus === 'advantage'}
-					>
-						<i
-							class="fa-solid fa-caret-up"
-							data-tooltip={savingThrowStatus === 'advantage'
-								? abilityScoreTooltips.advantageOnSave
-								: null}
-							data-tooltip-direction="UP"
-						></i>
-					</div>
-
+				<li class="nimble-cc-ability-score">
 					<header class="nimble-cc-ability-score__header">
 						<h4 class="nimble-heading" data-heading-variant="section">
-							{abilityScores[abilityKey]}
+							{#if isKey}<span
+									data-tooltip={abilityScoreTooltips.keyStat}
+									data-tooltip-direction="UP"
+									>{abilityScores[abilityKey]}<sup class="nimble-cc-ability-score__key-star"
+										><i class="fa-solid fa-star"></i></sup
+									></span
+								>{:else}{abilityScores[abilityKey]}{/if}
 						</h4>
 					</header>
 
 					<div class="nimble-cc-ability-score__value nimble-cc-ability-score__value--no-drag">
-						{replaceHyphenWithMinusSign(selectedArray?.array?.[arrayIndex] ?? '')}
+						{formatModifier(selectedArray?.array?.[arrayIndex])}
 					</div>
 
-					<div
-						class="nimble-cc-ability-score__indicator nimble-cc-ability-score__indicator--bottom"
-						class:nimble-cc-ability-score__indicator--disadvantage={savingThrowStatus ===
-							'disadvantage'}
-					>
-						<i
-							class="fa-solid fa-caret-down"
-							data-tooltip={savingThrowStatus === 'disadvantage'
-								? abilityScoreTooltips.disadvantageOnSave
-								: null}
-							data-tooltip-direction="DOWN"
-						></i>
+					<div class="nimble-cc-ability-score__indicators">
+						{#if savingThrowStatus === 'advantage'}
+							<i
+								class="nimble-cc-ability-score__indicator nimble-cc-ability-score__indicator--advantage fa-solid fa-circle-plus"
+								data-tooltip={abilityScoreTooltips.advantageOnSave}
+								data-tooltip-direction="UP"
+							></i>
+						{:else if savingThrowStatus === 'disadvantage'}
+							<i
+								class="nimble-cc-ability-score__indicator nimble-cc-ability-score__indicator--disadvantage fa-solid fa-circle-minus"
+								data-tooltip={abilityScoreTooltips.disadvantageOnSave}
+								data-tooltip-direction="UP"
+							></i>
+						{/if}
 					</div>
 				</li>
 			{/each}
@@ -263,6 +269,39 @@
 		--nimble-button-margin: 0.5rem 0 0 0;
 		--nimble-button-padding: 0.5rem;
 		--nimble-button-width: 100%;
+	}
+
+	.nimble-cc-legend {
+		display: flex;
+		justify-content: center;
+		gap: 1rem;
+		margin-bottom: 0.5rem;
+		padding: 0.375rem 0.5rem;
+		font-size: var(--nimble-xs-text);
+		color: var(--nimble-medium-text-color);
+		background: hsla(0, 0%, 0%, 0.03);
+		border-radius: 4px;
+
+		&__item {
+			display: flex;
+			align-items: center;
+			gap: 0.25rem;
+		}
+
+		&__icon--key {
+			font-size: 0.5rem;
+			color: hsl(45, 90%, 55%);
+		}
+
+		&__icon--advantage {
+			font-size: var(--nimble-sm-text);
+			color: hsl(139, 48%, 36%);
+		}
+
+		&__icon--disadvantage {
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-roll-failure-color, hsl(355, 55%, 52%));
+		}
 	}
 
 	.nimble-array-value-list,
@@ -327,7 +366,7 @@
 
 	.nimble-cc-ability-score {
 		padding: 0.5rem;
-		margin: 1rem 0;
+		margin: 0.5rem 0;
 		gap: 0.25rem;
 		display: flex;
 		flex-direction: column;
@@ -344,60 +383,46 @@
 			background-color 0.2s ease,
 			box-shadow 0.2s ease;
 
+		&__key-star {
+			font-size: 0.5rem;
+			color: hsl(45, 90%, 55%);
+			margin-left: 0.125rem;
+		}
+
 		&:hover {
 			text-shadow: none;
 		}
 
-		&--key {
-			border: 2px solid hsl(43, 50%, 45%);
-			box-shadow: var(--nimble-box-shadow);
-		}
-
 		&:global(.nimble-cc-ability-score--drag-over) {
-			border-color: var(--nimble-accent-color);
+			border-color: var(--nimble-card-border-color);
 			background: color-mix(
 				in srgb,
-				var(--nimble-accent-color) 15%,
+				var(--nimble-card-border-color) 15%,
 				var(--nimble-card-background-color, transparent)
 			);
 			box-shadow:
 				var(--nimble-box-shadow),
-				0 0 12px color-mix(in srgb, var(--nimble-accent-color) 60%, transparent),
-				inset 0 0 8px color-mix(in srgb, var(--nimble-accent-color) 20%, transparent);
+				0 0 8px color-mix(in srgb, var(--nimble-card-border-color) 40%, transparent);
+		}
+
+		&__indicators {
+			display: flex;
+			gap: 0.25rem;
+			align-items: center;
+			justify-content: center;
+			min-height: 1rem;
 		}
 
 		&__indicator {
-			position: absolute;
-			width: 100%;
-			display: flex;
-			justify-content: center;
-			font-size: 2.25rem;
-			line-height: 1;
-			color: hsla(0, 0%, 50%, 0.3);
-			transition:
-				color 0.2s ease,
-				text-shadow 0.2s ease;
-
-			i {
-				pointer-events: auto;
-			}
-
-			&--top {
-				top: -1.25rem;
-			}
-
-			&--bottom {
-				bottom: -1.25rem;
-			}
+			font-size: var(--nimble-sm-text);
+			transition: color 0.2s ease;
 
 			&--advantage {
-				color: hsl(155, 45%, 48%);
-				text-shadow: 0 0 8px hsla(155, 50%, 35%, 0.8);
+				color: hsl(139, 48%, 36%);
 			}
 
 			&--disadvantage {
-				color: hsl(355, 55%, 52%);
-				text-shadow: 0 0 8px hsla(355, 50%, 38%, 0.8);
+				color: var(--nimble-roll-failure-color, hsl(355, 55%, 52%));
 			}
 		}
 
@@ -427,8 +452,8 @@
 
 		&:global(.nimble-cc-ability-score--drag-over) &__drop-zone {
 			opacity: 1;
-			border-color: var(--nimble-accent-color);
-			background-color: color-mix(in srgb, var(--nimble-accent-color) 20%, transparent);
+			border-color: var(--nimble-card-border-color);
+			background-color: color-mix(in srgb, var(--nimble-card-border-color) 20%, transparent);
 			animation: pulse 1s ease-in-out infinite;
 		}
 
@@ -466,7 +491,7 @@
 			&:hover {
 				background-color: color-mix(
 					in srgb,
-					var(--nimble-accent-color) 20%,
+					var(--nimble-card-border-color) 20%,
 					var(--nimble-box-background-color, transparent)
 				);
 
@@ -484,18 +509,5 @@
 				}
 			}
 		}
-	}
-
-	:global(.nimble-tooltip--key-ability) {
-		background: linear-gradient(135deg, hsl(43, 70%, 45%) 0%, hsl(43, 80%, 55%) 100%);
-		border: 1px solid hsl(43, 90%, 65%);
-		box-shadow:
-			0 2px 8px rgba(0, 0, 0, 0.6),
-			0 0 12px hsla(43, 80%, 50%, 0.4);
-		font-weight: 600;
-		letter-spacing: 0.025em;
-		padding: 0.375rem 0.75rem;
-		font-size: 0.875rem;
-		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 	}
 </style>
