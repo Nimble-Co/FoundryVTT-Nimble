@@ -18,6 +18,7 @@ occludable
 pixi
 placeables
 popout
+popovertarget
 prelocalize
 quadtree
 runed

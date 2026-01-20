@@ -41,7 +41,6 @@
 		// Store the RAW size; display will be incremented when shown
 		const displaySize = incrementDieSize(rawSize, hitDiceSizeBonus);
 		bonusDice = [...bonusDice, { size: rawSize, value: 1, name: `d${displaySize}` }];
-		showDropdown = false;
 	}
 
 	function updateBonusDieValue(index: number, delta: number) {
@@ -164,7 +163,7 @@
 		return dice;
 	});
 
-	let availableDieSizes = $derived(getOrderedDieSizes());
+	// let availableDieSizes = $derived(getOrderedDieSizes());
 
 	// Get rule-based bonus dice for display in Bonus Hit Dice section
 	// Apply hitDiceSizeBonus to increment these dice as well
@@ -216,7 +215,7 @@
 			<div class="hd-info-banner__content">
 				<span class="hd-info-banner__text">
 					{game.i18n.format(CONFIG.NIMBLE.hitDice.hitDiceSizeIncreased, {
-						steps: hitDiceSizeBonus,
+						steps: hitDiceSizeBonus.toString(),
 					})}
 				</span>
 				{#if hitDiceSizeBonusContributions.length > 0}
@@ -314,7 +313,7 @@
 									type="button"
 									onclick={() => updateBonusDieValue(index, -1)}
 									aria-label={game.i18n.format('NIMBLE.hitDice.decreaseBonusDie', {
-										size: displaySize,
+										size: displaySize.toString(),
 									})}
 								>
 									<i class="fa-solid fa-minus"></i>
@@ -325,7 +324,7 @@
 									type="button"
 									onclick={() => updateBonusDieValue(index, 1)}
 									aria-label={game.i18n.format('NIMBLE.hitDice.increaseBonusDie', {
-										size: displaySize,
+										size: displaySize.toString(),
 									})}
 								>
 									<i class="fa-solid fa-plus"></i>
