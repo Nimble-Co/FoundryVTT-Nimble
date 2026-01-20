@@ -32,7 +32,7 @@ declare global {
 			};
 		};
 		abilities?: Record<string, { mod: number; defaultRollMode?: number }>;
-		savingThrows?: Record<string, { mod: number; defaultRollMode?: number }>;
+		savingThrows?: Record<string, { mod: number; bonus?: number; defaultRollMode?: number }>;
 		skills?: Record<
 			string,
 			{ mod: number; points: number; bonus: number; defaultRollMode?: number }

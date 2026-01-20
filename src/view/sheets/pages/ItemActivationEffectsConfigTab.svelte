@@ -5,6 +5,8 @@
 	import { updateEffectNode } from '../../../utils/treeManipulation/updateEffectNode.js';
 	import TagGroup from '../../components/TagGroup.svelte';
 
+	const { saves } = CONFIG.NIMBLE;
+
 	function getNodeOptions(node) {
 		// Define available options for different node types
 		const nodeOptions = new Map([
@@ -13,7 +15,7 @@
 			['damageOutcome', 'Damage Outcome'],
 			['healing', 'Healing'],
 			['note', 'Note'],
-			['savingThrow', 'Saving Throw'],
+			['savingThrow', saves.save],
 		]);
 
 		const includedOptions = [];
@@ -443,13 +445,13 @@
 	<li data-node-id={node.id}>
 		<details open>
 			<summary class="nimble-tree-node-summary">
-				<h4 class="nimble-heading" data-heading-variant="field">Saving Throw</h4>
+				<h4 class="nimble-heading" data-heading-variant="field">{saves.save}</h4>
 
 				<button
 					class="nimble-button"
 					data-button-variant="icon"
-					aria-label="Delete saving throw prompt"
-					data-tooltip="Delete saving throw prompt"
+					aria-label={saves.deleteSavePrompt}
+					data-tooltip={saves.deleteSavePrompt}
 					type="button"
 					onclick={() => deleteEffectNode(document, effects, node.id)}
 				>
@@ -462,7 +464,7 @@
 					<div style="width: 100%; flex-grow: 1;">
 						<header class="nimble-header">
 							<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-								Save Type
+								{saves.saveType}
 							</h5>
 						</header>
 

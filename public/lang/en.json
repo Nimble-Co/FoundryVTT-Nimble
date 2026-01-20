@@ -65,6 +65,31 @@
 			"incompleteStepsWarning": "Some character creation steps have not been completed.",
 			"createCharacter": "Create Character"
 		},
+		"ancestryOptions": {
+			"header": "Ancestry Options",
+			"sizeCategory": "Size Category",
+			"sizeCategoryHint": "Choose your character's size category from those available to your ancestry.",
+			"enhancedSave": "Enhanced Save",
+			"enhancedSaveHint": "Choose a neutral save to enhance with advantage."
+		},
+		"saveConfig": {
+			"abilityModifier": "Ability Modifier",
+			"abilityModifierSubtitle": "Base modifier from linked ability score",
+			"bonusPenalty": "Bonus/Penalty",
+			"bonusPenaltySubtitle": "Flat modifiers to saving throws",
+			"defaultRollMode": "Default Roll Mode",
+			"defaultRollModeSubtitle": "Advantage or disadvantage on saving throws",
+			"ancestryTraits": "Ancestry Traits",
+			"ancestryTraitsSubtitle": "Features that enhance a save of your choice",
+			"abilityMod": "Ability Mod",
+			"flatBonus": "Flat Bonus",
+			"rollMode": "Roll Mode",
+			"totalModifier": "Total Modifier",
+			"resetToClassDefaults": "Reset to Class Defaults",
+			"legendDisadvantage": "Disadvantage (roll extra dice, take lowest)",
+			"legendNormal": "Standard roll",
+			"legendAdvantage": "Advantage (roll extra dice, take highest)"
+		},
 		"activationCosts": {
 			"action": "Action",
 			"minute": "Minute",
@@ -331,6 +356,7 @@
 			"configureArmorProficiencies": "Configure Armor Proficiencies",
 			"configureLanguageProficiencies": "Configure Language Proficiencies",
 			"configureMovement": "Configure Movement",
+			"configureSavingThrows": "Configure Saves",
 			"configureSkills": "Configure Skills",
 			"configureWeaponProficiencies": "Configure Weapon Proficiencies",
 			"editRoll": "Edit Roll",
@@ -339,8 +365,8 @@
 			"rollAbilityCheck": "Roll Ability Check",
 			"rollAbilityCheckSpecific": "Roll {ability} Check",
 			"rollInitiative": "Roll Initiative",
-			"rollSavingThrow": "Roll Saving Throw",
-			"rollSavingThrowSpecific": "Roll {save} Saving Throw",
+			"rollSavingThrow": "Roll Save",
+			"rollSavingThrowSpecific": "Roll {save} Save",
 			"rollSkillCheck": "Roll Skill Check",
 			"rollSkillCheckSpecific": "Roll {skill} Check",
 			"fieldRest": "Field Rest"
@@ -429,6 +455,8 @@
 			"maximizeHitDice": "Maximize Hit Dice",
 			"maxWounds": "Wounds",
 			"note": "Note",
+			"savingThrowBonus": "Save Bonus",
+			"savingThrowRollMode": "Save Roll Mode",
 			"skillBonus": "Skill Bonus"
 		},
 		"creatureFeatures": {
@@ -436,6 +464,18 @@
 			"actionSequence": "After each hero's turn, choose one.",
 			"expand": "Expand",
 			"collapse": "Collapse"
+		},
+		"saves": {
+			"save": "Save",
+			"saves": "Saves",
+			"saveType": "Save Type",
+			"advantageSave": "Advantage Save",
+			"disadvantageSave": "Disadvantage Save",
+			"deleteSavePrompt": "Delete save prompt",
+			"strengthSave": "Strength Save",
+			"dexteritySave": "Dexterity Save",
+			"intelligenceSave": "Intelligence Save",
+			"willSave": "Will Save"
 		},
 		"savingThrows": {
 			"strength": "Strength",

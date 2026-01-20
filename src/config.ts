@@ -49,6 +49,33 @@ const characterCreationStages = {
 	stepFiveStats: 'NIMBLE.characterCreationStages.stepFiveStats',
 };
 
+const ancestryOptions = {
+	header: 'NIMBLE.ancestryOptions.header',
+	sizeCategory: 'NIMBLE.ancestryOptions.sizeCategory',
+	sizeCategoryHint: 'NIMBLE.ancestryOptions.sizeCategoryHint',
+	enhancedSave: 'NIMBLE.ancestryOptions.enhancedSave',
+	enhancedSaveHint: 'NIMBLE.ancestryOptions.enhancedSaveHint',
+};
+
+const saveConfig = {
+	abilityModifier: 'NIMBLE.saveConfig.abilityModifier',
+	abilityModifierSubtitle: 'NIMBLE.saveConfig.abilityModifierSubtitle',
+	bonusPenalty: 'NIMBLE.saveConfig.bonusPenalty',
+	bonusPenaltySubtitle: 'NIMBLE.saveConfig.bonusPenaltySubtitle',
+	defaultRollMode: 'NIMBLE.saveConfig.defaultRollMode',
+	defaultRollModeSubtitle: 'NIMBLE.saveConfig.defaultRollModeSubtitle',
+	ancestryTraits: 'NIMBLE.saveConfig.ancestryTraits',
+	ancestryTraitsSubtitle: 'NIMBLE.saveConfig.ancestryTraitsSubtitle',
+	abilityMod: 'NIMBLE.saveConfig.abilityMod',
+	flatBonus: 'NIMBLE.saveConfig.flatBonus',
+	rollMode: 'NIMBLE.saveConfig.rollMode',
+	totalModifier: 'NIMBLE.saveConfig.totalModifier',
+	resetToClassDefaults: 'NIMBLE.saveConfig.resetToClassDefaults',
+	legendDisadvantage: 'NIMBLE.saveConfig.legendDisadvantage',
+	legendNormal: 'NIMBLE.saveConfig.legendNormal',
+	legendAdvantage: 'NIMBLE.saveConfig.legendAdvantage',
+};
+
 const startingEquipment = {
 	editSelection: 'NIMBLE.startingEquipment.editSelection',
 	hint: 'NIMBLE.startingEquipment.hint',
@@ -352,6 +379,19 @@ const objectTypes = {
 const restTypes = {
 	fieldRest: 'NIMBLE.restTypes.fieldRest',
 	safeRest: 'NIMBLE.restTypes.safeRest',
+};
+
+const saves = {
+	save: 'NIMBLE.saves.save',
+	saves: 'NIMBLE.saves.saves',
+	saveType: 'NIMBLE.saves.saveType',
+	advantageSave: 'NIMBLE.saves.advantageSave',
+	disadvantageSave: 'NIMBLE.saves.disadvantageSave',
+	deleteSavePrompt: 'NIMBLE.saves.deleteSavePrompt',
+	strengthSave: 'NIMBLE.saves.strengthSave',
+	dexteritySave: 'NIMBLE.saves.dexteritySave',
+	intelligenceSave: 'NIMBLE.saves.intelligenceSave',
+	willSave: 'NIMBLE.saves.willSave',
 };
 
 const savingThrows: Record<SaveKeyType, string> = {
@@ -672,6 +712,7 @@ const NIMBLE = {
 	abilityScores,
 	abilityScoreTooltips,
 	activationCostTypes,
+	ancestryOptions,
 	activationCostTypesPlural,
 	actorTypeBanners,
 	armorTypes,
@@ -715,6 +756,8 @@ const NIMBLE = {
 	objectTypes,
 	restTypes,
 	safeRest,
+	saveConfig,
+	saves,
 	savingThrowAbbreviations,
 	savingThrows,
 	sectionHeaders,

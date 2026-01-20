@@ -11,37 +11,102 @@
 		}));
 	}
 
+	function ancestryRequiresSaveChoice(ancestry) {
+		const rules = [...(ancestry?.rules?.values() ?? [])];
+		if (!rules.length) return false;
+
+		for (const rule of rules) {
+			if (rule.type === 'savingThrowRollMode' && rule.requiresChoice && rule.target === 'neutral') {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	function getNeutralSaves(selectedClass) {
+		if (!selectedClass) return [];
+
+		const savingThrowKeys = Object.keys(CONFIG.NIMBLE.savingThrows);
+		const classAdvantage = selectedClass.system?.savingThrows?.advantage;
+		const classDisadvantage = selectedClass.system?.savingThrows?.disadvantage;
+
+		return savingThrowKeys.filter((key) => key !== classAdvantage && key !== classDisadvantage);
+	}
+
+	function prepareSaveOptions(selectedClass) {
+		const neutralSaves = getNeutralSaves(selectedClass);
+		const { savingThrows } = CONFIG.NIMBLE;
+
+		return neutralSaves.map((saveKey) => ({
+			value: saveKey,
+			label: savingThrows[saveKey] ?? saveKey,
+		}));
+	}
+
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
 
-	const { sizeCategories } = CONFIG.NIMBLE;
+	const { sizeCategories, ancestryOptions } = CONFIG.NIMBLE;
 
-	const hintText = 'Select a size category for your character from the options listed below.';
+	let {
+		active,
+		selectedAncestry,
+		selectedClass,
+		selectedAncestrySize = $bindable(),
+		selectedAncestrySave = $bindable(),
+	} = $props();
 
-	let { active, selectedAncestry, selectedAncestrySize = $bindable() } = $props();
+	let hasSizeChoice = $derived(selectedAncestry?.system?.size?.length > 1);
+	let hasSaveChoice = $derived(ancestryRequiresSaveChoice(selectedAncestry));
+	let hasAnyChoice = $derived(hasSizeChoice || hasSaveChoice);
 </script>
 
-{#if selectedAncestry?.system?.size?.length > 1}
+{#if hasAnyChoice}
 	<section
 		class="nimble-character-creation-section"
-		id="{dialog.id}-stage-{CHARACTER_CREATION_STAGES.ANCESTRY_SIZE}"
+		id="{dialog.id}-stage-{CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS}"
 	>
 		<header class="nimble-section-header" data-header-variant="character-creator">
 			<h3 class="nimble-heading" data-heading-variant="section">
-				Step 2.1. Select Your Size Category
+				{ancestryOptions.header}
 			</h3>
 		</header>
 
-		{#if active}
-			<Hint {hintText} />
+		{#if hasSizeChoice}
+			<div class="nimble-character-creation-section__subsection">
+				<h4 class="nimble-heading" data-heading-variant="subsection">
+					{ancestryOptions.sizeCategory}
+				</h4>
+				{#if active}
+					<Hint hintText={ancestryOptions.sizeCategoryHint} />
+				{/if}
+				<div class="nimble-character-creation-section__body">
+					<TagGroup
+						options={prepareAncestrySizeOptions(selectedAncestry)}
+						selectedOptions={[selectedAncestrySize]}
+						toggleOption={(sizeCategory) => (selectedAncestrySize = sizeCategory)}
+					/>
+				</div>
+			</div>
 		{/if}
 
-		<div class="nimble-character-creation-section__body">
-			<TagGroup
-				options={prepareAncestrySizeOptions(selectedAncestry)}
-				selectedOptions={[selectedAncestrySize]}
-				toggleOption={(sizeCategory) => (selectedAncestrySize = sizeCategory)}
-			/>
-		</div>
+		{#if hasSaveChoice && selectedClass}
+			<div class="nimble-character-creation-section__subsection">
+				<h4 class="nimble-heading" data-heading-variant="subsection">
+					{ancestryOptions.enhancedSave}
+				</h4>
+				{#if active}
+					<Hint hintText={ancestryOptions.enhancedSaveHint} />
+				{/if}
+				<div class="nimble-character-creation-section__body">
+					<TagGroup
+						options={prepareSaveOptions(selectedClass)}
+						selectedOptions={selectedAncestrySave ? [selectedAncestrySave] : []}
+						toggleOption={(saveKey) => (selectedAncestrySave = saveKey)}
+					/>
+				</div>
+			</div>
+		{/if}
 	</section>
 {/if}

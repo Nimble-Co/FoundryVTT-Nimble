@@ -156,7 +156,7 @@
 		},
 	];
 
-	const { abilityScores, armorTypesPlural, manaRecoveryTypes, savingThrows } = CONFIG.NIMBLE;
+	const { abilityScores, armorTypesPlural, manaRecoveryTypes, saves, savingThrows } = CONFIG.NIMBLE;
 
 	const abilityScoreOptions = prepareAbilityScoreTagOptions();
 	const armorOptions = prepareArmorOptions();
@@ -228,7 +228,7 @@
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">Advantage Saving Throw</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">{saves.advantageSave}</h3>
 			</header>
 
 			<TagGroup
@@ -242,7 +242,7 @@
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">Disadvantage Saving Throw</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">{saves.disadvantageSave}</h3>
 			</header>
 
 			<TagGroup

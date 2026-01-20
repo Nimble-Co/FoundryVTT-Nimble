@@ -425,6 +425,7 @@ interface AbilityData {
 
 /** Type definitions for saving throw data */
 interface SavingThrowData {
+	bonus: number;
 	defaultRollMode: number;
 	mod: number;
 }
