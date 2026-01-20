@@ -78,27 +78,34 @@
 		actor.system.attributes.bonusHitDice?.map((d: BonusDieEntry) => ({ ...d })) ?? [],
 	);
 
-	let showDropdown = $state(false);
-	let dropdownPosition = $state({ top: 0, left: 0 });
+	let dropdownRef: HTMLElement | null = $state(null);
 
-	function openDropdown(event: MouseEvent) {
-		const button = event.currentTarget as HTMLElement;
-		const rect = button.getBoundingClientRect();
-
-		dropdownPosition = {
-			top: rect.bottom + 4,
-			left: rect.right,
-		};
-
-		showDropdown = !showDropdown;
-	}
-
-	function handleClickOutside(event: MouseEvent) {
-		const target = event.target as HTMLElement;
-		if (!target.closest('.hd-add-btn') && !target.closest('.hd-dropdown')) {
-			showDropdown = false;
+	function positionDropdown(event: ToggleEvent) {
+		if (event.newState === 'open' && dropdownRef) {
+			const button = document.querySelector(`[popovertarget="${dropdownRef.id}"]`) as HTMLElement;
+			if (button) {
+				const rect = button.getBoundingClientRect();
+				dropdownRef.style.position = 'fixed';
+				dropdownRef.style.top = `${rect.bottom + 4}px`;
+				dropdownRef.style.left = `${rect.left + rect.width / 2}px`;
+				dropdownRef.style.transform = 'translateX(-50%)';
+				dropdownRef.style.margin = '0';
+			}
 		}
 	}
+
+	function selectDieSize(rawSize: number) {
+		addBonusDie(rawSize);
+		dropdownRef?.hidePopover();
+	}
+
+	// Also close popover on scroll to prevent misalignment
+	$effect(() => {
+		const handleScroll = () => dropdownRef?.hidePopover();
+		const body = document.querySelector('.nimble-sheet__body');
+		body?.addEventListener('scroll', handleScroll);
+		return () => body?.removeEventListener('scroll', handleScroll);
+	});
 
 	// Build current hit dice display with source info
 	let currentHitDice = $derived.by(() => {
@@ -201,7 +208,7 @@
 	});
 </script>
 
-<div class="nimble-sheet__body" role="presentation" onclick={handleClickOutside}>
+<div class="nimble-sheet__body" role="presentation">
 	<!-- Hit Dice Size Increment Info -->
 	{#if hitDiceSizeBonus > 0}
 		<div class="hd-info-banner">
@@ -262,7 +269,7 @@
 		{#if ruleContributions.length === 0 && bonusDice.length === 0}
 			<div class="hd-empty-state">
 				<span class="hd-empty-state__text">{CONFIG.NIMBLE.hitDice.noBonusDice}</span>
-				<button class="hd-add-btn" type="button" onclick={openDropdown}>
+				<button class="hd-add-btn" type="button" popovertarget="hd-die-dropdown">
 					<i class="fa-solid fa-plus"></i>
 					{CONFIG.NIMBLE.hitDice.addBonusDie}
 				</button>
@@ -331,7 +338,7 @@
 				<button
 					class="hd-add-btn hd-add-btn--small"
 					type="button"
-					onclick={openDropdown}
+					popovertarget="hd-die-dropdown"
 					aria-label={CONFIG.NIMBLE.hitDice.addBonusDie}
 				>
 					<i class="fa-solid fa-plus"></i>
@@ -345,21 +352,22 @@
 		<span class="hd-total__label">{CONFIG.NIMBLE.hitDice.totalHitDice}</span>
 		<span class="hd-total__value">{totals.max}</span>
 	</section>
-</div>
 
-<!-- Fixed position dropdown portal -->
-{#if showDropdown}
+	<!-- Popover dropdown for die size selection -->
 	<div
-		class="hd-dropdown hd-dropdown--fixed"
-		style="top: {dropdownPosition.top}px; left: {dropdownPosition.left}px;"
+		id="hd-die-dropdown"
+		popover
+		class="hd-dropdown"
+		bind:this={dropdownRef}
+		ontoggle={positionDropdown}
 	>
-		{#each availableDieSizes as rawSize}
+		{#each getOrderedDieSizes() as rawSize}
 			{@const displaySize = incrementDieSize(rawSize, hitDiceSizeBonus)}
 			<button
 				class="hd-dropdown__item"
 				class:hd-dropdown__item--class={rawSize === rawClassDieSize}
 				type="button"
-				onclick={() => addBonusDie(rawSize)}
+				onclick={() => selectDieSize(rawSize)}
 			>
 				d{displaySize}
 				{#if rawSize === rawClassDieSize}
@@ -368,7 +376,7 @@
 			</button>
 		{/each}
 	</div>
-{/if}
+</div>
 
 <footer class="nimble-sheet__footer">
 	<button class="nimble-button" data-button-variant="basic" onclick={submit}
@@ -514,57 +522,52 @@
 
 	.hd-dropdown {
 		min-width: 5rem;
+		padding: 0;
 		background: var(--nimble-box-background-color, hsl(48, 17%, 97%));
 		border: 1px solid var(--nimble-card-border-color, hsla(41, 18%, 54%, 25%));
 		border-radius: 6px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 		overflow: hidden;
+	}
 
-		&--fixed {
-			position: fixed;
-			z-index: 99999;
-			transform: translateX(-100%);
+	.hd-dropdown__item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		width: 100%;
+		padding: 0.5rem 0.75rem;
+		font-size: var(--nimble-sm-text, 0.833rem);
+		font-weight: 600;
+		color: var(--nimble-dark-text-color, hsl(50, 14%, 9%));
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		text-align: left;
+		transition: background 0.1s ease;
+
+		&:hover {
+			background: var(--nimble-input-background-color, hsla(0, 0%, 100%, 0.5));
 		}
 
-		&__item {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			gap: 0.5rem;
-			width: 100%;
-			padding: 0.5rem 0.75rem;
-			font-size: var(--nimble-sm-text, 0.833rem);
-			font-weight: 600;
-			color: var(--nimble-dark-text-color, hsl(50, 14%, 9%));
-			background: transparent;
-			border: none;
-			cursor: pointer;
-			text-align: left;
-			transition: background 0.1s ease;
+		&--class {
+			background: var(--nimble-input-background-color, hsla(0, 0%, 100%, 0.5));
 
 			&:hover {
-				background: var(--nimble-input-background-color, hsla(0, 0%, 100%, 0.5));
-			}
-
-			&--class {
-				background: var(--nimble-input-background-color, hsla(0, 0%, 100%, 0.5));
-
-				&:hover {
-					background: var(--nimble-box-background-color, hsl(48, 17%, 97%));
-				}
+				background: var(--nimble-box-background-color, hsl(48, 17%, 97%));
 			}
 		}
+	}
 
-		&__badge {
-			font-size: 0.5625rem;
-			font-weight: 700;
-			text-transform: uppercase;
-			letter-spacing: 0.03em;
-			padding: 0.125rem 0.375rem;
-			background: hsl(45, 50%, 55%);
-			color: #fff;
-			border-radius: 3px;
-		}
+	.hd-dropdown__badge {
+		font-size: 0.5625rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		padding: 0.125rem 0.375rem;
+		background: hsl(45, 50%, 55%);
+		color: #fff;
+		border-radius: 3px;
 	}
 
 	.hd-dice-list {
