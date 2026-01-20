@@ -47,11 +47,7 @@
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
 
-	const { sizeCategories } = CONFIG.NIMBLE;
-
-	const sizeHintText = 'Select a size category for your character from the options listed below.';
-	const saveHintText =
-		'Your ancestry grants you an enhanced saving throw. Select which of your neutral saves you would like to become advantaged.';
+	const { sizeCategories, ancestryOptions } = CONFIG.NIMBLE;
 
 	let {
 		active,
@@ -72,14 +68,18 @@
 		id="{dialog.id}-stage-{CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS}"
 	>
 		<header class="nimble-section-header" data-header-variant="character-creator">
-			<h3 class="nimble-heading" data-heading-variant="section">Step 2.1. Ancestry Options</h3>
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{ancestryOptions.header}
+			</h3>
 		</header>
 
 		{#if hasSizeChoice}
 			<div class="nimble-character-creation-section__subsection">
-				<h4 class="nimble-heading" data-heading-variant="subsection">Size Category</h4>
+				<h4 class="nimble-heading" data-heading-variant="subsection">
+					{ancestryOptions.sizeCategory}
+				</h4>
 				{#if active}
-					<Hint hintText={sizeHintText} />
+					<Hint hintText={ancestryOptions.sizeCategoryHint} />
 				{/if}
 				<div class="nimble-character-creation-section__body">
 					<TagGroup
@@ -93,9 +93,11 @@
 
 		{#if hasSaveChoice && selectedClass}
 			<div class="nimble-character-creation-section__subsection">
-				<h4 class="nimble-heading" data-heading-variant="subsection">Enhanced Save</h4>
+				<h4 class="nimble-heading" data-heading-variant="subsection">
+					{ancestryOptions.enhancedSave}
+				</h4>
 				{#if active}
-					<Hint hintText={saveHintText} />
+					<Hint hintText={ancestryOptions.enhancedSaveHint} />
 				{/if}
 				<div class="nimble-character-creation-section__body">
 					<TagGroup

@@ -1,4 +1,3 @@
-import type { NimbleCharacter } from '../../documents/actor/character.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
@@ -43,81 +42,15 @@ class SavingThrowRollModeRule extends NimbleBaseRule<SavingThrowRollModeRule.Sch
 	}
 
 	prePrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
-
-		// Skip choice-based rules entirely during data prep - the selection was applied
-		// during character creation and is stored in the character's saved data.
-		// The rule data is only used by Reset to recalculate defaults.
-		if (this.requiresChoice) return;
-
-		const actor = item.actor as NimbleCharacter;
-		const savingThrowKeys = Object.keys(CONFIG.NIMBLE.savingThrows);
-
-		// Determine which saves to affect based on target
-		const targetSaves = this.getTargetSaves(actor, savingThrowKeys);
-
-		for (const saveKey of targetSaves) {
-			const currentRollMode = actor.system.savingThrows[saveKey]?.defaultRollMode ?? 0;
-			let newRollMode: number;
-
-			if (this.mode === 'set') {
-				newRollMode = this.value;
-			} else {
-				// adjust mode
-				newRollMode = currentRollMode + this.value;
-			}
-
-			// Clamp to valid range (-3 to 3)
-			newRollMode = Math.max(-3, Math.min(3, newRollMode));
-
-			foundry.utils.setProperty(
-				actor.system,
-				`savingThrows.${saveKey}.defaultRollMode`,
-				newRollMode,
-			);
-		}
-	}
-
-	private getTargetSaves(actor: NimbleCharacter, allSaveKeys: string[]): string[] {
-		const { target, selectedSave } = this;
-
-		// If a specific save was selected (for choice-based rules)
-		if (selectedSave && allSaveKeys.includes(selectedSave)) {
-			return [selectedSave];
-		}
-
-		// Handle specific save key targets
-		if (allSaveKeys.includes(target)) {
-			return [target];
-		}
-
-		// Handle special targets
-		switch (target) {
-			case 'all':
-				return allSaveKeys;
-
-			case 'advantaged':
-				return allSaveKeys.filter((key) => {
-					const rollMode = actor.system.savingThrows[key]?.defaultRollMode ?? 0;
-					return rollMode > 0;
-				});
-
-			case 'disadvantaged':
-				return allSaveKeys.filter((key) => {
-					const rollMode = actor.system.savingThrows[key]?.defaultRollMode ?? 0;
-					return rollMode < 0;
-				});
-
-			case 'neutral':
-				return allSaveKeys.filter((key) => {
-					const rollMode = actor.system.savingThrows[key]?.defaultRollMode ?? 0;
-					return rollMode === 0;
-				});
-
-			default:
-				return [];
-		}
+		// NOTE: This rule intentionally does NOT modify defaultRollMode during data prep.
+		// The defaultRollMode is a user-configurable value that should persist.
+		//
+		// Rule contributions to roll modes are calculated on-demand by:
+		// 1. The "Reset to Class Defaults" button in ActorSavingThrowConfigDialog.svelte
+		// 2. Character creation flow
+		//
+		// This allows users to customize their saving throw roll modes while still
+		// being able to reset to calculated defaults when needed.
 	}
 }
 

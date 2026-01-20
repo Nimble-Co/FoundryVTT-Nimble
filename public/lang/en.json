@@ -65,6 +65,31 @@
 			"incompleteStepsWarning": "Some character creation steps have not been completed.",
 			"createCharacter": "Create Character"
 		},
+		"ancestryOptions": {
+			"header": "Ancestry Options",
+			"sizeCategory": "Size Category",
+			"sizeCategoryHint": "Choose your character's size category from those available to your ancestry.",
+			"enhancedSave": "Enhanced Save",
+			"enhancedSaveHint": "Choose a neutral save to enhance with advantage."
+		},
+		"saveConfig": {
+			"abilityModifier": "Ability Modifier",
+			"abilityModifierSubtitle": "Base modifier from linked ability score",
+			"bonusPenalty": "Bonus/Penalty",
+			"bonusPenaltySubtitle": "Flat modifiers to saving throws",
+			"defaultRollMode": "Default Roll Mode",
+			"defaultRollModeSubtitle": "Advantage or disadvantage on saving throws",
+			"ancestryTraits": "Ancestry Traits",
+			"ancestryTraitsSubtitle": "Features that enhance a save of your choice",
+			"abilityMod": "Ability Mod",
+			"flatBonus": "Flat Bonus",
+			"rollMode": "Roll Mode",
+			"totalModifier": "Total Modifier",
+			"resetToClassDefaults": "Reset to Class Defaults",
+			"legendDisadvantage": "Disadvantage (roll extra dice, take lowest)",
+			"legendNormal": "Standard roll",
+			"legendAdvantage": "Advantage (roll extra dice, take highest)"
+		},
 		"activationCosts": {
 			"action": "Action",
 			"minute": "Minute",

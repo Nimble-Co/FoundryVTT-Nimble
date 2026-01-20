@@ -109,7 +109,7 @@
 		}
 	}
 
-	const { savingThrows } = CONFIG.NIMBLE;
+	const { savingThrows, saveConfig } = CONFIG.NIMBLE;
 	const savingThrowKeys = Object.keys(savingThrows);
 	const rollModes = [-3, -2, -1, 0, 1, 2, 3];
 
@@ -117,6 +117,117 @@
 
 	let characterSavingThrows = $derived(document.reactive.system.savingThrows);
 	let characterAbilities = $derived(document.reactive.system.abilities);
+
+	// Fix any corrupted rules arrays by restoring from compendium
+	async function fixCorruptedRulesArrays() {
+		for (const item of document.items) {
+			if (item.type !== 'ancestry') continue;
+
+			const rulesArray = item.system?.rules;
+			if (!Array.isArray(rulesArray)) continue;
+
+			// Check if any rules are undefined/null or missing type
+			const hasCorruption = rulesArray.some((r) => !r || !r.type);
+			if (!hasCorruption) continue;
+
+			// Try to restore from compendium
+			const sourceId = item.flags?.core?.sourceId;
+			if (sourceId) {
+				const compendiumItem = await fromUuid(sourceId);
+				if (compendiumItem?.system?.rules) {
+					// Restore the original rules from compendium
+					await item.update({ 'system.rules': compendiumItem.system.rules });
+					continue;
+				}
+			}
+
+			// Fallback: just remove corrupted entries if we can't find compendium source
+			const cleanedRules = rulesArray.filter((r) => r && r.type);
+			await item.update({ 'system.rules': cleanedRules });
+		}
+	}
+
+	// Run cleanup on mount
+	$effect(() => {
+		fixCorruptedRulesArrays();
+	});
+
+	// Find all choice-based saving throw rules from items (ancestry, etc.)
+	let choiceBasedRules = $derived.by(() => {
+		// Access reactive to ensure this derived re-runs when items update
+		const _ = document.reactive.items;
+		const rules = [];
+		for (const item of document.items) {
+			if (!item.rules) continue;
+			for (const [, rule] of item.rules) {
+				if (rule.type === 'savingThrowRollMode' && rule.requiresChoice && !rule.disabled) {
+					rules.push({
+						rule,
+						item,
+						label: rule.label || item.name,
+						selectedSave: rule.selectedSave,
+						target: rule.target,
+						value: rule.value,
+					});
+				}
+			}
+		}
+		return rules;
+	});
+
+	// Get available save options for a choice-based rule based on its target
+	function getAvailableSavesForRule(rule) {
+		const { target } = rule;
+
+		// For 'neutral' target, we need to calculate which saves would be neutral
+		// based on class defaults (not current customized values)
+		if (target === 'neutral') {
+			const classes = document.classes;
+			const primaryClass = Object.values(classes)[0];
+			if (!primaryClass) return savingThrowKeys;
+
+			const classAdvantage = primaryClass.system?.savingThrows?.advantage;
+			const classDisadvantage = primaryClass.system?.savingThrows?.disadvantage;
+
+			return savingThrowKeys.filter((key) => key !== classAdvantage && key !== classDisadvantage);
+		}
+
+		// For other targets, return all saves
+		return savingThrowKeys;
+	}
+
+	// Update the selected save for a choice-based rule
+	async function updateRuleSelectedSave(ruleData, newSaveKey) {
+		const { rule, item } = ruleData;
+
+		// Use source data, not prepared data, to avoid losing information
+		const sourceRules = item._source.system.rules;
+		if (!Array.isArray(sourceRules)) return;
+
+		// Find the rule index in the source rules array
+		const ruleIndex = sourceRules.findIndex(
+			(r) => r.type === 'savingThrowRollMode' && r.requiresChoice && r.label === rule.label,
+		);
+
+		if (ruleIndex === -1) return;
+
+		// Create a new rules array with the updated selectedSave
+		const updatedRules = sourceRules.map((r, i) => {
+			if (i === ruleIndex) {
+				return { ...r, selectedSave: newSaveKey };
+			}
+			return r;
+		});
+
+		// Safety check - never update with fewer rules than we started with
+		if (updatedRules.length !== sourceRules.length) return;
+
+		// Update the item with the new rules array
+		await item.update({ 'system.rules': updatedRules });
+
+		// Recalculate roll modes with the new selection
+		await resetSavingThrowRollModes();
+	}
 
 	// Check if current roll modes differ from calculated defaults
 	let rollModesDifferFromDefaults = $derived.by(() => {
@@ -182,8 +293,8 @@
 					<button
 						class="nimble-save-config__reset-btn"
 						type="button"
-						aria-label="Reset to Class Defaults"
-						data-tooltip="Reset to Class Defaults"
+						aria-label={saveConfig.resetToClassDefaults}
+						data-tooltip={saveConfig.resetToClassDefaults}
 						onclick={onReset}
 					>
 						<i class="fa-solid fa-rotate-left"></i>
@@ -234,11 +345,11 @@
 
 			<tbody>
 				<!-- Ability Modifier Section -->
-				{@render sectionHeader('Ability Modifier', 'Base modifier from linked ability score')}
+				{@render sectionHeader(saveConfig.abilityModifier, saveConfig.abilityModifierSubtitle)}
 				<tr class="nimble-save-config__data-row">
 					<th class="nimble-save-config__row-label">
 						<i class="fa-solid fa-dice-d20"></i>
-						Ability Mod
+						{saveConfig.abilityMod}
 					</th>
 					{#each savingThrowKeys as saveKey}
 						{@const abilityMod = characterAbilities[saveKey]?.mod ?? 0}
@@ -251,11 +362,11 @@
 				</tr>
 
 				<!-- Bonus Section -->
-				{@render sectionHeader('Bonus/Penalty', 'Flat modifiers to saving throws')}
+				{@render sectionHeader(saveConfig.bonusPenalty, saveConfig.bonusPenaltySubtitle)}
 				<tr class="nimble-save-config__data-row">
 					<th class="nimble-save-config__row-label">
 						<i class="fa-solid fa-plus-minus"></i>
-						Flat Bonus
+						{saveConfig.flatBonus}
 					</th>
 					{#each savingThrowKeys as saveKey}
 						{@const bonus = characterSavingThrows[saveKey]?.bonus ?? 0}
@@ -272,14 +383,14 @@
 
 				<!-- Roll Mode Section -->
 				{@render sectionHeader(
-					'Default Roll Mode',
-					'Advantage or disadvantage on saving throws',
+					saveConfig.defaultRollMode,
+					saveConfig.defaultRollModeSubtitle,
 					rollModesDifferFromDefaults ? resetSavingThrowRollModes : null,
 				)}
 				<tr class="nimble-save-config__data-row nimble-save-config__data-row--roll-mode">
 					<th class="nimble-save-config__row-label">
 						<i class="fa-solid fa-dice"></i>
-						Roll Mode
+						{saveConfig.rollMode}
 					</th>
 					{#each savingThrowKeys as saveKey}
 						{@const currentRollMode = characterSavingThrows[saveKey]?.defaultRollMode ?? 0}
@@ -296,6 +407,46 @@
 					{/each}
 				</tr>
 
+				<!-- Ancestry Choices Section (only shown for choice-based rules) -->
+				{#if choiceBasedRules.length > 0}
+					{@render sectionHeader(saveConfig.ancestryTraits, saveConfig.ancestryTraitsSubtitle)}
+					{#each choiceBasedRules as ruleData}
+						<tr class="nimble-save-config__data-row nimble-save-config__data-row--ancestry">
+							<th class="nimble-save-config__row-label">
+								<i class="fa-solid fa-star"></i>
+								{ruleData.label}
+							</th>
+							{#each savingThrowKeys as saveKey}
+								{@const availableSaves = getAvailableSavesForRule(ruleData)}
+								{@const isAvailable = availableSaves.includes(saveKey)}
+								{@const isSelected = ruleData.selectedSave === saveKey}
+								<td class="nimble-save-config__ancestry-cell">
+									{#if isAvailable}
+										<button
+											class="nimble-save-config__ancestry-btn"
+											class:nimble-save-config__ancestry-btn--selected={isSelected}
+											type="button"
+											aria-label="Select {savingThrows[saveKey]} for {ruleData.label}"
+											data-tooltip={isSelected
+												? 'Current selection'
+												: 'Select ' + savingThrows[saveKey]}
+											onclick={() => updateRuleSelectedSave(ruleData, saveKey)}
+										>
+											{#if isSelected}
+												<i class="fa-solid fa-check-circle"></i>
+											{:else}
+												<i class="fa-regular fa-circle"></i>
+											{/if}
+										</button>
+									{:else}
+										<span class="nimble-save-config__ancestry-unavailable">—</span>
+									{/if}
+								</td>
+							{/each}
+						</tr>
+					{/each}
+				{/if}
+
 				<!-- Spacer before totals -->
 				<tr class="nimble-save-config__spacer-row">
 					<td colspan={savingThrowKeys.length + 1}></td>
@@ -307,7 +458,7 @@
 				<tr class="nimble-save-config__total-row">
 					<th class="nimble-save-config__row-label nimble-save-config__row-label--total">
 						<i class="fa-solid fa-shield"></i>
-						Total Modifier
+						{saveConfig.totalModifier}
 					</th>
 					{#each savingThrowKeys as saveKey}
 						{@const totalMod = characterSavingThrows[saveKey]?.mod ?? 0}
@@ -328,19 +479,19 @@
 					class="nimble-save-config__legend-badge nimble-save-config__legend-badge--disadvantage"
 					>Dis</span
 				>
-				<span>Disadvantage (roll extra dice, take lowest)</span>
+				<span>{saveConfig.legendDisadvantage}</span>
 			</div>
 			<div class="nimble-save-config__legend-item">
 				<span class="nimble-save-config__legend-badge nimble-save-config__legend-badge--normal"
 					>Normal</span
 				>
-				<span>Standard roll</span>
+				<span>{saveConfig.legendNormal}</span>
 			</div>
 			<div class="nimble-save-config__legend-item">
 				<span class="nimble-save-config__legend-badge nimble-save-config__legend-badge--advantage"
 					>Adv</span
 				>
-				<span>Advantage (roll extra dice, take highest)</span>
+				<span>{saveConfig.legendAdvantage}</span>
 			</div>
 		</aside>
 	</div>
@@ -557,6 +708,51 @@
 			font-size: var(--nimble-xs-text);
 			font-weight: 500;
 			color: var(--nimble-medium-text-color);
+		}
+
+		&__data-row--ancestry {
+			background: hsla(45, 80%, 50%, 0.03);
+		}
+
+		&__ancestry-cell {
+			padding: 0.5rem;
+			text-align: center;
+		}
+
+		&__ancestry-btn {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.5rem;
+			height: 1.5rem;
+			margin: 0;
+			padding: 0;
+			font-size: 0.75rem;
+			color: var(--nimble-medium-text-color);
+			background: transparent;
+			border: 0;
+			border-radius: 50%;
+			cursor: pointer;
+			transition: var(--nimble-standard-transition);
+
+			&:hover {
+				transform: scale(1.15);
+				color: hsl(45, 80%, 40%);
+			}
+
+			&--selected {
+				color: hsl(45, 80%, 40%);
+
+				&:hover {
+					color: hsl(45, 90%, 35%);
+				}
+			}
+		}
+
+		&__ancestry-unavailable {
+			display: inline-block;
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-light-text-color);
 		}
 
 		&__spacer-row {
