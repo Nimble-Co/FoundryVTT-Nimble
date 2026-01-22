@@ -94,7 +94,9 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		if (!item) return false;
 		const itemData = item.toObject() as ReturnType<Item.Implementation['toObject']> & {
 			uuid?: string;
+			id?: typeof item.id;
 		};
+		itemData.id = item.id;
 
 		if (item.uuid && !itemData.uuid) {
 			// Preserve the UUID from the source document

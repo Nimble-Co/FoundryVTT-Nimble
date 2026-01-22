@@ -186,6 +186,8 @@
 						draggable="true"
 						role="button"
 						ondragstart={(event) => sheet._onDragStart(event)}
+						ondragover={(event) => event.preventDefault()}
+						ondrop={(event) => sheet._onSortItem(event, item)}
 						onclick={() => actor.activateItem(item._id)}
 					>
 						<header class="u-semantic-only">
