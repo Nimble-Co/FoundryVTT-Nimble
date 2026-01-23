@@ -66,8 +66,6 @@
 			!Object.values(selectedAbilityScores).some((mod) => mod === null),
 	);
 
-	let maxStarIndex = $derived.by(() => Math.min(4, remainingTempSkillPoints));
-
 	// Initialize tempAssignedSkillPoints from assignedSkillPoints when they change
 	$effect(() => {
 		if (
@@ -84,8 +82,7 @@
 	<li class="nimble-skill-point-assignment-list__item">
 		<button
 			class="nimble-skill-point-star"
-			class:nimble-skill-point-star--hidden={remainingTempSkillPoints === 0 ||
-				index >= maxStarIndex}
+			class:nimble-skill-point-star--hidden={index >= remainingTempSkillPoints + (skillPoints[skillKey] || 0)}
 			onclick={() => assignSkillPoints(skillKey, index + 1)}
 		>
 			{#if skillPoints[skillKey] > index}
