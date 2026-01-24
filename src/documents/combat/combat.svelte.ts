@@ -211,21 +211,6 @@ class NimbleCombat extends Combat {
 	}
 
 	override _sortCombatants(a: Combatant.Implementation, b: Combatant.Implementation): number {
-		// Always sort characters before NPCs/monsters
-		const typeOrder = {
-			character: 0,
-			npc: 1,
-			soloMonster: 1,
-		};
-
-		const typeA = typeOrder[a.type] ?? 99;
-		const typeB = typeOrder[b.type] ?? 99;
-
-		if (typeA !== typeB) {
-			return typeA - typeB;
-		}
-
-		// If same type, sort by the 'system.sort' field
 		const sa = (a.system as unknown as { sort: number }).sort;
 		const sb = (b.system as unknown as { sort: number }).sort;
 
