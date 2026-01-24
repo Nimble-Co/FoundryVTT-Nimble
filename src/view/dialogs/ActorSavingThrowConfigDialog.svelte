@@ -28,7 +28,7 @@
 	}
 
 	async function resetSavingThrowRollModes() {
-		const classes = document.classes;
+		const classes = document.classes ?? {};
 		const primaryClass = Object.values(classes)[0];
 		if (!primaryClass) return;
 
@@ -115,8 +115,12 @@
 
 	let { document } = $props();
 
-	let characterSavingThrows = $derived(document.reactive.system.savingThrows);
-	let characterAbilities = $derived(document.reactive.system.abilities);
+	// Check if this is a character (has classes) vs NPC/monster
+	let isCharacter = $derived(document.type === 'character');
+	let hasClasses = $derived(isCharacter && Object.keys(document.classes ?? {}).length > 0);
+
+	let characterSavingThrows = $derived(document.reactive?.system?.savingThrows ?? {});
+	let characterAbilities = $derived(document.reactive?.system?.abilities ?? {});
 
 	// Fix any corrupted rules arrays by restoring from compendium
 	async function fixCorruptedRulesArrays() {
@@ -182,7 +186,7 @@
 		// For 'neutral' target, we need to calculate which saves would be neutral
 		// based on class defaults (not current customized values)
 		if (target === 'neutral') {
-			const classes = document.classes;
+			const classes = document.classes ?? {};
 			const primaryClass = Object.values(classes)[0];
 			if (!primaryClass) return savingThrowKeys;
 
@@ -231,7 +235,10 @@
 
 	// Check if current roll modes differ from calculated defaults
 	let rollModesDifferFromDefaults = $derived.by(() => {
-		const classes = document.classes;
+		// NPCs don't have classes, so we can't check class defaults
+		if (!hasClasses) return false;
+
+		const classes = document.classes ?? {};
 		const primaryClass = Object.values(classes)[0];
 		if (!primaryClass) return false;
 
@@ -344,22 +351,24 @@
 			</thead>
 
 			<tbody>
-				<!-- Ability Modifier Section -->
-				{@render sectionHeader(saveConfig.abilityModifier, saveConfig.abilityModifierSubtitle)}
-				<tr class="nimble-save-config__data-row">
-					<th class="nimble-save-config__row-label">
-						<i class="fa-solid fa-dice-d20"></i>
-						{saveConfig.abilityMod}
-					</th>
-					{#each savingThrowKeys as saveKey}
-						{@const abilityMod = characterAbilities[saveKey]?.mod ?? 0}
-						<td class="nimble-save-config__value-cell">
-							<span class="nimble-save-config__ability-value">
-								{formatModifier(abilityMod)}
-							</span>
-						</td>
-					{/each}
-				</tr>
+				<!-- Ability Modifier Section (Characters only - NPCs don't have abilities) -->
+				{#if isCharacter}
+					{@render sectionHeader(saveConfig.abilityModifier, saveConfig.abilityModifierSubtitle)}
+					<tr class="nimble-save-config__data-row">
+						<th class="nimble-save-config__row-label">
+							<i class="fa-solid fa-dice-d20"></i>
+							{saveConfig.abilityMod}
+						</th>
+						{#each savingThrowKeys as saveKey}
+							{@const abilityMod = characterAbilities[saveKey]?.mod ?? 0}
+							<td class="nimble-save-config__value-cell">
+								<span class="nimble-save-config__ability-value">
+									{formatModifier(abilityMod)}
+								</span>
+							</td>
+						{/each}
+					</tr>
+				{/if}
 
 				<!-- Bonus Section -->
 				{@render sectionHeader(saveConfig.bonusPenalty, saveConfig.bonusPenaltySubtitle)}
@@ -407,8 +416,8 @@
 					{/each}
 				</tr>
 
-				<!-- Ancestry Choices Section (only shown for choice-based rules) -->
-				{#if choiceBasedRules.length > 0}
+				<!-- Ancestry Choices Section (only shown for characters with choice-based rules) -->
+				{#if isCharacter && choiceBasedRules.length > 0}
 					{@render sectionHeader(saveConfig.ancestryTraits, saveConfig.ancestryTraitsSubtitle)}
 					{#each choiceBasedRules as ruleData}
 						<tr class="nimble-save-config__data-row nimble-save-config__data-row--ancestry">
