@@ -8,7 +8,6 @@
 		const currentActions = combatant.reactive?.system?.actions?.base?.current ?? 0;
 		const newValue = currentActions === 1 ? 0 : 1;
 
-		console.log(combatant);
 		await combatant.update({
 			'system.actions.base.current': newValue,
 		});
