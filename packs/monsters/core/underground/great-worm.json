@@ -218,7 +218,7 @@
 									{
 										"id": "ogrGMAxnbWUF6fBB",
 										"type": "damage",
-										"damageType": "acid",
+										"damageType": "bludgeoning",
 										"formula": "50",
 										"parentContext": "failedSave",
 										"parentNode": "WWKE5zboJ97IA44J"
