@@ -2,18 +2,18 @@
 
 ### Additions / Changes
 <!-- New features, improvements, or behavior changes -->
-- <Brief description of change>. @<contributor>
-- <Brief description of change>. @<contributor>
+- <Brief description of change>. #<issue> @<contributor>
+- <Brief description of change>. #<issue> @<contributor>
 
 ### Fixes
 <!-- Bug fixes and corrections -->
-- <Brief description of fix>. @<contributor>
-- <Brief description of fix>. @<contributor>
+- <Brief description of fix>. #<issue> @<contributor>
+- <Brief description of fix>. #<issue> @<contributor>
 
 ### System Data
 <!-- Compendium, data, or content corrections -->
-- <Brief description of data change>. @<contributor>
-- <Brief description of data change>. @<contributor>
+- <Brief description of data change>. #<issue> @<contributor>
+- <Brief description of data change>. #<issue> @<contributor>
 
 ---
 
