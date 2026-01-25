@@ -7,6 +7,7 @@
 	function getDamageMultiplier(damageOutcome = 'fullDamage') {
 		if (damageOutcome === 'fullDamage') return 1;
 		if (damageOutcome === 'halfDamage') return 0.5;
+		if (damageOutcome === 'noDamage') return 1; // Show actual roll value for misses
 		return 0;
 	}
 
@@ -19,6 +20,11 @@
 	function getSecondaryInformation(outcome, ignoreArmor, rollOptions) {
 		const rollModeSummary = getRollModeSummary(rollOptions.rollMode);
 
+		// For misses, don't include "No Damage" - the card header shows "Miss"
+		if (outcome === 'noDamage') {
+			if (ignoreArmor) return `${rollModeSummary} (Ignores Armor)`.trim();
+			return rollModeSummary;
+		}
 		if (outcome === 'fullDamage' && ignoreArmor) return `${rollModeSummary} (Ignores Armor)`;
 		if (outcome === 'halfDamage') {
 			if (ignoreArmor) return `${rollModeSummary} (Half Damage, Ignores Armor)`;

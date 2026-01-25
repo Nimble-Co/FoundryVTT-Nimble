@@ -105,7 +105,33 @@ class NimbleChatMessage extends ChatMessage {
 		else contexts.push('hit');
 
 		const effects = (systemData.activation.effects || []) as EffectNode[];
-		const nodes = getRelevantNodes(effects, contexts);
+		const nodes = getRelevantNodes(effects, contexts, {
+			includeBaseDamageNodes: systemData.isMiss,
+		});
+
+		// Add a "MISS" text hint at the start if the attack missed and there isn't one already
+		if (systemData.isMiss) {
+			const hasMissHint = nodes.some((group) =>
+				group.some(
+					(node) =>
+						node.type === 'note' && (node as { text?: string }).text?.toUpperCase() === 'MISS',
+				),
+			);
+
+			if (!hasMissHint) {
+				const missHintNode: EffectNode = {
+					id: 'miss-hint',
+					type: 'note',
+					noteType: 'warning',
+					text: 'MISS',
+					parentContext: 'miss',
+					parentNode: null,
+				};
+				// Insert as the first group
+				nodes.unshift([missHintNode]);
+			}
+		}
+
 		return nodes;
 	}
 

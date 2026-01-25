@@ -12,12 +12,17 @@ export function findNodesByContexts(
 	nodes: EffectNode[],
 	contexts: string[],
 	includeBaseNodes = false,
+	includeBaseDamageNodes = false,
 ): EffectNode[] {
 	const result: EffectNode[] = [];
 
 	function traverse(node: EffectNode) {
-		if (!includeBaseNodes && !node.parentNode) {
-			if (node.type !== 'damage') result.push(node);
+		if (!node.parentNode) {
+			if (includeBaseDamageNodes && node.type === 'damage') {
+				result.push(node);
+			} else if (!includeBaseNodes && node.type !== 'damage') {
+				result.push(node);
+			}
 		}
 
 		if (node.type === 'damage' || node.type === 'savingThrow') {
