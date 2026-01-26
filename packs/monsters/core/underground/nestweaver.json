@@ -299,7 +299,7 @@
 						{
 							"id": "cREA7LLMJ7O9va97",
 							"type": "damage",
-							"damageType": "acid",
+							"damageType": "poison",
 							"formula": "3d8+6",
 							"parentContext": null,
 							"parentNode": null,
