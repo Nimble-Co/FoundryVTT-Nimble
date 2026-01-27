@@ -448,6 +448,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 
 		ChatMessage.applyRollMode(
 			chatData as Record<string, unknown>,
+			// 'blindroll' as foundry.CONST.DICE_ROLL_MODES
 			visibilityMode ?? game.settings.get('core', 'rollMode'),
 		);
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);

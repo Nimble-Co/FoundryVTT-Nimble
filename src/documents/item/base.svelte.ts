@@ -160,7 +160,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			this as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
 			options,
 		);
-		const { activation, rolls } = await manager.getData();
+		const { activation, rolls, rollHidden } = await manager.getData();
 		if (activation === null || rolls === null) {
 			return null;
 		}
@@ -191,7 +191,9 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			await this.prepareChatCardData(options),
 		);
 
-		const rollModeValue = options.visibilityMode ?? game.settings.get('core', 'rollMode');
+		const rollModeValue = rollHidden
+			? 'blindroll'
+			: (options.visibilityMode ?? game.settings.get('core', 'rollMode'));
 		ChatMessage.applyRollMode(
 			chatData as Record<string, unknown>,
 			rollModeValue as foundry.CONST.DICE_ROLL_MODES,

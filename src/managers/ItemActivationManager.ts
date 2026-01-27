@@ -100,7 +100,7 @@ class ItemActivationManager {
 		// Get template data
 		const _templateData = this.#getTemplateData();
 
-		return { rolls, activation: this.activationData };
+		return { rolls, activation: this.activationData, rollHidden: dialogData.rollHidden ?? false };
 	}
 
 	async #getRolls(dialogData: ItemActivationManager.DialogData): Promise<(Roll | DamageRoll)[]> {
@@ -259,6 +259,7 @@ namespace ItemActivationManager {
 		rollFormula?: string;
 		primaryDieValue?: number;
 		primaryDieModifier?: string;
+		rollHidden?: boolean;
 	}
 }
 
