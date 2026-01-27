@@ -5,6 +5,7 @@
 
 	let { actor, dialog, ...data } = $props();
 	let selectedRollMode = $state(Math.clamp(data.rollMode ?? 0, -6, 6));
+	let shouldRollBeHidden = $state(false);
 
 	let rollFormula = $derived(
 		getRollFormula(actor, {
@@ -16,7 +17,12 @@
 
 <article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
 	<RollModeConfig bind:selectedRollMode />
-
+	<div class="nimble-roll-modifiers-container">
+		<label>
+			Hide Roll?
+			<input type="checkbox" bind:checked={shouldRollBeHidden} class="modifier-item__checkbox" />
+		</label>
+	</div>
 	<div class="nimble-roll-formula">{rollFormula}</div>
 </article>
 
@@ -24,7 +30,12 @@
 	<button
 		class="nimble-button"
 		data-button-variant="basic"
-		onclick={() => dialog.submitRoll({ rollMode: selectedRollMode[0], rollFormula })}
+		onclick={() =>
+			dialog.submitRoll({
+				rollMode: selectedRollMode[0],
+				rollFormula,
+				visibilityMode: shouldRollBeHidden ? 'blindroll' : 'publicroll',
+			})}
 	>
 		<i class="nimble-button__icon fa-solid fa-dice-d20"></i>
 		Roll

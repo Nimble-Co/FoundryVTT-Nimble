@@ -7,6 +7,7 @@
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
+	let shouldRollHidden = $state(false);
 
 	const { damageTypes, hitDice } = CONFIG.NIMBLE;
 
@@ -120,6 +121,12 @@
 			</div>
 		{/each}
 	</div>
+	<div class="nimble-roll-modifiers-container">
+		<label>
+			Hide Roll?
+			<input type="checkbox" bind:checked={shouldRollHidden} class="modifier-item__checkbox" />
+		</label>
+	</div>
 </article>
 
 <footer class="nimble-sheet__footer">
@@ -149,6 +156,7 @@
 				situationalModifiers,
 				primaryDieValue: primaryDieValue,
 				primaryDieModifier: primaryDieModifier,
+				rollHidden: shouldRollHidden,
 			});
 		}}
 	>
