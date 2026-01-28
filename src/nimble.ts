@@ -8,6 +8,10 @@ import renderChatMessageHTML from './hooks/renderChatMessage.js';
 import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import setup from './hooks/setup.js';
 import './scss/main.scss';
+import { injectViteHmrClient } from './utils/viteHmr.js';
+
+// Inject Vite HMR client for hot reload support during development
+injectViteHmrClient();
 
 /** ----------------------------------- */
 //                Hooks
@@ -54,3 +58,9 @@ Hooks.on('deleteCombat', () => {
 		token.renderFlags.set({ refreshTurnMarker: true });
 	}
 });
+
+// Accept HMR updates during development
+// For FoundryVTT, a full reload is typically safest when JS changes
+if (import.meta.hot) {
+	import.meta.hot.accept();
+}

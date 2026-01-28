@@ -9,7 +9,7 @@
 		"isolatedModules": true,
 		"lib": ["DOM", "DOM.Iterable", "ESnext"],
 		"target": "esnext",
-		"types": ["fvtt-types"],
+		"types": ["fvtt-types", "vite/client"],
 		"paths": {
 			"#documents/*": ["./src/documents/*"],
 			"#lib/*": ["./lib/*"],

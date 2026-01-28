@@ -9,7 +9,7 @@ const config = defineConfig({
 	publicDir: path.resolve(__dirname, 'public'),
 	server: {
 		port: 30001,
-		open: true,
+		open: '/',
 		proxy: {
 			// Explicit paths (Vite proxy keys are path prefixes; regex-like strings don't always match)
 			'/systems/nimble/nimble.css': 'http://localhost:30000',
