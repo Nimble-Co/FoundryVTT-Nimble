@@ -1,4 +1,21 @@
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
+const { ApplicationV2 } = foundry.applications.api;
+
+const namespace = 'nimble';
+export const settings = [
+	{
+		namespace,
+		key: 'hideRolls',
+		options: {
+			name: 'nimble.settings.dice.hideRolls',
+			hint: 'nimble.settings.hints.hideRolls',
+			scope: 'client',
+			config: false,
+			default: false,
+			type: Boolean,
+		},
+	},
+];
 
 export default function registerSystemSettings() {
 	game.settings.register(
@@ -7,6 +24,27 @@ export default function registerSystemSettings() {
 		{
 			name: 'NIMBLE.settings.autoExpandRolls.name',
 			hint: 'NIMBLE.settings.autoExpandRolls.hint',
+			scope: 'client',
+			config: true,
+			type: Boolean,
+			default: false,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
+
+	for (const setting of settings) {
+		game.settings.register(
+			setting.namespace as 'core',
+			setting.key as 'rollMode',
+			setting.options as unknown as Parameters<typeof game.settings.register>[2],
+		);
+	}
+
+	game.settings.register(
+		'nimble' as 'core',
+		'hideRolls' as 'rollMode',
+		{
+			name: 'Hide Rolls by Default',
+			hint: 'When enabled, skill check and weapon roll dialogs will default to hiding the roll from other players.',
 			scope: 'client',
 			config: true,
 			type: Boolean,
