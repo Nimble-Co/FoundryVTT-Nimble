@@ -10,7 +10,6 @@
 		"build:compendia": "node ./build/buildCompendia.mjs",
 		"worktree:setup": "node ./build/worktreeSetup.mjs",
 		"dev": "vite",
-		"dev:watch": "vite build --watch",
 		"format": "npx @biomejs/biome format --write ./src/ ./types/ ./lib/ && npx prettier --write \"src/**/*.svelte\"",
 		"format:biome": "npx @biomejs/biome format --write ./src/ ./types/ ./lib/",
 		"format:svelte": "npx prettier --write \"src/**/*.svelte\"",
