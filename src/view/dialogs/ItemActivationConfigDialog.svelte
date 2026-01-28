@@ -7,7 +7,7 @@
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
-	let shouldRollHidden = $state(false);
+	let shouldRollHidden = $state(!!game.settings.get('nimble', 'hideRolls'));
 
 	const { damageTypes, hitDice } = CONFIG.NIMBLE;
 

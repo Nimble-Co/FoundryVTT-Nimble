@@ -5,7 +5,7 @@
 
 	let { actor, dialog, ...data } = $props();
 	let selectedRollMode = $state(Math.clamp(data.rollMode ?? 0, -6, 6));
-	let shouldRollBeHidden = $state(false);
+	let shouldRollBeHidden = $state(!!game.settings.get('nimble', 'hideRolls'));
 
 	let rollFormula = $derived(
 		getRollFormula(actor, {
