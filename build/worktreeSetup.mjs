@@ -139,8 +139,8 @@ async function promptUser(title, infoLines, options) {
  * Setup the symlink to FoundryVTT
  * @returns {Promise<void>}
  */
-async function setupSymlink() {
-	const foundryDataPath = getFoundryDataPath();
+async function setupSymlink(customPath) {
+	const foundryDataPath = customPath || getFoundryDataPath();
 	const systemsPath = path.join(foundryDataPath, 'systems');
 	const targetSymlinkPath = path.join(systemsPath, SYSTEM_NAME);
 
@@ -261,14 +261,25 @@ async function setup() {
 	console.log('║     Worktree Setup for FoundryVTT      ║');
 	console.log('╚════════════════════════════════════════╝');
 
-	// Step 1: Install dependencies
+	// Step 1: Get potential custom path from argument
+	const customPath = process.argv[2];
+	if (customPath) {
+		// Verify the custom path exists
+		if (!fs.existsSync(customPath)) {
+			console.error(`\nCustom FoundryVTT data path does not exist: ${customPath}`);
+			process.exit(1);
+		}
+		console.log(`\nUsing custom FoundryVTT data path from argument: ${customPath}`);
+	}
+
+	// Step 2: Install dependencies
 	runCommand('npm install', 'Installing dependencies');
 
-	// Step 2: Build the system
+	// Step 3: Build the system
 	runCommand('npm run build', 'Building system and compendia');
 
-	// Step 3: Setup symlink
-	await setupSymlink();
+	// Step 4: Setup symlink
+	await setupSymlink(customPath);
 
 	console.log('');
 	console.log('╔════════════════════════════════════════╗');
