@@ -47,6 +47,7 @@ const abilityScoreControls = {
 const characterCreationStages = {
 	stepFourStartingEquipment: 'NIMBLE.characterCreationStages.stepFourStartingEquipment',
 	stepFiveStats: 'NIMBLE.characterCreationStages.stepFiveStats',
+	stepSixSkills: 'NIMBLE.characterCreationStages.stepSixSkills',
 };
 
 const ancestryOptions = {
