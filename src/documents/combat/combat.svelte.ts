@@ -84,8 +84,6 @@ class NimbleCombat extends Combat {
 			await combatant.update({
 				'system.actions.base.current': system.actions.base.max,
 			} as Record<string, unknown>);
-		} else if (combatant.type === 'soloMonster') {
-			console.log('SOLO MONSTER');
 		}
 	}
 
@@ -95,19 +93,17 @@ class NimbleCombat extends Combat {
 			return;
 		}
 
-		const skippedCombatants = this.turns.slice(this.previous?.turn ?? 0);
-
 		type CombatantUpdate = { _id: string | null; 'system.actions.base.current': number };
+
+		// Reset all combatants' actions to their respective max values
 		await this.updateEmbeddedDocuments(
 			'Combatant',
-			skippedCombatants.reduce<CombatantUpdate[]>((updates, currentCombatant) => {
-				if (currentCombatant.type === 'character') {
-					const system = currentCombatant.system as unknown as CombatantSystemWithActions;
-					updates.push({
-						_id: currentCombatant.id,
-						'system.actions.base.current': system.actions.base.max,
-					});
-				}
+			this.combatants.reduce<CombatantUpdate[]>((updates, currentCombatant) => {
+				const system = currentCombatant.system as unknown as CombatantSystemWithActions;
+				updates.push({
+					_id: currentCombatant.id,
+					'system.actions.base.current': system.actions.base.max,
+				});
 				return updates;
 			}, []),
 		);

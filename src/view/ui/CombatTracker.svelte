@@ -4,6 +4,7 @@
 	import BaseCombatant from './components/BaseCombatant.svelte';
 	import CombatTrackerControls from './components/CombatTrackerControls.svelte';
 	import PlayerCharacterCombatant from './components/PlayerCharacterCombatant.svelte';
+	import MonsterCombatant from '#view/ui/components/MonsterCombatant.svelte';
 
 	type CombatWithDrop = Combat & {
 		_onDrop?: (
@@ -66,6 +67,9 @@
 		switch (combatant.type) {
 			case 'character':
 				return PlayerCharacterCombatant;
+			case 'soloMonster':
+			case 'npc': // TODO: For now NPCs are monsters in regards to the combat tracker
+				return MonsterCombatant;
 			default:
 				return BaseCombatant;
 		}
