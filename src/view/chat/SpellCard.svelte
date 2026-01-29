@@ -25,7 +25,7 @@
 
 	let { messageDocument } = $props();
 
-	let { activation, description, image, isCritical, isMiss, spellName, tier } = $derived(
+	let { activation, description, image, isCritical, isMiss, spellName, tier, upcast } = $derived(
 		messageDocument.reactive.system,
 	);
 
@@ -34,6 +34,12 @@
 	let subheading = $derived(getCardSubheading(activation, isCritical, isMiss));
 
 	let upcastingLabel = $derived(getUpcastingDescriptionLabel(tier, description.higherLevelEffect));
+
+	let hasUpcast = $derived(upcast?.isUpcast);
+	let upcastSummary = $derived(() => {
+		if (!hasUpcast) return null;
+		return `Cast with ${upcast.manaSpent} mana (+${upcast.upcastSteps} step${upcast.upcastSteps !== 1 ? 's' : ''})`;
+	});
 
 	setContext('messageDocument', messageDocument);
 </script>
@@ -50,6 +56,13 @@
 		image={image || 'icons/svg/item-bag.svg'}
 		{subheading}
 	/>
+
+	{#if hasUpcast}
+		<section class="nimble-card-section nimble-upcast-indicator">
+			<i class="fa-solid fa-arrow-up-right-dots"></i>
+			{upcastSummary()}
+		</section>
+	{/if}
 
 	<Targets />
 
@@ -81,6 +94,18 @@
 		&:not(:last-of-type) {
 			border-bottom: 1px solid var(--nimble-card-border-color);
 		}
+	}
+
+	.nimble-upcast-indicator {
+		background: var(--nimble-color-primary-alpha);
+		color: var(--nimble-color-primary);
+		font-weight: 600;
+		text-align: center;
+		padding: 0.5rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
 	}
 
 	:global(.nimble-card-section--description *:first-child) {

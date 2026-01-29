@@ -1,9 +1,12 @@
 import type { EffectNode } from '#types/effectTree.js';
+import type { UpcastResult } from '#types/spellScaling.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
+import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
 import getRollFormula from '../utils/getRollFormula.js';
+import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
 
@@ -23,6 +26,8 @@ class ItemActivationManager {
 	#options: ItemActivationManager.ActivationOptions;
 
 	activationData: any;
+
+	upcastResult: UpcastResult | null = null;
 
 	constructor(item: NimbleBaseItem, options: ItemActivationManager.ActivationOptions) {
 		this.#item = item;
@@ -57,7 +62,10 @@ class ItemActivationManager {
 				(node) => node.type === 'damage' || node.type === 'healing',
 			);
 
-			if (hasRolls) {
+			// Check if this is a spell (for upcast dialog)
+			const isSpell = this.#item.type === 'spell';
+
+			if (hasRolls || isSpell) {
 				// Check if Alt is pressed to skip dialog
 				let altPressed = false;
 				const unsubscribe = keyPressStore.subscribe((state) => {
@@ -68,7 +76,10 @@ class ItemActivationManager {
 					// Skip dialog, use default
 					dialogData = this.#getDefaultDialogData(rollOptions);
 				} else {
-					const dialog = new ItemActivationConfigDialog(
+					// Use spell dialog for spells, regular dialog for others
+					const DialogClass = isSpell ? SpellUpcastDialog : ItemActivationConfigDialog;
+
+					const dialog = new DialogClass(
 						this.actor,
 						this.#item,
 						`Activate ${this.#item.name}`,
@@ -88,6 +99,40 @@ class ItemActivationManager {
 			} else {
 				// No rolls needed, use default
 				dialogData = this.#getDefaultDialogData(rollOptions);
+			}
+		}
+
+		// Apply upcast deltas if present
+		if (dialogData.upcast && this.#item.type === 'spell') {
+			const spellSystem = this.#item.system as any;
+			const actorSystem = this.actor!.system as any;
+			console.log(this.actor);
+			const context = {
+				spell: {
+					tier: spellSystem.tier,
+					scaling: spellSystem.scaling,
+				},
+				actor: {
+					resources: {
+						mana: {
+							current: actorSystem.resources?.mana?.current || 0,
+						},
+						highestUnlockedSpellTier: actorSystem.resources?.highestUnlockedSpellTier || 0,
+					},
+				},
+				activationData: this.activationData,
+				manaToSpend: dialogData.upcast.manaToSpend,
+				choiceIndex: dialogData.upcast.choiceIndex,
+			};
+
+			try {
+				const upcastData = applyUpcastDeltas(context);
+				this.activationData = upcastData.activationData;
+				this.upcastResult = upcastData.upcastResult;
+			} catch (error) {
+				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+				ui.notifications?.error(`Upcast failed: ${errorMessage}`);
+				return { activation: null, rolls: null };
 			}
 		}
 
@@ -264,6 +309,10 @@ namespace ItemActivationManager {
 		rollFormula?: string;
 		primaryDieValue?: number;
 		primaryDieModifier?: string;
+		upcast?: {
+			manaToSpend: number;
+			choiceIndex?: number;
+		};
 	}
 }
 

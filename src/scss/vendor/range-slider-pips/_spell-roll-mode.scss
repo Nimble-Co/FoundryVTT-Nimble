@@ -1,0 +1,26 @@
+.nimble-spell-roll-mode-config {
+	padding: 0.5rem;
+
+	.rangePips {
+		.rsPipVal {
+			font-size: var(--nimble-sm-text);
+			font-weight: 500;
+			transition: var(--nimble-standard-transition);
+			top: 0.75em;
+		}
+
+		.rsPip:first-of-type,
+		.rsPip:last-of-type {
+			height: 0.75em;
+		}
+	}
+
+	.rangeSlider {
+		cursor: pointer;
+	}
+
+	.rangePips.hoverable:not(.disabled) .pip:hover,
+	.rangePips .pip.selected .pipVal {
+		font-weight: 700;
+	}
+}

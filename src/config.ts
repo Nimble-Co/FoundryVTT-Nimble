@@ -462,8 +462,20 @@ const skills: Record<SkillKeyType, string> = {
 	stealth: 'NIMBLE.skills.stealth',
 };
 
-const spellUpcasting = {
-	castAtTierHeading: 'NIMBLE.spells.spellUpcasting.castAtTierHeading',
+const spellUpcastDialog = {
+	upcastHeading: 'NIMBLE.spells.spellUpcastDialog.upcastHeading',
+	castSpell: 'NIMBLE.spells.spellUpcastDialog.castSpell',
+	manaInfo: {
+		currentManaCost: 'NIMBLE.spells.spellUpcastDialog.manaInfo.currentManaCost',
+		upcastManaCost: 'NIMBLE.spells.spellUpcastDialog.manaInfo.upcastManaCost',
+	},
+	slider: {
+		level: 'NIMBLE.spells.spellUpcastDialog.slider.level',
+		minTier: 'NIMBLE.spells.spellUpcastDialog.slider.minTier',
+		maxTier: 'NIMBLE.spells.spellUpcastDialog.slider.maxTier',
+	},
+	chooseEnhancement: 'NIMBLE.spells.spellUpcastDialog.chooseEnhancement',
+	maxTier: 'NIMBLE.spells.spellUpcastDialog.maxTier',
 };
 
 const spellProperties = {
@@ -740,6 +752,24 @@ const fieldRest = {
 	restedWithoutSpending: 'NIMBLE.fieldRest.restedWithoutSpending',
 };
 
+const itemConfig = {
+	targets: 'NIMBLE.itemConfig.targets',
+	targetsNumber: 'NIMBLE.itemConfig.targetsNumber',
+	acquireTargetsFromTemplate: 'NIMBLE.itemConfig.acquireTargetsFromTemplate',
+	targetCount: 'NIMBLE.itemConfig.targetCount',
+	targetRestrictions: 'NIMBLE.itemConfig.targetRestrictions',
+	attackType: 'NIMBLE.itemConfig.attackType',
+	duration: 'NIMBLE.itemConfig.duration',
+	distance: 'NIMBLE.itemConfig.distance',
+	areaSize: 'NIMBLE.itemConfig.areaSize',
+	attackTypes: {
+		none: 'NIMBLE.itemConfig.attackTypes.none',
+		melee: 'NIMBLE.itemConfig.attackTypes.melee',
+		reach: 'NIMBLE.itemConfig.attackTypes.reach',
+		range: 'NIMBLE.itemConfig.attackTypes.range',
+	},
+};
+
 const NIMBLE = {
 	// Constants
 	ROLL_MODE,
@@ -805,7 +835,7 @@ const NIMBLE = {
 	sizeCategories,
 	skillPointAssignment,
 	skills,
-	spellUpcasting,
+	spellUpcastDialog,
 	spellProperties,
 	startingEquipment,
 	spellSchoolIcons,
@@ -821,6 +851,7 @@ const NIMBLE = {
 	weaponAttributes,
 	weaponGroups,
 	weaponProperties,
+	itemConfig,
 
 	// Register functions
 	...registerDocumentConfig(),

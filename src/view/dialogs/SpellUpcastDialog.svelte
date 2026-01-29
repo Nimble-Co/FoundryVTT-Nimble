@@ -1,0 +1,391 @@
+<script lang="ts">
+	import type { ScalingDelta } from '#types/spellScaling.js';
+	import RollModeConfig from './components/RollModeConfig.svelte';
+	import RangeSlider from 'svelte-range-slider-pips';
+
+	let { actor, dialog, item, spell, ...data } = $props();
+
+	// Initialize state
+	let selectedRollMode = $state(Math.clamp(data.rollMode ?? 0, -6, 6));
+	let situationalModifiers = $state('');
+	let primaryDieValue = $state();
+	let primaryDieModifier = $state();
+
+	// I18n helpers
+	const { hitDice, spellUpcastDialog, effectTypes, spellProperties, itemConfig, objectTypes } =
+		CONFIG.NIMBLE;
+	const format = (key: string, data?: Record<string, string>) => game.i18n.format(key, data);
+
+	// Compute upcast constraints
+	const baseMana = spell.tier;
+	const currentMana = actor.system.resources.mana.current;
+	const maxTier = actor.system.resources.highestUnlockedSpellTier;
+	const maxMana = Math.min(currentMana, maxTier);
+
+	// Check if spell can be upcast
+	const canUpcast = spell.tier > 0 && spell.scaling && spell.scaling.mode !== 'none';
+	const hasChoices = spell.scaling?.mode === 'upcastChoice';
+
+	// Upcast state
+	let manaToSpend = $state(baseMana);
+	let choiceIndex = $state(0);
+
+	// Derived values
+	let upcastSteps = $derived(manaToSpend - baseMana);
+	let remainingMana = $derived(currentMana - manaToSpend);
+
+	// Compute preview of upcast effects
+	let upcastPreview = $derived(() => {
+		if (!canUpcast || upcastSteps === 0) return [];
+
+		const deltas = hasChoices
+			? spell.scaling.choices[choiceIndex]?.deltas || []
+			: spell.scaling.deltas;
+
+		return deltas.map((delta: ScalingDelta) => {
+			const amount = getScaledAmount(delta, upcastSteps);
+			return formatDeltaPreview(delta, amount, spell.school);
+		});
+	});
+
+	function getScaledAmount(delta: ScalingDelta, steps: number) {
+		if (delta.operation === 'addDice' && delta.dice) {
+			return `${delta.dice.count * steps}d${delta.dice.faces}`;
+		}
+		if (delta.value !== null && delta.value !== undefined) {
+			return delta.value * steps;
+		}
+		return delta.condition || '';
+	}
+
+	function formatDeltaPreview(
+		delta: ScalingDelta,
+		amount: ReturnType<typeof getScaledAmount>,
+		school: string,
+	) {
+		const operations = {
+			addFlatDamage: `+${amount} ${school} ${format(effectTypes.damage)}`,
+			addDice: `+${amount} ${school} ${format(effectTypes.damage)}`,
+			addReach: `+${amount} ${format(spellProperties.reach)}`,
+			addRange: `+${amount} ${format(spellProperties.range)}`,
+			addTargets: `+${amount} ${format(itemConfig.targetsNumber, { count: `${amount}` })}`,
+			addAreaSize: `+${amount} ${format(itemConfig.areaSize)}`,
+			addDC: `+${amount} DC`,
+			addDuration: `+${amount} ${format(itemConfig.duration)}`,
+			//TODO: i18n
+			addCondition: `Add ${amount}`,
+			addArmor: `+${amount} ${format(objectTypes.armor)}`,
+		};
+		return operations[delta.operation] || delta.operation;
+	}
+</script>
+
+<article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
+	<RollModeConfig bind:selectedRollMode />
+
+	{#if canUpcast}
+		<hr />
+		<div class="nimble-upcast-section">
+			<h3 class="nimble-upcast-heading">
+				{format(spellUpcastDialog.upcastHeading, {
+					spellName: spell.parent.name,
+				})}
+			</h3>
+			<div class="nimble-mana-info">
+				<span>Current Mana: <strong>{currentMana}</strong></span>
+				<span>Max Tier: <strong>{maxTier}</strong></span>
+			</div>
+			<div class="nimble-mana-slider">
+				<div class="nimble-upcast-meta">
+					<span class="nimble-upcast-steps"
+						>{format(spellUpcastDialog.slider.level)}: <strong>{upcastSteps}</strong></span
+					>
+					<!-- <span class="nimble-remaining-mana" class:nimble-remaining-mana--low={remainingMana < 3}>
+						{format(spellUpcastDialog.slider.remaining)}: <strong>{remainingMana}</strong>
+					</span> -->
+				</div>
+				<section class="nimble-spell-roll-mode-config">
+					<RangeSlider
+						pips
+						float
+						all="label"
+						min={1}
+						max={9}
+						formatter={(value) => `${value} Mana`}
+						--range-float-text="var(--nimble-light-text-color)"
+						--range-handle="var(--nimble-range-slider-handle-color)"
+						--range-handle-focus="var(--nimble-range-slider-handle-color)"
+						--range-handle-inactive="var(--nimble-range-slider-handle-color)"
+						--range-pip="var(--nimble-dark-text-color)"
+						--range-pip-active="var(--nimble-dark-text-color)"
+						--range-pip-hover="var(--nimble-dark-text-color)"
+						--range-slider="var(--nimble-accent-color)"
+						spring={false}
+						bind:value={manaToSpend}
+					/>
+				</section>
+			</div>
+			<div class="nimble-upcast-info">
+				{#if hasChoices && spell.scaling.choices && upcastSteps > 0}
+					<fieldset class="nimble-upcast-choices">
+						<!-- TODO: i18n -->
+						<legend class="nimble-choices-label">Choose Enhancement:</legend>
+						{#each spell.scaling.choices as choice, i}
+							<label class="nimble-choice-option">
+								<input type="radio" name="upcast-choice" value={i} bind:group={choiceIndex} />
+								<span>{choice.label}</span>
+							</label>
+						{/each}
+					</fieldset>
+				{/if}
+
+				{#if upcastSteps > 0 && upcastPreview().length > 0}
+					<div class="nimble-upcast-preview">
+						<!-- TODO: i18n -->
+						<h4 class="nimble-preview-heading">Applied Effects:</h4>
+						<ul class="nimble-preview-list">
+							{#each upcastPreview() as effect}
+								<li>{effect}</li>
+							{/each}
+						</ul>
+					</div>
+				{/if}
+			</div>
+		</div>
+	{/if}
+
+	<div class="nimble-roll-modifiers-container">
+		<div class="nimble-roll-modifiers">
+			<label>
+				{format(hitDice.situationalModifiers)}:
+				<input type="string" bind:value={situationalModifiers} placeholder="0" />
+			</label>
+		</div>
+	</div>
+
+	<div class="nimble-roll-modifiers-container">
+		<div class="nimble-roll-modifiers">
+			<label>
+				{format(hitDice.setPrimaryDie)}:
+				<input type="number" bind:value={primaryDieValue} placeholder="0" />
+			</label>
+		</div>
+
+		<div class="nimble-roll-modifiers">
+			<label>
+				{format(hitDice.setPrimaryDieModifier)}:
+				<input
+					type="number"
+					bind:value={primaryDieModifier}
+					placeholder="0"
+					disabled={primaryDieValue !== undefined ? false : true}
+				/>
+			</label>
+		</div>
+	</div>
+</article>
+
+<footer class="nimble-sheet__footer">
+	<button
+		class="nimble-button"
+		data-button-variant="basic"
+		onclick={() => {
+			console.log('[SpellUpcastDialog] Cast button clicked');
+
+			// Validate situational modifiers
+			if (situationalModifiers !== '') {
+				const isValid = Roll.validate(situationalModifiers);
+				if (!isValid) {
+					ui.notifications?.warn('Invalid dice formula in situational modifiers.');
+					return;
+				}
+			}
+
+			// Validate mana (only for tiered spells that cost mana)
+			if (baseMana > 0) {
+				if (manaToSpend < baseMana) {
+					ui.notifications?.warn(
+						`Must spend at least ${baseMana} mana for a tier ${baseMana} spell.`,
+					);
+					return;
+				}
+				if (manaToSpend > currentMana) {
+					ui.notifications?.warn(
+						`Not enough mana. You have ${currentMana}, but need ${manaToSpend}.`,
+					);
+					return;
+				}
+			}
+
+			dialog.submitActivation({
+				rollMode: selectedRollMode,
+				situationalModifiers,
+				primaryDieValue,
+				primaryDieModifier,
+				upcast: canUpcast
+					? {
+							manaToSpend,
+							choiceIndex: hasChoices ? choiceIndex : undefined,
+						}
+					: undefined,
+			});
+		}}
+	>
+		<i class="nimble-button__icon fa-solid fa-wand-magic-sparkles"></i>
+		{format(spellUpcastDialog.castSpell)}
+	</button>
+</footer>
+
+<style lang="scss">
+	[data-button-variant='basic'] {
+		--nimble-button-padding: 0.5rem;
+		--nimble-button-width: 100%;
+	}
+
+	.nimble-upcast-info {
+		display: flex;
+		gap: 1rem;
+	}
+
+	.nimble-upcast-section {
+		padding: 1rem;
+		background: var(--nimble-background-color-secondary);
+		border-radius: var(--nimble-border-radius);
+	}
+
+	.nimble-upcast-heading {
+		margin: 0 0 0.75rem 0;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--nimble-color-primary);
+	}
+
+	.nimble-mana-info {
+		display: flex;
+		flex-direction: column;
+		margin-bottom: 0.75rem;
+		font-size: 0.875rem;
+		color: var(--nimble-text-color-secondary);
+
+		strong {
+			color: var(--nimble-text-color-primary);
+		}
+	}
+
+	.nimble-mana-slider {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.nimble-upcast-meta {
+		display: flex;
+		justify-content: space-between;
+		font-size: 0.875rem;
+		color: var(--nimble-text-color-secondary);
+
+		strong {
+			color: var(--nimble-text-color-primary);
+		}
+	}
+
+	// .nimble-remaining-mana--low {
+	// 	color: var(--nimble-color-error);
+
+	// 	strong {
+	// 		color: var(--nimble-color-error);
+	// 	}
+	// }
+
+	.nimble-upcast-choices {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.nimble-choices-label {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--nimble-text-color-primary);
+		margin-bottom: 0.25rem;
+	}
+
+	.nimble-choice-option {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem;
+		background: var(--nimble-background-color-tertiary);
+		border-radius: var(--nimble-border-radius);
+		cursor: pointer;
+		transition: background 0.15s ease;
+
+		&:hover {
+			background: var(--nimble-background-color-hover);
+		}
+
+		input[type='radio'] {
+			cursor: pointer;
+		}
+
+		span {
+			flex: 1;
+			font-size: 0.875rem;
+		}
+	}
+
+	.nimble-upcast-preview {
+		background: var(--nimble-background-color-tertiary);
+		border-radius: var(--nimble-border-radius);
+		border: 1px solid var(--nimble-color-primary-alpha);
+	}
+
+	.nimble-preview-heading {
+		margin: 0 0 0.5rem 0;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--nimble-color-primary);
+	}
+
+	.nimble-preview-list {
+		margin: 0;
+		padding-left: 0;
+		list-style: none;
+
+		li {
+			font-size: 0.875rem;
+			color: var(--nimble-text-color-primary);
+			margin-bottom: 0.25rem;
+
+			&:last-child {
+				margin-bottom: 0;
+			}
+		}
+	}
+
+	.nimble-roll-modifiers-container {
+		display: flex;
+		gap: 1rem;
+		margin-top: 1rem;
+	}
+
+	.nimble-roll-modifiers {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		flex: 1;
+
+		label {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+
+			input {
+				padding: 0.5rem;
+				border: 1px solid var(--nimble-border-color);
+				border-radius: var(--nimble-border-radius);
+				flex: 1;
+			}
+		}
+	}
+</style>

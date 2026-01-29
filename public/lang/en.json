@@ -568,8 +568,20 @@
 				"tier8": "Tier 8",
 				"tier9": "Tier 9"
 			},
-			"spellUpcasting": {
-				"castAtTierHeading": "Cast at Tier"
+			"spellUpcastDialog": {
+				"upcastHeading": "Upcast {spellName}",
+				"castSpell": "Cast Spell",
+				"manaInfo": {
+					"currentManaCost": "Current mana cost: {currentCost}",
+					"upcastManaCost": "Upcast mana cost: {upcastCost} (Total)"
+				},
+				"slider": {
+					"level": "Upcast Level",
+					"min": "Min Tier {tier}",
+					"max": "Max Tier {tier}"
+				},
+				"chooseEnhancement": "Choose Enhancement",
+				"maxTier": "Max tier"
 			}
 		},
 		"statArrays": {
@@ -730,7 +742,10 @@
 			"dropError": "Failed to process dropped item. Please report this issue."
 		},
 		"itemConfig": {
+			"areaSize": "Area Size",
 			"targets": "Targets",
+			"duration": "Duration",
+			"targetsNumber": "Targets {count}",
 			"acquireTargetsFromTemplate": "Acquire targets from template",
 			"targetCount": "Target Count",
 			"targetRestrictions": "Target Restrictions",
