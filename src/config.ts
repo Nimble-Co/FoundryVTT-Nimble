@@ -639,6 +639,8 @@ const hitPoints = {
 	level: 'NIMBLE.hitPoints.level',
 	bonusHp: 'NIMBLE.hitPoints.bonusHp',
 	bonusHpHint: 'NIMBLE.hitPoints.bonusHpHint',
+	fromRules: 'NIMBLE.hitPoints.fromRules',
+	totalFromRules: 'NIMBLE.hitPoints.totalFromRules',
 	totalMaxHp: 'NIMBLE.hitPoints.totalMaxHp',
 	saveChanges: 'NIMBLE.hitPoints.saveChanges',
 };

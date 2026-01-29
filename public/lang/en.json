@@ -623,6 +623,8 @@
 			"level": "Lvl {level}",
 			"bonusHp": "Bonus HP",
 			"bonusHpHint": "Static bonus from feats, items, or other sources",
+			"fromRules": "From Items & Rules",
+			"totalFromRules": "Total from Rules",
 			"totalMaxHp": "Total Maximum HP",
 			"saveChanges": "Save Changes"
 		},

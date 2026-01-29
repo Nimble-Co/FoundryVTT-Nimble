@@ -282,10 +282,12 @@
 			"bonusHp": "Bonus HP",
 			"bonusHpHint": "Static bonus from feats, items, or other sources",
 			"classTotal": "Class Total",
+			"fromRules": "De Objetos y Reglas",
 			"level": "Lvl {level}",
 			"levelUpHpGains": "Level-Up HP Gains",
 			"saveChanges": "Save Changes",
 			"startingHp": "Starting HP",
+			"totalFromRules": "Total de Reglas",
 			"totalMaxHp": "Total Maximum HP"
 		},
 		"itemConfig": {

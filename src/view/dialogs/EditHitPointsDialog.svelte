@@ -1,4 +1,6 @@
 <script>
+	import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
+
 	const startingHpByHitDie = {
 		6: 10,
 		8: 13,
@@ -21,6 +23,34 @@
 
 	let classHpData = $state([]);
 	let hpBonus = $state(document.system.attributes.hp.bonus || 0);
+
+	// Collect HP bonuses from rules
+	let ruleBonuses = $derived.by(() => {
+		const bonuses = [];
+		const rollData = document.getRollData?.() ?? {};
+
+		for (const item of document.items ?? []) {
+			if (!item.rules) continue;
+
+			for (const rule of item.rules.values()) {
+				if (rule.type !== 'maxHpBonus') continue;
+				if (rule.disabled) continue;
+
+				const formula = rule.perLevel ? `${rule.value} * @level` : rule.value;
+				const value = getDeterministicBonus(formula, rollData) ?? 0;
+
+				bonuses.push({
+					name: item.name,
+					value,
+					perLevel: rule.perLevel,
+				});
+			}
+		}
+
+		return bonuses;
+	});
+
+	let totalRuleBonus = $derived(ruleBonuses.reduce((acc, b) => acc + b.value, 0));
 
 	$effect(() => {
 		classHpData = Object.values(document.classes ?? {}).map((cls) => ({
@@ -98,6 +128,25 @@
 				{CONFIG.NIMBLE.hitPoints.bonusHp}
 			</h3>
 		</header>
+
+		{#if ruleBonuses.length > 0}
+			<div class="hp-rule-bonuses">
+				<span class="hp-rule-bonuses__header">{CONFIG.NIMBLE.hitPoints.fromRules}</span>
+				<div class="hp-rule-bonuses__list">
+					{#each ruleBonuses as bonus}
+						<div class="hp-rule-bonus">
+							<span class="hp-rule-bonus__name">{bonus.name}</span>
+							<span class="hp-rule-bonus__value">+{bonus.value}</span>
+						</div>
+					{/each}
+				</div>
+				<div class="hp-rule-bonuses__total">
+					<span class="hp-rule-bonuses__total-label">{CONFIG.NIMBLE.hitPoints.totalFromRules}</span>
+					<span class="hp-rule-bonuses__total-value">+{totalRuleBonus}</span>
+				</div>
+			</div>
+		{/if}
+
 		<div class="hp-bonus-row">
 			<label class="hp-bonus-label" for="hp-bonus-input">
 				{CONFIG.NIMBLE.hitPoints.bonusHpHint}
@@ -268,6 +317,67 @@
 		background: var(--nimble-box-background-color);
 		border-radius: 6px;
 		border: 1px solid var(--nimble-card-border-color);
+	}
+
+	.hp-rule-bonuses {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+		padding: 0.5rem;
+		background: var(--nimble-input-background-color);
+		border-radius: 4px;
+		border: 1px solid var(--nimble-card-border-color);
+
+		&__header {
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
+			color: var(--nimble-medium-text-color);
+			text-transform: uppercase;
+			letter-spacing: 0.025em;
+		}
+
+		&__list {
+			display: flex;
+			flex-direction: column;
+			gap: 0.25rem;
+		}
+
+		&__total {
+			display: flex;
+			justify-content: space-between;
+			padding-top: 0.375rem;
+			margin-top: 0.25rem;
+			border-top: 1px solid var(--nimble-card-border-color);
+		}
+
+		&__total-label {
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__total-value {
+			font-size: var(--nimble-sm-text);
+			font-weight: 700;
+			color: hsl(139, 50%, 40%);
+		}
+	}
+
+	.hp-rule-bonus {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+
+		&__name {
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-dark-text-color);
+		}
+
+		&__value {
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			color: hsl(139, 50%, 40%);
+		}
 	}
 
 	.hp-bonus-row {
