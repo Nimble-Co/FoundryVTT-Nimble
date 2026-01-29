@@ -60,8 +60,8 @@
 </header>
 
 {#each [['failedSave', 'On Failed Save:'], ['passedSave', 'On Successful Save:']] as [context, label]}
-	{@const relevantNodes = getRelevantNodes([node], [context], effects).filter((nodeGroup) =>
-		nodeGroup.some((node) => node.type !== 'savingThrow'),
+	{@const relevantNodes = getRelevantNodes([node], [context], { fullTree: effects }).filter(
+		(nodeGroup) => nodeGroup.some((node) => node.type !== 'savingThrow'),
 	)}
 
 	{#if relevantNodes.some((nodeGroup) => nodeGroup.length)}

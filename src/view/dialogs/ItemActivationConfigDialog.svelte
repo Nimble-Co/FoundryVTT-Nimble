@@ -12,7 +12,7 @@
 
 	// Get all damage effects from the item's activation effects
 	// This searches recursively through the effects tree, including sharedRolls
-	let damageEffects = $state(() => {
+	let damageEffects = $derived.by(() => {
 		const effects = item.system.activation?.effects ?? [];
 		const allDamageEffects = [];
 
@@ -57,13 +57,11 @@
 	});
 
 	// Get the first damage formula for backward compatibility (used in validation)
-	let damageFormula = $derived(() => {
-		return damageEffects()[0]?.formula || '0';
-	});
+	let damageFormula = $derived(damageEffects[0]?.formula || '0');
 
 	// Modify formulas by adding the situationalModifiers
-	let modifiedFormulas = $derived(() => {
-		return damageEffects().map((effect) => {
+	let modifiedFormulas = $derived.by(() => {
+		return damageEffects.map((effect) => {
 			let formula = effect.formula;
 			if (situationalModifiers !== '') {
 				formula += `+${situationalModifiers}`;
@@ -109,7 +107,7 @@
 	</div>
 
 	<div class="nimble-roll-formulas">
-		{#each modifiedFormulas() as damageEffect}
+		{#each modifiedFormulas as damageEffect}
 			<div class="nimble-roll-formula">
 				{#if damageEffect.damageType}
 					<span class="nimble-roll-formula__type">
@@ -137,7 +135,7 @@
 				}
 			}
 			if (primaryDieValue != null) {
-				const roll = new Roll(damageFormula());
+				const roll = new Roll(damageFormula);
 				const terms = roll.terms;
 				const firstDieIndex = terms.findIndex((t) => t instanceof foundry.dice.terms.Die);
 				if (primaryDieValue > terms[firstDieIndex].faces || primaryDieValue < 0) {
@@ -147,7 +145,7 @@
 			}
 			dialog.submitActivation({
 				rollMode: selectedRollMode,
-				rollFormula: modifiedFormulas()[0]?.formula || '0',
+				rollFormula: modifiedFormulas[0]?.formula || '0',
 				situationalModifiers,
 				primaryDieValue: primaryDieValue,
 				primaryDieModifier: primaryDieModifier,
