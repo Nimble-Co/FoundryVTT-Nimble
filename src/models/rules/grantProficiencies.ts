@@ -57,6 +57,7 @@ class GrantProficiencyRule extends NimbleBaseRule<GrantProficiencyRule.Schema> {
 	override afterPrepareData(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
+		if (!this.test()) return;
 
 		const actor = item.actor as NimbleCharacter;
 		const { proficiencyType } = this;
@@ -65,8 +66,6 @@ class GrantProficiencyRule extends NimbleBaseRule<GrantProficiencyRule.Schema> {
 			actor,
 			`system.proficiencies.${proficiencyType}`,
 		) as string[];
-
-		console.error('Here');
 
 		if (!values.length) return;
 		if (values.includes('all')) {
