@@ -59,11 +59,11 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		const formula = this.perLevel ? `${this.value} * @level` : this.value;
 
 		const addedHp = getDeterministicBonus(formula, actor.getRollData());
-		if (!addedHp) return;
+		if (addedHp === null) return;
 
 		const actorSystem = actor.system as unknown as ActorSystemWithHp;
 		const { bonus } = actorSystem.attributes.hp;
-		actor.update({ system: { attributes: { hp: { bonus: bonus + addedHp } } } } as Record<
+		await actor.update({ system: { attributes: { hp: { bonus: bonus + addedHp } } } } as Record<
 			string,
 			unknown
 		>);
@@ -89,17 +89,17 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 
 		const formula = this.value;
 		const addedHp = getDeterministicBonus(formula, actor.getRollData());
-		if (!addedHp) return;
+		if (addedHp === null) return;
 
 		const actorSystem = actor.system as unknown as ActorSystemWithHp;
 		const { bonus } = actorSystem.attributes.hp;
-		actor.update({ system: { attributes: { hp: { bonus: bonus + addedHp } } } } as Record<
+		await actor.update({ system: { attributes: { hp: { bonus: bonus + addedHp } } } } as Record<
 			string,
 			unknown
 		>);
 	}
 
-	afterDelete(): void {
+	async afterDelete(): Promise<void> {
 		if (this.invalid) return;
 
 		const { actor, item } = this;
@@ -108,11 +108,11 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 		const formula = this.perLevel ? `${this.value} * @level` : this.value;
 
 		const addedHp = getDeterministicBonus(formula, actor.getRollData());
-		if (!addedHp) return;
+		if (addedHp === null) return;
 
 		const actorSystem = actor.system as unknown as ActorSystemWithHp;
 		const { bonus } = actorSystem.attributes.hp;
-		actor.update({ system: { attributes: { hp: { bonus: bonus - addedHp } } } } as Record<
+		await actor.update({ system: { attributes: { hp: { bonus: bonus - addedHp } } } } as Record<
 			string,
 			unknown
 		>);

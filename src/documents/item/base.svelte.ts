@@ -239,6 +239,42 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 	/** ------------------------------------------------------ */
 
 	/** ------------------------------------------------------ */
+	/**                  Lifecycle Hooks                       */
+	/** ------------------------------------------------------ */
+	protected override async _preUpdate(
+		changed: Record<string, unknown>,
+		options: Item.Database.UpdateOptions,
+		user: User.Implementation,
+	): Promise<boolean | void> {
+		// Call preUpdate on all rules
+		if (this.rules) {
+			for (const rule of this.rules.values()) {
+				const ruleWithPreUpdate = rule as object as {
+					preUpdate?: (changes: Record<string, unknown>) => Promise<void>;
+				};
+				await ruleWithPreUpdate.preUpdate?.(changed);
+			}
+		}
+
+		return super._preUpdate(changed, options, user);
+	}
+
+	override _onDelete(options, userId: string): void {
+		// Call afterDelete on all rules
+		if (this.rules) {
+			for (const rule of this.rules.values()) {
+				const ruleWithAfterDelete = rule as object as {
+					afterDelete?: () => Promise<void>;
+				};
+				// Fire and forget - afterDelete runs asynchronously after delete completes
+				ruleWithAfterDelete.afterDelete?.();
+			}
+		}
+
+		super._onDelete(options, userId);
+	}
+
+	/** ------------------------------------------------------ */
 	/**                    Document CRUD                       */
 	/** ------------------------------------------------------ */
 	static override async createDocuments<Temporary extends boolean | undefined = undefined>(

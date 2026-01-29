@@ -12,10 +12,10 @@ declare interface NimbleBaseRule<Schema = any, Parent = any> {
 	afterCreate?(): void;
 	preRoll?(): void;
 	preDelete?(): void;
-	preUpdate?(changes: Record<string, unknown>): void;
+	preUpdate?(changes: Record<string, unknown>): Promise<void>;
 	afterUpdate?(changes: Record<string, unknown>): void;
 	afterRoll?(): void;
-	afterDelete?(): void;
+	afterDelete?(): Promise<void>;
 	toObject?(): any;
 	tooltipInfo?(props?: Map<string, string>): string;
 	preUpdateActor?(
