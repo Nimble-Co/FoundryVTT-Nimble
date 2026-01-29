@@ -355,14 +355,18 @@
 		selectedRaisedByAncestry = null;
 	});
 
-	$effect(() => {
-		// Reset bonus languages when INT modifier changes and is less than current selections
-		const intMod =
-			selectedArray && selectedAbilityScores.intelligence !== null
-				? (selectedArray.array?.[selectedAbilityScores.intelligence] ?? 0)
-				: 0;
+	// Track whether stats have been fully assigned (to avoid running during drag)
+	let statsFullyAssigned = $derived(
+		Object.values(selectedAbilityScores).every((mod) => mod !== null),
+	);
 
-		// Only reset if there are actually languages to clear (prevents unnecessary state changes)
+	$effect(() => {
+		// Only run after stats are fully assigned (not during drag operations)
+		if (!statsFullyAssigned) return;
+
+		const intMod = selectedArray?.array?.[selectedAbilityScores.intelligence] ?? 0;
+
+		// Only reset if there are actually languages to clear
 		if (bonusLanguages.length > 0 && intMod < bonusLanguages.length) {
 			bonusLanguages = [];
 		}

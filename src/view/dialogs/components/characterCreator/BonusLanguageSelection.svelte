@@ -68,7 +68,9 @@
 	);
 
 	// Reset temp selections when INT drops below current temp selection count
+	// Only run after ability scores are fully assigned (not during drag operations)
 	$effect(() => {
+		if (hasUnassignedAbilityScores) return;
 		if (tempBonusLanguages.length > 0 && intelligenceModifier < tempBonusLanguages.length) {
 			tempBonusLanguages = [];
 		}
