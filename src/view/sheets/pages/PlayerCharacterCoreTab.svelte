@@ -33,24 +33,19 @@
 	async function rollInitiative() {
 		// Check if there's an active combat on the current scene with this character
 		const combat = game.combats?.viewed;
-		if (!combat) {
-			// Not currently in a combat encounter.
-			return;
-		}
-
 		const sceneId = canvas.scene?.id;
-		if (!sceneId) return;
 
-		const combatant =
-			combat.scene?.id === sceneId ? combat.combatants.find((c) => c.actorId === actor.id) : null;
+		// If character is in combat for the current scene and hasn't rolled, use combat.rollInitiative
+		if (combat && sceneId && combat.scene?.id === sceneId) {
+			const combatant = combat.combatants.find((c) => c.actorId === actor.id);
 
-		// If character is in combat and hasn't rolled initiative yet, apply to combat
-		if (combatant && combatant.initiative === null && combatant.id) {
-			await combat.rollInitiative([combatant.id]);
-			return;
+			if (combatant && combatant.initiative === null && combatant.id) {
+				await combat.rollInitiative([combatant.id]);
+				return;
+			}
 		}
 
-		// Otherwise, just roll initiative to chat without applying to combat
+		// Always roll initiative to chat
 		const roll = Roll.create(actor._getInitiativeFormula({}), actor.getRollData());
 		await roll.evaluate();
 
