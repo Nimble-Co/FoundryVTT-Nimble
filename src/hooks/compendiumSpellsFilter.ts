@@ -108,11 +108,24 @@ function normalizeIndexEntry(e: any): { _id: string; system: { school: string; t
 /**
  * Add school icon to a spell item's display name
  */
+function ensureSpellNameLayout(nameLink: HTMLElement): void {
+	if (nameLink.classList.contains('nimble-spell-name-flex')) {
+		return;
+	}
+
+	nameLink.classList.add('nimble-spell-name-flex');
+	nameLink.style.display = 'flex';
+	nameLink.style.alignItems = 'center';
+	nameLink.style.width = '100%';
+}
+
 function addSchoolIconToItem(item: HTMLElement, school: string): void {
 	try {
 		// Find the spell name element (usually the first text node or a link)
 		const nameLink = item.querySelector('a') || item;
 		if (!nameLink) return;
+
+		ensureSpellNameLayout(nameLink as HTMLElement);
 
 		// Check if icon already exists
 		if (nameLink.querySelector('.nimble-spell-school-icon')) {
@@ -132,6 +145,44 @@ function addSchoolIconToItem(item: HTMLElement, school: string): void {
 		nameLink.appendChild(iconSpan);
 	} catch (error) {
 		console.warn('Nimble: Error adding school icon to item:', error);
+	}
+}
+
+/**
+ * Add tier badge (single letter/number) to a spell item's display name
+ */
+function addTierBadgeToItem(item: HTMLElement, tier: number): void {
+	try {
+		const nameLink = item.querySelector('a') || item;
+		if (!nameLink) return;
+
+		ensureSpellNameLayout(nameLink as HTMLElement);
+
+		if (nameLink.querySelector('.nimble-spell-tier-badge')) {
+			return;
+		}
+
+		let badgeText = '';
+		if (tier === 0) {
+			badgeText = 'U';
+		} else if (tier === 1) {
+			badgeText = 'C';
+		} else if (tier >= 2) {
+			badgeText = String(tier - 1);
+		}
+
+		if (!badgeText) return;
+
+		const badgeSpan = document.createElement('span');
+		badgeSpan.className = 'nimble-spell-tier-badge';
+		badgeSpan.style.marginLeft = 'auto';
+		badgeSpan.style.marginRight = '6px';
+		badgeSpan.style.display = 'inline-block';
+		badgeSpan.textContent = badgeText;
+
+		nameLink.appendChild(badgeSpan);
+	} catch (error) {
+		console.warn('Nimble: Error adding tier badge to item:', error);
 	}
 }
 
@@ -401,6 +452,8 @@ async function applyFilter(
 						item.style.display = '';
 						// Add school icon to the spell name
 						addSchoolIconToItem(item, spell.school);
+						// Add tier badge to the spell name
+						addTierBadgeToItem(item, spell.tier);
 						// Move item to be after the header
 						if (insertBeforeItem) {
 							insertBeforeItem.parentNode?.insertBefore(item, insertBeforeItem);
@@ -564,6 +617,103 @@ function initializeSchoolButtons(container: HTMLElement, app: any, collection: a
 }
 
 /**
+ * Add school icons to all spells on initial render (no filtering yet)
+ */
+async function addIconsToAllSpells(app: any, collection: any): Promise<void> {
+	const TARGET_COLLECTION = GLOBAL_NIMBLE_SPELLS_COLLECTION;
+
+	try {
+		const pack = app?.collection || collection;
+		if (!pack) {
+			return;
+		}
+
+		// Load pack index
+		let index: any[] = [];
+		try {
+			if (typeof pack.getIndex === 'function') {
+				const indexData = await pack.getIndex({ fields: ['system.school'] });
+				if (indexData && indexData.size > 0) {
+					index = Array.from(indexData);
+				} else if (pack.index && pack.index.size > 0) {
+					index = Array.from(pack.index);
+				}
+			}
+
+			if (index.length === 0 && typeof pack.getDocuments === 'function') {
+				const docs = await pack.getDocuments();
+				index = docs.map((doc: any) => ({
+					_id: doc.id,
+					system: { school: doc.system?.school || '' },
+				}));
+			}
+
+			if (index.length === 0) {
+				const gamePack = game.packs.get(TARGET_COLLECTION);
+				if ((gamePack?.index?.size ?? 0) > 0) {
+					index = Array.from(gamePack!.index);
+				}
+			}
+		} catch (error) {
+			console.warn('Nimble: Error loading index for icon render:', error);
+			return;
+		}
+
+		// Map id -> school/tier
+		const dataById = new Map<string, { school: string; tier: number }>();
+		index.forEach((entry: any) => {
+			const normalized = normalizeIndexEntry(entry);
+			if (normalized._id) {
+				dataById.set(normalized._id, {
+					school: normalized.system.school,
+					tier: normalized.system.tier ?? 0,
+				});
+			}
+		});
+
+		// Find compendium element
+		let compendiumElement: HTMLElement | null = null;
+		const collectionAttr = TARGET_COLLECTION.split('.').pop() || 'nimble-spells';
+
+		if (app?.element) {
+			compendiumElement = app.element;
+		} else if (typeof document !== 'undefined') {
+			compendiumElement =
+				document.querySelector(`.compendium[data-collection="${collectionAttr}"]`) ||
+				document.querySelector(`.compendium[data-pack="${collectionAttr}"]`) ||
+				document.querySelector(`.directory[data-collection="${collectionAttr}"]`);
+		}
+
+		if (!compendiumElement) {
+			return;
+		}
+
+		// Apply icon to each item
+		const listItems: NodeListOf<HTMLElement> = compendiumElement.querySelectorAll(
+			'li[data-document-id], li[data-entry-id], .compendium-entry, .compendium-item, .directory-item',
+		);
+
+		listItems.forEach((item: HTMLElement) => {
+			const itemId =
+				item.getAttribute('data-document-id') ||
+				item.getAttribute('data-entry-id') ||
+				item.getAttribute('data-id') ||
+				'';
+			if (!itemId) return;
+
+			const data = dataById.get(itemId);
+			if (!data) return;
+			if (data.school) {
+				addSchoolIconToItem(item, data.school);
+			}
+			addTierBadgeToItem(item, data.tier);
+		});
+	} catch (error) {
+		console.error('Nimble: Error adding icons to spells:', error);
+	}
+}
+
+/**
  * Register the renderCompendium hook to add filter buttons
  */
 export default function registerCompendiumSpellsFilter(): void {
@@ -600,6 +750,9 @@ export default function registerCompendiumSpellsFilter(): void {
 
 			// Initialize the buttons
 			initializeSchoolButtons(header, app, app?.collection);
+
+			// Add school icons to the initial list (no filtering)
+			addIconsToAllSpells(app, app?.collection);
 		} catch (error) {
 			console.error('Nimble: Error in renderCompendium hook:', error);
 		}
