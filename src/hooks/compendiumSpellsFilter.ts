@@ -23,6 +23,31 @@ const TIER_LABELS: { [key: number]: string } = {
 };
 
 /**
+ * Map of school values to Font Awesome icon classes
+ */
+const SCHOOL_ICONS: { [key: string]: string } = {
+	fire: 'fa-solid fa-fire',
+	ice: 'fa-solid fa-snowflake',
+	lightning: 'fa-solid fa-bolt',
+	necrotic: 'fa-solid fa-skull',
+	radiant: 'fa-solid fa-sun',
+	wind: 'fa-solid fa-wind',
+	secret: 'fa-solid fa-eye-slash',
+	utility: 'fa-solid fa-wand-magic-sparkles',
+};
+
+/**
+ * Tier header colors when a specific school filter is active
+ */
+const SCHOOL_TIER_COLORS: { [key: string]: string } = {
+	fire: '#FF8C00', // orange
+	ice: '#FFFFFF', // white
+	lightning: '#1E90FF', // blue
+	necrotic: '#800080', // purple
+	radiant: '#FFD700', // yellow
+	wind: '#FFFFFF', // white
+};
+/**
  * Normalize index entries to handle various pack.index formats
  * Handles array-based entries, object-based entries, and alternate field paths
  */
@@ -78,6 +103,36 @@ function normalizeIndexEntry(e: any): { _id: string; system: { school: string; t
 		_id: '',
 		system: { school: '', tier: 0 },
 	};
+}
+
+/**
+ * Add school icon to a spell item's display name
+ */
+function addSchoolIconToItem(item: HTMLElement, school: string): void {
+	try {
+		// Find the spell name element (usually the first text node or a link)
+		const nameLink = item.querySelector('a') || item;
+		if (!nameLink) return;
+
+		// Check if icon already exists
+		if (nameLink.querySelector('.nimble-spell-school-icon')) {
+			return;
+		}
+
+		const iconClass = SCHOOL_ICONS[school];
+		if (!iconClass) return;
+
+		// Create and append icon element
+		const iconSpan = document.createElement('span');
+		iconSpan.className = 'nimble-spell-school-icon';
+		iconSpan.style.marginLeft = '6px';
+		iconSpan.style.display = 'inline-block';
+		iconSpan.innerHTML = `<i class="${iconClass}" style="opacity: 0.7;"></i>`;
+
+		nameLink.appendChild(iconSpan);
+	} catch (error) {
+		console.warn('Nimble: Error adding school icon to item:', error);
+	}
 }
 
 /**
@@ -290,7 +345,10 @@ async function applyFilter(
 			const tierHeaderDiv = document.createElement('li');
 			tierHeaderDiv.className = 'nimble-spell-tier-header';
 			tierHeaderDiv.style.fontWeight = 'bold';
-			tierHeaderDiv.style.color = '#b0860b';
+			// Use selected school's color when a specific school filter is active
+			const tierColor =
+				school && SCHOOL_TIER_COLORS[school] ? SCHOOL_TIER_COLORS[school] : '#b0860b';
+			tierHeaderDiv.style.color = tierColor;
 			tierHeaderDiv.style.paddingLeft = '6px';
 			tierHeaderDiv.style.paddingTop = '8px';
 			tierHeaderDiv.style.paddingBottom = '4px';
@@ -313,25 +371,27 @@ async function applyFilter(
 					return;
 				}
 
-				// Create school header
-				const schoolDisplayName = schoolDisplayNames[schoolKey] || schoolKey;
-				const schoolHeaderDiv = document.createElement('li');
-				schoolHeaderDiv.className = 'nimble-spell-school-header';
-				schoolHeaderDiv.style.fontWeight = '600';
-				schoolHeaderDiv.style.color = '#999999';
-				schoolHeaderDiv.style.paddingLeft = '18px';
-				schoolHeaderDiv.style.paddingTop = '4px';
-				schoolHeaderDiv.style.paddingBottom = '2px';
-				schoolHeaderDiv.style.fontSize = '0.85rem';
-				schoolHeaderDiv.style.fontStyle = 'italic';
-				schoolHeaderDiv.style.marginTop = '4px';
-				schoolHeaderDiv.textContent = schoolDisplayName;
+				// Create and insert school header only for the 'All' view (no specific school filter)
+				if (school === '') {
+					const schoolDisplayName = schoolDisplayNames[schoolKey] || schoolKey;
+					const schoolHeaderDiv = document.createElement('li');
+					schoolHeaderDiv.className = 'nimble-spell-school-header';
+					schoolHeaderDiv.style.fontWeight = '600';
+					schoolHeaderDiv.style.color = '#999999';
+					schoolHeaderDiv.style.paddingLeft = '18px';
+					schoolHeaderDiv.style.paddingTop = '4px';
+					schoolHeaderDiv.style.paddingBottom = '2px';
+					schoolHeaderDiv.style.fontSize = '0.85rem';
+					schoolHeaderDiv.style.fontStyle = 'italic';
+					schoolHeaderDiv.style.marginTop = '4px';
+					schoolHeaderDiv.textContent = schoolDisplayName;
 
-				// Insert school header
-				if (insertBeforeItem) {
-					insertBeforeItem.parentNode?.insertBefore(schoolHeaderDiv, insertBeforeItem);
-				} else {
-					listContainer.appendChild(schoolHeaderDiv);
+					// Insert school header
+					if (insertBeforeItem) {
+						insertBeforeItem.parentNode?.insertBefore(schoolHeaderDiv, insertBeforeItem);
+					} else {
+						listContainer.appendChild(schoolHeaderDiv);
+					}
 				}
 
 				// Move spell items to appear after this school header
@@ -339,6 +399,8 @@ async function applyFilter(
 					const item = itemsById.get(spell._id);
 					if (item) {
 						item.style.display = '';
+						// Add school icon to the spell name
+						addSchoolIconToItem(item, spell.school);
 						// Move item to be after the header
 						if (insertBeforeItem) {
 							insertBeforeItem.parentNode?.insertBefore(item, insertBeforeItem);
