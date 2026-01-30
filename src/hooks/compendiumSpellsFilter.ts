@@ -9,17 +9,17 @@ const GLOBAL_NIMBLE_SPELLS_COLLECTION = 'nimble.nimble-spells';
  * Map of tier values to display names
  */
 const TIER_LABELS: { [key: number]: string } = {
-	'-1': 'Cantrip',
 	0: 'Utility',
-	1: 'Tier 1',
-	2: 'Tier 2',
-	3: 'Tier 3',
-	4: 'Tier 4',
-	5: 'Tier 5',
-	6: 'Tier 6',
-	7: 'Tier 7',
-	8: 'Tier 8',
-	9: 'Tier 9',
+	1: 'Cantrip',
+	2: 'Tier 1',
+	3: 'Tier 2',
+	4: 'Tier 3',
+	5: 'Tier 4',
+	6: 'Tier 5',
+	7: 'Tier 6',
+	8: 'Tier 7',
+	9: 'Tier 8',
+	10: 'Tier 9',
 };
 
 /**
@@ -43,7 +43,7 @@ const SCHOOL_TIER_COLORS: { [key: string]: string } = {
 	fire: '#FF8C00', // orange
 	ice: '#FFFFFF', // white
 	lightning: '#1E90FF', // blue
-	necrotic: '#800080', // purple
+	necrotic: '#b000b0', // purple
 	radiant: '#FFD700', // yellow
 	wind: '#FFFFFF', // white
 };
@@ -285,15 +285,15 @@ async function applyFilter(
 				header.remove();
 			});
 
-		// Sort tier keys: -1 (cantrip), 0 (utility), then 1-9
+		// Sort tier keys: 0 (utility), 1 (cantrip), then 2-10
 		const sortedTiers = Object.keys(spellsByTierAndSchool).sort((a, b) => {
 			const aNum = parseInt(a, 10);
 			const bNum = parseInt(b, 10);
-			// Cantrips first (-1), then utility (0), then 1-9
-			if (aNum === -1) return -1;
-			if (bNum === -1) return 1;
+			// Utility first (0), then cantrip (1), then 2-10
 			if (aNum === 0) return -1;
 			if (bNum === 0) return 1;
+			if (aNum === 1) return -1;
+			if (bNum === 1) return 1;
 			return aNum - bNum;
 		});
 
