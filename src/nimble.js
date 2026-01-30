@@ -1,3 +1,5 @@
 /** This is a temp file for vite dev */
 
-import * as nimble from './nimble.ts';
+import './nimble.ts';
+
+console.log('Nimble: dev code is running');
