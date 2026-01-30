@@ -19,11 +19,11 @@ export interface DiceValue {
 
 export interface ScalingDelta {
 	operation: ScalingOperation;
-	value?: number | null;
-	dice?: DiceValue | null;
-	condition?: string | null;
-	targetEffectId?: string | null;
-	durationType?: string | null;
+	value: number | null;
+	dice: DiceValue | null;
+	condition: string | null;
+	targetEffectId: string | null;
+	durationType: string | null;
 }
 
 export interface ScalingChoice {
@@ -34,7 +34,7 @@ export interface ScalingChoice {
 export interface SpellScaling {
 	mode: ScalingMode;
 	deltas: ScalingDelta[];
-	choices?: ScalingChoice[] | null;
+	choices: ScalingChoice[] | null;
 }
 
 export interface UpcastResult {

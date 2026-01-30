@@ -1,4 +1,3 @@
-import type { SpellScaling } from '#types/spellScaling.js';
 import { NimbleBaseItemData } from './BaseItemDataModel.js';
 import { activation, baseProperties } from './common.js';
 
@@ -149,7 +148,7 @@ const schema = () => ({
 				{ required: false, nullable: true, initial: null },
 			),
 		},
-		{ required: false, nullable: true, initial: null },
+		{ required: true, nullable: false },
 	),
 });
 
@@ -192,8 +191,6 @@ class NimbleSpellData extends NimbleBaseItemData<
 	declare school: string;
 
 	declare tier: number;
-
-	declare scaling: SpellScaling | null;
 
 	/** @inheritDoc */
 	static override defineSchema(): NimbleSpellData.Schema {

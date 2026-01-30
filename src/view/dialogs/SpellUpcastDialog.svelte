@@ -3,7 +3,7 @@
 	import RollModeConfig from './components/RollModeConfig.svelte';
 	import RangeSlider from 'svelte-range-slider-pips';
 
-	let { actor, dialog, item, spell, ...data } = $props();
+	let { actor, dialog, spell, ...data } = $props();
 
 	// Initialize state
 	let selectedRollMode = $state(Math.clamp(data.rollMode ?? 0, -6, 6));
@@ -20,7 +20,7 @@
 	const baseMana = spell.tier;
 	const currentMana = actor.system.resources.mana.current;
 	const maxTier = actor.system.resources.highestUnlockedSpellTier;
-	const maxMana = Math.min(currentMana, maxTier);
+	// const maxMana = Math.min(currentMana, maxTier);
 
 	// Check if spell can be upcast
 	const canUpcast = spell.tier > 0 && spell.scaling && spell.scaling.mode !== 'none';
@@ -32,7 +32,7 @@
 
 	// Derived values
 	let upcastSteps = $derived(manaToSpend - baseMana);
-	let remainingMana = $derived(currentMana - manaToSpend);
+	// let remainingMana = $derived(currentMana - manaToSpend);
 
 	// Compute preview of upcast effects
 	let upcastPreview = $derived(() => {

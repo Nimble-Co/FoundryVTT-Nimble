@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ScalingDelta, SpellScaling } from '#types/spellScaling.js';
+import type { ConditionNode, DamageNode, HealingNode, SavingThrowNode } from '#types/effectTree.js';
 import type { UpcastContext } from './applyUpcastDeltas.js';
 import { applyUpcastDeltas, validateAndComputeUpcast } from './applyUpcastDeltas.js';
 
@@ -9,6 +11,29 @@ globalThis.foundry = {
 		randomID: vi.fn(() => `test-id-${Math.random().toString(36).substring(2, 11)}`),
 	},
 } as any;
+
+// Helper to create a properly typed ScalingDelta with defaults
+function createDelta(
+	partial: Partial<ScalingDelta> & { operation: ScalingDelta['operation'] },
+): ScalingDelta {
+	return {
+		operation: partial.operation,
+		value: partial.value ?? null,
+		dice: partial.dice ?? null,
+		condition: partial.condition ?? null,
+		targetEffectId: partial.targetEffectId ?? null,
+		durationType: partial.durationType ?? null,
+	};
+}
+
+// Helper to create a properly typed SpellScaling
+function createScaling(
+	mode: SpellScaling['mode'],
+	deltas: ScalingDelta[] = [],
+	choices: SpellScaling['choices'] = null,
+): SpellScaling {
+	return { mode, deltas, choices };
+}
 
 describe('validateAndComputeUpcast', () => {
 	describe('Validation Rules', () => {
@@ -27,7 +52,7 @@ describe('validateAndComputeUpcast', () => {
 
 		it('should reject spells without scaling', () => {
 			const context: UpcastContext = {
-				spell: { tier: 3, scaling: { mode: 'none', deltas: [] } },
+				spell: { tier: 3, scaling: createScaling('none') },
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 9 } },
 				activationData: { effects: [] },
 				manaToSpend: 5,
@@ -40,7 +65,7 @@ describe('validateAndComputeUpcast', () => {
 
 		it('should reject insufficient mana', () => {
 			const context: UpcastContext = {
-				spell: { tier: 3, scaling: { mode: 'upcast', deltas: [] } },
+				spell: { tier: 3, scaling: createScaling('upcast') },
 				actor: { resources: { mana: { current: 2 }, highestUnlockedSpellTier: 9 } },
 				activationData: { effects: [] },
 				manaToSpend: 5,
@@ -53,7 +78,7 @@ describe('validateAndComputeUpcast', () => {
 
 		it('should reject spending below base cost', () => {
 			const context: UpcastContext = {
-				spell: { tier: 3, scaling: { mode: 'upcast', deltas: [] } },
+				spell: { tier: 3, scaling: createScaling('upcast') },
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 9 } },
 				activationData: { effects: [] },
 				manaToSpend: 2,
@@ -66,7 +91,7 @@ describe('validateAndComputeUpcast', () => {
 
 		it('should reject spending above highest unlocked tier', () => {
 			const context: UpcastContext = {
-				spell: { tier: 3, scaling: { mode: 'upcast', deltas: [] } },
+				spell: { tier: 3, scaling: createScaling('upcast') },
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
 				activationData: { effects: [] },
 				manaToSpend: 6,
@@ -79,7 +104,7 @@ describe('validateAndComputeUpcast', () => {
 
 		it('should validate correct upcast steps calculation', () => {
 			const context: UpcastContext = {
-				spell: { tier: 3, scaling: { mode: 'upcast', deltas: [] } },
+				spell: { tier: 3, scaling: createScaling('upcast') },
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 9 } },
 				activationData: { effects: [] },
 				manaToSpend: 5,
@@ -104,10 +129,7 @@ describe('applyUpcastDeltas', () => {
 			const context: UpcastContext = {
 				spell: {
 					tier: 1,
-					scaling: {
-						mode: 'upcast',
-						deltas: [{ operation: 'addFlatDamage', value: 4 }],
-					},
+					scaling: createScaling('upcast', [createDelta({ operation: 'addFlatDamage', value: 4 })]),
 				},
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
 				activationData: {
@@ -128,17 +150,14 @@ describe('applyUpcastDeltas', () => {
 			const result = applyUpcastDeltas(context);
 
 			expect(result.upcastResult.upcastSteps).toBe(1);
-			expect(result.activationData.effects[0].formula).toBe('3d8+4');
+			expect((result.activationData.effects[0] as DamageNode).formula).toBe('3d8+4');
 		});
 
 		it('should add flat damage with 8 upcast steps', () => {
 			const context: UpcastContext = {
 				spell: {
 					tier: 1,
-					scaling: {
-						mode: 'upcast',
-						deltas: [{ operation: 'addFlatDamage', value: 4 }],
-					},
+					scaling: createScaling('upcast', [createDelta({ operation: 'addFlatDamage', value: 4 })]),
 				},
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 9 } },
 				activationData: {
@@ -159,27 +178,25 @@ describe('applyUpcastDeltas', () => {
 			const result = applyUpcastDeltas(context);
 
 			expect(result.upcastResult.upcastSteps).toBe(8);
-			expect(result.activationData.effects[0].formula).toBe('3d8+32');
+			expect((result.activationData.effects[0] as DamageNode).formula).toBe('3d8+32');
 		});
 	});
 
 	describe('Heal Scenario - upcastChoice', () => {
+		const healChoices = [
+			{ label: '+1 target', deltas: [createDelta({ operation: 'addTargets', value: 1 })] },
+			{ label: '+4 Reach', deltas: [createDelta({ operation: 'addReach', value: 4 })] },
+			{
+				label: '+1d6 healing',
+				deltas: [createDelta({ operation: 'addDice', dice: { count: 1, faces: 6 } })],
+			},
+		];
+
 		it('should apply target choice (+2 targets for 2 steps)', () => {
 			const context: UpcastContext = {
 				spell: {
 					tier: 1,
-					scaling: {
-						mode: 'upcastChoice',
-						deltas: [],
-						choices: [
-							{ label: '+1 target', deltas: [{ operation: 'addTargets', value: 1 }] },
-							{ label: '+4 Reach', deltas: [{ operation: 'addReach', value: 4 }] },
-							{
-								label: '+1d6 healing',
-								deltas: [{ operation: 'addDice', dice: { count: 1, faces: 6 } }],
-							},
-						],
-					},
+					scaling: createScaling('upcastChoice', [], healChoices),
 				},
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
 				activationData: {
@@ -209,18 +226,7 @@ describe('applyUpcastDeltas', () => {
 			const context: UpcastContext = {
 				spell: {
 					tier: 1,
-					scaling: {
-						mode: 'upcastChoice',
-						deltas: [],
-						choices: [
-							{ label: '+1 target', deltas: [{ operation: 'addTargets', value: 1 }] },
-							{ label: '+4 Reach', deltas: [{ operation: 'addReach', value: 4 }] },
-							{
-								label: '+1d6 healing',
-								deltas: [{ operation: 'addDice', dice: { count: 1, faces: 6 } }],
-							},
-						],
-					},
+					scaling: createScaling('upcastChoice', [], healChoices),
 				},
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
 				activationData: {
@@ -250,18 +256,7 @@ describe('applyUpcastDeltas', () => {
 			const context: UpcastContext = {
 				spell: {
 					tier: 1,
-					scaling: {
-						mode: 'upcastChoice',
-						deltas: [],
-						choices: [
-							{ label: '+1 target', deltas: [{ operation: 'addTargets', value: 1 }] },
-							{ label: '+4 Reach', deltas: [{ operation: 'addReach', value: 4 }] },
-							{
-								label: '+1d6 healing',
-								deltas: [{ operation: 'addDice', dice: { count: 1, faces: 6 } }],
-							},
-						],
-					},
+					scaling: createScaling('upcastChoice', [], healChoices),
 				},
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
 				activationData: {
@@ -284,7 +279,7 @@ describe('applyUpcastDeltas', () => {
 			const result = applyUpcastDeltas(context);
 
 			expect(result.upcastResult.upcastSteps).toBe(2);
-			expect(result.activationData.effects[0].formula).toBe('1d6+@key+2d6');
+			expect((result.activationData.effects[0] as HealingNode).formula).toBe('1d6+@key+2d6');
 		});
 	});
 
@@ -293,10 +288,9 @@ describe('applyUpcastDeltas', () => {
 			const context: UpcastContext = {
 				spell: {
 					tier: 2,
-					scaling: {
-						mode: 'upcast',
-						deltas: [{ operation: 'addDice', dice: { count: 2, faces: 8 } }],
-					},
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'addDice', dice: { count: 2, faces: 8 } }),
+					]),
 				},
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
 				activationData: {
@@ -317,17 +311,14 @@ describe('applyUpcastDeltas', () => {
 			const result = applyUpcastDeltas(context);
 
 			expect(result.upcastResult.upcastSteps).toBe(2);
-			expect(result.activationData.effects[0].formula).toBe('4d6+4d8');
+			expect((result.activationData.effects[0] as DamageNode).formula).toBe('4d6+4d8');
 		});
 
 		it('should increase saving throw DC', () => {
 			const context: UpcastContext = {
 				spell: {
 					tier: 2,
-					scaling: {
-						mode: 'upcast',
-						deltas: [{ operation: 'addDC', value: 1 }],
-					},
+					scaling: createScaling('upcast', [createDelta({ operation: 'addDC', value: 1 })]),
 				},
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
 				activationData: {
@@ -348,17 +339,14 @@ describe('applyUpcastDeltas', () => {
 			const result = applyUpcastDeltas(context);
 
 			expect(result.upcastResult.upcastSteps).toBe(2);
-			expect(result.activationData.effects[0].saveDC).toBe(14);
+			expect((result.activationData.effects[0] as SavingThrowNode).saveDC).toBe(14);
 		});
 
 		it('should increase area size (radius)', () => {
 			const context: UpcastContext = {
 				spell: {
 					tier: 2,
-					scaling: {
-						mode: 'upcast',
-						deltas: [{ operation: 'addAreaSize', value: 2 }],
-					},
+					scaling: createScaling('upcast', [createDelta({ operation: 'addAreaSize', value: 2 })]),
 				},
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
 				activationData: {
@@ -378,10 +366,7 @@ describe('applyUpcastDeltas', () => {
 			const context: UpcastContext = {
 				spell: {
 					tier: 2,
-					scaling: {
-						mode: 'upcast',
-						deltas: [{ operation: 'addAreaSize', value: 3 }],
-					},
+					scaling: createScaling('upcast', [createDelta({ operation: 'addAreaSize', value: 3 })]),
 				},
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
 				activationData: {
@@ -401,10 +386,7 @@ describe('applyUpcastDeltas', () => {
 			const context: UpcastContext = {
 				spell: {
 					tier: 2,
-					scaling: {
-						mode: 'upcast',
-						deltas: [{ operation: 'addDuration', value: 1 }],
-					},
+					scaling: createScaling('upcast', [createDelta({ operation: 'addDuration', value: 1 })]),
 				},
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
 				activationData: {
@@ -424,10 +406,9 @@ describe('applyUpcastDeltas', () => {
 			const context: UpcastContext = {
 				spell: {
 					tier: 2,
-					scaling: {
-						mode: 'upcast',
-						deltas: [{ operation: 'addCondition', condition: 'burning' }],
-					},
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'addCondition', condition: 'burning' }),
+					]),
 				},
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
 				activationData: {
@@ -441,7 +422,7 @@ describe('applyUpcastDeltas', () => {
 			expect(result.upcastResult.upcastSteps).toBe(1);
 			expect(result.activationData.effects.length).toBe(1);
 			expect(result.activationData.effects[0].type).toBe('condition');
-			expect(result.activationData.effects[0].condition).toBe('burning');
+			expect((result.activationData.effects[0] as ConditionNode).condition).toBe('burning');
 		});
 	});
 
@@ -464,13 +445,10 @@ describe('applyUpcastDeltas', () => {
 			const context: UpcastContext = {
 				spell: {
 					tier: 1,
-					scaling: {
-						mode: 'upcast',
-						deltas: [
-							{ operation: 'addFlatDamage', value: 5 },
-							{ operation: 'addTargets', value: 1 },
-						],
-					},
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'addFlatDamage', value: 5 }),
+						createDelta({ operation: 'addTargets', value: 1 }),
+					]),
 				},
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
 				activationData: originalActivationData as any,
@@ -480,11 +458,11 @@ describe('applyUpcastDeltas', () => {
 			const result = applyUpcastDeltas(context);
 
 			// Original should not be modified
-			expect(originalActivationData.effects[0].formula).toBe('3d8');
+			expect((originalActivationData.effects[0] as DamageNode).formula).toBe('3d8');
 			expect(originalActivationData.targets.count).toBe(1);
 
 			// Result should have modifications
-			expect(result.activationData.effects[0].formula).toBe('3d8+10');
+			expect((result.activationData.effects[0] as DamageNode).formula).toBe('3d8+10');
 			expect(result.activationData.targets?.count).toBe(3);
 		});
 	});
@@ -494,11 +472,16 @@ describe('applyUpcastDeltas', () => {
 			const context: UpcastContext = {
 				spell: {
 					tier: 1,
-					scaling: {
-						mode: 'upcastChoice',
-						deltas: [],
-						choices: [{ label: 'Option 1', deltas: [{ operation: 'addFlatDamage', value: 5 }] }],
-					},
+					scaling: createScaling(
+						'upcastChoice',
+						[],
+						[
+							{
+								label: 'Option 1',
+								deltas: [createDelta({ operation: 'addFlatDamage', value: 5 })],
+							},
+						],
+					),
 				},
 				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
 				activationData: { effects: [] },
