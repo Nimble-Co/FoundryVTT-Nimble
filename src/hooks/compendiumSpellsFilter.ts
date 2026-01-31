@@ -49,7 +49,9 @@ function ensureSchoolFilterStyles(): void {
 
 function applySchoolFilterClass(compendiumElement: HTMLElement | null, school: string): void {
 	if (!compendiumElement) return;
-	SCHOOL_KEYS.forEach((key) => compendiumElement.classList.remove(`nimble-school-filter-${key}`));
+	for (const key of SCHOOL_KEYS) {
+		compendiumElement.classList.remove(`nimble-school-filter-${key}`);
+	}
 	if (school) {
 		compendiumElement.classList.add(`nimble-school-filter-${school}`);
 	}
@@ -69,14 +71,16 @@ function applyCachedMetadataToListItems(
 			item.getAttribute('data-entry-id') ||
 			item.getAttribute('data-id') ||
 			'';
-		if (!itemId) return;
-		const data = spellData.get(itemId);
-		if (!data) return;
-		item.setAttribute('data-nimble-school', data.school || '');
-		if (data.school) {
-			addSchoolIconToItem(item, data.school);
+		if (itemId) {
+			const data = spellData.get(itemId);
+			if (data) {
+				item.setAttribute('data-nimble-school', data.school || '');
+				if (data.school) {
+					addSchoolIconToItem(item, data.school);
+				}
+				addTierBadgeToItem(item, data.tier);
+			}
 		}
-		addTierBadgeToItem(item, data.tier);
 	});
 }
 
@@ -98,16 +102,17 @@ function applySearchFilter(
 			item.getAttribute('data-entry-id') ||
 			item.getAttribute('data-id') ||
 			'';
-		if (!itemId) return;
-		let name = nameById?.get(itemId) || '';
-		if (!name) {
-			const nameLink = item.querySelector('a') || item;
-			name = (nameLink?.textContent || '').toLowerCase();
-		}
-		if (name.includes(term)) {
-			item.style.display = '';
-		} else {
-			item.style.display = 'none';
+		if (itemId) {
+			let name = nameById?.get(itemId) || '';
+			if (!name) {
+				const nameLink = item.querySelector('a') || item;
+				name = (nameLink?.textContent || '').toLowerCase();
+			}
+			if (name.includes(term)) {
+				item.style.display = '';
+			} else {
+				item.style.display = 'none';
+			}
 		}
 	});
 }
@@ -412,31 +417,29 @@ async function applyFilter(
 				}
 			}
 
-			if (searchActive) {
-				return;
+			if (!searchActive) {
+				const shouldInclude = school === '' || normalized.system.school === school;
+				if (shouldInclude) {
+					allowedIds.add(normalized._id);
+
+					const tierKey = String(normalized.system.tier);
+					const schoolKey = normalized.system.school || 'unknown';
+
+					if (!spellsByTierAndSchool[tierKey]) {
+						spellsByTierAndSchool[tierKey] = {};
+					}
+					if (!spellsByTierAndSchool[tierKey][schoolKey]) {
+						spellsByTierAndSchool[tierKey][schoolKey] = [];
+					}
+
+					spellsByTierAndSchool[tierKey][schoolKey].push({
+						_id: normalized._id,
+						name: entry.name || '',
+						tier: normalized.system.tier,
+						school: normalized.system.school,
+					});
+				}
 			}
-
-			const shouldInclude = school === '' || normalized.system.school === school;
-			if (!shouldInclude) return;
-
-			allowedIds.add(normalized._id);
-
-			const tierKey = String(normalized.system.tier);
-			const schoolKey = normalized.system.school || 'unknown';
-
-			if (!spellsByTierAndSchool[tierKey]) {
-				spellsByTierAndSchool[tierKey] = {};
-			}
-			if (!spellsByTierAndSchool[tierKey][schoolKey]) {
-				spellsByTierAndSchool[tierKey][schoolKey] = [];
-			}
-
-			spellsByTierAndSchool[tierKey][schoolKey].push({
-				_id: normalized._id,
-				name: entry.name || '',
-				tier: normalized.system.tier,
-				school: normalized.system.school,
-			});
 		});
 
 		cachedSpellDataById = normalizedById;
@@ -582,58 +585,54 @@ async function applyFilter(
 				// Process schools in sorted order
 				schoolOrder.forEach((schoolKey) => {
 					const schoolSpells = tierSpellsBySchool[schoolKey];
-					if (!schoolSpells || schoolSpells.length === 0) {
-						return;
-					}
+					if (schoolSpells && schoolSpells.length > 0) {
+						// Create and insert school header only for the 'All' view (no specific school filter)
+						if (school === '') {
+							const schoolDisplayName = schoolDisplayNames[schoolKey] || schoolKey;
+							const schoolHeaderDiv = document.createElement('li');
+							schoolHeaderDiv.className = 'nimble-spell-school-header';
+							schoolHeaderDiv.style.fontWeight = '600';
+							const schoolHeaderColor =
+								school === '' && SCHOOL_TIER_COLORS[schoolKey]
+									? SCHOOL_TIER_COLORS[schoolKey]
+									: school === ''
+										? '#dddddd'
+										: '#999999';
+							schoolHeaderDiv.style.color = schoolHeaderColor;
+							schoolHeaderDiv.style.paddingLeft = '18px';
+							schoolHeaderDiv.style.paddingTop = '4px';
+							schoolHeaderDiv.style.paddingBottom = '2px';
+							schoolHeaderDiv.style.fontSize = school === '' ? '0.95rem' : '0.85rem';
+							schoolHeaderDiv.style.fontStyle = 'italic';
+							schoolHeaderDiv.style.marginTop = '4px';
+							schoolHeaderDiv.textContent = schoolDisplayName;
 
-					// Create and insert school header only for the 'All' view (no specific school filter)
-					if (school === '') {
-						const schoolDisplayName = schoolDisplayNames[schoolKey] || schoolKey;
-						const schoolHeaderDiv = document.createElement('li');
-						schoolHeaderDiv.className = 'nimble-spell-school-header';
-						schoolHeaderDiv.style.fontWeight = '600';
-						const schoolHeaderColor =
-							school === '' && SCHOOL_TIER_COLORS[schoolKey]
-								? SCHOOL_TIER_COLORS[schoolKey]
-								: school === ''
-									? '#dddddd'
-									: '#999999';
-						schoolHeaderDiv.style.color = schoolHeaderColor;
-						schoolHeaderDiv.style.paddingLeft = '18px';
-						schoolHeaderDiv.style.paddingTop = '4px';
-						schoolHeaderDiv.style.paddingBottom = '2px';
-						schoolHeaderDiv.style.fontSize = school === '' ? '0.95rem' : '0.85rem';
-						schoolHeaderDiv.style.fontStyle = 'italic';
-						schoolHeaderDiv.style.marginTop = '4px';
-						schoolHeaderDiv.textContent = schoolDisplayName;
-
-						// Insert school header
-						if (insertBeforeItem) {
-							insertBeforeItem.parentNode?.insertBefore(schoolHeaderDiv, insertBeforeItem);
-						} else {
-							listContainer.appendChild(schoolHeaderDiv);
-						}
-					}
-
-					// Move spell items to appear after this school header
-					schoolSpells.forEach((spell) => {
-						const item = itemsById.get(spell._id);
-						if (item) {
-							item.style.display = '';
-							item.removeAttribute('data-nimble-school-hidden');
-							// Add school icon to the spell name
-							addSchoolIconToItem(item, spell.school);
-							// Add tier badge to the spell name
-							addTierBadgeToItem(item, spell.tier);
-							// Move item to be after the header
+							// Insert school header
 							if (insertBeforeItem) {
-								insertBeforeItem.parentNode?.insertBefore(item, insertBeforeItem);
+								insertBeforeItem.parentNode?.insertBefore(schoolHeaderDiv, insertBeforeItem);
+							} else {
+								listContainer.appendChild(schoolHeaderDiv);
 							}
 						}
-					});
 
-					// Update insertBeforeItem to be the next item to insert before
-					if (schoolSpells.length > 0) {
+						// Move spell items to appear after this school header
+						schoolSpells.forEach((spell) => {
+							const item = itemsById.get(spell._id);
+							if (item) {
+								item.style.display = '';
+								item.removeAttribute('data-nimble-school-hidden');
+								// Add school icon to the spell name
+								addSchoolIconToItem(item, spell.school);
+								// Add tier badge to the spell name
+								addTierBadgeToItem(item, spell.tier);
+								// Move item to be after the header
+								if (insertBeforeItem) {
+									insertBeforeItem.parentNode?.insertBefore(item, insertBeforeItem);
+								}
+							}
+						});
+
+						// Update insertBeforeItem to be the next item to insert before
 						const lastSpellItem = itemsById.get(schoolSpells[schoolSpells.length - 1]._id);
 						if (lastSpellItem?.nextElementSibling) {
 							insertBeforeItem = lastSpellItem.nextElementSibling as HTMLElement;
@@ -777,29 +776,27 @@ function initializeSchoolButtons(container: HTMLElement, app: any, collection: a
 
 			// Create buttons for each school
 			schools.forEach((school: string) => {
-				if (!schoolIcons[school]) {
-					return; // Skip unknown schools
-				}
-
-				const btn = document.createElement('button');
-				btn.className = 'header-button nimble-spell-school';
-				btn.setAttribute('data-school', school);
-				btn.title = school;
-				btn.innerHTML = `<i class="${schoolIcons[school]}"></i>`;
-				btn.style.display = 'inline-block';
-				btn.style.cursor = 'pointer';
-				btn.addEventListener('click', (e: Event) => {
-					e.preventDefault();
-					e.stopPropagation();
-					activeSchoolFilter = school;
-					applyFilter(school, pack, app, collection);
-					// Update active state
-					btnGroup.querySelectorAll('.header-button.nimble-spell-school').forEach((b) => {
-						b.classList.remove('active');
+				if (schoolIcons[school]) {
+					const btn = document.createElement('button');
+					btn.className = 'header-button nimble-spell-school';
+					btn.setAttribute('data-school', school);
+					btn.title = school;
+					btn.innerHTML = `<i class="${schoolIcons[school]}"></i>`;
+					btn.style.display = 'inline-block';
+					btn.style.cursor = 'pointer';
+					btn.addEventListener('click', (e: Event) => {
+						e.preventDefault();
+						e.stopPropagation();
+						activeSchoolFilter = school;
+						applyFilter(school, pack, app, collection);
+						// Update active state
+						btnGroup.querySelectorAll('.header-button.nimble-spell-school').forEach((b) => {
+							b.classList.remove('active');
+						});
+						btn.classList.add('active');
 					});
-					btn.classList.add('active');
-				});
-				btnGroup.appendChild(btn);
+					btnGroup.appendChild(btn);
+				}
 			});
 		} catch (error) {
 			console.error('Nimble: Error initializing school buttons:', error);
@@ -899,15 +896,16 @@ async function addIconsToAllSpells(app: any, collection: any): Promise<void> {
 				item.getAttribute('data-entry-id') ||
 				item.getAttribute('data-id') ||
 				'';
-			if (!itemId) return;
-
-			const data = dataById.get(itemId);
-			if (!data) return;
-			item.setAttribute('data-nimble-school', data.school || '');
-			if (data.school) {
-				addSchoolIconToItem(item, data.school);
+			if (itemId) {
+				const data = dataById.get(itemId);
+				if (data) {
+					item.setAttribute('data-nimble-school', data.school || '');
+					if (data.school) {
+						addSchoolIconToItem(item, data.school);
+					}
+					addTierBadgeToItem(item, data.tier);
+				}
 			}
-			addTierBadgeToItem(item, data.tier);
 		});
 	} catch (error) {
 		console.error('Nimble: Error adding icons to spells:', error);
