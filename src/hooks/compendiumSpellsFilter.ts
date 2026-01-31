@@ -47,6 +47,25 @@ function ensureSchoolFilterStyles(): void {
 	document.head.appendChild(style);
 }
 
+function ensureClearFiltersStyles(): void {
+	if (document.getElementById('nimble-clear-filters-styles')) {
+		return;
+	}
+
+	const style = document.createElement('style');
+	style.id = 'nimble-clear-filters-styles';
+	style.textContent = `
+.nimble-clear-filters::before,
+.nimble-clear-filters::after {
+	content: none !important;
+}
+.nimble-clear-filters {
+	background-image: none !important;
+}
+`;
+	document.head.appendChild(style);
+}
+
 function applySchoolFilterClass(compendiumElement: HTMLElement | null, school: string): void {
 	if (!compendiumElement) return;
 	for (const key of SCHOOL_KEYS) {
@@ -163,29 +182,46 @@ const SCHOOL_TIER_COLORS: { [key: string]: string } = {
  * Normalize index entries to handle various pack.index formats
  * Handles array-based entries, object-based entries, and alternate field paths
  */
-function normalizeIndexEntry(e: any): { _id: string; system: { school: string; tier: number } } {
+function normalizeIndexEntry(e: any): {
+	_id: string;
+	system: { school: string; tier: number; propertiesSelected?: string[] };
+} {
 	// Handle array-based entries where _id is at index 0 and payload at indices 1-2
 	if (Array.isArray(e)) {
 		const [_id, field1, field2] = e;
 		const payload = field2 || field1 || {};
+		const propertiesSelected = payload.system?.properties?.selected || payload.properties?.selected;
+		const tierValue = payload.system?.tier ?? payload.tier ?? 0;
+		const tier =
+			Array.isArray(propertiesSelected) && propertiesSelected.includes('utilitySpell')
+				? 0
+				: tierValue;
 		return {
 			_id,
 			system: {
 				school: payload.system?.school || payload.school || '',
-				tier: payload.system?.tier ?? payload.tier ?? 0,
+				tier,
+				propertiesSelected,
 			},
 		};
 	}
 
 	// Handle object-based entries
 	if (typeof e === 'object' && e !== null) {
+		const propertiesSelected = e.system?.properties?.selected || e.properties?.selected;
+		const tierValue = e.system?.tier ?? e.tier ?? 0;
+		const tier =
+			Array.isArray(propertiesSelected) && propertiesSelected.includes('utilitySpell')
+				? 0
+				: tierValue;
 		// Direct system.school and system.tier fields
 		if (e.system?.school !== undefined) {
 			return {
 				_id: e._id,
 				system: {
 					school: e.system.school,
-					tier: e.system?.tier ?? 0,
+					tier,
+					propertiesSelected,
 				},
 			};
 		}
@@ -196,7 +232,8 @@ function normalizeIndexEntry(e: any): { _id: string; system: { school: string; t
 				_id: e._id,
 				system: {
 					school: e.school,
-					tier: e.tier ?? 0,
+					tier,
+					propertiesSelected,
 				},
 			};
 		}
@@ -206,7 +243,8 @@ function normalizeIndexEntry(e: any): { _id: string; system: { school: string; t
 			_id: e._id,
 			system: {
 				school: e.system?.school || '',
-				tier: e.system?.tier ?? 0,
+				tier,
+				propertiesSelected,
 			},
 		};
 	}
@@ -298,6 +336,57 @@ function addTierBadgeToItem(item: HTMLElement, tier: number): void {
 	}
 }
 
+function setupClearFiltersButton(header: HTMLElement, app: any, collection: any): void {
+	const targetSelectors = [
+		'button[data-action="collapse"]',
+		'button[data-action="collapse-all"]',
+		'button.collapse-all',
+		'button.collapse',
+		'button[title*="Collapse"]',
+	];
+
+	const collapseButton =
+		targetSelectors.map((selector) => header.querySelector(selector)).find((btn) => btn) || null;
+
+	if (!collapseButton) {
+		return;
+	}
+
+	ensureClearFiltersStyles();
+	collapseButton.classList.add('nimble-clear-filters');
+	collapseButton.removeAttribute('title');
+	(collapseButton as HTMLElement).dataset.tooltip = 'Clear All Filters';
+	collapseButton.innerHTML = '<i class="fa-solid fa-broom"></i>';
+
+	const clearHandler = (event: Event) => {
+		event.preventDefault();
+		event.stopPropagation();
+
+		activeSchoolFilter = '';
+		const searchInput = app?.element?.querySelector?.(
+			'input[type="search"]',
+		) as HTMLInputElement | null;
+		if (searchInput) {
+			searchInput.value = '';
+		}
+
+		const btnGroup = header.querySelector('.nimble-spell-school-buttons');
+		if (btnGroup) {
+			btnGroup.querySelectorAll('.header-button.nimble-spell-school').forEach((btn) => {
+				btn.classList.remove('active');
+			});
+			const allBtn = btnGroup.querySelector('.header-button.nimble-spell-school.all');
+			if (allBtn) {
+				allBtn.classList.add('active');
+			}
+		}
+
+		applyFilter('', app?.collection || collection, app, collection);
+	};
+
+	collapseButton.addEventListener('click', clearHandler);
+}
+
 /**
  * Apply filter to compendium entries by school and sort by tier, then school, then alphabetically
  */
@@ -327,7 +416,9 @@ async function applyFilter(
 		try {
 			// Try primary method
 			if (typeof pack.getIndex === 'function') {
-				const indexData = await pack.getIndex({ fields: ['system.school', 'system.tier', 'name'] });
+				const indexData = await pack.getIndex({
+					fields: ['system.school', 'system.tier', 'system.properties.selected', 'name'],
+				});
 				if (indexData && indexData.size > 0) {
 					index = Array.from(indexData);
 				} else if (pack.index && pack.index.size > 0) {
@@ -342,7 +433,11 @@ async function applyFilter(
 				index = docs.map((doc: any) => ({
 					_id: doc.id,
 					name: doc.name || '',
-					system: { school: doc.system?.school || '', tier: doc.system?.tier ?? 0 },
+					system: {
+						school: doc.system?.school || '',
+						tier: doc.system?.tier ?? 0,
+						properties: { selected: doc.system?.properties?.selected || [] },
+					},
 				}));
 			}
 
@@ -421,7 +516,6 @@ async function applyFilter(
 				const shouldInclude = school === '' || normalized.system.school === school;
 				if (shouldInclude) {
 					allowedIds.add(normalized._id);
-
 					const tierKey = String(normalized.system.tier);
 					const schoolKey = normalized.system.school || 'unknown';
 
@@ -535,20 +629,7 @@ async function applyFilter(
 			];
 
 			// Reorganize items with tier and school headers
-			const firstAllowedItemId = (() => {
-				for (const tierKey of sortedTiers) {
-					const tierSchools = spellsByTierAndSchool[tierKey];
-					for (const schoolKey of schoolOrder) {
-						if (tierSchools[schoolKey]?.length > 0) {
-							return tierSchools[schoolKey][0]._id;
-						}
-					}
-				}
-				return null;
-			})();
-			let insertBeforeItem: HTMLElement | null = firstAllowedItemId
-				? itemsById.get(firstAllowedItemId) || null
-				: null;
+			const fragment = document.createDocumentFragment();
 
 			sortedTiers.forEach((tierKey) => {
 				const tierNum = parseInt(tierKey, 10);
@@ -575,12 +656,7 @@ async function applyFilter(
 				tierHeaderDiv.style.marginTop = '8px';
 				tierHeaderDiv.textContent = `${tierLabel} Spells`;
 
-				// Insert tier header
-				if (insertBeforeItem) {
-					insertBeforeItem.parentNode?.insertBefore(tierHeaderDiv, insertBeforeItem);
-				} else {
-					listContainer.appendChild(tierHeaderDiv);
-				}
+				fragment.appendChild(tierHeaderDiv);
 
 				// Process schools in sorted order
 				schoolOrder.forEach((schoolKey) => {
@@ -606,13 +682,7 @@ async function applyFilter(
 							schoolHeaderDiv.style.fontStyle = 'italic';
 							schoolHeaderDiv.style.marginTop = '4px';
 							schoolHeaderDiv.textContent = schoolDisplayName;
-
-							// Insert school header
-							if (insertBeforeItem) {
-								insertBeforeItem.parentNode?.insertBefore(schoolHeaderDiv, insertBeforeItem);
-							} else {
-								listContainer.appendChild(schoolHeaderDiv);
-							}
+							fragment.appendChild(schoolHeaderDiv);
 						}
 
 						// Move spell items to appear after this school header
@@ -625,21 +695,23 @@ async function applyFilter(
 								addSchoolIconToItem(item, spell.school);
 								// Add tier badge to the spell name
 								addTierBadgeToItem(item, spell.tier);
-								// Move item to be after the header
-								if (insertBeforeItem) {
-									insertBeforeItem.parentNode?.insertBefore(item, insertBeforeItem);
-								}
+								fragment.appendChild(item);
 							}
 						});
-
-						// Update insertBeforeItem to be the next item to insert before
-						const lastSpellItem = itemsById.get(schoolSpells[schoolSpells.length - 1]._id);
-						if (lastSpellItem?.nextElementSibling) {
-							insertBeforeItem = lastSpellItem.nextElementSibling as HTMLElement;
-						}
 					}
 				});
 			});
+
+			// Append any hidden items at the end so the list order is consistent
+			itemsById.forEach((item, itemId) => {
+				if (!allowedIds.has(itemId)) {
+					item.style.display = 'none';
+					item.setAttribute('data-nimble-school-hidden', '1');
+					fragment.appendChild(item);
+				}
+			});
+
+			listContainer.appendChild(fragment);
 		}
 
 		// Hide items not in allowedIds
@@ -689,7 +761,7 @@ function initializeSchoolButtons(container: HTMLElement, app: any, collection: a
 			try {
 				if (typeof pack.getIndex === 'function') {
 					const indexData = await pack.getIndex({
-						fields: ['system.school', 'system.tier', 'name'],
+						fields: ['system.school', 'system.tier', 'system.properties.selected', 'name'],
 					});
 					if (indexData && indexData.size > 0) {
 						index = Array.from(indexData);
@@ -703,7 +775,11 @@ function initializeSchoolButtons(container: HTMLElement, app: any, collection: a
 					index = docs.map((doc: any) => ({
 						_id: doc.id,
 						name: doc.name || '',
-						system: { school: doc.system?.school || '', tier: doc.system?.tier ?? 0 },
+						system: {
+							school: doc.system?.school || '',
+							tier: doc.system?.tier ?? 0,
+							properties: { selected: doc.system?.properties?.selected || [] },
+						},
 					}));
 				}
 
@@ -757,7 +833,9 @@ function initializeSchoolButtons(container: HTMLElement, app: any, collection: a
 			// Create "All" button
 			const allBtn = document.createElement('button');
 			allBtn.className = 'header-button nimble-spell-school all';
-			allBtn.title = (game.i18n.localize('NIMBLE.compendium.filterAll') as string) || 'All';
+			allBtn.removeAttribute('title');
+			allBtn.dataset.tooltip = ((game.i18n.localize('NIMBLE.compendium.filterAll') as string) ||
+				'All') as string;
 			allBtn.innerHTML = '<i class="fa-solid fa-circle-dot"></i>';
 			allBtn.style.display = 'inline-block';
 			allBtn.style.cursor = 'pointer';
@@ -777,10 +855,12 @@ function initializeSchoolButtons(container: HTMLElement, app: any, collection: a
 			// Create buttons for each school
 			schools.forEach((school: string) => {
 				if (schoolIcons[school]) {
+					const schoolLabel = school.charAt(0).toUpperCase() + school.slice(1);
 					const btn = document.createElement('button');
 					btn.className = 'header-button nimble-spell-school';
 					btn.setAttribute('data-school', school);
-					btn.title = school;
+					btn.removeAttribute('title');
+					btn.dataset.tooltip = schoolLabel;
 					btn.innerHTML = `<i class="${schoolIcons[school]}"></i>`;
 					btn.style.display = 'inline-block';
 					btn.style.cursor = 'pointer';
@@ -822,7 +902,9 @@ async function addIconsToAllSpells(app: any, collection: any): Promise<void> {
 		let index: any[] = [];
 		try {
 			if (typeof pack.getIndex === 'function') {
-				const indexData = await pack.getIndex({ fields: ['system.school'] });
+				const indexData = await pack.getIndex({
+					fields: ['system.school', 'system.tier', 'system.properties.selected', 'name'],
+				});
 				if (indexData && indexData.size > 0) {
 					index = Array.from(indexData);
 				} else if (pack.index && pack.index.size > 0) {
@@ -834,7 +916,12 @@ async function addIconsToAllSpells(app: any, collection: any): Promise<void> {
 				const docs = await pack.getDocuments();
 				index = docs.map((doc: any) => ({
 					_id: doc.id,
-					system: { school: doc.system?.school || '' },
+					name: doc.name || '',
+					system: {
+						school: doc.system?.school || '',
+						tier: doc.system?.tier ?? 0,
+						properties: { selected: doc.system?.properties?.selected || [] },
+					},
 				}));
 			}
 
@@ -949,6 +1036,7 @@ export default function registerCompendiumSpellsFilter(): void {
 
 			// Initialize the buttons
 			initializeSchoolButtons(header, app, app?.collection);
+			setupClearFiltersButton(header, app, app?.collection);
 
 			// Add school icons to the initial list (no filtering)
 			addIconsToAllSpells(app, app?.collection);
