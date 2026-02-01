@@ -5,6 +5,7 @@
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import HitPointBar from './components/HitPointBar.svelte';
 	import HitDiceBar from './components/HitDiceBar.svelte';
+	import ManaBar from './components/ManaBar.svelte';
 	import { incrementDieSize } from '../../managers/HitDiceManager.js';
 	import PlayerCharacterBioTab from './pages/PlayerCharacterBioTab.svelte';
 	import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';
@@ -62,6 +63,24 @@
 	function updateTempHP(newValue) {
 		actor.update({
 			'system.attributes.hp.temp': newValue,
+		});
+	}
+
+	function updateCurrentMana(newValue) {
+		actor.update({
+			'system.resources.mana.current': newValue,
+		});
+	}
+
+	function updateMaxMana(newValue) {
+		const manaData = actor.reactive.system.resources.mana;
+		const baseMax = manaData.baseMax ?? 0;
+		const max = manaData.max || baseMax;
+		const formulaBonus = max - baseMax;
+		const adjustedBaseMax = Math.max(0, newValue - formulaBonus);
+
+		actor.update({
+			'system.resources.mana.baseMax': adjustedBaseMax,
 		});
 	}
 
@@ -132,6 +151,13 @@
 
 	let classItem = $derived(actor.reactive.items.find((item) => item.type === 'class') ?? null);
 	let wounds = $derived(actor.reactive.system.attributes.wounds);
+	let mana = $derived(actor.reactive.system.resources.mana);
+	let hasMana = $derived.by(() => {
+		if ((mana.max ?? 0) > 0 || (mana.baseMax ?? 0) > 0) return true;
+		return actor.reactive.items.some(
+			(item) => item.type === 'class' && item.system?.mana?.formula?.length,
+		);
+	});
 
 	// Flags
 	let flags = $derived(actor.reactive.flags.nimble);
@@ -249,6 +275,16 @@
 			{/each}
 		</ul>
 
+		{#if wounds.value > 0}
+			<span
+				class="nimble-wounds-indicator nimble-wounds-indicator--portrait"
+				data-tooltip="{wounds.value} {wounds.value === 1 ? 'Wound' : 'Wounds'}"
+			>
+				<i class="nimble-wounds-list__icon fa-solid fa-droplet"></i>
+				<span class="nimble-wounds-indicator__count">{wounds.value}</span>
+			</span>
+		{/if}
+
 		<button
 			class="nimble-icon__button nimble-icon__button--actor"
 			aria-label={localize('NIMBLE.prompts.changeActorImage')}
@@ -269,7 +305,10 @@
 		</button>
 	</div>
 
-	<section class="nimble-character-sheet-section nimble-character-sheet-section--defense">
+	<section
+		class="nimble-character-sheet-section nimble-character-sheet-section--defense"
+		class:nimble-character-sheet-section--defense--has-mana={hasMana}
+	>
 		<h3 class="nimble-heading nimble-heading--hp">
 			Hit Points
 
@@ -281,15 +320,6 @@
 				{/if}
 			</span>
 
-			{#if wounds.value > 0}
-				<span
-					class="nimble-wounds-indicator"
-					data-tooltip="{wounds.value} {wounds.value === 1 ? 'Wound' : 'Wounds'}"
-				>
-					<i class="nimble-wounds-list__icon fa-solid fa-droplet"></i>
-					<span class="nimble-wounds-indicator__count">{wounds.value}</span>
-				</span>
-			{/if}
 			<button
 				class="nimble-button"
 				data-button-variant="icon"
@@ -336,6 +366,20 @@
 			{editCurrentHitDice}
 			{rollHitDice}
 		/>
+
+		{#if hasMana}
+			<h3 class="nimble-heading nimble-heading--mana">
+				Mana
+				<i class="fa-solid fa-sparkles"></i>
+			</h3>
+
+			<ManaBar
+				currentMana={mana.current}
+				maxMana={mana.max || mana.baseMax}
+				{updateCurrentMana}
+				{updateMaxMana}
+			/>
+		{/if}
 	</section>
 
 	<div class="nimble-player-character-header">
@@ -492,9 +536,25 @@
 			grid-template-areas:
 				'hpHeading hitDiceHeading'
 				'hpBar hitDiceBar';
-			grid-gap: 0 0.125rem;
-			margin-block-start: -2.25rem;
+			grid-gap: 0.25rem 0.125rem;
+			margin-block-start: 0.5rem;
 			margin-inline: 0.25rem;
+		}
+
+		&--defense--has-mana {
+			grid-template-areas:
+				'manaHeading hitDiceHeading'
+				'manaBar hitDiceBar'
+				'hpHeading hpHeading'
+				'hpBar hpBar';
+
+			.nimble-heading--hp {
+				--nimble-heading-margin: 0.5rem 0 0;
+			}
+
+			.nimble-hit-points {
+				margin-block-start: 0.5rem;
+			}
 		}
 	}
 
@@ -520,6 +580,14 @@
 			color: #b01b19;
 			-webkit-text-stroke: 1px #fff;
 			filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+		}
+
+		&--portrait {
+			position: absolute;
+			left: 0.625rem;
+			bottom: 0.5rem;
+			margin-inline-start: 0;
+			z-index: 3;
 		}
 	}
 
@@ -550,5 +618,9 @@
 		&:hover .nimble-button {
 			opacity: 1;
 		}
+	}
+
+	.nimble-heading--mana {
+		grid-area: manaHeading;
 	}
 </style>

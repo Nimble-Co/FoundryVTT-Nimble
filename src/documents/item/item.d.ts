@@ -38,6 +38,7 @@ declare interface NimbleClassItem extends NimbleBaseItem<'class'> {
 		};
 		mana: {
 			formula: string;
+			recovery: string;
 		};
 		keyAbilityScores: string[];
 		[key: string]: unknown;

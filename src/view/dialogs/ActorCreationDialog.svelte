@@ -4,13 +4,12 @@
 	let { dialog } = $props();
 	const { Actor, actorTypeBanners } = CONFIG.NIMBLE;
 	const { documentClasses } = Actor;
-
-	delete documentClasses.base;
+	const actorTypeKeys = Object.keys(documentClasses).filter((key) => key !== 'base');
 </script>
 
 <article>
 	<ul class="nimble-actor-type-list">
-		{#each Object.keys(documentClasses) as actorType}
+		{#each actorTypeKeys as actorType}
 			{@const actorTypeName = localize(`TYPES.Actor.${actorType}`)}
 
 			<li class="nimble-actor-type-list__option nimble-card">

@@ -1,4 +1,5 @@
 import { HitDiceManager } from './HitDiceManager.js';
+import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '../utils/manaRecovery.js';
 
 // Uses NimbleCharacterInterface ambient type from actor.d.ts
 
@@ -69,8 +70,13 @@ class RestManager {
 		if (this.#restType === 'safe') {
 			this.#restoreHitDice();
 			this.#restoreHitPoints();
-			this.#restoreMana();
+			if (this.#shouldRestoreMana('safe')) {
+				this.#restoreMana();
+			}
 			this.#restoreWounds();
+		}
+		if (this.#restType === 'field' && this.#shouldRestoreMana('field')) {
+			this.#restoreMana();
 		}
 
 		// TODO: Call Pre Hook
@@ -252,6 +258,11 @@ class RestManager {
 			this.#recovery.manaRestored = max - current;
 			this.#summary.push(`Restored ${max - current} mana.`);
 		}
+	}
+
+	#shouldRestoreMana(restType: 'field' | 'safe'): boolean {
+		const recoveryTypes = getManaRecoveryTypesFromClasses(Object.values(this.#actor.classes ?? {}));
+		return restoresManaOnRest(recoveryTypes, restType);
 	}
 
 	#restoreWounds() {

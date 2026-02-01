@@ -2,6 +2,7 @@
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
 	import { incrementDieSize } from '../../managers/HitDiceManager.js';
+	import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '../../utils/manaRecovery.js';
 
 	interface Props {
 		document: NimbleCharacter;
@@ -22,7 +23,11 @@
 	let tempHpLoss = $derived(hp.temp);
 
 	let mana = $derived(actor.reactive.system.resources.mana);
-	let manaRecovery = $derived(mana.max - mana.current);
+	let manaRecoveryTypes = $derived.by(() =>
+		getManaRecoveryTypesFromClasses(actor.reactive.items.filter((i) => i.type === 'class')),
+	);
+	let restoresManaOnSafeRest = $derived.by(() => restoresManaOnRest(manaRecoveryTypes, 'safe'));
+	let manaRecovery = $derived(restoresManaOnSafeRest ? mana.max - mana.current : 0);
 
 	let wounds = $derived(actor.reactive.system.attributes.wounds);
 	let woundRecovery = $derived(Math.min(wounds.value, 1));
@@ -106,7 +111,7 @@
 		hpRecovery > 0 ||
 			tempHpLoss > 0 ||
 			totalHitDiceRecovery > 0 ||
-			(mana.max > 0 && manaRecovery > 0) ||
+			(restoresManaOnSafeRest && mana.max > 0 && manaRecovery > 0) ||
 			woundRecovery > 0,
 	);
 </script>
@@ -176,7 +181,7 @@
 			</div>
 
 			<!-- Mana (only show if character has mana) -->
-			{#if mana.max > 0}
+			{#if mana.max > 0 && restoresManaOnSafeRest}
 				<div class="recovery-card" class:recovery-card--inactive={manaRecovery === 0}>
 					<div class="recovery-card__icon-wrapper recovery-card__icon-wrapper--mana">
 						<i class="fa-solid fa-sparkles"></i>
