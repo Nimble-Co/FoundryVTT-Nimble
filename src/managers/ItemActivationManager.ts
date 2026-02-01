@@ -118,7 +118,9 @@ class ItemActivationManager {
 
 				if (node.type === 'damage' && !foundDamageRoll) {
 					const { canCrit, canMiss } = node;
-					const isMinion = this.actor?.type === 'minion';
+					const actorTags = (this.actor as { tags?: Set<string> } | null)?.tags;
+					const isMinion =
+						actorTags?.has('minion') ?? (this.actor?.type as string | undefined) === 'minion';
 					const resolvedCanCrit = isMinion ? false : (canCrit ?? true);
 					const resolvedCanMiss = isMinion ? true : (canMiss ?? true);
 					node.rollMode = dialogData.rollMode ?? 0;
