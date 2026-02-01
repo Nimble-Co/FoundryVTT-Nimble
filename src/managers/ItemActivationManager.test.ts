@@ -14,6 +14,7 @@ interface MockActor {
 	uuid: string;
 	token: { uuid: string } | null;
 	getRollData: ReturnType<typeof vi.fn>;
+	type?: string;
 	system: {
 		savingThrows: {
 			strength: { mod: number };
@@ -363,6 +364,48 @@ describe('ItemActivationManager.getData (rolls)', () => {
 	});
 
 	describe('Damage effects', () => {
+		it('should force minion damage rolls to miss on 1 and never crit', async () => {
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+			mockActor.type = 'minion';
+			mockItem.actor = mockActor;
+
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'fire',
+				formula: '1d6',
+				canCrit: true,
+				canMiss: false,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 4 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			await manager.getData();
+
+			expect(DamageRoll).toHaveBeenCalledWith(
+				'1d6',
+				{ level: 1, strength: 10 },
+				{
+					canCrit: false,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+		});
 		it('should create DamageRoll for first damage effect', async () => {
 			manager = new ItemActivationManager(
 				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
