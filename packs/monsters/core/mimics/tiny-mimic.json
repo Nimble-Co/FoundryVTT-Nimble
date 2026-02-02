@@ -18,7 +18,7 @@
 		},
 		"description": "<p>(Cup, Shoe, Apple, Candlestick, Potion, Pebble)</p>",
 		"details": {
-			"creatureType": "",
+			"creatureType": "Mimics",
 			"isFlunky": false,
 			"level": "1"
 		},

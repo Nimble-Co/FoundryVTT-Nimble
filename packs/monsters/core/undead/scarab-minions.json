@@ -13,7 +13,7 @@
 		},
 		"description": "",
 		"details": {
-			"creatureType": "",
+			"creatureType": "Undead",
 			"level": "1/3"
 		},
 		"savingThrows": {

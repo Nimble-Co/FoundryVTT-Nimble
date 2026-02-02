@@ -18,7 +18,7 @@
 		},
 		"description": "<p>(Backpack, Shield/Weapon, Chair, Crate, Tree Stump)</p>",
 		"details": {
-			"creatureType": "",
+			"creatureType": "Mimics",
 			"isFlunky": false,
 			"level": "2"
 		},
