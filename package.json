@@ -85,7 +85,8 @@
 	"homepage": "https://github.com/Nimble-Co/FoundryVTT-Nimble#readme",
 	"private": true,
 	"engines": {
-		"node": ">=22.1.0"
+		"node": ">=22.1.0",
+		"npm": ">=10.7.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.1",
