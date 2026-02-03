@@ -106,7 +106,6 @@ class ItemActivationManager {
 		if (dialogData.upcast && this.#item.type === 'spell') {
 			const spellSystem = this.#item.system as any;
 			const actorSystem = this.actor!.system as any;
-			console.log(this.actor);
 			const context = {
 				spell: {
 					tier: spellSystem.tier,

@@ -20,7 +20,7 @@
 	const baseMana = spell.tier;
 	const currentMana = actor.system.resources.mana.current;
 	const maxTier = actor.system.resources.highestUnlockedSpellTier;
-	// const maxMana = Math.min(currentMana, maxTier);
+	const maxMana = Math.min(currentMana, maxTier);
 
 	// Check if spell can be upcast
 	const canUpcast = spell.tier > 0 && spell.scaling && spell.scaling.mode !== 'none';
@@ -41,7 +41,6 @@
 		const deltas = hasChoices
 			? spell.scaling.choices[choiceIndex]?.deltas || []
 			: spell.scaling.deltas;
-
 		return deltas.map((delta: ScalingDelta) => {
 			const amount = getScaledAmount(delta, upcastSteps);
 			return formatDeltaPreview(delta, amount, spell.school);
@@ -102,8 +101,8 @@
 						pips
 						float
 						all="label"
-						min={1}
-						max={9}
+						min={baseMana}
+						max={maxMana}
 						formatter={(value) => `${value} Mana`}
 						--range-float-text="var(--nimble-light-text-color)"
 						--range-handle="var(--nimble-range-slider-handle-color)"
@@ -210,7 +209,14 @@
 				}
 			}
 
-			dialog.submitActivation({
+			if (manaToSpend > maxTier) {
+				ui.notifications?.warn(
+					`Cannot spend more mana than your highest unlocked spell tier (${maxTier}).`,
+				);
+				return;
+			}
+
+			const activationData = {
 				rollMode: selectedRollMode,
 				situationalModifiers,
 				primaryDieValue,
@@ -221,7 +227,8 @@
 							choiceIndex: hasChoices ? choiceIndex : undefined,
 						}
 					: undefined,
-			});
+			};
+			dialog.submitActivation(activationData);
 		}}
 	>
 		<i class="nimble-button__icon fa-solid fa-wand-magic-sparkles"></i>
