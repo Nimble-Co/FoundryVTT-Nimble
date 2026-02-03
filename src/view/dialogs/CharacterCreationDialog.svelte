@@ -216,14 +216,14 @@
 		const { characterCreation } = CONFIG.NIMBLE;
 		const confirmed = await foundry.applications.api.DialogV2.confirm({
 			window: {
-				title: game.i18n.localize(characterCreation.incompleteCharacterTitle),
+				title: characterCreation.incompleteCharacterTitle,
 			},
-			content: `<p>${game.i18n.localize(characterCreation.incompleteCharacterMessage)}</p>`,
+			content: `<p>${characterCreation.incompleteCharacterMessage}</p>`,
 			yes: {
-				label: game.i18n.localize(characterCreation.incompleteCharacterProceed),
+				label: characterCreation.incompleteCharacterProceed,
 			},
 			no: {
-				label: game.i18n.localize(characterCreation.incompleteCharacterReturn),
+				label: characterCreation.incompleteCharacterReturn,
 			},
 			rejectClose: false,
 			modal: true,
