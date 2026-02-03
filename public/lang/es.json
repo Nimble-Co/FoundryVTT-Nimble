@@ -37,6 +37,13 @@
 			"minute": "Minutes",
 			"turn": "Turns"
 		},
+		"ancestryOptions": {
+			"enhancedSave": "Enhanced Save",
+			"enhancedSaveHint": "Choose a neutral save to enhance with advantage.",
+			"header": "Ancestry Options",
+			"sizeCategory": "Size Category",
+			"sizeCategoryHint": "Choose your character's size category from those available to your ancestry."
+		},
 		"armorEffects": {
 			"heavy": "<p>Monsters with Heavy Armor ignore damage modifiers and take half the sum of the dice (rounding up).</p>",
 			"medium": "<p>Monsters with Medium Armor ignore all damage modifiers from stats and other effects, taking damage from the sum of the dice only.</p>",
@@ -52,6 +59,23 @@
 			"plate": "Plate",
 			"shield": "Shield",
 			"shieldPlural": "Shields"
+		},
+		"backgroundOptionsSelection": {
+			"confirmSelection": "Confirm Selection",
+			"editSelection": "Edit Heritage Selection",
+			"header": "Step 2b. Choose Heritage Ancestry",
+			"hint": "Your background lets you choose which ancestry raised you. This grants you their native language.",
+			"raisedBy": "Raised By",
+			"raisedByLabel": "Raised by:",
+			"speaks": "Speaks {language}"
+		},
+		"bonusLanguageSelection": {
+			"choose": "Choose {count}",
+			"confirmSelection": "Confirm Bonus Language Selections",
+			"editSelection": "Edit Bonus Language Selections",
+			"granted": "Granted",
+			"header": "Step 7. Select Bonus Languages",
+			"hint": "All heroes speak Common by default, and some backgrounds will grant another language. Additionally, each point of INT grants an additional language known."
 		},
 		"boonTypes": {
 			"epic": "Epic",
@@ -146,6 +170,8 @@
 		},
 		"creatureFeatures": {
 			"actionSequence": "After each hero's turn, choose one.",
+			"collapse": "Collapse",
+			"expand": "Expand",
 			"noFeatures": "No features yet."
 		},
 		"currency": {
@@ -218,19 +244,32 @@
 			"class": "Class"
 		},
 		"fieldRest": {
+			"advantage": "Advantage",
+			"advantageWhen": "Roll with advantage when {condition}",
+			"cardHeading": "Field Rest: {restType}",
 			"catchBreath": "Catch Breath",
 			"catchBreathDescription": "10 min rest. Roll Hit Dice + STR to heal.",
 			"decreaseDie": "Decrease d{size}",
+			"healing": "Healing",
+			"hitDice": "Hit Dice",
 			"hitDiceToSpend": "Hit Dice to Spend",
 			"increaseDie": "Increase d{size}",
 			"makeCamp": "Make Camp",
 			"makeCampDescription": "8 hour rest. Take max Hit Die value + STR.",
 			"max": "Max",
 			"maxDie": "Max d{size}",
+			"maximizeHitDice": "Always maximize Hit Dice",
+			"maximized": "Maximized",
+			"modifiers": "Modifiers",
+			"noHitDiceAvailable": "No hit dice available to spend",
+			"noModifiers": "No special modifiers",
 			"restAndSpendHitDice": "Rest & Spend {count} Hit Dice",
 			"restAndSpendHitDie": "Rest & Spend {count} Hit Die",
 			"restType": "Rest Type",
-			"restWithoutSpending": "Rest Without Spending Hit Dice"
+			"restWithoutSpending": "Rest Without Spending Hit Dice",
+			"restedWithoutSpending": "Rested without spending hit dice",
+			"rolled": "Rolled",
+			"withAdvantage": "With Advantage"
 		},
 		"forms": {
 			"submit": "Submit"
@@ -244,13 +283,6 @@
 			"skillPointAssignment": "You may assign a single skill point to a skill of your choice. In addition, you may transfer one of your assigned skill points to another skill of your choice.",
 			"statAssignment": "Below you will find the stat bonuses granted by your selected array. Drag and drop each of these values onto one of the attribute boxes below to assign your stats."
 		},
-		"statIncrease": {
-			"header": "Stat Increase",
-			"capstoneDescription": "Select any 2 stats to increase by +1"
-		},
-		"sectionHeaders": {
-			"stats": "Stats"
-		},
 		"hitDice": {
 			"addBonusDie": "Add Bonus Die",
 			"addDie": "Add one d{size}",
@@ -259,16 +291,22 @@
 			"bonusDieName": "Name",
 			"bonusHitDice": "Bonus Hit Dice",
 			"bonusHitDiceHint": "Hit dice bonuses received from boons, ancestries, or features",
+			"configureHitDice": "Configure Hit Dice",
 			"currentHitDice": "Current Hit Dice",
 			"currentHitDiceValue": "Current Hit Dice Value",
 			"decreaseBonusDie": "Decrease bonus d{size}",
 			"depleted": "Depleted",
 			"editCurrentHitDice": "Edit Current Hit Dice",
+			"fromSource": "from {source}",
+			"heading": "Hit Dice",
+			"hitDiceSizeIncreased": "All hit dice sizes are increased by {steps} step(s)",
 			"increaseBonusDie": "Increase bonus d{size}",
 			"max": "Max",
 			"maxHitDice": "Maximum Hit Dice",
 			"noBonusDice": "No bonus dice",
 			"noHitDiceYet": "No hit dice yet.",
+			"primaryDieModifier": "Primary Die Modifier",
+			"primaryDieValue": "Primary Die Value",
 			"removeDie": "Remove one d{size}",
 			"rollHitDice": "Roll {count} Hit {dieWord}",
 			"rollHitDiceButton": "Roll Hit Dice",
@@ -276,6 +314,9 @@
 			"selectAll": "Select all",
 			"selectAllDie": "Select all d{size}",
 			"selectToRoll": "Select Hit Dice to Roll",
+			"setPrimaryDie": "Set Primary Die",
+			"setPrimaryDieModifier": "Set Primary Die Modifier",
+			"situationalModifiers": "Situational Modifiers",
 			"totalHitDice": "Total Hit Dice"
 		},
 		"hitPoints": {
@@ -328,6 +369,20 @@
 			"primordial": "Primordial",
 			"thievesCant": "Thieves' Cant"
 		},
+		"levelDownDialog": {
+			"changesToRevert": "Changes to Revert",
+			"confirmLevelDown": "Confirm Level Down",
+			"hitDie": "Hit Die",
+			"hitPoints": "Hit Points",
+			"hp": "HP",
+			"level": "Level",
+			"levelUpInProgress": "Cannot revert level while a level up is in progress.",
+			"point": "point",
+			"points": "points",
+			"removed": "removed",
+			"subclass": "Subclass",
+			"warningMessage": "This action will permanently revert the last level up. This cannot be undone."
+		},
 		"levelUpDialog": {
 			"completeAllSelections": "Complete all selections before submitting",
 			"completeAllSelectionsTooltip": "Complete all selections before submitting",
@@ -344,8 +399,16 @@
 			"savingThrow": "{saveType} Mod",
 			"skillCheck": "{skill} Mod"
 		},
+		"monsterFeatureSubtypes": {
+			"action": "Action",
+			"attackSequence": "Attack Sequence",
+			"bloodied": "Bloodied",
+			"feature": "Feature",
+			"lastStand": "Last Stand"
+		},
 		"monsterFeatureTypes": {
 			"action": "Actions",
+			"attackSequence": "Attack Sequence",
 			"bloodied": "Bloodied",
 			"feature": "Feature",
 			"lastStand": "Last Stand"
@@ -406,6 +469,7 @@
 			"configureArmorProficiencies": "Configure Armor Proficiencies",
 			"configureLanguageProficiencies": "Configure Language Proficiencies",
 			"configureMovement": "Configure Movement",
+			"configureSavingThrows": "Configure Saves",
 			"configureSkills": "Configure Skills",
 			"configureWeaponProficiencies": "Configure Weapon Proficiencies",
 			"editRoll": "Edit Roll",
@@ -440,28 +504,73 @@
 			"armorClass": "Armor Class",
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
+			"hitDiceAdvantage": "Hit Dice Advantage",
+			"incrementHitDice": "Increment Hit Dice",
 			"initiativeBonus": "Initiative Bonus",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
 			"maxWounds": "Wounds",
+			"maximizeHitDice": "Maximize Hit Dice",
 			"note": "Note",
+			"savingThrowBonus": "Save Bonus",
+			"savingThrowRollMode": "Save Roll Mode",
 			"skillBonus": "Skill Bonus"
 		},
 		"safeRest": {
+			"allResourcesFull": "All resources are already at full capacity.",
 			"alreadyFull": "Already full",
+			"alreadyFullyRested": "Already fully rested",
+			"cardHeading": "Safe Rest",
+			"cardSubheading": "Full Recovery",
+			"dialogTitle": "{name}: Safe Rest",
 			"hitDice": "Hit Dice",
+			"hitDiceRecovered": "Hit Dice Recovered",
 			"hitDieRecovery": "+{amount} d{size}",
 			"hitPoints": "Hit Points",
 			"hpRecovery": "+{amount} HP ({current} → {max})",
+			"hpRestored": "HP Restored",
 			"mana": "Mana",
 			"manaRecovery": "+{amount} ({current} → {max})",
+			"manaRestored": "Mana Restored",
 			"noWounds": "No wounds",
 			"recoveryPreview": "Recovery Preview",
 			"removed": "-{amount} removed",
 			"safeRestButton": "Safe Rest",
 			"tempHp": "Temp HP",
+			"tempHpRemoved": "Temp HP Removed",
 			"wound": "-1 wound ({current} → {next})",
-			"wounds": "Wounds"
+			"wounds": "Wounds",
+			"woundsHealed": "Wounds Healed"
+		},
+		"saveConfig": {
+			"abilityMod": "Ability Mod",
+			"abilityModifier": "Ability Modifier",
+			"abilityModifierSubtitle": "Base modifier from linked ability score",
+			"ancestryTraits": "Ancestry Traits",
+			"ancestryTraitsSubtitle": "Features that enhance a save of your choice",
+			"bonusPenalty": "Bonus/Penalty",
+			"bonusPenaltySubtitle": "Flat modifiers to saves",
+			"defaultRollMode": "Default Roll Mode",
+			"defaultRollModeSubtitle": "Advantage or disadvantage on saves",
+			"flatBonus": "Flat Bonus",
+			"legendAdvantage": "Advantage (roll extra dice, take highest)",
+			"legendDisadvantage": "Disadvantage (roll extra dice, take lowest)",
+			"legendNormal": "Standard roll",
+			"resetToClassDefaults": "Reset to Class Defaults",
+			"rollMode": "Roll Mode",
+			"totalModifier": "Total Modifier"
+		},
+		"saves": {
+			"advantageSave": "Advantage Save",
+			"deleteSavePrompt": "Delete save prompt",
+			"dexteritySave": "Dexterity Save",
+			"disadvantageSave": "Disadvantage Save",
+			"intelligenceSave": "Intelligence Save",
+			"save": "Save",
+			"saveType": "Save Type",
+			"saves": "Saves",
+			"strengthSave": "Strength Save",
+			"willSave": "Will Save"
 		},
 		"savingThrowAbbreviations": {
 			"dexterity": "Dex",
@@ -469,23 +578,14 @@
 			"strength": "Str",
 			"will": "Wil"
 		},
-		"saves": {
-			"save": "Save",
-			"saves": "Saves",
-			"saveType": "Save Type",
-			"advantageSave": "Advantage Save",
-			"disadvantageSave": "Disadvantage Save",
-			"deleteSavePrompt": "Delete save prompt",
-			"strengthSave": "Strength Save",
-			"dexteritySave": "Dexterity Save",
-			"intelligenceSave": "Intelligence Save",
-			"willSave": "Will Save"
-		},
 		"savingThrows": {
 			"dexterity": "Dexterity",
 			"intelligence": "Intelligence",
 			"strength": "Strength",
 			"will": "Will"
+		},
+		"sectionHeaders": {
+			"stats": "Stats"
 		},
 		"sheets": {
 			"ancestry": "Nimble Ancestry Sheet",
@@ -589,6 +689,10 @@
 			"balanced": "Balanced",
 			"minMax": "Min-Max",
 			"standard": "Standard"
+		},
+		"statIncrease": {
+			"capstoneDescription": "Select any 2 stats to increase by +1",
+			"header": "Stat Increase"
 		},
 		"templateShapes": {
 			"circle": "Circle",

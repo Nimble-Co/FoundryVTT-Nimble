@@ -72,6 +72,23 @@
 			"enhancedSave": "Enhanced Save",
 			"enhancedSaveHint": "Choose a neutral save to enhance with advantage."
 		},
+		"backgroundOptionsSelection": {
+			"header": "Step 2b. Choose Heritage Ancestry",
+			"editSelection": "Edit Heritage Selection",
+			"hint": "Your background lets you choose which ancestry raised you. This grants you their native language.",
+			"raisedBy": "Raised By",
+			"speaks": "Speaks {language}",
+			"confirmSelection": "Confirm Selection",
+			"raisedByLabel": "Raised by:"
+		},
+		"bonusLanguageSelection": {
+			"header": "Step 7. Select Bonus Languages",
+			"editSelection": "Edit Bonus Language Selections",
+			"hint": "All heroes speak Common by default, and some backgrounds will grant another language. Additionally, each point of INT grants an additional language known.",
+			"granted": "Granted",
+			"choose": "Choose {count}",
+			"confirmSelection": "Confirm Bonus Language Selections"
+		},
 		"saveConfig": {
 			"abilityModifier": "Ability Modifier",
 			"abilityModifierSubtitle": "Base modifier from linked ability score",

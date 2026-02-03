@@ -39,13 +39,10 @@
 		selectedArray,
 	} = $props();
 
-	const hintText =
-		'All heroes speak Common by default, and some backgrounds will grant another language. Additionally, each point of INT grants an additional language known.';
-
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
 
-	const { languages } = CONFIG.NIMBLE;
+	const { languages, bonusLanguageSelection } = CONFIG.NIMBLE;
 
 	let tempBonusLanguages = $state([]);
 
@@ -83,7 +80,7 @@
 >
 	<header class="nimble-section-header" data-header-variant="character-creator">
 		<h3 class="nimble-heading" data-heading-variant="section">
-			Step 7. Select Bonus Languages
+			{bonusLanguageSelection.header}
 
 			{#if active}
 				({remainingTempLanguagePicks})
@@ -91,8 +88,8 @@
 				<button
 					class="nimble-button"
 					data-button-variant="icon"
-					aria-label="Edit Bonus Language Selections"
-					data-tooltip="Edit Bonus Language Selections"
+					aria-label={bonusLanguageSelection.editSelection}
+					data-tooltip={bonusLanguageSelection.editSelection}
 					onclick={() => (bonusLanguages = [])}
 				>
 					<i class="fa-solid fa-edit"></i>
@@ -102,13 +99,13 @@
 	</header>
 
 	{#if active}
-		<Hint {hintText} />
+		<Hint hintText={bonusLanguageSelection.hint} />
 
 		<div class="nimble-language-selection">
 			<!-- Granted languages displayed as locked tags -->
 			{#if grantedLanguages.length > 0}
 				<div class="nimble-language-group">
-					<span class="nimble-language-group__label">Granted</span>
+					<span class="nimble-language-group__label">{bonusLanguageSelection.granted}</span>
 					<ul class="nimble-language-tags">
 						{#each grantedLanguages as lang}
 							<li class="nimble-language-tag nimble-language-tag--granted">
@@ -125,7 +122,11 @@
 			<!-- Bonus language selection (only if INT > 0) -->
 			{#if intelligenceModifier > 0}
 				<div class="nimble-language-group">
-					<span class="nimble-language-group__label">Choose {intelligenceModifier}</span>
+					<span class="nimble-language-group__label"
+						>{game.i18n.format(bonusLanguageSelection.choose, {
+							count: intelligenceModifier,
+						})}</span
+					>
 					<TagGroup
 						disabled={remainingTempLanguagePicks < 1}
 						options={selectableOptions}
@@ -136,7 +137,7 @@
 
 				{#if remainingTempLanguagePicks < 1}
 					<button class="nimble-button" data-button-variant="basic" onclick={lockInBonusLanguages}>
-						Confirm Bonus Language Selections
+						{bonusLanguageSelection.confirmSelection}
 					</button>
 				{/if}
 			{/if}

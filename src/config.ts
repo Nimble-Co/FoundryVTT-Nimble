@@ -58,6 +58,25 @@ const ancestryOptions = {
 	enhancedSaveHint: 'NIMBLE.ancestryOptions.enhancedSaveHint',
 };
 
+const backgroundOptionsSelection = {
+	header: 'NIMBLE.backgroundOptionsSelection.header',
+	editSelection: 'NIMBLE.backgroundOptionsSelection.editSelection',
+	hint: 'NIMBLE.backgroundOptionsSelection.hint',
+	raisedBy: 'NIMBLE.backgroundOptionsSelection.raisedBy',
+	speaks: 'NIMBLE.backgroundOptionsSelection.speaks',
+	confirmSelection: 'NIMBLE.backgroundOptionsSelection.confirmSelection',
+	raisedByLabel: 'NIMBLE.backgroundOptionsSelection.raisedByLabel',
+};
+
+const bonusLanguageSelection = {
+	header: 'NIMBLE.bonusLanguageSelection.header',
+	editSelection: 'NIMBLE.bonusLanguageSelection.editSelection',
+	hint: 'NIMBLE.bonusLanguageSelection.hint',
+	granted: 'NIMBLE.bonusLanguageSelection.granted',
+	choose: 'NIMBLE.bonusLanguageSelection.choose',
+	confirmSelection: 'NIMBLE.bonusLanguageSelection.confirmSelection',
+};
+
 const saveConfig = {
 	abilityModifier: 'NIMBLE.saveConfig.abilityModifier',
 	abilityModifierSubtitle: 'NIMBLE.saveConfig.abilityModifierSubtitle',
@@ -717,6 +736,8 @@ const NIMBLE = {
 	activationCostTypes,
 	ancestryOptions,
 	activationCostTypesPlural,
+	backgroundOptionsSelection,
+	bonusLanguageSelection,
 	actorTypeBanners,
 	armorTypes,
 	armorTypesPlural,

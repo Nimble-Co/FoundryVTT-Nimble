@@ -13,7 +13,7 @@
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
 
-	const { languages } = CONFIG.NIMBLE;
+	const { languages, backgroundOptionsSelection } = CONFIG.NIMBLE;
 
 	// Extract language grants from ancestry rules
 	function getLanguageFromAncestry(ancestry) {
@@ -95,13 +95,13 @@
 >
 	<header class="nimble-section-header" data-header-variant="character-creator">
 		<h3 class="nimble-heading" data-heading-variant="section">
-			Step 2b. Choose Heritage Ancestry
+			{backgroundOptionsSelection.header}
 			{#if !active && selectedRaisedByAncestry}
 				<button
 					class="nimble-button"
 					data-button-variant="icon"
-					aria-label="Edit Heritage Selection"
-					data-tooltip="Edit Heritage Selection"
+					aria-label={backgroundOptionsSelection.editSelection}
+					data-tooltip={backgroundOptionsSelection.editSelection}
 					onclick={() => (selectedRaisedByAncestry = null)}
 				>
 					<i class="fa-solid fa-edit"></i>
@@ -111,19 +111,19 @@
 	</header>
 
 	{#if active}
-		<Hint
-			hintText="Your background lets you choose which ancestry raised you. This grants you their native language."
-		/>
+		<Hint hintText={backgroundOptionsSelection.hint} />
 
 		<div class="nimble-heritage-selection">
 			<label class="nimble-field" data-field-variant="stacked">
 				<span class="nimble-heading nimble-field__label" data-heading-variant="field">
-					Raised By
+					{backgroundOptionsSelection.raisedBy}
 				</span>
 				<select class="nimble-select" bind:value={dropdownValue}>
 					{#each resolvedAncestries as option}
 						<option value={option.ancestryKey}>
-							{option.label} (Speaks {option.languageLabel})
+							{option.label} ({game.i18n.format(backgroundOptionsSelection.speaks, {
+								language: option.languageLabel,
+							})})
 						</option>
 					{/each}
 				</select>
@@ -131,17 +131,22 @@
 
 			{#if !hasSelection}
 				<button class="nimble-button" data-button-variant="basic" onclick={confirmSelection}>
-					Confirm Selection
+					{backgroundOptionsSelection.confirmSelection}
 				</button>
 			{/if}
 		</div>
 	{:else if selectedRaisedByAncestry}
 		<p class="nimble-selected-option">
-			Raised by: <strong
+			{backgroundOptionsSelection.raisedByLabel}
+			<strong
 				>{selectedRaisedByAncestry.ancestryKey.charAt(0).toUpperCase() +
 					selectedRaisedByAncestry.ancestryKey.slice(1)}</strong
 			>
-			<span class="nimble-language-grant">(Speaks {selectedLanguageLabel()})</span>
+			<span class="nimble-language-grant"
+				>({game.i18n.format(backgroundOptionsSelection.speaks, {
+					language: selectedLanguageLabel(),
+				})})</span
+			>
 		</p>
 	{/if}
 </section>
