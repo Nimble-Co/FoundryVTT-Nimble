@@ -16,9 +16,7 @@
 				"predicate": {},
 				"priority": 1,
 				"value": "2",
-				"skills": [
-					"might"
-				]
+				"skills": ["might"]
 			},
 			{
 				"type": "maxHitDice",
