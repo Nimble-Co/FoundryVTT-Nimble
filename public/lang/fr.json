@@ -1,0 +1,718 @@
+{
+	"NIMBLE": {
+		"abilityScoreAbbreviations": {
+			"constitution": "Con",
+			"dexterity": "Dex",
+			"intelligence": "Int",
+			"strength": "For",
+			"will": "Vol"
+		},
+		"abilityScoreControls": {
+			"confirmStatAssignments": "Confirmer les Assignations d'Attributs"
+		},
+		"abilityScoreTooltips": {
+			"advantageOnSave": "Avantage sur le jet de sauvegarde",
+			"disadvantageOnSave": "Désavantage sur le jet de sauvegarde",
+			"editStats": "Modifier les Attributs",
+			"keyStat": "Attribut clé"
+		},
+		"abilityScores": {
+			"constitution": "Constitution",
+			"dexterity": "Dexterité",
+			"intelligence": "Intelligence",
+			"strength": "Force",
+			"will": "Volonté"
+		},
+		"activationCosts": {
+			"action": "Action",
+			"hour": "Heure",
+			"minute": "Minute",
+			"none": "Aucun",
+			"special": "Spécial",
+			"turn": "Tour"
+		},
+		"activationCostsPlural": {
+			"action": "Actions",
+			"hour": "Heures",
+			"minute": "Minutes",
+			"turn": "Tours"
+		},
+		"ancestryOptions": {
+			"enhancedSave": "Sauvegarde Améliorée",
+			"enhancedSaveHint": "Choisissez une sauvegarde neutre à améliorer avec un avantage.",
+			"header": "Options d'Ascendance",
+			"sizeCategory": "Catégorie de Taille",
+			"sizeCategoryHint": "Choisissez la catégorie de taille de votre personnage parmi celles disponibles pour votre ascendance."
+		},
+		"armorEffects": {
+			"heavy": "<p>Les Monstres avec Armure Lourde ignorent les modificateurs de dégâts et subissent la moitié de la somme des dés (arrondi à l'entier supérieur).</p>",
+			"medium": "<p>Les Monstres avec Armure Moyenne ignorent tous les modificateurs de dégâts provenant des caractéristiques et autres effets, ne subissant que les dégâts du total des dés.</p>",
+			"none": "<p>aucun</p>"
+		},
+		"armorTypes": {
+			"cloth": "Tissus",
+			"heavy": "Lourde",
+			"leather": "Cuir",
+			"mail": "Mailles",
+			"medium": "Intermédiaire",
+			"none": "Aucune",
+			"plate": "Plate",
+			"shield": "Bouclier",
+			"shieldPlural": "Boucliers"
+		},
+		"boonTypes": {
+			"epic": "Épique",
+			"major": "Majeur",
+			"minor": "Mineur"
+		},
+		"characterCreation": {
+			"characterName": "Nom de Personnage",
+			"createCharacter": "Créer un Personnage",
+			"incompleteStepsWarning": "Certaines étapes de création de personnage n'ont pas été complétées.",
+			"newCharacterPlaceholder": "Nouveau Personnage"
+		},
+		"characterCreationStages": {
+			"stepFiveStats": "Étape 5. Assigner les Attributs",
+			"stepFourStartingEquipment": "Étape 4. Équipement de départ",
+			"stepSixSkills": "Étape 6. Assigner les Points de Compétence"
+		},
+		"classes": {
+			"berserker": "Berserker",
+			"cheat": "Tricheur",
+			"commander": "Commandant",
+			"hunter": "Chasseur",
+			"mage": "Mage",
+			"oathsworn": "Chevalier du Serment",
+			"shadowmancer": "Ombremancien",
+			"shepherd": "Berger",
+			"songweaver": "Tissechant",
+			"stormshifter": "Grifforage",
+			"zephyr": "Zéphyr"
+		},
+		"conditionDescriptions": {
+			"blinded": "<p>Ne peut pas voir. Les attaques contre vous ont l'avantage, et vos attaques ont un désavantage.</p>",
+			"bloodied": "<p>À la moitié de vos PV ou moins.</p>",
+			"charged": "<p>Chaque fois que vous subissez des dégâts de foudre, vous êtes Surchargé pendant 1 minute.</p>",
+			"charmed": "<p>Considère le charmeur comme un allié. Le charmeur a l'avantage sur les interactions sociales avec vous.</p>",
+			"concentration": "<p>Ne peut se concentrer que sur une seule chose à la fois. DD 10 pour un jet de Force quand vous êtes critique ou perdez votre concentration.</p>",
+			"confused": "<p>Le MJ dépense votre prochaine action.</p>",
+			"dazed": "<p><b>Héros:</b> perd 1 action.</p> <p><b>Monstres:</b> peut effectuer une action de moins à leur prochain tour.</p>",
+			"dead": "<p>Vous mourrez lorsque vous avez subi 6 Blessures (sauf si vous avez une capacité qui modifie ce nombre). Il existe des moyens de ressusciter un héros qui est mort, mais ils sont rares et souvent coûteux.</p>",
+			"despair": "<p>Désavantage sur la prochaine attaque que vous effectuez dans ce combat.</p>",
+			"distracted": "<p>Une cible est distraite si elle est adjacente à un allié qui vous provoque, ou si elle ne peut pas vous voir.</p>",
+			"dying": "<p>À 0PV. Subir des dégâts en étant mourant cause 2 Blessures, un critique en cause 3.</p>",
+			"frightened": "<p>ésavantage sur les jets quand la source de la peur est proche ; vitesse réduite de moitié quand vous vous approchez d'elle.</p>",
+			"grappled": "<p>Ne peut pas bouger. Les attaques contre vous ont l'avantage.</p>",
+			"hampered": "<p>Toute créature dont les actions ou le mouvement sont réduits (ex. Étourdi, Grapplé, À terre, Terrain difficile).</p>",
+			"incapacitated": "<p>Ne peut rien faire. Les attaques contre vous ont l'avantage, et les attaques de mêlée qui touchent, critiquent.</p>",
+			"invisible": "<p>Ne peut pas être vu. Vos attaques ont l'avantage, et les attaques contre vous ont un désavantage.</p>",
+			"paralyzed": "<p>Incapacité. Ne peut rien faire. Les attaques contre vous ont l'avantage, et les attaques de mêlée qui touchent, critiquent.</p>",
+			"petrified": "<p>Incapacité. Vous avez tous les bénéfices et inconvénients d'être un rocher ! Immunisé à la plupart des dégâts sauf ceux causés par de grandes explosions, des pioches ou des outils similaires.</p>",
+			"poisoned": "<p>Désavantage sur les jets.</p>",
+			"prone": "<p>Le déplacement coûte deux fois plus cher, et vous avez un désavantage sur les attaques. Les attaques de mêlée contre vous ont l'avantage ; les attaques à distance ont un désavantage. Dépensez 3 espaces de votre Vitesse pour vous relever.</p>",
+			"restrained": "<p>Ne peut pas bouger. Les attaques contre vous ont l'avantage.</p>",
+			"riding": "<p>Vous vous déplacez avec la créature sur laquelle vous êtes monté. Toute attaque qui vous touche, touche la créature.</p>",
+			"silenced": "<p>Ne peut pas lancer de sorts ou utiliser d'autres capacités qui nécessitent de parler (ex. Ordres du Commandant).</p>",
+			"slowed": "<p>Vitesse réduite de moitié pendant votre prochain tour.</p>",
+			"smoldering": "<p>Certains sorts de feu peuvent infliger la condition Incandescent et apporter des effets destructifs supplémentaires contre les ennemis Incandescents.</p>",
+			"stunned": "<p>Incapacité. Ne peut rien faire. Les attaques contre vous ont l'avantage, et les attaques de mêlée qui touchent, critiquent.</p>",
+			"taunted": "<p>Désavantage sur les attaques sauf contre le plus récent provoqueur.</p>",
+			"unconscious": "<p>Incapacité. Ne peut rien faire. Les attaques contre vous ont l'avantage, et les attaques de mêlée qui touchent, critiquent.</p>",
+			"wounded": "<p>À une ou plusieurs Blessures (typiquement 6 Blessures et un héros est mort).</p>"
+		},
+		"conditions": {
+			"blinded": "Aveuglé",
+			"bloodied": "Ensanglanté",
+			"charged": "Surchargé",
+			"charmed": "Charmé",
+			"concentration": "Concentration",
+			"confused": "Confus",
+			"dazed": "Étourdi",
+			"dead": "Mort",
+			"despair": "Désespoir",
+			"distracted": "Distrait",
+			"dying": "Mourant",
+			"frightened": "Effrayé",
+			"grappled": "Grapplé",
+			"hampered": "Entravé",
+			"incapacitated": "Incapacité",
+			"invisible": "Invisible",
+			"paralyzed": "Paralysé",
+			"petrified": "Pétrifié",
+			"poisoned": "Empoisonné",
+			"prone": "À terre",
+			"restrained": "Restreint",
+			"riding": "Monté",
+			"silenced": "Silencié",
+			"slowed": "Ralenti",
+			"smoldering": "Incandescent",
+			"stunned": "Étourdi",
+			"taunted": "Provoqué",
+			"unconscious": "Inconscient",
+			"wounded": "Blessé"
+		},
+		"creatureFeatures": {
+			"actionSequence": "Après le tour de chaque héros, choisissez-en un.",
+			"collapse": "Réduire",
+			"expand": "Développer",
+			"noFeatures": "Pas encore de Capacités."
+		},
+		"currency": {
+			"cp": "Cuivre",
+			"gp": "Or",
+			"sp": "Argent"
+		},
+		"currencyAbbreviations": {
+			"cp": "pc",
+			"gp": "po",
+			"sp": "pa"
+		},
+		"damageTypes": {
+			"acid": "Acide",
+			"bludgeoning": "Contondant",
+			"cold": "Froid",
+			"fire": "Feu",
+			"force": "Force",
+			"lightning": "Foudre",
+			"necrotic": "Nécrotique",
+			"piercing": "Perforant",
+			"poison": "Poison",
+			"psychic": "Psychique",
+			"radiant": "Sacré",
+			"slashing": "Tranchant",
+			"thunder": "Tonnerre",
+			"unknown": "Type inconnu"
+		},
+		"data": {
+			"total": "Total"
+		},
+		"durations": {
+			"action": "Action",
+			"hour": "Heure",
+			"minute": "Minute",
+			"none": "Aucun",
+			"round": "Ronde",
+			"special": "Spécial",
+			"turn": "Tour"
+		},
+		"durationsPlural": {
+			"action": "Actions",
+			"hour": "Heures",
+			"minute": "Minutes",
+			"round": "Rondes",
+			"turn": "Tours"
+		},
+		"effectApplications": {
+			"always": "Toujours",
+			"failedSave": "Échec de sauvegarde",
+			"hit": "Touché",
+			"miss": "Raté",
+			"successfulSave": "Sauvegarde réussie"
+		},
+		"effectTypes": {
+			"condition": "État",
+			"damage": "Dégâts",
+			"healing": "Soin"
+		},
+		"featureTypeHeadings": {
+			"ancestry": "Ascendance",
+			"background": "Historique",
+			"boon": "Bienfaits",
+			"feature": "Caractéristiques de Classe"
+		},
+		"featureTypes": {
+			"ancestry": "Ascendance",
+			"background": "Historique",
+			"boon": "Bienfait",
+			"class": "Classe"
+		},
+		"fieldRest": {
+			"advantage": "Avantage",
+			"advantageWhen": "Lancer avec avantage quand {condition}",
+			"cardHeading": "Repos en plein air: {restType}",
+			"catchBreath": "Courte pause",
+			"catchBreathDescription": "Repos de 10 min. Lancer les dés de vie + Force pour soigner.",
+			"decreaseDie": "Diminuer d{size}",
+			"healing": "Soins",
+			"hitDice": "Dés de vie dépensés",
+			"hitDiceToSpend": "Dés de vie à dépenser",
+			"increaseDie": "Augmenter d{size}",
+			"makeCamp": "Faire un camp",
+			"makeCampDescription": "Repos de 8 heures. Prendre la valeur maximale des dés de vie + Force.",
+			"max": "Max",
+			"maxDie": "Max d{size}",
+			"maximizeHitDice": "Toujours maximiser les dés de vie",
+			"maximized": "Maximisé",
+			"modifiers": "Modificateurs",
+			"noHitDiceAvailable": "Pas de dés de vie disponibles à dépenser",
+			"noModifiers": "Pas de modificateur spécial",
+			"restAndSpendHitDice": "Reposez-vous et dépensez {count} dés de vie",
+			"restAndSpendHitDie": "Reposez-vous et dépensez {count} dé de vie",
+			"restType": "Type de repos",
+			"restWithoutSpending": "Repos sans dépenser de dés de vie",
+			"restedWithoutSpending": "Reposé sans dépenser de dés de vie",
+			"rolled": "Lancés",
+			"withAdvantage": "Avec avantage"
+		},
+		"forms": {
+			"submit": "Soumettre"
+		},
+		"healingTypes": {
+			"healing": "Soin",
+			"tempHealing": "Soin Temporaire"
+		},
+		"hints": {
+			"characterCreationSkillPointAssignment": "Vous pouvez maintenant assigner 4 points de compétence pour augmenter les modificateurs de vos compétences.",
+			"skillPointAssignment": "Vous pouvez assigner un seul point de compétence à une compétence de votre choix. De plus, vous pouvez transférer un des points de compétence assignés à une autre compétence de votre choix.",
+			"statAssignment": "Ci-dessous se trouvent les bonus d'attributs accordés par votre sélection. Glissez-déposez chacune de ces valeurs dans l'une des cases d'attribut ci-dessous pour assigner vos attributs."
+		},
+		"hitDice": {
+			"addBonusDie": "Ajouter un dé bonus",
+			"addDie": "Ajouter un d{size}",
+			"addStrBonus": "Ajoutez le bonus de Force ({bonus} par dé)",
+			"applyHealingToHP": "Appliquer les soins aux PV",
+			"bonusDieName": "Nom",
+			"bonusHitDice": "Bonus de dés de vie",
+			"bonusHitDiceHint": "Bonus de dés de vie reçus par les bienfaits, ascendants ou capacités",
+			"configureHitDice": "Configurer les dés de vie",
+			"currentHitDice": "Dés de vie actuels",
+			"currentHitDiceValue": "Valeur actuelle des dés de vie",
+			"decreaseBonusDie": "Diminuer le dé bonus d{size}",
+			"depleted": "Épuisé",
+			"editCurrentHitDice": "Modifier les dés de vie actuels",
+			"fromSource": "depuis {source}",
+			"heading": "Dés de vie",
+			"hitDiceSizeIncreased": "Tous les dés de vie sont augmentés de {steps} niveau(x).",
+			"increaseBonusDie": "Augmenter le dé bonus d{size}",
+			"max": "Max",
+			"maxHitDice": "Maximum de dés de vie",
+			"noBonusDice": "Pas de dés bonus",
+			"noHitDiceYet": "Pas encore de dés de vie.",
+			"primaryDieModifier": "Modificateur du dé principal",
+			"primaryDieValue": "Valeur du dé principal",
+			"removeDie": "Retirer un d{size}",
+			"rollHitDice": "Lancer {count} fois {dieWord}",
+			"rollHitDiceButton": "Lancer les dés de vie",
+			"saveChanges": "Sauvegarder les modifications",
+			"selectAll": "Tout sélectionner",
+			"selectAllDie": "Sélectionner tous les d{size}",
+			"selectToRoll": "Sélectionnez les dés de vie à lancer",
+			"setPrimaryDie": "Définir le dé principal",
+			"setPrimaryDieModifier": "Définir le modificateur du dé principal",
+			"situationalModifiers": "Modificateurs situationnels",
+			"totalHitDice": "Total des dés de vie"
+		},
+		"hitPoints": {
+			"bonusHp": "Bonus HP",
+			"bonusHpHint": "Static bonus from feats, items, or other sources",
+			"classTotal": "Class Total",
+			"fromRules": "From Items & Rules",
+			"level": "Lvl {level}",
+			"levelUpHpGains": "Level-Up HP Gains",
+			"saveChanges": "Save Changes",
+			"startingHp": "Starting HP",
+			"totalFromRules": "Total from Rules",
+			"totalMaxHp": "Total Maximum HP"
+		},
+		"itemConfig": {
+			"acquireTargetsFromTemplate": "Acquérir les cibles à partir d'un modèle",
+			"attackType": "Type d'attaque",
+			"attackTypes": {
+				"melee": "Mêlée",
+				"none": "Aucune",
+				"range": "Portée",
+				"reach": "Allonge"
+			},
+			"distance": "Distance",
+			"targetCount": "Nombre de cibles",
+			"targetRestrictions": "Restrictions de cibles",
+			"targets": "Cibles"
+		},
+		"languageHints": {
+			"celestial": "Typiquement parlé par les êtres célestes.",
+			"common": "La plupart des créatures parlent cette langue.",
+			"deepSpeak": "Parlé par les habitants des profondeurs.",
+			"draconic": "Typiquement parlé par les Dragons, Drakéïdes, et Kobolds.",
+			"dwarvish": "Typiquement parlé par les Nains, Gnomes, et Géants.",
+			"elvish": "Typiquement parlé par les Elfes, Fées, et Sylvains.",
+			"goblin": "Typiquement parlé par les Gobelins et Orques.",
+			"infernal": "Typiquement parlé par divers Diables.",
+			"primordial": "Spoken by Elementals and Ancient Beings.",
+			"thievesCant": "Typiquement connu par les voleurs."
+		},
+		"languages": {
+			"celestial": "Céleste",
+			"common": "Commun",
+			"deepSpeak": "Prodond",
+			"draconic": "Draconique",
+			"dwarvish": "Nain",
+			"elvish": "Elfique",
+			"goblin": "Gobelin",
+			"infernal": "Infernal",
+			"primordial": "Primordial",
+			"thievesCant": "Argot d'voleur"
+		},
+		"levelDownDialog": {
+			"changesToRevert": "Changements à annuler",
+			"confirmLevelDown": "Confirmer la baisse de niveau.",
+			"hitDie": "Dé de vie",
+			"hitPoints": "Points de vie",
+			"hp": "PV",
+			"level": "Niveau",
+			"levelUpInProgress": "Impossible d'annuler le niveau tant qu'un niveau supérieur est en cours.",
+			"point": "point",
+			"points": "points",
+			"removed": "supprimé",
+			"subclass": "Sous-classe",
+			"warningMessage": "Cette action va définitivement annuler le dernier niveau obtenu. Cela ne peut pas être annulé."
+		},
+		"levelUpDialog": {
+			"completeAllSelections": "Complétez toutes les sélections avant de soumettre",
+			"completeAllSelectionsTooltip": "Complétez toutes les sélections avant de soumettre",
+			"skillPointsOverMax": "Un ou plusieurs points de compétence dépasseraient la limite de 12 points. Veuillez réallouer les points de compétence avant de soumettre.",
+			"skillPointsOverMaxTooltip": "Un point de compétence dépasserait la limite de 12 points"
+		},
+		"manaRecoveryTypes": {
+			"fieldRest": "Repos de terrain",
+			"initiative": "Initiative",
+			"safeRest": "Repos sûr"
+		},
+		"modifiers": {
+			"abilityCheck": "Modificateur de {ability}",
+			"savingThrow": "Modificateur de sauvegarde {saveType}",
+			"skillCheck": "Modificateur de {skill}"
+		},
+		"monsterFeatureSubtypes": {
+			"action": "Action",
+			"attackSequence": "Séquence d'Attaque",
+			"bloodied": "Ensanglanté",
+			"feature": "Capacité",
+			"lastStand": "Barroud d'Honneur"
+		},
+		"monsterFeatureTypes": {
+			"action": "Actions",
+			"attackSequence": "Séquence d'Attaque",
+			"bloodied": "Ensanglanté",
+			"feature": "Capacité",
+			"lastStand": "Barroud d'Honneur"
+		},
+		"movementTypes": {
+			"burrow": "Enfouissement",
+			"climb": "Escalade",
+			"fly": "Vol",
+			"swim": "Nage",
+			"walk": "Marche"
+		},
+		"npcSheet": {
+			"armor": "Armure",
+			"collapseAllDescriptions": "Réduire toutes les descriptions",
+			"collapseDescription": "Réduire la description de {name}",
+			"configureItem": "Configurer {name}",
+			"createFeature": "Créer une caractéristique",
+			"decreaseArmor": "Diminuer l'armure",
+			"deleteItem": "Supprimer {name}",
+			"dropError": "Echec du traitement de l'objet déposé. Veuillez signaler ce problème.",
+			"editAttackSequence": "Modifier la séquence d'attaque",
+			"expandAllDescriptions": "Développer toutes les descriptions",
+			"features": "Caractéristiques",
+			"increaseArmor": "Augmenter l'armure",
+			"melee": "Mêlée",
+			"range": "Portée {distance}",
+			"reach": "Allonge {distance}",
+			"revealDescription": "Révéler la description de {name}"
+		},
+		"objectSizeTypes": {
+			"slots": "Emplacements requis",
+			"smallSized": "Petit",
+			"stackable": "Empilable"
+		},
+		"objectTypeHeadings": {
+			"armor": "Armure",
+			"consumable": "Consommables",
+			"misc": "Divers",
+			"shield": "Boucliers",
+			"weapon": "Armes"
+		},
+		"objectTypes": {
+			"armor": "Armure",
+			"consumable": "Consommable",
+			"misc": "Divers",
+			"shield": "Bouclier",
+			"weapon": "Arme"
+		},
+		"prompts": {
+			"changeActorImage": "Changer l'Image de l'Acteur",
+			"changeBoonImage": "Changer l'Image du Bienfait",
+			"changeClassImage": "Changer l'Image de la Classe",
+			"changeFeatureImage": "Changer l'Image de la Capacité",
+			"changeItemImage": "Changer l'Image de l'Objet",
+			"changeSpellImage": "Changer l'Image du Sort",
+			"changeSubclassImage": "Changer l'Image de la Sous-Classe",
+			"configureAbilityScores": "Configurer Stats",
+			"configureArmorProficiencies": "Configurer les Maîtrises d'Armure",
+			"configureLanguageProficiencies": "Configurer les Maîtrises de Langue",
+			"configureMovement": "Configurer le Mouvement",
+			"configureSavingThrows": "Configurer les Sauvegardes",
+			"configureSkills": "Configurer les Compétences",
+			"configureWeaponProficiencies": "Configurer les Maîtrises d'Arme",
+			"editRoll": "Modifier le Jet",
+			"fieldRest": "Repos de terrain",
+			"levelUp": "Passer au Niveau Supérieur",
+			"rollAbilityCheck": "Lancer un test d'Attribut",
+			"rollAbilityCheckSpecific": "Lancer un test de {ability}",
+			"rollInitiative": "Lancer l'initiative",
+			"rollSavingThrow": "Lancer une Sauvegarde",
+			"rollSavingThrowSpecific": "Lancer une sauvegarde de {save}",
+			"rollSkillCheck": "Lancer un test de Compétence",
+			"rollSkillCheckSpecific": "Lancer un test de {skill}",
+			"safeRest": "Repos Sûr"
+		},
+		"properties": {
+			"concentration": "Concentration",
+			"light": "Léger",
+			"load": "Recharge",
+			"range": "Portée",
+			"reach": "Allonge",
+			"thrown": "Lancé",
+			"twoHanded": "2-Mains",
+			"utilitySpell": "Sort Utilitaire",
+			"vicious": "Vicieux"
+		},
+		"restTypes": {
+			"fieldRest": "Repos de terrain",
+			"safeRest": "Repos sûr"
+		},
+		"ruleTypes": {
+			"abilityBonus": "Bonus d'Attribut",
+			"armorClass": "Classe d'Armure",
+			"grantItem": "Objet",
+			"grantProficiency": "Maîtrise",
+			"hitDiceAdvantage": "Avantage sur les Dés de Vie",
+			"incrementHitDice": "Incrémenter les Dés de Vie",
+			"initiativeBonus": "Bonus d'Initiative",
+			"maxHitDice": "Dés de Vie Maximum",
+			"maxHpBonus": "Points de Vie Bonus Maximum",
+			"maxWounds": "Blessures Maximum",
+			"maximizeHitDice": "Maximiser les Dés de Vie",
+			"note": "Note",
+			"savingThrowBonus": "Bonus de Sauvegarde",
+			"savingThrowRollMode": "Mode de Jet de Sauvegarde",
+			"skillBonus": "Bonus de Compétence"
+		},
+		"safeRest": {
+			"allResourcesFull": "Toutes les ressources sont déjà au maximum.",
+			"alreadyFull": "Déjà au maximum",
+			"alreadyFullyRested": "Déjà complètement reposé",
+			"cardHeading": "Repos sûr",
+			"cardSubheading": "Récupération complète",
+			"dialogTitle": "{name}: Repos sûr",
+			"hitDice": "Dés de vie",
+			"hitDiceRecovered": "Dés de vie récupérés",
+			"hitDieRecovery": "+{amount} d{size}",
+			"hitPoints": "Points de vie",
+			"hpRecovery": "+{amount} PV ({current} → {max})",
+			"hpRestored": "PV restaurés",
+			"mana": "Mana",
+			"manaRecovery": "+{amount} ({current} → {max})",
+			"manaRestored": "Mana restauré",
+			"noWounds": "Pas de blessures",
+			"recoveryPreview": "Aperçu de la récupération",
+			"removed": "-{amount} retirés",
+			"safeRestButton": "Repos sûr",
+			"tempHp": "PV temporaires",
+			"tempHpRemoved": "PV temporaires retirés",
+			"wound": "-1 blessure ({current} → {next})",
+			"wounds": "Blessures",
+			"woundsHealed": "Blessures soignées"
+		},
+		"saveConfig": {
+			"abilityMod": "Modificateur d'Attribut",
+			"abilityModifier": "Modificateur d'Attribut",
+			"abilityModifierSubtitle": "Modificateur de base à partir du score d'attribut lié",
+			"ancestryTraits": "Traits d'Ascendance",
+			"ancestryTraitsSubtitle": "Capacités qui améliorent une sauvegarde de votre choix",
+			"bonusPenalty": "Bonus/Penalité",
+			"bonusPenaltySubtitle": "Modificateurs fixes sur les jets de sauvegarde",
+			"defaultRollMode": "Mode de Jet par Défaut",
+			"defaultRollModeSubtitle": "Avantage ou désavantage sur les jets de sauvegarde",
+			"flatBonus": "Bonus Fixe",
+			"legendAdvantage": "Avantage (lancer des dés supplémentaires, prendre le plus haut)",
+			"legendDisadvantage": "Désavantage (lancer des dés supplémentaires, prendre le plus bas)",
+			"legendNormal": "Normal (lancer un seul dé)",
+			"resetToClassDefaults": "Réinitialiser aux Valeurs par Défaut de la Classe",
+			"rollMode": "Mode de Jet",
+			"totalModifier": "Modificateur Total"
+		},
+		"saves": {
+			"advantageSave": "Avantage sur la Sauvegarde",
+			"deleteSavePrompt": "Supprimer l'invite de sauvegarde",
+			"dexteritySave": "Sauvegarde de Dextérité",
+			"disadvantageSave": "ésavantage sur la Sauvegarde",
+			"intelligenceSave": "Sauvegarde d'Intelligence",
+			"save": "Sauvegarde",
+			"saveType": "Type de Sauvegarde",
+			"saves": "Sauvegardes",
+			"strengthSave": "Sauvegarde de Force",
+			"willSave": "Sauvegarde de Volonté"
+		},
+		"savingThrowAbbreviations": {
+			"dexterity": "Dex",
+			"intelligence": "Int",
+			"strength": "For",
+			"will": "Vol"
+		},
+		"savingThrows": {
+			"dexterity": "Dextérité",
+			"intelligence": "Intelligence",
+			"strength": "Force",
+			"will": "Volonté"
+		},
+		"sectionHeaders": {
+			"stats": "Attributs"
+		},
+		"sheets": {
+			"ancestry": "Feuille d'Ascendance Nimble",
+			"background": "Feuille d'Historique Nimble",
+			"boon": "Feuille de Bienfait Nimble",
+			"class": "Feuille de Classe Nimble",
+			"feature": "Feuille de Capacité Nimble",
+			"monsterFeature": "Feuille de Capacité de Monstre Nimble",
+			"npc": "Feuille de PNJ Nimble",
+			"object": "Feuille d'Objet Nimble",
+			"playerCharacter": "Feuille de Personnage Joueur Nimble",
+			"soloMonster": "Feuille de Monstre Solo Nimble",
+			"spell": "Feuille de Sort Nimble",
+			"subclass": "Feuille de Sous-Classe Nimble"
+		},
+		"sizeCategories": {
+			"gargantuan": "Gigantesque",
+			"huge": "Colossale",
+			"large": "Grande",
+			"medium": "Moyenne",
+			"small": "Petit",
+			"tiny": "Très petit"
+		},
+		"skillPointAssignment": {
+			"abilityMod": "Modificateur d'Attribut",
+			"alreadyMarkedToTransferOnePoint": "Déjà marqué pour transférer 1 point.",
+			"confirmSkillPointAssignments": "Confirmer les Assignations de Points de Compétence",
+			"decrementSkillPoints": "Décrémenter les Points de Compétence",
+			"editSkillPoints": "Modifier les Points de Compétence",
+			"incrementSkillPoints": "Incrémenter les Points de Compétence",
+			"limitReached": "Limite atteinte : seul 1 nouveau point et 1 transfert sont autorisés par niveau supérieur.",
+			"maxSkillBonus": "Le bonus de compétence maximum est +12.",
+			"onlyOneNewPointAndOneTransferAllowed": "Seul 1 nouveau point et 1 transfert sont autorisés par niveau supérieur.",
+			"onlyOneTransferPerLevelUp": "Seul 1 transfert est autorisé par niveau supérieur.",
+			"pointsRemaining": "({remainingSkillPoints} Points Restants)",
+			"reduceAnotherSkillFirstToAddSkillPoint": "Réduisez d'abord une autre compétence pour ajouter un point de compétence.",
+			"skill": "Compétence",
+			"skillBonus": "Bonus de Compétence",
+			"skillPoints": "Points de Compétence",
+			"skillPointsCantGoBelowZero": "Les points de compétence ne peuvent pas descendre en dessous de 0."
+		},
+		"skills": {
+			"arcana": "Arcanes",
+			"examination": "Examen",
+			"finesse": "Finesse",
+			"influence": "Influence",
+			"insight": "Intuition",
+			"lore": "Connaissance",
+			"might": "Puissance",
+			"naturecraft": "Nature",
+			"perception": "Perception",
+			"stealth": "Discrétion"
+		},
+		"spells": {
+			"schools": {
+				"fire": "Feu",
+				"ice": "Glace",
+				"lightning": "Foudre",
+				"necrotic": "Nécrotique",
+				"radiant": "Sacré",
+				"wind": "Vent"
+			},
+			"tierHeadings": {
+				"tier0": "Sorts mineurs et utilitaires",
+				"tier1": "Sorts de rang 1",
+				"tier2": "Sorts de rang 2",
+				"tier3": "Sorts de rang 3",
+				"tier4": "Sorts de rang 4",
+				"tier5": "Sorts de rang 5",
+				"tier6": "Sorts de rang 6",
+				"tier7": "Sorts de rang 7",
+				"tier8": "Sorts de rang 8",
+				"tier9": "Sorts de rang 9"
+			},
+			"tiers": {
+				"tier0": "Sort mineur",
+				"tier1": "Rang 1",
+				"tier2": "Rang 2",
+				"tier3": "Rang 3",
+				"tier4": "Rang 4",
+				"tier5": "Rang 5",
+				"tier6": "Rang 6",
+				"tier7": "Rang 7",
+				"tier8": "Rang 8",
+				"tier9": "Rang 9"
+			}
+		},
+		"startingEquipment": {
+			"editSelection": "Modifier la Sélection d'Équipement de Départ",
+			"equipmentDescription": "Sélectionnez l'équipement de départ:",
+			"equipmentSelected": "Équipement de Départ Sélectionné",
+			"equipmentTitle": "Équipement de Départ",
+			"goldDescription": "Recevoir 50 po pour acheter votre propre équipement",
+			"goldSelected": "Or de Départ (50 po) Sélectionné",
+			"goldTitle": "Or de Départ",
+			"hint": "Les personnages commencent avec l'équipement listé pour leur classe et leur historique OU 50 po pour acheter leur propre équipement.",
+			"noEquipmentDefined": "Aucun équipement de départ défini",
+			"unknownItem": "Objet Inconnu"
+		},
+		"statArrays": {
+			"balanced": "Équilibré",
+			"minMax": "Min-Max",
+			"standard": "Standard"
+		},
+		"statIncrease": {
+			"capstoneDescription": "Sélectionnez 2 attributs à augmenter de +1",
+			"header": "Augmentation d'Attributs"
+		},
+		"templateShapes": {
+			"circle": "Cercle",
+			"cone": "Cône",
+			"emanation": "Émanation",
+			"line": "Ligne",
+			"square": "Carré"
+		},
+		"timeUnits": {
+			"action": "action",
+			"day": "jour",
+			"hour": "heure",
+			"minute": "minute",
+			"round": "ronde",
+			"turn": "tour"
+		},
+		"ui": {
+			"clearAll": "Tout effacer"
+		}
+	},
+	"TYPES": {
+		"Actor": {
+			"character": "Personnage Joueur",
+			"minion": "Sbire",
+			"npc": "Personnage Non-Joueur",
+			"soloMonster": "Monstre Solo"
+		},
+		"Item": {
+			"ancestry": "Ascendance",
+			"background": "Historique",
+			"boon": "Bienfait",
+			"class": "Classe",
+			"feature": "Capacité",
+			"monsterFeature": "Capacité de Monstre",
+			"object": "Objet",
+			"spell": "Sort",
+			"subclass": "Sous-Classe"
+		}
+	}
+}
