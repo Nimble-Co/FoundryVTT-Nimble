@@ -23,6 +23,7 @@
 			class="nimble-tag-group__option-button"
 			class:nimble-tag-group__option-button--selected={selected}
 			data-tooltip={option.tooltip}
+			data-tooltip-direction="UP"
 			disabled={!selected && disabled}
 			type="button"
 			onclick={(event) => toggleOption(option.value, event)}

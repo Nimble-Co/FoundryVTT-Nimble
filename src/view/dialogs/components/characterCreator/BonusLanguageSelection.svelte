@@ -42,7 +42,7 @@
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
 
-	const { languages, bonusLanguageSelection } = CONFIG.NIMBLE;
+	const { languages, languageHints, bonusLanguageSelection } = CONFIG.NIMBLE;
 
 	let tempBonusLanguages = $state([]);
 
@@ -108,7 +108,11 @@
 					<span class="nimble-language-group__label">{bonusLanguageSelection.granted}</span>
 					<ul class="nimble-language-tags">
 						{#each grantedLanguages as lang}
-							<li class="nimble-language-tag nimble-language-tag--granted">
+							<li
+								class="nimble-language-tag nimble-language-tag--granted"
+								data-tooltip={languageHints[lang.key]}
+								data-tooltip-direction="UP"
+							>
 								<span class="nimble-language-tag__name"
 									>{localize(languages[lang.key] ?? lang.key)}</span
 								>
@@ -145,19 +149,31 @@
 	{:else if !hasUnassignedAbilityScores && !remainingSkillPoints}
 		<!-- Summary view: show all languages -->
 		<ul class="nimble-language-tags nimble-language-tags--summary">
-			<li class="nimble-language-tag">
+			<li
+				class="nimble-language-tag"
+				data-tooltip={languageHints.common}
+				data-tooltip-direction="UP"
+			>
 				<span class="nimble-language-tag__name">{localize(languages.common)}</span>
 			</li>
 
 			{#each grantedLanguages as lang}
-				<li class="nimble-language-tag nimble-language-tag--granted">
+				<li
+					class="nimble-language-tag nimble-language-tag--granted"
+					data-tooltip={languageHints[lang.key]}
+					data-tooltip-direction="UP"
+				>
 					<span class="nimble-language-tag__name">{localize(languages[lang.key] ?? lang.key)}</span>
 					<span class="nimble-language-tag__source">({lang.source})</span>
 				</li>
 			{/each}
 
 			{#each bonusLanguages as language}
-				<li class="nimble-language-tag">
+				<li
+					class="nimble-language-tag"
+					data-tooltip={languageHints[language]}
+					data-tooltip-direction="UP"
+				>
 					<span class="nimble-language-tag__name">{localize(languages[language] ?? language)}</span>
 				</li>
 			{/each}
