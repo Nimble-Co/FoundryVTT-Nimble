@@ -67,7 +67,7 @@
 			"incompleteCharacterTitle": "Character Creation Incomplete",
 			"incompleteCharacterMessage": "This character is not finished yet. You can proceed anyway or return to complete the remaining steps.",
 			"incompleteCharacterProceed": "Proceed Anyway",
-			"incompleteCharacterReturn": "Return to Complete Steps"
+			"incompleteCharacterReturn": "Back to Character Creation"
 		},
 		"ancestryOptions": {
 			"header": "Ancestry Options",
