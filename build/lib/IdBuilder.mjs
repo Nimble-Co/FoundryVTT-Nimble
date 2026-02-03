@@ -206,7 +206,7 @@ export default class IdBuilder {
 	static getIdKey(absoluteFilePath) {
 		let filePath = absoluteFilePath;
 
-		if (os.platform() === 'linux') {
+		if (os.platform() === 'linux' || os.platform() === 'darwin') {
 			const dirName = fileURLToPath(new URL('.', import.meta.url));
 			const dataPath = path.resolve(dirName, '../../packs');
 
