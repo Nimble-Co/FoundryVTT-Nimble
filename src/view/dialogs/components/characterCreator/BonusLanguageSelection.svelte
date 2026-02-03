@@ -33,18 +33,16 @@
 		active,
 		bonusLanguages = $bindable(),
 		bonusLanguageOptions,
+		grantedLanguages = [],
 		remainingSkillPoints,
 		selectedAbilityScores,
 		selectedArray,
 	} = $props();
 
-	const hintText =
-		'All heroes speak Common by default, and some backgrounds will grant another language. Additionally, each point of INT grants an additional language known.';
-
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
 
-	const { languages } = CONFIG.NIMBLE;
+	const { languages, languageHints, bonusLanguageSelection } = CONFIG.NIMBLE;
 
 	let tempBonusLanguages = $state([]);
 
@@ -60,8 +58,19 @@
 
 	let remainingTempLanguagePicks = $derived(intelligenceModifier - tempBonusLanguages.length);
 
+	let grantedLanguageKeys = $derived(grantedLanguages.map((l) => l.key));
+
+	let selectableOptions = $derived(
+		bonusLanguageOptions.filter((opt) => !grantedLanguageKeys.includes(opt.value)),
+	);
+
+	// Reset temp selections when INT drops below current temp selection count
+	// Only run after ability scores are fully assigned (not during drag operations)
 	$effect(() => {
-		tempBonusLanguages = [];
+		if (hasUnassignedAbilityScores) return;
+		if (tempBonusLanguages.length > 0 && intelligenceModifier < tempBonusLanguages.length) {
+			tempBonusLanguages = [];
+		}
 	});
 </script>
 
@@ -71,7 +80,7 @@
 >
 	<header class="nimble-section-header" data-header-variant="character-creator">
 		<h3 class="nimble-heading" data-heading-variant="section">
-			Step 7. Select Bonus Languages
+			{bonusLanguageSelection.header}
 
 			{#if active}
 				({remainingTempLanguagePicks})
@@ -79,8 +88,8 @@
 				<button
 					class="nimble-button"
 					data-button-variant="icon"
-					aria-label="Edit Bonus Language Selections"
-					data-tooltip="Edit Bonus Language Selections"
+					aria-label={bonusLanguageSelection.editSelection}
+					data-tooltip={bonusLanguageSelection.editSelection}
 					onclick={() => (bonusLanguages = [])}
 				>
 					<i class="fa-solid fa-edit"></i>
@@ -90,37 +99,82 @@
 	</header>
 
 	{#if active}
-		<Hint {hintText} />
+		<Hint hintText={bonusLanguageSelection.hint} />
 
-		<TagGroup
-			disabled={remainingTempLanguagePicks < 1}
-			options={bonusLanguageOptions}
-			selectedOptions={tempBonusLanguages}
-			toggleOption={toggleBonusLanguages}
-		/>
-
-		{#if remainingTempLanguagePicks < 1}
-			<button class="nimble-button" data-button-variant="basic" onclick={lockInBonusLanguages}>
-				Confirm Bonus Language Selections
-			</button>
-		{/if}
-	{:else if !hasUnassignedAbilityScores && !remainingSkillPoints}
-		<ul class="nimble-selected-languages-list">
-			<li class="nimble-selected-languages-list__item">
-				<div class="nimble-card">
-					<h4 class="nimble-card__title nimble-heading" data-heading-variant="item">
-						{localize(languages.common)}
-					</h4>
+		<div class="nimble-language-selection">
+			<!-- Granted languages displayed as locked tags -->
+			{#if grantedLanguages.length > 0}
+				<div class="nimble-language-group">
+					<span class="nimble-language-group__label">{bonusLanguageSelection.granted}</span>
+					<ul class="nimble-language-tags">
+						{#each grantedLanguages as lang}
+							<li
+								class="nimble-language-tag nimble-language-tag--granted"
+								data-tooltip={languageHints[lang.key]}
+								data-tooltip-direction="UP"
+							>
+								<span class="nimble-language-tag__name"
+									>{localize(languages[lang.key] ?? lang.key)}</span
+								>
+								<span class="nimble-language-tag__source">({lang.source})</span>
+							</li>
+						{/each}
+					</ul>
 				</div>
+			{/if}
+
+			<!-- Bonus language selection (only if INT > 0) -->
+			{#if intelligenceModifier > 0}
+				<div class="nimble-language-group">
+					<span class="nimble-language-group__label"
+						>{game.i18n.format(bonusLanguageSelection.choose, {
+							count: intelligenceModifier,
+						})}</span
+					>
+					<TagGroup
+						disabled={remainingTempLanguagePicks < 1}
+						options={selectableOptions}
+						selectedOptions={tempBonusLanguages}
+						toggleOption={toggleBonusLanguages}
+					/>
+				</div>
+
+				{#if remainingTempLanguagePicks < 1}
+					<button class="nimble-button" data-button-variant="basic" onclick={lockInBonusLanguages}>
+						{bonusLanguageSelection.confirmSelection}
+					</button>
+				{/if}
+			{/if}
+		</div>
+	{:else if !hasUnassignedAbilityScores && !remainingSkillPoints}
+		<!-- Summary view: show all languages -->
+		<ul class="nimble-language-tags nimble-language-tags--summary">
+			<li
+				class="nimble-language-tag"
+				data-tooltip={languageHints.common}
+				data-tooltip-direction="UP"
+			>
+				<span class="nimble-language-tag__name">{localize(languages.common)}</span>
 			</li>
 
+			{#each grantedLanguages as lang}
+				<li
+					class="nimble-language-tag nimble-language-tag--granted"
+					data-tooltip={languageHints[lang.key]}
+					data-tooltip-direction="UP"
+				>
+					<span class="nimble-language-tag__name">{localize(languages[lang.key] ?? lang.key)}</span>
+					<span class="nimble-language-tag__source">({lang.source})</span>
+				</li>
+			{/each}
+
 			{#each bonusLanguages as language}
-				<li class="nimble-selected-languages-list__item">
-					<div class="nimble-card">
-						<h4 class="nimble-card__title nimble-heading" data-heading-variant="item">
-							{localize(languages[language] ?? language)}
-						</h4>
-					</div>
+				<li
+					class="nimble-language-tag"
+					data-tooltip={languageHints[language]}
+					data-tooltip-direction="UP"
+				>
+					<span class="nimble-language-tag__name">{localize(languages[language] ?? language)}</span>
 				</li>
 			{/each}
 		</ul>
@@ -128,22 +182,65 @@
 </section>
 
 <style lang="scss">
-	.nimble-selected-languages-list {
-		--nimble-card-content-grid: 'title';
-		--nimble-card-column-dimensions: 1fr;
-		--nimble-card-row-dimensions: 2rem;
-		--nimble-card-padding: 0 0.75rem;
-		--nimble-card-title-alignment: center;
+	.nimble-language-selection {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
 
+	.nimble-language-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+
+		&__label {
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			color: var(--nimble-muted-text-color, hsl(0, 0%, 50%));
+		}
+	}
+
+	.nimble-language-tags {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.5rem;
+		gap: 0.25rem;
 		margin: 0;
 		padding: 0;
 		list-style: none;
 
-		&__item {
-			display: contents;
+		&--summary {
+			gap: 0.5rem;
+		}
+	}
+
+	.nimble-language-tag {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.25rem 0.375rem;
+		font-size: var(--nimble-xs-text);
+		line-height: 1;
+		color: var(--nimble-tag-text-color, var(--nimble-dark-text-color));
+		background: var(--nimble-tag-background-color, var(--nimble-box-background-color));
+		border: 1px solid var(--nimble-accent-color);
+		border-radius: 4px;
+
+		&--granted {
+			--nimble-tag-background-color: var(--nimble-selected-tag-background-color);
+
+			color: var(--nimble-selected-tag-text-color, var(--nimble-light-text-color));
+		}
+
+		&__name {
+			font-weight: 500;
+		}
+
+		&__source {
+			font-size: 0.65rem;
+			opacity: 0.8;
+			text-transform: capitalize;
 		}
 	}
 

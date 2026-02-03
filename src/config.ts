@@ -47,6 +47,7 @@ const abilityScoreControls = {
 const characterCreationStages = {
 	stepFourStartingEquipment: 'NIMBLE.characterCreationStages.stepFourStartingEquipment',
 	stepFiveStats: 'NIMBLE.characterCreationStages.stepFiveStats',
+	stepSixSkills: 'NIMBLE.characterCreationStages.stepSixSkills',
 };
 
 const ancestryOptions = {
@@ -55,6 +56,25 @@ const ancestryOptions = {
 	sizeCategoryHint: 'NIMBLE.ancestryOptions.sizeCategoryHint',
 	enhancedSave: 'NIMBLE.ancestryOptions.enhancedSave',
 	enhancedSaveHint: 'NIMBLE.ancestryOptions.enhancedSaveHint',
+};
+
+const backgroundOptionsSelection = {
+	header: 'NIMBLE.backgroundOptionsSelection.header',
+	editSelection: 'NIMBLE.backgroundOptionsSelection.editSelection',
+	hint: 'NIMBLE.backgroundOptionsSelection.hint',
+	raisedBy: 'NIMBLE.backgroundOptionsSelection.raisedBy',
+	speaks: 'NIMBLE.backgroundOptionsSelection.speaks',
+	confirmSelection: 'NIMBLE.backgroundOptionsSelection.confirmSelection',
+	raisedByLabel: 'NIMBLE.backgroundOptionsSelection.raisedByLabel',
+};
+
+const bonusLanguageSelection = {
+	header: 'NIMBLE.bonusLanguageSelection.header',
+	editSelection: 'NIMBLE.bonusLanguageSelection.editSelection',
+	hint: 'NIMBLE.bonusLanguageSelection.hint',
+	granted: 'NIMBLE.bonusLanguageSelection.granted',
+	choose: 'NIMBLE.bonusLanguageSelection.choose',
+	confirmSelection: 'NIMBLE.bonusLanguageSelection.confirmSelection',
 };
 
 const saveConfig = {
@@ -716,6 +736,8 @@ const NIMBLE = {
 	activationCostTypes,
 	ancestryOptions,
 	activationCostTypesPlural,
+	backgroundOptionsSelection,
+	bonusLanguageSelection,
 	actorTypeBanners,
 	armorTypes,
 	armorTypesPlural,

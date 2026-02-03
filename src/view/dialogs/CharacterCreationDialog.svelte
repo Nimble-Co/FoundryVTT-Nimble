@@ -6,6 +6,7 @@
 
 	import AncestrySelection from './components/characterCreator/AncestrySelection.svelte';
 	import AncestrySizeSelection from './components/characterCreator/AncestrySizeSelection.svelte';
+	import BackgroundOptionsSelection from './components/characterCreator/BackgroundOptionsSelection.svelte';
 	import BackgroundSelection from './components/characterCreator/BackgroundSelection.svelte';
 	import BonusLanguageSelection from './components/characterCreator/BonusLanguageSelection.svelte';
 	import ClassSelection from './components/characterCreator/ClassSelection.svelte';
@@ -19,6 +20,7 @@
 		ANCESTRY: '1a',
 		ANCESTRY_OPTIONS: '1b',
 		BACKGROUND: 2,
+		BACKGROUND_OPTIONS: '2b',
 		STARTING_EQUIPMENT: 3,
 		ARRAY: 4,
 		STATS: 5,
@@ -120,12 +122,17 @@
 		return true;
 	}
 
+	function isRaisedByBackground(background) {
+		return background?.name?.toLowerCase().includes('raised by');
+	}
+
 	function getCurrentStage(
 		selectedClass,
 		selectedAncestry,
 		selectedAncestrySize,
 		selectedAncestrySave,
 		selectedBackground,
+		selectedRaisedByAncestry,
 		startingEquipmentChoice,
 		selectedArray,
 		selectedAbilityScores,
@@ -155,6 +162,10 @@
 
 		if (backgroundCount && !selectedBackground) {
 			return CHARACTER_CREATION_STAGES.BACKGROUND;
+		}
+
+		if (isRaisedByBackground(selectedBackground) && selectedRaisedByAncestry === null) {
+			return CHARACTER_CREATION_STAGES.BACKGROUND_OPTIONS;
 		}
 
 		if (!startingEquipmentChoice) return CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT;
@@ -199,10 +210,18 @@
 			),
 			sizeCategory: selectedAncestrySize,
 			selectedAncestrySave,
+			// Pass the selected "raised by" ancestry for backgrounds that allow choice
+			selectedRaisedByAncestry: selectedRaisedByAncestry
+				? {
+						language: selectedRaisedByAncestry.language,
+						label: selectedRaisedByAncestry.label,
+					}
+				: null,
 			skills: Object.entries(assignedSkillPoints).reduce((assignedPoints, [skillKey, points]) => {
 				assignedPoints[`${skillKey}.points`] = points;
 				return assignedPoints;
 			}, {}),
+			// Only include common + bonus languages; rule-granted languages are handled by the rules at runtime
 			languages: ['common', ...bonusLanguages],
 		});
 	}
@@ -226,6 +245,7 @@
 	let selectedAncestry = $state('');
 	let selectedAncestrySize = $state('medium');
 	let selectedAncestrySave = $state(null);
+	let selectedRaisedByAncestry = $state(null);
 	let startingEquipmentChoice = $state(null);
 
 	let abilityBonuses = $derived(
@@ -233,6 +253,66 @@
 	);
 
 	let skillBonuses = $derived(getSkillBonuses(selectedAncestry, selectedBackground, selectedClass));
+
+	// Helper to extract language grants from rules, checking INT predicate
+	function getLanguageGrantsFromRules(rules, intMod, source) {
+		if (!rules?.length) return [];
+
+		const grantRules = rules.filter(
+			(r) => r.type === 'grantProficiency' && r.proficiencyType === 'languages',
+		);
+
+		return grantRules.flatMap((r) => {
+			// Check predicate for INT requirement
+			const intPredicate = r.predicate?.intelligence;
+			if (intPredicate?.min !== undefined && intMod < intPredicate.min) {
+				return [];
+			}
+			return r.values.map((v) => ({ key: v.toLowerCase(), source }));
+		});
+	}
+
+	// Languages granted by ancestry (based on rules with INT predicate)
+	let ancestryGrantedLanguages = $derived.by(() => {
+		if (!selectedAncestry || !selectedArray || selectedAbilityScores.intelligence === null)
+			return [];
+		const intMod = selectedArray.array?.[selectedAbilityScores.intelligence] ?? 0;
+
+		const rules = [...(selectedAncestry?.system?.rules ?? [])];
+		return getLanguageGrantsFromRules(rules, intMod, 'ancestry');
+	});
+
+	// Languages granted by background
+	let backgroundGrantedLanguages = $derived.by(() => {
+		if (!selectedBackground) return [];
+
+		// For "Raised by" backgrounds, use the language stored with the selected ancestry
+		// selectedRaisedByAncestry is an object { ancestryKey, language }
+		if (isRaisedByBackground(selectedBackground)) {
+			if (!selectedRaisedByAncestry?.language) return [];
+			return [{ key: selectedRaisedByAncestry.language, source: 'background' }];
+		}
+
+		// For other backgrounds with grantProficiency rules
+		const rules = [...(selectedBackground?.system?.rules ?? [])];
+		const grantRules = rules.filter(
+			(r) => r.type === 'grantProficiency' && r.proficiencyType === 'languages',
+		);
+		return grantRules.flatMap((r) =>
+			r.values.map((v) => ({ key: v.toLowerCase(), source: 'background' })),
+		);
+	});
+
+	// Combined granted languages (deduplicated by key)
+	let grantedLanguages = $derived.by(() => {
+		const all = [...ancestryGrantedLanguages, ...backgroundGrantedLanguages];
+		const seen = new Set();
+		return all.filter((lang) => {
+			if (seen.has(lang.key)) return false;
+			seen.add(lang.key);
+			return true;
+		});
+	});
 
 	let remainingSkillPoints = $derived(
 		4 - Object.values(assignedSkillPoints).reduce((a, b) => a + b, 0),
@@ -245,6 +325,7 @@
 			selectedAncestrySize,
 			selectedAncestrySave,
 			selectedBackground,
+			selectedRaisedByAncestry,
 			startingEquipmentChoice,
 			selectedArray,
 			selectedAbilityScores,
@@ -266,6 +347,29 @@
 		// Reset ancestry save selection when ancestry changes
 		void selectedAncestry;
 		selectedAncestrySave = null;
+	});
+
+	$effect(() => {
+		// Reset raised-by selection when background changes
+		void selectedBackground;
+		selectedRaisedByAncestry = null;
+	});
+
+	// Track whether stats have been fully assigned (to avoid running during drag)
+	let statsFullyAssigned = $derived(
+		Object.values(selectedAbilityScores).every((mod) => mod !== null),
+	);
+
+	$effect(() => {
+		// Only run after stats are fully assigned (not during drag operations)
+		if (!statsFullyAssigned) return;
+
+		const intMod = selectedArray?.array?.[selectedAbilityScores.intelligence] ?? 0;
+
+		// Only reset if there are actually languages to clear
+		if (bonusLanguages.length > 0 && intMod < bonusLanguages.length) {
+			bonusLanguages = [];
+		}
 	});
 </script>
 
@@ -322,6 +426,15 @@
 		/>
 	{/await}
 
+	{#if isRaisedByBackground(selectedBackground)}
+		<BackgroundOptionsSelection
+			active={stage === CHARACTER_CREATION_STAGES.BACKGROUND_OPTIONS}
+			{ancestryOptions}
+			{selectedBackground}
+			bind:selectedRaisedByAncestry
+		/>
+	{/if}
+
 	<StartingEquipmentSelection
 		active={stage === CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT}
 		{selectedClass}
@@ -361,6 +474,7 @@
 		active={stage === CHARACTER_CREATION_STAGES.LANGUAGES}
 		bind:bonusLanguages
 		{bonusLanguageOptions}
+		{grantedLanguages}
 		{remainingSkillPoints}
 		{selectedArray}
 		{selectedAbilityScores}

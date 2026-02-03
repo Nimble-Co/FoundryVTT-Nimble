@@ -5,7 +5,21 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "grantProficiency",
+				"proficiencyType": "languages",
+				"values": [
+					"goblin"
+				],
+				"label": "Skedaddle",
+				"predicate": {
+					"intelligence": {
+						"min": 0
+					}
+				}
+			}
+		],
 		"description": "<p>Green, cunning, and perpetually vilified, Goblins thrive on the edge of chaos. For a Goblin, vanishing into the shadows is not just a skill—it's an identity. After all, what kind of Goblin would you be if you couldn't slip away unnoticed?</p><hr><p><strong>Skedaddle</strong> </p><p>Can move 2 spaces for free after you become the target of an attack or negative effect (after damage, ignoring difficult terrain). </p><p>You know Goblin if your INT is not negative. [M]</p>",
 		"exotic": true,
 		"size": [

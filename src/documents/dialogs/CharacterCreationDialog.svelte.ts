@@ -74,6 +74,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		name?: string;
 		sizeCategory?: string;
 		selectedAncestrySave?: string | null;
+		selectedRaisedByAncestry?: { language: string; label: string } | null;
 		abilityScores?: Record<string, number>;
 		skills?: Record<string, number>;
 		languages?: string[];
@@ -108,7 +109,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		const processOriginSource = (
 			doc: NimbleBackgroundItem | NimbleClassItem | NimbleAncestryItem | null,
 			uuid: string | undefined,
-			isAncestry = false,
+			options: { isAncestry?: boolean; isBackground?: boolean } = {},
 		) => {
 			if (!doc || !uuid) return;
 
@@ -131,7 +132,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			}
 
 			// If this is an ancestry with a save choice, set the selectedSave on the rule
-			if (isAncestry && results.selectedAncestrySave) {
+			if (options.isAncestry && results.selectedAncestrySave) {
 				const systemWithRules = source.system as {
 					rules?: Array<{
 						type: string;
@@ -153,12 +154,61 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 				}
 			}
 
+			// If this is a background with a "raised by" ancestry choice, update the name, description, and rule
+			if (options.isBackground && results.selectedRaisedByAncestry) {
+				const { language, label } = results.selectedRaisedByAncestry;
+
+				// Simple pluralization for common ancestries
+				const pluralize = (name: string): string => {
+					const irregulars: Record<string, string> = {
+						dwarf: 'Dwarves',
+						elf: 'Elves',
+						dragonborn: 'Dragonborn',
+					};
+					const lower = name.toLowerCase();
+					if (irregulars[lower]) return irregulars[lower];
+					// Default: capitalize and add 's'
+					return `${name}s`;
+				};
+
+				const pluralLabel = pluralize(label);
+
+				// Update the background name (e.g., "Raised by Goblins" → "Raised by Dwarves")
+				if (source.name?.includes('Goblins')) {
+					source.name = source.name.replace('Goblins', pluralLabel);
+				}
+
+				// Update the description - replace references to Goblin/Goblins
+				const sourceWithSystem = source as { system?: { description?: string } };
+				if (sourceWithSystem.system?.description) {
+					sourceWithSystem.system.description = sourceWithSystem.system.description
+						.replace(/Goblins/g, pluralLabel)
+						.replace(/Goblin/g, label);
+				}
+
+				// Update the grantProficiency rule to use the selected language
+				const systemWithRules = source.system as {
+					rules?: Array<{
+						type: string;
+						proficiencyType?: string;
+						values?: string[];
+					}>;
+				};
+				if (systemWithRules.rules) {
+					for (const rule of systemWithRules.rules) {
+						if (rule.type === 'grantProficiency' && rule.proficiencyType === 'languages') {
+							rule.values = [language];
+						}
+					}
+				}
+			}
+
 			originDocumentSources.push(source as object as Item.CreateData);
 		};
 
-		processOriginSource(backgroundDocument, background?.uuid);
+		processOriginSource(backgroundDocument, background?.uuid, { isBackground: true });
 		processOriginSource(classDocument, characterClass?.uuid);
-		processOriginSource(ancestryDocument, ancestry?.uuid, true);
+		processOriginSource(ancestryDocument, ancestry?.uuid, { isAncestry: true });
 
 		// When origin documents are added, the system automatically processes grantItem rules
 		// If equipment was chosen, items will be granted automatically

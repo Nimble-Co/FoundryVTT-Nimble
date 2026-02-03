@@ -5,7 +5,19 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "grantProficiency",
+				"proficiencyType": "languages",
+				"values": ["elvish"],
+				"label": "Danger Pollen/Spores",
+				"predicate": {
+					"intelligence": {
+						"min": 0
+					}
+				}
+			}
+		],
 		"description": "<p>Tied to the natural world, Dryads and Shroomlings embody the balance between flora and fauna. Their unique physiology releases toxic spores when harmed, providing a natural defense against those who dare to harm them.</p><hr><p><strong>Danger Pollen/Spores</strong> </p><p>Whenever an enemy causes you one or more Wounds, you excrete soporific spores: all adjacent enemies are Dazed. </p><p>You know Elvish if your INT is not negative. [M]</p>",
 		"exotic": true,
 		"size": [
