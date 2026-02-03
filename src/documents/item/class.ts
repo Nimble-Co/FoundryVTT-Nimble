@@ -169,18 +169,28 @@ export class NimbleClassItem extends NimbleBaseItem {
 		return true;
 	}
 
-	override async _preUpdate(changed, options, userId) {
-		await super._preUpdate(changed, options, userId);
+	override async _preUpdate(
+		changed: Record<string, unknown>,
+		options: Item.Database.UpdateOptions,
+		user: User.Implementation,
+	): Promise<boolean | undefined> {
+		const result = await super._preUpdate(changed, options, user);
 
-		if (!this.isEmbedded) return;
+		if (!this.isEmbedded) return result;
 
 		const actor = this.parent as NimbleCharacter;
 		const actorUpdates = {};
 
-		if (changed.name) {
+		// Type the changed object for this method's usage
+		const changedData = changed as {
+			name?: string & { slugify: (options: { strict: boolean }) => string };
+			system?: { hitDieSize?: number };
+		};
+
+		if (changedData.name) {
 			const existingLevels =
 				(foundry.utils.getProperty(actor, 'system.classData.levels') as string[] | undefined) ?? [];
-			const newIdentifier = changed.name.slugify({ strict: true });
+			const newIdentifier = changedData.name.slugify({ strict: true });
 
 			actorUpdates['system.classData.levels'] = existingLevels.reduce(
 				(ids: string[], id: string) => {
@@ -196,7 +206,7 @@ export class NimbleClassItem extends NimbleBaseItem {
 				actorUpdates['system.classData.startingClass'] = newIdentifier;
 			}
 
-			if (!changed?.system?.hitDieSize) {
+			if (!changedData.system?.hitDieSize) {
 				const existingHitDice =
 					(foundry.utils.getProperty(
 						actor,
@@ -213,7 +223,7 @@ export class NimbleClassItem extends NimbleBaseItem {
 			}
 		}
 
-		if (changed?.system?.hitDieSize) {
+		if (changedData.system?.hitDieSize) {
 			const existingHitDice =
 				(foundry.utils.getProperty(
 					actor,
@@ -233,13 +243,13 @@ export class NimbleClassItem extends NimbleBaseItem {
 				const existingNewHitDice =
 					(foundry.utils.getProperty(
 						actor,
-						`system.attributes.hitDice.${changed.system.hitDieSize}.origin`,
+						`system.attributes.hitDice.${changedData.system.hitDieSize}.origin`,
 					) as string[] | undefined) ?? [];
 
-				actorUpdates[`system.attributes.hitDice.${changed.system.hitDieSize}.origin`] =
+				actorUpdates[`system.attributes.hitDice.${changedData.system.hitDieSize}.origin`] =
 					existingNewHitDice.concat(
 						Array(hitDiceCountDifference).fill(
-							changed?.name?.slugify({ strict: true }) ?? this.identifier,
+							changedData.name?.slugify({ strict: true }) ?? this.identifier,
 						),
 					);
 
@@ -249,6 +259,8 @@ export class NimbleClassItem extends NimbleBaseItem {
 		}
 
 		actor.update(actorUpdates);
+
+		return result;
 	}
 
 	override _onCreate(data, options, userId) {

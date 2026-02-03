@@ -256,7 +256,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			}
 		}
 
-		return super._preUpdate(changed, options, user);
+		return (await super._preUpdate(changed, options, user)) ?? undefined;
 	}
 
 	override _onDelete(options, userId: string): void {
