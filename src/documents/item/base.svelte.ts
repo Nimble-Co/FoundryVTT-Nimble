@@ -245,7 +245,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		changed: Record<string, unknown>,
 		options: Item.Database.UpdateOptions,
 		user: User.Implementation,
-	): Promise<boolean | void> {
+	): Promise<boolean | undefined> {
 		// Call preUpdate on all rules
 		if (this.rules) {
 			for (const rule of this.rules.values()) {
