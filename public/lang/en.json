@@ -581,6 +581,7 @@
 					"max": "Max Tier {tier}"
 				},
 				"chooseEnhancement": "Choose Enhancement",
+				"appliedEffect": "Applied Effect",
 				"maxTier": "Max tier"
 			}
 		},

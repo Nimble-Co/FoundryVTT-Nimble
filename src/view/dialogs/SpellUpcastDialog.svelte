@@ -91,18 +91,11 @@
 					spellName: spell.parent.name,
 				})}
 			</h3>
-			<div class="nimble-mana-info">
-				<span>Current Mana: <strong>{currentMana}</strong></span>
-				<span>Max Tier: <strong>{maxTier}</strong></span>
-			</div>
 			<div class="nimble-mana-slider">
 				<div class="nimble-upcast-meta">
 					<span class="nimble-upcast-steps"
 						>{format(spellUpcastDialog.slider.level)}: <strong>{upcastSteps}</strong></span
 					>
-					<!-- <span class="nimble-remaining-mana" class:nimble-remaining-mana--low={remainingMana < 3}>
-						{format(spellUpcastDialog.slider.remaining)}: <strong>{remainingMana}</strong>
-					</span> -->
 				</div>
 				<section class="nimble-spell-roll-mode-config">
 					<RangeSlider
@@ -129,7 +122,7 @@
 				{#if hasChoices && spell.scaling.choices && upcastSteps > 0}
 					<fieldset class="nimble-upcast-choices">
 						<!-- TODO: i18n -->
-						<legend class="nimble-choices-label">Choose Enhancement:</legend>
+						<legend class="nimble-choices-label">{spellUpcastDialog.chooseEnhancement}</legend>
 						{#each spell.scaling.choices as choice, i}
 							<label class="nimble-choice-option">
 								<input type="radio" name="upcast-choice" value={i} bind:group={choiceIndex} />
@@ -142,7 +135,7 @@
 				{#if upcastSteps > 0 && upcastPreview().length > 0}
 					<div class="nimble-upcast-preview">
 						<!-- TODO: i18n -->
-						<h4 class="nimble-preview-heading">Applied Effects:</h4>
+						<h4 class="nimble-preview-heading">{spellUpcastDialog.appliedEffect}</h4>
 						<ul class="nimble-preview-list">
 							{#each upcastPreview() as effect}
 								<li>{effect}</li>
@@ -244,7 +237,70 @@
 
 	.nimble-upcast-info {
 		display: flex;
+		flex-direction: column;
 		gap: 1rem;
+
+		.nimble-upcast-choices {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+
+			.nimble-choice-option {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+				padding: 0.5rem;
+				background: var(--nimble-background-color-tertiary);
+				border-radius: var(--nimble-border-radius);
+				cursor: pointer;
+				transition: background 0.15s ease;
+
+				&:hover {
+					background: var(--nimble-background-color-hover);
+				}
+
+				input[type='radio'] {
+					border: none;
+					background: var(--nimble-background-color-secondary);
+					cursor: pointer;
+				}
+
+				span {
+					flex: 1;
+					font-size: 0.875rem;
+				}
+			}
+		}
+
+		.nimble-upcast-preview {
+			margin: 0 auto;
+			background: var(--nimble-background-color-tertiary);
+			border-radius: var(--nimble-border-radius);
+			border: 1px solid var(--nimble-color-primary-alpha);
+
+			.nimble-preview-heading {
+				margin: 0 0 0.5rem 0;
+				font-size: 1rem;
+				font-weight: 600;
+				color: var(--nimble-color-primary);
+			}
+
+			.nimble-preview-list {
+				margin: 0;
+				padding-left: 0;
+				list-style: none;
+
+				li {
+					font-size: 0.875rem;
+					color: var(--nimble-text-color-primary);
+					margin-bottom: 0.25rem;
+
+					&:last-child {
+						margin-bottom: 0;
+					}
+				}
+			}
+		}
 	}
 
 	.nimble-upcast-section {
@@ -258,18 +314,6 @@
 		font-size: 1rem;
 		font-weight: 600;
 		color: var(--nimble-color-primary);
-	}
-
-	.nimble-mana-info {
-		display: flex;
-		flex-direction: column;
-		margin-bottom: 0.75rem;
-		font-size: 0.875rem;
-		color: var(--nimble-text-color-secondary);
-
-		strong {
-			color: var(--nimble-text-color-primary);
-		}
 	}
 
 	.nimble-mana-slider {
@@ -289,78 +333,11 @@
 		}
 	}
 
-	// .nimble-remaining-mana--low {
-	// 	color: var(--nimble-color-error);
-
-	// 	strong {
-	// 		color: var(--nimble-color-error);
-	// 	}
-	// }
-
-	.nimble-upcast-choices {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-
 	.nimble-choices-label {
 		font-size: 0.875rem;
 		font-weight: 600;
 		color: var(--nimble-text-color-primary);
 		margin-bottom: 0.25rem;
-	}
-
-	.nimble-choice-option {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem;
-		background: var(--nimble-background-color-tertiary);
-		border-radius: var(--nimble-border-radius);
-		cursor: pointer;
-		transition: background 0.15s ease;
-
-		&:hover {
-			background: var(--nimble-background-color-hover);
-		}
-
-		input[type='radio'] {
-			cursor: pointer;
-		}
-
-		span {
-			flex: 1;
-			font-size: 0.875rem;
-		}
-	}
-
-	.nimble-upcast-preview {
-		background: var(--nimble-background-color-tertiary);
-		border-radius: var(--nimble-border-radius);
-		border: 1px solid var(--nimble-color-primary-alpha);
-	}
-
-	.nimble-preview-heading {
-		margin: 0 0 0.5rem 0;
-		font-size: 0.875rem;
-		font-weight: 600;
-		color: var(--nimble-color-primary);
-	}
-
-	.nimble-preview-list {
-		margin: 0;
-		padding-left: 0;
-		list-style: none;
-
-		li {
-			font-size: 0.875rem;
-			color: var(--nimble-text-color-primary);
-			margin-bottom: 0.25rem;
-
-			&:last-child {
-				margin-bottom: 0;
-			}
-		}
 	}
 
 	.nimble-roll-modifiers-container {
