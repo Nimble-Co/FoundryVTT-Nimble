@@ -122,7 +122,7 @@ class ItemActivationManager {
 					const isMinion =
 						actorTags?.has('minion') ?? (this.actor?.type as string | undefined) === 'minion';
 					const resolvedCanCrit = isMinion ? false : (canCrit ?? true);
-					const resolvedCanMiss = isMinion || canMiss ?? true;
+					const resolvedCanMiss = isMinion || (canMiss ?? true);
 					node.rollMode = dialogData.rollMode ?? 0;
 
 					// Use modified formula if provided
