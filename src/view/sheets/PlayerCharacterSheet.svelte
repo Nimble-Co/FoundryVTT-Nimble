@@ -275,16 +275,6 @@
 			{/each}
 		</ul>
 
-		{#if wounds.value > 0}
-			<span
-				class="nimble-wounds-indicator nimble-wounds-indicator--portrait"
-				data-tooltip="{wounds.value} {wounds.value === 1 ? 'Wound' : 'Wounds'}"
-			>
-				<i class="nimble-wounds-list__icon fa-solid fa-droplet"></i>
-				<span class="nimble-wounds-indicator__count">{wounds.value}</span>
-			</span>
-		{/if}
-
 		<button
 			class="nimble-icon__button nimble-icon__button--actor"
 			aria-label={localize('NIMBLE.prompts.changeActorImage')}
@@ -305,10 +295,7 @@
 		</button>
 	</div>
 
-	<section
-		class="nimble-character-sheet-section nimble-character-sheet-section--defense"
-		class:nimble-character-sheet-section--defense--has-mana={hasMana}
-	>
+	<section class="nimble-character-sheet-section nimble-character-sheet-section--defense">
 		<h3 class="nimble-heading nimble-heading--hp">
 			Hit Points
 
@@ -320,6 +307,15 @@
 				{/if}
 			</span>
 
+			{#if wounds.value > 0}
+				<span
+					class="nimble-wounds-indicator"
+					data-tooltip="{wounds.value} {wounds.value === 1 ? 'Wound' : 'Wounds'}"
+				>
+					<i class="nimble-wounds-list__icon fa-solid fa-droplet"></i>
+					<span class="nimble-wounds-indicator__count">{wounds.value}</span>
+				</span>
+			{/if}
 			<button
 				class="nimble-button"
 				data-button-variant="icon"
@@ -535,26 +531,12 @@
 			grid-template-columns: 1fr auto;
 			grid-template-areas:
 				'hpHeading hitDiceHeading'
-				'hpBar hitDiceBar';
-			grid-gap: 0.25rem 0.125rem;
-			margin-block-start: 0.5rem;
+				'hpBar hitDiceBar'
+				'manaHeading manaHeading'
+				'manaBar manaBar';
+			grid-gap: 0 0.125rem;
+			margin-block-start: -2.25rem;
 			margin-inline: 0.25rem;
-		}
-
-		&--defense--has-mana {
-			grid-template-areas:
-				'manaHeading hitDiceHeading'
-				'manaBar hitDiceBar'
-				'hpHeading hpHeading'
-				'hpBar hpBar';
-
-			.nimble-heading--hp {
-				--nimble-heading-margin: 0.5rem 0 0;
-			}
-
-			.nimble-hit-points {
-				margin-block-start: 0.5rem;
-			}
 		}
 	}
 
@@ -580,14 +562,6 @@
 			color: #b01b19;
 			-webkit-text-stroke: 1px #fff;
 			filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
-		}
-
-		&--portrait {
-			position: absolute;
-			left: 0.625rem;
-			bottom: 0.5rem;
-			margin-inline-start: 0;
-			z-index: 3;
 		}
 	}
 
