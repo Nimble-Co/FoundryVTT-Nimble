@@ -4,6 +4,8 @@
 	import Editor from '../components/Editor.svelte';
 
 	let actor = getContext('actor');
+	const editingEnabledStore = getContext('editingEnabled');
+	let editingEnabled = $derived($editingEnabledStore ?? true);
 	let details = $derived(actor.reactive.system.details);
 	let age = $derived(details?.age ?? '');
 	let gender = $derived(details?.gender ?? '');
@@ -22,6 +24,7 @@
 				type="text"
 				value={age}
 				onchange={({ target }) => actor.update({ 'system.details.age': target.value })}
+				disabled={!editingEnabled}
 			/>
 		</label>
 
@@ -34,6 +37,7 @@
 				type="text"
 				value={height}
 				onchange={({ target }) => actor.update({ 'system.details.height': target.value })}
+				disabled={!editingEnabled}
 			/>
 		</label>
 
@@ -46,6 +50,7 @@
 				type="text"
 				value={weight}
 				onchange={({ target }) => actor.update({ 'system.details.weight': target.value })}
+				disabled={!editingEnabled}
 			/>
 		</label>
 
@@ -58,6 +63,7 @@
 				type="text"
 				value={gender}
 				onchange={({ target }) => actor.update({ 'system.details.gender': target.value })}
+				disabled={!editingEnabled}
 			/>
 		</label>
 
@@ -71,6 +77,7 @@
 					field="system.details.notes"
 					content={actor.reactive.system.details.notes}
 					document={actor}
+					editable={editingEnabled}
 				/>
 			</div>
 		{/key}

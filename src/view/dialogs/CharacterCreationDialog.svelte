@@ -226,6 +226,33 @@
 		});
 	}
 
+	async function handleCreateCharacter() {
+		if (stage === CHARACTER_CREATION_STAGES.SUBMIT) {
+			submit();
+			return;
+		}
+
+		const { characterCreation } = CONFIG.NIMBLE;
+		const confirmed = await foundry.applications.api.DialogV2.confirm({
+			window: {
+				title: characterCreation.incompleteCharacterTitle,
+			},
+			content: `<p>${characterCreation.incompleteCharacterMessage}</p>`,
+			yes: {
+				label: characterCreation.incompleteCharacterProceed,
+			},
+			no: {
+				label: characterCreation.incompleteCharacterReturn,
+			},
+			rejectClose: false,
+			modal: true,
+		});
+
+		if (confirmed) {
+			submit();
+		}
+	}
+
 	let {
 		ancestryOptions,
 		backgroundOptions,
@@ -493,7 +520,7 @@
 			? game.i18n.localize(CONFIG.NIMBLE.characterCreation.incompleteStepsWarning)
 			: null}
 		data-tooltip-direction="UP"
-		onclick={submit}
+		onclick={handleCreateCharacter}
 	>
 		{game.i18n.localize(CONFIG.NIMBLE.characterCreation.createCharacter)}
 

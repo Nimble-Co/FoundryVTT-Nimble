@@ -86,7 +86,11 @@
 			"characterName": "Character Name",
 			"createCharacter": "Create Character",
 			"incompleteStepsWarning": "Some character creation steps have not been completed.",
-			"newCharacterPlaceholder": "New Character"
+			"newCharacterPlaceholder": "New Character",
+			"incompleteCharacterTitle": "Character Creation Incomplete",
+			"incompleteCharacterMessage": "This character is not finished yet. You can proceed anyway or return to complete the remaining steps.",
+			"incompleteCharacterProceed": "Proceed Anyway",
+			"incompleteCharacterReturn": "Return to Complete Steps"
 		},
 		"characterCreationStages": {
 			"stepFiveStats": "Step 5. Assign Stats",

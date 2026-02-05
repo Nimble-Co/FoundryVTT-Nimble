@@ -114,6 +114,10 @@ const characterCreation = {
 	newCharacterPlaceholder: 'NIMBLE.characterCreation.newCharacterPlaceholder',
 	incompleteStepsWarning: 'NIMBLE.characterCreation.incompleteStepsWarning',
 	createCharacter: 'NIMBLE.characterCreation.createCharacter',
+	incompleteCharacterTitle: 'NIMBLE.characterCreation.incompleteCharacterTitle',
+	incompleteCharacterMessage: 'NIMBLE.characterCreation.incompleteCharacterMessage',
+	incompleteCharacterProceed: 'NIMBLE.characterCreation.incompleteCharacterProceed',
+	incompleteCharacterReturn: 'NIMBLE.characterCreation.incompleteCharacterReturn',
 };
 
 const hints = {

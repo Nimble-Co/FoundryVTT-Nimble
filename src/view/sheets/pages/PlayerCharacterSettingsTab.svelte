@@ -8,6 +8,8 @@
 	}
 
 	let actor = getContext('actor');
+	const editingEnabledStore = getContext('editingEnabled');
+	let editingEnabled = $derived($editingEnabledStore ?? true);
 	let flags = $derived(actor.reactive.flags.nimble);
 
 	let automaticallyExecuteAvailableMacros = $derived(
@@ -43,6 +45,7 @@
 					type="number"
 					value={actorImageXOffset}
 					onchange={({ target }) => actor.setFlag('nimble', 'actorImageXOffset', target.value)}
+					disabled={!editingEnabled}
 				/>
 			</label>
 
@@ -55,6 +58,7 @@
 					type="number"
 					value={actorImageYOffset}
 					onchange={({ target }) => actor.setFlag('nimble', 'actorImageYOffset', target.value)}
+					disabled={!editingEnabled}
 				/>
 			</label>
 
@@ -67,6 +71,7 @@
 					type="number"
 					value={actorImageScale}
 					onchange={({ target }) => actor.setFlag('nimble', 'actorImageScale', target.value)}
+					disabled={!editingEnabled}
 				/>
 			</label>
 		</div>
@@ -83,6 +88,7 @@
 				checked={automaticallyExecuteAvailableMacros}
 				onchange={({ target }) =>
 					actor.setFlag('nimble', 'automaticallyExecuteAvailableMacros', target.checked)}
+				disabled={!editingEnabled}
 			/>
 
 			<span class="nimble-field__label"> Execute Item Macros on Item Activation </span>
@@ -94,6 +100,7 @@
 				checked={showEmbeddedDocumentImages}
 				onchange={({ target }) =>
 					actor.setFlag('nimble', 'showEmbeddedDocumentImages', target.checked)}
+				disabled={!editingEnabled}
 			/>
 
 			<span class="nimble-field__label"> Show Embedded Document Images </span>
@@ -110,6 +117,7 @@
 				type="checkbox"
 				checked={trackInventorySlots}
 				onchange={({ target }) => actor.setFlag('nimble', 'trackInventorySlots', target.checked)}
+				disabled={!editingEnabled}
 			/>
 
 			<span class="nimble-field__label"> Track Inventory Slots </span>
@@ -121,6 +129,7 @@
 					type="checkbox"
 					checked={includeCurrencyBulk}
 					onchange={({ target }) => actor.setFlag('nimble', 'includeCurrencyBulk', target.checked)}
+					disabled={!editingEnabled}
 				/>
 
 				<span class="nimble-field__label"> Automatically Include Currency Bulk </span>
@@ -134,6 +143,7 @@
 						type="button"
 						aria-label="Decrement Bonus Inventory Slots"
 						onclick={() => updateBonusInventorySlots(bonusInventorySlots - 1)}
+						disabled={!editingEnabled}
 					>
 						<i class="fa-solid fa-minus"></i>
 					</button>
@@ -148,6 +158,7 @@
 						type="button"
 						aria-label="Increment Bonus Inventory Slots"
 						onclick={() => updateBonusInventorySlots(bonusInventorySlots + 1)}
+						disabled={!editingEnabled}
 					>
 						<i class="fa-solid fa-plus"></i>
 					</button>
@@ -168,6 +179,7 @@
 				type="checkbox"
 				checked={compactSkillsView}
 				onchange={({ target }) => actor.setFlag('nimble', 'compactSkillsView', target.checked)}
+				disabled={!editingEnabled}
 			/>
 
 			<span class="nimble-field__label"> Use Two-Column Skills View </span>
@@ -178,6 +190,7 @@
 				type="checkbox"
 				checked={showPassiveSkillScores}
 				onchange={({ target }) => actor.setFlag('nimble', 'showPassiveSkillScores', target.checked)}
+				disabled={!editingEnabled}
 			/>
 
 			<span class="nimble-field__label"> Show Passive Skill Scores </span>

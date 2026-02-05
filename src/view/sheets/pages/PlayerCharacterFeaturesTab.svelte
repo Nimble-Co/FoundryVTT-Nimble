@@ -117,6 +117,8 @@
 
 	let actor = getContext('actor');
 	let sheet = getContext('application');
+	const editingEnabledStore = getContext('editingEnabled');
+	let editingEnabled = $derived($editingEnabledStore ?? true);
 
 	let searchTerm = $state('');
 	let items = $derived(filterItems(actor.reactive, validTypes, searchTerm));
@@ -205,6 +207,7 @@
 								type="button"
 								aria-label="Delete {item.reactive.name}"
 								onclick={(event) => deleteItem(event, item._id)}
+								disabled={!editingEnabled}
 							>
 								<i class="fa-solid fa-trash"></i>
 							</button>
@@ -259,6 +262,7 @@
 										type="button"
 										aria-label="Delete {subclass.reactive.name}"
 										onclick={(event) => deleteItem(event, subclass._id)}
+										disabled={!editingEnabled}
 									>
 										<i class="fa-solid fa-trash"></i>
 									</button>

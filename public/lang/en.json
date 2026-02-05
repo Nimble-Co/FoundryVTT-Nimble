@@ -63,7 +63,11 @@
 			"characterName": "Character Name",
 			"newCharacterPlaceholder": "New Character",
 			"incompleteStepsWarning": "Some character creation steps have not been completed.",
-			"createCharacter": "Create Character"
+			"createCharacter": "Create Character",
+			"incompleteCharacterTitle": "Unfinished Character",
+			"incompleteCharacterMessage": "This character isn’t finished. Create anyway?",
+			"incompleteCharacterProceed": "Create Anyway",
+			"incompleteCharacterReturn": "Back"
 		},
 		"ancestryOptions": {
 			"header": "Ancestry Options",
