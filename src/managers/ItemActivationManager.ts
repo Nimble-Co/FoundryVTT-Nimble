@@ -118,6 +118,11 @@ class ItemActivationManager {
 
 				if (node.type === 'damage' && !foundDamageRoll) {
 					const { canCrit, canMiss } = node;
+					const actorTags = (this.actor as { tags?: Set<string> } | null)?.tags;
+					const isMinion =
+						actorTags?.has('minion') ?? (this.actor?.type as string | undefined) === 'minion';
+					const resolvedCanCrit = isMinion ? false : (canCrit ?? true);
+					const resolvedCanMiss = isMinion || (canMiss ?? true);
 					node.rollMode = dialogData.rollMode ?? 0;
 
 					// Use modified formula if provided
@@ -127,8 +132,8 @@ class ItemActivationManager {
 						formula,
 						this.actor!.getRollData() as DamageRoll.Data,
 						{
-							canCrit: canCrit ?? true,
-							canMiss: canMiss ?? true,
+							canCrit: resolvedCanCrit,
+							canMiss: resolvedCanMiss,
 							rollMode: node.rollMode ?? 0,
 							primaryDieValue: dialogData.primaryDieValue ?? 0,
 							primaryDieModifier: Number(dialogData.primaryDieModifier) || 0,
