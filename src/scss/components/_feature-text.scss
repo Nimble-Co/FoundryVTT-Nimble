@@ -1,28 +1,28 @@
 .system-nimble .nimble-monster-feature-text {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font-size: var(--nimble-sm-text);
+  line-height: 1.15;
+
+  * {
     display: inline;
-    margin: 0;
-    padding: 0;
-    font-size: var(--nimble-sm-text);
-    line-height: 1.15;
+  }
 
-    * {
-        display: inline;
-    }
+  figure,
+  img,
+  table,
+  video {
+    display: none;
+  }
 
-    figure,
-    img,
-    table,
-    video {
-        display: none;
-    }
+  ol,
+  ul {
+    display: block;
+    margin-block: 0.25rem;
+  }
 
-    ol,
-    ul {
-        display: block;
-        margin-block: 0.25rem;
-    }
-
-    li {
-        display: block;
-    }
+  li {
+    display: block;
+  }
 }

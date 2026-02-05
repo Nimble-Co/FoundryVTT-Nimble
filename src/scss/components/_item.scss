@@ -1,16 +1,16 @@
 .nimble-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
 
-    &__img {
-        height: 2rem;
-        width: 2rem;
-        object-fit: cover;
-    }
+  &__img {
+    height: 2rem;
+    width: 2rem;
+    object-fit: cover;
+  }
 
-    &__name {
-        white-space: nowrap;
-    }
+  &__name {
+    white-space: nowrap;
+  }
 }

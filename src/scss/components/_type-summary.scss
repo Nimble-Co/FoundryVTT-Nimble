@@ -1,35 +1,35 @@
 .nimble-type-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  font-family: var(--nimble-mono-font);
+  line-height: 1.15;
+  color: var(--nimble-code-text-color);
+  background: var(--nimble-code-editor-background-color);
+  border-radius: 4px;
+
+  &__brace {
+    color: var(--nimble-code-wrapping-brace-color);
+  }
+
+  &__line {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0.75rem;
-    font-family: var(--nimble-mono-font);
-    line-height: 1.15;
-    color: var(--nimble-code-text-color);
-    background: var(--nimble-code-editor-background-color);
-    border-radius: 4px;
+    gap: 1ch;
+    align-items: flex-start;
+    margin-inline-start: 1rem;
+  }
 
-    &__brace {
-        color: var(--nimble-code-wrapping-brace-color);
-    }
+  &__operator {
+    color: var(--nimble-code-operator-color);
+  }
 
-    &__line {
-        display: flex;
-        gap: 1ch;
-        align-items: flex-start;
-        margin-inline-start: 1rem;
-    }
+  &__type {
+    color: var(--nimble-code-type-color);
+  }
 
-    &__operator {
-        color: var(--nimble-code-operator-color);
-    }
-
-    &__type {
-        color: var(--nimble-code-type-color);
-    }
-
-    &__type-wrapper {
-        margin: 0;
-        padding: 0;
-    }
+  &__type-wrapper {
+    margin: 0;
+    padding: 0;
+  }
 }

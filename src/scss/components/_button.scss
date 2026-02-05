@@ -137,10 +137,8 @@
     &:hover {
       --nimble-default-overhang-button-width: calc(var(--nimble-sheet-sidebar-width) - 1px);
       --nimble-overhang-button-background: var(--nimble-overhang-button-hover-background);
-      --nimble-overhang-button-width: var(
-        --nimble-overhang-button-expanded-width,
-        var(--nimble-default-overhang-button-width)
-      );
+      --nimble-overhang-button-width: var(--nimble-overhang-button-expanded-width,
+      var(--nimble-default-overhang-button-width));
       --nimble-overhang-button-text-color: #fff;
     }
 

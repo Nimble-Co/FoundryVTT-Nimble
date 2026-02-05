@@ -51,6 +51,8 @@ declare interface NimbleCharacterInterface extends NimbleBaseActorInterface {
 		resources: {
 			mana: {
 				current: number;
+				baseMax: number;
+				value?: number;
 				max: number;
 			};
 		};

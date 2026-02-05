@@ -1,34 +1,34 @@
 $die-sizes: 4, 6, 8, 10, 12, 20;
 
 .nimble-die {
-    width: 1.5rem;
-    background-repeat: no-repeat;
-    background-size: 1.5rem 1.5rem;
-    color: #fff;
-    font-size: var(--nimble-md-text);
-    font-weight: 900;
-    line-height: 1.5rem;
-    text-align: center;
-    text-shadow: 0 0 4px black;
-    -webkit-text-stroke: 0.5px #888;
+  width: 1.5rem;
+  background-repeat: no-repeat;
+  background-size: 1.5rem 1.5rem;
+  color: #fff;
+  font-size: var(--nimble-md-text);
+  font-weight: 900;
+  line-height: 1.5rem;
+  text-align: center;
+  text-shadow: 0 0 4px black;
+  -webkit-text-stroke: 0.5px #888;
 
-    &--discarded {
-        filter: sepia(0.5) contrast(0.75) opacity(0.4);
-    }
+  &--discarded {
+    filter: sepia(0.5) contrast(0.75) opacity(0.4);
+  }
 
-    &--min {
-        -webkit-text-stroke: 1px #aa0200;
-        filter: sepia(0.5) hue-rotate(-60deg);
-    }
+  &--min {
+    -webkit-text-stroke: 1px #aa0200;
+    filter: sepia(0.5) hue-rotate(-60deg);
+  }
 
-    &--max {
-        -webkit-text-stroke: 0.25px #18520b;
-        filter: sepia(0.5) hue-rotate(60deg);
-    }
+  &--max {
+    -webkit-text-stroke: 0.25px #18520b;
+    filter: sepia(0.5) hue-rotate(60deg);
+  }
 
-    @each $size in $die-sizes {
-        &--#{$size} {
-            background-image: url("/icons/svg/d#{$size}-grey.svg");
-        }
+  @each $size in $die-sizes {
+    &--#{$size} {
+      background-image: url("/icons/svg/d#{$size}-grey.svg");
     }
+  }
 }

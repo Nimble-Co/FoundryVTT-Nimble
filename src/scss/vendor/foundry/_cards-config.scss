@@ -1,42 +1,42 @@
 // Styling for FoundryVTT CardsConfig (Deck) Application
 .system-nimble {
-	// Target both v1 and v2 application classes
-	.application.sheet.cards-config,
-	.application.cards-config {
-		// Make the details tab fill available height
-		.tab[data-tab="details"] {
-			height: 100%;
+  // Target both v1 and v2 application classes
+  .application.sheet.cards-config,
+  .application.cards-config {
+    // Make the details tab fill available height
+    .tab[data-tab="details"] {
+      height: 100%;
 
-			.form-group.stacked {
-				display: block;
-				height: 100%;
-				align-content: flex-start;
+      .form-group.stacked {
+        display: block;
+        height: 100%;
+        align-content: flex-start;
 
-				.form-fields {
-					height: 100%;
+        .form-fields {
+          height: 100%;
 
-					// Make the prose-mirror editor expand to fill available space
-					// Apply globally within cards-config, not just in Details tab
-					prose-mirror[name="description"] {
-						height: 100%;
-						display: block;
+          // Make the prose-mirror editor expand to fill available space
+          // Apply globally within cards-config, not just in Details tab
+          prose-mirror[name="description"] {
+            height: 100%;
+            display: block;
 
-						.editor-container {
-							height: calc(100% - 68px);
-						}
-					}
-				}
-			}
-		}
+            .editor-container {
+              height: calc(100% - 68px);
+            }
+          }
+        }
+      }
+    }
 
-		// Keep the form footer (buttons) at the bottom
-		.form-footer,
-		footer.sheet-footer {
-			flex-shrink: 0;
-			margin-top: auto;
-			display: flex;
-			gap: 0.5rem;
-			flex-wrap: wrap;
-		}
-	}
+    // Keep the form footer (buttons) at the bottom
+    .form-footer,
+    footer.sheet-footer {
+      flex-shrink: 0;
+      margin-top: auto;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+  }
 }

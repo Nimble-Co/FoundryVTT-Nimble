@@ -1,100 +1,96 @@
 .system-nimble .nimble-card {
-    --nimble-card-image-filter: grayscale(60%);
+  --nimble-card-image-filter: grayscale(60%);
 
-    display: grid;
-    grid-template-areas: var(--nimble-card-content-grid);
-    grid-template-columns: var(--nimble-card-column-dimensions);
-    grid-template-rows: var(--nimble-card-row-dimensions);
-    align-items: center;
-    justify-items: start;
-    gap: 0.125rem 0.5rem;
-    height: var(--nimble-card-height, auto);
-    width: var(--nimble-card-width, 100%);
-    min-width: var(--nimble-card-min-width, 0);
-    margin: var(--nimble-card-margin, 0);
-    padding: var(--nimble-card-padding, 0);
-    color: var(--nimble-primary-text-color);
-    line-height: 1;
-    background: var(--nimble-card-background-color);
-    border: 1px solid var(--nimble-card-border-color);
-    border-radius: 4px;
-    box-shadow: var(--nimble-box-shadow);
+  display: grid;
+  grid-template-areas: var(--nimble-card-content-grid);
+  grid-template-columns: var(--nimble-card-column-dimensions);
+  grid-template-rows: var(--nimble-card-row-dimensions);
+  align-items: center;
+  justify-items: start;
+  gap: 0.125rem 0.5rem;
+  height: var(--nimble-card-height, auto);
+  width: var(--nimble-card-width, 100%);
+  min-width: var(--nimble-card-min-width, 0);
+  margin: var(--nimble-card-margin, 0);
+  padding: var(--nimble-card-padding, 0);
+  color: var(--nimble-primary-text-color);
+  line-height: 1;
+  background: var(--nimble-card-background-color);
+  border: 1px solid var(--nimble-card-border-color);
+  border-radius: 4px;
+  box-shadow: var(--nimble-box-shadow);
+  outline: none;
+  transition: var(--nimble-standard-transition);
+
+  &[data-card-option="non-clickable"] {
+    --nimble-card-image-filter: grayscale(0%);
+    cursor: initial;
+  }
+
+  &:active,
+  &:focus {
     outline: none;
-    transition: var(--nimble-standard-transition);
+    box-shadow: var(--nimble-box-shadow);
+  }
 
-    &[data-card-option="non-clickable"] {
-        --nimble-card-image-filter: grayscale(0%);
-        cursor: initial;
+  &:hover {
+    --nimble-card-image-filter: grayscale(0%);
+
+    background: var(--nimble-card-background-color);
+    border-color: var(--nimble-card-border-color);
+    color: var(--nimble-primary-text-color);
+  }
+
+  &__description {
+    grid-area: description;
+    flex-grow: 1;
+    line-height: 1.15rem;
+    align-self: center;
+    width: 100%;
+    overflow-y: auto;
+    height: 100%;
+
+    *:first-child {
+      margin-block-start: 0;
     }
 
-    &:active,
-    &:focus {
-        outline: none;
-        box-shadow: var(--nimble-box-shadow);
+    *:last-child {
+      margin-block-end: 0;
     }
+  }
 
-    &:hover {
-        --nimble-card-image-filter: grayscale(0%);
+  &__img {
+    grid-area: img;
+    height: var(--nimble-card-image-height, 2.5rem);
+    width: var(--nimble-card-image-width, 2.5rem);
+    object-fit: cover;
+    object-position: center;
+    background-color: var(--nimble-image-background-color);
+    border: 0;
+    border-top-right-radius: var(--nimble-card-image-tr-border-radius, 0);
+    border-top-left-radius: var(--nimble-card-image-tl-border-radius, 2px);
+    border-bottom-right-radius: var(--nimble-card-image-br-border-radius,
+    0);
+    border-bottom-left-radius: var(--nimble-card-image-bl-border-radius,
+    2px);
+    filter: var(--nimble-card-image-filter);
 
-        background: var(--nimble-card-background-color);
-        border-color: var(--nimble-card-border-color);
-        color: var(--nimble-primary-text-color);
+    &[src$=".svg" i] {
+      padding: 0.1rem;
     }
+  }
 
-    &__description {
-        grid-area: description;
-        flex-grow: 1;
-        line-height: 1.15rem;
-        align-self: center;
-        width: 100%;
-        overflow-y: auto;
-        height: 100%;
+  &__title {
+    grid-area: title;
+    width: 100%;
+    align-self: var(--nimble-card-title-alignment, end);
+    justify-content: var(--nimble-card-title-justification, center);
+  }
 
-        *:first-child {
-            margin-block-start: 0;
-        }
-
-        *:last-child {
-            margin-block-end: 0;
-        }
-    }
-
-    &__img {
-        grid-area: img;
-        height: var(--nimble-card-image-height, 2.5rem);
-        width: var(--nimble-card-image-width, 2.5rem);
-        object-fit: cover;
-        object-position: center;
-        background-color: var(--nimble-image-background-color);
-        border: 0;
-        border-top-right-radius: var(--nimble-card-image-tr-border-radius, 0);
-        border-top-left-radius: var(--nimble-card-image-tl-border-radius, 2px);
-        border-bottom-right-radius: var(
-            --nimble-card-image-br-border-radius,
-            0
-        );
-        border-bottom-left-radius: var(
-            --nimble-card-image-bl-border-radius,
-            2px
-        );
-        filter: var(--nimble-card-image-filter);
-
-        &[src$=".svg" i] {
-            padding: 0.1rem;
-        }
-    }
-
-    &__title {
-        grid-area: title;
-        width: 100%;
-        align-self: var(--nimble-card-title-alignment, end);
-        justify-content: var(--nimble-card-title-justification, center);
-    }
-
-    &__meta {
-        grid-area: meta;
-        font-size: var(--nimble-xs-text);
-        align-self: start;
-        color: inherit;
-    }
+  &__meta {
+    grid-area: meta;
+    font-size: var(--nimble-xs-text);
+    align-self: start;
+    color: inherit;
+  }
 }

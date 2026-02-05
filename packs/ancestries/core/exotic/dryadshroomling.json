@@ -9,7 +9,9 @@
 			{
 				"type": "grantProficiency",
 				"proficiencyType": "languages",
-				"values": ["elvish"],
+				"values": [
+					"elvish"
+				],
 				"label": "Danger Pollen/Spores",
 				"predicate": {
 					"intelligence": {

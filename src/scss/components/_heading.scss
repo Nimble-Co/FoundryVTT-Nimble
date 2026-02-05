@@ -47,7 +47,8 @@
 
   &--armor,
   &--hit-dice,
-  &--hp {
+  &--hp,
+  &--mana {
     text-transform: uppercase;
     color: #fff;
     text-shadow: 0 0 4px #000;
@@ -79,8 +80,13 @@
     }
   }
 
-  &--hp {
+  &--hp,
+  &--mana {
     padding-inline-start: 0.75rem;
+  }
+
+  &--mana {
+    padding-top: 0.275rem;
   }
 
   &--large {

@@ -5,6 +5,7 @@
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import HitPointBar from './components/HitPointBar.svelte';
 	import HitDiceBar from './components/HitDiceBar.svelte';
+	import ManaBar from './components/ManaBar.svelte';
 	import { incrementDieSize } from '../../managers/HitDiceManager.js';
 	import PlayerCharacterBioTab from './pages/PlayerCharacterBioTab.svelte';
 	import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';
@@ -62,6 +63,24 @@
 	function updateTempHP(newValue) {
 		actor.update({
 			'system.attributes.hp.temp': newValue,
+		});
+	}
+
+	function updateCurrentMana(newValue) {
+		actor.update({
+			'system.resources.mana.current': newValue,
+		});
+	}
+
+	function updateMaxMana(newValue) {
+		const manaData = actor.reactive.system.resources.mana;
+		const baseMax = manaData.baseMax ?? 0;
+		const max = manaData.max || baseMax;
+		const formulaBonus = max - baseMax;
+		const adjustedBaseMax = Math.max(0, newValue - formulaBonus);
+
+		actor.update({
+			'system.resources.mana.baseMax': adjustedBaseMax,
 		});
 	}
 
@@ -132,6 +151,13 @@
 
 	let classItem = $derived(actor.reactive.items.find((item) => item.type === 'class') ?? null);
 	let wounds = $derived(actor.reactive.system.attributes.wounds);
+	let mana = $derived(actor.reactive.system.resources.mana);
+	let hasMana = $derived.by(() => {
+		if ((mana.max ?? 0) > 0 || (mana.baseMax ?? 0) > 0) return true;
+		return actor.reactive.items.some(
+			(item) => item.type === 'class' && item.system?.mana?.formula?.length,
+		);
+	});
 
 	// Flags
 	let flags = $derived(actor.reactive.flags.nimble);
@@ -336,6 +362,20 @@
 			{editCurrentHitDice}
 			{rollHitDice}
 		/>
+
+		{#if hasMana}
+			<h3 class="nimble-heading nimble-heading--mana">
+				Mana
+				<i class="fa-solid fa-sparkles"></i>
+			</h3>
+
+			<ManaBar
+				currentMana={mana.current}
+				maxMana={mana.max || mana.baseMax}
+				{updateCurrentMana}
+				{updateMaxMana}
+			/>
+		{/if}
 	</section>
 
 	<div class="nimble-player-character-header">
@@ -491,7 +531,9 @@
 			grid-template-columns: 1fr auto;
 			grid-template-areas:
 				'hpHeading hitDiceHeading'
-				'hpBar hitDiceBar';
+				'hpBar hitDiceBar'
+				'manaHeading manaHeading'
+				'manaBar manaBar';
 			grid-gap: 0 0.125rem;
 			margin-block-start: -2.25rem;
 			margin-inline: 0.25rem;
@@ -550,5 +592,9 @@
 		&:hover .nimble-button {
 			opacity: 1;
 		}
+	}
+
+	.nimble-heading--mana {
+		grid-area: manaHeading;
 	}
 </style>

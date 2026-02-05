@@ -5,6 +5,7 @@
 	import sortItems from '../../../utils/sortItems.js';
 
 	import SearchBar from '../components/SearchBar.svelte';
+	import ManaBar from '../components/ManaBar.svelte';
 	import SecondaryNavigation from '../../components/SecondaryNavigation.svelte';
 
 	async function configureItem(event, id) {
@@ -147,8 +148,14 @@
 	}
 
 	async function updateMaxMana(newValue) {
+		const manaData = actor.reactive.system.resources.mana;
+		const baseMax = manaData.baseMax ?? 0;
+		const max = manaData.max || baseMax;
+		const formulaBonus = max - baseMax;
+		const adjustedBaseMax = Math.max(0, newValue - formulaBonus);
+
 		await actor.update({
-			'system.resources.mana.baseMax': newValue,
+			'system.resources.mana.baseMax': adjustedBaseMax,
 		});
 	}
 
@@ -326,32 +333,7 @@
 		<h3 class="nimble-heading u-mb-300" data-heading-variant="field">Mana</h3>
 	</header>
 
-	<div
-		class="nimble-hit-points"
-		style="--nimble-hp-bar-percentage: {Math.clamp(
-			0,
-			Math.round((currentMana / maxMana) * 100),
-			100,
-		)}%"
-	>
-		<div class="nimble-hit-points__bar">
-			<div class="nimble-hit-points__values">
-				<input
-					class="nimble-hit-points__input nimble-hit-points__input--current-hp"
-					type="number"
-					value={currentMana}
-					onchange={({ target }) => updateCurrentMana?.(Number(target.value))}
-				/>
-				/
-				<input
-					class="nimble-hit-points__input nimble-hit-points__input--max-hp"
-					type="number"
-					value={maxMana || baseMaxMana}
-					onchange={({ target }) => updateMaxMana?.(Number(target.value))}
-				/>
-			</div>
-		</div>
-	</div>
+	<ManaBar {currentMana} maxMana={maxMana || baseMaxMana} {updateCurrentMana} {updateMaxMana} />
 </footer>
 
 <style lang="scss">
@@ -377,84 +359,5 @@
 		display: flex;
 		gap: 0.375rem;
 		width: 100%;
-	}
-
-	.nimble-hit-points {
-		--nimble-hit-point-input-text-size: var(--nimble-sm-text);
-		--nimble-hit-point-input-font-weight: 600;
-
-		grid-area: hpBar;
-		display: flex;
-		align-items: center;
-		flex-wrap: nowrap;
-		background-color: var(--nimble-hp-bar-background);
-		border: var(--nimble-hp-bar-border-thickness, 1px) solid hsl(41, 18%, 54%);
-		border-radius: 4px;
-		box-shadow: var(--nimble-card-box-shadow);
-		font-weight: 600;
-		text-shadow: 0 0 4px hsl(41, 18%, 54%);
-
-		&__bar {
-			flex: 1;
-			position: relative;
-			overflow: hidden;
-
-			&::before {
-				content: '';
-				position: absolute;
-				display: block;
-				height: 100%;
-				width: var(--nimble-hp-bar-percentage);
-				box-shadow: 0 0 6px rgba(0, 0, 0, 0.45);
-				background: linear-gradient(
-					to right,
-					hsl(207.03deg 47% 20%) 0%,
-					hsl(212.24deg 47% 44%) 100%
-				);
-				z-index: 0;
-				border-radius: 4px 0 0 4px;
-				transition: width 0.2s ease-in-out;
-			}
-		}
-
-		&__values {
-			position: relative;
-			display: flex;
-			flex-wrap: nowrap;
-			gap: 0.25rem;
-			align-items: center;
-			font-size: var(--nimble-hit-point-input-text-size);
-			font-weight: var(--nimble-hit-point-input-font-weight);
-			color: #fff;
-			z-index: 5;
-		}
-
-		&__input[type] {
-			font-size: var(--nimble-hit-point-input-text-size);
-			text-align: center;
-			text-shadow: inherit;
-			color: inherit;
-			border: 0;
-			background: transparent;
-			font-weight: var(--nimble-hit-point-input-font-weight);
-			outline: none;
-			box-shadow: none;
-
-			&:active,
-			&:focus,
-			&:hover {
-				border: 0;
-				outline: none;
-				box-shadow: none;
-			}
-		}
-
-		&__input--current-hp[type] {
-			text-align: end;
-		}
-
-		&__input--max-hp[type] {
-			text-align: start;
-		}
 	}
 </style>

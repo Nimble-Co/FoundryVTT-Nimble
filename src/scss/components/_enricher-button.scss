@@ -1,19 +1,19 @@
 .nimble-enricher-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: bold;
 
-    &__icon {
-        font-size: var(--nimble-xs-text);
-    }
+  &__icon {
+    font-size: var(--nimble-xs-text);
+  }
 
-    &--condition,
-    &--roll {
-        cursor: pointer;
-    }
+  &--condition,
+  &--roll {
+    cursor: pointer;
+  }
 
-    &--condition {
-        color: #199356;
-    }
+  &--condition {
+    color: #199356;
+  }
 }

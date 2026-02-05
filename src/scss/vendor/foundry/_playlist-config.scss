@@ -1,35 +1,35 @@
 // Styling for FoundryVTT PlaylistsConfig (Playlist) Application
 .system-nimble {
-	.application.sheet.playlist-config,
-	.application.playlist-sound-config {
-		.form-group.stacked {
-			display: block;
-			height: 100%;
-			align-content: flex-start;
+  .application.sheet.playlist-config,
+  .application.playlist-sound-config {
+    .form-group.stacked {
+      display: block;
+      height: 100%;
+      align-content: flex-start;
 
-			.form-fields {
-				height: 100%;
+      .form-fields {
+        height: 100%;
 
-				// Make the prose-mirror editor expand to fill available space
-				prose-mirror[name="description"] {
-					height: calc(100% - 40px);
-					display: block;
+        // Make the prose-mirror editor expand to fill available space
+        prose-mirror[name="description"] {
+          height: calc(100% - 40px);
+          display: block;
 
-					.editor-container {
-						height: calc(100% - 68px);
-					}
-				}
-			}
-		}
+          .editor-container {
+            height: calc(100% - 68px);
+          }
+        }
+      }
+    }
 
-		// Keep the form footer (buttons) at the bottom
-		.form-footer,
-		footer.sheet-footer {
-			flex-shrink: 0;
-			margin-top: auto;
-			display: flex;
-			gap: 0.5rem;
-			flex-wrap: wrap;
-		}
-	}
+    // Keep the form footer (buttons) at the bottom
+    .form-footer,
+    footer.sheet-footer {
+      flex-shrink: 0;
+      margin-top: auto;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+  }
 }
