@@ -9,7 +9,10 @@
 		"editor.defaultFormatter": "vscode.html-language-features"
 	},
 	"[scss]": {
-		"editor.defaultFormatter": "sibiraj-s.vscode-scss-formatter"
+		"editor.defaultFormatter": "sibiraj-s.vscode-scss-formatter",
+		"editor.codeActionsOnSave": {
+			"source.fixAll.stylelint": "explicit"
+		}
 	},
 	"[svelte]": {
 		"editor.defaultFormatter": "svelte.svelte-vscode",

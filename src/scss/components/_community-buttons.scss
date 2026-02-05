@@ -1,38 +1,38 @@
 .nimble-community-links {
-    display: flex;
-    gap: 0.5rem;
-    padding-block: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  padding-block: 0.5rem;
 }
 
 [href].nimble-community-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    height: 2rem;
-    color: #fff;
-    font-weight: 700;
-    text-decoration: none;
-    border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2rem;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 4px;
 
-    &--discord {
-        background: #6790e3;
-        border: 1px solid hsl(220, 69%, 55%);
-    }
+  &--discord {
+    background: #6790e3;
+    border: 1px solid hsl(220, 69%, 55%);
+  }
 
-    &--logo {
-        height: 4rem;
-    }
+  &--logo {
+    height: 4rem;
+  }
 
-    &--patreon {
-        background: #f96854;
-        border: 1px solid hsl(7, 93%, 65%);
-    }
+  &--patreon {
+    background: #f96854;
+    border: 1px solid hsl(7, 93%, 65%);
+  }
 
-    &:focus,
-    &:hover {
-        outline: none;
-        box-shadow: none;
-        text-shadow: none;
-    }
+  &:focus,
+  &:hover {
+    outline: none;
+    box-shadow: none;
+    text-shadow: none;
+  }
 }

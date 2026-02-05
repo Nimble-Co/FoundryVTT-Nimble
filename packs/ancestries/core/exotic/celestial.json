@@ -16,7 +16,9 @@
 			{
 				"type": "grantProficiency",
 				"proficiencyType": "languages",
-				"values": ["celestial"],
+				"values": [
+					"celestial"
+				],
 				"label": "Highborn",
 				"predicate": {
 					"intelligence": {
@@ -27,7 +29,9 @@
 		],
 		"description": "<p>Descendants of divine beings, Celestials carry an aura of nobility and grace. Their innate connection to the higher planes allows them to resist the effects of misfortune, standing strong where others may falter.</p><hr><p><strong>Highborn</strong> </p><p>Your disadvantaged save is Neutral instead. [M]</p><p>You know Celestial if your INT isn't negative. [M]</p>",
 		"exotic": true,
-		"size": ["medium"]
+		"size": [
+			"medium"
+		]
 	},
 	"effects": [],
 	"folder": null,

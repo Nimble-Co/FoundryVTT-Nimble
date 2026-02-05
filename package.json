@@ -13,6 +13,7 @@
 		"format": "npx @biomejs/biome format --write ./src/ ./types/ ./lib/ && npx prettier --write \"src/**/*.svelte\"",
 		"format:biome": "npx @biomejs/biome format --write ./src/ ./types/ ./lib/",
 		"format:svelte": "npx prettier --write \"src/**/*.svelte\"",
+		"format:scss": "npx stylelint \"src/**/*.scss\" --fix",
 		"lint:svelte": "eslint \"src/**/*.svelte\"",
 		"lint:svelte-fix": "eslint \"src/**/*.svelte\" --fix",
 		"lint": "npm run lint:svelte && npx @biomejs/biome lint ./src/ ./types/ ./lib/",
