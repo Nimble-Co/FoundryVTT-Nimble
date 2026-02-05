@@ -59,6 +59,8 @@
 	const { armorTypesPlural, languages } = CONFIG.NIMBLE;
 
 	let actor: NimbleCharacter = getContext('actor');
+	const editingEnabledStore = getContext('editingEnabled');
+	let editingEnabled = $derived($editingEnabledStore ?? true);
 	let skills = $derived(actor.reactive.system.skills);
 	let abilities = $derived(actor.reactive.system.abilities);
 	let characterSavingThrows = $derived(actor.reactive.system.savingThrows);
@@ -133,6 +135,7 @@
 					aria-label={tooltip}
 					data-tooltip={tooltip}
 					onclick={configMethod}
+					disabled={!editingEnabled}
 				>
 					<i class="fa-solid fa-edit"></i>
 				</button>

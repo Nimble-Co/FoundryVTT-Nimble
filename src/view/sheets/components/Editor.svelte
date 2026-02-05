@@ -12,6 +12,7 @@
 		content: string;
 		field: string;
 		document: foundry.abstract.Document.Any;
+		editable?: boolean;
 		editorOptions?: EditorOptions;
 		enrichOptions?: EnrichOptions;
 	}
@@ -20,6 +21,7 @@
 		content,
 		field,
 		document,
+		editable = true,
 		editorOptions = {} as EditorOptions,
 		enrichOptions = {} as EnrichOptions,
 	}: Props = $props();
@@ -31,8 +33,8 @@
 			collaborate: false,
 			compact: false,
 			documentUUID: document.uuid,
-			editable: true,
-			toggled: true,
+			editable,
+			toggled: editable,
 			value: content,
 		},
 		editorOptions,

@@ -1,5 +1,6 @@
 <script>
 	import { setContext } from 'svelte';
+	import { readable } from 'svelte/store';
 	import localize from '../../utils/localize.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
@@ -77,6 +78,10 @@
 		await actor.editCurrentHitDice();
 	}
 
+	async function toggleEditingEnabled() {
+		await actor.setFlag('nimble', 'editingEnabled', !editingEnabled);
+	}
+
 	let { actor, sheet } = $props();
 
 	const navigation = $state([
@@ -138,6 +143,11 @@
 	let actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
+	let editingEnabled = $derived(flags?.editingEnabled ?? true);
+	const editingEnabledStore = readable(editingEnabled, (set) => {
+		$effect(() => set(editingEnabled));
+		return () => {};
+	});
 
 	let metaData = $derived.by(() => {
 		const c = actor.reactive.items.find((i) => i.type === 'class') ?? null;
@@ -224,9 +234,26 @@
 	setContext('actor', actor);
 	setContext('document', actor);
 	setContext('application', sheet);
+	setContext('editingEnabled', editingEnabledStore);
 </script>
 
 <header class="nimble-sheet__header">
+	<button
+		class="nimble-edit-toggle"
+		class:nimble-edit-toggle--enabled={editingEnabled}
+		type="button"
+		aria-pressed={editingEnabled}
+		aria-label={editingEnabled ? 'Disable editing' : 'Enable editing'}
+		data-tooltip={editingEnabled ? 'Editing Enabled' : 'Editing Locked'}
+		onclick={toggleEditingEnabled}
+	>
+		<span class="nimble-edit-toggle__track">
+			<span class="nimble-edit-toggle__thumb">
+				<i class="fa-solid {editingEnabled ? 'fa-pen' : 'fa-lock'}"></i>
+			</span>
+		</span>
+	</button>
+
 	<div class="nimble-icon nimble-icon--actor">
 		<ul
 			class="nimble-wounds-list"
@@ -255,6 +282,7 @@
 			data-tooltip="NIMBLE.prompts.changeActorImage"
 			onclick={(event) => updateDocumentImage(actor, { shiftKey: event.shiftKey })}
 			type="button"
+			disabled={!editingEnabled}
 		>
 			<img
 				class="nimble-icon__image nimble-icon__image--actor"
@@ -297,6 +325,7 @@
 				aria-label="Configure Hit Points"
 				data-tooltip="Configure Hit Points"
 				onclick={() => actor.configureHitPoints()}
+				disabled={!editingEnabled}
 			>
 				<i class="fa-solid fa-edit"></i>
 			</button>
@@ -310,7 +339,7 @@
 			{updateCurrentHP}
 			{updateMaxHP}
 			{updateTempHP}
-			disableMaxHPEdit={true}
+			disableMaxHPEdit={!editingEnabled}
 		/>
 
 		<h3 class="nimble-heading nimble-heading--hit-dice">
@@ -323,6 +352,7 @@
 				aria-label={CONFIG.NIMBLE.hitDice.configureHitDice}
 				data-tooltip={CONFIG.NIMBLE.hitDice.configureHitDice}
 				onclick={() => actor.configureHitDice()}
+				disabled={!editingEnabled}
 			>
 				<i class="fa-solid fa-edit"></i>
 			</button>
@@ -335,6 +365,7 @@
 			{updateCurrentHitDice}
 			{editCurrentHitDice}
 			{rollHitDice}
+			disableControls={!editingEnabled}
 		/>
 	</section>
 
@@ -347,6 +378,7 @@
 			autocomplete="off"
 			spellcheck="false"
 			onchange={({ target }) => actor.update({ name: target.value })}
+			disabled={!editingEnabled}
 		/>
 
 		{#if metaData}
@@ -360,6 +392,7 @@
 					aria-label="Edit"
 					data-tooltip="Edit"
 					onclick={() => actor.editMetadata()}
+					disabled={!editingEnabled}
 				>
 					<i class="fa-solid fa-edit"></i>
 				</button>
@@ -421,6 +454,75 @@
 </section>
 
 <style lang="scss">
+	.nimble-sheet__header {
+		position: relative;
+	}
+
+	.nimble-edit-toggle {
+		position: absolute;
+		top: 0.5rem;
+		left: 0.5rem;
+		z-index: 50;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid hsl(41, 18%, 54%);
+		border-radius: 999px;
+		background: hsl(215, 30%, 10%);
+		padding: 0.125rem;
+		box-shadow: var(--nimble-card-box-shadow);
+		cursor: pointer;
+		transition:
+			transform 0.15s ease,
+			box-shadow 0.15s ease;
+
+		&:hover {
+			transform: translateY(-1px);
+			box-shadow:
+				var(--nimble-card-box-shadow),
+				0 0 6px rgba(255, 255, 255, 0.2);
+		}
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: default;
+		}
+	}
+
+	.nimble-edit-toggle__track {
+		position: relative;
+		width: 2.1rem;
+		height: 1rem;
+		border-radius: 999px;
+		background: linear-gradient(to right, hsl(45, 35%, 30%) 0%, hsl(45, 35%, 18%) 100%);
+		border: 1px solid hsl(41, 18%, 54%);
+		display: flex;
+		align-items: center;
+	}
+
+	.nimble-edit-toggle__thumb {
+		position: absolute;
+		left: 0.1rem;
+		width: 0.85rem;
+		height: 0.85rem;
+		border-radius: 50%;
+		background: hsl(45, 70%, 72%);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		color: hsl(215, 30%, 12%);
+		font-size: 0.45rem;
+		transform: translateX(0);
+		transition:
+			transform 0.2s ease-in-out,
+			background-color 0.2s ease-in-out;
+		box-shadow: 0 0 4px rgba(0, 0, 0, 0.45);
+	}
+
+	.nimble-edit-toggle--enabled .nimble-edit-toggle__thumb {
+		transform: translateX(1.05rem);
+	}
+
 	.nimble-player-character-header {
 		display: flex;
 		flex-direction: column;

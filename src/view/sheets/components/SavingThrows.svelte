@@ -15,6 +15,8 @@
 
 	const { saves, savingThrows, savingThrowAbbreviations } = CONFIG.NIMBLE;
 	const actor = getContext('actor');
+	const editingEnabledStore = getContext('editingEnabled');
+	let editingEnabled = $derived($editingEnabledStore ?? true);
 </script>
 
 {#snippet savingThrowSnippet(saveKey, save)}
@@ -64,6 +66,7 @@
 			data-tooltip="NIMBLE.prompts.configureSavingThrows"
 			aria-label={localize('NIMBLE.prompts.configureSavingThrows')}
 			onclick={() => actor.configureSavingThrows()}
+			disabled={!editingEnabled}
 		>
 			<i class="fa-solid fa-edit"></i>
 		</button>

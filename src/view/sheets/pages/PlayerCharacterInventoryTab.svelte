@@ -46,6 +46,8 @@
 
 	let actor = getContext('actor');
 	let sheet = getContext('application');
+	const editingEnabledStore = getContext('editingEnabled');
+	let editingEnabled = $derived($editingEnabledStore ?? true);
 	let searchTerm = $state('');
 
 	const tooltipCache = new Map();
@@ -260,6 +262,7 @@
 								type="button"
 								aria-label="Delete {item.name}"
 								onclick={(event) => deleteItem(event, item._id)}
+								disabled={!editingEnabled}
 							>
 								<i class="fa-solid fa-trash"></i>
 							</button>
