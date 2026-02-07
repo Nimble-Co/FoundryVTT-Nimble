@@ -3,6 +3,7 @@ import type { NimbleBackgroundItem } from '#documents/item/background.js';
 import type { NimbleClassItem } from '#documents/item/class.js';
 import type { NimbleSubclassItem } from '#documents/item/subclass.js';
 import type { SkillKeyType } from '#types/skillKey.js';
+import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
@@ -372,22 +373,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const isSpellCaster = this.system.resources.mana.max > 0;
 
 		if (!isSpellCaster) return null;
-
-		const level = this.levels.character;
-		let defaultTier = 0;
-
-		if (level >= 18) defaultTier = 9;
-		else if (level >= 16) defaultTier = 8;
-		else if (level >= 14) defaultTier = 7;
-		else if (level >= 12) defaultTier = 6;
-		else if (level >= 10) defaultTier = 5;
-		else if (level >= 8) defaultTier = 4;
-		else if (level >= 6) defaultTier = 3;
-		else if (level >= 4) defaultTier = 2;
-		else if (level >= 1) defaultTier = 1;
-
 		// Only update if value is null e.g not migrated
-		return defaultTier;
+		return getHighestSpellTier(this);
 	}
 
 	_prepareArmorClass(): void {

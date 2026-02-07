@@ -1,4 +1,5 @@
 <script>
+	import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 	import { getContext } from 'svelte';
 	let actor = getContext('actor');
 	let flags = $derived(actor.reactive.flags.nimble);
@@ -218,6 +219,7 @@
 					data-button-variant="basic"
 					type="button"
 					aria-label="Decrement Highest Unlocked Spell Tier"
+					disabled={!editingEnabled}
 					onclick={() => updateHighestUnlockedSpellTier(highestUnlockedSpellTier - 1)}
 				>
 					<i class="fa-solid fa-minus"></i>
@@ -231,6 +233,7 @@
 					class="nimble-button"
 					data-button-variant="basic"
 					type="button"
+					disabled={!editingEnabled}
 					aria-label="Increment Highest Unlocked Spell Tier"
 					onclick={() => updateHighestUnlockedSpellTier(highestUnlockedSpellTier + 1)}
 				>
@@ -239,6 +242,18 @@
 			</div>
 
 			<span> Highest Unlocked Spell Tier </span>
+		</div>
+		<div class="nimble-field">
+			<button
+				class="nimble-button"
+				data-button-variant="full-width"
+				type="button"
+				disabled={!editingEnabled}
+				aria-label="Reset Highest Unlocked Spell Tier"
+				onclick={() => updateHighestUnlockedSpellTier(getHighestSpellTier(actor))}
+			>
+				Reset spell tier
+			</button>
 		</div>
 	</section>
 </section>
