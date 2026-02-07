@@ -24,12 +24,12 @@ Group commits into these categories:
 
 Each entry should follow this format:
 ```
-- <Brief description>. #<issue> @<contributor>
+- [#<issue>] <Brief description>. @<contributor>
 ```
 
-- Use sentence case
-- Include PR/issue number when available
-- Credit the contributor with @username
+- Issue/PR number first in brackets (creates clickable link on GitHub)
+- Use sentence case for description
+- Credit the contributor with @username at the end
 
 ### 4. Release Notes Template
 
@@ -37,13 +37,16 @@ Each entry should follow this format:
 ## Version X.Y.Z
 
 ### Additions / Changes
-- Description of feature or change. #123 @contributor
+
+- [#123] Description of feature or change. @contributor
 
 ### Fixes
-- Description of fix. #124 @contributor
+
+- [#124] Description of fix. @contributor
 
 ### System Data
-- Description of compendium/pack update. #125 @contributor
+
+- [#125] Description of compendium/pack update. @contributor
 
 ---
 
@@ -58,13 +61,16 @@ Add a new section at the top of CHANGELOG.md using **Keep a Changelog** format:
 ## [X.Y.Z] - YYYY-MM-DD
 
 ### Added
-- Description of feature. #123 @contributor
+
+- [#123] Description of feature. @contributor
 
 ### Fixed
-- Description of fix. #124 @contributor
+
+- [#124] Description of fix. @contributor
 
 ### Changed
-- Description of change. #125 @contributor
+
+- [#125] Description of change. @contributor
 
 ---
 ```
