@@ -606,28 +606,6 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 			...savingThrows(),
 		};
 	}
-
-	static override migrateData(source: any) {
-		// Migrate highestUnlockedSpellTier: null = new character, undefined = existing character without field
-		const level = source.classData?.levels?.length || 0;
-		let defaultTier = 0;
-
-		if (level >= 18) defaultTier = 9;
-		else if (level >= 16) defaultTier = 8;
-		else if (level >= 14) defaultTier = 7;
-		else if (level >= 12) defaultTier = 6;
-		else if (level >= 10) defaultTier = 5;
-		else if (level >= 8) defaultTier = 4;
-		else if (level >= 6) defaultTier = 3;
-		else if (level >= 4) defaultTier = 2;
-		else if (level >= 1) defaultTier = 1;
-
-		source.resources.highestUnlockedSpellTier = defaultTier;
-
-		// biome-ignore lint/complexity/noThisInStatic: Recommended according to https://foundryvtt.wiki/en/development/api/DataModel#migratedata
-		return super.migrateData(source);
-	}
-
 	// This is necessary to ensure that derived data is included in the toObject data.
 	override toObject(source: true): this['_source'];
 	override toObject(source?: boolean): ReturnType<this['schema']['toObject']>;

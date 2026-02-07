@@ -23,8 +23,8 @@ import EditCurrentHitDiceDialog from '../../view/dialogs/EditCurrentHitDiceDialo
 import EditHitDiceDialog from '../../view/dialogs/EditHitDiceDialog.svelte';
 import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
-import SafeRestDialog from '../../view/dialogs/SafeRestDialog.svelte';
 import RollHitDiceDialog from '../../view/dialogs/RollHitDiceDialog.svelte';
+import SafeRestDialog from '../../view/dialogs/SafeRestDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions } from './actorInterfaces.ts';
 import { NimbleBaseActor } from './base.svelte.js';
@@ -205,6 +205,10 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		actorData.resources.mana.value = actorData.resources.mana.current;
 		actorData.resources.mana.max = this._prepareMaxMana(actorData);
 
+		// Prepare highest unlocked spell tier (only if not manually set)
+		actorData.resources.highestUnlockedSpellTier ??=
+			this._prepareHighestUnlockedSpellTier(actorData);
+
 		// Prepare Inventory Slots
 		const baseInventorySlots = 10 + actorData.abilities.strength.mod;
 		const bonusInventorySlots = actorData.inventory.bonusSlots;
@@ -359,6 +363,31 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		});
 
 		return maxMana;
+	}
+
+	_prepareHighestUnlockedSpellTier(_: NimbleCharacterData): number | null {
+		const classes = Object.values(this.classes ?? {});
+		if (classes.length === 0) return 0;
+		// Check if there are any spellcasting classes - if not, return null
+		const isSpellCaster = this.system.resources.mana.max > 0;
+
+		if (!isSpellCaster) return null;
+
+		const level = this.levels.character;
+		let defaultTier = 0;
+
+		if (level >= 18) defaultTier = 9;
+		else if (level >= 16) defaultTier = 8;
+		else if (level >= 14) defaultTier = 7;
+		else if (level >= 12) defaultTier = 6;
+		else if (level >= 10) defaultTier = 5;
+		else if (level >= 8) defaultTier = 4;
+		else if (level >= 6) defaultTier = 3;
+		else if (level >= 4) defaultTier = 2;
+		else if (level >= 1) defaultTier = 1;
+
+		// Only update if value is null e.g not migrated
+		return defaultTier;
 	}
 
 	_prepareArmorClass(): void {
