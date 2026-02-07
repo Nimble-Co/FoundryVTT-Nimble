@@ -204,9 +204,10 @@ function applyDelta(activationData: any, delta: ScalingDelta, upcastSteps: numbe
 		}
 
 		case 'addRange': {
-			// Range is typically in spell.properties, not activation
-			// This would need to be handled at a higher level
-			// For now, we'll skip this in activation data
+			if (activationData.targets && delta.value) {
+				activationData.targets.distance =
+					(activationData.targets.distance || 0) + delta.value * upcastSteps;
+			}
 			break;
 		}
 
@@ -241,6 +242,7 @@ function applyDelta(activationData: any, delta: ScalingDelta, upcastSteps: numbe
 		case 'addCondition': {
 			// Add new condition node to effects
 			if (delta.condition) {
+				//TODO: Figure out how to handle conditions
 				activationData.effects.push({
 					id: foundry.utils.randomID(),
 					type: 'condition',
@@ -260,8 +262,7 @@ function applyDelta(activationData: any, delta: ScalingDelta, upcastSteps: numbe
 		}
 
 		case 'addArmor': {
-			// Armor is typically on character, not spell activation
-			// This would need special handling
+			// TODO: Armor modifications affect the character, not activation data
 			break;
 		}
 

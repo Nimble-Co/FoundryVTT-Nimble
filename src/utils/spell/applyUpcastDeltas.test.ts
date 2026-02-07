@@ -402,6 +402,26 @@ describe('applyUpcastDeltas', () => {
 			expect(result.activationData.duration?.quantity).toBe(5);
 		});
 
+		it('should increase range', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 2,
+					scaling: createScaling('upcast', [createDelta({ operation: 'addRange', value: 5 })]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
+				activationData: {
+					effects: [],
+					targets: { count: 1, restrictions: '', attackType: 'range', distance: 10 },
+				},
+				manaToSpend: 4,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect(result.upcastResult.upcastSteps).toBe(2);
+			expect(result.activationData.targets?.distance).toBe(20);
+		});
+
 		it('should add condition', () => {
 			const context: UpcastContext = {
 				spell: {
