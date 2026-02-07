@@ -3,6 +3,9 @@
 .nova/
 .vs/
 
+# Claude Code local files
+CLAUDE.local.md
+
 # Node Modules
 node_modules/
 .npm/

@@ -18,7 +18,14 @@ Group commits into these categories:
 
 - **Additions / Changes** - New features, improvements, or behavior changes
 - **Fixes** - Bug fixes and corrections
-- **System Data** - Compendium packs, data, or content corrections
+- **System Data** - Compendium packs, data, or content corrections including:
+  - Creature/monster data updates
+  - Class/subclass ability additions
+  - Rules added to ancestry, backgrounds, boons
+  - Damage types, save bonuses, language bonuses
+  - Compendium formatting
+
+**Note:** A single PR may appear in multiple sections if it includes both code and data changes. For example, a PR that adds code to handle language selection AND adds language bonuses to ancestry data would appear in both Additions/Changes and System Data.
 
 ### 3. Format
 
@@ -89,6 +96,47 @@ gh release create X.Y.Z --title "VX.Y.Z" --notes-file <release-notes-file>
 ```
 
 Or create via GitHub UI at: https://github.com/FoundryVTT-NimbleDev/FoundryVTT-Nimble/releases/new
+
+### 7. Post Discord Announcements
+
+Post release announcements to three Discord locations:
+
+#### a) Nimble FoundryVTT Announcements Channel
+https://discord.com/channels/1389098475374903437/1389103640723198002
+
+Post the full release notes with `@System Notifications` role mention.
+
+#### b) Nimble Discord Foundry Channel
+https://discord.com/channels/1163603714565734400/1346528535547740160
+
+Post a brief, original announcement. Keep it candid - vary the thank you message each time. Include:
+- Mention the new version is available
+- A genuine, varied thank you to contributors
+- Tag contributing Discord users
+- Link to the GitHub release
+
+#### c) Nimble Discord Community Effort Module Thread
+https://discord.com/channels/1163603714565734400/1384548206972502056
+
+Post with sparkles emoji and release notes wrapped in triple backticks. No @System Notifications, no usernames, no support blurb:
+
+    :sparkles: Nimble FoundryVTT System VX.Y.Z is now available!
+
+    ```
+    ## Version X.Y.Z
+
+    ### Additions / Changes
+
+    - [#123] Description of change.
+
+    ### Fixes
+
+    - [#124] Description of fix.
+
+    ### System Data
+
+    - [#125] Description of data change.
+    ```
 
 ## Version Numbering
 
