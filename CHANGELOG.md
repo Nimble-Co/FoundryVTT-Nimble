@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.6.1] - 2026-02-07
+
+### Changed
+
+- [#274] Moved editing toggle button from sheet header to sidebar. @fronix
+- [#274] Mana bar now always visible in sidebar; removed from spells tab footer. @fronix
+
+---
+
 ## [0.6.0] - 2026-02-07
 
 ### Added
