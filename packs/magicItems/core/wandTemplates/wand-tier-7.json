@@ -60,6 +60,10 @@
 				"overridesTwoHanded": false
 			},
 			"thrownRange": 4
+		},
+		"price": {
+			"value": 125000,
+			"denomination": "gp"
 		}
 	},
 	"effects": [],

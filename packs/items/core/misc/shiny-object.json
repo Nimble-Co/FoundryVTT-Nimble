@@ -60,6 +60,10 @@
 				"overridesTwoHanded": false
 			},
 			"thrownRange": 4
+		},
+		"price": {
+			"value": 1,
+			"denomination": "sp"
 		}
 	},
 	"effects": [],

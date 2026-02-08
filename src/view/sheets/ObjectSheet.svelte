@@ -138,6 +138,41 @@
 
 		<div>
 			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.objectSheet.price')}
+				</h3>
+			</header>
+
+			<div class="nimble-price-field">
+				<input
+					class="nimble-price-field__value"
+					type="number"
+					min="0"
+					step="1"
+					value={item.reactive.system.price?.value ?? 0}
+					onchange={({ target }) =>
+						item.update({
+							'system.price.value': Number(target.value),
+						})}
+				/>
+
+				<select
+					class="nimble-price-field__denomination"
+					value={item.reactive.system.price?.denomination ?? 'gp'}
+					onchange={({ target }) =>
+						item.update({
+							'system.price.denomination': target.value,
+						})}
+				>
+					<option value="cp">{localize('NIMBLE.currencyAbbreviations.cp')}</option>
+					<option value="sp">{localize('NIMBLE.currencyAbbreviations.sp')}</option>
+					<option value="gp">{localize('NIMBLE.currencyAbbreviations.gp')}</option>
+				</select>
+			</div>
+		</div>
+
+		<div>
+			<header class="nimble-section-header">
 				<h3 class="nimble-heading" data-heading-variant="section">General Configuration</h3>
 			</header>
 
@@ -324,3 +359,20 @@
 <PrimaryNavigation bind:currentTab {navigation} />
 
 {@render currentTab.component()}
+
+<style lang="scss">
+	.nimble-price-field {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+
+		&__value {
+			flex: 1;
+		}
+
+		&__denomination {
+			flex: 0 0 auto;
+			width: auto;
+		}
+	}
+</style>
