@@ -73,6 +73,24 @@ class NimbleCombat extends Combat {
 			);
 		}
 
+		// Initialize actions for non-character combatants (NPCs, minions, solo monsters)
+		// Characters get their actions set during initiative roll
+		type CombatantUpdate = { _id: string | null; 'system.actions.base.current': number };
+		const npcUpdates = this.combatants.reduce<CombatantUpdate[]>((updates, combatant) => {
+			if (combatant.type !== 'character') {
+				const system = combatant.system as unknown as CombatantSystemWithActions;
+				updates.push({
+					_id: combatant.id,
+					'system.actions.base.current': system.actions.base.max,
+				});
+			}
+			return updates;
+		}, []);
+
+		if (npcUpdates.length > 0) {
+			await this.updateEmbeddedDocuments('Combatant', npcUpdates);
+		}
+
 		return result;
 	}
 
@@ -88,25 +106,24 @@ class NimbleCombat extends Combat {
 	}
 
 	override async _onEndRound() {
-		// If it's the first turn of the first round, don't reset actions
-		if (this.round === 1 && this.turn === 0) {
-			return;
-		}
-
 		type CombatantUpdate = { _id: string | null; 'system.actions.base.current': number };
 
-		// Reset all combatants' actions to their respective max values
-		await this.updateEmbeddedDocuments(
-			'Combatant',
-			this.combatants.reduce<CombatantUpdate[]>((updates, currentCombatant) => {
+		// Reset only non-character combatants' actions at end of round
+		// (Characters refresh their actions at end of their turn via _onEndTurn)
+		const updates = this.combatants.reduce<CombatantUpdate[]>((updates, currentCombatant) => {
+			if (currentCombatant.type !== 'character') {
 				const system = currentCombatant.system as unknown as CombatantSystemWithActions;
 				updates.push({
 					_id: currentCombatant.id,
 					'system.actions.base.current': system.actions.base.max,
 				});
-				return updates;
-			}, []),
-		);
+			}
+			return updates;
+		}, []);
+
+		if (updates.length > 0) {
+			await this.updateEmbeddedDocuments('Combatant', updates);
+		}
 	}
 
 	async updateCombatant(
