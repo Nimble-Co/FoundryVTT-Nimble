@@ -113,6 +113,8 @@
 			flex-wrap: nowrap;
 			gap: 0.25rem;
 			align-items: center;
+			justify-content: center;
+			width: 100%;
 			font-size: var(--nimble-mana-input-text-size);
 			font-weight: var(--nimble-mana-input-font-weight);
 			color: #fff;

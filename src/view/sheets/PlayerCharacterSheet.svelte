@@ -170,7 +170,7 @@
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
 	let editingEnabled = $derived(flags?.editingEnabled ?? true);
-	const editingEnabledStore = readable(editingEnabled, (set) => {
+	const editingEnabledStore = readable(false, (set) => {
 		$effect(() => set(editingEnabled));
 		return () => {};
 	});
@@ -264,22 +264,6 @@
 </script>
 
 <header class="nimble-sheet__header">
-	<button
-		class="nimble-edit-toggle"
-		class:nimble-edit-toggle--enabled={editingEnabled}
-		type="button"
-		aria-pressed={editingEnabled}
-		aria-label={editingEnabled ? 'Disable editing' : 'Enable editing'}
-		data-tooltip={editingEnabled ? 'Editing Enabled' : 'Editing Locked'}
-		onclick={toggleEditingEnabled}
-	>
-		<span class="nimble-edit-toggle__track">
-			<span class="nimble-edit-toggle__thumb">
-				<i class="fa-solid {editingEnabled ? 'fa-pen' : 'fa-lock'}"></i>
-			</span>
-		</span>
-	</button>
-
 	<div class="nimble-icon nimble-icon--actor">
 		<ul
 			class="nimble-wounds-list"
@@ -405,6 +389,7 @@
 				maxMana={mana.max || mana.baseMax}
 				{updateCurrentMana}
 				{updateMaxMana}
+				disableMaxManaEdit={!editingEnabled}
 			/>
 		{/if}
 	</section>
@@ -446,6 +431,22 @@
 <currentTab.component />
 
 <section class="nimble-sheet__sidebar">
+	<button
+		class="nimble-button"
+		data-button-variant="overhang"
+		class:nimble-edit-toggle--enabled={editingEnabled}
+		type="button"
+		aria-pressed={editingEnabled}
+		aria-label={editingEnabled ? 'Disable editing' : 'Enable editing'}
+		data-tooltip={editingEnabled ? 'Editing Enabled' : 'Editing Locked'}
+		onclick={toggleEditingEnabled}
+	>
+		<span class="nimble-edit-toggle__track">
+			<span class="nimble-edit-toggle__thumb">
+				<i class="fa-solid {editingEnabled ? 'fa-pen' : 'fa-lock'}"></i>
+			</span>
+		</span>
+	</button>
 	<button
 		class="nimble-button"
 		data-button-variant="overhang"
@@ -498,44 +499,13 @@
 		position: relative;
 	}
 
-	.nimble-edit-toggle {
-		position: absolute;
-		top: 0.5rem;
-		left: 0.5rem;
-		z-index: 50;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		border: 1px solid hsl(41, 18%, 54%);
-		border-radius: 999px;
-		background: hsl(215, 30%, 10%);
-		padding: 0.125rem;
-		box-shadow: var(--nimble-card-box-shadow);
-		cursor: pointer;
-		transition:
-			transform 0.15s ease,
-			box-shadow 0.15s ease;
-
-		&:hover {
-			transform: translateY(-1px);
-			box-shadow:
-				var(--nimble-card-box-shadow),
-				0 0 6px rgba(255, 255, 255, 0.2);
-		}
-
-		&:disabled {
-			opacity: 0.6;
-			cursor: default;
-		}
-	}
-
 	.nimble-edit-toggle__track {
 		position: relative;
 		width: 2.1rem;
 		height: 1rem;
 		border-radius: 999px;
-		background: linear-gradient(to right, hsl(45, 35%, 30%) 0%, hsl(45, 35%, 18%) 100%);
-		border: 1px solid hsl(41, 18%, 54%);
+		background: var(--nimble-overhang-button-text-color);
+		border: 1px solid var(--nimble-overhang-button-text-color);
 		display: flex;
 		align-items: center;
 	}
@@ -546,7 +516,7 @@
 		width: 0.85rem;
 		height: 0.85rem;
 		border-radius: 50%;
-		background: hsl(45, 70%, 72%);
+		background: var(--nimble-overhang-button-text-color);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;

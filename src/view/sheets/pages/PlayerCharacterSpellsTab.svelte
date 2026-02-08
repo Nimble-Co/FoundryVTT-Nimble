@@ -5,7 +5,6 @@
 	import sortItems from '../../../utils/sortItems.js';
 
 	import SearchBar from '../components/SearchBar.svelte';
-	import ManaBar from '../components/ManaBar.svelte';
 	import SecondaryNavigation from '../../components/SecondaryNavigation.svelte';
 
 	async function configureItem(event, id) {
@@ -141,24 +140,6 @@
 		}, {});
 	}
 
-	async function updateCurrentMana(newValue) {
-		await actor.update({
-			'system.resources.mana.current': newValue,
-		});
-	}
-
-	async function updateMaxMana(newValue) {
-		const manaData = actor.reactive.system.resources.mana;
-		const baseMax = manaData.baseMax ?? 0;
-		const max = manaData.max || baseMax;
-		const formulaBonus = max - baseMax;
-		const adjustedBaseMax = Math.max(0, newValue - formulaBonus);
-
-		await actor.update({
-			'system.resources.mana.baseMax': adjustedBaseMax,
-		});
-	}
-
 	const {
 		activationCostTypes,
 		activationCostTypesPlural,
@@ -175,9 +156,6 @@
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
 	// Content State
-	let currentMana = $derived(actor.reactive.system.resources.mana.current);
-	let baseMaxMana = $derived(actor.reactive.system.resources.mana.baseMax);
-	let maxMana = $derived(actor.reactive.system.resources.mana.max);
 	let searchTerm = $state('');
 	let spells = $derived(filterItems(actor.reactive, ['spell'], searchTerm));
 	let subNavigation = $derived(getSpellSchoolTabs(spells));
@@ -328,13 +306,7 @@
 	{/each}
 </section>
 
-<footer class="nimble-sheet__footer nimble-sheet__footer--spells">
-	<header>
-		<h3 class="nimble-heading u-mb-300" data-heading-variant="field">Mana</h3>
-	</header>
-
-	<ManaBar {currentMana} maxMana={maxMana || baseMaxMana} {updateCurrentMana} {updateMaxMana} />
-</footer>
+<footer class="nimble-sheet__footer nimble-sheet__footer--spells"></footer>
 
 <style lang="scss">
 	.nimble-items-section {
