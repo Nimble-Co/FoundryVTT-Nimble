@@ -567,19 +567,32 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 			return '0';
 		}
 
-		const rollMode = rollOptions?.rollMode ?? 1;
-		let modifiers = '';
+		const systemData = this.system as unknown as BaseActorSystemData & {
+			attributes: { initiative: { defaultRollMode?: number } };
+		};
 
-		if (rollMode > 1) modifiers = `kh${rollMode - 1}`;
-		else if (rollMode < 0) modifiers = `kl${Math.abs(rollMode) - 1}`;
-		else modifiers = '';
+		// Get the default roll mode from character data (set by rules like initiativeRollMode)
+		const defaultRollMode = systemData.attributes.initiative?.defaultRollMode ?? 0;
 
-		const systemData = this.system as unknown as BaseActorSystemData;
+		// Calculate the effective roll mode: override > (default + modifier)
+		const rollModeOverride = rollOptions?.rollMode ?? null;
+		const rollModeModifier = rollOptions?.rollModeModifier ?? 0;
+		const rollMode =
+			rollModeOverride !== null ? rollModeOverride : defaultRollMode + rollModeModifier;
+
+		// Build the d20 term based on roll mode (following constructD20Term pattern)
+		let d20Term = '1d20';
+		if (rollMode > 0) {
+			d20Term = `${rollMode + 1}d20kh`;
+		} else if (rollMode < 0) {
+			d20Term = `${Math.abs(rollMode) + 1}d20kl`;
+		}
+
 		const bonus = systemData.attributes.initiative?.mod || '';
 
-		if (!bonus) return `${rollMode}d20${modifiers}`;
+		if (!bonus) return d20Term;
 
-		return `${rollMode}d20${modifiers} + ${bonus}`;
+		return `${d20Term} + ${bonus}`;
 	}
 
 	/** ------------------------------------------------------ */

@@ -5,6 +5,7 @@ import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
 import { HitDiceAdvantageRule } from '../models/rules/hitDiceAdvantage.js';
 import { IncrementHitDiceRule } from '../models/rules/incrementHitDice.js';
 import { InitiativeBonusRule } from '../models/rules/initiativeBonus.js';
+import { InitiativeRollModeRule } from '../models/rules/initiativeRollMode.js';
 import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
 import { MaximizeHitDiceRule } from '../models/rules/maximizeHitDice.js';
@@ -24,6 +25,7 @@ export default function registerRulesConfig() {
 		hitDiceAdvantage: 'NIMBLE.ruleTypes.hitDiceAdvantage',
 		incrementHitDice: 'NIMBLE.ruleTypes.incrementHitDice',
 		initiativeBonus: 'NIMBLE.ruleTypes.initiativeBonus',
+		initiativeRollMode: 'NIMBLE.ruleTypes.initiativeRollMode',
 		maxHitDice: 'NIMBLE.ruleTypes.maxHitDice',
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
 		maximizeHitDice: 'NIMBLE.ruleTypes.maximizeHitDice',
@@ -43,6 +45,7 @@ export default function registerRulesConfig() {
 		hitDiceAdvantage: HitDiceAdvantageRule,
 		incrementHitDice: IncrementHitDiceRule,
 		initiativeBonus: InitiativeBonusRule,
+		initiativeRollMode: InitiativeRollModeRule,
 		maxHitDice: MaxHitDiceRule,
 		maxHpBonus: MaxHpBonusRule,
 		maximizeHitDice: MaximizeHitDiceRule,

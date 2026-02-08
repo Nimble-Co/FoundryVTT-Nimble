@@ -167,6 +167,12 @@ const characterSchema = () => ({
 				initial: '',
 				nullable: false,
 			}),
+			defaultRollMode: new fields.NumberField({
+				required: true,
+				initial: 0,
+				nullable: false,
+				integer: true,
+			}),
 		}),
 		movement: new fields.SchemaField({
 			burrow: new fields.NumberField({
@@ -528,6 +534,7 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 		hitDice: Record<string, HitDiceData>;
 		initiative: {
 			bonuses: string;
+			defaultRollMode: number;
 			mod: number;
 		};
 		movement: {
