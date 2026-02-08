@@ -28,6 +28,7 @@
 				"priority": 1,
 				"allowDuplicate": true,
 				"inMemoryOnly": false,
+				"quantity": 4,
 				"uuid": "Compendium.nimble.nimble-items.Item.YbHHJEDlYHoEvyje"
 			},
 			{
