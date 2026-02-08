@@ -12,6 +12,7 @@
 
 	// Get all damage effects from the item's activation effects
 	// This searches recursively through the effects tree, including sharedRolls
+	// Only includes damage effects that apply on normal hits (not crit-only damage)
 	let damageEffects = $derived.by(() => {
 		const effects = item.system.activation?.effects ?? [];
 		const allDamageEffects = [];
@@ -19,7 +20,14 @@
 		// Flatten the tree to get all effects including those in sharedRolls
 		const flattened = flattenEffectsTree(effects);
 		for (const effect of flattened) {
-			if (effect.type === 'damage') {
+			// Only include damage effects that apply on normal hits
+			// Exclude crit-only damage (parentContext === "criticalHit") and miss effects
+			if (
+				effect.type === 'damage' &&
+				(effect.parentContext === null ||
+					effect.parentContext === 'hit' ||
+					effect.parentContext === 'sharedRolls')
+			) {
 				allDamageEffects.push({
 					formula: effect.formula || '0',
 					damageType: effect.damageType,
@@ -27,28 +35,7 @@
 			}
 		}
 
-		// Also check sharedRolls directly (before flattening removes them)
-		// This ensures we catch all damage effects in sharedRolls
-		for (const effect of effects) {
-			if (effect.type === 'savingThrow' && effect.sharedRolls) {
-				for (const sharedRoll of effect.sharedRolls) {
-					if (sharedRoll.type === 'damage') {
-						// Check if we already have this damage effect
-						const exists = allDamageEffects.some(
-							(d) => d.formula === sharedRoll.formula && d.damageType === sharedRoll.damageType,
-						);
-						if (!exists) {
-							allDamageEffects.push({
-								formula: sharedRoll.formula || '0',
-								damageType: sharedRoll.damageType,
-							});
-						}
-					}
-				}
-			}
-		}
-
-		// If still no damage effects found, return a default one
+		// If no damage effects found, return a default one
 		if (allDamageEffects.length === 0) {
 			return [{ formula: '0' }];
 		}
