@@ -164,6 +164,18 @@
 
 	const tooltipCache = new Map();
 
+	// Invalidate tooltip cache when spells change (e.g., name or properties modified)
+	$effect(() => {
+		spells.forEach((spell) => {
+			// Access reactive properties to track changes
+			spell.reactive.name;
+			spell.reactive.img;
+			spell.reactive.system;
+			// Clear the cache entry so it will be regenerated on next hover
+			tooltipCache.delete(spell.reactive._id);
+		});
+	});
+
 	async function getSpellTooltip(spell) {
 		const cacheKey = spell.reactive._id;
 		if (tooltipCache.has(cacheKey)) {

@@ -126,6 +126,26 @@
 	let subclasses = $derived(filterItems(actor.reactive, 'subclass', searchTerm));
 	let categorizedSubclasses = $derived(groupSubclassesByParentClass(subclasses));
 
+	// Invalidate tooltip cache when items change (e.g., name or properties modified)
+	$effect(() => {
+		// Track changes in regular items
+		items.forEach((item) => {
+			// Access reactive properties to track changes
+			item.reactive.name;
+			item.reactive.img;
+			item.reactive.system;
+			// Clear the cache entry so it will be regenerated on next hover
+			tooltipCache.delete(item.reactive._id);
+		});
+		// Track changes in subclasses
+		subclasses.forEach((subclass) => {
+			subclass.reactive.name;
+			subclass.reactive.img;
+			subclass.reactive.system;
+			tooltipCache.delete(subclass.reactive._id);
+		});
+	});
+
 	// Settings
 	let flags = $derived(actor.reactive.flags.nimble);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
@@ -184,9 +204,6 @@
 								/>
 							{/if}
 
-							<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
-								{item.reactive.name}
-							</h4>
 							<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
 								{item.reactive.name}
 							</h4>
