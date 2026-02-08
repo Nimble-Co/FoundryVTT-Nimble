@@ -113,7 +113,22 @@ function release() {
 	execSync(`git commit -m "chore(release): v${newVersion}"`, { cwd: rootDir });
 	console.log(`Created commit: chore(release): v${newVersion}`);
 
-	console.log('\nRelease preparation complete!');
+	// Push dev branch
+	execSync('git push origin dev', { cwd: rootDir, stdio: 'inherit' });
+	console.log('Pushed dev branch to origin');
+
+	// Checkout main and merge dev
+	execSync('git checkout main', { cwd: rootDir, stdio: 'inherit' });
+	console.log('Checked out main branch');
+
+	execSync('git merge dev', { cwd: rootDir, stdio: 'inherit' });
+	console.log('Merged dev into main');
+
+	// Push main branch
+	execSync('git push origin main', { cwd: rootDir, stdio: 'inherit' });
+	console.log('Pushed main branch to origin');
+
+	console.log('\nRelease complete!');
 }
 
 release();
