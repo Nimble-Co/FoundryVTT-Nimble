@@ -10,7 +10,7 @@
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
-				"quantity": 2,
+				"quantity": 1,
 				"type": "action",
 				"isReaction": false
 			},
