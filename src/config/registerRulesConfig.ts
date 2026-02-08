@@ -7,6 +7,7 @@ import { IncrementHitDiceRule } from '../models/rules/incrementHitDice.js';
 import { InitiativeBonusRule } from '../models/rules/initiativeBonus.js';
 import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
+import { MaxManaBonusRule } from '../models/rules/maxManaBonus.js';
 import { MaximizeHitDiceRule } from '../models/rules/maximizeHitDice.js';
 import { MaxWoundsRule } from '../models/rules/maxWounds.js';
 import { NoteRule } from '../models/rules/note.js';
@@ -25,6 +26,7 @@ export default function registerRulesConfig() {
 		initiativeBonus: 'NIMBLE.ruleTypes.initiativeBonus',
 		maxHitDice: 'NIMBLE.ruleTypes.maxHitDice',
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
+		maxManaBonus: 'NIMBLE.ruleTypes.maxManaBonus',
 		maximizeHitDice: 'NIMBLE.ruleTypes.maximizeHitDice',
 		maxWounds: 'NIMBLE.ruleTypes.maxWounds',
 		note: 'NIMBLE.ruleTypes.note',
@@ -43,6 +45,7 @@ export default function registerRulesConfig() {
 		initiativeBonus: InitiativeBonusRule,
 		maxHitDice: MaxHitDiceRule,
 		maxHpBonus: MaxHpBonusRule,
+		maxManaBonus: MaxManaBonusRule,
 		maximizeHitDice: MaximizeHitDiceRule,
 		maxWounds: MaxWoundsRule,
 		note: NoteRule,

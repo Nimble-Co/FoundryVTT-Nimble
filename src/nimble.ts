@@ -49,13 +49,44 @@ type HookFn = (...args: object[]) => undefined | boolean | Promise<undefined | b
 
 Hooks.on('hotbarDrop', onHotbarDrop);
 
-// Refresh tokens when combat ends to remove turn indicators
-Hooks.on('deleteCombat', () => {
-	if (!canvas?.ready || !canvas?.tokens) return;
+/** Actor system with mana resources for combat mana clearing */
+interface ActorSystemWithCombatMana {
+	resources?: {
+		mana?: {
+			current: number;
+			combatMana: number;
+		};
+	};
+}
 
-	// Refresh all tokens on the canvas to clear turn indicators
-	for (const token of canvas.tokens.placeables) {
-		token.renderFlags.set({ refreshTurnMarker: true });
+// Refresh tokens when combat ends to remove turn indicators
+// Also clear combat mana for all combatants
+Hooks.on('deleteCombat', async (combat: Combat) => {
+	if (canvas?.ready && canvas?.tokens) {
+		// Refresh all tokens on the canvas to clear turn indicators
+		for (const token of canvas.tokens.placeables) {
+			token.renderFlags.set({ refreshTurnMarker: true });
+		}
+	}
+
+	// Clear combat mana for all combatants (GM only)
+	if (!game.user?.isGM) return;
+
+	for (const combatant of combat.combatants) {
+		if (combatant.type !== 'character') continue;
+		const actor = combatant.actor as
+			| (Actor.Implementation & { system: ActorSystemWithCombatMana })
+			| null;
+		if (!actor) continue;
+
+		const combatMana = actor.system.resources?.mana?.combatMana ?? 0;
+		if (combatMana > 0) {
+			const currentMana = actor.system.resources?.mana?.current ?? 0;
+			await actor.update({
+				'system.resources.mana.current': Math.max(0, currentMana - combatMana),
+				'system.resources.mana.combatMana': 0,
+			} as Record<string, unknown>);
+		}
 	}
 });
 

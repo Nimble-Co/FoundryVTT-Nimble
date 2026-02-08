@@ -358,6 +358,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			maxMana += resolvedValue;
 		});
 
+		// Add mana bonus from rules (e.g., maxManaBonus rule)
+		maxMana += actorData.resources.mana.bonus ?? 0;
+
 		return maxMana;
 	}
 

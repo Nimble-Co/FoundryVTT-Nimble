@@ -513,6 +513,7 @@
 			"initiativeBonus": "Initiative Bonus",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
+			"maxManaBonus": "Mana",
 			"maxWounds": "Wounds",
 			"maximizeHitDice": "Maximize Hit Dice",
 			"note": "Note",
