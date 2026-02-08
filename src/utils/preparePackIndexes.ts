@@ -49,10 +49,13 @@ export function preparePackIndexes() {
 		const indexType = indexTypes[0];
 		if (!indexType) return;
 
-		const { applyFunc } = PACK_DATA_CONFIG[indexType];
+		const packConfig = PACK_DATA_CONFIG[indexType as keyof typeof PACK_DATA_CONFIG];
+		if (!packConfig) return;
+
+		const { applyFunc } = packConfig;
 		if (!applyFunc) return;
 
-		applyFunc(pack);
+		applyFunc(pack, {});
 	});
 }
 
