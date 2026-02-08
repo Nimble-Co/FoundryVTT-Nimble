@@ -478,7 +478,8 @@
 			"note": "Note",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
-			"skillBonus": "Skill Bonus"
+			"skillBonus": "Skill Bonus",
+			"speedBonus": "Speed Bonus"
 		},
 		"creatureFeatures": {
 			"noFeatures": "No features yet.",

@@ -18,6 +18,11 @@
 						"min": 0
 					}
 				}
+			},
+			{
+				"type": "speedBonus",
+				"value": "1",
+				"label": "Lithe"
 			}
 		],
 		"description": "<p>Elves epitomize swiftness and grace. Their tall, slender forms belie their innate speed, grace, and wit. Formidable in both diplomacy and combat, elves strike swiftly, often preventing the worst by acting first.</p><hr><p><strong>Lithe</strong></p><p>Advantage on Initiative [M]</p><p>+1 Speed [M]</p><p>You know Elvish if your INT is not negative [M]</p>",
