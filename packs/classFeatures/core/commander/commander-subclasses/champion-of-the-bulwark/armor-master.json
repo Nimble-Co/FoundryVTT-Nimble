@@ -14,7 +14,7 @@
 				"label": "Armor master",
 				"predicate": {},
 				"priority": 1,
-				"proficiencyType": "armors",
+				"proficiencyType": "armor",
 				"values": [
 					"plate"
 				]
