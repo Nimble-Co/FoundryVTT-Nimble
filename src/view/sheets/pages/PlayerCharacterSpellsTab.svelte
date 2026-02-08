@@ -5,7 +5,6 @@
 	import sortItems from '../../../utils/sortItems.js';
 
 	import SearchBar from '../components/SearchBar.svelte';
-	import ManaBar from '../components/ManaBar.svelte';
 	import SecondaryNavigation from '../../components/SecondaryNavigation.svelte';
 
 	async function configureItem(event, id) {
@@ -328,13 +327,7 @@
 	{/each}
 </section>
 
-<footer class="nimble-sheet__footer nimble-sheet__footer--spells">
-	<header>
-		<h3 class="nimble-heading u-mb-300" data-heading-variant="field">Mana</h3>
-	</header>
-
-	<ManaBar {currentMana} maxMana={maxMana || baseMaxMana} {updateCurrentMana} {updateMaxMana} />
-</footer>
+<footer class="nimble-sheet__footer nimble-sheet__footer--spells"></footer>
 
 <style lang="scss">
 	.nimble-items-section {
