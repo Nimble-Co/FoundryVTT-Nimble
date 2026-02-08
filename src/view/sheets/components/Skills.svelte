@@ -20,8 +20,6 @@
 	const { abilityScoreAbbreviations, defaultSkillAbilities, skills: skillNames } = CONFIG.NIMBLE;
 
 	const actor = getContext('actor');
-	const editingEnabledStore = getContext('editingEnabled');
-	let editingEnabled = $derived($editingEnabledStore ?? true);
 
 	let flags = $derived(actor.reactive.flags.nimble);
 	let compactSkillsView = $derived(flags?.compactSkillsView ?? true);
@@ -78,7 +76,6 @@
 			aria-label={localize('NIMBLE.prompts.configureSkills')}
 			data-tooltip={localize('NIMBLE.prompts.configureSkills')}
 			onclick={() => actor.configureSkills()}
-			disabled={!editingEnabled}
 		>
 			<i class="fa-solid fa-edit"></i>
 		</button>

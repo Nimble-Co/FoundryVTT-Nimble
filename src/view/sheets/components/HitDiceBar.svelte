@@ -41,7 +41,6 @@
 	let isUpdating = $state(false);
 
 	async function handleUpdateCurrentHitDice(newValue: number) {
-		if (disableControls) return;
 		isUpdating = true;
 		try {
 			await updateCurrentHitDice?.(newValue);
@@ -56,7 +55,7 @@
 	}
 
 	async function handleEditCurrentHitDice() {
-		if (isUpdating || disableControls) return;
+		if (isUpdating) return;
 		await editCurrentHitDice?.();
 	}
 
@@ -76,11 +75,9 @@
 		{#if hasMultipleDieSizes}
 			<span
 				class="nimble-hit-dice-bar__values nimble-hit-dice-bar__values--clickable"
-				class:nimble-hit-dice-bar__values--disabled={disableControls}
 				onclick={handleEditCurrentHitDice}
 				data-tooltip={CONFIG.NIMBLE.hitDice.editCurrentHitDice}
 				aria-label={CONFIG.NIMBLE.hitDice.editCurrentHitDice}
-				aria-disabled={disableControls}
 				role="button"
 				tabindex="0"
 				onkeydown={(e) => e.key === 'Enter' && handleEditCurrentHitDice()}
@@ -200,15 +197,6 @@
 					text-shadow:
 						0 0 4px hsl(41, 18%, 54%),
 						0 0 8px rgba(255, 255, 255, 0.4);
-				}
-			}
-
-			&--disabled {
-				cursor: default;
-				opacity: 0.6;
-
-				&:hover {
-					text-shadow: none;
 				}
 			}
 		}

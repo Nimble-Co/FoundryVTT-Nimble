@@ -1,12 +1,9 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 
 	const { movementTypes } = CONFIG.NIMBLE;
 
 	let { actor, showDefaultSpeed = false } = $props();
-	const editingEnabledStore = getContext('editingEnabled');
-	let editingEnabled = $derived($editingEnabledStore ?? true);
 
 	// Check if movement is the default (walk=6, all others=0)
 	let isDefaultMovement = $derived.by(() => {
@@ -56,7 +53,6 @@
 					aria-label={tooltip}
 					data-tooltip={tooltip}
 					onclick={configMethod}
-					disabled={!editingEnabled}
 				>
 					<i class="fa-solid fa-edit"></i>
 				</button>

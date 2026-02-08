@@ -7,8 +7,6 @@
 
 	const { abilityScores, abilityScoreAbbreviations, sectionHeaders } = CONFIG.NIMBLE;
 	const actor = getContext('actor');
-	const editingEnabledStore = getContext('editingEnabled');
-	let editingEnabled = $derived($editingEnabledStore ?? true);
 </script>
 
 {#snippet abilityScoreSnippet(abilityScore, abilityKey)}
@@ -45,7 +43,6 @@
 			data-tooltip="NIMBLE.prompts.configureAbilityScores"
 			aria-label={localize('NIMBLE.prompts.configureAbilityScores')}
 			onclick={() => actor.configureAbilityScores()}
-			disabled={!editingEnabled}
 		>
 			<i class="fa-solid fa-edit"></i>
 		</button>
