@@ -1,6 +1,6 @@
 {
 	"name": "nimble",
-	"version": "0.6.0",
+	"version": "0.6.1",
 	"description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
 	"main": "nimble.mjs",
 	"type": "module",
