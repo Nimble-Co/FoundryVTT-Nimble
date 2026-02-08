@@ -1,3 +1,9 @@
+// Firefox repaint bug workaround - forces continuous compositor activity
+@keyframes firefox-repaint-fix {
+	0%, 100% { transform: translateZ(0); }
+	50% { transform: translateZ(0.1px); }
+}
+
 .system-nimble .nimble-sheet {
   --nimble-content-grid-areas: "header" "primaryNavigation" "secondaryNavigation" "static" "body" "footer";
 
@@ -45,12 +51,16 @@
   }
 
   &--item,
+  &--npc {
+    &:not(.minimized) {
+      box-shadow: 0 0 10px #000;
+    }
+  }
+
+  &--item,
   &--npc,
   &--player-character {
     &:not(.minimized) {
-      box-shadow: none;
-      filter: drop-shadow(0 0 10px #000);
-
       .controls-dropdown {
         border-radius: 4px;
         z-index: 100;
@@ -65,6 +75,10 @@
         overflow-y: hidden;
         height: 100%;
         position: relative;
+        z-index: 1;
+        // Firefox repaint bug fix - keeps compositor active
+        animation: firefox-repaint-fix 0.5s linear infinite;
+        will-change: transform;
       }
 
       .window-header {
@@ -73,10 +87,13 @@
         border: 0;
         z-index: 10;
         position: relative;
+        // Firefox: put header on its own compositing layer
+        transform: translateZ(0);
 
         .header-control {
-          background: rgba(0, 0, 0, 0.4);
-          backdrop-filter: blur(2px);
+          background: rgba(0, 0, 0, 0.5);
+          // Firefox fix: backdrop-filter causes rendering issues
+          backdrop-filter: none;
         }
       }
 
@@ -111,14 +128,14 @@
 
         &::before {
           content: "";
-          height: 100%;
-          width: 100%;
-          grid-area: header-start / header-start / footer-end / footer-end;
+          grid-row: 1 / -1;
+          grid-column: 1 / 2;
           background: var(--nimble-sheet-background);
-          z-index: 1;
+          z-index: 0;
           border: 0;
           border-radius: 6px;
-          position: relative;
+          box-shadow: 0 0 10px #000;
+          pointer-events: none;
         }
       }
 
