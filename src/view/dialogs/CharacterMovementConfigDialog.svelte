@@ -154,6 +154,7 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
 		gap: 0.5rem;
+		align-items: stretch;
 	}
 
 	.movement-card {
@@ -164,6 +165,7 @@
 		background: var(--nimble-box-background-color);
 		border-radius: 6px;
 		border: 1px solid var(--nimble-card-border-color);
+		height: 100%;
 
 		&--has-bonus {
 			border-color: var(--nimble-accent-color);
@@ -197,6 +199,7 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.375rem;
+			flex: 1;
 		}
 
 		&__input-wrapper {
@@ -235,12 +238,13 @@
 			padding: 0.25rem 0.375rem;
 			background: var(--nimble-accent-color);
 			border-radius: 4px;
+			margin-top: auto;
 		}
 
 		&__total-label {
 			font-size: var(--nimble-xs-text);
 			font-weight: 500;
-			color: var(--nimble-light-text-color, #fff);
+			color: white;
 			text-transform: uppercase;
 			letter-spacing: 0.025em;
 		}
@@ -248,7 +252,7 @@
 		&__total-value {
 			font-size: var(--nimble-sm-text);
 			font-weight: 700;
-			color: var(--nimble-light-text-color, #fff);
+			color: white;
 		}
 
 		&__bonus-list {
