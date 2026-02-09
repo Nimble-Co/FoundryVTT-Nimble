@@ -26,11 +26,25 @@
 				if (rule.disabled) continue;
 
 				const value = getDeterministicBonus(rule.value, rollData) ?? 0;
-				const movementType = rule.movementType ?? 'walk';
+				if (value === 0) continue;
 
-				if (value !== 0) {
+				// Check if movementType was explicitly set in source data
+				const hasExplicitMovementType = rule._source?.movementType !== undefined;
+
+				if (hasExplicitMovementType) {
+					// Specific movement type bonus (e.g., "gain climb = walk")
+					const movementType = rule.movementType;
 					bonusesByType[movementType] ??= [];
 					bonusesByType[movementType].push({
+						itemName: item.name,
+						label: rule.label,
+						value,
+					});
+				} else {
+					// Generic speed bonus: only applies to walk
+					// (other movement types granted via formula inherit walk's bonuses)
+					bonusesByType['walk'] ??= [];
+					bonusesByType['walk'].push({
 						itemName: item.name,
 						label: rule.label,
 						value,

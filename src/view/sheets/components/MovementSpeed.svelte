@@ -35,7 +35,6 @@
 		return alternateTypes
 			.filter((type) => movement[type] > 0)
 			.map((type) => ({
-				type,
 				value: movement[type],
 				icon: movementTypeIcons[type],
 				label: localize(movementTypes[type]),
@@ -54,7 +53,7 @@
 
 		{#if alternateMovements.length > 0}
 			<div class="nimble-movement__secondary">
-				{#each alternateMovements as { type, value, icon, label }}
+				{#each alternateMovements as { value, icon, label }}
 					<span
 						class="nimble-movement__icon"
 						data-tooltip="{label} {value}"
