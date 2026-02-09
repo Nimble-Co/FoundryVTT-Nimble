@@ -5,7 +5,13 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "speedBonus",
+				"value": "1",
+				"label": "Intrepid"
+			}
+		],
 		"description": "<p>+1 Speed. [M]</p>",
 		"boonType": "minor"
 	},

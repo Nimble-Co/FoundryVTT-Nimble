@@ -6,7 +6,14 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "speedBonus",
+				"value": "@attributes.movement.walk",
+				"movementType": "climb",
+				"label": "Professional Skulker"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

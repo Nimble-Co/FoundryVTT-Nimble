@@ -16,6 +16,11 @@
 				"predicate": {},
 				"priority": 1,
 				"value": "4"
+			},
+			{
+				"type": "speedBonus",
+				"value": "4",
+				"label": "Epic Speed"
 			}
 		],
 		"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+4 Speed [M]<br>+4 Initiative [A]</span></p>",

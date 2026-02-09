@@ -1,11 +1,19 @@
 import { NimbleBaseRule } from './base.js';
 
+type MovementType = 'walk' | 'fly' | 'climb' | 'swim' | 'burrow';
+
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
 		value: new fields.StringField({ required: true, nullable: false, initial: '' }),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'speedBonus' }),
+		movementType: new fields.StringField({
+			required: false,
+			nullable: false,
+			initial: 'walk',
+			choices: ['walk', 'fly', 'climb', 'swim', 'burrow'],
+		}),
 	};
 }
 
@@ -15,6 +23,7 @@ declare namespace SpeedBonusRule {
 
 class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 	declare value: string;
+	declare movementType: MovementType;
 
 	static override defineSchema(): SpeedBonusRule.Schema {
 		return {
@@ -33,17 +42,19 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 
 		const { actor } = item;
 		const value = this.resolveFormula(this.value) ?? 0;
+		const movementType = this.movementType ?? 'walk';
 
 		interface ActorAttributes {
 			attributes: {
-				movement: { walk?: number };
+				movement: Record<string, number>;
 			};
 		}
 		const actorSystem = actor.system as object as ActorAttributes;
-		const originalValue = actorSystem.attributes.movement.walk ?? 6;
+		const defaultValue = movementType === 'walk' ? 6 : 0;
+		const originalValue = actorSystem.attributes.movement[movementType] ?? defaultValue;
 		const modifiedValue = Math.max(0, originalValue + value);
 
-		foundry.utils.setProperty(actor.system, 'attributes.movement.walk', modifiedValue);
+		foundry.utils.setProperty(actor.system, `attributes.movement.${movementType}`, modifiedValue);
 	}
 }
 

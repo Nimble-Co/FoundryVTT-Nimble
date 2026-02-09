@@ -13,9 +13,9 @@
 	// Get current (derived) movement values with bonuses applied
 	let currentMovement = $derived(document.reactive?.system?.attributes?.movement ?? {});
 
-	// Collect speed bonuses from rules
-	let speedBonuses = $derived.by(() => {
-		const bonuses = [];
+	// Collect speed bonuses from rules, grouped by movement type
+	let speedBonusesByType = $derived.by(() => {
+		const bonusesByType = {};
 		const rollData = document.getRollData?.() ?? {};
 
 		for (const item of document.items ?? []) {
@@ -26,20 +26,31 @@
 				if (rule.disabled) continue;
 
 				const value = getDeterministicBonus(rule.value, rollData) ?? 0;
+				const movementType = rule.movementType ?? 'walk';
 
 				if (value !== 0) {
-					bonuses.push({
-						name: item.name,
+					bonusesByType[movementType] ??= [];
+					bonusesByType[movementType].push({
+						itemName: item.name,
+						label: rule.label,
 						value,
 					});
 				}
 			}
 		}
 
-		return bonuses;
+		return bonusesByType;
 	});
 
-	let totalSpeedBonus = $derived(speedBonuses.reduce((acc, b) => acc + b.value, 0));
+	// Get bonuses for a specific movement type
+	function getBonusesForType(type) {
+		return speedBonusesByType[type] ?? [];
+	}
+
+	// Get total bonus for a specific movement type
+	function getTotalBonusForType(type) {
+		return getBonusesForType(type).reduce((acc, b) => acc + b.value, 0);
+	}
 
 	function updateMovement(key, value) {
 		document.update({
@@ -60,7 +71,9 @@
 			{@const label = localize(movementTypes[key])}
 			{@const baseValue = baseMovement[key] ?? 0}
 			{@const currentValue = currentMovement[key] ?? 0}
-			{@const hasBonus = key === 'walk' && totalSpeedBonus !== 0}
+			{@const bonuses = getBonusesForType(key)}
+			{@const totalBonus = getTotalBonusForType(key)}
+			{@const hasBonus = totalBonus !== 0}
 
 			<div class="movement-card" class:movement-card--has-bonus={hasBonus}>
 				<div class="movement-card__header">
@@ -81,6 +94,24 @@
 					</div>
 
 					{#if hasBonus}
+						<div class="movement-card__bonus-list">
+							{#each bonuses as bonus}
+								<div class="movement-card__bonus-item">
+									<div class="movement-card__bonus-source">
+										<span class="movement-card__bonus-item-name">{bonus.itemName}</span>
+										{#if bonus.label && bonus.label !== bonus.itemName}
+											<span class="movement-card__bonus-label">{bonus.label}</span>
+										{/if}
+									</div>
+									<span
+										class="movement-card__bonus-value"
+										class:movement-card__bonus-value--negative={bonus.value < 0}
+									>
+										{formatBonus(bonus.value)}
+									</span>
+								</div>
+							{/each}
+						</div>
 						<div class="movement-card__total">
 							<span class="movement-card__total-label">Total</span>
 							<span class="movement-card__total-value">{currentValue}</span>
@@ -90,40 +121,6 @@
 			</div>
 		{/each}
 	</div>
-
-	<!-- Speed Bonuses from Rules -->
-	{#if speedBonuses.length > 0}
-		<div class="speed-bonuses">
-			<div class="speed-bonuses__header">
-				<i class="fa-solid fa-bolt"></i>
-				<span>Speed Bonuses</span>
-			</div>
-
-			<div class="speed-bonuses__list">
-				{#each speedBonuses as bonus}
-					<div class="speed-bonus-item">
-						<span class="speed-bonus-item__name">{bonus.name}</span>
-						<span
-							class="speed-bonus-item__value"
-							class:speed-bonus-item__value--negative={bonus.value < 0}
-						>
-							{formatBonus(bonus.value)}
-						</span>
-					</div>
-				{/each}
-			</div>
-
-			<div class="speed-bonuses__total">
-				<span class="speed-bonuses__total-label">Total Bonus</span>
-				<span
-					class="speed-bonuses__total-value"
-					class:speed-bonuses__total-value--negative={totalSpeedBonus < 0}
-				>
-					{formatBonus(totalSpeedBonus)}
-				</span>
-			</div>
-		</div>
-	{/if}
 
 	<aside class="movement-note">
 		<i class="fa-solid fa-circle-info"></i>
@@ -239,79 +236,37 @@
 			font-weight: 700;
 			color: #fff;
 		}
-	}
 
-	.speed-bonuses {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		padding: 0.75rem;
-		background: var(--nimble-box-background-color);
-		border-radius: 6px;
-		border: 1px solid var(--nimble-card-border-color);
-
-		&__header {
-			display: flex;
-			align-items: center;
-			gap: 0.375rem;
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
-			color: var(--nimble-dark-text-color);
-
-			i {
-				color: hsl(45, 70%, 50%);
-			}
-		}
-
-		&__list {
+		&__bonus-list {
 			display: flex;
 			flex-direction: column;
-			gap: 0.25rem;
+			gap: 0.125rem;
 		}
 
-		&__total {
+		&__bonus-item {
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			padding-top: 0.5rem;
-			margin-top: 0.25rem;
-			border-top: 1px solid var(--nimble-card-border-color);
-		}
-
-		&__total-label {
 			font-size: var(--nimble-xs-text);
-			font-weight: 600;
-			color: var(--nimble-medium-text-color);
-			text-transform: uppercase;
-			letter-spacing: 0.025em;
 		}
 
-		&__total-value {
-			font-size: var(--nimble-md-text);
-			font-weight: 700;
-			color: hsl(139, 50%, 40%);
-
-			&--negative {
-				color: hsl(0, 50%, 50%);
-			}
+		&__bonus-source {
+			display: flex;
+			flex-direction: column;
+			gap: 0.0625rem;
 		}
-	}
 
-	.speed-bonus-item {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 0.25rem 0.375rem;
-		background: var(--nimble-input-background-color);
-		border-radius: 4px;
-
-		&__name {
-			font-size: var(--nimble-sm-text);
+		&__bonus-item-name {
 			color: var(--nimble-dark-text-color);
+			font-weight: 500;
 		}
 
-		&__value {
-			font-size: var(--nimble-sm-text);
+		&__bonus-label {
+			color: var(--nimble-medium-text-color);
+			font-size: var(--nimble-2xs-text, 0.625rem);
+		}
+
+		&__bonus-value {
 			font-weight: 600;
 			color: hsl(139, 50%, 40%);
 
