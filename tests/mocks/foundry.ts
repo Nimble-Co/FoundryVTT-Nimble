@@ -6,6 +6,15 @@ import { vi } from 'vitest';
  */
 
 // Global Foundry classes that must be set up before any code tries to extend them
+// UI notifications mock
+export const uiMock = {
+	notifications: {
+		error: vi.fn(),
+		warn: vi.fn(),
+		info: vi.fn(),
+	},
+};
+
 export const globalFoundryMocks = {
 	Actor: class Actor {
 		constructor(data?: any, _context?: any) {
@@ -142,9 +151,43 @@ export function createTrackableRollMock() {
 			return roll;
 		}
 
+		static validate(_formula: string): boolean {
+			// Always return true for mock - real validation not needed in tests
+			return true;
+		}
+
 		async evaluate() {
 			this._evaluated = true;
 			this._total ??= 0;
+			return this;
+		}
+
+		evaluateSync(_options?: { strict?: boolean }) {
+			this._evaluated = true;
+			// Parse simple numeric formulas
+			const formula = this.formula.trim();
+			const data = this.data as Record<string, unknown>;
+
+			// Handle @-references by replacing them with values from rollData
+			let resolvedFormula = formula.replace(/@([\w.]+)/g, (_match, path: string) => {
+				const value = path.split('.').reduce((obj: unknown, key: string) => {
+					if (obj && typeof obj === 'object') {
+						return (obj as Record<string, unknown>)[key];
+					}
+					return undefined;
+				}, data);
+				return value !== undefined ? String(value) : '0';
+			});
+
+			// Evaluate the formula (simple arithmetic)
+			try {
+				// Use Function to safely evaluate arithmetic expressions
+				// eslint-disable-next-line @typescript-eslint/no-implied-eval
+				this._total = new Function(`return (${resolvedFormula})`)() as number;
+			} catch {
+				this._total = 0;
+			}
+
 			return this;
 		}
 
@@ -182,6 +225,7 @@ export function createTrackableRollMock() {
 	// Copy static methods
 	MockRoll.getFormula = MockRollClass.getFormula;
 	MockRoll.fromData = MockRollClass.fromData;
+	MockRoll.validate = MockRollClass.validate;
 
 	// Add vi.fn() mock methods by copying them from the spy
 	// This allows tests to use mockImplementation, mockClear, etc.
