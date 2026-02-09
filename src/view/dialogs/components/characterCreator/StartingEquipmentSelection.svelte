@@ -84,7 +84,11 @@
 				{#if equipmentRules.length > 0}
 					<ul class="equipment-list">
 						{#each equipmentRules as rule}
-							<li>{rule.label || game.i18n.localize(startingEquipment.unknownItem)}</li>
+							<li>
+								{rule.label || game.i18n.localize(startingEquipment.unknownItem)}
+								{#if rule.quantity > 1}
+									({rule.quantity}){/if}
+							</li>
 						{/each}
 					</ul>
 				{:else}

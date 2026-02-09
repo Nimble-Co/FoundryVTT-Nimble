@@ -16,18 +16,7 @@
 				"priority": 1,
 				"allowDuplicate": true,
 				"inMemoryOnly": false,
-				"uuid": "Compendium.nimble.nimble-items.Item.O1sCIVQKfAqSlDT5"
-			},
-			{
-				"type": "grantItem",
-				"disabled": false,
-				"id": "snAchOLX0tw5RXZZ",
-				"identifier": "",
-				"label": "Starting Gear - Dagger",
-				"predicate": {},
-				"priority": 1,
-				"allowDuplicate": true,
-				"inMemoryOnly": false,
+				"quantity": 2,
 				"uuid": "Compendium.nimble.nimble-items.Item.O1sCIVQKfAqSlDT5"
 			},
 			{

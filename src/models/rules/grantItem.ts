@@ -7,6 +7,7 @@ function schema() {
 	return {
 		allowDuplicate: new fields.BooleanField({ required: true, nullable: false, initial: true }),
 		inMemoryOnly: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+		quantity: new fields.NumberField({ required: false, nullable: true, initial: null, min: 1 }),
 		uuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'grantItem' }),
 	};
@@ -20,6 +21,8 @@ class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 	declare allowDuplicate: boolean;
 
 	declare inMemoryOnly: boolean;
+
+	declare quantity: number | null;
 
 	declare uuid: string;
 
@@ -38,6 +41,7 @@ class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 			new Map([
 				['allowDuplicate', 'boolean'],
 				['inMemoryOnly', 'boolean'],
+				['quantity', 'number'],
 				['uuid', 'string'],
 			]),
 		);
@@ -93,6 +97,17 @@ class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 		// TODO: Effects
 
 		grantedSource._stats.compendiumSource = uuid;
+
+		// Apply quantity override if specified
+		if (this.quantity !== null) {
+			interface SystemWithQuantity {
+				quantity?: number;
+			}
+			const system = grantedSource.system as SystemWithQuantity;
+			if ('quantity' in system) {
+				system.quantity = this.quantity;
+			}
+		}
 
 		// TODO: Apply Alteration
 
