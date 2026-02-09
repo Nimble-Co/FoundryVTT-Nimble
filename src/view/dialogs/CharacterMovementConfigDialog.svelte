@@ -166,11 +166,11 @@
 		border: 1px solid var(--nimble-card-border-color);
 
 		&--has-bonus {
-			border-color: hsl(200, 50%, 50%);
+			border-color: var(--nimble-accent-color);
 			background: linear-gradient(
 				to bottom,
 				var(--nimble-box-background-color),
-				hsl(200, 30%, 95%)
+				color-mix(in srgb, var(--nimble-accent-color) 10%, var(--nimble-box-background-color))
 			);
 		}
 
@@ -233,14 +233,14 @@
 			align-items: center;
 			justify-content: space-between;
 			padding: 0.25rem 0.375rem;
-			background: hsl(200, 50%, 45%);
+			background: var(--nimble-accent-color);
 			border-radius: 4px;
 		}
 
 		&__total-label {
 			font-size: var(--nimble-xs-text);
 			font-weight: 500;
-			color: hsl(200, 30%, 95%);
+			color: var(--nimble-light-text-color, #fff);
 			text-transform: uppercase;
 			letter-spacing: 0.025em;
 		}
@@ -248,7 +248,7 @@
 		&__total-value {
 			font-size: var(--nimble-sm-text);
 			font-weight: 700;
-			color: #fff;
+			color: var(--nimble-light-text-color, #fff);
 		}
 
 		&__bonus-list {
@@ -282,10 +282,10 @@
 
 		&__bonus-value {
 			font-weight: 600;
-			color: hsl(139, 50%, 40%);
+			color: var(--nimble-roll-success-color);
 
 			&--negative {
-				color: hsl(0, 50%, 50%);
+				color: var(--nimble-roll-failure-color);
 			}
 		}
 	}

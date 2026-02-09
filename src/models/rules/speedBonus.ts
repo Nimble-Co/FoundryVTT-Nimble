@@ -21,13 +21,12 @@ declare namespace SpeedBonusRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-interface ActorWithSpeedBonus {
+interface ActorSystem {
 	system: {
 		attributes: {
 			movement: Record<string, number>;
 		};
 	};
-	_speedGenericBonusTotal?: number;
 }
 
 class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
@@ -72,7 +71,7 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 
 		const { actor } = item;
 		const value = this.resolveFormula(this.value) ?? 0;
-		const actorSystem = actor as object as ActorWithSpeedBonus;
+		const actorSystem = actor as object as ActorSystem;
 
 		if (this.hasExplicitMovementType()) {
 			// Apply bonus to specific movement type only
@@ -82,16 +81,13 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 			const modifiedValue = Math.max(0, originalValue + value);
 			foundry.utils.setProperty(actor.system, `attributes.movement.${movementType}`, modifiedValue);
 		} else {
-			// Generic speed bonus: apply to walk now, track total for later
+			// Generic speed bonus: apply to walk only
 			const walkValue = actorSystem.system.attributes.movement.walk ?? 6;
 			foundry.utils.setProperty(
 				actor.system,
 				'attributes.movement.walk',
 				Math.max(0, walkValue + value),
 			);
-
-			// Accumulate generic bonus total for applying to other movement types later
-			actorSystem._speedGenericBonusTotal = (actorSystem._speedGenericBonusTotal ?? 0) + value;
 		}
 	}
 
@@ -104,7 +100,7 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 		if (this.isNumericValue()) return; // Already processed in prePrepareData
 
 		const { actor } = item;
-		const actorSystem = actor as object as ActorWithSpeedBonus;
+		const actorSystem = actor as object as ActorSystem;
 
 		// Formula-based value: evaluate now (walk should have all numeric bonuses applied)
 		const value = this.resolveFormula(this.value) ?? 0;
