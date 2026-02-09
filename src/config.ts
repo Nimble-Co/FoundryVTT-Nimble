@@ -120,6 +120,26 @@ const characterCreation = {
 	incompleteCharacterReturn: 'NIMBLE.characterCreation.incompleteCharacterReturn',
 };
 
+const actorImport = {
+	buttonLabel: 'NIMBLE.actorImport.buttonLabel',
+	dialogTitle: 'NIMBLE.actorImport.dialogTitle',
+	searchPlaceholder: 'NIMBLE.actorImport.searchPlaceholder',
+	browseTab: 'NIMBLE.actorImport.browseTab',
+	uploadTab: 'NIMBLE.actorImport.uploadTab',
+	selectAll: 'NIMBLE.actorImport.selectAll',
+	deselectAll: 'NIMBLE.actorImport.deselectAll',
+	importSelected: 'NIMBLE.actorImport.importSelected',
+	createFolder: 'NIMBLE.actorImport.createFolder',
+	noFolder: 'NIMBLE.actorImport.noFolder',
+	noResults: 'NIMBLE.actorImport.noResults',
+	loading: 'NIMBLE.actorImport.loading',
+	loadMore: 'NIMBLE.actorImport.loadMore',
+	selectFile: 'NIMBLE.actorImport.selectFile',
+	clearFile: 'NIMBLE.actorImport.clearFile',
+	successMessage: 'NIMBLE.actorImport.successMessage',
+	partialSuccessMessage: 'NIMBLE.actorImport.partialSuccessMessage',
+};
+
 const hints = {
 	skillPointAssignment: 'NIMBLE.hints.skillPointAssignment',
 	characterCreationSkillPointAssignment: 'NIMBLE.hints.characterCreationSkillPointAssignment',
@@ -803,6 +823,7 @@ const NIMBLE = {
 	armorTypes,
 	armorTypesPlural,
 	boonTypes,
+	actorImport,
 	characterCreation,
 	characterCreationStages,
 	classBanners,

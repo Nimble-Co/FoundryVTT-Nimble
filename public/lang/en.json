@@ -3,7 +3,7 @@
 		"Actor": {
 			"character": "Player Character",
 			"minion": "Minion",
-			"npc": "Non-Player Character",
+			"npc": "Standard",
 			"soloMonster": "Solo Monster"
 		},
 		"Item": {
@@ -781,6 +781,25 @@
 				"name": "Auto-Expand Rolls",
 				"hint": "When enabled, dice roll details are shown inline below each roll in chat messages, without needing to hover."
 			}
+		},
+		"actorImport": {
+			"buttonLabel": "Import Actor",
+			"dialogTitle": "Import from Nimble Nexus",
+			"searchPlaceholder": "Search monsters...",
+			"browseTab": "Browse",
+			"uploadTab": "Upload File",
+			"selectAll": "Select All",
+			"deselectAll": "Deselect All",
+			"importSelected": "Import Selected",
+			"createFolder": "Create folder for imports",
+			"noFolder": "No folder (root)",
+			"noResults": "No monsters found",
+			"loading": "Loading...",
+			"loadMore": "Load More",
+			"selectFile": "Select JSON File",
+			"clearFile": "Clear",
+			"successMessage": "Successfully imported {count} monster(s)",
+			"partialSuccessMessage": "Imported {successful} monster(s), {failed} failed"
 		}
 	}
 }

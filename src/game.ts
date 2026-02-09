@@ -12,6 +12,9 @@ import AncestrySheet from './documents/sheets/AncestrySheet.svelte.js';
 import SpellSheet from './documents/sheets/SpellSheet.svelte.js';
 import SubclassSheet from './documents/sheets/SubclassSheet.svelte.js';
 
+// Dialogs
+import NimbrewImportDialog from './import/nimbrew/NimbrewImportDialog.svelte.js';
+
 // Managers
 import { ConditionManager } from './managers/ConditionManager.js';
 import { ModifierManager } from './managers/ModifierManager.js';
@@ -47,7 +50,9 @@ const NIMBLE_GAME = {
 		...NIMBLE.Combatant.documentClass,
 		...NIMBLE.Item.documentClasses,
 	},
-	dialogs: {},
+	dialogs: {
+		NimbrewImportDialog,
+	},
 	macros: {
 		activateItemMacro,
 		createMacro,

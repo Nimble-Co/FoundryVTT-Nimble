@@ -3,6 +3,7 @@ import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 
 import ActorCreationDialogComponent from '../../view/dialogs/ActorCreationDialog.svelte';
 import CharacterCreationDialog from './CharacterCreationDialog.svelte.js';
+import NimbrewImportDialog from '../../import/nimbrew/NimbrewImportDialog.svelte.js';
 
 const { ApplicationV2 } = foundry.applications.api;
 
@@ -70,6 +71,12 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 			);
 		}
 
+		return super.close();
+	}
+
+	async openNimbrewImport() {
+		const nimbrewImportDialog = new NimbrewImportDialog();
+		nimbrewImportDialog.render(true);
 		return super.close();
 	}
 
