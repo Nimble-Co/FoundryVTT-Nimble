@@ -444,6 +444,8 @@
 	<section class="nimble-monster-sheet-section nimble-monster-sheet-section--defenses">
 		<SavingThrows characterSavingThrows={actor.reactive.system.savingThrows} />
 
+		<MovementSpeed {actor} showDefaultSpeed={false} />
+
 		<section class="nimble-other-attribute-wrapper" style="grid-area: armor;">
 			<header class="nimble-section-header" data-header-alignment="center">
 				<h3 class="nimble-heading" data-heading-variant="section">
@@ -631,10 +633,6 @@
 				<p>{creatureFeatures.noFeatures}</p>
 			</section>
 		{/if}
-
-		<section class="nimble-monster-sheet-section">
-			<MovementSpeed {actor} showDefaultSpeed={false} />
-		</section>
 	</section>
 </section>
 
@@ -1427,7 +1425,7 @@
 		padding: 0.25rem 0.5rem 0.25rem;
 
 		&:first-of-type {
-			padding: 0.75rem 0.5rem 0.75rem !important;
+			padding: 0.25rem 0.5rem 0.75rem !important;
 		}
 		&:not(:last-of-type) {
 			padding: 0 0.5rem 0.75rem;
@@ -1439,7 +1437,10 @@
 		&--defenses {
 			display: grid;
 			grid-template-columns: 1fr 4.2rem;
-			grid-template-areas: 'savingThrows armor';
+			grid-template-areas:
+				'savingThrows armor'
+				'speed armor';
+			row-gap: 0.25rem;
 		}
 	}
 
