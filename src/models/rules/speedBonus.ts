@@ -2,6 +2,8 @@ import { NimbleBaseRule } from './base.js';
 
 type MovementType = 'walk' | 'fly' | 'climb' | 'swim' | 'burrow';
 
+const DEFAULT_WALK_SPEED = 6;
+
 function schema() {
 	const { fields } = foundry.data;
 
@@ -76,13 +78,13 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 		if (this.hasExplicitMovementType()) {
 			// Apply bonus to specific movement type only
 			const movementType = this.movementType;
-			const defaultValue = movementType === 'walk' ? 6 : 0;
+			const defaultValue = movementType === 'walk' ? DEFAULT_WALK_SPEED : 0;
 			const originalValue = actorSystem.system.attributes.movement[movementType] ?? defaultValue;
 			const modifiedValue = Math.max(0, originalValue + value);
 			foundry.utils.setProperty(actor.system, `attributes.movement.${movementType}`, modifiedValue);
 		} else {
 			// Generic speed bonus: apply to walk only
-			const walkValue = actorSystem.system.attributes.movement.walk ?? 6;
+			const walkValue = actorSystem.system.attributes.movement.walk ?? DEFAULT_WALK_SPEED;
 			foundry.utils.setProperty(
 				actor.system,
 				'attributes.movement.walk',
@@ -108,14 +110,14 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 		if (this.hasExplicitMovementType()) {
 			// Apply to specific movement type (e.g., "gain climb speed equal to walk")
 			const movementType = this.movementType;
-			const defaultValue = movementType === 'walk' ? 6 : 0;
+			const defaultValue = movementType === 'walk' ? DEFAULT_WALK_SPEED : 0;
 			const originalValue = actorSystem.system.attributes.movement[movementType] ?? defaultValue;
 			const modifiedValue = Math.max(0, originalValue + value);
 			foundry.utils.setProperty(actor.system, `attributes.movement.${movementType}`, modifiedValue);
 		} else {
 			// Generic formula bonus: apply to walk only
 			// (other movement types granted via formula already inherit walk's bonuses)
-			const walkValue = actorSystem.system.attributes.movement.walk ?? 6;
+			const walkValue = actorSystem.system.attributes.movement.walk ?? DEFAULT_WALK_SPEED;
 			foundry.utils.setProperty(
 				actor.system,
 				'attributes.movement.walk',
