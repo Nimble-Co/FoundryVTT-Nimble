@@ -56,9 +56,9 @@
 	$effect(() => {
 		items.forEach((item) => {
 			// Access reactive properties to track changes
-			item.reactive.name;
-			item.reactive.img;
-			item.reactive.system;
+			void item.reactive.name;
+			void item.reactive.img;
+			void item.reactive.system;
 			// Clear the cache entry so it will be regenerated on next hover
 			tooltipCache.delete(item.reactive._id);
 		});

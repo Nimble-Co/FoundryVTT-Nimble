@@ -131,17 +131,17 @@
 		// Track changes in regular items
 		items.forEach((item) => {
 			// Access reactive properties to track changes
-			item.reactive.name;
-			item.reactive.img;
-			item.reactive.system;
+			void item.reactive.name;
+			void item.reactive.img;
+			void item.reactive.system;
 			// Clear the cache entry so it will be regenerated on next hover
 			tooltipCache.delete(item.reactive._id);
 		});
 		// Track changes in subclasses
 		subclasses.forEach((subclass) => {
-			subclass.reactive.name;
-			subclass.reactive.img;
-			subclass.reactive.system;
+			void subclass.reactive.name;
+			void subclass.reactive.img;
+			void subclass.reactive.system;
 			tooltipCache.delete(subclass.reactive._id);
 		});
 	});

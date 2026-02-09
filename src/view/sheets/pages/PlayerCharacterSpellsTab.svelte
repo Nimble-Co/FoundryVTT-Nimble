@@ -168,9 +168,9 @@
 	$effect(() => {
 		spells.forEach((spell) => {
 			// Access reactive properties to track changes
-			spell.reactive.name;
-			spell.reactive.img;
-			spell.reactive.system;
+			void spell.reactive.name;
+			void spell.reactive.img;
+			void spell.reactive.system;
 			// Clear the cache entry so it will be regenerated on next hover
 			tooltipCache.delete(spell.reactive._id);
 		});
