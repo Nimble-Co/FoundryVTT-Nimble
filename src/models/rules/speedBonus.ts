@@ -63,13 +63,11 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 	}
 
 	/**
-	 * Phase 1: Process numeric bonuses early so walk speed is fully calculated
-	 * before any formulas that reference @attributes.movement.walk
+	 * Apply the speed bonus to the actor's movement
 	 */
-	prePrepareData(): void {
+	private applySpeedBonus(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
-		if (!this.isNumericValue()) return; // Only process numeric values in this phase
 
 		const { actor } = item;
 		const value = this.resolveFormula(this.value) ?? 0;
@@ -94,36 +92,20 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 	}
 
 	/**
+	 * Phase 1: Process numeric bonuses early so walk speed is fully calculated
+	 * before any formulas that reference @attributes.movement.walk
+	 */
+	prePrepareData(): void {
+		if (!this.isNumericValue()) return;
+		this.applySpeedBonus();
+	}
+
+	/**
 	 * Phase 2: Process formula-based bonuses (numeric bonuses already handled in prePrepareData)
 	 */
 	override afterPrepareData(): void {
-		const { item } = this;
-		if (!item.isEmbedded) return;
-		if (this.isNumericValue()) return; // Already processed in prePrepareData
-
-		const { actor } = item;
-		const actorSystem = actor as object as ActorSystem;
-
-		// Formula-based value: evaluate now (walk should have all numeric bonuses applied)
-		const value = this.resolveFormula(this.value) ?? 0;
-
-		if (this.hasExplicitMovementType()) {
-			// Apply to specific movement type (e.g., "gain climb speed equal to walk")
-			const movementType = this.movementType;
-			const defaultValue = movementType === 'walk' ? DEFAULT_WALK_SPEED : 0;
-			const originalValue = actorSystem.system.attributes.movement[movementType] ?? defaultValue;
-			const modifiedValue = Math.max(0, originalValue + value);
-			foundry.utils.setProperty(actor.system, `attributes.movement.${movementType}`, modifiedValue);
-		} else {
-			// Generic formula bonus: apply to walk only
-			// (other movement types granted via formula already inherit walk's bonuses)
-			const walkValue = actorSystem.system.attributes.movement.walk ?? DEFAULT_WALK_SPEED;
-			foundry.utils.setProperty(
-				actor.system,
-				'attributes.movement.walk',
-				Math.max(0, walkValue + value),
-			);
-		}
+		if (this.isNumericValue()) return;
+		this.applySpeedBonus();
 	}
 }
 
