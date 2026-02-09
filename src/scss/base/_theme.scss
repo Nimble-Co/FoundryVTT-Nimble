@@ -54,4 +54,10 @@
 
   --nimble-rule-background-color: hsl(210, 30%, 25%);
   --nimble-rule-border-color: hsl(210, 30%, 40%);
+
+  /** ROLL RESULT COLORS **/
+  --nimble-roll-success-color: hsl(120, 45%, 55%);
+  --nimble-roll-success-background-color: hsl(120, 30%, 25%);
+  --nimble-roll-failure-color: hsl(0, 65%, 60%);
+  --nimble-roll-failure-background-color: hsl(0, 40%, 25%);
 }
