@@ -462,6 +462,10 @@ const skills: Record<SkillKeyType, string> = {
 	stealth: 'NIMBLE.skills.stealth',
 };
 
+const spellUpcasting = {
+	castAtTierHeading: 'NIMBLE.spells.spellUpcasting.castAtTierHeading',
+};
+
 const spellProperties = {
 	...genericProperties,
 	concentration: 'NIMBLE.properties.concentration',
@@ -801,6 +805,7 @@ const NIMBLE = {
 	sizeCategories,
 	skillPointAssignment,
 	skills,
+	spellUpcasting,
 	spellProperties,
 	startingEquipment,
 	spellSchoolIcons,

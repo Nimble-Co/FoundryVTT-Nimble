@@ -567,6 +567,9 @@
 				"tier7": "Tier 7",
 				"tier8": "Tier 8",
 				"tier9": "Tier 9"
+			},
+			"spellUpcasting": {
+				"castAtTierHeading": "Cast at Tier"
 			}
 		},
 		"statArrays": {
