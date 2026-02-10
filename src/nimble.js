@@ -1,3 +1,4 @@
 /** This is a temp file for vite dev */
 
-import * as nimble from './nimble.ts';
+// Side-effect import: bootstraps Nimble hooks and system initialization.
+import './nimble.ts';
