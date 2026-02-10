@@ -7,7 +7,14 @@
 		"group": "savage-arsenal",
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "initiativeRollMode",
+				"value": 1,
+				"mode": "adjust",
+				"label": "Eager for Battle (Advantage on Initiative)"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
