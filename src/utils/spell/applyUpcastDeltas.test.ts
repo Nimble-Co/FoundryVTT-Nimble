@@ -446,6 +446,198 @@ describe('applyUpcastDeltas', () => {
 		});
 	});
 
+	describe('Edge Cases', () => {
+		it('should apply multiple deltas in a single upcast', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 1,
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'addFlatDamage', value: 4 }),
+						createDelta({ operation: 'addTargets', value: 1 }),
+					]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
+				activationData: {
+					effects: [
+						{
+							id: 'dmg1',
+							type: 'damage',
+							damageType: 'fire',
+							formula: '2d6',
+							parentContext: null,
+							parentNode: null,
+						},
+					],
+					targets: { count: 1, restrictions: '', attackType: '', distance: 2 },
+				},
+				manaToSpend: 3,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect(result.upcastResult.upcastSteps).toBe(2);
+			expect((result.activationData.effects[0] as DamageNode).formula).toBe('2d6+8');
+			expect(result.activationData.targets?.count).toBe(3);
+		});
+
+		it('should target specific effect by targetEffectId', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 2,
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'addFlatDamage', value: 3, targetEffectId: 'secondary' }),
+					]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
+				activationData: {
+					effects: [
+						{
+							id: 'primary',
+							type: 'damage',
+							damageType: 'fire',
+							formula: '4d6',
+							parentContext: null,
+							parentNode: null,
+						},
+						{
+							id: 'secondary',
+							type: 'damage',
+							damageType: 'cold',
+							formula: '2d8',
+							parentContext: null,
+							parentNode: null,
+						},
+					],
+				},
+				manaToSpend: 3,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect((result.activationData.effects[0] as DamageNode).formula).toBe('4d6');
+			expect((result.activationData.effects[1] as DamageNode).formula).toBe('2d8+3');
+		});
+
+		it('should handle casting at exactly max tier', () => {
+			const context: UpcastContext = {
+				spell: { tier: 3, scaling: createScaling('upcast') },
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
+				activationData: { effects: [] },
+				manaToSpend: 5,
+			};
+
+			const result = validateAndComputeUpcast(context);
+			expect(result.valid).toBe(true);
+			expect(result.upcastSteps).toBe(2);
+			expect(result.totalMana).toBe(5);
+		});
+
+		it('should skip delta gracefully when no matching effect exists', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 1,
+					scaling: createScaling('upcast', [createDelta({ operation: 'addFlatDamage', value: 5 })]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
+				activationData: {
+					effects: [],
+				},
+				manaToSpend: 2,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect(result.upcastResult.upcastSteps).toBe(1);
+			expect(result.activationData.effects.length).toBe(0);
+		});
+
+		it('should append dice to formula with existing modifiers', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 1,
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'addDice', dice: { count: 1, faces: 8 } }),
+					]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
+				activationData: {
+					effects: [
+						{
+							id: 'dmg1',
+							type: 'damage',
+							damageType: 'fire',
+							formula: '3d8+@key',
+							parentContext: null,
+							parentNode: null,
+						},
+					],
+				},
+				manaToSpend: 3,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect((result.activationData.effects[0] as DamageNode).formula).toBe('3d8+@key+2d8');
+		});
+
+		it('should skip addDuration when duration is missing', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 1,
+					scaling: createScaling('upcast', [createDelta({ operation: 'addDuration', value: 1 })]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
+				activationData: {
+					effects: [],
+				},
+				manaToSpend: 2,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect(result.upcastResult.upcastSteps).toBe(1);
+			expect(result.activationData.duration).toBeUndefined();
+		});
+
+		it('should skip addAreaSize when template is missing', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 1,
+					scaling: createScaling('upcast', [createDelta({ operation: 'addAreaSize', value: 2 })]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
+				activationData: {
+					effects: [],
+				},
+				manaToSpend: 2,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect(result.upcastResult.upcastSteps).toBe(1);
+			expect(result.activationData.template).toBeUndefined();
+		});
+
+		it('should be a no-op for addArmor (not yet implemented)', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 2,
+					scaling: createScaling('upcast', [createDelta({ operation: 'addArmor', value: 2 })]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 5 } },
+				activationData: {
+					effects: [],
+				},
+				manaToSpend: 4,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect(result.upcastResult.upcastSteps).toBe(2);
+			expect(result.activationData.effects.length).toBe(0);
+		});
+	});
+
 	describe('Immutability Tests', () => {
 		it('should not mutate original activation data', () => {
 			const originalActivationData = {
