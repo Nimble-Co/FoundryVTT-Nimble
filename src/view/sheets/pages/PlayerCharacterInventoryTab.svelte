@@ -52,6 +52,18 @@
 
 	const tooltipCache = new Map();
 
+	// Invalidate tooltip cache when items change (e.g., name or properties modified)
+	$effect(() => {
+		items.forEach((item) => {
+			// Access reactive properties to track changes
+			void item.reactive.name;
+			void item.reactive.img;
+			void item.reactive.system;
+			// Clear the cache entry so it will be regenerated on next hover
+			tooltipCache.delete(item.reactive._id);
+		});
+	});
+
 	async function getObjectTooltip(item) {
 		const cacheKey = item.reactive._id;
 		if (tooltipCache.has(cacheKey)) {
