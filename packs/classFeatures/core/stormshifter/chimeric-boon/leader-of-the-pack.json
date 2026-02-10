@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "4203ea7551825792",
 	"name": "Leader of the Pack",
 	"type": "feature",
 	"img": "icons/creatures/mammals/humanoid-wolf-dog-blue.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Advantage against fear and charm effects for yourself and allies within 6 spaces.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "chimeric-boon"
+		"group": "chimeric-boon",
+		"gainedAtLevel": 6
 	},
 	"effects": [],
 	"flags": {},

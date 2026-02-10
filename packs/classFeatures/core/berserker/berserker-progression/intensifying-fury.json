@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7a2072a1eb2a6128",
 	"name": "Intensifying Fury",
 	"type": "feature",
 	"img": "icons/magic/control/buff-strength-muscle-damage-red.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>If you are Raging at the beginning of your turn, roll 1 Fury Die for free.</p><hr><p>Level 1: Fury Die is a d4</p><p>Level 6: Fury Die is a d6</p><p>Level 9: Fury Die is a d8</p><p>Level 13: Fury Die is a d10</p><p>Level 117: Fury Die is a d12</p>",
 		"featureType": "class",
 		"class": "berserker",
-		"group": "berserker-progression"
+		"group": "berserker-progression",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "db05900e423cad38",
 	"name": "Arcane Command",
 	"type": "feature",
 	"img": "icons/magic/symbols/runes-star-blue.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Your focus on the arcane causes you to lose access to Weapon Mastery and Combat Tactics, but you now gain INT mana when you roll Initiative (this mana is lost if unspent when combat ends). Whenever you could choose a Combat Tactic or Weapon Mastery, instead choose another Commander's Order or a tier 1 (or lower) spell from any spell school. Your Commander's Orders are also empowered with magical power:</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "spellblade"
+		"group": "spellblade",
+		"gainedAtLevel": 3,
+		"subclass": "Spellblade"
 	},
 	"effects": [],
 	"flags": {},

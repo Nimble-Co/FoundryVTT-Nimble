@@ -63,10 +63,11 @@
 		"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when you would drop to 0 HP): You may expend any number of Hit Dice and set your HP to the sum rolled instead (do not add your STR). </p><p></p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "commanders-orders"
+		"group": "commanders-orders",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "9548936586e677f6",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

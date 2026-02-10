@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "b51f49b6c2c5ac78",
 	"name": "Elemental Surge",
 	"type": "feature",
 	"img": "icons/magic/light/beams-explosion-blue.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>A surge of adrenaline and your attunement with the elements grants you additional power as combat begins. When you roll Initiative, regain WIL mana (this expires at the end of combat if unused).</p><hr><p>Level 10: WIL+1d4 mana</p><p>Level 17: WIL+2d4 mana</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "mage-progression"
+		"group": "mage-progression",
+		"gainedAtLevel": 5
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "00526c7e25c0bf82",
 	"name": "Assist Me, My Friend!",
 	"type": "feature",
 	"img": "icons/creatures/abilities/wolf-heads-swirl-purple.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Whenever you make your first melee attack each round, you may add your Lifebinding Spirit's damage to the attack.</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "sacred-grace"
+		"group": "sacred-grace",
+		"gainedAtLevel": 5
 	},
 	"effects": [],
 	"flags": {},

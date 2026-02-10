@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "9849ad388e421035",
 	"name": "Raging Tempest",
 	"type": "feature",
 	"img": "icons/magic/lightning/bolt-strike-explosion-purple.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Whenever you crit with a tiered spell, you may cast a cantrip for free from a school you know and haven't cast any spells from this turn (at the same level of dis/advantage).</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "circle-of-sky-and-storm"
+		"group": "circle-of-sky-and-storm",
+		"gainedAtLevel": 7,
+		"subclass": "Circle of Sky & Storm"
 	},
 	"effects": [],
 	"flags": {},

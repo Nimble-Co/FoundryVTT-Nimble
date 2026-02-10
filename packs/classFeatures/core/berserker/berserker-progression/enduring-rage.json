@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7a2072a1eb2a6128",
 	"name": "Enduring Rage",
 	"type": "feature",
 	"img": "icons/skills/wounds/blood-cells-vessel-red.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>While Dying, you Rage automatically for free at the beginning of your turn, have a max of 2 actions instead of 1, and ignore the STR saves to make attacks.</p>",
 		"featureType": "class",
 		"class": "berserker",
-		"group": "berserker-progression"
+		"group": "berserker-progression",
+		"gainedAtLevel": 4
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7dec83da1812d369",
 	"name": "Hollow One",
 	"type": "feature",
 	"img": "icons/magic/control/silhouette-hold-change-green.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Cut off from your patron, you can no longer cast Shadow Blast and you can no longer cast tiered spells using Pilfered Power. However, as a parting token, you have stolen a secret from your patron: The magical Bonescythe, a weapon of sinew and bone, infused with shadowy magic.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "reaver"
+		"group": "reaver",
+		"gainedAtLevel": 3,
+		"subclass": "Reaver"
 	},
 	"effects": [],
 	"flags": {},

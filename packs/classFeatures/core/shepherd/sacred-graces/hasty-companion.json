@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "00526c7e25c0bf82",
 	"name": "Hasty Companion",
 	"type": "feature",
 	"img": "icons/magic/movement/trail-streak-zigzag-yellow.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>+4 Reach for your Lifebinding Spirit. It can also act for free when summoned.</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "sacred-grace"
+		"group": "sacred-grace",
+		"gainedAtLevel": 5
 	},
 	"effects": [],
 	"flags": {},

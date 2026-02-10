@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "687a5b0a965a0339",
 	"name": "Stand Fast, Friends!",
 	"type": "feature",
 	"img": "icons/environment/people/infantry-army.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>When you roll Initiative, grant allies temp HP equal to your STR+WIL. You and allies within your aura have advantage against fear and effects that would move or knock Prone.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "sacred-decree"
+		"group": "sacred-decree",
+		"gainedAtLevel": 3
 	},
 	"effects": [],
 	"flags": {},

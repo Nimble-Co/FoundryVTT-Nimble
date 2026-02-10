@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "9207a06f3df082e6",
 	"name": "Twist the Blade (2)",
 	"type": "feature",
 	"img": "icons/skills/melee/strike-dagger-blood-red.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>(1/turn) Change one of your Sneak Attack dice to whatever you like, for free</p>",
 		"featureType": "class",
 		"class": "the-cheat",
-		"group": "the-cheat-progression"
+		"group": "the-cheat-progression",
+		"gainedAtLevel": 13
 	},
 	"effects": [],
 	"flags": {},

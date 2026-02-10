@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "650e4f740f3717ea",
 	"name": "Professional Skulker",
 	"type": "feature",
 	"img": "icons/creatures/abilities/cougar-roar-rush-orange.webp",
@@ -43,7 +43,9 @@
 		"description": "<p>Gain a climbing speed and advantage on Stealth checks (replaces Leave No Trace). </p>",
 		"featureType": "class",
 		"class": "the-cheat",
-		"group": "tools-of-the-silent-blade"
+		"group": "tools-of-the-silent-blade",
+		"gainedAtLevel": 11,
+		"subclass": "Tools of the Silent Blade"
 	},
 	"effects": [],
 	"flags": {},

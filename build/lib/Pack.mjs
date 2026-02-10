@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+﻿import crypto from 'crypto';
 import fs from 'fs';
 import { globSync } from 'glob';
 import path from 'path';
@@ -16,6 +16,11 @@ export default class Pack {
 	static #PACK_DEST = path.resolve(process.cwd(), 'public/packs');
 
 	static #packsMetadata = systemJSON.packs;
+
+	static #CLASS_FEATURE_CLASS_SORT_ORDER = new Map([
+		['berserker', 0],
+		['the-cheat', 1],
+	]);
 
 	constructor(dirName, data) {
 		const metadata = Pack.#packsMetadata.find(
@@ -59,19 +64,30 @@ export default class Pack {
 	#prepareFolderAssignments() {
 		this.folderDocuments = [];
 
-		// Monsters are grouped by source path folder names.
-		if (this.dirName === 'monsters' && this.documentType === 'Actor') {
-			return this.#prepareMonsterFolderAssignments();
-		}
+		const folderAssignmentHandlers = [
+			{
+				matches: this.dirName === 'monsters' && this.documentType === 'Actor',
+				prepare: () => this.#prepareMonsterFolderAssignments(),
+			},
+			{
+				matches: this.dirName === 'boons' && this.documentType === 'Item',
+				prepare: () => this.#prepareBoonFolderAssignments(),
+			},
+			{
+				matches: this.dirName === 'subclasses',
+				prepare: () => this.#prepareSubclassFolderAssignments(),
+			},
+			{
+				matches: this.dirName === 'classFeatures',
+				prepare: () => this.#prepareClassFeatureFolderAssignments(),
+			},
+		];
 
-		// Boons are grouped by boonType (minor, major, epic).
-		if (this.dirName === 'boons' && this.documentType === 'Item') {
-			return this.#prepareBoonFolderAssignments();
-		}
+		const matchedHandler = folderAssignmentHandlers.find((handler) => handler.matches);
+		return matchedHandler ? matchedHandler.prepare() : new Map();
+	}
 
-		// Restrict class-based folder generation to the subclasses pack only.
-		if (this.dirName !== 'subclasses') return new Map();
-
+	#prepareSubclassFolderAssignments() {
 		/** @type {any[]} */
 		const subclasses = [...this.data.values()].filter(
 			(source) => source?.type === 'subclass' && typeof source?.system?.parentClass === 'string',
@@ -216,6 +232,136 @@ export default class Pack {
 			if (folder) acc.set(source._id, folder._id);
 			return acc;
 		}, new Map());
+	}
+
+	#prepareClassFeatureFolderAssignments() {
+		const features = [...this.data.entries()].filter(
+			([, source]) => typeof source?._id === 'string',
+		);
+		if (features.length === 0) return new Map();
+
+		const statsTemplate = this.#getFolderStatsTemplate(features.map(([, source]) => source));
+		const classFolderData = new Map();
+
+		for (const [file, source] of features) {
+			const classId = this.#getClassId(file, source);
+			if (!classId) continue;
+
+			const className = this.#toDisplayClassName(classId);
+			let classData = classFolderData.get(classId);
+			if (!classData) {
+				classData = {
+					name: className,
+					progressionName: `${className} Progression`,
+					subclasses: new Map(),
+				};
+				classFolderData.set(classId, classData);
+			}
+
+			const subclassId = this.#getSubclassId(file, source);
+			if (!subclassId) continue;
+
+			const subclassName = this.#getSubclassFolderName(file, source, subclassId);
+			if (!classData.subclasses.has(subclassId)) classData.subclasses.set(subclassId, subclassName);
+		}
+
+		const folders = [];
+		const classFolderLookup = new Map();
+		const sortedClasses = [...classFolderData.entries()].sort(
+			([aClassId, aData], [bClassId, bData]) => {
+				const aOrder =
+					Pack.#CLASS_FEATURE_CLASS_SORT_ORDER.get(aClassId) ?? Number.MAX_SAFE_INTEGER;
+				const bOrder =
+					Pack.#CLASS_FEATURE_CLASS_SORT_ORDER.get(bClassId) ?? Number.MAX_SAFE_INTEGER;
+				if (aOrder !== bOrder) return aOrder - bOrder;
+
+				return aData.name.localeCompare(bData.name, undefined, { sensitivity: 'base' });
+			},
+		);
+
+		sortedClasses.forEach(([classId, classData], classIndex) => {
+			const classFolderId = Pack.#folderIdForClassId(classId);
+			const progressionFolderId = Pack.#folderIdForProgressionId(classId);
+
+			folders.push({
+				_id: classFolderId,
+				_stats: { ...statsTemplate },
+				color: null,
+				description: '',
+				flags: {},
+				folder: null,
+				name: classData.name,
+				sort: classIndex * 10,
+				sorting: 'm',
+				type: this.documentType,
+			});
+
+			folders.push({
+				_id: progressionFolderId,
+				_stats: { ...statsTemplate },
+				color: null,
+				description: '',
+				flags: {},
+				folder: classFolderId,
+				name: classData.progressionName,
+				sort: 0,
+				sorting: 'm',
+				type: this.documentType,
+			});
+
+			const subclassFolderLookup = new Map();
+			const sortedSubclasses = [...classData.subclasses.entries()].sort(([, aName], [, bName]) =>
+				aName.localeCompare(bName, undefined, { sensitivity: 'base' }),
+			);
+
+			sortedSubclasses.forEach(([subclassId, subclassName], subclassIndex) => {
+				const subclassFolderId = Pack.#folderIdForSubclassId(classId, subclassId);
+				subclassFolderLookup.set(subclassId, subclassFolderId);
+
+				folders.push({
+					_id: subclassFolderId,
+					_stats: { ...statsTemplate },
+					color: null,
+					description: '',
+					flags: {},
+					folder: classFolderId,
+					name: subclassName,
+					sort: (subclassIndex + 1) * 10,
+					sorting: 'm',
+					type: this.documentType,
+				});
+			});
+
+			classFolderLookup.set(classId, {
+				classFolderId,
+				progressionFolderId,
+				subclassFolderLookup,
+			});
+		});
+
+		this.folderDocuments = folders;
+
+		const folderAssignments = new Map();
+		for (const [file, source] of features) {
+			const classId = this.#getClassId(file, source);
+			if (!classId || !source._id) continue;
+
+			const classFolders = classFolderLookup.get(classId);
+			if (!classFolders) continue;
+
+			const subclassId = this.#getSubclassId(file, source);
+			if (subclassId && classFolders.subclassFolderLookup.has(subclassId)) {
+				folderAssignments.set(source._id, classFolders.subclassFolderLookup.get(subclassId));
+				continue;
+			}
+
+			folderAssignments.set(
+				source._id,
+				classFolders.progressionFolderId ?? classFolders.classFolderId,
+			);
+		}
+
+		return folderAssignments;
 	}
 
 	#getFolderStatsTemplate(sources) {
@@ -403,5 +549,88 @@ export default class Pack {
 		}
 
 		return new Pack(dirPath, files);
+	}
+
+	#getClassId(filePath, source) {
+		const relativePath = path.relative(this.dirPath, filePath);
+		const pathParts = relativePath.split(path.sep).filter(Boolean);
+		const pathClass = pathParts.length >= 2 ? Pack.#normalizeClassId(pathParts[1]) : null;
+		if (pathClass) return pathClass;
+
+		return Pack.#normalizeClassId(source?.system?.class);
+	}
+
+	#getSubclassId(filePath, source) {
+		const sourceSubclass = Pack.#normalizeSubclassId(source?.system?.subclass);
+		if (sourceSubclass) return sourceSubclass;
+
+		const relativePath = path.relative(this.dirPath, filePath);
+		const pathParts = relativePath.split(path.sep).filter(Boolean);
+		const subclassMarkerIndex = pathParts.findIndex((part) => part.endsWith('-subclasses'));
+		const pathSubclass = subclassMarkerIndex >= 0 ? pathParts[subclassMarkerIndex + 1] : null;
+
+		return Pack.#normalizeSubclassId(pathSubclass);
+	}
+
+	#getSubclassFolderName(filePath, source, subclassId) {
+		if (typeof source?.system?.subclass === 'string') {
+			const subclassName = source.system.subclass.trim();
+			if (subclassName) return subclassName;
+		}
+
+		const relativePath = path.relative(this.dirPath, filePath);
+		const pathParts = relativePath.split(path.sep).filter(Boolean);
+		const subclassMarkerIndex = pathParts.findIndex((part) => part.endsWith('-subclasses'));
+		const pathSubclass = subclassMarkerIndex >= 0 ? pathParts[subclassMarkerIndex + 1] : null;
+		if (pathSubclass) {
+			const normalizedPathSubclass = Pack.#normalizeClassId(pathSubclass);
+			if (normalizedPathSubclass) return this.#toDisplayClassName(normalizedPathSubclass);
+		}
+
+		return this.#toDisplayClassName(subclassId);
+	}
+
+	static #normalizeClassId(classId) {
+		if (typeof classId !== 'string') return null;
+		const normalized = classId.trim().toLowerCase().replaceAll('_', '-').replace(/\s+/g, '-');
+		return normalized || null;
+	}
+
+	static #normalizeSubclassId(subclassId) {
+		if (typeof subclassId !== 'string') return null;
+		const normalized = subclassId
+			.trim()
+			.toLowerCase()
+			.replace(/[’']/g, '')
+			.replaceAll('&', 'and')
+			.replaceAll('_', '-')
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-+|-+$/g, '');
+
+		return normalized || null;
+	}
+
+	static #folderIdForClassId(classId) {
+		return crypto
+			.createHash('sha256')
+			.update(`nimble-class-features-${classId}`)
+			.digest('hex')
+			.slice(0, 16);
+	}
+
+	static #folderIdForSubclassId(classId, subclassId) {
+		return crypto
+			.createHash('sha256')
+			.update(`nimble-class-features-${classId}-${subclassId}`)
+			.digest('hex')
+			.slice(0, 16);
+	}
+
+	static #folderIdForProgressionId(classId) {
+		return crypto
+			.createHash('sha256')
+			.update(`nimble-class-features-${classId}-progression`)
+			.digest('hex')
+			.slice(0, 16);
 	}
 }

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7a2072a1eb2a6128",
 	"name": "Eager for Battle",
 	"type": "feature",
 	"img": "icons/weapons/axes/axe-double-short-orange.webp",
@@ -43,7 +43,8 @@
 		},
 		"description": "<p>Gain advantage on Initiative. Move 2×DEX spaces for free on your first turn each encounter.</p>",
 		"featureType": "class",
-		"class": ""
+		"class": "",
+		"gainedAtLevel": 4
 	},
 	"effects": [],
 	"flags": {},

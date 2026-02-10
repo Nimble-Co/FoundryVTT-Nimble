@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "b8b11dde028cc7df",
 	"name": "Thrill of the Hunt",
 	"type": "feature",
 	"img": "icons/creatures/eyes/lizard-single-slit-green.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Choose 2 Thrill of the Hunt abilities. Gain a charge to use these abilities during that encounter whenever:</p><ul><li><p>Your quarry dies.</p></li><li><p>You hit your quarry in melee or crit your quarry at range</p><hr><p>Choose an additional Thrill of the Hunt ability at levels 4, 6, 8, 12, and 14.</p></li></ul>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "hunter-progression"
+		"group": "hunter-progression",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
 	"flags": {},

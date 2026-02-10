@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "b8b11dde028cc7df",
 	"name": "Wild Instinct",
 	"type": "feature",
 	"img": "icons/magic/perception/eye-ringed-green.webp",
@@ -36,7 +36,8 @@
 		"description": "<p><em>(1/round, costs 0 TotH charges if you have none.)</em> Assess for free, with advantage.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "thrill-of-the-hunt"
+		"group": "thrill-of-the-hunt",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
 	"flags": {},

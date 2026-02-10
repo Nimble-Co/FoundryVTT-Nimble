@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7a2072a1eb2a6128",
 	"name": "You're Next!",
 	"type": "feature",
 	"img": "icons/weapons/axes/axe-double-short-orange.webp",
@@ -36,7 +36,8 @@
 		},
 		"description": "<p>Action: While Raging, you can make a Might skill check to demoralize an enemy within Reach 12 (DC: their current HP). On a success, they immediately flee the battle.</p>",
 		"featureType": "class",
-		"class": ""
+		"class": "",
+		"gainedAtLevel": 4
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "db05900e423cad38",
 	"name": "Crystalline Armor",
 	"type": "feature",
 	"img": "icons/magic/water/barrier-ice-crystal-wall-green.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>(Replaces: Hold the Line!)</p><p>(1/encounter) Reaction (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. Additionally, they gain that many temp HP. Enemies who reduce this temp HP in melee have their speed halved until the end of their next turn.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "spellblade"
+		"group": "spellblade",
+		"gainedAtLevel": 3,
+		"subclass": "Spellblade"
 	},
 	"effects": [],
 	"flags": {},

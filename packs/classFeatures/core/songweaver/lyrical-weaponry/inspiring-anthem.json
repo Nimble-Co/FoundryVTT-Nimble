@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "249bc0cebeccd302",
 	"name": "Inspiring Anthem",
 	"type": "feature",
 	"img": "icons/tools/instruments/harp-gold-glowing.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>(1/encounter) Action: Grant all friendly Dying creatures who can hear you 1 HP and 1 action.</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "lyrical-weaponry"
+		"group": "lyrical-weaponry",
+		"gainedAtLevel": 4
 	},
 	"effects": [],
 	"flags": {},

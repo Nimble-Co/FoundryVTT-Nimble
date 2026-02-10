@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "6d61edc0313632f0",
 	"name": "Greedy pact",
 	"type": "feature",
 	"img": "icons/magic/light/hand-sparks-smoke-teal.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>When you would take damage from Pilfer Power, make a STR save:</p><ul><li><p>1–9: Suffer damage as normal.</p></li><li><p>10–19: Suffer only 10 HP of damage. </p></li><li><p>20+: Suffer no damage and cast the spell as if it were 1 tier higher</p></li></ul>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "shadowmancer-progression"
+		"group": "shadowmancer-progression",
+		"gainedAtLevel": 12
 	},
 	"effects": [],
 	"flags": {},

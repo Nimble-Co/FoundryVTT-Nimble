@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "650e4f740f3717ea",
 	"name": "Cunning Strike",
 	"type": "feature",
 	"img": "icons/weapons/daggers/dagger-blue.webp",
@@ -69,7 +69,9 @@
 		"description": "<p><em>(2/encounter)</em> When you land a Sneak Attack, you may force the target to make a STR save (DC 10+INT). On a failure, instead of rolling your Sneak Attack dice, they deal the maximum amount of damage (if your target saves, regain 1 use). </p>",
 		"featureType": "class",
 		"class": "the-cheat",
-		"group": "tools-of-the-silent-blade"
+		"group": "tools-of-the-silent-blade",
+		"gainedAtLevel": 7,
+		"subclass": "Tools of the Silent Blade"
 	},
 	"effects": [],
 	"flags": {},

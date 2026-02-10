@@ -58,10 +58,11 @@
 		"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. (M)</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "commanders-orders"
+		"group": "commanders-orders",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "9548936586e677f6",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

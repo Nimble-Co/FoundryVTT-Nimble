@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "97940746b5651bd1",
 	"name": "Chord of Chaos",
 	"type": "feature",
 	"img": "icons/magic/movement/trail-streak-zigzag-yellow.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>(1/encounter) Action: You may move ALL creatures within hearing of your song up to 3 spaces as long as they do not move into an obviously dangerous place.</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "herald-of-snark"
+		"group": "herald-of-snark",
+		"gainedAtLevel": 11,
+		"subclass": "Herald of Snark"
 	},
 	"effects": [],
 	"flags": {},

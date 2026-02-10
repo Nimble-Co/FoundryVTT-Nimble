@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7fec6a94e7504af7",
 	"name": "Small - Go for the Throat!",
 	"type": "feature",
 	"img": "icons/creatures/claws/claw-talons-glowing-orange.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>(1/encounter) Costs 1 TotH charge: Your companion attacks your quarry for 1d4+LVL damage for free (ignoring armor). </p><hr><p>Level 11: 2/encounter, 1/round. </p><p>Level 15: 3/encounter, 1/round.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "beastmaster"
+		"group": "beastmaster",
+		"gainedAtLevel": 3,
+		"subclass": "Beastmaster"
 	},
 	"effects": [],
 	"flags": {},

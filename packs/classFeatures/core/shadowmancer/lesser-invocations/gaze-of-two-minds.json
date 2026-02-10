@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "6d61edc0313632f0",
 	"name": "Gaze of Two Minds",
 	"type": "feature",
 	"img": "icons/creatures/eyes/humanoid-single-purple-blue.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Touch a willing creature and perceive through its senses instead of your own for as long as you hold concentration.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "lesser-invocations"
+		"group": "lesser-invocations",
+		"gainedAtLevel": 8
 	},
 	"effects": [],
 	"flags": {},

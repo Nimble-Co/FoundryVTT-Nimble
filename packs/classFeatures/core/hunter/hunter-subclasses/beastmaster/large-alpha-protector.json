@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7fec6a94e7504af7",
 	"name": "Large - Alpha Protector",
 	"type": "feature",
 	"img": "icons/creatures/abilities/bear-roar-bite-brown.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Damage from the first attack against you each round is halved.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "beastmaster"
+		"group": "beastmaster",
+		"gainedAtLevel": 3,
+		"subclass": "Beastmaster"
 	},
 	"effects": [],
 	"flags": {},

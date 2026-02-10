@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "db1b1e86f71126fe",
 	"name": "Supreme Control",
 	"type": "feature",
 	"img": "icons/magic/nature/beam-hand-leaves-green.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Whenever you Demand Control, you may choose to trigger the selected option twice. You may Demand Control as a Reaction.</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "invoker-of-control"
+		"group": "invoker-of-control",
+		"gainedAtLevel": 15,
+		"subclass": "Invoker of Control"
 	},
 	"effects": [],
 	"flags": {},

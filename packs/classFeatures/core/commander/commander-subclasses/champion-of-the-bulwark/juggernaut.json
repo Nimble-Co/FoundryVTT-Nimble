@@ -65,10 +65,12 @@
 		"description": "<p>When you use Coordinated Strike, you deal extra damage equal to your armor, and you can <strong>add 1 to your primary die.</strong></p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "champion-of-the-bulwark"
+		"group": "champion-of-the-bulwark",
+		"gainedAtLevel": 7,
+		"subclass": "Champion of the Bulwark"
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "ef7bbbb1a86323cd",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "db05900e423cad38",
 	"name": "Borne Upon the Wind",
 	"type": "feature",
 	"img": "icons/magic/air/air-wave-gust-smoke-yellow.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>(Replaces: Move it! Move it!)</p><p>When you roll Initiative, you may give yourself and an ally advantage on the roll, +3 speed, and the ability to fly for 1 round. Then, you both can also move for free.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "spellblade"
+		"group": "spellblade",
+		"gainedAtLevel": 3,
+		"subclass": "Spellblade"
 	},
 	"effects": [],
 	"flags": {},

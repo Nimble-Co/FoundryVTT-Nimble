@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "9a8d746b8e010522",
 	"name": "Master of Chaos",
 	"type": "feature",
 	"img": "icons/magic/light/explosion-glow-spiral-teal.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Whenever you Invoke Chaos, roll with advantage.</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "invoker-of-chaos"
+		"group": "invoker-of-chaos",
+		"gainedAtLevel": 15,
+		"subclass": "Invoker of Chaos"
 	},
 	"effects": [],
 	"flags": {},

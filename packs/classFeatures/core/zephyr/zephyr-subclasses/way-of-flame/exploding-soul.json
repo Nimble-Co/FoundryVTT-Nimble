@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "89578cecae9a993c",
 	"name": "Exploding Soul",
 	"type": "feature",
 	"img": "icons/magic/fire/explosion-fireball-medium-red-orange.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>(1/round) On your turn, you may suffer a Wound. Whenever you gain a Wound, deal STR+Wounds damage to any creatures you choose within 2 spaces (ignoring armor) and give them the Smoldering condition.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "way-of-flame"
+		"group": "way-of-flame",
+		"gainedAtLevel": 3,
+		"subclass": "Way of Flame"
 	},
 	"effects": [],
 	"flags": {},

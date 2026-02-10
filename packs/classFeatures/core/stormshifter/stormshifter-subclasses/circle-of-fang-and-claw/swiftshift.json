@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "1e1a739466fd09a6",
 	"name": "Swiftshift",
 	"type": "feature",
 	"img": "icons/creatures/abilities/paw-print-pair-purple.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>When you roll Initiative, you may Beastshift or move for free. While transformed, you may shift between different Direbeast forms for free (and as a reaction by spending 1 mana); however, Beastshifting for free does not grant any temp HP.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "circle-of-fang-and-claw"
+		"group": "circle-of-fang-and-claw",
+		"gainedAtLevel": 3,
+		"subclass": "Circle of Fang & Claw"
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "9207a06f3df082e6",
 	"name": "I'm Outta Here!",
 	"type": "feature",
 	"img": "icons/magic/air/air-smoke-casting.webp",
@@ -44,7 +44,8 @@
 		"description": "<p>When an ally within 4 spaces is crit, you may turn invisible until the end of your next turn and then move up to half your speed for free. </p>",
 		"featureType": "class",
 		"class": "cheat",
-		"group": "underhanded-abilities"
+		"group": "underhanded-abilities",
+		"gainedAtLevel": 4
 	},
 	"effects": [],
 	"flags": {},

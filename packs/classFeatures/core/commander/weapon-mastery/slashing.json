@@ -35,10 +35,11 @@
 		"description": "<p>Your attacks with slashing weapons cannot miss unarmored enemies. </p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "weapon-mastery"
+		"group": "weapon-mastery",
+		"gainedAtLevel": 6
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "9548936586e677f6",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

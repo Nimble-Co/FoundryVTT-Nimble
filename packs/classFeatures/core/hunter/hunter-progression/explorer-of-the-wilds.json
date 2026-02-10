@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "b8b11dde028cc7df",
 	"name": "Explorer of the Wilds",
 	"type": "feature",
 	"img": "icons/commodities/treasure/dreamcatcher-blue.webp",
@@ -48,7 +48,8 @@
 		"description": "<p>+2 speed; gain a climbing speed.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "hunter-progression"
+		"group": "hunter-progression",
+		"gainedAtLevel": 4
 	},
 	"effects": [],
 	"flags": {},

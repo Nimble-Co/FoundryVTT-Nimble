@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "249bc0cebeccd302",
 	"name": "Jack of All Trades",
 	"type": "feature",
 	"img": "icons/tools/smithing/anvil.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>When you Safe Rest, you may move a skill point as if you just leveled up.</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "songweaver-progression"
+		"group": "songweaver-progression",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
 	"flags": {},

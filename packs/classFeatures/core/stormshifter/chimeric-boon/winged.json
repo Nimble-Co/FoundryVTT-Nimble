@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "4203ea7551825792",
 	"name": "Winged",
 	"type": "feature",
 	"img": "icons/creatures/abilities/wing-batlike-white-blue.webp",
@@ -43,7 +43,8 @@
 		"description": "<p>Gain a flying speed. Forced movement moves you twice as far while flying.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "chimeric-boon"
+		"group": "chimeric-boon",
+		"gainedAtLevel": 6
 	},
 	"effects": [],
 	"flags": {},

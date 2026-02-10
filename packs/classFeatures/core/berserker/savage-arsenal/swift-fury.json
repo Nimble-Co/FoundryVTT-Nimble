@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7a2072a1eb2a6128",
 	"name": "Swift Fury",
 	"type": "feature",
 	"img": "icons/weapons/axes/axe-double-short-orange.webp",
@@ -36,7 +36,8 @@
 		},
 		"description": "<p>Whenever you gain one or more Fury Dice, move up to DEX spaces for free, ignoring difficult terrain.</p>",
 		"featureType": "class",
-		"class": ""
+		"class": "",
+		"gainedAtLevel": 4
 	},
 	"effects": [],
 	"flags": {},

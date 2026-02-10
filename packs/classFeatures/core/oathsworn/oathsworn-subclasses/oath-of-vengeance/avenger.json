@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "1ab92542c532c8c2",
 	"name": "Avenger",
 	"type": "feature",
 	"img": "icons/skills/melee/strike-flail-destructive-yellow.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Whenever you or an ally within your aura gain any Wounds, change up to that many Judgment Dice to their max. Then, move up to half your speed for free.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "oath-of-vengeance"
+		"group": "oath-of-vengeance",
+		"gainedAtLevel": 7,
+		"subclass": "Oath of Vengeance"
 	},
 	"effects": [],
 	"flags": {},

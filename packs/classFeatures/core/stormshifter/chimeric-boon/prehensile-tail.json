@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "4203ea7551825792",
 	"name": "Prehensile Tail",
 	"type": "feature",
 	"img": "icons/creatures/abilities/tail-swipe-green.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Creatures you hit in melee that are your size or smaller are Grappled. If you hit a larger creature, you may move with it when it moves.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "chimeric-boon"
+		"group": "chimeric-boon",
+		"gainedAtLevel": 6
 	},
 	"effects": [],
 	"flags": {},

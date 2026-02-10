@@ -8,6 +8,19 @@ const schema = () => ({
 	featureType: new fields.StringField({ required: true, nullable: false, initial: 'class' }),
 	class: new fields.StringField({ required: true, nullable: false, initial: '' }),
 	group: new fields.StringField({ required: true, nullable: false, initial: '' }),
+	subclass: new fields.StringField({
+		required: false,
+		nullable: true,
+		initial: null,
+	}),
+	gainedAtLevel: new fields.NumberField({
+		required: false,
+		nullable: true,
+		initial: null,
+		integer: true,
+		min: 1,
+		max: 20,
+	}),
 });
 
 declare namespace NimbleFeatureData {
@@ -30,6 +43,10 @@ class NimbleFeatureData extends NimbleBaseItemData<
 	declare class: string;
 
 	declare group: string;
+
+	declare subclass: string | null;
+
+	declare gainedAtLevel: number | null;
 
 	declare activation: {
 		showDescription: boolean;

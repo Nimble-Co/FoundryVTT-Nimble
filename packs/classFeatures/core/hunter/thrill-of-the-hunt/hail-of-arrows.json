@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "b8b11dde028cc7df",
 	"name": "Hail of Arrows",
 	"type": "feature",
 	"img": "icons/skills/ranged/arrows-flying-salvo-blue.webp",
@@ -36,7 +36,8 @@
 		"description": "<p><em>(Half range)</em> 2 actions: Shoot all creatures within a 3×3 area. Their speed is halved until the end of their next turn.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "thrill-of-the-hunt"
+		"group": "thrill-of-the-hunt",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
 	"flags": {},

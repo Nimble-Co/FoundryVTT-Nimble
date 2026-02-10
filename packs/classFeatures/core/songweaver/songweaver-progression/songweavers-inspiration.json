@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "249bc0cebeccd302",
 	"name": "Songweaver's Inspiration",
 	"type": "feature",
 	"img": "icons/tools/instruments/lute-gold-brown.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>(2×WIL times/Safe Rest) Free Reaction: Allow an ally to reroll a single die related to an attack or save (must keep either result).</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "songweaver-progression"
+		"group": "songweaver-progression",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
 	"flags": {},

@@ -49,10 +49,12 @@
 		"description": "<p>You are proficient with plate armor.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "champion-of-the-bulwark"
+		"group": "champion-of-the-bulwark",
+		"gainedAtLevel": 3,
+		"subclass": "Champion of the Bulwark"
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "ef7bbbb1a86323cd",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

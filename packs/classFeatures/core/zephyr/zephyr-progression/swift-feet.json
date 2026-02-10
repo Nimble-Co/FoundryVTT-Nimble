@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c0b495898c491076",
 	"name": "Swift Feet",
 	"type": "feature",
 	"img": "icons/skills/movement/feet-winged-sandals-tan.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>While unarmored, gain +2 speed and +LVL Initiative.</p><hr><p>Level 9: +2 additional speed while unarmored.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "zephyr-progression"
+		"group": "zephyr-progression",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
 	"flags": {},

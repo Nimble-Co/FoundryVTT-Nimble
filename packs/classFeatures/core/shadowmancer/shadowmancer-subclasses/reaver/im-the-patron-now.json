@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7dec83da1812d369",
 	"name": "I'm the Patron Now!",
 	"type": "feature",
 	"img": "icons/creatures/unholy/demons-horned-glowing-pink.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Summon 2 shadow minions for free when you roll Initiative.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "reaver"
+		"group": "reaver",
+		"gainedAtLevel": 15,
+		"subclass": "Reaver"
 	},
 	"effects": [],
 	"flags": {},

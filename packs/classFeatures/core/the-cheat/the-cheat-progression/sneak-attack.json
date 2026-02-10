@@ -35,10 +35,11 @@
 		"description": "<p><em>(1/turn)</em> When you crit, deal additional damage.</p><hr><p>Level 1: 1d6</p><p>Level 3: 1d8</p><p>Level 7: 2d8</p><p>Level 9: 2d10</p><p>Level 11: 2d12</p><p>Level 15: 2d20</p><p>Level 17: 3d20 </p>",
 		"featureType": "class",
 		"class": "the-cheat",
-		"group": "the-cheat-progression"
+		"group": "the-cheat-progression",
+		"gainedAtLevel": 1
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "9207a06f3df082e6",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

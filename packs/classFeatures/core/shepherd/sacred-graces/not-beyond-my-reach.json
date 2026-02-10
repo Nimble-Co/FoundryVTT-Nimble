@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "00526c7e25c0bf82",
 	"name": "Not Beyond MY Reach",
 	"type": "feature",
 	"img": "icons/magic/life/cross-embers-glow-yellow-purple.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>You may target creatures who have been dead less than 1 round for healing. For every 10 HP a dead creature is healed this way, you may have them recover 1 Wound instead (you must heal at least 1 Wound to revive them).</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "sacred-grace"
+		"group": "sacred-grace",
+		"gainedAtLevel": 5
 	},
 	"effects": [],
 	"flags": {},

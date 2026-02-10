@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "e914d4e3f1941fbb",
 	"name": "Pack Hunter",
 	"type": "feature",
 	"img": "icons/creatures/mammals/wolf-howl-moon-forest-blue.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Whenever you mark a creature, you may also mark another creature within 6 spaces of them for free.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "keeper-of-the-shadowpath"
+		"group": "keeper-of-the-shadowpath",
+		"gainedAtLevel": 11,
+		"subclass": "Keeper of the Shadowpath"
 	},
 	"effects": [],
 	"flags": {},

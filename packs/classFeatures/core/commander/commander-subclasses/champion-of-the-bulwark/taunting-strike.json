@@ -35,10 +35,12 @@
 		"description": "<p>(1/turn) You may Taunt a creature you hit until the end of their next turn.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "champion-of-the-bulwark"
+		"group": "champion-of-the-bulwark",
+		"gainedAtLevel": 11,
+		"subclass": "Champion of the Bulwark"
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "ef7bbbb1a86323cd",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

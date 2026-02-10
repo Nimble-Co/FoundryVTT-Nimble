@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c0b495898c491076",
 	"name": "Unyielding Resolve",
 	"type": "feature",
 	"img": "icons/magic/earth/strike-fist-stone.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Ignore the first Wound you would suffer each encounter (when-Wounded abilities, such as Kinetic Momentum, still trigger).</p><hr><p>Level 10: First 2 wounds per encounter</p><p>Level 17: First 3 wounds per encounter, and you have advantage on STR saves while Dying.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "zephyr-progression"
+		"group": "zephyr-progression",
+		"gainedAtLevel": 4
 	},
 	"effects": [],
 	"flags": {},

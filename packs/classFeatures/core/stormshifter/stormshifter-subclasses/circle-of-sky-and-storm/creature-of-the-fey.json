@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "9849ad388e421035",
 	"name": "Creature of the Fey",
 	"type": "feature",
 	"img": "icons/magic/air/air-wave-gust-smoke-yellow.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>You may cast spells while Beastshifted.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "circle-of-sky-and-storm"
+		"group": "circle-of-sky-and-storm",
+		"gainedAtLevel": 3,
+		"subclass": "Circle of Sky & Storm"
 	},
 	"effects": [],
 	"flags": {},

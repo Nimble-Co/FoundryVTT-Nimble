@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "9a8d746b8e010522",
 	"name": "Chaos Lash",
 	"type": "feature",
 	"img": "icons/magic/control/energy-stream-link-large-teal.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>(1/encounter) Reaction (when an enemy moves adjacent to you): They are pushed back 2 spaces, and on a failed WIL save, knocked Prone as well. Invoke Chaos.</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "invoker-of-chaos"
+		"group": "invoker-of-chaos",
+		"gainedAtLevel": 7,
+		"subclass": "Invoker of Chaos"
 	},
 	"effects": [],
 	"flags": {},

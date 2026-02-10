@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "317347ba2e5d174e",
 	"name": "Low Blow",
 	"type": "feature",
 	"img": "icons/skills/melee/strike-sword-stabbed-brown.webp",
@@ -51,7 +51,9 @@
 		"description": "<p>When you Sneak Attack, you may spend 2 additional actions to Incapacitate your target for their next turn on a failed STR save (DC 10+INT). Save or fail, they are Taunted by you until you drop to 0 HP. </p>",
 		"featureType": "class",
 		"class": "the-cheat",
-		"group": "tools-of-the-scoundrel"
+		"group": "tools-of-the-scoundrel",
+		"gainedAtLevel": 3,
+		"subclass": "Tools of the Scoundrel"
 	},
 	"effects": [],
 	"flags": {},

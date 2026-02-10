@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "8305bc76ead2700d",
 	"name": "Merciful Healing",
 	"type": "feature",
 	"img": "icons/magic/life/crosses-trio-red.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>When an effect caused by you heals a Dying creature, they are healed for twice as much. (1/round) Your Lifebinding Spirit can act for free while you are Dying.</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "luminary-of-mercy"
+		"group": "luminary-of-mercy",
+		"gainedAtLevel": 3,
+		"subclass": "Luminary of Mercy"
 	},
 	"effects": [],
 	"flags": {},

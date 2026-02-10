@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7e6f6ce0e41bf22b",
 	"name": "Echoed Agony",
 	"type": "feature",
 	"img": "icons/skills/melee/spear-tips-quintuple-orange.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Your Swiftstrike can also target a 3rd creature within Reach 4.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "way-of-pain"
+		"group": "way-of-pain",
+		"gainedAtLevel": 15,
+		"subclass": "Way of Pain"
 	},
 	"effects": [],
 	"flags": {},

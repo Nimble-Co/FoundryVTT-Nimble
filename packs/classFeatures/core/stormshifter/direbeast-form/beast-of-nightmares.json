@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "4203ea7551825792",
 	"name": "Beast of Nightmares",
 	"type": "feature",
 	"img": "icons/creatures/invertebrates/spider-skull-green.webp",
@@ -36,7 +36,8 @@
 		"description": "<p><strong>(Tiny)</strong>. Transform into any Tiny beast or insect (provided it is horrible). Gain the Sting attack and Silent But Deadly. </p><p><strong>Sting</strong>. (1/round) Action: Reach: 0. 1d4 piercing + 3×LVL acid damage (ignoring armor), on crit: 4×LVL damage instead. </p><p><strong>Silent But Deadly</strong>. Speed: 2. You cannot Defend or Interpose. Attackers cannot target you until you become conspicuous (e.g., being seen transforming or attacking).</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "direbeast-form"
+		"group": "direbeast-form",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
 	"flags": {},

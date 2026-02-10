@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c0b495898c491076",
 	"name": "I Jump On His Back!",
 	"type": "feature",
 	"img": "icons/skills/movement/arrow-upward-yellow.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>While moving with your Windstep, if you move into the space of a creature your size or larger, you may jump onto its back. While on a creature this way, gain advantage on melee attacks against it, and any damage you avoid is dealt to it instead.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "martial-arts-ability"
+		"group": "martial-arts-ability",
+		"gainedAtLevel": 4
 	},
 	"effects": [],
 	"flags": {},

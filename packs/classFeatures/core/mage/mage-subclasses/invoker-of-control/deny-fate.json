@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "db1b1e86f71126fe",
 	"name": "Deny Fate",
 	"type": "feature",
 	"img": "icons/commodities/currency/coin-engraved-skull-gold.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Whenever you miss with a spell or an effect you cause is saved against, you MUST Demand Control.</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "invoker-of-control"
+		"group": "invoker-of-control",
+		"gainedAtLevel": 3,
+		"subclass": "Invoker of Control"
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "8305bc76ead2700d",
 	"name": "Life is Beautiful",
 	"type": "feature",
 	"img": "icons/magic/nature/plant-sprout-hand-flower-pink.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Harmless and lovely creatures such as butterflies and humming birds are attracted to your presence and often follow you. Flowers bloom more vibrantly in your presence.</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "luminary-of-mercy"
+		"group": "luminary-of-mercy",
+		"gainedAtLevel": 3,
+		"subclass": "Luminary of Mercy"
 	},
 	"effects": [],
 	"flags": {},

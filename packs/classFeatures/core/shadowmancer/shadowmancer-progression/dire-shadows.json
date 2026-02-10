@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "6d61edc0313632f0",
 	"name": "Dire Shadows",
 	"type": "feature",
 	"img": "icons/creatures/unholy/demon-horned-black-yellow.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Attacks against your shadow minions are made with disadvantage. They take no damage from successful saves.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "shadowmancer-progression"
+		"group": "shadowmancer-progression",
+		"gainedAtLevel": 17
 	},
 	"effects": [],
 	"flags": {},

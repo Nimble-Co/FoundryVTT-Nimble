@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "1e1a739466fd09a6",
 	"name": "Master of Forms",
 	"type": "feature",
 	"img": "icons/creatures/abilities/dragon-breath-purple.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Your shapeshift forms can have 2 Chimeric Boons at a time.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "circle-of-fang-and-claw"
+		"group": "circle-of-fang-and-claw",
+		"gainedAtLevel": 11,
+		"subclass": "Circle of Fang & Claw"
 	},
 	"effects": [],
 	"flags": {},

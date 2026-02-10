@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a94d928d1a8ed9d5",
 	"name": "Aura of Refuge",
 	"type": "feature",
 	"img": "icons/equipment/shield/heater-steel-crystal-red.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Your shields gain +WIL armor and count as your spellcasting focus. Gain an aura with a Reach of 4; you can Interpose for an ally anywhere within your aura.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "oath-of-refuge"
+		"group": "oath-of-refuge",
+		"gainedAtLevel": 3,
+		"subclass": "Oath of Refuge"
 	},
 	"effects": [],
 	"flags": {},

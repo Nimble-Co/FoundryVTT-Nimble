@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "650e4f740f3717ea",
 	"name": "Amidst All This Commotion",
 	"type": "feature",
 	"img": "icons/magic/air/fog-gas-smoke-blue-gray.webp",
@@ -44,7 +44,9 @@
 		"description": "<p>If a creature dies while you Sneak Attack them, you may turn Invisible until you attack again or until the beginning of your next turn.</p>",
 		"featureType": "class",
 		"class": "the-cheat",
-		"group": "tools-of-the-silent-blade"
+		"group": "tools-of-the-silent-blade",
+		"gainedAtLevel": 3,
+		"subclass": "Tools of the Silent Blade"
 	},
 	"effects": [],
 	"flags": {},

@@ -35,10 +35,11 @@
 		"description": "<p><em>(1/turn)</em> When you hit a Distracted target with a melee attack, you may change the Primary Die roll to whatever you like (changing it to the max value counts as a crit). </p><hr><p><span style=\"color: rgb(231, 209, 177); font-family: &#x27;Roboto Condensed&#x27;, sans-serif; font-size: 0.833rem; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(25, 24, 33); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none\">Distracted. A target is Distracted if it is adjacent to or Taunted by an ally, or if it cannot see you.</span></p>",
 		"featureType": "class",
 		"class": "the-cheat",
-		"group": "the-cheat-progression"
+		"group": "the-cheat-progression",
+		"gainedAtLevel": 1
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "9207a06f3df082e6",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

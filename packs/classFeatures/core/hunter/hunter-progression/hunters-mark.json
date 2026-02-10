@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "b8b11dde028cc7df",
 	"name": "Hunter's Mark",
 	"type": "feature",
 	"img": "icons/weapons/bows/shortbow-recurve-yellow.webp",
@@ -36,7 +36,8 @@
 		"description": "<p><strong>Action:</strong> A creature you can see is marked as your quarry for 1 day (or until you mark another creature). It can't be hidden from you, and your attacks against it gain your choice of advantage OR +LVL damage (choose before each attack).</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "hunter-progression"
+		"group": "hunter-progression",
+		"gainedAtLevel": 1
 	},
 	"effects": [],
 	"flags": {},

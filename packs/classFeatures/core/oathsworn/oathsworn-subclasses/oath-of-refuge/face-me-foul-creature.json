@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a94d928d1a8ed9d5",
 	"name": "Face Me, Foul Creature!",
 	"type": "feature",
 	"img": "icons/magic/control/debuff-energy-hold-yellow.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>When you Interpose, the attacking enemy is also Taunted by you until the end of their next turn.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "oath-of-refuge"
+		"group": "oath-of-refuge",
+		"gainedAtLevel": 7,
+		"subclass": "Oath of Refuge"
 	},
 	"effects": [],
 	"flags": {},

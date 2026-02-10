@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c0b495898c491076",
 	"name": "Iron Defense",
 	"type": "feature",
 	"img": "icons/skills/melee/maneuver-sword-katana-yellow.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Your armor equals DEX+STR as long as you are unarmored.</p><hr><p>Level 13: Your armor is doubled while unarmored.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "zephyr-progression"
+		"group": "zephyr-progression",
+		"gainedAtLevel": 1
 	},
 	"effects": [],
 	"flags": {},

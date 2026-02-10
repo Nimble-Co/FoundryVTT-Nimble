@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "317347ba2e5d174e",
 	"name": "Escape Plan",
 	"type": "feature",
 	"img": "icons/magic/perception/shadow-stealth-eyes-purple.webp",
@@ -44,7 +44,9 @@
 		"description": "<p><em>(1/Safe Rest)</em> When you would drop to 0 HP or gain a Wound, you don't. Instead, you turn Invisible for 1 minute or until you attack. </p>",
 		"featureType": "class",
 		"class": "the-cheat",
-		"group": "tools-of-the-scoundrel"
+		"group": "tools-of-the-scoundrel",
+		"gainedAtLevel": 11,
+		"subclass": "Tools of the Scoundrel"
 	},
 	"effects": [],
 	"flags": {},

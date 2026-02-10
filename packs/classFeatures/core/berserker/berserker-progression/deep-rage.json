@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7a2072a1eb2a6128",
 	"name": "DEEP RAGE",
 	"type": "feature",
 	"img": "icons/skills/wounds/blood-cells-red.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Dropping to 0 HP does not cause your Rage to end.</p>",
 		"featureType": "class",
 		"class": "berserker",
-		"group": "berserker-progression"
+		"group": "berserker-progression",
+		"gainedAtLevel": 18
 	},
 	"effects": [],
 	"flags": {},

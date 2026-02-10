@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "4203ea7551825792",
 	"name": "Climber",
 	"type": "feature",
 	"img": "icons/commodities/claws/claw-bear-brown.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Can walk across walls and ceilings; ignores difficult terrain.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "chimeric-boon"
+		"group": "chimeric-boon",
+		"gainedAtLevel": 6
 	},
 	"effects": [],
 	"flags": {},

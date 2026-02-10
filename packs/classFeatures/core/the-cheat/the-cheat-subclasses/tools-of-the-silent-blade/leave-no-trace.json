@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "650e4f740f3717ea",
 	"name": "Leave No Trace",
 	"type": "feature",
 	"img": "icons/creatures/abilities/cougar-pounce-stalk-black.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Advantage on Stealth checks when you are at full health. </p>",
 		"featureType": "class",
 		"class": "the-cheat",
-		"group": "tools-of-the-silent-blade"
+		"group": "tools-of-the-silent-blade",
+		"gainedAtLevel": 3,
+		"subclass": "Tools of the Silent Blade"
 	},
 	"effects": [],
 	"flags": {},

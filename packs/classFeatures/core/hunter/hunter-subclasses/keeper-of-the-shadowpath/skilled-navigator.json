@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "e914d4e3f1941fbb",
 	"name": "Skilled Navigator",
 	"type": "feature",
 	"img": "icons/environment/wilderness/terrain-river-road-gray.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>You cannot become lost by nonmagical means.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "keeper-of-the-shadowpath"
+		"group": "keeper-of-the-shadowpath",
+		"gainedAtLevel": 3,
+		"subclass": "Keeper of the Shadowpath"
 	},
 	"effects": [],
 	"flags": {},

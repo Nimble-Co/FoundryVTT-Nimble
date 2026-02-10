@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "b8b11dde028cc7df",
 	"name": "Keen Eye, Steady Hand",
 	"type": "feature",
 	"img": "icons/creatures/eyes/humanoid-single-blind.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Add WIL to your ranged weapon damage.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "hunter-progression"
+		"group": "hunter-progression",
+		"gainedAtLevel": 10
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "6d61edc0313632f0",
 	"name": "Hungering Shadows",
 	"type": "feature",
 	"img": "icons/magic/unholy/hand-claw-glow-orange.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Whenever one of your shadows would crit, the next tiered spell you cast this encounter does not cost a use of Pilfered Power.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "greater-invocations"
+		"group": "greater-invocations",
+		"gainedAtLevel": 4
 	},
 	"effects": [],
 	"flags": {},

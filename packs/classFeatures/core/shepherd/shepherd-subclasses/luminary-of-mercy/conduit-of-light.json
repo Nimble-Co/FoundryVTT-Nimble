@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "8305bc76ead2700d",
 	"name": "Conduit of Light",
 	"type": "feature",
 	"img": "icons/magic/light/beam-horizon-strike-yellow.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>When an effect caused by you would heal HP, you may expend 1 use of Searing Light to heal (or damage, ignoring armor) another target within 6 spaces of yourself for the same amount.</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "luminary-of-mercy"
+		"group": "luminary-of-mercy",
+		"gainedAtLevel": 7,
+		"subclass": "Luminary of Mercy"
 	},
 	"effects": [],
 	"flags": {},

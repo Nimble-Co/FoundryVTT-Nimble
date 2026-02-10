@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "249bc0cebeccd302",
 	"name": "Song of Rest",
 	"type": "feature",
 	"img": "icons/tools/instruments/flute-simple-wood.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>(1/ day) Whenever you Field Rest, you may play a song and allow anyone who spends Hit Dice to heal additional HP equal to your WIL.</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "songweaver-progression"
+		"group": "songweaver-progression",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
 	"flags": {},

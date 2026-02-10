@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a94d928d1a8ed9d5",
 	"name": "Divine Grace",
 	"type": "feature",
 	"img": "icons/magic/holy/prayer-hands-glowing-yellow.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>You are resistant to all damage while Interposing.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "oath-of-refuge"
+		"group": "oath-of-refuge",
+		"gainedAtLevel": 15,
+		"subclass": "Oath of Refuge"
 	},
 	"effects": [],
 	"flags": {},

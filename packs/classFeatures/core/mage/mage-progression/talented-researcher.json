@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "b51f49b6c2c5ac78",
 	"name": "Talented Researcher",
 	"type": "feature",
 	"img": "icons/sundries/books/book-embossed-jewel-gold-purple.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Gain advantage on Arcana or Lore checks when you have access to a large amount of books and time to study them.</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "mage-progression"
+		"group": "mage-progression",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "b8b11dde028cc7df",
 	"name": "Heavy Shot",
 	"type": "feature",
 	"img": "icons/skills/ranged/arrow-flying-white-blue.webp",
@@ -36,7 +36,8 @@
 		"description": "<p><em>(Half range)</em> Action: Attack with a ranged weapon and push your target: 4 spaces for a small creature, 2 for a medium creature, 1 for a large creature.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "thrill-of-the-hunt"
+		"group": "thrill-of-the-hunt",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
 	"flags": {},

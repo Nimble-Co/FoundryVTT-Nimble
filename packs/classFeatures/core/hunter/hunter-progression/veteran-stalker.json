@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "b8b11dde028cc7df",
 	"name": "Veteran Stalker",
 	"type": "feature",
 	"img": "icons/magic/perception/silhouette-stealth-shadow.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Gain a Thrill of the Hunt charge whenever you are first Bloodied in an encounter and for every Wound you gain.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "hunter-progression"
+		"group": "hunter-progression",
+		"gainedAtLevel": 10
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c0b495898c491076",
 	"name": "Burst of Speed",
 	"type": "feature",
 	"img": "icons/skills/melee/hand-grip-staff-blue.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>When you roll Initiative, gain DEX Bursts of Speed to use during that encounter.</p><p>(1/turn) You may spend 1 Burst of Speed to use any of the following maneuvers for free:</p><p>• <strong>Slipstream</strong>. Defend, and the attack misses.</p><p>• <strong>Whirling Defense</strong>. Defend and apply your armor to every attack this round.</p><p>• <strong>Swiftstrike</strong>. Attack on your turn, and ignore disadvantage from Rushed Attacks.</p><p>• <strong>Windstep</strong>. Move on your turn, ignoring difficult terrain.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "zephyr-progression"
+		"group": "zephyr-progression",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
 	"flags": {},

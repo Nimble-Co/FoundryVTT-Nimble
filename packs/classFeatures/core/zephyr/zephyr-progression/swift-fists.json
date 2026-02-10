@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c0b495898c491076",
 	"name": "Swift Fists",
 	"type": "feature",
 	"img": "icons/skills/melee/unarmed-punch-fist.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Your unarmed strikes are not subject to disadvantage imposed by Rushed Attacks (see pg. 13 of the Core Rules), and their damage is 1d4+STR.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "zephyr-progression"
+		"group": "zephyr-progression",
+		"gainedAtLevel": 2
 	},
 	"effects": [],
 	"flags": {},

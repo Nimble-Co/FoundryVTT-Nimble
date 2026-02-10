@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "62cad863cd5952d9",
 	"name": "I Have the High Ground",
 	"type": "feature",
 	"img": "icons/environment/wilderness/cave-entrance-vulcano.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>When you roll Initiative or gain one or more Thrill of the Hunt charges, move up to half your speed for free, ignoring difficult terrain.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "keeper-of-the-wildheart"
+		"group": "keeper-of-the-wildheart",
+		"gainedAtLevel": 3,
+		"subclass": "Keeper of the Wildheart"
 	},
 	"effects": [],
 	"flags": {},

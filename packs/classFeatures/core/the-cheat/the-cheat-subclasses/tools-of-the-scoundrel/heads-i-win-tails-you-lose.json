@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "317347ba2e5d174e",
 	"name": "Heads I Win, Tails You Lose",
 	"type": "feature",
 	"img": "icons/commodities/currency/coin-inset-crown-gold.webp",
@@ -36,7 +36,9 @@
 		"description": "<p><em>(1/encounter)</em> Attacks you make this round don't miss, you crit on 1 less than normally needed, and you gain LVL temp HP. </p>",
 		"featureType": "class",
 		"class": "the-cheat",
-		"group": "tools-of-the-scoundrel"
+		"group": "tools-of-the-scoundrel",
+		"gainedAtLevel": 15,
+		"subclass": "Tools of the Scoundrel"
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "249bc0cebeccd302",
 	"name": "Linos, the Everfriendly",
 	"type": "feature",
 	"img": "icons/creatures/magical/humanoid-giant-forest-blue.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Summon a legendary flying (but friendly) creature to take you and your party wherever you need to go. He may request a very large amount of food as payment.</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "a-people-person"
+		"group": "a-people-person",
+		"gainedAtLevel": 5
 	},
 	"effects": [],
 	"flags": {},

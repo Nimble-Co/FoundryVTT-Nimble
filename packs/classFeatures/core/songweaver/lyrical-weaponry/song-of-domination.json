@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "249bc0cebeccd302",
 	"name": "Song of Domination",
 	"type": "feature",
 	"img": "icons/magic/control/debuff-chains-shackles-movement-blue.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>(1/encounter) 2 actions: Play a bewitching tune, and all enemies within 6 spaces who hear it must make a WIL save. If they fail, you move them up to 6 spaces in any direction, and they cannot move on their next turn.</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "lyrical-weaponry"
+		"group": "lyrical-weaponry",
+		"gainedAtLevel": 4
 	},
 	"effects": [],
 	"flags": {},

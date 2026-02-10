@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "1e1a739466fd09a6",
 	"name": "Storm Wake",
 	"type": "feature",
 	"img": "icons/magic/lightning/explosion-stone-smoke-teal.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>(1/encounter) Action: Spend 3 mana to shift into a Beast of the Pack, then teleport in a straight line up to 12 spaces away, unerringly dealing WIL d8 lightning damage to any creatures you choose adjacent to your path.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "circle-of-fang-and-claw"
+		"group": "circle-of-fang-and-claw",
+		"gainedAtLevel": 7,
+		"subclass": "Circle of Fang & Claw"
 	},
 	"effects": [],
 	"flags": {},

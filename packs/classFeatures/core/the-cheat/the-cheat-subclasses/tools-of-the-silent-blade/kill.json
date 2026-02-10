@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "650e4f740f3717ea",
 	"name": "KILL",
 	"type": "feature",
 	"img": "icons/skills/melee/strike-dagger-skull-white.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>When you crit an enemy with fewer max HP than you, it dies. </p>",
 		"featureType": "class",
 		"class": "the-cheat",
-		"group": "tools-of-the-silent-blade"
+		"group": "tools-of-the-silent-blade",
+		"gainedAtLevel": 15,
+		"subclass": "Tools of the Silent Blade"
 	},
 	"effects": [],
 	"flags": {},

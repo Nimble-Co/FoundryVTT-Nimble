@@ -58,10 +58,11 @@
 		"description": "<p>When you hit, push a Medium creature STR spaces and deal extra damage equal to a roll of your Combat Die. A Small creature is pushed twice as far; Large, pushed half as far (round down).</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "combat-tactics"
+		"group": "combat-tactics",
+		"gainedAtLevel": 4
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "9548936586e677f6",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

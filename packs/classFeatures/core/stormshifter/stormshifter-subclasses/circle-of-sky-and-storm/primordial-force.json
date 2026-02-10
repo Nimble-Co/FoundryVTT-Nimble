@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "9849ad388e421035",
 	"name": "Primordial Force",
 	"type": "feature",
 	"img": "icons/magic/nature/meteorite-purple.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Spending 2+ mana on a spell grants an additional effect:</p><p>• <strong>Ice</strong>. Gain WIL temp HP.</p><p>• <strong>Lightning</strong>. Deal additional damage equal to your WIL.</p><p>• <strong>Radiant</strong>. You may heal a creature within 6 spaces WIL HP.</p><p>• <strong>Wind</strong>. Gain a flying speed this turn. Move up to 6 spaces for free.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "circle-of-sky-and-storm"
+		"group": "circle-of-sky-and-storm",
+		"gainedAtLevel": 11,
+		"subclass": "Circle of Sky & Storm"
 	},
 	"effects": [],
 	"flags": {},

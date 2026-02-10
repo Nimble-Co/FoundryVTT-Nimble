@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "4203ea7551825792",
 	"name": "Beast of the Sea",
 	"type": "feature",
 	"img": "icons/creatures/fish/fish-marlin-swordfight-blue.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Can move, breathe, and fight underwater without penalty.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "chimeric-boon"
+		"group": "chimeric-boon",
+		"gainedAtLevel": 6
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "ae3c2d3dc5e990ab",
 	"name": "Savage Awareness",
 	"type": "feature",
 	"img": "icons/commodities/materials/slime-red.webp",
@@ -36,7 +36,9 @@
 		"description": "<p><span style=\"color: rgb(231, 209, 177); font-family: &#x27;Roboto Condensed&#x27;, sans-serif; font-size: 0.833rem; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(25, 24, 33); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none\">Advantage on Perception checks to notice or track down blood. Blindsight 2 while Raging: you ignore the Blinded condition and can see through darkness and Invisibility within that Range.</span></p>",
 		"featureType": "class",
 		"class": "berserker",
-		"group": "path-of-the-red-mist"
+		"group": "path-of-the-red-mist",
+		"gainedAtLevel": 3,
+		"subclass": "Path of the Red Mist"
 	},
 	"effects": [],
 	"flags": {},

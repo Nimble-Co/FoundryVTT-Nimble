@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7e6f6ce0e41bf22b",
 	"name": "Pain Sharpens the Mind",
 	"type": "feature",
 	"img": "icons/skills/wounds/anatomy-organ-brain-pink-red.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>While you are Bloodied, gain advantage on the first attack you make each turn, and on all saves.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "way-of-pain"
+		"group": "way-of-pain",
+		"gainedAtLevel": 11,
+		"subclass": "Way of Pain"
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "317347ba2e5d174e",
 	"name": "Pocket Sand",
 	"type": "feature",
 	"img": "icons/containers/bags/coinpouch-simple-leather-brown.webp",
@@ -44,7 +44,9 @@
 		"description": "<p><em>(2/encounter—you've got to collect more sand!)</em> When you Defend against a melee attack, Blind the attacker until the start of their next turn and force them to reroll the attack (Blinded creatures attack with disadvantage). [M]</p>",
 		"featureType": "class",
 		"class": "the-cheat",
-		"group": "tools-of-the-scoundrel"
+		"group": "tools-of-the-scoundrel",
+		"gainedAtLevel": 7,
+		"subclass": "Tools of the Scoundrel"
 	},
 	"effects": [],
 	"flags": {},

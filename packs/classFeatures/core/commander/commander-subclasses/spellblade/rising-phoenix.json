@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "db05900e423cad38",
 	"name": "Rising Phoenix",
 	"type": "feature",
 	"img": "icons/magic/fire/projectile-wave-arrow.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>(Replaces: I Can Do This ALL DAY!)</p><p>(1/encounter) Reaction, (when you would drop to 0 HP): You may expend any number of Hit Dice, set your HP to the sum rolled instead, and deal that much fire damage to each enemy within 2 spaces of you. They gain the Smoldering condition.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "spellblade"
+		"group": "spellblade",
+		"gainedAtLevel": 3,
+		"subclass": "Spellblade"
 	},
 	"effects": [],
 	"flags": {},

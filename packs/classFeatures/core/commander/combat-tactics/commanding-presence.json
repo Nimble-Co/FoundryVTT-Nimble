@@ -87,10 +87,11 @@
 		"description": "<p><strong>Action:</strong> Shout a command up to 2 words long at an enemy. On a failed WIL save (DC 10+STR), they must spend their entire next turn obeying it to the best of their ability, provided it is not obviously harmful to themselves. They then become immune to this effect for 1 day.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "combat-tactics"
+		"group": "combat-tactics",
+		"gainedAtLevel": 4
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "9548936586e677f6",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

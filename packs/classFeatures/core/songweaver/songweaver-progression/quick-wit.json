@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "249bc0cebeccd302",
 	"name": "Quick Wit",
 	"type": "feature",
 	"img": "icons/tools/scribal/ink-quill-pink.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>When you roll Initiative, you may regain 2 spent uses of your Songweaver's Inspiration (these expire at the end of combat if left unused).</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "songweaver-progression"
+		"group": "songweaver-progression",
+		"gainedAtLevel": 5
 	},
 	"effects": [],
 	"flags": {},

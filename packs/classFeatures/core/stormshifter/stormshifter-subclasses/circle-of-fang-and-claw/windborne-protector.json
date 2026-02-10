@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "1e1a739466fd09a6",
 	"name": "Windborne Protector",
 	"type": "feature",
 	"img": "icons/creatures/abilities/bear-roar-bite-brown-green.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>(1/encounter) Reaction: when an enemy attacks, spend 2 mana to shift into a Fearsome Beast. Then you may Interpose from up to 12 spaces away and Defend for free (if you have not yet done so this round).</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "circle-of-fang-and-claw"
+		"group": "circle-of-fang-and-claw",
+		"gainedAtLevel": 3,
+		"subclass": "Circle of Fang & Claw"
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7fec6a94e7504af7",
 	"name": "Medium - Protect Me!",
 	"type": "feature",
 	"img": "icons/creatures/mammals/dog-husky-white-blue.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>When you Defend, your companion may first attack that creature for 1d4+LVL damage.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "beastmaster"
+		"group": "beastmaster",
+		"gainedAtLevel": 3,
+		"subclass": "Beastmaster"
 	},
 	"effects": [],
 	"flags": {},

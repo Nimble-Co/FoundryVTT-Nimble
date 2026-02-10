@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "4203ea7551825792",
 	"name": "Keen Senses",
 	"type": "feature",
 	"img": "icons/commodities/biological/eye-blue-gold.webp",
@@ -36,7 +36,8 @@
 		"description": "<p>Advantage on Perception and Assess checks. Unaffected by Blinded.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "chimeric-boon"
+		"group": "chimeric-boon",
+		"gainedAtLevel": 6
 	},
 	"effects": [],
 	"flags": {},

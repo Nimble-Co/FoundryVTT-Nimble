@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7dec83da1812d369",
 	"name": "My Blood, My Power",
 	"type": "feature",
 	"img": "icons/magic/death/skull-poison-green.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>You may take 1 Wound to cast a tiered spell you know at the highest tier you have unlocked.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "reaver"
+		"group": "reaver",
+		"gainedAtLevel": 11,
+		"subclass": "Reaver"
 	},
 	"effects": [],
 	"flags": {},
