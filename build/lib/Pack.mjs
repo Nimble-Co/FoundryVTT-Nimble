@@ -57,6 +57,11 @@ export default class Pack {
 			return this.#prepareMonsterFolderAssignments();
 		}
 
+		// Boons are grouped by boonType (minor, major, epic).
+		if (this.dirName === 'boons' && this.documentType === 'Item') {
+			return this.#prepareBoonFolderAssignments();
+		}
+
 		// Restrict class-based folder generation to the subclasses pack only.
 		if (this.dirName !== 'subclasses') return new Map();
 
@@ -152,6 +157,55 @@ export default class Pack {
 		}, new Map());
 	}
 
+	#prepareBoonFolderAssignments() {
+		/** @type {any[]} */
+		const boons = [...this.data.values()].filter(
+			(source) =>
+				typeof source?._id === 'string' && typeof source?.system?.boonType === 'string',
+		);
+		if (boons.length === 0) return new Map();
+
+		const statsTemplate = this.#getFolderStatsTemplate(boons);
+		const configuredBoonTypes = ['minor', 'major', 'epic'];
+		const boonTypes = [
+			...new Set(boons.map((source) => source.system.boonType.trim().toLowerCase()).filter(Boolean)),
+		].sort((a, b) => {
+			const aIndex = configuredBoonTypes.indexOf(a);
+			const bIndex = configuredBoonTypes.indexOf(b);
+			if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+			if (aIndex !== -1) return -1;
+			if (bIndex !== -1) return 1;
+			return this.#toDisplayBoonFolderName(a).localeCompare(this.#toDisplayBoonFolderName(b));
+		});
+
+		const foldersByType = boonTypes.reduce((acc, boonType, index) => {
+			const folder = {
+				_id: this.#getBoonFolderId(boonType),
+				_stats: { ...statsTemplate },
+				color: null,
+				description: '',
+				flags: {},
+				folder: null,
+				name: this.#toDisplayBoonFolderName(boonType),
+				sort: index * 10,
+				sorting: 'a',
+				type: this.documentType,
+			};
+
+			acc.set(boonType, folder);
+			return acc;
+		}, new Map());
+
+		this.folderDocuments = [...foldersByType.values()];
+
+		return boons.reduce((acc, source) => {
+			const boonType = source.system.boonType.trim().toLowerCase();
+			const folder = foldersByType.get(boonType);
+			if (folder) acc.set(source._id, folder._id);
+			return acc;
+		}, new Map());
+	}
+
 	#getFolderStatsTemplate(sources) {
 		const sourceStats = sources.find((source) => source?._stats)?._stats;
 		const now = Date.now();
@@ -211,6 +265,32 @@ export default class Pack {
 		return crypto
 			.createHash('sha1')
 			.update(`${this.packId}-folder:${folderKey}`)
+			.digest('hex')
+			.slice(0, 16);
+	}
+
+	#toDisplayBoonFolderName(boonType) {
+		switch (boonType) {
+			case 'minor':
+				return 'Minor Boons';
+			case 'major':
+				return 'Major Boons';
+			case 'epic':
+				return 'Epic Boons';
+			default:
+				return `${boonType
+					.replace(/[-_]+/g, ' ')
+					.split(' ')
+					.filter(Boolean)
+					.map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+					.join(' ')} Boons`;
+		}
+	}
+
+	#getBoonFolderId(boonType) {
+		return crypto
+			.createHash('sha1')
+			.update(`${this.packId}-boon-folder:${boonType}`)
 			.digest('hex')
 			.slice(0, 16);
 	}
