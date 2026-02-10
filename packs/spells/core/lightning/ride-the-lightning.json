@@ -90,7 +90,21 @@
 			"selected": []
 		},
 		"school": "lightning",
-		"tier": 6
+		"tier": 6,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "addDC",
+					"value": 1,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": "sklq8bAt2H8fc8lm",
+					"durationType": null
+				}
+			],
+			"choices": null
+		}
 	},
 	"effects": [],
 	"folder": null,
