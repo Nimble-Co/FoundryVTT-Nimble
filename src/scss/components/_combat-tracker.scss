@@ -196,7 +196,7 @@
 
   &__hp-bar-wrapper {
     position: absolute;
-    top: 93px;
+    top: calc(var(--nimble-combatant-image-size) - 0.0625rem);
     left: 0.375rem;
     width: calc(100% - 0.75rem);
     transform: translateY(-0.625rem);
@@ -225,7 +225,7 @@
   &__image-wrapper {
     --nimble-combatant-controls-overlay-display: none;
 
-    height: 94px;
+    height: var(--nimble-combatant-image-size);
     border-block-end: 1px solid var(--color-border-dark-1);
 
     &--observer {

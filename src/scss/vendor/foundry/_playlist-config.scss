@@ -12,11 +12,11 @@
 
         // Make the prose-mirror editor expand to fill available space
         prose-mirror[name="description"] {
-          height: calc(100% - 40px);
+          height: calc(100% - var(--nimble-editor-toolbar-height));
           display: block;
 
           .editor-container {
-            height: calc(100% - 68px);
+            height: calc(100% - var(--nimble-editor-toolbar-height-lg));
           }
         }
       }

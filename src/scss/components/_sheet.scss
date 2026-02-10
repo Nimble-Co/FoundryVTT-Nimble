@@ -97,7 +97,7 @@
     --nimble-sheet-body-padding-block-start: 0.5rem;
 
     &:not(.minimized) {
-      min-width: 336px;
+      min-width: var(--nimble-sheet-min-width);
       background: transparent;
       border: 0;
       overflow: visible;

@@ -113,4 +113,10 @@
   /** ANIMATION **/
   --nimble-standard-transition: all 0.15s ease-in-out;
   --nimble-slow-transition: all 0.25s ease-in-out;
+
+  /** LAYOUT DIMENSIONS **/
+  --nimble-combatant-image-size: 5.875rem;
+  --nimble-sheet-min-width: 21rem;
+  --nimble-editor-toolbar-height: 2.5rem;
+  --nimble-editor-toolbar-height-lg: 4.25rem;
 }
