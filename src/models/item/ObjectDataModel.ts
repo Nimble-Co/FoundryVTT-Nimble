@@ -11,6 +11,20 @@ const schema = () => ({
 	}),
 	identified: new fields.BooleanField({ required: true, nullable: false, initial: true }),
 	objectType: new fields.StringField({ required: true, initial: '', nullable: false }),
+	price: new fields.SchemaField({
+		value: new fields.NumberField({
+			required: true,
+			initial: 0,
+			nullable: false,
+			min: 0,
+		}),
+		denomination: new fields.StringField({
+			required: true,
+			initial: 'gp',
+			nullable: false,
+			choices: ['cp', 'sp', 'gp'],
+		}),
+	}),
 	quantity: new fields.NumberField({
 		required: true,
 		initial: 1,
@@ -108,6 +122,10 @@ class NimbleObjectData extends NimbleBaseItemData<
 	};
 	declare identified: boolean;
 	declare objectType: string;
+	declare price: {
+		value: number;
+		denomination: 'cp' | 'sp' | 'gp';
+	};
 	declare quantity: number;
 	declare unidentifiedName: string;
 	declare objectSizeType: 'slots' | 'stackable' | 'smallSized';

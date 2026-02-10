@@ -365,6 +365,9 @@
 			"consumable": "Consumables",
 			"misc": "Miscellaneous"
 		},
+		"objectSheet": {
+			"price": "Price"
+		},
 		"prompts": {
 			"changeActorImage": "Change Actor Image",
 			"changeBoonImage": "Change Boon Image",
