@@ -2,7 +2,7 @@ import type { NimbleCharacter } from '../../documents/actor/character.ts';
 import { NimbleBaseRule } from './base.ts';
 
 const PROFICIENCY_TYPE_MAPPING = {
-	armors: 'armorTypes',
+	armor: 'armorTypes',
 	languages: 'languages',
 	weapons: null,
 };
@@ -69,7 +69,10 @@ class GrantProficiencyRule extends NimbleBaseRule<GrantProficiencyRule.Schema> {
 
 		if (!values.length) return;
 		if (values.includes('all')) {
-			values = Object.keys(CONFIG.NIMBLE[PROFICIENCY_TYPE_MAPPING[proficiencyType] ?? []]);
+			const configKey = PROFICIENCY_TYPE_MAPPING[proficiencyType];
+			if (configKey) {
+				values = Object.keys(CONFIG.NIMBLE[configKey]);
+			}
 		}
 
 		foundry.utils.setProperty(
