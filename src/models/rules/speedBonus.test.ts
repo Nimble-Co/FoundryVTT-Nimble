@@ -1,12 +1,79 @@
+import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SpeedBonusRule } from './speedBonus.js';
+
+type MovementType = 'walk' | 'fly' | 'climb' | 'swim' | 'burrow';
+
+interface MockMovement {
+	walk?: number;
+	fly?: number;
+	climb?: number;
+	swim?: number;
+	burrow?: number;
+	[key: string]: number | undefined;
+}
+
+interface MockRollData {
+	attributes: {
+		movement: MockMovement;
+	};
+	level?: number;
+	[key: string]: unknown;
+}
+
+interface MockActor {
+	system: {
+		attributes: {
+			movement: MockMovement;
+		};
+	};
+	getRollData: Mock<() => MockRollData>;
+}
+
+interface MockItem {
+	isEmbedded: boolean;
+	actor: MockActor;
+	name: string;
+	uuid: string;
+}
+
+interface SpeedBonusSourceData {
+	value: string;
+	movementType?: MovementType;
+	disabled: boolean;
+	label: string;
+	id: string;
+	identifier: string;
+	priority: number;
+	predicate: Record<string, unknown>;
+	type: string;
+}
+
+// Type for test instances where we need to access/modify internal properties
+interface SpeedBonusRuleTestInstance extends SpeedBonusRule {
+	value: string;
+	movementType: MovementType;
+	disabled: boolean;
+	label: string;
+}
+
+/**
+ * Helper to set _source on a rule for testing hasExplicitMovementType()
+ */
+function setRuleSource(rule: SpeedBonusRule, source: { movementType?: string }): void {
+	Object.defineProperty(rule, '_source', {
+		value: source,
+		writable: true,
+		configurable: true,
+	});
+}
 
 /**
  * Creates a mock actor with movement attributes
  */
 function createMockActor(
-	movement: Record<string, number> = { walk: 6, fly: 0, climb: 0, swim: 0, burrow: 0 },
-) {
+	movement: MockMovement = { walk: 6, fly: 0, climb: 0, swim: 0, burrow: 0 },
+): MockActor {
 	return {
 		system: {
 			attributes: {
@@ -24,9 +91,9 @@ function createMockActor(
 /**
  * Creates a mock item that contains the rule
  */
-function createMockItem(actor: ReturnType<typeof createMockActor>) {
+function createMockItem(actor: MockActor, isEmbedded = true): MockItem {
 	return {
-		isEmbedded: true,
+		isEmbedded,
 		actor,
 		name: 'Test Item',
 		uuid: 'test-item-uuid',
@@ -39,15 +106,16 @@ function createMockItem(actor: ReturnType<typeof createMockActor>) {
 function createSpeedBonusRule(
 	config: {
 		value: string;
-		movementType?: string;
+		movementType?: MovementType;
 		disabled?: boolean;
 		label?: string;
 	},
-	actor: ReturnType<typeof createMockActor>,
-) {
-	const item = createMockItem(actor);
+	actor: MockActor,
+	itemOptions?: { isEmbedded?: boolean },
+): SpeedBonusRuleTestInstance {
+	const item = createMockItem(actor, itemOptions?.isEmbedded ?? true);
 
-	const sourceData = {
+	const sourceData: SpeedBonusSourceData = {
 		value: config.value,
 		movementType: config.movementType,
 		disabled: config.disabled ?? false,
@@ -60,19 +128,22 @@ function createSpeedBonusRule(
 	};
 
 	// Create the rule with a mock parent
-	const rule = new SpeedBonusRule(sourceData as any, { parent: item as any, strict: false });
+	const rule = new SpeedBonusRule(
+		sourceData as foundry.data.fields.SchemaField.CreateData<SpeedBonusRule['schema']['fields']>,
+		{ parent: item as unknown as foundry.abstract.DataModel.Any, strict: false },
+	) as SpeedBonusRuleTestInstance;
 
 	// Manually set properties since the mock DataModel doesn't do this automatically
-	(rule as any).value = config.value;
-	(rule as any).movementType = config.movementType ?? 'walk';
-	(rule as any).disabled = config.disabled ?? false;
-	(rule as any).label = config.label ?? 'Test Rule';
+	rule.value = config.value;
+	rule.movementType = config.movementType ?? 'walk';
+	rule.disabled = config.disabled ?? false;
+	rule.label = config.label ?? 'Test Rule';
 
 	// Override the _source to control hasExplicitMovementType() behavior
 	if (config.movementType !== undefined) {
-		(rule as any)._source = { movementType: config.movementType };
+		setRuleSource(rule, { movementType: config.movementType });
 	} else {
-		(rule as any)._source = {};
+		setRuleSource(rule, {});
 	}
 
 	// Override the item getter to return our mock
@@ -155,8 +226,7 @@ describe('SpeedBonusRule', () => {
 		});
 
 		it('should use default walk speed of 6 when not set', () => {
-			const actor = createMockActor({} as any);
-			actor.system.attributes.movement = {} as any;
+			const actor = createMockActor({});
 			const rule = createSpeedBonusRule({ value: '2' }, actor);
 
 			rule.prePrepareData();
@@ -198,12 +268,15 @@ describe('SpeedBonusRule', () => {
 		it('should apply generic formula bonus to walk only', () => {
 			const actor = createMockActor({ walk: 6, fly: 0, climb: 0, swim: 0, burrow: 0 });
 			actor.getRollData = vi.fn(() => ({
+				attributes: {
+					movement: actor.system.attributes.movement,
+				},
 				level: 5,
 			}));
 			// Generic formula bonus (no explicit movementType)
 			const rule = createSpeedBonusRule({ value: '@level' }, actor);
 			// Remove movementType from _source to make it generic
-			(rule as any)._source = {};
+			setRuleSource(rule, {});
 
 			rule.afterPrepareData();
 
@@ -298,38 +371,7 @@ describe('SpeedBonusRule', () => {
 	describe('edge cases', () => {
 		it('should handle non-embedded items gracefully', () => {
 			const actor = createMockActor({ walk: 6, fly: 0, climb: 0, swim: 0, burrow: 0 });
-			const item = {
-				isEmbedded: false, // Not embedded
-				actor,
-				name: 'Test Item',
-				uuid: 'test-item-uuid',
-			};
-
-			const rule = new SpeedBonusRule(
-				{
-					value: '2',
-					movementType: 'walk',
-					disabled: false,
-					label: 'Test Rule',
-					id: 'test-rule-id',
-					identifier: '',
-					priority: 1,
-					predicate: {},
-					type: 'speedBonus',
-				} as any,
-				{ parent: item as any, strict: false },
-			);
-
-			// Manually set properties
-			(rule as any).value = '2';
-			(rule as any).movementType = 'walk';
-			(rule as any)._source = {};
-
-			// Override the item getter
-			Object.defineProperty(rule, 'item', {
-				get: () => item,
-				configurable: true,
-			});
+			const rule = createSpeedBonusRule({ value: '2' }, actor, { isEmbedded: false });
 
 			rule.prePrepareData();
 
