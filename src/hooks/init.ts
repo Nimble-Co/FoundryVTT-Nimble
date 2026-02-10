@@ -36,6 +36,7 @@ import { trackableAttributes } from '../documents/actor/trackableAttributes.ts';
 import registerCustomEnrichers from '../enrichers/registerCustomEnrichers.js';
 
 import { NIMBLE_GAME } from '../game.js';
+import registerSystemSettings from '../settings/index.js';
 
 export default function init() {
 	CONFIG.NIMBLE = NIMBLE;
@@ -71,6 +72,7 @@ export default function init() {
 	foundry.helpers.interaction.TooltipManager.implementation.TOOLTIP_ACTIVATION_MS = 100;
 
 	registerCustomEnrichers();
+	registerSystemSettings();
 
 	// Sheet registration types
 	type ActorSheetConstructor = Parameters<
