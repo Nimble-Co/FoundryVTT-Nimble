@@ -11,35 +11,36 @@
 	let searchQuery = $state('');
 	let searchTimeout = $state(null);
 
-	// Filter options
-	const monsterTypeOptions = [
-		{ value: 'all', label: 'All Types' },
-		{ value: 'standard', label: 'Standard' },
-		{ value: 'legendary', label: 'Legendary' },
-		{ value: 'minion', label: 'Minion' },
-	];
+	// Filter options (localized)
+	const { filters } = actorImport;
+	const monsterTypeOptions = $derived([
+		{ value: 'all', label: game.i18n.localize(filters.allTypes) },
+		{ value: 'standard', label: game.i18n.localize(filters.monsterTypes.standard) },
+		{ value: 'legendary', label: game.i18n.localize(filters.monsterTypes.legendary) },
+		{ value: 'minion', label: game.i18n.localize(filters.monsterTypes.minion) },
+	]);
 
-	const roleOptions = [
-		{ value: 'all', label: 'All Roles' },
-		{ value: 'ambusher', label: 'Ambusher' },
-		{ value: 'aoe', label: 'AoE' },
-		{ value: 'controller', label: 'Controller' },
-		{ value: 'defender', label: 'Defender' },
-		{ value: 'melee', label: 'Melee' },
-		{ value: 'ranged', label: 'Ranged' },
-		{ value: 'skirmisher', label: 'Skirmisher' },
-		{ value: 'striker', label: 'Striker' },
-		{ value: 'summoner', label: 'Summoner' },
-		{ value: 'support', label: 'Support' },
-	];
+	const roleOptions = $derived([
+		{ value: 'all', label: game.i18n.localize(filters.allRoles) },
+		{ value: 'ambusher', label: game.i18n.localize(filters.roles.ambusher) },
+		{ value: 'aoe', label: game.i18n.localize(filters.roles.aoe) },
+		{ value: 'controller', label: game.i18n.localize(filters.roles.controller) },
+		{ value: 'defender', label: game.i18n.localize(filters.roles.defender) },
+		{ value: 'melee', label: game.i18n.localize(filters.roles.melee) },
+		{ value: 'ranged', label: game.i18n.localize(filters.roles.ranged) },
+		{ value: 'skirmisher', label: game.i18n.localize(filters.roles.skirmisher) },
+		{ value: 'striker', label: game.i18n.localize(filters.roles.striker) },
+		{ value: 'summoner', label: game.i18n.localize(filters.roles.summoner) },
+		{ value: 'support', label: game.i18n.localize(filters.roles.support) },
+	]);
 
-	const levelOptions = [
-		{ value: '', label: 'All Levels' },
-		{ value: '-4', label: '1/4' },
-		{ value: '-3', label: '1/3' },
-		{ value: '-2', label: '1/2' },
+	const levelOptions = $derived([
+		{ value: '', label: game.i18n.localize(filters.allLevels) },
+		{ value: '-4', label: game.i18n.localize(filters.levelFraction.quarter) },
+		{ value: '-3', label: game.i18n.localize(filters.levelFraction.third) },
+		{ value: '-2', label: game.i18n.localize(filters.levelFraction.half) },
 		...Array.from({ length: 30 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) })),
-	];
+	]);
 
 	// Check if any filters are active
 	let hasActiveFilters = $derived(
@@ -155,7 +156,7 @@
 
 	// Get actor folders (depends on foldersVersion to refresh after import)
 	let actorFolders = $derived.by(() => {
-		dialog.foldersVersion; // Reactive dependency
+		const _version = dialog.foldersVersion; // Reactive dependency
 		return dialog.getActorFolders();
 	});
 </script>
@@ -203,7 +204,9 @@
 	<div class="actor-import-filters">
 		<div class="actor-import-filters-row">
 			<div class="actor-import-filter-group">
-				<label class="actor-import-filter-label" for="level-filter">Level</label>
+				<label class="actor-import-filter-label" for="level-filter"
+					>{game.i18n.localize(filters.level)}</label
+				>
 				<select
 					id="level-filter"
 					class="actor-import-filter-select"
@@ -220,7 +223,9 @@
 			</div>
 
 			<div class="actor-import-filter-group">
-				<label class="actor-import-filter-label" for="type-filter">Type</label>
+				<label class="actor-import-filter-label" for="type-filter"
+					>{game.i18n.localize(filters.type)}</label
+				>
 				<select
 					id="type-filter"
 					class="actor-import-filter-select"
@@ -236,7 +241,9 @@
 			</div>
 
 			<div class="actor-import-filter-group">
-				<label class="actor-import-filter-label" for="role-filter">Role</label>
+				<label class="actor-import-filter-label" for="role-filter"
+					>{game.i18n.localize(filters.role)}</label
+				>
 				<select
 					id="role-filter"
 					class="actor-import-filter-select"
@@ -256,7 +263,7 @@
 					class="actor-import-filter-clear"
 					type="button"
 					onclick={() => dialog.resetFilters()}
-					title="Clear all filters"
+					title={game.i18n.localize(filters.clearFilters)}
 				>
 					<i class="fa-solid fa-times"></i>
 				</button>
@@ -317,6 +324,13 @@
 				{game.i18n.localize(actorImport.noResults)}
 			</div>
 		{:else}
+			<!-- Loading overlay for filter updates -->
+			{#if dialog.isLoading}
+				<div class="actor-import-loading-overlay">
+					<i class="fa-solid fa-spinner fa-spin"></i>
+				</div>
+			{/if}
+
 			<!-- Selection Controls -->
 			<div class="actor-import-selection-controls">
 				<button
@@ -624,11 +638,31 @@
 	}
 
 	.actor-import-monster-list {
+		position: relative;
 		flex: 1;
 		overflow-y: auto;
 		border: 1px solid var(--color-border-light-tertiary);
 		border-radius: 4px;
 		background: var(--color-bg-option);
+	}
+
+	.actor-import-loading-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: hsla(0, 0%, 100%, 0.7);
+		z-index: 10;
+		pointer-events: none;
+
+		i {
+			font-size: 2rem;
+			color: var(--color-text-dark-secondary);
+		}
 	}
 
 	.actor-import-loading,

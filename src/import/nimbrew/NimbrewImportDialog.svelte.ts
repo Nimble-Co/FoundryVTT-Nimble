@@ -10,6 +10,7 @@ import { nimbrewParser, type NimbrewParser } from './NimbrewParser.js';
 import type {
 	BatchImportResult,
 	ImportOptions,
+	ImportResult,
 	MonsterRoleFilter,
 	MonsterTypeFilter,
 	NimbreApiSearchOptions,
@@ -37,6 +38,7 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 	private _levelFilter: string | null = $state(null);
 	private _monsterTypeFilter: MonsterTypeFilter = $state('all');
 	private _roleFilter: MonsterRoleFilter = $state('all');
+	private _filterDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Selection state (reactive)
 	private _selectedMonsters: Set<string> = $state(new Set());
@@ -116,14 +118,14 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 		return this._foldersVersion;
 	}
 
-	// Filter getters and setters (setters trigger new API request)
+	// Filter getters and setters (setters trigger debounced API request)
 	get levelFilter(): string | null {
 		return this._levelFilter;
 	}
 
 	set levelFilter(value: string | null) {
 		this._levelFilter = value;
-		this.refetchWithFilters();
+		this.scheduleFilterRefetch();
 	}
 
 	get monsterTypeFilter(): MonsterTypeFilter {
@@ -132,7 +134,7 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 
 	set monsterTypeFilter(value: MonsterTypeFilter) {
 		this._monsterTypeFilter = value;
-		this.refetchWithFilters();
+		this.scheduleFilterRefetch();
 	}
 
 	get roleFilter(): MonsterRoleFilter {
@@ -141,7 +143,7 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 
 	set roleFilter(value: MonsterRoleFilter) {
 		this._roleFilter = value;
-		this.refetchWithFilters();
+		this.scheduleFilterRefetch();
 	}
 
 	/**
@@ -185,6 +187,11 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 	 * Reset all filters to default values
 	 */
 	resetFilters(): void {
+		// Clear any pending debounce
+		if (this._filterDebounceTimeout) {
+			clearTimeout(this._filterDebounceTimeout);
+			this._filterDebounceTimeout = null;
+		}
 		// Set values without triggering individual refetches
 		this._levelFilter = null;
 		this._monsterTypeFilter = 'all';
@@ -193,11 +200,25 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 	}
 
 	/**
+	 * Schedule a debounced filter refetch
+	 */
+	private scheduleFilterRefetch(): void {
+		if (this._filterDebounceTimeout) {
+			clearTimeout(this._filterDebounceTimeout);
+		}
+		this._filterDebounceTimeout = setTimeout(() => {
+			this._filterDebounceTimeout = null;
+			this.refetchWithFilters();
+		}, 150);
+	}
+
+	/**
 	 * Refetch monsters with current filter settings
 	 */
 	private refetchWithFilters(): void {
 		const lastSearch = this._lastSearchOptions.search ?? '';
-		this.searchMonsters(lastSearch);
+		// Don't clear results when just filtering - shows loading overlay instead
+		this.searchMonsters(lastSearch, {}, false);
 	}
 
 	/**
@@ -206,11 +227,16 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 	async searchMonsters(
 		query: string,
 		options: Omit<NimbreApiSearchOptions, 'search'> = {},
+		clearResults = true,
 	): Promise<void> {
 		this._isLoading = true;
 		this._error = null;
-		this._searchResults = [];
-		this._selectedMonsters = new Set();
+
+		// Only clear results on new searches, not filter changes
+		if (clearResults) {
+			this._searchResults = [];
+			this._selectedMonsters = new Set();
+		}
 
 		// Build search options with current filters
 		const searchOptions: NimbreApiSearchOptions = {
@@ -313,8 +339,24 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 
 		try {
 			const text = await file.text();
-			const jsonData = JSON.parse(text);
+
+			let jsonData: unknown;
+			try {
+				jsonData = JSON.parse(text);
+			} catch {
+				throw new Error(
+					`Invalid JSON format in "${file.name}". Please ensure the file contains valid JSON.`,
+				);
+			}
+
 			this._uploadedMonsters = this.parser.parseJsonFile(jsonData);
+
+			if (this._uploadedMonsters.length === 0) {
+				throw new Error(
+					`No monsters found in "${file.name}". The file should contain monster data in the expected format.`,
+				);
+			}
+
 			this._selectedMonsters = new Set();
 		} catch (err) {
 			this._error = err instanceof Error ? err.message : 'Failed to parse file';

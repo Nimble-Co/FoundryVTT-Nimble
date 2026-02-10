@@ -799,7 +799,38 @@
 			"selectFile": "Select JSON File",
 			"clearFile": "Clear",
 			"successMessage": "Successfully imported {count} monster(s)",
-			"partialSuccessMessage": "Imported {successful} monster(s), {failed} failed"
+			"partialSuccessMessage": "Imported {successful} monster(s), {failed} failed",
+			"filters": {
+				"level": "Level",
+				"type": "Type",
+				"role": "Role",
+				"clearFilters": "Clear all filters",
+				"allLevels": "All Levels",
+				"allTypes": "All Types",
+				"allRoles": "All Roles",
+				"levelFraction": {
+					"quarter": "1/4",
+					"third": "1/3",
+					"half": "1/2"
+				},
+				"monsterTypes": {
+					"standard": "Standard",
+					"legendary": "Legendary",
+					"minion": "Minion"
+				},
+				"roles": {
+					"ambusher": "Ambusher",
+					"aoe": "AoE",
+					"controller": "Controller",
+					"defender": "Defender",
+					"melee": "Melee",
+					"ranged": "Ranged",
+					"skirmisher": "Skirmisher",
+					"striker": "Striker",
+					"summoner": "Summoner",
+					"support": "Support"
+				}
+			}
 		}
 	}
 }
