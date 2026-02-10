@@ -638,6 +638,238 @@ describe('applyUpcastDeltas', () => {
 		});
 	});
 
+	describe('Nested Effect Node Lookup', () => {
+		it('should find damage node inside savingThrow.on.failedSave (Gangrenous Burst pattern)', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 5,
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'addFlatDamage', value: 10, targetEffectId: 'nestedDmg' }),
+					]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 9 } },
+				activationData: {
+					effects: [
+						{
+							id: 'save1',
+							type: 'savingThrow',
+							savingThrowType: 'strength',
+							saveType: 'strength',
+							parentContext: null,
+							parentNode: null,
+							on: {
+								failedSave: [
+									{
+										id: 'nestedDmg',
+										type: 'damage',
+										damageType: 'necrotic',
+										formula: '3d20',
+										parentContext: 'failedSave',
+										parentNode: 'save1',
+										ignoreArmor: true,
+									},
+								],
+							},
+							sharedRolls: [],
+						},
+					],
+				},
+				manaToSpend: 6,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect(result.upcastResult.upcastSteps).toBe(1);
+			const saveNode = result.activationData.effects[0] as any;
+			expect(saveNode.on.failedSave[0].formula).toBe('3d20+10');
+		});
+
+		it('should find savingThrow node inside damage.on.hit (Vampiric Greed pattern)', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 3,
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'addDC', value: 1, targetEffectId: 'nestedSave' }),
+					]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 9 } },
+				activationData: {
+					effects: [
+						{
+							id: 'dmg1',
+							type: 'damage',
+							damageType: 'necrotic',
+							formula: '4d12',
+							parentContext: null,
+							parentNode: null,
+							canCrit: false,
+							canMiss: false,
+							on: {
+								hit: [
+									{
+										id: 'nestedSave',
+										type: 'savingThrow',
+										savingThrowType: 'strength',
+										saveType: 'strength',
+										parentContext: 'hit',
+										parentNode: 'dmg1',
+										saveDC: 0,
+										on: {},
+										sharedRolls: [],
+									},
+								],
+							},
+						},
+					],
+				},
+				manaToSpend: 5,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect(result.upcastResult.upcastSteps).toBe(2);
+			const dmgNode = result.activationData.effects[0] as any;
+			expect(dmgNode.on.hit[0].saveDC).toBe(2);
+		});
+
+		it('should apply both addDC and addFlatDamage to nested nodes (Unspeakable Word pattern)', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 6,
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'addDC', value: 1, targetEffectId: 'topSave' }),
+						createDelta({ operation: 'addFlatDamage', value: 10, targetEffectId: 'nestedDmg' }),
+					]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 9 } },
+				activationData: {
+					effects: [
+						{
+							id: 'topSave',
+							type: 'savingThrow',
+							savingThrowType: 'strength',
+							saveType: 'intelligence',
+							saveDC: 0,
+							parentContext: null,
+							parentNode: null,
+							on: {
+								failedSave: [
+									{
+										id: 'nestedDmg',
+										type: 'damage',
+										damageType: 'necrotic',
+										formula: '3d6+10',
+										parentContext: 'failedSave',
+										parentNode: 'topSave',
+										ignoreArmor: true,
+									},
+								],
+							},
+							sharedRolls: [],
+						},
+					],
+				},
+				manaToSpend: 8,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect(result.upcastResult.upcastSteps).toBe(2);
+			const saveNode = result.activationData.effects[0] as any;
+			expect(saveNode.saveDC).toBe(2);
+			expect(saveNode.on.failedSave[0].formula).toBe('3d6+10+20');
+		});
+
+		it('should find damage node nested inside savingThrow within damage.on.hit (Pyroclasm pattern)', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 4,
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'addFlatDamage', value: 2, targetEffectId: 'deepDmg' }),
+					]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 9 } },
+				activationData: {
+					effects: [
+						{
+							id: 'topSave',
+							type: 'savingThrow',
+							savingThrowType: 'strength',
+							saveType: 'dexterity',
+							parentContext: null,
+							parentNode: null,
+							on: {
+								failedSave: [
+									{
+										id: 'deepDmg',
+										type: 'damage',
+										damageType: 'fire',
+										formula: '2d20+10',
+										parentContext: 'failedSave',
+										parentNode: 'topSave',
+										ignoreArmor: true,
+									},
+								],
+							},
+							sharedRolls: [],
+						},
+					],
+				},
+				manaToSpend: 6,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			expect(result.upcastResult.upcastSteps).toBe(2);
+			const saveNode = result.activationData.effects[0] as any;
+			expect(saveNode.on.failedSave[0].formula).toBe('2d20+10+4');
+		});
+
+		it('should not match nested node when targetEffectId does not exist', () => {
+			const context: UpcastContext = {
+				spell: {
+					tier: 3,
+					scaling: createScaling('upcast', [
+						createDelta({ operation: 'addFlatDamage', value: 5, targetEffectId: 'nonexistent' }),
+					]),
+				},
+				actor: { resources: { mana: { current: 10 }, highestUnlockedSpellTier: 9 } },
+				activationData: {
+					effects: [
+						{
+							id: 'save1',
+							type: 'savingThrow',
+							savingThrowType: 'strength',
+							saveType: 'strength',
+							parentContext: null,
+							parentNode: null,
+							on: {
+								failedSave: [
+									{
+										id: 'realDmg',
+										type: 'damage',
+										damageType: 'fire',
+										formula: '3d8',
+										parentContext: 'failedSave',
+										parentNode: 'save1',
+									},
+								],
+							},
+							sharedRolls: [],
+						},
+					],
+				},
+				manaToSpend: 4,
+			};
+
+			const result = applyUpcastDeltas(context);
+
+			// Should not modify anything since targetEffectId doesn't match
+			const saveNode = result.activationData.effects[0] as any;
+			expect(saveNode.on.failedSave[0].formula).toBe('3d8');
+		});
+	});
+
 	describe('Immutability Tests', () => {
 		it('should not mutate original activation data', () => {
 			const originalActivationData = {

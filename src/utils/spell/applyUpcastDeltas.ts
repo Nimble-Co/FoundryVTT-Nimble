@@ -276,11 +276,33 @@ function applyDelta(activationData: any, delta: ScalingDelta, upcastSteps: numbe
 }
 
 /**
- * Helper to find effect node by type and optional ID
+ * Helper to find effect node by type and optional ID.
+ * Searches recursively through nested nodes (e.g. damage inside savingThrow.on.failedSave).
  */
 function findEffectNode(effects: EffectNode[], type: string, targetId?: string | null): any {
-	if (targetId) {
-		return effects.find((e) => e.type === type && e.id === targetId);
+	for (const node of effects) {
+		if (targetId) {
+			if (node.type === type && node.id === targetId) return node;
+		} else {
+			if (node.type === type) return node;
+		}
+
+		// Traverse into nested nodes via "on" contexts (hit, miss, failedSave, etc.)
+		if ('on' in node && node.on) {
+			for (const key in node.on) {
+				if (Object.hasOwn(node.on, key)) {
+					const found = findEffectNode(node.on[key], type, targetId);
+					if (found) return found;
+				}
+			}
+		}
+
+		// Traverse into shared rolls on saving throw nodes
+		if ('sharedRolls' in node && node.sharedRolls) {
+			const found = findEffectNode(node.sharedRolls as EffectNode[], type, targetId);
+			if (found) return found;
+		}
 	}
-	return effects.find((e) => e.type === type);
+
+	return null;
 }
