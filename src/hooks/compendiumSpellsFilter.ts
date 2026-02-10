@@ -4,10 +4,6 @@
  */
 
 const GLOBAL_NIMBLE_SPELLS_COLLECTION = 'nimble.nimble-spells';
-let activeSchoolFilter = '';
-let isApplyingFilter = false;
-let cachedSpellDataById: Map<string, { school: string; tier: number }> | null = null;
-let cachedSpellNameById: Map<string, string> | null = null;
 
 const SCHOOL_KEYS = [
 	'fire',
@@ -19,6 +15,80 @@ const SCHOOL_KEYS = [
 	'secret',
 	'utility',
 ];
+const SPELL_LIST_ITEM_SELECTOR =
+	'li[data-document-id], li[data-entry-id], .compendium-entry, .compendium-item, .directory-item';
+const SPELL_HEADER_SELECTOR = '.nimble-spell-tier-header, .nimble-spell-school-header';
+const SEARCH_INPUT_SELECTOR = 'input[type="search"]';
+const SORT_BUTTON_SELECTORS = [
+	'button[data-action="sort"]',
+	'button[data-action="toggle-sort"]',
+	'button[data-action="toggleSort"]',
+	'button[data-action="sortAlphabetical"]',
+	'button[data-action*="sort"]',
+	'button[data-action*="Sort"]',
+	'button.sort',
+	'button.sort-alphabetical',
+	'button[data-tooltip*="Sort"]',
+	'button[title*="Sort"]',
+];
+const COLLAPSE_BUTTON_SELECTORS = [
+	'button[data-action="collapse"]',
+	'button[data-action="collapse-all"]',
+	'button[data-action="collapseAll"]',
+	'button[data-action="collapseFolders"]',
+	'button[data-action*="collapse"]',
+	'button[data-action*="Collapse"]',
+	'button.collapse-all',
+	'button.collapse',
+	'button[data-tooltip*="Collapse"]',
+	'button[title*="Collapse"]',
+];
+const HEADER_ACTIONS_SELECTOR =
+	'.header-actions, .directory-header-actions, .compendium-header-actions';
+const SCHOOL_DISPLAY_NAMES: Record<string, string> = {
+	fire: 'Fire',
+	ice: 'Ice',
+	lightning: 'Lightning',
+	necrotic: 'Necrotic',
+	radiant: 'Radiant',
+	wind: 'Wind',
+	secret: 'Secret',
+	utility: 'Utility',
+};
+type SpellMetadata = { school: string; tier: number };
+type CompendiumFilterState = {
+	activeSchoolFilter: string;
+	isApplyingFilter: boolean;
+	cachedSpellDataById: Map<string, SpellMetadata> | null;
+	cachedSpellNameById: Map<string, string> | null;
+	metadataApplyScheduled: boolean;
+};
+
+const compendiumStateByApp = new WeakMap<object, CompendiumFilterState>();
+
+function createCompendiumFilterState(): CompendiumFilterState {
+	return {
+		activeSchoolFilter: '',
+		isApplyingFilter: false,
+		cachedSpellDataById: null,
+		cachedSpellNameById: null,
+		metadataApplyScheduled: false,
+	};
+}
+
+function getCompendiumFilterState(app: any): CompendiumFilterState {
+	if (!app || (typeof app !== 'object' && typeof app !== 'function')) {
+		return createCompendiumFilterState();
+	}
+
+	let state = compendiumStateByApp.get(app);
+	if (!state) {
+		state = createCompendiumFilterState();
+		compendiumStateByApp.set(app, state);
+	}
+	return state;
+}
+
 function ensureSchoolFilterStyles(): void {
 	if (document.getElementById('nimble-spell-school-filter-styles')) {
 		return;
@@ -26,7 +96,7 @@ function ensureSchoolFilterStyles(): void {
 
 	const style = document.createElement('style');
 	style.id = 'nimble-spell-school-filter-styles';
-	style.textContent = SCHOOL_KEYS.map(
+	const schoolFilterRules = SCHOOL_KEYS.map(
 		(school) => `
 .nimble-school-filter-${school} li[data-document-id]:not([data-nimble-school="${school}"]),
 .nimble-school-filter-${school} li[data-entry-id]:not([data-nimble-school="${school}"]),
@@ -44,26 +114,89 @@ function ensureSchoolFilterStyles(): void {
 }
 `,
 	).join('');
-	document.head.appendChild(style);
+	style.textContent = `${schoolFilterRules}
+.nimble-spell-name-flex {
+	display: flex;
+	align-items: center;
+	width: 100%;
 }
-
-function ensureClearFiltersStyles(): void {
-	if (document.getElementById('nimble-clear-filters-styles')) {
-		return;
-	}
-
-	const style = document.createElement('style');
-	style.id = 'nimble-clear-filters-styles';
-	style.textContent = `
-.nimble-clear-filters::before,
-.nimble-clear-filters::after {
+.nimble-spell-school-icon {
+	margin-left: 6px;
+	display: inline-block;
+}
+.nimble-spell-school-icon i {
+	opacity: 0.7;
+}
+.nimble-spell-tier-badge {
+	margin-left: auto;
+	margin-right: 6px;
+	display: inline-block;
+}
+.nimble-spell-tier-header {
+	font-weight: 700;
+	color: var(--nimble-tier-header-color, #ffffff);
+	padding-left: 6px;
+	padding-top: 8px;
+	padding-bottom: 4px;
+	font-size: 0.9rem;
+	border-top: 1px solid rgba(176, 134, 11, 0.3);
+	margin-top: 8px;
+}
+.nimble-spell-school-header {
+	font-weight: 600;
+	color: var(--nimble-school-header-color, #dddddd);
+	padding-left: 18px;
+	padding-top: 4px;
+	padding-bottom: 2px;
+	font-size: 0.95rem;
+	font-style: italic;
+	margin-top: 4px;
+}
+.nimble-spell-school-buttons {
+	display: flex;
+	justify-content: center;
+	gap: 12px;
+	align-items: center;
+	margin-left: 6px;
+	flex: 1;
+}
+.nimble-spell-school-buttons .header-button.nimble-spell-school {
+	display: inline-block;
+	cursor: pointer;
+}
+.nimble-clear-filters-control::before,
+.nimble-clear-filters-control::after {
 	content: none !important;
 }
-.nimble-clear-filters {
-	background-image: none !important;
+.nimble-clear-filters-control,
+.nimble-clear-filters-control:hover,
+.nimble-clear-filters-control:focus,
+.nimble-clear-filters-control:active {
+	border: none !important;
+	background: transparent !important;
+	box-shadow: none !important;
 }
 `;
 	document.head.appendChild(style);
+}
+
+function findFirstButton(
+	container: ParentNode,
+	selectors: string[],
+	excludeClass?: string,
+): HTMLButtonElement | null {
+	for (const selector of selectors) {
+		const found = container.querySelector(selector) as HTMLButtonElement | null;
+		if (!found) {
+			continue;
+		}
+		if (excludeClass && found.classList.contains(excludeClass)) {
+			continue;
+		}
+		return found;
+	}
+
+	return null;
 }
 
 function applySchoolFilterClass(compendiumElement: HTMLElement | null, school: string): void {
@@ -78,12 +211,11 @@ function applySchoolFilterClass(compendiumElement: HTMLElement | null, school: s
 
 function applyCachedMetadataToListItems(
 	compendiumElement: HTMLElement | null,
-	spellData: Map<string, { school: string; tier: number }> | null,
+	spellData: Map<string, SpellMetadata> | null,
 ): void {
 	if (!compendiumElement || !spellData) return;
-	const listItems: NodeListOf<HTMLElement> = compendiumElement.querySelectorAll(
-		'li[data-document-id], li[data-entry-id], .compendium-entry, .compendium-item, .directory-item',
-	);
+	const listItems: NodeListOf<HTMLElement> =
+		compendiumElement.querySelectorAll(SPELL_LIST_ITEM_SELECTOR);
 	listItems.forEach((item: HTMLElement) => {
 		const itemId =
 			item.getAttribute('data-document-id') ||
@@ -112,9 +244,8 @@ function applySearchFilter(
 	const term = searchTerm.trim().toLowerCase();
 	if (!term) return;
 
-	const listItems: NodeListOf<HTMLElement> = compendiumElement.querySelectorAll(
-		'li[data-document-id], li[data-entry-id], .compendium-entry, .compendium-item, .directory-item',
-	);
+	const listItems: NodeListOf<HTMLElement> =
+		compendiumElement.querySelectorAll(SPELL_LIST_ITEM_SELECTOR);
 	listItems.forEach((item: HTMLElement) => {
 		const itemId =
 			item.getAttribute('data-document-id') ||
@@ -136,21 +267,43 @@ function applySearchFilter(
 	});
 }
 
+function scheduleMetadataRefresh(
+	compendiumElement: HTMLElement | null,
+	state: CompendiumFilterState,
+): void {
+	if (!compendiumElement || state.metadataApplyScheduled) {
+		return;
+	}
+
+	state.metadataApplyScheduled = true;
+	const applyRefresh = () => {
+		state.metadataApplyScheduled = false;
+		applyCachedMetadataToListItems(compendiumElement, state.cachedSpellDataById);
+	};
+
+	if (typeof requestAnimationFrame === 'function') {
+		requestAnimationFrame(applyRefresh);
+		return;
+	}
+
+	setTimeout(applyRefresh, 0);
+}
+
 /**
  * Map of tier values to display names
  */
-const TIER_LABELS: { [key: number]: string } = {
-	0: 'Utility',
-	1: 'Cantrip',
-	2: 'Tier 1',
-	3: 'Tier 2',
-	4: 'Tier 3',
-	5: 'Tier 4',
-	6: 'Tier 5',
-	7: 'Tier 6',
-	8: 'Tier 7',
-	9: 'Tier 8',
-	10: 'Tier 9',
+const TIER_LABELS: Record<string, string> = {
+	'0': 'Utility',
+	'1': 'Cantrip',
+	'2': 'Tier 1',
+	'3': 'Tier 2',
+	'4': 'Tier 3',
+	'5': 'Tier 4',
+	'6': 'Tier 5',
+	'7': 'Tier 6',
+	'8': 'Tier 7',
+	'9': 'Tier 8',
+	'10': 'Tier 9',
 };
 
 /**
@@ -264,9 +417,6 @@ function ensureSpellNameLayout(nameLink: HTMLElement): void {
 	}
 
 	nameLink.classList.add('nimble-spell-name-flex');
-	nameLink.style.display = 'flex';
-	nameLink.style.alignItems = 'center';
-	nameLink.style.width = '100%';
 }
 
 function addSchoolIconToItem(item: HTMLElement, school: string): void {
@@ -288,9 +438,7 @@ function addSchoolIconToItem(item: HTMLElement, school: string): void {
 		// Create and append icon element
 		const iconSpan = document.createElement('span');
 		iconSpan.className = 'nimble-spell-school-icon';
-		iconSpan.style.marginLeft = '6px';
-		iconSpan.style.display = 'inline-block';
-		iconSpan.innerHTML = `<i class="${iconClass}" style="opacity: 0.7;"></i>`;
+		iconSpan.innerHTML = `<i class="${iconClass}"></i>`;
 
 		nameLink.appendChild(iconSpan);
 	} catch (error) {
@@ -325,9 +473,6 @@ function addTierBadgeToItem(item: HTMLElement, tier: number): void {
 
 		const badgeSpan = document.createElement('span');
 		badgeSpan.className = 'nimble-spell-tier-badge';
-		badgeSpan.style.marginLeft = 'auto';
-		badgeSpan.style.marginRight = '6px';
-		badgeSpan.style.display = 'inline-block';
 		badgeSpan.textContent = badgeText;
 
 		nameLink.appendChild(badgeSpan);
@@ -336,35 +481,33 @@ function addTierBadgeToItem(item: HTMLElement, tier: number): void {
 	}
 }
 
-function setupClearFiltersButton(header: HTMLElement, app: any, collection: any): void {
-	const targetSelectors = [
-		'button[data-action="collapse"]',
-		'button[data-action="collapse-all"]',
-		'button.collapse-all',
-		'button.collapse',
-		'button[title*="Collapse"]',
-	];
-
-	const collapseButton =
-		targetSelectors.map((selector) => header.querySelector(selector)).find((btn) => btn) || null;
-
-	if (!collapseButton) {
-		return;
+function setupClearFiltersButton(
+	header: HTMLElement,
+	app: any,
+	collection: any,
+	state: CompendiumFilterState,
+): void {
+	const searchInput = header.querySelector(SEARCH_INPUT_SELECTOR) as HTMLInputElement | null;
+	let clearButton = header.querySelector(
+		'.nimble-clear-filters-control',
+	) as HTMLButtonElement | null;
+	if (!clearButton) {
+		clearButton = document.createElement('button');
+		clearButton.type = 'button';
+		clearButton.className = 'header-button nimble-clear-filters-control';
 	}
-
-	ensureClearFiltersStyles();
-	collapseButton.classList.add('nimble-clear-filters');
-	collapseButton.removeAttribute('title');
-	(collapseButton as HTMLElement).dataset.tooltip = 'Clear All Filters';
-	collapseButton.innerHTML = '<i class="fa-solid fa-broom"></i>';
+	clearButton.removeAttribute('title');
+	clearButton.dataset.tooltipText = 'Clear All Filters';
+	clearButton.setAttribute('aria-label', 'Clear All Filters');
+	clearButton.innerHTML = '<i class="fa-solid fa-broom"></i>';
 
 	const clearHandler = (event: Event) => {
 		event.preventDefault();
 		event.stopPropagation();
 
-		activeSchoolFilter = '';
+		state.activeSchoolFilter = '';
 		const searchInput = app?.element?.querySelector?.(
-			'input[type="search"]',
+			SEARCH_INPUT_SELECTOR,
 		) as HTMLInputElement | null;
 		if (searchInput) {
 			searchInput.value = '';
@@ -381,10 +524,58 @@ function setupClearFiltersButton(header: HTMLElement, app: any, collection: any)
 			}
 		}
 
-		applyFilter('', app?.collection || collection, app, collection);
+		applyFilter('', app?.collection || collection, app, collection, state);
 	};
 
-	collapseButton.addEventListener('click', clearHandler);
+	if (!clearButton.dataset.nimbleClearFiltersBound) {
+		clearButton.dataset.nimbleClearFiltersBound = '1';
+		clearButton.addEventListener('click', clearHandler);
+	}
+
+	const sortButton = findFirstButton(header, SORT_BUTTON_SELECTORS, 'nimble-clear-filters-control');
+	const collapseButton = findFirstButton(
+		header,
+		COLLAPSE_BUTTON_SELECTORS,
+		'nimble-clear-filters-control',
+	);
+	const actionContainer =
+		(sortButton?.parentElement as HTMLElement | null) ||
+		(collapseButton?.parentElement as HTMLElement | null) ||
+		(header.querySelector(HEADER_ACTIONS_SELECTOR) as HTMLElement | null);
+
+	if (actionContainer) {
+		if (clearButton.parentElement !== actionContainer) {
+			actionContainer.appendChild(clearButton);
+		}
+
+		const orderedButtons = [clearButton, sortButton, collapseButton].filter(
+			(button): button is HTMLButtonElement => Boolean(button),
+		);
+		const seenButtons = new Set<HTMLButtonElement>();
+		orderedButtons.forEach((button) => {
+			if (seenButtons.has(button)) {
+				return;
+			}
+			seenButtons.add(button);
+			actionContainer.appendChild(button);
+		});
+
+		if (
+			searchInput &&
+			actionContainer.parentElement === searchInput.parentElement &&
+			searchInput.nextElementSibling !== actionContainer
+		) {
+			searchInput.insertAdjacentElement('afterend', actionContainer);
+		}
+		return;
+	}
+
+	if (searchInput) {
+		searchInput.insertAdjacentElement('afterend', clearButton);
+		return;
+	}
+
+	header.appendChild(clearButton);
 }
 
 /**
@@ -395,14 +586,15 @@ async function applyFilter(
 	packFromApp: any,
 	app: any,
 	collection: any,
+	state: CompendiumFilterState,
 ): Promise<void> {
 	const TARGET_COLLECTION = GLOBAL_NIMBLE_SPELLS_COLLECTION;
 
 	try {
-		if (isApplyingFilter) {
+		if (state.isApplyingFilter) {
 			return;
 		}
-		isApplyingFilter = true;
+		state.isApplyingFilter = true;
 
 		// Get the pack from packFromApp
 		const pack = packFromApp || collection;
@@ -475,22 +667,20 @@ async function applyFilter(
 		applySchoolFilterClass(compendiumElement, school);
 
 		const searchInput = compendiumElement.querySelector(
-			'input[type="search"]',
+			SEARCH_INPUT_SELECTOR,
 		) as HTMLInputElement | null;
 		const searchTerm = searchInput?.value?.trim() ?? '';
 		const searchActive = searchTerm.length > 0;
 
 		if (searchActive && school === '') {
-			compendiumElement
-				.querySelectorAll('.nimble-spell-tier-header, .nimble-spell-school-header')
-				.forEach((header) => {
-					header.remove();
-				});
+			compendiumElement.querySelectorAll(SPELL_HEADER_SELECTOR).forEach((header) => {
+				header.remove();
+			});
 			return;
 		}
 
 		// Build maps (always build id->school/tier; only build grouping when not searching)
-		const normalizedById = new Map<string, { school: string; tier: number }>();
+		const normalizedById = new Map<string, SpellMetadata>();
 		const nameById = new Map<string, string>();
 		const spellsByTierAndSchool: {
 			[tierKey: string]: {
@@ -536,16 +726,14 @@ async function applyFilter(
 			}
 		});
 
-		cachedSpellDataById = normalizedById;
-		cachedSpellNameById = nameById;
+		state.cachedSpellDataById = normalizedById;
+		state.cachedSpellNameById = nameById;
 
 		if (searchActive) {
-			compendiumElement
-				.querySelectorAll('.nimble-spell-tier-header, .nimble-spell-school-header')
-				.forEach((header) => {
-					header.remove();
-				});
-			applyCachedMetadataToListItems(compendiumElement, cachedSpellDataById);
+			compendiumElement.querySelectorAll(SPELL_HEADER_SELECTOR).forEach((header) => {
+				header.remove();
+			});
+			applyCachedMetadataToListItems(compendiumElement, state.cachedSpellDataById);
 			return;
 		}
 
@@ -568,9 +756,8 @@ async function applyFilter(
 		}
 
 		// Query for list items
-		const listItems: NodeListOf<HTMLElement> = compendiumElement.querySelectorAll(
-			'li[data-document-id], li[data-entry-id], .compendium-entry, .compendium-item, .directory-item',
-		);
+		const listItems: NodeListOf<HTMLElement> =
+			compendiumElement.querySelectorAll(SPELL_LIST_ITEM_SELECTOR);
 
 		// Create a map of items by ID for easy lookup
 		const itemsById = new Map<string, HTMLElement>();
@@ -586,11 +773,9 @@ async function applyFilter(
 		});
 
 		// Remove existing group headers
-		compendiumElement
-			.querySelectorAll('.nimble-spell-tier-header, .nimble-spell-school-header')
-			.forEach((header) => {
-				header.remove();
-			});
+		compendiumElement.querySelectorAll(SPELL_HEADER_SELECTOR).forEach((header) => {
+			header.remove();
+		});
 
 		if (!searchActive) {
 			// Sort tier keys: 0 (utility), 1 (cantrip), then 2-10
@@ -605,41 +790,19 @@ async function applyFilter(
 				return aNum - bNum;
 			});
 
-			// Define school display names and order
-			const schoolDisplayNames: { [key: string]: string } = {
-				fire: 'Fire',
-				ice: 'Ice',
-				lightning: 'Lightning',
-				necrotic: 'Necrotic',
-				radiant: 'Radiant',
-				wind: 'Wind',
-				secret: 'Secret',
-				utility: 'Utility',
-			};
-
-			const schoolOrder = [
-				'fire',
-				'ice',
-				'lightning',
-				'necrotic',
-				'radiant',
-				'wind',
-				'secret',
-				'utility',
-			];
+			const schoolOrder = SCHOOL_KEYS;
 
 			// Reorganize items with tier and school headers
 			const fragment = document.createDocumentFragment();
 
 			sortedTiers.forEach((tierKey) => {
 				const tierNum = parseInt(tierKey, 10);
-				const tierLabel = TIER_LABELS[tierNum] || `Tier ${tierNum}`;
+				const tierLabel = TIER_LABELS[tierKey] || `Tier ${tierNum}`;
 				const tierSpellsBySchool = spellsByTierAndSchool[tierKey];
 
 				// Create tier header
 				const tierHeaderDiv = document.createElement('li');
 				tierHeaderDiv.className = 'nimble-spell-tier-header';
-				tierHeaderDiv.style.fontWeight = 'bold';
 				// Use selected school's color when a specific school filter is active
 				const tierColor =
 					school === ''
@@ -647,13 +810,7 @@ async function applyFilter(
 						: SCHOOL_TIER_COLORS[school]
 							? SCHOOL_TIER_COLORS[school]
 							: '#b0860b';
-				tierHeaderDiv.style.color = tierColor;
-				tierHeaderDiv.style.paddingLeft = '6px';
-				tierHeaderDiv.style.paddingTop = '8px';
-				tierHeaderDiv.style.paddingBottom = '4px';
-				tierHeaderDiv.style.fontSize = '0.9rem';
-				tierHeaderDiv.style.borderTop = '1px solid rgba(176, 134, 11, 0.3)';
-				tierHeaderDiv.style.marginTop = '8px';
+				tierHeaderDiv.style.setProperty('--nimble-tier-header-color', tierColor);
 				tierHeaderDiv.textContent = `${tierLabel} Spells`;
 
 				fragment.appendChild(tierHeaderDiv);
@@ -664,23 +821,16 @@ async function applyFilter(
 					if (schoolSpells && schoolSpells.length > 0) {
 						// Create and insert school header only for the 'All' view (no specific school filter)
 						if (school === '') {
-							const schoolDisplayName = schoolDisplayNames[schoolKey] || schoolKey;
+							const schoolDisplayName = SCHOOL_DISPLAY_NAMES[schoolKey] || schoolKey;
 							const schoolHeaderDiv = document.createElement('li');
 							schoolHeaderDiv.className = 'nimble-spell-school-header';
-							schoolHeaderDiv.style.fontWeight = '600';
 							const schoolHeaderColor =
 								school === '' && SCHOOL_TIER_COLORS[schoolKey]
 									? SCHOOL_TIER_COLORS[schoolKey]
 									: school === ''
 										? '#dddddd'
 										: '#999999';
-							schoolHeaderDiv.style.color = schoolHeaderColor;
-							schoolHeaderDiv.style.paddingLeft = '18px';
-							schoolHeaderDiv.style.paddingTop = '4px';
-							schoolHeaderDiv.style.paddingBottom = '2px';
-							schoolHeaderDiv.style.fontSize = school === '' ? '0.95rem' : '0.85rem';
-							schoolHeaderDiv.style.fontStyle = 'italic';
-							schoolHeaderDiv.style.marginTop = '4px';
+							schoolHeaderDiv.style.setProperty('--nimble-school-header-color', schoolHeaderColor);
 							schoolHeaderDiv.textContent = schoolDisplayName;
 							fragment.appendChild(schoolHeaderDiv);
 						}
@@ -737,18 +887,25 @@ async function applyFilter(
 	} catch (error) {
 		console.error('Nimble: Error applying spell filter:', error);
 	} finally {
-		isApplyingFilter = false;
+		state.isApplyingFilter = false;
 	}
 }
 
 /**
  * Initialize school icon buttons in the compendium header
  */
-function initializeSchoolButtons(container: HTMLElement, app: any, collection: any): void {
+function initializeSchoolButtons(
+	container: HTMLElement,
+	app: any,
+	collection: any,
+	state: CompendiumFilterState,
+): void {
 	async function loadAndRenderButtons() {
 		const TARGET_COLLECTION = GLOBAL_NIMBLE_SPELLS_COLLECTION;
 
 		try {
+			ensureSchoolFilterStyles();
+
 			// Extract CompendiumCollection from app or use directly
 			const pack = app?.collection || collection;
 			if (!pack) {
@@ -820,12 +977,6 @@ function initializeSchoolButtons(container: HTMLElement, app: any, collection: a
 			if (!btnGroup) {
 				btnGroup = document.createElement('div');
 				btnGroup.className = 'nimble-spell-school-buttons';
-				btnGroup.style.display = 'flex';
-				btnGroup.style.justifyContent = 'center';
-				btnGroup.style.gap = '12px';
-				btnGroup.style.alignItems = 'center';
-				btnGroup.style.marginLeft = '6px';
-				btnGroup.style.flex = '1';
 				container.appendChild(btnGroup);
 			}
 			btnGroup.innerHTML = '';
@@ -834,16 +985,17 @@ function initializeSchoolButtons(container: HTMLElement, app: any, collection: a
 			const allBtn = document.createElement('button');
 			allBtn.className = 'header-button nimble-spell-school all';
 			allBtn.removeAttribute('title');
-			allBtn.dataset.tooltip = ((game.i18n.localize('NIMBLE.compendium.filterAll') as string) ||
-				'All') as string;
+			allBtn.dataset.tooltip = 'NIMBLE.compendium.filterAll';
+			allBtn.setAttribute(
+				'aria-label',
+				((game.i18n.localize('NIMBLE.compendium.filterAll') as string) || 'All') as string,
+			);
 			allBtn.innerHTML = '<i class="fa-solid fa-circle-dot"></i>';
-			allBtn.style.display = 'inline-block';
-			allBtn.style.cursor = 'pointer';
 			allBtn.addEventListener('click', (e: Event) => {
 				e.preventDefault();
 				e.stopPropagation();
-				activeSchoolFilter = '';
-				applyFilter('', pack, app, collection);
+				state.activeSchoolFilter = '';
+				applyFilter('', pack, app, collection, state);
 				// Update active state
 				btnGroup.querySelectorAll('.header-button.nimble-spell-school').forEach((btn) => {
 					btn.classList.remove('active');
@@ -860,15 +1012,14 @@ function initializeSchoolButtons(container: HTMLElement, app: any, collection: a
 					btn.className = 'header-button nimble-spell-school';
 					btn.setAttribute('data-school', school);
 					btn.removeAttribute('title');
-					btn.dataset.tooltip = schoolLabel;
+					btn.dataset.tooltipText = schoolLabel;
+					btn.setAttribute('aria-label', schoolLabel);
 					btn.innerHTML = `<i class="${schoolIcons[school]}"></i>`;
-					btn.style.display = 'inline-block';
-					btn.style.cursor = 'pointer';
 					btn.addEventListener('click', (e: Event) => {
 						e.preventDefault();
 						e.stopPropagation();
-						activeSchoolFilter = school;
-						applyFilter(school, pack, app, collection);
+						state.activeSchoolFilter = school;
+						applyFilter(school, pack, app, collection, state);
 						// Update active state
 						btnGroup.querySelectorAll('.header-button.nimble-spell-school').forEach((b) => {
 							b.classList.remove('active');
@@ -889,7 +1040,11 @@ function initializeSchoolButtons(container: HTMLElement, app: any, collection: a
 /**
  * Add school icons to all spells on initial render (no filtering yet)
  */
-async function addIconsToAllSpells(app: any, collection: any): Promise<void> {
+async function addIconsToAllSpells(
+	app: any,
+	collection: any,
+	state: CompendiumFilterState,
+): Promise<void> {
 	const TARGET_COLLECTION = GLOBAL_NIMBLE_SPELLS_COLLECTION;
 
 	try {
@@ -937,7 +1092,7 @@ async function addIconsToAllSpells(app: any, collection: any): Promise<void> {
 		}
 
 		// Map id -> school/tier
-		const dataById = new Map<string, { school: string; tier: number }>();
+		const dataById = new Map<string, SpellMetadata>();
 		const nameById = new Map<string, string>();
 		index.forEach((entry: any) => {
 			const normalized = normalizeIndexEntry(entry);
@@ -952,8 +1107,8 @@ async function addIconsToAllSpells(app: any, collection: any): Promise<void> {
 				}
 			}
 		});
-		cachedSpellDataById = dataById;
-		cachedSpellNameById = nameById;
+		state.cachedSpellDataById = dataById;
+		state.cachedSpellNameById = nameById;
 
 		// Find compendium element
 		let compendiumElement: HTMLElement | null = null;
@@ -973,9 +1128,8 @@ async function addIconsToAllSpells(app: any, collection: any): Promise<void> {
 		}
 
 		// Apply icon to each item
-		const listItems: NodeListOf<HTMLElement> = compendiumElement.querySelectorAll(
-			'li[data-document-id], li[data-entry-id], .compendium-entry, .compendium-item, .directory-item',
-		);
+		const listItems: NodeListOf<HTMLElement> =
+			compendiumElement.querySelectorAll(SPELL_LIST_ITEM_SELECTOR);
 
 		listItems.forEach((item: HTMLElement) => {
 			const itemId =
@@ -1018,6 +1172,8 @@ export default function registerCompendiumSpellsFilter(): void {
 			if (collectionId !== TARGET_COLLECTION) {
 				return;
 			}
+			const state = getCompendiumFilterState(app);
+			ensureSchoolFilterStyles();
 
 			// Find header element
 			const header =
@@ -1035,21 +1191,20 @@ export default function registerCompendiumSpellsFilter(): void {
 			}
 
 			// Initialize the buttons
-			initializeSchoolButtons(header, app, app?.collection);
-			setupClearFiltersButton(header, app, app?.collection);
+			initializeSchoolButtons(header, app, app?.collection, state);
+			setupClearFiltersButton(header, app, app?.collection, state);
 
 			// Add school icons to the initial list (no filtering)
-			addIconsToAllSpells(app, app?.collection);
+			addIconsToAllSpells(app, app?.collection, state);
 
-			ensureSchoolFilterStyles();
-			applySchoolFilterClass(app?.element || null, activeSchoolFilter);
+			applySchoolFilterClass(app?.element || null, state.activeSchoolFilter);
 
-			const searchInput = html?.querySelector?.('input[type="search"]') as HTMLInputElement | null;
+			const searchInput = html?.querySelector?.(SEARCH_INPUT_SELECTOR) as HTMLInputElement | null;
 			if (searchInput && !searchInput.dataset.nimbleSpellSearchBound) {
 				searchInput.dataset.nimbleSpellSearchBound = '1';
 				const applyActiveSchoolClass = () => {
-					applySchoolFilterClass(app?.element || null, activeSchoolFilter);
-					applyCachedMetadataToListItems(app?.element || null, cachedSpellDataById);
+					applySchoolFilterClass(app?.element || null, state.activeSchoolFilter);
+					applyCachedMetadataToListItems(app?.element || null, state.cachedSpellDataById);
 				};
 
 				searchInput.addEventListener(
@@ -1061,15 +1216,13 @@ export default function registerCompendiumSpellsFilter(): void {
 						applyActiveSchoolClass();
 						const term = searchInput.value || '';
 						if (!term.trim()) {
-							applyFilter(activeSchoolFilter, app?.collection, app, app?.collection);
+							applyFilter(state.activeSchoolFilter, app?.collection, app, app?.collection, state);
 							return;
 						}
-						html
-							?.querySelectorAll?.('.nimble-spell-tier-header, .nimble-spell-school-header')
-							.forEach((header: Element) => {
-								header.remove();
-							});
-						applySearchFilter(app?.element || null, term, cachedSpellNameById);
+						html?.querySelectorAll?.(SPELL_HEADER_SELECTOR).forEach((header: Element) => {
+							header.remove();
+						});
+						applySearchFilter(app?.element || null, term, state.cachedSpellNameById);
 					},
 					true,
 				);
@@ -1082,7 +1235,7 @@ export default function registerCompendiumSpellsFilter(): void {
 			if (listContainer && !(listContainer as HTMLElement).dataset.nimbleSpellObserver) {
 				(listContainer as HTMLElement).dataset.nimbleSpellObserver = '1';
 				const observer = new MutationObserver(() => {
-					applyCachedMetadataToListItems(app?.element || null, cachedSpellDataById);
+					scheduleMetadataRefresh(app?.element || null, state);
 				});
 				observer.observe(listContainer, { childList: true, subtree: true });
 			}
