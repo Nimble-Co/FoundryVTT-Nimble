@@ -23,6 +23,7 @@ const spellCardSchema = () => ({
 		max: 9,
 		nullable: false,
 	}),
+	upcast: new fields.ObjectField({ required: false, nullable: true, initial: null }),
 });
 
 declare namespace NimbleSpellCardData {

@@ -65,8 +65,8 @@
 			if (baseEffect) {
 				const label =
 					baseEffect.type === 'healing'
-						? format(effectTypes.healing)
-						: `${spell.school} ${format(effectTypes.damage)}`;
+						? effectTypes.healing
+						: `${spell.school} ${effectTypes.damage}`;
 				const calculatedFormula = new NimbleRoll(baseEffect.formula, actor.getRollData());
 				preview.push(`${calculatedFormula.formula} ${label}`);
 			}
@@ -90,9 +90,7 @@
 		amount: ReturnType<typeof getScaledAmount>,
 		school: string,
 	) {
-		const effectLabel = isHealingSpell
-			? format(effectTypes.healing)
-			: `${school} ${format(effectTypes.damage)}`;
+		const effectLabel = isHealingSpell ? effectTypes.healing : `${school} ${effectTypes.damage}`;
 		const operations = {
 			addFlatDamage: `+${amount} ${effectLabel}`,
 			addDice: `+${amount} ${effectLabel}`,

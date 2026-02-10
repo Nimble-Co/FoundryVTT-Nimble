@@ -46,7 +46,11 @@
 	let hasUpcast = $derived(upcast?.isUpcast);
 	let upcastSummary = $derived(() => {
 		if (!hasUpcast) return null;
-		return `Cast with ${upcast.manaSpent} mana (+${upcast.upcastSteps} step${upcast.upcastSteps !== 1 ? 's' : ''})`;
+		const parts = [`Upcast to level ${upcast.manaSpent}`];
+		if (upcast.choiceLabel) {
+			parts.push(upcast.choiceLabel);
+		}
+		return parts.join(' — ');
 	});
 
 	setContext('messageDocument', messageDocument);
@@ -64,13 +68,6 @@
 		image={image || 'icons/svg/item-bag.svg'}
 		{subheading}
 	/>
-
-	{#if hasUpcast}
-		<section class="nimble-card-section nimble-upcast-indicator">
-			<i class="fa-solid fa-arrow-up-right-dots"></i>
-			{upcastSummary()}
-		</section>
-	{/if}
 
 	<Targets />
 
@@ -93,6 +90,13 @@
 	{/if}
 
 	<ItemCardEffects />
+
+	{#if hasUpcast}
+		<section class="nimble-card-section nimble-upcast-indicator">
+			<i class="fa-solid fa-arrow-up-right-dots"></i>
+			{upcastSummary()}
+		</section>
+	{/if}
 </article>
 
 <style>

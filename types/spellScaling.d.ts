@@ -42,5 +42,6 @@ export interface UpcastResult {
 	manaSpent: number;
 	upcastSteps: number;
 	choiceIndex?: number;
+	choiceLabel?: string;
 	appliedDeltas: ScalingDelta[];
 }

@@ -160,6 +160,10 @@ export function applyUpcastDeltas(context: UpcastContext): AppliedUpcastData {
 			manaSpent: validation.totalMana,
 			upcastSteps,
 			choiceIndex: context.choiceIndex,
+			choiceLabel:
+				context.spell.scaling!.mode === 'upcastChoice' && context.choiceIndex !== undefined
+					? context.spell.scaling!.choices?.[context.choiceIndex]?.label
+					: undefined,
 			appliedDeltas: deltasToApply,
 		},
 	};
