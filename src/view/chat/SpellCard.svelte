@@ -10,11 +10,19 @@
 	function getCardSubheading(activation, isCritical, isMiss) {
 		if (!activation) return null;
 		if (!activation.effects?.length) return null;
-		if (!activation.effects.some((node) => node.type === 'damage')) return null;
 
-		if (isCritical) return 'Critical Hit';
-		if (isMiss) return 'Miss';
-		return 'Hit';
+		const hasDamage = activation.effects.some((node) => node.type === 'damage');
+		const hasHealing = activation.effects.some((node) => node.type === 'healing');
+
+		if (!hasDamage && !hasHealing) return null;
+
+		if (hasDamage) {
+			if (isCritical) return 'Critical Hit';
+			if (isMiss) return 'Miss';
+			return 'Hit';
+		}
+
+		return 'Healing';
 	}
 
 	function getUpcastingDescriptionLabel(tier, higherLevelEffectDescription) {

@@ -755,7 +755,7 @@ const fieldRest = {
 
 const itemConfig = {
 	targets: 'NIMBLE.itemConfig.targets',
-	targetsNumber: 'NIMBLE.itemConfig.targetsNumber',
+	target: 'NIMBLE.itemConfig.target',
 	acquireTargetsFromTemplate: 'NIMBLE.itemConfig.acquireTargetsFromTemplate',
 	targetCount: 'NIMBLE.itemConfig.targetCount',
 	targetRestrictions: 'NIMBLE.itemConfig.targetRestrictions',

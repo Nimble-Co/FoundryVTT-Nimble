@@ -745,8 +745,8 @@
 		"itemConfig": {
 			"areaSize": "Area Size",
 			"targets": "Targets",
+			"target": "Target",
 			"duration": "Duration",
-			"targetsNumber": "Targets {count}",
 			"acquireTargetsFromTemplate": "Acquire targets from template",
 			"targetCount": "Target Count",
 			"targetRestrictions": "Target Restrictions",

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ScalingDelta } from '#types/spellScaling.js';
+	import { NimbleRoll } from '../../dice/NimbleRoll';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 	import RangeSlider from 'svelte-range-slider-pips';
 
@@ -25,6 +26,9 @@
 	// Check if spell can be upcast
 	const canUpcast = spell.tier > 0 && spell.scaling && spell.scaling.mode !== 'none';
 	const hasChoices = spell.scaling?.mode === 'upcastChoice';
+	const isHealingSpell = spell.activation?.effects?.some(
+		(e: { type: string }) => e.type === 'healing',
+	);
 
 	// Upcast state
 	let manaToSpend = $state(baseMana);
@@ -35,16 +39,40 @@
 	// let remainingMana = $derived(currentMana - manaToSpend);
 
 	// Compute preview of upcast effects
+	const damageOrHealingOps = new Set(['addFlatDamage', 'addDice']);
+
 	let upcastPreview = $derived(() => {
 		if (!canUpcast || upcastSteps === 0) return [];
 
-		const deltas = hasChoices
+		const deltas: ScalingDelta[] = hasChoices
 			? spell.scaling.choices[choiceIndex]?.deltas || []
 			: spell.scaling.deltas;
-		return deltas.map((delta: ScalingDelta) => {
+
+		const preview = deltas.map((delta: ScalingDelta) => {
 			const amount = getScaledAmount(delta, upcastSteps);
 			return formatDeltaPreview(delta, amount, spell.school);
 		});
+
+		// If the chosen enhancement doesn't modify damage/healing, show the base effect
+		const modifiesDamageOrHealing = deltas.some((d: ScalingDelta) =>
+			damageOrHealingOps.has(d.operation),
+		);
+		if (!modifiesDamageOrHealing) {
+			const baseEffect = spell.activation?.effects?.find(
+				(e: { type: string; formula?: string }) =>
+					(e.type === 'damage' || e.type === 'healing') && e.formula,
+			);
+			if (baseEffect) {
+				const label =
+					baseEffect.type === 'healing'
+						? format(effectTypes.healing)
+						: `${spell.school} ${format(effectTypes.damage)}`;
+				const calculatedFormula = new NimbleRoll(baseEffect.formula, actor.getRollData());
+				preview.push(`${calculatedFormula.formula} ${label}`);
+			}
+		}
+
+		return preview;
 	});
 
 	function getScaledAmount(delta: ScalingDelta, steps: number) {
@@ -62,18 +90,20 @@
 		amount: ReturnType<typeof getScaledAmount>,
 		school: string,
 	) {
+		const effectLabel = isHealingSpell
+			? format(effectTypes.healing)
+			: `${school} ${format(effectTypes.damage)}`;
 		const operations = {
-			addFlatDamage: `+${amount} ${school} ${format(effectTypes.damage)}`,
-			addDice: `+${amount} ${school} ${format(effectTypes.damage)}`,
-			addReach: `+${amount} ${format(spellProperties.reach)}`,
-			addRange: `+${amount} ${format(spellProperties.range)}`,
-			addTargets: `+${amount} ${format(itemConfig.targetsNumber, { count: `${amount}` })}`,
-			addAreaSize: `+${amount} ${format(itemConfig.areaSize)}`,
+			addFlatDamage: `+${amount} ${effectLabel}`,
+			addDice: `+${amount} ${effectLabel}`,
+			addReach: `+${amount} ${spellProperties.reach}`,
+			addRange: `+${amount} ${spellProperties.range}`,
+			addTargets: `+${amount} ${Number(amount) > 1 ? itemConfig.targets : itemConfig.target}`,
+			addAreaSize: `+${amount} ${itemConfig.areaSize}`,
 			addDC: `+${amount} DC`,
-			addDuration: `+${amount} ${format(itemConfig.duration)}`,
-			//TODO: i18n
-			addCondition: `Add ${amount}`,
-			addArmor: `+${amount} ${format(objectTypes.armor)}`,
+			addDuration: `+${amount} ${itemConfig.duration}`,
+			addCondition: `+${amount} ${effectTypes.condition}`,
+			addArmor: `+${amount} ${objectTypes.armor}`,
 		};
 		return operations[delta.operation] || delta.operation;
 	}
@@ -120,8 +150,9 @@
 			<div class="nimble-upcast-info">
 				{#if hasChoices && spell.scaling.choices && upcastSteps > 0}
 					<fieldset class="nimble-upcast-choices">
-						<!-- TODO: i18n -->
-						<legend class="nimble-choices-label">{spellUpcastDialog.chooseEnhancement}</legend>
+						<legend class="nimble-choices-label"
+							>{format(spellUpcastDialog.chooseEnhancement)}</legend
+						>
 						{#each spell.scaling.choices as choice, i}
 							<label class="nimble-choice-option">
 								<input type="radio" name="upcast-choice" value={i} bind:group={choiceIndex} />
@@ -133,8 +164,7 @@
 
 				{#if upcastSteps > 0 && upcastPreview().length > 0}
 					<div class="nimble-upcast-preview">
-						<!-- TODO: i18n -->
-						<h4 class="nimble-preview-heading">{spellUpcastDialog.appliedEffect}</h4>
+						<h4 class="nimble-preview-heading">{format(spellUpcastDialog.appliedEffect)}</h4>
 						<ul class="nimble-preview-list">
 							{#each upcastPreview() as effect}
 								<li>{effect}</li>
