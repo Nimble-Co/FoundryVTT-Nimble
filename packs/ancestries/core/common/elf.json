@@ -23,7 +23,8 @@
 				"type": "speedBonus",
 				"value": "1",
 				"label": "Lithe"
-			}, {
+			},
+			{
 				"type": "initiativeRollMode",
 				"value": 1,
 				"mode": "adjust",
