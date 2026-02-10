@@ -13,6 +13,7 @@ import { NoteRule } from '../models/rules/note.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SkillBonusRule } from '../models/rules/skillBonus.js';
+import { SpeedBonusRule } from '../models/rules/speedBonus.js';
 
 export default function registerRulesConfig() {
 	const ruleTypes = {
@@ -31,6 +32,7 @@ export default function registerRulesConfig() {
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
 		skillBonus: 'NIMBLE.ruleTypes.skillBonus',
+		speedBonus: 'NIMBLE.ruleTypes.speedBonus',
 	};
 
 	const ruleDataModels = {
@@ -49,6 +51,7 @@ export default function registerRulesConfig() {
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,
 		skillBonus: SkillBonusRule,
+		speedBonus: SpeedBonusRule,
 	} as const;
 
 	return { ruleDataModels, ruleTypes };

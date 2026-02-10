@@ -6,7 +6,19 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "speedBonus",
+				"value": "2",
+				"label": "Explorer of the Wilds"
+			},
+			{
+				"type": "speedBonus",
+				"value": "@attributes.movement.walk",
+				"movementType": "climb",
+				"label": "Explorer of the Wilds"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

@@ -10,12 +10,16 @@ import {
 	foundryApiMocks,
 	globalFoundryMocks,
 	MockRollConstructor,
+	uiMock,
 } from './mocks/foundry.js';
 
 // Mock Foundry global object required setup before importing config
 // CRITICAL: These document classes must be mocked BEFORE any code tries to extend them
 // They are global Foundry classes, not part of the foundry object
 Object.assign(globalThis, globalFoundryMocks);
+
+// Mock the ui global for notifications
+(globalThis as object as { ui: typeof uiMock }).ui = uiMock;
 
 // Mock foundry object for utilities and APIs
 // foundryApiMocks already includes a trackable Roll mock

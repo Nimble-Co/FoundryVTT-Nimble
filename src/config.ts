@@ -354,6 +354,14 @@ const movementTypes = {
 	walk: 'NIMBLE.movementTypes.walk',
 };
 
+const movementTypeIcons = {
+	burrow: 'fa-solid fa-circle-down',
+	climb: 'fa-solid fa-mountain',
+	fly: 'fa-solid fa-feather',
+	swim: 'fa-solid fa-water',
+	walk: 'fa-solid fa-person-walking',
+};
+
 const npcArmorEffects = {
 	none: 'NIMBLE.armorEffects.none',
 	medium: 'NIMBLE.armorEffects.medium',
@@ -775,6 +783,7 @@ const NIMBLE = {
 	manaRecoveryTypes,
 	monsterFeatureTypes,
 	movementTypes,
+	movementTypeIcons,
 	npcArmorEffects,
 	npcArmorIcons,
 	npcArmorTypeAbbreviations,

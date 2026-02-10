@@ -11,11 +11,16 @@
 				"disabled": false,
 				"id": "ODF6VnVsmfBrfFtp",
 				"identifier": "",
-				"label": "Slow but Steady",
+				"label": "Slow & Steady",
 				"predicate": {},
 				"priority": 1,
 				"formula": "+4",
 				"mode": "add"
+			},
+			{
+				"type": "speedBonus",
+				"value": "-2",
+				"label": "Slow & Steady"
 			}
 		],
 		"description": "<p>Turtlefolk take their time in everything they do; they are patient, sturdy, and slow to anger. They rely on their thick shells for protection, making them difficult to harm, but their cautious movements come at the cost of speed.</p><hr><p><strong>Slow & Steady</strong></p><p>+4 Armor [A]</p><p>–2 speed [M]</p>",
