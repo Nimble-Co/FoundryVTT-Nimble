@@ -52,7 +52,12 @@ export default class Pack {
 	#prepareFolderAssignments() {
 		this.folderDocuments = [];
 
-		// Restrict folder generation to the subclasses pack only.
+		// Monsters are grouped by source path folder names.
+		if (this.dirName === 'monsters' && this.documentType === 'Actor') {
+			return this.#prepareMonsterFolderAssignments();
+		}
+
+		// Restrict class-based folder generation to the subclasses pack only.
 		if (this.dirName !== 'subclasses') return new Map();
 
 		/** @type {any[]} */
@@ -96,6 +101,57 @@ export default class Pack {
 		}, new Map());
 	}
 
+	#prepareMonsterFolderAssignments() {
+		const monsters = [...this.data.entries()].filter(
+			([, source]) => typeof source?._id === 'string',
+		);
+		if (monsters.length === 0) return new Map();
+
+		const folderLabelByKey = new Map();
+		const folderKeyByActorId = new Map();
+
+		for (const [file, source] of monsters) {
+			const folderKey = this.#getMonsterFolderKey(file);
+			if (!folderKey) continue;
+
+			folderKeyByActorId.set(source._id, folderKey);
+			if (!folderLabelByKey.has(folderKey)) {
+				folderLabelByKey.set(folderKey, this.#toDisplayMonsterFolderName(folderKey));
+			}
+		}
+
+		if (folderLabelByKey.size === 0) return new Map();
+
+		const statsTemplate = this.#getFolderStatsTemplate(monsters.map(([, source]) => source));
+		const foldersByKey = [...folderLabelByKey.entries()]
+			.sort((a, b) => a[1].localeCompare(b[1]))
+			.reduce((acc, [folderKey, folderName], index) => {
+				const folder = {
+					_id: this.#getMonsterFolderId(folderKey),
+					_stats: { ...statsTemplate },
+					color: null,
+					description: '',
+					flags: {},
+					folder: null,
+					name: folderName,
+					sort: index * 10,
+					sorting: 'a',
+					type: this.documentType,
+				};
+
+				acc.set(folderKey, folder);
+				return acc;
+			}, new Map());
+
+		this.folderDocuments = [...foldersByKey.values()];
+
+		return [...folderKeyByActorId.entries()].reduce((acc, [actorId, folderKey]) => {
+			const folder = foldersByKey.get(folderKey);
+			if (folder) acc.set(actorId, folder._id);
+			return acc;
+		}, new Map());
+	}
+
 	#getFolderStatsTemplate(sources) {
 		const sourceStats = sources.find((source) => source?._stats)?._stats;
 		const now = Date.now();
@@ -127,6 +183,34 @@ export default class Pack {
 		return crypto
 			.createHash('sha1')
 			.update(`nimble-subclasses-folder:${classId}`)
+			.digest('hex')
+			.slice(0, 16);
+	}
+
+	#getMonsterFolderKey(filePath) {
+		const relativePath = path.relative(this.dirPath, filePath);
+		const directory = path.dirname(relativePath);
+		if (!directory || directory === '.') return null;
+
+		const segments = directory.split(path.sep).filter(Boolean);
+		if (!segments.length) return null;
+
+		if (segments[0] === 'core') return segments[1] ?? null;
+		return segments[0];
+	}
+
+	#toDisplayMonsterFolderName(folderKey) {
+		return folderKey
+			.split(/[-_]+/g)
+			.filter(Boolean)
+			.map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+			.join(' ');
+	}
+
+	#getMonsterFolderId(folderKey) {
+		return crypto
+			.createHash('sha1')
+			.update(`${this.packId}-folder:${folderKey}`)
 			.digest('hex')
 			.slice(0, 16);
 	}
