@@ -1,15 +1,6 @@
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 
 export default function registerSystemSettings() {
-	game.settings.registerMenu('nimble', 'SystemSettings', {
-		name: 'System Settings',
-		hint: 'Configure system settings for the Nimble RPG system',
-		label: 'Coming Soon...',
-		icon: 'fas fa-bars',
-		type: SystemSettingsPlaceholder,
-		restricted: false,
-	});
-
 	game.settings.register(
 		'nimble' as 'core',
 		'autoExpandRolls' as 'rollMode',
@@ -35,6 +26,21 @@ export default function registerSystemSettings() {
 			config: false,
 			type: Number,
 			default: MigrationRunnerBase.MINIMUM_SAFE_VERSION,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
+
+	// Placeholder setting to create the system settings tab
+	// This gets replaced by the attribution via the renderSettingsConfig hook
+	game.settings.register(
+		'nimble' as 'core',
+		'attribution' as 'rollMode',
+		{
+			name: '',
+			hint: '',
+			scope: 'client',
+			config: true,
+			type: Boolean,
+			default: false,
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
