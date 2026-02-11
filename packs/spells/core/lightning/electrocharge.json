@@ -65,7 +65,21 @@
 			]
 		},
 		"school": "lightning",
-		"tier": 5
+		"tier": 5,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "addRange",
+					"value": 4,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": null,
+					"durationType": null
+				}
+			],
+			"choices": null
+		}
 	},
 	"effects": [],
 	"folder": null,

@@ -59,7 +59,21 @@
 			]
 		},
 		"school": "radiant",
-		"tier": 6
+		"tier": 6,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "addReach",
+					"value": 4,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": null,
+					"durationType": null
+				}
+			],
+			"choices": null
+		}
 	},
 	"effects": [],
 	"folder": null,

@@ -1,5 +1,11 @@
 <script>
+	import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 	import { getContext } from 'svelte';
+	let actor = getContext('actor');
+	let flags = $derived(actor.reactive.flags.nimble);
+
+	const editingEnabledStore = getContext('editingEnabled');
+	let editingEnabled = $derived($editingEnabledStore ?? true);
 
 	function updateBonusInventorySlots(newValue) {
 		if (newValue < 0) return;
@@ -7,10 +13,10 @@
 		actor.update({ 'system.inventory.bonusSlots': newValue });
 	}
 
-	let actor = getContext('actor');
-	const editingEnabledStore = getContext('editingEnabled');
-	let editingEnabled = $derived($editingEnabledStore ?? true);
-	let flags = $derived(actor.reactive.flags.nimble);
+	async function updateHighestUnlockedSpellTier(newValue) {
+		if (newValue < 0) return;
+		await actor.update({ 'system.resources.highestUnlockedSpellTier': newValue });
+	}
 
 	let automaticallyExecuteAvailableMacros = $derived(
 		flags?.automaticallyExecuteAvailableMacros ?? true,
@@ -27,6 +33,10 @@
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 	let showPassiveSkillScores = $derived(flags?.showPassiveSkillScores ?? false);
 	let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
+
+	let highestUnlockedSpellTier = $derived(
+		actor.reactive?.system?.resources?.highestUnlockedSpellTier ?? 0,
+	);
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
@@ -195,6 +205,56 @@
 
 			<span class="nimble-field__label"> Show Passive Skill Scores </span>
 		</label>
+	</section>
+
+	<section>
+		<header class="nimble-section-header">
+			<h3 class="nimble-heading" data-heading-variant="section">Spell settings</h3>
+		</header>
+
+		<div class="nimble-field">
+			<div class="nimble-editable-numeric-field">
+				<button
+					class="nimble-button"
+					data-button-variant="basic"
+					type="button"
+					aria-label="Decrement Highest Unlocked Spell Tier"
+					disabled={!editingEnabled}
+					onclick={() => updateHighestUnlockedSpellTier(highestUnlockedSpellTier - 1)}
+				>
+					<i class="fa-solid fa-minus"></i>
+				</button>
+
+				<span class="nimble-editable-numeric-field__value">
+					{highestUnlockedSpellTier}
+				</span>
+
+				<button
+					class="nimble-button"
+					data-button-variant="basic"
+					type="button"
+					disabled={!editingEnabled}
+					aria-label="Increment Highest Unlocked Spell Tier"
+					onclick={() => updateHighestUnlockedSpellTier(highestUnlockedSpellTier + 1)}
+				>
+					<i class="fa-solid fa-plus"></i>
+				</button>
+			</div>
+
+			<span> Highest Unlocked Spell Tier </span>
+		</div>
+		<div class="nimble-field">
+			<button
+				class="nimble-button"
+				data-button-variant="full-width"
+				type="button"
+				disabled={!editingEnabled}
+				aria-label="Reset Highest Unlocked Spell Tier"
+				onclick={() => updateHighestUnlockedSpellTier(getHighestSpellTier(actor))}
+			>
+				Reset spell tier
+			</button>
+		</div>
 	</section>
 </section>
 

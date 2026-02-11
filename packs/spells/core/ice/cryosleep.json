@@ -80,7 +80,21 @@
 			]
 		},
 		"school": "ice",
-		"tier": 3
+		"tier": 3,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "addAreaSize",
+					"value": 1,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": null,
+					"durationType": null
+				}
+			],
+			"choices": null
+		}
 	},
 	"effects": [],
 	"folder": null,

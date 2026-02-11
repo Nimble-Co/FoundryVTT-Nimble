@@ -59,7 +59,55 @@
 			]
 		},
 		"school": "radiant",
-		"tier": 1
+		"tier": 1,
+		"scaling": {
+			"mode": "upcastChoice",
+			"deltas": [],
+			"choices": [
+				{
+					"label": "+1 target",
+					"deltas": [
+						{
+							"operation": "addTargets",
+							"value": 1,
+							"dice": null,
+							"condition": null,
+							"targetEffectId": null,
+							"durationType": null
+						}
+					]
+				},
+				{
+					"label": "+4 reach",
+					"deltas": [
+						{
+							"operation": "addReach",
+							"value": 4,
+							"dice": null,
+							"condition": null,
+							"targetEffectId": null,
+							"durationType": null
+						}
+					]
+				},
+				{
+					"label": "+1d6 healing",
+					"deltas": [
+						{
+							"operation": "addDice",
+							"value": null,
+							"dice": {
+								"count": 1,
+								"faces": 6
+							},
+							"condition": null,
+							"targetEffectId": null,
+							"durationType": null
+						}
+					]
+				}
+			]
+		}
 	},
 	"effects": [],
 	"folder": null,

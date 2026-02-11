@@ -74,7 +74,29 @@
 			]
 		},
 		"school": "necrotic",
-		"tier": 6
+		"tier": 6,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "addDC",
+					"value": 1,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": "xFH2PgXT97EPr8jr",
+					"durationType": null
+				},
+				{
+					"operation": "addFlatDamage",
+					"value": 10,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": "UYavQJvOx4gcSfbg",
+					"durationType": null
+				}
+			],
+			"choices": null
+		}
 	},
 	"effects": [],
 	"flags": {},

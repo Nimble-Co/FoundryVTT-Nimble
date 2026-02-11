@@ -73,7 +73,24 @@
 			]
 		},
 		"school": "necrotic",
-		"tier": 7
+		"tier": 7,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "addDice",
+					"value": null,
+					"dice": {
+						"count": 1,
+						"faces": 20
+					},
+					"condition": null,
+					"targetEffectId": null,
+					"durationType": null
+				}
+			],
+			"choices": null
+		}
 	},
 	"effects": [],
 	"flags": {},

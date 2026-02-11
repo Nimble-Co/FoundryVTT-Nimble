@@ -1,63 +1,64 @@
 //** FOUNDRY DARK THEME **/
 
 .theme-dark {
-  /** COMBAT TRACKER **/
-  --nimble-combat-tracker-text-color: hsl(38, 38%, 94%);
-  --nimble-combat-tracker-background: hsla(0, 0%, 0%, 0.85);
+	/** COMBAT TRACKER **/
+	--nimble-combat-tracker-text-color: hsl(38, 38%, 94%);
+	--nimble-combat-tracker-background: hsla(0, 0%, 0%, 0.85);
 
-  /** INPUT FIELDS **/
-  --nimble-input-background-color: hsla(0, 0%, 0%, 0.3);
-  --nimble-input-border-color: hsl(293, 10%, 40%);
+	/** INPUT FIELDS **/
+	--nimble-input-background-color: hsla(0, 0%, 0%, 0.3);
+	--nimble-input-border-color: hsl(293, 10%, 40%);
+	--nimble-select-option-background-color: color-mix(in srgb, var(--nimble-input-background-color) 10%, #000);
 
-  /** TEXT COLORS **/
-  --nimble-dark-text-color: hsl(36, 53%, 80%);
-  --nimble-dark-text-hover-color: hsl(36, 58%, 90%);
-  --nimble-dark-text-glow-color: var(--nimble-dark-text-color);
-  --nimble-light-text-color: hsl(50, 14%, 9%);
-  --nimble-medium-text-color: hsl(0, 0%, 84%);
-  --nimble-navigation-text-color: hsl(36, 53%, 80%);
-  --nimble-navigation-active-text-color: hsl(38, 38%, 94%);
-  --nimble-secondary-navigation-text-color: hsl(36, 53%, 80%);
-  --nimble-secondary-navigation-active-text-color: hsl(36, 58%, 90%);
-  --nimble-secondary-navigation-background: rgba(255, 255, 255, 0.1);
-  --nimble-sidebar-text-color: hsl(36, 53%, 80%);
-  --nimble-code-editor-text-color: hsl(217, 34%, 88%);
+	/** TEXT COLORS **/
+	--nimble-dark-text-color: hsl(36, 53%, 80%);
+	--nimble-dark-text-hover-color: hsl(36, 58%, 90%);
+	--nimble-dark-text-glow-color: var(--nimble-dark-text-color);
+	--nimble-light-text-color: hsl(50, 14%, 9%);
+	--nimble-medium-text-color: hsl(0, 0%, 84%);
+	--nimble-navigation-text-color: hsl(36, 53%, 80%);
+	--nimble-navigation-active-text-color: hsl(38, 38%, 94%);
+	--nimble-secondary-navigation-text-color: hsl(36, 53%, 80%);
+	--nimble-secondary-navigation-active-text-color: hsl(36, 58%, 90%);
+	--nimble-secondary-navigation-background: rgba(255, 255, 255, 0.1);
+	--nimble-sidebar-text-color: hsl(36, 53%, 80%);
+	--nimble-code-editor-text-color: hsl(217, 34%, 88%);
 
-  /** OTHER COLORS **/
-  --nimble-box-background-color: hsl(293, 10%, 17%);
-  --nimble-sheet-background-color: unset;
-  --nimble-accent-color: hsl(278, 10%, 42%);
-  --nimble-range-slider-handle-color: var(--nimble-dark-text-color);
-  --nimble-hover-tag-text-color: white;
-  --nimble-selected-tag-text-color: white;
-  --nimble-selected-tag-background-color: hsl(293 10% 35% / 1);
-  --nimble-hp-bar-background: hsl(293, 10%, 17%);
-  --nimble-sheet-background: hsl(247, 16%, 11%);
-  --nimble-navigation-background-color: hsl(293, 10%, 17%);
-  --nimble-navigation-border-color: hsl(293, 10%, 25%);
-  --nimble-navigation-box-shadow: var(--nimble-box-shadow);
-  --nimble-navigation-button-box-shadow: 0 0 0 1px hsl(36, 53%, 80%), 0 0 0 2px var(--nimble-navigation-border-color),
-    0 3px 5px rgba(0, 0, 0, 0.4);
-  --nimble-search-input-border-color: none;
-  --nimble-currency-input-border-color: none;
-  --nimble-dark-input-text-color: hsl(36, 53%, 80%);
-  --nimble-code-editor-background-color: hsl(293, 10%, 17%);
-  --nimble-card-border-color: hsla(293, 10%, 25%);
-  --nimble-ac-border-color: hsl(293, 10%, 25%);
-  --nimble-initiative-border-color: hsl(293, 10%, 25%);
-  --nimble-icon-button-border-color: hsl(293, 10%, 25%);
-  --nimble-image-background-color: #181821;
-  --nimble-basic-button-background-color: #302831;
-  --nimble-warning-icon-color: hsl(33, 90%, 15%);
-  --nimble-warning-background-color: hsla(45, 100%, 60%, 0.4);
-  --nimble-warning-border-color: hsl(33, 50%, 30%);
+	/** OTHER COLORS **/
+	--nimble-box-background-color: hsl(293, 10%, 17%);
+	--nimble-sheet-background-color: unset;
+	--nimble-accent-color: hsl(278, 10%, 42%);
+	--nimble-range-slider-handle-color: var(--nimble-dark-text-color);
+	--nimble-hover-tag-text-color: white;
+	--nimble-selected-tag-text-color: white;
+	--nimble-selected-tag-background-color: hsl(293 10% 35% / 1);
+	--nimble-hp-bar-background: hsl(293, 10%, 17%);
+	--nimble-sheet-background: hsl(247, 16%, 11%);
+	--nimble-navigation-background-color: hsl(293, 10%, 17%);
+	--nimble-navigation-border-color: hsl(293, 10%, 25%);
+	--nimble-navigation-box-shadow: var(--nimble-box-shadow);
+	--nimble-navigation-button-box-shadow:
+		0 0 0 1px hsl(36, 53%, 80%), 0 0 0 2px var(--nimble-navigation-border-color), 0 3px 5px rgba(0, 0, 0, 0.4);
+	--nimble-search-input-border-color: none;
+	--nimble-currency-input-border-color: none;
+	--nimble-dark-input-text-color: hsl(36, 53%, 80%);
+	--nimble-code-editor-background-color: hsl(293, 10%, 17%);
+	--nimble-card-border-color: hsla(293, 10%, 25%);
+	--nimble-ac-border-color: hsl(293, 10%, 25%);
+	--nimble-initiative-border-color: hsl(293, 10%, 25%);
+	--nimble-icon-button-border-color: hsl(293, 10%, 25%);
+	--nimble-image-background-color: #181821;
+	--nimble-basic-button-background-color: #302831;
+	--nimble-warning-icon-color: hsl(33, 90%, 15%);
+	--nimble-warning-background-color: hsla(45, 100%, 60%, 0.4);
+	--nimble-warning-border-color: hsl(33, 50%, 30%);
 
-  --nimble-rule-background-color: hsl(210, 30%, 25%);
-  --nimble-rule-border-color: hsl(210, 30%, 40%);
+	--nimble-rule-background-color: hsl(210, 30%, 25%);
+	--nimble-rule-border-color: hsl(210, 30%, 40%);
 
-  /** ROLL RESULT COLORS **/
-  --nimble-roll-success-color: hsl(120, 45%, 55%);
-  --nimble-roll-success-background-color: hsl(120, 30%, 25%);
-  --nimble-roll-failure-color: hsl(0, 65%, 60%);
-  --nimble-roll-failure-background-color: hsl(0, 40%, 25%);
+	/** ROLL RESULT COLORS **/
+	--nimble-roll-success-color: hsl(120, 45%, 55%);
+	--nimble-roll-success-background-color: hsl(120, 30%, 25%);
+	--nimble-roll-failure-color: hsl(0, 65%, 60%);
+	--nimble-roll-failure-background-color: hsl(0, 40%, 25%);
 }

@@ -25,6 +25,131 @@ const schema = () => ({
 		max: 9,
 		nullable: false,
 	}),
+	scaling: new fields.SchemaField(
+		{
+			mode: new fields.StringField({
+				required: true,
+				initial: 'none',
+				nullable: false,
+				choices: ['none', 'upcast', 'upcastChoice'],
+			}),
+			deltas: new fields.ArrayField(
+				new fields.SchemaField({
+					operation: new fields.StringField({
+						required: true,
+						nullable: false,
+						choices: [
+							'addFlatDamage',
+							'addDice',
+							'addReach',
+							'addRange',
+							'addTargets',
+							'addAreaSize',
+							'addDC',
+							'addArmor',
+							'addDuration',
+							'addCondition',
+						],
+					}),
+					value: new fields.NumberField({ required: false, nullable: true, initial: null }),
+					dice: new fields.SchemaField(
+						{
+							count: new fields.NumberField({
+								required: true,
+								nullable: false,
+								initial: 1,
+								integer: true,
+								min: 1,
+							}),
+							faces: new fields.NumberField({
+								required: true,
+								nullable: false,
+								initial: 6,
+								integer: true,
+								min: 2,
+							}),
+						},
+						{ required: false, nullable: true, initial: null },
+					),
+					condition: new fields.StringField({ required: false, nullable: true, initial: null }),
+					targetEffectId: new fields.StringField({
+						required: false,
+						nullable: true,
+						initial: null,
+					}),
+					durationType: new fields.StringField({
+						required: false,
+						nullable: true,
+						initial: null,
+					}),
+				}),
+				{ required: true, nullable: false, initial: [] },
+			),
+			choices: new fields.ArrayField(
+				new fields.SchemaField({
+					label: new fields.StringField({ required: true, nullable: false, initial: '' }),
+					deltas: new fields.ArrayField(
+						new fields.SchemaField({
+							operation: new fields.StringField({
+								required: true,
+								nullable: false,
+								choices: [
+									'addFlatDamage',
+									'addDice',
+									'addReach',
+									'addRange',
+									'addTargets',
+									'addAreaSize',
+									'addDC',
+									'addArmor',
+									'addDuration',
+									'addCondition',
+								],
+							}),
+							value: new fields.NumberField({ required: false, nullable: true, initial: null }),
+							dice: new fields.SchemaField(
+								{
+									count: new fields.NumberField({
+										required: true,
+										nullable: false,
+										initial: 1,
+										integer: true,
+										min: 1,
+									}),
+									faces: new fields.NumberField({
+										required: true,
+										nullable: false,
+										initial: 6,
+										integer: true,
+										min: 2,
+									}),
+								},
+								{ required: false, nullable: true, initial: null },
+							),
+							condition: new fields.StringField({
+								required: false,
+								nullable: true,
+								initial: null,
+							}),
+							targetEffectId: new fields.StringField({
+								required: false,
+								nullable: true,
+								initial: null,
+							}),
+							durationType: new fields.StringField({
+								required: false,
+								nullable: true,
+								initial: null,
+							}),
+						}),
+						{ required: true, nullable: false, initial: [] },
+					),
+				}),
+				{ required: false, nullable: true, initial: null },
+			),
+		},
+		{ required: true, nullable: false },
+	),
 });
 
 declare namespace NimbleSpellData {

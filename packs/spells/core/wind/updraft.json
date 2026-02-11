@@ -71,7 +71,29 @@
 			]
 		},
 		"school": "wind",
-		"tier": 5
+		"tier": 5,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "addRange",
+					"value": 2,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": null,
+					"durationType": null
+				},
+				{
+					"operation": "addAreaSize",
+					"value": 1,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": null,
+					"durationType": null
+				}
+			],
+			"choices": null
+		}
 	},
 	"effects": [],
 	"folder": null,

@@ -92,7 +92,21 @@
 			]
 		},
 		"school": "ice",
-		"tier": 5
+		"tier": 5,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "addAreaSize",
+					"value": 1,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": null,
+					"durationType": null
+				}
+			],
+			"choices": null
+		}
 	},
 	"effects": [],
 	"folder": null,

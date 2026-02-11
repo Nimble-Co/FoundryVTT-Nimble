@@ -48,7 +48,21 @@
 			"selected": []
 		},
 		"school": "radiant",
-		"tier": 3
+		"tier": 3,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "addArmor",
+					"value": 5,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": null,
+					"durationType": null
+				}
+			],
+			"choices": null
+		}
 	},
 	"effects": [],
 	"folder": null,

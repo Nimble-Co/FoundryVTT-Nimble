@@ -81,7 +81,21 @@
 			"selected": []
 		},
 		"school": "necrotic",
-		"tier": 3
+		"tier": 3,
+		"scaling": {
+			"mode": "upcast",
+			"deltas": [
+				{
+					"operation": "addDC",
+					"value": 1,
+					"dice": null,
+					"condition": null,
+					"targetEffectId": "JeRAFUXZteYotazu",
+					"durationType": null
+				}
+			],
+			"choices": null
+		}
 	},
 	"effects": [],
 	"flags": {},

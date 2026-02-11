@@ -59,7 +59,39 @@
 			]
 		},
 		"school": "wind",
-		"tier": 7
+		"tier": 7,
+		"scaling": {
+			"mode": "upcastChoice",
+			"deltas": [],
+			"choices": [
+				{
+					"label": "+1 minute",
+					"deltas": [
+						{
+							"operation": "addDuration",
+							"value": 1,
+							"dice": null,
+							"condition": null,
+							"targetEffectId": null,
+							"durationType": "minute"
+						}
+					]
+				},
+				{
+					"label": "+2 targets",
+					"deltas": [
+						{
+							"operation": "addTargets",
+							"value": 2,
+							"dice": null,
+							"condition": null,
+							"targetEffectId": null,
+							"durationType": null
+						}
+					]
+				}
+			]
+		}
 	},
 	"effects": [],
 	"folder": null,

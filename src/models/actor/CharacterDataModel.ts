@@ -343,6 +343,14 @@ const characterSchema = () => ({
 				nullable: false,
 			}),
 		}),
+		highestUnlockedSpellTier: new fields.NumberField({
+			required: true,
+			initial: null,
+			min: 0,
+			max: 9,
+			integer: true,
+			nullable: true,
+		}),
 	}),
 	levelUpHistory: new fields.ArrayField(
 		new fields.SchemaField({
@@ -585,6 +593,7 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 			value: number;
 			max: number;
 		};
+		highestUnlockedSpellTier: number | null;
 	};
 	declare levelUpHistory: LevelUpHistoryEntry[];
 	declare savingThrows: Record<SaveKeyType, SavingThrowData>;
@@ -597,7 +606,6 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 			...savingThrows(),
 		};
 	}
-
 	// This is necessary to ensure that derived data is included in the toObject data.
 	override toObject(source: true): this['_source'];
 	override toObject(source?: boolean): ReturnType<this['schema']['toObject']>;
