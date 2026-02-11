@@ -22,7 +22,7 @@
 <section class="nimble-sheet__body nimble-sheet__body--item">
 	{#each rules as rule (rule.id)}
 		{@const { ...ruleData } = rule}
-		{@const { tooltipInfo } = item.rules.get(rule.id)}
+		{@const ruleInstance = item.rules.get(rule.id)}
 
 		<div class="nimble-code-block nimble-code-block--rule">
 			<header class="nimble-section-header">
@@ -30,13 +30,24 @@
 					{rule.label || 'New Rule'} ({ruleTypes[rule.type] ?? rule.type})
 				</h4>
 
-				<i
-					class="nimble-rule-help-icon fa-solid fa-circle-question"
-					data-tooltip={tooltipInfo()}
-					data-tooltip-direction="UP"
-					data-tooltip-class="nimble-tooltip"
-				>
-				</i>
+				{#if ruleInstance}
+					<i
+						class="nimble-rule-help-icon fa-solid fa-circle-question"
+						data-tooltip={ruleInstance.tooltipInfo()}
+						data-tooltip-direction="UP"
+						data-tooltip-class="nimble-tooltip"
+					>
+					</i>
+				{:else}
+					<i
+						class="nimble-rule-help-icon fa-solid fa-circle-exclamation"
+						data-tooltip="Unknown rule type: {rule.type}"
+						data-tooltip-direction="UP"
+						data-tooltip-class="nimble-tooltip"
+						style="color: var(--color-level-error);"
+					>
+					</i>
+				{/if}
 
 				<button
 					class="nimble-button"
