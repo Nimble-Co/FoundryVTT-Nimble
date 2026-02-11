@@ -1,5 +1,5 @@
 {
-	"folder": "9207a06f3df082e6",
+	"folder": "4915fea5a41fc733",
 	"name": "I'm Outta Here!",
 	"type": "feature",
 	"img": "icons/magic/air/air-smoke-casting.webp",
@@ -45,7 +45,18 @@
 		"featureType": "class",
 		"class": "cheat",
 		"group": "underhanded-abilities",
-		"gainedAtLevel": 4
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			6,
+			8,
+			10,
+			12,
+			14,
+			16,
+			18
+		]
 	},
 	"effects": [],
 	"flags": {},

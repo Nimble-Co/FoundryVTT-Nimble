@@ -1,5 +1,5 @@
 {
-	"folder": "c0b495898c491076",
+	"folder": "a03073c1f33d5b34",
 	"name": "Bodily Discipline",
 	"type": "feature",
 	"img": "icons/magic/holy/meditation-chi-focus-blue.webp",
@@ -37,7 +37,18 @@
 		"featureType": "class",
 		"class": "zephyr",
 		"group": "martial-arts-ability",
-		"gainedAtLevel": 4
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			6,
+			8,
+			10,
+			12,
+			14,
+			16,
+			18
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": "b8b11dde028cc7df",
+	"folder": "2e9e32bf9e74e633",
 	"name": "Sharpshooter",
 	"type": "feature",
 	"img": "icons/skills/targeting/crosshair-pointed-orange.webp",
@@ -37,7 +37,16 @@
 		"featureType": "class",
 		"class": "hunter",
 		"group": "thrill-of-the-hunt",
-		"gainedAtLevel": 2
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2,
+			4,
+			6,
+			8,
+			12,
+			14
+		]
 	},
 	"effects": [],
 	"flags": {},

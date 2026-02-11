@@ -37,7 +37,10 @@
 		"class": "commander",
 		"group": "champion-of-the-vanguard",
 		"gainedAtLevel": 11,
-		"subclass": "Champion of the Vanguard"
+		"subclass": true,
+		"gainedAtLevels": [
+			11
+		]
 	},
 	"effects": [],
 	"folder": "39d701b7816ab485",

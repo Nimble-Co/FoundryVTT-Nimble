@@ -1,5 +1,5 @@
 {
-	"folder": "6d61edc0313632f0",
+	"folder": "81e685bc5c9127ce",
 	"name": "Blood Sight",
 	"type": "feature",
 	"img": "icons/magic/perception/eye-ringed-glow-angry-small-teal.webp",
@@ -37,7 +37,13 @@
 		"featureType": "class",
 		"class": "shadowmancer",
 		"group": "lesser-invocations",
-		"gainedAtLevel": 8
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3,
+			8,
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

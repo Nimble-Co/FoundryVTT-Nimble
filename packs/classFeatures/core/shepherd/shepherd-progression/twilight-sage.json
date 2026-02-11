@@ -1,5 +1,5 @@
 {
-	"folder": "00526c7e25c0bf82",
+	"folder": "c1face1ec4d1249a",
 	"name": "Twilight Sage",
 	"type": "feature",
 	"img": "icons/creatures/mammals/humanoid-wolf-dog-blue.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "shepherd",
 		"group": "shepherd-progression",
-		"gainedAtLevel": 20
+		"gainedAtLevel": 20,
+		"subclass": false,
+		"gainedAtLevels": [
+			20
+		]
 	},
 	"effects": [],
 	"flags": {},

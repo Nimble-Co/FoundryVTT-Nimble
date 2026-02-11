@@ -1,5 +1,5 @@
 {
-	"folder": "b51f49b6c2c5ac78",
+	"folder": "a95d9a582c294f7c",
 	"name": "Talented Researcher",
 	"type": "feature",
 	"img": "icons/sundries/books/book-embossed-jewel-gold-purple.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "mage",
 		"group": "mage-progression",
-		"gainedAtLevel": 2
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
 	"flags": {},

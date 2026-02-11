@@ -38,7 +38,10 @@
 		"class": "oathsworn",
 		"group": "oath-of-vengeance",
 		"gainedAtLevel": 3,
-		"subclass": "Oath of Vengeance"
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

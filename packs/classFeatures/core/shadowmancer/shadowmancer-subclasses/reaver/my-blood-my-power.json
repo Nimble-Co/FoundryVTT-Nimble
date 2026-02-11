@@ -38,7 +38,10 @@
 		"class": "shadowmancer",
 		"group": "reaver",
 		"gainedAtLevel": 11,
-		"subclass": "Reaver"
+		"subclass": true,
+		"gainedAtLevels": [
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

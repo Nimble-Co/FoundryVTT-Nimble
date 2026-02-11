@@ -1,5 +1,5 @@
 {
-	"folder": "687a5b0a965a0339",
+	"folder": "c5f324248b31dabc",
 	"name": "Unending Judgment",
 	"type": "feature",
 	"img": "icons/magic/holy/projectiles-blades-salvo-yellow.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "oathsworn",
 		"group": "oathsworn-progression",
-		"gainedAtLevel": 18
+		"gainedAtLevel": 18,
+		"subclass": false,
+		"gainedAtLevels": [
+			18
+		]
 	},
 	"effects": [],
 	"flags": {},

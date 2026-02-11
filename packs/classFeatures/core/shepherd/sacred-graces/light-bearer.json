@@ -1,5 +1,5 @@
 {
-	"folder": "00526c7e25c0bf82",
+	"folder": "c1face1ec4d1249a",
 	"name": "Light Bearer",
 	"type": "feature",
 	"img": "icons/magic/light/hand-sparks-glow-yellow.webp",
@@ -37,7 +37,13 @@
 		"featureType": "class",
 		"class": "shepherd",
 		"group": "sacred-grace",
-		"gainedAtLevel": 5
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5,
+			9,
+			13
+		]
 	},
 	"effects": [],
 	"flags": {},

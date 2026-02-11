@@ -38,7 +38,10 @@
 		"class": "shadowmancer",
 		"group": "pact-of-the-abyssal-depths",
 		"gainedAtLevel": 15,
-		"subclass": "Pact of the Abyssal Depths"
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": "c0b495898c491076",
+	"folder": "a03073c1f33d5b34",
 	"name": "Swift Fists",
 	"type": "feature",
 	"img": "icons/skills/melee/unarmed-punch-fist.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "zephyr",
 		"group": "zephyr-progression",
-		"gainedAtLevel": 2
+		"gainedAtLevel": 1,
+		"subclass": false,
+		"gainedAtLevels": [
+			1
+		]
 	},
 	"effects": [],
 	"flags": {},

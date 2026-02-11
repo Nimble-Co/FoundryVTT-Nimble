@@ -38,7 +38,10 @@
 		"class": "the-cheat",
 		"group": "tools-of-the-silent-blade",
 		"gainedAtLevel": 15,
-		"subclass": "Tools of the Silent Blade"
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

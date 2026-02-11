@@ -36,10 +36,16 @@
 		"featureType": "class",
 		"class": "commander",
 		"group": "weapon-mastery",
-		"gainedAtLevel": 6
+		"gainedAtLevel": 6,
+		"subclass": false,
+		"gainedAtLevels": [
+			6,
+			10,
+			14
+		]
 	},
 	"effects": [],
-	"folder": "9548936586e677f6",
+	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

@@ -1,5 +1,5 @@
 {
-	"folder": "b8b11dde028cc7df",
+	"folder": "2e9e32bf9e74e633",
 	"name": "Hunter's Resolve",
 	"type": "feature",
 	"img": "icons/creatures/eyes/lizard-single-slit-blue.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "hunter",
 		"group": "hunter-progression",
-		"gainedAtLevel": 5
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5
+		]
 	},
 	"effects": [],
 	"flags": {},

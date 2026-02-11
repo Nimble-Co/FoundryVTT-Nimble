@@ -38,7 +38,10 @@
 		"class": "mage",
 		"group": "invoker-of-control",
 		"gainedAtLevel": 3,
-		"subclass": "Invoker of Control"
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -38,7 +38,10 @@
 		"class": "oathsworn",
 		"group": "oath-of-refuge",
 		"gainedAtLevel": 7,
-		"subclass": "Oath of Refuge"
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

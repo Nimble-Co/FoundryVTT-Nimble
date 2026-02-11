@@ -1,5 +1,5 @@
 {
-	"folder": "249bc0cebeccd302",
+	"folder": "910213b07f81138f",
 	"name": "Mana and Unlock Tier 1 Spells",
 	"type": "feature",
 	"img": "icons/magic/air/air-wave-gust-blue.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "songweaver",
 		"group": "songweaver-progression",
-		"gainedAtLevel": 2
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
 	"flags": {},

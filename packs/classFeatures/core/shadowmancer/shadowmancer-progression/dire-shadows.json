@@ -1,5 +1,5 @@
 {
-	"folder": "6d61edc0313632f0",
+	"folder": "81e685bc5c9127ce",
 	"name": "Dire Shadows",
 	"type": "feature",
 	"img": "icons/creatures/unholy/demon-horned-black-yellow.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "shadowmancer",
 		"group": "shadowmancer-progression",
-		"gainedAtLevel": 17
+		"gainedAtLevel": 17,
+		"subclass": false,
+		"gainedAtLevels": [
+			17
+		]
 	},
 	"effects": [],
 	"flags": {},

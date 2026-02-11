@@ -1,5 +1,5 @@
 {
-	"folder": "9207a06f3df082e6",
+	"folder": "4915fea5a41fc733",
 	"name": "Thieves' Cant",
 	"type": "feature",
 	"img": "icons/skills/social/diplomacy-unity-alliance.webp",
@@ -51,7 +51,11 @@
 		"featureType": "class",
 		"class": "the-cheat",
 		"group": "the-cheat-progression",
-		"gainedAtLevel": 3
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

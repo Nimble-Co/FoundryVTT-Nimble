@@ -38,7 +38,10 @@
 		"class": "shadowmancer",
 		"group": "pact-of-the-red-dragon",
 		"gainedAtLevel": 7,
-		"subclass": "Pact of the Red Dragon"
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

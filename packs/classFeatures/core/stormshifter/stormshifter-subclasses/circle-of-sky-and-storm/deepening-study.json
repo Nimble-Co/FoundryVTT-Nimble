@@ -38,7 +38,10 @@
 		"class": "stormshifter",
 		"group": "circle-of-sky-and-storm",
 		"gainedAtLevel": 3,
-		"subclass": "Circle of Sky & Storm"
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

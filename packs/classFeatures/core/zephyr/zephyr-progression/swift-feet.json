@@ -1,5 +1,5 @@
 {
-	"folder": "c0b495898c491076",
+	"folder": "a03073c1f33d5b34",
 	"name": "Swift Feet",
 	"type": "feature",
 	"img": "icons/skills/movement/feet-winged-sandals-tan.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "zephyr",
 		"group": "zephyr-progression",
-		"gainedAtLevel": 2
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
 	"flags": {},

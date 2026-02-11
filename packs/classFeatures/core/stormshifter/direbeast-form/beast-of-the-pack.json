@@ -1,5 +1,5 @@
 {
-	"folder": "4203ea7551825792",
+	"folder": "0075e1e989d0552b",
 	"name": "Beast of the Pack",
 	"type": "feature",
 	"img": "icons/creatures/abilities/wolf-howl-moon-purple.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "stormshifter",
 		"group": "direbeast-form",
-		"gainedAtLevel": 2
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

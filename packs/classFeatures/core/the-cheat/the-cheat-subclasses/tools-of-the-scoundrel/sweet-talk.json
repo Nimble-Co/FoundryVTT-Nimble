@@ -38,7 +38,10 @@
 		"class": "the-cheat",
 		"group": "tools-of-the-scoundrel",
 		"gainedAtLevel": 3,
-		"subclass": "Tools of the Scoundrel"
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

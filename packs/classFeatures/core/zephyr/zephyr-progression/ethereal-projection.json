@@ -1,5 +1,5 @@
 {
-	"folder": "c0b495898c491076",
+	"folder": "a03073c1f33d5b34",
 	"name": "Ethereal Projection",
 	"type": "feature",
 	"img": "icons/creatures/magical/spirit-undead-ghost-blue.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "zephyr",
 		"group": "zephyr-progression",
-		"gainedAtLevel": 3
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -38,7 +38,10 @@
 		"class": "stormshifter",
 		"group": "circle-of-fang-and-claw",
 		"gainedAtLevel": 3,
-		"subclass": "Circle of Fang & Claw"
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -38,7 +38,10 @@
 		"class": "berserker",
 		"group": "path-of-the-red-mist",
 		"gainedAtLevel": 11,
-		"subclass": "Path of the Red Mist"
+		"subclass": true,
+		"gainedAtLevels": [
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

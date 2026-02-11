@@ -1,5 +1,5 @@
 {
-	"folder": "c0b495898c491076",
+	"folder": "a03073c1f33d5b34",
 	"name": "Unyielding Resolve",
 	"type": "feature",
 	"img": "icons/magic/earth/strike-fist-stone.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "zephyr",
 		"group": "zephyr-progression",
-		"gainedAtLevel": 4
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4
+		]
 	},
 	"effects": [],
 	"flags": {},

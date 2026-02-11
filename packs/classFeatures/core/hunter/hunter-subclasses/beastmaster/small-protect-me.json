@@ -37,8 +37,12 @@
 		"featureType": "class",
 		"class": "hunter",
 		"group": "beastmaster",
-		"gainedAtLevel": 3,
-		"subclass": "Beastmaster"
+		"gainedAtLevel": 2,
+		"subclass": true,
+		"gainedAtLevels": [
+			2,
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

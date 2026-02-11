@@ -1,5 +1,5 @@
 {
-	"folder": "b8b11dde028cc7df",
+	"folder": "2e9e32bf9e74e633",
 	"name": "Peerless Hunter",
 	"type": "feature",
 	"img": "icons/creatures/claws/claw-bear-paw-swipe-red.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "hunter",
 		"group": "hunter-progression",
-		"gainedAtLevel": 17
+		"gainedAtLevel": 17,
+		"subclass": false,
+		"gainedAtLevels": [
+			17
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": "249bc0cebeccd302",
+	"folder": "910213b07f81138f",
 	"name": "Jack of All Trades",
 	"type": "feature",
 	"img": "icons/tools/smithing/anvil.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "songweaver",
 		"group": "songweaver-progression",
-		"gainedAtLevel": 2
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
 	"flags": {},

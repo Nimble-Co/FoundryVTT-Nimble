@@ -87,7 +87,7 @@ export function createClassIndex(pack: Pack, _options: Record<string, any>) {
 
 export function createFeatureIndex(pack: Pack, _options: Record<string, any>) {
 	pack.getIndex({
-		fields: ['system.description', 'system.gainedAtLevel'],
+		fields: ['system.description', 'system.gainedAtLevel', 'system.gainedAtLevels'],
 	});
 }
 

@@ -1,5 +1,5 @@
 {
-	"folder": "249bc0cebeccd302",
+	"folder": "910213b07f81138f",
 	"name": "Song of Domination",
 	"type": "feature",
 	"img": "icons/magic/control/debuff-chains-shackles-movement-blue.webp",
@@ -37,7 +37,14 @@
 		"featureType": "class",
 		"class": "songweaver",
 		"group": "lyrical-weaponry",
-		"gainedAtLevel": 4
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			9,
+			13,
+			17
+		]
 	},
 	"effects": [],
 	"flags": {},

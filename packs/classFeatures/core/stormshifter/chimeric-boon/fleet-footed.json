@@ -1,5 +1,5 @@
 {
-	"folder": "4203ea7551825792",
+	"folder": "0075e1e989d0552b",
 	"name": "Fleet Footed",
 	"type": "feature",
 	"img": "icons/commodities/claws/claw-lizard-white-black.webp",
@@ -43,7 +43,14 @@
 		"featureType": "class",
 		"class": "stormshifter",
 		"group": "chimeric-boon",
-		"gainedAtLevel": 6
+		"gainedAtLevel": 6,
+		"subclass": false,
+		"gainedAtLevels": [
+			6,
+			9,
+			12,
+			17
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": "687a5b0a965a0339",
+	"folder": "c5f324248b31dabc",
 	"name": "Blinding Aura",
 	"type": "feature",
 	"img": "icons/magic/light/beam-strike-orange-gold.webp",
@@ -37,7 +37,16 @@
 		"featureType": "class",
 		"class": "oathsworn",
 		"group": "sacred-decree",
-		"gainedAtLevel": 3
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3,
+			6,
+			9,
+			12,
+			14,
+			16
+		]
 	},
 	"effects": [],
 	"flags": {},

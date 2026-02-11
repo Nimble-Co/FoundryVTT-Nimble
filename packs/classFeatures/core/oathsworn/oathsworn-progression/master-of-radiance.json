@@ -1,5 +1,5 @@
 {
-	"folder": "687a5b0a965a0339",
+	"folder": "c5f324248b31dabc",
 	"name": "Master of Radiance",
 	"type": "feature",
 	"img": "icons/magic/light/explosion-star-glow-orange.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "oathsworn",
 		"group": "oathsworn-progression",
-		"gainedAtLevel": 7
+		"gainedAtLevel": 7,
+		"subclass": false,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": "687a5b0a965a0339",
+	"folder": "c5f324248b31dabc",
 	"name": "Shining Mandate",
 	"type": "feature",
 	"img": "icons/skills/melee/strike-hammer-destructive-orange.webp",
@@ -37,7 +37,16 @@
 		"featureType": "class",
 		"class": "oathsworn",
 		"group": "sacred-decree",
-		"gainedAtLevel": 3
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3,
+			6,
+			9,
+			12,
+			14,
+			16
+		]
 	},
 	"effects": [],
 	"flags": {},

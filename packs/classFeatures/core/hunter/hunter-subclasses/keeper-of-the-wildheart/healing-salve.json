@@ -38,7 +38,10 @@
 		"class": "hunter",
 		"group": "keeper-of-the-wildheart",
 		"gainedAtLevel": 7,
-		"subclass": "Keeper of the Wildheart"
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

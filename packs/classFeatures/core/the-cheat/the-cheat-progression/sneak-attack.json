@@ -36,10 +36,20 @@
 		"featureType": "class",
 		"class": "the-cheat",
 		"group": "the-cheat-progression",
-		"gainedAtLevel": 1
+		"gainedAtLevel": 1,
+		"subclass": false,
+		"gainedAtLevels": [
+			1,
+			3,
+			7,
+			9,
+			11,
+			15,
+			17
+		]
 	},
 	"effects": [],
-	"folder": "9207a06f3df082e6",
+	"folder": "4915fea5a41fc733",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

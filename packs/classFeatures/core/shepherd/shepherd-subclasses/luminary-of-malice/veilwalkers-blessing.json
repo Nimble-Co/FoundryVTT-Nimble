@@ -38,7 +38,10 @@
 		"class": "shepherd",
 		"group": "luminary-of-malice",
 		"gainedAtLevel": 7,
-		"subclass": "Luminary of Malice"
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": "7a2072a1eb2a6128",
+	"folder": "d40bf36abe9f4b0a",
 	"name": "Intensifying Fury",
 	"type": "feature",
 	"img": "icons/magic/control/buff-strength-muscle-damage-red.webp",
@@ -37,7 +37,15 @@
 		"featureType": "class",
 		"class": "berserker",
 		"group": "berserker-progression",
-		"gainedAtLevel": 2
+		"gainedAtLevel": 2,
+		"gainedAtLevels": [
+			2,
+			6,
+			9,
+			13,
+			17
+		],
+		"subclass": false
 	},
 	"effects": [],
 	"flags": {},

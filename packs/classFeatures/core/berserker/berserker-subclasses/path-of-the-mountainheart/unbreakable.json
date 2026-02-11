@@ -38,7 +38,10 @@
 		"class": "berserker",
 		"group": "path-of-the-mountainheart",
 		"gainedAtLevel": 7,
-		"subclass": "Path of the Mountainheart"
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

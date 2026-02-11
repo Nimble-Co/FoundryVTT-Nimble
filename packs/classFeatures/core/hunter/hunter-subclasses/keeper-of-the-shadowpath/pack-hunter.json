@@ -38,7 +38,10 @@
 		"class": "hunter",
 		"group": "keeper-of-the-shadowpath",
 		"gainedAtLevel": 11,
-		"subclass": "Keeper of the Shadowpath"
+		"subclass": true,
+		"gainedAtLevels": [
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

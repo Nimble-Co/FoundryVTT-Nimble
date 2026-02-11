@@ -36,10 +36,14 @@
 		"featureType": "class",
 		"class": "commander",
 		"group": "commanders-orders",
-		"gainedAtLevel": 2
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
-	"folder": "9548936586e677f6",
+	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

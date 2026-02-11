@@ -38,7 +38,11 @@
 		"class": "hunter",
 		"group": "beastmaster",
 		"gainedAtLevel": 3,
-		"subclass": "Beastmaster"
+		"subclass": true,
+		"gainedAtLevels": [
+			3,
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

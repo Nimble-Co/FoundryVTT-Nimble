@@ -1,5 +1,5 @@
 {
-	"folder": "687a5b0a965a0339",
+	"folder": "c5f324248b31dabc",
 	"name": "Radiant Judgement",
 	"type": "feature",
 	"img": "icons/skills/melee/strike-sword-slashing-red.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "oathsworn",
 		"group": "oathsworn-progression",
-		"gainedAtLevel": 1
+		"gainedAtLevel": 1,
+		"subclass": false,
+		"gainedAtLevels": [
+			1
+		]
 	},
 	"effects": [],
 	"flags": {},

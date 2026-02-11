@@ -38,7 +38,10 @@
 		"class": "songweaver",
 		"group": "herald-of-courage",
 		"gainedAtLevel": 3,
-		"subclass": "Herald of Courage"
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

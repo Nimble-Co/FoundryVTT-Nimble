@@ -37,7 +37,10 @@
 		"class": "commander",
 		"group": "champion-of-the-bulwark",
 		"gainedAtLevel": 15,
-		"subclass": "Champion of the Bulwark"
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
 	"folder": "ef7bbbb1a86323cd",

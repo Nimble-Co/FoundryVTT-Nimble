@@ -38,7 +38,10 @@
 		"class": "commander",
 		"group": "spellblade",
 		"gainedAtLevel": 3,
-		"subclass": "Spellblade"
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

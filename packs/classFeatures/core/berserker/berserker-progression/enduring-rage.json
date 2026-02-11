@@ -1,5 +1,5 @@
 {
-	"folder": "7a2072a1eb2a6128",
+	"folder": "d40bf36abe9f4b0a",
 	"name": "Enduring Rage",
 	"type": "feature",
 	"img": "icons/skills/wounds/blood-cells-vessel-red.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "berserker",
 		"group": "berserker-progression",
-		"gainedAtLevel": 4
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4
+		]
 	},
 	"effects": [],
 	"flags": {},

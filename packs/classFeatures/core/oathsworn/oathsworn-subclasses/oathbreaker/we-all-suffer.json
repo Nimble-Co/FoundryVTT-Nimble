@@ -38,7 +38,10 @@
 		"class": "oathsworn",
 		"group": "oathbreaker",
 		"gainedAtLevel": 3,
-		"subclass": "Oathbreaker"
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

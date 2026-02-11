@@ -1,5 +1,5 @@
 {
-	"folder": "7a2072a1eb2a6128",
+	"folder": "d40bf36abe9f4b0a",
 	"name": "Whirlwind",
 	"type": "feature",
 	"img": "icons/weapons/axes/axe-double-short-orange.webp",
@@ -37,7 +37,16 @@
 		"description": "<p>2 actions: Attack ALL targets within your melee weapon's reach.</p>",
 		"featureType": "class",
 		"class": "",
-		"gainedAtLevel": 4
+		"gainedAtLevel": 4,
+		"gainedAtLevels": [
+			4,
+			6,
+			8,
+			12,
+			14,
+			16
+		],
+		"subclass": false
 	},
 	"effects": [],
 	"flags": {},

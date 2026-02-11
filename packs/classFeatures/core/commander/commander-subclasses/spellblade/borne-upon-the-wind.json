@@ -37,8 +37,11 @@
 		"featureType": "class",
 		"class": "commander",
 		"group": "spellblade",
-		"gainedAtLevel": 3,
-		"subclass": "Spellblade"
+		"gainedAtLevel": 1,
+		"subclass": true,
+		"gainedAtLevels": [
+			1
+		]
 	},
 	"effects": [],
 	"flags": {},

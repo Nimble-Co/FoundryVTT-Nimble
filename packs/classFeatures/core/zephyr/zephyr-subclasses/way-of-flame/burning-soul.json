@@ -38,7 +38,10 @@
 		"class": "zephyr",
 		"group": "way-of-flame",
 		"gainedAtLevel": 15,
-		"subclass": "Way of Flame"
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": "249bc0cebeccd302",
+	"folder": "910213b07f81138f",
 	"name": "Stompy",
 	"type": "feature",
 	"img": "icons/creatures/magical/construct-iron-stomping-yellow.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "songweaver",
 		"group": "a-people-person",
-		"gainedAtLevel": 5
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5
+		]
 	},
 	"effects": [],
 	"flags": {},

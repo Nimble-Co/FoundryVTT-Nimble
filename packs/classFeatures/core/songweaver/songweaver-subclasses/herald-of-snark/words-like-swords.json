@@ -38,7 +38,10 @@
 		"class": "songweaver",
 		"group": "herald-of-snark",
 		"gainedAtLevel": 15,
-		"subclass": "Herald of Snark"
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": "4203ea7551825792",
+	"folder": "0075e1e989d0552b",
 	"name": "Beastshift",
 	"type": "feature",
 	"img": "icons/creatures/birds/corvid-watchful-glowing-green.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "stormshifter",
 		"group": "stormshifter-progression",
-		"gainedAtLevel": 1
+		"gainedAtLevel": 1,
+		"subclass": false,
+		"gainedAtLevels": [
+			1
+		]
 	},
 	"effects": [],
 	"flags": {},

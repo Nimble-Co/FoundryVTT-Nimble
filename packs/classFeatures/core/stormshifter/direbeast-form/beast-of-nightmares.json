@@ -1,5 +1,5 @@
 {
-	"folder": "4203ea7551825792",
+	"folder": "0075e1e989d0552b",
 	"name": "Beast of Nightmares",
 	"type": "feature",
 	"img": "icons/creatures/invertebrates/spider-skull-green.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "stormshifter",
 		"group": "direbeast-form",
-		"gainedAtLevel": 2
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5
+		]
 	},
 	"effects": [],
 	"flags": {},

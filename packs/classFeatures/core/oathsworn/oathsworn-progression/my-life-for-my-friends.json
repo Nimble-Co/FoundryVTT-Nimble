@@ -1,5 +1,5 @@
 {
-	"folder": "687a5b0a965a0339",
+	"folder": "c5f324248b31dabc",
 	"name": "My Life, for My Friends",
 	"type": "feature",
 	"img": "icons/equipment/shield/heater-embossed-gold.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "oathsworn",
 		"group": "oathsworn-progression",
-		"gainedAtLevel": 4
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4
+		]
 	},
 	"effects": [],
 	"flags": {},

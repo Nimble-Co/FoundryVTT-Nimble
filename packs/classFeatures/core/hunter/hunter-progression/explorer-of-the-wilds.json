@@ -1,5 +1,5 @@
 {
-	"folder": "b8b11dde028cc7df",
+	"folder": "2e9e32bf9e74e633",
 	"name": "Explorer of the Wilds",
 	"type": "feature",
 	"img": "icons/commodities/treasure/dreamcatcher-blue.webp",
@@ -49,7 +49,11 @@
 		"featureType": "class",
 		"class": "hunter",
 		"group": "hunter-progression",
-		"gainedAtLevel": 4
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4
+		]
 	},
 	"effects": [],
 	"flags": {},

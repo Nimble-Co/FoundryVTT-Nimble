@@ -1,5 +1,5 @@
 {
-	"folder": "4203ea7551825792",
+	"folder": "0075e1e989d0552b",
 	"name": "Fearsome Beast",
 	"type": "feature",
 	"img": "icons/creatures/abilities/bear-roar-bite-brown.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "stormshifter",
 		"group": "direbeast-form",
-		"gainedAtLevel": 2
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -38,7 +38,10 @@
 		"class": "shepherd",
 		"group": "luminary-of-mercy",
 		"gainedAtLevel": 15,
-		"subclass": "Luminary of Mercy"
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

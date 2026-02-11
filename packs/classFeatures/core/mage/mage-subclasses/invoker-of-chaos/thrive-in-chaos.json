@@ -38,7 +38,10 @@
 		"class": "mage",
 		"group": "invoker-of-chaos",
 		"gainedAtLevel": 11,
-		"subclass": "Invoker of Chaos"
+		"subclass": true,
+		"gainedAtLevels": [
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

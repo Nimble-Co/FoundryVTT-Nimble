@@ -1,5 +1,5 @@
 {
-	"folder": "c0b495898c491076",
+	"folder": "a03073c1f33d5b34",
 	"name": "Iron Defense",
 	"type": "feature",
 	"img": "icons/skills/melee/maneuver-sword-katana-yellow.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "zephyr",
 		"group": "zephyr-progression",
-		"gainedAtLevel": 1
+		"gainedAtLevel": 1,
+		"subclass": false,
+		"gainedAtLevels": [
+			1
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": "4203ea7551825792",
+	"folder": "0075e1e989d0552b",
 	"name": "Stormborn (2)",
 	"type": "feature",
 	"img": "icons/magic/lightning/bolt-forked-large-teal-purple.webp",
@@ -37,7 +37,12 @@
 		"featureType": "class",
 		"class": "stormshifter",
 		"group": "stormshifter-progression",
-		"gainedAtLevel": 15
+		"gainedAtLevel": 8,
+		"subclass": false,
+		"gainedAtLevels": [
+			8,
+			13
+		]
 	},
 	"effects": [],
 	"flags": {},

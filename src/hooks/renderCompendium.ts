@@ -5,9 +5,10 @@ const LEVEL_NAME_FLEX_CLASS = 'nimble-class-feature-name-flex';
 
 type FeatureEntryData = {
 	entryElement: HTMLElement;
-	gainedAtLevel: number | null;
+	gainedAtLevels: number[];
 	nameElement: HTMLElement;
 	parentElement: HTMLElement;
+	sortLevel: number | null;
 	title: string;
 };
 
@@ -22,6 +23,45 @@ function toLevel(value: unknown): number | null {
 	}
 
 	return null;
+}
+
+function toLevels(value: unknown): number[] {
+	const levels = new Set<number>();
+
+	const pushLevel = (candidate: unknown) => {
+		const parsed = toLevel(candidate);
+		if (parsed !== null) levels.add(parsed);
+	};
+
+	if (Array.isArray(value)) {
+		for (const candidate of value) {
+			pushLevel(candidate);
+		}
+	} else if (typeof value === 'string' && value.includes(',')) {
+		for (const candidate of value.split(',')) {
+			pushLevel(candidate);
+		}
+	} else if (typeof value === 'string') {
+		const matches = value.match(/\d+/g);
+		if (matches && matches.length > 1) {
+			for (const candidate of matches) {
+				pushLevel(candidate);
+			}
+		} else {
+			pushLevel(value);
+		}
+	} else {
+		pushLevel(value);
+	}
+
+	return [...levels].sort((a, b) => a - b);
+}
+
+function getFeatureLevels(indexEntry: any): number[] {
+	const gainedAtLevels = toLevels(foundry.utils.getProperty(indexEntry, 'system.gainedAtLevels'));
+	if (gainedAtLevels.length > 0) return gainedAtLevels;
+
+	return toLevels(foundry.utils.getProperty(indexEntry, 'system.gainedAtLevel'));
 }
 
 function removeLevelBadge(entryElement: HTMLElement) {
@@ -44,16 +84,17 @@ function collectClassFeatureEntryData(pack: any, element: HTMLElement): FeatureE
 			entryElement;
 
 		const indexEntry = pack.index.get(entryId);
-		const gainedAtLevel = toLevel(foundry.utils.getProperty(indexEntry, 'system.gainedAtLevel'));
+		const gainedAtLevels = getFeatureLevels(indexEntry);
 		const title =
 			(typeof indexEntry?.name === 'string' ? indexEntry.name : '') ||
 			(nameElement.textContent?.trim() ?? '');
 
 		entries.push({
 			entryElement,
-			gainedAtLevel,
+			gainedAtLevels,
 			nameElement,
 			parentElement: entryElement.parentElement,
+			sortLevel: gainedAtLevels[0] ?? null,
 			title,
 		});
 	}
@@ -72,9 +113,15 @@ function sortClassFeatureEntries(entries: FeatureEntryData[]) {
 
 	for (const [parentElement, groupedEntries] of groupedByParent) {
 		groupedEntries.sort((a, b) => {
-			const aLevel = a.gainedAtLevel ?? Number.MAX_SAFE_INTEGER;
-			const bLevel = b.gainedAtLevel ?? Number.MAX_SAFE_INTEGER;
+			const aLevel = a.sortLevel ?? Number.MAX_SAFE_INTEGER;
+			const bLevel = b.sortLevel ?? Number.MAX_SAFE_INTEGER;
 			if (aLevel !== bLevel) return aLevel - bLevel;
+
+			const aIsSingleLevel = a.gainedAtLevels.length === 1;
+			const bIsSingleLevel = b.gainedAtLevels.length === 1;
+			if (aIsSingleLevel !== bIsSingleLevel) {
+				return aIsSingleLevel ? -1 : 1;
+			}
 
 			return a.title.localeCompare(b.title, undefined, {
 				numeric: true,
@@ -89,8 +136,8 @@ function sortClassFeatureEntries(entries: FeatureEntryData[]) {
 }
 
 function applyClassFeatureLevelsToEntries(entries: FeatureEntryData[]) {
-	for (const { entryElement, gainedAtLevel, nameElement } of entries) {
-		if (!gainedAtLevel) {
+	for (const { entryElement, gainedAtLevels, nameElement } of entries) {
+		if (gainedAtLevels.length < 1) {
 			removeLevelBadge(entryElement);
 			continue;
 		}
@@ -113,7 +160,7 @@ function applyClassFeatureLevelsToEntries(entries: FeatureEntryData[]) {
 		levelBadge.style.setProperty('display', 'inline-block', 'important');
 		levelBadge.style.setProperty('white-space', 'nowrap', 'important');
 
-		levelBadge.textContent = String(gainedAtLevel);
+		levelBadge.textContent = gainedAtLevels.join(', ');
 		entryElement.classList.add(ENTRY_WITH_LEVEL_CLASS);
 	}
 }
@@ -124,7 +171,7 @@ export default function renderCompendium(application: any, element: HTMLElement)
 
 	void pack
 		.getIndex({
-			fields: ['system.gainedAtLevel'],
+			fields: ['system.gainedAtLevel', 'system.gainedAtLevels'],
 		})
 		.then(() => {
 			const entryData = collectClassFeatureEntryData(pack, element);

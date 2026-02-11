@@ -38,7 +38,10 @@
 		"class": "zephyr",
 		"group": "way-of-pain",
 		"gainedAtLevel": 7,
-		"subclass": "Way of Pain"
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

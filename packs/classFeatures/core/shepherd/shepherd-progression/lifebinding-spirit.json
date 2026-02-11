@@ -1,8 +1,8 @@
 {
-	"folder": "a03073c1f33d5b34",
-	"name": "Kinetic Momentum",
+	"folder": "c1face1ec4d1249a",
+	"name": "Lifebinding Spirit",
 	"type": "feature",
-	"img": "icons/magic/movement/abstract-ribbons-red-orange.webp",
+	"img": "icons/magic/light/hand-sparks-glow-yellow.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -33,14 +33,14 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Whenever you gain a Wound, gain a Burst of Speed.</p>",
+		"description": "<p>Action: Summon a spirit companion that follows you and is immune to harm. It lasts until you cast this spell again, take a Safe Rest, or it heals a number of times equal to the mana spent summoning it.</p><p>Action: It attacks or heals a creature within Reach 4. It attacks for 1d6+WIL radiant damage (ignoring armor), or heals for the same amount.</p><p><strong>Upcasting:</strong> Increment its die size by 1 (max d12), +1 healing use.</p>",
 		"featureType": "class",
-		"class": "zephyr",
-		"group": "zephyr-progression",
-		"gainedAtLevel": 3,
+		"class": "shepherd",
+		"group": "shepherd-progression",
+		"gainedAtLevel": 2,
 		"subclass": false,
 		"gainedAtLevels": [
-			3
+			2
 		]
 	},
 	"effects": [],
@@ -49,9 +49,9 @@
 		"coreVersion": "13.347",
 		"systemId": "nimble",
 		"systemVersion": "0.1.9",
-		"createdTime": 1762053465185,
-		"modifiedTime": 1762053681030,
+		"createdTime": 1761714066553,
+		"modifiedTime": 1761714165315,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "aTT5T3bYQNXCxT4O"
+	"_id": "n6Df3QpL8sV1xR2M"
 }

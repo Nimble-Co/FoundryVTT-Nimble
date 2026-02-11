@@ -1,5 +1,5 @@
 {
-	"folder": "c0b495898c491076",
+	"folder": "a03073c1f33d5b34",
 	"name": "Reverberating Strikes",
 	"type": "feature",
 	"img": "icons/skills/melee/strike-hammer-destructive-blue.webp",
@@ -37,7 +37,11 @@
 		"featureType": "class",
 		"class": "zephyr",
 		"group": "zephyr-progression",
-		"gainedAtLevel": 5
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": "7a2072a1eb2a6128",
+	"folder": "d40bf36abe9f4b0a",
 	"name": "Rage",
 	"type": "feature",
 	"img": "icons/skills/social/intimidation-impressing.webp",
@@ -37,7 +37,12 @@
 		"featureType": "class",
 		"class": "berserker",
 		"group": "berserker-progression",
-		"gainedAtLevel": 1
+		"gainedAtLevel": 1,
+		"gainedAtLevels": [
+			1,
+			5
+		],
+		"subclass": false
 	},
 	"effects": [],
 	"flags": {},
