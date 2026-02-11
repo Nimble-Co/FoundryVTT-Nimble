@@ -13,7 +13,7 @@
 		aria-label={localize(tab.tooltip)}
 		data-tooltip={localize(tab.tooltip)}
 		data-tooltip-direction="UP"
-		onclick={() => (currentTab = tab)}
+		onpointerup={(e) => e.button === 0 && (currentTab = tab)}
 	>
 		<i class={tab.icon}></i>
 		{localize(tab.label ?? '')}
