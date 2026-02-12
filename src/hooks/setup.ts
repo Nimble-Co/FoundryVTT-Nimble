@@ -1,4 +1,5 @@
 import registerKeybindings from '../registerKeyBindings.js';
+import registerSystemSettings from '../settings/index.js';
 import { preparePackIndexes } from '../utils/preparePackIndexes.js';
 
 /**
@@ -41,6 +42,7 @@ function makeApplicationDialogResizable(appClass: any): boolean {
 export default function setup() {
 	preparePackIndexes();
 	registerKeybindings();
+	registerSystemSettings();
 
 	game.nimble.conditions.initialize();
 
