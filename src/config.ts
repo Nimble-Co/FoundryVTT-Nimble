@@ -669,6 +669,10 @@ const levelUpDialog = {
 	completeAllSelectionsTooltip: 'NIMBLE.levelUpDialog.completeAllSelectionsTooltip',
 };
 
+const skillCheckDialog = {
+	hideRoll: 'NIMBLE.prompts.hideRoll',
+};
+
 const levelDownDialog = {
 	level: 'NIMBLE.levelDownDialog.level',
 	changesToRevert: 'NIMBLE.levelDownDialog.changesToRevert',
@@ -875,6 +879,7 @@ const NIMBLE = {
 	languageHints,
 	languageImages,
 	languages,
+	skillCheckDialog,
 	levelDownDialog,
 	levelUpDialog,
 	manaConfig,

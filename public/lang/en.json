@@ -393,12 +393,15 @@
 			"rollSavingThrowSpecific": "Roll {save} Save",
 			"rollSkillCheck": "Roll Skill Check",
 			"rollSkillCheckSpecific": "Roll {skill} Check",
-			"fieldRest": "Field Rest"
+			"fieldRest": "Field Rest",
+			"hideRoll": "Hide From Players?"
 		},
 		"hints": {
 			"skillPointAssignment": "You may assign a single skill point to a skill of your choice. In addition, you may transfer one of your assigned skill points to another skill of your choice.",
 			"characterCreationSkillPointAssignment": "You can now assign 4 skills points to increase the modifiers for your skills.",
-			"statAssignment": "Below you will find the stat bonuses granted by your selected array. Drag and drop each of these values onto one of the attribute boxes below to assign your stats."
+			"statAssignment": "Below you will find the stat bonuses granted by your selected array. Drag and drop each of these values onto one of the attribute boxes below to assign your stats.",
+			"hideRollsFromPlayersByDefaultHint": "When enabled, skill check and weapon roll dialogs will default to hiding the roll from other players.",
+			"hideRollsFromPlayersByDefault": "Hide Rolls by Default"
 		},
 		"statIncrease": {
 			"header": "Stat Increase",
