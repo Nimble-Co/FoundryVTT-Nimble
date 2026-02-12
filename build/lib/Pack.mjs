@@ -160,15 +160,16 @@ export default class Pack {
 	#prepareBoonFolderAssignments() {
 		/** @type {any[]} */
 		const boons = [...this.data.values()].filter(
-			(source) =>
-				typeof source?._id === 'string' && typeof source?.system?.boonType === 'string',
+			(source) => typeof source?._id === 'string' && typeof source?.system?.boonType === 'string',
 		);
 		if (boons.length === 0) return new Map();
 
 		const statsTemplate = this.#getFolderStatsTemplate(boons);
 		const configuredBoonTypes = ['minor', 'major', 'epic'];
 		const boonTypes = [
-			...new Set(boons.map((source) => source.system.boonType.trim().toLowerCase()).filter(Boolean)),
+			...new Set(
+				boons.map((source) => source.system.boonType.trim().toLowerCase()).filter(Boolean),
+			),
 		].sort((a, b) => {
 			const aIndex = configuredBoonTypes.indexOf(a);
 			const bIndex = configuredBoonTypes.indexOf(b);
@@ -188,7 +189,7 @@ export default class Pack {
 				folder: null,
 				name: this.#toDisplayBoonFolderName(boonType),
 				sort: index * 10,
-				sorting: 'a',
+				sorting: boonType === 'lodging' ? 'm' : 'a',
 				type: this.documentType,
 			};
 
@@ -201,6 +202,10 @@ export default class Pack {
 		return boons.reduce((acc, source) => {
 			const boonType = source.system.boonType.trim().toLowerCase();
 			const folder = foldersByType.get(boonType);
+			if (boonType === 'lodging') {
+				const sortOrder = this.#getLodgingBoonSortOrder(source.name);
+				if (sortOrder !== null) source.sort = sortOrder;
+			}
 			if (folder) acc.set(source._id, folder._id);
 			return acc;
 		}, new Map());
@@ -285,6 +290,25 @@ export default class Pack {
 					.map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
 					.join(' ')} Boons`;
 		}
+	}
+
+	#getLodgingBoonSortOrder(boonName) {
+		if (typeof boonName !== 'string') return null;
+
+		const order = [
+			'lodging boons',
+			'recover 2 additional wounds',
+			'gain lvl temp hp',
+			'gain key temp hit dice',
+			'+1 speed',
+			'inspired (reroll any die, once)',
+			'advantage vs. fear/charm/etc.',
+			'learn an important rumor',
+			'+key mana',
+		];
+
+		const index = order.indexOf(boonName.trim().toLowerCase());
+		return index === -1 ? null : index * 10;
 	}
 
 	#getBoonFolderId(boonType) {
