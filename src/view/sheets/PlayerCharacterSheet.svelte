@@ -382,6 +382,17 @@
 			<h3 class="nimble-heading nimble-heading--mana">
 				Mana
 				<i class="fa-solid fa-sparkles"></i>
+				<button
+					class="nimble-button"
+					data-button-variant="icon"
+					type="button"
+					aria-label={CONFIG.NIMBLE.manaConfig.configureMana}
+					data-tooltip={CONFIG.NIMBLE.manaConfig.configureMana}
+					onclick={() => actor.configureMana()}
+					disabled={!editingEnabled}
+				>
+					<i class="fa-solid fa-edit"></i>
+				</button>
 			</h3>
 
 			<ManaBar
@@ -389,7 +400,7 @@
 				maxMana={mana.max || mana.baseMax}
 				{updateCurrentMana}
 				{updateMaxMana}
-				disableMaxManaEdit={!editingEnabled}
+				disableMaxManaEdit={true}
 			/>
 		{/if}
 	</section>
