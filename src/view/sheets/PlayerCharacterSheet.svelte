@@ -618,7 +618,7 @@
 				'manaHeading manaHeading'
 				'manaBar manaBar';
 			grid-gap: 0 0.125rem;
-			margin-block-start: -2.25rem;
+			margin-block-start: 0.25rem;
 			margin-inline: 0.25rem;
 		}
 	}
@@ -679,5 +679,6 @@
 
 	.nimble-heading--mana {
 		grid-area: manaHeading;
+		margin-block-start: 0.25rem;
 	}
 </style>
