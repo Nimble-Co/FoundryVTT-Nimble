@@ -5,6 +5,13 @@ import path from 'path';
 import systemJSON from '../../public/system.json' with { type: 'json' };
 import LevelDatabase from './LevelDB.mjs';
 
+const MINOR_BOON_TYPE = 'minor';
+const MAJOR_BOON_TYPE = 'major';
+const EPIC_BOON_TYPE = 'epic';
+const LODGING_BOON_TYPE = 'lodging';
+
+const CONFIGURED_BOON_TYPES = [MINOR_BOON_TYPE, MAJOR_BOON_TYPE, EPIC_BOON_TYPE, LODGING_BOON_TYPE];
+
 export default class Pack {
 	static #PACK_DEST = path.resolve(process.cwd(), 'public/packs');
 
@@ -55,6 +62,11 @@ export default class Pack {
 		// Monsters are grouped by source path folder names.
 		if (this.dirName === 'monsters' && this.documentType === 'Actor') {
 			return this.#prepareMonsterFolderAssignments();
+		}
+
+		// Boons are grouped by boonType (minor, major, epic).
+		if (this.dirName === 'boons' && this.documentType === 'Item') {
+			return this.#prepareBoonFolderAssignments();
 		}
 
 		// Restrict class-based folder generation to the subclasses pack only.
@@ -152,6 +164,60 @@ export default class Pack {
 		}, new Map());
 	}
 
+	#prepareBoonFolderAssignments() {
+		/** @type {any[]} */
+		const boons = [...this.data.values()].filter(
+			(source) => typeof source?._id === 'string' && typeof source?.system?.boonType === 'string',
+		);
+		if (boons.length === 0) return new Map();
+
+		const statsTemplate = this.#getFolderStatsTemplate(boons);
+		const boonTypes = [
+			...new Set(
+				boons.map((source) => source.system.boonType.trim().toLowerCase()).filter(Boolean),
+			),
+		].sort((a, b) => {
+			const aIndex = CONFIGURED_BOON_TYPES.indexOf(a);
+			const bIndex = CONFIGURED_BOON_TYPES.indexOf(b);
+			if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+			if (aIndex !== -1) return -1;
+			if (bIndex !== -1) return 1;
+			return this.#toDisplayBoonFolderName(a).localeCompare(this.#toDisplayBoonFolderName(b));
+		});
+
+		const foldersByType = boonTypes.reduce((acc, boonType, index) => {
+			const folder = {
+				_id: this.#getBoonFolderId(boonType),
+				_stats: { ...statsTemplate },
+				color: null,
+				description: '',
+				flags: {},
+				folder: null,
+				name: this.#toDisplayBoonFolderName(boonType),
+				sort: index * 10,
+				// Lodging uses explicit `sort` values so we can preserve a fixed custom display order.
+				sorting: boonType === LODGING_BOON_TYPE ? 'm' : 'a',
+				type: this.documentType,
+			};
+
+			acc.set(boonType, folder);
+			return acc;
+		}, new Map());
+
+		this.folderDocuments = [...foldersByType.values()];
+
+		return boons.reduce((acc, source) => {
+			const boonType = source.system.boonType.trim().toLowerCase();
+			const folder = foldersByType.get(boonType);
+			if (boonType === LODGING_BOON_TYPE) {
+				const sortOrder = this.#getLodgingBoonSortOrder(source.name);
+				if (sortOrder !== null) source.sort = sortOrder;
+			}
+			if (folder) acc.set(source._id, folder._id);
+			return acc;
+		}, new Map());
+	}
+
 	#getFolderStatsTemplate(sources) {
 		const sourceStats = sources.find((source) => source?._stats)?._stats;
 		const now = Date.now();
@@ -211,6 +277,51 @@ export default class Pack {
 		return crypto
 			.createHash('sha1')
 			.update(`${this.packId}-folder:${folderKey}`)
+			.digest('hex')
+			.slice(0, 16);
+	}
+
+	#toDisplayBoonFolderName(boonType) {
+		switch (boonType) {
+			case MINOR_BOON_TYPE:
+				return 'Minor Boons';
+			case MAJOR_BOON_TYPE:
+				return 'Major Boons';
+			case EPIC_BOON_TYPE:
+				return 'Epic Boons';
+			default:
+				return `${boonType
+					.replace(/[-_]+/g, ' ')
+					.split(' ')
+					.filter(Boolean)
+					.map((word) => `${word.charAt(0).toUpperCase()}${word.slice(1)}`)
+					.join(' ')} Boons`;
+		}
+	}
+
+	#getLodgingBoonSortOrder(boonName) {
+		if (typeof boonName !== 'string') return null;
+
+		const order = [
+			'lodging boons',
+			'recover 2 additional wounds',
+			'gain lvl temp hp',
+			'gain key temp hit dice',
+			'+1 speed',
+			'inspired (reroll any die, once)',
+			'advantage vs. fear/charm/etc.',
+			'learn an important rumor',
+			'+key mana',
+		];
+
+		const index = order.indexOf(boonName.trim().toLowerCase());
+		return index === -1 ? null : index * 10;
+	}
+
+	#getBoonFolderId(boonType) {
+		return crypto
+			.createHash('sha1')
+			.update(`${this.packId}-boon-folder:${boonType}`)
 			.digest('hex')
 			.slice(0, 16);
 	}

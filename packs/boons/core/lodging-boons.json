@@ -1,0 +1,25 @@
+{
+	"folder": "1a13d4b4fe1e14db",
+	"name": "Lodging Boons",
+	"type": "boon",
+	"img": "icons/environment/settlement/house-city.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Spending extra gold on lavish accommodations can provide valuable temporary benefits. These perks might include quicker recovery, valuable contacts, additional resources, or unique opportunities. The specific benefits depend on the quality of the lodging and the amount spent. You can roll from the table, or award a Minor, Major, or even EPIC Boon based on how much the heroes pay and where they rest:</p><ul><li>A Minor Boon: Typically costs around 10 gp.</li><li>A Major Boon: Typically costs around 100 gp.</li><li>An EPIC Boon: Typically costs around 1,000 gp.</li></ul><p>These Boons are temporary and last only until the heroes take another Safe Rest. Adjust the cost and impact to suit your campaign and the party's level of wealth.</p><table style=\"table-layout: fixed; width: 100%;\"><colgroup><col style=\"width: 3rem;\"/><col/></colgroup><thead><tr><th style=\"width: 3rem;\"><em>1d8</em></th><th><em>Temporary Boon</em></th></tr></thead><tbody><tr><td style=\"width: 3rem;\">1</td><td>Recover 2 additional Wounds</td></tr><tr><td style=\"width: 3rem;\">2</td><td>Gain LVL temp HP</td></tr><tr><td style=\"width: 3rem;\">3</td><td>Gain KEY temp Hit Dice</td></tr><tr><td style=\"width: 3rem;\">4</td><td>+1 Speed</td></tr><tr><td style=\"width: 3rem;\">5</td><td>Inspired (reroll any die, once)</td></tr><tr><td style=\"width: 3rem;\">6</td><td>Advantage vs. Fear/Charm/Etc.</td></tr><tr><td style=\"width: 3rem;\">7</td><td>Learn an important rumor</td></tr><tr><td style=\"width: 3rem;\">8</td><td>+KEY mana</td></tr></tbody></table>",
+		"boonType": "lodging"
+	},
+	"effects": [],
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757285942275,
+		"modifiedTime": 1757290625367,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "uCflTF9GTUiLkDMZ",
+	"sort": 0
+}

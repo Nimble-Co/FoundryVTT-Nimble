@@ -75,6 +75,17 @@
 				"epic-stamina": "r5ATBBkKXjM1KRyZ",
 				"epic-stats": "Y6A9YGuhcuuyBCAZ"
 			},
+			"lodging": {
+				"advantage-vs-fear-charm-etc": "F9rKd2CvP5sLj1Wx",
+				"gain-key-temp-hit-dice": "C5mNp8JvR1xDf7Qa",
+				"gain-lvl-temp-hp": "B2hKs9QwE4rTz6Yu",
+				"inspired-reroll-any-die-once": "E3tGh6BnM1qXy8Uz",
+				"learn-an-important-rumor": "G4yMn7HbT2dQk8Rp",
+				"plus-1-speed": "D7pLs2WmH9cVk4Er",
+				"plus-key-mana": "H8uJc3NzV6fLm2Sq",
+				"recover-2-additional-wounds": "Nf1VqR3mY7kLp8Ds"
+			},
+			"lodging-boons": "uCflTF9GTUiLkDMZ",
 			"major": {
 				"aggressive": "WMZCMKB28kCXHRV4",
 				"ancestry-trait": "mrE1HU2dBJlR7qA4",
@@ -1159,4 +1170,3 @@
 		}
 	}
 }
-

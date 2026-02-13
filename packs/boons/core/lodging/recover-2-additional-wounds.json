@@ -1,0 +1,25 @@
+{
+	"name": "Recover 2 additional Wounds",
+	"type": "boon",
+	"img": "icons/magic/life/cross-worn-green.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"description": "<p>Recover 2 additional Wounds.</p>",
+		"boonType": "lodging"
+	},
+	"effects": [],
+	"folder": "1a13d4b4fe1e14db",
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": 1757285942275,
+		"modifiedTime": 1757290625367,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "Nf1VqR3mY7kLp8Ds",
+	"sort": 10
+}
