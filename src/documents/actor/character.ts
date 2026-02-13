@@ -23,6 +23,7 @@ import CharacterWeaponProficienciesConfigDialog from '../../view/dialogs/Charact
 import EditCurrentHitDiceDialog from '../../view/dialogs/EditCurrentHitDiceDialog.svelte';
 import EditHitDiceDialog from '../../view/dialogs/EditHitDiceDialog.svelte';
 import EditHitPointsDialog from '../../view/dialogs/EditHitPointsDialog.svelte';
+import EditManaDialog from '../../view/dialogs/EditManaDialog.svelte';
 import FieldRestDialog from '../../view/dialogs/FieldRestDialog.svelte';
 import RollHitDiceDialog from '../../view/dialogs/RollHitDiceDialog.svelte';
 import SafeRestDialog from '../../view/dialogs/SafeRestDialog.svelte';
@@ -54,6 +55,11 @@ interface RollHitDiceResult {
 /** Edit current hit dice dialog result data */
 interface EditCurrentHitDiceResult {
 	currentValues: Record<string, number>;
+}
+
+/** Configure mana dialog result data */
+interface ConfigureManaResult {
+	baseMax: number;
 }
 
 /** Level up dialog result data */
@@ -599,6 +605,47 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				// Removing bonus dice and current exceeds new max - clamp down
 				updates[`system.attributes.hitDice.${size}.current`] = newMax;
 			}
+		}
+
+		await this.update(updates);
+	}
+
+	async configureMana() {
+		const dialog = GenericDialog.getOrCreate(
+			`${this.name}: ${game.i18n.localize(CONFIG.NIMBLE.manaConfig.configureMana)}`,
+			EditManaDialog,
+			{ document: this },
+			{ icon: 'fa-solid fa-sparkles', width: 340, uniqueId: `${this.id}-configure-mana` },
+		);
+
+		await dialog.render(true);
+		const result = (await dialog.promise) as ConfigureManaResult | null;
+
+		if (result === null) {
+			return;
+		}
+
+		const nextBaseMax = Math.max(0, Number(result.baseMax) || 0);
+		let nextMaxMana = nextBaseMax;
+
+		// Match character max mana prep logic: formula-based class mana starts applying at level 2.
+		if (this.levels.character > 1) {
+			for (const cls of Object.values(this.classes ?? {})) {
+				const manaFormula = cls.system.mana.formula;
+				if (!manaFormula?.trim()) continue;
+				const resolvedValue = getDeterministicBonus(manaFormula, this.getRollData()) ?? 0;
+				nextMaxMana += resolvedValue;
+			}
+		}
+
+		const boundedMaxMana = Math.max(0, nextMaxMana);
+		const updates: Record<string, unknown> = {
+			'system.resources.mana.baseMax': nextBaseMax,
+		};
+
+		// Clamp current mana down if max decreased below current.
+		if (this.system.resources.mana.current > boundedMaxMana) {
+			updates['system.resources.mana.current'] = boundedMaxMana;
 		}
 
 		await this.update(updates);

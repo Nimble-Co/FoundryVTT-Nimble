@@ -670,6 +670,19 @@
 			"totalMaxHp": "Total Maximum HP",
 			"saveChanges": "Save Changes"
 		},
+		"manaConfig": {
+			"configureMana": "Configure Mana",
+			"classContributions": "Class Mana Contributions",
+			"classContributionsHint": "Formula-based mana gained from your classes",
+			"noClassContributions": "No class mana formula contributions.",
+			"formulaLabel": "Formula",
+			"baseMana": "Base Mana",
+			"baseManaHint": "Static mana before class formula contributions",
+			"recoveryProfile": "Recovery Profile",
+			"initiativeInfo": "Initiative recovery is currently informational only.",
+			"totalMaxMana": "Total Maximum Mana",
+			"saveChanges": "Save Changes"
+		},
 		"safeRest": {
 			"dialogTitle": "{name}: Safe Rest",
 			"recoveryPreview": "Recovery Preview",

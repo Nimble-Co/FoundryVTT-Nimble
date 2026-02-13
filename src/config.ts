@@ -694,6 +694,20 @@ const hitPoints = {
 	saveChanges: 'NIMBLE.hitPoints.saveChanges',
 };
 
+const manaConfig = {
+	configureMana: 'NIMBLE.manaConfig.configureMana',
+	classContributions: 'NIMBLE.manaConfig.classContributions',
+	classContributionsHint: 'NIMBLE.manaConfig.classContributionsHint',
+	noClassContributions: 'NIMBLE.manaConfig.noClassContributions',
+	formulaLabel: 'NIMBLE.manaConfig.formulaLabel',
+	baseMana: 'NIMBLE.manaConfig.baseMana',
+	baseManaHint: 'NIMBLE.manaConfig.baseManaHint',
+	recoveryProfile: 'NIMBLE.manaConfig.recoveryProfile',
+	initiativeInfo: 'NIMBLE.manaConfig.initiativeInfo',
+	totalMaxMana: 'NIMBLE.manaConfig.totalMaxMana',
+	saveChanges: 'NIMBLE.manaConfig.saveChanges',
+};
+
 const safeRest = {
 	dialogTitle: 'NIMBLE.safeRest.dialogTitle',
 	recoveryPreview: 'NIMBLE.safeRest.recoveryPreview',
@@ -815,6 +829,7 @@ const NIMBLE = {
 	languages,
 	levelDownDialog,
 	levelUpDialog,
+	manaConfig,
 	manaRecoveryTypes,
 	monsterFeatureTypes,
 	movementTypes,
