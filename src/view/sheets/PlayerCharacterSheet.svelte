@@ -1,4 +1,5 @@
 <script>
+	import { createSubscriber } from 'svelte/reactivity';
 	import { setContext } from 'svelte';
 	import { readable } from 'svelte/store';
 	import localize from '../../utils/localize.js';
@@ -37,6 +38,49 @@
 		}
 
 		return origins.filter(Boolean).join(' ⟡ ');
+	}
+
+	function isCommanderSpellbladeCharacter(character) {
+		return character.reactive.items.some((item) => {
+			if (item.type !== 'subclass') return false;
+			const identifier = item.system?.identifier ?? item.name.slugify({ strict: true });
+			return identifier === 'spellblade' && item.system?.parentClass === 'commander';
+		});
+	}
+
+	function getActiveCombatForCurrentScene() {
+		const sceneId = canvas?.scene?.id;
+		if (!sceneId) return null;
+
+		const activeCombat = game.combat;
+		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
+			return activeCombat;
+		}
+
+		const activeByScene = game.combats?.contents?.find(
+			(combat) => combat?.active && combat.scene?.id === sceneId,
+		);
+		if (activeByScene) return activeByScene;
+
+		const viewedCombat = game.combats?.viewed ?? null;
+		if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
+			return viewedCombat;
+		}
+
+		return null;
+	}
+
+	function hasRolledInitiativeInActiveCombat(character) {
+		const combat = getActiveCombatForCurrentScene();
+		if (!combat?.started) return false;
+
+		const sceneId = canvas?.scene?.id;
+		if (sceneId && combat.scene?.id !== sceneId) return false;
+
+		const combatant = combat.combatants.find((entry) => entry.actorId === character.id);
+		if (!combatant) return false;
+
+		return combatant.initiative !== null;
 	}
 
 	function toggleWounds(woundLevel) {
@@ -102,6 +146,29 @@
 	}
 
 	let { actor, sheet } = $props();
+	const subscribeCombatState = createSubscriber((update) => {
+		const hookNames = [
+			'combatStart',
+			'createCombat',
+			'updateCombat',
+			'deleteCombat',
+			'createCombatant',
+			'updateCombatant',
+			'deleteCombatant',
+			'canvasInit',
+			'canvasReady',
+		];
+		const hookIds = hookNames.map((hookName) => ({
+			hookId: Hooks.on(hookName, () => update()),
+			hookName,
+		}));
+
+		return () => {
+			for (const { hookName, hookId } of hookIds) {
+				Hooks.off(hookName, hookId);
+			}
+		};
+	});
 
 	const navigation = $state([
 		{
@@ -157,7 +224,17 @@
 	let classItem = $derived(actor.reactive.items.find((item) => item.type === 'class') ?? null);
 	let wounds = $derived(actor.reactive.system.attributes.wounds);
 	let mana = $derived(actor.reactive.system.resources.mana);
+	let isCommanderSpellblade = $derived.by(() => isCommanderSpellbladeCharacter(actor));
+	let spellbladeManaVisible = $derived.by(() => {
+		subscribeCombatState();
+		return isCommanderSpellblade && hasRolledInitiativeInActiveCombat(actor);
+	});
 	let hasMana = $derived.by(() => {
+		if (isCommanderSpellblade) {
+			const maxMana = mana.max || mana.baseMax || 0;
+			return spellbladeManaVisible && maxMana > 0;
+		}
+
 		if ((mana.max ?? 0) > 0 || (mana.baseMax ?? 0) > 0) return true;
 		return actor.reactive.items.some(
 			(item) => item.type === 'class' && item.system?.mana?.formula?.length,

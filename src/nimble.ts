@@ -12,6 +12,40 @@ import setup from './hooks/setup.js';
 import './scss/main.scss';
 import { injectViteHmrClient } from './utils/viteHmr.js';
 
+function isCommanderSpellbladeCombatant(combatant: Combatant.Implementation): boolean {
+	const actor = combatant.actor;
+	if (!actor || actor.type !== 'character') return false;
+
+	return actor.items.some((item) => {
+		if (item.type !== 'subclass') return false;
+
+		const parentClass = foundry.utils.getProperty(item, 'system.parentClass') as string | undefined;
+		const identifier =
+			(foundry.utils.getProperty(item, 'system.identifier') as string | undefined) ??
+			item.name.slugify({ strict: true });
+		return identifier === 'spellblade' && parentClass === 'commander';
+	});
+}
+
+async function clearSpellbladeManaFromCombat(combat: Combat): Promise<void> {
+	const updates = combat.combatants.reduce<Promise<unknown>[]>((acc, combatant) => {
+		if (!isCommanderSpellbladeCombatant(combatant)) return acc;
+		if (!combatant.actor?.isOwner) return acc;
+
+		acc.push(
+			combatant.actor.update({
+				'system.resources.mana.baseMax': 0,
+				'system.resources.mana.current': 0,
+			} as Record<string, unknown>),
+		);
+		return acc;
+	}, []);
+
+	if (updates.length > 0) {
+		await Promise.all(updates);
+	}
+}
+
 // Inject Vite HMR client for hot reload support during development
 injectViteHmrClient();
 
@@ -54,7 +88,9 @@ Hooks.on('hotbarDrop', onHotbarDrop);
 registerCombatantDefeatSync();
 
 // Refresh tokens when combat ends to remove turn indicators
-Hooks.on('deleteCombat', () => {
+Hooks.on('deleteCombat', async (combat: Combat) => {
+	await clearSpellbladeManaFromCombat(combat);
+
 	if (!canvas?.ready || !canvas?.tokens) return;
 
 	// Refresh all tokens on the canvas to clear turn indicators
