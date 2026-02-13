@@ -17,36 +17,9 @@ interface CombatantSystemWithActions {
 	};
 }
 
-function getCombatantManualSortValue(combatant: Combatant.Implementation): number {
-	return Number((combatant.system as unknown as { sort?: number }).sort ?? 0);
-}
-
-function getSourceSortValueForDrop(
-	source: Combatant.Implementation,
-	target: Combatant.Implementation,
-	siblings: Combatant.Implementation[],
-	sortBefore: boolean,
-): number | null {
-	const targetIndex = siblings.findIndex((combatant) => combatant.id === target.id);
-	if (targetIndex < 0) return null;
-
-	const insertIndex = sortBefore ? targetIndex : targetIndex + 1;
-	const previous = insertIndex > 0 ? siblings[insertIndex - 1] : null;
-	const next = insertIndex < siblings.length ? siblings[insertIndex] : null;
-
-	if (previous && next) {
-		const previousSort = getCombatantManualSortValue(previous);
-		const nextSort = getCombatantManualSortValue(next);
-		if (previousSort === nextSort) {
-			return previousSort + (sortBefore ? -0.5 : 0.5);
-		}
-		return previousSort + (nextSort - previousSort) / 2;
-	}
-
-	if (previous) return getCombatantManualSortValue(previous) + 1;
-	if (next) return getCombatantManualSortValue(next) - 1;
-
-	return getCombatantManualSortValue(source);
+function getCombatantTypePriority(combatant: Combatant.Implementation): number {
+	if (combatant.type === 'character') return 0;
+	return 1;
 }
 
 class NimbleCombat extends Combat {
@@ -313,41 +286,19 @@ class NimbleCombat extends Combat {
 		return this;
 	}
 
-	override setupTurns(): Combatant.Implementation[] {
-		const turns = super.setupTurns();
-		return turns.filter((combatant) => !isCombatantDead(combatant));
-	}
-
-	override async nextTurn(): Promise<this> {
-		this.#syncTurnIndexWithAliveTurns();
-		const result = (await super.nextTurn()) as this;
-		this.#syncTurnIndexWithAliveTurns();
-		return result;
-	}
-
-	override async nextRound(): Promise<this> {
-		this.#syncTurnIndexWithAliveTurns();
-		const result = (await super.nextRound()) as this;
-		this.#syncTurnIndexWithAliveTurns();
-		return result;
-	}
-
 	override _sortCombatants(a: Combatant.Implementation, b: Combatant.Implementation): number {
 		const typePriorityDiff = getCombatantTypePriority(a) - getCombatantTypePriority(b);
 		if (typePriorityDiff !== 0) return typePriorityDiff;
-
-		const deadStateDiff = Number(isCombatantDead(a)) - Number(isCombatantDead(b));
-		if (deadStateDiff !== 0) return deadStateDiff;
-
-		const sa = getCombatantManualSortValue(a);
-		const sb = getCombatantManualSortValue(b);
-		const manualSortDiff = sa - sb;
-		if (manualSortDiff !== 0) return manualSortDiff;
 
 		const initiativeA = Number(a.initiative ?? Number.NEGATIVE_INFINITY);
 		const initiativeB = Number(b.initiative ?? Number.NEGATIVE_INFINITY);
 		const initiativeDiff = initiativeB - initiativeA;
 		if (initiativeDiff !== 0) return initiativeDiff;
+
+		const sa = (a.system as unknown as { sort?: number }).sort ?? 0;
+		const sb = (b.system as unknown as { sort?: number }).sort ?? 0;
+		const manualSortDiff = sa - sb;
+		if (manualSortDiff !== 0) return manualSortDiff;
 
 		return (a.name ?? '').localeCompare(b.name ?? '');
 	}
