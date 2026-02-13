@@ -24,6 +24,40 @@
 		});
 	}
 
+	function parseLevels(rawLevels) {
+		if (typeof rawLevels !== 'string') return [];
+
+		const levelValues = rawLevels
+			.split(',')
+			.map((value) => Number.parseInt(value.trim(), 10))
+			.filter((value) => Number.isInteger(value) && value >= 1 && value <= 20);
+
+		return [...new Set(levelValues)].sort((a, b) => a - b);
+	}
+
+	function getGainedAtLevelsInputValue() {
+		const levels = item.reactive.system.gainedAtLevels || [];
+		if (levels.length > 0) return levels.join(', ');
+
+		const level = item.reactive.system.gainedAtLevel;
+		return Number.isInteger(level) ? String(level) : '';
+	}
+
+	function updateGainedAtLevels(rawLevels) {
+		const levels = parseLevels(rawLevels);
+
+		item.update({
+			'system.gainedAtLevels': levels,
+			'system.gainedAtLevel': levels[0] ?? null,
+		});
+	}
+
+	function updateSubclassFlag(checked) {
+		item.update({
+			'system.subclass': checked,
+		});
+	}
+
 	const { featureTypes } = CONFIG.NIMBLE;
 
 	let { item, sheet } = $props();
@@ -119,6 +153,31 @@
 					type="text"
 					value={item.reactive.system.group || ''}
 					onchange={({ target }) => item.update({ 'system.group': target.value })}
+				/>
+			</div>
+
+			<div>
+				<header class="nimble-section-header">
+					<h3 class="nimble-heading">Subclass Feature</h3>
+				</header>
+
+				<input
+					type="checkbox"
+					checked={Boolean(item.reactive.system.subclass)}
+					onchange={({ target }) => updateSubclassFlag(target.checked)}
+				/>
+			</div>
+
+			<div>
+				<header class="nimble-section-header">
+					<h3 class="nimble-heading">Gained At Levels</h3>
+				</header>
+
+				<input
+					type="text"
+					value={getGainedAtLevelsInputValue()}
+					placeholder="e.g. 3 or 2, 6, 9"
+					onchange={({ target }) => updateGainedAtLevels(target.value)}
 				/>
 			</div>
 		{/if}
