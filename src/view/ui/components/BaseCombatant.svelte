@@ -97,13 +97,10 @@
 	let { active, children = undefined, combatant } = $props();
 
 	let isObserver = combatant?.actor?.testUserPermission(game.user, 'OBSERVER');
-	let isOwner = combatant?.actor?.testUserPermission(game.user, 'OWNER');
-	let isDead = $derived(isCombatantDead(combatant));
-	let canDrag = $derived(
-		!isDead &&
-			canCurrentUserReorderCombatant(combatant, {
-				ownerOverride: isOwner,
-			}),
+	let isDead = $derived(
+		combatant.reactive?.defeated ||
+			(combatant.type !== 'character' &&
+				(combatant.actor?.reactive?.system?.attributes?.hp?.value ?? 1) <= 0),
 	);
 </script>
 
