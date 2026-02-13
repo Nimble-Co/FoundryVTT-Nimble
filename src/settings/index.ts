@@ -30,8 +30,8 @@ export default function registerSystemSettings() {
 		'nimble' as 'core',
 		'autoExpandRolls' as 'rollMode',
 		{
-			name: 'Auto-Expand Rolls',
-			hint: 'When enabled, dice roll details are shown inline below each roll in chat messages, without needing to hover.',
+			name: 'NIMBLE.settings.autoExpandRolls.name',
+			hint: 'NIMBLE.settings.autoExpandRolls.hint',
 			scope: 'client',
 			config: true,
 			type: Boolean,
