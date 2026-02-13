@@ -1,7 +1,7 @@
 {
 	"name": "Kobold Sneak",
 	"type": "npc",
-	"folder": null,
+	"folder": "fbd108fbd999fb4e",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {

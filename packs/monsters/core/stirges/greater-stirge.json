@@ -1,7 +1,7 @@
 {
 	"name": "Greater Stirge",
 	"type": "npc",
-	"folder": null,
+	"folder": "d36ca31a175222a1",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {

@@ -1,7 +1,7 @@
 {
 	"name": "Basilisk",
 	"type": "npc",
-	"folder": null,
+	"folder": "6ca61bb961e872ce",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {

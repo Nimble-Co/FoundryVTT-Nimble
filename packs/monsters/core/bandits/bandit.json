@@ -1,7 +1,7 @@
 {
 	"name": "Bandit",
 	"type": "npc",
-	"folder": null,
+	"folder": "718123f1f5a7d7b3",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {
