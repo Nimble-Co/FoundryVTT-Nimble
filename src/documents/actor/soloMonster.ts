@@ -25,6 +25,11 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 
 	override prepareDerivedData() {
 		super.prepareDerivedData();
+
+		const actorData = this.system;
+		Object.entries(actorData.savingThrows).forEach(([_, save]) => {
+			save.mod = save.bonus ?? 0;
+		});
 	}
 
 	async activateBloodiedFeature(options: { visibilityMode?: string } = {}) {
