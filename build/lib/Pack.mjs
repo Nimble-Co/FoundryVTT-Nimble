@@ -5,6 +5,13 @@ import path from 'path';
 import systemJSON from '../../public/system.json' with { type: 'json' };
 import LevelDatabase from './LevelDB.mjs';
 
+const MINOR_BOON_TYPE = 'minor';
+const MAJOR_BOON_TYPE = 'major';
+const EPIC_BOON_TYPE = 'epic';
+const LODGING_BOON_TYPE = 'lodging';
+
+const CONFIGURED_BOON_TYPES = [MINOR_BOON_TYPE, MAJOR_BOON_TYPE, EPIC_BOON_TYPE, LODGING_BOON_TYPE];
+
 export default class Pack {
 	static #PACK_DEST = path.resolve(process.cwd(), 'public/packs');
 
@@ -165,14 +172,13 @@ export default class Pack {
 		if (boons.length === 0) return new Map();
 
 		const statsTemplate = this.#getFolderStatsTemplate(boons);
-		const configuredBoonTypes = ['minor', 'major', 'epic'];
 		const boonTypes = [
 			...new Set(
 				boons.map((source) => source.system.boonType.trim().toLowerCase()).filter(Boolean),
 			),
 		].sort((a, b) => {
-			const aIndex = configuredBoonTypes.indexOf(a);
-			const bIndex = configuredBoonTypes.indexOf(b);
+			const aIndex = CONFIGURED_BOON_TYPES.indexOf(a);
+			const bIndex = CONFIGURED_BOON_TYPES.indexOf(b);
 			if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
 			if (aIndex !== -1) return -1;
 			if (bIndex !== -1) return 1;
@@ -189,7 +195,8 @@ export default class Pack {
 				folder: null,
 				name: this.#toDisplayBoonFolderName(boonType),
 				sort: index * 10,
-				sorting: boonType === 'lodging' ? 'm' : 'a',
+				// Lodging uses explicit `sort` values so we can preserve a fixed custom display order.
+				sorting: boonType === LODGING_BOON_TYPE ? 'm' : 'a',
 				type: this.documentType,
 			};
 
@@ -202,7 +209,7 @@ export default class Pack {
 		return boons.reduce((acc, source) => {
 			const boonType = source.system.boonType.trim().toLowerCase();
 			const folder = foldersByType.get(boonType);
-			if (boonType === 'lodging') {
+			if (boonType === LODGING_BOON_TYPE) {
 				const sortOrder = this.#getLodgingBoonSortOrder(source.name);
 				if (sortOrder !== null) source.sort = sortOrder;
 			}
@@ -276,11 +283,11 @@ export default class Pack {
 
 	#toDisplayBoonFolderName(boonType) {
 		switch (boonType) {
-			case 'minor':
+			case MINOR_BOON_TYPE:
 				return 'Minor Boons';
-			case 'major':
+			case MAJOR_BOON_TYPE:
 				return 'Major Boons';
-			case 'epic':
+			case EPIC_BOON_TYPE:
 				return 'Epic Boons';
 			default:
 				return `${boonType
