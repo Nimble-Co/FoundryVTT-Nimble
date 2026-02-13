@@ -85,11 +85,17 @@
 	let { active, children = undefined, combatant } = $props();
 
 	let isObserver = combatant?.actor?.testUserPermission(game.user, 'OBSERVER');
+	let isDead = $derived(
+		combatant.reactive?.defeated ||
+			(combatant.type !== 'character' &&
+				(combatant.actor?.reactive?.system?.attributes?.hp?.value ?? 1) <= 0),
+	);
 </script>
 
 <article
 	class="nimble-combatant"
 	class:nimble-combatant--active={active}
+	class:nimble-combatant--dead={isDead}
 	data-combatant-id={combatant._id}
 	onmouseenter={(event) => handleTokenHighlight(event, 'enter')}
 	onmouseleave={(event) => handleTokenHighlight(event, 'leave')}
