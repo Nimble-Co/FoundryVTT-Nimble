@@ -1,7 +1,7 @@
 {
 	"name": "Cloaker",
 	"type": "npc",
-	"folder": null,
+	"folder": "1e695c5c5b1b3293",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {

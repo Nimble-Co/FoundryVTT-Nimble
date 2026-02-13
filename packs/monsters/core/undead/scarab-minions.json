@@ -1,7 +1,7 @@
 {
 	"name": "Scarab Minions",
 	"type": "minion",
-	"folder": null,
+	"folder": "523dda610883c011",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {

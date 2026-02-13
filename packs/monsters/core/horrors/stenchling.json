@@ -1,7 +1,7 @@
 {
 	"name": "Stenchling",
 	"type": "npc",
-	"folder": null,
+	"folder": "91a6874c8954288c",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {

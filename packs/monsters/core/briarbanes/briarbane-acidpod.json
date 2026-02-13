@@ -1,7 +1,7 @@
 {
 	"name": "Briarbane Acidpod",
 	"type": "npc",
-	"folder": null,
+	"folder": "0476e3533a26f1de",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {

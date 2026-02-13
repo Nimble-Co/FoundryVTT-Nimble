@@ -1,7 +1,7 @@
 {
 	"name": "Doomsayer",
 	"type": "npc",
-	"folder": null,
+	"folder": "3f82818ca74b49f9",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {

@@ -1,7 +1,7 @@
 {
 	"name": "Bulette",
 	"type": "npc",
-	"folder": null,
+	"folder": "ed190d32f397df62",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {

@@ -1,7 +1,7 @@
 {
 	"name": "Snakeman Minion",
 	"type": "minion",
-	"folder": null,
+	"folder": "186fd36bd601cbc8",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {

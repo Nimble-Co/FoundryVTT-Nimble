@@ -1,7 +1,7 @@
 {
 	"name": "Black Pudding",
 	"type": "npc",
-	"folder": null,
+	"folder": "b46bff9abe4a012b",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {

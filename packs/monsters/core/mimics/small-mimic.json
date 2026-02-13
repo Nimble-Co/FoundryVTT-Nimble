@@ -1,7 +1,7 @@
 {
 	"name": "Small Mimic",
 	"type": "npc",
-	"folder": null,
+	"folder": "3823f3be6e4231e8",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {

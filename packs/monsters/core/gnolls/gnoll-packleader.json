@@ -1,7 +1,7 @@
 {
 	"name": "Gnoll Packleader",
 	"type": "npc",
-	"folder": null,
+	"folder": "e4c215cd64d7d6f8",
 	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {
