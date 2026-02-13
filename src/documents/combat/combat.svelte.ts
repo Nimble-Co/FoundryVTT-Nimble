@@ -56,6 +56,21 @@ import type {
 } from './combatTypes.js';
 import { handleInitiativeRules } from './handleInitiativeRules.js';
 
+/** Combatant system data with actions */
+interface CombatantSystemWithActions {
+	actions: {
+		base: {
+			current: number;
+			max: number;
+		};
+	};
+}
+
+function getCombatantTypePriority(combatant: Combatant.Implementation): number {
+	if (combatant.type === 'character') return 0;
+	return 1;
+}
+
 class NimbleCombat extends Combat {
 	#subscribe: ReturnType<typeof createSubscriber>;
 
@@ -1197,55 +1212,19 @@ class NimbleCombat extends Combat {
 		return this;
 	}
 
-	override setupTurns(): Combatant.Implementation[] {
-		const aliveTurns = super.setupTurns().filter((combatant) => !isCombatantDead(combatant));
-		const groupedSummaries = getMinionGroupSummaries(aliveTurns);
-		if (groupedSummaries.size === 0) return aliveTurns;
-
-		const leaderIds = new Set<string>();
-		for (const summary of groupedSummaries.values()) {
-			const leader = getEffectiveMinionGroupLeader(summary, { aliveOnly: true });
-			if (leader?.id) leaderIds.add(leader.id);
-		}
-
-		return aliveTurns.filter((combatant) => {
-			const groupId = getMinionGroupId(combatant);
-			if (!groupId) return true;
-			return leaderIds.has(combatant.id ?? '');
-		});
-	}
-
-	override async nextTurn(): Promise<this> {
-		this.#syncTurnIndexWithAliveTurns();
-		let result = (await super.nextTurn()) as this;
-		this.#syncTurnIndexWithAliveTurns();
-		result = await this.#advancePastExhaustedTurns(result);
-		return result;
-	}
-
-	override async nextRound(): Promise<this> {
-		this.#syncTurnIndexWithAliveTurns();
-		const result = (await super.nextRound()) as this;
-		this.#syncTurnIndexWithAliveTurns();
-		return result;
-	}
-
 	override _sortCombatants(a: Combatant.Implementation, b: Combatant.Implementation): number {
 		const typePriorityDiff = getCombatantTypePriority(a) - getCombatantTypePriority(b);
 		if (typePriorityDiff !== 0) return typePriorityDiff;
-
-		const deadStateDiff = Number(isCombatantDead(a)) - Number(isCombatantDead(b));
-		if (deadStateDiff !== 0) return deadStateDiff;
-
-		const sa = getCombatantManualSortValue(a);
-		const sb = getCombatantManualSortValue(b);
-		const manualSortDiff = sa - sb;
-		if (manualSortDiff !== 0) return manualSortDiff;
 
 		const initiativeA = Number(a.initiative ?? Number.NEGATIVE_INFINITY);
 		const initiativeB = Number(b.initiative ?? Number.NEGATIVE_INFINITY);
 		const initiativeDiff = initiativeB - initiativeA;
 		if (initiativeDiff !== 0) return initiativeDiff;
+
+		const sa = (a.system as unknown as { sort?: number }).sort ?? 0;
+		const sb = (b.system as unknown as { sort?: number }).sort ?? 0;
+		const manualSortDiff = sa - sb;
+		if (manualSortDiff !== 0) return manualSortDiff;
 
 		return (a.name ?? '').localeCompare(b.name ?? '');
 	}
