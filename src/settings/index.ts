@@ -26,6 +26,19 @@ export default function registerSystemSettings() {
 		restricted: false,
 	});
 
+	game.settings.register(
+		'nimble' as 'core',
+		'autoExpandRolls' as 'rollMode',
+		{
+			name: 'Auto-Expand Rolls',
+			hint: 'When enabled, dice roll details are shown inline below each roll in chat messages, without needing to hover.',
+			scope: 'client',
+			config: true,
+			type: Boolean,
+			default: false,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
+
 	// Migration schema version tracking
 	game.settings.register(
 		'nimble' as 'core',

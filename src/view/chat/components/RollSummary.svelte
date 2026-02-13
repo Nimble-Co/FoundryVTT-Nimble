@@ -1,12 +1,14 @@
 <script>
 	let { label, subheading, tooltip, total, options, showRollDetails } = $props();
 	const { hitDice } = CONFIG.NIMBLE;
+	const autoExpand = game.settings.get('nimble', 'autoExpandRolls');
+	let expanded = $state(autoExpand);
 </script>
 
 <div class="roll" class:roll--no-subheading={!subheading}>
 	<div
 		class="roll__total"
-		data-tooltip={tooltip}
+		data-tooltip={expanded ? null : tooltip}
 		data-tooltip-class="nimble-tooltip nimble-tooltip--roll"
 		data-tooltip-direction="LEFT"
 	>
@@ -14,6 +16,18 @@
 	</div>
 
 	<h3 class="roll__label">{label}</h3>
+
+	{#if tooltip}
+		<button
+			class="nimble-button roll-expand"
+			data-button-variant="icon"
+			class:roll-expand--open={expanded}
+			aria-label="Toggle dice results"
+			onclick={() => (expanded = !expanded)}
+		>
+			<i class={expanded ? 'fa-solid fa-angle-up' : 'fa-solid fa-angle-down'}></i>
+		</button>
+	{/if}
 
 	{#if subheading}
 		<span class="roll__subheading">
@@ -35,7 +49,6 @@
     {/if} -->
 </div>
 
-<!-- TODO: Make a GM only system setting for this -->
 {#if showRollDetails}
 	<div class="roll-details">
 		<span>{hitDice.primaryDieValue}: {options.rollOptions.primaryDieValue}</span>
@@ -43,7 +56,22 @@
 	</div>
 {/if}
 
+{#if expanded && tooltip}
+	<div class="roll-expanded-details">
+		{@html tooltip}
+	</div>
+{/if}
+
 <style lang="scss">
+	.roll-expanded-details {
+		margin-top: 0.5rem;
+		padding-block-start: 0.5rem;
+		font-size: var(--nimble-sm-text);
+		background: var(--nimble-sheet-background);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+	}
+
 	.roll-details {
 		border-top: 1px solid var(--nimble-card-border-color);
 		padding-top: 0.5rem;
@@ -54,16 +82,42 @@
 		flex-direction: column;
 	}
 
+	.system-nimble .nimble-chat-card .roll-expand.nimble-button[data-button-variant='icon'] {
+		padding: 8px;
+	}
+
 	.roll {
 		display: grid;
 		grid-template-areas:
-			'rollResult rollLabel editButton'
-			'rollResult subHeading editButton';
-		grid-template-columns: max-content 1fr max-content;
+			'rollResult rollLabel expandButton editButton'
+			'rollResult subHeading expandButton editButton';
+		grid-template-columns: max-content 1fr max-content max-content;
 		gap: 0 0.5rem;
 
 		&--no-subheading {
-			grid-template-areas: 'rollResult rollLabel editButton';
+			grid-template-areas: 'rollResult rollLabel expandButton editButton';
+		}
+
+		&__expand {
+			grid-area: expandButton;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: none;
+			border: none;
+			padding: 0;
+			cursor: pointer;
+			color: var(--nimble-medium-text-color);
+			font-size: var(--nimble-sm-text);
+			transition: color 0.15s ease;
+
+			&:hover {
+				color: var(--nimble-dark-text-color);
+			}
+
+			&--open {
+				color: var(--nimble-primary-color, var(--nimble-dark-text-color));
+			}
 		}
 
 		&__label {
