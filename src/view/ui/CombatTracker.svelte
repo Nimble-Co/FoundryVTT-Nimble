@@ -12,6 +12,11 @@
 		) => Promise<void | boolean | Combatant.Implementation[]>;
 	};
 
+	interface SceneCombatantLists {
+		activeCombatants: Combatant.Implementation[];
+		deadCombatants: Combatant.Implementation[];
+	}
+
 	function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
 		// Try multiple ways to get the combatant's scene ID
 		// 1. Direct sceneId property
@@ -31,17 +36,44 @@
 		return combat.combatants.contents.some((c) => getCombatantSceneId(c) === sceneId);
 	}
 
+	function isDeadCombatant(combatant: Combatant.Implementation): boolean {
+		const hpValue = (
+			combatant.actor?.system as {
+				attributes?: { hp?: { value?: number } };
+			}
+		)?.attributes?.hp?.value;
+
+		if (combatant.type === 'character') return combatant.defeated;
+		return combatant.defeated || (typeof hpValue === 'number' && hpValue <= 0);
+	}
+
 	function getCombatantsForScene(
 		combat: Combat | null,
 		sceneId: string | undefined,
-	): Combatant.Implementation[] {
-		if (!sceneId || !combat) return [];
+	): SceneCombatantLists {
+		if (!sceneId || !combat) return { activeCombatants: [], deadCombatants: [] };
 
-		// Filter turns to only include those from the current scene
-		// Filter out invisible combatants and ensure each has a valid _id for keying
-		return combat.turns.filter(
+		const combatantsForScene = combat.combatants.contents.filter(
 			(c) => getCombatantSceneId(c) === sceneId && c.visible && c._id != null,
 		);
+		const turnCombatants = combat.turns.filter(
+			(c) => getCombatantSceneId(c) === sceneId && c.visible && c._id != null,
+		);
+
+		const turnCombatantIds = new Set(turnCombatants.map((c) => c.id));
+		const activeCombatants = turnCombatants.filter((combatant) => !isDeadCombatant(combatant));
+		const missingActiveCombatants = combatantsForScene.filter(
+			(combatant) => !isDeadCombatant(combatant) && !turnCombatantIds.has(combatant.id ?? ''),
+		);
+
+		const deadCombatants = combatantsForScene
+			.filter((combatant) => isDeadCombatant(combatant))
+			.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+
+		return {
+			activeCombatants: [...activeCombatants, ...missingActiveCombatants],
+			deadCombatants,
+		};
 	}
 
 	function getCombatForCurrentScene(): Combat | null {
@@ -81,8 +113,10 @@
 		queueMicrotask(() => {
 			const combat = getCombatForCurrentScene();
 			const sceneId = canvas.scene?.id;
+			const { activeCombatants, deadCombatants } = getCombatantsForScene(combat, sceneId);
 			currentCombat = combat;
-			sceneCombatants = getCombatantsForScene(combat, sceneId);
+			sceneCombatants = activeCombatants;
+			sceneDeadCombatants = deadCombatants;
 			version++;
 		});
 	}
@@ -109,6 +143,7 @@
 	let currentCombat: Combat | null = $state(null);
 	// Combatants filtered to only those belonging to the current scene
 	let sceneCombatants: Combatant.Implementation[] = $state([]);
+	let sceneDeadCombatants: Combatant.Implementation[] = $state([]);
 	// Version counter to force re-renders when combat data changes
 	// (since the Combat object reference may stay the same)
 	let version = $state(0);
@@ -168,6 +203,7 @@
 		canvasTearDownHook = Hooks.on('canvasTearDown', () => {
 			currentCombat = null;
 			sceneCombatants = [];
+			sceneDeadCombatants = [];
 			version++;
 		});
 
@@ -234,6 +270,20 @@
 						/>
 					</li>
 				{/each}
+
+				{#if sceneDeadCombatants.length > 0}
+					<li class="nimble-combatants__dead-divider">
+						<span class="nimble-combatants__dead-label">- Dead -</span>
+					</li>
+
+					{#each sceneDeadCombatants as combatant (combatant._id)}
+						{@const CombatantComponent = getCombatantComponent(combatant)}
+
+						<li class="nimble-combatants__item">
+							<CombatantComponent active={false} {combatant} />
+						</li>
+					{/each}
+				{/if}
 			{/key}
 		</ol>
 
