@@ -286,6 +286,25 @@ class NimbleCombat extends Combat {
 		return this;
 	}
 
+	override setupTurns(): Combatant.Implementation[] {
+		const turns = super.setupTurns();
+		return turns.filter((combatant) => !isCombatantDead(combatant));
+	}
+
+	override async nextTurn(): Promise<this> {
+		this.#syncTurnIndexWithAliveTurns();
+		const result = (await super.nextTurn()) as this;
+		this.#syncTurnIndexWithAliveTurns();
+		return result;
+	}
+
+	override async nextRound(): Promise<this> {
+		this.#syncTurnIndexWithAliveTurns();
+		const result = (await super.nextRound()) as this;
+		this.#syncTurnIndexWithAliveTurns();
+		return result;
+	}
+
 	override _sortCombatants(a: Combatant.Implementation, b: Combatant.Implementation): number {
 		const typePriorityDiff = getCombatantTypePriority(a) - getCombatantTypePriority(b);
 		if (typePriorityDiff !== 0) return typePriorityDiff;
