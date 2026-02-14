@@ -1,4 +1,8 @@
-import { getActorHpValue, isCombatantDead } from '../utils/isCombatantDead.js';
+import {
+	getActorHpValue,
+	getActorWoundsValueAndMax,
+	isCombatantDead,
+} from '../utils/isCombatantDead.js';
 
 type CombatantWithActions = Combatant.Implementation & {
 	system: {
@@ -44,22 +48,38 @@ function hasAnyOtherAliveCombatant(combat: Combat, currentCombatantId: string | 
 	);
 }
 
+function getShouldBeDefeatedFromActorState(combatant: CombatantWithActions): boolean | null {
+	if (combatant.type === 'character') {
+		const wounds = getActorWoundsValueAndMax(combatant.actor);
+		if (!wounds) return null;
+
+		return wounds.value >= wounds.max;
+	}
+
+	const hpValue = getActorHpValue(combatant.actor);
+	if (hpValue === null) return null;
+
+	return hpValue <= 0;
+}
+
 async function syncActorCombatantDeathState(actor: Actor.Implementation): Promise<void> {
 	if (!game.user?.isGM) return;
 	if (!actor.id) return;
 
-	const hpValue = getActorHpValue(actor);
-	if (hpValue === null) return;
-
-	const shouldBeDefeated = hpValue <= 0;
 	const matches = getCombatantsForActor(actor.id);
 	if (matches.length === 0) return;
 
 	const updatesByCombat = new Map<string, { combat: Combat; updates: Record<string, unknown>[] }>();
 	const combatsToAdvanceTurn = new Set<Combat>();
+	let actorShouldShowDefeated = false;
+	let hasKnownDefeatState = false;
 
 	for (const { combat, combatant } of matches) {
 		if (!combat.id || !combatant.id) continue;
+		const shouldBeDefeated = getShouldBeDefeatedFromActorState(combatant);
+		if (shouldBeDefeated === null) continue;
+		hasKnownDefeatState = true;
+		actorShouldShowDefeated ||= shouldBeDefeated;
 
 		const update: Record<string, unknown> = { _id: combatant.id };
 		let hasChanges = false;
@@ -102,10 +122,12 @@ async function syncActorCombatantDeathState(actor: Actor.Implementation): Promis
 		}
 	}
 
+	if (!hasKnownDefeatState) return;
+
 	const defeatedStatusId = CONFIG.specialStatusEffects.DEFEATED;
 	await actor.toggleStatusEffect(defeatedStatusId, {
 		overlay: true,
-		active: shouldBeDefeated,
+		active: actorShouldShowDefeated,
 	});
 
 	for (const combat of combatsToAdvanceTurn) {
@@ -119,7 +141,10 @@ export default function registerCombatantDefeatSync() {
 
 	Hooks.on('updateActor', (actor: Actor.Implementation, changes: Record<string, unknown>) => {
 		const hpChanged = foundry.utils.hasProperty(changes, 'system.attributes.hp.value');
-		if (!hpChanged) return;
+		const woundsChanged =
+			foundry.utils.hasProperty(changes, 'system.attributes.wounds.value') ||
+			foundry.utils.hasProperty(changes, 'system.attributes.wounds.max');
+		if (!hpChanged && !woundsChanged) return;
 
 		void syncActorCombatantDeathState(actor);
 	});
