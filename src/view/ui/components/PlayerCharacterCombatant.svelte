@@ -1,5 +1,6 @@
 <script>
 	import BaseCombatant from './BaseCombatant.svelte';
+	import { isCombatantDead } from '../../../utils/isCombatantDead.js';
 
 	async function rollInitiative(event, combatantId) {
 		event.preventDefault();
@@ -28,13 +29,40 @@
 		});
 	}
 
+	async function endTurn(event) {
+		event.preventDefault();
+		event.stopPropagation();
+
+		if (!active || (!isOwner && !game.user.isGM)) return;
+
+		const parentCombat = combatant.parent;
+		if (!parentCombat) return;
+
+		const currentTurnIndex =
+			typeof parentCombat.turn === 'number' && parentCombat.turn >= 0
+				? parentCombat.turn
+				: parentCombat.turns.findIndex((turnCombatant) => turnCombatant.id === combatant.id);
+		const isLastTurn = currentTurnIndex >= parentCombat.turns.length - 1;
+
+		try {
+			if (isLastTurn) {
+				await parentCombat.nextRound();
+			} else {
+				await parentCombat.nextTurn();
+			}
+		} catch (_error) {
+			ui.notifications?.warn('You do not have permission to end turns.');
+		}
+	}
+
 	let { active, combatant } = $props();
 	let isOwner = combatant.actor?.testUserPermission(game.user, 'OWNER');
 	let isObserver = combatant.actor?.testUserPermission(game.user, 'OBSERVER');
+	let isDead = $derived(isCombatantDead(combatant));
 </script>
 
 <BaseCombatant {active} {combatant}>
-	{#if combatant.reactive.initiative === null}
+	{#if !isDead && combatant.reactive.initiative === null}
 		{#if isOwner}
 			<div class="nimble-combatant-actions">
 				<button
@@ -50,8 +78,11 @@
 				</button>
 			</div>
 		{/if}
-	{:else if isObserver && combatant.type === 'character'}
-		<div class="nimble-combatant-actions" class:nimble-combatant-actions--disabled={!isOwner}>
+	{:else if !isDead && isObserver && combatant.type === 'character'}
+		<div
+			class="nimble-combatant-actions"
+			class:nimble-combatant-actions--disabled={!isOwner && !game.user.isGM}
+		>
 			{#each { length: combatant.system.actions.base.max }, index}
 				<button
 					class="nimble-combatant-actions__pip-button"
@@ -66,6 +97,18 @@
 					{/if}
 				</button>
 			{/each}
+
+			{#if active && (isOwner || game.user.isGM)}
+				<button
+					class="nimble-combatant-actions__end-turn-button"
+					type="button"
+					aria-label="End Turn"
+					data-tooltip="End Turn"
+					onclick={endTurn}
+				>
+					End Turn
+				</button>
+			{/if}
 		</div>
 	{/if}
 </BaseCombatant>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
+	import { isCombatantDead } from '../../utils/isCombatantDead.js';
 	import BaseCombatant from './components/BaseCombatant.svelte';
 	import CombatTrackerControls from './components/CombatTrackerControls.svelte';
 	import PlayerCharacterCombatant from './components/PlayerCharacterCombatant.svelte';
@@ -15,6 +16,55 @@
 	interface SceneCombatantLists {
 		activeCombatants: Combatant.Implementation[];
 		deadCombatants: Combatant.Implementation[];
+	}
+
+	interface CombatantDropPreview {
+		sourceId: string;
+		targetId: string;
+		before: boolean;
+	}
+
+	interface CombatantDragStartDetail {
+		combatantId: string;
+	}
+
+	const COMBAT_TRACKER_MIN_WIDTH_REM = 6.5;
+	const COMBAT_TRACKER_MAX_WIDTH_REM = COMBAT_TRACKER_MIN_WIDTH_REM * 2;
+	const COMBAT_TRACKER_WIDTH_STORAGE_KEY = 'nimble.combatTracker.widthRem';
+	const DRAG_TARGET_EXPANSION_REM = 0.9;
+	const DRAG_SWITCH_UPPER_RATIO = 0.4;
+	const DRAG_SWITCH_LOWER_RATIO = 0.6;
+
+	function clampCombatTrackerWidth(widthRem: number): number {
+		return Math.min(COMBAT_TRACKER_MAX_WIDTH_REM, Math.max(COMBAT_TRACKER_MIN_WIDTH_REM, widthRem));
+	}
+
+	function getRootFontSizePx(): number {
+		const rootFontSize =
+			Number.parseFloat(globalThis.getComputedStyle(document.documentElement).fontSize) || 16;
+		return Number.isFinite(rootFontSize) && rootFontSize > 0 ? rootFontSize : 16;
+	}
+
+	function readStoredCombatTrackerWidth(): number {
+		try {
+			const storedWidth = globalThis.localStorage.getItem(COMBAT_TRACKER_WIDTH_STORAGE_KEY);
+			if (!storedWidth) return COMBAT_TRACKER_MIN_WIDTH_REM;
+
+			const parsed = Number.parseFloat(storedWidth);
+			if (!Number.isFinite(parsed)) return COMBAT_TRACKER_MIN_WIDTH_REM;
+
+			return clampCombatTrackerWidth(parsed);
+		} catch (_error) {
+			return COMBAT_TRACKER_MIN_WIDTH_REM;
+		}
+	}
+
+	function saveCombatTrackerWidth(widthRem: number): void {
+		try {
+			globalThis.localStorage.setItem(COMBAT_TRACKER_WIDTH_STORAGE_KEY, String(widthRem));
+		} catch (_error) {
+			// No-op: local storage access may fail in some browser privacy modes.
+		}
 	}
 
 	function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
@@ -36,15 +86,8 @@
 		return combat.combatants.contents.some((c) => getCombatantSceneId(c) === sceneId);
 	}
 
-	function isDeadCombatant(combatant: Combatant.Implementation): boolean {
-		const hpValue = (
-			combatant.actor?.system as {
-				attributes?: { hp?: { value?: number } };
-			}
-		)?.attributes?.hp?.value;
-
-		if (combatant.type === 'character') return combatant.defeated;
-		return combatant.defeated || (typeof hpValue === 'number' && hpValue <= 0);
+	function getCombatantTypePriority(combatant: Combatant.Implementation): number {
+		return combatant.type === 'character' ? 0 : 1;
 	}
 
 	function getCombatantsForScene(
@@ -61,13 +104,13 @@
 		);
 
 		const turnCombatantIds = new Set(turnCombatants.map((c) => c.id));
-		const activeCombatants = turnCombatants.filter((combatant) => !isDeadCombatant(combatant));
+		const activeCombatants = turnCombatants.filter((combatant) => !isCombatantDead(combatant));
 		const missingActiveCombatants = combatantsForScene.filter(
-			(combatant) => !isDeadCombatant(combatant) && !turnCombatantIds.has(combatant.id ?? ''),
+			(combatant) => !isCombatantDead(combatant) && !turnCombatantIds.has(combatant.id ?? ''),
 		);
 
 		const deadCombatants = combatantsForScene
-			.filter((combatant) => isDeadCombatant(combatant))
+			.filter((combatant) => isCombatantDead(combatant))
 			.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
 
 		return {
@@ -123,11 +166,149 @@
 
 	async function _onDrop(event: DragEvent) {
 		event.preventDefault();
-		if (!(event.target instanceof HTMLElement)) return;
+		if (!(event.target instanceof HTMLElement)) {
+			clearDragState();
+			return;
+		}
 
 		const combat = currentCombat as CombatWithDrop | null;
-		if (typeof combat?._onDrop !== 'function') return;
-		await combat._onDrop(event as DragEvent & { target: EventTarget & HTMLElement });
+		if (typeof combat?._onDrop !== 'function') {
+			clearDragState();
+			return;
+		}
+
+		try {
+			await combat._onDrop(event as DragEvent & { target: EventTarget & HTMLElement });
+		} finally {
+			clearDragState();
+		}
+	}
+
+	function clearDropPreview() {
+		dragPreview = null;
+	}
+
+	function clearDragState() {
+		activeDragSourceId = null;
+		clearDropPreview();
+	}
+
+	function handleCombatantDragStart(event: Event) {
+		const customEvent = event as CustomEvent<CombatantDragStartDetail>;
+		const combatantId = customEvent.detail?.combatantId;
+		if (!combatantId) return;
+
+		activeDragSourceId = combatantId;
+		clearDropPreview();
+	}
+
+	function handleCombatantDragEnd() {
+		clearDragState();
+	}
+
+	function getDragTargetExpansionPx(): number {
+		return getRootFontSizePx() * DRAG_TARGET_EXPANSION_REM * combatTrackerScale;
+	}
+
+	function getPreviewTargetFromPointer(
+		clientY: number,
+		source: Combatant.Implementation,
+	): { target: Combatant.Implementation; before: boolean } | null {
+		if (!combatantsListElement) return null;
+
+		const sourcePriority = getCombatantTypePriority(source);
+		const candidates = sceneCombatants.filter(
+			(combatant) =>
+				combatant.id !== source.id &&
+				!isCombatantDead(combatant) &&
+				getCombatantTypePriority(combatant) === sourcePriority,
+		);
+		if (candidates.length === 0) return null;
+
+		const expansionPx = getDragTargetExpansionPx();
+		let bestTarget: Combatant.Implementation | null = null;
+		let bestRect: DOMRect | null = null;
+		let bestDistance = Number.POSITIVE_INFINITY;
+
+		for (const candidate of candidates) {
+			const row = combatantsListElement.querySelector<HTMLElement>(
+				`.nimble-combatants__item[data-combatant-id="${candidate.id}"]`,
+			);
+			if (!row) continue;
+
+			const rect = row.getBoundingClientRect();
+			const expandedTop = rect.top - expansionPx;
+			const expandedBottom = rect.bottom + expansionPx;
+
+			const distance =
+				clientY < expandedTop
+					? expandedTop - clientY
+					: clientY > expandedBottom
+						? clientY - expandedBottom
+						: 0;
+
+			if (distance < bestDistance) {
+				bestDistance = distance;
+				bestTarget = candidate;
+				bestRect = rect;
+			}
+		}
+
+		if (!bestTarget || !bestRect) return null;
+
+		const relativeY = (clientY - bestRect.top) / Math.max(1, bestRect.height);
+		let before: boolean;
+
+		if (relativeY <= DRAG_SWITCH_UPPER_RATIO) {
+			before = true;
+		} else if (relativeY >= DRAG_SWITCH_LOWER_RATIO) {
+			before = false;
+		} else if (dragPreview?.targetId === bestTarget.id) {
+			before = dragPreview.before;
+		} else {
+			before = relativeY < 0.5;
+		}
+
+		return { target: bestTarget, before };
+	}
+
+	function getDragPreview(event: DragEvent): CombatantDropPreview | null {
+		if (!game.user?.isGM) return null;
+		if (!currentCombat) return null;
+		if (!activeDragSourceId) return null;
+
+		const source = currentCombat.combatants.get(activeDragSourceId);
+		if (!source?.id) return null;
+		if (source.parent?.id !== currentCombat.id) return null;
+		if (isCombatantDead(source)) return null;
+
+		const pointerTarget = getPreviewTargetFromPointer(event.clientY, source);
+		if (!pointerTarget) return null;
+
+		return {
+			sourceId: source.id,
+			targetId: pointerTarget.target.id ?? '',
+			before: pointerTarget.before,
+		};
+	}
+
+	function handleDragOver(event: DragEvent) {
+		event.preventDefault();
+		if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+
+		const preview = getDragPreview(event);
+		if (!preview) {
+			clearDropPreview();
+			return;
+		}
+
+		const isUnchanged =
+			dragPreview?.sourceId === preview.sourceId &&
+			dragPreview?.targetId === preview.targetId &&
+			dragPreview?.before === preview.before;
+		if (!isUnchanged) {
+			dragPreview = preview;
+		}
 	}
 
 	function rollInitiativeForAll(event: MouseEvent) {
@@ -140,10 +321,59 @@
 		return currentCombat?.startCombat();
 	}
 
+	function stopResizeTracking() {
+		if (resizeMoveHandler) {
+			window.removeEventListener('pointermove', resizeMoveHandler);
+			resizeMoveHandler = undefined;
+		}
+
+		if (resizeEndHandler) {
+			window.removeEventListener('pointerup', resizeEndHandler);
+			window.removeEventListener('pointercancel', resizeEndHandler);
+			resizeEndHandler = undefined;
+		}
+	}
+
+	function startResize(event: PointerEvent) {
+		event.preventDefault();
+
+		const handle = event.currentTarget as HTMLElement | null;
+		const startX = event.clientX;
+		const startWidthRem = combatTrackerWidthRem;
+		const rootFontSizePx = getRootFontSizePx();
+
+		stopResizeTracking();
+
+		resizeMoveHandler = (moveEvent: PointerEvent) => {
+			const deltaRem = (moveEvent.clientX - startX) / rootFontSizePx;
+			combatTrackerWidthRem = clampCombatTrackerWidth(startWidthRem + deltaRem);
+		};
+
+		resizeEndHandler = () => {
+			stopResizeTracking();
+			saveCombatTrackerWidth(combatTrackerWidthRem);
+			if (handle?.hasPointerCapture?.(event.pointerId)) {
+				handle.releasePointerCapture(event.pointerId);
+			}
+		};
+
+		window.addEventListener('pointermove', resizeMoveHandler);
+		window.addEventListener('pointerup', resizeEndHandler, { once: true });
+		window.addEventListener('pointercancel', resizeEndHandler, { once: true });
+		handle?.setPointerCapture?.(event.pointerId);
+	}
+
 	let currentCombat: Combat | null = $state(null);
 	// Combatants filtered to only those belonging to the current scene
 	let sceneCombatants: Combatant.Implementation[] = $state([]);
 	let sceneDeadCombatants: Combatant.Implementation[] = $state([]);
+	let dragPreview: CombatantDropPreview | null = $state(null);
+	let activeDragSourceId: string | null = $state(null);
+	let combatantsListElement: HTMLOListElement | null = $state(null);
+	let combatTrackerWidthRem: number = $state(COMBAT_TRACKER_MIN_WIDTH_REM);
+	let combatTrackerScale = $derived(combatTrackerWidthRem / COMBAT_TRACKER_MIN_WIDTH_REM);
+	let resizeMoveHandler: ((event: PointerEvent) => void) | undefined;
+	let resizeEndHandler: ((event: PointerEvent) => void) | undefined;
 	// Version counter to force re-renders when combat data changes
 	// (since the Combat object reference may stay the same)
 	let version = $state(0);
@@ -160,7 +390,11 @@
 	let updateSceneHook: number | undefined;
 
 	onMount(() => {
+		combatTrackerWidthRem = readStoredCombatTrackerWidth();
 		updateCurrentCombat();
+		window.addEventListener('dragend', handleCombatantDragEnd);
+		window.addEventListener('nimble-combatant-dragstart', handleCombatantDragStart);
+		window.addEventListener('nimble-combatant-dragend', handleCombatantDragEnd);
 
 		createCombatHook = Hooks.on('createCombat', (_combat) => {
 			updateCurrentCombat();
@@ -216,6 +450,11 @@
 	});
 
 	onDestroy(() => {
+		stopResizeTracking();
+		window.removeEventListener('dragend', handleCombatantDragEnd);
+		window.removeEventListener('nimble-combatant-dragstart', handleCombatantDragStart);
+		window.removeEventListener('nimble-combatant-dragend', handleCombatantDragEnd);
+
 		if (createCombatHook !== undefined) Hooks.off('createCombat', createCombatHook);
 		if (deleteCombatHook !== undefined) Hooks.off('deleteCombat', deleteCombatHook);
 		if (updateCombatHook !== undefined) Hooks.off('updateCombat', updateCombatHook);
@@ -231,7 +470,11 @@
 </script>
 
 {#if currentCombat}
-	<section class="nimble-combat-tracker" transition:slide={{ axis: 'x' }}>
+	<section
+		class="nimble-combat-tracker"
+		style={`--nimble-combat-sidebar-width: ${combatTrackerWidthRem}rem; --nimble-combat-sidebar-min-width: ${COMBAT_TRACKER_MIN_WIDTH_REM}rem; --nimble-combat-sidebar-max-width: ${COMBAT_TRACKER_MAX_WIDTH_REM}rem; --nimble-combat-card-scale: ${combatTrackerScale};`}
+		transition:slide={{ axis: 'x' }}
+	>
 		<header
 			class="nimble-combat-tracker__header"
 			class:nimble-combat-tracker__header--no-controls={!game.user!.isGM}
@@ -258,16 +501,34 @@
 			{/key}
 		</header>
 
-		<ol class="nimble-combatants" ondrop={(event) => _onDrop(event)} out:fade={{ delay: 0 }}>
+		<ol
+			bind:this={combatantsListElement}
+			class="nimble-combatants"
+			data-drag-source-id={activeDragSourceId ?? ''}
+			data-drop-target-id={dragPreview?.targetId ?? ''}
+			data-drop-before={dragPreview ? String(dragPreview.before) : ''}
+			ondragover={handleDragOver}
+			ondrop={(event) => _onDrop(event)}
+			out:fade={{ delay: 0 }}
+		>
 			{#key version}
 				{#each sceneCombatants as combatant (combatant._id)}
 					{@const CombatantComponent = getCombatantComponent(combatant)}
+					{@const isActiveCombatant = currentCombat?.combatant?.id === combatant.id}
 
-					<li class="nimble-combatants__item">
-						<CombatantComponent
-							active={currentCombat?.combatant?.id === combatant.id}
-							{combatant}
-						/>
+					<li
+						class="nimble-combatants__item"
+						class:nimble-combatants__item--active={isActiveCombatant}
+						data-combatant-id={combatant.id}
+						class:nimble-combatants__item--preview-gap-before={dragPreview?.targetId ===
+							combatant.id && dragPreview.before}
+						class:nimble-combatants__item--preview-gap-after={dragPreview?.targetId ===
+							combatant.id && !dragPreview.before}
+					>
+						{#if isActiveCombatant}
+							<span class="nimble-combatants__active-crawler" aria-hidden="true"></span>
+						{/if}
+						<CombatantComponent active={isActiveCombatant} {combatant} />
 					</li>
 				{/each}
 
@@ -303,5 +564,12 @@
 				</div>
 			</footer>
 		{/if}
+
+		<button
+			class="nimble-combat-tracker__resize-handle"
+			type="button"
+			aria-label="Resize combat tracker"
+			onpointerdown={startResize}
+		></button>
 	</section>
 {/if}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import BaseCombatant from './BaseCombatant.svelte';
+	import { isCombatantDead } from '../../../utils/isCombatantDead.js';
 
 	async function updateNonPcCombatantAction(event) {
 		event.preventDefault();
@@ -13,13 +14,39 @@
 		});
 	}
 
+	async function endTurn(event: MouseEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+
+		if (!active || !game.user.isGM) return;
+
+		const parentCombat = combatant.parent;
+		if (!parentCombat) return;
+
+		const currentTurnIndex =
+			typeof parentCombat.turn === 'number' && parentCombat.turn >= 0
+				? parentCombat.turn
+				: parentCombat.turns.findIndex((turnCombatant) => turnCombatant.id === combatant.id);
+		const isLastTurn = currentTurnIndex >= parentCombat.turns.length - 1;
+
+		try {
+			if (isLastTurn) {
+				await parentCombat.nextRound();
+			} else {
+				await parentCombat.nextTurn();
+			}
+		} catch (_error) {
+			ui.notifications?.warn('You do not have permission to end turns.');
+		}
+	}
+
 	let { active, combatant } = $props();
 	let isObserver = combatant.actor?.testUserPermission(game.user, 'OBSERVER');
-	let isGM = combatant.actor?.testUserPermission(game.user, 'GM');
+	let isDead = $derived(isCombatantDead(combatant));
 </script>
 
 <BaseCombatant {active} {combatant}>
-	{#if combatant.type !== 'character' && combatant.reactive.initiative !== null && (isGM || isObserver)}
+	{#if !isDead && combatant.type !== 'character' && combatant.reactive.initiative !== null && (game.user.isGM || isObserver)}
 		<div class="nimble-combatant-actions">
 			{#each { length: combatant.system.actions.base.max }, index}
 				<button
@@ -36,6 +63,18 @@
 					{/if}
 				</button>
 			{/each}
+
+			{#if active && game.user.isGM}
+				<button
+					class="nimble-combatant-actions__end-turn-button"
+					type="button"
+					aria-label="End Turn"
+					data-tooltip="End Turn"
+					onclick={endTurn}
+				>
+					End Turn
+				</button>
+			{/if}
 		</div>
 	{/if}
 </BaseCombatant>
