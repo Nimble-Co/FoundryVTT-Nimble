@@ -5,6 +5,12 @@ import {
 	getCombatantTypePriority,
 } from '../../utils/combatantOrdering.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
+import {
+	getCombatManaGrantForCombat,
+	getCombatManaGrantMap,
+	getCombatManaGrantTotalForInitiative,
+	primeActorCombatManaSourceRules,
+} from '../../utils/combatManaRules.js';
 
 /** Combatant system data with actions */
 interface CombatantSystemWithActions {
@@ -76,35 +82,6 @@ class NimbleCombat extends Combat {
 		const currentTurn = Number.isInteger(this.turn) ? Number(this.turn) : 0;
 		this.turn = Math.min(Math.max(currentTurn, 0), aliveTurns.length - 1);
 	}
-
-	#isCommanderSpellblade(combatant: Combatant.Implementation): boolean {
-		const actor = combatant.actor;
-		if (!actor || actor.type !== 'character') return false;
-
-		return actor.items.some((item) => {
-			if (item.type !== 'subclass') return false;
-
-			const parentClass = foundry.utils.getProperty(item, 'system.parentClass') as
-				| string
-				| undefined;
-			const identifier =
-				(foundry.utils.getProperty(item, 'system.identifier') as string | undefined) ??
-				item.name.slugify({ strict: true });
-			return identifier === 'spellblade' && parentClass === 'commander';
-		});
-	}
-
-	#getSpellbladeManaFromInt(combatant: Combatant.Implementation): number {
-		const actor = combatant.actor;
-		if (!actor) return 0;
-
-		const intelligenceMod = Number(
-			foundry.utils.getProperty(actor, 'system.abilities.intelligence.mod') ?? 0,
-		);
-
-		return Math.max(0, intelligenceMod);
-	}
-
 	constructor(
 		data?: Combat.CreateData,
 		context?: foundry.abstract.Document.ConstructionContext<Combat.Parent>,
@@ -258,7 +235,7 @@ class NimbleCombat extends Combat {
 
 		// Iterate over Combatants, performing an initiative roll for each
 		const updates: Record<string, unknown>[] = [];
-		const spellbladeManaUpdates: Promise<unknown>[] = [];
+		const combatManaUpdates: Promise<unknown>[] = [];
 		const messages: ChatMessage.CreateData[] = [];
 
 		for await (const [i, id] of combatantIds.entries()) {
@@ -281,19 +258,32 @@ class NimbleCombat extends Combat {
 				else combatantUpdates[actionPath] = 1;
 			}
 
-			const shouldGrantSpellbladeMana =
+			const shouldGrantCombatMana =
 				combatant.type === 'character' &&
 				combatant.initiative === null &&
-				this.#isCommanderSpellblade(combatant);
+				combatant.actor?.isOwner &&
+				Boolean(this.id);
 
-			if (shouldGrantSpellbladeMana && combatant.actor?.isOwner) {
-				const spellbladeMana = this.#getSpellbladeManaFromInt(combatant);
-				spellbladeManaUpdates.push(
-					combatant.actor.update({
-						'system.resources.mana.baseMax': spellbladeMana,
-						'system.resources.mana.current': spellbladeMana,
-					} as Record<string, unknown>),
-				);
+			if (shouldGrantCombatMana && combatant.actor) {
+				await primeActorCombatManaSourceRules(combatant.actor);
+
+				const combatId = this.id as string;
+				const existingGrant = getCombatManaGrantForCombat(combatant.actor, combatId);
+				if (existingGrant <= 0) {
+					const combatMana = getCombatManaGrantTotalForInitiative(combatant.actor);
+					if (combatMana > 0) {
+						const grants = getCombatManaGrantMap(combatant.actor);
+						grants[combatId] = { mana: combatMana };
+
+						combatManaUpdates.push(
+							combatant.actor.update({
+								'system.resources.mana.baseMax': combatMana,
+								'system.resources.mana.current': combatMana,
+								'flags.nimble.combatManaGrants': grants,
+							} as Record<string, unknown>),
+						);
+					}
+				}
 			}
 
 			updates.push(combatantUpdates);
@@ -336,8 +326,8 @@ class NimbleCombat extends Combat {
 		// Update multiple combatants
 		await this.updateEmbeddedDocuments('Combatant', updates);
 
-		if (spellbladeManaUpdates.length > 0) {
-			await Promise.all(spellbladeManaUpdates);
+		if (combatManaUpdates.length > 0) {
+			await Promise.all(combatManaUpdates);
 		}
 
 		// Ensure the turn order remains with the same combatant

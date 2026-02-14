@@ -3,6 +3,10 @@
 	import { setContext } from 'svelte';
 	import { readable } from 'svelte/store';
 	import localize from '../../utils/localize.js';
+	import {
+		getInitiativeCombatManaRules,
+		primeActorCombatManaSourceRules,
+	} from '../../utils/combatManaRules.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import HitPointBar from './components/HitPointBar.svelte';
@@ -40,12 +44,9 @@
 		return origins.filter(Boolean).join(' ⟡ ');
 	}
 
-	function isCommanderSpellbladeCharacter(character) {
-		return character.reactive.items.some((item) => {
-			if (item.type !== 'subclass') return false;
-			const identifier = item.system?.identifier ?? item.name.slugify({ strict: true });
-			return identifier === 'spellblade' && item.system?.parentClass === 'commander';
-		});
+	function hasInitiativeCombatManaRule(character) {
+		const rules = getInitiativeCombatManaRules(character);
+		return rules.length > 0;
 	}
 
 	function getActiveCombatForCurrentScene() {
@@ -146,6 +147,20 @@
 	}
 
 	let { actor, sheet } = $props();
+	let combatManaRulesPrimeVersion = $state(0);
+	let lastCombatManaPrimeActorId = $state(null);
+
+	$effect(() => {
+		const actorId = actor?.id ?? null;
+		if (!actorId) return;
+		if (lastCombatManaPrimeActorId === actorId) return;
+
+		lastCombatManaPrimeActorId = actorId;
+		void primeActorCombatManaSourceRules(actor).then(() => {
+			combatManaRulesPrimeVersion += 1;
+		});
+	});
+
 	const subscribeCombatState = createSubscriber((update) => {
 		const hookNames = [
 			'combatStart',
@@ -224,21 +239,28 @@
 	let classItem = $derived(actor.reactive.items.find((item) => item.type === 'class') ?? null);
 	let wounds = $derived(actor.reactive.system.attributes.wounds);
 	let mana = $derived(actor.reactive.system.resources.mana);
-	let isCommanderSpellblade = $derived.by(() => isCommanderSpellbladeCharacter(actor));
-	let spellbladeManaVisible = $derived.by(() => {
+	let hasInitiativeCombatMana = $derived.by(() => {
+		combatManaRulesPrimeVersion;
+		return hasInitiativeCombatManaRule(actor);
+	});
+	let combatManaVisible = $derived.by(() => {
 		subscribeCombatState();
-		return isCommanderSpellblade && hasRolledInitiativeInActiveCombat(actor);
+		return hasInitiativeCombatMana && hasRolledInitiativeInActiveCombat(actor);
 	});
 	let hasMana = $derived.by(() => {
-		if (isCommanderSpellblade) {
-			const maxMana = mana.max || mana.baseMax || 0;
-			return spellbladeManaVisible && maxMana > 0;
+		subscribeCombatState();
+
+		const maxMana = mana.max || mana.baseMax || 0;
+		const classHasManaFormula = actor.reactive.items.some(
+			(item) => item.type === 'class' && item.system?.mana?.formula?.length,
+		);
+
+		if (hasInitiativeCombatMana) {
+			return combatManaVisible && maxMana > 0;
 		}
 
 		if ((mana.max ?? 0) > 0 || (mana.baseMax ?? 0) > 0) return true;
-		return actor.reactive.items.some(
-			(item) => item.type === 'class' && item.system?.mana?.formula?.length,
-		);
+		return classHasManaFormula;
 	});
 
 	// Flags
