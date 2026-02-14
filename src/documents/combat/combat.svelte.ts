@@ -1,14 +1,5 @@
 import { createSubscriber } from 'svelte/reactivity';
-import { DamageRoll } from '../../dice/DamageRoll.js';
-import {
-	getPrimaryDamageFormulaFromActivationEffects,
-	getUnsupportedActivationEffectTypes,
-} from '../../utils/activationEffects.js';
-import { getCombatantImage } from '../../utils/combatantImage.js';
-import {
-	canCurrentUserReorderCombatant,
-	getCombatantTypePriority,
-} from '../../utils/combatantOrdering.js';
+import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
 import {
 	getEffectiveMinionGroupLeader,
@@ -69,6 +60,10 @@ interface CombatantSystemWithActions {
 function getCombatantTypePriority(combatant: Combatant.Implementation): number {
 	if (combatant.type === 'character') return 0;
 	return 1;
+}
+
+function getCombatantManualSortValue(combatant: Combatant.Implementation): number {
+	return Number((combatant.system as unknown as { sort?: number }).sort ?? 0);
 }
 
 class NimbleCombat extends Combat {
@@ -1216,36 +1211,25 @@ class NimbleCombat extends Combat {
 		const typePriorityDiff = getCombatantTypePriority(a) - getCombatantTypePriority(b);
 		if (typePriorityDiff !== 0) return typePriorityDiff;
 
+		const deadStateDiff = Number(isCombatantDead(a)) - Number(isCombatantDead(b));
+		if (deadStateDiff !== 0) return deadStateDiff;
+
+		const sa = getCombatantManualSortValue(a);
+		const sb = getCombatantManualSortValue(b);
+		const manualSortDiff = sa - sb;
+		if (manualSortDiff !== 0) return manualSortDiff;
+
 		const initiativeA = Number(a.initiative ?? Number.NEGATIVE_INFINITY);
 		const initiativeB = Number(b.initiative ?? Number.NEGATIVE_INFINITY);
 		const initiativeDiff = initiativeB - initiativeA;
 		if (initiativeDiff !== 0) return initiativeDiff;
 
-		const sa = (a.system as unknown as { sort?: number }).sort ?? 0;
-		const sb = (b.system as unknown as { sort?: number }).sort ?? 0;
-		const manualSortDiff = sa - sb;
-		if (manualSortDiff !== 0) return manualSortDiff;
-
 		return (a.name ?? '').localeCompare(b.name ?? '');
 	}
 
-	#resolveDropSource(params: {
-		dropData: Record<string, string>;
-		trackerListElement: HTMLElement | null;
-	}): Combatant.Implementation | null {
-		const { combatants } = this;
-		let source = fromUuidSync(
-			params.dropData.uuid as `Combatant.${string}`,
-		) as Combatant.Implementation | null;
-		if (!source && params.trackerListElement?.dataset.dragSourceId) {
-			source = combatants.get(params.trackerListElement.dataset.dragSourceId) ?? null;
-		}
-		if (!source) return null;
-		if (source.parent?.id !== this.id) return null;
-		if (isCombatantDead(source)) return null;
-		if (!canCurrentUserReorderCombatant(source)) return null;
-		return source;
-	}
+	async _onDrop(event: DragEvent & { target: EventTarget & HTMLElement }) {
+		event.preventDefault();
+		if (!game.user?.isGM) return false;
 
 	#resolveDropTargetFromEvent(params: {
 		event: DragEvent & { target: EventTarget & HTMLElement };
@@ -1329,9 +1313,41 @@ class NimbleCombat extends Combat {
 		const source = this.#resolveDropSource({ dropData, trackerListElement });
 		if (!source) return null;
 
-		const dropTargetResolution = this.#resolveDropTarget({ event, trackerListElement });
-		if (!dropTargetResolution) return null;
-		if (!this.#isValidDropPair(source, dropTargetResolution.target)) return null;
+		const { combatants } = this;
+
+		let source = fromUuidSync(
+			dropData.uuid as `Combatant.${string}`,
+		) as Combatant.Implementation | null;
+		if (!source && trackerListElement?.dataset.dragSourceId) {
+			source = combatants.get(trackerListElement.dataset.dragSourceId) ?? null;
+		}
+
+		if (!source) return false;
+		if (source.parent?.id !== this.id) return false;
+		if (isCombatantDead(source)) return false;
+
+		let dropTarget = (event.target as HTMLElement).closest<HTMLElement>('[data-combatant-id]');
+		let target = dropTarget ? combatants.get(dropTarget.dataset.combatantId ?? '') : null;
+		let sortBefore: boolean | null = null;
+
+		if (target && dropTarget) {
+			sortBefore =
+				event.y <
+				dropTarget.getBoundingClientRect().top + dropTarget.getBoundingClientRect().height / 2;
+		}
+
+		if (!target && trackerListElement?.dataset.dropTargetId) {
+			target = combatants.get(trackerListElement.dataset.dropTargetId) ?? null;
+			if (target) {
+				dropTarget = trackerListElement.querySelector<HTMLElement>(
+					`[data-combatant-id="${target.id}"]`,
+				);
+				sortBefore = trackerListElement.dataset.dropBefore === 'true';
+			}
+		}
+
+		if (!target) return false;
+		if (isCombatantDead(target)) return false;
 
 		const sourceTypePriority = getCombatantTypePriority(source);
 		const siblings = this.#resolveDropSiblings(source, sourceTypePriority);
@@ -1344,26 +1360,23 @@ class NimbleCombat extends Combat {
 		};
 	}
 
-	async #applyGmSort(dropResolution: DropResolution) {
-		// Perform the sort with full integer normalization for GM reorders.
-		type SortableCombatant = Combatant.Implementation & { id: string };
-		const sortUpdates = SortingHelpers.performIntegerSort(
-			dropResolution.source as SortableCombatant,
-			{
-				target: dropResolution.target as SortableCombatant | null,
-				siblings: dropResolution.siblings as SortableCombatant[],
-				sortKey: 'system.sort',
-				sortBefore: dropResolution.sortBefore,
-			},
-		);
+		if (source.id === target.id) return false;
 
-		const updateData = sortUpdates.map((updateEntry) => {
-			const { update } = updateEntry;
-			return {
-				...update,
-				_id: updateEntry.target.id,
-			};
-		});
+		const siblings = this.turns.filter(
+			(c) =>
+				c.id !== source.id &&
+				!isCombatantDead(c) &&
+				getCombatantTypePriority(c) === sourceTypePriority,
+		);
+		if (sortBefore === null) return false;
+
+			const updateData = sortUpdates.map((u) => {
+				const { update } = u;
+				return {
+					...update,
+					_id: u.target.id,
+				};
+			});
 
 		const updates = await this.updateEmbeddedDocuments('Combatant', updateData);
 		this.turns = this.setupTurns();

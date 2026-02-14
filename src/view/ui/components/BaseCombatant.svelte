@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import { draggable } from '../../../actions/draggable.svelte.js';
-	import { canCurrentUserReorderCombatant } from '../../../utils/combatantOrdering.js';
 	import { isCombatantDead } from '../../../utils/isCombatantDead.js';
 	import {
 		getEffectiveMinionGroupLeader,
@@ -156,22 +155,8 @@
 	let { active, children = undefined, combatant } = $props();
 
 	let isObserver = combatant?.actor?.testUserPermission(game.user, 'OBSERVER');
-	let isDead = $derived(
-		combatant.reactive?.defeated ||
-			(combatant.type !== 'character' &&
-				(combatant.actor?.reactive?.system?.attributes?.hp?.value ?? 1) <= 0),
-	);
-	let showTurnCompleteBadge = $derived.by(() => {
-		if (!game.user?.isGM) return false;
-		if (combatant.reactive?.defeated) return false;
-		if (!combat) return false;
-
-		const turnEnded = hasCombatantTurnEndedThisRound(combat, combatant, combatGroupSummaries);
-		if (combatant.type === 'character') return turnEnded;
-
-		const actionsRemaining = getCombatantCurrentActions(combatant);
-		return actionsRemaining <= 0 || turnEnded;
-	});
+	let isDead = $derived(isCombatantDead(combatant));
+	let canDrag = $derived(game.user?.isGM && !isDead);
 </script>
 
 <article
