@@ -1,9 +1,5 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
-import {
-	canCurrentUserReorderCombatant,
-	getCombatantTypePriority,
-} from '../../utils/combatantOrdering.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
 import { handleInitiativeRules } from './handleInitiativeRules.js';
 
@@ -20,6 +16,10 @@ interface CombatantSystemWithActions {
 function getCombatantTypePriority(combatant: Combatant.Implementation): number {
 	if (combatant.type === 'character') return 0;
 	return 1;
+}
+
+function getCombatantManualSortValue(combatant: Combatant.Implementation): number {
+	return Number((combatant.system as unknown as { sort?: number }).sort ?? 0);
 }
 
 class NimbleCombat extends Combat {
@@ -290,21 +290,25 @@ class NimbleCombat extends Combat {
 		const typePriorityDiff = getCombatantTypePriority(a) - getCombatantTypePriority(b);
 		if (typePriorityDiff !== 0) return typePriorityDiff;
 
+		const deadStateDiff = Number(isCombatantDead(a)) - Number(isCombatantDead(b));
+		if (deadStateDiff !== 0) return deadStateDiff;
+
+		const sa = getCombatantManualSortValue(a);
+		const sb = getCombatantManualSortValue(b);
+		const manualSortDiff = sa - sb;
+		if (manualSortDiff !== 0) return manualSortDiff;
+
 		const initiativeA = Number(a.initiative ?? Number.NEGATIVE_INFINITY);
 		const initiativeB = Number(b.initiative ?? Number.NEGATIVE_INFINITY);
 		const initiativeDiff = initiativeB - initiativeA;
 		if (initiativeDiff !== 0) return initiativeDiff;
-
-		const sa = (a.system as unknown as { sort?: number }).sort ?? 0;
-		const sb = (b.system as unknown as { sort?: number }).sort ?? 0;
-		const manualSortDiff = sa - sb;
-		if (manualSortDiff !== 0) return manualSortDiff;
 
 		return (a.name ?? '').localeCompare(b.name ?? '');
 	}
 
 	async _onDrop(event: DragEvent & { target: EventTarget & HTMLElement }) {
 		event.preventDefault();
+		if (!game.user?.isGM) return false;
 
 		const trackerListElement = (event.target as HTMLElement).closest<HTMLElement>(
 			'.nimble-combatants',
@@ -325,7 +329,6 @@ class NimbleCombat extends Combat {
 		if (!source) return false;
 		if (source.parent?.id !== this.id) return false;
 		if (isCombatantDead(source)) return false;
-		if (!canCurrentUserReorderCombatant(source)) return false;
 
 		let dropTarget = (event.target as HTMLElement).closest<HTMLElement>('[data-combatant-id]');
 		let target = dropTarget ? combatants.get(dropTarget.dataset.combatantId ?? '') : null;
@@ -363,16 +366,6 @@ class NimbleCombat extends Combat {
 				getCombatantTypePriority(c) === sourceTypePriority,
 		);
 		if (sortBefore === null) return false;
-
-		if (game.user?.isGM) {
-			// Perform the sort with full integer normalization for GM reorders.
-			type SortableCombatant = Combatant.Implementation & { id: string };
-			const sortUpdates = SortingHelpers.performIntegerSort(source as SortableCombatant, {
-				target: target as SortableCombatant | null,
-				siblings: siblings as SortableCombatant[],
-				sortKey: 'system.sort',
-				sortBefore,
-			});
 
 			const updateData = sortUpdates.map((u) => {
 				const { update } = u;

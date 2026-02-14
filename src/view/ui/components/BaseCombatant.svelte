@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import { draggable } from '../../../actions/draggable.svelte.js';
-	import { canCurrentUserReorderCombatant } from '../../../utils/combatantOrdering.js';
 	import { isCombatantDead } from '../../../utils/isCombatantDead.js';
 
 	import HitPointBar from '../../sheets/components/HitPointBar.svelte';
@@ -97,11 +96,8 @@
 	let { active, children = undefined, combatant } = $props();
 
 	let isObserver = combatant?.actor?.testUserPermission(game.user, 'OBSERVER');
-	let isDead = $derived(
-		combatant.reactive?.defeated ||
-			(combatant.type !== 'character' &&
-				(combatant.actor?.reactive?.system?.attributes?.hp?.value ?? 1) <= 0),
-	);
+	let isDead = $derived(isCombatantDead(combatant));
+	let canDrag = $derived(game.user?.isGM && !isDead);
 </script>
 
 <article

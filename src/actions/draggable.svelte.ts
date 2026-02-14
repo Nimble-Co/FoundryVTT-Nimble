@@ -24,7 +24,8 @@ function suppressNextOverlayButtonClick() {
 
 export function draggable(node: HTMLElement, data: string | null | undefined) {
 	let state = $state(data);
-	applyDragState(node, data);
+	applyDragState(node, state);
+	let dragImageElement: HTMLElement | null = null;
 	let sourceHidden = false;
 	let isDragging = false;
 	let dragMotionHandler: ((event: DragEvent) => void) | null = null;
@@ -62,6 +63,7 @@ export function draggable(node: HTMLElement, data: string | null | undefined) {
 		window.removeEventListener('blur', globalCleanupHandler);
 
 		clearAllDragImages();
+		dragImageElement = null;
 		clearAllDragSourceHidden();
 		setGlobalDragMode(false);
 		isDragging = false;
@@ -89,6 +91,7 @@ export function draggable(node: HTMLElement, data: string | null | undefined) {
 		dragImage.style.height = `${rect.height}px`;
 
 		document.body.appendChild(dragImage);
+		dragImageElement = dragImage;
 
 		dragMotionHandler = (dragEvent: DragEvent) => {
 			if (!isDragging) return;

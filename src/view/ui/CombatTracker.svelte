@@ -1,19 +1,7 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
-	import {
-		canCurrentUserReorderCombatant,
-		getCombatantTypePriority,
-	} from '../../utils/combatantOrdering.js';
 	import { isCombatantDead } from '../../utils/isCombatantDead.js';
-	import {
-		getCombatTrackerLocation,
-		getCurrentTurnAnimationSettings,
-		isCombatTrackerLocationSettingKey,
-		isCurrentTurnAnimationSettingKey,
-		type CombatTrackerLocation,
-		type CurrentTurnAnimationSettings,
-	} from '../../settings/combatTrackerSettings.js';
 	import BaseCombatant from './components/BaseCombatant.svelte';
 	import CombatTrackerControls from './components/CombatTrackerControls.svelte';
 	import PlayerCharacterCombatant from './components/PlayerCharacterCombatant.svelte';
@@ -29,6 +17,55 @@
 	interface SceneCombatantLists {
 		activeCombatants: Combatant.Implementation[];
 		deadCombatants: Combatant.Implementation[];
+	}
+
+	interface CombatantDropPreview {
+		sourceId: string;
+		targetId: string;
+		before: boolean;
+	}
+
+	interface CombatantDragStartDetail {
+		combatantId: string;
+	}
+
+	const COMBAT_TRACKER_MIN_WIDTH_REM = 6.5;
+	const COMBAT_TRACKER_MAX_WIDTH_REM = COMBAT_TRACKER_MIN_WIDTH_REM * 2;
+	const COMBAT_TRACKER_WIDTH_STORAGE_KEY = 'nimble.combatTracker.widthRem';
+	const DRAG_TARGET_EXPANSION_REM = 0.9;
+	const DRAG_SWITCH_UPPER_RATIO = 0.4;
+	const DRAG_SWITCH_LOWER_RATIO = 0.6;
+
+	function clampCombatTrackerWidth(widthRem: number): number {
+		return Math.min(COMBAT_TRACKER_MAX_WIDTH_REM, Math.max(COMBAT_TRACKER_MIN_WIDTH_REM, widthRem));
+	}
+
+	function getRootFontSizePx(): number {
+		const rootFontSize =
+			Number.parseFloat(globalThis.getComputedStyle(document.documentElement).fontSize) || 16;
+		return Number.isFinite(rootFontSize) && rootFontSize > 0 ? rootFontSize : 16;
+	}
+
+	function readStoredCombatTrackerWidth(): number {
+		try {
+			const storedWidth = globalThis.localStorage.getItem(COMBAT_TRACKER_WIDTH_STORAGE_KEY);
+			if (!storedWidth) return COMBAT_TRACKER_MIN_WIDTH_REM;
+
+			const parsed = Number.parseFloat(storedWidth);
+			if (!Number.isFinite(parsed)) return COMBAT_TRACKER_MIN_WIDTH_REM;
+
+			return clampCombatTrackerWidth(parsed);
+		} catch (_error) {
+			return COMBAT_TRACKER_MIN_WIDTH_REM;
+		}
+	}
+
+	function saveCombatTrackerWidth(widthRem: number): void {
+		try {
+			globalThis.localStorage.setItem(COMBAT_TRACKER_WIDTH_STORAGE_KEY, String(widthRem));
+		} catch (_error) {
+			// No-op: local storage access may fail in some browser privacy modes.
+		}
 	}
 
 	function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
@@ -50,15 +87,8 @@
 		return combat.combatants.contents.some((c) => getCombatantSceneId(c) === sceneId);
 	}
 
-	function isDeadCombatant(combatant: Combatant.Implementation): boolean {
-		const hpValue = (
-			combatant.actor?.system as {
-				attributes?: { hp?: { value?: number } };
-			}
-		)?.attributes?.hp?.value;
-
-		if (combatant.type === 'character') return combatant.defeated;
-		return combatant.defeated || (typeof hpValue === 'number' && hpValue <= 0);
+	function getCombatantTypePriority(combatant: Combatant.Implementation): number {
+		return combatant.type === 'character' ? 0 : 1;
 	}
 
 	function getCombatantsForScene(
@@ -75,13 +105,13 @@
 		);
 
 		const turnCombatantIds = new Set(turnCombatants.map((c) => c.id));
-		const activeCombatants = turnCombatants.filter((combatant) => !isDeadCombatant(combatant));
+		const activeCombatants = turnCombatants.filter((combatant) => !isCombatantDead(combatant));
 		const missingActiveCombatants = combatantsForScene.filter(
-			(combatant) => !isDeadCombatant(combatant) && !turnCombatantIds.has(combatant.id ?? ''),
+			(combatant) => !isCombatantDead(combatant) && !turnCombatantIds.has(combatant.id ?? ''),
 		);
 
 		const deadCombatants = combatantsForScene
-			.filter((combatant) => isDeadCombatant(combatant))
+			.filter((combatant) => isCombatantDead(combatant))
 			.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
 
 		return {
@@ -266,13 +296,11 @@
 	}
 
 	function getPreviewTargetFromPointer(
-		clientX: number,
 		clientY: number,
 		source: Combatant.Implementation,
 	): { target: Combatant.Implementation; before: boolean } | null {
 		if (!combatantsListElement) return null;
 
-		const isHorizontalLayout = isHorizontalCombatTrackerLocation(combatTrackerLocation);
 		const sourcePriority = getCombatantTypePriority(source);
 		const candidates = sceneCombatants.filter(
 			(combatant) =>
@@ -294,17 +322,14 @@
 			if (!row) continue;
 
 			const rect = row.getBoundingClientRect();
-			const rectStart = isHorizontalLayout ? rect.left : rect.top;
-			const rectEnd = isHorizontalLayout ? rect.right : rect.bottom;
-			const expandedStart = rectStart - expansionPx;
-			const expandedEnd = rectEnd + expansionPx;
-			const pointerValue = isHorizontalLayout ? clientX : clientY;
+			const expandedTop = rect.top - expansionPx;
+			const expandedBottom = rect.bottom + expansionPx;
 
 			const distance =
-				pointerValue < expandedStart
-					? expandedStart - pointerValue
-					: pointerValue > expandedEnd
-						? pointerValue - expandedEnd
+				clientY < expandedTop
+					? expandedTop - clientY
+					: clientY > expandedBottom
+						? clientY - expandedBottom
 						: 0;
 
 			if (distance < bestDistance) {
@@ -316,26 +341,24 @@
 
 		if (!bestTarget || !bestRect) return null;
 
-		const pointerValue = isHorizontalLayout ? clientX : clientY;
-		const rectStart = isHorizontalLayout ? bestRect.left : bestRect.top;
-		const rectSize = isHorizontalLayout ? bestRect.width : bestRect.height;
-		const relative = (pointerValue - rectStart) / Math.max(1, rectSize);
+		const relativeY = (clientY - bestRect.top) / Math.max(1, bestRect.height);
 		let before: boolean;
 
-		if (relative <= DRAG_SWITCH_UPPER_RATIO) {
+		if (relativeY <= DRAG_SWITCH_UPPER_RATIO) {
 			before = true;
-		} else if (relative >= DRAG_SWITCH_LOWER_RATIO) {
+		} else if (relativeY >= DRAG_SWITCH_LOWER_RATIO) {
 			before = false;
 		} else if (dragPreview?.targetId === bestTarget.id) {
 			before = dragPreview.before;
 		} else {
-			before = relative < 0.5;
+			before = relativeY < 0.5;
 		}
 
 		return { target: bestTarget, before };
 	}
 
 	function getDragPreview(event: DragEvent): CombatantDropPreview | null {
+		if (!game.user?.isGM) return null;
 		if (!currentCombat) return null;
 		if (!activeDragSourceId) return null;
 
@@ -343,9 +366,8 @@
 		if (!source?.id) return null;
 		if (source.parent?.id !== currentCombat.id) return null;
 		if (isCombatantDead(source)) return null;
-		if (!canCurrentUserReorderCombatant(source)) return null;
 
-		const pointerTarget = getPreviewTargetFromPointer(event.clientX, event.clientY, source);
+		const pointerTarget = getPreviewTargetFromPointer(event.clientY, source);
 		if (!pointerTarget) return null;
 
 		return {
@@ -384,98 +406,6 @@
 		return currentCombat?.startCombat();
 	}
 
-	async function endCombat(event: MouseEvent): Promise<void> {
-		event.preventDefault();
-		if (!game.user?.isGM) return;
-
-		try {
-			await currentCombat?.delete();
-		} catch (_error) {
-			ui.notifications?.error('Unable to end combat.');
-		}
-	}
-
-	function openCombatTrackerSettings(event: MouseEvent): void {
-		event.preventDefault();
-		CombatTrackerSettings.open();
-	}
-
-	async function endCurrentTurn(event: MouseEvent): Promise<void> {
-		event.preventDefault();
-
-		if (!showHorizontalFloatingEndTurn) return;
-		if (!canCurrentUserEndCurrentTurn) {
-			ui.notifications?.warn('You do not have permission to end turns.');
-			return;
-		}
-
-		try {
-			await currentCombat?.nextTurn();
-		} catch (_error) {
-			ui.notifications?.warn('You do not have permission to end turns.');
-		}
-	}
-
-	function updateFloatingEndTurnButtonPosition(): void {
-		if (!showHorizontalFloatingEndTurn || !combatTrackerElement) {
-			return;
-		}
-
-		const activeCardElement = combatantsListElement
-			? (combatantsListElement.querySelector<HTMLElement>('.nimble-combatants__item--active') ??
-				combatantsListElement.querySelector<HTMLElement>('.nimble-combatants__item'))
-			: null;
-		const activeRect = activeCardElement?.getBoundingClientRect();
-		const buttonWidth = floatingEndTurnButtonElement?.offsetWidth ?? 96;
-		const buttonHeight = floatingEndTurnButtonElement?.offsetHeight ?? 28;
-		const viewportPaddingPx = 4;
-		const edgeGapPx = 1;
-		const trackerRect = combatTrackerElement.getBoundingClientRect();
-		const preferredCenterX = activeRect
-			? activeRect.left + activeRect.width / 2
-			: trackerRect.left + trackerRect.width / 2;
-		const minCenterX = buttonWidth / 2 + viewportPaddingPx;
-		const maxCenterX = window.innerWidth - buttonWidth / 2 - viewportPaddingPx;
-		const centerX = clampNumber(preferredCenterX, minCenterX, maxCenterX);
-		const trackerDockedTop = combatTrackerElement.classList.contains(
-			'nimble-combat-tracker--location-top',
-		);
-		const trackerDockedBottom = combatTrackerElement.classList.contains(
-			'nimble-combat-tracker--location-bottom',
-		);
-		const preferredTop =
-			trackerDockedTop && !trackerDockedBottom
-				? trackerRect.bottom + edgeGapPx
-				: trackerRect.top - buttonHeight - edgeGapPx;
-		const minTop = viewportPaddingPx;
-		const maxTop = window.innerHeight - buttonHeight - viewportPaddingPx;
-		const top = clampNumber(preferredTop, minTop, maxTop);
-
-		floatingEndTurnButtonStyle = `left: ${Math.round(centerX)}px; top: ${Math.round(top)}px;`;
-	}
-
-	function scheduleFloatingEndTurnPositionUpdate(_dependencyToken = ''): void {
-		if (floatingEndTurnPositionFrameHandle !== undefined) {
-			cancelAnimationFrame(floatingEndTurnPositionFrameHandle);
-		}
-
-		floatingEndTurnPositionFrameHandle = requestAnimationFrame(() => {
-			floatingEndTurnPositionFrameHandle = undefined;
-			updateFloatingEndTurnButtonPosition();
-		});
-	}
-
-	function handleHorizontalWheelScroll(event: WheelEvent): void {
-		if (!isHorizontalLayout || !combatantsListElement) return;
-
-		const deltaPx = getWheelDeltaPx(event);
-		if (Math.abs(deltaPx) < 0.1) return;
-
-		event.preventDefault();
-		combatantsListElement.scrollLeft += deltaPx;
-		scheduleFloatingEndTurnPositionUpdate();
-	}
-
 	function stopResizeTracking() {
 		if (resizeMoveHandler) {
 			window.removeEventListener('pointermove', resizeMoveHandler);
@@ -487,8 +417,6 @@
 			window.removeEventListener('pointercancel', resizeEndHandler);
 			resizeEndHandler = undefined;
 		}
-
-		isResizing = false;
 	}
 
 	function startResize(event: PointerEvent) {
@@ -496,41 +424,19 @@
 
 		const handle = event.currentTarget as HTMLElement | null;
 		const startX = event.clientX;
-		const startY = event.clientY;
-		const isHorizontalLayout = isHorizontalCombatTrackerLocation(combatTrackerLocation);
-		const isBottomLayout = combatTrackerLocation === 'bottom';
-		const startSizeRem = isHorizontalLayout ? combatTrackerHeightRem : combatTrackerWidthRem;
+		const startWidthRem = combatTrackerWidthRem;
 		const rootFontSizePx = getRootFontSizePx();
-		const horizontalDirectionMultiplier = combatTrackerLocation === 'right' ? -1 : 1;
-		const verticalDirectionMultiplier = isBottomLayout ? -1 : 1;
 
 		stopResizeTracking();
-		isResizing = true;
 
 		resizeMoveHandler = (moveEvent: PointerEvent) => {
-			const pointerDeltaPx = isHorizontalLayout
-				? moveEvent.clientY - startY
-				: moveEvent.clientX - startX;
-			const directionMultiplier = isHorizontalLayout
-				? verticalDirectionMultiplier
-				: horizontalDirectionMultiplier;
-			const deltaRem = (pointerDeltaPx / rootFontSizePx) * directionMultiplier;
-			const nextSizeRem = clampCombatTrackerSize(startSizeRem + deltaRem, combatTrackerLocation);
-
-			if (isHorizontalLayout) {
-				combatTrackerHeightRem = nextSizeRem;
-			} else {
-				combatTrackerWidthRem = nextSizeRem;
-			}
+			const deltaRem = (moveEvent.clientX - startX) / rootFontSizePx;
+			combatTrackerWidthRem = clampCombatTrackerWidth(startWidthRem + deltaRem);
 		};
 
 		resizeEndHandler = () => {
 			stopResizeTracking();
-			if (isHorizontalLayout) {
-				saveCombatTrackerSize(COMBAT_TRACKER_HEIGHT_STORAGE_KEY, combatTrackerHeightRem);
-			} else {
-				saveCombatTrackerSize(COMBAT_TRACKER_WIDTH_STORAGE_KEY, combatTrackerWidthRem);
-			}
+			saveCombatTrackerWidth(combatTrackerWidthRem);
 			if (handle?.hasPointerCapture?.(event.pointerId)) {
 				handle.releasePointerCapture(event.pointerId);
 			}
@@ -546,6 +452,13 @@
 	// Combatants filtered to only those belonging to the current scene
 	let sceneCombatants: Combatant.Implementation[] = $state([]);
 	let sceneDeadCombatants: Combatant.Implementation[] = $state([]);
+	let dragPreview: CombatantDropPreview | null = $state(null);
+	let activeDragSourceId: string | null = $state(null);
+	let combatantsListElement: HTMLOListElement | null = $state(null);
+	let combatTrackerWidthRem: number = $state(COMBAT_TRACKER_MIN_WIDTH_REM);
+	let combatTrackerScale = $derived(combatTrackerWidthRem / COMBAT_TRACKER_MIN_WIDTH_REM);
+	let resizeMoveHandler: ((event: PointerEvent) => void) | undefined;
+	let resizeEndHandler: ((event: PointerEvent) => void) | undefined;
 	// Version counter to force re-renders when combat data changes
 	// (since the Combat object reference may stay the same)
 	let version = $state(0);
@@ -566,39 +479,11 @@
 	let windowScrollHandler: (() => void) | undefined;
 
 	onMount(() => {
-		combatTrackerWidthRem = readStoredCombatTrackerSize(
-			COMBAT_TRACKER_WIDTH_STORAGE_KEY,
-			COMBAT_TRACKER_MIN_WIDTH_REM,
-			COMBAT_TRACKER_MAX_WIDTH_REM,
-		);
-		combatTrackerHeightRem = readStoredCombatTrackerSize(
-			COMBAT_TRACKER_HEIGHT_STORAGE_KEY,
-			COMBAT_TRACKER_MIN_HEIGHT_REM,
-			COMBAT_TRACKER_MAX_HEIGHT_REM,
-		);
+		combatTrackerWidthRem = readStoredCombatTrackerWidth();
 		updateCurrentCombat();
-		updateCurrentTurnAnimationSettings();
-		updateCombatTrackerLocation();
 		window.addEventListener('dragend', handleCombatantDragEnd);
 		window.addEventListener('nimble-combatant-dragstart', handleCombatantDragStart);
 		window.addEventListener('nimble-combatant-dragend', handleCombatantDragEnd);
-		window.addEventListener(
-			'nimble-combat-tracker-animation-settings-preview',
-			handleCurrentTurnAnimationSettingsPreview,
-		);
-		window.addEventListener(
-			'nimble-combat-tracker-location-preview',
-			handleCombatTrackerLocationPreview,
-		);
-		resizeWindowHandler = () => {
-			updateCombatTrackerSceneReserveInsets();
-			scheduleFloatingEndTurnPositionUpdate();
-		};
-		window.addEventListener('resize', resizeWindowHandler);
-		windowScrollHandler = () => {
-			scheduleFloatingEndTurnPositionUpdate();
-		};
-		window.addEventListener('scroll', windowScrollHandler, true);
 
 		createCombatHook = Hooks.on('createCombat', (_combat) => {
 			updateCurrentCombat();
@@ -671,27 +556,9 @@
 
 	onDestroy(() => {
 		stopResizeTracking();
-		clearCombatTrackerSceneReserveInsets();
-		if (floatingEndTurnPositionFrameHandle !== undefined) {
-			cancelAnimationFrame(floatingEndTurnPositionFrameHandle);
-		}
 		window.removeEventListener('dragend', handleCombatantDragEnd);
 		window.removeEventListener('nimble-combatant-dragstart', handleCombatantDragStart);
 		window.removeEventListener('nimble-combatant-dragend', handleCombatantDragEnd);
-		window.removeEventListener(
-			'nimble-combat-tracker-animation-settings-preview',
-			handleCurrentTurnAnimationSettingsPreview,
-		);
-		window.removeEventListener(
-			'nimble-combat-tracker-location-preview',
-			handleCombatTrackerLocationPreview,
-		);
-		if (resizeWindowHandler) {
-			window.removeEventListener('resize', resizeWindowHandler);
-		}
-		if (windowScrollHandler) {
-			window.removeEventListener('scroll', windowScrollHandler, true);
-		}
 
 		if (createCombatHook !== undefined) Hooks.off('createCombat', createCombatHook);
 		if (deleteCombatHook !== undefined) Hooks.off('deleteCombat', deleteCombatHook);
@@ -720,16 +587,9 @@
 
 {#if currentCombat}
 	<section
-		bind:this={combatTrackerElement}
 		class="nimble-combat-tracker"
-		class:nimble-combat-tracker--location-left={combatTrackerLocation === 'left'}
-		class:nimble-combat-tracker--location-right={combatTrackerLocation === 'right'}
-		class:nimble-combat-tracker--location-top={combatTrackerLocation === 'top'}
-		class:nimble-combat-tracker--location-bottom={combatTrackerLocation === 'bottom'}
-		class:nimble-combat-tracker--combat-started={combatHasStarted}
-		class:nimble-combat-tracker--resizing={isResizing}
-		style={`--nimble-combat-sidebar-width: ${combatTrackerWidthRem}rem; --nimble-combat-tracker-height: ${combatTrackerDisplayedHeightRem}rem; --nimble-combat-horizontal-card-width: ${combatTrackerHorizontalCardWidthRem}rem; --nimble-combat-sidebar-min-width: ${COMBAT_TRACKER_MIN_WIDTH_REM}rem; --nimble-combat-sidebar-max-width: ${COMBAT_TRACKER_MAX_WIDTH_REM}rem; --nimble-combat-tracker-min-height: ${COMBAT_TRACKER_MIN_HEIGHT_REM}rem; --nimble-combat-tracker-max-height: ${combatTrackerDisplayedMaxHeightRem}rem; --nimble-combat-card-scale: ${combatTrackerScale}; --nimble-combat-border-glow-color: ${currentTurnAnimationSettings.borderGlowColor}; --nimble-combat-edge-crawler-color: ${currentTurnAnimationSettings.edgeCrawlerColor}; --nimble-combat-pulse-duration: ${pulseAnimationDurationSeconds}s; --nimble-combat-border-glow-scale: ${borderGlowScale}; --nimble-combat-edge-crawler-size-scale: ${edgeCrawlerSizeScale};`}
-		transition:slide={{ axis: trackerTransitionAxis }}
+		style={`--nimble-combat-sidebar-width: ${combatTrackerWidthRem}rem; --nimble-combat-sidebar-min-width: ${COMBAT_TRACKER_MIN_WIDTH_REM}rem; --nimble-combat-sidebar-max-width: ${COMBAT_TRACKER_MAX_WIDTH_REM}rem; --nimble-combat-card-scale: ${combatTrackerScale};`}
+		transition:slide={{ axis: 'x' }}
 	>
 		<header
 			class="nimble-combat-tracker__header"
@@ -781,13 +641,9 @@
 		<ol
 			bind:this={combatantsListElement}
 			class="nimble-combatants"
-			class:nimble-combatants--pulse={currentTurnAnimationSettings.pulseAnimation}
-			class:nimble-combatants--border-glow={currentTurnAnimationSettings.borderGlow}
 			data-drag-source-id={activeDragSourceId ?? ''}
 			data-drop-target-id={dragPreview?.targetId ?? ''}
 			data-drop-before={dragPreview ? String(dragPreview.before) : ''}
-			onscroll={() => scheduleFloatingEndTurnPositionUpdate()}
-			onwheel={handleHorizontalWheelScroll}
 			ondragover={handleDragOver}
 			ondrop={(event) => _onDrop(event)}
 			out:fade={{ delay: 0 }}
@@ -806,7 +662,7 @@
 						class:nimble-combatants__item--preview-gap-after={dragPreview?.targetId ===
 							combatant.id && !dragPreview.before}
 					>
-						{#if isActiveCombatant && currentTurnAnimationSettings.edgeCrawler}
+						{#if isActiveCombatant}
 							<span class="nimble-combatants__active-crawler" aria-hidden="true"></span>
 						{/if}
 						<CombatantComponent active={isActiveCombatant} {combatant} />

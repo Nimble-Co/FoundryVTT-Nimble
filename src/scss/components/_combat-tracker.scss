@@ -74,22 +74,9 @@
   --nimble-combat-sidebar-min-width: 6.5rem;
   --nimble-combat-sidebar-max-width: 13rem;
   --nimble-combat-sidebar-width: var(--nimble-combat-sidebar-min-width);
-  --nimble-combat-tracker-height: var(--nimble-combat-tracker-min-height);
-  --nimble-combat-tracker-min-height: 6.5rem;
-  --nimble-combat-tracker-max-height: 13.5rem;
-  --nimble-combat-horizontal-card-width: var(--nimble-combat-sidebar-width);
   --nimble-combat-card-scale: 1;
-  --nimble-combat-border-glow-color: hsl(0, 0%, 100%);
-  --nimble-combat-edge-crawler-color: hsl(0, 0%, 100%);
-  --nimble-combat-pulse-duration: 1.6s;
-  --nimble-combat-border-glow-scale: 1;
-  --nimble-combat-edge-crawler-size-scale: 1;
 
-  position: fixed;
-  inset-block-start: 0;
-  inset-block-end: 0;
-  inset-inline-start: 0;
-  inset-inline-end: auto;
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100dvh;
@@ -132,89 +119,6 @@
     transition: var(--nimble-standard-transition);
     z-index: 1001;
     touch-action: none;
-  }
-
-  &--location-right {
-    inset-inline-start: auto;
-    inset-inline-end: 0;
-    border-inline-start: 1px solid var(--color-dark-4);
-    border-inline-end: 0;
-
-    .nimble-combat-tracker__resize-handle {
-      right: auto;
-      left: 0;
-      cursor: ew-resize;
-      background: linear-gradient(
-        to left,
-        transparent,
-        color-mix(in srgb, var(--nimble-combat-tracker-border-color) 35%, transparent)
-      );
-    }
-  }
-
-  &--location-top,
-  &--location-bottom {
-    inset-inline-start: 0;
-    inset-inline-end: 0;
-    width: 100dvw;
-    min-width: 0;
-    max-width: none;
-    height: var(--nimble-combat-tracker-height);
-    min-height: var(--nimble-combat-tracker-min-height);
-    max-height: var(--nimble-combat-tracker-max-height);
-    flex-direction: row;
-    align-items: stretch;
-    border-inline-end: 0;
-  }
-
-  &--location-top {
-    inset-block-start: 0;
-    inset-block-end: auto;
-    border-block-end: 1px solid var(--color-dark-4);
-
-    .nimble-combat-tracker__resize-handle {
-      inset-block-start: auto;
-      inset-block-end: 0;
-      inset-inline-start: 0;
-      inset-inline-end: 0;
-      width: 100%;
-      height: 0.4rem;
-      cursor: ns-resize;
-      background: linear-gradient(
-        to bottom,
-        transparent,
-        color-mix(in srgb, var(--nimble-combat-tracker-border-color) 35%, transparent)
-      );
-    }
-  }
-
-  &--location-bottom {
-    inset-block-start: auto;
-    inset-block-end: 0;
-    border-block-start: 1px solid var(--color-dark-4);
-    border-block-end: 0;
-
-    .nimble-combat-tracker__resize-handle {
-      inset-block-start: 0;
-      inset-block-end: auto;
-      inset-inline-start: 0;
-      inset-inline-end: 0;
-      width: 100%;
-      height: 0.4rem;
-      cursor: ns-resize;
-      background: linear-gradient(
-        to top,
-        transparent,
-        color-mix(in srgb, var(--nimble-combat-tracker-border-color) 35%, transparent)
-      );
-    }
-  }
-
-  &--resizing,
-  &--resizing *,
-  &--resizing *::before,
-  &--resizing *::after {
-    transition: none !important;
   }
 
   &__footer {
@@ -669,17 +573,138 @@
       filter var(--nimble-combat-preview-shift-duration) var(--nimble-combat-preview-shift-ease);
   }
 
+  &__item--active {
+    --nimble-combat-active-crawler-offset: calc(0.16rem * var(--nimble-combat-card-scale));
+    --nimble-combat-active-crawler-length: calc(1.52rem * var(--nimble-combat-card-scale));
+    --nimble-combat-active-crawler-thickness: calc(0.18rem * var(--nimble-combat-card-scale));
+    --nimble-combat-active-crawler-duration: 4.2s;
+    --nimble-combat-active-crawler-opposite-delay: -2.1s;
+
+    z-index: 1;
+
+    > .nimble-combatant {
+      position: relative;
+      z-index: 1;
+      background: rgba(2, 2, 6, 0.96);
+    }
+  }
+
+  &__active-crawler {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  &__active-crawler::before,
+  &__active-crawler::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--nimble-combat-active-crawler-length);
+    height: var(--nimble-combat-active-crawler-thickness);
+    border-radius: calc(999px * var(--nimble-combat-card-scale));
+    background: linear-gradient(
+      90deg,
+      hsla(0, 0%, 100%, 0.02) 0%,
+      hsla(0, 0%, 100%, 0.22) 26%,
+      hsla(0, 0%, 100%, 0.96) 68%,
+      hsla(0, 0%, 100%, 0.08) 100%
+    );
+    box-shadow:
+      0 0 calc(7px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.8),
+      0 0 calc(13px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.4);
+    offset-position: 0 0;
+    offset-path: inset(
+      calc(-1 * var(--nimble-combat-active-crawler-offset))
+      round
+      calc(6px * var(--nimble-combat-card-scale))
+    );
+    offset-distance: 0%;
+    offset-rotate: auto;
+    animation: nimble-combatant-edge-crawler var(--nimble-combat-active-crawler-duration) linear infinite;
+  }
+
+  &__active-crawler::after {
+    opacity: 0.86;
+    animation-delay: var(--nimble-combat-active-crawler-opposite-delay);
+  }
+
+  &__item--preview-gap-before {
+    margin-top: var(--nimble-combat-preview-slot-height);
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: calc(
+        -1 * var(--nimble-combat-preview-slot-height) + (0.125rem * var(--nimble-combat-card-scale))
+      );
+      left: 0;
+      width: 100%;
+      height: calc(var(--nimble-combat-preview-slot-height) - (0.25rem * var(--nimble-combat-card-scale)));
+      border: 1px dashed color-mix(in srgb, var(--color-border-highlight) 78%, transparent);
+      border-radius: calc(4px * var(--nimble-combat-card-scale));
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-border-highlight) 18%, transparent),
+        color-mix(in srgb, var(--color-border-highlight) 10%, transparent)
+      );
+      box-shadow: inset 0 0 calc(10px * var(--nimble-combat-card-scale))
+          color-mix(in srgb, var(--color-border-highlight) 18%, transparent),
+        0 0 calc(10px * var(--nimble-combat-card-scale))
+          color-mix(in srgb, var(--color-border-highlight) 30%, transparent);
+      animation: nimble-combat-drop-slot-pulse
+        calc(var(--nimble-combat-preview-shift-duration) * 2.2)
+        var(--nimble-combat-preview-shift-ease)
+        1;
+      pointer-events: none;
+    }
+  }
+
+  &__item--preview-gap-after {
+    margin-bottom: var(--nimble-combat-preview-slot-height);
+
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: calc(
+        -1 * var(--nimble-combat-preview-slot-height) + (0.125rem * var(--nimble-combat-card-scale))
+      );
+      left: 0;
+      width: 100%;
+      height: calc(var(--nimble-combat-preview-slot-height) - (0.25rem * var(--nimble-combat-card-scale)));
+      border: 1px dashed color-mix(in srgb, var(--color-border-highlight) 78%, transparent);
+      border-radius: calc(4px * var(--nimble-combat-card-scale));
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-border-highlight) 18%, transparent),
+        color-mix(in srgb, var(--color-border-highlight) 10%, transparent)
+      );
+      box-shadow: inset 0 0 calc(10px * var(--nimble-combat-card-scale))
+          color-mix(in srgb, var(--color-border-highlight) 18%, transparent),
+        0 0 calc(10px * var(--nimble-combat-card-scale))
+          color-mix(in srgb, var(--color-border-highlight) 30%, transparent);
+      animation: nimble-combat-drop-slot-pulse
+        calc(var(--nimble-combat-preview-shift-duration) * 2.2)
+        var(--nimble-combat-preview-shift-ease)
+        1;
+      pointer-events: none;
+    }
+  }
+
   &__dead-divider {
     display: flex;
     justify-content: center;
     width: 100%;
-    margin: 0.5rem 0 0.25rem;
-    padding-top: 0.5rem;
+    margin: calc(0.5rem * var(--nimble-combat-card-scale)) 0
+      calc(0.25rem * var(--nimble-combat-card-scale));
+    padding-top: calc(0.5rem * var(--nimble-combat-card-scale));
     border-top: 1px dashed var(--nimble-combat-tracker-border-color);
   }
 
   &__dead-label {
-    font-size: var(--nimble-xs-text);
+    font-size: calc(var(--nimble-sm-text) * var(--nimble-combat-card-scale));
     font-weight: 700;
     letter-spacing: 0.04em;
     color: var(--nimble-medium-text-color);
@@ -708,9 +733,16 @@
 
   &--active {
     border-color: hsl(0, 0%, 100%);
+    box-shadow:
+      0 0 calc(10px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.7),
+      0 0 calc(18px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.42);
+    animation: nimble-combatant-active-breathe 1.6s ease-in-out infinite;
 
     &:hover {
       border-color: hsl(0, 0%, 100%);
+      box-shadow:
+        0 0 calc(12px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.8),
+        0 0 calc(22px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.5);
     }
   }
 
@@ -720,10 +752,6 @@
 
   &--drag-source-hidden {
     display: none !important;
-  }
-
-  &--dead {
-    border-style: dashed;
   }
 
   &__header {
@@ -899,7 +927,7 @@
     transition: var(--nimble-standard-transition);
 
     &:hover,
-    &:focus-visible {
+    &:focus {
       color: var(--nimble-combat-tracker-hover-color);
       border-color: var(--nimble-combat-tracker-hover-color);
       box-shadow: 0 0 calc(8px * var(--nimble-combat-card-scale))
