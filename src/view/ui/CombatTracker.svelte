@@ -90,6 +90,11 @@
 		return combatant.type === 'character' ? 0 : 1;
 	}
 
+	function canCurrentUserReorderCombatant(combatant: Combatant.Implementation): boolean {
+		if (game.user?.isGM) return true;
+		return combatant.type === 'character' && combatant.isOwner;
+	}
+
 	function getCombatantsForScene(
 		combat: Combat | null,
 		sceneId: string | undefined,
@@ -273,7 +278,6 @@
 	}
 
 	function getDragPreview(event: DragEvent): CombatantDropPreview | null {
-		if (!game.user?.isGM) return null;
 		if (!currentCombat) return null;
 		if (!activeDragSourceId) return null;
 
@@ -281,6 +285,7 @@
 		if (!source?.id) return null;
 		if (source.parent?.id !== currentCombat.id) return null;
 		if (isCombatantDead(source)) return null;
+		if (!canCurrentUserReorderCombatant(source)) return null;
 
 		const pointerTarget = getPreviewTargetFromPointer(event.clientY, source);
 		if (!pointerTarget) return null;
