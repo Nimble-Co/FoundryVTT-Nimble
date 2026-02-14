@@ -21,6 +21,39 @@ function getCombatantManualSortValue(combatant: Combatant.Implementation): numbe
 	return Number((combatant.system as unknown as { sort?: number }).sort ?? 0);
 }
 
+function canCurrentUserReorderCombatant(combatant: Combatant.Implementation): boolean {
+	if (game.user?.isGM) return true;
+	return combatant.type === 'character' && combatant.isOwner;
+}
+
+function getSourceSortValueForDrop(
+	source: Combatant.Implementation,
+	target: Combatant.Implementation,
+	siblings: Combatant.Implementation[],
+	sortBefore: boolean,
+): number | null {
+	const targetIndex = siblings.findIndex((combatant) => combatant.id === target.id);
+	if (targetIndex < 0) return null;
+
+	const insertIndex = sortBefore ? targetIndex : targetIndex + 1;
+	const previous = insertIndex > 0 ? siblings[insertIndex - 1] : null;
+	const next = insertIndex < siblings.length ? siblings[insertIndex] : null;
+
+	if (previous && next) {
+		const previousSort = getCombatantManualSortValue(previous);
+		const nextSort = getCombatantManualSortValue(next);
+		if (previousSort === nextSort) {
+			return previousSort + (sortBefore ? -0.5 : 0.5);
+		}
+		return previousSort + (nextSort - previousSort) / 2;
+	}
+
+	if (previous) return getCombatantManualSortValue(previous) + 1;
+	if (next) return getCombatantManualSortValue(next) - 1;
+
+	return getCombatantManualSortValue(source);
+}
+
 class NimbleCombat extends Combat {
 	#subscribe: ReturnType<typeof createSubscriber>;
 
@@ -316,7 +349,6 @@ class NimbleCombat extends Combat {
 
 	async _onDrop(event: DragEvent & { target: EventTarget & HTMLElement }) {
 		event.preventDefault();
-		if (!game.user?.isGM) return false;
 
 		const trackerListElement = (event.target as HTMLElement).closest<HTMLElement>(
 			'.nimble-combatants',
@@ -337,6 +369,7 @@ class NimbleCombat extends Combat {
 		if (!source) return false;
 		if (source.parent?.id !== this.id) return false;
 		if (isCombatantDead(source)) return false;
+		if (!canCurrentUserReorderCombatant(source)) return false;
 
 		let dropTarget = (event.target as HTMLElement).closest<HTMLElement>('[data-combatant-id]');
 		let target = dropTarget ? combatants.get(dropTarget.dataset.combatantId ?? '') : null;
@@ -375,27 +408,37 @@ class NimbleCombat extends Combat {
 		);
 		if (sortBefore === null) return false;
 
-		// Perform the sort
-		type SortableCombatant = Combatant.Implementation & { id: string };
-		const sortUpdates = SortingHelpers.performIntegerSort(source as SortableCombatant, {
-			target: target as SortableCombatant | null,
-			siblings: siblings as SortableCombatant[],
-			sortKey: 'system.sort',
-			sortBefore,
-		});
+		if (game.user?.isGM) {
+			// Perform the sort with full integer normalization for GM reorders.
+			type SortableCombatant = Combatant.Implementation & { id: string };
+			const sortUpdates = SortingHelpers.performIntegerSort(source as SortableCombatant, {
+				target: target as SortableCombatant | null,
+				siblings: siblings as SortableCombatant[],
+				sortKey: 'system.sort',
+				sortBefore,
+			});
 
-		const updateData = sortUpdates.map((u) => {
-			const { update } = u;
-			return {
-				...update,
-				_id: u.target.id,
-			};
-		});
+			const updateData = sortUpdates.map((u) => {
+				const { update } = u;
+				return {
+					...update,
+					_id: u.target.id,
+				};
+			});
 
-		const updates = await this.updateEmbeddedDocuments('Combatant', updateData);
+			const updates = await this.updateEmbeddedDocuments('Combatant', updateData);
+			this.turns = this.setupTurns();
+
+			return updates;
+		}
+
+		// Non-GM owners can reorder their own character card by updating only their card's sort value.
+		const newSortValue = getSourceSortValueForDrop(source, target, siblings, sortBefore);
+		if (newSortValue === null || !Number.isFinite(newSortValue)) return false;
+
+		const updated = await source.update({ 'system.sort': newSortValue } as Record<string, unknown>);
 		this.turns = this.setupTurns();
-
-		return updates;
+		return updated ? [updated] : [];
 	}
 }
 
