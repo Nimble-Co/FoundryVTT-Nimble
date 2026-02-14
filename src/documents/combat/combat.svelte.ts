@@ -24,6 +24,32 @@ function getCombatantManualSortValue(combatant: Combatant.Implementation): numbe
 class NimbleCombat extends Combat {
 	#subscribe: ReturnType<typeof createSubscriber>;
 
+	#syncTurnIndexWithAliveTurns() {
+		const currentCombatantId =
+			typeof this.turn === 'number' && this.turn >= 0 && this.turn < this.turns.length
+				? (this.turns[this.turn]?.id ?? null)
+				: (this.combatant?.id ?? null);
+
+		const aliveTurns = this.setupTurns();
+		this.turns = aliveTurns;
+
+		if (aliveTurns.length === 0) {
+			this.turn = 0;
+			return;
+		}
+
+		if (currentCombatantId) {
+			const matchedIndex = aliveTurns.findIndex((combatant) => combatant.id === currentCombatantId);
+			if (matchedIndex >= 0) {
+				this.turn = matchedIndex;
+				return;
+			}
+		}
+
+		const currentTurn = Number.isInteger(this.turn) ? Number(this.turn) : 0;
+		this.turn = Math.min(Math.max(currentTurn, 0), aliveTurns.length - 1);
+	}
+
 	constructor(
 		data?: Combat.CreateData,
 		context?: foundry.abstract.Document.ConstructionContext<Combat.Parent>,
@@ -99,6 +125,17 @@ class NimbleCombat extends Combat {
 
 		if (npcUpdates.length > 0) {
 			await this.updateEmbeddedDocuments('Combatant', npcUpdates);
+		}
+
+		// After start + auto-roll updates, always begin on the top player card.
+		// This preserves pre-combat manual ordering as the first-turn source of truth.
+		this.turns = this.setupTurns();
+		if (this.turns.length > 0) {
+			const firstCharacterTurnIndex = this.turns.findIndex(
+				(combatant) => combatant.type === 'character',
+			);
+			const nextTurnIndex = firstCharacterTurnIndex >= 0 ? firstCharacterTurnIndex : 0;
+			await this.update({ turn: nextTurnIndex });
 		}
 
 		return result;
@@ -236,6 +273,25 @@ class NimbleCombat extends Combat {
 		// Create multiple chat messages
 		await ChatMessage.implementation.create(messages);
 		return this;
+	}
+
+	override setupTurns(): Combatant.Implementation[] {
+		const turns = super.setupTurns();
+		return turns.filter((combatant) => !isCombatantDead(combatant));
+	}
+
+	override async nextTurn(): Promise<this> {
+		this.#syncTurnIndexWithAliveTurns();
+		const result = (await super.nextTurn()) as this;
+		this.#syncTurnIndexWithAliveTurns();
+		return result;
+	}
+
+	override async nextRound(): Promise<this> {
+		this.#syncTurnIndexWithAliveTurns();
+		const result = (await super.nextRound()) as this;
+		this.#syncTurnIndexWithAliveTurns();
+		return result;
 	}
 
 	override _sortCombatants(a: Combatant.Implementation, b: Combatant.Implementation): number {
