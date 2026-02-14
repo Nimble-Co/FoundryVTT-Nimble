@@ -44,7 +44,7 @@
 		return origins.filter(Boolean).join(' ⟡ ');
 	}
 
-	function hasInitiativeCombatManaRule(character) {
+	function hasInitiativeCombatManaRule(character, _primeVersion = 0) {
 		const rules = getInitiativeCombatManaRules(character);
 		return rules.length > 0;
 	}
@@ -240,8 +240,7 @@
 	let wounds = $derived(actor.reactive.system.attributes.wounds);
 	let mana = $derived(actor.reactive.system.resources.mana);
 	let hasInitiativeCombatMana = $derived.by(() => {
-		combatManaRulesPrimeVersion;
-		return hasInitiativeCombatManaRule(actor);
+		return hasInitiativeCombatManaRule(actor, combatManaRulesPrimeVersion);
 	});
 	let combatManaVisible = $derived.by(() => {
 		subscribeCombatState();
