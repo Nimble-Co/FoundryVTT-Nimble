@@ -38,18 +38,8 @@
 		const parentCombat = combatant.parent;
 		if (!parentCombat) return;
 
-		const currentTurnIndex =
-			typeof parentCombat.turn === 'number' && parentCombat.turn >= 0
-				? parentCombat.turn
-				: parentCombat.turns.findIndex((turnCombatant) => turnCombatant.id === combatant.id);
-		const isLastTurn = currentTurnIndex >= parentCombat.turns.length - 1;
-
 		try {
-			if (isLastTurn) {
-				await parentCombat.nextRound();
-			} else {
-				await parentCombat.nextTurn();
-			}
+			await parentCombat.nextTurn();
 		} catch (_error) {
 			ui.notifications?.warn('You do not have permission to end turns.');
 		}
