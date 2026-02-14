@@ -342,6 +342,16 @@ const characterSchema = () => ({
 				initial: 0,
 				nullable: false,
 			}),
+			bonus: new fields.NumberField({
+				required: true,
+				initial: 0,
+				nullable: false,
+			}),
+			combatMana: new fields.NumberField({
+				required: true,
+				initial: 0,
+				nullable: false,
+			}),
 		}),
 		highestUnlockedSpellTier: new fields.NumberField({
 			required: true,
@@ -590,6 +600,8 @@ class NimbleCharacterData extends foundry.abstract.TypeDataModel<
 		mana: {
 			current: number;
 			baseMax: number;
+			bonus: number;
+			combatMana: number;
 			value: number;
 			max: number;
 		};

@@ -1,4 +1,6 @@
 import { createSubscriber } from 'svelte/reactivity';
+import type { NimbleRollData } from '#types/rollData.d.ts';
+import { hasInitiativeManaRecovery, getInitiativeManaAmount } from '../../utils/manaRecovery.js';
 import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
 
 /** Combatant system data with actions */
@@ -9,6 +11,22 @@ interface CombatantSystemWithActions {
 			max: number;
 		};
 	};
+}
+
+/** Actor with mana resources */
+interface ActorWithMana {
+	system: {
+		resources?: {
+			mana?: {
+				current: number;
+				combatMana: number;
+				max: number;
+			};
+		};
+	};
+	items: Iterable<{ type: string; system?: { mana?: { formula?: string; recovery?: string } } }>;
+	getRollData(): NimbleRollData;
+	update(data: Record<string, unknown>): Promise<unknown>;
 }
 
 class NimbleCombat extends Combat {
@@ -175,6 +193,29 @@ class NimbleCombat extends Combat {
 				if (total >= 20) combatantUpdates[actionPath] = 3;
 				else if (total >= 10) combatantUpdates[actionPath] = 2;
 				else combatantUpdates[actionPath] = 1;
+
+				// Grant mana on initiative for classes with initiative recovery
+				const actor = combatant.actor as ActorWithMana | null;
+				if (actor) {
+					const classes = [...actor.items].filter((i) => i.type === 'class');
+					if (hasInitiativeManaRecovery(classes)) {
+						const manaAmount = getInitiativeManaAmount(actor, classes);
+						if (manaAmount > 0) {
+							const currentMana = actor.system.resources?.mana?.current ?? 0;
+							const maxMana = actor.system.resources?.mana?.max ?? 0;
+							const currentCombatMana = actor.system.resources?.mana?.combatMana ?? 0;
+							const newMana = Math.min(currentMana + manaAmount, maxMana);
+							const actualGain = newMana - currentMana;
+
+							if (actualGain > 0) {
+								await actor.update({
+									'system.resources.mana.current': newMana,
+									'system.resources.mana.combatMana': currentCombatMana + actualGain,
+								});
+							}
+						}
+					}
+				}
 			}
 
 			updates.push(combatantUpdates);
