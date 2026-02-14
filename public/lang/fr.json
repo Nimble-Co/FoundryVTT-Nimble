@@ -485,6 +485,7 @@
 		"ruleTypes": {
 			"abilityBonus": "Bonus d'Attribut",
 			"armorClass": "Classe d'Armure",
+			"combatMana": "Mana de Combat",
 			"grantItem": "Objet",
 			"grantProficiency": "Maîtrise",
 			"hitDiceAdvantage": "Avantage sur les Dés de Vie",

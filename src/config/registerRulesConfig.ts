@@ -1,5 +1,6 @@
 import { AbilityBonusRule } from '../models/rules/abilityBonus.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
+import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
 import { HitDiceAdvantageRule } from '../models/rules/hitDiceAdvantage.js';
@@ -20,6 +21,7 @@ export default function registerRulesConfig() {
 	const ruleTypes = {
 		abilityBonus: 'NIMBLE.ruleTypes.abilityBonus',
 		armorClass: 'NIMBLE.ruleTypes.armorClass',
+		combatMana: 'NIMBLE.ruleTypes.combatMana',
 		grantItem: 'NIMBLE.ruleTypes.grantItem',
 		grantProficiency: 'NIMBLE.ruleTypes.grantProficiency',
 		hitDiceAdvantage: 'NIMBLE.ruleTypes.hitDiceAdvantage',
@@ -40,6 +42,7 @@ export default function registerRulesConfig() {
 	const ruleDataModels = {
 		abilityBonus: AbilityBonusRule,
 		armorClass: ArmorClassRule,
+		combatMana: CombatManaRule,
 		grantItem: ItemGrantRule,
 		grantProficiency: GrantProficiencyRule,
 		hitDiceAdvantage: HitDiceAdvantageRule,
