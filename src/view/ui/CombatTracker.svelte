@@ -179,7 +179,7 @@
 			window: {
 				title: 'End Combat?',
 			},
-			content: '<p>The are no combatants in this encounter. Would like to end combat?</p>',
+			content: '<p>The are no combatants in this encounter.<br>Would you like to end combat?</p>',
 			yes: {
 				label: 'End Combat',
 			},
