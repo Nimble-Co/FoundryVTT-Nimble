@@ -29,21 +29,6 @@ export default function registerSystemSettings() {
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
-	// Placeholder setting to create the system settings tab
-	// This gets replaced by the attribution via the renderSettingsConfig hook
-	game.settings.register(
-		'nimble' as 'core',
-		'attribution' as 'rollMode',
-		{
-			name: '',
-			hint: '',
-			scope: 'client',
-			config: true,
-			type: Boolean,
-			default: false,
-		} as unknown as Parameters<typeof game.settings.register>[2],
-	);
-
 	// Helper to create the attribution element with divider
 	const createAttributionElement = () => {
 		const wrapper = document.createElement('div');
@@ -81,17 +66,10 @@ export default function registerSystemSettings() {
 			element.querySelector('section[data-category="system"]');
 		if (!systemTab) return;
 
-		// Check if attribution already exists
+		// Check if attribution already exists (e.g. re-render)
 		if (systemTab.querySelector('.nimble-attribution')) return;
 
-		// Find and replace the placeholder setting with the attribution
-		const placeholder = systemTab
-			.querySelector('[data-setting-id="nimble.attribution"]')
-			?.closest('.form-group');
-		if (placeholder) {
-			placeholder.replaceWith(createAttributionElement());
-		} else {
-			systemTab.appendChild(createAttributionElement());
-		}
+		// Dynamically append attribution at the end of the system settings tab
+		systemTab.appendChild(createAttributionElement());
 	});
 }
