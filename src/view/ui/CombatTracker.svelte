@@ -93,7 +93,8 @@
 
 	function canCurrentUserReorderCombatant(combatant: Combatant.Implementation): boolean {
 		if (game.user?.isGM) return true;
-		return combatant.type === 'character' && combatant.isOwner;
+		const hasTrustedRole = Number(game.user?.role ?? 0) >= Number(CONST.USER_ROLES?.TRUSTED ?? 2);
+		return hasTrustedRole && combatant.type === 'character' && combatant.isOwner;
 	}
 
 	function getCombatantsForScene(
