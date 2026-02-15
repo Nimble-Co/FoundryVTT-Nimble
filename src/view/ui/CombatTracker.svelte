@@ -168,6 +168,46 @@
 		});
 	}
 
+	async function promptToEndCombatIfEmpty(combatId: string): Promise<void> {
+		if (!game.user?.isGM) return;
+
+		const combat = game.combats.get(combatId);
+		if (!combat) return;
+		if (combat.combatants.size > 0) return;
+
+		const confirmed = await foundry.applications.api.DialogV2.confirm({
+			window: {
+				title: 'End Combat?',
+			},
+			content: '<p>The are no combatants in this encounter. Would like to end combat?</p>',
+			yes: {
+				label: 'End Combat',
+			},
+			no: {
+				label: 'Continue Combat',
+			},
+			rejectClose: false,
+			modal: true,
+		});
+
+		if (confirmed !== true) return;
+
+		const currentCombat = game.combats.get(combatId);
+		if (!currentCombat || currentCombat.combatants.size > 0) return;
+
+		await currentCombat.delete();
+	}
+
+	function scheduleEmptyCombatPrompt(combatId: string): void {
+		if (pendingEmptyCombatPromptIds.has(combatId)) return;
+		pendingEmptyCombatPromptIds.add(combatId);
+
+		queueMicrotask(() => {
+			pendingEmptyCombatPromptIds.delete(combatId);
+			void promptToEndCombatIfEmpty(combatId);
+		});
+	}
+
 	async function _onDrop(event: DragEvent) {
 		event.preventDefault();
 		if (!(event.target instanceof HTMLElement)) {
@@ -392,6 +432,7 @@
 	let canvasReadyHook: number | undefined;
 	let canvasTearDownHook: number | undefined;
 	let updateSceneHook: number | undefined;
+	let pendingEmptyCombatPromptIds = new Set<string>();
 
 	onMount(() => {
 		combatTrackerWidthRem = readStoredCombatTrackerWidth();
@@ -421,8 +462,14 @@
 			updateCurrentCombat();
 		});
 
-		deleteCombatantHook = Hooks.on('deleteCombatant', () => {
+		deleteCombatantHook = Hooks.on('deleteCombatant', (combatant: Combatant.Implementation) => {
 			updateCurrentCombat();
+
+			const parentCombatId = combatant.parent?.id;
+			if (!parentCombatId) return;
+			if (parentCombatId !== currentCombat?.id) return;
+
+			scheduleEmptyCombatPrompt(parentCombatId);
 		});
 
 		updateCombatantHook = Hooks.on('updateCombatant', () => {
