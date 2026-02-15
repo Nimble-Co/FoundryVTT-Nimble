@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "2e9e32bf9e74e633",
 	"name": "Forager",
 	"type": "feature",
 	"img": "icons/containers/bags/pouch-leather-leaf-green.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Gain advantage on skill checks to find food and water in the wild.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "hunter-progression"
+		"group": "hunter-progression",
+		"gainedAtLevel": 1,
+		"subclass": false,
+		"gainedAtLevels": [
+			1
+		]
 	},
 	"effects": [],
 	"flags": {},

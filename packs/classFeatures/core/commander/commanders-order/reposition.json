@@ -35,10 +35,15 @@
 		"description": "<p><strong>Action/Reaction</strong> (on an ally's turn): Command 1 ally to move up to their speed (or 2 allies up to half their speed) for free.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "commanders-orders"
+		"group": "commanders-orders",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

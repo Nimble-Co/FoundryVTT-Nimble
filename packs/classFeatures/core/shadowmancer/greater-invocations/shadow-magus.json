@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "81e685bc5c9127ce",
 	"name": "Shadow Magus",
 	"type": "feature",
 	"img": "icons/magic/fire/projectile-arrow-fire-purple.webp",
@@ -36,7 +36,16 @@
 		"description": "<p>Your minions gain +4 Reach and deal d10 damage instead.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "greater-invocations"
+		"group": "greater-invocations",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			6,
+			9,
+			14,
+			18
+		]
 	},
 	"effects": [],
 	"flags": {},

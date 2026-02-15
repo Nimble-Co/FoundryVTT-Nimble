@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "bc8ab08c0bb200e1",
 	"name": "Inspiring Presence",
 	"type": "feature",
 	"img": "icons/magic/control/buff-flight-wings-runes-blue-white.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Whenever you use Songweaver's Inspiration, your allies within 12 spaces who can hear you gain WIL temp HP.</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "herald-of-courage"
+		"group": "herald-of-courage",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

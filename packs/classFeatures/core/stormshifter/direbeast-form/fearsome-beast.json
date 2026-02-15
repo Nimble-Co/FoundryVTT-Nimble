@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "0075e1e989d0552b",
 	"name": "Fearsome Beast",
 	"type": "feature",
 	"img": "icons/creatures/abilities/bear-roar-bite-brown.webp",
@@ -36,7 +36,12 @@
 		"description": "<p><strong>(Large)</strong>. Transform into any Large beast. Gain DEX+LVL temp HP (until Beastshift ends), the Gore attack, and Fearsome. </p><p><strong>Gore</strong>. Action: 1d6+LVL damage, on hit: Gain LVL temp HP.</p><p><strong>Fearsome</strong>. Whenever you Interpose or Defend, you may spend 1 mana to force them to reroll the attack (you must choose either result).</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "direbeast-form"
+		"group": "direbeast-form",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
 	"flags": {},

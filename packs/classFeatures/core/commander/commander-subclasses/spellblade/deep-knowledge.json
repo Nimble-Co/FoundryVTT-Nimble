@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "db05900e423cad38",
 	"name": "Deep Knowledge",
 	"type": "feature",
 	"img": "icons/sundries/books/book-open-purple.webp",
@@ -36,7 +36,15 @@
 		"description": "<p>Choose any tier 1 (or lower) spell and any Utility Spell.</p><hr><p>Level 7: Tier 2 or lower spell + any utility spell</p><p>Level 11: Tier 3 or lower spell + any utility spell</p><p>Level 15: Tier 4 or lower spell + any utility spell</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "spellblade"
+		"group": "spellblade",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3,
+			7,
+			11,
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

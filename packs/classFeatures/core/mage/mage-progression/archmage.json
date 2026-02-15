@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a95d9a582c294f7c",
 	"name": "Archmage",
 	"type": "feature",
 	"img": "icons/equipment/head/hat-pointed-leather-black-glowing.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>+1 to any 2 of your stats. The first tiered spell you cast each encounter costs 1 action less and 5 fewer mana.</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "mage-progression"
+		"group": "mage-progression",
+		"gainedAtLevel": 20,
+		"subclass": false,
+		"gainedAtLevels": [
+			20
+		]
 	},
 	"effects": [],
 	"flags": {},

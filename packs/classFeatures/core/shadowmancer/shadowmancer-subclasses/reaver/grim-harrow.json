@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7dec83da1812d369",
 	"name": "Grim Harrow",
 	"type": "feature",
 	"img": "icons/magic/acid/projectile-stream-bubbles.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>When you strike with your Bonescythe, you may divide the dice as you choose amongst any number of adjacent targets within Reach.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "reaver"
+		"group": "reaver",
+		"gainedAtLevel": 7,
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

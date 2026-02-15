@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "0075e1e989d0552b",
 	"name": "Direbeast Form",
 	"type": "feature",
 	"img": "icons/magic/nature/wolf-paw-glow-green.webp",
@@ -36,7 +36,14 @@
 		"description": "<p>You can Beastshift into a Fearsome Beast.</p><hr><p>Level 3: Beast of the Pack</p><p>Level 5: Beast of Nightmares</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "stormshifter-progression"
+		"group": "stormshifter-progression",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2,
+			3,
+			5
+		]
 	},
 	"effects": [],
 	"flags": {},

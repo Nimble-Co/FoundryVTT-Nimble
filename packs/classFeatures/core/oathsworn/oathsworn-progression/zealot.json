@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c5f324248b31dabc",
 	"name": "Zealot",
 	"type": "feature",
 	"img": "icons/skills/melee/strike-sword-dagger-runes-yellow.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Whenever you attack with a melee weapon, you may spend mana (up to your highest unlocked spell tier) to choose one for each mana spent:</p><p>• <strong>Condemning Strike.</strong> Deal +5 radiant damage.</p><p>• <strong>Blessed Aim.</strong> Decrease your target's armor by 1 step for this attack.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "oathsworn-progression"
+		"group": "oathsworn-progression",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
 	"flags": {},

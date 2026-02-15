@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "97940746b5651bd1",
 	"name": "Fight Picker",
 	"type": "feature",
 	"img": "icons/magic/control/buff-strength-muscle-damage-orange.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>(1/turn) When an enemy is damaged by your Vicious Mockery, you may have one of your allies Taunt them until the end of the enemy's turn instead.</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "herald-of-snark"
+		"group": "herald-of-snark",
+		"gainedAtLevel": 7,
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -58,10 +58,15 @@
 		"description": "<p><em>(1/round)</em> <strong>Free action:</strong> you and an ally within 6 spaces both immediately make a weapon attack or cast a cantrip for free. You can do this INT times/Safe Rest. </p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "commanders-orders"
+		"group": "commanders-orders",
+		"gainedAtLevel": 1,
+		"subclass": false,
+		"gainedAtLevels": [
+			1
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

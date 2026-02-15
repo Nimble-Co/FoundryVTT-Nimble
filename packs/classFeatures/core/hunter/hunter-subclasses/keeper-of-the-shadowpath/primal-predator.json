@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "e914d4e3f1941fbb",
 	"name": "Primal Predator",
 	"type": "feature",
 	"img": "icons/skills/melee/shield-damaged-broken-orange.webp",
@@ -36,7 +36,12 @@
 		"description": "<p><em>(1/encounter)</em> Your weapon attacks ignore cover and armor this turn.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "keeper-of-the-shadowpath"
+		"group": "keeper-of-the-shadowpath",
+		"gainedAtLevel": 7,
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

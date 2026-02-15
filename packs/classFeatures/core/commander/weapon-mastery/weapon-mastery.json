@@ -1,0 +1,59 @@
+{
+	"name": "Weapon Mastery",
+	"type": "feature",
+	"img": "icons/skills/melee/strike-sword-slashing-red.webp",
+	"system": {
+		"macro": "",
+		"identifier": "",
+		"rules": [],
+		"activation": {
+			"acquireTargetsFromTemplate": false,
+			"cost": {
+				"details": "",
+				"quantity": 1,
+				"type": "none",
+				"isReaction": false
+			},
+			"duration": {
+				"details": "",
+				"quantity": 1,
+				"type": "none"
+			},
+			"effects": [],
+			"showDescription": true,
+			"targets": {
+				"count": 1,
+				"restrictions": ""
+			},
+			"template": {
+				"length": 1,
+				"radius": 1,
+				"shape": "",
+				"width": 1
+			}
+		},
+		"description": "<p>You may sheathe a weapon and draw a different one 2x/round for free.<br>Choose a weapon type to specialize in.</p><hr><p>Level 6: Choose a weapon type to specialize in.</p><p>Level 10: Choose a 2nd weapon type to specialize in.</p><p>Level 14: You have complete mastery of all weapon types.</p>",
+		"featureType": "class",
+		"class": "commander",
+		"group": "commander-progression",
+		"gainedAtLevel": 6,
+		"subclass": false,
+		"gainedAtLevels": [
+			6,
+			10,
+			14
+		]
+	},
+	"effects": [],
+	"folder": "406c4e162069a4a8",
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.8",
+		"createdTime": 1760399170426,
+		"modifiedTime": 1760399194128,
+		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+	},
+	"_id": "j7H3pLmQ2Vx9A4Rc"
+}

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "1e1a739466fd09a6",
 	"name": "Unleash the Beast",
 	"type": "feature",
 	"img": "icons/creatures/abilities/lion-roar-yellow.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>(1/encounter) When you miss, you can crit instead.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "circle-of-fang-and-claw"
+		"group": "circle-of-fang-and-claw",
+		"gainedAtLevel": 7,
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

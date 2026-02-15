@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a03073c1f33d5b34",
 	"name": "Reverberating Strikes",
 	"type": "feature",
 	"img": "icons/skills/melee/strike-hammer-destructive-blue.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>You learn to focus your energy and transfer it as an additional concussive force into your foes. Add LVL bludgeoning damage to all of your melee attacks.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "zephyr-progression"
+		"group": "zephyr-progression",
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5
+		]
 	},
 	"effects": [],
 	"flags": {},

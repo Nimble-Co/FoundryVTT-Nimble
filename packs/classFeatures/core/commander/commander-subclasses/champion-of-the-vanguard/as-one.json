@@ -35,10 +35,15 @@
 		"description": "<p>Attacks made with your Coordinated Strike also grant advantage and ignore all disadvantage. Your chosen allies gain 1 additional action to use on their next turn.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "champion-of-the-vanguard"
+		"group": "champion-of-the-vanguard",
+		"gainedAtLevel": 15,
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "39d701b7816ab485",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

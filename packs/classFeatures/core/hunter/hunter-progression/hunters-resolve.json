@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "2e9e32bf9e74e633",
 	"name": "Hunter's Resolve",
 	"type": "feature",
 	"img": "icons/creatures/eyes/lizard-single-slit-blue.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Whenever you have no Thrill of the Hunt charges, gain Hunter's Resolve until the end of your turn: treat all creatures as your quarry for the purposes of movement and melee attacks.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "hunter-progression"
+		"group": "hunter-progression",
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5
+		]
 	},
 	"effects": [],
 	"flags": {},

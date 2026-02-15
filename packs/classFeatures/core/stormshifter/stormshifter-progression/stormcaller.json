@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "0075e1e989d0552b",
 	"name": "Stormcaller",
 	"type": "feature",
 	"img": "icons/magic/lightning/bolts-salvo-clouds-sky.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Learn a Utility Spell from each spell school you know.</p><hr><p>Level 6: Choose a 2nd of each</p><p>Level 11: Choose a 3rd of each</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "stormshifter-progression"
+		"group": "stormshifter-progression",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4
+		]
 	},
 	"effects": [],
 	"flags": {},

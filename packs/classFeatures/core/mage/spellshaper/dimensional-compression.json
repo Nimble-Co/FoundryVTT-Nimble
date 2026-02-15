@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a95d9a582c294f7c",
 	"name": "Dimensional Compression",
 	"type": "feature",
 	"img": "icons/magic/movement/trail-streak-impact-blue.webp",
@@ -36,7 +36,14 @@
 		"description": "<p>(1 or more mana) +4 range to a spell for each additional mana spent.</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "spellshaper"
+		"group": "spellshaper",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			9,
+			13
+		]
 	},
 	"effects": [],
 	"flags": {},

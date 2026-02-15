@@ -35,10 +35,15 @@
 		"description": "<p>While wearing a shield, you may Defend 2× each round. The first time each round you block all of the damage from an attack, you may make an opportunity attack against the attacker for free.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "champion-of-the-bulwark"
+		"group": "champion-of-the-bulwark",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "ef7bbbb1a86323cd",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

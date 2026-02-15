@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "2e9e32bf9e74e633",
 	"name": "Multishot",
 	"type": "feature",
 	"img": "icons/skills/ranged/arrows-flying-triple-blue.webp",
@@ -36,7 +36,17 @@
 		"description": "<p><em>(Half range)</em> Action: Attack your quarry with a ranged weapon and load an extra projectile. Select a 2nd target within 2 spaces of them to take the same amount of damage.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "thrill-of-the-hunt"
+		"group": "thrill-of-the-hunt",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2,
+			4,
+			6,
+			8,
+			12,
+			14
+		]
 	},
 	"effects": [],
 	"flags": {},

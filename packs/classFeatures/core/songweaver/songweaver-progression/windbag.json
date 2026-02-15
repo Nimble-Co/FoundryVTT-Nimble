@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "910213b07f81138f",
 	"name": "Windbag",
 	"type": "feature",
 	"img": "icons/magic/air/air-smoke-casting.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Choose 1 Utility Spell from each spell school you know.</p><hr><p>Level 6: One additional utility spell per school</p><p>Level 14: All utility spells from your schools</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "songweaver-progression"
+		"group": "songweaver-progression",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

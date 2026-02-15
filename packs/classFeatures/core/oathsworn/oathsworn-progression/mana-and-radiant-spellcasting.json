@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c5f324248b31dabc",
 	"name": "Mana and Radiant Spellcasting",
 	"type": "feature",
 	"img": "icons/magic/light/beam-rays-orange.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>You know Radiant cantrips, tier 1 Radiant spells, and gain a mana pool. Your mana pool is equal to WIL + LVL and recharges on a Safe Rest.</p><hr><p>Level 4: Tier 2</p><p>Level 6: Tier 3</p><p>Level 8: Tier 4</p><p>Level 10: Tier 5</p><p>Level 13: Tier 6</p><p>Level 17: Tier 7</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "oathsworn-progression"
+		"group": "oathsworn-progression",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7fec6a94e7504af7",
 	"name": "Large - Protect Me!",
 	"type": "feature",
 	"img": "icons/creatures/mammals/deer-movement-leap-green.webp",
@@ -36,7 +36,14 @@
 		"description": "<p>(1/encounter) After you gain a Wound, your companion can whisk you away to safety up to 12 spaces. </p><hr><p>Level 7: You are whisked away before gaining the Wound. </p><p>Level 15: 2/encounter.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "beastmaster"
+		"group": "beastmaster",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3,
+			7,
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

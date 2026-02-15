@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "d40bf36abe9f4b0a",
 	"name": "Rampage",
 	"type": "feature",
 	"img": "icons/weapons/axes/axe-double-short-orange.webp",
@@ -36,7 +36,17 @@
 		},
 		"description": "<p>(1/ turn) After you land a hit, you may treat your next attack this turn as if you rolled that same amount instead of rolling again.</p>",
 		"featureType": "class",
-		"class": ""
+		"class": "",
+		"gainedAtLevel": 4,
+		"gainedAtLevels": [
+			4,
+			6,
+			8,
+			12,
+			14,
+			16
+		],
+		"subclass": false
 	},
 	"effects": [],
 	"flags": {},

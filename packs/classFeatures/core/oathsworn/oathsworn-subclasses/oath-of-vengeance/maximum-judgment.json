@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "1ab92542c532c8c2",
 	"name": "Maximum Judgment",
 	"type": "feature",
 	"img": "icons/skills/melee/sword-winged-holy-orange.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Whenever you are attacked, set a Judgment Die to its max.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "oath-of-vengeance"
+		"group": "oath-of-vengeance",
+		"gainedAtLevel": 15,
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

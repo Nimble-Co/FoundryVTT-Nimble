@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "81e685bc5c9127ce",
 	"name": "Beguiling Influence",
 	"type": "feature",
 	"img": "icons/magic/control/debuff-energy-hold-pink.webp",
@@ -36,7 +36,14 @@
 		"description": "<p>(1/day) You may reroll an Influence check.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "lesser-invocations"
+		"group": "lesser-invocations",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3,
+			8,
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

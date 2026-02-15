@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "2e9e32bf9e74e633",
 	"name": "Decoy",
 	"type": "feature",
 	"img": "icons/magic/defensive/illusion-evasion-echo-purple.webp",
@@ -36,7 +36,17 @@
 		"description": "<p>When you Defend: The attack misses instead, and you can move up to half your speed away (where you really were all along!).</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "thrill-of-the-hunt"
+		"group": "thrill-of-the-hunt",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2,
+			4,
+			6,
+			8,
+			12,
+			14
+		]
 	},
 	"effects": [],
 	"flags": {},

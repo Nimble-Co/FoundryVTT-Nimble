@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7fec6a94e7504af7",
 	"name": "Small - Keen Eyes",
 	"type": "feature",
 	"img": "icons/creatures/eyes/humanoid-single-red-brown.webp",
@@ -36,7 +36,14 @@
 		"description": "<p>(1/encounter) Mark a target for free. </p><hr><p>Level 7: 2/encounter</p><p>Level 11: 3/encounter.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "beastmaster"
+		"group": "beastmaster",
+		"gainedAtLevel": 1,
+		"subclass": true,
+		"gainedAtLevels": [
+			1,
+			7,
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

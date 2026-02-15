@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c5f324248b31dabc",
 	"name": "Radiant Aura",
 	"type": "feature",
 	"img": "icons/magic/light/beam-rays-yellow.webp",
@@ -36,7 +36,17 @@
 		"description": "<p>Action: End any single harmful condition or effect on yourself or another willing creature within your aura. You may use this ability WIL times/Safe Rest.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "sacred-decree"
+		"group": "sacred-decree",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3,
+			6,
+			9,
+			12,
+			14,
+			16
+		]
 	},
 	"effects": [],
 	"flags": {},

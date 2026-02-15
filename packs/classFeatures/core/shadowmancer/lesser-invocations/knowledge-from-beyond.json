@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "81e685bc5c9127ce",
 	"name": "Knowledge from Beyond",
 	"type": "feature",
 	"img": "icons/sundries/scrolls/scroll-plain-red.webp",
@@ -36,7 +36,14 @@
 		"description": "<p>Whenever you fail an Insight or Arcana check, you may suffer 1 Wound to succeed instead.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "lesser-invocations"
+		"group": "lesser-invocations",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3,
+			8,
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

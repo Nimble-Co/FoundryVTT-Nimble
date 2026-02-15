@@ -35,10 +35,15 @@
 		"description": "<p>When you roll Initiative, regain 1 use of Coordinated Strike. +1 max Combat Dice.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "champion-of-the-vanguard"
+		"group": "champion-of-the-vanguard",
+		"gainedAtLevel": 11,
+		"subclass": true,
+		"gainedAtLevels": [
+			11
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "39d701b7816ab485",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

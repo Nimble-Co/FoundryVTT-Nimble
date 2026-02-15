@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c1face1ec4d1249a",
 	"name": "Keeper of Life & Death",
 	"type": "feature",
 	"img": "icons/magic/light/orbs-firefly-hand-yellow.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>You know Radiant and Necrotic cantrips.</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "shepherd-progression"
+		"group": "shepherd-progression",
+		"gainedAtLevel": 1,
+		"subclass": false,
+		"gainedAtLevels": [
+			1
+		]
 	},
 	"effects": [],
 	"flags": {},

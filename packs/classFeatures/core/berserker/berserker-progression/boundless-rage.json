@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "d40bf36abe9f4b0a",
 	"name": "BOUNDLESS RAGE",
 	"type": "feature",
 	"img": "icons/skills/wounds/blood-cells-vessel-red-orange.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>+1 to any 2 of your stats. Anytime you roll less than 6 on a Fury Die, change it to 6 instead.</p>",
 		"featureType": "class",
 		"class": "berserker",
-		"group": "berserker-progression"
+		"group": "berserker-progression",
+		"gainedAtLevel": 20,
+		"subclass": false,
+		"gainedAtLevels": [
+			20
+		]
 	},
 	"effects": [],
 	"flags": {},

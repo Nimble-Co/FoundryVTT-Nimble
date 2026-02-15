@@ -66,10 +66,15 @@
 		"description": "<p><strong>Field Medic.</strong> Roll 1 additional die for any health potion you administer.</p><p>Whenever you or an ally spends any number of Hit Dice to recover HP, if you spent at least ten minutes examining their wounds, they can add your Examination bonus to the HP recovered.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "commander-progression"
+		"group": "commander-progression",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

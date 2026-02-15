@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "d40bf36abe9f4b0a",
 	"name": "One with the Ancients",
 	"type": "feature",
 	"img": "icons/magic/control/control-influence-rally-purple.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>(1/Safe Rest) When faced with a decision about which direction or course of action to take, you can call upon your ancestors to guide you toward the most dangerous or challenging path.</p>",
 		"featureType": "class",
 		"class": "berserker",
-		"group": "berserker-progression"
+		"group": "berserker-progression",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
 	"flags": {},

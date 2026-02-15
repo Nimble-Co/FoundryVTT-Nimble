@@ -35,10 +35,15 @@
 		"description": "<p>+1 to any 2 of your stats.</p><p>The first time each encounter you use Coordinated Strike, EVERY ally within 12 spaces gains +1 action (replaces Unparalleled Tactics).</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "commander-progression"
+		"group": "commander-progression",
+		"gainedAtLevel": 20,
+		"subclass": false,
+		"gainedAtLevels": [
+			20
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

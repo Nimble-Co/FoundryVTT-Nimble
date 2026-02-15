@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "910213b07f81138f",
 	"name": "Stompy",
 	"type": "feature",
 	"img": "icons/creatures/magical/construct-iron-stomping-yellow.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>3 actions: Summon a huge hill giant for 1 round. As he enters the battlefield adjacent to you, use</p><p><strong>Stompy's Stomp</strong>: Make a DC 10 Influence check. On a success, he moves 6 spaces in a direction you choose; on a failure, he moves towards YOU instead (\"YOU NOT FRIEND!\"). He deals everything in his path damage equal to LVL+Influence check. ANY creature within 6 spaces of Stompy can use this ability once instead of an attack.</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "a-people-person"
+		"group": "a-people-person",
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5
+		]
 	},
 	"effects": [],
 	"flags": {},

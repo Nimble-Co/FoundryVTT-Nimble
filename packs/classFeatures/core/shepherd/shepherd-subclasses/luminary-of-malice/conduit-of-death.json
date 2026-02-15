@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "3b941de5156b9615",
 	"name": "Conduit of Death",
 	"type": "feature",
 	"img": "icons/magic/death/projectile-skull-flaming-green.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Your Veilwalker's Blessing ability recharges when you roll Initiative. This charge is lost if unspent at the end of combat.</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "luminary-of-malice"
+		"group": "luminary-of-malice",
+		"gainedAtLevel": 15,
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

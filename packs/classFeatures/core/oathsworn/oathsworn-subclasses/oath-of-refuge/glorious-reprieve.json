@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a94d928d1a8ed9d5",
 	"name": "Glorious Reprieve",
 	"type": "feature",
 	"img": "icons/magic/holy/chalice-glowing-gold-water.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>You and allies in your aura cannot drop below 1 HP. Whenever this triggers, they gain 1 Wound instead (heroes still die at max Wounds).</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "oath-of-refuge"
+		"group": "oath-of-refuge",
+		"gainedAtLevel": 11,
+		"subclass": true,
+		"gainedAtLevels": [
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

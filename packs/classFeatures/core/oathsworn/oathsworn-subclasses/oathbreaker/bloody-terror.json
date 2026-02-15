@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "f90b2245c7d1523a",
 	"name": "Bloody Terror",
 	"type": "feature",
 	"img": "icons/skills/melee/blade-tip-chipped-blood-red.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Attacks against you gain 1 instance of disadvantage for each Wound you have (max 3).</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "oathbreaker"
+		"group": "oathbreaker",
+		"gainedAtLevel": 15,
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

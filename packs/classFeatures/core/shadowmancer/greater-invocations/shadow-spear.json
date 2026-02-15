@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "81e685bc5c9127ce",
 	"name": "Shadow Spear",
 	"type": "feature",
 	"img": "icons/magic/light/beam-rays-magenta.webp",
@@ -36,7 +36,16 @@
 		"description": "<p>Your Shadow Blast can target creatures twice as far away, it ignores cover, and you may attack Prone targets with advantage with it (instead of disadvantage).</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "greater-invocations"
+		"group": "greater-invocations",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			6,
+			9,
+			14,
+			18
+		]
 	},
 	"effects": [],
 	"flags": {},

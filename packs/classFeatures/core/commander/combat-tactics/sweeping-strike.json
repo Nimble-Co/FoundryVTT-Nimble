@@ -58,10 +58,18 @@
 		"description": "<p><strong>2 actions:</strong> Select any contiguous area within your weapon's Reach and damage ALL targets there. This attack does not miss on a 1. </p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "combat-tactics"
+		"group": "combat-tactics",
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5,
+			9,
+			13,
+			17
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

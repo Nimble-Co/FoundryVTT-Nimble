@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "81e685bc5c9127ce",
 	"name": "Master of Darkness",
 	"type": "feature",
 	"img": "icons/magic/unholy/silhouette-robe-evil-power.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Your Patron grants you knowledge of Necrotic cantrips and tier 1 spells.</p><hr><p>Level 5: Tier 2</p><p>Level 7: Tier 3</p><p>Level 10: Tier 4</p><p>Level 13: Tier 5</p><p>Level 16: Tier 6</p><p>Level 19: Tier 7</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "shadowmancer-progression"
+		"group": "shadowmancer-progression",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
 	"flags": {},

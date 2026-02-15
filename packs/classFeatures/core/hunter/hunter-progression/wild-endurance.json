@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "2e9e32bf9e74e633",
 	"name": "Wild Endurance",
 	"type": "feature",
 	"img": "icons/skills/wounds/injury-pain-body-orange.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Gain 1 Thrill of the Hunt charge at the start of your turns.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "hunter-progression"
+		"group": "hunter-progression",
+		"gainedAtLevel": 18,
+		"subclass": false,
+		"gainedAtLevels": [
+			18
+		]
 	},
 	"effects": [],
 	"flags": {},

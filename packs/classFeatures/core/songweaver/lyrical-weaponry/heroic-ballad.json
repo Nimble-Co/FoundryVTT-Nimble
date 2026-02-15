@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "910213b07f81138f",
 	"name": "Heroic Ballad",
 	"type": "feature",
 	"img": "icons/tools/instruments/harp-lap-brown.webp",
@@ -36,7 +36,15 @@
 		"description": "<p>+2 max Songweaver's Inspiration charges. When used to reroll an ally's attack, your Songweaver's Inspiration also grants them +WIL damage on the attack.</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "lyrical-weaponry"
+		"group": "lyrical-weaponry",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			9,
+			13,
+			17
+		]
 	},
 	"effects": [],
 	"flags": {},

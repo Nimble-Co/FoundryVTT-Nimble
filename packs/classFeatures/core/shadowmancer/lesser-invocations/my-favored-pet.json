@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "81e685bc5c9127ce",
 	"name": "My Favored Pet",
 	"type": "feature",
 	"img": "icons/creatures/magical/spirit-fear-energy-pink.webp",
@@ -36,7 +36,14 @@
 		"description": "<p>One shadow minion can begrudgingly tolerate you outside of combat. It can (very creepily) do any menial task a below average commoner could.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "lesser-invocations"
+		"group": "lesser-invocations",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3,
+			8,
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

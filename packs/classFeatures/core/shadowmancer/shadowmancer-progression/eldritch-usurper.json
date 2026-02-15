@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "81e685bc5c9127ce",
 	"name": "Eldritch Usurper",
 	"type": "feature",
 	"img": "icons/magic/nature/plant-undersea-orb-purple.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>+1 to any 2 of your stats. Whenever you summon a single shadow minion, summon 2 instead. They die only when they receive 12 or more damage at one time.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "shadowmancer-progression"
+		"group": "shadowmancer-progression",
+		"gainedAtLevel": 20,
+		"subclass": false,
+		"gainedAtLevels": [
+			20
+		]
 	},
 	"effects": [],
 	"flags": {},

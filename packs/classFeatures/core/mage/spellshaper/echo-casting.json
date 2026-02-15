@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a95d9a582c294f7c",
 	"name": "Echo Casting",
 	"type": "feature",
 	"img": "icons/magic/sonic/projectile-sound-rings-wave.webp",
@@ -36,7 +36,14 @@
 		"description": "<p>(2×mana, min. 1 mana) When you cast a tiered, single-target spell, you may cast a copy of that spell on a 2nd target for free.</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "spellshaper"
+		"group": "spellshaper",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			9,
+			13
+		]
 	},
 	"effects": [],
 	"flags": {},

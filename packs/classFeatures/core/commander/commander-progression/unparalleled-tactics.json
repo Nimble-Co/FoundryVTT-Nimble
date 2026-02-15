@@ -35,10 +35,15 @@
 		"description": "<p>The first time each encounter you use Coordinated Strike, an ally who can hear you also gains 1 action to use on their next turn.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "commander-progression"
+		"group": "commander-progression",
+		"gainedAtLevel": 18,
+		"subclass": false,
+		"gainedAtLevels": [
+			18
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

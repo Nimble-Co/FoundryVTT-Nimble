@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "89578cecae9a993c",
 	"name": "Blazing Speed",
 	"type": "feature",
 	"img": "icons/magic/fire/blast-jet-stream-embers-orange.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Gain +2 speed while using Windstep. After you cease movement with Windstep, enemies you passed through take STR+DEX fire damage. You may have Smoldering enemies take double, ending the condition.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "way-of-flame"
+		"group": "way-of-flame",
+		"gainedAtLevel": 7,
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

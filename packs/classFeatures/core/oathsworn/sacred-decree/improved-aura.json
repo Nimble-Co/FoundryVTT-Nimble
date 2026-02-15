@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c5f324248b31dabc",
 	"name": "Improved Aura",
 	"type": "feature",
 	"img": "icons/magic/lightning/bolt-strike-explosion-yellow.webp",
@@ -36,7 +36,17 @@
 		"description": "<p>+2 aura Reach.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "sacred-decree"
+		"group": "sacred-decree",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3,
+			6,
+			9,
+			12,
+			14,
+			16
+		]
 	},
 	"effects": [],
 	"flags": {},

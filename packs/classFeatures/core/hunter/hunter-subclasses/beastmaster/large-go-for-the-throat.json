@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7fec6a94e7504af7",
 	"name": "Large - Go for the Throat!",
 	"type": "feature",
 	"img": "icons/creatures/abilities/lion-roar-yellow.webp",
@@ -36,7 +36,13 @@
 		"description": "<p>(1/encounter) Costs 2 TotH charges, 2 actions: Your companion attacks your quarry for 1d12+(4×LVL) damage (ignoring armor). If that creature dies, you may deal half as much to another creature within Reach 4. </p><hr><p>Level 11: 2/encounter.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "beastmaster"
+		"group": "beastmaster",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3,
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

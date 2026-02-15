@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "d40bf36abe9f4b0a",
 	"name": "Thunderous Steps",
 	"type": "feature",
 	"img": "icons/weapons/axes/axe-double-short-orange.webp",
@@ -58,7 +58,17 @@
 		},
 		"description": "<p>After moving at least 4 spaces while Raging, you may deal STR Bludgeoning damage to all adjacent creatures where you stop.</p>",
 		"featureType": "class",
-		"class": ""
+		"class": "",
+		"gainedAtLevel": 4,
+		"gainedAtLevels": [
+			4,
+			6,
+			8,
+			12,
+			14,
+			16
+		],
+		"subclass": false
 	},
 	"effects": [],
 	"flags": {},

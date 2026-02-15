@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "db1b1e86f71126fe",
 	"name": "Steel Will",
 	"type": "feature",
 	"img": "icons/magic/earth/strike-fist-stone-light.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>(1/Safe Rest) Whenever you would fail a save, you may succeed instead. Whenever you roll a 1 on an Elemental Surge die, you may reroll it once.</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "invoker-of-control"
+		"group": "invoker-of-control",
+		"gainedAtLevel": 11,
+		"subclass": true,
+		"gainedAtLevels": [
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

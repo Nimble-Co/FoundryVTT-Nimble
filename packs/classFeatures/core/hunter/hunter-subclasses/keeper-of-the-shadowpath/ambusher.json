@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "e914d4e3f1941fbb",
 	"name": "Ambusher",
 	"type": "feature",
 	"img": "icons/magic/nature/stealth-hide-beast-eyes-green.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>When you roll Initiative, you may use Hunter's Mark for free. Gain advantage on the first attack you make each encounter.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "keeper-of-the-shadowpath"
+		"group": "keeper-of-the-shadowpath",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

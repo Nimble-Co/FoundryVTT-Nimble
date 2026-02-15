@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "8305bc76ead2700d",
 	"name": "Empowered Conduit",
 	"type": "feature",
 	"img": "icons/magic/light/beam-rays-teal-purple-large.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Your Conduit of Light may target 1 additional creature. Regain 1 charge of Searing Light when you roll Initiative (this expires if unspent at the end of combat).</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "luminary-of-mercy"
+		"group": "luminary-of-mercy",
+		"gainedAtLevel": 15,
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

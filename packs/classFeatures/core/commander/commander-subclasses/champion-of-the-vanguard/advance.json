@@ -35,10 +35,15 @@
 		"description": "<p>(1/round) After you move toward an enemy, gain advantage on the first melee attack you make against it. When you use your Coordinated Strike, you and all allies within 12 spaces can first move up to half their speed for free.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "champion-of-the-vanguard"
+		"group": "champion-of-the-vanguard",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "39d701b7816ab485",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

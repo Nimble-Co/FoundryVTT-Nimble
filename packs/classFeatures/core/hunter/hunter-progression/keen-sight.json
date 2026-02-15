@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "2e9e32bf9e74e633",
 	"name": "Keen Sight",
 	"type": "feature",
 	"img": "icons/creatures/eyes/humanoid-single-blind.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Advantage on Perception checks.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "hunter-progression"
+		"group": "hunter-progression",
+		"gainedAtLevel": 13,
+		"subclass": false,
+		"gainedAtLevels": [
+			13
+		]
 	},
 	"effects": [],
 	"flags": {},

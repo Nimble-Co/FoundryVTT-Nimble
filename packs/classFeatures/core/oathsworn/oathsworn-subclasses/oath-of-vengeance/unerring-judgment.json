@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "1ab92542c532c8c2",
 	"name": "Unerring Judgment",
 	"type": "feature",
 	"img": "icons/magic/sonic/explosion-impact-shock-wave.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Increase your primary die rolls on melee attacks by 1 whenever you have Judgment Dice.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "oath-of-vengeance"
+		"group": "oath-of-vengeance",
+		"gainedAtLevel": 11,
+		"subclass": true,
+		"gainedAtLevels": [
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

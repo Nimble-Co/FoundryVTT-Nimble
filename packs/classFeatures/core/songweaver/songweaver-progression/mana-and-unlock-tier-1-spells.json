@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "910213b07f81138f",
 	"name": "Mana and Unlock Tier 1 Spells",
 	"type": "feature",
 	"img": "icons/magic/air/air-wave-gust-blue.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>You unlock tier 1 spells in the schools you know and gain a mana pool to cast them. This mana pool's maximum is always equal to (INT×3)+LVL and recharges on a Safe Rest.</p><hr><p>Level 4: Tier 2</p><p>Level 6: Tier 3</p><p>Level 8: Tier 4</p><p>Level 10: Tier 5</p><p>Level 12: Tier 6</p><p>Level 14: Tier 7</p><p>Level 16: Tier 8</p><p>Level 18: Tier 9</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "songweaver-progression"
+		"group": "songweaver-progression",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
 	"flags": {},

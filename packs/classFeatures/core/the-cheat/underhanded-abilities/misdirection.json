@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "4915fea5a41fc733",
 	"name": "Misdirection",
 	"type": "feature",
 	"img": "icons/magic/air/air-smoke-casting.webp",
@@ -48,7 +48,19 @@
 		"description": "<p>Gain INT armor. </p><p>Whenever you Defend, you may halve the damage instead. </p>",
 		"featureType": "class",
 		"class": "cheat",
-		"group": "underhanded-abilities"
+		"group": "underhanded-abilities",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			6,
+			8,
+			10,
+			12,
+			14,
+			16,
+			18
+		]
 	},
 	"effects": [],
 	"flags": {},

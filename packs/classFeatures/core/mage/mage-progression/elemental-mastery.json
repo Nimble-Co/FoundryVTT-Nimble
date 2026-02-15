@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a95d9a582c294f7c",
 	"name": "Elemental Mastery",
 	"type": "feature",
 	"img": "icons/magic/fire/projectile-fireball-smoke-teal.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Learn the Utility Spells from 1 spell school you know.</p><hr><p>Level 6: +1 School</p><p>Level 14: +1 School</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "mage-progression"
+		"group": "mage-progression",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
 	"flags": {},
