@@ -98,8 +98,12 @@
 	let isObserver = combatant?.actor?.testUserPermission(game.user, 'OBSERVER');
 	let isOwner = combatant?.actor?.testUserPermission(game.user, 'OWNER');
 	let isDead = $derived(isCombatantDead(combatant));
+	let isTrustedPlayerOrHigher = $derived(
+		Number(game.user?.role ?? 0) >= Number(CONST.USER_ROLES?.TRUSTED ?? 2),
+	);
 	let canDrag = $derived(
-		!isDead && (game.user?.isGM || (combatant.type === 'character' && isOwner)),
+		!isDead &&
+			(game.user?.isGM || (isTrustedPlayerOrHigher && combatant.type === 'character' && isOwner)),
 	);
 </script>
 
