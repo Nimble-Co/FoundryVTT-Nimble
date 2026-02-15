@@ -12,6 +12,62 @@ type FeatureEntryData = {
 	title: string;
 };
 
+type FeatureIndexEntry = {
+	name?: unknown;
+	system?: {
+		gainedAtLevel?: unknown;
+		gainedAtLevels?: unknown;
+	};
+};
+
+type CompendiumIndexLike = {
+	get(id: string): unknown;
+};
+
+type CompendiumPackLike = {
+	collection: string;
+	index: CompendiumIndexLike;
+	getIndex(options: { fields: string[] }): Promise<unknown>;
+};
+
+type CompendiumApplicationLike = {
+	collection?: unknown;
+};
+
+function isCompendiumPackLike(value: unknown): value is CompendiumPackLike {
+	if (!value || typeof value !== 'object') return false;
+
+	const pack = value as {
+		collection?: unknown;
+		index?: { get?: unknown };
+		getIndex?: unknown;
+	};
+
+	return (
+		typeof pack.collection === 'string' &&
+		typeof pack.index?.get === 'function' &&
+		typeof pack.getIndex === 'function'
+	);
+}
+
+function toFeatureIndexEntry(value: unknown): FeatureIndexEntry | null {
+	if (!value || typeof value !== 'object') return null;
+	return value as FeatureIndexEntry;
+}
+
+function toCompendiumApplication(value: unknown): CompendiumApplicationLike | null {
+	if (!value || typeof value !== 'object') return null;
+	return value as CompendiumApplicationLike;
+}
+
+function toRenderElement(value: unknown): HTMLElement | null {
+	if (value instanceof HTMLElement) return value;
+	if (!value || typeof value !== 'object') return null;
+
+	const htmlLike = value as { 0?: unknown };
+	return htmlLike[0] instanceof HTMLElement ? htmlLike[0] : null;
+}
+
 function toLevel(value: unknown): number | null {
 	if (typeof value === 'number') {
 		return Number.isFinite(value) && value > 0 ? value : null;
@@ -57,11 +113,14 @@ function toLevels(value: unknown): number[] {
 	return [...levels].sort((a, b) => a - b);
 }
 
-function getFeatureLevels(indexEntry: any): number[] {
-	const gainedAtLevels = toLevels(foundry.utils.getProperty(indexEntry, 'system.gainedAtLevels'));
+function getFeatureLevels(indexEntry: FeatureIndexEntry | null): number[] {
+	const safeIndexEntry = indexEntry ?? {};
+	const gainedAtLevels = toLevels(
+		foundry.utils.getProperty(safeIndexEntry, 'system.gainedAtLevels'),
+	);
 	if (gainedAtLevels.length > 0) return gainedAtLevels;
 
-	return toLevels(foundry.utils.getProperty(indexEntry, 'system.gainedAtLevel'));
+	return toLevels(foundry.utils.getProperty(safeIndexEntry, 'system.gainedAtLevel'));
 }
 
 function removeLevelBadge(entryElement: HTMLElement) {
@@ -70,7 +129,10 @@ function removeLevelBadge(entryElement: HTMLElement) {
 	entryElement.querySelector(`.${LEVEL_BADGE_CLASS}`)?.remove();
 }
 
-function collectClassFeatureEntryData(pack: any, element: HTMLElement): FeatureEntryData[] {
+function collectClassFeatureEntryData(
+	pack: CompendiumPackLike,
+	element: HTMLElement,
+): FeatureEntryData[] {
 	const entries: FeatureEntryData[] = [];
 
 	for (const entryElement of element.querySelectorAll<HTMLElement>('[data-entry-id]')) {
@@ -83,7 +145,7 @@ function collectClassFeatureEntryData(pack: any, element: HTMLElement): FeatureE
 			entryElement.querySelector<HTMLElement>('a') ??
 			entryElement;
 
-		const indexEntry = pack.index.get(entryId);
+		const indexEntry = toFeatureIndexEntry(pack.index.get(entryId));
 		const gainedAtLevels = getFeatureLevels(indexEntry);
 		const title =
 			(typeof indexEntry?.name === 'string' ? indexEntry.name : '') ||
@@ -165,16 +227,21 @@ function applyClassFeatureLevelsToEntries(entries: FeatureEntryData[]) {
 	}
 }
 
-export default function renderCompendium(application: any, element: HTMLElement) {
-	const pack = application.collection as any;
-	if (!pack || pack.collection !== CLASS_FEATURES_PACK_COLLECTION) return;
+export default function renderCompendium(application: unknown, element: unknown) {
+	const app = toCompendiumApplication(application);
+	if (!app) return;
+
+	const pack = app.collection;
+	if (!isCompendiumPackLike(pack) || pack.collection !== CLASS_FEATURES_PACK_COLLECTION) return;
+	const container = toRenderElement(element);
+	if (!container) return;
 
 	void pack
 		.getIndex({
 			fields: ['system.gainedAtLevel', 'system.gainedAtLevels'],
 		})
 		.then(() => {
-			const entryData = collectClassFeatureEntryData(pack, element);
+			const entryData = collectClassFeatureEntryData(pack, container);
 			sortClassFeatureEntries(entryData);
 			applyClassFeatureLevelsToEntries(entryData);
 		})

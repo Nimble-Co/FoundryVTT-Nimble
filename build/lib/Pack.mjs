@@ -1,4 +1,4 @@
-﻿import crypto from 'crypto';
+import crypto from 'crypto';
 import fs from 'fs';
 import { globSync } from 'glob';
 import path from 'path';
@@ -610,27 +610,19 @@ export default class Pack {
 		return normalized || null;
 	}
 
+	static #folderIdForDocument(documentId) {
+		return crypto.createHash('sha256').update(documentId).digest('hex').slice(0, 16);
+	}
+
 	static #folderIdForClassId(classId) {
-		return crypto
-			.createHash('sha256')
-			.update(`nimble-class-features-${classId}`)
-			.digest('hex')
-			.slice(0, 16);
+		return Pack.#folderIdForDocument(`nimble-class-features-${classId}`);
 	}
 
 	static #folderIdForSubclassId(classId, subclassId) {
-		return crypto
-			.createHash('sha256')
-			.update(`nimble-class-features-${classId}-${subclassId}`)
-			.digest('hex')
-			.slice(0, 16);
+		return Pack.#folderIdForDocument(`nimble-class-features-${classId}-${subclassId}`);
 	}
 
 	static #folderIdForProgressionId(classId) {
-		return crypto
-			.createHash('sha256')
-			.update(`nimble-class-features-${classId}-progression`)
-			.digest('hex')
-			.slice(0, 16);
+		return Pack.#folderIdForDocument(`nimble-class-features-${classId}-progression`);
 	}
 }
