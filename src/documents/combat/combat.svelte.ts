@@ -5,12 +5,7 @@ import {
 	getCombatantTypePriority,
 } from '../../utils/combatantOrdering.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
-import {
-	getCombatManaGrantForCombat,
-	getCombatManaGrantMap,
-	getCombatManaGrantTotalForInitiative,
-	primeActorCombatManaSourceRules,
-} from '../../utils/combatManaRules.js';
+import { handleInitiativeRules } from './handleInitiativeRules.js';
 
 /** Combatant system data with actions */
 interface CombatantSystemWithActions {
@@ -258,33 +253,11 @@ class NimbleCombat extends Combat {
 				else combatantUpdates[actionPath] = 1;
 			}
 
-			const shouldGrantCombatMana =
-				combatant.type === 'character' &&
-				combatant.initiative === null &&
-				combatant.actor?.isOwner &&
-				Boolean(this.id);
-
-			if (shouldGrantCombatMana && combatant.actor) {
-				await primeActorCombatManaSourceRules(combatant.actor);
-
-				const combatId = this.id as string;
-				const existingGrant = getCombatManaGrantForCombat(combatant.actor, combatId);
-				if (existingGrant <= 0) {
-					const combatMana = getCombatManaGrantTotalForInitiative(combatant.actor);
-					if (combatMana > 0) {
-						const grants = getCombatManaGrantMap(combatant.actor);
-						grants[combatId] = { mana: combatMana };
-
-						combatManaUpdates.push(
-							combatant.actor.update({
-								'system.resources.mana.baseMax': combatMana,
-								'system.resources.mana.current': combatMana,
-								'flags.nimble.combatManaGrants': grants,
-							} as Record<string, unknown>),
-						);
-					}
-				}
-			}
+			await handleInitiativeRules({
+				combatId: this.id,
+				combatManaUpdates,
+				combatant,
+			});
 
 			updates.push(combatantUpdates);
 
