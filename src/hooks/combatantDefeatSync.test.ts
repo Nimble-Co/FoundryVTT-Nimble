@@ -1,124 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-type HookCallback = (...args: unknown[]) => unknown;
-
-type TestGlobals = {
-	Hooks: {
-		on: ReturnType<typeof vi.fn>;
-	};
-	game: {
-		user: {
-			isGM: boolean;
-		};
-		combats: {
-			contents: Combat[];
-		};
-	};
-	foundry: {
-		utils: {
-			hasProperty: (obj: unknown, path: string) => boolean;
-		};
-	};
-	CONFIG: {
-		specialStatusEffects: {
-			DEFEATED: string;
-		};
-	};
-};
+import {
+	createHasPropertyMock,
+	createHookCapture,
+	createMockCombat,
+	createMockCombatActor,
+	createMockCombatant,
+	getTestGlobals,
+	type CombatDefeatSyncTestGlobals,
+} from '../../tests/mocks/combat.js';
 
 function globals() {
-	return globalThis as unknown as TestGlobals;
-}
-
-function createActor({
-	id,
-	hp,
-	woundsValue,
-	woundsMax,
-}: {
-	id: string;
-	hp: number;
-	woundsValue?: number;
-	woundsMax?: number;
-}) {
-	return {
-		id,
-		system: {
-			attributes: {
-				hp: { value: hp },
-				wounds: { value: woundsValue, max: woundsMax },
-			},
-		},
-		toggleStatusEffect: vi.fn().mockResolvedValue(undefined),
-	} as unknown as Actor.Implementation;
-}
-
-function createCombatant({
-	id,
-	type,
-	actorId,
-	actor,
-	defeated,
-	actionsCurrent,
-	actionsMax,
-}: {
-	id: string;
-	type: string;
-	actorId: string;
-	actor: Actor.Implementation;
-	defeated: boolean;
-	actionsCurrent: number;
-	actionsMax: number;
-}) {
-	return {
-		id,
-		actorId,
-		actor,
-		type,
-		defeated,
-		system: {
-			actions: {
-				base: {
-					current: actionsCurrent,
-					max: actionsMax,
-				},
-			},
-		},
-	} as unknown as Combatant.Implementation;
-}
-
-function createCombat({
-	id,
-	combatants,
-	turns,
-	activeCombatant,
-	round,
-}: {
-	id: string;
-	combatants: Combatant.Implementation[];
-	turns: Combatant.Implementation[];
-	activeCombatant: Combatant.Implementation | null;
-	round: number;
-}) {
-	return {
-		id,
-		combatants: { contents: combatants },
-		turns,
-		combatant: activeCombatant,
-		round,
-		updateEmbeddedDocuments: vi.fn().mockResolvedValue([]),
-		nextTurn: vi.fn().mockResolvedValue(undefined),
-	} as unknown as Combat;
-}
-
-function createHookCapture() {
-	const callbacks = new Map<string, HookCallback>();
-	globals().Hooks.on.mockImplementation((event: string, callback: HookCallback) => {
-		callbacks.set(event, callback);
-		return 1;
-	});
-
-	return callbacks;
+	return getTestGlobals<CombatDefeatSyncTestGlobals>();
 }
 
 async function flushAsync() {
@@ -132,34 +24,24 @@ describe('registerCombatantDefeatSync', () => {
 
 		globals().game.user = { isGM: true };
 		globals().game.combats = { contents: [] };
-
-		globals().foundry.utils.hasProperty = (obj: unknown, path: string) => {
-			const keys = path.split('.');
-			let current = obj as Record<string, unknown> | undefined;
-			for (const key of keys) {
-				if (!current || typeof current !== 'object' || !(key in current)) return false;
-				current = current[key] as Record<string, unknown> | undefined;
-			}
-			return true;
-		};
-
+		globals().foundry.utils.hasProperty = createHasPropertyMock();
 		globals().CONFIG.specialStatusEffects = {
 			DEFEATED: 'defeated',
 		};
 	});
 
 	it('marks character combatants defeated when wounds reach max and clears actions', async () => {
-		const callbacks = createHookCapture();
+		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
 		registerCombatantDefeatSync();
 
-		const actor = createActor({
+		const actor = createMockCombatActor({
 			id: 'actor-1',
 			hp: 0,
 			woundsValue: 6,
 			woundsMax: 6,
 		});
-		const combatant = createCombatant({
+		const combatant = createMockCombatant({
 			id: 'combatant-1',
 			type: 'character',
 			actorId: 'actor-1',
@@ -168,7 +50,7 @@ describe('registerCombatantDefeatSync', () => {
 			actionsCurrent: 2,
 			actionsMax: 3,
 		});
-		const combat = createCombat({
+		const combat = createMockCombat({
 			id: 'combat-1',
 			combatants: [combatant],
 			turns: [combatant],
@@ -197,17 +79,17 @@ describe('registerCombatantDefeatSync', () => {
 	});
 
 	it('restores character combatants when wounds drop below max', async () => {
-		const callbacks = createHookCapture();
+		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
 		registerCombatantDefeatSync();
 
-		const actor = createActor({
+		const actor = createMockCombatActor({
 			id: 'actor-2',
 			hp: 1,
 			woundsValue: 2,
 			woundsMax: 6,
 		});
-		const combatant = createCombatant({
+		const combatant = createMockCombatant({
 			id: 'combatant-2',
 			type: 'character',
 			actorId: 'actor-2',
@@ -216,7 +98,7 @@ describe('registerCombatantDefeatSync', () => {
 			actionsCurrent: 0,
 			actionsMax: 3,
 		});
-		const combat = createCombat({
+		const combat = createMockCombat({
 			id: 'combat-2',
 			combatants: [combatant],
 			turns: [combatant],
@@ -244,17 +126,17 @@ describe('registerCombatantDefeatSync', () => {
 	});
 
 	it('uses HP logic for non-character combatants', async () => {
-		const callbacks = createHookCapture();
+		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
 		registerCombatantDefeatSync();
 
-		const actor = createActor({
+		const actor = createMockCombatActor({
 			id: 'actor-3',
 			hp: 0,
 			woundsValue: 0,
 			woundsMax: 6,
 		});
-		const combatant = createCombatant({
+		const combatant = createMockCombatant({
 			id: 'combatant-3',
 			type: 'npc',
 			actorId: 'actor-3',
@@ -263,7 +145,7 @@ describe('registerCombatantDefeatSync', () => {
 			actionsCurrent: 1,
 			actionsMax: 1,
 		});
-		const combat = createCombat({
+		const combat = createMockCombat({
 			id: 'combat-3',
 			combatants: [combatant],
 			turns: [combatant],
@@ -287,17 +169,17 @@ describe('registerCombatantDefeatSync', () => {
 	});
 
 	it('advances turn when active combatant becomes defeated and others are alive', async () => {
-		const callbacks = createHookCapture();
+		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
 		registerCombatantDefeatSync();
 
-		const actor = createActor({
+		const actor = createMockCombatActor({
 			id: 'actor-4',
 			hp: 0,
 			woundsValue: 6,
 			woundsMax: 6,
 		});
-		const deadCombatant = createCombatant({
+		const deadCombatant = createMockCombatant({
 			id: 'combatant-4a',
 			type: 'character',
 			actorId: 'actor-4',
@@ -306,16 +188,16 @@ describe('registerCombatantDefeatSync', () => {
 			actionsCurrent: 2,
 			actionsMax: 2,
 		});
-		const aliveOther = createCombatant({
+		const aliveOther = createMockCombatant({
 			id: 'combatant-4b',
 			type: 'npc',
 			actorId: 'other-actor',
-			actor: createActor({ id: 'other-actor', hp: 10 }),
+			actor: createMockCombatActor({ id: 'other-actor', hp: 10 }),
 			defeated: false,
 			actionsCurrent: 1,
 			actionsMax: 1,
 		});
-		const combat = createCombat({
+		const combat = createMockCombat({
 			id: 'combat-4',
 			combatants: [deadCombatant, aliveOther],
 			turns: [deadCombatant, aliveOther],
@@ -333,17 +215,17 @@ describe('registerCombatantDefeatSync', () => {
 	});
 
 	it('does not advance turn at round 0 even when active combatant becomes defeated', async () => {
-		const callbacks = createHookCapture();
+		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
 		registerCombatantDefeatSync();
 
-		const actor = createActor({
+		const actor = createMockCombatActor({
 			id: 'actor-5',
 			hp: 0,
 			woundsValue: 6,
 			woundsMax: 6,
 		});
-		const deadCombatant = createCombatant({
+		const deadCombatant = createMockCombatant({
 			id: 'combatant-5a',
 			type: 'character',
 			actorId: 'actor-5',
@@ -352,16 +234,16 @@ describe('registerCombatantDefeatSync', () => {
 			actionsCurrent: 2,
 			actionsMax: 2,
 		});
-		const aliveOther = createCombatant({
+		const aliveOther = createMockCombatant({
 			id: 'combatant-5b',
 			type: 'npc',
 			actorId: 'other-actor-5',
-			actor: createActor({ id: 'other-actor-5', hp: 8 }),
+			actor: createMockCombatActor({ id: 'other-actor-5', hp: 8 }),
 			defeated: false,
 			actionsCurrent: 1,
 			actionsMax: 1,
 		});
-		const combat = createCombat({
+		const combat = createMockCombat({
 			id: 'combat-5',
 			combatants: [deadCombatant, aliveOther],
 			turns: [deadCombatant, aliveOther],

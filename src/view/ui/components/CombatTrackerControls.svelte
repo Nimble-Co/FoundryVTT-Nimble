@@ -20,8 +20,14 @@
 			modal: true,
 		});
 
-		if (!confirmed) return;
-		await combat.delete();
+		if (confirmed !== true) return;
+
+		// Re-resolve the current combat after modal interaction to avoid deleting
+		// a stale reference if combat state changed while the dialog was open.
+		const currentCombat = game.combat as NimbleCombat | undefined;
+		if (!currentCombat || currentCombat.id !== combat.id) return;
+
+		await currentCombat.delete();
 	}
 
 	function rewindRound(): Promise<NimbleCombat> | undefined {

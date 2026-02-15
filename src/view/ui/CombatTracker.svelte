@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
+	import {
+		canCurrentUserReorderCombatant,
+		getCombatantTypePriority,
+	} from '../../utils/combatantOrdering.js';
 	import { isCombatantDead } from '../../utils/isCombatantDead.js';
 	import BaseCombatant from './components/BaseCombatant.svelte';
 	import CombatTrackerControls from './components/CombatTrackerControls.svelte';
@@ -86,16 +90,6 @@
 		return combat.combatants.contents.some((c) => getCombatantSceneId(c) === sceneId);
 	}
 
-	function getCombatantTypePriority(combatant: Combatant.Implementation): number {
-		return combatant.type === 'character' ? 0 : 1;
-	}
-
-	function canCurrentUserReorderCombatant(combatant: Combatant.Implementation): boolean {
-		if (game.user?.isGM) return true;
-		const hasTrustedRole = Number(game.user?.role ?? 0) >= Number(CONST.USER_ROLES?.TRUSTED ?? 2);
-		return hasTrustedRole && combatant.type === 'character' && combatant.isOwner;
-	}
-
 	function getCombatantsForScene(
 		combat: Combat | null,
 		sceneId: string | undefined,
@@ -129,18 +123,22 @@
 		const sceneId = canvas.scene?.id;
 		if (!sceneId) return null;
 
-		// Find combats that have combatants belonging to the current scene
-		const combatsForScene = game.combats.contents.filter(
-			(combat) => combat.combatants.size > 0 && hasCombatantsForScene(combat, sceneId),
-		);
-
-		// Prefer the active combat if it has combatants for this scene
+		// Prefer the active combat for this scene, even if it currently has no combatants.
 		const activeCombat = game.combat;
-		if (activeCombat && combatsForScene.includes(activeCombat)) {
+		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
 			return activeCombat;
 		}
 
-		// Otherwise return the first combat that has combatants for this scene
+		// Next, use the viewed combat for this scene when present.
+		const viewedCombat = game.combats.viewed ?? null;
+		if (viewedCombat?.scene?.id === sceneId) {
+			return viewedCombat;
+		}
+
+		// Otherwise return the first combat that has combatants for this scene.
+		const combatsForScene = game.combats.contents.filter((combat) =>
+			hasCombatantsForScene(combat, sceneId),
+		);
 		return combatsForScene[0] ?? null;
 	}
 
