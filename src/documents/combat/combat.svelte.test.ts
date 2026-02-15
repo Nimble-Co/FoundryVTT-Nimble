@@ -5,6 +5,7 @@ type TestGlobals = {
 	game: {
 		user: {
 			isGM: boolean;
+			role?: number;
 		};
 	};
 	fromUuidSync: ReturnType<typeof vi.fn>;
@@ -135,7 +136,7 @@ describe('NimbleCombat', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 
-		globals().game.user = { isGM: true };
+		globals().game.user = { isGM: true, role: 4 };
 		globals().fromUuidSync = vi.fn().mockReturnValue(null);
 		globals().SortingHelpers = {
 			performIntegerSort: vi.fn(),
@@ -302,6 +303,7 @@ describe('NimbleCombat', () => {
 
 	it('allows player owners to reorder their own character cards', async () => {
 		globals().game.user.isGM = false;
+		globals().game.user.role = 2;
 		const combatId = 'combat-drop-owner-character';
 		const source = createCombatant({
 			id: 'source-character',
@@ -346,6 +348,7 @@ describe('NimbleCombat', () => {
 
 	it('blocks non-owner players from reordering character cards they do not own', async () => {
 		globals().game.user.isGM = false;
+		globals().game.user.role = 2;
 		const combatId = 'combat-drop-non-owner-character';
 		const source = createCombatant({
 			id: 'source-character',
@@ -384,6 +387,7 @@ describe('NimbleCombat', () => {
 
 	it('blocks non-GM players from reordering non-character cards', async () => {
 		globals().game.user.isGM = false;
+		globals().game.user.role = 2;
 		const combatId = 'combat-drop-player-npc';
 		const source = createCombatant({
 			id: 'source-npc',
@@ -413,6 +417,45 @@ describe('NimbleCombat', () => {
 			sourceId: 'source-npc',
 			targetId: 'target-npc',
 			before: false,
+		});
+
+		const result = await combat._onDrop(dropEvent);
+		expect(result).toBe(false);
+		expect(source.update).not.toHaveBeenCalled();
+	});
+
+	it('blocks below-trusted owners from reordering their own character cards', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-drop-untrusted-owner-character';
+		const source = createCombatant({
+			id: 'source-character',
+			type: 'character',
+			sort: 5,
+			isOwner: true,
+			initiative: 10,
+			actor: createActor({ hp: 5, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const target = createCombatant({
+			id: 'target-character',
+			type: 'character',
+			sort: 10,
+			isOwner: false,
+			initiative: 8,
+			actor: createActor({ hp: 5, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollection([source, target]),
+			turns: [target, source],
+		} as unknown as Combat.CreateData);
+
+		const dropEvent = createDropEvent({
+			sourceId: 'source-character',
+			targetId: 'target-character',
+			before: true,
 		});
 
 		const result = await combat._onDrop(dropEvent);
