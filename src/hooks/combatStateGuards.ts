@@ -6,8 +6,10 @@
  * refresh while the combat tracker UI (which depends on `game.combats.viewed`) fails to render.
  *
  * This hook set repairs that state by:
- * - Ending any active combat in a scene once it has no valid combatants/tokens remaining.
  * - Re-syncing the client's viewed combat to the active combat for the current canvas scene.
+ *
+ * Note: This intentionally does not end combat automatically. Combat should only end through the
+ * explicit "End Combat" UI action.
  */
 let didRegisterCombatStateGuards = false;
 type HookRegistration = { hook: Hooks.HookName; id: number };
@@ -20,25 +22,6 @@ function hasViewCombat(value: object): value is { viewCombat: ViewCombatFn } {
 		'viewCombat' in value &&
 		typeof (value as { viewCombat?: ViewCombatFn }).viewCombat === 'function'
 	);
-}
-
-/**
- * Create a scheduler that runs the handler once per key
- * after Foundry finishes processing the current batch of updates.
- *
- * This prevents running cleanup logic N times during bulk operations
- * like mass token or combatant deletion.
- */
-function createPostUpdateSchedulerPerKey<T>(handler: (value: T) => void | Promise<void>) {
-	const scheduled = new Set<T>();
-	return (value: T) => {
-		if (scheduled.has(value)) return;
-		scheduled.add(value);
-		setTimeout(() => {
-			scheduled.delete(value);
-			void handler(value);
-		}, 0);
-	};
 }
 
 /**
@@ -103,26 +86,11 @@ export default function combatStateGuards() {
 		return null;
 	}
 
-	async function endCombatIfPossible(combat: Combat): Promise<void> {
-		if (!game.user?.isGM) return;
-
-		const combatWithEnd = combat as Combat & { endCombat?: () => Promise<Combat> };
-		if (typeof combatWithEnd.endCombat === 'function') {
-			await combatWithEnd.endCombat();
-			return;
-		}
-
-		// Fallback for older cores or unexpected overrides.
-		await combat.delete();
-	}
-
 	function ensureViewedCombatForCurrentScene(): void {
 		if (!canvas?.ready || !canvas.scene) return;
 
 		const sceneId = canvas.scene.id;
 		const activeCombat = getActiveCombatForScene(sceneId);
-		const activeCombatIsViewable =
-			activeCombat !== null && isCombatViewableForScene(activeCombat, sceneId);
 
 		const combats = game.combats;
 		if (!hasViewCombat(combats)) return;
@@ -132,16 +100,9 @@ export default function combatStateGuards() {
 		const viewedIsValidForScene =
 			viewed !== null && viewed.scene?.id === sceneId && isCombatViewableForScene(viewed, sceneId);
 
-		// Active combat exists but is not viewable: clear the view.
-		if (activeCombat && !activeCombatIsViewable) {
-			if (viewed?.scene?.id === sceneId) {
-				combats.viewCombat(null, { render: true });
-			}
-			return;
-		}
-
-		// Active, viewable combat should always be the viewed combat.
-		if (activeCombatIsViewable && (!viewedIsValidForScene || viewed?.id !== activeCombat!.id)) {
+		// Active combat should always be the viewed combat for this scene,
+		// even when it temporarily has zero combatants.
+		if (activeCombat && viewed?.id !== activeCombat.id) {
 			combats.viewCombat(activeCombat, { render: true });
 			return;
 		}
@@ -152,51 +113,7 @@ export default function combatStateGuards() {
 		}
 	}
 
-	async function cleanupSceneCombatState(sceneId: string): Promise<void> {
-		try {
-			const activeCombat = getActiveCombatForScene(sceneId);
-			if (!activeCombat) {
-				scheduleViewSync('cleanup:no-active-combat');
-				return;
-			}
-
-			// Active combat with no token-backed combatants should be ended.
-			if (!isCombatViewableForScene(activeCombat, sceneId)) {
-				await endCombatIfPossible(activeCombat);
-			}
-
-			scheduleViewSync('cleanup:post');
-		} catch (error) {
-			console.error('[Nimble:CombatStateGuard] Combat state cleanup failed:', error);
-		}
-	}
-
-	const scheduleSceneCleanup = createPostUpdateSchedulerPerKey(cleanupSceneCombatState);
 	const scheduleViewSync = createPostUpdateScheduler(ensureViewedCombatForCurrentScene);
-
-	/**
-	 * Token lifecycle: deleting the last token(s) should end combat.
-	 */
-	hookIds.push({
-		hook: 'deleteToken',
-		id: Hooks.on('deleteToken', (token: TokenDocument.Implementation) => {
-			const sceneId = token.parent?.id;
-			if (!sceneId) return;
-			scheduleSceneCleanup(sceneId);
-		}),
-	});
-
-	/**
-	 * Combatant lifecycle: deleting the last combatant should also end combat.
-	 */
-	hookIds.push({
-		hook: 'deleteCombatant',
-		id: Hooks.on('deleteCombatant', (combatant: Combatant.Implementation) => {
-			const sceneId = combatant.sceneId;
-			if (!sceneId) return;
-			scheduleSceneCleanup(sceneId);
-		}),
-	});
 
 	/**
 	 * Combat lifecycle: keep `viewed` converged on the active combat for this scene, per-client.

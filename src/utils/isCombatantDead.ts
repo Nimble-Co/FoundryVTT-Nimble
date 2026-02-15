@@ -1,16 +1,4 @@
-type ActorHpData = {
-	system?: {
-		attributes?: {
-			hp?: {
-				value?: number;
-			};
-			wounds?: {
-				value?: number;
-				max?: number;
-			};
-		};
-	};
-};
+import type { ActorHpData } from '#types/combat.js';
 
 export function getActorHpValue(actor: Actor.Implementation | null | undefined): number | null {
 	if (!actor) return null;
