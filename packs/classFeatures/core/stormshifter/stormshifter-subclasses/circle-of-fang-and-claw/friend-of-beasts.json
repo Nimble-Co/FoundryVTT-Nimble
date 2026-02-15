@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "1e1a739466fd09a6",
 	"name": "Friend of Beasts",
 	"type": "feature",
 	"img": "icons/creatures/mammals/deer-movement-leap-green.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Beasts will not attack you until you first harm them. You may transform into harmless beasts without spending a Beastshift charge.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "circle-of-fang-and-claw"
+		"group": "circle-of-fang-and-claw",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

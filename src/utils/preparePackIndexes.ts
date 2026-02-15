@@ -13,7 +13,7 @@ const PACK_DATA_CONFIG = {
 	},
 	feature: {
 		packs: [],
-		applyFunc: null,
+		applyFunc: createFeatureIndex,
 	},
 	object: {
 		packs: [],
@@ -87,7 +87,7 @@ export function createClassIndex(pack: Pack, _options: Record<string, any>) {
 
 export function createFeatureIndex(pack: Pack, _options: Record<string, any>) {
 	pack.getIndex({
-		fields: ['system.description'],
+		fields: ['system.description', 'system.gainedAtLevel', 'system.gainedAtLevels'],
 	});
 }
 

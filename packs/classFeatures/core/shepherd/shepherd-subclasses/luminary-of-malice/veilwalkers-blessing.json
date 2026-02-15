@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "3b941de5156b9615",
 	"name": "Veilwalker's Blessing",
 	"type": "feature",
 	"img": "icons/magic/unholy/barrier-fire-pink.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>(1/Safe Rest) Reaction (when you would drop to 0 HP): Drop to 1 HP instead and force an enemy within 6 spaces to make a STR save. On a failure, they become Bloodied, or if they are already Bloodied, they drop to 0 HP.</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "luminary-of-malice"
+		"group": "luminary-of-malice",
+		"gainedAtLevel": 7,
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

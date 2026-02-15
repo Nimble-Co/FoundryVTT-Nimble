@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c5f324248b31dabc",
 	"name": "Paragon of Virtue",
 	"type": "feature",
 	"img": "icons/skills/social/diplomacy-handshake.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Advantage on Influence checks to convince someone when you are forthrightly telling the truth, disadvantage when misleading.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "oathsworn-progression"
+		"group": "oathsworn-progression",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
 	"flags": {},

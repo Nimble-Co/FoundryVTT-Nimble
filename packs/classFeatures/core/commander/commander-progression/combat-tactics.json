@@ -35,10 +35,18 @@
 		"description": "<p>Your Combat Dice are now d8s.</p><hr><p>Level 5: d8</p><p>Level 9: d10</p><p>Level 13: d12</p><p>Level 17: d20</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "commander-progression"
+		"group": "commander-progression",
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5,
+			9,
+			13,
+			17
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

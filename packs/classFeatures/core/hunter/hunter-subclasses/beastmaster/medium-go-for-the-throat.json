@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7fec6a94e7504af7",
 	"name": "Medium - Go for the Throat!",
 	"type": "feature",
 	"img": "icons/skills/melee/strike-slashes-red.webp",
@@ -36,7 +36,13 @@
 		"description": "<p>(1/encounter) Costs 1 TotH charge, action: Your companion attacks your quarry, for 1d8+(3×LVL) damage (ignoring armor). </p><hr><p>Level 11: 2/encounter.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "beastmaster"
+		"group": "beastmaster",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3,
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

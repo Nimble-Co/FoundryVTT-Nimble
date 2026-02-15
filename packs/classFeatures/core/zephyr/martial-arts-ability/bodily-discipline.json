@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a03073c1f33d5b34",
 	"name": "Bodily Discipline",
 	"type": "feature",
 	"img": "icons/magic/holy/meditation-chi-focus-blue.webp",
@@ -36,7 +36,19 @@
 		"description": "<p>You may spend 1 action to end any non-Wound condition on yourself.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "martial-arts-ability"
+		"group": "martial-arts-ability",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			6,
+			8,
+			10,
+			12,
+			14,
+			16,
+			18
+		]
 	},
 	"effects": [],
 	"flags": {},

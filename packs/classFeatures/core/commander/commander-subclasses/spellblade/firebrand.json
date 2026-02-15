@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "db05900e423cad38",
 	"name": "Firebrand",
 	"type": "feature",
 	"img": "icons/magic/fire/dagger-rune-enchant-flame-strong-orange.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>When you roll Initiative you may cast Enchant Weapon for free (can be upcast as normal by spending additional mana).</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "spellblade"
+		"group": "spellblade",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

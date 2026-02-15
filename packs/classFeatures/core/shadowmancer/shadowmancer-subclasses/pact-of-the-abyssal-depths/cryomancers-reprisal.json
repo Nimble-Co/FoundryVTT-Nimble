@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "99fa253d70efc47a",
 	"name": "Cryomancer's Reprisal",
 	"type": "feature",
 	"img": "icons/magic/water/projectiles-ice-faceted-shard-salvo-blue.webp",
@@ -36,7 +36,12 @@
 		"description": "<p><span style=\"color: rgb(231, 209, 177); font-family: &#x27;Roboto Condensed&#x27;, sans-serif; font-size: 0.833rem; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: normal; background-color: rgb(25, 24, 33); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; display: inline !important; float: none\">Pay half your max HP to cast ANY Ice spell. After casting an Ice spell in this way, you gain an invisible aura: the next creature that hits you with a melee attack this encounter takes cold damage equal to half the HP you spent on this casting.</span></p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "pact-of-the-abyssal-depths"
+		"group": "pact-of-the-abyssal-depths",
+		"gainedAtLevel": 15,
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

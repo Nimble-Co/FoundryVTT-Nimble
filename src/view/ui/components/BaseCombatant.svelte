@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import { draggable } from '../../../actions/draggable.svelte.js';
+	import { canCurrentUserReorderCombatant } from '../../../utils/combatantOrdering.js';
+	import { isCombatantDead } from '../../../utils/isCombatantDead.js';
 
 	import HitPointBar from '../../sheets/components/HitPointBar.svelte';
 
@@ -28,13 +30,23 @@
 	async function toggleCombatantDefeatedState(event) {
 		event.preventDefault();
 
-		combatant.update({ defeated: !combatant.defeated });
+		const nextDefeated = !combatant.defeated;
+		const maxActions = Number(foundry.utils.getProperty(combatant, 'system.actions.base.max') ?? 0);
+		const updates: Record<string, unknown> = {
+			defeated: nextDefeated,
+		};
+
+		if (Number.isFinite(maxActions) && maxActions >= 0) {
+			updates['system.actions.base.current'] = nextDefeated ? 0 : maxActions;
+		}
+
+		await combatant.update(updates);
 
 		const defeatedId = CONFIG.specialStatusEffects.DEFEATED;
 
 		await combatant.actor?.toggleStatusEffect(defeatedId, {
 			overlay: true,
-			active: !combatant.defeated,
+			active: nextDefeated,
 		});
 	}
 
@@ -85,17 +97,28 @@
 	let { active, children = undefined, combatant } = $props();
 
 	let isObserver = combatant?.actor?.testUserPermission(game.user, 'OBSERVER');
+	let isOwner = combatant?.actor?.testUserPermission(game.user, 'OWNER');
+	let isDead = $derived(isCombatantDead(combatant));
+	let canDrag = $derived(
+		!isDead &&
+			canCurrentUserReorderCombatant(combatant, {
+				ownerOverride: isOwner,
+			}),
+	);
 </script>
 
 <article
 	class="nimble-combatant"
 	class:nimble-combatant--active={active}
+	class:nimble-combatant--dead={isDead}
 	data-combatant-id={combatant._id}
 	onmouseenter={(event) => handleTokenHighlight(event, 'enter')}
 	onmouseleave={(event) => handleTokenHighlight(event, 'leave')}
-	use:draggable={JSON.stringify(
-		(combatant.parent as Combat | null)?.combatants?.get(combatant._id)?.toDragData() ?? {},
-	)}
+	use:draggable={canDrag
+		? JSON.stringify(
+				(combatant.parent as Combat | null)?.combatants?.get(combatant._id)?.toDragData() ?? {},
+			)
+		: null}
 	in:fade={{ delay: 200 }}
 	out:fade={{ delay: 0 }}
 >
@@ -108,6 +131,7 @@
 			class:nimble-combatant__image--muted={combatant.reactive?.defeated ||
 				combatant.reactive?.hidden}
 			src={combatant.reactive?.img ?? 'icons/svg/mystery-man.svg'}
+			draggable="false"
 			alt="Combatant art"
 		/>
 
@@ -208,8 +232,9 @@
 			class="nimble-combatant__heading"
 			class:nimble-combatant__heading--defeated={combatant.reactive?.defeated}
 		>
-			{combatant.token?.actor?.reactive?.name ??
-				combatant.token?.reactive?.name ??
+			{combatant.token?.reactive?.name ??
+				combatant.token?.name ??
+				combatant.token?.actor?.reactive?.name ??
 				combatant.reactive?.name ??
 				combatant.name ??
 				'Unknown'}

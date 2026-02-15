@@ -35,10 +35,17 @@
 		"description": "<p> Your attacks with piercing weapons ignore Medium Armor.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "weapon-mastery"
+		"group": "weapon-mastery",
+		"gainedAtLevel": 6,
+		"subclass": false,
+		"gainedAtLevels": [
+			6,
+			10,
+			14
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

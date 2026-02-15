@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "d40bf36abe9f4b0a",
 	"name": "Rage",
 	"type": "feature",
 	"img": "icons/skills/social/intimidation-impressing.webp",
@@ -36,7 +36,13 @@
 		"description": "<p>(1/turn) Action: Roll a Fury Die [[/r 1d4]] and set it aside. Add it to every STR attack you make. You can have a max of KEY Fury Dice; they are lost when your Rage ends.</p><hr><p>Level 1: Gain 1 Fury Die</p><p>Level 5: Gain 2 Fury Dice</p>",
 		"featureType": "class",
 		"class": "berserker",
-		"group": "berserker-progression"
+		"group": "berserker-progression",
+		"gainedAtLevel": 1,
+		"gainedAtLevels": [
+			1,
+			5
+		],
+		"subclass": false
 	},
 	"effects": [],
 	"flags": {},

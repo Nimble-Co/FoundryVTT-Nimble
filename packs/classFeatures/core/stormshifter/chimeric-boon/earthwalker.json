@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "0075e1e989d0552b",
 	"name": "Earthwalker",
 	"type": "feature",
 	"img": "icons/environment/wilderness/terrain-rocky-ground.webp",
@@ -36,7 +36,15 @@
 		"description": "<p>+2 armor. Can burrow through dirt and unworked rock at half speed (leaving a tunnel behind). Advantage against the Prone condition.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "chimeric-boon"
+		"group": "chimeric-boon",
+		"gainedAtLevel": 6,
+		"subclass": false,
+		"gainedAtLevels": [
+			6,
+			9,
+			12,
+			17
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "d40bf36abe9f4b0a",
 	"name": "Deathless Rage",
 	"type": "feature",
 	"img": "icons/weapons/axes/axe-double-short-orange.webp",
@@ -36,7 +36,17 @@
 		},
 		"description": "<p>(1/turn) While Dying, you may suffer 1 Wound to gain 1 action.</p>",
 		"featureType": "class",
-		"class": ""
+		"class": "",
+		"gainedAtLevel": 4,
+		"gainedAtLevels": [
+			4,
+			6,
+			8,
+			12,
+			14,
+			16
+		],
+		"subclass": false
 	},
 	"effects": [],
 	"flags": {},

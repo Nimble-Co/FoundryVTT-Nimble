@@ -218,7 +218,8 @@
 				"weapon-mastery": {
 					"bludgeoning": "8ZUAj7ge0sqalA2K",
 					"piercing": "FpAasHdqW9jG2C8V",
-					"slashing": "vahUZIJY59MJaKQP"
+					"slashing": "vahUZIJY59MJaKQP",
+					"weapon-mastery": "j7H3pLmQ2Vx9A4Rc"
 				}
 			},
 			"hunter": {
@@ -447,6 +448,7 @@
 				},
 				"shepherd-progression": {
 					"keeper-of-life-and-death": "TQMK0gjyB1o7BHKs",
+					"lifebinding-spirit": "n6Df3QpL8sV1xR2M",
 					"mana-and-unlock-tier-1-spells": "keNIkcRhQZju0G7O",
 					"master-of-twilight": "4qOCmaI3PyIwtcnp",
 					"revitalizing-blessing": "LkqJsA3O4gN2YZop",

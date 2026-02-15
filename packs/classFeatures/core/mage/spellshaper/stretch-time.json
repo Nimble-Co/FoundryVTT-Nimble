@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a95d9a582c294f7c",
 	"name": "Stretch Time",
 	"type": "feature",
 	"img": "icons/magic/time/hourglass-tilted-glowing-gold.webp",
@@ -36,7 +36,14 @@
 		"description": "<p>(2 mana) Reduce the action cost of a spell by 1 (min 1).</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "spellshaper"
+		"group": "spellshaper",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			9,
+			13
+		]
 	},
 	"effects": [],
 	"flags": {},

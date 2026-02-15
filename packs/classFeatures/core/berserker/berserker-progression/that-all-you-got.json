@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "d40bf36abe9f4b0a",
 	"name": "That all you got?!",
 	"type": "feature",
 	"img": "icons/skills/melee/maneuver-sword-katana-yellow.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>When you are attacked, you may expend 1 or more Fury Dice to reduce the damage taken by STR+DEX for each die spent.</p>",
 		"featureType": "class",
 		"class": "berserker",
-		"group": "berserker-progression"
+		"group": "berserker-progression",
+		"gainedAtLevel": 1,
+		"subclass": false,
+		"gainedAtLevels": [
+			1
+		]
 	},
 	"effects": [],
 	"flags": {},

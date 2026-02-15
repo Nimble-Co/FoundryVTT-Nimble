@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "0075e1e989d0552b",
 	"name": "Expert Shifter",
 	"type": "feature",
 	"img": "icons/magic/nature/beam-hand-leaves-green.webp",
@@ -36,7 +36,14 @@
 		"description": "<p>Gain 1 additional use of Beastshift per Safe Rest.</p><hr><p>Level 9: +1 Beastshift per Safe Rest</p><p>Level 12: +1 Beastshift per Safe Rest</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "stormshifter-progression"
+		"group": "stormshifter-progression",
+		"gainedAtLevel": 6,
+		"subclass": false,
+		"gainedAtLevels": [
+			6,
+			9,
+			12
+		]
 	},
 	"effects": [],
 	"flags": {},

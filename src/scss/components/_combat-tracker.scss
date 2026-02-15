@@ -1,11 +1,18 @@
 .nimble-combat-tracker {
   --nimble-combat-tracker-hover-color: hsl(0, 66%, 53%);
   --nimble-combat-tracker-border-color: hsl(41, 18%, 54%);
+  --nimble-combat-sidebar-min-width: 6.5rem;
+  --nimble-combat-sidebar-max-width: 13rem;
+  --nimble-combat-sidebar-width: var(--nimble-combat-sidebar-min-width);
+  --nimble-combat-card-scale: 1;
 
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  width: 6.5rem;
+  width: var(--nimble-combat-sidebar-width);
+  min-width: var(--nimble-combat-sidebar-min-width);
+  max-width: var(--nimble-combat-sidebar-max-width);
   color: var(--nimble-combat-tracker-text-color);
   background: var(--nimble-combat-tracker-background);
   backdrop-filter: blur(4px);
@@ -13,6 +20,32 @@
   border-inline-end: 1px solid var(--color-dark-4);
   overflow-y: clip;
   z-index: 999;
+
+  &:hover &__resize-handle,
+  &__resize-handle:focus-visible {
+    opacity: 1;
+  }
+
+  &__resize-handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0.4rem;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(
+      to right,
+      transparent,
+      color-mix(in srgb, var(--nimble-combat-tracker-border-color) 35%, transparent)
+    );
+    border: 0;
+    opacity: 0;
+    cursor: ew-resize;
+    transition: var(--nimble-standard-transition);
+    z-index: 1001;
+    touch-action: none;
+  }
 
   &__footer {
     display: flex;
@@ -132,19 +165,169 @@
 }
 
 .nimble-combatants {
+  --nimble-combat-preview-slot-height: calc(7.2rem * var(--nimble-combat-card-scale));
+  --nimble-combat-preview-shift-duration: 240ms;
+  --nimble-combat-preview-shift-ease: cubic-bezier(0.08, 0.92, 0.24, 1);
+
   display: flex;
   flex-direction: column;
   align-items: center;
   flex-grow: 1;
   flex-shrink: 1;
-  gap: 0.375rem;
+  gap: calc(0.375rem * var(--nimble-combat-card-scale));
   margin: 0;
-  padding: 0.5rem 0.25rem;
+  padding: calc(0.5rem * var(--nimble-combat-card-scale))
+    calc(0.25rem * var(--nimble-combat-card-scale));
   list-style: none;
   overflow-y: auto;
 
   &__item {
-    display: contents;
+    position: relative;
+    display: block;
+    width: 100%;
+    margin: 0;
+    will-change: margin, transform;
+    transition:
+      margin var(--nimble-combat-preview-shift-duration) var(--nimble-combat-preview-shift-ease),
+      transform var(--nimble-combat-preview-shift-duration) var(--nimble-combat-preview-shift-ease),
+      filter var(--nimble-combat-preview-shift-duration) var(--nimble-combat-preview-shift-ease);
+  }
+
+  &__item--active {
+    --nimble-combat-active-crawler-offset: calc(0.16rem * var(--nimble-combat-card-scale));
+    --nimble-combat-active-crawler-length: calc(1.52rem * var(--nimble-combat-card-scale));
+    --nimble-combat-active-crawler-thickness: calc(0.18rem * var(--nimble-combat-card-scale));
+    --nimble-combat-active-crawler-duration: 4.2s;
+    --nimble-combat-active-crawler-opposite-delay: -2.1s;
+
+    z-index: 1;
+
+    > .nimble-combatant {
+      position: relative;
+      z-index: 1;
+      background: rgba(2, 2, 6, 0.96);
+    }
+  }
+
+  &__active-crawler {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  &__active-crawler::before,
+  &__active-crawler::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--nimble-combat-active-crawler-length);
+    height: var(--nimble-combat-active-crawler-thickness);
+    border-radius: calc(999px * var(--nimble-combat-card-scale));
+    background: linear-gradient(
+      90deg,
+      hsla(0, 0%, 100%, 0.02) 0%,
+      hsla(0, 0%, 100%, 0.22) 26%,
+      hsla(0, 0%, 100%, 0.96) 68%,
+      hsla(0, 0%, 100%, 0.08) 100%
+    );
+    box-shadow:
+      0 0 calc(7px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.8),
+      0 0 calc(13px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.4);
+    offset-position: 0 0;
+    offset-path: inset(
+      calc(-1 * var(--nimble-combat-active-crawler-offset))
+      round
+      calc(6px * var(--nimble-combat-card-scale))
+    );
+    offset-distance: 0%;
+    offset-rotate: auto;
+    animation: nimble-combatant-edge-crawler var(--nimble-combat-active-crawler-duration) linear infinite;
+  }
+
+  &__active-crawler::after {
+    opacity: 0.86;
+    animation-delay: var(--nimble-combat-active-crawler-opposite-delay);
+  }
+
+  &__item--preview-gap-before {
+    margin-top: var(--nimble-combat-preview-slot-height);
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: calc(
+        -1 * var(--nimble-combat-preview-slot-height) + (0.125rem * var(--nimble-combat-card-scale))
+      );
+      left: 0;
+      width: 100%;
+      height: calc(var(--nimble-combat-preview-slot-height) - (0.25rem * var(--nimble-combat-card-scale)));
+      border: 1px dashed color-mix(in srgb, var(--color-border-highlight) 78%, transparent);
+      border-radius: calc(4px * var(--nimble-combat-card-scale));
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-border-highlight) 18%, transparent),
+        color-mix(in srgb, var(--color-border-highlight) 10%, transparent)
+      );
+      box-shadow: inset 0 0 calc(10px * var(--nimble-combat-card-scale))
+          color-mix(in srgb, var(--color-border-highlight) 18%, transparent),
+        0 0 calc(10px * var(--nimble-combat-card-scale))
+          color-mix(in srgb, var(--color-border-highlight) 30%, transparent);
+      animation: nimble-combat-drop-slot-pulse
+        calc(var(--nimble-combat-preview-shift-duration) * 2.2)
+        var(--nimble-combat-preview-shift-ease)
+        1;
+      pointer-events: none;
+    }
+  }
+
+  &__item--preview-gap-after {
+    margin-bottom: var(--nimble-combat-preview-slot-height);
+
+    &::after {
+      content: "";
+      position: absolute;
+      bottom: calc(
+        -1 * var(--nimble-combat-preview-slot-height) + (0.125rem * var(--nimble-combat-card-scale))
+      );
+      left: 0;
+      width: 100%;
+      height: calc(var(--nimble-combat-preview-slot-height) - (0.25rem * var(--nimble-combat-card-scale)));
+      border: 1px dashed color-mix(in srgb, var(--color-border-highlight) 78%, transparent);
+      border-radius: calc(4px * var(--nimble-combat-card-scale));
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-border-highlight) 18%, transparent),
+        color-mix(in srgb, var(--color-border-highlight) 10%, transparent)
+      );
+      box-shadow: inset 0 0 calc(10px * var(--nimble-combat-card-scale))
+          color-mix(in srgb, var(--color-border-highlight) 18%, transparent),
+        0 0 calc(10px * var(--nimble-combat-card-scale))
+          color-mix(in srgb, var(--color-border-highlight) 30%, transparent);
+      animation: nimble-combat-drop-slot-pulse
+        calc(var(--nimble-combat-preview-shift-duration) * 2.2)
+        var(--nimble-combat-preview-shift-ease)
+        1;
+      pointer-events: none;
+    }
+  }
+
+  &__dead-divider {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin: calc(0.5rem * var(--nimble-combat-card-scale)) 0
+      calc(0.25rem * var(--nimble-combat-card-scale));
+    padding-top: calc(0.5rem * var(--nimble-combat-card-scale));
+    border-top: 1px dashed var(--nimble-combat-tracker-border-color);
+  }
+
+  &__dead-label {
+    font-size: calc(var(--nimble-sm-text) * var(--nimble-combat-card-scale));
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--nimble-medium-text-color);
   }
 }
 
@@ -158,7 +341,7 @@
   color: inherit;
   background: transparent;
   border: 1px solid var(--nimble-combat-tracker-border-color);
-  border-radius: 4px;
+  border-radius: calc(4px * var(--nimble-combat-card-scale));
   box-shadow: var(--nimble-box-shadow);
   overflow: hidden;
   transition: var(--nimble-standard-transition);
@@ -169,7 +352,26 @@
   }
 
   &--active {
-    border-color: var(--color-border-highlight);
+    border-color: hsl(0, 0%, 100%);
+    box-shadow:
+      0 0 calc(10px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.7),
+      0 0 calc(18px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.42);
+    animation: nimble-combatant-active-breathe 1.6s ease-in-out infinite;
+
+    &:hover {
+      border-color: hsl(0, 0%, 100%);
+      box-shadow:
+        0 0 calc(12px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.8),
+        0 0 calc(22px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.5);
+    }
+  }
+
+  &--dead {
+    border-style: dashed;
+  }
+
+  &--drag-source-hidden {
+    display: none !important;
   }
 
   &__header {
@@ -178,9 +380,10 @@
 
   &__heading {
     margin: 0;
-    padding-block: 0.125rem 0.25rem;
-    padding-inline: 0.25rem;
-    font-size: var(--nimble-sm-text);
+    padding-block: calc(0.125rem * var(--nimble-combat-card-scale))
+      calc(0.25rem * var(--nimble-combat-card-scale));
+    padding-inline: calc(0.25rem * var(--nimble-combat-card-scale));
+    font-size: calc(var(--nimble-sm-text) * var(--nimble-combat-card-scale));
     font-weight: 500;
     line-height: 1;
     color: var(--nimble-combat-tracker-text-color);
@@ -196,10 +399,10 @@
 
   &__hp-bar-wrapper {
     position: absolute;
-    top: 93px;
-    left: 0.375rem;
-    width: calc(100% - 0.75rem);
-    transform: translateY(-0.625rem);
+    top: calc(93px * var(--nimble-combat-card-scale));
+    left: calc(0.375rem * var(--nimble-combat-card-scale));
+    width: calc(100% - (0.75rem * var(--nimble-combat-card-scale)));
+    transform: translateY(calc(-0.625rem * var(--nimble-combat-card-scale)));
     pointer-events: none;
   }
 
@@ -208,6 +411,9 @@
     height: auto;
     aspect-ratio: 1 / 1;
     object-fit: cover;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
     margin: 0;
     border: 0;
     background: var(--nimble-navigation-border-color);
@@ -218,18 +424,19 @@
     }
 
     &[src$=".svg" i] {
-      padding: 0.2rem;
+      padding: calc(0.2rem * var(--nimble-combat-card-scale));
     }
   }
 
   &__image-wrapper {
     --nimble-combatant-controls-overlay-display: none;
+    position: relative;
 
-    height: 94px;
+    height: calc(94px * var(--nimble-combat-card-scale));
     border-block-end: 1px solid var(--color-border-dark-1);
 
     &--observer {
-      margin-block-end: 0.5rem;
+      margin-block-end: calc(0.5rem * var(--nimble-combat-card-scale));
     }
 
     &:hover {
@@ -238,12 +445,35 @@
   }
 }
 
+.nimble-combatant--drag-image {
+  position: fixed;
+  top: -10000px;
+  left: -10000px;
+  margin: 0;
+  pointer-events: none;
+  z-index: 10000;
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+.nimble-combat-tracker--dragging {
+  .nimble-combatant-controls-overlay__button,
+  .nimble-combatant-actions__pip-button,
+  .nimble-combatant-actions__initiative-button,
+  .nimble-combatant-actions__end-turn-button {
+    pointer-events: none !important;
+  }
+}
+
 .nimble-combatant-actions {
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
-  padding-block-end: 0.375rem;
-  font-size: var(--nimble-xs-text);
+  flex-wrap: wrap;
+  gap: calc(0.5rem * var(--nimble-combat-card-scale));
+  padding-block-end: calc(0.375rem * var(--nimble-combat-card-scale));
+  font-size: calc(var(--nimble-xs-text) * var(--nimble-combat-card-scale));
 
   &--disabled {
     pointer-events: none;
@@ -265,7 +495,7 @@
   &__initiative-icon {
     margin: 0;
     padding: 0;
-    font-size: var(--nimble-md-text);
+    font-size: calc(var(--nimble-md-text) * var(--nimble-combat-card-scale));
     color: var(--nimble-icon-color);
     transition: var(--nimble-standard-transition);
   }
@@ -285,7 +515,7 @@
   }
 
   &__pip-button {
-    --button-size: 0.75rem;
+    --button-size: calc(0.75rem * var(--nimble-combat-card-scale));
 
     border-radius: 50%;
     text-shadow: 1px 1px 4px var(--color-shadow-dark);
@@ -300,37 +530,65 @@
     margin: 0;
     padding: 0;
   }
+
+  &__end-turn-button {
+    width: calc(100% - (0.25rem * var(--nimble-combat-card-scale)));
+    margin-top: calc(0.125rem * var(--nimble-combat-card-scale));
+    padding: calc(0.125rem * var(--nimble-combat-card-scale))
+      calc(0.375rem * var(--nimble-combat-card-scale));
+    font-size: inherit;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--nimble-combat-tracker-text-color);
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--nimble-combat-tracker-border-color);
+    border-radius: calc(0.375rem * var(--nimble-combat-card-scale));
+    box-shadow: var(--nimble-box-shadow);
+    transition: var(--nimble-standard-transition);
+
+    &:hover,
+    &:focus {
+      color: var(--nimble-combat-tracker-hover-color);
+      border-color: var(--nimble-combat-tracker-hover-color);
+      box-shadow: 0 0 calc(8px * var(--nimble-combat-card-scale))
+        var(--nimble-combat-tracker-hover-color);
+      text-shadow: none;
+    }
+  }
 }
 
 .nimble-combatant-controls-overlay {
   position: absolute;
-  top: 0.25rem;
-  left: 0.25rem;
+  top: calc(0.25rem * var(--nimble-combat-card-scale));
+  left: calc(0.25rem * var(--nimble-combat-card-scale));
   display: flex;
   justify-content: space-between;
-  width: calc(100% - 0.5rem);
-  font-size: var(--nimble-sm-text);
+  width: calc(100% - (0.5rem * var(--nimble-combat-card-scale)));
+  font-size: calc(var(--nimble-sm-text) * var(--nimble-combat-card-scale));
+  pointer-events: none;
   transition: var(--nimble-standard-transition);
 
   &__column {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: calc(0.25rem * var(--nimble-combat-card-scale));
+    pointer-events: none;
   }
 
   &__button {
     --button-size: fit-content;
 
     display: var(--nimble-combatant-controls-overlay-display);
+    pointer-events: auto;
     margin: 0;
-    padding: 0.25rem;
+    padding: calc(0.25rem * var(--nimble-combat-card-scale));
     font-size: inherit;
     line-height: 1;
     color: hsla(38, 38%, 94%, 65%);
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(2px);
     border: 0;
-    border-radius: 4px;
+    border-radius: calc(4px * var(--nimble-combat-card-scale));
     transition: var(--nimble-standard-transition);
 
     &:hover,
@@ -349,5 +607,35 @@
   &__button-icon {
     margin: 0;
     padding: 0;
+  }
+}
+
+@keyframes nimble-combatant-active-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes nimble-combatant-edge-crawler {
+  from {
+    offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+@keyframes nimble-combat-drop-slot-pulse {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }

@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "910213b07f81138f",
 	"name": "Mal, the Malevolent Imp",
 	"type": "feature",
 	"img": "icons/creatures/unholy/demon-fanged-horned-yellow.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Summon a tiny fiend for 1 night. He can find out dangerous information you have no right to know! Or “take care” of a problem with only the slightest chance of things going wrong. Make an Influence check to convince him to help you (advantage if you ask him to do something he would find mischievous or fun; with disadvantage if it is something he would find good or menial).</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "a-people-person"
+		"group": "a-people-person",
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5
+		]
 	},
 	"effects": [],
 	"flags": {},

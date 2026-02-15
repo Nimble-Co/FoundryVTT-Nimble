@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "4915fea5a41fc733",
 	"name": "How'd YOU get here?!",
 	"type": "feature",
 	"img": "icons/magic/air/air-smoke-casting.webp",
@@ -36,7 +36,19 @@
 		"description": "<p>2 actions: “Teleport” up to 4 spaces away, adjacent to a Distracted target, and make a melee attack against them. If you crit, you may \"teleport\" again. </p>",
 		"featureType": "class",
 		"class": "cheat",
-		"group": "underhanded-abilities"
+		"group": "underhanded-abilities",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			6,
+			8,
+			10,
+			12,
+			14,
+			16,
+			18
+		]
 	},
 	"effects": [],
 	"flags": {},

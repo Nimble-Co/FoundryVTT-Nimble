@@ -1,10 +1,12 @@
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import canvasInit from './hooks/canvasInit.js';
+import registerCombatantDefeatSync from './hooks/combatantDefeatSync.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
 import init from './hooks/init.js';
 import ready from './hooks/ready.js';
 import renderChatMessageHTML from './hooks/renderChatMessage.js';
+import renderCompendium from './hooks/renderCompendium.js';
 import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import setup from './hooks/setup.js';
 import './scss/main.scss';
@@ -54,6 +56,7 @@ Hooks.once('i18nInit', i18nInit);
 
 Hooks.on('canvasInit', canvasInit);
 Hooks.on('renderChatMessageHTML', renderChatMessageHTML);
+Hooks.on('renderCompendium', renderCompendium);
 
 (Hooks.on as (event: string, fn: (...args: object[]) => void) => number)(
 	'renderNimbleTokenHUD',
@@ -79,6 +82,7 @@ type HookFn = (...args: object[]) => undefined | boolean | Promise<undefined | b
 );
 
 Hooks.on('hotbarDrop', onHotbarDrop);
+registerCombatantDefeatSync();
 
 // Refresh tokens when combat ends to remove turn indicators
 Hooks.on('deleteCombat', async (combat: Combat) => {

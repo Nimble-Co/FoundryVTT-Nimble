@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "4915fea5a41fc733",
 	"name": "Quick Read",
 	"type": "feature",
 	"img": "icons/magic/perception/eye-ringed-glow-angry-red.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>• <em>(1/encounter)</em> Gain advantage on an Assess check. </p><p>• <em>(1/day)</em> Gain advantage on an Examination check. </p>",
 		"featureType": "class",
 		"class": "the-cheat",
-		"group": "the-cheat-progression"
+		"group": "the-cheat-progression",
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5
+		]
 	},
 	"effects": [],
 	"flags": {},

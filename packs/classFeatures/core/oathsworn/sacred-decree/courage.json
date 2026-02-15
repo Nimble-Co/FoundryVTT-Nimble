@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c5f324248b31dabc",
 	"name": "Courage!",
 	"type": "feature",
 	"img": "icons/magic/defensive/shield-barrier-deflect-gold.webp",
@@ -36,7 +36,17 @@
 		"description": "<p>(1/encounter) When you or an ally in your aura would drop to 0 HP, set their HP to 1 instead.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "sacred-decree"
+		"group": "sacred-decree",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3,
+			6,
+			9,
+			12,
+			14,
+			16
+		]
 	},
 	"effects": [],
 	"flags": {},

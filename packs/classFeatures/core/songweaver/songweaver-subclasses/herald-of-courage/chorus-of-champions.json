@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "bc8ab08c0bb200e1",
 	"name": "Chorus of Champions",
 	"type": "feature",
 	"img": "icons/tools/instruments/pipe-flute-yellow.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Champions. (1/encounter) Free Reaction: Give all party members 1 action.</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "herald-of-courage"
+		"group": "herald-of-courage",
+		"gainedAtLevel": 15,
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

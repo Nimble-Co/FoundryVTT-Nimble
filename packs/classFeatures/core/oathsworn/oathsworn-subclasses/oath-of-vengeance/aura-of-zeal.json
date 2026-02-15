@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "1ab92542c532c8c2",
 	"name": "Aura of Zeal",
 	"type": "feature",
 	"img": "icons/weapons/hammers/hammer-double-glowing-yellow.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Whenever you roll Judgment Dice, roll 1 more. Gain an aura with a Reach of 4. Your Radiant Judgment also triggers when an ally within your aura is attacked while you have no Judgment Dice.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "oath-of-vengeance"
+		"group": "oath-of-vengeance",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

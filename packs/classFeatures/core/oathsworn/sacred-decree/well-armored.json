@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c5f324248b31dabc",
 	"name": "Well Armored",
 	"type": "feature",
 	"img": "icons/equipment/chest/breastplate-collared-leather-brown.webp",
@@ -36,7 +36,17 @@
 		"description": "<p>Whenever you Interpose, gain temp HP equal to your STR.</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "sacred-decree"
+		"group": "sacred-decree",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3,
+			6,
+			9,
+			12,
+			14,
+			16
+		]
 	},
 	"effects": [],
 	"flags": {},

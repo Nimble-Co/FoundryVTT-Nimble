@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c5f324248b31dabc",
 	"name": "Reliable Justice",
 	"type": "feature",
 	"img": "icons/skills/melee/strike-polearm-light-orange.webp",
@@ -36,7 +36,17 @@
 		"description": "<p>Whenever you roll Judgment Dice, roll with advantage (roll one extra and drop the lowest).</p>",
 		"featureType": "class",
 		"class": "oathsworn",
-		"group": "sacred-decree"
+		"group": "sacred-decree",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3,
+			6,
+			9,
+			12,
+			14,
+			16
+		]
 	},
 	"effects": [],
 	"flags": {},

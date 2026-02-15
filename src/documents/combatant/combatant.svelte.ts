@@ -57,7 +57,7 @@ export class NimbleCombatant extends Combatant {
 		const roll = this.getInitiativeRoll(formula, rollOptions);
 		await roll.evaluate();
 
-		return this.update({ initiative: 0 });
+		return this.update({ initiative: roll.total ?? 0 });
 	}
 
 	override toObject(source = true) {

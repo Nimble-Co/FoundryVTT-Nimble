@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c1face1ec4d1249a",
 	"name": "Searing Light",
 	"type": "feature",
 	"img": "icons/magic/light/beam-rays-orange-large.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>(WIL times/Safe Rest) Action: Heal or Inflict grievous injuries:</p><p>• Heal WIL d8 HP to a Dying creature within Reach 6. OR:</p><p>• Inflict WIL d8 radiant damage to an undead or Bloodied enemy within Reach 6.</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "shepherd-progression"
+		"group": "shepherd-progression",
+		"gainedAtLevel": 1,
+		"subclass": false,
+		"gainedAtLevels": [
+			1
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -35,10 +35,15 @@
 		"description": "<p> Allies within 2 spaces gain ALL the benefits of the shield you have equipped.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "champion-of-the-bulwark"
+		"group": "champion-of-the-bulwark",
+		"gainedAtLevel": 15,
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "ef7bbbb1a86323cd",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

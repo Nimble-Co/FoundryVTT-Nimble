@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7fec6a94e7504af7",
 	"name": "Medium - Ferocious",
 	"type": "feature",
 	"img": "icons/creatures/mammals/wolf-shadow-black.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>Whenever you or your companion crit your quarry, your companion attacks again for LVL damage (ignoring armor), and you can move up to 2 spaces for free. </p><hr><p>Level 7: 4 spaces. </p><p>Level 15: 6 spaces.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "beastmaster"
+		"group": "beastmaster",
+		"gainedAtLevel": 3,
+		"subclass": true
 	},
 	"effects": [],
 	"flags": {},
