@@ -1,5 +1,9 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
+import {
+	canCurrentUserReorderCombatant,
+	getCombatantTypePriority,
+} from '../../utils/combatantOrdering.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
 import { handleInitiativeRules } from './handleInitiativeRules.js';
 
@@ -13,19 +17,8 @@ interface CombatantSystemWithActions {
 	};
 }
 
-function getCombatantTypePriority(combatant: Combatant.Implementation): number {
-	if (combatant.type === 'character') return 0;
-	return 1;
-}
-
 function getCombatantManualSortValue(combatant: Combatant.Implementation): number {
 	return Number((combatant.system as unknown as { sort?: number }).sort ?? 0);
-}
-
-function canCurrentUserReorderCombatant(combatant: Combatant.Implementation): boolean {
-	if (game.user?.isGM) return true;
-	const hasTrustedRole = Number(game.user?.role ?? 0) >= Number(CONST.USER_ROLES?.TRUSTED ?? 2);
-	return hasTrustedRole && combatant.type === 'character' && combatant.isOwner;
 }
 
 function getSourceSortValueForDrop(

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import { draggable } from '../../../actions/draggable.svelte.js';
+	import { canCurrentUserReorderCombatant } from '../../../utils/combatantOrdering.js';
 	import { isCombatantDead } from '../../../utils/isCombatantDead.js';
 
 	import HitPointBar from '../../sheets/components/HitPointBar.svelte';
@@ -98,12 +99,11 @@
 	let isObserver = combatant?.actor?.testUserPermission(game.user, 'OBSERVER');
 	let isOwner = combatant?.actor?.testUserPermission(game.user, 'OWNER');
 	let isDead = $derived(isCombatantDead(combatant));
-	let isTrustedPlayerOrHigher = $derived(
-		Number(game.user?.role ?? 0) >= Number(CONST.USER_ROLES?.TRUSTED ?? 2),
-	);
 	let canDrag = $derived(
 		!isDead &&
-			(game.user?.isGM || (isTrustedPlayerOrHigher && combatant.type === 'character' && isOwner)),
+			canCurrentUserReorderCombatant(combatant, {
+				ownerOverride: isOwner,
+			}),
 	);
 </script>
 

@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
+	import {
+		canCurrentUserReorderCombatant,
+		getCombatantTypePriority,
+	} from '../../utils/combatantOrdering.js';
 	import { isCombatantDead } from '../../utils/isCombatantDead.js';
 	import BaseCombatant from './components/BaseCombatant.svelte';
 	import CombatTrackerControls from './components/CombatTrackerControls.svelte';
@@ -85,16 +89,6 @@
 
 	function hasCombatantsForScene(combat: Combat, sceneId: string): boolean {
 		return combat.combatants.contents.some((c) => getCombatantSceneId(c) === sceneId);
-	}
-
-	function getCombatantTypePriority(combatant: Combatant.Implementation): number {
-		return combatant.type === 'character' ? 0 : 1;
-	}
-
-	function canCurrentUserReorderCombatant(combatant: Combatant.Implementation): boolean {
-		if (game.user?.isGM) return true;
-		const hasTrustedRole = Number(game.user?.role ?? 0) >= Number(CONST.USER_ROLES?.TRUSTED ?? 2);
-		return hasTrustedRole && combatant.type === 'character' && combatant.isOwner;
 	}
 
 	function getCombatantsForScene(
