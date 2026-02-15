@@ -1,8 +1,33 @@
 <script lang="ts">
 	import type { NimbleCombat } from '../../../documents/combat/combat.svelte.js';
 
-	function endCombat(): Promise<NimbleCombat> | undefined {
-		return (game.combat as NimbleCombat | undefined)?.endCombat();
+	async function endCombat(): Promise<void> {
+		const combat = game.combat as NimbleCombat | undefined;
+		if (!combat) return;
+
+		const confirmed = await foundry.applications.api.DialogV2.confirm({
+			window: {
+				title: 'End Combat?',
+			},
+			content: '<p>End this combat encounter?</p>',
+			yes: {
+				label: 'End Combat',
+			},
+			no: {
+				label: 'Continue Combat',
+			},
+			rejectClose: false,
+			modal: true,
+		});
+
+		if (confirmed !== true) return;
+
+		// Re-resolve the current combat after modal interaction to avoid deleting
+		// a stale reference if combat state changed while the dialog was open.
+		const currentCombat = game.combat as NimbleCombat | undefined;
+		if (!currentCombat || currentCombat.id !== combat.id) return;
+
+		await currentCombat.delete();
 	}
 
 	function rewindRound(): Promise<NimbleCombat> | undefined {

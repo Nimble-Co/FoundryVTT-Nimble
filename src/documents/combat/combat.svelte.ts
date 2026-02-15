@@ -1,5 +1,10 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
+import {
+	canCurrentUserReorderCombatant,
+	getCombatantTypePriority,
+} from '../../utils/combatantOrdering.js';
+import { isCombatantDead } from '../../utils/isCombatantDead.js';
 
 /** Combatant system data with actions */
 interface CombatantSystemWithActions {
@@ -11,8 +16,66 @@ interface CombatantSystemWithActions {
 	};
 }
 
+function getCombatantManualSortValue(combatant: Combatant.Implementation): number {
+	return Number((combatant.system as unknown as { sort?: number }).sort ?? 0);
+}
+
+function getSourceSortValueForDrop(
+	source: Combatant.Implementation,
+	target: Combatant.Implementation,
+	siblings: Combatant.Implementation[],
+	sortBefore: boolean,
+): number | null {
+	const targetIndex = siblings.findIndex((combatant) => combatant.id === target.id);
+	if (targetIndex < 0) return null;
+
+	const insertIndex = sortBefore ? targetIndex : targetIndex + 1;
+	const previous = insertIndex > 0 ? siblings[insertIndex - 1] : null;
+	const next = insertIndex < siblings.length ? siblings[insertIndex] : null;
+
+	if (previous && next) {
+		const previousSort = getCombatantManualSortValue(previous);
+		const nextSort = getCombatantManualSortValue(next);
+		if (previousSort === nextSort) {
+			return previousSort + (sortBefore ? -0.5 : 0.5);
+		}
+		return previousSort + (nextSort - previousSort) / 2;
+	}
+
+	if (previous) return getCombatantManualSortValue(previous) + 1;
+	if (next) return getCombatantManualSortValue(next) - 1;
+
+	return getCombatantManualSortValue(source);
+}
+
 class NimbleCombat extends Combat {
 	#subscribe: ReturnType<typeof createSubscriber>;
+
+	#syncTurnIndexWithAliveTurns() {
+		const currentCombatantId =
+			typeof this.turn === 'number' && this.turn >= 0 && this.turn < this.turns.length
+				? (this.turns[this.turn]?.id ?? null)
+				: (this.combatant?.id ?? null);
+
+		const aliveTurns = this.setupTurns();
+		this.turns = aliveTurns;
+
+		if (aliveTurns.length === 0) {
+			this.turn = 0;
+			return;
+		}
+
+		if (currentCombatantId) {
+			const matchedIndex = aliveTurns.findIndex((combatant) => combatant.id === currentCombatantId);
+			if (matchedIndex >= 0) {
+				this.turn = matchedIndex;
+				return;
+			}
+		}
+
+		const currentTurn = Number.isInteger(this.turn) ? Number(this.turn) : 0;
+		this.turn = Math.min(Math.max(currentTurn, 0), aliveTurns.length - 1);
+	}
 
 	constructor(
 		data?: Combat.CreateData,
@@ -91,6 +154,17 @@ class NimbleCombat extends Combat {
 			await this.updateEmbeddedDocuments('Combatant', npcUpdates);
 		}
 
+		// After start + auto-roll updates, always begin on the top player card.
+		// This preserves pre-combat manual ordering as the first-turn source of truth.
+		this.turns = this.setupTurns();
+		if (this.turns.length > 0) {
+			const firstCharacterTurnIndex = this.turns.findIndex(
+				(combatant) => combatant.type === 'character',
+			);
+			const nextTurnIndex = firstCharacterTurnIndex >= 0 ? firstCharacterTurnIndex : 0;
+			await this.update({ turn: nextTurnIndex });
+		}
+
 		return result;
 	}
 
@@ -161,12 +235,13 @@ class NimbleCombat extends Combat {
 		for await (const [i, id] of combatantIds.entries()) {
 			// Get Combatant data (non-strictly)
 			const combatant = this.combatants.get(id);
-			const combatantUpdates: Record<string, unknown> = { _id: id, initiative: 0 };
+			const combatantUpdates: Record<string, unknown> = { _id: id };
 			if (!combatant?.isOwner) continue;
 
 			// Produce an initiative roll for the Combatant
 			const roll = combatant.getInitiativeRoll(formula ?? undefined);
 			await roll.evaluate();
+			combatantUpdates.initiative = roll.total ?? 0;
 
 			if (combatant.type === 'character') {
 				const actionPath = 'system.actions.base.current';
@@ -227,59 +302,137 @@ class NimbleCombat extends Combat {
 		return this;
 	}
 
-	override _sortCombatants(a: Combatant.Implementation, b: Combatant.Implementation): number {
-		const sa = (a.system as unknown as { sort: number }).sort;
-		const sb = (b.system as unknown as { sort: number }).sort;
+	override setupTurns(): Combatant.Implementation[] {
+		const turns = super.setupTurns();
+		return turns.filter((combatant) => !isCombatantDead(combatant));
+	}
 
-		return sa - sb;
+	override async nextTurn(): Promise<this> {
+		this.#syncTurnIndexWithAliveTurns();
+		const result = (await super.nextTurn()) as this;
+		this.#syncTurnIndexWithAliveTurns();
+		return result;
+	}
+
+	override async nextRound(): Promise<this> {
+		this.#syncTurnIndexWithAliveTurns();
+		const result = (await super.nextRound()) as this;
+		this.#syncTurnIndexWithAliveTurns();
+		return result;
+	}
+
+	override _sortCombatants(a: Combatant.Implementation, b: Combatant.Implementation): number {
+		const typePriorityDiff = getCombatantTypePriority(a) - getCombatantTypePriority(b);
+		if (typePriorityDiff !== 0) return typePriorityDiff;
+
+		const deadStateDiff = Number(isCombatantDead(a)) - Number(isCombatantDead(b));
+		if (deadStateDiff !== 0) return deadStateDiff;
+
+		const sa = getCombatantManualSortValue(a);
+		const sb = getCombatantManualSortValue(b);
+		const manualSortDiff = sa - sb;
+		if (manualSortDiff !== 0) return manualSortDiff;
+
+		const initiativeA = Number(a.initiative ?? Number.NEGATIVE_INFINITY);
+		const initiativeB = Number(b.initiative ?? Number.NEGATIVE_INFINITY);
+		const initiativeDiff = initiativeB - initiativeA;
+		if (initiativeDiff !== 0) return initiativeDiff;
+
+		return (a.name ?? '').localeCompare(b.name ?? '');
 	}
 
 	async _onDrop(event: DragEvent & { target: EventTarget & HTMLElement }) {
 		event.preventDefault();
+
+		const trackerListElement = (event.target as HTMLElement).closest<HTMLElement>(
+			'.nimble-combatants',
+		);
 		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(
 			event,
 		) as unknown as Record<string, string>;
 
 		const { combatants } = this;
 
-		const source = fromUuidSync<Combatant.Implementation>(dropData.uuid as `Combatant.${string}`);
+		let source = fromUuidSync(
+			dropData.uuid as `Combatant.${string}`,
+		) as Combatant.Implementation | null;
+		if (!source && trackerListElement?.dataset.dragSourceId) {
+			source = combatants.get(trackerListElement.dataset.dragSourceId) ?? null;
+		}
+
 		if (!source) return false;
+		if (source.parent?.id !== this.id) return false;
+		if (isCombatantDead(source)) return false;
+		if (!canCurrentUserReorderCombatant(source)) return false;
 
-		const dropTarget = (event.target as HTMLElement).closest<HTMLElement>('[data-combatant-id]');
-		if (!dropTarget) return false;
+		let dropTarget = (event.target as HTMLElement).closest<HTMLElement>('[data-combatant-id]');
+		let target = dropTarget ? combatants.get(dropTarget.dataset.combatantId ?? '') : null;
+		let sortBefore: boolean | null = null;
 
-		const target = combatants.get(dropTarget.dataset.combatantId ?? '');
+		if (target && dropTarget) {
+			sortBefore =
+				event.y <
+				dropTarget.getBoundingClientRect().top + dropTarget.getBoundingClientRect().height / 2;
+		}
+
+		if (!target && trackerListElement?.dataset.dropTargetId) {
+			target = combatants.get(trackerListElement.dataset.dropTargetId) ?? null;
+			if (target) {
+				dropTarget = trackerListElement.querySelector<HTMLElement>(
+					`[data-combatant-id="${target.id}"]`,
+				);
+				sortBefore = trackerListElement.dataset.dropBefore === 'true';
+			}
+		}
+
 		if (!target) return false;
+		if (isCombatantDead(target)) return false;
+
+		const sourceTypePriority = getCombatantTypePriority(source);
+		const targetTypePriority = getCombatantTypePriority(target);
+		if (sourceTypePriority !== targetTypePriority) return false;
 
 		if (source.id === target.id) return false;
 
-		const siblings = this.turns.filter((c) => c.id !== source.id);
+		const siblings = this.turns.filter(
+			(c) =>
+				c.id !== source.id &&
+				!isCombatantDead(c) &&
+				getCombatantTypePriority(c) === sourceTypePriority,
+		);
+		if (sortBefore === null) return false;
 
-		const sortBefore =
-			event.y <
-			dropTarget.getBoundingClientRect().top + dropTarget.getBoundingClientRect().height / 2;
+		if (game.user?.isGM) {
+			// Perform the sort with full integer normalization for GM reorders.
+			type SortableCombatant = Combatant.Implementation & { id: string };
+			const sortUpdates = SortingHelpers.performIntegerSort(source as SortableCombatant, {
+				target: target as SortableCombatant | null,
+				siblings: siblings as SortableCombatant[],
+				sortKey: 'system.sort',
+				sortBefore,
+			});
 
-		// Perform the sort
-		type SortableCombatant = Combatant.Implementation & { id: string };
-		const sortUpdates = SortingHelpers.performIntegerSort(source as SortableCombatant, {
-			target: target as SortableCombatant | null,
-			siblings: siblings as SortableCombatant[],
-			sortKey: 'system.sort',
-			sortBefore,
-		});
+			const updateData = sortUpdates.map((u) => {
+				const { update } = u;
+				return {
+					...update,
+					_id: u.target.id,
+				};
+			});
 
-		const updateData = sortUpdates.map((u) => {
-			const { update } = u;
-			return {
-				...update,
-				_id: u.target.id,
-			};
-		});
+			const updates = await this.updateEmbeddedDocuments('Combatant', updateData);
+			this.turns = this.setupTurns();
 
-		const updates = await this.updateEmbeddedDocuments('Combatant', updateData);
+			return updates;
+		}
+
+		// Non-GM owners can reorder their own character card by updating only their card's sort value.
+		const newSortValue = getSourceSortValueForDrop(source, target, siblings, sortBefore);
+		if (newSortValue === null || !Number.isFinite(newSortValue)) return false;
+
+		const updated = await source.update({ 'system.sort': newSortValue } as Record<string, unknown>);
 		this.turns = this.setupTurns();
-
-		return updates;
+		return updated ? [updated] : [];
 	}
 }
 
