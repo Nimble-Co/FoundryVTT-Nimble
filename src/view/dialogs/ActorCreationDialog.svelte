@@ -28,16 +28,18 @@
 		{/each}
 	</ul>
 
-	<div class="nimble-import-section">
-		<button
-			class="nimble-button"
-			data-button-variant="full-width"
-			onclick={() => dialog.openNimbrewImport.call(dialog)}
-		>
-			<i class="fa-solid fa-file-import"></i>
-			{game.i18n.localize(actorImport.buttonLabel)}
-		</button>
-	</div>
+	{#if game.user.isGM}
+		<div class="nimble-import-section">
+			<button
+				class="nimble-button"
+				data-button-variant="full-width"
+				onclick={() => dialog.openNimbrewImport.call(dialog)}
+			>
+				<i class="fa-solid fa-file-import"></i>
+				{game.i18n.localize(actorImport.buttonLabel)}
+			</button>
+		</div>
+	{/if}
 </article>
 
 <style lang="scss">
