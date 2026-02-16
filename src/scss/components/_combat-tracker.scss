@@ -774,11 +774,18 @@
 
   &__group-popover-heading {
     margin: 0;
-    font-size: calc(var(--nimble-xs-text) * var(--nimble-combat-card-scale));
+    min-height: calc(1.4rem * var(--nimble-combat-card-scale));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-family: inherit;
+    font-size: calc(var(--nimble-sm-text) * var(--nimble-combat-card-scale));
     font-weight: 700;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, hsl(200 88% 85%) 75%, white);
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--nimble-combat-tracker-text-color);
   }
 
   &__group-table {
@@ -787,7 +794,6 @@
     font-size: calc(var(--nimble-xxs-text, 0.55rem) * var(--nimble-combat-card-scale));
     line-height: 1.3;
 
-    th,
     td {
       margin: 0;
       padding: calc(0.08rem * var(--nimble-combat-card-scale))
@@ -796,11 +802,6 @@
       border: 0;
       border-bottom: 1px solid color-mix(in srgb, hsl(205 45% 35%) 45%, transparent);
       vertical-align: middle;
-    }
-
-    th {
-      font-weight: 700;
-      color: color-mix(in srgb, hsl(202 80% 79%) 74%, white);
     }
   }
 

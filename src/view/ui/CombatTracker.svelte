@@ -34,6 +34,7 @@
 		) => Promise<Combatant.Implementation[]>;
 		removeMinionsFromGroups?: (combatantIds: string[]) => Promise<Combatant.Implementation[]>;
 		dissolveMinionGroups?: (groupIds: string[]) => Promise<Combatant.Implementation[]>;
+		updateCombatant?: (combatantID: string, updates: Record<string, unknown>) => Promise<unknown>;
 	};
 
 	interface MinionGroupDisplayData {
@@ -245,16 +246,6 @@
 		);
 	}
 
-	function getCombatantHpDisplay(combatant: Combatant.Implementation): string {
-		const hpValue = Number(
-			foundry.utils.getProperty(combatant.actor, 'system.attributes.hp.value'),
-		);
-		const hpMax = Number(foundry.utils.getProperty(combatant.actor, 'system.attributes.hp.max'));
-		if (!Number.isFinite(hpValue) || !Number.isFinite(hpMax)) return '-';
-
-		return `${Math.max(0, Math.floor(hpValue))}/${Math.max(0, Math.floor(hpMax))}`;
-	}
-
 	function getGroupMemberCode(
 		member: Combatant.Implementation,
 		groupLabel: string | null | undefined,
@@ -263,6 +254,35 @@
 		const label = groupLabel?.trim().toUpperCase() ?? '?';
 		const memberNumber = getMinionGroupMemberNumber(member) ?? fallbackIndex + 1;
 		return `${label}${memberNumber}`;
+	}
+
+	function applyOptimisticMemberKillState(combatantId: string): void {
+		if (!hoveredGroupDisplay || !combatantId) return;
+
+		let didUpdateMember = false;
+		const members = hoveredGroupDisplay.members.map((member) => {
+			if (member.id !== combatantId) return member;
+
+			didUpdateMember = true;
+			const nextMember = {
+				...member,
+				defeated: true,
+			} as Combatant.Implementation;
+
+			if (member.actor) {
+				const actorClone = foundry.utils.deepClone(member.actor) as Actor.Implementation;
+				foundry.utils.setProperty(actorClone, 'system.attributes.hp.value', 0);
+				(nextMember as unknown as { actor?: Actor.Implementation | null }).actor = actorClone;
+			}
+
+			return nextMember;
+		});
+
+		if (!didUpdateMember) return;
+		hoveredGroupDisplay = {
+			...hoveredGroupDisplay,
+			members,
+		};
 	}
 
 	function clearGroupPopoverHideTimer() {
@@ -941,6 +961,46 @@
 		logGroupingDebug('Remove member completed', { combatantId });
 	}
 
+	async function killMember(event: MouseEvent, combatant: Combatant.Implementation) {
+		event.preventDefault();
+		event.stopPropagation();
+		if (!game.user?.isGM) return;
+		if (!combatant.id) return;
+		if (isCombatantDead(combatant)) return;
+
+		const combat = currentCombat as CombatWithGrouping | null;
+		const hpPath = 'system.attributes.hp.value';
+		applyOptimisticMemberKillState(combatant.id);
+
+		logGroupingDebug('Kill member requested', {
+			combatantId: combatant.id,
+			combatantName: getCombatantDisplayName(combatant),
+		});
+
+		if (combatant.actor) {
+			await combatant.actor.update({ [hpPath]: 0 } as Record<string, unknown>);
+		}
+
+		if (typeof combat?.updateCombatant === 'function') {
+			await combat.updateCombatant(combatant.id, {
+				defeated: true,
+				'system.actions.base.current': 0,
+			});
+		} else {
+			await combatant.update({
+				defeated: true,
+				'system.actions.base.current': 0,
+			} as Record<string, unknown>);
+		}
+
+		updateCurrentCombat();
+		queueMicrotask(() => updateCurrentCombat());
+		logGroupingDebug('Kill member completed', {
+			combatantId: combatant.id,
+			combatantName: getCombatantDisplayName(combatant),
+		});
+	}
+
 	async function dissolveGroup(event: MouseEvent, groupId: string) {
 		event.preventDefault();
 		event.stopPropagation();
@@ -1490,34 +1550,13 @@
 					Minion Group {hoveredGroupDisplay.label ?? '?'}
 				</h4>
 				<table class="nimble-combatants__group-table">
-					<thead>
-						<tr>
-							<th scope="col" class="nimble-combatants__group-code-column">G#</th>
-							<th scope="col">Member</th>
-							<th scope="col">HP</th>
-							<th scope="col">State</th>
-							{#if game.user!.isGM}
-								<th scope="col">Edit</th>
-							{/if}
-						</tr>
-					</thead>
 					<tbody>
 						{#each hoveredGroupDisplay.members as member, memberIndex (member._id)}
 							<tr class:nimble-combatants__group-row--dead={isCombatantDead(member)}>
 								<td class="nimble-combatants__group-code-column"
 									>{getGroupMemberCode(member, hoveredGroupDisplay.label, memberIndex)}</td
 								>
-								<td>
-									{getCombatantDisplayName(member)}
-									{#if member.id === hoveredGroupDisplay.leaderId}
-										<i
-											class="nimble-combatants__group-leader-icon fa-solid fa-crown"
-											aria-label="Group Leader"
-										></i>
-									{/if}
-								</td>
-								<td>{getCombatantHpDisplay(member)}</td>
-								<td>{isCombatantDead(member) ? 'Defeated' : 'Alive'}</td>
+								<td>{getCombatantDisplayName(member)}</td>
 								{#if game.user!.isGM}
 									<td>
 										<button
@@ -1527,6 +1566,16 @@
 											onclick={(event) => removeMemberFromGroup(event, member.id ?? '')}
 										>
 											Remove
+										</button>
+									</td>
+									<td>
+										<button
+											class="nimble-combatants__group-member-action"
+											type="button"
+											disabled={!member.id || isCombatantDead(member)}
+											onclick={(event) => killMember(event, member)}
+										>
+											Kill
 										</button>
 									</td>
 								{/if}
