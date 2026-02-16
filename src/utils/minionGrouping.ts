@@ -3,14 +3,18 @@ import { isCombatantDead } from './isCombatantDead.js';
 export const MINION_GROUP_FLAG_ROOT = 'flags.nimble.minionGroup';
 export const MINION_GROUP_ID_PATH = `${MINION_GROUP_FLAG_ROOT}.id`;
 export const MINION_GROUP_ROLE_PATH = `${MINION_GROUP_FLAG_ROOT}.role`;
-export const MINION_GROUP_TEMPORARY_PATH = `${MINION_GROUP_FLAG_ROOT}.temporary`;
+export const MINION_GROUP_LABEL_PATH = `${MINION_GROUP_FLAG_ROOT}.label`;
+export const MINION_GROUP_LABEL_INDEX_PATH = `${MINION_GROUP_FLAG_ROOT}.labelIndex`;
+export const MINION_GROUP_MEMBER_NUMBER_PATH = `${MINION_GROUP_FLAG_ROOT}.memberNumber`;
 
 export type MinionGroupRole = 'leader' | 'member';
 
 interface MinionGroupFlagData {
 	id?: unknown;
 	role?: unknown;
-	temporary?: unknown;
+	label?: unknown;
+	labelIndex?: unknown;
+	memberNumber?: unknown;
 }
 
 export interface MinionGroupSummary {
@@ -19,6 +23,8 @@ export interface MinionGroupSummary {
 	explicitLeader: Combatant.Implementation | null;
 	aliveMembers: Combatant.Implementation[];
 	deadMembers: Combatant.Implementation[];
+	label: string | null;
+	labelIndex: number | null;
 }
 
 function getMinionGroupFlagData(
@@ -63,9 +69,8 @@ export function sortCombatantsForGroupResolution(
 export function isMinionCombatant(
 	combatant: Combatant.Implementation | null | undefined,
 ): combatant is Combatant.Implementation {
-	const combatantType = combatant?.type as string | undefined;
 	const actorType = combatant?.actor?.type as string | undefined;
-	return Boolean(combatant && (actorType === 'minion' || combatantType === 'minion'));
+	return Boolean(combatant && actorType === 'minion');
 }
 
 export function getMinionGroupId(
@@ -86,17 +91,72 @@ export function getMinionGroupRole(
 	return role === 'leader' || role === 'member' ? role : null;
 }
 
-export function isMinionGrouped(combatant: Combatant.Implementation | null | undefined): boolean {
-	return getMinionGroupId(combatant) !== null;
+export function formatMinionGroupLabel(index: number): string {
+	const normalized = Number.isFinite(index) ? Math.max(0, Math.floor(index)) : 0;
+
+	let value = normalized;
+	let label = '';
+	do {
+		const remainder = value % 26;
+		label = String.fromCharCode(65 + remainder) + label;
+		value = Math.floor(value / 26) - 1;
+	} while (value >= 0);
+
+	return label;
 }
 
-export function isMinionGroupTemporary(
-	combatant: Combatant.Implementation | null | undefined,
-): boolean {
-	if (!isMinionCombatant(combatant)) return false;
+export function parseMinionGroupLabel(label: string | null | undefined): number | null {
+	if (!label) return null;
+	const normalized = label.trim().toUpperCase();
+	if (!/^[A-Z]+$/.test(normalized)) return null;
 
-	const { temporary } = getMinionGroupFlagData(combatant);
-	return temporary === true;
+	let value = 0;
+	for (const char of normalized) {
+		value = value * 26 + (char.charCodeAt(0) - 64);
+	}
+
+	return value - 1;
+}
+
+export function getMinionGroupLabel(
+	combatant: Combatant.Implementation | null | undefined,
+): string | null {
+	if (!isMinionCombatant(combatant)) return null;
+
+	const { label } = getMinionGroupFlagData(combatant);
+	if (typeof label !== 'string') return null;
+	const normalized = label.trim().toUpperCase();
+	return /^[A-Z]+$/.test(normalized) ? normalized : null;
+}
+
+export function getMinionGroupLabelIndex(
+	combatant: Combatant.Implementation | null | undefined,
+): number | null {
+	if (!isMinionCombatant(combatant)) return null;
+
+	const { labelIndex } = getMinionGroupFlagData(combatant);
+	if (typeof labelIndex === 'number' && Number.isFinite(labelIndex) && labelIndex >= 0) {
+		return Math.floor(labelIndex);
+	}
+
+	const label = getMinionGroupLabel(combatant);
+	return parseMinionGroupLabel(label);
+}
+
+export function getMinionGroupMemberNumber(
+	combatant: Combatant.Implementation | null | undefined,
+): number | null {
+	if (!isMinionCombatant(combatant)) return null;
+
+	const { memberNumber } = getMinionGroupFlagData(combatant);
+	const parsed = Number(memberNumber);
+	if (!Number.isFinite(parsed) || parsed < 1) return null;
+
+	return Math.floor(parsed);
+}
+
+export function isMinionGrouped(combatant: Combatant.Implementation | null | undefined): boolean {
+	return getMinionGroupId(combatant) !== null;
 }
 
 export function isExplicitMinionGroupLeader(
@@ -122,6 +182,8 @@ export function getMinionGroupSummaries(
 				explicitLeader: null,
 				aliveMembers: [],
 				deadMembers: [],
+				label: null,
+				labelIndex: null,
 			};
 			summaries.set(groupId, summary);
 		}
@@ -137,6 +199,22 @@ export function getMinionGroupSummaries(
 		summary.explicitLeader = explicitLeaders[0] ?? null;
 		summary.aliveMembers = sortedMembers.filter((member) => !isCombatantDead(member));
 		summary.deadMembers = sortedMembers.filter((member) => isCombatantDead(member));
+
+		const labelIndexFromMembers = sortedMembers
+			.map((member) => getMinionGroupLabelIndex(member))
+			.find((labelIndex): labelIndex is number => typeof labelIndex === 'number');
+		const labelFromMembers = sortedMembers
+			.map((member) => getMinionGroupLabel(member))
+			.find((label): label is string => typeof label === 'string');
+
+		summary.labelIndex =
+			typeof labelIndexFromMembers === 'number'
+				? labelIndexFromMembers
+				: parseMinionGroupLabel(labelFromMembers);
+		summary.label =
+			typeof summary.labelIndex === 'number'
+				? formatMinionGroupLabel(summary.labelIndex)
+				: (labelFromMembers ?? null);
 	}
 
 	return summaries;

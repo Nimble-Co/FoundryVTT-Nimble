@@ -50,6 +50,26 @@ import type {
 	ResolvedMinionGroupAttackTargets,
 } from './combatTypes.js';
 import { handleInitiativeRules } from './handleInitiativeRules.js';
+import {
+	formatMinionGroupLabel,
+	getEffectiveMinionGroupLeader,
+	getMinionGroupId,
+	getMinionGroupLabel,
+	getMinionGroupLabelIndex,
+	getMinionGroupMemberNumber,
+	getMinionGroupRole,
+	getMinionGroupSummaries,
+	isMinionCombatant,
+	isMinionGrouped,
+	MINION_GROUP_FLAG_ROOT,
+	MINION_GROUP_ID_PATH,
+	MINION_GROUP_LABEL_INDEX_PATH,
+	MINION_GROUP_LABEL_PATH,
+	MINION_GROUP_MEMBER_NUMBER_PATH,
+	MINION_GROUP_ROLE_PATH,
+} from '../../utils/minionGrouping.js';
+
+const MINION_GROUP_COUNTER_NEXT_LABEL_INDEX_PATH = 'flags.nimble.minionGrouping.nextLabelIndex';
 
 /** Combatant system data with actions */
 interface CombatantSystemWithActions {
@@ -91,6 +111,12 @@ function getSourceSortValueForDrop(
 	if (next) return getCombatantManualSortValue(next) - 1;
 
 	return getCombatantManualSortValue(source);
+}
+
+function logMinionGroupingCombat(message: string, details: Record<string, unknown> = {}) {
+	if ((globalThis as Record<string, unknown>).NIMBLE_DISABLE_GROUP_LOGS === true) return;
+	// eslint-disable-next-line no-console
+	console.info(`[Nimble][MinionGrouping][Combat] ${message}`, details);
 }
 
 class NimbleCombat extends Combat {
@@ -183,311 +209,106 @@ class NimbleCombat extends Combat {
 		const currentTurn = Number.isInteger(this.turn) ? Number(this.turn) : 0;
 		this.turn = Math.min(Math.max(currentTurn, 0), aliveTurns.length - 1);
 	}
-	#combatantHasAnyActionsRemaining(combatant: Combatant.Implementation): boolean {
-		if (combatant.type === 'character') return true;
+	#getStoredNextMinionGroupLabelIndex(): number {
+		const stored = Number(
+			foundry.utils.getProperty(this, MINION_GROUP_COUNTER_NEXT_LABEL_INDEX_PATH),
+		);
+		if (!Number.isFinite(stored) || stored < 0) return 0;
+		return Math.floor(stored);
+	}
 
-		const groupId = getMinionGroupId(combatant);
-		if (groupId) {
-			const summary = getMinionGroupSummaries(this.combatants.contents).get(groupId);
-			if (summary?.aliveMembers.length) {
-				return summary.aliveMembers.some((member) => getCombatantCurrentActions(member) > 0);
+	#getDerivedNextMinionGroupLabelIndexFromCombatants(): number {
+		let maxAssignedIndex = -1;
+
+		for (const combatant of this.combatants.contents) {
+			if (!isMinionCombatant(combatant)) continue;
+			if (!getMinionGroupId(combatant)) continue;
+
+			const labelIndex = getMinionGroupLabelIndex(combatant);
+			if (typeof labelIndex === 'number' && labelIndex > maxAssignedIndex) {
+				maxAssignedIndex = labelIndex;
 			}
 		}
 
-		return getCombatantCurrentActions(combatant) > 0;
+		return maxAssignedIndex + 1;
 	}
 
-	async #advancePastExhaustedTurns(result: this): Promise<this> {
-		if (!this.turns.length) return result;
-
-		const hasTurnWithActions = this.turns.some((combatant) =>
-			this.#combatantHasAnyActionsRemaining(combatant),
+	#getNextMinionGroupLabelIndex(): number {
+		return Math.max(
+			this.#getStoredNextMinionGroupLabelIndex(),
+			this.#getDerivedNextMinionGroupLabelIndexFromCombatants(),
 		);
-		if (!hasTurnWithActions) return result;
-
-		let nextResult = result;
-		const maxIterations = Math.max(this.turns.length, 1);
-		for (let iteration = 0; iteration < maxIterations; iteration += 1) {
-			const activeCombatant = this.combatant;
-			if (!activeCombatant) break;
-			if (activeCombatant.type === 'character') break;
-			if (this.#combatantHasAnyActionsRemaining(activeCombatant)) break;
-
-			const previousActiveId = activeCombatant.id ?? null;
-			nextResult = (await super.nextTurn()) as this;
-			this.#syncTurnIndexWithAliveTurns();
-			const nextActiveId = this.combatant?.id ?? null;
-			if (!nextActiveId || nextActiveId === previousActiveId) break;
-		}
-
-		return nextResult;
 	}
 
-	async #createNcsGroupAttackChatMessage(params: {
-		groupLabel: string | null;
-		targetTokenIds: string[];
-		targetName: string;
-		rollEntries: MinionGroupAttackRollEntry[];
-		totalDamage: number;
-		skippedMembers: MinionGroupAttackSkippedMember[];
-		unsupportedWarnings: string[];
-		attackMembers: Combatant.Implementation[];
-	}): Promise<ChatMessage | null> {
-		if (params.rollEntries.length === 0) return null;
+	async #persistNextMinionGroupLabelIndex(nextLabelIndex: number): Promise<void> {
+		const normalized = Math.max(0, Math.floor(nextLabelIndex));
+		if (this.#getStoredNextMinionGroupLabelIndex() === normalized) return;
 
-		const speakerCombatant = resolveGroupAttackSpeaker({
-			attackMembers: params.attackMembers,
-			rollEntries: params.rollEntries,
-		});
-		const speakerAlias = resolveGroupAttackSpeakerAlias(params.groupLabel);
-		const chatData = buildNcsGroupAttackChatData({
-			...params,
-			speakerCombatant,
-			speakerAlias,
-		});
-		ChatMessage.applyRollMode(
-			chatData as Record<string, unknown>,
-			chatData.rollMode as foundry.CONST.DICE_ROLL_MODES,
-		);
-
-		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-		return chatCard ?? null;
-	}
-	#getRoundBoundaryGroupIdsToDissolve(): string[] {
-		return [...getMinionGroupSummaries(this.combatants.contents).keys()];
+		await this.update({
+			[MINION_GROUP_COUNTER_NEXT_LABEL_INDEX_PATH]: normalized,
+		} as Record<string, unknown>);
 	}
 
-	async #dissolveMinionGroupsByIds(
-		groupIds: string[],
-		reason: string,
-	): Promise<Combatant.Implementation[]> {
-		const targetGroupIds = new Set(
-			groupIds
-				.map((groupId) => groupId?.trim() ?? '')
-				.filter((groupId): groupId is string => groupId.length > 0),
-		);
-		if (targetGroupIds.size === 0) return [];
+	async #resetMinionGroupLabelCounterIfNoGroupsRemain(reason: string): Promise<void> {
+		const remainingGroups = getMinionGroupSummaries(this.combatants.contents).size;
+		if (remainingGroups > 0) return;
 
-		const previousActiveCombatantId = this.combatant?.id;
-		const updates = this.combatants.contents.reduce<Record<string, unknown>[]>((acc, combatant) => {
-			if (!combatant.id || !isMinionCombatant(combatant)) return acc;
+		if (this.#getStoredNextMinionGroupLabelIndex() === 0) return;
 
-			const groupId = getMinionGroupId(combatant);
-			if (!groupId || !targetGroupIds.has(groupId)) return acc;
-
-			acc.push({
-				_id: combatant.id,
-				[MINION_GROUP_FLAG_ROOT]: null,
-			});
-			return acc;
-		}, []);
-		if (updates.length === 0) return [];
-
-		const updated = await this.updateEmbeddedDocuments('Combatant', updates);
-		this.turns = this.setupTurns();
-		await this.#syncTurnToCombatant(previousActiveCombatantId);
-		logMinionGroupingCombat('dissolved minion groups', {
+		await this.#persistNextMinionGroupLabelIndex(0);
+		logMinionGroupingCombat('reset minion group label counter because no groups remain', {
 			combatId: this.id ?? null,
-			groupIds: [...targetGroupIds],
 			reason,
 		});
-		return updated ?? [];
 	}
 
-	async #dissolveRoundBoundaryMinionGroups(): Promise<void> {
-		if (!game.user?.isGM) return;
+	#resolveStableGroupMemberNumbers(members: Combatant.Implementation[]): {
+		numbersById: Map<string, number>;
+		maxMemberNumber: number;
+		backfillUpdates: Record<string, unknown>[];
+	} {
+		const numbersById = new Map<string, number>();
+		const usedNumbers = new Set<number>();
+		const pendingMembers: Combatant.Implementation[] = [];
 
-		const groupIdsToDissolve = this.#getRoundBoundaryGroupIdsToDissolve();
-		if (groupIdsToDissolve.length === 0) return;
-
-		await this.#dissolveMinionGroupsByIds(groupIdsToDissolve, 'ncsModeRoundBoundary');
-		logMinionGroupingCombat('dissolved round-boundary minion groups', {
-			combatId: this.id ?? null,
-			groupIds: groupIdsToDissolve,
-			reason: 'ncsModeRoundBoundary',
-		});
-	}
-
-	#resolveAliveMinionMembersByIds(memberCombatantIds: string[]): Combatant.Implementation[] {
-		return this.#resolveCombatantsByIds(normalizeUniqueIds(memberCombatantIds)).filter(
-			(member) => isMinionCombatant(member) && !isCombatantDead(member),
-		);
-	}
-
-	#setCombatantUpdate(
-		updatesById: Map<string, Record<string, unknown>>,
-		combatantId: string,
-		update: Record<string, unknown>,
-	): void {
-		const current = updatesById.get(combatantId) ?? { _id: combatantId };
-		updatesById.set(combatantId, { ...current, ...update });
-	}
-
-	#collectRemainingGroupMembers(
-		groupId: string,
-		selectedMemberIds: ReadonlySet<string>,
-	): Combatant.Implementation[] {
-		return this.combatants.contents.filter((combatant) => {
-			const combatantId = combatant.id ?? '';
-			if (!combatantId) return false;
-			if (selectedMemberIds.has(combatantId)) return false;
-			if (!isMinionCombatant(combatant)) return false;
-			return getMinionGroupId(combatant) === groupId;
-		});
-	}
-
-	#applyGroupDetachmentUpdate(
-		groupId: string,
-		remainingMembers: Combatant.Implementation[],
-		updatesById: Map<string, Record<string, unknown>>,
-	): void {
-		if (remainingMembers.length <= 1) {
-			for (const member of remainingMembers) {
-				if (!member.id) continue;
-				this.#setCombatantUpdate(updatesById, member.id, { [MINION_GROUP_FLAG_ROOT]: null });
-			}
-			return;
-		}
-
-		const summary = getMinionGroupSummaries(remainingMembers).get(groupId);
-		if (!summary) return;
-		const nextLeader =
-			getEffectiveMinionGroupLeader(summary, { aliveOnly: true }) ??
-			getEffectiveMinionGroupLeader(summary);
-		if (!nextLeader?.id) return;
-
-		for (const member of remainingMembers) {
+		for (const member of members) {
 			if (!member.id) continue;
-			this.#setCombatantUpdate(updatesById, member.id, {
-				[MINION_GROUP_ID_PATH]: groupId,
-				[MINION_GROUP_ROLE_PATH]: member.id === nextLeader.id ? 'leader' : 'member',
-				[MINION_GROUP_TEMPORARY_PATH]: true,
-			});
-		}
-	}
 
-	#buildTemporaryGroupUpdates(
-		orderedMembers: Combatant.Implementation[],
-		leaderId: string,
-		temporaryGroupId: string,
-		sharedInitiative: number,
-		sharedSort: number,
-	): Record<string, unknown>[] {
-		return orderedMembers.reduce<Record<string, unknown>[]>((acc, member) => {
-			if (!member.id) return acc;
-			acc.push({
+			const existingMemberNumber = getMinionGroupMemberNumber(member);
+			if (typeof existingMemberNumber === 'number' && !usedNumbers.has(existingMemberNumber)) {
+				numbersById.set(member.id, existingMemberNumber);
+				usedNumbers.add(existingMemberNumber);
+				continue;
+			}
+
+			pendingMembers.push(member);
+		}
+
+		let nextMemberNumber = 1;
+		const backfillUpdates: Record<string, unknown>[] = [];
+		for (const member of pendingMembers) {
+			if (!member.id) continue;
+			while (usedNumbers.has(nextMemberNumber)) nextMemberNumber += 1;
+
+			numbersById.set(member.id, nextMemberNumber);
+			usedNumbers.add(nextMemberNumber);
+			backfillUpdates.push({
 				_id: member.id,
-				[MINION_GROUP_ID_PATH]: temporaryGroupId,
-				[MINION_GROUP_ROLE_PATH]: member.id === leaderId ? 'leader' : 'member',
-				[MINION_GROUP_TEMPORARY_PATH]: true,
-				initiative: sharedInitiative,
-				'system.sort': sharedSort,
+				[MINION_GROUP_MEMBER_NUMBER_PATH]: nextMemberNumber,
 			});
-			return acc;
-		}, []);
-	}
-
-	#resolveDesiredActiveIdAfterRegroup(params: {
-		previousActiveCombatantId: string | null | undefined;
-		leaderId: string;
-		orderedMembers: Combatant.Implementation[];
-	}): string | null | undefined {
-		const regroupedIds = new Set(
-			params.orderedMembers
-				.map((member) => member.id)
-				.filter((memberId): memberId is string => typeof memberId === 'string'),
-		);
-		return params.previousActiveCombatantId && regroupedIds.has(params.previousActiveCombatantId)
-			? params.leaderId
-			: params.previousActiveCombatantId;
-	}
-
-	async #detachMembersFromExistingMinionGroups(memberCombatantIds: string[]): Promise<void> {
-		const selectedMemberIds = new Set(normalizeUniqueIds(memberCombatantIds));
-		if (selectedMemberIds.size === 0) return;
-
-		const groupedSelectedMinions = this.combatants.contents.filter(
-			(combatant) =>
-				Boolean(combatant.id) &&
-				selectedMemberIds.has(combatant.id as string) &&
-				isMinionCombatant(combatant) &&
-				isMinionGrouped(combatant),
-		);
-		if (groupedSelectedMinions.length === 0) return;
-
-		const affectedGroupIds = new Set(
-			normalizeUniqueIds(groupedSelectedMinions.map(getMinionGroupId)),
-		);
-		const updatesById = new Map<string, Record<string, unknown>>();
-
-		for (const combatant of groupedSelectedMinions) {
-			const combatantId = combatant.id;
-			if (!combatantId) continue;
-			this.#setCombatantUpdate(updatesById, combatantId, { [MINION_GROUP_FLAG_ROOT]: null });
+			nextMemberNumber += 1;
 		}
 
-		for (const groupId of affectedGroupIds) {
-			const remainingMembers = this.#collectRemainingGroupMembers(groupId, selectedMemberIds);
-			this.#applyGroupDetachmentUpdate(groupId, remainingMembers, updatesById);
+		let maxMemberNumber = 0;
+		for (const memberNumber of usedNumbers) {
+			if (memberNumber > maxMemberNumber) maxMemberNumber = memberNumber;
 		}
 
-		const updates = [...updatesById.values()];
-		if (updates.length === 0) return;
-
-		await this.updateEmbeddedDocuments('Combatant', updates);
-		this.turns = this.setupTurns();
-	}
-
-	async #assignNcsTemporaryGroupFromAttackMembers(memberCombatantIds: string[]): Promise<void> {
-		if (!game.user?.isGM) return;
-
-		const scopedMemberIds = normalizeUniqueIds(memberCombatantIds);
-		if (scopedMemberIds.length < 2) return;
-
-		const scopedMembers = this.#resolveAliveMinionMembersByIds(scopedMemberIds);
-		if (scopedMembers.length < 2) return;
-
-		await this.#detachMembersFromExistingMinionGroups(scopedMemberIds);
-
-		const refreshedMembers = this.#resolveAliveMinionMembersByIds(scopedMemberIds);
-		if (refreshedMembers.length < 2) return;
-
-		const orderedMembers = this.#sortCombatantsByCurrentTurnOrder(refreshedMembers);
-		const leader = orderedMembers[0];
-		if (!leader?.id) return;
-
-		const previousActiveCombatantId = this.combatant?.id;
-		const temporaryGroupId = foundry.utils.randomID();
-		const sharedInitiative = Number(leader.initiative ?? 0);
-		const sharedSort = getCombatantManualSortValue(leader);
-
-		const updates = this.#buildTemporaryGroupUpdates(
-			orderedMembers,
-			leader.id,
-			temporaryGroupId,
-			sharedInitiative,
-			sharedSort,
-		);
-		if (updates.length === 0) return;
-
-		await this.updateEmbeddedDocuments('Combatant', updates);
-		this.turns = this.setupTurns();
-
-		const desiredActiveId = this.#resolveDesiredActiveIdAfterRegroup({
-			previousActiveCombatantId,
-			leaderId: leader.id,
-			orderedMembers,
-		});
-		await this.#syncTurnToCombatant(desiredActiveId, { persist: false });
-
-		logMinionGroupingCombat('assigned ncs temporary attack group', {
-			combatId: this.id ?? null,
-			groupId: temporaryGroupId,
-			leaderId: leader.id,
-			memberIds: orderedMembers.map((member) => member.id),
-			sharedInitiative,
-			sharedSort,
-		});
+		return {
+			numbersById,
+			maxMemberNumber,
+			backfillUpdates,
+		};
 	}
 	constructor(
 		data?: Combat.CreateData,
@@ -649,542 +470,437 @@ class NimbleCombat extends Combat {
 		return combatant.update(updates);
 	}
 
-	#buildSelectionsMap(selections: MinionGroupAttackSelection[]): Map<string, string> {
-		const selectionsByMemberId = new Map<string, string>();
-		for (const selection of selections) {
-			const memberCombatantId = selection.memberCombatantId?.trim() ?? '';
-			const actionId = selection.actionId?.trim() ?? '';
-			if (!memberCombatantId || !actionId) continue;
-			selectionsByMemberId.set(memberCombatantId, actionId);
-		}
-		return selectionsByMemberId;
-	}
-
-	#normalizeAttackParams(params: MinionGroupAttackParams): NormalizedMinionGroupAttackParams {
-		const memberCombatantIds = normalizeUniqueIds(params.memberCombatantIds ?? []);
-		const targetTokenIds = normalizeUniqueIds(params.targetTokenIds ?? []);
-
-		return {
-			memberCombatantIds,
-			targetTokenIds,
-			selectionsByMemberId: this.#buildSelectionsMap(params.selections),
-			endTurn: params.endTurn === true,
-		};
-	}
-
-	#resolveSelectedTargets(
-		requestedTargetTokenIds: string[],
-	): ResolvedMinionGroupAttackTargets | null {
-		const selectedTargetIds = getCurrentUserTargetTokenIds();
-		if (selectedTargetIds.length < 1) return null;
-
-		const requestedIds =
-			requestedTargetTokenIds.length > 0 ? requestedTargetTokenIds : selectedTargetIds;
-		const resolvedTargetTokenIds = requestedIds.filter((targetTokenId) =>
-			selectedTargetIds.includes(targetTokenId),
-		);
-		const activeTargetTokenIds =
-			resolvedTargetTokenIds.length > 0 ? resolvedTargetTokenIds : selectedTargetIds;
-
-		return {
-			activeTargetTokenIds,
-			primaryTargetTokenId: activeTargetTokenIds[0] ?? '',
-		};
-	}
-
-	#resolveAttackMembers(memberCombatantIds: string[]): Combatant.Implementation[] {
-		return this.#resolveCombatantsByIds(memberCombatantIds).filter(
-			(member) => isMinionCombatant(member) && !isCombatantDead(member),
-		);
-	}
-
-	#buildSkippedMinionAttackOutcome(
-		memberId: string,
-		reason: string,
-		unsupportedWarning: string | null = null,
-	): MinionGroupAttackRollOutcome {
-		return {
-			rollEntry: null,
-			actionUpdate: null,
-			skippedMember: { combatantId: memberId, reason },
-			unsupportedWarning,
-		};
-	}
-
-	#buildUnsupportedMinionAttackWarning(params: {
-		memberName: string | null | undefined;
-		memberId: string;
-		selectedAction: ItemLike;
-		selectedActionId: string;
-	}): string | null {
-		const unsupportedEffectTypes = getUnsupportedActivationEffectTypes(
-			params.selectedAction.system?.activation?.effects,
-		);
-		if (unsupportedEffectTypes.length < 1) return null;
-		return `${params.memberName ?? params.memberId}: ${params.selectedAction.name ?? params.selectedActionId} ignores unsupported effect types (${unsupportedEffectTypes.join(', ')})`;
-	}
-
-	#resolveMinionAttackActionContext(params: {
-		member: Combatant.Implementation;
-		selectionsByMemberId: ReadonlyMap<string, string>;
-	}): ResolvedMinionAttackActionContext | MinionGroupAttackRollOutcome {
-		const memberId = params.member.id ?? '';
-		if (!memberId || !isMinionCombatant(params.member)) {
-			return {
-				rollEntry: null,
-				actionUpdate: null,
-				skippedMember: null,
-				unsupportedWarning: null,
-			};
-		}
-
-		const selectedActionId = params.selectionsByMemberId.get(memberId) ?? '';
-		const currentActions = getCombatantCurrentActions(params.member);
-		const actor = (params.member.actor as unknown as ActorWithActivateItem | null) ?? null;
-		const selectedAction =
-			resolveActorItems(actor).find((item) => item?.id === selectedActionId) ?? null;
-		const skipReason = resolveMinionAttackSkipReason({
-			selectedActionId,
-			currentActions,
-			actor,
-			selectedAction,
+	async createMinionGroup(combatantIds: string[]): Promise<Combatant.Implementation[]> {
+		logMinionGroupingCombat('createMinionGroup called', {
+			combatId: this.id ?? null,
+			combatantIds,
 		});
-		if (skipReason) {
-			return this.#buildSkippedMinionAttackOutcome(memberId, skipReason);
+		if (!game.user?.isGM) {
+			logMinionGroupingCombat('createMinionGroup blocked because user is not GM');
+			return [];
 		}
 
-		const resolvedActor = actor as ActorWithActivateItem;
-		const resolvedAction = selectedAction as ItemLike;
-		const unsupportedWarning = this.#buildUnsupportedMinionAttackWarning({
-			memberName: params.member.name,
-			memberId,
-			selectedAction: resolvedAction,
-			selectedActionId,
-		});
+		const selectedCombatants = this.#resolveCombatantsByIds(combatantIds);
+		const minions = selectedCombatants.filter(
+			(combatant) =>
+				isMinionCombatant(combatant) && !isCombatantDead(combatant) && !isMinionGrouped(combatant),
+		);
 
-		return {
-			memberId,
-			selectedActionId,
-			currentActions,
-			actor: resolvedActor,
-			selectedAction: resolvedAction,
-			unsupportedWarning,
-		};
-	}
-
-	#isMinionAttackRollOutcome(
-		value: ResolvedMinionAttackActionContext | MinionGroupAttackRollOutcome,
-	): value is MinionGroupAttackRollOutcome {
-		return 'rollEntry' in value;
-	}
-
-	#buildMinionAttackRollEntry(params: {
-		member: Combatant.Implementation;
-		memberId: string;
-		selectedActionId: string;
-		selectedAction: ItemLike;
-		formula: string;
-		damageRoll: DamageRoll;
-	}): MinionGroupAttackRollEntry {
-		const isMiss = Boolean(params.damageRoll.isMiss);
-		const totalDamage = Number(params.damageRoll.total ?? 0);
-		const normalizedTotalDamage = isMiss
-			? 0
-			: Number.isFinite(totalDamage)
-				? Math.max(0, totalDamage)
-				: 0;
-
-		return {
-			memberCombatantId: params.memberId,
-			memberName: params.member.name ?? params.memberId,
-			memberImage: getCombatantImage(params.member),
-			actionId: params.selectedActionId,
-			actionName: params.selectedAction.name ?? params.selectedActionId,
-			actionImage:
-				typeof params.selectedAction.img === 'string' && params.selectedAction.img.trim().length > 0
-					? params.selectedAction.img.trim()
-					: null,
-			formula: params.formula,
-			totalDamage: normalizedTotalDamage,
-			isMiss,
-			rollData: params.damageRoll.toJSON() as Record<string, unknown>,
-		};
-	}
-
-	async #rollSingleMinionAttack(params: {
-		member: Combatant.Implementation;
-		selectionsByMemberId: ReadonlyMap<string, string>;
-	}): Promise<MinionGroupAttackRollOutcome> {
-		const resolvedActionContext = this.#resolveMinionAttackActionContext(params);
-		if (this.#isMinionAttackRollOutcome(resolvedActionContext)) {
-			return resolvedActionContext;
-		}
-
-		try {
-			const formula = getPrimaryDamageFormulaFromActivationEffects(
-				resolvedActionContext.selectedAction.system?.activation?.effects,
+		if (minions.length < 2) {
+			logMinionGroupingCombat(
+				'createMinionGroup blocked because fewer than 2 valid ungrouped alive minions were found',
+				{
+					selectedCombatants: selectedCombatants.map((combatant) => ({
+						id: combatant.id ?? null,
+						name: combatant.name ?? null,
+						actorType: combatant.actor?.type ?? null,
+						isDead: isCombatantDead(combatant),
+						groupId: getMinionGroupId(combatant),
+					})),
+				},
 			);
-			if (!formula) {
-				return this.#buildSkippedMinionAttackOutcome(
-					resolvedActionContext.memberId,
-					'noDamageFormula',
-					resolvedActionContext.unsupportedWarning,
-				);
+			return [];
+		}
+
+		const ordered = this.#sortCombatantsByCurrentTurnOrder(minions);
+		const leader = ordered[0];
+		if (!leader?.id) {
+			logMinionGroupingCombat('createMinionGroup blocked because no leader could be resolved');
+			return [];
+		}
+
+		const previousActiveId = this.combatant?.id;
+		const groupId = foundry.utils.randomID();
+		const groupLabelIndex = this.#getNextMinionGroupLabelIndex();
+		const groupLabel = formatMinionGroupLabel(groupLabelIndex);
+		const sharedInitiative = Number(leader.initiative ?? 0);
+		const sharedSort = getCombatantManualSortValue(leader);
+
+		const updates = ordered.reduce<Record<string, unknown>[]>((acc, combatant, memberIndex) => {
+			if (!combatant.id) return acc;
+
+			acc.push({
+				_id: combatant.id,
+				[MINION_GROUP_ID_PATH]: groupId,
+				[MINION_GROUP_ROLE_PATH]: combatant.id === leader.id ? 'leader' : 'member',
+				[MINION_GROUP_LABEL_PATH]: groupLabel,
+				[MINION_GROUP_LABEL_INDEX_PATH]: groupLabelIndex,
+				[MINION_GROUP_MEMBER_NUMBER_PATH]: memberIndex + 1,
+				initiative: sharedInitiative,
+				'system.sort': sharedSort,
+			});
+			return acc;
+		}, []);
+
+		if (updates.length === 0) {
+			logMinionGroupingCombat(
+				'createMinionGroup blocked because no update payloads were generated',
+			);
+			return [];
+		}
+
+		const updated = await this.updateEmbeddedDocuments('Combatant', updates);
+		await this.#persistNextMinionGroupLabelIndex(groupLabelIndex + 1);
+		this.turns = this.setupTurns();
+		const selectedIds = new Set(minions.map((combatant) => combatant.id).filter(Boolean));
+		const desiredActiveId =
+			previousActiveId && selectedIds.has(previousActiveId) ? leader.id : previousActiveId;
+		await this.#syncTurnToCombatant(desiredActiveId);
+
+		logMinionGroupingCombat('createMinionGroup completed', {
+			groupId,
+			groupLabel,
+			groupLabelIndex,
+			leaderId: leader.id,
+			memberIds: ordered.map((combatant) => combatant.id),
+			sharedInitiative,
+			sharedSort,
+		});
+		return updated ?? [];
+	}
+
+	async addMinionsToGroup(
+		groupId: string,
+		combatantIds: string[],
+	): Promise<Combatant.Implementation[]> {
+		logMinionGroupingCombat('addMinionsToGroup called', {
+			combatId: this.id ?? null,
+			groupId,
+			combatantIds,
+		});
+		if (!game.user?.isGM) {
+			logMinionGroupingCombat('addMinionsToGroup blocked because user is not GM');
+			return [];
+		}
+		if (!groupId) {
+			logMinionGroupingCombat('addMinionsToGroup blocked because groupId is empty');
+			return [];
+		}
+
+		const summaries = getMinionGroupSummaries(this.combatants.contents);
+		const existingSummary = summaries.get(groupId);
+		if (!existingSummary) {
+			logMinionGroupingCombat('addMinionsToGroup blocked because target group was not found', {
+				groupId,
+			});
+			return [];
+		}
+
+		const selectedCombatants = this.#resolveCombatantsByIds(combatantIds);
+		const additions = selectedCombatants.filter(
+			(combatant) =>
+				isMinionCombatant(combatant) && !isCombatantDead(combatant) && !isMinionGrouped(combatant),
+		);
+		if (additions.length === 0) {
+			logMinionGroupingCombat(
+				'addMinionsToGroup blocked because no valid ungrouped minions were selected',
+				{
+					selectedCombatants: selectedCombatants.map((combatant) => ({
+						id: combatant.id ?? null,
+						name: combatant.name ?? null,
+						actorType: combatant.actor?.type ?? null,
+						isDead: isCombatantDead(combatant),
+						groupId: getMinionGroupId(combatant),
+					})),
+				},
+			);
+			return [];
+		}
+
+		const leader =
+			getEffectiveMinionGroupLeader(existingSummary, { aliveOnly: true }) ??
+			getEffectiveMinionGroupLeader(existingSummary);
+		if (!leader?.id) {
+			logMinionGroupingCombat(
+				'addMinionsToGroup blocked because no group leader could be resolved',
+				{
+					groupId,
+				},
+			);
+			return [];
+		}
+		const previousActiveId = this.combatant?.id;
+
+		const updatesById = new Map<string, Record<string, unknown>>();
+		const setUpdate = (combatantId: string, update: Record<string, unknown>) => {
+			const current = updatesById.get(combatantId) ?? { _id: combatantId };
+			updatesById.set(combatantId, { ...current, ...update });
+		};
+		const sharedInitiative = Number(leader.initiative ?? 0);
+		const sharedSort = getCombatantManualSortValue(leader);
+		const groupLabelIndex = existingSummary.labelIndex;
+		const groupLabel =
+			typeof groupLabelIndex === 'number'
+				? formatMinionGroupLabel(groupLabelIndex)
+				: (existingSummary.label ?? null);
+		const normalizedGroupLabel = groupLabel?.trim().toUpperCase() ?? null;
+		const memberNumberAssignment = this.#resolveStableGroupMemberNumbers(existingSummary.members);
+		const leaderHasDesiredLabel = getMinionGroupLabel(leader) === normalizedGroupLabel;
+		const leaderHasDesiredLabelIndex =
+			typeof groupLabelIndex === 'number'
+				? getMinionGroupLabelIndex(leader) === groupLabelIndex
+				: getMinionGroupLabelIndex(leader) === null;
+
+		if (
+			getMinionGroupRole(leader) !== 'leader' ||
+			(!leaderHasDesiredLabel && normalizedGroupLabel !== null) ||
+			(!leaderHasDesiredLabelIndex && typeof groupLabelIndex === 'number')
+		) {
+			setUpdate(leader.id, {
+				[MINION_GROUP_ID_PATH]: groupId,
+				[MINION_GROUP_ROLE_PATH]: 'leader',
+				...(normalizedGroupLabel ? { [MINION_GROUP_LABEL_PATH]: normalizedGroupLabel } : {}),
+				...(typeof groupLabelIndex === 'number'
+					? { [MINION_GROUP_LABEL_INDEX_PATH]: groupLabelIndex }
+					: {}),
+			});
+		}
+
+		for (const backfill of memberNumberAssignment.backfillUpdates) {
+			const backfillId = typeof backfill._id === 'string' ? backfill._id : null;
+			if (!backfillId) continue;
+			const changes = { ...backfill };
+			delete changes._id;
+			setUpdate(backfillId, changes);
+		}
+
+		let nextMemberNumber = memberNumberAssignment.maxMemberNumber + 1;
+		for (const combatant of additions) {
+			if (!combatant.id) continue;
+			setUpdate(combatant.id, {
+				[MINION_GROUP_ID_PATH]: groupId,
+				[MINION_GROUP_ROLE_PATH]: 'member',
+				...(normalizedGroupLabel ? { [MINION_GROUP_LABEL_PATH]: normalizedGroupLabel } : {}),
+				...(typeof groupLabelIndex === 'number'
+					? { [MINION_GROUP_LABEL_INDEX_PATH]: groupLabelIndex }
+					: {}),
+				[MINION_GROUP_MEMBER_NUMBER_PATH]: nextMemberNumber,
+				initiative: sharedInitiative,
+				'system.sort': sharedSort,
+			});
+			nextMemberNumber += 1;
+		}
+
+		const updates = [...updatesById.values()];
+
+		if (updates.length === 0) {
+			logMinionGroupingCombat(
+				'addMinionsToGroup blocked because no update payloads were generated',
+				{
+					groupId,
+				},
+			);
+			return [];
+		}
+
+		const updated = await this.updateEmbeddedDocuments('Combatant', updates);
+		this.turns = this.setupTurns();
+		const addedIds = new Set(additions.map((combatant) => combatant.id).filter(Boolean));
+		const desiredActiveId =
+			previousActiveId && addedIds.has(previousActiveId) ? leader.id : previousActiveId;
+		await this.#syncTurnToCombatant(desiredActiveId);
+		logMinionGroupingCombat('addMinionsToGroup completed', {
+			groupId,
+			leaderId: leader.id,
+			addedIds: additions.map((combatant) => combatant.id),
+			updates: updates.length,
+		});
+		return updated ?? [];
+	}
+
+	async removeMinionsFromGroups(combatantIds: string[]): Promise<Combatant.Implementation[]> {
+		logMinionGroupingCombat('removeMinionsFromGroups called', {
+			combatId: this.id ?? null,
+			combatantIds,
+		});
+		if (!game.user?.isGM) {
+			logMinionGroupingCombat('removeMinionsFromGroups blocked because user is not GM');
+			return [];
+		}
+
+		const selectedCombatants = this.#resolveCombatantsByIds(combatantIds);
+		const groupedMinions = selectedCombatants.filter(
+			(combatant) => isMinionCombatant(combatant) && isMinionGrouped(combatant),
+		);
+		if (groupedMinions.length === 0) {
+			logMinionGroupingCombat(
+				'removeMinionsFromGroups blocked because no grouped minions were found in selection',
+			);
+			return [];
+		}
+
+		const previousActiveCombatantId = this.combatant?.id;
+		const previousActiveGroupId = getMinionGroupId(this.combatant);
+		const affectedGroupIds = new Set(
+			groupedMinions
+				.map((combatant) => getMinionGroupId(combatant))
+				.filter((id): id is string => !!id),
+		);
+
+		const updatesById = new Map<string, Record<string, unknown>>();
+		const setUpdate = (combatantId: string, update: Record<string, unknown>) => {
+			const current = updatesById.get(combatantId) ?? { _id: combatantId };
+			updatesById.set(combatantId, { ...current, ...update });
+		};
+
+		for (const combatant of groupedMinions) {
+			if (!combatant.id) continue;
+			setUpdate(combatant.id, { [MINION_GROUP_FLAG_ROOT]: null });
+		}
+
+		const groupedRemovalIds = new Set(groupedMinions.map((combatant) => combatant.id));
+		const currentSummaries = getMinionGroupSummaries(this.combatants.contents);
+
+		for (const groupId of affectedGroupIds) {
+			const summary = currentSummaries.get(groupId);
+			if (!summary) continue;
+			const groupLabelIndex = summary.labelIndex;
+			const groupLabel =
+				typeof groupLabelIndex === 'number'
+					? formatMinionGroupLabel(groupLabelIndex)
+					: (summary.label ?? null);
+
+			const remainingMembers = summary.members.filter(
+				(member) => member.id && !groupedRemovalIds.has(member.id),
+			);
+
+			if (remainingMembers.length <= 1) {
+				for (const member of remainingMembers) {
+					if (!member.id) continue;
+					setUpdate(member.id, { [MINION_GROUP_FLAG_ROOT]: null });
+				}
+				continue;
 			}
 
-			const rollData =
-				typeof resolvedActionContext.actor.getRollData === 'function'
-					? resolvedActionContext.actor.getRollData(resolvedActionContext.selectedAction)
-					: {};
-			const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, {
-				canCrit: false,
-				canMiss: true,
-				rollMode: 0,
-				primaryDieValue: 0,
-				primaryDieModifier: 0,
-			});
-			await damageRoll.evaluate();
+			const memberNumberAssignment = this.#resolveStableGroupMemberNumbers(remainingMembers);
+			for (const backfill of memberNumberAssignment.backfillUpdates) {
+				const backfillId = typeof backfill._id === 'string' ? backfill._id : null;
+				if (!backfillId) continue;
+				const changes = { ...backfill };
+				delete changes._id;
+				setUpdate(backfillId, changes);
+			}
 
-			return {
-				rollEntry: this.#buildMinionAttackRollEntry({
-					member: params.member,
-					memberId: resolvedActionContext.memberId,
-					selectedActionId: resolvedActionContext.selectedActionId,
-					selectedAction: resolvedActionContext.selectedAction,
-					formula,
-					damageRoll,
-				}),
-				actionUpdate: {
-					_id: resolvedActionContext.memberId,
-					'system.actions.base.current': Math.max(0, resolvedActionContext.currentActions - 1),
-				},
-				skippedMember: null,
-				unsupportedWarning: resolvedActionContext.unsupportedWarning,
-			};
-		} catch (error) {
-			logMinionGroupingCombat('performMinionGroupAttack member activation failed', {
-				combatId: this.id ?? null,
-				memberCombatantId: resolvedActionContext.memberId,
-				actionId: resolvedActionContext.selectedActionId,
-				error,
-			});
-			return this.#buildSkippedMinionAttackOutcome(
-				resolvedActionContext.memberId,
-				'activationFailed',
-				resolvedActionContext.unsupportedWarning,
-			);
-		}
-	}
+			const remainingSummary = getMinionGroupSummaries(remainingMembers).get(groupId);
+			if (!remainingSummary) continue;
 
-	async #applyActionConsumptionUpdates(updates: Record<string, unknown>[]): Promise<void> {
-		if (updates.length < 1) return;
-		await this.updateEmbeddedDocuments('Combatant', updates);
-	}
+			const nextLeader =
+				getEffectiveMinionGroupLeader(remainingSummary, { aliveOnly: true }) ??
+				getEffectiveMinionGroupLeader(remainingSummary);
+			if (!nextLeader?.id) continue;
 
-	async #maybeAssignTemporaryGroup(params: {
-		rolledCombatantIds: string[];
-		attackMembers: Combatant.Implementation[];
-	}): Promise<void> {
-		if (params.rolledCombatantIds.length < 1) return;
+			for (const member of remainingMembers) {
+				if (!member.id) continue;
+				const desiredRole = member.id === nextLeader.id ? 'leader' : 'member';
+				const desiredMemberNumber = memberNumberAssignment.numbersById.get(member.id);
+				const roleMatches = getMinionGroupRole(member) === desiredRole;
+				const labelMatches = !groupLabel || getMinionGroupLabel(member) === groupLabel;
+				const labelIndexMatches =
+					typeof groupLabelIndex !== 'number' ||
+					getMinionGroupLabelIndex(member) === groupLabelIndex;
+				const memberNumberMatches =
+					typeof desiredMemberNumber !== 'number' ||
+					getMinionGroupMemberNumber(member) === desiredMemberNumber;
+				if (roleMatches && labelMatches && labelIndexMatches && memberNumberMatches) continue;
 
-		const attackMemberIds = params.attackMembers
-			.map((member) => member.id)
-			.filter((memberId): memberId is string => typeof memberId === 'string');
-		if (attackMemberIds.length < 1) return;
-
-		await this.#assignNcsTemporaryGroupFromAttackMembers(attackMemberIds);
-	}
-
-	async #buildNcsAttackChatData(params: {
-		activeTargetTokenIds: string[];
-		rollEntries: MinionGroupAttackRollEntry[];
-		skippedMembers: MinionGroupAttackSkippedMember[];
-		unsupportedWarnings: string[];
-		attackMembers: Combatant.Implementation[];
-	}): Promise<{ chatMessageId: string | null; totalDamage: number }> {
-		if (params.rollEntries.length < 1) {
-			return { chatMessageId: null, totalDamage: 0 };
+				setUpdate(member.id, {
+					[MINION_GROUP_ID_PATH]: groupId,
+					[MINION_GROUP_ROLE_PATH]: desiredRole,
+					...(groupLabel ? { [MINION_GROUP_LABEL_PATH]: groupLabel } : {}),
+					...(typeof groupLabelIndex === 'number'
+						? { [MINION_GROUP_LABEL_INDEX_PATH]: groupLabelIndex }
+						: {}),
+					...(typeof desiredMemberNumber === 'number'
+						? { [MINION_GROUP_MEMBER_NUMBER_PATH]: desiredMemberNumber }
+						: {}),
+				});
+			}
 		}
 
-		const totalDamage = params.rollEntries.reduce((sum, entry) => sum + entry.totalDamage, 0);
-		const targetName =
-			params.activeTargetTokenIds.length === 1
-				? getTargetTokenName(params.activeTargetTokenIds[0])
-				: `${params.activeTargetTokenIds.length} targets`;
-		const chatCard = await this.#createNcsGroupAttackChatMessage({
-			groupLabel: null,
-			targetTokenIds: params.activeTargetTokenIds,
-			targetName,
-			rollEntries: params.rollEntries,
-			totalDamage,
-			skippedMembers: params.skippedMembers,
-			unsupportedWarnings: params.unsupportedWarnings,
-			attackMembers: params.attackMembers,
-		});
-
-		return {
-			chatMessageId: chatCard?.id ?? null,
-			totalDamage,
-		};
-	}
-
-	async #maybeAdvanceTurnAfterAttack(params: {
-		endTurn: boolean;
-		attackMembers: Combatant.Implementation[];
-	}): Promise<boolean> {
-		if (!params.endTurn) return false;
-
-		const activeCombatantId = this.combatant?.id ?? '';
-		const attackedActiveCombatant = params.attackMembers.some(
-			(member) => (member.id ?? '') === activeCombatantId,
-		);
-		if (!attackedActiveCombatant) {
+		const updates = [...updatesById.values()];
+		if (updates.length === 0) {
 			logMinionGroupingCombat(
-				'performMinionGroupAttack skipped end-turn because active turn was outside attack scope',
-				{
-					combatId: this.id ?? null,
-					activeCombatantId: this.combatant?.id ?? null,
-					attackedActiveCombatant,
-				},
+				'removeMinionsFromGroups blocked because no update payloads were generated',
 			);
-			return false;
+			return [];
 		}
 
-		await this.nextTurn();
-		return true;
+		const updated = await this.updateEmbeddedDocuments('Combatant', updates);
+		this.turns = this.setupTurns();
+		let desiredActiveId = previousActiveCombatantId;
+
+		if (previousActiveGroupId && affectedGroupIds.has(previousActiveGroupId)) {
+			const nextSummaries = getMinionGroupSummaries(this.combatants.contents);
+			const nextSummary = nextSummaries.get(previousActiveGroupId);
+			const nextLeader = nextSummary
+				? (getEffectiveMinionGroupLeader(nextSummary, { aliveOnly: true }) ??
+					getEffectiveMinionGroupLeader(nextSummary))
+				: null;
+			desiredActiveId = nextLeader?.id ?? desiredActiveId;
+		}
+		await this.#syncTurnToCombatant(desiredActiveId);
+
+		await this.#resetMinionGroupLabelCounterIfNoGroupsRemain('removeMinionsFromGroups');
+
+		logMinionGroupingCombat('removeMinionsFromGroups completed', {
+			removedIds: groupedMinions.map((combatant) => combatant.id),
+			affectedGroupIds: [...affectedGroupIds],
+			updates: updates.length,
+		});
+		return updated ?? [];
 	}
 
-	#resolveMinionGroupAttackExecutionContext(params: {
-		normalizedParams: NormalizedMinionGroupAttackParams;
-		result: MinionGroupAttackResult;
-	}): {
-		resolvedTargets: ResolvedMinionGroupAttackTargets;
-		attackMembers: Combatant.Implementation[];
-	} | null {
+	async dissolveMinionGroups(groupIds: string[]): Promise<Combatant.Implementation[]> {
+		logMinionGroupingCombat('dissolveMinionGroups called', {
+			combatId: this.id ?? null,
+			groupIds,
+		});
 		if (!game.user?.isGM) {
-			logMinionGroupingCombat('performMinionGroupAttack blocked because user is not GM');
-			return null;
+			logMinionGroupingCombat('dissolveMinionGroups blocked because user is not GM');
+			return [];
 		}
 
-		if (params.normalizedParams.memberCombatantIds.length < 1) {
-			logMinionGroupingCombat('performMinionGroupAttack blocked because member scope is missing', {
-				memberCombatantIds: params.normalizedParams.memberCombatantIds,
-				targetTokenIds: params.normalizedParams.targetTokenIds,
-			});
-			return null;
-		}
-
-		const resolvedTargets = this.#resolveSelectedTargets(params.normalizedParams.targetTokenIds);
-		if (!resolvedTargets) {
+		const targetGroupIds = new Set(groupIds.filter((groupId) => groupId.length > 0));
+		if (targetGroupIds.size === 0) {
 			logMinionGroupingCombat(
-				'performMinionGroupAttack blocked because at least one target is required',
-				{ memberCombatantIds: params.normalizedParams.memberCombatantIds },
+				'dissolveMinionGroups blocked because no valid group ids were provided',
 			);
-			return null;
+			return [];
 		}
 
-		const attackMembers = this.#resolveAttackMembers(params.normalizedParams.memberCombatantIds);
-		if (attackMembers.length < 1) {
+		const previousActiveCombatantId = this.combatant?.id;
+		const updates = this.combatants.contents.reduce<Record<string, unknown>[]>((acc, combatant) => {
+			if (!combatant.id || !isMinionCombatant(combatant)) return acc;
+
+			const groupId = getMinionGroupId(combatant);
+			if (!groupId || !targetGroupIds.has(groupId)) return acc;
+
+			acc.push({
+				_id: combatant.id,
+				[MINION_GROUP_FLAG_ROOT]: null,
+			});
+			return acc;
+		}, []);
+
+		if (updates.length === 0) {
 			logMinionGroupingCombat(
-				'performMinionGroupAttack blocked because no eligible attack members were found',
+				'dissolveMinionGroups blocked because no members were found for target groups',
 				{
-					combatId: this.id ?? null,
-					memberCombatantIds: params.normalizedParams.memberCombatantIds,
+					targetGroupIds: [...targetGroupIds],
 				},
 			);
-			return null;
+			return [];
 		}
 
-		params.result.targetTokenId = resolvedTargets.primaryTargetTokenId;
-		return { resolvedTargets, attackMembers };
-	}
-
-	async #collectMinionAttackRollData(params: {
-		attackMembers: Combatant.Implementation[];
-		selectionsByMemberId: ReadonlyMap<string, string>;
-		result: MinionGroupAttackResult;
-	}): Promise<{
-		actionUpdates: Record<string, unknown>[];
-		rollEntries: MinionGroupAttackRollEntry[];
-		unsupportedWarnings: string[];
-	}> {
-		const actionUpdates: Record<string, unknown>[] = [];
-		const unsupportedWarnings = new Set<string>();
-		const rollEntries: MinionGroupAttackRollEntry[] = [];
-		for (const member of params.attackMembers) {
-			const rollOutcome = await this.#rollSingleMinionAttack({
-				member,
-				selectionsByMemberId: params.selectionsByMemberId,
-			});
-			appendMinionAttackRollOutcome({
-				rollOutcome,
-				result: params.result,
-				rollEntries,
-				actionUpdates,
-				unsupportedWarnings,
-			});
-		}
-		return {
-			actionUpdates,
-			rollEntries,
-			unsupportedWarnings: [...unsupportedWarnings],
-		};
-	}
-
-	async performMinionGroupAttack(
-		params: MinionGroupAttackParams,
-	): Promise<MinionGroupAttackResult> {
-		const normalizedParams = this.#normalizeAttackParams(params);
-		const result = createMinionGroupAttackResult(normalizedParams.targetTokenIds);
-
-		logMinionGroupingCombat('performMinionGroupAttack called', {
-			combatId: this.id ?? null,
-			memberCombatantIds: normalizedParams.memberCombatantIds,
-			targetTokenIds: normalizedParams.targetTokenIds,
-			selectionCount: normalizedParams.selectionsByMemberId.size,
-			requestedEndTurn: normalizedParams.endTurn,
+		const updated = await this.updateEmbeddedDocuments('Combatant', updates);
+		this.turns = this.setupTurns();
+		await this.#syncTurnToCombatant(previousActiveCombatantId);
+		await this.#resetMinionGroupLabelCounterIfNoGroupsRemain('dissolveMinionGroups');
+		logMinionGroupingCombat('dissolveMinionGroups completed', {
+			targetGroupIds: [...targetGroupIds],
+			updates: updates.length,
 		});
-
-		const executionContext = this.#resolveMinionGroupAttackExecutionContext({
-			normalizedParams,
-			result,
-		});
-		if (!executionContext) return result;
-
-		const { resolvedTargets, attackMembers } = executionContext;
-		const rollData = await this.#collectMinionAttackRollData({
-			attackMembers,
-			selectionsByMemberId: normalizedParams.selectionsByMemberId,
-			result,
-		});
-		await this.#applyActionConsumptionUpdates(rollData.actionUpdates);
-		await this.#maybeAssignTemporaryGroup({
-			rolledCombatantIds: result.rolledCombatantIds,
-			attackMembers,
-		});
-
-		const chatData = await this.#buildNcsAttackChatData({
-			activeTargetTokenIds: resolvedTargets.activeTargetTokenIds,
-			rollEntries: rollData.rollEntries,
-			skippedMembers: result.skippedMembers,
-			unsupportedWarnings: rollData.unsupportedWarnings,
-			attackMembers,
-		});
-		result.totalDamage = chatData.totalDamage;
-		result.chatMessageId = chatData.chatMessageId;
-		result.endTurnApplied = await this.#maybeAdvanceTurnAfterAttack({
-			endTurn: normalizedParams.endTurn,
-			attackMembers,
-		});
-		result.unsupportedSelectionWarnings = rollData.unsupportedWarnings;
-
-		logMinionGroupingCombat('performMinionGroupAttack completed', {
-			combatId: this.id ?? null,
-			targetTokenId: result.targetTokenId,
-			targetTokenIds: resolvedTargets.activeTargetTokenIds,
-			rolledCombatantIds: result.rolledCombatantIds,
-			skippedMembers: result.skippedMembers,
-			unsupportedSelectionWarnings: result.unsupportedSelectionWarnings,
-			endTurnApplied: result.endTurnApplied,
-			totalDamage: result.totalDamage,
-			chatMessageId: result.chatMessageId ?? null,
-		});
-		return result;
-	}
-
-	#applyCharacterInitiativeActionUpdate(
-		combatant: Combatant.Implementation,
-		combatantUpdates: Record<string, unknown>,
-		rollTotal: number,
-	): void {
-		if (combatant.type !== 'character') return;
-
-		const actionPath = 'system.actions.base.current';
-		if (rollTotal >= 20) {
-			combatantUpdates[actionPath] = 3;
-			return;
-		}
-		if (rollTotal >= 10) {
-			combatantUpdates[actionPath] = 2;
-			return;
-		}
-		combatantUpdates[actionPath] = 1;
-	}
-
-	async #buildInitiativeChatData(params: {
-		combatant: Combatant.Implementation;
-		roll: Roll;
-		messageOptions: ChatMessage.CreateData;
-		chatRollMode: string | null;
-		rollIndex: number;
-	}): Promise<ChatMessage.CreateData> {
-		const messageData = foundry.utils.mergeObject(
-			{
-				speaker: ChatMessage.getSpeaker({
-					actor: params.combatant.actor,
-					token: params.combatant.token,
-					alias: params.combatant.name ?? undefined,
-				}),
-				flavor: game.i18n.format('COMBAT.RollsInitiative', { name: params.combatant.name ?? '' }),
-				flags: { 'core.initiativeRoll': true },
-			},
-			params.messageOptions,
-		) as ChatMessage.CreateData;
-		const chatData = (await params.roll.toMessage(messageData, {
-			create: false,
-		})) as ChatMessage.CreateData & { rollMode?: string | null; sound?: string | null };
-
-		// If the combatant is hidden, use a private roll unless an alternative rollMode was requested.
-		const msgOpts = params.messageOptions as ChatMessage.CreateData & { rollMode?: string };
-		chatData.rollMode =
-			'rollMode' in msgOpts
-				? (msgOpts.rollMode ?? undefined)
-				: params.combatant.hidden
-					? CONST.DICE_ROLL_MODES.PRIVATE
-					: params.chatRollMode;
-
-		// Play 1 sound for the whole rolled set.
-		if (params.rollIndex > 0) chatData.sound = null;
-		return chatData;
-	}
-
-	async #rollInitiativeForCombatant(params: {
-		combatantId: string;
-		formula: string | null;
-		messageOptions: ChatMessage.CreateData;
-		chatRollMode: string | null;
-		rollIndex: number;
-		combatManaUpdates: Promise<unknown>[];
-	}): Promise<InitiativeRollOutcome | null> {
-		const combatant = this.combatants.get(params.combatantId);
-		if (!combatant?.isOwner) return null;
-
-		const combatantUpdates: Record<string, unknown> = { _id: params.combatantId };
-
-		const roll = combatant.getInitiativeRoll(params.formula ?? undefined);
-		await roll.evaluate();
-		const rollTotal = roll.total ?? 0;
-		combatantUpdates.initiative = rollTotal;
-		this.#applyCharacterInitiativeActionUpdate(combatant, combatantUpdates, rollTotal);
-
-		await handleInitiativeRules({
-			combatId: this.id,
-			combatManaUpdates: params.combatManaUpdates,
-			combatant,
-		});
-
-		const chatData = await this.#buildInitiativeChatData({
-			combatant,
-			roll,
-			messageOptions: params.messageOptions,
-			chatRollMode: params.chatRollMode,
-			rollIndex: params.rollIndex,
-		});
-
-		return {
-			combatantUpdate: combatantUpdates,
-			chatData,
-		};
+		return updated ?? [];
 	}
 
 	override async rollInitiative(
@@ -1235,8 +951,21 @@ class NimbleCombat extends Combat {
 	}
 
 	override setupTurns(): Combatant.Implementation[] {
-		const turns = super.setupTurns();
-		return turns.filter((combatant) => !isCombatantDead(combatant));
+		const aliveTurns = super.setupTurns().filter((combatant) => !isCombatantDead(combatant));
+		const groupedSummaries = getMinionGroupSummaries(aliveTurns);
+		if (groupedSummaries.size === 0) return aliveTurns;
+
+		const leaderIds = new Set<string>();
+		for (const summary of groupedSummaries.values()) {
+			const leader = getEffectiveMinionGroupLeader(summary, { aliveOnly: true });
+			if (leader?.id) leaderIds.add(leader.id);
+		}
+
+		return aliveTurns.filter((combatant) => {
+			const groupId = getMinionGroupId(combatant);
+			if (!groupId) return true;
+			return leaderIds.has(combatant.id ?? '');
+		});
 	}
 
 	override async nextTurn(): Promise<this> {
@@ -1407,6 +1136,7 @@ class NimbleCombat extends Combat {
 	}
 
 		if (source.id === target.id) return false;
+		const previousActiveCombatantId = this.combatant?.id;
 
 		const siblings = this.turns.filter(
 			(c) =>
@@ -1434,11 +1164,12 @@ class NimbleCombat extends Combat {
 				};
 			});
 
-		const updates = await this.updateEmbeddedDocuments('Combatant', updateData);
-		this.turns = this.setupTurns();
-		await this.#syncTurnToCombatant(dropResolution.previousActiveCombatantId);
-		return updates;
-	}
+			const updates = await this.updateEmbeddedDocuments('Combatant', updateData);
+			this.turns = this.setupTurns();
+			await this.#syncTurnToCombatant(previousActiveCombatantId);
+
+			return updates;
+		}
 
 	async #applyOwnerSort(dropResolution: DropResolution) {
 		// Non-GM owners can reorder their own character card by updating only their card's sort value.
@@ -1454,7 +1185,7 @@ class NimbleCombat extends Combat {
 			'system.sort': newSortValue,
 		} as Record<string, unknown>);
 		this.turns = this.setupTurns();
-		await this.#syncTurnToCombatant(dropResolution.previousActiveCombatantId, { persist: false });
+		await this.#syncTurnToCombatant(previousActiveCombatantId, { persist: false });
 		return updated ? [updated] : [];
 	}
 

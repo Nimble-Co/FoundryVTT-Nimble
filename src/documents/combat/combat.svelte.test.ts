@@ -217,59 +217,42 @@ describe('NimbleCombat', () => {
 		expect(combat.turn).toBe(1);
 	});
 
-	it('auto-dissolves grouped minions at round boundary in ncs mode', async () => {
-		const combatId = 'combat-ncs-round-boundary';
+	it('creates a minion group with shared initiative and leader/member roles', async () => {
+		const combatId = 'combat-create-minion-group';
 		const minionActorA = {
-			...createCombatActorFixture({ id: 'ncs-round-minion-actor-a', hp: 1 }),
+			...createCombatActorFixture({ id: 'minion-actor-a', hp: 1 }),
 			type: 'minion',
 		} as unknown as Actor.Implementation;
 		const minionActorB = {
-			...createCombatActorFixture({ id: 'ncs-round-minion-actor-b', hp: 1 }),
+			...createCombatActorFixture({ id: 'minion-actor-b', hp: 1 }),
 			type: 'minion',
 		} as unknown as Actor.Implementation;
 
 		const minionA = createMockCombatant({
-			id: 'ncs-round-minion-a',
+			id: 'minion-a',
 			type: 'npc',
 			sort: 1,
 			isOwner: false,
-			initiative: 12,
+			initiative: 15,
 			actor: minionActorA,
 			combatId,
 		});
 		const minionB = createMockCombatant({
-			id: 'ncs-round-minion-b',
+			id: 'minion-b',
 			type: 'npc',
 			sort: 2,
 			isOwner: false,
-			initiative: 11,
+			initiative: 3,
 			actor: minionActorB,
 			combatId,
 		});
-
-		(minionA as unknown as { flags: Record<string, unknown> }).flags = {
-			nimble: {
-				minionGroup: {
-					id: 'ncs-group-a',
-					role: 'leader',
-				},
-			},
-		};
-		(minionB as unknown as { flags: Record<string, unknown> }).flags = {
-			nimble: {
-				minionGroup: {
-					id: 'ncs-group-a',
-					role: 'member',
-				},
-			},
-		};
 
 		const combat = new NimbleCombat({
 			id: combatId,
 			combatants: createCombatantsCollectionFixture([minionA, minionB]),
 			turns: [minionA, minionB],
-			turn: 0,
-			combatant: minionA,
+			turn: 1,
+			combatant: minionB,
 		} as unknown as Combat.CreateData) as NimbleCombat & {
 			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
 			update: ReturnType<typeof vi.fn>;
@@ -278,575 +261,360 @@ describe('NimbleCombat', () => {
 		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
 		combat.update = vi.fn().mockResolvedValue(combat);
 
-		await combat._onEndRound();
+		await combat.createMinionGroup(['minion-a', 'minion-b']);
 
-		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledTimes(2);
-		const dissolveUpdates = combat.updateEmbeddedDocuments.mock.calls[1][1] as Array<
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledTimes(1);
+		const updates = combat.updateEmbeddedDocuments.mock.calls[0][1] as Array<
 			Record<string, unknown>
 		>;
-		expect(dissolveUpdates).toEqual([
-			{ _id: 'ncs-round-minion-a', 'flags.nimble.minionGroup': null },
-			{ _id: 'ncs-round-minion-b', 'flags.nimble.minionGroup': null },
-		]);
+
+		expect(updates).toHaveLength(2);
+		const groupIds = new Set(
+			updates.map((update) => update['flags.nimble.minionGroup.id']).filter(Boolean),
+		);
+		expect(groupIds.size).toBe(1);
+
+		expect(
+			updates.find((update) => update._id === 'minion-a')?.['flags.nimble.minionGroup.role'],
+		).toBe('leader');
+		expect(
+			updates.find((update) => update._id === 'minion-b')?.['flags.nimble.minionGroup.role'],
+		).toBe('member');
+		expect(
+			new Set(updates.map((update) => update['flags.nimble.minionGroup.label']).filter(Boolean)),
+		).toEqual(new Set(['A']));
+		expect(
+			new Set(
+				updates
+					.map((update) => update['flags.nimble.minionGroup.labelIndex'])
+					.filter((value) => typeof value === 'number'),
+			),
+		).toEqual(new Set([0]));
+		expect(
+			new Set(
+				updates
+					.map((update) => update['flags.nimble.minionGroup.memberNumber'])
+					.filter((value) => typeof value === 'number'),
+			),
+		).toEqual(new Set([1, 2]));
+		expect(updates.find((update) => update._id === 'minion-b')?.initiative).toBe(15);
+		expect(combat.update).toHaveBeenCalledWith({
+			'flags.nimble.minionGrouping.nextLabelIndex': 1,
+		});
+		expect(combat.update).toHaveBeenCalledWith({ turn: 0 });
 	});
 
-	it('performs a minion group attack, consumes member actions, and can end turn', async () => {
-		const combatId = 'combat-minion-group-attack-success';
+	it('preserves member numbers when removing and adding minions in a group', async () => {
+		const combatId = 'combat-member-number-persistence';
 		const minionActorA = {
-			...createCombatActorFixture({ id: 'group-attack-actor-a', hp: 1 }),
+			...createCombatActorFixture({ id: 'minion-num-actor-a', hp: 1 }),
 			type: 'minion',
-			items: [
-				{
-					id: 'action-a',
-					type: 'monsterFeature',
-					name: 'Stab',
-					system: {
-						subtype: 'action',
-						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
-					},
-				},
-			],
-			activateItem: vi.fn().mockResolvedValue(null),
 		} as unknown as Actor.Implementation;
 		const minionActorB = {
-			...createCombatActorFixture({ id: 'group-attack-actor-b', hp: 1 }),
+			...createCombatActorFixture({ id: 'minion-num-actor-b', hp: 1 }),
 			type: 'minion',
-			items: [
-				{
-					id: 'action-b',
-					type: 'monsterFeature',
-					name: 'Bite',
-					system: {
-						subtype: 'action',
-						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
-					},
-				},
-			],
-			activateItem: vi.fn().mockResolvedValue(null),
+		} as unknown as Actor.Implementation;
+		const minionActorC = {
+			...createCombatActorFixture({ id: 'minion-num-actor-c', hp: 1 }),
+			type: 'minion',
+		} as unknown as Actor.Implementation;
+		const minionActorD = {
+			...createCombatActorFixture({ id: 'minion-num-actor-d', hp: 1 }),
+			type: 'minion',
 		} as unknown as Actor.Implementation;
 
 		const minionA = createMockCombatant({
-			id: 'group-attack-a',
+			id: 'minion-num-a',
 			type: 'npc',
 			sort: 1,
 			isOwner: false,
-			initiative: 12,
-			actionsCurrent: 1,
+			initiative: 15,
 			actor: minionActorA,
 			combatId,
 		});
 		const minionB = createMockCombatant({
-			id: 'group-attack-b',
+			id: 'minion-num-b',
 			type: 'npc',
 			sort: 2,
 			isOwner: false,
-			initiative: 12,
-			actionsCurrent: 1,
+			initiative: 14,
 			actor: minionActorB,
 			combatId,
 		});
-
-		(minionA as unknown as { flags: Record<string, unknown> }).flags = {
-			nimble: {
-				minionGroup: {
-					id: 'group-attack-1',
-					role: 'leader',
-				},
-			},
-		};
-		(minionB as unknown as { flags: Record<string, unknown> }).flags = {
-			nimble: {
-				minionGroup: {
-					id: 'group-attack-1',
-					role: 'member',
-				},
-			},
-		};
-
-		(
-			globals().game as unknown as {
-				user: { targets?: Set<{ id: string; name?: string }> };
-			}
-		).user.targets = new Set([{ id: 'target-token-1', name: 'Target' }]);
-
-		const combat = new NimbleCombat({
-			id: combatId,
-			combatants: createCombatantsCollectionFixture([minionA, minionB]),
-			turns: [minionA],
-			turn: 0,
-			combatant: minionA,
-		} as unknown as Combat.CreateData) as NimbleCombat & {
-			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
-			nextTurn: ReturnType<typeof vi.fn>;
-		};
-
-		combat.updateEmbeddedDocuments = vi
-			.fn()
-			.mockImplementation(
-				async (_documentName: string, updates: Array<Record<string, unknown>>) => {
-					for (const update of updates) {
-						const id = update._id as string | undefined;
-						if (!id) continue;
-						const target = combat.combatants.get(id);
-						if (!target) continue;
-						const nextActions = update['system.actions.base.current'];
-						if (typeof nextActions === 'number') {
-							foundry.utils.setProperty(target, 'system.actions.base.current', nextActions);
-						}
-					}
-					return updates as unknown as Combatant.Implementation[];
-				},
-			);
-		combat.nextTurn = vi.fn().mockResolvedValue(combat);
-
-		const result = await combat.performMinionGroupAttack({
-			memberCombatantIds: ['group-attack-a', 'group-attack-b'],
-			targetTokenIds: ['target-token-1'],
-			selections: [
-				{ memberCombatantId: 'group-attack-a', actionId: 'action-a' },
-				{ memberCombatantId: 'group-attack-b', actionId: 'action-b' },
-			],
-			endTurn: true,
-		});
-
-		expect(
-			(minionActorA as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
-		).not.toHaveBeenCalled();
-		expect(
-			(minionActorB as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
-		).not.toHaveBeenCalled();
-		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
-			{
-				_id: 'group-attack-a',
-				'system.actions.base.current': 0,
-			},
-			{
-				_id: 'group-attack-b',
-				'system.actions.base.current': 0,
-			},
-		]);
-		expect(combat.nextTurn).toHaveBeenCalledTimes(1);
-		expect(result.rolledCombatantIds).toEqual(['group-attack-a', 'group-attack-b']);
-		expect(result.endTurnApplied).toBe(true);
-	});
-
-	it('uses currently targeted tokens when requested target id is not targeted', async () => {
-		const combatId = 'combat-minion-group-attack-target-validation';
-		const minionActorA = {
-			...createCombatActorFixture({ id: 'group-attack-target-actor-a', hp: 1 }),
-			type: 'minion',
-			items: [
-				{
-					id: 'action-a',
-					type: 'monsterFeature',
-					name: 'Stab',
-					system: {
-						subtype: 'action',
-						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
-					},
-				},
-			],
-			activateItem: vi.fn().mockResolvedValue(null),
-		} as unknown as Actor.Implementation;
-
-		const minionA = createMockCombatant({
-			id: 'group-attack-target-a',
+		const minionC = createMockCombatant({
+			id: 'minion-num-c',
 			type: 'npc',
-			sort: 1,
-			isOwner: false,
-			initiative: 12,
-			actionsCurrent: 1,
-			actor: minionActorA,
-			combatId,
-		});
-
-		(minionA as unknown as { flags: Record<string, unknown> }).flags = {
-			nimble: {
-				minionGroup: {
-					id: 'group-attack-target-1',
-					role: 'leader',
-				},
-			},
-		};
-
-		(
-			globals().game as unknown as {
-				user: { targets?: Set<{ id: string; name?: string }> };
-			}
-		).user.targets = new Set([{ id: 'other-target-token', name: 'Other Target' }]);
-
-		const combat = new NimbleCombat({
-			id: combatId,
-			combatants: createCombatantsCollectionFixture([minionA]),
-			turns: [minionA],
-			turn: 0,
-			combatant: minionA,
-		} as unknown as Combat.CreateData) as NimbleCombat & {
-			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
-			nextTurn: ReturnType<typeof vi.fn>;
-		};
-
-		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
-		combat.nextTurn = vi.fn().mockResolvedValue(combat);
-
-		const result = await combat.performMinionGroupAttack({
-			memberCombatantIds: ['group-attack-target-a'],
-			targetTokenIds: ['target-token-expected'],
-			selections: [{ memberCombatantId: 'group-attack-target-a', actionId: 'action-a' }],
-			endTurn: true,
-		});
-
-		expect(combat.updateEmbeddedDocuments).toHaveBeenCalled();
-		expect(combat.nextTurn).toHaveBeenCalled();
-		expect(result.rolledCombatantIds).toEqual(['group-attack-target-a']);
-		expect(result.endTurnApplied).toBe(true);
-		expect(
-			(minionActorA as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
-		).not.toHaveBeenCalled();
-	});
-
-	it('supports ad-hoc minion attack scope without a persisted group id', async () => {
-		const combatId = 'combat-minion-group-attack-adhoc-scope';
-		const minionActorA = {
-			...createCombatActorFixture({ id: 'group-attack-adhoc-actor-a', hp: 1 }),
-			type: 'minion',
-			items: [
-				{
-					id: 'action-a',
-					type: 'monsterFeature',
-					name: 'Stab',
-					system: {
-						subtype: 'action',
-						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
-					},
-				},
-			],
-			activateItem: vi.fn().mockResolvedValue(null),
-		} as unknown as Actor.Implementation;
-		const minionActorB = {
-			...createCombatActorFixture({ id: 'group-attack-adhoc-actor-b', hp: 1 }),
-			type: 'minion',
-			items: [
-				{
-					id: 'action-b',
-					type: 'monsterFeature',
-					name: 'Bite',
-					system: {
-						subtype: 'action',
-						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
-					},
-				},
-			],
-			activateItem: vi.fn().mockResolvedValue(null),
-		} as unknown as Actor.Implementation;
-
-		const minionA = createMockCombatant({
-			id: 'group-attack-adhoc-a',
-			type: 'npc',
-			sort: 1,
-			isOwner: false,
-			initiative: 12,
-			actionsCurrent: 1,
-			actor: minionActorA,
-			combatId,
-		});
-		const minionB = createMockCombatant({
-			id: 'group-attack-adhoc-b',
-			type: 'npc',
-			sort: 2,
-			isOwner: false,
-			initiative: 12,
-			actionsCurrent: 1,
-			actor: minionActorB,
-			combatId,
-		});
-
-		(
-			globals().game as unknown as {
-				user: { targets?: Set<{ id: string; name?: string }> };
-			}
-		).user.targets = new Set([{ id: 'target-token-adhoc', name: 'Target' }]);
-
-		const combat = new NimbleCombat({
-			id: combatId,
-			combatants: createCombatantsCollectionFixture([minionA, minionB]),
-			turns: [minionA, minionB],
-			turn: 0,
-			combatant: minionA,
-		} as unknown as Combat.CreateData) as NimbleCombat & {
-			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
-			nextTurn: ReturnType<typeof vi.fn>;
-		};
-
-		combat.updateEmbeddedDocuments = vi
-			.fn()
-			.mockImplementation(
-				async (_documentName: string, updates: Array<Record<string, unknown>>) => {
-					for (const update of updates) {
-						const id = update._id as string | undefined;
-						if (!id) continue;
-						const target = combat.combatants.get(id);
-						if (!target) continue;
-						const nextActions = update['system.actions.base.current'];
-						if (typeof nextActions === 'number') {
-							foundry.utils.setProperty(target, 'system.actions.base.current', nextActions);
-						}
-					}
-					return updates as unknown as Combatant.Implementation[];
-				},
-			);
-		combat.nextTurn = vi.fn().mockResolvedValue(combat);
-
-		const result = await combat.performMinionGroupAttack({
-			memberCombatantIds: ['group-attack-adhoc-a', 'group-attack-adhoc-b'],
-			targetTokenIds: ['target-token-adhoc'],
-			selections: [
-				{ memberCombatantId: 'group-attack-adhoc-a', actionId: 'action-a' },
-				{ memberCombatantId: 'group-attack-adhoc-b', actionId: 'action-b' },
-			],
-			endTurn: true,
-		});
-
-		expect(
-			(minionActorA as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
-		).not.toHaveBeenCalled();
-		expect(
-			(minionActorB as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
-		).not.toHaveBeenCalled();
-		expect(combat.nextTurn).toHaveBeenCalledTimes(1);
-		expect(result.rolledCombatantIds).toEqual(['group-attack-adhoc-a', 'group-attack-adhoc-b']);
-		expect(result.endTurnApplied).toBe(true);
-	});
-
-	it('creates a single combined chat card for ncs group attacks', async () => {
-		(
-			globals().game as unknown as {
-				settings?: { get: ReturnType<typeof vi.fn> };
-			}
-		).settings = {
-			get: vi.fn((namespace: string, key: string) => {
-				if (namespace === 'core' && key === 'rollMode') {
-					return 'publicroll';
-				}
-				return undefined;
-			}),
-		};
-
-		const chatCreate = vi.fn().mockResolvedValue({ id: 'group-attack-chat-1' });
-		(
-			globalThis as unknown as {
-				ChatMessage: {
-					create: ReturnType<typeof vi.fn>;
-					getSpeaker: ReturnType<typeof vi.fn>;
-					applyRollMode: ReturnType<typeof vi.fn>;
-				};
-			}
-		).ChatMessage.create = chatCreate;
-		(
-			globalThis as unknown as {
-				ChatMessage: { getSpeaker: ReturnType<typeof vi.fn> };
-			}
-		).ChatMessage.getSpeaker = vi.fn().mockReturnValue({});
-		(
-			globalThis as unknown as {
-				ChatMessage: { applyRollMode: ReturnType<typeof vi.fn> };
-			}
-		).ChatMessage.applyRollMode = vi.fn();
-		(
-			globalThis as unknown as {
-				CONST: { CHAT_MESSAGE_STYLES: { OTHER: number } };
-			}
-		).CONST.CHAT_MESSAGE_STYLES = { OTHER: 0 };
-		(
-			globalThis as unknown as {
-				CONFIG: { sounds: { dice: string } };
-			}
-		).CONFIG.sounds = { dice: 'dice' };
-
-		const combatId = 'combat-ncs-group-attack-chat';
-		const minionActorA = {
-			...createCombatActorFixture({ id: 'ncs-group-attack-actor-a', hp: 1 }),
-			type: 'minion',
-			items: [
-				{
-					id: 'action-a',
-					type: 'monsterFeature',
-					name: 'Stab',
-					system: {
-						subtype: 'action',
-						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
-					},
-				},
-			],
-			activateItem: vi.fn().mockResolvedValue(null),
-			getRollData: vi.fn().mockReturnValue({}),
-		} as unknown as Actor.Implementation;
-		const minionActorB = {
-			...createCombatActorFixture({ id: 'ncs-group-attack-actor-b', hp: 1 }),
-			type: 'minion',
-			items: [
-				{
-					id: 'action-b',
-					type: 'monsterFeature',
-					name: 'Bite',
-					system: {
-						subtype: 'action',
-						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
-					},
-				},
-			],
-			activateItem: vi.fn().mockResolvedValue(null),
-			getRollData: vi.fn().mockReturnValue({}),
-		} as unknown as Actor.Implementation;
-
-		const minionA = createMockCombatant({
-			id: 'ncs-group-attack-a',
-			type: 'npc',
-			sort: 1,
-			isOwner: false,
-			initiative: 12,
-			actionsCurrent: 1,
-			actor: minionActorA,
-			combatId,
-		});
-		const minionB = createMockCombatant({
-			id: 'ncs-group-attack-b',
-			type: 'npc',
-			sort: 2,
-			isOwner: false,
-			initiative: 12,
-			actionsCurrent: 1,
-			actor: minionActorB,
-			combatId,
-		});
-
-		(
-			globals().game as unknown as {
-				user: {
-					targets?: Set<{
-						id: string;
-						name?: string;
-						document?: { id?: string; uuid?: string };
-					}>;
-				};
-			}
-		).user.targets = new Set([
-			{
-				id: 'ncs-target-token',
-				name: 'Target',
-				document: {
-					id: 'ncs-target-token',
-					uuid: 'Scene.scene.Token.ncs-target-token',
-				},
-			},
-		]);
-
-		const combat = new NimbleCombat({
-			id: combatId,
-			combatants: createCombatantsCollectionFixture([minionA, minionB]),
-			turns: [minionA, minionB],
-			turn: 0,
-			combatant: minionA,
-		} as unknown as Combat.CreateData) as NimbleCombat & {
-			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
-		};
-
-		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
-
-		const result = await combat.performMinionGroupAttack({
-			memberCombatantIds: ['ncs-group-attack-a', 'ncs-group-attack-b'],
-			targetTokenIds: ['ncs-target-token'],
-			selections: [
-				{ memberCombatantId: 'ncs-group-attack-a', actionId: 'action-a' },
-				{ memberCombatantId: 'ncs-group-attack-b', actionId: 'action-b' },
-			],
-			endTurn: false,
-		});
-
-		expect(chatCreate).toHaveBeenCalledTimes(1);
-		const createdChatData = chatCreate.mock.calls[0]?.[0] as Record<string, unknown>;
-		expect(createdChatData.type).toBe('base');
-		expect(createdChatData.content).toBe('');
-		const createdFlags = createdChatData.flags as Record<string, unknown>;
-		expect(createdFlags).toBeDefined();
-		expect((createdFlags.nimble as Record<string, unknown>).chatCardType).toBe('minionGroupAttack');
-		const createdSystem = createdChatData.system as Record<string, unknown>;
-		expect(createdSystem.actorName).toBe('Selected Minions');
-		expect(createdSystem.targetName).toBe('Target');
-		expect(createdSystem.targets).toEqual(['Scene.scene.Token.ncs-target-token']);
-		expect(createdSystem.totalDamage).toBe(result.totalDamage);
-		const createdRows = createdSystem.rows as Array<Record<string, unknown>>;
-		expect(createdRows).toHaveLength(2);
-		expect(createdRows.map((row) => row.actionName)).toEqual(['Stab', 'Bite']);
-		expect(createdRows.map((row) => row.formula)).toEqual(['1d6', '1d6']);
-		expect(result.chatMessageId).toBe('group-attack-chat-1');
-		expect(result.rolledCombatantIds).toEqual(['ncs-group-attack-a', 'ncs-group-attack-b']);
-		expect(
-			(minionActorA as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
-		).not.toHaveBeenCalled();
-		expect(
-			(minionActorB as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
-		).not.toHaveBeenCalled();
-	});
-
-	it('skips exhausted non-character turns when advancing initiative', async () => {
-		const combatId = 'combat-next-turn-skip-exhausted';
-		const exhaustedNpcA = createMockCombatant({
-			id: 'exhausted-npc-a',
-			type: 'npc',
-			sort: 1,
+			sort: 3,
 			isOwner: false,
 			initiative: 13,
-			actionsCurrent: 0,
-			actor: createCombatActorFixture({ hp: 6 }),
+			actor: minionActorC,
 			combatId,
 		});
-		const exhaustedNpcB = createMockCombatant({
-			id: 'exhausted-npc-b',
+		const minionD = createMockCombatant({
+			id: 'minion-num-d',
 			type: 'npc',
-			sort: 2,
+			sort: 4,
 			isOwner: false,
 			initiative: 12,
-			actionsCurrent: 0,
-			actor: createCombatActorFixture({ hp: 6 }),
+			actor: minionActorD,
 			combatId,
-		});
-		const character = createMockCombatant({
-			id: 'active-character',
-			type: 'character',
-			sort: 3,
-			isOwner: true,
-			initiative: 11,
-			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
-			combatId,
-		});
-
-		const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
-		superNextTurn.mockImplementation(async function (
-			this: Combat & { turn?: number; turns?: Combatant.Implementation[] },
-		) {
-			const turns = this.turns ?? [];
-			if (turns.length === 0) return this;
-			const currentTurn = Number.isInteger(this.turn) ? Number(this.turn) : 0;
-			const nextTurn = (currentTurn + 1) % turns.length;
-			this.turn = nextTurn;
-			(this as unknown as { combatant?: Combatant.Implementation | null }).combatant =
-				turns[nextTurn] ?? null;
-			return this;
 		});
 
 		const combat = new NimbleCombat({
 			id: combatId,
-			combatants: createCombatantsCollectionFixture([exhaustedNpcA, exhaustedNpcB, character]),
-			turns: [exhaustedNpcA, exhaustedNpcB, character],
-			turn: 0,
-			combatant: exhaustedNpcA,
-		} as unknown as Combat.CreateData);
+			combatants: createCombatantsCollectionFixture([minionA, minionB, minionC, minionD]),
+			turns: [minionA, minionB, minionC, minionD],
+			combatant: minionA,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+		};
 
-		await combat.nextTurn();
+		combat.update = vi.fn().mockImplementation(async (updateData: Record<string, unknown>) => {
+			for (const [path, value] of Object.entries(updateData)) {
+				if (path.includes('.')) {
+					foundry.utils.setProperty(combat, path, value);
+					continue;
+				}
 
-		expect(combat.combatant?.id).toBe('active-character');
-		expect(superNextTurn).toHaveBeenCalledTimes(2);
+				(combat as unknown as Record<string, unknown>)[path] = value;
+			}
+			return combat;
+		});
+
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(
+				async (_documentName: string, updates: Array<Record<string, unknown>>) => {
+					for (const update of updates) {
+						const id = update._id as string | undefined;
+						if (!id) continue;
+
+						const target = combat.combatants.get(id);
+						if (!target) continue;
+
+						for (const [path, value] of Object.entries(update)) {
+							if (path === '_id') continue;
+
+							if (path.includes('.')) {
+								foundry.utils.setProperty(target, path, value);
+								continue;
+							}
+
+							(target as unknown as Record<string, unknown>)[path] = value;
+						}
+					}
+
+					return updates as unknown as Combatant.Implementation[];
+				},
+			);
+
+		const getMemberNumber = (combatantId: string): number | null => {
+			const combatant = combat.combatants.get(combatantId);
+			if (!combatant) return null;
+			const value = foundry.utils.getProperty(combatant, 'flags.nimble.minionGroup.memberNumber');
+			return typeof value === 'number' ? value : null;
+		};
+
+		await combat.createMinionGroup(['minion-num-a', 'minion-num-b', 'minion-num-c']);
+		const createUpdates = combat.updateEmbeddedDocuments.mock.calls[0][1] as Array<
+			Record<string, unknown>
+		>;
+		const groupId = createUpdates[0]?.['flags.nimble.minionGroup.id'];
+		expect(typeof groupId).toBe('string');
+
+		expect(getMemberNumber('minion-num-a')).toBe(1);
+		expect(getMemberNumber('minion-num-b')).toBe(2);
+		expect(getMemberNumber('minion-num-c')).toBe(3);
+
+		await combat.removeMinionsFromGroups(['minion-num-b']);
+
+		expect(getMemberNumber('minion-num-a')).toBe(1);
+		expect(getMemberNumber('minion-num-c')).toBe(3);
+		const removedMinion = combat.combatants.get('minion-num-b');
+		expect(removedMinion).toBeDefined();
+		expect(foundry.utils.getProperty(removedMinion as object, 'flags.nimble.minionGroup')).toBe(
+			null,
+		);
+
+		await combat.addMinionsToGroup(groupId as string, ['minion-num-d']);
+
+		expect(getMemberNumber('minion-num-a')).toBe(1);
+		expect(getMemberNumber('minion-num-c')).toBe(3);
+		expect(getMemberNumber('minion-num-d')).toBe(4);
+	});
+
+	it('resets minion group letters to A when the last group is dissolved', async () => {
+		const combatId = 'combat-minion-group-letter-sequence';
+		const minionActorA = {
+			...createCombatActorFixture({ id: 'minion-seq-actor-a', hp: 1 }),
+			type: 'minion',
+		} as unknown as Actor.Implementation;
+		const minionActorB = {
+			...createCombatActorFixture({ id: 'minion-seq-actor-b', hp: 1 }),
+			type: 'minion',
+		} as unknown as Actor.Implementation;
+		const minionActorC = {
+			...createCombatActorFixture({ id: 'minion-seq-actor-c', hp: 1 }),
+			type: 'minion',
+		} as unknown as Actor.Implementation;
+		const minionActorD = {
+			...createCombatActorFixture({ id: 'minion-seq-actor-d', hp: 1 }),
+			type: 'minion',
+		} as unknown as Actor.Implementation;
+
+		const minionA = createMockCombatant({
+			id: 'minion-seq-a',
+			type: 'npc',
+			sort: 1,
+			isOwner: false,
+			initiative: 15,
+			actor: minionActorA,
+			combatId,
+		});
+		const minionB = createMockCombatant({
+			id: 'minion-seq-b',
+			type: 'npc',
+			sort: 2,
+			isOwner: false,
+			initiative: 13,
+			actor: minionActorB,
+			combatId,
+		});
+		const minionC = createMockCombatant({
+			id: 'minion-seq-c',
+			type: 'npc',
+			sort: 3,
+			isOwner: false,
+			initiative: 11,
+			actor: minionActorC,
+			combatId,
+		});
+		const minionD = createMockCombatant({
+			id: 'minion-seq-d',
+			type: 'npc',
+			sort: 4,
+			isOwner: false,
+			initiative: 9,
+			actor: minionActorD,
+			combatId,
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([minionA, minionB, minionC, minionD]),
+			turns: [minionA, minionB, minionC, minionD],
+			combatant: minionA,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+		};
+
+		combat.update = vi.fn().mockImplementation(async (updateData: Record<string, unknown>) => {
+			for (const [path, value] of Object.entries(updateData)) {
+				if (path.includes('.')) {
+					globals().foundry.utils.setProperty(combat, path, value);
+					continue;
+				}
+
+				(combat as unknown as Record<string, unknown>)[path] = value;
+			}
+			return combat;
+		});
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(
+				async (_documentName: string, updates: Array<Record<string, unknown>>) => {
+					for (const update of updates) {
+						const id = update._id as string | undefined;
+						if (!id) continue;
+
+						const target = combat.combatants.get(id);
+						if (!target) continue;
+
+						if (Object.hasOwn(update, 'flags.nimble.minionGroup')) {
+							globals().foundry.utils.setProperty(
+								target,
+								'flags.nimble.minionGroup',
+								update['flags.nimble.minionGroup'],
+							);
+						}
+
+						if (Object.hasOwn(update, 'flags.nimble.minionGroup.id')) {
+							globals().foundry.utils.setProperty(
+								target,
+								'flags.nimble.minionGroup.id',
+								update['flags.nimble.minionGroup.id'],
+							);
+						}
+						if (Object.hasOwn(update, 'flags.nimble.minionGroup.role')) {
+							globals().foundry.utils.setProperty(
+								target,
+								'flags.nimble.minionGroup.role',
+								update['flags.nimble.minionGroup.role'],
+							);
+						}
+						if (Object.hasOwn(update, 'flags.nimble.minionGroup.label')) {
+							globals().foundry.utils.setProperty(
+								target,
+								'flags.nimble.minionGroup.label',
+								update['flags.nimble.minionGroup.label'],
+							);
+						}
+						if (Object.hasOwn(update, 'flags.nimble.minionGroup.labelIndex')) {
+							globals().foundry.utils.setProperty(
+								target,
+								'flags.nimble.minionGroup.labelIndex',
+								update['flags.nimble.minionGroup.labelIndex'],
+							);
+						}
+					}
+
+					return updates as unknown as Combatant.Implementation[];
+				},
+			);
+
+		await combat.createMinionGroup(['minion-seq-a', 'minion-seq-b']);
+
+		const firstCreateUpdates = combat.updateEmbeddedDocuments.mock.calls[0][1] as Array<
+			Record<string, unknown>
+		>;
+		expect(
+			new Set(
+				firstCreateUpdates
+					.map((update) => update['flags.nimble.minionGroup.label'])
+					.filter(Boolean),
+			),
+		).toEqual(new Set(['A']));
+		const firstGroupId = firstCreateUpdates[0]?.['flags.nimble.minionGroup.id'] as string;
+		expect(typeof firstGroupId).toBe('string');
+
+		await combat.dissolveMinionGroups([firstGroupId]);
+		await combat.createMinionGroup(['minion-seq-c', 'minion-seq-d']);
+
+		const secondCreateUpdates = combat.updateEmbeddedDocuments.mock.calls[2][1] as Array<
+			Record<string, unknown>
+		>;
+		expect(
+			new Set(
+				secondCreateUpdates
+					.map((update) => update['flags.nimble.minionGroup.label'])
+					.filter(Boolean),
+			),
+		).toEqual(new Set(['A']));
+		expect(
+			new Set(
+				secondCreateUpdates
+					.map((update) => update['flags.nimble.minionGroup.labelIndex'])
+					.filter((value) => typeof value === 'number'),
+			),
+		).toEqual(new Set([0]));
+		expect(combat.update).toHaveBeenCalledWith({
+			'flags.nimble.minionGrouping.nextLabelIndex': 0,
+		});
+		expect(combat.update).toHaveBeenCalledWith({
+			'flags.nimble.minionGrouping.nextLabelIndex': 1,
+		});
 	});
 
 	it('allows GM drop reorder for all active combatant types', async () => {
@@ -1117,6 +885,111 @@ describe('NimbleCombat', () => {
 
 		expect(combat.turn).toBe(0);
 		expect(combat.update).not.toHaveBeenCalled();
+	});
+
+	it('switches to group leader turn when the active minion is added into an existing group', async () => {
+		const combatId = 'combat-add-minion-group-preserve-turn';
+		const minionActorLeader = {
+			...createCombatActorFixture({ id: 'minion-add-actor-leader', hp: 1 }),
+			type: 'minion',
+		} as unknown as Actor.Implementation;
+		const minionActorMember = {
+			...createCombatActorFixture({ id: 'minion-add-actor-member', hp: 1 }),
+			type: 'minion',
+		} as unknown as Actor.Implementation;
+		const minionActorActive = {
+			...createCombatActorFixture({ id: 'minion-add-actor-active', hp: 1 }),
+			type: 'minion',
+		} as unknown as Actor.Implementation;
+
+		const leader = createMockCombatant({
+			id: 'group-leader',
+			type: 'npc',
+			sort: 1,
+			isOwner: false,
+			initiative: 12,
+			actor: minionActorLeader,
+			combatId,
+		});
+		const member = createMockCombatant({
+			id: 'group-member',
+			type: 'npc',
+			sort: 1,
+			isOwner: false,
+			initiative: 12,
+			actor: minionActorMember,
+			combatId,
+		});
+		const activeMinion = createMockCombatant({
+			id: 'active-minion',
+			type: 'npc',
+			sort: 2,
+			isOwner: false,
+			initiative: 11,
+			actor: minionActorActive,
+			combatId,
+		});
+
+		(leader as unknown as { flags: Record<string, unknown> }).flags = {
+			nimble: {
+				minionGroup: { id: 'group-1', role: 'leader', label: 'A', labelIndex: 0, memberNumber: 1 },
+			},
+		};
+		(member as unknown as { flags: Record<string, unknown> }).flags = {
+			nimble: {
+				minionGroup: { id: 'group-1', role: 'member', label: 'A', labelIndex: 0, memberNumber: 2 },
+			},
+		};
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([leader, member, activeMinion]),
+			turns: [leader, activeMinion],
+			turn: 1,
+			combatant: activeMinion,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(
+				async (_documentName: string, updates: Array<Record<string, unknown>>) => {
+					for (const update of updates) {
+						const id = update._id as string | undefined;
+						if (!id) continue;
+						const target = combat.combatants.get(id);
+						if (!target) continue;
+
+						for (const [path, value] of Object.entries(update)) {
+							if (path === '_id') continue;
+							if (path.includes('.')) {
+								foundry.utils.setProperty(target, path, value);
+								continue;
+							}
+							(target as unknown as Record<string, unknown>)[path] = value;
+						}
+					}
+
+					return updates as unknown as Combatant.Implementation[];
+				},
+			);
+		combat.update = vi.fn().mockImplementation(async (updateData: Record<string, unknown>) => {
+			for (const [path, value] of Object.entries(updateData)) {
+				if (path.includes('.')) {
+					foundry.utils.setProperty(combat, path, value);
+					continue;
+				}
+				(combat as unknown as Record<string, unknown>)[path] = value;
+			}
+			return combat;
+		});
+
+		await combat.addMinionsToGroup('group-1', ['active-minion']);
+
+		expect(combat.turn).toBe(0);
+		expect(combat.update).toHaveBeenCalledWith({ turn: 0 });
 	});
 
 	it('blocks non-owner players from reordering character cards they do not own', async () => {
