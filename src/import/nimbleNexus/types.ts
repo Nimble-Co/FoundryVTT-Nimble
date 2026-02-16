@@ -1,5 +1,5 @@
 /**
- * TypeScript interfaces for Nimbrew/nimble.nexus monster import
+ * TypeScript interfaces for Nimble Nexus monster import
  */
 
 // Size categories matching both API and FoundryVTT
@@ -172,7 +172,7 @@ export type MonsterRoleFilter =
 /**
  * Search/filter options for the API
  */
-export interface NimbreApiSearchOptions {
+export interface NimbleNexusApiSearchOptions {
 	search?: string;
 	level?: string;
 	limit?: number;
@@ -214,12 +214,3 @@ export interface ImportOptions {
  * Actor type determination
  */
 export type ActorType = 'npc' | 'soloMonster' | 'minion';
-
-/**
- * Nimbrew JSON export format (user-uploaded files)
- * This matches the format exported from nimble.nexus
- */
-export interface NimbrewJsonExport {
-	monsters?: NimbleNexusMonster[];
-	data?: NimbleNexusMonster[];
-}

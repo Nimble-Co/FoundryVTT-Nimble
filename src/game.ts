@@ -13,7 +13,7 @@ import SpellSheet from './documents/sheets/SpellSheet.svelte.js';
 import SubclassSheet from './documents/sheets/SubclassSheet.svelte.js';
 
 // Dialogs
-import NimbrewImportDialog from './import/nimbrew/NimbrewImportDialog.svelte.js';
+import NimbleNexusImportDialog from './import/nimbleNexus/NimbleNexusImportDialog.svelte.js';
 
 // Managers
 import { ConditionManager } from './managers/ConditionManager.js';
@@ -51,7 +51,7 @@ const NIMBLE_GAME = {
 		...NIMBLE.Item.documentClasses,
 	},
 	dialogs: {
-		NimbrewImportDialog,
+		NimbleNexusImportDialog,
 	},
 	macros: {
 		activateItemMacro,

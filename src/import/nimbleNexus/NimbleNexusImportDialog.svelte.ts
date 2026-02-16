@@ -1,38 +1,38 @@
 /**
- * Dialog controller for Nimbrew monster import
+ * Dialog controller for Nimble Nexus monster import
  */
 
 import type { DeepPartial } from 'fvtt-types/utils';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
-import NimbrewImportDialogComponent from '#view/dialogs/NimbrewImportDialog.svelte';
-import { nimbrewApi, type NimbrewApiClient } from './NimbrewApiClient.js';
-import { nimbrewParser, type NimbrewParser } from './NimbrewParser.js';
+import NimbleNexusImportDialogComponent from '#view/dialogs/NimbleNexusImportDialog.svelte';
+import { nimbleNexusApi, type NimbleNexusApiClient } from './NimbleNexusApiClient.js';
+import { nimbleNexusParser, type NimbleNexusParser } from './NimbleNexusParser.js';
 import type {
 	BatchImportResult,
 	ImportOptions,
 	ImportResult,
 	MonsterRoleFilter,
 	MonsterTypeFilter,
-	NimbreApiSearchOptions,
+	NimbleNexusApiSearchOptions,
 	NimbleNexusMonster,
 } from './types.js';
 
 const { ApplicationV2 } = foundry.applications.api;
 
-export default class NimbrewImportDialog extends SvelteApplicationMixin(ApplicationV2) {
+export default class NimbleNexusImportDialog extends SvelteApplicationMixin(ApplicationV2) {
 	protected root;
-	protected props: { dialog: NimbrewImportDialog };
+	protected props: { dialog: NimbleNexusImportDialog };
 
 	// API client and parser
-	private api: NimbrewApiClient;
-	private parser: NimbrewParser;
+	private api: NimbleNexusApiClient;
+	private parser: NimbleNexusParser;
 
 	// Search state (reactive)
 	private _searchResults: NimbleNexusMonster[] = $state([]);
 	private _isLoading = $state(false);
 	private _error: string | null = $state(null);
 	private _nextCursor: string | undefined = $state(undefined);
-	private _lastSearchOptions: NimbreApiSearchOptions = {};
+	private _lastSearchOptions: NimbleNexusApiSearchOptions = {};
 
 	// Filter state (reactive)
 	private _levelFilter: string | null = $state(null);
@@ -57,10 +57,10 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 			},
 		});
 
-		this.root = NimbrewImportDialogComponent;
+		this.root = NimbleNexusImportDialogComponent;
 		this.props = { dialog: this };
-		this.api = nimbrewApi;
-		this.parser = nimbrewParser;
+		this.api = nimbleNexusApi;
+		this.parser = nimbleNexusParser;
 	}
 
 	static override DEFAULT_OPTIONS = {
@@ -182,7 +182,7 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 	 */
 	async searchMonsters(
 		query: string,
-		options: Omit<NimbreApiSearchOptions, 'search'> = {},
+		options: Omit<NimbleNexusApiSearchOptions, 'search'> = {},
 		clearResults = true,
 	): Promise<void> {
 		this._isLoading = true;
@@ -195,7 +195,7 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 		}
 
 		// Build search options with current filters
-		const searchOptions: NimbreApiSearchOptions = {
+		const searchOptions: NimbleNexusApiSearchOptions = {
 			...options,
 			search: query,
 			level: this._levelFilter ?? undefined,
@@ -240,7 +240,7 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 	/**
 	 * Browse monsters without search term
 	 */
-	async browseMonsters(options: NimbreApiSearchOptions = {}): Promise<void> {
+	async browseMonsters(options: NimbleNexusApiSearchOptions = {}): Promise<void> {
 		return this.searchMonsters('', options);
 	}
 

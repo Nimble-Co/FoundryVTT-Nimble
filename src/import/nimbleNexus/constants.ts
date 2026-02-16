@@ -1,5 +1,5 @@
 /**
- * Constants and mappings for Nimbrew monster import
+ * Constants and mappings for Nimble Nexus monster import
  */
 
 import type { FoundrySaveStat, SaveStat } from './types.js';

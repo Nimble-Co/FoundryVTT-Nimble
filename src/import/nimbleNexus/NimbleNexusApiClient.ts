@@ -4,7 +4,7 @@
 
 import { DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT, NIMBLE_NEXUS_API_URL } from './constants.js';
 import type {
-	NimbreApiSearchOptions,
+	NimbleNexusApiSearchOptions,
 	NimbleNexusApiResponse,
 	NimbleNexusMonster,
 	NimbleNexusSingleMonsterResponse,
@@ -13,13 +13,13 @@ import type {
 /**
  * Error class for API-specific errors
  */
-export class NimbrewApiError extends Error {
+export class NimbleNexusApiError extends Error {
 	status: number;
 	statusText: string;
 
 	constructor(message: string, status: number, statusText: string) {
 		super(message);
-		this.name = 'NimbrewApiError';
+		this.name = 'NimbleNexusApiError';
 		this.status = status;
 		this.statusText = statusText;
 	}
@@ -50,7 +50,7 @@ async function fetchWithErrorHandling<T>(url: string): Promise<T> {
 		const response = await fetch(url);
 
 		if (!response.ok) {
-			throw new NimbrewApiError(
+			throw new NimbleNexusApiError(
 				`API request failed: ${response.statusText}`,
 				response.status,
 				response.statusText,
@@ -59,12 +59,12 @@ async function fetchWithErrorHandling<T>(url: string): Promise<T> {
 
 		return (await response.json()) as T;
 	} catch (error) {
-		if (error instanceof NimbrewApiError) {
+		if (error instanceof NimbleNexusApiError) {
 			throw error;
 		}
 
 		// Network errors or other fetch failures
-		throw new NimbrewApiError(
+		throw new NimbleNexusApiError(
 			error instanceof Error ? error.message : 'Unknown network error',
 			0,
 			'Network Error',
@@ -76,7 +76,7 @@ async function fetchWithErrorHandling<T>(url: string): Promise<T> {
  * Search for monsters with optional filters
  */
 export async function searchMonsters(
-	options: NimbreApiSearchOptions = {},
+	options: NimbleNexusApiSearchOptions = {},
 ): Promise<NimbleNexusApiResponse> {
 	const limit = Math.min(options.limit ?? DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT);
 
@@ -110,7 +110,7 @@ export async function getMonsterById(id: string): Promise<NimbleNexusMonster> {
 export async function paginateMonsters(
 	cursor?: string,
 	limit: number = DEFAULT_PAGE_LIMIT,
-	sort?: NimbreApiSearchOptions['sort'],
+	sort?: NimbleNexusApiSearchOptions['sort'],
 ): Promise<NimbleNexusApiResponse> {
 	return searchMonsters({ cursor, limit, sort });
 }
@@ -130,13 +130,13 @@ export function extractCursorFromNextLink(nextLink?: string): string | undefined
 }
 
 /**
- * NimbrewApiClient class providing a unified interface
+ * NimbleNexusApiClient class providing a unified interface
  */
-export class NimbrewApiClient {
+export class NimbleNexusApiClient {
 	/**
 	 * Search for monsters
 	 */
-	async search(options: NimbreApiSearchOptions = {}): Promise<NimbleNexusApiResponse> {
+	async search(options: NimbleNexusApiSearchOptions = {}): Promise<NimbleNexusApiResponse> {
 		return searchMonsters(options);
 	}
 
@@ -153,7 +153,7 @@ export class NimbrewApiClient {
 	async paginate(
 		cursor?: string,
 		limit?: number,
-		sort?: NimbreApiSearchOptions['sort'],
+		sort?: NimbleNexusApiSearchOptions['sort'],
 	): Promise<NimbleNexusApiResponse> {
 		return paginateMonsters(cursor, limit, sort);
 	}
@@ -167,4 +167,4 @@ export class NimbrewApiClient {
 }
 
 // Export a singleton instance for convenience
-export const nimbrewApi = new NimbrewApiClient();
+export const nimbleNexusApi = new NimbleNexusApiClient();

@@ -33,7 +33,7 @@
 			<button
 				class="nimble-button"
 				data-button-variant="full-width"
-				onclick={() => dialog.openNimbrewImport.call(dialog)}
+				onclick={() => dialog.openNimbleNexusImport.call(dialog)}
 			>
 				<i class="fa-solid fa-file-import"></i>
 				{game.i18n.localize(actorImport.buttonLabel)}
