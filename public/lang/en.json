@@ -3,7 +3,7 @@
 		"Actor": {
 			"character": "Player Character",
 			"minion": "Minion",
-			"npc": "Non-Player Character",
+			"npc": "Standard",
 			"soloMonster": "Solo Monster"
 		},
 		"Item": {
@@ -780,6 +780,52 @@
 			"autoExpandRolls": {
 				"name": "Auto-Expand Rolls",
 				"hint": "When enabled, dice roll details are shown inline below each roll in chat messages, without needing to hover."
+			}
+		},
+		"actorImport": {
+			"buttonLabel": "Import Actor",
+			"dialogTitle": "Import from Nimble Nexus",
+			"searchPlaceholder": "Search monsters...",
+			"selectAll": "Select All",
+			"deselectAll": "Deselect All",
+			"importSelected": "Import Selected",
+			"createFolder": "Create folder for imports",
+			"noFolder": "No folder (root)",
+			"noResults": "No monsters found",
+			"loading": "Loading...",
+			"loadMore": "Load More",
+			"successMessage": "Successfully imported {count} monster(s)",
+			"partialSuccessMessage": "Imported {successful} monster(s), {failed} failed",
+			"filters": {
+				"level": "Level",
+				"type": "Type",
+				"role": "Role",
+				"clearFilters": "Clear all filters",
+				"allLevels": "All Levels",
+				"allTypes": "All Types",
+				"allRoles": "All Roles",
+				"levelFraction": {
+					"quarter": "1/4",
+					"third": "1/3",
+					"half": "1/2"
+				},
+				"monsterTypes": {
+					"standard": "Standard",
+					"legendary": "Legendary",
+					"minion": "Minion"
+				},
+				"roles": {
+					"ambusher": "Ambusher",
+					"aoe": "AoE",
+					"controller": "Controller",
+					"defender": "Defender",
+					"melee": "Melee",
+					"ranged": "Ranged",
+					"skirmisher": "Skirmisher",
+					"striker": "Striker",
+					"summoner": "Summoner",
+					"support": "Support"
+				}
 			}
 		}
 	}
