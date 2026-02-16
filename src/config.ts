@@ -120,6 +120,53 @@ const characterCreation = {
 	incompleteCharacterReturn: 'NIMBLE.characterCreation.incompleteCharacterReturn',
 };
 
+const actorImport = {
+	buttonLabel: 'NIMBLE.actorImport.buttonLabel',
+	dialogTitle: 'NIMBLE.actorImport.dialogTitle',
+	searchPlaceholder: 'NIMBLE.actorImport.searchPlaceholder',
+	selectAll: 'NIMBLE.actorImport.selectAll',
+	deselectAll: 'NIMBLE.actorImport.deselectAll',
+	importSelected: 'NIMBLE.actorImport.importSelected',
+	createFolder: 'NIMBLE.actorImport.createFolder',
+	noFolder: 'NIMBLE.actorImport.noFolder',
+	noResults: 'NIMBLE.actorImport.noResults',
+	loading: 'NIMBLE.actorImport.loading',
+	loadMore: 'NIMBLE.actorImport.loadMore',
+	successMessage: 'NIMBLE.actorImport.successMessage',
+	partialSuccessMessage: 'NIMBLE.actorImport.partialSuccessMessage',
+	filters: {
+		level: 'NIMBLE.actorImport.filters.level',
+		type: 'NIMBLE.actorImport.filters.type',
+		role: 'NIMBLE.actorImport.filters.role',
+		clearFilters: 'NIMBLE.actorImport.filters.clearFilters',
+		allLevels: 'NIMBLE.actorImport.filters.allLevels',
+		allTypes: 'NIMBLE.actorImport.filters.allTypes',
+		allRoles: 'NIMBLE.actorImport.filters.allRoles',
+		levelFraction: {
+			quarter: 'NIMBLE.actorImport.filters.levelFraction.quarter',
+			third: 'NIMBLE.actorImport.filters.levelFraction.third',
+			half: 'NIMBLE.actorImport.filters.levelFraction.half',
+		},
+		monsterTypes: {
+			standard: 'NIMBLE.actorImport.filters.monsterTypes.standard',
+			legendary: 'NIMBLE.actorImport.filters.monsterTypes.legendary',
+			minion: 'NIMBLE.actorImport.filters.monsterTypes.minion',
+		},
+		roles: {
+			ambusher: 'NIMBLE.actorImport.filters.roles.ambusher',
+			aoe: 'NIMBLE.actorImport.filters.roles.aoe',
+			controller: 'NIMBLE.actorImport.filters.roles.controller',
+			defender: 'NIMBLE.actorImport.filters.roles.defender',
+			melee: 'NIMBLE.actorImport.filters.roles.melee',
+			ranged: 'NIMBLE.actorImport.filters.roles.ranged',
+			skirmisher: 'NIMBLE.actorImport.filters.roles.skirmisher',
+			striker: 'NIMBLE.actorImport.filters.roles.striker',
+			summoner: 'NIMBLE.actorImport.filters.roles.summoner',
+			support: 'NIMBLE.actorImport.filters.roles.support',
+		},
+	},
+};
+
 const hints = {
 	skillPointAssignment: 'NIMBLE.hints.skillPointAssignment',
 	characterCreationSkillPointAssignment: 'NIMBLE.hints.characterCreationSkillPointAssignment',
@@ -803,6 +850,7 @@ const NIMBLE = {
 	armorTypes,
 	armorTypesPlural,
 	boonTypes,
+	actorImport,
 	characterCreation,
 	characterCreationStages,
 	classBanners,
