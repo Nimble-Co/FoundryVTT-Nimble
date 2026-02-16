@@ -124,8 +124,6 @@ const actorImport = {
 	buttonLabel: 'NIMBLE.actorImport.buttonLabel',
 	dialogTitle: 'NIMBLE.actorImport.dialogTitle',
 	searchPlaceholder: 'NIMBLE.actorImport.searchPlaceholder',
-	browseTab: 'NIMBLE.actorImport.browseTab',
-	uploadTab: 'NIMBLE.actorImport.uploadTab',
 	selectAll: 'NIMBLE.actorImport.selectAll',
 	deselectAll: 'NIMBLE.actorImport.deselectAll',
 	importSelected: 'NIMBLE.actorImport.importSelected',
@@ -134,8 +132,6 @@ const actorImport = {
 	noResults: 'NIMBLE.actorImport.noResults',
 	loading: 'NIMBLE.actorImport.loading',
 	loadMore: 'NIMBLE.actorImport.loadMore',
-	selectFile: 'NIMBLE.actorImport.selectFile',
-	clearFile: 'NIMBLE.actorImport.clearFile',
 	successMessage: 'NIMBLE.actorImport.successMessage',
 	partialSuccessMessage: 'NIMBLE.actorImport.partialSuccessMessage',
 	filters: {

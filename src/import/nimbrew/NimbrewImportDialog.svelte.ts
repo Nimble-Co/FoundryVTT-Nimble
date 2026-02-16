@@ -43,9 +43,6 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 	// Selection state (reactive)
 	private _selectedMonsters: Set<string> = $state(new Set());
 
-	// File upload state (reactive)
-	private _uploadedMonsters: NimbleNexusMonster[] = $state([]);
-
 	// Folder list version (increment to trigger refresh)
 	private _foldersVersion = $state(0);
 
@@ -110,10 +107,6 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 		return this._selectedMonsters;
 	}
 
-	get uploadedMonsters(): NimbleNexusMonster[] {
-		return this._uploadedMonsters;
-	}
-
 	get foldersVersion(): number {
 		return this._foldersVersion;
 	}
@@ -144,43 +137,6 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 	set roleFilter(value: MonsterRoleFilter) {
 		this._roleFilter = value;
 		this.scheduleFilterRefetch();
-	}
-
-	/**
-	 * Get filtered uploaded monsters based on current filter settings (client-side for uploads)
-	 */
-	get filteredUploadedMonsters(): NimbleNexusMonster[] {
-		return this.applyFiltersToUploaded(this._uploadedMonsters);
-	}
-
-	/**
-	 * Apply client-side filters to uploaded monster list
-	 */
-	private applyFiltersToUploaded(monsters: NimbleNexusMonster[]): NimbleNexusMonster[] {
-		return monsters.filter((monster) => {
-			const attrs = monster.attributes;
-
-			// Level filter - compare as strings to handle fractional levels
-			if (this._levelFilter !== null) {
-				const monsterLevel = String(attrs.level);
-				if (monsterLevel !== this._levelFilter) return false;
-			}
-
-			// Monster type filter
-			if (this._monsterTypeFilter !== 'all') {
-				if (this._monsterTypeFilter === 'legendary' && !attrs.legendary) return false;
-				if (this._monsterTypeFilter === 'minion' && !attrs.minion) return false;
-				if (this._monsterTypeFilter === 'standard' && (attrs.legendary || attrs.minion))
-					return false;
-			}
-
-			// Role filter
-			if (this._roleFilter !== 'all' && attrs.role) {
-				if (attrs.role.toLowerCase() !== this._roleFilter) return false;
-			}
-
-			return true;
-		});
 	}
 
 	/**
@@ -320,61 +276,6 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 	}
 
 	/**
-	 * Select all uploaded monsters
-	 */
-	selectAllUploaded(): void {
-		const newSet = new Set(this._selectedMonsters);
-		for (const monster of this._uploadedMonsters) {
-			newSet.add(monster.id);
-		}
-		this._selectedMonsters = newSet;
-	}
-
-	/**
-	 * Handle file upload
-	 */
-	async handleFileUpload(file: File): Promise<void> {
-		this._isLoading = true;
-		this._error = null;
-
-		try {
-			const text = await file.text();
-
-			let jsonData: unknown;
-			try {
-				jsonData = JSON.parse(text);
-			} catch {
-				throw new Error(
-					`Invalid JSON format in "${file.name}". Please ensure the file contains valid JSON.`,
-				);
-			}
-
-			this._uploadedMonsters = this.parser.parseJsonFile(jsonData);
-
-			if (this._uploadedMonsters.length === 0) {
-				throw new Error(
-					`No monsters found in "${file.name}". The file should contain monster data in the expected format.`,
-				);
-			}
-
-			this._selectedMonsters = new Set();
-		} catch (err) {
-			this._error = err instanceof Error ? err.message : 'Failed to parse file';
-			this._uploadedMonsters = [];
-		} finally {
-			this._isLoading = false;
-		}
-	}
-
-	/**
-	 * Clear uploaded monsters
-	 */
-	clearUploadedMonsters(): void {
-		this._uploadedMonsters = [];
-		this._selectedMonsters = new Set();
-	}
-
-	/**
 	 * Get selected monsters from search results
 	 */
 	getSelectedSearchMonsters(): NimbleNexusMonster[] {
@@ -382,36 +283,10 @@ export default class NimbrewImportDialog extends SvelteApplicationMixin(Applicat
 	}
 
 	/**
-	 * Get selected monsters from uploaded file
-	 */
-	getSelectedUploadedMonsters(): NimbleNexusMonster[] {
-		return this._uploadedMonsters.filter((m) => this._selectedMonsters.has(m.id));
-	}
-
-	/**
 	 * Import selected monsters from search
 	 */
 	async importSelectedFromSearch(options: ImportOptions = {}): Promise<BatchImportResult> {
 		const monsters = this.getSelectedSearchMonsters();
-		if (monsters.length === 0) return { results: [] };
-
-		this._isLoading = true;
-
-		try {
-			const batchResult = await this.parser.importBatch(monsters, options);
-			this.showImportResults(batchResult.results);
-			this._foldersVersion++;
-			return batchResult;
-		} finally {
-			this._isLoading = false;
-		}
-	}
-
-	/**
-	 * Import selected monsters from uploaded file
-	 */
-	async importSelectedFromUpload(options: ImportOptions = {}): Promise<BatchImportResult> {
-		const monsters = this.getSelectedUploadedMonsters();
 		if (monsters.length === 0) return { results: [] };
 
 		this._isLoading = true;

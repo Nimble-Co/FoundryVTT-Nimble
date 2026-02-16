@@ -786,8 +786,6 @@
 			"buttonLabel": "Import Actor",
 			"dialogTitle": "Import from Nimble Nexus",
 			"searchPlaceholder": "Search monsters...",
-			"browseTab": "Browse",
-			"uploadTab": "Upload File",
 			"selectAll": "Select All",
 			"deselectAll": "Deselect All",
 			"importSelected": "Import Selected",
@@ -796,8 +794,6 @@
 			"noResults": "No monsters found",
 			"loading": "Loading...",
 			"loadMore": "Load More",
-			"selectFile": "Select JSON File",
-			"clearFile": "Clear",
 			"successMessage": "Successfully imported {count} monster(s)",
 			"partialSuccessMessage": "Imported {successful} monster(s), {failed} failed",
 			"filters": {
