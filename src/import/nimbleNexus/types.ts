@@ -96,6 +96,7 @@ export interface NimbleNexusMonsterAttributes {
 	lastStand?: NimbleNexusLastStand;
 	saves?: Partial<Record<SaveStat, number>>;
 	description?: string;
+	paperforgeImageUrl?: string;
 }
 
 /**

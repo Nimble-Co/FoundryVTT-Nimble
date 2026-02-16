@@ -3,9 +3,9 @@
  */
 
 import {
-	DEFAULT_ACTOR_IMAGE,
 	DEFAULT_FEATURE_ICONS,
 	FEATURE_SUBTYPES,
+	getMonsterImageUrl,
 	levelToString,
 	SAVE_STAT_MAP,
 	saveValueToRollMode,
@@ -449,11 +449,12 @@ export function toActorData(monster: NimbleNexusMonster): Actor.CreateData {
 	const savingThrows = parseSaves(attributes.saves);
 	const items = createMonsterFeatures(attributes);
 	const tokenDimensions = SIZE_TO_TOKEN_DIMENSIONS[attributes.size] ?? { width: 1, height: 1 };
+	const imageUrl = getMonsterImageUrl(attributes.paperforgeImageUrl);
 
 	return {
 		name: attributes.name,
 		type: actorType,
-		img: DEFAULT_ACTOR_IMAGE,
+		img: imageUrl,
 		system: {
 			attributes: {
 				armor: attributes.armor,
@@ -483,7 +484,7 @@ export function toActorData(monster: NimbleNexusMonster): Actor.CreateData {
 			width: tokenDimensions.width,
 			height: tokenDimensions.height,
 			texture: {
-				src: DEFAULT_ACTOR_IMAGE,
+				src: imageUrl,
 			},
 			lockRotation: true,
 			disposition: -1, // HOSTILE

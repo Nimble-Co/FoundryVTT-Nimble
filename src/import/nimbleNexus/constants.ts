@@ -5,9 +5,14 @@
 import type { FoundrySaveStat, SaveStat } from './types.js';
 
 /**
+ * Base URL for nimble.nexus
+ */
+export const NIMBLE_NEXUS_BASE_URL = 'https://nimble.nexus';
+
+/**
  * API base URL for nimble.nexus
  */
-export const NIMBLE_NEXUS_API_URL = 'https://nimble.nexus/api';
+export const NIMBLE_NEXUS_API_URL = `${NIMBLE_NEXUS_BASE_URL}/api`;
 
 /**
  * Default pagination limit
@@ -78,6 +83,14 @@ export const DEFAULT_FEATURE_ICONS: Record<string, string> = {
  * Default actor image
  */
 export const DEFAULT_ACTOR_IMAGE = 'icons/svg/mystery-man.svg';
+
+/**
+ * Get full image URL from paperforge relative path
+ */
+export function getMonsterImageUrl(paperforgeImageUrl?: string): string {
+	if (!paperforgeImageUrl) return DEFAULT_ACTOR_IMAGE;
+	return `${NIMBLE_NEXUS_BASE_URL}${paperforgeImageUrl}`;
+}
 
 /**
  * Level string to number conversion for fractional levels
