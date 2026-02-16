@@ -1,3 +1,31 @@
+:root {
+  --nimble-combat-scene-reserve-top: 0px;
+  --nimble-combat-scene-reserve-right: 0px;
+  --nimble-combat-scene-reserve-bottom: 0px;
+  --nimble-combat-scene-reserve-left: 0px;
+}
+
+#board {
+  inset-block-start: var(--nimble-combat-scene-reserve-top, 0px);
+  inset-inline-end: var(--nimble-combat-scene-reserve-right, 0px);
+  inset-block-end: var(--nimble-combat-scene-reserve-bottom, 0px);
+  inset-inline-start: var(--nimble-combat-scene-reserve-left, 0px);
+}
+
+#ui-left,
+#interface #ui-left {
+  inset-inline-start: var(--nimble-combat-scene-reserve-left, 0px);
+}
+
+#ui-right,
+#interface #ui-right {
+  inset-inline-end: var(--nimble-combat-scene-reserve-right, 0px);
+}
+
+#nimble-combat-tracker-settings {
+  z-index: 2000 !important;
+}
+
 .nimble-combat-tracker {
   --nimble-combat-tracker-hover-color: hsl(0, 66%, 53%);
   --nimble-combat-tracker-border-color: hsl(41, 18%, 54%);
@@ -5,8 +33,17 @@
   --nimble-combat-sidebar-max-width: 13rem;
   --nimble-combat-sidebar-width: var(--nimble-combat-sidebar-min-width);
   --nimble-combat-card-scale: 1;
+  --nimble-combat-border-glow-color: hsl(0, 0%, 100%);
+  --nimble-combat-edge-crawler-color: hsl(0, 0%, 100%);
+  --nimble-combat-pulse-duration: 1.6s;
+  --nimble-combat-border-glow-scale: 1;
+  --nimble-combat-edge-crawler-size-scale: 1;
 
-  position: relative;
+  position: fixed;
+  inset-block-start: 0;
+  inset-block-end: 0;
+  inset-inline-start: 0;
+  inset-inline-end: auto;
   display: flex;
   flex-direction: column;
   height: 100dvh;
@@ -45,6 +82,24 @@
     transition: var(--nimble-standard-transition);
     z-index: 1001;
     touch-action: none;
+  }
+
+  &--location-right {
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+    border-inline-start: 1px solid var(--color-dark-4);
+    border-inline-end: 0;
+
+    .nimble-combat-tracker__resize-handle {
+      right: auto;
+      left: 0;
+      cursor: ew-resize;
+      background: linear-gradient(
+        to left,
+        transparent,
+        color-mix(in srgb, var(--nimble-combat-tracker-border-color) 35%, transparent)
+      );
+    }
   }
 
   &__footer {
@@ -90,12 +145,50 @@
     border-block-end: 1px solid var(--color-dark-4);
 
     &--no-controls {
-      padding-block-end: 0.5rem;
+      padding-block-end: 0.625rem;
     }
 
     &--not-started {
-      padding: 0.5rem 0.25rem;
+      padding: 0.5rem 0.25rem 0.625rem;
     }
+  }
+
+  &__header-button-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.25rem;
+    margin-block-start: 0.375rem;
+  }
+
+  &__settings-button {
+    --button-size: fit-content;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0;
+    padding: 0;
+    color: inherit;
+    line-height: 0;
+    background: transparent;
+    border: 0;
+    transition: var(--nimble-standard-transition);
+
+    &:focus,
+    &:hover {
+      color: var(--nimble-combat-tracker-hover-color);
+      text-shadow: 0 0 8px var(--nimble-combat-tracker-hover-color);
+      box-shadow: none;
+      transform: scale(1.2);
+    }
+  }
+
+  &__settings-button-icon {
+    margin: 0;
   }
 
   &__heading {
@@ -131,10 +224,10 @@
 
 .nimble-combat-tracker-controls {
   display: flex;
+  flex-grow: 1;
   justify-content: space-between;
   align-items: center;
-  padding-block: 0.375rem 0;
-  padding-inline: 0.375rem;
+  padding: 0 0.125rem;
 
   &__button {
     --button-size: fit-content;
@@ -194,9 +287,15 @@
   }
 
   &__item--active {
-    --nimble-combat-active-crawler-offset: calc(0.16rem * var(--nimble-combat-card-scale));
-    --nimble-combat-active-crawler-length: calc(1.52rem * var(--nimble-combat-card-scale));
-    --nimble-combat-active-crawler-thickness: calc(0.18rem * var(--nimble-combat-card-scale));
+    --nimble-combat-active-crawler-offset: calc(
+      0.16rem * var(--nimble-combat-card-scale) * var(--nimble-combat-edge-crawler-size-scale)
+    );
+    --nimble-combat-active-crawler-length: calc(
+      1.52rem * var(--nimble-combat-card-scale) * var(--nimble-combat-edge-crawler-size-scale)
+    );
+    --nimble-combat-active-crawler-thickness: calc(
+      0.18rem * var(--nimble-combat-card-scale) * var(--nimble-combat-edge-crawler-size-scale)
+    );
     --nimble-combat-active-crawler-duration: 4.2s;
     --nimble-combat-active-crawler-opposite-delay: -2.1s;
 
@@ -213,7 +312,7 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    z-index: 0;
+    z-index: 2;
   }
 
   &__active-crawler::before,
@@ -227,14 +326,16 @@
     border-radius: calc(999px * var(--nimble-combat-card-scale));
     background: linear-gradient(
       90deg,
-      hsla(0, 0%, 100%, 0.02) 0%,
-      hsla(0, 0%, 100%, 0.22) 26%,
-      hsla(0, 0%, 100%, 0.96) 68%,
-      hsla(0, 0%, 100%, 0.08) 100%
+      color-mix(in srgb, var(--nimble-combat-edge-crawler-color) 2%, transparent) 0%,
+      color-mix(in srgb, var(--nimble-combat-edge-crawler-color) 20%, transparent) 26%,
+      color-mix(in srgb, var(--nimble-combat-edge-crawler-color) 96%, transparent) 68%,
+      color-mix(in srgb, var(--nimble-combat-edge-crawler-color) 8%, transparent) 100%
     );
     box-shadow:
-      0 0 calc(7px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.8),
-      0 0 calc(13px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.4);
+      0 0 calc(7px * var(--nimble-combat-card-scale))
+        color-mix(in srgb, var(--nimble-combat-edge-crawler-color) 80%, transparent),
+      0 0 calc(13px * var(--nimble-combat-card-scale))
+        color-mix(in srgb, var(--nimble-combat-edge-crawler-color) 40%, transparent);
     offset-position: 0 0;
     offset-path: inset(
       calc(-1 * var(--nimble-combat-active-crawler-offset))
@@ -249,6 +350,33 @@
   &__active-crawler::after {
     opacity: 0.86;
     animation-delay: var(--nimble-combat-active-crawler-opposite-delay);
+  }
+
+  &--pulse {
+    .nimble-combatant--active {
+      animation: nimble-combatant-active-breathe var(--nimble-combat-pulse-duration) ease-in-out
+        infinite;
+    }
+  }
+
+  &--border-glow {
+    .nimble-combatant--active {
+      border-color: var(--nimble-combat-border-glow-color);
+      box-shadow:
+        0 0 calc(10px * var(--nimble-combat-card-scale) * var(--nimble-combat-border-glow-scale))
+          color-mix(in srgb, var(--nimble-combat-border-glow-color) 70%, transparent),
+        0 0 calc(18px * var(--nimble-combat-card-scale) * var(--nimble-combat-border-glow-scale))
+          color-mix(in srgb, var(--nimble-combat-border-glow-color) 42%, transparent);
+    }
+
+    .nimble-combatant--active:hover {
+      border-color: var(--nimble-combat-border-glow-color);
+      box-shadow:
+        0 0 calc(12px * var(--nimble-combat-card-scale) * var(--nimble-combat-border-glow-scale))
+          color-mix(in srgb, var(--nimble-combat-border-glow-color) 80%, transparent),
+        0 0 calc(22px * var(--nimble-combat-card-scale) * var(--nimble-combat-border-glow-scale))
+          color-mix(in srgb, var(--nimble-combat-border-glow-color) 50%, transparent);
+    }
   }
 
   &__item--preview-gap-before {
@@ -353,16 +481,9 @@
 
   &--active {
     border-color: hsl(0, 0%, 100%);
-    box-shadow:
-      0 0 calc(10px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.7),
-      0 0 calc(18px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.42);
-    animation: nimble-combatant-active-breathe 1.6s ease-in-out infinite;
 
     &:hover {
       border-color: hsl(0, 0%, 100%);
-      box-shadow:
-        0 0 calc(12px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.8),
-        0 0 calc(22px * var(--nimble-combat-card-scale)) hsla(0, 0%, 100%, 0.5);
     }
   }
 

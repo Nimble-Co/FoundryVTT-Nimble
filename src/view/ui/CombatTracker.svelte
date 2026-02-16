@@ -6,10 +6,20 @@
 		getCombatantTypePriority,
 	} from '../../utils/combatantOrdering.js';
 	import { isCombatantDead } from '../../utils/isCombatantDead.js';
+	import {
+		getCombatTrackerLocation,
+		getCurrentTurnAnimationSettings,
+		isCombatTrackerLocationSettingKey,
+		isCurrentTurnAnimationSettingKey,
+		type CombatTrackerLocation,
+		type CombatTrackerSideLocation,
+		type CurrentTurnAnimationSettings,
+	} from '../../settings/combatTrackerSettings.js';
 	import BaseCombatant from './components/BaseCombatant.svelte';
 	import CombatTrackerControls from './components/CombatTrackerControls.svelte';
 	import PlayerCharacterCombatant from './components/PlayerCharacterCombatant.svelte';
 	import MonsterCombatant from '#view/ui/components/MonsterCombatant.svelte';
+	import CombatTrackerSettings from '#view/ui/CombatTrackerSettings.svelte.js';
 
 	type CombatWithDrop = Combat & {
 		_onDrop?: (
@@ -32,15 +42,41 @@
 		combatantId: string;
 	}
 
+	interface CurrentTurnAnimationSettingsPreviewDetail {
+		settings: CurrentTurnAnimationSettings;
+	}
+
+	interface CombatTrackerLocationPreviewDetail {
+		location: CombatTrackerLocation;
+	}
+
+	interface CombatTrackerReserveInsets {
+		top: number;
+		right: number;
+		bottom: number;
+		left: number;
+	}
+
 	const COMBAT_TRACKER_MIN_WIDTH_REM = 6.5;
 	const COMBAT_TRACKER_MAX_WIDTH_REM = COMBAT_TRACKER_MIN_WIDTH_REM * 2;
 	const COMBAT_TRACKER_WIDTH_STORAGE_KEY = 'nimble.combatTracker.widthRem';
 	const DRAG_TARGET_EXPANSION_REM = 0.9;
 	const DRAG_SWITCH_UPPER_RATIO = 0.4;
 	const DRAG_SWITCH_LOWER_RATIO = 0.6;
+	const PULSE_DURATION_MIN_SECONDS = 0.6;
+	const PULSE_DURATION_MAX_SECONDS = 2.4;
+	const GLOW_SCALE_MIN = 0.275;
+	const GLOW_SCALE_MAX = 2.775;
+	const EDGE_CRAWLER_SIZE_MIN = 0.6;
+	const EDGE_CRAWLER_SIZE_MAX = 2.0;
 
 	function clampCombatTrackerWidth(widthRem: number): number {
 		return Math.min(COMBAT_TRACKER_MAX_WIDTH_REM, Math.max(COMBAT_TRACKER_MIN_WIDTH_REM, widthRem));
+	}
+
+	function sliderToRange(value: number, min: number, max: number): number {
+		const normalizedValue = Math.min(100, Math.max(0, value)) / 100;
+		return min + (max - min) * normalizedValue;
 	}
 
 	function getRootFontSizePx(): number {
@@ -69,6 +105,47 @@
 		} catch (_error) {
 			// No-op: local storage access may fail in some browser privacy modes.
 		}
+	}
+
+	function clearCombatTrackerSceneReserveInsets(): void {
+		const rootStyle = document.documentElement.style;
+		rootStyle.setProperty('--nimble-combat-scene-reserve-top', '0px');
+		rootStyle.setProperty('--nimble-combat-scene-reserve-right', '0px');
+		rootStyle.setProperty('--nimble-combat-scene-reserve-bottom', '0px');
+		rootStyle.setProperty('--nimble-combat-scene-reserve-left', '0px');
+	}
+
+	function updateCombatTrackerSceneReserveInsets(): void {
+		if (!currentCombat) {
+			clearCombatTrackerSceneReserveInsets();
+			return;
+		}
+
+		const sidebarWidthPx = combatTrackerWidthRem * getRootFontSizePx();
+		const reserveInsets: CombatTrackerReserveInsets = {
+			top: 0,
+			right: combatTrackerLocation === 'right' ? sidebarWidthPx : 0,
+			bottom: 0,
+			left: combatTrackerLocation === 'left' ? sidebarWidthPx : 0,
+		};
+
+		const rootStyle = document.documentElement.style;
+		rootStyle.setProperty(
+			'--nimble-combat-scene-reserve-top',
+			`${Math.round(reserveInsets.top)}px`,
+		);
+		rootStyle.setProperty(
+			'--nimble-combat-scene-reserve-right',
+			`${Math.round(reserveInsets.right)}px`,
+		);
+		rootStyle.setProperty(
+			'--nimble-combat-scene-reserve-bottom',
+			`${Math.round(reserveInsets.bottom)}px`,
+		);
+		rootStyle.setProperty(
+			'--nimble-combat-scene-reserve-left',
+			`${Math.round(reserveInsets.left)}px`,
+		);
 	}
 
 	function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
@@ -206,6 +283,38 @@
 			pendingEmptyCombatPromptIds.delete(combatId);
 			void promptToEndCombatIfEmpty(combatId);
 		});
+	}
+
+	function updateCurrentTurnAnimationSettings() {
+		currentTurnAnimationSettings = getCurrentTurnAnimationSettings();
+	}
+
+	function normalizePreviewLocation(
+		location: CombatTrackerLocation,
+		fallback: CombatTrackerSideLocation,
+	): CombatTrackerSideLocation {
+		if (location === 'left' || location === 'right') return location;
+		return fallback;
+	}
+
+	function updateCombatTrackerLocation() {
+		combatTrackerLocation = getCombatTrackerLocation();
+	}
+
+	function handleCurrentTurnAnimationSettingsPreview(event: Event): void {
+		const previewEvent = event as CustomEvent<CurrentTurnAnimationSettingsPreviewDetail>;
+		const previewSettings = previewEvent.detail?.settings;
+		if (!previewSettings) return;
+
+		currentTurnAnimationSettings = previewSettings;
+	}
+
+	function handleCombatTrackerLocationPreview(event: Event): void {
+		const previewEvent = event as CustomEvent<CombatTrackerLocationPreviewDetail>;
+		const previewLocation = previewEvent.detail?.location;
+		if (!previewLocation) return;
+
+		combatTrackerLocation = normalizePreviewLocation(previewLocation, combatTrackerLocation);
 	}
 
 	async function _onDrop(event: DragEvent) {
@@ -365,6 +474,11 @@
 		return currentCombat?.startCombat();
 	}
 
+	function openCombatTrackerSettings(event: MouseEvent): void {
+		event.preventDefault();
+		CombatTrackerSettings.open();
+	}
+
 	function stopResizeTracking() {
 		if (resizeMoveHandler) {
 			window.removeEventListener('pointermove', resizeMoveHandler);
@@ -385,11 +499,13 @@
 		const startX = event.clientX;
 		const startWidthRem = combatTrackerWidthRem;
 		const rootFontSizePx = getRootFontSizePx();
+		const horizontalDirectionMultiplier = combatTrackerLocation === 'right' ? -1 : 1;
 
 		stopResizeTracking();
 
 		resizeMoveHandler = (moveEvent: PointerEvent) => {
-			const deltaRem = (moveEvent.clientX - startX) / rootFontSizePx;
+			const deltaRem =
+				((moveEvent.clientX - startX) / rootFontSizePx) * horizontalDirectionMultiplier;
 			combatTrackerWidthRem = clampCombatTrackerWidth(startWidthRem + deltaRem);
 		};
 
@@ -416,6 +532,27 @@
 	let combatantsListElement: HTMLOListElement | null = $state(null);
 	let combatTrackerWidthRem: number = $state(COMBAT_TRACKER_MIN_WIDTH_REM);
 	let combatTrackerScale = $derived(combatTrackerWidthRem / COMBAT_TRACKER_MIN_WIDTH_REM);
+	let currentTurnAnimationSettings: CurrentTurnAnimationSettings = $state(
+		getCurrentTurnAnimationSettings(),
+	);
+	let combatTrackerLocation: CombatTrackerSideLocation = $state(getCombatTrackerLocation());
+	let pulseAnimationDurationSeconds = $derived(
+		sliderToRange(
+			currentTurnAnimationSettings.pulseSpeed,
+			PULSE_DURATION_MAX_SECONDS,
+			PULSE_DURATION_MIN_SECONDS,
+		),
+	);
+	let borderGlowScale = $derived(
+		sliderToRange(currentTurnAnimationSettings.borderGlowSize, GLOW_SCALE_MIN, GLOW_SCALE_MAX),
+	);
+	let edgeCrawlerSizeScale = $derived(
+		sliderToRange(
+			currentTurnAnimationSettings.edgeCrawlerSize,
+			EDGE_CRAWLER_SIZE_MIN,
+			EDGE_CRAWLER_SIZE_MAX,
+		),
+	);
 	let resizeMoveHandler: ((event: PointerEvent) => void) | undefined;
 	let resizeEndHandler: ((event: PointerEvent) => void) | undefined;
 	// Version counter to force re-renders when combat data changes
@@ -433,13 +570,29 @@
 	let canvasTearDownHook: number | undefined;
 	let updateSceneHook: number | undefined;
 	let pendingEmptyCombatPromptIds = new Set<string>();
+	let updateSettingHook: number | undefined;
+	let resizeWindowHandler: (() => void) | undefined;
 
 	onMount(() => {
 		combatTrackerWidthRem = readStoredCombatTrackerWidth();
 		updateCurrentCombat();
+		updateCurrentTurnAnimationSettings();
+		updateCombatTrackerLocation();
 		window.addEventListener('dragend', handleCombatantDragEnd);
 		window.addEventListener('nimble-combatant-dragstart', handleCombatantDragStart);
 		window.addEventListener('nimble-combatant-dragend', handleCombatantDragEnd);
+		window.addEventListener(
+			'nimble-combat-tracker-animation-settings-preview',
+			handleCurrentTurnAnimationSettingsPreview,
+		);
+		window.addEventListener(
+			'nimble-combat-tracker-location-preview',
+			handleCombatTrackerLocationPreview,
+		);
+		resizeWindowHandler = () => {
+			updateCombatTrackerSceneReserveInsets();
+		};
+		window.addEventListener('resize', resizeWindowHandler);
 
 		createCombatHook = Hooks.on('createCombat', (_combat) => {
 			updateCurrentCombat();
@@ -497,14 +650,36 @@
 			updateCurrentCombat();
 		});
 
+		updateSettingHook = Hooks.on('updateSetting', (setting) => {
+			const settingKey = foundry.utils.getProperty(setting, 'key');
+			if (isCurrentTurnAnimationSettingKey(settingKey)) {
+				updateCurrentTurnAnimationSettings();
+			}
+			if (isCombatTrackerLocationSettingKey(settingKey)) {
+				updateCombatTrackerLocation();
+			}
+		});
+
 		return () => Hooks.off('combatStart', combatStartHook);
 	});
 
 	onDestroy(() => {
 		stopResizeTracking();
+		clearCombatTrackerSceneReserveInsets();
 		window.removeEventListener('dragend', handleCombatantDragEnd);
 		window.removeEventListener('nimble-combatant-dragstart', handleCombatantDragStart);
 		window.removeEventListener('nimble-combatant-dragend', handleCombatantDragEnd);
+		window.removeEventListener(
+			'nimble-combat-tracker-animation-settings-preview',
+			handleCurrentTurnAnimationSettingsPreview,
+		);
+		window.removeEventListener(
+			'nimble-combat-tracker-location-preview',
+			handleCombatTrackerLocationPreview,
+		);
+		if (resizeWindowHandler) {
+			window.removeEventListener('resize', resizeWindowHandler);
+		}
 
 		if (createCombatHook !== undefined) Hooks.off('createCombat', createCombatHook);
 		if (deleteCombatHook !== undefined) Hooks.off('deleteCombat', deleteCombatHook);
@@ -517,18 +692,26 @@
 		if (canvasReadyHook !== undefined) Hooks.off('canvasReady', canvasReadyHook);
 		if (canvasTearDownHook !== undefined) Hooks.off('canvasTearDown', canvasTearDownHook);
 		if (updateSceneHook !== undefined) Hooks.off('updateScene', updateSceneHook);
+		if (updateSettingHook !== undefined) Hooks.off('updateSetting', updateSettingHook);
+	});
+
+	$effect(() => {
+		updateCombatTrackerSceneReserveInsets();
 	});
 </script>
 
 {#if currentCombat}
 	<section
 		class="nimble-combat-tracker"
-		style={`--nimble-combat-sidebar-width: ${combatTrackerWidthRem}rem; --nimble-combat-sidebar-min-width: ${COMBAT_TRACKER_MIN_WIDTH_REM}rem; --nimble-combat-sidebar-max-width: ${COMBAT_TRACKER_MAX_WIDTH_REM}rem; --nimble-combat-card-scale: ${combatTrackerScale};`}
+		class:nimble-combat-tracker--location-left={combatTrackerLocation === 'left'}
+		class:nimble-combat-tracker--location-right={combatTrackerLocation === 'right'}
+		style={`--nimble-combat-sidebar-width: ${combatTrackerWidthRem}rem; --nimble-combat-sidebar-min-width: ${COMBAT_TRACKER_MIN_WIDTH_REM}rem; --nimble-combat-sidebar-max-width: ${COMBAT_TRACKER_MAX_WIDTH_REM}rem; --nimble-combat-card-scale: ${combatTrackerScale}; --nimble-combat-border-glow-color: ${currentTurnAnimationSettings.borderGlowColor}; --nimble-combat-edge-crawler-color: ${currentTurnAnimationSettings.edgeCrawlerColor}; --nimble-combat-pulse-duration: ${pulseAnimationDurationSeconds}s; --nimble-combat-border-glow-scale: ${borderGlowScale}; --nimble-combat-edge-crawler-size-scale: ${edgeCrawlerSizeScale};`}
 		transition:slide={{ axis: 'x' }}
 	>
 		<header
 			class="nimble-combat-tracker__header"
-			class:nimble-combat-tracker__header--no-controls={!game.user!.isGM}
+			class:nimble-combat-tracker__header--no-controls={currentCombat?.round === 0 ||
+				!game.user!.isGM}
 			class:nimble-combat-tracker__header--not-started={currentCombat?.round === 0}
 			in:slide={{ axis: 'y', delay: 200 }}
 			out:fade={{ delay: 0 }}
@@ -546,15 +729,30 @@
 					</h2>
 				{/if}
 
-				{#if currentCombat?.round !== 0 && game.user!.isGM}
-					<CombatTrackerControls />
-				{/if}
+				<div class="nimble-combat-tracker__header-button-row">
+					<button
+						class="nimble-combat-tracker__settings-button"
+						type="button"
+						aria-label="Open Combat Tracker Settings"
+						data-tooltip="Combat Tracker Settings"
+						data-tooltip-direction="RIGHT"
+						onclick={openCombatTrackerSettings}
+					>
+						<i class="nimble-combat-tracker__settings-button-icon fa-solid fa-gear"></i>
+					</button>
+
+					{#if currentCombat?.round !== 0 && game.user!.isGM}
+						<CombatTrackerControls />
+					{/if}
+				</div>
 			{/key}
 		</header>
 
 		<ol
 			bind:this={combatantsListElement}
 			class="nimble-combatants"
+			class:nimble-combatants--pulse={currentTurnAnimationSettings.pulseAnimation}
+			class:nimble-combatants--border-glow={currentTurnAnimationSettings.borderGlow}
 			data-drag-source-id={activeDragSourceId ?? ''}
 			data-drop-target-id={dragPreview?.targetId ?? ''}
 			data-drop-before={dragPreview ? String(dragPreview.before) : ''}
@@ -576,7 +774,7 @@
 						class:nimble-combatants__item--preview-gap-after={dragPreview?.targetId ===
 							combatant.id && !dragPreview.before}
 					>
-						{#if isActiveCombatant}
+						{#if isActiveCombatant && currentTurnAnimationSettings.edgeCrawler}
 							<span class="nimble-combatants__active-crawler" aria-hidden="true"></span>
 						{/if}
 						<CombatantComponent active={isActiveCombatant} {combatant} />
