@@ -1,4 +1,6 @@
 <script>
+	import { getMonsterImageUrl } from '../../../../import/nimbleNexus/constants.js';
+
 	const { actorImport } = CONFIG.NIMBLE;
 
 	let { dialog, monsterListEl = $bindable(), onScroll } = $props();
@@ -15,6 +17,12 @@
 		if (monster.attributes.legendary) return 'monster-badge--legendary';
 		if (monster.attributes.minion) return 'monster-badge--minion';
 		return 'monster-badge--npc';
+	}
+
+	// Capitalize first letter of size
+	function formatSize(size) {
+		if (!size) return '';
+		return size.charAt(0).toUpperCase() + size.slice(1);
 	}
 
 	let selectedCount = $derived(
@@ -62,12 +70,18 @@
 					checked={dialog.selectedMonsters.has(monster.id)}
 					onchange={() => dialog.toggleSelection(monster.id)}
 				/>
+				<img
+					class="actor-import-monster-avatar"
+					src={getMonsterImageUrl(monster.attributes.paperforgeImageUrl)}
+					alt={monster.attributes.name}
+				/>
 				<div class="actor-import-monster-info">
 					<span class="actor-import-monster-name">{monster.attributes.name}</span>
 					<span class="monster-badge {getMonsterTypeBadgeClass(monster)}">
 						{getMonsterTypeBadge(monster)}
 					</span>
 					<span class="actor-import-monster-level">Lvl {monster.attributes.level}</span>
+					<span class="actor-import-monster-size">{formatSize(monster.attributes.size)}</span>
 					<span class="actor-import-monster-hp">{monster.attributes.hp} HP</span>
 					{#if monster.attributes.kind}
 						<span class="actor-import-monster-kind">{monster.attributes.kind}</span>
@@ -187,6 +201,15 @@
 		cursor: pointer;
 	}
 
+	.actor-import-monster-avatar {
+		width: 32px;
+		height: 32px;
+		border-radius: 4px;
+		object-fit: cover;
+		background: var(--color-bg-option);
+		flex-shrink: 0;
+	}
+
 	.actor-import-monster-info {
 		display: flex;
 		align-items: center;
@@ -222,6 +245,7 @@
 	}
 
 	.actor-import-monster-level,
+	.actor-import-monster-size,
 	.actor-import-monster-hp,
 	.actor-import-monster-kind {
 		color: var(--color-text-dark-secondary);
