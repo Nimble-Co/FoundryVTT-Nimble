@@ -3,6 +3,7 @@
  */
 
 import {
+	DEFAULT_ACTOR_IMAGE,
 	DEFAULT_FEATURE_ICONS,
 	FEATURE_SUBTYPES,
 	getMonsterImageUrl,
@@ -513,6 +514,15 @@ export async function importMonster(
 		}
 
 		const actor = await Actor.create(actorData);
+
+		// Update prototype token image if actor has a custom image
+		// Actor.create doesn't always properly apply nested prototypeToken.texture settings
+		const imageUrl = getMonsterImageUrl(monster.attributes.paperforgeImageUrl);
+		if (actor && imageUrl !== DEFAULT_ACTOR_IMAGE) {
+			await actor.update({
+				'prototypeToken.texture.src': imageUrl,
+			} as object);
+		}
 
 		return {
 			success: true,
