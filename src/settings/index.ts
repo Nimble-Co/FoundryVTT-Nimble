@@ -1,31 +1,6 @@
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 
-const { ApplicationV2 } = foundry.applications.api;
-
-/**
- * Placeholder class for the upcoming System Settings feature
- */
-class SystemSettingsPlaceholder extends ApplicationV2 {
-	constructor() {
-		super({});
-	}
-
-	override async render(): Promise<this> {
-		ui.notifications?.info('System Settings - Coming Soon!');
-		return this;
-	}
-}
-
 export default function registerSystemSettings() {
-	game.settings.registerMenu('nimble', 'SystemSettings', {
-		name: 'System Settings',
-		hint: 'Configure system settings for the Nimble RPG system',
-		label: 'Coming Soon...',
-		icon: 'fas fa-bars',
-		type: SystemSettingsPlaceholder,
-		restricted: false,
-	});
-
 	game.settings.register(
 		'nimble' as 'core',
 		'autoExpandRolls' as 'rollMode',
@@ -40,6 +15,7 @@ export default function registerSystemSettings() {
 	);
 
 	// Migration schema version tracking
+	// Migration schema version tracking (internal, not visible)
 	game.settings.register(
 		'nimble' as 'core',
 		'worldSchemaVersion' as 'rollMode',
@@ -52,4 +28,48 @@ export default function registerSystemSettings() {
 			default: MigrationRunnerBase.MINIMUM_SAFE_VERSION,
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
+
+	// Helper to create the attribution element with divider
+	const createAttributionElement = () => {
+		const wrapper = document.createElement('div');
+		wrapper.className = 'nimble-attribution-wrapper';
+		wrapper.innerHTML = `
+			<hr class="nimble-attribution__divider">
+			<section class="nimble-attribution">
+				<div class="nimble-attribution__icon">
+					<i class="fa-solid fa-heart"></i>
+				</div>
+				<div class="nimble-attribution__content">
+					<p class="nimble-attribution__text">
+						The Nimble system for Foundry VTT is free for anyone who already owns the content,
+						is trying the system out, or cannot afford to purchase it right now. If you enjoy
+						Nimble and are able, please consider supporting the game by purchasing the official content.
+					</p>
+					<a href="https://nimblerpg.com" target="_blank" rel="noopener noreferrer" class="nimble-attribution__link">
+						<i class="fa-solid fa-external-link"></i>
+						nimblerpg.com
+					</a>
+				</div>
+			</section>
+		`;
+		return wrapper;
+	};
+
+	// Add attribution to the Configure Settings dialog (Nimble tab)
+	Hooks.on('renderSettingsConfig', (_app: unknown, html: HTMLElement | JQuery) => {
+		const element = html instanceof HTMLElement ? html : html[0];
+		if (!element) return;
+
+		// Find the system settings tab (where Nimble settings appear)
+		const systemTab =
+			element.querySelector('section[data-tab="system"]') ||
+			element.querySelector('section[data-category="system"]');
+		if (!systemTab) return;
+
+		// Check if attribution already exists (e.g. re-render)
+		if (systemTab.querySelector('.nimble-attribution')) return;
+
+		// Dynamically append attribution at the end of the system settings tab
+		systemTab.appendChild(createAttributionElement());
+	});
 }
