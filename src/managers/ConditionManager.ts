@@ -32,9 +32,8 @@ export class ConditionManager {
 	initialize() {
 		const conditions = Object.keys(CONFIG.NIMBLE.conditions);
 
-		conditions.forEach(async (c) => {
-			let _id: string | null = null;
-
+		// Process conditions synchronously first, then handle async enrichment
+		for (const c of conditions) {
 			const id = c;
 			const name = CONFIG.NIMBLE.conditions[id];
 			const img = CONFIG.NIMBLE.conditionDefaultImages[id];
@@ -47,33 +46,42 @@ export class ConditionManager {
 				name,
 				img,
 				stackable,
+				enriched: `[[/condition condition=${id}]]`, // Default value, will be enriched async
 			} as Condition;
 
 			if (aliases.length) data.aliases = new Set(aliases);
 
 			if (statuses.length) {
 				data.statuses = statuses;
-
-				_id = String(id).padEnd(16, '0');
-				data._id = _id;
+				data._id = String(id).padEnd(16, '0');
 			}
 
-			// Add an enriched version of the condition to the data
+			this.#conditions.set(id, data);
+		}
+
+		this.#ready = true;
+
+		// Enrich descriptions asynchronously after initialization is complete
+		this.#enrichConditionDescriptions();
+	}
+
+	async #enrichConditionDescriptions() {
+		for (const [id, data] of this.#conditions) {
 			try {
 				data.enriched =
 					(await foundry.applications.ux?.TextEditor?.implementation?.enrichHTML?.(
 						`[[/condition condition=${id}]]`,
 					)) || `[[/condition condition=${id}]]`;
 			} catch (_error) {
-				data.enriched = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-					`[[/condition condition=${id}]]`,
-				);
+				try {
+					data.enriched = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
+						`[[/condition condition=${id}]]`,
+					);
+				} catch (error) {
+					console.warn(`Nimble | Failed to enrich condition description for "${id}":`, error);
+				}
 			}
-
-			this.#conditions.set(id, data);
-		});
-
-		this.#ready = true;
+		}
 	}
 
 	configureStatusEffects() {
