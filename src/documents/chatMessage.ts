@@ -189,24 +189,53 @@ class NimbleChatMessage extends ChatMessage {
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
-	async applyDamage(value: number, _options?: Record<string, unknown>): Promise<void> {
+	async applyDamage(value: number, options?: Record<string, unknown>): Promise<void> {
 		if (!this.isActivationCard()) return;
+
+		if (options?.outcome === 'noDamage') {
+			ui.notifications?.info('No damage to apply.');
+			return;
+		}
+
+		const damage = Math.floor(Math.abs(Number(value)));
+		if (!Number.isFinite(damage) || damage <= 0) return;
 
 		const systemData = this.system as ActivationCardSystemData;
 		const targets = systemData.targets || [];
 
-		targets.forEach((uuid) => {
-			// UUIDs are stored as strings like "Scene.xxx.Token.yyy"
-			const token = fromUuidSync<TokenDocument>(uuid);
-			if (!token || !('actor' in token)) return;
+		if (!targets.length) {
+			ui.notifications?.warn('No targets selected');
+			return;
+		}
 
-			const actor = token.actor;
-			if (!actor) return;
+		for (const uuid of targets) {
+			const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
+			const actor = tokenDocument?.actor as Actor.Implementation | null;
+			if (!actor) continue;
 
-			console.log(actor);
-			console.log(value);
-			// actor.applyDamage(value, options);
-		});
+			const hpData = foundry.utils.getProperty(actor, 'system.attributes.hp') as
+				| {
+						value?: number;
+						temp?: number;
+				  }
+				| undefined;
+			const currentHp = hpData?.value;
+			if (typeof currentHp !== 'number' || Number.isNaN(currentHp)) continue;
+
+			const currentTemp = typeof hpData?.temp === 'number' ? hpData.temp : 0;
+			const absorbedByTemp = Math.min(currentTemp, damage);
+			const nextTemp = currentTemp - absorbedByTemp;
+			const remainingDamage = damage - absorbedByTemp;
+			const nextHp = Math.max(currentHp - remainingDamage, 0);
+
+			const updates: Record<string, unknown> = {};
+			if (nextTemp !== currentTemp) updates['system.attributes.hp.temp'] = nextTemp;
+			if (nextHp !== currentHp) updates['system.attributes.hp.value'] = nextHp;
+
+			if (Object.keys(updates).length > 0) {
+				await actor.update(updates as Actor.UpdateData);
+			}
+		}
 	}
 
 	async removeTarget(targetId: string): Promise<ChatMessage | undefined> {
