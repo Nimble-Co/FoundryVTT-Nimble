@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a95d9a582c294f7c",
 	"name": "Elemental Spellcasting",
 	"type": "feature",
 	"img": "icons/magic/symbols/elements-air-earth-fire-water.webp",
@@ -36,7 +36,9 @@
 		"description": "<p>You know Fire, Ice, and Lightning cantrips.</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "mage-progression"
+		"group": "mage-progression",
+		"gainedAtLevel": 1,
+		"subclass": false
 	},
 	"effects": [],
 	"flags": {},

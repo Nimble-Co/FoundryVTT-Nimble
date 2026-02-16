@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "2e9e32bf9e74e633",
 	"name": "Come Get Some!",
 	"type": "feature",
 	"img": "icons/skills/melee/weapons-crossed-daggers-orange.webp",
@@ -36,7 +36,17 @@
 		"description": "<p>Action: Attack a target. It is Taunted by you until the end of their next turn.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "thrill-of-the-hunt"
+		"group": "thrill-of-the-hunt",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2,
+			4,
+			6,
+			8,
+			12,
+			14
+		]
 	},
 	"effects": [],
 	"flags": {},

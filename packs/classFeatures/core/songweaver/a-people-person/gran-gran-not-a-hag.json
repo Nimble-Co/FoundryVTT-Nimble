@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "910213b07f81138f",
 	"name": "Gran Gran (NOT a hag)",
 	"type": "feature",
 	"img": "icons/consumables/grains/donut-baked-brown.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>When resting, you may summon her for 1 hour to soothe your wounds (and hassle you for not eating enough). She bakes and hands out pastries equal to your WIL+INT. Eating one recovers one mana, Hit Die, or Wound. Eat them while they're warm! They expire in 10 minutes.</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "a-people-person"
+		"group": "a-people-person",
+		"gainedAtLevel": 5,
+		"subclass": false,
+		"gainedAtLevels": [
+			5
+		]
 	},
 	"effects": [],
 	"flags": {},

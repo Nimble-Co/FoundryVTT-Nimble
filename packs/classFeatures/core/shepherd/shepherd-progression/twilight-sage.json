@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c1face1ec4d1249a",
 	"name": "Twilight Sage",
 	"type": "feature",
 	"img": "icons/creatures/mammals/humanoid-wolf-dog-blue.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>+1 to any 2 of your stats. Your Lifebinding Spirit rolls twice as many dice.</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "shepherd-progression"
+		"group": "shepherd-progression",
+		"gainedAtLevel": 20,
+		"subclass": false,
+		"gainedAtLevels": [
+			20
+		]
 	},
 	"effects": [],
 	"flags": {},

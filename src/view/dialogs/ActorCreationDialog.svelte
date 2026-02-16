@@ -2,7 +2,7 @@
 	import localize from '../../utils/localize.js';
 
 	let { dialog } = $props();
-	const { Actor, actorTypeBanners } = CONFIG.NIMBLE;
+	const { Actor, actorImport, actorTypeBanners } = CONFIG.NIMBLE;
 	const { documentClasses } = Actor;
 
 	delete documentClasses.base;
@@ -27,6 +27,19 @@
 			</li>
 		{/each}
 	</ul>
+
+	{#if game.user.isGM}
+		<div class="nimble-import-section">
+			<button
+				class="nimble-button"
+				data-button-variant="full-width"
+				onclick={() => dialog.openNimbleNexusImport.call(dialog)}
+			>
+				<i class="fa-solid fa-file-import"></i>
+				{game.i18n.localize(actorImport.buttonLabel)}
+			</button>
+		</div>
+	{/if}
 </article>
 
 <style lang="scss">
@@ -86,5 +99,11 @@
 			object-fit: cover;
 			max-height: calc(100% - 16px);
 		}
+	}
+
+	.nimble-import-section {
+		margin-top: 1rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--color-border-light-tertiary);
 	}
 </style>

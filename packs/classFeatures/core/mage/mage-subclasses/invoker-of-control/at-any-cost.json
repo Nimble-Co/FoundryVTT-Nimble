@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "db1b1e86f71126fe",
 	"name": "At Any Cost",
 	"type": "feature",
 	"img": "icons/magic/unholy/hand-light-green.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Learn 1 cantrip and 1 tiered spell from the Necrotic school.</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "invoker-of-control"
+		"group": "invoker-of-control",
+		"gainedAtLevel": 7,
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
 	"flags": {},

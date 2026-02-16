@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "c1face1ec4d1249a",
 	"name": "Master of Twilight",
 	"type": "feature",
 	"img": "icons/magic/light/projectile-flare-blue.webp",
@@ -36,7 +36,14 @@
 		"description": "<p>Choose 1 Necrotic and 1 Radiant Utility Spell.</p><hr><p>Level 6: Choose a 2nd of each</p><p>Level 11: Choose a 3rd of each</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "shepherd-progression"
+		"group": "shepherd-progression",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3,
+			6,
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -35,10 +35,15 @@
 		"description": "<p>Your Coordinated Strike may target 1 additional ally. Gain +1 use of Coordinated Strike/Safe Rest.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "champion-of-the-vanguard"
+		"group": "champion-of-the-vanguard",
+		"gainedAtLevel": 7,
+		"subclass": true,
+		"gainedAtLevels": [
+			7
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "39d701b7816ab485",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

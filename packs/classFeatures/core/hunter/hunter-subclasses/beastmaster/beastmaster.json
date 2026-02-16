@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7fec6a94e7504af7",
 	"name": "Beastmaster",
 	"type": "feature",
 	"img": "icons/magic/nature/wolf-paw-glow-green.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Choose a Small, Medium, or Large animal as your companion. Instead of your first 2 Thrill of the Hunt (TotH) abilities, you can select Go for the Throat! and Protect Me! to use with your companion.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "beastmaster"
+		"group": "beastmaster",
+		"gainedAtLevel": 1,
+		"subclass": true,
+		"gainedAtLevels": [
+			1
+		]
 	},
 	"effects": [],
 	"flags": {},

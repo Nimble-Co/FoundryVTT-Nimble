@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "2e9e32bf9e74e633",
 	"name": "Nemesis",
 	"type": "feature",
 	"img": "icons/skills/melee/maneuver-greatsword-yellow.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>+1 to any 2 of your stats. Your Hunter's Mark can target any number of creatures simultaneously.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "hunter-progression"
+		"group": "hunter-progression",
+		"gainedAtLevel": 20,
+		"subclass": false,
+		"gainedAtLevels": [
+			20
+		]
 	},
 	"effects": [],
 	"flags": {},

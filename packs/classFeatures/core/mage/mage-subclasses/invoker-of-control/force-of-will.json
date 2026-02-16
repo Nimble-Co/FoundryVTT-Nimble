@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "db1b1e86f71126fe",
 	"name": "Force of Will",
 	"type": "feature",
 	"img": "icons/magic/lightning/orb-ball-purple.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>(1/round) On your turn, you may Demand Control: Choose 1 option from the Control Table which you haven't chosen yet; resets when you roll Initiative, or when you have chosen all options once.</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "invoker-of-control"
+		"group": "invoker-of-control",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

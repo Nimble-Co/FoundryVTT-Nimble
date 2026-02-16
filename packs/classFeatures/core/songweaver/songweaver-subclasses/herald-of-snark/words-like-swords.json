@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "97940746b5651bd1",
 	"name": "Words Like Swords",
 	"type": "feature",
 	"img": "icons/skills/melee/strikes-sword-scimitar.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Your Vicious Mockery damage becomes 1d6+INT+ WIL.</p>",
 		"featureType": "class",
 		"class": "songweaver",
-		"group": "herald-of-snark"
+		"group": "herald-of-snark",
+		"gainedAtLevel": 15,
+		"subclass": true,
+		"gainedAtLevels": [
+			15
+		]
 	},
 	"effects": [],
 	"flags": {},

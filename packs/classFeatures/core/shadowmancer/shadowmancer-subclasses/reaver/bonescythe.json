@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7dec83da1812d369",
 	"name": "Bonescythe",
 	"type": "feature",
 	"img": "icons/weapons/sickles/scythe-bone-green-fire.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Action: Summon a magical Bonescythe, a melee weapon: 2d12 slashing+DEX necrotic damage to each die (Reach: 2). It shatters after you hit with it (or when combat ends). Any Invocations affecting Shadow Blast affect your Bonescythe Instead.</p><p>High Levels. Every 5 levels, add 1 extra damage die (Level 5: 3d12, Level 10: 4d12, etc.).</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "reaver"
+		"group": "reaver",
+		"gainedAtLevel": 1,
+		"subclass": true,
+		"gainedAtLevels": [
+			1
+		]
 	},
 	"effects": [],
 	"flags": {},

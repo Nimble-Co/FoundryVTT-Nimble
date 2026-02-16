@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a03073c1f33d5b34",
 	"name": "Kinetic Momentum",
 	"type": "feature",
 	"img": "icons/magic/movement/abstract-ribbons-red-orange.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Whenever you gain a Wound, gain a Burst of Speed.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "zephyr-progression"
+		"group": "zephyr-progression",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

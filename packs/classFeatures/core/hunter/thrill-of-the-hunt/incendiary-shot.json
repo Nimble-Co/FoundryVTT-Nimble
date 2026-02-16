@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "2e9e32bf9e74e633",
 	"name": "Incendiary Shot",
 	"type": "feature",
 	"img": "icons/magic/fire/projectile-arrow-fire-orange-yellow.webp",
@@ -36,7 +36,17 @@
 		"description": "<p><em>(Half range)</em> Action: Attack with a ranged weapon, add WIL d8 fire damage.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "thrill-of-the-hunt"
+		"group": "thrill-of-the-hunt",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2,
+			4,
+			6,
+			8,
+			12,
+			14
+		]
 	},
 	"effects": [],
 	"flags": {},

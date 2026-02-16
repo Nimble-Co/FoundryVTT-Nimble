@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "81e685bc5c9127ce",
 	"name": "Shadow Warp",
 	"type": "feature",
 	"img": "icons/magic/movement/trail-streak-pink.webp",
@@ -36,7 +36,16 @@
 		"description": "<p>Action: Switch places with a creature within 12 spaces that has been dealt necrotic damage this turn.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "greater-invocations"
+		"group": "greater-invocations",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			6,
+			9,
+			14,
+			18
+		]
 	},
 	"effects": [],
 	"flags": {},

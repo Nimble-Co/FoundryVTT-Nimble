@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "2e9e32bf9e74e633",
 	"name": "Peerless Hunter",
 	"type": "feature",
 	"img": "icons/creatures/claws/claw-bear-paw-swipe-red.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>You can Defend against your quarry for free.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "hunter-progression"
+		"group": "hunter-progression",
+		"gainedAtLevel": 17,
+		"subclass": false,
+		"gainedAtLevels": [
+			17
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -65,10 +65,15 @@
 		"description": "<p>When you roll Initiative you may give yourself and an ally advantage on the roll and +3 speed for 1 round. </p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "commanders-orders"
+		"group": "commanders-orders",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

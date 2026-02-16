@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "0075e1e989d0552b",
 	"name": "Phasebeast",
 	"type": "feature",
 	"img": "icons/creatures/abilities/dragon-breath-purple.webp",
@@ -36,7 +36,15 @@
 		"description": "<p>Whenever you shift between this form and your normal form (and vice versa), you may teleport up to 6 spaces away to a place you can see.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "chimeric-boon"
+		"group": "chimeric-boon",
+		"gainedAtLevel": 6,
+		"subclass": false,
+		"gainedAtLevels": [
+			6,
+			9,
+			12,
+			17
+		]
 	},
 	"effects": [],
 	"flags": {},

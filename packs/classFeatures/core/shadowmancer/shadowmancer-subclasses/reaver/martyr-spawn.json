@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "7dec83da1812d369",
 	"name": "Martyr Spawn",
 	"type": "feature",
 	"img": "icons/creatures/magical/humanoid-silhouette-dashing-blue.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Whenever you Defend, you can sacrifice a shadow minion to take no damage.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
-		"group": "reaver"
+		"group": "reaver",
+		"gainedAtLevel": 3,
+		"subclass": true,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

@@ -79,4 +79,25 @@
       }
     }
   }
+
+  .application.compendium,
+  .compendium.application {
+    .directory-item.nimble-compendium-entry-with-level .nimble-class-feature-name-flex {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .directory-item.nimble-compendium-entry-with-level .nimble-compendium-entry-level {
+      margin-left: auto;
+      margin-right: 6px;
+      display: inline-block;
+      text-align: right;
+      color: var(--color-text-light-6);
+      font-size: var(--font-size-12);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+  }
 }

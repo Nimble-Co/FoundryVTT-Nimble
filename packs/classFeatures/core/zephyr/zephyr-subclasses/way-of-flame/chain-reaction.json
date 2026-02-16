@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "89578cecae9a993c",
 	"name": "Chain Reaction",
 	"type": "feature",
 	"img": "icons/magic/fire/projectile-meteor-salvo-heavy-red.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>(1/turn) When you crit, deal fire damage equal to your STR+Wounds to creatures of your choice within 2 spaces of your target. Repeat any number of times, targeting creatures not yet damaged by this effect within 2 spaces of any already damaged.</p>",
 		"featureType": "class",
 		"class": "zephyr",
-		"group": "way-of-flame"
+		"group": "way-of-flame",
+		"gainedAtLevel": 11,
+		"subclass": true,
+		"gainedAtLevels": [
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

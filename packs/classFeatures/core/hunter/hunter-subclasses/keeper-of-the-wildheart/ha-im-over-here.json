@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "62cad863cd5952d9",
 	"name": "Ha! I'm Over Here!",
 	"type": "feature",
 	"img": "icons/magic/movement/trail-streak-zigzag-teal.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>(1/Safe Rest) If an attack would cause you to drop to 0 HP, you instead move up to your speed away and take no damage.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "keeper-of-the-wildheart"
+		"group": "keeper-of-the-wildheart",
+		"gainedAtLevel": 11,
+		"subclass": true,
+		"gainedAtLevels": [
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

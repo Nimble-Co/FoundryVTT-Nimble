@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "2e9e32bf9e74e633",
 	"name": "Versatile Bowmaster",
 	"type": "feature",
 	"img": "icons/weapons/bows/shortbow-arrows-black.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Whenever you attack with a Longbow, you may roll 2d4 instead of 1d8; or with a Crossbow, 2d8 instead of 4d4.</p>",
 		"featureType": "class",
 		"class": "hunter",
-		"group": "hunter-progression"
+		"group": "hunter-progression",
+		"gainedAtLevel": 6,
+		"subclass": false,
+		"gainedAtLevels": [
+			6
+		]
 	},
 	"effects": [],
 	"flags": {},

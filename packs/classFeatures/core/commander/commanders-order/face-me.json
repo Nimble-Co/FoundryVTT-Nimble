@@ -43,10 +43,15 @@
 		"description": "<p><strong>Reaction</strong> (after an ally is crit within 12 spaces): Taunt that enemy until you drop to 0 HP.</p>",
 		"featureType": "class",
 		"class": "commander",
-		"group": "commanders-orders"
+		"group": "commanders-orders",
+		"gainedAtLevel": 2,
+		"subclass": false,
+		"gainedAtLevels": [
+			2
+		]
 	},
 	"effects": [],
-	"folder": null,
+	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

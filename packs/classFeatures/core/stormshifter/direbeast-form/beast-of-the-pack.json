@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "0075e1e989d0552b",
 	"name": "Beast of the Pack",
 	"type": "feature",
 	"img": "icons/creatures/abilities/wolf-howl-moon-purple.webp",
@@ -36,7 +36,12 @@
 		"description": "<p><strong>(Medium)</strong>. Transform into a Medium beast. Gain +DEX speed, Supercharge, and the Thunderfang attack. Whenever you crit or kill one or more enemies, Thunderfang gains a cumulative +1d4 lightning damage until combat ends. </p><p><strong>Thunderfang</strong>. Action: 1d4+LVL piercing damage.</p><p><strong>Supercharge</strong>. Spend up to WIL mana, and your next Thunderfang attack deals an additional 1d8 lightning damage per mana spent (you take this damage on a miss).</p>",
 		"featureType": "class",
 		"class": "stormshifter",
-		"group": "direbeast-form"
+		"group": "direbeast-form",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

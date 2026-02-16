@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "8305bc76ead2700d",
 	"name": "Powerful Healer",
 	"type": "feature",
 	"img": "icons/magic/life/cross-area-circle-green-white.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>(WIL times/Safe Rest) Whenever you would roll dice to heal damage, you may instead heal the max amount you could roll, or give that many temp HP.</p>",
 		"featureType": "class",
 		"class": "shepherd",
-		"group": "luminary-of-mercy"
+		"group": "luminary-of-mercy",
+		"gainedAtLevel": 11,
+		"subclass": true,
+		"gainedAtLevels": [
+			11
+		]
 	},
 	"effects": [],
 	"flags": {},

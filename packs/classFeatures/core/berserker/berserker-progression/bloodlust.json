@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "d40bf36abe9f4b0a",
 	"name": "Bloodlust",
 	"type": "feature",
 	"img": "icons/skills/wounds/blood-spurt-spray-red.webp",
@@ -36,7 +36,12 @@
 		"description": "<p>Expend 1 or more Fury Dice on your turn, move DEX spaces per die spent for free.</p>",
 		"featureType": "class",
 		"class": "berserker",
-		"group": "berserker-progression"
+		"group": "berserker-progression",
+		"gainedAtLevel": 3,
+		"subclass": false,
+		"gainedAtLevels": [
+			3
+		]
 	},
 	"effects": [],
 	"flags": {},

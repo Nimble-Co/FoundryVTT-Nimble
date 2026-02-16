@@ -1,5 +1,5 @@
 {
-	"folder": null,
+	"folder": "a95d9a582c294f7c",
 	"name": "Elemental Destruction",
 	"type": "feature",
 	"img": "icons/magic/earth/explosion-lava-stone-green.webp",
@@ -36,7 +36,14 @@
 		"description": "<p>(1 or more mana) After you hit with a spell, you may spend 1 or more mana (up to your WIL) to reroll 1 die per mana spent.</p>",
 		"featureType": "class",
 		"class": "mage",
-		"group": "spellshaper"
+		"group": "spellshaper",
+		"gainedAtLevel": 4,
+		"subclass": false,
+		"gainedAtLevels": [
+			4,
+			9,
+			13
+		]
 	},
 	"effects": [],
 	"flags": {},
