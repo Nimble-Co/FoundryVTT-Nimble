@@ -15,6 +15,11 @@ export const NIMBLE_NEXUS_BASE_URL = 'https://nimble.nexus';
 export const NIMBLE_NEXUS_API_URL = `${NIMBLE_NEXUS_BASE_URL}/api`;
 
 /**
+ * Storage URL for paperforge images
+ */
+export const NIMBLE_NEXUS_STORAGE_URL = 'https://nimble-nexus.fly.storage.tigris.dev';
+
+/**
  * Default pagination limit
  */
 export const DEFAULT_PAGE_LIMIT = 100;
@@ -86,10 +91,14 @@ export const DEFAULT_ACTOR_IMAGE = 'icons/svg/mystery-man.svg';
 
 /**
  * Get full image URL from paperforge relative path
+ * The API returns paths like "/paperforge/0006/portrait.png" but
+ * actual files are stored as "100.png" on the storage bucket
  */
 export function getMonsterImageUrl(paperforgeImageUrl?: string): string {
 	if (!paperforgeImageUrl) return DEFAULT_ACTOR_IMAGE;
-	return `${NIMBLE_NEXUS_BASE_URL}${paperforgeImageUrl}`;
+	// Replace portrait.png with 100.png (the actual filename in storage)
+	const correctedPath = paperforgeImageUrl.replace('portrait.png', '100.png');
+	return `${NIMBLE_NEXUS_STORAGE_URL}${correctedPath}`;
 }
 
 /**
