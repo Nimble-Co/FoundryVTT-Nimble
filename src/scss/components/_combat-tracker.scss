@@ -323,186 +323,120 @@
     }
   }
 
-  &--location-top,
-  &--location-bottom {
-    .nimble-combat-tracker__header {
-      flex: 0 0 clamp(8.8rem, calc(var(--nimble-combat-tracker-height) + 1.2rem), 11rem);
-      display: grid;
-      grid-template-columns: minmax(4.9rem, 1fr) 1.55rem;
-      grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-      column-gap: 0.18rem;
-      row-gap: 0.2rem;
-      justify-items: stretch;
-      padding: 0.3rem 0.4rem;
-      text-align: left;
-      border-block-end: 0;
-      border-inline-end: 1px solid var(--color-dark-4);
+  &__group-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: calc(0.2rem * var(--nimble-combat-card-scale));
+    padding: calc(0.25rem * var(--nimble-combat-card-scale));
+    border-block-end: 1px solid color-mix(in srgb, var(--color-dark-4) 80%, transparent);
+  }
+
+  &__group-controls-panel {
+    display: flex;
+    flex-direction: column;
+    gap: calc(0.2rem * var(--nimble-combat-card-scale));
+    width: 100%;
+  }
+
+  &__group-selection-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: calc(0.25rem * var(--nimble-combat-card-scale));
+    width: 100%;
+  }
+
+  &__group-action-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: calc(0.25rem * var(--nimble-combat-card-scale));
+    width: 100%;
+  }
+
+  &__group-selection-label {
+    margin: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: calc(var(--nimble-xxs-text, 0.55rem) * var(--nimble-combat-card-scale));
+    font-weight: 600;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+    color: color-mix(in srgb, var(--nimble-combat-tracker-text-color) 85%, white);
+  }
+
+  &__group-hint {
+    margin: 0;
+    font-size: calc(var(--nimble-xxs-text, 0.55rem) * var(--nimble-combat-card-scale));
+    color: color-mix(in srgb, var(--nimble-medium-text-color) 80%, white);
+  }
+
+  &__group-button {
+    --button-size: fit-content;
+
+    margin: 0;
+    padding: calc(0.15rem * var(--nimble-combat-card-scale))
+      calc(0.35rem * var(--nimble-combat-card-scale));
+    font-size: calc(var(--nimble-xs-text) * var(--nimble-combat-card-scale));
+    line-height: 1.2;
+    color: var(--nimble-combat-tracker-text-color);
+    background: color-mix(in srgb, black 30%, transparent);
+    border: 1px solid var(--nimble-combat-tracker-border-color);
+    border-radius: calc(0.35rem * var(--nimble-combat-card-scale));
+    transition: var(--nimble-standard-transition);
+
+    &:hover,
+    &:focus {
+      color: var(--nimble-combat-tracker-hover-color);
+      border-color: var(--nimble-combat-tracker-hover-color);
+      box-shadow: 0 0 calc(6px * var(--nimble-combat-card-scale))
+        color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 70%, transparent);
     }
 
-    .nimble-combat-tracker__header--no-controls,
-    .nimble-combat-tracker__header--not-started {
-      padding: 0.3rem 0.4rem;
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+      box-shadow: none;
     }
 
-    .nimble-combat-tracker__heading,
-    .nimble-combat-tracker__start-actions {
+    &--mode {
       width: 100%;
+      justify-content: center;
     }
 
-    .nimble-combat-tracker__header-top-row {
-      display: contents;
-    }
-
-    .nimble-combat-tracker__header-controls-row {
-      grid-column: 2;
-      grid-row: 1 / span 2;
-      width: auto;
-      margin: 0;
-      align-self: center;
-      justify-self: center;
-    }
-
-    .nimble-combat-tracker__header-top-row > .nimble-combat-tracker__heading,
-    .nimble-combat-tracker__header-top-row > .nimble-combat-tracker__start-actions {
-      grid-column: 1;
-      grid-row: 1 / span 2;
-      align-self: center;
-      justify-self: stretch;
-      padding-inline: 0.15rem;
-      text-align: center;
-    }
-
-    .nimble-combat-tracker__header-top-row > .nimble-combat-tracker__heading {
-      white-space: nowrap;
-    }
-
-    .nimble-combat-tracker__heading {
-      font-size: clamp(1rem, 1.05vw, 1.25rem);
+    &--clear {
+      margin-inline-start: auto;
+      flex-shrink: 0;
+      padding: calc(0.1rem * var(--nimble-combat-card-scale))
+        calc(0.26rem * var(--nimble-combat-card-scale));
+      font-size: calc(var(--nimble-xxs-text, 0.55rem) * var(--nimble-combat-card-scale));
       line-height: 1.05;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .nimble-combat-tracker__start-actions {
-      width: auto;
-      min-width: 4.8rem;
-      justify-self: center;
-      gap: 0.2rem;
-    }
-
-    .nimble-combat-tracker__start-actions .nimble-combat-tracker__start-button,
-    .nimble-combat-tracker__start-actions .nimble-combat-tracker__end-combat-button {
-      width: 100%;
-      min-width: 4.8rem;
-      padding-inline: 0.4rem;
       white-space: nowrap;
     }
 
-    .nimble-combat-tracker__settings-button {
-      position: static;
-      inset-block-start: auto;
-      inset-inline-start: auto;
-      grid-column: 1;
-      grid-row: 1;
-      align-self: start;
-      justify-self: start;
-      width: 1.2rem;
-      height: 1.2rem;
-      z-index: 1;
-      transform: none;
-
-      &:focus,
-      &:hover {
-        transform: scale(1.12);
-      }
+    &--mode:not(.nimble-combat-tracker__group-button--active):hover,
+    &--mode:not(.nimble-combat-tracker__group-button--active):focus {
+      color: var(--nimble-combat-tracker-text-color);
+      border-color: var(--nimble-combat-tracker-border-color);
+      box-shadow: none;
+      background: color-mix(in srgb, black 30%, transparent);
     }
 
-    .nimble-combat-tracker__header-controls-row .nimble-combat-tracker-controls {
-      flex-direction: column;
-      flex-grow: 0;
-      justify-content: flex-start;
-      align-items: center;
-      gap: 0.15rem;
-      padding: 0;
+    &--active {
+      color: hsl(0, 0%, 98%);
+      border-color: color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 65%, white);
+      background: color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 20%, transparent);
     }
 
-    .nimble-combat-tracker__header-controls-row .nimble-combat-tracker-controls__button {
-      width: 1.1rem;
-      min-height: 1.1rem;
-    }
-
-    .nimble-combat-tracker__header-controls-row .nimble-combat-tracker-controls__button-icon {
-      font-size: 0.95rem;
-    }
-
-    .nimble-combat-tracker__footer {
-      flex: 0 0 auto;
-      justify-content: center;
-      padding-inline: calc(0.25rem * var(--nimble-combat-card-scale));
-      border-block-start: 0;
-      border-inline-start: 1px solid var(--color-dark-4);
-    }
-
-    .nimble-combat-tracker__footer-roll-container {
-      height: 100%;
-      padding-block: 0;
-      align-items: center;
-    }
-
-    .nimble-combat-tracker__footer-button {
-      width: calc(2rem * var(--nimble-combat-card-scale));
-      padding: 0;
-    }
-  }
-
-  &--location-top .nimble-combat-tracker__header--not-started
-    .nimble-combat-tracker__header-top-row
-    > .nimble-combat-tracker__heading,
-  &--location-top .nimble-combat-tracker__header--not-started
-    .nimble-combat-tracker__header-top-row
-    > .nimble-combat-tracker__start-actions,
-  &--location-bottom .nimble-combat-tracker__header--not-started
-    .nimble-combat-tracker__header-top-row
-    > .nimble-combat-tracker__heading,
-  &--location-bottom .nimble-combat-tracker__header--not-started
-    .nimble-combat-tracker__header-top-row
-    > .nimble-combat-tracker__start-actions {
-    grid-column: 1 / span 2;
-  }
-
-  &--location-top {
-    .nimble-combat-tracker__header {
-      grid-template-rows: auto 1fr;
-    }
-
-    .nimble-combat-tracker__settings-button {
-      grid-row: 1;
-      align-self: start;
-    }
-  }
-
-  &--location-bottom {
-    .nimble-combat-tracker__header {
-      grid-template-rows: 1fr auto;
-    }
-
-    .nimble-combat-tracker__settings-button {
-      grid-row: 2;
-      align-self: end;
-    }
-  }
-
-  &--location-left,
-  &--location-right {
-    .nimble-combat-tracker__header-controls-row {
-      justify-content: center;
-    }
-
-    .nimble-combat-tracker__header-controls-row .nimble-combat-tracker-controls {
-      flex-grow: 0;
-      justify-content: center;
-      gap: 0.35rem;
-      padding: 0;
+    &--mode.nimble-combat-tracker__group-button--active {
+      color: hsl(0 0% 98%);
+      border-color: color-mix(in srgb, hsl(132 62% 46%) 72%, white);
+      background: color-mix(in srgb, hsl(132 62% 46%) 28%, transparent);
+      box-shadow: 0 0 calc(7px * var(--nimble-combat-card-scale))
+        color-mix(in srgb, hsl(132 62% 46%) 56%, transparent);
     }
   }
 }
@@ -573,6 +507,24 @@
       filter var(--nimble-combat-preview-shift-duration) var(--nimble-combat-preview-shift-ease);
   }
 
+  &__item-surface {
+    position: relative;
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    color: inherit;
+    background: none;
+    border: 0;
+    text-align: inherit;
+
+    &:focus-visible {
+      outline: 1px solid color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 75%, transparent);
+      outline-offset: 2px;
+      border-radius: calc(0.35rem * var(--nimble-combat-card-scale));
+    }
+  }
+
   &__item--active {
     --nimble-combat-active-crawler-offset: calc(0.16rem * var(--nimble-combat-card-scale));
     --nimble-combat-active-crawler-length: calc(1.52rem * var(--nimble-combat-card-scale));
@@ -582,10 +534,39 @@
 
     z-index: 1;
 
-    > .nimble-combatant {
+    > .nimble-combatants__item-surface > .nimble-combatant {
       position: relative;
       z-index: 1;
       background: rgba(2, 2, 6, 0.96);
+    }
+  }
+
+  &__item--selected {
+    > .nimble-combatants__item-surface > .nimble-combatant {
+      border-color: color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 80%, white);
+      box-shadow: 0 0 calc(8px * var(--nimble-combat-card-scale))
+        color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 75%, transparent);
+    }
+
+    > .nimble-combatants__item-surface::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 1px solid color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 95%, white);
+      border-radius: calc(4px * var(--nimble-combat-card-scale));
+      box-shadow: inset 0 0 calc(11px * var(--nimble-combat-card-scale))
+        color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 30%, transparent);
+      pointer-events: none;
+    }
+  }
+
+  &__item--grouped {
+    > .nimble-combatants__item-surface > .nimble-combatant {
+      border-color: color-mix(in srgb, hsl(205 80% 66%) 78%, var(--nimble-combat-tracker-border-color));
+    }
+
+    &:hover {
+      z-index: 6;
     }
   }
 
@@ -708,6 +689,171 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     color: var(--nimble-medium-text-color);
+  }
+
+  &__group-badge {
+    position: absolute;
+    bottom: calc(0.2rem * var(--nimble-combat-card-scale));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: calc(0.95rem * var(--nimble-combat-card-scale));
+    padding: calc(0.12rem * var(--nimble-combat-card-scale))
+      calc(0.28rem * var(--nimble-combat-card-scale));
+    font-size: calc(var(--nimble-xs-text) * var(--nimble-combat-card-scale));
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: color-mix(in srgb, hsl(35 42% 90%) 92%, white);
+    background: color-mix(in srgb, hsl(228 25% 8%) 92%, transparent);
+    border: 1px solid color-mix(in srgb, hsl(207 85% 76%) 65%, transparent);
+    border-radius: calc(999px * var(--nimble-combat-card-scale));
+    box-shadow: 0 0 calc(6px * var(--nimble-combat-card-scale))
+      color-mix(in srgb, hsl(207 86% 72%) 30%, transparent);
+    z-index: 6;
+    pointer-events: none;
+
+    &--label {
+      left: calc(0.25rem * var(--nimble-combat-card-scale));
+      font-weight: 800;
+    }
+
+    &--count {
+      right: calc(0.25rem * var(--nimble-combat-card-scale));
+      min-width: calc(1.15rem * var(--nimble-combat-card-scale));
+    }
+  }
+
+  &__selection-badge {
+    position: absolute;
+    top: calc(0.2rem * var(--nimble-combat-card-scale));
+    left: calc(0.25rem * var(--nimble-combat-card-scale));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(0.9rem * var(--nimble-combat-card-scale));
+    height: calc(0.9rem * var(--nimble-combat-card-scale));
+    font-size: calc(0.5rem * var(--nimble-combat-card-scale));
+    color: hsl(35 95% 94%);
+    background: color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 78%, black);
+    border: 1px solid color-mix(in srgb, hsl(0 0% 100%) 65%, transparent);
+    border-radius: calc(999px * var(--nimble-combat-card-scale));
+    box-shadow:
+      0 0 calc(6px * var(--nimble-combat-card-scale))
+        color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 45%, transparent),
+      0 0 calc(2px * var(--nimble-combat-card-scale)) color-mix(in srgb, white 50%, transparent);
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  &__group-popover {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    gap: calc(0.2rem * var(--nimble-combat-card-scale));
+    padding: calc(0.3rem * var(--nimble-combat-card-scale));
+    min-width: calc(9.8rem * var(--nimble-combat-card-scale));
+    width: max-content;
+    max-width: min(26rem, calc(100vw - 1rem));
+    color: hsl(35, 42%, 90%);
+    background: color-mix(in srgb, hsl(228 25% 8%) 94%, transparent);
+    border: 1px solid color-mix(in srgb, hsl(205 76% 72%) 58%, transparent);
+    border-radius: calc(0.35rem * var(--nimble-combat-card-scale));
+    box-shadow:
+      0 0 calc(10px * var(--nimble-combat-card-scale))
+        color-mix(in srgb, hsl(205 86% 64%) 40%, transparent),
+      0 calc(4px * var(--nimble-combat-card-scale)) calc(14px * var(--nimble-combat-card-scale))
+        color-mix(in srgb, black 65%, transparent);
+    overflow: visible;
+    z-index: 1005;
+
+    &--floating {
+      pointer-events: auto;
+      animation: nimble-combat-group-popover-in 120ms ease-out;
+    }
+  }
+
+  &__group-popover-heading {
+    margin: 0;
+    font-size: calc(var(--nimble-xs-text) * var(--nimble-combat-card-scale));
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, hsl(200 88% 85%) 75%, white);
+  }
+
+  &__group-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: calc(var(--nimble-xxs-text, 0.55rem) * var(--nimble-combat-card-scale));
+    line-height: 1.3;
+
+    th,
+    td {
+      margin: 0;
+      padding: calc(0.08rem * var(--nimble-combat-card-scale))
+        calc(0.12rem * var(--nimble-combat-card-scale));
+      text-align: left;
+      border: 0;
+      border-bottom: 1px solid color-mix(in srgb, hsl(205 45% 35%) 45%, transparent);
+      vertical-align: middle;
+    }
+
+    th {
+      font-weight: 700;
+      color: color-mix(in srgb, hsl(202 80% 79%) 74%, white);
+    }
+  }
+
+  &__group-code-column {
+    width: 1%;
+    white-space: nowrap;
+    text-align: center !important;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: color-mix(in srgb, hsl(35 42% 90%) 88%, white);
+  }
+
+  &__group-row--dead td {
+    color: color-mix(in srgb, hsl(0 65% 66%) 82%, hsl(35 30% 84%));
+  }
+
+  &__group-leader-icon {
+    margin-inline-start: calc(0.14rem * var(--nimble-combat-card-scale));
+    font-size: calc(0.55rem * var(--nimble-combat-card-scale));
+    color: color-mix(in srgb, hsl(47 92% 72%) 88%, white);
+  }
+
+  &__group-popover-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__group-member-action {
+    --button-size: fit-content;
+
+    margin: 0;
+    padding: calc(0.1rem * var(--nimble-combat-card-scale))
+      calc(0.2rem * var(--nimble-combat-card-scale));
+    font-size: calc(var(--nimble-xxs-text, 0.55rem) * var(--nimble-combat-card-scale));
+    line-height: 1.2;
+    color: hsl(37 38% 92%);
+    background: color-mix(in srgb, black 40%, transparent);
+    border: 1px solid color-mix(in srgb, hsl(203 62% 72%) 45%, transparent);
+    border-radius: calc(0.2rem * var(--nimble-combat-card-scale));
+    transition: var(--nimble-standard-transition);
+
+    &:hover,
+    &:focus {
+      color: var(--nimble-combat-tracker-hover-color);
+      border-color: var(--nimble-combat-tracker-hover-color);
+      box-shadow: none;
+      text-shadow: none;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
   }
 }
 
@@ -1021,5 +1167,16 @@
   100% {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes nimble-combat-group-popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

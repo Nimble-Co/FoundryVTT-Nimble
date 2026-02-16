@@ -53,6 +53,9 @@ type NimbleCombatDocumentTestGlobals = {
 				};
 			};
 		};
+		utils: {
+			setProperty: (target: object, path: string, value: unknown) => void;
+		};
 	};
 	Combat: {
 		prototype: Record<string, unknown>;
