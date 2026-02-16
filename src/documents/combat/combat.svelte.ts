@@ -1,5 +1,6 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
+import { handleInitiativeRules } from './handleInitiativeRules.js';
 import {
 	canCurrentUserReorderCombatant,
 	getCombatantTypePriority,
@@ -230,6 +231,7 @@ class NimbleCombat extends Combat {
 
 		// Iterate over Combatants, performing an initiative roll for each
 		const updates: Record<string, unknown>[] = [];
+		const combatManaUpdates: Promise<unknown>[] = [];
 		const messages: ChatMessage.CreateData[] = [];
 
 		for await (const [i, id] of combatantIds.entries()) {
@@ -251,6 +253,12 @@ class NimbleCombat extends Combat {
 				else if (total >= 10) combatantUpdates[actionPath] = 2;
 				else combatantUpdates[actionPath] = 1;
 			}
+
+			await handleInitiativeRules({
+				combatId: this.id,
+				combatManaUpdates,
+				combatant,
+			});
 
 			updates.push(combatantUpdates);
 
@@ -291,6 +299,10 @@ class NimbleCombat extends Combat {
 
 		// Update multiple combatants
 		await this.updateEmbeddedDocuments('Combatant', updates);
+
+		if (combatManaUpdates.length > 0) {
+			await Promise.all(combatManaUpdates);
+		}
 
 		// Ensure the turn order remains with the same combatant
 		if (updateTurn && currentId) {
