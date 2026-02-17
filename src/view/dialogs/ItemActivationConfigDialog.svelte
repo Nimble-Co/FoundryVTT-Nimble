@@ -96,12 +96,7 @@
 		<div class="nimble-roll-modifiers">
 			<label>
 				{hitDice.setPrimaryDieModifier}:
-				<input
-					type="number"
-					bind:value={primaryDieModifier}
-					placeholder="0"
-					disabled={primaryDieValue !== undefined ? false : true}
-				/>
+				<input type="number" bind:value={primaryDieModifier} placeholder="0" />
 			</label>
 		</div>
 	</div>
