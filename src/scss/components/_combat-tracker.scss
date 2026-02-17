@@ -5,13 +5,6 @@
   --nimble-combat-scene-reserve-left: 0px;
 }
 
-#board {
-  inset-block-start: var(--nimble-combat-scene-reserve-top, 0px);
-  inset-inline-end: var(--nimble-combat-scene-reserve-right, 0px);
-  inset-block-end: var(--nimble-combat-scene-reserve-bottom, 0px);
-  inset-inline-start: var(--nimble-combat-scene-reserve-left, 0px);
-}
-
 #ui-left,
 #interface #ui-left {
   inset-inline-start: var(--nimble-combat-scene-reserve-left, 0px);
