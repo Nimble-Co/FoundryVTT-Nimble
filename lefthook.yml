@@ -1,0 +1,11 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome-format:
+      glob: "*.{ts,mts,js,mjs}"
+      run: npx @biomejs/biome format --write {staged_files}
+      stage_fixed: true
+    prettier-svelte:
+      glob: "*.svelte"
+      run: npx prettier --write {staged_files}
+      stage_fixed: true
