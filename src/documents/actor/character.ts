@@ -380,7 +380,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		if (!isSpellCaster) return null;
 		// Only update if value is null e.g not migrated
-		return getHighestSpellTier(this);
+		return getHighestSpellTier(this.levels.character);
 	}
 
 	_prepareArmorClass(): void {
