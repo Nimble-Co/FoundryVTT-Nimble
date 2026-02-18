@@ -1,6 +1,7 @@
 import type { NimbleSoloMonsterData } from '../../models/actor/SoloMonsterDataModel.js';
 import CharacterMovementConfigDialog from '../../view/dialogs/CharacterMovementConfigDialog.svelte';
 import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
+import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import { NimbleBaseActor } from './base.svelte.js';
 
 export class NimbleSoloMonster extends NimbleBaseActor {
@@ -96,8 +97,6 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 	}
 
 	async editMetadata() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.metaConfig ??= new GenericDialog(
 			`${this.name}: Configuration`,
 			NPCMetaConfigDialog,
@@ -109,8 +108,6 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 	}
 
 	async configureMovement() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.configureMovement ??= new GenericDialog(
 			`${this.name}: Configure Movement Speeds`,
 			CharacterMovementConfigDialog,

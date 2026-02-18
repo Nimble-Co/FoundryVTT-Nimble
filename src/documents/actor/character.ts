@@ -423,8 +423,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	/** ------------------------------------------------------ */
 
 	async configureAbilityScores() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.configureAbilityScores ??= new GenericDialog(
 			`${this.name}: Configure Stats`,
 			CharacterStatConfigDialog,
@@ -437,8 +435,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	async configureArmorProficiencies() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.configureArmorProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Armor Proficiencies`,
 			CharacterArmorProficienciesConfigDialog,
@@ -453,8 +449,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	async configureLanguageProficiencies() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.configureLanguageProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Language Proficiencies`,
 			CharacterLanguageProficienciesConfigDialog,
@@ -469,8 +463,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	async configureMovement() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.configureMovement ??= new GenericDialog(
 			`${this.name}: Configure Movement Speeds`,
 			CharacterMovementConfigDialog,
@@ -483,8 +475,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	async configureWeaponProficiencies() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.configureWeaponProficiencies ??= new GenericDialog(
 			`${this.name}: Configure Weapon Proficiencies`,
 			CharacterWeaponProficienciesConfigDialog,
@@ -499,8 +489,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	async configureSkills() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.configureSkills ??= new GenericDialog(
 			`${this.name}: Configure Skills`,
 			CharacterSkillsConfigDialog,
@@ -1044,8 +1032,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	/**
 	 * Check if a level up dialog is currently open for this character.
 	 */
-	async isLevelUpInProgress(): Promise<boolean> {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
+	isLevelUpInProgress(): boolean {
 		return GenericDialog.isOpen(this.getLevelUpDialogId());
 	}
 
@@ -1125,8 +1112,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const currentClassLevel = characterClass.system.classLevel;
 
 		if (currentClassLevel >= 20) return;
-
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
 
 		const levelUpDialogId = this.getLevelUpDialogId();
 		const levelDownDialogId = this.getLevelDownDialogId();
@@ -1467,8 +1452,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	}
 
 	async editMetadata() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
-
 		this.#dialogs.metaConfig ??= new GenericDialog(
 			`${this.name}: Configuration`,
 			CharacterMetaConfigDialog,

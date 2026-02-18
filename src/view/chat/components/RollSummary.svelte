@@ -84,10 +84,6 @@
 		flex-direction: column;
 	}
 
-	.system-nimble .nimble-chat-card .roll-expand.nimble-button[data-button-variant='icon'] {
-		padding: 8px;
-	}
-
 	.roll {
 		display: grid;
 		grid-template-areas:
