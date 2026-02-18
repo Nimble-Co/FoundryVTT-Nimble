@@ -14,8 +14,6 @@ export const COMBAT_TRACKER_LOCATION_SETTING_KEY = 'combatTrackerLocation';
 export const COMBAT_TRACKER_LOCATION_VALUES = ['left', 'right', 'top', 'bottom'] as const;
 
 export type CombatTrackerLocation = (typeof COMBAT_TRACKER_LOCATION_VALUES)[number];
-export const COMBAT_TRACKER_SIDE_LOCATION_VALUES = ['left', 'right'] as const;
-export type CombatTrackerSideLocation = (typeof COMBAT_TRACKER_SIDE_LOCATION_VALUES)[number];
 
 export interface CurrentTurnAnimationSettings {
 	pulseAnimation: boolean;
@@ -39,7 +37,7 @@ const DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS: CurrentTurnAnimationSettings = {
 	edgeCrawlerSize: 50,
 };
 
-const DEFAULT_COMBAT_TRACKER_LOCATION: CombatTrackerSideLocation = 'left';
+const DEFAULT_COMBAT_TRACKER_LOCATION: CombatTrackerLocation = 'left';
 
 const LEGACY_CURRENT_TURN_COLOR_SETTING_KEY = 'combatTrackerCurrentTurnColor';
 
@@ -67,9 +65,6 @@ const CURRENT_TURN_ANIMATION_SLIDER_SETTING_KEYS = new Set<CurrentTurnAnimationS
 
 const COMBAT_TRACKER_LOCATION_VALUE_SET = new Set<CombatTrackerLocation>(
 	COMBAT_TRACKER_LOCATION_VALUES,
-);
-const COMBAT_TRACKER_SIDE_LOCATION_VALUE_SET = new Set<CombatTrackerSideLocation>(
-	COMBAT_TRACKER_SIDE_LOCATION_VALUES,
 );
 
 function registerWorldSetting(
@@ -100,16 +95,6 @@ export function normalizeCombatTrackerLocation(value: unknown): CombatTrackerLoc
 	return COMBAT_TRACKER_LOCATION_VALUE_SET.has(normalized as CombatTrackerLocation)
 		? (normalized as CombatTrackerLocation)
 		: DEFAULT_COMBAT_TRACKER_LOCATION;
-}
-
-export function normalizeCombatTrackerSideLocation(
-	value: unknown,
-	fallback: CombatTrackerSideLocation = DEFAULT_COMBAT_TRACKER_LOCATION,
-): CombatTrackerSideLocation {
-	const normalizedLocation = normalizeCombatTrackerLocation(value);
-	return COMBAT_TRACKER_SIDE_LOCATION_VALUE_SET.has(normalizedLocation as CombatTrackerSideLocation)
-		? (normalizedLocation as CombatTrackerSideLocation)
-		: fallback;
 }
 
 export function normalizeCombatTrackerAnimationColor(value: unknown): string {
@@ -221,8 +206,8 @@ export function registerCombatTrackerSettings(): void {
 	});
 }
 
-export function getCombatTrackerLocation(): CombatTrackerSideLocation {
-	return normalizeCombatTrackerSideLocation(
+export function getCombatTrackerLocation(): CombatTrackerLocation {
+	return normalizeCombatTrackerLocation(
 		game.settings.get('nimble' as 'core', COMBAT_TRACKER_LOCATION_SETTING_KEY as 'rollMode'),
 	);
 }
@@ -307,11 +292,6 @@ export function isCombatTrackerLocationSettingKey(settingKey: unknown): boolean 
 
 export async function setCombatTrackerLocation(location: CombatTrackerLocation): Promise<void> {
 	const normalizedLocation = normalizeCombatTrackerLocation(location);
-	if (
-		!COMBAT_TRACKER_SIDE_LOCATION_VALUE_SET.has(normalizedLocation as CombatTrackerSideLocation)
-	) {
-		return;
-	}
 
 	await game.settings.set(
 		'nimble' as 'core',

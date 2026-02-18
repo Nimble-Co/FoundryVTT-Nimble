@@ -153,16 +153,8 @@
 		void updateCurrentTurnAnimationSetting(settingKey, snappedValue);
 	}
 
-	function isInactiveCombatTrackerLocation(location: CombatTrackerLocation): boolean {
-		return location === 'top' || location === 'bottom';
-	}
-
 	async function updateCombatTrackerLocation(location: CombatTrackerLocation) {
 		if (!isGM) return;
-		if (isInactiveCombatTrackerLocation(location)) {
-			syncCombatTrackerLocation();
-			return;
-		}
 
 		combatTrackerLocation = location;
 		emitCombatTrackerLocationPreview();
@@ -372,9 +364,7 @@
 				{/each}
 			</select>
 		</label>
-		<p class="nimble-combat-tracker-settings__hint">
-			Top and Bottom are placeholder options and currently do nothing.
-		</p>
+		<p class="nimble-combat-tracker-settings__hint">Choose where the tracker docks on screen.</p>
 	</section>
 
 	<section class="nimble-combat-tracker-settings__section">
