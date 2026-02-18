@@ -166,6 +166,10 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		}
 		const { isCritical, isMiss } = rolls.find((roll) => roll instanceof DamageRoll) ?? {};
 
+		// Only allow hiding rolls for GM users rolling for non-PC actors
+		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
+		const shouldHide = rollHidden && canHideRoll;
+
 		const chatData = foundry.utils.mergeObject(
 			{
 				author: game.user?.id,
@@ -174,7 +178,6 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 				style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 				sound: CONFIG.sounds.dice,
 				rolls,
-				rollMode: options.visibilityMode ?? game.settings.get('core', 'rollMode'),
 				system: {
 					actorName: this.actor?.name ?? '',
 					actorType: this.actor?.type ?? '',
@@ -191,13 +194,11 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 			await this.prepareChatCardData(options),
 		);
 
-		const rollModeValue = rollHidden
-			? 'blindroll'
-			: (options.visibilityMode ?? game.settings.get('core', 'rollMode'));
-		ChatMessage.applyRollMode(
-			chatData as Record<string, unknown>,
-			rollModeValue as foundry.CONST.DICE_ROLL_MODES,
-		);
+		if (shouldHide) {
+			// Whisper to GM users only
+			const gmUsers = game.users?.filter((u) => u.isGM).map((u) => u.id) ?? [];
+			(chatData as Record<string, unknown>).whisper = gmUsers;
+		}
 
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 		return chatCard ?? null;

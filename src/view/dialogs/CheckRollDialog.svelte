@@ -2,7 +2,7 @@
 	import RollModeConfig from './components/RollModeConfig.svelte';
 
 	import getRollFormula from '../../utils/getRollFormula.js';
-	const { prompts } = CONFIG.NIMBLE;
+	const { skillCheckDialog } = CONFIG.NIMBLE;
 
 	let { actor, dialog, ...data } = $props();
 	let selectedRollMode = $state(Math.clamp(data.rollMode ?? 0, -6, 6));
@@ -18,12 +18,14 @@
 
 <article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
 	<RollModeConfig bind:selectedRollMode />
-	<div class="nimble-roll-modifiers-container">
-		<label>
-			{prompts.hideFromPlayers}
-			<input type="checkbox" bind:checked={shouldRollBeHidden} class="modifier-item__checkbox" />
-		</label>
-	</div>
+	{#if game.user?.isGM}
+		<div class="nimble-roll-modifiers-container">
+			<label>
+				{skillCheckDialog.hideRoll}
+				<input type="checkbox" bind:checked={shouldRollBeHidden} class="modifier-item__checkbox" />
+			</label>
+		</div>
+	{/if}
 	<div class="nimble-roll-formula">{rollFormula}</div>
 </article>
 

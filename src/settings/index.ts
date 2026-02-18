@@ -1,5 +1,4 @@
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
-const { ApplicationV2 } = foundry.applications.api;
 
 export const settings = [];
 
@@ -21,8 +20,8 @@ export default function registerSystemSettings() {
 		'nimble' as 'core',
 		'hideRolls' as 'rollMode',
 		{
-			name: 'nimble.hints.hideRollsFromPlayersByDefault',
-			hint: 'nimble.hints.hideRollsFromPlayersByDefaultHint',
+			name: 'NIMBLE.hints.hideRollsFromPlayersByDefault',
+			hint: 'NIMBLE.hints.hideRollsFromPlayersByDefaultHint',
 			scope: 'client',
 			config: true,
 			type: Boolean,

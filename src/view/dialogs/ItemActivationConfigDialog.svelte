@@ -1,7 +1,7 @@
 <script>
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
-	const { prompts } = CONFIG.NIMBLE;
+	const { skillCheckDialog } = CONFIG.NIMBLE;
 
 	let { actor, dialog, item, ...data } = $props();
 	let selectedRollMode = $state(Math.clamp(data.rollMode ?? 0, -6, 6));
@@ -122,12 +122,14 @@
 			</div>
 		{/each}
 	</div>
-	<div class="nimble-roll-modifiers-container">
-		<label>
-			{prompts.hideRoll}
-			<input type="checkbox" bind:checked={shouldRollBeHidden} class="modifier-item__checkbox" />
-		</label>
-	</div>
+	{#if game.user?.isGM}
+		<div class="nimble-roll-modifiers-container">
+			<label>
+				{skillCheckDialog.hideRoll}
+				<input type="checkbox" bind:checked={shouldRollBeHidden} class="modifier-item__checkbox" />
+			</label>
+		</div>
+	{/if}
 </article>
 
 <footer class="nimble-sheet__footer">
