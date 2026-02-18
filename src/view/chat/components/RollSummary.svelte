@@ -37,18 +37,6 @@
 			{subheading}
 		</span>
 	{/if}
-
-	{#if type === 'damage'}
-		<button
-			class="nimble-button nimble-button--apply-damage"
-			aria-label="Apply Damage"
-			data-tooltip="Apply Damage"
-			data-tooltip-direction="UP"
-			onclick={() => messageDocument?.applyDamage(total, options)}
-		>
-			Apply
-		</button>
-	{/if}
 </div>
 
 {#if showRollDetails}
@@ -62,6 +50,18 @@
 	<div class="roll-expanded-details">
 		{@html tooltip}
 	</div>
+{/if}
+
+{#if type === 'damage'}
+	<button
+		class="nimble-button nimble-button--apply-damage"
+		aria-label="Apply Damage"
+		data-tooltip="Apply Damage"
+		data-tooltip-direction="UP"
+		onclick={() => messageDocument?.applyDamage(total, options)}
+	>
+		Apply Damage
+	</button>
 {/if}
 
 <style lang="scss">
@@ -91,22 +91,20 @@
 	.roll {
 		display: grid;
 		grid-template-areas:
-			'rollResult rollLabel expandButton . editButton'
-			'rollResult subHeading expandButton . editButton';
-		grid-template-columns: max-content max-content max-content 1fr max-content;
-		gap: 0 0.25rem;
+			'rollResult rollLabel expandButton'
+			'rollResult subHeading expandButton';
+		grid-template-columns: max-content 1fr max-content;
+		gap: 0 0.5rem;
 
 		&--no-subheading {
-			grid-template-areas: 'rollResult rollLabel expandButton . editButton';
+			grid-template-areas: 'rollResult rollLabel expandButton';
 		}
 
-		&__expand {
+		.roll-expand {
 			grid-area: expandButton;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			justify-self: start;
-			margin-left: -0.1rem;
 			background: none;
 			border: none;
 			padding: 0;
@@ -119,7 +117,7 @@
 				color: var(--nimble-dark-text-color);
 			}
 
-			&--open {
+			&.roll-expand--open {
 				color: var(--nimble-primary-color, var(--nimble-dark-text-color));
 			}
 		}
@@ -163,12 +161,10 @@
 	}
 
 	.nimble-button--apply-damage {
-		grid-area: editButton;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		justify-self: end;
-		min-width: 4.25rem;
+		width: 100%;
 		height: 2.25rem;
 		padding: 0 0.625rem;
 		font-size: var(--nimble-sm-text);
@@ -178,6 +174,6 @@
 		background-color: transparent;
 		border-radius: 4px;
 		border: 1px solid var(--nimble-card-border-color);
-		margin-left: 0;
+		margin-top: 0.5rem;
 	}
 </style>
