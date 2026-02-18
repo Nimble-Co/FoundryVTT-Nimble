@@ -1,7 +1,10 @@
 <script>
-	let { label, subheading, tooltip, total, options, showRollDetails } = $props();
+	import { getContext } from 'svelte';
+
+	let { label, subheading, tooltip, total, options, showRollDetails, type = '' } = $props();
 	const { hitDice } = CONFIG.NIMBLE;
 	const autoExpand = game.settings.get('nimble', 'autoExpandRolls');
+	const messageDocument = getContext('messageDocument');
 	let expanded = $state(autoExpand);
 </script>
 
@@ -34,19 +37,6 @@
 			{subheading}
 		</span>
 	{/if}
-
-	<!-- {#if type === "damage"}
-        <button
-            class="nimble-button nimble-button--apply-damage"
-            aria-label="Apply Damage"
-            data-tooltip="Apply Damage"
-            data-button-variant="icon"
-            data-tooltip-direction="UP"
-            onclick={() => messageDocument.applyDamage(total, options)}
-        >
-            <i class="fa-solid fa-check"></i>
-        </button>
-    {/if} -->
 </div>
 
 {#if showRollDetails}
@@ -60,6 +50,18 @@
 	<div class="roll-expanded-details">
 		{@html tooltip}
 	</div>
+{/if}
+
+{#if type === 'damage'}
+	<button
+		class="nimble-button nimble-button--apply-damage"
+		aria-label="Apply Damage"
+		data-tooltip="Apply Damage"
+		data-tooltip-direction="UP"
+		onclick={() => messageDocument?.applyDamage(total, options)}
+	>
+		Apply Damage
+	</button>
 {/if}
 
 <style lang="scss">
@@ -89,16 +91,16 @@
 	.roll {
 		display: grid;
 		grid-template-areas:
-			'rollResult rollLabel expandButton editButton'
-			'rollResult subHeading expandButton editButton';
-		grid-template-columns: max-content 1fr max-content max-content;
+			'rollResult rollLabel expandButton'
+			'rollResult subHeading expandButton';
+		grid-template-columns: max-content 1fr max-content;
 		gap: 0 0.5rem;
 
 		&--no-subheading {
-			grid-template-areas: 'rollResult rollLabel expandButton editButton';
+			grid-template-areas: 'rollResult rollLabel expandButton';
 		}
 
-		&__expand {
+		.roll-expand {
 			grid-area: expandButton;
 			display: flex;
 			align-items: center;
@@ -115,7 +117,7 @@
 				color: var(--nimble-dark-text-color);
 			}
 
-			&--open {
+			&.roll-expand--open {
 				color: var(--nimble-primary-color, var(--nimble-dark-text-color));
 			}
 		}
@@ -158,15 +160,20 @@
 		}
 	}
 
-	// .nimble-button--apply-damage {
-	//     grid-area: editButton;
-	//     width: 2.25rem;
-	//     height: 2.25rem;
-	//     padding: 0;
-	//     font-size: var(--nimble-lg-text);
-	//     color: var(--nimble-primary-color);
-	//     background-color: transparent;
-	//     border-radius: 4px;
-	//     border: 1px solid var(--nimble-card-border-color);
-	// }
+	.nimble-button--apply-damage {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 2.25rem;
+		padding: 0 0.625rem;
+		font-size: var(--nimble-sm-text);
+		font-weight: 900;
+		line-height: 1;
+		color: inherit;
+		background-color: transparent;
+		border-radius: 4px;
+		border: 1px solid var(--nimble-card-border-color);
+		margin-top: 0.5rem;
+	}
 </style>
