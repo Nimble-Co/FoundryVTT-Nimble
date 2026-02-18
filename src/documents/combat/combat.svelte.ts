@@ -217,27 +217,29 @@ class NimbleCombat extends Combat {
 		return Math.floor(stored);
 	}
 
-	#getDerivedNextMinionGroupLabelIndexFromCombatants(): number {
-		let maxAssignedIndex = -1;
+	#getAssignedMinionGroupLabelIndexesFromCombatants(): Set<number> {
+		const assignedIndexes = new Set<number>();
 
 		for (const combatant of this.combatants.contents) {
 			if (!isMinionCombatant(combatant)) continue;
 			if (!getMinionGroupId(combatant)) continue;
 
 			const labelIndex = getMinionGroupLabelIndex(combatant);
-			if (typeof labelIndex === 'number' && labelIndex > maxAssignedIndex) {
-				maxAssignedIndex = labelIndex;
-			}
+			if (typeof labelIndex === 'number') assignedIndexes.add(labelIndex);
 		}
 
-		return maxAssignedIndex + 1;
+		return assignedIndexes;
+	}
+
+	#getFirstAvailableMinionGroupLabelIndex(): number {
+		const assignedIndexes = this.#getAssignedMinionGroupLabelIndexesFromCombatants();
+		let nextAvailable = 0;
+		while (assignedIndexes.has(nextAvailable)) nextAvailable += 1;
+		return nextAvailable;
 	}
 
 	#getNextMinionGroupLabelIndex(): number {
-		return Math.max(
-			this.#getStoredNextMinionGroupLabelIndex(),
-			this.#getDerivedNextMinionGroupLabelIndexFromCombatants(),
-		);
+		return this.#getFirstAvailableMinionGroupLabelIndex();
 	}
 
 	async #persistNextMinionGroupLabelIndex(nextLabelIndex: number): Promise<void> {
