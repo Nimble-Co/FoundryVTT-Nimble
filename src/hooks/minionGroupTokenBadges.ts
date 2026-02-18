@@ -26,6 +26,10 @@ interface TokenGroupBadgeData {
 	groupLabel: string;
 }
 
+function canRenderMinionGroupIdentityUi(): boolean {
+	return Boolean(game.user?.isGM);
+}
+
 function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
 	if (combatant.sceneId) return combatant.sceneId;
 	if (combatant.token?.parent?.id) return combatant.token.parent.id;
@@ -49,6 +53,8 @@ function getCombatForScene(sceneId: string): Combat | null {
 }
 
 function buildTokenGroupBadgeDataForCurrentScene(): Map<string, TokenGroupBadgeData> {
+	if (!canRenderMinionGroupIdentityUi()) return new Map();
+
 	const sceneId = canvas.scene?.id;
 	if (!sceneId) return new Map();
 
@@ -260,6 +266,12 @@ function refreshTokenGroupBadge(
 	token: TokenWithGroupBadge,
 	tokenBadgeDataByTokenId: Map<string, TokenGroupBadgeData>,
 ): void {
+	if (!canRenderMinionGroupIdentityUi()) {
+		removeTokenGroupOutline(token);
+		removeTokenGroupBadge(token);
+		return;
+	}
+
 	const tokenId = token.document?.id ?? '';
 	const badgeData = tokenId ? tokenBadgeDataByTokenId.get(tokenId) : null;
 
@@ -278,6 +290,10 @@ function refreshTokenGroupBadge(
 
 function refreshAllVisibleTokenGroupBadges(): void {
 	if (!canvas?.ready || !canvas?.tokens) return;
+	if (!canRenderMinionGroupIdentityUi()) {
+		clearAllVisibleTokenGroupBadges();
+		return;
+	}
 
 	const tokenBadgeDataByTokenId = buildTokenGroupBadgeDataForCurrentScene();
 	for (const token of canvas.tokens.placeables) {

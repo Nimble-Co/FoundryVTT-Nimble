@@ -368,6 +368,7 @@
 		leaderId: string | undefined,
 		groupDisplay: MinionGroupDisplayData | undefined,
 	) {
+		if (!game.user?.isGM) return;
 		if (!leaderId || !groupDisplay) return;
 
 		clearGroupPopoverHideTimer();
@@ -1471,7 +1472,7 @@
 							{/if}
 							<CombatantComponent active={isActiveCombatant} {combatant} />
 
-							{#if groupDisplay}
+							{#if game.user!.isGM && groupDisplay}
 								{#if groupDisplay.label}
 									<div
 										class="nimble-combatants__group-badge nimble-combatants__group-badge--label"
@@ -1530,7 +1531,7 @@
 								{/if}
 								<CombatantComponent active={false} {combatant} />
 
-								{#if groupDisplay}
+								{#if game.user!.isGM && groupDisplay}
 									{#if groupDisplay.label}
 										<div
 											class="nimble-combatants__group-badge nimble-combatants__group-badge--label"
@@ -1555,7 +1556,7 @@
 			{/key}
 		</ol>
 
-		{#if hoveredGroupDisplay}
+		{#if game.user!.isGM && hoveredGroupDisplay}
 			<div
 				bind:this={groupPopoverElement}
 				class="nimble-combatants__group-popover nimble-combatants__group-popover--floating"

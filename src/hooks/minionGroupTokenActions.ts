@@ -11,8 +11,8 @@ const MINION_GROUP_TOKEN_UI_DEBUG_DISABLED_KEY = 'NIMBLE_DISABLE_GROUP_TOKEN_UI_
 const MINION_GROUP_ACTION_BAR_SCALE_STORAGE_KEY = 'nimble.minionGroupActionBar.scale';
 const MINION_GROUP_ACTION_BAR_POSITION_STORAGE_KEY = 'nimble.minionGroupActionBar.position';
 const MINION_GROUP_ACTION_BAR_DEFAULT_SCALE = 2;
-const MINION_GROUP_ACTION_BAR_MIN_SCALE = 1.5;
-const MINION_GROUP_ACTION_BAR_MAX_SCALE = 2.5;
+const MINION_GROUP_ACTION_BAR_MIN_SCALE = 2;
+const MINION_GROUP_ACTION_BAR_MAX_SCALE = 3;
 const MINION_GROUP_ACTION_BAR_VIEWPORT_MARGIN_PX = 8;
 const ALLOW_GROUPING_OUTSIDE_COMBAT_SETTING_KEY = 'allowMinionGroupingOutsideCombat';
 
@@ -249,6 +249,7 @@ function setActionBarScale(scale: number, options: { persist?: boolean } = {}): 
 	if (nextScale === actionBarScale) return;
 	actionBarScale = nextScale;
 	applyActionBarLayout();
+	scheduleVisibleGroupActionButtonsGridNormalization();
 
 	if (actionBarPosition && minionGroupActionBarElement && !minionGroupActionBarElement.hidden) {
 		const rect = minionGroupActionBarElement.getBoundingClientRect();
@@ -263,6 +264,15 @@ function setActionBarScale(scale: number, options: { persist?: boolean } = {}): 
 	if (options.persist ?? true) {
 		saveStoredActionBarScale(nextScale);
 	}
+}
+
+function scheduleVisibleGroupActionButtonsGridNormalization(): void {
+	if (!minionGroupActionBarElement || minionGroupActionBarElement.hidden) return;
+	const actions = minionGroupActionBarElement.querySelector<HTMLDivElement>(
+		'.nimble-minion-group-actions__actions',
+	);
+	if (!actions) return;
+	scheduleGroupActionButtonsGridNormalization(actions);
 }
 
 function setActionBarPosition(
@@ -540,8 +550,7 @@ function buildSelectionContext(): SelectionContext {
 		: 0;
 	const selectedUngroupedAliveMinionCountForActions =
 		selectedInCombatUngroupedAliveMinions.length + outOfCombatMinionCountForActions;
-	const selectedMinionCountForUi =
-		selectedMinions.length + (allowGroupingOutsideCombat ? selectedOutOfCombatMinionTokenCount : 0);
+	const selectedMinionCountForUi = selectedMinions.length + selectedOutOfCombatMinionTokenCount;
 	const selectedGroupIds = [
 		...new Set(
 			selectedGroupedMinions
@@ -717,19 +726,6 @@ function createActionButton(
 	button.append(prefixChip, valueChip);
 	button.disabled = isExecutingAction;
 	return button;
-}
-
-function createSelectedCountBadge(selectedCount: number): HTMLSpanElement {
-	const selectedBadge = document.createElement('span');
-	selectedBadge.className = 'nimble-minion-group-actions__badge';
-	selectedBadge.title = `${selectedCount} selected minion(s)`;
-	selectedBadge.ariaLabel = `${selectedCount} selected minion(s)`;
-	const selectedIcon = document.createElement('i');
-	selectedIcon.className = 'fa-solid fa-users';
-	const selectedValue = document.createElement('span');
-	selectedValue.textContent = String(selectedCount);
-	selectedBadge.append(selectedIcon, selectedValue);
-	return selectedBadge;
 }
 
 function createHintText(message: string): HTMLSpanElement {
@@ -983,6 +979,10 @@ function normalizeGroupActionButtonsGrid(actions: HTMLDivElement): void {
 		return;
 	}
 
+	// Clear previous pixel-locked sizing so measurements reflect the current scale.
+	actions.style.removeProperty('--nimble-minion-group-actions-column-width');
+	actions.style.removeProperty('--nimble-minion-group-actions-row-height');
+
 	const buttonSelector =
 		'.nimble-minion-group-actions__actions-column > .nimble-minion-group-actions__button:not(.nimble-minion-group-actions__button--placeholder)';
 	const buttons = [...actions.querySelectorAll<HTMLElement>(buttonSelector)];
@@ -1037,15 +1037,21 @@ function createCornerHandle(corner: ResizeCorner): HTMLDivElement {
 
 function renderActionBar(context: SelectionContext): void {
 	const actionBar = ensureActionBarElement();
+	const hasSelectedMinionTokens =
+		context.selectedMinions.length > 0 || context.selectedOutOfCombatMinionTokenCount > 0;
 
 	const shouldRender =
-		Boolean(game.user?.isGM) && Boolean(canvas?.ready) && context.selectedTokenCount > 0;
+		Boolean(game.user?.isGM) &&
+		Boolean(canvas?.ready) &&
+		context.selectedTokenCount > 0 &&
+		hasSelectedMinionTokens;
 
 	if (!shouldRender) {
 		logTokenUi('Action bar hidden', {
 			isGM: Boolean(game.user?.isGM),
 			canvasReady: Boolean(canvas?.ready),
 			selectedTokenCount: context.selectedTokenCount,
+			hasSelectedMinionTokens,
 			isTokenLayerActive: context.isTokenLayerActive,
 		});
 		hideActionBar();
@@ -1102,9 +1108,6 @@ function renderActionBar(context: SelectionContext): void {
 	dragHandle.className = 'nimble-minion-group-actions__drag-handle';
 	dragHandle.title = 'Drag to move';
 	dragHandle.addEventListener('pointerdown', handleDragHandlePointerDown);
-	const headerSelectedBadge = createSelectedCountBadge(context.selectedMinionCountForUi);
-	headerSelectedBadge.classList.add('nimble-minion-group-actions__badge--header');
-	dragHandle.append(headerSelectedBadge);
 	const headerTitle = document.createElement('span');
 	headerTitle.className = 'nimble-minion-group-actions__title';
 	headerTitle.textContent = 'Minion Groups';
