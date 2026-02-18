@@ -34,9 +34,10 @@
   &__drag-handle {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     gap: calc(0.16rem * var(--nimble-minion-group-actions-scale));
     min-height: calc(0.8rem * var(--nimble-minion-group-actions-scale));
+    width: 100%;
     margin: 0;
     padding: calc(0.05rem * var(--nimble-minion-group-actions-scale))
       calc(0.14rem * var(--nimble-minion-group-actions-scale));
@@ -59,6 +60,7 @@
     font-weight: 700;
     line-height: 1;
     color: hsl(0 0% 96%);
+    text-align: center;
     white-space: nowrap;
   }
 
@@ -95,11 +97,6 @@
     animation: nimble-minion-group-actions-spin 1s linear infinite;
   }
 
-  &__badge--header {
-    min-height: calc(0.72rem * var(--nimble-minion-group-actions-scale));
-    padding-inline: calc(0.17rem * var(--nimble-minion-group-actions-scale));
-  }
-
   &__hint {
     display: inline-flex;
     align-items: center;
@@ -131,9 +128,32 @@
   &__actions--group-columns {
     --nimble-minion-group-actions-column-width: max-content;
     --nimble-minion-group-actions-row-height: calc(0.84rem * var(--nimble-minion-group-actions-scale));
+    --nimble-minion-group-actions-column-gap: calc(
+      0.34rem * var(--nimble-minion-group-actions-scale)
+    );
+    --nimble-minion-group-actions-column-divider-width: 3px;
 
     align-items: flex-start;
-    gap: calc(0.16rem * var(--nimble-minion-group-actions-scale));
+    gap: var(--nimble-minion-group-actions-column-gap);
+  }
+
+  &__actions--group-columns > .nimble-minion-group-actions__actions-column {
+    position: relative;
+  }
+
+  &__actions--group-columns
+    > .nimble-minion-group-actions__actions-column
+    + .nimble-minion-group-actions__actions-column::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(var(--nimble-minion-group-actions-column-gap) / -2);
+    transform: translateX(-50%);
+    width: var(--nimble-minion-group-actions-column-divider-width);
+    background: #fff;
+    opacity: 1;
+    pointer-events: none;
   }
 
   &__actions-column {
