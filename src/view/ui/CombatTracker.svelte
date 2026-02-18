@@ -611,6 +611,17 @@
 		return currentCombat?.startCombat();
 	}
 
+	async function endCombat(event: MouseEvent): Promise<void> {
+		event.preventDefault();
+		if (!game.user?.isGM) return;
+
+		try {
+			await currentCombat?.delete();
+		} catch (_error) {
+			ui.notifications?.error('Unable to end combat.');
+		}
+	}
+
 	function openCombatTrackerSettings(event: MouseEvent): void {
 		event.preventDefault();
 		CombatTrackerSettings.open();
@@ -1048,9 +1059,14 @@
 					</button>
 
 					{#if currentCombat?.round === 0 && game.user!.isGM}
-						<button class="nimble-combat-tracker__start-button" onclick={startCombat}>
-							Start Combat
-						</button>
+						<div class="nimble-combat-tracker__start-actions">
+							<button class="nimble-combat-tracker__start-button" onclick={startCombat}>
+								Start Combat
+							</button>
+							<button class="nimble-combat-tracker__end-combat-button" onclick={endCombat}>
+								End Combat
+							</button>
+						</div>
 					{:else if currentCombat?.round === 0}
 						<h2 class="nimble-combat-tracker__heading">Combat Not Started</h2>
 					{:else}

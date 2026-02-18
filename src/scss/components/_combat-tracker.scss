@@ -281,10 +281,16 @@
   }
 
   &__header-top-row > .nimble-combat-tracker__heading,
-  &__header-top-row > .nimble-combat-tracker__start-button {
+  &__header-top-row > .nimble-combat-tracker__start-actions {
     width: 100%;
     text-align: center;
     padding-inline: 1.5rem;
+  }
+
+  &__start-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
   }
 
   &__end-turn-button {
@@ -388,7 +394,8 @@
     border: 0;
   }
 
-  &__start-button {
+  &__start-button,
+  &__end-combat-button {
     width: 100%;
     margin: 0;
     padding: 0;
@@ -431,7 +438,7 @@
     }
 
     .nimble-combat-tracker__heading,
-    .nimble-combat-tracker__start-button {
+    .nimble-combat-tracker__start-actions {
       width: 100%;
     }
 
@@ -449,13 +456,16 @@
     }
 
     .nimble-combat-tracker__header-top-row > .nimble-combat-tracker__heading,
-    .nimble-combat-tracker__header-top-row > .nimble-combat-tracker__start-button {
+    .nimble-combat-tracker__header-top-row > .nimble-combat-tracker__start-actions {
       grid-column: 1;
       grid-row: 1 / span 2;
       align-self: center;
       justify-self: stretch;
       padding-inline: 0.15rem;
       text-align: center;
+    }
+
+    .nimble-combat-tracker__header-top-row > .nimble-combat-tracker__heading {
       white-space: nowrap;
     }
 
@@ -466,10 +476,17 @@
       text-overflow: ellipsis;
     }
 
-    .nimble-combat-tracker__start-button {
+    .nimble-combat-tracker__start-actions {
       width: auto;
       min-width: 4.8rem;
       justify-self: center;
+      gap: 0.2rem;
+    }
+
+    .nimble-combat-tracker__start-actions .nimble-combat-tracker__start-button,
+    .nimble-combat-tracker__start-actions .nimble-combat-tracker__end-combat-button {
+      width: 100%;
+      min-width: 4.8rem;
       padding-inline: 0.4rem;
       white-space: nowrap;
     }
@@ -536,13 +553,13 @@
     > .nimble-combat-tracker__heading,
   &--location-top .nimble-combat-tracker__header--not-started
     .nimble-combat-tracker__header-top-row
-    > .nimble-combat-tracker__start-button,
+    > .nimble-combat-tracker__start-actions,
   &--location-bottom .nimble-combat-tracker__header--not-started
     .nimble-combat-tracker__header-top-row
     > .nimble-combat-tracker__heading,
   &--location-bottom .nimble-combat-tracker__header--not-started
     .nimble-combat-tracker__header-top-row
-    > .nimble-combat-tracker__start-button {
+    > .nimble-combat-tracker__start-actions {
     grid-column: 1 / span 2;
   }
 
