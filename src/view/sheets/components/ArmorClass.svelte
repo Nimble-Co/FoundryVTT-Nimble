@@ -33,7 +33,7 @@
 		flex-grow: 1;
 		height: 2.5rem;
 		padding: 0 0.25rem;
-		filter: drop-shadow(var(--nimble-box-shadow));
+		// Firefox fix: drop-shadow applied to SVG child instead
 	}
 
 	.nimble-ac-value {
@@ -53,5 +53,7 @@
 		width: auto;
 		z-index: -1;
 		transform: translateX(-50%);
+		// Firefox fix: apply shadow directly to SVG element
+		filter: drop-shadow(var(--nimble-box-shadow));
 	}
 </style>

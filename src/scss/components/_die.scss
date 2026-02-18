@@ -9,7 +9,13 @@ $die-sizes: 4, 6, 8, 10, 12, 20;
   font-weight: 900;
   line-height: 1.5rem;
   text-align: center;
-  text-shadow: 0 0 4px black;
+  // Firefox fallback: text-shadow simulates -webkit-text-stroke
+  text-shadow:
+    -0.5px -0.5px 0 #888,
+    0.5px -0.5px 0 #888,
+    -0.5px 0.5px 0 #888,
+    0.5px 0.5px 0 #888,
+    0 0 4px black;
   -webkit-text-stroke: 0.5px #888;
 
   &--discarded {
@@ -17,11 +23,25 @@ $die-sizes: 4, 6, 8, 10, 12, 20;
   }
 
   &--min {
+    // Firefox fallback for min roll stroke
+    text-shadow:
+      -1px -1px 0 #aa0200,
+      1px -1px 0 #aa0200,
+      -1px 1px 0 #aa0200,
+      1px 1px 0 #aa0200,
+      0 0 4px black;
     -webkit-text-stroke: 1px #aa0200;
     filter: sepia(0.5) hue-rotate(-60deg);
   }
 
   &--max {
+    // Firefox fallback for max roll stroke
+    text-shadow:
+      -0.25px -0.25px 0 #18520b,
+      0.25px -0.25px 0 #18520b,
+      -0.25px 0.25px 0 #18520b,
+      0.25px 0.25px 0 #18520b,
+      0 0 4px black;
     -webkit-text-stroke: 0.25px #18520b;
     filter: sepia(0.5) hue-rotate(60deg);
   }

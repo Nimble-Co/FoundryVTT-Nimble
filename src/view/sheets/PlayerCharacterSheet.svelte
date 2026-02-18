@@ -635,16 +635,28 @@
 			font-size: var(--nimble-sm-text);
 			line-height: 1;
 			color: #b01b19;
+			// Firefox fallback: text-shadow simulates stroke + drop-shadow
+			text-shadow:
+				-0.5px -0.5px 0 #fff,
+				0.5px -0.5px 0 #fff,
+				-0.5px 0.5px 0 #fff,
+				0.5px 0.5px 0 #fff,
+				0 0 2px rgba(0, 0, 0, 0.5);
 			-webkit-text-stroke: 0.5px #fff;
-			filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
 		}
 
 		i {
 			// Match the size of the heart icon in the heading
 			font-size: inherit;
 			color: #b01b19;
+			// Firefox fallback: text-shadow simulates stroke + drop-shadow
+			text-shadow:
+				-1px -1px 0 #fff,
+				1px -1px 0 #fff,
+				-1px 1px 0 #fff,
+				1px 1px 0 #fff,
+				0 0 2px rgba(0, 0, 0, 0.5);
 			-webkit-text-stroke: 1px #fff;
-			filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
 		}
 	}
 

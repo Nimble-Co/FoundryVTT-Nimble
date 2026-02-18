@@ -31,17 +31,29 @@
     width: fit-content;
     font-size: var(--nimble-md-text);
     color: #303030;
+    // Firefox fallback: use text-shadow to simulate text-stroke
+    text-shadow:
+      -1px -1px 0 #acacac,
+      1px -1px 0 #acacac,
+      -1px 1px 0 #acacac,
+      1px 1px 0 #acacac,
+      0 0 4px #000;
     -webkit-text-stroke: 1px #acacac;
     border: 0;
     background: transparent;
     transition: var(--nimble-standard-transition);
-    filter: drop-shadow(0 0 4px #000);
     cursor: pointer;
     pointer-events: var(--nimble-wound-button-point-events, none);
 
     &:focus,
     &:hover {
       color: #303030;
+      text-shadow:
+        -1px -1px 0 #acacac,
+        1px -1px 0 #acacac,
+        -1px 1px 0 #acacac,
+        1px 1px 0 #acacac,
+        0 0 4px #000;
       -webkit-text-stroke: 1px #acacac;
       background: transparent;
       box-shadow: none;
@@ -53,12 +65,25 @@
       --nimble-wound-button-opacity: 1;
       --nimble-wound-button-point-events: all;
       color: #b01b19;
+      // Firefox fallback: white stroke simulation
+      text-shadow:
+        -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        1px 1px 0 #fff,
+        0 0 4px #000;
       -webkit-text-stroke: 1px #fff;
     }
 
     &--active:focus,
     &--active:hover {
       color: #b01b19;
+      text-shadow:
+        -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        1px 1px 0 #fff,
+        0 0 4px #000;
       -webkit-text-stroke: 1px #fff;
     }
 

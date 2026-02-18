@@ -98,7 +98,10 @@
   max-width: var(--nimble-combat-sidebar-max-width);
   color: var(--nimble-combat-tracker-text-color);
   background: var(--nimble-combat-tracker-background);
-  backdrop-filter: blur(4px);
+  // Firefox fix: backdrop-filter can cause rendering issues
+  @supports (backdrop-filter: blur(4px)) and (-webkit-backdrop-filter: blur(4px)) {
+    backdrop-filter: blur(4px);
+  }
   box-shadow: 0 0 20px var(--color-shadow-dark);
   border-inline-end: 1px solid var(--color-dark-4);
   overflow-x: hidden;
@@ -1183,8 +1186,12 @@
     font-size: inherit;
     line-height: 1;
     color: hsla(38, 38%, 94%, 65%);
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(2px);
+    // Firefox fix: use more opaque background as fallback for backdrop-filter
+    background: rgba(0, 0, 0, 0.7);
+    @supports (backdrop-filter: blur(2px)) and (-webkit-backdrop-filter: blur(2px)) {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(2px);
+    }
     border: 0;
     border-radius: calc(4px * var(--nimble-combat-card-scale));
     transition: var(--nimble-standard-transition);

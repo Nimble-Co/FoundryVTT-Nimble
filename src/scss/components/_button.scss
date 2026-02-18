@@ -72,8 +72,8 @@
     line-height: 0;
     background: var(--nimble-navigation-background-color);
     border-radius: 50%;
-    box-shadow: var(--nimble-navigation-button-box-shadow);
-    filter: drop-shadow(var(--nimble-box-shadow));
+    // Firefox fix: use box-shadow instead of filter: drop-shadow()
+    box-shadow: var(--nimble-navigation-button-box-shadow), var(--nimble-box-shadow);
     transition: var(--nimble-standard-transition);
 
     i {
