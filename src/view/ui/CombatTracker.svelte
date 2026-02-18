@@ -1150,7 +1150,6 @@
 			class="nimble-combat-tracker__floating-end-turn"
 			type="button"
 			aria-label="End Turn"
-			data-tooltip="End Turn"
 			style={floatingEndTurnButtonStyle}
 			onclick={endCurrentTurn}
 		>

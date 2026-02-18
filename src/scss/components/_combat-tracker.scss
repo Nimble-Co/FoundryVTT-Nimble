@@ -105,6 +105,7 @@
   backdrop-filter: blur(4px);
   box-shadow: 0 0 20px var(--color-shadow-dark);
   border-inline-end: 1px solid var(--color-dark-4);
+  overflow-x: hidden;
   overflow-y: clip;
   z-index: 999;
 
@@ -326,7 +327,7 @@
     font-weight: 600;
     line-height: 1.2;
     color: var(--nimble-combat-tracker-text-color, var(--color-text-light-0, #ddd));
-    background: rgba(0, 0, 0, 0.65);
+    background: var(--nimble-combat-tracker-background, rgba(0, 0, 0, 0.65));
     border: 1px solid var(--nimble-combat-tracker-border-color, hsl(41 18% 54%));
     border-radius: calc(0.375rem * var(--nimble-combat-card-scale, 1));
     box-shadow: var(--nimble-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.45));
@@ -636,7 +637,9 @@
   padding: calc(0.5rem * var(--nimble-combat-card-scale))
     calc(0.25rem * var(--nimble-combat-card-scale));
   list-style: none;
+  overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-gutter: stable;
 
   &__item {
     position: relative;
@@ -668,7 +671,7 @@
     > .nimble-combatant {
       position: relative;
       z-index: 1;
-      background: rgba(2, 2, 6, 0.96);
+      background: var(--nimble-combat-tracker-background);
     }
   }
 
@@ -832,6 +835,7 @@
   justify-content: flex-start;
   overflow-x: auto;
   overflow-y: hidden;
+  scrollbar-gutter: auto;
   padding-block: calc(0.125rem * var(--nimble-combat-card-scale));
   padding-inline: calc(0.35rem * var(--nimble-combat-card-scale));
 }

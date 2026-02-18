@@ -59,7 +59,6 @@
 					class="nimble-combatant-actions__end-turn-button"
 					type="button"
 					aria-label="End Turn"
-					data-tooltip="End Turn"
 					onclick={endTurn}
 				>
 					End Turn
