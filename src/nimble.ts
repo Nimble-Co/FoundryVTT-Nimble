@@ -1,6 +1,7 @@
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import canvasInit from './hooks/canvasInit.js';
 import registerCombatantDefeatSync from './hooks/combatantDefeatSync.js';
+import registerMinionGroupTokenActions from './hooks/minionGroupTokenActions.js';
 import registerMinionGroupTokenBadges from './hooks/minionGroupTokenBadges.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
@@ -85,6 +86,7 @@ type HookFn = (...args: object[]) => undefined | boolean | Promise<undefined | b
 Hooks.on('hotbarDrop', onHotbarDrop);
 registerCombatantDefeatSync();
 registerMinionGroupTokenBadges();
+registerMinionGroupTokenActions();
 
 // Refresh tokens when combat ends to remove turn indicators
 Hooks.on('deleteCombat', async (combat: Combat) => {

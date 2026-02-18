@@ -8,6 +8,8 @@
 	import { isCombatantDead } from '../../utils/isCombatantDead.js';
 	import {
 		getEffectiveMinionGroupLeader,
+		getMinionGroupIdentityColorByLabel,
+		getMinionGroupIdentityColorByLabelIndex,
 		getMinionGroupId,
 		getMinionGroupMemberNumber,
 		getMinionGroupSummaries,
@@ -41,6 +43,7 @@
 		groupId: string;
 		leaderId: string;
 		label: string | null;
+		labelIndex: number | null;
 		members: Combatant.Implementation[];
 	}
 
@@ -163,6 +166,7 @@
 				groupId: summary.id,
 				leaderId: leader.id,
 				label: summary.label,
+				labelIndex: summary.labelIndex,
 				members: summary.members,
 			});
 
@@ -254,6 +258,17 @@
 		const label = groupLabel?.trim().toUpperCase() ?? '?';
 		const memberNumber = getMinionGroupMemberNumber(member) ?? fallbackIndex + 1;
 		return `${label}${memberNumber}`;
+	}
+
+	function getGroupIdentityStyle(
+		label: string | null | undefined,
+		labelIndex: number | null | undefined,
+	): string {
+		const accentColor =
+			typeof labelIndex === 'number'
+				? getMinionGroupIdentityColorByLabelIndex(labelIndex)
+				: getMinionGroupIdentityColorByLabel(label);
+		return `--nimble-group-accent: ${accentColor};`;
 	}
 
 	function applyOptimisticMemberKillState(combatantId: string): void {
@@ -1460,6 +1475,7 @@
 								{#if groupDisplay.label}
 									<div
 										class="nimble-combatants__group-badge nimble-combatants__group-badge--label"
+										style={getGroupIdentityStyle(groupDisplay.label, groupDisplay.labelIndex)}
 										aria-label={`Minion Group ${groupDisplay.label}`}
 									>
 										{groupDisplay.label}
@@ -1467,6 +1483,7 @@
 								{/if}
 								<div
 									class="nimble-combatants__group-badge nimble-combatants__group-badge--count"
+									style={getGroupIdentityStyle(groupDisplay.label, groupDisplay.labelIndex)}
 									aria-label={`${groupDisplay.members.length} minions in this group`}
 								>
 									x{groupDisplay.members.length}
@@ -1517,6 +1534,7 @@
 									{#if groupDisplay.label}
 										<div
 											class="nimble-combatants__group-badge nimble-combatants__group-badge--label"
+											style={getGroupIdentityStyle(groupDisplay.label, groupDisplay.labelIndex)}
 											aria-label={`Minion Group ${groupDisplay.label}`}
 										>
 											{groupDisplay.label}
@@ -1524,6 +1542,7 @@
 									{/if}
 									<div
 										class="nimble-combatants__group-badge nimble-combatants__group-badge--count"
+										style={getGroupIdentityStyle(groupDisplay.label, groupDisplay.labelIndex)}
 										aria-label={`${groupDisplay.members.length} minions in this group`}
 									>
 										x{groupDisplay.members.length}
@@ -1540,7 +1559,10 @@
 			<div
 				bind:this={groupPopoverElement}
 				class="nimble-combatants__group-popover nimble-combatants__group-popover--floating"
-				style={`left: ${groupPopoverLeftPx}px; top: ${groupPopoverTopPx}px;`}
+				style={`left: ${groupPopoverLeftPx}px; top: ${groupPopoverTopPx}px; ${getGroupIdentityStyle(
+					hoveredGroupDisplay.label,
+					hoveredGroupDisplay.labelIndex,
+				)}`}
 				onpointerenter={handleGroupPopoverPointerEnter}
 				onpointerleave={handleGroupPopoverPointerLeave}
 				onfocusin={handleGroupPopoverFocusIn}

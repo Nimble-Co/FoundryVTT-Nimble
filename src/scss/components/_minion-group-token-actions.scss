@@ -1,0 +1,312 @@
+.system-nimble .nimble-minion-group-actions {
+  --nimble-minion-group-actions-scale: 2;
+
+  position: fixed;
+  left: 50%;
+  bottom: calc(6.1rem * var(--nimble-minion-group-actions-scale));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: calc(0.25rem * var(--nimble-minion-group-actions-scale));
+  width: max-content;
+  min-width: 0;
+  max-width: min(calc(22rem * var(--nimble-minion-group-actions-scale)), calc(100vw - 1rem));
+  margin: 0;
+  padding: calc(0.35rem * var(--nimble-minion-group-actions-scale))
+    calc(0.4rem * var(--nimble-minion-group-actions-scale));
+  color: hsl(0 0% 96%);
+  background: color-mix(in srgb, hsl(230 22% 10%) 93%, transparent);
+  border: 1px solid color-mix(in srgb, hsl(205 70% 72%) 48%, transparent);
+  border-radius: calc(0.45rem * var(--nimble-minion-group-actions-scale));
+  box-shadow:
+    0 0 calc(10px * var(--nimble-minion-group-actions-scale))
+      color-mix(in srgb, hsl(205 78% 64%) 32%, transparent),
+    0 calc(4px * var(--nimble-minion-group-actions-scale))
+      calc(12px * var(--nimble-minion-group-actions-scale)) color-mix(in srgb, black 62%, transparent);
+  overflow: visible;
+  pointer-events: auto;
+  z-index: 10050;
+
+  &--positioned {
+    max-width: min(calc(22rem * var(--nimble-minion-group-actions-scale)), calc(100vw - 1rem));
+  }
+
+  &__drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: calc(0.16rem * var(--nimble-minion-group-actions-scale));
+    min-height: calc(0.8rem * var(--nimble-minion-group-actions-scale));
+    margin: 0;
+    padding: calc(0.05rem * var(--nimble-minion-group-actions-scale))
+      calc(0.14rem * var(--nimble-minion-group-actions-scale));
+    font-size: calc(var(--nimble-xxs-text, 0.55rem) * var(--nimble-minion-group-actions-scale));
+    font-weight: 700;
+    line-height: 1;
+    color: hsl(0 0% 96%);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    cursor: move;
+    user-select: none;
+    touch-action: none;
+    white-space: nowrap;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: calc(var(--nimble-xxs-text, 0.55rem) * var(--nimble-minion-group-actions-scale));
+    font-weight: 700;
+    line-height: 1;
+    color: hsl(0 0% 96%);
+    white-space: nowrap;
+  }
+
+  &__command-row {
+    display: flex;
+    align-items: center;
+    gap: calc(0.2rem * var(--nimble-minion-group-actions-scale));
+    min-width: 0;
+  }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(0.12rem * var(--nimble-minion-group-actions-scale));
+    min-height: calc(0.74rem * var(--nimble-minion-group-actions-scale));
+    margin: 0;
+    padding: 0 calc(0.2rem * var(--nimble-minion-group-actions-scale));
+    font-size: calc(var(--nimble-xxs-text, 0.55rem) * var(--nimble-minion-group-actions-scale));
+    font-weight: 700;
+    line-height: 1;
+    color: hsl(0 0% 96%);
+    background: color-mix(in srgb, hsl(216 36% 20%) 62%, transparent);
+    border: 1px solid color-mix(in srgb, hsl(205 70% 72%) 40%, transparent);
+    border-radius: calc(0.24rem * var(--nimble-minion-group-actions-scale));
+    white-space: nowrap;
+    flex: 0 0 auto;
+
+    i {
+      font-size: calc(var(--nimble-xxs-text, 0.55rem) * var(--nimble-minion-group-actions-scale));
+    }
+  }
+
+  &__badge--busy i {
+    animation: nimble-minion-group-actions-spin 1s linear infinite;
+  }
+
+  &__badge--header {
+    min-height: calc(0.72rem * var(--nimble-minion-group-actions-scale));
+    padding-inline: calc(0.17rem * var(--nimble-minion-group-actions-scale));
+  }
+
+  &__hint {
+    display: inline-flex;
+    align-items: center;
+    min-height: calc(0.74rem * var(--nimble-minion-group-actions-scale));
+    margin: 0;
+    padding: 0 calc(0.2rem * var(--nimble-minion-group-actions-scale));
+    color: hsl(0 0% 96%);
+    background: color-mix(in srgb, hsl(216 36% 20%) 55%, transparent);
+    border: 1px solid color-mix(in srgb, hsl(205 70% 72%) 36%, transparent);
+    border-radius: calc(0.24rem * var(--nimble-minion-group-actions-scale));
+    font-size: calc(var(--nimble-xxs-text, 0.55rem) * var(--nimble-minion-group-actions-scale));
+    line-height: 1;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: calc(0.25rem * var(--nimble-minion-group-actions-scale));
+    min-width: 0;
+    max-width: min(calc(16rem * var(--nimble-minion-group-actions-scale)), calc(100vw - 6rem));
+    scrollbar-width: thin;
+  }
+
+  &__actions--group-columns {
+    --nimble-minion-group-actions-column-width: max-content;
+    --nimble-minion-group-actions-row-height: calc(0.84rem * var(--nimble-minion-group-actions-scale));
+
+    align-items: flex-start;
+    gap: calc(0.16rem * var(--nimble-minion-group-actions-scale));
+  }
+
+  &__actions-column {
+    display: flex;
+    flex-direction: column;
+    gap: calc(0.1rem * var(--nimble-minion-group-actions-scale));
+    width: var(--nimble-minion-group-actions-column-width);
+    min-width: var(--nimble-minion-group-actions-column-width);
+  }
+
+  &__actions-column > .nimble-minion-group-actions__button {
+    width: 100%;
+    min-height: var(--nimble-minion-group-actions-row-height);
+    height: var(--nimble-minion-group-actions-row-height);
+  }
+
+  &__button {
+    --button-size: fit-content;
+
+    display: inline-flex;
+    align-items: center;
+    gap: calc(0.1rem * var(--nimble-minion-group-actions-scale));
+    min-height: calc(0.84rem * var(--nimble-minion-group-actions-scale));
+    margin: 0;
+    padding: calc(0.08rem * var(--nimble-minion-group-actions-scale));
+    font-size: calc(var(--nimble-xxs-text, 0.55rem) * var(--nimble-minion-group-actions-scale));
+    font-weight: 700;
+    line-height: 1;
+    color: hsl(0 0% 96%);
+    background: color-mix(in srgb, black 16%, transparent);
+    border: 1px solid color-mix(in srgb, white 24%, transparent);
+    border-radius: calc(0.24rem * var(--nimble-minion-group-actions-scale));
+    transition:
+      color 140ms ease,
+      border-color 140ms ease,
+      box-shadow 140ms ease,
+      opacity 140ms ease;
+    white-space: nowrap;
+
+    &:hover,
+    &:focus {
+      color: hsl(0 0% 96%);
+      border-color: var(--nimble-combat-tracker-hover-color);
+      box-shadow: 0 0 6px color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 64%, transparent);
+      text-shadow: none;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+      box-shadow: none;
+    }
+  }
+
+  &__button--placeholder {
+    min-width: var(--nimble-minion-group-actions-column-width);
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  &__button-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(0.62rem * var(--nimble-minion-group-actions-scale));
+    border: 1px solid currentcolor;
+    border-radius: calc(0.17rem * var(--nimble-minion-group-actions-scale));
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  &__button-chip--prefix {
+    min-width: calc(0.62rem * var(--nimble-minion-group-actions-scale));
+    padding-inline: calc(0.1rem * var(--nimble-minion-group-actions-scale));
+    font-size: calc(var(--nimble-xs-text) * var(--nimble-minion-group-actions-scale));
+    font-weight: 800;
+  }
+
+  &__button-chip--value {
+    padding-inline: calc(0.2rem * var(--nimble-minion-group-actions-scale));
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__button-chip i {
+    font-size: calc(var(--nimble-xxs-text, 0.55rem) * var(--nimble-minion-group-actions-scale));
+  }
+
+  &__button--positive {
+    color: hsl(0 0% 96%);
+    background: color-mix(in srgb, hsl(138 60% 20%) 56%, transparent);
+    border-color: color-mix(in srgb, hsl(140 68% 72%) 66%, transparent);
+
+    &:hover,
+    &:focus {
+      color: hsl(0 0% 96%);
+      border-color: color-mix(in srgb, hsl(140 74% 82%) 98%, white);
+      box-shadow: 0 0 6px color-mix(in srgb, hsl(140 74% 68%) 68%, transparent);
+    }
+  }
+
+  &__button--negative {
+    color: hsl(0 0% 96%);
+    background: color-mix(in srgb, hsl(357 78% 32%) 70%, transparent);
+    border-color: color-mix(in srgb, hsl(0 86% 78%) 84%, transparent);
+
+    .nimble-minion-group-actions__button-chip {
+      background: color-mix(in srgb, hsl(357 70% 18%) 78%, transparent);
+      border-color: color-mix(in srgb, hsl(0 90% 82%) 84%, white);
+    }
+
+    &:hover,
+    &:focus {
+      color: hsl(0 0% 96%);
+      border-color: color-mix(in srgb, hsl(0 92% 80%) 94%, white);
+      box-shadow: 0 0 6px color-mix(in srgb, hsl(0 92% 74%) 62%, transparent);
+    }
+  }
+
+  &__corner-handle {
+    position: absolute;
+    margin: 0;
+    width: calc(0.78rem * var(--nimble-minion-group-actions-scale));
+    height: calc(0.78rem * var(--nimble-minion-group-actions-scale));
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    user-select: none;
+    touch-action: none;
+
+    &--nw {
+      top: calc(-0.24rem * var(--nimble-minion-group-actions-scale));
+      left: calc(-0.24rem * var(--nimble-minion-group-actions-scale));
+      cursor: nwse-resize;
+    }
+
+    &--ne {
+      top: calc(-0.24rem * var(--nimble-minion-group-actions-scale));
+      right: calc(-0.24rem * var(--nimble-minion-group-actions-scale));
+      cursor: nesw-resize;
+    }
+
+    &--sw {
+      bottom: calc(-0.24rem * var(--nimble-minion-group-actions-scale));
+      left: calc(-0.24rem * var(--nimble-minion-group-actions-scale));
+      cursor: nesw-resize;
+    }
+
+    &--se {
+      bottom: calc(-0.24rem * var(--nimble-minion-group-actions-scale));
+      right: calc(-0.24rem * var(--nimble-minion-group-actions-scale));
+      cursor: nwse-resize;
+    }
+  }
+}
+
+@keyframes nimble-minion-group-actions-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 700px) {
+  .system-nimble .nimble-minion-group-actions:not(.nimble-minion-group-actions--positioned) {
+    --nimble-minion-group-actions-scale: 1.3;
+
+    left: 0.4rem;
+    right: 0.4rem;
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    transform: none;
+  }
+}

@@ -173,27 +173,29 @@ class NimbleCombat extends Combat {
 		return Math.floor(stored);
 	}
 
-	#getDerivedNextMinionGroupLabelIndexFromCombatants(): number {
-		let maxAssignedIndex = -1;
+	#getAssignedMinionGroupLabelIndexesFromCombatants(): Set<number> {
+		const assignedIndexes = new Set<number>();
 
 		for (const combatant of this.combatants.contents) {
 			if (!isMinionCombatant(combatant)) continue;
 			if (!getMinionGroupId(combatant)) continue;
 
 			const labelIndex = getMinionGroupLabelIndex(combatant);
-			if (typeof labelIndex === 'number' && labelIndex > maxAssignedIndex) {
-				maxAssignedIndex = labelIndex;
-			}
+			if (typeof labelIndex === 'number') assignedIndexes.add(labelIndex);
 		}
 
-		return maxAssignedIndex + 1;
+		return assignedIndexes;
+	}
+
+	#getFirstAvailableMinionGroupLabelIndex(): number {
+		const assignedIndexes = this.#getAssignedMinionGroupLabelIndexesFromCombatants();
+		let nextAvailable = 0;
+		while (assignedIndexes.has(nextAvailable)) nextAvailable += 1;
+		return nextAvailable;
 	}
 
 	#getNextMinionGroupLabelIndex(): number {
-		return Math.max(
-			this.#getStoredNextMinionGroupLabelIndex(),
-			this.#getDerivedNextMinionGroupLabelIndexFromCombatants(),
-		);
+		return this.#getFirstAvailableMinionGroupLabelIndex();
 	}
 
 	async #persistNextMinionGroupLabelIndex(nextLabelIndex: number): Promise<void> {
@@ -355,6 +357,37 @@ class NimbleCombat extends Combat {
 		}
 
 		return result;
+	}
+
+	override async createEmbeddedDocuments<EmbeddedName extends Combat.Embedded.Name>(
+		embeddedName: EmbeddedName,
+		data: foundry.abstract.Document.CreateDataForName<EmbeddedName>[] | undefined,
+		operation?: object,
+	): Promise<foundry.abstract.Document.StoredForName<EmbeddedName>[] | undefined> {
+		let normalizedData = data;
+
+		if (embeddedName === 'Combatant' && Array.isArray(data)) {
+			let normalizedCount = 0;
+			normalizedData = data.map((entry) => {
+				if (!entry || typeof entry !== 'object') return entry;
+				const asRecord = entry as Record<string, unknown>;
+				if (asRecord.type !== 'minion') return entry;
+				normalizedCount += 1;
+				return {
+					...asRecord,
+					type: 'npc',
+				};
+			}) as foundry.abstract.Document.CreateDataForName<EmbeddedName>[];
+
+			if (normalizedCount > 0) {
+				logMinionGroupingCombat('normalized invalid combatant create type from minion to npc', {
+					combatId: this.id ?? null,
+					normalizedCount,
+				});
+			}
+		}
+
+		return super.createEmbeddedDocuments(embeddedName, normalizedData, operation);
 	}
 
 	override async _onEndTurn(combatant: Combatant.Implementation, context: Combat.TurnEventContext) {

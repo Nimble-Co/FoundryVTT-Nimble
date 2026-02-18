@@ -6,6 +6,14 @@ export const MINION_GROUP_ROLE_PATH = `${MINION_GROUP_FLAG_ROOT}.role`;
 export const MINION_GROUP_LABEL_PATH = `${MINION_GROUP_FLAG_ROOT}.label`;
 export const MINION_GROUP_LABEL_INDEX_PATH = `${MINION_GROUP_FLAG_ROOT}.labelIndex`;
 export const MINION_GROUP_MEMBER_NUMBER_PATH = `${MINION_GROUP_FLAG_ROOT}.memberNumber`;
+export const MINION_GROUP_IDENTITY_COLOR_PALETTE = [
+	'#3B82F6', // A - Blue
+	'#F97316', // B - Orange
+	'#8B5CF6', // C - Violet
+	'#FACC15', // D - Yellow
+	'#06B6D4', // E - Cyan
+	'#D946EF', // F - Magenta
+] as const;
 
 export type MinionGroupRole = 'leader' | 'member';
 
@@ -69,8 +77,9 @@ export function sortCombatantsForGroupResolution(
 export function isMinionCombatant(
 	combatant: Combatant.Implementation | null | undefined,
 ): combatant is Combatant.Implementation {
+	const combatantType = combatant?.type as string | undefined;
 	const actorType = combatant?.actor?.type as string | undefined;
-	return Boolean(combatant && actorType === 'minion');
+	return Boolean(combatant && (actorType === 'minion' || combatantType === 'minion'));
 }
 
 export function getMinionGroupId(
@@ -127,6 +136,27 @@ export function getMinionGroupLabel(
 	if (typeof label !== 'string') return null;
 	const normalized = label.trim().toUpperCase();
 	return /^[A-Z]+$/.test(normalized) ? normalized : null;
+}
+
+export function getMinionGroupIdentityColorByLabelIndex(
+	labelIndex: number | null | undefined,
+): string {
+	const palette = MINION_GROUP_IDENTITY_COLOR_PALETTE;
+	const normalizedIndex =
+		typeof labelIndex === 'number' && Number.isFinite(labelIndex)
+			? Math.max(0, Math.floor(labelIndex))
+			: 0;
+	return palette[normalizedIndex % palette.length];
+}
+
+export function getMinionGroupIdentityColorByLabel(label: string | null | undefined): string {
+	const labelIndex = parseMinionGroupLabel(label);
+	return getMinionGroupIdentityColorByLabelIndex(labelIndex);
+}
+
+export function getMinionGroupIdentityColorNumberByLabel(label: string | null | undefined): number {
+	const hex = getMinionGroupIdentityColorByLabel(label);
+	return Number.parseInt(hex.slice(1), 16);
 }
 
 export function getMinionGroupLabelIndex(

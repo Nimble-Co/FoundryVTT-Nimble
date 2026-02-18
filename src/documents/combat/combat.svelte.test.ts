@@ -593,6 +593,113 @@ describe('NimbleCombat', () => {
 		});
 	});
 
+	it('reuses the first available group letter when a middle group is dissolved', async () => {
+		const combatId = 'combat-minion-group-first-available-letter';
+		const actorIds = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+		const minionActors = actorIds.map(
+			(id) =>
+				({
+					...createCombatActorFixture({ id: `minion-letter-actor-${id}`, hp: 1 }),
+					type: 'minion',
+				}) as unknown as Actor.Implementation,
+		);
+		const minions = actorIds.map((id, index) =>
+			createMockCombatant({
+				id: `minion-letter-${id}`,
+				type: 'minion',
+				sort: index + 1,
+				isOwner: false,
+				initiative: 20 - index,
+				actor: minionActors[index],
+				combatId,
+			}),
+		);
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture(minions),
+			turns: [...minions],
+			combatant: minions[0],
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+		};
+
+		combat.update = vi.fn().mockImplementation(async (updateData: Record<string, unknown>) => {
+			for (const [path, value] of Object.entries(updateData)) {
+				if (path.includes('.')) {
+					globals().foundry.utils.setProperty(combat, path, value);
+					continue;
+				}
+				(combat as unknown as Record<string, unknown>)[path] = value;
+			}
+			return combat;
+		});
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(
+				async (_documentName: string, updates: Array<Record<string, unknown>>) => {
+					for (const update of updates) {
+						const id = update._id as string | undefined;
+						if (!id) continue;
+						const target = combat.combatants.get(id);
+						if (!target) continue;
+
+						for (const [path, value] of Object.entries(update)) {
+							if (path === '_id') continue;
+							globals().foundry.utils.setProperty(target, path, value);
+						}
+					}
+
+					return updates as unknown as Combatant.Implementation[];
+				},
+			);
+
+		await combat.createMinionGroup(['minion-letter-a', 'minion-letter-b']);
+		const createAUpdates = combat.updateEmbeddedDocuments.mock.calls[0][1] as Array<
+			Record<string, unknown>
+		>;
+		const groupAId = createAUpdates[0]?.['flags.nimble.minionGroup.id'] as string;
+		expect(
+			new Set(createAUpdates.map((update) => update['flags.nimble.minionGroup.label'])),
+		).toEqual(new Set(['A']));
+
+		await combat.createMinionGroup(['minion-letter-c', 'minion-letter-d']);
+		const createBUpdates = combat.updateEmbeddedDocuments.mock.calls[1][1] as Array<
+			Record<string, unknown>
+		>;
+		const groupBId = createBUpdates[0]?.['flags.nimble.minionGroup.id'] as string;
+		expect(
+			new Set(createBUpdates.map((update) => update['flags.nimble.minionGroup.label'])),
+		).toEqual(new Set(['B']));
+
+		await combat.createMinionGroup(['minion-letter-e', 'minion-letter-f']);
+		const createCUpdates = combat.updateEmbeddedDocuments.mock.calls[2][1] as Array<
+			Record<string, unknown>
+		>;
+		expect(
+			new Set(createCUpdates.map((update) => update['flags.nimble.minionGroup.label'])),
+		).toEqual(new Set(['C']));
+
+		await combat.dissolveMinionGroups([groupBId]);
+		await combat.createMinionGroup(['minion-letter-g', 'minion-letter-h']);
+
+		const createAfterDissolveUpdates = combat.updateEmbeddedDocuments.mock.calls[4][1] as Array<
+			Record<string, unknown>
+		>;
+		expect(
+			new Set(createAfterDissolveUpdates.map((update) => update['flags.nimble.minionGroup.label'])),
+		).toEqual(new Set(['B']));
+		expect(
+			new Set(
+				createAfterDissolveUpdates
+					.map((update) => update['flags.nimble.minionGroup.labelIndex'])
+					.filter((value) => typeof value === 'number'),
+			),
+		).toEqual(new Set([1]));
+		expect(groupAId).not.toEqual(groupBId);
+	});
+
 	it('allows GM drop reorder for all active combatant types', async () => {
 		globals().game.user.isGM = true;
 		const combatId = 'combat-drop-gm';
