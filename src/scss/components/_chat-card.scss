@@ -1,3 +1,43 @@
+// Hidden roll placeholder for whispered messages
+.system-nimble .nimble-hidden-roll {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  text-align: center;
+  background: var(--nimble-sheet-background);
+  border: 1px solid var(--nimble-card-border-color);
+  border-radius: 5px;
+
+  &__header {
+    margin-bottom: 0.25rem;
+    font-size: var(--nimble-md-text);
+    font-weight: 600;
+    color: var(--nimble-dark-text-color);
+  }
+
+  &__message {
+    margin-bottom: 0.5rem;
+    font-size: var(--nimble-sm-text);
+    font-style: italic;
+    color: var(--nimble-medium-text-color);
+  }
+
+  &__result {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3rem;
+    height: 3rem;
+    font-size: var(--nimble-xl-text);
+    font-weight: 700;
+    color: var(--nimble-medium-text-color);
+    background: var(--nimble-input-background-color);
+    border: 2px dashed var(--nimble-card-border-color);
+    border-radius: 5px;
+  }
+}
+
 .system-nimble .nimble-chat-card {
   // Foundry uses this to set button height on chat cards for... reasons?
   --input-height: fit-content;

@@ -1,5 +1,7 @@
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 
+export const settings = [];
+
 export default function registerSystemSettings() {
 	game.settings.register(
 		'nimble' as 'core',
@@ -7,6 +9,19 @@ export default function registerSystemSettings() {
 		{
 			name: 'NIMBLE.settings.autoExpandRolls.name',
 			hint: 'NIMBLE.settings.autoExpandRolls.hint',
+			scope: 'client',
+			config: true,
+			type: Boolean,
+			default: false,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
+
+	game.settings.register(
+		'nimble' as 'core',
+		'hideRolls' as 'rollMode',
+		{
+			name: 'NIMBLE.hints.hideRollsFromPlayersByDefault',
+			hint: 'NIMBLE.hints.hideRollsFromPlayersByDefaultHint',
 			scope: 'client',
 			config: true,
 			type: Boolean,

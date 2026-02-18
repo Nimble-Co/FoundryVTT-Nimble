@@ -1,12 +1,14 @@
 <script>
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
+	const { skillCheckDialog } = CONFIG.NIMBLE;
 
 	let { actor, dialog, item, ...data } = $props();
 	let selectedRollMode = $state(Math.clamp(data.rollMode ?? 0, -6, 6));
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
+	let shouldRollBeHidden = $state(!!game.settings.get('nimble', 'hideRolls'));
 
 	const { damageTypes, hitDice } = CONFIG.NIMBLE;
 
@@ -120,6 +122,14 @@
 			</div>
 		{/each}
 	</div>
+	{#if game.user?.isGM}
+		<div class="nimble-roll-modifiers-container">
+			<label>
+				{skillCheckDialog.hideRoll}
+				<input type="checkbox" bind:checked={shouldRollBeHidden} class="modifier-item__checkbox" />
+			</label>
+		</div>
+	{/if}
 </article>
 
 <footer class="nimble-sheet__footer">
@@ -149,6 +159,7 @@
 				situationalModifiers,
 				primaryDieValue: primaryDieValue,
 				primaryDieModifier: primaryDieModifier,
+				rollHidden: shouldRollBeHidden,
 			});
 		}}
 	>

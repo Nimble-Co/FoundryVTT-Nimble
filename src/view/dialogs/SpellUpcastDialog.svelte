@@ -11,10 +11,18 @@
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
+	let shouldRollBeHidden = $state(!!game.settings.get('nimble', 'hideRolls'));
 
 	// I18n helpers
-	const { hitDice, spellUpcastDialog, effectTypes, spellProperties, itemConfig, objectTypes } =
-		CONFIG.NIMBLE;
+	const {
+		hitDice,
+		spellUpcastDialog,
+		effectTypes,
+		spellProperties,
+		itemConfig,
+		objectTypes,
+		skillCheckDialog,
+	} = CONFIG.NIMBLE;
 	const format = (key: string, data?: Record<string, string>) => game.i18n.format(key, data);
 
 	// Compute upcast constraints
@@ -203,6 +211,14 @@
 			</label>
 		</div>
 	</div>
+	{#if game.user?.isGM}
+		<div class="nimble-roll-modifiers-container">
+			<label>
+				{skillCheckDialog.hideRoll}
+				<input type="checkbox" bind:checked={shouldRollBeHidden} class="modifier-item__checkbox" />
+			</label>
+		</div>
+	{/if}
 </article>
 
 <footer class="nimble-sheet__footer">
@@ -249,6 +265,7 @@
 				situationalModifiers,
 				primaryDieValue,
 				primaryDieModifier,
+				rollHidden: shouldRollBeHidden,
 				upcast: canUpcast
 					? {
 							manaToSpend,

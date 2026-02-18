@@ -11,6 +11,32 @@ import NimbleSkillCheckCard from '../view/chat/SkillCheckCard.svelte';
 import NimbleSpellCard from '../view/chat/SpellCard.svelte';
 
 export default function renderChatMessageHTML(message, html) {
+	const target = $(html)[0];
+	if (!target) return;
+
+	// Check if this is a whispered message the current user shouldn't see details of
+	const whisperIds: string[] = message.whisper ?? [];
+	const currentUserId = game.user?.id;
+	const isHiddenFromUser =
+		whisperIds.length > 0 && currentUserId && !whisperIds.includes(currentUserId);
+
+	if (isHiddenFromUser) {
+		// Show a "privately rolled" placeholder instead of the full content
+		target.classList.add('nimble-chat-card', 'nimble-chat-card--hidden');
+		$(html).find('.message-header')[0]?.remove();
+		$(html).find('.message-content')[0]?.remove();
+
+		const speakerName = message.speaker?.alias || message.author?.name || 'Someone';
+		target.innerHTML = `
+			<div class="nimble-hidden-roll">
+				<div class="nimble-hidden-roll__header">${speakerName}</div>
+				<div class="nimble-hidden-roll__message">${speakerName} privately rolled some dice</div>
+				<div class="nimble-hidden-roll__result">???</div>
+			</div>
+		`;
+		return;
+	}
+
 	let component:
 		| typeof NimbleAbilityCheckCard
 		| typeof NimbleObjectCard
@@ -21,9 +47,6 @@ export default function renderChatMessageHTML(message, html) {
 		| typeof NimbleSkillCheckCard
 		| typeof NimbleSpellCard
 		| typeof NimbleLevelUpSummaryCard;
-	const target = $(html)[0];
-
-	if (!target) return;
 
 	switch (message.type) {
 		case 'abilityCheck':

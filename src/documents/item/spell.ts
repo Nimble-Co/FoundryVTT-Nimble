@@ -24,17 +24,13 @@ export class NimbleSpellItem extends NimbleBaseItem {
 	override async activate(
 		options: ItemActivationManager.ActivationOptions = {},
 	): Promise<ChatMessage | null> {
-		console.log('[Spell.activate] Called with options:', options);
-
 		if (options?.executeMacro) {
-			console.log('[Spell.activate] Delegating to super (executeMacro=true)');
 			const result: ChatMessage | null = (await super.activate(options)) ?? null;
 			return result;
 		}
 
-		console.log('[Spell.activate] Creating manager');
 		const manager = new ItemActivationManager(this as any, options);
-		const { activation, rolls } = await manager.getData();
+		const { activation, rolls, rollHidden } = await manager.getData();
 		if (activation === null || rolls === null) {
 			return null;
 		}
@@ -51,6 +47,10 @@ export class NimbleSpellItem extends NimbleBaseItem {
 
 		const { isCritical, isMiss } = rolls.find((roll) => roll instanceof DamageRoll) ?? {};
 
+		// Only allow hiding rolls for GM users rolling for non-PC actors
+		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
+		const shouldHide = rollHidden && canHideRoll;
+
 		const chatData = foundry.utils.mergeObject(
 			{
 				author: game.user?.id,
@@ -59,7 +59,6 @@ export class NimbleSpellItem extends NimbleBaseItem {
 				style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 				sound: CONFIG.sounds.dice,
 				rolls,
-				rollMode: options.visibilityMode ?? game.settings.get('core', 'rollMode'),
 				system: {
 					actorName: this.actor?.name ?? '',
 					actorType: this.actor?.type ?? '',
@@ -78,16 +77,13 @@ export class NimbleSpellItem extends NimbleBaseItem {
 			await this.prepareChatCardData(),
 		);
 
-		const rollModeValue = options.visibilityMode ?? game.settings.get('core', 'rollMode');
-		ChatMessage.applyRollMode(
-			chatData as Record<string, unknown>,
-			rollModeValue as foundry.CONST.DICE_ROLL_MODES,
-		);
+		if (shouldHide) {
+			// Whisper to GM users only
+			const gmUsers = game.users?.filter((u) => u.isGM).map((u) => u.id) ?? [];
+			(chatData as Record<string, unknown>).whisper = gmUsers;
+		}
 
-		console.log('[Spell.activate] Creating chat message');
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-		console.log('[Spell.activate] Chat message created:', chatCard?.id);
-
 		return chatCard || null;
 	}
 
