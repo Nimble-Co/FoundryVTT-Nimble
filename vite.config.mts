@@ -30,6 +30,9 @@ const config = defineConfig({
 		outDir: path.resolve(__dirname, 'dist'),
 		emptyOutDir: true,
 		sourcemap: true,
+		rollupOptions: {
+			external: [/^\/icons\//],
+		},
 		lib: {
 			name: 'Nimble 2',
 			entry: path.resolve(__dirname, 'src/nimble.ts'),
@@ -42,6 +45,12 @@ const config = defineConfig({
 	},
 	plugins: [
 		svelte({
+			configFile: path.resolve(__dirname, 'svelte.config.js'),
+			dynamicCompileOptions({ filename }) {
+				if (filename.includes('node_modules')) {
+					return { runes: false };
+				}
+			},
 			preprocess: sveltePreprocess({
 				typescript: {
 					tsconfigFile: './tsconfig.json',

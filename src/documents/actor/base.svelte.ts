@@ -5,6 +5,7 @@ import type { SaveKeyType } from '#types/saveKey.d.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import getRollFormula from '../../utils/getRollFormula.js';
+import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
 
 export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes };
@@ -227,7 +228,6 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	/** ------------------------------------------------------ */
 
 	async configureSavingThrows() {
-		const { default: GenericDialog } = await import('../dialogs/GenericDialog.svelte.js');
 		const { default: ActorSavingThrowConfigDialog } = await import(
 			'../../view/dialogs/ActorSavingThrowConfigDialog.svelte'
 		);
