@@ -1,11 +1,31 @@
 pre-commit:
   parallel: true
   commands:
-    biome-format:
-      glob: "*.{ts,mts,js,mjs}"
-      run: npx @biomejs/biome format --write {staged_files}
+    biome-fix-staged:
+      glob: "*.{js,ts,mjs,mts,json,jsonc}"
+      run: npx @biomejs/biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
       stage_fixed: true
     prettier-svelte:
       glob: "*.svelte"
       run: npx prettier --write {staged_files}
       stage_fixed: true
+
+pre-push:
+  output:
+    colored: false
+    meta: false
+  env:
+    NO_COLOR: "1"
+    FORCE_COLOR: "0"
+    CLICOLOR: "0"
+    CLICOLOR_FORCE: "0"
+    TERM: "dumb"
+  commands:
+    check:
+      glob: "*.{js,ts,mjs,mts,json,jsonc}"
+      run: npx @biomejs/biome check --no-errors-on-unmatched --error-on-warnings --files-ignore-unknown=true {push_files} 2>&1 | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b\]11;rgb:[^;]*;[^R]*R//g'
+    typecheck:
+      run: npm run type-check 2>&1 | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b\]11;rgb:[^;]*;[^R]*R//g'
+    tests:
+      glob: "*.{js,ts,mjs,mts,svelte}"
+      run: npm run test 2>&1 | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b\]11;rgb:[^;]*;[^R]*R//g'
