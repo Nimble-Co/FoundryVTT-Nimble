@@ -68,10 +68,6 @@
   bottom: var(--nimble-combat-chat-form-reserve-bottom, 0px) !important;
 }
 
-#nimble-combat-tracker-settings {
-  z-index: 2000 !important;
-}
-
 .nimble-combat-tracker {
   --nimble-combat-tracker-hover-color: hsl(0, 66%, 53%);
   --nimble-combat-tracker-border-color: hsl(41, 18%, 54%);
@@ -904,6 +900,7 @@
 
 .nimble-combat-tracker--location-top .nimble-combatants__dead-divider,
 .nimble-combat-tracker--location-bottom .nimble-combatants__dead-divider {
+  align-items: center;
   width: auto;
   height: 100%;
   margin: 0 calc(0.25rem * var(--nimble-combat-card-scale));
@@ -915,6 +912,7 @@
 
 .nimble-combat-tracker--location-top .nimble-combatants__dead-label,
 .nimble-combat-tracker--location-bottom .nimble-combatants__dead-label {
+  display: block;
   white-space: nowrap;
   writing-mode: vertical-rl;
   text-orientation: mixed;
