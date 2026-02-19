@@ -249,13 +249,12 @@
 	let hasMana = $derived.by(() => {
 		subscribeCombatState();
 
-		const maxMana = mana.max || mana.baseMax || 0;
 		const classHasManaFormula = actor.reactive.items.some(
 			(item) => item.type === 'class' && item.system?.mana?.formula?.length,
 		);
 
 		if (hasInitiativeCombatMana) {
-			return combatManaVisible && maxMana > 0;
+			return combatManaVisible;
 		}
 
 		if ((mana.max ?? 0) > 0 || (mana.baseMax ?? 0) > 0) return true;

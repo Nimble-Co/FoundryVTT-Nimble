@@ -47,6 +47,20 @@ export default function registerSystemSettings() {
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
+	// One-off migration version for Spellblade combat mana backfill
+	game.settings.register(
+		'nimble' as 'core',
+		'spellbladeCombatManaMigrationVersion' as 'rollMode',
+		{
+			name: 'Spellblade Combat Mana Migration Version',
+			hint: 'Tracks the Spellblade combat mana migration version for this world',
+			scope: 'world',
+			config: false,
+			type: Number,
+			default: 0,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
+
 	// Helper to create the attribution element with divider
 	const createAttributionElement = () => {
 		const wrapper = document.createElement('div');
