@@ -1,6 +1,10 @@
 <script>
-	import { getContext } from 'svelte';
+	import { getContext, setContext } from 'svelte';
 	import { getNodeComponent } from '../../dataPreparationHelpers/effectTree/getNodeComponent.js';
+
+	// Provide getNodeComponent via context to avoid circular dependencies
+	// (SavingThrowNode needs to render child nodes but can't import getNodeComponent directly)
+	setContext('getNodeComponent', getNodeComponent);
 
 	let messageDocument = getContext('messageDocument');
 

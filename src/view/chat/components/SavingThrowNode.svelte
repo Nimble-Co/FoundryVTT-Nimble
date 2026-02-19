@@ -1,7 +1,10 @@
 <script>
 	import { getContext } from 'svelte';
-	import { getNodeComponent } from '../../dataPreparationHelpers/effectTree/getNodeComponent.js';
 	import { getRelevantNodes } from '../../dataPreparationHelpers/effectTree/getRelevantNodes.js';
+
+	// Get getNodeComponent from context to avoid circular dependency
+	// (getNodeComponent imports this component, so we can't import it directly)
+	const getNodeComponent = getContext('getNodeComponent');
 
 	const { saves } = CONFIG.NIMBLE;
 
