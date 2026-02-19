@@ -67,19 +67,27 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 			const updateActorHook = Hooks.on('updateActor', (triggeringDocument, _, { diff }) => {
 				if (diff === false) return;
 
-				if (triggeringDocument._id === this.id) update();
+				if (triggeringDocument._id === this.id) {
+					update();
+				}
 			});
 
 			const embeddedItemHooks = {
 				create: Hooks.on('createItem', (doc) => {
-					if (doc?.actor?.id === this.id) update();
+					if (doc?.actor?.id === this.id) {
+						update();
+					}
 				}),
 				delete: Hooks.on('deleteItem', (doc) => {
-					if (doc?.actor?.id === this.id) update();
+					if (doc?.actor?.id === this.id) {
+						update();
+					}
 				}),
 				update: Hooks.on('updateItem', (doc, _change, { diff }) => {
 					if (diff === false) return;
-					if (doc?.actor?.id === this.id) update();
+					if (doc?.actor?.id === this.id) {
+						update();
+					}
 				}),
 			};
 

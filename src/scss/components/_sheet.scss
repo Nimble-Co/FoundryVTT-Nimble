@@ -53,8 +53,9 @@
 	&--npc,
 	&--player-character {
 		&:not(.minimized) {
-			box-shadow: none;
-			filter: drop-shadow(0 0 10px #000);
+			// Firefox fix: use box-shadow instead of filter: drop-shadow()
+			// drop-shadow can cause entire element to render black in Firefox
+			box-shadow: 0 0 10px #000;
 
 			.controls-dropdown {
 				border-radius: 4px;
@@ -80,8 +81,15 @@
 				position: relative;
 
 				.header-control {
-					background: rgba(0, 0, 0, 0.4);
-					backdrop-filter: blur(2px);
+					// Firefox fix: use @supports to only apply backdrop-filter in webkit browsers
+					// Also ensure buttons are visible with explicit color
+					background: rgba(0, 0, 0, 0.5);
+					color: var(--color-text-light-highlight, #fff);
+					opacity: 1;
+					@supports (-webkit-backdrop-filter: blur(2px)) {
+						background: rgba(0, 0, 0, 0.4);
+						backdrop-filter: blur(2px);
+					}
 				}
 			}
 
@@ -106,9 +114,10 @@
 			background: transparent;
 			border: 0;
 			overflow: visible;
+			box-shadow: none;
 
 			.controls-dropdown {
-				right: 2rem;
+				// right: 2rem;
 			}
 
 			.window-content {

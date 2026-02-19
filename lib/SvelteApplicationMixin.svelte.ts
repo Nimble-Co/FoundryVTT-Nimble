@@ -48,7 +48,16 @@ function SvelteApplicationMixin<
 			options: DeepPartial<foundry.applications.api.ApplicationV2.RenderOptions>,
 		) {
 			Object.assign(this.$state, result.state);
-			if (options.isFirstRender) {
+			// Mount on first render OR if content was cleared (Firefox edge case)
+			if (options.isFirstRender || content.childElementCount === 0) {
+				// Unmount existing component if present to prevent memory leaks
+				if (this.#mount && Object.keys(this.#mount).length > 0) {
+					try {
+						svelte.unmount(this.#mount);
+					} catch {
+						// Ignore unmount errors if component was already destroyed
+					}
+				}
 				this.#mount = svelte.mount(this.root, {
 					target: content,
 					props: { ...result, state: this.$state } as object as Record<string, never>,
