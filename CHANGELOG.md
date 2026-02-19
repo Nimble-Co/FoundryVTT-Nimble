@@ -6,6 +6,50 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.7.0] - 2026-02-18
+
+### Added
+
+- [#260] Spell upcasting system with scaling coverage. @fronix
+- [#262] Spell compendium organization and filtering. @7D7D
+- [#271] Hide NPC rolls from players. @leadanymind
+- [#282] Dedicated price property for items. @trevlar
+- [#283] Speed bonus rule for ancestry speed adjustments. @trevlar
+- [#287] Initiative roll mode rule for advantage/disadvantage. @trevlar
+- [#290] Nimble Nexus monster import dialog. @trevlar
+- [#292] Attribution blurb in system settings. @trevlar
+- [#299] Mana config pop-out window. @7D7D
+- [#301] Basic Combat: Initiative and sorting. @7D7D
+- [#303] Expanded roll information display. @fronix
+- [#312] Apply damage from chat messages. @7D7D
+- [#314] Remove disabled state from Primary Die Modifier input field. @Copilot
+- [#315] Combat tracker settings window. @7D7D
+
+### Fixed
+
+- [#277] Correct True Strike action cost from 2 to 1. @trevlar
+- [#278] Correct action refresh timing for PCs and NPCs. @trevlar
+- [#279] Handle unknown compendium types in preparePackIndexes. @trevlar
+- [#280] Add quantity support to item grant rules. @trevlar
+- [#284] Invalidate tooltip cache when items are modified. @trevlar
+- [#286] Correct armor proficiency path mapping. @trevlar
+- [#289] Allow observers to switch tabs on other players' sheets. @trevlar
+- [#291] Fix Firefox rendering issues with character sheets. @trevlar
+- [#294] Handle unrecognized rule types in ItemRulesTab. @trevlar
+- [#305] Fix NPC flat bonuses not applying. @fronix
+
+### Changed
+
+- [#293] Subclasses organized into compendium folders. @7D7D
+- [#295] Monsters sorted into folders. @7D7D
+- [#296] Boons compendium sorting. @7D7D
+- [#298] Class features fixed and compendium sorted. @7D7D
+- [#302] Monster folder ID assignments. @7D7D
+- [#306] Boons folder ID assignment. @7D7D
+- [#308] Small compendium adjustments. @7D7D
+
+---
+
 ## [0.6.1] - 2026-02-07
 
 ### Changed
