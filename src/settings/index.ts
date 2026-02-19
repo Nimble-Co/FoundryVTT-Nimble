@@ -1,4 +1,5 @@
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
+import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
 
 export const settings = [];
 
@@ -28,6 +29,8 @@ export default function registerSystemSettings() {
 			default: false,
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
+
+	registerCombatTrackerSettings();
 
 	// Migration schema version tracking
 	// Migration schema version tracking (internal, not visible)
