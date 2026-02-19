@@ -60,8 +60,6 @@
 			.controls-dropdown {
 				border-radius: 4px;
 				z-index: 100;
-				// Firefox fix: ensure popover escapes filter stacking context
-				position: fixed;
 			}
 
 			.window-content {
@@ -119,7 +117,7 @@
 			box-shadow: none;
 
 			.controls-dropdown {
-				right: 2rem;
+				// right: 2rem;
 			}
 
 			.window-content {

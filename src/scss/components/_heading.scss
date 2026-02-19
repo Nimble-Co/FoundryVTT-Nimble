@@ -50,8 +50,9 @@
   &--hp,
   &--mana {
     text-transform: uppercase;
-    color: #fff;
-    text-shadow: 0 0 4px #000;
+    // Use theme-aware color (--nimble-dark-text-color adapts to light/dark mode)
+    color: var(--nimble-dark-text-color);
+    text-shadow: none;
     padding-block-end: 0.25rem;
   }
 

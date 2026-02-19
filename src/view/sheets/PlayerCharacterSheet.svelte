@@ -624,6 +624,9 @@
 	}
 
 	.nimble-wounds-indicator {
+		// Always use dark mode text color for icon stroke (light cream color)
+		--stroke-color: hsl(36, 53%, 80%);
+
 		display: inline-flex;
 		align-items: center;
 		gap: 0.1875rem;
@@ -634,29 +637,20 @@
 			font-weight: 700;
 			font-size: var(--nimble-sm-text);
 			line-height: 1;
-			color: #b01b19;
-			// Firefox fallback: text-shadow simulates stroke + drop-shadow
-			text-shadow:
-				-0.5px -0.5px 0 #fff,
-				0.5px -0.5px 0 #fff,
-				-0.5px 0.5px 0 #fff,
-				0.5px 0.5px 0 #fff,
-				0 0 2px rgba(0, 0, 0, 0.5);
-			-webkit-text-stroke: 0.5px #fff;
+			// Use same color as heading for consistency
+			color: var(--nimble-dark-text-color);
 		}
 
 		i {
-			// Match the size of the heart icon in the heading
 			font-size: inherit;
 			color: #b01b19;
-			// Firefox fallback: text-shadow simulates stroke + drop-shadow
+			// Firefox fallback: text-shadow simulates stroke
 			text-shadow:
-				-1px -1px 0 #fff,
-				1px -1px 0 #fff,
-				-1px 1px 0 #fff,
-				1px 1px 0 #fff,
-				0 0 2px rgba(0, 0, 0, 0.5);
-			-webkit-text-stroke: 1px #fff;
+				-0.5px -0.5px 0 var(--stroke-color),
+				0.5px -0.5px 0 var(--stroke-color),
+				-0.5px 0.5px 0 var(--stroke-color),
+				0.5px 0.5px 0 var(--stroke-color);
+			-webkit-text-stroke: 0.5px var(--stroke-color);
 		}
 	}
 
