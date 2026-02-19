@@ -5,6 +5,7 @@ import {
 	getMinionGroupSummaries,
 	isMinionCombatant,
 } from '../utils/minionGrouping.js';
+import { shouldShowMinionGroupIdentityUiForCurrentUser } from '../utils/minionGroupingModes.js';
 
 const TOKEN_GROUP_BADGE_KEY = '_nimbleMinionGroupBadge';
 const TOKEN_GROUP_OUTLINE_KEY = '_nimbleMinionGroupOutline';
@@ -27,7 +28,7 @@ interface TokenGroupBadgeData {
 }
 
 function canRenderMinionGroupIdentityUi(): boolean {
-	return Boolean(game.user?.isGM);
+	return shouldShowMinionGroupIdentityUiForCurrentUser();
 }
 
 function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
@@ -347,6 +348,10 @@ export default function registerMinionGroupTokenBadges(): void {
 	});
 
 	Hooks.on('deleteCombatant', () => {
+		refreshAllVisibleTokenGroupBadges();
+	});
+
+	Hooks.on('updateSetting', () => {
 		refreshAllVisibleTokenGroupBadges();
 	});
 

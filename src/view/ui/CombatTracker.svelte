@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
 	import {
 		canCurrentUserReorderCombatant,
@@ -16,11 +16,15 @@
 		isMinionCombatant,
 		isMinionGrouped,
 	} from '../../utils/minionGrouping.js';
+	import {
+		shouldShowMinionGroupIdentityUiForCurrentUser,
+		shouldShowTrackerGroupedStacksForCurrentUser,
+		shouldShowTrackerGroupingControlsForCurrentUser,
+	} from '../../utils/minionGroupingModes.js';
 	import BaseCombatant from './components/BaseCombatant.svelte';
 	import CombatTrackerControls from './components/CombatTrackerControls.svelte';
 	import PlayerCharacterCombatant from './components/PlayerCharacterCombatant.svelte';
 	import MonsterCombatant from '#view/ui/components/MonsterCombatant.svelte';
-	import CombatTrackerSettings from '#view/ui/CombatTrackerSettings.svelte.js';
 
 	type CombatWithDrop = Combat & {
 		_onDrop?: (
@@ -152,27 +156,32 @@
 		const combatantsForScene = combat.combatants.contents.filter(
 			(c) => getCombatantSceneId(c) === sceneId && c.visible && c._id != null,
 		);
-		const groupedSummaries = getMinionGroupSummaries(combatantsForScene);
+		const shouldStackGroupedCombatants = shouldShowTrackerGroupedStacksForCurrentUser();
+		const groupedSummaries = shouldStackGroupedCombatants
+			? getMinionGroupSummaries(combatantsForScene)
+			: new Map();
 		const groupDisplayByLeaderId = new Map<string, MinionGroupDisplayData>();
 		const hiddenGroupMemberIds = new Set<string>();
 
-		for (const summary of groupedSummaries.values()) {
-			const leader =
-				getEffectiveMinionGroupLeader(summary, { aliveOnly: true }) ??
-				getEffectiveMinionGroupLeader(summary);
-			if (!leader?.id) continue;
+		if (shouldStackGroupedCombatants) {
+			for (const summary of groupedSummaries.values()) {
+				const leader =
+					getEffectiveMinionGroupLeader(summary, { aliveOnly: true }) ??
+					getEffectiveMinionGroupLeader(summary);
+				if (!leader?.id) continue;
 
-			groupDisplayByLeaderId.set(leader.id, {
-				groupId: summary.id,
-				leaderId: leader.id,
-				label: summary.label,
-				labelIndex: summary.labelIndex,
-				members: summary.members,
-			});
+				groupDisplayByLeaderId.set(leader.id, {
+					groupId: summary.id,
+					leaderId: leader.id,
+					label: summary.label,
+					labelIndex: summary.labelIndex,
+					members: summary.members,
+				});
 
-			for (const member of summary.members) {
-				if (!member.id || member.id === leader.id) continue;
-				hiddenGroupMemberIds.add(member.id);
+				for (const member of summary.members) {
+					if (!member.id || member.id === leader.id) continue;
+					hiddenGroupMemberIds.add(member.id);
+				}
 			}
 		}
 
@@ -368,7 +377,7 @@
 		leaderId: string | undefined,
 		groupDisplay: MinionGroupDisplayData | undefined,
 	) {
-		if (!game.user?.isGM) return;
+		if (!shouldShowMinionGroupIdentityUiForCurrentUser()) return;
 		if (!leaderId || !groupDisplay) return;
 
 		clearGroupPopoverHideTimer();
@@ -465,7 +474,8 @@
 	function updateCurrentCombat() {
 		// Use queueMicrotask to ensure Foundry's data is fully updated
 		// before we read it, and to batch Svelte's reactivity updates
-		queueMicrotask(() => {
+		queueMicrotask(async () => {
+			const previousScrollTop = combatantsListElement?.scrollTop ?? null;
 			const combat = getCombatForCurrentScene();
 			const sceneId = canvas.scene?.id;
 			const { activeCombatants, deadCombatants, groupDisplayByLeaderId } = getCombatantsForScene(
@@ -508,6 +518,13 @@
 				selectedCombatants: selectedCombatantIds,
 			});
 			version++;
+
+			if (previousScrollTop !== null) {
+				await tick();
+				if (combatantsListElement) {
+					combatantsListElement.scrollTop = previousScrollTop;
+				}
+			}
 		});
 	}
 
@@ -549,46 +566,6 @@
 			pendingEmptyCombatPromptIds.delete(combatId);
 			void promptToEndCombatIfEmpty(combatId);
 		});
-	}
-
-	function updateCurrentTurnAnimationSettings() {
-		currentTurnAnimationSettings = getCurrentTurnAnimationSettings();
-	}
-
-	function normalizePreviewLocation(
-		location: CombatTrackerLocation,
-		fallback: CombatTrackerLocation,
-	): CombatTrackerLocation {
-		if (
-			location === 'left' ||
-			location === 'right' ||
-			location === 'top' ||
-			location === 'bottom'
-		) {
-			return location;
-		}
-
-		return fallback;
-	}
-
-	function updateCombatTrackerLocation() {
-		combatTrackerLocation = getCombatTrackerLocation();
-	}
-
-	function handleCurrentTurnAnimationSettingsPreview(event: Event): void {
-		const previewEvent = event as CustomEvent<CurrentTurnAnimationSettingsPreviewDetail>;
-		const previewSettings = previewEvent.detail?.settings;
-		if (!previewSettings) return;
-
-		currentTurnAnimationSettings = previewSettings;
-	}
-
-	function handleCombatTrackerLocationPreview(event: Event): void {
-		const previewEvent = event as CustomEvent<CombatTrackerLocationPreviewDetail>;
-		const previewLocation = previewEvent.detail?.location;
-		if (!previewLocation) return;
-
-		combatTrackerLocation = normalizePreviewLocation(previewLocation, combatTrackerLocation);
 	}
 
 	async function _onDrop(event: DragEvent) {
@@ -750,9 +727,14 @@
 		return Boolean(interactiveElement);
 	}
 
+	function canUseTrackerGroupingControls(): boolean {
+		return shouldShowTrackerGroupingControlsForCurrentUser();
+	}
+
 	function handleCombatantCardKeyDown(event: KeyboardEvent, combatant: Combatant.Implementation) {
 		if (event.key !== 'Enter' && event.key !== ' ') return;
 		if (!game.user?.isGM) return;
+		if (!canUseTrackerGroupingControls()) return;
 		if (!groupModeEnabled) return;
 		if (!combatant.id || !isMinionCombatant(combatant)) return;
 
@@ -773,6 +755,7 @@
 			});
 			return;
 		}
+		if (!canUseTrackerGroupingControls()) return;
 		if (event.button !== 0) return;
 		if (isInteractiveTarget(event.target)) {
 			logGroupingDebug('Ignored card click because target is interactive control', {
@@ -818,6 +801,7 @@
 	}
 
 	function handleCombatantCardContextMenu(event: MouseEvent, combatant: Combatant.Implementation) {
+		if (!canUseTrackerGroupingControls()) return;
 		if (!game.user?.isGM || !groupModeEnabled) return;
 		if (isInteractiveTarget(event.target)) return;
 		if (!combatant.id || !isMinionCombatant(combatant)) {
@@ -845,6 +829,11 @@
 
 	function toggleGroupMode(event: MouseEvent) {
 		event.preventDefault();
+		if (!canUseTrackerGroupingControls()) {
+			groupModeEnabled = false;
+			clearSelectedCombatants();
+			return;
+		}
 		groupModeEnabled = !groupModeEnabled;
 		if (!groupModeEnabled) clearSelectedCombatants();
 		logGroupingDebug('Group mode toggled', {
@@ -856,6 +845,7 @@
 	async function createGroupFromSelection(event: MouseEvent) {
 		event.preventDefault();
 		event.stopPropagation();
+		if (!canUseTrackerGroupingControls()) return;
 		if (!canCreateMinionGroup) {
 			logGroupingDebug('Create Group blocked', {
 				selectedMinions: selectedMinions.length,
@@ -883,6 +873,7 @@
 	async function addSelectionToExistingGroup(event: MouseEvent) {
 		event.preventDefault();
 		event.stopPropagation();
+		if (!canUseTrackerGroupingControls()) return;
 		if (!canAddSelectedToGroup || !selectionGroupTargetId) {
 			logGroupingDebug('Add to Group blocked', {
 				selectionGroupTargetId,
@@ -916,6 +907,7 @@
 	async function dissolveAllGroups(event: MouseEvent) {
 		event.preventDefault();
 		event.stopPropagation();
+		if (!canUseTrackerGroupingControls()) return;
 		if (!canUngroupAll) {
 			logGroupingDebug('Ungroup All blocked because no groups are present in this tracker', {
 				groupCount: sceneMinionGroupDisplayByLeaderId.size,
@@ -945,6 +937,7 @@
 	async function dissolveSelectedGroups(event: MouseEvent) {
 		event.preventDefault();
 		event.stopPropagation();
+		if (!canUseTrackerGroupingControls()) return;
 		if (!canDissolveSelection) {
 			logGroupingDebug('Dissolve blocked because no groups are selected', {
 				selectedCombatantIds,
@@ -965,6 +958,7 @@
 	async function removeMemberFromGroup(event: MouseEvent, combatantId: string) {
 		event.preventDefault();
 		event.stopPropagation();
+		if (!canUseTrackerGroupingControls()) return;
 		if (!combatantId) return;
 
 		const combat = currentCombat as CombatWithGrouping | null;
@@ -981,6 +975,7 @@
 		event.preventDefault();
 		event.stopPropagation();
 		if (!game.user?.isGM) return;
+		if (!canUseTrackerGroupingControls()) return;
 		if (!combatant.id) return;
 		if (isCombatantDead(combatant)) return;
 
@@ -1020,6 +1015,7 @@
 	async function dissolveGroup(event: MouseEvent, groupId: string) {
 		event.preventDefault();
 		event.stopPropagation();
+		if (!canUseTrackerGroupingControls()) return;
 		if (!groupId) return;
 
 		const combat = currentCombat as CombatWithGrouping | null;
@@ -1100,6 +1096,8 @@
 	let hoveredGroupDisplay: MinionGroupDisplayData | null = $state(null);
 	let groupPopoverLeftPx: number = $state(0);
 	let groupPopoverTopPx: number = $state(0);
+	let showTrackerGroupingControls = $derived(shouldShowTrackerGroupingControlsForCurrentUser());
+	let showGroupIdentityUi = $derived(shouldShowMinionGroupIdentityUiForCurrentUser());
 	let groupPopoverHideTimer: ReturnType<typeof window.setTimeout> | undefined;
 	let resizeMoveHandler: ((event: PointerEvent) => void) | undefined;
 	let resizeEndHandler: ((event: PointerEvent) => void) | undefined;
@@ -1155,9 +1153,6 @@
 	let canvasTearDownHook: number | undefined;
 	let updateSceneHook: number | undefined;
 	let pendingEmptyCombatPromptIds = new Set<string>();
-	let updateSettingHook: number | undefined;
-	let resizeWindowHandler: (() => void) | undefined;
-	let windowScrollHandler: (() => void) | undefined;
 
 	onMount(() => {
 		combatTrackerWidthRem = readStoredCombatTrackerWidth();
@@ -1226,16 +1221,6 @@
 			updateCurrentCombat();
 		});
 
-		updateSettingHook = Hooks.on('updateSetting', (setting) => {
-			const settingKey = foundry.utils.getProperty(setting, 'key');
-			if (isCurrentTurnAnimationSettingKey(settingKey)) {
-				updateCurrentTurnAnimationSettings();
-			}
-			if (isCombatTrackerLocationSettingKey(settingKey)) {
-				updateCombatTrackerLocation();
-			}
-		});
-
 		return () => Hooks.off('combatStart', combatStartHook);
 	});
 
@@ -1258,17 +1243,17 @@
 		if (canvasReadyHook !== undefined) Hooks.off('canvasReady', canvasReadyHook);
 		if (canvasTearDownHook !== undefined) Hooks.off('canvasTearDown', canvasTearDownHook);
 		if (updateSceneHook !== undefined) Hooks.off('updateScene', updateSceneHook);
-		if (updateSettingHook !== undefined) Hooks.off('updateSetting', updateSettingHook);
 	});
 
 	$effect(() => {
-		updateCombatTrackerSceneReserveInsets();
+		if (showTrackerGroupingControls) return;
+		if (groupModeEnabled) groupModeEnabled = false;
+		if (selectedCombatantIds.length > 0) clearSelectedCombatants();
 	});
 
 	$effect(() => {
-		scheduleFloatingEndTurnPositionUpdate(
-			`${version}:${combatTrackerLocation}:${combatTrackerWidthRem}:${combatTrackerHeightRem}:${showHorizontalFloatingEndTurn}:${currentTurnCombatant?.id ?? ''}:${floatingEndTurnButtonElement ? '1' : '0'}:${combatantsListElement ? '1' : '0'}:${combatTrackerElement ? '1' : '0'}`,
-		);
+		if (showGroupIdentityUi) return;
+		closeGroupPopover();
 	});
 
 	$effect(() => {
@@ -1287,52 +1272,30 @@
 	>
 		<header
 			class="nimble-combat-tracker__header"
-			class:nimble-combat-tracker__header--no-controls={currentCombat?.round === 0 ||
-				!game.user!.isGM}
+			class:nimble-combat-tracker__header--no-controls={!game.user!.isGM}
 			class:nimble-combat-tracker__header--not-started={currentCombat?.round === 0}
 			in:slide={{ axis: 'y', delay: 200 }}
 			out:fade={{ delay: 0 }}
 		>
 			{#key version}
-				<div class="nimble-combat-tracker__header-top-row">
-					<button
-						class="nimble-combat-tracker__settings-button"
-						type="button"
-						aria-label="Open Combat Tracker Settings"
-						data-tooltip="Combat Tracker Settings"
-						data-tooltip-direction="RIGHT"
-						onclick={openCombatTrackerSettings}
-					>
-						<i class="nimble-combat-tracker__settings-button-icon fa-solid fa-gear"></i>
+				{#if currentCombat?.round === 0 && game.user!.isGM}
+					<button class="nimble-combat-tracker__start-button" onclick={startCombat}>
+						Start Combat
 					</button>
-
-					{#if currentCombat?.round === 0 && game.user!.isGM}
-						<div class="nimble-combat-tracker__start-actions">
-							<button class="nimble-combat-tracker__start-button" onclick={startCombat}>
-								Start Combat
-							</button>
-							<button class="nimble-combat-tracker__end-combat-button" onclick={endCombat}>
-								End Combat
-							</button>
-						</div>
-					{:else if currentCombat?.round === 0}
-						<h2 class="nimble-combat-tracker__heading">Combat Not Started</h2>
-					{:else}
-						<h2 class="nimble-combat-tracker__heading">
-							Round {currentCombat?.round}
-						</h2>
-					{/if}
-				</div>
-
+				{:else if currentCombat?.round === 0}
+					<h2 class="nimble-combat-tracker__heading">Combat Not Started</h2>
+				{:else}
+					<h2 class="nimble-combat-tracker__heading">
+						Round {currentCombat?.round}
+					</h2>
+				{/if}
 				{#if currentCombat?.round !== 0 && game.user!.isGM}
-					<div class="nimble-combat-tracker__header-controls-row">
-						<CombatTrackerControls />
-					</div>
+					<CombatTrackerControls />
 				{/if}
 			{/key}
 		</header>
 
-		{#if game.user!.isGM}
+		{#if showTrackerGroupingControls}
 			<div
 				class="nimble-combat-tracker__group-controls"
 				in:fade={{ delay: 100 }}
@@ -1472,7 +1435,7 @@
 							{/if}
 							<CombatantComponent active={isActiveCombatant} {combatant} />
 
-							{#if game.user!.isGM && groupDisplay}
+							{#if showGroupIdentityUi && groupDisplay}
 								{#if groupDisplay.label}
 									<div
 										class="nimble-combatants__group-badge nimble-combatants__group-badge--label"
@@ -1531,7 +1494,7 @@
 								{/if}
 								<CombatantComponent active={false} {combatant} />
 
-								{#if game.user!.isGM && groupDisplay}
+								{#if showGroupIdentityUi && groupDisplay}
 									{#if groupDisplay.label}
 										<div
 											class="nimble-combatants__group-badge nimble-combatants__group-badge--label"
@@ -1556,7 +1519,7 @@
 			{/key}
 		</ol>
 
-		{#if game.user!.isGM && hoveredGroupDisplay}
+		{#if showGroupIdentityUi && hoveredGroupDisplay}
 			<div
 				bind:this={groupPopoverElement}
 				class="nimble-combatants__group-popover nimble-combatants__group-popover--floating"
@@ -1580,7 +1543,7 @@
 									>{getGroupMemberCode(member, hoveredGroupDisplay.label, memberIndex)}</td
 								>
 								<td>{getCombatantDisplayName(member)}</td>
-								{#if game.user!.isGM}
+								{#if showTrackerGroupingControls}
 									<td>
 										<button
 											class="nimble-combatants__group-member-action"
@@ -1606,7 +1569,7 @@
 						{/each}
 					</tbody>
 				</table>
-				{#if game.user!.isGM}
+				{#if showTrackerGroupingControls}
 					<div class="nimble-combatants__group-popover-actions">
 						<button
 							class="nimble-combatants__group-member-action"
@@ -1644,17 +1607,4 @@
 			onpointerdown={startResize}
 		></button>
 	</section>
-
-	{#if showHorizontalFloatingEndTurn}
-		<button
-			bind:this={floatingEndTurnButtonElement}
-			class="nimble-combat-tracker__floating-end-turn"
-			type="button"
-			aria-label="End Turn"
-			style={floatingEndTurnButtonStyle}
-			onclick={endCurrentTurn}
-		>
-			End Turn
-		</button>
-	{/if}
 {/if}

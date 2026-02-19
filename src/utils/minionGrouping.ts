@@ -6,6 +6,7 @@ export const MINION_GROUP_ROLE_PATH = `${MINION_GROUP_FLAG_ROOT}.role`;
 export const MINION_GROUP_LABEL_PATH = `${MINION_GROUP_FLAG_ROOT}.label`;
 export const MINION_GROUP_LABEL_INDEX_PATH = `${MINION_GROUP_FLAG_ROOT}.labelIndex`;
 export const MINION_GROUP_MEMBER_NUMBER_PATH = `${MINION_GROUP_FLAG_ROOT}.memberNumber`;
+export const MINION_GROUP_TEMPORARY_PATH = `${MINION_GROUP_FLAG_ROOT}.temporary`;
 export const MINION_GROUP_IDENTITY_COLOR_PALETTE = [
 	'#3B82F6', // A - Blue
 	'#F97316', // B - Orange
@@ -23,6 +24,7 @@ interface MinionGroupFlagData {
 	label?: unknown;
 	labelIndex?: unknown;
 	memberNumber?: unknown;
+	temporary?: unknown;
 }
 
 export interface MinionGroupSummary {
@@ -187,6 +189,15 @@ export function getMinionGroupMemberNumber(
 
 export function isMinionGrouped(combatant: Combatant.Implementation | null | undefined): boolean {
 	return getMinionGroupId(combatant) !== null;
+}
+
+export function isMinionGroupTemporary(
+	combatant: Combatant.Implementation | null | undefined,
+): boolean {
+	if (!isMinionCombatant(combatant)) return false;
+
+	const { temporary } = getMinionGroupFlagData(combatant);
+	return temporary === true;
 }
 
 export function isExplicitMinionGroupLeader(

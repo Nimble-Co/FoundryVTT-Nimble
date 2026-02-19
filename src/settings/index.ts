@@ -1,4 +1,11 @@
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
+import {
+	MINION_GROUPING_MODE_CANVAS_LITE,
+	MINION_GROUPING_MODE_CANVAS_PERSISTENT,
+	MINION_GROUPING_MODE_FULL,
+	MINION_GROUPING_MODE_SETTING_KEY,
+	MINION_GROUPING_SHOW_IDENTITY_IN_CANVAS_PERSISTENT_SETTING_KEY,
+} from '../utils/minionGroupingModes.js';
 import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
 
 export const settings = [];
@@ -19,6 +26,52 @@ export default function registerSystemSettings() {
 
 	game.settings.register(
 		'nimble' as 'core',
+		'hideRolls' as 'rollMode',
+		{
+			name: 'NIMBLE.hints.hideRollsFromPlayersByDefault',
+			hint: 'NIMBLE.hints.hideRollsFromPlayersByDefaultHint',
+			scope: 'client',
+			config: true,
+			type: Boolean,
+			default: false,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
+
+	registerCombatTrackerSettings();
+
+	game.settings.register(
+		'nimble' as 'core',
+		MINION_GROUPING_MODE_SETTING_KEY as 'rollMode',
+		{
+			name: 'Minion Grouping Mode',
+			hint: 'Choose how the GM manages minion grouping: full tracker + canvas controls, canvas-only persistent groups, or canvas-only temporary groups that auto-dissolve each round.',
+			scope: 'world',
+			config: true,
+			type: String,
+			choices: {
+				[MINION_GROUPING_MODE_FULL]: 'Full (Tracker + Canvas + Identity UI)',
+				[MINION_GROUPING_MODE_CANVAS_PERSISTENT]: 'Canvas Persistent (Canvas-only, groups persist)',
+				[MINION_GROUPING_MODE_CANVAS_LITE]: 'Canvas Lite (Canvas-only, temporary groups by round)',
+			},
+			default: MINION_GROUPING_MODE_FULL,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
+
+	game.settings.register(
+		'nimble' as 'core',
+		MINION_GROUPING_SHOW_IDENTITY_IN_CANVAS_PERSISTENT_SETTING_KEY as 'rollMode',
+		{
+			name: 'Show Group Identity UI In Canvas Persistent Mode',
+			hint: 'When enabled, GM-only group identity markers (tracker badges/popover accents and token G# tags) remain visible in Canvas Persistent mode.',
+			scope: 'world',
+			config: true,
+			type: Boolean,
+			default: false,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
+
+	game.settings.register(
+		'nimble' as 'core',
 		'allowMinionGroupingOutsideCombat' as 'rollMode',
 		{
 			name: 'Allow Minion Grouping Outside Combat',
@@ -30,8 +83,6 @@ export default function registerSystemSettings() {
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
-	// Migration schema version tracking
-	// Migration schema version tracking (internal, not visible)
 	game.settings.register(
 		'nimble' as 'core',
 		'worldSchemaVersion' as 'rollMode',
@@ -45,7 +96,6 @@ export default function registerSystemSettings() {
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
-	// Helper to create the attribution element with divider
 	const createAttributionElement = () => {
 		const wrapper = document.createElement('div');
 		wrapper.className = 'nimble-attribution-wrapper';
@@ -71,21 +121,17 @@ export default function registerSystemSettings() {
 		return wrapper;
 	};
 
-	// Add attribution to the Configure Settings dialog (Nimble tab)
 	Hooks.on('renderSettingsConfig', (_app: unknown, html: HTMLElement | JQuery) => {
 		const element = html instanceof HTMLElement ? html : html[0];
 		if (!element) return;
 
-		// Find the system settings tab (where Nimble settings appear)
 		const systemTab =
 			element.querySelector('section[data-tab="system"]') ||
 			element.querySelector('section[data-category="system"]');
 		if (!systemTab) return;
 
-		// Check if attribution already exists (e.g. re-render)
 		if (systemTab.querySelector('.nimble-attribution')) return;
 
-		// Dynamically append attribution at the end of the system settings tab
 		systemTab.appendChild(createAttributionElement());
 	});
 }
