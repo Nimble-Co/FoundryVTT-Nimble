@@ -1,13 +1,18 @@
+import type { MinionGroupingMode } from './minionGroupingModes.js';
+
 export interface MinionGroupAttackSessionContext {
 	combatId: string;
+	groupId: string;
 	memberCombatantIds: string[];
+	targetTokenId: string | null;
+	groupingMode: MinionGroupingMode;
+	isTemporaryGroup: boolean;
 }
 
 export interface MinionGroupAttackOption {
 	actionId: string;
 	label: string;
 	rollFormula: string | null;
-	description?: string | null;
 	unsupportedReasons: string[];
 }
 
@@ -58,16 +63,15 @@ export function deriveDefaultMemberActionSelection(
 ): string | null {
 	const options = member.actionOptions;
 	if (options.length === 0) return null;
-	const firstActionId = options[0]?.actionId ?? null;
-	if (options.length === 1) return firstActionId;
+	if (options.length === 1) return options[0]?.actionId ?? null;
 
 	const rememberedSelectionKey = buildRememberedSelectionKey(context.combatId, member.actorType);
 	const rememberedActionId = rememberedSelectionsByActorType.get(rememberedSelectionKey);
-	if (!rememberedActionId) return firstActionId;
+	if (!rememberedActionId) return null;
 
 	return options.some((option) => option.actionId === rememberedActionId)
 		? rememberedActionId
-		: firstActionId;
+		: null;
 }
 
 export function rememberMemberActionSelection(
