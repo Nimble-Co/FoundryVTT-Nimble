@@ -11,6 +11,7 @@
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
+	// @ts-ignore
 	let shouldRollBeHidden = $state(!!game.settings.get('nimble', 'hideRolls'));
 
 	// I18n helpers
@@ -25,14 +26,16 @@
 	} = CONFIG.NIMBLE;
 	const format = (key: string, data?: Record<string, string>) => game.i18n.format(key, data);
 
-	// Compute upcast constraints
+	// Compute upcast constraints (safe for NPCs/Monsters that lack resources)
 	const baseMana = spell.tier;
-	const currentMana = actor.system.resources.mana.current;
-	const maxTier = actor.system.resources.highestUnlockedSpellTier;
+	const resources = actor?.system?.resources;
+	const currentMana = resources?.mana?.current ?? 0;
+	const maxTier = resources?.highestUnlockedSpellTier ?? 9;
 	const maxMana = Math.min(currentMana, maxTier);
 
-	// Check if spell can be upcast
-	const canUpcast = spell.tier > 0 && spell.scaling && spell.scaling.mode !== 'none';
+	// Check if spell can be upcast (also guard against min >= max slider reset)
+	const canUpcast =
+		spell.tier > 0 && spell.scaling && spell.scaling.mode !== 'none' && maxMana > baseMana;
 	const hasChoices = spell.scaling?.mode === 'upcastChoice';
 	const isHealingSpell = spell.activation?.effects?.some(
 		(e: { type: string }) => e.type === 'healing',
