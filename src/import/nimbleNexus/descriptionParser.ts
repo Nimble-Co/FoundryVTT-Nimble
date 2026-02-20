@@ -10,11 +10,7 @@ import type {
 	EffectNode,
 	SavingThrowNode,
 } from '#types/effectTree.js';
-import {
-	CONDITION_MAP,
-	DAMAGE_TYPE_MAP,
-	SAVE_TYPE_ABBREVIATION_MAP,
-} from './constants.js';
+import { CONDITION_MAP, DAMAGE_TYPE_MAP, SAVE_TYPE_ABBREVIATION_MAP } from './constants.js';
 import type {
 	NimbleNexusAction,
 	ParsedCondition,
@@ -53,9 +49,7 @@ export function extractDiceFormula(roll: string): string {
 export function parseDamageType(formula?: string, description?: string): string {
 	// First, try to extract from formula (e.g., "5d8+13 Radiant")
 	if (formula) {
-		const formulaDamageMatch = formula.match(
-			/[\d]+d[\d]+(?:[+-][\d]+)?\s+(\w+)/i,
-		);
+		const formulaDamageMatch = formula.match(/[\d]+d[\d]+(?:[+-][\d]+)?\s+(\w+)/i);
 		if (formulaDamageMatch) {
 			const extracted = formulaDamageMatch[1].toLowerCase();
 			if (DAMAGE_TYPE_MAP[extracted]) {
@@ -69,11 +63,7 @@ export function parseDamageType(formula?: string, description?: string): string 
 		const lowerDesc = description.toLowerCase();
 
 		// Look for patterns like "fire damage", "deals necrotic damage", etc.
-		const damagePatterns = [
-			/(\w+)\s+damage/gi,
-			/deals?\s+(\w+)/gi,
-			/inflicts?\s+(\w+)/gi,
-		];
+		const damagePatterns = [/(\w+)\s+damage/gi, /deals?\s+(\w+)/gi, /inflicts?\s+(\w+)/gi];
 
 		for (const pattern of damagePatterns) {
 			const matches = [...lowerDesc.matchAll(pattern)];
@@ -187,9 +177,7 @@ export function parseSavingThrow(description?: string): ParsedSavingThrow | null
 
 				// Try to extract consequence (what happens on failed save)
 				let consequence: string | undefined;
-				const consequenceMatch = description.match(
-					/save\s+(?:or\s+)?(.+?)(?:\.|$)/i,
-				);
+				const consequenceMatch = description.match(/save\s+(?:or\s+)?(.+?)(?:\.|$)/i);
 				if (consequenceMatch && !halfOnSave) {
 					consequence = consequenceMatch[1].trim();
 				}
@@ -226,15 +214,10 @@ export function parseConditions(description?: string): ParsedCondition[] {
 		const condition = CONDITION_MAP[conditionRaw];
 		if (condition) {
 			// Determine context based on surrounding text
-			const beforeBracket = description
-				.substring(0, bracketMatch.index)
-				.toLowerCase();
+			const beforeBracket = description.substring(0, bracketMatch.index).toLowerCase();
 			let context: ParsedCondition['context'] = 'hit';
 
-			if (
-				beforeBracket.includes('on crit') ||
-				beforeBracket.includes('critical hit')
-			) {
+			if (beforeBracket.includes('on crit') || beforeBracket.includes('critical hit')) {
 				context = 'criticalHit';
 			} else if (
 				beforeBracket.includes('failed save') ||
@@ -287,11 +270,7 @@ export function parseConditions(description?: string): ParsedCondition[] {
 			const condition = CONDITION_MAP[conditionRaw];
 			if (condition) {
 				// Avoid duplicates
-				if (
-					!conditions.some(
-						(c) => c.condition === condition && c.context === context,
-					)
-				) {
+				if (!conditions.some((c) => c.condition === condition && c.context === context)) {
 					conditions.push({
 						condition,
 						context,
@@ -302,33 +281,23 @@ export function parseConditions(description?: string): ParsedCondition[] {
 	}
 
 	// Pattern 3: "target is/becomes <condition>"
-	const targetPattern =
-		/target\s+(?:is|becomes?)\s+(\w+)/gi;
+	const targetPattern = /target\s+(?:is|becomes?)\s+(\w+)/gi;
 	let targetMatch: RegExpExecArray | null;
 	while ((targetMatch = targetPattern.exec(description)) !== null) {
 		const conditionRaw = targetMatch[1].toLowerCase();
 		const condition = CONDITION_MAP[conditionRaw];
 		if (condition) {
 			// Check context from surrounding text
-			const beforeMatch = description
-				.substring(0, targetMatch.index)
-				.toLowerCase();
+			const beforeMatch = description.substring(0, targetMatch.index).toLowerCase();
 			let context: ParsedCondition['context'] = 'hit';
 
-			if (
-				beforeMatch.includes('failed save') ||
-				beforeMatch.includes('fails')
-			) {
+			if (beforeMatch.includes('failed save') || beforeMatch.includes('fails')) {
 				context = 'failedSave';
 			} else if (beforeMatch.includes('crit')) {
 				context = 'criticalHit';
 			}
 
-			if (
-				!conditions.some(
-					(c) => c.condition === condition && c.context === context,
-				)
-			) {
+			if (!conditions.some((c) => c.condition === condition && c.context === context)) {
 				conditions.push({
 					condition,
 					context,
@@ -507,11 +476,7 @@ export function buildEffectTree(action: NimbleNexusAction): EffectNode[] {
 
 		// Case 1: Saving throw based action
 		if (saveInfo) {
-			const savingThrowNode = buildSavingThrowTree(
-				saveInfo,
-				damageInfo,
-				conditions,
-			);
+			const savingThrowNode = buildSavingThrowTree(saveInfo, damageInfo, conditions);
 			effects.push(savingThrowNode);
 		}
 		// Case 2: Damage-based action (attack)
@@ -525,9 +490,7 @@ export function buildEffectTree(action: NimbleNexusAction): EffectNode[] {
 			// This is needed because conditions need a parent context
 			for (const cond of conditions) {
 				if (cond.context === 'hit') {
-					effects.push(
-						createConditionNode(cond.condition, null, null),
-					);
+					effects.push(createConditionNode(cond.condition, null, null));
 				}
 			}
 		}
@@ -584,16 +547,12 @@ function buildSavingThrowTree(
 	}
 
 	// Add conditions to the appropriate context
-	const failedSaveConditions = conditions.filter(
-		(c) => c.context === 'failedSave',
-	);
+	const failedSaveConditions = conditions.filter((c) => c.context === 'failedSave');
 	if (failedSaveConditions.length > 0) {
 		saveNode.on ??= {};
 		saveNode.on.failedSave ??= [];
 		for (const cond of failedSaveConditions) {
-			saveNode.on.failedSave.push(
-				createConditionNode(cond.condition, saveNode.id, 'failedSave'),
-			);
+			saveNode.on.failedSave.push(createConditionNode(cond.condition, saveNode.id, 'failedSave'));
 		}
 	}
 
@@ -603,17 +562,11 @@ function buildSavingThrowTree(
 /**
  * Build a damage tree with nested effects for an attack
  */
-function buildDamageTree(
-	damageInfo: ParsedDamage,
-	conditions: ParsedCondition[],
-): DamageNode {
-	const damageNode = createDamageNode(
-		damageInfo.formula,
-		damageInfo.damageType,
-		null,
-		null,
-		{ canCrit: true, canMiss: true },
-	);
+function buildDamageTree(damageInfo: ParsedDamage, conditions: ParsedCondition[]): DamageNode {
+	const damageNode = createDamageNode(damageInfo.formula, damageInfo.damageType, null, null, {
+		canCrit: true,
+		canMiss: true,
+	});
 
 	// Initialize the on property for consequences
 	damageNode.on = {
@@ -625,9 +578,7 @@ function buildDamageTree(
 	const critConditions = conditions.filter((c) => c.context === 'criticalHit');
 
 	for (const cond of hitConditions) {
-		damageNode.on.hit!.push(
-			createConditionNode(cond.condition, damageNode.id, 'hit'),
-		);
+		damageNode.on.hit!.push(createConditionNode(cond.condition, damageNode.id, 'hit'));
 	}
 
 	if (critConditions.length > 0) {

@@ -148,7 +148,10 @@ export const DAMAGE_TYPE_MAP: Record<string, string> = {
 /**
  * Map save abbreviations to full FoundryVTT save types
  */
-export const SAVE_TYPE_ABBREVIATION_MAP: Record<string, 'strength' | 'dexterity' | 'intelligence' | 'will'> = {
+export const SAVE_TYPE_ABBREVIATION_MAP: Record<
+	string,
+	'strength' | 'dexterity' | 'intelligence' | 'will'
+> = {
 	str: 'strength',
 	strength: 'strength',
 	dex: 'dexterity',
