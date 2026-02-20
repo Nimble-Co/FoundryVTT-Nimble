@@ -4,7 +4,13 @@
 	import Editor from '../components/Editor.svelte';
 	import SecondaryNavigation from '../../components/SecondaryNavigation.svelte';
 
-	const subNavigation = [
+	let item = getContext('document');
+
+	let higherLevelLabel = $derived(
+		item.reactive.system.tier > 0 ? 'Upcast Description' : 'Higher Level Effect',
+	);
+
+	let subNavigation = $derived([
 		{
 			component: DescriptionTab,
 			label: 'Base Effect',
@@ -12,13 +18,16 @@
 		},
 		{
 			component: HigherLevelDescriptionTab,
-			label: 'Higher Level Effect',
+			label: higherLevelLabel,
 			name: 'higherLevelEffect',
 		},
-	];
+	]);
 
-	let item = getContext('document');
-	let currentTab = $state(subNavigation[0]);
+	let currentTab = $state({
+		component: DescriptionTab,
+		label: 'Base Effect',
+		name: 'baseEffect',
+	});
 </script>
 
 {#snippet DescriptionTab()}
@@ -41,7 +50,7 @@
 	{#key item.reactive.system.description.higherLevelEffect}
 		<div class="nimble-spell-description-content">
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">Higher Level Effect</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">{higherLevelLabel}</h3>
 			</header>
 
 			<Editor

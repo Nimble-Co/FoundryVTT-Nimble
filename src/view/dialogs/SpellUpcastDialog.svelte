@@ -11,7 +11,7 @@
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
-	// @ts-ignore
+	// @ts-expect-error - nimble isn't included in the type
 	let shouldRollBeHidden = $state(!!game.settings.get('nimble', 'hideRolls'));
 
 	// I18n helpers
