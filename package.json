@@ -27,7 +27,7 @@
 		"test:watch": "vitest",
 		"test:ui": "vitest --ui",
 		"test:coverage": "vitest run --coverage",
-		"prepare": "husky",
+		"prepare": "lefthook install",
 		"release": "node build/release.mjs",
 		"lang:reconcile": "node scripts/reconcile-languages.mjs",
 		"lang:detect-untranslated": "node scripts/detect-untranslated.mjs"
@@ -91,6 +91,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.1",
+		"@evilmartians/lefthook": "^2.1.1",
 		"@sveltejs/vite-plugin-svelte": "6.2.1",
 		"@testing-library/jest-dom": "^6.9.1",
 		"@testing-library/svelte": "^5.2.8",
@@ -106,7 +107,6 @@
 		"glob": "^11.0.3",
 		"globals": "^16.4.0",
 		"happy-dom": "^20.0.10",
-		"husky": "^9.1.7",
 		"lint-staged": "^16.2.6",
 		"dependency-cruiser": "^16.10.0",
 		"postcss": "^8.5.6",
@@ -126,9 +126,5 @@
 		"svelte": "^5.42.2",
 		"svelte-preprocess": "^6.0.3",
 		"typescript": "^5.9.3"
-	},
-	"lint-staged": {
-		"*.{ts,mts,js,mjs}": "npx @biomejs/biome format --write",
-		"*.svelte": "npx prettier --write"
 	}
 }
