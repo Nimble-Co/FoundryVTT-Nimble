@@ -6,9 +6,12 @@
 	import ScalingConfig from '../components/ScalingConfig.svelte';
 	import TagGroup from '../../components/TagGroup.svelte';
 	import overrideTextAreaBehavior from '../../../utils/overrideTextAreaBehavior.js';
+	import localize from '../../../utils/localize.js';
 
 	let item = getContext('document');
 	let sheet = getContext('application');
+
+	const t = (key) => localize(`NIMBLE.spellConfig.${key}`);
 
 	const { spellProperties, spellSchoolIcons, spellSchools, spellTiers } = CONFIG.NIMBLE;
 	const { toggleSpellPropertyOption, toggleSpellSchoolOption, toggleSpellTierOption } = sheet;
@@ -24,7 +27,7 @@
 			jsonError = '';
 			await item.update({ system: parsed });
 		} catch {
-			jsonError = 'Invalid JSON';
+			jsonError = t('jsonEditor.invalidJson');
 		}
 	}
 
@@ -50,8 +53,8 @@
 			class="nimble-button nimble-config-toolbar__toggle"
 			data-button-variant="icon"
 			type="button"
-			aria-label={showJsonEditor ? 'Visual Editor' : 'JSON Editor'}
-			data-tooltip={showJsonEditor ? 'Switch to Visual Editor' : 'Switch to JSON Editor'}
+			aria-label={showJsonEditor ? t('jsonEditor.switchToVisual') : t('jsonEditor.switchToJson')}
+			data-tooltip={showJsonEditor ? t('jsonEditor.switchToVisual') : t('jsonEditor.switchToJson')}
 			data-tooltip-direction="LEFT"
 			onclick={() => (showJsonEditor = !showJsonEditor)}
 		>
@@ -62,7 +65,7 @@
 	{#if showJsonEditor}
 		<section class="nimble-config-json">
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">Spell Data (JSON)</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">{t('jsonEditor.heading')}</h3>
 			</header>
 
 			<textarea
@@ -83,7 +86,7 @@
 	{:else}
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">Identifier</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">{t('identifier')}</h3>
 			</header>
 
 			<input
@@ -95,7 +98,7 @@
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">Spell Properties</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">{t('spellProperties')}</h3>
 			</header>
 
 			<TagGroup
@@ -116,7 +119,7 @@
 		{#if !item.reactive.system.properties.selected.includes('utilitySpell')}
 			<section>
 				<header class="nimble-section-header">
-					<h3 class="nimble-heading" data-heading-variant="section">Spell Tier</h3>
+					<h3 class="nimble-heading" data-heading-variant="section">{t('spellTier')}</h3>
 				</header>
 
 				<TagGroup
@@ -131,7 +134,7 @@
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">Spell School</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">{t('spellSchool')}</h3>
 			</header>
 
 			<TagGroup

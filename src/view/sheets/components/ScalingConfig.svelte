@@ -2,30 +2,33 @@
 	import { getContext } from 'svelte';
 	import TagGroup from '../../components/TagGroup.svelte';
 	import { flattenEffectsTree } from '../../../utils/treeManipulation/flattenEffectsTree.js';
+	import localize from '../../../utils/localize.js';
 
 	let item = getContext('document');
+
+	const t = (key) => localize(`NIMBLE.spellConfig.scaling.${key}`);
 
 	let scalingMode = $derived(item.reactive.system.scaling?.mode ?? 'none');
 	let scalingDeltas = $derived(item.reactive.system.scaling?.deltas ?? []);
 	let scalingChoices = $derived(item.reactive.system.scaling?.choices ?? []);
 
 	const scalingModeOptions = [
-		{ label: 'None', value: 'none' },
-		{ label: 'Upcast', value: 'upcast' },
-		{ label: 'Upcast Choice', value: 'upcastChoice' },
+		{ label: t('modes.none'), value: 'none' },
+		{ label: t('modes.upcast'), value: 'upcast' },
+		{ label: t('modes.upcastChoice'), value: 'upcastChoice' },
 	];
 
 	const operationOptions = [
-		{ label: 'Flat Damage', value: 'addFlatDamage' },
-		{ label: 'Dice', value: 'addDice' },
-		{ label: 'Reach', value: 'addReach' },
-		{ label: 'Range', value: 'addRange' },
-		{ label: 'Targets', value: 'addTargets' },
-		{ label: 'Area Size', value: 'addAreaSize' },
-		{ label: 'DC', value: 'addDC' },
-		{ label: 'Armor', value: 'addArmor' },
-		{ label: 'Duration', value: 'addDuration' },
-		{ label: 'Condition', value: 'addCondition' },
+		{ label: t('operations.addFlatDamage'), value: 'addFlatDamage' },
+		{ label: t('operations.addDice'), value: 'addDice' },
+		{ label: t('operations.addReach'), value: 'addReach' },
+		{ label: t('operations.addRange'), value: 'addRange' },
+		{ label: t('operations.addTargets'), value: 'addTargets' },
+		{ label: t('operations.addAreaSize'), value: 'addAreaSize' },
+		{ label: t('operations.addDC'), value: 'addDC' },
+		{ label: t('operations.addArmor'), value: 'addArmor' },
+		{ label: t('operations.addDuration'), value: 'addDuration' },
+		{ label: t('operations.addCondition'), value: 'addCondition' },
 	];
 
 	const diceFaceOptions = [4, 6, 8, 10, 12, 20];
@@ -171,7 +174,7 @@
 	<div class="nimble-scaling-delta nimble-card">
 		<div class="nimble-scaling-delta__row">
 			<label class="nimble-field" data-field-variant="stacked">
-				<span class="nimble-heading" data-heading-variant="field">Operation</span>
+				<span class="nimble-heading" data-heading-variant="field">{t('operation')}</span>
 				<select
 					value={delta.operation}
 					onchange={({ target }) => onUpdate(index, 'operation', target.value)}
@@ -184,7 +187,7 @@
 
 			{#if delta.operation === 'addDice'}
 				<label class="nimble-field" data-field-variant="stacked">
-					<span class="nimble-heading" data-heading-variant="field">Count</span>
+					<span class="nimble-heading" data-heading-variant="field">{t('count')}</span>
 					<input
 						type="number"
 						min="1"
@@ -197,7 +200,7 @@
 					/>
 				</label>
 				<label class="nimble-field" data-field-variant="stacked">
-					<span class="nimble-heading" data-heading-variant="field">Die</span>
+					<span class="nimble-heading" data-heading-variant="field">{t('die')}</span>
 					<select
 						value={delta.dice?.faces ?? 6}
 						onchange={({ target }) =>
@@ -213,17 +216,17 @@
 				</label>
 			{:else if delta.operation === 'addCondition'}
 				<label class="nimble-field" data-field-variant="stacked">
-					<span class="nimble-heading" data-heading-variant="field">Condition</span>
+					<span class="nimble-heading" data-heading-variant="field">{t('condition')}</span>
 					<input
 						type="text"
 						value={delta.condition ?? ''}
-						placeholder="e.g. smoldering"
+						placeholder={t('conditionPlaceholder')}
 						onchange={({ target }) => onUpdate(index, 'condition', target.value || null)}
 					/>
 				</label>
 			{:else}
 				<label class="nimble-field" data-field-variant="stacked">
-					<span class="nimble-heading" data-heading-variant="field">Value</span>
+					<span class="nimble-heading" data-heading-variant="field">{t('value')}</span>
 					<input
 						type="number"
 						value={delta.value ?? 0}
@@ -238,13 +241,13 @@
 					(e) => e.id === delta.targetEffectId,
 				)}
 				<label class="nimble-field" data-field-variant="stacked">
-					<span class="nimble-heading" data-heading-variant="field">Target Effect</span>
+					<span class="nimble-heading" data-heading-variant="field">{t('targetEffect')}</span>
 					{#if hasEffects && (currentIdMatchesEffect || !delta.targetEffectId)}
 						<select
 							value={delta.targetEffectId ?? ''}
 							onchange={({ target }) => onUpdate(index, 'targetEffectId', target.value || null)}
 						>
-							<option value="">Auto (first match)</option>
+							<option value="">{t('targetEffectAuto')}</option>
 							{#each targetableEffects as effect}
 								<option value={effect.id} selected={effect.id === delta.targetEffectId}
 									>{effect.label}</option
@@ -255,11 +258,9 @@
 						<input
 							type="text"
 							value={delta.targetEffectId ?? ''}
-							data-tooltip={!hasEffects
-								? 'Add effects in the Activation tab to select targets here.'
-								: undefined}
+							data-tooltip={!hasEffects ? t('targetEffectHint') : undefined}
 							data-tooltip-direction="UP"
-							placeholder="Effect ID"
+							placeholder={t('targetEffectPlaceholder')}
 							onchange={({ target }) => onUpdate(index, 'targetEffectId', target.value || null)}
 						/>
 					{/if}
@@ -270,8 +271,8 @@
 				class="nimble-button nimble-scaling-delta__remove"
 				data-button-variant="icon"
 				type="button"
-				aria-label="Remove Delta"
-				data-tooltip="Remove Delta"
+				aria-label={t('removeDelta')}
+				data-tooltip={t('removeDelta')}
 				onclick={() => onRemove(index)}
 			>
 				<i class="fa-solid fa-trash"></i>
@@ -282,7 +283,7 @@
 
 <section>
 	<header class="nimble-section-header">
-		<h3 class="nimble-heading" data-heading-variant="section">Spell Scaling</h3>
+		<h3 class="nimble-heading" data-heading-variant="section">{t('heading')}</h3>
 	</header>
 
 	<TagGroup
@@ -296,14 +297,14 @@
 	{#if scalingMode === 'upcast'}
 		<div class="nimble-scaling-deltas">
 			<header class="nimble-section-header nimble-section-header--sub">
-				<h4 class="nimble-heading" data-heading-variant="field">Per Upcast Step</h4>
+				<h4 class="nimble-heading" data-heading-variant="field">{t('perUpcastStep')}</h4>
 
 				<button
 					class="nimble-button"
 					data-button-variant="icon"
 					type="button"
-					aria-label="Add Delta"
-					data-tooltip="Add Delta"
+					aria-label={t('addDelta')}
+					data-tooltip={t('addDelta')}
 					onclick={addDelta}
 				>
 					<i class="fa-solid fa-square-plus"></i>
@@ -315,7 +316,7 @@
 			{/each}
 
 			{#if scalingDeltas.length === 0}
-				<p class="nimble-scaling-empty">No scaling deltas configured.</p>
+				<p class="nimble-scaling-empty">{t('noDeltas')}</p>
 			{/if}
 		</div>
 	{/if}
@@ -323,14 +324,14 @@
 	{#if scalingMode === 'upcastChoice'}
 		<div class="nimble-scaling-choices">
 			<header class="nimble-section-header nimble-section-header--sub">
-				<h4 class="nimble-heading" data-heading-variant="field">Upcast Choices</h4>
+				<h4 class="nimble-heading" data-heading-variant="field">{t('upcastChoices')}</h4>
 
 				<button
 					class="nimble-button"
 					data-button-variant="icon"
 					type="button"
-					aria-label="Add Choice"
-					data-tooltip="Add Choice"
+					aria-label={t('addChoice')}
+					data-tooltip={t('addChoice')}
 					onclick={addChoice}
 				>
 					<i class="fa-solid fa-square-plus"></i>
@@ -341,11 +342,11 @@
 				<div class="nimble-scaling-choice nimble-card">
 					<div class="nimble-scaling-choice__header">
 						<label class="nimble-field" data-field-variant="stacked">
-							<span class="nimble-heading" data-heading-variant="field">Choice Label</span>
+							<span class="nimble-heading" data-heading-variant="field">{t('choiceLabel')}</span>
 							<input
 								type="text"
 								value={choice.label}
-								placeholder="e.g. Extra Damage"
+								placeholder={t('choiceLabelPlaceholder')}
 								onchange={({ target }) => updateChoiceLabel(choiceIndex, target.value)}
 							/>
 						</label>
@@ -354,8 +355,8 @@
 							class="nimble-button"
 							data-button-variant="icon"
 							type="button"
-							aria-label="Remove Choice"
-							data-tooltip="Remove Choice"
+							aria-label={t('removeChoice')}
+							data-tooltip={t('removeChoice')}
 							onclick={() => removeChoice(choiceIndex)}
 						>
 							<i class="fa-solid fa-trash"></i>
@@ -364,14 +365,14 @@
 
 					<div class="nimble-scaling-choice__deltas">
 						<header class="nimble-section-header nimble-section-header--sub">
-							<h5 class="nimble-heading" data-heading-variant="field">Deltas</h5>
+							<h5 class="nimble-heading" data-heading-variant="field">{t('deltas')}</h5>
 
 							<button
 								class="nimble-button"
 								data-button-variant="icon"
 								type="button"
-								aria-label="Add Delta"
-								data-tooltip="Add Delta"
+								aria-label={t('addDelta')}
+								data-tooltip={t('addDelta')}
 								onclick={() => addChoiceDelta(choiceIndex)}
 							>
 								<i class="fa-solid fa-square-plus"></i>
@@ -391,7 +392,7 @@
 			{/each}
 
 			{#if (scalingChoices ?? []).length === 0}
-				<p class="nimble-scaling-empty">No choices configured.</p>
+				<p class="nimble-scaling-empty">{t('noChoices')}</p>
 			{/if}
 		</div>
 	{/if}
