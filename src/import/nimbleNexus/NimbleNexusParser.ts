@@ -9,8 +9,8 @@ import {
 	getMonsterImageUrl,
 	levelToString,
 	SAVE_STAT_MAP,
-	saveValueToRollMode,
 	SIZE_TO_TOKEN_DIMENSIONS,
+	saveValueToRollMode,
 } from './constants.js';
 import { buildEffectTree, parseRangeReach } from './descriptionParser.js';
 import type {
@@ -528,6 +528,8 @@ export function toActorData(monster: NimbleNexusMonster): Actor.CreateData {
 			height: tokenDimensions.height,
 			texture: {
 				src: imageUrl,
+				scaleX: 1,
+				scaleY: 1,
 			},
 			lockRotation: true,
 			disposition: -1, // HOSTILE
@@ -562,7 +564,12 @@ export async function importMonster(
 		const imageUrl = getMonsterImageUrl(monster.attributes.paperforgeImageUrl);
 		if (actor && imageUrl !== DEFAULT_ACTOR_IMAGE) {
 			await actor.update({
-				'prototypeToken.texture.src': imageUrl,
+				img: imageUrl,
+				'prototypeToken.texture': {
+					src: imageUrl,
+					scaleX: 1,
+					scaleY: 1,
+				},
 			} as object);
 		}
 
