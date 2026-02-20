@@ -117,3 +117,105 @@ export function levelToString(level: number | string): string {
 	if (typeof level === 'string') return level;
 	return String(level);
 }
+
+/**
+ * Map damage type strings (case-insensitive) to canonical FoundryVTT damage types
+ */
+export const DAMAGE_TYPE_MAP: Record<string, string> = {
+	// Standard damage types
+	acid: 'acid',
+	bludgeoning: 'bludgeoning',
+	cold: 'cold',
+	fire: 'fire',
+	force: 'force',
+	lightning: 'lightning',
+	necrotic: 'necrotic',
+	piercing: 'piercing',
+	poison: 'poison',
+	psychic: 'psychic',
+	radiant: 'radiant',
+	slashing: 'slashing',
+	thunder: 'thunder',
+	// Common abbreviations/variations
+	blunt: 'bludgeoning',
+	electric: 'lightning',
+	holy: 'radiant',
+	unholy: 'necrotic',
+	magic: 'force',
+	physical: 'bludgeoning',
+};
+
+/**
+ * Map save abbreviations to full FoundryVTT save types
+ */
+export const SAVE_TYPE_ABBREVIATION_MAP: Record<string, 'strength' | 'dexterity' | 'intelligence' | 'will'> = {
+	str: 'strength',
+	strength: 'strength',
+	dex: 'dexterity',
+	dexterity: 'dexterity',
+	int: 'intelligence',
+	intelligence: 'intelligence',
+	wil: 'will',
+	will: 'will',
+	wis: 'will', // Common alternative
+	wisdom: 'will', // Common alternative
+};
+
+/**
+ * Map condition names (case-insensitive) to canonical FoundryVTT condition names
+ */
+export const CONDITION_MAP: Record<string, string> = {
+	blinded: 'blinded',
+	bloodied: 'bloodied',
+	charged: 'charged',
+	charmed: 'charmed',
+	concentration: 'concentration',
+	confused: 'confused',
+	dazed: 'dazed',
+	dead: 'dead',
+	despair: 'despair',
+	distracted: 'distracted',
+	dying: 'dying',
+	frightened: 'frightened',
+	grappled: 'grappled',
+	hampered: 'hampered',
+	incapacitated: 'incapacitated',
+	invisible: 'invisible',
+	paralyzed: 'paralyzed',
+	petrified: 'petrified',
+	poisoned: 'poisoned',
+	prone: 'prone',
+	restrained: 'restrained',
+	riding: 'riding',
+	silenced: 'silenced',
+	slowed: 'slowed',
+	stunned: 'stunned',
+	smoldering: 'smoldering',
+	taunted: 'taunted',
+	unconscious: 'unconscious',
+	wounded: 'wounded',
+	// Common variations/abbreviations
+	blind: 'blinded',
+	charm: 'charmed',
+	confuse: 'confused',
+	daze: 'dazed',
+	fear: 'frightened',
+	feared: 'frightened',
+	frighten: 'frightened',
+	grapple: 'grappled',
+	grabbed: 'grappled',
+	grab: 'grappled',
+	paralyze: 'paralyzed',
+	paralyses: 'paralyzed',
+	paralysis: 'paralyzed',
+	petrify: 'petrified',
+	petrifies: 'petrified',
+	petrification: 'petrified',
+	poison: 'poisoned',
+	restrain: 'restrained',
+	silence: 'silenced',
+	slow: 'slowed',
+	stun: 'stunned',
+	stuns: 'stunned',
+	taunt: 'taunted',
+};

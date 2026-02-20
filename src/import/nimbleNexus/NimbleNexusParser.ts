@@ -12,6 +12,7 @@ import {
 	saveValueToRollMode,
 	SIZE_TO_TOKEN_DIMENSIONS,
 } from './constants.js';
+import { buildEffectTree, parseRangeReach } from './descriptionParser.js';
 import type {
 	ActorType,
 	BatchImportResult,
@@ -173,35 +174,76 @@ export function createAbilityItem(ability: NimbleNexusAbility): object {
  * Create a monster feature item from an action
  */
 export function createActionItem(action: NimbleNexusAction, parentItemId?: string): object {
-	const effects: object[] = [];
+	// Use the new smart parser to build effect tree
+	let effects: object[] = buildEffectTree(action);
 
-	// Add damage effect if present
-	if (action.damage?.roll) {
-		effects.push({
-			id: generateId(),
-			type: 'damage',
-			damageType: 'piercing', // Default damage type
-			formula: parseDamageRoll(action.damage.roll),
-			parentContext: null,
-			parentNode: null,
-			canCrit: true,
-			canMiss: true,
-			on: {
-				hit: [
-					{
-						id: generateId(),
-						type: 'damageOutcome',
-						outcome: 'fullDamage',
-						parentContext: 'hit',
-						parentNode: effects.length > 0 ? effects[0] : null,
-					},
-				],
+	// Fallback to original behavior if parsing fails or returns empty
+	if (effects.length === 0 && action.damage?.roll) {
+		effects = [
+			{
+				id: generateId(),
+				type: 'damage',
+				damageType: 'bludgeoning',
+				formula: parseDamageRoll(action.damage.roll),
+				parentContext: null,
+				parentNode: null,
+				canCrit: true,
+				canMiss: true,
+				on: {
+					hit: [
+						{
+							id: generateId(),
+							type: 'damageOutcome',
+							outcome: 'fullDamage',
+							parentContext: 'hit',
+							parentNode: null,
+						},
+					],
+				},
 			},
-		});
+		];
 	}
 
-	const attackType = getAttackType(action.target);
-	const distance = getAttackDistance(action.target);
+	// Parse range/reach from description to supplement target info
+	const rangeReach = parseRangeReach(action.description, action.target);
+
+	let attackType = getAttackType(action.target);
+	let distance = getAttackDistance(action.target);
+
+	// Use parsed range/reach if target info is missing
+	if (rangeReach && !action.target?.reach && !action.target?.range) {
+		if (rangeReach.type === 'range') {
+			attackType = 'range';
+			distance = rangeReach.distance;
+		} else if (rangeReach.type === 'reach') {
+			attackType = rangeReach.distance > 1 ? 'reach' : '';
+			distance = rangeReach.distance;
+		}
+	}
+
+	// Determine template shape for area effects
+	let templateShape = '';
+	let templateLength = 1;
+	let templateWidth = 1;
+	let templateRadius = 1;
+	let acquireTargetsFromTemplate = false;
+
+	if (rangeReach) {
+		if (rangeReach.type === 'cone') {
+			templateShape = 'cone';
+			templateLength = rangeReach.distance;
+			acquireTargetsFromTemplate = true;
+		} else if (rangeReach.type === 'line') {
+			templateShape = 'line';
+			templateLength = rangeReach.distance;
+			templateWidth = rangeReach.width ?? 1;
+			acquireTargetsFromTemplate = true;
+		} else if (rangeReach.type === 'burst') {
+			templateShape = 'burst';
+			templateRadius = rangeReach.distance;
+			acquireTargetsFromTemplate = true;
+		}
+	}
 
 	return {
 		_id: generateId(),
@@ -213,7 +255,7 @@ export function createActionItem(action: NimbleNexusAction, parentItemId?: strin
 			identifier: '',
 			rules: [],
 			activation: {
-				acquireTargetsFromTemplate: false,
+				acquireTargetsFromTemplate,
 				cost: {
 					details: '',
 					quantity: 1,
@@ -234,10 +276,10 @@ export function createActionItem(action: NimbleNexusAction, parentItemId?: strin
 					distance,
 				},
 				template: {
-					length: 1,
-					radius: 1,
-					shape: '',
-					width: 1,
+					length: templateLength,
+					radius: templateRadius,
+					shape: templateShape,
+					width: templateWidth,
 				},
 			},
 			description: action.description ? `<p>${action.description}</p>` : '',
