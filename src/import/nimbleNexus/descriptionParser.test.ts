@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { NimbleNexusAction } from './types.js';
 import {
 	buildEffectTree,
 	extractDiceFormula,
@@ -9,6 +8,7 @@ import {
 	parseRangeReach,
 	parseSavingThrow,
 } from './descriptionParser.js';
+import type { NimbleNexusAction } from './types.js';
 
 // Mock foundry.utils.randomID
 let idCounter = 0;
@@ -217,9 +217,7 @@ describe('parseConditions', () => {
 		});
 
 		it('should parse escape DC', () => {
-			const result = parseConditions(
-				'Target is [[Grappled]] (escape DC 15 STR)',
-			);
+			const result = parseConditions('Target is [[Grappled]] (escape DC 15 STR)');
 			expect(result).toHaveLength(1);
 			expect(result[0].escapeDC).toBe(15);
 			expect(result[0].escapeType).toBe('strength');
@@ -517,7 +515,8 @@ describe('buildEffectTree', () => {
 			const action: NimbleNexusAction = {
 				name: 'Breath Weapon',
 				damage: { roll: '1d66' },
-				description: 'AOE 4x4 (fire) for Argonath or line 8 (Electricity). Dex DC 20 save for half damage.',
+				description:
+					'AOE 4x4 (fire) for Argonath or line 8 (Electricity). Dex DC 20 save for half damage.',
 			};
 			const result = buildEffectTree(action);
 
@@ -584,7 +583,7 @@ describe('buildEffectTree', () => {
 			const action: NimbleNexusAction = {
 				name: 'Tooth and Claw',
 				damage: { roll: '2d12+7' },
-				description: 'On hit: Roll a d10 on the Alchemist\'s table.',
+				description: "On hit: Roll a d10 on the Alchemist's table.",
 			};
 			const result = buildEffectTree(action);
 
@@ -643,12 +642,13 @@ describe('buildEffectTree', () => {
 			expect(damageNode.on?.hit[1].condition).toBe('taunted');
 		});
 
-		it('should parse Magmin Touch with fire damage from description', () => {
+		it('should parse Magmin Touch with fire damage from formula', () => {
 			// From: "Asuvius" the Magmin Uraniac - Touch action
 			const action: NimbleNexusAction = {
 				name: 'Touch',
-				damage: { roll: '2d8+2' },
-				description: 'If target is a creature or flammable it starts burning. A burning creature or object takes 1d4 fire damage at the start of each of its turns.',
+				damage: { roll: '2d8+2 fire' },
+				description:
+					'If target is a creature or flammable it starts burning. A burning creature or object takes 1d4 fire damage at the start of each of its turns.',
 			};
 			const result = buildEffectTree(action);
 
@@ -656,6 +656,7 @@ describe('buildEffectTree', () => {
 			expect(result[0].type).toBe('damage');
 			const damageNode = result[0] as any;
 			expect(damageNode.damageType).toBe('fire');
+			expect(damageNode.formula).toBe('2d8+2');
 		});
 
 		it('should parse Angor the Mad Troll Raking Claw with grappled condition', () => {
@@ -682,7 +683,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Ebonfang',
 					damage: { roll: '1d10+15' },
-					description: '1d10+15. Your target is considered Bloodied for 1 round. Fly 8 before or after attacking.',
+					description:
+						'1d10+15. Your target is considered Bloodied for 1 round. Fly 8 before or after attacking.',
 				};
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('damage');
@@ -692,7 +694,8 @@ describe('buildEffectTree', () => {
 			it('should parse Alaric Draegoth Beguile with WIL save', () => {
 				const action: NimbleNexusAction = {
 					name: 'Beguile',
-					description: 'If no creature is Beguiled, Beguile a target on a failed DC 18 WIL save (w/ disadvantage if Bloodied). Beguiled: Dazed.',
+					description:
+						'If no creature is Beguiled, Beguile a target on a failed DC 18 WIL save (w/ disadvantage if Bloodied). Beguiled: Dazed.',
 				};
 				const result = buildEffectTree(action);
 				expect(result).toHaveLength(1);
@@ -781,7 +784,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Vine Lash',
 					damage: { roll: 'd44' },
-					description: '(Line: 6) d44. On damage: [[restrained]] and [[poisoned]] (escape DC 17, or any fire ends both).',
+					description:
+						'(Line: 6) d44. On damage: [[restrained]] and [[poisoned]] (escape DC 17, or any fire ends both).',
 				};
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('damage');
@@ -804,7 +808,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Shaking Roots',
 					damage: { roll: '1d10' },
-					description: '(All adjacent creatures) DC12 DEX save, on fail 1d10 dmg and fall [[prone]]',
+					description:
+						'(All adjacent creatures) DC12 DEX save, on fail 1d10 dmg and fall [[prone]]',
 				};
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('savingThrow');
@@ -841,7 +846,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Hurl Flame',
 					damage: { roll: '2d6+10' },
-					description: '2d6+10 fire. (Reach 8) Lobs fire in a 2x2 area. Creatures make a DC 15 DEX save, half on success. On hit: Smoldering.',
+					description:
+						'2d6+10 fire. (Reach 8) Lobs fire in a 2x2 area. Creatures make a DC 15 DEX save, half on success. On hit: Smoldering.',
 					target: { reach: 8 },
 				};
 				const result = buildEffectTree(action);
@@ -853,7 +859,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Infernal Sting',
 					damage: { roll: '2d10+20' },
-					description: '2d10+20 poison. On hit: [[Poisoned]], and can\'t regain HP. Lasts for one round.',
+					description:
+						"2d10+20 poison. On hit: [[Poisoned]], and can't regain HP. Lasts for one round.",
 				};
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('damage');
@@ -892,7 +899,8 @@ describe('buildEffectTree', () => {
 			it('should parse The Black Spider Web with DEX save and restrained', () => {
 				const action: NimbleNexusAction = {
 					name: 'Web',
-					description: 'Cover a Reach 3 circle on the floor in webbing, creating Difficult Terrain. Creatures within: DC 13 DEX save or Restrained until the end of their next turn.',
+					description:
+						'Cover a Reach 3 circle on the floor in webbing, creating Difficult Terrain. Creatures within: DC 13 DEX save or Restrained until the end of their next turn.',
 				};
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('savingThrow');
@@ -941,7 +949,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Hammer Smash',
 					damage: { roll: '1d8+40' },
-					description: '1d8+40. Reach 2. Disadvantage 2 if target successfully assessed in their last turn. On hit: Prone',
+					description:
+						'1d8+40. Reach 2. Disadvantage 2 if target successfully assessed in their last turn. On hit: Prone',
 					target: { reach: 2 },
 				};
 				const result = buildEffectTree(action);
@@ -1004,7 +1013,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Grab',
 					damage: { roll: '2d6+2' },
-					description: '2d6+2 Bludgeoning Damage. If the target is a medium or smaller creature, it has the Grappled condition. (DC12 to escape)',
+					description:
+						'2d6+2 Bludgeoning Damage. If the target is a medium or smaller creature, it has the Grappled condition. (DC12 to escape)',
 				};
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('damage');
@@ -1018,7 +1028,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Piercing Cry',
 					damage: { roll: '1d4' },
-					description: '1d4. Targets within 2x2 tiles around the griffin must succeed a DC 7 saving roll or are deafened for 2 turns',
+					description:
+						'1d4. Targets within 2x2 tiles around the griffin must succeed a DC 7 saving roll or are deafened for 2 turns',
 				};
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('damage');
@@ -1030,7 +1041,8 @@ describe('buildEffectTree', () => {
 			it('should parse Forest Hag Command with WIL save', () => {
 				const action: NimbleNexusAction = {
 					name: 'Command',
-					description: '(Range: 8) One enemy must make a DC 12 WIL Save or be forced to lose 2 actions doing a silly dance, telling you a secret, or throwing what they\'re holding 6 squares.',
+					description:
+						"(Range: 8) One enemy must make a DC 12 WIL Save or be forced to lose 2 actions doing a silly dance, telling you a secret, or throwing what they're holding 6 squares.",
 					target: { range: 8 },
 				};
 				const result = buildEffectTree(action);
@@ -1043,7 +1055,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Force Vibration',
 					damage: { roll: '2d6' },
-					description: '(Reach 2) 2d6 piercing, INT DC 15 or 6d6 psychic, Vicious, can\'t be reduced, on hit: Dazed.',
+					description:
+						"(Reach 2) 2d6 piercing, INT DC 15 or 6d6 psychic, Vicious, can't be reduced, on hit: Dazed.",
 					target: { reach: 2 },
 				};
 				const result = buildEffectTree(action);
@@ -1097,7 +1110,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Horrific Visions',
 					damage: { roll: 'd66' },
-					description: '(3x3 area in Reach: 6) DC 17 INT save or [[frightened]] and d66 psychic, half on save.',
+					description:
+						'(3x3 area in Reach: 6) DC 17 INT save or [[frightened]] and d66 psychic, half on save.',
 					target: { reach: 6 },
 				};
 				const result = buildEffectTree(action);
@@ -1109,7 +1123,8 @@ describe('buildEffectTree', () => {
 			it('should parse Rakshasa Dominate with WIL save', () => {
 				const action: NimbleNexusAction = {
 					name: 'Dominate',
-					description: 'DC 17 WIL save or you spend 3 actions, 2 actions on save. (Cannot spend resources, they regain spent actions afterwards.)',
+					description:
+						'DC 17 WIL save or you spend 3 actions, 2 actions on save. (Cannot spend resources, they regain spent actions afterwards.)',
 				};
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('savingThrow');
@@ -1124,7 +1139,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Acid Spit',
 					damage: { roll: '2d6+6' },
-					description: 'Melts away stone, steel, or organic structures. On crit: target chooses 1 weapon, armour, or magic item on their person...',
+					description:
+						'Melts away stone, steel, or organic structures. On crit: target chooses 1 weapon, armour, or magic item on their person...',
 					target: { range: 8 },
 				};
 				const result = buildEffectTree(action);
@@ -1159,7 +1175,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Eruption',
 					damage: { roll: 'd66' },
-					description: 'd66 fire to creatures on cracked ground, or half on DC 17 DEX save. Removes cracked ground.',
+					description:
+						'd66 fire to creatures on cracked ground, or half on DC 17 DEX save. Removes cracked ground.',
 				};
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('savingThrow');
@@ -1184,7 +1201,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Enveloping Tendrils',
 					damage: { roll: '2d10' },
-					description: '2d10. On damage: [[Restrained]]. If a hero ends their turn [[restrained]], they take 5 dmg',
+					description:
+						'2d10. On damage: [[Restrained]]. If a hero ends their turn [[restrained]], they take 5 dmg',
 				};
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('damage');
@@ -1237,7 +1255,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Charge',
 					damage: { roll: '3d8+20' },
-					description: '3d8+20 piercing.. On crit: 1 wound (can only be used after moving at least 4 spaces in a straight line).',
+					description:
+						'3d8+20 piercing.. On crit: 1 wound (can only be used after moving at least 4 spaces in a straight line).',
 				};
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('damage');
@@ -1272,7 +1291,7 @@ describe('buildEffectTree', () => {
 
 			it('should parse Yeti Gaze with dazed and WIL escape', () => {
 				const action: NimbleNexusAction = {
-					name: 'Yeti\'s Gaze',
+					name: "Yeti's Gaze",
 					damage: { roll: '8d4+10' },
 					description: '8d4+10. (Range: 6) On hit: [[Dazed]] 2 (escape DC 17 WIL)',
 					target: { range: 6 },
@@ -1301,7 +1320,8 @@ describe('buildEffectTree', () => {
 			it('should parse Doppelganger True Form with WIL save and frightened', () => {
 				const action: NimbleNexusAction = {
 					name: 'True Form',
-					description: 'Transform back into its true form. Creatures within 6 spaces make a DC 13 WIL save or are Frightened for 3 rounds.',
+					description:
+						'Transform back into its true form. Creatures within 6 spaces make a DC 13 WIL save or are Frightened for 3 rounds.',
 				};
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('savingThrow');
@@ -1312,7 +1332,8 @@ describe('buildEffectTree', () => {
 			it('should parse Doppelganger Lure with INT save', () => {
 				const action: NimbleNexusAction = {
 					name: 'Lure',
-					description: 'DC 14 INT save. On fail: target moves 4 spaces in a direction of your choosing. Then:',
+					description:
+						'DC 14 INT save. On fail: target moves 4 spaces in a direction of your choosing. Then:',
 					target: { reach: 6 },
 				};
 				const result = buildEffectTree(action);
@@ -1454,7 +1475,8 @@ describe('buildEffectTree', () => {
 				const action: NimbleNexusAction = {
 					name: 'Smite',
 					damage: { roll: '4d8+12' },
-					description: '4d8+12. Reach 1. DC 15 WIL save or you are permanently blinded as divine light singes your eyes.',
+					description:
+						'4d8+12. Reach 1. DC 15 WIL save or you are permanently blinded as divine light singes your eyes.',
 					target: { reach: 1 },
 				};
 				const result = buildEffectTree(action);
