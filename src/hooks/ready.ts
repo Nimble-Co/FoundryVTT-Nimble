@@ -26,6 +26,7 @@ export default async function ready() {
 			`Nimble | No migration needed: world schema version ${worldSchemaVersion} is up to date`,
 		);
 	}
+
 	game.nimble.conditions.configureStatusEffects();
 
 	const target = document.body;

@@ -1,7 +1,12 @@
 <script>
+	import { createSubscriber } from 'svelte/reactivity';
 	import { setContext } from 'svelte';
 	import { readable } from 'svelte/store';
 	import localize from '../../utils/localize.js';
+	import {
+		getInitiativeCombatManaRules,
+		primeActorCombatManaSourceRules,
+	} from '../../utils/combatManaRules.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import HitPointBar from './components/HitPointBar.svelte';
@@ -37,6 +42,46 @@
 		}
 
 		return origins.filter(Boolean).join(' ⟡ ');
+	}
+
+	function hasInitiativeCombatManaRule(character, _primeVersion = 0) {
+		const rules = getInitiativeCombatManaRules(character);
+		return rules.length > 0;
+	}
+
+	function getActiveCombatForCurrentScene() {
+		const sceneId = canvas?.scene?.id;
+		if (!sceneId) return null;
+
+		const activeCombat = game.combat;
+		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
+			return activeCombat;
+		}
+
+		const activeByScene = game.combats?.contents?.find(
+			(combat) => combat?.active && combat.scene?.id === sceneId,
+		);
+		if (activeByScene) return activeByScene;
+
+		const viewedCombat = game.combats?.viewed ?? null;
+		if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
+			return viewedCombat;
+		}
+
+		return null;
+	}
+
+	function hasRolledInitiativeInActiveCombat(character) {
+		const combat = getActiveCombatForCurrentScene();
+		if (!combat?.started) return false;
+
+		const sceneId = canvas?.scene?.id;
+		if (sceneId && combat.scene?.id !== sceneId) return false;
+
+		const combatant = combat.combatants.find((entry) => entry.actorId === character.id);
+		if (!combatant) return false;
+
+		return combatant.initiative !== null;
 	}
 
 	function toggleWounds(woundLevel) {
@@ -102,6 +147,43 @@
 	}
 
 	let { actor, sheet } = $props();
+	let combatManaRulesPrimeVersion = $state(0);
+	let lastCombatManaPrimeActorId = $state(null);
+
+	$effect(() => {
+		const actorId = actor?.id ?? null;
+		if (!actorId) return;
+		if (lastCombatManaPrimeActorId === actorId) return;
+
+		lastCombatManaPrimeActorId = actorId;
+		void primeActorCombatManaSourceRules(actor).then(() => {
+			combatManaRulesPrimeVersion += 1;
+		});
+	});
+
+	const subscribeCombatState = createSubscriber((update) => {
+		const hookNames = [
+			'combatStart',
+			'createCombat',
+			'updateCombat',
+			'deleteCombat',
+			'createCombatant',
+			'updateCombatant',
+			'deleteCombatant',
+			'canvasInit',
+			'canvasReady',
+		];
+		const hookIds = hookNames.map((hookName) => ({
+			hookId: Hooks.on(hookName, () => update()),
+			hookName,
+		}));
+
+		return () => {
+			for (const { hookName, hookId } of hookIds) {
+				Hooks.off(hookName, hookId);
+			}
+		};
+	});
 
 	const navigation = $state([
 		{
@@ -157,11 +239,26 @@
 	let classItem = $derived(actor.reactive.items.find((item) => item.type === 'class') ?? null);
 	let wounds = $derived(actor.reactive.system.attributes.wounds);
 	let mana = $derived(actor.reactive.system.resources.mana);
+	let hasInitiativeCombatMana = $derived.by(() => {
+		return hasInitiativeCombatManaRule(actor, combatManaRulesPrimeVersion);
+	});
+	let combatManaVisible = $derived.by(() => {
+		subscribeCombatState();
+		return hasInitiativeCombatMana && hasRolledInitiativeInActiveCombat(actor);
+	});
 	let hasMana = $derived.by(() => {
-		if ((mana.max ?? 0) > 0 || (mana.baseMax ?? 0) > 0) return true;
-		return actor.reactive.items.some(
+		subscribeCombatState();
+
+		const classHasManaFormula = actor.reactive.items.some(
 			(item) => item.type === 'class' && item.system?.mana?.formula?.length,
 		);
+
+		if (hasInitiativeCombatMana) {
+			return combatManaVisible;
+		}
+
+		if ((mana.max ?? 0) > 0 || (mana.baseMax ?? 0) > 0) return true;
+		return classHasManaFormula;
 	});
 
 	// Flags

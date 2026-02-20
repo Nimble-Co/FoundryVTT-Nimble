@@ -5,6 +5,7 @@ import {
 	getCombatantTypePriority,
 } from '../../utils/combatantOrdering.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
+import { handleInitiativeRules } from './handleInitiativeRules.js';
 
 /** Combatant system data with actions */
 interface CombatantSystemWithActions {
@@ -76,7 +77,6 @@ class NimbleCombat extends Combat {
 		const currentTurn = Number.isInteger(this.turn) ? Number(this.turn) : 0;
 		this.turn = Math.min(Math.max(currentTurn, 0), aliveTurns.length - 1);
 	}
-
 	constructor(
 		data?: Combat.CreateData,
 		context?: foundry.abstract.Document.ConstructionContext<Combat.Parent>,
@@ -230,6 +230,7 @@ class NimbleCombat extends Combat {
 
 		// Iterate over Combatants, performing an initiative roll for each
 		const updates: Record<string, unknown>[] = [];
+		const combatManaUpdates: Promise<unknown>[] = [];
 		const messages: ChatMessage.CreateData[] = [];
 
 		for await (const [i, id] of combatantIds.entries()) {
@@ -251,6 +252,12 @@ class NimbleCombat extends Combat {
 				else if (total >= 10) combatantUpdates[actionPath] = 2;
 				else combatantUpdates[actionPath] = 1;
 			}
+
+			await handleInitiativeRules({
+				combatId: this.id,
+				combatManaUpdates,
+				combatant,
+			});
 
 			updates.push(combatantUpdates);
 
@@ -291,6 +298,10 @@ class NimbleCombat extends Combat {
 
 		// Update multiple combatants
 		await this.updateEmbeddedDocuments('Combatant', updates);
+
+		if (combatManaUpdates.length > 0) {
+			await Promise.all(combatManaUpdates);
+		}
 
 		// Ensure the turn order remains with the same combatant
 		if (updateTurn && currentId) {

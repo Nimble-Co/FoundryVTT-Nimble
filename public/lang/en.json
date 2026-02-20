@@ -472,6 +472,7 @@
 		"ruleTypes": {
 			"abilityBonus": "Stat Bonus",
 			"armorClass": "Armor Class",
+			"combatMana": "Combat Mana",
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
 			"hitDiceAdvantage": "Hit Dice Advantage",

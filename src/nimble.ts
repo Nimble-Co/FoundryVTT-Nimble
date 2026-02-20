@@ -10,7 +10,38 @@ import renderCompendium from './hooks/renderCompendium.js';
 import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import setup from './hooks/setup.js';
 import './scss/main.scss';
+import { getCombatManaGrantForCombat, getCombatManaGrantMap } from './utils/combatManaRules.js';
 import { injectViteHmrClient } from './utils/viteHmr.js';
+
+async function clearCombatManaFromCombat(combat: Combat): Promise<void> {
+	const combatId = combat.id;
+	if (!combatId) return;
+
+	const updates = combat.combatants.reduce<Promise<unknown>[]>((acc, combatant) => {
+		const actor = combatant.actor;
+		if (!actor || actor.type !== 'character') return acc;
+		if (!actor.isOwner) return acc;
+
+		const manaGrant = getCombatManaGrantForCombat(actor, combatId);
+		if (manaGrant <= 0) return acc;
+
+		const grants = getCombatManaGrantMap(actor);
+		delete grants[combatId];
+
+		acc.push(
+			actor.update({
+				'system.resources.mana.baseMax': 0,
+				'system.resources.mana.current': 0,
+				'flags.nimble.combatManaGrants': grants,
+			} as Record<string, unknown>),
+		);
+		return acc;
+	}, []);
+
+	if (updates.length > 0) {
+		await Promise.all(updates);
+	}
+}
 
 // Inject Vite HMR client for hot reload support during development
 injectViteHmrClient();
@@ -54,13 +85,23 @@ Hooks.on('hotbarDrop', onHotbarDrop);
 registerCombatantDefeatSync();
 
 // Refresh tokens when combat ends to remove turn indicators
-Hooks.on('deleteCombat', () => {
+Hooks.on('deleteCombat', async (combat: Combat) => {
+	await clearCombatManaFromCombat(combat);
+
 	if (!canvas?.ready || !canvas?.tokens) return;
 
 	// Refresh all tokens on the canvas to clear turn indicators
 	for (const token of canvas.tokens.placeables) {
 		token.renderFlags.set({ refreshTurnMarker: true });
 	}
+});
+
+// Also clear temporary combat mana when combat is ended without being deleted.
+Hooks.on('updateCombat', async (combat: Combat) => {
+	const isEnded = !combat.started || combat.round === 0;
+	if (!isEnded) return;
+
+	await clearCombatManaFromCombat(combat);
 });
 
 // Accept HMR updates during development
