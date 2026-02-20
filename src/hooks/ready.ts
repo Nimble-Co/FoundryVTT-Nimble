@@ -3,7 +3,6 @@ import { mount } from 'svelte';
 import { MigrationList } from '../migration/MigrationList.js';
 import { MigrationRunner } from '../migration/MigrationRunner.js';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
-import runSpellbladeCombatManaMigration from '../migration/runSpellbladeCombatManaMigration.js';
 import CombatTracker from '../view/ui/CombatTracker.svelte';
 import combatStateGuards from './combatStateGuards.js';
 
@@ -29,7 +28,6 @@ export default async function ready() {
 	}
 
 	game.nimble.conditions.configureStatusEffects();
-	await runSpellbladeCombatManaMigration();
 
 	const target = document.body;
 	const anchor = document.querySelector('#notifications');
