@@ -30,6 +30,11 @@ export const DEFAULT_PAGE_LIMIT = 100;
 export const MAX_PAGE_LIMIT = 100;
 
 /**
+ * Folder path for storing downloaded monster images
+ */
+export const NIMBLE_NEXUS_IMAGE_FOLDER = 'nimble-nexus/monsters';
+
+/**
  * Map API save stat abbreviations to FoundryVTT full names
  */
 export const SAVE_STAT_MAP: Record<SaveStat, FoundrySaveStat> = {
@@ -90,14 +95,26 @@ export const DEFAULT_FEATURE_ICONS: Record<string, string> = {
 export const DEFAULT_ACTOR_IMAGE = 'icons/svg/mystery-man.svg';
 
 /**
- * Get full image URL from paperforge relative path
- * The API returns paths like "/paperforge/0006/portrait.png" but
- * actual files are stored as "100.png" on the storage bucket
+ * Get preview image URL (100x100) for monster list display
+ * The API returns paths like "/paperforge/0006/portrait.png"
+ */
+export function getMonsterPreviewImageUrl(paperforgeImageUrl?: string): string {
+	if (!paperforgeImageUrl) return DEFAULT_ACTOR_IMAGE;
+	const correctedPath = paperforgeImageUrl.replace('portrait.png', '100.png');
+	return `${NIMBLE_NEXUS_STORAGE_URL}${correctedPath}`;
+}
+
+/**
+ * Get full image URL (400x400) for imported actor
+ * The API returns paths like "/paperforge/0006/portrait.png"
+ *
+ * NOTE: The storage bucket doesn't have CORS headers, so:
+ * - Portrait images will work (HTML img tags ignore CORS)
+ * - Token images won't work on canvas (requires fetch which enforces CORS)
  */
 export function getMonsterImageUrl(paperforgeImageUrl?: string): string {
 	if (!paperforgeImageUrl) return DEFAULT_ACTOR_IMAGE;
-	// Replace portrait.png with 100.png (the actual filename in storage)
-	const correctedPath = paperforgeImageUrl.replace('portrait.png', '100.png');
+	const correctedPath = paperforgeImageUrl.replace('portrait.png', '400.png');
 	return `${NIMBLE_NEXUS_STORAGE_URL}${correctedPath}`;
 }
 

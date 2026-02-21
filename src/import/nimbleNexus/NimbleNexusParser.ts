@@ -3,7 +3,6 @@
  */
 
 import {
-	DEFAULT_ACTOR_IMAGE,
 	DEFAULT_FEATURE_ICONS,
 	FEATURE_SUBTYPES,
 	getMonsterImageUrl,
@@ -544,6 +543,9 @@ export function toActorData(monster: NimbleNexusMonster): Actor.CreateData {
 
 /**
  * Import a single monster and create an Actor
+ *
+ * NOTE: Token images may not display on canvas due to CORS restrictions
+ * on the nimble-nexus storage bucket. Portrait images will work.
  */
 export async function importMonster(
 	monster: NimbleNexusMonster,
@@ -558,20 +560,6 @@ export async function importMonster(
 		}
 
 		const actor = await Actor.create(actorData);
-
-		// Update prototype token image if actor has a custom image
-		// Actor.create doesn't always properly apply nested prototypeToken.texture settings
-		const imageUrl = getMonsterImageUrl(monster.attributes.paperforgeImageUrl);
-		if (actor && imageUrl !== DEFAULT_ACTOR_IMAGE) {
-			await actor.update({
-				img: imageUrl,
-				'prototypeToken.texture': {
-					src: imageUrl,
-					scaleX: 1,
-					scaleY: 1,
-				},
-			} as object);
-		}
 
 		return {
 			success: true,
