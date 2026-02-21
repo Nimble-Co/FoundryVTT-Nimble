@@ -1373,10 +1373,7 @@ describe('NimbleCombat', () => {
 		expect(createdRows.map((row) => row.actionName)).toEqual(['Stab', 'Bite']);
 		expect(createdRows.map((row) => row.formula)).toEqual(['1d6', '1d6']);
 		expect(result.chatMessageId).toBe('group-attack-chat-1');
-		expect(result.rolledCombatantIds).toEqual([
-			'ncs-group-attack-a',
-			'ncs-group-attack-b',
-		]);
+		expect(result.rolledCombatantIds).toEqual(['ncs-group-attack-a', 'ncs-group-attack-b']);
 		expect(
 			(minionActorA as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
 		).not.toHaveBeenCalled();
@@ -1937,4 +1934,3 @@ describe('NimbleCombat', () => {
 		expect(source.update).not.toHaveBeenCalled();
 	});
 });
-

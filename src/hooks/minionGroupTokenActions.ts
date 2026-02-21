@@ -6,7 +6,10 @@ import {
 	getMinionGroupSummaries,
 	isMinionCombatant,
 } from '../utils/minionGrouping.js';
-import { MINION_GROUPING_MODE_NCS, shouldUseNcsTemporaryGroups } from '../utils/minionGroupingModes.js';
+import {
+	MINION_GROUPING_MODE_NCS,
+	shouldUseNcsTemporaryGroups,
+} from '../utils/minionGroupingModes.js';
 import {
 	createMinionGroupAttackSelectionState,
 	deriveDefaultMemberActionSelection,
@@ -1336,10 +1339,7 @@ function measureTargetListWidthPx(targetList: HTMLElement): number {
 	);
 	const measuredElements =
 		tokenButtons.length > 0
-			? tokenButtons.slice(
-					0,
-					Math.min(NCSW_PANEL_MAX_TARGETS_PER_ROW, tokenButtons.length),
-				)
+			? tokenButtons.slice(0, Math.min(NCSW_PANEL_MAX_TARGETS_PER_ROW, tokenButtons.length))
 			: [...targetList.children].filter(
 					(child): child is HTMLElement => child instanceof HTMLElement,
 				);
@@ -1719,9 +1719,7 @@ function clampGroupAttackPanelPositionWithinViewport(
 	);
 
 	return {
-		left: Math.round(
-			Math.max(NCSW_PANEL_VIEWPORT_MARGIN_PX, Math.min(maxLeft, left)),
-		),
+		left: Math.round(Math.max(NCSW_PANEL_VIEWPORT_MARGIN_PX, Math.min(maxLeft, left))),
 		top: Math.round(Math.max(NCSW_PANEL_VIEWPORT_MARGIN_PX, Math.min(maxTop, top))),
 	};
 }
@@ -2538,19 +2536,10 @@ function renderGroupAttackPanel(): void {
 			let left = actionBarRect.right + 12;
 			let top = actionBarRect.top;
 
-			if (
-				left + panelRect.width >
-				window.innerWidth - NCSW_PANEL_VIEWPORT_MARGIN_PX
-			) {
-				left = Math.max(
-					NCSW_PANEL_VIEWPORT_MARGIN_PX,
-					actionBarRect.left - panelRect.width - 12,
-				);
+			if (left + panelRect.width > window.innerWidth - NCSW_PANEL_VIEWPORT_MARGIN_PX) {
+				left = Math.max(NCSW_PANEL_VIEWPORT_MARGIN_PX, actionBarRect.left - panelRect.width - 12);
 			}
-			if (
-				top + panelRect.height >
-				window.innerHeight - NCSW_PANEL_VIEWPORT_MARGIN_PX
-			) {
+			if (top + panelRect.height > window.innerHeight - NCSW_PANEL_VIEWPORT_MARGIN_PX) {
 				top = Math.max(
 					NCSW_PANEL_VIEWPORT_MARGIN_PX,
 					window.innerHeight - panelRect.height - NCSW_PANEL_VIEWPORT_MARGIN_PX,
@@ -3699,4 +3688,3 @@ export default function registerMinionGroupTokenActions(): void {
 		scheduleActionBarRefresh('initial-ready');
 	}
 }
-

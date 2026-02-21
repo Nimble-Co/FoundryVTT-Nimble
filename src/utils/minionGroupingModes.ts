@@ -25,4 +25,3 @@ export function shouldShowTrackerGroupedStacksForCurrentUser(): boolean {
 export function shouldShowMinionGroupIdentityUiForCurrentUser(): boolean {
 	return false;
 }
-
