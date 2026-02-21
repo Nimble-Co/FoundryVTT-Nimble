@@ -314,19 +314,19 @@ describe('NimbleCombat', () => {
 		expect(combat.update).toHaveBeenCalledWith({ turn: 0 });
 	});
 
-	it('marks newly created groups as temporary in canvas lite mode', async () => {
-		const combatId = 'combat-canvas-lite-temporary-group';
+	it('marks newly created groups as temporary in ncs mode', async () => {
+		const combatId = 'combat-ncs-temporary-group';
 		const minionActorA = {
-			...createCombatActorFixture({ id: 'canvas-lite-minion-actor-a', hp: 1 }),
+			...createCombatActorFixture({ id: 'ncs-minion-actor-a', hp: 1 }),
 			type: 'minion',
 		} as unknown as Actor.Implementation;
 		const minionActorB = {
-			...createCombatActorFixture({ id: 'canvas-lite-minion-actor-b', hp: 1 }),
+			...createCombatActorFixture({ id: 'ncs-minion-actor-b', hp: 1 }),
 			type: 'minion',
 		} as unknown as Actor.Implementation;
 
 		const minionA = createMockCombatant({
-			id: 'canvas-lite-minion-a',
+			id: 'ncs-minion-a',
 			type: 'npc',
 			sort: 1,
 			isOwner: false,
@@ -335,7 +335,7 @@ describe('NimbleCombat', () => {
 			combatId,
 		});
 		const minionB = createMockCombatant({
-			id: 'canvas-lite-minion-b',
+			id: 'ncs-minion-b',
 			type: 'npc',
 			sort: 2,
 			isOwner: false,
@@ -358,7 +358,7 @@ describe('NimbleCombat', () => {
 		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
 		combat.update = vi.fn().mockResolvedValue(combat);
 
-		await combat.createMinionGroup(['canvas-lite-minion-a', 'canvas-lite-minion-b']);
+		await combat.createMinionGroup(['ncs-minion-a', 'ncs-minion-b']);
 
 		const updates = combat.updateEmbeddedDocuments.mock.calls[0][1] as Array<
 			Record<string, unknown>
@@ -373,19 +373,19 @@ describe('NimbleCombat', () => {
 		).toEqual(new Set([true]));
 	});
 
-	it('auto-dissolves grouped minions at round boundary in canvas lite mode', async () => {
-		const combatId = 'combat-canvas-lite-round-boundary';
+	it('auto-dissolves grouped minions at round boundary in ncs mode', async () => {
+		const combatId = 'combat-ncs-round-boundary';
 		const minionActorA = {
-			...createCombatActorFixture({ id: 'canvas-lite-round-minion-actor-a', hp: 1 }),
+			...createCombatActorFixture({ id: 'ncs-round-minion-actor-a', hp: 1 }),
 			type: 'minion',
 		} as unknown as Actor.Implementation;
 		const minionActorB = {
-			...createCombatActorFixture({ id: 'canvas-lite-round-minion-actor-b', hp: 1 }),
+			...createCombatActorFixture({ id: 'ncs-round-minion-actor-b', hp: 1 }),
 			type: 'minion',
 		} as unknown as Actor.Implementation;
 
 		const minionA = createMockCombatant({
-			id: 'canvas-lite-round-minion-a',
+			id: 'ncs-round-minion-a',
 			type: 'npc',
 			sort: 1,
 			isOwner: false,
@@ -394,7 +394,7 @@ describe('NimbleCombat', () => {
 			combatId,
 		});
 		const minionB = createMockCombatant({
-			id: 'canvas-lite-round-minion-b',
+			id: 'ncs-round-minion-b',
 			type: 'npc',
 			sort: 2,
 			isOwner: false,
@@ -406,7 +406,7 @@ describe('NimbleCombat', () => {
 		(minionA as unknown as { flags: Record<string, unknown> }).flags = {
 			nimble: {
 				minionGroup: {
-					id: 'canvas-lite-group-a',
+					id: 'ncs-group-a',
 					role: 'leader',
 					label: 'A',
 					labelIndex: 0,
@@ -417,7 +417,7 @@ describe('NimbleCombat', () => {
 		(minionB as unknown as { flags: Record<string, unknown> }).flags = {
 			nimble: {
 				minionGroup: {
-					id: 'canvas-lite-group-a',
+					id: 'ncs-group-a',
 					role: 'member',
 					label: 'A',
 					labelIndex: 0,
@@ -447,8 +447,8 @@ describe('NimbleCombat', () => {
 			Record<string, unknown>
 		>;
 		expect(dissolveUpdates).toEqual([
-			{ _id: 'canvas-lite-round-minion-a', 'flags.nimble.minionGroup': null },
-			{ _id: 'canvas-lite-round-minion-b', 'flags.nimble.minionGroup': null },
+			{ _id: 'ncs-round-minion-a', 'flags.nimble.minionGroup': null },
+			{ _id: 'ncs-round-minion-b', 'flags.nimble.minionGroup': null },
 		]);
 	});
 
@@ -1210,7 +1210,7 @@ describe('NimbleCombat', () => {
 		expect(result.endTurnApplied).toBe(true);
 	});
 
-	it('creates a single combined chat card for canvas lite group attacks', async () => {
+	it('creates a single combined chat card for ncs group attacks', async () => {
 		(
 			globals().game as unknown as {
 				settings?: { get: ReturnType<typeof vi.fn> };
@@ -1255,9 +1255,9 @@ describe('NimbleCombat', () => {
 			}
 		).CONFIG.sounds = { dice: 'dice' };
 
-		const combatId = 'combat-canvas-lite-group-attack-chat';
+		const combatId = 'combat-ncs-group-attack-chat';
 		const minionActorA = {
-			...createCombatActorFixture({ id: 'canvas-lite-group-attack-actor-a', hp: 1 }),
+			...createCombatActorFixture({ id: 'ncs-group-attack-actor-a', hp: 1 }),
 			type: 'minion',
 			items: [
 				{
@@ -1274,7 +1274,7 @@ describe('NimbleCombat', () => {
 			getRollData: vi.fn().mockReturnValue({}),
 		} as unknown as Actor.Implementation;
 		const minionActorB = {
-			...createCombatActorFixture({ id: 'canvas-lite-group-attack-actor-b', hp: 1 }),
+			...createCombatActorFixture({ id: 'ncs-group-attack-actor-b', hp: 1 }),
 			type: 'minion',
 			items: [
 				{
@@ -1292,7 +1292,7 @@ describe('NimbleCombat', () => {
 		} as unknown as Actor.Implementation;
 
 		const minionA = createMockCombatant({
-			id: 'canvas-lite-group-attack-a',
+			id: 'ncs-group-attack-a',
 			type: 'npc',
 			sort: 1,
 			isOwner: false,
@@ -1302,7 +1302,7 @@ describe('NimbleCombat', () => {
 			combatId,
 		});
 		const minionB = createMockCombatant({
-			id: 'canvas-lite-group-attack-b',
+			id: 'ncs-group-attack-b',
 			type: 'npc',
 			sort: 2,
 			isOwner: false,
@@ -1324,11 +1324,11 @@ describe('NimbleCombat', () => {
 			}
 		).user.targets = new Set([
 			{
-				id: 'canvas-lite-target-token',
+				id: 'ncs-target-token',
 				name: 'Target',
 				document: {
-					id: 'canvas-lite-target-token',
-					uuid: 'Scene.scene.Token.canvas-lite-target-token',
+					id: 'ncs-target-token',
+					uuid: 'Scene.scene.Token.ncs-target-token',
 				},
 			},
 		]);
@@ -1347,11 +1347,11 @@ describe('NimbleCombat', () => {
 
 		const result = await combat.performMinionGroupAttack({
 			groupId: '',
-			memberCombatantIds: ['canvas-lite-group-attack-a', 'canvas-lite-group-attack-b'],
-			targetTokenId: 'canvas-lite-target-token',
+			memberCombatantIds: ['ncs-group-attack-a', 'ncs-group-attack-b'],
+			targetTokenId: 'ncs-target-token',
 			selections: [
-				{ memberCombatantId: 'canvas-lite-group-attack-a', actionId: 'action-a' },
-				{ memberCombatantId: 'canvas-lite-group-attack-b', actionId: 'action-b' },
+				{ memberCombatantId: 'ncs-group-attack-a', actionId: 'action-a' },
+				{ memberCombatantId: 'ncs-group-attack-b', actionId: 'action-b' },
 			],
 			endTurn: false,
 		});
@@ -1366,7 +1366,7 @@ describe('NimbleCombat', () => {
 		const createdSystem = createdChatData.system as Record<string, unknown>;
 		expect(createdSystem.actorName).toBe('Selected Minions');
 		expect(createdSystem.targetName).toBe('Target');
-		expect(createdSystem.targets).toEqual(['Scene.scene.Token.canvas-lite-target-token']);
+		expect(createdSystem.targets).toEqual(['Scene.scene.Token.ncs-target-token']);
 		expect(createdSystem.totalDamage).toBe(result.totalDamage);
 		const createdRows = createdSystem.rows as Array<Record<string, unknown>>;
 		expect(createdRows).toHaveLength(2);
@@ -1374,8 +1374,8 @@ describe('NimbleCombat', () => {
 		expect(createdRows.map((row) => row.formula)).toEqual(['1d6', '1d6']);
 		expect(result.chatMessageId).toBe('group-attack-chat-1');
 		expect(result.rolledCombatantIds).toEqual([
-			'canvas-lite-group-attack-a',
-			'canvas-lite-group-attack-b',
+			'ncs-group-attack-a',
+			'ncs-group-attack-b',
 		]);
 		expect(
 			(minionActorA as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
@@ -1937,3 +1937,4 @@ describe('NimbleCombat', () => {
 		expect(source.update).not.toHaveBeenCalled();
 	});
 });
+
