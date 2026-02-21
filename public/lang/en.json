@@ -439,7 +439,7 @@
 			"skillPoints": "Skill Points",
 			"editSkillPoints": "Edit Skill Points",
 			"confirmSkillPointAssignments": "Confirm Skill Point Assignments",
-			"pointsRemaining": "({remainingSkillPoints} Points Remaining)",
+			"pointsRemaining": "{remainingSkillPoints} Points Remaining",
 			"maxSkillBonus": "Max skill bonus is +12.",
 			"onlyOneNewPointAndOneTransferAllowed": "Only 1 new point and 1 transfer are allowed per level-up.",
 			"reduceAnotherSkillFirstToAddSkillPoint": "Reduce another skill first to add a skill point.",
