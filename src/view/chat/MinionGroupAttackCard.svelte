@@ -130,10 +130,12 @@
 						<img
 							class="nimble-group-member-roll__member-image"
 							src={getMemberImage(row)}
-							alt={row.memberName ?? i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.memberFallback')}
+							alt={row.memberName ??
+								i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.memberFallback')}
 						/>
 						<span class="nimble-group-member-roll__member-name"
-							>{row.memberName ?? i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.memberFallback')}</span
+							>{row.memberName ??
+								i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.memberFallback')}</span
 						>
 					</div>
 
@@ -141,11 +143,13 @@
 						<img
 							class="nimble-group-member-roll__action-image"
 							src={getActionImage(row)}
-							alt={row.actionName ?? i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.actionFallback')}
+							alt={row.actionName ??
+								i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.actionFallback')}
 						/>
 						<div class="nimble-group-member-roll__action-details">
 							<span class="nimble-group-member-roll__action-name"
-								>{row.actionName ?? i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.actionFallback')}</span
+								>{row.actionName ??
+									i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.actionFallback')}</span
 							>
 							<span
 								class="nimble-group-member-roll__action-outcome"
@@ -327,4 +331,3 @@
 		border: 1px solid var(--nimble-card-border-color);
 	}
 </style>
-

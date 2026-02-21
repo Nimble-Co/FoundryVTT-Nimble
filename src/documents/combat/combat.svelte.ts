@@ -653,9 +653,7 @@ class NimbleCombat extends Combat {
 		});
 	}
 
-	async #assignNcsTemporaryGroupFromAttackMembers(
-		memberCombatantIds: string[],
-	): Promise<void> {
+	async #assignNcsTemporaryGroupFromAttackMembers(memberCombatantIds: string[]): Promise<void> {
 		if (!game.user?.isGM) return;
 
 		const scopedMemberIds = [
@@ -2014,4 +2012,3 @@ class NimbleCombat extends Combat {
 }
 
 export { NimbleCombat };
-
