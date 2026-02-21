@@ -30,6 +30,11 @@ export const DEFAULT_PAGE_LIMIT = 100;
 export const MAX_PAGE_LIMIT = 100;
 
 /**
+ * Folder path for storing downloaded monster images
+ */
+export const NIMBLE_NEXUS_IMAGE_FOLDER = 'nimble-nexus/monsters';
+
+/**
  * Map API save stat abbreviations to FoundryVTT full names
  */
 export const SAVE_STAT_MAP: Record<SaveStat, FoundrySaveStat> = {
@@ -90,14 +95,26 @@ export const DEFAULT_FEATURE_ICONS: Record<string, string> = {
 export const DEFAULT_ACTOR_IMAGE = 'icons/svg/mystery-man.svg';
 
 /**
- * Get full image URL from paperforge relative path
- * The API returns paths like "/paperforge/0006/portrait.png" but
- * actual files are stored as "100.png" on the storage bucket
+ * Get preview image URL (100x100) for monster list display
+ * The API returns paths like "/paperforge/0006/portrait.png"
+ */
+export function getMonsterPreviewImageUrl(paperforgeImageUrl?: string): string {
+	if (!paperforgeImageUrl) return DEFAULT_ACTOR_IMAGE;
+	const correctedPath = paperforgeImageUrl.replace('portrait.png', '100.png');
+	return `${NIMBLE_NEXUS_STORAGE_URL}${correctedPath}`;
+}
+
+/**
+ * Get full image URL (400x400) for imported actor
+ * The API returns paths like "/paperforge/0006/portrait.png"
+ *
+ * NOTE: The storage bucket doesn't have CORS headers, so:
+ * - Portrait images will work (HTML img tags ignore CORS)
+ * - Token images won't work on canvas (requires fetch which enforces CORS)
  */
 export function getMonsterImageUrl(paperforgeImageUrl?: string): string {
 	if (!paperforgeImageUrl) return DEFAULT_ACTOR_IMAGE;
-	// Replace portrait.png with 100.png (the actual filename in storage)
-	const correctedPath = paperforgeImageUrl.replace('portrait.png', '100.png');
+	const correctedPath = paperforgeImageUrl.replace('portrait.png', '400.png');
 	return `${NIMBLE_NEXUS_STORAGE_URL}${correctedPath}`;
 }
 
@@ -117,3 +134,108 @@ export function levelToString(level: number | string): string {
 	if (typeof level === 'string') return level;
 	return String(level);
 }
+
+/**
+ * Map damage type strings (case-insensitive) to canonical FoundryVTT damage types
+ */
+export const DAMAGE_TYPE_MAP: Record<string, string> = {
+	// Standard damage types
+	acid: 'acid',
+	bludgeoning: 'bludgeoning',
+	cold: 'cold',
+	fire: 'fire',
+	force: 'force',
+	lightning: 'lightning',
+	necrotic: 'necrotic',
+	piercing: 'piercing',
+	poison: 'poison',
+	psychic: 'psychic',
+	radiant: 'radiant',
+	slashing: 'slashing',
+	thunder: 'thunder',
+	// Common abbreviations/variations
+	blunt: 'bludgeoning',
+	electric: 'lightning',
+	holy: 'radiant',
+	unholy: 'necrotic',
+	magic: 'force',
+	physical: 'bludgeoning',
+};
+
+/**
+ * Map save abbreviations to full FoundryVTT save types
+ */
+export const SAVE_TYPE_ABBREVIATION_MAP: Record<
+	string,
+	'strength' | 'dexterity' | 'intelligence' | 'will'
+> = {
+	str: 'strength',
+	strength: 'strength',
+	dex: 'dexterity',
+	dexterity: 'dexterity',
+	int: 'intelligence',
+	intelligence: 'intelligence',
+	wil: 'will',
+	will: 'will',
+	wis: 'will', // Common alternative
+	wisdom: 'will', // Common alternative
+};
+
+/**
+ * Map condition names (case-insensitive) to canonical FoundryVTT condition names
+ */
+export const CONDITION_MAP: Record<string, string> = {
+	blinded: 'blinded',
+	bloodied: 'bloodied',
+	charged: 'charged',
+	charmed: 'charmed',
+	concentration: 'concentration',
+	confused: 'confused',
+	dazed: 'dazed',
+	dead: 'dead',
+	despair: 'despair',
+	distracted: 'distracted',
+	dying: 'dying',
+	frightened: 'frightened',
+	grappled: 'grappled',
+	hampered: 'hampered',
+	incapacitated: 'incapacitated',
+	invisible: 'invisible',
+	paralyzed: 'paralyzed',
+	petrified: 'petrified',
+	poisoned: 'poisoned',
+	prone: 'prone',
+	restrained: 'restrained',
+	riding: 'riding',
+	silenced: 'silenced',
+	slowed: 'slowed',
+	stunned: 'stunned',
+	smoldering: 'smoldering',
+	taunted: 'taunted',
+	unconscious: 'unconscious',
+	wounded: 'wounded',
+	// Common variations/abbreviations
+	blind: 'blinded',
+	charm: 'charmed',
+	confuse: 'confused',
+	daze: 'dazed',
+	fear: 'frightened',
+	feared: 'frightened',
+	frighten: 'frightened',
+	grapple: 'grappled',
+	grabbed: 'grappled',
+	grab: 'grappled',
+	paralyze: 'paralyzed',
+	paralyses: 'paralyzed',
+	paralysis: 'paralyzed',
+	petrify: 'petrified',
+	petrifies: 'petrified',
+	petrification: 'petrified',
+	poison: 'poisoned',
+	restrain: 'restrained',
+	silence: 'silenced',
+	slow: 'slowed',
+	stun: 'stunned',
+	stuns: 'stunned',
+	taunt: 'taunted',
+};

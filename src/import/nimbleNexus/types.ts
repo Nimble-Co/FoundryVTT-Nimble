@@ -215,3 +215,50 @@ export interface ImportOptions {
  * Actor type determination
  */
 export type ActorType = 'npc' | 'soloMonster' | 'minion';
+
+/**
+ * Save type for parsed data
+ */
+export type ParsedSaveType = 'strength' | 'dexterity' | 'intelligence' | 'will';
+
+/**
+ * Parsed saving throw information from action description
+ */
+export interface ParsedSavingThrow {
+	dc: number;
+	saveType: ParsedSaveType;
+	consequence?: string;
+	halfOnSave: boolean;
+}
+
+/**
+ * Context in which a condition applies
+ */
+export type ConditionContext = 'hit' | 'failedSave' | 'criticalHit' | 'damage';
+
+/**
+ * Parsed condition information from action description
+ */
+export interface ParsedCondition {
+	condition: string;
+	context: ConditionContext;
+	escapeDC?: number;
+	escapeType?: ParsedSaveType;
+}
+
+/**
+ * Parsed damage information from action
+ */
+export interface ParsedDamage {
+	formula: string;
+	damageType: string;
+}
+
+/**
+ * Parsed range/reach information
+ */
+export interface ParsedRangeReach {
+	type: 'reach' | 'range' | 'cone' | 'line' | 'burst';
+	distance: number;
+	width?: number;
+}
