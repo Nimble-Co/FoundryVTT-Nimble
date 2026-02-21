@@ -26,7 +26,6 @@ import {
 	MINION_GROUP_ROLE_PATH,
 	MINION_GROUP_TEMPORARY_PATH,
 } from '../../utils/minionGrouping.js';
-import { shouldUseCanvasLiteTemporaryGroups } from '../../utils/minionGroupingModes.js';
 import { DamageRoll } from '../../dice/DamageRoll.js';
 
 const MINION_GROUP_COUNTER_NEXT_LABEL_INDEX_PATH = 'flags.nimble.minionGrouping.nextLabelIndex';
@@ -50,6 +49,7 @@ interface MinionGroupAttackParams {
 	groupId: string;
 	memberCombatantIds?: string[];
 	targetTokenId: string;
+	targetTokenIds?: string[];
 	selections: MinionGroupAttackSelection[];
 	endTurn?: boolean;
 }
@@ -73,6 +73,7 @@ interface MinionGroupAttackResult {
 interface ItemLike {
 	id?: string;
 	name?: string;
+	img?: string;
 	system?: {
 		activation?: {
 			effects?: unknown[];
@@ -91,11 +92,29 @@ interface ActorWithActivateItem {
 interface MinionGroupAttackRollEntry {
 	memberCombatantId: string;
 	memberName: string;
+	memberImage: string | null;
 	actionId: string;
 	actionName: string;
+	actionImage: string | null;
 	formula: string;
 	totalDamage: number;
 	isMiss: boolean;
+	rollData: Record<string, unknown> | null;
+}
+
+function getCombatantImage(combatant: Combatant.Implementation): string | null {
+	const tokenTextureSource = (combatant.token as unknown as { texture?: { src?: string } } | null)
+		?.texture?.src;
+	if (typeof tokenTextureSource === 'string' && tokenTextureSource.trim().length > 0) {
+		return tokenTextureSource.trim();
+	}
+
+	const combatantImage = (combatant as unknown as { img?: string }).img;
+	if (typeof combatantImage === 'string' && combatantImage.trim().length > 0) {
+		return combatantImage.trim();
+	}
+
+	return null;
 }
 
 function getCombatantManualSortValue(combatant: Combatant.Implementation): number {
@@ -131,7 +150,9 @@ function getSourceSortValueForDrop(
 }
 
 function logMinionGroupingCombat(message: string, details: Record<string, unknown> = {}) {
-	if ((globalThis as Record<string, unknown>).NIMBLE_DISABLE_GROUP_LOGS === true) return;
+	const globals = globalThis as Record<string, unknown>;
+	if (globals.NIMBLE_ENABLE_GROUP_LOGS !== true) return;
+	if (globals.NIMBLE_DISABLE_GROUP_LOGS === true) return;
 	// eslint-disable-next-line no-console
 	console.info(`[Nimble][MinionGrouping][Combat] ${message}`, details);
 }
@@ -205,6 +226,27 @@ function getCombatantCurrentActions(combatant: Combatant.Implementation): number
 function getTargetTokenName(targetTokenId: string): string {
 	if (!targetTokenId) return 'Unknown Target';
 
+	const selectedTargets = Array.from(game.user?.targets ?? []);
+	const selectedTargetMatch =
+		selectedTargets.find((target) => {
+			const token = target as {
+				id?: string;
+				name?: string;
+				document?: { id?: string; name?: string };
+			};
+			return token.id === targetTokenId || token.document?.id === targetTokenId;
+		}) ?? null;
+	if (selectedTargetMatch) {
+		const selectedTarget = selectedTargetMatch as {
+			name?: string;
+			document?: { name?: string };
+		};
+		const selectedName = selectedTarget.name ?? selectedTarget.document?.name ?? null;
+		if (typeof selectedName === 'string' && selectedName.trim().length > 0) {
+			return selectedName.trim();
+		}
+	}
+
 	const canvasRef = (
 		globalThis as {
 			canvas?: {
@@ -229,96 +271,53 @@ function getTargetTokenName(targetTokenId: string): string {
 	return targetToken?.name ?? targetToken?.document?.name ?? 'Unknown Target';
 }
 
-function escapeHtml(value: string): string {
-	return value
-		.replaceAll('&', '&amp;')
-		.replaceAll('<', '&lt;')
-		.replaceAll('>', '&gt;')
-		.replaceAll('"', '&quot;')
-		.replaceAll("'", '&#039;');
-}
+function getTargetTokenUuid(targetTokenId: string): string | null {
+	if (!targetTokenId) return null;
 
-function buildMinionGroupAttackChatContent(params: {
-	groupLabel: string | null;
-	targetName: string;
-	rollEntries: MinionGroupAttackRollEntry[];
-	totalDamage: number;
-	skippedMembers: MinionGroupAttackSkippedMember[];
-	unsupportedWarnings: string[];
-}): string {
-	const groupedByAction = new Map<
-		string,
-		{
-			actionName: string;
-			formula: string;
-			entries: MinionGroupAttackRollEntry[];
+	const selectedTargets = Array.from(game.user?.targets ?? []);
+	const selectedTargetMatch =
+		selectedTargets.find((target) => {
+			const token = target as {
+				id?: string;
+				document?: { id?: string; uuid?: string };
+				uuid?: string;
+			};
+			return token.id === targetTokenId || token.document?.id === targetTokenId;
+		}) ?? null;
+	if (selectedTargetMatch) {
+		const selectedTarget = selectedTargetMatch as {
+			document?: { uuid?: string };
+			uuid?: string;
+		};
+		const selectedTargetUuid = selectedTarget.document?.uuid ?? selectedTarget.uuid ?? null;
+		if (typeof selectedTargetUuid === 'string' && selectedTargetUuid.trim().length > 0) {
+			return selectedTargetUuid.trim();
 		}
-	>();
-
-	for (const entry of params.rollEntries) {
-		const key = `${entry.actionId}:${entry.formula}`;
-		const existing = groupedByAction.get(key);
-		if (existing) {
-			existing.entries.push(entry);
-			continue;
-		}
-		groupedByAction.set(key, {
-			actionName: entry.actionName,
-			formula: entry.formula,
-			entries: [entry],
-		});
 	}
 
-	const rowHtml = [...groupedByAction.values()]
-		.sort((left, right) => left.actionName.localeCompare(right.actionName))
-		.map((groupedAction) => {
-			const rollBreakdown = groupedAction.entries
-				.map((entry) => {
-					const escapedMemberName = escapeHtml(entry.memberName);
-					return `${escapedMemberName}: ${entry.isMiss ? 'Miss' : entry.totalDamage}`;
-				})
-				.join(', ');
-			const subtotal = groupedAction.entries.reduce((sum, entry) => sum + entry.totalDamage, 0);
-			return `<tr>
-				<td>${escapeHtml(groupedAction.actionName)}</td>
-				<td>${escapeHtml(groupedAction.formula)}</td>
-				<td>${rollBreakdown}</td>
-				<td>${subtotal}</td>
-			</tr>`;
-		})
-		.join('');
+	const canvasRef = (
+		globalThis as {
+			canvas?: {
+				tokens?: {
+					get?: (tokenId: string) => { document?: { uuid?: string } } | null;
+					placeables?: Array<{
+						id?: string;
+						document?: { id?: string; uuid?: string };
+					}>;
+				};
+			};
+		}
+	).canvas;
 
-	const skippedSummary =
-		params.skippedMembers.length > 0
-			? `<p><strong>Skipped:</strong> ${params.skippedMembers.length}</p>`
-			: '';
-	const warningSummary =
-		params.unsupportedWarnings.length > 0
-			? `<p><strong>Warnings:</strong> ${params.unsupportedWarnings.length}</p>`
-			: '';
+	const tokenById = canvasRef?.tokens?.get?.(targetTokenId) ?? null;
+	if (tokenById?.document?.uuid) return tokenById.document.uuid;
 
-	const groupLabelText = params.groupLabel?.trim()
-		? `Minion Group ${escapeHtml(params.groupLabel.trim().toUpperCase())}`
-		: 'Selected Minions';
+	const placeableById =
+		canvasRef?.tokens?.placeables?.find(
+			(placeable) => placeable.id === targetTokenId || placeable.document?.id === targetTokenId,
+		) ?? null;
 
-	return `<section class="nimble-minion-group-attack-chat">
-		<h3>${groupLabelText} Attack</h3>
-		<p><strong>Target:</strong> ${escapeHtml(params.targetName)}</p>
-		<p><strong>Total Damage:</strong> ${params.totalDamage}</p>
-		<table>
-			<thead>
-				<tr>
-					<th>Action</th>
-					<th>Roll</th>
-					<th>Members</th>
-					<th>Damage</th>
-				</tr>
-			</thead>
-			<tbody>${rowHtml}</tbody>
-		</table>
-		${skippedSummary}
-		${warningSummary}
-	</section>`;
+	return placeableById?.document?.uuid ?? null;
 }
 
 class NimbleCombat extends Combat {
@@ -453,6 +452,7 @@ class NimbleCombat extends Combat {
 
 	async #createCanvasLiteGroupAttackChatMessage(params: {
 		groupLabel: string | null;
+		targetTokenIds: string[];
 		targetName: string;
 		rollEntries: MinionGroupAttackRollEntry[];
 		totalDamage: number;
@@ -469,6 +469,14 @@ class NimbleCombat extends Combat {
 		const speakerAlias = params.groupLabel?.trim()
 			? `Minion Group ${params.groupLabel.trim().toUpperCase()}`
 			: 'Selected Minions';
+		const speakerImage =
+			(speakerCombatant ? getCombatantImage(speakerCombatant) : null) ?? 'icons/svg/cowled.svg';
+		const speakerPermissions = Number(
+			(speakerCombatant?.actor as unknown as { permission?: number } | null)?.permission ?? 0,
+		);
+		const targetUuids = params.targetTokenIds
+			.map((targetTokenId) => getTargetTokenUuid(targetTokenId))
+			.filter((uuid): uuid is string => typeof uuid === 'string' && uuid.length > 0);
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${speakerAlias} attacks ${params.targetName}`,
@@ -480,14 +488,40 @@ class NimbleCombat extends Combat {
 			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 			sound: CONFIG.sounds.dice,
 			rollMode: game.settings.get('core', 'rollMode'),
-			content: buildMinionGroupAttackChatContent({
-				groupLabel: params.groupLabel,
+			flags: {
+				nimble: {
+					chatCardType: 'minionGroupAttack',
+				},
+			},
+			system: {
+				actorName: speakerAlias,
+				actorType: speakerCombatant?.actor?.type ?? 'minion',
+				image: speakerImage,
+				permissions: Number.isFinite(speakerPermissions) ? speakerPermissions : 0,
+				rollMode: 0,
+				targets: targetUuids,
+				groupLabel: params.groupLabel ?? '',
 				targetName: params.targetName,
-				rollEntries: params.rollEntries,
 				totalDamage: params.totalDamage,
-				skippedMembers: params.skippedMembers,
-				unsupportedWarnings: params.unsupportedWarnings,
-			}),
+				rows: params.rollEntries.map((entry) => ({
+					memberCombatantId: entry.memberCombatantId,
+					memberName: entry.memberName,
+					memberImage: entry.memberImage,
+					actionId: entry.actionId,
+					actionName: entry.actionName,
+					actionImage: entry.actionImage,
+					formula: entry.formula,
+					totalDamage: entry.totalDamage,
+					isMiss: entry.isMiss,
+					roll: entry.rollData,
+				})),
+				skippedMembers: params.skippedMembers.map((member) => ({
+					combatantId: member.combatantId,
+					reason: member.reason,
+				})),
+				unsupportedWarnings: [...params.unsupportedWarnings],
+			},
+			content: '',
 			type: 'base',
 		};
 		ChatMessage.applyRollMode(
@@ -554,27 +588,11 @@ class NimbleCombat extends Combat {
 	}
 
 	#shouldCreateTemporaryMinionGroups(): boolean {
-		return shouldUseCanvasLiteTemporaryGroups();
+		return true;
 	}
 
 	#getRoundBoundaryGroupIdsToDissolve(): string[] {
-		const groupedSummaries = getMinionGroupSummaries(this.combatants.contents);
-		if (groupedSummaries.size === 0) return [];
-
-		const dissolveAllGroupsForRoundBoundary = this.#shouldCreateTemporaryMinionGroups();
-		const groupIds: string[] = [];
-
-		for (const summary of groupedSummaries.values()) {
-			if (dissolveAllGroupsForRoundBoundary) {
-				groupIds.push(summary.id);
-				continue;
-			}
-
-			const isTemporaryGroup = summary.members.some((member) => isMinionGroupTemporary(member));
-			if (isTemporaryGroup) groupIds.push(summary.id);
-		}
-
-		return [...new Set(groupIds)];
+		return [...getMinionGroupSummaries(this.combatants.contents).keys()];
 	}
 
 	async #dissolveRoundBoundaryMinionGroups(): Promise<void> {
@@ -587,9 +605,90 @@ class NimbleCombat extends Combat {
 		logMinionGroupingCombat('dissolved round-boundary minion groups', {
 			combatId: this.id ?? null,
 			groupIds: groupIdsToDissolve,
-			reason: this.#shouldCreateTemporaryMinionGroups()
-				? 'canvasLiteModeRoundBoundary'
-				: 'temporaryGroupRoundBoundary',
+			reason: 'canvasLiteModeRoundBoundary',
+		});
+	}
+
+	async #assignCanvasLiteTemporaryGroupFromAttackMembers(
+		memberCombatantIds: string[],
+	): Promise<void> {
+		if (!game.user?.isGM) return;
+
+		const scopedMemberIds = [
+			...new Set(
+				memberCombatantIds
+					.map((memberCombatantId) => memberCombatantId?.trim() ?? '')
+					.filter((memberCombatantId): memberCombatantId is string => memberCombatantId.length > 0),
+			),
+		];
+		if (scopedMemberIds.length < 2) return;
+
+		const scopedMembers = this.#resolveCombatantsByIds(scopedMemberIds).filter(
+			(member) => isMinionCombatant(member) && !isCombatantDead(member),
+		);
+		if (scopedMembers.length < 2) return;
+
+		const groupedScopedMemberIds = scopedMembers
+			.map((member) => (isMinionGrouped(member) ? member.id : null))
+			.filter(
+				(memberId): memberId is string => typeof memberId === 'string' && memberId.length > 0,
+			);
+
+		if (groupedScopedMemberIds.length > 0) {
+			await this.removeMinionsFromGroups(groupedScopedMemberIds);
+		}
+
+		const refreshedMembers = this.#resolveCombatantsByIds(scopedMemberIds).filter(
+			(member) => isMinionCombatant(member) && !isCombatantDead(member),
+		);
+		if (refreshedMembers.length < 2) return;
+
+		const orderedMembers = this.#sortCombatantsByCurrentTurnOrder(refreshedMembers);
+		const leader = orderedMembers[0];
+		if (!leader?.id) return;
+
+		const previousActiveCombatantId = this.combatant?.id;
+		const temporaryGroupId = foundry.utils.randomID();
+		const sharedInitiative = Number(leader.initiative ?? 0);
+		const sharedSort = getCombatantManualSortValue(leader);
+
+		const updates = orderedMembers.reduce<Record<string, unknown>[]>((acc, member, memberIndex) => {
+			if (!member.id) return acc;
+
+			acc.push({
+				_id: member.id,
+				[MINION_GROUP_ID_PATH]: temporaryGroupId,
+				[MINION_GROUP_ROLE_PATH]: member.id === leader.id ? 'leader' : 'member',
+				[MINION_GROUP_MEMBER_NUMBER_PATH]: memberIndex + 1,
+				[MINION_GROUP_TEMPORARY_PATH]: true,
+				initiative: sharedInitiative,
+				'system.sort': sharedSort,
+			});
+			return acc;
+		}, []);
+		if (updates.length === 0) return;
+
+		await this.updateEmbeddedDocuments('Combatant', updates);
+		this.turns = this.setupTurns();
+
+		const regroupedIds = new Set(
+			orderedMembers
+				.map((member) => member.id)
+				.filter((memberId): memberId is string => typeof memberId === 'string'),
+		);
+		const desiredActiveId =
+			previousActiveCombatantId && regroupedIds.has(previousActiveCombatantId)
+				? leader.id
+				: previousActiveCombatantId;
+		await this.#syncTurnToCombatant(desiredActiveId, { persist: false });
+
+		logMinionGroupingCombat('assigned canvas-lite temporary attack group', {
+			combatId: this.id ?? null,
+			groupId: temporaryGroupId,
+			leaderId: leader.id,
+			memberIds: orderedMembers.map((member) => member.id),
+			sharedInitiative,
+			sharedSort,
 		});
 	}
 
@@ -1289,9 +1388,23 @@ class NimbleCombat extends Combat {
 			),
 		];
 		const normalizedTargetTokenId = params.targetTokenId?.trim() ?? '';
+		const normalizedTargetTokenIds = [
+			...new Set(
+				(params.targetTokenIds ?? [])
+					.map((targetTokenId) => targetTokenId?.trim() ?? '')
+					.filter((targetTokenId): targetTokenId is string => targetTokenId.length > 0),
+			),
+		];
+		if (
+			normalizedTargetTokenId.length > 0 &&
+			!normalizedTargetTokenIds.includes(normalizedTargetTokenId)
+		) {
+			normalizedTargetTokenIds.unshift(normalizedTargetTokenId);
+		}
+		const primaryTargetTokenId = normalizedTargetTokenIds[0] ?? normalizedTargetTokenId;
 		const result: MinionGroupAttackResult = {
 			groupId: normalizedGroupId,
-			targetTokenId: normalizedTargetTokenId,
+			targetTokenId: primaryTargetTokenId,
 			rolledCombatantIds: [],
 			skippedMembers: [],
 			unsupportedSelectionWarnings: [],
@@ -1304,7 +1417,8 @@ class NimbleCombat extends Combat {
 			combatId: this.id ?? null,
 			groupId: normalizedGroupId,
 			memberCombatantIds: normalizedMemberCombatantIds,
-			targetTokenId: normalizedTargetTokenId,
+			targetTokenId: primaryTargetTokenId,
+			targetTokenIds: normalizedTargetTokenIds,
 			selectionCount: params.selections.length,
 			requestedEndTurn: params.endTurn === true,
 		});
@@ -1315,32 +1429,38 @@ class NimbleCombat extends Combat {
 		}
 		const hasAttackMemberScope =
 			normalizedGroupId.length > 0 || normalizedMemberCombatantIds.length > 0;
-		if (!hasAttackMemberScope || !normalizedTargetTokenId) {
-			logMinionGroupingCombat(
-				'performMinionGroupAttack blocked because member scope or targetTokenId is missing',
-				{
-					groupId: normalizedGroupId,
-					memberCombatantIds: normalizedMemberCombatantIds,
-					targetTokenId: normalizedTargetTokenId,
-				},
-			);
+		if (!hasAttackMemberScope) {
+			logMinionGroupingCombat('performMinionGroupAttack blocked because member scope is missing', {
+				groupId: normalizedGroupId,
+				memberCombatantIds: normalizedMemberCombatantIds,
+				targetTokenId: primaryTargetTokenId,
+				targetTokenIds: normalizedTargetTokenIds,
+			});
 			return result;
 		}
 
 		const selectedTargetIds = Array.from(game.user?.targets ?? [])
 			.map((targetToken) => targetToken?.id ?? targetToken?.document?.id ?? '')
 			.filter((targetId): targetId is string => targetId.length > 0);
-		if (selectedTargetIds.length !== 1 || selectedTargetIds[0] !== normalizedTargetTokenId) {
+		if (selectedTargetIds.length < 1) {
 			logMinionGroupingCombat(
-				'performMinionGroupAttack blocked because a single matching target is required',
+				'performMinionGroupAttack blocked because at least one target is required',
 				{
 					groupId: normalizedGroupId,
-					requiredTargetTokenId: normalizedTargetTokenId,
 					selectedTargetIds,
 				},
 			);
 			return result;
 		}
+		const requestedTargetTokenIds =
+			normalizedTargetTokenIds.length > 0 ? normalizedTargetTokenIds : selectedTargetIds;
+		const resolvedTargetTokenIds = requestedTargetTokenIds.filter((targetTokenId) =>
+			selectedTargetIds.includes(targetTokenId),
+		);
+		const activeTargetTokenIds =
+			resolvedTargetTokenIds.length > 0 ? resolvedTargetTokenIds : selectedTargetIds;
+		const activePrimaryTargetTokenId = activeTargetTokenIds[0] ?? '';
+		result.targetTokenId = activePrimaryTargetTokenId;
 
 		const groupSummary =
 			normalizedGroupId.length > 0
@@ -1365,8 +1485,6 @@ class NimbleCombat extends Combat {
 			if (!memberId) return false;
 			return allMembers.findIndex((candidate) => candidate.id === memberId) === index;
 		});
-		const isCanvasLiteMode = shouldUseCanvasLiteTemporaryGroups();
-
 		const selectionsByMemberId = new Map<string, string>();
 		for (const selection of params.selections) {
 			const memberCombatantId = selection.memberCombatantId?.trim() ?? '';
@@ -1415,61 +1533,46 @@ class NimbleCombat extends Combat {
 				);
 			}
 
-			if (isCanvasLiteMode) {
+			try {
 				const formula = getPrimaryDamageFormula(selectedAction);
 				if (!formula) {
 					result.skippedMembers.push({ combatantId: memberId, reason: 'noDamageFormula' });
 					continue;
 				}
 
-				try {
-					const rollData =
-						typeof actor.getRollData === 'function' ? actor.getRollData(selectedAction) : {};
-					const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, {
-						canCrit: false,
-						canMiss: true,
-						rollMode: 0,
-						primaryDieValue: 0,
-						primaryDieModifier: 0,
-					});
-					await damageRoll.evaluate();
-					const totalDamage = Number(damageRoll.total ?? 0);
-					const normalizedTotalDamage = Number.isFinite(totalDamage) ? Math.max(0, totalDamage) : 0;
+				const rollData =
+					typeof actor.getRollData === 'function' ? actor.getRollData(selectedAction) : {};
+				const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, {
+					canCrit: false,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				});
+				await damageRoll.evaluate();
+				const isMiss = Boolean(damageRoll.isMiss);
+				const totalDamage = Number(damageRoll.total ?? 0);
+				const normalizedTotalDamage = isMiss
+					? 0
+					: Number.isFinite(totalDamage)
+						? Math.max(0, totalDamage)
+						: 0;
 
-					rollEntries.push({
-						memberCombatantId: memberId,
-						memberName: member.name ?? memberId,
-						actionId: selectedActionId,
-						actionName: selectedAction.name ?? selectedActionId,
-						formula,
-						totalDamage: normalizedTotalDamage,
-						isMiss: Boolean(damageRoll.isMiss),
-					});
-					result.rolledCombatantIds.push(memberId);
-					actionUpdates.push({
-						_id: memberId,
-						'system.actions.base.current': Math.max(0, currentActions - 1),
-					});
-				} catch (error) {
-					logMinionGroupingCombat('performMinionGroupAttack member activation failed', {
-						combatId: this.id ?? null,
-						groupId: normalizedGroupId,
-						memberCombatantId: memberId,
-						actionId: selectedActionId,
-						error,
-					});
-					result.skippedMembers.push({ combatantId: memberId, reason: 'activationFailed' });
-				}
-				continue;
-			}
-
-			if (!actor.activateItem) {
-				result.skippedMembers.push({ combatantId: memberId, reason: 'actorCannotActivate' });
-				continue;
-			}
-
-			try {
-				await actor.activateItem(selectedActionId, { fastForward: true });
+				rollEntries.push({
+					memberCombatantId: memberId,
+					memberName: member.name ?? memberId,
+					memberImage: getCombatantImage(member),
+					actionId: selectedActionId,
+					actionName: selectedAction.name ?? selectedActionId,
+					actionImage:
+						typeof selectedAction.img === 'string' && selectedAction.img.trim().length > 0
+							? selectedAction.img.trim()
+							: null,
+					formula,
+					totalDamage: normalizedTotalDamage,
+					isMiss,
+					rollData: damageRoll.toJSON() as Record<string, unknown>,
+				});
 				result.rolledCombatantIds.push(memberId);
 				actionUpdates.push({
 					_id: memberId,
@@ -1491,12 +1594,24 @@ class NimbleCombat extends Combat {
 			await this.updateEmbeddedDocuments('Combatant', actionUpdates);
 		}
 
-		if (isCanvasLiteMode && rollEntries.length > 0) {
+		if (result.rolledCombatantIds.length > 0) {
+			await this.#assignCanvasLiteTemporaryGroupFromAttackMembers(
+				attackMembers
+					.map((member) => member.id)
+					.filter((memberId): memberId is string => typeof memberId === 'string'),
+			);
+		}
+
+		if (rollEntries.length > 0) {
 			const totalDamage = rollEntries.reduce((sum, entry) => sum + entry.totalDamage, 0);
 			result.totalDamage = totalDamage;
-			const targetName = getTargetTokenName(normalizedTargetTokenId);
+			const targetName =
+				activeTargetTokenIds.length === 1
+					? getTargetTokenName(activeTargetTokenIds[0])
+					: `${activeTargetTokenIds.length} targets`;
 			const chatCard = await this.#createCanvasLiteGroupAttackChatMessage({
 				groupLabel: groupSummary?.label ?? null,
+				targetTokenIds: activeTargetTokenIds,
 				targetName,
 				rollEntries,
 				totalDamage,
@@ -1537,7 +1652,8 @@ class NimbleCombat extends Combat {
 		logMinionGroupingCombat('performMinionGroupAttack completed', {
 			combatId: this.id ?? null,
 			groupId: normalizedGroupId,
-			targetTokenId: normalizedTargetTokenId,
+			targetTokenId: result.targetTokenId,
+			targetTokenIds: activeTargetTokenIds,
 			rolledCombatantIds: result.rolledCombatantIds,
 			skippedMembers: result.skippedMembers,
 			unsupportedSelectionWarnings: result.unsupportedSelectionWarnings,

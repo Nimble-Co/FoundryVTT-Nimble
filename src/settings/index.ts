@@ -1,11 +1,4 @@
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
-import {
-	MINION_GROUPING_MODE_CANVAS_LITE,
-	MINION_GROUPING_MODE_CANVAS_PERSISTENT,
-	MINION_GROUPING_MODE_FULL,
-	MINION_GROUPING_MODE_SETTING_KEY,
-	MINION_GROUPING_SHOW_IDENTITY_IN_CANVAS_PERSISTENT_SETTING_KEY,
-} from '../utils/minionGroupingModes.js';
 import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
 
 export const settings = [];
@@ -38,37 +31,6 @@ export default function registerSystemSettings() {
 	);
 
 	registerCombatTrackerSettings();
-
-	game.settings.register(
-		'nimble' as 'core',
-		MINION_GROUPING_MODE_SETTING_KEY as 'rollMode',
-		{
-			name: 'Minion Grouping Mode',
-			hint: 'Choose how the GM manages minion grouping: full tracker + canvas controls, canvas-only persistent groups, or canvas-only temporary groups that auto-dissolve each round.',
-			scope: 'world',
-			config: true,
-			type: String,
-			choices: {
-				[MINION_GROUPING_MODE_FULL]: 'Full (Tracker + Canvas + Identity UI)',
-				[MINION_GROUPING_MODE_CANVAS_PERSISTENT]: 'Canvas Persistent (Canvas-only, groups persist)',
-				[MINION_GROUPING_MODE_CANVAS_LITE]: 'Canvas Lite (Canvas-only, temporary groups by round)',
-			},
-			default: MINION_GROUPING_MODE_FULL,
-		} as unknown as Parameters<typeof game.settings.register>[2],
-	);
-
-	game.settings.register(
-		'nimble' as 'core',
-		MINION_GROUPING_SHOW_IDENTITY_IN_CANVAS_PERSISTENT_SETTING_KEY as 'rollMode',
-		{
-			name: 'Show Group Identity UI In Canvas Persistent Mode',
-			hint: 'When enabled, GM-only group identity markers (tracker badges/popover accents and token G# tags) remain visible in Canvas Persistent mode.',
-			scope: 'world',
-			config: true,
-			type: Boolean,
-			default: false,
-		} as unknown as Parameters<typeof game.settings.register>[2],
-	);
 
 	game.settings.register(
 		'nimble' as 'core',

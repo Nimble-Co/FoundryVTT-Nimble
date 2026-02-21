@@ -13,6 +13,7 @@ export interface MinionGroupAttackOption {
 	actionId: string;
 	label: string;
 	rollFormula: string | null;
+	description?: string | null;
 	unsupportedReasons: string[];
 }
 
@@ -63,15 +64,16 @@ export function deriveDefaultMemberActionSelection(
 ): string | null {
 	const options = member.actionOptions;
 	if (options.length === 0) return null;
-	if (options.length === 1) return options[0]?.actionId ?? null;
+	const firstActionId = options[0]?.actionId ?? null;
+	if (options.length === 1) return firstActionId;
 
 	const rememberedSelectionKey = buildRememberedSelectionKey(context.combatId, member.actorType);
 	const rememberedActionId = rememberedSelectionsByActorType.get(rememberedSelectionKey);
-	if (!rememberedActionId) return null;
+	if (!rememberedActionId) return firstActionId;
 
 	return options.some((option) => option.actionId === rememberedActionId)
 		? rememberedActionId
-		: null;
+		: firstActionId;
 }
 
 export function rememberMemberActionSelection(

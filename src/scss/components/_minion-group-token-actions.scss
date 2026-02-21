@@ -330,6 +330,10 @@
 .system-nimble .nimble-minion-group-attack-panel {
   --nimble-minion-group-attack-text-size: calc(var(--nimble-xxs-text, 0.55rem) * 1.8);
   --nimble-minion-group-attack-title-size: calc(var(--nimble-xxs-text, 0.55rem) * 2.2);
+  --nimble-ncw-target-chip-size: 4.2rem;
+  --nimble-ncw-target-chip-gap: 0.3rem;
+  --nimble-ncw-target-max-row: 4;
+  --nimble-ncw-select-width: 7.4rem;
 
   position: fixed;
   left: 50%;
@@ -339,6 +343,9 @@
   flex-direction: column;
   gap: 0.34rem;
   width: min(23.5rem, calc(100vw - 1rem));
+  min-width: min(20rem, calc(100vw - 1rem));
+  min-height: 18rem;
+  max-width: calc(100vw - 1rem);
   max-height: calc(100vh - 1rem);
   padding: 0.38rem 0.44rem;
   margin: 0;
@@ -349,22 +356,41 @@
   box-shadow:
     0 0 12px color-mix(in srgb, hsl(205 78% 64%) 30%, transparent),
     0 8px 20px color-mix(in srgb, black 64%, transparent);
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  resize: vertical;
   z-index: 10060;
+
+  > * {
+    flex: 0 0 auto;
+  }
 
   &__header {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 1.45rem;
+    flex: 0 0 auto;
+    gap: 0.34rem;
+    min-height: 0;
     margin: 0;
-    padding: 0.06rem 0.22rem;
+    padding: 0.1rem 0.22rem 0.08rem;
     cursor: grab;
     user-select: none;
   }
 
   &__header:active {
     cursor: grabbing;
+  }
+
+  &__logo {
+    display: block;
+    width: auto;
+    height: calc(var(--nimble-minion-group-attack-title-size) * 2);
+    max-width: min(100%, 22rem);
+    object-fit: contain;
+    object-position: center;
+    pointer-events: none;
   }
 
   &__title {
@@ -377,7 +403,12 @@
   }
 
   &__target {
-    margin: 0;
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 0.34rem;
+    min-height: 4.2rem;
+    margin: 0 0 0.44rem;
     padding: 0.18rem 0.26rem;
     border: 1px solid color-mix(in srgb, hsl(205 70% 72%) 40%, transparent);
     border-radius: 0.25rem;
@@ -389,6 +420,404 @@
     text-align: left;
   }
 
+  &__target-label {
+    flex: 0 0 auto;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.24rem;
+    min-height: var(--nimble-ncw-target-chip-size);
+  }
+
+  &__target-label-text {
+    font-size: var(--nimble-minion-group-attack-text-size);
+    font-weight: 700;
+    line-height: 1.1;
+    color: hsl(0 0% 96%);
+    white-space: nowrap;
+    transform: translateY(-0.08rem);
+  }
+
+  &__target-label-icon {
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 2.2);
+    line-height: 1;
+  }
+
+  &__target-label-icon--active {
+    color: hsl(140 74% 64%);
+  }
+
+  &__target-label-icon--inactive {
+    color: hsl(0 86% 66%);
+  }
+
+  &__target-list {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--nimble-ncw-target-chip-gap);
+    flex: 0 0 auto;
+    width: fit-content;
+    max-width: calc(
+      (var(--nimble-ncw-target-chip-size) * var(--nimble-ncw-target-max-row)) +
+        (var(--nimble-ncw-target-chip-gap) * (var(--nimble-ncw-target-max-row) - 1))
+    );
+    min-width: 0;
+  }
+
+  &__target-hint {
+    font-size: var(--nimble-minion-group-attack-text-size);
+    font-weight: 600;
+    line-height: 1.1;
+    color: color-mix(in srgb, hsl(0 0% 96%) 88%, hsl(205 70% 72%) 12%);
+    white-space: nowrap;
+  }
+
+  &__target-token {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: var(--nimble-ncw-target-chip-size);
+    height: var(--nimble-ncw-target-chip-size);
+    margin: 0;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, hsl(210 90% 86%) 88%, white);
+    border-radius: 0.22rem;
+    background: color-mix(in srgb, hsl(217 62% 20%) 74%, transparent);
+    box-shadow: 0 0 4px color-mix(in srgb, hsl(210 92% 76%) 30%, transparent);
+    transition:
+      opacity 120ms ease,
+      border-color 120ms ease,
+      box-shadow 120ms ease;
+    cursor: pointer;
+  }
+
+  &__target-token:focus-visible {
+    outline: 1px solid color-mix(in srgb, hsl(210 96% 86%) 90%, white);
+    outline-offset: 1px;
+  }
+
+  &__target-token--inactive {
+    opacity: 0.42;
+    border-color: color-mix(in srgb, hsl(205 70% 72%) 40%, transparent);
+    box-shadow: none;
+  }
+
+  &__target-token-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  &__target-tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 0.22rem);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 0.18rem;
+    width: max-content;
+    max-width: min(17rem, calc(100vw - 1.4rem));
+    margin: 0;
+    padding: 0.2rem 0.24rem;
+    color: hsl(0 0% 96%);
+    background: color-mix(in srgb, hsl(230 22% 10%) 95%, transparent);
+    border: 1px solid color-mix(in srgb, hsl(205 70% 72%) 48%, transparent);
+    border-radius: 0.26rem;
+    box-shadow:
+      0 0 8px color-mix(in srgb, hsl(205 78% 64%) 28%, transparent),
+      0 4px 10px color-mix(in srgb, black 66%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10080;
+    transition:
+      opacity 120ms ease,
+      transform 120ms ease;
+  }
+
+  &__target-tooltip--floating {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: auto;
+    transform: none;
+    opacity: 1;
+    pointer-events: none;
+    z-index: 10120;
+  }
+
+  &__action-tooltip {
+    position: fixed;
+    left: 0;
+    top: 0;
+    max-width: min(24rem, calc(100vw - 1rem));
+    margin: 0;
+    padding: 0.22rem 0.28rem;
+    font-size: var(--nimble-minion-group-attack-text-size);
+    font-weight: 600;
+    line-height: 1.2;
+    color: hsl(0 0% 96%);
+    background: color-mix(in srgb, hsl(230 22% 10%) 95%, transparent);
+    border: 1px solid color-mix(in srgb, hsl(205 70% 72%) 48%, transparent);
+    border-radius: 0.26rem;
+    box-shadow:
+      0 0 8px color-mix(in srgb, hsl(205 78% 64%) 28%, transparent),
+      0 4px 10px color-mix(in srgb, black 66%, transparent);
+    pointer-events: none;
+    z-index: 10120;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  &__image-popover {
+    --nimble-image-popover-size: 7.25rem;
+    --nimble-image-popover-hp-percent: 0%;
+
+    position: fixed;
+    left: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.14rem;
+    width: 7.25rem;
+    margin: 0;
+    padding: 0.18rem;
+    background: color-mix(in srgb, hsl(230 22% 10%) 95%, transparent);
+    border: 1px solid color-mix(in srgb, hsl(205 70% 72%) 48%, transparent);
+    border-radius: 0.3rem;
+    box-shadow:
+      0 0 10px color-mix(in srgb, hsl(205 78% 64%) 28%, transparent),
+      0 6px 14px color-mix(in srgb, black 66%, transparent);
+    pointer-events: none;
+    z-index: 10120;
+    overflow: hidden;
+  }
+
+  &__image-popover-image {
+    display: block;
+    width: 100%;
+    height: var(--nimble-image-popover-size);
+    object-fit: cover;
+    object-position: center;
+    border-radius: 0.18rem;
+  }
+
+  &__image-popover-name {
+    width: 100%;
+    margin: 0;
+    font-size: var(--nimble-minion-group-attack-text-size);
+    font-weight: 700;
+    line-height: 1.15;
+    color: hsl(0 0% 96%);
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  &__image-popover-hp {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 1.18rem;
+    border: 1px solid hsl(41 18% 54%);
+    border-radius: 0.2rem;
+    background: hsl(220 26% 16%);
+  }
+
+  &__image-popover-hp::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--nimble-image-popover-hp-percent);
+    background: linear-gradient(to right, hsl(138 47% 20%) 0%, hsl(139 47% 44%) 100%);
+    z-index: 0;
+    transition: width 120ms ease;
+  }
+
+  &__image-popover-hp--bloodied::before {
+    background: linear-gradient(to right, hsl(0 47% 20%) 0%, hsl(0 47% 44%) 100%);
+  }
+
+  &__image-popover-hp-value {
+    position: relative;
+    z-index: 1;
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.86);
+    font-weight: 700;
+    line-height: 1;
+    color: hsl(0 0% 96%);
+    text-shadow: 0 0 4px color-mix(in srgb, black 58%, transparent);
+    white-space: nowrap;
+  }
+
+  .nimble-minion-group-attack-panel__target-token:hover .nimble-minion-group-attack-panel__target-tooltip,
+  .nimble-minion-group-attack-panel__target-token:focus-visible .nimble-minion-group-attack-panel__target-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-2px);
+  }
+
+  &__target-tooltip-head {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 1rem;
+    padding-inline: 1rem 0.2rem;
+  }
+
+  &__target-state-icon {
+    position: absolute;
+    left: 0.05rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.82);
+    line-height: 1;
+  }
+
+  &__target-state-icon--active {
+    color: hsl(140 74% 64%);
+  }
+
+  &__target-state-icon--inactive {
+    color: hsl(0 86% 66%);
+  }
+
+  &__target-tooltip-name {
+    font-size: var(--nimble-minion-group-attack-text-size);
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+    color: hsl(0 0% 96%);
+    white-space: nowrap;
+  }
+
+  &__target-tooltip-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 0.2rem;
+    align-items: center;
+  }
+
+  &__target-tooltip-hp {
+    --nimble-target-tooltip-hp-percent: 0%;
+
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 7rem;
+    min-height: 1.18rem;
+    border: 1px solid hsl(41 18% 54%);
+    border-radius: 0.2rem;
+    background: hsl(220 26% 16%);
+  }
+
+  &__target-tooltip-hp::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--nimble-target-tooltip-hp-percent);
+    background: linear-gradient(to right, hsl(138 47% 20%) 0%, hsl(139 47% 44%) 100%);
+    z-index: 0;
+    transition: width 120ms ease;
+  }
+
+  &__target-tooltip-hp--bloodied::before {
+    background: linear-gradient(to right, hsl(0 47% 20%) 0%, hsl(0 47% 44%) 100%);
+  }
+
+  &__target-tooltip-hp-value {
+    position: relative;
+    z-index: 1;
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.86);
+    font-weight: 700;
+    line-height: 1;
+    color: hsl(0 0% 96%);
+    text-shadow: 0 0 4px color-mix(in srgb, black 58%, transparent);
+    white-space: nowrap;
+  }
+
+  &__target-tooltip-wound {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.16rem;
+    min-height: 1.18rem;
+    padding: 0 0.22rem;
+    border: 1px solid color-mix(in srgb, hsl(205 70% 72%) 40%, transparent);
+    border-radius: 0.2rem;
+    background: color-mix(in srgb, hsl(216 38% 18%) 72%, transparent);
+    color: hsl(0 0% 96%);
+    white-space: nowrap;
+  }
+
+  &__target-tooltip-wound .fa-droplet {
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.86);
+    color: color-mix(in srgb, hsl(0 92% 76%) 82%, white);
+    line-height: 1;
+  }
+
+  &__target-tooltip-wound-value {
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.88);
+    font-weight: 700;
+    line-height: 1;
+    color: hsl(0 0% 96%);
+  }
+
+  &__section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.34rem;
+    margin: 0;
+    padding: 0.08rem 0.12rem 0.02rem;
+    font-size: var(--nimble-minion-group-attack-text-size);
+    font-weight: 700;
+    line-height: 1.1;
+    color: hsl(0 0% 96%);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  &__section-title-text {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  &__section-title-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.16rem;
+  }
+
+  &__section-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.92);
+    line-height: 1;
+    color: hsl(0 0% 96%);
+  }
+
+  &__section-icon--option {
+    min-width: 1rem;
+    min-height: 1rem;
+    padding: 0.08rem;
+    border: 1px solid color-mix(in srgb, hsl(205 70% 72%) 44%, transparent);
+    border-radius: 0.2rem;
+    background: color-mix(in srgb, hsl(216 38% 18%) 56%, transparent);
+  }
+
   &__table {
     width: 100%;
     table-layout: fixed;
@@ -396,13 +825,18 @@
     border-spacing: 0;
   }
 
-  &__row + &__row td {
+  .nimble-minion-group-attack-panel__row + .nimble-minion-group-attack-panel__row td {
     border-top: 1px solid color-mix(in srgb, hsl(205 70% 72%) 24%, transparent);
+  }
+
+  &__row--inactive td {
+    opacity: 0.5;
   }
 
   &__member,
   &__action,
-  &__dice {
+  &__dice,
+  &__controls {
     padding: 0.15rem 0.15rem;
     font-size: var(--nimble-minion-group-attack-text-size);
     line-height: 1.1;
@@ -414,6 +848,33 @@
     width: 44%;
     font-weight: 600;
     text-align: left;
+  }
+
+  &__member-content {
+    display: flex;
+    align-items: center;
+    gap: 0.34rem;
+    min-width: 0;
+  }
+
+  &__member-image {
+    display: block;
+    width: 1.45rem;
+    height: 1.45rem;
+    border: 1px solid color-mix(in srgb, hsl(205 70% 72%) 40%, transparent);
+    border-radius: 0.2rem;
+    object-fit: cover;
+    object-position: center;
+    background: color-mix(in srgb, hsl(216 38% 18%) 72%, transparent);
+    flex: 0 0 auto;
+  }
+
+  &__member-name {
+    display: inline-block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__action {
@@ -429,19 +890,41 @@
     white-space: nowrap;
   }
 
+  &__controls {
+    width: 1%;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .nimble-minion-group-attack-panel__table--monsters .nimble-minion-group-attack-panel__member {
+    width: 40%;
+  }
+
+  .nimble-minion-group-attack-panel__table--monsters .nimble-minion-group-attack-panel__action {
+    width: 44%;
+  }
+
+  .nimble-minion-group-attack-panel__table--monsters .nimble-minion-group-attack-panel__dice {
+    width: 16%;
+  }
+
   &__select {
     display: block;
-    width: min(100%, 9rem);
-    max-width: 9rem;
+    width: var(--nimble-ncw-select-width);
+    min-width: var(--nimble-ncw-select-width);
+    max-width: var(--nimble-ncw-select-width);
     min-height: 1.45rem;
     margin: 0;
-    padding: 0 0.3rem;
+    padding: 0 1.3rem 0 0.3rem;
     font-size: var(--nimble-minion-group-attack-text-size);
     line-height: 1.1;
     color: hsl(0 0% 96%);
     background: color-mix(in srgb, hsl(216 38% 18%) 72%, transparent);
     border: 1px solid color-mix(in srgb, hsl(205 70% 72%) 42%, transparent);
     border-radius: 0.22rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__select:disabled {
@@ -468,6 +951,38 @@
     color: hsl(0 0% 96%);
   }
 
+  &__inline-buttons {
+    display: inline-flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.16rem;
+    width: 100%;
+  }
+
+  &__button-tooltip-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nimble-minion-group-attack-panel__inline-buttons > .nimble-minion-group-attack-panel__button {
+    min-height: 1.3rem;
+    padding: 0 0.3rem;
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.9);
+  }
+
+  &__inline-buttons--monster-row {
+    justify-content: flex-end;
+  }
+
+  &__monster-controls-cell {
+    padding: 0.06rem 0.15rem 0.18rem;
+  }
+
+  .nimble-minion-group-attack-panel__row + .nimble-minion-group-attack-panel__row--monster-controls td {
+    border-top: 0;
+  }
+
   &__buttons {
     display: flex;
     justify-content: flex-end;
@@ -476,10 +991,10 @@
   }
 
   &__button {
-    min-height: 1.45rem;
+    min-height: 1.3rem;
     margin: 0;
-    padding: 0 0.42rem;
-    font-size: var(--nimble-minion-group-attack-text-size);
+    padding: 0 0.3rem;
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.9);
     font-weight: 700;
     line-height: 1;
     color: hsl(0 0% 96%);

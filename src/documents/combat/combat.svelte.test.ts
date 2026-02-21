@@ -9,11 +9,6 @@ import {
 	getTestGlobals,
 	type NimbleCombatDocumentTestGlobals,
 } from '../../../tests/mocks/combat.js';
-import {
-	MINION_GROUPING_MODE_CANVAS_LITE,
-	MINION_GROUPING_MODE_FULL,
-	MINION_GROUPING_MODE_SETTING_KEY,
-} from '../../utils/minionGroupingModes.js';
 import { NimbleCombat } from './combat.svelte.js';
 
 function globals() {
@@ -30,9 +25,10 @@ describe('NimbleCombat', () => {
 				settings?: { get: ReturnType<typeof vi.fn> };
 			}
 		).settings = {
-			get: vi.fn((_namespace: string, key: string) =>
-				key === MINION_GROUPING_MODE_SETTING_KEY ? MINION_GROUPING_MODE_FULL : undefined,
-			),
+			get: vi.fn((namespace: string, key: string) => {
+				if (namespace === 'core' && key === 'rollMode') return 'publicroll';
+				return undefined;
+			}),
 		};
 		globals().fromUuidSync = vi.fn().mockReturnValue(null);
 		globals().SortingHelpers = {
@@ -58,6 +54,30 @@ describe('NimbleCombat', () => {
 		const textEditorImpl =
 			globals().foundry.applications.ux.TextEditor.implementation.getDragEventData;
 		textEditorImpl.mockReturnValue({});
+
+		(
+			globalThis as unknown as {
+				ChatMessage: {
+					create: ReturnType<typeof vi.fn>;
+					getSpeaker: ReturnType<typeof vi.fn>;
+					applyRollMode: ReturnType<typeof vi.fn>;
+				};
+			}
+		).ChatMessage = {
+			create: vi.fn().mockResolvedValue({ id: 'chat-message' }),
+			getSpeaker: vi.fn().mockReturnValue({}),
+			applyRollMode: vi.fn(),
+		};
+		(
+			globalThis as unknown as {
+				CONST: { CHAT_MESSAGE_STYLES: { OTHER: number } };
+			}
+		).CONST.CHAT_MESSAGE_STYLES = { OTHER: 0 };
+		(
+			globalThis as unknown as {
+				CONFIG: { sounds: { dice: string } };
+			}
+		).CONFIG.sounds = { dice: 'dice' };
 	});
 
 	it('filters dead combatants out of setupTurns', () => {
@@ -295,16 +315,6 @@ describe('NimbleCombat', () => {
 	});
 
 	it('marks newly created groups as temporary in canvas lite mode', async () => {
-		(
-			globals().game as unknown as {
-				settings?: { get: ReturnType<typeof vi.fn> };
-			}
-		).settings = {
-			get: vi.fn((_namespace: string, key: string) =>
-				key === MINION_GROUPING_MODE_SETTING_KEY ? MINION_GROUPING_MODE_CANVAS_LITE : undefined,
-			),
-		};
-
 		const combatId = 'combat-canvas-lite-temporary-group';
 		const minionActorA = {
 			...createCombatActorFixture({ id: 'canvas-lite-minion-actor-a', hp: 1 }),
@@ -364,16 +374,6 @@ describe('NimbleCombat', () => {
 	});
 
 	it('auto-dissolves grouped minions at round boundary in canvas lite mode', async () => {
-		(
-			globals().game as unknown as {
-				settings?: { get: ReturnType<typeof vi.fn> };
-			}
-		).settings = {
-			get: vi.fn((_namespace: string, key: string) =>
-				key === MINION_GROUPING_MODE_SETTING_KEY ? MINION_GROUPING_MODE_CANVAS_LITE : undefined,
-			),
-		};
-
 		const combatId = 'combat-canvas-lite-round-boundary';
 		const minionActorA = {
 			...createCombatActorFixture({ id: 'canvas-lite-round-minion-actor-a', hp: 1 }),
@@ -884,7 +884,7 @@ describe('NimbleCombat', () => {
 					name: 'Stab',
 					system: {
 						subtype: 'action',
-						activation: { effects: [{ type: 'damage' }] },
+						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
 					},
 				},
 			],
@@ -900,7 +900,7 @@ describe('NimbleCombat', () => {
 					name: 'Bite',
 					system: {
 						subtype: 'action',
-						activation: { effects: [{ type: 'damage' }] },
+						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
 					},
 				},
 			],
@@ -999,10 +999,10 @@ describe('NimbleCombat', () => {
 
 		expect(
 			(minionActorA as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
-		).toHaveBeenCalledWith('action-a', { fastForward: true });
+		).not.toHaveBeenCalled();
 		expect(
 			(minionActorB as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
-		).toHaveBeenCalledWith('action-b', { fastForward: true });
+		).not.toHaveBeenCalled();
 		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
 			{
 				_id: 'group-attack-a',
@@ -1018,7 +1018,7 @@ describe('NimbleCombat', () => {
 		expect(result.endTurnApplied).toBe(true);
 	});
 
-	it('requires exactly one matching target for minion group attacks', async () => {
+	it('uses currently targeted tokens when requested target id is not targeted', async () => {
 		const combatId = 'combat-minion-group-attack-target-validation';
 		const minionActorA = {
 			...createCombatActorFixture({ id: 'group-attack-target-actor-a', hp: 1 }),
@@ -1030,7 +1030,7 @@ describe('NimbleCombat', () => {
 					name: 'Stab',
 					system: {
 						subtype: 'action',
-						activation: { effects: [{ type: 'damage' }] },
+						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
 					},
 				},
 			],
@@ -1087,10 +1087,10 @@ describe('NimbleCombat', () => {
 			endTurn: true,
 		});
 
-		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
-		expect(combat.nextTurn).not.toHaveBeenCalled();
-		expect(result.rolledCombatantIds).toEqual([]);
-		expect(result.endTurnApplied).toBe(false);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalled();
+		expect(combat.nextTurn).toHaveBeenCalled();
+		expect(result.rolledCombatantIds).toEqual(['group-attack-target-a']);
+		expect(result.endTurnApplied).toBe(true);
 		expect(
 			(minionActorA as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
 		).not.toHaveBeenCalled();
@@ -1108,7 +1108,7 @@ describe('NimbleCombat', () => {
 					name: 'Stab',
 					system: {
 						subtype: 'action',
-						activation: { effects: [{ type: 'damage' }] },
+						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
 					},
 				},
 			],
@@ -1124,7 +1124,7 @@ describe('NimbleCombat', () => {
 					name: 'Bite',
 					system: {
 						subtype: 'action',
-						activation: { effects: [{ type: 'damage' }] },
+						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
 					},
 				},
 			],
@@ -1201,10 +1201,10 @@ describe('NimbleCombat', () => {
 
 		expect(
 			(minionActorA as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
-		).toHaveBeenCalledWith('action-a', { fastForward: true });
+		).not.toHaveBeenCalled();
 		expect(
 			(minionActorB as unknown as { activateItem: ReturnType<typeof vi.fn> }).activateItem,
-		).toHaveBeenCalledWith('action-b', { fastForward: true });
+		).not.toHaveBeenCalled();
 		expect(combat.nextTurn).toHaveBeenCalledTimes(1);
 		expect(result.rolledCombatantIds).toEqual(['group-attack-adhoc-a', 'group-attack-adhoc-b']);
 		expect(result.endTurnApplied).toBe(true);
@@ -1217,9 +1217,6 @@ describe('NimbleCombat', () => {
 			}
 		).settings = {
 			get: vi.fn((namespace: string, key: string) => {
-				if (namespace === 'nimble' && key === MINION_GROUPING_MODE_SETTING_KEY) {
-					return MINION_GROUPING_MODE_CANVAS_LITE;
-				}
 				if (namespace === 'core' && key === 'rollMode') {
 					return 'publicroll';
 				}
@@ -1317,9 +1314,24 @@ describe('NimbleCombat', () => {
 
 		(
 			globals().game as unknown as {
-				user: { targets?: Set<{ id: string; name?: string }> };
+				user: {
+					targets?: Set<{
+						id: string;
+						name?: string;
+						document?: { id?: string; uuid?: string };
+					}>;
+				};
 			}
-		).user.targets = new Set([{ id: 'canvas-lite-target-token', name: 'Target' }]);
+		).user.targets = new Set([
+			{
+				id: 'canvas-lite-target-token',
+				name: 'Target',
+				document: {
+					id: 'canvas-lite-target-token',
+					uuid: 'Scene.scene.Token.canvas-lite-target-token',
+				},
+			},
+		]);
 
 		const combat = new NimbleCombat({
 			id: combatId,
@@ -1345,6 +1357,21 @@ describe('NimbleCombat', () => {
 		});
 
 		expect(chatCreate).toHaveBeenCalledTimes(1);
+		const createdChatData = chatCreate.mock.calls[0]?.[0] as Record<string, unknown>;
+		expect(createdChatData.type).toBe('base');
+		expect(createdChatData.content).toBe('');
+		const createdFlags = createdChatData.flags as Record<string, unknown>;
+		expect(createdFlags).toBeDefined();
+		expect((createdFlags.nimble as Record<string, unknown>).chatCardType).toBe('minionGroupAttack');
+		const createdSystem = createdChatData.system as Record<string, unknown>;
+		expect(createdSystem.actorName).toBe('Selected Minions');
+		expect(createdSystem.targetName).toBe('Target');
+		expect(createdSystem.targets).toEqual(['Scene.scene.Token.canvas-lite-target-token']);
+		expect(createdSystem.totalDamage).toBe(result.totalDamage);
+		const createdRows = createdSystem.rows as Array<Record<string, unknown>>;
+		expect(createdRows).toHaveLength(2);
+		expect(createdRows.map((row) => row.actionName)).toEqual(['Stab', 'Bite']);
+		expect(createdRows.map((row) => row.formula)).toEqual(['1d6', '1d6']);
 		expect(result.chatMessageId).toBe('group-attack-chat-1');
 		expect(result.rolledCombatantIds).toEqual([
 			'canvas-lite-group-attack-a',

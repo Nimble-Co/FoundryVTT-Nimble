@@ -669,6 +669,74 @@
       filter var(--nimble-combat-preview-shift-duration) var(--nimble-combat-preview-shift-ease);
   }
 
+  &__group-stack-badge {
+    position: absolute;
+    right: calc(0.26rem * var(--nimble-combat-card-scale));
+    bottom: calc(0.22rem * var(--nimble-combat-card-scale));
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: calc(1.25rem * var(--nimble-combat-card-scale));
+    height: calc(0.95rem * var(--nimble-combat-card-scale));
+    padding-inline: calc(0.2rem * var(--nimble-combat-card-scale));
+    font-size: calc(var(--nimble-xs-text) * var(--nimble-combat-card-scale));
+    font-weight: 800;
+    line-height: 1;
+    color: hsl(0 0% 96%);
+    font-variant-numeric: tabular-nums;
+    background: color-mix(in srgb, hsl(217 62% 20%) 86%, transparent);
+    border: 1px solid color-mix(in srgb, hsl(210 90% 86%) 90%, white);
+    border-radius: calc(0.22rem * var(--nimble-combat-card-scale));
+    box-shadow: 0 0 calc(6px * var(--nimble-combat-card-scale))
+      color-mix(in srgb, hsl(210 92% 76%) 42%, transparent);
+    pointer-events: none;
+  }
+
+  &__temp-group-popover {
+    position: fixed;
+    z-index: 1008;
+    width: max-content;
+    min-width: 0;
+    max-width: min(calc(22rem * var(--nimble-combat-card-scale)), calc(100vw - 1rem));
+    margin: 0;
+    padding: calc(0.22rem * var(--nimble-combat-card-scale))
+      calc(0.3rem * var(--nimble-combat-card-scale));
+    color: hsl(0 0% 96%);
+    background: color-mix(in srgb, hsl(230 22% 10%) 95%, transparent);
+    border: 1px solid color-mix(in srgb, hsl(205 70% 72%) 48%, transparent);
+    border-radius: calc(0.35rem * var(--nimble-combat-card-scale));
+    box-shadow:
+      0 0 calc(10px * var(--nimble-combat-card-scale))
+        color-mix(in srgb, hsl(205 78% 64%) 26%, transparent),
+      0 calc(4px * var(--nimble-combat-card-scale))
+        calc(10px * var(--nimble-combat-card-scale))
+        color-mix(in srgb, black 64%, transparent);
+    pointer-events: none;
+  }
+
+  &__temp-group-popover-list {
+    display: flex;
+    flex-direction: column;
+    gap: calc(0.14rem * var(--nimble-combat-card-scale));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    width: max-content;
+    max-width: min(calc(21.3rem * var(--nimble-combat-card-scale)), calc(100vw - 1.3rem));
+  }
+
+  &__temp-group-popover-item {
+    margin: 0;
+    padding: calc(0.02rem * var(--nimble-combat-card-scale))
+      calc(0.06rem * var(--nimble-combat-card-scale));
+    font-size: calc(var(--nimble-sm-text) * var(--nimble-combat-card-scale));
+    font-weight: 500;
+    line-height: 1.1;
+    color: hsl(0 0% 96%);
+    white-space: nowrap;
+  }
+
   &__item--active {
     --nimble-combat-active-crawler-offset: calc(
       0.16rem * var(--nimble-combat-card-scale) * var(--nimble-combat-edge-crawler-size-scale)
@@ -1042,6 +1110,36 @@
 
     &:hover {
       --nimble-combatant-controls-overlay-display: block;
+    }
+  }
+
+  &__turn-complete-badge {
+    position: absolute;
+    top: calc(0.12rem * var(--nimble-combat-card-scale));
+    right: calc(0.12rem * var(--nimble-combat-card-scale));
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: calc(1.25rem * var(--nimble-combat-card-scale));
+    height: calc(0.95rem * var(--nimble-combat-card-scale));
+    padding-inline: calc(0.22rem * var(--nimble-combat-card-scale));
+    font-size: calc(var(--nimble-xs-text) * var(--nimble-combat-card-scale));
+    font-weight: 800;
+    line-height: 1;
+    color: hsl(0 0% 96%);
+    background: color-mix(in srgb, hsl(217 62% 20%) 86%, transparent);
+    border: 1px solid color-mix(in srgb, hsl(210 90% 86%) 90%, white);
+    border-radius: calc(0.22rem * var(--nimble-combat-card-scale));
+    box-shadow: 0 0 calc(6px * var(--nimble-combat-card-scale))
+      color-mix(in srgb, hsl(210 92% 76%) 42%, transparent);
+    pointer-events: none;
+    transform: none;
+
+    .fa-check {
+      font-size: calc(var(--nimble-xs-text) * var(--nimble-combat-card-scale));
+      line-height: 1;
+      color: inherit;
     }
   }
 }

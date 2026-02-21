@@ -1,4 +1,6 @@
 import {
+	getEffectiveMinionGroupLeader,
+	getMinionGroupId,
 	getMinionGroupIdentityColorNumberByLabel,
 	getMinionGroupLabel,
 	getMinionGroupMemberNumber,
@@ -9,12 +11,14 @@ import { shouldShowMinionGroupIdentityUiForCurrentUser } from '../utils/minionGr
 
 const TOKEN_GROUP_BADGE_KEY = '_nimbleMinionGroupBadge';
 const TOKEN_GROUP_OUTLINE_KEY = '_nimbleMinionGroupOutline';
+const TOKEN_TURN_COMPLETE_BADGE_KEY = '_nimbleTurnCompleteBadge';
 
 let didRegisterMinionGroupTokenBadges = false;
 
 type TokenWithGroupBadge = Token & {
 	[TOKEN_GROUP_BADGE_KEY]?: PIXI.Container | null;
 	[TOKEN_GROUP_OUTLINE_KEY]?: PIXI.Graphics | null;
+	[TOKEN_TURN_COMPLETE_BADGE_KEY]?: PIXI.Container | null;
 };
 
 type GroupBadgeContainer = PIXI.Container & {
@@ -22,9 +26,66 @@ type GroupBadgeContainer = PIXI.Container & {
 	label?: PIXI.Text;
 };
 
+type TurnCompleteBadgeContainer = PIXI.Container & {
+	background?: PIXI.Graphics;
+	label?: PIXI.Text;
+};
+
 interface TokenGroupBadgeData {
 	groupCode: string;
 	groupLabel: string;
+}
+
+function getCombatantCurrentActions(combatant: Combatant.Implementation): number {
+	const actions = Number(foundry.utils.getProperty(combatant, 'system.actions.base.current') ?? 0);
+	if (!Number.isFinite(actions)) return 0;
+	return Math.max(0, actions);
+}
+
+function getTurnOrderIndexForCombatant(
+	combat: Combat,
+	combatant: Combatant.Implementation,
+	groupSummaries: ReturnType<typeof getMinionGroupSummaries>,
+): number {
+	const combatantId = combatant.id ?? '';
+	if (!combatantId) return -1;
+
+	const directIndex = combat.turns.findIndex((turnCombatant) => turnCombatant.id === combatantId);
+	if (directIndex >= 0) return directIndex;
+
+	const groupId = getMinionGroupId(combatant);
+	if (!groupId) return -1;
+
+	const groupSummary = groupSummaries.get(groupId);
+	if (!groupSummary) return -1;
+
+	const leader =
+		getEffectiveMinionGroupLeader(groupSummary, { aliveOnly: true }) ??
+		getEffectiveMinionGroupLeader(groupSummary);
+	if (!leader?.id) return -1;
+
+	return combat.turns.findIndex((turnCombatant) => turnCombatant.id === leader.id);
+}
+
+function hasCombatantTurnEndedThisRound(
+	combat: Combat,
+	combatant: Combatant.Implementation,
+	groupSummaries: ReturnType<typeof getMinionGroupSummaries>,
+): boolean {
+	if ((combat.round ?? 0) < 1) return false;
+
+	const activeCombatantId = combat.combatant?.id ?? '';
+	if (!activeCombatantId) return false;
+
+	const activeTurnIndex = combat.turns.findIndex(
+		(turnCombatant) => turnCombatant.id === activeCombatantId,
+	);
+	if (activeTurnIndex < 0) return false;
+
+	const combatantTurnIndex = getTurnOrderIndexForCombatant(combat, combatant, groupSummaries);
+	if (combatantTurnIndex < 0) return false;
+
+	return combatantTurnIndex < activeTurnIndex;
 }
 
 function canRenderMinionGroupIdentityUi(): boolean {
@@ -111,6 +172,42 @@ function buildTokenGroupBadgeDataForCurrentScene(): Map<string, TokenGroupBadgeD
 	return tokenBadgeData;
 }
 
+function buildTokenTurnCompleteBadgeTokenIdsForCurrentScene(): Set<string> {
+	const tokenIds = new Set<string>();
+
+	if (!game.user?.isGM) return tokenIds;
+
+	const sceneId = canvas.scene?.id;
+	if (!sceneId) return tokenIds;
+
+	const combat = getCombatForScene(sceneId);
+	if (!combat) return tokenIds;
+
+	const combatantsForScene = combat.combatants.contents.filter(
+		(combatant) => getCombatantSceneId(combatant) === sceneId,
+	);
+	const groupSummaries = getMinionGroupSummaries(combatantsForScene);
+
+	for (const combatant of combatantsForScene) {
+		if (!combatant.tokenId) continue;
+		if (combatant.defeated) continue;
+
+		const turnEnded = hasCombatantTurnEndedThisRound(combat, combatant, groupSummaries);
+		if (combatant.type === 'character') {
+			if (!turnEnded) continue;
+			tokenIds.add(combatant.tokenId);
+			continue;
+		}
+
+		const actionsRemaining = getCombatantCurrentActions(combatant);
+		if (actionsRemaining > 0 && !turnEnded) continue;
+
+		tokenIds.add(combatant.tokenId);
+	}
+
+	return tokenIds;
+}
+
 function removeTokenGroupBadge(token: TokenWithGroupBadge): void {
 	const badge = token[TOKEN_GROUP_BADGE_KEY];
 	if (!badge) return;
@@ -127,6 +224,15 @@ function removeTokenGroupOutline(token: TokenWithGroupBadge): void {
 	outline.parent?.removeChild(outline);
 	outline.destroy();
 	token[TOKEN_GROUP_OUTLINE_KEY] = null;
+}
+
+function removeTokenTurnCompleteBadge(token: TokenWithGroupBadge): void {
+	const badge = token[TOKEN_TURN_COMPLETE_BADGE_KEY];
+	if (!badge) return;
+
+	badge.parent?.removeChild(badge);
+	badge.destroy({ children: true });
+	token[TOKEN_TURN_COMPLETE_BADGE_KEY] = null;
 }
 
 function ensureTokenGroupBadge(token: TokenWithGroupBadge): GroupBadgeContainer {
@@ -161,6 +267,31 @@ function ensureTokenGroupOutline(token: TokenWithGroupBadge): PIXI.Graphics {
 	token.addChild(outline);
 	token[TOKEN_GROUP_OUTLINE_KEY] = outline;
 	return outline;
+}
+
+function ensureTokenTurnCompleteBadge(token: TokenWithGroupBadge): TurnCompleteBadgeContainer {
+	const existing = token[TOKEN_TURN_COMPLETE_BADGE_KEY] as
+		| TurnCompleteBadgeContainer
+		| null
+		| undefined;
+	if (existing) return existing;
+
+	const badge = new PIXI.Container() as TurnCompleteBadgeContainer;
+	badge.eventMode = 'none';
+	badge.zIndex = 1010;
+
+	const background = new PIXI.Graphics();
+	const label = new PIXI.Text('');
+	label.anchor.set(0, 0);
+
+	badge.background = background;
+	badge.label = label;
+	badge.addChild(background);
+	badge.addChild(label);
+	token.addChild(badge);
+	token[TOKEN_TURN_COMPLETE_BADGE_KEY] = badge;
+
+	return badge;
 }
 
 function styleAndPositionTokenGroupBadge(
@@ -249,6 +380,60 @@ function styleAndPositionTokenGroupOutline(
 	outline.endFill();
 }
 
+function styleAndPositionTokenTurnCompleteBadge(
+	token: TokenWithGroupBadge,
+	badge: TurnCompleteBadgeContainer,
+): void {
+	const text = badge.label;
+	const background = badge.background;
+	if (!text || !background) return;
+
+	const tokenSize = Math.max(1, Number(token.w ?? 1));
+	const fontSize = Math.max(12, Math.min(24, Math.round(tokenSize * 0.22)));
+	const paddingX = Math.max(4, Math.round(fontSize * 0.35));
+	const paddingY = Math.max(2, Math.round(fontSize * 0.2));
+
+	text.style = new PIXI.TextStyle({
+		fontFamily: 'Signika',
+		fontSize,
+		fontWeight: '700',
+		fill: 0xf6f9ff,
+		align: 'center',
+	});
+	text.text = '✓';
+	const rendererResolution = Number(
+		canvas?.app?.renderer?.resolution ?? globalThis.devicePixelRatio ?? 1,
+	);
+	text.resolution = Math.max(2, Number.isFinite(rendererResolution) ? rendererResolution : 2);
+	text.roundPixels = true;
+
+	const badgeWidth = Math.ceil(text.width + paddingX * 2);
+	const badgeHeight = Math.ceil(text.height + paddingY * 2);
+	const borderRadius = Math.max(4, Math.round(fontSize * 0.38));
+	const accentColor = 0x3b82f6;
+	const baseBackgroundColor = 0x0f1422;
+	const backgroundColor = blendColors(baseBackgroundColor, accentColor, 0.22);
+
+	background.clear();
+	background.lineStyle({
+		width: 1,
+		color: accentColor,
+		alpha: 0.95,
+	});
+	background.beginFill(backgroundColor, 0.95);
+	background.drawRoundedRect(0, 0, badgeWidth, badgeHeight, borderRadius);
+	background.endFill();
+
+	text.position.set(
+		Math.round((badgeWidth - text.width) / 2),
+		Math.round((badgeHeight - text.height) / 2),
+	);
+
+	const centeredTopRightX = tokenSize - badgeWidth / 2;
+	const centeredTopRightY = -badgeHeight / 2;
+	badge.position.set(Math.round(centeredTopRightX), Math.round(centeredTopRightY));
+}
+
 function blendColors(colorA: number, colorB: number, mixToB: number): number {
 	const ratio = Math.max(0, Math.min(1, mixToB));
 	const aR = (colorA >> 16) & 0xff;
@@ -266,39 +451,48 @@ function blendColors(colorA: number, colorB: number, mixToB: number): number {
 function refreshTokenGroupBadge(
 	token: TokenWithGroupBadge,
 	tokenBadgeDataByTokenId: Map<string, TokenGroupBadgeData>,
+	turnCompleteBadgeTokenIds: Set<string>,
 ): void {
 	if (!canRenderMinionGroupIdentityUi()) {
 		removeTokenGroupOutline(token);
 		removeTokenGroupBadge(token);
-		return;
+	} else {
+		const tokenId = token.document?.id ?? '';
+		const badgeData = tokenId ? tokenBadgeDataByTokenId.get(tokenId) : null;
+		if (!badgeData) {
+			removeTokenGroupOutline(token);
+			removeTokenGroupBadge(token);
+		} else {
+			const outline = ensureTokenGroupOutline(token);
+			styleAndPositionTokenGroupOutline(token, outline, badgeData);
+
+			const badge = ensureTokenGroupBadge(token);
+			styleAndPositionTokenGroupBadge(token, badge, badgeData);
+		}
 	}
 
 	const tokenId = token.document?.id ?? '';
-	const badgeData = tokenId ? tokenBadgeDataByTokenId.get(tokenId) : null;
-
-	if (!badgeData) {
-		removeTokenGroupOutline(token);
-		removeTokenGroupBadge(token);
+	const shouldRenderTurnCompleteBadge = tokenId ? turnCompleteBadgeTokenIds.has(tokenId) : false;
+	if (!shouldRenderTurnCompleteBadge) {
+		removeTokenTurnCompleteBadge(token);
 		return;
 	}
 
-	const outline = ensureTokenGroupOutline(token);
-	styleAndPositionTokenGroupOutline(token, outline, badgeData);
-
-	const badge = ensureTokenGroupBadge(token);
-	styleAndPositionTokenGroupBadge(token, badge, badgeData);
+	const turnCompleteBadge = ensureTokenTurnCompleteBadge(token);
+	styleAndPositionTokenTurnCompleteBadge(token, turnCompleteBadge);
 }
 
 function refreshAllVisibleTokenGroupBadges(): void {
 	if (!canvas?.ready || !canvas?.tokens) return;
-	if (!canRenderMinionGroupIdentityUi()) {
-		clearAllVisibleTokenGroupBadges();
-		return;
-	}
 
 	const tokenBadgeDataByTokenId = buildTokenGroupBadgeDataForCurrentScene();
+	const turnCompleteBadgeTokenIds = buildTokenTurnCompleteBadgeTokenIdsForCurrentScene();
 	for (const token of canvas.tokens.placeables) {
-		refreshTokenGroupBadge(token as TokenWithGroupBadge, tokenBadgeDataByTokenId);
+		refreshTokenGroupBadge(
+			token as TokenWithGroupBadge,
+			tokenBadgeDataByTokenId,
+			turnCompleteBadgeTokenIds,
+		);
 	}
 }
 
@@ -307,6 +501,7 @@ function clearAllVisibleTokenGroupBadges(): void {
 	for (const token of canvas.tokens.placeables) {
 		removeTokenGroupOutline(token as TokenWithGroupBadge);
 		removeTokenGroupBadge(token as TokenWithGroupBadge);
+		removeTokenTurnCompleteBadge(token as TokenWithGroupBadge);
 	}
 }
 
@@ -324,7 +519,12 @@ export default function registerMinionGroupTokenBadges(): void {
 
 	Hooks.on('refreshToken', (token: Token) => {
 		const tokenBadgeDataByTokenId = buildTokenGroupBadgeDataForCurrentScene();
-		refreshTokenGroupBadge(token as TokenWithGroupBadge, tokenBadgeDataByTokenId);
+		const turnCompleteBadgeTokenIds = buildTokenTurnCompleteBadgeTokenIdsForCurrentScene();
+		refreshTokenGroupBadge(
+			token as TokenWithGroupBadge,
+			tokenBadgeDataByTokenId,
+			turnCompleteBadgeTokenIds,
+		);
 	});
 
 	Hooks.on('createCombat', () => {
