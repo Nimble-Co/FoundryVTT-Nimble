@@ -1,16 +1,16 @@
-export const MINION_GROUPING_MODE_CANVAS_LITE = 'canvasLite';
-export type MinionGroupingMode = typeof MINION_GROUPING_MODE_CANVAS_LITE;
+export const MINION_GROUPING_MODE_NCS = 'ncs';
+export type MinionGroupingMode = typeof MINION_GROUPING_MODE_NCS;
 
 export function normalizeMinionGroupingMode(value: unknown): MinionGroupingMode {
 	void value;
-	return MINION_GROUPING_MODE_CANVAS_LITE;
+	return MINION_GROUPING_MODE_NCS;
 }
 
 export function getConfiguredMinionGroupingMode(): MinionGroupingMode {
-	return MINION_GROUPING_MODE_CANVAS_LITE;
+	return MINION_GROUPING_MODE_NCS;
 }
 
-export function shouldUseCanvasLiteTemporaryGroups(): boolean {
+export function shouldUseNcsTemporaryGroups(): boolean {
 	return true;
 }
 
@@ -25,3 +25,4 @@ export function shouldShowTrackerGroupedStacksForCurrentUser(): boolean {
 export function shouldShowMinionGroupIdentityUiForCurrentUser(): boolean {
 	return false;
 }
+

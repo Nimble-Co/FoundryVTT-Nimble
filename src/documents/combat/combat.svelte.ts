@@ -494,7 +494,7 @@ class NimbleCombat extends Combat {
 		return nextResult;
 	}
 
-	async #createCanvasLiteGroupAttackChatMessage(params: {
+	async #createNcsGroupAttackChatMessage(params: {
 		groupLabel: string | null;
 		targetTokenIds: string[];
 		targetName: string;
@@ -649,11 +649,11 @@ class NimbleCombat extends Combat {
 		logMinionGroupingCombat('dissolved round-boundary minion groups', {
 			combatId: this.id ?? null,
 			groupIds: groupIdsToDissolve,
-			reason: 'canvasLiteModeRoundBoundary',
+			reason: 'ncsModeRoundBoundary',
 		});
 	}
 
-	async #assignCanvasLiteTemporaryGroupFromAttackMembers(
+	async #assignNcsTemporaryGroupFromAttackMembers(
 		memberCombatantIds: string[],
 	): Promise<void> {
 		if (!game.user?.isGM) return;
@@ -726,7 +726,7 @@ class NimbleCombat extends Combat {
 				: previousActiveCombatantId;
 		await this.#syncTurnToCombatant(desiredActiveId, { persist: false });
 
-		logMinionGroupingCombat('assigned canvas-lite temporary attack group', {
+		logMinionGroupingCombat('assigned ncs temporary attack group', {
 			combatId: this.id ?? null,
 			groupId: temporaryGroupId,
 			leaderId: leader.id,
@@ -1643,7 +1643,7 @@ class NimbleCombat extends Combat {
 		}
 
 		if (result.rolledCombatantIds.length > 0) {
-			await this.#assignCanvasLiteTemporaryGroupFromAttackMembers(
+			await this.#assignNcsTemporaryGroupFromAttackMembers(
 				attackMembers
 					.map((member) => member.id)
 					.filter((memberId): memberId is string => typeof memberId === 'string'),
@@ -1657,7 +1657,7 @@ class NimbleCombat extends Combat {
 				activeTargetTokenIds.length === 1
 					? getTargetTokenName(activeTargetTokenIds[0])
 					: `${activeTargetTokenIds.length} targets`;
-			const chatCard = await this.#createCanvasLiteGroupAttackChatMessage({
+			const chatCard = await this.#createNcsGroupAttackChatMessage({
 				groupLabel: groupSummary?.label ?? null,
 				targetTokenIds: activeTargetTokenIds,
 				targetName,
@@ -2014,3 +2014,4 @@ class NimbleCombat extends Combat {
 }
 
 export { NimbleCombat };
+

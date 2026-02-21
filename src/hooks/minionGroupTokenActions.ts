@@ -6,7 +6,7 @@ import {
 	getMinionGroupSummaries,
 	isMinionCombatant,
 } from '../utils/minionGrouping.js';
-import { shouldUseCanvasLiteTemporaryGroups } from '../utils/minionGroupingModes.js';
+import { MINION_GROUPING_MODE_NCS, shouldUseNcsTemporaryGroups } from '../utils/minionGroupingModes.js';
 import {
 	createMinionGroupAttackSelectionState,
 	deriveDefaultMemberActionSelection,
@@ -17,7 +17,7 @@ import {
 } from '../utils/minionGroupAttackSession.js';
 
 const MINION_GROUP_ACTION_BAR_ID = 'nimble-minion-group-actions';
-const MINION_GROUP_ATTACK_PANEL_ID = 'nimble-minion-group-attack-panel';
+const NCSW_PANEL_ID = 'nimble-minion-group-attack-panel';
 const MINION_GROUP_TOKEN_UI_DEBUG_ENABLED_KEY = 'NIMBLE_ENABLE_GROUP_TOKEN_UI_LOGS';
 const MINION_GROUP_TOKEN_UI_DEBUG_DISABLED_KEY = 'NIMBLE_DISABLE_GROUP_TOKEN_UI_LOGS';
 const MINION_GROUP_ACTION_BAR_SCALE_STORAGE_KEY = 'nimble.minionGroupActionBar.scale';
@@ -26,12 +26,14 @@ const MINION_GROUP_ACTION_BAR_DEFAULT_SCALE = 2;
 const MINION_GROUP_ACTION_BAR_MIN_SCALE = 2;
 const MINION_GROUP_ACTION_BAR_MAX_SCALE = 3;
 const MINION_GROUP_ACTION_BAR_VIEWPORT_MARGIN_PX = 8;
-const MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX = 8;
-const MINION_GROUP_ATTACK_PANEL_MIN_WIDTH_REM = 20;
-const MINION_GROUP_ATTACK_PANEL_MAX_TARGETS_PER_ROW = 4;
+const NCSW_PANEL_VIEWPORT_MARGIN_PX = 8;
+const NCSW_PANEL_MIN_WIDTH_REM = 20;
+const NCSW_PANEL_MAX_TARGETS_PER_ROW = 4;
 const ALLOW_GROUPING_OUTSIDE_COMBAT_SETTING_KEY = 'allowMinionGroupingOutsideCombat';
-const CANVAS_LITE_SELECTION_ATTACK_GROUP_ID = '__nimbleCanvasLiteSelectionAttackGroup';
-const CANVAS_LITE_SELECTION_MONSTER_ATTACK_SCOPE_ID = '__nimbleCanvasLiteSelectionMonsterAttack';
+const NCS_SELECTION_ATTACK_GROUP_ID = '__nimbleNcsSelectionAttackGroup';
+const NCS_SELECTION_MONSTER_ATTACK_SCOPE_ID = '__nimbleNcsSelectionMonsterAttack';
+const MINION_GROUP_I18N_PREFIX = 'NIMBLE.minionGroupActions';
+const NCSW_I18N_PREFIX = 'NIMBLE.nimbleCombatSystemWindow';
 
 let didRegisterMinionGroupTokenActions = false;
 let minionGroupActionBarElement: HTMLDivElement | null = null;
@@ -192,6 +194,33 @@ interface ActorWithActionItems {
 	name?: string;
 	items?: { contents?: MonsterFeatureActionItemLike[] } | MonsterFeatureActionItemLike[];
 	activateItem?: (id: string, options?: Record<string, unknown>) => Promise<ChatMessage | null>;
+}
+
+function localizeByKey(key: string): string {
+	return game.i18n.localize(key as never);
+}
+
+function formatByKey(key: string, data: Record<string, string | number>): string {
+	const localizedData: Record<string, string> = Object.fromEntries(
+		Object.entries(data).map(([entryKey, entryValue]) => [entryKey, String(entryValue)]),
+	);
+	return game.i18n.format(key as never, localizedData);
+}
+
+function localizeMinionGroupAction(key: string): string {
+	return localizeByKey(`${MINION_GROUP_I18N_PREFIX}.${key}`);
+}
+
+function formatMinionGroupAction(key: string, data: Record<string, string | number>): string {
+	return formatByKey(`${MINION_GROUP_I18N_PREFIX}.${key}`, data);
+}
+
+function localizeNcsw(key: string): string {
+	return localizeByKey(`${NCSW_I18N_PREFIX}.${key}`);
+}
+
+function formatNcsw(key: string, data: Record<string, string | number>): string {
+	return formatByKey(`${NCSW_I18N_PREFIX}.${key}`, data);
 }
 
 function isTokenUiDebugEnabled(): boolean {
@@ -724,7 +753,7 @@ function buildSelectionContext(): SelectionContext {
 	const addableGroupSummaries = selectedGroupSummaries.filter(
 		(summary) => summary.selectedCount > 0,
 	);
-	const canvasLiteSelectedAliveMinionIds = [
+	const ncsSelectedAliveMinionIds = [
 		...new Set(
 			selectedAliveMinions
 				.map((combatant) => combatant.id)
@@ -732,15 +761,15 @@ function buildSelectionContext(): SelectionContext {
 		),
 	];
 	const attackableGroupSummaries =
-		canvasLiteSelectedAliveMinionIds.length >= 2
+		ncsSelectedAliveMinionIds.length >= 1
 			? [
 					{
-						groupId: CANVAS_LITE_SELECTION_ATTACK_GROUP_ID,
+						groupId: NCS_SELECTION_ATTACK_GROUP_ID,
 						label: null,
-						selectedCount: canvasLiteSelectedAliveMinionIds.length,
-						totalCount: canvasLiteSelectedAliveMinionIds.length,
-						aliveCount: canvasLiteSelectedAliveMinionIds.length,
-						selectedCombatantIds: canvasLiteSelectedAliveMinionIds,
+						selectedCount: ncsSelectedAliveMinionIds.length,
+						totalCount: ncsSelectedAliveMinionIds.length,
+						aliveCount: ncsSelectedAliveMinionIds.length,
+						selectedCombatantIds: ncsSelectedAliveMinionIds,
 						isPartialSelection: false,
 						isFullSelection: true,
 					},
@@ -899,23 +928,23 @@ function getSelectionHintMessage(
 		context.selectedOutOfCombatNonMinionTokenCount > 0;
 
 	if (!hasInCombatMinions && hasOutOfCombatMinions) {
-		return 'Select more minions';
+		return localizeMinionGroupAction('hints.selectMoreMinions');
 	}
 
 	if (!hasInCombatMinions && hasAnyNonMinions) {
-		return 'No minions selected';
+		return localizeMinionGroupAction('hints.noMinionsSelected');
 	}
 
 	if (hasInCombatMinions) {
-		return 'Select more minions';
+		return localizeMinionGroupAction('hints.selectMoreMinions');
 	}
 
 	if (context.selectedTokenCount > 0) {
-		return 'No minions selected';
+		return localizeMinionGroupAction('hints.noMinionsSelected');
 	}
 
 	if (!context.combat) {
-		return 'Select more minions';
+		return localizeMinionGroupAction('hints.selectMoreMinions');
 	}
 
 	return null;
@@ -1237,7 +1266,10 @@ function getAvailablePlayerTargetTokens(): TargetTokenView[] {
 			(token.document?.texture?.src ?? token.actor?.img ?? '').trim() ||
 			'icons/svg/mystery-man.svg';
 		const name =
-			token.document?.name?.trim() || token.name?.trim() || token.actor?.name?.trim() || 'Player';
+			token.document?.name?.trim() ||
+			token.name?.trim() ||
+			token.actor?.name?.trim() ||
+			localizeNcsw('targets.playerFallback');
 		const vitalStats = getTargetTokenVitalStats(token);
 
 		rows.push({
@@ -1262,6 +1294,18 @@ function toggleTargetTokenFromPanel(token: Token, targeted: boolean): void {
 		releaseOthers: false,
 		groupSelection: true,
 	});
+}
+
+function clearAllUserSelectedTargetsFromNcsw(): void {
+	if (!game.user) return;
+	const currentTargets = Array.from(game.user.targets ?? []);
+	for (const target of currentTargets) {
+		target.setTarget(false, {
+			user: game.user,
+			releaseOthers: false,
+			groupSelection: true,
+		});
+	}
 }
 
 function getRootFontSizePx(): number {
@@ -1294,7 +1338,7 @@ function measureTargetListWidthPx(targetList: HTMLElement): number {
 		tokenButtons.length > 0
 			? tokenButtons.slice(
 					0,
-					Math.min(MINION_GROUP_ATTACK_PANEL_MAX_TARGETS_PER_ROW, tokenButtons.length),
+					Math.min(NCSW_PANEL_MAX_TARGETS_PER_ROW, tokenButtons.length),
 				)
 			: [...targetList.children].filter(
 					(child): child is HTMLElement => child instanceof HTMLElement,
@@ -1315,7 +1359,7 @@ function applyGroupAttackPanelWidth(options: {
 	targetList: HTMLDivElement;
 }): void {
 	const remPx = getRootFontSizePx();
-	const minWidthPx = MINION_GROUP_ATTACK_PANEL_MIN_WIDTH_REM * remPx;
+	const minWidthPx = NCSW_PANEL_MIN_WIDTH_REM * remPx;
 	const panelStyles = globalThis.getComputedStyle(options.panel);
 	const panelPaddingWidthPx =
 		parseCssPixels(panelStyles.paddingLeft) + parseCssPixels(panelStyles.paddingRight);
@@ -1335,7 +1379,7 @@ function applyGroupAttackPanelWidth(options: {
 	const desiredWidthPx = Math.max(minWidthPx, targetPreferredWidthPx);
 	const viewportMaxWidthPx = Math.max(
 		minWidthPx,
-		window.innerWidth - MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX * 2,
+		window.innerWidth - NCSW_PANEL_VIEWPORT_MARGIN_PX * 2,
 	);
 	const nextWidthPx = Math.min(viewportMaxWidthPx, desiredWidthPx);
 	options.panel.style.width = `${Math.round(nextWidthPx)}px`;
@@ -1611,7 +1655,7 @@ function appendButtonWithOptionalTargetTooltip(
 
 	const wrapper = document.createElement('span');
 	wrapper.className = 'nimble-minion-group-attack-panel__button-tooltip-wrapper';
-	wrapper.title = 'Select a Target';
+	wrapper.title = localizeNcsw('targets.selectTargetTooltip');
 	wrapper.append(button);
 	container.append(wrapper);
 }
@@ -1652,7 +1696,7 @@ function getGroupAttackPanelElement(): HTMLDivElement {
 	}
 
 	const element = document.createElement('div');
-	element.id = MINION_GROUP_ATTACK_PANEL_ID;
+	element.id = NCSW_PANEL_ID;
 	element.className = 'nimble-minion-group-attack-panel';
 	element.hidden = true;
 	document.body.appendChild(element);
@@ -1666,19 +1710,19 @@ function clampGroupAttackPanelPositionWithinViewport(
 	rect: { width: number; height: number },
 ): { left: number; top: number } {
 	const maxLeft = Math.max(
-		MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX,
-		window.innerWidth - rect.width - MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX,
+		NCSW_PANEL_VIEWPORT_MARGIN_PX,
+		window.innerWidth - rect.width - NCSW_PANEL_VIEWPORT_MARGIN_PX,
 	);
 	const maxTop = Math.max(
-		MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX,
-		window.innerHeight - rect.height - MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX,
+		NCSW_PANEL_VIEWPORT_MARGIN_PX,
+		window.innerHeight - rect.height - NCSW_PANEL_VIEWPORT_MARGIN_PX,
 	);
 
 	return {
 		left: Math.round(
-			Math.max(MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX, Math.min(maxLeft, left)),
+			Math.max(NCSW_PANEL_VIEWPORT_MARGIN_PX, Math.min(maxLeft, left)),
 		),
-		top: Math.round(Math.max(MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX, Math.min(maxTop, top))),
+		top: Math.round(Math.max(NCSW_PANEL_VIEWPORT_MARGIN_PX, Math.min(maxTop, top))),
 	};
 }
 
@@ -1771,10 +1815,13 @@ function handleGroupAttackPanelDragStart(event: PointerEvent): void {
 	startGroupAttackPanelDragTracking();
 }
 
-function hideGroupAttackPanel(): void {
+function hideGroupAttackPanel(options: { clearTargets?: boolean } = {}): void {
 	if (minionGroupAttackPanelElement) {
 		minionGroupAttackPanelElement.hidden = true;
 		minionGroupAttackPanelElement.replaceChildren();
+	}
+	if (options.clearTargets ?? true) {
+		clearAllUserSelectedTargetsFromNcsw();
 	}
 	hideGroupAttackTargetPopover();
 	hideGroupAttackActionDescriptionPopover();
@@ -1792,7 +1839,7 @@ function getGroupAttackMembers(
 	groupId: string,
 	context: SelectionContext,
 ): Array<{ combatant: Combatant.Implementation; member: GroupAttackMemberView }> {
-	if (groupId === CANVAS_LITE_SELECTION_ATTACK_GROUP_ID) {
+	if (groupId === NCS_SELECTION_ATTACK_GROUP_ID) {
 		const rows: Array<{ combatant: Combatant.Implementation; member: GroupAttackMemberView }> = [];
 		for (const combatant of context.selectedMinions) {
 			if (!combatant.id) continue;
@@ -2001,7 +2048,7 @@ function buildNonMinionSelectionSync(
 }
 
 function buildAttackActionButtonLabel(endTurn: boolean): string {
-	return endTurn ? 'Roll + End Turn' : 'Roll';
+	return endTurn ? localizeNcsw('buttons.rollEndTurn') : localizeNcsw('buttons.roll');
 }
 
 function buildSelectionWarnings(result: {
@@ -2013,17 +2060,22 @@ function buildSelectionWarnings(result: {
 	for (const skippedMember of result.skippedMembers) {
 		const reasonLabel =
 			skippedMember.reason === 'noActionSelected'
-				? 'No action selected'
+				? localizeNcsw('warnings.reasons.noActionSelected')
 				: skippedMember.reason === 'noActionsRemaining'
-					? 'No actions remaining'
+					? localizeNcsw('warnings.reasons.noActionsRemaining')
 					: skippedMember.reason === 'actionNotFound'
-						? 'Selected action not found'
+						? localizeNcsw('warnings.reasons.actionNotFound')
 						: skippedMember.reason === 'actorCannotActivate'
-							? 'Actor cannot activate item'
+							? localizeNcsw('warnings.reasons.actorCannotActivate')
 							: skippedMember.reason === 'activationFailed'
-								? 'Activation failed'
+								? localizeNcsw('warnings.reasons.activationFailed')
 								: skippedMember.reason;
-		warnings.push(`${skippedMember.combatantId}: ${reasonLabel}`);
+		warnings.push(
+			formatNcsw('warnings.memberReason', {
+				memberCombatantId: skippedMember.combatantId,
+				reason: reasonLabel,
+			}),
+		);
 	}
 
 	for (const unsupportedWarning of result.unsupportedSelectionWarnings) {
@@ -2065,11 +2117,11 @@ function renderGroupAttackPanel(): void {
 
 	const header = document.createElement('div');
 	header.className = 'nimble-minion-group-attack-panel__header';
-	header.title = 'Drag to move';
+	header.title = localizeNcsw('tooltips.dragToMove');
 	header.addEventListener('pointerdown', handleGroupAttackPanelDragStart);
 	const logo = document.createElement('img');
 	logo.className = 'nimble-minion-group-attack-panel__logo';
-	logo.alt = 'Nimble';
+	logo.alt = localizeNcsw('logo.alt');
 	logo.draggable = false;
 	logo.src = 'systems/nimble/assets/logos/NimbleLogos.png';
 	logo.addEventListener('error', () => {
@@ -2079,7 +2131,7 @@ function renderGroupAttackPanel(): void {
 	});
 	const title = document.createElement('h3');
 	title.className = 'nimble-minion-group-attack-panel__title';
-	title.textContent = 'Combat System';
+	title.textContent = localizeNcsw('title');
 	header.append(logo, title);
 	panel.append(header);
 
@@ -2089,7 +2141,7 @@ function renderGroupAttackPanel(): void {
 	targetLabel.className = 'nimble-minion-group-attack-panel__target-label';
 	const targetLabelText = document.createElement('span');
 	targetLabelText.className = 'nimble-minion-group-attack-panel__target-label-text';
-	targetLabelText.textContent = 'Targets:';
+	targetLabelText.textContent = localizeNcsw('targets.label');
 	const targetStatusIcon = document.createElement('i');
 	targetStatusIcon.className = `nimble-minion-group-attack-panel__target-label-icon fa-solid fa-crosshairs ${
 		hasAnyTarget
@@ -2105,7 +2157,7 @@ function renderGroupAttackPanel(): void {
 	if (availableTargetTokens.length === 0) {
 		const hint = document.createElement('span');
 		hint.className = 'nimble-minion-group-attack-panel__target-hint';
-		hint.textContent = 'select non-monster token(s)';
+		hint.textContent = localizeNcsw('targets.hint');
 		targetList.append(hint);
 	} else {
 		for (const targetToken of availableTargetTokens) {
@@ -2116,8 +2168,8 @@ function renderGroupAttackPanel(): void {
 				targetButton.classList.add('nimble-minion-group-attack-panel__target-token--inactive');
 			}
 			targetButton.ariaLabel = targetToken.isTargeted
-				? `Untarget ${targetToken.name}`
-				: `Target ${targetToken.name}`;
+				? formatNcsw('targets.untargetAria', { name: targetToken.name })
+				: formatNcsw('targets.targetAria', { name: targetToken.name });
 
 			const image = document.createElement('img');
 			image.className = 'nimble-minion-group-attack-panel__target-token-image';
@@ -2143,7 +2195,7 @@ function renderGroupAttackPanel(): void {
 
 			targetButton.addEventListener('click', () => {
 				toggleTargetTokenFromPanel(targetToken.token, !targetToken.isTargeted);
-				scheduleActionBarRefresh('ncw-target-toggle');
+				scheduleActionBarRefresh('ncsw-target-toggle');
 			});
 
 			targetList.append(targetButton);
@@ -2157,7 +2209,7 @@ function renderGroupAttackPanel(): void {
 		nonMinionTitle.className = 'nimble-minion-group-attack-panel__section-title';
 		const nonMinionTitleText = document.createElement('span');
 		nonMinionTitleText.className = 'nimble-minion-group-attack-panel__section-title-text';
-		nonMinionTitleText.textContent = 'Monsters';
+		nonMinionTitleText.textContent = localizeNcsw('sections.monsters');
 		const nonMinionTitleIcons = document.createElement('span');
 		nonMinionTitleIcons.className = 'nimble-minion-group-attack-panel__section-title-icons';
 		const nonMinionIcon = document.createElement('i');
@@ -2217,7 +2269,10 @@ function renderGroupAttackPanel(): void {
 
 			const placeholder = document.createElement('option');
 			placeholder.value = '';
-			placeholder.textContent = member.actionsRemaining < 1 ? 'No actions left' : 'Select action';
+			placeholder.textContent =
+				member.actionsRemaining < 1
+					? localizeNcsw('actions.noActionsLeft')
+					: localizeNcsw('actions.selectAction');
 			select.append(placeholder);
 
 			for (const actionOption of member.actionOptions) {
@@ -2312,7 +2367,7 @@ function renderGroupAttackPanel(): void {
 		minionTitle.className = 'nimble-minion-group-attack-panel__section-title';
 		const minionTitleText = document.createElement('span');
 		minionTitleText.className = 'nimble-minion-group-attack-panel__section-title-text';
-		minionTitleText.textContent = 'Minions';
+		minionTitleText.textContent = localizeNcsw('sections.minions');
 		const minionTitleIcons = document.createElement('span');
 		minionTitleIcons.className = 'nimble-minion-group-attack-panel__section-title-icons';
 		const minionIcon = document.createElement('i');
@@ -2369,7 +2424,10 @@ function renderGroupAttackPanel(): void {
 
 			const placeholder = document.createElement('option');
 			placeholder.value = '';
-			placeholder.textContent = member.actionsRemaining < 1 ? 'No actions left' : 'Select action';
+			placeholder.textContent =
+				member.actionsRemaining < 1
+					? localizeNcsw('actions.noActionsLeft')
+					: localizeNcsw('actions.selectAction');
 			select.append(placeholder);
 
 			for (const actionOption of member.actionOptions) {
@@ -2453,7 +2511,7 @@ function renderGroupAttackPanel(): void {
 	closeButton.type = 'button';
 	closeButton.className =
 		'nimble-minion-group-attack-panel__button nimble-minion-group-attack-panel__button--negative';
-	closeButton.textContent = 'Close';
+	closeButton.textContent = localizeNcsw('buttons.close');
 	closeButton.disabled = isExecutingAction;
 	closeButton.addEventListener('click', () => {
 		hideGroupAttackPanel();
@@ -2482,20 +2540,20 @@ function renderGroupAttackPanel(): void {
 
 			if (
 				left + panelRect.width >
-				window.innerWidth - MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX
+				window.innerWidth - NCSW_PANEL_VIEWPORT_MARGIN_PX
 			) {
 				left = Math.max(
-					MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX,
+					NCSW_PANEL_VIEWPORT_MARGIN_PX,
 					actionBarRect.left - panelRect.width - 12,
 				);
 			}
 			if (
 				top + panelRect.height >
-				window.innerHeight - MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX
+				window.innerHeight - NCSW_PANEL_VIEWPORT_MARGIN_PX
 			) {
 				top = Math.max(
-					MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX,
-					window.innerHeight - panelRect.height - MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX,
+					NCSW_PANEL_VIEWPORT_MARGIN_PX,
+					window.innerHeight - panelRect.height - NCSW_PANEL_VIEWPORT_MARGIN_PX,
 				);
 			}
 
@@ -2514,7 +2572,7 @@ async function executeGroupAttackRoll(endTurn: boolean): Promise<void> {
 
 	const combat = getCombatForCurrentScene();
 	if (!combat || typeof combat.performMinionGroupAttack !== 'function') {
-		ui.notifications?.warn('No active combat found for group attack.');
+		ui.notifications?.warn(localizeNcsw('notifications.noActiveCombatForGroupAttack'));
 		return;
 	}
 	if (!combat.started) {
@@ -2523,7 +2581,7 @@ async function executeGroupAttackRoll(endTurn: boolean): Promise<void> {
 
 	const targetSummary = getCurrentTargetSummary();
 	if (targetSummary.targetTokenIds.length === 0 || !targetSummary.targetTokenId) {
-		ui.notifications?.warn('Select token target before rolling a group attack.');
+		ui.notifications?.warn(localizeNcsw('notifications.selectTargetBeforeGroupAttack'));
 		return;
 	}
 
@@ -2557,12 +2615,12 @@ async function executeGroupAttackRoll(endTurn: boolean): Promise<void> {
 
 		activeGroupAttackWarnings = buildSelectionWarnings(result);
 		if (result.rolledCombatantIds.length === 0) {
-			ui.notifications?.warn('No group attacks were rolled.');
+			ui.notifications?.warn(localizeNcsw('notifications.noGroupAttacksRolled'));
 		}
 		if (endTurn && !result.endTurnApplied) {
 			activeGroupAttackWarnings = [
 				...activeGroupAttackWarnings,
-				'End turn was not applied because this group is not currently active.',
+				localizeNcsw('warnings.endTurnNotApplied'),
 			];
 		}
 
@@ -2573,7 +2631,7 @@ async function executeGroupAttackRoll(endTurn: boolean): Promise<void> {
 			groupId: session.context.groupId,
 			error,
 		});
-		ui.notifications?.error('Group attack failed. See console for details.');
+		ui.notifications?.error(localizeNcsw('notifications.groupAttackFailed'));
 	} finally {
 		isExecutingAction = false;
 		scheduleActionBarRefresh('group-attack-roll-finalize');
@@ -2588,7 +2646,7 @@ async function executeNonMinionAttackRoll(
 
 	const combat = getCombatForCurrentScene();
 	if (!combat) {
-		ui.notifications?.warn('No active combat found for monster attack.');
+		ui.notifications?.warn(localizeNcsw('notifications.noActiveCombatForMonsterAttack'));
 		return;
 	}
 	if (!combat.started) {
@@ -2602,7 +2660,9 @@ async function executeNonMinionAttackRoll(
 
 	const selectedActionId = getNonMinionActionSelectValueForMember(memberCombatantId).trim();
 	if (!selectedActionId) {
-		ui.notifications?.warn(`Select an action for ${member.combatantName} before rolling.`);
+		ui.notifications?.warn(
+			formatNcsw('notifications.selectActionBeforeRoll', { name: member.combatantName }),
+		);
 		return;
 	}
 
@@ -2610,18 +2670,24 @@ async function executeNonMinionAttackRoll(
 		(actionOption) => actionOption.actionId === selectedActionId,
 	);
 	if (!selectedAction) {
-		ui.notifications?.warn(`Selected action is unavailable for ${member.combatantName}.`);
+		ui.notifications?.warn(
+			formatNcsw('notifications.actionUnavailableForMonster', { name: member.combatantName }),
+		);
 		return;
 	}
 
 	const combatant = combat.combatants.get(memberCombatantId) ?? null;
 	if (!combatant) {
-		ui.notifications?.warn(`${member.combatantName} is no longer in combat.`);
+		ui.notifications?.warn(
+			formatNcsw('notifications.monsterNoLongerInCombat', { name: member.combatantName }),
+		);
 		return;
 	}
 
 	if (isCombatantDead(combatant)) {
-		ui.notifications?.warn(`${member.combatantName} is defeated and cannot act.`);
+		ui.notifications?.warn(
+			formatNcsw('notifications.monsterDefeatedCannotAct', { name: member.combatantName }),
+		);
 		return;
 	}
 
@@ -2630,13 +2696,17 @@ async function executeNonMinionAttackRoll(
 			?.current ?? 0,
 	);
 	if (!Number.isFinite(actionsRemaining) || actionsRemaining < 1) {
-		ui.notifications?.warn(`${member.combatantName} has no actions left.`);
+		ui.notifications?.warn(
+			formatNcsw('notifications.monsterNoActionsLeft', { name: member.combatantName }),
+		);
 		return;
 	}
 
 	const actor = (combatant.actor as unknown as ActorWithActionItems | null) ?? null;
 	if (!actor?.activateItem) {
-		ui.notifications?.warn(`${member.combatantName} cannot activate actions.`);
+		ui.notifications?.warn(
+			formatNcsw('notifications.monsterCannotActivateActions', { name: member.combatantName }),
+		);
 		return;
 	}
 
@@ -2661,12 +2731,12 @@ async function executeNonMinionAttackRoll(
 
 		const rememberContext: MinionGroupAttackSessionContext = {
 			combatId: combat.id ?? '',
-			groupId: CANVAS_LITE_SELECTION_MONSTER_ATTACK_SCOPE_ID,
+			groupId: NCS_SELECTION_MONSTER_ATTACK_SCOPE_ID,
 			memberCombatantIds: activeNonMinionAttackMembers.map(
 				(activeMember) => activeMember.combatantId,
 			),
 			targetTokenId: getCurrentTargetSummary().targetTokenId,
-			groupingMode: 'canvasLite',
+			groupingMode: MINION_GROUPING_MODE_NCS,
 			isTemporaryGroup: true,
 		};
 		rememberMemberActionSelection(
@@ -2690,7 +2760,7 @@ async function executeNonMinionAttackRoll(
 			selectedActionId,
 			error,
 		});
-		ui.notifications?.error('Monster attack failed. See console for details.');
+		ui.notifications?.error(localizeNcsw('notifications.monsterAttackFailed'));
 	} finally {
 		isExecutingAction = false;
 		scheduleActionBarRefresh('monster-attack-roll-finalize');
@@ -2708,7 +2778,7 @@ function openGroupAttackPanel(context: SelectionContext, groupId: string): void 
 
 	const memberRows = getGroupAttackMembers(combat, groupId, context);
 	if (memberRows.length === 0) {
-		ui.notifications?.warn('Selected group has no alive minions to attack.');
+		ui.notifications?.warn(localizeNcsw('notifications.selectedGroupHasNoAliveMinions'));
 		return;
 	}
 
@@ -2717,7 +2787,7 @@ function openGroupAttackPanel(context: SelectionContext, groupId: string): void 
 		groupId,
 		memberCombatantIds: memberRows.map((row) => row.member.combatantId),
 		targetTokenId: getCurrentTargetSummary().targetTokenId,
-		groupingMode: 'canvasLite',
+		groupingMode: MINION_GROUPING_MODE_NCS,
 		isTemporaryGroup: true,
 	};
 	const syncedSession = buildSessionSyncForMembers(
@@ -2731,7 +2801,7 @@ function openGroupAttackPanel(context: SelectionContext, groupId: string): void 
 	renderGroupAttackPanel();
 }
 
-function syncCanvasLiteAttackPanel(context: SelectionContext): void {
+function syncNcswPanel(context: SelectionContext): void {
 	const canUsePanel =
 		Boolean(game.user?.isGM) &&
 		Boolean(canvas?.ready) &&
@@ -2745,10 +2815,10 @@ function syncCanvasLiteAttackPanel(context: SelectionContext): void {
 	const nonMinionRows = getSelectedNonMinionAttackMembers(context);
 	const nonMinionSyncContext: MinionGroupAttackSessionContext = {
 		combatId: context.combat.id ?? '',
-		groupId: CANVAS_LITE_SELECTION_MONSTER_ATTACK_SCOPE_ID,
+		groupId: NCS_SELECTION_MONSTER_ATTACK_SCOPE_ID,
 		memberCombatantIds: nonMinionRows.map((row) => row.member.combatantId),
 		targetTokenId: getCurrentTargetSummary().targetTokenId,
-		groupingMode: 'canvasLite',
+		groupingMode: MINION_GROUPING_MODE_NCS,
 		isTemporaryGroup: true,
 	};
 	const syncedNonMinionRows = buildNonMinionSelectionSync(
@@ -2760,19 +2830,19 @@ function syncCanvasLiteAttackPanel(context: SelectionContext): void {
 	activeNonMinionAttackSelectionsByMemberId = syncedNonMinionRows.nextSelectionsByMemberId;
 
 	const selectedGroup = context.attackableGroupSummaries.find(
-		(summary) => summary.groupId === CANVAS_LITE_SELECTION_ATTACK_GROUP_ID,
+		(summary) => summary.groupId === NCS_SELECTION_ATTACK_GROUP_ID,
 	);
 	const minionMemberRows = selectedGroup
-		? getGroupAttackMembers(context.combat, CANVAS_LITE_SELECTION_ATTACK_GROUP_ID, context)
+		? getGroupAttackMembers(context.combat, NCS_SELECTION_ATTACK_GROUP_ID, context)
 		: [];
-	const hasMinionSession = minionMemberRows.length >= 2;
+	const hasMinionSession = minionMemberRows.length >= 1;
 	if (hasMinionSession) {
 		const sessionContext: MinionGroupAttackSessionContext = {
 			combatId: context.combat.id ?? '',
-			groupId: CANVAS_LITE_SELECTION_ATTACK_GROUP_ID,
+			groupId: NCS_SELECTION_ATTACK_GROUP_ID,
 			memberCombatantIds: minionMemberRows.map((row) => row.member.combatantId),
 			targetTokenId: getCurrentTargetSummary().targetTokenId,
-			groupingMode: 'canvasLite',
+			groupingMode: MINION_GROUPING_MODE_NCS,
 			isTemporaryGroup: true,
 		};
 		const syncedSession = buildSessionSyncForMembers(
@@ -2842,7 +2912,7 @@ function buildActionButtonDescriptors(context: SelectionContext): ActionButtonDe
 		);
 
 		for (const groupSummary of attackTargets) {
-			const isSelectionAttackGroup = groupSummary.groupId === CANVAS_LITE_SELECTION_ATTACK_GROUP_ID;
+			const isSelectionAttackGroup = groupSummary.groupId === NCS_SELECTION_ATTACK_GROUP_ID;
 			const groupLabel = formatGroupDisplayLabel(groupSummary.label);
 			descriptors.push({
 				kind: 'attack',
@@ -2850,8 +2920,12 @@ function buildActionButtonDescriptors(context: SelectionContext): ActionButtonDe
 				groupLabel: isSelectionAttackGroup ? undefined : groupLabel,
 				compactLabel: isSelectionAttackGroup ? String(groupSummary.selectedCount) : groupLabel,
 				tooltip: isSelectionAttackGroup
-					? `Open attack for ${groupSummary.selectedCount} selected minions`
-					: `Open Group ${groupLabel} attack`,
+					? formatMinionGroupAction('tooltips.openAttackForSelected', {
+							count: groupSummary.selectedCount,
+						})
+					: formatMinionGroupAction('tooltips.openGroupAttack', {
+							groupLabel,
+						}),
 			});
 		}
 	}
@@ -2861,7 +2935,7 @@ function buildActionButtonDescriptors(context: SelectionContext): ActionButtonDe
 		descriptors.push({
 			kind: 'create',
 			compactLabel: String(groupCount),
-			tooltip: `Group ${groupCount} Minion${groupCount === 1 ? '' : 's'}`,
+			tooltip: formatMinionGroupAction('tooltips.groupMinions', { count: groupCount }),
 		});
 	}
 
@@ -2886,7 +2960,7 @@ function buildActionButtonDescriptors(context: SelectionContext): ActionButtonDe
 				groupId: groupSummary.groupId,
 				groupLabel,
 				compactLabel: `${groupLabel}+${groupCount}`,
-				tooltip: `Add ${groupCount} to Group ${groupLabel}`,
+				tooltip: formatMinionGroupAction('tooltips.addToGroup', { count: groupCount, groupLabel }),
 			});
 		}
 	}
@@ -2910,7 +2984,10 @@ function buildActionButtonDescriptors(context: SelectionContext): ActionButtonDe
 			groupId: groupSummary.groupId,
 			groupLabel,
 			compactLabel: `${groupLabel}-${groupSummary.selectedCount}`,
-			tooltip: `Remove ${groupSummary.selectedCount} from Group ${groupLabel}`,
+			tooltip: formatMinionGroupAction('tooltips.removeFromGroup', {
+				count: groupSummary.selectedCount,
+				groupLabel,
+			}),
 		});
 	}
 
@@ -2933,7 +3010,7 @@ function buildActionButtonDescriptors(context: SelectionContext): ActionButtonDe
 			groupId: groupSummary.groupId,
 			groupLabel,
 			compactLabel: groupLabel,
-			tooltip: `Dissolve Group ${groupLabel}`,
+			tooltip: formatMinionGroupAction('tooltips.dissolveGroup', { groupLabel }),
 		});
 	}
 
@@ -3083,17 +3160,17 @@ function createCornerHandle(corner: ResizeCorner): HTMLDivElement {
 	const handle = document.createElement('div');
 	handle.className = `nimble-minion-group-actions__corner-handle nimble-minion-group-actions__corner-handle--${corner}`;
 	handle.setAttribute('role', 'presentation');
-	handle.title = 'Drag corner to resize';
+	handle.title = localizeMinionGroupAction('tooltips.dragCornerToResize');
 	handle.addEventListener('pointerdown', (event) => handleResizeHandlePointerDown(event, corner));
 	return handle;
 }
 
 function renderActionBar(context: SelectionContext): void {
 	const actionBar = ensureActionBarElement();
-	if (shouldUseCanvasLiteTemporaryGroups()) {
+	if (shouldUseNcsTemporaryGroups()) {
 		actionBar.hidden = true;
 		actionBar.replaceChildren();
-		syncCanvasLiteAttackPanel(context);
+		syncNcswPanel(context);
 		return;
 	}
 
@@ -3123,7 +3200,7 @@ function renderActionBar(context: SelectionContext): void {
 		const stillSelected = context.attackableGroupSummaries.some(
 			(summary) => summary.groupId === activeGroupAttackSession?.context.groupId,
 		);
-		if (!stillSelected || !shouldUseCanvasLiteTemporaryGroups()) {
+		if (!stillSelected || !shouldUseNcsTemporaryGroups()) {
 			hideGroupAttackPanel();
 		}
 	}
@@ -3208,11 +3285,11 @@ function renderActionBar(context: SelectionContext): void {
 
 	const dragHandle = document.createElement('div');
 	dragHandle.className = 'nimble-minion-group-actions__drag-handle';
-	dragHandle.title = 'Drag to move';
+	dragHandle.title = localizeMinionGroupAction('tooltips.dragToMove');
 	dragHandle.addEventListener('pointerdown', handleDragHandlePointerDown);
 	const headerTitle = document.createElement('span');
 	headerTitle.className = 'nimble-minion-group-actions__title';
-	headerTitle.textContent = 'Minion Groups';
+	headerTitle.textContent = localizeMinionGroupAction('title');
 	dragHandle.append(headerTitle);
 	actionBar.append(dragHandle);
 
@@ -3231,7 +3308,7 @@ function renderActionBar(context: SelectionContext): void {
 		const busyBadge = document.createElement('span');
 		busyBadge.className =
 			'nimble-minion-group-actions__badge nimble-minion-group-actions__badge--busy';
-		busyBadge.title = 'Working';
+		busyBadge.title = localizeMinionGroupAction('working');
 		const busyIcon = document.createElement('i');
 		busyIcon.className = 'fa-solid fa-spinner';
 		const busyValue = document.createElement('span');
@@ -3399,7 +3476,7 @@ async function performGroupAction(action: ActionRequest): Promise<void> {
 		}
 		case 'attack': {
 			if (!context.canAttackGroups) return;
-			openGroupAttackPanel(context, action.groupId ?? CANVAS_LITE_SELECTION_ATTACK_GROUP_ID);
+			openGroupAttackPanel(context, action.groupId ?? NCS_SELECTION_ATTACK_GROUP_ID);
 			break;
 		}
 		case 'remove': {
@@ -3457,7 +3534,7 @@ async function handleActionSelection(action: ActionRequest): Promise<void> {
 				groupId: action.groupId ?? null,
 				error,
 			});
-			ui.notifications?.error('Could not open group attack panel. See console for details.');
+			ui.notifications?.error(localizeNcsw('notifications.couldNotOpenPanel'));
 		}
 		return;
 	}
@@ -3475,7 +3552,7 @@ async function handleActionSelection(action: ActionRequest): Promise<void> {
 			groupId: action.groupId ?? null,
 			error,
 		});
-		ui.notifications?.error('Minion grouping action failed. See console for details.');
+		ui.notifications?.error(localizeMinionGroupAction('notifications.groupingActionFailed'));
 	} finally {
 		isExecutingAction = false;
 		scheduleActionBarRefresh('action-end');
@@ -3622,3 +3699,4 @@ export default function registerMinionGroupTokenActions(): void {
 		scheduleActionBarRefresh('initial-ready');
 	}
 }
+
