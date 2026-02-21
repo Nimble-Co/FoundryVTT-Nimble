@@ -23,7 +23,7 @@ function suppressNextOverlayButtonClick() {
 }
 
 export function draggable(node: HTMLElement, data: string | null | undefined) {
-	let state = $state(data);
+	let state = data;
 	applyDragState(node, state);
 	let sourceHidden = false;
 	let isDragging = false;

@@ -18,6 +18,7 @@ import {
 
 const MINION_GROUP_ACTION_BAR_ID = 'nimble-minion-group-actions';
 const MINION_GROUP_ATTACK_PANEL_ID = 'nimble-minion-group-attack-panel';
+const MINION_GROUP_TOKEN_UI_DEBUG_ENABLED_KEY = 'NIMBLE_ENABLE_GROUP_TOKEN_UI_LOGS';
 const MINION_GROUP_TOKEN_UI_DEBUG_DISABLED_KEY = 'NIMBLE_DISABLE_GROUP_TOKEN_UI_LOGS';
 const MINION_GROUP_ACTION_BAR_SCALE_STORAGE_KEY = 'nimble.minionGroupActionBar.scale';
 const MINION_GROUP_ACTION_BAR_POSITION_STORAGE_KEY = 'nimble.minionGroupActionBar.position';
@@ -26,8 +27,11 @@ const MINION_GROUP_ACTION_BAR_MIN_SCALE = 2;
 const MINION_GROUP_ACTION_BAR_MAX_SCALE = 3;
 const MINION_GROUP_ACTION_BAR_VIEWPORT_MARGIN_PX = 8;
 const MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX = 8;
+const MINION_GROUP_ATTACK_PANEL_MIN_WIDTH_REM = 20;
+const MINION_GROUP_ATTACK_PANEL_MAX_TARGETS_PER_ROW = 4;
 const ALLOW_GROUPING_OUTSIDE_COMBAT_SETTING_KEY = 'allowMinionGroupingOutsideCombat';
 const CANVAS_LITE_SELECTION_ATTACK_GROUP_ID = '__nimbleCanvasLiteSelectionAttackGroup';
+const CANVAS_LITE_SELECTION_MONSTER_ATTACK_SCOPE_ID = '__nimbleCanvasLiteSelectionMonsterAttack';
 
 let didRegisterMinionGroupTokenActions = false;
 let minionGroupActionBarElement: HTMLDivElement | null = null;
@@ -59,8 +63,9 @@ let windowResizeHandler: (() => void) | null = null;
 let minionGroupAttackPanelElement: HTMLDivElement | null = null;
 let activeGroupAttackSession: MinionGroupAttackSelectionState | null = null;
 let activeGroupAttackMembers: GroupAttackMemberView[] = [];
+let activeNonMinionAttackMembers: GroupAttackMemberView[] = [];
+let activeNonMinionAttackSelectionsByMemberId: Map<string, string | null> = new Map();
 let activeGroupAttackWarnings: string[] = [];
-let activeGroupAttackLabel: string | null = null;
 let groupAttackPanelPosition: { left: number; top: number } | null = null;
 let groupAttackPanelDragState: {
 	pointerId: number;
@@ -71,6 +76,10 @@ let groupAttackPanelDragState: {
 } | null = null;
 let groupAttackPanelMoveHandler: ((event: PointerEvent) => void) | null = null;
 let groupAttackPanelUpHandler: ((event: PointerEvent) => void) | null = null;
+let groupAttackTargetPopoverElement: HTMLDivElement | null = null;
+let groupAttackTargetPopoverRefreshInterval: ReturnType<typeof setInterval> | null = null;
+let groupAttackActionDescriptionPopoverElement: HTMLDivElement | null = null;
+let groupAttackImagePopoverElement: HTMLDivElement | null = null;
 const rememberedGroupAttackSelectionsByActorType = new Map<string, string>();
 
 type HookRegistration = { hook: string; id: number };
@@ -108,6 +117,7 @@ type CombatWithGrouping = Combat & {
 		groupId: string;
 		memberCombatantIds?: string[];
 		targetTokenId: string;
+		targetTokenIds?: string[];
 		selections: Array<{ memberCombatantId: string; actionId: string | null }>;
 		endTurn?: boolean;
 	}) => Promise<{
@@ -125,6 +135,7 @@ interface SelectionContext {
 	allowGroupingOutsideCombat: boolean;
 	selectedTokenCount: number;
 	selectedCombatants: Combatant.Implementation[];
+	selectedAliveNonMinionMonsters: Combatant.Implementation[];
 	selectedMinions: Combatant.Implementation[];
 	selectedOutOfCombatMinionTokenIds: string[];
 	selectedMinionCountForUi: number;
@@ -153,6 +164,7 @@ interface SelectionContext {
 interface GroupAttackMemberView {
 	combatantId: string;
 	combatantName: string;
+	memberImage: string;
 	actorType: string;
 	actionsRemaining: number;
 	actionOptions: MinionGroupAttackOption[];
@@ -177,13 +189,17 @@ interface MonsterFeatureActionItemLike {
 
 interface ActorWithActionItems {
 	type?: string;
+	name?: string;
 	items?: { contents?: MonsterFeatureActionItemLike[] } | MonsterFeatureActionItemLike[];
+	activateItem?: (id: string, options?: Record<string, unknown>) => Promise<ChatMessage | null>;
 }
 
 function isTokenUiDebugEnabled(): boolean {
+	const globals = globalThis as Record<string, unknown>;
 	return (
 		Boolean(game.user?.isGM) &&
-		(globalThis as Record<string, unknown>)[MINION_GROUP_TOKEN_UI_DEBUG_DISABLED_KEY] !== true
+		globals[MINION_GROUP_TOKEN_UI_DEBUG_ENABLED_KEY] === true &&
+		globals[MINION_GROUP_TOKEN_UI_DEBUG_DISABLED_KEY] !== true
 	);
 }
 
@@ -608,10 +624,18 @@ function buildSelectionContext(): SelectionContext {
 		}
 	}
 
-	const selectedMinions = selectedCombatants.filter((combatant) => isMinionCombatant(combatant));
+	const selectedNonPlayerCombatants = selectedCombatants.filter(
+		(combatant) => combatant.type !== 'character',
+	);
+	const selectedMinions = selectedNonPlayerCombatants.filter((combatant) =>
+		isMinionCombatant(combatant),
+	);
+	const selectedAliveNonMinionMonsters = selectedNonPlayerCombatants.filter(
+		(combatant) => !isMinionCombatant(combatant) && !isCombatantDead(combatant),
+	);
 	const selectedInCombatNonMinionCount = Math.max(
 		0,
-		selectedCombatants.length - selectedMinions.length,
+		selectedNonPlayerCombatants.length - selectedMinions.length,
 	);
 	const selectedDeadMinions = selectedMinions.filter((combatant) => isCombatantDead(combatant));
 	const selectedAliveMinions = selectedMinions.filter((combatant) => !isCombatantDead(combatant));
@@ -700,9 +724,6 @@ function buildSelectionContext(): SelectionContext {
 	const addableGroupSummaries = selectedGroupSummaries.filter(
 		(summary) => summary.selectedCount > 0,
 	);
-	const groupedAttackableGroupSummaries = selectedGroupSummaries.filter(
-		(summary) => summary.selectedCount > 0 && summary.aliveCount > 0,
-	);
 	const canvasLiteSelectedAliveMinionIds = [
 		...new Set(
 			selectedAliveMinions
@@ -710,9 +731,8 @@ function buildSelectionContext(): SelectionContext {
 				.filter((combatantId): combatantId is string => typeof combatantId === 'string'),
 		),
 	];
-	const isCanvasLiteMode = shouldUseCanvasLiteTemporaryGroups();
-	const attackableGroupSummaries = isCanvasLiteMode
-		? canvasLiteSelectedAliveMinionIds.length >= 1
+	const attackableGroupSummaries =
+		canvasLiteSelectedAliveMinionIds.length >= 2
 			? [
 					{
 						groupId: CANVAS_LITE_SELECTION_ATTACK_GROUP_ID,
@@ -725,8 +745,7 @@ function buildSelectionContext(): SelectionContext {
 						isFullSelection: true,
 					},
 				]
-			: []
-		: groupedAttackableGroupSummaries;
+			: [];
 
 	const canCreateGroup =
 		selectedUngroupedAliveMinionCountForActions >= 2 && selectedGroupedMinions.length === 0;
@@ -734,14 +753,14 @@ function buildSelectionContext(): SelectionContext {
 		addableGroupSummaries.length > 0 && selectedUngroupedAliveMinionCountForActions > 0;
 	const canRemoveFromGroup = removableGroupSummaries.length > 0;
 	const canDissolveGroups = dissolvableGroupSummaries.length > 0;
-	const canAttackGroups =
-		isCanvasLiteMode && Boolean(combat) && attackableGroupSummaries.length > 0;
+	const canAttackGroups = Boolean(combat) && attackableGroupSummaries.length > 0;
 
 	return {
 		combat,
 		allowGroupingOutsideCombat,
 		selectedTokenCount,
 		selectedCombatants,
+		selectedAliveNonMinionMonsters,
 		selectedMinions,
 		selectedOutOfCombatMinionTokenIds,
 		selectedMinionCountForUi,
@@ -905,19 +924,14 @@ function getSelectionHintMessage(
 function getGroupAttackAvailabilityDiagnostics(context: SelectionContext): {
 	available: boolean;
 	reasons: string[];
-	isCanvasLiteMode: boolean;
 } {
 	const reasons: string[] = [];
-	const isCanvasLiteMode = shouldUseCanvasLiteTemporaryGroups();
-
-	if (!isCanvasLiteMode) reasons.push('modeNotCanvasLite');
 	if (!context.combat) reasons.push('noCombatForScene');
 	if (context.attackableGroupSummaries.length === 0) reasons.push('noAttackableSelection');
 
 	return {
 		available: context.canAttackGroups,
 		reasons,
-		isCanvasLiteMode,
 	};
 }
 
@@ -962,6 +976,22 @@ function getActionRollFormulaLabel(item: MonsterFeatureActionItemLike): string |
 	const flattened = flattenActivationEffects(effects);
 	if (flattened.length === 0) return null;
 
+	const normalizeFormulaForDisplay = (formula: string): string | null => {
+		const normalized = formula.replace(/\s+/g, ' ').trim();
+		if (!normalized) return null;
+
+		// Prefer the first alternate when formulas include free-text separators (e.g. "1d10, OR 2d6").
+		const firstSegment =
+			normalized
+				.split(/\s*(?:\||,|;|\bor\b)\s*/i)
+				.map((segment) => segment.trim())
+				.find((segment) => segment.length > 0) ?? normalized;
+
+		const diceMatch = firstSegment.match(/\b\d*d\d+(?:\s*[+-]\s*\d+)?\b/i);
+		if (!diceMatch) return firstSegment;
+		return diceMatch[0].replace(/\s+/g, '');
+	};
+
 	const formulas = [
 		...new Set(
 			flattened
@@ -972,12 +1002,42 @@ function getActionRollFormulaLabel(item: MonsterFeatureActionItemLike): string |
 						node.formula.trim().length > 0,
 				)
 				.map((node) => node.formula as string)
-				.map((formula) => formula.trim()),
+				.map((formula) => normalizeFormulaForDisplay(formula))
+				.filter((formula): formula is string => Boolean(formula)),
 		),
 	];
 
 	if (formulas.length === 0) return null;
 	return formulas.join(' + ');
+}
+
+function normalizeDescriptionToPlainText(value: unknown): string | null {
+	if (typeof value !== 'string') return null;
+	const normalized = value.trim();
+	if (!normalized) return null;
+
+	const htmlWrapper = document.createElement('div');
+	htmlWrapper.innerHTML = normalized;
+	const text = htmlWrapper.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+	return text.length > 0 ? text : null;
+}
+
+function getActionDescriptionLabel(item: MonsterFeatureActionItemLike): string | null {
+	const descriptionCandidates: unknown[] = [
+		foundry.utils.getProperty(item, 'system.description'),
+		foundry.utils.getProperty(item, 'system.description.value'),
+		foundry.utils.getProperty(item, 'system.activation.description'),
+		foundry.utils.getProperty(item, 'system.activation.description.value'),
+		foundry.utils.getProperty(item, 'system.details.description'),
+		foundry.utils.getProperty(item, 'system.details.description.value'),
+	];
+
+	for (const candidate of descriptionCandidates) {
+		const normalized = normalizeDescriptionToPlainText(candidate);
+		if (normalized) return normalized;
+	}
+
+	return null;
 }
 
 function getActorActionItems(actor: ActorWithActionItems | null): MonsterFeatureActionItemLike[] {
@@ -1003,6 +1063,7 @@ function buildGroupAttackActionOptions(
 				actionId: item.id ?? '',
 				label: item.name?.trim() || 'Unnamed Action',
 				rollFormula: getActionRollFormulaLabel(item),
+				description: getActionDescriptionLabel(item),
 				unsupportedReasons,
 			};
 		})
@@ -1012,14 +1073,26 @@ function buildGroupAttackActionOptions(
 		);
 }
 
-function getCurrentTargetSummary(): { targetTokenId: string | null; targetName: string | null } {
+function getCurrentTargetSummary(): {
+	targetTokenId: string | null;
+	targetTokenIds: string[];
+	targetName: string | null;
+} {
 	const selectedTargets = Array.from(game.user?.targets ?? []);
-	if (selectedTargets.length !== 1) return { targetTokenId: null, targetName: null };
+	const targetTokenIds = [
+		...new Set(
+			selectedTargets
+				.map((target) => (target?.id ?? target?.document?.id ?? '').trim())
+				.filter((tokenId): tokenId is string => tokenId.length > 0),
+		),
+	];
+	const targetTokenId = targetTokenIds[0] ?? null;
+
+	if (targetTokenIds.length !== 1) {
+		return { targetTokenId, targetTokenIds, targetName: null };
+	}
 
 	const [target] = selectedTargets;
-	const tokenId = (target?.id ?? target?.document?.id ?? '').trim();
-	if (!tokenId) return { targetTokenId: null, targetName: null };
-
 	const targetName =
 		target?.name?.trim() ||
 		target?.document?.name?.trim() ||
@@ -1027,9 +1100,550 @@ function getCurrentTargetSummary(): { targetTokenId: string | null; targetName: 
 		'Target';
 
 	return {
-		targetTokenId: tokenId,
+		targetTokenId,
+		targetTokenIds,
 		targetName,
 	};
+}
+
+interface TargetTokenView {
+	token: Token;
+	tokenId: string;
+	name: string;
+	image: string;
+	isTargeted: boolean;
+	hpCurrent: number | null;
+	hpMax: number | null;
+	wounds: number;
+}
+
+interface CombatantPreviewStats {
+	tokenName: string;
+	hpCurrent: number | null;
+	hpMax: number | null;
+	hpPercent: number;
+	isBloodied: boolean;
+}
+
+function getTargetTokenVitalStats(token: Token): {
+	hpCurrent: number | null;
+	hpMax: number | null;
+	wounds: number;
+} {
+	const actor = token.actor ?? token.document?.actor ?? null;
+	if (!actor) {
+		return {
+			hpCurrent: null,
+			hpMax: null,
+			wounds: 0,
+		};
+	}
+	const hpCurrentRaw = Number(
+		foundry.utils.getProperty(actor, 'system.attributes.hp.value') as number | null,
+	);
+	const hpMaxRaw = Number(
+		foundry.utils.getProperty(actor, 'system.attributes.hp.max') as number | null,
+	);
+	const woundsRaw = Number(
+		foundry.utils.getProperty(actor, 'system.attributes.wounds.value') as number | null,
+	);
+
+	const hpCurrent = Number.isFinite(hpCurrentRaw) ? hpCurrentRaw : null;
+	const hpMax = Number.isFinite(hpMaxRaw) && hpMaxRaw > 0 ? hpMaxRaw : null;
+	const wounds = Number.isFinite(woundsRaw) ? Math.max(0, Math.floor(woundsRaw)) : 0;
+
+	return { hpCurrent, hpMax, wounds };
+}
+
+function getCombatantPreviewStats(
+	combatantId: string,
+	fallbackName: string,
+): CombatantPreviewStats {
+	const combat = getCombatForCurrentScene();
+	const combatant = combat?.combatants.get(combatantId) ?? null;
+	const tokenName =
+		combatant?.name?.trim() || combatant?.token?.name?.trim() || fallbackName || 'Monster';
+	const actor = (combatant?.actor as ActorWithActionItems | null) ?? null;
+	const actorData = actor ?? {};
+	const hpCurrentRaw = Number(
+		foundry.utils.getProperty(actorData, 'system.attributes.hp.value') as number | null,
+	);
+	const hpMaxRaw = Number(
+		foundry.utils.getProperty(actorData, 'system.attributes.hp.max') as number | null,
+	);
+	const hpCurrent = Number.isFinite(hpCurrentRaw) ? hpCurrentRaw : null;
+	const hpMax = Number.isFinite(hpMaxRaw) && hpMaxRaw > 0 ? hpMaxRaw : null;
+	const hpPercent =
+		hpMax && hpCurrent !== null
+			? Math.max(0, Math.min(100, Math.round((hpCurrent / hpMax) * 100)))
+			: 0;
+	const isBloodied = Boolean(hpMax && hpCurrent !== null && hpCurrent <= hpMax / 2);
+
+	return {
+		tokenName,
+		hpCurrent,
+		hpMax,
+		hpPercent,
+		isBloodied,
+	};
+}
+
+function getCombatantRowImage(combatant: Combatant.Implementation): string {
+	const tokenTextureSource = (combatant.token as unknown as { texture?: { src?: string } } | null)
+		?.texture?.src;
+	if (typeof tokenTextureSource === 'string' && tokenTextureSource.trim().length > 0) {
+		return tokenTextureSource.trim();
+	}
+
+	const combatantImage = (combatant as unknown as { img?: string }).img;
+	if (typeof combatantImage === 'string' && combatantImage.trim().length > 0) {
+		return combatantImage.trim();
+	}
+
+	const actorImage = (combatant.actor as unknown as { img?: string } | null)?.img;
+	if (typeof actorImage === 'string' && actorImage.trim().length > 0) {
+		return actorImage.trim();
+	}
+
+	return 'icons/svg/mystery-man.svg';
+}
+
+function getAvailablePlayerTargetTokens(): TargetTokenView[] {
+	const controlledTokens = canvas?.tokens?.controlled ?? [];
+	const targetedTokens = Array.from(game.user?.targets ?? []);
+	const candidateTokensById = new Map<string, Token>();
+	for (const tokenCandidate of [...controlledTokens, ...targetedTokens]) {
+		const token = tokenCandidate as Token;
+		const tokenId = (token?.id ?? token?.document?.id ?? '').trim();
+		if (!tokenId) continue;
+		if (!candidateTokensById.has(tokenId)) {
+			candidateTokensById.set(tokenId, token);
+		}
+	}
+	const selectedTargetIds = new Set(
+		Array.from(game.user?.targets ?? [])
+			.map((target) => (target?.id ?? target?.document?.id ?? '').trim())
+			.filter((tokenId): tokenId is string => tokenId.length > 0),
+	);
+
+	const rows: TargetTokenView[] = [];
+	for (const token of candidateTokensById.values()) {
+		const actorType = (token.actor?.type ?? token.document?.actor?.type ?? '').trim().toLowerCase();
+		if (actorType !== 'character') continue;
+		const tokenId = (token.id ?? token.document?.id ?? '').trim();
+		if (!tokenId) continue;
+
+		const image =
+			(token.document?.texture?.src ?? token.actor?.img ?? '').trim() ||
+			'icons/svg/mystery-man.svg';
+		const name =
+			token.document?.name?.trim() || token.name?.trim() || token.actor?.name?.trim() || 'Player';
+		const vitalStats = getTargetTokenVitalStats(token);
+
+		rows.push({
+			token,
+			tokenId,
+			name,
+			image,
+			isTargeted: selectedTargetIds.has(tokenId),
+			hpCurrent: vitalStats.hpCurrent,
+			hpMax: vitalStats.hpMax,
+			wounds: vitalStats.wounds,
+		});
+	}
+
+	return rows;
+}
+
+function toggleTargetTokenFromPanel(token: Token, targeted: boolean): void {
+	if (!game.user) return;
+	token.setTarget(targeted, {
+		user: game.user,
+		releaseOthers: false,
+		groupSelection: true,
+	});
+}
+
+function getRootFontSizePx(): number {
+	const rootElement = document.documentElement;
+	if (!rootElement) return 16;
+	const parsed = Number.parseFloat(globalThis.getComputedStyle(rootElement).fontSize);
+	return Number.isFinite(parsed) && parsed > 0 ? parsed : 16;
+}
+
+function parseCssPixels(value: string | null | undefined): number {
+	if (!value) return 0;
+	const parsed = Number.parseFloat(value);
+	return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getElementHorizontalGapPx(element: HTMLElement): number {
+	const styles = globalThis.getComputedStyle(element);
+	const columnGap = parseCssPixels(styles.columnGap);
+	if (columnGap > 0) return columnGap;
+	return parseCssPixels(styles.gap);
+}
+
+function measureTargetListWidthPx(targetList: HTMLElement): number {
+	const tokenButtons = [...targetList.children].filter(
+		(child): child is HTMLButtonElement =>
+			child instanceof HTMLButtonElement &&
+			child.classList.contains('nimble-minion-group-attack-panel__target-token'),
+	);
+	const measuredElements =
+		tokenButtons.length > 0
+			? tokenButtons.slice(
+					0,
+					Math.min(MINION_GROUP_ATTACK_PANEL_MAX_TARGETS_PER_ROW, tokenButtons.length),
+				)
+			: [...targetList.children].filter(
+					(child): child is HTMLElement => child instanceof HTMLElement,
+				);
+	if (measuredElements.length === 0) return 0;
+	const gapPx = getElementHorizontalGapPx(targetList);
+	const childrenWidthPx = measuredElements.reduce(
+		(total, child) => total + child.getBoundingClientRect().width,
+		0,
+	);
+	return childrenWidthPx + gapPx * Math.max(0, measuredElements.length - 1);
+}
+
+function applyGroupAttackPanelWidth(options: {
+	panel: HTMLDivElement;
+	targetRow: HTMLDivElement;
+	targetLabel: HTMLSpanElement;
+	targetList: HTMLDivElement;
+}): void {
+	const remPx = getRootFontSizePx();
+	const minWidthPx = MINION_GROUP_ATTACK_PANEL_MIN_WIDTH_REM * remPx;
+	const panelStyles = globalThis.getComputedStyle(options.panel);
+	const panelPaddingWidthPx =
+		parseCssPixels(panelStyles.paddingLeft) + parseCssPixels(panelStyles.paddingRight);
+	const targetRowStyles = globalThis.getComputedStyle(options.targetRow);
+	const targetRowPaddingWidthPx =
+		parseCssPixels(targetRowStyles.paddingLeft) + parseCssPixels(targetRowStyles.paddingRight);
+	const targetRowGapPx = getElementHorizontalGapPx(options.targetRow);
+	const targetLabelWidthPx = options.targetLabel.getBoundingClientRect().width;
+	const targetListWidthPx = measureTargetListWidthPx(options.targetList);
+	const targetPreferredWidthPx =
+		panelPaddingWidthPx +
+		targetRowPaddingWidthPx +
+		targetLabelWidthPx +
+		targetRowGapPx +
+		targetListWidthPx +
+		4;
+	const desiredWidthPx = Math.max(minWidthPx, targetPreferredWidthPx);
+	const viewportMaxWidthPx = Math.max(
+		minWidthPx,
+		window.innerWidth - MINION_GROUP_ATTACK_PANEL_VIEWPORT_MARGIN_PX * 2,
+	);
+	const nextWidthPx = Math.min(viewportMaxWidthPx, desiredWidthPx);
+	options.panel.style.width = `${Math.round(nextWidthPx)}px`;
+}
+
+function getGroupAttackTargetPopoverElement(): HTMLDivElement {
+	if (groupAttackTargetPopoverElement && document.body.contains(groupAttackTargetPopoverElement)) {
+		return groupAttackTargetPopoverElement;
+	}
+
+	const element = document.createElement('div');
+	element.className =
+		'nimble-minion-group-attack-panel__target-tooltip nimble-minion-group-attack-panel__target-tooltip--floating';
+	element.hidden = true;
+	document.body.appendChild(element);
+	groupAttackTargetPopoverElement = element;
+	return element;
+}
+
+function clearGroupAttackTargetPopoverRefreshInterval(): void {
+	if (!groupAttackTargetPopoverRefreshInterval) return;
+	clearInterval(groupAttackTargetPopoverRefreshInterval);
+	groupAttackTargetPopoverRefreshInterval = null;
+}
+
+function hideGroupAttackTargetPopover(): void {
+	clearGroupAttackTargetPopoverRefreshInterval();
+	if (!groupAttackTargetPopoverElement) return;
+	groupAttackTargetPopoverElement.hidden = true;
+	groupAttackTargetPopoverElement.replaceChildren();
+}
+
+function positionGroupAttackTargetPopover(anchor: HTMLElement, popover: HTMLDivElement): void {
+	const margin = 8;
+	const gap = 6;
+	const anchorRect = anchor.getBoundingClientRect();
+	const popoverRect = popover.getBoundingClientRect();
+
+	let left = anchorRect.left + anchorRect.width / 2 - popoverRect.width / 2;
+	let top = anchorRect.top - popoverRect.height - gap;
+
+	if (top < margin) {
+		top = Math.min(window.innerHeight - popoverRect.height - margin, anchorRect.bottom + gap);
+	}
+
+	left = Math.max(margin, Math.min(window.innerWidth - popoverRect.width - margin, left));
+	top = Math.max(margin, Math.min(window.innerHeight - popoverRect.height - margin, top));
+
+	popover.style.left = `${Math.round(left)}px`;
+	popover.style.top = `${Math.round(top)}px`;
+}
+
+function getLiveTargetPopoverState(targetToken: TargetTokenView): TargetTokenView {
+	const selectedTargetIds = new Set(
+		Array.from(game.user?.targets ?? [])
+			.map((target) => (target?.id ?? target?.document?.id ?? '').trim())
+			.filter((tokenId): tokenId is string => tokenId.length > 0),
+	);
+	const vitalStats = getTargetTokenVitalStats(targetToken.token);
+	return {
+		...targetToken,
+		isTargeted: selectedTargetIds.has(targetToken.tokenId),
+		hpCurrent: vitalStats.hpCurrent,
+		hpMax: vitalStats.hpMax,
+		wounds: vitalStats.wounds,
+	};
+}
+
+function renderGroupAttackTargetPopoverContent(
+	popover: HTMLDivElement,
+	targetToken: TargetTokenView,
+): void {
+	popover.replaceChildren();
+
+	const tooltipHead = document.createElement('div');
+	tooltipHead.className = 'nimble-minion-group-attack-panel__target-tooltip-head';
+
+	const tooltipStateIcon = document.createElement('i');
+	tooltipStateIcon.className = `nimble-minion-group-attack-panel__target-state-icon fa-solid fa-crosshairs ${
+		targetToken.isTargeted
+			? 'nimble-minion-group-attack-panel__target-state-icon--active'
+			: 'nimble-minion-group-attack-panel__target-state-icon--inactive'
+	}`;
+	tooltipHead.append(tooltipStateIcon);
+
+	const tooltipName = document.createElement('span');
+	tooltipName.className = 'nimble-minion-group-attack-panel__target-tooltip-name';
+	tooltipName.textContent = targetToken.name;
+	tooltipHead.append(tooltipName);
+	popover.append(tooltipHead);
+
+	const tooltipMeta = document.createElement('div');
+	tooltipMeta.className = 'nimble-minion-group-attack-panel__target-tooltip-meta';
+
+	const hpBar = document.createElement('div');
+	hpBar.className = 'nimble-minion-group-attack-panel__target-tooltip-hp';
+	const hpCurrent = targetToken.hpCurrent ?? 0;
+	const hpMax = targetToken.hpMax ?? 0;
+	const hpPercent =
+		hpMax > 0 ? Math.max(0, Math.min(100, Math.round((hpCurrent / hpMax) * 100))) : 0;
+	hpBar.style.setProperty('--nimble-target-tooltip-hp-percent', `${hpPercent}%`);
+	if (hpMax > 0 && hpCurrent <= hpMax / 2) {
+		hpBar.classList.add('nimble-minion-group-attack-panel__target-tooltip-hp--bloodied');
+	}
+
+	const hpValue = document.createElement('span');
+	hpValue.className = 'nimble-minion-group-attack-panel__target-tooltip-hp-value';
+	hpValue.textContent =
+		hpMax > 0 ? `${Math.max(0, Math.floor(hpCurrent))}/${Math.floor(hpMax)}` : '-/-';
+	hpBar.append(hpValue);
+	tooltipMeta.append(hpBar);
+
+	const wounds = document.createElement('div');
+	wounds.className = 'nimble-minion-group-attack-panel__target-tooltip-wound';
+	const woundsIcon = document.createElement('i');
+	woundsIcon.className = 'fa-solid fa-droplet';
+	const woundsValue = document.createElement('span');
+	woundsValue.className = 'nimble-minion-group-attack-panel__target-tooltip-wound-value';
+	woundsValue.textContent = String(targetToken.wounds);
+	wounds.append(woundsIcon, woundsValue);
+	tooltipMeta.append(wounds);
+	popover.append(tooltipMeta);
+}
+
+function showGroupAttackTargetPopover(anchor: HTMLElement, targetToken: TargetTokenView): void {
+	clearGroupAttackTargetPopoverRefreshInterval();
+	const popover = getGroupAttackTargetPopoverElement();
+
+	const updatePopover = () => {
+		if (!document.body.contains(anchor)) {
+			hideGroupAttackTargetPopover();
+			return;
+		}
+		const liveState = getLiveTargetPopoverState(targetToken);
+		renderGroupAttackTargetPopoverContent(popover, liveState);
+		popover.hidden = false;
+		positionGroupAttackTargetPopover(anchor, popover);
+	};
+
+	updatePopover();
+	groupAttackTargetPopoverRefreshInterval = setInterval(updatePopover, 200);
+}
+
+function getGroupAttackActionDescriptionPopoverElement(): HTMLDivElement {
+	if (
+		groupAttackActionDescriptionPopoverElement &&
+		document.body.contains(groupAttackActionDescriptionPopoverElement)
+	) {
+		return groupAttackActionDescriptionPopoverElement;
+	}
+
+	const element = document.createElement('div');
+	element.className = 'nimble-minion-group-attack-panel__action-tooltip';
+	element.hidden = true;
+	document.body.appendChild(element);
+	groupAttackActionDescriptionPopoverElement = element;
+	return element;
+}
+
+function hideGroupAttackActionDescriptionPopover(): void {
+	if (!groupAttackActionDescriptionPopoverElement) return;
+	groupAttackActionDescriptionPopoverElement.hidden = true;
+	groupAttackActionDescriptionPopoverElement.textContent = '';
+}
+
+function showGroupAttackActionDescriptionPopover(anchor: HTMLElement, description: string): void {
+	const popover = getGroupAttackActionDescriptionPopoverElement();
+	popover.textContent = description;
+	popover.hidden = false;
+	const margin = 8;
+	const gap = 6;
+	const anchorRect = anchor.getBoundingClientRect();
+	const popoverRect = popover.getBoundingClientRect();
+	let left = anchorRect.left + anchorRect.width / 2 - popoverRect.width / 2;
+	let top = anchorRect.top - popoverRect.height - gap;
+	if (top < margin) {
+		top = Math.min(window.innerHeight - popoverRect.height - margin, anchorRect.bottom + gap);
+	}
+	left = Math.max(margin, Math.min(window.innerWidth - popoverRect.width - margin, left));
+	top = Math.max(margin, Math.min(window.innerHeight - popoverRect.height - margin, top));
+	popover.style.left = `${Math.round(left)}px`;
+	popover.style.top = `${Math.round(top)}px`;
+}
+
+function getGroupAttackImagePopoverElement(): HTMLDivElement {
+	if (groupAttackImagePopoverElement && document.body.contains(groupAttackImagePopoverElement)) {
+		return groupAttackImagePopoverElement;
+	}
+
+	const element = document.createElement('div');
+	element.className = 'nimble-minion-group-attack-panel__image-popover';
+	element.hidden = true;
+	document.body.appendChild(element);
+	groupAttackImagePopoverElement = element;
+	return element;
+}
+
+function hideGroupAttackImagePopover(): void {
+	if (!groupAttackImagePopoverElement) return;
+	groupAttackImagePopoverElement.hidden = true;
+	groupAttackImagePopoverElement.replaceChildren();
+}
+
+function showGroupAttackImagePopover(options: {
+	anchor: HTMLElement;
+	imageSource: string;
+	imageAlt: string;
+	combatantId: string;
+	fallbackName: string;
+	baseImageSizePx: number;
+}): void {
+	const panel = getGroupAttackPanelElement();
+	const popover = getGroupAttackImagePopoverElement();
+	popover.replaceChildren();
+
+	const previewStats = getCombatantPreviewStats(options.combatantId, options.fallbackName);
+
+	const name = document.createElement('div');
+	name.className = 'nimble-minion-group-attack-panel__image-popover-name';
+	name.textContent = previewStats.tokenName;
+	popover.append(name);
+
+	const image = document.createElement('img');
+	image.className = 'nimble-minion-group-attack-panel__image-popover-image';
+	image.src = options.imageSource;
+	image.alt = options.imageAlt;
+	popover.append(image);
+
+	const hpBar = document.createElement('div');
+	hpBar.className = 'nimble-minion-group-attack-panel__image-popover-hp';
+	hpBar.style.setProperty('--nimble-image-popover-hp-percent', `${previewStats.hpPercent}%`);
+	if (previewStats.isBloodied) {
+		hpBar.classList.add('nimble-minion-group-attack-panel__image-popover-hp--bloodied');
+	}
+	const hpValue = document.createElement('span');
+	hpValue.className = 'nimble-minion-group-attack-panel__image-popover-hp-value';
+	hpValue.textContent =
+		previewStats.hpMax && previewStats.hpCurrent !== null
+			? `${Math.max(0, Math.floor(previewStats.hpCurrent))}/${Math.floor(previewStats.hpMax)}`
+			: '-/-';
+	hpBar.append(hpValue);
+	popover.append(hpBar);
+
+	popover.hidden = false;
+	const margin = 8;
+	const gap = 12;
+	const panelRect = panel.getBoundingClientRect();
+	const anchorRect = options.anchor.getBoundingClientRect();
+	const imageSize = Math.max(56, Math.round(options.baseImageSizePx * 5));
+	popover.style.width = `${imageSize}px`;
+	popover.style.setProperty('--nimble-image-popover-size', `${imageSize}px`);
+	const popoverRect = popover.getBoundingClientRect();
+
+	let left = panelRect.left - popoverRect.width - gap;
+	let top = anchorRect.top + anchorRect.height / 2 - popoverRect.height / 2;
+
+	left = Math.max(margin, left);
+	top = Math.max(margin, Math.min(window.innerHeight - popoverRect.height - margin, top));
+
+	popover.style.left = `${Math.round(left)}px`;
+	popover.style.top = `${Math.round(top)}px`;
+}
+
+function appendButtonWithOptionalTargetTooltip(
+	container: HTMLElement,
+	button: HTMLButtonElement,
+	showTooltip: boolean,
+): void {
+	if (!showTooltip) {
+		container.append(button);
+		return;
+	}
+
+	const wrapper = document.createElement('span');
+	wrapper.className = 'nimble-minion-group-attack-panel__button-tooltip-wrapper';
+	wrapper.title = 'Select a Target';
+	wrapper.append(button);
+	container.append(wrapper);
+}
+
+function getActionDescriptionForSelection(
+	actionOptions: MinionGroupAttackOption[],
+	selectedActionId: string | null | undefined,
+): string | null {
+	const actionId = selectedActionId?.trim() ?? '';
+	if (!actionId) return null;
+	const matchedAction = actionOptions.find((option) => option.actionId === actionId);
+	const description = matchedAction?.description?.trim() ?? '';
+	return description.length > 0 ? description : null;
+}
+
+function bindActionSelectDescriptionPopover(options: {
+	select: HTMLSelectElement;
+	getDescription: () => string | null;
+}): void {
+	const showTooltip = () => {
+		const description = options.getDescription();
+		if (!description) {
+			hideGroupAttackActionDescriptionPopover();
+			return;
+		}
+		showGroupAttackActionDescriptionPopover(options.select, description);
+	};
+	options.select.addEventListener('mouseenter', showTooltip);
+	options.select.addEventListener('focus', showTooltip);
+	options.select.addEventListener('mouseleave', hideGroupAttackActionDescriptionPopover);
+	options.select.addEventListener('blur', hideGroupAttackActionDescriptionPopover);
+	options.select.addEventListener('pointerdown', hideGroupAttackActionDescriptionPopover);
 }
 
 function getGroupAttackPanelElement(): HTMLDivElement {
@@ -1162,15 +1776,15 @@ function hideGroupAttackPanel(): void {
 		minionGroupAttackPanelElement.hidden = true;
 		minionGroupAttackPanelElement.replaceChildren();
 	}
+	hideGroupAttackTargetPopover();
+	hideGroupAttackActionDescriptionPopover();
+	hideGroupAttackImagePopover();
 	stopGroupAttackPanelDragTracking();
 	activeGroupAttackSession = null;
 	activeGroupAttackMembers = [];
+	activeNonMinionAttackMembers = [];
+	activeNonMinionAttackSelectionsByMemberId = new Map();
 	activeGroupAttackWarnings = [];
-	activeGroupAttackLabel = null;
-}
-
-function getGroupDisplayLabel(label: string | null | undefined): string {
-	return formatGroupDisplayLabel(label);
 }
 
 function getGroupAttackMembers(
@@ -1198,6 +1812,7 @@ function getGroupAttackMembers(
 				member: {
 					combatantId: combatant.id,
 					combatantName: combatant.name?.trim() || combatant.token?.name || 'Minion',
+					memberImage: getCombatantRowImage(combatant),
 					actorType,
 					actionsRemaining: Number.isFinite(actionsRemaining) ? Math.max(0, actionsRemaining) : 0,
 					actionOptions,
@@ -1230,6 +1845,38 @@ function getGroupAttackMembers(
 			member: {
 				combatantId: combatant.id,
 				combatantName: combatant.name?.trim() || combatant.token?.name || 'Minion',
+				memberImage: getCombatantRowImage(combatant),
+				actorType,
+				actionsRemaining: Number.isFinite(actionsRemaining) ? Math.max(0, actionsRemaining) : 0,
+				actionOptions,
+			},
+		});
+	}
+
+	return rows;
+}
+
+function getSelectedNonMinionAttackMembers(
+	context: SelectionContext,
+): Array<{ combatant: Combatant.Implementation; member: GroupAttackMemberView }> {
+	const rows: Array<{ combatant: Combatant.Implementation; member: GroupAttackMemberView }> = [];
+	for (const combatant of context.selectedAliveNonMinionMonsters) {
+		if (!combatant.id) continue;
+
+		const actionsRemaining = Number(
+			(combatant.system as unknown as { actions?: { base?: { current?: unknown } } }).actions?.base
+				?.current ?? 0,
+		);
+		const actor = (combatant.actor as unknown as ActorWithActionItems | null) ?? null;
+		const actorType = actor?.type?.trim()?.toLowerCase() || 'npc';
+		const actionOptions = buildGroupAttackActionOptions(actor);
+
+		rows.push({
+			combatant,
+			member: {
+				combatantId: combatant.id,
+				combatantName: combatant.name?.trim() || combatant.token?.name || 'Monster',
+				memberImage: getCombatantRowImage(combatant),
 				actorType,
 				actionsRemaining: Number.isFinite(actionsRemaining) ? Math.max(0, actionsRemaining) : 0,
 				actionOptions,
@@ -1252,8 +1899,31 @@ function setActionSelectValueForMember(memberCombatantId: string, actionId: stri
 	activeGroupAttackSession.selectionsByMemberId.set(memberCombatantId, current);
 }
 
+function getNonMinionActionSelectValueForMember(memberCombatantId: string): string {
+	return activeNonMinionAttackSelectionsByMemberId.get(memberCombatantId) ?? '';
+}
+
+function setNonMinionActionSelectValueForMember(
+	memberCombatantId: string,
+	actionId: string | null,
+): void {
+	if (!activeNonMinionAttackMembers.some((member) => member.combatantId === memberCombatantId)) {
+		return;
+	}
+	activeNonMinionAttackSelectionsByMemberId.set(memberCombatantId, actionId ?? '');
+}
+
 function getSelectedActionRollFormulaForMember(member: GroupAttackMemberView): string {
 	const selectedActionId = getActionSelectValueForMember(member.combatantId);
+	if (!selectedActionId) return '-';
+	const selectedOption = member.actionOptions.find(
+		(option) => option.actionId === selectedActionId,
+	);
+	return selectedOption?.rollFormula?.trim() || '-';
+}
+
+function getSelectedActionRollFormulaForNonMinionMember(member: GroupAttackMemberView): string {
+	const selectedActionId = getNonMinionActionSelectValueForMember(member.combatantId);
 	if (!selectedActionId) return '-';
 	const selectedOption = member.actionOptions.find(
 		(option) => option.actionId === selectedActionId,
@@ -1299,6 +1969,37 @@ function buildSessionSyncForMembers(
 	};
 }
 
+function buildNonMinionSelectionSync(
+	context: MinionGroupAttackSessionContext,
+	memberRows: Array<{ member: GroupAttackMemberView }>,
+	previousSelectionsByMemberId: Map<string, string | null>,
+): { nextMembers: GroupAttackMemberView[]; nextSelectionsByMemberId: Map<string, string | null> } {
+	const nextSelectionsByMemberId = new Map<string, string | null>();
+	const nextMembers = memberRows.map((row) => row.member);
+
+	for (const member of nextMembers) {
+		const memberCombatantId = member.combatantId;
+		const existingSelection = previousSelectionsByMemberId.get(memberCombatantId) ?? null;
+		const hasExistingSelection =
+			typeof existingSelection === 'string' &&
+			existingSelection.length > 0 &&
+			member.actionOptions.some((option) => option.actionId === existingSelection);
+		const defaultSelection = deriveDefaultMemberActionSelection(
+			{
+				combatantId: memberCombatantId,
+				actorType: member.actorType,
+				actionOptions: member.actionOptions,
+			},
+			context,
+			rememberedGroupAttackSelectionsByActorType,
+		);
+		const selectedActionId = hasExistingSelection ? existingSelection : defaultSelection;
+		nextSelectionsByMemberId.set(memberCombatantId, selectedActionId ?? '');
+	}
+
+	return { nextMembers, nextSelectionsByMemberId };
+}
+
 function buildAttackActionButtonLabel(endTurn: boolean): string {
 	return endTurn ? 'Roll + End Turn' : 'Roll';
 }
@@ -1338,101 +2039,377 @@ function buildSelectionWarnings(result: {
 
 function renderGroupAttackPanel(): void {
 	const panel = getGroupAttackPanelElement();
-	const session = activeGroupAttackSession;
-	if (!session) {
+	const minionSession = activeGroupAttackSession;
+	const hasMinionSection = Boolean(minionSession) && activeGroupAttackMembers.length > 0;
+	const hasNonMinionSection = activeNonMinionAttackMembers.length > 0;
+	if (!hasMinionSection && !hasNonMinionSection) {
 		hideGroupAttackPanel();
 		return;
 	}
 
-	const { targetTokenId, targetName } = getCurrentTargetSummary();
-	const hasExactlyOneTarget = Boolean(targetTokenId);
-	const groupLabel = getGroupDisplayLabel(activeGroupAttackLabel);
-	const isSelectionAttackGroup = session.context.groupId === CANVAS_LITE_SELECTION_ATTACK_GROUP_ID;
-	const hasRollableMembers = activeGroupAttackMembers.some((member) => {
+	const { targetTokenIds } = getCurrentTargetSummary();
+	const hasAnyTarget = targetTokenIds.length > 0;
+	const availableTargetTokens = getAvailablePlayerTargetTokens();
+	const hasRollableMinionMembers = activeGroupAttackMembers.some((member) => {
 		if (member.actionsRemaining < 1) return false;
 		const selectedActionId = getActionSelectValueForMember(member.combatantId);
 		return selectedActionId.length > 0;
 	});
 
 	panel.hidden = false;
+	hideGroupAttackTargetPopover();
+	hideGroupAttackActionDescriptionPopover();
+	hideGroupAttackImagePopover();
 	panel.replaceChildren();
+	panel.style.removeProperty('width');
 
 	const header = document.createElement('div');
 	header.className = 'nimble-minion-group-attack-panel__header';
 	header.title = 'Drag to move';
 	header.addEventListener('pointerdown', handleGroupAttackPanelDragStart);
+	const logo = document.createElement('img');
+	logo.className = 'nimble-minion-group-attack-panel__logo';
+	logo.alt = 'Nimble';
+	logo.draggable = false;
+	logo.src = 'systems/nimble/assets/logos/NimbleLogos.png';
+	logo.addEventListener('error', () => {
+		if (!logo.src.endsWith('/NimbleLogoRaw.avif')) {
+			logo.src = 'systems/nimble/assets/logos/NimbleLogoRaw.avif';
+		}
+	});
 	const title = document.createElement('h3');
 	title.className = 'nimble-minion-group-attack-panel__title';
-	title.textContent = isSelectionAttackGroup
-		? 'Selected Minions Attack'
-		: `Group ${groupLabel} Attack`;
-	header.append(title);
+	title.textContent = 'Combat System';
+	header.append(logo, title);
 	panel.append(header);
 
 	const targetRow = document.createElement('div');
 	targetRow.className = 'nimble-minion-group-attack-panel__target';
-	targetRow.textContent = hasExactlyOneTarget
-		? `Target: ${targetName ?? 'Target'}`
-		: 'Target: select exactly 1 token target';
+	const targetLabel = document.createElement('span');
+	targetLabel.className = 'nimble-minion-group-attack-panel__target-label';
+	const targetLabelText = document.createElement('span');
+	targetLabelText.className = 'nimble-minion-group-attack-panel__target-label-text';
+	targetLabelText.textContent = 'Targets:';
+	const targetStatusIcon = document.createElement('i');
+	targetStatusIcon.className = `nimble-minion-group-attack-panel__target-label-icon fa-solid fa-crosshairs ${
+		hasAnyTarget
+			? 'nimble-minion-group-attack-panel__target-label-icon--active'
+			: 'nimble-minion-group-attack-panel__target-label-icon--inactive'
+	}`;
+	targetLabel.append(targetLabelText, targetStatusIcon);
+	targetRow.append(targetLabel);
+
+	const targetList = document.createElement('div');
+	targetList.className = 'nimble-minion-group-attack-panel__target-list';
+
+	if (availableTargetTokens.length === 0) {
+		const hint = document.createElement('span');
+		hint.className = 'nimble-minion-group-attack-panel__target-hint';
+		hint.textContent = 'select non-monster token(s)';
+		targetList.append(hint);
+	} else {
+		for (const targetToken of availableTargetTokens) {
+			const targetButton = document.createElement('button');
+			targetButton.type = 'button';
+			targetButton.className = 'nimble-minion-group-attack-panel__target-token';
+			if (!targetToken.isTargeted) {
+				targetButton.classList.add('nimble-minion-group-attack-panel__target-token--inactive');
+			}
+			targetButton.ariaLabel = targetToken.isTargeted
+				? `Untarget ${targetToken.name}`
+				: `Target ${targetToken.name}`;
+
+			const image = document.createElement('img');
+			image.className = 'nimble-minion-group-attack-panel__target-token-image';
+			image.src = targetToken.image;
+			image.alt = targetToken.name;
+			targetButton.append(image);
+
+			targetButton.addEventListener('mouseenter', () => {
+				showGroupAttackTargetPopover(targetButton, targetToken);
+			});
+			targetButton.addEventListener('mouseleave', () => {
+				hideGroupAttackTargetPopover();
+			});
+			targetButton.addEventListener('focus', () => {
+				showGroupAttackTargetPopover(targetButton, targetToken);
+			});
+			targetButton.addEventListener('blur', () => {
+				hideGroupAttackTargetPopover();
+			});
+			targetButton.addEventListener('pointerdown', () => {
+				hideGroupAttackTargetPopover();
+			});
+
+			targetButton.addEventListener('click', () => {
+				toggleTargetTokenFromPanel(targetToken.token, !targetToken.isTargeted);
+				scheduleActionBarRefresh('ncw-target-toggle');
+			});
+
+			targetList.append(targetButton);
+		}
+	}
+	targetRow.append(targetList);
 	panel.append(targetRow);
 
-	const table = document.createElement('table');
-	table.className = 'nimble-minion-group-attack-panel__table';
-	const body = document.createElement('tbody');
+	if (hasNonMinionSection) {
+		const nonMinionTitle = document.createElement('div');
+		nonMinionTitle.className = 'nimble-minion-group-attack-panel__section-title';
+		const nonMinionTitleText = document.createElement('span');
+		nonMinionTitleText.className = 'nimble-minion-group-attack-panel__section-title-text';
+		nonMinionTitleText.textContent = 'Monsters';
+		const nonMinionTitleIcons = document.createElement('span');
+		nonMinionTitleIcons.className = 'nimble-minion-group-attack-panel__section-title-icons';
+		const nonMinionIcon = document.createElement('i');
+		nonMinionIcon.className = 'nimble-minion-group-attack-panel__section-icon fa-solid fa-dragon';
+		nonMinionTitleIcons.append(nonMinionIcon);
+		nonMinionTitle.append(nonMinionTitleText, nonMinionTitleIcons);
+		panel.append(nonMinionTitle);
 
-	for (const member of activeGroupAttackMembers) {
-		const row = document.createElement('tr');
-		row.className = 'nimble-minion-group-attack-panel__row';
+		const nonMinionTable = document.createElement('table');
+		nonMinionTable.className =
+			'nimble-minion-group-attack-panel__table nimble-minion-group-attack-panel__table--monsters';
+		const nonMinionBody = document.createElement('tbody');
 
-		const memberCell = document.createElement('td');
-		memberCell.className = 'nimble-minion-group-attack-panel__member';
-		memberCell.textContent = member.combatantName;
-
-		const actionCell = document.createElement('td');
-		actionCell.className = 'nimble-minion-group-attack-panel__action';
-		const select = document.createElement('select');
-		select.className = 'nimble-minion-group-attack-panel__select';
-		select.disabled = member.actionOptions.length === 0 || member.actionsRemaining < 1;
-		select.dataset.memberCombatantId = member.combatantId;
-
-		const placeholder = document.createElement('option');
-		placeholder.value = '';
-		placeholder.textContent = member.actionsRemaining < 1 ? 'No actions left' : 'Select action';
-		select.append(placeholder);
-
-		for (const actionOption of member.actionOptions) {
-			const option = document.createElement('option');
-			option.value = actionOption.actionId;
-			option.textContent = actionOption.label;
-			if (actionOption.unsupportedReasons.length > 0) {
-				option.dataset.unsupported = 'true';
-				option.title = actionOption.unsupportedReasons.join(' ');
+		for (const member of activeNonMinionAttackMembers) {
+			const row = document.createElement('tr');
+			row.className =
+				'nimble-minion-group-attack-panel__row nimble-minion-group-attack-panel__row--monster';
+			const hasNoActionsRemaining = member.actionsRemaining < 1;
+			if (hasNoActionsRemaining) {
+				row.classList.add('nimble-minion-group-attack-panel__row--inactive');
 			}
-			select.append(option);
+
+			const memberCell = document.createElement('td');
+			memberCell.className = 'nimble-minion-group-attack-panel__member';
+			const memberContent = document.createElement('div');
+			memberContent.className = 'nimble-minion-group-attack-panel__member-content';
+			const memberImage = document.createElement('img');
+			memberImage.className = 'nimble-minion-group-attack-panel__member-image';
+			memberImage.src = member.memberImage;
+			memberImage.alt = member.combatantName;
+			const memberName = document.createElement('span');
+			memberName.className = 'nimble-minion-group-attack-panel__member-name';
+			memberName.textContent = member.combatantName;
+			const showMemberPreview = (anchor: HTMLElement) => {
+				showGroupAttackImagePopover({
+					anchor,
+					imageSource: member.memberImage,
+					imageAlt: member.combatantName,
+					combatantId: member.combatantId,
+					fallbackName: member.combatantName,
+					baseImageSizePx: memberImage.getBoundingClientRect().width || 28,
+				});
+			};
+			memberImage.addEventListener('mouseenter', () => showMemberPreview(memberImage));
+			memberName.addEventListener('mouseenter', () => showMemberPreview(memberName));
+			memberContent.addEventListener('mouseleave', hideGroupAttackImagePopover);
+			memberContent.addEventListener('pointerdown', hideGroupAttackImagePopover);
+			memberContent.append(memberImage, memberName);
+			memberCell.append(memberContent);
+
+			const actionCell = document.createElement('td');
+			actionCell.className = 'nimble-minion-group-attack-panel__action';
+			const select = document.createElement('select');
+			select.className = 'nimble-minion-group-attack-panel__select';
+			select.disabled = member.actionOptions.length === 0 || member.actionsRemaining < 1;
+			select.dataset.memberCombatantId = member.combatantId;
+
+			const placeholder = document.createElement('option');
+			placeholder.value = '';
+			placeholder.textContent = member.actionsRemaining < 1 ? 'No actions left' : 'Select action';
+			select.append(placeholder);
+
+			for (const actionOption of member.actionOptions) {
+				const option = document.createElement('option');
+				option.value = actionOption.actionId;
+				option.textContent = actionOption.label;
+				if (actionOption.unsupportedReasons.length > 0) {
+					option.dataset.unsupported = 'true';
+					option.title = actionOption.unsupportedReasons.join(' ');
+				}
+				select.append(option);
+			}
+
+			select.value = getNonMinionActionSelectValueForMember(member.combatantId);
+			bindActionSelectDescriptionPopover({
+				select,
+				getDescription: () => getActionDescriptionForSelection(member.actionOptions, select.value),
+			});
+			select.addEventListener('change', (event) => {
+				const target = event.currentTarget as HTMLSelectElement;
+				const nextActionId = target.value.trim();
+				setNonMinionActionSelectValueForMember(
+					member.combatantId,
+					nextActionId.length > 0 ? nextActionId : null,
+				);
+				renderGroupAttackPanel();
+			});
+
+			const diceCell = document.createElement('td');
+			diceCell.className = 'nimble-minion-group-attack-panel__dice';
+			diceCell.textContent = getSelectedActionRollFormulaForNonMinionMember(member);
+
+			const controls = document.createElement('div');
+			controls.className =
+				'nimble-minion-group-attack-panel__inline-buttons nimble-minion-group-attack-panel__inline-buttons--monster-row';
+
+			const selectedActionId = getNonMinionActionSelectValueForMember(member.combatantId);
+			const canRollMonster =
+				hasAnyTarget &&
+				!isExecutingAction &&
+				member.actionsRemaining > 0 &&
+				selectedActionId.trim().length > 0 &&
+				member.actionOptions.some((option) => option.actionId === selectedActionId);
+			const missingTarget = !hasAnyTarget;
+
+			const rollButton = document.createElement('button');
+			rollButton.type = 'button';
+			rollButton.className =
+				'nimble-minion-group-attack-panel__button nimble-minion-group-attack-panel__button--positive';
+			rollButton.textContent = buildAttackActionButtonLabel(false);
+			rollButton.disabled = !canRollMonster;
+			rollButton.addEventListener('click', () => {
+				void executeNonMinionAttackRoll(member.combatantId, false);
+			});
+			appendButtonWithOptionalTargetTooltip(controls, rollButton, missingTarget);
+
+			const rollEndTurnButton = document.createElement('button');
+			rollEndTurnButton.type = 'button';
+			rollEndTurnButton.className =
+				'nimble-minion-group-attack-panel__button nimble-minion-group-attack-panel__button--positive';
+			rollEndTurnButton.textContent = buildAttackActionButtonLabel(true);
+			rollEndTurnButton.disabled = !canRollMonster;
+			rollEndTurnButton.addEventListener('click', () => {
+				void executeNonMinionAttackRoll(member.combatantId, true);
+			});
+			appendButtonWithOptionalTargetTooltip(controls, rollEndTurnButton, missingTarget);
+
+			actionCell.append(select);
+			row.append(memberCell, actionCell, diceCell);
+			nonMinionBody.append(row);
+
+			const controlsRow = document.createElement('tr');
+			controlsRow.className =
+				'nimble-minion-group-attack-panel__row nimble-minion-group-attack-panel__row--monster-controls';
+			if (hasNoActionsRemaining) {
+				controlsRow.classList.add('nimble-minion-group-attack-panel__row--inactive');
+			}
+			const controlsCell = document.createElement('td');
+			controlsCell.className = 'nimble-minion-group-attack-panel__monster-controls-cell';
+			controlsCell.colSpan = 3;
+			controlsCell.append(controls);
+			controlsRow.append(controlsCell);
+			nonMinionBody.append(controlsRow);
 		}
 
-		select.value = getActionSelectValueForMember(member.combatantId);
-		select.addEventListener('change', (event) => {
-			const target = event.currentTarget as HTMLSelectElement;
-			const nextActionId = target.value.trim();
-			setActionSelectValueForMember(
-				member.combatantId,
-				nextActionId.length > 0 ? nextActionId : null,
-			);
-			renderGroupAttackPanel();
-		});
-
-		const diceCell = document.createElement('td');
-		diceCell.className = 'nimble-minion-group-attack-panel__dice';
-		diceCell.textContent = getSelectedActionRollFormulaForMember(member);
-
-		actionCell.append(select);
-		row.append(memberCell, actionCell, diceCell);
-		body.append(row);
+		nonMinionTable.append(nonMinionBody);
+		panel.append(nonMinionTable);
 	}
 
-	table.append(body);
-	panel.append(table);
+	if (hasMinionSection) {
+		const minionTitle = document.createElement('div');
+		minionTitle.className = 'nimble-minion-group-attack-panel__section-title';
+		const minionTitleText = document.createElement('span');
+		minionTitleText.className = 'nimble-minion-group-attack-panel__section-title-text';
+		minionTitleText.textContent = 'Minions';
+		const minionTitleIcons = document.createElement('span');
+		minionTitleIcons.className = 'nimble-minion-group-attack-panel__section-title-icons';
+		const minionIcon = document.createElement('i');
+		minionIcon.className = 'nimble-minion-group-attack-panel__section-icon fa-solid fa-dragon';
+		minionTitleIcons.append(minionIcon);
+		minionTitle.append(minionTitleText, minionTitleIcons);
+		panel.append(minionTitle);
+
+		const table = document.createElement('table');
+		table.className = 'nimble-minion-group-attack-panel__table';
+		const body = document.createElement('tbody');
+
+		for (const member of activeGroupAttackMembers) {
+			const row = document.createElement('tr');
+			row.className = 'nimble-minion-group-attack-panel__row';
+			if (member.actionsRemaining < 1) {
+				row.classList.add('nimble-minion-group-attack-panel__row--inactive');
+			}
+
+			const memberCell = document.createElement('td');
+			memberCell.className = 'nimble-minion-group-attack-panel__member';
+			const memberContent = document.createElement('div');
+			memberContent.className = 'nimble-minion-group-attack-panel__member-content';
+			const memberImage = document.createElement('img');
+			memberImage.className = 'nimble-minion-group-attack-panel__member-image';
+			memberImage.src = member.memberImage;
+			memberImage.alt = member.combatantName;
+			const memberName = document.createElement('span');
+			memberName.className = 'nimble-minion-group-attack-panel__member-name';
+			memberName.textContent = member.combatantName;
+			const showMemberPreview = (anchor: HTMLElement) => {
+				showGroupAttackImagePopover({
+					anchor,
+					imageSource: member.memberImage,
+					imageAlt: member.combatantName,
+					combatantId: member.combatantId,
+					fallbackName: member.combatantName,
+					baseImageSizePx: memberImage.getBoundingClientRect().width || 28,
+				});
+			};
+			memberImage.addEventListener('mouseenter', () => showMemberPreview(memberImage));
+			memberName.addEventListener('mouseenter', () => showMemberPreview(memberName));
+			memberContent.addEventListener('mouseleave', hideGroupAttackImagePopover);
+			memberContent.addEventListener('pointerdown', hideGroupAttackImagePopover);
+			memberContent.append(memberImage, memberName);
+			memberCell.append(memberContent);
+
+			const actionCell = document.createElement('td');
+			actionCell.className = 'nimble-minion-group-attack-panel__action';
+			const select = document.createElement('select');
+			select.className = 'nimble-minion-group-attack-panel__select';
+			select.disabled = member.actionOptions.length === 0 || member.actionsRemaining < 1;
+			select.dataset.memberCombatantId = member.combatantId;
+
+			const placeholder = document.createElement('option');
+			placeholder.value = '';
+			placeholder.textContent = member.actionsRemaining < 1 ? 'No actions left' : 'Select action';
+			select.append(placeholder);
+
+			for (const actionOption of member.actionOptions) {
+				const option = document.createElement('option');
+				option.value = actionOption.actionId;
+				option.textContent = actionOption.label;
+				if (actionOption.unsupportedReasons.length > 0) {
+					option.dataset.unsupported = 'true';
+					option.title = actionOption.unsupportedReasons.join(' ');
+				}
+				select.append(option);
+			}
+
+			select.value = getActionSelectValueForMember(member.combatantId);
+			bindActionSelectDescriptionPopover({
+				select,
+				getDescription: () => getActionDescriptionForSelection(member.actionOptions, select.value),
+			});
+			select.addEventListener('change', (event) => {
+				const target = event.currentTarget as HTMLSelectElement;
+				const nextActionId = target.value.trim();
+				setActionSelectValueForMember(
+					member.combatantId,
+					nextActionId.length > 0 ? nextActionId : null,
+				);
+				renderGroupAttackPanel();
+			});
+
+			const diceCell = document.createElement('td');
+			diceCell.className = 'nimble-minion-group-attack-panel__dice';
+			diceCell.textContent = getSelectedActionRollFormulaForMember(member);
+
+			actionCell.append(select);
+			row.append(memberCell, actionCell, diceCell);
+			body.append(row);
+		}
+
+		table.append(body);
+		panel.append(table);
+	}
 
 	if (activeGroupAttackWarnings.length > 0) {
 		const warningList = document.createElement('ul');
@@ -1447,27 +2424,30 @@ function renderGroupAttackPanel(): void {
 
 	const buttons = document.createElement('div');
 	buttons.className = 'nimble-minion-group-attack-panel__buttons';
-	const rollButton = document.createElement('button');
-	rollButton.type = 'button';
-	rollButton.className =
-		'nimble-minion-group-attack-panel__button nimble-minion-group-attack-panel__button--positive';
-	rollButton.textContent = buildAttackActionButtonLabel(false);
-	rollButton.disabled = !hasExactlyOneTarget || !hasRollableMembers || isExecutingAction;
-	rollButton.addEventListener('click', () => {
-		void executeGroupAttackRoll(false);
-	});
-	buttons.append(rollButton);
+	if (hasMinionSection) {
+		const missingTarget = !hasAnyTarget;
+		const rollButton = document.createElement('button');
+		rollButton.type = 'button';
+		rollButton.className =
+			'nimble-minion-group-attack-panel__button nimble-minion-group-attack-panel__button--positive';
+		rollButton.textContent = buildAttackActionButtonLabel(false);
+		rollButton.disabled = !hasAnyTarget || !hasRollableMinionMembers || isExecutingAction;
+		rollButton.addEventListener('click', () => {
+			void executeGroupAttackRoll(false);
+		});
+		appendButtonWithOptionalTargetTooltip(buttons, rollButton, missingTarget);
 
-	const rollEndTurnButton = document.createElement('button');
-	rollEndTurnButton.type = 'button';
-	rollEndTurnButton.className =
-		'nimble-minion-group-attack-panel__button nimble-minion-group-attack-panel__button--positive';
-	rollEndTurnButton.textContent = buildAttackActionButtonLabel(true);
-	rollEndTurnButton.disabled = !hasExactlyOneTarget || !hasRollableMembers || isExecutingAction;
-	rollEndTurnButton.addEventListener('click', () => {
-		void executeGroupAttackRoll(true);
-	});
-	buttons.append(rollEndTurnButton);
+		const rollEndTurnButton = document.createElement('button');
+		rollEndTurnButton.type = 'button';
+		rollEndTurnButton.className =
+			'nimble-minion-group-attack-panel__button nimble-minion-group-attack-panel__button--positive';
+		rollEndTurnButton.textContent = buildAttackActionButtonLabel(true);
+		rollEndTurnButton.disabled = !hasAnyTarget || !hasRollableMinionMembers || isExecutingAction;
+		rollEndTurnButton.addEventListener('click', () => {
+			void executeGroupAttackRoll(true);
+		});
+		appendButtonWithOptionalTargetTooltip(buttons, rollEndTurnButton, missingTarget);
+	}
 
 	const closeButton = document.createElement('button');
 	closeButton.type = 'button';
@@ -1481,6 +2461,12 @@ function renderGroupAttackPanel(): void {
 	buttons.append(closeButton);
 
 	panel.append(buttons);
+	applyGroupAttackPanelWidth({
+		panel,
+		targetRow,
+		targetLabel,
+		targetList,
+	});
 
 	queueMicrotask(() => {
 		const panelRect = panel.getBoundingClientRect();
@@ -1531,10 +2517,13 @@ async function executeGroupAttackRoll(endTurn: boolean): Promise<void> {
 		ui.notifications?.warn('No active combat found for group attack.');
 		return;
 	}
+	if (!combat.started) {
+		await combat.startCombat();
+	}
 
 	const targetSummary = getCurrentTargetSummary();
-	if (!targetSummary.targetTokenId) {
-		ui.notifications?.warn('Select exactly 1 target token before rolling a group attack.');
+	if (targetSummary.targetTokenIds.length === 0 || !targetSummary.targetTokenId) {
+		ui.notifications?.warn('Select token target before rolling a group attack.');
 		return;
 	}
 
@@ -1550,6 +2539,7 @@ async function executeGroupAttackRoll(endTurn: boolean): Promise<void> {
 			groupId: session.context.groupId,
 			memberCombatantIds: session.context.memberCombatantIds,
 			targetTokenId: targetSummary.targetTokenId,
+			targetTokenIds: targetSummary.targetTokenIds,
 			selections,
 			endTurn,
 		});
@@ -1590,8 +2580,124 @@ async function executeGroupAttackRoll(endTurn: boolean): Promise<void> {
 	}
 }
 
+async function executeNonMinionAttackRoll(
+	memberCombatantId: string,
+	endTurn: boolean,
+): Promise<void> {
+	if (isExecutingAction) return;
+
+	const combat = getCombatForCurrentScene();
+	if (!combat) {
+		ui.notifications?.warn('No active combat found for monster attack.');
+		return;
+	}
+	if (!combat.started) {
+		await combat.startCombat();
+	}
+
+	const member = activeNonMinionAttackMembers.find(
+		(candidate) => candidate.combatantId === memberCombatantId,
+	);
+	if (!member) return;
+
+	const selectedActionId = getNonMinionActionSelectValueForMember(memberCombatantId).trim();
+	if (!selectedActionId) {
+		ui.notifications?.warn(`Select an action for ${member.combatantName} before rolling.`);
+		return;
+	}
+
+	const selectedAction = member.actionOptions.find(
+		(actionOption) => actionOption.actionId === selectedActionId,
+	);
+	if (!selectedAction) {
+		ui.notifications?.warn(`Selected action is unavailable for ${member.combatantName}.`);
+		return;
+	}
+
+	const combatant = combat.combatants.get(memberCombatantId) ?? null;
+	if (!combatant) {
+		ui.notifications?.warn(`${member.combatantName} is no longer in combat.`);
+		return;
+	}
+
+	if (isCombatantDead(combatant)) {
+		ui.notifications?.warn(`${member.combatantName} is defeated and cannot act.`);
+		return;
+	}
+
+	const actionsRemaining = Number(
+		(combatant.system as unknown as { actions?: { base?: { current?: unknown } } }).actions?.base
+			?.current ?? 0,
+	);
+	if (!Number.isFinite(actionsRemaining) || actionsRemaining < 1) {
+		ui.notifications?.warn(`${member.combatantName} has no actions left.`);
+		return;
+	}
+
+	const actor = (combatant.actor as unknown as ActorWithActionItems | null) ?? null;
+	if (!actor?.activateItem) {
+		ui.notifications?.warn(`${member.combatantName} cannot activate actions.`);
+		return;
+	}
+
+	isExecutingAction = true;
+	scheduleActionBarRefresh('monster-attack-roll-start');
+	try {
+		await actor.activateItem(selectedActionId, { fastForward: true });
+
+		const latestCombatant = combat.combatants.get(memberCombatantId) ?? combatant;
+		const latestActions = Number(
+			(foundry.utils.getProperty(latestCombatant, 'system.actions.base.current') as
+				| number
+				| null) ?? actionsRemaining,
+		);
+		if (Number.isFinite(latestActions) && latestActions > 0) {
+			const actionUpdate: Record<string, unknown> = {
+				_id: memberCombatantId,
+				'system.actions.base.current': Math.max(0, latestActions - 1),
+			};
+			await combat.updateEmbeddedDocuments('Combatant', [actionUpdate]);
+		}
+
+		const rememberContext: MinionGroupAttackSessionContext = {
+			combatId: combat.id ?? '',
+			groupId: CANVAS_LITE_SELECTION_MONSTER_ATTACK_SCOPE_ID,
+			memberCombatantIds: activeNonMinionAttackMembers.map(
+				(activeMember) => activeMember.combatantId,
+			),
+			targetTokenId: getCurrentTargetSummary().targetTokenId,
+			groupingMode: 'canvasLite',
+			isTemporaryGroup: true,
+		};
+		rememberMemberActionSelection(
+			rememberedGroupAttackSelectionsByActorType,
+			rememberContext,
+			member.actorType,
+			selectedActionId,
+		);
+
+		if (endTurn) {
+			const activeCombatantId = combat.combatant?.id ?? null;
+			if (activeCombatantId === memberCombatantId) {
+				await combat.nextTurn();
+			}
+		}
+
+		scheduleActionBarRefresh('monster-attack-roll-end');
+	} catch (error) {
+		console.error('[Nimble][MinionGrouping][TokenUI] Monster attack roll failed', {
+			memberCombatantId,
+			selectedActionId,
+			error,
+		});
+		ui.notifications?.error('Monster attack failed. See console for details.');
+	} finally {
+		isExecutingAction = false;
+		scheduleActionBarRefresh('monster-attack-roll-finalize');
+	}
+}
+
 function openGroupAttackPanel(context: SelectionContext, groupId: string): void {
-	if (!shouldUseCanvasLiteTemporaryGroups()) return;
 	const combat = context.combat;
 	if (!combat || !groupId) return;
 
@@ -1622,57 +2728,71 @@ function openGroupAttackPanel(context: SelectionContext, groupId: string): void 
 	activeGroupAttackSession = syncedSession.nextSession;
 	activeGroupAttackMembers = syncedSession.nextMembers;
 	activeGroupAttackWarnings = [];
-	activeGroupAttackLabel = selectedGroup.label;
 	renderGroupAttackPanel();
 }
 
 function syncCanvasLiteAttackPanel(context: SelectionContext): void {
-	const shouldRenderPanel =
+	const canUsePanel =
 		Boolean(game.user?.isGM) &&
 		Boolean(canvas?.ready) &&
 		context.selectedTokenCount > 0 &&
-		Boolean(context.combat) &&
-		context.selectedMinions.some((combatant) => !isCombatantDead(combatant));
-	if (!shouldRenderPanel) {
+		Boolean(context.combat);
+	if (!canUsePanel || !context.combat) {
 		hideGroupAttackPanel();
 		return;
 	}
 
-	const selectedGroup = context.attackableGroupSummaries.find(
-		(summary) => summary.groupId === CANVAS_LITE_SELECTION_ATTACK_GROUP_ID,
-	);
-	if (!selectedGroup || !context.combat) {
-		hideGroupAttackPanel();
-		return;
-	}
-
-	const memberRows = getGroupAttackMembers(
-		context.combat,
-		CANVAS_LITE_SELECTION_ATTACK_GROUP_ID,
-		context,
-	);
-	if (memberRows.length === 0) {
-		hideGroupAttackPanel();
-		return;
-	}
-
-	const sessionContext: MinionGroupAttackSessionContext = {
+	const nonMinionRows = getSelectedNonMinionAttackMembers(context);
+	const nonMinionSyncContext: MinionGroupAttackSessionContext = {
 		combatId: context.combat.id ?? '',
-		groupId: CANVAS_LITE_SELECTION_ATTACK_GROUP_ID,
-		memberCombatantIds: memberRows.map((row) => row.member.combatantId),
+		groupId: CANVAS_LITE_SELECTION_MONSTER_ATTACK_SCOPE_ID,
+		memberCombatantIds: nonMinionRows.map((row) => row.member.combatantId),
 		targetTokenId: getCurrentTargetSummary().targetTokenId,
 		groupingMode: 'canvasLite',
 		isTemporaryGroup: true,
 	};
-	const syncedSession = buildSessionSyncForMembers(
-		sessionContext,
-		memberRows,
-		activeGroupAttackSession,
+	const syncedNonMinionRows = buildNonMinionSelectionSync(
+		nonMinionSyncContext,
+		nonMinionRows,
+		activeNonMinionAttackSelectionsByMemberId,
 	);
-	activeGroupAttackSession = syncedSession.nextSession;
-	activeGroupAttackMembers = syncedSession.nextMembers;
+	activeNonMinionAttackMembers = syncedNonMinionRows.nextMembers;
+	activeNonMinionAttackSelectionsByMemberId = syncedNonMinionRows.nextSelectionsByMemberId;
+
+	const selectedGroup = context.attackableGroupSummaries.find(
+		(summary) => summary.groupId === CANVAS_LITE_SELECTION_ATTACK_GROUP_ID,
+	);
+	const minionMemberRows = selectedGroup
+		? getGroupAttackMembers(context.combat, CANVAS_LITE_SELECTION_ATTACK_GROUP_ID, context)
+		: [];
+	const hasMinionSession = minionMemberRows.length >= 2;
+	if (hasMinionSession) {
+		const sessionContext: MinionGroupAttackSessionContext = {
+			combatId: context.combat.id ?? '',
+			groupId: CANVAS_LITE_SELECTION_ATTACK_GROUP_ID,
+			memberCombatantIds: minionMemberRows.map((row) => row.member.combatantId),
+			targetTokenId: getCurrentTargetSummary().targetTokenId,
+			groupingMode: 'canvasLite',
+			isTemporaryGroup: true,
+		};
+		const syncedSession = buildSessionSyncForMembers(
+			sessionContext,
+			minionMemberRows,
+			activeGroupAttackSession,
+		);
+		activeGroupAttackSession = syncedSession.nextSession;
+		activeGroupAttackMembers = syncedSession.nextMembers;
+	} else {
+		activeGroupAttackSession = null;
+		activeGroupAttackMembers = [];
+	}
 	activeGroupAttackWarnings = [];
-	activeGroupAttackLabel = selectedGroup.label;
+
+	if (activeNonMinionAttackMembers.length === 0 && !hasMinionSession) {
+		hideGroupAttackPanel();
+		return;
+	}
+
 	renderGroupAttackPanel();
 }
 
@@ -2423,24 +3543,37 @@ export function unregisterMinionGroupTokenActions(): void {
 	if (minionGroupAttackPanelElement?.parentElement) {
 		minionGroupAttackPanelElement.parentElement.removeChild(minionGroupAttackPanelElement);
 	}
+	if (groupAttackTargetPopoverElement?.parentElement) {
+		groupAttackTargetPopoverElement.parentElement.removeChild(groupAttackTargetPopoverElement);
+	}
+	if (groupAttackActionDescriptionPopoverElement?.parentElement) {
+		groupAttackActionDescriptionPopoverElement.parentElement.removeChild(
+			groupAttackActionDescriptionPopoverElement,
+		);
+	}
+	if (groupAttackImagePopoverElement?.parentElement) {
+		groupAttackImagePopoverElement.parentElement.removeChild(groupAttackImagePopoverElement);
+	}
+	clearGroupAttackTargetPopoverRefreshInterval();
 	minionGroupActionBarElement = null;
 	minionGroupAttackPanelElement = null;
+	groupAttackTargetPopoverElement = null;
+	groupAttackActionDescriptionPopoverElement = null;
+	groupAttackImagePopoverElement = null;
 	didRegisterMinionGroupTokenActions = false;
 	isExecutingAction = false;
 	refreshScheduled = false;
 	activeGroupAttackSession = null;
 	activeGroupAttackMembers = [];
 	activeGroupAttackWarnings = [];
-	activeGroupAttackLabel = null;
 	groupAttackPanelPosition = null;
 }
 
 export default function registerMinionGroupTokenActions(): void {
 	if (didRegisterMinionGroupTokenActions) return;
 	didRegisterMinionGroupTokenActions = true;
-	console.info('[Nimble][MinionGrouping][TokenUI] registerMinionGroupTokenActions invoked');
 	(globalThis as Record<string, unknown>).__nimbleMinionGroupTokenActionsRegistered = true;
-	logTokenUi('Registering token action bar hooks');
+	logTokenUi('registerMinionGroupTokenActions invoked');
 	actionBarScale = readStoredActionBarScale();
 	actionBarPosition = readStoredActionBarPosition();
 

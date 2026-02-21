@@ -25,26 +25,16 @@
 	let rows = $derived((system.rows as MinionGroupAttackRow[] | undefined) ?? []);
 	let totalDamage = $derived(Number(system.totalDamage ?? 0));
 	let groupLabel = $derived((system.groupLabel as string | undefined)?.trim() ?? '');
-	const i18nLocalize = (key: string): string => game.i18n.localize(key as never);
-	const i18nFormat = (key: string, data: Record<string, unknown>): string =>
-		game.i18n.format(key as never, data);
-
 	let subheading = $derived(
-		groupLabel.length > 0
-			? i18nFormat('NIMBLE.nimbleCombatSystemWindow.chat.subheading', {
-					groupLabel: groupLabel.toUpperCase(),
-				})
-			: undefined,
+		groupLabel.length > 0 ? `Minion Group ${groupLabel.toUpperCase()}` : undefined,
 	);
 
-	const heading = $derived(i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.heading'));
+	const heading = 'Group of Minions';
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
 	function getRowOutcomeText(row: MinionGroupAttackRow): string {
-		return row.isMiss
-			? i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.outcomeMiss')
-			: i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.outcomeHit');
+		return row.isMiss ? 'Miss' : 'Hit';
 	}
 
 	function getRowRolledTotal(row: MinionGroupAttackRow): number | null {
@@ -130,26 +120,19 @@
 						<img
 							class="nimble-group-member-roll__member-image"
 							src={getMemberImage(row)}
-							alt={row.memberName ??
-								i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.memberFallback')}
+							alt={row.memberName ?? 'Minion'}
 						/>
-						<span class="nimble-group-member-roll__member-name"
-							>{row.memberName ??
-								i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.memberFallback')}</span
-						>
+						<span class="nimble-group-member-roll__member-name">{row.memberName ?? 'Minion'}</span>
 					</div>
 
 					<div class="nimble-group-member-roll__action">
 						<img
 							class="nimble-group-member-roll__action-image"
 							src={getActionImage(row)}
-							alt={row.actionName ??
-								i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.actionFallback')}
+							alt={row.actionName ?? 'Action'}
 						/>
 						<div class="nimble-group-member-roll__action-details">
-							<span class="nimble-group-member-roll__action-name"
-								>{row.actionName ??
-									i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.actionFallback')}</span
+							<span class="nimble-group-member-roll__action-name">{row.actionName ?? 'Action'}</span
 							>
 							<span
 								class="nimble-group-member-roll__action-outcome"
@@ -180,21 +163,19 @@
 
 	<section class="nimble-card-section nimble-card-section--total">
 		<div class="nimble-group-total">
-			<span class="nimble-group-total__label"
-				>{i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.totalDamageLabel')}</span
-			>
+			<span class="nimble-group-total__label">Total Damage</span>
 			<span class="nimble-group-total__value">{Math.max(0, Math.floor(totalDamage))}</span>
 		</div>
 
 		<button
 			class="nimble-button nimble-button--apply-damage"
-			aria-label={i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.applyDamage')}
-			data-tooltip={i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.applyDamage')}
+			aria-label="Apply Damage"
+			data-tooltip="Apply Damage"
 			data-tooltip-direction="UP"
 			type="button"
 			onclick={applyTotalDamage}
 		>
-			{i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.applyDamage')}
+			Apply Damage
 		</button>
 	</section>
 </article>

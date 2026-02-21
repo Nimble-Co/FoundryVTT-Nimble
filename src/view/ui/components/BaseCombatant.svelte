@@ -158,12 +158,27 @@
 	let isObserver = combatant?.actor?.testUserPermission(game.user, 'OBSERVER');
 	let isOwner = combatant?.actor?.testUserPermission(game.user, 'OWNER');
 	let isDead = $derived(isCombatantDead(combatant));
+	let combat = $derived((combatant.parent as Combat | null) ?? null);
+	let combatGroupSummaries = $derived(
+		combat ? getMinionGroupSummaries(combat.combatants.contents) : new Map(),
+	);
 	let canDrag = $derived(
 		!isDead &&
 			canCurrentUserReorderCombatant(combatant, {
 				ownerOverride: isOwner,
 			}),
 	);
+	let showTurnCompleteBadge = $derived.by(() => {
+		if (!game.user?.isGM) return false;
+		if (combatant.reactive?.defeated) return false;
+		if (!combat) return false;
+
+		const turnEnded = hasCombatantTurnEndedThisRound(combat, combatant, combatGroupSummaries);
+		if (combatant.type === 'character') return turnEnded;
+
+		const actionsRemaining = getCombatantCurrentActions(combatant);
+		return actionsRemaining <= 0 || turnEnded;
+	});
 </script>
 
 <article
