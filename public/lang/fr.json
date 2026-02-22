@@ -694,7 +694,12 @@
 			"turn": "tour"
 		},
 		"ui": {
-			"clearAll": "Tout effacer"
+			"clearAll": "Tout effacer",
+			"conditions": "Conditions",
+			"noConditions": "Aucun etat",
+			"removeCondition": "Retirer l'etat",
+			"conditionsFor": "Conditions : {name}",
+			"conditionDescriptionUnavailable": "<p>Aucune description disponible.</p>"
 		}
 	},
 	"TYPES": {

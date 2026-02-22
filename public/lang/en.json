@@ -624,7 +624,12 @@
 			"turn": "turn"
 		},
 		"ui": {
-			"clearAll": "Clear All"
+			"clearAll": "Clear All",
+			"conditions": "Conditions",
+			"noConditions": "No conditions",
+			"removeCondition": "Remove condition",
+			"conditionsFor": "Conditions: {name}",
+			"conditionDescriptionUnavailable": "<p>No description available.</p>"
 		},
 		"hitDice": {
 			"selectToRoll": "Select Hit Dice to Roll",

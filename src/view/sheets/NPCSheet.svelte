@@ -4,6 +4,7 @@
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import HitPointBar from './components/HitPointBar.svelte';
 	import NPCCoreTab from './pages/NPCCoreTab.svelte';
+	import NPCConditionsTab from './pages/NPCConditionsTab.svelte';
 	import NPCNotesTab from './pages/NPCNotesTab.svelte';
 	import NPCSettingsTab from './pages/NPCSettingsTab.svelte';
 
@@ -42,6 +43,12 @@
 			icon: 'fa-solid fa-home',
 			tooltip: 'Core',
 			name: 'core',
+		},
+		{
+			component: NPCConditionsTab,
+			icon: 'fa-solid fa-notes-medical',
+			tooltip: 'NIMBLE.ui.conditions',
+			name: 'conditions',
 		},
 		{
 			component: NPCNotesTab,

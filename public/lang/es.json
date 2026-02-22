@@ -715,7 +715,12 @@
 			"turn": "turn"
 		},
 		"ui": {
-			"clearAll": "Clear All"
+			"clearAll": "Clear All",
+			"conditions": "Condiciones",
+			"noConditions": "Sin condiciones",
+			"removeCondition": "Eliminar condición",
+			"conditionsFor": "Condiciones: {name}",
+			"conditionDescriptionUnavailable": "<p>No hay descripción disponible.</p>"
 		}
 	},
 	"TYPES": {
