@@ -410,8 +410,8 @@ describe('NimbleCombat', () => {
 		combat.nextTurn = vi.fn().mockResolvedValue(combat);
 
 		const result = await combat.performMinionGroupAttack({
-			groupId: 'group-attack-1',
-			targetTokenId: 'target-token-1',
+			memberCombatantIds: ['group-attack-a', 'group-attack-b'],
+			targetTokenIds: ['target-token-1'],
 			selections: [
 				{ memberCombatantId: 'group-attack-a', actionId: 'action-a' },
 				{ memberCombatantId: 'group-attack-b', actionId: 'action-b' },
@@ -500,8 +500,8 @@ describe('NimbleCombat', () => {
 		combat.nextTurn = vi.fn().mockResolvedValue(combat);
 
 		const result = await combat.performMinionGroupAttack({
-			groupId: 'group-attack-target-1',
-			targetTokenId: 'target-token-expected',
+			memberCombatantIds: ['group-attack-target-a'],
+			targetTokenIds: ['target-token-expected'],
 			selections: [{ memberCombatantId: 'group-attack-target-a', actionId: 'action-a' }],
 			endTurn: true,
 		});
@@ -608,9 +608,8 @@ describe('NimbleCombat', () => {
 		combat.nextTurn = vi.fn().mockResolvedValue(combat);
 
 		const result = await combat.performMinionGroupAttack({
-			groupId: '',
 			memberCombatantIds: ['group-attack-adhoc-a', 'group-attack-adhoc-b'],
-			targetTokenId: 'target-token-adhoc',
+			targetTokenIds: ['target-token-adhoc'],
 			selections: [
 				{ memberCombatantId: 'group-attack-adhoc-a', actionId: 'action-a' },
 				{ memberCombatantId: 'group-attack-adhoc-b', actionId: 'action-b' },
@@ -765,9 +764,8 @@ describe('NimbleCombat', () => {
 		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
 
 		const result = await combat.performMinionGroupAttack({
-			groupId: '',
 			memberCombatantIds: ['ncs-group-attack-a', 'ncs-group-attack-b'],
-			targetTokenId: 'ncs-target-token',
+			targetTokenIds: ['ncs-target-token'],
 			selections: [
 				{ memberCombatantId: 'ncs-group-attack-a', actionId: 'action-a' },
 				{ memberCombatantId: 'ncs-group-attack-b', actionId: 'action-b' },
