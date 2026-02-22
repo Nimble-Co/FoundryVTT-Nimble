@@ -7,7 +7,7 @@ import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
-import { HitDiceManager } from '../../managers/HitDiceManager.js';
+import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.js';
 import { RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
@@ -1148,10 +1148,18 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const maxHitDice = this.system.attributes.hitDice?.[classHitDieSize.toString()]?.origin ?? [];
 		const currentHp = this.system.attributes.hp.value;
 
+		// Apply hit dice size bonus from rules (e.g., Oozeling's Odd Constitution)
+		const hitDiceSizeBonus =
+			(this.system.attributes as { hitDiceSizeBonus?: number }).hitDiceSizeBonus ?? 0;
+		const effectiveHitDieSize = incrementDieSize(classHitDieSize, hitDiceSizeBonus);
+
 		let formula: string;
 
-		if (typedDialogData.takeAverageHp) formula = Math.ceil((classHitDieSize + 1) / 2).toString();
-		else formula = `2d${classHitDieSize}kh`;
+		if (typedDialogData.takeAverageHp) {
+			formula = Math.ceil((effectiveHitDieSize + 1) / 2).toString();
+		} else {
+			formula = `2d${effectiveHitDieSize}kh`;
+		}
 
 		const roll = new Roll(formula);
 		await roll.evaluate();

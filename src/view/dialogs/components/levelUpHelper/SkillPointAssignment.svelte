@@ -146,11 +146,12 @@
 
 <section>
 	<header class="nimble-section-header">
-		<h3 class="nimble-heading" data-heading-variant="section">
+		<h3 class="nimble-heading" data-heading-variant="section">More Skilled</h3>
+		<span class="nimble-points-remaining">
 			{localize('NIMBLE.skillPointAssignment.pointsRemaining', {
 				remainingSkillPoints: remainingSkillPoints,
 			})}
-		</h3>
+		</span>
 	</header>
 
 	<Hint hintText={hints.skillPointAssignment} />
@@ -250,6 +251,12 @@
 </section>
 
 <style lang="scss">
+	.nimble-points-remaining {
+		font-size: var(--nimble-sm-text);
+		font-weight: 500;
+		color: var(--nimble-medium-text-color);
+	}
+
 	.nimble-skill-config-table {
 		--nimble-button-min-width: 4ch;
 
