@@ -709,6 +709,7 @@
 			"showActiveOnly": "Afficher actives seulement",
 			"showAllConditions": "Afficher toutes les conditions",
 			"removeCondition": "Retirer l'etat",
+			"removeEffect": "Retirer l'effet",
 			"applyCondition": "Appliquer l'etat",
 			"conditionsFor": "Conditions : {name}",
 			"conditionDescriptionUnavailable": "<p>Aucune description disponible.</p>"

@@ -730,6 +730,7 @@
 			"showActiveOnly": "Mostrar solo activas",
 			"showAllConditions": "Mostrar todas",
 			"removeCondition": "Eliminar condición",
+			"removeEffect": "Eliminar efecto",
 			"applyCondition": "Aplicar condición",
 			"conditionsFor": "Condiciones: {name}",
 			"conditionDescriptionUnavailable": "<p>No hay descripción disponible.</p>"

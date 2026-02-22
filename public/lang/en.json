@@ -639,6 +639,7 @@
 			"showActiveOnly": "Show Active Only",
 			"showAllConditions": "Show All Conditions",
 			"removeCondition": "Remove condition",
+			"removeEffect": "Remove effect",
 			"applyCondition": "Apply condition",
 			"conditionsFor": "Conditions: {name}",
 			"conditionDescriptionUnavailable": "<p>No description available.</p>"

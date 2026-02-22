@@ -187,4 +187,53 @@ describe('prepareActorConditions', () => {
 		expect(blinded).toBeDefined();
 		expect(blinded?.active).toBe(false);
 	});
+
+	it('does not include non-standard effect statuses when includeInactive is true', () => {
+		(game.nimble.conditions as { get: (id: string) => unknown }).get = vi.fn((id: string) => ({
+			id,
+			name: id,
+			img: `${id}.svg`,
+		}));
+
+		const actor = {
+			conditionsMetadata: {
+				active: new Set<string>(),
+				overlay: new Set<string>(),
+			},
+			effects: [
+				createEffect({ statuses: ['test-haste'], duration: { rounds: 3 }, sourceName: 'Haste' }),
+			],
+		} as unknown as Actor.Implementation;
+
+		const result = prepareActorConditions(actor, { includeInactive: true });
+		expect(result.find((condition) => condition.id === 'test-haste')).toBeUndefined();
+	});
+
+	it('includes non-standard effect statuses when includeEffectStatuses is true', () => {
+		(game.nimble.conditions as { get: (id: string) => unknown }).get = vi.fn(() => undefined);
+
+		const actor = {
+			conditionsMetadata: {
+				active: new Set<string>(),
+				overlay: new Set<string>(),
+			},
+			effects: [
+				{
+					name: 'Test Haste',
+					img: 'icons/svg/aura.svg',
+					statuses: new Set(['test-haste']),
+					duration: { rounds: 3 },
+					sourceName: 'Haste Source',
+				},
+			],
+		} as unknown as Actor.Implementation;
+
+		const result = prepareActorConditions(actor, { includeEffectStatuses: true });
+		expect(result).toHaveLength(1);
+		expect(result[0].id).toBe('test-haste');
+		expect(result[0].name).toBe('Test Haste');
+		expect(result[0].img).toBe('icons/svg/aura.svg');
+		expect(result[0].active).toBe(true);
+		expect(result[0].durationLabel).toBe('3r');
+	});
 });

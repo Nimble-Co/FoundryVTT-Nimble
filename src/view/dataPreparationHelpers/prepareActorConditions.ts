@@ -173,10 +173,10 @@ function buildConditionTooltip(
 
 export default function prepareActorConditions(
 	actor: Actor.Implementation | null,
-	options: { includeInactive?: boolean } = {},
+	options: { includeInactive?: boolean; includeEffectStatuses?: boolean } = {},
 ): ActorCondition[] {
 	if (!actor) return [];
-	const { includeInactive = false } = options;
+	const { includeInactive = false, includeEffectStatuses = false } = options;
 
 	const actorWithMetadata = actor as ActorWithConditionsMetadata;
 	const activeConditions = actorWithMetadata.conditionsMetadata?.active ?? new Set<string>();
@@ -198,18 +198,18 @@ export default function prepareActorConditions(
 	}
 
 	const conditionIds = includeInactive
-		? new Set([
-				...Object.keys(CONFIG.NIMBLE.conditions ?? {}),
-				...activeConditions,
-				...effectConditions.keys(),
-			])
-		: new Set(activeConditions);
+		? new Set([...Object.keys(CONFIG.NIMBLE.conditions ?? {}), ...activeConditions])
+		: includeEffectStatuses
+			? new Set([...activeConditions, ...effectConditions.keys()])
+			: new Set(activeConditions);
 
 	const conditions = [...conditionIds].map((conditionId) => {
-		const metadata = game.nimble.conditions.get(conditionId);
-		const fallbackName = CONFIG.NIMBLE.conditions?.[conditionId] ?? conditionId;
-		const fallbackImage = CONFIG.NIMBLE.conditionDefaultImages?.[conditionId] ?? '';
 		const matchingEffects = effectConditions.get(conditionId) ?? [];
+		const metadata = game.nimble.conditions.get(conditionId);
+		const fallbackName =
+			CONFIG.NIMBLE.conditions?.[conditionId] ?? (matchingEffects[0]?.name || conditionId);
+		const fallbackImage =
+			CONFIG.NIMBLE.conditionDefaultImages?.[conditionId] ?? (matchingEffects[0]?.img || '');
 		const bestEffect = getBestEffectCandidate(matchingEffects);
 		const sourceLabel = bestEffect.sourceName ?? sourceNoneText;
 		const descriptionHtml = conditionDescriptions[conditionId] ?? '';
@@ -218,7 +218,7 @@ export default function prepareActorConditions(
 			name: metadata?.name ?? fallbackName,
 			img: metadata?.img ?? fallbackImage,
 			descriptionHtml,
-			active: activeConditions.has(conditionId),
+			active: activeConditions.has(conditionId) || matchingEffects.length > 0,
 			isOverlay: overlayConditions.has(conditionId),
 			durationLabel: bestEffect.durationLabel,
 			durationSortMs: bestEffect.durationSortMs,
