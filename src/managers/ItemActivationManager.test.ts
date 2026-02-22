@@ -622,7 +622,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 			await manager.getData();
 
 			expect(DamageRoll).toHaveBeenCalledWith(
-				undefined,
+				'0',
 				{ level: 1, strength: 10 },
 				{
 					canCrit: false,
