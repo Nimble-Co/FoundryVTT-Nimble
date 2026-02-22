@@ -20,6 +20,51 @@ const dependencies = {
 
 export const testDependencies = dependencies;
 
+function normalizeDamageRollFormula(formula: unknown): string {
+	const normalized = typeof formula === 'string' ? formula.replace(/\s+/g, ' ').trim() : '';
+	if (!normalized) return '0';
+
+	const normalizedDiceFaces = normalized.replace(
+		/\b(\d*)d([0-9oO|Il]+)\b/g,
+		(_match, rawCount, rawFaces) => {
+			const countValue = String(rawCount ?? '').replace(/[^0-9]/g, '');
+			const facesValue = String(rawFaces ?? '')
+				.replace(/[oO]/g, '0')
+				.replace(/[^0-9]/g, '');
+			const normalizedCount = countValue.length > 0 ? countValue : '1';
+			const normalizedFaces = facesValue.length > 0 ? facesValue : '0';
+			return `${normalizedCount}d${normalizedFaces}`;
+		},
+	);
+
+	const validateFormula = (candidate: string): boolean => {
+		const trimmed = candidate.trim();
+		if (!trimmed) return false;
+		try {
+			return Roll.validate(trimmed);
+		} catch {
+			return false;
+		}
+	};
+
+	if (validateFormula(normalizedDiceFaces)) return normalizedDiceFaces;
+
+	const firstSegment =
+		normalizedDiceFaces
+			.split(/\s*(?:,|;|\bor\b)\s*/i)
+			.map((segment) => segment.trim())
+			.find((segment) => segment.length > 0) ?? '';
+	if (firstSegment && validateFormula(firstSegment)) return firstSegment;
+
+	const diceMatch = normalizedDiceFaces.match(/\b\d*d\d+(?:\s*[+-]\s*\d+)?\b/i);
+	if (diceMatch) {
+		const extracted = diceMatch[0].replace(/\s+/g, '');
+		if (validateFormula(extracted)) return extracted;
+	}
+
+	return normalizedDiceFaces;
+}
+
 class ItemActivationManager {
 	#item: NimbleBaseItem;
 
@@ -54,7 +99,13 @@ class ItemActivationManager {
 		let dialogData: ItemActivationManager.DialogData;
 
 		if (options.fastForward) {
-			dialogData = { rollMode: options.rollMode ?? 0 };
+			dialogData = {
+				rollMode: options.rollMode ?? 0,
+				rollFormula: options.rollFormula,
+				primaryDieValue: options.primaryDieValue,
+				primaryDieModifier: options.primaryDieModifier,
+				rollHidden: options.rollHidden,
+			};
 		} else {
 			// Check if there are damage or healing effects that require rolling
 			const effects = this.activationData?.effects ?? [];
@@ -170,7 +221,7 @@ class ItemActivationManager {
 					node.rollMode = dialogData.rollMode ?? 0;
 
 					// Use modified formula if provided
-					const formula = dialogData.rollFormula || node.formula;
+					const formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
 
 					roll = new dependencies.DamageRoll(
 						formula,
@@ -301,6 +352,10 @@ namespace ItemActivationManager {
 		fastForward?: boolean;
 		rollMode?: number;
 		visibilityMode?: keyof foundry.CONST.DICE_ROLL_MODES;
+		rollFormula?: string;
+		primaryDieValue?: number;
+		primaryDieModifier?: string;
+		rollHidden?: boolean;
 	}
 
 	export interface DialogData {

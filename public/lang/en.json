@@ -786,6 +786,73 @@
 				"hint": "When enabled, dice roll details are shown inline below each roll in chat messages, without needing to hover."
 			}
 		},
+		"nimbleCombatSystemWindow": {
+			"title": "Combat System",
+			"logo": {
+				"alt": "Nimble"
+			},
+			"tooltips": {
+				"dragToMove": "Drag to move"
+			},
+			"targets": {
+				"label": "Targets:",
+				"hint": "Select non-monster token(s)",
+				"targetAria": "Target {name}",
+				"untargetAria": "Untarget {name}",
+				"selectTargetTooltip": "Select a Target",
+				"playerFallback": "Player"
+			},
+			"sections": {
+				"monsters": "Monsters",
+				"minions": "Minions"
+			},
+			"actions": {
+				"selectAction": "Select action",
+				"noActionsLeft": "No actions left"
+			},
+			"buttons": {
+				"roll": "Roll",
+				"rollEndTurn": "Roll + End Turn",
+				"close": "Close"
+			},
+			"chat": {
+				"heading": "Group of Minions",
+				"subheading": "Minion Group {groupLabel}",
+				"outcomeHit": "Hit",
+				"outcomeMiss": "Miss",
+				"memberFallback": "Minion",
+				"actionFallback": "Action",
+				"totalDamageLabel": "Total Damage",
+				"applyDamage": "Apply Damage"
+			},
+			"warnings": {
+				"endTurnNotApplied": "End turn was not applied because this group is not currently active.",
+				"memberReason": "{memberCombatantId}: {reason}",
+				"reasons": {
+					"noActionSelected": "No action selected",
+					"noActionsRemaining": "No actions remaining",
+					"actionNotFound": "Selected action not found",
+					"actorCannotActivate": "Actor cannot activate item",
+					"activationFailed": "Activation failed"
+				}
+			},
+			"notifications": {
+				"noActiveCombatForGroupAttack": "No active combat found for group attack.",
+				"selectTargetBeforeGroupAttack": "Select token target before rolling a group attack.",
+				"noGroupAttacksRolled": "No group attacks were rolled.",
+				"groupAttackFailed": "Group attack failed. See console for details.",
+				"noActiveCombatForMonsterAttack": "No active combat found for monster attack.",
+				"selectActionBeforeRoll": "Select an action for {name} before rolling.",
+				"actionUnavailableForMonster": "Selected action is unavailable for {name}.",
+				"monsterNoLongerInCombat": "{name} is no longer in combat.",
+				"monsterDefeatedCannotAct": "{name} is defeated and cannot act.",
+				"monsterNoActionsLeft": "{name} has no actions left.",
+				"monsterCannotActivateActions": "{name} cannot activate actions.",
+				"monsterAttackFailed": "Monster attack failed. See console for details.",
+				"selectedGroupHasNoAliveMinions": "Selected group has no alive minions to attack.",
+				"couldNotOpenPanel": "Could not open group attack panel. See console for details."
+			}
+		},
 		"actorImport": {
 			"buttonLabel": "Import Actor",
 			"dialogTitle": "Import from Nimble Nexus",

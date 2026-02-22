@@ -1,0 +1,780 @@
+.system-nimble,
+.theme-dark.system-nimble,
+.theme-dark .system-nimble {
+  --nimble-ncsw-text-color: hsl(0 0% 96%);
+  --nimble-ncsw-subtle-text-color: color-mix(in srgb, hsl(0 0% 96%) 88%, hsl(205 70% 72%) 12%);
+  --nimble-ncsw-panel-background: color-mix(in srgb, hsl(230 22% 10%) 95%, transparent);
+  --nimble-ncsw-panel-border: color-mix(in srgb, hsl(205 70% 72%) 48%, transparent);
+  --nimble-ncsw-panel-shadow-glow: color-mix(in srgb, hsl(205 78% 64%) 30%, transparent);
+  --nimble-ncsw-panel-shadow-drop: color-mix(in srgb, black 64%, transparent);
+  --nimble-ncsw-surface-background: color-mix(in srgb, hsl(216 36% 20%) 58%, transparent);
+  --nimble-ncsw-surface-border: color-mix(in srgb, hsl(205 70% 72%) 40%, transparent);
+  --nimble-ncsw-token-background: color-mix(in srgb, hsl(217 62% 20%) 74%, transparent);
+  --nimble-ncsw-token-border: color-mix(in srgb, hsl(210 90% 86%) 88%, white);
+  --nimble-ncsw-token-shadow: color-mix(in srgb, hsl(210 92% 76%) 30%, transparent);
+  --nimble-ncsw-tooltip-background: color-mix(in srgb, hsl(230 22% 10%) 95%, transparent);
+  --nimble-ncsw-tooltip-border: color-mix(in srgb, hsl(205 70% 72%) 48%, transparent);
+  --nimble-ncsw-tooltip-shadow-glow: color-mix(in srgb, hsl(205 78% 64%) 28%, transparent);
+  --nimble-ncsw-tooltip-shadow-drop: color-mix(in srgb, black 66%, transparent);
+  --nimble-ncsw-hp-track-border: hsl(41 18% 54%);
+  --nimble-ncsw-hp-track-background: hsl(220 26% 16%);
+  --nimble-ncsw-hp-text-shadow: color-mix(in srgb, black 58%, transparent);
+  --nimble-ncsw-wound-border: color-mix(in srgb, hsl(205 70% 72%) 40%, transparent);
+  --nimble-ncsw-wound-background: color-mix(in srgb, hsl(216 38% 18%) 72%, transparent);
+  --nimble-ncsw-wound-icon-color: color-mix(in srgb, hsl(0 92% 76%) 82%, white);
+  --nimble-ncsw-section-icon-border: color-mix(in srgb, hsl(205 70% 72%) 44%, transparent);
+  --nimble-ncsw-section-icon-background: color-mix(in srgb, hsl(216 38% 18%) 56%, transparent);
+  --nimble-ncsw-row-divider: color-mix(in srgb, hsl(205 70% 72%) 24%, transparent);
+  --nimble-ncsw-member-image-border: color-mix(in srgb, hsl(205 70% 72%) 40%, transparent);
+  --nimble-ncsw-member-image-background: color-mix(in srgb, hsl(216 38% 18%) 72%, transparent);
+  --nimble-ncsw-input-background: color-mix(in srgb, hsl(216 38% 18%) 72%, transparent);
+  --nimble-ncsw-input-border: color-mix(in srgb, hsl(205 70% 72%) 42%, transparent);
+  --nimble-ncsw-button-text-color: hsl(0 0% 96%);
+  --nimble-ncsw-button-background: color-mix(in srgb, black 16%, transparent);
+  --nimble-ncsw-button-border: color-mix(in srgb, white 28%, transparent);
+  --nimble-ncsw-button-positive-background: color-mix(in srgb, hsl(138 60% 20%) 58%, transparent);
+  --nimble-ncsw-button-positive-border: color-mix(in srgb, hsl(140 68% 72%) 68%, transparent);
+  --nimble-ncsw-button-negative-background: color-mix(in srgb, hsl(357 78% 32%) 72%, transparent);
+  --nimble-ncsw-button-negative-border: color-mix(in srgb, hsl(0 86% 78%) 84%, transparent);
+  --nimble-ncsw-warning-border: color-mix(in srgb, hsl(38 95% 72%) 34%, transparent);
+  --nimble-ncsw-warning-background: color-mix(in srgb, hsl(24 76% 26%) 58%, transparent);
+  --nimble-ncsw-warning-text: hsl(0 0% 96%);
+  --nimble-ncsw-target-active-color: hsl(140 74% 64%);
+  --nimble-ncsw-target-inactive-color: hsl(0 86% 66%);
+}
+
+.theme-light.system-nimble,
+.theme-light .system-nimble {
+  --nimble-ncsw-text-color: hsl(225 28% 14%);
+  --nimble-ncsw-subtle-text-color: color-mix(in srgb, hsl(225 28% 14%) 82%, hsl(212 58% 46%) 18%);
+  --nimble-ncsw-panel-background: var(--nimble-sheet-background);
+  --nimble-ncsw-panel-border: color-mix(in srgb, hsl(211 62% 58%) 52%, transparent);
+  --nimble-ncsw-panel-shadow-glow: color-mix(in srgb, hsl(211 72% 58%) 22%, transparent);
+  --nimble-ncsw-panel-shadow-drop: color-mix(in srgb, hsl(220 16% 28%) 24%, transparent);
+  --nimble-ncsw-surface-background: color-mix(in srgb, hsl(216 58% 94%) 88%, white);
+  --nimble-ncsw-surface-border: color-mix(in srgb, hsl(211 58% 64%) 52%, transparent);
+  --nimble-ncsw-token-background: color-mix(in srgb, hsl(215 70% 92%) 88%, white);
+  --nimble-ncsw-token-border: color-mix(in srgb, hsl(211 72% 64%) 70%, white);
+  --nimble-ncsw-token-shadow: color-mix(in srgb, hsl(211 68% 58%) 22%, transparent);
+  --nimble-ncsw-tooltip-background: color-mix(in srgb, hsl(212 52% 97%) 95%, white);
+  --nimble-ncsw-tooltip-border: color-mix(in srgb, hsl(211 58% 62%) 54%, transparent);
+  --nimble-ncsw-tooltip-shadow-glow: color-mix(in srgb, hsl(211 70% 58%) 20%, transparent);
+  --nimble-ncsw-tooltip-shadow-drop: color-mix(in srgb, hsl(220 16% 26%) 22%, transparent);
+  --nimble-ncsw-hp-track-border: hsl(40 22% 47%);
+  --nimble-ncsw-hp-track-background: hsl(216 34% 88%);
+  --nimble-ncsw-hp-text-shadow: color-mix(in srgb, black 25%, transparent);
+  --nimble-ncsw-wound-border: color-mix(in srgb, hsl(211 55% 62%) 50%, transparent);
+  --nimble-ncsw-wound-background: color-mix(in srgb, hsl(216 50% 92%) 84%, white);
+  --nimble-ncsw-wound-icon-color: color-mix(in srgb, hsl(0 86% 58%) 78%, hsl(0 66% 44%) 22%);
+  --nimble-ncsw-section-icon-border: color-mix(in srgb, hsl(211 55% 62%) 50%, transparent);
+  --nimble-ncsw-section-icon-background: color-mix(in srgb, hsl(216 50% 92%) 84%, white);
+  --nimble-ncsw-row-divider: color-mix(in srgb, hsl(211 55% 62%) 34%, transparent);
+  --nimble-ncsw-member-image-border: color-mix(in srgb, hsl(211 58% 64%) 46%, transparent);
+  --nimble-ncsw-member-image-background: color-mix(in srgb, hsl(216 44% 90%) 86%, white);
+  --nimble-ncsw-input-background: color-mix(in srgb, hsl(215 58% 93%) 88%, white);
+  --nimble-ncsw-input-border: color-mix(in srgb, hsl(211 60% 60%) 54%, transparent);
+  --nimble-ncsw-button-text-color: hsl(0 0% 96%);
+  --nimble-ncsw-button-background: color-mix(in srgb, hsl(215 50% 92%) 84%, white);
+  --nimble-ncsw-button-border: color-mix(in srgb, hsl(212 52% 60%) 52%, transparent);
+  --nimble-ncsw-button-positive-background: color-mix(in srgb, hsl(138 60% 32%) 76%, transparent);
+  --nimble-ncsw-button-positive-border: color-mix(in srgb, hsl(140 68% 60%) 80%, transparent);
+  --nimble-ncsw-button-negative-background: color-mix(in srgb, hsl(357 78% 38%) 78%, transparent);
+  --nimble-ncsw-button-negative-border: color-mix(in srgb, hsl(0 86% 62%) 84%, transparent);
+  --nimble-ncsw-warning-border: color-mix(in srgb, hsl(38 72% 52%) 44%, transparent);
+  --nimble-ncsw-warning-background: color-mix(in srgb, hsl(35 72% 70%) 34%, white);
+  --nimble-ncsw-warning-text: hsl(222 22% 16%);
+  --nimble-ncsw-target-active-color: hsl(140 74% 42%);
+  --nimble-ncsw-target-inactive-color: hsl(0 86% 56%);
+}
+
+.system-nimble .nimble-minion-group-attack-panel {
+  --nimble-minion-group-attack-text-size: calc(var(--nimble-xxs-text, 0.55rem) * 1.8);
+  --nimble-minion-group-attack-title-size: calc(var(--nimble-xxs-text, 0.55rem) * 2.2);
+  --nimble-ncsw-target-chip-size: 4.2rem;
+  --nimble-ncsw-target-chip-gap: 0.3rem;
+  --nimble-ncsw-target-max-row: 4;
+  --nimble-ncsw-select-width: 7.4rem;
+
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.34rem;
+  width: min(23.5rem, calc(100vw - 1rem));
+  min-width: min(20rem, calc(100vw - 1rem));
+  min-height: 18rem;
+  max-width: calc(100vw - 1rem);
+  max-height: calc(100vh - 1rem);
+  padding: 0 0.44rem 0.38rem;
+  margin: 0;
+  color: var(--nimble-ncsw-text-color);
+  background: var(--nimble-ncsw-panel-background);
+  border: 1px solid var(--nimble-ncsw-panel-border);
+  border-radius: 0.5rem;
+  box-shadow:
+    0 0 12px var(--nimble-ncsw-panel-shadow-glow),
+    0 8px 20px var(--nimble-ncsw-panel-shadow-drop);
+  overflow-x: hidden;
+  overflow-y: auto;
+  resize: vertical;
+  z-index: 10060;
+
+  > * {
+    flex: 0 0 auto;
+  }
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    cursor: grab;
+    user-select: none;
+  }
+
+  &__header:active {
+    cursor: grabbing;
+  }
+
+  &__logo {
+    display: block;
+    width: auto;
+    height: calc(var(--nimble-minion-group-attack-title-size) * 3);
+    max-width: min(100%, 22rem);
+    object-fit: contain;
+    object-position: center;
+    pointer-events: none;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--nimble-minion-group-attack-title-size);
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+    color: var(--nimble-ncsw-text-color);
+  }
+
+  &__target {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 0.34rem;
+    min-height: 4.2rem;
+    margin: 0 0 0.44rem;
+    padding: 0.18rem 0.26rem;
+    border: 1px solid var(--nimble-ncsw-surface-border);
+    border-radius: 0.25rem;
+    background: var(--nimble-ncsw-surface-background);
+    font-size: var(--nimble-minion-group-attack-text-size);
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--nimble-ncsw-text-color);
+    text-align: left;
+  }
+
+  &__target-label {
+    flex: 0 0 auto;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.24rem;
+    min-height: var(--nimble-ncsw-target-chip-size);
+  }
+
+  &__target-label-text {
+    font-size: var(--nimble-minion-group-attack-text-size);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--nimble-ncsw-text-color);
+    white-space: nowrap;
+    transform: translateY(-0.08rem);
+  }
+
+  &__target-label-icon {
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 2.2);
+    line-height: 1;
+  }
+
+  &__target-label-icon--active {
+    color: var(--nimble-ncsw-target-active-color);
+  }
+
+  &__target-label-icon--inactive {
+    color: var(--nimble-ncsw-target-inactive-color);
+  }
+
+  &__target-list {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--nimble-ncsw-target-chip-gap);
+    flex: 0 0 auto;
+    width: fit-content;
+    max-width: calc(
+      (var(--nimble-ncsw-target-chip-size) * var(--nimble-ncsw-target-max-row)) +
+        (var(--nimble-ncsw-target-chip-gap) * (var(--nimble-ncsw-target-max-row) - 1))
+    );
+    min-width: 0;
+  }
+
+  &__target-hint {
+    font-size: var(--nimble-minion-group-attack-text-size);
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--nimble-ncsw-subtle-text-color);
+    white-space: nowrap;
+  }
+
+  &__target-token {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: var(--nimble-ncsw-target-chip-size);
+    height: var(--nimble-ncsw-target-chip-size);
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--nimble-ncsw-token-border);
+    border-radius: 0.22rem;
+    background: var(--nimble-ncsw-token-background);
+    box-shadow: 0 0 4px var(--nimble-ncsw-token-shadow);
+    transition:
+      opacity 120ms ease,
+      border-color 120ms ease,
+      box-shadow 120ms ease;
+    cursor: pointer;
+  }
+
+  &__target-token:focus-visible {
+    outline: 1px solid var(--nimble-ncsw-token-border);
+    outline-offset: 1px;
+  }
+
+  &__target-token--inactive {
+    opacity: 0.42;
+    border-color: var(--nimble-ncsw-surface-border);
+    box-shadow: none;
+  }
+
+  &__target-token-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  &__target-tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 0.22rem);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 0.18rem;
+    width: max-content;
+    max-width: min(17rem, calc(100vw - 1.4rem));
+    margin: 0;
+    padding: 0.2rem 0.24rem;
+    color: var(--nimble-ncsw-text-color);
+    background: var(--nimble-ncsw-tooltip-background);
+    border: 1px solid var(--nimble-ncsw-tooltip-border);
+    border-radius: 0.26rem;
+    box-shadow:
+      0 0 8px var(--nimble-ncsw-tooltip-shadow-glow),
+      0 4px 10px var(--nimble-ncsw-tooltip-shadow-drop);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 10080;
+    transition:
+      opacity 120ms ease,
+      transform 120ms ease;
+  }
+
+  &__target-tooltip--floating {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: auto;
+    transform: none;
+    opacity: 1;
+    pointer-events: none;
+    z-index: 10120;
+  }
+
+  &__action-tooltip {
+    position: fixed;
+    left: 0;
+    top: 0;
+    max-width: min(24rem, calc(100vw - 1rem));
+    margin: 0;
+    padding: 0.22rem 0.28rem;
+    font-size: var(--nimble-minion-group-attack-text-size);
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--nimble-ncsw-text-color);
+    background: var(--nimble-ncsw-tooltip-background);
+    border: 1px solid var(--nimble-ncsw-tooltip-border);
+    border-radius: 0.26rem;
+    box-shadow:
+      0 0 8px var(--nimble-ncsw-tooltip-shadow-glow),
+      0 4px 10px var(--nimble-ncsw-tooltip-shadow-drop);
+    pointer-events: none;
+    z-index: 10120;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  &__image-popover {
+    --nimble-image-popover-size: 7.25rem;
+    --nimble-image-popover-hp-percent: 0%;
+
+    position: fixed;
+    left: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.14rem;
+    width: 7.25rem;
+    margin: 0;
+    padding: 0.18rem;
+    background: var(--nimble-ncsw-tooltip-background);
+    border: 1px solid var(--nimble-ncsw-tooltip-border);
+    border-radius: 0.3rem;
+    box-shadow:
+      0 0 10px var(--nimble-ncsw-tooltip-shadow-glow),
+      0 6px 14px var(--nimble-ncsw-tooltip-shadow-drop);
+    pointer-events: none;
+    z-index: 10120;
+    overflow: hidden;
+  }
+
+  &__image-popover-image {
+    display: block;
+    width: 100%;
+    height: var(--nimble-image-popover-size);
+    object-fit: cover;
+    object-position: center;
+    border-radius: 0.18rem;
+  }
+
+  &__image-popover-name {
+    width: 100%;
+    margin: 0;
+    font-size: var(--nimble-minion-group-attack-text-size);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--nimble-ncsw-text-color);
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  &__image-popover-hp {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 1.18rem;
+    border: 1px solid var(--nimble-ncsw-hp-track-border);
+    border-radius: 0.2rem;
+    background: var(--nimble-ncsw-hp-track-background);
+  }
+
+  &__image-popover-hp::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--nimble-image-popover-hp-percent);
+    background: linear-gradient(to right, hsl(138 47% 20%) 0%, hsl(139 47% 44%) 100%);
+    z-index: 0;
+    transition: width 120ms ease;
+  }
+
+  &__image-popover-hp--bloodied::before {
+    background: linear-gradient(to right, hsl(0 47% 20%) 0%, hsl(0 47% 44%) 100%);
+  }
+
+  &__image-popover-hp-value {
+    position: relative;
+    z-index: 1;
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.86);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--nimble-ncsw-text-color);
+    text-shadow: 0 0 4px var(--nimble-ncsw-hp-text-shadow);
+    white-space: nowrap;
+  }
+
+  .nimble-minion-group-attack-panel__target-token:hover .nimble-minion-group-attack-panel__target-tooltip,
+  .nimble-minion-group-attack-panel__target-token:focus-visible .nimble-minion-group-attack-panel__target-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-2px);
+  }
+
+  &__target-tooltip-head {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 1rem;
+    padding-inline: 1rem 0.2rem;
+  }
+
+  &__target-state-icon {
+    position: absolute;
+    left: 0.05rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.82);
+    line-height: 1;
+  }
+
+  &__target-state-icon--active {
+    color: var(--nimble-ncsw-target-active-color);
+  }
+
+  &__target-state-icon--inactive {
+    color: var(--nimble-ncsw-target-inactive-color);
+  }
+
+  &__target-tooltip-name {
+    font-size: var(--nimble-minion-group-attack-text-size);
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+    color: var(--nimble-ncsw-text-color);
+    white-space: nowrap;
+  }
+
+  &__target-tooltip-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 0.2rem;
+    align-items: center;
+  }
+
+  &__target-tooltip-hp {
+    --nimble-target-tooltip-hp-percent: 0%;
+
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 7rem;
+    min-height: 1.18rem;
+    border: 1px solid var(--nimble-ncsw-hp-track-border);
+    border-radius: 0.2rem;
+    background: var(--nimble-ncsw-hp-track-background);
+  }
+
+  &__target-tooltip-hp::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--nimble-target-tooltip-hp-percent);
+    background: linear-gradient(to right, hsl(138 47% 20%) 0%, hsl(139 47% 44%) 100%);
+    z-index: 0;
+    transition: width 120ms ease;
+  }
+
+  &__target-tooltip-hp--bloodied::before {
+    background: linear-gradient(to right, hsl(0 47% 20%) 0%, hsl(0 47% 44%) 100%);
+  }
+
+  &__target-tooltip-hp-value {
+    position: relative;
+    z-index: 1;
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.86);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--nimble-ncsw-text-color);
+    text-shadow: 0 0 4px var(--nimble-ncsw-hp-text-shadow);
+    white-space: nowrap;
+  }
+
+  &__target-tooltip-wound {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.16rem;
+    min-height: 1.18rem;
+    padding: 0 0.22rem;
+    border: 1px solid var(--nimble-ncsw-wound-border);
+    border-radius: 0.2rem;
+    background: var(--nimble-ncsw-wound-background);
+    color: var(--nimble-ncsw-text-color);
+    white-space: nowrap;
+  }
+
+  &__target-tooltip-wound .fa-droplet {
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.86);
+    color: var(--nimble-ncsw-wound-icon-color);
+    line-height: 1;
+  }
+
+  &__target-tooltip-wound-value {
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.88);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--nimble-ncsw-text-color);
+  }
+
+  &__section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.34rem;
+    margin: 0;
+    padding: 0.08rem 0.12rem 0.02rem;
+    font-size: var(--nimble-minion-group-attack-text-size);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--nimble-ncsw-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  &__section-title-text {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  &__section-title-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.16rem;
+  }
+
+  &__section-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.92);
+    line-height: 1;
+    color: var(--nimble-ncsw-text-color);
+  }
+
+  &__section-icon--option {
+    min-width: 1rem;
+    min-height: 1rem;
+    padding: 0.08rem;
+    border: 1px solid var(--nimble-ncsw-section-icon-border);
+    border-radius: 0.2rem;
+    background: var(--nimble-ncsw-section-icon-background);
+  }
+
+  &__table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  .nimble-minion-group-attack-panel__row + .nimble-minion-group-attack-panel__row td {
+    border-top: 1px solid var(--nimble-ncsw-row-divider);
+  }
+
+  &__row--inactive td {
+    opacity: 0.5;
+  }
+
+  &__member,
+  &__action,
+  &__dice,
+  &__controls {
+    padding: 0.15rem 0.15rem;
+    font-size: var(--nimble-minion-group-attack-text-size);
+    line-height: 1.1;
+    color: var(--nimble-ncsw-text-color);
+    vertical-align: middle;
+  }
+
+  &__member {
+    width: 44%;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  &__member-content {
+    display: flex;
+    align-items: center;
+    gap: 0.34rem;
+    min-width: 0;
+  }
+
+  &__member-image {
+    display: block;
+    width: 1.45rem;
+    height: 1.45rem;
+    border: 1px solid var(--nimble-ncsw-member-image-border);
+    border-radius: 0.2rem;
+    object-fit: cover;
+    object-position: center;
+    background: var(--nimble-ncsw-member-image-background);
+    flex: 0 0 auto;
+  }
+
+  &__member-name {
+    display: inline-block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__action {
+    width: 36%;
+    text-align: left;
+  }
+
+  &__dice {
+    width: 20%;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  &__controls {
+    width: 1%;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .nimble-minion-group-attack-panel__table--monsters .nimble-minion-group-attack-panel__member {
+    width: 40%;
+  }
+
+  .nimble-minion-group-attack-panel__table--monsters .nimble-minion-group-attack-panel__action {
+    width: 44%;
+  }
+
+  .nimble-minion-group-attack-panel__table--monsters .nimble-minion-group-attack-panel__dice {
+    width: 16%;
+  }
+
+  &__select {
+    display: block;
+    width: var(--nimble-ncsw-select-width);
+    min-width: var(--nimble-ncsw-select-width);
+    max-width: var(--nimble-ncsw-select-width);
+    min-height: 1.45rem;
+    margin: 0;
+    padding: 0 1.3rem 0 0.3rem;
+    font-size: var(--nimble-minion-group-attack-text-size);
+    line-height: 1.1;
+    color: var(--nimble-ncsw-text-color);
+    background: var(--nimble-ncsw-input-background);
+    border: 1px solid var(--nimble-ncsw-input-border);
+    border-radius: 0.22rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__select:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &__warnings {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    margin: 0;
+    padding: 0.22rem 0.3rem;
+    list-style: none;
+    border: 1px solid var(--nimble-ncsw-warning-border);
+    border-radius: 0.24rem;
+    background: var(--nimble-ncsw-warning-background);
+  }
+
+  &__warnings li {
+    margin: 0;
+    font-size: var(--nimble-minion-group-attack-text-size);
+    line-height: 1.1;
+    color: var(--nimble-ncsw-warning-text);
+  }
+
+  &__inline-buttons {
+    display: inline-flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.16rem;
+    width: 100%;
+  }
+
+  &__button-tooltip-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nimble-minion-group-attack-panel__inline-buttons > .nimble-minion-group-attack-panel__button {
+    min-height: 1.3rem;
+    padding: 0 0.3rem;
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.9);
+  }
+
+  &__inline-buttons--monster-row {
+    justify-content: flex-end;
+  }
+
+  &__monster-controls-cell {
+    padding: 0.06rem 0.15rem 0.18rem;
+  }
+
+  .nimble-minion-group-attack-panel__row + .nimble-minion-group-attack-panel__row--monster-controls td {
+    border-top: 0;
+  }
+
+  &__buttons {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.24rem;
+  }
+
+  &__button {
+    min-height: 1.3rem;
+    margin: 0;
+    padding: 0 0.3rem;
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.9);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--nimble-ncsw-button-text-color);
+    border: 1px solid var(--nimble-ncsw-button-border);
+    border-radius: 0.24rem;
+    background: var(--nimble-ncsw-button-background);
+  }
+
+  &__button--positive {
+    background: var(--nimble-ncsw-button-positive-background);
+    border-color: var(--nimble-ncsw-button-positive-border);
+  }
+
+  &__button--negative {
+    background: var(--nimble-ncsw-button-negative-background);
+    border-color: var(--nimble-ncsw-button-negative-border);
+  }
+
+  &__button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}

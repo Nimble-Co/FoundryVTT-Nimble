@@ -5,14 +5,14 @@ import type { EffectNode } from '#types/effectTree.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 
 /** Types for activation cards that have targets and effects */
-type ActivationCardTypes = 'feature' | 'object' | 'spell';
+type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'spell';
 
 /** System data for activation cards */
 interface ActivationCardSystemData {
 	targets: string[];
 	isCritical: boolean;
 	isMiss: boolean;
-	activation: {
+	activation?: {
 		effects: unknown[];
 		[key: string]: unknown;
 	};
@@ -76,16 +76,33 @@ class NimbleChatMessage extends ChatMessage {
 		return type === this.type;
 	}
 
+	isMinionGroupAttackCard(): boolean {
+		if (this.type === 'minionGroupAttack') return true;
+		const messageType = this.type as string;
+		if (messageType !== 'base') return false;
+
+		const nimbleChatCardType = (
+			this as unknown as {
+				flags?: {
+					nimble?: { chatCardType?: string };
+				};
+			}
+		).flags?.nimble?.chatCardType;
+		return nimbleChatCardType === 'minionGroupAttack';
+	}
+
 	/** Check if this chat message is an activation card type (feature, object, or spell) */
 	isActivationCard(): this is NimbleChatMessage & { system: ActivationCardSystemData } {
-		return (this.activationCardTypes as string[]).includes(this.type);
+		return (
+			(this.activationCardTypes as string[]).includes(this.type) || this.isMinionGroupAttackCard()
+		);
 	}
 
 	/** ------------------------------------------------------ */
 	/**                       Getters                          */
 	/** ------------------------------------------------------ */
 	get activationCardTypes(): ActivationCardTypes[] {
-		return ['feature', 'object', 'spell'];
+		return ['feature', 'minionGroupAttack', 'object', 'spell'];
 	}
 
 	get reactive() {
@@ -104,7 +121,8 @@ class NimbleChatMessage extends ChatMessage {
 		else if (systemData.isMiss) contexts.push('miss');
 		else contexts.push('hit');
 
-		const effects = (systemData.activation.effects || []) as EffectNode[];
+		const effects = ((systemData.activation?.effects as EffectNode[] | undefined) ??
+			[]) as EffectNode[];
 		const nodes = getRelevantNodes(effects, contexts, {
 			includeBaseDamageNodes: systemData.isMiss,
 		});

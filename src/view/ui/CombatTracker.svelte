@@ -1,11 +1,18 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { fade, slide } from 'svelte/transition';
 	import {
 		canCurrentUserReorderCombatant,
 		getCombatantTypePriority,
 	} from '../../utils/combatantOrdering.js';
 	import { isCombatantDead } from '../../utils/isCombatantDead.js';
+	import {
+		getEffectiveMinionGroupLeader,
+		getMinionGroupId,
+		getMinionGroupSummaries,
+		isMinionGroupTemporary,
+	} from '../../utils/minionGrouping.js';
+	import { shouldShowTrackerGroupedStacksForCurrentUser } from '../../utils/minionGroupingModes.js';
 	import {
 		getCombatTrackerLocation,
 		getCurrentTurnAnimationSettings,
@@ -29,6 +36,15 @@
 	interface SceneCombatantLists {
 		activeCombatants: Combatant.Implementation[];
 		deadCombatants: Combatant.Implementation[];
+		groupedStackMemberCountsByLeaderId: Map<string, number>;
+		groupedStackMemberNamesByLeaderId: Map<string, string[]>;
+	}
+
+	interface TempGroupPopoverState {
+		leaderId: string;
+		memberNames: string[];
+		left: number;
+		top: number;
 	}
 
 	interface CombatantDropPreview {
@@ -288,24 +304,107 @@
 		return combat.combatants.contents.some((c) => getCombatantSceneId(c) === sceneId);
 	}
 
+	function getGroupedStackDataByLeaderIdForScene(combatantsForScene: Combatant.Implementation[]): {
+		countsByLeaderId: Map<string, number>;
+		memberNamesByLeaderId: Map<string, string[]>;
+	} {
+		const groupedStackMemberCountsByLeaderId = new Map<string, number>();
+		const groupedStackMemberNamesByLeaderId = new Map<string, string[]>();
+		const groupSummaries = getMinionGroupSummaries(combatantsForScene);
+
+		for (const summary of groupSummaries.values()) {
+			const isTemporaryGroup = summary.members.some((member) => isMinionGroupTemporary(member));
+			if (!isTemporaryGroup) continue;
+
+			const aliveMemberCount = summary.aliveMembers.length;
+			if (aliveMemberCount < 2) continue;
+
+			const leader =
+				getEffectiveMinionGroupLeader(summary, { aliveOnly: true }) ??
+				getEffectiveMinionGroupLeader(summary);
+			if (!leader?.id) continue;
+
+			groupedStackMemberCountsByLeaderId.set(leader.id, aliveMemberCount);
+			groupedStackMemberNamesByLeaderId.set(
+				leader.id,
+				summary.aliveMembers
+					.map(
+						(member) =>
+							member.token?.reactive?.name ??
+							member.token?.name ??
+							member.token?.actor?.reactive?.name ??
+							member.reactive?.name ??
+							member.name ??
+							'Unknown',
+					)
+					.sort((left, right) => left.localeCompare(right)),
+			);
+		}
+
+		return {
+			countsByLeaderId: groupedStackMemberCountsByLeaderId,
+			memberNamesByLeaderId: groupedStackMemberNamesByLeaderId,
+		};
+	}
+
 	function getCombatantsForScene(
 		combat: Combat | null,
 		sceneId: string | undefined,
 	): SceneCombatantLists {
-		if (!sceneId || !combat) return { activeCombatants: [], deadCombatants: [] };
+		if (!sceneId || !combat) {
+			return {
+				activeCombatants: [],
+				deadCombatants: [],
+				groupedStackMemberCountsByLeaderId: new Map(),
+				groupedStackMemberNamesByLeaderId: new Map(),
+			};
+		}
+
+		const shouldShowGroupedStacks = shouldShowTrackerGroupedStacksForCurrentUser();
 
 		const combatantsForScene = combat.combatants.contents.filter(
 			(c) => getCombatantSceneId(c) === sceneId && c.visible && c._id != null,
 		);
+		const groupedStackDataByLeaderId = shouldShowGroupedStacks
+			? getGroupedStackDataByLeaderIdForScene(combatantsForScene)
+			: {
+					countsByLeaderId: new Map<string, number>(),
+					memberNamesByLeaderId: new Map<string, string[]>(),
+				};
+		const groupedStackMemberCountsByLeaderId = groupedStackDataByLeaderId.countsByLeaderId;
+		const groupedStackMemberNamesByLeaderId = groupedStackDataByLeaderId.memberNamesByLeaderId;
+		const groupSummariesById = getMinionGroupSummaries(combatantsForScene);
+		const isTemporaryGroupMemberHiddenInStack = (combatant: Combatant.Implementation): boolean => {
+			if (!shouldShowGroupedStacks) return false;
+
+			const groupId = getMinionGroupId(combatant);
+			if (!groupId) return false;
+
+			const summary = groupSummariesById.get(groupId);
+			if (!summary) return false;
+			if (!summary.members.some((member) => isMinionGroupTemporary(member))) return false;
+
+			const leader =
+				getEffectiveMinionGroupLeader(summary, { aliveOnly: true }) ??
+				getEffectiveMinionGroupLeader(summary);
+			if (!leader?.id) return false;
+			return leader.id !== combatant.id;
+		};
+
 		const turnCombatants = combat.turns.filter(
 			(c) => getCombatantSceneId(c) === sceneId && c.visible && c._id != null,
 		);
 
 		const turnCombatantIds = new Set(turnCombatants.map((c) => c.id));
-		const activeCombatants = turnCombatants.filter((combatant) => !isCombatantDead(combatant));
-		const missingActiveCombatants = combatantsForScene.filter(
-			(combatant) => !isCombatantDead(combatant) && !turnCombatantIds.has(combatant.id ?? ''),
+		const activeCombatants = turnCombatants.filter(
+			(combatant) => !isCombatantDead(combatant) && !isTemporaryGroupMemberHiddenInStack(combatant),
 		);
+		const missingActiveCombatants = combatantsForScene.filter((combatant) => {
+			if (isCombatantDead(combatant)) return false;
+			if (turnCombatantIds.has(combatant.id ?? '')) return false;
+			if (isTemporaryGroupMemberHiddenInStack(combatant)) return false;
+			return true;
+		});
 
 		const deadCombatants = combatantsForScene
 			.filter((combatant) => isCombatantDead(combatant))
@@ -314,6 +413,8 @@
 		return {
 			activeCombatants: [...activeCombatants, ...missingActiveCombatants],
 			deadCombatants,
+			groupedStackMemberCountsByLeaderId,
+			groupedStackMemberNamesByLeaderId,
 		};
 	}
 
@@ -355,14 +456,29 @@
 	function updateCurrentCombat() {
 		// Use queueMicrotask to ensure Foundry's data is fully updated
 		// before we read it, and to batch Svelte's reactivity updates
-		queueMicrotask(() => {
+		queueMicrotask(async () => {
+			const previousScrollTop = combatantsListElement?.scrollTop ?? null;
 			const combat = getCombatForCurrentScene();
 			const sceneId = canvas.scene?.id;
-			const { activeCombatants, deadCombatants } = getCombatantsForScene(combat, sceneId);
+			const {
+				activeCombatants,
+				deadCombatants,
+				groupedStackMemberCountsByLeaderId,
+				groupedStackMemberNamesByLeaderId,
+			} = getCombatantsForScene(combat, sceneId);
 			currentCombat = combat;
 			sceneCombatants = activeCombatants;
 			sceneDeadCombatants = deadCombatants;
+			sceneGroupedStackMemberCountsByLeaderId = groupedStackMemberCountsByLeaderId;
+			sceneGroupedStackMemberNamesByLeaderId = groupedStackMemberNamesByLeaderId;
 			version++;
+
+			if (previousScrollTop !== null) {
+				await tick();
+				if (combatantsListElement) {
+					combatantsListElement.scrollTop = previousScrollTop;
+				}
+			}
 		});
 	}
 
@@ -703,6 +819,84 @@
 		scheduleFloatingEndTurnPositionUpdate();
 	}
 
+	function hideTempGroupPopover(): void {
+		tempGroupPopoverState = null;
+		tempGroupPopoverAnchorElement = null;
+	}
+
+	function updateTempGroupPopoverPosition(): void {
+		if (!tempGroupPopoverState || !tempGroupPopoverAnchorElement) return;
+
+		const anchorRect = tempGroupPopoverAnchorElement.getBoundingClientRect();
+		const popoverWidth = tempGroupPopoverElement?.offsetWidth ?? 180;
+		const popoverHeight = tempGroupPopoverElement?.offsetHeight ?? 120;
+		const viewportMarginPx = 8;
+		const edgeGapPx = 8;
+
+		let left = anchorRect.right + edgeGapPx;
+		let top = anchorRect.top;
+
+		if (combatTrackerLocation === 'top') {
+			left = anchorRect.left + (anchorRect.width - popoverWidth) / 2;
+			top = anchorRect.bottom + edgeGapPx;
+		} else if (combatTrackerLocation === 'bottom') {
+			left = anchorRect.left + (anchorRect.width - popoverWidth) / 2;
+			top = anchorRect.top - popoverHeight - edgeGapPx;
+		} else {
+			top = anchorRect.top + (anchorRect.height - popoverHeight) / 2;
+			if (left + popoverWidth > window.innerWidth - viewportMarginPx) {
+				left = anchorRect.left - popoverWidth - edgeGapPx;
+			}
+		}
+
+		const maxLeft = Math.max(viewportMarginPx, window.innerWidth - popoverWidth - viewportMarginPx);
+		const maxTop = Math.max(
+			viewportMarginPx,
+			window.innerHeight - popoverHeight - viewportMarginPx,
+		);
+
+		const nextLeft = Math.round(Math.max(viewportMarginPx, Math.min(maxLeft, left)));
+		const nextTop = Math.round(Math.max(viewportMarginPx, Math.min(maxTop, top)));
+		if (tempGroupPopoverState.left === nextLeft && tempGroupPopoverState.top === nextTop) return;
+
+		tempGroupPopoverState = {
+			...tempGroupPopoverState,
+			left: nextLeft,
+			top: nextTop,
+		};
+	}
+
+	async function showTempGroupPopover(event: MouseEvent, combatantId: string): Promise<void> {
+		if (!game.user?.isGM) return;
+		if (!combatantId) {
+			hideTempGroupPopover();
+			return;
+		}
+
+		const memberNames = sceneGroupedStackMemberNamesByLeaderId.get(combatantId);
+		if (!memberNames || memberNames.length === 0) {
+			hideTempGroupPopover();
+			return;
+		}
+
+		tempGroupPopoverAnchorElement = event.currentTarget as HTMLElement;
+		tempGroupPopoverState = {
+			leaderId: combatantId,
+			memberNames,
+			left: 0,
+			top: 0,
+		};
+		await tick();
+		updateTempGroupPopoverPosition();
+	}
+
+	function moveTempGroupPopover(event: MouseEvent, combatantId: string): void {
+		if (!tempGroupPopoverState) return;
+		if (tempGroupPopoverState.leaderId !== combatantId) return;
+		tempGroupPopoverAnchorElement = event.currentTarget as HTMLElement;
+		updateTempGroupPopoverPosition();
+	}
+
 	function stopResizeTracking() {
 		if (resizeMoveHandler) {
 			window.removeEventListener('pointermove', resizeMoveHandler);
@@ -773,10 +967,15 @@
 	// Combatants filtered to only those belonging to the current scene
 	let sceneCombatants: Combatant.Implementation[] = $state([]);
 	let sceneDeadCombatants: Combatant.Implementation[] = $state([]);
+	let sceneGroupedStackMemberCountsByLeaderId: Map<string, number> = $state(new Map());
+	let sceneGroupedStackMemberNamesByLeaderId: Map<string, string[]> = $state(new Map());
 	let dragPreview: CombatantDropPreview | null = $state(null);
 	let activeDragSourceId: string | null = $state(null);
 	let combatantsListElement: HTMLOListElement | null = $state(null);
 	let combatTrackerElement: HTMLElement | null = $state(null);
+	let tempGroupPopoverElement: HTMLDivElement | null = $state(null);
+	let tempGroupPopoverAnchorElement: HTMLElement | null = $state(null);
+	let tempGroupPopoverState: TempGroupPopoverState | null = $state(null);
 	let combatTrackerWidthRem: number = $state(COMBAT_TRACKER_MIN_WIDTH_REM);
 	let combatTrackerHeightRem: number = $state(COMBAT_TRACKER_MIN_HEIGHT_REM);
 	let combatTrackerLocation: CombatTrackerLocation = $state(getCombatTrackerLocation());
@@ -899,10 +1098,12 @@
 		resizeWindowHandler = () => {
 			updateCombatTrackerSceneReserveInsets();
 			scheduleFloatingEndTurnPositionUpdate();
+			updateTempGroupPopoverPosition();
 		};
 		window.addEventListener('resize', resizeWindowHandler);
 		windowScrollHandler = () => {
 			scheduleFloatingEndTurnPositionUpdate();
+			updateTempGroupPopoverPosition();
 		};
 		window.addEventListener('scroll', windowScrollHandler, true);
 
@@ -954,6 +1155,9 @@
 			currentCombat = null;
 			sceneCombatants = [];
 			sceneDeadCombatants = [];
+			sceneGroupedStackMemberCountsByLeaderId = new Map();
+			sceneGroupedStackMemberNamesByLeaderId = new Map();
+			hideTempGroupPopover();
 			version++;
 		});
 
@@ -978,6 +1182,7 @@
 	onDestroy(() => {
 		stopResizeTracking();
 		clearCombatTrackerSceneReserveInsets();
+		hideTempGroupPopover();
 		if (floatingEndTurnPositionFrameHandle !== undefined) {
 			cancelAnimationFrame(floatingEndTurnPositionFrameHandle);
 		}
@@ -1021,6 +1226,18 @@
 		scheduleFloatingEndTurnPositionUpdate(
 			`${version}:${combatTrackerLocation}:${combatTrackerWidthRem}:${combatTrackerHeightRem}:${showHorizontalFloatingEndTurn}:${currentTurnCombatant?.id ?? ''}:${floatingEndTurnButtonElement ? '1' : '0'}:${combatantsListElement ? '1' : '0'}:${combatTrackerElement ? '1' : '0'}`,
 		);
+		updateTempGroupPopoverPosition();
+	});
+
+	$effect(() => {
+		if (!tempGroupPopoverState) return;
+		if (!sceneGroupedStackMemberNamesByLeaderId.has(tempGroupPopoverState.leaderId)) {
+			hideTempGroupPopover();
+			return;
+		}
+		queueMicrotask(() => {
+			updateTempGroupPopoverPosition();
+		});
 	});
 </script>
 
@@ -1092,7 +1309,10 @@
 			data-drag-source-id={activeDragSourceId ?? ''}
 			data-drop-target-id={dragPreview?.targetId ?? ''}
 			data-drop-before={dragPreview ? String(dragPreview.before) : ''}
-			onscroll={() => scheduleFloatingEndTurnPositionUpdate()}
+			onscroll={() => {
+				scheduleFloatingEndTurnPositionUpdate();
+				updateTempGroupPopoverPosition();
+			}}
 			onwheel={handleHorizontalWheelScroll}
 			ondragover={handleDragOver}
 			ondrop={(event) => _onDrop(event)}
@@ -1102,6 +1322,8 @@
 				{#each sceneCombatants as combatant (combatant._id)}
 					{@const CombatantComponent = getCombatantComponent(combatant)}
 					{@const isActiveCombatant = currentCombat?.combatant?.id === combatant.id}
+					{@const groupedStackMemberCount =
+						sceneGroupedStackMemberCountsByLeaderId.get(combatant.id ?? '') ?? 0}
 
 					<li
 						class="nimble-combatants__item"
@@ -1111,9 +1333,30 @@
 							combatant.id && dragPreview.before}
 						class:nimble-combatants__item--preview-gap-after={dragPreview?.targetId ===
 							combatant.id && !dragPreview.before}
+						onmouseenter={(event) => {
+							if (groupedStackMemberCount > 1) {
+								void showTempGroupPopover(event, combatant.id ?? '');
+							}
+						}}
+						onmousemove={(event) => {
+							if (groupedStackMemberCount > 1) {
+								moveTempGroupPopover(event, combatant.id ?? '');
+							}
+						}}
+						onmouseleave={() => {
+							if (groupedStackMemberCount > 1) hideTempGroupPopover();
+						}}
 					>
 						{#if isActiveCombatant && currentTurnAnimationSettings.edgeCrawler}
 							<span class="nimble-combatants__active-crawler" aria-hidden="true"></span>
+						{/if}
+						{#if groupedStackMemberCount > 1}
+							<span
+								class="nimble-combatants__group-stack-badge"
+								aria-label={`Grouped minions: ${groupedStackMemberCount}`}
+							>
+								x{groupedStackMemberCount}
+							</span>
 						{/if}
 						<CombatantComponent active={isActiveCombatant} {combatant} />
 					</li>
@@ -1159,6 +1402,20 @@
 			onpointerdown={startResize}
 		></button>
 	</section>
+
+	{#if game.user!.isGM && tempGroupPopoverState}
+		<div
+			bind:this={tempGroupPopoverElement}
+			class="nimble-combatants__temp-group-popover"
+			style={`left: ${tempGroupPopoverState.left}px; top: ${tempGroupPopoverState.top}px;`}
+		>
+			<ul class="nimble-combatants__temp-group-popover-list">
+				{#each tempGroupPopoverState.memberNames as memberName}
+					<li class="nimble-combatants__temp-group-popover-item">{memberName}</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
 
 	{#if showHorizontalFloatingEndTurn}
 		<button

@@ -32,8 +32,6 @@ export default function registerSystemSettings() {
 
 	registerCombatTrackerSettings();
 
-	// Migration schema version tracking
-	// Migration schema version tracking (internal, not visible)
 	game.settings.register(
 		'nimble' as 'core',
 		'worldSchemaVersion' as 'rollMode',
@@ -47,7 +45,6 @@ export default function registerSystemSettings() {
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
-	// Helper to create the attribution element with divider
 	const createAttributionElement = () => {
 		const wrapper = document.createElement('div');
 		wrapper.className = 'nimble-attribution-wrapper';
@@ -73,21 +70,17 @@ export default function registerSystemSettings() {
 		return wrapper;
 	};
 
-	// Add attribution to the Configure Settings dialog (Nimble tab)
 	Hooks.on('renderSettingsConfig', (_app: unknown, html: HTMLElement | JQuery) => {
 		const element = html instanceof HTMLElement ? html : html[0];
 		if (!element) return;
 
-		// Find the system settings tab (where Nimble settings appear)
 		const systemTab =
 			element.querySelector('section[data-tab="system"]') ||
 			element.querySelector('section[data-category="system"]');
 		if (!systemTab) return;
 
-		// Check if attribution already exists (e.g. re-render)
 		if (systemTab.querySelector('.nimble-attribution')) return;
 
-		// Dynamically append attribution at the end of the system settings tab
 		systemTab.appendChild(createAttributionElement());
 	});
 }
