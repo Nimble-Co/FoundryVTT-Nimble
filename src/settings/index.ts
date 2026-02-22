@@ -34,19 +34,6 @@ export default function registerSystemSettings() {
 
 	game.settings.register(
 		'nimble' as 'core',
-		'allowMinionGroupingOutsideCombat' as 'rollMode',
-		{
-			name: 'Allow Minion Grouping Outside Combat',
-			hint: 'When enabled, selected minion tokens can be grouped even if not already in combat. Nimble will add them to scene combat automatically when grouping actions are used.',
-			scope: 'world',
-			config: true,
-			type: Boolean,
-			default: true,
-		} as unknown as Parameters<typeof game.settings.register>[2],
-	);
-
-	game.settings.register(
-		'nimble' as 'core',
 		'worldSchemaVersion' as 'rollMode',
 		{
 			name: 'World Schema Version',

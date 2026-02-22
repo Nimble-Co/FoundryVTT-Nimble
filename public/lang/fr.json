@@ -693,27 +693,6 @@
 			"round": "ronde",
 			"turn": "tour"
 		},
-		"minionGroupActions": {
-			"title": "Minion Groups",
-			"working": "Working",
-			"hints": {
-				"selectMoreMinions": "Select more minions",
-				"noMinionsSelected": "No minions selected"
-			},
-			"tooltips": {
-				"dragToMove": "Drag to move",
-				"dragCornerToResize": "Drag corner to resize",
-				"openAttackForSelected": "Open attack for {count} selected minions",
-				"openGroupAttack": "Open Group {groupLabel} attack",
-				"groupMinions": "Group {count} Minions",
-				"addToGroup": "Add {count} to Group {groupLabel}",
-				"removeFromGroup": "Remove {count} from Group {groupLabel}",
-				"dissolveGroup": "Dissolve Group {groupLabel}"
-			},
-			"notifications": {
-				"groupingActionFailed": "Minion grouping action failed. See console for details."
-			}
-		},
 		"nimbleCombatSystemWindow": {
 			"title": "Combat System",
 			"logo": {
@@ -805,4 +784,3 @@
 		}
 	}
 }
-

@@ -4,15 +4,11 @@
 	getMinionGroupSummaries,
 } from '../utils/minionGrouping.js';
 
-const LEGACY_TOKEN_GROUP_BADGE_KEY = '_nimbleMinionGroupBadge';
-const LEGACY_TOKEN_GROUP_OUTLINE_KEY = '_nimbleMinionGroupOutline';
 const TOKEN_TURN_COMPLETE_BADGE_KEY = '_nimbleTurnCompleteBadge';
 
 let didRegisterMinionGroupTokenBadges = false;
 
 type TokenWithTurnBadge = Token & {
-	[LEGACY_TOKEN_GROUP_BADGE_KEY]?: PIXI.Container | null;
-	[LEGACY_TOKEN_GROUP_OUTLINE_KEY]?: PIXI.Graphics | null;
 	[TOKEN_TURN_COMPLETE_BADGE_KEY]?: PIXI.Container | null;
 };
 
@@ -131,22 +127,6 @@ function buildTurnCompleteBadgeTokenIdsForCurrentScene(): Set<string> {
 	return tokenIds;
 }
 
-function removeLegacyGroupIdentityVisuals(token: TokenWithTurnBadge): void {
-	const legacyBadge = token[LEGACY_TOKEN_GROUP_BADGE_KEY];
-	if (legacyBadge) {
-		legacyBadge.parent?.removeChild(legacyBadge);
-		legacyBadge.destroy({ children: true });
-		token[LEGACY_TOKEN_GROUP_BADGE_KEY] = null;
-	}
-
-	const legacyOutline = token[LEGACY_TOKEN_GROUP_OUTLINE_KEY];
-	if (legacyOutline) {
-		legacyOutline.parent?.removeChild(legacyOutline);
-		legacyOutline.destroy();
-		token[LEGACY_TOKEN_GROUP_OUTLINE_KEY] = null;
-	}
-}
-
 function removeTokenTurnCompleteBadge(token: TokenWithTurnBadge): void {
 	const badge = token[TOKEN_TURN_COMPLETE_BADGE_KEY];
 	if (!badge) return;
@@ -253,8 +233,6 @@ function refreshTokenTurnCompleteBadge(
 	token: TokenWithTurnBadge,
 	turnCompleteBadgeTokenIds: Set<string>,
 ): void {
-	removeLegacyGroupIdentityVisuals(token);
-
 	const tokenId = token.document?.id ?? '';
 	const shouldRenderTurnCompleteBadge = tokenId ? turnCompleteBadgeTokenIds.has(tokenId) : false;
 	if (!shouldRenderTurnCompleteBadge) {
@@ -278,7 +256,6 @@ function refreshAllVisibleTokenGroupBadges(): void {
 function clearAllVisibleTokenGroupBadges(): void {
 	if (!canvas?.tokens) return;
 	for (const token of canvas.tokens.placeables) {
-		removeLegacyGroupIdentityVisuals(token as TokenWithTurnBadge);
 		removeTokenTurnCompleteBadge(token as TokenWithTurnBadge);
 	}
 }
