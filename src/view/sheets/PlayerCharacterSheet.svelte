@@ -195,7 +195,7 @@
 		},
 		{
 			component: PlayerCharacterConditionsTab,
-			icon: 'fa-solid fa-notes-medical',
+			icon: 'fa-solid fa-heart-pulse',
 			tooltip: 'NIMBLE.ui.conditions',
 			name: 'conditions',
 		},
