@@ -32,6 +32,8 @@ const MINION_GROUP_ACTION_BAR_VIEWPORT_MARGIN_PX = 8;
 const NCSW_PANEL_VIEWPORT_MARGIN_PX = 8;
 const NCSW_PANEL_MIN_WIDTH_REM = 20;
 const NCSW_PANEL_MAX_TARGETS_PER_ROW = 4;
+const NCSW_LOGO_DARK_PATH = '/systems/nimble/ncsw/logos/White-A.png';
+const NCSW_LOGO_LIGHT_PATH = '/systems/nimble/ncsw/logos/Black-A.png';
 const ALLOW_GROUPING_OUTSIDE_COMBAT_SETTING_KEY = 'allowMinionGroupingOutsideCombat';
 const NCS_SELECTION_ATTACK_GROUP_ID = '__nimbleNcsSelectionAttackGroup';
 const NCS_SELECTION_MONSTER_ATTACK_SCOPE_ID = '__nimbleNcsSelectionMonsterAttack';
@@ -224,6 +226,24 @@ function localizeNcsw(key: string): string {
 
 function formatNcsw(key: string, data: Record<string, string | number>): string {
 	return formatByKey(`${NCSW_I18N_PREFIX}.${key}`, data);
+}
+
+function isNcswLightThemeActive(): boolean {
+	const roots = [document.body, document.documentElement];
+	for (const root of roots) {
+		if (!root) continue;
+		if (root.classList.contains('theme-light')) return true;
+		if (root.classList.contains('theme-dark')) return false;
+	}
+
+	return window.matchMedia('(prefers-color-scheme: light)').matches;
+}
+
+function getNcswLogoSourcesByTheme(): string[] {
+	const lightTheme = isNcswLightThemeActive();
+	return lightTheme
+		? [NCSW_LOGO_LIGHT_PATH, NCSW_LOGO_DARK_PATH]
+		: [NCSW_LOGO_DARK_PATH, NCSW_LOGO_LIGHT_PATH];
 }
 
 function isTokenUiDebugEnabled(): boolean {
@@ -986,6 +1006,18 @@ function flattenActivationEffects(effects: unknown): Array<Record<string, unknow
 	return flattened;
 }
 
+function normalizeDiceFaceArtifacts(formula: string): string {
+	return formula.replace(/\b(\d*)d([0-9oO|Il]+)\b/g, (_match, rawCount, rawFaces) => {
+		const countValue = String(rawCount ?? '').replace(/[^0-9]/g, '');
+		const facesValue = String(rawFaces ?? '')
+			.replace(/[oO]/g, '0')
+			.replace(/[^0-9]/g, '');
+		const normalizedCount = countValue.length > 0 ? countValue : '1';
+		const normalizedFaces = facesValue.length > 0 ? facesValue : '0';
+		return `${normalizedCount}d${normalizedFaces}`;
+	});
+}
+
 function getUnsupportedActionEffectTypes(item: MonsterFeatureActionItemLike): string[] {
 	const effects = item.system?.activation?.effects;
 	const flattened = flattenActivationEffects(effects);
@@ -1009,13 +1041,13 @@ function getActionRollFormulaLabel(item: MonsterFeatureActionItemLike): string |
 	if (flattened.length === 0) return null;
 
 	const normalizeFormulaForDisplay = (formula: string): string | null => {
-		const normalized = formula.replace(/\s+/g, ' ').trim();
+		const normalized = normalizeDiceFaceArtifacts(formula.replace(/\s+/g, ' ').trim());
 		if (!normalized) return null;
 
 		// Prefer the first alternate when formulas include free-text separators (e.g. "1d10, OR 2d6").
 		const firstSegment =
 			normalized
-				.split(/\s*(?:\||,|;|\bor\b)\s*/i)
+				.split(/\s*(?:,|;|\bor\b)\s*/i)
 				.map((segment) => segment.trim())
 				.find((segment) => segment.length > 0) ?? normalized;
 
@@ -2121,11 +2153,16 @@ function renderGroupAttackPanel(): void {
 	logo.className = 'nimble-minion-group-attack-panel__logo';
 	logo.alt = localizeNcsw('logo.alt');
 	logo.draggable = false;
-	logo.src = 'systems/nimble/assets/logos/NimbleLogos.png';
+	const logoSources = getNcswLogoSourcesByTheme();
+	let logoSourceIndex = 0;
+	logo.src = logoSources[logoSourceIndex] ?? '';
 	logo.addEventListener('error', () => {
-		if (!logo.src.endsWith('/NimbleLogoRaw.avif')) {
-			logo.src = 'systems/nimble/assets/logos/NimbleLogoRaw.avif';
+		logoSourceIndex += 1;
+		if (logoSourceIndex >= logoSources.length) {
+			logo.remove();
+			return;
 		}
+		logo.src = logoSources[logoSourceIndex] ?? '';
 	});
 	const title = document.createElement('h3');
 	title.className = 'nimble-minion-group-attack-panel__title';
@@ -2702,7 +2739,13 @@ async function executeNonMinionAttackRoll(
 	isExecutingAction = true;
 	scheduleActionBarRefresh('monster-attack-roll-start');
 	try {
-		await actor.activateItem(selectedActionId, { fastForward: true });
+		const activationOptions: Record<string, unknown> = { fastForward: true };
+		const selectedActionRollFormula = selectedAction.rollFormula?.trim() ?? '';
+		if (selectedActionRollFormula.length > 0 && selectedActionRollFormula !== '-') {
+			activationOptions.rollFormula = selectedActionRollFormula;
+		}
+
+		await actor.activateItem(selectedActionId, activationOptions);
 
 		const latestCombatant = combat.combatants.get(memberCombatantId) ?? combatant;
 		const latestActions = Number(

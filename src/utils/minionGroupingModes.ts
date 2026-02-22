@@ -21,7 +21,3 @@ export function shouldShowTrackerGroupingControlsForCurrentUser(): boolean {
 export function shouldShowTrackerGroupedStacksForCurrentUser(): boolean {
 	return Boolean(game.user?.isGM);
 }
-
-export function shouldShowMinionGroupIdentityUiForCurrentUser(): boolean {
-	return false;
-}

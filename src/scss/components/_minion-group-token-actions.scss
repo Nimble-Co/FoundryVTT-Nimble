@@ -474,9 +474,9 @@
 
   &__logo {
     display: block;
-    width: auto;
-    height: calc(var(--nimble-minion-group-attack-title-size) * 2);
-    max-width: min(100%, 22rem);
+    width: min(100%, 22rem);
+    height: auto;
+    max-height: calc(var(--nimble-minion-group-attack-title-size) * 2.8);
     object-fit: contain;
     object-position: center;
     pointer-events: none;
