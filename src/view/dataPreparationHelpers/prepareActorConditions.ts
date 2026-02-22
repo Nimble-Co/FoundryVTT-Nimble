@@ -149,8 +149,27 @@ function buildConditionTooltip(
 		condition.descriptionHtml || localize('NIMBLE.ui.conditionDescriptionUnavailable');
 	const escapedName = escapeHtml(condition.name);
 	const escapedConditionTag = escapeHtml(conditionTag);
+	const expandedDurationLabel = (() => {
+		const roundsMatch = condition.durationLabel.match(/^(\d+)r$/i);
+		if (roundsMatch) {
+			const count = Number.parseInt(roundsMatch[1], 10);
+			const roundLabel =
+				count === 1 ? localize('NIMBLE.durations.round') : localize('NIMBLE.durationsPlural.round');
+			return `${count} ${roundLabel}`;
+		}
+
+		const turnsMatch = condition.durationLabel.match(/^(\d+)t$/i);
+		if (turnsMatch) {
+			const count = Number.parseInt(turnsMatch[1], 10);
+			const turnLabel =
+				count === 1 ? localize('NIMBLE.durations.turn') : localize('NIMBLE.durationsPlural.turn');
+			return `${count} ${turnLabel}`;
+		}
+
+		return condition.durationLabel;
+	})();
 	const escapedDurationLabel = escapeHtml(
-		condition.durationLabel === '∞' ? unlimitedText : condition.durationLabel,
+		condition.durationLabel === '∞' ? unlimitedText : expandedDurationLabel,
 	);
 	const escapedSourceLabel = escapeHtml(condition.sourceLabel);
 	const escapedDurationTagLabel = escapeHtml(durationTagLabel);
