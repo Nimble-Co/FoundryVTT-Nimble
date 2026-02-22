@@ -694,7 +694,25 @@
 			"turn": "tour"
 		},
 		"ui": {
-			"clearAll": "Tout effacer"
+			"clearAll": "Tout effacer",
+			"conditions": "Conditions",
+			"condition": "Condition",
+			"duration": "Durée",
+			"unlimited": "Illimitée",
+			"source": "Source",
+			"sourceNone": "Aucune",
+			"noConditions": "Aucun etat",
+			"noEffects": "Aucun effet",
+			"temporaryEffects": "Effets temporaires",
+			"passiveEffects": "Effets passifs",
+			"searchConditions": "Rechercher des conditions",
+			"showActiveOnly": "Afficher actives seulement",
+			"showAllConditions": "Afficher toutes les conditions",
+			"removeCondition": "Retirer l'etat",
+			"removeEffect": "Retirer l'effet",
+			"applyCondition": "Appliquer l'etat",
+			"conditionsFor": "Conditions : {name}",
+			"conditionDescriptionUnavailable": "<p>Aucune description disponible.</p>"
 		}
 	},
 	"TYPES": {
