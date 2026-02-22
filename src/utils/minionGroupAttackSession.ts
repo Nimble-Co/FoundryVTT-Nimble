@@ -1,12 +1,6 @@
-import type { MinionGroupingMode } from './minionGroupingModes.js';
-
 export interface MinionGroupAttackSessionContext {
 	combatId: string;
-	groupId: string;
 	memberCombatantIds: string[];
-	targetTokenId: string | null;
-	groupingMode: MinionGroupingMode;
-	isTemporaryGroup: boolean;
 }
 
 export interface MinionGroupAttackOption {
