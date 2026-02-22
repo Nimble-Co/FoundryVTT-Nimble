@@ -58,7 +58,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions, Special</strong></p><p><strong>Reach</strong>: 8. <strong>Damage</strong>: d66 (with advantage, ignoring armor, does not miss or crit) on a failed INT save. Target rolls with disadvantage if Bloodied or Frightened. On a success, you both take half of this damage instead.</p>",
-			"higherLevelEffect": "<p>+1 DC, +10 damage.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+1 DC, +10 damage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -69,9 +70,7 @@
 				"min": 1,
 				"max": 8
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "necrotic",
 		"tier": 6,

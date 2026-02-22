@@ -42,7 +42,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target+</strong></p><p><strong>Concentration</strong>: Up to 10 minutes. Touch a creature, grant a flying speed of 12.</p>",
-			"higherLevelEffect": "<p>+1 target. </p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+1 target. </p>"
 		},
 		"properties": {
 			"range": {
@@ -53,9 +54,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"concentration"
-			]
+			"selected": ["concentration"]
 		},
 		"school": "wind",
 		"tier": 3,

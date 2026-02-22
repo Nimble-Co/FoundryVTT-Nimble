@@ -90,7 +90,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: 2d8. On miss: the lightning fails to find ground, and strikes you instead.</p>",
-			"higherLevelEffect": "<p>+6 damage every 5 levels.</p>"
+			"higherLevelEffect": "<p>+6 damage every 5 levels.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -101,9 +102,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "lightning",
 		"tier": 0

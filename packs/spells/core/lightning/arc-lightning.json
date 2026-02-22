@@ -90,7 +90,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: 3d8. The bolt also damages the next closest creature to your target. On miss: the lightning fails to find ground and strikes you instead.</p>",
-			"higherLevelEffect": "<p>+4 damage.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+4 damage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -101,9 +102,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "lightning",
 		"tier": 1,

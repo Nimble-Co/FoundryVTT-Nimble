@@ -35,7 +35,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>Self, Casting Time: 1 min.</strong></p><p>Teleport to a fire source you can see.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -46,9 +47,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"utilitySpell"
-			]
+			"selected": ["utilitySpell"]
 		},
 		"school": "fire",
 		"tier": 0

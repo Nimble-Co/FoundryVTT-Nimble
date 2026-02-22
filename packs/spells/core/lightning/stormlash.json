@@ -83,7 +83,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Line</strong>: 12. <strong>Damage</strong>: 3d8+4 (ignoring metal armor). Surviving creatures are Dazed on a failed STR save, or Incapacitated instead for 1 of their turns if they fail by 5 or more. Creatures with a large amount of metal (e.g., armor or a longsword) roll with disadvantage.</p>",
-			"higherLevelEffect": "<p>+4 damage.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+4 damage.</p>"
 		},
 		"properties": {
 			"range": {

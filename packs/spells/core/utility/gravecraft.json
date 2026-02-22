@@ -35,7 +35,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>Single Target</strong></p><p><strong>Gravemark</strong>. Action: Soil a surface with blood, filth, or other disgusting things. OR:</p><p><strong>Gravework</strong>. Casting time 1 minute: Shape/move a body-sized plot of earth.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -46,9 +47,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"utilitySpell"
-			]
+			"selected": ["utilitySpell"]
 		},
 		"school": "necrotic",
 		"tier": 0

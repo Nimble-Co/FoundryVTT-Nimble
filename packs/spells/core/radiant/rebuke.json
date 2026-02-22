@@ -67,7 +67,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Reach</strong>: 4. <strong>Damage</strong>: 1d6 (ignoring armor), does not miss. 2× damage against undead or cowardly (those Frightened or behind cover).</p>",
-			"higherLevelEffect": "<p>+2 damage every 5 levels.</p>"
+			"higherLevelEffect": "<p>+2 damage every 5 levels.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -78,9 +79,7 @@
 				"min": 1,
 				"max": 4
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "radiant",
 		"tier": 0

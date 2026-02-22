@@ -56,7 +56,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>3 Actions, AoE</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: d66 bludgeoning to creatures in a 3×3 area. Creatures adjacent to that area take half as much. The entire area permanently becomes difficult terrain.</p>",
-			"higherLevelEffect": "<p>+1 initial area.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+1 initial area.</p>"
 		},
 		"properties": {
 			"range": {
@@ -67,9 +68,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "ice",
 		"tier": 8,

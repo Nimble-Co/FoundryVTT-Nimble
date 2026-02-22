@@ -45,7 +45,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>3 Actions, 2 Targets</strong></p><p><strong>Range</strong>: 8. <strong>Reaction</strong>: When an ally is attacked. Choose another creature within Range to swap places with your ally on a failed WIL save (they become the new target). Costs 1 Action while Charged, ending the condition. </p>",
-			"higherLevelEffect": "<p>+2 Range.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+2 Range.</p>"
 		},
 		"properties": {
 			"range": {
@@ -56,9 +57,7 @@
 				"min": 1,
 				"max": 2
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "lightning",
 		"tier": 4,

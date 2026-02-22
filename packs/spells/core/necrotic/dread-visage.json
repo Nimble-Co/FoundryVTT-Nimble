@@ -84,7 +84,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>Action, Self</strong></p><p><strong>Reaction</strong>: When attacked, Defend for free. Melee attackers are Frightened of you and suffer 1d12 damage if they attack you this round. Costs 2 mana less while dying.</p>",
-			"higherLevelEffect": "<p>+2 damage, +2 armor.</p>"
+			"higherLevelEffect": "<p>+2 damage, +2 armor.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {

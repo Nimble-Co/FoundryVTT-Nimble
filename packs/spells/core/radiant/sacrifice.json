@@ -43,7 +43,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Special</strong></p><p><strong>Reach</strong>: 4. Reduce yourself to 0 HP. You cannot have more than 0 HP until you Safe Rest. Heal a number of HP equal to your maximum HP, divided as you choose to any other creatures within Reach. You may revive a creature that has died in the past minute if you give them at least 20 HP (also healing 2 Wounds from them), provided they have not been revived with this spell before. </p>",
-			"higherLevelEffect": "<p>+4 Reach.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+4 Reach.</p>"
 		},
 		"properties": {
 			"range": {
@@ -54,9 +55,7 @@
 				"min": 1,
 				"max": 4
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "radiant",
 		"tier": 6,

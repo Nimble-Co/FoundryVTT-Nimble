@@ -35,7 +35,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action</strong></p><p><strong>Dispel</strong> a minor magical effect, or temporarily suppress a stronger one (the more powerful an enchantment, the shorter the duration). OR:</p><p><strong>Voice of Thunder</strong>. Your eyes glow and your voice is amplified to a booming, thunder-like volume for 1 min.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -46,9 +47,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"utilitySpell"
-			]
+			"selected": ["utilitySpell"]
 		},
 		"school": "lightning",
 		"tier": 0

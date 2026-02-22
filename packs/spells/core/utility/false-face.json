@@ -35,7 +35,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>Casting Time: 1 min</strong></p><p>Change your appearance to look like someone else for 10 minutes. Requires a piece of them.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -46,9 +47,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"utilitySpell"
-			]
+			"selected": ["utilitySpell"]
 		},
 		"school": "necrotic",
 		"tier": 0

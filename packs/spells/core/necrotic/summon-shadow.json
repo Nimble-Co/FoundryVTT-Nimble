@@ -35,7 +35,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action</strong></p><p>Summon a shadow minion within Reach 1 (you can summon a max of INT or LVL minions this way, whichever is lower). Your shadow minions follow the normal minion rules: they have 1 HP, no damage bonus, and do not crit. They abandon you immediately outside of combat. </p><p><strong>Action</strong>: (1/turn) you may command ALL of your minions to move up to 6 then attack (Reach 1, d12 each).</p>",
-			"higherLevelEffect": "<p>+1 Reach every 5 levels.</p>"
+			"higherLevelEffect": "<p>+1 Reach every 5 levels.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -46,9 +47,7 @@
 				"min": 1,
 				"max": 1
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "necrotic",
 		"tier": 0

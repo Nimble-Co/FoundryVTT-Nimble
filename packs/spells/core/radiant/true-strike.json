@@ -34,7 +34,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Reach</strong>: 2. Give a creature advantage on the next attack they make (until the end of their next turn).</p>",
-			"higherLevelEffect": "<p>+1 Reach every 5 levels.</p>"
+			"higherLevelEffect": "<p>+1 Reach every 5 levels.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -45,9 +46,7 @@
 				"min": 1,
 				"max": 2
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "radiant",
 		"tier": 0

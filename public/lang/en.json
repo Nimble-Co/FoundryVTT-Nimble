@@ -781,6 +781,11 @@
 			"spellProperties": "Spell Properties",
 			"spellTier": "Spell Tier",
 			"spellSchool": "Spell School",
+			"description": {
+				"baseEffect": "Base Spell Effect",
+				"higherLevelEffect": "Higher Level Effect",
+				"upcastEffect": "Upcast Effect"
+			},
 			"jsonEditor": {
 				"switchToVisual": "Switch to Visual Editor",
 				"switchToJson": "Switch to JSON Editor",

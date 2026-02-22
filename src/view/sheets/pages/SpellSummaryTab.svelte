@@ -7,6 +7,8 @@
 
 	let higherLevelEffectDescription = $derived(item.reactive.system.description.higherLevelEffect);
 
+	let upcastEffectDescription = $derived(item.reactive.system.description.upcastEffect);
+
 	let isUtilitySpell = $derived(item.reactive.system.utility);
 	let spellTier = $derived(item.reactive.system.tier);
 </script>
@@ -24,25 +26,37 @@
 		{/await}
 	</section>
 
-	{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(higherLevelEffectDescription) then higherLevelEffect}
-		{#if higherLevelEffect}
-			<section class="nimble-spell-description-content">
-				<header class="nimble-section-header">
-					<h4 class="nimble-heading" data-heading-variant="section">
-						{#if isUtilitySpell || spellTier === 0}
-							Higher Level Description
-						{:else}
-							Upcast
-						{/if}
-					</h4>
-				</header>
+	{#if higherLevelEffectDescription}
+		{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(higherLevelEffectDescription) then higherLevelEffect}
+			{#if higherLevelEffect}
+				<section class="nimble-spell-description-content">
+					<header class="nimble-section-header">
+						<h4 class="nimble-heading" data-heading-variant="section">Higher Level Effect</h4>
+					</header>
 
-				<div class="nimble-summary__description">
-					{@html higherLevelEffect}
-				</div>
-			</section>
-		{/if}
-	{/await}
+					<div class="nimble-summary__description">
+						{@html higherLevelEffect}
+					</div>
+				</section>
+			{/if}
+		{/await}
+	{/if}
+
+	{#if spellTier > 0 && !isUtilitySpell && upcastEffectDescription}
+		{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(upcastEffectDescription) then upcastContent}
+			{#if upcastContent}
+				<section class="nimble-spell-description-content">
+					<header class="nimble-section-header">
+						<h4 class="nimble-heading" data-heading-variant="section">Upcast</h4>
+					</header>
+
+					<div class="nimble-summary__description">
+						{@html upcastContent}
+					</div>
+				</section>
+			{/if}
+		{/await}
+	{/if}
 </section>
 
 <style lang="scss">

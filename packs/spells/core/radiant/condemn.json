@@ -56,7 +56,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Reach</strong>: 4. <strong>Damage</strong>: 30. Can only target an enemy that crit you or an ally since your last turn. Cannot be reduced by any means. The next attack against that enemy is made with advantage.</p>",
-			"higherLevelEffect": "<p>+1 Reach, +1 advantage.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+1 Reach, +1 advantage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -67,9 +68,7 @@
 				"min": 1,
 				"max": 4
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "radiant",
 		"tier": 4,

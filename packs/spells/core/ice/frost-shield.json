@@ -43,7 +43,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Self</strong></p><p><strong>Reaction</strong>: When attacked, Gain 2×KEY temp HP and Defend for free. The ice melts and these temp HP are lost at the start of your next turn.</p>",
-			"higherLevelEffect": "<p>+2×KEY temp HP.</p>"
+			"higherLevelEffect": "<p>+2×KEY temp HP.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {

@@ -43,7 +43,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Range</strong>: 6. Restore 1 HP to a Dying creature.</p>",
-			"higherLevelEffect": "<p>+2 Range every 5 levels.</p>"
+			"higherLevelEffect": "<p>+2 Range every 5 levels.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -54,9 +55,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "wind",
 		"tier": 0
