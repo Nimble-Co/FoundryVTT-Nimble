@@ -31,9 +31,7 @@ function doesTargetMatchTokenId(target: TokenTargetReference, targetTokenId: str
 
 function getUserTargetMatches(targetTokenId: string): TokenTargetReference | null {
 	const selectedTargets = Array.from(game.user?.targets ?? []) as unknown as TokenTargetReference[];
-	return (
-		selectedTargets.find((target) => doesTargetMatchTokenId(target, targetTokenId)) ?? null
-	);
+	return selectedTargets.find((target) => doesTargetMatchTokenId(target, targetTokenId)) ?? null;
 }
 
 function getCanvasTokenMatches(targetTokenId: string): CanvasTokenReference | null {

@@ -842,7 +842,9 @@ class NimbleCombat extends Combat {
 		};
 	}
 
-	#resolveSelectedTargets(requestedTargetTokenIds: string[]): ResolvedMinionGroupAttackTargets | null {
+	#resolveSelectedTargets(
+		requestedTargetTokenIds: string[],
+	): ResolvedMinionGroupAttackTargets | null {
 		const selectedTargetIds = getCurrentUserTargetTokenIds();
 		if (selectedTargetIds.length < 1) return null;
 
@@ -1292,8 +1294,12 @@ class NimbleCombat extends Combat {
 		return (a.name ?? '').localeCompare(b.name ?? '');
 	}
 
-	#resolveDropContext(event: DragEvent & { target: EventTarget & HTMLElement }): DropResolution | null {
-		const trackerListElement = (event.target as HTMLElement).closest<HTMLElement>('.nimble-combatants');
+	#resolveDropContext(
+		event: DragEvent & { target: EventTarget & HTMLElement },
+	): DropResolution | null {
+		const trackerListElement = (event.target as HTMLElement).closest<HTMLElement>(
+			'.nimble-combatants',
+		);
 		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(
 			event,
 		) as unknown as Record<string, string>;
@@ -1363,12 +1369,15 @@ class NimbleCombat extends Combat {
 	async #applyGmSort(dropResolution: DropResolution) {
 		// Perform the sort with full integer normalization for GM reorders.
 		type SortableCombatant = Combatant.Implementation & { id: string };
-		const sortUpdates = SortingHelpers.performIntegerSort(dropResolution.source as SortableCombatant, {
-			target: dropResolution.target as SortableCombatant | null,
-			siblings: dropResolution.siblings as SortableCombatant[],
-			sortKey: 'system.sort',
-			sortBefore: dropResolution.sortBefore,
-		});
+		const sortUpdates = SortingHelpers.performIntegerSort(
+			dropResolution.source as SortableCombatant,
+			{
+				target: dropResolution.target as SortableCombatant | null,
+				siblings: dropResolution.siblings as SortableCombatant[],
+				sortKey: 'system.sort',
+				sortBefore: dropResolution.sortBefore,
+			},
+		);
 
 		const updateData = sortUpdates.map((updateEntry) => {
 			const { update } = updateEntry;
