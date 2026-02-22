@@ -68,7 +68,7 @@ describe('prepareActorConditions', () => {
 		expect(result[0].sourceLabel).toBe('Spell');
 		expect(result[0].descriptionHtml).toBe(CONFIG.NIMBLE.conditionDescriptions.blinded);
 		expect(result[0].tooltipHtml).toContain('nimble-tooltip__enricher-heading');
-		expect(result[0].tooltipHtml).toContain('Duration: 3r');
+		expect(result[0].tooltipHtml).toContain('Duration: 3 Rounds');
 		expect(result[0].tooltipHtml).toContain('Source: Spell');
 	});
 
