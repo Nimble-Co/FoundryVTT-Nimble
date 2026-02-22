@@ -1,6 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import prepareActorConditions from './prepareActorConditions.js';
 
+function createEffect({
+	statuses,
+	duration,
+	sourceName,
+}: {
+	statuses: string[];
+	duration?: { remaining?: number; seconds?: number; rounds?: number; turns?: number };
+	sourceName?: string;
+}) {
+	return {
+		statuses: new Set(statuses),
+		duration,
+		sourceName,
+	} as unknown as ActiveEffect;
+}
+
 describe('prepareActorConditions', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -19,6 +35,7 @@ describe('prepareActorConditions', () => {
 				active: new Set(['zeta', 'alpha']),
 				overlay: new Set<string>(),
 			},
+			effects: [],
 		} as unknown as Actor.Implementation;
 
 		const result = prepareActorConditions(actor);
@@ -26,7 +43,7 @@ describe('prepareActorConditions', () => {
 		expect(result.map((c) => c.id)).toEqual(['alpha', 'zeta']);
 	});
 
-	it('marks overlay conditions and uses configured descriptions', () => {
+	it('marks overlay conditions, builds tooltip, and uses configured descriptions', () => {
 		(game.nimble.conditions as { get: (id: string) => unknown }).get = vi.fn((id: string) => ({
 			id,
 			name: id,
@@ -38,13 +55,21 @@ describe('prepareActorConditions', () => {
 				active: new Set(['blinded']),
 				overlay: new Set(['blinded']),
 			},
+			effects: [
+				createEffect({ statuses: ['blinded'], duration: { rounds: 3 }, sourceName: 'Spell' }),
+			],
 		} as unknown as Actor.Implementation;
 
 		const result = prepareActorConditions(actor);
 
 		expect(result).toHaveLength(1);
 		expect(result[0].isOverlay).toBe(true);
+		expect(result[0].durationLabel).toBe('3r');
+		expect(result[0].sourceLabel).toBe('Spell');
 		expect(result[0].descriptionHtml).toBe(CONFIG.NIMBLE.conditionDescriptions.blinded);
+		expect(result[0].tooltipHtml).toContain('nimble-tooltip__enricher-heading');
+		expect(result[0].tooltipHtml).toContain('Duration: 3r');
+		expect(result[0].tooltipHtml).toContain('Source: Spell');
 	});
 
 	it('handles missing metadata and empty actor gracefully', () => {
@@ -58,6 +83,7 @@ describe('prepareActorConditions', () => {
 				active: new Set(['customCondition']),
 				overlay: new Set<string>(),
 			},
+			effects: [],
 		} as unknown as Actor.Implementation;
 
 		const result = prepareActorConditions(actor);
@@ -71,7 +97,94 @@ describe('prepareActorConditions', () => {
 				descriptionHtml: '',
 				active: true,
 				isOverlay: false,
+				durationLabel: '∞',
+				durationSortMs: null,
+				sourceLabel: 'None',
+				tooltipHtml: expect.stringContaining('Custom Condition'),
 			},
 		]);
+	});
+
+	it('uses soonest-expiring duration when multiple effects set the same condition', () => {
+		(game.nimble.conditions as { get: (id: string) => unknown }).get = vi.fn((id: string) => ({
+			id,
+			name: id,
+			img: `${id}.svg`,
+		}));
+
+		const actor = {
+			conditionsMetadata: {
+				active: new Set(['blinded']),
+				overlay: new Set<string>(),
+			},
+			effects: [
+				createEffect({
+					statuses: ['blinded'],
+					duration: { remaining: 180 },
+					sourceName: 'Long Spell',
+				}),
+				createEffect({
+					statuses: ['blinded'],
+					duration: { remaining: 45 },
+					sourceName: 'Short Spell',
+				}),
+				createEffect({ statuses: ['blinded'] }),
+			],
+		} as unknown as Actor.Implementation;
+
+		const result = prepareActorConditions(actor);
+
+		expect(result).toHaveLength(1);
+		expect(result[0].durationLabel).toBe('45s');
+		expect(result[0].durationSortMs).toBe(45000);
+		expect(result[0].sourceLabel).toBe('Short Spell');
+	});
+
+	it('supports compact minute and hour labels', () => {
+		(game.nimble.conditions as { get: (id: string) => unknown }).get = vi.fn((id: string) => ({
+			id,
+			name: id,
+			img: `${id}.svg`,
+		}));
+
+		const actor = {
+			conditionsMetadata: {
+				active: new Set(['blinded', 'poisoned']),
+				overlay: new Set<string>(),
+			},
+			effects: [
+				createEffect({ statuses: ['blinded'], duration: { remaining: 600 }, sourceName: 'Clock' }),
+				createEffect({ statuses: ['poisoned'], duration: { remaining: 5400 }, sourceName: 'Aura' }),
+			],
+		} as unknown as Actor.Implementation;
+
+		const result = prepareActorConditions(actor);
+		const blinded = result.find((condition) => condition.id === 'blinded');
+		const poisoned = result.find((condition) => condition.id === 'poisoned');
+
+		expect(blinded?.durationLabel).toBe('10m');
+		expect(poisoned?.durationLabel).toBe('2h');
+	});
+
+	it('includes inactive catalog conditions when includeInactive is true', () => {
+		(game.nimble.conditions as { get: (id: string) => unknown }).get = vi.fn((id: string) => ({
+			id,
+			name: id,
+			img: `${id}.svg`,
+		}));
+
+		const actor = {
+			conditionsMetadata: {
+				active: new Set<string>(),
+				overlay: new Set<string>(),
+			},
+			effects: [],
+		} as unknown as Actor.Implementation;
+
+		const result = prepareActorConditions(actor, { includeInactive: true });
+		const blinded = result.find((condition) => condition.id === 'blinded');
+
+		expect(blinded).toBeDefined();
+		expect(blinded?.active).toBe(false);
 	});
 });

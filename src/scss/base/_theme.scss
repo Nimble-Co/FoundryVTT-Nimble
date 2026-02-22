@@ -54,6 +54,18 @@
 	--nimble-canvas-conditions-icon-background: rgb(10 10 14 / 72%);
 	--nimble-canvas-conditions-panel-background: rgb(10 10 14 / 52%);
 	--nimble-canvas-conditions-icon-shadow: drop-shadow(0 0 2px rgb(0 0 0 / 95%));
+	--nimble-canvas-conditions-badge-background: rgb(8 8 12 / 94%);
+	--nimble-canvas-conditions-badge-border-color: hsl(36deg 53% 80% / 45%);
+	--nimble-canvas-conditions-badge-text-color: hsl(36deg 53% 80%);
+	--nimble-canvas-conditions-badge-icon-color: hsl(36deg 53% 80%);
+	--nimble-conditions-catalog-icon-background: rgb(0 0 0 / 78%);
+	--nimble-conditions-catalog-icon-border-color: hsl(36deg 53% 80% / 18%);
+	--nimble-conditions-catalog-active-border-color: hsl(130, 58%, 46%);
+	--nimble-conditions-catalog-active-background: hsl(130deg 40% 18% / 88%);
+	--nimble-conditions-catalog-active-shadow:
+		0 0 0 1px hsl(130deg 58% 46% / 55%),
+		inset 0 0 0 1px hsl(130deg 58% 46% / 28%);
+	--nimble-conditions-catalog-active-text-color: hsl(130, 68%, 66%);
 	--nimble-token-effects-background: rgb(10 10 14 / 62%);
 	--nimble-token-effects-icon-border-color: hsl(36deg 53% 80% / 45%);
 	--nimble-token-effects-icon-background: rgb(10 10 14 / 82%);
