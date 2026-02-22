@@ -56,7 +56,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>3 Actions, AoE</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: d44 slashing damage (roll with advantage), also damages enemies within Reach 1 of your target.</p>",
-			"higherLevelEffect": "<p>+1 Reach</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+1 Reach</p>"
 		},
 		"properties": {
 			"range": {
@@ -67,9 +68,7 @@
 				"min": 1,
 				"max": 12
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "wind",
 		"tier": 6,

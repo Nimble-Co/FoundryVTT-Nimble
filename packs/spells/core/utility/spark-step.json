@@ -35,7 +35,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Self</strong></p><p><strong>Range</strong>: 4. Teleport to a metal object.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -46,10 +47,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"utilitySpell",
-				"range"
-			]
+			"selected": ["utilitySpell", "range"]
 		},
 		"school": "lightning",
 		"tier": 0

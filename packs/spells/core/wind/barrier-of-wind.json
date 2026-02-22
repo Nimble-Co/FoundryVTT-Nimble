@@ -34,7 +34,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Self</strong></p><p><strong>Reaction</strong>: When attacked at Range. Defend for free. Ranged attacks have disadvantage against you this round (including the triggering attack).</p>",
-			"higherLevelEffect": "<p>+3 Armor.</p>"
+			"higherLevelEffect": "<p>+3 Armor.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {

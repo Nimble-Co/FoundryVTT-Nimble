@@ -42,7 +42,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Self</strong></p><p><strong>Range</strong>: 4. Reaction: When attacked. Defend for free. After damage is dealt, you gain the Charged condition then teleport anywhere within Range.</p>",
-			"higherLevelEffect": "<p>+4 Range.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+4 Range.</p>"
 		},
 		"properties": {
 			"range": {
@@ -53,9 +54,7 @@
 				"min": 1,
 				"max": 2
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "lightning",
 		"tier": 2,

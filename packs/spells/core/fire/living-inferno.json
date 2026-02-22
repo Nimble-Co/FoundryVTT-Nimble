@@ -34,7 +34,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>3 Actions, Self</strong></p><p>Gain the effects of Flame Barrier until your next turn. At the end of this turn and your next turn, cast Pyroclasm for free.</p>",
-			"higherLevelEffect": "<p>Upcast Flame Barrier and Pyroclasm</p>"
+			"higherLevelEffect": "<p>Upcast Flame Barrier and Pyroclasm</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {

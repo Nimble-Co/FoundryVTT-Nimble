@@ -84,7 +84,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1Action, Single Target</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: 1d4+INT psychic (ignoring armor). On hit: the target is Taunted during their next turn.</p>",
-			"higherLevelEffect": "<p>+2 damage every 5 levels.</p>"
+			"higherLevelEffect": "<p>+2 damage every 5 levels.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -95,9 +96,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "wind",
 		"tier": 0

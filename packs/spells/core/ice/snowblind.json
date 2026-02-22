@@ -83,7 +83,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Reach</strong>: 1. <strong>Damage</strong>: 1d6. On hit: Blinded until the end of their next turn.</p>",
-			"higherLevelEffect": "<p>+3 damage every 5 levels.</p>"
+			"higherLevelEffect": "<p>+3 damage every 5 levels.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -94,9 +95,7 @@
 				"min": 1,
 				"max": 1
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "ice",
 		"tier": 0

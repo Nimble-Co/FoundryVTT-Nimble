@@ -78,7 +78,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Reach</strong>: 1. <strong>Damage</strong>: 1d12. On hit: Target is considered undead for 1 round.</p>",
-			"higherLevelEffect": "<p>+6 damage every 5 levels.</p>"
+			"higherLevelEffect": "<p>+6 damage every 5 levels.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -89,9 +90,7 @@
 				"min": 1,
 				"max": 1
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "necrotic",
 		"tier": 0

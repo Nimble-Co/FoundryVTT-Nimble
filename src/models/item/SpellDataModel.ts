@@ -7,6 +7,7 @@ const schema = () => ({
 	description: new fields.SchemaField({
 		baseEffect: new fields.HTMLField({ required: true, initial: '', nullable: false }),
 		higherLevelEffect: new fields.HTMLField({ required: true, initial: '', nullable: false }),
+		upcastEffect: new fields.HTMLField({ required: true, initial: '', nullable: false }),
 	}),
 	properties: new fields.SchemaField({
 		...baseProperties(),
@@ -180,7 +181,7 @@ class NimbleSpellData extends NimbleBaseItemData<
 		template: { length: number; radius: number; shape: string; width: number };
 	};
 
-	declare description: { baseEffect: string; higherLevelEffect: string };
+	declare description: { baseEffect: string; higherLevelEffect: string; upcastEffect: string };
 
 	declare properties: {
 		selected: string[];

@@ -34,7 +34,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Self</strong></p><p><strong>Reaction</strong>: When attacked, Defend for free and reflect Radiant damage back at the attacker equal to the amount blocked (ignoring armor).</p>",
-			"higherLevelEffect": "<p>+5 Armor.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+5 Armor.</p>"
 		},
 		"properties": {
 			"range": {

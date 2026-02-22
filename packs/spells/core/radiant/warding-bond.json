@@ -34,7 +34,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p>Designate a willing creature as your ward for 1 minute. They take half damage from all attacks; you are attacked for the other half.</p>",
-			"higherLevelEffect": "<p>+1 creature.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+1 creature.</p>"
 		},
 		"properties": {
 			"range": {

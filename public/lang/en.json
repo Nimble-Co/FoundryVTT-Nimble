@@ -776,6 +776,64 @@
 				"range": "Range"
 			}
 		},
+		"spellConfig": {
+			"identifier": "Identifier",
+			"spellProperties": "Spell Properties",
+			"spellTier": "Spell Tier",
+			"spellSchool": "Spell School",
+			"description": {
+				"baseEffect": "Base Spell Effect",
+				"higherLevelEffect": "Higher Level Effect",
+				"upcastEffect": "Upcast Effect"
+			},
+			"jsonEditor": {
+				"switchToVisual": "Switch to Visual Editor",
+				"switchToJson": "Switch to JSON Editor",
+				"heading": "Spell Data (JSON)",
+				"invalidJson": "Invalid JSON"
+			},
+			"scaling": {
+				"heading": "Spell Scaling",
+				"modes": {
+					"none": "None",
+					"upcast": "Upcast",
+					"upcastChoice": "Upcast Choice"
+				},
+				"perUpcastStep": "Per Upcast Step",
+				"upcastChoices": "Upcast Choices",
+				"noDeltas": "No scaling deltas configured.",
+				"noChoices": "No choices configured.",
+				"addDelta": "Add Delta",
+				"removeDelta": "Remove Delta",
+				"addChoice": "Add Choice",
+				"removeChoice": "Remove Choice",
+				"choiceLabel": "Choice Label",
+				"choiceLabelPlaceholder": "e.g. Extra Damage",
+				"deltas": "Deltas",
+				"operation": "Operation",
+				"value": "Value",
+				"count": "Count",
+				"die": "Die",
+				"condition": "Condition",
+				"conditionPlaceholder": "e.g. smoldering",
+				"targetEffect": "Target Effect",
+				"targetEffectAuto": "Auto (first match)",
+				"targetEffectPlaceholder": "Effect ID",
+				"targetEffectHint": "Add effects in the Activation tab to select targets here.",
+				"operations": {
+					"addFlatDamage": "Flat Damage",
+					"addDice": "Dice",
+					"addReach": "Reach",
+					"addRange": "Range",
+					"addTargets": "Targets",
+					"addAreaSize": "Area Size",
+					"addDC": "DC",
+					"addArmor": "Armor",
+					"addDuration": "Duration",
+					"addCondition": "Condition"
+				}
+			}
+		},
 		"compendium": {
 			"filterSpells": "Filter Spells",
 			"filterAll": "All"
