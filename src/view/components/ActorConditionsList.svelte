@@ -11,6 +11,7 @@
 
 	let { actor, mode = 'sheet', allowRemove = true }: Props = $props();
 	let effectVersion = $state(0);
+	let effectTick = $derived(effectVersion);
 
 	function getLiveActor() {
 		return actor && 'reactive' in actor
@@ -19,17 +20,17 @@
 	}
 
 	let actorConditions = $derived.by(() => {
-		effectVersion;
 		const liveActor = getLiveActor();
-		return prepareActorConditions(liveActor, {
+		const conditions = prepareActorConditions(liveActor, {
 			includeInactive: mode === 'sheet',
 			includeEffectStatuses: mode === 'canvas',
 		});
+		return effectTick >= 0 ? conditions : conditions;
 	});
 	let actorEffects = $derived.by(() => {
-		effectVersion;
 		const liveActor = getLiveActor();
-		return Array.from((liveActor?.effects ?? []) as Iterable<ActiveEffect>);
+		const effects = Array.from(liveActor?.effects ?? []);
+		return effectTick >= 0 ? effects : effects;
 	});
 	let nonConditionEffects = $derived.by(() => {
 		const standardConditionIds = new Set(Object.keys(CONFIG.NIMBLE.conditions ?? {}));
@@ -42,11 +43,10 @@
 	let temporaryEffects = $derived.by(() => {
 		return nonConditionEffects
 			.filter((effect) => {
-				const typedEffect = effect as ActiveEffect & { isTemporary?: boolean };
+				const typedEffect = effect as { isTemporary?: boolean };
 				if (typeof typedEffect.isTemporary === 'boolean') return typedEffect.isTemporary;
-				const duration = (
-					effect as ActiveEffect & { duration?: { remaining?: number; rounds?: number } }
-				).duration;
+				const duration = (effect as { duration?: { remaining?: number; rounds?: number } })
+					.duration;
 				return (
 					typeof duration?.remaining === 'number' ||
 					(typeof duration?.rounds === 'number' && duration.rounds > 0)
@@ -92,7 +92,7 @@
 				return;
 			}
 
-			const matchingEffectIds = Array.from((liveActor.effects ?? []) as Iterable<ActiveEffect>)
+			const matchingEffectIds = Array.from(liveActor.effects ?? [])
 				.filter((effect) => effect.statuses?.has(conditionId))
 				.map((effect) => effect.id)
 				.filter((id): id is string => Boolean(id));
@@ -140,20 +140,20 @@
 	}
 
 	onMount(() => {
-		const refreshFromEffect = (effect: ActiveEffect) => {
+		const refreshFromEffect = (effect: { parent?: { documentName?: string; id?: string } }) => {
 			if (!actor || effect.parent?.documentName !== 'Actor') return;
 			if (effect.parent?.id !== actor.id) return;
 			effectVersion += 1;
 		};
 
 		const createHook = Hooks.on('createActiveEffect', (effect) => {
-			refreshFromEffect(effect as ActiveEffect);
+			refreshFromEffect(effect as { parent?: { documentName?: string; id?: string } });
 		});
 		const updateHook = Hooks.on('updateActiveEffect', (effect) => {
-			refreshFromEffect(effect as ActiveEffect);
+			refreshFromEffect(effect as { parent?: { documentName?: string; id?: string } });
 		});
 		const deleteHook = Hooks.on('deleteActiveEffect', (effect) => {
-			refreshFromEffect(effect as ActiveEffect);
+			refreshFromEffect(effect as { parent?: { documentName?: string; id?: string } });
 		});
 
 		return () => {
