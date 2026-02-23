@@ -74,9 +74,7 @@ export function resolveGroupAttackSpeaker(params: {
 	rollEntries: MinionGroupAttackRollEntry[];
 }): Combatant.Implementation | undefined {
 	const rolledMemberIds = new Set(
-		params.rollEntries
-			.map((entry) => entry.memberCombatantId)
-			.filter((memberId) => memberId.length > 0),
+		params.rollEntries.map((entry) => entry.memberCombatantId).filter((memberId) => memberId.length > 0),
 	);
 	return (
 		params.attackMembers.find((member) => {
@@ -91,9 +89,7 @@ export function resolveGroupAttackSpeakerAlias(groupLabel: string | null): strin
 	return trimmedLabel ? `Minion Group ${trimmedLabel.toUpperCase()}` : 'Selected Minions';
 }
 
-function resolveGroupAttackSpeakerImage(
-	speakerCombatant: Combatant.Implementation | undefined,
-): string {
+function resolveGroupAttackSpeakerImage(speakerCombatant: Combatant.Implementation | undefined): string {
 	return (speakerCombatant ? getCombatantImage(speakerCombatant) : null) ?? 'icons/svg/cowled.svg';
 }
 

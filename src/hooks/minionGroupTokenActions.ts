@@ -66,6 +66,9 @@ type CombatWithGrouping = Combat & {
 		endTurnApplied: boolean;
 	}>;
 };
+type CombatWithGroupAttack = CombatWithGrouping & {
+	performMinionGroupAttack: NonNullable<CombatWithGrouping['performMinionGroupAttack']>;
+};
 
 interface SelectionContext {
 	combat: CombatWithGrouping | null;
@@ -171,62 +174,84 @@ function getCombatForCurrentScene(): CombatWithGrouping | null {
 	return (combatForScene as CombatWithGrouping | undefined) ?? null;
 }
 
-function buildSelectionContext(): SelectionContext {
-	const combat = getCombatForCurrentScene();
-	const selectedTokens = canvas?.tokens?.controlled ?? [];
-	const selectedTokenCount = selectedTokens.length;
-	const sceneId = canvas.scene?.id;
-	const selectedCombatants: Combatant.Implementation[] = [];
-
+function buildCombatantsByTokenId(params: {
+	combat: CombatWithGrouping | null;
+	sceneId: string | null | undefined;
+}): Map<string, Combatant.Implementation> {
 	const combatantsByTokenId = new Map<string, Combatant.Implementation>();
-	if (combat && sceneId) {
-		for (const combatant of combat.combatants.contents) {
-			if (getCombatantSceneId(combatant) !== sceneId) continue;
-			if (!combatant.tokenId) continue;
-			combatantsByTokenId.set(combatant.tokenId, combatant);
-		}
+	if (!params.combat || !params.sceneId) return combatantsByTokenId;
+
+	for (const combatant of params.combat.combatants.contents) {
+		if (getCombatantSceneId(combatant) !== params.sceneId) continue;
+		const tokenId = combatant.tokenId?.trim() ?? '';
+		if (!tokenId || combatantsByTokenId.has(tokenId)) continue;
+		combatantsByTokenId.set(tokenId, combatant);
 	}
+	return combatantsByTokenId;
+}
 
-	if (selectedTokenCount > 0) {
-		const seenCombatantIds = new Set<string>();
-		for (const token of selectedTokens) {
-			const tokenId = token.document?.id ?? token.id ?? '';
-			if (!tokenId) {
-				continue;
-			}
+function resolveSelectedCombatants(
+	selectedTokens: Token[],
+	combatantsByTokenId: ReadonlyMap<string, Combatant.Implementation>,
+): Combatant.Implementation[] {
+	const selectedCombatants: Combatant.Implementation[] = [];
+	const seenCombatantIds = new Set<string>();
+	for (const token of selectedTokens) {
+		const tokenId = (token.document?.id ?? token.id ?? '').trim();
+		if (!tokenId) continue;
 
-			const combatant = combatantsByTokenId.get(tokenId);
-			if (!combatant?.id) {
-				continue;
-			}
-			if (seenCombatantIds.has(combatant.id)) continue;
-
-			seenCombatantIds.add(combatant.id);
-			selectedCombatants.push(combatant);
-		}
+		const combatant = combatantsByTokenId.get(tokenId);
+		const combatantId = combatant?.id ?? '';
+		if (!combatant || !combatantId || seenCombatantIds.has(combatantId)) continue;
+		seenCombatantIds.add(combatantId);
+		selectedCombatants.push(combatant);
 	}
+	return selectedCombatants;
+}
 
-	const selectedNonPlayerCombatants = selectedCombatants.filter(
-		(combatant) => combatant.type !== 'character',
-	);
-	const selectedAliveNonMinionMonsters = selectedNonPlayerCombatants.filter(
+function resolveSelectedNonPlayerCombatants(
+	selectedCombatants: Combatant.Implementation[],
+): Combatant.Implementation[] {
+	return selectedCombatants.filter((combatant) => combatant.type !== 'character');
+}
+
+function resolveSelectedAliveNonMinionMonsters(
+	selectedNonPlayerCombatants: Combatant.Implementation[],
+): Combatant.Implementation[] {
+	return selectedNonPlayerCombatants.filter(
 		(combatant) => !isMinionCombatant(combatant) && !isCombatantDead(combatant),
 	);
-	const selectedMinionCombatantIds = [
+}
+
+function resolveSelectedMinionCombatantIds(
+	selectedNonPlayerCombatants: Combatant.Implementation[],
+): string[] {
+	return [
 		...new Set(
 			selectedNonPlayerCombatants
-				.filter((combatant) => isMinionCombatant(combatant))
-				.filter((combatant) => !isCombatantDead(combatant))
+				.filter((combatant) => isMinionCombatant(combatant) && !isCombatantDead(combatant))
 				.map((combatant) => combatant.id)
 				.filter((combatantId): combatantId is string => typeof combatantId === 'string'),
 		),
 	];
+}
+
+function buildSelectionContext(): SelectionContext {
+	const combat = getCombatForCurrentScene();
+	const selectedTokens = (canvas?.tokens?.controlled ?? []) as Token[];
+	const selectedTokenCount = selectedTokens.length;
+	const combatantsByTokenId = buildCombatantsByTokenId({
+		combat,
+		sceneId: canvas.scene?.id,
+	});
+	const selectedCombatants = resolveSelectedCombatants(selectedTokens, combatantsByTokenId);
+	const selectedNonPlayerCombatants = resolveSelectedNonPlayerCombatants(selectedCombatants);
 
 	return {
 		combat,
 		selectedTokenCount,
-		selectedAliveNonMinionMonsters,
-		selectedMinionCombatantIds,
+		selectedAliveNonMinionMonsters: resolveSelectedAliveNonMinionMonsters(selectedNonPlayerCombatants),
+		selectedMinionCombatantIds: resolveSelectedMinionCombatantIds(selectedNonPlayerCombatants),
 	};
 }
 
@@ -348,36 +373,44 @@ function buildGroupAttackActionOptions(
 		);
 }
 
+function getCurrentUserTargetTokens(): Token[] {
+	return Array.from(game.user?.targets ?? []) as Token[];
+}
+
+function getTargetTokenId(target: Token): string {
+	return (target?.id ?? target?.document?.id ?? '').trim();
+}
+
+function getUniqueTargetTokenIds(targets: Token[]): string[] {
+	return [...new Set(targets.map((target) => getTargetTokenId(target)).filter((tokenId) => tokenId))];
+}
+
+function resolveSingleTargetName(target: Token | undefined): string {
+	const nameCandidates = [target?.name, target?.document?.name, target?.document?.actor?.name];
+	for (const candidate of nameCandidates) {
+		const normalized = candidate?.trim() ?? '';
+		if (normalized) return normalized;
+	}
+	return 'Target';
+}
+
 function getCurrentTargetSummary(): {
 	targetTokenId: string | null;
 	targetTokenIds: string[];
 	targetName: string | null;
 } {
-	const selectedTargets = Array.from(game.user?.targets ?? []);
-	const targetTokenIds = [
-		...new Set(
-			selectedTargets
-				.map((target) => (target?.id ?? target?.document?.id ?? '').trim())
-				.filter((tokenId): tokenId is string => tokenId.length > 0),
-		),
-	];
+	const selectedTargets = getCurrentUserTargetTokens();
+	const targetTokenIds = getUniqueTargetTokenIds(selectedTargets);
 	const targetTokenId = targetTokenIds[0] ?? null;
 
 	if (targetTokenIds.length !== 1) {
 		return { targetTokenId, targetTokenIds, targetName: null };
 	}
 
-	const [target] = selectedTargets;
-	const targetName =
-		target?.name?.trim() ||
-		target?.document?.name?.trim() ||
-		target?.document?.actor?.name?.trim() ||
-		'Target';
-
 	return {
 		targetTokenId,
 		targetTokenIds,
-		targetName,
+		targetName: resolveSingleTargetName(selectedTargets[0]),
 	};
 }
 
@@ -430,15 +463,19 @@ function getTargetTokenVitalStats(token: Token): {
 	return { hpCurrent, hpMax, wounds };
 }
 
-function getCombatantPreviewStats(
-	combatantId: string,
+function resolveCombatantPreviewName(
+	combatant: Combatant.Implementation | null,
 	fallbackName: string,
-): CombatantPreviewStats {
-	const combat = getCombatForCurrentScene();
-	const combatant = combat?.combatants.get(combatantId) ?? null;
-	const tokenName =
-		combatant?.name?.trim() || combatant?.token?.name?.trim() || fallbackName || 'Monster';
-	const actor = (combatant?.actor as ActorWithActionItems | null) ?? null;
+): string {
+	return combatant?.name?.trim() || combatant?.token?.name?.trim() || fallbackName || 'Monster';
+}
+
+function resolveActorHpStats(actor: ActorWithActionItems | null): {
+	hpCurrent: number | null;
+	hpMax: number | null;
+	hpPercent: number;
+	isBloodied: boolean;
+} {
 	const actorData = actor ?? {};
 	const hpCurrentRaw = Number(
 		foundry.utils.getProperty(actorData, 'system.attributes.hp.value') as number | null,
@@ -453,13 +490,30 @@ function getCombatantPreviewStats(
 			? Math.max(0, Math.min(100, Math.round((hpCurrent / hpMax) * 100)))
 			: 0;
 	const isBloodied = Boolean(hpMax && hpCurrent !== null && hpCurrent <= hpMax / 2);
-
 	return {
-		tokenName,
 		hpCurrent,
 		hpMax,
 		hpPercent,
 		isBloodied,
+	};
+}
+
+function getCombatantPreviewStats(
+	combatantId: string,
+	fallbackName: string,
+): CombatantPreviewStats {
+	const combat = getCombatForCurrentScene();
+	const combatant = combat?.combatants.get(combatantId) ?? null;
+	const tokenName = resolveCombatantPreviewName(combatant, fallbackName);
+	const actor = (combatant?.actor as ActorWithActionItems | null) ?? null;
+	const hpStats = resolveActorHpStats(actor);
+
+	return {
+		tokenName,
+		hpCurrent: hpStats.hpCurrent,
+		hpMax: hpStats.hpMax,
+		hpPercent: hpStats.hpPercent,
+		isBloodied: hpStats.isBloodied,
 	};
 }
 
@@ -472,54 +526,61 @@ function getCombatantRowImage(combatant: Combatant.Implementation): string {
 	);
 }
 
-function getAvailablePlayerTargetTokens(): TargetTokenView[] {
-	const controlledTokens = canvas?.tokens?.controlled ?? [];
-	const targetedTokens = Array.from(game.user?.targets ?? []);
+function getCandidateTargetTokens(): Token[] {
+	const controlledTokens = (canvas?.tokens?.controlled ?? []) as Token[];
 	const candidateTokensById = new Map<string, Token>();
-	for (const tokenCandidate of [...controlledTokens, ...targetedTokens]) {
-		const token = tokenCandidate as Token;
-		const tokenId = (token?.id ?? token?.document?.id ?? '').trim();
-		if (!tokenId) continue;
-		if (!candidateTokensById.has(tokenId)) {
-			candidateTokensById.set(tokenId, token);
-		}
+	for (const token of [...controlledTokens, ...getCurrentUserTargetTokens()]) {
+		const tokenId = getTargetTokenId(token);
+		if (!tokenId || candidateTokensById.has(tokenId)) continue;
+		candidateTokensById.set(tokenId, token);
 	}
-	const selectedTargetIds = new Set(
-		Array.from(game.user?.targets ?? [])
-			.map((target) => (target?.id ?? target?.document?.id ?? '').trim())
-			.filter((tokenId): tokenId is string => tokenId.length > 0),
+	return [...candidateTokensById.values()];
+}
+
+function isCharacterTargetToken(token: Token): boolean {
+	const actorType = (token.actor?.type ?? token.document?.actor?.type ?? '').trim().toLowerCase();
+	return actorType === 'character';
+}
+
+function resolveTargetTokenImage(token: Token): string {
+	return (token.document?.texture?.src ?? token.actor?.img ?? '').trim() || 'icons/svg/mystery-man.svg';
+}
+
+function resolveTargetTokenName(token: Token): string {
+	return (
+		token.document?.name?.trim() ||
+		token.name?.trim() ||
+		token.actor?.name?.trim() ||
+		localizeNcsw('targets.playerFallback')
 	);
+}
 
-	const rows: TargetTokenView[] = [];
-	for (const token of candidateTokensById.values()) {
-		const actorType = (token.actor?.type ?? token.document?.actor?.type ?? '').trim().toLowerCase();
-		if (actorType !== 'character') continue;
-		const tokenId = (token.id ?? token.document?.id ?? '').trim();
-		if (!tokenId) continue;
+function buildTargetTokenView(
+	token: Token,
+	selectedTargetIds: ReadonlySet<string>,
+): TargetTokenView | null {
+	if (!isCharacterTargetToken(token)) return null;
+	const tokenId = getTargetTokenId(token);
+	if (!tokenId) return null;
 
-		const image =
-			(token.document?.texture?.src ?? token.actor?.img ?? '').trim() ||
-			'icons/svg/mystery-man.svg';
-		const name =
-			token.document?.name?.trim() ||
-			token.name?.trim() ||
-			token.actor?.name?.trim() ||
-			localizeNcsw('targets.playerFallback');
-		const vitalStats = getTargetTokenVitalStats(token);
+	const vitalStats = getTargetTokenVitalStats(token);
+	return {
+		token,
+		tokenId,
+		name: resolveTargetTokenName(token),
+		image: resolveTargetTokenImage(token),
+		isTargeted: selectedTargetIds.has(tokenId),
+		hpCurrent: vitalStats.hpCurrent,
+		hpMax: vitalStats.hpMax,
+		wounds: vitalStats.wounds,
+	};
+}
 
-		rows.push({
-			token,
-			tokenId,
-			name,
-			image,
-			isTargeted: selectedTargetIds.has(tokenId),
-			hpCurrent: vitalStats.hpCurrent,
-			hpMax: vitalStats.hpMax,
-			wounds: vitalStats.wounds,
-		});
-	}
-
-	return rows;
+function getAvailablePlayerTargetTokens(): TargetTokenView[] {
+	const selectedTargetIds = new Set(getUniqueTargetTokenIds(getCurrentUserTargetTokens()));
+	return getCandidateTargetTokens()
+		.map((token) => buildTargetTokenView(token, selectedTargetIds))
+		.filter((row): row is TargetTokenView => row !== null);
 }
 
 function toggleTargetTokenFromPanel(token: Token, targeted: boolean): void {
@@ -1064,39 +1125,64 @@ function hideGroupAttackPanel(options: { clearTargets?: boolean } = {}): void {
 	activeGroupAttackWarnings = [];
 }
 
+function getCombatantActionsRemaining(combatant: Combatant.Implementation): number {
+	const actionsRemainingRaw = Number(
+		(combatant.system as unknown as { actions?: { base?: { current?: unknown } } }).actions?.base
+			?.current ?? 0,
+	);
+	return Number.isFinite(actionsRemainingRaw) ? Math.max(0, actionsRemainingRaw) : 0;
+}
+
+function buildAttackMemberViewFromCombatant(
+	combatant: Combatant.Implementation,
+	defaults: { actorType: string; name: string },
+): GroupAttackMemberView | null {
+	const combatantId = combatant.id ?? '';
+	if (!combatantId) return null;
+
+	const actor = (combatant.actor as unknown as ActorWithActionItems | null) ?? null;
+	return {
+		combatantId,
+		combatantName: combatant.name?.trim() || combatant.token?.name || defaults.name,
+		memberImage: getCombatantRowImage(combatant),
+		actorType: actor?.type?.trim()?.toLowerCase() || defaults.actorType,
+		actionsRemaining: getCombatantActionsRemaining(combatant),
+		actionOptions: buildGroupAttackActionOptions(actor),
+	};
+}
+
+function buildAttackMemberRow(
+	combatant: Combatant.Implementation,
+	defaults: { actorType: string; name: string },
+): { combatant: Combatant.Implementation; member: GroupAttackMemberView } | null {
+	const member = buildAttackMemberViewFromCombatant(combatant, defaults);
+	return member ? { combatant, member } : null;
+}
+
+function resolveGroupAttackMinionCombatant(
+	combat: CombatWithGrouping,
+	combatantId: string,
+): Combatant.Implementation | null {
+	const combatant = combat.combatants.get(combatantId) ?? null;
+	if (!combatant || isCombatantDead(combatant) || !isMinionCombatant(combatant)) return null;
+	return combatant;
+}
+
 function getGroupAttackMembers(
 	combat: CombatWithGrouping,
 	context: SelectionContext,
 ): Array<{ combatant: Combatant.Implementation; member: GroupAttackMemberView }> {
 	const rows: Array<{ combatant: Combatant.Implementation; member: GroupAttackMemberView }> = [];
-	for (const memberCombatantId of context.selectedMinionCombatantIds) {
-		const combatant = combat.combatants.get(memberCombatantId);
+	for (const combatantId of context.selectedMinionCombatantIds) {
+		const combatant = resolveGroupAttackMinionCombatant(combat, combatantId);
 		if (!combatant) continue;
-		if (!combatant.id) continue;
-		if (isCombatantDead(combatant)) continue;
-		if (!isMinionCombatant(combatant)) continue;
 
-		const actionsRemaining = Number(
-			(combatant.system as unknown as { actions?: { base?: { current?: unknown } } }).actions?.base
-				?.current ?? 0,
-		);
-		const actor = (combatant.actor as unknown as ActorWithActionItems | null) ?? null;
-		const actorType = actor?.type?.trim()?.toLowerCase() || 'minion';
-		const actionOptions = buildGroupAttackActionOptions(actor);
-
-		rows.push({
-			combatant,
-			member: {
-				combatantId: combatant.id,
-				combatantName: combatant.name?.trim() || combatant.token?.name || 'Minion',
-				memberImage: getCombatantRowImage(combatant),
-				actorType,
-				actionsRemaining: Number.isFinite(actionsRemaining) ? Math.max(0, actionsRemaining) : 0,
-				actionOptions,
-			},
+		const row = buildAttackMemberRow(combatant, {
+			actorType: 'minion',
+			name: 'Minion',
 		});
+		if (row) rows.push(row);
 	}
-
 	return rows;
 }
 
@@ -1105,29 +1191,12 @@ function getSelectedNonMinionAttackMembers(
 ): Array<{ combatant: Combatant.Implementation; member: GroupAttackMemberView }> {
 	const rows: Array<{ combatant: Combatant.Implementation; member: GroupAttackMemberView }> = [];
 	for (const combatant of context.selectedAliveNonMinionMonsters) {
-		if (!combatant.id) continue;
-
-		const actionsRemaining = Number(
-			(combatant.system as unknown as { actions?: { base?: { current?: unknown } } }).actions?.base
-				?.current ?? 0,
-		);
-		const actor = (combatant.actor as unknown as ActorWithActionItems | null) ?? null;
-		const actorType = actor?.type?.trim()?.toLowerCase() || 'npc';
-		const actionOptions = buildGroupAttackActionOptions(actor);
-
-		rows.push({
-			combatant,
-			member: {
-				combatantId: combatant.id,
-				combatantName: combatant.name?.trim() || combatant.token?.name || 'Monster',
-				memberImage: getCombatantRowImage(combatant),
-				actorType,
-				actionsRemaining: Number.isFinite(actionsRemaining) ? Math.max(0, actionsRemaining) : 0,
-				actionOptions,
-			},
+		const row = buildAttackMemberRow(combatant, {
+			actorType: 'npc',
+			name: 'Monster',
 		});
+		if (row) rows.push(row);
 	}
-
 	return rows;
 }
 
@@ -1755,62 +1824,93 @@ function renderGroupAttackPanel(): void {
 	});
 }
 
+async function resolveCombatForGroupAttackRoll(): Promise<CombatWithGroupAttack | null> {
+	const combat = getCombatForCurrentScene();
+	if (!combat || typeof combat.performMinionGroupAttack !== 'function') {
+		ui.notifications?.warn(localizeNcsw('notifications.noActiveCombatForGroupAttack'));
+		return null;
+	}
+	if (!combat.started) {
+		await combat.startCombat();
+	}
+	return combat as CombatWithGroupAttack;
+}
+
+function resolveGroupAttackTargetTokenIds(): string[] {
+	const { targetTokenIds } = getCurrentTargetSummary();
+	if (targetTokenIds.length < 1) {
+		ui.notifications?.warn(localizeNcsw('notifications.selectTargetBeforeGroupAttack'));
+		return [];
+	}
+	return targetTokenIds;
+}
+
+function buildGroupAttackRollSelections(): Array<{ memberCombatantId: string; actionId: string | null }> {
+	return activeGroupAttackMembers.map((member) => ({
+		memberCombatantId: member.combatantId,
+		actionId: getActionSelectValueForMember(member.combatantId) || null,
+	}));
+}
+
+function rememberCurrentGroupAttackSelections(session: MinionGroupAttackSelectionState): void {
+	for (const member of activeGroupAttackMembers) {
+		const selectedActionId = getActionSelectValueForMember(member.combatantId);
+		if (!selectedActionId) continue;
+		rememberMemberActionSelection(
+			rememberedGroupAttackSelectionsByActorType,
+			session.context,
+			member.actorType,
+			selectedActionId,
+		);
+	}
+}
+
+function applyGroupAttackRollResultState(params: {
+	result: {
+		rolledCombatantIds: string[];
+		skippedMembers: Array<{ combatantId: string; reason: string }>;
+		unsupportedSelectionWarnings: string[];
+		endTurnApplied: boolean;
+	};
+	endTurn: boolean;
+}): void {
+	activeGroupAttackWarnings = buildSelectionWarnings(params.result);
+	if (params.result.rolledCombatantIds.length === 0) {
+		ui.notifications?.warn(localizeNcsw('notifications.noGroupAttacksRolled'));
+	}
+	if (params.endTurn && !params.result.endTurnApplied) {
+		activeGroupAttackWarnings = [
+			...activeGroupAttackWarnings,
+			localizeNcsw('warnings.endTurnNotApplied'),
+		];
+	}
+}
+
 async function executeGroupAttackRoll(endTurn: boolean): Promise<void> {
 	const session = activeGroupAttackSession;
 	if (!session) return;
 	if (isExecutingAction) return;
 
-	const combat = getCombatForCurrentScene();
-	if (!combat || typeof combat.performMinionGroupAttack !== 'function') {
-		ui.notifications?.warn(localizeNcsw('notifications.noActiveCombatForGroupAttack'));
-		return;
-	}
-	if (!combat.started) {
-		await combat.startCombat();
-	}
+	const combat = await resolveCombatForGroupAttackRoll();
+	if (!combat) return;
 
-	const targetSummary = getCurrentTargetSummary();
-	if (targetSummary.targetTokenIds.length === 0) {
-		ui.notifications?.warn(localizeNcsw('notifications.selectTargetBeforeGroupAttack'));
-		return;
-	}
+	const targetTokenIds = resolveGroupAttackTargetTokenIds();
+	if (targetTokenIds.length < 1) return;
 
-	const selections = activeGroupAttackMembers.map((member) => ({
-		memberCombatantId: member.combatantId,
-		actionId: getActionSelectValueForMember(member.combatantId) || null,
-	}));
+	const selections = buildGroupAttackRollSelections();
 
 	isExecutingAction = true;
 	scheduleActionBarRefresh('group-attack-roll-start');
 	try {
 		const result = await combat.performMinionGroupAttack({
 			memberCombatantIds: session.context.memberCombatantIds,
-			targetTokenIds: targetSummary.targetTokenIds,
+			targetTokenIds,
 			selections,
 			endTurn,
 		});
 
-		for (const member of activeGroupAttackMembers) {
-			const selectedActionId = getActionSelectValueForMember(member.combatantId);
-			if (!selectedActionId) continue;
-			rememberMemberActionSelection(
-				rememberedGroupAttackSelectionsByActorType,
-				session.context,
-				member.actorType,
-				selectedActionId,
-			);
-		}
-
-		activeGroupAttackWarnings = buildSelectionWarnings(result);
-		if (result.rolledCombatantIds.length === 0) {
-			ui.notifications?.warn(localizeNcsw('notifications.noGroupAttacksRolled'));
-		}
-		if (endTurn && !result.endTurnApplied) {
-			activeGroupAttackWarnings = [
-				...activeGroupAttackWarnings,
-				localizeNcsw('warnings.endTurnNotApplied'),
-			];
-		}
+		rememberCurrentGroupAttackSelections(session);
+		applyGroupAttackRollResultState({ result, endTurn });
 
 		renderGroupAttackPanel();
 		scheduleActionBarRefresh('group-attack-roll-end');
@@ -1839,9 +1939,7 @@ interface ValidatedNonMinionAttackRoll {
 	};
 }
 
-async function validateNonMinionAttackRoll(
-	memberCombatantId: string,
-): Promise<ValidatedNonMinionAttackRoll | null> {
+async function resolveCombatForNonMinionAttackRoll(): Promise<CombatWithGrouping | null> {
 	const combat = getCombatForCurrentScene();
 	if (!combat) {
 		ui.notifications?.warn(localizeNcsw('notifications.noActiveCombatForMonsterAttack'));
@@ -1850,62 +1948,103 @@ async function validateNonMinionAttackRoll(
 	if (!combat.started) {
 		await combat.startCombat();
 	}
+	return combat;
+}
 
-	const member = activeNonMinionAttackMembers.find(
-		(candidate) => candidate.combatantId === memberCombatantId,
+function resolveNonMinionAttackMember(memberCombatantId: string): GroupAttackMemberView | null {
+	return (
+		activeNonMinionAttackMembers.find((candidate) => candidate.combatantId === memberCombatantId) ??
+		null
 	);
-	if (!member) return null;
+}
 
+function resolveNonMinionSelectedActionId(
+	memberCombatantId: string,
+	memberName: string,
+): string | null {
 	const selectedActionId = getNonMinionActionSelectValueForMember(memberCombatantId).trim();
-	if (!selectedActionId) {
-		ui.notifications?.warn(
-			formatNcsw('notifications.selectActionBeforeRoll', { name: member.combatantName }),
-		);
-		return null;
-	}
+	if (selectedActionId) return selectedActionId;
+	ui.notifications?.warn(formatNcsw('notifications.selectActionBeforeRoll', { name: memberName }));
+	return null;
+}
 
-	const selectedAction = member.actionOptions.find(
-		(actionOption) => actionOption.actionId === selectedActionId,
+function resolveNonMinionSelectedAction(
+	member: GroupAttackMemberView,
+	selectedActionId: string,
+): MinionGroupAttackOption | null {
+	const selectedAction = member.actionOptions.find((actionOption) => actionOption.actionId === selectedActionId);
+	if (selectedAction) return selectedAction;
+	ui.notifications?.warn(
+		formatNcsw('notifications.actionUnavailableForMonster', { name: member.combatantName }),
 	);
-	if (!selectedAction) {
-		ui.notifications?.warn(
-			formatNcsw('notifications.actionUnavailableForMonster', { name: member.combatantName }),
-		);
-		return null;
-	}
+	return null;
+}
 
+function resolveNonMinionAttackCombatant(
+	combat: CombatWithGrouping,
+	memberCombatantId: string,
+	memberName: string,
+): Combatant.Implementation | null {
 	const combatant = combat.combatants.get(memberCombatantId) ?? null;
 	if (!combatant) {
-		ui.notifications?.warn(
-			formatNcsw('notifications.monsterNoLongerInCombat', { name: member.combatantName }),
-		);
+		ui.notifications?.warn(formatNcsw('notifications.monsterNoLongerInCombat', { name: memberName }));
 		return null;
 	}
 	if (isCombatantDead(combatant)) {
-		ui.notifications?.warn(
-			formatNcsw('notifications.monsterDefeatedCannotAct', { name: member.combatantName }),
-		);
+		ui.notifications?.warn(formatNcsw('notifications.monsterDefeatedCannotAct', { name: memberName }));
 		return null;
 	}
+	return combatant;
+}
 
-	const actionsRemaining = Number(
-		(combatant.system as unknown as { actions?: { base?: { current?: unknown } } }).actions?.base
-			?.current ?? 0,
-	);
-	if (!Number.isFinite(actionsRemaining) || actionsRemaining < 1) {
-		ui.notifications?.warn(
-			formatNcsw('notifications.monsterNoActionsLeft', { name: member.combatantName }),
-		);
-		return null;
-	}
+function resolveNonMinionActionsRemaining(
+	combatant: Combatant.Implementation,
+	memberName: string,
+): number | null {
+	const actionsRemaining = getCombatantActionsRemaining(combatant);
+	if (actionsRemaining >= 1) return actionsRemaining;
+	ui.notifications?.warn(formatNcsw('notifications.monsterNoActionsLeft', { name: memberName }));
+	return null;
+}
 
+function resolveNonMinionAttackActor(
+	combatant: Combatant.Implementation,
+	memberName: string,
+): ValidatedNonMinionAttackRoll['actor'] | null {
 	const actor = (combatant.actor as unknown as ActorWithActionItems | null) ?? null;
-	if (!actor?.activateItem) {
-		ui.notifications?.warn(
-			formatNcsw('notifications.monsterCannotActivateActions', { name: member.combatantName }),
-		);
-		return null;
-	}
+	if (actor?.activateItem) return actor as ValidatedNonMinionAttackRoll['actor'];
+	ui.notifications?.warn(
+		formatNcsw('notifications.monsterCannotActivateActions', { name: memberName }),
+	);
+	return null;
+}
+
+async function validateNonMinionAttackRoll(
+	memberCombatantId: string,
+): Promise<ValidatedNonMinionAttackRoll | null> {
+	const combat = await resolveCombatForNonMinionAttackRoll();
+	if (!combat) return null;
+
+	const member = resolveNonMinionAttackMember(memberCombatantId);
+	if (!member) return null;
+
+	const selectedActionId = resolveNonMinionSelectedActionId(
+		memberCombatantId,
+		member.combatantName,
+	);
+	if (!selectedActionId) return null;
+
+	const selectedAction = resolveNonMinionSelectedAction(member, selectedActionId);
+	if (!selectedAction) return null;
+
+	const combatant = resolveNonMinionAttackCombatant(combat, memberCombatantId, member.combatantName);
+	if (!combatant) return null;
+
+	const actionsRemaining = resolveNonMinionActionsRemaining(combatant, member.combatantName);
+	if (actionsRemaining === null) return null;
+
+	const actor = resolveNonMinionAttackActor(combatant, member.combatantName);
+	if (!actor) return null;
 
 	return {
 		combat,
@@ -1915,7 +2054,7 @@ async function validateNonMinionAttackRoll(
 		selectedAction,
 		combatant,
 		actionsRemaining,
-		actor: actor as ValidatedNonMinionAttackRoll['actor'],
+		actor,
 	};
 }
 
@@ -1996,20 +2135,19 @@ async function executeNonMinionAttackRoll(
 	}
 }
 
-function syncNcswPanel(context: SelectionContext): void {
-	const canUsePanel =
+function canUseNcswPanel(context: SelectionContext): boolean {
+	return (
 		Boolean(game.user?.isGM) &&
 		Boolean(canvas?.ready) &&
 		context.selectedTokenCount > 0 &&
-		Boolean(context.combat);
-	if (!canUsePanel || !context.combat) {
-		hideGroupAttackPanel();
-		return;
-	}
+		Boolean(context.combat)
+	);
+}
 
+function syncNonMinionPanelState(combat: CombatWithGrouping, context: SelectionContext): void {
 	const nonMinionRows = getSelectedNonMinionAttackMembers(context);
 	const nonMinionSyncContext: MinionGroupAttackSessionContext = {
-		combatId: context.combat.id ?? '',
+		combatId: combat.id ?? '',
 		memberCombatantIds: nonMinionRows.map((row) => row.member.combatantId),
 	};
 	const syncedNonMinionRows = buildNonMinionSelectionSync(
@@ -2019,28 +2157,40 @@ function syncNcswPanel(context: SelectionContext): void {
 	);
 	activeNonMinionAttackMembers = syncedNonMinionRows.nextMembers;
 	activeNonMinionAttackSelectionsByMemberId = syncedNonMinionRows.nextSelectionsByMemberId;
+}
 
+function syncMinionPanelState(combat: CombatWithGrouping, context: SelectionContext): boolean {
 	const minionMemberRows =
-		context.selectedMinionCombatantIds.length >= 1
-			? getGroupAttackMembers(context.combat, context)
-			: [];
+		context.selectedMinionCombatantIds.length >= 1 ? getGroupAttackMembers(combat, context) : [];
 	const hasMinionSession = minionMemberRows.length >= 1;
-	if (hasMinionSession) {
-		const sessionContext: MinionGroupAttackSessionContext = {
-			combatId: context.combat.id ?? '',
-			memberCombatantIds: minionMemberRows.map((row) => row.member.combatantId),
-		};
-		const syncedSession = buildSessionSyncForMembers(
-			sessionContext,
-			minionMemberRows,
-			activeGroupAttackSession,
-		);
-		activeGroupAttackSession = syncedSession.nextSession;
-		activeGroupAttackMembers = syncedSession.nextMembers;
-	} else {
+	if (!hasMinionSession) {
 		activeGroupAttackSession = null;
 		activeGroupAttackMembers = [];
+		return false;
 	}
+
+	const sessionContext: MinionGroupAttackSessionContext = {
+		combatId: combat.id ?? '',
+		memberCombatantIds: minionMemberRows.map((row) => row.member.combatantId),
+	};
+	const syncedSession = buildSessionSyncForMembers(
+		sessionContext,
+		minionMemberRows,
+		activeGroupAttackSession,
+	);
+	activeGroupAttackSession = syncedSession.nextSession;
+	activeGroupAttackMembers = syncedSession.nextMembers;
+	return true;
+}
+
+function syncNcswPanel(context: SelectionContext): void {
+	if (!canUseNcswPanel(context) || !context.combat) {
+		hideGroupAttackPanel();
+		return;
+	}
+
+	syncNonMinionPanelState(context.combat, context);
+	const hasMinionSession = syncMinionPanelState(context.combat, context);
 	activeGroupAttackWarnings = [];
 
 	if (activeNonMinionAttackMembers.length === 0 && !hasMinionSession) {
