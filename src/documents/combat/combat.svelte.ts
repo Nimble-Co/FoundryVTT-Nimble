@@ -1,10 +1,10 @@
 import { createSubscriber } from 'svelte/reactivity';
-import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
 import {
 	canCurrentUserReorderCombatant,
 	getCombatantTypePriority,
 } from '../../utils/combatantOrdering.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
+import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
 import { handleInitiativeRules } from './handleInitiativeRules.js';
 
 /** Combatant system data with actions */
