@@ -250,7 +250,9 @@ function buildSelectionContext(): SelectionContext {
 	return {
 		combat,
 		selectedTokenCount,
-		selectedAliveNonMinionMonsters: resolveSelectedAliveNonMinionMonsters(selectedNonPlayerCombatants),
+		selectedAliveNonMinionMonsters: resolveSelectedAliveNonMinionMonsters(
+			selectedNonPlayerCombatants,
+		),
 		selectedMinionCombatantIds: resolveSelectedMinionCombatantIds(selectedNonPlayerCombatants),
 	};
 }
@@ -382,7 +384,9 @@ function getTargetTokenId(target: Token): string {
 }
 
 function getUniqueTargetTokenIds(targets: Token[]): string[] {
-	return [...new Set(targets.map((target) => getTargetTokenId(target)).filter((tokenId) => tokenId))];
+	return [
+		...new Set(targets.map((target) => getTargetTokenId(target)).filter((tokenId) => tokenId)),
+	];
 }
 
 function resolveSingleTargetName(target: Token | undefined): string {
@@ -543,7 +547,9 @@ function isCharacterTargetToken(token: Token): boolean {
 }
 
 function resolveTargetTokenImage(token: Token): string {
-	return (token.document?.texture?.src ?? token.actor?.img ?? '').trim() || 'icons/svg/mystery-man.svg';
+	return (
+		(token.document?.texture?.src ?? token.actor?.img ?? '').trim() || 'icons/svg/mystery-man.svg'
+	);
 }
 
 function resolveTargetTokenName(token: Token): string {
@@ -1845,7 +1851,10 @@ function resolveGroupAttackTargetTokenIds(): string[] {
 	return targetTokenIds;
 }
 
-function buildGroupAttackRollSelections(): Array<{ memberCombatantId: string; actionId: string | null }> {
+function buildGroupAttackRollSelections(): Array<{
+	memberCombatantId: string;
+	actionId: string | null;
+}> {
 	return activeGroupAttackMembers.map((member) => ({
 		memberCombatantId: member.combatantId,
 		actionId: getActionSelectValueForMember(member.combatantId) || null,
@@ -1972,7 +1981,9 @@ function resolveNonMinionSelectedAction(
 	member: GroupAttackMemberView,
 	selectedActionId: string,
 ): MinionGroupAttackOption | null {
-	const selectedAction = member.actionOptions.find((actionOption) => actionOption.actionId === selectedActionId);
+	const selectedAction = member.actionOptions.find(
+		(actionOption) => actionOption.actionId === selectedActionId,
+	);
 	if (selectedAction) return selectedAction;
 	ui.notifications?.warn(
 		formatNcsw('notifications.actionUnavailableForMonster', { name: member.combatantName }),
@@ -1987,11 +1998,15 @@ function resolveNonMinionAttackCombatant(
 ): Combatant.Implementation | null {
 	const combatant = combat.combatants.get(memberCombatantId) ?? null;
 	if (!combatant) {
-		ui.notifications?.warn(formatNcsw('notifications.monsterNoLongerInCombat', { name: memberName }));
+		ui.notifications?.warn(
+			formatNcsw('notifications.monsterNoLongerInCombat', { name: memberName }),
+		);
 		return null;
 	}
 	if (isCombatantDead(combatant)) {
-		ui.notifications?.warn(formatNcsw('notifications.monsterDefeatedCannotAct', { name: memberName }));
+		ui.notifications?.warn(
+			formatNcsw('notifications.monsterDefeatedCannotAct', { name: memberName }),
+		);
 		return null;
 	}
 	return combatant;
@@ -2037,7 +2052,11 @@ async function validateNonMinionAttackRoll(
 	const selectedAction = resolveNonMinionSelectedAction(member, selectedActionId);
 	if (!selectedAction) return null;
 
-	const combatant = resolveNonMinionAttackCombatant(combat, memberCombatantId, member.combatantName);
+	const combatant = resolveNonMinionAttackCombatant(
+		combat,
+		memberCombatantId,
+		member.combatantName,
+	);
 	if (!combatant) return null;
 
 	const actionsRemaining = resolveNonMinionActionsRemaining(combatant, member.combatantName);

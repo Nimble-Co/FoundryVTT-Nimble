@@ -67,10 +67,7 @@ import {
 	getUnsupportedActivationEffectTypes,
 } from '../../utils/activationEffects.js';
 import { getCombatantImage } from '../../utils/combatantImage.js';
-import {
-	getCurrentUserTargetTokenIds,
-	getTargetTokenName,
-} from '../../utils/tokenTargetLookup.js';
+import { getCurrentUserTargetTokenIds, getTargetTokenName } from '../../utils/tokenTargetLookup.js';
 import {
 	appendMinionAttackRollOutcome,
 	buildNcsGroupAttackChatData,
@@ -425,7 +422,9 @@ class NimbleCombat extends Combat {
 		);
 		if (groupedSelectedMinions.length === 0) return;
 
-		const affectedGroupIds = new Set(normalizeUniqueIds(groupedSelectedMinions.map(getMinionGroupId)));
+		const affectedGroupIds = new Set(
+			normalizeUniqueIds(groupedSelectedMinions.map(getMinionGroupId)),
+		);
 		const updatesById = new Map<string, Record<string, unknown>>();
 
 		for (const combatant of groupedSelectedMinions) {
@@ -555,7 +554,9 @@ class NimbleCombat extends Combat {
 
 	#resolveStartCombatTurnIndex(): number {
 		if (this.turns.length < 1) return 0;
-		const firstCharacterTurnIndex = this.turns.findIndex((combatant) => combatant.type === 'character');
+		const firstCharacterTurnIndex = this.turns.findIndex(
+			(combatant) => combatant.type === 'character',
+		);
 		return firstCharacterTurnIndex >= 0 ? firstCharacterTurnIndex : 0;
 	}
 
@@ -747,7 +748,8 @@ class NimbleCombat extends Combat {
 		const selectedActionId = params.selectionsByMemberId.get(memberId) ?? '';
 		const currentActions = getCombatantCurrentActions(params.member);
 		const actor = (params.member.actor as unknown as ActorWithActivateItem | null) ?? null;
-		const selectedAction = resolveActorItems(actor).find((item) => item?.id === selectedActionId) ?? null;
+		const selectedAction =
+			resolveActorItems(actor).find((item) => item?.id === selectedActionId) ?? null;
 		const skipReason = resolveMinionAttackSkipReason({
 			selectedActionId,
 			currentActions,
@@ -962,12 +964,10 @@ class NimbleCombat extends Combat {
 	#resolveMinionGroupAttackExecutionContext(params: {
 		normalizedParams: NormalizedMinionGroupAttackParams;
 		result: MinionGroupAttackResult;
-	}):
-		| {
-				resolvedTargets: ResolvedMinionGroupAttackTargets;
-				attackMembers: Combatant.Implementation[];
-		  }
-		| null {
+	}): {
+		resolvedTargets: ResolvedMinionGroupAttackTargets;
+		attackMembers: Combatant.Implementation[];
+	} | null {
 		if (!game.user?.isGM) {
 			logMinionGroupingCombat('performMinionGroupAttack blocked because user is not GM');
 			return null;
@@ -1319,7 +1319,7 @@ class NimbleCombat extends Combat {
 			'[data-combatant-id]',
 		);
 		const targetId = dropTargetElement?.dataset.combatantId ?? '';
-		const target = targetId ? this.combatants.get(targetId) ?? null : null;
+		const target = targetId ? (this.combatants.get(targetId) ?? null) : null;
 		if (!target || !dropTargetElement) {
 			return { target, sortBefore: null };
 		}
@@ -1331,9 +1331,10 @@ class NimbleCombat extends Combat {
 		};
 	}
 
-	#resolveDropTargetFromTrackerFallback(params: {
-		trackerListElement: HTMLElement | null;
-	}): { target: Combatant.Implementation | null; sortBefore: boolean | null } {
+	#resolveDropTargetFromTrackerFallback(params: { trackerListElement: HTMLElement | null }): {
+		target: Combatant.Implementation | null;
+		sortBefore: boolean | null;
+	} {
 		const targetId = params.trackerListElement?.dataset.dropTargetId ?? '';
 		if (!targetId) return { target: null, sortBefore: null };
 
@@ -1361,10 +1362,7 @@ class NimbleCombat extends Combat {
 		return { target, sortBefore };
 	}
 
-	#isValidDropPair(
-		source: Combatant.Implementation,
-		target: Combatant.Implementation,
-	): boolean {
+	#isValidDropPair(source: Combatant.Implementation, target: Combatant.Implementation): boolean {
 		const sourceTypePriority = getCombatantTypePriority(source);
 		const targetTypePriority = getCombatantTypePriority(target);
 		if (sourceTypePriority !== targetTypePriority) return false;
