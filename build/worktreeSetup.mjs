@@ -24,7 +24,7 @@ function runCommand(command, description) {
 
 	try {
 		execSync(command, { cwd: rootDir, stdio: 'inherit' });
-	} catch (err) {
+	} catch (_err) {
 		console.error(`\nFailed: ${description}`);
 		process.exit(1);
 	}
