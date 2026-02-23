@@ -678,6 +678,64 @@
 				"tier9": "Tier 9"
 			}
 		},
+		"spellConfig": {
+			"identifier": "Identificador",
+			"spellProperties": "Propiedades del Hechizo",
+			"spellTier": "Nivel del Hechizo",
+			"spellSchool": "Escuela de Hechizo",
+			"description": {
+				"baseEffect": "Efecto Base del Hechizo",
+				"higherLevelEffect": "Efecto de Nivel Superior",
+				"upcastEffect": "Efecto de Lanzamiento Superior"
+			},
+			"jsonEditor": {
+				"switchToVisual": "Cambiar a Editor Visual",
+				"switchToJson": "Cambiar a Editor JSON",
+				"heading": "Datos del Hechizo (JSON)",
+				"invalidJson": "JSON inválido"
+			},
+			"scaling": {
+				"heading": "Escalado del Hechizo",
+				"modes": {
+					"none": "Ninguno",
+					"upcast": "Lanzamiento Superior",
+					"upcastChoice": "Elección de Lanzamiento Superior"
+				},
+				"perUpcastStep": "Por Nivel de Lanzamiento Superior",
+				"upcastChoices": "Elecciones de Lanzamiento Superior",
+				"noDeltas": "No hay deltas de escalado configurados.",
+				"noChoices": "No hay elecciones configuradas.",
+				"addDelta": "Añadir Delta",
+				"removeDelta": "Eliminar Delta",
+				"addChoice": "Añadir Elección",
+				"removeChoice": "Eliminar Elección",
+				"choiceLabel": "Etiqueta de Elección",
+				"choiceLabelPlaceholder": "ej. Daño Extra",
+				"deltas": "Deltas",
+				"operation": "Operación",
+				"value": "Valor",
+				"count": "Cantidad",
+				"die": "Dado",
+				"condition": "Condición",
+				"conditionPlaceholder": "ej. ardiente",
+				"targetEffect": "Efecto Objetivo",
+				"targetEffectAuto": "Auto (primera coincidencia)",
+				"targetEffectPlaceholder": "ID del Efecto",
+				"targetEffectHint": "Añade efectos en la pestaña Activación para seleccionar objetivos aquí.",
+				"operations": {
+					"addFlatDamage": "Daño Fijo",
+					"addDice": "Dados",
+					"addReach": "Alcance",
+					"addRange": "Distancia",
+					"addTargets": "Objetivos",
+					"addAreaSize": "Tamaño de Área",
+					"addDC": "CD",
+					"addArmor": "Armadura",
+					"addDuration": "Duración",
+					"addCondition": "Condición"
+				}
+			}
+		},
 		"startingEquipment": {
 			"editSelection": "Edit Starting Equipment Selection",
 			"equipmentDescription": "Receive the following items:",
