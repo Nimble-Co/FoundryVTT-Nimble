@@ -31,6 +31,33 @@ function runCommand(command, description) {
 }
 
 /**
+ * Reset stale Husky hooksPath so Lefthook can install hooks in new worktrees.
+ * This only touches local repo config when it still references .husky.
+ */
+function resetLegacyHooksPath() {
+	let hooksPath = '';
+
+	try {
+		hooksPath = execSync('git config --local --get core.hooksPath', {
+			cwd: rootDir,
+			stdio: ['ignore', 'pipe', 'ignore'],
+		})
+			.toString()
+			.trim();
+	} catch {
+		// Missing config is expected for repos that never used Husky.
+		return;
+	}
+
+	if (!hooksPath.startsWith('.husky')) return;
+
+	runCommand(
+		'git config --unset-all --local core.hooksPath',
+		`Clearing legacy Husky hooksPath (${hooksPath})`,
+	);
+}
+
+/**
  * Get the FoundryVTT data path based on the operating system
  * @returns {string} Path to FoundryVTT Data directory
  */
@@ -272,13 +299,16 @@ async function setup() {
 		console.log(`\nUsing custom FoundryVTT data path from argument: ${customPath}`);
 	}
 
-	// Step 2: Install dependencies
+	// Step 2: Clear legacy git hooks path from Husky migration
+	resetLegacyHooksPath();
+
+	// Step 3: Install dependencies
 	runCommand('npm install', 'Installing dependencies');
 
-	// Step 3: Build the system
+	// Step 4: Build the system
 	runCommand('npm run build', 'Building system and compendia');
 
-	// Step 4: Setup symlink
+	// Step 5: Setup symlink
 	await setupSymlink(customPath);
 
 	console.log('');
