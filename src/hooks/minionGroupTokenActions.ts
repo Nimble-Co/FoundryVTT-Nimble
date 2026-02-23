@@ -1749,17 +1749,22 @@ function renderGroupAttackButtonSection(params: {
 		appendButtonWithOptionalTargetTooltip(buttons, rollEndTurnButton, missingTarget);
 	}
 
-	const closeButton = document.createElement('button');
-	closeButton.type = 'button';
-	closeButton.className =
-		'nimble-minion-group-attack-panel__button nimble-minion-group-attack-panel__button--negative';
-	closeButton.textContent = localizeNcsw('buttons.close');
-	closeButton.disabled = isExecutingAction;
-	closeButton.addEventListener('click', () => {
-		hideGroupAttackPanel();
-	});
-	buttons.append(closeButton);
-	params.panel.append(buttons);
+	if (!isNcswCombatStateEnabled(getCombatForCurrentScene())) {
+		const closeButton = document.createElement('button');
+		closeButton.type = 'button';
+		closeButton.className =
+			'nimble-minion-group-attack-panel__button nimble-minion-group-attack-panel__button--negative';
+		closeButton.textContent = localizeNcsw('buttons.close');
+		closeButton.disabled = isExecutingAction;
+		closeButton.addEventListener('click', () => {
+			hideGroupAttackPanel();
+		});
+		buttons.append(closeButton);
+	}
+
+	if (buttons.childElementCount > 0) {
+		params.panel.append(buttons);
+	}
 }
 
 function finalizeGroupAttackPanelLayout(params: {
@@ -1788,10 +1793,6 @@ function renderGroupAttackPanel(): void {
 	const panel = getGroupAttackPanelElement();
 	const hasMinionSection = Boolean(activeGroupAttackSession) && activeGroupAttackMembers.length > 0;
 	const hasNonMinionSection = activeNonMinionAttackMembers.length > 0;
-	if (!hasMinionSection && !hasNonMinionSection) {
-		hideGroupAttackPanel();
-		return;
-	}
 
 	const { targetTokenIds } = getCurrentTargetSummary();
 	const hasAnyTarget = targetTokenIds.length > 0;
@@ -2156,10 +2157,7 @@ async function executeNonMinionAttackRoll(
 
 function canUseNcswPanel(context: SelectionContext): boolean {
 	return (
-		Boolean(game.user?.isGM) &&
-		Boolean(canvas?.ready) &&
-		context.selectedTokenCount > 0 &&
-		Boolean(context.combat)
+		Boolean(game.user?.isGM) && Boolean(canvas?.ready) && isNcswCombatStateEnabled(context.combat)
 	);
 }
 
@@ -2209,14 +2207,8 @@ function syncNcswPanel(context: SelectionContext): void {
 	}
 
 	syncNonMinionPanelState(context.combat, context);
-	const hasMinionSession = syncMinionPanelState(context.combat, context);
+	syncMinionPanelState(context.combat, context);
 	activeGroupAttackWarnings = [];
-
-	if (activeNonMinionAttackMembers.length === 0 && !hasMinionSession) {
-		hideGroupAttackPanel();
-		return;
-	}
-
 	renderGroupAttackPanel();
 }
 
@@ -2237,6 +2229,10 @@ function registerHook(event: string, callback: (...args: unknown[]) => unknown):
 		Hooks.on as (eventName: string, cb: (...args: unknown[]) => unknown) => number
 	).call(Hooks, event, callback);
 	hookIds.push({ hook: event, id: hookId });
+}
+
+function isNcswCombatStateEnabled(combat: CombatWithGrouping | null | undefined): boolean {
+	return Boolean(combat && (combat.active || combat.started));
 }
 
 export function unregisterMinionGroupTokenActions(): void {
