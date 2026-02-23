@@ -1,6 +1,6 @@
 {
 	"id": "nimble",
-	"title": "Nimble v2",
+	"title": "Nimble",
 	"description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
 	"version": "0.7.0",
 	"authors": [
@@ -29,12 +29,8 @@
 		}
 	],
 	"scripts": [],
-	"esmodules": [
-		"nimble.js"
-	],
-	"styles": [
-		"nimble.css"
-	],
+	"esmodules": ["nimble.js"],
+	"styles": ["nimble.css"],
 	"socket": true,
 	"languages": [
 		{
