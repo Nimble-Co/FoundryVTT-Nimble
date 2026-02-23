@@ -791,7 +791,7 @@
 							"id": "SqqL7WHNreF474eJ",
 							"type": "damage",
 							"damageType": "piercing",
-							"formula": "1d4x+1d4x+1d4x+1d4x",
+							"formula": "1d4",
 							"parentContext": null,
 							"parentNode": null,
 							"canCrit": true,
@@ -799,19 +799,154 @@
 							"on": {
 								"hit": [
 									{
-										"id": "G811z6HFSAyW7uzA",
-										"type": "note",
-										"noteType": "warning",
-										"text": "[Vicious not modeled]\nFor every 4 rolled, roll an extra 1d4",
-										"parentContext": "hit",
-										"parentNode": "SqqL7WHNreF474eJ"
-									},
-									{
 										"id": "a3P1uHz3p99oSEW8",
 										"type": "damageOutcome",
 										"outcome": "fullDamage",
 										"parentContext": "hit",
 										"parentNode": "SqqL7WHNreF474eJ"
+									}
+								],
+								"criticalHit": [
+									{
+										"id": "maw1CritNote",
+										"type": "note",
+										"noteType": "warning",
+										"text": "CRIT",
+										"parentContext": "criticalHit",
+										"parentNode": "SqqL7WHNreF474eJ"
+									},
+									{
+										"id": "maw1ViciousDamage",
+										"type": "damage",
+										"damageType": "piercing",
+										"formula": "1d4",
+										"parentContext": "criticalHit",
+										"parentNode": "SqqL7WHNreF474eJ",
+										"ignoreArmor": true,
+										"on": {}
+									}
+								]
+							}
+						},
+						{
+							"id": "maw2Damage",
+							"type": "damage",
+							"damageType": "piercing",
+							"formula": "1d4",
+							"parentContext": null,
+							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
+							"on": {
+								"hit": [
+									{
+										"id": "maw2DamageOutcome",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "maw2Damage"
+									}
+								],
+								"criticalHit": [
+									{
+										"id": "maw2CritNote",
+										"type": "note",
+										"noteType": "warning",
+										"text": "CRIT",
+										"parentContext": "criticalHit",
+										"parentNode": "maw2Damage"
+									},
+									{
+										"id": "maw2ViciousDamage",
+										"type": "damage",
+										"damageType": "piercing",
+										"formula": "1d4",
+										"parentContext": "criticalHit",
+										"parentNode": "maw2Damage",
+										"ignoreArmor": true,
+										"on": {}
+									}
+								]
+							}
+						},
+						{
+							"id": "maw3Damage",
+							"type": "damage",
+							"damageType": "piercing",
+							"formula": "1d4",
+							"parentContext": null,
+							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
+							"on": {
+								"hit": [
+									{
+										"id": "maw3DamageOutcome",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "maw3Damage"
+									}
+								],
+								"criticalHit": [
+									{
+										"id": "maw3CritNote",
+										"type": "note",
+										"noteType": "warning",
+										"text": "CRIT",
+										"parentContext": "criticalHit",
+										"parentNode": "maw3Damage"
+									},
+									{
+										"id": "maw3ViciousDamage",
+										"type": "damage",
+										"damageType": "piercing",
+										"formula": "1d4",
+										"parentContext": "criticalHit",
+										"parentNode": "maw3Damage",
+										"ignoreArmor": true,
+										"on": {}
+									}
+								]
+							}
+						},
+						{
+							"id": "maw4Damage",
+							"type": "damage",
+							"damageType": "piercing",
+							"formula": "1d4",
+							"parentContext": null,
+							"parentNode": null,
+							"canCrit": true,
+							"canMiss": true,
+							"on": {
+								"hit": [
+									{
+										"id": "maw4DamageOutcome",
+										"type": "damageOutcome",
+										"outcome": "fullDamage",
+										"parentContext": "hit",
+										"parentNode": "maw4Damage"
+									}
+								],
+								"criticalHit": [
+									{
+										"id": "maw4CritNote",
+										"type": "note",
+										"noteType": "warning",
+										"text": "CRIT",
+										"parentContext": "criticalHit",
+										"parentNode": "maw4Damage"
+									},
+									{
+										"id": "maw4ViciousDamage",
+										"type": "damage",
+										"damageType": "piercing",
+										"formula": "1d4",
+										"parentContext": "criticalHit",
+										"parentNode": "maw4Damage",
+										"ignoreArmor": true,
+										"on": {}
 									}
 								]
 							}

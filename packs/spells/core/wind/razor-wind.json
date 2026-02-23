@@ -32,21 +32,22 @@
 					"on": {
 						"criticalHit": [
 							{
-								"id": "XG1PDj3LuzwZfbFT",
-								"type": "damage",
-								"damageType": "slashing",
-								"formula": "1d4",
-								"parentContext": "criticalHit",
-								"parentNode": "6pEXpZ8znbQP6LiP",
-								"on": {}
-							},
-							{
 								"id": "enoNfbb3InpTsMUg",
 								"type": "note",
 								"noteType": "warning",
 								"text": "CRIT",
 								"parentContext": "criticalHit",
 								"parentNode": "6pEXpZ8znbQP6LiP"
+							},
+							{
+								"id": "XG1PDj3LuzwZfbFT",
+								"type": "damage",
+								"damageType": "slashing",
+								"formula": "1d4",
+								"parentContext": "criticalHit",
+								"parentNode": "6pEXpZ8znbQP6LiP",
+								"ignoreArmor": true,
+								"on": {}
 							}
 						],
 						"hit": [
