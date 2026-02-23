@@ -26,152 +26,38 @@ import { getCombatantImage } from '../../utils/combatantImage.js';
 import {
 	getCurrentUserTargetTokenIds,
 	getTargetTokenName,
-	getTargetTokenUuid,
 } from '../../utils/tokenTargetLookup.js';
-
-/** Combatant system data with actions */
-interface CombatantSystemWithActions {
-	actions: {
-		base: {
-			current: number;
-			max: number;
-		};
-	};
-}
-
-interface MinionGroupAttackSelection {
-	memberCombatantId: string;
-	actionId: string | null;
-}
-
-interface MinionGroupAttackParams {
-	memberCombatantIds: string[];
-	targetTokenIds?: string[];
-	selections: MinionGroupAttackSelection[];
-	endTurn?: boolean;
-}
-
-interface MinionGroupAttackSkippedMember {
-	combatantId: string;
-	reason: string;
-}
-
-interface MinionGroupAttackResult {
-	targetTokenId: string;
-	rolledCombatantIds: string[];
-	skippedMembers: MinionGroupAttackSkippedMember[];
-	unsupportedSelectionWarnings: string[];
-	endTurnApplied: boolean;
-	totalDamage: number;
-	chatMessageId?: string | null;
-}
-
-interface NormalizedMinionGroupAttackParams {
-	memberCombatantIds: string[];
-	targetTokenIds: string[];
-	selectionsByMemberId: Map<string, string>;
-	endTurn: boolean;
-}
-
-interface ResolvedMinionGroupAttackTargets {
-	activeTargetTokenIds: string[];
-	primaryTargetTokenId: string;
-}
-
-interface MinionGroupAttackRollOutcome {
-	rollEntry: MinionGroupAttackRollEntry | null;
-	actionUpdate: Record<string, unknown> | null;
-	skippedMember: MinionGroupAttackSkippedMember | null;
-	unsupportedWarning: string | null;
-}
-
-interface DropResolution {
-	source: Combatant.Implementation;
-	target: Combatant.Implementation;
-	siblings: Combatant.Implementation[];
-	sortBefore: boolean;
-	previousActiveCombatantId: string | null;
-}
-
-interface ItemLike {
-	id?: string;
-	name?: string;
-	img?: string;
-	system?: {
-		activation?: {
-			effects?: unknown[];
-		};
-	};
-}
-
-interface ActorWithActivateItem {
-	type?: string;
-	name?: string;
-	items?: { contents?: ItemLike[] } | ItemLike[];
-	activateItem?: (id: string, options?: Record<string, unknown>) => Promise<ChatMessage | null>;
-	getRollData?: (item?: unknown) => Record<string, unknown>;
-}
-
-interface MinionGroupAttackRollEntry {
-	memberCombatantId: string;
-	memberName: string;
-	memberImage: string | null;
-	actionId: string;
-	actionName: string;
-	actionImage: string | null;
-	formula: string;
-	totalDamage: number;
-	isMiss: boolean;
-	rollData: Record<string, unknown> | null;
-}
-
-function getCombatantManualSortValue(combatant: Combatant.Implementation): number {
-	return Number((combatant.system as unknown as { sort?: number }).sort ?? 0);
-}
-
-function getSourceSortValueForDrop(
-	source: Combatant.Implementation,
-	target: Combatant.Implementation,
-	siblings: Combatant.Implementation[],
-	sortBefore: boolean,
-): number | null {
-	const targetIndex = siblings.findIndex((combatant) => combatant.id === target.id);
-	if (targetIndex < 0) return null;
-
-	const insertIndex = sortBefore ? targetIndex : targetIndex + 1;
-	const previous = insertIndex > 0 ? siblings[insertIndex - 1] : null;
-	const next = insertIndex < siblings.length ? siblings[insertIndex] : null;
-
-	if (previous && next) {
-		const previousSort = getCombatantManualSortValue(previous);
-		const nextSort = getCombatantManualSortValue(next);
-		if (previousSort === nextSort) {
-			return previousSort + (sortBefore ? -0.5 : 0.5);
-		}
-		return previousSort + (nextSort - previousSort) / 2;
-	}
-
-	if (previous) return getCombatantManualSortValue(previous) + 1;
-	if (next) return getCombatantManualSortValue(next) - 1;
-
-	return getCombatantManualSortValue(source);
-}
-
-function logMinionGroupingCombat(message: string, details: Record<string, unknown> = {}) {
-	const globals = globalThis as Record<string, unknown>;
-	if (globals.NIMBLE_ENABLE_GROUP_LOGS !== true) return;
-	if (globals.NIMBLE_DISABLE_GROUP_LOGS === true) return;
-	// eslint-disable-next-line no-console
-	console.info(`[Nimble][MinionGrouping][Combat] ${message}`, details);
-}
-
-function getCombatantCurrentActions(combatant: Combatant.Implementation): number {
-	const currentActions = Number(
-		(combatant.system as unknown as CombatantSystemWithActions).actions?.base?.current ?? 0,
-	);
-	if (!Number.isFinite(currentActions)) return 0;
-	return currentActions;
-}
+import {
+	appendMinionAttackRollOutcome,
+	buildNcsGroupAttackChatData,
+	createMinionGroupAttackResult,
+	getCombatantCurrentActions,
+	getCombatantManualSortValue,
+	getSourceSortValueForDrop,
+	logMinionGroupingCombat,
+	normalizeUniqueIds,
+	resolveActorItems,
+	resolveGroupAttackSpeaker,
+	resolveGroupAttackSpeakerAlias,
+	resolveMinionAttackSkipReason,
+} from './combatCommon.js';
+import type {
+	ActorWithActivateItem,
+	CombatantSystemWithActions,
+	DropResolution,
+	DropTargetResolution,
+	InitiativeRollOutcome,
+	ItemLike,
+	MinionGroupAttackParams,
+	MinionGroupAttackResult,
+	MinionGroupAttackRollEntry,
+	MinionGroupAttackRollOutcome,
+	MinionGroupAttackSkippedMember,
+	MinionGroupAttackSelection,
+	NormalizedMinionGroupAttackParams,
+	ResolvedMinionAttackActionContext,
+	ResolvedMinionGroupAttackTargets,
+} from './combatTypes.js';
 
 class NimbleCombat extends Combat {
 	#subscribe: ReturnType<typeof createSubscriber>;
@@ -315,68 +201,16 @@ class NimbleCombat extends Combat {
 	}): Promise<ChatMessage | null> {
 		if (params.rollEntries.length === 0) return null;
 
-		const speakerCombatant =
-			params.attackMembers.find((member) =>
-				params.rollEntries.some((entry) => entry.memberCombatantId === member.id),
-			) ?? params.attackMembers[0];
-		const speakerAlias = params.groupLabel?.trim()
-			? `Minion Group ${params.groupLabel.trim().toUpperCase()}`
-			: 'Selected Minions';
-		const speakerImage =
-			(speakerCombatant ? getCombatantImage(speakerCombatant) : null) ?? 'icons/svg/cowled.svg';
-		const speakerPermissions = Number(
-			(speakerCombatant?.actor as unknown as { permission?: number } | null)?.permission ?? 0,
-		);
-		const targetUuids = params.targetTokenIds
-			.map((targetTokenId) => getTargetTokenUuid(targetTokenId))
-			.filter((uuid): uuid is string => typeof uuid === 'string' && uuid.length > 0);
-		const chatData = {
-			author: game.user?.id,
-			flavor: `${speakerAlias} attacks ${params.targetName}`,
-			speaker: ChatMessage.getSpeaker({
-				actor: speakerCombatant?.actor,
-				token: speakerCombatant?.token,
-				alias: speakerAlias,
-			}),
-			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
-			sound: CONFIG.sounds.dice,
-			rollMode: game.settings.get('core', 'rollMode'),
-			flags: {
-				nimble: {
-					chatCardType: 'minionGroupAttack',
-				},
-			},
-			system: {
-				actorName: speakerAlias,
-				actorType: speakerCombatant?.actor?.type ?? 'minion',
-				image: speakerImage,
-				permissions: Number.isFinite(speakerPermissions) ? speakerPermissions : 0,
-				rollMode: 0,
-				targets: targetUuids,
-				groupLabel: params.groupLabel ?? '',
-				targetName: params.targetName,
-				totalDamage: params.totalDamage,
-				rows: params.rollEntries.map((entry) => ({
-					memberCombatantId: entry.memberCombatantId,
-					memberName: entry.memberName,
-					memberImage: entry.memberImage,
-					actionId: entry.actionId,
-					actionName: entry.actionName,
-					actionImage: entry.actionImage,
-					formula: entry.formula,
-					totalDamage: entry.totalDamage,
-					isMiss: entry.isMiss,
-					roll: entry.rollData,
-				})),
-				skippedMembers: params.skippedMembers.map((member) => ({
-					combatantId: member.combatantId,
-					reason: member.reason,
-				})),
-				unsupportedWarnings: [...params.unsupportedWarnings],
-			},
-			content: '',
-			type: 'base',
-		};
+		const speakerCombatant = resolveGroupAttackSpeaker({
+			attackMembers: params.attackMembers,
+			rollEntries: params.rollEntries,
+		});
+		const speakerAlias = resolveGroupAttackSpeakerAlias(params.groupLabel);
+		const chatData = buildNcsGroupAttackChatData({
+			...params,
+			speakerCombatant,
+			speakerAlias,
+		});
 		ChatMessage.applyRollMode(
 			chatData as Record<string, unknown>,
 			chatData.rollMode as foundry.CONST.DICE_ROLL_MODES,
@@ -440,12 +274,102 @@ class NimbleCombat extends Combat {
 		});
 	}
 
-	async #detachMembersFromExistingMinionGroups(memberCombatantIds: string[]): Promise<void> {
-		const selectedMemberIds = new Set(
-			memberCombatantIds
-				.map((memberCombatantId) => memberCombatantId?.trim() ?? '')
-				.filter((memberCombatantId): memberCombatantId is string => memberCombatantId.length > 0),
+	#resolveAliveMinionMembersByIds(memberCombatantIds: string[]): Combatant.Implementation[] {
+		return this.#resolveCombatantsByIds(normalizeUniqueIds(memberCombatantIds)).filter(
+			(member) => isMinionCombatant(member) && !isCombatantDead(member),
 		);
+	}
+
+	#setCombatantUpdate(
+		updatesById: Map<string, Record<string, unknown>>,
+		combatantId: string,
+		update: Record<string, unknown>,
+	): void {
+		const current = updatesById.get(combatantId) ?? { _id: combatantId };
+		updatesById.set(combatantId, { ...current, ...update });
+	}
+
+	#collectRemainingGroupMembers(
+		groupId: string,
+		selectedMemberIds: ReadonlySet<string>,
+	): Combatant.Implementation[] {
+		return this.combatants.contents.filter((combatant) => {
+			const combatantId = combatant.id ?? '';
+			if (!combatantId) return false;
+			if (selectedMemberIds.has(combatantId)) return false;
+			if (!isMinionCombatant(combatant)) return false;
+			return getMinionGroupId(combatant) === groupId;
+		});
+	}
+
+	#applyGroupDetachmentUpdate(
+		groupId: string,
+		remainingMembers: Combatant.Implementation[],
+		updatesById: Map<string, Record<string, unknown>>,
+	): void {
+		if (remainingMembers.length <= 1) {
+			for (const member of remainingMembers) {
+				if (!member.id) continue;
+				this.#setCombatantUpdate(updatesById, member.id, { [MINION_GROUP_FLAG_ROOT]: null });
+			}
+			return;
+		}
+
+		const summary = getMinionGroupSummaries(remainingMembers).get(groupId);
+		if (!summary) return;
+		const nextLeader =
+			getEffectiveMinionGroupLeader(summary, { aliveOnly: true }) ??
+			getEffectiveMinionGroupLeader(summary);
+		if (!nextLeader?.id) return;
+
+		for (const member of remainingMembers) {
+			if (!member.id) continue;
+			this.#setCombatantUpdate(updatesById, member.id, {
+				[MINION_GROUP_ID_PATH]: groupId,
+				[MINION_GROUP_ROLE_PATH]: member.id === nextLeader.id ? 'leader' : 'member',
+				[MINION_GROUP_TEMPORARY_PATH]: true,
+			});
+		}
+	}
+
+	#buildTemporaryGroupUpdates(
+		orderedMembers: Combatant.Implementation[],
+		leaderId: string,
+		temporaryGroupId: string,
+		sharedInitiative: number,
+		sharedSort: number,
+	): Record<string, unknown>[] {
+		return orderedMembers.reduce<Record<string, unknown>[]>((acc, member) => {
+			if (!member.id) return acc;
+			acc.push({
+				_id: member.id,
+				[MINION_GROUP_ID_PATH]: temporaryGroupId,
+				[MINION_GROUP_ROLE_PATH]: member.id === leaderId ? 'leader' : 'member',
+				[MINION_GROUP_TEMPORARY_PATH]: true,
+				initiative: sharedInitiative,
+				'system.sort': sharedSort,
+			});
+			return acc;
+		}, []);
+	}
+
+	#resolveDesiredActiveIdAfterRegroup(params: {
+		previousActiveCombatantId: string | null | undefined;
+		leaderId: string;
+		orderedMembers: Combatant.Implementation[];
+	}): string | null | undefined {
+		const regroupedIds = new Set(
+			params.orderedMembers
+				.map((member) => member.id)
+				.filter((memberId): memberId is string => typeof memberId === 'string'),
+		);
+		return params.previousActiveCombatantId && regroupedIds.has(params.previousActiveCombatantId)
+			? params.leaderId
+			: params.previousActiveCombatantId;
+	}
+
+	async #detachMembersFromExistingMinionGroups(memberCombatantIds: string[]): Promise<void> {
+		const selectedMemberIds = new Set(normalizeUniqueIds(memberCombatantIds));
 		if (selectedMemberIds.size === 0) return;
 
 		const groupedSelectedMinions = this.combatants.contents.filter(
@@ -457,55 +381,18 @@ class NimbleCombat extends Combat {
 		);
 		if (groupedSelectedMinions.length === 0) return;
 
-		const affectedGroupIds = new Set(
-			groupedSelectedMinions
-				.map((combatant) => getMinionGroupId(combatant))
-				.filter((groupId): groupId is string => typeof groupId === 'string' && groupId.length > 0),
-		);
+		const affectedGroupIds = new Set(normalizeUniqueIds(groupedSelectedMinions.map(getMinionGroupId)));
 		const updatesById = new Map<string, Record<string, unknown>>();
-		const setUpdate = (combatantId: string, update: Record<string, unknown>): void => {
-			const current = updatesById.get(combatantId) ?? { _id: combatantId };
-			updatesById.set(combatantId, { ...current, ...update });
-		};
 
 		for (const combatant of groupedSelectedMinions) {
 			const combatantId = combatant.id;
 			if (!combatantId) continue;
-			setUpdate(combatantId, { [MINION_GROUP_FLAG_ROOT]: null });
+			this.#setCombatantUpdate(updatesById, combatantId, { [MINION_GROUP_FLAG_ROOT]: null });
 		}
 
 		for (const groupId of affectedGroupIds) {
-			const remainingMembers = this.combatants.contents.filter((combatant) => {
-				const combatantId = combatant.id ?? '';
-				if (!combatantId) return false;
-				if (selectedMemberIds.has(combatantId)) return false;
-				if (!isMinionCombatant(combatant)) return false;
-				return getMinionGroupId(combatant) === groupId;
-			});
-
-			if (remainingMembers.length <= 1) {
-				for (const member of remainingMembers) {
-					if (!member.id) continue;
-					setUpdate(member.id, { [MINION_GROUP_FLAG_ROOT]: null });
-				}
-				continue;
-			}
-
-			const summary = getMinionGroupSummaries(remainingMembers).get(groupId);
-			if (!summary) continue;
-			const nextLeader =
-				getEffectiveMinionGroupLeader(summary, { aliveOnly: true }) ??
-				getEffectiveMinionGroupLeader(summary);
-			if (!nextLeader?.id) continue;
-
-			for (const member of remainingMembers) {
-				if (!member.id) continue;
-				setUpdate(member.id, {
-					[MINION_GROUP_ID_PATH]: groupId,
-					[MINION_GROUP_ROLE_PATH]: member.id === nextLeader.id ? 'leader' : 'member',
-					[MINION_GROUP_TEMPORARY_PATH]: true,
-				});
-			}
+			const remainingMembers = this.#collectRemainingGroupMembers(groupId, selectedMemberIds);
+			this.#applyGroupDetachmentUpdate(groupId, remainingMembers, updatesById);
 		}
 
 		const updates = [...updatesById.values()];
@@ -518,25 +405,15 @@ class NimbleCombat extends Combat {
 	async #assignNcsTemporaryGroupFromAttackMembers(memberCombatantIds: string[]): Promise<void> {
 		if (!game.user?.isGM) return;
 
-		const scopedMemberIds = [
-			...new Set(
-				memberCombatantIds
-					.map((memberCombatantId) => memberCombatantId?.trim() ?? '')
-					.filter((memberCombatantId): memberCombatantId is string => memberCombatantId.length > 0),
-			),
-		];
+		const scopedMemberIds = normalizeUniqueIds(memberCombatantIds);
 		if (scopedMemberIds.length < 2) return;
 
-		const scopedMembers = this.#resolveCombatantsByIds(scopedMemberIds).filter(
-			(member) => isMinionCombatant(member) && !isCombatantDead(member),
-		);
+		const scopedMembers = this.#resolveAliveMinionMembersByIds(scopedMemberIds);
 		if (scopedMembers.length < 2) return;
 
 		await this.#detachMembersFromExistingMinionGroups(scopedMemberIds);
 
-		const refreshedMembers = this.#resolveCombatantsByIds(scopedMemberIds).filter(
-			(member) => isMinionCombatant(member) && !isCombatantDead(member),
-		);
+		const refreshedMembers = this.#resolveAliveMinionMembersByIds(scopedMemberIds);
 		if (refreshedMembers.length < 2) return;
 
 		const orderedMembers = this.#sortCombatantsByCurrentTurnOrder(refreshedMembers);
@@ -548,33 +425,23 @@ class NimbleCombat extends Combat {
 		const sharedInitiative = Number(leader.initiative ?? 0);
 		const sharedSort = getCombatantManualSortValue(leader);
 
-		const updates = orderedMembers.reduce<Record<string, unknown>[]>((acc, member) => {
-			if (!member.id) return acc;
-
-			acc.push({
-				_id: member.id,
-				[MINION_GROUP_ID_PATH]: temporaryGroupId,
-				[MINION_GROUP_ROLE_PATH]: member.id === leader.id ? 'leader' : 'member',
-				[MINION_GROUP_TEMPORARY_PATH]: true,
-				initiative: sharedInitiative,
-				'system.sort': sharedSort,
-			});
-			return acc;
-		}, []);
+		const updates = this.#buildTemporaryGroupUpdates(
+			orderedMembers,
+			leader.id,
+			temporaryGroupId,
+			sharedInitiative,
+			sharedSort,
+		);
 		if (updates.length === 0) return;
 
 		await this.updateEmbeddedDocuments('Combatant', updates);
 		this.turns = this.setupTurns();
 
-		const regroupedIds = new Set(
-			orderedMembers
-				.map((member) => member.id)
-				.filter((memberId): memberId is string => typeof memberId === 'string'),
-		);
-		const desiredActiveId =
-			previousActiveCombatantId && regroupedIds.has(previousActiveCombatantId)
-				? leader.id
-				: previousActiveCombatantId;
+		const desiredActiveId = this.#resolveDesiredActiveIdAfterRegroup({
+			previousActiveCombatantId,
+			leaderId: leader.id,
+			orderedMembers,
+		});
 		await this.#syncTurnToCombatant(desiredActiveId, { persist: false });
 
 		logMinionGroupingCombat('assigned ncs temporary attack group', {
@@ -628,6 +495,26 @@ class NimbleCombat extends Combat {
 		return this;
 	}
 
+	async #applyNpcActionResetUpdates(): Promise<void> {
+		const updates = this.combatants.contents
+			.filter((combatant) => combatant.type !== 'character')
+			.map((combatant) => {
+				const system = combatant.system as unknown as CombatantSystemWithActions;
+				return {
+					_id: combatant.id,
+					'system.actions.base.current': system.actions.base.max,
+				};
+			});
+		if (updates.length < 1) return;
+		await this.updateEmbeddedDocuments('Combatant', updates);
+	}
+
+	#resolveStartCombatTurnIndex(): number {
+		if (this.turns.length < 1) return 0;
+		const firstCharacterTurnIndex = this.turns.findIndex((combatant) => combatant.type === 'character');
+		return firstCharacterTurnIndex >= 0 ? firstCharacterTurnIndex : 0;
+	}
+
 	override async startCombat(): Promise<this> {
 		const result = await super.startCombat();
 
@@ -645,32 +532,14 @@ class NimbleCombat extends Combat {
 			);
 		}
 
-		// Initialize actions for non-character combatants (NPCs, minions, solo monsters)
-		// Characters get their actions set during initiative roll
-		type CombatantUpdate = { _id: string | null; 'system.actions.base.current': number };
-		const npcUpdates = this.combatants.reduce<CombatantUpdate[]>((updates, combatant) => {
-			if (combatant.type !== 'character') {
-				const system = combatant.system as unknown as CombatantSystemWithActions;
-				updates.push({
-					_id: combatant.id,
-					'system.actions.base.current': system.actions.base.max,
-				});
-			}
-			return updates;
-		}, []);
-
-		if (npcUpdates.length > 0) {
-			await this.updateEmbeddedDocuments('Combatant', npcUpdates);
-		}
+		// Initialize actions for non-character combatants.
+		await this.#applyNpcActionResetUpdates();
 
 		// After start + auto-roll updates, always begin on the top player card.
 		// This preserves pre-combat manual ordering as the first-turn source of truth.
 		this.turns = this.setupTurns();
 		if (this.turns.length > 0) {
-			const firstCharacterTurnIndex = this.turns.findIndex(
-				(combatant) => combatant.type === 'character',
-			);
-			const nextTurnIndex = firstCharacterTurnIndex >= 0 ? firstCharacterTurnIndex : 0;
+			const nextTurnIndex = this.#resolveStartCombatTurnIndex();
 			await this.update({ turn: nextTurnIndex });
 		}
 
@@ -720,24 +589,8 @@ class NimbleCombat extends Combat {
 	}
 
 	override async _onEndRound() {
-		type CombatantUpdate = { _id: string | null; 'system.actions.base.current': number };
-
-		// Reset only non-character combatants' actions at end of round
-		// (Characters refresh their actions at end of their turn via _onEndTurn)
-		const updates = this.combatants.reduce<CombatantUpdate[]>((updates, currentCombatant) => {
-			if (currentCombatant.type !== 'character') {
-				const system = currentCombatant.system as unknown as CombatantSystemWithActions;
-				updates.push({
-					_id: currentCombatant.id,
-					'system.actions.base.current': system.actions.base.max,
-				});
-			}
-			return updates;
-		}, []);
-
-		if (updates.length > 0) {
-			await this.updateEmbeddedDocuments('Combatant', updates);
-		}
+		// Reset only non-character combatants' actions at end of round.
+		await this.#applyNpcActionResetUpdates();
 
 		await this.#dissolveRoundBoundaryMinionGroups();
 	}
@@ -749,7 +602,6 @@ class NimbleCombat extends Combat {
 		const combatant = this.combatants.get(combatantID) as NimbleCombatant | null;
 
 		if (!combatant) {
-			// eslint-disable-next-line no-console
 			console.error(
 				`Attempted to update combatant with id ${combatantID}, but the combatant could not be found.`,
 			);
@@ -771,20 +623,8 @@ class NimbleCombat extends Combat {
 	}
 
 	#normalizeAttackParams(params: MinionGroupAttackParams): NormalizedMinionGroupAttackParams {
-		const memberCombatantIds = [
-			...new Set(
-				(params.memberCombatantIds ?? [])
-					.map((memberCombatantId) => memberCombatantId?.trim() ?? '')
-					.filter((memberCombatantId): memberCombatantId is string => memberCombatantId.length > 0),
-			),
-		];
-		const targetTokenIds = [
-			...new Set(
-				(params.targetTokenIds ?? [])
-					.map((targetTokenId) => targetTokenId?.trim() ?? '')
-					.filter((targetTokenId): targetTokenId is string => targetTokenId.length > 0),
-			),
-		];
+		const memberCombatantIds = normalizeUniqueIds(params.memberCombatantIds ?? []);
+		const targetTokenIds = normalizeUniqueIds(params.targetTokenIds ?? []);
 
 		return {
 			memberCombatantIds,
@@ -820,10 +660,36 @@ class NimbleCombat extends Combat {
 		);
 	}
 
-	async #rollSingleMinionAttack(params: {
+	#buildSkippedMinionAttackOutcome(
+		memberId: string,
+		reason: string,
+		unsupportedWarning: string | null = null,
+	): MinionGroupAttackRollOutcome {
+		return {
+			rollEntry: null,
+			actionUpdate: null,
+			skippedMember: { combatantId: memberId, reason },
+			unsupportedWarning,
+		};
+	}
+
+	#buildUnsupportedMinionAttackWarning(params: {
+		memberName: string | null | undefined;
+		memberId: string;
+		selectedAction: ItemLike;
+		selectedActionId: string;
+	}): string | null {
+		const unsupportedEffectTypes = getUnsupportedActivationEffectTypes(
+			params.selectedAction.system?.activation?.effects,
+		);
+		if (unsupportedEffectTypes.length < 1) return null;
+		return `${params.memberName ?? params.memberId}: ${params.selectedAction.name ?? params.selectedActionId} ignores unsupported effect types (${unsupportedEffectTypes.join(', ')})`;
+	}
+
+	#resolveMinionAttackActionContext(params: {
 		member: Combatant.Implementation;
 		selectionsByMemberId: ReadonlyMap<string, string>;
-	}): Promise<MinionGroupAttackRollOutcome> {
+	}): ResolvedMinionAttackActionContext | MinionGroupAttackRollOutcome {
 		const memberId = params.member.id ?? '';
 		if (!memberId || !isMinionCombatant(params.member)) {
 			return {
@@ -834,70 +700,103 @@ class NimbleCombat extends Combat {
 			};
 		}
 
-		const selectedActionId = params.selectionsByMemberId.get(memberId);
-		if (!selectedActionId) {
-			return {
-				rollEntry: null,
-				actionUpdate: null,
-				skippedMember: { combatantId: memberId, reason: 'noActionSelected' },
-				unsupportedWarning: null,
-			};
-		}
-
+		const selectedActionId = params.selectionsByMemberId.get(memberId) ?? '';
 		const currentActions = getCombatantCurrentActions(params.member);
-		if (!Number.isFinite(currentActions) || currentActions < 1) {
-			return {
-				rollEntry: null,
-				actionUpdate: null,
-				skippedMember: { combatantId: memberId, reason: 'noActionsRemaining' },
-				unsupportedWarning: null,
-			};
-		}
-
 		const actor = (params.member.actor as unknown as ActorWithActivateItem | null) ?? null;
-		if (!actor) {
-			return {
-				rollEntry: null,
-				actionUpdate: null,
-				skippedMember: { combatantId: memberId, reason: 'actorCannotActivate' },
-				unsupportedWarning: null,
-			};
+		const selectedAction = resolveActorItems(actor).find((item) => item?.id === selectedActionId) ?? null;
+		const skipReason = resolveMinionAttackSkipReason({
+			selectedActionId,
+			currentActions,
+			actor,
+			selectedAction,
+		});
+		if (skipReason) {
+			return this.#buildSkippedMinionAttackOutcome(memberId, skipReason);
 		}
 
-		const actorItems = Array.isArray(actor.items) ? actor.items : (actor.items?.contents ?? []);
-		const selectedAction = actorItems.find((item) => item?.id === selectedActionId);
-		if (!selectedAction) {
-			return {
-				rollEntry: null,
-				actionUpdate: null,
-				skippedMember: { combatantId: memberId, reason: 'actionNotFound' },
-				unsupportedWarning: null,
-			};
-		}
+		const resolvedActor = actor as ActorWithActivateItem;
+		const resolvedAction = selectedAction as ItemLike;
+		const unsupportedWarning = this.#buildUnsupportedMinionAttackWarning({
+			memberName: params.member.name,
+			memberId,
+			selectedAction: resolvedAction,
+			selectedActionId,
+		});
 
-		const unsupportedEffectTypes = getUnsupportedActivationEffectTypes(
-			selectedAction.system?.activation?.effects,
-		);
-		const unsupportedWarning =
-			unsupportedEffectTypes.length > 0
-				? `${params.member.name ?? memberId}: ${selectedAction.name ?? selectedActionId} ignores unsupported effect types (${unsupportedEffectTypes.join(', ')})`
-				: null;
+		return {
+			memberId,
+			selectedActionId,
+			currentActions,
+			actor: resolvedActor,
+			selectedAction: resolvedAction,
+			unsupportedWarning,
+		};
+	}
+
+	#isMinionAttackRollOutcome(
+		value: ResolvedMinionAttackActionContext | MinionGroupAttackRollOutcome,
+	): value is MinionGroupAttackRollOutcome {
+		return 'rollEntry' in value;
+	}
+
+	#buildMinionAttackRollEntry(params: {
+		member: Combatant.Implementation;
+		memberId: string;
+		selectedActionId: string;
+		selectedAction: ItemLike;
+		formula: string;
+		damageRoll: DamageRoll;
+	}): MinionGroupAttackRollEntry {
+		const isMiss = Boolean(params.damageRoll.isMiss);
+		const totalDamage = Number(params.damageRoll.total ?? 0);
+		const normalizedTotalDamage = isMiss
+			? 0
+			: Number.isFinite(totalDamage)
+				? Math.max(0, totalDamage)
+				: 0;
+
+		return {
+			memberCombatantId: params.memberId,
+			memberName: params.member.name ?? params.memberId,
+			memberImage: getCombatantImage(params.member),
+			actionId: params.selectedActionId,
+			actionName: params.selectedAction.name ?? params.selectedActionId,
+			actionImage:
+				typeof params.selectedAction.img === 'string' && params.selectedAction.img.trim().length > 0
+					? params.selectedAction.img.trim()
+					: null,
+			formula: params.formula,
+			totalDamage: normalizedTotalDamage,
+			isMiss,
+			rollData: params.damageRoll.toJSON() as Record<string, unknown>,
+		};
+	}
+
+	async #rollSingleMinionAttack(params: {
+		member: Combatant.Implementation;
+		selectionsByMemberId: ReadonlyMap<string, string>;
+	}): Promise<MinionGroupAttackRollOutcome> {
+		const resolvedActionContext = this.#resolveMinionAttackActionContext(params);
+		if (this.#isMinionAttackRollOutcome(resolvedActionContext)) {
+			return resolvedActionContext;
+		}
 
 		try {
 			const formula = getPrimaryDamageFormulaFromActivationEffects(
-				selectedAction.system?.activation?.effects,
+				resolvedActionContext.selectedAction.system?.activation?.effects,
 			);
 			if (!formula) {
-				return {
-					rollEntry: null,
-					actionUpdate: null,
-					skippedMember: { combatantId: memberId, reason: 'noDamageFormula' },
-					unsupportedWarning,
-				};
+				return this.#buildSkippedMinionAttackOutcome(
+					resolvedActionContext.memberId,
+					'noDamageFormula',
+					resolvedActionContext.unsupportedWarning,
+				);
 			}
 
 			const rollData =
-				typeof actor.getRollData === 'function' ? actor.getRollData(selectedAction) : {};
+				typeof resolvedActionContext.actor.getRollData === 'function'
+					? resolvedActionContext.actor.getRollData(resolvedActionContext.selectedAction)
+					: {};
 			const damageRoll = new DamageRoll(formula, rollData as DamageRoll.Data, {
 				canCrit: false,
 				canMiss: true,
@@ -906,50 +805,35 @@ class NimbleCombat extends Combat {
 				primaryDieModifier: 0,
 			});
 			await damageRoll.evaluate();
-			const isMiss = Boolean(damageRoll.isMiss);
-			const totalDamage = Number(damageRoll.total ?? 0);
-			const normalizedTotalDamage = isMiss
-				? 0
-				: Number.isFinite(totalDamage)
-					? Math.max(0, totalDamage)
-					: 0;
 
 			return {
-				rollEntry: {
-					memberCombatantId: memberId,
-					memberName: params.member.name ?? memberId,
-					memberImage: getCombatantImage(params.member),
-					actionId: selectedActionId,
-					actionName: selectedAction.name ?? selectedActionId,
-					actionImage:
-						typeof selectedAction.img === 'string' && selectedAction.img.trim().length > 0
-							? selectedAction.img.trim()
-							: null,
+				rollEntry: this.#buildMinionAttackRollEntry({
+					member: params.member,
+					memberId: resolvedActionContext.memberId,
+					selectedActionId: resolvedActionContext.selectedActionId,
+					selectedAction: resolvedActionContext.selectedAction,
 					formula,
-					totalDamage: normalizedTotalDamage,
-					isMiss,
-					rollData: damageRoll.toJSON() as Record<string, unknown>,
-				},
+					damageRoll,
+				}),
 				actionUpdate: {
-					_id: memberId,
-					'system.actions.base.current': Math.max(0, currentActions - 1),
+					_id: resolvedActionContext.memberId,
+					'system.actions.base.current': Math.max(0, resolvedActionContext.currentActions - 1),
 				},
 				skippedMember: null,
-				unsupportedWarning,
+				unsupportedWarning: resolvedActionContext.unsupportedWarning,
 			};
 		} catch (error) {
 			logMinionGroupingCombat('performMinionGroupAttack member activation failed', {
 				combatId: this.id ?? null,
-				memberCombatantId: memberId,
-				actionId: selectedActionId,
+				memberCombatantId: resolvedActionContext.memberId,
+				actionId: resolvedActionContext.selectedActionId,
 				error,
 			});
-			return {
-				rollEntry: null,
-				actionUpdate: null,
-				skippedMember: { combatantId: memberId, reason: 'activationFailed' },
-				unsupportedWarning,
-			};
+			return this.#buildSkippedMinionAttackOutcome(
+				resolvedActionContext.memberId,
+				'activationFailed',
+				resolvedActionContext.unsupportedWarning,
+			);
 		}
 	}
 
@@ -1031,19 +915,90 @@ class NimbleCombat extends Combat {
 		return true;
 	}
 
+	#resolveMinionGroupAttackExecutionContext(params: {
+		normalizedParams: NormalizedMinionGroupAttackParams;
+		result: MinionGroupAttackResult;
+	}):
+		| {
+				resolvedTargets: ResolvedMinionGroupAttackTargets;
+				attackMembers: Combatant.Implementation[];
+		  }
+		| null {
+		if (!game.user?.isGM) {
+			logMinionGroupingCombat('performMinionGroupAttack blocked because user is not GM');
+			return null;
+		}
+
+		if (params.normalizedParams.memberCombatantIds.length < 1) {
+			logMinionGroupingCombat('performMinionGroupAttack blocked because member scope is missing', {
+				memberCombatantIds: params.normalizedParams.memberCombatantIds,
+				targetTokenIds: params.normalizedParams.targetTokenIds,
+			});
+			return null;
+		}
+
+		const resolvedTargets = this.#resolveSelectedTargets(params.normalizedParams.targetTokenIds);
+		if (!resolvedTargets) {
+			logMinionGroupingCombat(
+				'performMinionGroupAttack blocked because at least one target is required',
+				{ memberCombatantIds: params.normalizedParams.memberCombatantIds },
+			);
+			return null;
+		}
+
+		const attackMembers = this.#resolveAttackMembers(params.normalizedParams.memberCombatantIds);
+		if (attackMembers.length < 1) {
+			logMinionGroupingCombat(
+				'performMinionGroupAttack blocked because no eligible attack members were found',
+				{
+					combatId: this.id ?? null,
+					memberCombatantIds: params.normalizedParams.memberCombatantIds,
+				},
+			);
+			return null;
+		}
+
+		params.result.targetTokenId = resolvedTargets.primaryTargetTokenId;
+		return { resolvedTargets, attackMembers };
+	}
+
+	async #collectMinionAttackRollData(params: {
+		attackMembers: Combatant.Implementation[];
+		selectionsByMemberId: ReadonlyMap<string, string>;
+		result: MinionGroupAttackResult;
+	}): Promise<{
+		actionUpdates: Record<string, unknown>[];
+		rollEntries: MinionGroupAttackRollEntry[];
+		unsupportedWarnings: string[];
+	}> {
+		const actionUpdates: Record<string, unknown>[] = [];
+		const unsupportedWarnings = new Set<string>();
+		const rollEntries: MinionGroupAttackRollEntry[] = [];
+		for (const member of params.attackMembers) {
+			const rollOutcome = await this.#rollSingleMinionAttack({
+				member,
+				selectionsByMemberId: params.selectionsByMemberId,
+			});
+			appendMinionAttackRollOutcome({
+				rollOutcome,
+				result: params.result,
+				rollEntries,
+				actionUpdates,
+				unsupportedWarnings,
+			});
+		}
+		return {
+			actionUpdates,
+			rollEntries,
+			unsupportedWarnings: [...unsupportedWarnings],
+		};
+	}
+
 	async performMinionGroupAttack(
 		params: MinionGroupAttackParams,
 	): Promise<MinionGroupAttackResult> {
 		const normalizedParams = this.#normalizeAttackParams(params);
-		const result: MinionGroupAttackResult = {
-			targetTokenId: normalizedParams.targetTokenIds[0] ?? '',
-			rolledCombatantIds: [],
-			skippedMembers: [],
-			unsupportedSelectionWarnings: [],
-			endTurnApplied: false,
-			totalDamage: 0,
-			chatMessageId: null,
-		};
+		const result = createMinionGroupAttackResult(normalizedParams.targetTokenIds);
 
 		logMinionGroupingCombat('performMinionGroupAttack called', {
 			combatId: this.id ?? null,
@@ -1053,65 +1008,19 @@ class NimbleCombat extends Combat {
 			requestedEndTurn: normalizedParams.endTurn,
 		});
 
-		if (!game.user?.isGM) {
-			logMinionGroupingCombat('performMinionGroupAttack blocked because user is not GM');
-			return result;
-		}
-		if (normalizedParams.memberCombatantIds.length < 1) {
-			logMinionGroupingCombat('performMinionGroupAttack blocked because member scope is missing', {
-				memberCombatantIds: normalizedParams.memberCombatantIds,
-				targetTokenIds: normalizedParams.targetTokenIds,
-			});
-			return result;
-		}
+		const executionContext = this.#resolveMinionGroupAttackExecutionContext({
+			normalizedParams,
+			result,
+		});
+		if (!executionContext) return result;
 
-		const resolvedTargets = this.#resolveSelectedTargets(normalizedParams.targetTokenIds);
-		if (!resolvedTargets) {
-			logMinionGroupingCombat(
-				'performMinionGroupAttack blocked because at least one target is required',
-				{
-					memberCombatantIds: normalizedParams.memberCombatantIds,
-				},
-			);
-			return result;
-		}
-		result.targetTokenId = resolvedTargets.primaryTargetTokenId;
-
-		const attackMembers = this.#resolveAttackMembers(normalizedParams.memberCombatantIds);
-		if (attackMembers.length < 1) {
-			logMinionGroupingCombat(
-				'performMinionGroupAttack blocked because no eligible attack members were found',
-				{
-					combatId: this.id ?? null,
-					memberCombatantIds: normalizedParams.memberCombatantIds,
-				},
-			);
-			return result;
-		}
-
-		const actionUpdates: Record<string, unknown>[] = [];
-		const unsupportedWarnings = new Set<string>();
-		const rollEntries: MinionGroupAttackRollEntry[] = [];
-		for (const member of attackMembers) {
-			const rollOutcome = await this.#rollSingleMinionAttack({
-				member,
-				selectionsByMemberId: normalizedParams.selectionsByMemberId,
-			});
-			if (rollOutcome.unsupportedWarning) {
-				unsupportedWarnings.add(rollOutcome.unsupportedWarning);
-			}
-			if (rollOutcome.skippedMember) {
-				result.skippedMembers.push(rollOutcome.skippedMember);
-			}
-			if (rollOutcome.rollEntry) {
-				rollEntries.push(rollOutcome.rollEntry);
-				result.rolledCombatantIds.push(rollOutcome.rollEntry.memberCombatantId);
-			}
-			if (rollOutcome.actionUpdate) {
-				actionUpdates.push(rollOutcome.actionUpdate);
-			}
-		}
-		await this.#applyActionConsumptionUpdates(actionUpdates);
+		const { resolvedTargets, attackMembers } = executionContext;
+		const rollData = await this.#collectMinionAttackRollData({
+			attackMembers,
+			selectionsByMemberId: normalizedParams.selectionsByMemberId,
+			result,
+		});
+		await this.#applyActionConsumptionUpdates(rollData.actionUpdates);
 		await this.#maybeAssignTemporaryGroup({
 			rolledCombatantIds: result.rolledCombatantIds,
 			attackMembers,
@@ -1119,9 +1028,9 @@ class NimbleCombat extends Combat {
 
 		const chatData = await this.#buildNcsAttackChatData({
 			activeTargetTokenIds: resolvedTargets.activeTargetTokenIds,
-			rollEntries,
+			rollEntries: rollData.rollEntries,
 			skippedMembers: result.skippedMembers,
-			unsupportedWarnings: [...unsupportedWarnings],
+			unsupportedWarnings: rollData.unsupportedWarnings,
 			attackMembers,
 		});
 		result.totalDamage = chatData.totalDamage;
@@ -1130,7 +1039,7 @@ class NimbleCombat extends Combat {
 			endTurn: normalizedParams.endTurn,
 			attackMembers,
 		});
-		result.unsupportedSelectionWarnings = [...unsupportedWarnings];
+		result.unsupportedSelectionWarnings = rollData.unsupportedWarnings;
 
 		logMinionGroupingCombat('performMinionGroupAttack completed', {
 			combatId: this.id ?? null,
@@ -1144,6 +1053,101 @@ class NimbleCombat extends Combat {
 			chatMessageId: result.chatMessageId ?? null,
 		});
 		return result;
+	}
+
+	#applyCharacterInitiativeActionUpdate(
+		combatant: Combatant.Implementation,
+		combatantUpdates: Record<string, unknown>,
+		rollTotal: number,
+	): void {
+		if (combatant.type !== 'character') return;
+
+		const actionPath = 'system.actions.base.current';
+		if (rollTotal >= 20) {
+			combatantUpdates[actionPath] = 3;
+			return;
+		}
+		if (rollTotal >= 10) {
+			combatantUpdates[actionPath] = 2;
+			return;
+		}
+		combatantUpdates[actionPath] = 1;
+	}
+
+	async #buildInitiativeChatData(params: {
+		combatant: Combatant.Implementation;
+		roll: Roll;
+		messageOptions: ChatMessage.CreateData;
+		chatRollMode: string | null;
+		rollIndex: number;
+	}): Promise<ChatMessage.CreateData> {
+		const messageData = foundry.utils.mergeObject(
+			{
+				speaker: ChatMessage.getSpeaker({
+					actor: params.combatant.actor,
+					token: params.combatant.token,
+					alias: params.combatant.name ?? undefined,
+				}),
+				flavor: game.i18n.format('COMBAT.RollsInitiative', { name: params.combatant.name ?? '' }),
+				flags: { 'core.initiativeRoll': true },
+			},
+			params.messageOptions,
+		) as ChatMessage.CreateData;
+		const chatData = (await params.roll.toMessage(messageData, {
+			create: false,
+		})) as ChatMessage.CreateData & { rollMode?: string | null; sound?: string | null };
+
+		// If the combatant is hidden, use a private roll unless an alternative rollMode was requested.
+		const msgOpts = params.messageOptions as ChatMessage.CreateData & { rollMode?: string };
+		chatData.rollMode =
+			'rollMode' in msgOpts
+				? (msgOpts.rollMode ?? undefined)
+				: params.combatant.hidden
+					? CONST.DICE_ROLL_MODES.PRIVATE
+					: params.chatRollMode;
+
+		// Play 1 sound for the whole rolled set.
+		if (params.rollIndex > 0) chatData.sound = null;
+		return chatData;
+	}
+
+	async #rollInitiativeForCombatant(params: {
+		combatantId: string;
+		formula: string | null;
+		messageOptions: ChatMessage.CreateData;
+		chatRollMode: string | null;
+		rollIndex: number;
+		combatManaUpdates: Promise<unknown>[];
+	}): Promise<InitiativeRollOutcome | null> {
+		const combatant = this.combatants.get(params.combatantId);
+		if (!combatant?.isOwner) return null;
+
+		const combatantUpdates: Record<string, unknown> = { _id: params.combatantId };
+
+		const roll = combatant.getInitiativeRoll(params.formula ?? undefined);
+		await roll.evaluate();
+		const rollTotal = roll.total ?? 0;
+		combatantUpdates.initiative = rollTotal;
+		this.#applyCharacterInitiativeActionUpdate(combatant, combatantUpdates, rollTotal);
+
+		await handleInitiativeRules({
+			combatId: this.id,
+			combatManaUpdates: params.combatManaUpdates,
+			combatant,
+		});
+
+		const chatData = await this.#buildInitiativeChatData({
+			combatant,
+			roll,
+			messageOptions: params.messageOptions,
+			chatRollMode: params.chatRollMode,
+			rollIndex: params.rollIndex,
+		});
+
+		return {
+			combatantUpdate: combatantUpdates,
+			chatData,
+		};
 	}
 
 	override async rollInitiative(
@@ -1163,66 +1167,17 @@ class NimbleCombat extends Combat {
 		const messages: ChatMessage.CreateData[] = [];
 
 		for await (const [i, id] of combatantIds.entries()) {
-			// Get Combatant data (non-strictly)
-			const combatant = this.combatants.get(id);
-			const combatantUpdates: Record<string, unknown> = { _id: id };
-			if (!combatant?.isOwner) continue;
-
-			// Produce an initiative roll for the Combatant
-			const roll = combatant.getInitiativeRoll(formula ?? undefined);
-			await roll.evaluate();
-			combatantUpdates.initiative = roll.total ?? 0;
-
-			if (combatant.type === 'character') {
-				const actionPath = 'system.actions.base.current';
-				const total = roll.total ?? 0;
-
-				if (total >= 20) combatantUpdates[actionPath] = 3;
-				else if (total >= 10) combatantUpdates[actionPath] = 2;
-				else combatantUpdates[actionPath] = 1;
-			}
-
-			await handleInitiativeRules({
-				combatId: this.id,
-				combatManaUpdates,
-				combatant,
-			});
-
-			updates.push(combatantUpdates);
-
-			// Construct chat message data
-			const messageData = foundry.utils.mergeObject(
-				{
-					speaker: ChatMessage.getSpeaker({
-						actor: combatant.actor,
-						token: combatant.token,
-						alias: combatant.name ?? undefined,
-					}),
-					flavor: game.i18n.format('COMBAT.RollsInitiative', { name: combatant.name ?? '' }),
-					flags: { 'core.initiativeRoll': true },
-				},
+			const rollOutcome = await this.#rollInitiativeForCombatant({
+				combatantId: id,
+				formula,
 				messageOptions,
-			) as ChatMessage.CreateData;
-			const chatData = (await roll.toMessage(messageData, {
-				create: false,
-			})) as ChatMessage.CreateData & {
-				rollMode?: string | null;
-				sound?: string | null;
-			};
-
-			// If the combatant is hidden, use a private roll unless an alternative rollMode
-			// was explicitly requested
-			const msgOpts = messageOptions as ChatMessage.CreateData & { rollMode?: string };
-			chatData.rollMode =
-				'rollMode' in msgOpts
-					? (msgOpts.rollMode ?? undefined)
-					: combatant.hidden
-						? CONST.DICE_ROLL_MODES.PRIVATE
-						: chatRollMode;
-
-			// Play 1 sound for the whole rolled set
-			if (i > 0) chatData.sound = null;
-			messages.push(chatData);
+				chatRollMode,
+				rollIndex: i,
+				combatManaUpdates,
+			});
+			if (!rollOutcome) continue;
+			updates.push(rollOutcome.combatantUpdate);
+			messages.push(rollOutcome.chatData);
 		}
 
 		// Update multiple combatants
@@ -1295,6 +1250,96 @@ class NimbleCombat extends Combat {
 		return (a.name ?? '').localeCompare(b.name ?? '');
 	}
 
+	#resolveDropSource(params: {
+		dropData: Record<string, string>;
+		trackerListElement: HTMLElement | null;
+	}): Combatant.Implementation | null {
+		const { combatants } = this;
+		let source = fromUuidSync(
+			params.dropData.uuid as `Combatant.${string}`,
+		) as Combatant.Implementation | null;
+		if (!source && params.trackerListElement?.dataset.dragSourceId) {
+			source = combatants.get(params.trackerListElement.dataset.dragSourceId) ?? null;
+		}
+		if (!source) return null;
+		if (source.parent?.id !== this.id) return null;
+		if (isCombatantDead(source)) return null;
+		if (!canCurrentUserReorderCombatant(source)) return null;
+		return source;
+	}
+
+	#resolveDropTargetFromEvent(params: {
+		event: DragEvent & { target: EventTarget & HTMLElement };
+	}): { target: Combatant.Implementation | null; sortBefore: boolean | null } {
+		const dropTargetElement = (params.event.target as HTMLElement).closest<HTMLElement>(
+			'[data-combatant-id]',
+		);
+		const targetId = dropTargetElement?.dataset.combatantId ?? '';
+		const target = targetId ? this.combatants.get(targetId) ?? null : null;
+		if (!target || !dropTargetElement) {
+			return { target, sortBefore: null };
+		}
+
+		const rect = dropTargetElement.getBoundingClientRect();
+		return {
+			target,
+			sortBefore: params.event.y < rect.top + rect.height / 2,
+		};
+	}
+
+	#resolveDropTargetFromTrackerFallback(params: {
+		trackerListElement: HTMLElement | null;
+	}): { target: Combatant.Implementation | null; sortBefore: boolean | null } {
+		const targetId = params.trackerListElement?.dataset.dropTargetId ?? '';
+		if (!targetId) return { target: null, sortBefore: null };
+
+		const target = this.combatants.get(targetId) ?? null;
+		if (!target) return { target: null, sortBefore: null };
+		return {
+			target,
+			sortBefore: params.trackerListElement?.dataset.dropBefore === 'true',
+		};
+	}
+
+	#resolveDropTarget(params: {
+		event: DragEvent & { target: EventTarget & HTMLElement };
+		trackerListElement: HTMLElement | null;
+	}): DropTargetResolution | null {
+		const eventTargetResolution = this.#resolveDropTargetFromEvent({ event: params.event });
+		const { target, sortBefore } = eventTargetResolution.target
+			? eventTargetResolution
+			: this.#resolveDropTargetFromTrackerFallback({
+					trackerListElement: params.trackerListElement,
+				});
+		if (!target) return null;
+		if (isCombatantDead(target)) return null;
+		if (sortBefore === null) return null;
+		return { target, sortBefore };
+	}
+
+	#isValidDropPair(
+		source: Combatant.Implementation,
+		target: Combatant.Implementation,
+	): boolean {
+		const sourceTypePriority = getCombatantTypePriority(source);
+		const targetTypePriority = getCombatantTypePriority(target);
+		if (sourceTypePriority !== targetTypePriority) return false;
+		if (source.id === target.id) return false;
+		return true;
+	}
+
+	#resolveDropSiblings(
+		source: Combatant.Implementation,
+		sourceTypePriority: number,
+	): Combatant.Implementation[] {
+		return this.turns.filter(
+			(combatant) =>
+				combatant.id !== source.id &&
+				!isCombatantDead(combatant) &&
+				getCombatantTypePriority(combatant) === sourceTypePriority,
+		);
+	}
+
 	#resolveDropContext(
 		event: DragEvent & { target: EventTarget & HTMLElement },
 	): DropResolution | null {
@@ -1304,63 +1349,20 @@ class NimbleCombat extends Combat {
 		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(
 			event,
 		) as unknown as Record<string, string>;
-
-		const { combatants } = this;
-
-		let source = fromUuidSync(
-			dropData.uuid as `Combatant.${string}`,
-		) as Combatant.Implementation | null;
-		if (!source && trackerListElement?.dataset.dragSourceId) {
-			source = combatants.get(trackerListElement.dataset.dragSourceId) ?? null;
-		}
-
+		const source = this.#resolveDropSource({ dropData, trackerListElement });
 		if (!source) return null;
-		if (source.parent?.id !== this.id) return null;
-		if (isCombatantDead(source)) return null;
-		if (!canCurrentUserReorderCombatant(source)) return null;
 
-		let dropTarget = (event.target as HTMLElement).closest<HTMLElement>('[data-combatant-id]');
-		let target = dropTarget ? combatants.get(dropTarget.dataset.combatantId ?? '') : null;
-		let sortBefore: boolean | null = null;
-
-		if (target && dropTarget) {
-			sortBefore =
-				event.y <
-				dropTarget.getBoundingClientRect().top + dropTarget.getBoundingClientRect().height / 2;
-		}
-
-		if (!target && trackerListElement?.dataset.dropTargetId) {
-			target = combatants.get(trackerListElement.dataset.dropTargetId) ?? null;
-			if (target) {
-				dropTarget = trackerListElement.querySelector<HTMLElement>(
-					`[data-combatant-id="${target.id}"]`,
-				);
-				sortBefore = trackerListElement.dataset.dropBefore === 'true';
-			}
-		}
-
-		if (!target) return null;
-		if (isCombatantDead(target)) return null;
+		const dropTargetResolution = this.#resolveDropTarget({ event, trackerListElement });
+		if (!dropTargetResolution) return null;
+		if (!this.#isValidDropPair(source, dropTargetResolution.target)) return null;
 
 		const sourceTypePriority = getCombatantTypePriority(source);
-		const targetTypePriority = getCombatantTypePriority(target);
-		if (sourceTypePriority !== targetTypePriority) return null;
-
-		if (source.id === target.id) return null;
-		if (sortBefore === null) return null;
-
-		const siblings = this.turns.filter(
-			(combatant) =>
-				combatant.id !== source.id &&
-				!isCombatantDead(combatant) &&
-				getCombatantTypePriority(combatant) === sourceTypePriority,
-		);
-
+		const siblings = this.#resolveDropSiblings(source, sourceTypePriority);
 		return {
 			source,
-			target,
+			target: dropTargetResolution.target,
 			siblings,
-			sortBefore,
+			sortBefore: dropTargetResolution.sortBefore,
 			previousActiveCombatantId: this.combatant?.id ?? null,
 		};
 	}
