@@ -173,7 +173,8 @@ export function parseSavingThrow(description?: string): ParsedSavingThrow | null
 					) ||
 					/(?:successful|success|passed?)\s+save\s+(?:takes?\s+)?half/i.test(description) ||
 					/\bhalf\s+on\s+save\b/i.test(description) || // "(half on save)"
-					/,\s*half\s+on\s+save\b/i.test(description); // ", half on save"
+					/,\s*half\s+on\s+save\b/i.test(description) || // ", half on save"
+					/on\s+success[:\s]+half\s+damage/i.test(description); // "On Success: Half Damage"
 
 				// Try to extract consequence (what happens on failed save)
 				let consequence: string | undefined;
@@ -223,7 +224,9 @@ export function parseConditions(description?: string): ParsedCondition[] {
 				beforeBracket.includes('failed save') ||
 				beforeBracket.includes('fails the save') ||
 				beforeBracket.includes('fail the save') ||
-				beforeBracket.includes('save or') // "DC X save or <condition>"
+				beforeBracket.includes('save or') || // "DC X save or <condition>"
+				beforeBracket.includes('on fail') ||
+				beforeBracket.includes('on failure')
 			) {
 				context = 'failedSave';
 			}
@@ -280,8 +283,8 @@ export function parseConditions(description?: string): ParsedCondition[] {
 		}
 	}
 
-	// Pattern 3: "target is/becomes <condition>"
-	const targetPattern = /target\s+(?:is|becomes?)\s+(\w+)/gi;
+	// Pattern 3: "target is/becomes <condition>" or "target gains <condition>"
+	const targetPattern = /target\s+(?:is|becomes?|gains?)\s+(\w+)/gi;
 	let targetMatch: RegExpExecArray | null;
 	while ((targetMatch = targetPattern.exec(description)) !== null) {
 		const conditionRaw = targetMatch[1].toLowerCase();
@@ -291,7 +294,12 @@ export function parseConditions(description?: string): ParsedCondition[] {
 			const beforeMatch = description.substring(0, targetMatch.index).toLowerCase();
 			let context: ParsedCondition['context'] = 'hit';
 
-			if (beforeMatch.includes('failed save') || beforeMatch.includes('fails')) {
+			if (
+				beforeMatch.includes('failed save') ||
+				beforeMatch.includes('fails') ||
+				beforeMatch.includes('on fail') ||
+				beforeMatch.includes('on failure')
+			) {
 				context = 'failedSave';
 			} else if (beforeMatch.includes('crit')) {
 				context = 'criticalHit';
@@ -329,13 +337,17 @@ export function parseRangeReach(
 
 	if (!description) return null;
 
-	// Pattern: (Range: 8), Range 8, Reach 3, Cone 6, Line 10x2
+	// Pattern: (Range: 8), Range 8, Reach 3, Cone 6, Line 10x2, (8ft), (8 ft)
 	const patterns = [
 		{ pattern: /\(?\s*range[:\s]+(\d+)\s*\)?/gi, type: 'range' as const },
 		{ pattern: /reach[:\s]+(\d+)/gi, type: 'reach' as const },
 		{ pattern: /cone[:\s]+(\d+)/gi, type: 'cone' as const },
 		{ pattern: /line[:\s]+(\d+)(?:x(\d+))?/gi, type: 'line' as const },
 		{ pattern: /burst[:\s]+(\d+)/gi, type: 'burst' as const },
+		// Feet-based patterns: (8ft), (8 ft), (8ft ft), 8ft range
+		{ pattern: /\(\s*(\d+)\s*ft(?:\s+ft)?\s*\)/gi, type: 'range' as const },
+		{ pattern: /(\d+)\s*ft\s+range/gi, type: 'range' as const },
+		{ pattern: /(\d+)\s*ft\s+reach/gi, type: 'reach' as const },
 	];
 
 	for (const { pattern, type } of patterns) {

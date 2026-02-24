@@ -281,6 +281,34 @@ describe('parseConditions', () => {
 		expect(result).toHaveLength(1);
 		expect(result[0].condition).toBe('slowed');
 	});
+
+	describe('On Failure patterns', () => {
+		it('should detect "target gains <condition>" after "On Failure:"', () => {
+			const result = parseConditions(
+				'DEX Save DC 11. On Failure: Full damage and target gains Smoldering.',
+			);
+			expect(result).toHaveLength(1);
+			expect(result[0].condition).toBe('smoldering');
+			expect(result[0].context).toBe('failedSave');
+		});
+
+		it('should detect "target gains <condition>" after "On Fail:"', () => {
+			const result = parseConditions('INT Save DC 15. On Fail: target gains Dazed for 1 round.');
+			expect(result).toHaveLength(1);
+			expect(result[0].condition).toBe('dazed');
+			expect(result[0].context).toBe('failedSave');
+		});
+
+		it('should detect multiple conditions after "On Failure:"', () => {
+			const result = parseConditions(
+				'On Failure: target gains [[Poisoned]] and [[Slowed]] for 2 rounds.',
+			);
+			expect(result).toHaveLength(2);
+			expect(result.map((c) => c.condition)).toContain('poisoned');
+			expect(result.map((c) => c.condition)).toContain('slowed');
+			expect(result.every((c) => c.context === 'failedSave')).toBe(true);
+		});
+	});
 });
 
 describe('parseRangeReach', () => {
@@ -325,6 +353,31 @@ describe('parseRangeReach', () => {
 		it('should parse "Burst X" pattern', () => {
 			const result = parseRangeReach('Burst 4');
 			expect(result).toEqual({ type: 'burst', distance: 4 });
+		});
+
+		it('should parse "(Xft)" pattern', () => {
+			const result = parseRangeReach('(8ft)');
+			expect(result).toEqual({ type: 'range', distance: 8 });
+		});
+
+		it('should parse "(X ft)" pattern with space', () => {
+			const result = parseRangeReach('(8 ft)');
+			expect(result).toEqual({ type: 'range', distance: 8 });
+		});
+
+		it('should parse "(Xft ft)" pattern', () => {
+			const result = parseRangeReach('(8ft ft)');
+			expect(result).toEqual({ type: 'range', distance: 8 });
+		});
+
+		it('should parse "Xft range" pattern', () => {
+			const result = parseRangeReach('8ft range attack');
+			expect(result).toEqual({ type: 'range', distance: 8 });
+		});
+
+		it('should parse "Xft reach" pattern', () => {
+			const result = parseRangeReach('10ft reach melee');
+			expect(result).toEqual({ type: 'reach', distance: 10 });
 		});
 	});
 
@@ -1454,6 +1507,37 @@ describe('buildEffectTree', () => {
 				const result = buildEffectTree(action);
 				expect(result[0].type).toBe('damage');
 				expect((result[0] as any).damageType).toBe('bludgeoning');
+			});
+		});
+
+		// GOLEMS
+		describe('Golems', () => {
+			it('should parse Tutor Teaching Golem Fiiiire Ball with On Failure/On Success pattern', () => {
+				// From: Tutor, Teaching Golem - Fiiiire Ball! action
+				const action: NimbleNexusAction = {
+					name: 'Fiiiire Ball!',
+					damage: { roll: '5d6' },
+					description:
+						'5d6. Aoe, Range 8, 5x5. DEX Save DC 11. On Failure: Full damage and target gains Smoldering. On Success: Half Damage.',
+				};
+				const result = buildEffectTree(action);
+
+				expect(result).toHaveLength(1);
+				expect(result[0].type).toBe('savingThrow');
+				const saveNode = result[0] as any;
+				expect(saveNode.savingThrowType).toBe('dexterity');
+				expect(saveNode.saveDC).toBe(11);
+				// Should have damage in sharedRolls with failedSave and passedSave outcomes
+				expect(saveNode.sharedRolls).toHaveLength(1);
+				expect(saveNode.sharedRolls[0].on?.failedSave).toBeDefined();
+				expect(saveNode.sharedRolls[0].on?.passedSave).toBeDefined();
+				// Should have Smoldering condition on failedSave
+				expect(saveNode.on?.failedSave).toBeDefined();
+				const failedSaveConditions = saveNode.on?.failedSave?.filter(
+					(n: any) => n.type === 'condition',
+				);
+				expect(failedSaveConditions).toHaveLength(1);
+				expect(failedSaveConditions[0].condition).toBe('smoldering');
 			});
 		});
 
