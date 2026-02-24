@@ -9,9 +9,22 @@
 		allowRemove?: boolean;
 	}
 
+	interface EffectWithTemporary {
+		isTemporary?: boolean;
+	}
+
+	interface EffectDuration {
+		remaining?: number;
+		rounds?: number;
+	}
+
+	interface EffectWithDuration {
+		duration?: EffectDuration;
+	}
+
 	let { actor, mode = 'sheet', allowRemove = true }: Props = $props();
+
 	let effectVersion = $state(0);
-	let effectTick = $derived(effectVersion);
 
 	function getLiveActor() {
 		return actor && 'reactive' in actor
@@ -20,17 +33,17 @@
 	}
 
 	let actorConditions = $derived.by(() => {
+		void effectVersion;
 		const liveActor = getLiveActor();
-		const conditions = prepareActorConditions(liveActor, {
+		return prepareActorConditions(liveActor, {
 			includeInactive: mode === 'sheet',
 			includeEffectStatuses: mode === 'canvas',
 		});
-		return effectTick >= 0 ? conditions : conditions;
 	});
 	let actorEffects = $derived.by(() => {
+		void effectVersion;
 		const liveActor = getLiveActor();
-		const effects = Array.from(liveActor?.effects ?? []);
-		return effectTick >= 0 ? effects : effects;
+		return Array.from(liveActor?.effects ?? []);
 	});
 	let nonConditionEffects = $derived.by(() => {
 		const standardConditionIds = new Set(Object.keys(CONFIG.NIMBLE.conditions ?? {}));
@@ -43,10 +56,9 @@
 	let temporaryEffects = $derived.by(() => {
 		return nonConditionEffects
 			.filter((effect) => {
-				const typedEffect = effect as { isTemporary?: boolean };
+				const typedEffect = effect as EffectWithTemporary;
 				if (typeof typedEffect.isTemporary === 'boolean') return typedEffect.isTemporary;
-				const duration = (effect as { duration?: { remaining?: number; rounds?: number } })
-					.duration;
+				const duration = (effect as EffectWithDuration).duration;
 				return (
 					typeof duration?.remaining === 'number' ||
 					(typeof duration?.rounds === 'number' && duration.rounds > 0)
@@ -105,7 +117,7 @@
 			// Fallback: some integrations still use toggleStatusEffect for non-standard statuses.
 			await liveActor.toggleStatusEffect(conditionId, { active: false });
 		} catch (_error) {
-			ui.notifications.error('Failed to remove condition.');
+			ui.notifications.error(localize('NIMBLE.ui.failedToRemoveCondition'));
 		}
 	}
 
@@ -116,7 +128,7 @@
 		try {
 			await liveActor.toggleStatusEffect(conditionId, { active });
 		} catch (_error) {
-			ui.notifications.error('Failed to update condition.');
+			ui.notifications.error(localize('NIMBLE.ui.failedToUpdateCondition'));
 		}
 	}
 
@@ -127,7 +139,7 @@
 		try {
 			await liveActor.deleteEmbeddedDocuments('ActiveEffect', [effectId]);
 		} catch (_error) {
-			ui.notifications.error('Failed to remove effect.');
+			ui.notifications.error(localize('NIMBLE.ui.failedToRemoveEffect'));
 		}
 	}
 
@@ -164,7 +176,7 @@
 	});
 </script>
 
-<section class="nimble-actor-conditions">
+<section class="nimble-actor-conditions" data-mode={mode}>
 	{#if mode === 'canvas'}
 		{#if actorConditions.filter((condition) => condition.active).length > 0}
 			<ul class="nimble-actor-conditions__icons">
@@ -267,10 +279,9 @@
 					bind:value={conditionSearch}
 				/>
 				<button
-					class="nimble-button"
+					class="nimble-button nimble-actor-conditions__filter-toggle"
 					type="button"
 					data-button-variant={showActiveOnly ? 'primary' : 'secondary'}
-					style="padding: 0.25rem 0.625rem;"
 					onclick={() => (showActiveOnly = !showActiveOnly)}
 				>
 					{showActiveOnly
