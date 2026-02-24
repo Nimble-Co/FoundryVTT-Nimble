@@ -1,3 +1,4 @@
+import { deriveDurationDetails, expandDurationLabel } from '../../utils/formatDuration.js';
 import localize from '../../utils/localize.js';
 
 export type ActorCondition = {
@@ -20,19 +21,11 @@ type ActorWithConditionsMetadata = Actor.Implementation & {
 	};
 };
 
-type EffectDurationDetails = {
-	label: string;
-	sortMs: number | null;
-};
-
 type ConditionEffectCandidate = {
 	durationLabel: string;
 	durationSortMs: number | null;
 	sourceName: string | null;
 };
-
-const ROUND_SECONDS = 6;
-const TURN_SECONDS = 6;
 
 function escapeHtml(value: string): string {
 	return value
@@ -41,57 +34,6 @@ function escapeHtml(value: string): string {
 		.replaceAll('>', '&gt;')
 		.replaceAll('"', '&quot;')
 		.replaceAll("'", '&#39;');
-}
-
-function compactSecondsLabel(seconds: number): string {
-	const boundedSeconds = Math.max(seconds, 0);
-
-	if (boundedSeconds < 60) return `${Math.ceil(boundedSeconds)}s`;
-	if (boundedSeconds < 3600) return `${Math.ceil(boundedSeconds / 60)}m`;
-	return `${Math.ceil(boundedSeconds / 3600)}h`;
-}
-
-function deriveDurationDetails(
-	duration:
-		| {
-				remaining?: number;
-				seconds?: number;
-				rounds?: number;
-				turns?: number;
-		  }
-		| null
-		| undefined,
-): EffectDurationDetails {
-	if (!duration) {
-		return { label: '∞', sortMs: null };
-	}
-
-	if (typeof duration.remaining === 'number' && Number.isFinite(duration.remaining)) {
-		const remainingMs = Math.max(duration.remaining, 0) * 1000;
-		return { label: compactSecondsLabel(duration.remaining), sortMs: remainingMs };
-	}
-
-	if (typeof duration.turns === 'number' && Number.isFinite(duration.turns) && duration.turns > 0) {
-		return { label: `${Math.ceil(duration.turns)}t`, sortMs: duration.turns * TURN_SECONDS * 1000 };
-	}
-
-	if (
-		typeof duration.rounds === 'number' &&
-		Number.isFinite(duration.rounds) &&
-		duration.rounds > 0
-	) {
-		return {
-			label: `${Math.ceil(duration.rounds)}r`,
-			sortMs: duration.rounds * ROUND_SECONDS * 1000,
-		};
-	}
-
-	if (typeof duration.seconds === 'number' && Number.isFinite(duration.seconds)) {
-		const secondsMs = Math.max(duration.seconds, 0) * 1000;
-		return { label: compactSecondsLabel(duration.seconds), sortMs: secondsMs };
-	}
-
-	return { label: '∞', sortMs: null };
 }
 
 function getEffectSourceName(effect: ActiveEffect): string | null {
@@ -149,25 +91,7 @@ function buildConditionTooltip(
 		condition.descriptionHtml || localize('NIMBLE.ui.conditionDescriptionUnavailable');
 	const escapedName = escapeHtml(condition.name);
 	const escapedConditionTag = escapeHtml(conditionTag);
-	const expandedDurationLabel = (() => {
-		const roundsMatch = condition.durationLabel.match(/^(\d+)r$/i);
-		if (roundsMatch) {
-			const count = Number.parseInt(roundsMatch[1], 10);
-			const roundLabel =
-				count === 1 ? localize('NIMBLE.durations.round') : localize('NIMBLE.durationsPlural.round');
-			return `${count} ${roundLabel}`;
-		}
-
-		const turnsMatch = condition.durationLabel.match(/^(\d+)t$/i);
-		if (turnsMatch) {
-			const count = Number.parseInt(turnsMatch[1], 10);
-			const turnLabel =
-				count === 1 ? localize('NIMBLE.durations.turn') : localize('NIMBLE.durationsPlural.turn');
-			return `${count} ${turnLabel}`;
-		}
-
-		return condition.durationLabel;
-	})();
+	const expandedDurationLabel = expandDurationLabel(condition.durationLabel, localize);
 	const escapedDurationLabel = escapeHtml(
 		condition.durationLabel === '∞' ? unlimitedText : expandedDurationLabel,
 	);

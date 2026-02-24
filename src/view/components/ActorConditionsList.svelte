@@ -143,6 +143,53 @@
 		}
 	}
 
+	const CATALOG_COLUMNS = 2;
+
+	function handleCatalogItemKeydown(event: KeyboardEvent) {
+		if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
+			return;
+		}
+
+		const item = event.currentTarget as HTMLElement;
+		const catalog = item.closest<HTMLElement>('.nimble-actor-conditions__catalog');
+		if (!catalog) return;
+
+		const focusable = Array.from(
+			catalog.querySelectorAll<HTMLElement>('.nimble-actor-conditions__catalog-toggle'),
+		);
+		const currentIndex = focusable.indexOf(item);
+		if (currentIndex === -1) return;
+
+		let nextIndex: number;
+		switch (event.key) {
+			case 'ArrowRight':
+				nextIndex = Math.min(currentIndex + 1, focusable.length - 1);
+				break;
+			case 'ArrowLeft':
+				nextIndex = Math.max(currentIndex - 1, 0);
+				break;
+			case 'ArrowDown':
+				nextIndex = Math.min(currentIndex + CATALOG_COLUMNS, focusable.length - 1);
+				break;
+			case 'ArrowUp':
+				nextIndex = Math.max(currentIndex - CATALOG_COLUMNS, 0);
+				break;
+			case 'Home':
+				nextIndex = 0;
+				break;
+			case 'End':
+				nextIndex = focusable.length - 1;
+				break;
+			default:
+				return;
+		}
+
+		if (nextIndex !== currentIndex) {
+			event.preventDefault();
+			focusable[nextIndex].focus();
+		}
+	}
+
 	async function handleConditionContextMenu(event: MouseEvent, conditionId: string) {
 		if (mode !== 'canvas') return;
 
@@ -304,6 +351,7 @@
 								aria-label={`Toggle ${condition.name}`}
 								data-tooltip={condition.tooltipHtml}
 								data-tooltip-class="nimble-tooltip nimble-tooltip--rules nimble-tooltip--condition"
+								onkeydown={handleCatalogItemKeydown}
 								onclick={() => toggleCondition(condition.id, !condition.active)}
 							>
 								<img
