@@ -25,8 +25,8 @@
 		return 'Healing';
 	}
 
-	function getUpcastingDescriptionLabel(tier, higherLevelEffectDescription) {
-		if (!higherLevelEffectDescription) return null;
+	function getUpcastingDescriptionLabel(tier, content) {
+		if (!content) return null;
 		if (tier === 0) return 'At Higher Levels';
 		return 'Upcasting';
 	}
@@ -41,7 +41,10 @@
 	let headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 	let subheading = $derived(getCardSubheading(activation, isCritical, isMiss));
 
-	let upcastingLabel = $derived(getUpcastingDescriptionLabel(tier, description.higherLevelEffect));
+	let higherLevelContent = $derived(description.higherLevelEffect);
+	let upcastContent = $derived(tier > 0 ? description.upcastEffect : '');
+	let higherLevelLabel = $derived(getUpcastingDescriptionLabel(0, higherLevelContent));
+	let upcastLabel = $derived(getUpcastingDescriptionLabel(tier, upcastContent));
 
 	let hasUpcast = $derived(upcast?.isUpcast);
 	let upcastSummary = $derived(() => {
@@ -71,7 +74,7 @@
 
 	<Targets />
 
-	{#if description.baseEffect || description.higherLevelEffect}
+	{#if description.baseEffect || higherLevelContent || upcastContent}
 		<section class="nimble-card-section nimble-card-section--description">
 			{#if description.baseEffect}
 				{@html description.baseEffect}
@@ -79,12 +82,20 @@
 				No description available.
 			{/if}
 
-			{#if description.higherLevelEffect}
+			{#if higherLevelContent}
 				<h4 class="nimble-heading" data-heading-variant="section">
-					{upcastingLabel}
+					{higherLevelLabel}
 				</h4>
 
-				{@html description.higherLevelEffect}
+				{@html higherLevelContent}
+			{/if}
+
+			{#if upcastContent}
+				<h4 class="nimble-heading" data-heading-variant="section">
+					{upcastLabel}
+				</h4>
+
+				{@html upcastContent}
 			{/if}
 		</section>
 	{/if}

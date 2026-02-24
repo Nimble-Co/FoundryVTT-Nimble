@@ -43,7 +43,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target+</strong></p><p><strong>Reach</strong>: 1. Heal a creature 1d6+KEY HP.</p>",
-			"higherLevelEffect": "<p>Choose one: +1 target, +4 Reach, +1d6 healing.</p><p>If 5+ mana is spent, you may also heal 1 negative condition (e.g., Blind, Poisoned, 1 Wound).</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>Choose one: +1 target, +4 Reach, +1d6 healing.</p><p>If 5+ mana is spent, you may also heal 1 negative condition (e.g., Blind, Poisoned, 1 Wound).</p>"
 		},
 		"properties": {
 			"range": {
@@ -54,9 +55,7 @@
 				"min": 1,
 				"max": 1
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "radiant",
 		"tier": 1,

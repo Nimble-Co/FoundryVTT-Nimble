@@ -657,6 +657,64 @@
 				"tier9": "Rang 9"
 			}
 		},
+		"spellConfig": {
+			"identifier": "Identifiant",
+			"spellProperties": "Propriétés du Sort",
+			"spellTier": "Rang du Sort",
+			"spellSchool": "École de Sort",
+			"description": {
+				"baseEffect": "Effet de Base du Sort",
+				"higherLevelEffect": "Effet de Niveau Supérieur",
+				"upcastEffect": "Effet de Surcaste"
+			},
+			"jsonEditor": {
+				"switchToVisual": "Passer à l'Éditeur Visuel",
+				"switchToJson": "Passer à l'Éditeur JSON",
+				"heading": "Données du Sort (JSON)",
+				"invalidJson": "JSON invalide"
+			},
+			"scaling": {
+				"heading": "Mise à l'Échelle du Sort",
+				"modes": {
+					"none": "Aucun",
+					"upcast": "Surcaste",
+					"upcastChoice": "Choix de Surcaste"
+				},
+				"perUpcastStep": "Par Niveau de Surcaste",
+				"upcastChoices": "Choix de Surcaste",
+				"noDeltas": "Aucun delta de mise à l'échelle configuré.",
+				"noChoices": "Aucun choix configuré.",
+				"addDelta": "Ajouter un Delta",
+				"removeDelta": "Supprimer le Delta",
+				"addChoice": "Ajouter un Choix",
+				"removeChoice": "Supprimer le Choix",
+				"choiceLabel": "Libellé du Choix",
+				"choiceLabelPlaceholder": "ex. Dégâts Supplémentaires",
+				"deltas": "Deltas",
+				"operation": "Opération",
+				"value": "Valeur",
+				"count": "Nombre",
+				"die": "Dé",
+				"condition": "État",
+				"conditionPlaceholder": "ex. incandescent",
+				"targetEffect": "Effet Cible",
+				"targetEffectAuto": "Auto (première correspondance)",
+				"targetEffectPlaceholder": "ID de l'Effet",
+				"targetEffectHint": "Ajoutez des effets dans l'onglet Activation pour sélectionner des cibles ici.",
+				"operations": {
+					"addFlatDamage": "Dégâts Fixes",
+					"addDice": "Dés",
+					"addReach": "Allonge",
+					"addRange": "Portée",
+					"addTargets": "Cibles",
+					"addAreaSize": "Taille de Zone",
+					"addDC": "DD",
+					"addArmor": "Armure",
+					"addDuration": "Durée",
+					"addCondition": "État"
+				}
+			}
+		},
 		"startingEquipment": {
 			"editSelection": "Modifier la Sélection d'Équipement de Départ",
 			"equipmentDescription": "Sélectionnez l'équipement de départ:",

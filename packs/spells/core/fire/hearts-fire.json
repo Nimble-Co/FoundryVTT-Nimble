@@ -34,7 +34,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Range</strong>: 4. Give an ally within Range an extra action. Spend 1 mana to cast this when it is not your turn.</p>",
-			"higherLevelEffect": "<p>+1 Range every 5 levels.</p>"
+			"higherLevelEffect": "<p>+1 Range every 5 levels.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -45,9 +46,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "fire",
 		"tier": 0

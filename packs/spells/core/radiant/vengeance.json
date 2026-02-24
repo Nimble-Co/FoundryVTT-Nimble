@@ -76,7 +76,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Reach</strong>: 1. <strong>Damage</strong>: 1d100, to a creature that attacked a Dying ally or reduced one to 0 HP since your last turn.</p>",
-			"higherLevelEffect": "<p>+1 Reach, roll w/ advantage.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+1 Reach, roll w/ advantage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -87,9 +88,7 @@
 				"min": 1,
 				"max": 1
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "radiant",
 		"tier": 5,

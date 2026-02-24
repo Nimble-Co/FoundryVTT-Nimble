@@ -56,7 +56,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Range</strong>: 8. <strong>Damage</strong>: 4d10 to a Smoldering target, ending the condition on hit.</p>",
-			"higherLevelEffect": "<p>+10 damage.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+10 damage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -67,9 +68,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "fire",
 		"tier": 1,

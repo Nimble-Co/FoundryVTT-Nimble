@@ -49,7 +49,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Concentration</strong>: Up to 1 minute. A creature you touch gains the Charged condition, +1 max action, +5 armor, 2x speed, and advantage on DEX saves.</p>",
-			"higherLevelEffect": "<p>+4 Range.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+4 Range.</p>"
 		},
 		"properties": {
 			"range": {
@@ -60,9 +61,7 @@
 				"min": 1,
 				"max": 2
 			},
-			"selected": [
-				"concentration"
-			]
+			"selected": ["concentration"]
 		},
 		"school": "lightning",
 		"tier": 5,

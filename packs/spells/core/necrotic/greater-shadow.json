@@ -35,7 +35,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions</strong></p><p>Summon a 5d12 Greater Shadow minion (max 1) adjacent to you. When it dies, it explodes into 5 shadow minions (see Summon Shadow). Place them anywhere within 8 spaces.</p>",
-			"higherLevelEffect": "<p>+1d12 damage, +1 shadow minion on explosion.</p>"
+			"higherLevelEffect": "<p>+1d12 damage, +1 shadow minion on explosion.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {

@@ -63,7 +63,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>3 Actions, AoE</strong></p><p><strong>Concentration</strong>: Up to 1 minute. Reach: 4. You become a cloud of tempestuous storm. You can fly, move for free 1/round, and attacks against you are made with disadvantage.</p><p>• At the end of each of your turns, strike up to 4 creatures within Reach with a bolt of lightning for d88 damage (a creature can only be struck 1/round).</p><p>• +2 Reach and number of bolts each round. Costs 3 actions each round to maintain.</p><p>Once you cast this spell, you must Safe Rest for 1 week before you can use it again.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -74,10 +75,7 @@
 				"min": 1,
 				"max": 4
 			},
-			"selected": [
-				"concentration",
-				"reach"
-			]
+			"selected": ["concentration", "reach"]
 		},
 		"school": "lightning",
 		"tier": 9

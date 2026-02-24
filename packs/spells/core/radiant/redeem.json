@@ -34,7 +34,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>AoE</strong></p><p><strong>Casting Time:</strong> 24 hours. <strong>Requires:</strong> A diamond worth at least 10,000 gp, which this spell consumes. Revive any number of deceased creatures you choose—within 1 mile—that have died in the past year, provided they have not died of old age or been revived with this spell before.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {

@@ -85,7 +85,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: 1d4 slashing (Vicious: roll 1 additional die whenever you roll crit damage). Also damages up to 1 adjacent target.</p>",
-			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+2 damage every 5 levels.</strong></p></td></tr></tbody></table>"
+			"higherLevelEffect": "<table><tbody><tr><td><p><strong>+2 damage every 5 levels.</strong></p></td></tr></tbody></table>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -96,9 +97,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "wind",
 		"tier": 0

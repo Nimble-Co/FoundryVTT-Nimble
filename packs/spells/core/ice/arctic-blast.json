@@ -76,7 +76,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Reach</strong>: Cone 4. <strong>Damage</strong>: 4d6+10 damage. This area is difficult terrain until the end of your next turn. Surviving creatures must make a STR save or be frozen in place (Restrained) until the end of their next turn; creatures already Hampered are Incapacitated for 1 turn instead.</p>",
-			"higherLevelEffect": "<p>+1 Reach</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+1 Reach</p>"
 		},
 		"properties": {
 			"range": {
@@ -87,9 +88,7 @@
 				"min": 1,
 				"max": 4
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "ice",
 		"tier": 5,

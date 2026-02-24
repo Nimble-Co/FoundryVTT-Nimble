@@ -97,12 +97,17 @@ export class NimbleSpellItem extends NimbleBaseItem {
 			this.system.description.higherLevelEffect,
 		);
 
+		const upcastEffect = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
+			this.system.description.upcastEffect,
+		);
+
 		return {
 			system: {
 				actorName: this.actor?.name ?? game?.user?.name ?? '',
 				description: {
 					baseEffect: showDescription ? baseEffect : '',
 					higherLevelEffect: showDescription ? higherLevelEffect : '',
+					upcastEffect: showDescription ? upcastEffect : '',
 				},
 				duration: {
 					concentration: this.tags.has('property:concentration'),

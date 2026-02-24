@@ -34,7 +34,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action</strong></p><p>Summon a spirit companion that follows you and is immune to harm. It lasts until you cast this spell again, take a Safe Rest, or it heals a number of times equal to the mana spent summoning it.</p><p><strong>Action</strong>: It attacks or heals a creature within Reach 4. It attacks for 1d6+WIL radiant damage (ignoring armor), or heals for the same amount.</p>",
-			"higherLevelEffect": "<p>Increment its die size by 1 (max d12), +1 healing use.</p>"
+			"higherLevelEffect": "<p>Increment its die size by 1 (max d12), +1 healing use.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {

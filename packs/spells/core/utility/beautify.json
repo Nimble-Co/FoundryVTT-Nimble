@@ -35,7 +35,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p>Clean stains or repair a small tear/break in a non-magical item, or conjure tiny beautiful things: flowers, butterflies, etc.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -46,9 +47,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"utilitySpell"
-			]
+			"selected": ["utilitySpell"]
 		},
 		"school": "radiant",
 		"tier": 0

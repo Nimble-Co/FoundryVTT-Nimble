@@ -85,7 +85,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: 3d6. If any die rolls the max against a Hampered target, this counts as a crit. On crit: +20 damage. </p>",
-			"higherLevelEffect": "<p>Increase the result of ANY die by 1. +5 damage on crit.</p>"
+			"higherLevelEffect": "<p>Increase the result of ANY die by 1. +5 damage on crit.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -96,9 +97,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "ice",
 		"tier": 2

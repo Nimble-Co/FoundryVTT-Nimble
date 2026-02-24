@@ -35,7 +35,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Reach</strong>: 6. <strong>Reaction</strong>: When a creature falls, cause them to gently float to the ground, unharmed.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -46,10 +47,7 @@
 				"min": 1,
 				"max": 6
 			},
-			"selected": [
-				"utilitySpell",
-				"reach"
-			]
+			"selected": ["utilitySpell", "reach"]
 		},
 		"school": "wind",
 		"tier": 0

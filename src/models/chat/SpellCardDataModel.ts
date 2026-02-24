@@ -1,5 +1,5 @@
 import { activation } from '../item/common.js';
-import { targets, metadata } from './common.js';
+import { metadata, targets } from './common.js';
 
 const { fields } = foundry.data;
 
@@ -7,6 +7,7 @@ const spellCardSchema = () => ({
 	description: new fields.SchemaField({
 		baseEffect: new fields.HTMLField({ required: false, initial: '', nullable: false }),
 		higherLevelEffect: new fields.HTMLField({ required: false, initial: '', nullable: false }),
+		upcastEffect: new fields.HTMLField({ required: false, initial: '', nullable: false }),
 	}),
 	duration: new fields.SchemaField({
 		concentration: new fields.BooleanField({ required: true, initial: false, nullable: false }),

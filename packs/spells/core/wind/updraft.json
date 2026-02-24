@@ -55,7 +55,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>3 Actions, AoE</strong></p><p><strong>Reach</strong>: 12. Enemies within a 5×5 area must repeat a DEX save until they succeed. For each time they failed they suffer 1d6 falling damage and land prone.</p>",
-			"higherLevelEffect": "<p>+2 Range, +1 area.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+2 Range, +1 area.</p>"
 		},
 		"properties": {
 			"range": {
@@ -66,9 +67,7 @@
 				"min": 1,
 				"max": 12
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "wind",
 		"tier": 5,

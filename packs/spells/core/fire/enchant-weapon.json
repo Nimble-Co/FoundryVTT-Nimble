@@ -42,7 +42,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Concentration:</strong> Up to 1 minute. A weapon you touch is enchanted with  magical flame. It deals +KEY damage and inflicts Smoldering on crit.</p>",
-			"higherLevelEffect": "<p>+KEY damage</p>"
+			"higherLevelEffect": "<p>+KEY damage</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -53,9 +54,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"concentration"
-			]
+			"selected": ["concentration"]
 		},
 		"school": "fire",
 		"tier": 2

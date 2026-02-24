@@ -35,7 +35,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action</strong></p><p><strong>Chill</strong>. Harmlessly freeze, thaw, or move a bath-sized amount of water near you. OR: </p><p><strong>Craft</strong>. Conjure a sheet of opaque, mirror-like, or transparent ice the size of a window or small door.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -46,9 +47,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"utilitySpell"
-			]
+			"selected": ["utilitySpell"]
 		},
 		"school": "ice",
 		"tier": 0

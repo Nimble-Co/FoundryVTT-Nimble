@@ -58,7 +58,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Reach</strong>: Up to 8. Other damaged creatures must make a STR save or take 3d20 damage (ignoring armor), half on save. The save is rolled with disadvantage while Bloodied.</p>",
-			"higherLevelEffect": "<p>+10 damage.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+10 damage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -69,9 +70,7 @@
 				"min": 1,
 				"max": 8
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "necrotic",
 		"tier": 5,

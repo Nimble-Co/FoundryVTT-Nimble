@@ -35,7 +35,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target/Self</strong></p><p><strong>Bond</strong>. Telepathically communicate simple thoughts or feelings with a friendly creature you can see. OR:</p><p><strong>Peace</strong>. Imbue your spoken words with calming magic, granting advantage on any check made to soothe anger or fear in creatures who can hear you.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -46,9 +47,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"utilitySpell"
-			]
+			"selected": ["utilitySpell"]
 		},
 		"school": "radiant",
 		"tier": 0

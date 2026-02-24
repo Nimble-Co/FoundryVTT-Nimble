@@ -56,7 +56,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>3 Actions, AoE</strong></p><p><strong>Concentration</strong>: Up to 1 minute. <strong>Reach</strong>: 12. Conjure razor-sharp icy spikes in 5 contiguous spaces within Reach; this area is difficult terrain. Creatures that enter these spaces (or who are in the area when you conjure them) suffer 2d6 damage for each space they touch.</p>",
-			"higherLevelEffect": "<p>+1 space, +1 damage.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+1 space, +1 damage.</p>"
 		},
 		"properties": {
 			"range": {
@@ -67,10 +68,7 @@
 				"min": 1,
 				"max": 12
 			},
-			"selected": [
-				"concentration",
-				"reach"
-			]
+			"selected": ["concentration", "reach"]
 		},
 		"school": "ice",
 		"tier": 4,

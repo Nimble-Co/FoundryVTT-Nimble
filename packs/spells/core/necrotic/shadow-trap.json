@@ -43,7 +43,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions, Single Target</strong></p><p><strong>Concentration</strong>: Up to 1 minute. The next creature to move adjacent to you suffers 3d12 damage; if Small or Tiny, it is also Restrained by shadowy tendrils for as long as you maintain concentration or until they escape.</p>",
-			"higherLevelEffect": "<p>+1 size category, +1d12 damage when they escape.</p>"
+			"higherLevelEffect": "<p>+1 size category, +1d12 damage when they escape.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -54,9 +55,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"concentration"
-			]
+			"selected": ["concentration"]
 		},
 		"school": "necrotic",
 		"tier": 1

@@ -64,7 +64,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Reach</strong>: 12. Creatures in a 2×2 area within Reach are Dazed. On a failed STR save, they fall asleep instead, becoming Incapacitated until their next two turns have passed, until damaged, or until an ally uses an action to wake them.</p>",
-			"higherLevelEffect": "<p>+1 area, +1 turn asleep.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+1 area, +1 turn asleep.</p>"
 		},
 		"properties": {
 			"range": {
@@ -75,9 +76,7 @@
 				"min": 1,
 				"max": 12
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "ice",
 		"tier": 3,

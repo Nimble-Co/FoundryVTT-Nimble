@@ -78,7 +78,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Range</strong>: 8. <strong>Damage</strong>: 1d4 (ignoring armor). On hit: target moves 2 spaces closer to you. High Levels: Increment the die size 1 step every 5 levels (d6 » d8 » d10 » d12).</p>",
-			"higherLevelEffect": "<p>Increment the die size 1 step every 5 levels (d6 » d8 » d10 » d12).</p>"
+			"higherLevelEffect": "<p>Increment the die size 1 step every 5 levels (d6 » d8 » d10 » d12).</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -89,9 +90,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "necrotic",
 		"tier": 0

@@ -76,7 +76,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>3 Actions, AoE</strong></p><p><strong>Reach</strong>: 12. Choose any number of objects or willing creatures within Reach to encase in ice. They are Incapacitated and immune to damage and negative effects until the start of their next turn. All other creatures and objects within Reach take d66 damage. Any surviving creature who took this damage must make a STR save or be Incapacitated for 1 round. Once you cast this spell, you must Safe Rest for 1 week before using it again.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -87,9 +88,7 @@
 				"min": 1,
 				"max": 12
 			},
-			"selected": [
-				"reach"
-			]
+			"selected": ["reach"]
 		},
 		"school": "ice",
 		"tier": 9

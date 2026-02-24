@@ -34,7 +34,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Self</strong></p><p><strong>Reaction:</strong> When attacked, Defend for free. Until the start of your next turn, melee attackers against you take KEY damage (ignoring armor) and gain Smoldering.</p>",
-			"higherLevelEffect": "<p>+KEY damage</p>"
+			"higherLevelEffect": "<p>+KEY damage</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {

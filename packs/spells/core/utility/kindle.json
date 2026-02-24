@@ -35,7 +35,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Conjure</strong> a minor visual illusion. OR:</p><p><strong>Ignite</strong> a small, unheld item within Range 6.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -46,9 +47,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"utilitySpell"
-			]
+			"selected": ["utilitySpell"]
 		},
 		"school": "fire",
 		"tier": 0

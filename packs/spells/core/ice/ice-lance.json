@@ -83,7 +83,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action, Single Target</strong></p><p><strong>Range</strong>: 12. <strong>Damage</strong>: 1d6 cold or piercing damage. On hit: Slowed.</p>",
-			"higherLevelEffect": "<p>+3 damage every 5 levels.</p>"
+			"higherLevelEffect": "<p>+3 damage every 5 levels.</p>",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -94,9 +95,7 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": [
-				"range"
-			]
+			"selected": ["range"]
 		},
 		"school": "ice",
 		"tier": 0

@@ -42,7 +42,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>2 Actions, AoE</strong></p><p><strong>Concentration</strong>: Up to 1 minute. <strong>Reach</strong>: 8. While within Reach: 1 ally gains the effects of Enchant Weapon. Enemies gain Smoldering, lose damage resistance, and their damage immunity is reduced to resistance.</p>",
-			"higherLevelEffect": "<p>+1 ally</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+1 ally</p>"
 		},
 		"properties": {
 			"range": {
@@ -53,10 +54,7 @@
 				"min": 1,
 				"max": 8
 			},
-			"selected": [
-				"concentration",
-				"reach"
-			]
+			"selected": ["concentration", "reach"]
 		},
 		"school": "fire",
 		"tier": 5,

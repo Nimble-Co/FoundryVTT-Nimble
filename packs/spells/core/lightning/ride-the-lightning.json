@@ -76,7 +76,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>3 Actions, AoE</strong></p><p>Teleport up to 12 spaces away to a spot you can see (if a willing creature is there, swap places with them). Adjacent creatures take d88 damage. Surviving creatures must make a STR save or be hurled back 3 spaces, knocked Prone, and deafened for 1 day. </p>",
-			"higherLevelEffect": "<p>+1 DC.</p>"
+			"higherLevelEffect": "",
+			"upcastEffect": "<p>+1 DC.</p>"
 		},
 		"properties": {
 			"range": {

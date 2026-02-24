@@ -35,7 +35,8 @@
 		},
 		"description": {
 			"baseEffect": "<p><strong>1 Action</strong></p><p><strong>Reach</strong>: 6. Read the surface thoughts of a creature within Reach. Creatures can sense you doing this and may not like it.</p>",
-			"higherLevelEffect": ""
+			"higherLevelEffect": "",
+			"upcastEffect": ""
 		},
 		"properties": {
 			"range": {
@@ -46,10 +47,7 @@
 				"min": 1,
 				"max": 6
 			},
-			"selected": [
-				"utilitySpell",
-				"reach"
-			]
+			"selected": ["utilitySpell", "reach"]
 		},
 		"school": "necrotic",
 		"tier": 0
