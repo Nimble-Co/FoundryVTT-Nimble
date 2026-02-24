@@ -17,7 +17,10 @@ class PrimaryDie extends foundry.dice.terms.Die {
 
 	get isMiss() {
 		if (!this._evaluated) return undefined;
-		return this.results.some((r) => r.result === 1 && r.active && !r.discarded && !r.exploded);
+		// If any die exploded (crit), the roll cannot also be a miss
+		// Only the initial roll can miss, not explosion dice
+		if (this.exploded) return false;
+		return this.results.some((r) => r.result === 1 && r.active && !r.discarded);
 	}
 }
 
