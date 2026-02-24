@@ -1,5 +1,5 @@
 <script>
-	import { getMonsterImageUrl } from '../../../../import/nimbleNexus/constants.js';
+	import { getMonsterPreviewImageUrl } from '../../../../import/nimbleNexus/constants.js';
 
 	const { actorImport } = CONFIG.NIMBLE;
 
@@ -72,7 +72,7 @@
 				/>
 				<img
 					class="actor-import-monster-avatar"
-					src={getMonsterImageUrl(monster.attributes.paperforgeImageUrl)}
+					src={getMonsterPreviewImageUrl(monster.attributes.paperforgeImageUrl)}
 					alt={monster.attributes.name}
 				/>
 				<div class="actor-import-monster-info">
