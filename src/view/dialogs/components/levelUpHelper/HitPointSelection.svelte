@@ -90,17 +90,13 @@
 		}
 
 		&__die-box {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			min-width: 2.25rem;
-			height: 2.25rem;
 			padding: 0.25rem 0.5rem;
-			font-size: 0.9em;
+			font-size: var(--nimble-sm-text);
 			font-weight: 700;
-			border: 1px solid currentColor;
-			border-radius: 5px;
-			opacity: 0.7;
+			color: var(--nimble-dark-text-color);
+			background: var(--nimble-input-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
 		}
 
 		&__options {
