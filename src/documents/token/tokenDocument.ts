@@ -7,8 +7,16 @@ interface CombatantCreateData {
 }
 
 export class NimbleTokenDocument extends TokenDocument {
-	static getCombatantType(_token: TokenDocument): string {
-		return 'npc';
+	static getCombatantType(token: TokenDocument): string {
+		const actorType = token.actor?.type as string | undefined;
+		switch (actorType) {
+			case 'character':
+				return 'character';
+			case 'soloMonster':
+				return 'soloMonster';
+			default:
+				return 'npc';
+		}
 	}
 
 	static override async createCombatants(
@@ -36,19 +44,7 @@ export class NimbleTokenDocument extends TokenDocument {
 		const createData = new Set(tokens).reduce<CombatantCreateData[]>((arr, token) => {
 			if (token.inCombat) return arr;
 
-			let combatantType: string;
-
-			switch (token.actor?.type) {
-				case 'character':
-					combatantType = 'character';
-					break;
-				case 'soloMonster':
-					combatantType = 'soloMonster';
-					break;
-				default:
-					combatantType = 'npc';
-					break;
-			}
+			const combatantType = NimbleTokenDocument.getCombatantType(token);
 
 			// Use token.parent?.id if available, otherwise fall back to current scene ID
 			const tokenSceneId = token.parent?.id ?? currentSceneId;

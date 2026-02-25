@@ -3,8 +3,67 @@
 	import { draggable } from '../../../actions/draggable.svelte.js';
 	import { canCurrentUserReorderCombatant } from '../../../utils/combatantOrdering.js';
 	import { isCombatantDead } from '../../../utils/isCombatantDead.js';
+	import {
+		getEffectiveMinionGroupLeader,
+		getMinionGroupId,
+		getMinionGroupSummaries,
+	} from '../../../utils/minionGrouping.js';
 
 	import HitPointBar from '../../sheets/components/HitPointBar.svelte';
+
+	function getCombatantCurrentActions(combatant: Combatant.Implementation): number {
+		const actions = Number(
+			foundry.utils.getProperty(combatant, 'system.actions.base.current') ?? 0,
+		);
+		if (!Number.isFinite(actions)) return 0;
+		return Math.max(0, actions);
+	}
+
+	function getTurnOrderIndexForCombatant(
+		combat: Combat,
+		combatant: Combatant.Implementation,
+		groupSummaries: ReturnType<typeof getMinionGroupSummaries>,
+	): number {
+		const combatantId = combatant.id ?? '';
+		if (!combatantId) return -1;
+
+		const directIndex = combat.turns.findIndex((turnCombatant) => turnCombatant.id === combatantId);
+		if (directIndex >= 0) return directIndex;
+
+		const groupId = getMinionGroupId(combatant);
+		if (!groupId) return -1;
+
+		const groupSummary = groupSummaries.get(groupId);
+		if (!groupSummary) return -1;
+
+		const leader =
+			getEffectiveMinionGroupLeader(groupSummary, { aliveOnly: true }) ??
+			getEffectiveMinionGroupLeader(groupSummary);
+		if (!leader?.id) return -1;
+
+		return combat.turns.findIndex((turnCombatant) => turnCombatant.id === leader.id);
+	}
+
+	function hasCombatantTurnEndedThisRound(
+		combat: Combat,
+		combatant: Combatant.Implementation,
+		groupSummaries: ReturnType<typeof getMinionGroupSummaries>,
+	): boolean {
+		if ((combat.round ?? 0) < 1) return false;
+
+		const activeCombatantId = combat.combatant?.id ?? '';
+		if (!activeCombatantId) return false;
+
+		const activeTurnIndex = combat.turns.findIndex(
+			(turnCombatant) => turnCombatant.id === activeCombatantId,
+		);
+		if (activeTurnIndex < 0) return false;
+
+		const combatantTurnIndex = getTurnOrderIndexForCombatant(combat, combatant, groupSummaries);
+		if (combatantTurnIndex < 0) return false;
+
+		return combatantTurnIndex < activeTurnIndex;
+	}
 
 	async function deleteCombatant(event: MouseEvent) {
 		event.preventDefault();
@@ -99,12 +158,27 @@
 	let isObserver = combatant?.actor?.testUserPermission(game.user, 'OBSERVER');
 	let isOwner = combatant?.actor?.testUserPermission(game.user, 'OWNER');
 	let isDead = $derived(isCombatantDead(combatant));
+	let combat = $derived((combatant.parent as Combat | null) ?? null);
+	let combatGroupSummaries = $derived(
+		combat ? getMinionGroupSummaries(combat.combatants.contents) : new Map(),
+	);
 	let canDrag = $derived(
 		!isDead &&
 			canCurrentUserReorderCombatant(combatant, {
 				ownerOverride: isOwner,
 			}),
 	);
+	let showTurnCompleteBadge = $derived.by(() => {
+		if (!game.user?.isGM) return false;
+		if (combatant.reactive?.defeated) return false;
+		if (!combat) return false;
+
+		const turnEnded = hasCombatantTurnEndedThisRound(combat, combatant, combatGroupSummaries);
+		if (combatant.type === 'character') return turnEnded;
+
+		const actionsRemaining = getCombatantCurrentActions(combatant);
+		return actionsRemaining <= 0 || turnEnded;
+	});
 </script>
 
 <article
@@ -134,6 +208,11 @@
 			draggable="false"
 			alt="Combatant art"
 		/>
+		{#if showTurnCompleteBadge}
+			<span class="nimble-combatant__turn-complete-badge" aria-label="Turn complete">
+				<i class="fa-solid fa-check"></i>
+			</span>
+		{/if}
 
 		<div class="nimble-combatant-controls-overlay">
 			<div class="nimble-combatant-controls-overlay__column">

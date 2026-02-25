@@ -2,6 +2,7 @@ import { NimbleAbilityCheckCardData } from './AbilityCheckCardDataModel.js';
 import { NimbleFeatureCardData } from './FeatureCardDataModel.js';
 import { NimbleFieldRestCardData } from './FieldRestCardDataModel.js';
 import { NimbleLevelUpSummaryCardData } from './LevelUpSummaryCardDataModel.js';
+import { NimbleMinionGroupAttackCardData } from './MinionGroupAttackCardDataModel.js';
 import { NimbleObjectCardData } from './ObjectCardDataModel.js';
 import { NimbleSafeRestCardData } from './SafeRestCardDataModel.js';
 import { NimbleSavingThrowCardData } from './SavingThrowCardDataModel.js';
@@ -13,6 +14,7 @@ const chatDataModels = {
 	feature: NimbleFeatureCardData,
 	fieldRest: NimbleFieldRestCardData,
 	levelUpSummary: NimbleLevelUpSummaryCardData,
+	minionGroupAttack: NimbleMinionGroupAttackCardData,
 	object: NimbleObjectCardData,
 	safeRest: NimbleSafeRestCardData,
 	savingThrow: NimbleSavingThrowCardData,
@@ -30,6 +32,7 @@ declare global {
 			feature: NimbleFeatureCardData;
 			fieldRest: NimbleFieldRestCardData;
 			levelUpSummary: NimbleLevelUpSummaryCardData;
+			minionGroupAttack: NimbleMinionGroupAttackCardData;
 			object: NimbleObjectCardData;
 			safeRest: NimbleSafeRestCardData;
 			savingThrow: NimbleSavingThrowCardData;

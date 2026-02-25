@@ -5,6 +5,7 @@ import { MigrationRunner } from '../migration/MigrationRunner.js';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import CombatTracker from '../view/ui/CombatTracker.svelte';
 import combatStateGuards from './combatStateGuards.js';
+import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
 
 export default async function ready() {
 	// Run migrations if needed
@@ -40,6 +41,7 @@ export default async function ready() {
 	});
 
 	combatStateGuards();
+	registerMinionGroupTokenActions();
 
 	const combatTrackerConfig = game.settings.get('core', 'combatTrackerConfig') ?? {};
 	combatTrackerConfig.skipDefeated ??= true;

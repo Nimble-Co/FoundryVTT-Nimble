@@ -8,6 +8,10 @@ export namespace ItemActivationManager {
 		fastForward?: boolean;
 		rollMode?: number;
 		visibilityMode?: keyof foundry.CONST.DICE_ROLL_MODES;
+		rollFormula?: string;
+		primaryDieValue?: number;
+		primaryDieModifier?: string;
+		rollHidden?: boolean;
 	}
 
 	export interface DialogData {
