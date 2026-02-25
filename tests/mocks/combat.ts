@@ -1,9 +1,9 @@
 import { vi } from 'vitest';
 import {
-	createCombatActorFixture,
-	createCombatantFixture,
 	type CombatActorFixtureOptions,
 	type CombatantFixtureOptions,
+	createCombatActorFixture,
+	createCombatantFixture,
 } from '../fixtures/combat.js';
 
 type HookCallback = (...args: unknown[]) => unknown;
