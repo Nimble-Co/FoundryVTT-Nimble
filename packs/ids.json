@@ -136,8 +136,8 @@
 				},
 				"berserker-subclasses": {
 					"path-of-the-mountainheart": {
-						"mountains-endurance": "CLAQBXSaK5TgFsmN",
 						"mountainous-tenacity": "VI69M0QiJh5TOw5R",
+						"mountains-endurance": "CLAQBXSaK5TgFsmN",
 						"stones-resilience": "j9PQ4IkM5NgPW67m",
 						"titans-fury": "8LFqi9XLldluX3ro",
 						"unbreakable": "8LMk8Ke1m1AXR0ij"
@@ -229,8 +229,8 @@
 					"forager": "wZ4Q5MjM1xHp8xsx",
 					"hunters-mark": "iDYdYYMzgculnANa",
 					"hunters-resolve": "gwq4K6NbllcuFLPB",
-					"keen-sight": "IXFxaKSsPtHZ313f",
 					"keen-eye-steady-hand": "bKtlyFEqca4WVdzU",
+					"keen-sight": "IXFxaKSsPtHZ313f",
 					"nemesis": "Wyiz02wruaCYqHiN",
 					"no-escape": "yJqf7nEqz1UBi03b",
 					"peerless-hunter": "eE1rSZ1XBAON8YXM",
@@ -754,17 +754,23 @@
 			"azriel-lord-of-pain-and-flame": "ZtvN9z6ZEolYZu1R",
 			"caerys-the-hollow-star": "SILDSex9MI5AuAs7",
 			"dravok-all-seeing-tyrant": "7n4NFalMBVr8hKaP",
+			"dregatha-thrice-chinned": "svHoUz8vIun3j9tI",
 			"florindris-bane-of-the-forest": "91He6bIh0M7nRt2C",
 			"general-flameheart": "JZ9lUy4rwuTBCa6t",
 			"gloomwing-the-cruel": "n6suthbw9UWnOpex",
+			"greenthumb-lichling": "HIXIhUIG7S9vyF1B",
 			"grimbeak-the-unyielding": "UqXZgpT99YjVCVQj",
 			"kelebek-entomancer": "LZYmTHd8wN4x8DCo",
+			"krogg-goblin-king": "4CLKneQXGJuCNoP7",
+			"lind-worm": "tPiWzclr1ZSkyTAP",
 			"nalzar-apex-predator": "nHmhDIozM5iowqpT",
 			"poppy-giant-stinkbug": "tIt1UdE6d6jmughV",
 			"pudge-the-blunderer": "nAew89tkjzZNnnac",
 			"queen-aranya-broodmother": "m5BJajp8f7TGj3QU",
 			"queen-aranyas-spiderling-minion": "RW07GUkU1QLtRbrV",
+			"rat-prince": "XQOBiTP8L3Yac9Up",
 			"ravager-of-the-lowlands": "zCcpMXbxzzyFzKsz",
+			"scorpion-queen": "zaM78FA829bAaDmR",
 			"thorn-quickblade": "lgul04YrKU0RjG0F",
 			"titan-of-the-deep-woods": "9HMbDYuZ4iJusIrj",
 			"titans-skeleton-minion": "DOHY1RHnRQlPqAYn",
@@ -865,7 +871,8 @@
 				"briarbane-rootbreaker": "UvgXMSWKrPWqtJgv",
 				"briarbane-seedling": "helYUT1m9nYqh4mC",
 				"briarbane-tangler": "zUR4X7UV37zHrDF2",
-				"briarbane-treant": "lDTJWdkMFVOOQVwc"
+				"briarbane-treant": "lDTJWdkMFVOOQVwc",
+				"giant-venus-flytrap": "2WAfywOh2jWhIlVy"
 			},
 			"cultists": {
 				"cultist": "YjKhjwiYoNrrhXfo",
@@ -886,7 +893,8 @@
 				"goblin": "65v4ZutYxq6hlTog",
 				"goblin-minion": "KCZqQUfTuczLNEA3",
 				"goblin-ratrider": "SM6NlZaQdKqFN2AD",
-				"goblin-taskmaster": "XkaTxC6xYSk2kPVV"
+				"goblin-taskmaster": "XkaTxC6xYSk2kPVV",
+				"pinky": "61FWYH8AiVq2gD9R"
 			},
 			"hill-and-field": {
 				"blue-drake": "w9gh6oGZ8508YMAN",
@@ -899,6 +907,7 @@
 			},
 			"horrors": {
 				"glabrezu": "nopp2DKrd9uK67B7",
+				"incubus-succubus": "QiXaRObRw5xxE1VT",
 				"spiny-fiend": "cr1zy94gxZjzh86o",
 				"stenchling": "rV8kgeKs7wRL55j6"
 			},
@@ -947,10 +956,13 @@
 			"underground": {
 				"cloaker": "iee2AYLgQjRieoEI",
 				"ettercap": "R24pjE8ntXNVd1Ah",
+				"giant-slug-minion": "Fh0VprW8Tnc2anU7",
 				"giant-spider": "ML3WomiwkHKUfTnO",
 				"great-worm": "lQ83gZRlm3bTgsbp",
 				"nestweaver": "zDKPmCy5DbGdkJLU",
-				"umber-hulk": "UqUuKtAWlOrDkAFy"
+				"rat-swarm": "xx6ELqMvhFA8qVfN",
+				"umber-hulk": "UqUuKtAWlOrDkAFy",
+				"wax-golem": "7f3ZENlslRDMVcEf"
 			}
 		}
 	},
