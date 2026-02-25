@@ -153,7 +153,7 @@ function parseSpeedLine(line: string, state: ParseState): boolean {
 	const speeds: Record<string, number> = {};
 
 	const partRegex = /(?:(\w+)\s+)?(\d+)\s*ft\.?/gi;
-	let partMatch;
+	let partMatch: RegExpExecArray | null;
 	let isFirst = true;
 	while ((partMatch = partRegex.exec(speedText)) !== null) {
 		const mode = partMatch[1]?.toLowerCase() ?? (isFirst ? 'walk' : undefined);
@@ -180,7 +180,7 @@ function parseAbilityScores(lines: string[], startIdx: number, state: ParseState
 	const scores: { score: number; mod: number }[] = [];
 
 	const scoreRegex = /(\d+)\s*\(\s*([+-]?\d+)\s*\)/g;
-	let scoreMatch;
+	let scoreMatch: RegExpExecArray | null;
 	while ((scoreMatch = scoreRegex.exec(scoreLine)) !== null) {
 		scores.push({
 			score: parseInt(scoreMatch[1], 10),
@@ -200,7 +200,7 @@ function parseSavesLine(line: string, state: ParseState): boolean {
 	if (!match) return false;
 
 	const saveRegex = /(\w{3})\s+\+(\d+)/gi;
-	let saveMatch;
+	let saveMatch: RegExpExecArray | null;
 	while ((saveMatch = saveRegex.exec(match[1])) !== null) {
 		state.saveProficiencies.push(saveMatch[1].toLowerCase());
 	}
@@ -212,7 +212,7 @@ function parseSkillsLine(line: string, state: ParseState): boolean {
 	if (!match) return false;
 
 	const skillRegex = /([\w\s]+?)\s+\+(\d+)/gi;
-	let skillMatch;
+	let skillMatch: RegExpExecArray | null;
 	while ((skillMatch = skillRegex.exec(match[1])) !== null) {
 		state.skills[skillMatch[1].trim().toLowerCase()] = parseInt(skillMatch[2], 10);
 	}
@@ -295,7 +295,7 @@ function parseTraitBlock(
 		if (!line) break; // blank line ends the block
 		if (TEXT_PATTERNS.sectionHeader.test(line)) break;
 		if (TEXT_PATTERNS.traitName.test(line)) break;
-		description += ' ' + line;
+		description += ` ${line}`;
 		endIdx = i;
 	}
 
@@ -603,7 +603,7 @@ function parseSpellcastingText(text: string): Dnd5eStatblock['spellcasting'] | u
 
 	// Leveled spells: "1st level (4 slots): spell1, spell2"
 	const levelRegex = /(\d+)(?:st|nd|rd|th)\s+level\s*\((\d+)\s+slots?\)\s*:\s*([^\n]+)/gi;
-	let levelMatch;
+	let levelMatch: RegExpExecArray | null;
 	while ((levelMatch = levelRegex.exec(text)) !== null) {
 		spells.push({
 			level: parseInt(levelMatch[1], 10),
@@ -629,7 +629,7 @@ function parseSpellcastingText(text: string): Dnd5eStatblock['spellcasting'] | u
 
 	// "X/day each: spell1, spell2"
 	const perDayRegex = /(\d+)\/day(?:\s+each)?\s*:\s*([^\n]+)/gi;
-	let perDayMatch;
+	let perDayMatch: RegExpExecArray | null;
 	while ((perDayMatch = perDayRegex.exec(text)) !== null) {
 		spells.push({
 			level: -1, // special marker for per-day spells

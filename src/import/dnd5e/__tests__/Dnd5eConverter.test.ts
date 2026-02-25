@@ -13,7 +13,6 @@ import {
 	generateWarnings,
 	toActorData,
 } from '../Dnd5eConverter.js';
-import type { Dnd5eStatblock } from '../types.js';
 
 let idCounter = 0;
 beforeEach(() => {

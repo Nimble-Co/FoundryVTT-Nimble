@@ -212,7 +212,7 @@ export function parseAttackFromDescription(description: string): ParsedAttack | 
 	// Parse damage parts
 	const damageParts: ParsedDamage[] = [];
 	const damageRegex = /(\d+d\d+(?:\s*[+-]\s*\d+)?)\)?\s+(\w+)\s+damage/gi;
-	let damageMatch;
+	let damageMatch: RegExpExecArray | null;
 	while ((damageMatch = damageRegex.exec(description)) !== null) {
 		damageParts.push({
 			formula: damageMatch[1].replace(/\s+/g, ''),

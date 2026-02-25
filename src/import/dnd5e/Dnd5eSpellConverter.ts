@@ -3,7 +3,7 @@
  * Uses Levenshtein distance for fuzzy matching.
  */
 
-import type { Dnd5eSpellcasting, ReviewFlag, SpellMatchResult } from './types.js';
+import type { Dnd5eSpellcasting, SpellMatchResult } from './types.js';
 
 // ─── Levenshtein Distance ────────────────────────────────────────────────────
 

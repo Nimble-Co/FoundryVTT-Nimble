@@ -8,7 +8,6 @@ import type {
 	ImportOptions,
 	ImportResult,
 	ParsedDamage,
-	ParsedRangeReach,
 	ParsedSaveType,
 } from '../nimbleNexus/types.js';
 
