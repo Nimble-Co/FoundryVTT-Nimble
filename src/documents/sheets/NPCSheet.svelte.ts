@@ -23,8 +23,9 @@ export default class NPCSheet extends SvelteApplicationMixin(
 
 		this.root = NPCSheetComponent;
 
+		// For token actors, use the actor property; for regular actors, use the document directly
 		this._actor = actor.document.isToken
-			? (actor.document.parent?.actor ?? actor.document)
+			? (actor.document.actor ?? actor.document)
 			: actor.document;
 
 		this.props = {

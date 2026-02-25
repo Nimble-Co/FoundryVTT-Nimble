@@ -1,7 +1,7 @@
-import crypto from 'crypto';
-import fs from 'fs';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import { globSync } from 'glob';
-import path from 'path';
 import systemJSON from '../../public/system.json' with { type: 'json' };
 import LevelDatabase from './LevelDB.mjs';
 
@@ -376,7 +376,7 @@ export default class Pack {
 			systemVersion: sourceStats?.systemVersion ?? systemJSON.version,
 			createdTime: sourceStats?.createdTime ?? now,
 			modifiedTime: sourceStats?.modifiedTime ?? now,
-			lastModifiedBy: sourceStats?.lastModifiedBy ?? 'system',
+			lastModifiedBy: sourceStats?.lastModifiedBy ?? null,
 		};
 	}
 
@@ -501,8 +501,12 @@ export default class Pack {
 		// TODO: Update migration data
 
 		// Recurse for sub documents
-		if (Array.isArray(source?.effects)) source.effects.forEach((e) => this.#cleanDocument(e));
-		if (Array.isArray(source?.items)) source.items.forEach((i) => this.#cleanDocument(i));
+		if (Array.isArray(source?.effects)) {
+			for (const e of source.effects) this.#cleanDocument(e);
+		}
+		if (Array.isArray(source?.items)) {
+			for (const i of source.items) this.#cleanDocument(i);
+		}
 	}
 
 	async saveAsPack() {

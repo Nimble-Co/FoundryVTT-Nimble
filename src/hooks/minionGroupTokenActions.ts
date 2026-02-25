@@ -2309,7 +2309,7 @@ export default function registerMinionGroupTokenActions(): void {
 	registerHook('deactivateTokenLayer', () => scheduleActionBarRefresh('deactivateTokenLayer'));
 	registerHook('updateSetting', () => scheduleActionBarRefresh('updateSetting'));
 
-	if (canvas?.ready) {
+	if (typeof canvas !== 'undefined' && canvas?.ready) {
 		scheduleActionBarRefresh('initial-ready');
 	}
 }
