@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DRAGON_TEXT, WOLF_TEXT } from '../../../../tests/fixtures/dnd5e.js';
+import { DRAGON_TEXT, WOLF_TEXT } from '../../../../tests/fixtures/dnd5eImporter.js';
 import { ingestText, ingestTextBatch, splitTextBlocks } from '../Dnd5eTextIngest.js';
 
 let idCounter = 0;

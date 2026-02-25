@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DRAGON_JSON, WOLF_JSON } from '../../../../tests/fixtures/dnd5e.js';
+import { DRAGON_JSON, WOLF_JSON } from '../../../../tests/fixtures/dnd5eImporter.js';
 import {
 	ingestJson,
 	ingestJsonString,

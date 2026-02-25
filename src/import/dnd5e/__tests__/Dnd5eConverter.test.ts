@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createWolfStatblock } from '../../../../tests/fixtures/dnd5e.js';
+import { createWolfStatblock } from '../../../../tests/fixtures/dnd5eImporter.js';
 import {
 	buildConversionReport,
 	convertArmor,
