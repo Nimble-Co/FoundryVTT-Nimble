@@ -1,11 +1,12 @@
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import canvasInit from './hooks/canvasInit.js';
 import registerCombatantDefeatSync from './hooks/combatantDefeatSync.js';
-import registerMinionGroupTokenActions from './hooks/minionGroupTokenActions.js';
-import registerMinionGroupTokenBadges from './hooks/minionGroupTokenBadges.js';
+import { registerDnd5eContextMenu } from './hooks/dnd5eCompendiumContext.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
 import init from './hooks/init.js';
+import registerMinionGroupTokenActions from './hooks/minionGroupTokenActions.js';
+import registerMinionGroupTokenBadges from './hooks/minionGroupTokenBadges.js';
 import ready from './hooks/ready.js';
 import renderChatMessageHTML from './hooks/renderChatMessage.js';
 import renderCompendium from './hooks/renderCompendium.js';
@@ -87,6 +88,7 @@ Hooks.on('hotbarDrop', onHotbarDrop);
 registerCombatantDefeatSync();
 registerMinionGroupTokenBadges();
 registerMinionGroupTokenActions();
+registerDnd5eContextMenu();
 
 // Refresh tokens when combat ends to remove turn indicators
 Hooks.on('deleteCombat', async (combat: Combat) => {

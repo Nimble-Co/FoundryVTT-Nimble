@@ -1,9 +1,9 @@
 import type { DeepPartial } from 'fvtt-types/utils';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
-
+import Dnd5eImportDialog from '../../import/dnd5e/Dnd5eImportDialog.svelte.js';
+import NimbleNexusImportDialog from '../../import/nimbleNexus/NimbleNexusImportDialog.svelte.js';
 import ActorCreationDialogComponent from '../../view/dialogs/ActorCreationDialog.svelte';
 import CharacterCreationDialog from './CharacterCreationDialog.svelte.js';
-import NimbleNexusImportDialog from '../../import/nimbleNexus/NimbleNexusImportDialog.svelte.js';
 
 const { ApplicationV2 } = foundry.applications.api;
 
@@ -77,6 +77,12 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 	async openNimbleNexusImport() {
 		const nimbleNexusImportDialog = new NimbleNexusImportDialog();
 		nimbleNexusImportDialog.render(true);
+		return super.close();
+	}
+
+	async openDnd5eImport() {
+		const dnd5eImportDialog = new Dnd5eImportDialog();
+		dnd5eImportDialog.render(true);
 		return super.close();
 	}
 
