@@ -2,7 +2,7 @@
 	import localize from '../../utils/localize.js';
 
 	let { dialog } = $props();
-	const { Actor, actorImport, actorTypeBanners } = CONFIG.NIMBLE;
+	const { Actor, actorImport, actorTypeBanners, dnd5eImport } = CONFIG.NIMBLE;
 	const { documentClasses } = Actor;
 
 	delete documentClasses.base;
@@ -37,6 +37,14 @@
 			>
 				<i class="fa-solid fa-file-import"></i>
 				{game.i18n.localize(actorImport.buttonLabel)}
+			</button>
+			<button
+				class="nimble-button"
+				data-button-variant="full-width"
+				onclick={() => dialog.openDnd5eImport.call(dialog)}
+			>
+				<i class="fa-solid fa-dragon"></i>
+				{game.i18n.localize(dnd5eImport.buttonLabel)}
 			</button>
 		</div>
 	{/if}

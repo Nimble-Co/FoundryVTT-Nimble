@@ -6,3 +6,4 @@
 export * from './characters.js';
 export * from './combat.js';
 export * from './dialogs.js';
+export * from './dnd5eImporter.js';

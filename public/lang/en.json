@@ -916,6 +916,62 @@
 				"couldNotOpenPanel": "Could not open group attack panel. See console for details."
 			}
 		},
+		"dnd5eImport": {
+			"buttonLabel": "Convert D&D 5e Statblock",
+			"dialogTitle": "Convert D&D 5e Statblock",
+			"pasteJsonTab": "Paste JSON",
+			"pasteTextTab": "Paste Text",
+			"pasteJsonPrompt": "Paste the exported 5e actor JSON below (single object or array for batch)",
+			"pasteTextPrompt": "Paste a plain text 5e statblock below (separate multiple with ---)",
+			"parseButton": "Parse & Convert",
+			"importButton": "Import Actor",
+			"importAllButton": "Import All ({count})",
+			"importAnother": "Import Another",
+			"backButton": "Back",
+			"parseError": "Failed to parse input",
+			"reviewCount": "{count} field(s) flagged for review",
+			"warningCount": "{count} warning(s)",
+			"skippedCount": "{count} feature(s) skipped",
+			"spellMatchCount": "{count} spell(s) matched",
+			"successMessage": "Successfully imported \"{name}\"",
+			"batchSuccessMessage": "Successfully imported {count} monster(s)",
+			"convertToNimble": "Convert to Nimble",
+			"batchCount": "{count} monsters",
+			"emptyInput": "Please paste a statblock to convert",
+			"noStatblocks": "No statblocks found in input",
+			"unknownError": "Unknown error during parsing",
+			"importFailed": "Import failed",
+			"partialSuccess": "Imported {successful} monster(s), {failed} failed",
+			"folderNamePlaceholder": "Folder name",
+			"badges": {
+				"auto": "Auto",
+				"review": "Review",
+				"skipped": "Skipped"
+			},
+			"sections": {
+				"basicInfo": "Basic Info",
+				"movement": "Movement",
+				"defenses": "Defenses",
+				"savingThrows": "Saving Throws",
+				"actions": "Actions & Features",
+				"skipped": "Skipped Features",
+				"spells": "Spell Matches",
+				"warnings": "Warnings"
+			},
+			"fields": {
+				"name": "Name",
+				"actorType": "Actor Type",
+				"size": "Size",
+				"creatureType": "Creature Type",
+				"hp": "Hit Points",
+				"armor": "Armor",
+				"level": "Level",
+				"cr": "Challenge Rating",
+				"resistances": "Resistances",
+				"immunities": "Immunities",
+				"vulnerabilities": "Vulnerabilities"
+			}
+		},
 		"actorImport": {
 			"buttonLabel": "Import Actor",
 			"dialogTitle": "Import from Nimble Nexus",
