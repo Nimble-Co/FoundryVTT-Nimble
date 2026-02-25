@@ -3,3 +3,5 @@ export { Migration002ItemPrices } from './Migration002ItemPrices.js';
 export { Migration003OozelingConstructRules } from './Migration003OozelingConstructRules.js';
 export { Migration004SpellbladeCombatMana } from './Migration004SpellbladeCombatMana.js';
 export { Migration005SpellUpcastEffect } from './Migration005SpellUpcastEffect.js';
+export { Migration006DwarfMaxHitDice } from './Migration006DwarfMaxHitDice.js';
+export { Migration007WildOneHitDiceAdvantage } from './Migration007WildOneHitDiceAdvantage.js';

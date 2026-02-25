@@ -1,5 +1,6 @@
 <script>
 	import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
+	import { incrementDieSize } from '../../managers/HitDiceManager.js';
 
 	const startingHpByHitDie = {
 		6: 10,
@@ -20,6 +21,9 @@
 	}
 
 	let { document, dialog } = $props();
+
+	// Get hit dice size bonus from rules (e.g., Oozeling's Odd Constitution)
+	const hitDiceSizeBonus = document.system.attributes?.hitDiceSizeBonus ?? 0;
 
 	let classHpData = $state([]);
 	let hpBonus = $state(document.system.attributes.hp.bonus || 0);
@@ -53,14 +57,18 @@
 	let totalRuleBonus = $derived(ruleBonuses.reduce((acc, b) => acc + b.value, 0));
 
 	$effect(() => {
-		classHpData = Object.values(document.classes ?? {}).map((cls) => ({
-			id: cls.id,
-			name: cls.name,
-			hitDie: cls.system.hitDieSize,
-			startingHp: startingHpByHitDie[cls.system.hitDieSize] || 0,
-			hpData: [...cls.system.hpData],
-			maxHp: cls.maxHp,
-		}));
+		classHpData = Object.values(document.classes ?? {}).map((cls) => {
+			// Apply hit dice size bonus to get effective size for display
+			const effectiveHitDie = incrementDieSize(cls.system.hitDieSize, hitDiceSizeBonus);
+			return {
+				id: cls.id,
+				name: cls.name,
+				hitDie: effectiveHitDie,
+				startingHp: startingHpByHitDie[cls.system.hitDieSize] || 0,
+				hpData: [...cls.system.hpData],
+				maxHp: cls.maxHp,
+			};
+		});
 	});
 
 	function updateHpData(classIndex, levelIndex, value) {

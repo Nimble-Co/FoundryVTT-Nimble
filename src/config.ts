@@ -667,6 +667,11 @@ const levelUpDialog = {
 	completeAllSelections: 'NIMBLE.levelUpDialog.completeAllSelections',
 	skillPointsOverMaxTooltip: 'NIMBLE.levelUpDialog.skillPointsOverMaxTooltip',
 	completeAllSelectionsTooltip: 'NIMBLE.levelUpDialog.completeAllSelectionsTooltip',
+	hpIncrease: 'NIMBLE.levelUpDialog.hpIncrease',
+	hitDiceLabel: 'NIMBLE.levelUpDialog.hitDiceLabel',
+	rollHitDice: 'NIMBLE.levelUpDialog.rollHitDice',
+	rollHitDiceTooltip: 'NIMBLE.levelUpDialog.rollHitDiceTooltip',
+	takeAverage: 'NIMBLE.levelUpDialog.takeAverage',
 };
 
 const skillCheckDialog = {

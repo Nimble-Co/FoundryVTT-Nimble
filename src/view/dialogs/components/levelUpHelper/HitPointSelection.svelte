@@ -1,72 +1,135 @@
-<script>
-	let { document, hitPointRollSelection = $bindable() } = $props();
+<script lang="ts">
+	import type { NimbleCharacter } from '../../../../documents/actor/character.js';
+	import type { NimbleClassItem } from '../../../../documents/item/class.js';
+	import { incrementDieSize } from '../../../../managers/HitDiceManager.js';
+
+	interface Props {
+		document: NimbleCharacter;
+		hitPointRollSelection: string;
+	}
+
+	let { document, hitPointRollSelection = $bindable() }: Props = $props();
+
+	const characterClass: NimbleClassItem | undefined = document?.classes
+		? (Object.values(document.classes)[0] as NimbleClassItem | undefined)
+		: undefined;
+
+	const baseHitDieSize = characterClass?.system?.hitDieSize ?? 6;
+	const hitDiceSizeBonus =
+		(document?.system?.attributes as { hitDiceSizeBonus?: number } | undefined)?.hitDiceSizeBonus ??
+		0;
+	const effectiveHitDieSize = incrementDieSize(baseHitDieSize, hitDiceSizeBonus);
+	const averageHp = Math.ceil((effectiveHitDieSize + 1) / 2);
 </script>
 
 <section>
 	<header class="nimble-section-header">
-		<h3 class="nimble-heading" data-heading-variant="section">Hit Points</h3>
+		<h3 class="nimble-heading" data-heading-variant="section">
+			{CONFIG.NIMBLE.levelUpDialog.hpIncrease}
+		</h3>
 	</header>
 
-	<div class="nimble-hit-point-roll-selection">
-		<label
-			class="nimble-hit-point-roll-selection__option"
-			class:nimble-hit-point-roll-selection__option--selected={hitPointRollSelection === 'roll'}
-		>
-			<i class="fa-solid fa-dice"></i>
-			Roll Hit Points
+	<div class="nimble-hit-point-selection">
+		<div class="nimble-hit-point-selection__hit-dice">
+			<span class="nimble-hit-point-selection__hit-dice-label">
+				{CONFIG.NIMBLE.levelUpDialog.hitDiceLabel}
+			</span>
+			<span class="nimble-hit-point-selection__die-box">d{effectiveHitDieSize}</span>
+		</div>
 
-			<input
-				class="nimble-hit-point-roll-selection__input"
-				type="radio"
-				name="{document.id}-hit-points"
-				value="roll"
-				bind:group={hitPointRollSelection}
-			/>
-		</label>
+		<div class="nimble-hit-point-selection__options">
+			<label
+				class="nimble-hit-point-selection__option"
+				class:nimble-hit-point-selection__option--selected={hitPointRollSelection === 'roll'}
+				data-tooltip={CONFIG.NIMBLE.levelUpDialog.rollHitDiceTooltip}
+			>
+				<i class="fa-solid fa-dice"></i>
+				{CONFIG.NIMBLE.levelUpDialog.rollHitDice}
 
-		<label
-			class="nimble-hit-point-roll-selection__option"
-			class:nimble-hit-point-roll-selection__option--selected={hitPointRollSelection === 'average'}
-		>
-			<i class="fa-solid fa-gauge"></i>
-			Take Average
+				<input
+					class="nimble-hit-point-selection__input"
+					type="radio"
+					name="{document.id}-hit-points"
+					value="roll"
+					bind:group={hitPointRollSelection}
+				/>
+			</label>
 
-			<input
-				class="nimble-hit-point-roll-selection__input"
-				type="radio"
-				name="{document.id}-hit-points"
-				value="average"
-				bind:group={hitPointRollSelection}
-			/>
-		</label>
+			<label
+				class="nimble-hit-point-selection__option"
+				class:nimble-hit-point-selection__option--selected={hitPointRollSelection === 'average'}
+			>
+				<i class="fa-solid fa-gauge"></i>
+				{game.i18n.format(CONFIG.NIMBLE.levelUpDialog.takeAverage, { average: averageHp })}
+
+				<input
+					class="nimble-hit-point-selection__input"
+					type="radio"
+					name="{document.id}-hit-points"
+					value="average"
+					bind:group={hitPointRollSelection}
+				/>
+			</label>
+		</div>
 	</div>
 </section>
 
 <style lang="scss">
-	.nimble-hit-point-roll-selection {
+	.nimble-hit-point-selection {
 		display: flex;
-		gap: 0.5rem;
+		align-items: center;
+		gap: 1rem;
 		margin-block-end: 0.75rem;
 		font-size: var(--nimble-sm-text);
 		font-weight: 500;
 
+		&__hit-dice {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+		}
+
+		&__hit-dice-label {
+			font-weight: 500;
+		}
+
+		&__die-box {
+			padding: 0.25rem 0.5rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 700;
+			color: var(--nimble-dark-text-color);
+			background: var(--nimble-input-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+		}
+
+		&__options {
+			display: flex;
+			gap: 0.5rem;
+		}
+
 		&__option {
 			display: flex;
-			align-self: center;
+			align-items: center;
 			justify-content: center;
 			gap: 0.5rem;
 			width: fit-content;
 			padding: 0.5rem 1rem;
 			line-height: 1;
-			border: 1px solid black;
+			border: 1px solid var(--nimble-input-border-color);
 			border-radius: 4px;
 			box-shadow: var(--nimble-card-box-shadow);
 			cursor: pointer;
 			transition: var(--nimble-standard-transition);
 
+			&:hover:not(&--selected) {
+				background: var(--nimble-hint-background-color);
+			}
+
 			&--selected {
-				color: var(--nimble-light-text-color);
-				background: hsl(0, 0%, 24%);
+				color: var(--nimble-navigation-active-text-color);
+				background: #842c2b;
+				border-color: var(--nimble-input-border-color);
 			}
 		}
 
