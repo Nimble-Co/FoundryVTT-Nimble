@@ -155,8 +155,8 @@
 	// `children` is optional: some combatant rows render no extra controls/content.
 	let { active, children = undefined, combatant } = $props();
 
-	let isObserver = combatant?.actor?.testUserPermission(game.user, 'OBSERVER');
-	let isOwner = combatant?.actor?.testUserPermission(game.user, 'OWNER');
+	let isObserver = $derived(combatant?.actor?.testUserPermission(game.user, 'OBSERVER'));
+	let isOwner = $derived(combatant?.actor?.testUserPermission(game.user, 'OWNER'));
 	let isDead = $derived(isCombatantDead(combatant));
 	let combat = $derived((combatant.parent as Combat | null) ?? null);
 	let combatGroupSummaries = $derived(

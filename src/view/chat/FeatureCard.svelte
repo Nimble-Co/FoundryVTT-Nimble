@@ -41,10 +41,12 @@
 	let subheading = $derived(getCardSubheading(activation, isCritical, isMiss));
 	let attackTypeLabel = $derived(getAttackTypeLabel(attackType, attackDistance));
 
-	const headerBackgroundColor = messageDocument.reactive.author.color;
+	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
-	setContext('messageDocument', messageDocument);
+	$effect(() => {
+		setContext('messageDocument', messageDocument);
+	});
 </script>
 
 <CardHeader {messageDocument} />

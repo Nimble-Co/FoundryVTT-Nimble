@@ -1,10 +1,11 @@
 <script>
+	import { untrack } from 'svelte';
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 	const { skillCheckDialog } = CONFIG.NIMBLE;
 
 	let { actor, dialog, item, ...data } = $props();
-	let selectedRollMode = $state(Math.clamp(data.rollMode ?? 0, -6, 6));
+	let selectedRollMode = $state(untrack(() => Math.clamp(data.rollMode ?? 0, -6, 6)));
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();

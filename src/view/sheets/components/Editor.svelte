@@ -26,28 +26,32 @@
 		enrichOptions = {} as EnrichOptions,
 	}: Props = $props();
 
-	// Build Options
-	editorOptions = foundry.utils.mergeObject(
-		{
-			name: field,
-			collaborate: false,
-			compact: false,
-			documentUUID: document.uuid,
-			editable,
-			toggled: editable,
-			value: content,
-		},
-		editorOptions,
-	) as EditorOptions;
+	// Build Options - using $derived to avoid state_referenced_locally warnings
+	const mergedEditorOptions = $derived(
+		foundry.utils.mergeObject(
+			{
+				name: field,
+				collaborate: false,
+				compact: false,
+				documentUUID: document.uuid,
+				editable,
+				toggled: editable,
+				value: content,
+			},
+			editorOptions,
+		) as EditorOptions,
+	);
 
-	enrichOptions = foundry.utils.mergeObject(
-		{
-			secrets: document.isOwner || game.user?.isGM,
-			rollData: document.isEmbedded ? document.actor.getRollData() : document.getRollData(),
-			relativeTo: document,
-		},
-		enrichOptions,
-	) as EnrichOptions;
+	const mergedEnrichOptions = $derived(
+		foundry.utils.mergeObject(
+			{
+				secrets: document.isOwner || game.user?.isGM,
+				rollData: document.isEmbedded ? document.actor.getRollData() : document.getRollData(),
+				relativeTo: document,
+			},
+			enrichOptions,
+		) as EnrichOptions,
+	);
 
 	let proseMirrorElem: HTMLElement;
 
@@ -55,11 +59,11 @@
 	onMount(async () => {
 		const enriched = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
 			content,
-			enrichOptions,
+			mergedEnrichOptions,
 		);
 
 		const element = foundry.applications.elements.HTMLProseMirrorElement.create(
-			foundry.utils.mergeObject(editorOptions, { enriched }),
+			foundry.utils.mergeObject(mergedEditorOptions, { enriched }),
 		);
 
 		// Listen for save events from ProseMirror and update the document

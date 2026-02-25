@@ -354,10 +354,12 @@
 		return { bySize, value, max };
 	});
 
-	setContext('actor', actor);
-	setContext('document', actor);
-	setContext('application', sheet);
-	setContext('editingEnabled', editingEnabledStore);
+	$effect(() => {
+		setContext('actor', actor);
+		setContext('document', actor);
+		setContext('application', sheet);
+		setContext('editingEnabled', editingEnabledStore);
+	});
 </script>
 
 <header class="nimble-sheet__header">

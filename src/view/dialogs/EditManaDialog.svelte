@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
 	import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
@@ -38,7 +39,7 @@
 	}
 
 	let { document: actor, dialog }: Props = $props();
-	let baseMax = $state(actor.system.resources.mana.baseMax ?? 0);
+	let baseMax = $state(untrack(() => actor.system.resources.mana.baseMax ?? 0));
 
 	let classManaContributions = $derived.by(() => {
 		const classes = actor.items.filter((i: Item) => i.type === 'class') as ClassWithManaFormula[];

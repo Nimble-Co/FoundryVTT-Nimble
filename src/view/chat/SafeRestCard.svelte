@@ -6,23 +6,33 @@
 	import CardHeader from './components/CardHeader.svelte';
 
 	let { messageDocument } = $props();
-	let { system } = messageDocument;
 
-	const { hitDiceRecovered, hpRestored, tempHpRemoved, manaRestored, woundsRecovered } = system;
+	const system = $derived(messageDocument.system);
+	const hitDiceRecovered = $derived(system.hitDiceRecovered);
+	const hpRestored = $derived(system.hpRestored);
+	const tempHpRemoved = $derived(system.tempHpRemoved);
+	const manaRestored = $derived(system.manaRestored);
+	const woundsRecovered = $derived(system.woundsRecovered);
 
-	const headerBackgroundColor = messageDocument.author.color;
-	const headerTextColor = calculateHeaderTextColor(headerBackgroundColor);
+	const headerBackgroundColor = $derived(messageDocument.author.color);
+	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
 	// Format hit dice recovered for display
-	const hitDiceDisplay = Object.entries(hitDiceRecovered as Record<string, number>)
-		.filter(([_, qty]) => qty > 0)
-		.map(([size, qty]) => `${qty}d${size}`)
-		.join(', ');
+	const hitDiceDisplay = $derived(
+		Object.entries(hitDiceRecovered as Record<string, number>)
+			.filter(([_, qty]) => qty > 0)
+			.map(([size, qty]) => `${qty}d${size}`)
+			.join(', '),
+	);
 
 	// Check if anything was recovered
-	const hasRecovery = hitDiceDisplay || hpRestored > 0 || manaRestored > 0 || woundsRecovered > 0;
+	const hasRecovery = $derived(
+		hitDiceDisplay || hpRestored > 0 || manaRestored > 0 || woundsRecovered > 0,
+	);
 
-	setContext('message', messageDocument);
+	$effect(() => {
+		setContext('message', messageDocument);
+	});
 </script>
 
 <CardHeader {messageDocument} />

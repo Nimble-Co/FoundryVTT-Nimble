@@ -27,9 +27,11 @@
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
 
-	const ancestryOptionsCount = Object.values(ancestries).reduce((count, category) => {
-		return count + category.length;
-	}, 0);
+	const ancestryOptionsCount = $derived(
+		Object.values(ancestries).reduce((count, category) => {
+			return count + category.length;
+		}, 0),
+	);
 
 	const hintText =
 		'Your ancestry determines how your character was born and how others see you at first glance. Select one option from the following list.';

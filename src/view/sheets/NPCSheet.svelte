@@ -88,7 +88,9 @@
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
 
-	setContext('actor', actor);
+	$effect(() => {
+		setContext('actor', actor);
+	});
 </script>
 
 <header class="nimble-sheet__header">

@@ -19,7 +19,7 @@
 
 	const { messageDocument } = $props();
 
-	let headerBackgroundColor = messageDocument.reactive.author.color;
+	let headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	let headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
 	let { activation, description, image, isCritical, isIdentified, isMiss, name } = $derived(
@@ -28,7 +28,9 @@
 
 	let subheading = $derived(getCardSubheading(activation, isCritical, isMiss));
 
-	setContext('messageDocument', messageDocument);
+	$effect(() => {
+		setContext('messageDocument', messageDocument);
+	});
 </script>
 
 <CardHeader {messageDocument} />
