@@ -88,7 +88,9 @@
 				"min": 1,
 				"max": 4
 			},
-			"selected": ["reach"]
+			"selected": [
+				"reach"
+			]
 		},
 		"school": "ice",
 		"tier": 5,

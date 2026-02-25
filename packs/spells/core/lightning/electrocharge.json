@@ -61,7 +61,9 @@
 				"min": 1,
 				"max": 2
 			},
-			"selected": ["concentration"]
+			"selected": [
+				"concentration"
+			]
 		},
 		"school": "lightning",
 		"tier": 5,

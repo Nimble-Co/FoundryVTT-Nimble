@@ -102,7 +102,9 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": ["range"]
+			"selected": [
+				"range"
+			]
 		},
 		"school": "lightning",
 		"tier": 1,

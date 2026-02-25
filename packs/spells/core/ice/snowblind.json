@@ -95,7 +95,9 @@
 				"min": 1,
 				"max": 1
 			},
-			"selected": ["reach"]
+			"selected": [
+				"reach"
+			]
 		},
 		"school": "ice",
 		"tier": 0

@@ -68,7 +68,10 @@
 				"min": 1,
 				"max": 12
 			},
-			"selected": ["concentration", "reach"]
+			"selected": [
+				"concentration",
+				"reach"
+			]
 		},
 		"school": "ice",
 		"tier": 4,

@@ -96,7 +96,9 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": ["range"]
+			"selected": [
+				"range"
+			]
 		},
 		"school": "wind",
 		"tier": 0

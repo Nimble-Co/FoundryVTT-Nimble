@@ -47,7 +47,10 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": ["utilitySpell", "range"]
+			"selected": [
+				"utilitySpell",
+				"range"
+			]
 		},
 		"school": "lightning",
 		"tier": 0
