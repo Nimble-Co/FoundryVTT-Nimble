@@ -24,12 +24,16 @@
 
 <section>
 	<header class="nimble-section-header">
-		<h3 class="nimble-heading" data-heading-variant="section">HP Increase</h3>
+		<h3 class="nimble-heading" data-heading-variant="section">
+			{CONFIG.NIMBLE.levelUpDialog.hpIncrease}
+		</h3>
 	</header>
 
 	<div class="nimble-hit-point-selection">
 		<div class="nimble-hit-point-selection__hit-dice">
-			<span class="nimble-hit-point-selection__hit-dice-label">Hit Dice:</span>
+			<span class="nimble-hit-point-selection__hit-dice-label">
+				{CONFIG.NIMBLE.levelUpDialog.hitDiceLabel}
+			</span>
 			<span class="nimble-hit-point-selection__die-box">d{effectiveHitDieSize}</span>
 		</div>
 
@@ -37,10 +41,10 @@
 			<label
 				class="nimble-hit-point-selection__option"
 				class:nimble-hit-point-selection__option--selected={hitPointRollSelection === 'roll'}
-				data-tooltip="Roll your Hit Die with advantage and increase your max HP by that much."
+				data-tooltip={CONFIG.NIMBLE.levelUpDialog.rollHitDiceTooltip}
 			>
 				<i class="fa-solid fa-dice"></i>
-				Roll Hit Dice
+				{CONFIG.NIMBLE.levelUpDialog.rollHitDice}
 
 				<input
 					class="nimble-hit-point-selection__input"
@@ -56,7 +60,7 @@
 				class:nimble-hit-point-selection__option--selected={hitPointRollSelection === 'average'}
 			>
 				<i class="fa-solid fa-gauge"></i>
-				Take Average ({averageHp})
+				{game.i18n.format(CONFIG.NIMBLE.levelUpDialog.takeAverage, { average: averageHp })}
 
 				<input
 					class="nimble-hit-point-selection__input"
