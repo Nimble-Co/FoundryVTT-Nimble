@@ -3,6 +3,7 @@ pre-commit:
   commands:
     biome-fix-staged:
       glob: "*.{js,ts,mjs,mts,json,jsonc}"
+      exclude: "packs/**"
       run: npx @biomejs/biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
       stage_fixed: true
     prettier-svelte:
