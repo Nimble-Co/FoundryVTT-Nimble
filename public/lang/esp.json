@@ -12,7 +12,7 @@
 			"class": "Clase",
 			"feature": "Rasgo",
 			"monsterFeature": "Rasgo de monstruo",
-			"object": "Objecto",
+			"object": "Objeto",
 			"ancestry": "Ascendencia",
 			"spell": "Conjuro",
 			"subclass": "Subclase"
