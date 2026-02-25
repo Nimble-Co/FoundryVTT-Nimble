@@ -74,6 +74,7 @@
 
 	const COMBAT_TRACKER_MIN_WIDTH_REM = 6.5;
 	const COMBAT_TRACKER_MAX_WIDTH_REM = COMBAT_TRACKER_MIN_WIDTH_REM * 2;
+	const COMBAT_TRACKER_COMPACT_START_ACTION_LABEL_WIDTH_REM = 8.75;
 	const COMBAT_TRACKER_MIN_HEIGHT_REM = 6.5;
 	const COMBAT_TRACKER_MAX_HEIGHT_REM = 13.5;
 	const COMBAT_TRACKER_HEIGHT_TO_CARD_WIDTH_RATIO = 0.66;
@@ -95,6 +96,10 @@
 
 	function isHorizontalCombatTrackerLocation(location: CombatTrackerLocation): boolean {
 		return location === 'top' || location === 'bottom';
+	}
+
+	function isSideCombatTrackerLocation(location: CombatTrackerLocation): boolean {
+		return location === 'left' || location === 'right';
 	}
 
 	function getCombatTrackerSizeBounds(location: CombatTrackerLocation): {
@@ -1024,6 +1029,12 @@
 		isHorizontalLayout ? combatTrackerHorizontalCardWidthRem : combatTrackerWidthRem,
 	);
 	let combatTrackerScale = $derived(combatTrackerScaleSizeRem / COMBAT_TRACKER_MIN_WIDTH_REM);
+	let useCompactStartActionLabels = $derived(
+		isSideCombatTrackerLocation(combatTrackerLocation) &&
+			combatTrackerWidthRem <= COMBAT_TRACKER_COMPACT_START_ACTION_LABEL_WIDTH_REM,
+	);
+	let startCombatButtonLabel = $derived(useCompactStartActionLabels ? 'Start' : 'Start Combat');
+	let endCombatButtonLabel = $derived(useCompactStartActionLabels ? 'End' : 'End Combat');
 	let trackerTransitionAxis: 'x' | 'y' = $derived(isHorizontalLayout ? 'y' : 'x');
 	let currentTurnAnimationSettings: CurrentTurnAnimationSettings = $state(
 		getCurrentTurnAnimationSettings(),
@@ -1278,10 +1289,10 @@
 					{#if currentCombat?.round === 0 && game.user!.isGM}
 						<div class="nimble-combat-tracker__start-actions">
 							<button class="nimble-combat-tracker__start-button" onclick={startCombat}>
-								Start Combat
+								{startCombatButtonLabel}
 							</button>
 							<button class="nimble-combat-tracker__end-combat-button" onclick={endCombat}>
-								End Combat
+								{endCombatButtonLabel}
 							</button>
 						</div>
 					{:else if currentCombat?.round === 0}

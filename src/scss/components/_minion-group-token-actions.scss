@@ -41,6 +41,7 @@
   --nimble-ncsw-warning-text: hsl(0 0% 96%);
   --nimble-ncsw-target-active-color: hsl(140 74% 64%);
   --nimble-ncsw-target-inactive-color: hsl(0 86% 66%);
+  --nimble-ncsw-mystery-man-filter: none;
 }
 
 .theme-light.system-nimble,
@@ -85,6 +86,7 @@
   --nimble-ncsw-warning-text: hsl(222 22% 16%);
   --nimble-ncsw-target-active-color: hsl(140 74% 42%);
   --nimble-ncsw-target-inactive-color: hsl(0 86% 56%);
+  --nimble-ncsw-mystery-man-filter: brightness(0);
 }
 
 .system-nimble .nimble-minion-group-attack-panel {
@@ -367,6 +369,14 @@
     object-fit: cover;
     object-position: center;
     border-radius: 0.18rem;
+  }
+
+  &__target-token-image,
+  &__image-popover-image,
+  &__member-image {
+    &[src*="icons/svg/mystery-man.svg" i] {
+      filter: var(--nimble-ncsw-mystery-man-filter);
+    }
   }
 
   &__image-popover-name {

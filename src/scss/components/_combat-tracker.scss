@@ -402,6 +402,7 @@
     width: 100%;
     margin: 0;
     padding: 0;
+    white-space: nowrap;
     font-size: var(--nimble-sm-text);
     font-weight: 600;
     color: inherit;
@@ -1094,6 +1095,10 @@
 
     &[src$=".svg" i] {
       padding: calc(0.2rem * var(--nimble-combat-card-scale));
+    }
+
+    &[src*="icons/svg/mystery-man.svg" i] {
+      filter: var(--nimble-combat-tracker-mystery-man-filter);
     }
   }
 
