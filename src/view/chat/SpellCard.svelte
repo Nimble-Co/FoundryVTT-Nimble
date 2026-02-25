@@ -56,7 +56,9 @@
 		return parts.join(' — ');
 	});
 
-	setContext('messageDocument', messageDocument);
+	$effect(() => {
+		setContext('messageDocument', messageDocument);
+	});
 </script>
 
 <CardHeader {messageDocument} />

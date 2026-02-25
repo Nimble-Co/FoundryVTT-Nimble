@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type { NimbleClassItem } from '../../documents/item/class.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
@@ -59,22 +60,29 @@
 
 	let { document: actor, dialog }: Props = $props();
 
-	const classes = actor.items.filter((i: Item) => i.type === 'class') as NimbleClassItem[];
+	const classes = $derived(
+		actor.items.filter((i: Item) => i.type === 'class') as NimbleClassItem[],
+	);
 	// Get hit dice size bonus from rules (e.g., Oozeling's Odd Constitution)
-	const hitDiceSizeBonus =
-		(actor.system.attributes as { hitDiceSizeBonus?: number }).hitDiceSizeBonus ?? 0;
+	const hitDiceSizeBonus = $derived(
+		(actor.system.attributes as { hitDiceSizeBonus?: number }).hitDiceSizeBonus ?? 0,
+	);
 	// Get contributions that make up the hit dice size bonus
-	const hitDiceSizeBonusContributions = ((
-		actor.system.attributes as {
-			hitDiceSizeBonusContributions?: Array<{ label: string; value: number }>;
-		}
-	).hitDiceSizeBonusContributions ?? []) as Array<{ label: string; value: number }>;
+	const hitDiceSizeBonusContributions = $derived(
+		((
+			actor.system.attributes as {
+				hitDiceSizeBonusContributions?: Array<{ label: string; value: number }>;
+			}
+		).hitDiceSizeBonusContributions ?? []) as Array<{ label: string; value: number }>,
+	);
 	// Raw class die size (for storage and data operations)
-	const rawClassDieSize = classes.length > 0 ? classes[0].system.hitDieSize : null;
+	const rawClassDieSize = $derived(classes.length > 0 ? classes[0].system.hitDieSize : null);
 
 	// Initialize bonus dice from existing data
 	let bonusDice = $state<BonusDieEntry[]>(
-		actor.system.attributes.bonusHitDice?.map((d: BonusDieEntry) => ({ ...d })) ?? [],
+		untrack(
+			() => actor.system.attributes.bonusHitDice?.map((d: BonusDieEntry) => ({ ...d })) ?? [],
+		),
 	);
 
 	let dropdownRef: HTMLElement | null = $state(null);

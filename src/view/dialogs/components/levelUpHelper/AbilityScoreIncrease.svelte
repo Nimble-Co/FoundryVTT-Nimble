@@ -37,13 +37,13 @@
 
 	const { abilityScores, statIncrease } = CONFIG.NIMBLE;
 
-	const statIncreaseType = getStatIncreaseType(characterClass);
-	const statOptions = getStatIncreaseOptions(characterClass, statIncreaseType);
+	const statIncreaseType = $derived(getStatIncreaseType(characterClass));
+	const statOptions = $derived(getStatIncreaseOptions(characterClass, statIncreaseType));
 
 	$effect(() => {
 		hasStatIncrease = statIncreaseType && statOptions.length && characterClass;
 	});
-	const capstone = isCapstone(statIncreaseType);
+	const capstone = $derived(isCapstone(statIncreaseType));
 
 	$effect(() => {
 		if (capstone && !selectedAbilityScores) {

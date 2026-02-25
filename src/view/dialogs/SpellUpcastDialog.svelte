@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { ScalingDelta } from '#types/spellScaling.js';
 	import { NimbleRoll } from '../../dice/NimbleRoll';
 	import RollModeConfig from './components/RollModeConfig.svelte';
@@ -7,7 +8,7 @@
 	let { actor, dialog, spell, ...data } = $props();
 
 	// Initialize state
-	let selectedRollMode = $state(Math.clamp(data.rollMode ?? 0, -6, 6));
+	let selectedRollMode = $state(untrack(() => Math.clamp(data.rollMode ?? 0, -6, 6)));
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
@@ -27,22 +28,23 @@
 	const format = (key: string, data?: Record<string, string>) => game.i18n.format(key, data);
 
 	// Compute upcast constraints (safe for NPCs/Monsters that lack resources)
-	const baseMana = spell.tier;
-	const resources = actor?.system?.resources;
-	const currentMana = resources?.mana?.current ?? 0;
-	const maxTier = resources?.highestUnlockedSpellTier ?? 9;
-	const maxMana = Math.min(currentMana, maxTier);
+	const baseMana = $derived(spell.tier);
+	const resources = $derived(actor?.system?.resources);
+	const currentMana = $derived(resources?.mana?.current ?? 0);
+	const maxTier = $derived(resources?.highestUnlockedSpellTier ?? 9);
+	const maxMana = $derived(Math.min(currentMana, maxTier));
 
 	// Check if spell can be upcast (also guard against min >= max slider reset)
-	const canUpcast =
-		spell.tier > 0 && spell.scaling && spell.scaling.mode !== 'none' && maxMana > baseMana;
-	const hasChoices = spell.scaling?.mode === 'upcastChoice';
-	const isHealingSpell = spell.activation?.effects?.some(
-		(e: { type: string }) => e.type === 'healing',
+	const canUpcast = $derived(
+		spell.tier > 0 && spell.scaling && spell.scaling.mode !== 'none' && maxMana > baseMana,
+	);
+	const hasChoices = $derived(spell.scaling?.mode === 'upcastChoice');
+	const isHealingSpell = $derived(
+		spell.activation?.effects?.some((e: { type: string }) => e.type === 'healing'),
 	);
 
 	// Upcast state
-	let manaToSpend = $state(baseMana);
+	let manaToSpend = $state(untrack(() => baseMana));
 	let choiceIndex = $state(0);
 
 	// Derived values

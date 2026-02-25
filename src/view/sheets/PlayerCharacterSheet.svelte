@@ -1,6 +1,6 @@
 <script>
 	import { createSubscriber } from 'svelte/reactivity';
-	import { setContext } from 'svelte';
+	import { setContext, untrack } from 'svelte';
 	import { readable } from 'svelte/store';
 	import localize from '../../utils/localize.js';
 	import {
@@ -354,10 +354,16 @@
 		return { bySize, value, max };
 	});
 
-	setContext('actor', actor);
-	setContext('document', actor);
-	setContext('application', sheet);
-	setContext('editingEnabled', editingEnabledStore);
+	// Set context synchronously during component initialization (not in $effect)
+	// Wrapped in untrack to suppress warnings - actor/sheet don't change during sheet lifecycle
+	{
+		const actorRef = untrack(() => actor);
+		const sheetRef = untrack(() => sheet);
+		setContext('actor', actorRef);
+		setContext('document', actorRef);
+		setContext('application', sheetRef);
+		setContext('editingEnabled', editingEnabledStore);
+	}
 </script>
 
 <header class="nimble-sheet__header">

@@ -1,18 +1,18 @@
-import { isCombatantDead } from '../utils/isCombatantDead.js';
-import { isMinionCombatant } from '../utils/minionGrouping.js';
-import {
-	createMinionGroupAttackSelectionState,
-	deriveDefaultMemberActionSelection,
-	rememberMemberActionSelection,
-	type MinionGroupAttackOption,
-	type MinionGroupAttackSessionContext,
-	type MinionGroupAttackSelectionState,
-} from '../utils/minionGroupAttackSession.js';
 import {
 	flattenActivationEffects,
 	getUnsupportedActivationEffectTypes,
 } from '../utils/activationEffects.js';
 import { getCombatantImage } from '../utils/combatantImage.js';
+import { isCombatantDead } from '../utils/isCombatantDead.js';
+import {
+	createMinionGroupAttackSelectionState,
+	deriveDefaultMemberActionSelection,
+	type MinionGroupAttackOption,
+	type MinionGroupAttackSelectionState,
+	type MinionGroupAttackSessionContext,
+	rememberMemberActionSelection,
+} from '../utils/minionGroupAttackSession.js';
+import { isMinionCombatant } from '../utils/minionGrouping.js';
 
 const NCSW_PANEL_ID = 'nimble-minion-group-attack-panel';
 const MINION_GROUP_TOKEN_UI_DEBUG_ENABLED_KEY = 'NIMBLE_ENABLE_GROUP_TOKEN_UI_LOGS';
@@ -2309,7 +2309,7 @@ export default function registerMinionGroupTokenActions(): void {
 	registerHook('deactivateTokenLayer', () => scheduleActionBarRefresh('deactivateTokenLayer'));
 	registerHook('updateSetting', () => scheduleActionBarRefresh('updateSetting'));
 
-	if (canvas?.ready) {
+	if (typeof canvas !== 'undefined' && canvas?.ready) {
 		scheduleActionBarRefresh('initial-ready');
 	}
 }

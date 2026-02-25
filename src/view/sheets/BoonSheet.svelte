@@ -55,8 +55,10 @@
 	let currentTab = $state(navigation[0]);
 	const { boonTypes } = CONFIG.NIMBLE;
 
-	setContext('document', item);
-	setContext('application', sheet);
+	$effect(() => {
+		setContext('document', item);
+		setContext('application', sheet);
+	});
 </script>
 
 {#snippet configTab()}

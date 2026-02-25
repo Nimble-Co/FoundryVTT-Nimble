@@ -1,4 +1,5 @@
 <script>
+	import { untrack } from 'svelte';
 	import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 	import { incrementDieSize } from '../../managers/HitDiceManager.js';
 
@@ -23,10 +24,10 @@
 	let { document, dialog } = $props();
 
 	// Get hit dice size bonus from rules (e.g., Oozeling's Odd Constitution)
-	const hitDiceSizeBonus = document.system.attributes?.hitDiceSizeBonus ?? 0;
+	const hitDiceSizeBonus = $derived(document.system.attributes?.hitDiceSizeBonus ?? 0);
 
 	let classHpData = $state([]);
-	let hpBonus = $state(document.system.attributes.hp.bonus || 0);
+	let hpBonus = $state(untrack(() => document.system.attributes.hp.bonus || 0));
 
 	// Collect HP bonuses from rules
 	let ruleBonuses = $derived.by(() => {

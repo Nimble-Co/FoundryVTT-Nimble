@@ -240,11 +240,12 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 			'../../view/dialogs/ActorSavingThrowConfigDialog.svelte'
 		);
 
-		const dialog = new GenericDialog(
+		const uniqueId = `configure-saves-${this.id}`;
+		const dialog = GenericDialog.getOrCreate(
 			`${this.name}: Configure Saves`,
 			ActorSavingThrowConfigDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-shield', width: 600 },
+			{ icon: 'fa-solid fa-shield', width: 600, uniqueId },
 		);
 
 		await dialog.render(true);

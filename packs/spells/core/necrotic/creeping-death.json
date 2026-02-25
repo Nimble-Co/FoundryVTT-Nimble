@@ -69,7 +69,9 @@
 				"min": 1,
 				"max": 8
 			},
-			"selected": ["reach"]
+			"selected": [
+				"reach"
+			]
 		},
 		"school": "necrotic",
 		"tier": 7,

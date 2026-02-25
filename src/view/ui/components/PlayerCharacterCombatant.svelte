@@ -46,8 +46,8 @@
 	}
 
 	let { active, combatant } = $props();
-	let isOwner = combatant.actor?.testUserPermission(game.user, 'OWNER');
-	let isObserver = combatant.actor?.testUserPermission(game.user, 'OBSERVER');
+	let isOwner = $derived(combatant.actor?.testUserPermission(game.user, 'OWNER'));
+	let isObserver = $derived(combatant.actor?.testUserPermission(game.user, 'OBSERVER'));
 	let isDead = $derived(isCombatantDead(combatant));
 </script>
 

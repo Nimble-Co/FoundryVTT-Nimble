@@ -8,42 +8,49 @@
 	import RollSummary from './components/RollSummary.svelte';
 
 	let { messageDocument } = $props();
-	let { system, rolls } = messageDocument;
 
-	const {
-		actorType,
-		permissions,
-		restType,
-		hitDiceSpent,
-		totalHealing,
-		wasMaximized,
-		hadAdvantage,
-		advantageSource,
-	} = system;
+	const system = $derived(messageDocument.system);
+	const rolls = $derived(messageDocument.rolls);
+	const actorType = $derived(system.actorType);
+	const permissions = $derived(system.permissions);
+	const restType = $derived(system.restType);
+	const hitDiceSpent = $derived(system.hitDiceSpent);
+	const totalHealing = $derived(system.totalHealing);
+	const wasMaximized = $derived(system.wasMaximized);
+	const hadAdvantage = $derived(system.hadAdvantage);
+	const advantageSource = $derived(system.advantageSource);
 
-	const headerBackgroundColor = messageDocument.author.color;
-	const headerTextColor = calculateHeaderTextColor(headerBackgroundColor);
+	const headerBackgroundColor = $derived(messageDocument.author.color);
+	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
 	// Determine rest type label and icon
-	const isMakeCamp = restType === 'makeCamp';
-	const restTypeLabel = isMakeCamp
-		? CONFIG.NIMBLE.fieldRest.makeCamp
-		: CONFIG.NIMBLE.fieldRest.catchBreath;
-	const restLabel = game.i18n.format(CONFIG.NIMBLE.fieldRest.cardHeading, {
-		restType: restTypeLabel,
-	});
-	const restIcon = isMakeCamp ? 'fa-solid fa-campground' : 'fa-solid fa-wind';
+	const isMakeCamp = $derived(restType === 'makeCamp');
+	const restTypeLabel = $derived(
+		isMakeCamp ? CONFIG.NIMBLE.fieldRest.makeCamp : CONFIG.NIMBLE.fieldRest.catchBreath,
+	);
+	const restLabel = $derived(
+		game.i18n.format(CONFIG.NIMBLE.fieldRest.cardHeading, {
+			restType: restTypeLabel,
+		}),
+	);
+	const restIcon = $derived(isMakeCamp ? 'fa-solid fa-campground' : 'fa-solid fa-wind');
 
 	// Format hit dice spent for display
-	const hitDiceDisplay = Object.entries(hitDiceSpent as Record<string, number>)
-		.filter(([_, qty]) => qty > 0)
-		.map(([size, qty]) => `${qty}d${size}`)
-		.join(' + ');
+	const hitDiceDisplay = $derived(
+		Object.entries(hitDiceSpent as Record<string, number>)
+			.filter(([_, qty]) => qty > 0)
+			.map(([size, qty]) => `${qty}d${size}`)
+			.join(' + '),
+	);
 
 	// Prepare roll tooltip if rolls exist
-	const rollTooltip = rolls?.length ? prepareRollTooltip(actorType, permissions, rolls[0]) : '';
+	const rollTooltip = $derived(
+		rolls?.length ? prepareRollTooltip(actorType, permissions, rolls[0]) : '',
+	);
 
-	setContext('message', messageDocument);
+	$effect(() => {
+		setContext('message', messageDocument);
+	});
 </script>
 
 <CardHeader {messageDocument} />

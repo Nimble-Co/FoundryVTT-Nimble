@@ -1,5 +1,5 @@
 <script>
-	import { setContext } from 'svelte';
+	import { setContext, untrack } from 'svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import HitPointBar from './components/HitPointBar.svelte';
@@ -88,7 +88,12 @@
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
 
-	setContext('actor', actor);
+	// Set context synchronously during component initialization (not in $effect)
+	// Wrapped in untrack to suppress warnings - actor doesn't change during sheet lifecycle
+	{
+		const actorRef = untrack(() => actor);
+		setContext('actor', actorRef);
+	}
 </script>
 
 <header class="nimble-sheet__header">

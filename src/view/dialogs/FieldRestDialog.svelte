@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
 	import { incrementDieSize } from '../../managers/HitDiceManager.js';
@@ -105,13 +106,15 @@
 	});
 
 	// Get hit dice advantage rules from the actor
-	const advantageRules = ((
-		actor.system.attributes as { hitDiceAdvantageRules?: HitDiceAdvantageRule[] }
-	).hitDiceAdvantageRules ?? []) as HitDiceAdvantageRule[];
+	const advantageRules = $derived(
+		((actor.system.attributes as { hitDiceAdvantageRules?: HitDiceAdvantageRule[] })
+			.hitDiceAdvantageRules ?? []) as HitDiceAdvantageRule[],
+	);
 
 	// Check if hit dice are always maximized (from rules like Oozeling's Odd Constitution)
-	const alwaysMaximize =
-		(actor.system.attributes as { maximizeHitDice?: boolean }).maximizeHitDice ?? false;
+	const alwaysMaximize = $derived(
+		(actor.system.attributes as { maximizeHitDice?: boolean }).maximizeHitDice ?? false,
+	);
 
 	let makeCamp = $state(false);
 	let selectedHitDice = $state<Record<string, number>>({});
@@ -128,7 +131,7 @@
 
 	// Initialize advantage toggles - all off by default since they're conditional
 	let advantageToggles = $state(
-		Object.fromEntries(advantageRules.map((rule) => [rule.id, false])),
+		untrack(() => Object.fromEntries(advantageRules.map((rule) => [rule.id, false]))),
 	) as Record<string, boolean>;
 
 	const totalSelected = $derived(

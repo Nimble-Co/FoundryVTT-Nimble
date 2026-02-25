@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
 
@@ -10,18 +11,20 @@
 	let { document: actor, dialog }: Props = $props();
 
 	// Get hit dice data - use HitDiceManager which is refreshed on actor update
-	const hitDice = actor.HitDiceManager.bySize;
+	const hitDice = $derived(actor.HitDiceManager.bySize);
 
 	// Check if the actor has the maximizeHitDice flag from rules (e.g., Oozeling's Odd Constitution)
-	const maximizeHitDice =
-		(actor.system.attributes as { maximizeHitDice?: boolean }).maximizeHitDice ?? false;
-	const maximizeHitDiceContributions = ((
-		actor.system.attributes as { maximizeHitDiceContributions?: Array<{ label: string }> }
-	).maximizeHitDiceContributions ?? []) as Array<{ label: string }>;
+	const maximizeHitDice = $derived(
+		(actor.system.attributes as { maximizeHitDice?: boolean }).maximizeHitDice ?? false,
+	);
+	const maximizeHitDiceContributions = $derived(
+		((actor.system.attributes as { maximizeHitDiceContributions?: Array<{ label: string }> })
+			.maximizeHitDiceContributions ?? []) as Array<{ label: string }>,
+	);
 
 	// Initialize selections to 0 for each die size
 	let selections: Record<string, number> = $state(
-		Object.fromEntries(Object.keys(hitDice).map((die) => [die, 0])),
+		untrack(() => Object.fromEntries(Object.keys(hitDice).map((die) => [die, 0]))),
 	);
 	let addStrBonus = $state(true);
 	let applyToHP = $state(true);

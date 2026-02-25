@@ -8,14 +8,20 @@
 	import RollSummary from './components/RollSummary.svelte';
 
 	let { messageDocument } = $props();
-	let { system, rolls } = messageDocument;
 
-	const { actorType, currentClassLevel, takeAverageHp, permissions } = system;
+	const system = $derived(messageDocument.system);
+	const rolls = $derived(messageDocument.rolls);
+	const actorType = $derived(system.actorType);
+	const currentClassLevel = $derived(system.currentClassLevel);
+	const takeAverageHp = $derived(system.takeAverageHp);
+	const permissions = $derived(system.permissions);
 
-	const headerBackgroundColor = messageDocument.author.color;
-	const headerTextColor = calculateHeaderTextColor(headerBackgroundColor);
+	const headerBackgroundColor = $derived(messageDocument.author.color);
+	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
-	setContext('message', messageDocument);
+	$effect(() => {
+		setContext('message', messageDocument);
+	});
 </script>
 
 <CardHeader {messageDocument} />

@@ -16,36 +16,40 @@
 
 	let { document: actor, dialog }: Props = $props();
 
-	const levelUpHistory = actor.system.levelUpHistory;
-	const lastHistory = levelUpHistory[levelUpHistory.length - 1];
+	const levelUpHistory = $derived(actor.system.levelUpHistory);
+	const lastHistory = $derived(levelUpHistory[levelUpHistory.length - 1]);
 
-	const characterClass: NimbleClassItem | undefined = lastHistory
-		? actor.classes[lastHistory.classIdentifier]
-		: undefined;
+	const characterClass: NimbleClassItem | undefined = $derived(
+		lastHistory ? actor.classes[lastHistory.classIdentifier] : undefined,
+	);
 
-	const currentLevel = characterClass?.system?.classLevel ?? 1;
-	const newLevel = currentLevel - 1;
+	const currentLevel = $derived(characterClass?.system?.classLevel ?? 1);
+	const newLevel = $derived(currentLevel - 1);
 
 	// Get skill names for display
-	const skillChanges = Object.entries(lastHistory?.skillIncreases ?? {})
-		.filter(([, value]) => (value as number) > 0)
-		.map(([key, value]) => ({
-			name: CONFIG.NIMBLE.skills[key]?.label ?? key,
-			points: value as number,
-		}));
+	const skillChanges = $derived(
+		Object.entries(lastHistory?.skillIncreases ?? {})
+			.filter(([, value]) => (value as number) > 0)
+			.map(([key, value]) => ({
+				name: CONFIG.NIMBLE.skills[key]?.label ?? key,
+				points: value as number,
+			})),
+	);
 
 	// Get ability score names for display
-	const abilityChanges = Object.entries(lastHistory?.abilityIncreases ?? {})
-		.filter(([, value]) => (value as number) > 0)
-		.map(([key, value]) => ({
-			name: CONFIG.NIMBLE.abilities[key]?.label ?? key,
-			points: value as number,
-		}));
+	const abilityChanges = $derived(
+		Object.entries(lastHistory?.abilityIncreases ?? {})
+			.filter(([, value]) => (value as number) > 0)
+			.map(([key, value]) => ({
+				name: CONFIG.NIMBLE.abilities[key]?.label ?? key,
+				points: value as number,
+			})),
+	);
 
 	// Check if subclass will be removed
-	const willRemoveSubclass = lastHistory?.level <= 3;
-	const subclasses = actor.items.filter((i) => i.type === 'subclass');
-	const hasSubclass = subclasses.length > 0;
+	const willRemoveSubclass = $derived(lastHistory?.level <= 3);
+	const subclasses = $derived(actor.items.filter((i) => i.type === 'subclass'));
+	const hasSubclass = $derived(subclasses.length > 0);
 </script>
 
 <article class="nimble-sheet__body">

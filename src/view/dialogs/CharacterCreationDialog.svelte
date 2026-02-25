@@ -363,8 +363,11 @@
 
 	let stageNumber = $derived(stage.toString().match(/\d+/)[0]);
 
-	setContext('dialog', dialog);
 	setContext('CHARACTER_CREATION_STAGES', CHARACTER_CREATION_STAGES);
+
+	$effect(() => {
+		setContext('dialog', dialog);
+	});
 
 	$effect(() => {
 		scrollIntoView(`${dialog.id}-stage-${stage}`);

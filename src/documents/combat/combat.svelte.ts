@@ -1,11 +1,15 @@
 import { createSubscriber } from 'svelte/reactivity';
+import { DamageRoll } from '../../dice/DamageRoll.js';
+import {
+	getPrimaryDamageFormulaFromActivationEffects,
+	getUnsupportedActivationEffectTypes,
+} from '../../utils/activationEffects.js';
+import { getCombatantImage } from '../../utils/combatantImage.js';
 import {
 	canCurrentUserReorderCombatant,
 	getCombatantTypePriority,
 } from '../../utils/combatantOrdering.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
-import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
-import { handleInitiativeRules } from './handleInitiativeRules.js';
 import {
 	getEffectiveMinionGroupLeader,
 	getMinionGroupId,
@@ -17,13 +21,8 @@ import {
 	MINION_GROUP_ROLE_PATH,
 	MINION_GROUP_TEMPORARY_PATH,
 } from '../../utils/minionGrouping.js';
-import { DamageRoll } from '../../dice/DamageRoll.js';
-import {
-	getPrimaryDamageFormulaFromActivationEffects,
-	getUnsupportedActivationEffectTypes,
-} from '../../utils/activationEffects.js';
-import { getCombatantImage } from '../../utils/combatantImage.js';
 import { getCurrentUserTargetTokenIds, getTargetTokenName } from '../../utils/tokenTargetLookup.js';
+import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
 import {
 	appendMinionAttackRollOutcome,
 	buildNcsGroupAttackChatData,
@@ -49,12 +48,13 @@ import type {
 	MinionGroupAttackResult,
 	MinionGroupAttackRollEntry,
 	MinionGroupAttackRollOutcome,
-	MinionGroupAttackSkippedMember,
 	MinionGroupAttackSelection,
+	MinionGroupAttackSkippedMember,
 	NormalizedMinionGroupAttackParams,
 	ResolvedMinionAttackActionContext,
 	ResolvedMinionGroupAttackTargets,
 } from './combatTypes.js';
+import { handleInitiativeRules } from './handleInitiativeRules.js';
 
 class NimbleCombat extends Combat {
 	#subscribe: ReturnType<typeof createSubscriber>;

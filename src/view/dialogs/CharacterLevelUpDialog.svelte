@@ -47,11 +47,13 @@
 
 	let { document, dialog } = $props();
 
-	const characterClass: NimbleClassItem | undefined = document?.classes
-		? (Object.values(document.classes)[0] as NimbleClassItem | undefined)
-		: undefined;
-	const level = characterClass?.system?.classLevel ?? 1;
-	const levelingTo = level + 1;
+	const characterClass: NimbleClassItem | undefined = $derived(
+		document?.classes
+			? (Object.values(document.classes)[0] as NimbleClassItem | undefined)
+			: undefined,
+	);
+	const level = $derived(characterClass?.system?.classLevel ?? 1);
+	const levelingTo = $derived(level + 1);
 
 	let boons = getChoicesFromCompendium('boon');
 	let subclasses: Array<{
@@ -60,7 +62,7 @@
 		img: string;
 		system: { parentClass: string };
 	}> = $state([]);
-	let hasSubclassSelection = levelingTo === 3;
+	let hasSubclassSelection = $derived(levelingTo === 3);
 
 	// Load subclasses filtered by parent class when leveling to 3
 	$effect(() => {

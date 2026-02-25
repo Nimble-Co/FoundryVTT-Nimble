@@ -7,15 +7,19 @@
 	import RollSummary from './components/RollSummary.svelte';
 
 	const { messageDocument } = $props();
-	const { system, rolls } = messageDocument;
 
-	const headerBackgroundColor = messageDocument.author.color;
-	const headerTextColor = calculateHeaderTextColor(headerBackgroundColor);
+	const system = $derived(messageDocument.system);
+	const rolls = $derived(messageDocument.rolls);
+	const headerBackgroundColor = $derived(messageDocument.author.color);
+	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
 	const { saves } = CONFIG.NIMBLE;
-	const { actorType, permissions, rollMode, saveKey } = system;
+	const actorType = $derived(system.actorType);
+	const permissions = $derived(system.permissions);
+	const rollMode = $derived(system.rollMode);
+	const saveKey = $derived(system.saveKey);
 
-	const label = saves[`${saveKey}Save`];
+	const label = $derived(saves[`${saveKey}Save`]);
 </script>
 
 <CardHeader {messageDocument} />

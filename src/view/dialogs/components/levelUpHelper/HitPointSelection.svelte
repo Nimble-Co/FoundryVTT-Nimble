@@ -10,16 +10,19 @@
 
 	let { document, hitPointRollSelection = $bindable() }: Props = $props();
 
-	const characterClass: NimbleClassItem | undefined = document?.classes
-		? (Object.values(document.classes)[0] as NimbleClassItem | undefined)
-		: undefined;
+	const characterClass: NimbleClassItem | undefined = $derived(
+		document?.classes
+			? (Object.values(document.classes)[0] as NimbleClassItem | undefined)
+			: undefined,
+	);
 
-	const baseHitDieSize = characterClass?.system?.hitDieSize ?? 6;
-	const hitDiceSizeBonus =
+	const baseHitDieSize = $derived(characterClass?.system?.hitDieSize ?? 6);
+	const hitDiceSizeBonus = $derived(
 		(document?.system?.attributes as { hitDiceSizeBonus?: number } | undefined)?.hitDiceSizeBonus ??
-		0;
-	const effectiveHitDieSize = incrementDieSize(baseHitDieSize, hitDiceSizeBonus);
-	const averageHp = Math.ceil((effectiveHitDieSize + 1) / 2);
+			0,
+	);
+	const effectiveHitDieSize = $derived(incrementDieSize(baseHitDieSize, hitDiceSizeBonus));
+	const averageHp = $derived(Math.ceil((effectiveHitDieSize + 1) / 2));
 </script>
 
 <section>

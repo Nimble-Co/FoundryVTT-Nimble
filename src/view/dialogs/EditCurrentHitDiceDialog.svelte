@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { NimbleCharacter } from '../../documents/actor/character.js';
 	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
 
@@ -10,14 +11,16 @@
 	let { document: actor, dialog }: Props = $props();
 
 	// Get hit dice data from the HitDiceManager
-	const hitDice = actor.HitDiceManager.bySize;
+	const hitDice = $derived(actor.HitDiceManager.bySize);
 
 	// Initialize current values from existing data
 	let currentValues: Record<string, number> = $state(
-		Object.fromEntries(
-			Object.entries(hitDice)
-				.filter(([_, data]) => data.total > 0)
-				.map(([die, data]) => [die, data.current]),
+		untrack(() =>
+			Object.fromEntries(
+				Object.entries(hitDice)
+					.filter(([_, data]) => data.total > 0)
+					.map(([die, data]) => [die, data.current]),
+			),
 		),
 	);
 

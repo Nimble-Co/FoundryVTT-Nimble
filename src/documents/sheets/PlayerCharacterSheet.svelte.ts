@@ -26,7 +26,10 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		);
 
 		this.root = PlayerCharacterSheetComponent;
-		const resolvedActor = actor.document.isToken ? actor.document.parent?.actor : actor.document;
+		// For synthetic token actors, get the actor via the parent TokenDocument
+		const resolvedActor = actor.document.isToken
+			? (actor.document.parent as TokenDocument | undefined)?.actor
+			: actor.document;
 		this._actor = resolvedActor ?? actor.document;
 
 		this.props = {

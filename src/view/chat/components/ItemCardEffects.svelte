@@ -8,7 +8,7 @@
 
 	let messageDocument = getContext('messageDocument');
 
-	let nodes = messageDocument.effectNodes;
+	let nodes = messageDocument?.effectNodes ?? [];
 </script>
 
 {#each nodes as nodeGroup}

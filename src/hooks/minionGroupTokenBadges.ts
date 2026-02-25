@@ -305,7 +305,7 @@ export default function registerMinionGroupTokenBadges(): void {
 		refreshAllVisibleTokenGroupBadges();
 	});
 
-	if (canvas?.ready) {
+	if (typeof canvas !== 'undefined' && canvas?.ready) {
 		refreshAllVisibleTokenGroupBadges();
 	}
 }

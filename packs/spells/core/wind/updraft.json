@@ -67,7 +67,9 @@
 				"min": 1,
 				"max": 12
 			},
-			"selected": ["reach"]
+			"selected": [
+				"reach"
+			]
 		},
 		"school": "wind",
 		"tier": 5,
