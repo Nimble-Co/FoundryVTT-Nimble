@@ -2,6 +2,7 @@ import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 import { SvelteItemSheet } from '#lib/SvelteItemSheet.svelte.js';
 
 import BackgroundSheetComponent from '../../view/sheets/BackgroundSheet.svelte';
+import { SHEET_DEFAULTS } from './sheetDefaults.js';
 
 export default class BackgroundSheet extends SvelteApplicationMixin(SvelteItemSheet) {
 	protected root;
@@ -22,10 +23,7 @@ export default class BackgroundSheet extends SvelteApplicationMixin(SvelteItemSh
 			icon: 'fa-solid fa-building-columns',
 			resizable: true,
 		},
-		position: {
-			width: 350,
-			height: 500,
-		},
+		position: SHEET_DEFAULTS.item,
 		actions: {},
 	};
 

@@ -3,6 +3,7 @@ import {
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
 import AncestrySheetComponent from '../../view/sheets/AncestrySheet.svelte';
+import { SHEET_DEFAULTS } from './sheetDefaults.js';
 
 export default class AncestrySheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ItemSheetV2,
@@ -30,10 +31,7 @@ export default class AncestrySheet extends SvelteApplicationMixin(
 			icon: 'fa-solid fa-user',
 			resizable: true,
 		},
-		position: {
-			width: 350,
-			height: 500,
-		},
+		position: SHEET_DEFAULTS.item,
 	};
 
 	protected override async _prepareContext(

@@ -4,6 +4,7 @@ import {
 } from '#lib/SvelteApplicationMixin.svelte.js';
 import NPCSheetComponent from '../../view/sheets/NPCSheet.svelte';
 import type { NimbleNPC } from '../actor/npc.js';
+import { SHEET_DEFAULTS } from './sheetDefaults.js';
 
 export default class NPCSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ActorSheetV2,
@@ -44,10 +45,7 @@ export default class NPCSheet extends SvelteApplicationMixin(
 			icon: 'fa-solid fa-ghost',
 			resizable: true,
 		},
-		position: {
-			width: 288,
-			height: 650,
-		},
+		position: SHEET_DEFAULTS.npc,
 	};
 
 	protected override async _prepareContext(

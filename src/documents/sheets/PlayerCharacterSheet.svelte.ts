@@ -3,8 +3,8 @@ import {
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
 import PlayerCharacterSheetComponent from '../../view/sheets/PlayerCharacterSheet.svelte';
-
 import type { NimbleCharacter } from '../actor/character.js';
+import { SHEET_DEFAULTS } from './sheetDefaults.js';
 
 export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ActorSheetV2,
@@ -48,10 +48,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			icon: 'fa-solid fa-user',
 			resizable: true,
 		},
-		position: {
-			width: 336,
-			height: 850,
-		},
+		position: SHEET_DEFAULTS.playerCharacter,
 	};
 
 	protected override async _prepareContext(

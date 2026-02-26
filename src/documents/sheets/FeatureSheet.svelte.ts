@@ -3,6 +3,7 @@ import {
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
 import FeatureSheetComponent from '../../view/sheets/FeatureSheet.svelte';
+import { SHEET_DEFAULTS } from './sheetDefaults.js';
 
 export default class FeatureSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ItemSheetV2,
@@ -30,10 +31,7 @@ export default class FeatureSheet extends SvelteApplicationMixin(
 			icon: 'fa-solid fa-user',
 			resizable: true,
 		},
-		position: {
-			width: 400,
-			height: 500,
-		},
+		position: SHEET_DEFAULTS.feature,
 		actions: {},
 	};
 
