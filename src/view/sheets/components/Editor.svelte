@@ -7,6 +7,7 @@
 
 	interface ProseMirrorElement extends HTMLElement {
 		_getValue?(): string;
+		_refresh?(): void;
 		open?(): void;
 		isDirty?(): boolean;
 	}
@@ -111,15 +112,12 @@
 	}
 
 	function saveEditor() {
-		console.log('saveEditor');
 		const proseMirror = containerElem?.querySelector('prose-mirror') as ProseMirrorElement | null;
 		if (!proseMirror) return;
 
 		// Get the current value and save it to the document
 		if (typeof proseMirror._getValue === 'function') {
-			console.log('proseMirror._getValue', proseMirror._getValue);
 			const value = proseMirror._getValue();
-			console.log('value', value);
 			document.update({ [field]: value });
 		}
 
@@ -130,9 +128,8 @@
 		proseMirror.classList.remove('active');
 
 		// Force a re-render by calling _refresh if available
-		if (typeof (proseMirror as any)._refresh === 'function') {
-			console.log('proseMirror._refresh', (proseMirror as any)._refresh);
-			(proseMirror as any)._refresh();
+		if (typeof proseMirror._refresh === 'function') {
+			proseMirror._refresh();
 		}
 	}
 
@@ -163,7 +160,6 @@
 
 		// Listen for save events from ProseMirror and update the document
 		element.addEventListener('save', (event: Event) => {
-			console.log('save event', event);
 			const target = event.target as ProseMirrorElement;
 			if (target?._getValue) {
 				const value = target._getValue();
