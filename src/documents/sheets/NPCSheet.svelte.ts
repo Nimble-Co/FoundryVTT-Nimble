@@ -46,7 +46,7 @@ export default class NPCSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 288,
-			height: 'auto' as const,
+			height: 650,
 		},
 	};
 
