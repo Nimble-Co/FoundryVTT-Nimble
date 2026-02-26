@@ -11,6 +11,9 @@
 
 	const CHARACTER_CREATION_STAGES = getContext('CHARACTER_CREATION_STAGES');
 	const dialog = getContext('dialog');
+	const sectionId = $derived(
+		`${dialog?.id ?? 'character-creation'}-stage-${CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT}`,
+	);
 	const { startingEquipment, characterCreationStages } = CONFIG.NIMBLE;
 
 	const hintText = game.i18n.localize(startingEquipment.hint);
@@ -47,10 +50,7 @@
 	}
 </script>
 
-<section
-	class="nimble-character-creation-section"
-	id="{dialog.id}-stage-{CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT}"
->
+<section class="nimble-character-creation-section" id={sectionId}>
 	<header class="nimble-section-header" data-header-variant="character-creator">
 		<h3 class="nimble-heading" data-heading-variant="section">
 			{game.i18n.localize(characterCreationStages.stepFourStartingEquipment)}

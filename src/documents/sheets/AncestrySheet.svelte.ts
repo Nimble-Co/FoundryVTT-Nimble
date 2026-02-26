@@ -31,8 +31,8 @@ export default class AncestrySheet extends SvelteApplicationMixin(
 			resizable: true,
 		},
 		position: {
-			width: 288,
-			height: 'auto' as const,
+			width: 350,
+			height: 500,
 		},
 	};
 

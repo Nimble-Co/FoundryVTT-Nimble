@@ -32,7 +32,7 @@ export default class FeatureSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 400,
-			height: 'auto' as const,
+			height: 500,
 		},
 		actions: {},
 	};
