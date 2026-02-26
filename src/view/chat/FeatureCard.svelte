@@ -1,5 +1,5 @@
 <script>
-	import { setContext, untrack } from 'svelte';
+	import { setContext } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
@@ -44,10 +44,7 @@
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
-	{
-		const messageDocumentRef = untrack(() => messageDocument);
-		setContext('messageDocument', messageDocumentRef);
-	}
+	setContext('messageDocument', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />

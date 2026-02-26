@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setContext, untrack } from 'svelte';
+	import { setContext } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import prepareRollTooltip from '../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
@@ -111,10 +111,7 @@
 		});
 	}
 
-	{
-		const messageDocumentRef = untrack(() => messageDocument);
-		setContext('messageDocument', messageDocumentRef);
-	}
+	setContext('messageDocument', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />

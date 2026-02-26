@@ -1,5 +1,5 @@
 <script>
-	import { setContext, untrack } from 'svelte';
+	import { setContext } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
@@ -56,10 +56,7 @@
 		return parts.join(' — ');
 	});
 
-	{
-		const messageDocumentRef = untrack(() => messageDocument);
-		setContext('messageDocument', messageDocumentRef);
-	}
+	setContext('messageDocument', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />

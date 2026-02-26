@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setContext, untrack } from 'svelte';
+	import { setContext } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
@@ -30,10 +30,7 @@
 		hitDiceDisplay || hpRestored > 0 || manaRestored > 0 || woundsRecovered > 0,
 	);
 
-	{
-		const messageDocumentRef = untrack(() => messageDocument);
-		setContext('message', messageDocumentRef);
-	}
+	setContext('message', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />
