@@ -121,6 +121,7 @@
 	.nimble-notes-section {
 		display: block;
 		height: 100%;
+		min-height: 200px;
 		align-content: flex-start;
 		grid-area: notes;
 

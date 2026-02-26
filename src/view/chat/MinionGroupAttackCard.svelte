@@ -111,9 +111,7 @@
 		});
 	}
 
-	$effect(() => {
-		setContext('messageDocument', messageDocument);
-	});
+	setContext('messageDocument', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />

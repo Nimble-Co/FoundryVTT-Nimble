@@ -50,7 +50,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		},
 		position: {
 			width: 336,
-			height: 'auto' as const,
+			height: 850,
 		},
 	};
 

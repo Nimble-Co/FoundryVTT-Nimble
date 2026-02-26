@@ -22,9 +22,7 @@
 
 	const label = $derived(`${abilityScores[abilityKey]} Check`);
 
-	$effect(() => {
-		setContext('message', messageDocument);
-	});
+	setContext('message', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />

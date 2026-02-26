@@ -114,10 +114,8 @@
 	let objectType = $derived(item.reactive.system.objectType);
 	let objectSizeType = $derived(item.reactive.system.objectSizeType);
 
-	$effect(() => {
-		setContext('document', item);
-		setContext('application', sheet);
-	});
+	setContext('document', item);
+	setContext('application', sheet);
 </script>
 
 {#snippet activationConfigTab()}

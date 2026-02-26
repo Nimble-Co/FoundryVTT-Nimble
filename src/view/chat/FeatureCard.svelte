@@ -44,9 +44,7 @@
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
-	$effect(() => {
-		setContext('messageDocument', messageDocument);
-	});
+	setContext('messageDocument', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />

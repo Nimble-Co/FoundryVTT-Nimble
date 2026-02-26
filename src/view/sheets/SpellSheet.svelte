@@ -55,10 +55,8 @@
 	let currentTab = $state(navigation[0]);
 	let metadata = $derived(prepareSpellMetaData(item.reactive) ?? '');
 
-	$effect(() => {
-		setContext('document', item);
-		setContext('application', sheet);
-	});
+	setContext('document', item);
+	setContext('application', sheet);
 </script>
 
 <header class="nimble-sheet__header nimble-sheet__header--spell">

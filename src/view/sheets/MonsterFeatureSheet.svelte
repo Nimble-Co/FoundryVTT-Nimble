@@ -47,10 +47,8 @@
 
 	let { item, sheet } = $props();
 
-	$effect(() => {
-		setContext('document', item);
-		setContext('application', sheet);
-	});
+	setContext('document', item);
+	setContext('application', sheet);
 </script>
 
 {#snippet activationConfigTab()}

@@ -34,10 +34,8 @@
 	let currentTab = $state(navigation[0]);
 	let parentClass = $derived(item.system.parentClass);
 
-	$effect(() => {
-		setContext('document', item);
-		setContext('application', sheet);
-	});
+	setContext('document', item);
+	setContext('application', sheet);
 </script>
 
 {#snippet configTab()}

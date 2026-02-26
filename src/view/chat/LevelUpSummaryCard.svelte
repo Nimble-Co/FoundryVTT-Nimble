@@ -19,9 +19,7 @@
 	const headerBackgroundColor = $derived(messageDocument.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
-	$effect(() => {
-		setContext('message', messageDocument);
-	});
+	setContext('message', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />

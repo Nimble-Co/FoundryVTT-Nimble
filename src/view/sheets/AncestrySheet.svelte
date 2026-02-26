@@ -33,10 +33,8 @@
 
 	let exoticAncestry = $derived(item.reactive.system.exotic);
 
-	$effect(() => {
-		setContext('document', item);
-		setContext('application', sheet);
-	});
+	setContext('document', item);
+	setContext('application', sheet);
 </script>
 
 {#snippet descriptionTab()}

@@ -30,9 +30,7 @@
 		hitDiceDisplay || hpRestored > 0 || manaRestored > 0 || woundsRecovered > 0,
 	);
 
-	$effect(() => {
-		setContext('message', messageDocument);
-	});
+	setContext('message', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />

@@ -178,10 +178,8 @@
 	let weaponProficiencies = $derived(item.reactive.system.weaponProficiencies);
 	let featureGroups = $derived(item.reactive.system.groupIdentifiers || []);
 
-	$effect(() => {
-		setContext('document', item);
-		setContext('application', sheet);
-	});
+	setContext('document', item);
+	setContext('application', sheet);
 </script>
 
 {#snippet configTab()}
