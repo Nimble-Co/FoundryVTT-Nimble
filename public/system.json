@@ -2,7 +2,7 @@
 	"id": "nimble",
 	"title": "Nimble",
 	"description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
-	"version": "0.7.0",
+	"version": "0.7.1",
 	"authors": [
 		{
 			"name": "Trevor Carlston",
@@ -193,5 +193,5 @@
 	"background": "systems/nimble/assets/banners/manticoreFight.webp",
 	"url": "https://github.com/Nimble-Co/FoundryVTT-Nimble",
 	"manifest": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/latest/download/system.json",
-	"download": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/download/0.7.0/nimble.zip"
+	"download": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/download/0.7.1/nimble.zip"
 }

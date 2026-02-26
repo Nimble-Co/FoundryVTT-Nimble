@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.7.1] - 2026-02-26
+
+### Added
+
+- [#313] Nimble Combat System (NCS) v1.0. @7D7D
+- [#323] Smart parsing for Nimble Nexus action descriptions. @trevlar
+- [#324] Spell upcasting scaling editor. @fronix
+- [#328] Apply hit dice size bonus rules on level up. @trevlar
+- Data migrations for oozeling/constructs hit dice increases, spellblade combat mana, spell upcasting, dwarf max hit dice increase, wild one hit dice advantage.
+
+### Fixed
+
+- [#307] Spellblade Mana edge case during combat. @7D7D
+- [#322] Odd Constitution rules for Oozeling/Construct ancestry. @trevlar
+- [#324] Spell upcasting bugs. @fronix
+- [#351] Item sheet size issues and text editor UX updates. @trevlar
+
+### Changed
+
+- [#336] Add missing legendary and standard creatures from adventures in GMG. @trevlar
+- [#338] Update nimble system name. @trevlar
+
+### Maintenance
+
+- [#349] Fixed build errors and character sheet rendering issues. @trevlar
+- [#346] Normalize formatting and ids generated for comp packs. @trevlar
+- [#317] Replace husky with lefthook for git hooks. @trevlar
+- [#327] Fix npm audit vulnerabilities. @trevlar
+- [#337] Fix npm hooks with worktree setup. @trevlar
+- [#339] Comprehensive coding style guide. @trevlar
+- Release automation of git tags and changelog update @trevlar
+
+---
+
+
 ## [0.7.0] - 2026-02-18
 
 ### Added
