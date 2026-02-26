@@ -23,6 +23,7 @@
 <style lang="scss">
 	:global(.nimble-sheet__body--notes) {
 		height: 100% !important;
+		min-height: 200px;
 		display: block !important;
 		overflow: visible !important;
 	}

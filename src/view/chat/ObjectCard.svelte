@@ -28,9 +28,7 @@
 
 	let subheading = $derived(getCardSubheading(activation, isCritical, isMiss));
 
-	$effect(() => {
-		setContext('messageDocument', messageDocument);
-	});
+	setContext('messageDocument', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />

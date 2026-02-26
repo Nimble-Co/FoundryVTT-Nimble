@@ -48,9 +48,7 @@
 		rolls?.length ? prepareRollTooltip(actorType, permissions, rolls[0]) : '',
 	);
 
-	$effect(() => {
-		setContext('message', messageDocument);
-	});
+	setContext('message', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />

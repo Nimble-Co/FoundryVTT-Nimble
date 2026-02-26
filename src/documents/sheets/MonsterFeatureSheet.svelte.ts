@@ -26,7 +26,7 @@ export default class MonsterFeatureSheet extends SvelteApplicationMixin(
 			resizable: true,
 		},
 		position: {
-			width: 288,
+			width: 350,
 			height: 600,
 		},
 		actions: {},

@@ -26,8 +26,8 @@ export default class ClassSheet extends SvelteApplicationMixin(
 			resizable: true,
 		},
 		position: {
-			width: 288,
-			height: 'auto' as const,
+			width: 350,
+			height: 500,
 		},
 		actions: {},
 	};

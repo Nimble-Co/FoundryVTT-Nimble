@@ -23,8 +23,8 @@ export default class BackgroundSheet extends SvelteApplicationMixin(SvelteItemSh
 			resizable: true,
 		},
 		position: {
-			width: 288,
-			height: 'auto' as const,
+			width: 350,
+			height: 500,
 		},
 		actions: {},
 	};
