@@ -1,5 +1,5 @@
 <script>
-	import { setContext } from 'svelte';
+	import { setContext, untrack } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import CardHeader from './components/CardHeader.svelte';
@@ -28,7 +28,10 @@
 
 	let subheading = $derived(getCardSubheading(activation, isCritical, isMiss));
 
-	setContext('messageDocument', messageDocument);
+	{
+		const messageDocumentRef = untrack(() => messageDocument);
+		setContext('messageDocument', messageDocumentRef);
+	}
 </script>
 
 <CardHeader {messageDocument} />

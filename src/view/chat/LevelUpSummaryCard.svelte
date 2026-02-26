@@ -1,5 +1,5 @@
 <script>
-	import { setContext } from 'svelte';
+	import { setContext, untrack } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import prepareRollTooltip from '../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
@@ -19,7 +19,10 @@
 	const headerBackgroundColor = $derived(messageDocument.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
-	setContext('message', messageDocument);
+	{
+		const messageDocumentRef = untrack(() => messageDocument);
+		setContext('message', messageDocumentRef);
+	}
 </script>
 
 <CardHeader {messageDocument} />

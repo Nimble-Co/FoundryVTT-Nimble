@@ -1,5 +1,5 @@
 <script>
-	import { setContext } from 'svelte';
+	import { setContext, untrack } from 'svelte';
 	import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 	import generateBlankAttributeSet from '../../utils/generateBlankAttributeSet.js';
 	import scrollIntoView from '../../utils/scrollIntoView.js';
@@ -364,7 +364,10 @@
 	let stageNumber = $derived(stage.toString().match(/\d+/)[0]);
 
 	setContext('CHARACTER_CREATION_STAGES', CHARACTER_CREATION_STAGES);
-	setContext('dialog', dialog);
+	{
+		const dialogRef = untrack(() => dialog);
+		setContext('dialog', dialogRef);
+	}
 
 	$effect(() => {
 		scrollIntoView(`${dialog.id}-stage-${stage}`);

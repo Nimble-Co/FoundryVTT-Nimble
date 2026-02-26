@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setContext } from 'svelte';
+	import { setContext, untrack } from 'svelte';
 	import localize from '../../utils/localize.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
@@ -47,8 +47,12 @@
 
 	let { item, sheet } = $props();
 
-	setContext('document', item);
-	setContext('application', sheet);
+	{
+		const itemRef = untrack(() => item);
+		const sheetRef = untrack(() => sheet);
+		setContext('document', itemRef);
+		setContext('application', sheetRef);
+	}
 </script>
 
 {#snippet activationConfigTab()}
