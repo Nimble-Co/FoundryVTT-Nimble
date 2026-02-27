@@ -129,7 +129,7 @@ If you want to support further system development, please consider joining or ti
 gh release create X.Y.Z --title "VX.Y.Z" --notes-file <release-notes-file>
 ```
 
-Or create via GitHub UI at: <https://github.com/FoundryVTT-NimbleDev/FoundryVTT-Nimble/releases/new>
+Or create via GitHub UI at: <https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/new>
 
 ### 9. Post Discord Announcements
 
