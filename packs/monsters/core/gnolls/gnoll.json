@@ -163,7 +163,7 @@
 							"id": "fOq8wiRwll2djwMT",
 							"type": "damage",
 							"damageType": "slashing",
-							"formula": "1d1|0",
+							"formula": "1d10",
 							"parentContext": null,
 							"parentNode": null,
 							"on": {
