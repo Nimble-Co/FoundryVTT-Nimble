@@ -657,64 +657,6 @@
 				"tier9": "Rang 9"
 			}
 		},
-		"spellConfig": {
-			"identifier": "Identifiant",
-			"spellProperties": "Propriétés du Sort",
-			"spellTier": "Rang du Sort",
-			"spellSchool": "École de Sort",
-			"description": {
-				"baseEffect": "Effet de Base du Sort",
-				"higherLevelEffect": "Effet de Niveau Supérieur",
-				"upcastEffect": "Effet de Surcaste"
-			},
-			"jsonEditor": {
-				"switchToVisual": "Passer à l'Éditeur Visuel",
-				"switchToJson": "Passer à l'Éditeur JSON",
-				"heading": "Données du Sort (JSON)",
-				"invalidJson": "JSON invalide"
-			},
-			"scaling": {
-				"heading": "Mise à l'Échelle du Sort",
-				"modes": {
-					"none": "Aucun",
-					"upcast": "Surcaste",
-					"upcastChoice": "Choix de Surcaste"
-				},
-				"perUpcastStep": "Par Niveau de Surcaste",
-				"upcastChoices": "Choix de Surcaste",
-				"noDeltas": "Aucun delta de mise à l'échelle configuré.",
-				"noChoices": "Aucun choix configuré.",
-				"addDelta": "Ajouter un Delta",
-				"removeDelta": "Supprimer le Delta",
-				"addChoice": "Ajouter un Choix",
-				"removeChoice": "Supprimer le Choix",
-				"choiceLabel": "Libellé du Choix",
-				"choiceLabelPlaceholder": "ex. Dégâts Supplémentaires",
-				"deltas": "Deltas",
-				"operation": "Opération",
-				"value": "Valeur",
-				"count": "Nombre",
-				"die": "Dé",
-				"condition": "État",
-				"conditionPlaceholder": "ex. incandescent",
-				"targetEffect": "Effet Cible",
-				"targetEffectAuto": "Auto (première correspondance)",
-				"targetEffectPlaceholder": "ID de l'Effet",
-				"targetEffectHint": "Ajoutez des effets dans l'onglet Activation pour sélectionner des cibles ici.",
-				"operations": {
-					"addFlatDamage": "Dégâts Fixes",
-					"addDice": "Dés",
-					"addReach": "Allonge",
-					"addRange": "Portée",
-					"addTargets": "Cibles",
-					"addAreaSize": "Taille de Zone",
-					"addDC": "DD",
-					"addArmor": "Armure",
-					"addDuration": "Durée",
-					"addCondition": "État"
-				}
-			}
-		},
 		"startingEquipment": {
 			"editSelection": "Modifier la Sélection d'Équipement de Départ",
 			"equipmentDescription": "Sélectionnez l'équipement de départ:",
@@ -756,8 +698,20 @@
 			"logo": {
 				"alt": "Nimble"
 			},
+			"selector": {
+				"title": "Selector",
+				"players": "Players",
+				"monsters": "Monsters",
+				"minions": "Minions"
+			},
+			"actionWindow": {
+				"title": "Action Window",
+				"noDescription": "No description",
+				"selectActionAria": "Select {action} for {name}"
+			},
 			"tooltips": {
-				"dragToMove": "Drag to move"
+				"dragToMove": "Drag to move",
+				"toggleSelection": "Toggle map token selection"
 			},
 			"targets": {
 				"label": "Targets:",
@@ -775,10 +729,24 @@
 				"selectAction": "Select action",
 				"noActionsLeft": "No actions left"
 			},
+			"accordion": {
+				"armor": "Armor",
+				"saves": "Saves",
+				"features": "Features",
+				"actions": "Actions"
+			},
 			"buttons": {
 				"roll": "Roll",
 				"rollEndTurn": "Roll + End Turn",
-				"close": "Close"
+				"done": "Done",
+				"close": "Close",
+				"panTo": "Pan to token",
+				"openSheet": "Open actor sheet",
+				"pingToken": "Ping token",
+				"markDefeated": "Mark combatant as defeated",
+				"deleteCombatant": "Delete combatant",
+				"toggleDetails": "Toggle details",
+				"toggleSelectionAria": "Toggle selection for {name}"
 			},
 			"chat": {
 				"heading": "Group of Minions",
@@ -804,10 +772,12 @@
 			"notifications": {
 				"noActiveCombatForGroupAttack": "No active combat found for group attack.",
 				"selectTargetBeforeGroupAttack": "Select token target before rolling a group attack.",
+				"selectMinionsBeforeRoll": "Select at least one minion before rolling.",
 				"noGroupAttacksRolled": "No group attacks were rolled.",
 				"groupAttackFailed": "Group attack failed. See console for details.",
 				"noActiveCombatForMonsterAttack": "No active combat found for monster attack.",
 				"selectActionBeforeRoll": "Select an action for {name} before rolling.",
+				"selectMonsterBeforeRoll": "Select {name} before rolling.",
 				"actionUnavailableForMonster": "Selected action is unavailable for {name}.",
 				"monsterNoLongerInCombat": "{name} is no longer in combat.",
 				"monsterDefeatedCannotAct": "{name} is defeated and cannot act.",

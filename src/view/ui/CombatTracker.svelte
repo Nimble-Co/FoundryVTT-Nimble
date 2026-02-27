@@ -21,6 +21,12 @@
 		type CombatTrackerLocation,
 		type CurrentTurnAnimationSettings,
 	} from '../../settings/combatTrackerSettings.js';
+	import {
+		getNcswSidebarViewMode,
+		setNcswDockHostElement,
+		setNcswSidebarViewMode,
+		type NcswSidebarViewMode,
+	} from '../../hooks/minionGroupTokenActions.js';
 	import BaseCombatant from './components/BaseCombatant.svelte';
 	import CombatTrackerControls from './components/CombatTrackerControls.svelte';
 	import PlayerCharacterCombatant from './components/PlayerCharacterCombatant.svelte';
@@ -74,6 +80,8 @@
 
 	const COMBAT_TRACKER_MIN_WIDTH_REM = 6.5;
 	const COMBAT_TRACKER_MAX_WIDTH_REM = COMBAT_TRACKER_MIN_WIDTH_REM * 2;
+	const NCS_SIDEBAR_MIN_WIDTH_REM = 24;
+	const NCS_SIDEBAR_MAX_WIDTH_REM = 40;
 	const COMBAT_TRACKER_MIN_HEIGHT_REM = 6.5;
 	const COMBAT_TRACKER_MAX_HEIGHT_REM = 13.5;
 	const COMBAT_TRACKER_HEIGHT_TO_CARD_WIDTH_RATIO = 0.66;
@@ -81,7 +89,9 @@
 	const COMBAT_TRACKER_ACTIVE_HORIZONTAL_HEIGHT_BUFFER_RATIO = 0;
 	const COMBAT_TRACKER_BOTTOM_PROTECTED_UI_GAP_PX = 10;
 	const COMBAT_TRACKER_WIDTH_STORAGE_KEY = 'nimble.combatTracker.widthRem';
+	const NCS_SIDEBAR_WIDTH_STORAGE_KEY = 'nimble.ncs.widthRem';
 	const COMBAT_TRACKER_HEIGHT_STORAGE_KEY = 'nimble.combatTracker.heightRem';
+	const COMBAT_SIDEBAR_VIEW_MODE_STORAGE_KEY = 'nimble.combatSidebar.viewMode';
 	const DRAG_TARGET_EXPANSION_REM = 0.9;
 	const DRAG_SWITCH_UPPER_RATIO = 0.4;
 	const DRAG_SWITCH_LOWER_RATIO = 0.6;
@@ -97,6 +107,28 @@
 		return location === 'top' || location === 'bottom';
 	}
 
+	function normalizeSidebarViewMode(
+		viewMode: NcswSidebarViewMode | string | null | undefined,
+	): NcswSidebarViewMode {
+		return viewMode === 'ncs' ? 'ncs' : 'combatTracker';
+	}
+
+	function getSidebarWidthBoundsForViewMode(viewMode: NcswSidebarViewMode): {
+		min: number;
+		max: number;
+	} {
+		if (viewMode === 'ncs') {
+			return {
+				min: NCS_SIDEBAR_MIN_WIDTH_REM,
+				max: NCS_SIDEBAR_MAX_WIDTH_REM,
+			};
+		}
+		return {
+			min: COMBAT_TRACKER_MIN_WIDTH_REM,
+			max: COMBAT_TRACKER_MAX_WIDTH_REM,
+		};
+	}
+
 	function getCombatTrackerSizeBounds(location: CombatTrackerLocation): {
 		min: number;
 		max: number;
@@ -106,10 +138,7 @@
 					min: COMBAT_TRACKER_MIN_HEIGHT_REM,
 					max: COMBAT_TRACKER_MAX_HEIGHT_REM,
 				}
-			: {
-					min: COMBAT_TRACKER_MIN_WIDTH_REM,
-					max: COMBAT_TRACKER_MAX_WIDTH_REM,
-				};
+			: getSidebarWidthBoundsForViewMode(combatSidebarViewMode);
 	}
 
 	function clampCombatTrackerSize(sizeRem: number, location: CombatTrackerLocation): number {
@@ -167,6 +196,27 @@
 		} catch (_error) {
 			// No-op: local storage access may fail in some browser privacy modes.
 		}
+	}
+
+	function readStoredSidebarViewMode(): NcswSidebarViewMode {
+		try {
+			const storedMode = globalThis.localStorage.getItem(COMBAT_SIDEBAR_VIEW_MODE_STORAGE_KEY);
+			return normalizeSidebarViewMode(storedMode);
+		} catch (_error) {
+			return 'combatTracker';
+		}
+	}
+
+	function saveSidebarViewMode(viewMode: NcswSidebarViewMode): void {
+		try {
+			globalThis.localStorage.setItem(COMBAT_SIDEBAR_VIEW_MODE_STORAGE_KEY, viewMode);
+		} catch (_error) {
+			// No-op: local storage access may fail in some browser privacy modes.
+		}
+	}
+
+	function getSidebarWidthStorageKey(viewMode: NcswSidebarViewMode): string {
+		return viewMode === 'ncs' ? NCS_SIDEBAR_WIDTH_STORAGE_KEY : COMBAT_TRACKER_WIDTH_STORAGE_KEY;
 	}
 
 	function clearCombatTrackerSceneReserveInsets(): void {
@@ -544,6 +594,31 @@
 
 	function updateCombatTrackerLocation() {
 		combatTrackerLocation = getCombatTrackerLocation();
+	}
+
+	function setCombatSidebarMode(nextMode: NcswSidebarViewMode): void {
+		const normalizedMode = normalizeSidebarViewMode(nextMode);
+		if (combatSidebarViewMode === normalizedMode) return;
+
+		const previousBounds = getSidebarWidthBoundsForViewMode(combatSidebarViewMode);
+		const clampedCurrentWidth = clampNumber(
+			combatTrackerWidthRem,
+			previousBounds.min,
+			previousBounds.max,
+		);
+		saveCombatTrackerSize(getSidebarWidthStorageKey(combatSidebarViewMode), clampedCurrentWidth);
+
+		combatSidebarViewMode = normalizedMode;
+
+		const nextBounds = getSidebarWidthBoundsForViewMode(normalizedMode);
+		combatTrackerWidthRem = readStoredCombatTrackerSize(
+			getSidebarWidthStorageKey(normalizedMode),
+			nextBounds.min,
+			nextBounds.max,
+		);
+
+		saveSidebarViewMode(normalizedMode);
+		setNcswSidebarViewMode(normalizedMode);
 	}
 
 	function handleCurrentTurnAnimationSettingsPreview(event: Event): void {
@@ -950,7 +1025,10 @@
 			if (isHorizontalLayout) {
 				saveCombatTrackerSize(COMBAT_TRACKER_HEIGHT_STORAGE_KEY, combatTrackerHeightRem);
 			} else {
-				saveCombatTrackerSize(COMBAT_TRACKER_WIDTH_STORAGE_KEY, combatTrackerWidthRem);
+				saveCombatTrackerSize(
+					getSidebarWidthStorageKey(combatSidebarViewMode),
+					combatTrackerWidthRem,
+				);
 			}
 			if (handle?.hasPointerCapture?.(event.pointerId)) {
 				handle.releasePointerCapture(event.pointerId);
@@ -976,6 +1054,9 @@
 	let tempGroupPopoverElement: HTMLDivElement | null = $state(null);
 	let tempGroupPopoverAnchorElement: HTMLElement | null = $state(null);
 	let tempGroupPopoverState: TempGroupPopoverState | null = $state(null);
+	let ncsDockHostElement: HTMLDivElement | null = $state(null);
+	let combatSidebarViewMode: NcswSidebarViewMode = $state(getNcswSidebarViewMode());
+	let combatSidebarWidthBounds = $derived(getSidebarWidthBoundsForViewMode(combatSidebarViewMode));
 	let combatTrackerWidthRem: number = $state(COMBAT_TRACKER_MIN_WIDTH_REM);
 	let combatTrackerHeightRem: number = $state(COMBAT_TRACKER_MIN_HEIGHT_REM);
 	let combatTrackerLocation: CombatTrackerLocation = $state(getCombatTrackerLocation());
@@ -996,7 +1077,9 @@
 
 		return currentTurnCombatant.actor?.testUserPermission(game.user!, 'OWNER') ?? false;
 	});
-	let showHorizontalFloatingEndTurn = $derived(isHorizontalLayout && combatHasStarted);
+	let showHorizontalFloatingEndTurn = $derived(
+		combatSidebarViewMode === 'combatTracker' && isHorizontalLayout && combatHasStarted,
+	);
 	let combatTrackerActiveHorizontalHeightBufferRem = $derived(
 		combatHasStarted && isHorizontalLayout
 			? Math.max(
@@ -1071,10 +1154,13 @@
 	let windowScrollHandler: (() => void) | undefined;
 
 	onMount(() => {
+		combatSidebarViewMode = readStoredSidebarViewMode();
+		setNcswSidebarViewMode(combatSidebarViewMode);
+		const startingWidthBounds = getSidebarWidthBoundsForViewMode(combatSidebarViewMode);
 		combatTrackerWidthRem = readStoredCombatTrackerSize(
-			COMBAT_TRACKER_WIDTH_STORAGE_KEY,
-			COMBAT_TRACKER_MIN_WIDTH_REM,
-			COMBAT_TRACKER_MAX_WIDTH_REM,
+			getSidebarWidthStorageKey(combatSidebarViewMode),
+			startingWidthBounds.min,
+			startingWidthBounds.max,
 		);
 		combatTrackerHeightRem = readStoredCombatTrackerSize(
 			COMBAT_TRACKER_HEIGHT_STORAGE_KEY,
@@ -1180,6 +1266,8 @@
 	});
 
 	onDestroy(() => {
+		setNcswDockHostElement(null);
+		setNcswSidebarViewMode('combatTracker');
 		stopResizeTracking();
 		clearCombatTrackerSceneReserveInsets();
 		hideTempGroupPopover();
@@ -1219,6 +1307,24 @@
 	});
 
 	$effect(() => {
+		if (isHorizontalLayout) return;
+		combatTrackerWidthRem = clampNumber(
+			combatTrackerWidthRem,
+			combatSidebarWidthBounds.min,
+			combatSidebarWidthBounds.max,
+		);
+	});
+
+	$effect(() => {
+		setNcswSidebarViewMode(combatSidebarViewMode);
+		if (combatSidebarViewMode === 'ncs' && ncsDockHostElement) {
+			setNcswDockHostElement(ncsDockHostElement);
+			return;
+		}
+		setNcswDockHostElement(null);
+	});
+
+	$effect(() => {
 		updateCombatTrackerSceneReserveInsets();
 	});
 
@@ -1251,7 +1357,9 @@
 		class:nimble-combat-tracker--location-bottom={combatTrackerLocation === 'bottom'}
 		class:nimble-combat-tracker--combat-started={combatHasStarted}
 		class:nimble-combat-tracker--resizing={isResizing}
-		style={`--nimble-combat-sidebar-width: ${combatTrackerWidthRem}rem; --nimble-combat-tracker-height: ${combatTrackerDisplayedHeightRem}rem; --nimble-combat-horizontal-card-width: ${combatTrackerHorizontalCardWidthRem}rem; --nimble-combat-sidebar-min-width: ${COMBAT_TRACKER_MIN_WIDTH_REM}rem; --nimble-combat-sidebar-max-width: ${COMBAT_TRACKER_MAX_WIDTH_REM}rem; --nimble-combat-tracker-min-height: ${COMBAT_TRACKER_MIN_HEIGHT_REM}rem; --nimble-combat-tracker-max-height: ${combatTrackerDisplayedMaxHeightRem}rem; --nimble-combat-card-scale: ${combatTrackerScale}; --nimble-combat-border-glow-color: ${currentTurnAnimationSettings.borderGlowColor}; --nimble-combat-edge-crawler-color: ${currentTurnAnimationSettings.edgeCrawlerColor}; --nimble-combat-pulse-duration: ${pulseAnimationDurationSeconds}s; --nimble-combat-border-glow-scale: ${borderGlowScale}; --nimble-combat-edge-crawler-size-scale: ${edgeCrawlerSizeScale};`}
+		class:nimble-combat-tracker--mode-combat-tracker={combatSidebarViewMode === 'combatTracker'}
+		class:nimble-combat-tracker--mode-ncs={combatSidebarViewMode === 'ncs'}
+		style={`--nimble-combat-sidebar-width: ${combatTrackerWidthRem}rem; --nimble-combat-tracker-height: ${combatTrackerDisplayedHeightRem}rem; --nimble-combat-horizontal-card-width: ${combatTrackerHorizontalCardWidthRem}rem; --nimble-combat-sidebar-min-width: ${combatSidebarWidthBounds.min}rem; --nimble-combat-sidebar-max-width: ${combatSidebarWidthBounds.max}rem; --nimble-combat-tracker-min-height: ${COMBAT_TRACKER_MIN_HEIGHT_REM}rem; --nimble-combat-tracker-max-height: ${combatTrackerDisplayedMaxHeightRem}rem; --nimble-combat-card-scale: ${combatTrackerScale}; --nimble-combat-border-glow-color: ${currentTurnAnimationSettings.borderGlowColor}; --nimble-combat-edge-crawler-color: ${currentTurnAnimationSettings.edgeCrawlerColor}; --nimble-combat-pulse-duration: ${pulseAnimationDurationSeconds}s; --nimble-combat-border-glow-scale: ${borderGlowScale}; --nimble-combat-edge-crawler-size-scale: ${edgeCrawlerSizeScale};`}
 		transition:slide={{ axis: trackerTransitionAxis }}
 	>
 		<header
@@ -1274,6 +1382,30 @@
 					>
 						<i class="nimble-combat-tracker__settings-button-icon fa-solid fa-gear"></i>
 					</button>
+
+					<div class="nimble-combat-tracker__mode-toggle" role="group" aria-label="Sidebar View">
+						<button
+							type="button"
+							class="nimble-combat-tracker__mode-toggle-button"
+							class:nimble-combat-tracker__mode-toggle-button--active={combatSidebarViewMode ===
+								'combatTracker'}
+							aria-label="Show Combat Tracker"
+							data-tooltip="Combat Tracker"
+							onclick={() => setCombatSidebarMode('combatTracker')}
+						>
+							CT
+						</button>
+						<button
+							type="button"
+							class="nimble-combat-tracker__mode-toggle-button"
+							class:nimble-combat-tracker__mode-toggle-button--active={combatSidebarViewMode === 'ncs'}
+							aria-label="Show Nimble Combat System"
+							data-tooltip="Nimble Combat System"
+							onclick={() => setCombatSidebarMode('ncs')}
+						>
+							NCS
+						</button>
+					</div>
 
 					{#if currentCombat?.round === 0 && game.user!.isGM}
 						<div class="nimble-combat-tracker__start-actions">
@@ -1301,98 +1433,102 @@
 			{/key}
 		</header>
 
-		<ol
-			bind:this={combatantsListElement}
-			class="nimble-combatants"
-			class:nimble-combatants--pulse={currentTurnAnimationSettings.pulseAnimation}
-			class:nimble-combatants--border-glow={currentTurnAnimationSettings.borderGlow}
-			data-drag-source-id={activeDragSourceId ?? ''}
-			data-drop-target-id={dragPreview?.targetId ?? ''}
-			data-drop-before={dragPreview ? String(dragPreview.before) : ''}
-			onscroll={() => {
-				scheduleFloatingEndTurnPositionUpdate();
-				updateTempGroupPopoverPosition();
-			}}
-			onwheel={handleHorizontalWheelScroll}
-			ondragover={handleDragOver}
-			ondrop={(event) => _onDrop(event)}
-			out:fade={{ delay: 0 }}
-		>
-			{#key version}
-				{#each sceneCombatants as combatant (combatant._id)}
-					{@const CombatantComponent = getCombatantComponent(combatant)}
-					{@const isActiveCombatant = currentCombat?.combatant?.id === combatant.id}
-					{@const groupedStackMemberCount =
-						sceneGroupedStackMemberCountsByLeaderId.get(combatant.id ?? '') ?? 0}
-
-					<li
-						class="nimble-combatants__item"
-						class:nimble-combatants__item--active={isActiveCombatant}
-						data-combatant-id={combatant.id}
-						class:nimble-combatants__item--preview-gap-before={dragPreview?.targetId ===
-							combatant.id && dragPreview.before}
-						class:nimble-combatants__item--preview-gap-after={dragPreview?.targetId ===
-							combatant.id && !dragPreview.before}
-						onmouseenter={(event) => {
-							if (groupedStackMemberCount > 1) {
-								void showTempGroupPopover(event, combatant.id ?? '');
-							}
-						}}
-						onmousemove={(event) => {
-							if (groupedStackMemberCount > 1) {
-								moveTempGroupPopover(event, combatant.id ?? '');
-							}
-						}}
-						onmouseleave={() => {
-							if (groupedStackMemberCount > 1) hideTempGroupPopover();
-						}}
-					>
-						{#if isActiveCombatant && currentTurnAnimationSettings.edgeCrawler}
-							<span class="nimble-combatants__active-crawler" aria-hidden="true"></span>
-						{/if}
-						{#if groupedStackMemberCount > 1}
-							<span
-								class="nimble-combatants__group-stack-badge"
-								aria-label={`Grouped minions: ${groupedStackMemberCount}`}
-							>
-								x{groupedStackMemberCount}
-							</span>
-						{/if}
-						<CombatantComponent active={isActiveCombatant} {combatant} />
-					</li>
-				{/each}
-
-				{#if sceneDeadCombatants.length > 0}
-					<li class="nimble-combatants__dead-divider">
-						<span class="nimble-combatants__dead-label">- Dead -</span>
-					</li>
-
-					{#each sceneDeadCombatants as combatant (combatant._id)}
+		{#if combatSidebarViewMode === 'combatTracker'}
+			<ol
+				bind:this={combatantsListElement}
+				class="nimble-combatants"
+				class:nimble-combatants--pulse={currentTurnAnimationSettings.pulseAnimation}
+				class:nimble-combatants--border-glow={currentTurnAnimationSettings.borderGlow}
+				data-drag-source-id={activeDragSourceId ?? ''}
+				data-drop-target-id={dragPreview?.targetId ?? ''}
+				data-drop-before={dragPreview ? String(dragPreview.before) : ''}
+				onscroll={() => {
+					scheduleFloatingEndTurnPositionUpdate();
+					updateTempGroupPopoverPosition();
+				}}
+				onwheel={handleHorizontalWheelScroll}
+				ondragover={handleDragOver}
+				ondrop={(event) => _onDrop(event)}
+				out:fade={{ delay: 0 }}
+			>
+				{#key version}
+					{#each sceneCombatants as combatant (combatant._id)}
 						{@const CombatantComponent = getCombatantComponent(combatant)}
+						{@const isActiveCombatant = currentCombat?.combatant?.id === combatant.id}
+						{@const groupedStackMemberCount =
+							sceneGroupedStackMemberCountsByLeaderId.get(combatant.id ?? '') ?? 0}
 
-						<li class="nimble-combatants__item">
-							<CombatantComponent active={false} {combatant} />
+						<li
+							class="nimble-combatants__item"
+							class:nimble-combatants__item--active={isActiveCombatant}
+							data-combatant-id={combatant.id}
+							class:nimble-combatants__item--preview-gap-before={dragPreview?.targetId ===
+								combatant.id && dragPreview.before}
+							class:nimble-combatants__item--preview-gap-after={dragPreview?.targetId ===
+								combatant.id && !dragPreview.before}
+							onmouseenter={(event) => {
+								if (groupedStackMemberCount > 1) {
+									void showTempGroupPopover(event, combatant.id ?? '');
+								}
+							}}
+							onmousemove={(event) => {
+								if (groupedStackMemberCount > 1) {
+									moveTempGroupPopover(event, combatant.id ?? '');
+								}
+							}}
+							onmouseleave={() => {
+								if (groupedStackMemberCount > 1) hideTempGroupPopover();
+							}}
+						>
+							{#if isActiveCombatant && currentTurnAnimationSettings.edgeCrawler}
+								<span class="nimble-combatants__active-crawler" aria-hidden="true"></span>
+							{/if}
+							{#if groupedStackMemberCount > 1}
+								<span
+									class="nimble-combatants__group-stack-badge"
+									aria-label={`Grouped minions: ${groupedStackMemberCount}`}
+								>
+									x{groupedStackMemberCount}
+								</span>
+							{/if}
+							<CombatantComponent active={isActiveCombatant} {combatant} />
 						</li>
 					{/each}
-				{/if}
-			{/key}
-		</ol>
 
-		{#if game.user!.isGM && sceneCombatants.some((combatant) => combatant.initiative === null)}
-			<footer class="nimble-combat-tracker__footer">
-				<div class="nimble-combat-tracker__footer-roll-container">
-					<button
-						class="nimble-combat-tracker__footer-button"
-						type="button"
-						aria-label="Roll All"
-						data-tooltip="Roll All"
-						data-tooltip-direction="UP"
-						onclick={(event) => rollInitiativeForAll(event)}
-					>
-						<i class="fa-solid fa-users"></i>
-					</button>
-				</div>
-			</footer>
+					{#if sceneDeadCombatants.length > 0}
+						<li class="nimble-combatants__dead-divider">
+							<span class="nimble-combatants__dead-label">- Dead -</span>
+						</li>
+
+						{#each sceneDeadCombatants as combatant (combatant._id)}
+							{@const CombatantComponent = getCombatantComponent(combatant)}
+
+							<li class="nimble-combatants__item">
+								<CombatantComponent active={false} {combatant} />
+							</li>
+						{/each}
+					{/if}
+				{/key}
+			</ol>
+
+			{#if game.user!.isGM && sceneCombatants.some((combatant) => combatant.initiative === null)}
+				<footer class="nimble-combat-tracker__footer">
+					<div class="nimble-combat-tracker__footer-roll-container">
+						<button
+							class="nimble-combat-tracker__footer-button"
+							type="button"
+							aria-label="Roll All"
+							data-tooltip="Roll All"
+							data-tooltip-direction="UP"
+							onclick={(event) => rollInitiativeForAll(event)}
+						>
+							<i class="fa-solid fa-users"></i>
+						</button>
+					</div>
+				</footer>
+			{/if}
+		{:else}
+			<section bind:this={ncsDockHostElement} class="nimble-combat-tracker__ncs-host"></section>
 		{/if}
 
 		<button

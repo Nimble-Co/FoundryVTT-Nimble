@@ -628,6 +628,149 @@ describe('NimbleCombat', () => {
 		expect(result.endTurnApplied).toBe(true);
 	});
 
+	it('creates separate temporary groups per minion actor type after group attacks', async () => {
+		const combatId = 'combat-minion-group-attack-type-stacks';
+		const goblinActor = {
+			...createCombatActorFixture({ id: 'goblin-actor', hp: 1 }),
+			type: 'minion',
+			name: 'Goblin',
+			items: [
+				{
+					id: 'goblin-action',
+					type: 'monsterFeature',
+					name: 'Slash',
+					system: {
+						subtype: 'action',
+						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
+					},
+				},
+			],
+			activateItem: vi.fn().mockResolvedValue(null),
+		} as unknown as Actor.Implementation;
+		const koboldActor = {
+			...createCombatActorFixture({ id: 'kobold-actor', hp: 1 }),
+			type: 'minion',
+			name: 'Kobold',
+			items: [
+				{
+					id: 'kobold-action',
+					type: 'monsterFeature',
+					name: 'Stab',
+					system: {
+						subtype: 'action',
+						activation: { effects: [{ type: 'damage', formula: '1d6' }] },
+					},
+				},
+			],
+			activateItem: vi.fn().mockResolvedValue(null),
+		} as unknown as Actor.Implementation;
+
+		const goblinA = createMockCombatant({
+			id: 'goblin-a',
+			type: 'npc',
+			sort: 1,
+			isOwner: false,
+			initiative: 12,
+			actionsCurrent: 1,
+			actor: goblinActor,
+			combatId,
+		});
+		const goblinB = createMockCombatant({
+			id: 'goblin-b',
+			type: 'npc',
+			sort: 2,
+			isOwner: false,
+			initiative: 12,
+			actionsCurrent: 1,
+			actor: goblinActor,
+			combatId,
+		});
+		const koboldA = createMockCombatant({
+			id: 'kobold-a',
+			type: 'npc',
+			sort: 3,
+			isOwner: false,
+			initiative: 10,
+			actionsCurrent: 1,
+			actor: koboldActor,
+			combatId,
+		});
+		const koboldB = createMockCombatant({
+			id: 'kobold-b',
+			type: 'npc',
+			sort: 4,
+			isOwner: false,
+			initiative: 10,
+			actionsCurrent: 1,
+			actor: koboldActor,
+			combatId,
+		});
+
+		(
+			globals().game as unknown as {
+				user: { targets?: Set<{ id: string; name?: string }> };
+			}
+		).user.targets = new Set([{ id: 'target-token-type-stack', name: 'Target' }]);
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([goblinA, goblinB, koboldA, koboldB]),
+			turns: [goblinA, goblinB, koboldA, koboldB],
+			turn: 0,
+			combatant: goblinA,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		await combat.performMinionGroupAttack({
+			memberCombatantIds: ['goblin-a', 'goblin-b', 'kobold-a', 'kobold-b'],
+			targetTokenIds: ['target-token-type-stack'],
+			selections: [
+				{ memberCombatantId: 'goblin-a', actionId: 'goblin-action' },
+				{ memberCombatantId: 'goblin-b', actionId: 'goblin-action' },
+				{ memberCombatantId: 'kobold-a', actionId: 'kobold-action' },
+				{ memberCombatantId: 'kobold-b', actionId: 'kobold-action' },
+			],
+			endTurn: false,
+		});
+
+		const updateCalls = combat.updateEmbeddedDocuments.mock.calls as Array<
+			[string, Array<Record<string, unknown>>]
+		>;
+		const groupingCall = updateCalls.find((call) =>
+			call[1].some((update) => typeof update['flags.nimble.minionGroup.id'] === 'string'),
+		);
+		expect(groupingCall).toBeDefined();
+
+		const groupingUpdates = groupingCall?.[1] ?? [];
+		expect(groupingUpdates).toHaveLength(4);
+		const groupIds = groupingUpdates
+			.map((update) => update['flags.nimble.minionGroup.id'])
+			.filter((groupId): groupId is string => typeof groupId === 'string' && groupId.length > 0);
+		expect(new Set(groupIds).size).toBe(2);
+
+		for (const groupId of new Set(groupIds)) {
+			const membersInGroup = groupingUpdates.filter(
+				(update) => update['flags.nimble.minionGroup.id'] === groupId,
+			);
+			expect(membersInGroup).toHaveLength(2);
+			expect(
+				new Set(membersInGroup.map((update) => update['flags.nimble.minionGroup.role'])).size,
+			).toBe(2);
+			expect(
+				membersInGroup.every((update) => update['flags.nimble.minionGroup.temporary'] === true),
+			).toBe(true);
+
+			const memberActorIds = membersInGroup
+				.map((update) => String(update._id ?? ''))
+				.map((memberId) => combat.combatants.get(memberId)?.actor?.id ?? '')
+				.filter((actorId) => actorId.length > 0);
+			expect(new Set(memberActorIds).size).toBe(1);
+		}
+	});
+
 	it('creates a single combined chat card for ncs group attacks', async () => {
 		(
 			globals().game as unknown as {

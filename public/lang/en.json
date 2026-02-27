@@ -414,12 +414,7 @@
 			"skillPointsOverMax": "One or more skills would exceed the 12 point cap. Please reallocate skill points before submitting.",
 			"completeAllSelections": "Complete all selections before submitting",
 			"skillPointsOverMaxTooltip": "A skill would exceed the 12 point cap",
-			"completeAllSelectionsTooltip": "Complete all selections before submitting",
-			"hpIncrease": "HP Increase",
-			"hitDiceLabel": "Hit Dice:",
-			"rollHitDice": "Roll Hit Dice",
-			"rollHitDiceTooltip": "Roll your Hit Die with advantage and increase your max HP by that much.",
-			"takeAverage": "Take Average ({average})"
+			"completeAllSelectionsTooltip": "Complete all selections before submitting"
 		},
 		"levelDownDialog": {
 			"level": "Level",
@@ -444,7 +439,7 @@
 			"skillPoints": "Skill Points",
 			"editSkillPoints": "Edit Skill Points",
 			"confirmSkillPointAssignments": "Confirm Skill Point Assignments",
-			"pointsRemaining": "{remainingSkillPoints} Points Remaining",
+			"pointsRemaining": "({remainingSkillPoints} Points Remaining)",
 			"maxSkillBonus": "Max skill bonus is +12.",
 			"onlyOneNewPointAndOneTransferAllowed": "Only 1 new point and 1 transfer are allowed per level-up.",
 			"reduceAnotherSkillFirstToAddSkillPoint": "Reduce another skill first to add a skill point.",
@@ -781,64 +776,6 @@
 				"range": "Range"
 			}
 		},
-		"spellConfig": {
-			"identifier": "Identifier",
-			"spellProperties": "Spell Properties",
-			"spellTier": "Spell Tier",
-			"spellSchool": "Spell School",
-			"description": {
-				"baseEffect": "Base Spell Effect",
-				"higherLevelEffect": "Higher Level Effect",
-				"upcastEffect": "Upcast Effect"
-			},
-			"jsonEditor": {
-				"switchToVisual": "Switch to Visual Editor",
-				"switchToJson": "Switch to JSON Editor",
-				"heading": "Spell Data (JSON)",
-				"invalidJson": "Invalid JSON"
-			},
-			"scaling": {
-				"heading": "Spell Scaling",
-				"modes": {
-					"none": "None",
-					"upcast": "Upcast",
-					"upcastChoice": "Upcast Choice"
-				},
-				"perUpcastStep": "Per Upcast Step",
-				"upcastChoices": "Upcast Choices",
-				"noDeltas": "No scaling deltas configured.",
-				"noChoices": "No choices configured.",
-				"addDelta": "Add Delta",
-				"removeDelta": "Remove Delta",
-				"addChoice": "Add Choice",
-				"removeChoice": "Remove Choice",
-				"choiceLabel": "Choice Label",
-				"choiceLabelPlaceholder": "e.g. Extra Damage",
-				"deltas": "Deltas",
-				"operation": "Operation",
-				"value": "Value",
-				"count": "Count",
-				"die": "Die",
-				"condition": "Condition",
-				"conditionPlaceholder": "e.g. smoldering",
-				"targetEffect": "Target Effect",
-				"targetEffectAuto": "Auto (first match)",
-				"targetEffectPlaceholder": "Effect ID",
-				"targetEffectHint": "Add effects in the Activation tab to select targets here.",
-				"operations": {
-					"addFlatDamage": "Flat Damage",
-					"addDice": "Dice",
-					"addReach": "Reach",
-					"addRange": "Range",
-					"addTargets": "Targets",
-					"addAreaSize": "Area Size",
-					"addDC": "DC",
-					"addArmor": "Armor",
-					"addDuration": "Duration",
-					"addCondition": "Condition"
-				}
-			}
-		},
 		"compendium": {
 			"filterSpells": "Filter Spells",
 			"filterAll": "All"
@@ -854,8 +791,20 @@
 			"logo": {
 				"alt": "Nimble"
 			},
+			"selector": {
+				"title": "Selector",
+				"players": "Players",
+				"monsters": "Monsters",
+				"minions": "Minions"
+			},
+			"actionWindow": {
+				"title": "Action Window",
+				"noDescription": "No description",
+				"selectActionAria": "Select {action} for {name}"
+			},
 			"tooltips": {
-				"dragToMove": "Drag to move"
+				"dragToMove": "Drag to move",
+				"toggleSelection": "Toggle map token selection"
 			},
 			"targets": {
 				"label": "Targets:",
@@ -873,10 +822,24 @@
 				"selectAction": "Select action",
 				"noActionsLeft": "No actions left"
 			},
+			"accordion": {
+				"armor": "Armor",
+				"saves": "Saves",
+				"features": "Features",
+				"actions": "Actions"
+			},
 			"buttons": {
 				"roll": "Roll",
 				"rollEndTurn": "Roll + End Turn",
-				"close": "Close"
+				"done": "Done",
+				"close": "Close",
+				"panTo": "Pan to token",
+				"openSheet": "Open actor sheet",
+				"pingToken": "Ping token",
+				"markDefeated": "Mark combatant as defeated",
+				"deleteCombatant": "Delete combatant",
+				"toggleDetails": "Toggle details",
+				"toggleSelectionAria": "Toggle selection for {name}"
 			},
 			"chat": {
 				"heading": "Group of Minions",
@@ -902,10 +865,12 @@
 			"notifications": {
 				"noActiveCombatForGroupAttack": "No active combat found for group attack.",
 				"selectTargetBeforeGroupAttack": "Select token target before rolling a group attack.",
+				"selectMinionsBeforeRoll": "Select at least one minion before rolling.",
 				"noGroupAttacksRolled": "No group attacks were rolled.",
 				"groupAttackFailed": "Group attack failed. See console for details.",
 				"noActiveCombatForMonsterAttack": "No active combat found for monster attack.",
 				"selectActionBeforeRoll": "Select an action for {name} before rolling.",
+				"selectMonsterBeforeRoll": "Select {name} before rolling.",
 				"actionUnavailableForMonster": "Selected action is unavailable for {name}.",
 				"monsterNoLongerInCombat": "{name} is no longer in combat.",
 				"monsterDefeatedCannotAct": "{name} is defeated and cannot act.",

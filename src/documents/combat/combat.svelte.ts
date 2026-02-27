@@ -365,6 +365,42 @@ class NimbleCombat extends Combat {
 			: params.previousActiveCombatantId;
 	}
 
+	#resolveMinionTypeGroupingKey(combatant: Combatant.Implementation): string {
+		const actorName = combatant.actor?.name?.trim().toLowerCase() ?? '';
+		if (actorName.length > 0) return `actorName:${actorName}`;
+
+		const actorId = combatant.actor?.id?.trim() ?? '';
+		if (actorId.length > 0) return `actor:${actorId}`;
+
+		const combatantName = combatant.name?.trim().toLowerCase() ?? '';
+		if (combatantName.length > 0) return `combatantName:${combatantName}`;
+
+		const combatantId = combatant.id?.trim() ?? '';
+		if (combatantId.length > 0) return `combatant:${combatantId}`;
+
+		return `opaque:${foundry.utils.randomID()}`;
+	}
+
+	#groupAttackMembersByType(
+		members: Combatant.Implementation[],
+	): Combatant.Implementation[][] {
+		const groupedMembersByKey = new Map<string, Combatant.Implementation[]>();
+
+		for (const member of members) {
+			const groupingKey = this.#resolveMinionTypeGroupingKey(member);
+			const groupedMembers = groupedMembersByKey.get(groupingKey);
+			if (groupedMembers) {
+				groupedMembers.push(member);
+				continue;
+			}
+			groupedMembersByKey.set(groupingKey, [member]);
+		}
+
+		return [...groupedMembersByKey.values()].map((groupedMembers) =>
+			this.#sortCombatantsByCurrentTurnOrder(groupedMembers),
+		);
+	}
+
 	async #detachMembersFromExistingMinionGroups(memberCombatantIds: string[]): Promise<void> {
 		const selectedMemberIds = new Set(normalizeUniqueIds(memberCombatantIds));
 		if (selectedMemberIds.size === 0) return;
@@ -415,41 +451,60 @@ class NimbleCombat extends Combat {
 		const refreshedMembers = this.#resolveAliveMinionMembersByIds(scopedMemberIds);
 		if (refreshedMembers.length < 2) return;
 
-		const orderedMembers = this.#sortCombatantsByCurrentTurnOrder(refreshedMembers);
-		const leader = orderedMembers[0];
-		if (!leader?.id) return;
-
 		const previousActiveCombatantId = this.combatant?.id;
-		const temporaryGroupId = foundry.utils.randomID();
-		const sharedInitiative = Number(leader.initiative ?? 0);
-		const sharedSort = getCombatantManualSortValue(leader);
-
-		const updates = this.#buildTemporaryGroupUpdates(
-			orderedMembers,
-			leader.id,
-			temporaryGroupId,
-			sharedInitiative,
-			sharedSort,
+		const groupedMembers = this.#groupAttackMembersByType(refreshedMembers).filter(
+			(groupMembers) => groupMembers.length > 1,
 		);
+		if (groupedMembers.length < 1) return;
+
+		const updates: Record<string, unknown>[] = [];
+		const groupedAssignments: Array<{
+			groupId: string;
+			leaderId: string;
+			memberIds: Array<string | null | undefined>;
+			sharedInitiative: number;
+			sharedSort: number;
+		}> = [];
+		let desiredActiveId: string | null | undefined = previousActiveCombatantId;
+		for (const orderedMembers of groupedMembers) {
+			const leader = orderedMembers[0];
+			if (!leader?.id) continue;
+
+			const temporaryGroupId = foundry.utils.randomID();
+			const sharedInitiative = Number(leader.initiative ?? 0);
+			const sharedSort = getCombatantManualSortValue(leader);
+			const groupedUpdates = this.#buildTemporaryGroupUpdates(
+				orderedMembers,
+				leader.id,
+				temporaryGroupId,
+				sharedInitiative,
+				sharedSort,
+			);
+			updates.push(...groupedUpdates);
+
+			desiredActiveId = this.#resolveDesiredActiveIdAfterRegroup({
+				previousActiveCombatantId: desiredActiveId,
+				leaderId: leader.id,
+				orderedMembers,
+			});
+			groupedAssignments.push({
+				groupId: temporaryGroupId,
+				leaderId: leader.id,
+				memberIds: orderedMembers.map((member) => member.id),
+				sharedInitiative,
+				sharedSort,
+			});
+		}
 		if (updates.length === 0) return;
 
 		await this.updateEmbeddedDocuments('Combatant', updates);
 		this.turns = this.setupTurns();
 
-		const desiredActiveId = this.#resolveDesiredActiveIdAfterRegroup({
-			previousActiveCombatantId,
-			leaderId: leader.id,
-			orderedMembers,
-		});
 		await this.#syncTurnToCombatant(desiredActiveId, { persist: false });
 
-		logMinionGroupingCombat('assigned ncs temporary attack group', {
+		logMinionGroupingCombat('assigned ncs temporary attack groups', {
 			combatId: this.id ?? null,
-			groupId: temporaryGroupId,
-			leaderId: leader.id,
-			memberIds: orderedMembers.map((member) => member.id),
-			sharedInitiative,
-			sharedSort,
+			groups: groupedAssignments,
 		});
 	}
 	constructor(

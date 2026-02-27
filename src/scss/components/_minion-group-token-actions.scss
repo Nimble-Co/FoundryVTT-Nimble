@@ -39,7 +39,9 @@
   --nimble-ncsw-warning-border: color-mix(in srgb, hsl(38 95% 72%) 34%, transparent);
   --nimble-ncsw-warning-background: color-mix(in srgb, hsl(24 76% 26%) 58%, transparent);
   --nimble-ncsw-warning-text: hsl(0 0% 96%);
+  --nimble-ncsw-member-selected-text-color: hsl(32 92% 68%);
   --nimble-ncsw-target-active-color: hsl(140 74% 64%);
+  --nimble-ncsw-target-selection-outline-color: hsl(29 92% 62%);
   --nimble-ncsw-target-inactive-color: hsl(0 86% 66%);
 }
 
@@ -83,17 +85,31 @@
   --nimble-ncsw-warning-border: color-mix(in srgb, hsl(38 72% 52%) 44%, transparent);
   --nimble-ncsw-warning-background: color-mix(in srgb, hsl(35 72% 70%) 34%, white);
   --nimble-ncsw-warning-text: hsl(222 22% 16%);
+  --nimble-ncsw-member-selected-text-color: hsl(28 82% 36%);
   --nimble-ncsw-target-active-color: hsl(140 74% 42%);
+  --nimble-ncsw-target-selection-outline-color: hsl(28 84% 46%);
   --nimble-ncsw-target-inactive-color: hsl(0 86% 56%);
 }
 
 .system-nimble .nimble-minion-group-attack-panel {
   --nimble-minion-group-attack-text-size: calc(var(--nimble-xxs-text, 0.55rem) * 1.8);
   --nimble-minion-group-attack-title-size: calc(var(--nimble-xxs-text, 0.55rem) * 2.2);
+  // Temporary NCSW layout overrides. Set these values back to previous defaults to quickly revert.
+  --nimble-ncsw-locked-width: 22.56rem;
   --nimble-ncsw-target-chip-size: 4.2rem;
   --nimble-ncsw-target-chip-gap: 0.3rem;
   --nimble-ncsw-target-max-row: 4;
+  --nimble-ncsw-target-label-width: 4rem;
   --nimble-ncsw-select-width: 7.4rem;
+  --nimble-ncsw-row-text-size: calc(var(--nimble-minion-group-attack-text-size) * 0.9);
+  --nimble-ncsw-member-col-width: 17rem;
+  --nimble-ncsw-member-name-col-width: 4.875rem;
+  --nimble-ncsw-action-col-width: 0rem;
+  --nimble-ncsw-dice-col-width: 8ch;
+  --nimble-ncsw-table-fixed-width: calc(
+    var(--nimble-ncsw-member-col-width) + var(--nimble-ncsw-action-col-width) +
+      var(--nimble-ncsw-dice-col-width)
+  );
 
   position: fixed;
   left: 50%;
@@ -102,8 +118,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.34rem;
-  width: min(23.5rem, calc(100vw - 1rem));
-  min-width: min(20rem, calc(100vw - 1rem));
+  width: min(var(--nimble-ncsw-locked-width), calc(100vw - 1rem));
+  min-width: min(var(--nimble-ncsw-locked-width), calc(100vw - 1rem));
   min-height: 18rem;
   max-width: calc(100vw - 1rem);
   max-height: calc(100vh - 1rem);
@@ -116,10 +132,26 @@
   box-shadow:
     0 0 12px var(--nimble-ncsw-panel-shadow-glow),
     0 8px 20px var(--nimble-ncsw-panel-shadow-drop);
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
-  resize: vertical;
+  resize: none;
   z-index: 10060;
+
+  &--docked {
+    position: relative;
+    left: auto;
+    top: auto;
+    transform: none;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    min-height: 0;
+    max-height: 100%;
+    height: 100%;
+    border-radius: 0.36rem;
+    resize: none;
+    z-index: 1;
+  }
 
   > * {
     flex: 0 0 auto;
@@ -139,8 +171,79 @@
     user-select: none;
   }
 
+  &__selector {
+    position: absolute;
+    top: 0.38rem;
+    left: 0.36rem;
+    z-index: 5;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    margin: 0;
+    padding: 0.16rem 0.18rem;
+    border: 1px solid var(--nimble-ncsw-surface-border);
+    border-radius: 0.24rem;
+    background: color-mix(in srgb, var(--nimble-ncsw-surface-background) 88%, transparent);
+  }
+
+  &__selector-title {
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.74);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: var(--nimble-ncsw-subtle-text-color);
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  &__selector-buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.14rem;
+  }
+
+  &__selector-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.36rem;
+    height: 1.36rem;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--nimble-ncsw-input-border);
+    border-radius: 0.2rem;
+    color: var(--nimble-ncsw-text-color);
+    background: var(--nimble-ncsw-input-background);
+    cursor: pointer;
+    transition:
+      border-color 120ms ease,
+      opacity 120ms ease,
+      box-shadow 120ms ease;
+  }
+
+  &__selector-button--active {
+    border-color: color-mix(in srgb, var(--nimble-ncsw-target-selection-outline-color) 72%, transparent);
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--nimble-ncsw-target-selection-outline-color) 38%, transparent);
+  }
+
+  &__selector-button--inactive {
+    opacity: 0.45;
+  }
+
+  &__selector-button-icon {
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.78);
+    line-height: 1;
+  }
+
   &__header:active {
     cursor: grabbing;
+  }
+
+  &__header--docked,
+  &--docked .nimble-minion-group-attack-panel__header {
+    cursor: default;
+    user-select: auto;
   }
 
   &__logo {
@@ -187,6 +290,9 @@
     justify-content: center;
     align-items: center;
     gap: 0.24rem;
+    width: var(--nimble-ncsw-target-label-width);
+    min-width: var(--nimble-ncsw-target-label-width);
+    max-width: var(--nimble-ncsw-target-label-width);
     min-height: var(--nimble-ncsw-target-chip-size);
   }
 
@@ -213,12 +319,18 @@
   }
 
   &__target-list {
-    display: flex;
+    display: grid;
     align-items: center;
-    flex-wrap: wrap;
+    grid-template-columns: repeat(
+      var(--nimble-ncsw-target-max-row),
+      minmax(0, var(--nimble-ncsw-target-chip-size))
+    );
     gap: var(--nimble-ncsw-target-chip-gap);
     flex: 0 0 auto;
-    width: fit-content;
+    width: calc(
+      (var(--nimble-ncsw-target-chip-size) * var(--nimble-ncsw-target-max-row)) +
+        (var(--nimble-ncsw-target-chip-gap) * (var(--nimble-ncsw-target-max-row) - 1))
+    );
     max-width: calc(
       (var(--nimble-ncsw-target-chip-size) * var(--nimble-ncsw-target-max-row)) +
         (var(--nimble-ncsw-target-chip-gap) * (var(--nimble-ncsw-target-max-row) - 1))
@@ -227,6 +339,7 @@
   }
 
   &__target-hint {
+    grid-column: 1 / -1;
     font-size: var(--nimble-minion-group-attack-text-size);
     font-weight: 600;
     line-height: 1.1;
@@ -260,8 +373,24 @@
   }
 
   &__target-token--inactive {
-    opacity: 0.42;
     border-color: var(--nimble-ncsw-surface-border);
+    box-shadow: none;
+  }
+
+  &__target-token--inactive .nimble-minion-group-attack-panel__target-token-image {
+    opacity: 0.42;
+  }
+
+  &__target-token--selected {
+    border-color: var(--nimble-ncsw-target-selection-outline-color);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--nimble-ncsw-target-selection-outline-color) 72%, transparent),
+      0 0 8px color-mix(in srgb, var(--nimble-ncsw-target-selection-outline-color) 44%, transparent);
+  }
+
+  &__target-token:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
     box-shadow: none;
   }
 
@@ -580,9 +709,23 @@
 
   &__table {
     width: 100%;
+    min-width: 100%;
+    max-width: 100%;
     table-layout: fixed;
     border-collapse: collapse;
     border-spacing: 0;
+  }
+
+  &__col--member {
+    width: auto;
+  }
+
+  &__col--action {
+    width: var(--nimble-ncsw-action-col-width);
+  }
+
+  &__col--dice {
+    width: var(--nimble-ncsw-dice-col-width);
   }
 
   .nimble-minion-group-attack-panel__row + .nimble-minion-group-attack-panel__row td {
@@ -593,19 +736,170 @@
     opacity: 0.5;
   }
 
+  &__accordion-row td {
+    border-top: 0;
+    padding-top: 0;
+    padding-bottom: 0.1rem;
+  }
+
+  &__accordion-cell {
+    padding-inline: 0.12rem;
+  }
+
+  &__accordion {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0.22rem 0.24rem;
+    border: 1px solid var(--nimble-ncsw-surface-border);
+    border-radius: 0.22rem;
+    background: color-mix(in srgb, var(--nimble-ncsw-surface-background) 72%, transparent);
+    overflow: visible;
+  }
+
+  &__accordion-action-list {
+    --nimble-ncsw-accordion-action-columns: 1;
+
+    display: grid;
+    grid-template-columns: repeat(var(--nimble-ncsw-accordion-action-columns), minmax(0, 1fr));
+    gap: 0.22rem;
+    align-items: stretch;
+    width: 100%;
+    overflow: visible;
+  }
+
+  &__accordion-action-section {
+    display: flex;
+    min-width: 0;
+    min-height: 100%;
+    padding: 0.18rem 0.2rem;
+    border: 1px solid color-mix(in srgb, var(--nimble-ncsw-row-divider) 82%, transparent);
+    border-radius: 0.16rem;
+    background: color-mix(in srgb, var(--nimble-ncsw-input-background) 62%, transparent);
+  }
+
+  &__accordion-action-section--empty {
+    justify-content: center;
+    align-items: center;
+    font-size: calc(var(--nimble-ncsw-row-text-size) * 0.9);
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--nimble-ncsw-subtle-text-color);
+  }
+
+  &__accordion-action-row {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 0.22rem;
+    align-items: stretch;
+    min-width: 0;
+    width: 100%;
+  }
+
+  &__accordion-action-image {
+    display: block;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--nimble-ncsw-member-image-border);
+    border-radius: 0.16rem;
+    object-fit: cover;
+    object-position: center;
+    background: var(--nimble-ncsw-member-image-background);
+  }
+
+  &__accordion-action-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.06rem;
+    min-width: 0;
+    height: 100%;
+  }
+
+  &__accordion-action-button {
+    margin: 0;
+    padding: 0.03rem 0.14rem;
+    border: 1px solid var(--nimble-ncsw-input-border);
+    border-radius: 0.12rem;
+    background: color-mix(in srgb, var(--nimble-ncsw-input-background) 88%, transparent);
+    color: var(--nimble-ncsw-text-color);
+    font-size: calc(var(--nimble-ncsw-row-text-size) * 0.92);
+    font-weight: 700;
+    line-height: 1;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__accordion-action-button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &__accordion-action-button--active {
+    color: var(--nimble-ncsw-member-selected-text-color);
+    border-color: color-mix(
+      in srgb,
+      var(--nimble-ncsw-member-selected-text-color) 72%,
+      transparent
+    );
+    background: color-mix(
+      in srgb,
+      var(--nimble-ncsw-member-selected-text-color) 18%,
+      var(--nimble-ncsw-input-background)
+    );
+    text-shadow: 0 0 4px
+      color-mix(in srgb, var(--nimble-ncsw-member-selected-text-color) 46%, transparent);
+  }
+
+  &__accordion-action-description {
+    display: block;
+    min-width: 0;
+    font-size: calc(var(--nimble-ncsw-row-text-size) * 0.82);
+    font-weight: 600;
+    line-height: 1.14;
+    white-space: normal;
+    overflow-wrap: break-word;
+    color: var(--nimble-ncsw-text-color);
+  }
+
+  &__accordion-action-controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.14rem;
+    width: 100%;
+    margin-top: auto;
+    align-self: flex-end;
+    padding-top: 0.06rem;
+  }
+
+  .nimble-minion-group-attack-panel__accordion-action-controls
+    > .nimble-minion-group-attack-panel__button-tooltip-wrapper
+    > .nimble-minion-group-attack-panel__button {
+    min-height: 1.2rem;
+    height: 1.2rem;
+    min-width: 1.85rem;
+    padding: 0 0.16rem;
+    border-radius: 0.18rem;
+  }
+
   &__member,
   &__action,
-  &__dice,
-  &__controls {
+  &__dice {
     padding: 0.15rem 0.15rem;
-    font-size: var(--nimble-minion-group-attack-text-size);
+    font-size: var(--nimble-ncsw-row-text-size);
     line-height: 1.1;
     color: var(--nimble-ncsw-text-color);
     vertical-align: middle;
   }
 
   &__member {
-    width: 44%;
+    width: calc(100% - var(--nimble-ncsw-dice-col-width));
+    min-width: calc(100% - var(--nimble-ncsw-dice-col-width));
+    max-width: calc(100% - var(--nimble-ncsw-dice-col-width));
     font-weight: 600;
     text-align: left;
   }
@@ -614,6 +908,7 @@
     display: flex;
     align-items: center;
     gap: 0.34rem;
+    width: 100%;
     min-width: 0;
   }
 
@@ -629,43 +924,129 @@
     flex: 0 0 auto;
   }
 
-  &__member-name {
-    display: inline-block;
-    min-width: 0;
+  &__member-name-button {
+    display: block;
+    flex: 1 1 auto;
+    width: auto;
+    max-width: none;
+    min-width: 5.2rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    cursor: pointer;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
+  &__member-name-button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  &__member-name--selected {
+    color: var(--nimble-ncsw-member-selected-text-color);
+    text-shadow: 0 0 4px color-mix(in srgb, var(--nimble-ncsw-member-selected-text-color) 45%, transparent);
+  }
+
+  &__member-icon-buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.14rem;
+    margin-left: auto;
+    flex: 0 0 auto;
+  }
+
+  &__member-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.45rem;
+    height: 1.45rem;
+    margin: 0;
+    padding: 0;
+    color: var(--nimble-ncsw-text-color);
+    background: var(--nimble-ncsw-input-background);
+    border: 1px solid var(--nimble-ncsw-input-border);
+    border-radius: 0.22rem;
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition:
+      border-color 120ms ease,
+      box-shadow 120ms ease;
+  }
+
+  &__member-icon-button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &__member-icon-button--danger {
+    background: color-mix(in srgb, var(--nimble-ncsw-button-negative-background) 64%, transparent);
+    border-color: color-mix(in srgb, var(--nimble-ncsw-button-negative-border) 86%, transparent);
+  }
+
+  &__member-icon-button--active {
+    border-color: color-mix(in srgb, var(--nimble-ncsw-target-active-color) 76%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--nimble-ncsw-target-active-color) 38%, transparent);
+  }
+
+  &__member-icon-button--accordion {
+    border-color: color-mix(
+      in srgb,
+      var(--nimble-ncsw-target-selection-outline-color) 58%,
+      transparent
+    );
+  }
+
+  &__member-icon-button-icon {
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.9);
+    line-height: 1;
+  }
+
   &__action {
-    width: 36%;
+    width: var(--nimble-ncsw-action-col-width);
+    min-width: var(--nimble-ncsw-action-col-width);
+    max-width: var(--nimble-ncsw-action-col-width);
+    padding: 0;
+    border: 0;
+    overflow: hidden;
     text-align: left;
   }
 
+  &__action > * {
+    display: none;
+  }
+
   &__dice {
-    width: 20%;
-    text-align: right;
+    width: var(--nimble-ncsw-dice-col-width);
+    min-width: var(--nimble-ncsw-dice-col-width);
+    max-width: var(--nimble-ncsw-dice-col-width);
+    text-align: center;
     font-variant-numeric: tabular-nums;
     font-weight: 700;
     white-space: nowrap;
   }
 
-  &__controls {
-    width: 1%;
-    text-align: right;
+  &__dice-roll-button {
+    width: 100%;
+    min-height: 1.45rem;
+    height: 1.45rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0 0.2rem;
+    font-size: var(--nimble-ncsw-row-text-size);
+    line-height: 1;
+    justify-content: center;
     white-space: nowrap;
-  }
-
-  .nimble-minion-group-attack-panel__table--monsters .nimble-minion-group-attack-panel__member {
-    width: 40%;
-  }
-
-  .nimble-minion-group-attack-panel__table--monsters .nimble-minion-group-attack-panel__action {
-    width: 44%;
-  }
-
-  .nimble-minion-group-attack-panel__table--monsters .nimble-minion-group-attack-panel__dice {
-    width: 16%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &__select {
@@ -675,9 +1056,11 @@
     max-width: var(--nimble-ncsw-select-width);
     min-height: 1.45rem;
     margin: 0;
-    padding: 0 1.3rem 0 0.3rem;
-    font-size: var(--nimble-minion-group-attack-text-size);
+    padding: 0 0.1rem 0 0.3rem;
+    font-size: var(--nimble-ncsw-row-text-size);
     line-height: 1.1;
+    text-align: center;
+    text-align-last: center;
     color: var(--nimble-ncsw-text-color);
     background: var(--nimble-ncsw-input-background);
     border: 1px solid var(--nimble-ncsw-input-border);
@@ -685,6 +1068,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  &__select option {
+    text-align: center;
   }
 
   &__select:disabled {
@@ -715,6 +1102,7 @@
     display: inline-flex;
     justify-content: flex-end;
     align-items: center;
+    flex-wrap: nowrap;
     gap: 0.16rem;
     width: 100%;
   }
@@ -726,21 +1114,18 @@
   }
 
   .nimble-minion-group-attack-panel__inline-buttons > .nimble-minion-group-attack-panel__button {
-    min-height: 1.3rem;
+    min-height: 1.45rem;
+    height: 1.45rem;
+    min-width: 2rem;
     padding: 0 0.3rem;
     font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.9);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   &__inline-buttons--monster-row {
     justify-content: flex-end;
-  }
-
-  &__monster-controls-cell {
-    padding: 0.06rem 0.15rem 0.18rem;
-  }
-
-  .nimble-minion-group-attack-panel__row + .nimble-minion-group-attack-panel__row--monster-controls td {
-    border-top: 0;
   }
 
   &__buttons {
@@ -751,7 +1136,7 @@
   }
 
   &__button {
-    min-height: 1.3rem;
+    min-height: 1.45rem;
     margin: 0;
     padding: 0 0.3rem;
     font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.9);
@@ -761,6 +1146,34 @@
     border: 1px solid var(--nimble-ncsw-button-border);
     border-radius: 0.24rem;
     background: var(--nimble-ncsw-button-background);
+  }
+
+  &__button--icon {
+    min-width: 2.3rem;
+    padding: 0 0.2rem;
+  }
+
+  &__button-content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.12rem;
+    line-height: 1;
+  }
+
+  &__button-content--roll-end-turn {
+    gap: 0.1rem;
+  }
+
+  &__button-icon {
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.92);
+    line-height: 1;
+  }
+
+  &__button-icon-plus {
+    font-size: calc(var(--nimble-minion-group-attack-text-size) * 0.84);
+    font-weight: 700;
+    line-height: 1;
   }
 
   &__button--positive {
@@ -777,4 +1190,171 @@
     opacity: 0.45;
     cursor: not-allowed;
   }
+}
+
+.system-nimble .nimble-minion-group-action-window {
+  --nimble-ncs-aw-text-size: calc(var(--nimble-xxs-text, 0.55rem) * 1.66);
+  --nimble-ncs-aw-max-height: calc(
+    (var(--nimble-ncs-aw-section-max, 6) * 2.55rem) + 6.6rem
+  );
+
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 10095;
+  display: flex;
+  flex-direction: column;
+  gap: 0.26rem;
+  width: min(24rem, calc(100vw - 1rem));
+  max-width: calc(100vw - 1rem);
+  max-height: min(var(--nimble-ncs-aw-max-height), calc(100vh - 1rem));
+  margin: 0;
+  padding: 0.32rem;
+  color: var(--nimble-ncsw-text-color);
+  background: var(--nimble-ncsw-panel-background);
+  border: 1px solid var(--nimble-ncsw-panel-border);
+  border-radius: 0.4rem;
+  box-shadow:
+    0 0 10px var(--nimble-ncsw-panel-shadow-glow),
+    0 8px 18px var(--nimble-ncsw-panel-shadow-drop);
+  overflow: hidden;
+}
+
+.system-nimble .nimble-minion-group-action-window__title {
+  margin: 0;
+  font-size: calc(var(--nimble-ncs-aw-text-size) * 1.04);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--nimble-ncsw-text-color);
+}
+
+.system-nimble .nimble-minion-group-action-window__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.04rem;
+}
+
+.system-nimble .nimble-minion-group-action-window__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.16rem;
+  margin: 0;
+  padding: 0.2rem;
+  border: 1px solid var(--nimble-ncsw-surface-border);
+  border-radius: 0.24rem;
+  background: var(--nimble-ncsw-surface-background);
+}
+
+.system-nimble .nimble-minion-group-action-window__section-title {
+  margin: 0;
+  font-size: var(--nimble-ncs-aw-text-size);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--nimble-ncsw-text-color);
+}
+
+.system-nimble .nimble-minion-group-action-window__section-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.14rem;
+}
+
+.system-nimble .nimble-minion-group-action-window__option-row {
+  display: flex;
+  align-items: center;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.system-nimble .nimble-minion-group-action-window__option-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 4.9rem;
+  min-height: 1.32rem;
+  margin: 0;
+  padding: 0 0.3rem;
+  font-size: calc(var(--nimble-ncs-aw-text-size) * 0.9);
+  font-weight: 700;
+  line-height: 1;
+  border: 1px solid var(--nimble-ncsw-input-border);
+  border-radius: 0.2rem;
+  background: var(--nimble-ncsw-input-background);
+  color: var(--nimble-ncsw-text-color);
+  cursor: pointer;
+  text-align: center;
+}
+
+.system-nimble .nimble-minion-group-action-window__option-toggle--active {
+  border-color: color-mix(in srgb, var(--nimble-ncsw-target-selection-outline-color) 72%, transparent);
+  color: var(--nimble-ncsw-button-text-color);
+  background: color-mix(
+    in srgb,
+    var(--nimble-ncsw-target-selection-outline-color) 48%,
+    var(--nimble-ncsw-input-background)
+  );
+}
+
+.system-nimble .nimble-minion-group-action-window__option-content {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.system-nimble .nimble-minion-group-action-window__option-label {
+  flex: 0 0 auto;
+  font-size: var(--nimble-ncs-aw-text-size);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--nimble-ncsw-text-color);
+  white-space: nowrap;
+}
+
+.system-nimble .nimble-minion-group-action-window__option-description {
+  display: block;
+  font-size: calc(var(--nimble-ncs-aw-text-size) * 0.93);
+  font-weight: 600;
+  line-height: 1.18;
+  color: var(--nimble-ncsw-subtle-text-color);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.system-nimble .nimble-minion-group-action-window__buttons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.system-nimble .nimble-minion-group-action-window__button {
+  min-height: 1.4rem;
+  margin: 0;
+  padding: 0 0.34rem;
+  font-size: calc(var(--nimble-ncs-aw-text-size) * 0.94);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--nimble-ncsw-button-text-color);
+  border: 1px solid var(--nimble-ncsw-button-border);
+  border-radius: 0.22rem;
+  background: var(--nimble-ncsw-button-background);
+}
+
+.system-nimble .nimble-minion-group-action-window__button--positive {
+  background: var(--nimble-ncsw-button-positive-background);
+  border-color: var(--nimble-ncsw-button-positive-border);
+}
+
+.system-nimble .nimble-minion-group-action-window__button--negative {
+  background: var(--nimble-ncsw-button-negative-background);
+  border-color: var(--nimble-ncsw-button-negative-border);
+}
+
+.system-nimble .nimble-minion-group-action-window__button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }

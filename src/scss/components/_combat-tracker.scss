@@ -287,7 +287,7 @@
   &__header-top-row > .nimble-combat-tracker__start-actions {
     width: 100%;
     text-align: center;
-    padding-inline: 1.5rem;
+    padding-inline: 1.5rem 4.05rem;
   }
 
   &__start-actions {
@@ -388,6 +388,55 @@
     margin: 0;
   }
 
+  &__mode-toggle {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.16rem;
+    transform: translateY(-50%);
+  }
+
+  &__mode-toggle-button {
+    min-width: 1.55rem;
+    min-height: 1.2rem;
+    margin: 0;
+    padding: 0 0.2rem;
+    font-size: calc(var(--nimble-xs-text) * var(--nimble-combat-card-scale, 1));
+    font-weight: 700;
+    line-height: 1;
+    color: var(--nimble-combat-tracker-text-color);
+    background: color-mix(in srgb, hsl(222 24% 20%) 62%, transparent);
+    border: 1px solid color-mix(in srgb, var(--nimble-combat-tracker-border-color) 68%, transparent);
+    border-radius: 0.2rem;
+    transition:
+      color 120ms ease,
+      border-color 120ms ease,
+      box-shadow 120ms ease,
+      background-color 120ms ease;
+  }
+
+  &__mode-toggle-button--active {
+    color: color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 82%, white);
+    border-color: color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 82%, transparent);
+    background: color-mix(in srgb, hsl(223 24% 26%) 74%, transparent);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 34%, transparent);
+  }
+
+  &__mode-toggle-button:hover,
+  &__mode-toggle-button:focus-visible {
+    border-color: color-mix(in srgb, var(--nimble-combat-tracker-hover-color) 70%, transparent);
+  }
+
+  &__ncs-host {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 0.24rem;
+    overflow: hidden;
+  }
+
   &__heading {
     margin: 0;
     font-family: var(--font-h3);
@@ -402,7 +451,6 @@
     width: 100%;
     margin: 0;
     padding: 0;
-    white-space: nowrap;
     font-size: var(--nimble-sm-text);
     font-weight: 600;
     color: inherit;
@@ -514,6 +562,22 @@
       }
     }
 
+    .nimble-combat-tracker__mode-toggle {
+      position: static;
+      inset-block-start: auto;
+      inset-inline-end: auto;
+      grid-column: 1;
+      grid-row: 2;
+      justify-self: end;
+      align-self: end;
+      transform: none;
+    }
+
+    .nimble-combat-tracker__header-top-row > .nimble-combat-tracker__heading,
+    .nimble-combat-tracker__header-top-row > .nimble-combat-tracker__start-actions {
+      padding-inline: 0.15rem;
+    }
+
     .nimble-combat-tracker__header-controls-row .nimble-combat-tracker-controls {
       flex-direction: column;
       flex-grow: 0;
@@ -600,6 +664,12 @@
       justify-content: center;
       gap: 0.35rem;
       padding: 0;
+    }
+  }
+
+  &--mode-ncs {
+    .nimble-combat-tracker__ncs-host {
+      padding: 0.14rem;
     }
   }
 }
@@ -1095,10 +1165,6 @@
 
     &[src$=".svg" i] {
       padding: calc(0.2rem * var(--nimble-combat-card-scale));
-    }
-
-    &[src*="icons/svg/mystery-man.svg" i] {
-      filter: var(--nimble-combat-tracker-mystery-man-filter);
     }
   }
 
