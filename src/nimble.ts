@@ -6,8 +6,6 @@ import registerMinionGroupTokenBadges from './hooks/minionGroupTokenBadges.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
 import init from './hooks/init.js';
-import registerMinionGroupTokenActions from './hooks/minionGroupTokenActions.js';
-import registerMinionGroupTokenBadges from './hooks/minionGroupTokenBadges.js';
 import ready from './hooks/ready.js';
 import renderChatMessageHTML from './hooks/renderChatMessage.js';
 import renderCompendium from './hooks/renderCompendium.js';
