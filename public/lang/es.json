@@ -161,7 +161,7 @@
 		},
 		"conditions": {
 			"blinded": "Cegado",
-			"bloodied": "Malherido",
+			"bloodied": "Maltrecho",
 			"concentration": "Concentración",
 			"charged": "Cargado",
 			"charmed": "Hechizado",
@@ -215,7 +215,7 @@
 			"riding": "<p>Te mueves junto a la criatura que estás montando. Si un ataque contra ti falla, impacta a tu montura en su lugar.</p>",
 			"silenced": "<p>No puedes lanzar conjuros o usar aptitudes que requieran del habla (ej. Órdenes de Comandante).</p>",
 			"slowed": "<p>Tu Velocidad se reduce a la mitad en tu próximo turno.</p>",
-			"smoldering": "<p>Algunos conjuros de fuego pueden infligir el estado Quemado y crear efectos destructivos adicionales contra enemigos con este estado.</p>",
+			"smoldering": "<p>Algunos conjuros de fuego pueden infligir el estado Ardiente y crear efectos destructivos adicionales contra enemigos con este estado.</p>",
 			"stunned": "<p>Incapacitado. No puedes hacer nada. Los ataques contra ti tienen ventaja, y los ataques cuerpo a cuerpo que impacten son crítico.</p>",
 			"taunted": "<p>Desventaja en los ataques contra cualquier criatura que no sea la última que te provocó.</p>",
 			"unconscious": "<p>Incapacitado. No puedes hacer nada. Los ataques contra ti tienen ventaja, y los ataques cuerpo a cuerpo que impacten son crítico.</p>",
@@ -329,14 +329,14 @@
 			"feature": "Rasgo",
 			"action": "Acciones",
 			"attackSequence": "Secuencia de ataque",
-			"bloodied": "Malherido",
+			"bloodied": "Maltrecho",
 			"lastStand": "Último Aliento"
 		},
 		"monsterFeatureSubtypes": {
 			"feature": "Rasgo",
 			"action": "Acción",
 			"attackSequence": "Secuencia de ataque",
-			"bloodied": "Malherido",
+			"bloodied": "Maltrecho",
 			"lastStand": "Último Aliento"
 		},
 		"movementTypes": {
