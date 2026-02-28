@@ -248,9 +248,9 @@
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 						data-tooltip-direction="LEFT"
 						onmouseenter={(event) => handleTooltipMouseEnter(event, spell)}
-						draggable={editingEnabled ? 'true' : 'false'}
+						draggable="true"
 						role="button"
-						ondragstart={(event) => editingEnabled && sheet._onDragStart(event)}
+						ondragstart={(event) => sheet._onDragStart(event)}
 						onclick={() => actor.activateItem(spell._id)}
 					>
 						{#if showEmbeddedDocumentImages}
@@ -286,29 +286,27 @@
 								</div>
 							</h4>
 
-							{#if editingEnabled}
-								<button
-									class="nimble-button"
-									style="grid-area: configureButton"
-									data-button-variant="icon"
-									type="button"
-									aria-label="Configure {spell.name}"
-									onclick={(event) => configureItem(event, spell._id)}
-								>
-									<i class="fa-solid fa-edit"></i>
-								</button>
+							<button
+								class="nimble-button"
+								style="grid-area: configureButton"
+								data-button-variant="icon"
+								type="button"
+								aria-label="Configure {spell.name}"
+								onclick={(event) => configureItem(event, spell._id)}
+							>
+								<i class="fa-solid fa-edit"></i>
+							</button>
 
-								<button
-									class="nimble-button"
-									style="grid-area: deleteButton"
-									data-button-variant="icon"
-									type="button"
-									aria-label="Delete {spell.name}"
-									onclick={(event) => deleteItem(event, spell._id)}
-								>
-									<i class="fa-solid fa-trash"></i>
-								</button>
-							{/if}
+							<button
+								class="nimble-button"
+								style="grid-area: deleteButton"
+								data-button-variant="icon"
+								type="button"
+								aria-label="Delete {spell.name}"
+								onclick={(event) => deleteItem(event, spell._id)}
+							>
+								<i class="fa-solid fa-trash"></i>
+							</button>
 						</header>
 
 						{#if meta}

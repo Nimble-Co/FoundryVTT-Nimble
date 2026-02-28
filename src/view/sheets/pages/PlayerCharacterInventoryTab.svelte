@@ -166,7 +166,6 @@
 					actor.update({
 						[`system.currency.${key}.value`]: target.value,
 					})}
-				disabled={!editingEnabled}
 			/>
 		</label>
 	{/each}
@@ -199,11 +198,11 @@
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 						data-tooltip-direction="LEFT"
 						onmouseenter={(event) => handleTooltipMouseEnter(event, item)}
-						draggable={editingEnabled ? 'true' : 'false'}
+						draggable="true"
 						role="button"
-						ondragstart={(event) => editingEnabled && sheet._onDragStart(event)}
-						ondragover={(event) => editingEnabled && event.preventDefault()}
-						ondrop={(event) => editingEnabled && sheet._onSortItem(event, item)}
+						ondragstart={(event) => sheet._onDragStart(event)}
+						ondragover={(event) => event.preventDefault()}
+						ondrop={(event) => sheet._onSortItem(event, item)}
 						onclick={() => actor.activateItem(item._id)}
 					>
 						<header class="u-semantic-only">
@@ -258,31 +257,29 @@
 										actor.updateItem(item._id, {
 											'system.quantity': currentTarget.value,
 										})}
-									disabled={!editingEnabled || item.system.objectSizeType === 'slots'}
+									disabled={item.system.objectSizeType === 'slots'}
 								/>
 							{/if}
 
-							{#if editingEnabled}
-								<button
-									class="nimble-button"
-									data-button-variant="icon"
-									type="button"
-									aria-label="Configure {item.name}"
-									onclick={(event) => configureItem(event, item._id)}
-								>
-									<i class="fa-solid fa-edit"></i>
-								</button>
+							<button
+								class="nimble-button"
+								data-button-variant="icon"
+								type="button"
+								aria-label="Configure {item.name}"
+								onclick={(event) => configureItem(event, item._id)}
+							>
+								<i class="fa-solid fa-edit"></i>
+							</button>
 
-								<button
-									class="nimble-button"
-									data-button-variant="icon"
-									type="button"
-									aria-label="Delete {item.name}"
-									onclick={(event) => deleteItem(event, item._id)}
-								>
-									<i class="fa-solid fa-trash"></i>
-								</button>
-							{/if}
+							<button
+								class="nimble-button"
+								data-button-variant="icon"
+								type="button"
+								aria-label="Delete {item.name}"
+								onclick={(event) => deleteItem(event, item._id)}
+							>
+								<i class="fa-solid fa-trash"></i>
+							</button>
 						</header>
 					</li>
 				{/each}
