@@ -68,13 +68,6 @@ export default class NPCSheet extends SvelteApplicationMixin(
 
 		const actor = this.document as NimbleNPC;
 
-		// Reject drops when editing is disabled
-		const editingEnabled = actor.getFlag('nimble', 'editingEnabled') ?? false;
-		if (!editingEnabled) {
-			ui.notifications?.warn('Enable editing mode to add items to this sheet.');
-			return false;
-		}
-
 		const allowed = Hooks.call(
 			'dropActorSheetData',
 			actor,
