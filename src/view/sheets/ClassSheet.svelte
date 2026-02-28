@@ -1,5 +1,5 @@
 <script>
-	import { setContext } from 'svelte';
+	import { setContext, untrack } from 'svelte';
 	import localize from '../../utils/localize.js';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 
@@ -178,8 +178,14 @@
 	let weaponProficiencies = $derived(item.reactive.system.weaponProficiencies);
 	let featureGroups = $derived(item.reactive.system.groupIdentifiers || []);
 
-	setContext('document', item);
-	setContext('application', sheet);
+	setContext(
+		'document',
+		untrack(() => item),
+	);
+	setContext(
+		'application',
+		untrack(() => sheet),
+	);
 </script>
 
 {#snippet configTab()}

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { setContext } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
@@ -29,8 +28,6 @@
 	const hasRecovery = $derived(
 		hitDiceDisplay || hpRestored > 0 || manaRestored > 0 || woundsRecovered > 0,
 	);
-
-	setContext('message', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />

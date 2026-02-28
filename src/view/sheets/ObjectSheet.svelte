@@ -1,5 +1,5 @@
 <script>
-	import { setContext } from 'svelte';
+	import { setContext, untrack } from 'svelte';
 	import localize from '../../utils/localize.js';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 
@@ -114,8 +114,14 @@
 	let objectType = $derived(item.reactive.system.objectType);
 	let objectSizeType = $derived(item.reactive.system.objectSizeType);
 
-	setContext('document', item);
-	setContext('application', sheet);
+	setContext(
+		'document',
+		untrack(() => item),
+	);
+	setContext(
+		'application',
+		untrack(() => sheet),
+	);
 </script>
 
 {#snippet activationConfigTab()}
