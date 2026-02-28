@@ -14,6 +14,7 @@
 	import ManaBar from './components/ManaBar.svelte';
 	import { incrementDieSize } from '../../managers/HitDiceManager.js';
 	import PlayerCharacterBioTab from './pages/PlayerCharacterBioTab.svelte';
+	import PlayerCharacterConditionsTab from './pages/PlayerCharacterConditionsTab.svelte';
 	import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';
 	import PlayerCharacterFeaturesTab from './pages/PlayerCharacterFeaturesTab.svelte';
 	import PlayerCharacterInventoryTab from './pages/PlayerCharacterInventoryTab.svelte';
@@ -191,6 +192,12 @@
 			icon: 'fa-solid fa-home',
 			tooltip: 'Core',
 			name: 'core',
+		},
+		{
+			component: PlayerCharacterConditionsTab,
+			icon: 'fa-solid fa-notes-medical',
+			tooltip: 'NIMBLE.ui.conditions',
+			name: 'conditions',
 		},
 		{
 			component: PlayerCharacterInventoryTab,

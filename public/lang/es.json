@@ -629,7 +629,28 @@
 			"turn": "turno"
 		},
 		"ui": {
-			"clearAll": "Borrar todo"
+			"clearAll": "Borrar todo",
+			"conditions": "Condiciones",
+			"condition": "Condición",
+			"duration": "Duración",
+			"unlimited": "Ilimitado",
+			"source": "Fuente",
+			"sourceNone": "Ninguna",
+			"noConditions": "Sin condiciones",
+			"noEffects": "Sin efectos",
+			"temporaryEffects": "Efectos temporales",
+			"passiveEffects": "Efectos pasivos",
+			"searchConditions": "Buscar condiciones",
+			"showActiveOnly": "Mostrar activas",
+			"showAllConditions": "Mostrar todas",
+			"removeCondition": "Eliminar condición",
+			"removeEffect": "Eliminar efecto",
+			"failedToRemoveCondition": "Error al eliminar la condición.",
+			"failedToUpdateCondition": "Error al actualizar la condición.",
+			"failedToRemoveEffect": "Error al eliminar el efecto.",
+			"applyCondition": "Aplicar condición",
+			"conditionsFor": "Condiciones: {name}",
+			"conditionDescriptionUnavailable": "<p>No hay descripción disponible.</p>"
 		},
 		"hitDice": {
 			"selectToRoll": "Selecciona Dados de Golpe para tirar",

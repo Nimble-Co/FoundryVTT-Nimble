@@ -1,11 +1,14 @@
-import { mount } from 'svelte';
+import { mount, unmount } from 'svelte';
 
 import { MigrationList } from '../migration/MigrationList.js';
 import { MigrationRunner } from '../migration/MigrationRunner.js';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
+import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CombatTracker from '../view/ui/CombatTracker.svelte';
 import combatStateGuards from './combatStateGuards.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
+
+let canvasConditionsPanelComponent: object | null = null;
 
 export default async function ready() {
 	// Run migrations if needed
@@ -39,6 +42,18 @@ export default async function ready() {
 		anchor,
 		target,
 	});
+
+	const canvasPanelTarget = document.querySelector('#interface') ?? document.body;
+	if (canvasPanelTarget) {
+		if (canvasConditionsPanelComponent) {
+			unmount(canvasConditionsPanelComponent);
+			canvasConditionsPanelComponent = null;
+		}
+
+		canvasConditionsPanelComponent = mount(CanvasConditionsPanel, {
+			target: canvasPanelTarget,
+		});
+	}
 
 	combatStateGuards();
 	registerMinionGroupTokenActions();
