@@ -81,6 +81,14 @@ export class NimbleSpellItem extends NimbleBaseItem {
 				style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 				sound: CONFIG.sounds.dice,
 				rolls,
+				flags: {
+					nimble: {
+						itemId: this.id,
+						itemUuid: this.uuid,
+						actorId: this.actor?.id,
+						tokenUuid: this.actor?.token?.uuid,
+					},
+				},
 				system: {
 					actorName: this.actor?.name ?? '',
 					actorType: this.actor?.type ?? '',
