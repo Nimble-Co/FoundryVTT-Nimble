@@ -35,6 +35,30 @@ export class NimbleSpellItem extends NimbleBaseItem {
 			return null;
 		}
 
+		const { isCritical, isMiss } = rolls.find((roll) => roll instanceof DamageRoll) ?? {};
+
+		/**
+		 * A hook event that fires before an item is used.
+		 * @function nimble.preUseItem
+		 * @memberof hookEvents
+		 * @param {Item} item           The item being used
+		 * @param {Object} context       Additional context about the item use
+		 * @param {Roll[]} context.rolls The rolls associated with the item use
+		 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
+		 * @param {boolean} [context.isMiss] Whether the item use resulted in a miss
+		 * @param {Token[]} context.targets The targets of the item use
+		 * @returns {boolean}  Explicitly return `false` to prevent the item from being used.
+		 */
+		// @ts-expect-error - nimble.preUseItem is a custom hook
+		const allowed = Hooks.call('nimble.preUseItem', this, {
+			rolls,
+			isCritical,
+			isMiss,
+			targets: Array.from(game.user?.targets ?? []),
+			upcast: manager.upcastResult,
+		});
+		if (!allowed) return null;
+
 		// Deduct mana for tiered spells (cantrips are free)
 		if (this.system.tier > 0 && this.actor) {
 			// Use upcast amount if available, otherwise use base tier cost
@@ -44,8 +68,6 @@ export class NimbleSpellItem extends NimbleBaseItem {
 				'system.resources.mana.current': Math.max(0, currentMana - manaSpent),
 			} as any);
 		}
-
-		const { isCritical, isMiss } = rolls.find((roll) => roll instanceof DamageRoll) ?? {};
 
 		// Only allow hiding rolls for GM users rolling for non-PC actors
 		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
@@ -84,6 +106,29 @@ export class NimbleSpellItem extends NimbleBaseItem {
 		}
 
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
+
+		if (chatCard) {
+			/**
+			 * A hook event that fires after an item has been used.
+			 * @function nimble.useItem
+			 * @memberof hookEvents
+			 * @param {Item} item                The item that was used
+			 * @param {ChatMessage} chatMessage   The chat message created by the item use
+			 * @param {Object} context            Additional context about the item use
+			 * @param {Roll[]} context.rolls      The rolls associated with the item use
+			 * @param {boolean} [context.isCritical] Whether the item use resulted in a critical hit
+			 * @param {boolean} [context.isMiss]  Whether the item use resulted in a miss
+			 * @param {Token[]} context.targets   The targets of the item use
+			 */
+			Hooks.callAll('nimble.useItem' as any, this, chatCard, {
+				rolls,
+				isCritical,
+				isMiss,
+				targets: Array.from(game.user?.targets ?? []),
+				upcast: manager.upcastResult,
+			});
+		}
+
 		return chatCard || null;
 	}
 
