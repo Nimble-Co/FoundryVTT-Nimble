@@ -572,6 +572,7 @@
 		class="nimble-button"
 		data-button-variant="overhang"
 		class:nimble-edit-toggle--enabled={editingEnabled}
+		class:nimble-edit-toggle--disabled={!editingEnabled}
 		type="button"
 		aria-pressed={editingEnabled}
 		aria-label={editingEnabled ? 'Disable editing' : 'Enable editing'}
@@ -641,10 +642,18 @@
 		width: 2.1rem;
 		height: 1rem;
 		border-radius: 999px;
-		background: var(--nimble-overhang-button-text-color);
-		border: 1px solid var(--nimble-overhang-button-text-color);
+		background: hsl(0, 0%, 55%);
+		border: 1px solid hsl(0, 0%, 55%);
 		display: flex;
 		align-items: center;
+		transition:
+			background-color 0.2s ease-in-out,
+			border-color 0.2s ease-in-out;
+	}
+
+	.nimble-edit-toggle--enabled .nimble-edit-toggle__track {
+		background: var(--nimble-overhang-button-text-color);
+		border: 1px solid var(--nimble-overhang-button-text-color);
 	}
 
 	.nimble-edit-toggle__thumb {
@@ -666,8 +675,10 @@
 		box-shadow: 0 0 4px rgba(0, 0, 0, 0.45);
 	}
 
-	.nimble-edit-toggle--enabled .nimble-edit-toggle__thumb {
+	.nimble-edit-toggle--disabled .nimble-edit-toggle__thumb {
 		transform: translateX(1.05rem);
+		background: hsl(0, 0%, 75%);
+		color: hsl(0, 0%, 40%);
 	}
 
 	.nimble-player-character-header {
