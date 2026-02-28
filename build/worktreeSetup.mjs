@@ -271,7 +271,7 @@ async function setupSymlink(customPath) {
 
 	// Create the symlink
 	try {
-		fs.symlinkSync(distDir, targetSymlinkPath, 'dir');
+		fs.symlinkSync(distDir, targetSymlinkPath, 'junction');
 		console.log('Symlink created successfully!');
 	} catch (err) {
 		console.error('Failed to create symlink:', err.message);
