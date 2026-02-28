@@ -629,7 +629,28 @@
 			"turn": "turn"
 		},
 		"ui": {
-			"clearAll": "Clear All"
+			"clearAll": "Clear All",
+			"conditions": "Conditions",
+			"condition": "Condition",
+			"duration": "Duration",
+			"unlimited": "Unlimited",
+			"source": "Source",
+			"sourceNone": "None",
+			"noConditions": "No conditions",
+			"noEffects": "No effects",
+			"temporaryEffects": "Temporary Effects",
+			"passiveEffects": "Passive Effects",
+			"searchConditions": "Search conditions",
+			"showActiveOnly": "Show Active",
+			"showAllConditions": "Show All",
+			"removeCondition": "Remove condition",
+			"removeEffect": "Remove effect",
+			"failedToRemoveCondition": "Failed to remove condition.",
+			"failedToUpdateCondition": "Failed to update condition.",
+			"failedToRemoveEffect": "Failed to remove effect.",
+			"applyCondition": "Apply condition",
+			"conditionsFor": "Conditions: {name}",
+			"conditionDescriptionUnavailable": "<p>No description available.</p>"
 		},
 		"hitDice": {
 			"selectToRoll": "Select Hit Dice to Roll",

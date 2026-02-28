@@ -3,6 +3,7 @@ import {
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
 import ObjectSheetComponent from '../../view/sheets/ObjectSheet.svelte';
+import { SHEET_DEFAULTS } from './sheetDefaults.js';
 
 export default class ObjectSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ItemSheetV2,
@@ -25,10 +26,7 @@ export default class ObjectSheet extends SvelteApplicationMixin(
 			icon: 'fa-solid fa-crown',
 			resizable: true,
 		},
-		position: {
-			width: 350,
-			height: 500,
-		},
+		position: SHEET_DEFAULTS.item,
 		actions: {},
 	};
 

@@ -819,7 +819,28 @@
 			}
 		},
 		"ui": {
-			"clearAll": "Tout effacer"
+			"clearAll": "Tout effacer",
+			"conditions": "Conditions",
+			"condition": "Condition",
+			"duration": "Durée",
+			"unlimited": "Illimitée",
+			"source": "Source",
+			"sourceNone": "Aucune",
+			"noConditions": "Aucun etat",
+			"noEffects": "Aucun effet",
+			"temporaryEffects": "Effets temporaires",
+			"passiveEffects": "Effets passifs",
+			"searchConditions": "Rechercher des conditions",
+			"showActiveOnly": "Afficher actives",
+			"showAllConditions": "Afficher toutes",
+			"removeCondition": "Retirer l'etat",
+			"removeEffect": "Retirer l'effet",
+			"failedToRemoveCondition": "Échec de la suppression de la condition.",
+			"failedToUpdateCondition": "Échec de la mise à jour de la condition.",
+			"failedToRemoveEffect": "Échec de la suppression de l'effet.",
+			"applyCondition": "Appliquer l'etat",
+			"conditionsFor": "Conditions : {name}",
+			"conditionDescriptionUnavailable": "<p>Aucune description disponible.</p>"
 		}
 	},
 	"TYPES": {

@@ -3,6 +3,7 @@ import {
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
 import SubclassSheetComponent from '../../view/sheets/SubclassSheet.svelte';
+import { SHEET_DEFAULTS } from './sheetDefaults.js';
 
 export default class SubclassSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ItemSheetV2,
@@ -25,10 +26,7 @@ export default class SubclassSheet extends SvelteApplicationMixin(
 			icon: 'fa-solid fa-user',
 			resizable: true,
 		},
-		position: {
-			width: 350,
-			height: 500,
-		},
+		position: SHEET_DEFAULTS.item,
 		actions: {},
 	};
 

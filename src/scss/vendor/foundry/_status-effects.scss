@@ -2,3 +2,25 @@
   display: block;
   width: fit-content;
 }
+
+#board .token .token-effects {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px;
+  background: color-mix(in srgb, var(--nimble-token-effects-background) 70%, black);
+  border-radius: 4px;
+}
+
+#board .token .token-effects .effect-control,
+#board .token .token-effects img {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  border: 1px solid var(--nimble-token-effects-icon-border-color);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--nimble-token-effects-icon-background) 75%, black);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 10%);
+  object-fit: contain;
+  filter: var(--nimble-token-effects-icon-shadow);
+}
