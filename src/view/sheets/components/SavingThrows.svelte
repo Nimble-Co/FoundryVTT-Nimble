@@ -15,8 +15,8 @@
 
 	const { saves, savingThrows, savingThrowAbbreviations } = CONFIG.NIMBLE;
 	const actor = getContext('actor');
-	const editingEnabledStore = getContext('editingEnabled');
-	let editingEnabled = $derived($editingEnabledStore ?? true);
+	let flags = $derived(actor.reactive.flags.nimble);
+	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 </script>
 
 {#snippet savingThrowSnippet(saveKey, save)}
@@ -59,17 +59,18 @@
 	<header class="nimble-section-header">
 		<h3 class="nimble-heading" data-heading-variant="section">{saves.saves}</h3>
 
-		<button
-			class="nimble-button"
-			data-button-variant="icon"
-			type="button"
-			data-tooltip="NIMBLE.prompts.configureSavingThrows"
-			aria-label={localize('NIMBLE.prompts.configureSavingThrows')}
-			onclick={() => actor.configureSavingThrows()}
-			disabled={!editingEnabled}
-		>
-			<i class="fa-solid fa-edit"></i>
-		</button>
+		{#if editingEnabled}
+			<button
+				class="nimble-button"
+				data-button-variant="icon"
+				type="button"
+				data-tooltip="NIMBLE.prompts.configureSavingThrows"
+				aria-label={localize('NIMBLE.prompts.configureSavingThrows')}
+				onclick={() => actor.configureSavingThrows()}
+			>
+				<i class="fa-solid fa-edit"></i>
+			</button>
+		{/if}
 	</header>
 
 	<dl class="nimble-stats">

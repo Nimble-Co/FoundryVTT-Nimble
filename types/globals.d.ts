@@ -5,8 +5,19 @@ import type { NIMBLE_GAME } from '../src/game.js';
 
 /** Nimble system flags for actors */
 declare interface NimbleActorFlags {
+	// Settings
 	includeCurrencyBulk?: boolean;
 	automaticallyExecuteAvailableMacros?: boolean;
+	showEmbeddedDocumentImages?: boolean;
+	trackInventorySlots?: boolean;
+	compactSkillsView?: boolean;
+	showPassiveSkillScores?: boolean;
+
+	// Sheet state
+	editingEnabled?: boolean;
+	actorImageXOffset?: number;
+	actorImageYOffset?: number;
+	actorImageScale?: number;
 }
 
 /** Nimble system flags for items */
@@ -47,6 +58,9 @@ declare global {
 		rules?: NimbleBaseRule[];
 		tags?: Set<string>;
 		isType<TypeName extends SystemActorTypes>(type: TypeName): boolean;
+		activateItem?(itemId: string, options?: Record<string, unknown>): Promise<ChatMessage | null>;
+		configureItem?(itemId: string, options?: Record<string, unknown>): Promise<void>;
+		deleteItem?(itemId: string, options?: Record<string, unknown>): Promise<void>;
 	}
 
 	/** Interface for Nimble base item with common methods */

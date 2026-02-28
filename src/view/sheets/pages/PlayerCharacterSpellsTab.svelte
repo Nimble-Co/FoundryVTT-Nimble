@@ -153,6 +153,7 @@
 
 	// Settings
 	let flags = $derived(actor.reactive.flags.nimble);
+	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
 	// Content State
@@ -207,14 +208,16 @@
 	<div class="nimble-search-wrapper">
 		<SearchBar bind:searchTerm />
 
-		<button
-			class="nimble-button fa-solid fa-plus"
-			data-button-variant="basic"
-			type="button"
-			aria-label="Create Spell"
-			data-tooltip="Create Spell"
-			onclick={createItem}
-		></button>
+		{#if editingEnabled}
+			<button
+				class="nimble-button fa-solid fa-plus"
+				data-button-variant="basic"
+				type="button"
+				aria-label="Create Spell"
+				data-tooltip="Create Spell"
+				onclick={createItem}
+			></button>
+		{/if}
 	</div>
 </header>
 
@@ -245,9 +248,9 @@
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 						data-tooltip-direction="LEFT"
 						onmouseenter={(event) => handleTooltipMouseEnter(event, spell)}
-						draggable="true"
+						draggable={editingEnabled ? 'true' : 'false'}
 						role="button"
-						ondragstart={(event) => sheet._onDragStart(event)}
+						ondragstart={(event) => editingEnabled && sheet._onDragStart(event)}
 						onclick={() => actor.activateItem(spell._id)}
 					>
 						{#if showEmbeddedDocumentImages}
@@ -283,27 +286,29 @@
 								</div>
 							</h4>
 
-							<button
-								class="nimble-button"
-								style="grid-area: configureButton"
-								data-button-variant="icon"
-								type="button"
-								aria-label="Configure {spell.name}"
-								onclick={(event) => configureItem(event, spell._id)}
-							>
-								<i class="fa-solid fa-edit"></i>
-							</button>
+							{#if editingEnabled}
+								<button
+									class="nimble-button"
+									style="grid-area: configureButton"
+									data-button-variant="icon"
+									type="button"
+									aria-label="Configure {spell.name}"
+									onclick={(event) => configureItem(event, spell._id)}
+								>
+									<i class="fa-solid fa-edit"></i>
+								</button>
 
-							<button
-								class="nimble-button"
-								style="grid-area: deleteButton"
-								data-button-variant="icon"
-								type="button"
-								aria-label="Delete {spell.name}"
-								onclick={(event) => deleteItem(event, spell._id)}
-							>
-								<i class="fa-solid fa-trash"></i>
-							</button>
+								<button
+									class="nimble-button"
+									style="grid-area: deleteButton"
+									data-button-variant="icon"
+									type="button"
+									aria-label="Delete {spell.name}"
+									onclick={(event) => deleteItem(event, spell._id)}
+								>
+									<i class="fa-solid fa-trash"></i>
+								</button>
+							{/if}
 						</header>
 
 						{#if meta}

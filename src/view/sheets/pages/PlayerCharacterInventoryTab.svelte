@@ -46,8 +46,6 @@
 
 	let actor = getContext('actor');
 	let sheet = getContext('application');
-	const editingEnabledStore = getContext('editingEnabled');
-	let editingEnabled = $derived($editingEnabledStore ?? true);
 	let searchTerm = $state('');
 
 	const tooltipCache = new Map();
@@ -116,6 +114,7 @@
 	let flags = $derived(actor.reactive.flags.nimble);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 	let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
+	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 </script>
 
 <header class="nimble-sheet__static nimble-sheet__static--inventory">
@@ -133,14 +132,16 @@
 	<div class="nimble-search-wrapper">
 		<SearchBar bind:searchTerm />
 
-		<button
-			class="nimble-button fa-solid fa-plus"
-			data-button-variant="basic"
-			type="button"
-			aria-label="Create Object"
-			data-tooltip="Create Object"
-			onclick={createItem}
-		></button>
+		{#if editingEnabled}
+			<button
+				class="nimble-button fa-solid fa-plus"
+				data-button-variant="basic"
+				type="button"
+				aria-label="Create Object"
+				data-tooltip="Create Object"
+				onclick={createItem}
+			></button>
+		{/if}
 	</div>
 
 	{#each Object.entries(currency).reverse() as [key, denomination] (key)}
@@ -165,6 +166,7 @@
 					actor.update({
 						[`system.currency.${key}.value`]: target.value,
 					})}
+				disabled={!editingEnabled}
 			/>
 		</label>
 	{/each}
@@ -197,11 +199,11 @@
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 						data-tooltip-direction="LEFT"
 						onmouseenter={(event) => handleTooltipMouseEnter(event, item)}
-						draggable="true"
+						draggable={editingEnabled ? 'true' : 'false'}
 						role="button"
-						ondragstart={(event) => sheet._onDragStart(event)}
-						ondragover={(event) => event.preventDefault()}
-						ondrop={(event) => sheet._onSortItem(event, item)}
+						ondragstart={(event) => editingEnabled && sheet._onDragStart(event)}
+						ondragover={(event) => editingEnabled && event.preventDefault()}
+						ondrop={(event) => editingEnabled && sheet._onSortItem(event, item)}
 						onclick={() => actor.activateItem(item._id)}
 					>
 						<header class="u-semantic-only">
@@ -218,31 +220,33 @@
 							</h4>
 
 							{#if rules && rules.hasRuleOfType('armorClass')}
-								<button
-									class="nimble-button"
-									data-button-variant="icon"
-									type="button"
-									aria-label="Toggle armor rule of {item.name}"
-									onclick={async (event) => {
-										event.stopPropagation();
-										const armorRule = rules.getRuleOfType('armorClass');
-										const newDisabledState = !armorRule.disabled;
+								{#if editingEnabled}
+									<button
+										class="nimble-button"
+										data-button-variant="icon"
+										type="button"
+										aria-label="Toggle armor rule of {item.name}"
+										onclick={async (event) => {
+											event.stopPropagation();
+											const armorRule = rules.getRuleOfType('armorClass');
+											const newDisabledState = !armorRule.disabled;
 
-										const updateData = {
-											...armorRule.toObject(),
-											disabled: newDisabledState,
-										};
+											const updateData = {
+												...armorRule.toObject(),
+												disabled: newDisabledState,
+											};
 
-										await rules.updateRule(armorRule.id, updateData);
-										itemsWithDisabledArmor.set(item.id, newDisabledState);
-									}}
-								>
-									{#if itemsWithDisabledArmor.get(item.id)}
-										<i class="fa-regular fa-circle"></i>
-									{:else}
-										<i class="fa-solid fa-circle"></i>
-									{/if}
-								</button>
+											await rules.updateRule(armorRule.id, updateData);
+											itemsWithDisabledArmor.set(item.id, newDisabledState);
+										}}
+									>
+										{#if itemsWithDisabledArmor.get(item.id)}
+											<i class="fa-regular fa-circle"></i>
+										{:else}
+											<i class="fa-solid fa-circle"></i>
+										{/if}
+									</button>
+								{/if}
 							{:else}
 								<input
 									class="nimble-document-card__quantity"
@@ -254,30 +258,31 @@
 										actor.updateItem(item._id, {
 											'system.quantity': currentTarget.value,
 										})}
-									disabled={item.system.objectSizeType === 'slots'}
+									disabled={!editingEnabled || item.system.objectSizeType === 'slots'}
 								/>
 							{/if}
 
-							<button
-								class="nimble-button"
-								data-button-variant="icon"
-								type="button"
-								aria-label="Configure {item.name}"
-								onclick={(event) => configureItem(event, item._id)}
-							>
-								<i class="fa-solid fa-edit"></i>
-							</button>
+							{#if editingEnabled}
+								<button
+									class="nimble-button"
+									data-button-variant="icon"
+									type="button"
+									aria-label="Configure {item.name}"
+									onclick={(event) => configureItem(event, item._id)}
+								>
+									<i class="fa-solid fa-edit"></i>
+								</button>
 
-							<button
-								class="nimble-button"
-								data-button-variant="icon"
-								type="button"
-								aria-label="Delete {item.name}"
-								onclick={(event) => deleteItem(event, item._id)}
-								disabled={!editingEnabled}
-							>
-								<i class="fa-solid fa-trash"></i>
-							</button>
+								<button
+									class="nimble-button"
+									data-button-variant="icon"
+									type="button"
+									aria-label="Delete {item.name}"
+									onclick={(event) => deleteItem(event, item._id)}
+								>
+									<i class="fa-solid fa-trash"></i>
+								</button>
+							{/if}
 						</header>
 					</li>
 				{/each}

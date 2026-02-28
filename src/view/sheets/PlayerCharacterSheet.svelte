@@ -273,7 +273,7 @@
 	let actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
-	let editingEnabled = $derived(flags?.editingEnabled ?? true);
+	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 	const editingEnabledStore = readable(false, (set) => {
 		$effect(() => set(editingEnabled));
 		return () => {};
@@ -396,25 +396,37 @@
 			{/each}
 		</ul>
 
-		<button
-			class="nimble-icon__button nimble-icon__button--actor"
-			aria-label={localize('NIMBLE.prompts.changeActorImage')}
-			data-tooltip="NIMBLE.prompts.changeActorImage"
-			onclick={(event) => updateDocumentImage(actor, { shiftKey: event.shiftKey })}
-			type="button"
-			disabled={!editingEnabled}
-		>
+		{#if editingEnabled}
+			<button
+				class="nimble-icon__button nimble-icon__button--actor"
+				aria-label={localize('NIMBLE.prompts.changeActorImage')}
+				data-tooltip="NIMBLE.prompts.changeActorImage"
+				onclick={(event) => updateDocumentImage(actor, { shiftKey: event.shiftKey })}
+				type="button"
+			>
+				<img
+					class="nimble-icon__image nimble-icon__image--actor"
+					src={actor.reactive.img}
+					alt={actor.reactive.name}
+					style="
+						--nimble-actor-image-x-offset: {actorImageXOffset}px;
+						--nimble-actor-image-y-offset: {actorImageYOffset}px;
+						--nimble-actor-image-scale: {actorImageScale}%;
+					"
+				/>
+			</button>
+		{:else}
 			<img
 				class="nimble-icon__image nimble-icon__image--actor"
 				src={actor.reactive.img}
 				alt={actor.reactive.name}
 				style="
-                    --nimble-actor-image-x-offset: {actorImageXOffset}px;
-                    --nimble-actor-image-y-offset: {actorImageYOffset}px;
-                    --nimble-actor-image-scale: {actorImageScale}%;
-                "
+					--nimble-actor-image-x-offset: {actorImageXOffset}px;
+					--nimble-actor-image-y-offset: {actorImageYOffset}px;
+					--nimble-actor-image-scale: {actorImageScale}%;
+				"
 			/>
-		</button>
+		{/if}
 	</div>
 
 	<section class="nimble-character-sheet-section nimble-character-sheet-section--defense">
@@ -438,17 +450,18 @@
 					<span class="nimble-wounds-indicator__count">{wounds.value}</span>
 				</span>
 			{/if}
-			<button
-				class="nimble-button"
-				data-button-variant="icon"
-				type="button"
-				aria-label="Configure Hit Points"
-				data-tooltip="Configure Hit Points"
-				onclick={() => actor.configureHitPoints()}
-				disabled={!editingEnabled}
-			>
-				<i class="fa-solid fa-edit"></i>
-			</button>
+			{#if editingEnabled}
+				<button
+					class="nimble-button"
+					data-button-variant="icon"
+					type="button"
+					aria-label="Configure Hit Points"
+					data-tooltip="Configure Hit Points"
+					onclick={() => actor.configureHitPoints()}
+				>
+					<i class="fa-solid fa-edit"></i>
+				</button>
+			{/if}
 		</h3>
 
 		<HitPointBar
@@ -465,17 +478,18 @@
 		<h3 class="nimble-heading nimble-heading--hit-dice">
 			{CONFIG.NIMBLE.hitDice.heading}
 			<i class="fa-solid fa-heart-circle-plus"></i>
-			<button
-				class="nimble-button"
-				data-button-variant="icon"
-				type="button"
-				aria-label={CONFIG.NIMBLE.hitDice.configureHitDice}
-				data-tooltip={CONFIG.NIMBLE.hitDice.configureHitDice}
-				onclick={() => actor.configureHitDice()}
-				disabled={!editingEnabled}
-			>
-				<i class="fa-solid fa-edit"></i>
-			</button>
+			{#if editingEnabled}
+				<button
+					class="nimble-button"
+					data-button-variant="icon"
+					type="button"
+					aria-label={CONFIG.NIMBLE.hitDice.configureHitDice}
+					data-tooltip={CONFIG.NIMBLE.hitDice.configureHitDice}
+					onclick={() => actor.configureHitDice()}
+				>
+					<i class="fa-solid fa-edit"></i>
+				</button>
+			{/if}
 		</h3>
 
 		<HitDiceBar
@@ -492,17 +506,18 @@
 			<h3 class="nimble-heading nimble-heading--mana">
 				Mana
 				<i class="fa-solid fa-sparkles"></i>
-				<button
-					class="nimble-button"
-					data-button-variant="icon"
-					type="button"
-					aria-label={CONFIG.NIMBLE.manaConfig.configureMana}
-					data-tooltip={CONFIG.NIMBLE.manaConfig.configureMana}
-					onclick={() => actor.configureMana()}
-					disabled={!editingEnabled}
-				>
-					<i class="fa-solid fa-edit"></i>
-				</button>
+				{#if editingEnabled}
+					<button
+						class="nimble-button"
+						data-button-variant="icon"
+						type="button"
+						aria-label={CONFIG.NIMBLE.manaConfig.configureMana}
+						data-tooltip={CONFIG.NIMBLE.manaConfig.configureMana}
+						onclick={() => actor.configureMana()}
+					>
+						<i class="fa-solid fa-edit"></i>
+					</button>
+				{/if}
 			</h3>
 
 			<ManaBar
@@ -531,17 +546,18 @@
 			<h4 class="nimble-character-meta">
 				{metaData}
 
-				<button
-					class="nimble-button"
-					type="button"
-					data-button-variant="icon"
-					aria-label="Edit"
-					data-tooltip="Edit"
-					onclick={() => actor.editMetadata()}
-					disabled={!editingEnabled}
-				>
-					<i class="fa-solid fa-edit"></i>
-				</button>
+				{#if editingEnabled}
+					<button
+						class="nimble-button"
+						type="button"
+						data-button-variant="icon"
+						aria-label="Edit"
+						data-tooltip="Edit"
+						onclick={() => actor.editMetadata()}
+					>
+						<i class="fa-solid fa-edit"></i>
+					</button>
+				{/if}
 			</h4>
 		{/if}
 	</div>
@@ -574,7 +590,7 @@
 		aria-label={localize('NIMBLE.prompts.levelUp')}
 		data-tooltip={localize('NIMBLE.prompts.levelUp')}
 		onclick={() => actor.triggerLevelUp()}
-		disabled={!classItem || classItem?.system?.classLevel >= 20}
+		disabled={!editingEnabled || !classItem || classItem?.system?.classLevel >= 20}
 		type="button"
 	>
 		<i class="fa-solid fa-arrow-up-right-dots"></i>
@@ -586,7 +602,7 @@
 		aria-label="Revert Last Level Up"
 		data-tooltip="Revert Last Level Up"
 		onclick={() => actor.triggerLevelDown()}
-		disabled={actor.reactive.system.levelUpHistory.length === 0}
+		disabled={!editingEnabled || actor.reactive.system.levelUpHistory.length === 0}
 		type="button"
 	>
 		<i class="fa-solid fa-undo"></i>

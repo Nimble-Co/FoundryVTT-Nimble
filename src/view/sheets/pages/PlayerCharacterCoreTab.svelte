@@ -6,7 +6,6 @@
 	import type { NimbleCharacter } from '../../../documents/actor/character.js';
 	import localize from '../../../utils/localize.js';
 	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
-
 	// Components
 	import AbilityScores from '../components/AbilityScores.svelte';
 	import ArmorClass from '../components/ArmorClass.svelte';
@@ -57,10 +56,11 @@
 	}
 
 	const { armorTypesPlural, languages } = CONFIG.NIMBLE;
-
 	let actor: NimbleCharacter = getContext('actor');
-	const editingEnabledStore = getContext('editingEnabled');
-	let editingEnabled = $derived($editingEnabledStore ?? true);
+
+	let flags = $derived(actor.reactive.flags.nimble);
+	let editingEnabled = $derived(flags?.editingEnabled ?? false);
+
 	let skills = $derived(actor.reactive.system.skills);
 	let abilities = $derived(actor.reactive.system.abilities);
 	let characterSavingThrows = $derived(actor.reactive.system.savingThrows);
@@ -128,17 +128,18 @@
 					{heading}
 				</h3>
 
-				<button
-					class="nimble-button"
-					data-button-variant="icon"
-					type="button"
-					aria-label={tooltip}
-					data-tooltip={tooltip}
-					onclick={configMethod}
-					disabled={!editingEnabled}
-				>
-					<i class="fa-solid fa-edit"></i>
-				</button>
+				{#if editingEnabled}
+					<button
+						class="nimble-button"
+						data-button-variant="icon"
+						type="button"
+						aria-label={tooltip}
+						data-tooltip={tooltip}
+						onclick={configMethod}
+					>
+						<i class="fa-solid fa-edit"></i>
+					</button>
+				{/if}
 			</header>
 
 			<ul class="nimble-proficiency-list">

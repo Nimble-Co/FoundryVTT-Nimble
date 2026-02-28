@@ -7,8 +7,8 @@
 
 	const { abilityScores, abilityScoreAbbreviations, sectionHeaders } = CONFIG.NIMBLE;
 	const actor = getContext('actor');
-	const editingEnabledStore = getContext('editingEnabled');
-	let editingEnabled = $derived($editingEnabledStore ?? true);
+	let flags = $derived(actor.reactive.flags.nimble);
+	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 </script>
 
 {#snippet abilityScoreSnippet(abilityScore, abilityKey)}
@@ -38,17 +38,18 @@
 	<header class="nimble-section-header">
 		<h3 class="nimble-heading" data-heading-variant="section">{sectionHeaders.stats}</h3>
 
-		<button
-			class="nimble-button"
-			data-button-variant="icon"
-			type="button"
-			data-tooltip="NIMBLE.prompts.configureAbilityScores"
-			aria-label={localize('NIMBLE.prompts.configureAbilityScores')}
-			onclick={() => actor.configureAbilityScores()}
-			disabled={!editingEnabled}
-		>
-			<i class="fa-solid fa-edit"></i>
-		</button>
+		{#if editingEnabled}
+			<button
+				class="nimble-button"
+				data-button-variant="icon"
+				type="button"
+				data-tooltip="NIMBLE.prompts.configureAbilityScores"
+				aria-label={localize('NIMBLE.prompts.configureAbilityScores')}
+				onclick={() => actor.configureAbilityScores()}
+			>
+				<i class="fa-solid fa-edit"></i>
+			</button>
+		{/if}
 	</header>
 
 	<dl class="nimble-stats">

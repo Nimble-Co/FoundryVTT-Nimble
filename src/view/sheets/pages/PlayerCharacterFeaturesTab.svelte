@@ -155,14 +155,16 @@
 	<div class="nimble-search-wrapper">
 		<SearchBar bind:searchTerm />
 
-		<button
-			class="nimble-button fa-solid fa-plus"
-			data-button-variant="basic"
-			type="button"
-			aria-label="Create Feature"
-			data-tooltip="Create Feature"
-			onclick={createItem}
-		></button>
+		{#if editingEnabled}
+			<button
+				class="nimble-button fa-solid fa-plus"
+				data-button-variant="basic"
+				type="button"
+				aria-label="Create Feature"
+				data-tooltip="Create Feature"
+				onclick={createItem}
+			></button>
+		{/if}
 	</div>
 </header>
 
@@ -189,9 +191,9 @@
 						data-tooltip={getItemTooltip(item)}
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 						data-tooltip-direction="LEFT"
-						draggable="true"
+						draggable={editingEnabled ? 'true' : 'false'}
 						role="button"
-						ondragstart={(event) => sheet._onDragStart(event)}
+						ondragstart={(event) => editingEnabled && sheet._onDragStart(event)}
 						onmouseenter={(event) => handleTooltipMouseEnter(event, item)}
 						onclick={() => actor.activateItem(item.reactive._id)}
 					>
@@ -208,26 +210,27 @@
 								{item.reactive.name}
 							</h4>
 
-							<button
-								class="nimble-button"
-								data-button-variant="icon"
-								type="button"
-								aria-label="Configure {item.reactive.name}"
-								onclick={(event) => configureItem(event, item._id)}
-							>
-								<i class="fa-solid fa-edit"></i>
-							</button>
+							{#if editingEnabled}
+								<button
+									class="nimble-button"
+									data-button-variant="icon"
+									type="button"
+									aria-label="Configure {item.reactive.name}"
+									onclick={(event) => configureItem(event, item._id)}
+								>
+									<i class="fa-solid fa-edit"></i>
+								</button>
 
-							<button
-								class="nimble-button"
-								data-button-variant="icon"
-								type="button"
-								aria-label="Delete {item.reactive.name}"
-								onclick={(event) => deleteItem(event, item._id)}
-								disabled={!editingEnabled}
-							>
-								<i class="fa-solid fa-trash"></i>
-							</button>
+								<button
+									class="nimble-button"
+									data-button-variant="icon"
+									type="button"
+									aria-label="Delete {item.reactive.name}"
+									onclick={(event) => deleteItem(event, item._id)}
+								>
+									<i class="fa-solid fa-trash"></i>
+								</button>
+							{/if}
 						</header>
 					</li>
 					{#if categoryName === 'class' && categorizedSubclasses[item.reactive.system.identifier]?.length}
@@ -245,9 +248,9 @@
 									data-tooltip={getItemTooltip(subclass)}
 									data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 									data-tooltip-direction="LEFT"
-									draggable="true"
+									draggable={editingEnabled ? 'true' : 'false'}
 									role="button"
-									ondragstart={(event) => sheet._onDragStart(event)}
+									ondragstart={(event) => editingEnabled && sheet._onDragStart(event)}
 									onmouseenter={(event) => handleTooltipMouseEnter(event, subclass)}
 									onclick={() => actor.activateItem(subclass._id)}
 								>
@@ -263,26 +266,27 @@
 										{subclass.reactive.name}
 									</h4>
 
-									<button
-										class="nimble-button"
-										data-button-variant="icon"
-										type="button"
-										aria-label="Configure {subclass.reactive.name}"
-										onclick={(event) => configureItem(event, subclass._id)}
-									>
-										<i class="fa-solid fa-edit"></i>
-									</button>
+									{#if editingEnabled}
+										<button
+											class="nimble-button"
+											data-button-variant="icon"
+											type="button"
+											aria-label="Configure {subclass.reactive.name}"
+											onclick={(event) => configureItem(event, subclass._id)}
+										>
+											<i class="fa-solid fa-edit"></i>
+										</button>
 
-									<button
-										class="nimble-button"
-										data-button-variant="icon"
-										type="button"
-										aria-label="Delete {subclass.reactive.name}"
-										onclick={(event) => deleteItem(event, subclass._id)}
-										disabled={!editingEnabled}
-									>
-										<i class="fa-solid fa-trash"></i>
-									</button>
+										<button
+											class="nimble-button"
+											data-button-variant="icon"
+											type="button"
+											aria-label="Delete {subclass.reactive.name}"
+											onclick={(event) => deleteItem(event, subclass._id)}
+										>
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									{/if}
 								</li>
 							{/each}
 						</ul>

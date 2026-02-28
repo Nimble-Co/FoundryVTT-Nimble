@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 
 	const { movementTypes, movementTypeIcons } = CONFIG.NIMBLE;
 
 	let { actor, showDefaultSpeed = false } = $props();
-	const editingEnabledStore = getContext('editingEnabled');
-	let editingEnabled = $derived($editingEnabledStore ?? true);
+	let flags = $derived(actor?.reactive.flags.nimble);
+	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 
 	// Access the full reactive movement object to ensure proper reactivity tracking
 	let movement = $derived(actor.reactive.system.attributes.movement);
@@ -46,10 +45,22 @@
 
 {#if shouldShowMovement}
 	<section class="nimble-movement" style="grid-area: speed;">
-		<div class="nimble-movement__primary">
-			<span class="nimble-heading" data-heading-variant="section">Speed</span>
+		<header class="nimble-section-header nimble-movement__primary">
+			<h3 class="nimble-heading" data-heading-variant="section">Speed</h3>
 			<span class="nimble-movement__value">{walkSpeed}</span>
-		</div>
+			{#if editingEnabled}
+				<button
+					class="nimble-button"
+					data-button-variant="icon"
+					type="button"
+					aria-label={configTooltip}
+					data-tooltip={configTooltip}
+					onclick={() => actor.configureMovement()}
+				>
+					<i class="fa-solid fa-edit"></i>
+				</button>
+			{/if}
+		</header>
 
 		{#if alternateMovements.length > 0}
 			<div class="nimble-movement__secondary">
@@ -65,18 +76,6 @@
 				{/each}
 			</div>
 		{/if}
-
-		<button
-			class="nimble-button"
-			data-button-variant="icon"
-			type="button"
-			aria-label={configTooltip}
-			data-tooltip={configTooltip}
-			onclick={() => actor.configureMovement()}
-			disabled={!editingEnabled}
-		>
-			<i class="fa-solid fa-edit"></i>
-		</button>
 	</section>
 {/if}
 
@@ -88,9 +87,7 @@
 	}
 
 	.nimble-movement__primary {
-		display: flex;
-		align-items: baseline;
-		gap: 0.5rem;
+		margin-block-end: 0;
 	}
 
 	.nimble-movement__value {

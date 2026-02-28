@@ -20,10 +20,9 @@
 	const { abilityScoreAbbreviations, defaultSkillAbilities, skills: skillNames } = CONFIG.NIMBLE;
 
 	const actor = getContext('actor');
-	const editingEnabledStore = getContext('editingEnabled');
-	let editingEnabled = $derived($editingEnabledStore ?? true);
 
 	let flags = $derived(actor.reactive.flags.nimble);
+	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 	let compactSkillsView = $derived(flags?.compactSkillsView ?? true);
 	let showPassiveSkillScores = $derived(flags?.showPassiveSkillScores ?? false);
 
@@ -71,17 +70,18 @@
 	<header class="nimble-section-header">
 		<h3 class="nimble-heading" data-heading-variant="section">Skills</h3>
 
-		<button
-			class="nimble-button"
-			data-button-variant="icon"
-			type="button"
-			aria-label={localize('NIMBLE.prompts.configureSkills')}
-			data-tooltip={localize('NIMBLE.prompts.configureSkills')}
-			onclick={() => actor.configureSkills()}
-			disabled={!editingEnabled}
-		>
-			<i class="fa-solid fa-edit"></i>
-		</button>
+		{#if editingEnabled}
+			<button
+				class="nimble-button"
+				data-button-variant="icon"
+				type="button"
+				aria-label={localize('NIMBLE.prompts.configureSkills')}
+				data-tooltip={localize('NIMBLE.prompts.configureSkills')}
+				onclick={() => actor.configureSkills()}
+			>
+				<i class="fa-solid fa-edit"></i>
+			</button>
+		{/if}
 	</header>
 
 	<ul class="nimble-skills" class:nimble-skills--compact={compactSkillsView}>
