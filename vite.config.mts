@@ -62,6 +62,9 @@ const config = defineConfig({
 				if (warning.message.includes('<a> element should have an href attribute')) return;
 				if (warning.code === 'a11y-click-events-have-key-events') return;
 
+				// Suppress a11y warnings from third-party libraries in node_modules
+				if (warning.code?.startsWith('a11y') && warning.filename?.includes('node_modules')) return;
+
 				// eslint-disable-next-line no-console
 				console.log(warning);
 
