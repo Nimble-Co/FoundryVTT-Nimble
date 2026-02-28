@@ -60,7 +60,7 @@ declare global {
 		isType<TypeName extends SystemActorTypes>(type: TypeName): boolean;
 		activateItem?(itemId: string, options?: Record<string, unknown>): Promise<ChatMessage | null>;
 		configureItem?(itemId: string, options?: Record<string, unknown>): Promise<void>;
-		deleteItem?(itemId: string, options?: Record<string, unknown>): Promise<void>;
+		deleteItem?(itemId: string, options?: Record<string, unknown>): Promise<Item[]>;
 	}
 
 	/** Interface for Nimble base item with common methods */

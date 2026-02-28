@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { NimbleBaseActor } from '#documents/actor/base.svelte.js';
 	import { getContext } from 'svelte';
 
 	// Type definitions
