@@ -11,20 +11,24 @@
 
 	let { actor, mode = 'sheet', allowRemove = true }: Props = $props();
 	let effectVersion = $state(0);
+
+	function getLiveActor() {
+		return actor && 'reactive' in actor
+			? (actor as Actor.Implementation & { reactive: Actor.Implementation }).reactive
+			: actor;
+	}
+
 	let actorConditions = $derived.by(() => {
 		effectVersion;
-		const liveActor =
-			actor && 'reactive' in actor
-				? (actor as Actor.Implementation & { reactive: Actor.Implementation }).reactive
-				: actor;
-		return prepareActorConditions(liveActor, { includeInactive: mode === 'sheet' });
+		const liveActor = getLiveActor();
+		return prepareActorConditions(liveActor, {
+			includeInactive: mode === 'sheet',
+			includeEffectStatuses: mode === 'canvas',
+		});
 	});
 	let actorEffects = $derived.by(() => {
 		effectVersion;
-		const liveActor =
-			actor && 'reactive' in actor
-				? (actor as Actor.Implementation & { reactive: Actor.Implementation }).reactive
-				: actor;
+		const liveActor = getLiveActor();
 		return Array.from((liveActor?.effects ?? []) as Iterable<ActiveEffect>);
 	});
 	let nonConditionEffects = $derived.by(() => {
@@ -57,10 +61,11 @@
 			.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
 	});
 	let canRemoveConditions = $derived.by(() => {
-		if (!actor || !allowRemove) return false;
-		if ('isOwner' in actor && typeof actor.isOwner === 'boolean') return actor.isOwner;
-		if (typeof actor.canUserModify === 'function') {
-			return actor.canUserModify(game.user, 'update');
+		const liveActor = getLiveActor();
+		if (!liveActor || !allowRemove) return false;
+		if ('isOwner' in liveActor && typeof liveActor.isOwner === 'boolean') return liveActor.isOwner;
+		if (typeof liveActor.canUserModify === 'function') {
+			return liveActor.canUserModify(game.user, 'update');
 		}
 		return false;
 	});
@@ -76,22 +81,53 @@
 	});
 
 	async function removeCondition(conditionId: string) {
-		if (!actor || !canRemoveConditions) return;
+		const liveActor = getLiveActor();
+		if (!liveActor || !canRemoveConditions) return;
+
+		const isStandardCondition = conditionId in (CONFIG.NIMBLE.conditions ?? {});
 
 		try {
-			await actor.toggleStatusEffect(conditionId, { active: false });
+			if (isStandardCondition) {
+				await liveActor.toggleStatusEffect(conditionId, { active: false });
+				return;
+			}
+
+			const matchingEffectIds = Array.from((liveActor.effects ?? []) as Iterable<ActiveEffect>)
+				.filter((effect) => effect.statuses?.has(conditionId))
+				.map((effect) => effect.id)
+				.filter((id): id is string => Boolean(id));
+
+			if (matchingEffectIds.length > 0) {
+				await liveActor.deleteEmbeddedDocuments('ActiveEffect', matchingEffectIds);
+				return;
+			}
+
+			// Fallback: some integrations still use toggleStatusEffect for non-standard statuses.
+			await liveActor.toggleStatusEffect(conditionId, { active: false });
 		} catch (_error) {
 			ui.notifications.error('Failed to remove condition.');
 		}
 	}
 
 	async function toggleCondition(conditionId: string, active: boolean) {
-		if (!actor || !canRemoveConditions) return;
+		const liveActor = getLiveActor();
+		if (!liveActor || !canRemoveConditions) return;
 
 		try {
-			await actor.toggleStatusEffect(conditionId, { active });
+			await liveActor.toggleStatusEffect(conditionId, { active });
 		} catch (_error) {
 			ui.notifications.error('Failed to update condition.');
+		}
+	}
+
+	async function removeEffect(effectId: string | null | undefined) {
+		const liveActor = getLiveActor();
+		if (!liveActor || !canRemoveConditions || !effectId) return;
+
+		try {
+			await liveActor.deleteEmbeddedDocuments('ActiveEffect', [effectId]);
+		} catch (_error) {
+			ui.notifications.error('Failed to remove effect.');
 		}
 	}
 
@@ -174,6 +210,19 @@
 							<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
 								{effect.name ?? effect.id}
 							</h4>
+							{#if canRemoveConditions}
+								<button
+									class="nimble-button"
+									data-button-variant="icon"
+									type="button"
+									style="grid-area: deleteButton"
+									aria-label={localize('NIMBLE.ui.removeEffect')}
+									data-tooltip="NIMBLE.ui.removeEffect"
+									onclick={() => removeEffect(effect.id)}
+								>
+									<i class="fa-solid fa-trash-can"></i>
+								</button>
+							{/if}
 						</li>
 					{/each}
 				</ul>

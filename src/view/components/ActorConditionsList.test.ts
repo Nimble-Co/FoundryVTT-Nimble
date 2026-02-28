@@ -31,6 +31,7 @@ function createActor({
 				},
 			] as unknown as ActiveEffect[]),
 		toggleStatusEffect: vi.fn().mockResolvedValue(undefined),
+		deleteEmbeddedDocuments: vi.fn().mockResolvedValue([]),
 	} as unknown as Actor.Implementation;
 }
 
@@ -46,7 +47,7 @@ describe('ActorConditionsList', () => {
 	});
 
 	it('renders no content in canvas mode when actor has no active conditions', () => {
-		const actor = createActor({ statuses: [] });
+		const actor = createActor({ statuses: [], effects: [] });
 		const { container } = render(ActorConditionsList, { actor, mode: 'canvas', allowRemove: true });
 
 		expect(container.querySelector('.nimble-actor-conditions__icons')).not.toBeInTheDocument();
@@ -78,6 +79,28 @@ describe('ActorConditionsList', () => {
 		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('blinded', { active: false });
 	});
 
+	it('removes non-standard status icons by deleting matching active effects', async () => {
+		const actor = createActor({
+			statuses: [],
+			effects: [
+				{
+					id: 'effect-haste',
+					name: 'Test Haste',
+					img: 'icons/svg/aura.svg',
+					statuses: new Set(['test-haste']),
+					duration: { rounds: 2 },
+				},
+			] as unknown as ActiveEffect[],
+		});
+
+		render(ActorConditionsList, { actor, mode: 'canvas', allowRemove: true });
+		const button = screen.getByRole('button', { name: 'test-haste' });
+		await fireEvent.contextMenu(button);
+
+		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['effect-haste']);
+		expect(actor.toggleStatusEffect).not.toHaveBeenCalledWith('test-haste', { active: false });
+	});
+
 	it('shows toggle button and can remove active conditions in sheet mode', async () => {
 		const actor = createActor();
 		render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
@@ -95,7 +118,7 @@ describe('ActorConditionsList', () => {
 	});
 
 	it('shows apply toggle for inactive condition and activates it', async () => {
-		const actor = createActor({ statuses: [] });
+		const actor = createActor({ statuses: [], effects: [] });
 		render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
 
 		const applyButton = screen.getByRole('button', { name: 'Toggle Blinded' });
@@ -126,6 +149,44 @@ describe('ActorConditionsList', () => {
 
 		expect(screen.queryByText('Blinded Condition Effect')).not.toBeInTheDocument();
 		expect(screen.getByText('Haste')).toBeInTheDocument();
+	});
+
+	it('allows removing temporary effects from sheet', async () => {
+		const actor = createActor({
+			effects: [
+				{
+					id: 'effect-haste',
+					name: 'Haste',
+					statuses: new Set(['haste']),
+					duration: { rounds: 2 },
+				},
+			] as unknown as ActiveEffect[],
+		});
+
+		render(ActorConditionsList, { actor, mode: 'sheet', allowRemove: true });
+		const removeEffectButton = screen.getByRole('button', { name: 'Remove effect' });
+		await fireEvent.click(removeEffectButton);
+
+		expect(actor.deleteEmbeddedDocuments).toHaveBeenCalledWith('ActiveEffect', ['effect-haste']);
+	});
+
+	it('shows non-standard effect statuses in canvas mode', () => {
+		const actor = createActor({
+			statuses: [],
+			effects: [
+				{
+					id: 'effect-haste',
+					name: 'Test Haste',
+					img: 'icons/svg/aura.svg',
+					statuses: new Set(['test-haste']),
+					duration: { rounds: 2 },
+				},
+			] as unknown as ActiveEffect[],
+		});
+
+		render(ActorConditionsList, { actor, mode: 'canvas', allowRemove: true });
+		expect(screen.getByRole('button', { name: 'test-haste' })).toBeInTheDocument();
+		expect(screen.getByText('2r')).toBeInTheDocument();
 	});
 
 	it('hides condition toggle controls when actor is not editable', () => {
