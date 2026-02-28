@@ -9,6 +9,7 @@
 		"build:system": "vite build",
 		"build:compendia": "node ./build/buildCompendia.mjs",
 		"worktree:setup": "node ./build/worktreeSetup.mjs",
+		"worktree:cleanup": "node ./build/worktreeCleanup.mjs",
 		"dev": "vite",
 		"format": "npx @biomejs/biome format --write ./src/ ./types/ ./lib/ && npx prettier --write \"src/**/*.svelte\"",
 		"format:biome": "npx @biomejs/biome format --write ./src/ ./types/ ./lib/",
