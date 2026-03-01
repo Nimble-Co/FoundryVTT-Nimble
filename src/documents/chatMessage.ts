@@ -283,13 +283,13 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = systemData.targets || [];
 
 		if (!targets.length) {
-			ui.notifications?.warn('No targets selected');
+			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.noTargetsSelected'));
 			return;
 		}
 
 		// Check if already applied for this effect
 		if (effectId && this.isHealingApplied(effectId)) {
-			ui.notifications?.warn('Healing has already been applied');
+			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.healingAlreadyApplied'));
 			return;
 		}
 
@@ -356,7 +356,7 @@ class NimbleChatMessage extends ChatMessage {
 		const healingRecord = systemData.appliedHealing?.[effectId];
 
 		if (!healingRecord) {
-			ui.notifications?.warn('No healing record found to undo');
+			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.noHealingRecord'));
 			return;
 		}
 
@@ -386,7 +386,7 @@ class NimbleChatMessage extends ChatMessage {
 			[`system.appliedHealing.-=${effectId}`]: null,
 		} as Record<string, unknown>);
 
-		ui.notifications?.info('Healing has been undone');
+		ui.notifications?.info(game.i18n.localize('NIMBLE.chat.healingUndone'));
 	}
 
 	isHealingApplied(effectId: string): boolean {

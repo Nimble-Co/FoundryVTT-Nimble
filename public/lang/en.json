@@ -42,6 +42,16 @@
 		"abilityScoreControls": {
 			"confirmStatAssignments": "Confirm Stat Assignments"
 		},
+		"chat": {
+			"applyHealing": "Apply Healing",
+			"healingApplied": "Healing Applied",
+			"undoHealing": "Undo Healing",
+			"undo": "Undo",
+			"noTargetsSelected": "No targets selected",
+			"healingAlreadyApplied": "Healing has already been applied",
+			"healingUndone": "Healing has been undone",
+			"noHealingRecord": "No healing record found to undo"
+		},
 		"characterCreationStages": {
 			"stepFourStartingEquipment": "Step 4. Starting Equipment",
 			"stepFiveStats": "Step 5. Assign Stats",
@@ -887,13 +897,7 @@
 				"memberFallback": "Minion",
 				"actionFallback": "Action",
 				"totalDamageLabel": "Total Damage",
-				"applyDamage": "Apply Damage",
-				"applyHealing": "Apply Healing",
-				"healingApplied": "Healing Applied",
-				"undoHealing": "Undo Healing",
-				"healingAlreadyApplied": "Healing has already been applied",
-				"healingUndone": "Healing has been undone",
-				"noHealingRecord": "No healing record found to undo"
+				"applyDamage": "Apply Damage"
 			},
 			"warnings": {
 				"endTurnNotApplied": "End turn was not applied because this group is not currently active.",

@@ -170,6 +170,15 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
 		const shouldHide = rollHidden && canHideRoll;
 
+		// Get targets - if none selected, default to the actor's own token (for self-healing items like potions)
+		let targets = Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []);
+		if (targets.length === 0 && this.actor) {
+			const actorTokens = this.actor.getActiveTokens();
+			if (actorTokens.length > 0) {
+				targets = [actorTokens[0].document.uuid];
+			}
+		}
+
 		const chatData = foundry.utils.mergeObject(
 			{
 				author: game.user?.id,
@@ -187,7 +196,7 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 					isMiss,
 					permissions: this.permission,
 					rollMode: options.rollMode ?? 0,
-					targets: Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []),
+					targets,
 				},
 				type: 'base',
 			},
