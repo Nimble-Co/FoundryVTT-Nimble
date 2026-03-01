@@ -41,6 +41,12 @@ const NCSW_PANEL_LOCKED_WIDTH_REM =
 const NCSW_PANEL_MIN_WIDTH_REM = NCSW_PANEL_LOCKED_WIDTH_REM;
 const NCSW_LOGO_PATH = '/systems/nimble/ncsw/logos/NimbleLogos.png';
 const NCSW_I18N_PREFIX = 'NIMBLE.nimbleCombatSystemWindow';
+const NCSW_TARGET_ACTION_SLOT_COUNT = 3;
+const NCSW_TARGET_ACTION_DICE_ICON_CLASSES = [
+	'fa-dice-one',
+	'fa-dice-two',
+	'fa-dice-three',
+] as const;
 const NCS_AW_WINDOW_ID = 'nimble-minion-group-action-window';
 const NCS_AW_SECTION_LIMIT_BEFORE_SCROLL = 6;
 const NCS_AW_REFRESH_DEBOUNCE_MS = 100;
@@ -1183,6 +1189,9 @@ interface TargetTokenView {
 	isTargeted: boolean;
 	isSelected: boolean;
 	canToggleTarget: boolean;
+	actionsRemaining: number;
+	actionsMax: number;
+	hasEndedTurn: boolean;
 	hpCurrent: number | null;
 	hpMax: number | null;
 	wounds: number;
@@ -1224,6 +1233,48 @@ function getTargetCombatantVitalStats(combatant: Combatant.Implementation): {
 	const wounds = Number.isFinite(woundsRaw) ? Math.max(0, Math.floor(woundsRaw)) : 0;
 
 	return { hpCurrent, hpMax, wounds };
+}
+
+function getCombatantActionsMax(combatant: Combatant.Implementation): number {
+	const actionsMaxRaw = Number(
+		(combatant.system as unknown as { actions?: { base?: { max?: unknown } } }).actions?.base?.max,
+	);
+	if (!Number.isFinite(actionsMaxRaw) || actionsMaxRaw <= 0) {
+		return NCSW_TARGET_ACTION_SLOT_COUNT;
+	}
+	return Math.max(0, Math.floor(actionsMaxRaw));
+}
+
+function getTargetTokenActionState(combatant: Combatant.Implementation): {
+	actionsRemaining: number;
+	actionsMax: number;
+} {
+	const actionsMax = Math.min(NCSW_TARGET_ACTION_SLOT_COUNT, getCombatantActionsMax(combatant));
+	const actionsRemaining = Math.min(actionsMax, getCombatantActionsRemaining(combatant));
+	return { actionsRemaining, actionsMax };
+}
+
+function hasCombatantTurnEndedThisRound(
+	combat: CombatWithGrouping | null,
+	combatant: Combatant.Implementation,
+): boolean {
+	if (!combat || (combat.round ?? 0) < 1) return false;
+	const activeCombatantId = combat.combatant?.id ?? '';
+	if (!activeCombatantId) return false;
+
+	const activeTurnIndex = combat.turns.findIndex(
+		(turnCombatant) => (turnCombatant.id ?? '') === activeCombatantId,
+	);
+	if (activeTurnIndex < 0) return false;
+
+	const combatantId = combatant.id ?? '';
+	if (!combatantId) return false;
+	const combatantTurnIndex = combat.turns.findIndex(
+		(turnCombatant) => (turnCombatant.id ?? '') === combatantId,
+	);
+	if (combatantTurnIndex < 0) return false;
+
+	return combatantTurnIndex < activeTurnIndex;
 }
 
 function resolveCombatantPreviewName(
@@ -1328,6 +1379,7 @@ function resolveTargetCombatantName(
 }
 
 function buildTargetTokenView(
+	combat: CombatWithGrouping | null,
 	combatant: Combatant.Implementation,
 	selectedTargetIds: ReadonlySet<string>,
 	selectedControlledTokenIds: ReadonlySet<string>,
@@ -1338,6 +1390,7 @@ function buildTargetTokenView(
 	if (!tokenId) return null;
 
 	const vitalStats = getTargetCombatantVitalStats(combatant);
+	const actionState = getTargetTokenActionState(combatant);
 	return {
 		combatantId: combatant.id ?? '',
 		token,
@@ -1347,6 +1400,9 @@ function buildTargetTokenView(
 		isTargeted: selectedTargetIds.has(tokenId),
 		isSelected: selectedControlledTokenIds.has(tokenId),
 		canToggleTarget: token !== null,
+		actionsRemaining: actionState.actionsRemaining,
+		actionsMax: actionState.actionsMax,
+		hasEndedTurn: hasCombatantTurnEndedThisRound(combat, combatant),
 		hpCurrent: vitalStats.hpCurrent,
 		hpMax: vitalStats.hpMax,
 		wounds: vitalStats.wounds,
@@ -1362,7 +1418,9 @@ function getAvailablePlayerTargetTokens(): TargetTokenView[] {
 	);
 	const selectedTargetIds = new Set(getUniqueTargetTokenIds(getCurrentUserTargetTokens()));
 	return getCombatantsForCurrentScene(combat)
-		.map((combatant) => buildTargetTokenView(combatant, selectedTargetIds, selectedControlledTokenIds))
+		.map((combatant) =>
+			buildTargetTokenView(combat, combatant, selectedTargetIds, selectedControlledTokenIds)
+		)
 		.filter((row): row is TargetTokenView => row !== null)
 		.sort((left, right) => left.name.localeCompare(right.name, undefined, { sensitivity: 'base' }));
 }
@@ -1501,12 +1559,25 @@ function getLiveTargetPopoverState(targetToken: TargetTokenView): TargetTokenVie
 				hpMax: targetToken.hpMax,
 				wounds: targetToken.wounds,
 			};
+	const actionState = liveCombatant
+		? getTargetTokenActionState(liveCombatant)
+		: {
+				actionsRemaining: targetToken.actionsRemaining,
+				actionsMax: targetToken.actionsMax,
+			};
+	const combat = getCombatForCurrentScene();
+	const hasEndedTurn = liveCombatant
+		? hasCombatantTurnEndedThisRound(combat, liveCombatant)
+		: targetToken.hasEndedTurn;
 	return {
 		...targetToken,
 		token: liveToken,
 		isTargeted: selectedTargetIds.has(targetToken.tokenId),
 		isSelected: selectedControlledTokenIds.has(targetToken.tokenId),
 		canToggleTarget: liveToken !== null,
+		actionsRemaining: actionState.actionsRemaining,
+		actionsMax: actionState.actionsMax,
+		hasEndedTurn,
 		hpCurrent: vitalStats.hpCurrent,
 		hpMax: vitalStats.hpMax,
 		wounds: vitalStats.wounds,
@@ -2462,6 +2533,35 @@ function renderGroupAttackTargetSection(params: {
 			image.src = targetToken.image;
 			image.alt = targetToken.name;
 			targetButton.append(image);
+
+			const actionState = document.createElement('span');
+			actionState.className = 'nimble-minion-group-attack-panel__target-token-actions';
+			for (const [index, iconClass] of NCSW_TARGET_ACTION_DICE_ICON_CLASSES.entries()) {
+				const slotNumber = index + 1;
+				const icon = document.createElement('i');
+				icon.className = `nimble-minion-group-attack-panel__target-token-action-icon fa-solid ${iconClass}`;
+				if (slotNumber > targetToken.actionsMax) {
+					icon.classList.add(
+						'nimble-minion-group-attack-panel__target-token-action-icon--unavailable',
+					);
+				} else if (slotNumber <= targetToken.actionsRemaining) {
+					icon.classList.add('nimble-minion-group-attack-panel__target-token-action-icon--active');
+				} else {
+					icon.classList.add('nimble-minion-group-attack-panel__target-token-action-icon--inactive');
+				}
+				actionState.append(icon);
+			}
+			targetButton.append(actionState);
+
+			if (targetToken.hasEndedTurn) {
+				const endedTurnBadge = document.createElement('span');
+				endedTurnBadge.className = 'nimble-minion-group-attack-panel__target-token-turn-ended';
+				endedTurnBadge.title = localizeByKey('COMBAT.EndTurn');
+				const endedTurnIcon = document.createElement('i');
+				endedTurnIcon.className = 'fa-solid fa-check';
+				endedTurnBadge.append(endedTurnIcon);
+				targetButton.append(endedTurnBadge);
+			}
 
 			targetButton.addEventListener('mouseenter', () => {
 				showGroupAttackTargetPopover(targetButton, targetToken);
