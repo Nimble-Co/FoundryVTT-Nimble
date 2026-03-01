@@ -888,7 +888,12 @@
 				"actionFallback": "Action",
 				"totalDamageLabel": "Total Damage",
 				"applyDamage": "Apply Damage",
-				"applyHealing": "Apply Healing"
+				"applyHealing": "Apply Healing",
+				"healingApplied": "Healing Applied",
+				"undoHealing": "Undo Healing",
+				"healingAlreadyApplied": "Healing has already been applied",
+				"healingUndone": "Healing has been undone",
+				"noHealingRecord": "No healing record found to undo"
 			},
 			"warnings": {
 				"endTurnNotApplied": "End turn was not applied because this group is not currently active.",
