@@ -3,6 +3,21 @@
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 	import type { NimbleChatMessage } from '../../../documents/chatMessage.js';
 
+	interface AppliedHealingRecord {
+		effectId: string;
+		healingType: string;
+		amount: number;
+		targets: Array<{
+			uuid: string;
+			tokenName: string;
+			previousHp: number;
+			previousTempHp: number;
+			newHp: number;
+			newTempHp: number;
+		}>;
+		appliedAt: number;
+	}
+
 	const messageDocument = getContext('messageDocument') as NimbleChatMessage;
 	const { actorType, permissions } = messageDocument.system as {
 		actorType: string;
@@ -17,8 +32,13 @@
 	let effectId = $derived(node.id);
 	let secondaryInfo = $derived(healingType === 'tempHealing' ? healingTypes[healingType] : null);
 
-	let isApplied = $derived(messageDocument.reactive.isHealingApplied(effectId));
-	let healingRecord = $derived(messageDocument.reactive.getAppliedHealingRecord(effectId));
+	// Access reactive system data directly for proper Svelte 5 reactivity
+	let appliedHealingData = $derived(
+		(messageDocument.reactive.system as { appliedHealing?: Record<string, AppliedHealingRecord> })
+			.appliedHealing,
+	);
+	let isApplied = $derived(!!appliedHealingData?.[effectId]);
+	let healingRecord = $derived(appliedHealingData?.[effectId]);
 
 	function handleApplyHealing() {
 		messageDocument?.applyHealing(roll.total, healingType, effectId);

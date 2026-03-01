@@ -381,12 +381,9 @@ class NimbleChatMessage extends ChatMessage {
 			}
 		}
 
-		// Remove the healing record from the message
-		const appliedHealing = { ...(systemData.appliedHealing || {}) };
-		delete appliedHealing[effectId];
-
+		// Remove the healing record from the message using Foundry's delete syntax
 		await this.update({
-			'system.appliedHealing': appliedHealing,
+			[`system.appliedHealing.-=${effectId}`]: null,
 		} as Record<string, unknown>);
 
 		ui.notifications?.info('Healing has been undone');
