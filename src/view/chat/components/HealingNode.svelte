@@ -111,13 +111,7 @@
 				data-tooltip-direction="UP"
 				onclick={handleUndoHealing}
 			>
-				<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-					<path
-						fill-rule="evenodd"
-						d="M7.793 2.232a.75.75 0 01-.025 1.06L3.622 7.25h10.003a5.375 5.375 0 010 10.75H10.75a.75.75 0 010-1.5h2.875a3.875 3.875 0 000-7.75H3.622l4.146 3.957a.75.75 0 01-1.036 1.085l-5.5-5.25a.75.75 0 010-1.085l5.5-5.25a.75.75 0 011.06.025z"
-						clip-rule="evenodd"
-					/>
-				</svg>
+				<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
 			</button>
 		</div>
 	{:else}
@@ -203,7 +197,7 @@
 
 		display: flex;
 		flex-direction: row;
-		align-items: flex-start;
+		align-items: center;
 		gap: 0.5rem;
 		padding: 0.5rem;
 		background-color: color-mix(in srgb, var(--healing-success-color) 15%, transparent);
@@ -253,13 +247,18 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
+			align-self: center;
 			width: 1.75rem;
+			min-width: 1.75rem;
+			max-width: 1.75rem;
 			height: 1.75rem;
-			aspect-ratio: 1;
+			min-height: 1.75rem;
+			max-height: 1.75rem;
 			flex-shrink: 0;
+			flex-grow: 0;
 			padding: 0;
 			background-color: var(--nimble-basic-button-background-color);
-			border: 1px solid var(--nimble-dark-text-color);
+			border: 1px solid color-mix(in srgb, var(--nimble-dark-text-color) 50%, transparent);
 			border-radius: 4px;
 			color: var(--nimble-dark-text-color);
 			cursor: pointer;
@@ -269,9 +268,8 @@
 				color 0.15s ease,
 				filter 0.15s ease;
 
-			svg {
-				width: 0.75rem;
-				height: 0.75rem;
+			i {
+				font-size: 0.75rem;
 			}
 
 			&:hover {
