@@ -259,12 +259,14 @@
 			flex-shrink: 0;
 			padding: 0;
 			background-color: var(--nimble-basic-button-background-color);
-			border: 0;
+			border: 1px solid var(--nimble-dark-text-color);
 			border-radius: 4px;
 			color: var(--nimble-dark-text-color);
 			cursor: pointer;
 			transition:
 				background-color 0.15s ease,
+				border-color 0.15s ease,
+				color 0.15s ease,
 				filter 0.15s ease;
 
 			svg {
@@ -273,6 +275,9 @@
 			}
 
 			&:hover {
+				color: var(--nimble-dark-text-hover-color);
+				border-color: var(--nimble-dark-text-hover-color);
+				background-color: var(--nimble-basic-button-background-color);
 				filter: brightness(1.1);
 			}
 		}
