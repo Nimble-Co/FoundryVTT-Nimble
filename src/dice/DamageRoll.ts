@@ -145,6 +145,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 						number: 1,
 						faces: firstDieTerm.faces ?? 6,
 						modifiers: [],
+						options: { flavor: 'Primary Die' },
 					});
 
 					// Add rollMode
