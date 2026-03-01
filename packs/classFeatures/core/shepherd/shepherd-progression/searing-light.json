@@ -20,7 +20,26 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "SearingLightHealing1",
+					"type": "healing",
+					"healingType": "healing",
+					"formula": "(@will)d8",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "SearingLightDamage1",
+					"type": "damage",
+					"damageType": "radiant",
+					"formula": "(@will)d8",
+					"parentContext": null,
+					"parentNode": null,
+					"canCrit": false,
+					"canMiss": false
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

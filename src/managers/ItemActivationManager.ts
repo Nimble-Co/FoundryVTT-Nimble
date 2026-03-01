@@ -208,6 +208,14 @@ class ItemActivationManager {
 		const rolls: (Roll | DamageRoll)[] = [];
 		let foundDamageRoll = false;
 
+		// Check if item is a healing potion (consumable with healing effects)
+		const itemSystem = this.#item.system as { objectType?: string };
+		const isHealingPotion = itemSystem.objectType === 'consumable';
+
+		// Get healing potion bonus from actor if applicable
+		const actorSystem = this.actor?.system as { healingPotionBonus?: number } | undefined;
+		const healingPotionBonus = isHealingPotion ? (actorSystem?.healingPotionBonus ?? 0) : 0;
+
 		for (const node of flattenEffectsTree(effects)) {
 			if (node.type === 'damage' || node.type === 'healing') {
 				let roll: Roll | DamageRoll;
@@ -238,7 +246,14 @@ class ItemActivationManager {
 
 					foundDamageRoll = true;
 				} else {
-					roll = new Roll(node.formula || '0', this.actor!.getRollData()) as Roll;
+					let formula = node.formula || '0';
+
+					// Apply healing potion bonus dice if applicable
+					if (node.type === 'healing' && healingPotionBonus > 0) {
+						formula = this.#applyHealingPotionBonus(formula, healingPotionBonus);
+					}
+
+					roll = new Roll(formula, this.actor!.getRollData()) as Roll;
 				}
 
 				await roll.evaluate();
@@ -253,6 +268,22 @@ class ItemActivationManager {
 		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
 
 		return rolls;
+	}
+
+	/**
+	 * Adds bonus dice to a healing formula based on the healing potion bonus.
+	 * For example, if formula is "2d4+4" and bonus is 1, returns "3d4+4"
+	 */
+	#applyHealingPotionBonus(formula: string, bonusDice: number): string {
+		// Match dice notation like "2d4", "3d6", etc.
+		const diceMatch = formula.match(/(\d*)d(\d+)/);
+		if (!diceMatch) return formula;
+
+		const currentCount = parseInt(diceMatch[1] || '1', 10);
+		const diceSize = diceMatch[2];
+		const newCount = currentCount + bonusDice;
+
+		return formula.replace(/(\d*)d(\d+)/, `${newCount}d${diceSize}`);
 	}
 
 	#getDefaultDialogData(options): ItemActivationManager.DialogData {

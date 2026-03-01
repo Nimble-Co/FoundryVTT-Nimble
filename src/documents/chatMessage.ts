@@ -256,6 +256,35 @@ class NimbleChatMessage extends ChatMessage {
 		}
 	}
 
+	async applyHealing(value: number, healingType?: string): Promise<void> {
+		if (!this.isActivationCard()) return;
+
+		const healing = Math.floor(Math.abs(Number(value)));
+		if (!Number.isFinite(healing) || healing <= 0) return;
+
+		const systemData = this.system as ActivationCardSystemData;
+		const targets = systemData.targets || [];
+
+		if (!targets.length) {
+			ui.notifications?.warn('No targets selected');
+			return;
+		}
+
+		for (const uuid of targets) {
+			const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
+			const actor = tokenDocument?.actor as
+				| (Actor.Implementation & {
+						applyHealing?: (healing: number, healingType?: string) => Promise<void>;
+				  })
+				| null;
+			if (!actor) continue;
+
+			if (actor.applyHealing) {
+				await actor.applyHealing(healing, healingType);
+			}
+		}
+	}
+
 	async removeTarget(targetId: string): Promise<ChatMessage | undefined> {
 		if (!this.isActivationCard()) {
 			ui.notifications?.warn('Cannot open a target management window for this message type.');

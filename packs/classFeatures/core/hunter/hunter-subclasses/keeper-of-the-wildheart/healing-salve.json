@@ -12,7 +12,7 @@
 			"cost": {
 				"details": "",
 				"quantity": 1,
-				"type": "none",
+				"type": "action",
 				"isReaction": false
 			},
 			"duration": {
@@ -20,7 +20,16 @@
 				"quantity": 1,
 				"type": "none"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "HealingSalveEffect1",
+					"type": "healing",
+					"healingType": "healing",
+					"formula": "(@will)d6",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,

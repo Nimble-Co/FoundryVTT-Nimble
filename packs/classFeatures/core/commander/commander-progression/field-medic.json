@@ -5,7 +5,14 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "fieldMedicHealingPotionBonus",
+				"type": "healingPotionBonus",
+				"value": "1",
+				"label": "Field Medic"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

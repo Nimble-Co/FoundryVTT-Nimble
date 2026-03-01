@@ -480,6 +480,7 @@
 			"combatMana": "Combat Mana",
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
+			"healingPotionBonus": "Healing Potion Bonus",
 			"hitDiceAdvantage": "Hit Dice Advantage",
 			"incrementHitDice": "Increment Hit Dice",
 			"initiativeBonus": "Initiative Bonus",
@@ -886,7 +887,8 @@
 				"memberFallback": "Minion",
 				"actionFallback": "Action",
 				"totalDamageLabel": "Total Damage",
-				"applyDamage": "Apply Damage"
+				"applyDamage": "Apply Damage",
+				"applyHealing": "Apply Healing"
 			},
 			"warnings": {
 				"endTurnNotApplied": "End turn was not applied because this group is not currently active.",

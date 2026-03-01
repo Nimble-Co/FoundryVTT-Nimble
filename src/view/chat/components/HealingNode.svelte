@@ -32,6 +32,16 @@
 	{/if}
 </div>
 
+<button
+	class="nimble-button nimble-button--apply-healing"
+	aria-label="Apply Healing"
+	data-tooltip="Apply Healing"
+	data-tooltip-direction="UP"
+	onclick={() => messageDocument?.applyHealing(roll.total, healingType)}
+>
+	Apply Healing
+</button>
+
 <style lang="scss">
 	.roll {
 		display: grid;
@@ -79,5 +89,22 @@
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
 		}
+	}
+
+	.nimble-button--apply-healing {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 2.25rem;
+		padding: 0 0.625rem;
+		font-size: var(--nimble-sm-text);
+		font-weight: 900;
+		line-height: 1;
+		color: inherit;
+		background-color: transparent;
+		border-radius: 4px;
+		border: 1px solid var(--nimble-card-border-color);
+		margin-top: 0.5rem;
 	}
 </style>
