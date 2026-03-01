@@ -1,27 +1,12 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
-	import type { NimbleChatMessage } from '../../../documents/chatMessage.js';
-
-	interface AppliedHealingRecord {
-		effectId: string;
-		healingType: string;
-		amount: number;
-		targets: Array<{
-			uuid: string;
-			tokenName: string;
-			previousHp: number;
-			previousTempHp: number;
-			newHp: number;
-			newTempHp: number;
-		}>;
-		appliedAt: number;
-	}
+	import type { NimbleChatMessage, AppliedHealingRecord } from '../../../documents/chatMessage.js';
 
 	const messageDocument = getContext('messageDocument') as NimbleChatMessage;
 	const { actorType, permissions } = messageDocument.system as {
-		actorType: string;
-		permissions: unknown;
+		actorType?: string;
+		permissions?: unknown;
 	};
 	const { healingTypes } = CONFIG.NIMBLE;
 
@@ -70,7 +55,7 @@
 		{roll.total}
 	</div>
 
-	<h3 class="roll__label">Healing</h3>
+	<h3 class="roll__label">{localize('healing')}</h3>
 
 	{#if secondaryInfo}
 		<span class="roll__mode">
@@ -85,18 +70,7 @@
 			<div class="healing-applied">
 				<div class="healing-applied__content">
 					<div class="healing-applied__status">
-						<svg
-							class="healing-applied__icon"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-							aria-hidden="true"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-								clip-rule="evenodd"
-							/>
-						</svg>
+						<i class="fa-solid fa-check healing-applied__icon" aria-hidden="true"></i>
 						<span class="healing-applied__text">{localize('healingApplied')}</span>
 					</div>
 					{#if healingRecord?.targets?.length}
@@ -251,13 +225,8 @@
 			justify-content: center;
 			align-self: center;
 			width: 1.75rem;
-			min-width: 1.75rem;
-			max-width: 1.75rem;
 			height: 1.75rem;
-			min-height: 1.75rem;
-			max-height: 1.75rem;
 			flex-shrink: 0;
-			flex-grow: 0;
 			padding: 0;
 			background-color: var(--nimble-basic-button-background-color);
 			border: 1px solid color-mix(in srgb, var(--nimble-dark-text-color) 50%, transparent);

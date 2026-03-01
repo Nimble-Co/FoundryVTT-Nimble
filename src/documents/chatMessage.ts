@@ -8,7 +8,7 @@ import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRel
 type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'spell';
 
 /** Record of applied healing for undo functionality */
-interface AppliedHealingRecord {
+export interface AppliedHealingRecord {
 	effectId: string;
 	healingType: string;
 	amount: number;
@@ -349,6 +349,11 @@ class NimbleChatMessage extends ChatMessage {
 		}
 	}
 
+	/**
+	 * Reverts previously applied healing by restoring HP to the snapshot taken at apply time.
+	 * Note: This is snapshot-based - if something else modified HP between apply and undo,
+	 * those changes will be silently overwritten when reverting to the previous values.
+	 */
 	async undoHealing(effectId: string): Promise<void> {
 		if (!this.isActivationCard()) return;
 
@@ -393,12 +398,6 @@ class NimbleChatMessage extends ChatMessage {
 		if (!this.isActivationCard()) return false;
 		const systemData = this.system as ActivationCardSystemData;
 		return !!systemData.appliedHealing?.[effectId];
-	}
-
-	getAppliedHealingRecord(effectId: string): AppliedHealingRecord | undefined {
-		if (!this.isActivationCard()) return undefined;
-		const systemData = this.system as ActivationCardSystemData;
-		return systemData.appliedHealing?.[effectId];
 	}
 
 	async removeTarget(targetId: string): Promise<ChatMessage | undefined> {

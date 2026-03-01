@@ -208,13 +208,13 @@ class ItemActivationManager {
 		const rolls: (Roll | DamageRoll)[] = [];
 		let foundDamageRoll = false;
 
-		// Check if item is a healing item
+		// Check if item is a consumable (healing bonuses only apply to healing nodes, gated below)
 		const itemSystem = this.#item.system as { objectType?: string };
-		const isHealingItem = itemSystem.objectType === 'consumable';
+		const isConsumable = itemSystem.objectType === 'consumable';
 
 		// Get healing bonus from actor if applicable
 		const actorSystem = this.actor?.system as { healingPotionBonus?: number } | undefined;
-		const healingBonus = isHealingItem ? (actorSystem?.healingPotionBonus ?? 0) : 0;
+		const healingBonus = isConsumable ? (actorSystem?.healingPotionBonus ?? 0) : 0;
 
 		for (const node of flattenEffectsTree(effects)) {
 			if (node.type === 'damage' || node.type === 'healing') {
@@ -273,9 +273,13 @@ class ItemActivationManager {
 	/**
 	 * Adds bonus dice to a healing formula based on the healing bonus.
 	 * For example, if formula is "2d4+4" and bonus is 1, returns "3d4+4"
+	 *
+	 * Note: Uses a non-global regex, so only the first dice group is modified.
+	 * For formulas like "2d4+1d6", only the first group becomes "3d4+1d6".
+	 * This is intentional for healing potions which typically have a single dice pool.
 	 */
 	#applyHealingBonus(formula: string, bonusDice: number): string {
-		// Match dice notation like "2d4", "3d6", etc.
+		// Match dice notation like "2d4", "3d6", etc. (first occurrence only)
 		const diceMatch = formula.match(/(\d*)d(\d+)/);
 		if (!diceMatch) return formula;
 
