@@ -257,7 +257,7 @@
 			height: 1.5rem;
 			flex-shrink: 0;
 			padding: 0;
-			background-color: var(--nimble-card-background-color);
+			background-color: var(--nimble-sheet-background, var(--color-bg, hsl(40, 20%, 94%)));
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
 			color: var(--nimble-medium-text-color);
