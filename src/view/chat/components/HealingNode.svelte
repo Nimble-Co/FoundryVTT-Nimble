@@ -44,6 +44,10 @@
 	let healingRecord = $derived(appliedHealingData?.[effectId]);
 	let hasTargets = $derived((systemData.targets?.length ?? 0) > 0);
 
+	// Permission check - only GM or the message author can interact with healing buttons
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used in template
+	let canInteract = $derived(game.user?.isGM || messageDocument.author?.id === game.user?.id);
+
 	// Localization
 	const localize = (key: string) => game.i18n.localize(`NIMBLE.chat.${key}`);
 
@@ -75,64 +79,62 @@
 	{/if}
 </div>
 
-<div class="healing-actions">
-	{#if isApplied}
-		<div class="healing-applied">
-			<div class="healing-applied__content">
-				<div class="healing-applied__status">
-					<svg
-						class="healing-applied__icon"
-						viewBox="0 0 20 20"
-						fill="currentColor"
-						aria-hidden="true"
-					>
-						<path
-							fill-rule="evenodd"
-							d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-							clip-rule="evenodd"
-						/>
-					</svg>
-					<span class="healing-applied__text">{localize('healingApplied')}</span>
-				</div>
-				{#if healingRecord?.targets?.length}
-					<div class="healing-applied__targets">
-						{#each healingRecord.targets as target}
-							<span class="healing-applied__target">
-								{target.tokenName}: {target.previousHp} → {target.newHp} HP
-							</span>
-						{/each}
+{#if canInteract}
+	<div class="healing-actions">
+		{#if isApplied}
+			<div class="healing-applied">
+				<div class="healing-applied__content">
+					<div class="healing-applied__status">
+						<svg
+							class="healing-applied__icon"
+							viewBox="0 0 20 20"
+							fill="currentColor"
+							aria-hidden="true"
+						>
+							<path
+								fill-rule="evenodd"
+								d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+						<span class="healing-applied__text">{localize('healingApplied')}</span>
 					</div>
-				{/if}
+					{#if healingRecord?.targets?.length}
+						<div class="healing-applied__targets">
+							{#each healingRecord.targets as target}
+								<span class="healing-applied__target">
+									{target.tokenName}: {target.previousHp} → {target.newHp} HP
+								</span>
+							{/each}
+						</div>
+					{/if}
+				</div>
+				<button
+					class="healing-applied__undo"
+					aria-label={localize('undoHealing')}
+					data-tooltip={localize('undoHealing')}
+					data-tooltip-direction="UP"
+					onclick={handleUndoHealing}
+				>
+					<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+				</button>
 			</div>
+		{:else}
 			<button
-				class="healing-applied__undo"
-				aria-label={localize('undoHealing')}
-				data-tooltip={localize('undoHealing')}
+				class="nimble-button nimble-button--apply-healing"
+				class:nimble-button--disabled={!hasTargets}
+				aria-label={hasTargets ? localize('applyHealing') : localize('noTargetsSelected')}
+				data-tooltip={hasTargets ? localize('applyHealing') : localize('noTargetsSelected')}
 				data-tooltip-direction="UP"
-				onclick={handleUndoHealing}
+				onclick={handleApplyHealing}
+				disabled={!hasTargets}
 			>
-				<i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+				<i class="fa-solid fa-heart" aria-hidden="true"></i>
+				{localize('applyHealing')}
 			</button>
-		</div>
-	{:else}
-		<button
-			class="nimble-button nimble-button--apply-healing"
-			class:nimble-button--disabled={!hasTargets}
-			aria-label={hasTargets ? localize('applyHealing') : localize('noTargetsSelected')}
-			data-tooltip={hasTargets ? localize('applyHealing') : localize('noTargetsSelected')}
-			data-tooltip-direction="UP"
-			onclick={handleApplyHealing}
-			disabled={!hasTargets}
-		>
-			<svg class="nimble-button__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-				<path
-					d="M9.653 16.915l-.005-.003-.019-.01a20.759 20.759 0 01-1.162-.682 22.045 22.045 0 01-2.582-1.9C4.045 12.733 2 10.352 2 7.5a4.5 4.5 0 018-2.828A4.5 4.5 0 0118 7.5c0 2.852-2.044 5.233-3.885 6.82a22.049 22.049 0 01-3.744 2.582l-.019.01-.005.003h-.002a.739.739 0 01-.69.001l-.002-.001z"
-				/>
-			</svg>
-			{localize('applyHealing')}
-		</button>
-	{/if}
-</div>
+		{/if}
+	</div>
+{/if}
 
 <style lang="scss">
 	.roll {
@@ -305,17 +307,16 @@
 			background-color: color-mix(in srgb, currentColor 8%, transparent);
 		}
 
-		&__icon {
-			width: 0.875rem;
-			height: 0.875rem;
-			flex-shrink: 0;
-		}
-
 		&--apply-healing {
 			--healing-button-color: var(--color-level-success, #18520b);
 
 			color: var(--healing-button-color);
 			border-color: color-mix(in srgb, var(--healing-button-color) 50%, transparent);
+
+			i {
+				display: flex;
+				align-items: center;
+			}
 
 			&:hover:not(:disabled) {
 				background-color: color-mix(in srgb, var(--healing-button-color) 12%, transparent);
