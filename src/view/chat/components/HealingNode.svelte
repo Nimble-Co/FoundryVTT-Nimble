@@ -253,11 +253,11 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			width: 2.25rem;
-			height: 2.25rem;
+			width: 1.5rem;
+			height: 1.5rem;
 			flex-shrink: 0;
 			padding: 0;
-			background-color: var(--nimble-card-background-color, var(--color-bg-primary, #fff));
+			background-color: var(--nimble-card-background-color);
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
 			color: var(--nimble-medium-text-color);
@@ -268,14 +268,13 @@
 				color 0.15s ease;
 
 			svg {
-				width: 0.875rem;
-				height: 0.875rem;
+				width: 0.625rem;
+				height: 0.625rem;
 			}
 
 			&:hover {
 				color: var(--color-warning, #ffc107);
 				border-color: var(--color-warning, #ffc107);
-				background-color: color-mix(in srgb, var(--color-warning, #ffc107) 12%, transparent);
 			}
 		}
 	}
