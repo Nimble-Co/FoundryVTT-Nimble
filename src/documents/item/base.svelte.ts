@@ -170,9 +170,12 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		const canHideRoll = game.user?.isGM && this.actor?.type !== 'character';
 		const shouldHide = rollHidden && canHideRoll;
 
-		// Get targets - if none selected, default to the actor's own token (for self-healing items like potions)
+		// Get targets - if none selected, default to the actor's own token for healing items (like potions)
 		let targets = Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []);
-		if (targets.length === 0 && this.actor) {
+		const hasHealingEffect = activation.effects?.some(
+			(effect: { type: string }) => effect.type === 'healing',
+		);
+		if (targets.length === 0 && this.actor && hasHealingEffect) {
 			const actorTokens = this.actor.getActiveTokens();
 			if (actorTokens.length > 0) {
 				targets = [actorTokens[0].document.uuid];
