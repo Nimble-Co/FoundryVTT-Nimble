@@ -253,8 +253,9 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			width: 1.5rem;
-			height: 1.5rem;
+			width: 1.75rem;
+			height: 1.75rem;
+			aspect-ratio: 1;
 			flex-shrink: 0;
 			padding: 0;
 			background-color: var(--nimble-sheet-background, var(--color-bg, hsl(40, 20%, 94%)));
@@ -268,8 +269,8 @@
 				color 0.15s ease;
 
 			svg {
-				width: 0.625rem;
-				height: 0.625rem;
+				width: 0.75rem;
+				height: 0.75rem;
 			}
 
 			&:hover {
