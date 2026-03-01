@@ -4,7 +4,7 @@ import { MigrationList } from '../migration/MigrationList.js';
 import { MigrationRunner } from '../migration/MigrationRunner.js';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
-import CombatTracker from '../view/ui/CombatTracker.svelte';
+import NcctTopTracker from '../view/ui/NcctTopTracker.svelte';
 import combatStateGuards from './combatStateGuards.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
 
@@ -38,7 +38,8 @@ export default async function ready() {
 
 	if (!target || !anchor) return;
 
-	mount(CombatTracker, {
+	// Mount NCCT (top-only carousel tracker).
+	mount(NcctTopTracker, {
 		anchor,
 		target,
 	});

@@ -1341,9 +1341,9 @@ class NimbleCombat extends Combat {
 	#resolveDropContext(
 		event: DragEvent & { target: EventTarget & HTMLElement },
 	): DropResolution | null {
-		const trackerListElement = (event.target as HTMLElement).closest<HTMLElement>(
-			'.nimble-combatants',
-		);
+		const trackerListElement =
+			(event.target as HTMLElement).closest<HTMLElement>('[data-nimble-combat-drop-target]') ??
+			(event.target as HTMLElement).closest<HTMLElement>('.nimble-combatants');
 		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(
 			event,
 		) as unknown as Record<string, string>;
