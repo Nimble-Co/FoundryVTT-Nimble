@@ -258,15 +258,14 @@
 			aspect-ratio: 1;
 			flex-shrink: 0;
 			padding: 0;
-			background-color: var(--nimble-sheet-background, var(--color-bg, hsl(40, 20%, 94%)));
-			border: 1px solid var(--nimble-card-border-color);
+			background-color: var(--nimble-basic-button-background-color);
+			border: 0;
 			border-radius: 4px;
-			color: var(--nimble-medium-text-color);
+			color: var(--nimble-dark-text-color);
 			cursor: pointer;
 			transition:
 				background-color 0.15s ease,
-				border-color 0.15s ease,
-				color 0.15s ease;
+				filter 0.15s ease;
 
 			svg {
 				width: 0.75rem;
@@ -274,8 +273,7 @@
 			}
 
 			&:hover {
-				color: var(--color-warning, #ffc107);
-				border-color: var(--color-warning, #ffc107);
+				filter: brightness(1.1);
 			}
 		}
 	}
