@@ -78,47 +78,48 @@
 <div class="healing-actions">
 	{#if isApplied}
 		<div class="healing-applied">
-			<div class="healing-applied__status">
-				<svg
-					class="healing-applied__icon"
-					viewBox="0 0 20 20"
-					fill="currentColor"
-					aria-hidden="true"
-				>
+			<div class="healing-applied__content">
+				<div class="healing-applied__status">
+					<svg
+						class="healing-applied__icon"
+						viewBox="0 0 20 20"
+						fill="currentColor"
+						aria-hidden="true"
+					>
+						<path
+							fill-rule="evenodd"
+							d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+							clip-rule="evenodd"
+						/>
+					</svg>
+					<span class="healing-applied__text">{localize('healingApplied')}</span>
+				</div>
+				{#if healingRecord?.targets?.length}
+					<div class="healing-applied__targets">
+						{#each healingRecord.targets as target}
+							<span class="healing-applied__target">
+								{target.tokenName}: {target.previousHp} → {target.newHp} HP
+							</span>
+						{/each}
+					</div>
+				{/if}
+			</div>
+			<button
+				class="healing-applied__undo"
+				aria-label={localize('undoHealing')}
+				data-tooltip={localize('undoHealing')}
+				data-tooltip-direction="UP"
+				onclick={handleUndoHealing}
+			>
+				<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
 					<path
 						fill-rule="evenodd"
-						d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+						d="M7.793 2.232a.75.75 0 01-.025 1.06L3.622 7.25h10.003a5.375 5.375 0 010 10.75H10.75a.75.75 0 010-1.5h2.875a3.875 3.875 0 000-7.75H3.622l4.146 3.957a.75.75 0 01-1.036 1.085l-5.5-5.25a.75.75 0 010-1.085l5.5-5.25a.75.75 0 011.06.025z"
 						clip-rule="evenodd"
 					/>
 				</svg>
-				<span class="healing-applied__text">{localize('healingApplied')}</span>
-			</div>
-			{#if healingRecord?.targets?.length}
-				<div class="healing-applied__targets">
-					{#each healingRecord.targets as target}
-						<span class="healing-applied__target">
-							{target.tokenName}: {target.previousHp} → {target.newHp} HP
-						</span>
-					{/each}
-				</div>
-			{/if}
+			</button>
 		</div>
-		<button
-			class="nimble-button nimble-button--undo"
-			aria-label={localize('undoHealing')}
-			data-tooltip={localize('undoHealing')}
-			data-tooltip-direction="UP"
-			onclick={handleUndoHealing}
-		>
-			<svg class="nimble-button__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-				<path
-					fill-rule="evenodd"
-					d="M7.793 2.232a.75.75 0 01-.025 1.06L3.622 7.25h10.003a5.375 5.375 0 010 10.75H10.75a.75.75 0 010-1.5h2.875a3.875 3.875 0 000-7.75H3.622l4.146 3.957a.75.75 0 01-1.036 1.085l-5.5-5.25a.75.75 0 010-1.085l5.5-5.25a.75.75 0 011.06.025z"
-					clip-rule="evenodd"
-				/>
-			</svg>
-			{localize('undo')}
-		</button>
 	{:else}
 		<button
 			class="nimble-button nimble-button--apply-healing"
@@ -201,12 +202,21 @@
 		--healing-success-color: var(--color-level-success, #18520b);
 
 		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
+		flex-direction: row;
+		align-items: flex-start;
+		gap: 0.5rem;
 		padding: 0.5rem;
 		background-color: color-mix(in srgb, var(--healing-success-color) 15%, transparent);
 		border: 1px solid color-mix(in srgb, var(--healing-success-color) 40%, transparent);
 		border-radius: 4px;
+
+		&__content {
+			display: flex;
+			flex-direction: column;
+			gap: 0.25rem;
+			flex: 1;
+			min-width: 0;
+		}
 
 		&__status {
 			display: flex;
@@ -237,6 +247,36 @@
 		&__target {
 			font-size: var(--nimble-xs-text);
 			color: inherit;
+		}
+
+		&__undo {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 2.25rem;
+			height: 2.25rem;
+			flex-shrink: 0;
+			padding: 0;
+			background-color: var(--nimble-card-background-color, var(--color-bg-primary, #fff));
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			color: var(--nimble-medium-text-color);
+			cursor: pointer;
+			transition:
+				background-color 0.15s ease,
+				border-color 0.15s ease,
+				color 0.15s ease;
+
+			svg {
+				width: 0.875rem;
+				height: 0.875rem;
+			}
+
+			&:hover {
+				color: var(--color-warning, #ffc107);
+				border-color: var(--color-warning, #ffc107);
+				background-color: color-mix(in srgb, var(--color-warning, #ffc107) 12%, transparent);
+			}
 		}
 	}
 
@@ -285,15 +325,6 @@
 		&--disabled {
 			opacity: 0.5;
 			cursor: not-allowed;
-		}
-
-		&--undo {
-			color: var(--nimble-medium-text-color);
-
-			&:hover {
-				color: var(--color-warning, #ffc107);
-				border-color: var(--color-warning, #ffc107);
-			}
 		}
 	}
 </style>
