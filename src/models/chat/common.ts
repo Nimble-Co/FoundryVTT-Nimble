@@ -15,3 +15,8 @@ export const targets = () => ({
 		initial: [],
 	}),
 });
+
+/** Schema for tracking applied healing/damage on activation cards */
+export const appliedHealing = () => ({
+	appliedHealing: new fields.ObjectField({ required: false, nullable: false, initial: {} }),
+});

@@ -129,6 +129,7 @@
 			align-items: center;
 			gap: 0.5rem;
 			margin: 0;
+			color: inherit;
 			font-size: var(--nimble-sm-text);
 			line-height: 1;
 			font-weight: 900;
@@ -148,6 +149,7 @@
 			grid-area: rollResult;
 			position: relative;
 			display: flex;
+			flex-grow: 0;
 			align-items: center;
 			justify-content: center;
 			height: 2.25rem;
@@ -167,12 +169,14 @@
 	}
 
 	.healing-applied {
+		--healing-success-color: var(--color-level-success, #18520b);
+
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
 		padding: 0.5rem;
-		background-color: color-mix(in srgb, var(--color-success, #28a745) 15%, transparent);
-		border: 1px solid color-mix(in srgb, var(--color-success, #28a745) 40%, transparent);
+		background-color: color-mix(in srgb, var(--healing-success-color) 15%, transparent);
+		border: 1px solid color-mix(in srgb, var(--healing-success-color) 40%, transparent);
 		border-radius: 4px;
 
 		&__status {
@@ -181,7 +185,7 @@
 			gap: 0.375rem;
 			font-weight: 600;
 			font-size: var(--nimble-sm-text);
-			color: var(--color-success, #28a745);
+			color: var(--healing-success-color);
 		}
 
 		&__icon {
@@ -203,7 +207,7 @@
 
 		&__target {
 			font-size: var(--nimble-xs-text);
-			color: var(--nimble-medium-text-color);
+			color: inherit;
 		}
 	}
 
@@ -216,7 +220,7 @@
 		height: 2.25rem;
 		padding: 0 0.625rem;
 		font-size: var(--nimble-sm-text);
-		font-weight: 700;
+		font-weight: 900;
 		line-height: 1;
 		color: inherit;
 		background-color: transparent;
@@ -238,12 +242,14 @@
 		}
 
 		&--apply-healing {
-			color: var(--color-success, #28a745);
-			border-color: color-mix(in srgb, var(--color-success, #28a745) 50%, transparent);
+			--healing-button-color: var(--color-level-success, #18520b);
+
+			color: var(--healing-button-color);
+			border-color: color-mix(in srgb, var(--healing-button-color) 50%, transparent);
 
 			&:hover {
-				background-color: color-mix(in srgb, var(--color-success, #28a745) 12%, transparent);
-				border-color: var(--color-success, #28a745);
+				background-color: color-mix(in srgb, var(--healing-button-color) 12%, transparent);
+				border-color: var(--healing-button-color);
 			}
 		}
 
