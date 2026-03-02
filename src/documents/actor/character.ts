@@ -202,7 +202,9 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		});
 
 		// Prepare Initiative Data
-		// TODO: Add logic to account for initiative bonuses
+		// Reset defaultRollMode to 0 before rules apply their modifiers
+		// This prevents accumulation when rules use 'adjust' mode
+		actorData.attributes.initiative.defaultRollMode = 0;
 		actorData.attributes.initiative.mod = actorData.abilities.dexterity.mod;
 
 		// Prepare Class Data
