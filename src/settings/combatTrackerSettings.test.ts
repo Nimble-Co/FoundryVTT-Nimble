@@ -1,13 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+	COMBAT_TRACKER_ENABLED_SETTING_KEY,
 	COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY,
 	COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY,
 	getCombatTrackerCenterActiveCardEnabled,
+	getCombatTrackerNcctEnabled,
 	getCombatTrackerPlayersCanExpandMonsterCards,
 	isCombatTrackerCenterActiveCardSettingKey,
+	isCombatTrackerEnabledSettingKey,
 	isCombatTrackerPlayerMonsterExpansionSettingKey,
 	registerCombatTrackerSettings,
 	setCombatTrackerCenterActiveCardEnabled,
+	setCombatTrackerNcctEnabled,
 	setCombatTrackerPlayersCanExpandMonsterCards,
 } from './combatTrackerSettings.js';
 
@@ -56,6 +60,16 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 				default: true,
 			}),
 		);
+		expect(settingsMock.register).toHaveBeenCalledWith(
+			'nimble',
+			COMBAT_TRACKER_ENABLED_SETTING_KEY,
+			expect.objectContaining({
+				scope: 'world',
+				config: true,
+				type: Boolean,
+				default: true,
+			}),
+		);
 	});
 
 	it('returns boolean values for player monster-card expansion permission', () => {
@@ -94,6 +108,24 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 		);
 	});
 
+	it('returns boolean values for NCCT enabled setting', () => {
+		settingsMock.get.mockReturnValueOnce(true);
+		expect(getCombatTrackerNcctEnabled()).toBe(true);
+
+		settingsMock.get.mockReturnValueOnce(0);
+		expect(getCombatTrackerNcctEnabled()).toBe(false);
+	});
+
+	it('updates the NCCT enabled setting', async () => {
+		await setCombatTrackerNcctEnabled(false);
+
+		expect(settingsMock.set).toHaveBeenCalledWith(
+			'nimble',
+			COMBAT_TRACKER_ENABLED_SETTING_KEY,
+			false,
+		);
+	});
+
 	it('recognizes qualified and unqualified setting keys', () => {
 		expect(
 			isCombatTrackerPlayerMonsterExpansionSettingKey(
@@ -115,5 +147,10 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 			),
 		).toBe(true);
 		expect(isCombatTrackerCenterActiveCardSettingKey('combatTrackerLocation')).toBe(false);
+		expect(isCombatTrackerEnabledSettingKey(COMBAT_TRACKER_ENABLED_SETTING_KEY)).toBe(true);
+		expect(
+			isCombatTrackerEnabledSettingKey(`nimble.${COMBAT_TRACKER_ENABLED_SETTING_KEY}`),
+		).toBe(true);
+		expect(isCombatTrackerEnabledSettingKey('combatTrackerLocation')).toBe(false);
 	});
 });
