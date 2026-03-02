@@ -642,8 +642,8 @@
 		width: 2.1rem;
 		height: 1rem;
 		border-radius: 999px;
-		background: hsl(0, 0%, 55%);
-		border: 1px solid hsl(0, 0%, 55%);
+		background: color-mix(in srgb, var(--nimble-overhang-button-text-color) 25%, transparent);
+		border: 1px solid color-mix(in srgb, var(--nimble-overhang-button-text-color) 35%, transparent);
 		display: flex;
 		align-items: center;
 		transition:
@@ -662,11 +662,11 @@
 		width: 0.85rem;
 		height: 0.85rem;
 		border-radius: 50%;
-		background: var(--nimble-overhang-button-text-color);
+		background: color-mix(in srgb, var(--nimble-overhang-button-text-color) 70%, transparent);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		color: hsl(215, 30%, 12%);
+		color: var(--nimble-overhang-button-background);
 		font-size: 0.45rem;
 		transform: translateX(0);
 		transition:
@@ -675,10 +675,10 @@
 		box-shadow: 0 0 4px rgba(0, 0, 0, 0.45);
 	}
 
-	.nimble-edit-toggle--disabled .nimble-edit-toggle__thumb {
+	.nimble-edit-toggle--enabled .nimble-edit-toggle__thumb {
 		transform: translateX(1.05rem);
-		background: hsl(0, 0%, 75%);
-		color: hsl(0, 0%, 40%);
+		background: var(--nimble-overhang-button-background);
+		color: var(--nimble-overhang-button-text-color);
 	}
 
 	.nimble-player-character-header {

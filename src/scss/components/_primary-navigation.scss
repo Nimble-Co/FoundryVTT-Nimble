@@ -25,6 +25,14 @@
     --nimble-primary-navigation-icon-size: var(--nimble-xs-text);
     --nimble-primary-navigation-item-dimensions: 1.375rem;
     --nimble-primary-navigation-list-gap: 0.75rem;
+    // Override the default two-column grid to remove the label column,
+    // allowing the icon list to span the full width and be centered.
+    grid-template-areas: "list";
+    grid-template-columns: 1fr;
+
+    .nimble-primary-navigation__current-tab-label {
+      display: none;
+    }
   }
 
   &:has(+ .nimble-secondary-navigation) {
@@ -60,4 +68,9 @@
   &__item {
     display: contents;
   }
+}
+
+.nimble-sheet .nimble-primary-navigation--condense-navigation .nimble-primary-navigation-list {
+  justify-content: center;
+  margin-inline-start: 0;
 }
