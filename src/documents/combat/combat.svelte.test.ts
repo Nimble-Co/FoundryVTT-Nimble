@@ -169,6 +169,60 @@ describe('NimbleCombat', () => {
 		expect(turns.map((combatant) => combatant.id)).toEqual(['minion-leader', 'other-npc']);
 	});
 
+	it('inserts legendary turns after each player turn', () => {
+		const combatId = 'combat-legendary-interleave';
+		const playerOne = createMockCombatant({
+			id: 'player-one',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 16,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const playerTwo = createMockCombatant({
+			id: 'player-two',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 14,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const legendary = createMockCombatant({
+			id: 'legendary-one',
+			type: 'soloMonster',
+			sort: 3,
+			isOwner: false,
+			initiative: 12,
+			actor: createCombatActorFixture({ hp: 40 }),
+			combatId,
+		});
+		const npc = createMockCombatant({
+			id: 'npc-one',
+			type: 'npc',
+			sort: 4,
+			isOwner: false,
+			initiative: 10,
+			actor: createCombatActorFixture({ hp: 12 }),
+			combatId,
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([playerOne, playerTwo, legendary, npc]),
+		} as unknown as Combat.CreateData);
+
+		const turns = combat.setupTurns();
+		expect(turns.map((combatant) => combatant.id)).toEqual([
+			'player-one',
+			'legendary-one',
+			'player-two',
+			'legendary-one',
+			'npc-one',
+		]);
+	});
+
 	it('starts combat on the top-most character card after start initialization', async () => {
 		const combatId = 'combat-start-order';
 		const monster = createMockCombatant({
@@ -863,12 +917,12 @@ describe('NimbleCombat', () => {
 		globals().game.user.isGM = true;
 		const combatId = 'combat-drop-gm';
 		const source = createMockCombatant({
-			id: 'source-npc',
-			type: 'npc',
+			id: 'source-character',
+			type: 'character',
 			sort: 2,
-			isOwner: false,
+			isOwner: true,
 			initiative: 12,
-			actor: createCombatActorFixture({ hp: 10 }),
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
 			combatId,
 		});
 		const target = createMockCombatant({
@@ -895,7 +949,7 @@ describe('NimbleCombat', () => {
 		]);
 
 		const dropEvent = createCombatDropEvent({
-			sourceId: 'source-npc',
+			sourceId: 'source-character',
 			targetId: 'target-npc',
 			before: true,
 		});
@@ -905,7 +959,7 @@ describe('NimbleCombat', () => {
 		expect(globals().SortingHelpers.performIntegerSort).toHaveBeenCalled();
 		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
 			{
-				_id: 'source-npc',
+				_id: 'source-character',
 				'system.sort': 3,
 			},
 			{
@@ -1207,7 +1261,46 @@ describe('NimbleCombat', () => {
 		expect(source.update).not.toHaveBeenCalled();
 	});
 
-	it('blocks below-trusted owners from reordering their own character cards', async () => {
+	it('blocks non-GM players from moving owned character cards outside the player section', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-drop-owner-character-cross-section';
+		const source = createMockCombatant({
+			id: 'source-character',
+			type: 'character',
+			sort: 5,
+			isOwner: true,
+			initiative: 10,
+			actor: createCombatActorFixture({ hp: 5, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const target = createMockCombatant({
+			id: 'target-npc',
+			type: 'npc',
+			sort: 10,
+			isOwner: false,
+			initiative: 8,
+			actor: createCombatActorFixture({ hp: 10 }),
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([source, target]),
+			turns: [source, target],
+		} as unknown as Combat.CreateData);
+
+		const dropEvent = createCombatDropEvent({
+			sourceId: 'source-character',
+			targetId: 'target-npc',
+			before: true,
+		});
+
+		const result = await combat._onDrop(dropEvent);
+		expect(result).toBe(false);
+		expect(source.update).not.toHaveBeenCalled();
+	});
+
+	it('allows untrusted owners to reorder their own character cards', async () => {
 		globals().game.user.isGM = false;
 		globals().game.user.role = 1;
 		const combatId = 'combat-drop-untrusted-owner-character';
@@ -1241,8 +1334,10 @@ describe('NimbleCombat', () => {
 			before: true,
 		});
 
-		const result = await combat._onDrop(dropEvent);
-		expect(result).toBe(false);
-		expect(source.update).not.toHaveBeenCalled();
+		await combat._onDrop(dropEvent);
+
+		expect(source.update).toHaveBeenCalledWith({
+			'system.sort': expect.any(Number),
+		});
 	});
 });
