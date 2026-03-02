@@ -45,22 +45,10 @@
 
 {#if shouldShowMovement}
 	<section class="nimble-movement" style="grid-area: speed;">
-		<header class="nimble-section-header nimble-movement__primary">
-			<h3 class="nimble-heading" data-heading-variant="section">Speed</h3>
+		<div class="nimble-movement__primary">
+			<span class="nimble-heading" data-heading-variant="section">Speed</span>
 			<span class="nimble-movement__value">{walkSpeed}</span>
-			{#if editingEnabled}
-				<button
-					class="nimble-button"
-					data-button-variant="icon"
-					type="button"
-					aria-label={configTooltip}
-					data-tooltip={configTooltip}
-					onclick={() => actor.configureMovement()}
-				>
-					<i class="fa-solid fa-edit"></i>
-				</button>
-			{/if}
-		</header>
+		</div>
 
 		{#if alternateMovements.length > 0}
 			<div class="nimble-movement__secondary">
@@ -76,6 +64,19 @@
 				{/each}
 			</div>
 		{/if}
+
+		{#if editingEnabled}
+			<button
+				class="nimble-button"
+				data-button-variant="icon"
+				type="button"
+				aria-label={configTooltip}
+				data-tooltip={configTooltip}
+				onclick={() => actor.configureMovement()}
+			>
+				<i class="fa-solid fa-edit"></i>
+			</button>
+		{/if}
 	</section>
 {/if}
 
@@ -84,10 +85,6 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-	}
-
-	.nimble-movement__primary {
-		margin-block-end: 0;
 	}
 
 	.nimble-movement__value {
