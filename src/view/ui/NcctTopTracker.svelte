@@ -605,17 +605,13 @@
 		if (!trackElement) return;
 		await tick();
 		if (!trackElement) return;
-		if (!centerActiveCardEnabled) {
-			updateBannerAnchor();
-			return;
-		}
+		if (!centerActiveCardEnabled) return;
 		if (!activeKey) {
 			const centeredScrollLeft = Math.max(
 				0,
 				(trackElement.scrollWidth - trackElement.clientWidth) / 2,
 			);
 			trackElement.scrollTo({ left: centeredScrollLeft, behavior: 'smooth' });
-			updateBannerAnchor();
 			return;
 		}
 		const activeElement = trackElement.querySelector<HTMLElement>(
@@ -625,41 +621,6 @@
 		const scrollLeft =
 			activeElement.offsetLeft - trackElement.clientWidth / 2 + activeElement.clientWidth / 2;
 		trackElement.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' });
-		updateBannerAnchor();
-	}
-
-	function getActiveEntryElement(): HTMLElement | null {
-		if (!trackElement || !activeEntryKey) return null;
-		return trackElement.querySelector<HTMLElement>(`[data-track-key='${activeEntryKey}']`);
-	}
-
-	function updateBannerAnchor(): void {
-		if (!viewportElement || !trackElement) {
-			bannerLeftPx = null;
-			return;
-		}
-
-		const fallbackCenter = Math.round(viewportElement.clientWidth / 2);
-		const activeElement = getActiveEntryElement();
-		if (!activeElement) {
-			bannerLeftPx = fallbackCenter;
-			return;
-		}
-
-		const viewportRect = viewportElement.getBoundingClientRect();
-		const activeRect = activeElement.getBoundingClientRect();
-		const centerX = Math.round(activeRect.left - viewportRect.left + activeRect.width / 2);
-		bannerLeftPx = Number.isFinite(centerX) ? centerX : fallbackCenter;
-	}
-
-	function handleTrackTransitionEnd(event: TransitionEvent): void {
-		if (!activeEntryKey) return;
-		if (event.propertyName !== 'width' && event.propertyName !== 'height') return;
-		const target = event.target;
-		if (!(target instanceof HTMLElement)) return;
-		if (!target.classList.contains('nimble-ncct__portrait')) return;
-		if (target.dataset.trackKey !== activeEntryKey) return;
-		updateBannerAnchor();
 	}
 
 	function updateCurrentCombat(force = false): void {
@@ -1209,7 +1170,6 @@
 	let topOffsetPx = $state(MIN_TOP_OFFSET_PX);
 	let viewportElement: HTMLDivElement | null = $state(null);
 	let trackElement: HTMLOListElement | null = $state(null);
-	let bannerLeftPx: number | null = $state(null);
 	let activeDragSourceId: string | null = $state(null);
 	let dragPreview: CombatantDropPreview | null = $state(null);
 	let renderVersion = $state(0);
@@ -1296,11 +1256,9 @@
 		updateTopOffset();
 		updatePlayerMonsterExpansionPermission();
 		updateCurrentCombat(true);
-		queueMicrotask(() => updateBannerAnchor());
 
 		resizeListener = () => {
 			updateTopOffset();
-			updateBannerAnchor();
 		};
 		window.addEventListener('resize', resizeListener);
 
@@ -1352,22 +1310,12 @@
 
 	$effect(() => {
 		centerActiveCardEnabled;
-		void centerActiveEntryInView(activeEntryKey).then(() => {
-			queueMicrotask(() => updateBannerAnchor());
-		});
+		void centerActiveEntryInView(activeEntryKey);
 	});
 
 	$effect(() => {
 		if (canCurrentUserExpandMonsterCards) return;
 		if (monsterCardsExpanded) monsterCardsExpanded = false;
-	});
-
-	$effect(() => {
-		const trackedElement = trackElement;
-		if (!trackedElement) return;
-		const handleTrackScroll = () => updateBannerAnchor();
-		trackedElement.addEventListener('scroll', handleTrackScroll, { passive: true });
-		return () => trackedElement.removeEventListener('scroll', handleTrackScroll);
 	});
 
 	$effect(() => {
@@ -1435,7 +1383,6 @@
 						void handleTrackDrop(event);
 					}}
 					onwheel={handleTrackWheel}
-					ontransitionend={handleTrackTransitionEnd}
 				>
 					{#each orderedAliveEntries as entry, index (entry.key)}
 						{#if combatStarted && roundSeparatorIndex === index}
@@ -1569,17 +1516,6 @@
 						{/each}
 					{/if}
 				</ol>
-
-				<div
-					class="nimble-ncct__banner"
-					style={bannerLeftPx !== null ? `left: ${bannerLeftPx}px;` : ''}
-				>
-					{#if activeCombatant}
-						<span>{getCombatantDisplayName(activeCombatant)}</span>
-					{:else}
-						<span>{combatStarted ? `Round ${currentRoundLabel}` : 'Combat Not Started'}</span>
-					{/if}
-				</div>
 			</div>
 
 			{#if game.user?.isGM}
@@ -1972,23 +1908,6 @@
 		color: hsl(0 0% 96%);
 		text-shadow: 0 0 0.32rem color-mix(in srgb, black 75%, transparent);
 	}
-	.nimble-ncct__banner {
-		position: absolute;
-		left: 50%;
-		top: calc(100% + 0.14rem);
-		transform: translateX(-50%);
-		display: inline-flex;
-		gap: 0.4rem;
-		max-width: min(var(--nimble-ncct-track-max-width), 34rem);
-		padding: 0.35rem 0.7rem;
-		font-size: 1.15rem;
-		font-weight: 700;
-		color: hsl(0 0% 95%);
-		background: color-mix(in srgb, hsl(228 22% 10%) 94%, transparent);
-		border: 1px solid color-mix(in srgb, hsl(38 26% 59%) 55%, transparent);
-		border-radius: 0.12rem;
-		pointer-events: none;
-	}
 	@media (max-width: 900px) {
 		.nimble-ncct__icon-button {
 			width: 1.36rem;
@@ -2008,9 +1927,6 @@
 		}
 		.nimble-ncct__round-separator-round {
 			font-size: 0.72rem;
-		}
-		.nimble-ncct__banner {
-			font-size: 0.9rem;
 		}
 	}
 	@media (hover: none) {
