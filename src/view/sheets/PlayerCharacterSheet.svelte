@@ -644,7 +644,7 @@
 		width: 2.1rem;
 		height: 1rem;
 		border-radius: 999px;
-		background: var(--nimble-sheet-background);
+		background: color-mix(in srgb, var(--nimble-sheet-background) 30%, transparent);
 		border: none;
 		box-shadow: var(--nimble-navigation-button-box-shadow);
 		display: flex;
@@ -667,7 +667,6 @@
 		height: 1rem;
 		border-radius: 50%;
 		background: #842c2b;
-		border: 2px solid var(--nimble-initiative-border-color);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
