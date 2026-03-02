@@ -155,14 +155,16 @@
 	<div class="nimble-search-wrapper">
 		<SearchBar bind:searchTerm />
 
-		<button
-			class="nimble-button fa-solid fa-plus"
-			data-button-variant="basic"
-			type="button"
-			aria-label="Create Feature"
-			data-tooltip="Create Feature"
-			onclick={createItem}
-		></button>
+		{#if editingEnabled}
+			<button
+				class="nimble-button fa-solid fa-plus"
+				data-button-variant="basic"
+				type="button"
+				aria-label="Create Feature"
+				data-tooltip="Create Feature"
+				onclick={createItem}
+			></button>
+		{/if}
 	</div>
 </header>
 
@@ -224,7 +226,6 @@
 								type="button"
 								aria-label="Delete {item.reactive.name}"
 								onclick={(event) => deleteItem(event, item._id)}
-								disabled={!editingEnabled}
 							>
 								<i class="fa-solid fa-trash"></i>
 							</button>
@@ -279,7 +280,6 @@
 										type="button"
 										aria-label="Delete {subclass.reactive.name}"
 										onclick={(event) => deleteItem(event, subclass._id)}
-										disabled={!editingEnabled}
 									>
 										<i class="fa-solid fa-trash"></i>
 									</button>

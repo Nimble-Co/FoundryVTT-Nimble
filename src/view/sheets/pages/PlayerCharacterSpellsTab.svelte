@@ -153,6 +153,7 @@
 
 	// Settings
 	let flags = $derived(actor.reactive.flags.nimble);
+	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
 	// Content State
@@ -207,14 +208,16 @@
 	<div class="nimble-search-wrapper">
 		<SearchBar bind:searchTerm />
 
-		<button
-			class="nimble-button fa-solid fa-plus"
-			data-button-variant="basic"
-			type="button"
-			aria-label="Create Spell"
-			data-tooltip="Create Spell"
-			onclick={createItem}
-		></button>
+		{#if editingEnabled}
+			<button
+				class="nimble-button fa-solid fa-plus"
+				data-button-variant="basic"
+				type="button"
+				aria-label="Create Spell"
+				data-tooltip="Create Spell"
+				onclick={createItem}
+			></button>
+		{/if}
 	</div>
 </header>
 

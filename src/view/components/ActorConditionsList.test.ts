@@ -11,7 +11,7 @@ function createActor({
 	statuses?: string[];
 	effects?: ActiveEffect[];
 } = {}): Actor.Implementation {
-	return {
+	const actor = {
 		id: 'actor-1',
 		name: 'Hero',
 		isOwner: owner,
@@ -32,7 +32,15 @@ function createActor({
 			] as unknown as ActiveEffect[]),
 		toggleStatusEffect: vi.fn().mockResolvedValue(undefined),
 		deleteEmbeddedDocuments: vi.fn().mockResolvedValue([]),
-	} as unknown as Actor.Implementation;
+	} as Record<string, unknown>;
+
+	// Component accesses actor.reactive (which proxies back to actor)
+	actor.reactive = {
+		...actor,
+		flags: { nimble: { editingEnabled: owner } },
+	};
+
+	return actor as unknown as Actor.Implementation;
 }
 
 describe('ActorConditionsList', () => {

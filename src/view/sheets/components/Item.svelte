@@ -1,35 +1,66 @@
-<script>
+<script lang="ts">
+	import type { NimbleBaseActor } from '#documents/actor/base.svelte.js';
 	import { getContext } from 'svelte';
 
-	function stopPropagation(fn) {
-		return function (event) {
-			event.stopPropagation();
-			fn.call(this, event);
-		};
+	// Type definitions
+	interface ReactiveItem {
+		img: string;
+		name: string;
+	}
+	interface Item {
+		_id: string;
+		reactive: ReactiveItem;
 	}
 
-	let { item } = $props();
+	// Props
+	let { item }: { item: Item } = $props();
 
-	const actor = getContext('actor');
+	// Context
+	const actor = getContext<NimbleBaseActor>('actor');
+
+	function handleActivateItem(event: MouseEvent) {
+		event.stopPropagation();
+		actor?.activateItem?.(item._id);
+	}
+
+	function handleConfigureItem(event: MouseEvent) {
+		event.stopPropagation();
+		actor?.configureItem?.(item._id);
+	}
+
+	function handleDeleteItem(event: MouseEvent) {
+		event.stopPropagation();
+		actor?.deleteItem?.(item._id);
+	}
 </script>
 
-<li class="nimble-item" onclick={() => actor.activateItem(item._id)}>
-	<img class="nimble-item__img" src={item.reactive.img} alt={item.reactive.img} />
-
-	<span class="nimble-item__name">
-		{item.reactive.name}
-	</span>
+<li class="nimble-item">
+	<button
+		type="button"
+		class="nimble-item__activate"
+		onclick={handleActivateItem}
+		aria-label={`Activate ${item.reactive.name}`}
+	>
+		<img class="nimble-item__img" src={item.reactive.img} alt={item.reactive.img} />
+		<span class="nimble-item__name">
+			{item.reactive.name}
+		</span>
+	</button>
 
 	<button
-		onclick={stopPropagation(() => actor.configureItem(item._id))}
-		data-tooltip="Edit {item.reactive.name}"
+		type="button"
+		onclick={handleConfigureItem}
+		data-tooltip={`Edit ${item.reactive.name}`}
+		aria-label={`Edit ${item.reactive.name}`}
 	>
 		<i class="fa-solid fa-edit"></i>
 	</button>
 
 	<button
-		onclick={stopPropagation(() => actor.deleteItem(item._id))}
-		data-tooltip="Delete {item.reactive.name}"
+		type="button"
+		onclick={handleDeleteItem}
+		data-tooltip={`Delete ${item.reactive.name}`}
+		aria-label={`Delete ${item.reactive.name}`}
 	>
 		<i class="fa-solid fa-trash"></i>
 	</button>

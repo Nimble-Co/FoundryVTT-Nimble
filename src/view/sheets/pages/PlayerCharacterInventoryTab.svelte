@@ -46,8 +46,6 @@
 
 	let actor = getContext('actor');
 	let sheet = getContext('application');
-	const editingEnabledStore = getContext('editingEnabled');
-	let editingEnabled = $derived($editingEnabledStore ?? true);
 	let searchTerm = $state('');
 
 	const tooltipCache = new Map();
@@ -116,6 +114,7 @@
 	let flags = $derived(actor.reactive.flags.nimble);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 	let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
+	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 </script>
 
 <header class="nimble-sheet__static nimble-sheet__static--inventory">
@@ -218,31 +217,33 @@
 							</h4>
 
 							{#if rules && rules.hasRuleOfType('armorClass')}
-								<button
-									class="nimble-button"
-									data-button-variant="icon"
-									type="button"
-									aria-label="Toggle armor rule of {item.name}"
-									onclick={async (event) => {
-										event.stopPropagation();
-										const armorRule = rules.getRuleOfType('armorClass');
-										const newDisabledState = !armorRule.disabled;
+								{#if editingEnabled}
+									<button
+										class="nimble-button"
+										data-button-variant="icon"
+										type="button"
+										aria-label="Toggle armor rule of {item.name}"
+										onclick={async (event) => {
+											event.stopPropagation();
+											const armorRule = rules.getRuleOfType('armorClass');
+											const newDisabledState = !armorRule.disabled;
 
-										const updateData = {
-											...armorRule.toObject(),
-											disabled: newDisabledState,
-										};
+											const updateData = {
+												...armorRule.toObject(),
+												disabled: newDisabledState,
+											};
 
-										await rules.updateRule(armorRule.id, updateData);
-										itemsWithDisabledArmor.set(item.id, newDisabledState);
-									}}
-								>
-									{#if itemsWithDisabledArmor.get(item.id)}
-										<i class="fa-regular fa-circle"></i>
-									{:else}
-										<i class="fa-solid fa-circle"></i>
-									{/if}
-								</button>
+											await rules.updateRule(armorRule.id, updateData);
+											itemsWithDisabledArmor.set(item.id, newDisabledState);
+										}}
+									>
+										{#if itemsWithDisabledArmor.get(item.id)}
+											<i class="fa-regular fa-circle"></i>
+										{:else}
+											<i class="fa-solid fa-circle"></i>
+										{/if}
+									</button>
+								{/if}
 							{:else}
 								<input
 									class="nimble-document-card__quantity"
@@ -274,7 +275,6 @@
 								type="button"
 								aria-label="Delete {item.name}"
 								onclick={(event) => deleteItem(event, item._id)}
-								disabled={!editingEnabled}
 							>
 								<i class="fa-solid fa-trash"></i>
 							</button>

@@ -15,8 +15,8 @@
 
 	const { saves, savingThrows, savingThrowAbbreviations } = CONFIG.NIMBLE;
 	const actor = getContext('actor');
-	const editingEnabledStore = getContext('editingEnabled');
-	let editingEnabled = $derived($editingEnabledStore ?? true);
+	let flags = $derived(actor.reactive.flags.nimble);
+	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 </script>
 
 {#snippet savingThrowSnippet(saveKey, save)}
@@ -62,9 +62,10 @@
 		<button
 			class="nimble-button"
 			data-button-variant="icon"
+			class:nimble-button--hidden={!editingEnabled}
 			type="button"
-			data-tooltip="NIMBLE.prompts.configureSavingThrows"
-			aria-label={localize('NIMBLE.prompts.configureSavingThrows')}
+			aria-label={editingEnabled ? localize('NIMBLE.prompts.configureSavingThrows') : null}
+			data-tooltip={editingEnabled ? localize('NIMBLE.prompts.configureSavingThrows') : null}
 			onclick={() => actor.configureSavingThrows()}
 			disabled={!editingEnabled}
 		>

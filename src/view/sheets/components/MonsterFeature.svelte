@@ -4,6 +4,8 @@
 	let { icon = 'fa-solid fa-message', item } = $props();
 
 	let actor = getContext('actor');
+	let flags = $derived(actor.reactive.flags.nimble);
+	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 	let hasUses = false;
 </script>
 
@@ -26,27 +28,29 @@
 				</div>
 			{/if}
 
-			<button
-				class="nimble-button"
-				data-button-variant="icon"
-				type="button"
-				aria-label="Edit"
-				data-tooltip="Edit"
-				onclick={() => actor.configureItem(item._id)}
-			>
-				<i class="fa-solid fa-edit"></i>
-			</button>
+			{#if editingEnabled}
+				<button
+					class="nimble-button"
+					data-button-variant="icon"
+					type="button"
+					aria-label="Edit"
+					data-tooltip="Edit"
+					onclick={() => actor.configureItem(item._id)}
+				>
+					<i class="fa-solid fa-edit"></i>
+				</button>
 
-			<button
-				class="nimble-button"
-				data-button-variant="icon"
-				type="button"
-				aria-label="Delete"
-				data-tooltip="Delete"
-				onclick={() => actor.deleteItem(item._id)}
-			>
-				<i class="fa-solid fa-trash"></i>
-			</button>
+				<button
+					class="nimble-button"
+					data-button-variant="icon"
+					type="button"
+					aria-label="Delete"
+					data-tooltip="Delete"
+					onclick={() => actor.deleteItem(item._id)}
+				>
+					<i class="fa-solid fa-trash"></i>
+				</button>
+			{/if}
 		</header>
 
 		<div class="nimble-monster-feature-text">

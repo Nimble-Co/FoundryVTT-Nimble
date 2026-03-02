@@ -273,7 +273,7 @@
 	let actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
-	let editingEnabled = $derived(flags?.editingEnabled ?? true);
+	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 	const editingEnabledStore = readable(false, (set) => {
 		$effect(() => set(editingEnabled));
 		return () => {};
@@ -398,8 +398,8 @@
 
 		<button
 			class="nimble-icon__button nimble-icon__button--actor"
-			aria-label={localize('NIMBLE.prompts.changeActorImage')}
-			data-tooltip="NIMBLE.prompts.changeActorImage"
+			aria-label={editingEnabled ? localize('NIMBLE.prompts.changeActorImage') : ''}
+			data-tooltip={editingEnabled ? 'NIMBLE.prompts.changeActorImage' : null}
 			onclick={(event) => updateDocumentImage(actor, { shiftKey: event.shiftKey })}
 			type="button"
 			disabled={!editingEnabled}
@@ -409,10 +409,10 @@
 				src={actor.reactive.img}
 				alt={actor.reactive.name}
 				style="
-                    --nimble-actor-image-x-offset: {actorImageXOffset}px;
-                    --nimble-actor-image-y-offset: {actorImageYOffset}px;
-                    --nimble-actor-image-scale: {actorImageScale}%;
-                "
+					--nimble-actor-image-x-offset: {actorImageXOffset}px;
+					--nimble-actor-image-y-offset: {actorImageYOffset}px;
+					--nimble-actor-image-scale: {actorImageScale}%;
+				"
 			/>
 		</button>
 	</div>
@@ -440,12 +440,12 @@
 			{/if}
 			<button
 				class="nimble-button"
+				class:nimble-button--hidden={!editingEnabled}
 				data-button-variant="icon"
 				type="button"
 				aria-label="Configure Hit Points"
 				data-tooltip="Configure Hit Points"
 				onclick={() => actor.configureHitPoints()}
-				disabled={!editingEnabled}
 			>
 				<i class="fa-solid fa-edit"></i>
 			</button>
@@ -467,12 +467,12 @@
 			<i class="fa-solid fa-heart-circle-plus"></i>
 			<button
 				class="nimble-button"
+				class:nimble-button--hidden={!editingEnabled}
 				data-button-variant="icon"
 				type="button"
 				aria-label={CONFIG.NIMBLE.hitDice.configureHitDice}
 				data-tooltip={CONFIG.NIMBLE.hitDice.configureHitDice}
 				onclick={() => actor.configureHitDice()}
-				disabled={!editingEnabled}
 			>
 				<i class="fa-solid fa-edit"></i>
 			</button>
@@ -494,12 +494,12 @@
 				<i class="fa-solid fa-sparkles"></i>
 				<button
 					class="nimble-button"
+					class:nimble-button--hidden={!editingEnabled}
 					data-button-variant="icon"
 					type="button"
 					aria-label={CONFIG.NIMBLE.manaConfig.configureMana}
 					data-tooltip={CONFIG.NIMBLE.manaConfig.configureMana}
 					onclick={() => actor.configureMana()}
-					disabled={!editingEnabled}
 				>
 					<i class="fa-solid fa-edit"></i>
 				</button>
@@ -531,17 +531,18 @@
 			<h4 class="nimble-character-meta">
 				{metaData}
 
-				<button
-					class="nimble-button"
-					type="button"
-					data-button-variant="icon"
-					aria-label="Edit"
-					data-tooltip="Edit"
-					onclick={() => actor.editMetadata()}
-					disabled={!editingEnabled}
-				>
-					<i class="fa-solid fa-edit"></i>
-				</button>
+				{#if editingEnabled}
+					<button
+						class="nimble-button"
+						type="button"
+						data-button-variant="icon"
+						aria-label="Edit"
+						data-tooltip="Edit"
+						onclick={() => actor.editMetadata()}
+					>
+						<i class="fa-solid fa-edit"></i>
+					</button>
+				{/if}
 			</h4>
 		{/if}
 	</div>
@@ -556,6 +557,7 @@
 		class="nimble-button"
 		data-button-variant="overhang"
 		class:nimble-edit-toggle--enabled={editingEnabled}
+		class:nimble-edit-toggle--disabled={!editingEnabled}
 		type="button"
 		aria-pressed={editingEnabled}
 		aria-label={editingEnabled ? 'Disable editing' : 'Enable editing'}
@@ -568,29 +570,31 @@
 			</span>
 		</span>
 	</button>
-	<button
-		class="nimble-button"
-		data-button-variant="overhang"
-		aria-label={localize('NIMBLE.prompts.levelUp')}
-		data-tooltip={localize('NIMBLE.prompts.levelUp')}
-		onclick={() => actor.triggerLevelUp()}
-		disabled={!classItem || classItem?.system?.classLevel >= 20}
-		type="button"
-	>
-		<i class="fa-solid fa-arrow-up-right-dots"></i>
-	</button>
+	{#if editingEnabled}
+		<button
+			class="nimble-button"
+			data-button-variant="overhang"
+			aria-label={localize('NIMBLE.prompts.levelUp')}
+			data-tooltip={localize('NIMBLE.prompts.levelUp')}
+			onclick={() => actor.triggerLevelUp()}
+			disabled={!classItem || classItem?.system?.classLevel >= 20}
+			type="button"
+		>
+			<i class="fa-solid fa-arrow-up-right-dots"></i>
+		</button>
 
-	<button
-		class="nimble-button"
-		data-button-variant="overhang"
-		aria-label="Revert Last Level Up"
-		data-tooltip="Revert Last Level Up"
-		onclick={() => actor.triggerLevelDown()}
-		disabled={actor.reactive.system.levelUpHistory.length === 0}
-		type="button"
-	>
-		<i class="fa-solid fa-undo"></i>
-	</button>
+		<button
+			class="nimble-button"
+			data-button-variant="overhang"
+			aria-label="Revert Last Level Up"
+			data-tooltip="Revert Last Level Up"
+			onclick={() => actor.triggerLevelDown()}
+			disabled={actor.reactive.system.levelUpHistory.length === 0}
+			type="button"
+		>
+			<i class="fa-solid fa-undo"></i>
+		</button>
+	{/if}
 
 	<button
 		class="nimble-button"
@@ -625,24 +629,34 @@
 		width: 2.1rem;
 		height: 1rem;
 		border-radius: 999px;
-		background: var(--nimble-overhang-button-text-color);
-		border: 1px solid var(--nimble-overhang-button-text-color);
+		background: color-mix(in srgb, var(--nimble-sheet-background) 30%, transparent);
+		border: none;
+		box-shadow: var(--nimble-navigation-button-box-shadow);
 		display: flex;
 		align-items: center;
+		transition: background-color 0.2s ease-in-out;
+	}
+
+	.nimble-edit-toggle--disabled .nimble-edit-toggle__track {
+		background: hsl(0, 0%, 20%);
+		box-shadow:
+			0 0 0 1px hsl(0, 0%, 35%),
+			0 0 0 2px hsl(0, 0%, 12%),
+			0 3px 5px rgba(0, 0, 0, 0.4);
 	}
 
 	.nimble-edit-toggle__thumb {
 		position: absolute;
-		left: 0.1rem;
-		width: 0.85rem;
-		height: 0.85rem;
+		left: 0;
+		width: 1rem;
+		height: 1rem;
 		border-radius: 50%;
-		background: var(--nimble-overhang-button-text-color);
+		background: #842c2b;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		color: hsl(215, 30%, 12%);
-		font-size: 0.45rem;
+		color: hsl(0, 0%, 95%);
+		font-size: 0.5rem;
 		transform: translateX(0);
 		transition:
 			transform 0.2s ease-in-out,
@@ -650,8 +664,10 @@
 		box-shadow: 0 0 4px rgba(0, 0, 0, 0.45);
 	}
 
-	.nimble-edit-toggle--enabled .nimble-edit-toggle__thumb {
-		transform: translateX(1.05rem);
+	.nimble-edit-toggle--disabled .nimble-edit-toggle__thumb {
+		transform: translateX(1.1rem);
+		background: hsl(0, 0%, 65%);
+		color: hsl(0, 0%, 20%);
 	}
 
 	.nimble-player-character-header {
@@ -765,6 +781,8 @@
 	}
 
 	.nimble-heading--hp {
+		--nimble-button-icon-y-nudge: 0;
+
 		grid-area: hpHeading;
 		// Prevent wounds label from expanding the heading beyond available space
 		overflow: hidden;
@@ -781,6 +799,8 @@
 	}
 
 	.nimble-heading--hit-dice {
+		--nimble-button-icon-y-nudge: 0;
+
 		grid-area: hitDiceHeading;
 
 		.nimble-button {
@@ -794,6 +814,8 @@
 	}
 
 	.nimble-heading--mana {
+		--nimble-button-icon-y-nudge: 0;
+
 		grid-area: manaHeading;
 		margin-block-start: 0.25rem;
 	}
