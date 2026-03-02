@@ -3,8 +3,10 @@
 	import { fade } from 'svelte/transition';
 	import {
 		getCombatTrackerCenterActiveCardEnabled,
+		getCombatTrackerNcctEnabled,
 		getCombatTrackerPlayersCanExpandMonsterCards,
 		isCombatTrackerCenterActiveCardSettingKey,
+		isCombatTrackerEnabledSettingKey,
 		isCombatTrackerPlayerMonsterExpansionSettingKey,
 	} from '../../settings/combatTrackerSettings.js';
 	import { canCurrentUserReorderCombatant } from '../../utils/combatantOrdering.js';
@@ -1166,6 +1168,7 @@
 	let sceneDeadCombatants: Combatant.Implementation[] = $state([]);
 	let playersCanExpandMonsterCards = $state(getCombatTrackerPlayersCanExpandMonsterCards());
 	let centerActiveCardEnabled = $state(getCombatTrackerCenterActiveCardEnabled());
+	let ncctEnabled = $state(getCombatTrackerNcctEnabled());
 	let monsterCardsExpanded = $state(false);
 	let topOffsetPx = $state(MIN_TOP_OFFSET_PX);
 	let viewportElement: HTMLDivElement | null = $state(null);
@@ -1286,6 +1289,9 @@
 			if (isCombatTrackerCenterActiveCardSettingKey(settingKey)) {
 				centerActiveCardEnabled = getCombatTrackerCenterActiveCardEnabled();
 			}
+			if (isCombatTrackerEnabledSettingKey(settingKey)) {
+				ncctEnabled = getCombatTrackerNcctEnabled();
+			}
 		});
 	});
 
@@ -1324,7 +1330,7 @@
 	});
 </script>
 
-{#if currentCombat}
+{#if ncctEnabled && currentCombat}
 	<section
 		class="nimble-ncct-shell"
 		style={`top: ${topOffsetPx}px; --nimble-ncct-track-max-width: ${NCCT_TRACK_MAX_WIDTH};`}

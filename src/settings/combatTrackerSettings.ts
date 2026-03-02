@@ -1,9 +1,11 @@
 export const COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY =
 	'combatTrackerPlayersCanExpandMonsterCards';
 export const COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY = 'combatTrackerCenterActiveCard';
+export const COMBAT_TRACKER_ENABLED_SETTING_KEY = 'combatTrackerNcctEnabled';
 
 const DEFAULT_PLAYER_MONSTER_CARD_EXPANSION_PERMISSION = false;
 const DEFAULT_CENTER_ACTIVE_CARD_SETTING = true;
+const DEFAULT_NCCT_ENABLED_SETTING = true;
 let combatTrackerConfigHookRegistered = false;
 
 function registerWorldSetting(
@@ -34,6 +36,14 @@ export function registerCombatTrackerSettings(): void {
 		config: false,
 		type: Boolean,
 		default: DEFAULT_CENTER_ACTIVE_CARD_SETTING,
+	});
+	registerWorldSetting(COMBAT_TRACKER_ENABLED_SETTING_KEY, {
+		name: 'Enable NCCT',
+		hint: 'Show the Nimble Carousel Combat Tracker at the top of the screen',
+		scope: 'world',
+		config: true,
+		type: Boolean,
+		default: DEFAULT_NCCT_ENABLED_SETTING,
 	});
 
 	registerCombatTrackerConfigHook();
@@ -86,8 +96,9 @@ function registerCombatTrackerConfigHook(): void {
 		if (!game.user?.isGM) return;
 
 		const formElement = rootElement.querySelector('form') ?? rootElement;
-		if (formElement.querySelector('[data-nimble-ncct-center-active-setting="true"]')) return;
-		formElement.appendChild(buildCenterActiveCardSettingControl());
+		if (!formElement.querySelector('[data-nimble-ncct-center-active-setting="true"]')) {
+			formElement.appendChild(buildCenterActiveCardSettingControl());
+		}
 	});
 }
 
@@ -115,10 +126,22 @@ export function getCombatTrackerCenterActiveCardEnabled(): boolean {
 	);
 }
 
+export function getCombatTrackerNcctEnabled(): boolean {
+	return Boolean(
+		game.settings.get('nimble' as 'core', COMBAT_TRACKER_ENABLED_SETTING_KEY as 'rollMode'),
+	);
+}
+
 export function isCombatTrackerCenterActiveCardSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY) return true;
 	return settingKey === `nimble.${COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY}`;
+}
+
+export function isCombatTrackerEnabledSettingKey(settingKey: unknown): boolean {
+	if (typeof settingKey !== 'string') return false;
+	if (settingKey === COMBAT_TRACKER_ENABLED_SETTING_KEY) return true;
+	return settingKey === `nimble.${COMBAT_TRACKER_ENABLED_SETTING_KEY}`;
 }
 
 export async function setCombatTrackerPlayersCanExpandMonsterCards(value: boolean): Promise<void> {
@@ -133,6 +156,14 @@ export async function setCombatTrackerCenterActiveCardEnabled(value: boolean): P
 	await game.settings.set(
 		'nimble' as 'core',
 		COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY as 'rollMode',
+		Boolean(value) as never,
+	);
+}
+
+export async function setCombatTrackerNcctEnabled(value: boolean): Promise<void> {
+	await game.settings.set(
+		'nimble' as 'core',
+		COMBAT_TRACKER_ENABLED_SETTING_KEY as 'rollMode',
 		Boolean(value) as never,
 	);
 }
