@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { setContext } from 'svelte';
+	import { setContext, untrack } from 'svelte';
 	import type { NimbleSpellItem } from '../../documents/item/spell.js';
 	import type SpellSheet from '../../documents/sheets/SpellSheet.svelte.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
@@ -55,8 +55,14 @@
 	let currentTab = $state(navigation[0]);
 	let metadata = $derived(prepareSpellMetaData(item.reactive) ?? '');
 
-	setContext('document', item);
-	setContext('application', sheet);
+	setContext(
+		'document',
+		untrack(() => item),
+	);
+	setContext(
+		'application',
+		untrack(() => sheet),
+	);
 </script>
 
 <header class="nimble-sheet__header nimble-sheet__header--spell">

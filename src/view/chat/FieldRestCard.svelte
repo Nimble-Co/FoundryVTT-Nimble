@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { setContext } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import prepareRollTooltip from '../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
@@ -47,8 +46,6 @@
 	const rollTooltip = $derived(
 		rolls?.length ? prepareRollTooltip(actorType, permissions, rolls[0]) : '',
 	);
-
-	setContext('message', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />

@@ -1,5 +1,5 @@
 <script>
-	import { setContext } from 'svelte';
+	import { setContext, untrack } from 'svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 
 	import Editor from './components/Editor.svelte';
@@ -32,8 +32,14 @@
 
 	let currentTab = $state(navigation[0]);
 
-	setContext('document', item);
-	setContext('application', sheet);
+	setContext(
+		'document',
+		untrack(() => item),
+	);
+	setContext(
+		'application',
+		untrack(() => sheet),
+	);
 </script>
 
 {#snippet configTab()}

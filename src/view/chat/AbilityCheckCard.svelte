@@ -1,5 +1,4 @@
 <script>
-	import { setContext } from 'svelte';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import { getRollModeSummary } from '../dataPreparationHelpers/getRollModeSummary.js';
 	import prepareRollTooltip from '../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
@@ -21,8 +20,6 @@
 	const rollMode = $derived(system.rollMode);
 
 	const label = $derived(`${abilityScores[abilityKey]} Check`);
-
-	setContext('message', messageDocument);
 </script>
 
 <CardHeader {messageDocument} />
