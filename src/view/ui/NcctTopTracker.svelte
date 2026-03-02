@@ -7,10 +7,7 @@
 		isCombatTrackerCenterActiveCardSettingKey,
 		isCombatTrackerPlayerMonsterExpansionSettingKey,
 	} from '../../settings/combatTrackerSettings.js';
-	import {
-		canCurrentUserReorderCombatant,
-		getCombatantTypePriority,
-	} from '../../utils/combatantOrdering.js';
+	import { canCurrentUserReorderCombatant } from '../../utils/combatantOrdering.js';
 	import {
 		canCurrentUserEndTurn as canCurrentUserEndCombatantTurn,
 		getCombatantCurrentActions,
@@ -30,13 +27,13 @@
 		combatant?: Combatant.Implementation;
 	}
 
-interface CombatantDropPreview {
-	sourceId: string;
-	targetId: string;
-	before: boolean;
-}
+	interface CombatantDropPreview {
+		sourceId: string;
+		targetId: string;
+		before: boolean;
+	}
 
-type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
+	type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 
 	type CombatWithDrop = Combat & {
 		_onDrop?: (event: DragEvent & { target: EventTarget & HTMLElement }) => Promise<unknown>;
@@ -57,8 +54,101 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 	const DRAG_SWITCH_LOWER_RATIO = 0.6;
 	let preferredCombatId: string | null = null;
 
+	function isLegendaryCombatant(combatant: Combatant.Implementation): boolean {
+		return combatant.type === 'soloMonster';
+	}
+
+	function isPlayerCombatant(combatant: Combatant.Implementation): boolean {
+		return combatant.type === 'character';
+	}
+
 	function isMonsterOrMinionCombatant(combatant: Combatant.Implementation): boolean {
-		return combatant.type !== 'character';
+		return !isPlayerCombatant(combatant) && !isLegendaryCombatant(combatant);
+	}
+
+	function getCombatantId(
+		combatant: { id?: string | null; _id?: string | null } | null | undefined,
+	): string {
+		return combatant?.id ?? combatant?._id ?? '';
+	}
+
+	function buildCombatantEntryKey(combatantId: string, occurrence: number): string {
+		return `combatant-${combatantId}-${occurrence}`;
+	}
+
+	function getCombatantOccurrenceAtIndex(
+		combatants: Combatant.Implementation[],
+		combatantId: string,
+		inclusiveIndex: number,
+	): number {
+		let occurrence = -1;
+		for (let index = 0; index <= inclusiveIndex && index < combatants.length; index += 1) {
+			const id = getCombatantId(combatants[index]);
+			if (id === combatantId) occurrence += 1;
+		}
+		return occurrence;
+	}
+
+	function findTurnIndexByOccurrence(
+		turns: Combatant.Implementation[],
+		combatantId: string,
+		desiredOccurrence: number | null,
+	): number {
+		let occurrence = -1;
+		for (const [index, turnCombatant] of turns.entries()) {
+			if (getCombatantId(turnCombatant) !== combatantId) continue;
+			occurrence += 1;
+			if (desiredOccurrence === null || occurrence === desiredOccurrence) return index;
+		}
+		return -1;
+	}
+
+	function syncCombatTurnsForNcct(combat: Combat | null): void {
+		if (!combat) return;
+
+		const existingTurns = combat.turns;
+		const normalizedCurrentTurn =
+			typeof combat.turn === 'number' &&
+			combat.turn >= 0 &&
+			combat.turn < existingTurns.length
+				? combat.turn
+				: null;
+		const currentCombatantId =
+			normalizedCurrentTurn !== null
+				? getCombatantId(existingTurns[normalizedCurrentTurn])
+				: getCombatantId(combat.combatant);
+		const currentOccurrence =
+			currentCombatantId && normalizedCurrentTurn !== null
+				? getCombatantOccurrenceAtIndex(existingTurns, currentCombatantId, normalizedCurrentTurn)
+				: null;
+
+		let normalizedTurns: Combatant.Implementation[];
+		try {
+			normalizedTurns = combat.setupTurns();
+		} catch (_error) {
+			return;
+		}
+
+		combat.turns = normalizedTurns;
+		if (normalizedTurns.length === 0) {
+			combat.turn = 0;
+			return;
+		}
+
+		if (currentCombatantId) {
+			const matchedIndex = findTurnIndexByOccurrence(
+				normalizedTurns,
+				currentCombatantId,
+				currentOccurrence,
+			);
+			if (matchedIndex >= 0) {
+				combat.turn = matchedIndex;
+				return;
+			}
+		}
+
+		const fallbackTurn = Number.isInteger(combat.turn) ? Number(combat.turn) : 0;
+		combat.turn = Math.min(Math.max(fallbackTurn, 0), normalizedTurns.length - 1);
 	}
 
 	function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
@@ -153,13 +243,16 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 	function resolveActionCombat(): Combat | null {
 		const sceneCombat = getCombatForCurrentScene();
 		if (sceneCombat) {
+			syncCombatTurnsForNcct(sceneCombat);
 			preferredCombatId = sceneCombat.id ?? sceneCombat._id ?? null;
 			return sceneCombat;
 		}
 
 		const currentCombatId = currentCombat?.id ?? currentCombat?._id ?? '';
 		if (!currentCombatId) return currentCombat;
-		return game.combats.get(currentCombatId) ?? currentCombat;
+		const fallbackCombat = game.combats.get(currentCombatId) ?? currentCombat;
+		syncCombatTurnsForNcct(fallbackCombat);
+		return fallbackCombat;
 	}
 
 	function logNcctControl(action: string, details: Record<string, unknown> = {}): void {
@@ -211,9 +304,8 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 		const deadCombatants = combatantsForScene
 			.filter((combatant) => isCombatantDead(combatant))
 			.sort(sortDeadCombatants);
-		const reorderedAliveCombatants = reorderAliveCombatantsForNcct(aliveCombatants);
 
-		return { aliveCombatants: reorderedAliveCombatants, deadCombatants };
+		return { aliveCombatants, deadCombatants };
 	}
 
 	function getCombatantDisplayName(combatant: Combatant.Implementation): string {
@@ -289,58 +381,8 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 	}
 
 	function hasCombatantTurnRemainingThisRound(combatant: Combatant.Implementation): boolean {
-		// Character turns are controlled strictly by initiative flow and reset by combat hooks.
-		if (combatant.type === 'character') return true;
+		if (isPlayerCombatant(combatant) || isLegendaryCombatant(combatant)) return true;
 		return getCombatantCurrentActions(combatant) > 0;
-	}
-
-	function getCombatantModifiedTime(combatant: Combatant.Implementation): number {
-		const modifiedTime = Number(
-			foundry.utils.getProperty(combatant, '_stats.modifiedTime') ??
-				foundry.utils.getProperty(combatant, '_source._stats.modifiedTime') ??
-				0,
-		);
-		return Number.isFinite(modifiedTime) ? modifiedTime : 0;
-	}
-
-	function reorderAliveCombatantsForNcct(
-		aliveCombatants: Combatant.Implementation[],
-	): Combatant.Implementation[] {
-		if (aliveCombatants.length < 2) return aliveCombatants;
-
-		const characters: Combatant.Implementation[] = [];
-		const nonCharactersExhausted: Combatant.Implementation[] = [];
-		const nonCharactersWithTurnsRemaining: Combatant.Implementation[] = [];
-		const originalOrderIndex = new Map<string, number>();
-		aliveCombatants.forEach((combatant, index) => {
-			const combatantId = combatant.id ?? combatant._id ?? '';
-			if (combatantId) originalOrderIndex.set(combatantId, index);
-		});
-
-		for (const combatant of aliveCombatants) {
-			if (combatant.type === 'character') {
-				characters.push(combatant);
-				continue;
-			}
-			if (!hasCombatantTurnRemainingThisRound(combatant)) {
-				nonCharactersExhausted.push(combatant);
-				continue;
-			}
-			nonCharactersWithTurnsRemaining.push(combatant);
-		}
-
-		// Out-of-order ended monster/minion turns should queue at the front of the monster section
-		// in completion order (earliest completed first).
-		const orderedExhaustedNonCharacters = [...nonCharactersExhausted].sort((left, right) => {
-			const modifiedTimeDiff = getCombatantModifiedTime(left) - getCombatantModifiedTime(right);
-			if (modifiedTimeDiff !== 0) return modifiedTimeDiff;
-			const leftIndex = originalOrderIndex.get(left.id ?? left._id ?? '') ?? Number.MAX_SAFE_INTEGER;
-			const rightIndex =
-				originalOrderIndex.get(right.id ?? right._id ?? '') ?? Number.MAX_SAFE_INTEGER;
-			return leftIndex - rightIndex;
-		});
-
-		return [...characters, ...orderedExhaustedNonCharacters, ...nonCharactersWithTurnsRemaining];
 	}
 
 	function isFriendlyCombatant(combatant: Combatant.Implementation): boolean {
@@ -354,12 +396,17 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 		return combatant.type === 'character' || isFriendlyCombatant(combatant);
 	}
 
+	function getTrackEntryCombatantId(entry: TrackEntry): string {
+		return getCombatantId(entry.combatant);
+	}
+
 	function buildAliveEntries(
 		combatants: Combatant.Implementation[],
 		collapseMonsters: boolean,
 		includeMonsterStack: boolean,
 	): TrackEntry[] {
 		const entries: TrackEntry[] = [];
+		const occurrenceByCombatantId = new Map<string, number>();
 		let stackInserted = false;
 		for (const combatant of combatants) {
 			if (collapseMonsters && isMonsterOrMinionCombatant(combatant)) {
@@ -369,8 +416,11 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 				}
 				continue;
 			}
+			const combatantId = getCombatantId(combatant);
+			const occurrence = occurrenceByCombatantId.get(combatantId) ?? 0;
+			occurrenceByCombatantId.set(combatantId, occurrence + 1);
 			entries.push({
-				key: `combatant-${combatant.id ?? combatant._id ?? entries.length}`,
+				key: combatantId ? buildCombatantEntryKey(combatantId, occurrence) : `combatant-${entries.length}`,
 				kind: 'combatant',
 				combatant,
 			});
@@ -402,6 +452,42 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 		);
 	}
 
+	function getActiveCombatantOccurrence(combat: Combat | null, activeId: string): number | null {
+		if (!combat) return null;
+		const turnIndex = Number(combat.turn ?? -1);
+		if (!Number.isInteger(turnIndex) || turnIndex < 0 || turnIndex >= combat.turns.length) return null;
+		return getCombatantOccurrenceAtIndex(combat.turns, activeId, turnIndex);
+	}
+
+	function resolveActiveEntryKey(params: {
+		activeCombatantId: string | null;
+		activeOccurrence: number | null;
+		aliveEntries: TrackEntry[];
+		collapseMonsters: boolean;
+		monsterCombatants: Combatant.Implementation[];
+	}): string | null {
+		const { activeCombatantId, activeOccurrence, aliveEntries, collapseMonsters, monsterCombatants } =
+			params;
+		if (!activeCombatantId) return aliveEntries[0]?.key ?? null;
+
+		if (
+			collapseMonsters &&
+			monsterCombatants.some((combatant) => getCombatantId(combatant) === activeCombatantId)
+		) {
+			return 'monster-stack';
+		}
+
+		if (activeOccurrence !== null) {
+			const activeCombatantKey = buildCombatantEntryKey(activeCombatantId, activeOccurrence);
+			if (aliveEntries.some((entry) => entry.key === activeCombatantKey)) return activeCombatantKey;
+		}
+
+		const fallbackEntry = aliveEntries.find(
+			(entry) => entry.kind === 'combatant' && getTrackEntryCombatantId(entry) === activeCombatantId,
+		);
+		return fallbackEntry?.key ?? aliveEntries[0]?.key ?? null;
+	}
+
 	function orderEntriesForCenteredActive(
 		entries: TrackEntry[],
 		activeKey: string | null,
@@ -419,25 +505,32 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 		});
 	}
 
+	function findRoundBoundaryIndex(sceneAliveCombatants: Combatant.Implementation[]): number {
+		if (sceneAliveCombatants.length < 1) return -1;
+		for (let index = sceneAliveCombatants.length - 1; index >= 0; index -= 1) {
+			if (hasCombatantTurnRemainingThisRound(sceneAliveCombatants[index])) return index;
+		}
+		return sceneAliveCombatants.length - 1;
+	}
+
 	function getRoundBoundaryKey(
 		sceneAliveCombatants: Combatant.Implementation[],
 		collapseMonsters: boolean,
 	): string | null {
-		const fallbackBoundaryCombatant = sceneAliveCombatants[sceneAliveCombatants.length - 1];
-		if (!fallbackBoundaryCombatant) return null;
-		const lastCurrentRoundCombatant =
-			[...sceneAliveCombatants]
-				.reverse()
-				.find((combatant) => hasCombatantTurnRemainingThisRound(combatant)) ??
-			fallbackBoundaryCombatant;
+		const boundaryIndex = findRoundBoundaryIndex(sceneAliveCombatants);
+		if (boundaryIndex < 0) return null;
+
+		const lastCurrentRoundCombatant = sceneAliveCombatants[boundaryIndex];
+		if (!lastCurrentRoundCombatant) return null;
 
 		if (collapseMonsters && isMonsterOrMinionCombatant(lastCurrentRoundCombatant)) {
 			return 'monster-stack';
 		}
 
-		const combatantId = lastCurrentRoundCombatant.id ?? lastCurrentRoundCombatant._id;
+		const combatantId = getCombatantId(lastCurrentRoundCombatant);
 		if (!combatantId) return null;
-		return `combatant-${combatantId}`;
+		const occurrence = getCombatantOccurrenceAtIndex(sceneAliveCombatants, combatantId, boundaryIndex);
+		return buildCombatantEntryKey(combatantId, occurrence);
 	}
 
 	function getRoundSeparatorInsertionIndex(
@@ -572,6 +665,7 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 	function updateCurrentCombat(force = false): void {
 		queueMicrotask(() => {
 			const combat = getCombatForCurrentScene();
+			syncCombatTurnsForNcct(combat);
 			const sceneId = canvas.scene?.id;
 			const signature = buildCombatSyncSignature(combat, sceneId);
 			if (!force && signature === lastCombatSignature) return;
@@ -583,6 +677,49 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 			sceneDeadCombatants = deadCombatants;
 			renderVersion += 1;
 		});
+	}
+
+	function localizeWithFallback(key: string, fallback: string): string {
+		const localized = game.i18n?.localize?.(key);
+		if (typeof localized === 'string' && localized !== key) return localized;
+		return fallback;
+	}
+
+	async function confirmEndEncounter(): Promise<boolean> {
+		const dialogApi = foundry.applications?.api?.DialogV2;
+		const title = localizeWithFallback('COMBAT.EndTitle', 'End Encounter?');
+		const prompt = localizeWithFallback(
+			'COMBAT.EndConfirmation',
+			'End this encounter and empty the turn tracker?',
+		);
+		const yesLabel = localizeWithFallback('Yes', 'Yes');
+		const noLabel = localizeWithFallback('No', 'No');
+
+		if (!dialogApi?.wait) {
+			return globalThis.confirm(prompt);
+		}
+
+		const result = await dialogApi.wait({
+			window: { title },
+			content: `<p>${prompt}</p>`,
+			modal: true,
+			rejectClose: false,
+			buttons: [
+				{
+					action: 'no',
+					icon: 'fa-solid fa-xmark',
+					label: noLabel,
+				},
+				{
+					action: 'yes',
+					icon: 'fa-solid fa-check',
+					label: yesLabel,
+					default: true,
+				},
+			],
+		});
+
+		return result === true || result === 'yes';
 	}
 
 	async function handleEndTurnFromCard(event: MouseEvent): Promise<void> {
@@ -759,33 +896,48 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 		return canCurrentUserReorderCombatant(combatant);
 	}
 
+	function getDragPreviewCandidates(source: Combatant.Implementation): Combatant.Implementation[] {
+		const sourceId = getCombatantId(source);
+		const restrictToPlayers = !game.user?.isGM;
+		return sceneAliveCombatants.filter((combatant) => {
+			if (getCombatantId(combatant) === sourceId) return false;
+			if (isCombatantDead(combatant)) return false;
+			return !restrictToPlayers || isPlayerCombatant(combatant);
+		});
+	}
+
+	function getCombatantTrackCardElement(combatantId: string): HTMLElement | null {
+		if (!trackElement || !combatantId) return null;
+		return trackElement.querySelector<HTMLElement>(
+			`.nimble-ncct__portrait[data-combatant-id="${combatantId}"]`,
+		);
+	}
+
+	function resolvePreviewBeforeState(relative: number, targetId: string): boolean {
+		if (relative <= DRAG_SWITCH_UPPER_RATIO) return true;
+		if (relative >= DRAG_SWITCH_LOWER_RATIO) return false;
+		if (dragPreview?.targetId === targetId) return dragPreview.before;
+		return relative < 0.5;
+	}
+
 	function getPreviewTargetFromPointer(
 		clientX: number,
 		source: Combatant.Implementation,
 	): { target: Combatant.Implementation; before: boolean } | null {
 		if (!trackElement) return null;
 
-		const sourcePriority = getCombatantTypePriority(source);
-		const candidates = sceneAliveCombatants.filter((combatant) => {
-			if ((combatant.id ?? '') === (source.id ?? '')) return false;
-			if (isCombatantDead(combatant)) return false;
-			if (getCombatantTypePriority(combatant) !== sourcePriority) return false;
-			return true;
-		});
+		const candidates = getDragPreviewCandidates(source);
 		if (candidates.length < 1) return null;
 
 		const expansionPx = getDragTargetExpansionPx();
-		let bestTarget: Combatant.Implementation | null = null;
-		let bestRect: DOMRect | null = null;
+		let bestMatch: { target: Combatant.Implementation; rect: DOMRect; targetId: string } | null = null;
 		let bestDistance = Number.POSITIVE_INFINITY;
 
 		for (const candidate of candidates) {
-			const candidateId = candidate.id ?? '';
+			const candidateId = getCombatantId(candidate);
 			if (!candidateId) continue;
 
-			const row = trackElement.querySelector<HTMLElement>(
-				`.nimble-ncct__portrait[data-combatant-id="${candidateId}"]`,
-			);
+			const row = getCombatantTrackCardElement(candidateId);
 			if (!row) continue;
 
 			const rect = row.getBoundingClientRect();
@@ -801,27 +953,14 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 
 			if (distance < bestDistance) {
 				bestDistance = distance;
-				bestTarget = candidate;
-				bestRect = rect;
+				bestMatch = { target: candidate, rect, targetId: candidateId };
 			}
 		}
 
-		if (!bestTarget || !bestRect) return null;
-
-		const relative = (clientX - bestRect.left) / Math.max(1, bestRect.width);
-		let before: boolean;
-
-		if (relative <= DRAG_SWITCH_UPPER_RATIO) {
-			before = true;
-		} else if (relative >= DRAG_SWITCH_LOWER_RATIO) {
-			before = false;
-		} else if (dragPreview?.targetId === (bestTarget.id ?? '')) {
-			before = dragPreview.before;
-		} else {
-			before = relative < 0.5;
-		}
-
-		return { target: bestTarget, before };
+		if (!bestMatch) return null;
+		const relative = (clientX - bestMatch.rect.left) / Math.max(1, bestMatch.rect.width);
+		const before = resolvePreviewBeforeState(relative, bestMatch.targetId);
+		return { target: bestMatch.target, before };
 	}
 
 	function getDragPreview(event: DragEvent): CombatantDropPreview | null {
@@ -1006,9 +1145,6 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 					return;
 				}
 				case 'end-combat': {
-					const asRecord = actionCombat as unknown as {
-						endCombat?: () => Promise<unknown> | unknown;
-					};
 					const combatId = actionCombat.id ?? actionCombat._id ?? null;
 					logNcctControl('end-combat requested', {
 						combatId,
@@ -1016,8 +1152,9 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 						started: isCombatStarted(actionCombat),
 						round: actionCombat.round ?? 0,
 					});
-					if (typeof asRecord.endCombat === 'function') await asRecord.endCombat();
-					else await actionCombat.delete();
+					const confirmed = await confirmEndEncounter();
+					if (!confirmed) return;
+					await actionCombat.delete();
 					if (preferredCombatId === combatId) preferredCombatId = null;
 					ui.combat?.render(true);
 					updateCurrentCombat(true);
@@ -1111,16 +1248,14 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 	});
 	let canCurrentUserEndTurn = $derived.by(() => canCurrentUserEndCombatantTurn(activeCombatant));
 	let activeEntryKey = $derived.by(() => {
-		if (!activeCombatantId) return aliveEntries[0]?.key ?? null;
-		if (
-			shouldCollapseMonsterCards &&
-			sceneAllMonsterCombatants.some((combatant) => combatant.id === activeCombatantId)
-		) {
-			return 'monster-stack';
-		}
-		const activeCombatantKey = `combatant-${activeCombatantId}`;
-		if (aliveEntries.some((entry) => entry.key === activeCombatantKey)) return activeCombatantKey;
-		return aliveEntries[0]?.key ?? null;
+		const activeOccurrence = getActiveCombatantOccurrence(currentCombat, activeCombatantId);
+		return resolveActiveEntryKey({
+			activeCombatantId,
+			activeOccurrence,
+			aliveEntries,
+			collapseMonsters: shouldCollapseMonsterCards,
+			monsterCombatants: sceneAllMonsterCombatants,
+		});
 	});
 	let orderedAliveEntries = $derived.by(() =>
 		orderEntriesForCenteredActive(aliveEntries, activeEntryKey, centerActiveCardEnabled),
@@ -1313,7 +1448,7 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 						{/if}
 						{#if entry.kind === 'combatant' && entry.combatant}
 							{@const actionState = getActionState(entry.combatant)}
-							{@const combatantId = entry.combatant.id ?? entry.combatant._id ?? ''}
+							{@const combatantId = getCombatantId(entry.combatant)}
 							{@const canDragEntry = canDragCombatant(entry.combatant)}
 							<li
 								class="nimble-ncct__portrait"
@@ -1402,13 +1537,13 @@ type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 						</li>
 					{/if}
 
-						{#if renderedDeadCombatants.length > 0}
-							<li class="nimble-ncct__dead">Dead</li>
-							{#each renderedDeadCombatants as combatant (combatant._id)}
-								{@const actionState = getActionState(combatant)}
+					{#if renderedDeadCombatants.length > 0}
+						<li class="nimble-ncct__dead">Dead</li>
+						{#each renderedDeadCombatants as combatant (combatant._id)}
+							{@const actionState = getActionState(combatant)}
 							<li
 								class="nimble-ncct__portrait nimble-ncct__portrait--dead"
-								data-track-key={`dead-${combatant.id ?? combatant._id ?? ''}`}
+								data-track-key={`dead-${getCombatantId(combatant)}`}
 								data-tooltip={getCombatantDisplayName(combatant)}
 								onclick={(event) => handleCombatantCardClick(event, combatant)}
 								oncontextmenu={(event) => handleCombatantCardContextMenu(event, combatant)}
