@@ -287,7 +287,7 @@
 		width: var(--nimble-sheet-sidebar-width);
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
+		justify-content: flex-start;
 		gap: 0.75rem;
 		z-index: 400;
 	}

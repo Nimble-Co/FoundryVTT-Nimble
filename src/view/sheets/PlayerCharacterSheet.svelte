@@ -585,29 +585,31 @@
 			</span>
 		</span>
 	</button>
-	<button
-		class="nimble-button"
-		data-button-variant="overhang"
-		aria-label={localize('NIMBLE.prompts.levelUp')}
-		data-tooltip={localize('NIMBLE.prompts.levelUp')}
-		onclick={() => actor.triggerLevelUp()}
-		disabled={!editingEnabled || !classItem || classItem?.system?.classLevel >= 20}
-		type="button"
-	>
-		<i class="fa-solid fa-arrow-up-right-dots"></i>
-	</button>
+	{#if editingEnabled}
+		<button
+			class="nimble-button"
+			data-button-variant="overhang"
+			aria-label={localize('NIMBLE.prompts.levelUp')}
+			data-tooltip={localize('NIMBLE.prompts.levelUp')}
+			onclick={() => actor.triggerLevelUp()}
+			disabled={!classItem || classItem?.system?.classLevel >= 20}
+			type="button"
+		>
+			<i class="fa-solid fa-arrow-up-right-dots"></i>
+		</button>
 
-	<button
-		class="nimble-button"
-		data-button-variant="overhang"
-		aria-label="Revert Last Level Up"
-		data-tooltip="Revert Last Level Up"
-		onclick={() => actor.triggerLevelDown()}
-		disabled={!editingEnabled || actor.reactive.system.levelUpHistory.length === 0}
-		type="button"
-	>
-		<i class="fa-solid fa-undo"></i>
-	</button>
+		<button
+			class="nimble-button"
+			data-button-variant="overhang"
+			aria-label="Revert Last Level Up"
+			data-tooltip="Revert Last Level Up"
+			onclick={() => actor.triggerLevelDown()}
+			disabled={actor.reactive.system.levelUpHistory.length === 0}
+			type="button"
+		>
+			<i class="fa-solid fa-undo"></i>
+		</button>
+	{/if}
 
 	<button
 		class="nimble-button"
@@ -642,32 +644,35 @@
 		width: 2.1rem;
 		height: 1rem;
 		border-radius: 999px;
-		background: hsl(0, 0%, 55%);
-		border: 1px solid hsl(0, 0%, 55%);
+		background: var(--nimble-sheet-background);
+		border: none;
+		box-shadow: var(--nimble-navigation-button-box-shadow);
 		display: flex;
 		align-items: center;
-		transition:
-			background-color 0.2s ease-in-out,
-			border-color 0.2s ease-in-out;
+		transition: background-color 0.2s ease-in-out;
 	}
 
-	.nimble-edit-toggle--enabled .nimble-edit-toggle__track {
-		background: var(--nimble-overhang-button-text-color);
-		border: 1px solid var(--nimble-overhang-button-text-color);
+	.nimble-edit-toggle--disabled .nimble-edit-toggle__track {
+		background: hsl(0, 0%, 20%);
+		box-shadow:
+			0 0 0 1px hsl(0, 0%, 35%),
+			0 0 0 2px hsl(0, 0%, 12%),
+			0 3px 5px rgba(0, 0, 0, 0.4);
 	}
 
 	.nimble-edit-toggle__thumb {
 		position: absolute;
-		left: 0.1rem;
-		width: 0.85rem;
-		height: 0.85rem;
+		left: 0;
+		width: 1rem;
+		height: 1rem;
 		border-radius: 50%;
-		background: var(--nimble-overhang-button-text-color);
+		background: #842c2b;
+		border: 2px solid var(--nimble-initiative-border-color);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		color: hsl(215, 30%, 12%);
-		font-size: 0.45rem;
+		color: hsl(0, 0%, 95%);
+		font-size: 0.5rem;
 		transform: translateX(0);
 		transition:
 			transform 0.2s ease-in-out,
@@ -676,9 +681,9 @@
 	}
 
 	.nimble-edit-toggle--disabled .nimble-edit-toggle__thumb {
-		transform: translateX(1.05rem);
-		background: hsl(0, 0%, 75%);
-		color: hsl(0, 0%, 40%);
+		transform: translateX(1.1rem);
+		background: hsl(0, 0%, 65%);
+		color: hsl(0, 0%, 20%);
 	}
 
 	.nimble-player-character-header {
