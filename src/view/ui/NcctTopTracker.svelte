@@ -1639,6 +1639,8 @@
 		pointer-events: none;
 	}
 	.nimble-ncct {
+		--nimble-ncct-hover-hitbox-inline: 0.45rem;
+		pointer-events: auto;
 		display: grid;
 		grid-template-columns: auto auto auto;
 		gap: 0.2rem;
@@ -1646,9 +1648,12 @@
 		justify-content: center;
 		width: fit-content;
 		max-width: min(98vw, calc(var(--nimble-ncct-track-max-width) + 7rem));
+		/* Extend hover/focus activation zone slightly past side control bars. */
+		padding-inline: var(--nimble-ncct-hover-hitbox-inline);
+		margin-inline: calc(var(--nimble-ncct-hover-hitbox-inline) * -1);
 	}
 	.nimble-ncct__controls {
-		pointer-events: all;
+		pointer-events: none;
 		display: flex;
 		flex-direction: column;
 		gap: 0.2rem;
@@ -1656,11 +1661,18 @@
 		border: 1px solid color-mix(in srgb, hsl(41 18% 54%) 60%, transparent);
 		border-radius: 0.2rem;
 		background: color-mix(in srgb, hsl(226 27% 8%) 86%, transparent);
-		opacity: 0.78;
-		transition: opacity 120ms ease;
+		opacity: 0;
+		visibility: hidden;
+		transition:
+			opacity 120ms ease,
+			visibility 0s linear 120ms;
 	}
-	.nimble-ncct-shell:hover .nimble-ncct__controls {
+	.nimble-ncct:hover .nimble-ncct__controls,
+	.nimble-ncct:focus-within .nimble-ncct__controls {
+		pointer-events: all;
 		opacity: 1;
+		visibility: visible;
+		transition: opacity 120ms ease;
 	}
 	.nimble-ncct__icon-button {
 		width: 1.55rem;
@@ -1704,7 +1716,25 @@
 		min-width: 0;
 		overflow-x: auto;
 		overflow-y: hidden;
+		scrollbar-width: none;
+	}
+	.nimble-ncct__track::-webkit-scrollbar {
+		height: 0;
+	}
+	.nimble-ncct:hover .nimble-ncct__track,
+	.nimble-ncct:focus-within .nimble-ncct__track {
 		scrollbar-width: thin;
+	}
+	.nimble-ncct:hover .nimble-ncct__track::-webkit-scrollbar,
+	.nimble-ncct:focus-within .nimble-ncct__track::-webkit-scrollbar {
+		height: 0.44rem;
+	}
+	.nimble-ncct__track::-webkit-scrollbar-thumb {
+		background: color-mix(in srgb, hsl(0 0% 93%) 38%, transparent);
+		border-radius: 999px;
+	}
+	.nimble-ncct__track::-webkit-scrollbar-track {
+		background: transparent;
 	}
 	.nimble-ncct__portrait {
 		position: relative;
@@ -1981,6 +2011,20 @@
 		}
 		.nimble-ncct__banner {
 			font-size: 0.9rem;
+		}
+	}
+	@media (hover: none) {
+		.nimble-ncct__controls {
+			pointer-events: all;
+			opacity: 1;
+			visibility: visible;
+			transition: none;
+		}
+		.nimble-ncct__track {
+			scrollbar-width: thin;
+		}
+		.nimble-ncct__track::-webkit-scrollbar {
+			height: 0.44rem;
 		}
 	}
 </style>
