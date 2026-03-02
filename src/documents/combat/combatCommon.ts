@@ -14,6 +14,25 @@ export function getCombatantManualSortValue(combatant: Combatant.Implementation)
 	return Number((combatant.system as unknown as { sort?: number }).sort ?? 0);
 }
 
+function resolveNeighborSortValue(params: {
+	previous: Combatant.Implementation | null;
+	next: Combatant.Implementation | null;
+	sortBefore: boolean;
+}): number | null {
+	if (params.previous && params.next) {
+		const previousSort = getCombatantManualSortValue(params.previous);
+		const nextSort = getCombatantManualSortValue(params.next);
+		if (previousSort === nextSort) {
+			return previousSort + (params.sortBefore ? -0.5 : 0.5);
+		}
+		return previousSort + (nextSort - previousSort) / 2;
+	}
+
+	if (params.previous) return getCombatantManualSortValue(params.previous) + 1;
+	if (params.next) return getCombatantManualSortValue(params.next) - 1;
+	return null;
+}
+
 export function getSourceSortValueForDrop(
 	source: Combatant.Implementation,
 	target: Combatant.Implementation,
@@ -27,17 +46,8 @@ export function getSourceSortValueForDrop(
 	const previous = insertIndex > 0 ? siblings[insertIndex - 1] : null;
 	const next = insertIndex < siblings.length ? siblings[insertIndex] : null;
 
-	if (previous && next) {
-		const previousSort = getCombatantManualSortValue(previous);
-		const nextSort = getCombatantManualSortValue(next);
-		if (previousSort === nextSort) {
-			return previousSort + (sortBefore ? -0.5 : 0.5);
-		}
-		return previousSort + (nextSort - previousSort) / 2;
-	}
-
-	if (previous) return getCombatantManualSortValue(previous) + 1;
-	if (next) return getCombatantManualSortValue(next) - 1;
+	const neighborSortValue = resolveNeighborSortValue({ previous, next, sortBefore });
+	if (neighborSortValue !== null) return neighborSortValue;
 	return getCombatantManualSortValue(source);
 }
 

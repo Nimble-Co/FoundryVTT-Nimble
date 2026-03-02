@@ -155,6 +155,14 @@
 		return Math.min(max, Math.max(min, value));
 	}
 
+	function firstNonEmptyString(values: Array<string | null | undefined>): string | null {
+		for (const value of values) {
+			if (typeof value !== 'string') continue;
+			if (value.length > 0) return value;
+		}
+		return null;
+	}
+
 	function getWheelDeltaPx(event: WheelEvent): number {
 		const dominantDelta =
 			Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
@@ -232,6 +240,139 @@
 		rootStyle.setProperty('--nimble-combat-chat-form-reserve-bottom', '0px');
 	}
 
+	function buildCombatTrackerReserveInsets(
+		sidebarWidthPx: number,
+		trackerHeightPx: number,
+	): CombatTrackerReserveInsets {
+		return {
+			top: combatTrackerLocation === 'top' ? trackerHeightPx : 0,
+			right: combatTrackerLocation === 'right' ? sidebarWidthPx : 0,
+			bottom:
+				combatTrackerLocation === 'bottom'
+					? trackerHeightPx + COMBAT_TRACKER_BOTTOM_PROTECTED_UI_GAP_PX
+					: 0,
+			left: combatTrackerLocation === 'left' ? sidebarWidthPx : 0,
+		};
+	}
+
+	function setReserveInsetVariables(
+		rootStyle: CSSStyleDeclaration,
+		reserveInsets: CombatTrackerReserveInsets,
+	): void {
+		rootStyle.setProperty('--nimble-combat-scene-reserve-top', `${Math.round(reserveInsets.top)}px`);
+		rootStyle.setProperty(
+			'--nimble-combat-scene-reserve-right',
+			`${Math.round(reserveInsets.right)}px`,
+		);
+		rootStyle.setProperty(
+			'--nimble-combat-scene-reserve-bottom',
+			`${Math.round(reserveInsets.bottom)}px`,
+		);
+		rootStyle.setProperty('--nimble-combat-scene-reserve-left', `${Math.round(reserveInsets.left)}px`);
+	}
+
+	function hasBottomOffsetStyle(element: HTMLElement | null): boolean {
+		if (!element) return false;
+		const position = globalThis.getComputedStyle(element).position;
+		return position === 'absolute' || position === 'fixed' || position === 'relative' || position === 'sticky';
+	}
+
+	function isElementContainedBy(
+		containerSelector: string,
+		childSelector: string,
+	): boolean {
+		const containerElement = document.querySelector<HTMLElement>(containerSelector);
+		const childElement = document.querySelector<HTMLElement>(childSelector);
+		if (!containerElement || !childElement) return false;
+		return containerElement.contains(childElement);
+	}
+
+	function resolveBottomReserveVariables(reserveBottomPx: number): {
+		hotbarReserveBottomPx: number;
+		hotbarReserveMarginBottomPx: number;
+		playersReserveBottomPx: number;
+		chatControlsReserveBottomPx: number;
+		chatFormReserveBottomPx: number;
+	} {
+		let hotbarReserveBottomPx = reserveBottomPx;
+		let hotbarReserveMarginBottomPx = 0;
+		let playersReserveBottomPx = reserveBottomPx;
+		let chatControlsReserveBottomPx = reserveBottomPx;
+		let chatFormReserveBottomPx = reserveBottomPx;
+		if (reserveBottomPx < 1) {
+			return {
+				hotbarReserveBottomPx,
+				hotbarReserveMarginBottomPx,
+				playersReserveBottomPx,
+				chatControlsReserveBottomPx,
+				chatFormReserveBottomPx,
+			};
+		}
+
+		const hotbarElement = document.querySelector<HTMLElement>('#interface #hotbar, #hotbar');
+		if (!hasBottomOffsetStyle(hotbarElement)) {
+			hotbarReserveBottomPx = 0;
+			hotbarReserveMarginBottomPx = reserveBottomPx;
+		}
+
+		if (isElementContainedBy('#interface #ui-left, #ui-left', '#interface #players, #players')) {
+			playersReserveBottomPx = 0;
+		}
+		if (
+			isElementContainedBy(
+				'#interface #ui-right, #ui-right',
+				'#interface #chat-controls, #chat-controls',
+			)
+		) {
+			chatControlsReserveBottomPx = 0;
+		}
+		if (
+			isElementContainedBy('#interface #ui-right, #ui-right', '#interface #chat-form, #chat-form')
+		) {
+			chatFormReserveBottomPx = 0;
+		}
+
+		return {
+			hotbarReserveBottomPx,
+			hotbarReserveMarginBottomPx,
+			playersReserveBottomPx,
+			chatControlsReserveBottomPx,
+			chatFormReserveBottomPx,
+		};
+	}
+
+	function setBottomReserveVariables(
+		rootStyle: CSSStyleDeclaration,
+		bottomReserves: {
+			hotbarReserveBottomPx: number;
+			hotbarReserveMarginBottomPx: number;
+			playersReserveBottomPx: number;
+			chatControlsReserveBottomPx: number;
+			chatFormReserveBottomPx: number;
+		},
+	): void {
+		rootStyle.setProperty(
+			'--nimble-combat-hotbar-reserve-bottom',
+			`${Math.round(bottomReserves.hotbarReserveBottomPx)}px`,
+		);
+		rootStyle.setProperty(
+			'--nimble-combat-hotbar-reserve-margin-bottom',
+			`${Math.round(bottomReserves.hotbarReserveMarginBottomPx)}px`,
+		);
+		rootStyle.setProperty(
+			'--nimble-combat-players-reserve-bottom',
+			`${Math.round(bottomReserves.playersReserveBottomPx)}px`,
+		);
+		rootStyle.setProperty(
+			'--nimble-combat-chat-controls-reserve-bottom',
+			`${Math.round(bottomReserves.chatControlsReserveBottomPx)}px`,
+		);
+		rootStyle.setProperty(
+			'--nimble-combat-chat-form-reserve-bottom',
+			`${Math.round(bottomReserves.chatFormReserveBottomPx)}px`,
+		);
+	}
+
 	function updateCombatTrackerSceneReserveInsets(): void {
 		if (!currentCombat) {
 			clearCombatTrackerSceneReserveInsets();
@@ -241,113 +382,39 @@
 		const rootFontSizePx = getRootFontSizePx();
 		const sidebarWidthPx = combatTrackerWidthRem * rootFontSizePx;
 		const trackerHeightPx = combatTrackerDisplayedHeightRem * rootFontSizePx;
-		const reserveInsets: CombatTrackerReserveInsets = {
-			top: combatTrackerLocation === 'top' ? trackerHeightPx : 0,
-			right: combatTrackerLocation === 'right' ? sidebarWidthPx : 0,
-			bottom:
-				combatTrackerLocation === 'bottom'
-					? trackerHeightPx + COMBAT_TRACKER_BOTTOM_PROTECTED_UI_GAP_PX
-					: 0,
-			left: combatTrackerLocation === 'left' ? sidebarWidthPx : 0,
-		};
+		const reserveInsets = buildCombatTrackerReserveInsets(sidebarWidthPx, trackerHeightPx);
 
 		const rootStyle = document.documentElement.style;
-		rootStyle.setProperty(
-			'--nimble-combat-scene-reserve-top',
-			`${Math.round(reserveInsets.top)}px`,
-		);
-		rootStyle.setProperty(
-			'--nimble-combat-scene-reserve-right',
-			`${Math.round(reserveInsets.right)}px`,
-		);
-		rootStyle.setProperty(
-			'--nimble-combat-scene-reserve-bottom',
-			`${Math.round(reserveInsets.bottom)}px`,
-		);
-		rootStyle.setProperty(
-			'--nimble-combat-scene-reserve-left',
-			`${Math.round(reserveInsets.left)}px`,
-		);
+		setReserveInsetVariables(rootStyle, reserveInsets);
+		const bottomReserves = resolveBottomReserveVariables(reserveInsets.bottom);
+		setBottomReserveVariables(rootStyle, bottomReserves);
+	}
 
-		let hotbarReserveBottomPx = reserveInsets.bottom;
-		let hotbarReserveMarginBottomPx = 0;
-		let playersReserveBottomPx = reserveInsets.bottom;
-		let chatControlsReserveBottomPx = reserveInsets.bottom;
-		let chatFormReserveBottomPx = reserveInsets.bottom;
+	function resolveDirectCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
+		const directSceneId = combatant.sceneId;
+		if (directSceneId) return directSceneId;
+		const parentSceneId = combatant.token?.parent?.id;
+		if (parentSceneId) return parentSceneId;
+		return undefined;
+	}
 
-		if (reserveInsets.bottom > 0) {
-			const hotbarElement = document.querySelector<HTMLElement>('#interface #hotbar, #hotbar');
-			if (hotbarElement) {
-				const hotbarPosition = globalThis.getComputedStyle(hotbarElement).position;
-				const hotbarUsesBottomOffset =
-					hotbarPosition === 'absolute' ||
-					hotbarPosition === 'fixed' ||
-					hotbarPosition === 'relative' ||
-					hotbarPosition === 'sticky';
-
-				if (!hotbarUsesBottomOffset) {
-					hotbarReserveBottomPx = 0;
-					hotbarReserveMarginBottomPx = reserveInsets.bottom;
-				}
-			}
-
-			const uiLeftElement = document.querySelector<HTMLElement>('#interface #ui-left, #ui-left');
-			const playersElement = document.querySelector<HTMLElement>('#interface #players, #players');
-			if (uiLeftElement && playersElement && uiLeftElement.contains(playersElement)) {
-				playersReserveBottomPx = 0;
-			}
-
-			const uiRightElement = document.querySelector<HTMLElement>('#interface #ui-right, #ui-right');
-			const chatControlsElement = document.querySelector<HTMLElement>(
-				'#interface #chat-controls, #chat-controls',
-			);
-			if (uiRightElement && chatControlsElement && uiRightElement.contains(chatControlsElement)) {
-				chatControlsReserveBottomPx = 0;
-			}
-
-			const chatFormElement = document.querySelector<HTMLElement>(
-				'#interface #chat-form, #chat-form',
-			);
-			if (uiRightElement && chatFormElement && uiRightElement.contains(chatFormElement)) {
-				chatFormReserveBottomPx = 0;
-			}
-		}
-
-		rootStyle.setProperty(
-			'--nimble-combat-hotbar-reserve-bottom',
-			`${Math.round(hotbarReserveBottomPx)}px`,
-		);
-		rootStyle.setProperty(
-			'--nimble-combat-hotbar-reserve-margin-bottom',
-			`${Math.round(hotbarReserveMarginBottomPx)}px`,
-		);
-		rootStyle.setProperty(
-			'--nimble-combat-players-reserve-bottom',
-			`${Math.round(playersReserveBottomPx)}px`,
-		);
-		rootStyle.setProperty(
-			'--nimble-combat-chat-controls-reserve-bottom',
-			`${Math.round(chatControlsReserveBottomPx)}px`,
-		);
-		rootStyle.setProperty(
-			'--nimble-combat-chat-form-reserve-bottom',
-			`${Math.round(chatFormReserveBottomPx)}px`,
-		);
+	function resolveCurrentSceneCombatantSceneId(
+		combatant: Combatant.Implementation,
+	): string | undefined {
+		const sceneId = canvas.scene?.id;
+		if (!sceneId) return undefined;
+		const tokenId = combatant.tokenId?.trim() ?? '';
+		if (!tokenId) return undefined;
+		const tokenDoc = canvas.scene?.tokens?.get(tokenId);
+		if (tokenDoc) return sceneId;
+		return undefined;
 	}
 
 	function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
-		// Try multiple ways to get the combatant's scene ID
-		// 1. Direct sceneId property
-		if (combatant.sceneId) return combatant.sceneId;
-		// 2. Token's parent scene
-		if (combatant.token?.parent?.id) return combatant.token.parent.id;
-		// 3. Check if token document exists on current scene
-		const sceneId = canvas.scene?.id;
-		if (sceneId && combatant.tokenId) {
-			const tokenDoc = canvas.scene?.tokens?.get(combatant.tokenId);
-			if (tokenDoc) return sceneId;
-		}
-		return undefined;
+		return (
+			resolveDirectCombatantSceneId(combatant) ??
+			resolveCurrentSceneCombatantSceneId(combatant)
+		);
 	}
 
 	function hasCombatantsForScene(combat: Combat, sceneId: string): boolean {
@@ -378,15 +445,7 @@
 			groupedStackMemberNamesByLeaderId.set(
 				leader.id,
 				summary.aliveMembers
-					.map(
-						(member) =>
-							member.token?.reactive?.name ??
-							member.token?.name ??
-							member.token?.actor?.reactive?.name ??
-							member.reactive?.name ??
-							member.name ??
-							'Unknown',
-					)
+					.map((member) => resolveGroupedStackMemberName(member))
 					.sort((left, right) => left.localeCompare(right)),
 			);
 		}
@@ -395,6 +454,18 @@
 			countsByLeaderId: groupedStackMemberCountsByLeaderId,
 			memberNamesByLeaderId: groupedStackMemberNamesByLeaderId,
 		};
+	}
+
+	function resolveGroupedStackMemberName(combatant: Combatant.Implementation): string {
+		return (
+			firstNonEmptyString([
+				combatant.token?.reactive?.name,
+				combatant.token?.name,
+				combatant.token?.actor?.reactive?.name,
+				combatant.reactive?.name,
+				combatant.name,
+			]) ?? 'Unknown'
+		);
 	}
 
 	function getCombatantsForScene(
@@ -468,27 +539,29 @@
 		};
 	}
 
+	function getActiveCombatForCurrentScene(sceneId: string): Combat | null {
+		const activeCombat = game.combat;
+		if (!activeCombat) return null;
+		const isActiveCombat = activeCombat.active === true;
+		const matchesScene = activeCombat.scene?.id === sceneId;
+		return isActiveCombat && matchesScene ? activeCombat : null;
+	}
+
+	function getViewedCombatForCurrentScene(sceneId: string): Combat | null {
+		const viewedCombat = game.combats.viewed ?? null;
+		if (viewedCombat && viewedCombat.scene?.id === sceneId) return viewedCombat;
+		return null;
+	}
+
 	function getCombatForCurrentScene(): Combat | null {
 		const sceneId = canvas.scene?.id;
 		if (!sceneId) return null;
-
-		// Prefer the active combat for this scene, even if it currently has no combatants.
-		const activeCombat = game.combat;
-		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
-			return activeCombat;
-		}
-
-		// Next, use the viewed combat for this scene when present.
-		const viewedCombat = game.combats.viewed ?? null;
-		if (viewedCombat?.scene?.id === sceneId) {
-			return viewedCombat;
-		}
-
-		// Otherwise return the first combat that has combatants for this scene.
-		const combatsForScene = game.combats.contents.filter((combat) =>
-			hasCombatantsForScene(combat, sceneId),
+		return (
+			getActiveCombatForCurrentScene(sceneId) ??
+			getViewedCombatForCurrentScene(sceneId) ??
+			game.combats.contents.find((combat) => hasCombatantsForScene(combat, sceneId)) ??
+			null
 		);
-		return combatsForScene[0] ?? null;
 	}
 
 	function getCombatantComponent(combatant: Combatant.Implementation) {
@@ -683,6 +756,75 @@
 		return getRootFontSizePx() * DRAG_TARGET_EXPANSION_REM * combatTrackerScale;
 	}
 
+	function getDragPointerValue(clientX: number, clientY: number, isHorizontal: boolean): number {
+		return isHorizontal ? clientX : clientY;
+	}
+
+	function getDragTargetCandidates(source: Combatant.Implementation): Combatant.Implementation[] {
+		const sourcePriority = getCombatantTypePriority(source);
+		return sceneCombatants.filter((combatant) => {
+			if (combatant.id === source.id) return false;
+			if (isCombatantDead(combatant)) return false;
+			return getCombatantTypePriority(combatant) === sourcePriority;
+		});
+	}
+
+	function getExpandedDistanceToRect(params: {
+		rect: DOMRect;
+		pointerValue: number;
+		isHorizontal: boolean;
+		expansionPx: number;
+	}): number {
+		const rectStart = params.isHorizontal ? params.rect.left : params.rect.top;
+		const rectEnd = params.isHorizontal ? params.rect.right : params.rect.bottom;
+		const expandedStart = rectStart - params.expansionPx;
+		const expandedEnd = rectEnd + params.expansionPx;
+		if (params.pointerValue < expandedStart) return expandedStart - params.pointerValue;
+		if (params.pointerValue > expandedEnd) return params.pointerValue - expandedEnd;
+		return 0;
+	}
+
+	function findClosestPreviewTarget(params: {
+		candidates: Combatant.Implementation[];
+		pointerValue: number;
+		isHorizontal: boolean;
+		expansionPx: number;
+	}): { target: Combatant.Implementation; rect: DOMRect } | null {
+		if (!combatantsListElement) return null;
+		let bestTarget: Combatant.Implementation | null = null;
+		let bestRect: DOMRect | null = null;
+		let bestDistance = Number.POSITIVE_INFINITY;
+
+		for (const candidate of params.candidates) {
+			const row = combatantsListElement.querySelector<HTMLElement>(
+				`.nimble-combatants__item[data-combatant-id="${candidate.id}"]`,
+			);
+			if (!row) continue;
+
+			const rect = row.getBoundingClientRect();
+			const distance = getExpandedDistanceToRect({
+				rect,
+				pointerValue: params.pointerValue,
+				isHorizontal: params.isHorizontal,
+				expansionPx: params.expansionPx,
+			});
+			if (distance >= bestDistance) continue;
+			bestDistance = distance;
+			bestTarget = candidate;
+			bestRect = rect;
+		}
+
+		if (!bestTarget || !bestRect) return null;
+		return { target: bestTarget, rect: bestRect };
+	}
+
+	function resolveDropBeforePosition(relative: number, targetId: string): boolean {
+		if (relative <= DRAG_SWITCH_UPPER_RATIO) return true;
+		if (relative >= DRAG_SWITCH_LOWER_RATIO) return false;
+		if (dragPreview?.targetId === targetId) return dragPreview.before;
+		return relative < 0.5;
+	}
+
 	function getPreviewTargetFromPointer(
 		clientX: number,
 		clientY: number,
@@ -691,77 +833,43 @@
 		if (!combatantsListElement) return null;
 
 		const isHorizontalLayout = isHorizontalCombatTrackerLocation(combatTrackerLocation);
-		const sourcePriority = getCombatantTypePriority(source);
-		const candidates = sceneCombatants.filter(
-			(combatant) =>
-				combatant.id !== source.id &&
-				!isCombatantDead(combatant) &&
-				getCombatantTypePriority(combatant) === sourcePriority,
-		);
+		const candidates = getDragTargetCandidates(source);
 		if (candidates.length === 0) return null;
 
-		const expansionPx = getDragTargetExpansionPx();
-		let bestTarget: Combatant.Implementation | null = null;
-		let bestRect: DOMRect | null = null;
-		let bestDistance = Number.POSITIVE_INFINITY;
+		const pointerValue = getDragPointerValue(clientX, clientY, isHorizontalLayout);
+		const closestTarget = findClosestPreviewTarget({
+			candidates,
+			pointerValue,
+			isHorizontal: isHorizontalLayout,
+			expansionPx: getDragTargetExpansionPx(),
+		});
+		if (!closestTarget) return null;
 
-		for (const candidate of candidates) {
-			const row = combatantsListElement.querySelector<HTMLElement>(
-				`.nimble-combatants__item[data-combatant-id="${candidate.id}"]`,
-			);
-			if (!row) continue;
-
-			const rect = row.getBoundingClientRect();
-			const rectStart = isHorizontalLayout ? rect.left : rect.top;
-			const rectEnd = isHorizontalLayout ? rect.right : rect.bottom;
-			const expandedStart = rectStart - expansionPx;
-			const expandedEnd = rectEnd + expansionPx;
-			const pointerValue = isHorizontalLayout ? clientX : clientY;
-
-			const distance =
-				pointerValue < expandedStart
-					? expandedStart - pointerValue
-					: pointerValue > expandedEnd
-						? pointerValue - expandedEnd
-						: 0;
-
-			if (distance < bestDistance) {
-				bestDistance = distance;
-				bestTarget = candidate;
-				bestRect = rect;
-			}
-		}
-
-		if (!bestTarget || !bestRect) return null;
-
-		const pointerValue = isHorizontalLayout ? clientX : clientY;
-		const rectStart = isHorizontalLayout ? bestRect.left : bestRect.top;
-		const rectSize = isHorizontalLayout ? bestRect.width : bestRect.height;
+		const rectStart = isHorizontalLayout ? closestTarget.rect.left : closestTarget.rect.top;
+		const rectSize = isHorizontalLayout ? closestTarget.rect.width : closestTarget.rect.height;
 		const relative = (pointerValue - rectStart) / Math.max(1, rectSize);
-		let before: boolean;
+		const targetId = closestTarget.target.id ?? '';
+		const before = resolveDropBeforePosition(relative, targetId);
+		return { target: closestTarget.target, before };
+	}
 
-		if (relative <= DRAG_SWITCH_UPPER_RATIO) {
-			before = true;
-		} else if (relative >= DRAG_SWITCH_LOWER_RATIO) {
-			before = false;
-		} else if (dragPreview?.targetId === bestTarget.id) {
-			before = dragPreview.before;
-		} else {
-			before = relative < 0.5;
-		}
-
-		return { target: bestTarget, before };
+	function resolveDragPreviewSourceCombatant(
+		combat: Combat,
+		sourceId: string | null,
+	): Combatant.Implementation | null {
+		if (!sourceId) return null;
+		const source = combat.combatants.get(sourceId);
+		if (!source?.id) return null;
+		if (source.parent?.id !== combat.id) return null;
+		if (isCombatantDead(source)) return null;
+		if (!canCurrentUserReorderCombatant(source)) return null;
+		return source;
 	}
 
 	function getDragPreview(event: DragEvent): CombatantDropPreview | null {
 		if (!currentCombat) return null;
-		if (!activeDragSourceId) return null;
-
-		const source = currentCombat.combatants.get(activeDragSourceId);
-		if (!source?.id) return null;
-		if (source.parent?.id !== currentCombat.id) return null;
-		if (isCombatantDead(source)) return null;
-		if (!canCurrentUserReorderCombatant(source)) return null;
+		const source = resolveDragPreviewSourceCombatant(currentCombat, activeDragSourceId);
+		if (!source) return null;
 
 		const pointerTarget = getPreviewTargetFromPointer(event.clientX, event.clientY, source);
 		if (!pointerTarget) return null;
@@ -834,15 +942,40 @@
 		}
 	}
 
+	function getActiveCombatantCardElement(): HTMLElement | null {
+		if (!combatantsListElement) return null;
+		return (
+			combatantsListElement.querySelector<HTMLElement>('.nimble-combatants__item--active') ??
+			combatantsListElement.querySelector<HTMLElement>('.nimble-combatants__item')
+		);
+	}
+
+	function resolveFloatingEndTurnTop(params: {
+		trackerRect: DOMRect;
+		buttonHeight: number;
+		viewportPaddingPx: number;
+		edgeGapPx: number;
+	}): number {
+		const trackerDockedTop = combatTrackerElement?.classList.contains(
+			'nimble-combat-tracker--location-top',
+		);
+		const trackerDockedBottom = combatTrackerElement?.classList.contains(
+			'nimble-combat-tracker--location-bottom',
+		);
+		const preferredTop =
+			trackerDockedTop && !trackerDockedBottom
+				? params.trackerRect.bottom + params.edgeGapPx
+				: params.trackerRect.top - params.buttonHeight - params.edgeGapPx;
+		const maxTop = window.innerHeight - params.buttonHeight - params.viewportPaddingPx;
+		return clampNumber(preferredTop, params.viewportPaddingPx, maxTop);
+	}
+
 	function updateFloatingEndTurnButtonPosition(): void {
 		if (!showHorizontalFloatingEndTurn || !combatTrackerElement) {
 			return;
 		}
 
-		const activeCardElement = combatantsListElement
-			? (combatantsListElement.querySelector<HTMLElement>('.nimble-combatants__item--active') ??
-				combatantsListElement.querySelector<HTMLElement>('.nimble-combatants__item'))
-			: null;
+		const activeCardElement = getActiveCombatantCardElement();
 		const activeRect = activeCardElement?.getBoundingClientRect();
 		const buttonWidth = floatingEndTurnButtonElement?.offsetWidth ?? 96;
 		const buttonHeight = floatingEndTurnButtonElement?.offsetHeight ?? 28;
@@ -855,19 +988,12 @@
 		const minCenterX = buttonWidth / 2 + viewportPaddingPx;
 		const maxCenterX = window.innerWidth - buttonWidth / 2 - viewportPaddingPx;
 		const centerX = clampNumber(preferredCenterX, minCenterX, maxCenterX);
-		const trackerDockedTop = combatTrackerElement.classList.contains(
-			'nimble-combat-tracker--location-top',
-		);
-		const trackerDockedBottom = combatTrackerElement.classList.contains(
-			'nimble-combat-tracker--location-bottom',
-		);
-		const preferredTop =
-			trackerDockedTop && !trackerDockedBottom
-				? trackerRect.bottom + edgeGapPx
-				: trackerRect.top - buttonHeight - edgeGapPx;
-		const minTop = viewportPaddingPx;
-		const maxTop = window.innerHeight - buttonHeight - viewportPaddingPx;
-		const top = clampNumber(preferredTop, minTop, maxTop);
+		const top = resolveFloatingEndTurnTop({
+			trackerRect,
+			buttonHeight,
+			viewportPaddingPx,
+			edgeGapPx,
+		});
 
 		floatingEndTurnButtonStyle = `left: ${Math.round(centerX)}px; top: ${Math.round(top)}px;`;
 	}
@@ -899,6 +1025,34 @@
 		tempGroupPopoverAnchorElement = null;
 	}
 
+	function resolveTempGroupPopoverAnchorPosition(params: {
+		anchorRect: DOMRect;
+		popoverWidth: number;
+		popoverHeight: number;
+		viewportMarginPx: number;
+		edgeGapPx: number;
+	}): { left: number; top: number } {
+		if (combatTrackerLocation === 'top') {
+			return {
+				left: params.anchorRect.left + (params.anchorRect.width - params.popoverWidth) / 2,
+				top: params.anchorRect.bottom + params.edgeGapPx,
+			};
+		}
+		if (combatTrackerLocation === 'bottom') {
+			return {
+				left: params.anchorRect.left + (params.anchorRect.width - params.popoverWidth) / 2,
+				top: params.anchorRect.top - params.popoverHeight - params.edgeGapPx,
+			};
+		}
+
+		let left = params.anchorRect.right + params.edgeGapPx;
+		const top = params.anchorRect.top + (params.anchorRect.height - params.popoverHeight) / 2;
+		if (left + params.popoverWidth > window.innerWidth - params.viewportMarginPx) {
+			left = params.anchorRect.left - params.popoverWidth - params.edgeGapPx;
+		}
+		return { left, top };
+	}
+
 	function updateTempGroupPopoverPosition(): void {
 		if (!tempGroupPopoverState || !tempGroupPopoverAnchorElement) return;
 
@@ -908,21 +1062,13 @@
 		const viewportMarginPx = 8;
 		const edgeGapPx = 8;
 
-		let left = anchorRect.right + edgeGapPx;
-		let top = anchorRect.top;
-
-		if (combatTrackerLocation === 'top') {
-			left = anchorRect.left + (anchorRect.width - popoverWidth) / 2;
-			top = anchorRect.bottom + edgeGapPx;
-		} else if (combatTrackerLocation === 'bottom') {
-			left = anchorRect.left + (anchorRect.width - popoverWidth) / 2;
-			top = anchorRect.top - popoverHeight - edgeGapPx;
-		} else {
-			top = anchorRect.top + (anchorRect.height - popoverHeight) / 2;
-			if (left + popoverWidth > window.innerWidth - viewportMarginPx) {
-				left = anchorRect.left - popoverWidth - edgeGapPx;
-			}
-		}
+		const anchorPosition = resolveTempGroupPopoverAnchorPosition({
+			anchorRect,
+			popoverWidth,
+			popoverHeight,
+			viewportMarginPx,
+			edgeGapPx,
+		});
 
 		const maxLeft = Math.max(viewportMarginPx, window.innerWidth - popoverWidth - viewportMarginPx);
 		const maxTop = Math.max(
@@ -930,8 +1076,10 @@
 			window.innerHeight - popoverHeight - viewportMarginPx,
 		);
 
-		const nextLeft = Math.round(Math.max(viewportMarginPx, Math.min(maxLeft, left)));
-		const nextTop = Math.round(Math.max(viewportMarginPx, Math.min(maxTop, top)));
+		const nextLeft = Math.round(
+			Math.max(viewportMarginPx, Math.min(maxLeft, anchorPosition.left)),
+		);
+		const nextTop = Math.round(Math.max(viewportMarginPx, Math.min(maxTop, anchorPosition.top)));
 		if (tempGroupPopoverState.left === nextLeft && tempGroupPopoverState.top === nextTop) return;
 
 		tempGroupPopoverState = {
@@ -1153,6 +1301,47 @@
 	let resizeWindowHandler: (() => void) | undefined;
 	let windowScrollHandler: (() => void) | undefined;
 
+	function unregisterHookIfDefined(eventName: Hooks.HookName, hookId: number | undefined): void {
+		if (hookId === undefined) return;
+		Hooks.off(eventName, hookId);
+	}
+
+	function clearFloatingEndTurnPositionFrame(): void {
+		if (floatingEndTurnPositionFrameHandle === undefined) return;
+		cancelAnimationFrame(floatingEndTurnPositionFrameHandle);
+		floatingEndTurnPositionFrameHandle = undefined;
+	}
+
+	function removeCombatTrackerWindowListeners(): void {
+		window.removeEventListener('dragend', handleCombatantDragEnd);
+		window.removeEventListener('nimble-combatant-dragstart', handleCombatantDragStart);
+		window.removeEventListener('nimble-combatant-dragend', handleCombatantDragEnd);
+		window.removeEventListener(
+			'nimble-combat-tracker-animation-settings-preview',
+			handleCurrentTurnAnimationSettingsPreview,
+		);
+		window.removeEventListener(
+			'nimble-combat-tracker-location-preview',
+			handleCombatTrackerLocationPreview,
+		);
+		if (resizeWindowHandler) window.removeEventListener('resize', resizeWindowHandler);
+		if (windowScrollHandler) window.removeEventListener('scroll', windowScrollHandler, true);
+	}
+
+	function removeCombatTrackerHooks(): void {
+		unregisterHookIfDefined('createCombat', createCombatHook);
+		unregisterHookIfDefined('deleteCombat', deleteCombatHook);
+		unregisterHookIfDefined('updateCombat', updateCombatHook);
+		unregisterHookIfDefined('createCombatant', createCombatantHook);
+		unregisterHookIfDefined('deleteCombatant', deleteCombatantHook);
+		unregisterHookIfDefined('updateCombatant', updateCombatantHook);
+		unregisterHookIfDefined('renderSceneNavigation', renderSceneNavigationHook);
+		unregisterHookIfDefined('canvasReady', canvasReadyHook);
+		unregisterHookIfDefined('canvasTearDown', canvasTearDownHook);
+		unregisterHookIfDefined('updateScene', updateSceneHook);
+		unregisterHookIfDefined('updateSetting', updateSettingHook);
+	}
+
 	onMount(() => {
 		combatSidebarViewMode = readStoredSidebarViewMode();
 		setNcswSidebarViewMode(combatSidebarViewMode);
@@ -1271,39 +1460,9 @@
 		stopResizeTracking();
 		clearCombatTrackerSceneReserveInsets();
 		hideTempGroupPopover();
-		if (floatingEndTurnPositionFrameHandle !== undefined) {
-			cancelAnimationFrame(floatingEndTurnPositionFrameHandle);
-		}
-		window.removeEventListener('dragend', handleCombatantDragEnd);
-		window.removeEventListener('nimble-combatant-dragstart', handleCombatantDragStart);
-		window.removeEventListener('nimble-combatant-dragend', handleCombatantDragEnd);
-		window.removeEventListener(
-			'nimble-combat-tracker-animation-settings-preview',
-			handleCurrentTurnAnimationSettingsPreview,
-		);
-		window.removeEventListener(
-			'nimble-combat-tracker-location-preview',
-			handleCombatTrackerLocationPreview,
-		);
-		if (resizeWindowHandler) {
-			window.removeEventListener('resize', resizeWindowHandler);
-		}
-		if (windowScrollHandler) {
-			window.removeEventListener('scroll', windowScrollHandler, true);
-		}
-
-		if (createCombatHook !== undefined) Hooks.off('createCombat', createCombatHook);
-		if (deleteCombatHook !== undefined) Hooks.off('deleteCombat', deleteCombatHook);
-		if (updateCombatHook !== undefined) Hooks.off('updateCombat', updateCombatHook);
-		if (createCombatantHook !== undefined) Hooks.off('createCombatant', createCombatantHook);
-		if (deleteCombatantHook !== undefined) Hooks.off('deleteCombatant', deleteCombatantHook);
-		if (updateCombatantHook !== undefined) Hooks.off('updateCombatant', updateCombatantHook);
-		if (renderSceneNavigationHook !== undefined)
-			Hooks.off('renderSceneNavigation', renderSceneNavigationHook);
-		if (canvasReadyHook !== undefined) Hooks.off('canvasReady', canvasReadyHook);
-		if (canvasTearDownHook !== undefined) Hooks.off('canvasTearDown', canvasTearDownHook);
-		if (updateSceneHook !== undefined) Hooks.off('updateScene', updateSceneHook);
-		if (updateSettingHook !== undefined) Hooks.off('updateSetting', updateSettingHook);
+		clearFloatingEndTurnPositionFrame();
+		removeCombatTrackerWindowListeners();
+		removeCombatTrackerHooks();
 	});
 
 	$effect(() => {

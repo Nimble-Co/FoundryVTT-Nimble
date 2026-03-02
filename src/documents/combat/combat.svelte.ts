@@ -84,22 +84,50 @@ class NimbleCombat extends Combat {
 			if (turnCombatant.id) turnOrder.set(turnCombatant.id, index);
 		}
 
-		return [...combatants].sort((a, b) => {
-			const turnIndexA = turnOrder.get(a.id ?? '') ?? Number.POSITIVE_INFINITY;
-			const turnIndexB = turnOrder.get(b.id ?? '') ?? Number.POSITIVE_INFINITY;
-			const turnOrderDiff = turnIndexA - turnIndexB;
-			if (turnOrderDiff !== 0) return turnOrderDiff;
+		return [...combatants].sort((a, b) => this.#compareCombatantsForTurnOrder(a, b, turnOrder));
+	}
 
-			const manualSortDiff = getCombatantManualSortValue(a) - getCombatantManualSortValue(b);
-			if (manualSortDiff !== 0) return manualSortDiff;
+	#compareCombatantsForTurnOrder(
+		left: Combatant.Implementation,
+		right: Combatant.Implementation,
+		turnOrder: ReadonlyMap<string, number>,
+	): number {
+		const turnOrderDiff = this.#compareCombatantsByTurnIndex(left, right, turnOrder);
+		if (turnOrderDiff !== 0) return turnOrderDiff;
 
-			const initiativeDiff =
-				Number(b.initiative ?? Number.NEGATIVE_INFINITY) -
-				Number(a.initiative ?? Number.NEGATIVE_INFINITY);
-			if (initiativeDiff !== 0) return initiativeDiff;
+		const manualSortDiff = this.#compareCombatantsByManualSort(left, right);
+		if (manualSortDiff !== 0) return manualSortDiff;
 
-			return (a.name ?? '').localeCompare(b.name ?? '');
-		});
+		const initiativeDiff = this.#compareCombatantsByInitiative(left, right);
+		if (initiativeDiff !== 0) return initiativeDiff;
+
+		return (left.name ?? '').localeCompare(right.name ?? '');
+	}
+
+	#compareCombatantsByTurnIndex(
+		left: Combatant.Implementation,
+		right: Combatant.Implementation,
+		turnOrder: ReadonlyMap<string, number>,
+	): number {
+		const turnIndexLeft = turnOrder.get(left.id ?? '') ?? Number.POSITIVE_INFINITY;
+		const turnIndexRight = turnOrder.get(right.id ?? '') ?? Number.POSITIVE_INFINITY;
+		return turnIndexLeft - turnIndexRight;
+	}
+
+	#compareCombatantsByManualSort(
+		left: Combatant.Implementation,
+		right: Combatant.Implementation,
+	): number {
+		return getCombatantManualSortValue(left) - getCombatantManualSortValue(right);
+	}
+
+	#compareCombatantsByInitiative(
+		left: Combatant.Implementation,
+		right: Combatant.Implementation,
+	): number {
+		const leftInitiative = Number(left.initiative ?? Number.NEGATIVE_INFINITY);
+		const rightInitiative = Number(right.initiative ?? Number.NEGATIVE_INFINITY);
+		return rightInitiative - leftInitiative;
 	}
 
 	async #syncTurnToCombatant(
@@ -121,12 +149,23 @@ class NimbleCombat extends Combat {
 		await this.update({ turn: nextTurnIndex });
 	}
 
-	#syncTurnIndexWithAliveTurns() {
-		const currentCombatantId =
-			typeof this.turn === 'number' && this.turn >= 0 && this.turn < this.turns.length
-				? (this.turns[this.turn]?.id ?? null)
-				: (this.combatant?.id ?? null);
+	#resolveCurrentTurnCombatantId(): string | null {
+		const currentTurnIndex = typeof this.turn === 'number' ? this.turn : -1;
+		const isCurrentTurnInRange =
+			currentTurnIndex >= 0 && currentTurnIndex < this.turns.length;
+		if (isCurrentTurnInRange) {
+			return this.turns[currentTurnIndex]?.id ?? null;
+		}
+		return this.combatant?.id ?? null;
+	}
 
+	#resolveBoundedTurnIndex(turnCount: number): number {
+		const currentTurn = Number.isInteger(this.turn) ? Number(this.turn) : 0;
+		return Math.min(Math.max(currentTurn, 0), turnCount - 1);
+	}
+
+	#syncTurnIndexWithAliveTurns() {
+		const currentCombatantId = this.#resolveCurrentTurnCombatantId();
 		const aliveTurns = this.setupTurns();
 		this.turns = aliveTurns;
 
@@ -143,8 +182,7 @@ class NimbleCombat extends Combat {
 			}
 		}
 
-		const currentTurn = Number.isInteger(this.turn) ? Number(this.turn) : 0;
-		this.turn = Math.min(Math.max(currentTurn, 0), aliveTurns.length - 1);
+		this.turn = this.#resolveBoundedTurnIndex(aliveTurns.length);
 	}
 	#combatantHasAnyActionsRemaining(combatant: Combatant.Implementation): boolean {
 		if (combatant.type === 'character') return true;
@@ -160,27 +198,41 @@ class NimbleCombat extends Combat {
 		return getCombatantCurrentActions(combatant) > 0;
 	}
 
-	async #advancePastExhaustedTurns(result: this): Promise<this> {
-		if (!this.turns.length) return result;
+	#shouldAdvancePastCombatant(
+		combatant: Combatant.Implementation | null | undefined,
+	): boolean {
+		if (!combatant) return false;
+		if (combatant.type === 'character') return false;
+		return !this.#combatantHasAnyActionsRemaining(combatant);
+	}
 
-		const hasTurnWithActions = this.turns.some((combatant) =>
-			this.#combatantHasAnyActionsRemaining(combatant),
-		);
-		if (!hasTurnWithActions) return result;
+	#canAdvancePastExhaustedTurns(): boolean {
+		if (!this.turns.length) return false;
+		return this.turns.some((combatant) => this.#combatantHasAnyActionsRemaining(combatant));
+	}
+
+	async #advancePastCurrentCombatant(): Promise<this | null> {
+		const activeCombatant = this.combatant ?? null;
+		if (!activeCombatant) return null;
+		if (!this.#shouldAdvancePastCombatant(activeCombatant)) return null;
+
+		const previousActiveId = activeCombatant.id ?? null;
+		const nextResult = (await super.nextTurn()) as this;
+		this.#syncTurnIndexWithAliveTurns();
+		const nextActiveId = this.combatant?.id ?? null;
+		if (!nextActiveId || nextActiveId === previousActiveId) return null;
+		return nextResult;
+	}
+
+	async #advancePastExhaustedTurns(result: this): Promise<this> {
+		if (!this.#canAdvancePastExhaustedTurns()) return result;
 
 		let nextResult = result;
 		const maxIterations = Math.max(this.turns.length, 1);
 		for (let iteration = 0; iteration < maxIterations; iteration += 1) {
-			const activeCombatant = this.combatant;
-			if (!activeCombatant) break;
-			if (activeCombatant.type === 'character') break;
-			if (this.#combatantHasAnyActionsRemaining(activeCombatant)) break;
-
-			const previousActiveId = activeCombatant.id ?? null;
-			nextResult = (await super.nextTurn()) as this;
-			this.#syncTurnIndexWithAliveTurns();
-			const nextActiveId = this.combatant?.id ?? null;
-			if (!nextActiveId || nextActiveId === previousActiveId) break;
+			const advancedResult = await this.#advancePastCurrentCombatant();
+			if (!advancedResult) break;
+			nextResult = advancedResult;
 		}
 
 		return nextResult;
@@ -299,24 +351,40 @@ class NimbleCombat extends Combat {
 		});
 	}
 
+	#clearMinionGroupFlagsForMembers(
+		members: Combatant.Implementation[],
+		updatesById: Map<string, Record<string, unknown>>,
+	): void {
+		for (const member of members) {
+			if (!member.id) continue;
+			this.#setCombatantUpdate(updatesById, member.id, { [MINION_GROUP_FLAG_ROOT]: null });
+		}
+	}
+
+	#resolveGroupDetachmentLeader(
+		groupId: string,
+		remainingMembers: Combatant.Implementation[],
+	): Combatant.Implementation | null {
+		const summary = getMinionGroupSummaries(remainingMembers).get(groupId);
+		if (!summary) return null;
+		return (
+			getEffectiveMinionGroupLeader(summary, { aliveOnly: true }) ??
+			getEffectiveMinionGroupLeader(summary) ??
+			null
+		);
+	}
+
 	#applyGroupDetachmentUpdate(
 		groupId: string,
 		remainingMembers: Combatant.Implementation[],
 		updatesById: Map<string, Record<string, unknown>>,
 	): void {
 		if (remainingMembers.length <= 1) {
-			for (const member of remainingMembers) {
-				if (!member.id) continue;
-				this.#setCombatantUpdate(updatesById, member.id, { [MINION_GROUP_FLAG_ROOT]: null });
-			}
+			this.#clearMinionGroupFlagsForMembers(remainingMembers, updatesById);
 			return;
 		}
 
-		const summary = getMinionGroupSummaries(remainingMembers).get(groupId);
-		if (!summary) return;
-		const nextLeader =
-			getEffectiveMinionGroupLeader(summary, { aliveOnly: true }) ??
-			getEffectiveMinionGroupLeader(summary);
+		const nextLeader = this.#resolveGroupDetachmentLeader(groupId, remainingMembers);
 		if (!nextLeader?.id) return;
 
 		for (const member of remainingMembers) {
@@ -365,18 +433,24 @@ class NimbleCombat extends Combat {
 			: params.previousActiveCombatantId;
 	}
 
+	#buildMinionTypeGroupingCandidates(combatant: Combatant.Implementation): Array<{
+		prefix: string;
+		value: string;
+	}> {
+		return [
+			{ prefix: 'actorName', value: (combatant.actor?.name ?? '').trim().toLowerCase() },
+			{ prefix: 'actor', value: (combatant.actor?.id ?? '').trim() },
+			{ prefix: 'combatantName', value: (combatant.name ?? '').trim().toLowerCase() },
+			{ prefix: 'combatant', value: (combatant.id ?? '').trim() },
+		];
+	}
+
 	#resolveMinionTypeGroupingKey(combatant: Combatant.Implementation): string {
-		const actorName = combatant.actor?.name?.trim().toLowerCase() ?? '';
-		if (actorName.length > 0) return `actorName:${actorName}`;
-
-		const actorId = combatant.actor?.id?.trim() ?? '';
-		if (actorId.length > 0) return `actor:${actorId}`;
-
-		const combatantName = combatant.name?.trim().toLowerCase() ?? '';
-		if (combatantName.length > 0) return `combatantName:${combatantName}`;
-
-		const combatantId = combatant.id?.trim() ?? '';
-		if (combatantId.length > 0) return `combatant:${combatantId}`;
+		const keyCandidates = this.#buildMinionTypeGroupingCandidates(combatant);
+		for (const candidate of keyCandidates) {
+			if (candidate.value.length < 1) continue;
+			return `${candidate.prefix}:${candidate.value}`;
+		}
 
 		return `opaque:${foundry.utils.randomID()}`;
 	}
@@ -437,6 +511,88 @@ class NimbleCombat extends Combat {
 		this.turns = this.setupTurns();
 	}
 
+	#buildTemporaryGroupAssignment(
+		orderedMembers: Combatant.Implementation[],
+	): {
+		updates: Record<string, unknown>[];
+		assignment:
+			| {
+					groupId: string;
+					leaderId: string;
+					memberIds: Array<string | null | undefined>;
+					sharedInitiative: number;
+					sharedSort: number;
+			  }
+			| null;
+		leaderId: string | null;
+	} {
+		const leader = orderedMembers[0];
+		if (!leader?.id) {
+			return { updates: [], assignment: null, leaderId: null };
+		}
+
+		const temporaryGroupId = foundry.utils.randomID();
+		const sharedInitiative = Number(leader.initiative ?? 0);
+		const sharedSort = getCombatantManualSortValue(leader);
+		const updates = this.#buildTemporaryGroupUpdates(
+			orderedMembers,
+			leader.id,
+			temporaryGroupId,
+			sharedInitiative,
+			sharedSort,
+		);
+		return {
+			updates,
+			assignment: {
+				groupId: temporaryGroupId,
+				leaderId: leader.id,
+				memberIds: orderedMembers.map((member) => member.id),
+				sharedInitiative,
+				sharedSort,
+			},
+			leaderId: leader.id,
+		};
+	}
+
+	#collectTemporaryGroupAssignments(params: {
+		groupedMembers: Combatant.Implementation[][];
+		previousActiveCombatantId: string | null | undefined;
+	}): {
+		updates: Record<string, unknown>[];
+		groupedAssignments: Array<{
+			groupId: string;
+			leaderId: string;
+			memberIds: Array<string | null | undefined>;
+			sharedInitiative: number;
+			sharedSort: number;
+		}>;
+		desiredActiveId: string | null | undefined;
+	} {
+		const updates: Record<string, unknown>[] = [];
+		const groupedAssignments: Array<{
+			groupId: string;
+			leaderId: string;
+			memberIds: Array<string | null | undefined>;
+			sharedInitiative: number;
+			sharedSort: number;
+		}> = [];
+		let desiredActiveId: string | null | undefined = params.previousActiveCombatantId;
+
+		for (const orderedMembers of params.groupedMembers) {
+			const assignment = this.#buildTemporaryGroupAssignment(orderedMembers);
+			if (!assignment.assignment || !assignment.leaderId) continue;
+			updates.push(...assignment.updates);
+			groupedAssignments.push(assignment.assignment);
+			desiredActiveId = this.#resolveDesiredActiveIdAfterRegroup({
+				previousActiveCombatantId: desiredActiveId,
+				leaderId: assignment.leaderId,
+				orderedMembers,
+			});
+		}
+
+		return { updates, groupedAssignments, desiredActiveId };
+	}
+
 	async #assignNcsTemporaryGroupFromAttackMembers(memberCombatantIds: string[]): Promise<void> {
 		if (!game.user?.isGM) return;
 
@@ -457,44 +613,10 @@ class NimbleCombat extends Combat {
 		);
 		if (groupedMembers.length < 1) return;
 
-		const updates: Record<string, unknown>[] = [];
-		const groupedAssignments: Array<{
-			groupId: string;
-			leaderId: string;
-			memberIds: Array<string | null | undefined>;
-			sharedInitiative: number;
-			sharedSort: number;
-		}> = [];
-		let desiredActiveId: string | null | undefined = previousActiveCombatantId;
-		for (const orderedMembers of groupedMembers) {
-			const leader = orderedMembers[0];
-			if (!leader?.id) continue;
-
-			const temporaryGroupId = foundry.utils.randomID();
-			const sharedInitiative = Number(leader.initiative ?? 0);
-			const sharedSort = getCombatantManualSortValue(leader);
-			const groupedUpdates = this.#buildTemporaryGroupUpdates(
-				orderedMembers,
-				leader.id,
-				temporaryGroupId,
-				sharedInitiative,
-				sharedSort,
-			);
-			updates.push(...groupedUpdates);
-
-			desiredActiveId = this.#resolveDesiredActiveIdAfterRegroup({
-				previousActiveCombatantId: desiredActiveId,
-				leaderId: leader.id,
-				orderedMembers,
-			});
-			groupedAssignments.push({
-				groupId: temporaryGroupId,
-				leaderId: leader.id,
-				memberIds: orderedMembers.map((member) => member.id),
-				sharedInitiative,
-				sharedSort,
-			});
-		}
+		const { updates, groupedAssignments, desiredActiveId } = this.#collectTemporaryGroupAssignments({
+			groupedMembers,
+			previousActiveCombatantId,
+		});
 		if (updates.length === 0) return;
 
 		await this.updateEmbeddedDocuments('Combatant', updates);
@@ -1205,6 +1327,43 @@ class NimbleCombat extends Combat {
 		};
 	}
 
+	async #collectInitiativeRollOutcomes(params: {
+		combatantIds: string[];
+		formula: string | null;
+		messageOptions: ChatMessage.CreateData;
+		chatRollMode: string | null;
+		combatManaUpdates: Promise<unknown>[];
+	}): Promise<{ updates: Record<string, unknown>[]; messages: ChatMessage.CreateData[] }> {
+		const updates: Record<string, unknown>[] = [];
+		const messages: ChatMessage.CreateData[] = [];
+
+		for await (const [i, id] of params.combatantIds.entries()) {
+			const rollOutcome = await this.#rollInitiativeForCombatant({
+				combatantId: id,
+				formula: params.formula,
+				messageOptions: params.messageOptions,
+				chatRollMode: params.chatRollMode,
+				rollIndex: i,
+				combatManaUpdates: params.combatManaUpdates,
+			});
+			if (!rollOutcome) continue;
+			updates.push(rollOutcome.combatantUpdate);
+			messages.push(rollOutcome.chatData);
+		}
+
+		return { updates, messages };
+	}
+
+	async #syncTurnAfterInitiativeRoll(params: {
+		updateTurn: boolean;
+		currentCombatantId: string | null | undefined;
+	}): Promise<void> {
+		if (!params.updateTurn || !params.currentCombatantId) return;
+		await this.update({
+			turn: this.turns.findIndex((combatant) => combatant.id === params.currentCombatantId),
+		});
+	}
+
 	override async rollInitiative(
 		ids: string | string[],
 		options?: Combat.InitiativeOptions & { rollOptions?: Record<string, unknown> },
@@ -1216,24 +1375,14 @@ class NimbleCombat extends Combat {
 		const currentId = this.combatant?.id;
 		const chatRollMode = game.settings.get('core', 'rollMode');
 
-		// Iterate over Combatants, performing an initiative roll for each
-		const updates: Record<string, unknown>[] = [];
 		const combatManaUpdates: Promise<unknown>[] = [];
-		const messages: ChatMessage.CreateData[] = [];
-
-		for await (const [i, id] of combatantIds.entries()) {
-			const rollOutcome = await this.#rollInitiativeForCombatant({
-				combatantId: id,
-				formula,
-				messageOptions,
-				chatRollMode,
-				rollIndex: i,
-				combatManaUpdates,
-			});
-			if (!rollOutcome) continue;
-			updates.push(rollOutcome.combatantUpdate);
-			messages.push(rollOutcome.chatData);
-		}
+		const { updates, messages } = await this.#collectInitiativeRollOutcomes({
+			combatantIds,
+			formula,
+			messageOptions,
+			chatRollMode,
+			combatManaUpdates,
+		});
 
 		// Update multiple combatants
 		await this.updateEmbeddedDocuments('Combatant', updates);
@@ -1243,9 +1392,10 @@ class NimbleCombat extends Combat {
 		}
 
 		// Ensure the turn order remains with the same combatant
-		if (updateTurn && currentId) {
-			await this.update({ turn: this.turns.findIndex((t) => t.id === currentId) });
-		}
+		await this.#syncTurnAfterInitiativeRoll({
+			updateTurn: Boolean(updateTurn),
+			currentCombatantId: currentId,
+		});
 
 		// Create multiple chat messages
 		await ChatMessage.implementation.create(messages);

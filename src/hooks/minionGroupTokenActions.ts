@@ -232,6 +232,18 @@ function formatNcsw(key: string, data: Record<string, string | number>): string 
 	return formatByKey(`${NCSW_I18N_PREFIX}.${key}`, data);
 }
 
+function toTrimmedString(value: string | null | undefined): string {
+	return value?.trim() ?? '';
+}
+
+function firstNonEmptyTrimmed(values: Array<string | null | undefined>): string | null {
+	for (const value of values) {
+		const normalized = toTrimmedString(value);
+		if (normalized.length > 0) return normalized;
+	}
+	return null;
+}
+
 function isTokenUiDebugEnabled(): boolean {
 	const globals = globalThis as Record<string, unknown>;
 	return (
@@ -296,35 +308,64 @@ export function setNcswDockHostElement(host: HTMLElement | null): void {
 	}
 }
 
-function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
-	if (combatant.sceneId) return combatant.sceneId;
-	if (combatant.token?.parent?.id) return combatant.token.parent.id;
-	const sceneId = canvas.scene?.id;
-	if (sceneId && combatant.tokenId) {
-		const tokenDoc = canvas.scene?.tokens?.get(combatant.tokenId);
-		if (tokenDoc) return sceneId;
-	}
+function resolveDirectCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
+	const directSceneId = combatant.sceneId;
+	if (directSceneId) return directSceneId;
+
+	const parentSceneId = combatant.token?.parent?.id;
+	if (parentSceneId) return parentSceneId;
 	return undefined;
+}
+
+function resolveCurrentSceneIdFromCombatantToken(
+	combatant: Combatant.Implementation,
+): string | undefined {
+	const sceneId = canvas.scene?.id;
+	if (!sceneId) return undefined;
+
+	const tokenId = toTrimmedString(combatant.tokenId);
+	if (!tokenId) return undefined;
+	const tokenDoc = canvas.scene?.tokens?.get(tokenId);
+	if (tokenDoc) return sceneId;
+	return undefined;
+}
+
+function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
+	return (
+		resolveDirectCombatantSceneId(combatant) ?? resolveCurrentSceneIdFromCombatantToken(combatant)
+	);
 }
 
 function hasCombatantsForScene(combat: Combat, sceneId: string): boolean {
 	return combat.combatants.contents.some((combatant) => getCombatantSceneId(combatant) === sceneId);
 }
 
-function getCombatForCurrentScene(): CombatWithGrouping | null {
-	const sceneId = canvas.scene?.id;
-	if (!sceneId) return null;
-
+function getActiveCombatForScene(sceneId: string): CombatWithGrouping | null {
 	const activeCombat = game.combat as CombatWithGrouping | null;
-	if (activeCombat?.active && activeCombat.scene?.id === sceneId) return activeCombat;
+	if (!activeCombat) return null;
 
+	const isActiveCombat = activeCombat.active === true;
+	const matchesScene = activeCombat.scene?.id === sceneId;
+	return isActiveCombat && matchesScene ? activeCombat : null;
+}
+
+function getViewedCombatForScene(sceneId: string): CombatWithGrouping | null {
 	const viewedCombat = (game.combats.viewed ?? null) as CombatWithGrouping | null;
-	if (viewedCombat?.scene?.id === sceneId) return viewedCombat;
+	if (viewedCombat && viewedCombat.scene?.id === sceneId) return viewedCombat;
+	return null;
+}
 
+function findCombatForScene(sceneId: string): CombatWithGrouping | null {
 	const combatForScene = game.combats.contents.find((combat) =>
 		hasCombatantsForScene(combat, sceneId),
 	);
 	return (combatForScene as CombatWithGrouping | undefined) ?? null;
+}
+
+function getCombatForCurrentScene(): CombatWithGrouping | null {
+	const sceneId = canvas.scene?.id;
+	if (!sceneId) return null;
+	return getActiveCombatForScene(sceneId) ?? getViewedCombatForScene(sceneId) ?? findCombatForScene(sceneId);
 }
 
 function buildCombatantsByTokenId(params: {
@@ -494,19 +535,37 @@ function getSupportedActionOptionsForMember(member: GroupAttackMemberView): Acti
 		}));
 }
 
+function resolveActionWindowSectionName(
+	combatant: Combatant.Implementation | null,
+	member: GroupAttackMemberView,
+): string {
+	const sectionName = firstNonEmptyTrimmed([
+		combatant?.actor?.name,
+		combatant?.name,
+		member.combatantName,
+	]);
+	return sectionName ?? member.combatantName;
+}
+
+function resolveActionWindowSectionKeySuffix(
+	combatant: Combatant.Implementation | null,
+	sectionName: string,
+): string {
+	const actorId = toTrimmedString(combatant?.actor?.id);
+	if (actorId.length > 0) return actorId;
+	return toTrimmedString(sectionName).toLowerCase();
+}
+
 function buildActionWindowSectionIdentity(
 	ref: ActionWindowMemberRef,
 	member: GroupAttackMemberView,
 ): { sectionKey: string; sectionName: string } {
 	const combatant = resolveCombatantForPanelRow(ref.combatantId);
-	const actorId = combatant?.actor?.id?.trim() ?? '';
-	const actorName =
-		combatant?.actor?.name?.trim() ?? combatant?.name?.trim() ?? member.combatantName.trim();
-	const fallbackName = actorName.length > 0 ? actorName : member.combatantName;
-	const fallbackKey = fallbackName.trim().toLowerCase();
+	const sectionName = resolveActionWindowSectionName(combatant, member);
+	const sectionKeySuffix = resolveActionWindowSectionKeySuffix(combatant, sectionName);
 	return {
-		sectionKey: actorId ? `${ref.memberType}:${actorId}` : `${ref.memberType}:${fallbackKey}`,
-		sectionName: fallbackName,
+		sectionKey: `${ref.memberType}:${sectionKeySuffix}`,
+		sectionName,
 	};
 }
 
@@ -638,39 +697,72 @@ function hideActionWindow(options: { clearDraft?: boolean } = {}): void {
 	}
 }
 
+function clampActionWindowPosition(value: number, max: number, margin: number): number {
+	return Math.max(margin, Math.min(max - margin, value));
+}
+
+function getPanelAnchoredActionWindowPosition(params: {
+	panel: HTMLDivElement;
+	windowRect: DOMRect;
+	margin: number;
+	gap: number;
+}): { left: number; top: number } {
+	const panelRect = params.panel.getBoundingClientRect();
+	let left = panelRect.right + params.gap;
+	if (left + params.windowRect.width + params.margin > window.innerWidth) {
+		left = panelRect.left - params.windowRect.width - params.gap;
+	}
+	const top = panelRect.top;
+	return { left, top };
+}
+
+function getPointerAnchoredActionWindowPosition(params: {
+	windowRect: DOMRect;
+	margin: number;
+	offset: number;
+}): { left: number; top: number } {
+	const cursorX = actionWindowLastPointerPosition?.x ?? Math.round(window.innerWidth / 2);
+	const cursorY = actionWindowLastPointerPosition?.y ?? Math.round(window.innerHeight / 2);
+	let left = cursorX + params.offset;
+	let top = cursorY + params.offset;
+	if (left + params.windowRect.width + params.margin > window.innerWidth) {
+		left = cursorX - params.windowRect.width - params.offset;
+	}
+	if (top + params.windowRect.height + params.margin > window.innerHeight) {
+		top = cursorY - params.windowRect.height - params.offset;
+	}
+	return { left, top };
+}
+
 function positionActionWindowNearCursor(element: HTMLDivElement): void {
 	const margin = NCSW_PANEL_VIEWPORT_MARGIN_PX;
 	const gap = 8;
 	const rect = element.getBoundingClientRect();
 	const panel = minionGroupAttackPanelElement;
 
-	if (panel && !panel.hidden && panel.isConnected) {
-		const panelRect = panel.getBoundingClientRect();
-		let left = panelRect.right + gap;
-		let top = panelRect.top;
-		if (left + rect.width + margin > window.innerWidth) {
-			left = panelRect.left - rect.width - gap;
-		}
-		left = Math.max(margin, Math.min(window.innerWidth - rect.width - margin, left));
-		top = Math.max(margin, Math.min(window.innerHeight - rect.height - margin, top));
-		element.style.left = `${Math.round(left)}px`;
-		element.style.top = `${Math.round(top)}px`;
-		return;
-	}
-
-	const offset = 14;
-	const cursorX = actionWindowLastPointerPosition?.x ?? Math.round(window.innerWidth / 2);
-	const cursorY = actionWindowLastPointerPosition?.y ?? Math.round(window.innerHeight / 2);
-	let left = cursorX + offset;
-	let top = cursorY + offset;
-	if (left + rect.width + margin > window.innerWidth) {
-		left = cursorX - rect.width - offset;
-	}
-	if (top + rect.height + margin > window.innerHeight) {
-		top = cursorY - rect.height - offset;
-	}
-	left = Math.max(margin, Math.min(window.innerWidth - rect.width - margin, left));
-	top = Math.max(margin, Math.min(window.innerHeight - rect.height - margin, top));
+	const anchoredPosition =
+		panel && !panel.hidden && panel.isConnected
+			? getPanelAnchoredActionWindowPosition({
+					panel,
+					windowRect: rect,
+					margin,
+					gap,
+				})
+			: getPointerAnchoredActionWindowPosition({
+					windowRect: rect,
+					margin,
+					offset: 14,
+				});
+	const left = clampActionWindowPosition(
+		anchoredPosition.left,
+		window.innerWidth - rect.width,
+		margin,
+	);
+	const top = clampActionWindowPosition(
+		anchoredPosition.top,
+		window.innerHeight - rect.height,
+		margin,
+	);
 	element.style.left = `${Math.round(left)}px`;
 	element.style.top = `${Math.round(top)}px`;
 }
@@ -857,6 +949,15 @@ function scheduleActionWindowRefresh(context: SelectionContext | null): void {
 	}, NCS_AW_REFRESH_DEBOUNCE_MS);
 }
 
+function resolveCombatantByTokenId(
+	token: Token,
+	combatantsByTokenId: ReadonlyMap<string, Combatant.Implementation>,
+): Combatant.Implementation | null {
+	const tokenId = toTrimmedString(token.document?.id ?? token.id ?? null);
+	if (!tokenId) return null;
+	return combatantsByTokenId.get(tokenId) ?? null;
+}
+
 function resolveSelectedCombatants(
 	selectedTokens: Token[],
 	combatantsByTokenId: ReadonlyMap<string, Combatant.Implementation>,
@@ -864,10 +965,7 @@ function resolveSelectedCombatants(
 	const selectedCombatants: Combatant.Implementation[] = [];
 	const seenCombatantIds = new Set<string>();
 	for (const token of selectedTokens) {
-		const tokenId = (token.document?.id ?? token.id ?? '').trim();
-		if (!tokenId) continue;
-
-		const combatant = combatantsByTokenId.get(tokenId);
+		const combatant = resolveCombatantByTokenId(token, combatantsByTokenId);
 		const combatantId = combatant?.id ?? '';
 		if (!combatant || !combatantId || seenCombatantIds.has(combatantId)) continue;
 		seenCombatantIds.add(combatantId);
@@ -1152,12 +1250,10 @@ function getUniqueTargetTokenIds(targets: Token[]): string[] {
 }
 
 function resolveSingleTargetName(target: Token | undefined): string {
-	const nameCandidates = [target?.name, target?.document?.name, target?.document?.actor?.name];
-	for (const candidate of nameCandidates) {
-		const normalized = candidate?.trim() ?? '';
-		if (normalized) return normalized;
-	}
-	return 'Target';
+	return (
+		firstNonEmptyTrimmed([target?.name, target?.document?.name, target?.document?.actor?.name]) ??
+		'Target'
+	);
 }
 
 function getCurrentTargetSummary(): {
@@ -1254,27 +1350,49 @@ function getTargetTokenActionState(combatant: Combatant.Implementation): {
 	return { actionsRemaining, actionsMax };
 }
 
+function getTurnIndexByCombatantId(combat: CombatWithGrouping, combatantId: string): number {
+	return combat.turns.findIndex((turnCombatant) => (turnCombatant.id ?? '') === combatantId);
+}
+
+function resolveActiveTurnIndex(combat: CombatWithGrouping): number | null {
+	if ((combat.round ?? 0) < 1) return null;
+	const activeCombatantId = combat.combatant?.id ?? '';
+	if (!activeCombatantId) return null;
+	const activeTurnIndex = getTurnIndexByCombatantId(combat, activeCombatantId);
+	return activeTurnIndex < 0 ? null : activeTurnIndex;
+}
+
+function resolveCombatantTurnIndex(
+	combat: CombatWithGrouping,
+	combatant: Combatant.Implementation,
+): number | null {
+	const combatantId = combatant.id ?? '';
+	if (!combatantId) return null;
+	const combatantTurnIndex = getTurnIndexByCombatantId(combat, combatantId);
+	return combatantTurnIndex < 0 ? null : combatantTurnIndex;
+}
+
+function resolveTurnIndexPairForCombatant(params: {
+	combat: CombatWithGrouping | null;
+	combatant: Combatant.Implementation;
+}): { activeTurnIndex: number; combatantTurnIndex: number } | null {
+	const combat = params.combat;
+	if (!combat) return null;
+	const activeTurnIndex = resolveActiveTurnIndex(combat);
+	if (activeTurnIndex === null) return null;
+	const combatantTurnIndex = resolveCombatantTurnIndex(combat, params.combatant);
+	if (combatantTurnIndex === null) return null;
+
+	return { activeTurnIndex, combatantTurnIndex };
+}
+
 function hasCombatantTurnEndedThisRound(
 	combat: CombatWithGrouping | null,
 	combatant: Combatant.Implementation,
 ): boolean {
-	if (!combat || (combat.round ?? 0) < 1) return false;
-	const activeCombatantId = combat.combatant?.id ?? '';
-	if (!activeCombatantId) return false;
-
-	const activeTurnIndex = combat.turns.findIndex(
-		(turnCombatant) => (turnCombatant.id ?? '') === activeCombatantId,
-	);
-	if (activeTurnIndex < 0) return false;
-
-	const combatantId = combatant.id ?? '';
-	if (!combatantId) return false;
-	const combatantTurnIndex = combat.turns.findIndex(
-		(turnCombatant) => (turnCombatant.id ?? '') === combatantId,
-	);
-	if (combatantTurnIndex < 0) return false;
-
-	return combatantTurnIndex < activeTurnIndex;
+	const turnIndexPair = resolveTurnIndexPairForCombatant({ combat, combatant });
+	if (!turnIndexPair) return false;
+	return turnIndexPair.combatantTurnIndex < turnIndexPair.activeTurnIndex;
 }
 
 function resolveCombatantPreviewName(
@@ -1369,12 +1487,13 @@ function resolveTargetCombatantName(
 	token: Token | null,
 ): string {
 	return (
-		token?.document?.name?.trim() ||
-		token?.name?.trim() ||
-		combatant.token?.name?.trim() ||
-		combatant.name?.trim() ||
-		combatant.actor?.name?.trim() ||
-		localizeNcsw('targets.playerFallback')
+		firstNonEmptyTrimmed([
+			token?.document?.name,
+			token?.name,
+			combatant.token?.name,
+			combatant.name,
+			combatant.actor?.name,
+		]) ?? localizeNcsw('targets.playerFallback')
 	);
 }
 
@@ -1987,6 +2106,86 @@ function getCombatantActionsRemaining(combatant: Combatant.Implementation): numb
 	return Number.isFinite(actionsRemainingRaw) ? Math.max(0, actionsRemainingRaw) : 0;
 }
 
+function resolveAttackMemberCapabilities(
+	combatant: Combatant.Implementation,
+	token: Token | null,
+): Pick<
+	GroupAttackMemberView,
+	| 'canToggleSelection'
+	| 'canPanToToken'
+	| 'canOpenSheet'
+	| 'canPingToken'
+	| 'canMarkDefeated'
+	| 'canDeleteCombatant'
+> {
+	const hasObserverPermission = combatant.actor?.testUserPermission(game.user, 'OBSERVER') ?? false;
+	const hasToken = token !== null;
+	const canGmManageCombatant = game.user?.isGM === true;
+	return {
+		canToggleSelection: token?.isVisible === true,
+		canPanToToken: hasObserverPermission && hasToken,
+		canOpenSheet: hasObserverPermission,
+		canPingToken: hasObserverPermission && hasToken,
+		canMarkDefeated: canGmManageCombatant,
+		canDeleteCombatant: canGmManageCombatant,
+	};
+}
+
+function createAttackMemberView(params: {
+	combatantId: string;
+	combatant: Combatant.Implementation;
+	combatantName: string;
+	tokenId: string | null;
+	actorType: string;
+	isSelected: boolean;
+	actionOptions: MinionGroupAttackOption[];
+	capabilities: Pick<
+		GroupAttackMemberView,
+		| 'canToggleSelection'
+		| 'canPanToToken'
+		| 'canOpenSheet'
+		| 'canPingToken'
+		| 'canMarkDefeated'
+		| 'canDeleteCombatant'
+	>;
+}): GroupAttackMemberView {
+	return {
+		combatantId: params.combatantId,
+		combatantName: params.combatantName,
+		memberImage: getCombatantRowImage(params.combatant),
+		tokenId: params.tokenId,
+		stackSize: 1,
+		stackMemberCombatantIds: [params.combatantId],
+		isSelected: params.isSelected,
+		isDefeated: params.combatant.defeated === true,
+		...params.capabilities,
+		actorType: params.actorType,
+		actionsRemaining: getCombatantActionsRemaining(params.combatant),
+		actionOptions: params.actionOptions,
+	};
+}
+
+function resolveAttackMemberActor(combatant: Combatant.Implementation): ActorWithActionItems | null {
+	return (combatant.actor as unknown as ActorWithActionItems | null) ?? null;
+}
+
+function resolveAttackMemberTokenId(
+	combatant: Combatant.Implementation,
+	token: Token | null,
+): string | null {
+	if (token) return getTargetTokenId(token);
+	const fallbackTokenId = toTrimmedString(combatant.tokenId);
+	return fallbackTokenId.length > 0 ? fallbackTokenId : null;
+}
+
+function resolveAttackMemberName(combatant: Combatant.Implementation, fallbackName: string): string {
+	return firstNonEmptyTrimmed([combatant.name, combatant.token?.name, fallbackName]) ?? fallbackName;
+}
+
+function resolveAttackMemberType(actor: ActorWithActionItems | null, fallbackType: string): string {
+	return firstNonEmptyTrimmed([actor?.type?.toLowerCase(), fallbackType]) ?? fallbackType;
+}
+
 function buildAttackMemberViewFromCombatant(
 	combatant: Combatant.Implementation,
 	defaults: { actorType: string; name: string },
@@ -1995,31 +2194,22 @@ function buildAttackMemberViewFromCombatant(
 	const combatantId = combatant.id ?? '';
 	if (!combatantId) return null;
 
-	const actor = (combatant.actor as unknown as ActorWithActionItems | null) ?? null;
+	const actor = resolveAttackMemberActor(combatant);
 	const token = getCombatantTokenObject(combatant);
-	const tokenId = token ? getTargetTokenId(token) : (combatant.tokenId?.trim() ?? '');
-	const hasObserverPermission = combatant.actor?.testUserPermission(game.user, 'OBSERVER') ?? false;
-	const canControlToken = Boolean(token?.isVisible);
-	const canGmManageCombatant = Boolean(game.user?.isGM);
-	return {
+	const tokenId = resolveAttackMemberTokenId(combatant, token);
+	const capabilities = resolveAttackMemberCapabilities(combatant, token);
+	const combatantName = resolveAttackMemberName(combatant, defaults.name);
+	const actorType = resolveAttackMemberType(actor, defaults.actorType);
+	return createAttackMemberView({
 		combatantId,
-		combatantName: combatant.name?.trim() || combatant.token?.name || defaults.name,
-		memberImage: getCombatantRowImage(combatant),
-		tokenId: tokenId || null,
-		stackSize: 1,
-		stackMemberCombatantIds: [combatantId],
+		combatant,
+		combatantName,
+		tokenId,
+		actorType,
 		isSelected: selectedCombatantIds.has(combatantId),
-		isDefeated: combatant.defeated === true,
-		canToggleSelection: canControlToken,
-		canPanToToken: hasObserverPermission && Boolean(token),
-		canOpenSheet: hasObserverPermission,
-		canPingToken: hasObserverPermission && Boolean(token),
-		canMarkDefeated: canGmManageCombatant,
-		canDeleteCombatant: canGmManageCombatant,
-		actorType: actor?.type?.trim()?.toLowerCase() || defaults.actorType,
-		actionsRemaining: getCombatantActionsRemaining(combatant),
 		actionOptions: buildGroupAttackActionOptions(actor),
-	};
+		capabilities,
+	});
 }
 
 function buildAttackMemberRow(
@@ -2478,6 +2668,119 @@ function renderNcswMapSelectorOverlay(panel: HTMLDivElement): void {
 	panel.append(selector);
 }
 
+function buildTargetStatusIconClass(hasAnyTarget: boolean): string {
+	return hasAnyTarget
+		? 'nimble-minion-group-attack-panel__target-label-icon--active'
+		: 'nimble-minion-group-attack-panel__target-label-icon--inactive';
+}
+
+function appendTargetTokenActionState(
+	targetButton: HTMLButtonElement,
+	targetToken: TargetTokenView,
+): void {
+	const actionState = document.createElement('span');
+	actionState.className = 'nimble-minion-group-attack-panel__target-token-actions';
+	for (const [index, iconClass] of NCSW_TARGET_ACTION_DICE_ICON_CLASSES.entries()) {
+		const slotNumber = index + 1;
+		const icon = document.createElement('i');
+		icon.className = `nimble-minion-group-attack-panel__target-token-action-icon fa-solid ${iconClass}`;
+		if (slotNumber > targetToken.actionsMax) {
+			icon.classList.add('nimble-minion-group-attack-panel__target-token-action-icon--unavailable');
+		} else if (slotNumber <= targetToken.actionsRemaining) {
+			icon.classList.add('nimble-minion-group-attack-panel__target-token-action-icon--active');
+		} else {
+			icon.classList.add('nimble-minion-group-attack-panel__target-token-action-icon--inactive');
+		}
+		actionState.append(icon);
+	}
+	targetButton.append(actionState);
+}
+
+function appendTargetTokenTurnEndedBadge(
+	targetButton: HTMLButtonElement,
+	targetToken: TargetTokenView,
+): void {
+	if (!targetToken.hasEndedTurn) return;
+	const endedTurnBadge = document.createElement('span');
+	endedTurnBadge.className = 'nimble-minion-group-attack-panel__target-token-turn-ended';
+	endedTurnBadge.title = localizeByKey('COMBAT.EndTurn');
+	const endedTurnIcon = document.createElement('i');
+	endedTurnIcon.className = 'fa-solid fa-check';
+	endedTurnBadge.append(endedTurnIcon);
+	targetButton.append(endedTurnBadge);
+}
+
+function bindTargetTokenButtonEvents(
+	targetButton: HTMLButtonElement,
+	targetToken: TargetTokenView,
+): void {
+	targetButton.addEventListener('mouseenter', () => {
+		showGroupAttackTargetPopover(targetButton, targetToken);
+	});
+	targetButton.addEventListener('mouseleave', () => {
+		hideGroupAttackTargetPopover();
+	});
+	targetButton.addEventListener('focus', () => {
+		showGroupAttackTargetPopover(targetButton, targetToken);
+	});
+	targetButton.addEventListener('blur', () => {
+		hideGroupAttackTargetPopover();
+	});
+	targetButton.addEventListener('pointerdown', () => {
+		hideGroupAttackTargetPopover();
+	});
+	targetButton.addEventListener('click', () => {
+		toggleTargetTokenFromPanel(targetToken, !targetToken.isTargeted);
+		scheduleActionBarRefresh('ncsw-target-toggle');
+	});
+}
+
+function buildTargetTokenButton(targetToken: TargetTokenView): HTMLButtonElement {
+	const targetButton = document.createElement('button');
+	targetButton.type = 'button';
+	targetButton.className = 'nimble-minion-group-attack-panel__target-token';
+	if (targetToken.isSelected) {
+		targetButton.classList.add('nimble-minion-group-attack-panel__target-token--selected');
+	}
+	if (!targetToken.isTargeted) {
+		targetButton.classList.add('nimble-minion-group-attack-panel__target-token--inactive');
+	}
+	if (!targetToken.canToggleTarget) {
+		targetButton.disabled = true;
+	}
+	targetButton.ariaLabel = targetToken.isTargeted
+		? formatNcsw('targets.untargetAria', { name: targetToken.name })
+		: formatNcsw('targets.targetAria', { name: targetToken.name });
+
+	const image = document.createElement('img');
+	image.className = 'nimble-minion-group-attack-panel__target-token-image';
+	image.src = targetToken.image;
+	image.alt = targetToken.name;
+	targetButton.append(image);
+
+	appendTargetTokenActionState(targetButton, targetToken);
+	appendTargetTokenTurnEndedBadge(targetButton, targetToken);
+	bindTargetTokenButtonEvents(targetButton, targetToken);
+	return targetButton;
+}
+
+function renderTargetTokenList(
+	targetList: HTMLDivElement,
+	availableTargetTokens: TargetTokenView[],
+): void {
+	if (availableTargetTokens.length === 0) {
+		const hint = document.createElement('span');
+		hint.className = 'nimble-minion-group-attack-panel__target-hint';
+		hint.textContent = localizeNcsw('targets.hint');
+		targetList.append(hint);
+		return;
+	}
+
+	for (const targetToken of availableTargetTokens) {
+		targetList.append(buildTargetTokenButton(targetToken));
+	}
+}
+
 function renderGroupAttackTargetSection(params: {
 	panel: HTMLDivElement;
 	hasAnyTarget: boolean;
@@ -2494,98 +2797,15 @@ function renderGroupAttackTargetSection(params: {
 	targetLabelText.textContent = localizeNcsw('targets.label');
 
 	const targetStatusIcon = document.createElement('i');
-	targetStatusIcon.className = `nimble-minion-group-attack-panel__target-label-icon fa-solid fa-crosshairs ${
-		params.hasAnyTarget
-			? 'nimble-minion-group-attack-panel__target-label-icon--active'
-			: 'nimble-minion-group-attack-panel__target-label-icon--inactive'
-	}`;
+	targetStatusIcon.className =
+		`nimble-minion-group-attack-panel__target-label-icon fa-solid fa-crosshairs ` +
+		buildTargetStatusIconClass(params.hasAnyTarget);
 	targetLabel.append(targetLabelText, targetStatusIcon);
 	targetRow.append(targetLabel);
 
 	const targetList = document.createElement('div');
 	targetList.className = 'nimble-minion-group-attack-panel__target-list';
-
-	if (params.availableTargetTokens.length === 0) {
-		const hint = document.createElement('span');
-		hint.className = 'nimble-minion-group-attack-panel__target-hint';
-		hint.textContent = localizeNcsw('targets.hint');
-		targetList.append(hint);
-	} else {
-		for (const targetToken of params.availableTargetTokens) {
-			const targetButton = document.createElement('button');
-			targetButton.type = 'button';
-			targetButton.className = 'nimble-minion-group-attack-panel__target-token';
-			if (targetToken.isSelected) {
-				targetButton.classList.add('nimble-minion-group-attack-panel__target-token--selected');
-			}
-			if (!targetToken.isTargeted) {
-				targetButton.classList.add('nimble-minion-group-attack-panel__target-token--inactive');
-			}
-			if (!targetToken.canToggleTarget) {
-				targetButton.disabled = true;
-			}
-			targetButton.ariaLabel = targetToken.isTargeted
-				? formatNcsw('targets.untargetAria', { name: targetToken.name })
-				: formatNcsw('targets.targetAria', { name: targetToken.name });
-
-			const image = document.createElement('img');
-			image.className = 'nimble-minion-group-attack-panel__target-token-image';
-			image.src = targetToken.image;
-			image.alt = targetToken.name;
-			targetButton.append(image);
-
-			const actionState = document.createElement('span');
-			actionState.className = 'nimble-minion-group-attack-panel__target-token-actions';
-			for (const [index, iconClass] of NCSW_TARGET_ACTION_DICE_ICON_CLASSES.entries()) {
-				const slotNumber = index + 1;
-				const icon = document.createElement('i');
-				icon.className = `nimble-minion-group-attack-panel__target-token-action-icon fa-solid ${iconClass}`;
-				if (slotNumber > targetToken.actionsMax) {
-					icon.classList.add(
-						'nimble-minion-group-attack-panel__target-token-action-icon--unavailable',
-					);
-				} else if (slotNumber <= targetToken.actionsRemaining) {
-					icon.classList.add('nimble-minion-group-attack-panel__target-token-action-icon--active');
-				} else {
-					icon.classList.add('nimble-minion-group-attack-panel__target-token-action-icon--inactive');
-				}
-				actionState.append(icon);
-			}
-			targetButton.append(actionState);
-
-			if (targetToken.hasEndedTurn) {
-				const endedTurnBadge = document.createElement('span');
-				endedTurnBadge.className = 'nimble-minion-group-attack-panel__target-token-turn-ended';
-				endedTurnBadge.title = localizeByKey('COMBAT.EndTurn');
-				const endedTurnIcon = document.createElement('i');
-				endedTurnIcon.className = 'fa-solid fa-check';
-				endedTurnBadge.append(endedTurnIcon);
-				targetButton.append(endedTurnBadge);
-			}
-
-			targetButton.addEventListener('mouseenter', () => {
-				showGroupAttackTargetPopover(targetButton, targetToken);
-			});
-			targetButton.addEventListener('mouseleave', () => {
-				hideGroupAttackTargetPopover();
-			});
-			targetButton.addEventListener('focus', () => {
-				showGroupAttackTargetPopover(targetButton, targetToken);
-			});
-			targetButton.addEventListener('blur', () => {
-				hideGroupAttackTargetPopover();
-			});
-			targetButton.addEventListener('pointerdown', () => {
-				hideGroupAttackTargetPopover();
-			});
-			targetButton.addEventListener('click', () => {
-				toggleTargetTokenFromPanel(targetToken, !targetToken.isTargeted);
-				scheduleActionBarRefresh('ncsw-target-toggle');
-			});
-
-			targetList.append(targetButton);
-		}
-	}
+	renderTargetTokenList(targetList, params.availableTargetTokens);
 
 	targetRow.append(targetList);
 	params.panel.append(targetRow);
@@ -2620,10 +2840,13 @@ function resolveCombatantForPanelRow(combatantId: string): Combatant.Implementat
 	return combatant;
 }
 
-function toggleCombatantSelectionFromPanel(member: GroupAttackMemberView): void {
-	const combatantIds = member.stackMemberCombatantIds.length > 0
+function getCombatantIdsForMember(member: GroupAttackMemberView): string[] {
+	return member.stackMemberCombatantIds.length > 0
 		? member.stackMemberCombatantIds
 		: [member.combatantId];
+}
+
+function resolveVisibleTokensForCombatantIds(combatantIds: string[]): Token[] {
 	const seenTokenIds = new Set<string>();
 	const tokens: Token[] = [];
 	for (const combatantId of combatantIds) {
@@ -2636,8 +2859,10 @@ function toggleCombatantSelectionFromPanel(member: GroupAttackMemberView): void 
 		seenTokenIds.add(tokenId);
 		tokens.push(token);
 	}
-	if (tokens.length < 1) return;
+	return tokens;
+}
 
+function toggleTokenControlState(tokens: Token[]): void {
 	const shouldReleaseSelection = tokens.every((token) => token.controlled);
 	for (const token of tokens) {
 		if (shouldReleaseSelection) {
@@ -2646,6 +2871,14 @@ function toggleCombatantSelectionFromPanel(member: GroupAttackMemberView): void 
 		}
 		controlTokenFromPanel(token, { releaseOthers: false });
 	}
+}
+
+function toggleCombatantSelectionFromPanel(member: GroupAttackMemberView): void {
+	const combatantIds = getCombatantIdsForMember(member);
+	const tokens = resolveVisibleTokensForCombatantIds(combatantIds);
+	if (tokens.length < 1) return;
+
+	toggleTokenControlState(tokens);
 	scheduleActionBarRefresh('ncsw-member-toggle-selection');
 }
 
@@ -2667,18 +2900,27 @@ async function panToCombatantFromPanel(combatantId: string): Promise<void> {
 	await canvas.animatePan(token.center);
 }
 
+function canPingCombatantFromPanel(combatant: Combatant.Implementation): boolean {
+	if (!canvas?.ready) return false;
+	const sceneId = canvas.scene?.id;
+	if (combatant.sceneId !== sceneId) return false;
+	return combatant.actor?.testUserPermission(game.user, 'OBSERVER') ?? false;
+}
+
+function resolvePingableCombatantToken(combatant: Combatant.Implementation): Token | null {
+	const token = getCombatantTokenObject(combatant);
+	if (token?.visible) return token;
+	ui.notifications?.warn(game.i18n.localize('COMBAT.WarnNonVisibleToken'));
+	return null;
+}
+
 async function pingCombatantTokenFromPanel(combatantId: string): Promise<void> {
 	const combatant = resolveCombatantForPanelRow(combatantId);
 	if (!combatant) return;
-	if (!canvas?.ready || combatant.sceneId !== canvas?.scene?.id) return;
-	if (!combatant.actor?.testUserPermission(game.user, 'OBSERVER')) return;
+	if (!canPingCombatantFromPanel(combatant)) return;
 
-	const token = getCombatantTokenObject(combatant);
-	if (!token?.visible) {
-		ui.notifications?.warn(game.i18n.localize('COMBAT.WarnNonVisibleToken'));
-		return;
-	}
-
+	const token = resolvePingableCombatantToken(combatant);
+	if (!token) return;
 	await canvas.ping(token.center);
 }
 
@@ -3409,6 +3651,44 @@ function resolveMinionAttackMember(memberCombatantId: string): GroupAttackMember
 	return activeGroupAttackMembers.find((member) => member.combatantId === memberCombatantId) ?? null;
 }
 
+interface ValidatedSingleMinionAttackRoll {
+	member: GroupAttackMemberView;
+	combat: CombatWithGroupAttack;
+	targetTokenIds: string[];
+	scopedMemberCombatantIds: string[];
+}
+
+async function validateSingleMinionAttackRoll(
+	memberCombatantId: string,
+	actionId: string,
+): Promise<ValidatedSingleMinionAttackRoll | null> {
+	const member = resolveMinionAttackMember(memberCombatantId);
+	if (!member) return null;
+	if (!member.isSelected) {
+		ui.notifications?.warn(localizeNcsw('notifications.selectMinionsBeforeRoll'));
+		return null;
+	}
+	if (member.actionsRemaining < 1) return null;
+	const hasActionOption = member.actionOptions.some((option) => option.actionId === actionId);
+	if (!hasActionOption) {
+		ui.notifications?.warn(formatNcsw('notifications.selectActionBeforeRoll', { name: member.combatantName }));
+		return null;
+	}
+
+	const combat = await resolveCombatForGroupAttackRoll();
+	if (!combat) return null;
+
+	const targetTokenIds = resolveGroupAttackTargetTokenIds();
+	if (targetTokenIds.length < 1) return null;
+
+	return {
+		member,
+		combat,
+		targetTokenIds,
+		scopedMemberCombatantIds: getCombatantIdsForMember(member),
+	};
+}
+
 async function executeSingleMinionAttackRoll(
 	memberCombatantId: string,
 	actionId: string,
@@ -3416,35 +3696,17 @@ async function executeSingleMinionAttackRoll(
 ): Promise<void> {
 	if (isExecutingAction) return;
 
-	const member = resolveMinionAttackMember(memberCombatantId);
-	if (!member) return;
-	if (!member.isSelected) {
-		ui.notifications?.warn(localizeNcsw('notifications.selectMinionsBeforeRoll'));
-		return;
-	}
-	if (member.actionsRemaining < 1) return;
-	if (!member.actionOptions.some((option) => option.actionId === actionId)) {
-		ui.notifications?.warn(formatNcsw('notifications.selectActionBeforeRoll', { name: member.combatantName }));
-		return;
-	}
+	const validatedAttack = await validateSingleMinionAttackRoll(memberCombatantId, actionId);
+	if (!validatedAttack) return;
 
-	const combat = await resolveCombatForGroupAttackRoll();
-	if (!combat) return;
-
-	const targetTokenIds = resolveGroupAttackTargetTokenIds();
-	if (targetTokenIds.length < 1) return;
-
-	const scopedMemberCombatantIds = member.stackMemberCombatantIds.length > 0
-		? member.stackMemberCombatantIds
-		: [memberCombatantId];
-	setActionSelectValueForMemberStack(member, actionId);
+	setActionSelectValueForMemberStack(validatedAttack.member, actionId);
 	isExecutingAction = true;
 	scheduleActionBarRefresh('accordion-minion-roll-start');
 	try {
-		const result = await combat.performMinionGroupAttack({
-			memberCombatantIds: scopedMemberCombatantIds,
-			targetTokenIds,
-			selections: scopedMemberCombatantIds.map((scopedMemberCombatantId) => ({
+		const result = await validatedAttack.combat.performMinionGroupAttack({
+			memberCombatantIds: validatedAttack.scopedMemberCombatantIds,
+			targetTokenIds: validatedAttack.targetTokenIds,
+			selections: validatedAttack.scopedMemberCombatantIds.map((scopedMemberCombatantId) => ({
 				memberCombatantId: scopedMemberCombatantId,
 				actionId,
 			})),
@@ -3455,13 +3717,13 @@ async function executeSingleMinionAttackRoll(
 			rememberMemberActionSelection(
 				rememberedGroupAttackSelectionsByActorType,
 				activeGroupAttackSession.context,
-				member.actorType,
+				validatedAttack.member.actorType,
 				actionId,
 			);
 		}
 
 		applyGroupAttackRollResultState({ result, endTurn });
-		clearControlledTokensForCombatantIds(scopedMemberCombatantIds);
+		clearControlledTokensForCombatantIds(validatedAttack.scopedMemberCombatantIds);
 		renderGroupAttackPanel();
 		scheduleActionBarRefresh('accordion-minion-roll-end');
 	} catch (error) {
@@ -3885,39 +4147,39 @@ function isNcswCombatStateEnabled(combat: CombatWithGrouping | null | undefined)
 	return Boolean(combat && (combat.active || combat.started));
 }
 
-export function unregisterMinionGroupTokenActions(): void {
-	stopGroupAttackPanelDragTracking();
-	if (windowResizeHandler) {
-		window.removeEventListener('resize', windowResizeHandler);
-		windowResizeHandler = null;
-	}
-	if (actionWindowPointerMoveHandler) {
-		window.removeEventListener('pointermove', actionWindowPointerMoveHandler);
-		actionWindowPointerMoveHandler = null;
-	}
+function unregisterWindowResizeHandler(): void {
+	if (!windowResizeHandler) return;
+	window.removeEventListener('resize', windowResizeHandler);
+	windowResizeHandler = null;
+}
+
+function unregisterActionWindowPointerMoveHandler(): void {
+	if (!actionWindowPointerMoveHandler) return;
+	window.removeEventListener('pointermove', actionWindowPointerMoveHandler);
+	actionWindowPointerMoveHandler = null;
+}
+
+function unregisterTrackedHooks(): void {
 	for (const { hook, id } of hookIds) {
 		Hooks.off(hook as Hooks.HookName, id);
 	}
 	hookIds = [];
-	hideGroupAttackPanel();
-	if (minionGroupAttackPanelElement?.parentElement) {
-		minionGroupAttackPanelElement.parentElement.removeChild(minionGroupAttackPanelElement);
-	}
-	if (groupAttackTargetPopoverElement?.parentElement) {
-		groupAttackTargetPopoverElement.parentElement.removeChild(groupAttackTargetPopoverElement);
-	}
-	if (groupAttackActionDescriptionPopoverElement?.parentElement) {
-		groupAttackActionDescriptionPopoverElement.parentElement.removeChild(
-			groupAttackActionDescriptionPopoverElement,
-		);
-	}
-	if (groupAttackImagePopoverElement?.parentElement) {
-		groupAttackImagePopoverElement.parentElement.removeChild(groupAttackImagePopoverElement);
-	}
-	if (actionWindowElement?.parentElement) {
-		actionWindowElement.parentElement.removeChild(actionWindowElement);
-	}
-	clearGroupAttackTargetPopoverRefreshInterval();
+}
+
+function removeElementFromParent(element: HTMLElement | null): void {
+	if (!element?.parentElement) return;
+	element.parentElement.removeChild(element);
+}
+
+function removePanelElements(): void {
+	removeElementFromParent(minionGroupAttackPanelElement);
+	removeElementFromParent(groupAttackTargetPopoverElement);
+	removeElementFromParent(groupAttackActionDescriptionPopoverElement);
+	removeElementFromParent(groupAttackImagePopoverElement);
+	removeElementFromParent(actionWindowElement);
+}
+
+function resetMinionGroupTokenActionState(): void {
 	minionGroupAttackPanelElement = null;
 	groupAttackTargetPopoverElement = null;
 	groupAttackActionDescriptionPopoverElement = null;
@@ -3943,6 +4205,17 @@ export function unregisterMinionGroupTokenActions(): void {
 	ncswMapSelectorState.players = true;
 	ncswMapSelectorState.monsters = true;
 	ncswMapSelectorState.minions = true;
+}
+
+export function unregisterMinionGroupTokenActions(): void {
+	stopGroupAttackPanelDragTracking();
+	unregisterWindowResizeHandler();
+	unregisterActionWindowPointerMoveHandler();
+	unregisterTrackedHooks();
+	hideGroupAttackPanel();
+	removePanelElements();
+	clearGroupAttackTargetPopoverRefreshInterval();
+	resetMinionGroupTokenActionState();
 }
 
 export default function registerMinionGroupTokenActions(): void {

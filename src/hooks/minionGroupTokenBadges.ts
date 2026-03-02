@@ -91,6 +91,17 @@ function getCombatForScene(sceneId: string): Combat | null {
 	return combatForScene ?? null;
 }
 
+function shouldShowTurnCompleteBadgeForCombatant(params: {
+	combatant: Combatant.Implementation;
+	turnEnded: boolean;
+}): boolean {
+	if (params.combatant.defeated) return false;
+	if (params.combatant.type === 'character') return params.turnEnded;
+
+	const actionsRemaining = getCombatantCurrentActions(params.combatant);
+	return actionsRemaining <= 0 || params.turnEnded;
+}
+
 function buildTurnCompleteBadgeTokenIdsForCurrentScene(): Set<string> {
 	const tokenIds = new Set<string>();
 
@@ -109,18 +120,8 @@ function buildTurnCompleteBadgeTokenIdsForCurrentScene(): Set<string> {
 
 	for (const combatant of combatantsForScene) {
 		if (!combatant.tokenId) continue;
-		if (combatant.defeated) continue;
-
 		const turnEnded = hasCombatantTurnEndedThisRound(combat, combatant, groupSummaries);
-		if (combatant.type === 'character') {
-			if (!turnEnded) continue;
-			tokenIds.add(combatant.tokenId);
-			continue;
-		}
-
-		const actionsRemaining = getCombatantCurrentActions(combatant);
-		if (actionsRemaining > 0 && !turnEnded) continue;
-
+		if (!shouldShowTurnCompleteBadgeForCombatant({ combatant, turnEnded })) continue;
 		tokenIds.add(combatant.tokenId);
 	}
 
