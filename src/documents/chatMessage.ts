@@ -7,6 +7,22 @@ import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRel
 /** Types for activation cards that have targets and effects */
 type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'spell';
 
+/** Record of applied healing for undo functionality */
+export interface AppliedHealingRecord {
+	effectId: string;
+	healingType: string;
+	amount: number;
+	targets: Array<{
+		uuid: string;
+		tokenName: string;
+		previousHp: number;
+		previousTempHp: number;
+		newHp: number;
+		newTempHp: number;
+	}>;
+	appliedAt: number;
+}
+
 /** System data for activation cards */
 interface ActivationCardSystemData {
 	targets: string[];
@@ -16,6 +32,7 @@ interface ActivationCardSystemData {
 		effects: unknown[];
 		[key: string]: unknown;
 	};
+	appliedHealing?: Record<string, AppliedHealingRecord>;
 	[key: string]: unknown;
 }
 
@@ -254,6 +271,133 @@ class NimbleChatMessage extends ChatMessage {
 				await actor.update(updates as Actor.UpdateData);
 			}
 		}
+	}
+
+	async applyHealing(value: number, healingType?: string, effectId?: string): Promise<void> {
+		if (!this.isActivationCard()) return;
+
+		const healing = Math.floor(Math.abs(Number(value)));
+		if (!Number.isFinite(healing) || healing <= 0) return;
+
+		const systemData = this.system as ActivationCardSystemData;
+		const targets = systemData.targets || [];
+
+		if (!targets.length) {
+			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.noTargetsSelected'));
+			return;
+		}
+
+		// Check if already applied for this effect
+		if (effectId && this.isHealingApplied(effectId)) {
+			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.healingAlreadyApplied'));
+			return;
+		}
+
+		const healingRecord: AppliedHealingRecord = {
+			effectId: effectId || `healing-${Date.now()}`,
+			healingType: healingType || 'healing',
+			amount: healing,
+			targets: [],
+			appliedAt: Date.now(),
+		};
+
+		for (const uuid of targets) {
+			const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
+			const actor = tokenDocument?.actor as
+				| (Actor.Implementation & {
+						applyHealing?: (healing: number, healingType?: string) => Promise<void>;
+				  })
+				| null;
+			if (!actor) continue;
+
+			// Get current HP values before healing
+			const hpData = foundry.utils.getProperty(actor, 'system.attributes.hp') as
+				| { value?: number; temp?: number; max?: number }
+				| undefined;
+			const previousHp = typeof hpData?.value === 'number' ? hpData.value : 0;
+			const previousTempHp = typeof hpData?.temp === 'number' ? hpData.temp : 0;
+
+			if (actor.applyHealing) {
+				await actor.applyHealing(healing, healingType);
+			}
+
+			// Get new HP values after healing
+			const newHpData = foundry.utils.getProperty(actor, 'system.attributes.hp') as
+				| { value?: number; temp?: number }
+				| undefined;
+			const newHp = typeof newHpData?.value === 'number' ? newHpData.value : previousHp;
+			const newTempHp = typeof newHpData?.temp === 'number' ? newHpData.temp : previousTempHp;
+
+			healingRecord.targets.push({
+				uuid,
+				tokenName: tokenDocument?.name || 'Unknown',
+				previousHp,
+				previousTempHp,
+				newHp,
+				newTempHp,
+			});
+		}
+
+		// Store the healing record on the message
+		if (effectId) {
+			const appliedHealing = { ...(systemData.appliedHealing || {}) };
+			appliedHealing[effectId] = healingRecord;
+
+			await this.update({
+				'system.appliedHealing': appliedHealing,
+			} as Record<string, unknown>);
+		}
+	}
+
+	/**
+	 * Reverts previously applied healing by restoring HP to the snapshot taken at apply time.
+	 * Note: This is snapshot-based - if something else modified HP between apply and undo,
+	 * those changes will be silently overwritten when reverting to the previous values.
+	 */
+	async undoHealing(effectId: string): Promise<void> {
+		if (!this.isActivationCard()) return;
+
+		const systemData = this.system as ActivationCardSystemData;
+		const healingRecord = systemData.appliedHealing?.[effectId];
+
+		if (!healingRecord) {
+			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.noHealingRecord'));
+			return;
+		}
+
+		// Revert HP for each target
+		for (const targetRecord of healingRecord.targets) {
+			const tokenDocument = fromUuidSync(targetRecord.uuid) as TokenDocument | null;
+			const actor = tokenDocument?.actor as Actor.Implementation | null;
+			if (!actor) continue;
+
+			const updates: Record<string, unknown> = {};
+
+			if (healingRecord.healingType === 'temporaryHealing') {
+				// Revert temp HP
+				updates['system.attributes.hp.temp'] = targetRecord.previousTempHp;
+			} else {
+				// Revert regular HP
+				updates['system.attributes.hp.value'] = targetRecord.previousHp;
+			}
+
+			if (Object.keys(updates).length > 0) {
+				await actor.update(updates as Actor.UpdateData);
+			}
+		}
+
+		// Remove the healing record from the message using Foundry's delete syntax
+		await this.update({
+			[`system.appliedHealing.-=${effectId}`]: null,
+		} as Record<string, unknown>);
+
+		ui.notifications?.info(game.i18n.localize('NIMBLE.chat.healingUndone'));
+	}
+
+	isHealingApplied(effectId: string): boolean {
+		if (!this.isActivationCard()) return false;
+		const systemData = this.system as ActivationCardSystemData;
+		return !!systemData.appliedHealing?.[effectId];
 	}
 
 	async removeTarget(targetId: string): Promise<ChatMessage | undefined> {

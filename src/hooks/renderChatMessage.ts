@@ -1,4 +1,4 @@
-import { mount } from 'svelte';
+import { mount, unmount } from 'svelte';
 
 import NimbleAbilityCheckCard from '../view/chat/AbilityCheckCard.svelte';
 import NimbleFeatureCard from '../view/chat/FeatureCard.svelte';
@@ -100,6 +100,11 @@ export default function renderChatMessageHTML(message, html) {
 	target.classList.add('nimble-chat-card');
 	$(html).find('.message-header')[0]?.remove();
 	$(html).find('.message-content')[0]?.remove();
+
+	// Unmount any existing Svelte component before mounting a new one
+	if (message._svelteComponent) {
+		unmount(message._svelteComponent);
+	}
 
 	message._svelteComponent = mount(component, {
 		target,

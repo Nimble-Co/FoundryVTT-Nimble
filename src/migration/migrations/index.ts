@@ -5,3 +5,5 @@ export { Migration004SpellbladeCombatMana } from './Migration004SpellbladeCombat
 export { Migration005SpellUpcastEffect } from './Migration005SpellUpcastEffect.js';
 export { Migration006DwarfMaxHitDice } from './Migration006DwarfMaxHitDice.js';
 export { Migration007WildOneHitDiceAdvantage } from './Migration007WildOneHitDiceAdvantage.js';
+export { Migration008FieldMedicHealingPotionBonus } from './Migration008FieldMedicHealingPotionBonus.js';
+export { Migration009HealingEffects } from './Migration009HealingEffects.js';

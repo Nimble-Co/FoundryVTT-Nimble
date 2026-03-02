@@ -3,6 +3,7 @@ import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
+import { HealingPotionBonusRule } from '../models/rules/healingPotionBonus.js';
 import { HitDiceAdvantageRule } from '../models/rules/hitDiceAdvantage.js';
 import { IncrementHitDiceRule } from '../models/rules/incrementHitDice.js';
 import { InitiativeBonusRule } from '../models/rules/initiativeBonus.js';
@@ -24,6 +25,7 @@ export default function registerRulesConfig() {
 		combatMana: 'NIMBLE.ruleTypes.combatMana',
 		grantItem: 'NIMBLE.ruleTypes.grantItem',
 		grantProficiency: 'NIMBLE.ruleTypes.grantProficiency',
+		healingPotionBonus: 'NIMBLE.ruleTypes.healingPotionBonus',
 		hitDiceAdvantage: 'NIMBLE.ruleTypes.hitDiceAdvantage',
 		incrementHitDice: 'NIMBLE.ruleTypes.incrementHitDice',
 		initiativeBonus: 'NIMBLE.ruleTypes.initiativeBonus',
@@ -45,6 +47,7 @@ export default function registerRulesConfig() {
 		combatMana: CombatManaRule,
 		grantItem: ItemGrantRule,
 		grantProficiency: GrantProficiencyRule,
+		healingPotionBonus: HealingPotionBonusRule,
 		hitDiceAdvantage: HitDiceAdvantageRule,
 		incrementHitDice: IncrementHitDiceRule,
 		initiativeBonus: InitiativeBonusRule,

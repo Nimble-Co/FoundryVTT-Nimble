@@ -42,6 +42,17 @@
 		"abilityScoreControls": {
 			"confirmStatAssignments": "Confirm Stat Assignments"
 		},
+		"chat": {
+			"applyHealing": "Apply Healing",
+			"healing": "Healing",
+			"healingApplied": "Healing Applied",
+			"undoHealing": "Undo Healing",
+			"undo": "Undo",
+			"noTargetsSelected": "No targets selected",
+			"healingAlreadyApplied": "Healing has already been applied",
+			"healingUndone": "Healing has been undone",
+			"noHealingRecord": "No healing record found to undo"
+		},
 		"characterCreationStages": {
 			"stepFourStartingEquipment": "Step 4. Starting Equipment",
 			"stepFiveStats": "Step 5. Assign Stats",
@@ -480,6 +491,7 @@
 			"combatMana": "Combat Mana",
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
+			"healingPotionBonus": "Healing Potion Bonus",
 			"hitDiceAdvantage": "Hit Dice Advantage",
 			"incrementHitDice": "Increment Hit Dice",
 			"initiativeBonus": "Initiative Bonus",

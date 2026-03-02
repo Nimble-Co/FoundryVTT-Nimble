@@ -208,6 +208,14 @@ class ItemActivationManager {
 		const rolls: (Roll | DamageRoll)[] = [];
 		let foundDamageRoll = false;
 
+		// Check if item is a consumable (healing bonuses only apply to healing nodes, gated below)
+		const itemSystem = this.#item.system as { objectType?: string };
+		const isConsumable = itemSystem.objectType === 'consumable';
+
+		// Get healing bonus from actor if applicable
+		const actorSystem = this.actor?.system as { healingPotionBonus?: number } | undefined;
+		const healingBonus = isConsumable ? (actorSystem?.healingPotionBonus ?? 0) : 0;
+
 		for (const node of flattenEffectsTree(effects)) {
 			if (node.type === 'damage' || node.type === 'healing') {
 				let roll: Roll | DamageRoll;
@@ -238,7 +246,14 @@ class ItemActivationManager {
 
 					foundDamageRoll = true;
 				} else {
-					roll = new Roll(node.formula || '0', this.actor!.getRollData()) as Roll;
+					let formula = node.formula || '0';
+
+					// Apply healing bonus dice if applicable
+					if (node.type === 'healing' && healingBonus > 0) {
+						formula = this.#applyHealingBonus(formula, healingBonus);
+					}
+
+					roll = new Roll(formula, this.actor!.getRollData()) as Roll;
 				}
 
 				await roll.evaluate();
@@ -253,6 +268,26 @@ class ItemActivationManager {
 		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
 
 		return rolls;
+	}
+
+	/**
+	 * Adds bonus dice to a healing formula based on the healing bonus.
+	 * For example, if formula is "2d4+4" and bonus is 1, returns "3d4+4"
+	 *
+	 * Note: Uses a non-global regex, so only the first dice group is modified.
+	 * For formulas like "2d4+1d6", only the first group becomes "3d4+1d6".
+	 * This is intentional for healing potions which typically have a single dice pool.
+	 */
+	#applyHealingBonus(formula: string, bonusDice: number): string {
+		// Match dice notation like "2d4", "3d6", etc. (first occurrence only)
+		const diceMatch = formula.match(/(\d*)d(\d+)/);
+		if (!diceMatch) return formula;
+
+		const currentCount = parseInt(diceMatch[1] || '1', 10);
+		const diceSize = diceMatch[2];
+		const newCount = currentCount + bonusDice;
+
+		return formula.replace(/(\d*)d(\d+)/, `${newCount}d${diceSize}`);
 	}
 
 	#getDefaultDialogData(options): ItemActivationManager.DialogData {

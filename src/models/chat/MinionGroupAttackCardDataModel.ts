@@ -1,4 +1,4 @@
-import { metadata, targets } from './common.js';
+import { appliedHealing, metadata, targets } from './common.js';
 
 const { fields } = foundry.data;
 
@@ -43,6 +43,7 @@ const minionGroupAttackCardSchema = () => ({
 
 declare namespace NimbleMinionGroupAttackCardData {
 	type Schema = DataSchema &
+		ReturnType<typeof appliedHealing> &
 		ReturnType<typeof metadata> &
 		ReturnType<typeof minionGroupAttackCardSchema> &
 		ReturnType<typeof targets>;
@@ -58,6 +59,7 @@ class NimbleMinionGroupAttackCardData extends foundry.abstract.TypeDataModel<
 > {
 	static override defineSchema(): NimbleMinionGroupAttackCardData.Schema {
 		return {
+			...appliedHealing(),
 			...metadata(),
 			...targets(),
 			...minionGroupAttackCardSchema(),
