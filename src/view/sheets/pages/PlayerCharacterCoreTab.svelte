@@ -128,18 +128,18 @@
 					{heading}
 				</h3>
 
-				{#if editingEnabled}
-					<button
-						class="nimble-button"
-						data-button-variant="icon"
-						type="button"
-						aria-label={tooltip}
-						data-tooltip={tooltip}
-						onclick={configMethod}
-					>
-						<i class="fa-solid fa-edit"></i>
-					</button>
-				{/if}
+				<button
+					class="nimble-button"
+					data-button-variant="icon"
+					class:nimble-button--hidden={!editingEnabled}
+					type="button"
+					aria-label={editingEnabled ? tooltip : null}
+					data-tooltip={editingEnabled ? tooltip : null}
+					onclick={configMethod}
+					disabled={!editingEnabled}
+				>
+					<i class="fa-solid fa-edit"></i>
+				</button>
 			</header>
 
 			<ul class="nimble-proficiency-list">

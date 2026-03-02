@@ -1,183 +1,190 @@
 .system-nimble .nimble-chat-card .nimble-button,
 .system-nimble .nimble-sheet .nimble-button,
 .system-nimble .nimble-tooltip .nimble-button {
-  --button-size: fit-content;
+	--button-size: fit-content;
 
-  display: var(--nimble-button-display, flex);
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  color: inherit;
-  outline: 0;
-  box-shadow: none;
-  cursor: pointer;
-  transition: var(--nimble-standard-transition);
+	display: var(--nimble-button-display, flex);
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+	color: inherit;
+	outline: 0;
+	box-shadow: none;
+	cursor: pointer;
+	transition: var(--nimble-standard-transition);
 
-  &__icon {
-    font-size: var(--nimble-button-icon-font-size, inherit);
-    margin: 0;
+	&__icon {
+		font-size: var(--nimble-button-icon-font-size, inherit);
+		margin: 0;
 
-    &[data-icon-style="warning"] {
-      color: #c9593f;
-    }
-  }
+		&[data-icon-style="warning"] {
+			color: #c9593f;
+		}
+	}
 
-  &[data-button-variant="basic"] {
-    gap: 0.5rem;
-    width: var(--nimble-button-width, fit-content);
-    min-width: var(--nimble-button-min-width);
-    height: var(--nimble-button-height, auto);
-    margin: var(--nimble-button-margin, 0);
-    padding: var(--nimble-button-padding, 0.125rem 0.25rem);
-    font-size: var(--nimble-button-font-size, var(--nimble-sm-text));
-    font-weight: 500;
-    color: var(--nimble-dark-text-color);
-    background-color: var(--nimble-basic-button-background-color, var(--button-background-color));
-    border: 0;
+	&[data-button-variant="basic"] {
+		gap: 0.5rem;
+		width: var(--nimble-button-width, fit-content);
+		min-width: var(--nimble-button-min-width);
+		height: var(--nimble-button-height, auto);
+		margin: var(--nimble-button-margin, 0);
+		padding: var(--nimble-button-padding, 0.125rem 0.25rem);
+		font-size: var(--nimble-button-font-size, var(--nimble-sm-text));
+		font-weight: 500;
+		color: var(--nimble-dark-text-color);
+		background-color: var(--nimble-basic-button-background-color, var(--button-background-color));
+		border: 0;
 
-    &:hover {
-      color: var(--nimble-dark-text-hover-color);
-      background-color: var(--nimble-basic-button-background-color);
-      filter: brightness(1.1);
-    }
-  }
+		&:hover {
+			color: var(--nimble-dark-text-hover-color);
+			background-color: var(--nimble-basic-button-background-color);
+			filter: brightness(1.1);
+		}
+	}
 
-  &[data-button-variant="icon"] {
-    --button-size: fit-content;
+	&[data-button-variant="icon"] {
+		--button-size: fit-content;
 
-    width: fit-content;
-    margin: var(--nimble-button-margin, 0);
-    padding: var(--nimble-button-padding, 0.125rem);
-    font-size: var(--nimble-button-font-size, var(--nimble-xs-text));
-    background: var(--nimble-button-background, transparent);
-    border: 0;
-    border-radius: var(--nimble-button-border-radius, 0);
-    opacity: var(--nimble-button-opacity, 0.65);
-    transform: translateY(var(--nimble-button-icon-y-nudge, -1px));
+		width: fit-content;
+		margin: var(--nimble-button-margin, 0);
+		padding: var(--nimble-button-padding, 0.125rem);
+		font-size: var(--nimble-button-font-size, var(--nimble-xs-text));
+		background: var(--nimble-button-background, transparent);
+		border: 0;
+		border-radius: var(--nimble-button-border-radius, 0);
+		opacity: var(--nimble-button-opacity, 0.65);
+		transform: translateY(var(--nimble-button-icon-y-nudge, -1px));
 
-    &:hover {
-      opacity: 1;
-      transform: translateY(var(--nimble-button-icon-y-nudge, -1px)) scale(1.2);
-    }
-  }
+		&:hover {
+			opacity: 1;
+			transform: translateY(var(--nimble-button-icon-y-nudge, -1px)) scale(1.2);
+		}
+	}
 
-  &[data-button-variant="primary-navigation"] {
-    display: grid;
-    place-items: center;
-    height: var(--nimble-primary-navigation-item-dimensions, 1.5rem);
-    width: var(--nimble-primary-navigation-item-dimensions, 1.5rem);
-    margin: 0;
-    font-size: var(--nimble-primary-navigation-icon-size, var(--nimble-sm-text));
-    line-height: 1;
-    background: var(--nimble-navigation-background-color);
-    border-radius: 50%;
-    // Firefox fix: use box-shadow instead of filter: drop-shadow()
-    box-shadow: var(--nimble-navigation-button-box-shadow), var(--nimble-box-shadow);
-    transition: var(--nimble-standard-transition);
+	&[data-button-variant="primary-navigation"] {
+		display: grid;
+		place-items: center;
+		height: var(--nimble-primary-navigation-item-dimensions, 1.5rem);
+		width: var(--nimble-primary-navigation-item-dimensions, 1.5rem);
+		margin: 0;
+		font-size: var(--nimble-primary-navigation-icon-size, var(--nimble-sm-text));
+		line-height: 1;
+		background: var(--nimble-navigation-background-color);
+		border-radius: 50%;
+		// Firefox fix: use box-shadow instead of filter: drop-shadow()
+		box-shadow: var(--nimble-navigation-button-box-shadow), var(--nimble-box-shadow);
+		transition: var(--nimble-standard-transition);
 
-    i {
-      margin: 0;
-      padding: 0;
-    }
+		i {
+			margin: 0;
+			padding: 0;
+		}
 
-    &:focus,
-    &:hover {
-      color: var(--nimble-navigation-active-text-color);
-      background: var(--nimble-navigation-background-color);
-      transform: scale(1.2);
-      box-shadow: var(--nimble-navigation-button-box-shadow);
-      border: 0;
-    }
+		&:focus,
+		&:hover {
+			color: var(--nimble-navigation-active-text-color);
+			background: var(--nimble-navigation-background-color);
+			transform: scale(1.2);
+			box-shadow: var(--nimble-navigation-button-box-shadow);
+			border: 0;
+		}
 
-    &[data-button-state="active"] {
-      background: #842c2b;
-      transform: scale(1.2);
-      color: var(--nimble-navigation-active-text-color);
+		&[data-button-state="active"] {
+			background: #842c2b;
+			transform: scale(1.2);
+			color: var(--nimble-navigation-active-text-color);
 
-      &:focus,
-      &:hover {
-        box-shadow: var(--nimble-navigation-button-box-shadow);
-        color: var(--nimble-navigation-active-text-color);
-      }
-    }
-  }
+			&:focus,
+			&:hover {
+				box-shadow: var(--nimble-navigation-button-box-shadow);
+				color: var(--nimble-navigation-active-text-color);
+			}
+		}
+	}
 
-  &[data-button-variant="enricher"] {
-    --nimble-button-icon-font-size: var(--nimble-xs-text);
+	&[data-button-variant="enricher"] {
+		--nimble-button-icon-font-size: var(--nimble-xs-text);
 
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    width: fit-content;
-    padding: var(--nimble-button-padding, 0);
-    font-weight: 700;
-    background: transparent;
-    border: 0;
-    cursor: pointer;
-  }
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		width: fit-content;
+		padding: var(--nimble-button-padding, 0);
+		font-weight: 700;
+		background: transparent;
+		border: 0;
+		cursor: pointer;
+	}
 
-  &[data-button-variant="overhang"] {
-    --nimble-default-overhang-button-height: calc(var(--nimble-sheet-sidebar-width) - 0.5rem);
-    --nimble-default-overhang-button-width: calc(var(--nimble-sheet-sidebar-width) - 0.5rem);
+	&[data-button-variant="overhang"] {
+		--nimble-default-overhang-button-height: calc(var(--nimble-sheet-sidebar-width) - 0.5rem);
+		--nimble-default-overhang-button-width: calc(var(--nimble-sheet-sidebar-width) - 0.5rem);
 
-    height: var(--nimble-overhang-button-height, var(--nimble-default-overhang-button-height));
-    width: var(--nimble-overhang-button-width, var(--nimble-default-overhang-button-width));
-    padding: 0.5rem 0.25rem;
-    color: var(--nimble-overhang-button-text-color);
-    border-left: 0;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    border-color: hsl(41, 18%, 54%);
-    background-color: var(--nimble-overhang-button-background);
-    line-height: 1;
-    transition: var(--nimble-slow-transition);
-    opacity: 1;
+		height: var(--nimble-overhang-button-height, var(--nimble-default-overhang-button-height));
+		width: var(--nimble-overhang-button-width, var(--nimble-default-overhang-button-width));
+		padding: 0.5rem 0.25rem;
+		color: var(--nimble-overhang-button-text-color);
+		border-left: 0;
+		border-top-left-radius: 0;
+		border-bottom-left-radius: 0;
+		border-color: hsl(41, 18%, 54%);
+		background-color: var(--nimble-overhang-button-background);
+		line-height: 1;
+		transition: var(--nimble-slow-transition);
+		opacity: 1;
 
-    &:hover {
-      --nimble-default-overhang-button-width: calc(var(--nimble-sheet-sidebar-width) - 1px);
-      --nimble-overhang-button-background: var(--nimble-overhang-button-hover-background);
-      --nimble-overhang-button-width: var(--nimble-overhang-button-expanded-width,
-      var(--nimble-default-overhang-button-width));
-      --nimble-overhang-button-text-color: #fff;
-    }
+		&:hover {
+			--nimble-default-overhang-button-width: calc(var(--nimble-sheet-sidebar-width) - 1px);
+			--nimble-overhang-button-background: var(--nimble-overhang-button-hover-background);
+			--nimble-overhang-button-width: var(
+				--nimble-overhang-button-expanded-width,
+				var(--nimble-default-overhang-button-width)
+			);
+			--nimble-overhang-button-text-color: #fff;
+		}
 
-    &:disabled {
-      opacity: 0.5;
-    }
+		&:disabled {
+			opacity: 0.5;
+		}
 
-    @media (prefers-reduced-motion: no-preference) {
-      @starting-style {
-        opacity: 0;
-        translate: calc(var(--nimble-overhang-button-width, var(--nimble-default-overhang-button-width)) * -1) 0;
-      }
-    }
-  }
+		@media (prefers-reduced-motion: no-preference) {
+			@starting-style {
+				opacity: 0;
+				translate: calc(var(--nimble-overhang-button-width, var(--nimble-default-overhang-button-width)) * -1) 0;
+			}
+		}
+	}
 
-  &[data-button-variant="full-width"] {
-    display: flex;
-    width: 100%;
-    padding: 0.5rem 0.25rem;
-    border: 0;
-    border-radius: 4px;
-    color: var(--nimble-dark-text-color);
-    background-color: var(--nimble-basic-button-background-color, var(--button-background-color));
-    font-weight: 500;
-    line-height: 1;
-    transition: var(--nimble-slow-transition);
-    opacity: 1;
+	&[data-button-variant="full-width"] {
+		display: flex;
+		width: 100%;
+		padding: 0.5rem 0.25rem;
+		border: 0;
+		border-radius: 4px;
+		color: var(--nimble-dark-text-color);
+		background-color: var(--nimble-basic-button-background-color, var(--button-background-color));
+		font-weight: 500;
+		line-height: 1;
+		transition: var(--nimble-slow-transition);
+		opacity: 1;
 
-    &:hover {
-      color: var(--nimble-dark-text-hover-color);
-      background-color: var(--nimble-basic-button-background-color);
-      filter: brightness(1.1);
-    }
+		&:hover {
+			color: var(--nimble-dark-text-hover-color);
+			background-color: var(--nimble-basic-button-background-color);
+			filter: brightness(1.1);
+		}
 
-    &:disabled {
-      opacity: 0.5;
-    }
-  }
+		&:disabled {
+			opacity: 0.5;
+		}
+	}
 
-  &[data-enricher-type="condition"] {
-    color: #199356;
-  }
+	&[data-enricher-type="condition"] {
+		color: #199356;
+	}
+
+	&--hidden {
+		visibility: hidden;
+		pointer-events: none;
+	}
 }

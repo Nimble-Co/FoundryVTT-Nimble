@@ -59,18 +59,18 @@
 	<header class="nimble-section-header">
 		<h3 class="nimble-heading" data-heading-variant="section">{saves.saves}</h3>
 
-		{#if editingEnabled}
-			<button
-				class="nimble-button"
-				data-button-variant="icon"
-				type="button"
-				data-tooltip="NIMBLE.prompts.configureSavingThrows"
-				aria-label={localize('NIMBLE.prompts.configureSavingThrows')}
-				onclick={() => actor.configureSavingThrows()}
-			>
-				<i class="fa-solid fa-edit"></i>
-			</button>
-		{/if}
+		<button
+			class="nimble-button"
+			data-button-variant="icon"
+			class:nimble-button--hidden={!editingEnabled}
+			type="button"
+			aria-label={editingEnabled ? localize('NIMBLE.prompts.configureSavingThrows') : null}
+			data-tooltip={editingEnabled ? localize('NIMBLE.prompts.configureSavingThrows') : null}
+			onclick={() => actor.configureSavingThrows()}
+			disabled={!editingEnabled}
+		>
+			<i class="fa-solid fa-edit"></i>
+		</button>
 	</header>
 
 	<dl class="nimble-stats">

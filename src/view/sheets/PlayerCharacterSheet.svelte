@@ -780,11 +780,6 @@
 		}
 	}
 
-	.nimble-button--hidden {
-		visibility: hidden;
-		pointer-events: none;
-	}
-
 	.nimble-heading--hp {
 		--nimble-button-icon-y-nudge: 0;
 

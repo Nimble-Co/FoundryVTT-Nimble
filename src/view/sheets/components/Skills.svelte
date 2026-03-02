@@ -70,18 +70,18 @@
 	<header class="nimble-section-header">
 		<h3 class="nimble-heading" data-heading-variant="section">Skills</h3>
 
-		{#if editingEnabled}
-			<button
-				class="nimble-button"
-				data-button-variant="icon"
-				type="button"
-				aria-label={localize('NIMBLE.prompts.configureSkills')}
-				data-tooltip={localize('NIMBLE.prompts.configureSkills')}
-				onclick={() => actor.configureSkills()}
-			>
-				<i class="fa-solid fa-edit"></i>
-			</button>
-		{/if}
+		<button
+			class="nimble-button"
+			data-button-variant="icon"
+			type="button"
+			class:nimble-button--hidden={!editingEnabled}
+			aria-label={editingEnabled ? localize('NIMBLE.prompts.configureSkills') : null}
+			data-tooltip={editingEnabled ? localize('NIMBLE.prompts.configureSkills') : null}
+			onclick={() => actor.configureSkills()}
+			disabled={!editingEnabled}
+		>
+			<i class="fa-solid fa-edit"></i>
+		</button>
 	</header>
 
 	<ul class="nimble-skills" class:nimble-skills--compact={compactSkillsView}>

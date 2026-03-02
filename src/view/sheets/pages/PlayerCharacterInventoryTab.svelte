@@ -132,16 +132,14 @@
 	<div class="nimble-search-wrapper">
 		<SearchBar bind:searchTerm />
 
-		{#if editingEnabled}
-			<button
-				class="nimble-button fa-solid fa-plus"
-				data-button-variant="basic"
-				type="button"
-				aria-label="Create Object"
-				data-tooltip="Create Object"
-				onclick={createItem}
-			></button>
-		{/if}
+		<button
+			class="nimble-button fa-solid fa-plus"
+			data-button-variant="basic"
+			type="button"
+			aria-label="Create Object"
+			data-tooltip="Create Object"
+			onclick={createItem}
+		></button>
 	</div>
 
 	{#each Object.entries(currency).reverse() as [key, denomination] (key)}

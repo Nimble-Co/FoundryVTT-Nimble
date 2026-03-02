@@ -38,18 +38,18 @@
 	<header class="nimble-section-header">
 		<h3 class="nimble-heading" data-heading-variant="section">{sectionHeaders.stats}</h3>
 
-		{#if editingEnabled}
-			<button
-				class="nimble-button"
-				data-button-variant="icon"
-				type="button"
-				data-tooltip="NIMBLE.prompts.configureAbilityScores"
-				aria-label={localize('NIMBLE.prompts.configureAbilityScores')}
-				onclick={() => actor.configureAbilityScores()}
-			>
-				<i class="fa-solid fa-edit"></i>
-			</button>
-		{/if}
+		<button
+			type="button"
+			class="nimble-button"
+			data-button-variant="icon"
+			class:nimble-button--hidden={!editingEnabled}
+			aria-label={editingEnabled ? localize('NIMBLE.prompts.configureAbilityScores') : null}
+			data-tooltip={editingEnabled ? localize('NIMBLE.prompts.configureAbilityScores') : null}
+			onclick={() => actor.configureAbilityScores()}
+			disabled={!editingEnabled}
+		>
+			<i class="fa-solid fa-edit"></i>
+		</button>
 	</header>
 
 	<dl class="nimble-stats">
