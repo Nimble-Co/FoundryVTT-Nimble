@@ -87,6 +87,9 @@
 	}
 
 	.nimble-movement__primary {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
 		margin-block-end: 0;
 	}
 

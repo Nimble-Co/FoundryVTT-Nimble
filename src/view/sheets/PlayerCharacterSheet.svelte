@@ -396,26 +396,14 @@
 			{/each}
 		</ul>
 
-		{#if editingEnabled}
-			<button
-				class="nimble-icon__button nimble-icon__button--actor"
-				aria-label={localize('NIMBLE.prompts.changeActorImage')}
-				data-tooltip="NIMBLE.prompts.changeActorImage"
-				onclick={(event) => updateDocumentImage(actor, { shiftKey: event.shiftKey })}
-				type="button"
-			>
-				<img
-					class="nimble-icon__image nimble-icon__image--actor"
-					src={actor.reactive.img}
-					alt={actor.reactive.name}
-					style="
-						--nimble-actor-image-x-offset: {actorImageXOffset}px;
-						--nimble-actor-image-y-offset: {actorImageYOffset}px;
-						--nimble-actor-image-scale: {actorImageScale}%;
-					"
-				/>
-			</button>
-		{:else}
+		<button
+			class="nimble-icon__button nimble-icon__button--actor"
+			aria-label={editingEnabled ? localize('NIMBLE.prompts.changeActorImage') : ''}
+			data-tooltip={editingEnabled ? 'NIMBLE.prompts.changeActorImage' : null}
+			onclick={(event) => updateDocumentImage(actor, { shiftKey: event.shiftKey })}
+			type="button"
+			disabled={!editingEnabled}
+		>
 			<img
 				class="nimble-icon__image nimble-icon__image--actor"
 				src={actor.reactive.img}
@@ -426,7 +414,7 @@
 					--nimble-actor-image-scale: {actorImageScale}%;
 				"
 			/>
-		{/if}
+		</button>
 	</div>
 
 	<section class="nimble-character-sheet-section nimble-character-sheet-section--defense">
@@ -450,18 +438,17 @@
 					<span class="nimble-wounds-indicator__count">{wounds.value}</span>
 				</span>
 			{/if}
-			{#if editingEnabled}
-				<button
-					class="nimble-button"
-					data-button-variant="icon"
-					type="button"
-					aria-label="Configure Hit Points"
-					data-tooltip="Configure Hit Points"
-					onclick={() => actor.configureHitPoints()}
-				>
-					<i class="fa-solid fa-edit"></i>
-				</button>
-			{/if}
+			<button
+				class="nimble-button"
+				class:nimble-button--hidden={!editingEnabled}
+				data-button-variant="icon"
+				type="button"
+				aria-label="Configure Hit Points"
+				data-tooltip="Configure Hit Points"
+				onclick={() => actor.configureHitPoints()}
+			>
+				<i class="fa-solid fa-edit"></i>
+			</button>
 		</h3>
 
 		<HitPointBar
@@ -478,18 +465,17 @@
 		<h3 class="nimble-heading nimble-heading--hit-dice">
 			{CONFIG.NIMBLE.hitDice.heading}
 			<i class="fa-solid fa-heart-circle-plus"></i>
-			{#if editingEnabled}
-				<button
-					class="nimble-button"
-					data-button-variant="icon"
-					type="button"
-					aria-label={CONFIG.NIMBLE.hitDice.configureHitDice}
-					data-tooltip={CONFIG.NIMBLE.hitDice.configureHitDice}
-					onclick={() => actor.configureHitDice()}
-				>
-					<i class="fa-solid fa-edit"></i>
-				</button>
-			{/if}
+			<button
+				class="nimble-button"
+				class:nimble-button--hidden={!editingEnabled}
+				data-button-variant="icon"
+				type="button"
+				aria-label={CONFIG.NIMBLE.hitDice.configureHitDice}
+				data-tooltip={CONFIG.NIMBLE.hitDice.configureHitDice}
+				onclick={() => actor.configureHitDice()}
+			>
+				<i class="fa-solid fa-edit"></i>
+			</button>
 		</h3>
 
 		<HitDiceBar
@@ -506,18 +492,17 @@
 			<h3 class="nimble-heading nimble-heading--mana">
 				Mana
 				<i class="fa-solid fa-sparkles"></i>
-				{#if editingEnabled}
-					<button
-						class="nimble-button"
-						data-button-variant="icon"
-						type="button"
-						aria-label={CONFIG.NIMBLE.manaConfig.configureMana}
-						data-tooltip={CONFIG.NIMBLE.manaConfig.configureMana}
-						onclick={() => actor.configureMana()}
-					>
-						<i class="fa-solid fa-edit"></i>
-					</button>
-				{/if}
+				<button
+					class="nimble-button"
+					class:nimble-button--hidden={!editingEnabled}
+					data-button-variant="icon"
+					type="button"
+					aria-label={CONFIG.NIMBLE.manaConfig.configureMana}
+					data-tooltip={CONFIG.NIMBLE.manaConfig.configureMana}
+					onclick={() => actor.configureMana()}
+				>
+					<i class="fa-solid fa-edit"></i>
+				</button>
 			</h3>
 
 			<ManaBar
@@ -795,7 +780,14 @@
 		}
 	}
 
+	.nimble-button--hidden {
+		visibility: hidden;
+		pointer-events: none;
+	}
+
 	.nimble-heading--hp {
+		--nimble-button-icon-y-nudge: 0;
+
 		grid-area: hpHeading;
 		// Prevent wounds label from expanding the heading beyond available space
 		overflow: hidden;
@@ -812,6 +804,8 @@
 	}
 
 	.nimble-heading--hit-dice {
+		--nimble-button-icon-y-nudge: 0;
+
 		grid-area: hitDiceHeading;
 
 		.nimble-button {
@@ -825,6 +819,8 @@
 	}
 
 	.nimble-heading--mana {
+		--nimble-button-icon-y-nudge: 0;
+
 		grid-area: manaHeading;
 		margin-block-start: 0.25rem;
 	}

@@ -62,14 +62,13 @@
   }
 
   &[data-button-variant="primary-navigation"] {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     height: var(--nimble-primary-navigation-item-dimensions, 1.5rem);
     width: var(--nimble-primary-navigation-item-dimensions, 1.5rem);
     margin: 0;
     font-size: var(--nimble-primary-navigation-icon-size, var(--nimble-sm-text));
-    line-height: 0;
+    line-height: 1;
     background: var(--nimble-navigation-background-color);
     border-radius: 50%;
     // Firefox fix: use box-shadow instead of filter: drop-shadow()
