@@ -68,6 +68,6 @@ Before making changes, read the full coding style guide: [docs/STYLE_GUIDE.md](d
 
 ### Before Committing
 
-Run `npm run check` to verify formatting, linting, types, and tests pass.
+Run `pnpm check` to verify formatting, linting, types, and tests pass.
 
 See [Pre-Review Extraction Checks](docs/STYLE_GUIDE.md#pre-review-extraction-checks) for the full checklist.

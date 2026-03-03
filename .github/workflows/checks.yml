@@ -18,17 +18,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node_version }}
-      - name: Cache Node.js modules
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          path: .npm
-          key: npm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/package-lock.json') }}
+          path: ~/.local/share/pnpm/store/v10
+          key: pnpm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            npm-${{ github.head_ref }}-
-            npm-dev-
-      - run: npm ci --cache .npm --prefer-offline
+            pnpm-${{ github.head_ref }}-
+            pnpm-dev-
+      - run: pnpm install --frozen-lockfile
       - name: compile typescript
-        run: npm run type-check
+        run: pnpm type-check
 
   lint:
     name: Lint
@@ -39,17 +41,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node_version }}
-      - name: Cache Node.js modules
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          path: .npm
-          key: npm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/package-lock.json') }}
+          path: ~/.local/share/pnpm/store/v10
+          key: pnpm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            npm-${{ github.head_ref }}-
-            npm-dev-
-      - run: npm ci --cache .npm --prefer-offline
+            pnpm-${{ github.head_ref }}-
+            pnpm-dev-
+      - run: pnpm install --frozen-lockfile
       - name: Run Svelte and Biome linters
-        run: npm run lint
+        run: pnpm lint
 
   circular-deps:
     name: Circular Dependency Check
@@ -61,14 +65,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.node_version }}
-      - name: Cache Node.js modules
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          path: .npm
-          key: npm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/package-lock.json') }}
+          path: ~/.local/share/pnpm/store/v10
+          key: pnpm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            npm-${{ github.head_ref }}-
-            npm-dev-
-      - run: npm ci --cache .npm --prefer-offline
+            pnpm-${{ github.head_ref }}-
+            pnpm-dev-
+      - run: pnpm install --frozen-lockfile
       - name: Check circular dependencies
-        run: npm run circular-deps
+        run: pnpm circular-deps

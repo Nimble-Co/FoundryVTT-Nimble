@@ -28,24 +28,27 @@ jobs:
         with:
           node-version: ${{ env.node_version }}
 
-      - name: Cache Node.js modules
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Cache pnpm store
         uses: actions/cache@v4
         with:
-          path: .npm
-          key: npm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/package-lock.json') }}
+          path: ~/.local/share/pnpm/store/v10
+          key: pnpm-${{ github.head_ref }}-${{ github.event.pull_request.head.sha }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            npm-${{ github.head_ref }}-
-            npm-dev-
+            pnpm-${{ github.head_ref }}-
+            pnpm-dev-
 
       - name: Install dependencies
-        run: npm ci --cache .npm --prefer-offline
+        run: pnpm install --frozen-lockfile
 
       - name: Setup Biome
         uses: biomejs/setup-biome@v2
 
       - name: Run format (same-repo PRs)
         if: github.event.pull_request.head.repo.full_name == github.repository
-        run: npm run format
+        run: pnpm format
 
       - name: Commit formatted changes (same-repo PRs)
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -58,9 +61,9 @@ jobs:
       - name: Check format (fork PRs)
         if: github.event.pull_request.head.repo.full_name != github.repository
         run: |
-          npm run format
+          pnpm format
           if ! git diff --exit-code; then
-            echo "❌ Code is not formatted. Please run 'npm run format' locally and commit the changes."
+            echo "❌ Code is not formatted. Please run 'pnpm format' locally and commit the changes."
             exit 1
           fi
           echo "✅ Code is properly formatted."

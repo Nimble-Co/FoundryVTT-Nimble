@@ -9,7 +9,7 @@ Instructions for creating GitHub Releases for the Nimble FoundryVTT system.
 From the `dev` branch, run the release script:
 
 ```bash
-npm run release -- <major|minor|patch> --prod
+pnpm release -- <major|minor|patch> --prod
 ```
 
 Without `--prod`, the script runs in dry-run mode (no git operations).

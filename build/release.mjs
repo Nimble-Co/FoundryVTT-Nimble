@@ -210,9 +210,9 @@ async function release() {
 	writeJsonFile(PACKAGE_JSON_PATH, packageJson);
 	console.log(`Updated package.json version to ${newVersion}`);
 
-	// Update package-lock.json
-	execSync('npm install --package-lock-only', { cwd: rootDir });
-	console.log(`Updated package-lock.json version to ${newVersion}`);
+	// Update pnpm-lock.yaml
+	execSync('pnpm install --lockfile-only', { cwd: rootDir });
+	console.log(`Updated pnpm-lock.yaml version to ${newVersion}`);
 
 	// Update system.json
 	systemJson.version = newVersion;
@@ -222,11 +222,7 @@ async function release() {
 	console.log(`Updated download URL to ${systemJson.download}`);
 
 	// Create initial git commit
-	execCommand(
-		'git add package.json package-lock.json public/system.json',
-		{ cwd: rootDir },
-		dryRun,
-	);
+	execCommand('git add package.json pnpm-lock.yaml public/system.json', { cwd: rootDir }, dryRun);
 	execCommand(`git commit -m "chore(release): v${newVersion}"`, { cwd: rootDir }, dryRun);
 	console.log(
 		`${dryRun ? '[DRY-RUN] Would create' : 'Created'} commit: chore(release): v${newVersion}`,
@@ -269,7 +265,7 @@ async function release() {
 		console.log('DRY-RUN COMPLETE');
 		console.log('='.repeat(60));
 		console.log('\nFiles have been modified locally. To reset them, run:');
-		console.log('  git checkout -- package.json package-lock.json public/system.json CHANGELOG.md');
+		console.log('  git checkout -- package.json pnpm-lock.yaml public/system.json CHANGELOG.md');
 	} else {
 		console.log('\nRelease ready! Complete steps in release guide to finish.');
 	}

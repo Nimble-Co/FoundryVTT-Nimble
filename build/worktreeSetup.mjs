@@ -303,10 +303,10 @@ async function setup() {
 	resetLegacyHooksPath();
 
 	// Step 3: Install dependencies
-	runCommand('npm install', 'Installing dependencies');
+	runCommand('pnpm install', 'Installing dependencies');
 
 	// Step 4: Build the system
-	runCommand('npm run build', 'Building system and compendia');
+	runCommand('pnpm build', 'Building system and compendia');
 
 	// Step 5: Setup symlink
 	await setupSymlink(customPath);
@@ -317,7 +317,7 @@ async function setup() {
 	console.log('╚════════════════════════════════════════╝');
 	console.log('');
 	console.log('You can now start FoundryVTT and it will use this worktree.');
-	console.log('For development, run: npm run dev');
+	console.log('For development, run: pnpm dev');
 	console.log('');
 }
 

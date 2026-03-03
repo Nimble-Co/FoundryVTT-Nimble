@@ -4,26 +4,28 @@
 	"description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
 	"main": "nimble.mjs",
 	"type": "module",
+	"packageManager": "pnpm@10.11.0",
 	"scripts": {
-		"build": "npm run build:compendia && vite build",
+		"preinstall": "npx only-allow pnpm",
+		"build": "pnpm build:compendia && vite build",
 		"build:system": "vite build",
 		"build:compendia": "node ./build/buildCompendia.mjs",
 		"worktree:setup": "node ./build/worktreeSetup.mjs",
 		"worktree:cleanup": "node ./build/worktreeCleanup.mjs",
 		"dev": "vite",
-		"format": "npx @biomejs/biome format --write ./src/ ./types/ ./lib/ && npx prettier --write \"src/**/*.svelte\"",
-		"format:biome": "npx @biomejs/biome format --write ./src/ ./types/ ./lib/",
-		"format:svelte": "npx prettier --write \"src/**/*.svelte\"",
-		"format:scss": "npx stylelint \"src/**/*.scss\" --fix",
+		"format": "biome format --write ./src/ ./types/ ./lib/ && prettier --write \"src/**/*.svelte\"",
+		"format:biome": "biome format --write ./src/ ./types/ ./lib/",
+		"format:svelte": "prettier --write \"src/**/*.svelte\"",
+		"format:scss": "stylelint \"src/**/*.scss\" --fix",
 		"lint:svelte": "eslint \"src/**/*.svelte\"",
 		"lint:svelte-fix": "eslint \"src/**/*.svelte\" --fix",
-		"lint": "npm run lint:svelte && npx @biomejs/biome lint ./src/ ./types/ ./lib/",
-		"lint-fix": "npm run lint:svelte-fix && npx @biomejs/biome lint --write ./src/ ./types/ ./lib/",
+		"lint": "pnpm lint:svelte && biome lint ./src/ ./types/ ./lib/",
+		"lint-fix": "pnpm lint:svelte-fix && biome lint --write ./src/ ./types/ ./lib/",
 		"check:svelte": "svelte-check --tsconfig ./tsconfig.json",
 		"circular-deps": "depcruise --config .dependency-cruiser.cjs ./src/",
 		"type-check": "tsc --noEmit",
-		"check": "npm run format && npm run lint && npm run circular-deps && npm run type-check && npm run test",
-		"spell-check": "npx cspell -c ./cspell.json lint . --words-only | sort -u",
+		"check": "pnpm format && pnpm lint && pnpm circular-deps && pnpm type-check && pnpm test",
+		"spell-check": "cspell -c ./cspell.json lint . --words-only | sort -u",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:ui": "vitest --ui",
@@ -88,10 +90,19 @@
 	"private": true,
 	"engines": {
 		"node": ">=22.1.0",
-		"npm": ">=10.7.0"
+		"pnpm": ">=10.0.0"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@evilmartians/lefthook",
+			"@parcel/watcher",
+			"classic-level",
+			"esbuild"
+		]
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.1",
+		"@eslint/js": "^9.39.2",
 		"@evilmartians/lefthook": "^2.1.1",
 		"@sveltejs/vite-plugin-svelte": "6.2.1",
 		"@testing-library/jest-dom": "^6.9.1",
