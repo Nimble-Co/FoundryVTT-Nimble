@@ -97,7 +97,8 @@
 			"@evilmartians/lefthook",
 			"@parcel/watcher",
 			"classic-level",
-			"esbuild"
+			"esbuild",
+			"svelte-preprocess"
 		]
 	},
 	"devDependencies": {
