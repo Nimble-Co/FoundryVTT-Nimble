@@ -1267,7 +1267,7 @@ export const NIMBLE = {
 
 ### Before Committing
 
-- [ ] `npm run check` passes (format, lint, type-check, tests)
+- [ ] `pnpm check` passes (format, lint, type-check, tests)
 - [ ] No circular dependencies introduced
 - [ ] New code follows existing patterns
 - [ ] Svelte components use TypeScript (`lang="ts"`)

@@ -16,12 +16,12 @@
 
 2. **Install dependencies:**
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Start the development server:**
    ```bash
-   npm run dev
+   pnpm dev
    ```
 
    This will start a Vite development server on `http://localhost:30001` that proxies to your local FoundryVTT instance running on port 30000.
@@ -33,15 +33,15 @@
 
 ### Build Commands
 
-- **`npm run build`** - Build the system and compendia for production
-- **`npm run build:system`** - Build only the system files
-- **`npm run build:compendia`** - Build only the compendia data
-- **`npm run dev`** - Start development server with hot reload
-- **`npm run format`** - Format code with Biome
-- **`npm run lint`** - Lint code with Biome
-- **`npm run lint-fix`** - Auto-fix linting issues
-- **`npm run type-check`** - Run TypeScript type checking
-- **`npm run check`** - Run all checks (format, lint, circular dependencies, type-check, tests)
+- **`pnpm build`** - Build the system and compendia for production
+- **`pnpm build:system`** - Build only the system files
+- **`pnpm build:compendia`** - Build only the compendia data
+- **`pnpm dev`** - Start development server with hot reload
+- **`pnpm format`** - Format code with Biome
+- **`pnpm lint`** - Lint code with Biome
+- **`pnpm lint-fix`** - Auto-fix linting issues
+- **`pnpm type-check`** - Run TypeScript type checking
+- **`pnpm check`** - Run all checks (format, lint, circular dependencies, type-check, tests)
 
 ## 📁 Project Structure
 
@@ -131,7 +131,7 @@ The system integrates deeply with FoundryVTT through:
 2. Ensure you're on the `dev` branch: `git checkout dev`
 3. Create a feature branch from `dev`: `git checkout -b feature/your-feature`
 4. Make your changes and ensure tests pass
-5. Run checks before committing: `npm run check`
+5. Run checks before committing: `pnpm check`
 6. Commit your changes: `git commit -am 'Add some feature'`
 7. Push to the branch: `git push origin feature/your-feature`
 8. Submit a pull request **against the `dev` branch**
@@ -142,13 +142,13 @@ The system integrates deeply with FoundryVTT through:
 
 - Use TypeScript for all new code
 - Follow the existing code style and patterns
-- Run `npm run check` before committing (formats, lints, checks for circular dependencies, type-checks, and runs tests)
+- Run `pnpm check` before committing (formats, lints, checks for circular dependencies, type-checks, and runs tests)
 - Test your changes in FoundryVTT
 - Update documentation as needed
 
 ## 📦 Deployment
 
-1. Build the system: `npm run build`
+1. Build the system: `pnpm build`
 2. Copy the `dist/` folder to your FoundryVTT `systems/nimble/` directory
 3. Restart FoundryVTT or reload the system
 
