@@ -332,7 +332,10 @@ const SCHOOL_TIER_COLORS: { [key: string]: string } = {
 	wind: '#FFFFFF', // white
 };
 
-function mapTierForCompendiumDisplay(tierValue: unknown, propertiesSelected: unknown): number {
+export function mapTierForCompendiumDisplay(
+	tierValue: unknown,
+	propertiesSelected: unknown,
+): number {
 	const parsedTier =
 		typeof tierValue === 'number' ? tierValue : Number.parseInt(String(tierValue ?? 0), 10) || 0;
 	const isUtilitySpell =

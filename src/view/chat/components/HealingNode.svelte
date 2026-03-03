@@ -30,7 +30,6 @@
 	let hasTargets = $derived((systemData.targets?.length ?? 0) > 0);
 
 	// Permission check - only GM or the message author can interact with healing buttons
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used in template
 	let canInteract = $derived(game.user?.isGM || messageDocument.author?.id === game.user?.id);
 
 	// Localization
