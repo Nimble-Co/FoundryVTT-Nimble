@@ -332,14 +332,9 @@ const SCHOOL_TIER_COLORS: { [key: string]: string } = {
 	wind: '#FFFFFF', // white
 };
 
-function mapTierForCompendiumDisplay(
-	tierValue: unknown,
-	propertiesSelected: unknown,
-): number {
+function mapTierForCompendiumDisplay(tierValue: unknown, propertiesSelected: unknown): number {
 	const parsedTier =
-		typeof tierValue === 'number'
-			? tierValue
-			: Number.parseInt(String(tierValue ?? 0), 10) || 0;
+		typeof tierValue === 'number' ? tierValue : Number.parseInt(String(tierValue ?? 0), 10) || 0;
 	const isUtilitySpell =
 		Array.isArray(propertiesSelected) && propertiesSelected.includes('utilitySpell');
 	return isUtilitySpell ? 0 : parsedTier + 1;
