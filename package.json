@@ -4,6 +4,7 @@
 	"description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
 	"main": "nimble.mjs",
 	"type": "module",
+	"packageManager": "pnpm@10.11.0",
 	"scripts": {
 		"preinstall": "npx only-allow pnpm",
 		"build": "pnpm build:compendia && vite build",
