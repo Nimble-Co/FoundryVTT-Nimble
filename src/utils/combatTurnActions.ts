@@ -24,7 +24,10 @@ export function resolveCombatantCurrentActionsAfterDelta(params: {
 	maxActions: number;
 	delta: number;
 }): number {
-	const normalizedCurrent = Math.max(0, Math.floor(toFiniteNonNegativeNumber(params.currentActions)));
+	const normalizedCurrent = Math.max(
+		0,
+		Math.floor(toFiniteNonNegativeNumber(params.currentActions)),
+	);
 	const normalizedMax = Math.max(0, Math.floor(toFiniteNonNegativeNumber(params.maxActions)));
 	const numericDelta = Number(params.delta);
 	const normalizedDelta = Number.isFinite(numericDelta) ? Math.trunc(numericDelta) : 0;
@@ -44,9 +47,7 @@ export async function consumeCombatantAction(params: {
 	fallbackCombatant?: Combatant.Implementation | null;
 }): Promise<number> {
 	const combatant =
-		params.combat.combatants.get(params.combatantId) ??
-		params.fallbackCombatant ??
-		null;
+		params.combat.combatants.get(params.combatantId) ?? params.fallbackCombatant ?? null;
 	if (!combatant) return 0;
 
 	const currentActions = getCombatantCurrentActions(combatant);
@@ -57,9 +58,7 @@ export async function consumeCombatantAction(params: {
 		_id: params.combatantId,
 		[COMBATANT_ACTIONS_CURRENT_PATH]: nextActions,
 	};
-	await params.combat.updateEmbeddedDocuments('Combatant', [
-		actionUpdate,
-	]);
+	await params.combat.updateEmbeddedDocuments('Combatant', [actionUpdate]);
 	return nextActions;
 }
 

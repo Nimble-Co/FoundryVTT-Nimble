@@ -305,9 +305,7 @@
 				<tbody>
 					<tr>
 						<td>
-							<div class="nimble-ct-settings__permission-title">
-								Show HP for non-players
-							</div>
+							<div class="nimble-ct-settings__permission-title">Show HP for non-players</div>
 						</td>
 						{#each ROLE_COLUMNS as role}
 							<td>
@@ -366,7 +364,8 @@
 					class="nimble-ct-settings__color-picker"
 					value={actionDiceColor}
 					oninput={(event) => applyActionDiceColor((event.currentTarget as HTMLInputElement).value)}
-					onchange={(event) => applyActionDiceColor((event.currentTarget as HTMLInputElement).value)}
+					onchange={(event) =>
+						applyActionDiceColor((event.currentTarget as HTMLInputElement).value)}
 				/>
 			</div>
 		</div>
@@ -374,21 +373,16 @@
 </section>
 
 <style lang="scss">
-	:global(.system-nimble .nimble-sheet.nimble-dialog:has(.nimble-ct-settings) *:not(.fa-classic, .fa-light, .fa-regular, .fa-solid, .fa-thin, .fal, .far, .fas, .fat)) {
+	:global(
+		.system-nimble
+			.nimble-sheet.nimble-dialog:has(.nimble-ct-settings)
+			*:not(.fa-classic, .fa-light, .fa-regular, .fa-solid, .fa-thin, .fal, .far, .fas, .fat)
+	) {
 		font-family: var(--font-primary, sans-serif) !important;
 	}
 	.nimble-ct-settings,
-	.nimble-ct-settings :not(
-			.fa-classic,
-			.fa-light,
-			.fa-regular,
-			.fa-solid,
-			.fa-thin,
-			.fal,
-			.far,
-			.fas,
-			.fat
-		) {
+	.nimble-ct-settings
+		:not(.fa-classic, .fa-light, .fa-regular, .fa-solid, .fa-thin, .fal, .far, .fas, .fat) {
 		font-family: var(--font-primary, sans-serif);
 	}
 	.nimble-ct-settings {
@@ -401,8 +395,16 @@
 			--color-border-light-secondary,
 			color-mix(in srgb, hsl(36 58% 64%) 48%, transparent)
 		);
-		--nimble-ct-panel-bg: color-mix(in srgb, var(--color-bg-option, hsl(235 20% 22%)) 26%, transparent);
-		--nimble-ct-control-bg: color-mix(in srgb, var(--color-bg-option, hsl(235 20% 20%)) 72%, transparent);
+		--nimble-ct-panel-bg: color-mix(
+			in srgb,
+			var(--color-bg-option, hsl(235 20% 22%)) 26%,
+			transparent
+		);
+		--nimble-ct-control-bg: color-mix(
+			in srgb,
+			var(--color-bg-option, hsl(235 20% 20%)) 72%,
+			transparent
+		);
 		--nimble-ct-control-border: color-mix(in srgb, var(--nimble-ct-border) 75%, transparent);
 		--nimble-ct-slider-track: color-mix(in srgb, var(--nimble-ct-text-primary) 18%, transparent);
 		--nimble-ct-slider-thumb-border: var(--color-border-highlight, hsl(40 86% 74%));
@@ -481,7 +483,8 @@
 		border: 1px solid var(--nimble-ct-slider-thumb-border);
 		border-radius: 0.22rem;
 		background: var(--nimble-ct-slider-thumb-bg);
-		box-shadow: 0 0 0.24rem color-mix(in srgb, var(--nimble-ct-slider-thumb-border) 42%, transparent);
+		box-shadow: 0 0 0.24rem
+			color-mix(in srgb, var(--nimble-ct-slider-thumb-border) 42%, transparent);
 		cursor: pointer;
 	}
 	.nimble-ct-settings__slider-input::-moz-range-track {
@@ -496,7 +499,8 @@
 		border: 1px solid var(--nimble-ct-slider-thumb-border);
 		border-radius: 0.22rem;
 		background: var(--nimble-ct-slider-thumb-bg);
-		box-shadow: 0 0 0.24rem color-mix(in srgb, var(--nimble-ct-slider-thumb-border) 42%, transparent);
+		box-shadow: 0 0 0.24rem
+			color-mix(in srgb, var(--nimble-ct-slider-thumb-border) 42%, transparent);
 		cursor: pointer;
 	}
 	.nimble-ct-settings__slider-value {
