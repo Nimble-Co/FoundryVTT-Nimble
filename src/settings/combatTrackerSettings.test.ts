@@ -1,34 +1,42 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
 	COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY,
+	COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY,
 	COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY,
 	COMBAT_TRACKER_ENABLED_SETTING_KEY,
 	COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY,
 	COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY,
 	COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY,
+	COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY,
 	COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY,
 	canCurrentUserDisplayNonPlayerHitpointsOnCards,
 	getCombatTrackerActionDiceColor,
+	getCombatTrackerCtBadgeSizeLevel,
 	getCombatTrackerCenterActiveCardEnabled,
-	getCombatTrackerNcctCardSizeLevel,
-	getCombatTrackerNcctEnabled,
+	getCombatTrackerCtCardSizeLevel,
+	getCombatTrackerCtEnabled,
 	getCombatTrackerNonPlayerHitpointPermissionConfig,
-	getCombatTrackerNcctWidthLevel,
+	getCombatTrackerUseActionDice,
+	getCombatTrackerCtWidthLevel,
 	getCombatTrackerPlayersCanExpandMonsterCards,
 	isCombatTrackerActionDiceColorSettingKey,
+	isCombatTrackerBadgeSizeLevelSettingKey,
 	isCombatTrackerCardSizeLevelSettingKey,
 	isCombatTrackerCenterActiveCardSettingKey,
 	isCombatTrackerEnabledSettingKey,
 	isCombatTrackerNonPlayerHitpointPermissionSettingKey,
 	isCombatTrackerPlayerMonsterExpansionSettingKey,
+	isCombatTrackerUseActionDiceSettingKey,
 	isCombatTrackerWidthLevelSettingKey,
 	registerCombatTrackerSettings,
 	setCombatTrackerActionDiceColor,
-	setCombatTrackerNcctCardSizeLevel,
+	setCombatTrackerCtBadgeSizeLevel,
+	setCombatTrackerCtCardSizeLevel,
 	setCombatTrackerCenterActiveCardEnabled,
-	setCombatTrackerNcctEnabled,
+	setCombatTrackerCtEnabled,
 	setCombatTrackerNonPlayerHitpointPermissionConfig,
-	setCombatTrackerNcctWidthLevel,
+	setCombatTrackerUseActionDice,
+	setCombatTrackerCtWidthLevel,
 	setCombatTrackerPlayersCanExpandMonsterCards,
 } from './combatTrackerSettings.js';
 
@@ -109,6 +117,26 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 		);
 		expect(settingsMock.register).toHaveBeenCalledWith(
 			'nimble',
+			COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY,
+			expect.objectContaining({
+				scope: 'world',
+				config: false,
+				type: Number,
+				default: 1,
+			}),
+		);
+		expect(settingsMock.register).toHaveBeenCalledWith(
+			'nimble',
+			COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY,
+			expect.objectContaining({
+				scope: 'world',
+				config: false,
+				type: Boolean,
+				default: false,
+			}),
+		);
+		expect(settingsMock.register).toHaveBeenCalledWith(
+			'nimble',
 			COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY,
 			expect.objectContaining({
 				scope: 'world',
@@ -123,7 +151,7 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 				scope: 'client',
 				config: false,
 				type: String,
-				default: '#6ce685',
+				default: '#ffffff',
 			}),
 		);
 	});
@@ -164,16 +192,16 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 		);
 	});
 
-	it('returns boolean values for NCCT enabled setting', () => {
+	it('returns boolean values for CT enabled setting', () => {
 		settingsMock.get.mockReturnValueOnce(true);
-		expect(getCombatTrackerNcctEnabled()).toBe(true);
+		expect(getCombatTrackerCtEnabled()).toBe(true);
 
 		settingsMock.get.mockReturnValueOnce(0);
-		expect(getCombatTrackerNcctEnabled()).toBe(false);
+		expect(getCombatTrackerCtEnabled()).toBe(false);
 	});
 
-	it('updates the NCCT enabled setting', async () => {
-		await setCombatTrackerNcctEnabled(false);
+	it('updates the CT enabled setting', async () => {
+		await setCombatTrackerCtEnabled(false);
 
 		expect(settingsMock.set).toHaveBeenCalledWith(
 			'nimble',
@@ -182,19 +210,19 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 		);
 	});
 
-	it('returns normalized values for NCCT width level setting', () => {
+	it('returns normalized values for CT width level setting', () => {
 		settingsMock.get.mockReturnValueOnce(6);
-		expect(getCombatTrackerNcctWidthLevel()).toBe(6);
+		expect(getCombatTrackerCtWidthLevel()).toBe(6);
 
 		settingsMock.get.mockReturnValueOnce(0);
-		expect(getCombatTrackerNcctWidthLevel()).toBe(1);
+		expect(getCombatTrackerCtWidthLevel()).toBe(1);
 
 		settingsMock.get.mockReturnValueOnce(9);
-		expect(getCombatTrackerNcctWidthLevel()).toBe(6);
+		expect(getCombatTrackerCtWidthLevel()).toBe(6);
 	});
 
-	it('updates the NCCT width level setting with snapped values', async () => {
-		await setCombatTrackerNcctWidthLevel(3.4);
+	it('updates the CT width level setting with snapped values', async () => {
+		await setCombatTrackerCtWidthLevel(3.4);
 
 		expect(settingsMock.set).toHaveBeenCalledWith(
 			'nimble',
@@ -203,24 +231,63 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 		);
 	});
 
-	it('returns normalized values for NCCT card size level setting', () => {
+	it('returns normalized values for CT card size level setting', () => {
 		settingsMock.get.mockReturnValueOnce(6);
-		expect(getCombatTrackerNcctCardSizeLevel()).toBe(6);
+		expect(getCombatTrackerCtCardSizeLevel()).toBe(6);
 
 		settingsMock.get.mockReturnValueOnce(0);
-		expect(getCombatTrackerNcctCardSizeLevel()).toBe(1);
+		expect(getCombatTrackerCtCardSizeLevel()).toBe(1);
 
 		settingsMock.get.mockReturnValueOnce(9);
-		expect(getCombatTrackerNcctCardSizeLevel()).toBe(6);
+		expect(getCombatTrackerCtCardSizeLevel()).toBe(6);
 	});
 
-	it('updates the NCCT card size level setting with snapped values', async () => {
-		await setCombatTrackerNcctCardSizeLevel(4.6);
+	it('updates the CT card size level setting with snapped values', async () => {
+		await setCombatTrackerCtCardSizeLevel(4.6);
 
 		expect(settingsMock.set).toHaveBeenCalledWith(
 			'nimble',
 			COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY,
 			5,
+		);
+	});
+
+	it('returns normalized values for CT badge size level setting', () => {
+		settingsMock.get.mockReturnValueOnce(6);
+		expect(getCombatTrackerCtBadgeSizeLevel()).toBe(6);
+
+		settingsMock.get.mockReturnValueOnce(0);
+		expect(getCombatTrackerCtBadgeSizeLevel()).toBe(1);
+
+		settingsMock.get.mockReturnValueOnce(9);
+		expect(getCombatTrackerCtBadgeSizeLevel()).toBe(6);
+	});
+
+	it('updates the CT badge size level setting with snapped values', async () => {
+		await setCombatTrackerCtBadgeSizeLevel(4.6);
+
+		expect(settingsMock.set).toHaveBeenCalledWith(
+			'nimble',
+			COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY,
+			5,
+		);
+	});
+
+	it('returns boolean values for CT use action dice setting', () => {
+		settingsMock.get.mockReturnValueOnce(true);
+		expect(getCombatTrackerUseActionDice()).toBe(true);
+
+		settingsMock.get.mockReturnValueOnce(0);
+		expect(getCombatTrackerUseActionDice()).toBe(false);
+	});
+
+	it('updates the CT use action dice setting', async () => {
+		await setCombatTrackerUseActionDice(true);
+
+		expect(settingsMock.set).toHaveBeenCalledWith(
+			'nimble',
+			COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY,
+			true,
 		);
 	});
 
@@ -278,15 +345,15 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 		expect(canCurrentUserDisplayNonPlayerHitpointsOnCards(3)).toBe(true);
 	});
 
-	it('returns normalized values for NCCT action dice color setting', () => {
+	it('returns normalized values for CT action dice color setting', () => {
 		settingsMock.get.mockReturnValueOnce('#ABC');
 		expect(getCombatTrackerActionDiceColor()).toBe('#aabbcc');
 
 		settingsMock.get.mockReturnValueOnce('not-a-color');
-		expect(getCombatTrackerActionDiceColor()).toBe('#6ce685');
+		expect(getCombatTrackerActionDiceColor()).toBe('#ffffff');
 	});
 
-	it('updates the NCCT action dice color setting with normalized values', async () => {
+	it('updates the CT action dice color setting with normalized values', async () => {
 		await setCombatTrackerActionDiceColor('#F0A');
 
 		expect(settingsMock.set).toHaveBeenCalledWith(
@@ -336,6 +403,24 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 			),
 		).toBe(true);
 		expect(isCombatTrackerCardSizeLevelSettingKey('combatTrackerLocation')).toBe(false);
+		expect(isCombatTrackerBadgeSizeLevelSettingKey(COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY)).toBe(
+			true,
+		);
+		expect(
+			isCombatTrackerBadgeSizeLevelSettingKey(
+				`nimble.${COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY}`,
+			),
+		).toBe(true);
+		expect(isCombatTrackerBadgeSizeLevelSettingKey('combatTrackerLocation')).toBe(false);
+		expect(isCombatTrackerUseActionDiceSettingKey(COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY)).toBe(
+			true,
+		);
+		expect(
+			isCombatTrackerUseActionDiceSettingKey(
+				`nimble.${COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY}`,
+			),
+		).toBe(true);
+		expect(isCombatTrackerUseActionDiceSettingKey('combatTrackerLocation')).toBe(false);
 		expect(
 			isCombatTrackerNonPlayerHitpointPermissionSettingKey(
 				COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY,

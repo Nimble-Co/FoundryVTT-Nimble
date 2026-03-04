@@ -4,25 +4,30 @@
 	import GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
 	import {
 		canCurrentUserDisplayNonPlayerHitpointsOnCards,
+		getCombatTrackerCtBadgeSizeLevel,
 		getCombatTrackerCenterActiveCardEnabled,
-		getCombatTrackerNcctCardSizeLevel,
-		getCombatTrackerNcctEnabled,
-		getCombatTrackerNcctWidthLevel,
+		getCombatTrackerCtCardSizeLevel,
+		getCombatTrackerCtEnabled,
+		getCombatTrackerUseActionDice,
+		getCombatTrackerCtWidthLevel,
 		getCombatTrackerPlayersCanExpandMonsterCards,
+		isCombatTrackerBadgeSizeLevelSettingKey,
 		isCombatTrackerCardSizeLevelSettingKey,
 		isCombatTrackerCenterActiveCardSettingKey,
 		isCombatTrackerEnabledSettingKey,
 		isCombatTrackerNonPlayerHitpointPermissionSettingKey,
 		isCombatTrackerPlayerMonsterExpansionSettingKey,
+		isCombatTrackerUseActionDiceSettingKey,
 		isCombatTrackerWidthLevelSettingKey,
 	} from '../../settings/combatTrackerSettings.js';
-	import NcctSettingsDialogComponent from '../dialogs/NcctSettingsDialog.svelte';
+	import CtSettingsDialogComponent from '../dialogs/CtSettingsDialog.svelte';
 	import { canCurrentUserReorderCombatant } from '../../utils/combatantOrdering.js';
 	import {
 		COMBATANT_ACTIONS_CURRENT_PATH,
 		canCurrentUserEndTurn as canCurrentUserEndCombatantTurn,
 		getCombatantCurrentActions,
 		getCombatantMaxActions,
+		resolveCombatantCurrentActionsAfterDelta,
 	} from '../../utils/combatTurnActions.js';
 	import { getCombatantImage } from '../../utils/combatantImage.js';
 	import { getActorHpValue, isCombatantDead } from '../../utils/isCombatantDead.js';
@@ -53,6 +58,11 @@
 		entries: TrackEntry[];
 	}
 
+	interface CtWidthPreviewEventDetail {
+		active?: boolean;
+		widthLevel?: unknown;
+	}
+
 	type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 
 	type CombatWithDrop = Combat & {
@@ -66,61 +76,83 @@
 		'fa-solid fa-dice-three',
 	] as const;
 	const MAX_RENDERED_ACTION_DICE = ACTION_DICE_ICON_CLASSES.length;
-	const MIN_TOP_OFFSET_PX = 0;
 	const DRAG_TARGET_EXPANSION_REM = 0.85;
 	const DRAG_SWITCH_UPPER_RATIO = 0.4;
 	const DRAG_SWITCH_LOWER_RATIO = 0.6;
-	const NCCT_MIN_WIDTH_LEVEL = 1;
-	const NCCT_MAX_WIDTH_LEVEL = 6;
-	const NCCT_MIN_CARD_SIZE_LEVEL = 1;
-	const NCCT_MAX_CARD_SIZE_LEVEL = 6;
-	const NCCT_MIN_SAFE_TRACK_WIDTH_PX = 420;
-	const NCCT_FALLBACK_SIDE_RESERVED_PX = 84;
-	const NCCT_EDGE_GUTTER_PX = 12;
-	const NCCT_MIN_WIDTH_RATIO = 0.52;
-	const NCCT_MAX_WIDTH_RATIO = 2;
-	const NCCT_MIN_CARD_SCALE = 0.78;
-	const NCCT_MAX_CARD_SCALE = 1.2;
-	const NCCT_WIDTH_RATIO_STEP =
-		(NCCT_MAX_WIDTH_RATIO - NCCT_MIN_WIDTH_RATIO) /
-		(NCCT_MAX_WIDTH_LEVEL - NCCT_MIN_WIDTH_LEVEL);
-	const NCCT_CARD_SCALE_STEP =
-		(NCCT_MAX_CARD_SCALE - NCCT_MIN_CARD_SCALE) /
-		(NCCT_MAX_CARD_SIZE_LEVEL - NCCT_MIN_CARD_SIZE_LEVEL);
-	const NCCT_VIRTUALIZATION_ENTRY_THRESHOLD = 80;
-	const NCCT_VIRTUALIZATION_OVERSCAN = 12;
-	const NCCT_ESTIMATED_ENTRY_WIDTH_REM = 6.53;
-	const NCCT_SETTINGS_DIALOG_UNIQUE_ID = 'nimble-ncct-settings-dialog';
+	const CT_MIN_WIDTH_LEVEL = 1;
+	const CT_MAX_WIDTH_LEVEL = 6;
+	const CT_MIN_CARD_SIZE_LEVEL = 1;
+	const CT_MAX_CARD_SIZE_LEVEL = 6;
+	const CT_MIN_BADGE_SIZE_LEVEL = 1;
+	const CT_MAX_BADGE_SIZE_LEVEL = 6;
+	const CT_MIN_SAFE_TRACK_WIDTH_PX = 420;
+	const CT_FALLBACK_SIDE_RESERVED_PX = 84;
+	const CT_EDGE_GUTTER_PX = 12;
+	const CT_MIN_WIDTH_RATIO = 0.52;
+	const CT_MAX_WIDTH_RATIO = 2;
+	const CT_MIN_CARD_SCALE = 0.78;
+	const CT_MAX_CARD_SCALE = 1.2;
+	const CT_MIN_BADGE_SCALE = 1;
+	const CT_MAX_BADGE_SCALE = 1.8;
+	const CT_WIDTH_RATIO_STEP =
+		(CT_MAX_WIDTH_RATIO - CT_MIN_WIDTH_RATIO) /
+		(CT_MAX_WIDTH_LEVEL - CT_MIN_WIDTH_LEVEL);
+	const CT_CARD_SCALE_STEP =
+		(CT_MAX_CARD_SCALE - CT_MIN_CARD_SCALE) /
+		(CT_MAX_CARD_SIZE_LEVEL - CT_MIN_CARD_SIZE_LEVEL);
+	const CT_BADGE_SCALE_STEP =
+		(CT_MAX_BADGE_SCALE - CT_MIN_BADGE_SCALE) /
+		(CT_MAX_BADGE_SIZE_LEVEL - CT_MIN_BADGE_SIZE_LEVEL);
+	const CT_VIRTUALIZATION_ENTRY_THRESHOLD = 80;
+	const CT_VIRTUALIZATION_OVERSCAN = 12;
+	const CT_ESTIMATED_ENTRY_WIDTH_REM = 6.53;
+	const CT_SETTINGS_DIALOG_UNIQUE_ID = 'nimble-ct-settings-dialog';
+	const CT_WIDTH_PREVIEW_EVENT_NAME = 'nimble:ct-width-preview';
 	let preferredCombatId: string | null = null;
 
-	function normalizeNcctWidthLevel(value: unknown): number {
+	function normalizeCtWidthLevel(value: unknown): number {
 		const numericValue = Number(value);
 		if (!Number.isFinite(numericValue)) return 2;
 		const roundedValue = Math.round(numericValue);
-		return Math.min(NCCT_MAX_WIDTH_LEVEL, Math.max(NCCT_MIN_WIDTH_LEVEL, roundedValue));
+		return Math.min(CT_MAX_WIDTH_LEVEL, Math.max(CT_MIN_WIDTH_LEVEL, roundedValue));
 	}
 
 	function getViewportWidthPx(): number {
 		return Math.max(0, globalThis.innerWidth || document.documentElement.clientWidth || 0);
 	}
 
-	function getNcctWidthRatio(widthLevel: number): number {
-		const normalizedWidthLevel = normalizeNcctWidthLevel(widthLevel);
-		return NCCT_MIN_WIDTH_RATIO + (normalizedWidthLevel - NCCT_MIN_WIDTH_LEVEL) * NCCT_WIDTH_RATIO_STEP;
+	function getCtWidthRatio(widthLevel: number): number {
+		const normalizedWidthLevel = normalizeCtWidthLevel(widthLevel);
+		return CT_MIN_WIDTH_RATIO + (normalizedWidthLevel - CT_MIN_WIDTH_LEVEL) * CT_WIDTH_RATIO_STEP;
 	}
 
-	function normalizeNcctCardSizeLevel(value: unknown): number {
+	function normalizeCtCardSizeLevel(value: unknown): number {
 		const numericValue = Number(value);
 		if (!Number.isFinite(numericValue)) return 3;
 		const roundedValue = Math.round(numericValue);
-		return Math.min(NCCT_MAX_CARD_SIZE_LEVEL, Math.max(NCCT_MIN_CARD_SIZE_LEVEL, roundedValue));
+		return Math.min(CT_MAX_CARD_SIZE_LEVEL, Math.max(CT_MIN_CARD_SIZE_LEVEL, roundedValue));
 	}
 
-	function getNcctCardScale(cardSizeLevel: number): number {
-		const normalizedCardSizeLevel = normalizeNcctCardSizeLevel(cardSizeLevel);
+	function getCtCardScale(cardSizeLevel: number): number {
+		const normalizedCardSizeLevel = normalizeCtCardSizeLevel(cardSizeLevel);
 		return (
-			NCCT_MIN_CARD_SCALE +
-			(normalizedCardSizeLevel - NCCT_MIN_CARD_SIZE_LEVEL) * NCCT_CARD_SCALE_STEP
+			CT_MIN_CARD_SCALE +
+			(normalizedCardSizeLevel - CT_MIN_CARD_SIZE_LEVEL) * CT_CARD_SCALE_STEP
+		);
+	}
+
+	function normalizeCtBadgeSizeLevel(value: unknown): number {
+		const numericValue = Number(value);
+		if (!Number.isFinite(numericValue)) return CT_MIN_BADGE_SIZE_LEVEL;
+		const roundedValue = Math.round(numericValue);
+		return Math.min(CT_MAX_BADGE_SIZE_LEVEL, Math.max(CT_MIN_BADGE_SIZE_LEVEL, roundedValue));
+	}
+
+	function getCtBadgeScale(badgeSizeLevel: number): number {
+		const normalizedBadgeSizeLevel = normalizeCtBadgeSizeLevel(badgeSizeLevel);
+		return (
+			CT_MIN_BADGE_SCALE +
+			(normalizedBadgeSizeLevel - CT_MIN_BADGE_SIZE_LEVEL) * CT_BADGE_SCALE_STEP
 		);
 	}
 
@@ -134,26 +166,26 @@
 		return rect;
 	}
 
-	function getSafeNcctTrackWidthPx(): number {
+	function getSafeCtTrackWidthPx(): number {
 		const viewportWidth = getViewportWidthPx();
-		if (viewportWidth <= 0) return NCCT_MIN_SAFE_TRACK_WIDTH_PX;
+		if (viewportWidth <= 0) return CT_MIN_SAFE_TRACK_WIDTH_PX;
 
 		const leftUiRect = getVisibleUiRect('#ui-left');
 		const rightUiRect = getVisibleUiRect('#ui-right');
 		const leftInset = leftUiRect
-			? Math.max(0, leftUiRect.right + NCCT_EDGE_GUTTER_PX)
-			: NCCT_FALLBACK_SIDE_RESERVED_PX;
+			? Math.max(0, leftUiRect.right + CT_EDGE_GUTTER_PX)
+			: CT_FALLBACK_SIDE_RESERVED_PX;
 		const rightInset = rightUiRect
-			? Math.max(0, viewportWidth - rightUiRect.left + NCCT_EDGE_GUTTER_PX)
-			: NCCT_FALLBACK_SIDE_RESERVED_PX;
+			? Math.max(0, viewportWidth - rightUiRect.left + CT_EDGE_GUTTER_PX)
+			: CT_FALLBACK_SIDE_RESERVED_PX;
 		const safeWidth = viewportWidth - leftInset - rightInset;
 		return Math.max(240, safeWidth);
 	}
 
-	function resolveNcctTrackMaxWidth(widthLevel: number): string {
-		const widthRatio = getNcctWidthRatio(widthLevel);
-		const safeWidthPx = getSafeNcctTrackWidthPx();
-		const minimumWidthPx = Math.min(NCCT_MIN_SAFE_TRACK_WIDTH_PX, safeWidthPx);
+	function resolveCtTrackMaxWidth(widthLevel: number): string {
+		const widthRatio = getCtWidthRatio(widthLevel);
+		const safeWidthPx = getSafeCtTrackWidthPx();
+		const minimumWidthPx = Math.min(CT_MIN_SAFE_TRACK_WIDTH_PX, safeWidthPx);
 		const resolvedWidthPx = Math.max(minimumWidthPx, Math.round(safeWidthPx * widthRatio));
 		return `${resolvedWidthPx}px`;
 	}
@@ -207,7 +239,7 @@
 		return -1;
 	}
 
-	function syncCombatTurnsForNcct(combat: Combat | null): void {
+	function syncCombatTurnsForCt(combat: Combat | null): void {
 		if (!combat) return;
 
 		const existingTurns = combat.turns;
@@ -347,7 +379,7 @@
 	function resolveActionCombat(): Combat | null {
 		const sceneCombat = getCombatForCurrentScene();
 		if (sceneCombat) {
-			syncCombatTurnsForNcct(sceneCombat);
+			syncCombatTurnsForCt(sceneCombat);
 			preferredCombatId = sceneCombat.id ?? sceneCombat._id ?? null;
 			return sceneCombat;
 		}
@@ -355,12 +387,12 @@
 		const currentCombatId = currentCombat?.id ?? currentCombat?._id ?? '';
 		if (!currentCombatId) return currentCombat;
 		const fallbackCombat = game.combats.get(currentCombatId) ?? currentCombat;
-		syncCombatTurnsForNcct(fallbackCombat);
+		syncCombatTurnsForCt(fallbackCombat);
 		return fallbackCombat;
 	}
 
-	function logNcctControl(action: string, details: Record<string, unknown> = {}): void {
-		console.info(`[Nimble][NCCT] ${action}`, details);
+	function logCtControl(action: string, details: Record<string, unknown> = {}): void {
+		console.info(`[Nimble][CT] ${action}`, details);
 	}
 
 	function sortDeadCombatants(
@@ -452,13 +484,13 @@
 		const state = getCombatantHpBadgeState(combatant);
 		switch (state) {
 			case 'red':
-				return 'nimble-ncct__badge--hp-red';
+				return 'nimble-ct__badge--hp-red';
 			case 'yellow':
-				return 'nimble-ncct__badge--hp-yellow';
+				return 'nimble-ct__badge--hp-yellow';
 			case 'green':
-				return 'nimble-ncct__badge--hp-green';
+				return 'nimble-ct__badge--hp-green';
 			default:
-				return 'nimble-ncct__badge--hp-unknown';
+				return 'nimble-ct__badge--hp-unknown';
 		}
 	}
 
@@ -705,7 +737,6 @@
 	}
 
 	function shouldShowInitiativePromptForCombatant(combatant: Combatant.Implementation): boolean {
-		if (combatStarted) return false;
 		if (!isPlayerCombatant(combatant)) return false;
 		return combatant.initiative == null;
 	}
@@ -731,25 +762,25 @@
 			await actionCombat.rollInitiative([combatantId], { updateTurn: false });
 			updateCurrentCombat(true);
 		} catch (error) {
-			console.error('[Nimble][NCCT] Initiative roll failed', { combatantId, error });
+			console.error('[Nimble][CT] Initiative roll failed', { combatantId, error });
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			ui.notifications?.error(`Unable to roll initiative: ${errorMessage}`);
 		}
 	}
 
-	function openNcctSettingsDialog(): void {
-		const dialogWidth = 760;
+	function openCtSettingsDialog(): void {
+		const dialogWidth = 363;
 		const clampInsetPx = 12;
 
 		try {
 			const dialog = GenericDialog.getOrCreate(
-				'NCCT Settings',
-				NcctSettingsDialogComponent,
+				'Combat Tracker Settings',
+				CtSettingsDialogComponent,
 				{},
 				{
 					icon: 'fa-solid fa-gear',
 					width: dialogWidth,
-					uniqueId: NCCT_SETTINGS_DIALOG_UNIQUE_ID,
+					uniqueId: CT_SETTINGS_DIALOG_UNIQUE_ID,
 				},
 			);
 			void dialog.render(true).then(() => {
@@ -766,12 +797,8 @@
 				});
 			});
 		} catch (_error) {
-			ui.notifications?.warn('NCCT settings are unavailable in this context.');
+			ui.notifications?.warn('Combat Tracker settings are unavailable in this context.');
 		}
-	}
-
-	function updateTopOffset(): void {
-		topOffsetPx = MIN_TOP_OFFSET_PX;
 	}
 
 	function updatePlayerMonsterExpansionPermission(): void {
@@ -782,7 +809,10 @@
 		canCurrentUserViewNonPlayerHitpoints = canCurrentUserDisplayNonPlayerHitpointsOnCards();
 	}
 
-	async function centerActiveEntryInView(activeKey: string | null): Promise<void> {
+	async function centerActiveEntryInView(
+		activeKey: string | null,
+		behavior: ScrollBehavior = 'smooth',
+	): Promise<void> {
 		if (!trackElement) return;
 		await tick();
 		if (!trackElement) return;
@@ -792,7 +822,7 @@
 				0,
 				(trackElement.scrollWidth - trackElement.clientWidth) / 2,
 			);
-			trackElement.scrollTo({ left: centeredScrollLeft, behavior: 'smooth' });
+			trackElement.scrollTo({ left: centeredScrollLeft, behavior });
 			updateTrackViewportMetrics();
 			return;
 		}
@@ -804,19 +834,19 @@
 		const scrollLeft = activeElement
 			? activeElement.offsetLeft - trackElement.clientWidth / 2 + activeElement.clientWidth / 2
 			: activeIndex >= 0
-				? activeIndex * getEstimatedNcctEntryWidthPx() -
+				? activeIndex * getEstimatedCtEntryWidthPx() -
 					trackElement.clientWidth / 2 +
-					getEstimatedNcctEntryWidthPx() / 2
+					getEstimatedCtEntryWidthPx() / 2
 				: null;
 		if (scrollLeft == null) return;
-		trackElement.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' });
+		trackElement.scrollTo({ left: Math.max(0, scrollLeft), behavior });
 		updateTrackViewportMetrics();
 	}
 
 	function updateCurrentCombat(force = false): void {
 		queueMicrotask(() => {
 			const combat = getCombatForCurrentScene();
-			syncCombatTurnsForNcct(combat);
+			syncCombatTurnsForCt(combat);
 			const sceneId = canvas.scene?.id;
 			const signature = buildCombatSyncSignature(combat, sceneId);
 			if (!force && signature === lastCombatSignature) return;
@@ -946,8 +976,49 @@
 			]);
 			updateCurrentCombat(true);
 		} catch (error) {
-			console.error('[Nimble][NCCT] Failed to update combatant actions', {
+			console.error('[Nimble][CT] Failed to update combatant actions', {
 				combatantId,
+				nextActions,
+				error,
+			});
+		}
+	}
+
+	async function handleActionDeltaClick(
+		event: MouseEvent,
+		combatant: Combatant.Implementation,
+		delta: number,
+	): Promise<void> {
+		event.preventDefault();
+		event.stopPropagation();
+
+		if (!canCurrentUserAdjustCombatantActions(combatant)) return;
+		const combat = resolveActionCombat();
+		const combatantId = getCombatantId(combatant);
+		if (!combat || !combatantId) return;
+
+		const combatantDocument = combat.combatants.get(combatantId) ?? combatant;
+		const currentActions = getCombatantCurrentActions(combatantDocument);
+		const maxActions = getCombatantMaxActions(combatantDocument);
+		const nextActions = resolveCombatantCurrentActionsAfterDelta({
+			currentActions,
+			maxActions,
+			delta,
+		});
+		if (nextActions === currentActions) return;
+
+		try {
+			await combat.updateEmbeddedDocuments('Combatant', [
+				{
+					_id: combatantId,
+					[COMBATANT_ACTIONS_CURRENT_PATH]: nextActions,
+				},
+			]);
+			updateCurrentCombat(true);
+		} catch (error) {
+			console.error('[Nimble][CT] Failed to update combatant actions via delta', {
+				combatantId,
+				delta,
 				nextActions,
 				error,
 			});
@@ -1107,7 +1178,7 @@
 			dragHandleArmedCombatantId = null;
 			return;
 		}
-		const handle = target.closest<HTMLElement>('[data-ncct-drag-handle="true"]');
+		const handle = target.closest<HTMLElement>('[data-ct-drag-handle="true"]');
 		if (!handle) {
 			dragHandleArmedCombatantId = null;
 			return;
@@ -1123,8 +1194,8 @@
 		return Number.isFinite(rootFontSize) && rootFontSize > 0 ? rootFontSize : 16;
 	}
 
-	function getEstimatedNcctEntryWidthPx(): number {
-		return getRootFontSizePx() * NCCT_ESTIMATED_ENTRY_WIDTH_REM * getNcctCardScale(ncctCardSizeLevel);
+	function getEstimatedCtEntryWidthPx(): number {
+		return getRootFontSizePx() * CT_ESTIMATED_ENTRY_WIDTH_REM * getCtCardScale(ctCardSizeLevel);
 	}
 
 	function buildVirtualizedAliveEntries(params: {
@@ -1145,13 +1216,13 @@
 			};
 		}
 
-		const estimatedEntryWidthPx = Math.max(1, getEstimatedNcctEntryWidthPx());
+		const estimatedEntryWidthPx = Math.max(1, getEstimatedCtEntryWidthPx());
 		const visibleCount = Math.max(1, Math.ceil(Math.max(estimatedEntryWidthPx, params.viewportWidth) / estimatedEntryWidthPx));
 		const firstVisibleIndex = Math.max(0, Math.floor(params.scrollLeft / estimatedEntryWidthPx));
-		const startIndex = Math.max(0, firstVisibleIndex - NCCT_VIRTUALIZATION_OVERSCAN);
+		const startIndex = Math.max(0, firstVisibleIndex - CT_VIRTUALIZATION_OVERSCAN);
 		const endIndex = Math.min(
 			totalEntries,
-			firstVisibleIndex + visibleCount + NCCT_VIRTUALIZATION_OVERSCAN,
+			firstVisibleIndex + visibleCount + CT_VIRTUALIZATION_OVERSCAN,
 		);
 		return {
 			enabled: true,
@@ -1199,7 +1270,7 @@
 	function getCombatantTrackCardElement(combatantId: string): HTMLElement | null {
 		if (!trackElement || !combatantId) return null;
 		return trackElement.querySelector<HTMLElement>(
-			`.nimble-ncct__portrait[data-combatant-id="${combatantId}"]`,
+			`.nimble-ct__portrait[data-combatant-id="${combatantId}"]`,
 		);
 	}
 
@@ -1372,7 +1443,7 @@
 		event.preventDefault();
 		event.stopPropagation();
 		if (action === 'configure') {
-			openNcctSettingsDialog();
+			openCtSettingsDialog();
 			return;
 		}
 		if (!game.user?.isGM) return;
@@ -1386,13 +1457,13 @@
 					await rollEligibleInitiative(actionCombat);
 					return;
 				case 'previous-turn':
-					logNcctControl('previous-turn requested', {
+					logCtControl('previous-turn requested', {
 						combatId: actionCombat.id ?? actionCombat._id ?? null,
 						turn: actionCombat.turn ?? null,
 						activeCombatantId: getActiveCombatantId(actionCombat),
 					});
 					await actionCombat.previousTurn();
-					logNcctControl('previous-turn completed', {
+					logCtControl('previous-turn completed', {
 						combatId: actionCombat.id ?? actionCombat._id ?? null,
 						turn: actionCombat.turn ?? null,
 						activeCombatantId: getActiveCombatantId(actionCombat),
@@ -1405,7 +1476,7 @@
 					return;
 				case 'start-combat': {
 					const combatId = actionCombat.id ?? actionCombat._id ?? null;
-					logNcctControl('start-combat requested', {
+					logCtControl('start-combat requested', {
 						combatId,
 						sceneId: actionCombat.scene?.id ?? null,
 						active: actionCombat.active,
@@ -1428,7 +1499,7 @@
 					preferredCombatId = combatId;
 					currentCombat = refreshedCombat ?? actionCombat;
 					renderVersion += 1;
-					logNcctControl('start-combat completed', {
+					logCtControl('start-combat completed', {
 						combatId,
 						active: refreshedCombat?.active ?? false,
 						started: isCombatStarted(refreshedCombat ?? null),
@@ -1445,7 +1516,7 @@
 				}
 				case 'end-combat': {
 					const combatId = actionCombat.id ?? actionCombat._id ?? null;
-					logNcctControl('end-combat requested', {
+					logCtControl('end-combat requested', {
 						combatId,
 						active: actionCombat.active,
 						started: isCombatStarted(actionCombat),
@@ -1460,13 +1531,13 @@
 					return;
 				}
 				case 'next-turn':
-					logNcctControl('next-turn requested', {
+					logCtControl('next-turn requested', {
 						combatId: actionCombat.id ?? actionCombat._id ?? null,
 						turn: actionCombat.turn ?? null,
 						activeCombatantId: getActiveCombatantId(actionCombat),
 					});
 					await actionCombat.nextTurn();
-					logNcctControl('next-turn completed', {
+					logCtControl('next-turn completed', {
 						combatId: actionCombat.id ?? actionCombat._id ?? null,
 						turn: actionCombat.turn ?? null,
 						activeCombatantId: getActiveCombatantId(actionCombat),
@@ -1481,7 +1552,7 @@
 					return;
 			}
 		} catch (error) {
-			console.error('[Nimble][NCCT] Combat control action failed', { action, error });
+			console.error('[Nimble][CT] Combat control action failed', { action, error });
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			ui.notifications?.error(`Unable to run combat control action: ${errorMessage}`);
 		}
@@ -1501,14 +1572,14 @@
 	let sceneDeadCombatants: Combatant.Implementation[] = $state([]);
 	let playersCanExpandMonsterCards = $state(getCombatTrackerPlayersCanExpandMonsterCards());
 	let centerActiveCardEnabled = $state(getCombatTrackerCenterActiveCardEnabled());
-	let ncctEnabled = $state(getCombatTrackerNcctEnabled());
-	let ncctWidthLevel = $state(getCombatTrackerNcctWidthLevel());
-	let ncctCardSizeLevel = $state(getCombatTrackerNcctCardSizeLevel());
+	let ctEnabled = $state(getCombatTrackerCtEnabled());
+	let useActionDice = $state(getCombatTrackerUseActionDice());
+	let ctWidthLevel = $state(getCombatTrackerCtWidthLevel());
+	let ctCardSizeLevel = $state(getCombatTrackerCtCardSizeLevel());
+	let ctBadgeSizeLevel = $state(getCombatTrackerCtBadgeSizeLevel());
 	let canCurrentUserViewNonPlayerHitpoints = $state(canCurrentUserDisplayNonPlayerHitpointsOnCards());
 	let monsterCardsExpanded = $state(false);
-	let topOffsetPx = $state(MIN_TOP_OFFSET_PX);
 	let layoutVersion = $state(0);
-	let viewportElement: HTMLDivElement | null = $state(null);
 	let trackElement: HTMLOListElement | null = $state(null);
 	let trackScrollLeft = $state(0);
 	let trackClientWidth = $state(0);
@@ -1564,7 +1635,7 @@
 		orderEntriesForCenteredActive(aliveEntries, activeEntryKey, centerActiveCardEnabled),
 	);
 	let shouldVirtualizeAliveEntries = $derived(
-		orderedAliveEntries.length >= NCCT_VIRTUALIZATION_ENTRY_THRESHOLD,
+		orderedAliveEntries.length >= CT_VIRTUALIZATION_ENTRY_THRESHOLD,
 	);
 	let virtualizedAliveEntries = $derived.by(() =>
 		buildVirtualizedAliveEntries({
@@ -1588,11 +1659,17 @@
 		renderVersion;
 		return Math.max(1, currentCombat?.round ?? 1);
 	});
-	let ncctTrackMaxWidth = $derived.by(() => {
+	let ctTrackMaxWidth = $derived.by(() => {
 		layoutVersion;
-		return resolveNcctTrackMaxWidth(ncctWidthLevel);
+		return resolveCtTrackMaxWidth(ctWidthLevel);
 	});
-	let ncctCardScale = $derived.by(() => getNcctCardScale(ncctCardSizeLevel));
+	let ctWidthPreviewLevel = $state<number | null>(null);
+	let ctWidthPreviewVisible = $derived(ctWidthPreviewLevel !== null);
+	let ctWidthPreviewMaxWidth = $derived.by(() =>
+		resolveCtTrackMaxWidth(ctWidthPreviewLevel ?? ctWidthLevel),
+	);
+	let ctCardScale = $derived.by(() => getCtCardScale(ctCardSizeLevel));
+	let ctBadgeScale = $derived.by(() => getCtBadgeScale(ctBadgeSizeLevel));
 
 	let createCombatHook: number | undefined;
 	let updateCombatHook: number | undefined;
@@ -1609,9 +1686,9 @@
 	let combatRoundHook: number | undefined;
 	let updateSettingHook: number | undefined;
 	let resizeListener: (() => void) | undefined;
+	let ctWidthPreviewListener: ((event: Event) => void) | undefined;
 
 	onMount(() => {
-		updateTopOffset();
 		updatePlayerMonsterExpansionPermission();
 		updateNonPlayerHitpointPermission();
 		updateCurrentCombat(true);
@@ -1620,11 +1697,21 @@
 		});
 
 		resizeListener = () => {
-			updateTopOffset();
 			updateTrackViewportMetrics();
 			layoutVersion += 1;
 		};
 		window.addEventListener('resize', resizeListener);
+		ctWidthPreviewListener = (event: Event) => {
+			if (!(event instanceof CustomEvent)) return;
+			const detail = (event.detail ?? {}) as CtWidthPreviewEventDetail;
+			if (detail.active === false) {
+				ctWidthPreviewLevel = null;
+				return;
+			}
+			if (detail.active !== true) return;
+			ctWidthPreviewLevel = normalizeCtWidthLevel(detail.widthLevel);
+		};
+		window.addEventListener(CT_WIDTH_PREVIEW_EVENT_NAME, ctWidthPreviewListener);
 
 		createCombatHook = Hooks.on('createCombat', () => updateCurrentCombat(true));
 		updateCombatHook = Hooks.on('updateCombat', () => updateCurrentCombat(true));
@@ -1636,7 +1723,6 @@
 		canvasReadyHook = Hooks.on('canvasReady', () => updateCurrentCombat(true));
 		updateSceneHook = Hooks.on('updateScene', () => updateCurrentCombat(true));
 		renderSceneNavigationHook = Hooks.on('renderSceneNavigation', () => {
-			updateTopOffset();
 			layoutVersion += 1;
 			updateCurrentCombat(true);
 		});
@@ -1652,16 +1738,22 @@
 				centerActiveCardEnabled = getCombatTrackerCenterActiveCardEnabled();
 			}
 			if (isCombatTrackerEnabledSettingKey(settingKey)) {
-				ncctEnabled = getCombatTrackerNcctEnabled();
+				ctEnabled = getCombatTrackerCtEnabled();
 			}
 			if (isCombatTrackerWidthLevelSettingKey(settingKey)) {
-				ncctWidthLevel = getCombatTrackerNcctWidthLevel();
+				ctWidthLevel = getCombatTrackerCtWidthLevel();
 				layoutVersion += 1;
 			}
 			if (isCombatTrackerCardSizeLevelSettingKey(settingKey)) {
-				ncctCardSizeLevel = getCombatTrackerNcctCardSizeLevel();
+				ctCardSizeLevel = getCombatTrackerCtCardSizeLevel();
 				layoutVersion += 1;
-				void centerActiveEntryInView(activeEntryKey);
+				void centerActiveEntryInView(activeEntryKey, 'auto');
+			}
+			if (isCombatTrackerBadgeSizeLevelSettingKey(settingKey)) {
+				ctBadgeSizeLevel = getCombatTrackerCtBadgeSizeLevel();
+			}
+			if (isCombatTrackerUseActionDiceSettingKey(settingKey)) {
+				useActionDice = getCombatTrackerUseActionDice();
 			}
 			if (isCombatTrackerNonPlayerHitpointPermissionSettingKey(settingKey)) {
 				updateNonPlayerHitpointPermission();
@@ -1671,6 +1763,9 @@
 
 	onDestroy(() => {
 		if (resizeListener) window.removeEventListener('resize', resizeListener);
+		if (ctWidthPreviewListener) {
+			window.removeEventListener(CT_WIDTH_PREVIEW_EVENT_NAME, ctWidthPreviewListener);
+		}
 		if (createCombatHook !== undefined) Hooks.off('createCombat', createCombatHook);
 		if (updateCombatHook !== undefined) Hooks.off('updateCombat', updateCombatHook);
 		if (deleteCombatHook !== undefined) Hooks.off('deleteCombat', deleteCombatHook);
@@ -1712,18 +1807,30 @@
 	});
 </script>
 
-{#if ncctEnabled && currentCombat}
+{#if ctEnabled && currentCombat}
 	<section
-		class="nimble-ncct-shell"
-		style={`top: ${topOffsetPx}px; --nimble-ncct-track-max-width: ${ncctTrackMaxWidth}; --nimble-ncct-card-scale: ${ncctCardScale};`}
+		class="nimble-ct-shell"
+		style={`--nimble-ct-track-max-width: ${ctTrackMaxWidth}; --nimble-ct-card-scale: ${ctCardScale}; --nimble-ct-badge-scale: ${ctBadgeScale};`}
 		in:fade={{ duration: 120 }}
 	>
-		<div class="nimble-ncct">
+		{#if ctWidthPreviewVisible}
+			<div
+				class="nimble-ct__width-preview"
+				style={`--nimble-ct-width-preview-max: ${ctWidthPreviewMaxWidth};`}
+				aria-hidden="true"
+			>
+				<div class="nimble-ct__width-preview-track">
+					<span class="nimble-ct__width-preview-line nimble-ct__width-preview-line--left"></span>
+					<span class="nimble-ct__width-preview-line nimble-ct__width-preview-line--right"></span>
+				</div>
+			</div>
+		{/if}
+		<div class="nimble-ct">
 			{#if game.user?.isGM || (hasMonsterCombatants && canCurrentUserExpandMonsterCards)}
-				<div class="nimble-ncct__controls" aria-label="Combat controls left">
+				<div class="nimble-ct__controls" aria-label="Combat controls left">
 					{#if hasMonsterCombatants && canCurrentUserExpandMonsterCards}
 						<button
-							class="nimble-ncct__icon-button"
+							class="nimble-ct__icon-button"
 							aria-label={monsterCardsExpanded ? 'Collapse Monsters' : 'Expand Monsters'}
 							data-tooltip={monsterCardsExpanded ? 'Collapse Monsters' : 'Expand Monsters'}
 							onclick={toggleMonsterCardExpansion}
@@ -1733,21 +1840,21 @@
 					{/if}
 					{#if game.user?.isGM}
 						<button
-							class="nimble-ncct__icon-button"
+							class="nimble-ct__icon-button"
 							aria-label="Roll Initiative"
 							data-tooltip="Roll Initiative"
 							onclick={(event) => handleControlAction(event, 'roll-all')}
 							><i class="fa-solid fa-users"></i></button
 						>
 						<button
-							class="nimble-ncct__icon-button"
+							class="nimble-ct__icon-button"
 							aria-label="Previous Turn"
 							data-tooltip="Previous Turn"
 							onclick={(event) => handleControlAction(event, 'previous-turn')}
 							><i class="fa-solid fa-chevron-left"></i></button
 						>
 						<button
-							class="nimble-ncct__icon-button"
+							class="nimble-ct__icon-button"
 							aria-label="Previous Round"
 							data-tooltip="Previous Round"
 							onclick={(event) => handleControlAction(event, 'previous-round')}
@@ -1757,9 +1864,9 @@
 				</div>
 			{/if}
 
-			<div class="nimble-ncct__viewport" bind:this={viewportElement}>
+			<div class="nimble-ct__viewport">
 				<ol
-					class="nimble-ncct__track"
+					class="nimble-ct__track"
 					bind:this={trackElement}
 					id="combatants"
 					data-nimble-combat-drop-target="true"
@@ -1775,7 +1882,7 @@
 				>
 					{#if virtualizedAliveEntries.leadingWidthPx > 0}
 						<li
-							class="nimble-ncct__virtual-spacer"
+							class="nimble-ct__virtual-spacer"
 							aria-hidden="true"
 							style={`width: ${virtualizedAliveEntries.leadingWidthPx}px;`}
 						></li>
@@ -1783,9 +1890,9 @@
 					{#each virtualizedAliveEntries.entries as entry, localIndex (entry.key)}
 						{@const index = virtualizedAliveEntries.startIndex + localIndex}
 						{#if combatStarted && roundSeparatorIndex === index}
-							<li class="nimble-ncct__round-separator" data-tooltip="Current Round">
-								<span class="nimble-ncct__round-separator-line"></span>
-								<span class="nimble-ncct__round-separator-round"
+							<li class="nimble-ct__round-separator" data-tooltip="Current Round">
+								<span class="nimble-ct__round-separator-line"></span>
+								<span class="nimble-ct__round-separator-round"
 									><i class="fa-solid fa-angle-right"></i>{currentRoundLabel}</span
 								>
 							</li>
@@ -1795,13 +1902,13 @@
 							{@const combatantId = getCombatantId(entry.combatant)}
 							{@const canDragEntry = canDragCombatant(entry.combatant)}
 							<li
-								class="nimble-ncct__portrait"
-								class:nimble-ncct__portrait--active={activeEntryKey === entry.key}
-								class:nimble-ncct__portrait--dead={entry.combatant.defeated}
-								class:nimble-ncct__portrait--draggable={canDragEntry}
-								class:nimble-ncct__portrait--preview-gap-before={dragPreview?.targetId ===
+								class="nimble-ct__portrait"
+								class:nimble-ct__portrait--active={activeEntryKey === entry.key}
+								class:nimble-ct__portrait--dead={entry.combatant.defeated}
+								class:nimble-ct__portrait--draggable={canDragEntry}
+								class:nimble-ct__portrait--preview-gap-before={dragPreview?.targetId ===
 									combatantId && dragPreview.before}
-								class:nimble-ncct__portrait--preview-gap-after={dragPreview?.targetId ===
+								class:nimble-ct__portrait--preview-gap-after={dragPreview?.targetId ===
 									combatantId && !dragPreview.before}
 								data-track-key={entry.key}
 								data-combatant-id={combatantId}
@@ -1814,26 +1921,26 @@
 								ondragend={handleCombatantCardDragEnd}
 							>
 								<img
-									class="nimble-ncct__image"
+									class="nimble-ct__image"
 									src={getCombatantImageForDisplay(entry.combatant)}
 									alt="Combatant portrait"
 									draggable="false"
 								/>
 								{#if canDragEntry}
 									<div
-										class="nimble-ncct__drag-handle"
-										data-ncct-drag-handle="true"
+										class="nimble-ct__drag-handle"
+										data-ct-drag-handle="true"
 										data-combatant-id={combatantId}
 									></div>
 								{/if}
 								{#if shouldRenderHpBadge(entry.combatant)}
 									<span
-										class={`nimble-ncct__badge nimble-ncct__badge--hp ${getCombatantHpBadgeClass(entry.combatant)}`}
+										class={`nimble-ct__badge nimble-ct__badge--hp ${getCombatantHpBadgeClass(entry.combatant)}`}
 									>{getCombatantHpText(entry.combatant)}</span>
 								{/if}
 								{#if shouldShowInitiativePromptForCombatant(entry.combatant)}
 									<button
-										class="nimble-ncct__initiative-roll"
+										class="nimble-ct__initiative-roll"
 										type="button"
 										aria-label="Roll Initiative"
 										data-tooltip="Roll Initiative"
@@ -1845,28 +1952,75 @@
 										<i class="fa-solid fa-dice-d20"></i>
 									</button>
 								{/if}
-								<div class="nimble-ncct__pips">
-									{#each actionState.slots as slot}
-										<button
-											type="button"
-											class="nimble-ncct__action-die-button"
-											aria-label={`Set actions to ${slot + 1}`}
-											data-tooltip={`Set actions to ${slot + 1}`}
-											disabled={!canCurrentUserAdjustCombatantActions(entry.combatant)}
-											onclick={(event) => {
-												void handleActionDieClick(event, entry.combatant, slot);
-											}}
+								<div class="nimble-ct__pips">
+									{#if useActionDice}
+										{#each actionState.slots as slot}
+											<button
+												type="button"
+												class="nimble-ct__action-die-button"
+												aria-label={`Set actions to ${slot + 1}`}
+												data-tooltip={`Set actions to ${slot + 1}`}
+												disabled={!canCurrentUserAdjustCombatantActions(entry.combatant)}
+												onclick={(event) => {
+													void handleActionDieClick(event, entry.combatant, slot);
+												}}
+											>
+												<i
+													class={`${getActionDiceIconClass(slot)} ${slot < actionState.current ? 'nimble-ct__action-die--active' : 'nimble-ct__action-die--spent'}`}
+												></i>
+											</button>
+										{/each}
+										{#if actionState.overflow > 0}
+											<span class="nimble-ct__action-overflow">+{actionState.overflow}</span>
+										{/if}
+									{:else}
+										{@const displayCurrentActions = Math.max(0, Math.floor(actionState.current))}
+										{@const displayMaxActions = Math.max(0, Math.floor(actionState.max))}
+										{@const canAdjustActions = canCurrentUserAdjustCombatantActions(entry.combatant)}
+										<div
+											class="nimble-ct__action-box-shell"
+											class:nimble-ct__action-box-shell--editable={canAdjustActions}
 										>
-											<i
-												class={`${getActionDiceIconClass(slot)} ${slot < actionState.current ? 'nimble-ncct__action-die--active' : 'nimble-ncct__action-die--spent'}`}
-											></i>
-										</button>
-									{/each}
-									{#if actionState.overflow > 0}<span>+{actionState.overflow}</span>{/if}
+											{#if canAdjustActions}
+												<button
+													type="button"
+													class="nimble-ct__action-adjust nimble-ct__action-adjust--minus"
+													aria-label="Decrease available actions"
+													data-tooltip="Decrease actions"
+													disabled={displayCurrentActions <= 0}
+													onclick={(event) => {
+														void handleActionDeltaClick(event, entry.combatant, -1);
+													}}
+												>
+													<i class="fa-solid fa-minus"></i>
+												</button>
+											{/if}
+											<span
+												class="nimble-ct__action-box"
+												data-tooltip={`Available actions: ${displayCurrentActions} / ${displayMaxActions}`}
+											>
+												{displayCurrentActions}
+											</span>
+											{#if canAdjustActions}
+												<button
+													type="button"
+													class="nimble-ct__action-adjust nimble-ct__action-adjust--plus"
+													aria-label="Increase available actions"
+													data-tooltip="Increase actions"
+													disabled={displayCurrentActions >= displayMaxActions}
+													onclick={(event) => {
+														void handleActionDeltaClick(event, entry.combatant, 1);
+													}}
+												>
+													<i class="fa-solid fa-plus"></i>
+												</button>
+											{/if}
+										</div>
+									{/if}
 								</div>
 								{#if combatStarted && activeEntryKey === entry.key && canCurrentUserEndTurn}
 									<button
-										class="nimble-ncct__end-turn-overlay"
+										class="nimble-ct__end-turn-overlay"
 										type="button"
 										aria-label="End Turn"
 										data-tooltip="End Turn"
@@ -1878,20 +2032,20 @@
 							</li>
 						{:else}
 							<li
-								class="nimble-ncct__portrait nimble-ncct__portrait--monster"
-								class:nimble-ncct__portrait--active={activeEntryKey === entry.key}
+								class="nimble-ct__portrait nimble-ct__portrait--monster"
+								class:nimble-ct__portrait--active={activeEntryKey === entry.key}
 								data-track-key={entry.key}
 								data-tooltip="Monsters and Minions"
 								onclick={handleMonsterStackClick}
 								oncontextmenu={handleMonsterStackContextMenu}
 							>
-								<span class="nimble-ncct__monster-stack-icon" aria-hidden="true">
+								<span class="nimble-ct__monster-stack-icon" aria-hidden="true">
 									<i class="fa-solid fa-dragon"></i>
 								</span>
-								<span class="nimble-ncct__badge">x{sceneAllMonsterCombatants.length}</span>
+								<span class="nimble-ct__badge">x{sceneAllMonsterCombatants.length}</span>
 								{#if combatStarted && activeEntryKey === entry.key && canCurrentUserEndTurn}
 									<button
-										class="nimble-ncct__end-turn-overlay"
+										class="nimble-ct__end-turn-overlay"
 										type="button"
 										aria-label="End Turn"
 										data-tooltip="End Turn"
@@ -1904,61 +2058,108 @@
 						{/if}
 					{/each}
 					{#if combatStarted && orderedAliveEntries.length > 0 && roundSeparatorIndex < 0}
-						<li class="nimble-ncct__round-separator" data-tooltip="Current Round">
-							<span class="nimble-ncct__round-separator-line"></span>
-							<span class="nimble-ncct__round-separator-round"
+						<li class="nimble-ct__round-separator" data-tooltip="Current Round">
+							<span class="nimble-ct__round-separator-line"></span>
+							<span class="nimble-ct__round-separator-round"
 								><i class="fa-solid fa-angle-right"></i>{currentRoundLabel}</span
 							>
 						</li>
 					{/if}
 					{#if virtualizedAliveEntries.trailingWidthPx > 0}
 						<li
-							class="nimble-ncct__virtual-spacer"
+							class="nimble-ct__virtual-spacer"
 							aria-hidden="true"
 							style={`width: ${virtualizedAliveEntries.trailingWidthPx}px;`}
 						></li>
 					{/if}
 
 					{#if renderedDeadCombatants.length > 0}
-						<li class="nimble-ncct__dead">Dead</li>
+						<li class="nimble-ct__dead">Dead</li>
 						{#each renderedDeadCombatants as combatant (combatant._id)}
 							{@const actionState = getActionState(combatant)}
 							<li
-								class="nimble-ncct__portrait nimble-ncct__portrait--dead"
+								class="nimble-ct__portrait nimble-ct__portrait--dead"
 								data-track-key={`dead-${getCombatantId(combatant)}`}
 								data-tooltip={getCombatantDisplayName(combatant)}
 								onclick={(event) => handleCombatantCardClick(event, combatant)}
 								oncontextmenu={(event) => handleCombatantCardContextMenu(event, combatant)}
 							>
 								<img
-									class="nimble-ncct__image"
+									class="nimble-ct__image"
 									src={getCombatantImageForDisplay(combatant)}
 									alt="Dead combatant portrait"
 									draggable="false"
 								/>
 								{#if shouldRenderHpBadge(combatant)}
 									<span
-										class={`nimble-ncct__badge nimble-ncct__badge--hp ${getCombatantHpBadgeClass(combatant)}`}
+										class={`nimble-ct__badge nimble-ct__badge--hp ${getCombatantHpBadgeClass(combatant)}`}
 									>{getCombatantHpText(combatant)}</span>
 								{/if}
-								<div class="nimble-ncct__pips">
-									{#each actionState.slots as slot}
-										<button
-											type="button"
-											class="nimble-ncct__action-die-button"
-											aria-label={`Set actions to ${slot + 1}`}
-											data-tooltip={`Set actions to ${slot + 1}`}
-											disabled={!canCurrentUserAdjustCombatantActions(combatant)}
-											onclick={(event) => {
-												void handleActionDieClick(event, combatant, slot);
-											}}
+								<div class="nimble-ct__pips">
+									{#if useActionDice}
+										{#each actionState.slots as slot}
+											<button
+												type="button"
+												class="nimble-ct__action-die-button"
+												aria-label={`Set actions to ${slot + 1}`}
+												data-tooltip={`Set actions to ${slot + 1}`}
+												disabled={!canCurrentUserAdjustCombatantActions(combatant)}
+												onclick={(event) => {
+													void handleActionDieClick(event, combatant, slot);
+												}}
+											>
+												<i
+													class={`${getActionDiceIconClass(slot)} ${slot < actionState.current ? 'nimble-ct__action-die--active' : 'nimble-ct__action-die--spent'}`}
+												></i>
+											</button>
+										{/each}
+										{#if actionState.overflow > 0}
+											<span class="nimble-ct__action-overflow">+{actionState.overflow}</span>
+										{/if}
+									{:else}
+										{@const displayCurrentActions = Math.max(0, Math.floor(actionState.current))}
+										{@const displayMaxActions = Math.max(0, Math.floor(actionState.max))}
+										{@const canAdjustActions = canCurrentUserAdjustCombatantActions(combatant)}
+										<div
+											class="nimble-ct__action-box-shell"
+											class:nimble-ct__action-box-shell--editable={canAdjustActions}
 										>
-											<i
-												class={`${getActionDiceIconClass(slot)} ${slot < actionState.current ? 'nimble-ncct__action-die--active' : 'nimble-ncct__action-die--spent'}`}
-											></i>
-										</button>
-									{/each}
-									{#if actionState.overflow > 0}<span>+{actionState.overflow}</span>{/if}
+											{#if canAdjustActions}
+												<button
+													type="button"
+													class="nimble-ct__action-adjust nimble-ct__action-adjust--minus"
+													aria-label="Decrease available actions"
+													data-tooltip="Decrease actions"
+													disabled={displayCurrentActions <= 0}
+													onclick={(event) => {
+														void handleActionDeltaClick(event, combatant, -1);
+													}}
+												>
+													<i class="fa-solid fa-minus"></i>
+												</button>
+											{/if}
+											<span
+												class="nimble-ct__action-box"
+												data-tooltip={`Available actions: ${displayCurrentActions} / ${displayMaxActions}`}
+											>
+												{displayCurrentActions}
+											</span>
+											{#if canAdjustActions}
+												<button
+													type="button"
+													class="nimble-ct__action-adjust nimble-ct__action-adjust--plus"
+													aria-label="Increase available actions"
+													data-tooltip="Increase actions"
+													disabled={displayCurrentActions >= displayMaxActions}
+													onclick={(event) => {
+														void handleActionDeltaClick(event, combatant, 1);
+													}}
+												>
+													<i class="fa-solid fa-plus"></i>
+												</button>
+											{/if}
+										</div>
+									{/if}
 								</div>
 							</li>
 						{/each}
@@ -1967,10 +2168,10 @@
 			</div>
 
 			{#if game.user}
-				<div class="nimble-ncct__controls" aria-label="Combat controls right">
+				<div class="nimble-ct__controls" aria-label="Combat controls right">
 					{#if game.user?.isGM}
 						<button
-							class="nimble-ncct__icon-button"
+							class="nimble-ct__icon-button"
 							aria-label="Start Combat"
 							data-tooltip="Start Combat"
 							style={combatStarted ? 'display: none;' : ''}
@@ -1978,16 +2179,15 @@
 							><i class="fa-solid fa-play"></i></button
 						>
 						<button
-							class="nimble-ncct__icon-button"
+							class="nimble-ct__icon-button"
 							aria-label="End Combat"
 							data-tooltip="End Combat"
-							style={!combatStarted ? 'display: none;' : ''}
 							onclick={(event) => handleControlAction(event, 'end-combat')}
 							><i class="fa-solid fa-ban"></i></button
 						>
 					{/if}
 					<button
-						class="nimble-ncct__icon-button"
+						class="nimble-ct__icon-button"
 						aria-label="Combat Settings"
 						data-tooltip="Combat Settings"
 						onclick={(event) => handleControlAction(event, 'configure')}
@@ -1995,14 +2195,14 @@
 					>
 					{#if game.user?.isGM}
 						<button
-							class="nimble-ncct__icon-button"
+							class="nimble-ct__icon-button"
 							aria-label="Next Turn"
 							data-tooltip="Next Turn"
 							onclick={(event) => handleControlAction(event, 'next-turn')}
 							><i class="fa-solid fa-chevron-right"></i></button
 						>
 						<button
-							class="nimble-ncct__icon-button"
+							class="nimble-ct__icon-button"
 							aria-label="Next Round"
 							data-tooltip="Next Round"
 							onclick={(event) => handleControlAction(event, 'next-round')}
@@ -2016,18 +2216,107 @@
 {/if}
 
 <style lang="scss">
-	.nimble-ncct-shell {
+	.nimble-ct-shell {
+		--nimble-ct-action-color: var(--nimble-ct-action-die-color, #ffffff);
+		--nimble-ct-action-color-resolved: var(--nimble-ct-action-color);
+		--nimble-ct-action-box-bg: color-mix(in srgb, hsl(225 27% 9%) 84%, black 16%);
+		--nimble-ct-action-box-border: color-mix(
+			in srgb,
+			var(--nimble-ct-action-color-resolved) 72%,
+			white 28%
+		);
+		--nimble-ct-action-box-glow: color-mix(
+			in srgb,
+			var(--nimble-ct-action-color-resolved) 26%,
+			transparent
+		);
+		--nimble-ct-action-adjust-bg: color-mix(in srgb, hsl(226 26% 10%) 86%, black 14%);
+		--nimble-ct-action-adjust-border: color-mix(
+			in srgb,
+			var(--nimble-ct-action-color-resolved) 58%,
+			white 42%
+		);
+		--nimble-ct-action-text-shadow: 0 0 0.18rem color-mix(in srgb, black 70%, transparent);
 		position: fixed;
+		top: 0;
 		left: 0;
 		right: 0;
 		width: 100vw;
 		display: flex;
 		justify-content: center;
-		z-index: 110;
+		z-index: 30;
 		pointer-events: none;
 	}
-	.nimble-ncct {
-		--nimble-ncct-hover-hitbox-inline: 0.45rem;
+	.nimble-ct__width-preview {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		z-index: 0;
+	}
+	.nimble-ct__width-preview-track {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 50%;
+		width: min(100vw, var(--nimble-ct-width-preview-max));
+		transform: translateX(-50%);
+	}
+	.nimble-ct__width-preview-line {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 2px;
+		background: repeating-linear-gradient(
+			to bottom,
+			color-mix(in srgb, white 92%, hsl(0 0% 78%) 8%) 0 2px,
+			transparent 2px 9px
+		);
+		filter: drop-shadow(0 0 0.28rem color-mix(in srgb, hsl(206 92% 58%) 88%, transparent));
+		opacity: 0.9;
+	}
+	.nimble-ct__width-preview-line--left {
+		left: 0;
+	}
+	.nimble-ct__width-preview-line--right {
+		right: 0;
+	}
+	:global(.theme-light) .nimble-ct-shell {
+		--nimble-ct-action-color-resolved: color-mix(
+			in srgb,
+			var(--nimble-ct-action-color) 24%,
+			hsl(220 44% 14%) 76%
+		);
+		--nimble-ct-action-box-bg: color-mix(
+			in srgb,
+			var(--color-bg-option, hsl(40 20% 95%)) 74%,
+			hsl(220 20% 84%) 26%
+		);
+		--nimble-ct-action-box-border: color-mix(
+			in srgb,
+			var(--nimble-ct-action-color-resolved) 64%,
+			hsl(220 24% 42%) 36%
+		);
+		--nimble-ct-action-box-glow: color-mix(
+			in srgb,
+			var(--nimble-ct-action-color-resolved) 28%,
+			transparent
+		);
+		--nimble-ct-action-adjust-bg: color-mix(
+			in srgb,
+			var(--color-bg-option, hsl(40 20% 95%)) 60%,
+			hsl(220 22% 80%) 40%
+		);
+		--nimble-ct-action-adjust-border: color-mix(
+			in srgb,
+			var(--nimble-ct-action-color-resolved) 58%,
+			hsl(220 24% 42%) 42%
+		);
+		--nimble-ct-action-text-shadow: 0 0 0 transparent;
+	}
+	.nimble-ct {
+		--nimble-ct-hover-hitbox-inline: 0.45rem;
+		position: relative;
+		z-index: 1;
 		pointer-events: auto;
 		display: grid;
 		grid-template-columns: auto auto auto;
@@ -2035,12 +2324,12 @@
 		align-items: start;
 		justify-content: center;
 		width: fit-content;
-		max-width: calc(var(--nimble-ncct-track-max-width) + 7rem);
+		max-width: calc(var(--nimble-ct-track-max-width) + 7rem);
 		/* Extend hover/focus activation zone slightly past side control bars. */
-		padding-inline: var(--nimble-ncct-hover-hitbox-inline);
-		margin-inline: calc(var(--nimble-ncct-hover-hitbox-inline) * -1);
+		padding-inline: var(--nimble-ct-hover-hitbox-inline);
+		margin-inline: calc(var(--nimble-ct-hover-hitbox-inline) * -1);
 	}
-	.nimble-ncct__controls {
+	.nimble-ct__controls {
 		pointer-events: none;
 		display: flex;
 		flex-direction: column;
@@ -2055,14 +2344,14 @@
 			opacity 120ms ease,
 			visibility 0s linear 120ms;
 	}
-	.nimble-ncct:hover .nimble-ncct__controls,
-	.nimble-ncct:focus-within .nimble-ncct__controls {
+	.nimble-ct:hover .nimble-ct__controls,
+	.nimble-ct:focus-within .nimble-ct__controls {
 		pointer-events: all;
 		opacity: 1;
 		visibility: visible;
 		transition: opacity 120ms ease;
 	}
-	.nimble-ncct__icon-button {
+	.nimble-ct__icon-button {
 		width: 1.55rem;
 		height: 1.55rem;
 		margin: 0;
@@ -2074,23 +2363,23 @@
 		border-radius: 0.2rem;
 		cursor: pointer;
 	}
-	.nimble-ncct__icon-button:hover,
-	.nimble-ncct__icon-button:focus-visible {
+	.nimble-ct__icon-button:hover,
+	.nimble-ct__icon-button:focus-visible {
 		color: hsl(36 92% 86%);
 		border-color: color-mix(in srgb, hsl(36 90% 84%) 75%, white);
 		background: color-mix(in srgb, hsl(225 16% 23%) 90%, transparent);
 	}
-	.nimble-ncct__icon-button:disabled {
+	.nimble-ct__icon-button:disabled {
 		opacity: 0.45;
 		cursor: not-allowed;
 	}
-	.nimble-ncct__viewport {
+	.nimble-ct__viewport {
 		position: relative;
 		width: fit-content;
-		max-width: var(--nimble-ncct-track-max-width);
+		max-width: var(--nimble-ct-track-max-width);
 		min-width: 0;
 	}
-	.nimble-ncct__track {
+	.nimble-ct__track {
 		pointer-events: all;
 		display: flex;
 		align-items: flex-start;
@@ -2100,40 +2389,40 @@
 		padding: 0 0.45rem 0.2rem;
 		list-style: none;
 		width: fit-content;
-		max-width: var(--nimble-ncct-track-max-width);
+		max-width: var(--nimble-ct-track-max-width);
 		min-width: 0;
 		overflow-x: auto;
 		overflow-y: hidden;
 		scrollbar-width: none;
 	}
-	.nimble-ncct__track::-webkit-scrollbar {
+	.nimble-ct__track::-webkit-scrollbar {
 		height: 0;
 	}
-	.nimble-ncct:hover .nimble-ncct__track,
-	.nimble-ncct:focus-within .nimble-ncct__track {
+	.nimble-ct:hover .nimble-ct__track,
+	.nimble-ct:focus-within .nimble-ct__track {
 		scrollbar-width: thin;
 	}
-	.nimble-ncct:hover .nimble-ncct__track::-webkit-scrollbar,
-	.nimble-ncct:focus-within .nimble-ncct__track::-webkit-scrollbar {
+	.nimble-ct:hover .nimble-ct__track::-webkit-scrollbar,
+	.nimble-ct:focus-within .nimble-ct__track::-webkit-scrollbar {
 		height: 0.44rem;
 	}
-	.nimble-ncct__track::-webkit-scrollbar-thumb {
+	.nimble-ct__track::-webkit-scrollbar-thumb {
 		background: color-mix(in srgb, hsl(0 0% 93%) 38%, transparent);
 		border-radius: 999px;
 	}
-	.nimble-ncct__track::-webkit-scrollbar-track {
+	.nimble-ct__track::-webkit-scrollbar-track {
 		background: transparent;
 	}
-	.nimble-ncct__virtual-spacer {
+	.nimble-ct__virtual-spacer {
 		flex: 0 0 auto;
 		height: 0.1rem;
 		pointer-events: none;
 	}
-	.nimble-ncct__portrait {
+	.nimble-ct__portrait {
 		position: relative;
 		flex: 0 0 auto;
-		width: calc(6.25rem * var(--nimble-ncct-card-scale, 1));
-		height: calc(9.4rem * var(--nimble-ncct-card-scale, 1));
+		width: calc(6.25rem * var(--nimble-ct-card-scale, 1));
+		height: calc(9.4rem * var(--nimble-ct-card-scale, 1));
 		border: 1px solid color-mix(in srgb, hsl(0 0% 96%) 38%, transparent);
 		border-top-width: 0;
 		border-radius: 0 0 0.36rem 0.36rem;
@@ -2147,37 +2436,31 @@
 			box-shadow 140ms ease,
 			opacity 140ms ease;
 	}
-	.nimble-ncct__portrait--draggable {
+	.nimble-ct__portrait--draggable .nimble-ct__drag-handle {
 		cursor: grab;
 	}
-	.nimble-ncct__portrait--draggable .nimble-ncct__drag-handle {
-		cursor: grab;
-	}
-	.nimble-ncct__portrait--draggable:active {
+	.nimble-ct__portrait--draggable .nimble-ct__drag-handle:active {
 		cursor: grabbing;
 	}
-	.nimble-ncct__portrait--draggable:active .nimble-ncct__drag-handle {
-		cursor: grabbing;
-	}
-	.nimble-ncct__portrait--preview-gap-before {
+	.nimble-ct__portrait--preview-gap-before {
 		margin-inline-start: 0.95rem;
 	}
-	.nimble-ncct__portrait--preview-gap-after {
+	.nimble-ct__portrait--preview-gap-after {
 		margin-inline-end: 0.95rem;
 	}
-	.nimble-ncct__portrait--active {
-		width: calc(7.5rem * var(--nimble-ncct-card-scale, 1));
-		height: calc(11.2rem * var(--nimble-ncct-card-scale, 1));
+	.nimble-ct__portrait--active {
+		width: calc(7.5rem * var(--nimble-ct-card-scale, 1));
+		height: calc(11.2rem * var(--nimble-ct-card-scale, 1));
 		border-color: color-mix(in srgb, hsl(0 0% 96%) 68%, transparent);
 		box-shadow: 0 0 0.7rem color-mix(in srgb, hsl(0 0% 98%) 33%, transparent);
 	}
-	.nimble-ncct__portrait--dead {
+	.nimble-ct__portrait--dead {
 		opacity: 0.46;
 	}
-	.nimble-ncct__portrait--dead .nimble-ncct__image {
+	.nimble-ct__portrait--dead .nimble-ct__image {
 		filter: grayscale(1) contrast(1.1);
 	}
-	.nimble-ncct__image {
+	.nimble-ct__image {
 		display: block;
 		width: 100%;
 		height: 100%;
@@ -2185,12 +2468,12 @@
 		user-select: none;
 		pointer-events: none;
 	}
-	.nimble-ncct__drag-handle {
+	.nimble-ct__drag-handle {
 		position: absolute;
 		inset: 0 0 2.5rem;
 		z-index: 2;
 	}
-	.nimble-ncct__portrait--monster {
+	.nimble-ct__portrait--monster {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -2206,7 +2489,7 @@
 				color-mix(in srgb, hsl(222 36% 8%) 92%, black 8%) 100%
 			);
 	}
-	.nimble-ncct__monster-stack-icon {
+	.nimble-ct__monster-stack-icon {
 		position: relative;
 		z-index: 1;
 		width: 3.85rem;
@@ -2223,18 +2506,18 @@
 			inset 0 0 0.7rem color-mix(in srgb, hsl(226 64% 6%) 78%, transparent);
 		pointer-events: none;
 	}
-	.nimble-ncct__monster-stack-icon i {
+	.nimble-ct__monster-stack-icon i {
 		font-size: 2rem;
 		line-height: 1;
 	}
-	.nimble-ncct__portrait--active .nimble-ncct__monster-stack-icon {
+	.nimble-ct__portrait--active .nimble-ct__monster-stack-icon {
 		width: 4.35rem;
 		height: 4.35rem;
 	}
-	.nimble-ncct__portrait--active .nimble-ncct__monster-stack-icon i {
+	.nimble-ct__portrait--active .nimble-ct__monster-stack-icon i {
 		font-size: 2.25rem;
 	}
-	.nimble-ncct__badge {
+	.nimble-ct__badge {
 		position: absolute;
 		top: 0.14rem;
 		left: 0.16rem;
@@ -2250,13 +2533,19 @@
 		text-shadow: 0 0 0.28rem color-mix(in srgb, black 80%, transparent);
 		background: color-mix(in srgb, hsl(220 54% 16%) 75%, transparent);
 		border-radius: 0.24rem;
+		transform: scale(var(--nimble-ct-badge-scale, 1));
+		transform-origin: top left;
+		transition:
+			transform 140ms ease,
+			box-shadow 140ms ease,
+			border-color 140ms ease;
 	}
-	.nimble-ncct__badge--hp {
+	.nimble-ct__badge--hp {
 		background: color-mix(in srgb, hsl(220 54% 16%) 90%, black 10%);
 		border: 1px solid color-mix(in srgb, hsl(218 35% 63%) 62%, white 10%);
 		box-shadow: 0 0 0.26rem color-mix(in srgb, hsl(217 36% 52%) 30%, transparent);
 	}
-	.nimble-ncct__badge--hp-green {
+	.nimble-ct__badge--hp-green {
 		background: linear-gradient(
 			180deg,
 			color-mix(in srgb, hsl(131 70% 46%) 90%, black 8%) 0%,
@@ -2265,7 +2554,7 @@
 		border: 1px solid color-mix(in srgb, hsl(124 60% 72%) 75%, white 12%);
 		box-shadow: 0 0 0.32rem color-mix(in srgb, hsl(126 68% 52%) 40%, transparent);
 	}
-	.nimble-ncct__badge--hp-yellow {
+	.nimble-ct__badge--hp-yellow {
 		color: hsl(42 68% 14%);
 		text-shadow: 0 0 0.2rem color-mix(in srgb, hsl(0 0% 100%) 22%, transparent);
 		background: linear-gradient(
@@ -2276,7 +2565,7 @@
 		border: 1px solid color-mix(in srgb, hsl(50 94% 76%) 70%, white 8%);
 		box-shadow: 0 0 0.32rem color-mix(in srgb, hsl(48 90% 56%) 44%, transparent);
 	}
-	.nimble-ncct__badge--hp-red {
+	.nimble-ct__badge--hp-red {
 		background: linear-gradient(
 			180deg,
 			color-mix(in srgb, hsl(3 88% 58%) 92%, white 8%) 0%,
@@ -2285,24 +2574,24 @@
 		border: 1px solid color-mix(in srgb, hsl(2 95% 76%) 74%, white 8%);
 		box-shadow: 0 0 0.32rem color-mix(in srgb, hsl(1 92% 56%) 44%, transparent);
 	}
-	.nimble-ncct__badge--hp-unknown {
+	.nimble-ct__badge--hp-unknown {
 		background: color-mix(in srgb, hsl(220 54% 16%) 90%, black 10%);
 		border: 1px solid color-mix(in srgb, hsl(218 35% 63%) 62%, white 10%);
 		box-shadow: 0 0 0.26rem color-mix(in srgb, hsl(217 36% 52%) 30%, transparent);
 	}
-	.nimble-ncct__initiative-roll {
+	.nimble-ct__initiative-roll {
 		position: absolute;
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
-		width: 1.9rem;
-		height: 1.9rem;
+		width: 3.8rem;
+		height: 3.8rem;
 		margin: 0;
 		padding: 0;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		font-size: 1rem;
+		font-size: 2rem;
 		color: hsl(36 94% 86%);
 		background: color-mix(in srgb, hsl(230 24% 12%) 90%, black 10%);
 		border: 1px solid color-mix(in srgb, hsl(42 78% 72%) 75%, white 10%);
@@ -2311,16 +2600,16 @@
 		cursor: pointer;
 		z-index: 4;
 	}
-	.nimble-ncct__initiative-roll:hover,
-	.nimble-ncct__initiative-roll:focus-visible {
+	.nimble-ct__initiative-roll:hover,
+	.nimble-ct__initiative-roll:focus-visible {
 		color: hsl(42 97% 91%);
 		filter: brightness(1.08);
 	}
-	.nimble-ncct__initiative-roll:disabled {
+	.nimble-ct__initiative-roll:disabled {
 		opacity: 0.45;
 		cursor: not-allowed;
 	}
-	.nimble-ncct__pips {
+	.nimble-ct__pips {
 		position: absolute;
 		inset-inline: 0;
 		bottom: 0;
@@ -2338,41 +2627,108 @@
 			transparent 100%
 		);
 		z-index: 3;
+		cursor: default;
 	}
-	.nimble-ncct__action-die-button {
+	.nimble-ct__action-die-button {
 		all: unset;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 		cursor: pointer;
 	}
-	.nimble-ncct__action-die-button:disabled {
+	.nimble-ct__action-die-button:disabled {
 		cursor: default;
 		opacity: 0.6;
 	}
-	.nimble-ncct__pips i {
+	.nimble-ct__pips i {
 		font-size: 1.74rem;
 		line-height: 1;
 		filter: drop-shadow(0 0 0.12rem color-mix(in srgb, black 70%, transparent));
 	}
-	.nimble-ncct__action-die--active {
-		color: var(--nimble-ncct-action-die-color, hsl(124 72% 68%));
+	.nimble-ct__action-die--active {
+		color: var(--nimble-ct-action-die-color, #ffffff);
 		opacity: 1;
 	}
-	.nimble-ncct__action-die--spent {
+	.nimble-ct__action-die--spent {
 		color: color-mix(
 			in srgb,
-			var(--nimble-ncct-action-die-color, hsl(124 58% 56%)) 44%,
+			var(--nimble-ct-action-die-color, #ffffff) 44%,
 			hsl(138 18% 22%) 56%
 		);
 		opacity: 0.45;
 	}
-	.nimble-ncct__pips span {
+	.nimble-ct__action-overflow {
 		font-size: 0.46rem;
 		font-weight: 700;
 		color: hsl(39 90% 82%);
 	}
-	.nimble-ncct__end-turn-overlay {
+	.nimble-ct__action-box-shell {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.32rem;
+	}
+	.nimble-ct__action-box {
+		min-width: 2.45rem;
+		height: 1.45rem;
+		padding-inline: 0.42rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 0.28rem;
+		border: 1px solid var(--nimble-ct-action-box-border);
+		background: var(--nimble-ct-action-box-bg);
+		color: var(--nimble-ct-action-color-resolved);
+		font-size: 1rem;
+		font-weight: 800;
+		line-height: 1;
+		text-shadow: var(--nimble-ct-action-text-shadow);
+		box-shadow: 0 0 0.36rem var(--nimble-ct-action-box-glow);
+	}
+	.nimble-ct__action-adjust {
+		all: unset;
+		width: 1.18rem;
+		height: 1.1rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 0.22rem;
+		border: 1px solid var(--nimble-ct-action-adjust-border);
+		background: var(--nimble-ct-action-adjust-bg);
+		color: var(--nimble-ct-action-color-resolved);
+		font-size: 0.28rem;
+		line-height: 1;
+		cursor: pointer;
+		transition:
+			opacity 110ms ease,
+			transform 110ms ease,
+			filter 110ms ease;
+	}
+	.nimble-ct__action-adjust:hover,
+	.nimble-ct__action-adjust:focus-visible {
+		filter: brightness(1.12);
+	}
+	.nimble-ct__action-adjust i {
+		font-size: 0.6rem;
+		line-height: 1;
+	}
+	.nimble-ct__action-adjust:disabled {
+		cursor: default;
+		opacity: 0.42;
+	}
+	.nimble-ct__action-box-shell--editable .nimble-ct__action-adjust {
+		opacity: 0;
+		pointer-events: none;
+		transform: translateY(0.08rem);
+	}
+	.nimble-ct__portrait:hover .nimble-ct__action-box-shell--editable .nimble-ct__action-adjust,
+	.nimble-ct__portrait:focus-within .nimble-ct__action-box-shell--editable .nimble-ct__action-adjust,
+	.nimble-ct__pips:hover .nimble-ct__action-box-shell--editable .nimble-ct__action-adjust {
+		opacity: 1;
+		pointer-events: all;
+		transform: translateY(0);
+	}
+	.nimble-ct__end-turn-overlay {
 		position: absolute;
 		left: 50%;
 		bottom: 2.2rem;
@@ -2403,21 +2759,21 @@
 		cursor: pointer;
 		z-index: 4;
 	}
-	.nimble-ncct__portrait--active:hover .nimble-ncct__end-turn-overlay,
-	.nimble-ncct__portrait--active:focus-within .nimble-ncct__end-turn-overlay {
+	.nimble-ct__portrait--active:hover .nimble-ct__end-turn-overlay,
+	.nimble-ct__portrait--active:focus-within .nimble-ct__end-turn-overlay {
 		opacity: 1;
 		transform: translate(-50%, 0);
 		pointer-events: all;
 	}
-	.nimble-ncct__end-turn-overlay:hover,
-	.nimble-ncct__end-turn-overlay:focus-visible {
+	.nimble-ct__end-turn-overlay:hover,
+	.nimble-ct__end-turn-overlay:focus-visible {
 		filter: brightness(1.12);
 	}
-	.nimble-ncct__dead {
+	.nimble-ct__dead {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		height: calc(9rem * var(--nimble-ncct-card-scale, 1));
+		height: calc(9rem * var(--nimble-ct-card-scale, 1));
 		padding-inline: 0.26rem;
 		font-size: 0.56rem;
 		font-weight: 700;
@@ -2425,7 +2781,7 @@
 		text-transform: uppercase;
 		color: hsl(0 0% 79%);
 	}
-	.nimble-ncct__round-separator {
+	.nimble-ct__round-separator {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.28rem;
@@ -2433,54 +2789,70 @@
 		opacity: 0.8;
 		margin-inline: 0.1rem;
 	}
-	.nimble-ncct__round-separator-line {
+	.nimble-ct__round-separator-line {
 		width: 0;
-		height: calc(8.4rem * var(--nimble-ncct-card-scale, 1));
-		border-left: 1px solid color-mix(in srgb, hsl(0 0% 100%) 75%, transparent);
+		height: calc(8.4rem * var(--nimble-ct-card-scale, 1));
+		border-left: 2px solid color-mix(in srgb, hsl(0 0% 100%) 75%, transparent);
 		border-bottom-right-radius: 999px;
 		border-bottom-left-radius: 999px;
+		transition:
+			height 140ms ease,
+			border-color 140ms ease;
 	}
-	.nimble-ncct__round-separator-round {
+	.nimble-ct__round-separator-round {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.18rem;
-		font-size: 0.88rem;
+		font-size: 1.04rem;
 		font-weight: 700;
+		line-height: 1;
+		white-space: nowrap;
+		font-variant-numeric: tabular-nums;
 		color: hsl(0 0% 96%);
 		text-shadow: 0 0 0.32rem color-mix(in srgb, black 75%, transparent);
+		backface-visibility: hidden;
+		transform: translateZ(0);
+		transition:
+			font-size 140ms ease,
+			gap 140ms ease;
 	}
 	@media (max-width: 900px) {
-		.nimble-ncct__icon-button {
+		.nimble-ct__icon-button {
 			width: 1.36rem;
 			height: 1.36rem;
 			font-size: 0.7rem;
 		}
-		.nimble-ncct__portrait {
-			width: calc(4.5rem * var(--nimble-ncct-card-scale, 1));
-			height: calc(6.7rem * var(--nimble-ncct-card-scale, 1));
+		.nimble-ct__portrait {
+			width: calc(4.5rem * var(--nimble-ct-card-scale, 1));
+			height: calc(6.7rem * var(--nimble-ct-card-scale, 1));
 		}
-		.nimble-ncct__portrait--active {
-			width: calc(5.35rem * var(--nimble-ncct-card-scale, 1));
-			height: calc(8.05rem * var(--nimble-ncct-card-scale, 1));
+		.nimble-ct__portrait--active {
+			width: calc(5.35rem * var(--nimble-ct-card-scale, 1));
+			height: calc(8.05rem * var(--nimble-ct-card-scale, 1));
 		}
-		.nimble-ncct__round-separator-line {
-			height: calc(6.1rem * var(--nimble-ncct-card-scale, 1));
+		.nimble-ct__round-separator-line {
+			height: calc(6.1rem * var(--nimble-ct-card-scale, 1));
 		}
-		.nimble-ncct__round-separator-round {
-			font-size: 0.72rem;
+		.nimble-ct__round-separator-round {
+			font-size: 0.84rem;
 		}
 	}
-	@media (hover: none) {
-		.nimble-ncct__controls {
+	@media (hover: none), (pointer: coarse) {
+		.nimble-ct__action-box-shell--editable .nimble-ct__action-adjust {
+			opacity: 1;
+			pointer-events: all;
+			transform: none;
+		}
+		.nimble-ct__controls {
 			pointer-events: all;
 			opacity: 1;
 			visibility: visible;
 			transition: none;
 		}
-		.nimble-ncct__track {
+		.nimble-ct__track {
 			scrollbar-width: thin;
 		}
-		.nimble-ncct__track::-webkit-scrollbar {
+		.nimble-ct__track::-webkit-scrollbar {
 			height: 0.44rem;
 		}
 	}
