@@ -19,6 +19,19 @@ export function getCombatantMaxActions(combatant: Combatant.Implementation): num
 	);
 }
 
+export function resolveCombatantCurrentActionsAfterDelta(params: {
+	currentActions: number;
+	maxActions: number;
+	delta: number;
+}): number {
+	const normalizedCurrent = Math.max(0, Math.floor(toFiniteNonNegativeNumber(params.currentActions)));
+	const normalizedMax = Math.max(0, Math.floor(toFiniteNonNegativeNumber(params.maxActions)));
+	const numericDelta = Number(params.delta);
+	const normalizedDelta = Number.isFinite(numericDelta) ? Math.trunc(numericDelta) : 0;
+	const nextActions = normalizedCurrent + normalizedDelta;
+	return Math.min(normalizedMax, Math.max(0, nextActions));
+}
+
 export function canCurrentUserEndTurn(combatant: Combatant.Implementation | null): boolean {
 	if (!combatant) return false;
 	if (game.user?.isGM) return true;

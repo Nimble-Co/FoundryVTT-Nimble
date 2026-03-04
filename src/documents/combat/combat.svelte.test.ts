@@ -281,6 +281,62 @@ describe('NimbleCombat', () => {
 		expect(combat.turn).toBe(1);
 	});
 
+	it('sets unrolled character actions to 0 and non-character actions to max at combat start', async () => {
+		const combatId = 'combat-start-action-initialization';
+		const unrolledCharacter = createMockCombatant({
+			id: 'unrolled-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: null,
+			actionsCurrent: 2,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const rolledCharacter = createMockCombatant({
+			id: 'rolled-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 2,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const npc = createMockCombatant({
+			id: 'npc-combatant',
+			type: 'npc',
+			sort: 3,
+			isOwner: false,
+			initiative: 10,
+			actionsCurrent: 1,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 10 }),
+			combatId,
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: 'scene-1' },
+			combatants: createCombatantsCollectionFixture([unrolledCharacter, rolledCharacter, npc]),
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+		combat.update = vi.fn().mockResolvedValue(combat);
+
+		await combat.startCombat();
+
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{ _id: 'unrolled-character', 'system.actions.base.current': 0 },
+			{ _id: 'npc-combatant', 'system.actions.base.current': 3 },
+		]);
+	});
+
 	it('auto-dissolves grouped minions at round boundary in ncs mode', async () => {
 		const combatId = 'combat-ncs-round-boundary';
 		const minionActorA = {

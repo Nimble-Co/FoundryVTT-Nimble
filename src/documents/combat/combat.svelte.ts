@@ -546,6 +546,32 @@ class NimbleCombat extends Combat {
 		await this.updateEmbeddedDocuments('Combatant', updates);
 	}
 
+	async #applyStartCombatActionUpdates(): Promise<void> {
+		const updates = this.combatants.contents.flatMap((combatant) => {
+			if (!combatant.id) return [];
+			const system = combatant.system as unknown as CombatantSystemWithActions;
+			const maxActions = Number(system.actions.base.max ?? 0);
+			const currentActions = Number(system.actions.base.current ?? 0);
+
+			if (combatant.type === 'character') {
+				if (combatant.initiative !== null) return [];
+				if (currentActions === 0) return [];
+				return [{ _id: combatant.id, 'system.actions.base.current': 0 }];
+			}
+
+			const normalizedMaxActions = Number.isFinite(maxActions) ? Math.max(0, maxActions) : 0;
+			if (currentActions === normalizedMaxActions) return [];
+			return [
+				{
+					_id: combatant.id,
+					'system.actions.base.current': normalizedMaxActions,
+				},
+			];
+		});
+		if (updates.length < 1) return;
+		await this.updateEmbeddedDocuments('Combatant', updates);
+	}
+
 	#resolveStartCombatTurnIndex(): number {
 		if (this.turns.length < 1) return 0;
 		const firstCharacterTurnIndex = this.turns.findIndex(
@@ -557,24 +583,12 @@ class NimbleCombat extends Combat {
 	override async startCombat(): Promise<this> {
 		const result = await super.startCombat();
 
-		// Roll initiative for any unrolled combatants
-		const sceneId = this.scene?.id;
-		if (!sceneId) return result;
+		// Initialize actions at combat start:
+		// - Unrolled characters begin at 0 actions until they roll initiative.
+		// - Non-character combatants begin at max actions.
+		await this.#applyStartCombatActionUpdates();
 
-		const unrolled = this.combatants.filter(
-			(c) => c.initiative === null && c.type === 'character' && c.sceneId === sceneId,
-		);
-		if (unrolled.length > 0) {
-			await this.rollInitiative(
-				unrolled.map((c) => c.id).filter((id): id is string => id !== null),
-				{ updateTurn: false },
-			);
-		}
-
-		// Initialize actions for non-character combatants.
-		await this.#applyNpcActionResetUpdates();
-
-		// After start + auto-roll updates, always begin on the top player card.
+		// After combat starts, always begin on the top player card.
 		// This preserves pre-combat manual ordering as the first-turn source of truth.
 		this.turns = this.setupTurns();
 		if (this.turns.length > 0) {
