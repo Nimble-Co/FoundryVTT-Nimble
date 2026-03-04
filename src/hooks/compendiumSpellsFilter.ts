@@ -331,6 +331,18 @@ const SCHOOL_TIER_COLORS: { [key: string]: string } = {
 	radiant: '#FFD700', // yellow
 	wind: '#FFFFFF', // white
 };
+
+export function mapTierForCompendiumDisplay(
+	tierValue: unknown,
+	propertiesSelected: unknown,
+): number {
+	const parsedTier =
+		typeof tierValue === 'number' ? tierValue : Number.parseInt(String(tierValue ?? 0), 10) || 0;
+	const isUtilitySpell =
+		Array.isArray(propertiesSelected) && propertiesSelected.includes('utilitySpell');
+	return isUtilitySpell ? 0 : parsedTier + 1;
+}
+
 /**
  * Normalize index entries to handle various pack.index formats
  * Handles array-based entries, object-based entries, and alternate field paths
@@ -345,10 +357,7 @@ function normalizeIndexEntry(e: any): {
 		const payload = field2 || field1 || {};
 		const propertiesSelected = payload.system?.properties?.selected || payload.properties?.selected;
 		const tierValue = payload.system?.tier ?? payload.tier ?? 0;
-		const tier =
-			Array.isArray(propertiesSelected) && propertiesSelected.includes('utilitySpell')
-				? 0
-				: tierValue;
+		const tier = mapTierForCompendiumDisplay(tierValue, propertiesSelected);
 		return {
 			_id,
 			system: {
@@ -363,10 +372,7 @@ function normalizeIndexEntry(e: any): {
 	if (typeof e === 'object' && e !== null) {
 		const propertiesSelected = e.system?.properties?.selected || e.properties?.selected;
 		const tierValue = e.system?.tier ?? e.tier ?? 0;
-		const tier =
-			Array.isArray(propertiesSelected) && propertiesSelected.includes('utilitySpell')
-				? 0
-				: tierValue;
+		const tier = mapTierForCompendiumDisplay(tierValue, propertiesSelected);
 		// Direct system.school and system.tier fields
 		if (e.system?.school !== undefined) {
 			return {
