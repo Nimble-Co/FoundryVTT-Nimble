@@ -1820,8 +1820,26 @@
 				aria-hidden="true"
 			>
 				<div class="nimble-ct__width-preview-track">
-					<span class="nimble-ct__width-preview-line nimble-ct__width-preview-line--left"></span>
-					<span class="nimble-ct__width-preview-line nimble-ct__width-preview-line--right"></span>
+					<span class="nimble-ct__width-preview-line nimble-ct__width-preview-line--left">
+						<svg
+							class="nimble-ct__width-preview-svg"
+							viewBox="0 0 4 100"
+							preserveAspectRatio="none"
+							aria-hidden="true"
+						>
+							<line class="nimble-ct__width-preview-stroke" x1="2" y1="0" x2="2" y2="100"></line>
+						</svg>
+					</span>
+					<span class="nimble-ct__width-preview-line nimble-ct__width-preview-line--right">
+						<svg
+							class="nimble-ct__width-preview-svg"
+							viewBox="0 0 4 100"
+							preserveAspectRatio="none"
+							aria-hidden="true"
+						>
+							<line class="nimble-ct__width-preview-stroke" x1="2" y1="0" x2="2" y2="100"></line>
+						</svg>
+					</span>
 				</div>
 			</div>
 		{/if}
@@ -2251,7 +2269,7 @@
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
-		z-index: 0;
+		z-index: 6;
 	}
 	.nimble-ct__width-preview-track {
 		position: absolute;
@@ -2265,14 +2283,24 @@
 		position: absolute;
 		top: 0;
 		bottom: 0;
-		width: 2px;
-		background: repeating-linear-gradient(
-			to bottom,
-			color-mix(in srgb, white 92%, hsl(0 0% 78%) 8%) 0 2px,
-			transparent 2px 9px
-		);
-		filter: drop-shadow(0 0 0.28rem color-mix(in srgb, hsl(206 92% 58%) 88%, transparent));
+		width: 4px;
 		opacity: 0.9;
+	}
+	.nimble-ct__width-preview-svg {
+		display: block;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+		filter:
+			drop-shadow(0 0 0.26rem color-mix(in srgb, hsl(206 92% 58%) 95%, transparent))
+			drop-shadow(0 0 0.6rem color-mix(in srgb, hsl(211 94% 56%) 88%, transparent));
+	}
+	.nimble-ct__width-preview-stroke {
+		stroke: color-mix(in srgb, white 92%, hsl(0 0% 78%) 8%);
+		stroke-width: 2.4;
+		stroke-dasharray: 6 10;
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
 	}
 	.nimble-ct__width-preview-line--left {
 		left: 0;
