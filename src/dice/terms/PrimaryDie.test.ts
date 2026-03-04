@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { PrimaryDie } from './PrimaryDie.js';
 
 describe('PrimaryDie', () => {
@@ -143,12 +143,32 @@ describe('PrimaryDie', () => {
 			const die = new PrimaryDie({ number: 1, faces: 6 });
 			(die as any)._evaluated = true;
 			// Rolled 6 (crit, explodes), then rolled 1 on the explosion
+			// The explosion result has exploded: false because 1 doesn't trigger another explosion
 			die.results = [
-				{ result: 6, active: true, discarded: false, exploded: true }, // Original crit
-				{ result: 1, active: true, discarded: false, exploded: true }, // Exploded roll - should not count as miss
+				{ result: 6, active: true, discarded: false, exploded: true }, // Original crit - triggered explosion
+				{ result: 1, active: true, discarded: false, exploded: false }, // Explosion result - rolled 1, no further explosion
 			];
 
+			// This is a crit (the primary die exploded), NOT a miss
+			// Even though the explosion rolled 1, the attack was still a crit
 			expect(die.isMiss).toBe(false);
+			expect(die.exploded).toBe(true);
+		});
+
+		it('should return false when crit explodes and explosion rolls 1 (real scenario)', () => {
+			const die = new PrimaryDie({ number: 1, faces: 6 });
+			(die as any)._evaluated = true;
+			// Real scenario from crossbow crit:
+			// Primary die rolled 6 (max), triggered explosion
+			// Explosion die rolled 1
+			// UI was incorrectly showing both CRIT and MISS
+			die.results = [
+				{ result: 6, active: true, discarded: false, exploded: true },
+				{ result: 1, active: true, discarded: false, exploded: false },
+			];
+
+			expect(die.exploded).toBe(true); // It's a crit
+			expect(die.isMiss).toBe(false); // NOT a miss - the explosion result doesn't count
 		});
 	});
 
