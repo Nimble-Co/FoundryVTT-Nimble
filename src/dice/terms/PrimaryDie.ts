@@ -12,7 +12,7 @@ class PrimaryDie extends foundry.dice.terms.Die {
 
 	get exploded() {
 		if (!this._evaluated) return undefined;
-		return this.results.some((r) => r.exploded);
+		return this.results.some((r) => r.exploded && r.active && !r.discarded);
 	}
 
 	get isMiss() {
