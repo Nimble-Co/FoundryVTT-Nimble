@@ -92,20 +92,24 @@ function applyCtActionDiceColorCssVariable(value: unknown): void {
 	document.documentElement.style.setProperty(CT_ACTION_DICE_COLOR_CSS_VAR, normalizedColor);
 }
 
-function normalizePermissionValue(
-	value: unknown,
-	fallback: boolean,
-): boolean {
+function normalizePermissionValue(value: unknown, fallback: boolean): boolean {
 	if (typeof value === 'boolean') return value;
 	if (typeof value === 'number') return value !== 0;
 	return fallback;
 }
 
 function normalizeRolePermissionConfig(value: unknown): CombatTrackerRolePermissionConfig {
-	const source = typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
+	const source =
+		typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
 	return {
-		player: normalizePermissionValue(source.player, DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING.player),
-		trusted: normalizePermissionValue(source.trusted, DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING.trusted),
+		player: normalizePermissionValue(
+			source.player,
+			DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING.player,
+		),
+		trusted: normalizePermissionValue(
+			source.trusted,
+			DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING.trusted,
+		),
 		assistant: normalizePermissionValue(
 			source.assistant,
 			DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING.assistant,
@@ -117,7 +121,10 @@ function normalizeRolePermissionConfig(value: unknown): CombatTrackerRolePermiss
 	};
 }
 
-function getUserRoleValue(roleKey: 'PLAYER' | 'TRUSTED' | 'ASSISTANT' | 'GAMEMASTER', fallback: number): number {
+function getUserRoleValue(
+	roleKey: 'PLAYER' | 'TRUSTED' | 'ASSISTANT' | 'GAMEMASTER',
+	fallback: number,
+): number {
 	const userRoles = (globalThis as { CONST?: { USER_ROLES?: Record<string, number> } }).CONST
 		?.USER_ROLES;
 	return Number(userRoles?.[roleKey] ?? fallback);

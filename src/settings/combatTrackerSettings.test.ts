@@ -3,22 +3,22 @@ import {
 	COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY,
 	COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY,
 	COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY,
-	COMBAT_TRACKER_ENABLED_SETTING_KEY,
 	COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY,
+	COMBAT_TRACKER_ENABLED_SETTING_KEY,
 	COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY,
 	COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY,
 	COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY,
 	COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY,
 	canCurrentUserDisplayNonPlayerHitpointsOnCards,
 	getCombatTrackerActionDiceColor,
-	getCombatTrackerCtBadgeSizeLevel,
 	getCombatTrackerCenterActiveCardEnabled,
+	getCombatTrackerCtBadgeSizeLevel,
 	getCombatTrackerCtCardSizeLevel,
 	getCombatTrackerCtEnabled,
-	getCombatTrackerNonPlayerHitpointPermissionConfig,
-	getCombatTrackerUseActionDice,
 	getCombatTrackerCtWidthLevel,
+	getCombatTrackerNonPlayerHitpointPermissionConfig,
 	getCombatTrackerPlayersCanExpandMonsterCards,
+	getCombatTrackerUseActionDice,
 	isCombatTrackerActionDiceColorSettingKey,
 	isCombatTrackerBadgeSizeLevelSettingKey,
 	isCombatTrackerCardSizeLevelSettingKey,
@@ -30,14 +30,14 @@ import {
 	isCombatTrackerWidthLevelSettingKey,
 	registerCombatTrackerSettings,
 	setCombatTrackerActionDiceColor,
+	setCombatTrackerCenterActiveCardEnabled,
 	setCombatTrackerCtBadgeSizeLevel,
 	setCombatTrackerCtCardSizeLevel,
-	setCombatTrackerCenterActiveCardEnabled,
 	setCombatTrackerCtEnabled,
-	setCombatTrackerNonPlayerHitpointPermissionConfig,
-	setCombatTrackerUseActionDice,
 	setCombatTrackerCtWidthLevel,
+	setCombatTrackerNonPlayerHitpointPermissionConfig,
 	setCombatTrackerPlayersCanExpandMonsterCards,
+	setCombatTrackerUseActionDice,
 } from './combatTrackerSettings.js';
 
 type SettingsMock = {
@@ -385,9 +385,9 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 		).toBe(true);
 		expect(isCombatTrackerCenterActiveCardSettingKey('combatTrackerLocation')).toBe(false);
 		expect(isCombatTrackerEnabledSettingKey(COMBAT_TRACKER_ENABLED_SETTING_KEY)).toBe(true);
-		expect(
-			isCombatTrackerEnabledSettingKey(`nimble.${COMBAT_TRACKER_ENABLED_SETTING_KEY}`),
-		).toBe(true);
+		expect(isCombatTrackerEnabledSettingKey(`nimble.${COMBAT_TRACKER_ENABLED_SETTING_KEY}`)).toBe(
+			true,
+		);
 		expect(isCombatTrackerEnabledSettingKey('combatTrackerLocation')).toBe(false);
 		expect(isCombatTrackerWidthLevelSettingKey(COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY)).toBe(true);
 		expect(
@@ -403,9 +403,9 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 			),
 		).toBe(true);
 		expect(isCombatTrackerCardSizeLevelSettingKey('combatTrackerLocation')).toBe(false);
-		expect(isCombatTrackerBadgeSizeLevelSettingKey(COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY)).toBe(
-			true,
-		);
+		expect(
+			isCombatTrackerBadgeSizeLevelSettingKey(COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY),
+		).toBe(true);
 		expect(
 			isCombatTrackerBadgeSizeLevelSettingKey(
 				`nimble.${COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY}`,

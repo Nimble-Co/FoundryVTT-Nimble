@@ -63,6 +63,11 @@
 		widthLevel?: unknown;
 	}
 
+	interface CanvasTokenLike {
+		center?: { x: number; y: number } | null;
+		document?: { id?: string | null } | null;
+	}
+
 	type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
 
 	type CombatWithDrop = Combat & {
@@ -95,14 +100,11 @@
 	const CT_MIN_BADGE_SCALE = 1;
 	const CT_MAX_BADGE_SCALE = 1.8;
 	const CT_WIDTH_RATIO_STEP =
-		(CT_MAX_WIDTH_RATIO - CT_MIN_WIDTH_RATIO) /
-		(CT_MAX_WIDTH_LEVEL - CT_MIN_WIDTH_LEVEL);
+		(CT_MAX_WIDTH_RATIO - CT_MIN_WIDTH_RATIO) / (CT_MAX_WIDTH_LEVEL - CT_MIN_WIDTH_LEVEL);
 	const CT_CARD_SCALE_STEP =
-		(CT_MAX_CARD_SCALE - CT_MIN_CARD_SCALE) /
-		(CT_MAX_CARD_SIZE_LEVEL - CT_MIN_CARD_SIZE_LEVEL);
+		(CT_MAX_CARD_SCALE - CT_MIN_CARD_SCALE) / (CT_MAX_CARD_SIZE_LEVEL - CT_MIN_CARD_SIZE_LEVEL);
 	const CT_BADGE_SCALE_STEP =
-		(CT_MAX_BADGE_SCALE - CT_MIN_BADGE_SCALE) /
-		(CT_MAX_BADGE_SIZE_LEVEL - CT_MIN_BADGE_SIZE_LEVEL);
+		(CT_MAX_BADGE_SCALE - CT_MIN_BADGE_SCALE) / (CT_MAX_BADGE_SIZE_LEVEL - CT_MIN_BADGE_SIZE_LEVEL);
 	const CT_VIRTUALIZATION_ENTRY_THRESHOLD = 80;
 	const CT_VIRTUALIZATION_OVERSCAN = 12;
 	const CT_ESTIMATED_ENTRY_WIDTH_REM = 6.53;
@@ -136,8 +138,7 @@
 	function getCtCardScale(cardSizeLevel: number): number {
 		const normalizedCardSizeLevel = normalizeCtCardSizeLevel(cardSizeLevel);
 		return (
-			CT_MIN_CARD_SCALE +
-			(normalizedCardSizeLevel - CT_MIN_CARD_SIZE_LEVEL) * CT_CARD_SCALE_STEP
+			CT_MIN_CARD_SCALE + (normalizedCardSizeLevel - CT_MIN_CARD_SIZE_LEVEL) * CT_CARD_SCALE_STEP
 		);
 	}
 
@@ -212,6 +213,10 @@
 		return `combatant-${combatantId}-${occurrence}`;
 	}
 
+	function trackDependency(_value: unknown): void {
+		// Used to explicitly register rune dependencies in derived/effect blocks.
+	}
+
 	function getCombatantOccurrenceAtIndex(
 		combatants: Combatant.Implementation[],
 		combatantId: string,
@@ -244,9 +249,7 @@
 
 		const existingTurns = combat.turns;
 		const normalizedCurrentTurn =
-			typeof combat.turn === 'number' &&
-			combat.turn >= 0 &&
-			combat.turn < existingTurns.length
+			typeof combat.turn === 'number' && combat.turn >= 0 && combat.turn < existingTurns.length
 				? combat.turn
 				: null;
 		const currentCombatantId =
@@ -424,9 +427,7 @@
 			.filter((combatant): combatant is Combatant.Implementation => Boolean(combatant))
 			.filter(
 				(combatant) =>
-					getCombatantSceneId(combatant) === sceneId &&
-					combatant.visible &&
-					combatant._id != null,
+					getCombatantSceneId(combatant) === sceneId && combatant.visible && combatant._id != null,
 			);
 		const turnCombatantIds = new Set(turnCombatants.map((combatant) => combatant.id ?? ''));
 
@@ -561,7 +562,9 @@
 			const occurrence = occurrenceByCombatantId.get(combatantId) ?? 0;
 			occurrenceByCombatantId.set(combatantId, occurrence + 1);
 			entries.push({
-				key: combatantId ? buildCombatantEntryKey(combatantId, occurrence) : `combatant-${entries.length}`,
+				key: combatantId
+					? buildCombatantEntryKey(combatantId, occurrence)
+					: `combatant-${entries.length}`,
 				kind: 'combatant',
 				combatant,
 			});
@@ -596,7 +599,8 @@
 	function getActiveCombatantOccurrence(combat: Combat | null, activeId: string): number | null {
 		if (!combat) return null;
 		const turnIndex = Number(combat.turn ?? -1);
-		if (!Number.isInteger(turnIndex) || turnIndex < 0 || turnIndex >= combat.turns.length) return null;
+		if (!Number.isInteger(turnIndex) || turnIndex < 0 || turnIndex >= combat.turns.length)
+			return null;
 		return getCombatantOccurrenceAtIndex(combat.turns, activeId, turnIndex);
 	}
 
@@ -607,8 +611,13 @@
 		collapseMonsters: boolean;
 		monsterCombatants: Combatant.Implementation[];
 	}): string | null {
-		const { activeCombatantId, activeOccurrence, aliveEntries, collapseMonsters, monsterCombatants } =
-			params;
+		const {
+			activeCombatantId,
+			activeOccurrence,
+			aliveEntries,
+			collapseMonsters,
+			monsterCombatants,
+		} = params;
 		if (!activeCombatantId) return aliveEntries[0]?.key ?? null;
 
 		if (
@@ -624,7 +633,8 @@
 		}
 
 		const fallbackEntry = aliveEntries.find(
-			(entry) => entry.kind === 'combatant' && getTrackEntryCombatantId(entry) === activeCombatantId,
+			(entry) =>
+				entry.kind === 'combatant' && getTrackEntryCombatantId(entry) === activeCombatantId,
 		);
 		return fallbackEntry?.key ?? aliveEntries[0]?.key ?? null;
 	}
@@ -670,7 +680,11 @@
 
 		const combatantId = getCombatantId(lastCurrentRoundCombatant);
 		if (!combatantId) return null;
-		const occurrence = getCombatantOccurrenceAtIndex(sceneAliveCombatants, combatantId, boundaryIndex);
+		const occurrence = getCombatantOccurrenceAtIndex(
+			sceneAliveCombatants,
+			combatantId,
+			boundaryIndex,
+		);
 		return buildCombatantEntryKey(combatantId, occurrence);
 	}
 
@@ -730,10 +744,7 @@
 		if (!currentUser) return false;
 		if (currentUser.isGM) return true;
 		if (!combatant.actor) return false;
-		return combatant.actor.testUserPermission(
-			currentUser,
-			CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
-		);
+		return combatant.actor.testUserPermission(currentUser, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER);
 	}
 
 	function shouldShowInitiativePromptForCombatant(combatant: Combatant.Implementation): boolean {
@@ -1025,23 +1036,23 @@
 		}
 	}
 
-	function getCombatantToken(combatant: Combatant.Implementation): Token | null {
+	function getCombatantToken(combatant: Combatant.Implementation): CanvasTokenLike | null {
 		const tokenId = combatant.tokenId ?? combatant.token?.id ?? combatant.token?._id;
 		if (!tokenId) return null;
 
 		const tokenLayer = canvas.tokens;
 		if (!tokenLayer) return null;
 
-		const tokenFromLayer = (tokenLayer as unknown as { get?: (id: string) => Token | null }).get?.(
-			tokenId,
-		);
+		const tokenFromLayer = (
+			tokenLayer as unknown as { get?: (id: string) => CanvasTokenLike | null }
+		).get?.(tokenId);
 		if (tokenFromLayer) return tokenFromLayer;
 
 		const tokenFromPlaceables =
 			tokenLayer.placeables.find((token) => token.document?.id === tokenId) ?? null;
 		if (tokenFromPlaceables) return tokenFromPlaceables;
 
-		return (combatant.token?.object as Token | null) ?? null;
+		return (combatant.token?.object as CanvasTokenLike | null) ?? null;
 	}
 
 	async function panCanvasToCombatant(combatant: Combatant.Implementation): Promise<void> {
@@ -1074,10 +1085,7 @@
 		if (!token?.center) return;
 
 		const controlsLayer = canvas.controls as unknown as {
-			ping?: (
-				position: { x: number; y: number },
-				options?: Record<string, unknown>,
-			) => void;
+			ping?: (position: { x: number; y: number }, options?: Record<string, unknown>) => void;
 		};
 		if (typeof controlsLayer?.ping === 'function') {
 			controlsLayer.ping(token.center, {});
@@ -1085,10 +1093,7 @@
 		}
 
 		const canvasWithPing = canvas as unknown as {
-			ping?: (
-				position: { x: number; y: number },
-				options?: Record<string, unknown>,
-			) => void;
+			ping?: (position: { x: number; y: number }, options?: Record<string, unknown>) => void;
 		};
 		if (typeof canvasWithPing.ping === 'function') {
 			canvasWithPing.ping(token.center, {});
@@ -1141,8 +1146,7 @@
 		if (!trackedElement) return;
 		if (trackedElement.scrollWidth <= trackedElement.clientWidth + 1) return;
 
-		let delta =
-			Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+		let delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
 		if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
 			delta *= 16;
 		} else if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
@@ -1169,10 +1173,7 @@
 		clearDropPreview();
 	}
 
-	function handleCombatantCardPointerDown(
-		event: PointerEvent,
-		combatantId: string,
-	): void {
+	function handleCombatantCardPointerDown(event: PointerEvent, combatantId: string): void {
 		const target = event.target;
 		if (!(target instanceof HTMLElement)) {
 			dragHandleArmedCombatantId = null;
@@ -1217,7 +1218,10 @@
 		}
 
 		const estimatedEntryWidthPx = Math.max(1, getEstimatedCtEntryWidthPx());
-		const visibleCount = Math.max(1, Math.ceil(Math.max(estimatedEntryWidthPx, params.viewportWidth) / estimatedEntryWidthPx));
+		const visibleCount = Math.max(
+			1,
+			Math.ceil(Math.max(estimatedEntryWidthPx, params.viewportWidth) / estimatedEntryWidthPx),
+		);
 		const firstVisibleIndex = Math.max(0, Math.floor(params.scrollLeft / estimatedEntryWidthPx));
 		const startIndex = Math.max(0, firstVisibleIndex - CT_VIRTUALIZATION_OVERSCAN);
 		const endIndex = Math.min(
@@ -1291,7 +1295,8 @@
 		if (candidates.length < 1) return null;
 
 		const expansionPx = getDragTargetExpansionPx();
-		let bestMatch: { target: Combatant.Implementation; rect: DOMRect; targetId: string } | null = null;
+		let bestMatch: { target: Combatant.Implementation; rect: DOMRect; targetId: string } | null =
+			null;
 		let bestDistance = Number.POSITIVE_INFINITY;
 
 		for (const candidate of candidates) {
@@ -1577,7 +1582,9 @@
 	let ctWidthLevel = $state(getCombatTrackerCtWidthLevel());
 	let ctCardSizeLevel = $state(getCombatTrackerCtCardSizeLevel());
 	let ctBadgeSizeLevel = $state(getCombatTrackerCtBadgeSizeLevel());
-	let canCurrentUserViewNonPlayerHitpoints = $state(canCurrentUserDisplayNonPlayerHitpointsOnCards());
+	let canCurrentUserViewNonPlayerHitpoints = $state(
+		canCurrentUserDisplayNonPlayerHitpointsOnCards(),
+	);
 	let monsterCardsExpanded = $state(false);
 	let layoutVersion = $state(0);
 	let trackElement: HTMLOListElement | null = $state(null);
@@ -1613,11 +1620,11 @@
 		buildAliveEntries(sceneAliveCombatants, shouldCollapseMonsterCards, hasMonsterCombatants),
 	);
 	let activeCombatantId = $derived.by(() => {
-		renderVersion;
+		trackDependency(renderVersion);
 		return getActiveCombatantId(currentCombat);
 	});
 	let activeCombatant = $derived.by(() => {
-		renderVersion;
+		trackDependency(renderVersion);
 		return getActiveCombatant(currentCombat);
 	});
 	let canCurrentUserEndTurn = $derived.by(() => canCurrentUserEndCombatantTurn(activeCombatant));
@@ -1652,15 +1659,15 @@
 		getRoundSeparatorInsertionIndex(orderedAliveEntries, roundBoundaryKey),
 	);
 	let combatStarted = $derived.by(() => {
-		renderVersion;
+		trackDependency(renderVersion);
 		return isCombatStarted(currentCombat);
 	});
 	let currentRoundLabel = $derived.by(() => {
-		renderVersion;
+		trackDependency(renderVersion);
 		return Math.max(1, currentCombat?.round ?? 1);
 	});
 	let ctTrackMaxWidth = $derived.by(() => {
-		layoutVersion;
+		trackDependency(layoutVersion);
 		return resolveCtTrackMaxWidth(ctWidthLevel);
 	});
 	let ctWidthPreviewLevel = $state<number | null>(null);
@@ -1784,13 +1791,13 @@
 	});
 
 	$effect(() => {
-		centerActiveCardEnabled;
+		trackDependency(centerActiveCardEnabled);
 		void centerActiveEntryInView(activeEntryKey);
 	});
 
 	$effect(() => {
-		orderedAliveEntries.length;
-		layoutVersion;
+		trackDependency(orderedAliveEntries.length);
+		trackDependency(layoutVersion);
 		void tick().then(() => {
 			updateTrackViewportMetrics();
 		});
@@ -1954,7 +1961,8 @@
 								{#if shouldRenderHpBadge(entry.combatant)}
 									<span
 										class={`nimble-ct__badge nimble-ct__badge--hp ${getCombatantHpBadgeClass(entry.combatant)}`}
-									>{getCombatantHpText(entry.combatant)}</span>
+										>{getCombatantHpText(entry.combatant)}</span
+									>
 								{/if}
 								{#if shouldShowInitiativePromptForCombatant(entry.combatant)}
 									<button
@@ -1994,7 +2002,9 @@
 									{:else}
 										{@const displayCurrentActions = Math.max(0, Math.floor(actionState.current))}
 										{@const displayMaxActions = Math.max(0, Math.floor(actionState.max))}
-										{@const canAdjustActions = canCurrentUserAdjustCombatantActions(entry.combatant)}
+										{@const canAdjustActions = canCurrentUserAdjustCombatantActions(
+											entry.combatant,
+										)}
 										<div
 											class="nimble-ct__action-box-shell"
 											class:nimble-ct__action-box-shell--editable={canAdjustActions}
@@ -2111,7 +2121,8 @@
 								{#if shouldRenderHpBadge(combatant)}
 									<span
 										class={`nimble-ct__badge nimble-ct__badge--hp ${getCombatantHpBadgeClass(combatant)}`}
-									>{getCombatantHpText(combatant)}</span>
+										>{getCombatantHpText(combatant)}</span
+									>
 								{/if}
 								<div class="nimble-ct__pips">
 									{#if useActionDice}
@@ -2291,8 +2302,7 @@
 		width: 100%;
 		height: 100%;
 		overflow: visible;
-		filter:
-			drop-shadow(0 0 0.26rem color-mix(in srgb, hsl(206 92% 58%) 95%, transparent))
+		filter: drop-shadow(0 0 0.26rem color-mix(in srgb, hsl(206 92% 58%) 95%, transparent))
 			drop-shadow(0 0 0.6rem color-mix(in srgb, hsl(211 94% 56%) 88%, transparent));
 	}
 	.nimble-ct__width-preview-stroke {
@@ -2678,11 +2688,7 @@
 		opacity: 1;
 	}
 	.nimble-ct__action-die--spent {
-		color: color-mix(
-			in srgb,
-			var(--nimble-ct-action-die-color, #ffffff) 44%,
-			hsl(138 18% 22%) 56%
-		);
+		color: color-mix(in srgb, var(--nimble-ct-action-die-color, #ffffff) 44%, hsl(138 18% 22%) 56%);
 		opacity: 0.45;
 	}
 	.nimble-ct__action-overflow {
@@ -2750,7 +2756,9 @@
 		transform: translateY(0.08rem);
 	}
 	.nimble-ct__portrait:hover .nimble-ct__action-box-shell--editable .nimble-ct__action-adjust,
-	.nimble-ct__portrait:focus-within .nimble-ct__action-box-shell--editable .nimble-ct__action-adjust,
+	.nimble-ct__portrait:focus-within
+		.nimble-ct__action-box-shell--editable
+		.nimble-ct__action-adjust,
 	.nimble-ct__pips:hover .nimble-ct__action-box-shell--editable .nimble-ct__action-adjust {
 		opacity: 1;
 		pointer-events: all;
