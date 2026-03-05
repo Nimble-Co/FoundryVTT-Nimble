@@ -22,6 +22,27 @@ const NCSW_PANEL_MIN_WIDTH_REM = 20;
 const NCSW_PANEL_MAX_TARGETS_PER_ROW = 4;
 const NCSW_LOGO_PATH = '/systems/nimble/ncsw/logos/NimbleLogos.png';
 const NCSW_I18N_PREFIX = 'NIMBLE.nimbleCombatSystemWindow';
+const NCSW_SCENE_TOGGLE_TOOL_NAME = 'nimble-ncsw-toggle';
+const NCSW_SCENE_TOGGLE_ICON_CLASSES = 'fa-solid fa-crosshairs';
+const NCSW_SCENE_TOGGLE_DOM_OWNED_ATTRIBUTE = 'data-nimble-ncsw-owned';
+const NCSW_SCENE_TOGGLE_DOM_BOUND_ATTRIBUTE = 'data-nimble-ncsw-bound';
+const FONT_AWESOME_BASE_CLASSES = new Set([
+	'fa',
+	'fas',
+	'far',
+	'fab',
+	'fal',
+	'fat',
+	'fad',
+	'fa-solid',
+	'fa-regular',
+	'fa-brands',
+	'fa-light',
+	'fa-thin',
+	'fa-duotone',
+]);
+
+export type NcswSidebarViewMode = 'combatTracker' | 'ncs';
 
 let didRegisterMinionGroupTokenActions = false;
 let refreshScheduled = false;
@@ -47,6 +68,8 @@ let groupAttackTargetPopoverElement: HTMLDivElement | null = null;
 let groupAttackTargetPopoverRefreshInterval: ReturnType<typeof setInterval> | null = null;
 let groupAttackActionDescriptionPopoverElement: HTMLDivElement | null = null;
 let groupAttackImagePopoverElement: HTMLDivElement | null = null;
+let sceneControlsRefreshHandle: ReturnType<typeof setTimeout> | null = null;
+let ncswSidebarViewMode: NcswSidebarViewMode = 'ncs';
 const rememberedGroupAttackSelectionsByActorType = new Map<string, string>();
 
 type HookRegistration = { hook: string; id: number };
@@ -110,6 +133,26 @@ interface ActorWithActionItems {
 	activateItem?: (id: string, options?: Record<string, unknown>) => Promise<ChatMessage | null>;
 }
 
+interface SceneControlToolLike {
+	name?: string;
+	order?: number;
+	title?: string;
+	icon?: string;
+	button?: boolean;
+	toggle?: boolean;
+	active?: boolean;
+	visible?: boolean;
+	onClick?: (toggled?: boolean) => void;
+	onChange?: (event: Event, toggled: boolean) => void;
+}
+
+type SceneControlToolsLike = SceneControlToolLike[] | Record<string, SceneControlToolLike>;
+
+interface SceneControlLike {
+	name?: string;
+	tools?: SceneControlToolsLike;
+}
+
 function localizeByKey(key: string): string {
 	return game.i18n.localize(key as never);
 }
@@ -129,6 +172,18 @@ function formatNcsw(key: string, data: Record<string, string | number>): string 
 	return formatByKey(`${NCSW_I18N_PREFIX}.${key}`, data);
 }
 
+function toTrimmedString(value: string | null | undefined): string {
+	return value?.trim() ?? '';
+}
+
+function firstNonEmptyTrimmed(values: Array<string | null | undefined>): string | null {
+	for (const value of values) {
+		const normalized = toTrimmedString(value);
+		if (normalized.length > 0) return normalized;
+	}
+	return null;
+}
+
 function isTokenUiDebugEnabled(): boolean {
 	const globals = globalThis as Record<string, unknown>;
 	return (
@@ -141,6 +196,24 @@ function isTokenUiDebugEnabled(): boolean {
 function logTokenUi(message: string, details: Record<string, unknown> = {}): void {
 	if (!isTokenUiDebugEnabled()) return;
 	console.info(`[Nimble][MinionGrouping][TokenUI] ${message}`, details);
+}
+
+function isNcswSidebarModeActive(): boolean {
+	return ncswSidebarViewMode === 'ncs';
+}
+
+export function getNcswSidebarViewMode(): NcswSidebarViewMode {
+	return ncswSidebarViewMode;
+}
+
+export function setNcswSidebarViewMode(mode: NcswSidebarViewMode): void {
+	if (ncswSidebarViewMode === mode) return;
+	ncswSidebarViewMode = mode;
+	hideGroupAttackPanel();
+	if (didRegisterMinionGroupTokenActions) {
+		scheduleActionBarRefresh('setNcswSidebarViewMode');
+		scheduleSceneControlsRefresh('setNcswSidebarViewMode');
+	}
 }
 
 function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
@@ -2157,7 +2230,10 @@ async function executeNonMinionAttackRoll(
 
 function canUseNcswPanel(context: SelectionContext): boolean {
 	return (
-		Boolean(game.user?.isGM) && Boolean(canvas?.ready) && isNcswCombatStateEnabled(context.combat)
+		Boolean(game.user?.isGM) &&
+		Boolean(canvas?.ready) &&
+		isNcswCombatStateEnabled(context.combat) &&
+		isNcswSidebarModeActive()
 	);
 }
 
@@ -2224,6 +2300,593 @@ function scheduleActionBarRefresh(source = 'unknown'): void {
 	}, 0);
 }
 
+function scheduleSceneControlsRefresh(source = 'unknown'): void {
+	if (sceneControlsRefreshHandle) return;
+	logTokenUi('Scheduling scene controls refresh', { source });
+	sceneControlsRefreshHandle = setTimeout(() => {
+		sceneControlsRefreshHandle = null;
+		const controls = ui.controls as unknown as {
+			render?: (force?: boolean) => void;
+		};
+		if (typeof controls.render === 'function') controls.render(true);
+		setTimeout(() => syncNcswSceneToggleDomTool(), 0);
+	}, 0);
+}
+
+function getCombatForNcswSceneToggleVisibility(): CombatWithGrouping | null {
+	return getCombatForCurrentScene();
+}
+
+function getNcswSceneToggleTitle(isActive: boolean): string {
+	return isActive ? 'Hide NCSW' : 'Show NCSW';
+}
+
+function toggleNcswSceneControl(toggled?: boolean): void {
+	const shouldShowNcsw = typeof toggled === 'boolean' ? toggled : !isNcswSidebarModeActive();
+	setNcswSidebarViewMode(shouldShowNcsw ? 'ncs' : 'combatTracker');
+}
+
+function buildNcswSceneToggleTool(): SceneControlToolLike {
+	const isActive = isNcswSidebarModeActive();
+	return {
+		name: NCSW_SCENE_TOGGLE_TOOL_NAME,
+		title: getNcswSceneToggleTitle(isActive),
+		icon: NCSW_SCENE_TOGGLE_ICON_CLASSES,
+		toggle: true,
+		active: isActive,
+		visible: true,
+		onClick: toggleNcswSceneControl,
+		onChange: (_event, toggled) => toggleNcswSceneControl(toggled),
+	};
+}
+
+function isUnconstrainedMovementTool(tool: SceneControlToolLike | null | undefined): boolean {
+	const toolName = (tool?.name ?? '').trim().toLowerCase();
+	const toolTitle = (tool?.title ?? '').trim().toLowerCase();
+	return (
+		toolName.includes('unconstrained') ||
+		toolTitle.includes('unconstrained') ||
+		toolTitle.includes('movement')
+	);
+}
+
+function getSceneControlToolsList(
+	tools: SceneControlToolsLike | undefined,
+): SceneControlToolLike[] {
+	if (!tools) return [];
+	return Array.isArray(tools) ? tools : Object.values(tools);
+}
+
+function findSceneControlForNcswToggle(sceneControls: SceneControlLike[]): SceneControlLike | null {
+	const tokenControl =
+		sceneControls.find((sceneControl) => {
+			const controlName = (sceneControl.name ?? '').trim().toLowerCase();
+			return controlName === 'token' || controlName === 'tokens';
+		}) ?? null;
+	if (tokenControl) return tokenControl;
+
+	return (
+		sceneControls.find((sceneControl) => {
+			const tools = getSceneControlToolsList(sceneControl.tools);
+			return tools.some((tool) => isUnconstrainedMovementTool(tool));
+		}) ?? null
+	);
+}
+
+function removeNcswSceneToggleTool(tools: SceneControlToolsLike): void {
+	if (Array.isArray(tools)) {
+		const existingToolIndex = tools.findIndex((tool) => tool?.name === NCSW_SCENE_TOGGLE_TOOL_NAME);
+		if (existingToolIndex >= 0) tools.splice(existingToolIndex, 1);
+		return;
+	}
+
+	for (const [toolKey, tool] of Object.entries(tools)) {
+		if (toolKey !== NCSW_SCENE_TOGGLE_TOOL_NAME && tool?.name !== NCSW_SCENE_TOGGLE_TOOL_NAME)
+			continue;
+		delete tools[toolKey];
+	}
+}
+
+function resolveNcswSceneToggleOrder(tools: SceneControlToolLike[]): number {
+	const unconstrainedMovementTool = tools.find((tool) => isUnconstrainedMovementTool(tool));
+	const unconstrainedMovementOrder =
+		typeof unconstrainedMovementTool?.order === 'number' ? unconstrainedMovementTool.order : null;
+	if (unconstrainedMovementOrder !== null) return unconstrainedMovementOrder + 0.1;
+
+	const orderedTools = tools.filter((tool) => typeof tool?.order === 'number');
+	if (orderedTools.length < 1) return tools.length + 1;
+	return Math.max(...orderedTools.map((tool) => tool.order ?? 0)) + 1;
+}
+
+function isNcswSceneToggleVisible(): boolean {
+	const combat = getCombatForNcswSceneToggleVisibility();
+	return Boolean(game.user?.isGM) && isNcswCombatStateEnabled(combat);
+}
+
+function upsertNcswSceneToggleToolCollection(tools: SceneControlToolsLike): void {
+	const toggleTool = buildNcswSceneToggleTool();
+	if (Array.isArray(tools)) {
+		const existingToolIndex = tools.findIndex((tool) => tool?.name === NCSW_SCENE_TOGGLE_TOOL_NAME);
+		if (existingToolIndex >= 0) {
+			tools[existingToolIndex] = {
+				...tools[existingToolIndex],
+				...toggleTool,
+			};
+			return;
+		}
+
+		const unconstrainedMovementIndex = tools.findIndex((tool) => isUnconstrainedMovementTool(tool));
+		if (unconstrainedMovementIndex >= 0) {
+			tools.splice(unconstrainedMovementIndex + 1, 0, toggleTool);
+			return;
+		}
+		tools.push(toggleTool);
+		return;
+	}
+
+	const existingEntry =
+		tools[NCSW_SCENE_TOGGLE_TOOL_NAME] ??
+		Object.values(tools).find((tool) => tool?.name === NCSW_SCENE_TOGGLE_TOOL_NAME) ??
+		null;
+	tools[NCSW_SCENE_TOGGLE_TOOL_NAME] = {
+		...existingEntry,
+		...toggleTool,
+		order: resolveNcswSceneToggleOrder(Object.values(tools)),
+	};
+}
+
+function upsertNcswSceneToggleTool(sceneControls: unknown): void {
+	if (!Array.isArray(sceneControls)) return;
+
+	const tokenControl = findSceneControlForNcswToggle(sceneControls as SceneControlLike[]);
+	const tools = tokenControl?.tools;
+	if (!tools) return;
+
+	if (!isNcswSceneToggleVisible()) {
+		removeNcswSceneToggleTool(tools);
+		return;
+	}
+	upsertNcswSceneToggleToolCollection(tools);
+}
+
+function resolveSceneControlsRootElement(): HTMLElement | null {
+	const controlsElement = (ui.controls as unknown as { element?: unknown })?.element;
+	if (controlsElement instanceof HTMLElement) return controlsElement;
+	const jqueryLikeControlsElement = controlsElement as
+		| { length?: number; [index: number]: unknown }
+		| undefined;
+	const jqueryFirstElement = jqueryLikeControlsElement?.[0];
+	if (jqueryFirstElement instanceof HTMLElement) return jqueryFirstElement;
+
+	return (
+		document.querySelector<HTMLElement>('#scene-controls') ??
+		document.querySelector<HTMLElement>('#controls')
+	);
+}
+
+function getSceneToolElementLabel(element: HTMLElement): string {
+	const explicitLabel =
+		element.dataset.tooltip ??
+		element.getAttribute('aria-label') ??
+		element.getAttribute('title') ??
+		'';
+	return explicitLabel.trim().toLowerCase();
+}
+
+function getSceneToolElementIdentifier(element: HTMLElement): string {
+	return firstNonEmptyTrimmed([element.dataset.tool, element.dataset.action])?.toLowerCase() ?? '';
+}
+
+function isSceneToolListElement(element: HTMLElement): boolean {
+	return element.matches('.sub-controls, .control-tools, ol, ul, #controls, #scene-controls');
+}
+
+function hasSceneToolElementMarkers(element: HTMLElement): boolean {
+	if (getSceneToolElementIdentifier(element).length > 0) return true;
+	if (element.matches('.control-tool, [role="button"], button, a')) return true;
+	const interactiveElement = element.querySelector<HTMLElement>('button, a, [role="button"]');
+	if (!interactiveElement) return false;
+	if (getSceneToolElementIdentifier(interactiveElement).length > 0) return true;
+	if (interactiveElement.matches('.control-tool')) return true;
+	const interactiveLabel = getSceneToolElementLabel(interactiveElement);
+	const hasLabel = interactiveLabel.length > 0;
+	const hasIcon = interactiveElement.querySelector('i, svg') !== null;
+	return hasLabel && hasIcon;
+}
+
+function resolveSceneControlDomToolSlotElement(element: HTMLElement): HTMLElement {
+	const listItemSlot = (element.closest('li') as HTMLElement | null) ?? null;
+	if (listItemSlot) return listItemSlot;
+
+	const interactiveSlot =
+		(element.closest(
+			'button.control-tool,a.control-tool,button[data-tool],a[data-tool],button[data-action],a[data-action]',
+		) as HTMLElement | null) ?? null;
+	if (interactiveSlot) return interactiveSlot;
+
+	return element;
+}
+
+function getSceneControlDomToolSlotElements(root: ParentNode): HTMLElement[] {
+	if (root instanceof HTMLElement && isSceneToolListElement(root)) {
+		const directChildren = [...root.children].filter(
+			(child): child is HTMLElement => child instanceof HTMLElement,
+		);
+		const markedChildren = directChildren
+			.map((child) => resolveSceneControlDomToolSlotElement(child))
+			.filter((child) => hasSceneToolElementMarkers(child));
+		if (markedChildren.length > 0) return markedChildren;
+		return directChildren.map((child) => resolveSceneControlDomToolSlotElement(child));
+	}
+
+	const slotElements = new Set<HTMLElement>();
+	const listElements = [
+		...root.querySelectorAll<HTMLElement>('.sub-controls, .control-tools, ol, ul'),
+	];
+	for (const listElement of listElements) {
+		for (const slotElement of getSceneControlDomToolSlotElements(listElement)) {
+			slotElements.add(slotElement);
+		}
+	}
+	return [...slotElements];
+}
+
+function resolveNcswDomToolInteractiveElement(toolElement: HTMLElement): HTMLElement {
+	return toolElement.querySelector<HTMLElement>('button, a') ?? toolElement;
+}
+
+function isUnconstrainedMovementDomToolElement(element: HTMLElement): boolean {
+	const interactiveElement = resolveNcswDomToolInteractiveElement(element);
+	const toolIdentifier = firstNonEmptyTrimmed([
+		getSceneToolElementIdentifier(element),
+		getSceneToolElementIdentifier(interactiveElement),
+	]);
+	const toolLabel = firstNonEmptyTrimmed([
+		getSceneToolElementLabel(element),
+		getSceneToolElementLabel(interactiveElement),
+	]);
+	const normalizedIdentifier = toolIdentifier?.toLowerCase() ?? '';
+	const normalizedLabel = toolLabel?.toLowerCase() ?? '';
+	return (
+		normalizedIdentifier.includes('unconstrained') ||
+		normalizedIdentifier.includes('free') ||
+		normalizedLabel.includes('unconstrained movement') ||
+		normalizedLabel.includes('unconstrained')
+	);
+}
+
+function findUnconstrainedMovementDomToolElement(root: ParentNode): HTMLElement | null {
+	return (
+		getSceneControlDomToolSlotElements(root).find((toolElement) =>
+			isUnconstrainedMovementDomToolElement(toolElement),
+		) ?? null
+	);
+}
+
+function getSceneControlDomToolListCandidates(root: ParentNode): HTMLElement[] {
+	const candidates = new Set<HTMLElement>();
+	if (root instanceof HTMLElement && isSceneToolListElement(root)) candidates.add(root);
+	const queryRoot = root as Document | Element | DocumentFragment;
+	for (const toolList of queryRoot.querySelectorAll<HTMLElement>(
+		'.sub-controls, .control-tools, ol, ul',
+	)) {
+		candidates.add(toolList);
+	}
+	return [...candidates];
+}
+
+function getSceneControlDomAnchorCandidates(root: ParentNode): HTMLElement[] {
+	const queryRoot = root as Document | Element | DocumentFragment;
+	return [
+		...queryRoot.querySelectorAll<HTMLElement>(
+			'button, a, [role="button"], [data-tool], [data-action], [data-tooltip], [aria-label], [title]',
+		),
+	];
+}
+
+interface NcswDomAnchorContext {
+	toolList: HTMLElement;
+	anchorSlot: HTMLElement;
+}
+
+function findUnconstrainedMovementDomAnchorContext(root: ParentNode): NcswDomAnchorContext | null {
+	for (const toolList of getSceneControlDomToolListCandidates(root)) {
+		const unconstrainedTool = findUnconstrainedMovementDomToolElement(toolList);
+		if (!unconstrainedTool) continue;
+		const anchorSlot =
+			resolveDirectChildForInsertion(toolList, unconstrainedTool) ?? unconstrainedTool;
+		return {
+			toolList,
+			anchorSlot,
+		};
+	}
+
+	for (const anchorCandidate of getSceneControlDomAnchorCandidates(root)) {
+		const anchorSlot = resolveSceneControlDomToolSlotElement(anchorCandidate);
+		if (
+			!isUnconstrainedMovementDomToolElement(anchorCandidate) &&
+			!isUnconstrainedMovementDomToolElement(anchorSlot)
+		) {
+			continue;
+		}
+		const toolList =
+			(anchorSlot.parentElement as HTMLElement | null) ??
+			(anchorCandidate.parentElement as HTMLElement | null) ??
+			null;
+		if (!toolList) continue;
+		return {
+			toolList,
+			anchorSlot: resolveDirectChildForInsertion(toolList, anchorSlot) ?? anchorSlot,
+		};
+	}
+	return null;
+}
+
+function findOwnedNcswDomToolElements(root: ParentNode): HTMLElement[] {
+	const queryRoot = root as Document | Element | DocumentFragment;
+	return [
+		...queryRoot.querySelectorAll<HTMLElement>(`[${NCSW_SCENE_TOGGLE_DOM_OWNED_ATTRIBUTE}="true"]`),
+	];
+}
+
+function isRenderedNcswDomToolElement(toolElement: HTMLElement): boolean {
+	const interactiveElement = resolveNcswDomToolInteractiveElement(toolElement);
+	const identifiers = [
+		getSceneToolElementIdentifier(toolElement),
+		getSceneToolElementIdentifier(interactiveElement),
+	];
+	if (identifiers.includes(NCSW_SCENE_TOGGLE_TOOL_NAME)) return true;
+	return Boolean(toolElement.querySelector(`[data-tool="${NCSW_SCENE_TOGGLE_TOOL_NAME}"]`));
+}
+
+function findRenderedNcswDomToolElements(root: ParentNode): HTMLElement[] {
+	const queryRoot = root as Document | Element | DocumentFragment;
+	const directMatches = [
+		...queryRoot.querySelectorAll<HTMLElement>(`[data-tool="${NCSW_SCENE_TOGGLE_TOOL_NAME}"]`),
+	].map((toolElement) => resolveSceneControlDomToolSlotElement(toolElement));
+	const slotMatches = getSceneControlDomToolSlotElements(root).filter((toolElement) =>
+		isRenderedNcswDomToolElement(toolElement),
+	);
+	return [...new Set([...directMatches, ...slotMatches])];
+}
+
+function resolveSceneControlToolListElementFromControl(
+	controlElement: HTMLElement | null,
+): HTMLElement | null {
+	if (!controlElement) return null;
+	return (
+		controlElement.querySelector<HTMLElement>('.sub-controls, .control-tools, ol, ul') ??
+		controlElement.closest<HTMLElement>('.sub-controls, .control-tools, ol, ul')
+	);
+}
+
+function resolveNcswDomToolListElement(root: HTMLElement): HTMLElement | null {
+	const tokenControl = root.querySelector<HTMLElement>(
+		'[data-control="token"], [data-control="tokens"]',
+	);
+	const tokenToolList = resolveSceneControlToolListElementFromControl(tokenControl);
+	if (tokenToolList && getSceneControlDomToolSlotElements(tokenToolList).length > 0)
+		return tokenToolList;
+
+	const unconstrainedMovementAnchorContext = findUnconstrainedMovementDomAnchorContext(root);
+	if (unconstrainedMovementAnchorContext) return unconstrainedMovementAnchorContext.toolList;
+
+	const availableLists = [
+		...root.querySelectorAll<HTMLElement>('.control-tools, .sub-controls, ol, ul'),
+	];
+	return (
+		availableLists.find((list) => getSceneControlDomToolSlotElements(list).length > 0) ??
+		availableLists[0] ??
+		null
+	);
+}
+
+function isFontAwesomeClassName(className: string): boolean {
+	return FONT_AWESOME_BASE_CLASSES.has(className) || className.startsWith('fa-');
+}
+
+function removeFontAwesomeClasses(element: HTMLElement): void {
+	const fontAwesomeClasses = [...element.classList].filter((className) =>
+		isFontAwesomeClassName(className),
+	);
+	for (const className of fontAwesomeClasses) {
+		element.classList.remove(className);
+	}
+}
+
+function bindNcswDomToolClickHandler(toolElement: HTMLElement): void {
+	const bindTarget = (target: HTMLElement) => {
+		if (target.getAttribute(NCSW_SCENE_TOGGLE_DOM_BOUND_ATTRIBUTE) === 'true') return;
+		target.addEventListener('click', (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			toggleNcswSceneControl();
+		});
+		target.addEventListener('keydown', (event) => {
+			if (event.key !== 'Enter' && event.key !== ' ') return;
+			event.preventDefault();
+			event.stopPropagation();
+			toggleNcswSceneControl();
+		});
+		target.setAttribute(NCSW_SCENE_TOGGLE_DOM_BOUND_ATTRIBUTE, 'true');
+	};
+
+	const clickTarget = resolveNcswDomToolInteractiveElement(toolElement);
+	bindTarget(toolElement);
+	if (clickTarget !== toolElement) bindTarget(clickTarget);
+}
+
+function setNcswDomToolIdentity(toolElement: HTMLElement, title: string): void {
+	const clickTarget = resolveNcswDomToolInteractiveElement(toolElement);
+	const isSelfInteractive = clickTarget === toolElement;
+	toolElement.setAttribute(NCSW_SCENE_TOGGLE_DOM_OWNED_ATTRIBUTE, 'true');
+	toolElement.dataset.tool = NCSW_SCENE_TOGGLE_TOOL_NAME;
+	toolElement.dataset.tooltip = title;
+	delete toolElement.dataset.action;
+	toolElement.setAttribute('title', title);
+	toolElement.setAttribute('aria-label', title);
+	toolElement.classList.remove('active');
+	toolElement.removeAttribute('style');
+	removeFontAwesomeClasses(toolElement);
+	if (isSelfInteractive) {
+		toolElement.classList.add('control-tool', 'toggle');
+		toolElement.setAttribute('role', 'button');
+		toolElement.setAttribute('tabindex', '0');
+	} else {
+		toolElement.removeAttribute('role');
+		toolElement.removeAttribute('tabindex');
+	}
+
+	clickTarget.classList.remove('active');
+	clickTarget.removeAttribute('style');
+	removeFontAwesomeClasses(clickTarget);
+	if (isSelfInteractive) clickTarget.classList.add('control-tool', 'toggle');
+	clickTarget.dataset.tool = NCSW_SCENE_TOGGLE_TOOL_NAME;
+	clickTarget.dataset.tooltip = title;
+	delete clickTarget.dataset.action;
+	clickTarget.setAttribute('title', title);
+	clickTarget.setAttribute('aria-label', title);
+	clickTarget.setAttribute('role', 'button');
+	clickTarget.setAttribute('tabindex', '0');
+	if (clickTarget instanceof HTMLButtonElement) clickTarget.type = 'button';
+	clickTarget.style.cursor = 'pointer';
+}
+
+function ensureNcswDomToolIcon(toolElement: HTMLElement): void {
+	const clickTarget = resolveNcswDomToolInteractiveElement(toolElement);
+	clickTarget.replaceChildren();
+	const iconElement = document.createElement('i');
+	iconElement.className = NCSW_SCENE_TOGGLE_ICON_CLASSES;
+	clickTarget.append(iconElement);
+}
+
+function updateNcswDomToolElementState(toolElement: HTMLElement): void {
+	const isActive = getNcswSidebarViewMode() === 'ncs';
+	const title = getNcswSceneToggleTitle(isActive);
+	setNcswDomToolIdentity(toolElement, title);
+	toolElement.classList.toggle('active', isActive);
+	resolveNcswDomToolInteractiveElement(toolElement).classList.toggle('active', isActive);
+	ensureNcswDomToolIcon(toolElement);
+	bindNcswDomToolClickHandler(toolElement);
+}
+
+function createNcswDomToolElement(templateTool: HTMLElement | null): HTMLElement {
+	if (!templateTool) {
+		const toolElement = document.createElement('li');
+		toolElement.className = 'control-tool';
+		const clickTarget = document.createElement('button');
+		clickTarget.type = 'button';
+		toolElement.append(clickTarget);
+		toolElement.setAttribute(NCSW_SCENE_TOGGLE_DOM_OWNED_ATTRIBUTE, 'true');
+		return toolElement;
+	}
+
+	const toolElement = templateTool.cloneNode(false) as HTMLElement;
+	toolElement.removeAttribute('id');
+	toolElement.classList.remove('active');
+	toolElement.removeAttribute('style');
+
+	const templateClickTarget = resolveNcswDomToolInteractiveElement(templateTool);
+	if (templateClickTarget !== templateTool) {
+		const clickTarget = templateClickTarget.cloneNode(false) as HTMLElement;
+		clickTarget.removeAttribute('id');
+		clickTarget.classList.remove('active');
+		clickTarget.removeAttribute('style');
+		if (clickTarget instanceof HTMLButtonElement) clickTarget.type = 'button';
+		toolElement.append(clickTarget);
+	}
+	toolElement.setAttribute(NCSW_SCENE_TOGGLE_DOM_OWNED_ATTRIBUTE, 'true');
+	return toolElement;
+}
+
+function resolveDirectChildForInsertion(
+	container: HTMLElement,
+	element: HTMLElement,
+): HTMLElement | null {
+	let currentElement: HTMLElement | null = element;
+	while (currentElement && currentElement.parentElement !== container) {
+		currentElement = currentElement.parentElement;
+	}
+	return currentElement?.parentElement === container ? currentElement : null;
+}
+
+function insertNcswDomToolElement(toolList: HTMLElement, toolElement: HTMLElement): void {
+	const unconstrainedTool = findUnconstrainedMovementDomToolElement(toolList);
+	const unconstrainedToolSlot = unconstrainedTool
+		? resolveDirectChildForInsertion(toolList, unconstrainedTool)
+		: null;
+	if (unconstrainedToolSlot) {
+		unconstrainedToolSlot.insertAdjacentElement('afterend', toolElement);
+		return;
+	}
+	toolList.append(toolElement);
+}
+
+function insertNcswDomToolAfterAnchorSlot(
+	anchorSlot: HTMLElement,
+	toolElement: HTMLElement,
+): boolean {
+	const parent = anchorSlot.parentElement;
+	if (!(parent instanceof HTMLElement)) return false;
+	anchorSlot.insertAdjacentElement('afterend', toolElement);
+	return true;
+}
+
+function removeOwnedNcswDomToggleToolElements(root: ParentNode): void {
+	for (const toolElement of findOwnedNcswDomToolElements(root)) {
+		toolElement.remove();
+	}
+}
+
+function resolveNcswDomTemplateToolSlot(toolList: HTMLElement): HTMLElement | null {
+	const toolSlots = getSceneControlDomToolSlotElements(toolList);
+	const templateTool = findUnconstrainedMovementDomToolElement(toolList) ?? toolSlots[0] ?? null;
+	if (!templateTool) return null;
+	return resolveDirectChildForInsertion(toolList, templateTool) ?? templateTool;
+}
+
+function resolveVisibleNcswDomRoot(): HTMLElement | null {
+	const root = resolveSceneControlsRootElement() ?? document.body;
+	if (!isNcswSceneToggleVisible()) {
+		removeOwnedNcswDomToggleToolElements(document.body);
+		return null;
+	}
+	return root;
+}
+
+function clearExistingNcswDomTools(root: ParentNode): void {
+	for (const existingTool of findOwnedNcswDomToolElements(root)) {
+		existingTool.remove();
+	}
+}
+
+function syncNcswSceneToggleDomTool(): void {
+	const root = resolveVisibleNcswDomRoot();
+	if (!root) return;
+
+	clearExistingNcswDomTools(document.body);
+	if (findRenderedNcswDomToolElements(root).length > 0) return;
+
+	const anchorContext =
+		findUnconstrainedMovementDomAnchorContext(root) ??
+		findUnconstrainedMovementDomAnchorContext(document.body);
+	if (anchorContext) {
+		clearExistingNcswDomTools(anchorContext.toolList);
+		const toolElement = createNcswDomToolElement(anchorContext.anchorSlot);
+		updateNcswDomToolElementState(toolElement);
+		if (insertNcswDomToolAfterAnchorSlot(anchorContext.anchorSlot, toolElement)) return;
+	}
+
+	const toolList = resolveNcswDomToolListElement(root);
+	if (!toolList) return;
+
+	clearExistingNcswDomTools(toolList);
+	const templateToolSlot = resolveNcswDomTemplateToolSlot(toolList);
+	const toolElement = createNcswDomToolElement(templateToolSlot);
+	updateNcswDomToolElementState(toolElement);
+	insertNcswDomToolElement(toolList, toolElement);
+}
+
 function registerHook(event: string, callback: (...args: unknown[]) => unknown): void {
 	const hookId = (
 		Hooks.on as (eventName: string, cb: (...args: unknown[]) => unknown) => number
@@ -2268,6 +2931,10 @@ export function unregisterMinionGroupTokenActions(): void {
 	didRegisterMinionGroupTokenActions = false;
 	isExecutingAction = false;
 	refreshScheduled = false;
+	if (sceneControlsRefreshHandle) {
+		clearTimeout(sceneControlsRefreshHandle);
+		sceneControlsRefreshHandle = null;
+	}
 	activeGroupAttackSession = null;
 	activeGroupAttackMembers = [];
 	activeGroupAttackWarnings = [];
@@ -2275,7 +2942,13 @@ export function unregisterMinionGroupTokenActions(): void {
 }
 
 export default function registerMinionGroupTokenActions(): void {
-	if (didRegisterMinionGroupTokenActions) return;
+	if (didRegisterMinionGroupTokenActions) {
+		if (typeof canvas !== 'undefined' && canvas?.ready) {
+			scheduleActionBarRefresh('register-repeat');
+			scheduleSceneControlsRefresh('register-repeat');
+		}
+		return;
+	}
 	didRegisterMinionGroupTokenActions = true;
 	(globalThis as Record<string, unknown>).__nimbleMinionGroupTokenActionsRegistered = true;
 	logTokenUi('registerMinionGroupTokenActions invoked');
@@ -2295,21 +2968,39 @@ export default function registerMinionGroupTokenActions(): void {
 	};
 	window.addEventListener('resize', windowResizeHandler);
 
-	registerHook('canvasReady', () => scheduleActionBarRefresh('canvasReady'));
-	registerHook('canvasTearDown', () => hideGroupAttackPanel());
+	const refreshActionBarAndSceneControls = (source: string): void => {
+		scheduleActionBarRefresh(source);
+		scheduleSceneControlsRefresh(source);
+	};
+
+	registerHook('canvasReady', () => {
+		refreshActionBarAndSceneControls('canvasReady');
+	});
+	registerHook('canvasTearDown', () => {
+		hideGroupAttackPanel();
+		scheduleSceneControlsRefresh('canvasTearDown');
+	});
 	registerHook('controlToken', () => scheduleActionBarRefresh('controlToken'));
-	registerHook('createCombat', () => scheduleActionBarRefresh('createCombat'));
-	registerHook('updateCombat', () => scheduleActionBarRefresh('updateCombat'));
-	registerHook('deleteCombat', () => scheduleActionBarRefresh('deleteCombat'));
-	registerHook('createCombatant', () => scheduleActionBarRefresh('createCombatant'));
-	registerHook('updateCombatant', () => scheduleActionBarRefresh('updateCombatant'));
-	registerHook('deleteCombatant', () => scheduleActionBarRefresh('deleteCombatant'));
-	registerHook('renderSceneControls', () => scheduleActionBarRefresh('renderSceneControls'));
-	registerHook('activateTokenLayer', () => scheduleActionBarRefresh('activateTokenLayer'));
-	registerHook('deactivateTokenLayer', () => scheduleActionBarRefresh('deactivateTokenLayer'));
+	registerHook('createCombat', () => refreshActionBarAndSceneControls('createCombat'));
+	registerHook('updateCombat', () => refreshActionBarAndSceneControls('updateCombat'));
+	registerHook('deleteCombat', () => refreshActionBarAndSceneControls('deleteCombat'));
+	registerHook('createCombatant', () => refreshActionBarAndSceneControls('createCombatant'));
+	registerHook('updateCombatant', () => refreshActionBarAndSceneControls('updateCombatant'));
+	registerHook('deleteCombatant', () => refreshActionBarAndSceneControls('deleteCombatant'));
+	registerHook('getSceneControlButtons', (sceneControls) =>
+		upsertNcswSceneToggleTool(sceneControls),
+	);
+	registerHook('renderSceneControls', () => {
+		scheduleActionBarRefresh('renderSceneControls');
+		syncNcswSceneToggleDomTool();
+	});
+	registerHook('activateTokenLayer', () => refreshActionBarAndSceneControls('activateTokenLayer'));
+	registerHook('deactivateTokenLayer', () =>
+		refreshActionBarAndSceneControls('deactivateTokenLayer'),
+	);
 	registerHook('updateSetting', () => scheduleActionBarRefresh('updateSetting'));
 
 	if (typeof canvas !== 'undefined' && canvas?.ready) {
-		scheduleActionBarRefresh('initial-ready');
+		refreshActionBarAndSceneControls('initial-ready');
 	}
 }
