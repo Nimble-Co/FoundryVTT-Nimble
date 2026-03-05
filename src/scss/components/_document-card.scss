@@ -23,16 +23,7 @@
 
   &--drop-flash {
     position: relative;
-    overflow: hidden;
-  }
-
-  &--drop-flash::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    border-radius: inherit;
-    animation: nimble-drop-item-flash 1.2s ease-out forwards;
+    animation: nimble-drop-item-flash 2.5s ease-in-out forwards;
   }
 
   &--actor-inventory {
@@ -347,23 +338,38 @@
 
 @keyframes nimble-drop-item-flash {
   0% {
-    opacity: 0;
-    border: 1px solid rgba(255, 214, 84, 0);
-    box-shadow: 0 0 0 rgba(255, 214, 84, 0);
-    background: rgba(255, 214, 84, 0);
+    border-color: var(--nimble-card-border-color);
+    box-shadow: var(--nimble-box-shadow);
+    background-color: var(--nimble-card-background-color);
   }
 
-  20% {
-    opacity: 1;
-    border: 1px solid rgba(255, 214, 84, 0.9);
-    box-shadow: 0 0 10px rgba(255, 214, 84, 0.55);
-    background: rgba(255, 214, 84, 0.14);
+  16% {
+    border-color: hsl(var(--nimble-drop-flash-color-values) / 0.9);
+    box-shadow:
+      var(--nimble-box-shadow),
+      0 0 10px hsl(var(--nimble-drop-flash-color-values) / 0.55);
+    background-color: hsl(var(--nimble-drop-flash-color-values) / 0.14);
+  }
+
+  42% {
+    border-color: hsl(var(--nimble-drop-flash-color-values) / 0.55);
+    box-shadow:
+      var(--nimble-box-shadow),
+      0 0 7px hsl(var(--nimble-drop-flash-color-values) / 0.38);
+    background-color: hsl(var(--nimble-drop-flash-color-values) / 0.09);
+  }
+
+  72% {
+    border-color: hsl(var(--nimble-drop-flash-color-values) / 0.2);
+    box-shadow:
+      var(--nimble-box-shadow),
+      0 0 3px hsl(var(--nimble-drop-flash-color-values) / 0.14);
+    background-color: hsl(var(--nimble-drop-flash-color-values) / 0.04);
   }
 
   100% {
-    opacity: 0;
-    border: 1px solid rgba(255, 214, 84, 0);
-    box-shadow: 0 0 0 rgba(255, 214, 84, 0);
-    background: rgba(255, 214, 84, 0);
+    border-color: var(--nimble-card-border-color);
+    box-shadow: var(--nimble-box-shadow);
+    background-color: var(--nimble-card-background-color);
   }
 }

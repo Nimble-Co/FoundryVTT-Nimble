@@ -1,28 +1,30 @@
-import type { DeepPartial } from 'fvtt-types/utils';
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
 } from '#lib/SvelteApplicationMixin.svelte.js';
+import {
+	getDroppedItemFlashIds,
+	type SheetDropItemFlashState,
+} from '../../view/sheets/dropItemFlashState.js';
 import PlayerCharacterSheetComponent from '../../view/sheets/PlayerCharacterSheet.svelte';
+import {
+	DEFAULT_PRIMARY_TAB,
+	ITEM_TYPE_TO_PRIMARY_TAB,
+	type PrimaryTabName,
+} from '../../view/sheets/playerCharacterPrimaryTabs.js';
 import type { NimbleCharacter } from '../actor/character.js';
 import { SHEET_DEFAULTS } from './sheetDefaults.js';
 
-const DROP_ITEM_FLASH_DURATION_MS = 1200;
-const DROP_ITEM_FLASH_CLASS = 'nimble-document-card--drop-flash';
+type DroppedItemData = {
+	type?: unknown;
+	name?: unknown;
+	system?: {
+		parentClass?: unknown;
+		identifier?: unknown;
+	};
+};
 
-const ITEM_TYPE_TO_PRIMARY_TAB = {
-	object: 'inventory',
-	spell: 'spells',
-} as const;
-
-type PrimaryTabName =
-	| 'core'
-	| 'conditions'
-	| 'inventory'
-	| 'features'
-	| 'spells'
-	| 'bio'
-	| 'settings';
+type PlayerCharacterSheetState = Record<string, unknown> & SheetDropItemFlashState;
 
 export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ActorSheetV2,
@@ -32,10 +34,6 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	protected root;
 
 	protected props: { actor: Actor; sheet: PlayerCharacterSheet };
-
-	#pendingPrimaryTab: PrimaryTabName | null = null;
-	#pendingDroppedItemFlashIds: string[] = [];
-	#dropItemFlashClearTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	constructor(
 		actor: { document: NimbleCharacter },
@@ -77,11 +75,10 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		options: Parameters<foundry.applications.sheets.ActorSheetV2['_prepareContext']>[0],
 	): ReturnType<foundry.applications.sheets.ActorSheetV2['_prepareContext']> {
 		const context = await super._prepareContext(options);
-		const appState = this.$state as Record<string, unknown>;
+		const appState = this.$state as PlayerCharacterSheetState;
 
-		if (this.#pendingPrimaryTab) {
-			appState.activePrimaryTab = this.#pendingPrimaryTab;
-			this.#pendingPrimaryTab = null;
+		if (!Array.isArray(appState.droppedItemFlashIds)) {
+			appState.droppedItemFlashIds = [];
 		}
 
 		return {
@@ -89,26 +86,6 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			actor: this._actor,
 			sheet: this,
 		} as object as Awaited<ReturnType<foundry.applications.sheets.ActorSheetV2['_prepareContext']>>;
-	}
-
-	/**
-	 * Attach drop event listener for drag and drop functionality
-	 */
-	protected override _attachFrameListeners() {
-		super._attachFrameListeners();
-	}
-
-	protected override _replaceHTML(
-		result: SvelteApplicationRenderContext,
-		content: HTMLElement,
-		options: DeepPartial<foundry.applications.api.ApplicationV2.RenderOptions>,
-	): void {
-		super._replaceHTML(result, content, options);
-
-		if (this.#pendingDroppedItemFlashIds.length < 1) return;
-		this.#pendingDroppedItemFlashIds = this.#flashDroppedItemCards(
-			this.#pendingDroppedItemFlashIds,
-		);
 	}
 
 	/**
@@ -157,12 +134,11 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			);
 			this.#requestPrimaryTabForDroppedItems(items);
 			this.#requestDroppedItemFlash(this.#extractDroppedItemIds(items));
-			void this.render();
 			return result;
 		}
 
 		// Check if any item is a subclass
-		const hasSubclass = items.some((item: any) => item.type === 'subclass');
+		const hasSubclass = items.some((item) => (item as { type?: unknown }).type === 'subclass');
 
 		if (hasSubclass) {
 			// Use special subclass creation logic that includes validation
@@ -170,7 +146,6 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			if (Array.isArray(result) && result.length > 0) {
 				this.#requestPrimaryTabForDroppedItems(items);
 				this.#requestDroppedItemFlash(this.#extractDroppedItemIds(result));
-				void this.render();
 			}
 			return result;
 		}
@@ -180,24 +155,26 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		if (Array.isArray(result) && result.length > 0) {
 			this.#requestPrimaryTabForDroppedItems(items);
 			this.#requestDroppedItemFlash(this.#extractDroppedItemIds(result));
-			void this.render();
 		}
 		return result;
 	}
 
-	async _onDropSubclassCreate(itemData: any) {
+	async _onDropSubclassCreate(itemData: DroppedItemData | DroppedItemData[]) {
 		// Handle arrays
 		const items = Array.isArray(itemData) ? itemData : [itemData];
 		const actor = this.document as NimbleCharacter;
 
 		// Validate each item
-		const validatedItems: any[] = [];
+		const validatedItems: DroppedItemData[] = [];
 
 		for (const item of items) {
 			// Check if it's a subclass
 			if (item.type === 'subclass') {
 				const subclass = item;
-				const parentClass = subclass.system?.parentClass;
+				const parentClass =
+					typeof subclass.system?.parentClass === 'string'
+						? subclass.system.parentClass
+						: undefined;
 
 				// Check if character level is >= 3
 				const characterLevel = actor.levels?.character ?? 0;
@@ -214,7 +191,9 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 				);
 
 				if (!hasMatchingClass) {
-					const className = CONFIG.NIMBLE?.classes?.[parentClass] ?? parentClass;
+					const className = parentClass
+						? (CONFIG.NIMBLE?.classes?.[parentClass] ?? parentClass)
+						: '';
 					ui.notifications?.warn(
 						`The subclass "${subclass.name}" requires the ${className} class.`,
 					);
@@ -226,6 +205,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 				const existingSubclass = actor.items.find(
 					(i) =>
 						i.type === 'subclass' &&
+						parentClass !== undefined &&
 						(i.system as unknown as SubclassSystem)?.parentClass === parentClass,
 				);
 
@@ -233,7 +213,8 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 					// Check if it's the exact same subclass (compare by system.identifier)
 					const existingIdentifier = (existingSubclass.system as unknown as SubclassSystem)
 						?.identifier;
-					const newIdentifier = subclass.system?.identifier;
+					const newIdentifier =
+						typeof subclass.system?.identifier === 'string' ? subclass.system.identifier : null;
 
 					if (existingIdentifier && newIdentifier && existingIdentifier === newIdentifier) {
 						ui.notifications?.warn(`You already have the "${existingSubclass.name}" subclass.`);
@@ -262,18 +243,19 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 
 		// Create the validated items
 		if (validatedItems.length > 0) {
-			return actor.createEmbeddedDocuments('Item', validatedItems);
+			return actor.createEmbeddedDocuments(
+				'Item',
+				validatedItems as unknown as ReturnType<Item.Implementation['toObject']>[],
+			);
 		}
 
 		return [];
 	}
 
 	#getPrimaryTabForDroppedItemType(itemType: unknown): PrimaryTabName {
-		if (typeof itemType !== 'string') return 'features';
+		if (typeof itemType !== 'string') return DEFAULT_PRIMARY_TAB;
 
-		return (
-			ITEM_TYPE_TO_PRIMARY_TAB[itemType as keyof typeof ITEM_TYPE_TO_PRIMARY_TAB] ?? 'features'
-		);
+		return ITEM_TYPE_TO_PRIMARY_TAB[itemType] ?? DEFAULT_PRIMARY_TAB;
 	}
 
 	#requestPrimaryTabForDroppedItems(
@@ -284,7 +266,8 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		if (!Array.isArray(items) || items.length === 0) return;
 
 		const requestedTab = this.#getPrimaryTabForDroppedItemType(items[0]?.type);
-		this.#pendingPrimaryTab = requestedTab;
+		const appState = this.$state as PlayerCharacterSheetState;
+		appState.activePrimaryTab = requestedTab;
 	}
 
 	#extractDroppedItemIds(
@@ -304,82 +287,21 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		return Array.from(new Set(itemIds));
 	}
 
-	#flashDroppedItemCards(itemIds: string[]): string[] {
-		if (!Array.isArray(itemIds) || itemIds.length === 0) return [];
-
-		const rootElement = this.element;
-		if (!(rootElement instanceof HTMLElement)) {
-			return itemIds;
-		}
-
-		const unresolvedItemIds: string[] = [];
-		let hasAutoScrolled = false;
-		for (const itemId of itemIds) {
-			const escapedItemId = globalThis.CSS?.escape ? globalThis.CSS.escape(itemId) : itemId;
-			const itemCard = rootElement.querySelector<HTMLElement>(`[data-item-id="${escapedItemId}"]`);
-			if (!itemCard) {
-				unresolvedItemIds.push(itemId);
-				continue;
-			}
-
-			itemCard.classList.remove(DROP_ITEM_FLASH_CLASS);
-			void itemCard.offsetWidth;
-			itemCard.classList.add(DROP_ITEM_FLASH_CLASS);
-
-			if (!hasAutoScrolled) {
-				hasAutoScrolled = this.#scrollDroppedItemCardIntoView(itemCard);
-			}
-		}
-		return unresolvedItemIds;
-	}
-
-	#scrollDroppedItemCardIntoView(itemCard: HTMLElement): boolean {
-		const scrollContainer = itemCard.closest<HTMLElement>('.nimble-sheet__body');
-		if (!(scrollContainer instanceof HTMLElement)) return false;
-
-		const isScrollable = scrollContainer.scrollHeight > scrollContainer.clientHeight + 1;
-		if (!isScrollable) return false;
-
-		const containerRect = scrollContainer.getBoundingClientRect();
-		const itemRect = itemCard.getBoundingClientRect();
-		const isOutOfView = itemRect.top < containerRect.top || itemRect.bottom > containerRect.bottom;
-		if (!isOutOfView) return false;
-
-		itemCard.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
-		return true;
-	}
-
-	#clearDroppedItemFlashCards(itemIds: string[]): void {
-		if (!Array.isArray(itemIds) || itemIds.length === 0) return;
-
-		const rootElement = this.element;
-		if (!(rootElement instanceof HTMLElement)) return;
-
-		for (const itemId of itemIds) {
-			const escapedItemId = globalThis.CSS?.escape ? globalThis.CSS.escape(itemId) : itemId;
-			const itemCard = rootElement.querySelector<HTMLElement>(`[data-item-id="${escapedItemId}"]`);
-			itemCard?.classList.remove(DROP_ITEM_FLASH_CLASS);
-		}
-	}
-
 	#requestDroppedItemFlash(itemIds: string[]): void {
 		if (!Array.isArray(itemIds) || itemIds.length === 0) return;
 
-		const flashItemIds = [...itemIds];
-		this.#pendingDroppedItemFlashIds = flashItemIds;
-		const appState = this.$state as Record<string, unknown>;
-		appState.droppedItemFlashIds = flashItemIds;
+		const appState = this.$state as PlayerCharacterSheetState;
+		const currentFlashIds = getDroppedItemFlashIds(appState);
+		appState.droppedItemFlashIds = Array.from(new Set([...currentFlashIds, ...itemIds]));
+	}
 
-		if (this.#dropItemFlashClearTimeout) {
-			clearTimeout(this.#dropItemFlashClearTimeout);
-		}
+	clearDroppedItemFlash(itemId: unknown): void {
+		if (typeof itemId !== 'string' || itemId.length < 1) return;
 
-		this.#dropItemFlashClearTimeout = setTimeout(() => {
-			this.#dropItemFlashClearTimeout = null;
-			this.#pendingDroppedItemFlashIds = [];
-			(this.$state as Record<string, unknown>).droppedItemFlashIds = [];
-			this.#clearDroppedItemFlashCards(flashItemIds);
-			void this.render();
-		}, DROP_ITEM_FLASH_DURATION_MS);
+		const appState = this.$state as PlayerCharacterSheetState;
+		const currentFlashIds = getDroppedItemFlashIds(appState);
+		const nextFlashIds = currentFlashIds.filter((flashItemId) => flashItemId !== itemId);
+		if (nextFlashIds.length === currentFlashIds.length) return;
+		appState.droppedItemFlashIds = nextFlashIds;
 	}
 }

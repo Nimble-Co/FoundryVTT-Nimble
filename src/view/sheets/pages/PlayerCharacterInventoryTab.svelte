@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { NimbleCharacter } from '../../../documents/actor/character.js';
+	import type PlayerCharacterSheet from '../../../documents/sheets/PlayerCharacterSheet.svelte.js';
 	import { getContext } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { RulesManager } from '../../../managers/RulesManager.js';
@@ -7,6 +9,11 @@
 	import sortItems from '../../../utils/sortItems.js';
 	import prepareObjectTooltip from '../../dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js';
 	import filterItems from '../../dataPreparationHelpers/filterItems.js';
+	import {
+		DROP_ITEM_FLASH_ANIMATION_NAME,
+		getDroppedItemFlashIds,
+		type SheetDropItemFlashState,
+	} from '../dropItemFlashState.js';
 
 	import SearchBar from '../components/SearchBar.svelte';
 
@@ -45,11 +52,11 @@
 
 	const { objectTypeHeadings } = CONFIG.NIMBLE;
 
-	let actor = getContext('actor');
-	let sheet = getContext('application');
-	const droppedItemFlashIdsStore = getContext('droppedItemFlashIds');
+	let actor = getContext<NimbleCharacter>('actor');
+	let sheet = getContext<PlayerCharacterSheet>('application');
+	const sheetState = getContext<SheetDropItemFlashState>('sheetState');
 	let searchTerm = $state('');
-	let droppedItemFlashIds = $derived($droppedItemFlashIdsStore ?? new Set());
+	let droppedItemFlashIds = $derived(new Set(getDroppedItemFlashIds(sheetState)));
 
 	const tooltipCache = new Map();
 
@@ -97,6 +104,11 @@
 		}
 
 		await sheet._onSortItem(event, item);
+	}
+
+	function handleDropFlashAnimationEnd(event: AnimationEvent, itemId: string) {
+		if (event.animationName !== DROP_ITEM_FLASH_ANIMATION_NAME) return;
+		sheet.clearDroppedItemFlash(itemId);
 	}
 
 	let totalInventorySlots = $derived(actor.reactive.system.inventory.totalSlots ?? 0);
@@ -194,7 +206,7 @@
 			</header>
 
 			<ul class="nimble-item-list">
-				{#each sortItems(itemCategory) as item (item._id)}
+				{#each sortItems(itemCategory) as item (item.reactive._id)}
 					{@const metadata = getObjectMetadata(item)}
 					{@const rules = itemRulesManagers.get(item.id)}
 
@@ -208,7 +220,7 @@
 							droppedItemFlashIds,
 							item.reactive._id,
 						)}
-						data-item-id={item._id}
+						data-item-id={item.reactive._id}
 						data-tooltip={tooltipCache.get(item.reactive._id) || ''}
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 						data-tooltip-direction="LEFT"
@@ -218,6 +230,7 @@
 						ondragstart={(event) => sheet._onDragStart(event)}
 						ondragover={(event) => event.preventDefault()}
 						ondrop={(event) => handleItemDrop(event, item)}
+						onanimationend={(event) => handleDropFlashAnimationEnd(event, item.reactive._id)}
 						onclick={() => actor.activateItem(item._id)}
 					>
 						<header class="u-semantic-only">
