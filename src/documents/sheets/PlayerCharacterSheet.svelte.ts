@@ -313,6 +313,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		}
 
 		const unresolvedItemIds: string[] = [];
+		let hasAutoScrolled = false;
 		for (const itemId of itemIds) {
 			const escapedItemId = globalThis.CSS?.escape ? globalThis.CSS.escape(itemId) : itemId;
 			const itemCard = rootElement.querySelector<HTMLElement>(`[data-item-id="${escapedItemId}"]`);
@@ -324,8 +325,28 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			itemCard.classList.remove(DROP_ITEM_FLASH_CLASS);
 			void itemCard.offsetWidth;
 			itemCard.classList.add(DROP_ITEM_FLASH_CLASS);
+
+			if (!hasAutoScrolled) {
+				hasAutoScrolled = this.#scrollDroppedItemCardIntoView(itemCard);
+			}
 		}
 		return unresolvedItemIds;
+	}
+
+	#scrollDroppedItemCardIntoView(itemCard: HTMLElement): boolean {
+		const scrollContainer = itemCard.closest<HTMLElement>('.nimble-sheet__body');
+		if (!(scrollContainer instanceof HTMLElement)) return false;
+
+		const isScrollable = scrollContainer.scrollHeight > scrollContainer.clientHeight + 1;
+		if (!isScrollable) return false;
+
+		const containerRect = scrollContainer.getBoundingClientRect();
+		const itemRect = itemCard.getBoundingClientRect();
+		const isOutOfView = itemRect.top < containerRect.top || itemRect.bottom > containerRect.bottom;
+		if (!isOutOfView) return false;
+
+		itemCard.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+		return true;
 	}
 
 	#clearDroppedItemFlashCards(itemIds: string[]): void {
