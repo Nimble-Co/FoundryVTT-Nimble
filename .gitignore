@@ -13,6 +13,10 @@ node_modules/
 dist/
 .husky/
 
+# Lock files from other package managers
+package-lock.json
+yarn.lock
+
 # OS Specific
 .DS_Store
 
