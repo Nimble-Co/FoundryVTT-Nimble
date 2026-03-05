@@ -9,6 +9,7 @@ import getRollFormula from '../utils/getRollFormula.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
+import { normalizeDamageRollFormula } from './utils.js';
 
 // Dependencies are grouped to allow tests to override them without relying on module mocking.
 const dependencies = {
@@ -16,55 +17,14 @@ const dependencies = {
 	DamageRoll,
 	getRollFormula,
 	reconstructEffectsTree,
+	normalizeDamageRollFormula,
 };
 
 export const testDependencies = dependencies;
 
-function normalizeDamageRollFormula(formula: unknown): string {
-	const normalized = typeof formula === 'string' ? formula.replace(/\s+/g, ' ').trim() : '';
-	if (!normalized) return '0';
-
-	const normalizedDiceFaces = normalized.replace(
-		/\b(\d*)d([0-9oO|Il]+)\b/g,
-		(_match, rawCount, rawFaces) => {
-			const countValue = String(rawCount ?? '').replace(/[^0-9]/g, '');
-			const facesValue = String(rawFaces ?? '')
-				.replace(/[oO]/g, '0')
-				.replace(/[^0-9]/g, '');
-			const normalizedCount = countValue.length > 0 ? countValue : '1';
-			const normalizedFaces = facesValue.length > 0 ? facesValue : '0';
-			return `${normalizedCount}d${normalizedFaces}`;
-		},
-	);
-
-	const validateFormula = (candidate: string): boolean => {
-		const trimmed = candidate.trim();
-		if (!trimmed) return false;
-		try {
-			return Roll.validate(trimmed);
-		} catch {
-			return false;
-		}
-	};
-
-	if (validateFormula(normalizedDiceFaces)) return normalizedDiceFaces;
-
-	const firstSegment =
-		normalizedDiceFaces
-			.split(/\s*(?:,|;|\bor\b)\s*/i)
-			.map((segment) => segment.trim())
-			.find((segment) => segment.length > 0) ?? '';
-	if (firstSegment && validateFormula(firstSegment)) return firstSegment;
-
-	const diceMatch = normalizedDiceFaces.match(/\b\d*d\d+(?:\s*[+-]\s*\d+)?\b/i);
-	if (diceMatch) {
-		const extracted = diceMatch[0].replace(/\s+/g, '');
-		if (validateFormula(extracted)) return extracted;
-	}
-
-	return normalizedDiceFaces;
-}
-
+/**
+ * Manages item activation workflows including damage rolls, spell upcasting, and effect processing.
+ */
 class ItemActivationManager {
 	#item: NimbleBaseItem;
 
@@ -187,14 +147,7 @@ class ItemActivationManager {
 			}
 		}
 
-		// Get Targets
-		const _targets = game.user?.targets.map((t) => t.document.uuid) ?? new Set<string>();
-
-		let rolls: (Roll | DamageRoll)[] = [];
-		rolls = await this.#getRolls(dialogData);
-
-		// Get template data
-		const _templateData = this.#getTemplateData();
+		const rolls = await this.#getRolls(dialogData);
 
 		return { rolls, activation: this.activationData, rollHidden: dialogData.rollHidden ?? false };
 	}
@@ -216,7 +169,33 @@ class ItemActivationManager {
 		const actorSystem = this.actor?.system as { healingPotionBonus?: number } | undefined;
 		const healingBonus = isConsumable ? (actorSystem?.healingPotionBonus ?? 0) : 0;
 
-		for (const node of flattenEffectsTree(effects)) {
+		// Check if item has the Vicious property (adds 1 bonus die to crit explosions)
+		const itemProperties = (this.#item.system as { properties?: { selected?: string[] } })
+			.properties;
+		const hasVicious = itemProperties?.selected?.includes('vicious') ?? false;
+		const critBonusDice = hasVicious ? 1 : 0;
+
+		console.log(
+			'[ItemActivationManager] 3. Vicious check',
+			JSON.stringify({
+				itemName: this.#item.name,
+				selectedProperties: itemProperties?.selected,
+				hasVicious,
+				critBonusDice,
+			}),
+		);
+
+		const flattenedEffects = flattenEffectsTree(effects);
+
+		// Create rolls for each effect
+		for (const node of flattenedEffects) {
+			// Skip critical-only effects - they document crit behavior but explosions are
+			// handled by the primary die's explosion mechanic, not as separate rolls
+			if (node.parentContext === 'criticalHit') {
+				updatedEffects.push(node);
+				continue;
+			}
+
 			if (node.type === 'damage' || node.type === 'healing') {
 				let roll: Roll | DamageRoll;
 
@@ -229,8 +208,15 @@ class ItemActivationManager {
 					const resolvedCanMiss = isMinion || (canMiss ?? true);
 					node.rollMode = dialogData.rollMode ?? 0;
 
-					// Use modified formula if provided
+					console.log(
+						'[ItemActivationManager] 4. node.formula',
+						JSON.stringify({
+							dialogDataRollFormula: dialogData.rollFormula,
+							nodeFormula: node.formula,
+						}),
+					);
 					const formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
+					console.log('[ItemActivationManager] 4. formula', formula);
 
 					roll = new dependencies.DamageRoll(
 						formula,
@@ -241,6 +227,8 @@ class ItemActivationManager {
 							rollMode: node.rollMode ?? 0,
 							primaryDieValue: dialogData.primaryDieValue ?? 0,
 							primaryDieModifier: Number(dialogData.primaryDieModifier) || 0,
+							// Pass crit bonus dice (Vicious) to be added to explosion chain
+							critBonusDice: resolvedCanCrit ? critBonusDice : 0,
 						},
 					);
 
@@ -263,6 +251,12 @@ class ItemActivationManager {
 
 			updatedEffects.push(node);
 		}
+
+		// NOTE: Vicious bonus dice (detected via system.properties.selected) are rolled as part
+		// of the explosion chain in DamageRoll._preRollExplosionsWithVicious(). The critBonusDice
+		// option passed to DamageRoll controls how many extra dice are added on crit. Critical hit
+		// damage effects in the effects tree are skipped (see parentContext === 'criticalHit' check
+		// above) as they document crit behavior but explosions are handled by the primary die.
 
 		// Updating the effects tree this way ensures that the changes above are reflected in the activation data.
 		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);

@@ -98,7 +98,8 @@
 				"max": null
 			},
 			"selected": [
-				"range"
+				"range",
+				"vicious"
 			]
 		},
 		"school": "wind",

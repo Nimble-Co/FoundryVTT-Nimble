@@ -62,6 +62,42 @@
 	// Get the first damage formula for backward compatibility (used in validation)
 	let damageFormula = $derived(damageEffects[0]?.formula || '0');
 
+	// Handle form submission
+	function handleSubmit() {
+		if (situationalModifiers !== '') {
+			const isValid = Roll.validate(situationalModifiers);
+			if (!isValid) {
+				ui.notifications?.warn('❌ Invalid dice formula in the situational modifiers!');
+				return;
+			}
+		}
+		if (primaryDieValue != null) {
+			const roll = new Roll(damageFormula);
+			const terms = roll.terms;
+			const firstDieIndex = terms.findIndex((t) => t instanceof foundry.dice.terms.Die);
+			if (primaryDieValue > terms[firstDieIndex].faces || primaryDieValue < 0) {
+				ui.notifications?.warn('❌ Invalid value for primary die!');
+				return;
+			}
+		}
+		dialog.submitActivation({
+			rollMode: selectedRollMode,
+			rollFormula: modifiedFormulas[0]?.formula || '0',
+			situationalModifiers,
+			primaryDieValue: primaryDieValue,
+			primaryDieModifier: primaryDieModifier,
+			rollHidden: shouldRollBeHidden,
+		});
+	}
+
+	// Handle Enter key to submit
+	function handleKeydown(event) {
+		if (event.key === 'Enter' && !event.shiftKey) {
+			event.preventDefault();
+			handleSubmit();
+		}
+	}
+
 	// Modify formulas by adding the situationalModifiers
 	let modifiedFormulas = $derived.by(() => {
 		return damageEffects.map((effect) => {
@@ -76,6 +112,8 @@
 		});
 	});
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
 	<RollModeConfig bind:selectedRollMode />
@@ -129,36 +167,7 @@
 </article>
 
 <footer class="nimble-sheet__footer">
-	<button
-		class="nimble-button"
-		data-button-variant="basic"
-		onclick={() => {
-			if (situationalModifiers !== '') {
-				const isValid = Roll.validate(situationalModifiers);
-				if (!isValid) {
-					ui.notifications?.warn('❌ Invalid dice formula in the situational modifiers!');
-					return;
-				}
-			}
-			if (primaryDieValue != null) {
-				const roll = new Roll(damageFormula);
-				const terms = roll.terms;
-				const firstDieIndex = terms.findIndex((t) => t instanceof foundry.dice.terms.Die);
-				if (primaryDieValue > terms[firstDieIndex].faces || primaryDieValue < 0) {
-					ui.notifications?.warn('❌ Invalid value for primary die!');
-					return;
-				}
-			}
-			dialog.submitActivation({
-				rollMode: selectedRollMode,
-				rollFormula: modifiedFormulas[0]?.formula || '0',
-				situationalModifiers,
-				primaryDieValue: primaryDieValue,
-				primaryDieModifier: primaryDieModifier,
-				rollHidden: shouldRollBeHidden,
-			});
-		}}
-	>
+	<button class="nimble-button" data-button-variant="basic" onclick={handleSubmit}>
 		<i class="nimble-button__icon fa-solid fa-dice-d20"></i>
 		Roll
 	</button>

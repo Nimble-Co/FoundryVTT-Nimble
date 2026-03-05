@@ -7,6 +7,66 @@
 
 	let { actor, dialog, spell, ...data } = $props();
 
+	// Handle Enter key to submit
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter' && !event.shiftKey) {
+			event.preventDefault();
+			handleSubmit();
+		}
+	}
+
+	// Handle form submission
+	function handleSubmit() {
+		console.log('[SpellUpcastDialog] 1. Cast button clicked');
+
+		// Validate situational modifiers
+		if (situationalModifiers !== '') {
+			const isValid = Roll.validate(situationalModifiers);
+			if (!isValid) {
+				ui.notifications?.warn('Invalid dice formula in situational modifiers.');
+				return;
+			}
+		}
+
+		// Validate mana (only for tiered spells that cost mana)
+		if (baseMana > 0) {
+			if (manaToSpend < baseMana) {
+				ui.notifications?.warn(
+					`Must spend at least ${baseMana} mana for a tier ${baseMana} spell.`,
+				);
+				return;
+			}
+			if (manaToSpend > currentMana) {
+				ui.notifications?.warn(
+					`Not enough mana. You have ${currentMana}, but need ${manaToSpend}.`,
+				);
+				return;
+			}
+		}
+
+		if (manaToSpend > maxTier) {
+			ui.notifications?.warn(
+				`Cannot spend more mana than your highest unlocked spell tier (${maxTier}).`,
+			);
+			return;
+		}
+
+		const activationData = {
+			rollMode: selectedRollMode,
+			situationalModifiers,
+			primaryDieValue,
+			primaryDieModifier,
+			rollHidden: shouldRollBeHidden,
+			upcast: canUpcast
+				? {
+						manaToSpend,
+						choiceIndex: hasChoices ? choiceIndex : undefined,
+					}
+				: undefined,
+		};
+		dialog.submitActivation(activationData);
+	}
+
 	// Initialize state
 	let selectedRollMode = $state(untrack(() => Math.clamp(data.rollMode ?? 0, -6, 6)));
 	let situationalModifiers = $state('');
@@ -120,6 +180,8 @@
 	}
 </script>
 
+<svelte:window onkeydown={handleKeydown} />
+
 <article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
 	<RollModeConfig bind:selectedRollMode />
 
@@ -222,60 +284,7 @@
 </article>
 
 <footer class="nimble-sheet__footer">
-	<button
-		class="nimble-button"
-		data-button-variant="basic"
-		onclick={() => {
-			console.log('[SpellUpcastDialog] Cast button clicked');
-
-			// Validate situational modifiers
-			if (situationalModifiers !== '') {
-				const isValid = Roll.validate(situationalModifiers);
-				if (!isValid) {
-					ui.notifications?.warn('Invalid dice formula in situational modifiers.');
-					return;
-				}
-			}
-
-			// Validate mana (only for tiered spells that cost mana)
-			if (baseMana > 0) {
-				if (manaToSpend < baseMana) {
-					ui.notifications?.warn(
-						`Must spend at least ${baseMana} mana for a tier ${baseMana} spell.`,
-					);
-					return;
-				}
-				if (manaToSpend > currentMana) {
-					ui.notifications?.warn(
-						`Not enough mana. You have ${currentMana}, but need ${manaToSpend}.`,
-					);
-					return;
-				}
-			}
-
-			if (manaToSpend > maxTier) {
-				ui.notifications?.warn(
-					`Cannot spend more mana than your highest unlocked spell tier (${maxTier}).`,
-				);
-				return;
-			}
-
-			const activationData = {
-				rollMode: selectedRollMode,
-				situationalModifiers,
-				primaryDieValue,
-				primaryDieModifier,
-				rollHidden: shouldRollBeHidden,
-				upcast: canUpcast
-					? {
-							manaToSpend,
-							choiceIndex: hasChoices ? choiceIndex : undefined,
-						}
-					: undefined,
-			};
-			dialog.submitActivation(activationData);
-		}}
-	>
+	<button class="nimble-button" data-button-variant="basic" onclick={handleSubmit}>
 		<i class="nimble-button__icon fa-solid fa-wand-magic-sparkles"></i>
 		{format(spellUpcastDialog.castSpell)}
 	</button>

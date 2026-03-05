@@ -7,3 +7,4 @@ export { Migration006DwarfMaxHitDice } from './Migration006DwarfMaxHitDice.js';
 export { Migration007WildOneHitDiceAdvantage } from './Migration007WildOneHitDiceAdvantage.js';
 export { Migration008FieldMedicHealingPotionBonus } from './Migration008FieldMedicHealingPotionBonus.js';
 export { Migration009HealingEffects } from './Migration009HealingEffects.js';
+export { Migration010RazorWindVicious } from './Migration010RazorWindVicious.js';

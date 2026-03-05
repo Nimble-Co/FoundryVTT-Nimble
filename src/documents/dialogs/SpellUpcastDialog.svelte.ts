@@ -71,7 +71,7 @@ export default class SpellUpcastDialog extends SvelteApplicationMixin(Applicatio
 	}
 
 	async submitActivation(results: Record<string, unknown>) {
-		console.log('[SpellUpcastDialog] submitActivation called', results);
+		console.log('[SpellUpcastDialog] 2. submitActivation called', results);
 		this.#resolvePromise(results);
 		return super.close();
 	}
