@@ -188,6 +188,12 @@ async function release() {
 		process.exit(1);
 	}
 
+	// Reset any changes to release files from previous runs
+	console.log('Resetting release files to clean state...');
+	execSync('git checkout -- package.json pnpm-lock.yaml public/system.json CHANGELOG.md', {
+		cwd: rootDir,
+	});
+
 	if (dryRun) {
 		console.log(`\n${'='.repeat(60)}`);
 		console.log('DRY-RUN MODE - No git operations will be performed');
