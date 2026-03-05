@@ -290,6 +290,22 @@
 		$effect(() => set(editingEnabled));
 		return () => {};
 	});
+	const droppedItemFlashIdsStore = readable(new Set(), (set) => {
+		$effect(() => {
+			const itemIds = appState?.droppedItemFlashIds;
+			if (!Array.isArray(itemIds)) {
+				set(new Set());
+				return;
+			}
+
+			const validItemIds = itemIds.filter(
+				(itemId) => typeof itemId === 'string' && itemId.length > 0,
+			);
+			set(new Set(validItemIds));
+		});
+
+		return () => {};
+	});
 
 	let metaData = $derived.by(() => {
 		const c = actor.reactive.items.find((i) => i.type === 'class') ?? null;
@@ -382,6 +398,7 @@
 		setContext('document', actorRef);
 		setContext('application', sheetRef);
 		setContext('editingEnabled', editingEnabledStore);
+		setContext('droppedItemFlashIds', droppedItemFlashIdsStore);
 	}
 </script>
 

@@ -46,7 +46,13 @@
 
 	let actor = getContext('actor');
 	let sheet = getContext('application');
+	const droppedItemFlashIdsStore = getContext('droppedItemFlashIds');
 	let searchTerm = $state('');
+	let droppedItemFlashIds = $derived($droppedItemFlashIdsStore ?? new Set());
+
+	function shouldFlashDroppedItem(itemId) {
+		return typeof itemId === 'string' && droppedItemFlashIds.has(itemId);
+	}
 
 	const tooltipCache = new Map();
 
@@ -191,6 +197,7 @@
 						class="nimble-document-card nimble-document-card--actor-inventory"
 						class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
 						class:nimble-document-card--no-meta={!metadata}
+						class:nimble-document-card--drop-flash={shouldFlashDroppedItem(item.reactive._id)}
 						data-item-id={item._id}
 						data-tooltip={tooltipCache.get(item.reactive._id) || ''}
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
@@ -330,6 +337,43 @@
 		padding: 0;
 		list-style: none;
 		width: 100%;
+	}
+
+	.nimble-document-card--drop-flash {
+		position: relative;
+		overflow: hidden;
+	}
+
+	.nimble-document-card--drop-flash::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		border-radius: inherit;
+		animation: nimble-drop-item-flash 1.2s ease-out forwards;
+	}
+
+	@keyframes nimble-drop-item-flash {
+		0% {
+			opacity: 0;
+			border: 1px solid rgba(255, 214, 84, 0);
+			box-shadow: 0 0 0 rgba(255, 214, 84, 0);
+			background: rgba(255, 214, 84, 0);
+		}
+
+		20% {
+			opacity: 1;
+			border: 1px solid rgba(255, 214, 84, 0.9);
+			box-shadow: 0 0 10px rgba(255, 214, 84, 0.55);
+			background: rgba(255, 214, 84, 0.14);
+		}
+
+		100% {
+			opacity: 0;
+			border: 1px solid rgba(255, 214, 84, 0);
+			box-shadow: 0 0 0 rgba(255, 214, 84, 0);
+			background: rgba(255, 214, 84, 0);
+		}
 	}
 
 	.nimble-currency-wrapper {

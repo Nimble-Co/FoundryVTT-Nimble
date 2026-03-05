@@ -6,6 +6,8 @@ import PlayerCharacterSheetComponent from '../../view/sheets/PlayerCharacterShee
 import type { NimbleCharacter } from '../actor/character.js';
 import { SHEET_DEFAULTS } from './sheetDefaults.js';
 
+const DROP_ITEM_FLASH_DURATION_MS = 1200;
+
 const ITEM_TYPE_TO_PRIMARY_TAB = {
 	object: 'inventory',
 	spell: 'spells',
@@ -30,6 +32,8 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	protected props: { actor: Actor; sheet: PlayerCharacterSheet };
 
 	#pendingPrimaryTab: PrimaryTabName | null = null;
+	#pendingDroppedItemFlashIds: string[] = [];
+	#dropItemFlashClearTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	constructor(
 		actor: { document: NimbleCharacter },
@@ -76,6 +80,11 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		if (this.#pendingPrimaryTab) {
 			appState.activePrimaryTab = this.#pendingPrimaryTab;
 			this.#pendingPrimaryTab = null;
+		}
+
+		if (this.#pendingDroppedItemFlashIds.length > 0) {
+			appState.droppedItemFlashIds = [...this.#pendingDroppedItemFlashIds];
+			this.#pendingDroppedItemFlashIds = [];
 		}
 
 		return {
@@ -137,6 +146,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 				itemData,
 			);
 			this.#requestPrimaryTabForDroppedItems(items);
+			this.#requestDroppedItemFlash(this.#extractDroppedItemIds(items));
 			return result;
 		}
 
@@ -148,6 +158,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			const result = await this._onDropSubclassCreate(items);
 			if (Array.isArray(result) && result.length > 0) {
 				this.#requestPrimaryTabForDroppedItems(items);
+				this.#requestDroppedItemFlash(this.#extractDroppedItemIds(result));
 			}
 			return result;
 		}
@@ -156,6 +167,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		const result = await this._actor.createEmbeddedDocuments('Item', items);
 		if (Array.isArray(result) && result.length > 0) {
 			this.#requestPrimaryTabForDroppedItems(items);
+			this.#requestDroppedItemFlash(this.#extractDroppedItemIds(result));
 		}
 		return result;
 	}
@@ -260,6 +272,41 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 
 		const requestedTab = this.#getPrimaryTabForDroppedItemType(items[0]?.type);
 		this.#pendingPrimaryTab = requestedTab;
+		void this.render();
+	}
+
+	#extractDroppedItemIds(
+		items: Array<{
+			id?: unknown;
+			_id?: unknown;
+		}>,
+	): string[] {
+		const itemIds = items
+			.map((item) => {
+				if (typeof item.id === 'string' && item.id.length > 0) return item.id;
+				if (typeof item._id === 'string' && item._id.length > 0) return item._id;
+				return null;
+			})
+			.filter((itemId): itemId is string => itemId !== null);
+
+		return Array.from(new Set(itemIds));
+	}
+
+	#requestDroppedItemFlash(itemIds: string[]): void {
+		if (!Array.isArray(itemIds) || itemIds.length === 0) return;
+
+		this.#pendingDroppedItemFlashIds = itemIds;
+
+		if (this.#dropItemFlashClearTimeout) {
+			clearTimeout(this.#dropItemFlashClearTimeout);
+		}
+
+		this.#dropItemFlashClearTimeout = setTimeout(() => {
+			this.#dropItemFlashClearTimeout = null;
+			(this.$state as Record<string, unknown>).droppedItemFlashIds = [];
+			void this.render();
+		}, DROP_ITEM_FLASH_DURATION_MS);
+
 		void this.render();
 	}
 }
