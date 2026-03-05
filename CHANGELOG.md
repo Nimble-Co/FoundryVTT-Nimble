@@ -6,6 +6,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.7.2] - 2026-03-05
+
+### Added
+
+- [#394] NCS Hide/Show toggle button. @7D7D
+- [#375] Apply Healing button and healingPotionBonus rule. @trevlar
+- [#361] Item activation hooks and chat message flags. @fronix
+- [#332] Improved Active Effects and Conditions display on actor sheets and token HUD. @fronix
+
+### Fixed
+
+- [#355] NPCSheet image and Hit Point overlap. @7D7D
+- [#352] Gnoll damage formula. @fronix
+- [#384] Journal Source HTML not displaying and Save button inaccessible. @trevlar
+- [#383] Elf initiative roll mode accumulating. @trevlar
+- [#373] Edit mode toggle on sheets. @fronix
+- [#360] Symlink permissions error on Windows. @fronix
+- [#389] Spell Compendium sorting. @7D7D
+
+### Changed
+
+- [#354] [#379] Spanish translation updates. @carlosvgs
+
+### Maintenance
+
+- [#391] Migrate from npm to pnpm. @fronix
+- [#392] Svelte preprocess part of approved builds. @fronix
+- [#362] Resolve Svelte compile warnings in components and build. @fronix
+- [#359] Worktree cleanup script. @trevlar
+
+---
+
+
 ## [0.7.1] - 2026-02-26
 
 ### Added
