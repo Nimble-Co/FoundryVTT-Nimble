@@ -1,7 +1,8 @@
-<script>
+<script lang="ts">
 	import filterItems from '../../dataPreparationHelpers/filterItems.js';
 	import { getContext } from 'svelte';
 	import prepareSpellTooltip from '../../dataPreparationHelpers/documentTooltips/prepareSpellTooltip';
+	import shouldFlashDroppedItem from '../../../utils/shouldFlashDroppedItem.js';
 	import sortItems from '../../../utils/sortItems.js';
 
 	import SearchBar from '../components/SearchBar.svelte';
@@ -153,10 +154,6 @@
 	const droppedItemFlashIdsStore = getContext('droppedItemFlashIds');
 	let droppedItemFlashIds = $derived($droppedItemFlashIdsStore ?? new Set());
 
-	function shouldFlashDroppedItem(itemId) {
-		return typeof itemId === 'string' && droppedItemFlashIds.has(itemId);
-	}
-
 	// Settings
 	let flags = $derived(actor.reactive.flags.nimble);
 	let editingEnabled = $derived(flags?.editingEnabled ?? false);
@@ -249,7 +246,10 @@
 						class="nimble-document-card"
 						class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
 						class:nimble-document-card--no-meta={!meta}
-						class:nimble-document-card--drop-flash={shouldFlashDroppedItem(spell.reactive._id)}
+						class:nimble-document-card--drop-flash={shouldFlashDroppedItem(
+							droppedItemFlashIds,
+							spell.reactive._id,
+						)}
 						data-item-id={spell._id}
 						data-tooltip={tooltipCache.get(spell.reactive._id) || ''}
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
@@ -344,43 +344,6 @@
 		margin: 0.25rem 0 0 0;
 		padding: 0;
 		list-style: none;
-	}
-
-	.nimble-document-card--drop-flash {
-		position: relative;
-		overflow: hidden;
-	}
-
-	.nimble-document-card--drop-flash::after {
-		content: '';
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		border-radius: inherit;
-		animation: nimble-drop-item-flash 1.2s ease-out forwards;
-	}
-
-	@keyframes nimble-drop-item-flash {
-		0% {
-			opacity: 0;
-			border: 1px solid rgba(255, 214, 84, 0);
-			box-shadow: 0 0 0 rgba(255, 214, 84, 0);
-			background: rgba(255, 214, 84, 0);
-		}
-
-		20% {
-			opacity: 1;
-			border: 1px solid rgba(255, 214, 84, 0.9);
-			box-shadow: 0 0 10px rgba(255, 214, 84, 0.55);
-			background: rgba(255, 214, 84, 0.14);
-		}
-
-		100% {
-			opacity: 0;
-			border: 1px solid rgba(255, 214, 84, 0);
-			box-shadow: 0 0 0 rgba(255, 214, 84, 0);
-			background: rgba(255, 214, 84, 0);
-		}
 	}
 
 	.nimble-search-wrapper {

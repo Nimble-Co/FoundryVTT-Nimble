@@ -1,3 +1,4 @@
+import type { DeepPartial } from 'fvtt-types/utils';
 import {
 	SvelteApplicationMixin,
 	type SvelteApplicationRenderContext,
@@ -7,6 +8,7 @@ import type { NimbleCharacter } from '../actor/character.js';
 import { SHEET_DEFAULTS } from './sheetDefaults.js';
 
 const DROP_ITEM_FLASH_DURATION_MS = 1200;
+const DROP_ITEM_FLASH_CLASS = 'nimble-document-card--drop-flash';
 
 const ITEM_TYPE_TO_PRIMARY_TAB = {
 	object: 'inventory',
@@ -82,11 +84,6 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			this.#pendingPrimaryTab = null;
 		}
 
-		if (this.#pendingDroppedItemFlashIds.length > 0) {
-			appState.droppedItemFlashIds = [...this.#pendingDroppedItemFlashIds];
-			this.#pendingDroppedItemFlashIds = [];
-		}
-
 		return {
 			...context,
 			actor: this._actor,
@@ -99,6 +96,19 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	 */
 	protected override _attachFrameListeners() {
 		super._attachFrameListeners();
+	}
+
+	protected override _replaceHTML(
+		result: SvelteApplicationRenderContext,
+		content: HTMLElement,
+		options: DeepPartial<foundry.applications.api.ApplicationV2.RenderOptions>,
+	): void {
+		super._replaceHTML(result, content, options);
+
+		if (this.#pendingDroppedItemFlashIds.length < 1) return;
+		this.#pendingDroppedItemFlashIds = this.#flashDroppedItemCards(
+			this.#pendingDroppedItemFlashIds,
+		);
 	}
 
 	/**
@@ -294,10 +304,50 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		return Array.from(new Set(itemIds));
 	}
 
+	#flashDroppedItemCards(itemIds: string[]): string[] {
+		if (!Array.isArray(itemIds) || itemIds.length === 0) return [];
+
+		const rootElement = this.element;
+		if (!(rootElement instanceof HTMLElement)) {
+			return itemIds;
+		}
+
+		const unresolvedItemIds: string[] = [];
+		for (const itemId of itemIds) {
+			const escapedItemId = globalThis.CSS?.escape ? globalThis.CSS.escape(itemId) : itemId;
+			const itemCard = rootElement.querySelector<HTMLElement>(`[data-item-id="${escapedItemId}"]`);
+			if (!itemCard) {
+				unresolvedItemIds.push(itemId);
+				continue;
+			}
+
+			itemCard.classList.remove(DROP_ITEM_FLASH_CLASS);
+			void itemCard.offsetWidth;
+			itemCard.classList.add(DROP_ITEM_FLASH_CLASS);
+		}
+		return unresolvedItemIds;
+	}
+
+	#clearDroppedItemFlashCards(itemIds: string[]): void {
+		if (!Array.isArray(itemIds) || itemIds.length === 0) return;
+
+		const rootElement = this.element;
+		if (!(rootElement instanceof HTMLElement)) return;
+
+		for (const itemId of itemIds) {
+			const escapedItemId = globalThis.CSS?.escape ? globalThis.CSS.escape(itemId) : itemId;
+			const itemCard = rootElement.querySelector<HTMLElement>(`[data-item-id="${escapedItemId}"]`);
+			itemCard?.classList.remove(DROP_ITEM_FLASH_CLASS);
+		}
+	}
+
 	#requestDroppedItemFlash(itemIds: string[]): void {
 		if (!Array.isArray(itemIds) || itemIds.length === 0) return;
 
-		this.#pendingDroppedItemFlashIds = itemIds;
+		const flashItemIds = [...itemIds];
+		this.#pendingDroppedItemFlashIds = flashItemIds;
+		const appState = this.$state as Record<string, unknown>;
+		appState.droppedItemFlashIds = flashItemIds;
 
 		if (this.#dropItemFlashClearTimeout) {
 			clearTimeout(this.#dropItemFlashClearTimeout);
@@ -305,7 +355,9 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 
 		this.#dropItemFlashClearTimeout = setTimeout(() => {
 			this.#dropItemFlashClearTimeout = null;
+			this.#pendingDroppedItemFlashIds = [];
 			(this.$state as Record<string, unknown>).droppedItemFlashIds = [];
+			this.#clearDroppedItemFlashCards(flashItemIds);
 			void this.render();
 		}, DROP_ITEM_FLASH_DURATION_MS);
 	}

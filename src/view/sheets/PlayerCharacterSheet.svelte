@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { createSubscriber } from 'svelte/reactivity';
 	import { setContext, untrack } from 'svelte';
 	import { readable } from 'svelte/store';

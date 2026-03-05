@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import filterItems from '../../dataPreparationHelpers/filterItems.js';
 	import { getContext } from 'svelte';
 	import prepareAncestryTooltip from '../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js';
@@ -7,6 +7,7 @@
 	import prepareBoonTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBoonTooltip.js';
 	import prepareBackgroundTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBackgroundTooltip.js';
 	import prepareFeatureTooltip from '../../dataPreparationHelpers/documentTooltips/prepareFeatureTooltip.js';
+	import shouldFlashDroppedItem from '../../../utils/shouldFlashDroppedItem.js';
 	import sortItems from '../../../utils/sortItems.js';
 
 	import SearchBar from '../components/SearchBar.svelte';
@@ -122,10 +123,6 @@
 	let droppedItemFlashIds = $derived($droppedItemFlashIdsStore ?? new Set());
 	let editingEnabled = $derived($editingEnabledStore ?? true);
 
-	function shouldFlashDroppedItem(itemId) {
-		return typeof itemId === 'string' && droppedItemFlashIds.has(itemId);
-	}
-
 	let searchTerm = $state('');
 	let items = $derived(filterItems(actor.reactive, validTypes, searchTerm));
 	let categorizedItems = $derived(groupItemsByType(items));
@@ -193,7 +190,10 @@
 						class="nimble-document-card nimble-document-card--no-meta"
 						class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
 						class:nimble-document-card--no-meta={!metadata}
-						class:nimble-document-card--drop-flash={shouldFlashDroppedItem(item.reactive._id)}
+						class:nimble-document-card--drop-flash={shouldFlashDroppedItem(
+							droppedItemFlashIds,
+							item.reactive._id,
+						)}
 						data-item-id={item.reactive._id}
 						data-tooltip={getItemTooltip(item)}
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
@@ -250,6 +250,7 @@
 									class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
 									class:nimble-document-card--no-meta={!metadata}
 									class:nimble-document-card--drop-flash={shouldFlashDroppedItem(
+										droppedItemFlashIds,
 										subclass.reactive._id,
 									)}
 									data-item-id={subclass._id}
@@ -315,43 +316,6 @@
 		&--sublist {
 			margin-block-start: 0;
 			margin-inline-start: 1rem;
-		}
-	}
-
-	.nimble-document-card--drop-flash {
-		position: relative;
-		overflow: hidden;
-	}
-
-	.nimble-document-card--drop-flash::after {
-		content: '';
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		border-radius: inherit;
-		animation: nimble-drop-item-flash 1.2s ease-out forwards;
-	}
-
-	@keyframes nimble-drop-item-flash {
-		0% {
-			opacity: 0;
-			border: 1px solid rgba(255, 214, 84, 0);
-			box-shadow: 0 0 0 rgba(255, 214, 84, 0);
-			background: rgba(255, 214, 84, 0);
-		}
-
-		20% {
-			opacity: 1;
-			border: 1px solid rgba(255, 214, 84, 0.9);
-			box-shadow: 0 0 10px rgba(255, 214, 84, 0.55);
-			background: rgba(255, 214, 84, 0.14);
-		}
-
-		100% {
-			opacity: 0;
-			border: 1px solid rgba(255, 214, 84, 0);
-			box-shadow: 0 0 0 rgba(255, 214, 84, 0);
-			background: rgba(255, 214, 84, 0);
 		}
 	}
 

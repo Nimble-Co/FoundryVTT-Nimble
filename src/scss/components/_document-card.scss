@@ -21,6 +21,20 @@
   cursor: pointer;
   transition: var(--nimble-standard-transition);
 
+  &--drop-flash {
+    position: relative;
+    overflow: hidden;
+  }
+
+  &--drop-flash::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    animation: nimble-drop-item-flash 1.2s ease-out forwards;
+  }
+
   &--actor-inventory {
     grid-template-areas:
       "img name quantity configureButton deleteButton"
@@ -328,5 +342,28 @@
     text-align: center;
     line-height: 1;
     height: 1.5rem;
+  }
+}
+
+@keyframes nimble-drop-item-flash {
+  0% {
+    opacity: 0;
+    border: 1px solid rgba(255, 214, 84, 0);
+    box-shadow: 0 0 0 rgba(255, 214, 84, 0);
+    background: rgba(255, 214, 84, 0);
+  }
+
+  20% {
+    opacity: 1;
+    border: 1px solid rgba(255, 214, 84, 0.9);
+    box-shadow: 0 0 10px rgba(255, 214, 84, 0.55);
+    background: rgba(255, 214, 84, 0.14);
+  }
+
+  100% {
+    opacity: 0;
+    border: 1px solid rgba(255, 214, 84, 0);
+    box-shadow: 0 0 0 rgba(255, 214, 84, 0);
+    background: rgba(255, 214, 84, 0);
   }
 }
