@@ -3,9 +3,10 @@
 
 	const { movementTypes, movementTypeIcons } = CONFIG.NIMBLE;
 
-	let { actor, showDefaultSpeed = false } = $props();
+	let { actor, showDefaultSpeed = false, editingEnabled: editingEnabledProp } = $props();
 	let flags = $derived(actor?.reactive.flags.nimble);
-	let editingEnabled = $derived(flags?.editingEnabled ?? false);
+	let editingEnabledFromFlags = $derived(flags?.editingEnabled ?? false);
+	let editingEnabled = $derived(editingEnabledProp ?? editingEnabledFromFlags);
 
 	// Access the full reactive movement object to ensure proper reactivity tracking
 	let movement = $derived(actor.reactive.system.attributes.movement);
