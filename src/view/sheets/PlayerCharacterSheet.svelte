@@ -147,7 +147,7 @@
 		await actor.setFlag('nimble', 'editingEnabled', !editingEnabled);
 	}
 
-	let { actor, sheet } = $props();
+	let { actor, sheet, state: appState } = $props();
 	let combatManaRulesPrimeVersion = $state(0);
 	let lastCombatManaPrimeActorId = $state(null);
 
@@ -234,6 +234,18 @@
 	const { sizeCategories } = CONFIG.NIMBLE;
 
 	let currentTab = $state(navigation[0]);
+
+	$effect(() => {
+		const requestedTabName = appState?.activePrimaryTab;
+		if (typeof requestedTabName !== 'string' || requestedTabName.length < 1) return;
+
+		const requestedTab = navigation.find((tab) => tab.name === requestedTabName);
+		if (requestedTab && currentTab?.name !== requestedTab.name) {
+			currentTab = requestedTab;
+		}
+
+		appState.activePrimaryTab = null;
+	});
 
 	let isBloodied = $derived.by(
 		() =>

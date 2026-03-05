@@ -6,6 +6,20 @@ import PlayerCharacterSheetComponent from '../../view/sheets/PlayerCharacterShee
 import type { NimbleCharacter } from '../actor/character.js';
 import { SHEET_DEFAULTS } from './sheetDefaults.js';
 
+const ITEM_TYPE_TO_PRIMARY_TAB = {
+	object: 'inventory',
+	spell: 'spells',
+} as const;
+
+type PrimaryTabName =
+	| 'core'
+	| 'conditions'
+	| 'inventory'
+	| 'features'
+	| 'spells'
+	| 'bio'
+	| 'settings';
+
 export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	foundry.applications.sheets.ActorSheetV2,
 ) {
@@ -14,6 +28,8 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 	protected root;
 
 	protected props: { actor: Actor; sheet: PlayerCharacterSheet };
+
+	#pendingPrimaryTab: PrimaryTabName | null = null;
 
 	constructor(
 		actor: { document: NimbleCharacter },
@@ -55,6 +71,13 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		options: Parameters<foundry.applications.sheets.ActorSheetV2['_prepareContext']>[0],
 	): ReturnType<foundry.applications.sheets.ActorSheetV2['_prepareContext']> {
 		const context = await super._prepareContext(options);
+		const appState = this.$state as Record<string, unknown>;
+
+		if (this.#pendingPrimaryTab) {
+			appState.activePrimaryTab = this.#pendingPrimaryTab;
+			this.#pendingPrimaryTab = null;
+		}
+
 		return {
 			...context,
 			actor: this._actor,
@@ -103,28 +126,38 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			itemData.uuid = item.uuid;
 		}
 
+		// Handle arrays
+		const items = Array.isArray(itemData) ? itemData : [itemData];
+
 		// Handle item sorting within the same Actor
 		const keepId = !this._actor.items.has(item.id ?? '');
 		if (!keepId) {
-			return (this as object as { _onSortItem(e: DragEvent, d: object): void })._onSortItem(
+			const result = (this as object as { _onSortItem(e: DragEvent, d: object): void })._onSortItem(
 				event,
 				itemData,
 			);
+			this.#requestPrimaryTabForDroppedItems(items);
+			return result;
 		}
-
-		// Handle arrays
-		const items = Array.isArray(itemData) ? itemData : [itemData];
 
 		// Check if any item is a subclass
 		const hasSubclass = items.some((item: any) => item.type === 'subclass');
 
 		if (hasSubclass) {
 			// Use special subclass creation logic that includes validation
-			return this._onDropSubclassCreate(items);
-		} else {
-			// Create regular items
-			return this._actor.createEmbeddedDocuments('Item', items);
+			const result = await this._onDropSubclassCreate(items);
+			if (Array.isArray(result) && result.length > 0) {
+				this.#requestPrimaryTabForDroppedItems(items);
+			}
+			return result;
 		}
+
+		// Create regular items
+		const result = await this._actor.createEmbeddedDocuments('Item', items);
+		if (Array.isArray(result) && result.length > 0) {
+			this.#requestPrimaryTabForDroppedItems(items);
+		}
+		return result;
 	}
 
 	async _onDropSubclassCreate(itemData: any) {
@@ -208,5 +241,25 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		}
 
 		return [];
+	}
+
+	#getPrimaryTabForDroppedItemType(itemType: unknown): PrimaryTabName {
+		if (typeof itemType !== 'string') return 'features';
+
+		return (
+			ITEM_TYPE_TO_PRIMARY_TAB[itemType as keyof typeof ITEM_TYPE_TO_PRIMARY_TAB] ?? 'features'
+		);
+	}
+
+	#requestPrimaryTabForDroppedItems(
+		items: Array<{
+			type?: unknown;
+		}>,
+	): void {
+		if (!Array.isArray(items) || items.length === 0) return;
+
+		const requestedTab = this.#getPrimaryTabForDroppedItemType(items[0]?.type);
+		this.#pendingPrimaryTab = requestedTab;
+		void this.render();
 	}
 }
