@@ -147,6 +147,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			);
 			this.#requestPrimaryTabForDroppedItems(items);
 			this.#requestDroppedItemFlash(this.#extractDroppedItemIds(items));
+			void this.render();
 			return result;
 		}
 
@@ -159,6 +160,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			if (Array.isArray(result) && result.length > 0) {
 				this.#requestPrimaryTabForDroppedItems(items);
 				this.#requestDroppedItemFlash(this.#extractDroppedItemIds(result));
+				void this.render();
 			}
 			return result;
 		}
@@ -168,6 +170,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 		if (Array.isArray(result) && result.length > 0) {
 			this.#requestPrimaryTabForDroppedItems(items);
 			this.#requestDroppedItemFlash(this.#extractDroppedItemIds(result));
+			void this.render();
 		}
 		return result;
 	}
@@ -272,7 +275,6 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 
 		const requestedTab = this.#getPrimaryTabForDroppedItemType(items[0]?.type);
 		this.#pendingPrimaryTab = requestedTab;
-		void this.render();
 	}
 
 	#extractDroppedItemIds(
@@ -306,7 +308,5 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			(this.$state as Record<string, unknown>).droppedItemFlashIds = [];
 			void this.render();
 		}, DROP_ITEM_FLASH_DURATION_MS);
-
-		void this.render();
 	}
 }
