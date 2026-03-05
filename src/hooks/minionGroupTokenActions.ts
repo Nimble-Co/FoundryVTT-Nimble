@@ -2314,17 +2314,7 @@ function scheduleSceneControlsRefresh(source = 'unknown'): void {
 }
 
 function getCombatForNcswSceneToggleVisibility(): CombatWithGrouping | null {
-	const combatForScene = getCombatForCurrentScene();
-	if (combatForScene) return combatForScene;
-
-	const activeCombat = game.combat as CombatWithGrouping | null;
-	if (activeCombat) return activeCombat;
-
-	const viewedCombat = (game.combats.viewed ?? null) as CombatWithGrouping | null;
-	if (viewedCombat) return viewedCombat;
-
-	const startedCombat = game.combats.contents.find((combat) => combat.active || combat.started);
-	return (startedCombat as CombatWithGrouping | undefined) ?? null;
+	return getCombatForCurrentScene();
 }
 
 function getNcswSceneToggleTitle(isActive: boolean): string {
