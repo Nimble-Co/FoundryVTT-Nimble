@@ -640,6 +640,10 @@
 			"round": "round",
 			"turn": "turn"
 		},
+		"sceneDirectoryContext": {
+			"convertFeetToSpaces": "Convert Feet to Spaces",
+			"convertFeetToSpacesFailed": "Failed to convert scene from feet to spaces."
+		},
 		"ui": {
 			"clearAll": "Clear All",
 			"conditions": "Conditions",

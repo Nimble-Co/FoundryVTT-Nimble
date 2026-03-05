@@ -818,6 +818,10 @@
 				"couldNotOpenPanel": "Could not open group attack panel. See console for details."
 			}
 		},
+		"sceneDirectoryContext": {
+			"convertFeetToSpaces": "Convertir les pieds en cases",
+			"convertFeetToSpacesFailed": "Échec de la conversion de la scène des pieds en cases."
+		},
 		"ui": {
 			"clearAll": "Tout effacer",
 			"conditions": "Conditions",

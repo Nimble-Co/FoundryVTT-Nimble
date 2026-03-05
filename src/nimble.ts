@@ -10,6 +10,7 @@ import ready from './hooks/ready.js';
 import renderChatMessageHTML from './hooks/renderChatMessage.js';
 import renderCompendium from './hooks/renderCompendium.js';
 import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
+import registerSceneDirectoryConvertFeetToSpacesContextMenu from './hooks/sceneDirectoryConvertFeetToSpacesContextMenu.js';
 import setup from './hooks/setup.js';
 import './scss/main.scss';
 import { getCombatManaGrantForCombat, getCombatManaGrantMap } from './utils/combatManaRules.js';
@@ -87,6 +88,7 @@ Hooks.on('hotbarDrop', onHotbarDrop);
 registerCombatantDefeatSync();
 registerMinionGroupTokenBadges();
 registerMinionGroupTokenActions();
+registerSceneDirectoryConvertFeetToSpacesContextMenu();
 
 // Refresh tokens when combat ends to remove turn indicators
 Hooks.on('deleteCombat', async (combat: Combat) => {
