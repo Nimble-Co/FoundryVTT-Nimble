@@ -5,10 +5,14 @@
 	import RollModeConfig from './components/RollModeConfig.svelte';
 	import RangeSlider from 'svelte-range-slider-pips';
 
+	function clampRollMode(value) {
+		return Math.max(-6, Math.min(6, Number(value) || 0));
+	}
+
 	let { actor, dialog, spell, ...data } = $props();
 
 	// Initialize state
-	let selectedRollMode = $state(untrack(() => Math.clamp(data.rollMode ?? 0, -6, 6)));
+	let selectedRollMode = $state(untrack(() => clampRollMode(data.rollMode)));
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
