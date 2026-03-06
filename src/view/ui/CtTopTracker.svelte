@@ -1167,6 +1167,8 @@
 							{@const actionState = getActionState(entry.combatant)}
 							{@const combatantId = getCombatantId(entry.combatant)}
 							{@const canDragEntry = canDragCombatant(entry.combatant)}
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 							<li
 								class="nimble-ct__portrait"
 								class:nimble-ct__portrait--active={activeEntryKey === entry.key}
@@ -1300,6 +1302,8 @@
 								{/if}
 							</li>
 						{:else}
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 							<li
 								class="nimble-ct__portrait nimble-ct__portrait--monster"
 								class:nimble-ct__portrait--active={activeEntryKey === entry.key}
@@ -1346,6 +1350,8 @@
 						<li class="nimble-ct__dead">Dead</li>
 						{#each renderedDeadCombatants as combatant (combatant._id)}
 							{@const actionState = getActionState(combatant)}
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 							<li
 								class="nimble-ct__portrait nimble-ct__portrait--dead"
 								data-track-key={`dead-${getCombatantId(combatant)}`}

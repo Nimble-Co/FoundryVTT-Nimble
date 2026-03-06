@@ -15,6 +15,7 @@
 		isCombatTrackerNonPlayerHitpointPermissionSettingKey,
 		isCombatTrackerUseActionDiceSettingKey,
 		isCombatTrackerWidthLevelSettingKey,
+		normalizeHexColor,
 		setCombatTrackerActionDiceColor,
 		setCombatTrackerCtBadgeSizeLevel,
 		setCombatTrackerCenterActiveCardEnabled,
@@ -74,21 +75,16 @@
 		});
 	}
 
-	function normalizeHexColor(value: string): string {
-		const normalized = value.trim().toLowerCase();
-		if (/^#[0-9a-f]{6}$/.test(normalized)) return normalized;
-		const shortHexMatch = /^#([0-9a-f]{3})$/.exec(normalized);
-		if (shortHexMatch) {
-			const [red, green, blue] = shortHexMatch[1].split('');
-			return `#${red}${red}${green}${green}${blue}${blue}`;
-		}
-		return '#ffffff';
-	}
-
 	function clampLevel(value: unknown): number {
 		const numericValue = Number(value);
 		if (!Number.isFinite(numericValue)) return MIN_LEVEL;
 		return Math.min(MAX_LEVEL, Math.max(MIN_LEVEL, Math.round(numericValue)));
+	}
+
+	function persistCtSetting(action: string, write: Promise<void>): void {
+		void write.catch((error) => {
+			console.error(`[Nimble][CT Settings] Failed to persist ${action}`, { error });
+		});
 	}
 
 	function handleWidthLevelInput(event: Event): void {
@@ -102,7 +98,7 @@
 				widthLevel: nextValue,
 			});
 		}
-		void setCombatTrackerCtWidthLevel(nextValue);
+		persistCtSetting('width level', setCombatTrackerCtWidthLevel(nextValue));
 	}
 
 	function handleCardSizeLevelInput(event: Event): void {
@@ -110,7 +106,7 @@
 		const input = event.currentTarget as HTMLInputElement;
 		const nextValue = clampLevel(input.value);
 		cardSizeLevel = nextValue;
-		void setCombatTrackerCtCardSizeLevel(nextValue);
+		persistCtSetting('card size level', setCombatTrackerCtCardSizeLevel(nextValue));
 	}
 
 	function handleBadgeSizeLevelInput(event: Event): void {
@@ -118,21 +114,24 @@
 		const input = event.currentTarget as HTMLInputElement;
 		const nextValue = clampLevel(input.value);
 		badgeSizeLevel = nextValue;
-		void setCombatTrackerCtBadgeSizeLevel(nextValue);
+		persistCtSetting('badge size level', setCombatTrackerCtBadgeSizeLevel(nextValue));
 	}
 
 	function handleCenterActiveCardChange(event: Event): void {
 		if (!canManageWorldCtSettings) return;
 		const checkbox = event.currentTarget as HTMLInputElement;
 		centerActiveCardEnabled = checkbox.checked;
-		void setCombatTrackerCenterActiveCardEnabled(checkbox.checked);
+		persistCtSetting(
+			'center active card',
+			setCombatTrackerCenterActiveCardEnabled(checkbox.checked),
+		);
 	}
 
 	function handleUseActionDiceChange(event: Event): void {
 		if (!canManageWorldCtSettings) return;
 		const checkbox = event.currentTarget as HTMLInputElement;
 		useActionDice = checkbox.checked;
-		void setCombatTrackerUseActionDice(checkbox.checked);
+		persistCtSetting('use action dice', setCombatTrackerUseActionDice(checkbox.checked));
 	}
 
 	function handleNonPlayerHpPermissionChange(
@@ -146,13 +145,16 @@
 			[roleKey]: checkbox.checked,
 		};
 		nonPlayerHpPermissions = nextPermissions;
-		void setCombatTrackerNonPlayerHitpointPermissionConfig(nextPermissions);
+		persistCtSetting(
+			'non-player HP permissions',
+			setCombatTrackerNonPlayerHitpointPermissionConfig(nextPermissions),
+		);
 	}
 
 	function applyActionDiceColor(color: string): void {
 		const normalizedColor = normalizeHexColor(color);
 		actionDiceColor = normalizedColor;
-		void setCombatTrackerActionDiceColor(normalizedColor);
+		persistCtSetting('action dice color', setCombatTrackerActionDiceColor(normalizedColor));
 	}
 
 	onMount(() => {
