@@ -223,6 +223,77 @@ describe('NimbleCombat', () => {
 		]);
 	});
 
+	it('duplicates multiple legendary combatants after each player turn in turn order', () => {
+		const combatId = 'combat-legendary-interleave-multiple';
+		const playerOne = createMockCombatant({
+			id: 'player-one',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 18,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const firstLegendary = createMockCombatant({
+			id: 'legendary-one',
+			type: 'soloMonster',
+			sort: 2,
+			isOwner: false,
+			initiative: 17,
+			actor: createCombatActorFixture({ hp: 40 }),
+			combatId,
+		});
+		const secondLegendary = createMockCombatant({
+			id: 'legendary-two',
+			type: 'soloMonster',
+			sort: 3,
+			isOwner: false,
+			initiative: 16,
+			actor: createCombatActorFixture({ hp: 42 }),
+			combatId,
+		});
+		const playerTwo = createMockCombatant({
+			id: 'player-two',
+			type: 'character',
+			sort: 4,
+			isOwner: true,
+			initiative: 15,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const npc = createMockCombatant({
+			id: 'npc-one',
+			type: 'npc',
+			sort: 5,
+			isOwner: false,
+			initiative: 10,
+			actor: createCombatActorFixture({ hp: 12 }),
+			combatId,
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([
+				playerOne,
+				firstLegendary,
+				secondLegendary,
+				playerTwo,
+				npc,
+			]),
+		} as unknown as Combat.CreateData);
+
+		const turns = combat.setupTurns();
+		expect(turns.map((combatant) => combatant.id)).toEqual([
+			'player-one',
+			'legendary-one',
+			'legendary-two',
+			'player-two',
+			'legendary-one',
+			'legendary-two',
+			'npc-one',
+		]);
+	});
+
 	it('starts combat on the top-most character card after start initialization', async () => {
 		const combatId = 'combat-start-order';
 		const monster = createMockCombatant({
@@ -281,7 +352,7 @@ describe('NimbleCombat', () => {
 		expect(combat.turn).toBe(1);
 	});
 
-	it('sets unrolled character actions to 0 and non-character actions to max at combat start', async () => {
+	it('auto-rolls unrolled character initiative and resets non-character actions at combat start', async () => {
 		const combatId = 'combat-start-action-initialization';
 		const unrolledCharacter = createMockCombatant({
 			id: 'unrolled-character',
@@ -324,15 +395,19 @@ describe('NimbleCombat', () => {
 		} as unknown as Combat.CreateData) as NimbleCombat & {
 			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
 			update: ReturnType<typeof vi.fn>;
+			rollInitiative: ReturnType<typeof vi.fn>;
 		};
 
 		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
 		combat.update = vi.fn().mockResolvedValue(combat);
+		combat.rollInitiative = vi.fn().mockResolvedValue(combat);
 
 		await combat.startCombat();
 
+		expect(combat.rollInitiative).toHaveBeenCalledWith(['unrolled-character'], {
+			updateTurn: false,
+		});
 		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
-			{ _id: 'unrolled-character', 'system.actions.base.current': 0 },
 			{ _id: 'npc-combatant', 'system.actions.base.current': 3 },
 		]);
 	});
@@ -1025,6 +1100,63 @@ describe('NimbleCombat', () => {
 		]);
 	});
 
+	it('uses distinct visible turn siblings for GM reorder sorting', async () => {
+		globals().game.user.isGM = true;
+		const combatId = 'combat-drop-gm-turn-siblings';
+		const source = createMockCombatant({
+			id: 'source-npc',
+			type: 'npc',
+			sort: 2,
+			isOwner: false,
+			initiative: 12,
+			actor: createCombatActorFixture({ hp: 10 }),
+			combatId,
+		});
+		const target = createMockCombatant({
+			id: 'target-npc',
+			type: 'npc',
+			sort: 4,
+			isOwner: false,
+			initiative: 9,
+			actor: createCombatActorFixture({ hp: 10 }),
+			combatId,
+		});
+		const offTurnNpc = createMockCombatant({
+			id: 'off-turn-npc',
+			type: 'npc',
+			sort: 6,
+			isOwner: false,
+			initiative: 8,
+			actor: createCombatActorFixture({ hp: 10 }),
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([source, target, offTurnNpc]),
+			turns: [source, target, target],
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+		globals().SortingHelpers.performIntegerSort.mockReturnValue([
+			{ target: source, update: { 'system.sort': 3 } },
+			{ target: target, update: { 'system.sort': 4 } },
+		]);
+
+		const dropEvent = createCombatDropEvent({
+			sourceId: 'source-npc',
+			targetId: 'target-npc',
+			before: true,
+		});
+
+		await combat._onDrop(dropEvent);
+
+		const siblings = globals().SortingHelpers.performIntegerSort.mock.calls[0]?.[1]
+			?.siblings as Combatant.Implementation[];
+		expect(siblings.map((combatant) => combatant.id)).toEqual(['target-npc']);
+	});
+
 	it('keeps the same active combatant when GM reorders cards mid-round', async () => {
 		globals().game.user.isGM = true;
 		const combatId = 'combat-drop-gm-preserve-active';
@@ -1356,7 +1488,7 @@ describe('NimbleCombat', () => {
 		expect(source.update).not.toHaveBeenCalled();
 	});
 
-	it('allows untrusted owners to reorder their own character cards', async () => {
+	it('blocks untrusted owners from reordering their own character cards', async () => {
 		globals().game.user.isGM = false;
 		globals().game.user.role = 1;
 		const combatId = 'combat-drop-untrusted-owner-character';
@@ -1390,10 +1522,8 @@ describe('NimbleCombat', () => {
 			before: true,
 		});
 
-		await combat._onDrop(dropEvent);
-
-		expect(source.update).toHaveBeenCalledWith({
-			'system.sort': expect.any(Number),
-		});
+		const result = await combat._onDrop(dropEvent);
+		expect(result).toBe(false);
+		expect(source.update).not.toHaveBeenCalled();
 	});
 });

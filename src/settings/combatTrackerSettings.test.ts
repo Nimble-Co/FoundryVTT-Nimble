@@ -9,6 +9,7 @@ import {
 	COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY,
 	COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY,
 	COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY,
+	CURRENT_TURN_ANIMATION_SETTING_KEYS,
 	canCurrentUserDisplayNonPlayerHitpointsOnCards,
 	getCombatTrackerActionDiceColor,
 	getCombatTrackerCenterActiveCardEnabled,
@@ -19,6 +20,7 @@ import {
 	getCombatTrackerNonPlayerHitpointPermissionConfig,
 	getCombatTrackerPlayersCanExpandMonsterCards,
 	getCombatTrackerUseActionDice,
+	getCurrentTurnAnimationSettings,
 	isCombatTrackerActionDiceColorSettingKey,
 	isCombatTrackerBadgeSizeLevelSettingKey,
 	isCombatTrackerCardSizeLevelSettingKey,
@@ -38,6 +40,7 @@ import {
 	setCombatTrackerNonPlayerHitpointPermissionConfig,
 	setCombatTrackerPlayersCanExpandMonsterCards,
 	setCombatTrackerUseActionDice,
+	setCurrentTurnAnimationSetting,
 } from './combatTrackerSettings.js';
 
 type SettingsMock = {
@@ -152,6 +155,25 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 				config: false,
 				type: String,
 				default: '#ffffff',
+			}),
+		);
+		expect(settingsMock.register).toHaveBeenCalledWith(
+			'nimble',
+			CURRENT_TURN_ANIMATION_SETTING_KEYS.pulseAnimation,
+			expect.objectContaining({
+				scope: 'world',
+				config: false,
+				type: Boolean,
+				default: true,
+			}),
+		);
+		expect(settingsMock.register).toHaveBeenCalledWith(
+			'nimble',
+			CURRENT_TURN_ANIMATION_SETTING_KEYS.edgeCrawlerColor,
+			expect.objectContaining({
+				scope: 'world',
+				config: false,
+				type: String,
 			}),
 		);
 	});
@@ -360,6 +382,63 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 			'nimble',
 			COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY,
 			'#ff00aa',
+		);
+	});
+
+	it('returns normalized values for legacy current-turn animation settings', () => {
+		settingsMock.get.mockImplementation((_namespace: string, key: string) => {
+			switch (key) {
+				case CURRENT_TURN_ANIMATION_SETTING_KEYS.pulseAnimation:
+					return 1;
+				case CURRENT_TURN_ANIMATION_SETTING_KEYS.pulseSpeed:
+					return 101;
+				case CURRENT_TURN_ANIMATION_SETTING_KEYS.borderGlow:
+					return true;
+				case CURRENT_TURN_ANIMATION_SETTING_KEYS.borderGlowColor:
+					return '#abc';
+				case CURRENT_TURN_ANIMATION_SETTING_KEYS.borderGlowSize:
+					return -5;
+				case CURRENT_TURN_ANIMATION_SETTING_KEYS.edgeCrawler:
+					return false;
+				case CURRENT_TURN_ANIMATION_SETTING_KEYS.edgeCrawlerColor:
+					return 'bad-color';
+				case CURRENT_TURN_ANIMATION_SETTING_KEYS.edgeCrawlerSize:
+					return 67.8;
+				default:
+					return undefined;
+			}
+		});
+
+		expect(getCurrentTurnAnimationSettings()).toEqual({
+			pulseAnimation: true,
+			pulseSpeed: 100,
+			borderGlow: true,
+			borderGlowColor: '#AABBCC',
+			borderGlowSize: 0,
+			edgeCrawler: false,
+			edgeCrawlerColor: '#FFFFFF',
+			edgeCrawlerSize: 68,
+		});
+	});
+
+	it('updates legacy current-turn animation settings with normalized values', async () => {
+		await setCurrentTurnAnimationSetting(
+			CURRENT_TURN_ANIMATION_SETTING_KEYS.borderGlowColor,
+			'#0f0',
+		);
+		await setCurrentTurnAnimationSetting(CURRENT_TURN_ANIMATION_SETTING_KEYS.edgeCrawlerSize, 110);
+
+		expect(settingsMock.set).toHaveBeenNthCalledWith(
+			1,
+			'nimble',
+			CURRENT_TURN_ANIMATION_SETTING_KEYS.borderGlowColor,
+			'#00FF00',
+		);
+		expect(settingsMock.set).toHaveBeenNthCalledWith(
+			2,
+			'nimble',
+			CURRENT_TURN_ANIMATION_SETTING_KEYS.edgeCrawlerSize,
+			100,
 		);
 	});
 
