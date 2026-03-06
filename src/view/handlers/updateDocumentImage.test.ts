@@ -1,9 +1,37 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import updateDocumentImage from './updateDocumentImage.js';
 
+type FilePickerOptions = {
+	type: string;
+	current?: string;
+	callback: (path: string) => Promise<void>;
+};
+
+type GameImageTestDoubles = {
+	modules: {
+		get: ReturnType<typeof vi.fn>;
+	};
+};
+
+type FilePickerConstructor = new (
+	options: FilePickerOptions,
+) => {
+	browse: () => Promise<unknown>;
+};
+
+type FoundryApplicationsWithFilePicker = {
+	apps?: {
+		FilePicker?: {
+			implementation?: FilePickerConstructor;
+		};
+	};
+};
+
 describe('updateDocumentImage', () => {
 	beforeEach(() => {
-		(game as typeof game & { modules: Map<string, { active: boolean }> }).modules = new Map();
+		(game as unknown as GameImageTestDoubles).modules = {
+			get: vi.fn().mockReturnValue(undefined),
+		};
 	});
 
 	it('uses the namespaced FilePicker implementation when available', async () => {
@@ -17,28 +45,16 @@ describe('updateDocumentImage', () => {
 			| undefined;
 
 		class FilePickerImplementation {
-			constructor(options: {
-				type: string;
-				current?: string;
-				callback: (path: string) => Promise<void>;
-			}) {
+			constructor(options: FilePickerOptions) {
 				capturedOptions = options;
 			}
 
-			browse() {
+			browse(): Promise<unknown> {
 				return browse();
 			}
 		}
 
-		(
-			foundry.applications as typeof foundry.applications & {
-				apps?: {
-					FilePicker?: {
-						implementation?: typeof FilePickerImplementation;
-					};
-				};
-			}
-		).apps = {
+		(foundry.applications as unknown as FoundryApplicationsWithFilePicker).apps = {
 			FilePicker: {
 				implementation: FilePickerImplementation,
 			},

@@ -2,18 +2,23 @@ import { render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ItemActivationConfigDialog from './ItemActivationConfigDialog.svelte';
 
+type GameDialogTestDoubles = {
+	settings: { get: ReturnType<typeof vi.fn> };
+	user: { isGM: boolean };
+};
+
+type RollWithOptionalReplaceFormulaData = {
+	replaceFormulaData?: unknown;
+};
+
 describe('ItemActivationConfigDialog', () => {
 	beforeEach(() => {
-		(
-			game as typeof game & {
-				settings: { get: ReturnType<typeof vi.fn> };
-				user: { isGM: boolean };
-			}
-		).settings = {
+		const gameDoubles = game as unknown as GameDialogTestDoubles;
+		gameDoubles.settings = {
 			get: vi.fn().mockReturnValue(false),
 		};
-		(game as typeof game & { user: { isGM: boolean } }).user = { isGM: true };
-		(Roll as typeof Roll & { replaceFormulaData?: unknown }).replaceFormulaData = undefined;
+		gameDoubles.user = { isGM: true };
+		(Roll as unknown as RollWithOptionalReplaceFormulaData).replaceFormulaData = undefined;
 	});
 
 	it('renders damage formulas even when Roll.replaceFormulaData is unavailable', () => {
