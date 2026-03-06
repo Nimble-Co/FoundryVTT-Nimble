@@ -11,7 +11,7 @@ import {
 	DEFAULT_PRIMARY_TAB,
 	ITEM_TYPE_TO_PRIMARY_TAB,
 	type PrimaryTabName,
-} from '../../view/sheets/playerCharacterPrimaryTabs.js';
+} from '../../view/sheets/playerCharacterPrimaryTabConfig.js';
 import type { NimbleCharacter } from '../actor/character.js';
 import { SHEET_DEFAULTS } from './sheetDefaults.js';
 

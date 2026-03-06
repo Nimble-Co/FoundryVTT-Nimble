@@ -1,4 +1,4 @@
-import type { PrimaryTabName } from './playerCharacterPrimaryTabs.js';
+import type { PrimaryTabName } from './playerCharacterPrimaryTabConfig.js';
 
 export const DROP_ITEM_FLASH_ANIMATION_NAME = 'nimble-drop-item-flash';
 

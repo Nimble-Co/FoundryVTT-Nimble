@@ -5,8 +5,14 @@ import PlayerCharacterFeaturesTab from './pages/PlayerCharacterFeaturesTab.svelt
 import PlayerCharacterInventoryTab from './pages/PlayerCharacterInventoryTab.svelte';
 import PlayerCharacterSettingsTab from './pages/PlayerCharacterSettingsTab.svelte';
 import PlayerCharacterSpellsTab from './pages/PlayerCharacterSpellsTab.svelte';
+import type { PrimaryTabName } from './playerCharacterPrimaryTabConfig.js';
 
-export const PLAYER_CHARACTER_PRIMARY_NAVIGATION = [
+export const PLAYER_CHARACTER_PRIMARY_NAVIGATION: Array<{
+	component: unknown;
+	icon: string;
+	tooltip: string;
+	name: PrimaryTabName;
+}> = [
 	{
 		component: PlayerCharacterCoreTab,
 		icon: 'fa-solid fa-home',
@@ -49,13 +55,4 @@ export const PLAYER_CHARACTER_PRIMARY_NAVIGATION = [
 		tooltip: 'NIMBLE.ui.settings',
 		name: 'settings',
 	},
-] as const;
-
-export type PrimaryTabName = (typeof PLAYER_CHARACTER_PRIMARY_NAVIGATION)[number]['name'];
-
-export const DEFAULT_PRIMARY_TAB: PrimaryTabName = 'features';
-
-export const ITEM_TYPE_TO_PRIMARY_TAB: Partial<Record<string, PrimaryTabName>> = {
-	object: 'inventory',
-	spell: 'spells',
-};
+];
