@@ -8,9 +8,9 @@
 
 	const { messageDocument } = $props();
 
-	const system = $derived(messageDocument.system);
-	const rolls = $derived(messageDocument.rolls);
-	const headerBackgroundColor = $derived(messageDocument.author.color);
+	const system = $derived(messageDocument.reactive.system);
+	const rolls = $derived(messageDocument.reactive.rolls);
+	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
 	const { saves } = CONFIG.NIMBLE;

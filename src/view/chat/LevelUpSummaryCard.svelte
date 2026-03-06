@@ -8,14 +8,14 @@
 
 	let { messageDocument } = $props();
 
-	const system = $derived(messageDocument.system);
-	const rolls = $derived(messageDocument.rolls);
+	const system = $derived(messageDocument.reactive.system);
+	const rolls = $derived(messageDocument.reactive.rolls);
 	const actorType = $derived(system.actorType);
 	const currentClassLevel = $derived(system.currentClassLevel);
 	const takeAverageHp = $derived(system.takeAverageHp);
 	const permissions = $derived(system.permissions);
 
-	const headerBackgroundColor = $derived(messageDocument.author.color);
+	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 </script>
 
