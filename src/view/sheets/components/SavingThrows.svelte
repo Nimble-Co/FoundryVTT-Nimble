@@ -11,12 +11,13 @@
 		);
 	}
 
-	let { characterSavingThrows } = $props();
+	let { characterSavingThrows, editingEnabled: editingEnabledProp } = $props();
 
 	const { saves, savingThrows, savingThrowAbbreviations } = CONFIG.NIMBLE;
 	const actor = getContext('actor');
 	let flags = $derived(actor.reactive.flags.nimble);
-	let editingEnabled = $derived(flags?.editingEnabled ?? false);
+	let editingEnabledFromFlags = $derived(flags?.editingEnabled ?? false);
+	let editingEnabled = $derived(editingEnabledProp ?? editingEnabledFromFlags);
 </script>
 
 {#snippet savingThrowSnippet(saveKey, save)}

@@ -9,17 +9,20 @@
 ### Development Setup
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/Nimble-Co/FoundryVTT-Nimble.git
    cd FoundryVTT-Nimble
    ```
 
 2. **Install dependencies:**
+
    ```bash
    pnpm install
    ```
 
 3. **Start the development server:**
+
    ```bash
    pnpm dev
    ```
@@ -92,7 +95,7 @@ FoundryVTT-Nimble/
 
 ### Development Tools
 
-- **[`package.json`](package.json)** - Project dependencies and npm scripts
+- **[`package.json`](package.json)** - Project dependencies and pnpm scripts
 - **[`compendia.mjs`](compendia.mjs)** - Script for building game content compendia
 
 ## 🏗️ Architecture
