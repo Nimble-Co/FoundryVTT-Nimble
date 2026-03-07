@@ -3,6 +3,9 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { sveltePreprocess } from 'svelte-preprocess';
 import { defineConfig } from 'vitest/config';
 
+const FOUNDRY_URL = process.env.FOUNDRY_URL ?? 'http://localhost:30000';
+const FOUNDRY_WS_URL = FOUNDRY_URL.replace(/^https?/, (p) => (p === 'https' ? 'wss' : 'ws'));
+
 const config = defineConfig({
 	root: 'src/',
 	base: '/systems/nimble/',
@@ -12,15 +15,15 @@ const config = defineConfig({
 		open: '/',
 		proxy: {
 			// Explicit paths (Vite proxy keys are path prefixes; regex-like strings don't always match)
-			'/systems/nimble/nimble.css': 'http://localhost:30000',
-			'/systems/nimble/style.css': 'http://localhost:30000',
-			'/systems/nimble/assets': 'http://localhost:30000',
+			'/systems/nimble/nimble.css': FOUNDRY_URL,
+			'/systems/nimble/style.css': FOUNDRY_URL,
+			'/systems/nimble/assets': FOUNDRY_URL,
 			// During dev, Foundry loads the system stylesheet from system.json ("nimble.css").
 			// Proxy it (and assets) back to the Foundry server.
-			'^/systems/nimble/(assets|nimble\\.css|style\\.css)': 'http://localhost:30000',
-			'^(?!/systems/nimble)': 'http://localhost:30000',
+			'^/systems/nimble/(assets|nimble\\.css|style\\.css)': FOUNDRY_URL,
+			'^(?!/systems/nimble)': FOUNDRY_URL,
 			'/socket.io': {
-				target: 'ws://localhost:30000',
+				target: FOUNDRY_WS_URL,
 				ws: true,
 			},
 		},
