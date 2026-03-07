@@ -11,9 +11,54 @@ import NimbleSavingThrowCard from '../view/chat/SavingThrowCard.svelte';
 import NimbleSkillCheckCard from '../view/chat/SkillCheckCard.svelte';
 import NimbleSpellCard from '../view/chat/SpellCard.svelte';
 
+type MountedChatCard = {
+	component: ReturnType<typeof mount>;
+	target: HTMLElement;
+};
+
+const mountedChatCards = new WeakMap<object, MountedChatCard[]>();
+
+function getMountedChatCardsForMessage(message: object): MountedChatCard[] {
+	const existingCards = mountedChatCards.get(message) ?? [];
+
+	if (existingCards.length === 0) return existingCards;
+
+	const connectedCards: MountedChatCard[] = [];
+
+	for (const mountedCard of existingCards) {
+		if (mountedCard.target.isConnected) {
+			connectedCards.push(mountedCard);
+			continue;
+		}
+
+		unmount(mountedCard.component);
+	}
+
+	if (connectedCards.length !== existingCards.length) {
+		mountedChatCards.set(message, connectedCards);
+	}
+
+	return connectedCards;
+}
+
+function unmountChatCardAtTarget(message: object, target: HTMLElement): MountedChatCard[] {
+	const mountedCards = getMountedChatCardsForMessage(message);
+	const matchingCardIndex = mountedCards.findIndex((mountedCard) => mountedCard.target === target);
+
+	if (matchingCardIndex === -1) return mountedCards;
+
+	const [matchingCard] = mountedCards.splice(matchingCardIndex, 1);
+	unmount(matchingCard.component);
+
+	if (mountedCards.length === 0) mountedChatCards.delete(message);
+	else mountedChatCards.set(message, mountedCards);
+
+	return mountedCards;
+}
+
 export default function renderChatMessageHTML(message, html) {
 	const target = $(html)[0];
-	if (!target) return;
+	if (!target || !message || typeof message !== 'object') return;
 
 	// Check if this is a whispered message the current user shouldn't see details of
 	const whisperIds: string[] = message.whisper ?? [];
@@ -22,6 +67,8 @@ export default function renderChatMessageHTML(message, html) {
 		whisperIds.length > 0 && currentUserId && !whisperIds.includes(currentUserId);
 
 	if (isHiddenFromUser) {
+		unmountChatCardAtTarget(message, target);
+
 		// Show a "privately rolled" placeholder instead of the full content
 		target.classList.add('nimble-chat-card', 'nimble-chat-card--hidden');
 		$(html).find('.message-header')[0]?.remove();
@@ -101,13 +148,12 @@ export default function renderChatMessageHTML(message, html) {
 	$(html).find('.message-header')[0]?.remove();
 	$(html).find('.message-content')[0]?.remove();
 
-	// Unmount any existing Svelte component before mounting a new one
-	if (message._svelteComponent) {
-		unmount(message._svelteComponent);
-	}
-
-	message._svelteComponent = mount(component, {
+	const mountedCards = unmountChatCardAtTarget(message, target);
+	const mountedComponent = mount(component, {
 		target,
 		props: { messageDocument: message },
 	});
+
+	mountedCards.push({ component: mountedComponent, target });
+	mountedChatCards.set(message, mountedCards);
 }

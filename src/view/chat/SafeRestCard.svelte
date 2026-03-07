@@ -6,14 +6,14 @@
 
 	let { messageDocument } = $props();
 
-	const system = $derived(messageDocument.system);
+	const system = $derived(messageDocument.reactive.system);
 	const hitDiceRecovered = $derived(system.hitDiceRecovered);
 	const hpRestored = $derived(system.hpRestored);
 	const tempHpRemoved = $derived(system.tempHpRemoved);
 	const manaRestored = $derived(system.manaRestored);
 	const woundsRecovered = $derived(system.woundsRecovered);
 
-	const headerBackgroundColor = $derived(messageDocument.author.color);
+	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
 	// Format hit dice recovered for display

@@ -69,7 +69,7 @@
 	const { npcArmorEffects, npcArmorIcons, npcArmorTypes } = CONFIG.NIMBLE;
 
 	let messageDocument = getContext('messageDocument');
-	let targets = messageDocument?.system?.targets ?? [];
+	let targets = $derived(messageDocument?.reactive?.system?.targets ?? []);
 </script>
 
 <section class="nimble-card-section nimble-card-section--targets">
