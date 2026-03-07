@@ -1,6 +1,9 @@
-<script>
+<script lang="ts">
+	import type { NimbleCharacter } from '../../documents/actor/character.js';
+	import type PlayerCharacterSheetApplication from '../../documents/sheets/PlayerCharacterSheet.svelte.js';
+	import type { Readable } from 'svelte/store';
 	import { createSubscriber } from 'svelte/reactivity';
-	import { setContext, untrack } from 'svelte';
+	import { setContext, tick, untrack } from 'svelte';
 	import { readable } from 'svelte/store';
 	import localize from '../../utils/localize.js';
 	import {
@@ -13,13 +16,8 @@
 	import HitDiceBar from './components/HitDiceBar.svelte';
 	import ManaBar from './components/ManaBar.svelte';
 	import { incrementDieSize } from '../../managers/HitDiceManager.js';
-	import PlayerCharacterBioTab from './pages/PlayerCharacterBioTab.svelte';
-	import PlayerCharacterConditionsTab from './pages/PlayerCharacterConditionsTab.svelte';
-	import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';
-	import PlayerCharacterFeaturesTab from './pages/PlayerCharacterFeaturesTab.svelte';
-	import PlayerCharacterInventoryTab from './pages/PlayerCharacterInventoryTab.svelte';
-	import PlayerCharacterSettingsTab from './pages/PlayerCharacterSettingsTab.svelte';
-	import PlayerCharacterSpellsTab from './pages/PlayerCharacterSpellsTab.svelte';
+	import { PLAYER_CHARACTER_PRIMARY_NAVIGATION } from './playerCharacterPrimaryTabs.js';
+	import { getDroppedItemFlashIds, type SheetDropItemFlashState } from './dropItemFlashState.js';
 
 	function getHitPointPercentage(currentHP, maxHP) {
 		return Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100);
@@ -147,7 +145,7 @@
 		await actor.setFlag('nimble', 'editingEnabled', !editingEnabled);
 	}
 
-	let { actor, sheet } = $props();
+	let { actor, sheet, state: appState } = $props();
 	let combatManaRulesPrimeVersion = $state(0);
 	let lastCombatManaPrimeActorId = $state(null);
 
@@ -186,54 +184,45 @@
 		};
 	});
 
-	const navigation = $state([
-		{
-			component: PlayerCharacterCoreTab,
-			icon: 'fa-solid fa-home',
-			tooltip: 'Core',
-			name: 'core',
-		},
-		{
-			component: PlayerCharacterConditionsTab,
-			icon: 'fa-solid fa-heart-pulse',
-			tooltip: 'NIMBLE.ui.conditions',
-			name: 'conditions',
-		},
-		{
-			component: PlayerCharacterInventoryTab,
-			icon: 'fa-solid fa-box-open',
-			tooltip: 'Inventory',
-			name: 'inventory',
-		},
-		{
-			component: PlayerCharacterFeaturesTab,
-			icon: 'fa-solid fa-table-list',
-			tooltip: 'Features',
-			name: 'features',
-		},
-		{
-			component: PlayerCharacterSpellsTab,
-			icon: 'fa-solid fa-wand-sparkles',
-			tooltip: 'Spells',
-			name: 'spells',
-		},
-		{
-			component: PlayerCharacterBioTab,
-			icon: 'fa-solid fa-file-lines',
-			tooltip: 'Bio',
-			name: 'bio',
-		},
-		{
-			component: PlayerCharacterSettingsTab,
-			icon: 'fa-solid fa-cog',
-			tooltip: 'Settings',
-			name: 'settings',
-		},
-	]);
+	const navigation = PLAYER_CHARACTER_PRIMARY_NAVIGATION;
 
 	const { sizeCategories } = CONFIG.NIMBLE;
 
 	let currentTab = $state(navigation[0]);
+	let lastDroppedItemScrollSignature = $state('');
+
+	$effect(() => {
+		const sheetState = appState as SheetDropItemFlashState;
+		const requestedTabName = sheetState.activePrimaryTab;
+		if (typeof requestedTabName !== 'string' || requestedTabName.length < 1) return;
+
+		const requestedTab = navigation.find((tab) => tab.name === requestedTabName);
+		const didSwitchTab =
+			!!requestedTab && !!currentTab?.name && currentTab.name !== requestedTab.name;
+		if (requestedTab && didSwitchTab) {
+			currentTab = requestedTab;
+		}
+
+		if (didSwitchTab) {
+			const droppedItemIds = getDroppedItemFlashIds(sheetState);
+			if (droppedItemIds.length > 0) {
+				untrack(() => {
+					sheetState.droppedItemFlashIds = [];
+				});
+
+				void tick().then(() => {
+					const currentDroppedItemIds = getDroppedItemFlashIds(sheetState);
+					sheetState.droppedItemFlashIds = Array.from(
+						new Set([...currentDroppedItemIds, ...droppedItemIds]),
+					);
+				});
+			}
+		}
+
+		untrack(() => {
+			sheetState.activePrimaryTab = null;
+		});
+	});
 
 	let isBloodied = $derived.by(
 		() =>
@@ -277,6 +266,51 @@
 	const editingEnabledStore = readable(false, (set) => {
 		$effect(() => set(editingEnabled));
 		return () => {};
+	});
+
+	$effect(() => {
+		const sheetState = appState as SheetDropItemFlashState;
+		const actorItemCount = actor?.reactive?.items?.length ?? 0;
+		const droppedItemIds = getDroppedItemFlashIds(sheetState);
+		if (droppedItemIds.length < 1) {
+			lastDroppedItemScrollSignature = '';
+			return;
+		}
+
+		const scrollSignature = `${currentTab?.name ?? ''}:${actorItemCount}:${droppedItemIds.join(',')}`;
+		if (scrollSignature === lastDroppedItemScrollSignature) return;
+		lastDroppedItemScrollSignature = scrollSignature;
+
+		void tick().then(() => {
+			const rootElement = sheet?.element;
+			if (!(rootElement instanceof HTMLElement)) return;
+
+			let droppedItemCard: HTMLElement | null = null;
+			for (let i = droppedItemIds.length - 1; i >= 0; i--) {
+				const itemId = droppedItemIds[i];
+				const escapedItemId = globalThis.CSS?.escape ? globalThis.CSS.escape(itemId) : itemId;
+				droppedItemCard = rootElement.querySelector<HTMLElement>(
+					`.nimble-sheet__body [data-item-id="${escapedItemId}"]`,
+				);
+				if (droppedItemCard) break;
+			}
+
+			if (!(droppedItemCard instanceof HTMLElement)) return;
+
+			const scrollContainer = droppedItemCard.closest<HTMLElement>('.nimble-sheet__body');
+			if (!(scrollContainer instanceof HTMLElement)) return;
+
+			const isScrollable = scrollContainer.scrollHeight > scrollContainer.clientHeight + 1;
+			if (!isScrollable) return;
+
+			const containerRect = scrollContainer.getBoundingClientRect();
+			const itemRect = droppedItemCard.getBoundingClientRect();
+			const isOutOfView =
+				itemRect.top < containerRect.top || itemRect.bottom > containerRect.bottom;
+			if (!isOutOfView) return;
+
+			droppedItemCard.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+		});
 	});
 
 	let metaData = $derived.by(() => {
@@ -364,12 +398,14 @@
 	// Set context synchronously during component initialization (not in $effect)
 	// Wrapped in untrack to suppress warnings - actor/sheet don't change during sheet lifecycle
 	{
-		const actorRef = untrack(() => actor);
-		const sheetRef = untrack(() => sheet);
-		setContext('actor', actorRef);
-		setContext('document', actorRef);
-		setContext('application', sheetRef);
-		setContext('editingEnabled', editingEnabledStore);
+		const actorRef = untrack(() => actor) as NimbleCharacter;
+		const sheetRef = untrack(() => sheet) as PlayerCharacterSheetApplication;
+		const sheetStateRef = untrack(() => appState) as SheetDropItemFlashState;
+		setContext<NimbleCharacter>('actor', actorRef);
+		setContext<NimbleCharacter>('document', actorRef);
+		setContext<PlayerCharacterSheetApplication>('application', sheetRef);
+		setContext<Readable<boolean>>('editingEnabled', editingEnabledStore);
+		setContext<SheetDropItemFlashState>('sheetState', sheetStateRef);
 	}
 </script>
 

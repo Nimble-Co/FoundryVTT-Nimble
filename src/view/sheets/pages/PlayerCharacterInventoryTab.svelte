@@ -1,11 +1,19 @@
-<script>
+<script lang="ts">
+	import type { NimbleCharacter } from '../../../documents/actor/character.js';
+	import type PlayerCharacterSheet from '../../../documents/sheets/PlayerCharacterSheet.svelte.js';
 	import { getContext } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { RulesManager } from '../../../managers/RulesManager.js';
 	import localize from '../../../utils/localize.js';
+	import shouldFlashDroppedItem from '../../../utils/shouldFlashDroppedItem.js';
 	import sortItems from '../../../utils/sortItems.js';
 	import prepareObjectTooltip from '../../dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js';
 	import filterItems from '../../dataPreparationHelpers/filterItems.js';
+	import {
+		DROP_ITEM_FLASH_ANIMATION_NAME,
+		getDroppedItemFlashIds,
+		type SheetDropItemFlashState,
+	} from '../dropItemFlashState.js';
 
 	import SearchBar from '../components/SearchBar.svelte';
 
@@ -44,9 +52,11 @@
 
 	const { objectTypeHeadings } = CONFIG.NIMBLE;
 
-	let actor = getContext('actor');
-	let sheet = getContext('application');
+	let actor = getContext<NimbleCharacter>('actor');
+	let sheet = getContext<PlayerCharacterSheet>('application');
+	const sheetState = getContext<SheetDropItemFlashState>('sheetState');
 	let searchTerm = $state('');
+	let droppedItemFlashIds = $derived(new Set(getDroppedItemFlashIds(sheetState)));
 
 	const tooltipCache = new Map();
 
@@ -84,6 +94,21 @@
 				}
 			});
 		}
+	}
+
+	async function handleItemDrop(event, item) {
+		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
+		if (dropData?.type === 'Item') {
+			await sheet._onDropItem(event, dropData);
+			return;
+		}
+
+		await sheet._onSortItem(event, item);
+	}
+
+	function handleDropFlashAnimationEnd(event: AnimationEvent, itemId: string) {
+		if (event.animationName !== DROP_ITEM_FLASH_ANIMATION_NAME) return;
+		sheet.clearDroppedItemFlash(itemId);
 	}
 
 	let totalInventorySlots = $derived(actor.reactive.system.inventory.totalSlots ?? 0);
@@ -181,7 +206,7 @@
 			</header>
 
 			<ul class="nimble-item-list">
-				{#each sortItems(itemCategory) as item (item._id)}
+				{#each sortItems(itemCategory) as item (item.reactive._id)}
 					{@const metadata = getObjectMetadata(item)}
 					{@const rules = itemRulesManagers.get(item.id)}
 
@@ -191,7 +216,11 @@
 						class="nimble-document-card nimble-document-card--actor-inventory"
 						class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
 						class:nimble-document-card--no-meta={!metadata}
-						data-item-id={item._id}
+						class:nimble-document-card--drop-flash={shouldFlashDroppedItem(
+							droppedItemFlashIds,
+							item.reactive._id,
+						)}
+						data-item-id={item.reactive._id}
 						data-tooltip={tooltipCache.get(item.reactive._id) || ''}
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 						data-tooltip-direction="LEFT"
@@ -200,7 +229,8 @@
 						role="button"
 						ondragstart={(event) => sheet._onDragStart(event)}
 						ondragover={(event) => event.preventDefault()}
-						ondrop={(event) => sheet._onSortItem(event, item)}
+						ondrop={(event) => handleItemDrop(event, item)}
+						onanimationend={(event) => handleDropFlashAnimationEnd(event, item.reactive._id)}
 						onclick={() => actor.activateItem(item._id)}
 					>
 						<header class="u-semantic-only">
