@@ -1,0 +1,20 @@
+{
+	"_id": "NimMacroAtkSpell3",
+	"name": "ATK: Spells",
+	"type": "script",
+	"author": "",
+	"img": "icons/svg/explosion.svg",
+	"scope": "global",
+	"command": "(async () => {\n\n  // ── DETECT ACTOR / TARGET ─────────────────────────────────────────────────\n  let actorToken = canvas.tokens.controlled[0];\n  if (!actorToken) { actorToken = canvas.tokens.placeables.find(t => t.actor && t.actor.isOwner); }\n  if (!actorToken) { ui.notifications.warn('No token found. Select your token first.'); return; }\n  const actor = actorToken.actor;\n  const isPC  = actor.type === 'character';\n\n  if (!isPC) { ui.notifications.warn('Spells panel is for PC characters only.'); return; }\n\n  let targetToken = [...game.user.targets][0] || null;\n  if (!targetToken) {\n    const gs   = canvas.grid.size;\n    const pool = canvas.tokens.placeables.filter(t => {\n      if (t.id === actorToken.id || !t.actor) return false;\n      if (!game.user.isGM && !t.visible) return false;\n      return t.actor.type === 'npc';\n    });\n    if (pool.length) {\n      targetToken = pool.sort((a, b) => {\n        const da = Math.hypot((a.center.x - actorToken.center.x) / gs, (a.center.y - actorToken.center.y) / gs);\n        const db = Math.hypot((b.center.x - actorToken.center.x) / gs, (b.center.y - actorToken.center.y) / gs);\n        return da - db;\n      })[0];\n    }\n  }\n\n  const gs   = canvas.grid.size;\n  const dist = targetToken\n    ? Math.hypot((targetToken.center.x - actorToken.center.x) / gs, (targetToken.center.y - actorToken.center.y) / gs)\n    : null;\n  const armorType = (targetToken?.actor?.system?.attributes?.armor) || 'none';\n\n  // ── COLLECT SPELL ACTIONS ─────────────────────────────────────────────────\n  const abilityMap = {};\n  const lvl = actor.system.classData?.levels?.length ?? 1;\n  for (const [key, val] of Object.entries(actor.system.abilities || {})) { abilityMap['@' + key] = String(val.mod); }\n  abilityMap['@level'] = String(lvl);\n\n  function resolveFormula(raw) {\n    let expr = raw.replace(/@[a-zA-Z]+/g, k => abilityMap[k] ?? '0');\n    const dm = expr.match(/\\d+d\\d+/g) || [];\n    const me = expr.replace(/\\d+d\\d+/g, '0');\n    let mod = 0;\n    try { mod = Math.round(Function('return (' + me.replace(/floor/g, 'Math.floor') + ')')()) ; } catch(e) {}\n    return dm.join('+') + (mod > 0 ? '+' + mod : mod < 0 ? String(mod) : '');\n  }\n\n  const actions = actor.items.filter(i => i.type === 'spell').map(i => {\n    const fx = (i.system.activation?.effects || []).find(e => e.type === 'damage' && e.formula);\n    if (!fx) return null;\n    const raw = fx.formula;\n    const sel = i.system.properties?.selected || [];\n    const rangeMax = sel.includes('range') && i.system.properties.range?.max != null\n      ? i.system.properties.range.max\n      : (sel.includes('reach') && i.system.properties.reach?.max != null\n        ? i.system.properties.reach.max : 1);\n    const rangeMin = sel.includes('range') && i.system.properties.range?.min != null\n      ? i.system.properties.range.min : 1;\n    const tag = rangeMax > 1 ? '[range ' + rangeMax + 'sq]' : '[reach]';\n    return { id: i.id, name: i.name, raw, formula: resolveFormula(raw), rangeMin, rangeMax, isRanged: rangeMax > 1, tag };\n  }).filter(Boolean);\n\n  if (!actions.length) { ui.notifications.warn('No damage spells found for ' + actor.name + '.'); return; }\n\n  window._nimbleShowCard(actorToken, targetToken, dist, armorType, actions, '\\u2728 Spells');\n\n})();",
+	"folder": null,
+	"sort": 30,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13",
+		"systemId": "nimble",
+		"systemVersion": "0.7.2",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"_id": "NimMacroOpenDoor6",
+	"name": "Open Door",
+	"type": "script",
+	"author": "",
+	"img": "icons/svg/door-exit.svg",
+	"scope": "global",
+	"command": "(async () => {\n  const CFG = {\n    reach:         1.5,\n    includeSecret: false,\n  };\n\n  function pointToSegDist(px, py, ax, ay, bx, by) {\n    const dx = bx - ax, dy = by - ay;\n    const lenSq = dx * dx + dy * dy;\n    if (lenSq === 0) return Math.hypot(px - ax, py - ay);\n    const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lenSq));\n    return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));\n  }\n\n  const token = canvas.tokens.controlled[0];\n  if (!token) return ui.notifications.warn(\"Open Door: select your token first.\");\n\n  const cx = token.x + token.w / 2;\n  const cy = token.y + token.h / 2;\n  const maxDist = CFG.reach * canvas.grid.size;\n\n  const DOOR  = CONST.WALL_DOOR_TYPES;\n  const STATE = CONST.WALL_DOOR_STATES;\n\n  const nearby = canvas.walls.placeables\n    .filter(w => {\n      if (w.document.door === DOOR.NONE)   return false;\n      if (w.document.door === DOOR.SECRET && !CFG.includeSecret) return false;\n      const [x1, y1, x2, y2] = w.document.c;\n      return pointToSegDist(cx, cy, x1, y1, x2, y2) <= maxDist;\n    })\n    .sort((a, b) => {\n      const [ax1, ay1, ax2, ay2] = a.document.c;\n      const [bx1, by1, bx2, by2] = b.document.c;\n      return pointToSegDist(cx, cy, ax1, ay1, ax2, ay2)\n           - pointToSegDist(cx, cy, bx1, by1, bx2, by2);\n    });\n\n  if (!nearby.length) return ui.notifications.warn(\"No door within reach.\");\n\n  const door = nearby[0];\n  const ds   = door.document.ds;\n\n  if (ds === STATE.LOCKED) {\n    return ui.notifications.warn(\"That door is locked.\");\n  }\n\n  const newState = ds === STATE.OPEN ? STATE.CLOSED : STATE.OPEN;\n  await door.document.update({ ds: newState });\n\n  ui.notifications.info(newState === STATE.OPEN ? \"Door opened.\" : \"Door closed.\");\n})();",
+	"folder": null,
+	"sort": 60,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13",
+		"systemId": "nimble",
+		"systemVersion": "0.7.2",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	}
+}

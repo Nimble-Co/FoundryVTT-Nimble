@@ -1,6 +1,6 @@
-import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
+import path from 'node:path';
 
 import { fileURLToPath } from 'node:url';
 import { globSync } from 'glob';
@@ -12,6 +12,7 @@ export default class IdBuilder {
 			Actor: new Set(),
 			Item: new Set(),
 			Journal: new Set(),
+			Macro: new Set(),
 			RollTable: new Set(),
 		};
 
@@ -165,12 +166,12 @@ export default class IdBuilder {
 			let content;
 			try {
 				content = fs.readFileSync(file, { encoding: 'utf-8' });
-			} catch (err) {
+			} catch (_err) {
 				continue;
 			}
 
 			let modified = false;
-			const updatedContent = content.replace(uuidPattern, (match, docType, id) => {
+			const updatedContent = content.replace(uuidPattern, (match, _docType, id) => {
 				if (this.idMigrations.has(id)) {
 					const newId = this.idMigrations.get(id);
 					modified = true;
@@ -189,12 +190,13 @@ export default class IdBuilder {
 
 	/**
 	 * @param {any} doc
-	 * @returns { "Actor" | "Item" | "Journal" | "RollTable" | null}
+	 * @returns { "Actor" | "Item" | "Journal" | "Macro" | "RollTable" | null}
 	 */
 	static documentType(doc) {
 		if (IdBuilder.#isActor(doc)) return 'Actor';
 		if (IdBuilder.#isItem(doc)) return 'Item';
 		if (IdBuilder.#isJournal(doc)) return 'Journal';
+		if (IdBuilder.#isMacro(doc)) return 'Macro';
 		if (IdBuilder.#isRollTable(doc)) return 'RollTable';
 		return null;
 	}
@@ -258,6 +260,20 @@ export default class IdBuilder {
 	 */
 	static #isJournal(doc) {
 		return 'pages' in doc;
+	}
+
+	/**
+	 * @param {any} doc
+	 * @returns {boolean}
+	 */
+	static #isMacro(doc) {
+		return (
+			typeof doc.command === 'string' &&
+			!('system' in doc) &&
+			!('items' in doc) &&
+			!('pages' in doc) &&
+			!('results' in doc)
+		);
 	}
 
 	/**

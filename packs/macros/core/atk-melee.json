@@ -1,0 +1,20 @@
+{
+	"_id": "NimMacroAtkMelee1",
+	"name": "ATK: Melee",
+	"type": "script",
+	"author": "",
+	"img": "icons/skills/melee.webp",
+	"scope": "global",
+	"command": "(async () => {\n\n  // ── DETECT ACTOR / TARGET ─────────────────────────────────────────────────\n  let actorToken = canvas.tokens.controlled[0];\n  if (!actorToken) { actorToken = canvas.tokens.placeables.find(t => t.actor && t.actor.isOwner); }\n  if (!actorToken) { ui.notifications.warn('No token found. Select your token first.'); return; }\n  const actor = actorToken.actor;\n  const isPC  = actor.type === 'character';\n\n  let targetToken = [...game.user.targets][0] || null;\n  if (!targetToken) {\n    const gs   = canvas.grid.size;\n    const pool = canvas.tokens.placeables.filter(t => {\n      if (t.id === actorToken.id || !t.actor) return false;\n      if (!game.user.isGM && !t.visible) return false;\n      return isPC ? t.actor.type === 'npc' : t.actor.type === 'character';\n    });\n    if (pool.length) {\n      targetToken = pool.sort((a, b) => {\n        const da = Math.hypot((a.center.x - actorToken.center.x) / gs, (a.center.y - actorToken.center.y) / gs);\n        const db = Math.hypot((b.center.x - actorToken.center.x) / gs, (b.center.y - actorToken.center.y) / gs);\n        return da - db;\n      })[0];\n    }\n  }\n\n  const gs   = canvas.grid.size;\n  const dist = targetToken\n    ? Math.hypot((targetToken.center.x - actorToken.center.x) / gs, (targetToken.center.y - actorToken.center.y) / gs)\n    : null;\n  const armorType = (targetToken?.actor?.system?.attributes?.armor) || 'none';\n\n  // ── COLLECT MELEE ACTIONS ─────────────────────────────────────────────────\n  let actions = [];\n\n  if (isPC) {\n    const abilityMap = {};\n    const lvl = actor.system.classData?.levels?.length ?? 1;\n    for (const [key, val] of Object.entries(actor.system.abilities || {})) { abilityMap['@' + key] = String(val.mod); }\n    abilityMap['@level'] = String(lvl);\n    function resolveFormula(raw) {\n      let expr = raw.replace(/@[a-zA-Z]+/g, k => abilityMap[k] ?? '0');\n      const dm = expr.match(/\\d+d\\d+/g) || [];\n      const me = expr.replace(/\\d+d\\d+/g, '0');\n      let mod = 0;\n      try { mod = Math.round(Function('return (' + me.replace(/floor/g, 'Math.floor') + ')')()) ; } catch(e) {}\n      return dm.join('+') + (mod > 0 ? '+' + mod : mod < 0 ? String(mod) : '');\n    }\n    actions = actor.items.filter(i => i.type === 'object').map(i => {\n      const fx = (i.system.activation?.effects || []).find(e => e.type === 'damage' && e.formula);\n      if (!fx) return null;\n      const raw   = fx.formula;\n      const range = i.system.activation?.targets?.distance || 1;\n      if (range > 1) return null;\n      return { id: i.id, name: i.name, raw, formula: resolveFormula(raw), rangeMin: 1, rangeMax: range, isRanged: false, tag: '[melee]' };\n    }).filter(Boolean);\n  } else {\n    actions = actor.items.filter(i => i.type === 'monsterFeature' && i.system.subtype === 'action').map(i => {\n      const desc = String(i.system.description || '').replace(/<[^>]+>/g, ' ');\n      const m    = desc.match(/(\\d+)d(\\d+)\\s*([+\\-]\\s*\\d+)?/);\n      if (!m) return null;\n      if (i.system.activation?.targets?.attackType === 'range') return null;\n      const formula = m[1] + 'd' + m[2] + (m[3] ? m[3].replace(/\\s/g, '') : '');\n      return { id: i.id, name: i.name, raw: formula, formula, rangeMin: 1, rangeMax: i.system.activation?.targets?.distance || 1, isRanged: false, tag: '[melee]' };\n    }).filter(Boolean);\n  }\n\n  if (!actions.length) { ui.notifications.warn('No melee attacks found for ' + actor.name + '.'); return; }\n\n  window._nimbleShowCard(actorToken, targetToken, dist, armorType, actions, '\\u2694\\uFE0F Melee Attacks');\n\n})();",
+	"folder": null,
+	"sort": 10,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13",
+		"systemId": "nimble",
+		"systemVersion": "0.7.2",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	}
+}

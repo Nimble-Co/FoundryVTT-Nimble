@@ -1,3 +1,4 @@
+import registerAtkInitHook from './hooks/atkInit.js';
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import canvasInit from './hooks/canvasInit.js';
 import registerCombatantDefeatSync from './hooks/combatantDefeatSync.js';
@@ -11,6 +12,7 @@ import renderChatMessageHTML from './hooks/renderChatMessage.js';
 import renderCompendium from './hooks/renderCompendium.js';
 import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import setup from './hooks/setup.js';
+import registerStartingGearHook from './hooks/startingGear.js';
 import './scss/main.scss';
 import { getCombatManaGrantForCombat, getCombatManaGrantMap } from './utils/combatManaRules.js';
 import { injectViteHmrClient } from './utils/viteHmr.js';
@@ -87,6 +89,8 @@ Hooks.on('hotbarDrop', onHotbarDrop);
 registerCombatantDefeatSync();
 registerMinionGroupTokenBadges();
 registerMinionGroupTokenActions();
+registerStartingGearHook();
+registerAtkInitHook();
 
 // Refresh tokens when combat ends to remove turn indicators
 Hooks.on('deleteCombat', async (combat: Combat) => {

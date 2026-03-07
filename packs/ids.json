@@ -687,6 +687,7 @@
 			"consumables": {
 				"greater-healing-potion": "RuytwY5RTuHMlYMg",
 				"healing-potion": "7ZPoo93Dm8dVHO99",
+				"mana-potion": "DvBzeKXwjAiQFR7U",
 				"supreme-healing-potion": "rPpszgwsZX82KdL9",
 				"vial-of-pitch": "3DATN9QiaWXXcU75"
 			},
@@ -776,6 +777,16 @@
 			"titans-skeleton-minion": "DOHY1RHnRQlPqAYn",
 			"ulvek-psionic-despot": "WnnjaFQVSMGeqIIT",
 			"vael-undying-necromancer": "zLiINIZUQWRIx59J"
+		}
+	},
+	"macros": {
+		"core": {
+			"atk-melee": "NimMacroAtkMelee1",
+			"atk-ranged": "NimMacroAtkRange2",
+			"atk-spells": "NimMacroAtkSpell3",
+			"day-night-toggle": "NimMacroDayNight5",
+			"open-door": "NimMacroOpenDoor6",
+			"place-torch": "NimMacroPlcTorch7"
 		}
 	},
 	"magicItems": {

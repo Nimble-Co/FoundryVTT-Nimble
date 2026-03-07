@@ -23,9 +23,12 @@ const NCSW_PANEL_MAX_TARGETS_PER_ROW = 4;
 const NCSW_LOGO_PATH = '/systems/nimble/ncsw/logos/NimbleLogos.png';
 const NCSW_I18N_PREFIX = 'NIMBLE.nimbleCombatSystemWindow';
 const NCSW_SCENE_TOGGLE_TOOL_NAME = 'nimble-ncsw-toggle';
+const NCSW_PANEL_TOGGLE_TOOL_NAME = 'nimble-ncsw-panel-toggle';
 const NCSW_SCENE_TOGGLE_ICON_CLASSES = 'fa-solid fa-crosshairs';
 const NCSW_SCENE_TOGGLE_DOM_OWNED_ATTRIBUTE = 'data-nimble-ncsw-owned';
 const NCSW_SCENE_TOGGLE_DOM_BOUND_ATTRIBUTE = 'data-nimble-ncsw-bound';
+const NCSW_PANEL_TOGGLE_DOM_OWNED_ATTRIBUTE = 'data-nimble-ncsw-panel-owned';
+const NCSW_PANEL_TOGGLE_DOM_BOUND_ATTRIBUTE = 'data-nimble-ncsw-panel-bound';
 const FONT_AWESOME_BASE_CLASSES = new Set([
 	'fa',
 	'fas',
@@ -46,6 +49,7 @@ export type NcswSidebarViewMode = 'combatTracker' | 'ncs';
 
 let didRegisterMinionGroupTokenActions = false;
 let refreshScheduled = false;
+let panelUserVisible = false;
 let isExecutingAction = false;
 let windowResizeHandler: (() => void) | null = null;
 let minionGroupAttackPanelElement: HTMLDivElement | null = null;
@@ -1434,13 +1438,22 @@ function buildSelectionWarnings(result: {
 	return warnings;
 }
 
-function resetGroupAttackPanelForRender(panel: HTMLDivElement): void {
+function resetGroupAttackPanelForRender(panel: HTMLDivElement): boolean {
+	if (
+		game.settings.get('nimble' as 'core', 'hideGroupAttackPanel' as 'rollMode') &&
+		!panelUserVisible
+	) {
+		panel.hidden = true;
+		panel.replaceChildren();
+		return false;
+	}
 	panel.hidden = false;
 	hideGroupAttackTargetPopover();
 	hideGroupAttackActionDescriptionPopover();
 	hideGroupAttackImagePopover();
 	panel.replaceChildren();
 	panel.style.removeProperty('width');
+	return true;
 }
 
 function renderGroupAttackPanelHeader(panel: HTMLDivElement): void {
@@ -1830,6 +1843,7 @@ function renderGroupAttackButtonSection(params: {
 		closeButton.textContent = localizeNcsw('buttons.close');
 		closeButton.disabled = isExecutingAction;
 		closeButton.addEventListener('click', () => {
+			savePanelUserVisible(false);
 			hideGroupAttackPanel();
 		});
 		buttons.append(closeButton);
@@ -1876,7 +1890,7 @@ function renderGroupAttackPanel(): void {
 		return selectedActionId.length > 0;
 	});
 
-	resetGroupAttackPanelForRender(panel);
+	if (!resetGroupAttackPanelForRender(panel)) return;
 	renderGroupAttackPanelHeader(panel);
 	const targetSection = renderGroupAttackTargetSection({
 		panel,
@@ -2309,7 +2323,10 @@ function scheduleSceneControlsRefresh(source = 'unknown'): void {
 			render?: (force?: boolean) => void;
 		};
 		if (typeof controls.render === 'function') controls.render(true);
-		setTimeout(() => syncNcswSceneToggleDomTool(), 0);
+		setTimeout(() => {
+			syncNcswSceneToggleDomTool();
+			syncNcswPanelToggleDomTool();
+		}, 0);
 	}, 0);
 }
 
@@ -2324,6 +2341,47 @@ function getNcswSceneToggleTitle(isActive: boolean): string {
 function toggleNcswSceneControl(toggled?: boolean): void {
 	const shouldShowNcsw = typeof toggled === 'boolean' ? toggled : !isNcswSidebarModeActive();
 	setNcswSidebarViewMode(shouldShowNcsw ? 'ncs' : 'combatTracker');
+}
+
+function loadPanelUserVisible(): void {
+	panelUserVisible = Boolean(
+		game.settings.get('nimble' as 'core', 'groupAttackPanelVisible' as 'rollMode'),
+	);
+}
+
+function savePanelUserVisible(visible: boolean): void {
+	panelUserVisible = visible;
+	game.settings.set('nimble' as 'core', 'groupAttackPanelVisible' as 'rollMode', visible as never);
+}
+
+function toggleNcswPanelVisibility(): void {
+	savePanelUserVisible(!panelUserVisible);
+	scheduleActionBarRefresh('panelToggle');
+	scheduleSceneControlsRefresh('panelToggle');
+}
+
+function isNcswPanelToggleVisible(): boolean {
+	return (
+		isNcswSceneToggleVisible() &&
+		Boolean(game.settings.get('nimble' as 'core', 'hideGroupAttackPanel' as 'rollMode'))
+	);
+}
+
+function buildNcswPanelToggleTool(): SceneControlToolLike {
+	return {
+		name: NCSW_PANEL_TOGGLE_TOOL_NAME,
+		title: panelUserVisible ? 'Hide Group Attack Panel' : 'Show Group Attack Panel',
+		icon: panelUserVisible ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye',
+		toggle: true,
+		active: panelUserVisible,
+		visible: true,
+		onClick: toggleNcswPanelVisibility,
+		onChange: (_event, toggled) => {
+			savePanelUserVisible(toggled);
+			scheduleActionBarRefresh('panelToggle');
+			scheduleSceneControlsRefresh('panelToggle');
+		},
+	};
 }
 
 function buildNcswSceneToggleTool(): SceneControlToolLike {
@@ -2435,6 +2493,55 @@ function upsertNcswSceneToggleToolCollection(tools: SceneControlToolsLike): void
 	};
 }
 
+function resolveNcswPanelToggleOrder(tools: SceneControlToolLike[]): number {
+	const ncswTool = tools.find((t) => t?.name === NCSW_SCENE_TOGGLE_TOOL_NAME);
+	const ncswOrder = typeof ncswTool?.order === 'number' ? ncswTool.order : null;
+	if (ncswOrder !== null) return ncswOrder + 0.1;
+	return resolveNcswSceneToggleOrder(tools) + 0.2;
+}
+
+function removeNcswPanelToggleTool(tools: SceneControlToolsLike): void {
+	if (Array.isArray(tools)) {
+		const existingToolIndex = tools.findIndex((tool) => tool?.name === NCSW_PANEL_TOGGLE_TOOL_NAME);
+		if (existingToolIndex >= 0) tools.splice(existingToolIndex, 1);
+		return;
+	}
+
+	for (const [toolKey, tool] of Object.entries(tools)) {
+		if (toolKey !== NCSW_PANEL_TOGGLE_TOOL_NAME && tool?.name !== NCSW_PANEL_TOGGLE_TOOL_NAME)
+			continue;
+		delete tools[toolKey];
+	}
+}
+
+function upsertNcswPanelToggleToolCollection(tools: SceneControlToolsLike): void {
+	const panelToggleTool = buildNcswPanelToggleTool();
+	if (Array.isArray(tools)) {
+		const existingToolIndex = tools.findIndex((tool) => tool?.name === NCSW_PANEL_TOGGLE_TOOL_NAME);
+		if (existingToolIndex >= 0) {
+			tools[existingToolIndex] = { ...tools[existingToolIndex], ...panelToggleTool };
+			return;
+		}
+		const ncswToggleIndex = tools.findIndex((tool) => tool?.name === NCSW_SCENE_TOGGLE_TOOL_NAME);
+		if (ncswToggleIndex >= 0) {
+			tools.splice(ncswToggleIndex + 1, 0, panelToggleTool);
+			return;
+		}
+		tools.push(panelToggleTool);
+		return;
+	}
+
+	const existingEntry =
+		tools[NCSW_PANEL_TOGGLE_TOOL_NAME] ??
+		Object.values(tools).find((tool) => tool?.name === NCSW_PANEL_TOGGLE_TOOL_NAME) ??
+		null;
+	tools[NCSW_PANEL_TOGGLE_TOOL_NAME] = {
+		...existingEntry,
+		...panelToggleTool,
+		order: resolveNcswPanelToggleOrder(Object.values(tools)),
+	};
+}
+
 function upsertNcswSceneToggleTool(sceneControls: unknown): void {
 	if (!Array.isArray(sceneControls)) return;
 
@@ -2444,9 +2551,16 @@ function upsertNcswSceneToggleTool(sceneControls: unknown): void {
 
 	if (!isNcswSceneToggleVisible()) {
 		removeNcswSceneToggleTool(tools);
+		removeNcswPanelToggleTool(tools);
 		return;
 	}
 	upsertNcswSceneToggleToolCollection(tools);
+
+	if (!isNcswPanelToggleVisible()) {
+		removeNcswPanelToggleTool(tools);
+		return;
+	}
+	upsertNcswPanelToggleToolCollection(tools);
 }
 
 function resolveSceneControlsRootElement(): HTMLElement | null {
@@ -2860,6 +2974,107 @@ function clearExistingNcswDomTools(root: ParentNode): void {
 	}
 }
 
+function findOwnedNcswPanelDomElements(root: ParentNode): HTMLElement[] {
+	const queryRoot = root as Document | Element | DocumentFragment;
+	return [
+		...queryRoot.querySelectorAll<HTMLElement>(`[${NCSW_PANEL_TOGGLE_DOM_OWNED_ATTRIBUTE}="true"]`),
+	];
+}
+
+function removeOwnedNcswPanelDomElements(root: ParentNode): void {
+	for (const el of findOwnedNcswPanelDomElements(root)) el.remove();
+}
+
+function findRenderedNcswPanelDomElements(root: ParentNode): HTMLElement[] {
+	const queryRoot = root as Document | Element | DocumentFragment;
+	return [
+		...queryRoot.querySelectorAll<HTMLElement>(`[data-tool="${NCSW_PANEL_TOGGLE_TOOL_NAME}"]`),
+	].map((el) => resolveSceneControlDomToolSlotElement(el));
+}
+
+function findNcswToggleSlotElement(root: ParentNode): HTMLElement | null {
+	const queryRoot = root as Document | Element | DocumentFragment;
+	const owned = queryRoot.querySelector<HTMLElement>(
+		`[${NCSW_SCENE_TOGGLE_DOM_OWNED_ATTRIBUTE}="true"]`,
+	);
+	if (owned) return owned;
+	const dataToolEl = queryRoot.querySelector<HTMLElement>(
+		`[data-tool="${NCSW_SCENE_TOGGLE_TOOL_NAME}"]`,
+	);
+	if (dataToolEl) return resolveSceneControlDomToolSlotElement(dataToolEl);
+	return null;
+}
+
+function bindNcswPanelDomToolClickHandler(toolElement: HTMLElement): void {
+	const bindTarget = (target: HTMLElement) => {
+		if (target.getAttribute(NCSW_PANEL_TOGGLE_DOM_BOUND_ATTRIBUTE) === 'true') return;
+		target.addEventListener('click', (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			toggleNcswPanelVisibility();
+		});
+		target.setAttribute(NCSW_PANEL_TOGGLE_DOM_BOUND_ATTRIBUTE, 'true');
+	};
+	const clickTarget = resolveNcswDomToolInteractiveElement(toolElement);
+	bindTarget(toolElement);
+	if (clickTarget !== toolElement) bindTarget(clickTarget);
+}
+
+function updateNcswPanelDomToolElementState(toolElement: HTMLElement): void {
+	const title = panelUserVisible ? 'Hide Group Attack Panel' : 'Show Group Attack Panel';
+	const iconClass = panelUserVisible ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+
+	toolElement.setAttribute(NCSW_PANEL_TOGGLE_DOM_OWNED_ATTRIBUTE, 'true');
+	toolElement.dataset.tool = NCSW_PANEL_TOGGLE_TOOL_NAME;
+	toolElement.dataset.tooltip = title;
+	toolElement.setAttribute('title', title);
+	toolElement.setAttribute('aria-label', title);
+	toolElement.classList.toggle('active', panelUserVisible);
+
+	const clickTarget = resolveNcswDomToolInteractiveElement(toolElement);
+	clickTarget.setAttribute(NCSW_PANEL_TOGGLE_DOM_OWNED_ATTRIBUTE, 'true');
+	clickTarget.dataset.tool = NCSW_PANEL_TOGGLE_TOOL_NAME;
+	clickTarget.dataset.tooltip = title;
+	clickTarget.setAttribute('title', title);
+	clickTarget.setAttribute('aria-label', title);
+	clickTarget.classList.toggle('active', panelUserVisible);
+	clickTarget.style.cursor = 'pointer';
+	if (clickTarget instanceof HTMLButtonElement) clickTarget.type = 'button';
+
+	clickTarget.replaceChildren();
+	const iconElement = document.createElement('i');
+	iconElement.className = iconClass;
+	clickTarget.append(iconElement);
+
+	bindNcswPanelDomToolClickHandler(toolElement);
+}
+
+function syncNcswPanelToggleDomTool(): void {
+	if (!isNcswPanelToggleVisible()) {
+		removeOwnedNcswPanelDomElements(document.body);
+		return;
+	}
+
+	const root = resolveSceneControlsRootElement() ?? document.body;
+	if (findRenderedNcswPanelDomElements(root).length > 0) {
+		removeOwnedNcswPanelDomElements(document.body);
+		return;
+	}
+
+	const existingPanel = findOwnedNcswPanelDomElements(document.body)[0] ?? null;
+	if (existingPanel) {
+		updateNcswPanelDomToolElementState(existingPanel);
+		return;
+	}
+
+	const ncswToggleSlot = findNcswToggleSlotElement(document.body);
+	if (!ncswToggleSlot) return;
+
+	const toolElement = createNcswDomToolElement(ncswToggleSlot);
+	updateNcswPanelDomToolElementState(toolElement);
+	ncswToggleSlot.insertAdjacentElement('afterend', toolElement);
+}
+
 function syncNcswSceneToggleDomTool(): void {
 	const root = resolveVisibleNcswDomRoot();
 	if (!root) return;
@@ -2952,6 +3167,7 @@ export default function registerMinionGroupTokenActions(): void {
 	didRegisterMinionGroupTokenActions = true;
 	(globalThis as Record<string, unknown>).__nimbleMinionGroupTokenActionsRegistered = true;
 	logTokenUi('registerMinionGroupTokenActions invoked');
+	loadPanelUserVisible();
 	hideGroupAttackPanel({ clearTargets: false });
 
 	windowResizeHandler = () => {
@@ -2993,6 +3209,7 @@ export default function registerMinionGroupTokenActions(): void {
 	registerHook('renderSceneControls', () => {
 		scheduleActionBarRefresh('renderSceneControls');
 		syncNcswSceneToggleDomTool();
+		syncNcswPanelToggleDomTool();
 	});
 	registerHook('activateTokenLayer', () => refreshActionBarAndSceneControls('activateTokenLayer'));
 	registerHook('deactivateTokenLayer', () =>

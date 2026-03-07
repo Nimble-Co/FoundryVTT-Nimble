@@ -1,0 +1,20 @@
+{
+	"_id": "NimMacroDayNight5",
+	"name": "Day/Night Toggle",
+	"type": "script",
+	"author": "",
+	"img": "icons/svg/sun.svg",
+	"scope": "global",
+	"command": "(async () => {\n  if (!game.user.isGM) {\n    return ui.notifications.warn(\"Day/Night Toggle: GM permission required.\");\n  }\n\n  const scene = canvas.scene;\n  if (!scene) {\n    return ui.notifications.warn(\"Day/Night Toggle: No active scene found.\");\n  }\n\n  const currentDarkness = scene.environment?.darknessLevel ?? scene.darkness ?? 0;\n  const isCurrentlyNight = currentDarkness >= 0.5;\n  const targetLabel    = isCurrentlyNight ? \"Day\" : \"Night\";\n  const targetDarkness = isCurrentlyNight ? 0 : 0.85;\n  const targetGlobalLight = isCurrentlyNight;\n\n  let updatePayload;\n  if (scene.environment !== undefined) {\n    updatePayload = { \"environment.darknessLevel\": targetDarkness };\n    if (scene.environment.globalLight !== undefined) {\n      updatePayload[\"environment.globalLight.enabled\"] = targetGlobalLight;\n    }\n  } else {\n    updatePayload = { darkness: targetDarkness, globalLight: targetGlobalLight };\n  }\n\n  try {\n    await scene.update(updatePayload, { animateDarkness: 3000 });\n    ui.notifications.info(`Day/Night Toggle: Switched to ${targetLabel} (darkness: ${targetDarkness})`);\n  } catch (err) {\n    ui.notifications.error(`Day/Night Toggle: Failed \\u2014 ${err.message}`);\n  }\n})();",
+	"folder": null,
+	"sort": 50,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13",
+		"systemId": "nimble",
+		"systemVersion": "0.7.2",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	}
+}
