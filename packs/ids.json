@@ -1176,6 +1176,16 @@
 			}
 		}
 	},
+	"macros": {
+		"core": {
+			"atk-melee": "NimMacroAtkMelee1",
+			"atk-ranged": "NimMacroAtkRange2",
+			"atk-spells": "NimMacroAtkSpell3",
+			"day-night-toggle": "NimMacroDayNight5",
+			"open-door": "NimMacroOpenDoor6",
+			"place-torch": "NimMacroPlcTorch7"
+		}
+	},
 	"tables": {
 		"core": {
 			"chaos-table": "88iUQ5pgXNwl72uJ",

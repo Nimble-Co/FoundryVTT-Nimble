@@ -188,6 +188,13 @@
 			"path": "packs/tables.db",
 			"type": "RollTable",
 			"system": "nimble"
+		},
+		{
+			"name": "nimble-macros",
+			"label": "Nimble Macros",
+			"path": "packs/macros.db",
+			"type": "Macro",
+			"system": "nimble"
 		}
 	],
 	"background": "systems/nimble/assets/banners/manticoreFight.webp",
