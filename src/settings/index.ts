@@ -40,6 +40,18 @@ export default function registerSystemSettings() {
 			config: true,
 			type: Boolean,
 			default: false,
+			requiresReload: true,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
+
+	game.settings.register(
+		'nimble' as 'core',
+		'groupAttackPanelVisible' as 'rollMode',
+		{
+			scope: 'client',
+			config: false,
+			type: Boolean,
+			default: false,
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
