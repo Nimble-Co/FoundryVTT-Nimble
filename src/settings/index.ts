@@ -30,6 +30,19 @@ export default function registerSystemSettings() {
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
+	game.settings.register(
+		'nimble' as 'core',
+		'hideGroupAttackPanel' as 'rollMode',
+		{
+			name: 'NIMBLE.settings.hideGroupAttackPanel.name',
+			hint: 'NIMBLE.settings.hideGroupAttackPanel.hint',
+			scope: 'client',
+			config: true,
+			type: Boolean,
+			default: false,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
+
 	registerCombatTrackerSettings();
 
 	game.settings.register(

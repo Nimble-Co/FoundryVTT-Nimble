@@ -1435,6 +1435,9 @@ function buildSelectionWarnings(result: {
 }
 
 function resetGroupAttackPanelForRender(panel: HTMLDivElement): void {
+	if (game.settings.get('nimble' as 'core', 'hideGroupAttackPanel' as 'rollMode')) {
+		return;
+	}
 	panel.hidden = false;
 	hideGroupAttackTargetPopover();
 	hideGroupAttackActionDescriptionPopover();

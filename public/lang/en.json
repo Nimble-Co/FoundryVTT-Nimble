@@ -880,6 +880,10 @@
 			"autoExpandRolls": {
 				"name": "Auto-Expand Rolls",
 				"hint": "When enabled, dice roll details are shown inline below each roll in chat messages, without needing to hover."
+			},
+			"hideGroupAttackPanel": {
+				"name": "Hide Group Attack Panel",
+				"hint": "When enabled, the minion group attack panel is hidden. Useful for GMs who prefer to resolve group attacks via the combat tracker."
 			}
 		},
 		"nimbleCombatSystemWindow": {
