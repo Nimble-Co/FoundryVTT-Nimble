@@ -8,8 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 pnpm dev              # Start dev server (proxies to FoundryVTT on localhost:30000)
 pnpm dev:remote       # Start dev server proxying to live Oracle server (no local Foundry needed)
 pnpm deploy:nimble    # Build + rsync dist/ to remote Data/systems/nimble/ (with --delete)
-pnpm deploy:data      # Rsync foundrydata/Data/ to remote Data/ excluding systems/ (worlds, modules, etc.)
-pnpm pull             # Pull foundryuserdata/Data/ from Oracle server into local foundrydata/Data/ (excludes systems/nimble/)
+pnpm pull             # Pull worlds (no media) + modules from remote Oracle server
+pnpm pull:worlds      # Pull world DB data only, excludes uploaded media files
+pnpm pull:modules     # Pull all modules including module assets
 pnpm build            # Build compendia + system for production
 pnpm build:system     # Build system only
 pnpm build:compendia  # Build compendia only
@@ -24,6 +25,11 @@ pnpm test:watch       # Run tests in watch mode
 ```
 
 Run `pnpm check` before committing — it runs format, lint, circular-deps, type-check, and tests together.
+
+## Upstream Nimble Tracking
+
+To incorporate upstream Nimble-Co changes into your fork:
+  git fetch upstream && git merge upstream/dev
 
 ## Architecture
 
