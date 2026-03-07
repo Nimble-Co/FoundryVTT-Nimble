@@ -57,7 +57,7 @@
 		</label>
 	{/if}
 
-	<MovementSpeed {actor} showDefaultSpeed editingEnabled />
+	<MovementSpeed {actor} showDefaultSpeed={true} />
 </section>
 
 <style>

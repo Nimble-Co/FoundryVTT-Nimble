@@ -442,7 +442,7 @@
 
 <section class="nimble-sheet__body nimble-sheet__body--npc">
 	<section class="nimble-monster-sheet-section nimble-monster-sheet-section--defenses">
-		<SavingThrows characterSavingThrows={actor.reactive.system.savingThrows} editingEnabled />
+		<SavingThrows characterSavingThrows={actor.reactive.system.savingThrows} />
 
 		<MovementSpeed {actor} showDefaultSpeed={false} />
 
