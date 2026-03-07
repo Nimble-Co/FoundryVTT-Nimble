@@ -7,7 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 pnpm dev              # Start dev server (proxies to FoundryVTT on localhost:30000)
 pnpm dev:remote       # Start dev server proxying to live Oracle server (no local Foundry needed)
-pnpm deploy           # Build + rsync dist/ to Oracle server (ubuntu@foundryvtt.redirectme.net)
+pnpm deploy:nimble    # Build + rsync dist/ to remote Data/systems/nimble/ (with --delete)
+pnpm deploy:data      # Rsync foundrydata/Data/ to remote Data/ excluding systems/ (worlds, modules, etc.)
+pnpm pull             # Pull foundryuserdata/Data/ from Oracle server into local foundrydata/Data/ (excludes systems/nimble/)
 pnpm build            # Build compendia + system for production
 pnpm build:system     # Build system only
 pnpm build:compendia  # Build compendia only
