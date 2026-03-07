@@ -144,3 +144,11 @@ Use `SCREAMING_SNAKE_CASE` for true constants. Add system-wide constants to `src
 - Feature branches → `dev`
 - PRs target `dev`
 - `main` is reserved for releases
+
+## Agent Memory
+
+After completing any feature, bug fix, or architectural discovery, update:
+`~/.claude/projects/-Users-carlosprieto-foundryVTT/memory/MEMORY.md`
+
+Include: patterns confirmed, key file locations, bug fixes and their root causes, gotchas.
+Keep entries concise. Update or remove stale entries rather than appending duplicates.
