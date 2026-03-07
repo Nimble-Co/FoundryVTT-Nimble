@@ -1,5 +1,5 @@
+import path from 'node:path';
 import { ClassicLevel } from 'classic-level';
-import path from 'path';
 import systemJSON from '../../public/system.json' with { type: 'json' };
 
 export default class LevelDatabase extends ClassicLevel {
@@ -23,12 +23,10 @@ export default class LevelDatabase extends ClassicLevel {
 
 		this.#documentDb = this.sublevel(dbKey, dbOptions);
 
-		if (this.#embeddedKeys.length) {
-			this.#embeddedDbs = this.#embeddedKeys.map((key) => ({
-				key: key.replaceAll('.', '-'),
-				db: this.sublevel(`${this.#dbKey}.${key}`, dbOptions),
-			}));
-		}
+		this.#embeddedDbs = this.#embeddedKeys.map((key) => ({
+			key: key.replaceAll('.', '-'),
+			db: this.sublevel(`${this.#dbKey}.${key}`, dbOptions),
+		}));
 	}
 
 	#getDBKeys(packName) {
