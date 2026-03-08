@@ -10,6 +10,7 @@
 
 ### Bugs
 - [x] When rolls are made with the sidebar collapsed the chat wont populate with the results. But if the chat window is open then the rolls register and the card with results populates.
+- [x] On the remote server https://foundryvtt.redirectme.net/game im unable to roll skill checks from the token sheet. I can roll attacks just fine. This doesnt seem to be an issue on my local.
 
 ### Core Mechanics
 - [x] Add a `pnpm test` smoke-test that verifies all document proxy classes load without error

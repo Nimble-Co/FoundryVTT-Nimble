@@ -2,6 +2,15 @@
 
 ### Completed
 
+- [x] BUG: Skill check rolls broken on remote server
+  - Root cause: `svelte-range-slider-pips` binds `value` as `number[]`, but `selectedRollMode` in `CheckRollDialog.svelte` was initialised as a scalar.
+    Before the slider hydrates (slower on remote due to network latency), `selectedRollMode[0]` returned `undefined`, producing an invalid roll formula and silently failing.
+    Attacks (via `ItemActivationConfigDialog`) were unaffected because they pass `selectedRollMode` directly without indexing.
+  - Fix: initialise `selectedRollMode` as `[scalar]` array and update the `$derived` `getRollFormula` call to use `selectedRollMode[0]`.
+  - File: `src/view/dialogs/CheckRollDialog.svelte`
+  - Commit: FIX: Skill check rolls broken on remote server due to RangeSlider array binding
+
+
 - [x] CORE: Docker sandbox for afk-ralph.sh
   - Docker v27.2.0 confirmed available
   - Created `Dockerfile.sandbox`: node:22-slim image with git, pnpm, claude CLI
