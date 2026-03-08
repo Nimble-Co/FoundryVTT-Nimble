@@ -24,9 +24,10 @@
 
 ### Dice & Rolls
 - [ ] Write unit tests for `NimbleRoll` covering critical success and critical failure cases
+- [ ] When an attack damage is added, it should automatically the status condition in the targets `conditions` tab
 
 ### UI / Sheets
-- [ ] Add a tooltip component `<Tooltip>` in `src/view/components/` for hover text on stat labels
+
 
 ### Localization
 - [ ] Audit `src/config.ts` constants and ensure every user-facing string has a matching key in the en.json lang file
@@ -35,7 +36,7 @@
 ### Compendia / Packs
 - [ ] Add a sample Boon item to `packs/items/` with placeholder name, description, and effect
 - [ ] Add a sample NPC actor to `packs/actors/` with stat block and token image placeholder
+- [ ] Add a commoner NPC actor to `packs/actors/` with stat stat block and token image placeholder
 
 ### Tooling
-- [ ] Configure Vitest coverage reporting (add `coverage` script to package.json, threshold 50%)
-- [ ] Add a `pnpm size` script using `vite-bundle-visualizer` to inspect bundle output
+
