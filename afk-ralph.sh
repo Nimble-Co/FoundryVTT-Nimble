@@ -14,7 +14,8 @@ for ((i=1; i<=$1; i++)); do
   2. Run pnpm check. \
   3. Update PRD.md marking the task done. \
   4. Append your progress to progress.txt. \
-  5. Commit your changes. \
+  5. Run tests to make sure nothing is broken. \
+  6. Commit your changes. \
   ONLY WORK ON A SINGLE TASK. \
   If all tasks are complete, output <promise>COMPLETE</promise>.")
 
