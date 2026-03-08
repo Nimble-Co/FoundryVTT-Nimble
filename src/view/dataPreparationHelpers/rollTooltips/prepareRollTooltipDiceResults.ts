@@ -1,9 +1,11 @@
-export default function prepareRollTooltipDiceResults({ faces, results }) {
+export default function prepareRollTooltipDiceResults({ faces, results, options }) {
+	const isHitMissDie = options?.flavor === 'Primary Die';
+
 	return results.reduce((acc, { rerolled, discarded, result }) => {
 		const isCritical = (faces === 20 && result === 20) || result === faces;
 
 		const isDiscarded = discarded || rerolled;
-		const isFumble = result === 1;
+		const isFumble = isHitMissDie && result === 1;
 
 		let classes = `nimble-die nimble-die--${faces}`;
 
