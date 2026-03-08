@@ -6,13 +6,13 @@
 	const { skillCheckDialog } = CONFIG.NIMBLE;
 
 	let { actor, dialog, ...data } = $props();
-	let selectedRollMode = $state(untrack(() => Math.clamp(data.rollMode ?? 0, -6, 6)));
+	let selectedRollMode = $state(untrack(() => [Math.clamp(data.rollMode ?? 0, -6, 6)]));
 	let shouldRollBeHidden = $state(!!game.settings.get('nimble', 'hideRolls'));
 
 	let rollFormula = $derived(
 		getRollFormula(actor, {
 			...data,
-			rollMode: selectedRollMode,
+			rollMode: selectedRollMode[0],
 		}),
 	);
 </script>
