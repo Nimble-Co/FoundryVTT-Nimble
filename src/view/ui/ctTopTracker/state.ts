@@ -6,13 +6,14 @@ import {
 	getCombatTrackerCtWidthLevel,
 	getCombatTrackerPlayersCanExpandMonsterCards,
 	getCombatTrackerUseActionDice,
+	getCombatTrackerVisibilityPermissionConfig,
 	isCombatTrackerBadgeSizeLevelSettingKey,
 	isCombatTrackerCardSizeLevelSettingKey,
 	isCombatTrackerCenterActiveCardSettingKey,
 	isCombatTrackerEnabledSettingKey,
-	isCombatTrackerNonPlayerHitpointPermissionSettingKey,
 	isCombatTrackerPlayerMonsterExpansionSettingKey,
 	isCombatTrackerUseActionDiceSettingKey,
+	isCombatTrackerVisibilityPermissionSettingKey,
 	isCombatTrackerWidthLevelSettingKey,
 } from '../../../settings/combatTrackerSettings.js';
 import { getCombatForCurrentScene, syncCombatTurnsForCt } from './helpers.js';
@@ -59,9 +60,9 @@ export function resolveCtTopTrackerSettingPatch(
 			useActionDice: getCombatTrackerUseActionDice(),
 		};
 	}
-	if (isCombatTrackerNonPlayerHitpointPermissionSettingKey(settingKey)) {
+	if (isCombatTrackerVisibilityPermissionSettingKey(settingKey)) {
 		return {
-			refreshNonPlayerHitpointPermission: true,
+			visibilityPermissions: getCombatTrackerVisibilityPermissionConfig(),
 		};
 	}
 	return null;

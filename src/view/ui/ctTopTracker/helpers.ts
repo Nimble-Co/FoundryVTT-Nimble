@@ -1,9 +1,25 @@
+import {
+	type CombatTrackerVisibilityFieldKey,
+	type CombatTrackerVisibilityPermissionConfig,
+	canUserRoleAccessCombatTrackerPermission,
+} from '../../../settings/combatTrackerSettings.js';
+import { type ActorHealthState, getActorHealthState } from '../../../utils/actorHealthState.js';
+import {
+	getActorHpMaxValue,
+	getActorHpValue,
+	getActorManaValueAndMax,
+	getActorWoundsValueAndMax,
+} from '../../../utils/actorResources.js';
 import { getCombatantImage } from '../../../utils/combatantImage.js';
 import {
 	getCombatantCurrentActions,
 	getCombatantMaxActions,
 } from '../../../utils/combatTurnActions.js';
-import { getActorHpValue, isCombatantDead } from '../../../utils/isCombatantDead.js';
+import {
+	getHeroicReactionAvailability,
+	getHeroicReactionAvailabilityTitle,
+} from '../../../utils/heroicActions.js';
+import { isCombatantDead } from '../../../utils/isCombatantDead.js';
 import {
 	ACTION_DICE_ICON_CLASSES,
 	CT_BADGE_SCALE_STEP,
@@ -31,8 +47,11 @@ import {
 } from './constants.js';
 import type {
 	BuildVirtualizedAliveEntriesParams,
+	CombatantCardResourceChip,
 	CombatantDropPreview,
+	HpBadgeMode,
 	HpBadgeState,
+	PlayerCombatantDrawerData,
 	ResolveActiveEntryKeyParams,
 	ResolveNextCombatantActionsForSlotParams,
 	SceneCombatantLists,
@@ -89,6 +108,96 @@ function getNestedStringProperty(target: unknown, path: string): string | null {
 	if (!target || typeof target !== 'object') return null;
 	const value = foundry.utils.getProperty(target, path);
 	return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+type TokenBarLike = {
+	displayBars?: number | null;
+	bar1?: { attribute?: string | null } | null;
+	bar2?: { attribute?: string | null } | null;
+};
+
+function getTokenDisplayModeValue(
+	modeKey: 'HOVER' | 'ALWAYS' | 'OWNER_HOVER' | 'OWNER' | 'CONTROL' | 'NONE',
+	fallback: number,
+): number {
+	const tokenDisplayModes = (
+		CONST as typeof CONST & {
+			TOKEN_DISPLAY_MODES?: Partial<Record<typeof modeKey, number>>;
+		}
+	).TOKEN_DISPLAY_MODES;
+	return Number(tokenDisplayModes?.[modeKey] ?? fallback);
+}
+
+function getCombatantTokenDocumentForVisibility(
+	combatant: Combatant.Implementation,
+): TokenBarLike | null {
+	const tokenId = combatant.tokenId ?? combatant.token?.id ?? combatant.token?._id;
+	const sceneToken = tokenId ? canvas.scene?.tokens?.get(tokenId) : null;
+	return (sceneToken ??
+		combatant.token ??
+		combatant.actor?.prototypeToken ??
+		null) as TokenBarLike | null;
+}
+
+function tokenHasBarAttribute(tokenDocument: TokenBarLike | null, attribute: string): boolean {
+	if (!tokenDocument) return false;
+	return tokenDocument.bar1?.attribute === attribute || tokenDocument.bar2?.attribute === attribute;
+}
+
+function isTokenBarVisibleToNonOwners(tokenDocument: TokenBarLike | null): boolean {
+	if (!tokenDocument) return false;
+	const displayBars = Number(tokenDocument.displayBars ?? Number.NaN);
+	if (!Number.isFinite(displayBars)) return false;
+
+	const hoverByAnyone = getTokenDisplayModeValue('HOVER', 30);
+	const alwaysForEveryone = getTokenDisplayModeValue('ALWAYS', 50);
+	return displayBars === hoverByAnyone || displayBars === alwaysForEveryone;
+}
+
+function canCurrentUserSeeCombatantField(
+	combatant: Combatant.Implementation,
+	fieldKey: CombatTrackerVisibilityFieldKey,
+	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
+): boolean {
+	if (game.user?.isGM) return true;
+	if (combatant.actor?.isOwner) return true;
+
+	return canUserRoleAccessCombatTrackerPermission(
+		visibilityPermissions[fieldKey],
+		Number(game.user?.role ?? 0),
+	);
+}
+
+function canCurrentUserSeeCombatantTokenBarField(
+	combatant: Combatant.Implementation,
+	fieldKey: CombatTrackerVisibilityFieldKey,
+	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
+	attribute: string,
+): boolean {
+	if (!canCurrentUserSeeCombatantField(combatant, fieldKey, visibilityPermissions)) return false;
+	if (game.user?.isGM || combatant.actor?.isOwner) return true;
+
+	const tokenDocument = getCombatantTokenDocumentForVisibility(combatant);
+	if (!tokenHasBarAttribute(tokenDocument, attribute)) return false;
+	return isTokenBarVisibleToNonOwners(tokenDocument);
+}
+
+function getHealthStateLabel(state: ActorHealthState): string {
+	switch (state) {
+		case 'normal':
+			return localizeWithFallback('Normal', 'Normal');
+		case 'bloodied':
+			return localizeWithFallback('NIMBLE.conditions.bloodied', 'Bloodied');
+		case 'lastStand':
+			return localizeWithFallback('NIMBLE.conditions.lastStand', 'Last Stand');
+		default:
+			return '--';
+	}
+}
+
+function formatCombatTrackerValue(value: number | null): string {
+	if (value === null) return '--';
+	return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
 
 export function normalizeCtWidthLevel(value: unknown): number {
@@ -368,30 +477,17 @@ export function getCombatantDisplayName(combatant: Combatant.Implementation): st
 	);
 }
 
-export function getCombatantHpText(combatant: Combatant.Implementation): string {
-	const hpValue = getActorHpValue(combatant.actor);
-	if (hpValue === null) return '--';
-	return Number.isInteger(hpValue) ? String(hpValue) : hpValue.toFixed(1);
-}
-
-export function getCombatantHpMaxValue(combatant: Combatant.Implementation): number | null {
-	if (!combatant.actor) return null;
-	const hpMaxRaw = Number(
-		foundry.utils.getProperty(combatant.actor, 'system.attributes.hp.max') as number | null,
-	);
-	if (!Number.isFinite(hpMaxRaw) || hpMaxRaw <= 0) return null;
-	return hpMaxRaw;
-}
-
 export function getCombatantHpBadgeState(combatant: Combatant.Implementation): HpBadgeState {
-	const hpCurrent = getActorHpValue(combatant.actor);
-	const hpMax = getCombatantHpMaxValue(combatant);
-	if (hpCurrent === null || hpMax === null) return 'unknown';
-
-	const hpRatio = hpCurrent / hpMax;
-	if (hpRatio <= 1 / 3) return 'red';
-	if (hpRatio <= 2 / 3) return 'yellow';
-	return 'green';
+	switch (getActorHealthState(combatant.actor)) {
+		case 'normal':
+			return 'green';
+		case 'bloodied':
+			return isLegendaryCombatant(combatant) ? 'yellow' : 'red';
+		case 'lastStand':
+			return 'red';
+		default:
+			return 'unknown';
+	}
 }
 
 export function getCombatantHpBadgeClass(combatant: Combatant.Implementation): string {
@@ -408,12 +504,255 @@ export function getCombatantHpBadgeClass(combatant: Combatant.Implementation): s
 	}
 }
 
+export function getCombatantHpDrawerIconClass(combatant: Combatant.Implementation): string {
+	const healthState = getActorHealthState(combatant.actor);
+	return healthState === 'bloodied' ? 'fa-solid fa-heart-crack' : 'fa-solid fa-heart';
+}
+
+export function getCombatantHpBadgeMode(
+	combatant: Combatant.Implementation,
+	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
+): HpBadgeMode {
+	const canShowHpValue = canCurrentUserSeeCombatantTokenBarField(
+		combatant,
+		'hpValue',
+		visibilityPermissions,
+		'attributes.hp',
+	);
+	if (canShowHpValue) return 'value';
+
+	const canShowHpState = canCurrentUserSeeCombatantTokenBarField(
+		combatant,
+		'hpState',
+		visibilityPermissions,
+		'attributes.hp',
+	);
+	return canShowHpState ? 'state' : 'hidden';
+}
+
+export function getCombatantHpBadgeText(
+	combatant: Combatant.Implementation,
+	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
+): string | null {
+	const badgeMode = getCombatantHpBadgeMode(combatant, visibilityPermissions);
+	if (badgeMode === 'hidden') return null;
+	if (badgeMode === 'state') return getHealthStateLabel(getActorHealthState(combatant.actor));
+
+	const hpValue = getActorHpValue(combatant.actor);
+	if (hpValue === null) return '--';
+	return formatCombatTrackerValue(hpValue);
+}
+
+export function getCombatantHpBadgeTooltip(
+	combatant: Combatant.Implementation,
+	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
+): string | null {
+	const badgeMode = getCombatantHpBadgeMode(combatant, visibilityPermissions);
+	if (badgeMode === 'hidden') return null;
+
+	const healthState = getActorHealthState(combatant.actor);
+	const stateLabel = getHealthStateLabel(healthState);
+	const hpValue = getActorHpValue(combatant.actor);
+	const hpMax = getActorHpMaxValue(combatant.actor);
+	if (badgeMode === 'state') {
+		return stateLabel;
+	}
+	if (hpValue === null || hpMax === null) return stateLabel;
+	return `${hpValue}/${hpMax} (${stateLabel})`;
+}
+
 export function shouldRenderHpBadge(
 	combatant: Combatant.Implementation,
-	canCurrentUserViewNonPlayerHitpoints: boolean,
+	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
 ): boolean {
-	if (isPlayerCombatant(combatant)) return true;
-	return canCurrentUserViewNonPlayerHitpoints;
+	return getCombatantHpBadgeMode(combatant, visibilityPermissions) !== 'hidden';
+}
+
+export function shouldRenderCombatantActions(
+	combatant: Combatant.Implementation,
+	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
+): boolean {
+	return canCurrentUserSeeCombatantField(combatant, 'actions', visibilityPermissions);
+}
+
+export function getCombatantCardResourceChips(
+	combatant: Combatant.Implementation,
+	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
+): CombatantCardResourceChip[] {
+	const chips: CombatantCardResourceChip[] = [];
+
+	const wounds = getActorWoundsValueAndMax(combatant.actor);
+	if (
+		wounds &&
+		canCurrentUserSeeCombatantTokenBarField(
+			combatant,
+			'wounds',
+			visibilityPermissions,
+			'attributes.wounds.value',
+		)
+	) {
+		chips.push({
+			key: 'wounds',
+			iconClass: 'fa-solid fa-droplet',
+			text: `${Math.max(0, Math.floor(wounds.value))}/${Math.max(0, Math.floor(wounds.max))}`,
+			title: 'Wounds',
+			tone: 'wounds',
+		});
+	}
+
+	const mana = getActorManaValueAndMax(combatant.actor);
+	if (
+		mana &&
+		canCurrentUserSeeCombatantTokenBarField(
+			combatant,
+			'mana',
+			visibilityPermissions,
+			'resources.mana',
+		)
+	) {
+		chips.push({
+			key: 'mana',
+			iconClass: 'fa-solid fa-sparkles',
+			text: `${Math.max(0, Math.floor(mana.value))}/${Math.max(0, Math.floor(mana.max))}`,
+			title: 'Mana',
+			tone: 'mana',
+		});
+	}
+
+	if (isPlayerCombatant(combatant)) {
+		const defendAvailable = getHeroicReactionAvailability(combatant, 'defend');
+		if (canCurrentUserSeeCombatantField(combatant, 'defend', visibilityPermissions)) {
+			chips.push({
+				key: 'defend',
+				iconClass: 'fa-solid fa-shield-halved',
+				title: getHeroicReactionAvailabilityTitle('defend', defendAvailable),
+				active: defendAvailable,
+				tone: 'utility',
+			});
+		}
+
+		const interposeAvailable = getHeroicReactionAvailability(combatant, 'interpose');
+		if (canCurrentUserSeeCombatantField(combatant, 'interpose', visibilityPermissions)) {
+			chips.push({
+				key: 'interpose',
+				iconClass: 'fa-solid fa-hand',
+				title: getHeroicReactionAvailabilityTitle('interpose', interposeAvailable),
+				active: interposeAvailable,
+				tone: 'utility',
+			});
+		}
+	}
+
+	return chips;
+}
+
+export function getPlayerCombatantDrawerData(
+	combatant: Combatant.Implementation,
+	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
+): PlayerCombatantDrawerData {
+	const hpBadgeMode = getCombatantHpBadgeMode(combatant, visibilityPermissions);
+	const hpValue = getActorHpValue(combatant.actor);
+	const hpMax = getActorHpMaxValue(combatant.actor);
+	const hpState = getActorHealthState(combatant.actor);
+	const hpText =
+		hpBadgeMode === 'value'
+			? `${formatCombatTrackerValue(hpValue)}/${formatCombatTrackerValue(hpMax)}`
+			: hpBadgeMode === 'state'
+				? getHealthStateLabel(hpState)
+				: null;
+	const hpTitle = getCombatantHpBadgeTooltip(combatant, visibilityPermissions);
+	const hpVisible = hpBadgeMode !== 'hidden' && Boolean(hpText);
+
+	const wounds = getActorWoundsValueAndMax(combatant.actor);
+	const woundsVisible = Boolean(
+		wounds &&
+			canCurrentUserSeeCombatantTokenBarField(
+				combatant,
+				'wounds',
+				visibilityPermissions,
+				'attributes.wounds.value',
+			),
+	);
+	const woundsText =
+		woundsVisible && wounds
+			? `${Math.max(0, Math.floor(wounds.value))}/${Math.max(0, Math.floor(wounds.max))}`
+			: undefined;
+
+	const defendAvailable = getHeroicReactionAvailability(combatant, 'defend');
+	const defendVisible = canCurrentUserSeeCombatantField(combatant, 'defend', visibilityPermissions);
+
+	const interposeAvailable = getHeroicReactionAvailability(combatant, 'interpose');
+	const interposeVisible = canCurrentUserSeeCombatantField(
+		combatant,
+		'interpose',
+		visibilityPermissions,
+	);
+	const opportunityAttackAvailable = getHeroicReactionAvailability(combatant, 'opportunityAttack');
+	const opportunityAttackVisible = canCurrentUserSeeCombatantField(
+		combatant,
+		'opportunityAttack',
+		visibilityPermissions,
+	);
+	const helpAvailable = getHeroicReactionAvailability(combatant, 'help');
+	const helpVisible = canCurrentUserSeeCombatantField(combatant, 'help', visibilityPermissions);
+
+	return {
+		hp: {
+			key: 'hp',
+			iconClass: hpVisible ? getCombatantHpDrawerIconClass(combatant) : undefined,
+			text: hpVisible ? (hpText ?? undefined) : undefined,
+			title: hpVisible ? (hpTitle ?? 'Hit Points') : 'Hit Points hidden',
+			active: hpVisible,
+			visible: hpVisible,
+		},
+		wounds: {
+			key: 'wounds',
+			iconClass: 'fa-solid fa-droplet',
+			text: woundsText,
+			title: woundsText ? `Wounds ${woundsText}` : 'Wounds hidden',
+			active: woundsVisible,
+			visible: woundsVisible,
+		},
+		defend: {
+			key: 'defend',
+			iconClass: 'fa-solid fa-shield-halved',
+			title: getHeroicReactionAvailabilityTitle('defend', defendAvailable),
+			active: defendAvailable,
+			visible: defendVisible,
+		},
+		interpose: {
+			key: 'interpose',
+			iconClass: 'fa-solid fa-hand',
+			title: getHeroicReactionAvailabilityTitle('interpose', interposeAvailable),
+			active: interposeAvailable,
+			visible: interposeVisible,
+		},
+		opportunityAttack: {
+			key: 'opportunityAttack',
+			iconClass: 'fa-solid fa-bolt',
+			title: getHeroicReactionAvailabilityTitle('opportunityAttack', opportunityAttackAvailable),
+			active: opportunityAttackAvailable,
+			visible: opportunityAttackVisible,
+		},
+		help: {
+			key: 'help',
+			iconClass: 'fa-solid fa-handshake',
+			title: getHeroicReactionAvailabilityTitle('help', helpAvailable),
+			active: helpAvailable,
+			visible: helpVisible,
+		},
+	};
+}
+
+export function getCombatantOutlineClass(
+	combatant: Combatant.Implementation,
+	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
+): string {
+	if (!canCurrentUserSeeCombatantField(combatant, 'outline', visibilityPermissions)) return '';
+	if (isPlayerCombatant(combatant)) return 'nimble-ct__portrait--outline-player';
+	if (isLegendaryCombatant(combatant)) return 'nimble-ct__portrait--outline-monster';
+	if (isFriendlyCombatant(combatant)) return 'nimble-ct__portrait--outline-friendly';
+	return 'nimble-ct__portrait--outline-monster';
 }
 
 export function getActionState(combatant: Combatant.Implementation): {
@@ -428,7 +767,9 @@ export function getActionState(combatant: Combatant.Implementation): {
 	return {
 		current: normalizedCurrent,
 		max: normalizedMax,
-		overflow: Math.max(0, normalizedMax - MAX_RENDERED_ACTION_DICE),
+		overflow:
+			Math.max(0, normalizedMax - MAX_RENDERED_ACTION_DICE) +
+			Math.max(0, normalizedCurrent - normalizedMax),
 		slots: Array.from({ length: visiblePips }, (_value, index) => index),
 	};
 }
@@ -625,7 +966,10 @@ export function buildCombatSyncSignature(
 		.map((combatant) => {
 			const currentActions = getCombatantCurrentActions(combatant);
 			const maxActions = getCombatantMaxActions(combatant);
-			return `${combatant.id ?? combatant._id ?? ''}:${currentActions}:${maxActions}:${Number(isCombatantDead(combatant))}`;
+			const reactionSummary = (['defend', 'interpose', 'opportunityAttack', 'help'] as const)
+				.map((reactionKey) => Number(getHeroicReactionAvailability(combatant, reactionKey)))
+				.join('');
+			return `${combatant.id ?? combatant._id ?? ''}:${currentActions}:${maxActions}:${Number(isCombatantDead(combatant))}:${reactionSummary}`;
 		})
 		.join('|');
 

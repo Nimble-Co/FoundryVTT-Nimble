@@ -19,6 +19,17 @@ describe('resolveCombatantCurrentActionsAfterDelta', () => {
 		).toBe(10);
 	});
 
+	it('allows GMs to overflow above max when explicitly enabled', () => {
+		expect(
+			resolveCombatantCurrentActionsAfterDelta({
+				currentActions: 3,
+				maxActions: 3,
+				delta: 2,
+				allowOverflow: true,
+			}),
+		).toBe(5);
+	});
+
 	it('clamps decreases at zero actions', () => {
 		expect(
 			resolveCombatantCurrentActionsAfterDelta({
@@ -57,6 +68,6 @@ describe('resolveCombatantCurrentActionsAfterDelta', () => {
 				maxActions: 4,
 				delta: -1,
 			}),
-		).toBe(4);
+		).toBe(3);
 	});
 });

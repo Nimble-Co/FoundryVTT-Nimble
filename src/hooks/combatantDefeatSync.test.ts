@@ -30,7 +30,7 @@ describe('registerCombatantDefeatSync', () => {
 		};
 	});
 
-	it('marks character combatants defeated when wounds reach max and clears actions', async () => {
+	it('marks character combatants defeated when wounds reach max without altering actions', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
 		registerCombatantDefeatSync();
@@ -69,7 +69,6 @@ describe('registerCombatantDefeatSync', () => {
 			{
 				_id: 'combatant-1',
 				defeated: true,
-				'system.actions.base.current': 0,
 			},
 		]);
 		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('defeated', {
@@ -78,7 +77,7 @@ describe('registerCombatantDefeatSync', () => {
 		});
 	});
 
-	it('restores character combatants when wounds drop below max', async () => {
+	it('restores character combatants when wounds drop below max without refilling actions', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
 		registerCombatantDefeatSync();
@@ -116,7 +115,6 @@ describe('registerCombatantDefeatSync', () => {
 			{
 				_id: 'combatant-2',
 				defeated: false,
-				'system.actions.base.current': 3,
 			},
 		]);
 		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('defeated', {
@@ -200,9 +198,47 @@ describe('registerCombatantDefeatSync', () => {
 			{
 				_id: 'combatant-3',
 				defeated: true,
-				'system.actions.base.current': 0,
 			},
 		]);
+	});
+
+	it('does not update actions when HP changes but defeat state does not change', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
+		registerCombatantDefeatSync();
+
+		const actor = createMockCombatActor({
+			id: 'actor-6',
+			hp: 7,
+		});
+		const combatant = createMockCombatant({
+			id: 'combatant-6',
+			type: 'npc',
+			actorId: 'actor-6',
+			actor,
+			defeated: false,
+			actionsCurrent: 1,
+			actionsMax: 3,
+		});
+		const combat = createMockCombat({
+			id: 'combat-6',
+			combatants: [combatant],
+			turns: [combatant],
+			activeCombatant: combatant,
+			round: 1,
+		});
+
+		globals().game.combats.contents = [combat];
+
+		const updateActor = callbacks.get('updateActor');
+		updateActor?.(actor, { system: { attributes: { hp: { value: 7 } } } });
+		await flushAsync();
+
+		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
+		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('defeated', {
+			overlay: true,
+			active: false,
+		});
 	});
 
 	it('does not restore npc actions on hp updates while alive', async () => {

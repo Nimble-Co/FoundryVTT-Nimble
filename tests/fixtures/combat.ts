@@ -1,8 +1,14 @@
 export type CombatActorFixtureOptions = {
 	id?: string;
+	type?: string;
+	isOwner?: boolean;
 	hp?: number;
+	hpMax?: number;
+	lastStandThreshold?: number;
 	woundsValue?: number;
 	woundsMax?: number;
+	manaValue?: number;
+	manaMax?: number;
 };
 
 export type CombatantFixtureOptions = {
@@ -27,16 +33,34 @@ type CombatantsCollectionFixture = Combatant.Implementation[] & {
 
 export function createCombatActorFixture({
 	id = 'actor-1',
+	type = 'npc',
+	isOwner = false,
 	hp = 10,
+	hpMax,
+	lastStandThreshold,
 	woundsValue,
 	woundsMax,
+	manaValue,
+	manaMax,
 }: CombatActorFixtureOptions = {}): Actor.Implementation {
 	return {
 		id,
+		type,
+		isOwner,
 		system: {
 			attributes: {
-				hp: { value: hp },
+				hp: {
+					value: hp,
+					max: hpMax ?? Math.max(hp, 1),
+					lastStandThreshold,
+				},
 				wounds: { value: woundsValue, max: woundsMax },
+			},
+			resources: {
+				mana: {
+					current: manaValue,
+					max: manaMax,
+				},
 			},
 		},
 	} as unknown as Actor.Implementation;
@@ -75,6 +99,12 @@ export function createCombatantFixture({
 				base: {
 					current: actionsCurrent,
 					max: actionsMax,
+				},
+				heroic: {
+					defendAvailable: true,
+					interposeAvailable: true,
+					opportunityAttackAvailable: true,
+					helpAvailable: true,
 				},
 			},
 		},
