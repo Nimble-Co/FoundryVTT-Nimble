@@ -239,7 +239,7 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = systemData.targets || [];
 
 		if (!targets.length) {
-			ui.notifications?.warn('No targets selected');
+			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.noTargetsSelected'));
 			return;
 		}
 
@@ -398,6 +398,32 @@ class NimbleChatMessage extends ChatMessage {
 		if (!this.isActivationCard()) return false;
 		const systemData = this.system as ActivationCardSystemData;
 		return !!systemData.appliedHealing?.[effectId];
+	}
+
+	async applyCondition(conditionId: string): Promise<void> {
+		if (!this.isActivationCard()) return;
+
+		const systemData = this.system as ActivationCardSystemData;
+		const targets = systemData.targets || [];
+
+		if (!targets.length) {
+			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.noTargetsSelected'));
+			return;
+		}
+
+		for (const uuid of targets) {
+			const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
+			const actor = tokenDocument?.actor as
+				| (Actor.Implementation & {
+						statuses?: Set<string>;
+						toggleStatusEffect(id: string, options?: { active: boolean }): Promise<void>;
+				  })
+				| null;
+			if (!actor) continue;
+			if (!actor.statuses?.has(conditionId)) {
+				await actor.toggleStatusEffect(conditionId, { active: true });
+			}
+		}
 	}
 
 	async removeTarget(targetId: string): Promise<ChatMessage | undefined> {
