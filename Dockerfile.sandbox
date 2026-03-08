@@ -1,0 +1,21 @@
+# Nimble sandbox image for running Claude Code autonomously.
+# Used by afk-ralph.sh via: docker sandbox run claude [args...]
+FROM node:22-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pnpm
+RUN npm install -g pnpm@latest
+
+# Install Claude Code CLI
+RUN npm install -g @anthropic-ai/claude-code
+
+# git needs a safe directory config when running as root on a mounted volume
+RUN git config --global --add safe.directory /workspace
+
+WORKDIR /workspace

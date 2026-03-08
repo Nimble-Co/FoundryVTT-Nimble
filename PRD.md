@@ -2,7 +2,7 @@
 
 ## Instructions for Ralph
 - Read this file and `progress.txt` at the start of each iteration.
-- Pick the first unchecked task. Cut a new branch from stage (follow branch name standards). 
+- Pick the first unchecked task. If on stage cut a new branch (follow branch name standards). 
 - Implement the task, commit, then update `progress.txt`.
 - Mark the task `[x]` in this file when done.
 
@@ -13,6 +13,7 @@
 
 ### Core Mechanics
 - [x] Add a `pnpm test` smoke-test that verifies all document proxy classes load without error
+- [x] Check if docker is set up, if it is, create docker sandbox to impliment afk-ralph.sh
 
 ### Actor Documents
 - [ ] Add a `totalArmor` derived getter on the character actor that sums equipped armor items

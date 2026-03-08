@@ -2,6 +2,14 @@
 
 ### Completed
 
+- [x] CORE: Docker sandbox for afk-ralph.sh
+  - Docker v27.2.0 confirmed available
+  - Created `Dockerfile.sandbox`: node:22-slim image with git, pnpm, claude CLI
+  - Created `~/.docker/cli-plugins/docker-sandbox` Docker CLI plugin (makes `docker sandbox run/build` work)
+  - Plugin auto-builds the image on first `run` if not present; mounts project dir, ~/.claude, and ~/.gitconfig into the container
+  - `afk-ralph.sh` (which uses `docker sandbox run claude ...`) now has all infrastructure it needs
+  - Commit: CHORE: Add Dockerfile.sandbox and docker-sandbox CLI plugin for afk-ralph
+
 - [x] CORE: Add `pnpm test` smoke-test for document proxy classes
   - Added `src/documents/documentProxy.test.ts` with 17 tests covering `ActorProxy` and `ItemProxy`
   - Verifies both proxy modules load without error (import succeeds)
