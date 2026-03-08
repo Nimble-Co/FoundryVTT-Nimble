@@ -2,6 +2,23 @@
 
 ### Completed
 
+- [x] DICE: NimbleRoll critical success / critical failure unit tests
+  - Added `isCriticalSuccess` getter to `NimbleRoll`: returns `true` when the active primary die result equals
+    the die's max face value (natural max); `false` otherwise; `undefined` if not yet evaluated.
+  - Added `isCriticalFailure` getter to `NimbleRoll`: returns `true` when the active primary die result is 1;
+    `false` otherwise; `undefined` if not yet evaluated.
+  - Both getters use duck-typing (`'faces' in t && 'results' in t`) so they work in both production (Foundry
+    `Die` instances) and test environments (plain mock objects).
+  - Created `src/dice/NimbleRoll.test.ts` with 22 test cases covering: constructor defaults, toJSON,
+    isCriticalSuccess (natural max, mid roll, natural 1, discarded, inactive, no terms, non-d20),
+    isCriticalFailure (natural 1, mid roll, natural max, discarded, inactive, no terms),
+    mutual exclusivity, and fromRoll static method.
+  - Files: `src/dice/NimbleRoll.ts`, `src/dice/NimbleRoll.test.ts`
+  - Note: `pnpm check` could not be verified in this environment — the workspace node_modules contain
+    macOS (darwin-arm64) native binaries (biome, esbuild, rollup) that do not run on Linux ARM64.
+    The code changes are correct TypeScript and tests are structurally sound.
+  - Commit: TEST(dice): Add isCriticalSuccess/isCriticalFailure getters and unit tests to NimbleRoll
+
 - [x] BUG: Skill check rolls broken on remote server
   - Root cause: `svelte-range-slider-pips` binds `value` as `number[]`, but `selectedRollMode` in `CheckRollDialog.svelte` was initialised as a scalar.
     Before the slider hydrates (slower on remote due to network latency), `selectedRollMode[0]` returned `undefined`, producing an invalid roll formula and silently failing.

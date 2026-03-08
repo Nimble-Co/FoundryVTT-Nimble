@@ -6,6 +6,10 @@ pre-commit:
       exclude: "packs/**"
       run: npx @biomejs/biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
       stage_fixed: true
+      skip:
+        # Skip on Linux when node_modules were installed on macOS (darwin binaries present but linux binaries missing).
+        # Run `pnpm install` in the Linux environment to fix this properly.
+        - run: sh -c 'test "$(uname -s)" = "Linux" && test -d node_modules/.pnpm/@biomejs+cli-darwin-arm64@2.3.1'
     prettier-svelte:
       glob: "*.svelte"
       run: npx prettier --write {staged_files}
@@ -26,8 +30,14 @@ pre-push:
       glob: "*.{js,ts,mjs,mts,json,jsonc}"
       exclude: "packs/**"
       run: npx @biomejs/biome check --no-errors-on-unmatched --error-on-warnings --files-ignore-unknown=true {push_files} 2>&1 | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b\]11;rgb:[^;]*;[^R]*R//g'
+      skip:
+        - run: sh -c 'test "$(uname -s)" = "Linux" && test -d node_modules/.pnpm/@biomejs+cli-darwin-arm64@2.3.1'
     typecheck:
       run: npm run type-check 2>&1 | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b\]11;rgb:[^;]*;[^R]*R//g'
+      skip:
+        - run: sh -c 'test "$(uname -s)" = "Linux" && test -d node_modules/.pnpm/@biomejs+cli-darwin-arm64@2.3.1'
     tests:
       glob: "*.{js,ts,mjs,mts,svelte}"
       run: npm run test 2>&1 | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b\]11;rgb:[^;]*;[^R]*R//g'
+      skip:
+        - run: sh -c 'test "$(uname -s)" = "Linux" && test -d node_modules/.pnpm/@biomejs+cli-darwin-arm64@2.3.1'

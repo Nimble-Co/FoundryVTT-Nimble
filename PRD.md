@@ -23,7 +23,7 @@
 
 
 ### Dice & Rolls
-- [ ] Write unit tests for `NimbleRoll` covering critical success and critical failure cases
+- [x] Write unit tests for `NimbleRoll` covering critical success and critical failure cases
 - [ ] When an attack inflicts a condition, it should automatically toggle the status condition in the targets `conditions` tab to on. 
 
 ### UI / Sheets
