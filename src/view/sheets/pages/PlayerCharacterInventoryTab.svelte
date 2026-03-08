@@ -261,6 +261,7 @@
 
 							<button
 								class="nimble-button"
+								style="grid-area: configureButton"
 								data-button-variant="icon"
 								type="button"
 								aria-label="Configure {item.name}"
@@ -271,6 +272,7 @@
 
 							<button
 								class="nimble-button"
+								style="grid-area: deleteButton"
 								data-button-variant="icon"
 								type="button"
 								aria-label="Delete {item.name}"
