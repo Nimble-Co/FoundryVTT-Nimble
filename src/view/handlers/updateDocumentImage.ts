@@ -13,40 +13,7 @@ export default async function updateDocumentImage(
 		}
 	}
 
-	const filePickerImplementation =
-		(
-			foundry.applications as typeof foundry.applications & {
-				apps?: {
-					FilePicker?: {
-						implementation?: new (options: {
-							type: string;
-							current?: string;
-							callback: (path: string) => Promise<void>;
-						}) => {
-							browse: () => Promise<unknown>;
-						};
-					};
-				};
-			}
-		).apps?.FilePicker?.implementation ??
-		(
-			globalThis as typeof globalThis & {
-				FilePicker?: new (options: {
-					type: string;
-					current?: string;
-					callback: (path: string) => Promise<void>;
-				}) => {
-					browse: () => Promise<unknown>;
-				};
-			}
-		).FilePicker;
-
-	if (!filePickerImplementation) {
-		ui.notifications?.error('Unable to open the image picker.');
-		return null;
-	}
-
-	const filePicker = new filePickerImplementation({
+	const filePicker = new FilePicker({
 		type: 'image',
 		current: document.img ?? undefined,
 		callback: async (path) => {

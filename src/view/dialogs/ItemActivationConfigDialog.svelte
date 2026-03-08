@@ -1,21 +1,15 @@
 <script>
 	import { untrack } from 'svelte';
-	import replaceRollFormulaData from '../../utils/replaceRollFormulaData.js';
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 	const { skillCheckDialog } = CONFIG.NIMBLE;
 
-	function clampRollMode(value) {
-		return Math.max(-6, Math.min(6, Number(value) || 0));
-	}
-
 	let { actor, dialog, item, ...data } = $props();
-	let selectedRollMode = $state(untrack(() => clampRollMode(data.rollMode)));
+	let selectedRollMode = $state(untrack(() => Math.clamp(data.rollMode ?? 0, -6, 6)));
 	let situationalModifiers = $state('');
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
 	let shouldRollBeHidden = $state(!!game.settings.get('nimble', 'hideRolls'));
-	let rollData = $derived(actor?.getRollData?.(item) ?? {});
 
 	const { damageTypes, hitDice } = CONFIG.NIMBLE;
 
@@ -119,7 +113,7 @@
 					</span>
 				{/if}
 				<span class="nimble-roll-formula__formula">
-					{replaceRollFormulaData(damageEffect.formula, rollData)}
+					{Roll.replaceFormulaData(damageEffect.formula, actor.getRollData(item))}
 				</span>
 			</div>
 		{/each}
