@@ -1,9 +1,10 @@
 # Nimble 2 — Product Requirements Document
 
 ## Instructions for Ralph
-Read this file and `progress.txt` at the start of each iteration.
-Pick the first unchecked task. Implement it, commit, then update `progress.txt`.
-Mark the task `[x]` in this file when done.
+- Read this file and `progress.txt` at the start of each iteration.
+- Pick the first unchecked task. Cut a new branch from stage (follow branch name standards). 
+- Implement the task, commit, then update `progress.txt`.
+- Mark the task `[x]` in this file when done.
 
 ## Tasks
 
@@ -11,7 +12,7 @@ Mark the task `[x]` in this file when done.
 - [x] When rolls are made with the sidebar collapsed the chat wont populate with the results. But if the chat window is open then the rolls register and the card with results populates.
 
 ### Core Mechanics
-- [ ] Add a `pnpm test` smoke-test that verifies all document proxy classes load without error
+- [x] Add a `pnpm test` smoke-test that verifies all document proxy classes load without error
 
 ### Actor Documents
 - [ ] Add a `totalArmor` derived getter on the character actor that sums equipped armor items

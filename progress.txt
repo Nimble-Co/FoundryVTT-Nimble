@@ -2,6 +2,15 @@
 
 ### Completed
 
+- [x] CORE: Add `pnpm test` smoke-test for document proxy classes
+  - Added `src/documents/documentProxy.test.ts` with 17 tests covering `ActorProxy` and `ItemProxy`
+  - Verifies both proxy modules load without error (import succeeds)
+  - Verifies `CONFIG.NIMBLE.Actor.documentClasses` has all 5 actor subclasses (base, character, npc, soloMonster, minion)
+  - Verifies `CONFIG.NIMBLE.Item.documentClasses` has all 10 item subclasses (base, background, boon, class, feature, monsterFeature, object, ancestry, spell, subclass)
+  - All 495 tests pass
+  - Commit: TEST(core): Add smoke test verifying document proxy classes load without error
+
+
 - [x] BUG: Chat cards not appearing when sidebar is collapsed
   - Root cause: `renderChatMessageHTML` hook stored Svelte component on `message._svelteComponent`.
     When FoundryVTT re-rendered the same message for the collapsed-sidebar notification overlay,
