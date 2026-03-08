@@ -5,14 +5,14 @@
 		getCombatTrackerCtBadgeSizeLevel,
 		getCombatTrackerCenterActiveCardEnabled,
 		getCombatTrackerCtCardSizeLevel,
+		getCombatTrackerVisibilityPermissionConfig,
 		getCombatTrackerCtWidthLevel,
-		getCombatTrackerNonPlayerHitpointPermissionConfig,
 		getCombatTrackerUseActionDice,
 		isCombatTrackerActionDiceColorSettingKey,
 		isCombatTrackerBadgeSizeLevelSettingKey,
 		isCombatTrackerCardSizeLevelSettingKey,
 		isCombatTrackerCenterActiveCardSettingKey,
-		isCombatTrackerNonPlayerHitpointPermissionSettingKey,
+		isCombatTrackerVisibilityPermissionSettingKey,
 		isCombatTrackerUseActionDiceSettingKey,
 		isCombatTrackerWidthLevelSettingKey,
 		normalizeHexColor,
@@ -21,8 +21,10 @@
 		setCombatTrackerCenterActiveCardEnabled,
 		setCombatTrackerCtCardSizeLevel,
 		setCombatTrackerCtWidthLevel,
-		setCombatTrackerNonPlayerHitpointPermissionConfig,
+		setCombatTrackerVisibilityPermissionConfig,
 		setCombatTrackerUseActionDice,
+		type CombatTrackerVisibilityFieldKey,
+		type CombatTrackerVisibilityPermissionConfig,
 		type CombatTrackerRolePermissionConfig,
 		type CombatTrackerRolePermissionKey,
 	} from '../../settings/combatTrackerSettings.js';
@@ -44,6 +46,38 @@
 		{ key: 'assistant', label: 'Asst. GM' },
 		{ key: 'gamemaster', label: 'GM' },
 	];
+	const PERMISSION_ROWS: ReadonlyArray<{
+		key: CombatTrackerVisibilityFieldKey;
+		label: string;
+		note?: string;
+	}> = [
+		{
+			key: 'hpValue',
+			label: 'HP value',
+			note: 'Non-owners still need the token HP bar to be visible to them.',
+		},
+		{
+			key: 'hpState',
+			label: 'HP state',
+			note: 'Use this without HP value for Normal, Bloodied, or Last Stand only.',
+		},
+		{
+			key: 'mana',
+			label: 'Mana',
+			note: 'Non-owners still need mana assigned to a visible token bar.',
+		},
+		{
+			key: 'wounds',
+			label: 'Wounds',
+			note: 'Non-owners still need wounds assigned to a visible token bar.',
+		},
+		{ key: 'actions', label: 'Actions' },
+		{ key: 'defend', label: 'Defend available' },
+		{ key: 'interpose', label: 'Interpose available' },
+		{ key: 'opportunityAttack', label: 'Opportunity Attack available' },
+		{ key: 'help', label: 'Help available' },
+		{ key: 'outline', label: 'Card outline' },
+	];
 
 	let updateSettingHook: number | undefined;
 	let widthPreviewGlobalPointerUpListener: (() => void) | undefined;
@@ -53,7 +87,7 @@
 	let centerActiveCardEnabled = $state(getCombatTrackerCenterActiveCardEnabled());
 	let useActionDice = $state(getCombatTrackerUseActionDice());
 	let actionDiceColor = $state(getCombatTrackerActionDiceColor());
-	let nonPlayerHpPermissions = $state(getCombatTrackerNonPlayerHitpointPermissionConfig());
+	let visibilityPermissions = $state(getCombatTrackerVisibilityPermissionConfig());
 	let canManageWorldCtSettings = $derived(Boolean(game.user?.isGM));
 	let isWidthSliderPreviewActive = $state(false);
 
@@ -134,20 +168,25 @@
 		persistCtSetting('use action dice', setCombatTrackerUseActionDice(checkbox.checked));
 	}
 
-	function handleNonPlayerHpPermissionChange(
+	function handleVisibilityPermissionChange(
+		fieldKey: CombatTrackerVisibilityFieldKey,
 		roleKey: CombatTrackerRolePermissionKey,
 		event: Event,
 	): void {
 		if (!canManageWorldCtSettings) return;
 		const checkbox = event.currentTarget as HTMLInputElement;
-		const nextPermissions: CombatTrackerRolePermissionConfig = {
-			...nonPlayerHpPermissions,
+		const nextFieldPermissions: CombatTrackerRolePermissionConfig = {
+			...visibilityPermissions[fieldKey],
 			[roleKey]: checkbox.checked,
 		};
-		nonPlayerHpPermissions = nextPermissions;
+		const nextPermissions: CombatTrackerVisibilityPermissionConfig = {
+			...visibilityPermissions,
+			[fieldKey]: nextFieldPermissions,
+		};
+		visibilityPermissions = nextPermissions;
 		persistCtSetting(
-			'non-player HP permissions',
-			setCombatTrackerNonPlayerHitpointPermissionConfig(nextPermissions),
+			'visibility permissions',
+			setCombatTrackerVisibilityPermissionConfig(nextPermissions),
 		);
 	}
 
@@ -187,8 +226,8 @@
 			if (isCombatTrackerUseActionDiceSettingKey(settingKey)) {
 				useActionDice = getCombatTrackerUseActionDice();
 			}
-			if (isCombatTrackerNonPlayerHitpointPermissionSettingKey(settingKey)) {
-				nonPlayerHpPermissions = getCombatTrackerNonPlayerHitpointPermissionConfig();
+			if (isCombatTrackerVisibilityPermissionSettingKey(settingKey)) {
+				visibilityPermissions = getCombatTrackerVisibilityPermissionConfig();
 			}
 			if (isCombatTrackerActionDiceColorSettingKey(settingKey)) {
 				actionDiceColor = getCombatTrackerActionDiceColor();
@@ -294,7 +333,10 @@
 
 		<fieldset class="nimble-ct-settings__section">
 			<legend class="nimble-ct-settings__section-title">Permissions</legend>
-			<p class="notes">Choose which roles can view card details.</p>
+			<p class="notes">
+				Choose which roles can view each Combat Tracker field. HP, mana, and wounds still respect
+				token bar visibility for non-owners.
+			</p>
 			<table class="nimble-ct-settings__permissions-table">
 				<thead>
 					<tr>
@@ -305,21 +347,27 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr>
-						<td>
-							<div class="nimble-ct-settings__permission-title">Show HP for non-players</div>
-						</td>
-						{#each ROLE_COLUMNS as role}
+					{#each PERMISSION_ROWS as permissionRow}
+						<tr>
 							<td>
-								<input
-									type="checkbox"
-									aria-label={`${role.label} can show HP for non-players`}
-									checked={nonPlayerHpPermissions[role.key]}
-									onchange={(event) => handleNonPlayerHpPermissionChange(role.key, event)}
-								/>
+								<div class="nimble-ct-settings__permission-title">{permissionRow.label}</div>
+								{#if permissionRow.note}
+									<div class="nimble-ct-settings__permission-note">{permissionRow.note}</div>
+								{/if}
 							</td>
-						{/each}
-					</tr>
+							{#each ROLE_COLUMNS as role}
+								<td>
+									<input
+										type="checkbox"
+										aria-label={`${role.label} can view ${permissionRow.label}`}
+										checked={visibilityPermissions[permissionRow.key][role.key]}
+										onchange={(event) =>
+											handleVisibilityPermissionChange(permissionRow.key, role.key, event)}
+									/>
+								</td>
+							{/each}
+						</tr>
+					{/each}
 				</tbody>
 			</table>
 		</fieldset>
@@ -418,6 +466,17 @@
 		color: var(--nimble-ct-text-primary);
 		font-size: var(--font-size-14, 0.875rem);
 		line-height: 1.35;
+	}
+	:global(.theme-light) .nimble-ct-settings {
+		--nimble-ct-text-primary: hsl(220 28% 18%);
+		--nimble-ct-text-secondary: color-mix(in srgb, var(--nimble-ct-text-primary) 78%, white 22%);
+		--nimble-ct-border: color-mix(in srgb, hsl(39 42% 58%) 44%, hsl(216 20% 64%) 56%);
+		--nimble-ct-panel-bg: color-mix(in srgb, white 84%, hsl(42 24% 90%) 16%);
+		--nimble-ct-control-bg: white;
+		--nimble-ct-control-border: color-mix(in srgb, var(--nimble-ct-border) 82%, transparent);
+		--nimble-ct-slider-track: color-mix(in srgb, hsl(218 24% 42%) 24%, white 76%);
+		--nimble-ct-slider-thumb-border: color-mix(in srgb, hsl(41 70% 56%) 58%, hsl(216 22% 56%) 42%);
+		--nimble-ct-slider-thumb-bg: white;
 	}
 	.nimble-ct-settings__section {
 		margin: 0;
@@ -519,6 +578,12 @@
 		color: var(--nimble-ct-text-primary);
 		font-size: var(--font-size-14, 0.875rem);
 	}
+	:global(.theme-light) .nimble-ct-settings__slider-value {
+		background: white;
+		box-shadow:
+			inset 0 0 0 1px color-mix(in srgb, white 68%, transparent),
+			0 0.08rem 0.18rem color-mix(in srgb, hsl(220 18% 46%) 12%, transparent);
+	}
 	.nimble-ct-settings__toggle-field {
 		display: flex;
 		justify-content: flex-end;
@@ -546,6 +611,10 @@
 		color: var(--nimble-ct-text-secondary);
 		background: color-mix(in srgb, var(--nimble-ct-control-bg) 95%, transparent);
 	}
+	:global(.theme-light) .nimble-ct-settings__permissions-table thead th {
+		color: var(--nimble-ct-text-primary);
+		background: color-mix(in srgb, white 82%, hsl(42 24% 88%) 18%);
+	}
 	.nimble-ct-settings__permissions-table thead th:first-child {
 		text-align: left;
 		width: 28%;
@@ -562,6 +631,12 @@
 	.nimble-ct-settings__permission-title {
 		font-weight: 700;
 		font-size: var(--font-size-12, 0.75rem);
+	}
+	.nimble-ct-settings__permission-note {
+		margin-top: 0.18rem;
+		color: var(--nimble-ct-text-secondary);
+		font-size: 0.68rem;
+		line-height: 1.3;
 	}
 	.nimble-ct-settings__color-controls {
 		display: flex;

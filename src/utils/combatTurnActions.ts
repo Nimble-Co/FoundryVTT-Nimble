@@ -23,15 +23,17 @@ export function resolveCombatantCurrentActionsAfterDelta(params: {
 	currentActions: number;
 	maxActions: number;
 	delta: number;
+	allowOverflow?: boolean;
 }): number {
-	const normalizedCurrent = Math.max(
-		0,
-		Math.floor(toFiniteNonNegativeNumber(params.currentActions)),
-	);
+	const rawCurrent = Math.floor(toFiniteNonNegativeNumber(params.currentActions));
 	const normalizedMax = Math.max(0, Math.floor(toFiniteNonNegativeNumber(params.maxActions)));
 	const numericDelta = Number(params.delta);
 	const normalizedDelta = Number.isFinite(numericDelta) ? Math.trunc(numericDelta) : 0;
+	const normalizedCurrent = params.allowOverflow
+		? Math.max(0, rawCurrent)
+		: Math.min(normalizedMax, Math.max(0, rawCurrent));
 	const nextActions = normalizedCurrent + normalizedDelta;
+	if (params.allowOverflow) return Math.max(0, nextActions);
 	return Math.min(normalizedMax, Math.max(0, nextActions));
 }
 
