@@ -7,6 +7,9 @@ Mark the task `[x]` in this file when done.
 
 ## Tasks
 
+### Bugs
+- [x] When rolls are made with the sidebar collapsed the chat wont populate with the results. But if the chat window is open then the rolls register and the card with results populates.
+
 ### Core Mechanics
 - [ ] Add a `pnpm test` smoke-test that verifies all document proxy classes load without error
 

@@ -1,0 +1,13 @@
+## Progress
+
+### Completed
+
+- [x] BUG: Chat cards not appearing when sidebar is collapsed
+  - Root cause: `renderChatMessageHTML` hook stored Svelte component on `message._svelteComponent`.
+    When FoundryVTT re-rendered the same message for the collapsed-sidebar notification overlay,
+    the hook unmounted the component from the main chat log element before mounting to the notification.
+    On sidebar expand, users saw blank (un-Sveltified) chat cards.
+  - Fix: track component on the target DOM element (`target._nimbleSvelteComponent`) instead of
+    on the message, so each rendered copy manages its own lifecycle independently.
+  - File: `src/hooks/renderChatMessage.ts`
+  - Commit: FIX: Chat cards not appearing when sidebar is collapsed
