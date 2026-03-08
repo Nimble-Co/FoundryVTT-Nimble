@@ -18,4 +18,9 @@ RUN npm install -g @anthropic-ai/claude-code
 # git needs a safe directory config when running as root on a mounted volume
 RUN git config --global --add safe.directory /workspace
 
+# Entrypoint: restore ~/.claude.json from backup if missing (docker sandbox mounts ~/.claude/ but not ~/.claude.json)
+RUN printf '#!/bin/sh\nif [ ! -f /root/.claude.json ]; then\n  backup=$(ls /root/.claude/backups/.claude.json.backup.* 2>/dev/null | sort | tail -1)\n  if [ -n "$backup" ]; then\n    cp "$backup" /root/.claude.json\n  fi\nfi\nexec "$@"\n' > /entrypoint.sh && chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+
 WORKDIR /workspace
