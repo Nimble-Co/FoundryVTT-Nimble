@@ -17,6 +17,13 @@ Before making changes, read the full coding style guide: [docs/STYLE_GUIDE.md](d
 - **Naming**: PascalCase for components/classes, camelCase for functions/directories
 - **Localization**: Use `localize()` from `src/utils/localize.ts` for all user-facing strings
 
+### Engineering Principles
+These are mandatory implementation constraints, not slogans.
+
+**KISS**: Use explicit control flow (`if`/`switch`). Avoid dynamic component lookups, runtime string-to-function dispatch, or Svelte action factories that obscure what runs and when.
+**YAGNI**: Every abstraction (utility, store, component) must have a current caller. If a code path isn't supported yet, throw an error, don't add a stub or no-op fallback.
+**DRY + Rule of Three**: Two similar blocks in the same file are fine. Extract to a shared utility or component only after the same pattern appears three times across different files, and only if the extracted code respects [Code Promotion Rules](#code-promotion-rules).
+
 ### Foundational Principles
 
 1. **Write self-documenting code** — Use descriptive names; avoid abbreviations
