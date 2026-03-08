@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { NimbleRoll } from './NimbleRoll.js';
+import { describe, expect, it } from 'vitest';
+import { NimbleRoll } from './NimbleRoll.ts';
 
 type MockDieTerm = {
 	faces: number;
@@ -18,10 +18,6 @@ function makeRoll(formula: string, terms: MockDieTerm[], evaluated = true): Nimb
 }
 
 describe('NimbleRoll', () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
 	describe('constructor defaults', () => {
 		it('should default prompted to false', () => {
 			const roll = new NimbleRoll('1d20', {});
@@ -51,6 +47,12 @@ describe('NimbleRoll', () => {
 			expect(json.data).toEqual(
 				expect.objectContaining({ prompted: true, respondentId: 'actor-abc' }),
 			);
+		});
+
+		it('should include default data in JSON output when no data provided', () => {
+			const roll = new NimbleRoll('1d20');
+			const json = roll.toJSON() as Record<string, unknown>;
+			expect(json.data).toEqual(expect.objectContaining({ prompted: false, respondentId: null }));
 		});
 	});
 
@@ -160,6 +162,8 @@ describe('NimbleRoll', () => {
 			const copied = NimbleRoll.fromRoll(original);
 			expect(copied).toBeInstanceOf(NimbleRoll);
 			expect(copied.formula).toBe('1d20');
+			expect(copied.data.prompted).toBe(true);
+			expect(copied.data.respondentId).toBe('actor-1');
 		});
 	});
 });
