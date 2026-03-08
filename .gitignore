@@ -22,6 +22,7 @@ dist/
 # logs
 npm-debug.log
 yarn-error.log
+logs/deploy.log
 
 # ----------------------------------------------------
 # Compendium Packs

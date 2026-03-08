@@ -14,7 +14,7 @@
 		"worktree:cleanup": "node ./build/worktreeCleanup.mjs",
 		"dev": "vite",
 		"dev:remote": "FOUNDRY_URL=https://foundryvtt.redirectme.net vite",
-		"deploy:nimble": "pnpm build:compendia && vite build && rsync -avz --delete -e ssh dist/ ubuntu@foundryvtt.redirectme.net:/home/ubuntu/foundryuserdata/Data/systems/nimble/",
+		"deploy:nimble": "bash scripts/deploy-log.sh deploy:nimble sh -c 'pnpm build:compendia && vite build && rsync -avz --delete -e ssh dist/ ubuntu@foundryvtt.redirectme.net:/home/ubuntu/foundryuserdata/Data/systems/nimble/'",
 		"pull": "pnpm pull:worlds && pnpm pull:modules",
 		"pull:worlds": "rsync -avz -e ssh ubuntu@foundryvtt.redirectme.net:/home/ubuntu/foundryuserdata/Data/worlds/ ../foundrydata/Data/worlds/ --exclude '*.webp' --exclude '*.png' --exclude '*.jpg' --exclude '*.jpeg' --exclude '*.gif' --exclude '*.svg' --exclude '*.mp3' --exclude '*.ogg' --exclude '*.wav' --exclude '*.mp4' --exclude '*.webm' --exclude '*.pdf'",
 		"pull:modules": "rsync -avz -e ssh ubuntu@foundryvtt.redirectme.net:/home/ubuntu/foundryuserdata/Data/modules/ ../foundrydata/Data/modules/",
