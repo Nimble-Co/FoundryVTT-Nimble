@@ -264,8 +264,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		return foundry.dice.Roll.fromData(dataWithoutClass as object as foundry.dice.Roll.Data);
 	}
 
-	static fromRoll(roll) {
-		const newRoll = new DamageRoll(roll.formula, roll.data, roll.options);
+	static fromRoll<D extends DamageRoll.Data>(roll: Roll<D>): DamageRoll {
+		const newRoll = new DamageRoll(roll.formula, roll.data, roll.options as DamageRoll.Options);
 		Object.assign(newRoll, roll);
 		return newRoll;
 	}

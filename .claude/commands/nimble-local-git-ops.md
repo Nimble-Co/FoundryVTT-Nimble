@@ -1,4 +1,4 @@
-Use the `nimble-local-ops` agent to manage Git operations for the FoundryVTT-Nimble project.
+Use the `nimble-local-git-ops` agent to manage Git operations for the FoundryVTT-Nimble project.
 
 Arguments: $ARGUMENTS
 
