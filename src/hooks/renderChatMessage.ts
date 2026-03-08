@@ -101,12 +101,17 @@ export default function renderChatMessageHTML(message, html) {
 	$(html).find('.message-header')[0]?.remove();
 	$(html).find('.message-content')[0]?.remove();
 
-	// Unmount any existing Svelte component before mounting a new one
-	if (message._svelteComponent) {
-		unmount(message._svelteComponent);
+	// Unmount any existing Svelte component on this specific element before mounting a new one.
+	// We track per-element (not per-message) because a single message may be rendered in multiple
+	// places simultaneously: the main chat log and the collapsed-sidebar notification overlay.
+	// Storing the component on `target` prevents the notification render from unmounting the
+	// component that belongs to the main chat log element.
+	const targetEl = target as HTMLElement & { _nimbleSvelteComponent?: ReturnType<typeof mount> };
+	if (targetEl._nimbleSvelteComponent) {
+		unmount(targetEl._nimbleSvelteComponent);
 	}
 
-	message._svelteComponent = mount(component, {
+	targetEl._nimbleSvelteComponent = mount(component, {
 		target,
 		props: { messageDocument: message },
 	});
