@@ -2,6 +2,11 @@ import {
 	flattenActivationEffects,
 	getUnsupportedActivationEffectTypes,
 } from '../utils/activationEffects.js';
+import {
+	consumeCombatantAction,
+	getCombatantCurrentActions,
+	maybeAdvanceTurnForCombatant,
+} from '../utils/combatTurnActions.js';
 import { getCombatantImage } from '../utils/combatantImage.js';
 import { isCombatantDead } from '../utils/isCombatantDead.js';
 import {
@@ -1205,11 +1210,7 @@ function hideGroupAttackPanel(options: { clearTargets?: boolean } = {}): void {
 }
 
 function getCombatantActionsRemaining(combatant: Combatant.Implementation): number {
-	const actionsRemainingRaw = Number(
-		(combatant.system as unknown as { actions?: { base?: { current?: unknown } } }).actions?.base
-			?.current ?? 0,
-	);
-	return Number.isFinite(actionsRemainingRaw) ? Math.max(0, actionsRemainingRaw) : 0;
+	return getCombatantCurrentActions(combatant);
 }
 
 function buildAttackMemberViewFromCombatant(
@@ -2016,7 +2017,6 @@ interface ValidatedNonMinionAttackRoll {
 	selectedActionId: string;
 	selectedAction: MinionGroupAttackOption;
 	combatant: Combatant.Implementation;
-	actionsRemaining: number;
 	actor: ActorWithActionItems & {
 		activateItem: (id: string, options?: Record<string, unknown>) => Promise<ChatMessage | null>;
 	};
@@ -2133,8 +2133,7 @@ async function validateNonMinionAttackRoll(
 	);
 	if (!combatant) return null;
 
-	const actionsRemaining = resolveNonMinionActionsRemaining(combatant, member.combatantName);
-	if (actionsRemaining === null) return null;
+	if (resolveNonMinionActionsRemaining(combatant, member.combatantName) === null) return null;
 
 	const actor = resolveNonMinionAttackActor(combatant, member.combatantName);
 	if (!actor) return null;
@@ -2146,7 +2145,6 @@ async function validateNonMinionAttackRoll(
 		selectedActionId,
 		selectedAction,
 		combatant,
-		actionsRemaining,
 		actor,
 	};
 }
@@ -2165,17 +2163,11 @@ async function executeNonMinionAttackActivation(
 	const latestCombatant =
 		validatedAttack.combat.combatants.get(validatedAttack.memberCombatantId) ??
 		validatedAttack.combatant;
-	const latestActions = Number(
-		(foundry.utils.getProperty(latestCombatant, 'system.actions.base.current') as number | null) ??
-			validatedAttack.actionsRemaining,
-	);
-	if (Number.isFinite(latestActions) && latestActions > 0) {
-		const actionUpdate: Record<string, unknown> = {
-			_id: validatedAttack.memberCombatantId,
-			'system.actions.base.current': Math.max(0, latestActions - 1),
-		};
-		await validatedAttack.combat.updateEmbeddedDocuments('Combatant', [actionUpdate]);
-	}
+	await consumeCombatantAction({
+		combat: validatedAttack.combat,
+		combatantId: validatedAttack.memberCombatantId,
+		fallbackCombatant: latestCombatant,
+	});
 
 	const rememberContext: MinionGroupAttackSessionContext = {
 		combatId: validatedAttack.combat.id ?? '',
@@ -2193,11 +2185,11 @@ async function maybeAdvanceTurnAfterNonMinionAttack(
 	validatedAttack: ValidatedNonMinionAttackRoll,
 	endTurn: boolean,
 ): Promise<void> {
-	if (!endTurn) return;
-
-	const activeCombatantId = validatedAttack.combat.combatant?.id ?? null;
-	if (activeCombatantId !== validatedAttack.memberCombatantId) return;
-	await validatedAttack.combat.nextTurn();
+	await maybeAdvanceTurnForCombatant({
+		combat: validatedAttack.combat,
+		combatantId: validatedAttack.memberCombatantId,
+		endTurn,
+	});
 }
 
 async function executeNonMinionAttackRoll(

@@ -22,6 +22,13 @@ const soloMonsterSchema = () => ({
 		),
 		hp: new fields.SchemaField({
 			max: new fields.NumberField({ required: true, initial: 10, nullable: false }),
+			lastStandThreshold: new fields.NumberField({
+				required: true,
+				initial: 0,
+				nullable: false,
+				integer: true,
+				min: 0,
+			}),
 			temp: new fields.NumberField({ required: true, initial: 0, nullable: false }),
 			value: new fields.NumberField({ required: true, initial: 10, nullable: false }),
 		}),
