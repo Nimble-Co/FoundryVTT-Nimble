@@ -2,6 +2,30 @@
 
 ### Completed
 
+- [x] LOCALIZATION: Audit src/config.ts constants against en.json
+  - Performed full audit of all user-facing string keys in `src/config.ts` against `public/lang/en.json`.
+  - All config values are NIMBLE.* key references (no raw English strings) — pattern is correct throughout.
+  - Found 2 broken key references in `spellUpcastDialog.slider`:
+    - `slider.minTier` → was `'NIMBLE.spells.spellUpcastDialog.slider.minTier'` (non-existent) → fixed to `'NIMBLE.spells.spellUpcastDialog.slider.min'`
+    - `slider.maxTier` → was `'NIMBLE.spells.spellUpcastDialog.slider.maxTier'` (non-existent) → fixed to `'NIMBLE.spells.spellUpcastDialog.slider.max'`
+  - Both corrected keys exist in `en.json` and `es.json` with proper values (`"Min Tier {tier}"`, `"Max Tier {tier}"`).
+  - File: `src/config.ts` lines 521-522
+  - Branch: `feature/localization-config-audit`
+  - Commit: 5fb0ae6 — FIX(ui): correct broken lang key refs for spell upcast slider in config
+
+- [x] FEAT: Auto-apply attack conditions to targets
+  - Added `applyCondition(conditionId: string)` method to `NimbleChatMessage` (`src/documents/chatMessage.ts`).
+    Iterates `system.targets` UUIDs, resolves each to a TokenDocument, and calls `actor.toggleStatusEffect(conditionId, { active: true })` — skips tokens that already have the condition active.
+    Falls back to `ui.notifications.warn('No targets selected')` (localized) when `system.targets` is empty.
+  - Updated `ConditionNode.svelte` (`src/view/chat/components/ConditionNode.svelte`) to get `messageDocument`
+    from Svelte context (same context set by FeatureCard/SpellCard/ObjectCard/MinionGroupAttackCard)
+    and call `messageDocument.applyCondition(condition)` on click instead of applying to controlled tokens.
+    Retains a fallback to controlled-token toggle when no `messageDocument` context is available.
+  - Also fixed pre-existing inconsistency: `applyDamage` used a hardcoded "No targets selected" string
+    instead of `game.i18n.localize('NIMBLE.chat.noTargetsSelected')` (aligned with `applyHealing`).
+  - Branch: `feature/attack-condition-auto-toggle`
+  - Commit: 5bf6b84 — FEAT: Auto-apply conditions to targets when condition button clicked on chat card
+
 - [x] DICE: NimbleRoll critical success / critical failure unit tests
   - Added `isCriticalSuccess` getter to `NimbleRoll`: returns `true` when the active primary die result equals
     the die's max face value (natural max); `false` otherwise; `undefined` if not yet evaluated.

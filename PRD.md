@@ -24,13 +24,13 @@
 
 ### Dice & Rolls
 - [x] Write unit tests for `NimbleRoll` covering critical success and critical failure cases
-- [ ] When an attack inflicts a condition, it should automatically toggle the status condition in the targets `conditions` tab to on. 
+- [x] When an attack inflicts a condition, it should automatically toggle the status condition in the targets `conditions` tab to on.
 
 ### UI / Sheets
 
 
 ### Localization
-- [ ] Audit `src/config.ts` constants and ensure every user-facing string has a matching key in the en.json lang file
+- [x] Audit `src/config.ts` constants and ensure every user-facing string has a matching key in the en.json lang file
 
 ### Compendia / Packs
 - [ ] Add a commoner NPC actor to `packs/actors/` with stat stat block and token image placeholder
