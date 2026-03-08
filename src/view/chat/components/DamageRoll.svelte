@@ -1,5 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
+	import { DamageRoll as DamageRollClass } from '../../../dice/DamageRoll.js';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 
 	import RollSummary from './RollSummary.svelte';
@@ -48,7 +49,7 @@
 
 <RollSummary
 	{label}
-	tooltip={prepareRollTooltip(actorType, permissions, Roll.fromData(roll))}
+	tooltip={prepareRollTooltip(actorType, permissions, DamageRollClass.fromData(roll))}
 	subheading={secondaryInfo}
 	total={Math.ceil(roll.total * multiplier)}
 	type="damage"

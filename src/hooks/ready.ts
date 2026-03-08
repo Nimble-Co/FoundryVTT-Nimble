@@ -1,5 +1,6 @@
 import { mount, unmount } from 'svelte';
 
+import { initPositionSelectionHook } from '../dice/diceSoNiceIntegration.js';
 import { MigrationList } from '../migration/MigrationList.js';
 import { MigrationRunner } from '../migration/MigrationRunner.js';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
@@ -61,4 +62,7 @@ export default async function ready() {
 	const combatTrackerConfig = game.settings.get('core', 'combatTrackerConfig') ?? {};
 	combatTrackerConfig.skipDefeated ??= true;
 	game.settings.set('core', 'combatTrackerConfig', combatTrackerConfig);
+
+	// Initialize DSN position-based selection hook (for primary die selection by screen position)
+	initPositionSelectionHook();
 }

@@ -1,5 +1,6 @@
 import { createSubscriber } from 'svelte/reactivity';
 import { DamageRoll } from '../../dice/DamageRoll.js';
+import { registerForPositionSelection } from '../../dice/diceSoNiceIntegration.js';
 import { ItemActivationManager } from '../../managers/ItemActivationManager.js';
 import { RulesManager } from '../../managers/RulesManager.js';
 
@@ -244,6 +245,33 @@ class NimbleBaseItem<ItemType extends SystemItemTypes = SystemItemTypes> extends
 		const chatCard = await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 
 		if (chatCard) {
+			// Register damage rolls that need position-based selection with DSN integration
+			// This allows the primary die to be selected based on screen position after DSN animation
+			const damageRollsNeedingPositionSelection = rolls.filter(
+				(roll): roll is DamageRoll => roll instanceof DamageRoll && roll.needsPositionSelection,
+			);
+
+			for (const damageRoll of damageRollsNeedingPositionSelection) {
+				registerForPositionSelection(chatCard.id, damageRoll, async (result) => {
+					// Update the chat message with the position-based selection result
+					await chatCard.update({
+						'system.isCritical': result.isCritical,
+						'system.isMiss': result.isMiss,
+					});
+
+					console.log(
+						'[DSN Integration] Chat message updated with position-based selection',
+						JSON.stringify({
+							messageId: chatCard.id,
+							isCritical: result.isCritical,
+							isMiss: result.isMiss,
+							selectedDieIndex: result.selectedDieIndex,
+							selectedDieResult: result.selectedDieResult,
+						}),
+					);
+				});
+			}
+
 			/**
 			 * A hook event that fires after an item has been used.
 			 * @function nimble.useItem

@@ -50,6 +50,11 @@ export default function init() {
 	CONFIG.Dice.rolls.push(DamageRoll as (typeof CONFIG.Dice.rolls)[number]);
 	CONFIG.Dice.rolls.push(NimbleRoll as (typeof CONFIG.Dice.rolls)[number]);
 	CONFIG.Dice.types.push(PrimaryDie);
+	// Register PrimaryDie in terms for proper deserialization from saved rolls
+	if (CONFIG.Dice.terms) {
+		(CONFIG.Dice.terms as Record<string, typeof foundry.dice.terms.RollTerm>).PrimaryDie =
+			PrimaryDie;
+	}
 
 	// Adds Scene data
 	CONFIG.Actor.trackableAttributes = trackableAttributes;

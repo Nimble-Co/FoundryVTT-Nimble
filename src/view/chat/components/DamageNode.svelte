@@ -11,4 +11,6 @@
 	let outcome = $derived(messageDocument?.system?.isMiss ? 'noDamage' : 'fullDamage');
 </script>
 
-<DamageRoll {damageType} {ignoreArmor} {outcome} {roll} />
+{#if roll}
+	<DamageRoll {damageType} {ignoreArmor} {outcome} {roll} />
+{/if}
