@@ -8,8 +8,10 @@ import {
 	COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY,
 	COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY,
 	COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY,
+	COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY,
 	COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY,
 	CURRENT_TURN_ANIMATION_SETTING_KEYS,
+	canCurrentUserDisplayCombatTrackerField,
 	canCurrentUserDisplayNonPlayerHitpointsOnCards,
 	getCombatTrackerActionDiceColor,
 	getCombatTrackerCenterActiveCardEnabled,
@@ -20,6 +22,7 @@ import {
 	getCombatTrackerNonPlayerHitpointPermissionConfig,
 	getCombatTrackerPlayersCanExpandMonsterCards,
 	getCombatTrackerUseActionDice,
+	getCombatTrackerVisibilityPermissionConfig,
 	getCurrentTurnAnimationSettings,
 	isCombatTrackerActionDiceColorSettingKey,
 	isCombatTrackerBadgeSizeLevelSettingKey,
@@ -29,6 +32,7 @@ import {
 	isCombatTrackerNonPlayerHitpointPermissionSettingKey,
 	isCombatTrackerPlayerMonsterExpansionSettingKey,
 	isCombatTrackerUseActionDiceSettingKey,
+	isCombatTrackerVisibilityPermissionSettingKey,
 	isCombatTrackerWidthLevelSettingKey,
 	registerCombatTrackerSettings,
 	setCombatTrackerActionDiceColor,
@@ -40,6 +44,7 @@ import {
 	setCombatTrackerNonPlayerHitpointPermissionConfig,
 	setCombatTrackerPlayersCanExpandMonsterCards,
 	setCombatTrackerUseActionDice,
+	setCombatTrackerVisibilityPermissionConfig,
 	setCurrentTurnAnimationSetting,
 } from './combatTrackerSettings.js';
 
@@ -141,6 +146,15 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 		expect(settingsMock.register).toHaveBeenCalledWith(
 			'nimble',
 			COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY,
+			expect.objectContaining({
+				scope: 'world',
+				config: false,
+				type: Object,
+			}),
+		);
+		expect(settingsMock.register).toHaveBeenCalledWith(
+			'nimble',
+			COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY,
 			expect.objectContaining({
 				scope: 'world',
 				config: false,
@@ -349,6 +363,140 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 		);
 	});
 
+	it('returns normalized field visibility permissions', () => {
+		settingsMock.get.mockReturnValueOnce({
+			hpValue: {
+				player: 0,
+				trusted: 1,
+				assistant: true,
+				gamemaster: true,
+			},
+			actions: {
+				player: true,
+				trusted: true,
+				assistant: true,
+				gamemaster: true,
+			},
+		});
+
+		expect(getCombatTrackerVisibilityPermissionConfig()).toEqual(
+			expect.objectContaining({
+				hpValue: {
+					player: false,
+					trusted: true,
+					assistant: true,
+					gamemaster: true,
+				},
+				actions: {
+					player: true,
+					trusted: true,
+					assistant: true,
+					gamemaster: true,
+				},
+			}),
+		);
+	});
+
+	it('migrates legacy hp-only permission objects into the new field config', () => {
+		settingsMock.get.mockReturnValueOnce({
+			player: false,
+			trusted: true,
+			assistant: true,
+			gamemaster: true,
+		});
+
+		expect(getCombatTrackerVisibilityPermissionConfig()).toEqual(
+			expect.objectContaining({
+				hpValue: {
+					player: false,
+					trusted: true,
+					assistant: true,
+					gamemaster: true,
+				},
+				hpState: {
+					player: false,
+					trusted: true,
+					assistant: true,
+					gamemaster: true,
+				},
+			}),
+		);
+	});
+
+	it('updates the field visibility permission config setting', async () => {
+		await setCombatTrackerVisibilityPermissionConfig({
+			hpValue: {
+				player: false,
+				trusted: false,
+				assistant: true,
+				gamemaster: true,
+			},
+			hpState: {
+				player: true,
+				trusted: true,
+				assistant: true,
+				gamemaster: true,
+			},
+			mana: {
+				player: false,
+				trusted: false,
+				assistant: true,
+				gamemaster: true,
+			},
+			wounds: {
+				player: false,
+				trusted: false,
+				assistant: true,
+				gamemaster: true,
+			},
+			actions: {
+				player: true,
+				trusted: true,
+				assistant: true,
+				gamemaster: true,
+			},
+			defend: {
+				player: true,
+				trusted: true,
+				assistant: true,
+				gamemaster: true,
+			},
+			interpose: {
+				player: true,
+				trusted: true,
+				assistant: true,
+				gamemaster: true,
+			},
+			opportunityAttack: {
+				player: true,
+				trusted: true,
+				assistant: true,
+				gamemaster: true,
+			},
+			help: {
+				player: true,
+				trusted: true,
+				assistant: true,
+				gamemaster: true,
+			},
+			outline: {
+				player: true,
+				trusted: true,
+				assistant: true,
+				gamemaster: true,
+			},
+		});
+
+		expect(settingsMock.set).toHaveBeenCalledWith(
+			'nimble',
+			COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY,
+			expect.objectContaining({
+				hpValue: expect.objectContaining({ player: false }),
+				outline: expect.objectContaining({ gamemaster: true }),
+			}),
+		);
+	});
+
 	it('resolves non-player hitpoint visibility from user role', () => {
 		settingsMock.get.mockReturnValueOnce({
 			player: false,
@@ -365,6 +513,55 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 			gamemaster: true,
 		});
 		expect(canCurrentUserDisplayNonPlayerHitpointsOnCards(3)).toBe(true);
+	});
+
+	it('resolves field visibility from user role', () => {
+		expect(
+			canCurrentUserDisplayCombatTrackerField(
+				'actions',
+				{
+					hpValue: { player: false, trusted: false, assistant: true, gamemaster: true },
+					hpState: { player: false, trusted: false, assistant: true, gamemaster: true },
+					mana: { player: false, trusted: false, assistant: true, gamemaster: true },
+					wounds: { player: false, trusted: false, assistant: true, gamemaster: true },
+					actions: { player: true, trusted: true, assistant: true, gamemaster: true },
+					defend: { player: true, trusted: true, assistant: true, gamemaster: true },
+					interpose: { player: true, trusted: true, assistant: true, gamemaster: true },
+					opportunityAttack: {
+						player: true,
+						trusted: true,
+						assistant: true,
+						gamemaster: true,
+					},
+					help: { player: true, trusted: true, assistant: true, gamemaster: true },
+					outline: { player: true, trusted: true, assistant: true, gamemaster: true },
+				},
+				1,
+			),
+		).toBe(true);
+		expect(
+			canCurrentUserDisplayCombatTrackerField(
+				'hpValue',
+				{
+					hpValue: { player: false, trusted: false, assistant: true, gamemaster: true },
+					hpState: { player: false, trusted: false, assistant: true, gamemaster: true },
+					mana: { player: false, trusted: false, assistant: true, gamemaster: true },
+					wounds: { player: false, trusted: false, assistant: true, gamemaster: true },
+					actions: { player: true, trusted: true, assistant: true, gamemaster: true },
+					defend: { player: true, trusted: true, assistant: true, gamemaster: true },
+					interpose: { player: true, trusted: true, assistant: true, gamemaster: true },
+					opportunityAttack: {
+						player: true,
+						trusted: true,
+						assistant: true,
+						gamemaster: true,
+					},
+					help: { player: true, trusted: true, assistant: true, gamemaster: true },
+					outline: { player: true, trusted: true, assistant: true, gamemaster: true },
+				},
+				1,
+			),
+		).toBe(false);
 	});
 
 	it('returns normalized values for CT action dice color setting', () => {
@@ -513,6 +710,17 @@ describe('combatTrackerSettings monster card expansion permission', () => {
 		expect(isCombatTrackerNonPlayerHitpointPermissionSettingKey('combatTrackerLocation')).toBe(
 			false,
 		);
+		expect(
+			isCombatTrackerVisibilityPermissionSettingKey(
+				COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY,
+			),
+		).toBe(true);
+		expect(
+			isCombatTrackerVisibilityPermissionSettingKey(
+				`nimble.${COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY}`,
+			),
+		).toBe(true);
+		expect(isCombatTrackerVisibilityPermissionSettingKey('combatTrackerLocation')).toBe(false);
 		expect(
 			isCombatTrackerActionDiceColorSettingKey(COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY),
 		).toBe(true);

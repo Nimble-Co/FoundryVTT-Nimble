@@ -23,7 +23,7 @@ export const CT_EDGE_GUTTER_PX = 12;
 export const CT_MIN_WIDTH_RATIO = 0.52;
 export const CT_MAX_WIDTH_RATIO = 2;
 export const CT_MIN_CARD_SCALE = 0.78;
-export const CT_MAX_CARD_SCALE = 1.2;
+export const CT_MAX_CARD_SCALE = 1.4;
 export const CT_MIN_BADGE_SCALE = 1;
 export const CT_MAX_BADGE_SCALE = 1.8;
 

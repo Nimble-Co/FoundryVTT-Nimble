@@ -9,6 +9,8 @@ export const COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY = 'combatTrackerCtUseAct
 export const COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY = 'combatTrackerCtActionDiceColor';
 export const COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY =
 	'combatTrackerCtNonPlayerHpPermissions';
+export const COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY =
+	'combatTrackerCtVisibilityPermissions';
 export const CURRENT_TURN_ANIMATION_SETTING_KEYS = {
 	pulseAnimation: 'combatTrackerCurrentTurnPulseAnimation',
 	pulseSpeed: 'combatTrackerCurrentTurnPulseSpeed',
@@ -21,8 +23,25 @@ export const CURRENT_TURN_ANIMATION_SETTING_KEYS = {
 } as const;
 
 export type CombatTrackerRolePermissionKey = 'player' | 'trusted' | 'assistant' | 'gamemaster';
+export const COMBAT_TRACKER_VISIBILITY_FIELDS = [
+	'hpValue',
+	'hpState',
+	'mana',
+	'wounds',
+	'actions',
+	'defend',
+	'interpose',
+	'opportunityAttack',
+	'help',
+	'outline',
+] as const;
 
 export type CombatTrackerRolePermissionConfig = Record<CombatTrackerRolePermissionKey, boolean>;
+export type CombatTrackerVisibilityFieldKey = (typeof COMBAT_TRACKER_VISIBILITY_FIELDS)[number];
+export type CombatTrackerVisibilityPermissionConfig = Record<
+	CombatTrackerVisibilityFieldKey,
+	CombatTrackerRolePermissionConfig
+>;
 export interface CurrentTurnAnimationSettings {
 	pulseAnimation: boolean;
 	pulseSpeed: number;
@@ -67,6 +86,24 @@ const DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING: CombatTrackerRolePermissionConfi
 	trusted: false,
 	assistant: true,
 	gamemaster: true,
+};
+const DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING: CombatTrackerRolePermissionConfig = {
+	player: true,
+	trusted: true,
+	assistant: true,
+	gamemaster: true,
+};
+const DEFAULT_CT_VISIBILITY_PERMISSION_SETTING: CombatTrackerVisibilityPermissionConfig = {
+	hpValue: { ...DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING },
+	hpState: { ...DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING },
+	mana: { ...DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING },
+	wounds: { ...DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING },
+	actions: { ...DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING },
+	defend: { ...DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING },
+	interpose: { ...DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING },
+	opportunityAttack: { ...DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING },
+	help: { ...DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING },
+	outline: { ...DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING },
 };
 const CT_ACTION_DICE_COLOR_CSS_VAR = '--nimble-ct-action-die-color';
 type CurrentTurnAnimationSettingKey =
@@ -193,6 +230,44 @@ function normalizeRolePermissionConfig(value: unknown): CombatTrackerRolePermiss
 	};
 }
 
+function normalizeRolePermissionConfigWithFallback(
+	value: unknown,
+	fallback: CombatTrackerRolePermissionConfig,
+): CombatTrackerRolePermissionConfig {
+	const source =
+		typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
+	return {
+		player: normalizePermissionValue(source.player, fallback.player),
+		trusted: normalizePermissionValue(source.trusted, fallback.trusted),
+		assistant: normalizePermissionValue(source.assistant, fallback.assistant),
+		gamemaster: normalizePermissionValue(source.gamemaster, fallback.gamemaster),
+	};
+}
+
+function normalizeCombatTrackerVisibilityPermissionConfig(
+	value: unknown,
+): CombatTrackerVisibilityPermissionConfig {
+	const source =
+		typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
+	const hasFieldKeys = COMBAT_TRACKER_VISIBILITY_FIELDS.some((fieldKey) => fieldKey in source);
+	if (!hasFieldKeys) {
+		const legacyHpConfig = normalizeRolePermissionConfig(source);
+		return {
+			...foundry.utils.deepClone(DEFAULT_CT_VISIBILITY_PERMISSION_SETTING),
+			hpValue: legacyHpConfig,
+			hpState: { ...legacyHpConfig },
+		};
+	}
+
+	return COMBAT_TRACKER_VISIBILITY_FIELDS.reduce((config, fieldKey) => {
+		config[fieldKey] = normalizeRolePermissionConfigWithFallback(
+			source[fieldKey],
+			DEFAULT_CT_VISIBILITY_PERMISSION_SETTING[fieldKey],
+		);
+		return config;
+	}, {} as CombatTrackerVisibilityPermissionConfig);
+}
+
 function getUserRoleValue(
 	roleKey: 'PLAYER' | 'TRUSTED' | 'ASSISTANT' | 'GAMEMASTER',
 	fallback: number,
@@ -273,6 +348,15 @@ export function registerCombatTrackerSettings(): void {
 		config: false,
 		type: Object,
 		default: foundry.utils.deepClone(DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING),
+	});
+
+	registerWorldSetting(COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY, {
+		name: 'Combat Tracker Visibility Permissions',
+		hint: 'Configure which user roles can view each Combat Tracker card field',
+		scope: 'world',
+		config: false,
+		type: Object,
+		default: foundry.utils.deepClone(DEFAULT_CT_VISIBILITY_PERMISSION_SETTING) as unknown as object,
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY, {
@@ -442,6 +526,15 @@ export function getCombatTrackerActionDiceColor(): string {
 	);
 }
 
+export function getCombatTrackerVisibilityPermissionConfig(): CombatTrackerVisibilityPermissionConfig {
+	return normalizeCombatTrackerVisibilityPermissionConfig(
+		game.settings.get(
+			'nimble' as 'core',
+			COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY as 'rollMode',
+		),
+	);
+}
+
 export function isCombatTrackerCenterActiveCardSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY) return true;
@@ -482,6 +575,12 @@ export function isCombatTrackerNonPlayerHitpointPermissionSettingKey(settingKey:
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY) return true;
 	return settingKey === `nimble.${COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY}`;
+}
+
+export function isCombatTrackerVisibilityPermissionSettingKey(settingKey: unknown): boolean {
+	if (typeof settingKey !== 'string') return false;
+	if (settingKey === COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY) return true;
+	return settingKey === `nimble.${COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY}`;
 }
 
 export function isCombatTrackerActionDiceColorSettingKey(settingKey: unknown): boolean {
@@ -623,6 +722,16 @@ export async function setCombatTrackerNonPlayerHitpointPermissionConfig(
 	);
 }
 
+export async function setCombatTrackerVisibilityPermissionConfig(
+	value: CombatTrackerVisibilityPermissionConfig,
+): Promise<void> {
+	await game.settings.set(
+		'nimble' as 'core',
+		COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY as 'rollMode',
+		normalizeCombatTrackerVisibilityPermissionConfig(value) as never,
+	);
+}
+
 export async function setCombatTrackerActionDiceColor(value: string): Promise<void> {
 	const normalizedColor = normalizeHexColor(value);
 	applyCtActionDiceColorCssVariable(normalizedColor);
@@ -650,8 +759,17 @@ export async function setCurrentTurnAnimationSetting(
 export function canCurrentUserDisplayNonPlayerHitpointsOnCards(
 	userRole = Number(game.user?.role ?? 0),
 ): boolean {
+	return canUserRoleAccessCombatTrackerPermission(
+		getCombatTrackerNonPlayerHitpointPermissionConfig(),
+		userRole,
+	);
+}
+
+export function canUserRoleAccessCombatTrackerPermission(
+	permissionConfig: CombatTrackerRolePermissionConfig,
+	userRole = Number(game.user?.role ?? 0),
+): boolean {
 	const normalizedRole = Number.isFinite(userRole) ? Number(userRole) : 0;
-	const permissionConfig = getCombatTrackerNonPlayerHitpointPermissionConfig();
 	const gmRole = getUserRoleValue('GAMEMASTER', 4);
 	const assistantRole = getUserRoleValue('ASSISTANT', 3);
 	const trustedRole = getUserRoleValue('TRUSTED', 2);
@@ -662,4 +780,12 @@ export function canCurrentUserDisplayNonPlayerHitpointsOnCards(
 	if (normalizedRole >= trustedRole) return permissionConfig.trusted;
 	if (normalizedRole >= playerRole) return permissionConfig.player;
 	return false;
+}
+
+export function canCurrentUserDisplayCombatTrackerField(
+	fieldKey: CombatTrackerVisibilityFieldKey,
+	permissionConfig = getCombatTrackerVisibilityPermissionConfig(),
+	userRole = Number(game.user?.role ?? 0),
+): boolean {
+	return canUserRoleAccessCombatTrackerPermission(permissionConfig[fieldKey], userRole);
 }

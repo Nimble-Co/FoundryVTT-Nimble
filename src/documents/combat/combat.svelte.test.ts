@@ -39,6 +39,7 @@ describe('NimbleCombat', () => {
 		combatPrototype.startCombat = vi.fn(async function (this: Combat) {
 			return this;
 		});
+		combatPrototype._onEndTurn = vi.fn(async () => undefined);
 		combatPrototype.setupTurns = vi.fn(function (this: {
 			combatants?: { contents?: Combatant.Implementation[] };
 		}) {
@@ -410,6 +411,809 @@ describe('NimbleCombat', () => {
 		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
 			{ _id: 'npc-combatant', 'system.actions.base.current': 3 },
 		]);
+	});
+
+	it('spends one action and marks a heroic reaction unavailable when the GM toggles it off-turn', async () => {
+		const combatId = 'combat-heroic-reaction-toggle';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const reactingCharacter = createMockCombatant({
+			id: 'reacting-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, reactingCharacter]),
+			turns: [activeCharacter, reactingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.toggleHeroicReactionAvailability('reacting-character', 'defend');
+
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'reacting-character',
+				'system.actions.heroic.defendAvailable': false,
+				'system.actions.base.current': 2,
+			},
+		]);
+	});
+
+	it('re-enables a spent heroic reaction without refunding actions', async () => {
+		const combatId = 'combat-heroic-reaction-reenable';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const reactingCharacter = createMockCombatant({
+			id: 'reacting-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 1,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		foundry.utils.setProperty(reactingCharacter, 'system.actions.heroic.interposeAvailable', false);
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, reactingCharacter]),
+			turns: [activeCharacter, reactingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.toggleHeroicReactionAvailability(
+			'reacting-character',
+			'interpose',
+		);
+
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'reacting-character',
+				'system.actions.heroic.interposeAvailable': true,
+			},
+		]);
+	});
+
+	it('lets an owner use Defend off-turn and applies the Defending condition', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-defend-owner-use';
+		const activeActor = createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 });
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: false,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: activeActor,
+			combatId,
+		});
+		const defendingActor = createCombatActorFixture({
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+			isOwner: true,
+		}) as Actor.Implementation & {
+			toggleStatusEffect: ReturnType<typeof vi.fn>;
+			statuses: Set<string>;
+		};
+		defendingActor.toggleStatusEffect = vi.fn().mockResolvedValue(undefined);
+		defendingActor.statuses = new Set();
+		const defendingCharacter = createMockCombatant({
+			id: 'defending-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: defendingActor,
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, defendingCharacter]),
+			turns: [activeCharacter, defendingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.toggleHeroicReactionAvailability('defending-character', 'defend');
+
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'defending-character',
+				'system.actions.heroic.defendAvailable': false,
+				'system.actions.base.current': 2,
+			},
+		]);
+		expect(defendingActor.toggleStatusEffect).toHaveBeenCalledWith('defending', { active: true });
+	});
+
+	it('lets an owner use Interpose off-turn and applies the Interposing condition', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-interpose-owner-use';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: false,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const interposingActor = createCombatActorFixture({
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+			isOwner: true,
+		}) as Actor.Implementation & {
+			toggleStatusEffect: ReturnType<typeof vi.fn>;
+			statuses: Set<string>;
+		};
+		interposingActor.toggleStatusEffect = vi.fn().mockResolvedValue(undefined);
+		interposingActor.statuses = new Set();
+		const interposingCharacter = createMockCombatant({
+			id: 'interposing-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: interposingActor,
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, interposingCharacter]),
+			turns: [activeCharacter, interposingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.toggleHeroicReactionAvailability(
+			'interposing-character',
+			'interpose',
+		);
+
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'interposing-character',
+				'system.actions.heroic.interposeAvailable': false,
+				'system.actions.base.current': 2,
+			},
+		]);
+		expect(interposingActor.toggleStatusEffect).toHaveBeenCalledWith('interposing', {
+			active: true,
+		});
+	});
+
+	it('lets an owner use Opportunity Attack off-turn and applies the Opportunity Attack condition', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-opportunity-attack-owner-use';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: false,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const reactingActor = createCombatActorFixture({
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+			isOwner: true,
+		}) as Actor.Implementation & {
+			toggleStatusEffect: ReturnType<typeof vi.fn>;
+			statuses: Set<string>;
+		};
+		reactingActor.toggleStatusEffect = vi.fn().mockResolvedValue(undefined);
+		reactingActor.statuses = new Set();
+		const reactingCharacter = createMockCombatant({
+			id: 'reacting-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: reactingActor,
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, reactingCharacter]),
+			turns: [activeCharacter, reactingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.toggleHeroicReactionAvailability(
+			'reacting-character',
+			'opportunityAttack',
+		);
+
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'reacting-character',
+				'system.actions.heroic.opportunityAttackAvailable': false,
+				'system.actions.base.current': 2,
+			},
+		]);
+		expect(reactingActor.toggleStatusEffect).toHaveBeenCalledWith('opportunityAttacking', {
+			active: true,
+		});
+	});
+
+	it('lets an owner use Help off-turn and applies the Helping condition', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-help-owner-use';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: false,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const helpingActor = createCombatActorFixture({
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+			isOwner: true,
+		}) as Actor.Implementation & {
+			toggleStatusEffect: ReturnType<typeof vi.fn>;
+			statuses: Set<string>;
+		};
+		helpingActor.toggleStatusEffect = vi.fn().mockResolvedValue(undefined);
+		helpingActor.statuses = new Set();
+		const helpingCharacter = createMockCombatant({
+			id: 'helping-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: helpingActor,
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, helpingCharacter]),
+			turns: [activeCharacter, helpingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.toggleHeroicReactionAvailability('helping-character', 'help');
+
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'helping-character',
+				'system.actions.heroic.helpAvailable': false,
+				'system.actions.base.current': 2,
+			},
+		]);
+		expect(helpingActor.toggleStatusEffect).toHaveBeenCalledWith('helping', { active: true });
+	});
+
+	it('clears the Defending condition when the GM re-enables Defend', async () => {
+		const combatId = 'combat-defend-gm-reenable-clears-condition';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const defendingActor = createCombatActorFixture({
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+			isOwner: true,
+		}) as Actor.Implementation & {
+			toggleStatusEffect: ReturnType<typeof vi.fn>;
+			statuses: Set<string>;
+		};
+		defendingActor.toggleStatusEffect = vi.fn().mockResolvedValue(undefined);
+		defendingActor.statuses = new Set(['defending']);
+		const defendingCharacter = createMockCombatant({
+			id: 'defending-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 1,
+			actionsMax: 3,
+			actor: defendingActor,
+			combatId,
+		});
+		foundry.utils.setProperty(defendingCharacter, 'system.actions.heroic.defendAvailable', false);
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, defendingCharacter]),
+			turns: [activeCharacter, defendingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.toggleHeroicReactionAvailability('defending-character', 'defend');
+
+		expect(changed).toBe(true);
+		expect(defendingActor.toggleStatusEffect).toHaveBeenCalledWith('defending', { active: false });
+	});
+
+	it('clears the Interposing condition when the GM re-enables Interpose', async () => {
+		const combatId = 'combat-interpose-gm-reenable-clears-condition';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const interposingActor = createCombatActorFixture({
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+			isOwner: true,
+		}) as Actor.Implementation & {
+			toggleStatusEffect: ReturnType<typeof vi.fn>;
+			statuses: Set<string>;
+		};
+		interposingActor.toggleStatusEffect = vi.fn().mockResolvedValue(undefined);
+		interposingActor.statuses = new Set(['interposing']);
+		const interposingCharacter = createMockCombatant({
+			id: 'interposing-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 1,
+			actionsMax: 3,
+			actor: interposingActor,
+			combatId,
+		});
+		foundry.utils.setProperty(
+			interposingCharacter,
+			'system.actions.heroic.interposeAvailable',
+			false,
+		);
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, interposingCharacter]),
+			turns: [activeCharacter, interposingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.toggleHeroicReactionAvailability(
+			'interposing-character',
+			'interpose',
+		);
+
+		expect(changed).toBe(true);
+		expect(interposingActor.toggleStatusEffect).toHaveBeenCalledWith('interposing', {
+			active: false,
+		});
+	});
+
+	it('clears the Opportunity Attack condition when the GM re-enables Opportunity Attack', async () => {
+		const combatId = 'combat-opportunity-attack-gm-reenable-clears-condition';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const reactingActor = createCombatActorFixture({
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+			isOwner: true,
+		}) as Actor.Implementation & {
+			toggleStatusEffect: ReturnType<typeof vi.fn>;
+			statuses: Set<string>;
+		};
+		reactingActor.toggleStatusEffect = vi.fn().mockResolvedValue(undefined);
+		reactingActor.statuses = new Set(['opportunityAttacking']);
+		const reactingCharacter = createMockCombatant({
+			id: 'reacting-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 1,
+			actionsMax: 3,
+			actor: reactingActor,
+			combatId,
+		});
+		foundry.utils.setProperty(
+			reactingCharacter,
+			'system.actions.heroic.opportunityAttackAvailable',
+			false,
+		);
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, reactingCharacter]),
+			turns: [activeCharacter, reactingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.toggleHeroicReactionAvailability(
+			'reacting-character',
+			'opportunityAttack',
+		);
+
+		expect(changed).toBe(true);
+		expect(reactingActor.toggleStatusEffect).toHaveBeenCalledWith('opportunityAttacking', {
+			active: false,
+		});
+	});
+
+	it('clears the Helping condition when the GM re-enables Help', async () => {
+		const combatId = 'combat-help-gm-reenable-clears-condition';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const helpingActor = createCombatActorFixture({
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+			isOwner: true,
+		}) as Actor.Implementation & {
+			toggleStatusEffect: ReturnType<typeof vi.fn>;
+			statuses: Set<string>;
+		};
+		helpingActor.toggleStatusEffect = vi.fn().mockResolvedValue(undefined);
+		helpingActor.statuses = new Set(['helping']);
+		const helpingCharacter = createMockCombatant({
+			id: 'helping-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 1,
+			actionsMax: 3,
+			actor: helpingActor,
+			combatId,
+		});
+		foundry.utils.setProperty(helpingCharacter, 'system.actions.heroic.helpAvailable', false);
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, helpingCharacter]),
+			turns: [activeCharacter, helpingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.toggleHeroicReactionAvailability('helping-character', 'help');
+
+		expect(changed).toBe(true);
+		expect(helpingActor.toggleStatusEffect).toHaveBeenCalledWith('helping', { active: false });
+	});
+
+	it('allows the GM to toggle a heroic reaction on the combatants own turn', async () => {
+		const combatId = 'combat-heroic-reaction-own-turn';
+		const activeActor = createCombatActorFixture({
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+			isOwner: true,
+		}) as Actor.Implementation & {
+			toggleStatusEffect: ReturnType<typeof vi.fn>;
+			statuses: Set<string>;
+		};
+		activeActor.toggleStatusEffect = vi.fn().mockResolvedValue(undefined);
+		activeActor.statuses = new Set();
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: activeActor,
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter]),
+			turns: [activeCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.toggleHeroicReactionAvailability(
+			'active-character',
+			'opportunityAttack',
+		);
+
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'active-character',
+				'system.actions.heroic.opportunityAttackAvailable': false,
+				'system.actions.base.current': 2,
+			},
+		]);
+		expect(activeActor.toggleStatusEffect).toHaveBeenCalledWith('opportunityAttacking', {
+			active: true,
+		});
+	});
+
+	it('refreshes all heroic reactions for characters when a new round starts', async () => {
+		const combatId = 'combat-heroic-reaction-round-refresh';
+		const characterOne = createMockCombatant({
+			id: 'character-one',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 15,
+			actionsCurrent: 2,
+			actionsMax: 3,
+			actor: Object.assign(createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }), {
+				toggleStatusEffect: vi.fn().mockResolvedValue(undefined),
+				statuses: new Set(['defending', 'interposing', 'opportunityAttacking', 'helping']),
+			}),
+			combatId,
+		});
+		const characterTwo = createMockCombatant({
+			id: 'character-two',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 1,
+			actionsMax: 3,
+			actor: Object.assign(createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }), {
+				toggleStatusEffect: vi.fn().mockResolvedValue(undefined),
+				statuses: new Set(),
+			}),
+			combatId,
+		});
+		foundry.utils.setProperty(characterOne, 'system.actions.heroic.defendAvailable', false);
+		foundry.utils.setProperty(
+			characterOne,
+			'system.actions.heroic.opportunityAttackAvailable',
+			false,
+		);
+		foundry.utils.setProperty(characterTwo, 'system.actions.heroic.helpAvailable', false);
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([characterOne, characterTwo]),
+			turns: [characterOne, characterTwo],
+			turn: 0,
+			combatant: characterOne,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		await combat.nextRound();
+
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith(
+			'Combatant',
+			expect.arrayContaining([
+				expect.objectContaining({
+					_id: 'character-one',
+					'system.actions.heroic.defendAvailable': true,
+					'system.actions.heroic.interposeAvailable': true,
+					'system.actions.heroic.opportunityAttackAvailable': true,
+					'system.actions.heroic.helpAvailable': true,
+				}),
+				expect.objectContaining({
+					_id: 'character-two',
+					'system.actions.heroic.defendAvailable': true,
+					'system.actions.heroic.interposeAvailable': true,
+					'system.actions.heroic.opportunityAttackAvailable': true,
+					'system.actions.heroic.helpAvailable': true,
+				}),
+			]),
+		);
+		expect(
+			(
+				characterOne.actor as Actor.Implementation & {
+					toggleStatusEffect: ReturnType<typeof vi.fn>;
+				}
+			).toggleStatusEffect,
+		).toHaveBeenCalledWith('defending', { active: false });
+		expect(
+			(
+				characterOne.actor as Actor.Implementation & {
+					toggleStatusEffect: ReturnType<typeof vi.fn>;
+				}
+			).toggleStatusEffect,
+		).toHaveBeenCalledWith('interposing', { active: false });
+		expect(
+			(
+				characterOne.actor as Actor.Implementation & {
+					toggleStatusEffect: ReturnType<typeof vi.fn>;
+				}
+			).toggleStatusEffect,
+		).toHaveBeenCalledWith('opportunityAttacking', { active: false });
+		expect(
+			(
+				characterOne.actor as Actor.Implementation & {
+					toggleStatusEffect: ReturnType<typeof vi.fn>;
+				}
+			).toggleStatusEffect,
+		).toHaveBeenCalledWith('helping', { active: false });
+	});
+
+	it('clears reaction side-effect conditions at the end of the characters turn', async () => {
+		const defendingActor = createCombatActorFixture({
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+		}) as Actor.Implementation & {
+			toggleStatusEffect: ReturnType<typeof vi.fn>;
+			statuses: Set<string>;
+		};
+		defendingActor.toggleStatusEffect = vi.fn().mockResolvedValue(undefined);
+		defendingActor.statuses = new Set([
+			'defending',
+			'interposing',
+			'opportunityAttacking',
+			'helping',
+		]);
+		const combatant = createMockCombatant({
+			id: 'character-ending-turn',
+			type: 'character',
+			actionsCurrent: 1,
+			actionsMax: 3,
+			actor: defendingActor,
+		});
+		const combat = new NimbleCombat({
+			id: 'combat-end-turn-defending',
+			combatants: createCombatantsCollectionFixture([combatant]),
+		} as unknown as Combat.CreateData);
+
+		await combat._onEndTurn(combatant, {} as Combat.TurnEventContext);
+
+		expect(combatant.update).toHaveBeenCalledWith({
+			'system.actions.base.current': 3,
+		});
+		expect(defendingActor.toggleStatusEffect).toHaveBeenCalledWith('defending', { active: false });
+		expect(defendingActor.toggleStatusEffect).toHaveBeenCalledWith('interposing', {
+			active: false,
+		});
+		expect(defendingActor.toggleStatusEffect).toHaveBeenCalledWith('opportunityAttacking', {
+			active: false,
+		});
+		expect(defendingActor.toggleStatusEffect).toHaveBeenCalledWith('helping', {
+			active: false,
+		});
 	});
 
 	it('auto-dissolves grouped minions at round boundary in ncs mode', async () => {

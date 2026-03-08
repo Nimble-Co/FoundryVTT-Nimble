@@ -1,3 +1,5 @@
+import type { CombatTrackerVisibilityPermissionConfig } from '../../../settings/combatTrackerSettings.js';
+
 export interface SceneCombatantLists {
 	aliveCombatants: Combatant.Implementation[];
 	deadCombatants: Combatant.Implementation[];
@@ -35,10 +37,45 @@ export interface CanvasTokenLike {
 }
 
 export type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
+export type HpBadgeMode = 'hidden' | 'value' | 'state';
 
 export type CombatWithDrop = Combat & {
 	_onDrop?: (event: DragEvent & { target: EventTarget & HTMLElement }) => Promise<unknown>;
 };
+
+export type CombatWithHeroicReactionToggle = Combat & {
+	toggleHeroicReactionAvailability?: (
+		combatantId: string,
+		reactionKey: 'defend' | 'interpose' | 'opportunityAttack' | 'help',
+	) => Promise<boolean>;
+};
+
+export interface CombatantCardResourceChip {
+	key: 'mana' | 'wounds' | 'defend' | 'interpose';
+	iconClass: string;
+	text?: string;
+	title: string;
+	active?: boolean;
+	tone: 'mana' | 'wounds' | 'utility';
+}
+
+export interface PlayerCombatantDrawerCell {
+	key: 'hp' | 'wounds' | 'defend' | 'interpose' | 'opportunityAttack' | 'help';
+	iconClass?: string;
+	text?: string;
+	title: string;
+	active?: boolean;
+	visible: boolean;
+}
+
+export interface PlayerCombatantDrawerData {
+	hp: PlayerCombatantDrawerCell;
+	wounds: PlayerCombatantDrawerCell;
+	defend: PlayerCombatantDrawerCell;
+	interpose: PlayerCombatantDrawerCell;
+	opportunityAttack: PlayerCombatantDrawerCell;
+	help: PlayerCombatantDrawerCell;
+}
 
 export interface ResolveActiveEntryKeyParams {
 	activeCombatantId: string | null;
@@ -71,5 +108,5 @@ export interface CtTopTrackerSettingPatch {
 	useActionDice?: boolean;
 	layoutVersionDelta?: number;
 	shouldCenterActiveEntry?: boolean;
-	refreshNonPlayerHitpointPermission?: boolean;
+	visibilityPermissions?: CombatTrackerVisibilityPermissionConfig;
 }
