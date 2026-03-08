@@ -518,8 +518,8 @@ const spellUpcastDialog = {
 	},
 	slider: {
 		level: 'NIMBLE.spells.spellUpcastDialog.slider.level',
-		minTier: 'NIMBLE.spells.spellUpcastDialog.slider.minTier',
-		maxTier: 'NIMBLE.spells.spellUpcastDialog.slider.maxTier',
+		minTier: 'NIMBLE.spells.spellUpcastDialog.slider.min',
+		maxTier: 'NIMBLE.spells.spellUpcastDialog.slider.max',
 	},
 	chooseEnhancement: 'NIMBLE.spells.spellUpcastDialog.chooseEnhancement',
 	appliedEffect: 'NIMBLE.spells.spellUpcastDialog.appliedEffect',
