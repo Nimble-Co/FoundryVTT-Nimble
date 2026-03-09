@@ -185,6 +185,7 @@
 			font-weight: 500;
 			color: var(--nimble-dark-text-color);
 			line-height: 1.5;
+			text-align: center;
 		}
 
 		&__list {
@@ -198,11 +199,15 @@
 
 		&__footer {
 			margin: 0;
-			font-size: var(--nimble-xs-text);
+			padding: 0.5rem 0.75rem;
+			font-size: var(--nimble-sm-text);
 			font-weight: 500;
 			color: var(--nimble-medium-text-color);
-			line-height: 1.5;
-			font-style: italic;
+			line-height: 1.4;
+			text-align: center;
+			background: var(--nimble-hint-background-color);
+			border: 1px solid var(--nimble-hint-border-color);
+			border-radius: 4px;
 		}
 	}
 
