@@ -24,7 +24,12 @@ When the user asks to deploy (e.g., "deploy", "deploy:nimble", "push to server")
 
 4. **Report** the deploy + restart result to the user.
 
+## Deploy Logs
+
+Each `pnpm deploy:nimble` run appends a line to `logs/deploy.log` via `scripts/deploy-log.sh`. See `references/deploy-logs.md` for the log format, location, and how to interpret failures.
+
 ## Error Handling
 
 - If `pnpm deploy:nimble` fails, **stop immediately** and report the error — do NOT attempt to SSH or restart.
 - If the SSH command fails, report the error and ask the user whether to retry or investigate the server.
+- Check `logs/deploy.log` to review recent deploy history.

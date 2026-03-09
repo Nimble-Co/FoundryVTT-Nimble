@@ -6,7 +6,7 @@ For project conventions, architecture, and commands, see [`.github/copilot-instr
 
 ## Sub-Agents
 
-Five slash commands invoke specialized sub-agents for this project. All agents operate in **draft & propose** mode — they research and plan before writing anything. No files are written until you confirm.
+Seven slash commands invoke specialized sub-agents for this project. All agents operate in **draft & propose** mode — they research and plan before writing anything. No files are written until you confirm.
 
 | Command | When to Use |
 |---------|-------------|
@@ -15,6 +15,8 @@ Five slash commands invoke specialized sub-agents for this project. All agents o
 | `/nimble-research` | Answering an implementation question. Searches the codebase + fetches up-to-date docs via Context7 MCP. Read-only. |
 | `/nimble-review` | Reviewing changed/staged files against CLAUDE.md conventions before committing. |
 | `/nimble-upstream` | Comparing fork against `upstream/dev`, categorizing changes, and drafting patches. No git operations beyond `fetch`. |
+| `/nimble-git-ops` | Full deliberate Git workflow: survey → code review (`nimble-review`) → `pnpm check` → grouped commits (confirmed) → push → PR/issue management. Use when you want a thorough, interactive commit cycle. |
+| `/nimble-commit-push` | Quick automated pipeline: auto-group changes → `pnpm check` → commit all groups → push → open PR to `stage`. Use when code is ready and you want zero friction. |
 
 ### When to Auto-Invoke
 
@@ -23,6 +25,8 @@ Five slash commands invoke specialized sub-agents for this project. All agents o
 - **Unsure how to implement something** → run `/nimble-research <question>` first.
 - **Before committing** → run `/nimble-review` to catch convention violations.
 - **Upstream has new commits** → run `/nimble-upstream` to plan the merge safely.
+- **Ready to commit with full review** → run `/nimble-git-ops` for the complete quality-gated workflow.
+- **Just commit and push quickly** → run `/nimble-commit-push` for automated grouping + PR.
 
 ## Agent Memory
 
