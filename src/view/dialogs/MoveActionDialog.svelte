@@ -262,11 +262,12 @@
 		&__footer .nimble-button[data-button-variant='primary'] {
 			background: hsl(220, 15%, 18%);
 			border-color: hsl(45, 70%, 55%);
-			color: var(--nimble-light-text-color);
+			color: hsl(45, 60%, 75%);
 
 			&:hover {
 				background: hsla(45, 60%, 50%, 0.2);
 				border-color: hsl(45, 70%, 60%);
+				color: hsl(45, 60%, 85%);
 			}
 
 			i {
