@@ -12,7 +12,6 @@
 	} from '../../../utils/activationEffects.js';
 
 	import ActionPipTracker from '../components/ActionPipTracker.svelte';
-	import HeroicActionBox from '../components/HeroicActionBox.svelte';
 	import SearchBar from '../components/SearchBar.svelte';
 
 	// ============================================================================
@@ -184,11 +183,16 @@
 	// Panel State & Action Handlers
 	// ============================================================================
 
-	let expandedPanel = $state(null);
-	let isCompactMode = $derived(expandedPanel === 'attack' || expandedPanel === 'spell');
+	let expandedPanel = $state('attack');
 
 	function togglePanel(panelName) {
-		expandedPanel = expandedPanel === panelName ? null : panelName;
+		// If clicking the same panel, close it (go back to attack)
+		// Otherwise, open the new panel
+		if (expandedPanel === panelName) {
+			expandedPanel = panelName === 'attack' ? null : 'attack';
+		} else {
+			expandedPanel = panelName;
+		}
 	}
 
 	function handleActionClick(action) {
@@ -242,6 +246,22 @@
 			AssessActionDialog,
 			{ document: actor, deductActionPip, inCombat },
 			{ width: 420, uniqueId: dialogId },
+		).render(true);
+	}
+
+	async function handleHelpDialog() {
+		const { default: GenericDialog } = await import(
+			'../../../documents/dialogs/GenericDialog.svelte.js'
+		);
+		const { default: HeroicActionsHelpDialog } = await import(
+			'../../dialogs/HeroicActionsHelpDialog.svelte'
+		);
+
+		GenericDialog.getOrCreate(
+			localize('NIMBLE.ui.heroicActions.help.dialogTitle'),
+			HeroicActionsHelpDialog,
+			{},
+			{ width: 480, uniqueId: 'heroic-actions-help' },
 		).render(true);
 	}
 
@@ -718,43 +738,36 @@
 			<h3 class="nimble-heading" data-heading-variant="section">
 				{localize('NIMBLE.ui.heroicActions.title')}
 			</h3>
+
+			<button
+				class="nimble-button heroic-actions__help-button"
+				data-button-variant="icon"
+				type="button"
+				aria-label={localize('NIMBLE.ui.heroicActions.help.tooltip')}
+				data-tooltip={localize('NIMBLE.ui.heroicActions.help.tooltip')}
+				onclick={handleHelpDialog}
+			>
+				<i class="fa-solid fa-circle-question"></i>
+			</button>
 		</header>
 
-		{#if isCompactMode}
-			<!-- Compact tab mode when Attack or Spell panel is open -->
-			<div class="heroic-actions-tabs">
-				{#each HEROIC_ACTIONS as action (action.id)}
-					<button
-						class="heroic-action-tab"
-						class:heroic-action-tab--active={expandedPanel === action.id}
-						class:heroic-action-tab--disabled={isActionDisabled(action)}
-						type="button"
-						aria-label={localize(action.labelKey)}
-						data-tooltip={getActionTooltip(action)}
-						disabled={isActionDisabled(action)}
-						onclick={() => handleActionClick(action)}
-					>
-						<i class={action.icon}></i>
-						<span class="heroic-action-tab__indicator"></span>
-					</button>
-				{/each}
-			</div>
-		{:else}
-			<!-- Full box mode when no panel is expanded -->
-			<div class="heroic-actions-grid">
-				{#each HEROIC_ACTIONS as action (action.id)}
-					<HeroicActionBox
-						icon={action.icon}
-						label={localize(action.labelKey)}
-						description={localize(action.descriptionKey)}
-						tooltip={isActionDisabled(action) ? getActionTooltip(action) : ''}
-						disabled={isActionDisabled(action)}
-						expanded={expandedPanel === action.id}
-						onclick={() => handleActionClick(action)}
-					/>
-				{/each}
-			</div>
-		{/if}
+		<div class="heroic-actions-tabs">
+			{#each HEROIC_ACTIONS as action (action.id)}
+				<button
+					class="heroic-action-tab"
+					class:heroic-action-tab--active={expandedPanel === action.id}
+					class:heroic-action-tab--disabled={isActionDisabled(action)}
+					type="button"
+					aria-label={localize(action.labelKey)}
+					data-tooltip={getActionTooltip(action)}
+					disabled={isActionDisabled(action)}
+					onclick={() => handleActionClick(action)}
+				>
+					<i class={action.icon}></i>
+					<span class="heroic-action-tab__indicator"></span>
+				</button>
+			{/each}
+		</div>
 	</section>
 
 	{#if expandedPanel === 'attack'}
@@ -1026,14 +1039,20 @@
 		}
 	}
 
-	// Full-size action boxes (2x2 grid)
-	.heroic-actions-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.5rem;
+	.heroic-actions__help-button {
+		margin-left: auto;
+
+		i {
+			font-size: 0.875rem;
+			color: var(--nimble-medium-text-color);
+		}
+
+		&:hover i {
+			color: var(--nimble-dark-text-color);
+		}
 	}
 
-	// Compact action tabs (horizontal row)
+	// Action tabs (horizontal row)
 	.heroic-actions-tabs {
 		display: flex;
 		gap: 0.25rem;

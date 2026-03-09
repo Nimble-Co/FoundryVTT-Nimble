@@ -685,6 +685,32 @@
 						"description": "Study your surroundings"
 					}
 				},
+				"help": {
+					"dialogTitle": "Combat Actions",
+					"tooltip": "What can I do in combat?",
+					"intro": "On your turn, you have 3 actions to spend. Each action lets you do one of the following:",
+					"footer": "You can use your actions in any order. Creative actions beyond this list are encouraged - ask your GM!",
+					"attack": {
+						"title": "Attack",
+						"description": "Make an attack with a weapon or unarmed strike. Roll your Primary Die to hit, then roll damage if successful."
+					},
+					"spell": {
+						"title": "Cast a Spell",
+						"description": "Cast a spell you know. Most spells cost 1 action and may require mana. Check your spell's details for specifics."
+					},
+					"move": {
+						"title": "Move",
+						"description": "Move up to your speed in spaces. You can split your movement around other actions."
+					},
+					"assess": {
+						"title": "Assess",
+						"description": "Study your surroundings. Ask a question, create an opening for your next attack, or anticipate incoming danger."
+					},
+					"other": {
+						"title": "Other Actions",
+						"description": "Use an item, interact with an object, help an ally, hide, or attempt any other reasonable action. Ask your GM!"
+					}
+				},
 				"assess": {
 					"dialogTitle": "Assess Action",
 					"chooseOption": "Choose an Option",
