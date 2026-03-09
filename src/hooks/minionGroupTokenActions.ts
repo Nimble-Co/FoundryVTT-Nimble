@@ -1434,14 +1434,13 @@ function buildSelectionWarnings(result: {
 	return warnings;
 }
 
-function resetGroupAttackPanelForRender(panel: HTMLDivElement): boolean {
+function resetGroupAttackPanelForRender(panel: HTMLDivElement): void {
 	panel.hidden = false;
 	hideGroupAttackTargetPopover();
 	hideGroupAttackActionDescriptionPopover();
 	hideGroupAttackImagePopover();
 	panel.replaceChildren();
 	panel.style.removeProperty('width');
-	return true;
 }
 
 function renderGroupAttackPanelHeader(panel: HTMLDivElement): void {
@@ -1877,7 +1876,7 @@ function renderGroupAttackPanel(): void {
 		return selectedActionId.length > 0;
 	});
 
-	if (!resetGroupAttackPanelForRender(panel)) return;
+	resetGroupAttackPanelForRender(panel);
 	renderGroupAttackPanelHeader(panel);
 	const targetSection = renderGroupAttackTargetSection({
 		panel,
@@ -2952,9 +2951,6 @@ export default function registerMinionGroupTokenActions(): void {
 	didRegisterMinionGroupTokenActions = true;
 	(globalThis as Record<string, unknown>).__nimbleMinionGroupTokenActionsRegistered = true;
 	logTokenUi('registerMinionGroupTokenActions invoked');
-	if (game.settings.get('nimble' as 'core', 'hideGroupAttackPanel' as 'rollMode')) {
-		ncswSidebarViewMode = 'combatTracker';
-	}
 	hideGroupAttackPanel({ clearTargets: false });
 
 	windowResizeHandler = () => {
@@ -3001,12 +2997,7 @@ export default function registerMinionGroupTokenActions(): void {
 	registerHook('deactivateTokenLayer', () =>
 		refreshActionBarAndSceneControls('deactivateTokenLayer'),
 	);
-	registerHook('updateSetting', () => {
-		if (game.settings.get('nimble' as 'core', 'hideGroupAttackPanel' as 'rollMode')) {
-			setNcswSidebarViewMode('combatTracker');
-		}
-		scheduleActionBarRefresh('updateSetting');
-	});
+	registerHook('updateSetting', () => scheduleActionBarRefresh('updateSetting'));
 
 	if (typeof canvas !== 'undefined' && canvas?.ready) {
 		refreshActionBarAndSceneControls('initial-ready');
