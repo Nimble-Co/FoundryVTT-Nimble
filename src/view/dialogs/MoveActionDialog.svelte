@@ -218,24 +218,27 @@
 		&__footer {
 			display: flex;
 			gap: 0.5rem;
-			--nimble-button-padding: 0.5rem 1rem;
 
 			.nimble-button {
 				flex: 1;
+				padding: 0.625rem 1rem;
+				font-size: var(--nimble-sm-text);
+				font-weight: 600;
 			}
 
 			.nimble-button[data-button-variant='primary'] {
-				background: linear-gradient(135deg, hsl(139, 47%, 44%) 0%, hsl(139, 47%, 38%) 100%);
-				border-color: hsl(139, 47%, 35%);
-				color: white;
-				font-weight: 600;
+				background: var(--nimble-box-background-color);
+				border: 2px solid hsl(45, 60%, 45%);
+				color: var(--nimble-dark-text-color);
 
 				&:hover {
-					background: linear-gradient(135deg, hsl(139, 47%, 40%) 0%, hsl(139, 47%, 34%) 100%);
+					background: hsla(45, 60%, 50%, 0.15);
+					border-color: hsl(45, 60%, 50%);
 				}
 
 				i {
 					margin-right: 0.375rem;
+					color: hsl(45, 60%, 45%);
 				}
 			}
 		}
@@ -254,6 +257,21 @@
 
 		&__speed i {
 			color: hsl(210, 70%, 65%);
+		}
+
+		&__footer .nimble-button[data-button-variant='primary'] {
+			background: hsl(220, 15%, 18%);
+			border-color: hsl(45, 70%, 55%);
+			color: var(--nimble-light-text-color);
+
+			&:hover {
+				background: hsla(45, 60%, 50%, 0.2);
+				border-color: hsl(45, 70%, 60%);
+			}
+
+			i {
+				color: hsl(45, 70%, 60%);
+			}
 		}
 	}
 </style>

@@ -479,7 +479,20 @@
 
 		await roll.evaluate();
 
-		// Create chat message
+		// Build the activation effects with evaluated roll data
+		const evaluatedEffects = [
+			{
+				type: 'damage',
+				formula: rollFormula,
+				damageType: 'bludgeoning',
+				canCrit: true,
+				canMiss: true,
+				roll: roll.toJSON(),
+				total: roll.total,
+			},
+		];
+
+		// Create chat message using the feature card format
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${actor.name}: ${localize('NIMBLE.ui.heroicActions.unarmedStrike')}`,
@@ -488,16 +501,32 @@
 			sound: CONFIG.sounds.dice,
 			rolls: [roll],
 			system: {
+				// Metadata fields
 				actorName: actor.name,
 				actorType: actor.type,
-				activation: unarmedItem.system.activation,
 				image: unarmedItem.img,
+				permissions: 3, // OWNER permission
+				rollMode: result.rollMode ?? 0,
+				// Feature card specific fields
+				name: localize('NIMBLE.ui.heroicActions.unarmedStrike'),
+				description: '',
+				featureType: 'feature',
+				class: '',
+				attackType: 'reach',
+				attackDistance: 1,
+				// Roll state
 				isCritical: roll.isCritical,
 				isMiss: roll.isMiss,
-				rollMode: result.rollMode ?? 0,
+				// Activation data with evaluated effects
+				activation: {
+					effects: evaluatedEffects,
+					cost: { type: 'action', quantity: 1 },
+					duration: { type: 'none', quantity: 1 },
+					targets: { count: 1 },
+				},
 				targets: Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []),
 			},
-			type: 'base',
+			type: 'feature',
 		};
 
 		await ChatMessage.create(chatData);
