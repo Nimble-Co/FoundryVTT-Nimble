@@ -641,6 +641,7 @@
 			"turn": "turn"
 		},
 		"ui": {
+			"heroicActions": "Heroic Actions",
 			"clearAll": "Clear All",
 			"conditions": "Conditions",
 			"condition": "Condition",

@@ -1,0 +1,1068 @@
+<script>
+	import { createSubscriber } from 'svelte/reactivity';
+	import { getContext } from 'svelte';
+	import filterItems from '../../dataPreparationHelpers/filterItems.js';
+	import sortItems from '../../../utils/sortItems.js';
+	import localize from '../../../utils/localize.js';
+	import prepareSpellTooltip from '../../dataPreparationHelpers/documentTooltips/prepareSpellTooltip';
+	import prepareObjectTooltip from '../../dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js';
+	import {
+		getPrimaryDamageFormulaFromActivationEffects,
+		flattenActivationEffects,
+	} from '../../../utils/activationEffects.js';
+
+	import ActionPipTracker from '../components/ActionPipTracker.svelte';
+	import HeroicActionBox from '../components/HeroicActionBox.svelte';
+	import SearchBar from '../components/SearchBar.svelte';
+
+	// ============================================================================
+	// Context & Configuration
+	// ============================================================================
+
+	const { activationCostTypes, activationCostTypesPlural, spellSchoolIcons, weaponProperties } =
+		CONFIG.NIMBLE;
+
+	let actor = getContext('actor');
+	let sheet = getContext('application');
+
+	// ============================================================================
+	// Action Definitions (Single source of truth for all heroic actions)
+	// ============================================================================
+
+	const HEROIC_ACTIONS = [
+		{
+			id: 'attack',
+			icon: 'fa-solid fa-sword',
+			label: 'Attack',
+			description: 'Strike with a weapon',
+			type: 'panel', // Opens a panel
+		},
+		{
+			id: 'spell',
+			icon: 'fa-solid fa-wand-sparkles',
+			label: 'Cast a Spell',
+			description: 'Channel magical energy',
+			type: 'panel',
+		},
+		{
+			id: 'move',
+			icon: 'fa-solid fa-person-running',
+			label: 'Move',
+			description: 'Reposition on the battlefield',
+			type: 'immediate', // Executes immediately
+			requiresCombat: true,
+		},
+		{
+			id: 'assess',
+			icon: 'fa-solid fa-eye',
+			label: 'Assess',
+			description: 'Study your surroundings',
+			type: 'dialog', // Opens a dialog
+		},
+	];
+
+	// ============================================================================
+	// Combat State Management
+	// ============================================================================
+
+	const subscribeCombatState = createSubscriber((update) => {
+		const hookNames = [
+			'combatStart',
+			'createCombat',
+			'updateCombat',
+			'deleteCombat',
+			'createCombatant',
+			'updateCombatant',
+			'deleteCombatant',
+			'canvasInit',
+			'canvasReady',
+		];
+
+		const hookIds = hookNames.map((hookName) => ({
+			hookId: Hooks.on(hookName, () => update()),
+			hookName,
+		}));
+
+		return () => hookIds.forEach(({ hookName, hookId }) => Hooks.off(hookName, hookId));
+	});
+
+	function getActiveCombatForCurrentScene() {
+		const sceneId = canvas?.scene?.id;
+		if (!sceneId) return null;
+
+		const activeCombat = game.combat;
+		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
+			return activeCombat;
+		}
+
+		const activeByScene = game.combats?.contents?.find(
+			(combat) => combat?.active && combat.scene?.id === sceneId,
+		);
+		if (activeByScene) return activeByScene;
+
+		const viewedCombat = game.combats?.viewed ?? null;
+		if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
+			return viewedCombat;
+		}
+
+		return null;
+	}
+
+	function getCombatant() {
+		const combat = getActiveCombatForCurrentScene();
+		if (!combat?.started) return null;
+		return combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
+	}
+
+	function isInActiveCombat() {
+		const combatant = getCombatant();
+		return combatant?.initiative !== null;
+	}
+
+	function getActionsData() {
+		const combatant = getCombatant();
+		if (!combatant) return { current: 0, max: 3 };
+
+		const actions = combatant.system?.actions?.base;
+		return {
+			current: actions?.current ?? 0,
+			max: actions?.max ?? 3,
+		};
+	}
+
+	async function updateActionPips(newValue) {
+		const combatant = getCombatant();
+		if (!combatant) return;
+		await combatant.update({ 'system.actions.base.current': newValue });
+	}
+
+	async function deductActionPip() {
+		const { current } = getActionsData();
+		if (current > 0) {
+			await updateActionPips(current - 1);
+		}
+	}
+
+	// Reactive combat state
+	let inCombat = $derived.by(() => {
+		subscribeCombatState();
+		return isInActiveCombat();
+	});
+
+	let actionsData = $derived.by(() => {
+		subscribeCombatState();
+		return getActionsData();
+	});
+
+	// ============================================================================
+	// Panel State & Action Handlers
+	// ============================================================================
+
+	let expandedPanel = $state(null);
+	let isCompactMode = $derived(expandedPanel === 'attack' || expandedPanel === 'spell');
+
+	function togglePanel(panelName) {
+		expandedPanel = expandedPanel === panelName ? null : panelName;
+	}
+
+	function handleActionClick(action) {
+		switch (action.type) {
+			case 'panel':
+				togglePanel(action.id);
+				break;
+			case 'immediate':
+				handleMoveAction();
+				break;
+			case 'dialog':
+				handleAssessAction();
+				break;
+		}
+	}
+
+	function handleMoveAction() {
+		if (!inCombat || actionsData.current <= 0) return;
+
+		deductActionPip();
+		ChatMessage.create({
+			speaker: ChatMessage.getSpeaker({ actor }),
+			content: `<p><strong>${actor.name}</strong> uses a Move action.</p>`,
+		});
+	}
+
+	async function handleAssessAction() {
+		const { default: GenericDialog } = await import(
+			'../../../documents/dialogs/GenericDialog.svelte.js'
+		);
+		const { default: AssessActionDialog } = await import('../../dialogs/AssessActionDialog.svelte');
+
+		const dialogId = `assess-action-${actor.id}`;
+
+		GenericDialog.getOrCreate(
+			'Assess Action',
+			AssessActionDialog,
+			{ document: actor, deductActionPip, inCombat },
+			{ width: 420, uniqueId: dialogId },
+		).render(true);
+	}
+
+	function isActionDisabled(action) {
+		if (action.requiresCombat) {
+			return !inCombat || actionsData.current <= 0;
+		}
+		if (action.id === 'spell') {
+			return !hasSpells;
+		}
+		return false;
+	}
+
+	function getActionTooltip(action) {
+		if (action.id === 'spell' && !hasSpells) {
+			return "You don't have any spells";
+		}
+		return action.description;
+	}
+
+	// ============================================================================
+	// Formula Evaluation (for damage display)
+	// ============================================================================
+
+	function evaluateFormula(formula) {
+		if (!formula) return '';
+
+		try {
+			const rollData = actor.getRollData();
+			const substituted = Roll.replaceFormulaData(formula, rollData, { missing: '0' });
+
+			// Parse and simplify each term
+			const parts = substituted.split(/([+-])/);
+			const simplified = [];
+
+			for (const part of parts) {
+				const trimmed = part.trim();
+				if (!trimmed) continue;
+
+				if (trimmed === '+' || trimmed === '-') {
+					simplified.push(trimmed);
+				} else if (/^\d*d\d+/i.test(trimmed)) {
+					// Keep dice terms as-is
+					simplified.push(trimmed);
+				} else {
+					// Evaluate mathematical expressions
+					try {
+						const evaluated = Roll.safeEval(trimmed);
+						if (typeof evaluated === 'number' && !isNaN(evaluated)) {
+							simplified.push(String(Math.floor(evaluated)));
+						} else {
+							simplified.push(trimmed);
+						}
+					} catch {
+						simplified.push(trimmed);
+					}
+				}
+			}
+
+			let result = simplified.join(' ').replace(/\s+/g, ' ').trim();
+			result = result.replace(/[+-]\s*0(?!\d)/g, '').trim();
+			result = result
+				.replace(/^\s*[+-]\s*/, '')
+				.replace(/[+-]\s*[+-]/g, '+')
+				.trim();
+
+			return result || formula;
+		} catch {
+			return formula;
+		}
+	}
+
+	// ============================================================================
+	// Attack Panel Data
+	// ============================================================================
+
+	let attackSearchTerm = $state('');
+
+	let weapons = $derived.by(() => {
+		const weaponItems = actor.reactive.items.filter(
+			(item) => item.type === 'object' && item.system.objectType === 'weapon',
+		);
+
+		if (!attackSearchTerm) return weaponItems;
+
+		const search = attackSearchTerm.toLocaleLowerCase();
+		return weaponItems.filter((item) => item.name.toLocaleLowerCase().includes(search));
+	});
+
+	let showUnarmedStrike = $derived(
+		!attackSearchTerm || 'unarmed strike'.includes(attackSearchTerm.toLocaleLowerCase()),
+	);
+
+	let attackFeatures = $derived.by(() => {
+		const features = actor.reactive.items.filter((item) => {
+			if (item.type !== 'feature') return false;
+
+			const activation = item.system?.activation;
+			if (!activation) return false;
+
+			return activation.cost?.type === 'action' && item.system?.actionType?.includes('attack');
+		});
+
+		if (!attackSearchTerm) return features;
+
+		const search = attackSearchTerm.toLocaleLowerCase();
+		return features.filter((item) => item.name.toLocaleLowerCase().includes(search));
+	});
+
+	function getWeaponDamage(item) {
+		const effects = item.reactive?.system?.activation?.effects ?? item.system?.activation?.effects;
+		const formula = getPrimaryDamageFormulaFromActivationEffects(effects);
+		return evaluateFormula(formula);
+	}
+
+	function getWeaponProperties(item) {
+		const props = item.reactive?.system?.properties ?? item.system?.properties ?? {};
+		const selected = props.selected ?? [];
+
+		return selected
+			.map((key) => {
+				const localeKey = weaponProperties[key];
+				const label = localeKey ? game.i18n.localize(localeKey) : key;
+
+				// Add range values for specific properties (show max only)
+				if (key === 'thrown' && props.thrownRange) {
+					return `${label}: ${props.thrownRange}`;
+				}
+				if (key === 'range' && props.range?.max) {
+					return `${label}: ${props.range.max}`;
+				}
+				if (key === 'reach' && props.reach?.max) {
+					return `${label}: ${props.reach.max}`;
+				}
+
+				return label;
+			})
+			.filter(Boolean);
+	}
+
+	function handleUnarmedStrike() {
+		actor.rollUnarmedStrike?.() ?? actor.activateItem?.('unarmed');
+	}
+
+	// ============================================================================
+	// Spell Panel Data
+	// ============================================================================
+
+	let spellSearchTerm = $state('');
+	let allSpells = $derived(filterItems(actor.reactive, ['spell'], ''));
+	let hasSpells = $derived(allSpells.length > 0);
+	let spells = $derived(filterItems(actor.reactive, ['spell'], spellSearchTerm));
+
+	function getSpellEffect(spell) {
+		const effects =
+			spell.reactive?.system?.activation?.effects ?? spell.system?.activation?.effects;
+		const flattened = flattenActivationEffects(effects);
+
+		for (const node of flattened) {
+			const effectType = node.type;
+			if (effectType !== 'damage' && effectType !== 'healing') continue;
+
+			const formula = node.formula || node.roll;
+			if (typeof formula === 'string' && formula.trim().length > 0) {
+				return {
+					formula: evaluateFormula(formula.trim()),
+					isHealing: effectType === 'healing' || node.damageType === 'healing',
+				};
+			}
+		}
+
+		return null;
+	}
+
+	function getSpellManaCost(spell) {
+		return spell.reactive.system.manaCost ?? 0;
+	}
+
+	function getSpellMetadata(spell) {
+		const { type: activationType, quantity: activationCost } =
+			spell.reactive.system.activation.cost;
+
+		if (!activationType || activationType === 'none') return null;
+
+		if (['action', 'minute', 'hour'].includes(activationType)) {
+			const label =
+				activationCost > 1
+					? activationCostTypesPlural[activationType]
+					: activationCostTypes[activationType];
+			return `${activationCost || 1} ${label}`;
+		}
+
+		if (activationType === 'reaction' || activationType === 'special') {
+			return activationCostTypes[activationType];
+		}
+
+		return null;
+	}
+
+	function getSpellRange(spell) {
+		const props = spell.reactive?.system?.properties ?? spell.system?.properties ?? {};
+		const selected = props.selected ?? [];
+
+		if (selected.includes('range') && props.range?.max) {
+			return `Range: ${props.range.max}`;
+		}
+		if (selected.includes('reach') && props.reach?.max) {
+			return `Reach: ${props.reach.max}`;
+		}
+		return null;
+	}
+
+	// ============================================================================
+	// Tooltip Caching
+	// ============================================================================
+
+	const weaponTooltipCache = new Map();
+	const spellTooltipCache = new Map();
+
+	function handleTooltipMouseEnter(event, item, cache, prepareTooltip) {
+		const element = event.currentTarget;
+		const cacheKey = item.reactive._id;
+
+		if (!cache.has(cacheKey)) {
+			prepareTooltip(item.reactive).then((tooltip) => {
+				if (tooltip) {
+					cache.set(cacheKey, tooltip);
+					element.setAttribute('data-tooltip', tooltip);
+				}
+			});
+		}
+	}
+
+	// ============================================================================
+	// Derived State
+	// ============================================================================
+
+	let flags = $derived(actor.reactive.flags.nimble);
+	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
+</script>
+
+<section class="nimble-sheet__body nimble-sheet__body--player-character">
+	<ActionPipTracker
+		current={actionsData.current}
+		max={actionsData.max}
+		disabled={!inCombat}
+		onUpdate={updateActionPips}
+	/>
+
+	{#if !inCombat}
+		<p class="heroic-actions__combat-notice">
+			<i class="fa-solid fa-circle-info"></i>
+			Enter combat to use actions
+		</p>
+	{/if}
+
+	<section>
+		<header class="nimble-section-header">
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{localize('NIMBLE.ui.heroicActions')}
+			</h3>
+		</header>
+
+		{#if isCompactMode}
+			<!-- Compact tab mode when Attack or Spell panel is open -->
+			<div class="heroic-actions-tabs">
+				{#each HEROIC_ACTIONS as action (action.id)}
+					<button
+						class="heroic-action-tab"
+						class:heroic-action-tab--active={expandedPanel === action.id}
+						class:heroic-action-tab--disabled={isActionDisabled(action)}
+						type="button"
+						aria-label={action.label}
+						data-tooltip={getActionTooltip(action)}
+						disabled={isActionDisabled(action)}
+						onclick={() => handleActionClick(action)}
+					>
+						<i class={action.icon}></i>
+						<span class="heroic-action-tab__indicator"></span>
+					</button>
+				{/each}
+			</div>
+		{:else}
+			<!-- Full box mode when no panel is expanded -->
+			<div class="heroic-actions-grid">
+				{#each HEROIC_ACTIONS as action (action.id)}
+					<HeroicActionBox
+						icon={action.icon}
+						label={action.label}
+						description={action.description}
+						tooltip={isActionDisabled(action) ? getActionTooltip(action) : ''}
+						disabled={isActionDisabled(action)}
+						expanded={expandedPanel === action.id}
+						onclick={() => handleActionClick(action)}
+					/>
+				{/each}
+			</div>
+		{/if}
+	</section>
+
+	{#if expandedPanel === 'attack'}
+		<section class="heroic-actions-panel">
+			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">Select Attack</h3>
+			</header>
+
+			<div class="heroic-actions-panel__search">
+				<SearchBar bind:searchTerm={attackSearchTerm} />
+			</div>
+
+			<div class="heroic-actions-panel__content">
+				<ul class="nimble-item-list">
+					{#if showUnarmedStrike}
+						<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
+						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						<li class="weapon-card" role="button" onclick={handleUnarmedStrike}>
+							<div class="weapon-card__icon">
+								<i class="fa-solid fa-hand-fist"></i>
+							</div>
+
+							<div class="weapon-card__content">
+								<span class="weapon-card__name">Unarmed Strike</span>
+								<div class="weapon-card__meta">
+									<span class="weapon-card__tag">Melee</span>
+								</div>
+							</div>
+
+							<span class="weapon-card__damage">
+								<i class="fa-solid fa-burst"></i>
+								1d4
+							</span>
+						</li>
+					{/if}
+
+					{#each sortItems(weapons) as item (item._id)}
+						{@const damage = getWeaponDamage(item)}
+						{@const properties = getWeaponProperties(item)}
+						<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
+						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						<li
+							class="weapon-card"
+							data-item-id={item._id}
+							data-tooltip={weaponTooltipCache.get(item.reactive._id) || ''}
+							data-tooltip-class="nimble-tooltip nimble-tooltip--item"
+							data-tooltip-direction="LEFT"
+							onmouseenter={(event) =>
+								handleTooltipMouseEnter(event, item, weaponTooltipCache, prepareObjectTooltip)}
+							draggable="true"
+							role="button"
+							ondragstart={(event) => sheet._onDragStart(event)}
+							onclick={() => actor.activateItem(item._id)}
+						>
+							{#if showEmbeddedDocumentImages}
+								<img class="weapon-card__img" src={item.reactive.img} alt={item.reactive.name} />
+							{/if}
+
+							<div class="weapon-card__content">
+								<span class="weapon-card__name">{item.reactive.name}</span>
+								{#if properties.length > 0}
+									<div class="weapon-card__meta">
+										{#each properties as prop}
+											<span class="weapon-card__tag">{prop}</span>
+										{/each}
+									</div>
+								{/if}
+							</div>
+
+							{#if damage}
+								<span class="weapon-card__damage">
+									<i class="fa-solid fa-burst"></i>
+									{damage}
+								</span>
+							{/if}
+						</li>
+					{/each}
+
+					{#each sortItems(attackFeatures) as item (item._id)}
+						{@const damage = getWeaponDamage(item)}
+						<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
+						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						<li
+							class="weapon-card"
+							data-item-id={item._id}
+							draggable="true"
+							role="button"
+							ondragstart={(event) => sheet._onDragStart(event)}
+							onclick={() => actor.activateItem(item._id)}
+						>
+							{#if showEmbeddedDocumentImages}
+								<img class="weapon-card__img" src={item.reactive.img} alt={item.reactive.name} />
+							{/if}
+
+							<div class="weapon-card__content">
+								<span class="weapon-card__name">{item.reactive.name}</span>
+								<div class="weapon-card__meta">
+									<span class="weapon-card__tag">Feature</span>
+								</div>
+							</div>
+
+							{#if damage}
+								<span class="weapon-card__damage">
+									<i class="fa-solid fa-burst"></i>
+									{damage}
+								</span>
+							{/if}
+						</li>
+					{/each}
+				</ul>
+
+				{#if !showUnarmedStrike && weapons.length === 0 && attackFeatures.length === 0}
+					<p class="heroic-actions-panel__empty">No weapons or attack features found.</p>
+				{/if}
+			</div>
+		</section>
+	{/if}
+
+	{#if expandedPanel === 'spell'}
+		<section class="heroic-actions-panel">
+			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">Select Spell</h3>
+			</header>
+
+			<div class="heroic-actions-panel__search">
+				<SearchBar bind:searchTerm={spellSearchTerm} />
+			</div>
+
+			<div class="heroic-actions-panel__content">
+				{#if spells.length > 0}
+					<ul class="nimble-item-list">
+						{#each sortItems(spells) as spell (spell._id)}
+							{@const meta = getSpellMetadata(spell)}
+							{@const manaCost = getSpellManaCost(spell)}
+							{@const effect = getSpellEffect(spell)}
+							{@const spellRange = getSpellRange(spell)}
+							{@const requiresConcentration =
+								spell.reactive.system.properties.selected.includes('concentration')}
+
+							<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<li
+								class="spell-card"
+								data-item-id={spell._id}
+								data-tooltip={spellTooltipCache.get(spell.reactive._id) || ''}
+								data-tooltip-class="nimble-tooltip nimble-tooltip--item"
+								data-tooltip-direction="LEFT"
+								onmouseenter={(event) =>
+									handleTooltipMouseEnter(event, spell, spellTooltipCache, prepareSpellTooltip)}
+								draggable="true"
+								role="button"
+								ondragstart={(event) => sheet._onDragStart(event)}
+								onclick={() => actor.activateItem(spell._id)}
+							>
+								{#if showEmbeddedDocumentImages}
+									<img class="spell-card__img" src={spell.reactive.img} alt={spell.reactive.name} />
+								{/if}
+
+								<div class="spell-card__content">
+									<span class="spell-card__name">
+										{spell.reactive.name}
+										{#if requiresConcentration}
+											<span class="spell-card__tag">C</span>
+										{/if}
+									</span>
+
+									<div class="spell-card__meta">
+										{#if meta}
+											<span class="spell-card__action-cost">{@html meta}</span>
+										{/if}
+										{#if spellRange}
+											<span class="spell-card__range">
+												<i class="fa-solid fa-bullseye"></i>
+												{spellRange}
+											</span>
+										{/if}
+										{#if manaCost > 0}
+											<span class="spell-card__mana">
+												<i class="fa-solid fa-sparkles"></i>
+												{manaCost} Mana
+											</span>
+										{/if}
+									</div>
+								</div>
+
+								{#if effect}
+									<span
+										class="spell-card__effect"
+										class:spell-card__effect--healing={effect.isHealing}
+									>
+										<i class="fa-solid {effect.isHealing ? 'fa-heart' : 'fa-burst'}"></i>
+										{effect.formula}
+									</span>
+								{/if}
+							</li>
+						{/each}
+					</ul>
+				{:else}
+					<p class="heroic-actions-panel__empty">No spells found.</p>
+				{/if}
+			</div>
+		</section>
+	{/if}
+</section>
+
+<style lang="scss">
+	.heroic-actions__combat-notice {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		margin: 0;
+		padding: 0.5rem 0.75rem;
+		font-size: var(--nimble-sm-text);
+		font-weight: 500;
+		color: var(--nimble-medium-text-color);
+		background: var(--nimble-hint-background-color);
+		border: 1px solid var(--nimble-hint-border-color);
+		border-radius: 4px;
+
+		i {
+			color: var(--nimble-hint-icon-color);
+		}
+	}
+
+	// Full-size action boxes (2x2 grid)
+	.heroic-actions-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.5rem;
+	}
+
+	// Compact action tabs (horizontal row)
+	.heroic-actions-tabs {
+		display: flex;
+		gap: 0.25rem;
+	}
+
+	.heroic-action-tab {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex: 1;
+		height: 2.25rem;
+		padding: 0;
+		background: var(--nimble-box-background-color);
+		border: 2px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+
+		i {
+			font-size: 1rem;
+			color: var(--nimble-medium-text-color);
+			transition: color 0.2s ease;
+		}
+
+		&__indicator {
+			position: absolute;
+			top: 0.25rem;
+			right: 0.25rem;
+			width: 0.5rem;
+			height: 0.5rem;
+			border-radius: 50%;
+			background: transparent;
+			border: 2px solid transparent;
+			transition: all 0.2s ease;
+		}
+
+		&:hover:not(:disabled):not(.heroic-action-tab--active) {
+			border-color: var(--nimble-accent-color);
+
+			i {
+				color: var(--nimble-dark-text-color);
+			}
+		}
+
+		&--active {
+			border-color: hsl(45, 60%, 45%);
+			background: hsla(45, 60%, 50%, 0.12);
+			box-shadow: inset 0 0 0 1px hsla(45, 60%, 50%, 0.2);
+
+			i {
+				color: hsl(45, 60%, 40%);
+			}
+
+			.heroic-action-tab__indicator {
+				background: hsl(45, 70%, 50%);
+				border-color: hsl(45, 70%, 40%);
+				box-shadow: 0 0 8px hsla(45, 70%, 50%, 0.6);
+			}
+		}
+
+		&--disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+	}
+
+	:global(.theme-dark) .heroic-action-tab {
+		background: hsl(220, 15%, 18%);
+		border-color: hsl(220, 10%, 30%);
+
+		&:hover:not(:disabled):not(.heroic-action-tab--active) {
+			border-color: hsl(220, 15%, 45%);
+			background: hsl(220, 15%, 22%);
+		}
+	}
+
+	:global(.theme-dark) .heroic-action-tab--active {
+		border-color: hsl(45, 70%, 55%);
+		background: linear-gradient(135deg, hsla(45, 60%, 50%, 0.2) 0%, hsla(45, 60%, 40%, 0.1) 100%);
+		box-shadow:
+			inset 0 0 0 1px hsla(45, 60%, 60%, 0.3),
+			0 0 12px hsla(45, 60%, 50%, 0.15);
+	}
+
+	:global(.theme-dark) .heroic-action-tab--active i {
+		color: hsl(45, 70%, 65%);
+	}
+
+	:global(.theme-dark) .heroic-action-tab--active .heroic-action-tab__indicator {
+		background: hsl(45, 70%, 55%);
+		border-color: hsl(45, 70%, 65%);
+		box-shadow: 0 0 10px hsla(45, 70%, 55%, 0.7);
+	}
+
+	.heroic-actions-panel {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+
+		&__search {
+			display: flex;
+		}
+
+		&__content {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+			max-height: 300px;
+			overflow-y: auto;
+		}
+
+		&__empty {
+			margin: 0;
+			padding: 0.75rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 500;
+			text-align: center;
+			color: var(--nimble-medium-text-color);
+		}
+	}
+
+	.nimble-item-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.weapon-card {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem;
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+		cursor: pointer;
+		transition: var(--nimble-standard-transition);
+
+		&:hover {
+			border-color: var(--nimble-box-color);
+			box-shadow: var(--nimble-box-shadow);
+		}
+
+		&__icon {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 2rem;
+			height: 2rem;
+			background: var(--nimble-basic-button-background-color);
+			border-radius: 3px;
+			flex-shrink: 0;
+
+			i {
+				font-size: 1rem;
+				color: var(--nimble-medium-text-color);
+			}
+		}
+
+		&__img {
+			width: 2rem;
+			height: 2rem;
+			object-fit: cover;
+			border-radius: 3px;
+			flex-shrink: 0;
+		}
+
+		&__content {
+			display: flex;
+			flex-direction: column;
+			gap: 0.125rem;
+			flex: 1;
+			min-width: 0;
+		}
+
+		&__name {
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			color: var(--nimble-dark-text-color);
+			line-height: 1.2;
+		}
+
+		&__meta {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 0.25rem;
+		}
+
+		&__tag {
+			font-size: var(--nimble-xs-text);
+			font-weight: 500;
+			color: var(--nimble-medium-text-color);
+			padding: 0 0.25rem;
+			background: var(--nimble-basic-button-background-color);
+			border-radius: 2px;
+		}
+
+		&__damage {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.375rem;
+			padding: 0.25rem 0.625rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			color: var(--nimble-dark-text-color);
+			background: var(--nimble-basic-button-background-color);
+			border-radius: 3px;
+			flex-shrink: 0;
+
+			i {
+				font-size: 0.875rem;
+				color: hsl(0, 60%, 50%);
+			}
+		}
+	}
+
+	.spell-card {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem;
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+		cursor: pointer;
+		transition: var(--nimble-standard-transition);
+
+		&:hover {
+			border-color: var(--nimble-box-color);
+			box-shadow: var(--nimble-box-shadow);
+		}
+
+		&__img {
+			width: 2rem;
+			height: 2rem;
+			object-fit: cover;
+			border-radius: 3px;
+			flex-shrink: 0;
+		}
+
+		&__content {
+			display: flex;
+			flex-direction: column;
+			gap: 0.125rem;
+			flex: 1;
+			min-width: 0;
+		}
+
+		&__name {
+			display: flex;
+			align-items: center;
+			gap: 0.375rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			color: var(--nimble-dark-text-color);
+			line-height: 1.2;
+		}
+
+		&__tag {
+			font-size: var(--nimble-xs-text);
+			font-weight: 500;
+			color: var(--nimble-medium-text-color);
+			padding: 0 0.25rem;
+			background: var(--nimble-basic-button-background-color);
+			border-radius: 2px;
+		}
+
+		&__meta {
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+		}
+
+		&__effect {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.375rem;
+			padding: 0.25rem 0.625rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			color: var(--nimble-dark-text-color);
+			background: var(--nimble-basic-button-background-color);
+			border-radius: 3px;
+			flex-shrink: 0;
+
+			i {
+				font-size: 0.875rem;
+				color: hsl(0, 60%, 50%);
+			}
+
+			&--healing i {
+				color: hsl(139, 50%, 40%);
+			}
+		}
+
+		&__action-cost {
+			font-size: var(--nimble-xs-text);
+			font-weight: 500;
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__range {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.25rem;
+			font-size: var(--nimble-xs-text);
+			font-weight: 500;
+			color: var(--nimble-medium-text-color);
+
+			i {
+				font-size: 0.625rem;
+			}
+		}
+
+		&__mana {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.25rem;
+			font-size: var(--nimble-xs-text);
+			font-weight: 500;
+			color: hsl(270, 50%, 45%);
+
+			i {
+				font-size: 0.625rem;
+			}
+		}
+	}
+</style>
