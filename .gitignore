@@ -6,6 +6,7 @@
 # Claude Code local files
 CLAUDE.local.md
 .claude/settings.local.json
+.claude/memory/
 
 # Node Modules
 node_modules/
