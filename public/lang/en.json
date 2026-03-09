@@ -705,6 +705,15 @@
 						"description": "Ready yourself for incoming attacks. The next attack against you has -1 to the Primary Die.",
 						"chatMessage": "<p>{name} anticipates incoming danger. The next attack against them has <strong>-1 to the Primary Die</strong>.</p>"
 					}
+				},
+				"move": {
+					"dialogTitle": "Move Action",
+					"confirmTitle": "Did you move?",
+					"confirmDescription": "Confirm that you've repositioned your character on the battlefield.",
+					"yourMovement": "Your Movement",
+					"actionCost": "This will use 1 action",
+					"confirm": "Yes, I Moved",
+					"cancel": "Cancel"
 				}
 			},
 			"clearAll": "Clear All",

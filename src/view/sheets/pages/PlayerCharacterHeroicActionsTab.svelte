@@ -205,14 +205,25 @@
 		}
 	}
 
-	function handleMoveAction() {
+	async function handleMoveAction() {
 		if (!inCombat || actionsData.current <= 0) return;
 
-		deductActionPips(1);
-		ChatMessage.create({
-			speaker: ChatMessage.getSpeaker({ actor }),
-			content: localize('NIMBLE.ui.heroicActions.moveAction', { name: actor.name }),
-		});
+		const { default: GenericDialog } = await import(
+			'../../../documents/dialogs/GenericDialog.svelte.js'
+		);
+		const { default: MoveActionDialog } = await import('../../dialogs/MoveActionDialog.svelte');
+
+		const dialogId = `move-action-${actor.id}`;
+
+		// Wrapper to maintain MoveActionDialog's expected interface
+		const deductActionPip = () => deductActionPips(1);
+
+		GenericDialog.getOrCreate(
+			localize('NIMBLE.ui.heroicActions.move.dialogTitle'),
+			MoveActionDialog,
+			{ document: actor, deductActionPip, inCombat },
+			{ width: 340, uniqueId: dialogId },
+		).render(true);
 	}
 
 	async function handleAssessAction() {
