@@ -666,7 +666,7 @@
 					"clickToRestore": "Click to restore action"
 				},
 				"actionsHeader": "Actions",
-				"moveAction": "<p><strong>{name}</strong> uses a Move action.</p>",
+				"moveAction": "<p><strong>{name}</strong> used an action to move.</p>",
 				"actions": {
 					"attack": {
 						"label": "Attack",
@@ -689,21 +689,32 @@
 					"dialogTitle": "Assess Action",
 					"chooseOption": "Choose an Option",
 					"selectSkill": "Select Skill",
+					"selectSkillPlaceholder": "Choose a skill...",
+					"selectTarget": "Target",
+					"noTargetsHint": "Target a token on the canvas to select it",
+					"tooManyTargetsHint": "You can only target one creature at a time for this action",
+					"cannotTargetSelf": "You cannot target yourself. Target another creature on the canvas.",
 					"rollToAssess": "Roll {skill} to Assess",
+					"rollToAssessNoSkill": "Select a Skill to Assess",
+					"success": "Success",
+					"failure": "Failure",
 					"askQuestion": {
-						"title": "Ask a Question",
+						"title": "Assess: Ask a Question",
 						"description": "Ask the GM a question about the situation. They must answer truthfully based on what your character could reasonably perceive.",
-						"chatMessage": "<p>{name} assesses the situation and asks the GM a question.</p>"
+						"success": "<p><strong>{name}</strong> used an action to assess and may ask the GM one question. The GM will answer honestly.</p>",
+						"failure": "<p><strong>{name}</strong> used an action to assess but failed to glean any useful information.</p>"
 					},
 					"createOpening": {
-						"title": "Create an Opening",
-						"description": "Study your target to find a weakness. Your next attack gains +1 to the Primary Die.",
-						"chatMessage": "<p>{name} studies their target for a weakness. Their next attack gains <strong>+1 to the Primary Die</strong>.</p>"
+						"title": "Assess: Create an Opening",
+						"description": "Your next attack against the target gains +1 to the Primary Die this round.",
+						"success": "<p><strong>{name}</strong> used an action to assess <strong>{target}</strong> and create an opening. Their next attack against <strong>{target}</strong> gains <strong>+1 to the Primary Die</strong>.</p>",
+						"failure": "<p><strong>{name}</strong> used an action to assess <strong>{target}</strong> but failed to create an opening.</p>"
 					},
 					"anticipateDanger": {
-						"title": "Anticipate Danger",
-						"description": "Ready yourself for incoming attacks. The next attack against you has -1 to the Primary Die.",
-						"chatMessage": "<p>{name} anticipates incoming danger. The next attack against them has <strong>-1 to the Primary Die</strong>.</p>"
+						"title": "Assess: Anticipate Danger",
+						"description": "All Primary Dice rolled against you are reduced by 1 this round.",
+						"success": "<p><strong>{name}</strong> used an action to assess and anticipate danger. All Primary Dice rolled against them are <strong>reduced by 1</strong> this round.</p>",
+						"failure": "<p><strong>{name}</strong> used an action to assess but failed to anticipate danger.</p>"
 					}
 				},
 				"move": {

@@ -479,16 +479,41 @@
 
 		await roll.evaluate();
 
-		// Build the activation effects with evaluated roll data
+		// Build the roll data for chat card rendering
+		const rollData = roll.toJSON();
+
+		// Build the activation effects with proper tree structure
+		// The damage node must have damageOutcome children in the 'on' property
+		// for the chat card to render the damage correctly
 		const evaluatedEffects = [
 			{
+				id: 'unarmed-damage',
 				type: 'damage',
 				formula: rollFormula,
 				damageType: 'bludgeoning',
 				canCrit: true,
 				canMiss: true,
-				roll: roll.toJSON(),
-				total: roll.total,
+				roll: rollData,
+				parentNode: null,
+				parentContext: null,
+				on: {
+					hit: [
+						{
+							id: 'unarmed-damage-hit',
+							type: 'damageOutcome',
+							parentNode: 'unarmed-damage',
+							parentContext: 'hit',
+						},
+					],
+					criticalHit: [
+						{
+							id: 'unarmed-damage-crit',
+							type: 'damageOutcome',
+							parentNode: 'unarmed-damage',
+							parentContext: 'criticalHit',
+						},
+					],
+				},
 			},
 		];
 

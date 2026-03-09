@@ -75,6 +75,7 @@
 		},
 		"ChatMessage": {
 			"abilityCheck": {},
+			"assessAction": {},
 			"boon": {},
 			"damage": {},
 			"feature": {},
