@@ -19,8 +19,7 @@
 	// Context & Configuration
 	// ============================================================================
 
-	const { activationCostTypes, activationCostTypesPlural, spellSchoolIcons, weaponProperties } =
-		CONFIG.NIMBLE;
+	const { activationCostTypes, activationCostTypesPlural, weaponProperties } = CONFIG.NIMBLE;
 
 	let actor = getContext('actor');
 	let sheet = getContext('application');
@@ -380,11 +379,34 @@
 			.filter(Boolean);
 	}
 
+	// Unarmed strike rules:
+	// - Core rules: "roll 1d4; on hit: deal 1 + STR damage"
+	//   The d4 is the attack/primary die, damage is flat 1+STR
+	// - Swift Fists (Zephyr): "damage is 1d4+STR"
+	//   The d4 serves as both attack and damage die
+	//
+	// Implementation note: The DamageRoll system requires a die for hit/miss mechanics.
+	// For core rules, we use 1d4 as the primary die, which means the d4 result becomes
+	// the damage total (not strictly RAW, but enables proper attack mechanics).
+	// Swift Fists adds STR to the d4 damage, making it clearly superior.
+	const DEFAULT_UNARMED_DAMAGE = '1d4';
+
+	function getUnarmedDamageFormula() {
+		// Check if actor has a modified unarmed damage formula (e.g., from Swift Fists)
+		// This is set by the unarmedDamage rule during data preparation
+		return actor.system?.unarmedDamage ?? DEFAULT_UNARMED_DAMAGE;
+	}
+
 	async function handleUnarmedStrike() {
 		const { default: ItemActivationConfigDialog } = await import(
 			'../../../documents/dialogs/ItemActivationConfigDialog.svelte.js'
 		);
 		const { DamageRoll } = await import('../../../dice/DamageRoll.js');
+
+		// Get the unarmed damage formula
+		// Core rules: 1d4 (d4 is both attack roll and damage)
+		// Swift Fists: 1d4 + STR (d4 + STR modifier)
+		const rollFormula = getUnarmedDamageFormula();
 
 		// Create a fake item structure for unarmed strike
 		const unarmedItem = {
@@ -395,7 +417,7 @@
 					effects: [
 						{
 							type: 'damage',
-							formula: '1d4 + @abilities.strength.mod',
+							formula: rollFormula,
 							damageType: 'bludgeoning',
 							canCrit: true,
 							canMiss: true,
@@ -417,7 +439,7 @@
 		if (!result) return; // Dialog was cancelled
 
 		// Create the damage roll
-		const roll = new DamageRoll('1d4 + @abilities.strength.mod', actor.getRollData(), {
+		const roll = new DamageRoll(rollFormula, actor.getRollData(), {
 			canCrit: true,
 			canMiss: true,
 			rollMode: result.rollMode ?? 0,
@@ -685,7 +707,7 @@
 
 							<span class="weapon-card__damage">
 								<i class="fa-solid fa-burst"></i>
-								1d4
+								{evaluateFormula(getUnarmedDamageFormula())}
 							</span>
 						</li>
 					{/if}

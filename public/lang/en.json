@@ -504,7 +504,8 @@
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
 			"skillBonus": "Skill Bonus",
-			"speedBonus": "Speed Bonus"
+			"speedBonus": "Speed Bonus",
+			"unarmedDamage": "Unarmed Damage"
 		},
 		"creatureFeatures": {
 			"noFeatures": "No features yet.",
