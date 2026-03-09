@@ -273,10 +273,11 @@
 	</button>
 	<button
 		class="nimble-button"
-		data-button-variant="primary"
+		data-button-variant="basic"
 		disabled={isSubmitDisabled}
 		onclick={handleSubmit}
 	>
+		<i class="nimble-button__icon fa-solid fa-dice-d20"></i>
 		{#if selectedSkill}
 			{localize('NIMBLE.ui.heroicActions.assess.rollToAssess', {
 				skill: skillNames[selectedSkill],
@@ -292,11 +293,15 @@
 		display: flex;
 		gap: 0.5rem;
 
-		.nimble-button {
+		[data-button-variant='basic'] {
+			--nimble-button-padding: 0.5rem;
+
 			flex: 1;
-			padding: 0.625rem 1rem;
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
+
+			&:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
 		}
 	}
 
