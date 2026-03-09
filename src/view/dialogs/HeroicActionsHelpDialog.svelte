@@ -185,7 +185,6 @@
 			font-weight: 500;
 			color: var(--nimble-dark-text-color);
 			line-height: 1.5;
-			text-align: center;
 		}
 
 		&__list {
@@ -204,7 +203,6 @@
 			font-weight: 500;
 			color: var(--nimble-medium-text-color);
 			line-height: 1.4;
-			text-align: center;
 			background: var(--nimble-hint-background-color);
 			border: 1px solid var(--nimble-hint-border-color);
 			border-radius: 4px;
