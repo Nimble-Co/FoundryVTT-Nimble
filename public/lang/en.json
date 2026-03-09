@@ -686,29 +686,55 @@
 					}
 				},
 				"help": {
-					"dialogTitle": "Combat Actions",
+					"dialogTitle": "Combat Reference",
 					"tooltip": "What can I do in combat?",
-					"intro": "On your turn, you have 3 actions to spend. Each action lets you do one of the following:",
-					"footer": "You can use your actions in any order. Creative actions beyond this list are encouraged - ask your GM!",
-					"attack": {
-						"title": "Attack",
-						"description": "Make an attack with a weapon or unarmed strike. Roll your Primary Die to hit, then roll damage if successful."
+					"tabs": {
+						"actions": "Actions",
+						"reactions": "Reactions"
 					},
-					"spell": {
-						"title": "Cast a Spell",
-						"description": "Cast a spell you know. Most spells cost 1 action and may require mana. Check your spell's details for specifics."
+					"actions": {
+						"intro": "On your turn, you get 3 actions. All 3 recharge at the end of your turn, so spend them all! Generally, doing any single thing costs 1 action.",
+						"footer": "Rushed Attacks: Additional attacks after the first impose cumulative disadvantage.",
+						"attack": {
+							"title": "Attack",
+							"description": "Roll the die listed on your weapon or ability. Rolling a 1 is a miss. Rolling max on the Primary Die is a critical hit - roll again and add! Crits ignore armor."
+						},
+						"spell": {
+							"title": "Cast a Spell",
+							"description": "Requires a free hand (or focus) and the ability to speak. Costs mana equal to the spell's tier (cantrips are free). You can upcast spells for greater effect."
+						},
+						"move": {
+							"title": "Move",
+							"description": "Move up to your speed (usually 6 spaces). You can split movement around other actions and Move multiple times per turn. Difficult terrain halves speed."
+						},
+						"assess": {
+							"title": "Assess",
+							"description": "Make a DC 12 skill check to: Ask a Question (GM answers honestly), Create an Opening (+1 to Primary Die vs target), or Anticipate Danger (-1 to Primary Dice against you). Can't reuse the same skill in an encounter!"
+						},
+						"free": {
+							"title": "Free Actions",
+							"description": "Simple tasks like opening an unlocked door, shouting a phrase, dropping an item, or ending concentration. Limited to once per turn."
+						}
 					},
-					"move": {
-						"title": "Move",
-						"description": "Move up to your speed in spaces. You can split your movement around other actions."
-					},
-					"assess": {
-						"title": "Assess",
-						"description": "Study your surroundings. Ask a question, create an opening for your next attack, or anticipate incoming danger."
-					},
-					"other": {
-						"title": "Other Actions",
-						"description": "Use an item, interact with an object, help an ally, hide, or attempt any other reasonable action. Ask your GM!"
+					"reactions": {
+						"intro": "Reactions cost 1 action and are used when it's not your turn. Each reaction can only be used once per round, and you'll start your next turn with fewer actions.",
+						"footer": "You can combine reactions (like Interpose + Defend) if you have enough actions to spend!",
+						"defend": {
+							"title": "Defend",
+							"description": "Reduce damage from any single attack by your Armor value. Some damage (like psychic or certain area effects) may not be avoidable at the GM's discretion."
+						},
+						"interpose": {
+							"title": "Interpose",
+							"description": "When a creature within 2 spaces would be hit, push them aside and become the new target. You enter their space and move them to an adjacent space of your choice."
+						},
+						"opportunity": {
+							"title": "Opportunity Attack",
+							"description": "Make a melee attack with disadvantage against an adjacent enemy as it willingly moves away. Only heroes can make opportunity attacks - monsters cannot."
+						},
+						"help": {
+							"title": "Help",
+							"description": "Grant an ally advantage on a roll if you can explain how you'd help. The GM may call for a skill check or grant it automatically. Limited to one Help per roll."
+						}
 					}
 				},
 				"assess": {
