@@ -6,7 +6,7 @@ description: "Invoke when reviewing code or scaffolding new sheets. Loads the fu
 ## Svelte 5 Conventions
 
 - [ ] Uses runes: `$state`, `$derived`, `$effect`, `$props()` — no Svelte 4 stores in components
-- [ ] Script order matches exact 10-item sequence:
+- [ ] Script order matches exact 10-item sequence (see `references/svelte5-script-order.md`):
   1. Type imports
   2. Component imports
   3. Utility imports

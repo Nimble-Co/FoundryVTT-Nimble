@@ -9,9 +9,9 @@ description: "Invoke when writing or reviewing Playwright tests. Loads best prac
 - Use `expect(page).toHaveURL(...)` and `expect(locator).toBeVisible()` assertions.
 - Add `page.waitForLoadState('networkidle')` after navigation when FoundryVTT is initializing.
 - Capture a screenshot on test failure: `await page.screenshot({ path: 'failure.png' })`.
-- For FoundryVTT specifically: wait for the `#loading` overlay to disappear before interacting with the canvas or sheets.
+- For FoundryVTT specifically: wait for the `#loading` overlay to disappear before interacting with the canvas or sheets (see `scripts/wait-for-foundry.js`).
 - Use `page.evaluate()` to call FoundryVTT client-side APIs directly when setting up test state (e.g., opening an actor sheet programmatically).
-- Prefer `data-testid` selectors; fall back to semantic selectors (role, label, text). Avoid brittle CSS selectors.
+- Prefer `data-testid` selectors; fall back to semantic selectors (role, label, text). Avoid brittle CSS selectors (see `references/foundry-selectors.md` for known reliable selectors).
 - Run with `--headed` when debugging visually; `--headless` for CI-style runs.
 
 ## Reporting Format
