@@ -186,13 +186,12 @@
 	let expandedPanel = $state('attack');
 
 	function togglePanel(panelName) {
-		// If clicking the same panel, close it (go back to attack)
-		// Otherwise, open the new panel
+		// Attack and Spell act like tabs - clicking the selected one does nothing
+		// You can only switch between them
 		if (expandedPanel === panelName) {
-			expandedPanel = panelName === 'attack' ? null : 'attack';
-		} else {
-			expandedPanel = panelName;
+			return;
 		}
+		expandedPanel = panelName;
 	}
 
 	function handleActionClick(action) {
