@@ -181,6 +181,7 @@
 
 		&__intro {
 			margin: 0;
+			padding: 0 0.75rem;
 			font-size: var(--nimble-sm-text);
 			font-weight: 500;
 			color: var(--nimble-dark-text-color);
