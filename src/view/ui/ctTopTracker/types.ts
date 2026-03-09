@@ -101,6 +101,7 @@ export interface ResolveNextCombatantActionsForSlotParams {
 export interface CtTopTrackerSettingPatch {
 	playersCanExpandMonsterCards?: boolean;
 	centerActiveCardEnabled?: boolean;
+	resourceDrawerHoverEnabled?: boolean;
 	ctEnabled?: boolean;
 	ctWidthLevel?: number;
 	ctCardSizeLevel?: number;

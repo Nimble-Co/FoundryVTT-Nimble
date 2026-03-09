@@ -4,6 +4,7 @@
 		getCombatTrackerActionDiceColor,
 		getCombatTrackerCtBadgeSizeLevel,
 		getCombatTrackerCenterActiveCardEnabled,
+		getCombatTrackerResourceDrawerHoverEnabled,
 		getCombatTrackerCtCardSizeLevel,
 		getCombatTrackerVisibilityPermissionConfig,
 		getCombatTrackerCtWidthLevel,
@@ -12,6 +13,7 @@
 		isCombatTrackerBadgeSizeLevelSettingKey,
 		isCombatTrackerCardSizeLevelSettingKey,
 		isCombatTrackerCenterActiveCardSettingKey,
+		isCombatTrackerResourceDrawerHoverSettingKey,
 		isCombatTrackerVisibilityPermissionSettingKey,
 		isCombatTrackerUseActionDiceSettingKey,
 		isCombatTrackerWidthLevelSettingKey,
@@ -19,6 +21,7 @@
 		setCombatTrackerActionDiceColor,
 		setCombatTrackerCtBadgeSizeLevel,
 		setCombatTrackerCenterActiveCardEnabled,
+		setCombatTrackerResourceDrawerHoverEnabled,
 		setCombatTrackerCtCardSizeLevel,
 		setCombatTrackerCtWidthLevel,
 		setCombatTrackerVisibilityPermissionConfig,
@@ -85,6 +88,7 @@
 	let cardSizeLevel = $state(getCombatTrackerCtCardSizeLevel());
 	let badgeSizeLevel = $state(getCombatTrackerCtBadgeSizeLevel());
 	let centerActiveCardEnabled = $state(getCombatTrackerCenterActiveCardEnabled());
+	let resourceDrawerHoverEnabled = $state(getCombatTrackerResourceDrawerHoverEnabled());
 	let useActionDice = $state(getCombatTrackerUseActionDice());
 	let actionDiceColor = $state(getCombatTrackerActionDiceColor());
 	let visibilityPermissions = $state(getCombatTrackerVisibilityPermissionConfig());
@@ -161,6 +165,16 @@
 		);
 	}
 
+	function handleResourceDrawerHoverChange(event: Event): void {
+		if (!canManageWorldCtSettings) return;
+		const checkbox = event.currentTarget as HTMLInputElement;
+		resourceDrawerHoverEnabled = checkbox.checked;
+		persistCtSetting(
+			'resource drawer hover',
+			setCombatTrackerResourceDrawerHoverEnabled(checkbox.checked),
+		);
+	}
+
 	function handleUseActionDiceChange(event: Event): void {
 		if (!canManageWorldCtSettings) return;
 		const checkbox = event.currentTarget as HTMLInputElement;
@@ -222,6 +236,9 @@
 			}
 			if (isCombatTrackerCenterActiveCardSettingKey(settingKey)) {
 				centerActiveCardEnabled = getCombatTrackerCenterActiveCardEnabled();
+			}
+			if (isCombatTrackerResourceDrawerHoverSettingKey(settingKey)) {
+				resourceDrawerHoverEnabled = getCombatTrackerResourceDrawerHoverEnabled();
 			}
 			if (isCombatTrackerUseActionDiceSettingKey(settingKey)) {
 				useActionDice = getCombatTrackerUseActionDice();
@@ -325,6 +342,19 @@
 							type="checkbox"
 							checked={centerActiveCardEnabled}
 							onchange={handleCenterActiveCardChange}
+						/>
+					</div>
+				</div>
+				<div class="nimble-ct-settings__toggle-row">
+					<label class="nimble-ct-settings__label" for="nimble-ct-resource-drawer-hover"
+						>Resource Drawer Opens On Hover</label
+					>
+					<div class="nimble-ct-settings__toggle-field">
+						<input
+							id="nimble-ct-resource-drawer-hover"
+							type="checkbox"
+							checked={resourceDrawerHoverEnabled}
+							onchange={handleResourceDrawerHoverChange}
 						/>
 					</div>
 				</div>

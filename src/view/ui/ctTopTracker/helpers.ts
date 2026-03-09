@@ -1,3 +1,8 @@
+import type { TurnIdentity } from '../../../documents/combat/combatTypes.js';
+import {
+	getExpandedTurnIdentityHint,
+	setExpandedTurnIdentityHint,
+} from '../../../documents/combat/expandedTurnIdentityStore.js';
 import {
 	type CombatTrackerVisibilityFieldKey,
 	type CombatTrackerVisibilityPermissionConfig,
@@ -58,6 +63,10 @@ import type {
 	TrackEntry,
 	VirtualizedAliveEntries,
 } from './types.js';
+
+type CombatWithTurnIdentityHint = Combat & {
+	_nimbleExpandedTurnIdentity?: TurnIdentity | null;
+};
 
 function getViewportWidthPx(): number {
 	return Math.max(0, globalThis.innerWidth || document.documentElement.clientWidth || 0);
@@ -296,22 +305,54 @@ export function findTurnIndexByOccurrence(
 	return -1;
 }
 
-export function syncCombatTurnsForCt(combat: Combat | null): void {
-	if (!combat) return;
+function resolveCurrentTurnIdentity(
+	combat: Combat,
+	existingTurns: Combatant.Implementation[],
+): TurnIdentity | null {
+	const combatWithHint = combat as CombatWithTurnIdentityHint;
+	if (combatWithHint._nimbleExpandedTurnIdentity) {
+		return combatWithHint._nimbleExpandedTurnIdentity;
+	}
 
-	const existingTurns = combat.turns;
+	const storedTurnIdentity = getExpandedTurnIdentityHint(combat.id ?? null);
+	if (storedTurnIdentity) {
+		return storedTurnIdentity;
+	}
+
+	const explicitCombatantId = getCombatantId(combat.combatant);
+
 	const normalizedCurrentTurn =
 		typeof combat.turn === 'number' && combat.turn >= 0 && combat.turn < existingTurns.length
 			? combat.turn
 			: null;
-	const currentCombatantId =
-		normalizedCurrentTurn !== null
-			? getCombatantId(existingTurns[normalizedCurrentTurn])
-			: getCombatantId(combat.combatant);
-	const currentOccurrence =
-		currentCombatantId && normalizedCurrentTurn !== null
-			? getCombatantOccurrenceAtIndex(existingTurns, currentCombatantId, normalizedCurrentTurn)
-			: null;
+	const indexedCombatantId =
+		normalizedCurrentTurn !== null ? getCombatantId(existingTurns[normalizedCurrentTurn]) : '';
+	if (indexedCombatantId && normalizedCurrentTurn !== null) {
+		if (!explicitCombatantId || explicitCombatantId === indexedCombatantId) {
+			return {
+				combatantId: indexedCombatantId,
+				occurrence: getCombatantOccurrenceAtIndex(
+					existingTurns,
+					indexedCombatantId,
+					normalizedCurrentTurn,
+				),
+			};
+		}
+	}
+
+	if (explicitCombatantId) {
+		return { combatantId: explicitCombatantId, occurrence: null };
+	}
+
+	return null;
+}
+
+export function syncCombatTurnsForCt(combat: Combat | null): void {
+	if (!combat) return;
+
+	const existingTurns = combat.turns;
+	const combatWithHint = combat as CombatWithTurnIdentityHint;
+	const currentTurnIdentity = resolveCurrentTurnIdentity(combat, existingTurns);
 
 	let normalizedTurns: Combatant.Implementation[];
 	try {
@@ -323,23 +364,46 @@ export function syncCombatTurnsForCt(combat: Combat | null): void {
 	combat.turns = normalizedTurns;
 	if (normalizedTurns.length === 0) {
 		combat.turn = 0;
+		combatWithHint._nimbleExpandedTurnIdentity = null;
+		setExpandedTurnIdentityHint(combat.id ?? null, null);
 		return;
 	}
 
-	if (currentCombatantId) {
+	if (currentTurnIdentity?.combatantId) {
 		const matchedIndex = findTurnIndexByOccurrence(
 			normalizedTurns,
-			currentCombatantId,
-			currentOccurrence,
+			currentTurnIdentity.combatantId,
+			currentTurnIdentity.occurrence,
 		);
 		if (matchedIndex >= 0) {
 			combat.turn = matchedIndex;
+			combatWithHint._nimbleExpandedTurnIdentity = {
+				combatantId: currentTurnIdentity.combatantId,
+				occurrence: getCombatantOccurrenceAtIndex(
+					normalizedTurns,
+					currentTurnIdentity.combatantId,
+					matchedIndex,
+				),
+			};
+			setExpandedTurnIdentityHint(combat.id ?? null, combatWithHint._nimbleExpandedTurnIdentity);
 			return;
 		}
 	}
 
 	const fallbackTurn = Number.isInteger(combat.turn) ? Number(combat.turn) : 0;
 	combat.turn = Math.min(Math.max(fallbackTurn, 0), normalizedTurns.length - 1);
+	const fallbackCombatantId = getCombatantId(normalizedTurns[combat.turn]);
+	combatWithHint._nimbleExpandedTurnIdentity = fallbackCombatantId
+		? {
+				combatantId: fallbackCombatantId,
+				occurrence: getCombatantOccurrenceAtIndex(
+					normalizedTurns,
+					fallbackCombatantId,
+					combat.turn,
+				),
+			}
+		: null;
+	setExpandedTurnIdentityHint(combat.id ?? null, combatWithHint._nimbleExpandedTurnIdentity);
 }
 
 export function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
