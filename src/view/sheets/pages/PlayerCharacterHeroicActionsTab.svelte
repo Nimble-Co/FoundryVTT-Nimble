@@ -276,18 +276,20 @@
 	}
 
 	function getActionTooltip(action) {
+		const label = localize(action.labelKey);
+
 		if (action.requiresCombat) {
 			if (!inCombat) {
-				return localize('NIMBLE.ui.heroicActions.outsideCombat');
+				return `${label} (${localize('NIMBLE.ui.heroicActions.outsideCombat')})`;
 			}
 			if (actionsData.current <= 0) {
-				return localize('NIMBLE.ui.heroicActions.noActions');
+				return `${label} (${localize('NIMBLE.ui.heroicActions.noActions')})`;
 			}
 		}
 		if (action.id === 'spell' && !hasSpells) {
-			return localize('NIMBLE.ui.heroicActions.noSpells');
+			return `${label} (${localize('NIMBLE.ui.heroicActions.noSpells')})`;
 		}
-		return localize(action.descriptionKey);
+		return label;
 	}
 
 	// ============================================================================
