@@ -104,7 +104,7 @@
 							value={baseValue}
 							onchange={({ target }) => updateMovement(key, target.value)}
 						/>
-						<span class="movement-card__unit">spaces</span>
+						<span class="movement-card__unit">{localize('NIMBLE.movementConfig.spaces')}</span>
 					</div>
 
 					{#if hasBonus}
@@ -127,7 +127,9 @@
 							{/each}
 						</div>
 						<div class="movement-card__total">
-							<span class="movement-card__total-label">Total</span>
+							<span class="movement-card__total-label"
+								>{localize('NIMBLE.movementConfig.total')}</span
+							>
 							<span class="movement-card__total-value">{currentValue}</span>
 						</div>
 					{/if}
@@ -138,7 +140,7 @@
 
 	<aside class="movement-note">
 		<i class="fa-solid fa-circle-info"></i>
-		<span>All measurements are in grid spaces.</span>
+		<span>{localize('NIMBLE.movementConfig.gridSpacesNote')}</span>
 	</aside>
 </section>
 
