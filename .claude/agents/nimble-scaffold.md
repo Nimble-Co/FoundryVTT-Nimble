@@ -4,6 +4,7 @@ description: "Use this agent when scaffolding a new Svelte sheet for an actor or
 tools: Read, Glob, Grep, Write, Edit, Bash, Skill
 model: sonnet
 color: green
+isolation: worktree
 ---
 
 You are a FoundryVTT-Nimble sub-agent. Your job is to draft a complete new Svelte sheet and **propose** it to the user before writing any files.

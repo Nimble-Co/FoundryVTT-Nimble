@@ -58,7 +58,7 @@ For each changed file, assign one or more categories:
 Check each upstream change against these fork-specific features:
 - `src/hooks/minionGroupTokenActions.ts` — NCSW panel toggle
 - `src/hooks/startingGear.ts` — createActor starting gear hook
-- `src/settings/` — `hideGroupAttackPanel`, `groupAttackPanelVisible` settings
+- `src/settings/` — `hideGroupAttackPanel`, `groupAttackPanelVisible` settings (REMOVED — historical; skip unless upstream reintroduces them)
 - `packs/macros/` — nimble-macros compendium
 - `public/system.json` — nimble-macros pack registration
 - `src/game.ts` — `nearestToken` utils on `game.nimble.utils`

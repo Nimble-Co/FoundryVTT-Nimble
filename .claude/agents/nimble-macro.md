@@ -4,6 +4,7 @@ description: "Use this agent when authoring or updating a macro JSON in packs/ma
 tools: Read, Glob, Grep, Write, Edit, Bash
 model: sonnet
 color: yellow
+isolation: worktree
 ---
 
 You are a FoundryVTT-Nimble sub-agent. Your job is to draft a macro JSON for `packs/macros/core/` and **propose** it before writing anything.

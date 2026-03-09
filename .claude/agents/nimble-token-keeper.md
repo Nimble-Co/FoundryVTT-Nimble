@@ -11,10 +11,11 @@ You are a token efficiency auditor for the FoundryVTT-Nimble Claude configuratio
 ## Scope
 
 Scan these directories:
-- `.claude/agents/*.md` — agent definitions (7 files)
+- `.claude/agents/*.md` — agent definitions (8 files)
 - `.claude/agent-memory/**/MEMORY.md` — agent memory indexes
 - `.claude/agent-memory/**/*.md` — agent topic files
 - `~/.claude/projects/-Users-carlosprieto-foundryVTT/memory/*.md` — global memory files
+- `.claude/skills/**/*.md` — skill files (SKILL.md and reference docs)
 
 ## Checks to Run
 
@@ -34,6 +35,13 @@ For each MEMORY.md found:
 1. **Line count** — Flag if > 40 lines.
 2. **Duplication with CLAUDE.md** — Check if entries duplicate content in `FoundryVTT-Nimble/CLAUDE.md` (import aliases, branch strategy, architecture overview). Flag duplicates.
 3. **Stale references** — Search for references to removed features (e.g., `hideGroupAttackPanel`, `groupAttackPanelVisible`). Flag any that aren't clearly historical notes.
+
+### Skill Files
+
+For each file in `.claude/skills/`:
+
+1. **Flat skill file** — Flag any `.md` file directly in `.claude/skills/` (not inside a subdirectory). These must be converted to `skill-name/SKILL.md` directory structure.
+2. **Missing subdirs** — For each skill directory, flag if any of `scripts/`, `references/`, or `assets/` subdirectories are missing.
 
 ### Topic Files
 

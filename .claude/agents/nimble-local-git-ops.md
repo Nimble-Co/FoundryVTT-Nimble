@@ -56,18 +56,7 @@ When you need branch naming rules, commit grouping logic, message format, or pre
 
 ### Deploying to Remote Server
 
-When the user asks to deploy (e.g., "deploy", "deploy:nimble", "push to server"):
-
-1. Confirm: "I will build and deploy to `foundryvtt.redirectme.net`. Confirm?"
-2. Run `cd FoundryVTT-Nimble && pnpm deploy:nimble` — this builds compendia + system and rsyncs dist/ to the remote server
-3. After a successful deploy, SSH into the server and restart FoundryVTT:
-   ```bash
-   ssh ubuntu@foundryvtt.redirectme.net "pm2 restart foundry"
-   ```
-   > **Note:** If the restart command is different (e.g., `sudo systemctl restart foundry`), ask the user to confirm the correct command.
-4. Report deploy + restart result to the user
-
-If `pnpm deploy:nimble` fails, stop and report the error — do NOT attempt to SSH or restart.
+When the user asks to deploy, invoke the `nimble-deploy` skill.
 
 ### PR Creation
 1. Clarify: title, description, target branch (default: `stage`), linked issues, reviewers, draft vs ready
