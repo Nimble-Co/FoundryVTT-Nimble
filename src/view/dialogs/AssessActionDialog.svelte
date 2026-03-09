@@ -289,13 +289,14 @@
 
 <style lang="scss">
 	.nimble-sheet__footer {
-		--nimble-button-padding: 0.5rem 1rem;
-
 		display: flex;
 		gap: 0.5rem;
 
 		.nimble-button {
 			flex: 1;
+			padding: 0.625rem 1rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
 		}
 	}
 

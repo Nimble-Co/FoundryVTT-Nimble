@@ -642,6 +642,7 @@
 			"turn": "turn"
 		},
 		"ui": {
+			"cancel": "Cancel",
 			"heroicActions": {
 				"title": "Heroic Actions",
 				"enterCombat": "Enter combat to use actions",
