@@ -136,10 +136,32 @@
 		await combatant.update({ 'system.actions.base.current': newValue });
 	}
 
-	async function deductActionPip() {
+	async function deductActionPips(count = 1) {
 		const { current } = getActionsData();
 		if (current > 0) {
-			await updateActionPips(current - 1);
+			const newValue = Math.max(0, current - count);
+			await updateActionPips(newValue);
+		}
+	}
+
+	function isCharactersTurn() {
+		const combat = getActiveCombatForCurrentScene();
+		if (!combat?.started) return false;
+
+		const currentCombatant = combat.combatant;
+		if (!currentCombatant) return false;
+
+		return currentCombatant.actorId === actor.id;
+	}
+
+	async function endTurn() {
+		const combat = getActiveCombatForCurrentScene();
+		if (!combat) return;
+
+		try {
+			await combat.nextTurn();
+		} catch (_error) {
+			ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionEndTurn'));
 		}
 	}
 
@@ -152,6 +174,11 @@
 	let actionsData = $derived.by(() => {
 		subscribeCombatState();
 		return getActionsData();
+	});
+
+	let isMyTurn = $derived.by(() => {
+		subscribeCombatState();
+		return isCharactersTurn();
 	});
 
 	// ============================================================================
@@ -182,7 +209,7 @@
 	function handleMoveAction() {
 		if (!inCombat || actionsData.current <= 0) return;
 
-		deductActionPip();
+		deductActionPips(1);
 		ChatMessage.create({
 			speaker: ChatMessage.getSpeaker({ actor }),
 			content: localize('NIMBLE.ui.heroicActions.moveAction', { name: actor.name }),
@@ -196,6 +223,9 @@
 		const { default: AssessActionDialog } = await import('../../dialogs/AssessActionDialog.svelte');
 
 		const dialogId = `assess-action-${actor.id}`;
+
+		// Wrapper to maintain AssessActionDialog's expected interface
+		const deductActionPip = () => deductActionPips(1);
 
 		GenericDialog.getOrCreate(
 			'Assess Action',
@@ -216,6 +246,14 @@
 	}
 
 	function getActionTooltip(action) {
+		if (action.requiresCombat) {
+			if (!inCombat) {
+				return localize('NIMBLE.ui.heroicActions.outsideCombat');
+			}
+			if (actionsData.current <= 0) {
+				return localize('NIMBLE.ui.heroicActions.noActions');
+			}
+		}
 		if (action.id === 'spell' && !hasSpells) {
 			return localize('NIMBLE.ui.heroicActions.noSpells');
 		}
@@ -342,8 +380,101 @@
 			.filter(Boolean);
 	}
 
-	function handleUnarmedStrike() {
-		actor.rollUnarmedStrike?.() ?? actor.activateItem?.('unarmed');
+	async function handleUnarmedStrike() {
+		const { default: ItemActivationConfigDialog } = await import(
+			'../../../documents/dialogs/ItemActivationConfigDialog.svelte.js'
+		);
+		const { DamageRoll } = await import('../../../dice/DamageRoll.js');
+
+		// Create a fake item structure for unarmed strike
+		const unarmedItem = {
+			name: localize('NIMBLE.ui.heroicActions.unarmedStrike'),
+			img: 'icons/skills/melee/unarmed-punch-fist.webp',
+			system: {
+				activation: {
+					effects: [
+						{
+							type: 'damage',
+							formula: '1d4 + @abilities.strength.mod',
+							damageType: 'bludgeoning',
+							canCrit: true,
+							canMiss: true,
+						},
+					],
+				},
+			},
+		};
+
+		const dialog = new ItemActivationConfigDialog(
+			actor,
+			unarmedItem,
+			localize('NIMBLE.ui.heroicActions.unarmedStrike'),
+			{ rollMode: 0 },
+		);
+		await dialog.render(true);
+		const result = await dialog.promise;
+
+		if (!result) return; // Dialog was cancelled
+
+		// Create the damage roll
+		const roll = new DamageRoll('1d4 + @abilities.strength.mod', actor.getRollData(), {
+			canCrit: true,
+			canMiss: true,
+			rollMode: result.rollMode ?? 0,
+			primaryDieValue: result.primaryDieValue ?? 0,
+			primaryDieModifier: Number(result.primaryDieModifier) || 0,
+			damageType: 'bludgeoning',
+		});
+
+		await roll.evaluate();
+
+		// Create chat message
+		const chatData = {
+			author: game.user?.id,
+			flavor: `${actor.name}: ${localize('NIMBLE.ui.heroicActions.unarmedStrike')}`,
+			speaker: ChatMessage.getSpeaker({ actor }),
+			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
+			sound: CONFIG.sounds.dice,
+			rolls: [roll],
+			system: {
+				actorName: actor.name,
+				actorType: actor.type,
+				activation: unarmedItem.system.activation,
+				image: unarmedItem.img,
+				isCritical: roll.isCritical,
+				isMiss: roll.isMiss,
+				rollMode: result.rollMode ?? 0,
+				targets: Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []),
+			},
+			type: 'base',
+		};
+
+		await ChatMessage.create(chatData);
+
+		// Deduct action pip if in combat
+		if (inCombat && actionsData.current > 0) {
+			await deductActionPips(1);
+		}
+	}
+
+	async function activateItemWithActionDeduction(itemId) {
+		const item = actor.items.get(itemId);
+		const result = await actor.activateItem(itemId);
+
+		// If activation succeeded and we're in combat, deduct action pips
+		if (result && inCombat && actionsData.current > 0) {
+			// Get the action cost from the item's activation data
+			const activationCost = item?.system?.activation?.cost;
+			const costType = activationCost?.type;
+			const costQuantity = activationCost?.quantity ?? 1;
+
+			// Only deduct for action-type costs
+			if (costType === 'action') {
+				await deductActionPips(costQuantity);
+			}
+		}
+
+		return result;
 	}
 
 	// ============================================================================
@@ -444,12 +575,31 @@
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
-	<ActionPipTracker
-		current={actionsData.current}
-		max={actionsData.max}
-		disabled={!inCombat}
-		onUpdate={updateActionPips}
-	/>
+	<div class="heroic-actions__combat-header">
+		<ActionPipTracker
+			current={actionsData.current}
+			max={actionsData.max}
+			disabled={!inCombat}
+			onUpdate={updateActionPips}
+		/>
+
+		{#if isMyTurn}
+			{@const canEndTurn = actionsData.current === 0}
+			<button
+				class="heroic-actions__end-turn-button"
+				class:heroic-actions__end-turn-button--ready={canEndTurn}
+				type="button"
+				disabled={!canEndTurn}
+				aria-label={localize('NIMBLE.ui.heroicActions.endTurn')}
+				data-tooltip={canEndTurn
+					? localize('NIMBLE.ui.heroicActions.endTurn')
+					: localize('NIMBLE.ui.heroicActions.useActionsFirst')}
+				onclick={endTurn}
+			>
+				{localize('NIMBLE.ui.heroicActions.endTurn')}
+			</button>
+		{/if}
+	</div>
 
 	{#if !inCombat}
 		<p class="heroic-actions__combat-notice">
@@ -556,7 +706,7 @@
 							draggable="true"
 							role="button"
 							ondragstart={(event) => sheet._onDragStart(event)}
-							onclick={() => actor.activateItem(item._id)}
+							onclick={() => activateItemWithActionDeduction(item._id)}
 						>
 							{#if showEmbeddedDocumentImages}
 								<img class="weapon-card__img" src={item.reactive.img} alt={item.reactive.name} />
@@ -592,7 +742,7 @@
 							draggable="true"
 							role="button"
 							ondragstart={(event) => sheet._onDragStart(event)}
-							onclick={() => actor.activateItem(item._id)}
+							onclick={() => activateItemWithActionDeduction(item._id)}
 						>
 							{#if showEmbeddedDocumentImages}
 								<img class="weapon-card__img" src={item.reactive.img} alt={item.reactive.name} />
@@ -659,7 +809,7 @@
 								draggable="true"
 								role="button"
 								ondragstart={(event) => sheet._onDragStart(event)}
-								onclick={() => actor.activateItem(spell._id)}
+								onclick={() => activateItemWithActionDeduction(spell._id)}
 							>
 								{#if showEmbeddedDocumentImages}
 									<img class="spell-card__img" src={spell.reactive.img} alt={spell.reactive.name} />
@@ -712,6 +862,46 @@
 </section>
 
 <style lang="scss">
+	.heroic-actions__combat-header {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.heroic-actions__end-turn-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.375rem 1rem;
+		font-size: var(--nimble-sm-text);
+		font-weight: 600;
+		color: var(--nimble-medium-text-color);
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+		cursor: not-allowed;
+		opacity: 0.5;
+		transition: all 0.2s ease;
+
+		&--ready {
+			opacity: 1;
+			cursor: pointer;
+			color: var(--nimble-light-text-color);
+			background: hsl(139, 47%, 44%);
+			border-color: hsl(139, 47%, 38%);
+
+			&:hover {
+				background: hsl(139, 47%, 38%);
+				border-color: hsl(139, 47%, 32%);
+			}
+
+			&:active {
+				background: hsl(139, 47%, 32%);
+			}
+		}
+	}
+
 	.heroic-actions__combat-notice {
 		display: flex;
 		align-items: center;

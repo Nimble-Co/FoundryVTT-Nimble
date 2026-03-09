@@ -644,7 +644,12 @@
 			"heroicActions": {
 				"title": "Heroic Actions",
 				"enterCombat": "Enter combat to use actions",
+				"outsideCombat": "You are outside of combat",
+				"noActions": "You don't have any actions",
 				"noSpells": "You don't have any spells",
+				"endTurn": "End Turn",
+				"useActionsFirst": "Use your actions first",
+				"noPermissionEndTurn": "You do not have permission to end turns.",
 				"selectAttack": "Select Attack",
 				"selectSpell": "Select Spell",
 				"noWeapons": "No weapons or attack features found.",

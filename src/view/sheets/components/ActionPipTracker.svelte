@@ -87,7 +87,14 @@
 		gap: 0.5rem;
 
 		&--disabled {
-			opacity: 0.6;
+			.action-pip {
+				cursor: not-allowed;
+
+				&:hover {
+					transform: none;
+					box-shadow: none;
+				}
+			}
 		}
 
 		&__count {
@@ -98,7 +105,7 @@
 
 		&__pips {
 			display: flex;
-			gap: 0.375rem;
+			gap: 0.5rem;
 		}
 	}
 
@@ -106,11 +113,18 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 0.25rem;
-		background: transparent;
-		border: none;
+		width: 2.5rem;
+		height: 2.5rem;
+		padding: 0;
+		background: var(--nimble-box-background-color);
+		border: 2px solid var(--nimble-card-border-color);
+		border-radius: 6px;
 		cursor: pointer;
-		transition: var(--nimble-standard-transition);
+		transition: all 0.15s ease;
+
+		&:hover:not(:disabled) {
+			border-color: var(--nimble-accent-color);
+		}
 
 		&:disabled {
 			cursor: not-allowed;
@@ -128,22 +142,31 @@
 			}
 		}
 
-		// Spent actions: dimmed
+		// Spent actions: gray icon
 		&--spent {
-			opacity: 0.4;
-
-			&:hover:not(:disabled) {
-				opacity: 0.6;
-			}
-
 			.action-pip__icon {
 				color: var(--nimble-medium-text-color);
+				opacity: 0.5;
+			}
+
+			&:hover:not(:disabled) .action-pip__icon {
+				opacity: 0.7;
 			}
 		}
 
 		&__icon {
-			font-size: 1.5rem;
-			transition: var(--nimble-standard-transition);
+			font-size: 1.25rem;
+			transition: all 0.15s ease;
+		}
+	}
+
+	:global(.theme-dark) .action-pip {
+		background: hsl(220, 15%, 18%);
+		border-color: hsl(220, 10%, 30%);
+
+		&:hover:not(:disabled) {
+			border-color: hsl(220, 15%, 45%);
+			background: hsl(220, 15%, 22%);
 		}
 	}
 </style>
