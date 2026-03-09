@@ -1,4 +1,5 @@
 <script>
+	import { untrack } from 'svelte';
 	import localize from '../../../utils/localize.js';
 
 	const diceIcons = [
@@ -48,6 +49,28 @@
 	}
 
 	let { current = 0, max = 3, disabled = false, onUpdate = () => {} } = $props();
+
+	// Track which pips were just spent for animation
+	let justSpentPips = $state(new Set());
+	let previousCurrent = $state(untrack(() => current));
+
+	// Detect when pips are spent and trigger animation
+	$effect(() => {
+		if (current < previousCurrent) {
+			// Pips were spent - mark them for animation
+			const newlySpent = new Set();
+			for (let i = current; i < previousCurrent; i++) {
+				newlySpent.add(i);
+			}
+			justSpentPips = newlySpent;
+
+			// Clear the animation class after the animation completes
+			setTimeout(() => {
+				justSpentPips = new Set();
+			}, 600);
+		}
+		previousCurrent = current;
+	});
 </script>
 
 <div class="action-pip-tracker" class:action-pip-tracker--disabled={disabled}>
@@ -61,12 +84,14 @@
 	<div class="action-pip-tracker__pips">
 		{#each { length: max }, i}
 			{@const isAvailable = i < current}
+			{@const isJustSpent = justSpentPips.has(i)}
 			{@const diceIcon = getDiceIcon(i)}
 
 			<button
 				class="action-pip"
 				class:action-pip--available={isAvailable}
 				class:action-pip--spent={!isAvailable}
+				class:action-pip--just-spent={isJustSpent}
 				type="button"
 				aria-label={getAriaLabel(i, isAvailable)}
 				data-tooltip={getTooltip(isAvailable)}
@@ -154,9 +179,51 @@
 			}
 		}
 
+		// Animation when pip is just spent
+		&--just-spent {
+			animation: pip-spent 0.6s ease-out;
+
+			.action-pip__icon {
+				animation: pip-icon-spent 0.6s ease-out;
+			}
+		}
+
 		&__icon {
 			font-size: 1.25rem;
 			transition: all 0.15s ease;
+		}
+	}
+
+	@keyframes pip-spent {
+		0% {
+			transform: scale(1);
+			border-color: hsl(139, 47%, 44%);
+		}
+		30% {
+			transform: scale(1.15);
+			border-color: hsl(45, 70%, 50%);
+		}
+		100% {
+			transform: scale(1);
+			border-color: var(--nimble-card-border-color);
+		}
+	}
+
+	@keyframes pip-icon-spent {
+		0% {
+			color: hsl(139, 47%, 44%);
+			opacity: 1;
+			transform: scale(1);
+		}
+		30% {
+			color: hsl(45, 70%, 50%);
+			opacity: 1;
+			transform: scale(1.2);
+		}
+		100% {
+			color: var(--nimble-medium-text-color);
+			opacity: 0.5;
+			transform: scale(1);
 		}
 	}
 
