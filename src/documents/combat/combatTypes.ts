@@ -62,12 +62,17 @@ export interface ResolvedMinionAttackActionContext {
 	unsupportedWarning: string | null;
 }
 
+export interface TurnIdentity {
+	combatantId: string;
+	occurrence: number | null;
+}
+
 export interface DropResolution {
 	source: Combatant.Implementation;
 	target: Combatant.Implementation;
 	siblings: Combatant.Implementation[];
 	sortBefore: boolean;
-	previousActiveCombatantId: string | null;
+	previousActiveTurnIdentity: TurnIdentity | null;
 }
 
 export interface DropTargetResolution {

@@ -10,6 +10,7 @@ import {
 	type NimbleCombatDocumentTestGlobals,
 } from '../../../tests/mocks/combat.js';
 import { NimbleCombat } from './combat.svelte.js';
+import { clearExpandedTurnIdentityHint } from './expandedTurnIdentityStore.js';
 
 function globals() {
 	return getTestGlobals<NimbleCombatDocumentTestGlobals>();
@@ -18,6 +19,10 @@ function globals() {
 describe('NimbleCombat', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		clearExpandedTurnIdentityHint('combat-legendary-next-turn-occurrence');
+		clearExpandedTurnIdentityHint('combat-legendary-previous-turn-occurrence');
+		clearExpandedTurnIdentityHint('combat-start-top-player');
+		clearExpandedTurnIdentityHint('combat-start-local-combatant-sync');
 
 		globals().game.user = { isGM: true, role: 4 };
 		(
@@ -48,7 +53,13 @@ describe('NimbleCombat', () => {
 		combatPrototype.nextTurn = vi.fn(async function (this: Combat) {
 			return this;
 		});
+		combatPrototype.previousTurn = vi.fn(async function (this: Combat) {
+			return this;
+		});
 		combatPrototype.nextRound = vi.fn(async function (this: Combat) {
+			return this;
+		});
+		combatPrototype.previousRound = vi.fn(async function (this: Combat) {
 			return this;
 		});
 
@@ -295,6 +306,134 @@ describe('NimbleCombat', () => {
 		]);
 	});
 
+	it('preserves the second solo turn occurrence when advancing from the second player turn', async () => {
+		const combatId = 'combat-legendary-next-turn-occurrence';
+		const playerOne = createMockCombatant({
+			id: 'player-one',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 16,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const playerTwo = createMockCombatant({
+			id: 'player-two',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 14,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const legendary = createMockCombatant({
+			id: 'legendary-one',
+			type: 'soloMonster',
+			sort: 3,
+			isOwner: false,
+			initiative: 12,
+			actor: createCombatActorFixture({ hp: 40 }),
+			combatId,
+		});
+
+		const superNextTurn = globals().Combat.prototype.nextTurn as ReturnType<typeof vi.fn>;
+		superNextTurn.mockImplementation(async function (
+			this: Combat & {
+				turn?: number;
+				turns?: Combatant.Implementation[];
+				combatant?: Combatant.Implementation | null;
+			},
+		) {
+			// Simulate Foundry returning a raw turn index that no longer matches the expanded solo-turn list.
+			this.turn = 2;
+			this.combatant = legendary;
+			return this;
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([playerOne, playerTwo, legendary]),
+			turns: [playerOne, legendary, playerTwo, legendary],
+			turn: 2,
+			combatant: playerTwo,
+		} as unknown as Combat.CreateData);
+		(combat as NimbleCombat & { update: ReturnType<typeof vi.fn> }).update = vi
+			.fn()
+			.mockResolvedValue(combat);
+
+		await combat.nextTurn();
+
+		expect(combat.turn).toBe(3);
+		expect(combat.combatant?.id).toBe('legendary-one');
+		expect(
+			(combat as NimbleCombat & { update: ReturnType<typeof vi.fn> }).update,
+		).not.toHaveBeenCalled();
+	});
+
+	it('preserves the player turn when rewinding from a later solo turn occurrence', async () => {
+		const combatId = 'combat-legendary-previous-turn-occurrence';
+		const playerOne = createMockCombatant({
+			id: 'player-one',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 16,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const playerTwo = createMockCombatant({
+			id: 'player-two',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 14,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const legendary = createMockCombatant({
+			id: 'legendary-one',
+			type: 'soloMonster',
+			sort: 3,
+			isOwner: false,
+			initiative: 12,
+			actor: createCombatActorFixture({ hp: 40 }),
+			combatId,
+		});
+
+		const superPreviousTurn = globals().Combat.prototype.previousTurn as ReturnType<typeof vi.fn>;
+		superPreviousTurn.mockImplementation(async function (
+			this: Combat & {
+				turn?: number;
+				turns?: Combatant.Implementation[];
+				combatant?: Combatant.Implementation | null;
+			},
+		) {
+			// Simulate Foundry returning the raw player index while the expanded list still contains two solo turns.
+			this.turn = 1;
+			this.combatant = playerTwo;
+			return this;
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([playerOne, playerTwo, legendary]),
+			turns: [playerOne, legendary, playerTwo, legendary],
+			turn: 3,
+			combatant: legendary,
+		} as unknown as Combat.CreateData);
+		(combat as NimbleCombat & { update: ReturnType<typeof vi.fn> }).update = vi
+			.fn()
+			.mockResolvedValue(combat);
+
+		await combat.previousTurn();
+
+		expect(combat.turn).toBe(2);
+		expect(combat.combatant?.id).toBe('player-two');
+		expect(
+			(combat as NimbleCombat & { update: ReturnType<typeof vi.fn> }).update,
+		).not.toHaveBeenCalled();
+	});
+
 	it('starts combat on the top-most character card after start initialization', async () => {
 		const combatId = 'combat-start-order';
 		const monster = createMockCombatant({
@@ -349,8 +488,62 @@ describe('NimbleCombat', () => {
 
 		await combat.startCombat();
 
-		expect(combat.update).toHaveBeenCalledWith({ turn: 1 });
+		expect(combat.update).not.toHaveBeenCalled();
 		expect(combat.turn).toBe(1);
+	});
+
+	it('seeds the expanded turn identity hint for the chosen starting player turn at combat start', async () => {
+		const combatId = 'combat-start-local-combatant-sync';
+		const monster = createMockCombatant({
+			id: 'monster-top',
+			type: 'npc',
+			sort: 1,
+			isOwner: false,
+			initiative: 18,
+			actor: createCombatActorFixture({ hp: 12 }),
+			combatId,
+		});
+		const playerTop = createMockCombatant({
+			id: 'player-top',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 15,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const combatants = createCombatantsCollectionFixture([monster, playerTop]);
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: 'scene-1' },
+			combatants,
+			turn: 0,
+			combatant: monster,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+			_nimbleExpandedTurnIdentity?: { combatantId: string; occurrence: number | null } | null;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+		combat.update = vi.fn().mockImplementation(async (updateData: Record<string, unknown>) => {
+			for (const [path, value] of Object.entries(updateData)) {
+				if (path.includes('.')) {
+					globals().foundry.utils.setProperty(combat, path, value);
+					continue;
+				}
+				(combat as unknown as Record<string, unknown>)[path] = value;
+			}
+			return combat;
+		});
+
+		await combat.startCombat();
+
+		expect(combat.turn).toBe(1);
+		expect(combat._nimbleExpandedTurnIdentity).toEqual({
+			combatantId: 'player-top',
+			occurrence: 0,
+		});
 	});
 
 	it('auto-rolls unrolled character initiative and resets non-character actions at combat start', async () => {

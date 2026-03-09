@@ -6,6 +6,7 @@
 		canCurrentUserDisplayCombatTrackerField,
 		getCombatTrackerCtBadgeSizeLevel,
 		getCombatTrackerCenterActiveCardEnabled,
+		getCombatTrackerResourceDrawerHoverEnabled,
 		getCombatTrackerCtCardSizeLevel,
 		getCombatTrackerCtEnabled,
 		getCombatTrackerVisibilityPermissionConfig,
@@ -551,6 +552,55 @@
 		}
 	}
 
+	function getTrackWheelZoneBounds(): {
+		left: number;
+		right: number;
+		top: number;
+		bottom: number;
+	} | null {
+		if (!trackElement) return null;
+		const interactiveRects = Array.from(
+			trackElement.querySelectorAll<HTMLElement>(
+				'.nimble-ct__portrait-card, .nimble-ct__round-separator',
+			),
+		)
+			.map((element) => element.getBoundingClientRect())
+			.filter((rect) => rect.width > 0 && rect.height > 0);
+		if (interactiveRects.length < 1) {
+			const fallbackRect = trackElement.getBoundingClientRect();
+			if (fallbackRect.width <= 0 || fallbackRect.height <= 0) return null;
+			return {
+				left: fallbackRect.left,
+				right: fallbackRect.right,
+				top: fallbackRect.top,
+				bottom: fallbackRect.bottom,
+			};
+		}
+
+		return interactiveRects.reduce(
+			(bounds, rect) => ({
+				left: Math.min(bounds.left, rect.left),
+				right: Math.max(bounds.right, rect.right),
+				top: Math.min(bounds.top, rect.top),
+				bottom: Math.max(bounds.bottom, rect.bottom),
+			}),
+			{
+				left: Number.POSITIVE_INFINITY,
+				right: Number.NEGATIVE_INFINITY,
+				top: Number.POSITIVE_INFINITY,
+				bottom: Number.NEGATIVE_INFINITY,
+			},
+		);
+	}
+
+	function isPointerWithinTrackWheelZone(clientX: number, clientY: number): boolean {
+		const rect = getTrackWheelZoneBounds();
+		if (!rect) return false;
+		return (
+			clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
+		);
+	}
+
 	function clearDropPreview(): void {
 		dragPreview = null;
 	}
@@ -1003,6 +1053,7 @@
 	let sceneDeadCombatants: Combatant.Implementation[] = $state([]);
 	let playersCanExpandMonsterCards = $state(getCombatTrackerPlayersCanExpandMonsterCards());
 	let centerActiveCardEnabled = $state(getCombatTrackerCenterActiveCardEnabled());
+	let resourceDrawerHoverEnabled = $state(getCombatTrackerResourceDrawerHoverEnabled());
 	let ctEnabled = $state(getCombatTrackerCtEnabled());
 	let useActionDice = $state(getCombatTrackerUseActionDice());
 	let ctWidthLevel = $state(getCombatTrackerCtWidthLevel());
@@ -1118,6 +1169,12 @@
 	let unregisterCtHooks: (() => void) | undefined;
 	let resizeListener: (() => void) | undefined;
 	let ctWidthPreviewListener: ((event: Event) => void) | undefined;
+	let trackWheelListener: ((event: WheelEvent) => void) | undefined;
+	let trackHoverListener: ((event: MouseEvent) => void) | undefined;
+
+	function updateTrackGapCursor(active: boolean): void {
+		document.body.classList.toggle('nimble-ct--track-hover', active);
+	}
 
 	onMount(() => {
 		updatePlayerMonsterExpansionPermission();
@@ -1132,6 +1189,18 @@
 			layoutVersion += 1;
 		};
 		window.addEventListener('resize', resizeListener);
+		trackWheelListener = (event: WheelEvent) => {
+			if (!isPointerWithinTrackWheelZone(event.clientX, event.clientY)) return;
+			handleTrackWheel(event);
+		};
+		window.addEventListener('wheel', trackWheelListener, {
+			passive: false,
+			capture: true,
+		});
+		trackHoverListener = (event: MouseEvent) => {
+			updateTrackGapCursor(isPointerWithinTrackWheelZone(event.clientX, event.clientY));
+		};
+		window.addEventListener('mousemove', trackHoverListener);
 		ctWidthPreviewListener = (event: Event) => {
 			if (!(event instanceof CustomEvent)) return;
 			const detail = (event.detail ?? {}) as CtWidthPreviewEventDetail;
@@ -1158,6 +1227,9 @@
 				}
 				if (patch.centerActiveCardEnabled !== undefined) {
 					centerActiveCardEnabled = patch.centerActiveCardEnabled;
+				}
+				if (patch.resourceDrawerHoverEnabled !== undefined) {
+					resourceDrawerHoverEnabled = patch.resourceDrawerHoverEnabled;
 				}
 				if (patch.ctEnabled !== undefined) {
 					ctEnabled = patch.ctEnabled;
@@ -1189,6 +1261,13 @@
 
 	onDestroy(() => {
 		if (resizeListener) window.removeEventListener('resize', resizeListener);
+		if (trackWheelListener) {
+			window.removeEventListener('wheel', trackWheelListener, { capture: true });
+		}
+		if (trackHoverListener) {
+			window.removeEventListener('mousemove', trackHoverListener);
+		}
+		updateTrackGapCursor(false);
 		if (ctWidthPreviewListener) {
 			window.removeEventListener(CT_WIDTH_PREVIEW_EVENT_NAME, ctWidthPreviewListener);
 		}
@@ -1220,9 +1299,75 @@
 	});
 </script>
 
+{#snippet renderNameDrawer(cardName)}
+	<div class="nimble-ct__player-name-drawer">
+		<span class="nimble-ct__player-name-drawer-text">{cardName}</span>
+	</div>
+{/snippet}
+
+{#snippet renderResourceReactionButton(combatant, reactionKey, reactionCell)}
+	<button
+		type="button"
+		class="nimble-ct__drawer-cell nimble-ct__drawer-reaction-button nimble-ct__drawer-cell--utility"
+		class:nimble-ct__drawer-cell--inactive={reactionCell.active === false}
+		class:nimble-ct__drawer-cell--hidden={!reactionCell.visible}
+		data-tooltip={reactionCell.title}
+		data-tooltip-direction="RIGHT"
+		disabled={!canToggleHeroicReactionFromDrawer(combatant, reactionKey, reactionCell.active)}
+		onclick={(event) => handleHeroicReactionToggle(event, combatant, reactionKey)}
+	>
+		{#if reactionCell.visible}
+			<i class={reactionCell.iconClass}></i>
+		{/if}
+	</button>
+{/snippet}
+
+{#snippet renderResourceDrawer(combatant, resourceDrawerData, cardName)}
+	<div class="nimble-ct__resource-drawer-stack">
+		<div class="nimble-ct__resource-drawer">
+			<div
+				class={`nimble-ct__drawer-cell nimble-ct__drawer-cell--left nimble-ct__drawer-cell--hp ${getCombatantHpBadgeClass(combatant)}`}
+				class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.hp.visible}
+				data-tooltip={resourceDrawerData.hp.title}
+				data-tooltip-direction="LEFT"
+			>
+				{#if resourceDrawerData.hp.visible && resourceDrawerData.hp.text}
+					{#if resourceDrawerData.hp.iconClass}
+						<i class={resourceDrawerData.hp.iconClass}></i>
+					{/if}
+					<span class="nimble-ct__drawer-text">{resourceDrawerData.hp.text}</span>
+				{/if}
+			</div>
+			{@render renderResourceReactionButton(combatant, 'defend', resourceDrawerData.defend)}
+			{@render renderResourceReactionButton(combatant, 'interpose', resourceDrawerData.interpose)}
+			<div
+				class="nimble-ct__drawer-cell nimble-ct__drawer-cell--wounds"
+				class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.wounds.visible}
+				data-tooltip={resourceDrawerData.wounds.title}
+				data-tooltip-direction="LEFT"
+			>
+				{#if resourceDrawerData.wounds.visible}
+					<i class={resourceDrawerData.wounds.iconClass}></i>
+					{#if resourceDrawerData.wounds.text}
+						<span class="nimble-ct__drawer-text">{resourceDrawerData.wounds.text}</span>
+					{/if}
+				{/if}
+			</div>
+			{@render renderResourceReactionButton(
+				combatant,
+				'opportunityAttack',
+				resourceDrawerData.opportunityAttack,
+			)}
+			{@render renderResourceReactionButton(combatant, 'help', resourceDrawerData.help)}
+		</div>
+		{@render renderNameDrawer(cardName)}
+	</div>
+{/snippet}
+
 {#if ctEnabled && currentCombat}
 	<section
 		class="nimble-ct-shell"
+		class:nimble-ct-shell--resource-drawer-pinned={!resourceDrawerHoverEnabled}
 		style={`--nimble-ct-track-max-width: ${ctTrackMaxWidth}; --nimble-ct-card-scale: ${ctCardScale}; --nimble-ct-badge-scale: ${ctBadgeScale};`}
 		in:fade={{ duration: 120 }}
 	>
@@ -1312,7 +1457,6 @@
 					ondrop={(event) => {
 						void handleTrackDrop(event);
 					}}
-					onwheel={handleTrackWheel}
 					onscroll={handleTrackScroll}
 				>
 					{#if virtualizedAliveEntries.leadingWidthPx > 0}
@@ -1523,127 +1667,10 @@
 									{/if}
 								</div>
 								{#if isPlayerEntry && resourceDrawerData && cardName}
-									<div class="nimble-ct__resource-drawer-stack">
-										<div class="nimble-ct__resource-drawer">
-											<div
-												class={`nimble-ct__drawer-cell nimble-ct__drawer-cell--left nimble-ct__drawer-cell--hp ${getCombatantHpBadgeClass(entry.combatant)}`}
-												class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.hp.visible}
-												data-tooltip={resourceDrawerData.hp.title}
-												data-tooltip-direction="LEFT"
-											>
-												{#if resourceDrawerData.hp.visible && resourceDrawerData.hp.text}
-													{#if resourceDrawerData.hp.iconClass}
-														<i class={resourceDrawerData.hp.iconClass}></i>
-													{/if}
-													<span class="nimble-ct__drawer-text">{resourceDrawerData.hp.text}</span>
-												{/if}
-											</div>
-											<button
-												type="button"
-												class="nimble-ct__drawer-cell nimble-ct__drawer-reaction-button nimble-ct__drawer-cell--utility"
-												class:nimble-ct__drawer-cell--inactive={resourceDrawerData.defend.active ===
-													false}
-												class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.defend.visible}
-												data-tooltip={resourceDrawerData.defend.title}
-												data-tooltip-direction="RIGHT"
-												disabled={!canToggleHeroicReactionFromDrawer(
-													entry.combatant,
-													'defend',
-													resourceDrawerData.defend.active,
-												)}
-												onclick={(event) =>
-													handleHeroicReactionToggle(event, entry.combatant, 'defend')}
-											>
-												{#if resourceDrawerData.defend.visible}
-													<i class={resourceDrawerData.defend.iconClass}></i>
-												{/if}
-											</button>
-											<button
-												type="button"
-												class="nimble-ct__drawer-cell nimble-ct__drawer-reaction-button nimble-ct__drawer-cell--utility"
-												class:nimble-ct__drawer-cell--inactive={resourceDrawerData.interpose
-													.active === false}
-												class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.interpose.visible}
-												data-tooltip={resourceDrawerData.interpose.title}
-												data-tooltip-direction="RIGHT"
-												disabled={!canToggleHeroicReactionFromDrawer(
-													entry.combatant,
-													'interpose',
-													resourceDrawerData.interpose.active,
-												)}
-												onclick={(event) =>
-													handleHeroicReactionToggle(event, entry.combatant, 'interpose')}
-											>
-												{#if resourceDrawerData.interpose.visible}
-													<i class={resourceDrawerData.interpose.iconClass}></i>
-												{/if}
-											</button>
-											<div
-												class="nimble-ct__drawer-cell nimble-ct__drawer-cell--wounds"
-												class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.wounds.visible}
-												data-tooltip={resourceDrawerData.wounds.title}
-												data-tooltip-direction="LEFT"
-											>
-												{#if resourceDrawerData.wounds.visible}
-													<i class={resourceDrawerData.wounds.iconClass}></i>
-													{#if resourceDrawerData.wounds.text}
-														<span class="nimble-ct__drawer-text"
-															>{resourceDrawerData.wounds.text}</span
-														>
-													{/if}
-												{/if}
-											</div>
-											<button
-												type="button"
-												class="nimble-ct__drawer-cell nimble-ct__drawer-reaction-button nimble-ct__drawer-cell--utility"
-												class:nimble-ct__drawer-cell--inactive={resourceDrawerData.opportunityAttack
-													.active === false}
-												class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.opportunityAttack
-													.visible}
-												data-tooltip={resourceDrawerData.opportunityAttack.title}
-												data-tooltip-direction="RIGHT"
-												disabled={!canToggleHeroicReactionFromDrawer(
-													entry.combatant,
-													'opportunityAttack',
-													resourceDrawerData.opportunityAttack.active,
-												)}
-												onclick={(event) =>
-													handleHeroicReactionToggle(event, entry.combatant, 'opportunityAttack')}
-											>
-												{#if resourceDrawerData.opportunityAttack.visible}
-													<i class={resourceDrawerData.opportunityAttack.iconClass}></i>
-												{/if}
-											</button>
-											<button
-												type="button"
-												class="nimble-ct__drawer-cell nimble-ct__drawer-reaction-button nimble-ct__drawer-cell--utility"
-												class:nimble-ct__drawer-cell--inactive={resourceDrawerData.help.active ===
-													false}
-												class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.help.visible}
-												data-tooltip={resourceDrawerData.help.title}
-												data-tooltip-direction="RIGHT"
-												disabled={!canToggleHeroicReactionFromDrawer(
-													entry.combatant,
-													'help',
-													resourceDrawerData.help.active,
-												)}
-												onclick={(event) =>
-													handleHeroicReactionToggle(event, entry.combatant, 'help')}
-											>
-												{#if resourceDrawerData.help.visible}
-													<i class={resourceDrawerData.help.iconClass}></i>
-												{/if}
-											</button>
-										</div>
-										<div class="nimble-ct__player-name-drawer">
-											<span class="nimble-ct__player-name-drawer-text">{cardName}</span>
-										</div>
-									</div>
+									{@render renderResourceDrawer(entry.combatant, resourceDrawerData, cardName)}
 								{:else if cardName}
 									<div class="nimble-ct__name-drawer-stack">
-										<div class="nimble-ct__player-name-drawer">
-											<span class="nimble-ct__player-name-drawer-text">{cardName}</span>
-										</div>
+										{@render renderNameDrawer(cardName)}
 									</div>
 								{/if}
 							</li>
@@ -1674,9 +1701,7 @@
 									{/if}
 								</div>
 								<div class="nimble-ct__name-drawer-stack">
-									<div class="nimble-ct__player-name-drawer">
-										<span class="nimble-ct__player-name-drawer-text">Monsters and Minions</span>
-									</div>
+									{@render renderNameDrawer('Monsters and Minions')}
 								</div>
 							</li>
 						{/if}
@@ -1838,124 +1863,11 @@
 								</div>
 								{#if isPlayerEntry && resourceDrawerData && cardName}
 									<div class="nimble-ct__resource-drawer-stack">
-										<div class="nimble-ct__resource-drawer">
-											<div
-												class={`nimble-ct__drawer-cell nimble-ct__drawer-cell--left nimble-ct__drawer-cell--hp ${getCombatantHpBadgeClass(combatant)}`}
-												class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.hp.visible}
-												data-tooltip={resourceDrawerData.hp.title}
-												data-tooltip-direction="LEFT"
-											>
-												{#if resourceDrawerData.hp.visible && resourceDrawerData.hp.text}
-													{#if resourceDrawerData.hp.iconClass}
-														<i class={resourceDrawerData.hp.iconClass}></i>
-													{/if}
-													<span class="nimble-ct__drawer-text">{resourceDrawerData.hp.text}</span>
-												{/if}
-											</div>
-											<button
-												type="button"
-												class="nimble-ct__drawer-cell nimble-ct__drawer-reaction-button nimble-ct__drawer-cell--utility"
-												class:nimble-ct__drawer-cell--inactive={resourceDrawerData.defend.active ===
-													false}
-												class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.defend.visible}
-												data-tooltip={resourceDrawerData.defend.title}
-												data-tooltip-direction="RIGHT"
-												disabled={!canToggleHeroicReactionFromDrawer(
-													combatant,
-													'defend',
-													resourceDrawerData.defend.active,
-												)}
-												onclick={(event) => handleHeroicReactionToggle(event, combatant, 'defend')}
-											>
-												{#if resourceDrawerData.defend.visible}
-													<i class={resourceDrawerData.defend.iconClass}></i>
-												{/if}
-											</button>
-											<button
-												type="button"
-												class="nimble-ct__drawer-cell nimble-ct__drawer-reaction-button nimble-ct__drawer-cell--utility"
-												class:nimble-ct__drawer-cell--inactive={resourceDrawerData.interpose
-													.active === false}
-												class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.interpose.visible}
-												data-tooltip={resourceDrawerData.interpose.title}
-												data-tooltip-direction="RIGHT"
-												disabled={!canToggleHeroicReactionFromDrawer(
-													combatant,
-													'interpose',
-													resourceDrawerData.interpose.active,
-												)}
-												onclick={(event) =>
-													handleHeroicReactionToggle(event, combatant, 'interpose')}
-											>
-												{#if resourceDrawerData.interpose.visible}
-													<i class={resourceDrawerData.interpose.iconClass}></i>
-												{/if}
-											</button>
-											<div
-												class="nimble-ct__drawer-cell nimble-ct__drawer-cell--wounds"
-												class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.wounds.visible}
-												data-tooltip={resourceDrawerData.wounds.title}
-												data-tooltip-direction="LEFT"
-											>
-												{#if resourceDrawerData.wounds.visible}
-													<i class={resourceDrawerData.wounds.iconClass}></i>
-													{#if resourceDrawerData.wounds.text}
-														<span class="nimble-ct__drawer-text"
-															>{resourceDrawerData.wounds.text}</span
-														>
-													{/if}
-												{/if}
-											</div>
-											<button
-												type="button"
-												class="nimble-ct__drawer-cell nimble-ct__drawer-reaction-button nimble-ct__drawer-cell--utility"
-												class:nimble-ct__drawer-cell--inactive={resourceDrawerData.opportunityAttack
-													.active === false}
-												class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.opportunityAttack
-													.visible}
-												data-tooltip={resourceDrawerData.opportunityAttack.title}
-												data-tooltip-direction="RIGHT"
-												disabled={!canToggleHeroicReactionFromDrawer(
-													combatant,
-													'opportunityAttack',
-													resourceDrawerData.opportunityAttack.active,
-												)}
-												onclick={(event) =>
-													handleHeroicReactionToggle(event, combatant, 'opportunityAttack')}
-											>
-												{#if resourceDrawerData.opportunityAttack.visible}
-													<i class={resourceDrawerData.opportunityAttack.iconClass}></i>
-												{/if}
-											</button>
-											<button
-												type="button"
-												class="nimble-ct__drawer-cell nimble-ct__drawer-reaction-button nimble-ct__drawer-cell--utility"
-												class:nimble-ct__drawer-cell--inactive={resourceDrawerData.help.active ===
-													false}
-												class:nimble-ct__drawer-cell--hidden={!resourceDrawerData.help.visible}
-												data-tooltip={resourceDrawerData.help.title}
-												data-tooltip-direction="RIGHT"
-												disabled={!canToggleHeroicReactionFromDrawer(
-													combatant,
-													'help',
-													resourceDrawerData.help.active,
-												)}
-												onclick={(event) => handleHeroicReactionToggle(event, combatant, 'help')}
-											>
-												{#if resourceDrawerData.help.visible}
-													<i class={resourceDrawerData.help.iconClass}></i>
-												{/if}
-											</button>
-										</div>
-										<div class="nimble-ct__player-name-drawer">
-											<span class="nimble-ct__player-name-drawer-text">{cardName}</span>
-										</div>
+										{@render renderResourceDrawer(combatant, resourceDrawerData, cardName)}
 									</div>
 								{:else if cardName}
 									<div class="nimble-ct__name-drawer-stack">
-										<div class="nimble-ct__player-name-drawer">
-											<span class="nimble-ct__player-name-drawer-text">{cardName}</span>
-										</div>
+										{@render renderNameDrawer(cardName)}
 									</div>
 								{/if}
 							</li>
@@ -2036,6 +1948,13 @@
 {/if}
 
 <style lang="scss">
+	:global(body.nimble-ct--track-hover) {
+		cursor: grab;
+	}
+	:global(body.nimble-ct--track-hover canvas) {
+		cursor: grab !important;
+	}
+
 	.nimble-ct-shell {
 		--nimble-ct-action-color: var(--nimble-ct-action-die-color, #ffffff);
 		--nimble-ct-action-color-resolved: var(--nimble-ct-action-color);
@@ -2413,19 +2332,19 @@
 		--nimble-ct-outline-border-color: color-mix(in srgb, hsl(212 92% 72%) 82%, white 18%);
 		--nimble-ct-outline-glow-color: color-mix(in srgb, hsl(212 92% 62%) 26%, transparent);
 		border-color: var(--nimble-ct-outline-border-color);
-		box-shadow: 0 0 0.42rem var(--nimble-ct-outline-glow-color);
+		box-shadow: none;
 	}
 	.nimble-ct__portrait--outline-monster {
-		--nimble-ct-outline-border-color: color-mix(in srgb, hsl(358 92% 60%) 82%, white 18%);
+		--nimble-ct-outline-border-color: #c81414;
 		--nimble-ct-outline-glow-color: color-mix(in srgb, hsl(355 94% 34%) 36%, transparent);
 		border-color: var(--nimble-ct-outline-border-color);
-		box-shadow: 0 0 0.42rem var(--nimble-ct-outline-glow-color);
+		box-shadow: none;
 	}
 	.nimble-ct__portrait--outline-friendly {
 		--nimble-ct-outline-border-color: color-mix(in srgb, hsl(136 68% 62%) 78%, white 22%);
 		--nimble-ct-outline-glow-color: color-mix(in srgb, hsl(136 68% 48%) 24%, transparent);
 		border-color: var(--nimble-ct-outline-border-color);
-		box-shadow: 0 0 0.42rem var(--nimble-ct-outline-glow-color);
+		box-shadow: none;
 	}
 	.nimble-ct__portrait--resource-drawer {
 		--nimble-ct-resource-drawer-height: calc(6.85rem * var(--nimble-ct-card-scale, 1));
@@ -2473,15 +2392,11 @@
 	.nimble-ct__portrait--name-drawer.nimble-ct__portrait--active .nimble-ct__portrait-card {
 		height: calc(11.2rem * var(--nimble-ct-card-scale, 1));
 		border-color: color-mix(in srgb, var(--nimble-ct-outline-border-color) 84%, white 16%);
-		box-shadow:
-			0 0 0.7rem color-mix(in srgb, hsl(0 0% 98%) 22%, transparent),
-			0 0 0.52rem color-mix(in srgb, var(--nimble-ct-outline-glow-color) 85%, transparent);
+		box-shadow: none;
 	}
 	.nimble-ct__portrait--outline-monster.nimble-ct__portrait--active .nimble-ct__portrait-card {
-		border-color: color-mix(in srgb, hsl(358 96% 58%) 88%, white 12%);
-		box-shadow:
-			0 0 0.34rem color-mix(in srgb, hsl(358 96% 46%) 68%, transparent),
-			0 0 0.78rem color-mix(in srgb, hsl(355 94% 28%) 44%, transparent);
+		border-color: var(--nimble-ct-outline-border-color);
+		box-shadow: none;
 	}
 	.nimble-ct__portrait--draggable .nimble-ct__drag-handle {
 		cursor: grab;
@@ -2499,7 +2414,7 @@
 		width: calc(7.5rem * var(--nimble-ct-card-scale, 1));
 		height: calc(11.2rem * var(--nimble-ct-card-scale, 1));
 		border-color: color-mix(in srgb, hsl(0 0% 96%) 68%, transparent);
-		box-shadow: 0 0 0.7rem color-mix(in srgb, hsl(0 0% 98%) 33%, transparent);
+		box-shadow: none;
 	}
 	.nimble-ct__portrait--dead {
 		opacity: 0.46;
@@ -2516,7 +2431,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.22rem;
+		gap: 0;
 		opacity: 0;
 		visibility: hidden;
 		pointer-events: none;
@@ -2616,6 +2531,31 @@
 			opacity 170ms ease,
 			transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
 			visibility 0s linear 0s;
+	}
+	.nimble-ct-shell--resource-drawer-pinned
+		.nimble-ct__portrait--resource-drawer
+		.nimble-ct__resource-drawer-stack {
+		opacity: 1;
+		visibility: visible;
+		pointer-events: auto;
+		transform: translate(-50%, 0) scaleY(1);
+		transition:
+			opacity 170ms ease,
+			transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+			visibility 0s linear 0s;
+	}
+	.nimble-ct-shell--resource-drawer-pinned
+		.nimble-ct__portrait--resource-drawer
+		.nimble-ct__player-name-drawer {
+		display: none;
+	}
+	.nimble-ct-shell--resource-drawer-pinned
+		.nimble-ct__portrait--resource-drawer:hover
+		.nimble-ct__player-name-drawer,
+	.nimble-ct-shell--resource-drawer-pinned
+		.nimble-ct__portrait--resource-drawer:focus-within
+		.nimble-ct__player-name-drawer {
+		display: inline-flex;
 	}
 	.nimble-ct__portrait--name-drawer:hover .nimble-ct__name-drawer-stack,
 	.nimble-ct__portrait--name-drawer:focus-within .nimble-ct__name-drawer-stack {

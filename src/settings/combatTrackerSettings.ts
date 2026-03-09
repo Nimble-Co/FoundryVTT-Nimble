@@ -1,6 +1,8 @@
 export const COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY =
 	'combatTrackerPlayersCanExpandMonsterCards';
 export const COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY = 'combatTrackerCenterActiveCard';
+export const COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY =
+	'combatTrackerCtResourceDrawerHover';
 export const COMBAT_TRACKER_ENABLED_SETTING_KEY = 'combatTrackerCtEnabled';
 export const COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY = 'combatTrackerCtWidthLevel';
 export const COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY = 'combatTrackerCtCardSizeLevel';
@@ -55,6 +57,7 @@ export interface CurrentTurnAnimationSettings {
 
 const DEFAULT_PLAYER_MONSTER_CARD_EXPANSION_PERMISSION = false;
 const DEFAULT_CENTER_ACTIVE_CARD_SETTING = true;
+const DEFAULT_CT_RESOURCE_DRAWER_HOVER_SETTING = true;
 const DEFAULT_CT_ENABLED_SETTING = true;
 const DEFAULT_CT_WIDTH_LEVEL_SETTING = 2;
 const DEFAULT_CT_CARD_SIZE_LEVEL_SETTING = 3;
@@ -296,6 +299,15 @@ export function registerCombatTrackerSettings(): void {
 		default: DEFAULT_CENTER_ACTIVE_CARD_SETTING,
 	});
 
+	registerWorldSetting(COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY, {
+		name: 'Combat Tracker Resource Drawer Hover',
+		hint: 'When enabled, player resource drawers open only on hover',
+		scope: 'world',
+		config: false,
+		type: Boolean,
+		default: DEFAULT_CT_RESOURCE_DRAWER_HOVER_SETTING,
+	});
+
 	registerWorldSetting(COMBAT_TRACKER_ENABLED_SETTING_KEY, {
 		name: 'Enable Combat Tracker',
 		hint: 'Show the Combat Tracker at the top of the screen',
@@ -475,6 +487,15 @@ export function getCombatTrackerCenterActiveCardEnabled(): boolean {
 	);
 }
 
+export function getCombatTrackerResourceDrawerHoverEnabled(): boolean {
+	return Boolean(
+		game.settings.get(
+			'nimble' as 'core',
+			COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY as 'rollMode',
+		),
+	);
+}
+
 export function getCombatTrackerCtEnabled(): boolean {
 	return Boolean(
 		game.settings.get('nimble' as 'core', COMBAT_TRACKER_ENABLED_SETTING_KEY as 'rollMode'),
@@ -539,6 +560,12 @@ export function isCombatTrackerCenterActiveCardSettingKey(settingKey: unknown): 
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY) return true;
 	return settingKey === `nimble.${COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY}`;
+}
+
+export function isCombatTrackerResourceDrawerHoverSettingKey(settingKey: unknown): boolean {
+	if (typeof settingKey !== 'string') return false;
+	if (settingKey === COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY) return true;
+	return settingKey === `nimble.${COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY}`;
 }
 
 export function isCombatTrackerEnabledSettingKey(settingKey: unknown): boolean {
@@ -668,6 +695,14 @@ export async function setCombatTrackerCenterActiveCardEnabled(value: boolean): P
 	await game.settings.set(
 		'nimble' as 'core',
 		COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY as 'rollMode',
+		Boolean(value) as never,
+	);
+}
+
+export async function setCombatTrackerResourceDrawerHoverEnabled(value: boolean): Promise<void> {
+	await game.settings.set(
+		'nimble' as 'core',
+		COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY as 'rollMode',
 		Boolean(value) as never,
 	);
 }

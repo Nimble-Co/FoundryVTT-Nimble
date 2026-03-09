@@ -5,6 +5,7 @@ import {
 	getCombatTrackerCtEnabled,
 	getCombatTrackerCtWidthLevel,
 	getCombatTrackerPlayersCanExpandMonsterCards,
+	getCombatTrackerResourceDrawerHoverEnabled,
 	getCombatTrackerUseActionDice,
 	getCombatTrackerVisibilityPermissionConfig,
 	isCombatTrackerBadgeSizeLevelSettingKey,
@@ -12,6 +13,7 @@ import {
 	isCombatTrackerCenterActiveCardSettingKey,
 	isCombatTrackerEnabledSettingKey,
 	isCombatTrackerPlayerMonsterExpansionSettingKey,
+	isCombatTrackerResourceDrawerHoverSettingKey,
 	isCombatTrackerUseActionDiceSettingKey,
 	isCombatTrackerVisibilityPermissionSettingKey,
 	isCombatTrackerWidthLevelSettingKey,
@@ -30,6 +32,11 @@ export function resolveCtTopTrackerSettingPatch(
 	if (isCombatTrackerCenterActiveCardSettingKey(settingKey)) {
 		return {
 			centerActiveCardEnabled: getCombatTrackerCenterActiveCardEnabled(),
+		};
+	}
+	if (isCombatTrackerResourceDrawerHoverSettingKey(settingKey)) {
+		return {
+			resourceDrawerHoverEnabled: getCombatTrackerResourceDrawerHoverEnabled(),
 		};
 	}
 	if (isCombatTrackerEnabledSettingKey(settingKey)) {

@@ -3,6 +3,10 @@ import {
 	createCombatActorFixture,
 	createCombatantFixture,
 } from '../../../../tests/fixtures/combat.js';
+import {
+	clearExpandedTurnIdentityHint,
+	setExpandedTurnIdentityHint,
+} from '../../../documents/combat/expandedTurnIdentityStore.js';
 import type { CombatTrackerVisibilityPermissionConfig } from '../../../settings/combatTrackerSettings.js';
 import {
 	getCombatantCardResourceChips,
@@ -11,6 +15,7 @@ import {
 	getPlayerCombatantDrawerData,
 	shouldRenderCombatantActions,
 	shouldRenderHpBadge,
+	syncCombatTurnsForCt,
 } from './helpers.js';
 
 function createVisibilityPermissions(
@@ -33,6 +38,7 @@ function createVisibilityPermissions(
 
 describe('ctTopTracker helpers', () => {
 	beforeEach(() => {
+		clearExpandedTurnIdentityHint('combat-legendary-ct-sync');
 		const globals = globalThis as unknown as {
 			game: { user: { isGM?: boolean; role?: number } };
 			canvas: typeof canvas;
@@ -316,5 +322,56 @@ describe('ctTopTracker helpers', () => {
 
 		expect(shouldRenderCombatantActions(nonOwnerCombatant, hiddenActions)).toBe(false);
 		expect(shouldRenderCombatantActions(ownerCombatant, hiddenActions)).toBe(true);
+	});
+
+	it('preserves a stored later solo occurrence when syncing CT turns from a raw solo turn index', () => {
+		const playerOne = createCombatantFixture({
+			id: 'player-one',
+			type: 'character',
+			actor: createCombatActorFixture({ type: 'character' }),
+		});
+		const playerTwo = createCombatantFixture({
+			id: 'player-two',
+			type: 'character',
+			actor: createCombatActorFixture({ type: 'character' }),
+		});
+		const solo = createCombatantFixture({
+			id: 'legendary-one',
+			type: 'soloMonster',
+			actor: createCombatActorFixture({ type: 'soloMonster' }),
+		});
+
+		const expandedTurns = [playerOne, solo, playerTwo, solo] as Combatant.Implementation[];
+		const rawTurns = [playerOne, playerTwo, solo] as Combatant.Implementation[];
+		setExpandedTurnIdentityHint('combat-legendary-ct-sync', {
+			combatantId: 'legendary-one',
+			occurrence: 1,
+		});
+		const combat = {
+			id: 'combat-legendary-ct-sync',
+			turns: rawTurns,
+			turn: 2,
+			combatant: solo,
+			setupTurns: vi.fn(() => expandedTurns),
+		} as unknown as Combat & {
+			_nimbleExpandedTurnIdentity?: { combatantId: string; occurrence: number | null } | null;
+		};
+
+		syncCombatTurnsForCt(combat);
+
+		expect(combat.turn).toBe(3);
+		expect(
+			(
+				combat as Combat & {
+					_nimbleExpandedTurnIdentity?: {
+						combatantId: string;
+						occurrence: number | null;
+					} | null;
+				}
+			)._nimbleExpandedTurnIdentity,
+		).toEqual({
+			combatantId: 'legendary-one',
+			occurrence: 1,
+		});
 	});
 });
