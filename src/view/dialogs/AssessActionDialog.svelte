@@ -268,9 +268,12 @@
 </article>
 
 <footer class="nimble-sheet__footer">
+	<button class="nimble-button" data-button-variant="basic" onclick={() => dialog.close()}>
+		{localize('NIMBLE.ui.cancel')}
+	</button>
 	<button
 		class="nimble-button"
-		data-button-variant="basic"
+		data-button-variant="primary"
 		disabled={isSubmitDisabled}
 		onclick={handleSubmit}
 	>
@@ -287,7 +290,13 @@
 <style lang="scss">
 	.nimble-sheet__footer {
 		--nimble-button-padding: 0.5rem 1rem;
-		--nimble-button-width: 100%;
+
+		display: flex;
+		gap: 0.5rem;
+
+		.nimble-button {
+			flex: 1;
+		}
 	}
 
 	.assess-dialog {
