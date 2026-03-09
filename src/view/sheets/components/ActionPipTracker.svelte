@@ -1,4 +1,6 @@
 <script>
+	import localize from '../../../utils/localize.js';
+
 	const diceIcons = [
 		'fa-dice-one',
 		'fa-dice-two',
@@ -27,12 +29,32 @@
 		}
 	}
 
+	function getAriaLabel(index, isAvailable) {
+		const number = index + 1;
+		if (isAvailable) {
+			return localize('NIMBLE.ui.heroicActions.pip.spendAction', { number });
+		}
+		return localize('NIMBLE.ui.heroicActions.pip.restoreAction', { number });
+	}
+
+	function getTooltip(isAvailable) {
+		if (disabled) {
+			return localize('NIMBLE.ui.heroicActions.enterCombat');
+		}
+		if (isAvailable) {
+			return localize('NIMBLE.ui.heroicActions.pip.clickToSpend');
+		}
+		return localize('NIMBLE.ui.heroicActions.pip.clickToRestore');
+	}
+
 	let { current = 0, max = 3, disabled = false, onUpdate = () => {} } = $props();
 </script>
 
 <div class="action-pip-tracker" class:action-pip-tracker--disabled={disabled}>
 	<header class="nimble-section-header" data-header-alignment="center">
-		<h3 class="nimble-heading" data-heading-variant="section">Actions</h3>
+		<h3 class="nimble-heading" data-heading-variant="section">
+			{localize('NIMBLE.ui.heroicActions.actionsHeader')}
+		</h3>
 		<span class="action-pip-tracker__count">{current} / {max}</span>
 	</header>
 
@@ -46,12 +68,8 @@
 				class:action-pip--available={isAvailable}
 				class:action-pip--spent={!isAvailable}
 				type="button"
-				aria-label={isAvailable ? `Spend action ${i + 1}` : `Restore action ${i + 1}`}
-				data-tooltip={disabled
-					? 'Enter combat to use actions'
-					: isAvailable
-						? 'Click to spend action'
-						: 'Click to restore action'}
+				aria-label={getAriaLabel(i, isAvailable)}
+				data-tooltip={getTooltip(isAvailable)}
 				onclick={() => handlePipClick(i)}
 				{disabled}
 			>

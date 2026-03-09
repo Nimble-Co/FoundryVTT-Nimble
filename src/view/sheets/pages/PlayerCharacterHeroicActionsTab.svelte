@@ -33,30 +33,30 @@
 		{
 			id: 'attack',
 			icon: 'fa-solid fa-sword',
-			label: 'Attack',
-			description: 'Strike with a weapon',
+			labelKey: 'NIMBLE.ui.heroicActions.actions.attack.label',
+			descriptionKey: 'NIMBLE.ui.heroicActions.actions.attack.description',
 			type: 'panel', // Opens a panel
 		},
 		{
 			id: 'spell',
 			icon: 'fa-solid fa-wand-sparkles',
-			label: 'Cast a Spell',
-			description: 'Channel magical energy',
+			labelKey: 'NIMBLE.ui.heroicActions.actions.spell.label',
+			descriptionKey: 'NIMBLE.ui.heroicActions.actions.spell.description',
 			type: 'panel',
 		},
 		{
 			id: 'move',
 			icon: 'fa-solid fa-person-running',
-			label: 'Move',
-			description: 'Reposition on the battlefield',
+			labelKey: 'NIMBLE.ui.heroicActions.actions.move.label',
+			descriptionKey: 'NIMBLE.ui.heroicActions.actions.move.description',
 			type: 'immediate', // Executes immediately
 			requiresCombat: true,
 		},
 		{
 			id: 'assess',
 			icon: 'fa-solid fa-eye',
-			label: 'Assess',
-			description: 'Study your surroundings',
+			labelKey: 'NIMBLE.ui.heroicActions.actions.assess.label',
+			descriptionKey: 'NIMBLE.ui.heroicActions.actions.assess.description',
 			type: 'dialog', // Opens a dialog
 		},
 	];
@@ -185,7 +185,7 @@
 		deductActionPip();
 		ChatMessage.create({
 			speaker: ChatMessage.getSpeaker({ actor }),
-			content: `<p><strong>${actor.name}</strong> uses a Move action.</p>`,
+			content: localize('NIMBLE.ui.heroicActions.moveAction', { name: actor.name }),
 		});
 	}
 
@@ -217,9 +217,9 @@
 
 	function getActionTooltip(action) {
 		if (action.id === 'spell' && !hasSpells) {
-			return "You don't have any spells";
+			return localize('NIMBLE.ui.heroicActions.noSpells');
 		}
-		return action.description;
+		return localize(action.descriptionKey);
 	}
 
 	// ============================================================================
@@ -328,13 +328,13 @@
 
 				// Add range values for specific properties (show max only)
 				if (key === 'thrown' && props.thrownRange) {
-					return `${label}: ${props.thrownRange}`;
+					return localize('NIMBLE.ui.heroicActions.thrown', { distance: props.thrownRange });
 				}
 				if (key === 'range' && props.range?.max) {
-					return `${label}: ${props.range.max}`;
+					return localize('NIMBLE.npcSheet.range', { distance: props.range.max });
 				}
 				if (key === 'reach' && props.reach?.max) {
-					return `${label}: ${props.reach.max}`;
+					return localize('NIMBLE.npcSheet.reach', { distance: props.reach.max });
 				}
 
 				return label;
@@ -406,10 +406,10 @@
 		const selected = props.selected ?? [];
 
 		if (selected.includes('range') && props.range?.max) {
-			return `Range: ${props.range.max}`;
+			return localize('NIMBLE.npcSheet.range', { distance: props.range.max });
 		}
 		if (selected.includes('reach') && props.reach?.max) {
-			return `Reach: ${props.reach.max}`;
+			return localize('NIMBLE.npcSheet.reach', { distance: props.reach.max });
 		}
 		return null;
 	}
@@ -454,14 +454,14 @@
 	{#if !inCombat}
 		<p class="heroic-actions__combat-notice">
 			<i class="fa-solid fa-circle-info"></i>
-			Enter combat to use actions
+			{localize('NIMBLE.ui.heroicActions.enterCombat')}
 		</p>
 	{/if}
 
 	<section>
 		<header class="nimble-section-header">
 			<h3 class="nimble-heading" data-heading-variant="section">
-				{localize('NIMBLE.ui.heroicActions')}
+				{localize('NIMBLE.ui.heroicActions.title')}
 			</h3>
 		</header>
 
@@ -474,7 +474,7 @@
 						class:heroic-action-tab--active={expandedPanel === action.id}
 						class:heroic-action-tab--disabled={isActionDisabled(action)}
 						type="button"
-						aria-label={action.label}
+						aria-label={localize(action.labelKey)}
 						data-tooltip={getActionTooltip(action)}
 						disabled={isActionDisabled(action)}
 						onclick={() => handleActionClick(action)}
@@ -490,8 +490,8 @@
 				{#each HEROIC_ACTIONS as action (action.id)}
 					<HeroicActionBox
 						icon={action.icon}
-						label={action.label}
-						description={action.description}
+						label={localize(action.labelKey)}
+						description={localize(action.descriptionKey)}
 						tooltip={isActionDisabled(action) ? getActionTooltip(action) : ''}
 						disabled={isActionDisabled(action)}
 						expanded={expandedPanel === action.id}
@@ -505,7 +505,9 @@
 	{#if expandedPanel === 'attack'}
 		<section class="heroic-actions-panel">
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">Select Attack</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.ui.heroicActions.selectAttack')}
+				</h3>
 			</header>
 
 			<div class="heroic-actions-panel__search">
@@ -523,9 +525,11 @@
 							</div>
 
 							<div class="weapon-card__content">
-								<span class="weapon-card__name">Unarmed Strike</span>
+								<span class="weapon-card__name"
+									>{localize('NIMBLE.ui.heroicActions.unarmedStrike')}</span
+								>
 								<div class="weapon-card__meta">
-									<span class="weapon-card__tag">Melee</span>
+									<span class="weapon-card__tag">{localize('NIMBLE.npcSheet.melee')}</span>
 								</div>
 							</div>
 
@@ -597,7 +601,8 @@
 							<div class="weapon-card__content">
 								<span class="weapon-card__name">{item.reactive.name}</span>
 								<div class="weapon-card__meta">
-									<span class="weapon-card__tag">Feature</span>
+									<span class="weapon-card__tag">{localize('NIMBLE.ui.heroicActions.feature')}</span
+									>
 								</div>
 							</div>
 
@@ -612,7 +617,7 @@
 				</ul>
 
 				{#if !showUnarmedStrike && weapons.length === 0 && attackFeatures.length === 0}
-					<p class="heroic-actions-panel__empty">No weapons or attack features found.</p>
+					<p class="heroic-actions-panel__empty">{localize('NIMBLE.ui.heroicActions.noWeapons')}</p>
 				{/if}
 			</div>
 		</section>
@@ -621,7 +626,9 @@
 	{#if expandedPanel === 'spell'}
 		<section class="heroic-actions-panel">
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">Select Spell</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.ui.heroicActions.selectSpell')}
+				</h3>
 			</header>
 
 			<div class="heroic-actions-panel__search">
@@ -671,15 +678,12 @@
 											<span class="spell-card__action-cost">{@html meta}</span>
 										{/if}
 										{#if spellRange}
-											<span class="spell-card__range">
-												<i class="fa-solid fa-bullseye"></i>
-												{spellRange}
-											</span>
+											<span class="spell-card__range">{spellRange}</span>
 										{/if}
 										{#if manaCost > 0}
 											<span class="spell-card__mana">
 												<i class="fa-solid fa-sparkles"></i>
-												{manaCost} Mana
+												{localize('NIMBLE.ui.heroicActions.mana', { cost: manaCost })}
 											</span>
 										{/if}
 									</div>
@@ -698,7 +702,9 @@
 						{/each}
 					</ul>
 				{:else}
-					<p class="heroic-actions-panel__empty">No spells found.</p>
+					<p class="heroic-actions-panel__empty">
+						{localize('NIMBLE.ui.heroicActions.noSpellsFound')}
+					</p>
 				{/if}
 			</div>
 		</section>
@@ -1040,16 +1046,9 @@
 		}
 
 		&__range {
-			display: inline-flex;
-			align-items: center;
-			gap: 0.25rem;
 			font-size: var(--nimble-xs-text);
 			font-weight: 500;
 			color: var(--nimble-medium-text-color);
-
-			i {
-				font-size: 0.625rem;
-			}
 		}
 
 		&__mana {

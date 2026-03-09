@@ -641,7 +641,66 @@
 			"turn": "turn"
 		},
 		"ui": {
-			"heroicActions": "Heroic Actions",
+			"heroicActions": {
+				"title": "Heroic Actions",
+				"enterCombat": "Enter combat to use actions",
+				"noSpells": "You don't have any spells",
+				"selectAttack": "Select Attack",
+				"selectSpell": "Select Spell",
+				"noWeapons": "No weapons or attack features found.",
+				"noSpellsFound": "No spells found.",
+				"unarmedStrike": "Unarmed Strike",
+				"feature": "Feature",
+				"mana": "{cost} Mana",
+				"thrown": "Thrown: {distance}",
+				"pip": {
+					"spendAction": "Spend action {number}",
+					"restoreAction": "Restore action {number}",
+					"clickToSpend": "Click to spend action",
+					"clickToRestore": "Click to restore action"
+				},
+				"actionsHeader": "Actions",
+				"moveAction": "<p><strong>{name}</strong> uses a Move action.</p>",
+				"actions": {
+					"attack": {
+						"label": "Attack",
+						"description": "Strike with a weapon"
+					},
+					"spell": {
+						"label": "Cast a Spell",
+						"description": "Channel magical energy"
+					},
+					"move": {
+						"label": "Move",
+						"description": "Reposition on the battlefield"
+					},
+					"assess": {
+						"label": "Assess",
+						"description": "Study your surroundings"
+					}
+				},
+				"assess": {
+					"dialogTitle": "Assess Action",
+					"chooseOption": "Choose an Option",
+					"selectSkill": "Select Skill",
+					"rollToAssess": "Roll {skill} to Assess",
+					"askQuestion": {
+						"title": "Ask a Question",
+						"description": "Ask the GM a question about the situation. They must answer truthfully based on what your character could reasonably perceive.",
+						"chatMessage": "<p>{name} assesses the situation and asks the GM a question.</p>"
+					},
+					"createOpening": {
+						"title": "Create an Opening",
+						"description": "Study your target to find a weakness. Your next attack gains +1 to the Primary Die.",
+						"chatMessage": "<p>{name} studies their target for a weakness. Their next attack gains <strong>+1 to the Primary Die</strong>.</p>"
+					},
+					"anticipateDanger": {
+						"title": "Anticipate Danger",
+						"description": "Ready yourself for incoming attacks. The next attack against you has -1 to the Primary Die.",
+						"chatMessage": "<p>{name} anticipates incoming danger. The next attack against them has <strong>-1 to the Primary Die</strong>.</p>"
+					}
+				}
+			},
 			"clearAll": "Clear All",
 			"conditions": "Conditions",
 			"condition": "Condition",

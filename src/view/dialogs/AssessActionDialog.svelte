@@ -1,25 +1,27 @@
 <script>
+	import localize from '../../utils/localize.js';
+
 	const assessOptions = [
 		{
 			id: 'ask-question',
 			icon: 'fa-solid fa-circle-question',
-			title: 'Ask a Question',
-			description:
-				'Ask the GM a question about the situation. They must answer truthfully based on what your character could reasonably perceive.',
+			titleKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.title',
+			descriptionKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.description',
+			chatMessageKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.chatMessage',
 		},
 		{
 			id: 'create-opening',
 			icon: 'fa-solid fa-crosshairs',
-			title: 'Create an Opening',
-			description:
-				'Study your target to find a weakness. Your next attack gains +1 to the Primary Die.',
+			titleKey: 'NIMBLE.ui.heroicActions.assess.createOpening.title',
+			descriptionKey: 'NIMBLE.ui.heroicActions.assess.createOpening.description',
+			chatMessageKey: 'NIMBLE.ui.heroicActions.assess.createOpening.chatMessage',
 		},
 		{
 			id: 'anticipate-danger',
 			icon: 'fa-solid fa-shield',
-			title: 'Anticipate Danger',
-			description:
-				'Ready yourself for incoming attacks. The next attack against you has -1 to the Primary Die.',
+			titleKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.title',
+			descriptionKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.description',
+			chatMessageKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.chatMessage',
 		},
 	];
 
@@ -38,38 +40,19 @@
 			await document.rollSkillCheckToChat(selectedSkill);
 		}
 
-		// Send the appropriate chat message based on the option
-		if (selectedOption === 'anticipate-danger') {
-			await ChatMessage.create({
-				speaker: ChatMessage.getSpeaker({ actor: document }),
-				content: `
-					<div class="assess-action-chat">
-						<h4><i class="${option.icon}"></i> ${option.title}</h4>
-						<p>${document.name} anticipates incoming danger. The next attack against them has <strong>-1 to the Primary Die</strong>.</p>
-					</div>
-				`,
-			});
-		} else if (selectedOption === 'create-opening') {
-			await ChatMessage.create({
-				speaker: ChatMessage.getSpeaker({ actor: document }),
-				content: `
-					<div class="assess-action-chat">
-						<h4><i class="${option.icon}"></i> ${option.title}</h4>
-						<p>${document.name} studies their target for a weakness. Their next attack gains <strong>+1 to the Primary Die</strong>.</p>
-					</div>
-				`,
-			});
-		} else if (selectedOption === 'ask-question') {
-			await ChatMessage.create({
-				speaker: ChatMessage.getSpeaker({ actor: document }),
-				content: `
-					<div class="assess-action-chat">
-						<h4><i class="${option.icon}"></i> ${option.title}</h4>
-						<p>${document.name} assesses the situation and asks the GM a question.</p>
-					</div>
-				`,
-			});
-		}
+		// Send the appropriate chat message
+		const title = localize(option.titleKey);
+		const message = localize(option.chatMessageKey, { name: document.name });
+
+		await ChatMessage.create({
+			speaker: ChatMessage.getSpeaker({ actor: document }),
+			content: `
+				<div class="assess-action-chat">
+					<h4><i class="${option.icon}"></i> ${title}</h4>
+					${message}
+				</div>
+			`,
+		});
 
 		dialog.submit({ option: selectedOption, skill: selectedSkill });
 	}
@@ -89,7 +72,9 @@
 <article class="nimble-sheet__body assess-dialog">
 	<section>
 		<header class="nimble-section-header">
-			<h3 class="nimble-heading" data-heading-variant="section">Choose an Option</h3>
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{localize('NIMBLE.ui.heroicActions.assess.chooseOption')}
+			</h3>
 		</header>
 
 		<div class="assess-dialog__options">
@@ -106,8 +91,8 @@
 					<i class="assess-option__icon {option.icon}"></i>
 
 					<div class="assess-option__content">
-						<span class="assess-option__title">{option.title}</span>
-						<span class="assess-option__description">{option.description}</span>
+						<span class="assess-option__title">{localize(option.titleKey)}</span>
+						<span class="assess-option__description">{localize(option.descriptionKey)}</span>
 					</div>
 
 					<div class="assess-option__indicator"></div>
@@ -118,7 +103,9 @@
 
 	<section>
 		<header class="nimble-section-header">
-			<h3 class="nimble-heading" data-heading-variant="section">Select Skill</h3>
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{localize('NIMBLE.ui.heroicActions.assess.selectSkill')}
+			</h3>
 		</header>
 
 		<select class="assess-dialog__select" bind:value={selectedSkill}>
@@ -136,7 +123,7 @@
 		disabled={!selectedOption}
 		onclick={handleSubmit}
 	>
-		Roll {skillNames[selectedSkill]} to Assess
+		{localize('NIMBLE.ui.heroicActions.assess.rollToAssess', { skill: skillNames[selectedSkill] })}
 	</button>
 </footer>
 
