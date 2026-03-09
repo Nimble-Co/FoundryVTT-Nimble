@@ -381,20 +381,36 @@
 
 	// Unarmed strike rules:
 	// - Core rules: "roll 1d4; on hit: deal 1 + STR damage"
-	//   The d4 is the attack/primary die, damage is flat 1+STR
+	//   The d4 determines hit/miss only, damage is flat 1+STR
+	//   If d4 rolls max (4), it explodes and explosion values add to damage
 	// - Swift Fists (Zephyr): "damage is 1d4+STR"
 	//   The d4 serves as both attack and damage die
 	//
-	// Implementation note: The DamageRoll system requires a die for hit/miss mechanics.
-	// For core rules, we use 1d4 as the primary die, which means the d4 result becomes
-	// the damage total (not strictly RAW, but enables proper attack mechanics).
-	// Swift Fists adds STR to the d4 damage, making it clearly superior.
-	const DEFAULT_UNARMED_DAMAGE = '1d4';
+	// Implementation: We use primaryDieAsDamage option on DamageRoll to control
+	// whether the primary die's base value contributes to damage.
+	const DEFAULT_UNARMED_DAMAGE = '1d4 + 1 + @abilities.strength.mod';
 
 	function getUnarmedDamageFormula() {
 		// Check if actor has a modified unarmed damage formula (e.g., from Swift Fists)
 		// This is set by the unarmedDamage rule during data preparation
 		return actor.system?.unarmedDamage ?? DEFAULT_UNARMED_DAMAGE;
+	}
+
+	function hasCustomUnarmedDamage() {
+		// Returns true if the actor has a feature modifying unarmed damage (e.g., Swift Fists)
+		return actor.system?.unarmedDamage !== undefined;
+	}
+
+	function getUnarmedDamageDisplay() {
+		// For display purposes, show what the actual damage will be
+		// Core rules: show flat damage (1 + STR)
+		// Swift Fists: show full formula (1d4 + STR)
+		if (hasCustomUnarmedDamage()) {
+			// Has a custom formula like Swift Fists - show evaluated formula
+			return evaluateFormula(actor.system.unarmedDamage);
+		}
+		// Core rules - show just the flat damage portion (1 + STR)
+		return evaluateFormula('1 + @abilities.strength.mod');
 	}
 
 	async function handleUnarmedStrike() {
@@ -403,10 +419,11 @@
 		);
 		const { DamageRoll } = await import('../../../dice/DamageRoll.js');
 
-		// Get the unarmed damage formula
-		// Core rules: 1d4 (d4 is both attack roll and damage)
-		// Swift Fists: 1d4 + STR (d4 + STR modifier)
+		// Get the unarmed damage formula and whether the primary die contributes to damage
 		const rollFormula = getUnarmedDamageFormula();
+		// For core rules, the d4 is only for hit/miss, not damage
+		// For features like Swift Fists, the d4 IS part of the damage
+		const primaryDieAsDamage = hasCustomUnarmedDamage();
 
 		// Create a fake item structure for unarmed strike
 		const unarmedItem = {
@@ -446,6 +463,7 @@
 			primaryDieValue: result.primaryDieValue ?? 0,
 			primaryDieModifier: Number(result.primaryDieModifier) || 0,
 			damageType: 'bludgeoning',
+			primaryDieAsDamage,
 		});
 
 		await roll.evaluate();
@@ -707,7 +725,7 @@
 
 							<span class="weapon-card__damage">
 								<i class="fa-solid fa-burst"></i>
-								{evaluateFormula(getUnarmedDamageFormula())}
+								{getUnarmedDamageDisplay()}
 							</span>
 						</li>
 					{/if}
