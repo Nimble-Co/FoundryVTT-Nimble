@@ -1,6 +1,6 @@
 ---
 name: nimble-scaffold
-description: "Use this agent when scaffolding a new Svelte sheet for an actor or item type. It researches existing sheet patterns, drafts all 4 artifacts (sheet class, Svelte component, props type, SCSS partial), and proposes them before writing any files.\n\n<example>\nuser: \"I need a new sheet for the minion actor type\"\nassistant: \"Let me use the nimble-scaffold agent to research patterns and draft all the required artifacts.\"\n<commentary>A new sheet is needed. Launch nimble-scaffold to research existing patterns and draft the 4 artifacts before writing anything.</commentary>\n</example>\n\n<example>\nuser: \"/nimble-scaffold SpellSheet Item spell\"\nassistant: \"Launching nimble-scaffold to draft the SpellSheet artifacts.\"\n<commentary>Explicit scaffold invocation with all three arguments provided.</commentary>\n</example>"
+description: "Use this agent when scaffolding a new Svelte sheet for an actor or item type. It researches existing sheet patterns, drafts all 4 artifacts (sheet class, Svelte component, props type, SCSS partial), and proposes them before writing any files.\n\n<example>\nuser: \"I need a new sheet for the minion actor type\"\nassistant: \"Let me use the nimble-scaffold agent to research patterns and draft all the required artifacts.\"\n<commentary>A new sheet is needed. Launch nimble-scaffold to research existing patterns and draft the 4 artifacts before writing anything.</commentary>\n</example>"
 tools: Read, Glob, Grep, Write, Edit, Bash
 model: sonnet
 color: green

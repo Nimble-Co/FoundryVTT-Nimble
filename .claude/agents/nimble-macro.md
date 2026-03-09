@@ -1,6 +1,6 @@
 ---
 name: nimble-macro
-description: "Use this agent when authoring or updating a macro JSON in packs/macros/core/. It cross-references hand-written scripts in ~/foundryVTT/scripts/, checks existing IDs in packs/ids.json, and proposes the full JSON before writing anything.\n\n<example>\nuser: \"Create a macro for ATK: Ranged\"\nassistant: \"Let me use the nimble-macro agent to research existing macros and draft the JSON.\"\n<commentary>A new macro is needed. Launch nimble-macro to look up the ID, find any existing script, and draft the JSON.</commentary>\n</example>\n\n<example>\nuser: \"/nimble-macro \\\"Rest: Short\\\"\"\nassistant: \"Launching nimble-macro to draft the Rest: Short macro JSON.\"\n<commentary>Explicit macro invocation with the macro name provided.</commentary>\n</example>"
+description: "Use this agent when authoring or updating a macro JSON in packs/macros/core/. It cross-references hand-written scripts in ~/foundryVTT/scripts/, checks existing IDs in packs/ids.json, and proposes the full JSON before writing anything.\n\n<example>\nuser: \"Create a macro for ATK: Ranged\"\nassistant: \"Let me use the nimble-macro agent to research existing macros and draft the JSON.\"\n<commentary>A new macro is needed. Launch nimble-macro to look up the ID, find any existing script, and draft the JSON.</commentary>\n</example>"
 tools: Read, Glob, Grep, Write, Edit, Bash
 model: sonnet
 color: yellow

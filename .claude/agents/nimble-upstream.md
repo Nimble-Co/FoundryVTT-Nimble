@@ -1,6 +1,6 @@
 ---
 name: nimble-upstream
-description: "Use this agent to compare the fork against upstream/dev, categorize upstream changes, and draft patches. It only performs git fetch — no merges, rebases, or destructive operations.\n\n<example>\nuser: \"What's changed upstream?\"\nassistant: \"Let me use the nimble-upstream agent to fetch upstream and analyze the divergence.\"\n<commentary>Upstream comparison requested. Launch nimble-upstream to fetch, diff, and categorize changes.</commentary>\n</example>\n\n<example>\nuser: \"/nimble-upstream\"\nassistant: \"Launching nimble-upstream to compare the fork against upstream/dev.\"\n<commentary>Explicit upstream analysis invocation.</commentary>\n</example>"
+description: "Use this agent to compare the fork against upstream/dev, categorize upstream changes, and draft patches. It only performs git fetch — no merges, rebases, or destructive operations.\n\n<example>\nuser: \"What's changed upstream?\"\nassistant: \"Let me use the nimble-upstream agent to fetch upstream and analyze the divergence.\"\n<commentary>Upstream comparison requested. Launch nimble-upstream to fetch, diff, and categorize changes.</commentary>\n</example>"
 tools: Read, Glob, Grep, Bash, Edit, Write
 model: sonnet
 color: purple

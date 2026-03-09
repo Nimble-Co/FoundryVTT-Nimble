@@ -1,0 +1,1 @@
+Run the `nimble-token-keeper` agent to audit all Claude configuration files for token waste and convention drift. Check agent description example counts, memory boilerplate, model assignments, tools list length, MEMORY.md line counts, and duplication with CLAUDE.md. Report all violations with file paths and line numbers, then wait for confirmation before applying any fixes.

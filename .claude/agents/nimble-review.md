@@ -1,8 +1,8 @@
 ---
 name: nimble-review
-description: "Use this agent to review changed or staged files against CLAUDE.md conventions before committing. It checks Svelte 5 patterns, TypeScript conventions, file naming, localization, and FoundryVTT integration, then proposes fixes without applying them.\n\n<example>\nuser: \"Review my changes before I commit\"\nassistant: \"Let me use the nimble-review agent to check the changed files against project conventions.\"\n<commentary>Pre-commit review requested. Launch nimble-review to diff changed files and run the convention checklist.</commentary>\n</example>\n\n<example>\nuser: \"/nimble-review src/hooks/init.ts src/view/sheets/PlayerCharacterSheet.svelte\"\nassistant: \"Launching nimble-review to check the specified files.\"\n<commentary>Explicit review of specific files.</commentary>\n</example>"
+description: "Use this agent to review changed or staged files against CLAUDE.md conventions before committing. It checks Svelte 5 patterns, TypeScript conventions, file naming, localization, and FoundryVTT integration, then proposes fixes without applying them.\n\n<example>\nuser: \"Review my changes before I commit\"\nassistant: \"Let me use the nimble-review agent to check the changed files against project conventions.\"\n<commentary>Pre-commit review requested. Launch nimble-review to diff changed files and run the convention checklist.</commentary>\n</example>"
 tools: Read, Glob, Grep, Bash, Edit, Write
-model: sonnet
+model: haiku
 color: orange
 ---
 
