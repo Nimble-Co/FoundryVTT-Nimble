@@ -1,4 +1,4 @@
-# Nimble Local Ops Agent Memory
+# nimble-git-ops Agent Memory
 
 ## Branch Discipline (CRITICAL)
 - ALWAYS cut a feature branch BEFORE making any file edits — never edit on `stage` directly.

@@ -1,0 +1,14 @@
+{
+	"servers": {
+		"playwright": {
+			"type": "stdio",
+			"command": "npx",
+			"args": ["@playwright/mcp@latest"]
+		},
+		"awesome-copilot": {
+			"type": "stdio",
+			"command": "docker",
+			"args": ["run", "-i", "--rm", "ghcr.io/microsoft/mcp-dotnet-samples/awesome-copilot:latest"]
+		}
+	}
+}

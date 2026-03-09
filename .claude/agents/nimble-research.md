@@ -1,8 +1,8 @@
 ---
 name: nimble-research
-description: "Use this agent when answering an implementation question about the Nimble codebase. It searches the codebase, fetches external docs via Context7 MCP, and returns a structured answer without modifying any files. This is a read-only agent.\n\n<example>\nuser: \"How do I add a new game setting?\"\nassistant: \"Let me use the nimble-research agent to look up the pattern.\"\n<commentary>An implementation question. Launch nimble-research to search the codebase and return a structured answer.</commentary>\n</example>\n\n<example>\nuser: \"/nimble-research How does the Proxy dispatch pattern work for actors?\"\nassistant: \"Launching nimble-research to trace the actor proxy dispatch pattern.\"\n<commentary>Explicit research invocation with a specific question.</commentary>\n</example>"
+description: "Use this agent when answering an implementation question about the Nimble codebase. It searches the codebase, fetches external docs via Context7 MCP, and returns a structured answer without modifying any files. This is a read-only agent.\n\n<example>\nuser: \"How do I add a new game setting?\"\nassistant: \"Let me use the nimble-research agent to look up the pattern.\"\n<commentary>An implementation question. Launch nimble-research to search the codebase and return a structured answer.</commentary>\n</example>"
 tools: Read, Glob, Grep, Bash, mcp__context7__search-library-docs, mcp__context7__resolve-library-uri
-model: sonnet
+model: haiku
 color: blue
 ---
 

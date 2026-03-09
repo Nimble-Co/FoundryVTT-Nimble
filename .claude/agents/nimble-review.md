@@ -1,8 +1,8 @@
 ---
 name: nimble-review
-description: "Use this agent to review changed or staged files against CLAUDE.md conventions before committing. It checks Svelte 5 patterns, TypeScript conventions, file naming, localization, and FoundryVTT integration, then proposes fixes without applying them.\n\n<example>\nuser: \"Review my changes before I commit\"\nassistant: \"Let me use the nimble-review agent to check the changed files against project conventions.\"\n<commentary>Pre-commit review requested. Launch nimble-review to diff changed files and run the convention checklist.</commentary>\n</example>\n\n<example>\nuser: \"/nimble-review src/hooks/init.ts src/view/sheets/PlayerCharacterSheet.svelte\"\nassistant: \"Launching nimble-review to check the specified files.\"\n<commentary>Explicit review of specific files.</commentary>\n</example>"
-tools: Read, Glob, Grep, Bash, Edit, Write
-model: sonnet
+description: "Use this agent to review changed or staged files against CLAUDE.md conventions before committing. It checks Svelte 5 patterns, TypeScript conventions, file naming, localization, and FoundryVTT integration, then proposes fixes without applying them.\n\n<example>\nuser: \"Review my changes before I commit\"\nassistant: \"Let me use the nimble-review agent to check the changed files against project conventions.\"\n<commentary>Pre-commit review requested. Launch nimble-review to diff changed files and run the convention checklist.</commentary>\n</example>"
+tools: Read, Glob, Grep, Bash, Edit, Write, Skill
+model: haiku
 color: orange
 ---
 
@@ -18,45 +18,7 @@ If no files are specified and git diff returns nothing, ask the user which files
 
 ## Review Checklist
 
-For each file, check the following:
-
-### Svelte 5 Conventions
-- [ ] Uses runes: `$state`, `$derived`, `$effect`, `$props()` — no Svelte 4 stores in components
-- [ ] Script order matches CLAUDE.md: type imports → component imports → utility imports → store imports → context → props → state → derived → effects → functions
-- [ ] Props type defined in `types/components/ComponentName.d.ts`, not inline
-- [ ] `setContext` / `getContext` used correctly (not direct store subscriptions across component boundaries)
-
-### TypeScript Conventions
-- [ ] Import aliases used (`#documents/*`, `#view/*`, `#utils/*`, etc.) with `.ts` extension
-- [ ] No `any` types without justification
-- [ ] `game.settings.register` uses `'nimble' as 'core'` and `key as 'rollMode'` casts; third arg cast `as never`
-- [ ] Hook callbacks typed as `Hooks.on('hookName', (arg: unknown) => ...)`
-- [ ] Constants use `SCREAMING_SNAKE_CASE`; system-wide constants added to `src/config.ts`
-
-### File Naming
-- [ ] Svelte components: `PascalCase.svelte`
-- [ ] TS classes: `PascalCase.ts`
-- [ ] TS utilities: `camelCase.ts`
-- [ ] SCSS partials: `_kebab-case.scss`
-
-### Localization
-- [ ] All user-facing strings use `localize()` from `#utils/localize.ts` — no raw string literals in UI
-
-### SCSS
-- [ ] New SCSS partials: uses BEM naming, `var(--nimble-*)` custom properties, no hardcoded colors
-- [ ] New partial added with `@use` in `src/scss/main.scss`
-
-### Code Quality
-- [ ] No over-engineering: helpers extracted only if shared across 2+ files
-- [ ] No unused variables, dead code, or backwards-compat hacks
-- [ ] No security issues: no `eval`, no `innerHTML` with user content, no command injection
-- [ ] Error handling only at system boundaries (user input, external APIs) — not for internal invariants
-
-### FoundryVTT Integration
-- [ ] New settings registered correctly in `src/hooks/init.ts` or `src/settings/`
-- [ ] New document classes registered in `src/hooks/init.ts`
-- [ ] New sheets registered via `Actors.registerSheet` / `Items.registerSheet`
-- [ ] Hook usage: `renderSceneControls` (not `getSceneControlButtons`) for DOM injection in v13
+Invoke the `nimble-code-conventions` skill to load the full checklist (Svelte 5, TypeScript, file naming, localization, SCSS, code quality, FoundryVTT integration). Apply each check to every file in scope.
 
 ## Output Format
 

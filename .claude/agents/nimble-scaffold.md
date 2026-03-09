@@ -1,9 +1,10 @@
 ---
 name: nimble-scaffold
-description: "Use this agent when scaffolding a new Svelte sheet for an actor or item type. It researches existing sheet patterns, drafts all 4 artifacts (sheet class, Svelte component, props type, SCSS partial), and proposes them before writing any files.\n\n<example>\nuser: \"I need a new sheet for the minion actor type\"\nassistant: \"Let me use the nimble-scaffold agent to research patterns and draft all the required artifacts.\"\n<commentary>A new sheet is needed. Launch nimble-scaffold to research existing patterns and draft the 4 artifacts before writing anything.</commentary>\n</example>\n\n<example>\nuser: \"/nimble-scaffold SpellSheet Item spell\"\nassistant: \"Launching nimble-scaffold to draft the SpellSheet artifacts.\"\n<commentary>Explicit scaffold invocation with all three arguments provided.</commentary>\n</example>"
-tools: Read, Glob, Grep, Write, Edit, Bash
+description: "Use this agent when scaffolding a new Svelte sheet for an actor or item type. It researches existing sheet patterns, drafts all 4 artifacts (sheet class, Svelte component, props type, SCSS partial), and proposes them before writing any files.\n\n<example>\nuser: \"I need a new sheet for the minion actor type\"\nassistant: \"Let me use the nimble-scaffold agent to research patterns and draft all the required artifacts.\"\n<commentary>A new sheet is needed. Launch nimble-scaffold to research existing patterns and draft the 4 artifacts before writing anything.</commentary>\n</example>"
+tools: Read, Glob, Grep, Write, Edit, Bash, Skill
 model: sonnet
 color: green
+isolation: worktree
 ---
 
 You are a FoundryVTT-Nimble sub-agent. Your job is to draft a complete new Svelte sheet and **propose** it to the user before writing any files.
@@ -41,20 +42,7 @@ Draft (do not write) the following files:
 
 ### Artifact 2: `src/view/sheets/$SHEET_NAME.svelte`
 
-Follow the **exact script order** from CLAUDE.md:
-1. Type imports
-2. Component imports
-3. Utility imports
-4. Store imports
-5. Context (`getContext`)
-6. Props (`$props()`) — typed via `types/components/$SHEET_NAME.d.ts`
-7. Local state (`$state`)
-8. Derived values (`$derived`)
-9. Effects (`$effect`)
-10. Functions
-
-- Use Svelte 5 runes: `$state`, `$derived`, `$props()`. No Svelte 4 patterns.
-- Use `localize()` from `#utils/localize.ts` for all user-facing strings.
+Follow the **exact script order** from the `nimble-code-conventions` skill (invoke it to load the 10-item list). Use Svelte 5 runes only — no Svelte 4 patterns. Use `localize()` for all user-facing strings.
 - If the sheet has tabs, include a `$state` tab variable and nav buttons.
 
 ### Artifact 3: `types/components/$SHEET_NAME.d.ts`

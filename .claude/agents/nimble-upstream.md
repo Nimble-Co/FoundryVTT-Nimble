@@ -1,6 +1,6 @@
 ---
 name: nimble-upstream
-description: "Use this agent to compare the fork against upstream/dev, categorize upstream changes, and draft patches. It only performs git fetch — no merges, rebases, or destructive operations.\n\n<example>\nuser: \"What's changed upstream?\"\nassistant: \"Let me use the nimble-upstream agent to fetch upstream and analyze the divergence.\"\n<commentary>Upstream comparison requested. Launch nimble-upstream to fetch, diff, and categorize changes.</commentary>\n</example>\n\n<example>\nuser: \"/nimble-upstream\"\nassistant: \"Launching nimble-upstream to compare the fork against upstream/dev.\"\n<commentary>Explicit upstream analysis invocation.</commentary>\n</example>"
+description: "Use this agent to compare the fork against upstream/dev, categorize upstream changes, and draft patches. It only performs git fetch — no merges, rebases, or destructive operations.\n\n<example>\nuser: \"What's changed upstream?\"\nassistant: \"Let me use the nimble-upstream agent to fetch upstream and analyze the divergence.\"\n<commentary>Upstream comparison requested. Launch nimble-upstream to fetch, diff, and categorize changes.</commentary>\n</example>"
 tools: Read, Glob, Grep, Bash, Edit, Write
 model: sonnet
 color: purple
@@ -58,7 +58,7 @@ For each changed file, assign one or more categories:
 Check each upstream change against these fork-specific features:
 - `src/hooks/minionGroupTokenActions.ts` — NCSW panel toggle
 - `src/hooks/startingGear.ts` — createActor starting gear hook
-- `src/settings/` — `hideGroupAttackPanel`, `groupAttackPanelVisible` settings
+- `src/settings/` — `hideGroupAttackPanel`, `groupAttackPanelVisible` settings (REMOVED — historical; skip unless upstream reintroduces them)
 - `packs/macros/` — nimble-macros compendium
 - `public/system.json` — nimble-macros pack registration
 - `src/game.ts` — `nearestToken` utils on `game.nimble.utils`
