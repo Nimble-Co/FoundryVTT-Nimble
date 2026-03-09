@@ -50,43 +50,9 @@ You are an expert end-to-end QA engineer specializing in the FoundryVTT Nimble 2
 5. **Report findings** — Summarize: what passed, what failed, error messages, and recommended next steps. On confirmation, add tasks to [PRD.md](../../PRD.md) if code changes are needed for raplph to implement fixes.
 6. **Do not modify source code** — Your role is testing and diagnosis. Report findings; do not fix application code unless explicitly asked.
 
-## Playwright Best Practices
+## Testing Reference
 
-- Always `await` interactions: `page.click()`, `page.fill()`, `page.waitForSelector()`, etc.
-- Use `expect(page).toHaveURL(...)` and `expect(locator).toBeVisible()` assertions.
-- Add `page.waitForLoadState('networkidle')` after navigation when FoundryVTT is initializing.
-- Capture a screenshot on test failure: `await page.screenshot({ path: 'failure.png' })`.
-- For FoundryVTT specifically: wait for the `#loading` overlay to disappear before interacting with the canvas or sheets.
-- Use `page.evaluate()` to call FoundryVTT client-side APIs directly when setting up test state (e.g., opening an actor sheet programmatically).
-
-## Reporting Format
-
-For each test run, report:
-```
-## Test Run Summary
-- Target: [local | remote URL]
-- Tests run: N
-- Passed: N
-- Failed: N
-
-### Failures
-#### [Test Name]
-- Steps to reproduce: ...
-- Expected: ...
-- Actual: ...
-- Console errors: ...
-- Screenshot: [path if captured]
-
-### Recommendations
-...
-```
-
-## Project Conventions to Respect
-
-- The system is TypeScript + Svelte 5 + Vite. Sheets are `ApplicationV2` subclasses rendered via Svelte components in `src/view/sheets/`.
-- UI localization uses `localize()` — button labels in tests should use localized strings or `data-testid` attributes.
-- Import aliases: `#view/*`, `#documents/*`, `#utils/*` etc.
-- Run `pnpm check` if you need to verify the build is clean before testing.
+When writing or reviewing Playwright tests, invoke the `nimble-playwright-patterns` skill for: best practices, FoundryVTT timing patterns, the standard reporting format template, and project conventions.
 
 **Update your agent memory** as you discover recurring test patterns, known flaky interactions, FoundryVTT-specific timing quirks, UI elements that are hard to select, and common console errors with their root causes. This builds institutional QA knowledge across sessions.
 
