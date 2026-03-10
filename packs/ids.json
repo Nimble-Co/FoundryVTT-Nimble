@@ -786,7 +786,7 @@
 			"atk-spells": "NimMacroAtkSpell3",
 			"day-night-toggle": "NimMacroDayNight5",
 			"open-door": "NimMacroOpenDoor6",
-			"place-torch": "NimMacroPlcTorch7"
+			"place-light": "NimMacroPlcLight8"
 		}
 	},
 	"magicItems": {

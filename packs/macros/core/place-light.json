@@ -1,0 +1,20 @@
+{
+	"_id": "NimMacroPlcLight8",
+	"name": "Place Light",
+	"type": "script",
+	"author": "",
+	"img": "icons/svg/fire.svg",
+	"scope": "global",
+	"command": "(async () => {\n  const CFG = {\n    bright:    3,\n    dim:       6,\n    color:          \"#e98b07\",\n    colorIntensity: 0.5,\n    attenuation:    0.5,\n    angle:          360,\n    animation: {\n      type:      \"torch\",\n      speed:     1,\n      intensity: 2,\n      reverse:   false,\n    },\n    snapToGrid: true,\n  };\n\n  ui.notifications.info(\"Light \\u25b8 click canvas to place (or Esc to cancel).\");\n\n  const previousLayer = canvas.activeLayer;\n\n  const pos = await new Promise((resolve, reject) => {\n    const onKey = (e) => {\n      if (e.key !== \"Escape\") return;\n      cleanup();\n      reject(new Error(\"cancelled\"));\n    };\n\n    const onClick = (event) => {\n      cleanup();\n      resolve(event.data.getLocalPosition(canvas.stage));\n    };\n\n    const cleanup = () => {\n      canvas.stage.off(\"click\", onClick);\n      window.removeEventListener(\"keydown\", onKey);\n      clearTimeout(timer);\n    };\n\n    const timer = setTimeout(() => {\n      cleanup();\n      reject(new Error(\"Light placement timed out.\"));\n    }, 30_000);\n\n    canvas.stage.once(\"click\", onClick);\n    window.addEventListener(\"keydown\", onKey, { once: false });\n  }).catch(err => {\n    if (err.message !== \"cancelled\") ui.notifications.warn(\"Light: \" + err.message);\n    return null;\n  });\n\n  if (!pos) return;\n\n  const { x, y } = CFG.snapToGrid\n    ? canvas.grid.getSnappedPosition(pos.x, pos.y)\n    : pos;\n\n  await AmbientLightDocument.create({\n    x, y,\n    config: {\n      dim:         CFG.dim,\n      bright:      CFG.bright,\n      color:       CFG.color,\n      alpha:       CFG.colorIntensity,\n      attenuation: CFG.attenuation,\n      angle:       CFG.angle,\n      animation:   CFG.animation,\n    },\n  }, { parent: canvas.scene, renderSheet: false });\n\n  previousLayer?.activate();\n\n  ui.notifications.info(\"Light placed.\");\n})();",
+	"folder": null,
+	"sort": 70,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13",
+		"systemId": "nimble",
+		"systemVersion": "0.7.2",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	}
+}
