@@ -11,6 +11,7 @@
 
 	import ActionPipTracker from '../components/ActionPipTracker.svelte';
 	import SearchBar from '../components/SearchBar.svelte';
+	import AssessActionPanel from '../components/AssessActionPanel.svelte';
 
 	// ============================================================================
 	// Context & Configuration
@@ -52,7 +53,7 @@
 			icon: 'fa-solid fa-eye',
 			labelKey: 'NIMBLE.ui.heroicActions.actions.assess.label',
 			descriptionKey: 'NIMBLE.ui.heroicActions.actions.assess.description',
-			type: 'dialog', // Opens a dialog
+			type: 'panel',
 		},
 	];
 
@@ -250,9 +251,6 @@
 			case 'panel':
 				togglePanel(action.id);
 				break;
-			case 'dialog':
-				handleAssessAction();
-				break;
 		}
 	}
 
@@ -300,25 +298,6 @@
 
 		return speeds;
 	});
-
-	async function handleAssessAction() {
-		const { default: GenericDialog } = await import(
-			'../../../documents/dialogs/GenericDialog.svelte.js'
-		);
-		const { default: AssessActionDialog } = await import('../../dialogs/AssessActionDialog.svelte');
-
-		const dialogId = `assess-action-${actor.id}`;
-
-		// Wrapper to maintain AssessActionDialog's expected interface
-		const deductActionPip = () => deductActionPips(1);
-
-		GenericDialog.getOrCreate(
-			'Assess Action',
-			AssessActionDialog,
-			{ document: actor, deductActionPip, inCombat },
-			{ width: 420, uniqueId: dialogId },
-		).render(true);
-	}
 
 	async function handleHelpDialog() {
 		const { default: GenericDialog } = await import(
@@ -1249,6 +1228,15 @@
 				</button>
 			</div>
 		</section>
+	{/if}
+
+	{#if expandedPanel === 'assess'}
+		<AssessActionPanel
+			{actor}
+			{inCombat}
+			actionsRemaining={actionsData.current}
+			onDeductAction={() => deductActionPips(1)}
+		/>
 	{/if}
 </section>
 
