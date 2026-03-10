@@ -1,18 +1,19 @@
 export const COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY =
 	'combatTrackerPlayersCanExpandMonsterCards';
-export const COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY = 'combatTrackerCenterActiveCard';
 export const COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY =
 	'combatTrackerCtResourceDrawerHover';
+export const COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY =
+	'combatTrackerCtPlayerHpBarTextMode';
+export const COMBAT_TRACKER_NON_PLAYER_HP_BAR_ENABLED_SETTING_KEY =
+	'combatTrackerCtNonPlayerHpBarEnabled';
+export const COMBAT_TRACKER_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY =
+	'combatTrackerCtNonPlayerHpBarTextMode';
 export const COMBAT_TRACKER_ENABLED_SETTING_KEY = 'combatTrackerCtEnabled';
 export const COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY = 'combatTrackerCtWidthLevel';
 export const COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY = 'combatTrackerCtCardSizeLevel';
-export const COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY = 'combatTrackerCtBadgeSizeLevel';
-export const COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY = 'combatTrackerCtUseActionDice';
 export const COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY = 'combatTrackerCtActionDiceColor';
-export const COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY =
-	'combatTrackerCtNonPlayerHpPermissions';
-export const COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY =
-	'combatTrackerCtVisibilityPermissions';
+export const COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY = 'combatTrackerCtReactionColor';
+export const COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME = 'nimble:ct-client-setting-updated';
 export const CURRENT_TURN_ANIMATION_SETTING_KEYS = {
 	pulseAnimation: 'combatTrackerCurrentTurnPulseAnimation',
 	pulseSpeed: 'combatTrackerCurrentTurnPulseSpeed',
@@ -24,26 +25,9 @@ export const CURRENT_TURN_ANIMATION_SETTING_KEYS = {
 	edgeCrawlerSize: 'combatTrackerCurrentTurnEdgeCrawlerSize',
 } as const;
 
-export type CombatTrackerRolePermissionKey = 'player' | 'trusted' | 'assistant' | 'gamemaster';
-export const COMBAT_TRACKER_VISIBILITY_FIELDS = [
-	'hpValue',
-	'hpState',
-	'mana',
-	'wounds',
-	'actions',
-	'defend',
-	'interpose',
-	'opportunityAttack',
-	'help',
-	'outline',
-] as const;
-
-export type CombatTrackerRolePermissionConfig = Record<CombatTrackerRolePermissionKey, boolean>;
-export type CombatTrackerVisibilityFieldKey = (typeof COMBAT_TRACKER_VISIBILITY_FIELDS)[number];
-export type CombatTrackerVisibilityPermissionConfig = Record<
-	CombatTrackerVisibilityFieldKey,
-	CombatTrackerRolePermissionConfig
->;
+export type CombatTrackerHpBarTextMode = 'none' | 'hpState' | 'percentage';
+export type CombatTrackerPlayerHpBarTextMode = CombatTrackerHpBarTextMode;
+export type CombatTrackerNonPlayerHpBarTextMode = CombatTrackerHpBarTextMode;
 export interface CurrentTurnAnimationSettings {
 	pulseAnimation: boolean;
 	pulseSpeed: number;
@@ -56,14 +40,15 @@ export interface CurrentTurnAnimationSettings {
 }
 
 const DEFAULT_PLAYER_MONSTER_CARD_EXPANSION_PERMISSION = false;
-const DEFAULT_CENTER_ACTIVE_CARD_SETTING = true;
 const DEFAULT_CT_RESOURCE_DRAWER_HOVER_SETTING = true;
+const DEFAULT_CT_PLAYER_HP_BAR_TEXT_MODE_SETTING: CombatTrackerPlayerHpBarTextMode = 'none';
+const DEFAULT_CT_NON_PLAYER_HP_BAR_ENABLED_SETTING = false;
+const DEFAULT_CT_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING: CombatTrackerNonPlayerHpBarTextMode = 'none';
 const DEFAULT_CT_ENABLED_SETTING = true;
-const DEFAULT_CT_WIDTH_LEVEL_SETTING = 2;
-const DEFAULT_CT_CARD_SIZE_LEVEL_SETTING = 3;
-const DEFAULT_CT_BADGE_SIZE_LEVEL_SETTING = 1;
-const DEFAULT_CT_USE_ACTION_DICE_SETTING = false;
+const DEFAULT_CT_WIDTH_LEVEL_SETTING = 10;
+const DEFAULT_CT_CARD_SIZE_LEVEL_SETTING = 5;
 const DEFAULT_CT_ACTION_DICE_COLOR_SETTING = '#ffffff';
+const DEFAULT_CT_REACTION_COLOR_SETTING = '#4fc3f7';
 const DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS: CurrentTurnAnimationSettings = {
 	pulseAnimation: true,
 	pulseSpeed: 50,
@@ -75,40 +60,15 @@ const DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS: CurrentTurnAnimationSettings = {
 	edgeCrawlerSize: 50,
 };
 const MIN_CT_WIDTH_LEVEL_SETTING = 1;
-const MAX_CT_WIDTH_LEVEL_SETTING = 6;
+const MAX_CT_WIDTH_LEVEL_SETTING = 10;
 const MIN_CT_CARD_SIZE_LEVEL_SETTING = 1;
-const MAX_CT_CARD_SIZE_LEVEL_SETTING = 6;
-const MIN_CT_BADGE_SIZE_LEVEL_SETTING = 1;
-const MAX_CT_BADGE_SIZE_LEVEL_SETTING = 6;
+const MAX_CT_CARD_SIZE_LEVEL_SETTING = 10;
 const LEGACY_CURRENT_TURN_COLOR_SETTING_KEY = 'combatTrackerCurrentTurnColor';
 const HEX_COLOR_PATTERN = /^#(?:[\da-fA-F]{3}|[\da-fA-F]{6})$/;
 const ANIMATION_SLIDER_MIN = 0;
 const ANIMATION_SLIDER_MAX = 100;
-const DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING: CombatTrackerRolePermissionConfig = {
-	player: false,
-	trusted: false,
-	assistant: true,
-	gamemaster: true,
-};
-const DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING: CombatTrackerRolePermissionConfig = {
-	player: true,
-	trusted: true,
-	assistant: true,
-	gamemaster: true,
-};
-const DEFAULT_CT_VISIBILITY_PERMISSION_SETTING: CombatTrackerVisibilityPermissionConfig = {
-	hpValue: { ...DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING },
-	hpState: { ...DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING },
-	mana: { ...DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING },
-	wounds: { ...DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING },
-	actions: { ...DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING },
-	defend: { ...DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING },
-	interpose: { ...DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING },
-	opportunityAttack: { ...DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING },
-	help: { ...DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING },
-	outline: { ...DEFAULT_VISIBLE_CT_FIELD_PERMISSION_SETTING },
-};
 const CT_ACTION_DICE_COLOR_CSS_VAR = '--nimble-ct-action-die-color';
+const CT_REACTION_COLOR_CSS_VAR = '--nimble-ct-reaction-color';
 type CurrentTurnAnimationSettingKey =
 	(typeof CURRENT_TURN_ANIMATION_SETTING_KEYS)[keyof typeof CURRENT_TURN_ANIMATION_SETTING_KEYS];
 const CURRENT_TURN_ANIMATION_SETTING_KEY_SET = new Set<CurrentTurnAnimationSettingKey>(
@@ -152,14 +112,10 @@ function normalizeCtCardSizeLevel(value: unknown): number {
 	);
 }
 
-function normalizeCtBadgeSizeLevel(value: unknown): number {
-	const numericValue = Number(value);
-	if (!Number.isFinite(numericValue)) return DEFAULT_CT_BADGE_SIZE_LEVEL_SETTING;
-	const rounded = Math.round(numericValue);
-	return Math.min(
-		MAX_CT_BADGE_SIZE_LEVEL_SETTING,
-		Math.max(MIN_CT_BADGE_SIZE_LEVEL_SETTING, rounded),
-	);
+function normalizeHpBarTextMode(value: unknown): CombatTrackerHpBarTextMode {
+	return value === 'hpState' || value === 'percentage'
+		? value
+		: DEFAULT_CT_PLAYER_HP_BAR_TEXT_MODE_SETTING;
 }
 
 export function normalizeHexColor(value: unknown): string {
@@ -204,80 +160,19 @@ function applyCtActionDiceColorCssVariable(value: unknown): void {
 	document.documentElement.style.setProperty(CT_ACTION_DICE_COLOR_CSS_VAR, normalizedColor);
 }
 
-function normalizePermissionValue(value: unknown, fallback: boolean): boolean {
-	if (typeof value === 'boolean') return value;
-	if (typeof value === 'number') return value !== 0;
-	return fallback;
+function applyCtReactionColorCssVariable(value: unknown): void {
+	if (typeof document === 'undefined') return;
+	const normalizedColor = normalizeHexColor(value);
+	document.documentElement.style.setProperty(CT_REACTION_COLOR_CSS_VAR, normalizedColor);
 }
 
-function normalizeRolePermissionConfig(value: unknown): CombatTrackerRolePermissionConfig {
-	const source =
-		typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
-	return {
-		player: normalizePermissionValue(
-			source.player,
-			DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING.player,
-		),
-		trusted: normalizePermissionValue(
-			source.trusted,
-			DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING.trusted,
-		),
-		assistant: normalizePermissionValue(
-			source.assistant,
-			DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING.assistant,
-		),
-		gamemaster: normalizePermissionValue(
-			source.gamemaster,
-			DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING.gamemaster,
-		),
-	};
-}
-
-function normalizeRolePermissionConfigWithFallback(
-	value: unknown,
-	fallback: CombatTrackerRolePermissionConfig,
-): CombatTrackerRolePermissionConfig {
-	const source =
-		typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
-	return {
-		player: normalizePermissionValue(source.player, fallback.player),
-		trusted: normalizePermissionValue(source.trusted, fallback.trusted),
-		assistant: normalizePermissionValue(source.assistant, fallback.assistant),
-		gamemaster: normalizePermissionValue(source.gamemaster, fallback.gamemaster),
-	};
-}
-
-function normalizeCombatTrackerVisibilityPermissionConfig(
-	value: unknown,
-): CombatTrackerVisibilityPermissionConfig {
-	const source =
-		typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
-	const hasFieldKeys = COMBAT_TRACKER_VISIBILITY_FIELDS.some((fieldKey) => fieldKey in source);
-	if (!hasFieldKeys) {
-		const legacyHpConfig = normalizeRolePermissionConfig(source);
-		return {
-			...foundry.utils.deepClone(DEFAULT_CT_VISIBILITY_PERMISSION_SETTING),
-			hpValue: legacyHpConfig,
-			hpState: { ...legacyHpConfig },
-		};
-	}
-
-	return COMBAT_TRACKER_VISIBILITY_FIELDS.reduce((config, fieldKey) => {
-		config[fieldKey] = normalizeRolePermissionConfigWithFallback(
-			source[fieldKey],
-			DEFAULT_CT_VISIBILITY_PERMISSION_SETTING[fieldKey],
-		);
-		return config;
-	}, {} as CombatTrackerVisibilityPermissionConfig);
-}
-
-function getUserRoleValue(
-	roleKey: 'PLAYER' | 'TRUSTED' | 'ASSISTANT' | 'GAMEMASTER',
-	fallback: number,
-): number {
-	const userRoles = (globalThis as { CONST?: { USER_ROLES?: Record<string, number> } }).CONST
-		?.USER_ROLES;
-	return Number(userRoles?.[roleKey] ?? fallback);
+function dispatchCtClientSettingUpdated(settingKey: string): void {
+	if (typeof window === 'undefined') return;
+	window.dispatchEvent(
+		new CustomEvent(COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME, {
+			detail: { key: settingKey },
+		}),
+	);
 }
 
 export function registerCombatTrackerSettings(): void {
@@ -290,22 +185,56 @@ export function registerCombatTrackerSettings(): void {
 		default: DEFAULT_PLAYER_MONSTER_CARD_EXPANSION_PERMISSION,
 	});
 
-	registerWorldSetting(COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY, {
-		name: 'Combat Tracker Center Active Card',
-		hint: 'Keep the active card centered and wrap cards around it in turn order',
-		scope: 'world',
-		config: false,
-		type: Boolean,
-		default: DEFAULT_CENTER_ACTIVE_CARD_SETTING,
-	});
-
 	registerWorldSetting(COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY, {
 		name: 'Combat Tracker Resource Drawer Hover',
 		hint: 'When enabled, player resource drawers open only on hover',
-		scope: 'world',
+		scope: 'client',
 		config: false,
 		type: Boolean,
 		default: DEFAULT_CT_RESOURCE_DRAWER_HOVER_SETTING,
+		onChange: () => {
+			dispatchCtClientSettingUpdated(COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY);
+		},
+	});
+
+	registerWorldSetting(COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY, {
+		name: 'Combat Tracker Player HP Bar Center Text',
+		hint: 'Choose whether player HP bars show nothing, health state, or HP percentage',
+		scope: 'client',
+		config: false,
+		type: String,
+		choices: {
+			none: 'None',
+			hpState: 'Health State',
+			percentage: 'HP %',
+		},
+		default: DEFAULT_CT_PLAYER_HP_BAR_TEXT_MODE_SETTING,
+		onChange: () => {
+			dispatchCtClientSettingUpdated(COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY);
+		},
+	});
+
+	registerWorldSetting(COMBAT_TRACKER_NON_PLAYER_HP_BAR_ENABLED_SETTING_KEY, {
+		name: 'Combat Tracker Non-player HP Bar',
+		hint: 'Show a hit point bar below individual non-player combatant cards',
+		scope: 'world',
+		config: false,
+		type: Boolean,
+		default: DEFAULT_CT_NON_PLAYER_HP_BAR_ENABLED_SETTING,
+	});
+
+	registerWorldSetting(COMBAT_TRACKER_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY, {
+		name: 'Combat Tracker Non-player HP Bar Center Text',
+		hint: 'Choose whether centered text in the non-player HP bar shows nothing, health state, or HP percentage',
+		scope: 'world',
+		config: false,
+		type: String,
+		choices: {
+			none: 'None',
+			hpState: 'Health State',
+			percentage: 'HP %',
+		},
+		default: DEFAULT_CT_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING,
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_ENABLED_SETTING_KEY, {
@@ -320,55 +249,25 @@ export function registerCombatTrackerSettings(): void {
 	registerWorldSetting(COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY, {
 		name: 'Combat Tracker Width Level',
 		hint: 'Controls how wide Combat Tracker can be in the top tracker',
-		scope: 'world',
+		scope: 'client',
 		config: false,
 		type: Number,
 		default: DEFAULT_CT_WIDTH_LEVEL_SETTING,
+		onChange: () => {
+			dispatchCtClientSettingUpdated(COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY);
+		},
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY, {
 		name: 'Combat Tracker Card Size Level',
 		hint: 'Controls how large Combat Tracker combatant cards appear',
-		scope: 'world',
+		scope: 'client',
 		config: false,
 		type: Number,
 		default: DEFAULT_CT_CARD_SIZE_LEVEL_SETTING,
-	});
-
-	registerWorldSetting(COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY, {
-		name: 'Combat Tracker Badge Size Level',
-		hint: 'Controls how large top-left badges appear on Combat Tracker cards',
-		scope: 'world',
-		config: false,
-		type: Number,
-		default: DEFAULT_CT_BADGE_SIZE_LEVEL_SETTING,
-	});
-
-	registerWorldSetting(COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY, {
-		name: 'Combat Tracker Use Action Dice',
-		hint: 'When enabled, Combat Tracker uses action dice instead of the numeric action box',
-		scope: 'world',
-		config: false,
-		type: Boolean,
-		default: DEFAULT_CT_USE_ACTION_DICE_SETTING,
-	});
-
-	registerWorldSetting(COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY, {
-		name: 'Combat Tracker Non-player HP Permissions',
-		hint: 'Configure which user roles can view non-player HP on Combat Tracker cards',
-		scope: 'world',
-		config: false,
-		type: Object,
-		default: foundry.utils.deepClone(DEFAULT_NON_PLAYER_HP_PERMISSION_SETTING),
-	});
-
-	registerWorldSetting(COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY, {
-		name: 'Combat Tracker Visibility Permissions',
-		hint: 'Configure which user roles can view each Combat Tracker card field',
-		scope: 'world',
-		config: false,
-		type: Object,
-		default: foundry.utils.deepClone(DEFAULT_CT_VISIBILITY_PERMISSION_SETTING) as unknown as object,
+		onChange: () => {
+			dispatchCtClientSettingUpdated(COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY);
+		},
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY, {
@@ -380,6 +279,20 @@ export function registerCombatTrackerSettings(): void {
 		default: DEFAULT_CT_ACTION_DICE_COLOR_SETTING,
 		onChange: (value) => {
 			applyCtActionDiceColorCssVariable(value);
+			dispatchCtClientSettingUpdated(COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY);
+		},
+	});
+
+	registerWorldSetting(COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY, {
+		name: 'Combat Tracker Reaction Color',
+		hint: 'Choose your personal reaction color for Combat Tracker',
+		scope: 'client',
+		config: false,
+		type: String,
+		default: DEFAULT_CT_REACTION_COLOR_SETTING,
+		onChange: (value) => {
+			applyCtReactionColorCssVariable(value);
+			dispatchCtClientSettingUpdated(COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY);
 		},
 	});
 
@@ -461,6 +374,7 @@ export function registerCombatTrackerSettings(): void {
 	});
 
 	applyCtActionDiceColorCssVariable(getCombatTrackerActionDiceColor());
+	applyCtReactionColorCssVariable(getCombatTrackerReactionColor());
 }
 
 export function getCombatTrackerPlayersCanExpandMonsterCards(): boolean {
@@ -478,20 +392,38 @@ export function isCombatTrackerPlayerMonsterExpansionSettingKey(settingKey: unkn
 	return settingKey === `nimble.${COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY}`;
 }
 
-export function getCombatTrackerCenterActiveCardEnabled(): boolean {
-	return Boolean(
-		game.settings.get(
-			'nimble' as 'core',
-			COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY as 'rollMode',
-		),
-	);
-}
-
 export function getCombatTrackerResourceDrawerHoverEnabled(): boolean {
 	return Boolean(
 		game.settings.get(
 			'nimble' as 'core',
 			COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY as 'rollMode',
+		),
+	);
+}
+
+export function getCombatTrackerPlayerHpBarTextMode(): CombatTrackerPlayerHpBarTextMode {
+	return normalizeHpBarTextMode(
+		game.settings.get(
+			'nimble' as 'core',
+			COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY as 'rollMode',
+		),
+	);
+}
+
+export function getCombatTrackerNonPlayerHpBarEnabled(): boolean {
+	return Boolean(
+		game.settings.get(
+			'nimble' as 'core',
+			COMBAT_TRACKER_NON_PLAYER_HP_BAR_ENABLED_SETTING_KEY as 'rollMode',
+		),
+	);
+}
+
+export function getCombatTrackerNonPlayerHpBarTextMode(): CombatTrackerNonPlayerHpBarTextMode {
+	return normalizeHpBarTextMode(
+		game.settings.get(
+			'nimble' as 'core',
+			COMBAT_TRACKER_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY as 'rollMode',
 		),
 	);
 }
@@ -514,30 +446,6 @@ export function getCombatTrackerCtCardSizeLevel(): number {
 	);
 }
 
-export function getCombatTrackerCtBadgeSizeLevel(): number {
-	return normalizeCtBadgeSizeLevel(
-		game.settings.get(
-			'nimble' as 'core',
-			COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY as 'rollMode',
-		),
-	);
-}
-
-export function getCombatTrackerUseActionDice(): boolean {
-	return Boolean(
-		game.settings.get('nimble' as 'core', COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY as 'rollMode'),
-	);
-}
-
-export function getCombatTrackerNonPlayerHitpointPermissionConfig(): CombatTrackerRolePermissionConfig {
-	return normalizeRolePermissionConfig(
-		game.settings.get(
-			'nimble' as 'core',
-			COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY as 'rollMode',
-		),
-	);
-}
-
 export function getCombatTrackerActionDiceColor(): string {
 	return normalizeHexColor(
 		game.settings.get(
@@ -547,25 +455,34 @@ export function getCombatTrackerActionDiceColor(): string {
 	);
 }
 
-export function getCombatTrackerVisibilityPermissionConfig(): CombatTrackerVisibilityPermissionConfig {
-	return normalizeCombatTrackerVisibilityPermissionConfig(
-		game.settings.get(
-			'nimble' as 'core',
-			COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY as 'rollMode',
-		),
+export function getCombatTrackerReactionColor(): string {
+	return normalizeHexColor(
+		game.settings.get('nimble' as 'core', COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY as 'rollMode'),
 	);
-}
-
-export function isCombatTrackerCenterActiveCardSettingKey(settingKey: unknown): boolean {
-	if (typeof settingKey !== 'string') return false;
-	if (settingKey === COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY}`;
 }
 
 export function isCombatTrackerResourceDrawerHoverSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY) return true;
 	return settingKey === `nimble.${COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY}`;
+}
+
+export function isCombatTrackerPlayerHpBarTextModeSettingKey(settingKey: unknown): boolean {
+	if (typeof settingKey !== 'string') return false;
+	if (settingKey === COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY) return true;
+	return settingKey === `nimble.${COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY}`;
+}
+
+export function isCombatTrackerNonPlayerHpBarEnabledSettingKey(settingKey: unknown): boolean {
+	if (typeof settingKey !== 'string') return false;
+	if (settingKey === COMBAT_TRACKER_NON_PLAYER_HP_BAR_ENABLED_SETTING_KEY) return true;
+	return settingKey === `nimble.${COMBAT_TRACKER_NON_PLAYER_HP_BAR_ENABLED_SETTING_KEY}`;
+}
+
+export function isCombatTrackerNonPlayerHpBarTextModeSettingKey(settingKey: unknown): boolean {
+	if (typeof settingKey !== 'string') return false;
+	if (settingKey === COMBAT_TRACKER_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY) return true;
+	return settingKey === `nimble.${COMBAT_TRACKER_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY}`;
 }
 
 export function isCombatTrackerEnabledSettingKey(settingKey: unknown): boolean {
@@ -586,34 +503,16 @@ export function isCombatTrackerCardSizeLevelSettingKey(settingKey: unknown): boo
 	return settingKey === `nimble.${COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY}`;
 }
 
-export function isCombatTrackerBadgeSizeLevelSettingKey(settingKey: unknown): boolean {
-	if (typeof settingKey !== 'string') return false;
-	if (settingKey === COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY}`;
-}
-
-export function isCombatTrackerUseActionDiceSettingKey(settingKey: unknown): boolean {
-	if (typeof settingKey !== 'string') return false;
-	if (settingKey === COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY}`;
-}
-
-export function isCombatTrackerNonPlayerHitpointPermissionSettingKey(settingKey: unknown): boolean {
-	if (typeof settingKey !== 'string') return false;
-	if (settingKey === COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY}`;
-}
-
-export function isCombatTrackerVisibilityPermissionSettingKey(settingKey: unknown): boolean {
-	if (typeof settingKey !== 'string') return false;
-	if (settingKey === COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY) return true;
-	return settingKey === `nimble.${COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY}`;
-}
-
 export function isCombatTrackerActionDiceColorSettingKey(settingKey: unknown): boolean {
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY) return true;
 	return settingKey === `nimble.${COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY}`;
+}
+
+export function isCombatTrackerReactionColorSettingKey(settingKey: unknown): boolean {
+	if (typeof settingKey !== 'string') return false;
+	if (settingKey === COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY) return true;
+	return settingKey === `nimble.${COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY}`;
 }
 
 export function getCurrentTurnAnimationSettings(): CurrentTurnAnimationSettings {
@@ -691,19 +590,39 @@ export async function setCombatTrackerPlayersCanExpandMonsterCards(value: boolea
 	);
 }
 
-export async function setCombatTrackerCenterActiveCardEnabled(value: boolean): Promise<void> {
-	await game.settings.set(
-		'nimble' as 'core',
-		COMBAT_TRACKER_CENTER_ACTIVE_CARD_SETTING_KEY as 'rollMode',
-		Boolean(value) as never,
-	);
-}
-
 export async function setCombatTrackerResourceDrawerHoverEnabled(value: boolean): Promise<void> {
 	await game.settings.set(
 		'nimble' as 'core',
 		COMBAT_TRACKER_RESOURCE_DRAWER_HOVER_SETTING_KEY as 'rollMode',
 		Boolean(value) as never,
+	);
+}
+
+export async function setCombatTrackerPlayerHpBarTextMode(
+	value: CombatTrackerPlayerHpBarTextMode,
+): Promise<void> {
+	await game.settings.set(
+		'nimble' as 'core',
+		COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY as 'rollMode',
+		normalizeHpBarTextMode(value) as never,
+	);
+}
+
+export async function setCombatTrackerNonPlayerHpBarEnabled(value: boolean): Promise<void> {
+	await game.settings.set(
+		'nimble' as 'core',
+		COMBAT_TRACKER_NON_PLAYER_HP_BAR_ENABLED_SETTING_KEY as 'rollMode',
+		Boolean(value) as never,
+	);
+}
+
+export async function setCombatTrackerNonPlayerHpBarTextMode(
+	value: CombatTrackerNonPlayerHpBarTextMode,
+): Promise<void> {
+	await game.settings.set(
+		'nimble' as 'core',
+		COMBAT_TRACKER_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY as 'rollMode',
+		normalizeHpBarTextMode(value) as never,
 	);
 }
 
@@ -731,48 +650,22 @@ export async function setCombatTrackerCtCardSizeLevel(value: number): Promise<vo
 	);
 }
 
-export async function setCombatTrackerCtBadgeSizeLevel(value: number): Promise<void> {
-	await game.settings.set(
-		'nimble' as 'core',
-		COMBAT_TRACKER_BADGE_SIZE_LEVEL_SETTING_KEY as 'rollMode',
-		normalizeCtBadgeSizeLevel(value) as never,
-	);
-}
-
-export async function setCombatTrackerUseActionDice(value: boolean): Promise<void> {
-	await game.settings.set(
-		'nimble' as 'core',
-		COMBAT_TRACKER_USE_ACTION_DICE_SETTING_KEY as 'rollMode',
-		Boolean(value) as never,
-	);
-}
-
-export async function setCombatTrackerNonPlayerHitpointPermissionConfig(
-	value: CombatTrackerRolePermissionConfig,
-): Promise<void> {
-	await game.settings.set(
-		'nimble' as 'core',
-		COMBAT_TRACKER_NON_PLAYER_HP_PERMISSION_SETTING_KEY as 'rollMode',
-		normalizeRolePermissionConfig(value) as never,
-	);
-}
-
-export async function setCombatTrackerVisibilityPermissionConfig(
-	value: CombatTrackerVisibilityPermissionConfig,
-): Promise<void> {
-	await game.settings.set(
-		'nimble' as 'core',
-		COMBAT_TRACKER_VISIBILITY_PERMISSION_SETTING_KEY as 'rollMode',
-		normalizeCombatTrackerVisibilityPermissionConfig(value) as never,
-	);
-}
-
 export async function setCombatTrackerActionDiceColor(value: string): Promise<void> {
 	const normalizedColor = normalizeHexColor(value);
 	applyCtActionDiceColorCssVariable(normalizedColor);
 	await game.settings.set(
 		'nimble' as 'core',
 		COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY as 'rollMode',
+		normalizedColor as never,
+	);
+}
+
+export async function setCombatTrackerReactionColor(value: string): Promise<void> {
+	const normalizedColor = normalizeHexColor(value);
+	applyCtReactionColorCssVariable(normalizedColor);
+	await game.settings.set(
+		'nimble' as 'core',
+		COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY as 'rollMode',
 		normalizedColor as never,
 	);
 }
@@ -789,38 +682,4 @@ export async function setCurrentTurnAnimationSetting(
 	}
 
 	await game.settings.set('nimble' as 'core', settingKey as 'rollMode', normalizedValue as never);
-}
-
-export function canCurrentUserDisplayNonPlayerHitpointsOnCards(
-	userRole = Number(game.user?.role ?? 0),
-): boolean {
-	return canUserRoleAccessCombatTrackerPermission(
-		getCombatTrackerNonPlayerHitpointPermissionConfig(),
-		userRole,
-	);
-}
-
-export function canUserRoleAccessCombatTrackerPermission(
-	permissionConfig: CombatTrackerRolePermissionConfig,
-	userRole = Number(game.user?.role ?? 0),
-): boolean {
-	const normalizedRole = Number.isFinite(userRole) ? Number(userRole) : 0;
-	const gmRole = getUserRoleValue('GAMEMASTER', 4);
-	const assistantRole = getUserRoleValue('ASSISTANT', 3);
-	const trustedRole = getUserRoleValue('TRUSTED', 2);
-	const playerRole = getUserRoleValue('PLAYER', 1);
-
-	if (normalizedRole >= gmRole) return permissionConfig.gamemaster;
-	if (normalizedRole >= assistantRole) return permissionConfig.assistant;
-	if (normalizedRole >= trustedRole) return permissionConfig.trusted;
-	if (normalizedRole >= playerRole) return permissionConfig.player;
-	return false;
-}
-
-export function canCurrentUserDisplayCombatTrackerField(
-	fieldKey: CombatTrackerVisibilityFieldKey,
-	permissionConfig = getCombatTrackerVisibilityPermissionConfig(),
-	userRole = Number(game.user?.role ?? 0),
-): boolean {
-	return canUserRoleAccessCombatTrackerPermission(permissionConfig[fieldKey], userRole);
 }

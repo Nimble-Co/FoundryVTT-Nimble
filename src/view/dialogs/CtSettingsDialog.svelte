@@ -2,40 +2,38 @@
 	import { onDestroy, onMount } from 'svelte';
 	import {
 		getCombatTrackerActionDiceColor,
-		getCombatTrackerCtBadgeSizeLevel,
-		getCombatTrackerCenterActiveCardEnabled,
-		getCombatTrackerResourceDrawerHoverEnabled,
 		getCombatTrackerCtCardSizeLevel,
-		getCombatTrackerVisibilityPermissionConfig,
 		getCombatTrackerCtWidthLevel,
-		getCombatTrackerUseActionDice,
+		getCombatTrackerNonPlayerHpBarEnabled,
+		getCombatTrackerNonPlayerHpBarTextMode,
+		getCombatTrackerPlayerHpBarTextMode,
+		getCombatTrackerReactionColor,
+		getCombatTrackerResourceDrawerHoverEnabled,
 		isCombatTrackerActionDiceColorSettingKey,
-		isCombatTrackerBadgeSizeLevelSettingKey,
 		isCombatTrackerCardSizeLevelSettingKey,
-		isCombatTrackerCenterActiveCardSettingKey,
+		isCombatTrackerNonPlayerHpBarEnabledSettingKey,
+		isCombatTrackerNonPlayerHpBarTextModeSettingKey,
+		isCombatTrackerPlayerHpBarTextModeSettingKey,
+		isCombatTrackerReactionColorSettingKey,
 		isCombatTrackerResourceDrawerHoverSettingKey,
-		isCombatTrackerVisibilityPermissionSettingKey,
-		isCombatTrackerUseActionDiceSettingKey,
 		isCombatTrackerWidthLevelSettingKey,
 		normalizeHexColor,
 		setCombatTrackerActionDiceColor,
-		setCombatTrackerCtBadgeSizeLevel,
-		setCombatTrackerCenterActiveCardEnabled,
-		setCombatTrackerResourceDrawerHoverEnabled,
 		setCombatTrackerCtCardSizeLevel,
 		setCombatTrackerCtWidthLevel,
-		setCombatTrackerVisibilityPermissionConfig,
-		setCombatTrackerUseActionDice,
-		type CombatTrackerVisibilityFieldKey,
-		type CombatTrackerVisibilityPermissionConfig,
-		type CombatTrackerRolePermissionConfig,
-		type CombatTrackerRolePermissionKey,
+		setCombatTrackerNonPlayerHpBarEnabled,
+		setCombatTrackerNonPlayerHpBarTextMode,
+		setCombatTrackerPlayerHpBarTextMode,
+		setCombatTrackerReactionColor,
+		setCombatTrackerResourceDrawerHoverEnabled,
+		type CombatTrackerNonPlayerHpBarTextMode,
+		type CombatTrackerPlayerHpBarTextMode,
 	} from '../../settings/combatTrackerSettings.js';
 
 	const MIN_LEVEL = 1;
-	const MAX_LEVEL = 6;
+	const MAX_LEVEL = 10;
 	const CT_WIDTH_PREVIEW_EVENT_NAME = 'nimble:ct-width-preview';
-	const ACTION_DICE_COLOR_PRESETS = [
+	const COLOR_PRESETS = [
 		{ label: 'White', color: '#ffffff' },
 		{ label: 'Green', color: '#6ce685' },
 		{ label: 'Red', color: '#ef5350' },
@@ -43,56 +41,26 @@
 		{ label: 'Yellow', color: '#f6d44c' },
 		{ label: 'Purple', color: '#b388ff' },
 	] as const;
-	const ROLE_COLUMNS: ReadonlyArray<{ key: CombatTrackerRolePermissionKey; label: string }> = [
-		{ key: 'player', label: 'Player' },
-		{ key: 'trusted', label: 'Trusted Player' },
-		{ key: 'assistant', label: 'Asst. GM' },
-		{ key: 'gamemaster', label: 'GM' },
-	];
-	const PERMISSION_ROWS: ReadonlyArray<{
-		key: CombatTrackerVisibilityFieldKey;
+	const HP_BAR_TEXT_MODE_OPTIONS: ReadonlyArray<{
+		value: CombatTrackerPlayerHpBarTextMode;
 		label: string;
-		note?: string;
 	}> = [
-		{
-			key: 'hpValue',
-			label: 'HP value',
-			note: 'Non-owners still need the token HP bar to be visible to them.',
-		},
-		{
-			key: 'hpState',
-			label: 'HP state',
-			note: 'Use this without HP value for Normal, Bloodied, or Last Stand only.',
-		},
-		{
-			key: 'mana',
-			label: 'Mana',
-			note: 'Non-owners still need mana assigned to a visible token bar.',
-		},
-		{
-			key: 'wounds',
-			label: 'Wounds',
-			note: 'Non-owners still need wounds assigned to a visible token bar.',
-		},
-		{ key: 'actions', label: 'Actions' },
-		{ key: 'defend', label: 'Defend available' },
-		{ key: 'interpose', label: 'Interpose available' },
-		{ key: 'opportunityAttack', label: 'Opportunity Attack available' },
-		{ key: 'help', label: 'Help available' },
-		{ key: 'outline', label: 'Card outline' },
+		{ value: 'none', label: 'None' },
+		{ value: 'hpState', label: 'Health State' },
+		{ value: 'percentage', label: 'HP %' },
 	];
 
 	let updateSettingHook: number | undefined;
 	let widthPreviewGlobalPointerUpListener: (() => void) | undefined;
 	let widthLevel = $state(getCombatTrackerCtWidthLevel());
 	let cardSizeLevel = $state(getCombatTrackerCtCardSizeLevel());
-	let badgeSizeLevel = $state(getCombatTrackerCtBadgeSizeLevel());
-	let centerActiveCardEnabled = $state(getCombatTrackerCenterActiveCardEnabled());
 	let resourceDrawerHoverEnabled = $state(getCombatTrackerResourceDrawerHoverEnabled());
-	let useActionDice = $state(getCombatTrackerUseActionDice());
-	let actionDiceColor = $state(getCombatTrackerActionDiceColor());
-	let visibilityPermissions = $state(getCombatTrackerVisibilityPermissionConfig());
-	let canManageWorldCtSettings = $derived(Boolean(game.user?.isGM));
+	let playerHpBarTextMode = $state(getCombatTrackerPlayerHpBarTextMode());
+	let nonPlayerHpBarEnabled = $state(getCombatTrackerNonPlayerHpBarEnabled());
+	let nonPlayerHpBarTextMode = $state(getCombatTrackerNonPlayerHpBarTextMode());
+	let actionColor = $state(getCombatTrackerActionDiceColor());
+	let reactionColor = $state(getCombatTrackerReactionColor());
+	let canManageSharedCtSettings = $derived(Boolean(game.user?.isGM));
 	let isWidthSliderPreviewActive = $state(false);
 
 	function dispatchCtWidthPreviewEvent(params: { active: boolean; widthLevel: number }): void {
@@ -126,7 +94,6 @@
 	}
 
 	function handleWidthLevelInput(event: Event): void {
-		if (!canManageWorldCtSettings) return;
 		const input = event.currentTarget as HTMLInputElement;
 		const nextValue = clampLevel(input.value);
 		widthLevel = nextValue;
@@ -140,33 +107,13 @@
 	}
 
 	function handleCardSizeLevelInput(event: Event): void {
-		if (!canManageWorldCtSettings) return;
 		const input = event.currentTarget as HTMLInputElement;
 		const nextValue = clampLevel(input.value);
 		cardSizeLevel = nextValue;
 		persistCtSetting('card size level', setCombatTrackerCtCardSizeLevel(nextValue));
 	}
 
-	function handleBadgeSizeLevelInput(event: Event): void {
-		if (!canManageWorldCtSettings) return;
-		const input = event.currentTarget as HTMLInputElement;
-		const nextValue = clampLevel(input.value);
-		badgeSizeLevel = nextValue;
-		persistCtSetting('badge size level', setCombatTrackerCtBadgeSizeLevel(nextValue));
-	}
-
-	function handleCenterActiveCardChange(event: Event): void {
-		if (!canManageWorldCtSettings) return;
-		const checkbox = event.currentTarget as HTMLInputElement;
-		centerActiveCardEnabled = checkbox.checked;
-		persistCtSetting(
-			'center active card',
-			setCombatTrackerCenterActiveCardEnabled(checkbox.checked),
-		);
-	}
-
 	function handleResourceDrawerHoverChange(event: Event): void {
-		if (!canManageWorldCtSettings) return;
 		const checkbox = event.currentTarget as HTMLInputElement;
 		resourceDrawerHoverEnabled = checkbox.checked;
 		persistCtSetting(
@@ -175,39 +122,41 @@
 		);
 	}
 
-	function handleUseActionDiceChange(event: Event): void {
-		if (!canManageWorldCtSettings) return;
-		const checkbox = event.currentTarget as HTMLInputElement;
-		useActionDice = checkbox.checked;
-		persistCtSetting('use action dice', setCombatTrackerUseActionDice(checkbox.checked));
+	function handlePlayerHpBarTextModeChange(event: Event): void {
+		const select = event.currentTarget as HTMLSelectElement;
+		const nextValue = select.value as CombatTrackerPlayerHpBarTextMode;
+		playerHpBarTextMode = nextValue;
+		persistCtSetting('player hp bar text mode', setCombatTrackerPlayerHpBarTextMode(nextValue));
 	}
 
-	function handleVisibilityPermissionChange(
-		fieldKey: CombatTrackerVisibilityFieldKey,
-		roleKey: CombatTrackerRolePermissionKey,
-		event: Event,
-	): void {
-		if (!canManageWorldCtSettings) return;
+	function handleNonPlayerHpBarEnabledChange(event: Event): void {
+		if (!canManageSharedCtSettings) return;
 		const checkbox = event.currentTarget as HTMLInputElement;
-		const nextFieldPermissions: CombatTrackerRolePermissionConfig = {
-			...visibilityPermissions[fieldKey],
-			[roleKey]: checkbox.checked,
-		};
-		const nextPermissions: CombatTrackerVisibilityPermissionConfig = {
-			...visibilityPermissions,
-			[fieldKey]: nextFieldPermissions,
-		};
-		visibilityPermissions = nextPermissions;
+		nonPlayerHpBarEnabled = checkbox.checked;
+		persistCtSetting('non-player hp bar', setCombatTrackerNonPlayerHpBarEnabled(checkbox.checked));
+	}
+
+	function handleNonPlayerHpBarTextModeChange(event: Event): void {
+		if (!canManageSharedCtSettings) return;
+		const select = event.currentTarget as HTMLSelectElement;
+		const nextValue = select.value as CombatTrackerNonPlayerHpBarTextMode;
+		nonPlayerHpBarTextMode = nextValue;
 		persistCtSetting(
-			'visibility permissions',
-			setCombatTrackerVisibilityPermissionConfig(nextPermissions),
+			'non-player hp bar text mode',
+			setCombatTrackerNonPlayerHpBarTextMode(nextValue),
 		);
 	}
 
-	function applyActionDiceColor(color: string): void {
+	function applyActionColor(color: string): void {
 		const normalizedColor = normalizeHexColor(color);
-		actionDiceColor = normalizedColor;
-		persistCtSetting('action dice color', setCombatTrackerActionDiceColor(normalizedColor));
+		actionColor = normalizedColor;
+		persistCtSetting('action color', setCombatTrackerActionDiceColor(normalizedColor));
+	}
+
+	function applyReactionColor(color: string): void {
+		const normalizedColor = normalizeHexColor(color);
+		reactionColor = normalizedColor;
+		persistCtSetting('reaction color', setCombatTrackerReactionColor(normalizedColor));
 	}
 
 	onMount(() => {
@@ -222,32 +171,29 @@
 			if (isCombatTrackerWidthLevelSettingKey(settingKey)) {
 				widthLevel = getCombatTrackerCtWidthLevel();
 				if (isWidthSliderPreviewActive) {
-					dispatchCtWidthPreviewEvent({
-						active: true,
-						widthLevel,
-					});
+					dispatchCtWidthPreviewEvent({ active: true, widthLevel });
 				}
 			}
 			if (isCombatTrackerCardSizeLevelSettingKey(settingKey)) {
 				cardSizeLevel = getCombatTrackerCtCardSizeLevel();
 			}
-			if (isCombatTrackerBadgeSizeLevelSettingKey(settingKey)) {
-				badgeSizeLevel = getCombatTrackerCtBadgeSizeLevel();
-			}
-			if (isCombatTrackerCenterActiveCardSettingKey(settingKey)) {
-				centerActiveCardEnabled = getCombatTrackerCenterActiveCardEnabled();
-			}
 			if (isCombatTrackerResourceDrawerHoverSettingKey(settingKey)) {
 				resourceDrawerHoverEnabled = getCombatTrackerResourceDrawerHoverEnabled();
 			}
-			if (isCombatTrackerUseActionDiceSettingKey(settingKey)) {
-				useActionDice = getCombatTrackerUseActionDice();
+			if (isCombatTrackerPlayerHpBarTextModeSettingKey(settingKey)) {
+				playerHpBarTextMode = getCombatTrackerPlayerHpBarTextMode();
 			}
-			if (isCombatTrackerVisibilityPermissionSettingKey(settingKey)) {
-				visibilityPermissions = getCombatTrackerVisibilityPermissionConfig();
+			if (isCombatTrackerNonPlayerHpBarEnabledSettingKey(settingKey)) {
+				nonPlayerHpBarEnabled = getCombatTrackerNonPlayerHpBarEnabled();
+			}
+			if (isCombatTrackerNonPlayerHpBarTextModeSettingKey(settingKey)) {
+				nonPlayerHpBarTextMode = getCombatTrackerNonPlayerHpBarTextMode();
 			}
 			if (isCombatTrackerActionDiceColorSettingKey(settingKey)) {
-				actionDiceColor = getCombatTrackerActionDiceColor();
+				actionColor = getCombatTrackerActionDiceColor();
+			}
+			if (isCombatTrackerReactionColorSettingKey(settingKey)) {
+				reactionColor = getCombatTrackerReactionColor();
 			}
 		});
 	});
@@ -264,12 +210,11 @@
 </script>
 
 <section class="nimble-sheet__body nimble-ct-settings standard-form">
-	{#if canManageWorldCtSettings}
-		<fieldset class="nimble-ct-settings__section">
-			<legend class="nimble-ct-settings__section-title">Interface Size</legend>
-
-			<div class="nimble-ct-settings__slider-group">
-				<label class="nimble-ct-settings__label" for="nimble-ct-width">Combat Tracker Width</label>
+	<fieldset class="nimble-ct-settings__section">
+		<legend class="nimble-ct-settings__section-title">Size</legend>
+		<div class="nimble-ct-settings__rows">
+			<div class="nimble-ct-settings__row nimble-ct-settings__row--slider">
+				<label class="nimble-ct-settings__label" for="nimble-ct-width">Width</label>
 				<div class="nimble-ct-settings__slider-fields">
 					<input
 						id="nimble-ct-width"
@@ -290,11 +235,8 @@
 					<span class="nimble-ct-settings__slider-value">{widthLevel}</span>
 				</div>
 			</div>
-
-			<div class="nimble-ct-settings__slider-group">
-				<label class="nimble-ct-settings__label" for="nimble-ct-card-size"
-					>Combat Tracker Card Size</label
-				>
+			<div class="nimble-ct-settings__row nimble-ct-settings__row--slider">
+				<label class="nimble-ct-settings__label" for="nimble-ct-card-size">Card Size</label>
 				<div class="nimble-ct-settings__slider-fields">
 					<input
 						id="nimble-ct-card-size"
@@ -310,143 +252,127 @@
 					<span class="nimble-ct-settings__slider-value">{cardSizeLevel}</span>
 				</div>
 			</div>
-
-			<div class="nimble-ct-settings__slider-group">
-				<label class="nimble-ct-settings__label" for="nimble-ct-badge-size"
-					>Combat Tracker Badge Size</label
-				>
-				<div class="nimble-ct-settings__slider-fields">
-					<input
-						id="nimble-ct-badge-size"
-						type="range"
-						class="nimble-ct-settings__slider-input"
-						min={MIN_LEVEL}
-						max={MAX_LEVEL}
-						step="1"
-						value={badgeSizeLevel}
-						oninput={handleBadgeSizeLevelInput}
-						onchange={handleBadgeSizeLevelInput}
-					/>
-					<span class="nimble-ct-settings__slider-value">{badgeSizeLevel}</span>
-				</div>
-			</div>
-
-			<div class="nimble-ct-settings__toggle-group">
-				<div class="nimble-ct-settings__toggle-row">
-					<label class="nimble-ct-settings__label" for="nimble-ct-center-active-card"
-						>Combat Tracker Center Active Card</label
-					>
-					<div class="nimble-ct-settings__toggle-field">
-						<input
-							id="nimble-ct-center-active-card"
-							type="checkbox"
-							checked={centerActiveCardEnabled}
-							onchange={handleCenterActiveCardChange}
-						/>
-					</div>
-				</div>
-				<div class="nimble-ct-settings__toggle-row">
-					<label class="nimble-ct-settings__label" for="nimble-ct-resource-drawer-hover"
-						>Resource Drawer Opens On Hover</label
-					>
-					<div class="nimble-ct-settings__toggle-field">
-						<input
-							id="nimble-ct-resource-drawer-hover"
-							type="checkbox"
-							checked={resourceDrawerHoverEnabled}
-							onchange={handleResourceDrawerHoverChange}
-						/>
-					</div>
-				</div>
-			</div>
-		</fieldset>
-
-		<fieldset class="nimble-ct-settings__section">
-			<legend class="nimble-ct-settings__section-title">Permissions</legend>
-			<p class="notes">
-				Choose which roles can view each Combat Tracker field. HP, mana, and wounds still respect
-				token bar visibility for non-owners.
-			</p>
-			<table class="nimble-ct-settings__permissions-table">
-				<thead>
-					<tr>
-						<th scope="col">Permission</th>
-						{#each ROLE_COLUMNS as role}
-							<th scope="col">{role.label}</th>
-						{/each}
-					</tr>
-				</thead>
-				<tbody>
-					{#each PERMISSION_ROWS as permissionRow}
-						<tr>
-							<td>
-								<div class="nimble-ct-settings__permission-title">{permissionRow.label}</div>
-								{#if permissionRow.note}
-									<div class="nimble-ct-settings__permission-note">{permissionRow.note}</div>
-								{/if}
-							</td>
-							{#each ROLE_COLUMNS as role}
-								<td>
-									<input
-										type="checkbox"
-										aria-label={`${role.label} can view ${permissionRow.label}`}
-										checked={visibilityPermissions[permissionRow.key][role.key]}
-										onchange={(event) =>
-											handleVisibilityPermissionChange(permissionRow.key, role.key, event)}
-									/>
-								</td>
-							{/each}
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</fieldset>
-	{/if}
+		</div>
+	</fieldset>
 
 	<fieldset class="nimble-ct-settings__section">
-		<legend class="nimble-ct-settings__section-title">Appearance</legend>
-		{#if canManageWorldCtSettings}
-			<div class="nimble-ct-settings__toggle-group">
-				<div class="nimble-ct-settings__toggle-row">
-					<label class="nimble-ct-settings__label" for="nimble-ct-use-action-dice"
-						>Use Action Dice</label
+		<legend class="nimble-ct-settings__section-title">Drawers &amp; Bars</legend>
+		<div class="nimble-ct-settings__rows">
+			<div class="nimble-ct-settings__row">
+				<label class="nimble-ct-settings__label" for="nimble-ct-resource-drawer-hover">
+					Resource Drawer Opens On Hover
+				</label>
+				<input
+					id="nimble-ct-resource-drawer-hover"
+					type="checkbox"
+					checked={resourceDrawerHoverEnabled}
+					onchange={handleResourceDrawerHoverChange}
+				/>
+			</div>
+			<div class="nimble-ct-settings__row">
+				<label class="nimble-ct-settings__label" for="nimble-ct-player-hp-bar-text-mode">
+					Player HP Bar Text
+				</label>
+				<select
+					id="nimble-ct-player-hp-bar-text-mode"
+					class="nimble-ct-settings__select"
+					value={playerHpBarTextMode}
+					onchange={handlePlayerHpBarTextModeChange}
+				>
+					{#each HP_BAR_TEXT_MODE_OPTIONS as option}
+						<option value={option.value}>{option.label}</option>
+					{/each}
+				</select>
+			</div>
+			{#if canManageSharedCtSettings}
+				<div class="nimble-ct-settings__row">
+					<label class="nimble-ct-settings__label" for="nimble-ct-non-player-hp-bar">
+						Show Non-player HP Bar
+					</label>
+					<input
+						id="nimble-ct-non-player-hp-bar"
+						type="checkbox"
+						checked={nonPlayerHpBarEnabled}
+						onchange={handleNonPlayerHpBarEnabledChange}
+					/>
+				</div>
+				<div class="nimble-ct-settings__row">
+					<label class="nimble-ct-settings__label" for="nimble-ct-non-player-hp-bar-text-mode">
+						Non-player HP Bar Text
+					</label>
+					<select
+						id="nimble-ct-non-player-hp-bar-text-mode"
+						class="nimble-ct-settings__select"
+						value={nonPlayerHpBarTextMode}
+						disabled={!nonPlayerHpBarEnabled}
+						onchange={handleNonPlayerHpBarTextModeChange}
 					>
-					<div class="nimble-ct-settings__toggle-field">
-						<input
-							id="nimble-ct-use-action-dice"
-							type="checkbox"
-							checked={useActionDice}
-							onchange={handleUseActionDiceChange}
-						/>
-					</div>
+						{#each HP_BAR_TEXT_MODE_OPTIONS as option}
+							<option value={option.value}>{option.label}</option>
+						{/each}
+					</select>
+				</div>
+			{/if}
+		</div>
+	</fieldset>
+
+	<fieldset class="nimble-ct-settings__section">
+		<legend class="nimble-ct-settings__section-title">Colors</legend>
+		<div class="nimble-ct-settings__rows">
+			<div class="nimble-ct-settings__color-row">
+				<div class="nimble-ct-settings__color-head">
+					<label class="nimble-ct-settings__label" for="nimble-ct-action-color">Action Color</label>
+				</div>
+				<div class="nimble-ct-settings__color-controls">
+					{#each COLOR_PRESETS as preset}
+						<button
+							type="button"
+							class="nimble-ct-settings__color-swatch"
+							class:nimble-ct-settings__color-swatch--active={actionColor === preset.color}
+							style={`--nimble-ct-color: ${preset.color};`}
+							aria-label={preset.label}
+							data-tooltip={preset.label}
+							onclick={() => applyActionColor(preset.color)}
+						></button>
+					{/each}
+					<input
+						id="nimble-ct-action-color"
+						type="color"
+						class="nimble-ct-settings__color-picker"
+						value={actionColor}
+						oninput={(event) => applyActionColor((event.currentTarget as HTMLInputElement).value)}
+						onchange={(event) => applyActionColor((event.currentTarget as HTMLInputElement).value)}
+					/>
 				</div>
 			</div>
-		{/if}
-		<div class="nimble-ct-settings__color-group">
-			<label class="nimble-ct-settings__label" for="nimble-ct-action-dice-color"
-				>Combat Tracker Action Color</label
-			>
-			<div class="nimble-ct-settings__color-controls">
-				{#each ACTION_DICE_COLOR_PRESETS as preset}
-					<button
-						type="button"
-						class="nimble-ct-settings__color-swatch"
-						class:nimble-ct-settings__color-swatch--active={actionDiceColor === preset.color}
-						style={`--nimble-ct-color: ${preset.color};`}
-						aria-label={preset.label}
-						data-tooltip={preset.label}
-						onclick={() => applyActionDiceColor(preset.color)}
-					></button>
-				{/each}
-				<input
-					id="nimble-ct-action-dice-color"
-					type="color"
-					class="nimble-ct-settings__color-picker"
-					value={actionDiceColor}
-					oninput={(event) => applyActionDiceColor((event.currentTarget as HTMLInputElement).value)}
-					onchange={(event) =>
-						applyActionDiceColor((event.currentTarget as HTMLInputElement).value)}
-				/>
+			<div class="nimble-ct-settings__color-row">
+				<div class="nimble-ct-settings__color-head">
+					<label class="nimble-ct-settings__label" for="nimble-ct-reaction-color"
+						>Reaction Color</label
+					>
+				</div>
+				<div class="nimble-ct-settings__color-controls">
+					{#each COLOR_PRESETS as preset}
+						<button
+							type="button"
+							class="nimble-ct-settings__color-swatch"
+							class:nimble-ct-settings__color-swatch--active={reactionColor === preset.color}
+							style={`--nimble-ct-color: ${preset.color};`}
+							aria-label={preset.label}
+							data-tooltip={preset.label}
+							onclick={() => applyReactionColor(preset.color)}
+						></button>
+					{/each}
+					<input
+						id="nimble-ct-reaction-color"
+						type="color"
+						class="nimble-ct-settings__color-picker"
+						value={reactionColor}
+						oninput={(event) => applyReactionColor((event.currentTarget as HTMLInputElement).value)}
+						onchange={(event) =>
+							applyReactionColor((event.currentTarget as HTMLInputElement).value)}
+					/>
+				</div>
 			</div>
 		</div>
 	</fieldset>
@@ -460,11 +386,13 @@
 	) {
 		font-family: var(--font-primary, sans-serif) !important;
 	}
+
 	.nimble-ct-settings,
 	.nimble-ct-settings
 		:not(.fa-classic, .fa-light, .fa-regular, .fa-solid, .fa-thin, .fal, .far, .fas, .fat) {
 		font-family: var(--font-primary, sans-serif);
 	}
+
 	.nimble-ct-settings {
 		--nimble-ct-text-primary: var(--color-text-primary, var(--nimble-dark-text-color));
 		--nimble-ct-text-secondary: var(
@@ -491,12 +419,13 @@
 		--nimble-ct-slider-thumb-bg: color-mix(in srgb, var(--nimble-ct-control-bg) 88%, black 12%);
 		display: flex;
 		flex-direction: column;
-		gap: 0.72rem;
-		padding: 0.66rem;
+		gap: 0.55rem;
+		padding: 0.62rem;
 		color: var(--nimble-ct-text-primary);
 		font-size: var(--font-size-14, 0.875rem);
-		line-height: 1.35;
+		line-height: 1.3;
 	}
+
 	:global(.theme-light) .nimble-ct-settings {
 		--nimble-ct-text-primary: hsl(220 28% 18%);
 		--nimble-ct-text-secondary: color-mix(in srgb, var(--nimble-ct-text-primary) 78%, white 22%);
@@ -508,63 +437,74 @@
 		--nimble-ct-slider-thumb-border: color-mix(in srgb, hsl(41 70% 56%) 58%, hsl(216 22% 56%) 42%);
 		--nimble-ct-slider-thumb-bg: white;
 	}
+
 	.nimble-ct-settings__section {
 		margin: 0;
 		min-width: 0;
 		border: 1px solid var(--nimble-ct-border);
 		border-radius: 0.38rem;
-		padding: 0.72rem 0.68rem 0.64rem;
+		padding: 0.6rem;
 		display: flex;
 		flex-direction: column;
-		gap: 0.56rem;
+		gap: 0.45rem;
 		background: var(--nimble-ct-panel-bg);
 	}
+
 	.nimble-ct-settings__section-title {
-		margin-inline-start: 0.48rem;
-		padding-inline: 0.34rem;
+		margin-inline-start: 0.3rem;
+		padding-inline: 0.3rem;
 		font-size: var(--font-size-14, 0.875rem);
 		line-height: 1;
-		font-weight: 600;
+		font-weight: 700;
 		color: var(--nimble-ct-text-primary);
 	}
+
+	.nimble-ct-settings__rows {
+		display: flex;
+		flex-direction: column;
+		gap: 0.36rem;
+	}
+
+	.nimble-ct-settings__row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.nimble-ct-settings__row--slider {
+		align-items: start;
+	}
+
 	.nimble-ct-settings__label {
 		font-weight: 700;
 		font-size: var(--font-size-14, 0.875rem);
 	}
-	.nimble-ct-settings .notes {
-		margin: 0;
-		color: var(--nimble-ct-text-secondary);
-		font-size: var(--font-size-14, 0.875rem);
-	}
-	.nimble-ct-settings__slider-group,
-	.nimble-ct-settings__toggle-group,
-	.nimble-ct-settings__color-group {
-		display: flex;
-		flex-direction: column;
-		gap: 0.44rem;
-	}
+
 	.nimble-ct-settings__slider-fields {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-columns: minmax(9rem, 1fr) auto;
 		align-items: center;
-		gap: 0.72rem;
+		gap: 0.6rem;
 	}
+
 	.nimble-ct-settings__slider-input {
 		-webkit-appearance: none;
 		appearance: none;
 		width: 100%;
-		max-width: 16rem;
 		height: 0.24rem;
 		margin: 0;
 		border: 0;
 		border-radius: 999px;
 		background: var(--nimble-ct-slider-track);
 	}
+
 	.nimble-ct-settings__slider-input::-webkit-slider-runnable-track {
 		height: 0.24rem;
 		border-radius: 999px;
 		background: var(--nimble-ct-slider-track);
 	}
+
 	.nimble-ct-settings__slider-input::-webkit-slider-thumb {
 		-webkit-appearance: none;
 		appearance: none;
@@ -578,12 +518,14 @@
 			color-mix(in srgb, var(--nimble-ct-slider-thumb-border) 42%, transparent);
 		cursor: pointer;
 	}
+
 	.nimble-ct-settings__slider-input::-moz-range-track {
 		height: 0.24rem;
 		border: 0;
 		border-radius: 999px;
 		background: var(--nimble-ct-slider-track);
 	}
+
 	.nimble-ct-settings__slider-input::-moz-range-thumb {
 		width: 0.76rem;
 		height: 0.76rem;
@@ -594,9 +536,10 @@
 			color-mix(in srgb, var(--nimble-ct-slider-thumb-border) 42%, transparent);
 		cursor: pointer;
 	}
+
 	.nimble-ct-settings__slider-value {
 		min-width: 2rem;
-		height: 1.82rem;
+		height: 1.65rem;
 		padding-inline: 0.4rem;
 		display: inline-flex;
 		align-items: center;
@@ -608,98 +551,100 @@
 		color: var(--nimble-ct-text-primary);
 		font-size: var(--font-size-14, 0.875rem);
 	}
-	:global(.theme-light) .nimble-ct-settings__slider-value {
+
+	:global(.theme-light) .nimble-ct-settings__slider-value,
+	:global(.theme-light) .nimble-ct-settings__select {
 		background: white;
 		box-shadow:
 			inset 0 0 0 1px color-mix(in srgb, white 68%, transparent),
 			0 0.08rem 0.18rem color-mix(in srgb, hsl(220 18% 46%) 12%, transparent);
 	}
-	.nimble-ct-settings__toggle-field {
-		display: flex;
-		justify-content: flex-end;
-	}
-	.nimble-ct-settings__toggle-row {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.8rem;
-	}
-	.nimble-ct-settings__permissions-table {
-		width: 100%;
-		border-collapse: collapse;
-		table-layout: fixed;
+
+	.nimble-ct-settings__select {
+		inline-size: 8.5rem;
+		min-width: 8.5rem;
+		padding: 0.28rem 0.48rem;
+		border: 1px solid var(--nimble-ct-control-border);
 		border-radius: 0.28rem;
-		overflow: hidden;
-	}
-	.nimble-ct-settings__permissions-table thead th {
-		padding: 0.5rem 0.4rem;
-		font-size: 0.68rem;
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.02em;
-		text-align: center;
-		color: var(--nimble-ct-text-secondary);
-		background: color-mix(in srgb, var(--nimble-ct-control-bg) 95%, transparent);
-	}
-	:global(.theme-light) .nimble-ct-settings__permissions-table thead th {
+		background: var(--nimble-ct-control-bg);
 		color: var(--nimble-ct-text-primary);
-		background: color-mix(in srgb, white 82%, hsl(42 24% 88%) 18%);
+		justify-self: end;
 	}
-	.nimble-ct-settings__permissions-table thead th:first-child {
-		text-align: left;
-		width: 28%;
+
+	.nimble-ct-settings__color-row {
+		display: flex;
+		flex-direction: column;
+		gap: 0.28rem;
 	}
-	.nimble-ct-settings__permissions-table tbody td {
-		padding: 0.62rem 0.4rem;
-		vertical-align: top;
-		border-top: 1px solid color-mix(in srgb, var(--nimble-ct-border) 45%, transparent);
+
+	.nimble-ct-settings__color-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.5rem;
 	}
-	.nimble-ct-settings__permissions-table tbody td:not(:first-child) {
-		text-align: center;
-		vertical-align: middle;
-	}
-	.nimble-ct-settings__permission-title {
-		font-weight: 700;
-		font-size: var(--font-size-12, 0.75rem);
-	}
-	.nimble-ct-settings__permission-note {
-		margin-top: 0.18rem;
-		color: var(--nimble-ct-text-secondary);
-		font-size: 0.68rem;
-		line-height: 1.3;
-	}
+
 	.nimble-ct-settings__color-controls {
 		display: flex;
 		align-items: center;
-		gap: 0.52rem;
+		gap: 0.45rem;
 		flex-wrap: wrap;
 	}
+
 	.nimble-ct-settings__color-swatch {
+		-webkit-appearance: none;
 		appearance: none;
-		width: 1.34rem;
-		height: 1.34rem;
+		display: inline-block;
+		inline-size: 1.28rem;
+		block-size: 1.28rem;
+		min-width: 0;
+		min-height: 0;
+		flex: 0 0 1.28rem;
+		box-sizing: border-box;
 		aspect-ratio: 1 / 1;
 		padding: 0;
-		border-radius: 999px;
+		border-radius: 50%;
 		border: 1px solid color-mix(in srgb, var(--nimble-ct-border) 72%, transparent);
 		background: var(--nimble-ct-color, #ffffff);
 		cursor: pointer;
 	}
+
 	.nimble-ct-settings__color-swatch:hover,
 	.nimble-ct-settings__color-swatch:focus-visible {
-		filter: brightness(1.1);
+		filter: brightness(1.08);
 	}
+
 	.nimble-ct-settings__color-swatch--active {
 		box-shadow: 0 0 0 0.1rem color-mix(in srgb, hsl(39 82% 74%) 65%, white 35%);
 		border-color: color-mix(in srgb, hsl(41 82% 74%) 72%, white 28%);
 	}
+
 	.nimble-ct-settings__color-picker {
-		width: 2.45rem;
-		height: 1.5rem;
+		-webkit-appearance: none;
+		appearance: none;
+		inline-size: 3.45rem;
+		block-size: 2.1rem;
+		min-width: 0;
+		min-height: 0;
+		box-sizing: border-box;
 		padding: 0;
 		border: 1px solid color-mix(in srgb, var(--nimble-ct-border) 72%, transparent);
 		border-radius: 0.3rem;
 		background: var(--nimble-ct-control-bg);
 		cursor: pointer;
+	}
+
+	.nimble-ct-settings__color-picker::-webkit-color-swatch-wrapper {
+		padding: 0.14rem;
+	}
+
+	.nimble-ct-settings__color-picker::-webkit-color-swatch {
+		border: 0;
+		border-radius: 0.18rem;
+	}
+
+	.nimble-ct-settings__color-picker::-moz-color-swatch {
+		border: 0;
+		border-radius: 0.18rem;
 	}
 </style>

@@ -1,4 +1,7 @@
-import type { CombatTrackerVisibilityPermissionConfig } from '../../../settings/combatTrackerSettings.js';
+import type {
+	CombatTrackerNonPlayerHpBarTextMode,
+	CombatTrackerPlayerHpBarTextMode,
+} from '../../../settings/combatTrackerSettings.js';
 
 export interface SceneCombatantLists {
 	aliveCombatants: Combatant.Implementation[];
@@ -36,9 +39,6 @@ export interface CanvasTokenLike {
 	document?: { id?: string | null } | null;
 }
 
-export type HpBadgeState = 'green' | 'yellow' | 'red' | 'unknown';
-export type HpBadgeMode = 'hidden' | 'value' | 'state';
-
 export type CombatWithDrop = Combat & {
 	_onDrop?: (event: DragEvent & { target: EventTarget & HTMLElement }) => Promise<unknown>;
 };
@@ -59,22 +59,40 @@ export interface CombatantCardResourceChip {
 	tone: 'mana' | 'wounds' | 'utility';
 }
 
-export interface PlayerCombatantDrawerCell {
-	key: 'hp' | 'wounds' | 'defend' | 'interpose' | 'opportunityAttack' | 'help';
-	iconClass?: string;
-	text?: string;
+export interface PlayerCombatantReactionCell {
+	key: 'defend' | 'interpose' | 'opportunityAttack' | 'help';
+	iconClass: string;
 	title: string;
 	active?: boolean;
 	visible: boolean;
 }
 
+export interface PlayerCombatantBarData {
+	key: 'hp' | 'wounds';
+	visible: boolean;
+	fillPercent: number;
+	centerText: string | null;
+	title: string;
+	toneClass: string;
+	iconClass?: string;
+}
+
 export interface PlayerCombatantDrawerData {
-	hp: PlayerCombatantDrawerCell;
-	wounds: PlayerCombatantDrawerCell;
-	defend: PlayerCombatantDrawerCell;
-	interpose: PlayerCombatantDrawerCell;
-	opportunityAttack: PlayerCombatantDrawerCell;
-	help: PlayerCombatantDrawerCell;
+	rowCount: number;
+	hpBar: PlayerCombatantBarData;
+	woundsBar: PlayerCombatantBarData;
+	defend: PlayerCombatantReactionCell;
+	interpose: PlayerCombatantReactionCell;
+	opportunityAttack: PlayerCombatantReactionCell;
+	help: PlayerCombatantReactionCell;
+}
+
+export interface NonPlayerCombatantHpBarData {
+	visible: boolean;
+	fillPercent: number;
+	centerText: string | null;
+	toneClass: string;
+	tooltip: string | null;
 }
 
 export interface ResolveActiveEntryKeyParams {
@@ -92,22 +110,15 @@ export interface BuildVirtualizedAliveEntriesParams {
 	viewportWidth: number;
 }
 
-export interface ResolveNextCombatantActionsForSlotParams {
-	slot: number;
-	currentActions: number;
-	maxActions: number;
-}
-
 export interface CtTopTrackerSettingPatch {
 	playersCanExpandMonsterCards?: boolean;
-	centerActiveCardEnabled?: boolean;
 	resourceDrawerHoverEnabled?: boolean;
+	playerHpBarTextMode?: CombatTrackerPlayerHpBarTextMode;
+	nonPlayerHpBarEnabled?: boolean;
+	nonPlayerHpBarTextMode?: CombatTrackerNonPlayerHpBarTextMode;
 	ctEnabled?: boolean;
 	ctWidthLevel?: number;
 	ctCardSizeLevel?: number;
-	ctBadgeSizeLevel?: number;
-	useActionDice?: boolean;
 	layoutVersionDelta?: number;
 	shouldCenterActiveEntry?: boolean;
-	visibilityPermissions?: CombatTrackerVisibilityPermissionConfig;
 }

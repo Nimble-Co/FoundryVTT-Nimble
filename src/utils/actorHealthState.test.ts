@@ -23,6 +23,16 @@ describe('getActorHealthState', () => {
 		expect(getActorHealthState(actor)).toBe('normal');
 	});
 
+	it('returns unknown for non-solo actors at 0 HP', () => {
+		const actor = createCombatActorFixture({
+			type: 'npc',
+			hp: 0,
+			hpMax: 10,
+		});
+
+		expect(getActorHealthState(actor)).toBe('unknown');
+	});
+
 	it('returns lastStand for solo monsters at or below their threshold', () => {
 		const actor = createCombatActorFixture({
 			type: 'soloMonster',
@@ -43,6 +53,17 @@ describe('getActorHealthState', () => {
 		});
 
 		expect(getActorHealthState(actor)).toBe('bloodied');
+	});
+
+	it('returns unknown for solo monsters at 0 HP even below last stand threshold', () => {
+		const actor = createCombatActorFixture({
+			type: 'soloMonster',
+			hp: 0,
+			hpMax: 20,
+			lastStandThreshold: 4,
+		});
+
+		expect(getActorHealthState(actor)).toBe('unknown');
 	});
 
 	it('treats a zero or missing last stand threshold as disabled', () => {

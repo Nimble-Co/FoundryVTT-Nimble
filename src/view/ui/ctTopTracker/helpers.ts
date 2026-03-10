@@ -3,10 +3,9 @@ import {
 	getExpandedTurnIdentityHint,
 	setExpandedTurnIdentityHint,
 } from '../../../documents/combat/expandedTurnIdentityStore.js';
-import {
-	type CombatTrackerVisibilityFieldKey,
-	type CombatTrackerVisibilityPermissionConfig,
-	canUserRoleAccessCombatTrackerPermission,
+import type {
+	CombatTrackerNonPlayerHpBarTextMode,
+	CombatTrackerPlayerHpBarTextMode,
 } from '../../../settings/combatTrackerSettings.js';
 import { type ActorHealthState, getActorHealthState } from '../../../utils/actorHealthState.js';
 import {
@@ -26,17 +25,12 @@ import {
 } from '../../../utils/heroicActions.js';
 import { isCombatantDead } from '../../../utils/isCombatantDead.js';
 import {
-	ACTION_DICE_ICON_CLASSES,
-	CT_BADGE_SCALE_STEP,
 	CT_CARD_SCALE_STEP,
 	CT_EDGE_GUTTER_PX,
 	CT_ESTIMATED_ENTRY_WIDTH_REM,
 	CT_FALLBACK_SIDE_RESERVED_PX,
-	CT_MAX_BADGE_SIZE_LEVEL,
 	CT_MAX_CARD_SIZE_LEVEL,
 	CT_MAX_WIDTH_LEVEL,
-	CT_MIN_BADGE_SCALE,
-	CT_MIN_BADGE_SIZE_LEVEL,
 	CT_MIN_CARD_SCALE,
 	CT_MIN_CARD_SIZE_LEVEL,
 	CT_MIN_SAFE_TRACK_WIDTH_PX,
@@ -47,18 +41,16 @@ import {
 	DRAG_SWITCH_LOWER_RATIO,
 	DRAG_SWITCH_UPPER_RATIO,
 	DRAG_TARGET_EXPANSION_REM,
-	MAX_RENDERED_ACTION_DICE,
 	PORTRAIT_FALLBACK_IMAGE,
 } from './constants.js';
 import type {
 	BuildVirtualizedAliveEntriesParams,
 	CombatantCardResourceChip,
 	CombatantDropPreview,
-	HpBadgeMode,
-	HpBadgeState,
+	NonPlayerCombatantHpBarData,
+	PlayerCombatantBarData,
 	PlayerCombatantDrawerData,
 	ResolveActiveEntryKeyParams,
-	ResolveNextCombatantActionsForSlotParams,
 	SceneCombatantLists,
 	TrackEntry,
 	VirtualizedAliveEntries,
@@ -163,31 +155,33 @@ function isTokenBarVisibleToNonOwners(tokenDocument: TokenBarLike | null): boole
 	return displayBars === hoverByAnyone || displayBars === alwaysForEveryone;
 }
 
-function canCurrentUserSeeCombatantField(
-	combatant: Combatant.Implementation,
-	fieldKey: CombatTrackerVisibilityFieldKey,
-	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
-): boolean {
-	if (game.user?.isGM) return true;
-	if (combatant.actor?.isOwner) return true;
-
-	return canUserRoleAccessCombatTrackerPermission(
-		visibilityPermissions[fieldKey],
-		Number(game.user?.role ?? 0),
-	);
+function isTokenBarExplicitlyHidden(tokenDocument: TokenBarLike | null): boolean {
+	if (!tokenDocument) return true;
+	const displayBars = Number(tokenDocument.displayBars ?? Number.NaN);
+	if (!Number.isFinite(displayBars)) return true;
+	return displayBars === getTokenDisplayModeValue('NONE', 0);
 }
 
 function canCurrentUserSeeCombatantTokenBarField(
 	combatant: Combatant.Implementation,
-	fieldKey: CombatTrackerVisibilityFieldKey,
-	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
 	attribute: string,
 ): boolean {
-	if (!canCurrentUserSeeCombatantField(combatant, fieldKey, visibilityPermissions)) return false;
 	if (game.user?.isGM || combatant.actor?.isOwner) return true;
 
 	const tokenDocument = getCombatantTokenDocumentForVisibility(combatant);
 	if (!tokenHasBarAttribute(tokenDocument, attribute)) return false;
+	return isTokenBarVisibleToNonOwners(tokenDocument);
+}
+
+function canCurrentUserSeeAssignedCombatantTokenBarField(
+	combatant: Combatant.Implementation,
+	attribute: string,
+): boolean {
+	const tokenDocument = getCombatantTokenDocumentForVisibility(combatant);
+	if (!tokenHasBarAttribute(tokenDocument, attribute)) return false;
+	if (isTokenBarExplicitlyHidden(tokenDocument)) return false;
+
+	if (game.user?.isGM || combatant.actor?.isOwner) return true;
 	return isTokenBarVisibleToNonOwners(tokenDocument);
 }
 
@@ -211,36 +205,22 @@ function formatCombatTrackerValue(value: number | null): string {
 
 export function normalizeCtWidthLevel(value: unknown): number {
 	const numericValue = Number(value);
-	if (!Number.isFinite(numericValue)) return 2;
+	if (!Number.isFinite(numericValue)) return 10;
 	const roundedValue = Math.round(numericValue);
 	return Math.min(CT_MAX_WIDTH_LEVEL, Math.max(CT_MIN_WIDTH_LEVEL, roundedValue));
 }
 
 export function normalizeCtCardSizeLevel(value: unknown): number {
 	const numericValue = Number(value);
-	if (!Number.isFinite(numericValue)) return 3;
+	if (!Number.isFinite(numericValue)) return 5;
 	const roundedValue = Math.round(numericValue);
 	return Math.min(CT_MAX_CARD_SIZE_LEVEL, Math.max(CT_MIN_CARD_SIZE_LEVEL, roundedValue));
-}
-
-export function normalizeCtBadgeSizeLevel(value: unknown): number {
-	const numericValue = Number(value);
-	if (!Number.isFinite(numericValue)) return CT_MIN_BADGE_SIZE_LEVEL;
-	const roundedValue = Math.round(numericValue);
-	return Math.min(CT_MAX_BADGE_SIZE_LEVEL, Math.max(CT_MIN_BADGE_SIZE_LEVEL, roundedValue));
 }
 
 export function getCtCardScale(cardSizeLevel: number): number {
 	const normalizedCardSizeLevel = normalizeCtCardSizeLevel(cardSizeLevel);
 	return (
 		CT_MIN_CARD_SCALE + (normalizedCardSizeLevel - CT_MIN_CARD_SIZE_LEVEL) * CT_CARD_SCALE_STEP
-	);
-}
-
-export function getCtBadgeScale(badgeSizeLevel: number): number {
-	const normalizedBadgeSizeLevel = normalizeCtBadgeSizeLevel(badgeSizeLevel);
-	return (
-		CT_MIN_BADGE_SCALE + (normalizedBadgeSizeLevel - CT_MIN_BADGE_SIZE_LEVEL) * CT_BADGE_SCALE_STEP
 	);
 }
 
@@ -541,7 +521,9 @@ export function getCombatantDisplayName(combatant: Combatant.Implementation): st
 	);
 }
 
-export function getCombatantHpBadgeState(combatant: Combatant.Implementation): HpBadgeState {
+type CombatantHealthTone = 'green' | 'yellow' | 'red' | 'unknown';
+
+function getCombatantHealthTone(combatant: Combatant.Implementation): CombatantHealthTone {
 	switch (getActorHealthState(combatant.actor)) {
 		case 'normal':
 			return 'green';
@@ -554,18 +536,48 @@ export function getCombatantHpBadgeState(combatant: Combatant.Implementation): H
 	}
 }
 
-export function getCombatantHpBadgeClass(combatant: Combatant.Implementation): string {
-	const state = getCombatantHpBadgeState(combatant);
-	switch (state) {
+function getNonPlayerHpBarToneClass(combatant: Combatant.Implementation): string {
+	switch (getCombatantHealthTone(combatant)) {
 		case 'red':
-			return 'nimble-ct__badge--hp-red';
+			return 'nimble-ct__non-player-hp-bar--red';
 		case 'yellow':
-			return 'nimble-ct__badge--hp-yellow';
+			return 'nimble-ct__non-player-hp-bar--yellow';
 		case 'green':
-			return 'nimble-ct__badge--hp-green';
+			return 'nimble-ct__non-player-hp-bar--green';
 		default:
-			return 'nimble-ct__badge--hp-unknown';
+			return 'nimble-ct__non-player-hp-bar--unknown';
 	}
+}
+
+function getPlayerHpBarToneClass(combatant: Combatant.Implementation): string {
+	switch (getCombatantHealthTone(combatant)) {
+		case 'red':
+			return 'nimble-ct__player-resource-bar--red';
+		case 'yellow':
+			return 'nimble-ct__player-resource-bar--yellow';
+		case 'green':
+			return 'nimble-ct__player-resource-bar--green';
+		default:
+			return 'nimble-ct__player-resource-bar--unknown';
+	}
+}
+
+function clampBarFillPercent(value: number, max: number): number {
+	if (!Number.isFinite(value) || !Number.isFinite(max) || max <= 0) return 0;
+	return Math.max(0, Math.min(100, Math.round((value / max) * 100)));
+}
+
+function getPlayerHpBarCenterText(
+	combatant: Combatant.Implementation,
+	textMode: CombatTrackerPlayerHpBarTextMode,
+	fillPercent: number,
+): string | null {
+	if (textMode === 'none') return null;
+	if (textMode === 'percentage') return `${fillPercent}%`;
+	if (!canCurrentUserSeeAssignedCombatantTokenBarField(combatant, 'attributes.hp')) {
+		return null;
+	}
+	return getHealthStateLabel(getActorHealthState(combatant.actor));
 }
 
 export function getCombatantHpDrawerIconClass(combatant: Combatant.Implementation): string {
@@ -573,88 +585,92 @@ export function getCombatantHpDrawerIconClass(combatant: Combatant.Implementatio
 	return healthState === 'bloodied' ? 'fa-solid fa-heart-crack' : 'fa-solid fa-heart';
 }
 
-export function getCombatantHpBadgeMode(
-	combatant: Combatant.Implementation,
-	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
-): HpBadgeMode {
-	const canShowHpValue = canCurrentUserSeeCombatantTokenBarField(
-		combatant,
-		'hpValue',
-		visibilityPermissions,
-		'attributes.hp',
-	);
-	if (canShowHpValue) return 'value';
-
-	const canShowHpState = canCurrentUserSeeCombatantTokenBarField(
-		combatant,
-		'hpState',
-		visibilityPermissions,
-		'attributes.hp',
-	);
-	return canShowHpState ? 'state' : 'hidden';
-}
-
-export function getCombatantHpBadgeText(
-	combatant: Combatant.Implementation,
-	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
-): string | null {
-	const badgeMode = getCombatantHpBadgeMode(combatant, visibilityPermissions);
-	if (badgeMode === 'hidden') return null;
-	if (badgeMode === 'state') return getHealthStateLabel(getActorHealthState(combatant.actor));
-
-	const hpValue = getActorHpValue(combatant.actor);
-	if (hpValue === null) return '--';
-	return formatCombatTrackerValue(hpValue);
-}
-
-export function getCombatantHpBadgeTooltip(
-	combatant: Combatant.Implementation,
-	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
-): string | null {
-	const badgeMode = getCombatantHpBadgeMode(combatant, visibilityPermissions);
-	if (badgeMode === 'hidden') return null;
-
-	const healthState = getActorHealthState(combatant.actor);
-	const stateLabel = getHealthStateLabel(healthState);
+function getCombatantHpTooltip(combatant: Combatant.Implementation, showState: boolean): string {
+	const stateLabel = getHealthStateLabel(getActorHealthState(combatant.actor));
 	const hpValue = getActorHpValue(combatant.actor);
 	const hpMax = getActorHpMaxValue(combatant.actor);
-	if (badgeMode === 'state') {
-		return stateLabel;
-	}
-	if (hpValue === null || hpMax === null) return stateLabel;
+	if (hpValue === null) return '--';
+	if (hpMax === null) return formatCombatTrackerValue(hpValue);
+	if (!showState) return `${hpValue}/${hpMax}`;
 	return `${hpValue}/${hpMax} (${stateLabel})`;
 }
 
-export function shouldRenderHpBadge(
-	combatant: Combatant.Implementation,
-	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
-): boolean {
-	return getCombatantHpBadgeMode(combatant, visibilityPermissions) !== 'hidden';
+function getCombatantHpBarTooltip(combatant: Combatant.Implementation): string | null {
+	const canShowHpValue = canCurrentUserSeeCombatantTokenBarField(combatant, 'attributes.hp');
+	if (!canShowHpValue) return null;
+	const canShowHpState = canCurrentUserSeeCombatantTokenBarField(combatant, 'attributes.hp');
+	return getCombatantHpTooltip(combatant, canShowHpState);
 }
 
-export function shouldRenderCombatantActions(
+export function getNonPlayerCombatantHpBarData(
 	combatant: Combatant.Implementation,
-	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
-): boolean {
-	return canCurrentUserSeeCombatantField(combatant, 'actions', visibilityPermissions);
+	barEnabled: boolean,
+	centerTextMode: CombatTrackerNonPlayerHpBarTextMode,
+): NonPlayerCombatantHpBarData {
+	if (!barEnabled || isPlayerCombatant(combatant)) {
+		return {
+			visible: false,
+			fillPercent: 0,
+			centerText: null,
+			toneClass: 'nimble-ct__non-player-hp-bar--unknown',
+			tooltip: null,
+		};
+	}
+
+	const canShowHpValue = canCurrentUserSeeCombatantTokenBarField(combatant, 'attributes.hp');
+	if (!canShowHpValue) {
+		return {
+			visible: false,
+			fillPercent: 0,
+			centerText: null,
+			toneClass: 'nimble-ct__non-player-hp-bar--unknown',
+			tooltip: null,
+		};
+	}
+
+	const hpValue = getActorHpValue(combatant.actor);
+	const hpMax = getActorHpMaxValue(combatant.actor);
+	if (hpValue === null || hpMax === null || hpMax <= 0) {
+		return {
+			visible: false,
+			fillPercent: 0,
+			centerText: null,
+			toneClass: 'nimble-ct__non-player-hp-bar--unknown',
+			tooltip: null,
+		};
+	}
+
+	const fillPercent = Math.max(0, Math.min(100, Math.round((hpValue / hpMax) * 100)));
+	let centerText: string | null = null;
+	if (centerTextMode === 'hpState') {
+		const canShowHpState = canCurrentUserSeeCombatantTokenBarField(combatant, 'attributes.hp');
+		if (canShowHpState) {
+			centerText = getHealthStateLabel(getActorHealthState(combatant.actor));
+		}
+	} else if (centerTextMode === 'percentage') {
+		centerText = `${fillPercent}%`;
+	}
+
+	return {
+		visible: true,
+		fillPercent,
+		centerText,
+		toneClass: getNonPlayerHpBarToneClass(combatant),
+		tooltip: getCombatantHpBarTooltip(combatant),
+	};
+}
+
+export function shouldRenderCombatantActions(): boolean {
+	return true;
 }
 
 export function getCombatantCardResourceChips(
 	combatant: Combatant.Implementation,
-	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
 ): CombatantCardResourceChip[] {
 	const chips: CombatantCardResourceChip[] = [];
 
 	const wounds = getActorWoundsValueAndMax(combatant.actor);
-	if (
-		wounds &&
-		canCurrentUserSeeCombatantTokenBarField(
-			combatant,
-			'wounds',
-			visibilityPermissions,
-			'attributes.wounds.value',
-		)
-	) {
+	if (wounds && canCurrentUserSeeCombatantTokenBarField(combatant, 'attributes.wounds.value')) {
 		chips.push({
 			key: 'wounds',
 			iconClass: 'fa-solid fa-droplet',
@@ -665,15 +681,7 @@ export function getCombatantCardResourceChips(
 	}
 
 	const mana = getActorManaValueAndMax(combatant.actor);
-	if (
-		mana &&
-		canCurrentUserSeeCombatantTokenBarField(
-			combatant,
-			'mana',
-			visibilityPermissions,
-			'resources.mana',
-		)
-	) {
+	if (mana && canCurrentUserSeeCombatantTokenBarField(combatant, 'resources.mana')) {
 		chips.push({
 			key: 'mana',
 			iconClass: 'fa-solid fa-sparkles',
@@ -685,26 +693,22 @@ export function getCombatantCardResourceChips(
 
 	if (isPlayerCombatant(combatant)) {
 		const defendAvailable = getHeroicReactionAvailability(combatant, 'defend');
-		if (canCurrentUserSeeCombatantField(combatant, 'defend', visibilityPermissions)) {
-			chips.push({
-				key: 'defend',
-				iconClass: 'fa-solid fa-shield-halved',
-				title: getHeroicReactionAvailabilityTitle('defend', defendAvailable),
-				active: defendAvailable,
-				tone: 'utility',
-			});
-		}
+		chips.push({
+			key: 'defend',
+			iconClass: 'fa-solid fa-shield-halved',
+			title: getHeroicReactionAvailabilityTitle('defend', defendAvailable),
+			active: defendAvailable,
+			tone: 'utility',
+		});
 
 		const interposeAvailable = getHeroicReactionAvailability(combatant, 'interpose');
-		if (canCurrentUserSeeCombatantField(combatant, 'interpose', visibilityPermissions)) {
-			chips.push({
-				key: 'interpose',
-				iconClass: 'fa-solid fa-hand',
-				title: getHeroicReactionAvailabilityTitle('interpose', interposeAvailable),
-				active: interposeAvailable,
-				tone: 'utility',
-			});
-		}
+		chips.push({
+			key: 'interpose',
+			iconClass: 'fa-solid fa-hand',
+			title: getHeroicReactionAvailabilityTitle('interpose', interposeAvailable),
+			active: interposeAvailable,
+			tone: 'utility',
+		});
 	}
 
 	return chips;
@@ -712,107 +716,92 @@ export function getCombatantCardResourceChips(
 
 export function getPlayerCombatantDrawerData(
 	combatant: Combatant.Implementation,
-	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
+	playerHpBarTextMode: CombatTrackerPlayerHpBarTextMode,
 ): PlayerCombatantDrawerData {
-	const hpBadgeMode = getCombatantHpBadgeMode(combatant, visibilityPermissions);
 	const hpValue = getActorHpValue(combatant.actor);
 	const hpMax = getActorHpMaxValue(combatant.actor);
-	const hpState = getActorHealthState(combatant.actor);
-	const hpText =
-		hpBadgeMode === 'value'
-			? `${formatCombatTrackerValue(hpValue)}/${formatCombatTrackerValue(hpMax)}`
-			: hpBadgeMode === 'state'
-				? getHealthStateLabel(hpState)
-				: null;
-	const hpTitle = getCombatantHpBadgeTooltip(combatant, visibilityPermissions);
-	const hpVisible = hpBadgeMode !== 'hidden' && Boolean(hpText);
+	const hpVisible = Boolean(
+		hpValue !== null &&
+			hpMax !== null &&
+			hpMax > 0 &&
+			canCurrentUserSeeAssignedCombatantTokenBarField(combatant, 'attributes.hp'),
+	);
+	const hpFillPercent =
+		hpVisible && hpValue !== null && hpMax !== null ? clampBarFillPercent(hpValue, hpMax) : 0;
+	const hpTitle = getCombatantHpBarTooltip(combatant) ?? 'Hit Points';
+	const hpBar: PlayerCombatantBarData = {
+		key: 'hp',
+		visible: hpVisible,
+		fillPercent: hpFillPercent,
+		centerText: hpVisible
+			? getPlayerHpBarCenterText(combatant, playerHpBarTextMode, hpFillPercent)
+			: null,
+		title: hpVisible ? hpTitle : 'Hit Points hidden',
+		toneClass: getPlayerHpBarToneClass(combatant),
+	};
 
 	const wounds = getActorWoundsValueAndMax(combatant.actor);
 	const woundsVisible = Boolean(
-		wounds &&
-			canCurrentUserSeeCombatantTokenBarField(
-				combatant,
-				'wounds',
-				visibilityPermissions,
-				'attributes.wounds.value',
-			),
+		wounds && canCurrentUserSeeAssignedCombatantTokenBarField(combatant, 'attributes.wounds.value'),
 	);
-	const woundsText =
-		woundsVisible && wounds
-			? `${Math.max(0, Math.floor(wounds.value))}/${Math.max(0, Math.floor(wounds.max))}`
-			: undefined;
+	const woundsBar: PlayerCombatantBarData = {
+		key: 'wounds',
+		visible: woundsVisible,
+		fillPercent: woundsVisible && wounds ? clampBarFillPercent(wounds.value, wounds.max) : 0,
+		centerText:
+			woundsVisible && wounds
+				? `${Math.max(0, Math.floor(wounds.value))}/${Math.max(0, Math.floor(wounds.max))}`
+				: null,
+		title:
+			woundsVisible && wounds
+				? `Wounds ${Math.max(0, Math.floor(wounds.value))}/${Math.max(0, Math.floor(wounds.max))}`
+				: 'Wounds hidden',
+		toneClass: 'nimble-ct__player-resource-bar--wounds',
+		iconClass: 'fa-solid fa-droplet',
+	};
 
 	const defendAvailable = getHeroicReactionAvailability(combatant, 'defend');
-	const defendVisible = canCurrentUserSeeCombatantField(combatant, 'defend', visibilityPermissions);
 
 	const interposeAvailable = getHeroicReactionAvailability(combatant, 'interpose');
-	const interposeVisible = canCurrentUserSeeCombatantField(
-		combatant,
-		'interpose',
-		visibilityPermissions,
-	);
 	const opportunityAttackAvailable = getHeroicReactionAvailability(combatant, 'opportunityAttack');
-	const opportunityAttackVisible = canCurrentUserSeeCombatantField(
-		combatant,
-		'opportunityAttack',
-		visibilityPermissions,
-	);
 	const helpAvailable = getHeroicReactionAvailability(combatant, 'help');
-	const helpVisible = canCurrentUserSeeCombatantField(combatant, 'help', visibilityPermissions);
 
 	return {
-		hp: {
-			key: 'hp',
-			iconClass: hpVisible ? getCombatantHpDrawerIconClass(combatant) : undefined,
-			text: hpVisible ? (hpText ?? undefined) : undefined,
-			title: hpVisible ? (hpTitle ?? 'Hit Points') : 'Hit Points hidden',
-			active: hpVisible,
-			visible: hpVisible,
-		},
-		wounds: {
-			key: 'wounds',
-			iconClass: 'fa-solid fa-droplet',
-			text: woundsText,
-			title: woundsText ? `Wounds ${woundsText}` : 'Wounds hidden',
-			active: woundsVisible,
-			visible: woundsVisible,
-		},
+		rowCount: 1 + Number(hpBar.visible) + Number(woundsBar.visible),
+		hpBar,
+		woundsBar,
 		defend: {
 			key: 'defend',
 			iconClass: 'fa-solid fa-shield-halved',
 			title: getHeroicReactionAvailabilityTitle('defend', defendAvailable),
 			active: defendAvailable,
-			visible: defendVisible,
+			visible: true,
 		},
 		interpose: {
 			key: 'interpose',
 			iconClass: 'fa-solid fa-hand',
 			title: getHeroicReactionAvailabilityTitle('interpose', interposeAvailable),
 			active: interposeAvailable,
-			visible: interposeVisible,
+			visible: true,
 		},
 		opportunityAttack: {
 			key: 'opportunityAttack',
 			iconClass: 'fa-solid fa-bolt',
 			title: getHeroicReactionAvailabilityTitle('opportunityAttack', opportunityAttackAvailable),
 			active: opportunityAttackAvailable,
-			visible: opportunityAttackVisible,
+			visible: true,
 		},
 		help: {
 			key: 'help',
 			iconClass: 'fa-solid fa-handshake',
 			title: getHeroicReactionAvailabilityTitle('help', helpAvailable),
 			active: helpAvailable,
-			visible: helpVisible,
+			visible: true,
 		},
 	};
 }
 
-export function getCombatantOutlineClass(
-	combatant: Combatant.Implementation,
-	visibilityPermissions: CombatTrackerVisibilityPermissionConfig,
-): string {
-	if (!canCurrentUserSeeCombatantField(combatant, 'outline', visibilityPermissions)) return '';
+export function getCombatantOutlineClass(combatant: Combatant.Implementation): string {
 	if (isPlayerCombatant(combatant)) return 'nimble-ct__portrait--outline-player';
 	if (isLegendaryCombatant(combatant)) return 'nimble-ct__portrait--outline-monster';
 	if (isFriendlyCombatant(combatant)) return 'nimble-ct__portrait--outline-friendly';
@@ -822,25 +811,13 @@ export function getCombatantOutlineClass(
 export function getActionState(combatant: Combatant.Implementation): {
 	current: number;
 	max: number;
-	overflow: number;
-	slots: number[];
 } {
 	const normalizedCurrent = getCombatantCurrentActions(combatant);
 	const normalizedMax = getCombatantMaxActions(combatant);
-	const visiblePips = Math.min(normalizedMax, MAX_RENDERED_ACTION_DICE);
 	return {
 		current: normalizedCurrent,
 		max: normalizedMax,
-		overflow:
-			Math.max(0, normalizedMax - MAX_RENDERED_ACTION_DICE) +
-			Math.max(0, normalizedCurrent - normalizedMax),
-		slots: Array.from({ length: visiblePips }, (_value, index) => index),
 	};
-}
-
-export function getActionDiceIconClass(slot: number): (typeof ACTION_DICE_ICON_CLASSES)[number] {
-	const clampedIndex = Math.max(0, Math.min(slot, ACTION_DICE_ICON_CLASSES.length - 1));
-	return ACTION_DICE_ICON_CLASSES[clampedIndex];
 }
 
 export function hasCombatantTurnRemainingThisRound(combatant: Combatant.Implementation): boolean {
@@ -1067,16 +1044,6 @@ export function canCurrentUserAdjustCombatantActions(combatant: Combatant.Implem
 	if (isCombatantDead(combatant)) return false;
 	if (game.user?.isGM) return true;
 	return Boolean(combatant.actor?.isOwner);
-}
-
-export function resolveNextCombatantActionsForSlot(
-	params: ResolveNextCombatantActionsForSlotParams,
-): number {
-	const clampedMax = Math.max(0, Math.floor(params.maxActions));
-	const clampedCurrent = Math.min(clampedMax, Math.max(0, Math.floor(params.currentActions)));
-	const targetFromSlot = Math.min(clampedMax, Math.max(0, params.slot + 1));
-	if (targetFromSlot === clampedCurrent) return Math.max(0, clampedCurrent - 1);
-	return targetFromSlot;
 }
 
 export function getRootFontSizePx(): number {
