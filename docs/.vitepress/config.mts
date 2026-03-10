@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: 'Nimble FoundryVTT',
-  description: 'Developer documentation for the Nimble FoundryVTT system',
+  description: 'Documentation hub for the Nimble FoundryVTT system',
 
   // Set base path for GitHub Pages, update if using a custom domain
   base: '/FoundryVTT-Nimble/',
@@ -22,6 +22,22 @@ export default defineConfig({
           { text: 'Release Guide', link: '/RELEASE_GUIDE' },
         ],
       },
+      { text: 'System', link: '/system/' },
+      {
+        text: 'Planning',
+        items: [
+          { text: 'Project Vision', link: '/planning/product-vision' },
+          { text: 'Architecture', link: '/planning/architecture' },
+          {
+            text: 'UX Design',
+            link: '/planning/ux-design-specification',
+            items: [
+              { text: 'Design Directions', link: '/planning/ux-design-directions' },
+            ],
+          },
+          { text: 'Epics & Stories', link: '/planning/epics' },
+        ],
+      },
     ],
 
     sidebar: [
@@ -37,6 +53,28 @@ export default defineConfig({
         items: [
           { text: 'Code Style Guide', link: '/STYLE_GUIDE' },
           { text: 'Release Guide', link: '/RELEASE_GUIDE' },
+        ],
+      },
+      {
+        text: 'System',
+        items: [
+          { text: 'Overview', link: '/system/' },
+        ],
+      },
+      {
+        text: 'Planning',
+        collapsed: true,
+        items: [
+          { text: 'Project Vision', link: '/planning/product-vision' },
+          { text: 'Architecture', link: '/planning/architecture' },
+          {
+            text: 'UX Design',
+            link: '/planning/ux-design-specification',
+            items: [
+              { text: 'Design Directions', link: '/planning/ux-design-directions' },
+            ],
+          },
+          { text: 'Epics & Stories', link: '/planning/epics' },
         ],
       },
     ],
