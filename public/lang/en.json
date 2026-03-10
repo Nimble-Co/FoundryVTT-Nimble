@@ -758,14 +758,14 @@
 				"assess": {
 					"dialogTitle": "Assess Action",
 					"header": "Assess",
-					"selectSkill": "Select Skill",
+					"selectOption": "Select an Option",
+					"selectSkill": "Select a Skill",
 					"selectSkillPlaceholder": "Choose a skill...",
 					"selectTarget": "Target",
 					"noTargetsHint": "Target a token on the canvas to select it",
 					"tooManyTargetsHint": "You can only target one creature at a time for this action",
 					"cannotTargetSelf": "You cannot target yourself. Target another creature on the canvas.",
-					"rollToAssess": "Roll {skill} to Assess",
-					"rollToAssessNoSkill": "Select a Skill to Assess",
+					"rollToAssess": "Roll {skill}",
 					"success": "Success",
 					"failure": "Failure",
 					"askQuestion": {

@@ -94,9 +94,7 @@
 	let isSubmitDisabled = $derived(
 		!selectedOption ||
 			!selectedSkill ||
-			(currentOptionRequiresTarget && availableTargets.length !== 1) ||
-			!inCombat ||
-			actionsRemaining <= 0,
+			(currentOptionRequiresTarget && availableTargets.length !== 1),
 	);
 
 	async function handleRoll() {
@@ -172,12 +170,6 @@
 			{/each}
 		</div>
 
-		<header class="nimble-section-header">
-			<h3 class="nimble-heading" data-heading-variant="section">
-				{localize('NIMBLE.ui.heroicActions.assess.selectSkill')}
-			</h3>
-		</header>
-
 		<select class="assess-panel__select" bind:value={selectedSkill}>
 			<option value={null} disabled>
 				{localize('NIMBLE.ui.heroicActions.assess.selectSkillPlaceholder')}
@@ -230,12 +222,14 @@
 			onclick={handleRoll}
 		>
 			<i class="fa-solid fa-dice-d20"></i>
-			{#if selectedSkill}
+			{#if !selectedOption}
+				{localize('NIMBLE.ui.heroicActions.assess.selectOption')}
+			{:else if !selectedSkill}
+				{localize('NIMBLE.ui.heroicActions.assess.selectSkill')}
+			{:else}
 				{localize('NIMBLE.ui.heroicActions.assess.rollToAssess', {
 					skill: skillNames[selectedSkill],
 				})}
-			{:else}
-				{localize('NIMBLE.ui.heroicActions.assess.rollToAssessNoSkill')}
 			{/if}
 		</button>
 	</div>
