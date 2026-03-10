@@ -723,6 +723,17 @@
 		return null;
 	}
 
+	function getItemDescription(item) {
+		const desc = item.reactive?.system?.description ?? item.system?.description;
+		if (!desc) return '';
+		if (typeof desc === 'string') {
+			// Check if it's just empty HTML or whitespace
+			const stripped = desc.replace(/<[^>]*>/g, '').trim();
+			return stripped ? desc : '';
+		}
+		return '';
+	}
+
 	// ============================================================================
 	// Derived State
 	// ============================================================================
@@ -854,7 +865,7 @@
 						{@const damage = getWeaponDamage(item)}
 						{@const properties = getWeaponProperties(item)}
 						{@const isExpanded = expandedDescriptions.has(item._id)}
-						{@const description = item.reactive.system?.description ?? ''}
+						{@const description = getItemDescription(item)}
 						<li
 							class="weapon-card"
 							class:weapon-card--expanded={isExpanded}
@@ -916,7 +927,7 @@
 					{#each sortItems(attackFeatures) as item (item._id)}
 						{@const damage = getWeaponDamage(item)}
 						{@const isExpanded = expandedDescriptions.has(item._id)}
-						{@const description = item.reactive.system?.description ?? ''}
+						{@const description = getItemDescription(item)}
 						<li
 							class="weapon-card"
 							class:weapon-card--expanded={isExpanded}
@@ -1004,7 +1015,7 @@
 							{@const requiresConcentration =
 								spell.reactive.system.properties.selected.includes('concentration')}
 							{@const isExpanded = expandedDescriptions.has(spell._id)}
-							{@const description = spell.reactive.system?.description ?? ''}
+							{@const description = getItemDescription(spell)}
 
 							<li
 								class="spell-card"
