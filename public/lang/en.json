@@ -654,8 +654,8 @@
 				"useActionsFirst": "Use your actions first",
 				"noPermissionEndTurn": "You do not have permission to end turns.",
 				"noPermissionRollInitiative": "You do not have permission to roll initiative.",
-				"selectAttack": "Select Attack",
-				"selectSpell": "Select Spell",
+				"selectAttack": "Attack",
+				"selectSpell": "Cast Spell",
 				"noWeapons": "No weapons or attack features found.",
 				"noSpellsFound": "No spells found.",
 				"unarmedStrike": "Unarmed Strike",
@@ -755,7 +755,7 @@
 				},
 				"assess": {
 					"dialogTitle": "Assess Action",
-					"chooseOption": "Choose an Option",
+					"header": "Assess",
 					"selectSkill": "Select Skill",
 					"selectSkillPlaceholder": "Choose a skill...",
 					"selectTarget": "Target",
@@ -767,19 +767,22 @@
 					"success": "Success",
 					"failure": "Failure",
 					"askQuestion": {
-						"title": "Assess: Ask a Question",
+						"title": "Ask a Question",
+						"chatTitle": "Assess: Ask a Question",
 						"description": "Ask the GM a question about the situation. They must answer truthfully based on what your character could reasonably perceive.",
 						"success": "<p><strong>{name}</strong> used an action to assess and may ask the GM one question. The GM will answer honestly.</p>",
 						"failure": "<p><strong>{name}</strong> used an action to assess but failed to glean any useful information.</p>"
 					},
 					"createOpening": {
-						"title": "Assess: Create an Opening",
+						"title": "Create an Opening",
+						"chatTitle": "Assess: Create an Opening",
 						"description": "Your next attack against the target gains +1 to the Primary Die this round.",
 						"success": "<p><strong>{name}</strong> used an action to assess <strong>{target}</strong> and create an opening. Their next attack against <strong>{target}</strong> gains <strong>+1 to the Primary Die</strong>.</p>",
 						"failure": "<p><strong>{name}</strong> used an action to assess <strong>{target}</strong> but failed to create an opening.</p>"
 					},
 					"anticipateDanger": {
-						"title": "Assess: Anticipate Danger",
+						"title": "Anticipate Danger",
+						"chatTitle": "Assess: Anticipate Danger",
 						"description": "All Primary Dice rolled against you are reduced by 1 this round.",
 						"success": "<p><strong>{name}</strong> used an action to assess and anticipate danger. All Primary Dice rolled against them are <strong>reduced by 1</strong> this round.</p>",
 						"failure": "<p><strong>{name}</strong> used an action to assess but failed to anticipate danger.</p>"

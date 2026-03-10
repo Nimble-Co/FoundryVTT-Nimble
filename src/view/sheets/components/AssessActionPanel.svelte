@@ -8,6 +8,7 @@
 			id: 'ask-question',
 			icon: 'fa-solid fa-circle-question',
 			titleKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.title',
+			chatTitleKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.chatTitle',
 			descriptionKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.description',
 			successKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.success',
 			failureKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.failure',
@@ -17,6 +18,7 @@
 			id: 'create-opening',
 			icon: 'fa-solid fa-crosshairs',
 			titleKey: 'NIMBLE.ui.heroicActions.assess.createOpening.title',
+			chatTitleKey: 'NIMBLE.ui.heroicActions.assess.createOpening.chatTitle',
 			descriptionKey: 'NIMBLE.ui.heroicActions.assess.createOpening.description',
 			successKey: 'NIMBLE.ui.heroicActions.assess.createOpening.success',
 			failureKey: 'NIMBLE.ui.heroicActions.assess.createOpening.failure',
@@ -26,6 +28,7 @@
 			id: 'anticipate-danger',
 			icon: 'fa-solid fa-shield',
 			titleKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.title',
+			chatTitleKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.chatTitle',
 			descriptionKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.description',
 			successKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.success',
 			failureKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.failure',
@@ -132,7 +135,7 @@
 				skillKey: selectedSkill,
 				dc: ASSESS_DC,
 				isSuccess,
-				optionTitle: localize(option.titleKey),
+				optionTitle: localize(option.chatTitleKey),
 				resultMessage,
 				target: selectedTarget ? selectedTarget.document.uuid : null,
 				targetName,
@@ -144,104 +147,110 @@
 <section class="assess-panel">
 	<header class="nimble-section-header">
 		<h3 class="nimble-heading" data-heading-variant="section">
-			{localize('NIMBLE.ui.heroicActions.assess.chooseOption')}
+			{localize('NIMBLE.ui.heroicActions.assess.header')}
 		</h3>
 	</header>
 
-	<div class="assess-panel__options">
-		{#each assessOptions as option}
-			<label class="assess-option" class:assess-option--active={selectedOption === option.id}>
-				<input
-					class="assess-option__input"
-					type="radio"
-					name="assess-option"
-					value={option.id}
-					bind:group={selectedOption}
-				/>
-				<i class="assess-option__icon {option.icon}"></i>
-				<div class="assess-option__content">
-					<span class="assess-option__title">{localize(option.titleKey)}</span>
-					<span class="assess-option__description">{localize(option.descriptionKey)}</span>
-				</div>
-				<div class="assess-option__indicator"></div>
-			</label>
-		{/each}
-	</div>
+	<div class="assess-panel__content">
+		<div class="assess-panel__options">
+			{#each assessOptions as option}
+				<label class="assess-option" class:assess-option--active={selectedOption === option.id}>
+					<input
+						class="assess-option__input"
+						type="radio"
+						name="assess-option"
+						value={option.id}
+						bind:group={selectedOption}
+					/>
+					<i class="assess-option__icon {option.icon}"></i>
+					<div class="assess-option__content">
+						<span class="assess-option__title">{localize(option.titleKey)}</span>
+						<span class="assess-option__description">{localize(option.descriptionKey)}</span>
+					</div>
+					<div class="assess-option__indicator"></div>
+				</label>
+			{/each}
+		</div>
 
-	<header class="nimble-section-header">
-		<h3 class="nimble-heading" data-heading-variant="section">
-			{localize('NIMBLE.ui.heroicActions.assess.selectSkill')}
-		</h3>
-	</header>
-
-	<select class="assess-panel__select" bind:value={selectedSkill}>
-		<option value={null} disabled>
-			{localize('NIMBLE.ui.heroicActions.assess.selectSkillPlaceholder')}
-		</option>
-		{#each sortedSkills as [skillKey, skillName]}
-			<option value={skillKey}>{skillName}</option>
-		{/each}
-	</select>
-
-	{#if currentOptionRequiresTarget}
 		<header class="nimble-section-header">
 			<h3 class="nimble-heading" data-heading-variant="section">
-				{localize('NIMBLE.ui.heroicActions.assess.selectTarget')}
+				{localize('NIMBLE.ui.heroicActions.assess.selectSkill')}
 			</h3>
 		</header>
 
-		{#if availableTargets.length === 0}
-			<div class="assess-panel__no-targets">
-				<i class="fa-solid fa-crosshairs"></i>
-				{#if hasTargetedSelf}
-					<span>{localize('NIMBLE.ui.heroicActions.assess.cannotTargetSelf')}</span>
-				{:else}
-					<span>{localize('NIMBLE.ui.heroicActions.assess.noTargetsHint')}</span>
-				{/if}
-			</div>
-		{:else if availableTargets.length === 1}
-			<div class="assess-panel__targets">
-				<div class="assess-target assess-target--active">
-					<img
-						class="assess-target__img"
-						src={availableTargets[0].document?.texture?.src || 'icons/svg/mystery-man.svg'}
-						alt={getTargetName(availableTargets[0])}
-					/>
-					<span class="assess-target__name">{getTargetName(availableTargets[0])}</span>
-					<i class="fa-solid fa-check assess-target__check"></i>
-				</div>
-			</div>
-		{:else}
-			<div class="assess-panel__no-targets assess-panel__no-targets--warning">
-				<i class="fa-solid fa-triangle-exclamation"></i>
-				<span>{localize('NIMBLE.ui.heroicActions.assess.tooManyTargetsHint')}</span>
-			</div>
-		{/if}
-	{/if}
+		<select class="assess-panel__select" bind:value={selectedSkill}>
+			<option value={null} disabled>
+				{localize('NIMBLE.ui.heroicActions.assess.selectSkillPlaceholder')}
+			</option>
+			{#each sortedSkills as [skillKey, skillName]}
+				<option value={skillKey}>{skillName}</option>
+			{/each}
+		</select>
 
-	<button
-		class="nimble-button assess-panel__roll"
-		data-button-variant="primary"
-		disabled={isSubmitDisabled}
-		onclick={handleRoll}
-	>
-		<i class="fa-solid fa-dice-d20"></i>
-		{#if selectedSkill}
-			{localize('NIMBLE.ui.heroicActions.assess.rollToAssess', {
-				skill: skillNames[selectedSkill],
-			})}
-		{:else}
-			{localize('NIMBLE.ui.heroicActions.assess.rollToAssessNoSkill')}
+		{#if currentOptionRequiresTarget}
+			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.ui.heroicActions.assess.selectTarget')}
+				</h3>
+			</header>
+
+			{#if availableTargets.length === 0}
+				<div class="assess-panel__no-targets">
+					<i class="fa-solid fa-crosshairs"></i>
+					{#if hasTargetedSelf}
+						<span>{localize('NIMBLE.ui.heroicActions.assess.cannotTargetSelf')}</span>
+					{:else}
+						<span>{localize('NIMBLE.ui.heroicActions.assess.noTargetsHint')}</span>
+					{/if}
+				</div>
+			{:else if availableTargets.length === 1}
+				<div class="assess-panel__targets">
+					<div class="assess-target assess-target--active">
+						<img
+							class="assess-target__img"
+							src={availableTargets[0].document?.texture?.src || 'icons/svg/mystery-man.svg'}
+							alt={getTargetName(availableTargets[0])}
+						/>
+						<span class="assess-target__name">{getTargetName(availableTargets[0])}</span>
+						<i class="fa-solid fa-check assess-target__check"></i>
+					</div>
+				</div>
+			{:else}
+				<div class="assess-panel__no-targets assess-panel__no-targets--warning">
+					<i class="fa-solid fa-triangle-exclamation"></i>
+					<span>{localize('NIMBLE.ui.heroicActions.assess.tooManyTargetsHint')}</span>
+				</div>
+			{/if}
 		{/if}
-	</button>
+
+		<button
+			class="nimble-button assess-panel__roll"
+			data-button-variant="primary"
+			disabled={isSubmitDisabled}
+			onclick={handleRoll}
+		>
+			<i class="fa-solid fa-dice-d20"></i>
+			{#if selectedSkill}
+				{localize('NIMBLE.ui.heroicActions.assess.rollToAssess', {
+					skill: skillNames[selectedSkill],
+				})}
+			{:else}
+				{localize('NIMBLE.ui.heroicActions.assess.rollToAssessNoSkill')}
+			{/if}
+		</button>
+	</div>
 </section>
 
 <style lang="scss">
 	.assess-panel {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-		padding: 0.5rem;
+
+		&__content {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+		}
 
 		&__options {
 			display: flex;

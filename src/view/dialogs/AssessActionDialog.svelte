@@ -9,6 +9,7 @@
 			id: 'ask-question',
 			icon: 'fa-solid fa-circle-question',
 			titleKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.title',
+			chatTitleKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.chatTitle',
 			descriptionKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.description',
 			successKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.success',
 			failureKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.failure',
@@ -18,6 +19,7 @@
 			id: 'create-opening',
 			icon: 'fa-solid fa-crosshairs',
 			titleKey: 'NIMBLE.ui.heroicActions.assess.createOpening.title',
+			chatTitleKey: 'NIMBLE.ui.heroicActions.assess.createOpening.chatTitle',
 			descriptionKey: 'NIMBLE.ui.heroicActions.assess.createOpening.description',
 			successKey: 'NIMBLE.ui.heroicActions.assess.createOpening.success',
 			failureKey: 'NIMBLE.ui.heroicActions.assess.createOpening.failure',
@@ -27,6 +29,7 @@
 			id: 'anticipate-danger',
 			icon: 'fa-solid fa-shield',
 			titleKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.title',
+			chatTitleKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.chatTitle',
 			descriptionKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.description',
 			successKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.success',
 			failureKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.failure',
@@ -110,7 +113,7 @@
 				skillKey: selectedSkill,
 				dc: ASSESS_DC,
 				isSuccess,
-				optionTitle: localize(option.titleKey),
+				optionTitle: localize(option.chatTitleKey),
 				resultMessage,
 				target: selectedTarget ? selectedTarget.document.uuid : null,
 				targetName,
@@ -183,7 +186,7 @@
 	<section>
 		<header class="nimble-section-header">
 			<h3 class="nimble-heading" data-heading-variant="section">
-				{localize('NIMBLE.ui.heroicActions.assess.chooseOption')}
+				{localize('NIMBLE.ui.heroicActions.assess.header')}
 			</h3>
 		</header>
 
