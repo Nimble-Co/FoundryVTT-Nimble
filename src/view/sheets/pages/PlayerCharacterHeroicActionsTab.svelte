@@ -114,7 +114,8 @@
 
 	function isInActiveCombat() {
 		const combatant = getCombatant();
-		return combatant?.initiative !== null;
+		if (!combatant) return false;
+		return combatant.initiative !== null;
 	}
 
 	function getActionsData() {

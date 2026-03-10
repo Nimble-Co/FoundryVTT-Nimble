@@ -73,36 +73,37 @@
 	});
 </script>
 
-<div class="action-pip-tracker" class:action-pip-tracker--disabled={disabled}>
-	<header class="nimble-section-header" data-header-alignment="center">
-		<h3 class="nimble-heading" data-heading-variant="section">
-			{localize('NIMBLE.ui.heroicActions.actionsHeader')}
-		</h3>
-		<span class="action-pip-tracker__count">{current} / {max}</span>
-	</header>
+{#if !disabled}
+	<div class="action-pip-tracker">
+		<header class="nimble-section-header" data-header-alignment="center">
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{localize('NIMBLE.ui.heroicActions.actionsHeader')}
+			</h3>
+			<span class="action-pip-tracker__count">{current} / {max}</span>
+		</header>
 
-	<div class="action-pip-tracker__pips">
-		{#each { length: max }, i}
-			{@const isAvailable = i < current}
-			{@const isJustSpent = justSpentPips.has(i)}
-			{@const diceIcon = getDiceIcon(i)}
+		<div class="action-pip-tracker__pips">
+			{#each { length: max }, i}
+				{@const isAvailable = i < current}
+				{@const isJustSpent = justSpentPips.has(i)}
+				{@const diceIcon = getDiceIcon(i)}
 
-			<button
-				class="action-pip"
-				class:action-pip--available={isAvailable}
-				class:action-pip--spent={!isAvailable}
-				class:action-pip--just-spent={isJustSpent}
-				type="button"
-				aria-label={getAriaLabel(i, isAvailable)}
-				data-tooltip={getTooltip(isAvailable)}
-				onclick={() => handlePipClick(i)}
-				{disabled}
-			>
-				<i class="action-pip__icon fa-solid {diceIcon}"></i>
-			</button>
-		{/each}
+				<button
+					class="action-pip"
+					class:action-pip--available={isAvailable}
+					class:action-pip--spent={!isAvailable}
+					class:action-pip--just-spent={isJustSpent}
+					type="button"
+					aria-label={getAriaLabel(i, isAvailable)}
+					data-tooltip={getTooltip(isAvailable)}
+					onclick={() => handlePipClick(i)}
+				>
+					<i class="action-pip__icon fa-solid {diceIcon}"></i>
+				</button>
+			{/each}
+		</div>
 	</div>
-</div>
+{/if}
 
 <style lang="scss">
 	.action-pip-tracker {
@@ -110,17 +111,6 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.5rem;
-
-		&--disabled {
-			.action-pip {
-				cursor: not-allowed;
-
-				&:hover {
-					transform: none;
-					box-shadow: none;
-				}
-			}
-		}
 
 		&__count {
 			font-size: var(--nimble-sm-text);
@@ -147,12 +137,8 @@
 		cursor: pointer;
 		transition: all 0.15s ease;
 
-		&:hover:not(:disabled) {
+		&:hover {
 			border-color: var(--nimble-accent-color);
-		}
-
-		&:disabled {
-			cursor: not-allowed;
 		}
 
 		// Available actions: green icon
@@ -161,7 +147,7 @@
 				color: hsl(139, 47%, 44%);
 			}
 
-			&:hover:not(:disabled) .action-pip__icon {
+			&:hover .action-pip__icon {
 				color: hsl(139, 47%, 55%);
 				filter: drop-shadow(0 0 4px hsl(139, 47%, 44%));
 			}
@@ -174,7 +160,7 @@
 				opacity: 0.5;
 			}
 
-			&:hover:not(:disabled) .action-pip__icon {
+			&:hover .action-pip__icon {
 				opacity: 0.7;
 			}
 		}
@@ -231,7 +217,7 @@
 		background: hsl(220, 15%, 18%);
 		border-color: hsl(220, 10%, 30%);
 
-		&:hover:not(:disabled) {
+		&:hover {
 			border-color: hsl(220, 15%, 45%);
 			background: hsl(220, 15%, 22%);
 		}
