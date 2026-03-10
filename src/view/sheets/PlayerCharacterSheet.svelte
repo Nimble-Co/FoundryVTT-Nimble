@@ -17,6 +17,7 @@
 	import PlayerCharacterConditionsTab from './pages/PlayerCharacterConditionsTab.svelte';
 	import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';
 	import PlayerCharacterFeaturesTab from './pages/PlayerCharacterFeaturesTab.svelte';
+	import PlayerCharacterHeroicActionsTab from './pages/PlayerCharacterHeroicActionsTab.svelte';
 	import PlayerCharacterInventoryTab from './pages/PlayerCharacterInventoryTab.svelte';
 	import PlayerCharacterSettingsTab from './pages/PlayerCharacterSettingsTab.svelte';
 	import PlayerCharacterSpellsTab from './pages/PlayerCharacterSpellsTab.svelte';
@@ -192,6 +193,12 @@
 			icon: 'fa-solid fa-home',
 			tooltip: 'Core',
 			name: 'core',
+		},
+		{
+			component: PlayerCharacterHeroicActionsTab,
+			icon: 'fa-solid fa-bolt',
+			tooltip: 'Actions',
+			name: 'actions',
 		},
 		{
 			component: PlayerCharacterConditionsTab,
@@ -620,6 +627,10 @@
 </section>
 
 <style lang="scss">
+	:global(.nimble-sheet--player-character) {
+		min-width: 200px;
+	}
+
 	.nimble-sheet__header {
 		position: relative;
 	}
