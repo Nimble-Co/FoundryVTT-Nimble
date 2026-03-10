@@ -14,6 +14,7 @@ export function getActorHealthState(
 	const hpValue = getActorHpValue(actor);
 	const hpMax = getActorHpMaxValue(actor);
 	if (hpValue === null || hpMax === null) return 'unknown';
+	if (hpValue <= 0) return 'unknown';
 
 	if (actor.type === 'soloMonster') {
 		const lastStandThreshold = getActorLastStandThreshold(actor);

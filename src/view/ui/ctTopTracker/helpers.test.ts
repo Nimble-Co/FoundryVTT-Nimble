@@ -7,34 +7,14 @@ import {
 	clearExpandedTurnIdentityHint,
 	setExpandedTurnIdentityHint,
 } from '../../../documents/combat/expandedTurnIdentityStore.js';
-import type { CombatTrackerVisibilityPermissionConfig } from '../../../settings/combatTrackerSettings.js';
 import {
 	getCombatantCardResourceChips,
-	getCombatantHpBadgeText,
 	getCombatantOutlineClass,
+	getNonPlayerCombatantHpBarData,
 	getPlayerCombatantDrawerData,
 	shouldRenderCombatantActions,
-	shouldRenderHpBadge,
 	syncCombatTurnsForCt,
 } from './helpers.js';
-
-function createVisibilityPermissions(
-	overrides: Partial<CombatTrackerVisibilityPermissionConfig> = {},
-): CombatTrackerVisibilityPermissionConfig {
-	return {
-		hpValue: { player: false, trusted: false, assistant: true, gamemaster: true },
-		hpState: { player: false, trusted: false, assistant: true, gamemaster: true },
-		mana: { player: false, trusted: false, assistant: true, gamemaster: true },
-		wounds: { player: false, trusted: false, assistant: true, gamemaster: true },
-		actions: { player: true, trusted: true, assistant: true, gamemaster: true },
-		defend: { player: true, trusted: true, assistant: true, gamemaster: true },
-		interpose: { player: true, trusted: true, assistant: true, gamemaster: true },
-		opportunityAttack: { player: true, trusted: true, assistant: true, gamemaster: true },
-		help: { player: true, trusted: true, assistant: true, gamemaster: true },
-		outline: { player: true, trusted: true, assistant: true, gamemaster: true },
-		...overrides,
-	};
-}
 
 describe('ctTopTracker helpers', () => {
 	beforeEach(() => {
@@ -66,56 +46,7 @@ describe('ctTopTracker helpers', () => {
 		};
 	});
 
-	it('shows a state-only HP badge when HP state is allowed but numeric HP is hidden', () => {
-		const actor = createCombatActorFixture({
-			type: 'npc',
-			isOwner: false,
-			hp: 5,
-			hpMax: 10,
-		});
-		const combatant = createCombatantFixture({
-			type: 'npc',
-			actor,
-		});
-		(combatant as unknown as { token: TokenDocument }).token = {
-			displayBars: 50,
-			bar1: { attribute: 'attributes.hp' },
-		} as TokenDocument;
-
-		const visibilityPermissions = createVisibilityPermissions({
-			hpState: { player: true, trusted: true, assistant: true, gamemaster: true },
-		});
-
-		expect(shouldRenderHpBadge(combatant, visibilityPermissions)).toBe(true);
-		expect(getCombatantHpBadgeText(combatant, visibilityPermissions)).toBe('Bloodied');
-	});
-
-	it('hides HP when the token hp bar is not visible to non-owners', () => {
-		const actor = createCombatActorFixture({
-			type: 'npc',
-			isOwner: false,
-			hp: 5,
-			hpMax: 10,
-		});
-		const combatant = createCombatantFixture({
-			type: 'npc',
-			actor,
-		});
-		(combatant as unknown as { token: TokenDocument }).token = {
-			displayBars: 40,
-			bar1: { attribute: 'attributes.hp' },
-		} as TokenDocument;
-
-		const visibilityPermissions = createVisibilityPermissions({
-			hpValue: { player: true, trusted: true, assistant: true, gamemaster: true },
-			hpState: { player: true, trusted: true, assistant: true, gamemaster: true },
-		});
-
-		expect(shouldRenderHpBadge(combatant, visibilityPermissions)).toBe(false);
-		expect(getCombatantHpBadgeText(combatant, visibilityPermissions)).toBeNull();
-	});
-
-	it('shows mana and wounds chips when both resources are assigned to visible token bars', () => {
+	it('shows wounds, mana, and heroic reaction chips for players when token bars are visible', () => {
 		const actor = createCombatActorFixture({
 			type: 'character',
 			isOwner: false,
@@ -126,25 +57,8 @@ describe('ctTopTracker helpers', () => {
 			manaValue: 4,
 			manaMax: 7,
 		});
-		const combatant = createCombatantFixture({
-			type: 'character',
-			actor,
-		});
-		(
-			combatant as unknown as {
-				token: TokenDocument;
-				system: {
-					actions: {
-						heroic?: {
-							defendAvailable?: boolean;
-							interposeAvailable?: boolean;
-							opportunityAttackAvailable?: boolean;
-							helpAvailable?: boolean;
-						};
-					};
-				};
-			}
-		).token = {
+		const combatant = createCombatantFixture({ type: 'character', actor });
+		(combatant as unknown as { token: TokenDocument }).token = {
 			displayBars: 50,
 			bar1: { attribute: 'resources.mana' },
 			bar2: { attribute: 'attributes.wounds.value' },
@@ -156,8 +70,6 @@ describe('ctTopTracker helpers', () => {
 						heroic?: {
 							defendAvailable?: boolean;
 							interposeAvailable?: boolean;
-							opportunityAttackAvailable?: boolean;
-							helpAvailable?: boolean;
 						};
 					};
 				};
@@ -165,27 +77,21 @@ describe('ctTopTracker helpers', () => {
 		).system.actions.heroic = {
 			defendAvailable: true,
 			interposeAvailable: false,
-			opportunityAttackAvailable: true,
-			helpAvailable: true,
 		};
 
-		const chips = getCombatantCardResourceChips(
-			combatant,
-			createVisibilityPermissions({
-				mana: { player: true, trusted: true, assistant: true, gamemaster: true },
-				wounds: { player: true, trusted: true, assistant: true, gamemaster: true },
-				defend: { player: false, trusted: false, assistant: false, gamemaster: false },
-				interpose: { player: false, trusted: false, assistant: false, gamemaster: false },
-			}),
-		);
+		const chips = getCombatantCardResourceChips(combatant);
 
-		expect(chips).toEqual([
-			expect.objectContaining({ key: 'wounds', text: '2/6' }),
-			expect.objectContaining({ key: 'mana', text: '4/7' }),
-		]);
+		expect(chips).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ key: 'wounds', text: '2/6' }),
+				expect.objectContaining({ key: 'mana', text: '4/7' }),
+				expect.objectContaining({ key: 'defend', active: true }),
+				expect.objectContaining({ key: 'interpose', active: false }),
+			]),
+		);
 	});
 
-	it('builds the player drawer with hp, wounds, and real heroic reaction state', () => {
+	it('builds the player drawer with bars and reaction state', () => {
 		const actor = createCombatActorFixture({
 			type: 'character',
 			isOwner: false,
@@ -194,25 +100,8 @@ describe('ctTopTracker helpers', () => {
 			woundsValue: 2,
 			woundsMax: 6,
 		});
-		const combatant = createCombatantFixture({
-			type: 'character',
-			actor,
-		});
-		(
-			combatant as unknown as {
-				token: TokenDocument;
-				system: {
-					actions: {
-						heroic?: {
-							defendAvailable?: boolean;
-							interposeAvailable?: boolean;
-							opportunityAttackAvailable?: boolean;
-							helpAvailable?: boolean;
-						};
-					};
-				};
-			}
-		).token = {
+		const combatant = createCombatantFixture({ type: 'character', actor });
+		(combatant as unknown as { token: TokenDocument }).token = {
 			displayBars: 50,
 			bar1: { attribute: 'attributes.hp' },
 			bar2: { attribute: 'attributes.wounds.value' },
@@ -237,26 +126,24 @@ describe('ctTopTracker helpers', () => {
 			helpAvailable: true,
 		};
 
-		const drawer = getPlayerCombatantDrawerData(
-			combatant,
-			createVisibilityPermissions({
-				hpValue: { player: true, trusted: true, assistant: true, gamemaster: true },
-				wounds: { player: true, trusted: true, assistant: true, gamemaster: true },
-				defend: { player: true, trusted: true, assistant: true, gamemaster: true },
-				interpose: { player: true, trusted: true, assistant: true, gamemaster: true },
-				opportunityAttack: {
-					player: true,
-					trusted: true,
-					assistant: true,
-					gamemaster: true,
-				},
-				help: { player: true, trusted: true, assistant: true, gamemaster: true },
+		const drawer = getPlayerCombatantDrawerData(combatant, 'hpState');
+
+		expect(drawer.rowCount).toBe(3);
+		expect(drawer.hpBar).toEqual(
+			expect.objectContaining({
+				visible: true,
+				fillPercent: 50,
+				centerText: 'Bloodied',
+				toneClass: 'nimble-ct__player-resource-bar--red',
 			}),
 		);
-
-		expect(drawer.hp).toEqual(expect.objectContaining({ visible: true, text: '5/10' }));
-		expect(drawer.wounds).toEqual(
-			expect.objectContaining({ visible: true, text: '2/6', iconClass: 'fa-solid fa-droplet' }),
+		expect(drawer.woundsBar).toEqual(
+			expect.objectContaining({
+				visible: true,
+				fillPercent: 33,
+				centerText: '2/6',
+				iconClass: 'fa-solid fa-droplet',
+			}),
 		);
 		expect(drawer.defend).toEqual(expect.objectContaining({ visible: true, active: true }));
 		expect(drawer.interpose).toEqual(expect.objectContaining({ visible: true, active: false }));
@@ -268,8 +155,73 @@ describe('ctTopTracker helpers', () => {
 		);
 	});
 
+	it('collapses the player drawer to reactions when token hp and wounds bars are hidden', () => {
+		const actor = createCombatActorFixture({
+			type: 'character',
+			isOwner: true,
+			hp: 9,
+			hpMax: 12,
+			woundsValue: 1,
+			woundsMax: 6,
+		});
+		const combatant = createCombatantFixture({ type: 'character', actor });
+		(combatant as unknown as { token: TokenDocument }).token = {
+			displayBars: 0,
+			bar1: { attribute: 'attributes.hp' },
+			bar2: { attribute: 'attributes.wounds.value' },
+		} as TokenDocument;
+
+		const drawer = getPlayerCombatantDrawerData(combatant, 'percentage');
+
+		expect(drawer.rowCount).toBe(1);
+		expect(drawer.hpBar.visible).toBe(false);
+		expect(drawer.woundsBar.visible).toBe(false);
+	});
+
+	it('builds a non-player hp bar with health state text when hp is visible', () => {
+		const actor = createCombatActorFixture({ type: 'npc', isOwner: false, hp: 5, hpMax: 10 });
+		const combatant = createCombatantFixture({ type: 'npc', actor });
+		(combatant as unknown as { token: TokenDocument }).token = {
+			displayBars: 50,
+			bar1: { attribute: 'attributes.hp' },
+		} as TokenDocument;
+
+		const hpBar = getNonPlayerCombatantHpBarData(combatant, true, 'hpState');
+
+		expect(hpBar).toEqual(
+			expect.objectContaining({
+				visible: true,
+				fillPercent: 50,
+				centerText: 'Bloodied',
+				toneClass: 'nimble-ct__non-player-hp-bar--red',
+			}),
+		);
+	});
+
+	it('hides the non-player hp bar when hp is not visible and shows percent when enabled', () => {
+		const actor = createCombatActorFixture({ type: 'npc', isOwner: false, hp: 7, hpMax: 10 });
+		const combatant = createCombatantFixture({ type: 'npc', actor });
+		(combatant as unknown as { token: TokenDocument }).token = {
+			displayBars: 0,
+			bar1: { attribute: 'attributes.hp' },
+		} as TokenDocument;
+
+		expect(getNonPlayerCombatantHpBarData(combatant, true, 'percentage').visible).toBe(false);
+
+		(combatant as unknown as { token: TokenDocument }).token = {
+			displayBars: 50,
+			bar1: { attribute: 'attributes.hp' },
+		} as TokenDocument;
+		expect(getNonPlayerCombatantHpBarData(combatant, true, 'percentage')).toEqual(
+			expect.objectContaining({
+				visible: true,
+				fillPercent: 70,
+				centerText: '70%',
+			}),
+		);
+	});
+
 	it('maps outline colors by combatant category', () => {
-		const visibilityPermissions = createVisibilityPermissions();
 		const player = createCombatantFixture({
 			type: 'character',
 			actor: createCombatActorFixture({ type: 'character' }),
@@ -293,35 +245,14 @@ describe('ctTopTracker helpers', () => {
 			actor: createCombatActorFixture({ type: 'soloMonster' }),
 		});
 
-		expect(getCombatantOutlineClass(player, visibilityPermissions)).toBe(
-			'nimble-ct__portrait--outline-player',
-		);
-		expect(getCombatantOutlineClass(friendlyNpc, visibilityPermissions)).toBe(
-			'nimble-ct__portrait--outline-friendly',
-		);
-		expect(getCombatantOutlineClass(monster, visibilityPermissions)).toBe(
-			'nimble-ct__portrait--outline-monster',
-		);
-		expect(getCombatantOutlineClass(solo, visibilityPermissions)).toBe(
-			'nimble-ct__portrait--outline-monster',
-		);
+		expect(getCombatantOutlineClass(player)).toBe('nimble-ct__portrait--outline-player');
+		expect(getCombatantOutlineClass(friendlyNpc)).toBe('nimble-ct__portrait--outline-friendly');
+		expect(getCombatantOutlineClass(monster)).toBe('nimble-ct__portrait--outline-monster');
+		expect(getCombatantOutlineClass(solo)).toBe('nimble-ct__portrait--outline-monster');
 	});
 
-	it('always shows actions for owners even when the role visibility is disabled', () => {
-		const hiddenActions = createVisibilityPermissions({
-			actions: { player: false, trusted: false, assistant: false, gamemaster: false },
-		});
-		const nonOwnerCombatant = createCombatantFixture({
-			type: 'npc',
-			actor: createCombatActorFixture({ type: 'npc', isOwner: false }),
-		});
-		const ownerCombatant = createCombatantFixture({
-			type: 'npc',
-			actor: createCombatActorFixture({ type: 'npc', isOwner: true }),
-		});
-
-		expect(shouldRenderCombatantActions(nonOwnerCombatant, hiddenActions)).toBe(false);
-		expect(shouldRenderCombatantActions(ownerCombatant, hiddenActions)).toBe(true);
+	it('always renders combatant actions', () => {
+		expect(shouldRenderCombatantActions()).toBe(true);
 	});
 
 	it('preserves a stored later solo occurrence when syncing CT turns from a raw solo turn index', () => {
@@ -360,16 +291,7 @@ describe('ctTopTracker helpers', () => {
 		syncCombatTurnsForCt(combat);
 
 		expect(combat.turn).toBe(3);
-		expect(
-			(
-				combat as Combat & {
-					_nimbleExpandedTurnIdentity?: {
-						combatantId: string;
-						occurrence: number | null;
-					} | null;
-				}
-			)._nimbleExpandedTurnIdentity,
-		).toEqual({
+		expect(combat._nimbleExpandedTurnIdentity).toEqual({
 			combatantId: 'legendary-one',
 			occurrence: 1,
 		});

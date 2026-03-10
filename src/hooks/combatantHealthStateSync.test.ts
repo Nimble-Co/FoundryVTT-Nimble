@@ -80,6 +80,35 @@ describe('registerCombatantHealthStateSync', () => {
 		});
 	});
 
+	it('clears bloodied and last stand when an actor reaches 0 HP', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
+			.default;
+		registerCombatantHealthStateSync();
+
+		const actor = createMockCombatActor({
+			type: 'soloMonster',
+			hp: 0,
+			hpMax: 20,
+			lastStandThreshold: 3,
+		});
+
+		const updateActor = callbacks.get('updateActor');
+		updateActor?.(actor, {
+			system: { attributes: { hp: { value: 0, lastStandThreshold: 3 } } },
+		});
+		await flushAsync();
+
+		expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
+			active: false,
+			overlay: false,
+		});
+		expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'lastStand', {
+			active: false,
+			overlay: false,
+		});
+	});
+
 	it('ignores actor updates that do not touch HP state inputs', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))

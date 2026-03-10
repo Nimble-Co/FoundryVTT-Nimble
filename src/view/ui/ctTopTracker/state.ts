@@ -1,21 +1,19 @@
 import {
-	getCombatTrackerCenterActiveCardEnabled,
-	getCombatTrackerCtBadgeSizeLevel,
 	getCombatTrackerCtCardSizeLevel,
 	getCombatTrackerCtEnabled,
 	getCombatTrackerCtWidthLevel,
+	getCombatTrackerNonPlayerHpBarEnabled,
+	getCombatTrackerNonPlayerHpBarTextMode,
+	getCombatTrackerPlayerHpBarTextMode,
 	getCombatTrackerPlayersCanExpandMonsterCards,
 	getCombatTrackerResourceDrawerHoverEnabled,
-	getCombatTrackerUseActionDice,
-	getCombatTrackerVisibilityPermissionConfig,
-	isCombatTrackerBadgeSizeLevelSettingKey,
 	isCombatTrackerCardSizeLevelSettingKey,
-	isCombatTrackerCenterActiveCardSettingKey,
 	isCombatTrackerEnabledSettingKey,
+	isCombatTrackerNonPlayerHpBarEnabledSettingKey,
+	isCombatTrackerNonPlayerHpBarTextModeSettingKey,
+	isCombatTrackerPlayerHpBarTextModeSettingKey,
 	isCombatTrackerPlayerMonsterExpansionSettingKey,
 	isCombatTrackerResourceDrawerHoverSettingKey,
-	isCombatTrackerUseActionDiceSettingKey,
-	isCombatTrackerVisibilityPermissionSettingKey,
 	isCombatTrackerWidthLevelSettingKey,
 } from '../../../settings/combatTrackerSettings.js';
 import { getCombatForCurrentScene, syncCombatTurnsForCt } from './helpers.js';
@@ -29,14 +27,24 @@ export function resolveCtTopTrackerSettingPatch(
 			playersCanExpandMonsterCards: getCombatTrackerPlayersCanExpandMonsterCards(),
 		};
 	}
-	if (isCombatTrackerCenterActiveCardSettingKey(settingKey)) {
-		return {
-			centerActiveCardEnabled: getCombatTrackerCenterActiveCardEnabled(),
-		};
-	}
 	if (isCombatTrackerResourceDrawerHoverSettingKey(settingKey)) {
 		return {
 			resourceDrawerHoverEnabled: getCombatTrackerResourceDrawerHoverEnabled(),
+		};
+	}
+	if (isCombatTrackerPlayerHpBarTextModeSettingKey(settingKey)) {
+		return {
+			playerHpBarTextMode: getCombatTrackerPlayerHpBarTextMode(),
+		};
+	}
+	if (isCombatTrackerNonPlayerHpBarEnabledSettingKey(settingKey)) {
+		return {
+			nonPlayerHpBarEnabled: getCombatTrackerNonPlayerHpBarEnabled(),
+		};
+	}
+	if (isCombatTrackerNonPlayerHpBarTextModeSettingKey(settingKey)) {
+		return {
+			nonPlayerHpBarTextMode: getCombatTrackerNonPlayerHpBarTextMode(),
 		};
 	}
 	if (isCombatTrackerEnabledSettingKey(settingKey)) {
@@ -55,21 +63,6 @@ export function resolveCtTopTrackerSettingPatch(
 			ctCardSizeLevel: getCombatTrackerCtCardSizeLevel(),
 			layoutVersionDelta: 1,
 			shouldCenterActiveEntry: true,
-		};
-	}
-	if (isCombatTrackerBadgeSizeLevelSettingKey(settingKey)) {
-		return {
-			ctBadgeSizeLevel: getCombatTrackerCtBadgeSizeLevel(),
-		};
-	}
-	if (isCombatTrackerUseActionDiceSettingKey(settingKey)) {
-		return {
-			useActionDice: getCombatTrackerUseActionDice(),
-		};
-	}
-	if (isCombatTrackerVisibilityPermissionSettingKey(settingKey)) {
-		return {
-			visibilityPermissions: getCombatTrackerVisibilityPermissionConfig(),
 		};
 	}
 	return null;

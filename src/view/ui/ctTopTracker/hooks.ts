@@ -21,6 +21,9 @@ export function registerCtTopTrackerHooks(callbacks: CtTopTrackerHookCallbacks):
 	register('updateCombatant', () => callbacks.updateCurrentCombat(true));
 	register('deleteCombatant', () => callbacks.updateCurrentCombat(true));
 	register('updateActor', () => callbacks.updateCurrentCombat(true));
+	register('createToken', () => callbacks.updateCurrentCombat(true));
+	register('updateToken', () => callbacks.updateCurrentCombat(true));
+	register('deleteToken', () => callbacks.updateCurrentCombat(true));
 	register('canvasReady', () => callbacks.updateCurrentCombat(true));
 	register('updateScene', () => callbacks.updateCurrentCombat(true));
 	register('renderSceneNavigation', () => {
