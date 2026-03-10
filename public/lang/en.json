@@ -786,12 +786,15 @@
 					}
 				},
 				"move": {
+					"title": "Move",
 					"dialogTitle": "Move Action",
 					"confirmTitle": "Did you move?",
 					"confirmDescription": "Confirm that you've repositioned your character on the battlefield.",
 					"yourMovement": "Your Movement",
+					"spaces": "spaces",
+					"noMovement": "No movement speeds available",
 					"actionCost": "This will use 1 action",
-					"confirm": "Yes, I Moved",
+					"confirm": "Use Action to Move",
 					"cancel": "Cancel"
 				}
 			},
