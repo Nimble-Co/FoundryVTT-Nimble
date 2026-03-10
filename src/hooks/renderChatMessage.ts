@@ -1,6 +1,7 @@
 import { mount, unmount } from 'svelte';
 
 import NimbleAbilityCheckCard from '../view/chat/AbilityCheckCard.svelte';
+import NimbleAssessActionCard from '../view/chat/AssessActionCard.svelte';
 import NimbleFeatureCard from '../view/chat/FeatureCard.svelte';
 import NimbleFieldRestCard from '../view/chat/FieldRestCard.svelte';
 import NimbleLevelUpSummaryCard from '../view/chat/LevelUpSummaryCard.svelte';
@@ -87,6 +88,7 @@ export default function renderChatMessageHTML(message, html) {
 
 	let component:
 		| typeof NimbleAbilityCheckCard
+		| typeof NimbleAssessActionCard
 		| typeof NimbleObjectCard
 		| typeof NimbleFeatureCard
 		| typeof NimbleFieldRestCard
@@ -111,6 +113,9 @@ export default function renderChatMessageHTML(message, html) {
 		switch (message.type) {
 			case 'abilityCheck':
 				component = NimbleAbilityCheckCard;
+				break;
+			case 'assessAction':
+				component = NimbleAssessActionCard;
 				break;
 			case 'feature':
 				component = NimbleFeatureCard;
