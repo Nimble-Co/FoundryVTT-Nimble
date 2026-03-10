@@ -6,14 +6,17 @@ import systemJSON from '../../public/system.json' with { type: 'json' };
 
 // Read the FoundryVTT version to stamp _stats.coreVersion, preventing startup migration.
 // Migration fires when coreVersion < Macro.metadata.schemaVersion ("13.341").
+// Set FOUNDRY_VERSION env var to override (e.g. in CI or other dev environments).
 const __dir = url.fileURLToPath(new URL('.', import.meta.url));
-let FOUNDRY_VERSION = '13.341'; // fallback: known schemaVersion
-try {
-	const foundryPkgPath = path.resolve(__dir, '../../../FoundryVTT-Node/package.json');
-	const foundryPkg = JSON.parse(fs.readFileSync(foundryPkgPath, 'utf-8'));
-	if (foundryPkg.version) FOUNDRY_VERSION = foundryPkg.version;
-} catch {
-	// FoundryVTT-Node not found at expected path; using fallback version
+let FOUNDRY_VERSION = process.env.FOUNDRY_VERSION || '13.341'; // fallback: known schemaVersion
+if (!process.env.FOUNDRY_VERSION) {
+	try {
+		const foundryPkgPath = path.resolve(__dir, '../../../FoundryVTT-Node/package.json');
+		const foundryPkg = JSON.parse(fs.readFileSync(foundryPkgPath, 'utf-8'));
+		if (foundryPkg.version) FOUNDRY_VERSION = foundryPkg.version;
+	} catch {
+		// FoundryVTT-Node not found at expected path; using fallback version
+	}
 }
 
 export default class LevelDatabase extends ClassicLevel {
