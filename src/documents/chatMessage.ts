@@ -226,6 +226,7 @@ class NimbleChatMessage extends ChatMessage {
 
 	async applyDamage(value: number, options?: Record<string, unknown>): Promise<void> {
 		if (!this.isActivationCard()) return;
+		if (!game.user?.isGM) return;
 
 		if (options?.outcome === 'noDamage') {
 			ui.notifications?.info('No damage to apply.');
