@@ -5,6 +5,9 @@
 
 	let messageDocument = getContext('messageDocument');
 
+	// Permission check - only GM or the message author can apply conditions
+	let canInteract = $derived(game.user?.isGM || messageDocument?.author?.id === game.user?.id);
+
 	function getConditionTooltip(condition) {
 		const label = conditions[condition];
 		const description = conditionDescriptions[condition];
@@ -49,11 +52,12 @@
 	data-button-variant="enricher"
 	data-enricher-type="condition"
 	type="button"
-	aria-label="Apply condition to selected targets"
+	aria-label="Apply condition to all targets"
 	data-tooltip={tooltip}
 	data-tooltip-class="nimble-tooltip nimble-tooltip--rules"
 	data-tooltip-position="UP"
 	onclick={applyCondition}
+	disabled={!canInteract}
 >
 	<i class="nimble-button__icon fa-solid fa-biohazard"></i>
 
