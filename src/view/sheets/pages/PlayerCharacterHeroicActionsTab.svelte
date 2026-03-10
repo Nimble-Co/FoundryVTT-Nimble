@@ -1075,12 +1075,7 @@
 	{/if}
 
 	{#if activeHeroicTab === 'actions' && expandedPanel === 'assess'}
-		<AssessActionPanel
-			{actor}
-			{inCombat}
-			actionsRemaining={actionsData.current}
-			onDeductAction={() => deductActionPips(1)}
-		/>
+		<AssessActionPanel {actor} onDeductAction={() => deductActionPips(1)} />
 	{/if}
 </section>
 

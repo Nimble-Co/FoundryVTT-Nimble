@@ -38,7 +38,7 @@
 
 	const { skills: skillNames } = CONFIG.NIMBLE;
 
-	let { actor, inCombat = false, actionsRemaining = 0, onDeductAction = async () => {} } = $props();
+	let { actor, onDeductAction = async () => {} } = $props();
 
 	let selectedOption = $state(null);
 	let selectedSkill = $state(null);
