@@ -740,12 +740,12 @@
 			<button
 				class="heroic-actions__roll-initiative-button"
 				type="button"
-				aria-label={localize('NIMBLE.ui.rollInitiative')}
-				data-tooltip={localize('NIMBLE.ui.rollInitiative')}
+				aria-label={localize('NIMBLE.ui.heroicActions.rollInitiative')}
+				data-tooltip={localize('NIMBLE.ui.heroicActions.rollInitiative')}
 				onclick={rollInitiative}
 			>
 				<i class="fa-solid fa-dice-d20"></i>
-				{localize('NIMBLE.ui.rollInitiative')}
+				{localize('NIMBLE.ui.heroicActions.rollInitiative')}
 			</button>
 		{:else if isMyTurn}
 			{@const canEndTurn = actionsData.current === 0}
