@@ -1091,16 +1091,18 @@
 
 									<div class="spell-card__content">
 										<div class="spell-card__header">
-											<span class="spell-card__name">{spell.reactive.name}</span>
+											<span class="spell-card__name">{spell.reactive.name},</span>
 											<span class="spell-card__tier"
 												>{spellTier === 0
 													? localize('NIMBLE.ui.heroicActions.cantrip')
 													: localize('NIMBLE.ui.heroicActions.spellTier', {
 															tier: spellTier,
-														})}</span
+														})}{meta || requiresConcentration ? ',' : ''}</span
 											>
 											{#if meta}
-												<span class="spell-card__action-cost">{@html meta}</span>
+												<span class="spell-card__action-cost"
+													>{@html meta}{requiresConcentration ? ',' : ''}</span
+												>
 											{/if}
 											{#if requiresConcentration}
 												<span class="spell-card__tag">C</span>
@@ -1109,10 +1111,12 @@
 
 										<div class="spell-card__meta">
 											{#if targetType}
-												<span class="spell-card__target-type">{targetType}</span>
+												<span class="spell-card__target-type"
+													>{targetType}{spellRange || manaCost > 0 ? ',' : ''}</span
+												>
 											{/if}
 											{#if spellRange}
-												<span class="spell-card__range">{spellRange}</span>
+												<span class="spell-card__range">{spellRange}{manaCost > 0 ? ',' : ''}</span>
 											{/if}
 											{#if manaCost > 0}
 												<span class="spell-card__mana">
