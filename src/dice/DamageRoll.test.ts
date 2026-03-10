@@ -529,7 +529,12 @@ describe('DamageRoll.fromData', () => {
 			expect(roll.formula).toBe('1d6');
 			expect(roll.originalFormula).toBe('1d6');
 			expect(roll.data).toEqual({ test: 'value' });
-			expect(roll.options).toEqual({ canCrit: true, canMiss: true, rollMode: 0 });
+			expect(roll.options).toEqual({
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieAsDamage: true,
+			});
 		});
 
 		it('should preserve parent class properties', () => {
@@ -546,7 +551,12 @@ describe('DamageRoll.fromData', () => {
 
 			expect(roll.formula).toBe('1d6+2');
 			expect(roll.data).toEqual({ level: 3 });
-			expect(roll.options).toEqual({ canCrit: true, canMiss: true, rollMode: 1 });
+			expect(roll.options).toEqual({
+				canCrit: true,
+				canMiss: true,
+				rollMode: 1,
+				primaryDieAsDamage: true,
+			});
 		});
 	});
 });

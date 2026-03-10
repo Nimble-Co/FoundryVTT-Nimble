@@ -17,6 +17,13 @@ declare namespace DamageRoll {
 		rollMode: number;
 		primaryDieValue: number;
 		primaryDieModifier: number;
+		/**
+		 * Whether the primary die's base result contributes to damage.
+		 * When false, the primary die is used only for hit/miss/crit detection,
+		 * and its base value is excluded from damage (explosions still count).
+		 * Default: true
+		 */
+		primaryDieAsDamage?: boolean;
 	}
 
 	interface SerializedData {
@@ -36,6 +43,7 @@ declare namespace DamageRoll {
 		isMiss?: boolean;
 		_total?: number;
 		_formula?: string;
+		excludedPrimaryDieValue?: number;
 	}
 
 	type Evaluated<T extends DamageRoll> = T & {
@@ -58,6 +66,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 	override _formula: string = '';
 
+	/**
+	 * The base value of the primary die that was excluded from damage
+	 * (only set when primaryDieAsDamage is false)
+	 */
+	excludedPrimaryDieValue: number = 0;
+
 	constructor(formula: string, data: DamageRoll.Data = {}, options?: DamageRoll.Options) {
 		super(formula, data, options);
 
@@ -65,6 +79,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		this.options.canCrit ??= true;
 		this.options.canMiss ??= true;
 		this.options.rollMode ??= 0;
+		this.options.primaryDieAsDamage ??= true;
 		this.originalFormula = formula;
 		this._formula = formula;
 
@@ -223,6 +238,20 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		if (primaryTerm) {
 			if (this.options.canCrit) this.isCritical = primaryTerm.exploded;
 			if (this.options.canMiss) this.isMiss = primaryTerm.isMiss;
+
+			// When primaryDieAsDamage is false, exclude the base die value from damage
+			// (explosions still count toward damage)
+			if (!this.options.primaryDieAsDamage) {
+				// Find the first result (the base roll, not explosion rolls)
+				// The base result is the one that may have exploded: true flag
+				const baseResult = primaryTerm.results.find((r) => r.active && !r.discarded);
+				if (baseResult) {
+					this.excludedPrimaryDieValue = baseResult.result;
+					// Adjust the total by subtracting the base die value
+					const internals = this as object as { _total: number };
+					internals._total = (this._total ?? 0) - this.excludedPrimaryDieValue;
+				}
+			}
 		}
 
 		return this as DamageRoll.Evaluated<this>;
@@ -235,6 +264,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			originalFormula: this.originalFormula,
 			isMiss: this.isMiss,
 			isCritical: this.isCritical,
+			excludedPrimaryDieValue: this.excludedPrimaryDieValue,
 		};
 	}
 
@@ -326,6 +356,9 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				roll.primaryDie = primaryTerm;
 			}
 		}
+
+		// Restore excludedPrimaryDieValue if it was serialized
+		roll.excludedPrimaryDieValue = data.excludedPrimaryDieValue ?? 0;
 
 		return roll as FixedInstanceType<T>;
 	}

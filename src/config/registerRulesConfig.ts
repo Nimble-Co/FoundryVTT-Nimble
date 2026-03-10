@@ -17,6 +17,7 @@ import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SkillBonusRule } from '../models/rules/skillBonus.js';
 import { SpeedBonusRule } from '../models/rules/speedBonus.js';
+import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 
 export default function registerRulesConfig() {
 	const ruleTypes = {
@@ -39,6 +40,7 @@ export default function registerRulesConfig() {
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
 		skillBonus: 'NIMBLE.ruleTypes.skillBonus',
 		speedBonus: 'NIMBLE.ruleTypes.speedBonus',
+		unarmedDamage: 'NIMBLE.ruleTypes.unarmedDamage',
 	};
 
 	const ruleDataModels = {
@@ -61,6 +63,7 @@ export default function registerRulesConfig() {
 		savingThrowRollMode: SavingThrowRollModeRule,
 		skillBonus: SkillBonusRule,
 		speedBonus: SpeedBonusRule,
+		unarmedDamage: UnarmedDamageRule,
 	} as const;
 
 	return { ruleDataModels, ruleTypes };
