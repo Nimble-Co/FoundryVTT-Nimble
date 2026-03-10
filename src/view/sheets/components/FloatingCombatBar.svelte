@@ -1,0 +1,506 @@
+<script>
+	import { createSubscriber } from 'svelte/reactivity';
+	import { untrack } from 'svelte';
+	import localize from '../../../utils/localize.js';
+
+	// ============================================================================
+	// Props
+	// ============================================================================
+
+	let { actor } = $props();
+
+	// ============================================================================
+	// Dice Icons (same as ActionPipTracker)
+	// ============================================================================
+
+	const diceIcons = [
+		'fa-dice-one',
+		'fa-dice-two',
+		'fa-dice-three',
+		'fa-dice-four',
+		'fa-dice-five',
+		'fa-dice-six',
+	];
+
+	function getDiceIcon(index) {
+		if (index < diceIcons.length) {
+			return diceIcons[index];
+		}
+		return 'fa-dice-d6';
+	}
+
+	// ============================================================================
+	// Combat State Management
+	// ============================================================================
+
+	const subscribeCombatState = createSubscriber((update) => {
+		const hookNames = [
+			'combatStart',
+			'createCombat',
+			'updateCombat',
+			'deleteCombat',
+			'createCombatant',
+			'updateCombatant',
+			'deleteCombatant',
+			'canvasInit',
+			'canvasReady',
+		];
+
+		const hookIds = hookNames.map((hookName) => ({
+			hookId: Hooks.on(hookName, () => update()),
+			hookName,
+		}));
+
+		return () => hookIds.forEach(({ hookName, hookId }) => Hooks.off(hookName, hookId));
+	});
+
+	function getActiveCombatForCurrentScene() {
+		const sceneId = canvas?.scene?.id;
+		if (!sceneId) return null;
+
+		const activeCombat = game.combat;
+		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
+			return activeCombat;
+		}
+
+		const activeByScene = game.combats?.contents?.find(
+			(combat) => combat?.active && combat.scene?.id === sceneId,
+		);
+		if (activeByScene) return activeByScene;
+
+		const viewedCombat = game.combats?.viewed ?? null;
+		if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
+			return viewedCombat;
+		}
+
+		return null;
+	}
+
+	function getCombatantInCombat() {
+		const combat = getActiveCombatForCurrentScene();
+		if (!combat) return null;
+		return combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
+	}
+
+	function hasRolledInitiative() {
+		const combatant = getCombatantInCombat();
+		if (!combatant) return false;
+		return combatant.initiative !== null;
+	}
+
+	function isInActiveCombat() {
+		const combat = getActiveCombatForCurrentScene();
+		if (!combat?.started) return false;
+		const combatant = combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
+		if (!combatant) return false;
+		return combatant.initiative !== null;
+	}
+
+	function needsToRollInitiative() {
+		const combatant = getCombatantInCombat();
+		if (!combatant) return false;
+		return combatant.initiative === null;
+	}
+
+	async function rollInitiative() {
+		const combat = getActiveCombatForCurrentScene();
+		if (!combat) return;
+		const combatant = combat.combatants.find((entry) => entry.actorId === actor.id);
+		if (!combatant) return;
+
+		try {
+			await combat.rollInitiative([combatant.id]);
+		} catch (_error) {
+			ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionRollInitiative'));
+		}
+	}
+
+	function getActionsData() {
+		const combatant = getCombatantInCombat();
+		if (!combatant) return { current: 0, max: 3 };
+
+		const actions = combatant.system?.actions?.base;
+		return {
+			current: actions?.current ?? 0,
+			max: actions?.max ?? 3,
+		};
+	}
+
+	async function updateActionPips(newValue) {
+		const combatant = getCombatantInCombat();
+		if (!combatant) return;
+		await combatant.update({ 'system.actions.base.current': newValue });
+	}
+
+	function isCharactersTurn() {
+		const combat = getActiveCombatForCurrentScene();
+		if (!combat?.started) return false;
+
+		const currentCombatant = combat.combatant;
+		if (!currentCombatant) return false;
+
+		return currentCombatant.actorId === actor.id;
+	}
+
+	async function endTurn() {
+		const combat = getActiveCombatForCurrentScene();
+		if (!combat) return;
+
+		try {
+			await combat.nextTurn();
+		} catch (_error) {
+			ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionEndTurn'));
+		}
+	}
+
+	// ============================================================================
+	// Reactive Combat State
+	// ============================================================================
+
+	let inCombat = $derived.by(() => {
+		subscribeCombatState();
+		return isInActiveCombat();
+	});
+
+	let needsInitiative = $derived.by(() => {
+		subscribeCombatState();
+		return needsToRollInitiative();
+	});
+
+	let hasInitiative = $derived.by(() => {
+		subscribeCombatState();
+		return hasRolledInitiative();
+	});
+
+	let actionsData = $derived.by(() => {
+		subscribeCombatState();
+		return getActionsData();
+	});
+
+	let isMyTurn = $derived.by(() => {
+		subscribeCombatState();
+		return isCharactersTurn();
+	});
+
+	let showCombatBar = $derived(hasInitiative || needsInitiative);
+
+	// ============================================================================
+	// Pip Interaction (same as ActionPipTracker)
+	// ============================================================================
+
+	function handlePipClick(index) {
+		if (!hasInitiative) return;
+
+		const pipNumber = index + 1;
+
+		if (pipNumber <= actionsData.current) {
+			updateActionPips(index);
+		} else {
+			updateActionPips(pipNumber);
+		}
+	}
+
+	function getPipAriaLabel(index, isAvailable) {
+		const number = index + 1;
+		if (isAvailable) {
+			return localize('NIMBLE.ui.heroicActions.pip.spendAction', { number });
+		}
+		return localize('NIMBLE.ui.heroicActions.pip.restoreAction', { number });
+	}
+
+	function getPipTooltip(isAvailable) {
+		if (!hasInitiative) {
+			return localize('NIMBLE.ui.heroicActions.enterCombat');
+		}
+		if (isAvailable) {
+			return localize('NIMBLE.ui.heroicActions.pip.clickToSpend');
+		}
+		return localize('NIMBLE.ui.heroicActions.pip.clickToRestore');
+	}
+
+	// ============================================================================
+	// Pip Spend Animation (same as ActionPipTracker)
+	// ============================================================================
+
+	let justSpentPips = $state(new Set());
+	let previousCurrent = $state(untrack(() => actionsData.current));
+
+	$effect(() => {
+		const current = actionsData.current;
+		if (current < previousCurrent) {
+			const newlySpent = new Set();
+			for (let i = current; i < previousCurrent; i++) {
+				newlySpent.add(i);
+			}
+			justSpentPips = newlySpent;
+
+			setTimeout(() => {
+				justSpentPips = new Set();
+			}, 600);
+		}
+		previousCurrent = current;
+	});
+</script>
+
+{#if showCombatBar}
+	<div class="floating-combat-bar">
+		<div class="floating-combat-bar__panel">
+			{#if needsInitiative}
+				<button
+					class="floating-combat-bar__initiative-btn"
+					type="button"
+					aria-label={localize('NIMBLE.ui.heroicActions.rollInitiative')}
+					data-tooltip={localize('NIMBLE.ui.heroicActions.rollInitiative')}
+					onclick={rollInitiative}
+				>
+					<i class="fa-solid fa-dice-d20"></i>
+				</button>
+			{:else if hasInitiative}
+				<div class="floating-combat-bar__pips">
+					{#each { length: actionsData.max }, i}
+						{@const isAvailable = i < actionsData.current}
+						{@const isJustSpent = justSpentPips.has(i)}
+						{@const diceIcon = getDiceIcon(i)}
+
+						<button
+							class="floating-combat-bar__pip"
+							class:floating-combat-bar__pip--available={isAvailable}
+							class:floating-combat-bar__pip--spent={!isAvailable}
+							class:floating-combat-bar__pip--just-spent={isJustSpent}
+							type="button"
+							aria-label={getPipAriaLabel(i, isAvailable)}
+							data-tooltip={getPipTooltip(isAvailable)}
+							onclick={() => handlePipClick(i)}
+						>
+							<i class="fa-solid {diceIcon}"></i>
+						</button>
+					{/each}
+				</div>
+
+				{#if isMyTurn}
+					{@const canEndTurn = actionsData.current === 0}
+					<button
+						class="floating-combat-bar__end-turn"
+						class:floating-combat-bar__end-turn--ready={canEndTurn}
+						type="button"
+						disabled={!canEndTurn}
+						aria-label={localize('NIMBLE.ui.heroicActions.endTurn')}
+						data-tooltip={canEndTurn
+							? localize('NIMBLE.ui.heroicActions.endTurn')
+							: localize('NIMBLE.ui.heroicActions.useActionsFirst')}
+						onclick={endTurn}
+					>
+						<i class="fa-solid fa-forward-step"></i>
+					</button>
+				{/if}
+			{/if}
+		</div>
+	</div>
+{/if}
+
+<style lang="scss">
+	.floating-combat-bar {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		margin-top: 0.5rem;
+
+		&__panel {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 0.25rem;
+			padding: 0.375rem;
+			background: color-mix(in srgb, var(--nimble-sheet-background) 85%, transparent);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 6px;
+			box-shadow:
+				0 2px 4px rgba(0, 0, 0, 0.15),
+				inset 0 1px 0 rgba(255, 255, 255, 0.1);
+		}
+
+		&__initiative-btn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 2rem;
+			height: 2rem;
+			padding: 0;
+			background: hsl(210, 60%, 50%);
+			border: 1px solid hsl(210, 60%, 44%);
+			border-radius: 4px;
+			cursor: pointer;
+			transition: all 0.15s ease;
+
+			i {
+				font-size: 1rem;
+				color: var(--nimble-light-text-color);
+			}
+
+			&:hover {
+				background: hsl(210, 60%, 44%);
+				border-color: hsl(210, 60%, 38%);
+			}
+		}
+
+		&__pips {
+			display: flex;
+			flex-direction: column;
+			gap: 0.25rem;
+		}
+
+		&__pip {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 2rem;
+			height: 2rem;
+			padding: 0;
+			background: var(--nimble-box-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			cursor: pointer;
+			transition: all 0.15s ease;
+
+			i {
+				font-size: 1rem;
+				transition: all 0.15s ease;
+			}
+
+			&:hover {
+				border-color: var(--nimble-accent-color);
+			}
+
+			&--available {
+				i {
+					color: hsl(139, 47%, 44%);
+				}
+
+				&:hover i {
+					color: hsl(139, 47%, 55%);
+					filter: drop-shadow(0 0 4px hsl(139, 47%, 44%));
+				}
+			}
+
+			&--spent {
+				i {
+					color: var(--nimble-medium-text-color);
+					opacity: 0.5;
+				}
+
+				&:hover i {
+					opacity: 0.7;
+				}
+			}
+
+			&--just-spent {
+				animation: pip-spent 0.6s ease-out;
+
+				i {
+					animation: pip-icon-spent 0.6s ease-out;
+				}
+			}
+		}
+
+		&__end-turn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 2rem;
+			height: 2rem;
+			padding: 0;
+			background: var(--nimble-box-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			opacity: 0.4;
+			cursor: not-allowed;
+			transition: all 0.2s ease;
+
+			i {
+				font-size: 0.875rem;
+				color: var(--nimble-medium-text-color);
+			}
+
+			&--ready {
+				opacity: 1;
+				cursor: pointer;
+				background: hsl(139, 50%, 45%);
+				border-color: hsl(139, 50%, 38%);
+				box-shadow:
+					0 0 8px hsla(139, 50%, 45%, 0.5),
+					inset 0 1px 0 hsla(139, 50%, 70%, 0.3);
+
+				i {
+					color: white;
+					filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
+				}
+
+				&:hover {
+					background: hsl(139, 50%, 40%);
+					border-color: hsl(139, 50%, 32%);
+					box-shadow:
+						0 0 12px hsla(139, 50%, 45%, 0.6),
+						inset 0 1px 0 hsla(139, 50%, 70%, 0.3);
+				}
+
+				&:active {
+					background: hsl(139, 50%, 35%);
+					box-shadow: 0 0 6px hsla(139, 50%, 45%, 0.4);
+				}
+			}
+		}
+	}
+
+	:global(.theme-dark) .floating-combat-bar__panel {
+		background: hsla(220, 15%, 15%, 0.95);
+		border-color: hsl(220, 10%, 30%);
+	}
+
+	:global(.theme-dark) .floating-combat-bar__pip {
+		background: hsl(220, 15%, 18%);
+		border-color: hsl(220, 10%, 30%);
+
+		&:hover {
+			border-color: hsl(220, 15%, 45%);
+			background: hsl(220, 15%, 22%);
+		}
+	}
+
+	:global(.theme-dark) .floating-combat-bar__end-turn {
+		background: hsl(220, 15%, 18%);
+		border-color: hsl(220, 10%, 30%);
+	}
+
+	@keyframes pip-spent {
+		0% {
+			transform: scale(1);
+			border-color: hsl(139, 47%, 44%);
+		}
+		30% {
+			transform: scale(1.15);
+			border-color: hsl(45, 70%, 50%);
+		}
+		100% {
+			transform: scale(1);
+			border-color: var(--nimble-card-border-color);
+		}
+	}
+
+	@keyframes pip-icon-spent {
+		0% {
+			color: hsl(139, 47%, 44%);
+			opacity: 1;
+			transform: scale(1);
+		}
+		30% {
+			color: hsl(45, 70%, 50%);
+			opacity: 1;
+			transform: scale(1.2);
+		}
+		100% {
+			color: var(--nimble-medium-text-color);
+			opacity: 0.5;
+			transform: scale(1);
+		}
+	}
+</style>

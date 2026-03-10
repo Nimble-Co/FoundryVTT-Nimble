@@ -21,6 +21,7 @@
 	import PlayerCharacterInventoryTab from './pages/PlayerCharacterInventoryTab.svelte';
 	import PlayerCharacterSettingsTab from './pages/PlayerCharacterSettingsTab.svelte';
 	import PlayerCharacterSpellsTab from './pages/PlayerCharacterSpellsTab.svelte';
+	import FloatingCombatBar from './components/FloatingCombatBar.svelte';
 
 	function getHitPointPercentage(currentHP, maxHP) {
 		return Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100);
@@ -624,6 +625,8 @@
 	>
 		<i class="fa-solid fa-moon"></i>
 	</button>
+
+	<FloatingCombatBar {actor} />
 </section>
 
 <style lang="scss">
