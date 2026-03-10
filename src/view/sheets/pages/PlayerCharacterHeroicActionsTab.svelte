@@ -797,9 +797,7 @@
 				type="button"
 				disabled={!canEndTurn}
 				aria-label={localize('NIMBLE.ui.heroicActions.endTurn')}
-				data-tooltip={canEndTurn
-					? localize('NIMBLE.ui.heroicActions.endTurn')
-					: localize('NIMBLE.ui.heroicActions.useActionsFirst')}
+				data-tooltip={canEndTurn ? null : localize('NIMBLE.ui.heroicActions.useActionsFirst')}
 				onclick={endTurn}
 			>
 				{localize('NIMBLE.ui.heroicActions.endTurn')}
