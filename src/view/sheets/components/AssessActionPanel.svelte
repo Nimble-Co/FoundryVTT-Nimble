@@ -239,6 +239,7 @@
 	.assess-panel {
 		display: flex;
 		flex-direction: column;
+		gap: 0.5rem;
 
 		&__content {
 			display: flex;

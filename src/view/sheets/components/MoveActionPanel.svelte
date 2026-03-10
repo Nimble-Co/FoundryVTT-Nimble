@@ -98,6 +98,10 @@
 
 <style lang="scss">
 	.move-panel {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+
 		&__content {
 			display: flex;
 			flex-direction: column;
