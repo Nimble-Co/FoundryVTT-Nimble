@@ -4,8 +4,6 @@
 	import filterItems from '../../dataPreparationHelpers/filterItems.js';
 	import sortItems from '../../../utils/sortItems.js';
 	import localize from '../../../utils/localize.js';
-	import prepareSpellTooltip from '../../dataPreparationHelpers/documentTooltips/prepareSpellTooltip';
-	import prepareObjectTooltip from '../../dataPreparationHelpers/documentTooltips/prepareObjectTooltip.js';
 	import {
 		getPrimaryDamageFormulaFromActivationEffects,
 		flattenActivationEffects,
@@ -226,6 +224,18 @@
 	// ============================================================================
 
 	let expandedPanel = $state('attack');
+	let expandedDescriptions = $state(new Set());
+
+	function toggleDescription(itemId, event) {
+		event.stopPropagation();
+		const newSet = new Set(expandedDescriptions);
+		if (newSet.has(itemId)) {
+			newSet.delete(itemId);
+		} else {
+			newSet.add(itemId);
+		}
+		expandedDescriptions = newSet;
+	}
 
 	function togglePanel(panelName) {
 		// Attack and Spell act like tabs - clicking the selected one does nothing
@@ -714,27 +724,6 @@
 	}
 
 	// ============================================================================
-	// Tooltip Caching
-	// ============================================================================
-
-	const weaponTooltipCache = new Map();
-	const spellTooltipCache = new Map();
-
-	function handleTooltipMouseEnter(event, item, cache, prepareTooltip) {
-		const element = event.currentTarget;
-		const cacheKey = item.reactive._id;
-
-		if (!cache.has(cacheKey)) {
-			prepareTooltip(item.reactive).then((tooltip) => {
-				if (tooltip) {
-					cache.set(cacheKey, tooltip);
-					element.setAttribute('data-tooltip', tooltip);
-				}
-			});
-		}
-	}
-
-	// ============================================================================
 	// Derived State
 	// ============================================================================
 
@@ -858,74 +847,118 @@
 					{#each sortItems(weapons) as item (item._id)}
 						{@const damage = getWeaponDamage(item)}
 						{@const properties = getWeaponProperties(item)}
-						<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
-						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						{@const isExpanded = expandedDescriptions.has(item._id)}
+						{@const description = item.reactive.system?.description ?? ''}
 						<li
 							class="weapon-card"
+							class:weapon-card--expanded={isExpanded}
 							data-item-id={item._id}
-							data-tooltip={weaponTooltipCache.get(item.reactive._id) || ''}
-							data-tooltip-class="nimble-tooltip nimble-tooltip--item"
-							data-tooltip-direction="LEFT"
-							onmouseenter={(event) =>
-								handleTooltipMouseEnter(event, item, weaponTooltipCache, prepareObjectTooltip)}
-							draggable="true"
-							role="button"
-							ondragstart={(event) => sheet._onDragStart(event)}
-							onclick={() => activateItemWithActionDeduction(item._id)}
 						>
-							{#if showEmbeddedDocumentImages}
-								<img class="weapon-card__img" src={item.reactive.img} alt={item.reactive.name} />
-							{/if}
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<div
+								class="weapon-card__row"
+								role="button"
+								tabindex="0"
+								draggable="true"
+								ondragstart={(event) => sheet._onDragStart(event)}
+								onclick={() => activateItemWithActionDeduction(item._id)}
+							>
+								{#if showEmbeddedDocumentImages}
+									<img class="weapon-card__img" src={item.reactive.img} alt={item.reactive.name} />
+								{/if}
 
-							<div class="weapon-card__content">
-								<span class="weapon-card__name">{item.reactive.name}</span>
-								{#if properties.length > 0}
-									<div class="weapon-card__meta">
-										{#each properties as prop}
-											<span class="weapon-card__tag">{prop}</span>
-										{/each}
-									</div>
+								<div class="weapon-card__content">
+									<span class="weapon-card__name">{item.reactive.name}</span>
+									{#if properties.length > 0}
+										<div class="weapon-card__meta">
+											{#each properties as prop}
+												<span class="weapon-card__tag">{prop}</span>
+											{/each}
+										</div>
+									{/if}
+								</div>
+
+								{#if damage}
+									<span class="weapon-card__damage">
+										<i class="fa-solid fa-burst"></i>
+										{damage}
+									</span>
+								{/if}
+
+								{#if description}
+									<button
+										class="weapon-card__expand"
+										type="button"
+										onclick={(e) => toggleDescription(item._id, e)}
+										aria-label={isExpanded ? 'Collapse' : 'Expand'}
+									>
+										<i class="fa-solid fa-caret-{isExpanded ? 'up' : 'down'}"></i>
+									</button>
 								{/if}
 							</div>
 
-							{#if damage}
-								<span class="weapon-card__damage">
-									<i class="fa-solid fa-burst"></i>
-									{damage}
-								</span>
+							{#if isExpanded && description}
+								<div class="weapon-card__description">
+									{@html description}
+								</div>
 							{/if}
 						</li>
 					{/each}
 
 					{#each sortItems(attackFeatures) as item (item._id)}
 						{@const damage = getWeaponDamage(item)}
-						<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
-						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						{@const isExpanded = expandedDescriptions.has(item._id)}
+						{@const description = item.reactive.system?.description ?? ''}
 						<li
 							class="weapon-card"
+							class:weapon-card--expanded={isExpanded}
 							data-item-id={item._id}
-							draggable="true"
-							role="button"
-							ondragstart={(event) => sheet._onDragStart(event)}
-							onclick={() => activateItemWithActionDeduction(item._id)}
 						>
-							{#if showEmbeddedDocumentImages}
-								<img class="weapon-card__img" src={item.reactive.img} alt={item.reactive.name} />
-							{/if}
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<div
+								class="weapon-card__row"
+								role="button"
+								tabindex="0"
+								draggable="true"
+								ondragstart={(event) => sheet._onDragStart(event)}
+								onclick={() => activateItemWithActionDeduction(item._id)}
+							>
+								{#if showEmbeddedDocumentImages}
+									<img class="weapon-card__img" src={item.reactive.img} alt={item.reactive.name} />
+								{/if}
 
-							<div class="weapon-card__content">
-								<span class="weapon-card__name">{item.reactive.name}</span>
-								<div class="weapon-card__meta">
-									<span class="weapon-card__tag">{localize('NIMBLE.ui.heroicActions.feature')}</span
-									>
+								<div class="weapon-card__content">
+									<span class="weapon-card__name">{item.reactive.name}</span>
+									<div class="weapon-card__meta">
+										<span class="weapon-card__tag"
+											>{localize('NIMBLE.ui.heroicActions.feature')}</span
+										>
+									</div>
 								</div>
+
+								{#if damage}
+									<span class="weapon-card__damage">
+										<i class="fa-solid fa-burst"></i>
+										{damage}
+									</span>
+								{/if}
+
+								{#if description}
+									<button
+										class="weapon-card__expand"
+										type="button"
+										onclick={(e) => toggleDescription(item._id, e)}
+										aria-label={isExpanded ? 'Collapse' : 'Expand'}
+									>
+										<i class="fa-solid fa-caret-{isExpanded ? 'up' : 'down'}"></i>
+									</button>
+								{/if}
 							</div>
 
-							{#if damage}
-								<span class="weapon-card__damage">
-									<i class="fa-solid fa-burst"></i>
-									{damage}
-								</span>
+							{#if isExpanded && description}
+								<div class="weapon-card__description">
+									{@html description}
+								</div>
 							{/if}
 						</li>
 					{/each}
@@ -960,58 +993,81 @@
 							{@const spellRange = getSpellRange(spell)}
 							{@const requiresConcentration =
 								spell.reactive.system.properties.selected.includes('concentration')}
+							{@const isExpanded = expandedDescriptions.has(spell._id)}
+							{@const description = spell.reactive.system?.description ?? ''}
 
-							<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
-							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<li
 								class="spell-card"
+								class:spell-card--expanded={isExpanded}
 								data-item-id={spell._id}
-								data-tooltip={spellTooltipCache.get(spell.reactive._id) || ''}
-								data-tooltip-class="nimble-tooltip nimble-tooltip--item"
-								data-tooltip-direction="LEFT"
-								onmouseenter={(event) =>
-									handleTooltipMouseEnter(event, spell, spellTooltipCache, prepareSpellTooltip)}
-								draggable="true"
-								role="button"
-								ondragstart={(event) => sheet._onDragStart(event)}
-								onclick={() => activateItemWithActionDeduction(spell._id)}
 							>
-								{#if showEmbeddedDocumentImages}
-									<img class="spell-card__img" src={spell.reactive.img} alt={spell.reactive.name} />
-								{/if}
+								<!-- svelte-ignore a11y_click_events_have_key_events -->
+								<div
+									class="spell-card__row"
+									role="button"
+									tabindex="0"
+									draggable="true"
+									ondragstart={(event) => sheet._onDragStart(event)}
+									onclick={() => activateItemWithActionDeduction(spell._id)}
+								>
+									{#if showEmbeddedDocumentImages}
+										<img
+											class="spell-card__img"
+											src={spell.reactive.img}
+											alt={spell.reactive.name}
+										/>
+									{/if}
 
-								<div class="spell-card__content">
-									<span class="spell-card__name">
-										{spell.reactive.name}
-										{#if requiresConcentration}
-											<span class="spell-card__tag">C</span>
-										{/if}
-									</span>
+									<div class="spell-card__content">
+										<span class="spell-card__name">
+											{spell.reactive.name}
+											{#if requiresConcentration}
+												<span class="spell-card__tag">C</span>
+											{/if}
+										</span>
 
-									<div class="spell-card__meta">
-										{#if meta}
-											<span class="spell-card__action-cost">{@html meta}</span>
-										{/if}
-										{#if spellRange}
-											<span class="spell-card__range">{spellRange}</span>
-										{/if}
-										{#if manaCost > 0}
-											<span class="spell-card__mana">
-												<i class="fa-solid fa-sparkles"></i>
-												{localize('NIMBLE.ui.heroicActions.mana', { cost: manaCost })}
-											</span>
-										{/if}
+										<div class="spell-card__meta">
+											{#if meta}
+												<span class="spell-card__action-cost">{@html meta}</span>
+											{/if}
+											{#if spellRange}
+												<span class="spell-card__range">{spellRange}</span>
+											{/if}
+											{#if manaCost > 0}
+												<span class="spell-card__mana">
+													<i class="fa-solid fa-sparkles"></i>
+													{localize('NIMBLE.ui.heroicActions.mana', { cost: manaCost })}
+												</span>
+											{/if}
+										</div>
 									</div>
+
+									{#if effect}
+										<span
+											class="spell-card__effect"
+											class:spell-card__effect--healing={effect.isHealing}
+										>
+											<i class="fa-solid {effect.isHealing ? 'fa-heart' : 'fa-burst'}"></i>
+											{effect.formula}
+										</span>
+									{/if}
+
+									{#if description}
+										<button
+											class="spell-card__expand"
+											type="button"
+											onclick={(e) => toggleDescription(spell._id, e)}
+											aria-label={isExpanded ? 'Collapse' : 'Expand'}
+										>
+											<i class="fa-solid fa-caret-{isExpanded ? 'up' : 'down'}"></i>
+										</button>
+									{/if}
 								</div>
 
-								{#if effect}
-									<span
-										class="spell-card__effect"
-										class:spell-card__effect--healing={effect.isHealing}
-									>
-										<i class="fa-solid {effect.isHealing ? 'fa-heart' : 'fa-burst'}"></i>
-										{effect.formula}
-									</span>
+								{#if isExpanded && description}
+									<div class="spell-card__description">
+										{@html description}
+									</div>
 								{/if}
 							</li>
 						{/each}
@@ -1243,18 +1299,23 @@
 
 	.weapon-card {
 		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem;
+		flex-direction: column;
 		background: var(--nimble-box-background-color);
 		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 4px;
-		cursor: pointer;
 		transition: var(--nimble-standard-transition);
 
 		&:hover {
 			border-color: var(--nimble-box-color);
 			box-shadow: var(--nimble-box-shadow);
+		}
+
+		&__row {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.5rem;
+			cursor: pointer;
 		}
 
 		&__icon {
@@ -1329,22 +1390,68 @@
 				color: hsl(0, 60%, 50%);
 			}
 		}
+
+		&__expand {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.5rem;
+			height: 1.5rem;
+			padding: 0;
+			background: transparent;
+			border: none;
+			border-radius: 3px;
+			cursor: pointer;
+			flex-shrink: 0;
+			color: var(--nimble-medium-text-color);
+			transition: all 0.15s ease;
+
+			&:hover {
+				background: var(--nimble-basic-button-background-color);
+				color: var(--nimble-dark-text-color);
+			}
+
+			i {
+				font-size: 0.875rem;
+			}
+		}
+
+		&__description {
+			padding: 0.5rem 0.75rem;
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-dark-text-color);
+			border-top: 1px solid var(--nimble-card-border-color);
+			line-height: 1.5;
+
+			:global(p) {
+				margin: 0 0 0.5rem;
+
+				&:last-child {
+					margin-bottom: 0;
+				}
+			}
+		}
 	}
 
 	.spell-card {
 		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem;
+		flex-direction: column;
 		background: var(--nimble-box-background-color);
 		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 4px;
-		cursor: pointer;
 		transition: var(--nimble-standard-transition);
 
 		&:hover {
 			border-color: var(--nimble-box-color);
 			box-shadow: var(--nimble-box-shadow);
+		}
+
+		&__row {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.5rem;
+			cursor: pointer;
 		}
 
 		&__img {
@@ -1432,6 +1539,47 @@
 
 			i {
 				font-size: 0.625rem;
+			}
+		}
+
+		&__expand {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.5rem;
+			height: 1.5rem;
+			padding: 0;
+			background: transparent;
+			border: none;
+			border-radius: 3px;
+			cursor: pointer;
+			flex-shrink: 0;
+			color: var(--nimble-medium-text-color);
+			transition: all 0.15s ease;
+
+			&:hover {
+				background: var(--nimble-basic-button-background-color);
+				color: var(--nimble-dark-text-color);
+			}
+
+			i {
+				font-size: 0.875rem;
+			}
+		}
+
+		&__description {
+			padding: 0.5rem 0.75rem;
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-dark-text-color);
+			border-top: 1px solid var(--nimble-card-border-color);
+			line-height: 1.5;
+
+			:global(p) {
+				margin: 0 0 0.5rem;
+
+				&:last-child {
+					margin-bottom: 0;
+				}
 			}
 		}
 	}
