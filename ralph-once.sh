@@ -1,5 +1,5 @@
 #!/bin/bash
-claude --permission-mode acceptEdits "@PRD.md @progress.txt \
+claude --permission-mode acceptEdits -p "@PRD.md @progress.txt \
 1. Read the PRD and progress file. \
 2. Find the next incomplete task. \
 3. Cut a new branch from stage for that task. \
