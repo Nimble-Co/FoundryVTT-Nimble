@@ -662,6 +662,8 @@
 				"feature": "Feature",
 				"mana": "{cost} Mana",
 				"thrown": "Thrown: {distance}",
+				"baseEffect": "Effect",
+				"higherLevelEffect": "At Higher Levels",
 				"pip": {
 					"spendAction": "Spend action {number}",
 					"restoreAction": "Restore action {number}",

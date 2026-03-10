@@ -734,6 +734,30 @@
 		return '';
 	}
 
+	function hasContent(text) {
+		if (!text || typeof text !== 'string') return false;
+		const stripped = text.replace(/<[^>]*>/g, '').trim();
+		return stripped.length > 0;
+	}
+
+	function getSpellEffects(spell) {
+		const desc = spell.reactive?.system?.description ?? spell.system?.description;
+		if (!desc) return null;
+
+		const baseEffect = desc.baseEffect;
+		const higherLevelEffect = desc.higherLevelEffect;
+
+		const hasBase = hasContent(baseEffect);
+		const hasHigher = hasContent(higherLevelEffect);
+
+		if (!hasBase && !hasHigher) return null;
+
+		return {
+			baseEffect: hasBase ? baseEffect : null,
+			higherLevelEffect: hasHigher ? higherLevelEffect : null,
+		};
+	}
+
 	// ============================================================================
 	// Derived State
 	// ============================================================================
@@ -1015,7 +1039,7 @@
 							{@const requiresConcentration =
 								spell.reactive.system.properties.selected.includes('concentration')}
 							{@const isExpanded = expandedDescriptions.has(spell._id)}
-							{@const description = getItemDescription(spell)}
+							{@const spellEffects = getSpellEffects(spell)}
 
 							<li
 								class="spell-card"
@@ -1073,7 +1097,7 @@
 										</span>
 									{/if}
 
-									{#if description}
+									{#if spellEffects}
 										<button
 											class="spell-card__expand"
 											type="button"
@@ -1085,11 +1109,24 @@
 									{/if}
 								</div>
 
-								{#if isExpanded && description}
+								{#if isExpanded && spellEffects}
 									<div class="spell-card__description">
-										{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(description) then enrichedDescription}
-											{@html enrichedDescription}
-										{/await}
+										{#if spellEffects.baseEffect}
+											<div class="spell-card__effect-section">
+												<strong>{localize('NIMBLE.ui.heroicActions.baseEffect')}</strong>
+												{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(spellEffects.baseEffect) then enrichedEffect}
+													{@html enrichedEffect}
+												{/await}
+											</div>
+										{/if}
+										{#if spellEffects.higherLevelEffect}
+											<div class="spell-card__effect-section">
+												<strong>{localize('NIMBLE.ui.heroicActions.higherLevelEffect')}</strong>
+												{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(spellEffects.higherLevelEffect) then enrichedEffect}
+													{@html enrichedEffect}
+												{/await}
+											</div>
+										{/if}
 									</div>
 								{/if}
 							</li>
@@ -1596,6 +1633,31 @@
 			color: var(--nimble-dark-text-color);
 			border-top: 1px solid var(--nimble-card-border-color);
 			line-height: 1.5;
+
+			:global(p) {
+				margin: 0 0 0.5rem;
+
+				&:last-child {
+					margin-bottom: 0;
+				}
+			}
+		}
+
+		&__effect-section {
+			&:not(:last-child) {
+				margin-bottom: 0.75rem;
+				padding-bottom: 0.75rem;
+				border-bottom: 1px solid var(--nimble-card-border-color);
+			}
+
+			strong {
+				display: block;
+				margin-bottom: 0.25rem;
+				font-size: var(--nimble-xs-text);
+				color: var(--nimble-medium-text-color);
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+			}
 
 			:global(p) {
 				margin: 0 0 0.5rem;
