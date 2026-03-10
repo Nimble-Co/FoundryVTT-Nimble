@@ -25,6 +25,7 @@
 	} from '../../utils/combatTurnActions.js';
 	import { isCombatantDead } from '../../utils/isCombatantDead.js';
 	import {
+		CT_CARD_SIZE_PREVIEW_EVENT_NAME,
 		CT_SETTINGS_DIALOG_UNIQUE_ID,
 		CT_VIRTUALIZATION_ENTRY_THRESHOLD,
 		CT_WIDTH_PREVIEW_EVENT_NAME,
@@ -58,6 +59,7 @@
 		isMonsterOrMinionCombatant,
 		isPlayerCombatant,
 		localizeWithFallback,
+		normalizeCtCardSizeLevel,
 		normalizeCtWidthLevel,
 		orderEntriesForCenteredActive,
 		resolveActiveEntryKey,
@@ -201,9 +203,9 @@
 		const scrollLeft = activeElement
 			? activeElement.offsetLeft - trackElement.clientWidth / 2 + activeElement.clientWidth / 2
 			: activeIndex >= 0
-				? activeIndex * getEstimatedCtEntryWidthPx(ctCardSizeLevel) -
+				? activeIndex * getEstimatedCtEntryWidthPx(ctEffectiveCardSizeLevel) -
 					trackElement.clientWidth / 2 +
-					getEstimatedCtEntryWidthPx(ctCardSizeLevel) / 2
+					getEstimatedCtEntryWidthPx(ctEffectiveCardSizeLevel) / 2
 				: null;
 		if (scrollLeft == null) return;
 		trackElement.scrollTo({ left: Math.max(0, scrollLeft), behavior });
@@ -1033,7 +1035,7 @@
 				scrollLeft: trackScrollLeft,
 				viewportWidth: trackClientWidth,
 			},
-			ctCardSizeLevel,
+			ctEffectiveCardSizeLevel,
 		),
 	);
 	let roundBoundaryKey = $derived.by(() =>
@@ -1059,13 +1061,17 @@
 	let ctWidthPreviewMaxWidth = $derived.by(() =>
 		resolveCtTrackMaxWidth(ctWidthPreviewLevel ?? ctWidthLevel),
 	);
-	let ctCardScale = $derived.by(() => getCtCardScale(ctCardSizeLevel));
+	let ctCardSizePreviewLevel = $state<number | null>(null);
+	let ctCardSizePreviewActive = $derived(ctCardSizePreviewLevel !== null);
+	let ctEffectiveCardSizeLevel = $derived(ctCardSizePreviewLevel ?? ctCardSizeLevel);
+	let ctCardScale = $derived.by(() => getCtCardScale(ctEffectiveCardSizeLevel));
 	let trackScrollbarMetrics = $derived.by(() => getTrackScrollbarMetrics());
 	let showTrackScrollbar = $derived(Boolean(trackScrollbarMetrics));
 
 	let unregisterCtHooks: (() => void) | undefined;
 	let resizeListener: (() => void) | undefined;
 	let ctWidthPreviewListener: ((event: Event) => void) | undefined;
+	let ctCardSizePreviewListener: ((event: Event) => void) | undefined;
 	let ctClientSettingUpdatedListener: ((event: Event) => void) | undefined;
 	let trackWheelListener: ((event: WheelEvent) => void) | undefined;
 	let trackHoverListener: ((event: MouseEvent) => void) | undefined;
@@ -1145,6 +1151,17 @@
 			ctWidthPreviewLevel = normalizeCtWidthLevel(detail.widthLevel);
 		};
 		window.addEventListener(CT_WIDTH_PREVIEW_EVENT_NAME, ctWidthPreviewListener);
+		ctCardSizePreviewListener = (event: Event) => {
+			if (!(event instanceof CustomEvent)) return;
+			const detail = (event.detail ?? {}) as { active?: boolean; cardSizeLevel?: unknown };
+			if (detail.active === false) {
+				ctCardSizePreviewLevel = null;
+				return;
+			}
+			if (detail.active !== true) return;
+			ctCardSizePreviewLevel = normalizeCtCardSizeLevel(detail.cardSizeLevel);
+		};
+		window.addEventListener(CT_CARD_SIZE_PREVIEW_EVENT_NAME, ctCardSizePreviewListener);
 		ctClientSettingUpdatedListener = (event: Event) => {
 			if (!(event instanceof CustomEvent)) return;
 			applyCtTopTrackerSettingPatch(event.detail?.key);
@@ -1177,6 +1194,9 @@
 		if (ctWidthPreviewListener) {
 			window.removeEventListener(CT_WIDTH_PREVIEW_EVENT_NAME, ctWidthPreviewListener);
 		}
+		if (ctCardSizePreviewListener) {
+			window.removeEventListener(CT_CARD_SIZE_PREVIEW_EVENT_NAME, ctCardSizePreviewListener);
+		}
 		if (ctClientSettingUpdatedListener) {
 			window.removeEventListener(
 				COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME,
@@ -1193,6 +1213,7 @@
 	$effect(() => {
 		trackDependency(orderedAliveEntries.length);
 		trackDependency(layoutVersion);
+		trackDependency(ctEffectiveCardSizeLevel);
 		void tick().then(() => {
 			updateTrackViewportMetrics();
 		});
@@ -1311,6 +1332,7 @@
 {#if ctEnabled && currentCombat}
 	<section
 		class="nimble-ct-shell"
+		class:nimble-ct-shell--card-size-preview-active={ctCardSizePreviewActive}
 		class:nimble-ct-shell--resource-drawer-pinned={!resourceDrawerHoverEnabled}
 		style={`--nimble-ct-track-max-width: ${ctTrackMaxWidth}; --nimble-ct-card-scale: ${ctCardScale};`}
 		in:fade={{ duration: 120 }}
@@ -1842,8 +1864,8 @@
 		--nimble-ct-action-adjust-bg: color-mix(in srgb, hsl(226 26% 10%) 86%, black 14%);
 		--nimble-ct-action-adjust-border: color-mix(
 			in srgb,
-			var(--nimble-ct-action-color-resolved) 58%,
-			white 42%
+			var(--nimble-ct-action-color-resolved) 74%,
+			white 26%
 		);
 		--nimble-ct-action-text-shadow: 0 0 0.18rem color-mix(in srgb, black 70%, transparent);
 		position: fixed;
@@ -1910,8 +1932,8 @@
 		--nimble-ct-action-adjust-bg: color-mix(in srgb, white 70%, var(--nimble-ct-action-color) 30%);
 		--nimble-ct-action-adjust-border: color-mix(
 			in srgb,
-			var(--nimble-ct-action-color) 66%,
-			hsl(219 28% 42%) 34%
+			var(--nimble-ct-action-color) 76%,
+			hsl(219 28% 42%) 24%
 		);
 		--nimble-ct-action-text-shadow: 0 0 0 transparent;
 	}
@@ -2393,6 +2415,23 @@
 			gap 180ms ease,
 			border-radius 180ms ease,
 			box-shadow 180ms ease;
+	}
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__portrait,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__portrait-card,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__resource-drawer-stack,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__resource-drawer,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__resource-row--reactions,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__player-resource-bar,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__player-resource-bar-text,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__player-resource-bar-text i,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__player-name-drawer,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__drawer-cell,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__drawer-cell i,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__non-player-footer-stack,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__non-player-hp-bar,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__non-player-hp-bar-text,
+	.nimble-ct-shell--card-size-preview-active .nimble-ct__name-drawer-stack {
+		transition: none !important;
 	}
 	.nimble-ct__resource-row {
 		width: 100%;
@@ -2947,15 +2986,17 @@
 	}
 	.nimble-ct__pips {
 		position: absolute;
-		inset-inline: 0;
+		inset-inline: clamp(0.12rem, calc(0.24rem * var(--nimble-ct-card-scale, 1)), 0.24rem);
 		bottom: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.16rem;
-		min-height: 0.9rem;
-		padding: 0.14rem 0.18rem 0.18rem;
-		font-size: 0.58rem;
+		gap: clamp(0.1rem, calc(0.16rem * var(--nimble-ct-card-scale, 1)), 0.16rem);
+		min-height: clamp(0.74rem, calc(0.9rem * var(--nimble-ct-card-scale, 1)), 0.9rem);
+		padding: clamp(0.08rem, calc(0.14rem * var(--nimble-ct-card-scale, 1)), 0.14rem)
+			clamp(0.12rem, calc(0.18rem * var(--nimble-ct-card-scale, 1)), 0.18rem)
+			clamp(0.1rem, calc(0.18rem * var(--nimble-ct-card-scale, 1)), 0.18rem);
+		font-size: clamp(0.48rem, calc(0.58rem * var(--nimble-ct-card-scale, 1)), 0.58rem);
 		color: hsl(36 87% 84%);
 		background: linear-gradient(
 			to top,
@@ -2971,23 +3012,31 @@
 		filter: drop-shadow(0 0 0.12rem color-mix(in srgb, black 70%, transparent));
 	}
 	.nimble-ct__action-box-shell {
+		--nimble-ct-action-control-scale: clamp(0.8, calc(var(--nimble-ct-card-scale, 1) / 1.08), 1);
+		width: max-content;
+		max-width: 100%;
 		display: inline-flex;
+		flex: 0 1 auto;
 		align-items: center;
 		justify-content: center;
-		gap: 0.32rem;
+		gap: clamp(0.08rem, calc(0.24rem * var(--nimble-ct-card-scale, 1)), 0.24rem);
+		transform: scale(var(--nimble-ct-action-control-scale));
+		transform-origin: center bottom;
 	}
 	.nimble-ct__action-box {
-		min-width: 3.1rem;
-		height: 1.45rem;
-		padding-inline: 0.42rem;
+		flex: 1 1 auto;
+		min-width: clamp(2.1rem, calc(3.1rem * var(--nimble-ct-card-scale, 1)), 3.1rem);
+		max-width: 100%;
+		height: clamp(1.08rem, calc(1.45rem * var(--nimble-ct-card-scale, 1)), 1.45rem);
+		padding-inline: clamp(0.18rem, calc(0.42rem * var(--nimble-ct-card-scale, 1)), 0.42rem);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: 0.28rem;
+		border-radius: clamp(0.18rem, calc(0.28rem * var(--nimble-ct-card-scale, 1)), 0.28rem);
 		border: 1px solid var(--nimble-ct-action-box-border);
 		background: var(--nimble-ct-action-box-bg);
 		color: var(--nimble-ct-action-color-resolved);
-		font-size: 0.88rem;
+		font-size: clamp(0.7rem, calc(0.88rem * var(--nimble-ct-card-scale, 1)), 0.88rem);
 		font-weight: 800;
 		line-height: 1;
 		font-variant-numeric: tabular-nums;
@@ -2996,16 +3045,20 @@
 	}
 	.nimble-ct__action-adjust {
 		all: unset;
-		width: 1.18rem;
-		height: 1.1rem;
+		flex: 0 0 auto;
+		width: clamp(0.78rem, calc(1.18rem * var(--nimble-ct-card-scale, 1)), 1.18rem);
+		height: clamp(0.84rem, calc(1.1rem * var(--nimble-ct-card-scale, 1)), 1.1rem);
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		border-radius: 0.22rem;
+		border-radius: clamp(0.16rem, calc(0.22rem * var(--nimble-ct-card-scale, 1)), 0.22rem);
 		border: 1px solid var(--nimble-ct-action-adjust-border);
 		background: var(--nimble-ct-action-adjust-bg);
+		box-shadow:
+			0 0 0 1px color-mix(in srgb, var(--nimble-ct-action-adjust-border) 58%, transparent),
+			inset 0 0 0 1px color-mix(in srgb, white 10%, transparent);
 		color: var(--nimble-ct-action-color-resolved);
-		font-size: 0.28rem;
+		font-size: clamp(0.24rem, calc(0.28rem * var(--nimble-ct-card-scale, 1)), 0.28rem);
 		line-height: 1;
 		cursor: pointer;
 		transition:
@@ -3018,7 +3071,7 @@
 		filter: brightness(1.12);
 	}
 	.nimble-ct__action-adjust i {
-		font-size: 0.6rem;
+		font-size: clamp(0.48rem, calc(0.6rem * var(--nimble-ct-card-scale, 1)), 0.6rem);
 		line-height: 1;
 	}
 	.nimble-ct__action-adjust:disabled {

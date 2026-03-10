@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import {
+		CT_CARD_SIZE_PREVIEW_EVENT_NAME,
+		CT_WIDTH_PREVIEW_EVENT_NAME,
+	} from '../ui/ctTopTracker/constants.js';
+	import {
 		getCombatTrackerActionDiceColor,
 		getCombatTrackerCtCardSizeLevel,
 		getCombatTrackerCtWidthLevel,
@@ -32,7 +36,6 @@
 
 	const MIN_LEVEL = 1;
 	const MAX_LEVEL = 10;
-	const CT_WIDTH_PREVIEW_EVENT_NAME = 'nimble:ct-width-preview';
 	const COLOR_PRESETS = [
 		{ label: 'White', color: '#ffffff' },
 		{ label: 'Green', color: '#6ce685' },
@@ -51,7 +54,7 @@
 	];
 
 	let updateSettingHook: number | undefined;
-	let widthPreviewGlobalPointerUpListener: (() => void) | undefined;
+	let sliderPreviewGlobalPointerUpListener: (() => void) | undefined;
 	let widthLevel = $state(getCombatTrackerCtWidthLevel());
 	let cardSizeLevel = $state(getCombatTrackerCtCardSizeLevel());
 	let resourceDrawerHoverEnabled = $state(getCombatTrackerResourceDrawerHoverEnabled());
@@ -62,6 +65,7 @@
 	let reactionColor = $state(getCombatTrackerReactionColor());
 	let canManageSharedCtSettings = $derived(Boolean(game.user?.isGM));
 	let isWidthSliderPreviewActive = $state(false);
+	let isCardSizeSliderPreviewActive = $state(false);
 
 	function dispatchCtWidthPreviewEvent(params: { active: boolean; widthLevel: number }): void {
 		if (typeof window === 'undefined') return;
@@ -78,6 +82,27 @@
 		dispatchCtWidthPreviewEvent({
 			active,
 			widthLevel: clampLevel(previewLevel),
+		});
+	}
+
+	function dispatchCtCardSizePreviewEvent(params: {
+		active: boolean;
+		cardSizeLevel: number;
+	}): void {
+		if (typeof window === 'undefined') return;
+		window.dispatchEvent(
+			new CustomEvent(CT_CARD_SIZE_PREVIEW_EVENT_NAME, {
+				detail: params,
+			}),
+		);
+	}
+
+	function setCardSizeSliderPreviewActive(active: boolean, previewLevel = cardSizeLevel): void {
+		if (isCardSizeSliderPreviewActive === active && previewLevel === cardSizeLevel) return;
+		isCardSizeSliderPreviewActive = active;
+		dispatchCtCardSizePreviewEvent({
+			active,
+			cardSizeLevel: clampLevel(previewLevel),
 		});
 	}
 
@@ -110,6 +135,12 @@
 		const input = event.currentTarget as HTMLInputElement;
 		const nextValue = clampLevel(input.value);
 		cardSizeLevel = nextValue;
+		if (isCardSizeSliderPreviewActive) {
+			dispatchCtCardSizePreviewEvent({
+				active: true,
+				cardSizeLevel: nextValue,
+			});
+		}
 		persistCtSetting('card size level', setCombatTrackerCtCardSizeLevel(nextValue));
 	}
 
@@ -160,11 +191,15 @@
 	}
 
 	onMount(() => {
-		widthPreviewGlobalPointerUpListener = () => {
-			if (!isWidthSliderPreviewActive) return;
-			setWidthSliderPreviewActive(false);
+		sliderPreviewGlobalPointerUpListener = () => {
+			if (isWidthSliderPreviewActive) {
+				setWidthSliderPreviewActive(false);
+			}
+			if (isCardSizeSliderPreviewActive) {
+				setCardSizeSliderPreviewActive(false);
+			}
 		};
-		window.addEventListener('pointerup', widthPreviewGlobalPointerUpListener);
+		window.addEventListener('pointerup', sliderPreviewGlobalPointerUpListener);
 
 		updateSettingHook = Hooks.on('updateSetting', (setting) => {
 			const settingKey = foundry.utils.getProperty(setting, 'key');
@@ -200,11 +235,14 @@
 
 	onDestroy(() => {
 		if (updateSettingHook !== undefined) Hooks.off('updateSetting', updateSettingHook);
-		if (widthPreviewGlobalPointerUpListener) {
-			window.removeEventListener('pointerup', widthPreviewGlobalPointerUpListener);
+		if (sliderPreviewGlobalPointerUpListener) {
+			window.removeEventListener('pointerup', sliderPreviewGlobalPointerUpListener);
 		}
 		if (isWidthSliderPreviewActive) {
 			setWidthSliderPreviewActive(false);
+		}
+		if (isCardSizeSliderPreviewActive) {
+			setCardSizeSliderPreviewActive(false);
 		}
 	});
 </script>
@@ -248,6 +286,11 @@
 						value={cardSizeLevel}
 						oninput={handleCardSizeLevelInput}
 						onchange={handleCardSizeLevelInput}
+						onpointerdown={() => setCardSizeSliderPreviewActive(true)}
+						onpointerup={() => setCardSizeSliderPreviewActive(false)}
+						onpointercancel={() => setCardSizeSliderPreviewActive(false)}
+						onfocus={() => setCardSizeSliderPreviewActive(true)}
+						onblur={() => setCardSizeSliderPreviewActive(false)}
 					/>
 					<span class="nimble-ct-settings__slider-value">{cardSizeLevel}</span>
 				</div>

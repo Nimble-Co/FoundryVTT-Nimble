@@ -27,3 +27,4 @@ export const CT_ESTIMATED_ENTRY_WIDTH_REM = 6.53;
 
 export const CT_SETTINGS_DIALOG_UNIQUE_ID = 'nimble-ct-settings-dialog';
 export const CT_WIDTH_PREVIEW_EVENT_NAME = 'nimble:ct-width-preview';
+export const CT_CARD_SIZE_PREVIEW_EVENT_NAME = 'nimble:ct-card-size-preview';
