@@ -1,4 +1,5 @@
 import { NimbleAbilityCheckCardData } from './AbilityCheckCardDataModel.js';
+import { NimbleAssessActionCardData } from './AssessActionCardDataModel.js';
 import { NimbleFeatureCardData } from './FeatureCardDataModel.js';
 import { NimbleFieldRestCardData } from './FieldRestCardDataModel.js';
 import { NimbleLevelUpSummaryCardData } from './LevelUpSummaryCardDataModel.js';
@@ -11,6 +12,7 @@ import { NimbleSpellCardData } from './SpellCardDataModel.js';
 
 const chatDataModels = {
 	abilityCheck: NimbleAbilityCheckCardData,
+	assessAction: NimbleAssessActionCardData,
 	feature: NimbleFeatureCardData,
 	fieldRest: NimbleFieldRestCardData,
 	levelUpSummary: NimbleLevelUpSummaryCardData,
@@ -29,6 +31,7 @@ declare global {
 	interface DataModelConfig {
 		ChatMessage: {
 			abilityCheck: NimbleAbilityCheckCardData;
+			assessAction: NimbleAssessActionCardData;
 			feature: NimbleFeatureCardData;
 			fieldRest: NimbleFieldRestCardData;
 			levelUpSummary: NimbleLevelUpSummaryCardData;
