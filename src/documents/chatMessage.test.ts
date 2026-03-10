@@ -3,11 +3,6 @@ import { NimbleChatMessage } from './chatMessage.js';
 
 type TestGlobals = {
 	fromUuidSync: ReturnType<typeof vi.fn>;
-	game: {
-		user: {
-			isGM: boolean;
-		};
-	};
 	ui: {
 		notifications: {
 			info: ReturnType<typeof vi.fn>;
@@ -247,7 +242,6 @@ describe('NimbleChatMessage.undoHealing', () => {
 describe('NimbleChatMessage.applyDamage', () => {
 	beforeEach(() => {
 		globals().fromUuidSync = vi.fn();
-		globals().game.user.isGM = true;
 	});
 
 	it('applies damage to target actor and consumes temporary hit points first', async () => {
@@ -304,28 +298,5 @@ describe('NimbleChatMessage.applyDamage', () => {
 
 		expect(globals().fromUuidSync).not.toHaveBeenCalled();
 		expect(globals().ui.notifications.warn).toHaveBeenCalledWith('No targets selected');
-	});
-
-	it('does not apply damage when the current user is not a GM', async () => {
-		const actor = {
-			system: {
-				attributes: {
-					hp: {
-						value: 10,
-						temp: 2,
-						max: 10,
-					},
-				},
-			},
-			update: vi.fn().mockResolvedValue(undefined),
-		};
-
-		globals().game.user.isGM = false;
-		globals().fromUuidSync.mockReturnValue({ actor });
-
-		const message = createActivationMessage();
-		await message.applyDamage(4, { outcome: 'fullDamage' });
-
-		expect(actor.update).not.toHaveBeenCalled();
 	});
 });

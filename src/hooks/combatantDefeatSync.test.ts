@@ -125,43 +125,6 @@ describe('registerCombatantDefeatSync', () => {
 		});
 	});
 
-	it('does not restore character actions on hp-only updates while alive', async () => {
-		const callbacks = createHookCapture(globals().Hooks.on);
-		const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
-		registerCombatantDefeatSync();
-
-		const actor = createMockCombatActor({
-			id: 'actor-2b',
-			hp: 4,
-			woundsValue: 2,
-			woundsMax: 6,
-		});
-		const combatant = createMockCombatant({
-			id: 'combatant-2b',
-			type: 'character',
-			actorId: 'actor-2b',
-			actor,
-			defeated: false,
-			actionsCurrent: 1,
-			actionsMax: 3,
-		});
-		const combat = createMockCombat({
-			id: 'combat-2b',
-			combatants: [combatant],
-			turns: [combatant],
-			activeCombatant: combatant,
-			round: 1,
-		});
-
-		globals().game.combats.contents = [combat];
-
-		const updateActor = callbacks.get('updateActor');
-		updateActor?.(actor, { system: { attributes: { hp: { value: 3 } } } });
-		await flushAsync();
-
-		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
-	});
-
 	it('uses HP logic for non-character combatants', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
@@ -203,43 +166,6 @@ describe('registerCombatantDefeatSync', () => {
 				'system.actions.base.current': 0,
 			},
 		]);
-	});
-
-	it('does not restore npc actions on hp updates while alive', async () => {
-		const callbacks = createHookCapture(globals().Hooks.on);
-		const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
-		registerCombatantDefeatSync();
-
-		const actor = createMockCombatActor({
-			id: 'actor-3b',
-			hp: 7,
-			woundsValue: 0,
-			woundsMax: 6,
-		});
-		const combatant = createMockCombatant({
-			id: 'combatant-3b',
-			type: 'npc',
-			actorId: 'actor-3b',
-			actor,
-			defeated: false,
-			actionsCurrent: 1,
-			actionsMax: 2,
-		});
-		const combat = createMockCombat({
-			id: 'combat-3b',
-			combatants: [combatant],
-			turns: [combatant],
-			activeCombatant: combatant,
-			round: 1,
-		});
-
-		globals().game.combats.contents = [combat];
-
-		const updateActor = callbacks.get('updateActor');
-		updateActor?.(actor, { system: { attributes: { hp: { value: 5 } } } });
-		await flushAsync();
-
-		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
 	it('advances turn when active combatant becomes defeated and others are alive', async () => {

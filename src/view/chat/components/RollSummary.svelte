@@ -52,7 +52,7 @@
 	</div>
 {/if}
 
-{#if type === 'damage' && game.user?.isGM}
+{#if type === 'damage'}
 	<button
 		class="nimble-button nimble-button--apply-damage"
 		aria-label="Apply Damage"

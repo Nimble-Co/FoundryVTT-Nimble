@@ -91,16 +91,9 @@ async function syncActorCombatantDeathState(actor: Actor.Implementation): Promis
 
 		const actionCurrent = getCombatantActionCurrent(combatant);
 		const actionMax = getCombatantActionMax(combatant);
-		let desiredActions: number | null = null;
+		const desiredActions = shouldBeDefeated ? 0 : actionMax;
 
-		// Only touch current actions when defeat state changes, or while a combatant remains defeated.
-		if (shouldBeDefeated) {
-			desiredActions = 0;
-		} else if (combatant.defeated) {
-			desiredActions = actionMax;
-		}
-
-		if (desiredActions !== null && actionCurrent !== desiredActions) {
+		if (actionCurrent !== desiredActions) {
 			update['system.actions.base.current'] = desiredActions;
 			hasChanges = true;
 		}

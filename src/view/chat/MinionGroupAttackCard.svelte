@@ -189,18 +189,16 @@
 			<span class="nimble-group-total__value">{Math.max(0, Math.floor(totalDamage))}</span>
 		</div>
 
-		{#if game.user?.isGM}
-			<button
-				class="nimble-button nimble-button--apply-damage"
-				aria-label={i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.applyDamage')}
-				data-tooltip={i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.applyDamage')}
-				data-tooltip-direction="UP"
-				type="button"
-				onclick={applyTotalDamage}
-			>
-				{i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.applyDamage')}
-			</button>
-		{/if}
+		<button
+			class="nimble-button nimble-button--apply-damage"
+			aria-label={i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.applyDamage')}
+			data-tooltip={i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.applyDamage')}
+			data-tooltip-direction="UP"
+			type="button"
+			onclick={applyTotalDamage}
+		>
+			{i18nLocalize('NIMBLE.nimbleCombatSystemWindow.chat.applyDamage')}
+		</button>
 	</section>
 </article>
 
