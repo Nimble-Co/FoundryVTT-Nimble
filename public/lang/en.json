@@ -652,6 +652,7 @@
 				"endTurn": "End Turn",
 				"useActionsFirst": "Use your actions first",
 				"noPermissionEndTurn": "You do not have permission to end turns.",
+				"noPermissionRollInitiative": "You do not have permission to roll initiative.",
 				"selectAttack": "Select Attack",
 				"selectSpell": "Select Spell",
 				"noWeapons": "No weapons or attack features found.",
