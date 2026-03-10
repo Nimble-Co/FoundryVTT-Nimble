@@ -724,14 +724,17 @@
 	}
 
 	function getItemDescription(item) {
-		const desc = item.reactive?.system?.description ?? item.system?.description;
-		if (!desc) return '';
-		if (typeof desc === 'string') {
-			// Check if it's just empty HTML or whitespace
-			const stripped = desc.replace(/<[^>]*>/g, '').trim();
-			return stripped ? desc : '';
-		}
-		return '';
+		const descData = item.reactive?.system?.description ?? item.system?.description;
+		if (!descData) return '';
+
+		// For objects (weapons), description is an object with 'public' field
+		const desc = typeof descData === 'object' ? descData.public : descData;
+
+		if (!desc || typeof desc !== 'string') return '';
+
+		// Check if it's just empty HTML or whitespace
+		const stripped = desc.replace(/<[^>]*>/g, '').trim();
+		return stripped ? desc : '';
 	}
 
 	function hasContent(text) {
