@@ -18,6 +18,6 @@ features:
     title: TypeScript & Svelte
     details: Modern stack with Svelte 5, TypeScript, and Vite for a fast development experience with hot reload.
   - icon: 🤝
-    title: Community Driven
+    title: Community Driven!
     details: Open source under MIT. Contributions welcome, check the contributing guide to get started.
 ---
