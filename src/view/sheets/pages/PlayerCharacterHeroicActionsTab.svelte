@@ -106,10 +106,22 @@
 		return null;
 	}
 
+	function getCombatantInCombat() {
+		const combat = getActiveCombatForCurrentScene();
+		if (!combat) return null;
+		return combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
+	}
+
 	function getCombatant() {
 		const combat = getActiveCombatForCurrentScene();
 		if (!combat?.started) return null;
 		return combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
+	}
+
+	function hasRolledInitiative() {
+		const combatant = getCombatantInCombat();
+		if (!combatant) return false;
+		return combatant.initiative !== null;
 	}
 
 	function isInActiveCombat() {
@@ -119,9 +131,7 @@
 	}
 
 	function needsToRollInitiative() {
-		const combat = getActiveCombatForCurrentScene();
-		if (!combat) return false;
-		const combatant = combat.combatants.find((entry) => entry.actorId === actor.id);
+		const combatant = getCombatantInCombat();
 		if (!combatant) return false;
 		return combatant.initiative === null;
 	}
@@ -140,7 +150,7 @@
 	}
 
 	function getActionsData() {
-		const combatant = getCombatant();
+		const combatant = getCombatantInCombat();
 		if (!combatant) return { current: 0, max: 3 };
 
 		const actions = combatant.system?.actions?.base;
@@ -151,7 +161,7 @@
 	}
 
 	async function updateActionPips(newValue) {
-		const combatant = getCombatant();
+		const combatant = getCombatantInCombat();
 		if (!combatant) return;
 		await combatant.update({ 'system.actions.base.current': newValue });
 	}
@@ -194,6 +204,11 @@
 	let needsInitiative = $derived.by(() => {
 		subscribeCombatState();
 		return needsToRollInitiative();
+	});
+
+	let hasInitiative = $derived.by(() => {
+		subscribeCombatState();
+		return hasRolledInitiative();
 	});
 
 	let actionsData = $derived.by(() => {
@@ -732,7 +747,7 @@
 		<ActionPipTracker
 			current={actionsData.current}
 			max={actionsData.max}
-			disabled={!inCombat}
+			disabled={!hasInitiative}
 			onUpdate={updateActionPips}
 		/>
 
