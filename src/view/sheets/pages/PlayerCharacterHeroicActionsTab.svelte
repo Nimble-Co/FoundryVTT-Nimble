@@ -57,6 +57,9 @@
 		},
 	];
 
+	// Top-level tab for switching between Actions and Reactions
+	let activeHeroicTab = $state('actions');
+
 	// ============================================================================
 	// Combat State Management
 	// ============================================================================
@@ -687,10 +690,25 @@
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
 	<section>
-		<header class="nimble-section-header">
-			<h3 class="nimble-heading" data-heading-variant="section">
-				{localize('NIMBLE.ui.heroicActions.title')}
-			</h3>
+		<header class="heroic-tab-header">
+			<div class="heroic-tab-header__tabs">
+				<button
+					class="heroic-tab-header__tab"
+					class:heroic-tab-header__tab--active={activeHeroicTab === 'actions'}
+					type="button"
+					onclick={() => (activeHeroicTab = 'actions')}
+				>
+					{localize('NIMBLE.ui.heroicActions.title')}
+				</button>
+				<button
+					class="heroic-tab-header__tab"
+					class:heroic-tab-header__tab--active={activeHeroicTab === 'reactions'}
+					type="button"
+					onclick={() => (activeHeroicTab = 'reactions')}
+				>
+					{localize('NIMBLE.ui.heroicActions.reactionsTitle')}
+				</button>
+			</div>
 
 			<button
 				class="nimble-button heroic-actions__help-button"
@@ -704,26 +722,34 @@
 			</button>
 		</header>
 
-		<div class="heroic-actions-tabs">
-			{#each HEROIC_ACTIONS as action (action.id)}
-				<button
-					class="heroic-action-tab"
-					class:heroic-action-tab--active={expandedPanel === action.id}
-					class:heroic-action-tab--disabled={isActionDisabled(action)}
-					type="button"
-					aria-label={localize(action.labelKey)}
-					data-tooltip={getActionTooltip(action)}
-					disabled={isActionDisabled(action)}
-					onclick={() => handleActionClick(action)}
-				>
-					<i class={action.icon}></i>
-					<span class="heroic-action-tab__indicator"></span>
-				</button>
-			{/each}
-		</div>
+		{#if activeHeroicTab === 'actions'}
+			<div class="heroic-actions-tabs">
+				{#each HEROIC_ACTIONS as action (action.id)}
+					<button
+						class="heroic-action-tab"
+						class:heroic-action-tab--active={expandedPanel === action.id}
+						class:heroic-action-tab--disabled={isActionDisabled(action)}
+						type="button"
+						aria-label={localize(action.labelKey)}
+						data-tooltip={getActionTooltip(action)}
+						disabled={isActionDisabled(action)}
+						onclick={() => handleActionClick(action)}
+					>
+						<i class={action.icon}></i>
+						<span class="heroic-action-tab__indicator"></span>
+					</button>
+				{/each}
+			</div>
+		{/if}
+
+		{#if activeHeroicTab === 'reactions'}
+			<div class="heroic-reactions-placeholder">
+				<p>{localize('NIMBLE.ui.heroicActions.reactionsPlaceholder')}</p>
+			</div>
+		{/if}
 	</section>
 
-	{#if expandedPanel === 'attack'}
+	{#if activeHeroicTab === 'actions' && expandedPanel === 'attack'}
 		<section class="heroic-actions-panel">
 			<header class="nimble-section-header">
 				<h3 class="nimble-heading" data-heading-variant="section">
@@ -898,7 +924,7 @@
 		</section>
 	{/if}
 
-	{#if expandedPanel === 'spell'}
+	{#if activeHeroicTab === 'actions' && expandedPanel === 'spell'}
 		<section class="heroic-actions-panel">
 			<header class="nimble-section-header">
 				<h3 class="nimble-heading" data-heading-variant="section">
@@ -1039,7 +1065,7 @@
 		</section>
 	{/if}
 
-	{#if expandedPanel === 'move'}
+	{#if activeHeroicTab === 'actions' && expandedPanel === 'move'}
 		<MoveActionPanel
 			{actor}
 			{inCombat}
@@ -1048,7 +1074,7 @@
 		/>
 	{/if}
 
-	{#if expandedPanel === 'assess'}
+	{#if activeHeroicTab === 'actions' && expandedPanel === 'assess'}
 		<AssessActionPanel
 			{actor}
 			{inCombat}
@@ -1059,6 +1085,40 @@
 </section>
 
 <style lang="scss">
+	.heroic-tab-header {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-block-end: 0.25rem;
+
+		&__tabs {
+			display: flex;
+			gap: 0;
+		}
+
+		&__tab {
+			padding: 0.25rem 0.75rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 700;
+			text-transform: uppercase;
+			color: var(--nimble-medium-text-color);
+			background: transparent;
+			border: none;
+			border-bottom: 2px solid transparent;
+			cursor: pointer;
+			transition: all 0.15s ease;
+
+			&:hover:not(&--active) {
+				color: var(--nimble-dark-text-color);
+			}
+
+			&--active {
+				color: var(--nimble-dark-text-color);
+				border-bottom-color: var(--nimble-accent-color);
+			}
+		}
+	}
+
 	.heroic-actions__help-button {
 		margin-left: auto;
 
@@ -1069,6 +1129,18 @@
 
 		&:hover i {
 			color: var(--nimble-dark-text-color);
+		}
+	}
+
+	.heroic-reactions-placeholder {
+		padding: 1rem;
+		text-align: center;
+		font-size: var(--nimble-sm-text);
+		color: var(--nimble-medium-text-color);
+		font-style: italic;
+
+		p {
+			margin: 0;
 		}
 	}
 

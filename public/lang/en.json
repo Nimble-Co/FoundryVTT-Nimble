@@ -645,6 +645,8 @@
 			"cancel": "Cancel",
 			"heroicActions": {
 				"title": "Heroic Actions",
+				"reactionsTitle": "Heroic Reactions",
+				"reactionsPlaceholder": "Reactions coming soon...",
 				"enterCombat": "Enter combat to use actions",
 				"outsideCombat": "You are outside of combat",
 				"noActions": "You don't have any actions",
