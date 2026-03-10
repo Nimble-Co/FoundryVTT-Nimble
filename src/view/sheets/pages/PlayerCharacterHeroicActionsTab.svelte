@@ -9,7 +9,6 @@
 		flattenActivationEffects,
 	} from '../../../utils/activationEffects.js';
 
-	import ActionPipTracker from '../components/ActionPipTracker.svelte';
 	import SearchBar from '../components/SearchBar.svelte';
 	import AssessActionPanel from '../components/AssessActionPanel.svelte';
 	import MoveActionPanel from '../components/MoveActionPanel.svelte';
@@ -117,35 +116,10 @@
 		return combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
 	}
 
-	function hasRolledInitiative() {
-		const combatant = getCombatantInCombat();
-		if (!combatant) return false;
-		return combatant.initiative !== null;
-	}
-
 	function isInActiveCombat() {
 		const combatant = getCombatant();
 		if (!combatant) return false;
 		return combatant.initiative !== null;
-	}
-
-	function needsToRollInitiative() {
-		const combatant = getCombatantInCombat();
-		if (!combatant) return false;
-		return combatant.initiative === null;
-	}
-
-	async function rollInitiative() {
-		const combat = getActiveCombatForCurrentScene();
-		if (!combat) return;
-		const combatant = combat.combatants.find((entry) => entry.actorId === actor.id);
-		if (!combatant) return;
-
-		try {
-			await combat.rollInitiative([combatant.id]);
-		} catch (_error) {
-			ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionRollInitiative'));
-		}
 	}
 
 	function getActionsData() {
@@ -173,51 +147,15 @@
 		}
 	}
 
-	function isCharactersTurn() {
-		const combat = getActiveCombatForCurrentScene();
-		if (!combat?.started) return false;
-
-		const currentCombatant = combat.combatant;
-		if (!currentCombatant) return false;
-
-		return currentCombatant.actorId === actor.id;
-	}
-
-	async function endTurn() {
-		const combat = getActiveCombatForCurrentScene();
-		if (!combat) return;
-
-		try {
-			await combat.nextTurn();
-		} catch (_error) {
-			ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionEndTurn'));
-		}
-	}
-
 	// Reactive combat state
 	let inCombat = $derived.by(() => {
 		subscribeCombatState();
 		return isInActiveCombat();
 	});
 
-	let needsInitiative = $derived.by(() => {
-		subscribeCombatState();
-		return needsToRollInitiative();
-	});
-
-	let hasInitiative = $derived.by(() => {
-		subscribeCombatState();
-		return hasRolledInitiative();
-	});
-
 	let actionsData = $derived.by(() => {
 		subscribeCombatState();
 		return getActionsData();
-	});
-
-	let isMyTurn = $derived.by(() => {
-		subscribeCombatState();
-		return isCharactersTurn();
 	});
 
 	// ============================================================================
@@ -748,41 +686,6 @@
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
-	<div class="heroic-actions__combat-header">
-		<ActionPipTracker
-			current={actionsData.current}
-			max={actionsData.max}
-			disabled={!hasInitiative}
-			onUpdate={updateActionPips}
-		/>
-
-		{#if needsInitiative}
-			<button
-				class="heroic-actions__roll-initiative-button"
-				type="button"
-				aria-label={localize('NIMBLE.ui.heroicActions.rollInitiative')}
-				data-tooltip={localize('NIMBLE.ui.heroicActions.rollInitiative')}
-				onclick={rollInitiative}
-			>
-				<i class="fa-solid fa-dice-d20"></i>
-				{localize('NIMBLE.ui.heroicActions.rollInitiative')}
-			</button>
-		{:else if isMyTurn}
-			{@const canEndTurn = actionsData.current === 0}
-			<button
-				class="heroic-actions__end-turn-button"
-				class:heroic-actions__end-turn-button--ready={canEndTurn}
-				type="button"
-				disabled={!canEndTurn}
-				aria-label={localize('NIMBLE.ui.heroicActions.endTurn')}
-				data-tooltip={canEndTurn ? null : localize('NIMBLE.ui.heroicActions.useActionsFirst')}
-				onclick={endTurn}
-			>
-				{localize('NIMBLE.ui.heroicActions.endTurn')}
-			</button>
-		{/if}
-	</div>
-
 	<section>
 		<header class="nimble-section-header">
 			<h3 class="nimble-heading" data-heading-variant="section">
@@ -1156,75 +1059,6 @@
 </section>
 
 <style lang="scss">
-	.heroic-actions__combat-header {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.heroic-actions__end-turn-button {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.375rem 1rem;
-		font-size: var(--nimble-sm-text);
-		font-weight: 600;
-		color: var(--nimble-medium-text-color);
-		background: var(--nimble-box-background-color);
-		border: 1px solid var(--nimble-card-border-color);
-		border-radius: 4px;
-		cursor: not-allowed;
-		opacity: 0.5;
-		transition: all 0.2s ease;
-
-		&--ready {
-			opacity: 1;
-			cursor: pointer;
-			color: var(--nimble-light-text-color);
-			background: hsl(139, 47%, 44%);
-			border-color: hsl(139, 47%, 38%);
-
-			&:hover {
-				background: hsl(139, 47%, 38%);
-				border-color: hsl(139, 47%, 32%);
-			}
-
-			&:active {
-				background: hsl(139, 47%, 32%);
-			}
-		}
-	}
-
-	.heroic-actions__roll-initiative-button {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.5rem;
-		padding: 0.375rem 1rem;
-		font-size: var(--nimble-sm-text);
-		font-weight: 600;
-		color: var(--nimble-light-text-color);
-		background: hsl(210, 60%, 50%);
-		border: 1px solid hsl(210, 60%, 44%);
-		border-radius: 4px;
-		cursor: pointer;
-		transition: all 0.2s ease;
-
-		i {
-			font-size: 0.875rem;
-		}
-
-		&:hover {
-			background: hsl(210, 60%, 44%);
-			border-color: hsl(210, 60%, 38%);
-		}
-
-		&:active {
-			background: hsl(210, 60%, 38%);
-		}
-	}
-
 	.heroic-actions__help-button {
 		margin-left: auto;
 
