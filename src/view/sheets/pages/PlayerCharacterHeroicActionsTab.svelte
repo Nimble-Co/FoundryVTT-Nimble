@@ -821,26 +821,32 @@
 			<div class="heroic-actions-panel__content">
 				<ul class="nimble-item-list">
 					{#if showUnarmedStrike}
-						<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
-						<!-- svelte-ignore a11y_click_events_have_key_events -->
-						<li class="weapon-card" role="button" onclick={handleUnarmedStrike}>
-							<div class="weapon-card__icon">
-								<i class="fa-solid fa-hand-fist"></i>
-							</div>
-
-							<div class="weapon-card__content">
-								<span class="weapon-card__name"
-									>{localize('NIMBLE.ui.heroicActions.unarmedStrike')}</span
-								>
-								<div class="weapon-card__meta">
-									<span class="weapon-card__tag">{localize('NIMBLE.npcSheet.melee')}</span>
+						<li class="weapon-card">
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<div
+								class="weapon-card__row"
+								role="button"
+								tabindex="0"
+								onclick={handleUnarmedStrike}
+							>
+								<div class="weapon-card__icon">
+									<i class="fa-solid fa-hand-fist"></i>
 								</div>
-							</div>
 
-							<span class="weapon-card__damage">
-								<i class="fa-solid fa-burst"></i>
-								{getUnarmedDamageDisplay()}
-							</span>
+								<div class="weapon-card__content">
+									<span class="weapon-card__name">
+										{localize('NIMBLE.ui.heroicActions.unarmedStrike')}
+									</span>
+									<div class="weapon-card__meta">
+										<span class="weapon-card__tag">{localize('NIMBLE.npcSheet.melee')}</span>
+									</div>
+								</div>
+
+								<span class="weapon-card__damage">
+									<i class="fa-solid fa-burst"></i>
+									{getUnarmedDamageDisplay()}
+								</span>
+							</div>
 						</li>
 					{/if}
 
