@@ -41,6 +41,9 @@ jobs:
         run: pnpm build
         working-directory: docs
 
+      - name: Disable Jekyll
+        run: touch docs/.vitepress/dist/.nojekyll
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
