@@ -728,13 +728,6 @@
 		{/if}
 	</div>
 
-	{#if !inCombat}
-		<p class="heroic-actions__combat-notice">
-			<i class="fa-solid fa-circle-info"></i>
-			{localize('NIMBLE.ui.heroicActions.enterCombat')}
-		</p>
-	{/if}
-
 	<section>
 		<header class="nimble-section-header">
 			<h3 class="nimble-heading" data-heading-variant="section">
@@ -1019,25 +1012,6 @@
 			&:active {
 				background: hsl(139, 47%, 32%);
 			}
-		}
-	}
-
-	.heroic-actions__combat-notice {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.5rem;
-		margin: 0;
-		padding: 0.5rem 0.75rem;
-		font-size: var(--nimble-sm-text);
-		font-weight: 500;
-		color: var(--nimble-medium-text-color);
-		background: var(--nimble-hint-background-color);
-		border: 1px solid var(--nimble-hint-border-color);
-		border-radius: 4px;
-
-		i {
-			color: var(--nimble-hint-icon-color);
 		}
 	}
 
