@@ -664,6 +664,17 @@
 				"thrown": "Thrown: {distance}",
 				"baseEffect": "Effect",
 				"higherLevelEffect": "At Higher Levels",
+				"cantrip": "Cantrip",
+				"spellTier": "Tier {tier}",
+				"rangeDistance": "Range: {distance}",
+				"reachDistance": "Reach: {distance}",
+				"targetTypes": {
+					"self": "Self",
+					"singleTarget": "Single Target",
+					"twoTargets": "2 Targets",
+					"multiTarget": "{count} Targets",
+					"aoe": "AoE"
+				},
 				"pip": {
 					"spendAction": "Spend action {number}",
 					"restoreAction": "Restore action {number}",

@@ -715,12 +715,35 @@
 		const selected = props.selected ?? [];
 
 		if (selected.includes('range') && props.range?.max) {
-			return localize('NIMBLE.npcSheet.range', { distance: props.range.max });
+			return localize('NIMBLE.ui.heroicActions.rangeDistance', { distance: props.range.max });
 		}
 		if (selected.includes('reach') && props.reach?.max) {
-			return localize('NIMBLE.npcSheet.reach', { distance: props.reach.max });
+			return localize('NIMBLE.ui.heroicActions.reachDistance', { distance: props.reach.max });
 		}
 		return null;
+	}
+
+	function getSpellTargetType(spell) {
+		const activation = spell.reactive?.system?.activation ?? spell.system?.activation;
+		if (!activation) return null;
+
+		// Check if it's an AoE spell (uses template)
+		if (activation.acquireTargetsFromTemplate) {
+			return localize('NIMBLE.ui.heroicActions.targetTypes.aoe');
+		}
+
+		const targetCount = activation.targets?.count ?? 1;
+
+		if (targetCount === 0) {
+			return localize('NIMBLE.ui.heroicActions.targetTypes.self');
+		}
+		if (targetCount === 1) {
+			return localize('NIMBLE.ui.heroicActions.targetTypes.singleTarget');
+		}
+		if (targetCount === 2) {
+			return localize('NIMBLE.ui.heroicActions.targetTypes.twoTargets');
+		}
+		return localize('NIMBLE.ui.heroicActions.targetTypes.multiTarget', { count: targetCount });
 	}
 
 	function getItemDescription(item) {
@@ -1039,6 +1062,8 @@
 							{@const spellRange = getSpellRange(spell)}
 							{@const requiresConcentration =
 								spell.reactive.system.properties.selected.includes('concentration')}
+							{@const spellTier = spell.reactive.system.tier}
+							{@const targetType = getSpellTargetType(spell)}
 							{@const isExpanded = expandedDescriptions.has(spell._id)}
 							{@const spellEffects = getSpellEffects(spell)}
 
@@ -1065,16 +1090,26 @@
 									{/if}
 
 									<div class="spell-card__content">
-										<span class="spell-card__name">
-											{spell.reactive.name}
+										<div class="spell-card__header">
+											<span class="spell-card__name">{spell.reactive.name}</span>
+											<span class="spell-card__tier"
+												>{spellTier === 0
+													? localize('NIMBLE.ui.heroicActions.cantrip')
+													: localize('NIMBLE.ui.heroicActions.spellTier', {
+															tier: spellTier,
+														})}</span
+											>
+											{#if meta}
+												<span class="spell-card__action-cost">{@html meta}</span>
+											{/if}
 											{#if requiresConcentration}
 												<span class="spell-card__tag">C</span>
 											{/if}
-										</span>
+										</div>
 
 										<div class="spell-card__meta">
-											{#if meta}
-												<span class="spell-card__action-cost">{@html meta}</span>
+											{#if targetType}
+												<span class="spell-card__target-type">{targetType}</span>
 											{/if}
 											{#if spellRange}
 												<span class="spell-card__range">{spellRange}</span>
@@ -1531,14 +1566,24 @@
 			min-width: 0;
 		}
 
-		&__name {
+		&__header {
 			display: flex;
 			align-items: center;
+			flex-wrap: wrap;
 			gap: 0.375rem;
+		}
+
+		&__name {
 			font-size: var(--nimble-sm-text);
 			font-weight: 600;
 			color: var(--nimble-dark-text-color);
 			line-height: 1.2;
+		}
+
+		&__target-type {
+			font-size: var(--nimble-xs-text);
+			font-weight: 500;
+			color: var(--nimble-medium-text-color);
 		}
 
 		&__tag {
@@ -1548,6 +1593,12 @@
 			padding: 0 0.25rem;
 			background: var(--nimble-basic-button-background-color);
 			border-radius: 2px;
+		}
+
+		&__tier {
+			font-size: var(--nimble-xs-text);
+			font-weight: 500;
+			color: var(--nimble-medium-text-color);
 		}
 
 		&__meta {
