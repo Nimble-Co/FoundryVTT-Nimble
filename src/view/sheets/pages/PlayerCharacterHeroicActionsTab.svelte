@@ -899,7 +899,9 @@
 
 							{#if isExpanded && description}
 								<div class="weapon-card__description">
-									{@html description}
+									{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(description) then enrichedDescription}
+										{@html enrichedDescription}
+									{/await}
 								</div>
 							{/if}
 						</li>
@@ -957,7 +959,9 @@
 
 							{#if isExpanded && description}
 								<div class="weapon-card__description">
-									{@html description}
+									{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(description) then enrichedDescription}
+										{@html enrichedDescription}
+									{/await}
 								</div>
 							{/if}
 						</li>
@@ -1066,7 +1070,9 @@
 
 								{#if isExpanded && description}
 									<div class="spell-card__description">
-										{@html description}
+										{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(description) then enrichedDescription}
+											{@html enrichedDescription}
+										{/await}
 									</div>
 								{/if}
 							</li>
