@@ -1,7 +1,6 @@
 <script>
-	import { createSubscriber } from 'svelte/reactivity';
-	import { untrack } from 'svelte';
 	import localize from '../../../utils/localize.js';
+	import { createFloatingCombatBarState, getDiceIcon } from './FloatingCombatBar.svelte.ts';
 
 	// ============================================================================
 	// Props
@@ -10,256 +9,33 @@
 	let { actor } = $props();
 
 	// ============================================================================
-	// Dice Icons (same as ActionPipTracker)
+	// State
 	// ============================================================================
 
-	const diceIcons = [
-		'fa-dice-one',
-		'fa-dice-two',
-		'fa-dice-three',
-		'fa-dice-four',
-		'fa-dice-five',
-		'fa-dice-six',
-	];
+	const state = createFloatingCombatBarState(() => actor);
 
-	function getDiceIcon(index) {
-		if (index < diceIcons.length) {
-			return diceIcons[index];
-		}
-		return 'fa-dice-d6';
-	}
-
-	// ============================================================================
-	// Combat State Management
-	// ============================================================================
-
-	const subscribeCombatState = createSubscriber((update) => {
-		const hookNames = [
-			'combatStart',
-			'createCombat',
-			'updateCombat',
-			'deleteCombat',
-			'createCombatant',
-			'updateCombatant',
-			'deleteCombatant',
-			'canvasInit',
-			'canvasReady',
-		];
-
-		const hookIds = hookNames.map((hookName) => ({
-			hookId: Hooks.on(hookName, () => update()),
-			hookName,
-		}));
-
-		return () => hookIds.forEach(({ hookName, hookId }) => Hooks.off(hookName, hookId));
-	});
-
-	function getActiveCombatForCurrentScene() {
-		const sceneId = canvas?.scene?.id;
-		if (!sceneId) return null;
-
-		const activeCombat = game.combat;
-		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
-			return activeCombat;
-		}
-
-		const activeByScene = game.combats?.contents?.find(
-			(combat) => combat?.active && combat.scene?.id === sceneId,
-		);
-		if (activeByScene) return activeByScene;
-
-		const viewedCombat = game.combats?.viewed ?? null;
-		if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
-			return viewedCombat;
-		}
-
-		return null;
-	}
-
-	function getCombatantInCombat() {
-		const combat = getActiveCombatForCurrentScene();
-		if (!combat) return null;
-		return combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
-	}
-
-	function hasRolledInitiative() {
-		const combatant = getCombatantInCombat();
-		if (!combatant) return false;
-		return combatant.initiative !== null;
-	}
-
-	function isInActiveCombat() {
-		const combat = getActiveCombatForCurrentScene();
-		if (!combat?.started) return false;
-		const combatant = combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
-		if (!combatant) return false;
-		return combatant.initiative !== null;
-	}
-
-	function needsToRollInitiative() {
-		const combatant = getCombatantInCombat();
-		if (!combatant) return false;
-		return combatant.initiative === null;
-	}
-
-	async function rollInitiative() {
-		const combat = getActiveCombatForCurrentScene();
-		if (!combat) return;
-		const combatant = combat.combatants.find((entry) => entry.actorId === actor.id);
-		if (!combatant) return;
-
-		try {
-			await combat.rollInitiative([combatant.id]);
-		} catch (_error) {
-			ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionRollInitiative'));
-		}
-	}
-
-	function getActionsData() {
-		const combatant = getCombatantInCombat();
-		if (!combatant) return { current: 0, max: 3 };
-
-		const actions = combatant.system?.actions?.base;
-		return {
-			current: actions?.current ?? 0,
-			max: actions?.max ?? 3,
-		};
-	}
-
-	async function updateActionPips(newValue) {
-		const combatant = getCombatantInCombat();
-		if (!combatant) return;
-		await combatant.update({ 'system.actions.base.current': newValue });
-	}
-
-	function isCharactersTurn() {
-		const combat = getActiveCombatForCurrentScene();
-		if (!combat?.started) return false;
-
-		const currentCombatant = combat.combatant;
-		if (!currentCombatant) return false;
-
-		return currentCombatant.actorId === actor.id;
-	}
-
-	async function endTurn() {
-		const combat = getActiveCombatForCurrentScene();
-		if (!combat) return;
-
-		try {
-			await combat.nextTurn();
-		} catch (_error) {
-			ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionEndTurn'));
-		}
-	}
-
-	// ============================================================================
-	// Reactive Combat State
-	// ============================================================================
-
-	let inCombat = $derived.by(() => {
-		subscribeCombatState();
-		return isInActiveCombat();
-	});
-
-	let needsInitiative = $derived.by(() => {
-		subscribeCombatState();
-		return needsToRollInitiative();
-	});
-
-	let hasInitiative = $derived.by(() => {
-		subscribeCombatState();
-		return hasRolledInitiative();
-	});
-
-	let actionsData = $derived.by(() => {
-		subscribeCombatState();
-		return getActionsData();
-	});
-
-	let isMyTurn = $derived.by(() => {
-		subscribeCombatState();
-		return isCharactersTurn();
-	});
-
-	let showCombatBar = $derived(hasInitiative || needsInitiative);
-
-	// ============================================================================
-	// Pip Interaction (same as ActionPipTracker)
-	// ============================================================================
-
-	function handlePipClick(index) {
-		if (!hasInitiative) return;
-
-		const pipNumber = index + 1;
-
-		if (pipNumber <= actionsData.current) {
-			updateActionPips(index);
-		} else {
-			updateActionPips(pipNumber);
-		}
-	}
-
-	function getPipAriaLabel(index, isAvailable) {
-		const number = index + 1;
-		if (isAvailable) {
-			return localize('NIMBLE.ui.heroicActions.pip.spendAction', { number });
-		}
-		return localize('NIMBLE.ui.heroicActions.pip.restoreAction', { number });
-	}
-
-	function getPipTooltip(isAvailable) {
-		if (!hasInitiative) {
-			return localize('NIMBLE.ui.heroicActions.enterCombat');
-		}
-		if (isAvailable) {
-			return localize('NIMBLE.ui.heroicActions.pip.clickToSpend');
-		}
-		return localize('NIMBLE.ui.heroicActions.pip.clickToRestore');
-	}
-
-	// ============================================================================
-	// Pip Spend Animation (same as ActionPipTracker)
-	// ============================================================================
-
-	let justSpentPips = $state(new Set());
-	let previousCurrent = $state(untrack(() => actionsData.current));
-
-	$effect(() => {
-		const current = actionsData.current;
-		if (current < previousCurrent) {
-			const newlySpent = new Set();
-			for (let i = current; i < previousCurrent; i++) {
-				newlySpent.add(i);
-			}
-			justSpentPips = newlySpent;
-
-			setTimeout(() => {
-				justSpentPips = new Set();
-			}, 600);
-		}
-		previousCurrent = current;
-	});
+	// Initialize the pip animation effect
+	state.setupPipAnimationEffect();
 </script>
 
-{#if showCombatBar}
+{#if state.showCombatBar}
 	<div class="floating-combat-bar">
 		<div class="floating-combat-bar__panel">
-			{#if needsInitiative}
+			{#if state.needsInitiative}
 				<button
 					class="floating-combat-bar__initiative-btn"
 					type="button"
 					aria-label={localize('NIMBLE.ui.heroicActions.rollInitiative')}
 					data-tooltip={localize('NIMBLE.ui.heroicActions.rollInitiative')}
-					onclick={rollInitiative}
+					onclick={state.rollInitiative}
 				>
 					<i class="fa-solid fa-dice-d20"></i>
 				</button>
-			{:else if hasInitiative}
+			{:else if state.hasInitiative}
 				<div class="floating-combat-bar__pips">
-					{#each { length: actionsData.max }, i}
-						{@const isAvailable = i < actionsData.current}
-						{@const isJustSpent = justSpentPips.has(i)}
+					{#each { length: state.actionsData.max }, i}
+						{@const isAvailable = i < state.actionsData.current}
+						{@const isJustSpent = state.justSpentPips.has(i)}
 						{@const diceIcon = getDiceIcon(i)}
 
 						<button
@@ -268,17 +44,17 @@
 							class:floating-combat-bar__pip--spent={!isAvailable}
 							class:floating-combat-bar__pip--just-spent={isJustSpent}
 							type="button"
-							aria-label={getPipAriaLabel(i, isAvailable)}
-							data-tooltip={getPipTooltip(isAvailable)}
-							onclick={() => handlePipClick(i)}
+							aria-label={state.getPipAriaLabel(i, isAvailable)}
+							data-tooltip={state.getPipTooltip(isAvailable)}
+							onclick={() => state.handlePipClick(i)}
 						>
 							<i class="fa-solid {diceIcon}"></i>
 						</button>
 					{/each}
 				</div>
 
-				{#if isMyTurn}
-					{@const canEndTurn = actionsData.current === 0}
+				{#if state.isMyTurn}
+					{@const canEndTurn = state.actionsData.current === 0}
 					<button
 						class="floating-combat-bar__end-turn"
 						class:floating-combat-bar__end-turn--ready={canEndTurn}
@@ -288,7 +64,7 @@
 						data-tooltip={canEndTurn
 							? localize('NIMBLE.ui.heroicActions.endTurn')
 							: localize('NIMBLE.ui.heroicActions.useActionsFirst')}
-						onclick={endTurn}
+						onclick={state.endTurn}
 					>
 						<i class="fa-solid fa-forward-step"></i>
 					</button>
