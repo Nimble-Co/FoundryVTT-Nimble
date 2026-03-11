@@ -9,7 +9,22 @@ const FOUNDRY_WS_URL = FOUNDRY_URL.replace(/^https?/, (p) => (p === 'https' ? 'w
 
 let CURRENT_BRANCH = 'unknown';
 try {
-	CURRENT_BRANCH = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
+	const abbrevRef = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
+	if (abbrevRef && abbrevRef !== 'HEAD') {
+		CURRENT_BRANCH = abbrevRef;
+	} else {
+		const envBranch = process.env.GITHUB_REF_NAME ?? process.env.CI_COMMIT_REF_NAME;
+		if (envBranch?.trim()) {
+			CURRENT_BRANCH = envBranch.trim();
+		} else {
+			const showCurrent = execSync('git branch --show-current').toString().trim();
+			if (showCurrent) {
+				CURRENT_BRANCH = showCurrent;
+			} else {
+				CURRENT_BRANCH = execSync('git rev-parse --short HEAD').toString().trim() || 'unknown';
+			}
+		}
+	}
 } catch {
 	// not a git repo or git not available
 }
