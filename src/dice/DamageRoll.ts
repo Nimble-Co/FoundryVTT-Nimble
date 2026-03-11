@@ -242,9 +242,13 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			// When primaryDieAsDamage is false, exclude the base die value from damage
 			// (explosions still count toward damage)
 			if (!this.options.primaryDieAsDamage) {
-				// Find the first result (the base roll, not explosion rolls)
-				// The base result is the one that may have exploded: true flag
-				const baseResult = primaryTerm.results.find((r) => r.active && !r.discarded);
+				// Find the base roll result, not explosion rolls.
+				// When a die explodes, it gets the `exploded: true` flag, so we look for that first.
+				// If no explosion occurred, fall back to the first active, non-discarded result.
+				// This handles advantage/disadvantage where dice results may be reordered.
+				const baseResult =
+					primaryTerm.results.find((r) => r.active && !r.discarded && r.exploded) ??
+					primaryTerm.results.find((r) => r.active && !r.discarded);
 				if (baseResult) {
 					this.excludedPrimaryDieValue = baseResult.result;
 					// Adjust the total by subtracting the base die value

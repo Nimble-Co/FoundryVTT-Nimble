@@ -1,176 +1,16 @@
 <script>
 	import { getContext } from 'svelte';
-	import filterItems from '../../dataPreparationHelpers/filterItems.js';
-	import sortItems from '../../../utils/sortItems.js';
 	import localize from '../../../utils/localize.js';
-	import { flattenActivationEffects } from '../../../utils/activationEffects.js';
-	import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
+	import { createSpellPanelState } from './CastSpellActionPanel.svelte.js';
 
 	import SearchBar from './SearchBar.svelte';
-
-	const { activationCostTypes, activationCostTypesPlural } = CONFIG.NIMBLE;
 
 	let actor = getContext('actor');
 	let sheet = getContext('application');
 
 	let { onActivateItem = async () => {}, showEmbeddedDocumentImages = true } = $props();
 
-	let searchTerm = $state('');
-	let expandedDescriptions = $state(new Set());
-
-	// ============================================================================
-	// Formula Evaluation
-	// ============================================================================
-
-	function evaluateFormula(formula) {
-		return evalFormula(formula, actor);
-	}
-
-	// ============================================================================
-	// Spell Data
-	// ============================================================================
-
-	let spells = $derived(filterItems(actor.reactive, ['spell'], searchTerm));
-
-	function getSpellEffect(spell) {
-		const effects =
-			spell.reactive?.system?.activation?.effects ?? spell.system?.activation?.effects;
-		const flattened = flattenActivationEffects(effects);
-
-		for (const node of flattened) {
-			const effectType = node.type;
-			if (effectType !== 'damage' && effectType !== 'healing') continue;
-
-			const formula = node.formula || node.roll;
-			if (typeof formula === 'string' && formula.trim().length > 0) {
-				return {
-					formula: evaluateFormula(formula.trim()),
-					isHealing: effectType === 'healing' || node.damageType === 'healing',
-				};
-			}
-		}
-
-		return null;
-	}
-
-	function getSpellManaCost(spell) {
-		return spell.reactive.system.manaCost ?? 0;
-	}
-
-	function getSpellMetadata(spell) {
-		const { type: activationType, quantity: activationCost } =
-			spell.reactive.system.activation.cost;
-
-		if (!activationType || activationType === 'none') return null;
-
-		if (['action', 'minute', 'hour'].includes(activationType)) {
-			const label =
-				activationCost > 1
-					? activationCostTypesPlural[activationType]
-					: activationCostTypes[activationType];
-			return `${activationCost || 1} ${label}`;
-		}
-
-		if (activationType === 'reaction' || activationType === 'special') {
-			return activationCostTypes[activationType];
-		}
-
-		return null;
-	}
-
-	function getSpellRange(spell) {
-		const props = spell.reactive?.system?.properties ?? spell.system?.properties ?? {};
-		const selected = props.selected ?? [];
-
-		if (selected.includes('range') && props.range?.max) {
-			return localize('NIMBLE.ui.heroicActions.rangeDistance', { distance: props.range.max });
-		}
-		if (selected.includes('reach') && props.reach?.max) {
-			return localize('NIMBLE.ui.heroicActions.reachDistance', { distance: props.reach.max });
-		}
-		return null;
-	}
-
-	function getSpellTargetType(spell) {
-		const activation = spell.reactive?.system?.activation ?? spell.system?.activation;
-		if (!activation) return null;
-
-		if (activation.acquireTargetsFromTemplate) {
-			return localize('NIMBLE.ui.heroicActions.targetTypes.aoe');
-		}
-
-		const targetCount = activation.targets?.count ?? 1;
-
-		if (targetCount === 0) {
-			return localize('NIMBLE.ui.heroicActions.targetTypes.self');
-		}
-		if (targetCount === 1) {
-			return localize('NIMBLE.ui.heroicActions.targetTypes.singleTarget');
-		}
-		if (targetCount === 2) {
-			return localize('NIMBLE.ui.heroicActions.targetTypes.twoTargets');
-		}
-		return localize('NIMBLE.ui.heroicActions.targetTypes.multiTarget', { count: targetCount });
-	}
-
-	function hasContent(text) {
-		if (!text || typeof text !== 'string') return false;
-		const stripped = text.replace(/<[^>]*>/g, '').trim();
-		return stripped.length > 0;
-	}
-
-	function getSpellEffects(spell) {
-		const desc = spell.reactive?.system?.description ?? spell.system?.description;
-		if (!desc) return null;
-
-		const baseEffect = desc.baseEffect;
-		const higherLevelEffect = desc.higherLevelEffect;
-
-		const hasBase = hasContent(baseEffect);
-		const hasHigher = hasContent(higherLevelEffect);
-
-		if (!hasBase && !hasHigher) return null;
-
-		return {
-			baseEffect: hasBase ? baseEffect : null,
-			higherLevelEffect: hasHigher ? higherLevelEffect : null,
-		};
-	}
-
-	function toggleDescription(spellId, event) {
-		event.stopPropagation();
-		const newSet = new Set(expandedDescriptions);
-		if (newSet.has(spellId)) {
-			newSet.delete(spellId);
-		} else {
-			newSet.add(spellId);
-		}
-		expandedDescriptions = newSet;
-	}
-
-	function handleKeydown(event, callback) {
-		if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
-			callback();
-		}
-	}
-
-	async function handleSpellClick(spellId) {
-		const spell = actor.items.get(spellId);
-		const result = await actor.activateItem(spellId);
-
-		if (result) {
-			const activationCost = spell?.system?.activation?.cost;
-			const costType = activationCost?.type;
-			const costQuantity = activationCost?.quantity ?? 1;
-
-			if (costType === 'action') {
-				await onActivateItem(costQuantity);
-			}
-		}
-
-		return result;
-	}
+	const state = createSpellPanelState(actor, onActivateItem);
 </script>
 
 <section class="spell-panel">
@@ -181,23 +21,23 @@
 	</header>
 
 	<div class="spell-panel__search">
-		<SearchBar bind:searchTerm />
+		<SearchBar bind:searchTerm={state.searchTerm} />
 	</div>
 
 	<div class="spell-panel__content">
-		{#if spells.length > 0}
+		{#if state.spells.length > 0}
 			<ul class="spell-panel__list">
-				{#each sortItems(spells) as spell (spell._id)}
-					{@const meta = getSpellMetadata(spell)}
-					{@const manaCost = getSpellManaCost(spell)}
-					{@const effect = getSpellEffect(spell)}
-					{@const spellRange = getSpellRange(spell)}
+				{#each state.sortItems(state.spells) as spell (spell._id)}
+					{@const meta = state.getSpellMetadata(spell)}
+					{@const manaCost = state.getSpellManaCost(spell)}
+					{@const effect = state.getSpellEffect(spell)}
+					{@const spellRange = state.getSpellRange(spell)}
 					{@const requiresConcentration =
 						spell.reactive.system.properties.selected.includes('concentration')}
 					{@const spellTier = spell.reactive.system.tier}
-					{@const targetType = getSpellTargetType(spell)}
-					{@const isExpanded = expandedDescriptions.has(spell._id)}
-					{@const spellEffects = getSpellEffects(spell)}
+					{@const targetType = state.getSpellTargetType(spell)}
+					{@const isExpanded = state.expandedDescriptions.has(spell._id)}
+					{@const spellEffects = state.getSpellEffects(spell)}
 
 					<li class="spell-card" class:spell-card--expanded={isExpanded} data-item-id={spell._id}>
 						<div
@@ -206,8 +46,8 @@
 							tabindex="0"
 							draggable="true"
 							ondragstart={(event) => sheet._onDragStart(event)}
-							onclick={() => handleSpellClick(spell._id)}
-							onkeydown={(e) => handleKeydown(e, () => handleSpellClick(spell._id))}
+							onclick={() => state.handleSpellClick(spell._id)}
+							onkeydown={(e) => state.handleKeydown(e, () => state.handleSpellClick(spell._id))}
 						>
 							{#if showEmbeddedDocumentImages}
 								<img class="spell-card__img" src={spell.reactive.img} alt={spell.reactive.name} />
@@ -265,7 +105,7 @@
 								<button
 									class="spell-card__expand"
 									type="button"
-									onclick={(e) => toggleDescription(spell._id, e)}
+									onclick={(e) => state.toggleDescription(spell._id, e)}
 									aria-label={localize(
 										isExpanded
 											? 'NIMBLE.ui.heroicActions.collapse'

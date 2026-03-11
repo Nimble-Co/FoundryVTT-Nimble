@@ -1,8 +1,7 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import localize from '../../utils/localize.js';
-	import { ASSESS_DC, assessOptions } from '../../utils/assessOptions.js';
-	import { getTargetedTokens, getInvalidTargets, getTargetName } from '../../utils/targeting.js';
+	import { createAssessDialogState } from './AssessActionDialog.svelte.js';
 
 	// ============================================================================
 	// Props
@@ -11,63 +10,23 @@
 	let { document, dialog, deductActionPip, inCombat = false } = $props();
 
 	// ============================================================================
-	// Constants
-	// ============================================================================
-
-	const { skills: skillNames } = CONFIG.NIMBLE;
-
-	// ============================================================================
 	// State
 	// ============================================================================
 
-	let selectedOption = $state(null);
-	let selectedSkill = $state(null);
-	let selectedTarget = $state(null);
-	let targetingVersion = $state(0);
-	let hookId = null;
+	const state = createAssessDialogState(document, dialog, deductActionPip, inCombat);
 
-	// ============================================================================
-	// Derived Values
-	// ============================================================================
-
-	let currentOptionRequiresTarget = $derived(
-		assessOptions.find((o) => o.id === selectedOption)?.requiresTarget ?? false,
-	);
-
-	let availableTargets = $derived.by(() => {
-		void targetingVersion;
-		return getTargetedTokens(document.id);
-	});
-
-	let hasTargetedSelf = $derived.by(() => {
-		void targetingVersion;
-		return getInvalidTargets(document.id).length > 0;
-	});
-
-	let sortedSkills = $derived(
-		Object.entries(skillNames).sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB)),
-	);
-
-	let isSubmitDisabled = $derived(
-		!selectedOption ||
-			!selectedSkill ||
-			(currentOptionRequiresTarget && availableTargets.length !== 1),
-	);
+	let cleanupHook = null;
 
 	// ============================================================================
 	// Lifecycle
 	// ============================================================================
 
 	onMount(() => {
-		hookId = Hooks.on('targetToken', () => {
-			targetingVersion++;
-		});
+		cleanupHook = state.setupTargetingHook(() => state.updateSelectedTarget());
 	});
 
 	onDestroy(() => {
-		if (hookId !== null) {
-			Hooks.off('targetToken', hookId);
-		}
+		if (cleanupHook) cleanupHook();
 	});
 
 	// ============================================================================
@@ -75,75 +34,8 @@
 	// ============================================================================
 
 	$effect(() => {
-		if (currentOptionRequiresTarget && availableTargets.length === 1) {
-			selectedTarget = availableTargets[0];
-		} else if (currentOptionRequiresTarget && availableTargets.length !== 1) {
-			selectedTarget = null;
-		}
+		state.updateSelectedTarget();
 	});
-
-	$effect(() => {
-		if (!currentOptionRequiresTarget) {
-			selectedTarget = null;
-		}
-	});
-
-	// ============================================================================
-	// Event Handlers
-	// ============================================================================
-
-	async function handleSubmit() {
-		if (!selectedOption || !selectedSkill) return;
-
-		const option = assessOptions.find((o) => o.id === selectedOption);
-
-		if (option.requiresTarget && !selectedTarget) return;
-
-		const { roll } = await document.rollSkillCheck(selectedSkill, { skipRollDialog: true });
-
-		if (!roll) {
-			dialog.close();
-			return;
-		}
-
-		// Deduct action pip only after roll is confirmed (not cancelled)
-		if (inCombat) {
-			await deductActionPip();
-		}
-
-		const isSuccess = roll.total >= ASSESS_DC;
-		const resultKey = isSuccess ? option.successKey : option.failureKey;
-		const targetName = selectedTarget ? getTargetName(selectedTarget) : null;
-		const resultMessage = localize(resultKey, { name: document.name, target: targetName });
-
-		await ChatMessage.create({
-			author: game.user?.id,
-			speaker: ChatMessage.getSpeaker({ actor: document }),
-			sound: CONFIG.sounds.dice,
-			rolls: [roll],
-			type: 'assessAction',
-			system: {
-				actorName: document.name,
-				actorType: document.type,
-				permissions: document.permission,
-				rollMode: 0,
-				skillKey: selectedSkill,
-				dc: ASSESS_DC,
-				isSuccess,
-				optionTitle: localize(option.chatTitleKey),
-				resultMessage,
-				target: selectedTarget ? selectedTarget.document.uuid : null,
-				targetName,
-			},
-		});
-
-		dialog.submit({
-			option: selectedOption,
-			skill: selectedSkill,
-			isSuccess,
-			target: selectedTarget?.document.uuid,
-		});
-	}
 </script>
 
 <article class="nimble-sheet__body assess-dialog">
@@ -155,14 +47,17 @@
 		</header>
 
 		<div class="assess-dialog__options">
-			{#each assessOptions as option}
-				<label class="assess-option" class:assess-option--active={selectedOption === option.id}>
+			{#each state.assessOptions as option}
+				<label
+					class="assess-option"
+					class:assess-option--active={state.selectedOption === option.id}
+				>
 					<input
 						class="assess-option__input"
 						type="radio"
 						name="assess-option"
 						value={option.id}
-						bind:group={selectedOption}
+						bind:group={state.selectedOption}
 					/>
 
 					<i class="assess-option__icon {option.icon}"></i>
@@ -179,17 +74,17 @@
 	</section>
 
 	<section>
-		<select class="assess-dialog__select" bind:value={selectedSkill}>
+		<select class="assess-dialog__select" bind:value={state.selectedSkill}>
 			<option value={null} disabled
 				>{localize('NIMBLE.ui.heroicActions.assess.selectSkillPlaceholder')}</option
 			>
-			{#each sortedSkills as [skillKey, skillName]}
+			{#each state.sortedSkills as [skillKey, skillName]}
 				<option value={skillKey}>{skillName}</option>
 			{/each}
 		</select>
 	</section>
 
-	{#if currentOptionRequiresTarget}
+	{#if state.currentOptionRequiresTarget}
 		<section>
 			<header class="nimble-section-header">
 				<h3 class="nimble-heading" data-heading-variant="section">
@@ -197,24 +92,25 @@
 				</h3>
 			</header>
 
-			{#if availableTargets.length === 0}
+			{#if state.availableTargets.length === 0}
 				<div class="assess-dialog__no-targets">
 					<i class="fa-solid fa-crosshairs"></i>
-					{#if hasTargetedSelf}
+					{#if state.hasTargetedSelf}
 						<span>{localize('NIMBLE.ui.heroicActions.assess.cannotTargetSelf')}</span>
 					{:else}
 						<span>{localize('NIMBLE.ui.heroicActions.assess.noTargetsHint')}</span>
 					{/if}
 				</div>
-			{:else if availableTargets.length === 1}
+			{:else if state.availableTargets.length === 1}
 				<div class="assess-dialog__targets">
 					<div class="assess-target assess-target--active assess-target--single">
 						<img
 							class="assess-target__img"
-							src={availableTargets[0].document?.texture?.src || 'icons/svg/mystery-man.svg'}
-							alt={getTargetName(availableTargets[0])}
+							src={state.availableTargets[0].document?.texture?.src || 'icons/svg/mystery-man.svg'}
+							alt={state.getTargetName(state.availableTargets[0])}
 						/>
-						<span class="assess-target__name">{getTargetName(availableTargets[0])}</span>
+						<span class="assess-target__name">{state.getTargetName(state.availableTargets[0])}</span
+						>
 						<i class="fa-solid fa-check assess-target__check"></i>
 					</div>
 				</div>
@@ -235,17 +131,17 @@
 	<button
 		class="nimble-button"
 		data-button-variant="basic"
-		disabled={isSubmitDisabled}
-		onclick={handleSubmit}
+		disabled={state.isSubmitDisabled}
+		onclick={state.handleSubmit}
 	>
 		<i class="nimble-button__icon fa-solid fa-dice-d20"></i>
-		{#if !selectedOption}
+		{#if !state.selectedOption}
 			{localize('NIMBLE.ui.heroicActions.assess.selectOption')}
-		{:else if !selectedSkill}
+		{:else if !state.selectedSkill}
 			{localize('NIMBLE.ui.heroicActions.assess.selectSkill')}
 		{:else}
 			{localize('NIMBLE.ui.heroicActions.assess.rollToAssess', {
-				skill: skillNames[selectedSkill],
+				skill: state.skillNames[state.selectedSkill],
 			})}
 		{/if}
 	</button>

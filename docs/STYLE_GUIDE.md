@@ -449,8 +449,8 @@ Use callback props for child-to-parent communication:
 ### Component Size Guidelines
 
 - **Small components (< 100 lines)**: Keep in single file
-- **Medium components (100-300 lines)**: Consider extracting sub-components
-- **Large components (> 300 lines)**: Definitely split into sub-components
+- **Medium components (100-500 lines)**: Consider extracting sub-components
+- **Large components (> 500 lines)**: Definitely split into sub-components
 
 Signs a component should be split:
 - Multiple unrelated concerns
@@ -1295,7 +1295,7 @@ Use these rules as a pre-review gate. They help keep files focused by extracting
 
 **Components:**
 - [ ] Components used by 2+ features are in `src/view/components/`
-- [ ] Large components (300+ lines) are split into sub-components
+- [ ] Large components (500+ lines) are split into sub-components
 
 **State:**
 - [ ] Loading, empty, and error states are handled

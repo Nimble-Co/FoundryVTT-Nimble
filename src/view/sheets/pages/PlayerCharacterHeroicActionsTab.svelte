@@ -1,233 +1,19 @@
 <script>
-	import { createSubscriber } from 'svelte/reactivity';
 	import { getContext } from 'svelte';
-	import filterItems from '../../dataPreparationHelpers/filterItems.js';
 	import localize from '../../../utils/localize.js';
-	import GenericDialog from '../../../documents/dialogs/GenericDialog.svelte.js';
+	import { createHeroicActionsTabState } from './PlayerCharacterHeroicActionsTab.svelte.js';
 
 	import AssessActionPanel from '../components/AssessActionPanel.svelte';
 	import AttackActionPanel from '../components/AttackActionPanel.svelte';
 	import CastSpellActionPanel from '../components/CastSpellActionPanel.svelte';
 	import MoveActionPanel from '../components/MoveActionPanel.svelte';
-	import HeroicActionsHelpDialog from '../../dialogs/HeroicActionsHelpDialog.svelte';
 
 	// ============================================================================
-	// Context & Configuration
+	// Context & State
 	// ============================================================================
 
 	let actor = getContext('actor');
-
-	// ============================================================================
-	// Action Definitions (Single source of truth for all heroic actions)
-	// ============================================================================
-
-	const HEROIC_ACTIONS = [
-		{
-			id: 'attack',
-			icon: 'fa-solid fa-sword',
-			labelKey: 'NIMBLE.ui.heroicActions.actions.attack.label',
-			descriptionKey: 'NIMBLE.ui.heroicActions.actions.attack.description',
-			type: 'panel', // Opens a panel
-		},
-		{
-			id: 'spell',
-			icon: 'fa-solid fa-wand-sparkles',
-			labelKey: 'NIMBLE.ui.heroicActions.actions.spell.label',
-			descriptionKey: 'NIMBLE.ui.heroicActions.actions.spell.description',
-			type: 'panel',
-		},
-		{
-			id: 'move',
-			icon: 'fa-solid fa-person-running',
-			labelKey: 'NIMBLE.ui.heroicActions.actions.move.label',
-			descriptionKey: 'NIMBLE.ui.heroicActions.actions.move.description',
-			type: 'panel',
-		},
-		{
-			id: 'assess',
-			icon: 'fa-solid fa-eye',
-			labelKey: 'NIMBLE.ui.heroicActions.actions.assess.label',
-			descriptionKey: 'NIMBLE.ui.heroicActions.actions.assess.description',
-			type: 'panel',
-		},
-	];
-
-	// Top-level tab for switching between Actions and Reactions
-	let activeHeroicTab = $state('actions');
-
-	// ============================================================================
-	// Combat State Management
-	// ============================================================================
-
-	const subscribeCombatState = createSubscriber((update) => {
-		const hookNames = [
-			'combatStart',
-			'createCombat',
-			'updateCombat',
-			'deleteCombat',
-			'createCombatant',
-			'updateCombatant',
-			'deleteCombatant',
-			'canvasInit',
-			'canvasReady',
-		];
-
-		const hookIds = hookNames.map((hookName) => ({
-			hookId: Hooks.on(hookName, () => update()),
-			hookName,
-		}));
-
-		return () => hookIds.forEach(({ hookName, hookId }) => Hooks.off(hookName, hookId));
-	});
-
-	function getActiveCombatForCurrentScene() {
-		const sceneId = canvas?.scene?.id;
-		if (!sceneId) return null;
-
-		const activeCombat = game.combat;
-		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
-			return activeCombat;
-		}
-
-		const activeByScene = game.combats?.contents?.find(
-			(combat) => combat?.active && combat.scene?.id === sceneId,
-		);
-		if (activeByScene) return activeByScene;
-
-		const viewedCombat = game.combats?.viewed ?? null;
-		if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
-			return viewedCombat;
-		}
-
-		return null;
-	}
-
-	function getCombatantInCombat() {
-		const combat = getActiveCombatForCurrentScene();
-		if (!combat) return null;
-		return combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
-	}
-
-	function getCombatant() {
-		const combat = getActiveCombatForCurrentScene();
-		if (!combat?.started) return null;
-		return combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
-	}
-
-	function isInActiveCombat() {
-		const combatant = getCombatant();
-		if (!combatant) return false;
-		return combatant.initiative !== null;
-	}
-
-	function getActionsData() {
-		const combatant = getCombatantInCombat();
-		if (!combatant) return { current: 0, max: 3 };
-
-		const actions = combatant.system?.actions?.base;
-		return {
-			current: actions?.current ?? 0,
-			max: actions?.max ?? 3,
-		};
-	}
-
-	async function updateActionPips(newValue) {
-		const combatant = getCombatantInCombat();
-		if (!combatant) return;
-		await combatant.update({ 'system.actions.base.current': newValue });
-	}
-
-	async function deductActionPips(count = 1) {
-		const { current } = getActionsData();
-		if (current > 0) {
-			const newValue = Math.max(0, current - count);
-			await updateActionPips(newValue);
-		}
-	}
-
-	// Reactive combat state
-	let inCombat = $derived.by(() => {
-		subscribeCombatState();
-		return isInActiveCombat();
-	});
-
-	let actionsData = $derived.by(() => {
-		subscribeCombatState();
-		return getActionsData();
-	});
-
-	// ============================================================================
-	// Panel State & Action Handlers
-	// ============================================================================
-
-	let expandedPanel = $state('attack');
-
-	function togglePanel(panelName) {
-		// Attack and Spell act like tabs - clicking the selected one does nothing
-		// You can only switch between them
-		if (expandedPanel === panelName) {
-			return;
-		}
-		expandedPanel = panelName;
-	}
-
-	function handleActionClick(action) {
-		switch (action.type) {
-			case 'panel':
-				togglePanel(action.id);
-				break;
-		}
-	}
-
-	function handleHelpDialog() {
-		GenericDialog.getOrCreate(
-			localize('NIMBLE.ui.heroicActions.help.dialogTitle'),
-			HeroicActionsHelpDialog,
-			{},
-			{ width: 480, uniqueId: 'heroic-actions-help' },
-		).render(true);
-	}
-
-	function isActionDisabled(action) {
-		if (action.requiresCombat) {
-			return !inCombat || actionsData.current <= 0;
-		}
-		if (action.id === 'spell') {
-			return !hasSpells;
-		}
-		return false;
-	}
-
-	function getActionTooltip(action) {
-		const label = localize(action.labelKey);
-
-		if (action.requiresCombat) {
-			if (!inCombat) {
-				return `${label} (${localize('NIMBLE.ui.heroicActions.outsideCombat')})`;
-			}
-			if (actionsData.current <= 0) {
-				return `${label} (${localize('NIMBLE.ui.heroicActions.noActions')})`;
-			}
-		}
-		if (action.id === 'spell' && !hasSpells) {
-			return `${label} (${localize('NIMBLE.ui.heroicActions.noSpells')})`;
-		}
-		return label;
-	}
-
-	// ============================================================================
-	// Spell Data (for hasSpells check)
-	// ============================================================================
-
-	let allSpells = $derived(filterItems(actor.reactive, ['spell'], ''));
-	let hasSpells = $derived(allSpells.length > 0);
-
-	// ============================================================================
-	// Derived State
-	// ============================================================================
-
-	let flags = $derived(actor.reactive.flags.nimble);
-	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
+	const state = createHeroicActionsTabState(actor);
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
@@ -236,17 +22,17 @@
 			<div class="heroic-tab-header__tabs">
 				<button
 					class="heroic-tab-header__tab"
-					class:heroic-tab-header__tab--active={activeHeroicTab === 'actions'}
+					class:heroic-tab-header__tab--active={state.activeHeroicTab === 'actions'}
 					type="button"
-					onclick={() => (activeHeroicTab = 'actions')}
+					onclick={() => (state.activeHeroicTab = 'actions')}
 				>
 					{localize('NIMBLE.ui.heroicActions.title')}
 				</button>
 				<button
 					class="heroic-tab-header__tab"
-					class:heroic-tab-header__tab--active={activeHeroicTab === 'reactions'}
+					class:heroic-tab-header__tab--active={state.activeHeroicTab === 'reactions'}
 					type="button"
-					onclick={() => (activeHeroicTab = 'reactions')}
+					onclick={() => (state.activeHeroicTab = 'reactions')}
 				>
 					{localize('NIMBLE.ui.heroicActions.reactionsTitle')}
 				</button>
@@ -258,24 +44,24 @@
 				type="button"
 				aria-label={localize('NIMBLE.ui.heroicActions.help.tooltip')}
 				data-tooltip={localize('NIMBLE.ui.heroicActions.help.tooltip')}
-				onclick={handleHelpDialog}
+				onclick={state.handleHelpDialog}
 			>
 				<i class="fa-solid fa-circle-question"></i>
 			</button>
 		</header>
 
-		{#if activeHeroicTab === 'actions'}
+		{#if state.activeHeroicTab === 'actions'}
 			<div class="heroic-actions-tabs">
-				{#each HEROIC_ACTIONS as action (action.id)}
+				{#each state.HEROIC_ACTIONS as action (action.id)}
 					<button
 						class="heroic-action-tab"
-						class:heroic-action-tab--active={expandedPanel === action.id}
-						class:heroic-action-tab--disabled={isActionDisabled(action)}
+						class:heroic-action-tab--active={state.expandedPanel === action.id}
+						class:heroic-action-tab--disabled={state.isActionDisabled(action)}
 						type="button"
 						aria-label={localize(action.labelKey)}
-						data-tooltip={getActionTooltip(action)}
-						disabled={isActionDisabled(action)}
-						onclick={() => handleActionClick(action)}
+						data-tooltip={state.getActionTooltip(action)}
+						disabled={state.isActionDisabled(action)}
+						onclick={() => state.handleActionClick(action)}
 					>
 						<i class={action.icon}></i>
 						<span class="heroic-action-tab__indicator"></span>
@@ -284,46 +70,46 @@
 			</div>
 		{/if}
 
-		{#if activeHeroicTab === 'reactions'}
+		{#if state.activeHeroicTab === 'reactions'}
 			<div class="heroic-reactions-placeholder">
 				<p>{localize('NIMBLE.ui.heroicActions.reactionsPlaceholder')}</p>
 			</div>
 		{/if}
 	</section>
 
-	{#if activeHeroicTab === 'actions' && expandedPanel === 'attack'}
+	{#if state.activeHeroicTab === 'actions' && state.expandedPanel === 'attack'}
 		<AttackActionPanel
-			{showEmbeddedDocumentImages}
+			showEmbeddedDocumentImages={state.showEmbeddedDocumentImages}
 			onActivateItem={(cost) => {
-				if (inCombat && actionsData.current > 0) {
-					deductActionPips(cost);
+				if (state.inCombat && state.actionsData.current > 0) {
+					state.deductActionPips(cost);
 				}
 			}}
 		/>
 	{/if}
 
-	{#if activeHeroicTab === 'actions' && expandedPanel === 'spell'}
+	{#if state.activeHeroicTab === 'actions' && state.expandedPanel === 'spell'}
 		<CastSpellActionPanel
-			{showEmbeddedDocumentImages}
+			showEmbeddedDocumentImages={state.showEmbeddedDocumentImages}
 			onActivateItem={(cost) => {
-				if (inCombat && actionsData.current > 0) {
-					deductActionPips(cost);
+				if (state.inCombat && state.actionsData.current > 0) {
+					state.deductActionPips(cost);
 				}
 			}}
 		/>
 	{/if}
 
-	{#if activeHeroicTab === 'actions' && expandedPanel === 'move'}
+	{#if state.activeHeroicTab === 'actions' && state.expandedPanel === 'move'}
 		<MoveActionPanel
 			{actor}
-			{inCombat}
-			actionsRemaining={actionsData.current}
-			onDeductAction={() => deductActionPips(1)}
+			inCombat={state.inCombat}
+			actionsRemaining={state.actionsData.current}
+			onDeductAction={() => state.deductActionPips(1)}
 		/>
 	{/if}
 
-	{#if activeHeroicTab === 'actions' && expandedPanel === 'assess'}
-		<AssessActionPanel {actor} onDeductAction={() => deductActionPips(1)} />
+	{#if state.activeHeroicTab === 'actions' && state.expandedPanel === 'assess'}
+		<AssessActionPanel {actor} onDeductAction={() => state.deductActionPips(1)} />
 	{/if}
 </section>
 

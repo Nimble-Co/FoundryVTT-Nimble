@@ -1,98 +1,15 @@
 <script>
 	import localize from '../../../utils/localize.js';
-	import { ASSESS_DC, assessOptions } from '../../../utils/assessOptions.js';
-	import { getTargetedTokens, getInvalidTargets, getTargetName } from '../../../utils/targeting.js';
-
-	const { skills: skillNames } = CONFIG.NIMBLE;
+	import { createAssessPanelState } from './AssessActionPanel.svelte.js';
 
 	let { actor, onDeductAction = async () => {} } = $props();
 
-	let selectedOption = $state(null);
-	let selectedSkill = $state(null);
-	let targetingVersion = $state(0);
+	const state = createAssessPanelState(actor, onDeductAction);
 
 	// Track targeting changes
 	$effect(() => {
-		const hookId = Hooks.on('targetToken', () => {
-			targetingVersion++;
-		});
-		return () => Hooks.off('targetToken', hookId);
+		return state.setupTargetingHook();
 	});
-
-	let currentOptionRequiresTarget = $derived(
-		assessOptions.find((o) => o.id === selectedOption)?.requiresTarget ?? false,
-	);
-
-	let availableTargets = $derived.by(() => {
-		void targetingVersion;
-		return getTargetedTokens(actor.id);
-	});
-
-	let hasTargetedSelf = $derived.by(() => {
-		void targetingVersion;
-		return getInvalidTargets(actor.id).length > 0;
-	});
-
-	let selectedTarget = $derived.by(() => {
-		if (currentOptionRequiresTarget && availableTargets.length === 1) {
-			return availableTargets[0];
-		}
-		return null;
-	});
-
-	let sortedSkills = $derived(
-		Object.entries(skillNames).sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB)),
-	);
-
-	let isSubmitDisabled = $derived(
-		!selectedOption ||
-			!selectedSkill ||
-			(currentOptionRequiresTarget && availableTargets.length !== 1),
-	);
-
-	async function handleRoll() {
-		if (isSubmitDisabled) return;
-
-		const option = assessOptions.find((o) => o.id === selectedOption);
-
-		// Roll the skill check (show the roll dialog)
-		const { roll } = await actor.rollSkillCheck(selectedSkill);
-
-		if (!roll) return;
-
-		// Deduct action pip only after roll is confirmed (not cancelled)
-		await onDeductAction();
-
-		// Determine success/failure based on DC 12
-		const isSuccess = roll.total >= ASSESS_DC;
-		const resultKey = isSuccess ? option.successKey : option.failureKey;
-
-		// Include target name in the message if there's a target
-		const targetName = selectedTarget ? getTargetName(selectedTarget) : null;
-		const resultMessage = localize(resultKey, { name: actor.name, target: targetName });
-
-		// Create chat message
-		await ChatMessage.create({
-			author: game.user?.id,
-			speaker: ChatMessage.getSpeaker({ actor }),
-			sound: CONFIG.sounds.dice,
-			rolls: [roll],
-			type: 'assessAction',
-			system: {
-				actorName: actor.name,
-				actorType: actor.type,
-				permissions: actor.permission,
-				rollMode: 0,
-				skillKey: selectedSkill,
-				dc: ASSESS_DC,
-				isSuccess,
-				optionTitle: localize(option.chatTitleKey),
-				resultMessage,
-				target: selectedTarget ? selectedTarget.document.uuid : null,
-				targetName,
-			},
-		});
-	}
 </script>
 
 <section class="assess-panel">
@@ -104,14 +21,17 @@
 
 	<div class="assess-panel__content">
 		<div class="assess-panel__options">
-			{#each assessOptions as option}
-				<label class="assess-option" class:assess-option--active={selectedOption === option.id}>
+			{#each state.assessOptions as option}
+				<label
+					class="assess-option"
+					class:assess-option--active={state.selectedOption === option.id}
+				>
 					<input
 						class="assess-option__input"
 						type="radio"
 						name="assess-option"
 						value={option.id}
-						bind:group={selectedOption}
+						bind:group={state.selectedOption}
 					/>
 					<i class="assess-option__icon {option.icon}"></i>
 					<div class="assess-option__content">
@@ -123,40 +43,41 @@
 			{/each}
 		</div>
 
-		<select class="assess-panel__select" bind:value={selectedSkill}>
+		<select class="assess-panel__select" bind:value={state.selectedSkill}>
 			<option value={null} disabled>
 				{localize('NIMBLE.ui.heroicActions.assess.selectSkillPlaceholder')}
 			</option>
-			{#each sortedSkills as [skillKey, skillName]}
+			{#each state.sortedSkills as [skillKey, skillName]}
 				<option value={skillKey}>{skillName}</option>
 			{/each}
 		</select>
 
-		{#if currentOptionRequiresTarget}
+		{#if state.currentOptionRequiresTarget}
 			<header class="nimble-section-header">
 				<h3 class="nimble-heading" data-heading-variant="section">
 					{localize('NIMBLE.ui.heroicActions.assess.selectTarget')}
 				</h3>
 			</header>
 
-			{#if availableTargets.length === 0}
+			{#if state.availableTargets.length === 0}
 				<div class="assess-panel__no-targets">
 					<i class="fa-solid fa-crosshairs"></i>
-					{#if hasTargetedSelf}
+					{#if state.hasTargetedSelf}
 						<span>{localize('NIMBLE.ui.heroicActions.assess.cannotTargetSelf')}</span>
 					{:else}
 						<span>{localize('NIMBLE.ui.heroicActions.assess.noTargetsHint')}</span>
 					{/if}
 				</div>
-			{:else if availableTargets.length === 1}
+			{:else if state.availableTargets.length === 1}
 				<div class="assess-panel__targets">
 					<div class="assess-target assess-target--active">
 						<img
 							class="assess-target__img"
-							src={availableTargets[0].document?.texture?.src || 'icons/svg/mystery-man.svg'}
-							alt={getTargetName(availableTargets[0])}
+							src={state.availableTargets[0].document?.texture?.src || 'icons/svg/mystery-man.svg'}
+							alt={state.getTargetName(state.availableTargets[0])}
 						/>
-						<span class="assess-target__name">{getTargetName(availableTargets[0])}</span>
+						<span class="assess-target__name">{state.getTargetName(state.availableTargets[0])}</span
+						>
 						<i class="fa-solid fa-check assess-target__check"></i>
 					</div>
 				</div>
@@ -171,17 +92,17 @@
 		<button
 			class="nimble-button assess-panel__roll"
 			data-button-variant="primary"
-			disabled={isSubmitDisabled}
-			onclick={handleRoll}
+			disabled={state.isSubmitDisabled}
+			onclick={state.handleRoll}
 		>
 			<i class="fa-solid fa-dice-d20"></i>
-			{#if !selectedOption}
+			{#if !state.selectedOption}
 				{localize('NIMBLE.ui.heroicActions.assess.selectOption')}
-			{:else if !selectedSkill}
+			{:else if !state.selectedSkill}
 				{localize('NIMBLE.ui.heroicActions.assess.selectSkill')}
 			{:else}
 				{localize('NIMBLE.ui.heroicActions.assess.rollToAssess', {
-					skill: skillNames[selectedSkill],
+					skill: state.skillNames[state.selectedSkill],
 				})}
 			{/if}
 		</button>

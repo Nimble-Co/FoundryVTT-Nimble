@@ -1,281 +1,16 @@
 <script>
 	import { getContext } from 'svelte';
-	import sortItems from '../../../utils/sortItems.js';
 	import localize from '../../../utils/localize.js';
-	import { getPrimaryDamageFormulaFromActivationEffects } from '../../../utils/activationEffects.js';
-	import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
-	import ItemActivationConfigDialog from '../../../documents/dialogs/ItemActivationConfigDialog.svelte.js';
-	import { DamageRoll } from '../../../dice/DamageRoll.js';
+	import { createAttackPanelState } from './AttackActionPanel.svelte.js';
 
 	import SearchBar from './SearchBar.svelte';
-
-	const { weaponProperties } = CONFIG.NIMBLE;
 
 	let actor = getContext('actor');
 	let sheet = getContext('application');
 
 	let { onActivateItem = async () => {}, showEmbeddedDocumentImages = true } = $props();
 
-	let searchTerm = $state('');
-	let expandedDescriptions = $state(new Set());
-
-	// ============================================================================
-	// Formula Evaluation
-	// ============================================================================
-
-	function evaluateFormula(formula) {
-		return evalFormula(formula, actor);
-	}
-
-	// ============================================================================
-	// Weapon Data
-	// ============================================================================
-
-	let weapons = $derived.by(() => {
-		const weaponItems = actor.reactive.items.filter(
-			(item) => item.type === 'object' && item.system.objectType === 'weapon',
-		);
-
-		if (!searchTerm) return weaponItems;
-
-		const search = searchTerm.toLocaleLowerCase();
-		return weaponItems.filter((item) => item.name.toLocaleLowerCase().includes(search));
-	});
-
-	let showUnarmedStrike = $derived(
-		!searchTerm || 'unarmed strike'.includes(searchTerm.toLocaleLowerCase()),
-	);
-
-	let attackFeatures = $derived.by(() => {
-		const features = actor.reactive.items.filter((item) => {
-			if (item.type !== 'feature') return false;
-
-			const activation = item.system?.activation;
-			if (!activation) return false;
-
-			return activation.cost?.type === 'action' && item.system?.actionType?.includes('attack');
-		});
-
-		if (!searchTerm) return features;
-
-		const search = searchTerm.toLocaleLowerCase();
-		return features.filter((item) => item.name.toLocaleLowerCase().includes(search));
-	});
-
-	function getWeaponDamage(item) {
-		const effects = item.reactive?.system?.activation?.effects ?? item.system?.activation?.effects;
-		const formula = getPrimaryDamageFormulaFromActivationEffects(effects);
-		return evaluateFormula(formula);
-	}
-
-	function getWeaponProperties(item) {
-		const props = item.reactive?.system?.properties ?? item.system?.properties ?? {};
-		const selected = props.selected ?? [];
-
-		return selected
-			.map((key) => {
-				const localeKey = weaponProperties[key];
-				const label = localeKey ? game.i18n.localize(localeKey) : key;
-
-				if (key === 'thrown' && props.thrownRange) {
-					return localize('NIMBLE.ui.heroicActions.thrown', { distance: props.thrownRange });
-				}
-				if (key === 'range' && props.range?.max) {
-					return localize('NIMBLE.npcSheet.range', { distance: props.range.max });
-				}
-				if (key === 'reach' && props.reach?.max) {
-					return localize('NIMBLE.npcSheet.reach', { distance: props.reach.max });
-				}
-
-				return label;
-			})
-			.filter(Boolean);
-	}
-
-	function getItemDescription(item) {
-		const descData = item.reactive?.system?.description ?? item.system?.description;
-		if (!descData) return '';
-
-		const desc = typeof descData === 'object' ? descData.public : descData;
-
-		if (!desc || typeof desc !== 'string') return '';
-
-		const stripped = desc.replace(/<[^>]*>/g, '').trim();
-		return stripped ? desc : '';
-	}
-
-	function toggleDescription(itemId, event) {
-		event.stopPropagation();
-		const newSet = new Set(expandedDescriptions);
-		if (newSet.has(itemId)) {
-			newSet.delete(itemId);
-		} else {
-			newSet.add(itemId);
-		}
-		expandedDescriptions = newSet;
-	}
-
-	function handleKeydown(event, callback) {
-		if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
-			callback();
-		}
-	}
-
-	// ============================================================================
-	// Unarmed Strike
-	// ============================================================================
-
-	// Default unarmed: roll 1d4 for hit determination, damage is 1 + STR
-	// The 1d4 is excluded from damage total when primaryDieAsDamage is false
-	const DEFAULT_UNARMED_DAMAGE = '1d4 + 1 + @abilities.strength.mod';
-
-	function getUnarmedDamageFormula() {
-		return actor.system?.unarmedDamage ?? DEFAULT_UNARMED_DAMAGE;
-	}
-
-	function hasCustomUnarmedDamage() {
-		return actor.system?.unarmedDamage !== undefined;
-	}
-
-	function getUnarmedDamageDisplay() {
-		if (hasCustomUnarmedDamage()) {
-			return evaluateFormula(actor.system.unarmedDamage);
-		}
-		return evaluateFormula('1 + @abilities.strength.mod');
-	}
-
-	async function handleUnarmedStrike() {
-		const rollFormula = getUnarmedDamageFormula();
-		const primaryDieAsDamage = hasCustomUnarmedDamage();
-
-		const unarmedItem = {
-			name: localize('NIMBLE.ui.heroicActions.unarmedStrike'),
-			img: 'icons/skills/melee/unarmed-punch-fist.webp',
-			system: {
-				activation: {
-					effects: [
-						{
-							type: 'damage',
-							formula: rollFormula,
-							damageType: 'bludgeoning',
-							canCrit: true,
-							canMiss: true,
-						},
-					],
-				},
-			},
-		};
-
-		const dialog = new ItemActivationConfigDialog(
-			actor,
-			unarmedItem,
-			localize('NIMBLE.ui.heroicActions.unarmedStrike'),
-			{ rollMode: 0 },
-		);
-		await dialog.render(true);
-		const result = await dialog.promise;
-
-		if (!result) return;
-
-		const roll = new DamageRoll(rollFormula, actor.getRollData(), {
-			canCrit: true,
-			canMiss: true,
-			rollMode: result.rollMode ?? 0,
-			primaryDieValue: result.primaryDieValue ?? 0,
-			primaryDieModifier: Number(result.primaryDieModifier) || 0,
-			damageType: 'bludgeoning',
-			primaryDieAsDamage,
-		});
-
-		await roll.evaluate();
-
-		const rollData = roll.toJSON();
-
-		const evaluatedEffects = [
-			{
-				id: 'unarmed-damage',
-				type: 'damage',
-				formula: rollFormula,
-				damageType: 'bludgeoning',
-				canCrit: true,
-				canMiss: true,
-				roll: rollData,
-				parentNode: null,
-				parentContext: null,
-				on: {
-					hit: [
-						{
-							id: 'unarmed-damage-hit',
-							type: 'damageOutcome',
-							parentNode: 'unarmed-damage',
-							parentContext: 'hit',
-						},
-					],
-					criticalHit: [
-						{
-							id: 'unarmed-damage-crit',
-							type: 'damageOutcome',
-							parentNode: 'unarmed-damage',
-							parentContext: 'criticalHit',
-						},
-					],
-				},
-			},
-		];
-
-		const chatData = {
-			author: game.user?.id,
-			flavor: `${actor.name}: ${localize('NIMBLE.ui.heroicActions.unarmedStrike')}`,
-			speaker: ChatMessage.getSpeaker({ actor }),
-			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
-			sound: CONFIG.sounds.dice,
-			rolls: [roll],
-			system: {
-				actorName: actor.name,
-				actorType: actor.type,
-				image: unarmedItem.img,
-				permissions: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
-				rollMode: result.rollMode ?? 0,
-				name: localize('NIMBLE.ui.heroicActions.unarmedStrike'),
-				description: '',
-				featureType: 'feature',
-				class: '',
-				attackType: 'reach',
-				attackDistance: 1,
-				isCritical: roll.isCritical,
-				isMiss: roll.isMiss,
-				activation: {
-					effects: evaluatedEffects,
-					cost: { type: 'action', quantity: 1 },
-					duration: { type: 'none', quantity: 1 },
-					targets: { count: 1 },
-				},
-				targets: Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []),
-			},
-			type: 'feature',
-		};
-
-		await ChatMessage.create(chatData);
-		await onActivateItem(1);
-	}
-
-	async function handleItemClick(itemId) {
-		const item = actor.items.get(itemId);
-		const result = await actor.activateItem(itemId);
-
-		if (result) {
-			const activationCost = item?.system?.activation?.cost;
-			const costType = activationCost?.type;
-			const costQuantity = activationCost?.quantity ?? 1;
-
-			if (costType === 'action') {
-				await onActivateItem(costQuantity);
-			}
-		}
-
-		return result;
-	}
+	const state = createAttackPanelState(actor, onActivateItem);
 </script>
 
 <section class="attack-panel">
@@ -286,19 +21,19 @@
 	</header>
 
 	<div class="attack-panel__search">
-		<SearchBar bind:searchTerm />
+		<SearchBar bind:searchTerm={state.searchTerm} />
 	</div>
 
 	<div class="attack-panel__content">
 		<ul class="attack-panel__list">
-			{#if showUnarmedStrike}
+			{#if state.showUnarmedStrike}
 				<li class="weapon-card">
 					<div
 						class="weapon-card__row"
 						role="button"
 						tabindex="0"
-						onclick={handleUnarmedStrike}
-						onkeydown={(e) => handleKeydown(e, handleUnarmedStrike)}
+						onclick={state.handleUnarmedStrike}
+						onkeydown={(e) => state.handleKeydown(e, state.handleUnarmedStrike)}
 					>
 						<div class="weapon-card__icon">
 							<i class="fa-solid fa-hand-fist"></i>
@@ -315,17 +50,17 @@
 
 						<span class="weapon-card__damage">
 							<i class="fa-solid fa-burst"></i>
-							{getUnarmedDamageDisplay()}
+							{state.getUnarmedDamageDisplay()}
 						</span>
 					</div>
 				</li>
 			{/if}
 
-			{#each sortItems(weapons) as item (item._id)}
-				{@const damage = getWeaponDamage(item)}
-				{@const properties = getWeaponProperties(item)}
-				{@const isExpanded = expandedDescriptions.has(item._id)}
-				{@const description = getItemDescription(item)}
+			{#each state.sortItems(state.weapons) as item (item._id)}
+				{@const damage = state.getWeaponDamage(item)}
+				{@const properties = state.getWeaponProperties(item)}
+				{@const isExpanded = state.expandedDescriptions.has(item._id)}
+				{@const description = state.getItemDescription(item)}
 				<li class="weapon-card" class:weapon-card--expanded={isExpanded} data-item-id={item._id}>
 					<div
 						class="weapon-card__row"
@@ -333,8 +68,8 @@
 						tabindex="0"
 						draggable="true"
 						ondragstart={(event) => sheet._onDragStart(event)}
-						onclick={() => handleItemClick(item._id)}
-						onkeydown={(e) => handleKeydown(e, () => handleItemClick(item._id))}
+						onclick={() => state.handleItemClick(item._id)}
+						onkeydown={(e) => state.handleKeydown(e, () => state.handleItemClick(item._id))}
 					>
 						{#if showEmbeddedDocumentImages}
 							<img class="weapon-card__img" src={item.reactive.img} alt={item.reactive.name} />
@@ -362,7 +97,7 @@
 							<button
 								class="weapon-card__expand"
 								type="button"
-								onclick={(e) => toggleDescription(item._id, e)}
+								onclick={(e) => state.toggleDescription(item._id, e)}
 								aria-label={localize(
 									isExpanded
 										? 'NIMBLE.ui.heroicActions.collapse'
@@ -386,10 +121,10 @@
 				</li>
 			{/each}
 
-			{#each sortItems(attackFeatures) as item (item._id)}
-				{@const damage = getWeaponDamage(item)}
-				{@const isExpanded = expandedDescriptions.has(item._id)}
-				{@const description = getItemDescription(item)}
+			{#each state.sortItems(state.attackFeatures) as item (item._id)}
+				{@const damage = state.getWeaponDamage(item)}
+				{@const isExpanded = state.expandedDescriptions.has(item._id)}
+				{@const description = state.getItemDescription(item)}
 				<li class="weapon-card" class:weapon-card--expanded={isExpanded} data-item-id={item._id}>
 					<div
 						class="weapon-card__row"
@@ -397,8 +132,8 @@
 						tabindex="0"
 						draggable="true"
 						ondragstart={(event) => sheet._onDragStart(event)}
-						onclick={() => handleItemClick(item._id)}
-						onkeydown={(e) => handleKeydown(e, () => handleItemClick(item._id))}
+						onclick={() => state.handleItemClick(item._id)}
+						onkeydown={(e) => state.handleKeydown(e, () => state.handleItemClick(item._id))}
 					>
 						{#if showEmbeddedDocumentImages}
 							<img class="weapon-card__img" src={item.reactive.img} alt={item.reactive.name} />
@@ -422,7 +157,7 @@
 							<button
 								class="weapon-card__expand"
 								type="button"
-								onclick={(e) => toggleDescription(item._id, e)}
+								onclick={(e) => state.toggleDescription(item._id, e)}
 								aria-label={localize(
 									isExpanded
 										? 'NIMBLE.ui.heroicActions.collapse'
@@ -447,7 +182,7 @@
 			{/each}
 		</ul>
 
-		{#if !showUnarmedStrike && weapons.length === 0 && attackFeatures.length === 0}
+		{#if !state.showUnarmedStrike && state.weapons.length === 0 && state.attackFeatures.length === 0}
 			<p class="attack-panel__empty">{localize('NIMBLE.ui.heroicActions.noWeapons')}</p>
 		{/if}
 	</div>
