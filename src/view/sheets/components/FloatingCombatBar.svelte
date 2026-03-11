@@ -139,7 +139,7 @@
 			transition: all 0.15s ease;
 
 			i {
-				font-size: 1rem;
+				font-size: 1.5rem;
 				transition: all 0.15s ease;
 			}
 
