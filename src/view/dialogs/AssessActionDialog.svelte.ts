@@ -1,3 +1,5 @@
+import type { SkillKeyType } from '#types/skillKey.js';
+import type { NimbleCharacter } from '../../documents/actor/character.js';
 import { ASSESS_DC, assessOptions } from '../../utils/assessOptions.js';
 import localize from '../../utils/localize.js';
 import { getInvalidTargets, getTargetedTokens, getTargetName } from '../../utils/targeting.js';
@@ -10,10 +12,10 @@ interface AssessDialogResult {
 }
 
 export function createAssessDialogState(
-	document: Actor,
+	getDocument: () => NimbleCharacter,
 	dialog: { close: () => void; submit: (result: AssessDialogResult) => void },
-	deductActionPip: () => Promise<void>,
-	inCombat: boolean,
+	getDeductActionPip: () => () => Promise<void>,
+	getInCombat: () => boolean,
 ) {
 	const { skills: skillNames } = CONFIG.NIMBLE;
 	let selectedOption = $state<string | null>(null);
@@ -31,12 +33,12 @@ export function createAssessDialogState(
 
 	const availableTargets = $derived.by(() => {
 		void targetingVersion;
-		return getTargetedTokens(document.id);
+		return getTargetedTokens(getDocument().id ?? '');
 	});
 
 	const hasTargetedSelf = $derived.by(() => {
 		void targetingVersion;
-		return getInvalidTargets(document.id).length > 0;
+		return getInvalidTargets(getDocument().id ?? '').length > 0;
 	});
 
 	const sortedSkills = $derived(
@@ -87,7 +89,9 @@ export function createAssessDialogState(
 
 		if (option.requiresTarget && !selectedTarget) return;
 
-		const { roll } = await document.rollSkillCheck(selectedSkill, { skipRollDialog: true });
+		const { roll } = await getDocument().rollSkillCheck(selectedSkill as SkillKeyType, {
+			skipRollDialog: true,
+		});
 
 		if (!roll) {
 			dialog.close();
@@ -95,25 +99,29 @@ export function createAssessDialogState(
 		}
 
 		// Deduct action pip only after roll is confirmed (not cancelled)
-		if (inCombat) {
-			await deductActionPip();
+		if (getInCombat()) {
+			await getDeductActionPip()();
 		}
 
-		const isSuccess = roll.total >= ASSESS_DC;
+		const isSuccess = (roll.total ?? 0) >= ASSESS_DC;
 		const resultKey = isSuccess ? option.successKey : option.failureKey;
 		const targetName = selectedTarget ? getTargetName(selectedTarget) : null;
-		const resultMessage = localize(resultKey, { name: document.name, target: targetName });
+		const resultMessage = localize(resultKey, {
+			name: getDocument().name,
+			target: targetName ?? '',
+		});
 
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		await ChatMessage.create({
 			author: game.user?.id,
-			speaker: ChatMessage.getSpeaker({ actor: document }),
+			speaker: ChatMessage.getSpeaker({ actor: getDocument() }),
 			sound: CONFIG.sounds.dice,
 			rolls: [roll],
 			type: 'assessAction',
 			system: {
-				actorName: document.name,
-				actorType: document.type,
-				permissions: document.permission,
+				actorName: getDocument().name,
+				actorType: getDocument().type,
+				permissions: getDocument().permission,
 				rollMode: 0,
 				skillKey: selectedSkill,
 				dc: ASSESS_DC,
@@ -123,7 +131,7 @@ export function createAssessDialogState(
 				target: selectedTarget ? selectedTarget.document.uuid : null,
 				targetName,
 			},
-		});
+		} as any);
 
 		dialog.submit({
 			option: selectedOption,

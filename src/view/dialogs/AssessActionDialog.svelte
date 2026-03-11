@@ -1,7 +1,7 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import localize from '../../utils/localize.js';
-	import { createAssessDialogState } from './AssessActionDialog.svelte.js';
+	import { createAssessDialogState } from './AssessActionDialog.svelte.ts';
 
 	// ============================================================================
 	// Props
@@ -13,7 +13,12 @@
 	// State
 	// ============================================================================
 
-	const state = createAssessDialogState(document, dialog, deductActionPip, inCombat);
+	const state = createAssessDialogState(
+		() => document,
+		dialog,
+		() => deductActionPip,
+		() => inCombat,
+	);
 
 	let cleanupHook = null;
 

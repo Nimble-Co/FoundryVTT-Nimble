@@ -1,16 +1,19 @@
 <script>
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
-	import { createAttackPanelState } from './AttackActionPanel.svelte.js';
+	import { createAttackPanelState } from './AttackActionPanel.svelte.ts';
 
 	import SearchBar from './SearchBar.svelte';
 
-	let actor = getContext('actor');
-	let sheet = getContext('application');
+	const actor = getContext('actor');
+	const sheet = getContext('application');
 
 	let { onActivateItem = async () => {}, showEmbeddedDocumentImages = true } = $props();
 
-	const state = createAttackPanelState(actor, onActivateItem);
+	const state = createAttackPanelState(
+		() => actor,
+		() => onActivateItem,
+	);
 </script>
 
 <section class="attack-panel">

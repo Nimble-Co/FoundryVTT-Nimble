@@ -1,4 +1,5 @@
 import { DamageRoll } from '../../../dice/DamageRoll.js';
+import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import ItemActivationConfigDialog from '../../../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { getPrimaryDamageFormulaFromActivationEffects } from '../../../utils/activationEffects.js';
 import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
@@ -9,9 +10,35 @@ import sortItems from '../../../utils/sortItems.js';
 // The 1d4 is excluded from damage total when primaryDieAsDamage is false
 const DEFAULT_UNARMED_DAMAGE = '1d4 + 1 + @abilities.strength.mod';
 
+/** System data for weapon items */
+interface WeaponSystemData {
+	objectType: string;
+	activation?: {
+		effects?: unknown[];
+		cost?: { type: string; quantity: number };
+	};
+	properties?: {
+		selected?: string[];
+		reach?: { max?: number };
+		range?: { max?: number };
+		thrownRange?: number;
+	};
+	description?:
+		| {
+				public?: string;
+		  }
+		| string;
+	actionType?: string;
+}
+
+/** Extended character system data with optional unarmed damage */
+interface CharacterSystemExtension {
+	unarmedDamage?: string;
+}
+
 export function createAttackPanelState(
-	actor: Actor,
-	onActivateItem: (cost: number) => Promise<void>,
+	getActor: () => NimbleCharacter,
+	getOnActivateItem: () => (cost: number) => Promise<void>,
 ) {
 	const { weaponProperties } = CONFIG.NIMBLE;
 	let searchTerm = $state('');
@@ -22,22 +49,27 @@ export function createAttackPanelState(
 	// ============================================================================
 
 	function evaluateFormula(formula: string | undefined): string {
-		return evalFormula(formula, actor);
+		return evalFormula(formula, getActor());
 	}
 
 	// ============================================================================
 	// Weapon Data
 	// ============================================================================
 
+	/** Helper to cast item system data */
+	function getSystemData(item: Item): WeaponSystemData {
+		return item.system as unknown as WeaponSystemData;
+	}
+
 	const weapons = $derived.by(() => {
-		const weaponItems = actor.reactive.items.filter(
-			(item: Item) => item.type === 'object' && item.system.objectType === 'weapon',
+		const weaponItems = getActor().reactive.items.filter(
+			(item) => item.type === 'object' && getSystemData(item).objectType === 'weapon',
 		);
 
 		if (!searchTerm) return weaponItems;
 
 		const search = searchTerm.toLocaleLowerCase();
-		return weaponItems.filter((item: Item) => item.name.toLocaleLowerCase().includes(search));
+		return weaponItems.filter((item) => item.name.toLocaleLowerCase().includes(search));
 	});
 
 	const showUnarmedStrike = $derived(
@@ -45,29 +77,31 @@ export function createAttackPanelState(
 	);
 
 	const attackFeatures = $derived.by(() => {
-		const features = actor.reactive.items.filter((item: Item) => {
+		const features = getActor().reactive.items.filter((item) => {
 			if (item.type !== 'feature') return false;
 
-			const activation = item.system?.activation;
+			const system = getSystemData(item);
+			const activation = system.activation;
 			if (!activation) return false;
 
-			return activation.cost?.type === 'action' && item.system?.actionType?.includes('attack');
+			return activation.cost?.type === 'action' && Boolean(system.actionType?.includes('attack'));
 		});
 
 		if (!searchTerm) return features;
 
 		const search = searchTerm.toLocaleLowerCase();
-		return features.filter((item: Item) => item.name.toLocaleLowerCase().includes(search));
+		return features.filter((item) => item.name.toLocaleLowerCase().includes(search));
 	});
 
 	function getWeaponDamage(item: Item): string {
-		const effects = item.reactive?.system?.activation?.effects ?? item.system?.activation?.effects;
+		const system = getSystemData(item);
+		const effects = system.activation?.effects;
 		const formula = getPrimaryDamageFormulaFromActivationEffects(effects);
-		return evaluateFormula(formula);
+		return evaluateFormula(formula ?? undefined);
 	}
 
 	function getWeaponProperties(item: Item): string[] {
-		const props = item.reactive?.system?.properties ?? item.system?.properties ?? {};
+		const props = getSystemData(item).properties ?? {};
 		const selected = props.selected ?? [];
 
 		return selected
@@ -76,13 +110,15 @@ export function createAttackPanelState(
 				const label = localeKey ? game.i18n.localize(localeKey) : key;
 
 				if (key === 'thrown' && props.thrownRange) {
-					return localize('NIMBLE.ui.heroicActions.thrown', { distance: props.thrownRange });
+					return localize('NIMBLE.ui.heroicActions.thrown', {
+						distance: String(props.thrownRange),
+					});
 				}
 				if (key === 'range' && props.range?.max) {
-					return localize('NIMBLE.npcSheet.range', { distance: props.range.max });
+					return localize('NIMBLE.npcSheet.range', { distance: String(props.range.max) });
 				}
 				if (key === 'reach' && props.reach?.max) {
-					return localize('NIMBLE.npcSheet.reach', { distance: props.reach.max });
+					return localize('NIMBLE.npcSheet.reach', { distance: String(props.reach.max) });
 				}
 
 				return label;
@@ -91,7 +127,7 @@ export function createAttackPanelState(
 	}
 
 	function getItemDescription(item: Item): string {
-		const descData = item.reactive?.system?.description ?? item.system?.description;
+		const descData = getSystemData(item).description;
 		if (!descData) return '';
 
 		const desc = typeof descData === 'object' ? descData.public : descData;
@@ -124,17 +160,22 @@ export function createAttackPanelState(
 	// Unarmed Strike
 	// ============================================================================
 
+	/** Get character system with unarmed damage extension */
+	function getCharacterSystem(): CharacterSystemExtension {
+		return getActor().system as CharacterSystemExtension;
+	}
+
 	function getUnarmedDamageFormula(): string {
-		return actor.system?.unarmedDamage ?? DEFAULT_UNARMED_DAMAGE;
+		return getCharacterSystem().unarmedDamage ?? DEFAULT_UNARMED_DAMAGE;
 	}
 
 	function hasCustomUnarmedDamage(): boolean {
-		return actor.system?.unarmedDamage !== undefined;
+		return getCharacterSystem().unarmedDamage !== undefined;
 	}
 
 	function getUnarmedDamageDisplay(): string {
 		if (hasCustomUnarmedDamage()) {
-			return evaluateFormula(actor.system.unarmedDamage);
+			return evaluateFormula(getCharacterSystem().unarmedDamage);
 		}
 		return evaluateFormula('1 + @abilities.strength.mod');
 	}
@@ -162,7 +203,7 @@ export function createAttackPanelState(
 		};
 
 		const dialog = new ItemActivationConfigDialog(
-			actor,
+			getActor(),
 			unarmedItem,
 			localize('NIMBLE.ui.heroicActions.unarmedStrike'),
 			{ rollMode: 0 },
@@ -172,7 +213,7 @@ export function createAttackPanelState(
 
 		if (!result) return;
 
-		const roll = new DamageRoll(rollFormula, actor.getRollData(), {
+		const roll = new DamageRoll(rollFormula, getActor().getRollData(), {
 			canCrit: true,
 			canMiss: true,
 			rollMode: result.rollMode ?? 0,
@@ -220,14 +261,14 @@ export function createAttackPanelState(
 
 		const chatData = {
 			author: game.user?.id,
-			flavor: `${actor.name}: ${localize('NIMBLE.ui.heroicActions.unarmedStrike')}`,
-			speaker: ChatMessage.getSpeaker({ actor }),
+			flavor: `${getActor().name}: ${localize('NIMBLE.ui.heroicActions.unarmedStrike')}`,
+			speaker: ChatMessage.getSpeaker({ actor: getActor() }),
 			style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 			sound: CONFIG.sounds.dice,
 			rolls: [roll],
 			system: {
-				actorName: actor.name,
-				actorType: actor.type,
+				actorName: getActor().name,
+				actorType: getActor().type,
 				image: unarmedItem.img,
 				permissions: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
 				rollMode: result.rollMode ?? 0,
@@ -250,21 +291,22 @@ export function createAttackPanelState(
 			type: 'feature',
 		};
 
-		await ChatMessage.create(chatData);
-		await onActivateItem(1);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		await ChatMessage.create(chatData as any);
+		await getOnActivateItem()(1);
 	}
 
 	async function handleItemClick(itemId: string): Promise<unknown> {
-		const item = actor.items.get(itemId);
-		const result = await actor.activateItem(itemId);
+		const item = getActor().items.get(itemId);
+		const result = await getActor().activateItem(itemId);
 
-		if (result) {
-			const activationCost = item?.system?.activation?.cost;
+		if (result && item) {
+			const activationCost = getSystemData(item).activation?.cost;
 			const costType = activationCost?.type;
 			const costQuantity = activationCost?.quantity ?? 1;
 
 			if (costType === 'action') {
-				await onActivateItem(costQuantity);
+				await getOnActivateItem()(costQuantity);
 			}
 		}
 

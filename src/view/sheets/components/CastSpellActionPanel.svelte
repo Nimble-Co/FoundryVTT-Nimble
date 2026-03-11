@@ -1,16 +1,19 @@
 <script>
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
-	import { createSpellPanelState } from './CastSpellActionPanel.svelte.js';
+	import { createSpellPanelState } from './CastSpellActionPanel.svelte.ts';
 
 	import SearchBar from './SearchBar.svelte';
 
-	let actor = getContext('actor');
-	let sheet = getContext('application');
+	const actor = getContext('actor');
+	const sheet = getContext('application');
 
 	let { onActivateItem = async () => {}, showEmbeddedDocumentImages = true } = $props();
 
-	const state = createSpellPanelState(actor, onActivateItem);
+	const state = createSpellPanelState(
+		() => actor,
+		() => onActivateItem,
+	);
 </script>
 
 <section class="spell-panel">

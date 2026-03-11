@@ -1,10 +1,13 @@
 <script>
 	import localize from '../../../utils/localize.js';
-	import { createAssessPanelState } from './AssessActionPanel.svelte.js';
+	import { createAssessPanelState } from './AssessActionPanel.svelte.ts';
 
 	let { actor, onDeductAction = async () => {} } = $props();
 
-	const state = createAssessPanelState(actor, onDeductAction);
+	const state = createAssessPanelState(
+		() => actor,
+		() => onDeductAction,
+	);
 
 	// Track targeting changes
 	$effect(() => {

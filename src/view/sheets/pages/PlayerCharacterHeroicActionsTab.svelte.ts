@@ -1,4 +1,5 @@
 import { createSubscriber } from 'svelte/reactivity';
+import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import GenericDialog from '../../../documents/dialogs/GenericDialog.svelte.js';
 import localize from '../../../utils/localize.js';
 import filterItems from '../../dataPreparationHelpers/filterItems.js';
@@ -57,7 +58,7 @@ export const HEROIC_ACTIONS: HeroicAction[] = [
 	},
 ];
 
-export function createHeroicActionsTabState(actor: Actor) {
+export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	// Top-level tab for switching between Actions and Reactions
 	let activeHeroicTab = $state<'actions' | 'reactions'>('actions');
 	let expandedPanel = $state('attack');
@@ -80,13 +81,15 @@ export function createHeroicActionsTabState(actor: Actor) {
 		];
 
 		const hookIds = hookNames.map((hookName) => ({
-			hookId: Hooks.on(hookName, () => update()),
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			hookId: Hooks.on(hookName as any, () => update()),
 			hookName,
 		}));
 
 		return () => {
 			hookIds.forEach(({ hookName, hookId }) => {
-				Hooks.off(hookName, hookId);
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				Hooks.off(hookName as any, hookId);
 			});
 		};
 	});
@@ -116,13 +119,13 @@ export function createHeroicActionsTabState(actor: Actor) {
 	function getCombatantInCombat(): Combatant | null {
 		const combat = getActiveCombatForCurrentScene();
 		if (!combat) return null;
-		return combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
+		return combat.combatants.find((entry) => entry.actorId === getActor().id) ?? null;
 	}
 
 	function getCombatant(): Combatant | null {
 		const combat = getActiveCombatForCurrentScene();
 		if (!combat?.started) return null;
-		return combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
+		return combat.combatants.find((entry) => entry.actorId === getActor().id) ?? null;
 	}
 
 	function isInActiveCombat(): boolean {
@@ -135,7 +138,8 @@ export function createHeroicActionsTabState(actor: Actor) {
 		const combatant = getCombatantInCombat();
 		if (!combatant) return { current: 0, max: 3 };
 
-		const actions = combatant.system?.actions?.base;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const actions = (combatant as any).system?.actions?.base;
 		return {
 			current: actions?.current ?? 0,
 			max: actions?.max ?? 3,
@@ -145,7 +149,8 @@ export function createHeroicActionsTabState(actor: Actor) {
 	async function updateActionPips(newValue: number): Promise<void> {
 		const combatant = getCombatantInCombat();
 		if (!combatant) return;
-		await combatant.update({ 'system.actions.base.current': newValue });
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		await combatant.update({ 'system.actions.base.current': newValue } as any);
 	}
 
 	async function deductActionPips(count = 1): Promise<void> {
@@ -199,14 +204,14 @@ export function createHeroicActionsTabState(actor: Actor) {
 	// Spell Data (for hasSpells check)
 	// ============================================================================
 
-	const allSpells = $derived(filterItems(actor.reactive, ['spell'], ''));
+	const allSpells = $derived(filterItems(getActor().reactive, ['spell'], ''));
 	const hasSpells = $derived(allSpells.length > 0);
 
 	// ============================================================================
 	// Derived State
 	// ============================================================================
 
-	const flags = $derived(actor.reactive.flags.nimble);
+	const flags = $derived(getActor().reactive.flags.nimble);
 	const showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
 	function isActionDisabled(action: HeroicAction): boolean {

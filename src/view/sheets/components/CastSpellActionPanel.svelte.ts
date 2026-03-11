@@ -1,3 +1,4 @@
+import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import { flattenActivationEffects } from '../../../utils/activationEffects.js';
 import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
 import localize from '../../../utils/localize.js';
@@ -14,9 +15,29 @@ interface SpellEffects {
 	higherLevelEffect: string | null;
 }
 
+/** System data for spell items */
+interface SpellSystemData {
+	manaCost?: number;
+	activation?: {
+		effects?: unknown[];
+		cost?: { type: string; quantity: number };
+		acquireTargetsFromTemplate?: boolean;
+		targets?: { count: number };
+	};
+	properties?: {
+		selected?: string[];
+		reach?: { max?: number };
+		range?: { max?: number };
+	};
+	description?: {
+		baseEffect?: string;
+		higherLevelEffect?: string;
+	};
+}
+
 export function createSpellPanelState(
-	actor: Actor,
-	onActivateItem: (cost: number) => Promise<void>,
+	getActor: () => NimbleCharacter,
+	getOnActivateItem: () => (cost: number) => Promise<void>,
 ) {
 	const { activationCostTypes, activationCostTypesPlural } = CONFIG.NIMBLE;
 	let searchTerm = $state('');
@@ -27,18 +48,22 @@ export function createSpellPanelState(
 	// ============================================================================
 
 	function evaluateFormula(formula: string | undefined): string {
-		return evalFormula(formula, actor);
+		return evalFormula(formula, getActor());
+	}
+
+	/** Helper to cast item system data */
+	function getSystemData(item: Item): SpellSystemData {
+		return item.system as unknown as SpellSystemData;
 	}
 
 	// ============================================================================
 	// Spell Data
 	// ============================================================================
 
-	const spells = $derived(filterItems(actor.reactive, ['spell'], searchTerm));
+	const spells = $derived(filterItems(getActor().reactive, ['spell'], searchTerm));
 
 	function getSpellEffect(spell: Item): SpellEffect | null {
-		const effects =
-			spell.reactive?.system?.activation?.effects ?? spell.system?.activation?.effects;
+		const effects = getSystemData(spell).activation?.effects;
 		const flattened = flattenActivationEffects(effects);
 
 		for (const node of flattened) {
@@ -58,12 +83,14 @@ export function createSpellPanelState(
 	}
 
 	function getSpellManaCost(spell: Item): number {
-		return spell.reactive.system.manaCost ?? 0;
+		return getSystemData(spell).manaCost ?? 0;
 	}
 
 	function getSpellMetadata(spell: Item): string | null {
-		const { type: activationType, quantity: activationCost } =
-			spell.reactive.system.activation.cost;
+		const activation = getSystemData(spell).activation;
+		if (!activation?.cost) return null;
+
+		const { type: activationType, quantity: activationCost } = activation.cost;
 
 		if (!activationType || activationType === 'none') return null;
 
@@ -83,20 +110,24 @@ export function createSpellPanelState(
 	}
 
 	function getSpellRange(spell: Item): string | null {
-		const props = spell.reactive?.system?.properties ?? spell.system?.properties ?? {};
+		const props = getSystemData(spell).properties ?? {};
 		const selected = props.selected ?? [];
 
 		if (selected.includes('range') && props.range?.max) {
-			return localize('NIMBLE.ui.heroicActions.rangeDistance', { distance: props.range.max });
+			return localize('NIMBLE.ui.heroicActions.rangeDistance', {
+				distance: String(props.range.max),
+			});
 		}
 		if (selected.includes('reach') && props.reach?.max) {
-			return localize('NIMBLE.ui.heroicActions.reachDistance', { distance: props.reach.max });
+			return localize('NIMBLE.ui.heroicActions.reachDistance', {
+				distance: String(props.reach.max),
+			});
 		}
 		return null;
 	}
 
 	function getSpellTargetType(spell: Item): string | null {
-		const activation = spell.reactive?.system?.activation ?? spell.system?.activation;
+		const activation = getSystemData(spell).activation;
 		if (!activation) return null;
 
 		if (activation.acquireTargetsFromTemplate) {
@@ -114,7 +145,9 @@ export function createSpellPanelState(
 		if (targetCount === 2) {
 			return localize('NIMBLE.ui.heroicActions.targetTypes.twoTargets');
 		}
-		return localize('NIMBLE.ui.heroicActions.targetTypes.multiTarget', { count: targetCount });
+		return localize('NIMBLE.ui.heroicActions.targetTypes.multiTarget', {
+			count: String(targetCount),
+		});
 	}
 
 	function hasContent(text: unknown): text is string {
@@ -124,7 +157,7 @@ export function createSpellPanelState(
 	}
 
 	function getSpellEffects(spell: Item): SpellEffects | null {
-		const desc = spell.reactive?.system?.description ?? spell.system?.description;
+		const desc = getSystemData(spell).description;
 		if (!desc) return null;
 
 		const baseEffect = desc.baseEffect;
@@ -160,16 +193,16 @@ export function createSpellPanelState(
 	}
 
 	async function handleSpellClick(spellId: string): Promise<unknown> {
-		const spell = actor.items.get(spellId);
-		const result = await actor.activateItem(spellId);
+		const spell = getActor().items.get(spellId);
+		const result = await getActor().activateItem(spellId);
 
-		if (result) {
-			const activationCost = spell?.system?.activation?.cost;
+		if (result && spell) {
+			const activationCost = getSystemData(spell).activation?.cost;
 			const costType = activationCost?.type;
 			const costQuantity = activationCost?.quantity ?? 1;
 
 			if (costType === 'action') {
-				await onActivateItem(costQuantity);
+				await getOnActivateItem()(costQuantity);
 			}
 		}
 

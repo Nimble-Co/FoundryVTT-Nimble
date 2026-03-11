@@ -1,8 +1,13 @@
+import type { SkillKeyType } from '#types/skillKey.js';
+import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import { ASSESS_DC, assessOptions } from '../../../utils/assessOptions.js';
 import localize from '../../../utils/localize.js';
 import { getInvalidTargets, getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 
-export function createAssessPanelState(actor: Actor, onDeductAction: () => Promise<void>) {
+export function createAssessPanelState(
+	getActor: () => NimbleCharacter,
+	getOnDeductAction: () => () => Promise<void>,
+) {
 	const { skills: skillNames } = CONFIG.NIMBLE;
 	let selectedOption = $state<string | null>(null);
 	let selectedSkill = $state<string | null>(null);
@@ -18,12 +23,12 @@ export function createAssessPanelState(actor: Actor, onDeductAction: () => Promi
 
 	const availableTargets = $derived.by(() => {
 		void targetingVersion;
-		return getTargetedTokens(actor.id);
+		return getTargetedTokens(getActor().id ?? '');
 	});
 
 	const hasTargetedSelf = $derived.by(() => {
 		void targetingVersion;
-		return getInvalidTargets(actor.id).length > 0;
+		return getInvalidTargets(getActor().id ?? '').length > 0;
 	});
 
 	const selectedTarget = $derived.by(() => {
@@ -61,38 +66,39 @@ export function createAssessPanelState(actor: Actor, onDeductAction: () => Promi
 	// ============================================================================
 
 	async function handleRoll(): Promise<void> {
-		if (isSubmitDisabled) return;
+		if (isSubmitDisabled || !selectedSkill) return;
 
 		const option = assessOptions.find((o) => o.id === selectedOption);
 		if (!option) return;
 
 		// Roll the skill check (show the roll dialog)
-		const { roll } = await actor.rollSkillCheck(selectedSkill);
+		const { roll } = await getActor().rollSkillCheck(selectedSkill as SkillKeyType);
 
 		if (!roll) return;
 
 		// Deduct action pip only after roll is confirmed (not cancelled)
-		await onDeductAction();
+		await getOnDeductAction()();
 
 		// Determine success/failure based on DC 12
-		const isSuccess = roll.total >= ASSESS_DC;
+		const isSuccess = (roll.total ?? 0) >= ASSESS_DC;
 		const resultKey = isSuccess ? option.successKey : option.failureKey;
 
 		// Include target name in the message if there's a target
 		const targetName = selectedTarget ? getTargetName(selectedTarget) : null;
-		const resultMessage = localize(resultKey, { name: actor.name, target: targetName });
+		const resultMessage = localize(resultKey, { name: getActor().name, target: targetName ?? '' });
 
 		// Create chat message
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		await ChatMessage.create({
 			author: game.user?.id,
-			speaker: ChatMessage.getSpeaker({ actor }),
+			speaker: ChatMessage.getSpeaker({ actor: getActor() }),
 			sound: CONFIG.sounds.dice,
 			rolls: [roll],
 			type: 'assessAction',
 			system: {
-				actorName: actor.name,
-				actorType: actor.type,
-				permissions: actor.permission,
+				actorName: getActor().name,
+				actorType: getActor().type,
+				permissions: getActor().permission,
 				rollMode: 0,
 				skillKey: selectedSkill,
 				dc: ASSESS_DC,
@@ -102,7 +108,7 @@ export function createAssessPanelState(actor: Actor, onDeductAction: () => Promi
 				target: selectedTarget ? selectedTarget.document.uuid : null,
 				targetName,
 			},
-		});
+		} as any);
 	}
 
 	return {

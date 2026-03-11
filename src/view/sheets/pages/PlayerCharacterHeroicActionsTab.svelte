@@ -13,7 +13,7 @@
 	// ============================================================================
 
 	let actor = getContext('actor');
-	const state = createHeroicActionsTabState(actor);
+	const state = createHeroicActionsTabState(() => actor);
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
