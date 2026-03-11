@@ -104,7 +104,9 @@ export default function registerSystemSettings() {
 
 		if (hasBranchBadge && hasAttribution) return;
 
-		if (!hasBranchBadge) {
+		const isMeaningfulBranch =
+			__BRANCH__ !== 'unknown' && __BRANCH__ !== 'HEAD' && __BRANCH__.trim() !== '';
+		if (!hasBranchBadge && isMeaningfulBranch) {
 			systemTab.prepend(createBranchBadge());
 		}
 
