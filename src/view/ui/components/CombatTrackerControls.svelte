@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NimbleCombat } from '../../../documents/combat/combat.svelte.js';
+	import localize from '../../../utils/localize.js';
 
 	async function endCombat(): Promise<void> {
 		const combat = game.combat as NimbleCombat | undefined;
@@ -7,14 +8,14 @@
 
 		const confirmed = await foundry.applications.api.DialogV2.confirm({
 			window: {
-				title: 'End Combat?',
+				title: localize('NIMBLE.combatControls.endCombatTitle'),
 			},
-			content: '<p>End this combat encounter?</p>',
+			content: `<p>${localize('NIMBLE.combatControls.endCombatContent')}</p>`,
 			yes: {
-				label: 'End Combat',
+				label: localize('NIMBLE.combatControls.endCombat'),
 			},
 			no: {
-				label: 'Continue Combat',
+				label: localize('NIMBLE.combatControls.continueCombat'),
 			},
 			rejectClose: false,
 			modal: true,
@@ -51,8 +52,8 @@
 	<button
 		class="nimble-combat-tracker-controls__button"
 		type="button"
-		aria-label="Previous Round"
-		data-tooltip="Previous Round"
+		aria-label={localize('NIMBLE.combatControls.previousRound')}
+		data-tooltip="NIMBLE.combatControls.previousRound"
 		onclick={rewindRound}
 	>
 		<i class="nimble-combat-tracker-controls__button-icon fa-solid fa-backward-step"></i>
@@ -61,8 +62,8 @@
 	<button
 		class="nimble-combat-tracker-controls__button"
 		type="button"
-		aria-label="Previous Turn"
-		data-tooltip="Previous Turn"
+		aria-label={localize('NIMBLE.combatControls.previousTurn')}
+		data-tooltip="NIMBLE.combatControls.previousTurn"
 		onclick={rewindTurn}
 	>
 		<i class="nimble-combat-tracker-controls__button-icon fa-solid fa-caret-left"></i>
@@ -71,8 +72,8 @@
 	<button
 		class="nimble-combat-tracker-controls__button"
 		type="button"
-		aria-label="End Combat"
-		data-tooltip="End Combat"
+		aria-label={localize('NIMBLE.combatControls.endCombat')}
+		data-tooltip="NIMBLE.combatControls.endCombat"
 		onclick={endCombat}
 	>
 		<i class="nimble-combat-tracker-controls__button-icon fa-solid fa-stop"></i>
@@ -81,8 +82,8 @@
 	<button
 		class="nimble-combat-tracker-controls__button"
 		type="button"
-		aria-label="Next Turn"
-		data-tooltip="Next Turn"
+		aria-label={localize('NIMBLE.combatControls.nextTurn')}
+		data-tooltip="NIMBLE.combatControls.nextTurn"
 		onclick={startNextTurn}
 	>
 		<i class="nimble-combat-tracker-controls__button-icon fa-solid fa-caret-right"></i>
@@ -91,8 +92,8 @@
 	<button
 		class="nimble-combat-tracker-controls__button"
 		type="button"
-		aria-label="Next Round"
-		data-tooltip="Next Round"
+		aria-label={localize('NIMBLE.combatControls.nextRound')}
+		data-tooltip="NIMBLE.combatControls.nextRound"
 		onclick={startNextRound}
 	>
 		<i class="nimble-combat-tracker-controls__button-icon fa-solid fa-forward-step"></i>

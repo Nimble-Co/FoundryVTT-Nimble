@@ -37,6 +37,75 @@
 			"minute": "Minutes",
 			"turn": "Tours"
 		},
+		"activationEffects": {
+			"addEffect": "Add Effect",
+			"canCrit": "Can Crit",
+			"canMiss": "Can Miss",
+			"condition": "Condition",
+			"damage": "Damage",
+			"damageOutcome": "Damage Outcome",
+			"effects": "Effects",
+			"flavor": "Flavor",
+			"fullDamage": "Full Damage",
+			"general": "General",
+			"halfDamage": "Half Damage",
+			"healing": "Healing",
+			"noAdditionalEffects": "No additional effects",
+			"note": "Note",
+			"onCriticalHit": "On Critical Hit",
+			"onFailedSave": "On Failed Save",
+			"onHit": "On Hit",
+			"onMiss": "On Miss",
+			"onPassedSave": "On Passed Save",
+			"reminder": "Reminder",
+			"warning": "Warning"
+		},
+		"actorImport": {
+			"buttonLabel": "Import Actor",
+			"createFolder": "Create folder for imports",
+			"deselectAll": "Deselect All",
+			"dialogTitle": "Import from Nimble Nexus",
+			"filters": {
+				"allLevels": "All Levels",
+				"allRoles": "All Roles",
+				"allTypes": "All Types",
+				"clearFilters": "Clear all filters",
+				"level": "Level",
+				"levelFraction": {
+					"half": "1/2",
+					"quarter": "1/4",
+					"third": "1/3"
+				},
+				"monsterTypes": {
+					"legendary": "Legendary",
+					"minion": "Minion",
+					"standard": "Standard"
+				},
+				"role": "Role",
+				"roles": {
+					"ambusher": "Ambusher",
+					"aoe": "AoE",
+					"controller": "Controller",
+					"defender": "Defender",
+					"melee": "Melee",
+					"ranged": "Ranged",
+					"skirmisher": "Skirmisher",
+					"striker": "Striker",
+					"summoner": "Summoner",
+					"support": "Support"
+				},
+				"type": "Type"
+			},
+			"importSelected": "Import Selected",
+			"loadMore": "Load More",
+			"loading": "Loading...",
+			"noFolder": "No folder (root)",
+			"noResults": "No monsters found",
+			"partialSuccessMessage": "Imported {successful} monster(s), {failed} failed",
+			"searchPlaceholder": "Search monsters...",
+			"selectAll": "Select All",
+			"successMessage": "Successfully imported {count} monster(s)"
+		},
 		"ancestryOptions": {
 			"enhancedSave": "Sauvegarde Améliorée",
 			"enhancedSaveHint": "Choisissez une sauvegarde neutre à améliorer avec un avantage.",
@@ -60,6 +129,23 @@
 			"shield": "Bouclier",
 			"shieldPlural": "Boucliers"
 		},
+		"backgroundOptionsSelection": {
+			"confirmSelection": "Confirm Selection",
+			"editSelection": "Edit Heritage Selection",
+			"header": "Step 2b. Choose Heritage Ancestry",
+			"hint": "Your background lets you choose which ancestry raised you. This grants you their native language.",
+			"raisedBy": "Raised By",
+			"raisedByLabel": "Raised by:",
+			"speaks": "Speaks {language}"
+		},
+		"bonusLanguageSelection": {
+			"choose": "Choose {count}",
+			"confirmSelection": "Confirm Bonus Language Selections",
+			"editSelection": "Edit Bonus Language Selections",
+			"granted": "Granted",
+			"header": "Step 7. Select Bonus Languages",
+			"hint": "All heroes speak Common by default, and some backgrounds will grant another language. Additionally, each point of INT grants an additional language known."
+		},
 		"boonTypes": {
 			"epic": "Épique",
 			"major": "Majeur",
@@ -68,6 +154,10 @@
 		"characterCreation": {
 			"characterName": "Nom de Personnage",
 			"createCharacter": "Créer un Personnage",
+			"incompleteCharacterMessage": "This character isn’t finished. Create anyway?",
+			"incompleteCharacterProceed": "Create Anyway",
+			"incompleteCharacterReturn": "Back",
+			"incompleteCharacterTitle": "Unfinished Character",
 			"incompleteStepsWarning": "Certaines étapes de création de personnage n'ont pas été complétées.",
 			"newCharacterPlaceholder": "Nouveau Personnage"
 		},
@@ -75,6 +165,78 @@
 			"stepFiveStats": "Étape 5. Assigner les Attributs",
 			"stepFourStartingEquipment": "Étape 4. Équipement de départ",
 			"stepSixSkills": "Étape 6. Assigner les Points de Compétence"
+		},
+		"characterSettings": {
+			"actorImageSettings": "Actor Image Settings",
+			"bonusInventorySlots": "Bonus Inventory Slots",
+			"decrementBonusInventorySlots": "Decrement Bonus Inventory Slots",
+			"decrementHighestUnlockedSpellTier": "Decrement Highest Unlocked Spell Tier",
+			"embeddedDocumentSettings": "Embedded Document Settings",
+			"executeItemMacros": "Execute Item Macros on Item Activation",
+			"highestUnlockedSpellTier": "Highest Unlocked Spell Tier",
+			"includeCurrencyBulk": "Automatically Include Currency Bulk",
+			"incrementBonusInventorySlots": "Increment Bonus Inventory Slots",
+			"incrementHighestUnlockedSpellTier": "Increment Highest Unlocked Spell Tier",
+			"inventorySettings": "Inventory Settings",
+			"resetHighestUnlockedSpellTier": "Reset Highest Unlocked Spell Tier",
+			"resetSpellTier": "Reset spell tier",
+			"scale": "Scale (%)",
+			"showEmbeddedDocumentImages": "Show Embedded Document Images",
+			"showPassiveSkillScores": "Show Passive Skill Scores",
+			"skillSettings": "Skill Settings",
+			"spellSettings": "Spell settings",
+			"trackInventorySlots": "Track Inventory Slots",
+			"useTwoColumnSkillsView": "Use Two-Column Skills View",
+			"xOffset": "X-Offset (px)",
+			"yOffset": "Y-Offset (px)"
+		},
+		"chat": {
+			"applyHealing": "Apply Healing",
+			"healing": "Healing",
+			"healingAlreadyApplied": "Healing has already been applied",
+			"healingApplied": "Healing Applied",
+			"healingUndone": "Healing has been undone",
+			"noHealingRecord": "No healing record found to undo",
+			"noTargetsSelected": "No targets selected",
+			"undo": "Undo",
+			"undoHealing": "Undo Healing"
+		},
+		"chatEffects": {
+			"noEffect": "No Effect"
+		},
+		"chatTargets": {
+			"addSelectedTokensAsTargets": "Add Selected Tokens as Targets",
+			"addTargetedTokensAsTargets": "Add Targeted Tokens as Targets",
+			"noTargetsSelected": "No targets selected",
+			"removeTarget": "Remove Target",
+			"targets": "Targets"
+		},
+		"classSelection": {
+			"classComplexity": "Class Complexity:",
+			"editClassSelection": "Edit Class Selection",
+			"noClassesAvailable": "There are no classes available in this world's compendium packs.",
+			"noDescriptionAvailable": "No Description Available",
+			"stepSelectClass": "Step 1: Select Class",
+			"unknown": "Unknown"
+		},
+		"classSheet": {
+			"addFeatureGroup": "Add Feature Group",
+			"addWeaponProficiency": "Add Weapon Proficiency",
+			"armorProficiencies": "Armor Proficiencies",
+			"classComplexity": "Class Complexity",
+			"config": "Config",
+			"deleteFeatureGroup": "Delete Feature Group",
+			"deleteWeaponProficiency": "Delete Weapon Proficiency",
+			"description": "Description",
+			"featureGroups": "Feature Groups",
+			"hitDieSize": "Hit Die Size",
+			"identifier": "Identifier",
+			"keyStats": "Key Stats",
+			"manaFormula": "Mana Formula",
+			"manaRecovery": "Mana Recovery",
+			"none": "None",
+			"rules": "Rules",
+			"weaponProficiencies": "Weapon Proficiencies"
 		},
 		"classes": {
 			"berserker": "Berserker",
@@ -88,6 +250,52 @@
 			"songweaver": "Tissechant",
 			"stormshifter": "Grifforage",
 			"zephyr": "Zéphyr"
+		},
+		"combatControls": {
+			"continueCombat": "Continue Combat",
+			"endCombat": "End Combat",
+			"endCombatContent": "End this combat encounter?",
+			"endCombatTitle": "End Combat?",
+			"nextRound": "Next Round",
+			"nextTurn": "Next Turn",
+			"previousRound": "Previous Round",
+			"previousTurn": "Previous Turn"
+		},
+		"combatTrackerSettings": {
+			"allowPlayersToMoveCards": "Allow players to move other players' cards",
+			"borderGlow": "Border glow",
+			"close": "Close",
+			"combatTrackerLocation": "Combat Tracker Location",
+			"combatTrackerLocationLabel": "Combat tracker location",
+			"currentRolePreview": "Current role preview:",
+			"currentTurnAnimations": "Current Turn Animations",
+			"currentTurnAnimationsLabel": "Current turn animations",
+			"edgeCrawler": "Edge crawler",
+			"extensibility": "Extensibility",
+			"extensibilityHint": "Additional combat tracker settings can be added to this window over time.",
+			"gm": "GM",
+			"gmModify": "GM Modify",
+			"gmView": "GM View",
+			"introText": "Current Turn Animation controls are live. All other sections remain preview-only.",
+			"layoutHint": "Choose where the tracker docks on screen.",
+			"layoutPosition": "Layout position",
+			"player": "Player",
+			"playerModify": "Player Modify",
+			"playerPermissions": "Player Permissions",
+			"playerView": "Player View",
+			"playersCanMoveCards": "Players can move other players cards",
+			"pulseAnimation": "Pulse animation",
+			"roleBasedControls": "Role-Based Controls (Preview)",
+			"roleBasedControlsHint": "The GM-facing permission matrix below is UI-only and not yet wired to behavior.",
+			"setting": "Setting",
+			"title": "Combat Tracker Settings",
+			"turnManagementSafety": "Turn Management Safety",
+			"warnOnEndTurn": "Warn players when clicking \"End Turn\" with actions remaining",
+			"warnOnEndTurnLabel": "Warn on End Turn with actions left"
+		},
+		"compendium": {
+			"filterAll": "All",
+			"filterSpells": "Filter Spells"
 		},
 		"conditionDescriptions": {
 			"blinded": "<p>Ne peut pas voir. Les attaques contre vous ont l'avantage, et vos attaques ont un désavantage.</p>",
@@ -202,6 +410,17 @@
 			"round": "Rondes",
 			"turn": "Tours"
 		},
+		"editCurrentHitDiceDialog": {
+			"addOneDie": "Add one d{die}",
+			"currentHitDice": "Current Hit Dice",
+			"empty": "Empty",
+			"max": "Max",
+			"removeOneDie": "Remove one d{die}",
+			"restoreAll": "Restore all",
+			"save": "Save",
+			"setToMax": "Set d{die} to max",
+			"total": "Total"
+		},
 		"effectApplications": {
 			"always": "Toujours",
 			"failedSave": "Échec de sauvegarde",
@@ -263,6 +482,8 @@
 		},
 		"hints": {
 			"characterCreationSkillPointAssignment": "Vous pouvez maintenant assigner 4 points de compétence pour augmenter les modificateurs de vos compétences.",
+			"hideRollsFromPlayersByDefault": "Hide Rolls by Default",
+			"hideRollsFromPlayersByDefaultHint": "When enabled, skill check and weapon roll dialogs will default to hiding the roll from other players.",
 			"skillPointAssignment": "Vous pouvez assigner un seul point de compétence à une compétence de votre choix. De plus, vous pouvez transférer un des points de compétence assignés à une autre compétence de votre choix.",
 			"statAssignment": "Ci-dessous se trouvent les bonus d'attributs accordés par votre sélection. Glissez-déposez chacune de ces valeurs dans l'une des cases d'attribut ci-dessous pour assigner vos attributs."
 		},
@@ -316,6 +537,7 @@
 		},
 		"itemConfig": {
 			"acquireTargetsFromTemplate": "Acquérir les cibles à partir d'un modèle",
+			"areaSize": "Area Size",
 			"attackType": "Type d'attaque",
 			"attackTypes": {
 				"melee": "Mêlée",
@@ -324,9 +546,14 @@
 				"reach": "Allonge"
 			},
 			"distance": "Distance",
+			"duration": "Duration",
+			"target": "Target",
 			"targetCount": "Nombre de cibles",
 			"targetRestrictions": "Restrictions de cibles",
 			"targets": "Cibles"
+		},
+		"itemMacro": {
+			"command": "Command"
 		},
 		"languageHints": {
 			"celestial": "Typiquement parlé par les êtres célestes.",
@@ -369,8 +596,26 @@
 		"levelUpDialog": {
 			"completeAllSelections": "Complétez toutes les sélections avant de soumettre",
 			"completeAllSelectionsTooltip": "Complétez toutes les sélections avant de soumettre",
+			"hitDiceLabel": "Hit Dice:",
+			"hpIncrease": "HP Increase",
+			"rollHitDice": "Roll Hit Dice",
+			"rollHitDiceTooltip": "Roll your Hit Die with advantage and increase your max HP by that much.",
 			"skillPointsOverMax": "Un ou plusieurs points de compétence dépasseraient la limite de 12 points. Veuillez réallouer les points de compétence avant de soumettre.",
-			"skillPointsOverMaxTooltip": "Un point de compétence dépasserait la limite de 12 points"
+			"skillPointsOverMaxTooltip": "Un point de compétence dépasserait la limite de 12 points",
+			"takeAverage": "Take Average ({average})"
+		},
+		"manaConfig": {
+			"baseMana": "Base Mana",
+			"baseManaHint": "Static mana before class formula contributions",
+			"classContributions": "Class Mana Contributions",
+			"classContributionsHint": "Formula-based mana gained from your classes",
+			"configureMana": "Configure Mana",
+			"formulaLabel": "Formula",
+			"initiativeInfo": "Initiative recovery is currently informational only.",
+			"noClassContributions": "No class mana formula contributions.",
+			"recoveryProfile": "Recovery Profile",
+			"saveChanges": "Save Changes",
+			"totalMaxMana": "Total Maximum Mana"
 		},
 		"manaRecoveryTypes": {
 			"fieldRest": "Repos de terrain",
@@ -396,12 +641,90 @@
 			"feature": "Capacité",
 			"lastStand": "Barroud d'Honneur"
 		},
+		"movementConfig": {
+			"gridSpacesNote": "All measurements are in grid spaces.",
+			"spaces": "spaces",
+			"total": "Total"
+		},
 		"movementTypes": {
 			"burrow": "Enfouissement",
 			"climb": "Escalade",
 			"fly": "Vol",
 			"swim": "Nage",
 			"walk": "Marche"
+		},
+		"nimbleCombatSystemWindow": {
+			"actions": {
+				"noActionsLeft": "No actions left",
+				"selectAction": "Select action"
+			},
+			"buttons": {
+				"close": "Close",
+				"roll": "Roll",
+				"rollEndTurn": "Roll + End Turn"
+			},
+			"chat": {
+				"actionFallback": "Action",
+				"applyDamage": "Apply Damage",
+				"heading": "Group of Minions",
+				"memberFallback": "Minion",
+				"outcomeHit": "Hit",
+				"outcomeMiss": "Miss",
+				"subheading": "Minion Group {groupLabel}",
+				"totalDamageLabel": "Total Damage"
+			},
+			"logo": {
+				"alt": "Nimble"
+			},
+			"notifications": {
+				"actionUnavailableForMonster": "Selected action is unavailable for {name}.",
+				"couldNotOpenPanel": "Could not open group attack panel. See console for details.",
+				"groupAttackFailed": "Group attack failed. See console for details.",
+				"monsterAttackFailed": "Monster attack failed. See console for details.",
+				"monsterCannotActivateActions": "{name} cannot activate actions.",
+				"monsterDefeatedCannotAct": "{name} is defeated and cannot act.",
+				"monsterNoActionsLeft": "{name} has no actions left.",
+				"monsterNoLongerInCombat": "{name} is no longer in combat.",
+				"noActiveCombatForGroupAttack": "No active combat found for group attack.",
+				"noActiveCombatForMonsterAttack": "No active combat found for monster attack.",
+				"noGroupAttacksRolled": "No group attacks were rolled.",
+				"selectActionBeforeRoll": "Select an action for {name} before rolling.",
+				"selectTargetBeforeGroupAttack": "Select token target before rolling a group attack.",
+				"selectedGroupHasNoAliveMinions": "Selected group has no alive minions to attack."
+			},
+			"sections": {
+				"minions": "Minions",
+				"monsters": "Monsters"
+			},
+			"targets": {
+				"hint": "Select non-monster token(s)",
+				"label": "Targets:",
+				"playerFallback": "Player",
+				"selectTargetTooltip": "Select a Target",
+				"targetAria": "Target {name}",
+				"untargetAria": "Untarget {name}"
+			},
+			"title": "Combat System",
+			"tooltips": {
+				"dragToMove": "Drag to move"
+			},
+			"warnings": {
+				"endTurnNotApplied": "End turn was not applied because this group is not currently active.",
+				"memberReason": "{memberCombatantId}: {reason}",
+				"reasons": {
+					"actionNotFound": "Selected action not found",
+					"activationFailed": "Activation failed",
+					"actorCannotActivate": "Actor cannot activate item",
+					"noActionSelected": "No action selected",
+					"noActionsRemaining": "No actions remaining"
+				}
+			}
+		},
+		"npcConfig": {
+			"creatureType": "Creature Type",
+			"flunky": "Flunky",
+			"level": "Level",
+			"sizeCategory": "Size Category"
 		},
 		"npcSheet": {
 			"armor": "Armure",
@@ -420,6 +743,9 @@
 			"range": "Portée {distance}",
 			"reach": "Allonge {distance}",
 			"revealDescription": "Révéler la description de {name}"
+		},
+		"objectSheet": {
+			"price": "Price"
 		},
 		"objectSizeTypes": {
 			"slots": "Emplacements requis",
@@ -440,6 +766,14 @@
 			"shield": "Bouclier",
 			"weapon": "Arme"
 		},
+		"proficiencyConfig": {
+			"addWeaponProficiency": "Add Weapon Proficiency",
+			"armorProficiencies": "Armor Proficiencies",
+			"deleteWeaponProficiency": "Delete Weapon Proficiency",
+			"languageProficiencies": "Language Proficiencies",
+			"none": "None",
+			"weaponProficiencies": "Weapon Proficiencies"
+		},
 		"prompts": {
 			"changeActorImage": "Changer l'Image de l'Acteur",
 			"changeBoonImage": "Changer l'Image du Bienfait",
@@ -457,6 +791,7 @@
 			"configureWeaponProficiencies": "Configurer les Maîtrises d'Arme",
 			"editRoll": "Modifier le Jet",
 			"fieldRest": "Repos de terrain",
+			"hideRoll": "Hide From Players?",
 			"levelUp": "Passer au Niveau Supérieur",
 			"rollAbilityCheck": "Lancer un test d'Attribut",
 			"rollAbilityCheckSpecific": "Lancer un test de {ability}",
@@ -488,9 +823,11 @@
 			"combatMana": "Mana de Combat",
 			"grantItem": "Objet",
 			"grantProficiency": "Maîtrise",
+			"healingPotionBonus": "Healing Potion Bonus",
 			"hitDiceAdvantage": "Avantage sur les Dés de Vie",
 			"incrementHitDice": "Incrémenter les Dés de Vie",
 			"initiativeBonus": "Bonus d'Initiative",
+			"initiativeRollMode": "Initiative Roll Mode",
 			"maxHitDice": "Dés de Vie Maximum",
 			"maxHpBonus": "Points de Vie Bonus Maximum",
 			"maxWounds": "Blessures Maximum",
@@ -498,7 +835,8 @@
 			"note": "Note",
 			"savingThrowBonus": "Bonus de Sauvegarde",
 			"savingThrowRollMode": "Mode de Jet de Sauvegarde",
-			"skillBonus": "Bonus de Compétence"
+			"skillBonus": "Bonus de Compétence",
+			"speedBonus": "Speed Bonus"
 		},
 		"safeRest": {
 			"allResourcesFull": "Toutes les ressources sont déjà au maximum.",
@@ -562,14 +900,36 @@
 			"strength": "For",
 			"will": "Vol"
 		},
+		"savingThrowConfig": {
+			"adv": "Adv",
+			"advMultiplied": "Adv ×{count}",
+			"currentSelection": "Current selection",
+			"dis": "Dis",
+			"disMultiplied": "Dis ×{count}",
+			"normal": "Normal",
+			"select": "Select {save}"
+		},
 		"savingThrows": {
 			"dexterity": "Dextérité",
 			"intelligence": "Intelligence",
 			"strength": "Force",
 			"will": "Volonté"
 		},
+		"scalingDialog": {
+			"formula": "Formula",
+			"level": "Level",
+			"scaleByLevel": "Scale by Level",
+			"scaleBySpellLevel": "Scale by Spell Level",
+			"scalingByCharacterLevel": "Scaling by Character Level"
+		},
 		"sectionHeaders": {
 			"stats": "Attributs"
+		},
+		"settings": {
+			"autoExpandRolls": {
+				"hint": "When enabled, dice roll details are shown inline below each roll in chat messages, without needing to hover.",
+				"name": "Auto-Expand Rolls"
+			}
 		},
 		"sheets": {
 			"ancestry": "Feuille d'Ascendance Nimble",
@@ -623,6 +983,73 @@
 			"perception": "Perception",
 			"stealth": "Discrétion"
 		},
+		"skillsConfig": {
+			"abilityModifier": "Ability Modifier",
+			"decrementSkillPoints": "Decrement Skill Points",
+			"incrementSkillPoints": "Increment Skill Points",
+			"skill": "Skill",
+			"skillBonus": "Skill Bonus",
+			"skillPoints": "Skill Points",
+			"total": "Total"
+		},
+		"spellConfig": {
+			"description": {
+				"baseEffect": "Effet de Base du Sort",
+				"higherLevelEffect": "Effet de Niveau Supérieur",
+				"upcastEffect": "Effet de Surcaste"
+			},
+			"identifier": "Identifiant",
+			"jsonEditor": {
+				"heading": "Données du Sort (JSON)",
+				"invalidJson": "JSON invalide",
+				"switchToJson": "Passer à l'Éditeur JSON",
+				"switchToVisual": "Passer à l'Éditeur Visuel"
+			},
+			"scaling": {
+				"addChoice": "Ajouter un Choix",
+				"addDelta": "Ajouter un Delta",
+				"choiceLabel": "Libellé du Choix",
+				"choiceLabelPlaceholder": "ex. Dégâts Supplémentaires",
+				"condition": "État",
+				"conditionPlaceholder": "ex. incandescent",
+				"count": "Nombre",
+				"deltas": "Deltas",
+				"die": "Dé",
+				"heading": "Mise à l'Échelle du Sort",
+				"modes": {
+					"none": "Aucun",
+					"upcast": "Surcaste",
+					"upcastChoice": "Choix de Surcaste"
+				},
+				"noChoices": "Aucun choix configuré.",
+				"noDeltas": "Aucun delta de mise à l'échelle configuré.",
+				"operation": "Opération",
+				"operations": {
+					"addAreaSize": "Taille de Zone",
+					"addArmor": "Armure",
+					"addCondition": "État",
+					"addDC": "DD",
+					"addDice": "Dés",
+					"addDuration": "Durée",
+					"addFlatDamage": "Dégâts Fixes",
+					"addRange": "Portée",
+					"addReach": "Allonge",
+					"addTargets": "Cibles"
+				},
+				"perUpcastStep": "Par Niveau de Surcaste",
+				"removeChoice": "Supprimer le Choix",
+				"removeDelta": "Supprimer le Delta",
+				"targetEffect": "Effet Cible",
+				"targetEffectAuto": "Auto (première correspondance)",
+				"targetEffectHint": "Ajoutez des effets dans l'onglet Activation pour sélectionner des cibles ici.",
+				"targetEffectPlaceholder": "ID de l'Effet",
+				"upcastChoices": "Choix de Surcaste",
+				"value": "Valeur"
+			},
+			"spellProperties": "Propriétés du Sort",
+			"spellSchool": "École de Sort",
+			"spellTier": "Rang du Sort"
+		},
 		"spells": {
 			"schools": {
 				"fire": "Feu",
@@ -631,6 +1058,22 @@
 				"necrotic": "Nécrotique",
 				"radiant": "Sacré",
 				"wind": "Vent"
+			},
+			"spellUpcastDialog": {
+				"appliedEffect": "Applied Effect",
+				"castSpell": "Cast Spell",
+				"chooseEnhancement": "Choose Enhancement",
+				"manaInfo": {
+					"currentManaCost": "Current mana cost: {currentCost}",
+					"upcastManaCost": "Upcast mana cost: {upcastCost} (Total)"
+				},
+				"maxTier": "Max tier",
+				"slider": {
+					"level": "Upcast Level",
+					"max": "Max Tier {tier}",
+					"min": "Min Tier {tier}"
+				},
+				"upcastHeading": "Upcast {spellName}"
 			},
 			"tierHeadings": {
 				"tier0": "Sorts mineurs et utilitaires",
@@ -657,64 +1100,6 @@
 				"tier9": "Rang 9"
 			}
 		},
-		"spellConfig": {
-			"identifier": "Identifiant",
-			"spellProperties": "Propriétés du Sort",
-			"spellTier": "Rang du Sort",
-			"spellSchool": "École de Sort",
-			"description": {
-				"baseEffect": "Effet de Base du Sort",
-				"higherLevelEffect": "Effet de Niveau Supérieur",
-				"upcastEffect": "Effet de Surcaste"
-			},
-			"jsonEditor": {
-				"switchToVisual": "Passer à l'Éditeur Visuel",
-				"switchToJson": "Passer à l'Éditeur JSON",
-				"heading": "Données du Sort (JSON)",
-				"invalidJson": "JSON invalide"
-			},
-			"scaling": {
-				"heading": "Mise à l'Échelle du Sort",
-				"modes": {
-					"none": "Aucun",
-					"upcast": "Surcaste",
-					"upcastChoice": "Choix de Surcaste"
-				},
-				"perUpcastStep": "Par Niveau de Surcaste",
-				"upcastChoices": "Choix de Surcaste",
-				"noDeltas": "Aucun delta de mise à l'échelle configuré.",
-				"noChoices": "Aucun choix configuré.",
-				"addDelta": "Ajouter un Delta",
-				"removeDelta": "Supprimer le Delta",
-				"addChoice": "Ajouter un Choix",
-				"removeChoice": "Supprimer le Choix",
-				"choiceLabel": "Libellé du Choix",
-				"choiceLabelPlaceholder": "ex. Dégâts Supplémentaires",
-				"deltas": "Deltas",
-				"operation": "Opération",
-				"value": "Valeur",
-				"count": "Nombre",
-				"die": "Dé",
-				"condition": "État",
-				"conditionPlaceholder": "ex. incandescent",
-				"targetEffect": "Effet Cible",
-				"targetEffectAuto": "Auto (première correspondance)",
-				"targetEffectPlaceholder": "ID de l'Effet",
-				"targetEffectHint": "Ajoutez des effets dans l'onglet Activation pour sélectionner des cibles ici.",
-				"operations": {
-					"addFlatDamage": "Dégâts Fixes",
-					"addDice": "Dés",
-					"addReach": "Allonge",
-					"addRange": "Portée",
-					"addTargets": "Cibles",
-					"addAreaSize": "Taille de Zone",
-					"addDC": "DD",
-					"addArmor": "Armure",
-					"addDuration": "Durée",
-					"addCondition": "État"
-				}
-			}
-		},
 		"startingEquipment": {
 			"editSelection": "Modifier la Sélection d'Équipement de Départ",
 			"equipmentDescription": "Sélectionnez l'équipement de départ:",
@@ -731,6 +1116,40 @@
 			"balanced": "Équilibré",
 			"minMax": "Min-Max",
 			"standard": "Standard"
+		},
+		"statConfig": {
+			"advOnSaves": "Adv. on Saves",
+			"applyChanges": "Apply Changes",
+			"asiTotal": "ASI Total",
+			"baseScoresWarning": "Your base scores do not match any of the standard Nimble stat arrays.",
+			"baseStats": "Base Stats",
+			"baseStatsSubtitle": "Starting stats from character creation",
+			"bonusTotal": "Bonus Total",
+			"bonuses": "Bonuses",
+			"bonusesSubtitle": "Modifiers from feats, items, and other sources",
+			"boon": "Boon",
+			"cancel": "Cancel",
+			"capstone": "Capstone",
+			"capstoneTooltip": "+1 to any 2 of your stats",
+			"currentArray": "Current Array",
+			"disOnSaves": "Dis. on Saves",
+			"dropHere": "Drop here",
+			"editBaseStats": "Edit Base Stats",
+			"finalModifier": "Final Modifier",
+			"keyStat": "Key Stat",
+			"keyStats": "Key Stats",
+			"noBonuses": "No bonuses from feats or items",
+			"noStatIncreasesYet": "No stat increases available yet",
+			"primary": "Primary",
+			"primaryTooltip": "+1 to one of your Key Stats",
+			"secondary": "Secondary",
+			"secondaryTooltip": "+1 to one of your Secondary Stats",
+			"selectArray": "Select Array",
+			"specialBoonAvailable": "Special Boon Available",
+			"statIncreaseHint": "Stat increases are gained at levels 4, 5, 8, 9, 12, 13, 16, 17, and 20",
+			"statIncreases": "Stat Increases",
+			"statIncreasesSubtitle": "Improvements gained at certain class levels",
+			"toggleStatIncrease": "Toggle Stat Increase"
 		},
 		"statIncrease": {
 			"capstoneDescription": "Sélectionnez 2 attributs à augmenter de +1",
@@ -751,96 +1170,29 @@
 			"round": "ronde",
 			"turn": "tour"
 		},
-		"nimbleCombatSystemWindow": {
-			"title": "Combat System",
-			"logo": {
-				"alt": "Nimble"
-			},
-			"tooltips": {
-				"dragToMove": "Drag to move"
-			},
-			"targets": {
-				"label": "Targets:",
-				"hint": "Select non-monster token(s)",
-				"targetAria": "Target {name}",
-				"untargetAria": "Untarget {name}",
-				"selectTargetTooltip": "Select a Target",
-				"playerFallback": "Player"
-			},
-			"sections": {
-				"monsters": "Monsters",
-				"minions": "Minions"
-			},
-			"actions": {
-				"selectAction": "Select action",
-				"noActionsLeft": "No actions left"
-			},
-			"buttons": {
-				"roll": "Roll",
-				"rollEndTurn": "Roll + End Turn",
-				"close": "Close"
-			},
-			"chat": {
-				"heading": "Group of Minions",
-				"subheading": "Minion Group {groupLabel}",
-				"outcomeHit": "Hit",
-				"outcomeMiss": "Miss",
-				"memberFallback": "Minion",
-				"actionFallback": "Action",
-				"totalDamageLabel": "Total Damage",
-				"applyDamage": "Apply Damage"
-			},
-			"warnings": {
-				"endTurnNotApplied": "End turn was not applied because this group is not currently active.",
-				"memberReason": "{memberCombatantId}: {reason}",
-				"reasons": {
-					"noActionSelected": "No action selected",
-					"noActionsRemaining": "No actions remaining",
-					"actionNotFound": "Selected action not found",
-					"actorCannotActivate": "Actor cannot activate item",
-					"activationFailed": "Activation failed"
-				}
-			},
-			"notifications": {
-				"noActiveCombatForGroupAttack": "No active combat found for group attack.",
-				"selectTargetBeforeGroupAttack": "Select token target before rolling a group attack.",
-				"noGroupAttacksRolled": "No group attacks were rolled.",
-				"groupAttackFailed": "Group attack failed. See console for details.",
-				"noActiveCombatForMonsterAttack": "No active combat found for monster attack.",
-				"selectActionBeforeRoll": "Select an action for {name} before rolling.",
-				"actionUnavailableForMonster": "Selected action is unavailable for {name}.",
-				"monsterNoLongerInCombat": "{name} is no longer in combat.",
-				"monsterDefeatedCannotAct": "{name} is defeated and cannot act.",
-				"monsterNoActionsLeft": "{name} has no actions left.",
-				"monsterCannotActivateActions": "{name} cannot activate actions.",
-				"monsterAttackFailed": "Monster attack failed. See console for details.",
-				"selectedGroupHasNoAliveMinions": "Selected group has no alive minions to attack.",
-				"couldNotOpenPanel": "Could not open group attack panel. See console for details."
-			}
-		},
 		"ui": {
+			"applyCondition": "Appliquer l'etat",
 			"clearAll": "Tout effacer",
-			"conditions": "Conditions",
 			"condition": "Condition",
+			"conditionDescriptionUnavailable": "<p>Aucune description disponible.</p>",
+			"conditions": "Conditions",
+			"conditionsFor": "Conditions : {name}",
 			"duration": "Durée",
-			"unlimited": "Illimitée",
-			"source": "Source",
-			"sourceNone": "Aucune",
+			"failedToRemoveCondition": "Échec de la suppression de la condition.",
+			"failedToRemoveEffect": "Échec de la suppression de l'effet.",
+			"failedToUpdateCondition": "Échec de la mise à jour de la condition.",
 			"noConditions": "Aucun etat",
 			"noEffects": "Aucun effet",
-			"temporaryEffects": "Effets temporaires",
 			"passiveEffects": "Effets passifs",
+			"removeCondition": "Retirer l'etat",
+			"removeEffect": "Retirer l'effet",
 			"searchConditions": "Rechercher des conditions",
 			"showActiveOnly": "Afficher actives",
 			"showAllConditions": "Afficher toutes",
-			"removeCondition": "Retirer l'etat",
-			"removeEffect": "Retirer l'effet",
-			"failedToRemoveCondition": "Échec de la suppression de la condition.",
-			"failedToUpdateCondition": "Échec de la mise à jour de la condition.",
-			"failedToRemoveEffect": "Échec de la suppression de l'effet.",
-			"applyCondition": "Appliquer l'etat",
-			"conditionsFor": "Conditions : {name}",
-			"conditionDescriptionUnavailable": "<p>Aucune description disponible.</p>"
+			"source": "Source",
+			"sourceNone": "Aucune",
+			"temporaryEffects": "Effets temporaires",
+			"unlimited": "Illimitée"
 		}
 	},
 	"TYPES": {

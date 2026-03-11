@@ -1,4 +1,5 @@
 <script>
+	import localize from '../../utils/localize.js';
 	import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
 	function incrementSkillPoints(skillKey, skill) {
@@ -30,11 +31,11 @@
 	<table class="nimble-skill-config-table">
 		<thead>
 			<tr>
-				<th>Skill</th>
-				<th>Ability Modifier</th>
-				<th>Skill Bonus</th>
-				<th>Skill Points</th>
-				<th>Total</th>
+				<th>{localize('NIMBLE.skillsConfig.skill')}</th>
+				<th>{localize('NIMBLE.skillsConfig.abilityModifier')}</th>
+				<th>{localize('NIMBLE.skillsConfig.skillBonus')}</th>
+				<th>{localize('NIMBLE.skillsConfig.skillPoints')}</th>
+				<th>{localize('NIMBLE.skillsConfig.total')}</th>
 			</tr>
 		</thead>
 
@@ -55,7 +56,7 @@
 							style="grid-area: decrementButton;"
 							data-button-variant="basic"
 							disabled={skill.points <= 0}
-							aria-label="Decrement Skill Points"
+							aria-label={localize('NIMBLE.skillsConfig.decrementSkillPoints')}
 							onclick={() => decrementSkillPoints(key, skill)}
 						>
 							-
@@ -70,7 +71,7 @@
 							style="grid-area: incrementButton;"
 							data-button-variant="basic"
 							disabled={skill.points >= 12}
-							aria-label="Increment Skill Points"
+							aria-label={localize('NIMBLE.skillsConfig.incrementSkillPoints')}
 							onclick={() => incrementSkillPoints(key, skill)}
 						>
 							+
