@@ -8,7 +8,7 @@
  */
 export function evaluateFormula(
 	formula: string | undefined,
-	actor: { getRollData: () => object },
+	actor: { getRollData: () => Record<string, unknown> },
 ): string {
 	if (!formula) return '';
 
@@ -31,7 +31,7 @@ export function evaluateFormula(
 			} else {
 				try {
 					const evaluated = Roll.safeEval(trimmed);
-					if (typeof evaluated === 'number' && !isNaN(evaluated)) {
+					if (typeof evaluated === 'number' && !Number.isNaN(evaluated)) {
 						simplified.push(String(Math.floor(evaluated)));
 					} else {
 						simplified.push(trimmed);
