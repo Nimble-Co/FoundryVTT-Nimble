@@ -627,10 +627,6 @@
 </section>
 
 <style lang="scss">
-	:global(.nimble-sheet--player-character) {
-		min-width: 367px;
-	}
-
 	.nimble-sheet__header {
 		position: relative;
 	}
