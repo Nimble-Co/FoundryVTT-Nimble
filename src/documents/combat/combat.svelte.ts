@@ -734,6 +734,7 @@ class NimbleCombat extends Combat {
 		if (statusSet) {
 			const hasStatus = statusSet.has(statusId);
 			if (active && hasStatus) return;
+			if (!active && !hasStatus) return;
 		}
 
 		await actor.toggleStatusEffect(statusId, { active });
@@ -752,18 +753,20 @@ class NimbleCombat extends Combat {
 	async #clearCombatantHeroicReactionSideEffects(
 		combatant: Combatant.Implementation,
 	): Promise<void> {
-		for (const sideEffectConditionId of getHeroicReactionSideEffectConditionIds()) {
-			await this.#setCombatantStatusEffect(combatant, sideEffectConditionId, false);
-		}
+		await Promise.all(
+			getHeroicReactionSideEffectConditionIds().map((sideEffectConditionId) =>
+				this.#setCombatantStatusEffect(combatant, sideEffectConditionId, false),
+			),
+		);
 	}
 
 	async #clearCharacterHeroicReactionSideEffects(): Promise<void> {
 		const characters = this.combatants.contents.filter(
 			(combatant) => combatant.type === 'character',
 		);
-		for (const combatant of characters) {
-			await this.#clearCombatantHeroicReactionSideEffects(combatant);
-		}
+		await Promise.all(
+			characters.map((combatant) => this.#clearCombatantHeroicReactionSideEffects(combatant)),
+		);
 	}
 
 	#buildHeroicReactionAvailabilityUpdate(available: boolean): Record<string, unknown> {

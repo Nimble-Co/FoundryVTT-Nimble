@@ -1263,6 +1263,52 @@ describe('NimbleCombat', () => {
 		});
 	});
 
+	it('blocks an owner from using a heroic reaction on their own active turn', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-heroic-reaction-owner-own-turn';
+		const activeActor = createCombatActorFixture({
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+			isOwner: true,
+		}) as Actor.Implementation & {
+			toggleStatusEffect: ReturnType<typeof vi.fn>;
+			statuses: Set<string>;
+		};
+		activeActor.toggleStatusEffect = vi.fn().mockResolvedValue(undefined);
+		activeActor.statuses = new Set();
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: activeActor,
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter]),
+			turns: [activeCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.toggleHeroicReactionAvailability('active-character', 'defend');
+
+		expect(changed).toBe(false);
+		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
+		expect(activeActor.toggleStatusEffect).not.toHaveBeenCalled();
+	});
+
 	it('refreshes all heroic reactions for characters when a new round starts', async () => {
 		const combatId = 'combat-heroic-reaction-round-refresh';
 		const characterOne = createMockCombatant({
