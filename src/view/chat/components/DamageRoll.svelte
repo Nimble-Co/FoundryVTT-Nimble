@@ -40,18 +40,30 @@
 	const { actorType, permissions } = messageDocument.system;
 
 	let { damageType, ignoreArmor = false, outcome, roll } = $props();
-	let { options: rollOptions } = $derived(roll);
+	let rollOptions = $derived(roll?.options ?? {});
 	let label = $derived(damageTypes[damageType] ?? '');
 	let multiplier = $derived(getDamageMultiplier(outcome));
 	let secondaryInfo = $derived(getSecondaryInformation(outcome, ignoreArmor, rollOptions).trim());
 </script>
 
-<RollSummary
-	{label}
-	tooltip={prepareRollTooltip(actorType, permissions, Roll.fromData(roll))}
-	subheading={secondaryInfo}
-	total={Math.ceil(roll.total * multiplier)}
-	type="damage"
-	options={{ damageType, ignoreArmor, outcome, rollOptions }}
-	showRollDetails={rollOptions.primaryDieValue != '0' || rollOptions?.primaryDieModifier != '0'}
-/>
+{#if roll?.class}
+	<RollSummary
+		{label}
+		tooltip={prepareRollTooltip(actorType, permissions, Roll.fromData(roll))}
+		subheading={secondaryInfo}
+		total={Math.ceil(roll.total * multiplier)}
+		type="damage"
+		options={{ damageType, ignoreArmor, outcome, rollOptions }}
+		showRollDetails={rollOptions.primaryDieValue != '0' || rollOptions?.primaryDieModifier != '0'}
+	/>
+{:else}
+	<RollSummary
+		{label}
+		tooltip={null}
+		subheading={secondaryInfo}
+		total={Math.ceil((roll?.total ?? 0) * multiplier)}
+		type="damage"
+		options={{ damageType, ignoreArmor, outcome, rollOptions }}
+		showRollDetails={false}
+	/>
+{/if}

@@ -39,7 +39,9 @@
 		"group": "the-cheat-progression",
 		"gainedAtLevel": 13,
 		"subclass": false,
-		"gainedAtLevels": [13]
+		"gainedAtLevels": [
+			13
+		]
 	},
 	"effects": [],
 	"flags": {},
