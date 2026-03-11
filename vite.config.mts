@@ -35,7 +35,14 @@ const branchWatchPlugin = {
 		watcher: { add: (f: string) => void; on: (e: string, cb: (f: string) => void) => void };
 		restart: () => void;
 	}) {
-		const gitHead = path.resolve(__dirname, '.git/HEAD');
+		let gitHead: string | null = null;
+		try {
+			const raw = execSync('git rev-parse --git-path HEAD').toString().trim();
+			gitHead = path.isAbsolute(raw) ? raw : path.resolve(__dirname, raw);
+		} catch {
+			// not a git repo, git not available, or worktree resolution failed
+		}
+		if (!gitHead) return;
 		server.watcher.add(gitHead);
 		server.watcher.on('change', (changedPath) => {
 			if (changedPath === gitHead) {
