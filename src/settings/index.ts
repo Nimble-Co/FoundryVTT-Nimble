@@ -99,9 +99,17 @@ export default function registerSystemSettings() {
 			element.querySelector('section[data-category="system"]');
 		if (!systemTab) return;
 
-		if (systemTab.querySelector('.nimble-branch-badge')) return;
+		const hasBranchBadge = !!systemTab.querySelector('.nimble-branch-badge');
+		const hasAttribution = !!systemTab.querySelector('.nimble-attribution');
 
-		systemTab.prepend(createBranchBadge());
-		systemTab.appendChild(createAttributionElement());
+		if (hasBranchBadge && hasAttribution) return;
+
+		if (!hasBranchBadge) {
+			systemTab.prepend(createBranchBadge());
+		}
+
+		if (!hasAttribution) {
+			systemTab.appendChild(createAttributionElement());
+		}
 	});
 }
