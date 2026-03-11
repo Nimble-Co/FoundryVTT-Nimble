@@ -2658,8 +2658,13 @@
 		.nimble-ct__name-drawer-stack {
 		top: calc(11.2rem * var(--nimble-ct-card-scale, 1) + 0.08rem);
 	}
-	.nimble-ct__portrait--resource-drawer:hover .nimble-ct__resource-drawer-stack,
-	.nimble-ct__portrait--resource-drawer:focus-within .nimble-ct__resource-drawer-stack {
+	.nimble-ct__portrait--resource-drawer:has(
+			.nimble-ct__portrait-card:hover,
+			.nimble-ct__portrait-card:focus-within,
+			.nimble-ct__resource-drawer-stack:hover,
+			.nimble-ct__resource-drawer-stack:focus-within
+		)
+		.nimble-ct__resource-drawer-stack {
 		opacity: 1;
 		visibility: visible;
 		pointer-events: auto;
@@ -2687,27 +2692,41 @@
 		display: none;
 	}
 	.nimble-ct-shell--resource-drawer-pinned
-		.nimble-ct__portrait--resource-drawer:hover
-		.nimble-ct__player-name-drawer,
-	.nimble-ct-shell--resource-drawer-pinned
-		.nimble-ct__portrait--resource-drawer:focus-within
+		.nimble-ct__portrait--resource-drawer:has(
+			.nimble-ct__portrait-card:hover,
+			.nimble-ct__portrait-card:focus-within,
+			.nimble-ct__resource-drawer-stack:hover,
+			.nimble-ct__resource-drawer-stack:focus-within
+		)
 		.nimble-ct__player-name-drawer {
 		display: inline-flex;
 	}
-	.nimble-ct__portrait--name-drawer:hover .nimble-ct__name-drawer-stack,
-	.nimble-ct__portrait--name-drawer:focus-within .nimble-ct__name-drawer-stack {
+	.nimble-ct__portrait--name-drawer:has(
+			.nimble-ct__portrait-card:hover,
+			.nimble-ct__portrait-card:focus-within,
+			.nimble-ct__name-drawer-stack:hover,
+			.nimble-ct__name-drawer-stack:focus-within
+		)
+		.nimble-ct__name-drawer-stack {
 		opacity: 1;
 		visibility: visible;
+		pointer-events: auto;
 		transform: translate(-50%, 0) scaleY(1);
 		transition:
 			opacity 170ms ease,
 			transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
 			visibility 0s linear 0s;
 	}
-	.nimble-ct__portrait--name-drawer:hover .nimble-ct__non-player-name-drawer-stack,
-	.nimble-ct__portrait--name-drawer:focus-within .nimble-ct__non-player-name-drawer-stack {
+	.nimble-ct__portrait--name-drawer:has(
+			.nimble-ct__portrait-card:hover,
+			.nimble-ct__portrait-card:focus-within,
+			.nimble-ct__non-player-name-drawer-stack:hover,
+			.nimble-ct__non-player-name-drawer-stack:focus-within
+		)
+		.nimble-ct__non-player-name-drawer-stack {
 		opacity: 1;
 		visibility: visible;
+		pointer-events: auto;
 		transform: translateY(0) scaleY(1);
 		transition:
 			opacity 170ms ease,
