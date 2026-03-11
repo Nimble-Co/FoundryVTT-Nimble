@@ -45,6 +45,17 @@ export default function registerSystemSettings() {
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
+	const createBranchBadge = () => {
+		const badge = document.createElement('div');
+		badge.className = 'nimble-branch-badge';
+		badge.innerHTML = `
+			<i class="fa-solid fa-code-branch"></i>
+			<span class="nimble-branch-badge__label">branch:</span>
+			<code class="nimble-branch-badge__name">${__BRANCH__}</code>
+		`;
+		return badge;
+	};
+
 	const createAttributionElement = () => {
 		const wrapper = document.createElement('div');
 		wrapper.className = 'nimble-attribution-wrapper';
@@ -79,8 +90,9 @@ export default function registerSystemSettings() {
 			element.querySelector('section[data-category="system"]');
 		if (!systemTab) return;
 
-		if (systemTab.querySelector('.nimble-attribution')) return;
+		if (systemTab.querySelector('.nimble-branch-badge')) return;
 
+		systemTab.prepend(createBranchBadge());
 		systemTab.appendChild(createAttributionElement());
 	});
 }
