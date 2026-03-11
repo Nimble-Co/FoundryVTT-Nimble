@@ -4,6 +4,7 @@
 	import sortItems from '../../../utils/sortItems.js';
 	import localize from '../../../utils/localize.js';
 	import { flattenActivationEffects } from '../../../utils/activationEffects.js';
+	import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
 
 	import SearchBar from './SearchBar.svelte';
 
@@ -22,48 +23,7 @@
 	// ============================================================================
 
 	function evaluateFormula(formula) {
-		if (!formula) return '';
-
-		try {
-			const rollData = actor.getRollData();
-			const substituted = Roll.replaceFormulaData(formula, rollData, { missing: '0' });
-
-			const parts = substituted.split(/([+-])/);
-			const simplified = [];
-
-			for (const part of parts) {
-				const trimmed = part.trim();
-				if (!trimmed) continue;
-
-				if (trimmed === '+' || trimmed === '-') {
-					simplified.push(trimmed);
-				} else if (/^\d*d\d+/i.test(trimmed)) {
-					simplified.push(trimmed);
-				} else {
-					try {
-						const evaluated = Roll.safeEval(trimmed);
-						if (typeof evaluated === 'number' && !isNaN(evaluated)) {
-							simplified.push(String(Math.floor(evaluated)));
-						} else {
-							simplified.push(trimmed);
-						}
-					} catch {
-						simplified.push(trimmed);
-					}
-				}
-			}
-
-			let result = simplified.join(' ').replace(/\s+/g, ' ').trim();
-			result = result.replace(/[+-]\s*0(?!\d)/g, '').trim();
-			result = result
-				.replace(/^\s*[+-]\s*/, '')
-				.replace(/[+-]\s*[+-]/g, '+')
-				.trim();
-
-			return result || formula;
-		} catch {
-			return formula;
-		}
+		return evalFormula(formula, actor);
 	}
 
 	// ============================================================================
@@ -188,6 +148,13 @@
 		expandedDescriptions = newSet;
 	}
 
+	function handleKeydown(event, callback) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			callback();
+		}
+	}
+
 	async function handleSpellClick(spellId) {
 		const spell = actor.items.get(spellId);
 		const result = await actor.activateItem(spellId);
@@ -233,7 +200,6 @@
 					{@const spellEffects = getSpellEffects(spell)}
 
 					<li class="spell-card" class:spell-card--expanded={isExpanded} data-item-id={spell._id}>
-						<!-- svelte-ignore a11y_click_events_have_key_events -->
 						<div
 							class="spell-card__row"
 							role="button"
@@ -241,6 +207,7 @@
 							draggable="true"
 							ondragstart={(event) => sheet._onDragStart(event)}
 							onclick={() => handleSpellClick(spell._id)}
+							onkeydown={(e) => handleKeydown(e, () => handleSpellClick(spell._id))}
 						>
 							{#if showEmbeddedDocumentImages}
 								<img class="spell-card__img" src={spell.reactive.img} alt={spell.reactive.name} />
@@ -299,7 +266,11 @@
 									class="spell-card__expand"
 									type="button"
 									onclick={(e) => toggleDescription(spell._id, e)}
-									aria-label={isExpanded ? 'Collapse' : 'Expand'}
+									aria-label={localize(
+										isExpanded
+											? 'NIMBLE.ui.heroicActions.collapse'
+											: 'NIMBLE.ui.heroicActions.expand',
+									)}
 								>
 									<i class="fa-solid fa-caret-{isExpanded ? 'up' : 'down'}"></i>
 								</button>
@@ -313,6 +284,8 @@
 										<strong>{localize('NIMBLE.ui.heroicActions.baseEffect')}</strong>
 										{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(spellEffects.baseEffect) then enrichedEffect}
 											{@html enrichedEffect}
+										{:catch}
+											{@html spellEffects.baseEffect}
 										{/await}
 									</div>
 								{/if}
@@ -321,6 +294,8 @@
 										<strong>{localize('NIMBLE.ui.heroicActions.higherLevelEffect')}</strong>
 										{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(spellEffects.higherLevelEffect) then enrichedEffect}
 											{@html enrichedEffect}
+										{:catch}
+											{@html spellEffects.higherLevelEffect}
 										{/await}
 									</div>
 								{/if}

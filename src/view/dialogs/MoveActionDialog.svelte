@@ -1,39 +1,10 @@
 <script>
 	import localize from '../../utils/localize.js';
+	import { getMovementSpeeds } from '../../utils/movementSpeeds.js';
 
 	let { document, dialog, deductActionPip, inCombat = false } = $props();
 
-	const { movementTypes, movementTypeIcons } = CONFIG.NIMBLE;
-
-	// Get movement speeds, filtering to only show non-zero values
-	let movementSpeeds = $derived.by(() => {
-		const movement = document.system?.attributes?.movement ?? {};
-		const speeds = [];
-
-		// Always show walk first if it exists
-		if (movement.walk > 0) {
-			speeds.push({
-				type: 'walk',
-				value: movement.walk,
-				label: game.i18n.localize(movementTypes.walk),
-				icon: movementTypeIcons.walk,
-			});
-		}
-
-		// Add other movement types if non-zero
-		for (const type of ['fly', 'climb', 'swim', 'burrow']) {
-			if (movement[type] > 0) {
-				speeds.push({
-					type,
-					value: movement[type],
-					label: game.i18n.localize(movementTypes[type]),
-					icon: movementTypeIcons[type],
-				});
-			}
-		}
-
-		return speeds;
-	});
+	let movementSpeeds = $derived(getMovementSpeeds(document));
 
 	async function handleConfirm() {
 		// Deduct action pip if in combat
@@ -181,7 +152,7 @@
 
 			i {
 				font-size: 0.875rem;
-				color: hsl(210, 60%, 50%);
+				color: var(--nimble-action-icon-color);
 			}
 		}
 
@@ -203,15 +174,15 @@
 			justify-content: center;
 			gap: 0.5rem;
 			padding: 0.5rem 0.75rem;
-			background: hsla(45, 70%, 50%, 0.1);
-			border: 1px solid hsla(45, 70%, 50%, 0.3);
+			background: var(--nimble-action-info-background);
+			border: 1px solid var(--nimble-action-info-border-color);
 			border-radius: 6px;
 			font-size: var(--nimble-sm-text);
 			font-weight: 500;
-			color: hsl(45, 60%, 35%);
+			color: var(--nimble-action-info-text-color);
 
 			i {
-				color: hsl(45, 70%, 45%);
+				color: var(--nimble-action-info-icon-color);
 			}
 		}
 
@@ -245,20 +216,6 @@
 	}
 
 	:global(.theme-dark) .move-dialog {
-		&__warning {
-			background: hsla(45, 70%, 50%, 0.15);
-			border-color: hsla(45, 70%, 50%, 0.4);
-			color: hsl(45, 60%, 65%);
-
-			i {
-				color: hsl(45, 70%, 55%);
-			}
-		}
-
-		&__speed i {
-			color: hsl(210, 70%, 65%);
-		}
-
 		&__footer .nimble-button[data-button-variant='primary'] {
 			background: hsl(220, 15%, 18%);
 			border-color: hsl(45, 70%, 55%);

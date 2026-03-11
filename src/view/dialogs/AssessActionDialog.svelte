@@ -1,61 +1,62 @@
 <script>
 	import { onMount, onDestroy } from 'svelte';
 	import localize from '../../utils/localize.js';
+	import { ASSESS_DC, assessOptions } from '../../utils/assessOptions.js';
+	import { getTargetedTokens, getInvalidTargets, getTargetName } from '../../utils/targeting.js';
 
-	const ASSESS_DC = 12;
+	// ============================================================================
+	// Props
+	// ============================================================================
 
-	const assessOptions = [
-		{
-			id: 'ask-question',
-			icon: 'fa-solid fa-circle-question',
-			titleKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.title',
-			chatTitleKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.chatTitle',
-			descriptionKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.description',
-			successKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.success',
-			failureKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.failure',
-			requiresTarget: false,
-		},
-		{
-			id: 'create-opening',
-			icon: 'fa-solid fa-crosshairs',
-			titleKey: 'NIMBLE.ui.heroicActions.assess.createOpening.title',
-			chatTitleKey: 'NIMBLE.ui.heroicActions.assess.createOpening.chatTitle',
-			descriptionKey: 'NIMBLE.ui.heroicActions.assess.createOpening.description',
-			successKey: 'NIMBLE.ui.heroicActions.assess.createOpening.success',
-			failureKey: 'NIMBLE.ui.heroicActions.assess.createOpening.failure',
-			requiresTarget: true,
-		},
-		{
-			id: 'anticipate-danger',
-			icon: 'fa-solid fa-shield',
-			titleKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.title',
-			chatTitleKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.chatTitle',
-			descriptionKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.description',
-			successKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.success',
-			failureKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.failure',
-			requiresTarget: false,
-		},
-	];
+	let { document, dialog, deductActionPip, inCombat = false } = $props();
 
-	function getTargetedTokens(actorId) {
-		const targets = Array.from(game.user?.targets ?? []);
-		// Filter out tokens belonging to the same actor (can't target self)
-		return targets.filter((token) => token.actor?.id !== actorId);
-	}
+	// ============================================================================
+	// Constants
+	// ============================================================================
 
-	function getInvalidTargets(actorId) {
-		const targets = Array.from(game.user?.targets ?? []);
-		// Return tokens that were filtered out (self-targeting)
-		return targets.filter((token) => token.actor?.id === actorId);
-	}
+	const { skills: skillNames } = CONFIG.NIMBLE;
 
-	function getTargetName(token) {
-		return token?.actor?.name || token?.name || 'Unknown';
-	}
+	// ============================================================================
+	// State
+	// ============================================================================
 
-	// Track targeting changes reactively
+	let selectedOption = $state(null);
+	let selectedSkill = $state(null);
+	let selectedTarget = $state(null);
 	let targetingVersion = $state(0);
 	let hookId = null;
+
+	// ============================================================================
+	// Derived Values
+	// ============================================================================
+
+	let currentOptionRequiresTarget = $derived(
+		assessOptions.find((o) => o.id === selectedOption)?.requiresTarget ?? false,
+	);
+
+	let availableTargets = $derived.by(() => {
+		void targetingVersion;
+		return getTargetedTokens(document.id);
+	});
+
+	let hasTargetedSelf = $derived.by(() => {
+		void targetingVersion;
+		return getInvalidTargets(document.id).length > 0;
+	});
+
+	let sortedSkills = $derived(
+		Object.entries(skillNames).sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB)),
+	);
+
+	let isSubmitDisabled = $derived(
+		!selectedOption ||
+			!selectedSkill ||
+			(currentOptionRequiresTarget && availableTargets.length !== 1),
+	);
+
+	// ============================================================================
+	// Lifecycle
+	// ============================================================================
 
 	onMount(() => {
 		hookId = Hooks.on('targetToken', () => {
@@ -69,20 +70,35 @@
 		}
 	});
 
+	// ============================================================================
+	// Effects
+	// ============================================================================
+
+	$effect(() => {
+		if (currentOptionRequiresTarget && availableTargets.length === 1) {
+			selectedTarget = availableTargets[0];
+		} else if (currentOptionRequiresTarget && availableTargets.length !== 1) {
+			selectedTarget = null;
+		}
+	});
+
+	$effect(() => {
+		if (!currentOptionRequiresTarget) {
+			selectedTarget = null;
+		}
+	});
+
+	// ============================================================================
+	// Event Handlers
+	// ============================================================================
+
 	async function handleSubmit() {
 		if (!selectedOption || !selectedSkill) return;
 
 		const option = assessOptions.find((o) => o.id === selectedOption);
 
-		// Check if target is required but not selected
 		if (option.requiresTarget && !selectedTarget) return;
 
-		// Only deduct action pip if in combat
-		if (inCombat) {
-			await deductActionPip();
-		}
-
-		// Roll the skill check (skip the roll dialog since we're already in a dialog)
 		const { roll } = await document.rollSkillCheck(selectedSkill, { skipRollDialog: true });
 
 		if (!roll) {
@@ -90,15 +106,16 @@
 			return;
 		}
 
-		// Determine success/failure based on DC 12
+		// Deduct action pip only after roll is confirmed (not cancelled)
+		if (inCombat) {
+			await deductActionPip();
+		}
+
 		const isSuccess = roll.total >= ASSESS_DC;
 		const resultKey = isSuccess ? option.successKey : option.failureKey;
-
-		// Include target name in the message if there's a target
 		const targetName = selectedTarget ? getTargetName(selectedTarget) : null;
 		const resultMessage = localize(resultKey, { name: document.name, target: targetName });
 
-		// Create chat message with proper type for Svelte rendering
 		await ChatMessage.create({
 			author: game.user?.id,
 			speaker: ChatMessage.getSpeaker({ actor: document }),
@@ -127,59 +144,6 @@
 			target: selectedTarget?.document.uuid,
 		});
 	}
-
-	let { document, dialog, deductActionPip, inCombat = false } = $props();
-
-	const { skills: skillNames } = CONFIG.NIMBLE;
-
-	let selectedOption = $state(null);
-	let selectedSkill = $state(null);
-	let selectedTarget = $state(null);
-
-	// Check if the current option requires a target
-	let currentOptionRequiresTarget = $derived(
-		assessOptions.find((o) => o.id === selectedOption)?.requiresTarget ?? false,
-	);
-
-	// Get available targets (currently targeted tokens) - depends on targetingVersion for reactivity
-	let availableTargets = $derived.by(() => {
-		// Reference targetingVersion to trigger reactivity when targeting changes
-		void targetingVersion;
-		return getTargetedTokens(document.id);
-	});
-
-	// Track if the user has targeted themselves (to show a helpful message)
-	let hasTargetedSelf = $derived.by(() => {
-		void targetingVersion;
-		return getInvalidTargets(document.id).length > 0;
-	});
-
-	// Auto-select target if exactly one is targeted
-	$effect(() => {
-		if (currentOptionRequiresTarget && availableTargets.length === 1) {
-			selectedTarget = availableTargets[0];
-		} else if (currentOptionRequiresTarget && availableTargets.length !== 1) {
-			selectedTarget = null;
-		}
-	});
-
-	// Clear target when switching to an option that doesn't require it
-	$effect(() => {
-		if (!currentOptionRequiresTarget) {
-			selectedTarget = null;
-		}
-	});
-
-	let sortedSkills = $derived(
-		Object.entries(skillNames).sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB)),
-	);
-
-	// Determine if submit should be disabled (requires exactly one target for Create an Opening)
-	let isSubmitDisabled = $derived(
-		!selectedOption ||
-			!selectedSkill ||
-			(currentOptionRequiresTarget && availableTargets.length !== 1),
-	);
 </script>
 
 <article class="nimble-sheet__body assess-dialog">

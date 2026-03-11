@@ -1,40 +1,7 @@
 <script>
 	import localize from '../../../utils/localize.js';
-
-	const ASSESS_DC = 12;
-
-	const assessOptions = [
-		{
-			id: 'ask-question',
-			icon: 'fa-solid fa-circle-question',
-			titleKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.title',
-			chatTitleKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.chatTitle',
-			descriptionKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.description',
-			successKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.success',
-			failureKey: 'NIMBLE.ui.heroicActions.assess.askQuestion.failure',
-			requiresTarget: false,
-		},
-		{
-			id: 'create-opening',
-			icon: 'fa-solid fa-crosshairs',
-			titleKey: 'NIMBLE.ui.heroicActions.assess.createOpening.title',
-			chatTitleKey: 'NIMBLE.ui.heroicActions.assess.createOpening.chatTitle',
-			descriptionKey: 'NIMBLE.ui.heroicActions.assess.createOpening.description',
-			successKey: 'NIMBLE.ui.heroicActions.assess.createOpening.success',
-			failureKey: 'NIMBLE.ui.heroicActions.assess.createOpening.failure',
-			requiresTarget: true,
-		},
-		{
-			id: 'anticipate-danger',
-			icon: 'fa-solid fa-shield',
-			titleKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.title',
-			chatTitleKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.chatTitle',
-			descriptionKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.description',
-			successKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.success',
-			failureKey: 'NIMBLE.ui.heroicActions.assess.anticipateDanger.failure',
-			requiresTarget: false,
-		},
-	];
+	import { ASSESS_DC, assessOptions } from '../../../utils/assessOptions.js';
+	import { getTargetedTokens, getInvalidTargets, getTargetName } from '../../../utils/targeting.js';
 
 	const { skills: skillNames } = CONFIG.NIMBLE;
 
@@ -43,20 +10,6 @@
 	let selectedOption = $state(null);
 	let selectedSkill = $state(null);
 	let targetingVersion = $state(0);
-
-	function getTargetedTokens(actorId) {
-		const targets = Array.from(game.user?.targets ?? []);
-		return targets.filter((token) => token.actor?.id !== actorId);
-	}
-
-	function getInvalidTargets(actorId) {
-		const targets = Array.from(game.user?.targets ?? []);
-		return targets.filter((token) => token.actor?.id === actorId);
-	}
-
-	function getTargetName(token) {
-		return token?.actor?.name || token?.name || 'Unknown';
-	}
 
 	// Track targeting changes
 	$effect(() => {
@@ -102,13 +55,13 @@
 
 		const option = assessOptions.find((o) => o.id === selectedOption);
 
-		// Deduct action pip
-		await onDeductAction();
-
 		// Roll the skill check (show the roll dialog)
 		const { roll } = await actor.rollSkillCheck(selectedSkill);
 
 		if (!roll) return;
+
+		// Deduct action pip only after roll is confirmed (not cancelled)
+		await onDeductAction();
 
 		// Determine success/failure based on DC 12
 		const isSuccess = roll.total >= ASSESS_DC;

@@ -73,7 +73,7 @@
 			flex-shrink: 0;
 			width: 2.5rem;
 			height: 2.5rem;
-			background: hsl(210, 65%, 50%);
+			background: var(--nimble-action-button-icon-color);
 			border-radius: 4px;
 			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 

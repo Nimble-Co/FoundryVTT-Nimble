@@ -789,6 +789,10 @@
 						}
 					}
 				},
+				"collapse": "Collapse",
+				"expand": "Expand",
+				"unknown": "Unknown",
+				"targetLabel": "Target:",
 				"assess": {
 					"dialogTitle": "Assess Action",
 					"header": "Assess",
@@ -800,6 +804,7 @@
 					"tooManyTargetsHint": "You can only target one creature at a time for this action",
 					"cannotTargetSelf": "You cannot target yourself. Target another creature on the canvas.",
 					"rollToAssess": "Roll {skill}",
+					"checkVsDC": "{skill} Check vs DC {dc}",
 					"success": "Success",
 					"failure": "Failure",
 					"askQuestion": {

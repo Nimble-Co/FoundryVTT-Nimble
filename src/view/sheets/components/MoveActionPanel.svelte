@@ -1,38 +1,10 @@
 <script>
 	import localize from '../../../utils/localize.js';
-
-	const { movementTypes, movementTypeIcons } = CONFIG.NIMBLE;
+	import { getMovementSpeeds } from '../../../utils/movementSpeeds.js';
 
 	let { actor, inCombat = false, actionsRemaining = 0, onDeductAction = async () => {} } = $props();
 
-	let movementSpeeds = $derived.by(() => {
-		const movement = actor.system?.attributes?.movement ?? {};
-		const speeds = [];
-
-		// Always show walk first if it exists
-		if (movement.walk > 0) {
-			speeds.push({
-				type: 'walk',
-				value: movement.walk,
-				label: game.i18n.localize(movementTypes.walk),
-				icon: movementTypeIcons.walk,
-			});
-		}
-
-		// Add other movement types if non-zero
-		for (const type of ['fly', 'climb', 'swim', 'burrow']) {
-			if (movement[type] > 0) {
-				speeds.push({
-					type,
-					value: movement[type],
-					label: game.i18n.localize(movementTypes[type]),
-					icon: movementTypeIcons[type],
-				});
-			}
-		}
-
-		return speeds;
-	});
+	let movementSpeeds = $derived(getMovementSpeeds(actor));
 
 	async function handleMove() {
 		if (!inCombat || actionsRemaining <= 0) return;
@@ -142,7 +114,7 @@
 
 			i {
 				font-size: 0.75rem;
-				color: hsl(210, 60%, 50%);
+				color: var(--nimble-action-icon-color);
 			}
 		}
 
@@ -171,15 +143,15 @@
 			align-items: center;
 			gap: 0.375rem;
 			padding: 0.375rem 0.5rem;
-			background: hsla(45, 70%, 50%, 0.1);
-			border: 1px solid hsla(45, 70%, 50%, 0.3);
+			background: var(--nimble-action-info-background);
+			border: 1px solid var(--nimble-action-info-border-color);
 			border-radius: 4px;
 			font-size: var(--nimble-xs-text);
 			font-weight: 500;
-			color: hsl(45, 60%, 35%);
+			color: var(--nimble-action-info-text-color);
 
 			i {
-				color: hsl(45, 70%, 45%);
+				color: var(--nimble-action-info-icon-color);
 			}
 		}
 
@@ -194,22 +166,6 @@
 
 			i {
 				font-size: 0.875rem;
-			}
-		}
-	}
-
-	:global(.theme-dark) .move-panel {
-		&__speed i {
-			color: hsl(210, 70%, 65%);
-		}
-
-		&__info {
-			background: hsla(45, 70%, 50%, 0.15);
-			border-color: hsla(45, 70%, 50%, 0.4);
-			color: hsl(45, 60%, 65%);
-
-			i {
-				color: hsl(45, 70%, 55%);
 			}
 		}
 	}

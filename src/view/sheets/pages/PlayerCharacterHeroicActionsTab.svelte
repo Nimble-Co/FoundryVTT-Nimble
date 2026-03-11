@@ -3,11 +3,13 @@
 	import { getContext } from 'svelte';
 	import filterItems from '../../dataPreparationHelpers/filterItems.js';
 	import localize from '../../../utils/localize.js';
+	import GenericDialog from '../../../documents/dialogs/GenericDialog.svelte.js';
 
 	import AssessActionPanel from '../components/AssessActionPanel.svelte';
 	import AttackActionPanel from '../components/AttackActionPanel.svelte';
 	import CastSpellActionPanel from '../components/CastSpellActionPanel.svelte';
 	import MoveActionPanel from '../components/MoveActionPanel.svelte';
+	import HeroicActionsHelpDialog from '../../dialogs/HeroicActionsHelpDialog.svelte';
 
 	// ============================================================================
 	// Context & Configuration
@@ -177,14 +179,7 @@
 		}
 	}
 
-	async function handleHelpDialog() {
-		const { default: GenericDialog } = await import(
-			'../../../documents/dialogs/GenericDialog.svelte.js'
-		);
-		const { default: HeroicActionsHelpDialog } = await import(
-			'../../dialogs/HeroicActionsHelpDialog.svelte'
-		);
-
+	function handleHelpDialog() {
 		GenericDialog.getOrCreate(
 			localize('NIMBLE.ui.heroicActions.help.dialogTitle'),
 			HeroicActionsHelpDialog,

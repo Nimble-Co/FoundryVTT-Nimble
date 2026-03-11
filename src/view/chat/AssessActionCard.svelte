@@ -2,6 +2,7 @@
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import { getRollModeSummary } from '../dataPreparationHelpers/getRollModeSummary.js';
 	import prepareRollTooltip from '../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
+	import localize from '../../utils/localize.js';
 
 	import CardHeader from './components/CardHeader.svelte';
 	import RollSummary from './components/RollSummary.svelte';
@@ -30,8 +31,16 @@
 	const target = $derived(system.target);
 	const targetName = $derived(system.targetName);
 
-	const label = $derived(`${skills[skillKey]} Check vs DC ${dc}`);
-	const resultLabel = $derived(isSuccess ? 'SUCCESS' : 'FAILED');
+	const label = $derived(
+		localize('NIMBLE.ui.heroicActions.assess.checkVsDC', { skill: skills[skillKey], dc }),
+	);
+	const resultLabel = $derived(
+		localize(
+			isSuccess
+				? 'NIMBLE.ui.heroicActions.assess.success'
+				: 'NIMBLE.ui.heroicActions.assess.failure',
+		),
+	);
 	const hintClass = $derived(isSuccess ? 'nimble-hint--success' : 'nimble-hint--warning');
 	const hintIcon = $derived(
 		isSuccess ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-exclamation',
@@ -60,8 +69,17 @@
 						alt={targetName}
 					/>
 				{/if}
+			{:catch}
+				<!-- Token lookup failed, show fallback image -->
+				<img
+					class="assess-action-card__target-img"
+					src="icons/svg/mystery-man.svg"
+					alt={targetName}
+				/>
 			{/await}
-			<span class="assess-action-card__target-label">Target:</span>
+			<span class="assess-action-card__target-label"
+				>{localize('NIMBLE.ui.heroicActions.targetLabel')}</span
+			>
 			<span class="assess-action-card__target-name">{targetName}</span>
 		</div>
 	{/if}
