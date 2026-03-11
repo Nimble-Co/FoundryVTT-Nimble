@@ -5,8 +5,6 @@ import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.j
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
 
-const { weaponProperties } = CONFIG.NIMBLE;
-
 // Default unarmed: roll 1d4 for hit determination, damage is 1 + STR
 // The 1d4 is excluded from damage total when primaryDieAsDamage is false
 const DEFAULT_UNARMED_DAMAGE = '1d4 + 1 + @abilities.strength.mod';
@@ -15,6 +13,7 @@ export function createAttackPanelState(
 	actor: Actor,
 	onActivateItem: (cost: number) => Promise<void>,
 ) {
+	const { weaponProperties } = CONFIG.NIMBLE;
 	let searchTerm = $state('');
 	let expandedDescriptions = $state(new Set<string>());
 

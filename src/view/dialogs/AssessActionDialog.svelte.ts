@@ -2,8 +2,6 @@ import { ASSESS_DC, assessOptions } from '../../utils/assessOptions.js';
 import localize from '../../utils/localize.js';
 import { getInvalidTargets, getTargetedTokens, getTargetName } from '../../utils/targeting.js';
 
-const { skills: skillNames } = CONFIG.NIMBLE;
-
 interface AssessDialogResult {
 	option: string;
 	skill: string;
@@ -17,6 +15,7 @@ export function createAssessDialogState(
 	deductActionPip: () => Promise<void>,
 	inCombat: boolean,
 ) {
+	const { skills: skillNames } = CONFIG.NIMBLE;
 	let selectedOption = $state<string | null>(null);
 	let selectedSkill = $state<string | null>(null);
 	let selectedTarget = $state<Token | null>(null);

@@ -4,8 +4,6 @@ import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
 import filterItems from '../../dataPreparationHelpers/filterItems.js';
 
-const { activationCostTypes, activationCostTypesPlural } = CONFIG.NIMBLE;
-
 interface SpellEffect {
 	formula: string;
 	isHealing: boolean;
@@ -20,6 +18,7 @@ export function createSpellPanelState(
 	actor: Actor,
 	onActivateItem: (cost: number) => Promise<void>,
 ) {
+	const { activationCostTypes, activationCostTypesPlural } = CONFIG.NIMBLE;
 	let searchTerm = $state('');
 	let expandedDescriptions = $state(new Set<string>());
 

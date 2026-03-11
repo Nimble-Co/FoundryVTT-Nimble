@@ -2,9 +2,8 @@ import { ASSESS_DC, assessOptions } from '../../../utils/assessOptions.js';
 import localize from '../../../utils/localize.js';
 import { getInvalidTargets, getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 
-const { skills: skillNames } = CONFIG.NIMBLE;
-
 export function createAssessPanelState(actor: Actor, onDeductAction: () => Promise<void>) {
+	const { skills: skillNames } = CONFIG.NIMBLE;
 	let selectedOption = $state<string | null>(null);
 	let selectedSkill = $state<string | null>(null);
 	let targetingVersion = $state(0);
