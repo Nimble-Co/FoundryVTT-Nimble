@@ -880,6 +880,9 @@
 			"autoExpandRolls": {
 				"name": "Auto-Expand Rolls",
 				"hint": "When enabled, dice roll details are shown inline below each roll in chat messages, without needing to hover."
+			},
+			"branchBadge": {
+				"label": "branch:"
 			}
 		},
 		"nimbleCombatSystemWindow": {

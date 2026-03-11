@@ -1,3 +1,4 @@
+import localize from '#utils/localize.ts';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
 
@@ -48,11 +49,19 @@ export default function registerSystemSettings() {
 	const createBranchBadge = () => {
 		const badge = document.createElement('div');
 		badge.className = 'nimble-branch-badge';
-		badge.innerHTML = `
-			<i class="fa-solid fa-code-branch"></i>
-			<span class="nimble-branch-badge__label">branch:</span>
-			<code class="nimble-branch-badge__name">${__BRANCH__}</code>
-		`;
+
+		const icon = document.createElement('i');
+		icon.className = 'fa-solid fa-code-branch nimble-branch-badge__icon';
+
+		const label = document.createElement('span');
+		label.className = 'nimble-branch-badge__label';
+		label.textContent = localize('NIMBLE.settings.branchBadge.label');
+
+		const name = document.createElement('code');
+		name.className = 'nimble-branch-badge__name';
+		name.textContent = __BRANCH__;
+
+		badge.append(icon, label, name);
 		return badge;
 	};
 
