@@ -5,7 +5,6 @@ export const SHEET_DEFAULTS = {
 	playerCharacter: {
 		width: 367,
 		height: 850,
-		minWidth: 367,
 	},
 	npc: {
 		width: 332,

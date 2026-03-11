@@ -48,7 +48,7 @@ export default class PlayerCharacterSheet extends SvelteApplicationMixin(
 			icon: 'fa-solid fa-user',
 			resizable: true,
 		},
-		position: { ...SHEET_DEFAULTS.playerCharacter },
+		position: SHEET_DEFAULTS.playerCharacter,
 	};
 
 	protected override async _prepareContext(
