@@ -7,6 +7,10 @@ outline: deep
 This document was primarily generated with AI assistance. Since this is a community-driven project with contributors having limited time, AI helps accelerate documentation and planning work.
 :::
 
+::: info Planning in Progress
+All planning documents are not final and are actively under construction. Details may change significantly as the project evolves.
+:::
+
 # Project Vision
 
 **Author:** fronix
