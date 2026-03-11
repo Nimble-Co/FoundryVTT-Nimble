@@ -29,6 +29,29 @@ try {
 	// not a git repo or git not available
 }
 
+const branchWatchPlugin = {
+	name: 'nimble-branch-watch',
+	configureServer(server: {
+		watcher: { add: (f: string) => void; on: (e: string, cb: (f: string) => void) => void };
+		restart: () => void;
+	}) {
+		let gitHead: string | null = null;
+		try {
+			const raw = execSync('git rev-parse --git-path HEAD').toString().trim();
+			gitHead = path.isAbsolute(raw) ? raw : path.resolve(__dirname, raw);
+		} catch {
+			// not a git repo, git not available, or worktree resolution failed
+		}
+		if (!gitHead) return;
+		server.watcher.add(gitHead);
+		server.watcher.on('change', (changedPath) => {
+			if (changedPath === gitHead) {
+				server.restart();
+			}
+		});
+	},
+};
+
 const config = defineConfig({
 	root: 'src/',
 	base: '/systems/nimble/',
@@ -73,6 +96,7 @@ const config = defineConfig({
 		keepNames: true,
 	},
 	plugins: [
+		branchWatchPlugin,
 		svelte({
 			configFile: path.resolve(__dirname, 'svelte.config.js'),
 			dynamicCompileOptions({ filename }) {
