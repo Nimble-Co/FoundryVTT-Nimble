@@ -69,6 +69,16 @@
   - Commit: TEST(core): Add smoke test verifying document proxy classes load without error
 
 
+- [x] AUDIT: SmallTime on v13 — PASS
+  - SmallTime v2.0.1 (declares minimum v13 compatibility) tested on FoundryVTT v13.351.
+  - Widget renders: `#smalltime-app` visible with correct dimensions.
+  - Time display shows correctly ("12 : 00 AM" at startup).
+  - Clock updates: slider interaction updated display to "12 : 00 PM" — daytime theming applied.
+  - Zero console errors attributed to SmallTime.
+  - Pre-existing errors from `foundryvtt-simple-calendar` (v12 incompatibility) were noted but are unrelated.
+  - No code changes made.
+  - Branch: `audit/module-compat`
+
 - [x] BUG: Chat cards not appearing when sidebar is collapsed
   - Root cause: `renderChatMessageHTML` hook stored Svelte component on `message._svelteComponent`.
     When FoundryVTT re-rendered the same message for the collapsed-sidebar notification overlay,
