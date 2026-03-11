@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { sveltePreprocess } from 'svelte-preprocess';
@@ -5,6 +6,13 @@ import { defineConfig } from 'vitest/config';
 
 const FOUNDRY_URL = process.env.FOUNDRY_URL ?? 'http://localhost:30000';
 const FOUNDRY_WS_URL = FOUNDRY_URL.replace(/^https?/, (p) => (p === 'https' ? 'wss' : 'ws'));
+
+let CURRENT_BRANCH = 'unknown';
+try {
+	CURRENT_BRANCH = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
+} catch {
+	// not a git repo or git not available
+}
 
 const config = defineConfig({
 	root: 'src/',
@@ -42,6 +50,9 @@ const config = defineConfig({
 			formats: ['es'],
 			fileName: 'nimble',
 		},
+	},
+	define: {
+		__BRANCH__: JSON.stringify(CURRENT_BRANCH),
 	},
 	esbuild: {
 		keepNames: true,

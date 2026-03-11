@@ -1,3 +1,4 @@
+import localize from '#utils/localize.ts';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
 
@@ -45,6 +46,25 @@ export default function registerSystemSettings() {
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
+	const createBranchBadge = () => {
+		const badge = document.createElement('div');
+		badge.className = 'nimble-branch-badge';
+
+		const icon = document.createElement('i');
+		icon.className = 'fa-solid fa-code-branch nimble-branch-badge__icon';
+
+		const label = document.createElement('span');
+		label.className = 'nimble-branch-badge__label';
+		label.textContent = localize('NIMBLE.settings.branchBadge.label');
+
+		const name = document.createElement('code');
+		name.className = 'nimble-branch-badge__name';
+		name.textContent = __BRANCH__;
+
+		badge.append(icon, label, name);
+		return badge;
+	};
+
 	const createAttributionElement = () => {
 		const wrapper = document.createElement('div');
 		wrapper.className = 'nimble-attribution-wrapper';
@@ -79,8 +99,17 @@ export default function registerSystemSettings() {
 			element.querySelector('section[data-category="system"]');
 		if (!systemTab) return;
 
-		if (systemTab.querySelector('.nimble-attribution')) return;
+		const hasBranchBadge = !!systemTab.querySelector('.nimble-branch-badge');
+		const hasAttribution = !!systemTab.querySelector('.nimble-attribution');
 
-		systemTab.appendChild(createAttributionElement());
+		if (hasBranchBadge && hasAttribution) return;
+
+		if (!hasBranchBadge) {
+			systemTab.prepend(createBranchBadge());
+		}
+
+		if (!hasAttribution) {
+			systemTab.appendChild(createAttributionElement());
+		}
 	});
 }
