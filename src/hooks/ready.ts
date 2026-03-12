@@ -58,7 +58,7 @@ export default async function ready() {
 
 	combatStateGuards();
 	registerMinionGroupTokenActions();
-	registerTorchCompatibility();
+	await registerTorchCompatibility();
 
 	const combatTrackerConfig = game.settings.get('core', 'combatTrackerConfig') ?? {};
 	combatTrackerConfig.skipDefeated ??= true;
