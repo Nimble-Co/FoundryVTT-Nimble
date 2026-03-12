@@ -9,22 +9,14 @@ fi
 for ((i=1; i<=$1; i++)); do
   echo "=== Ralph iteration $i / $1 ==="
 
-  result=$(docker run --rm \
-    -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY}" \
-    -v "$(pwd):/workspace" \
-    -v "$HOME/.claude:/root/.claude" \
-    nimble-sandbox \
-    claude --permission-mode acceptEdits -p "@PRD.md @progress.txt \
-  1. Read the PRD and progress file. \
-  2. Find the next incomplete task. \
-  3. Checkout feature branch for that task. \
-  4. Implement the task. \
-  5. Run /nimble-e2e-tester \
-  6. Fix any issues that arise. \
-  6. Run /nimble-local-git-ops. \
-  7. Update progress.txt with what you did. \
+  result=$(docker sandbox run claude --permission-mode acceptEdits -p "@PRD.md @progress.txt \
+  1. Find the highest-priority incomplete task and implement it. \
+  2. Run pnpm check. \
+  3. Update PRD.md marking the task done. \
+  4. Append your progress to progress.txt. \
+  5. Commit your changes. \
   ONLY WORK ON A SINGLE TASK. \
-  If all tasks are complete, output <promise>COMPLETE</promise>." 2>&1)
+  If all tasks are complete, output <promise>COMPLETE</promise>.")
 
   echo "$result"
 
