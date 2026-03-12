@@ -1,3 +1,4 @@
+import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { sveltePreprocess } from 'svelte-preprocess';
@@ -5,6 +6,51 @@ import { defineConfig } from 'vitest/config';
 
 const FOUNDRY_URL = process.env.FOUNDRY_URL ?? 'http://localhost:30000';
 const FOUNDRY_WS_URL = FOUNDRY_URL.replace(/^https?/, (p) => (p === 'https' ? 'wss' : 'ws'));
+
+let CURRENT_BRANCH = 'unknown';
+try {
+	const abbrevRef = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
+	if (abbrevRef && abbrevRef !== 'HEAD') {
+		CURRENT_BRANCH = abbrevRef;
+	} else {
+		const envBranch = process.env.GITHUB_REF_NAME ?? process.env.CI_COMMIT_REF_NAME;
+		if (envBranch?.trim()) {
+			CURRENT_BRANCH = envBranch.trim();
+		} else {
+			const showCurrent = execSync('git branch --show-current').toString().trim();
+			if (showCurrent) {
+				CURRENT_BRANCH = showCurrent;
+			} else {
+				CURRENT_BRANCH = execSync('git rev-parse --short HEAD').toString().trim() || 'unknown';
+			}
+		}
+	}
+} catch {
+	// not a git repo or git not available
+}
+
+const branchWatchPlugin = {
+	name: 'nimble-branch-watch',
+	configureServer(server: {
+		watcher: { add: (f: string) => void; on: (e: string, cb: (f: string) => void) => void };
+		restart: () => void;
+	}) {
+		let gitHead: string | null = null;
+		try {
+			const raw = execSync('git rev-parse --git-path HEAD').toString().trim();
+			gitHead = path.isAbsolute(raw) ? raw : path.resolve(__dirname, raw);
+		} catch {
+			// not a git repo, git not available, or worktree resolution failed
+		}
+		if (!gitHead) return;
+		server.watcher.add(gitHead);
+		server.watcher.on('change', (changedPath) => {
+			if (changedPath === gitHead) {
+				server.restart();
+			}
+		});
+	},
+};
 
 const config = defineConfig({
 	root: 'src/',
@@ -43,10 +89,14 @@ const config = defineConfig({
 			fileName: 'nimble',
 		},
 	},
+	define: {
+		__BRANCH__: JSON.stringify(CURRENT_BRANCH),
+	},
 	esbuild: {
 		keepNames: true,
 	},
 	plugins: [
+		branchWatchPlugin,
 		svelte({
 			configFile: path.resolve(__dirname, 'svelte.config.js'),
 			dynamicCompileOptions({ filename }) {

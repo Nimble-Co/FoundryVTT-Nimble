@@ -26,23 +26,12 @@
 
 - [x] **[Audit] SmallTime on v13** — Enable `smalltime`. Confirm the time widget renders, the clock updates, and there are no console errors. No code changes expected. Update `progress.txt` with pass/fail.
 
-- [ ] **[Audit] Michael Ghelfi audio pack on v13** — Enable `michaelghelfi`. Open the Playlists tab and confirm ambient tracks are visible and playable. This is an asset-only module; no JS hooks. Update `progress.txt` with pass/fail.
+- [x] **[Audit] Michael Ghelfi audio pack on v13** — Enable `michaelghelfi`. Open the Playlists tab and confirm ambient tracks are visible and playable. This is an asset-only module; no JS hooks. Update `progress.txt` with pass/fail.
 
-- [ ] **[Audit] Monks Bloodsplats on v13** — Enable `monks-bloodsplats`. Set a token's HP to 0 in a scene. Confirm a bloodsplat graphic renders over the dead token. No code changes expected. Update `progress.txt` with pass/fail.
-
-#### Simple — Updates
-
-- [ ] **[Fix] Update Simple Calendar to v13** — `foundryvtt-simple-calendar` 2.4.18 is only verified to v12. Check https://github.com/vigoren/foundryvtt-simple-calendar/releases for a v13-compatible release. If found, update the installed module. Confirm the calendar UI appears in FoundryVTT v13 with no errors. Run `/nimble-review` (no Nimble source changes expected). Update `progress.txt`.
-
-- [ ] **[Fix] Assess + update Suss Soundboard** — `suss-soundboard` 1.0.0 is only verified to v11. Enable it on v13. If the UI loads cleanly, mark it compatible. If broken, open its source (`~/foundryVTT/foundrydata/Data/modules/suss-soundboard/`), identify the failing v13 API calls (check for deprecated `Application` base class, removed globals, etc.), and patch them. Run `/nimble-review`. Update `progress.txt`.
 
 #### Medium — Verify + Minor Config / Patches
 
-- [ ] **[Audit] Dice So Nice with Nimble custom dice** — Open `src/dice/NimbleRoll.ts` and `src/dice/DamageRoll.ts`. Confirm both extend the base Foundry `Roll` class (required for Dice So Nice to intercept). Roll an attack in the browser; confirm 3D dice animations fire. If dice do not animate: add `CONFIG.Dice.rolls.push(NimbleRoll, DamageRoll)` in `src/hooks/init.ts` and re-test. Run `/nimble-review`. Run `/nimble-e2e-tester`. Update `progress.txt`.
-
 - [ ] **[Fix] Torch — configure for Nimble item schema** — Read `~/foundryVTT/foundrydata/Data/modules/torch/torch.js` to find how it searches an actor's inventory for a torch item (item type, name pattern, uses/quantity field path). Compare against Nimble's item data model in `src/models/item/`. Either configure Torch's module settings to match Nimble field paths, or add a small compatibility hook in `src/hooks/` that exposes torch item data in the format Torch expects. Test: equip a torch item on an actor; confirm the Torch HUD button appears and toggling it lights the token. Run `/nimble-review`. Run `/nimble-e2e-tester`. Update `progress.txt`.
-
-- [ ] **[Audit] Monks Active Tile Triggers** — Build a test scene with tile triggers for each action category: teleport, play sound, show text/journal, open/close door. Also test actions that call system APIs: apply damage, apply condition, roll saving throw. Document which work and which throw errors. If any system-adjacent actions fail, check whether a small Nimble hook can provide the required data. Update `progress.txt` with a pass/fail table for each action type.
 
 - [ ] **[Audit] Foundry MCP Bridge actor creation** — Use the MCP bridge to create a Nimble actor via the AI interface. Observe the network/console for schema errors or missing required fields. If a Nimble required field is absent and has a safe default, add it to the actor data model default in `src/models/actor/`. Run `/nimble-review`. Update `progress.txt` with any mismatches found.
 
@@ -62,6 +51,9 @@ test with:
 - actor:Mage should apply 'blind' to enemis with 'snowblind'
 - actor:Mummy lord should apply 'dazed' with 'slam(x2)'
 I have set those actors on the current scene in battle mode, use nimble-e2e-tester
+
+- [ ] **[Audit] Monks Active Tile Triggers** — Build a test scene with tile triggers for each action category: teleport, play sound, show text/journal, open/close door. Also test actions that call system APIs: apply damage, apply condition, roll saving throw. Document which work and which throw errors. If any system-adjacent actions fail, check whether a small Nimble hook can provide the required data. Update `progress.txt` with a pass/fail table for each action type.
+
 
 ### Actor Documents
 
