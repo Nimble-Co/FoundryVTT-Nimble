@@ -74,7 +74,7 @@
   - Created `public/torch-nimble.json` — custom Torch light-source config for the `nimble` system (topology: standard, quantity: quantity).
     Defines two sources matching items in the Nimble compendium:
     - `"Torch (Stack of 2)"` — consumable, bright 3 / dim 6, flame animation
-    - `"Lantern & Oil"` — non-consumable, bright 6 / dim 12, torch animation
+    - `"Lantern & Oil"` — non-consumable, bright 5 / dim 10, torch animation
   - Created `src/hooks/torchCompatibility.ts` — `registerTorchCompatibility()` fires on `ready`.
     When `torch` module is active and `gameLightSources` setting is empty, auto-sets it to
     `systems/nimble/torch-nimble.json` so no manual GM configuration is needed.
