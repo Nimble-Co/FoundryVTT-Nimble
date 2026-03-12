@@ -237,8 +237,8 @@
 				}
 
 				&:hover {
-					background: hsl(145, 50%, 46%);
-					border-color: hsl(145, 50%, 40%);
+					background: hsl(145, 45%, 38%);
+					border-color: hsl(145, 45%, 32%);
 					box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
 
 					&::before,
