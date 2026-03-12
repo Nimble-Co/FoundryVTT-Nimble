@@ -1,6 +1,7 @@
 import { untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
+import type { CombatantSystemWithActions } from '../../../documents/combat/combatTypes.js';
 import localize from '../../../utils/localize.js';
 
 // ============================================================================
@@ -52,18 +53,18 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 			'deleteCombatant',
 			'canvasInit',
 			'canvasReady',
-		];
+		] as const;
 
-		const hookIds = hookNames.map((hookName) => ({
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			hookId: Hooks.on(hookName as any, () => update()),
+		type HookName = (typeof hookNames)[number];
+
+		const hookIds = hookNames.map((hookName: HookName) => ({
+			hookId: Hooks.on(hookName, () => update()),
 			hookName,
 		}));
 
 		return () => {
 			hookIds.forEach(({ hookName, hookId }) => {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				Hooks.off(hookName as any, hookId);
+				Hooks.off(hookName, hookId);
 			});
 		};
 	});
@@ -116,8 +117,8 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		const combatant = getCombatantInCombat();
 		if (!combatant) return { current: 0, max: 3 };
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const actions = (combatant as any).system?.actions?.base;
+		const system = combatant.system as unknown as CombatantSystemWithActions;
+		const actions = system?.actions?.base;
 		return {
 			current: actions?.current ?? 0,
 			max: actions?.max ?? 3,
@@ -154,8 +155,7 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 	async function updateActionPips(newValue: number): Promise<void> {
 		const combatant = getCombatantInCombat();
 		if (!combatant) return;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		await combatant.update({ 'system.actions.base.current': newValue } as any);
+		await combatant.update({ 'system.actions.base.current': newValue } as Record<string, unknown>);
 	}
 
 	async function endTurn(): Promise<void> {
