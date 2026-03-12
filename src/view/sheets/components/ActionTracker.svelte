@@ -316,13 +316,13 @@
 	@keyframes end-turn-ping {
 		0% {
 			inset: -1px;
-			opacity: 0.6;
+			opacity: 0.35;
 		}
 		50% {
-			opacity: 0.3;
+			opacity: 0.2;
 		}
 		100% {
-			inset: -10px;
+			inset: -6px;
 			opacity: 0;
 		}
 	}
