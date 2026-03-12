@@ -26,7 +26,7 @@
 
 - [x] **[Audit] SmallTime on v13** — Enable `smalltime`. Confirm the time widget renders, the clock updates, and there are no console errors. No code changes expected. Update `progress.txt` with pass/fail.
 
-- [ ] **[Audit] Michael Ghelfi audio pack on v13** — Enable `michaelghelfi`. Open the Playlists tab and confirm ambient tracks are visible and playable. This is an asset-only module; no JS hooks. Update `progress.txt` with pass/fail.
+- [x] **[Audit] Michael Ghelfi audio pack on v13** — Enable `michaelghelfi`. Open the Playlists tab and confirm ambient tracks are visible and playable. This is an asset-only module; no JS hooks. Update `progress.txt` with pass/fail.
 
 - [ ] **[Audit] Monks Bloodsplats on v13** — Enable `monks-bloodsplats`. Set a token's HP to 0 in a scene. Confirm a bloodsplat graphic renders over the dead token. No code changes expected. Update `progress.txt` with pass/fail.
 

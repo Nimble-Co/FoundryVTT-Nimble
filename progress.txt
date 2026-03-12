@@ -69,6 +69,17 @@
   - Commit: TEST(core): Add smoke test verifying document proxy classes load without error
 
 
+- [x] AUDIT: Michael Ghelfi audio pack on v13 — PASS
+  - Enabled `michaelghelfi` v1.4 on FoundryVTT v13.351.
+  - FoundryVTT automatically migrated the module's NEDB pack to LevelDB on first load (no errors).
+  - Compendium pack "Michael Ghelfi Studios" visible with 2 playlists: "Michael Ghelfi Ambience" (38 OGG tracks) and "Michael Ghelfi Music" (17 MP3 tracks).
+  - All audio files served correctly (HTTP 200); MP3 and OGG decoded successfully via Web Audio API.
+  - Zero console errors attributed to michaelghelfi.
+  - Note: `module.json` declares `verified: "11"` — shows as unverified in module manager UI, but functions correctly.
+  - Note: Playlists live in the compendium; GM must import to world to use in-session (expected compendium behavior).
+  - No code changes made.
+  - Branch: `audit/module-compat`
+
 - [x] AUDIT: SmallTime on v13 — PASS
   - SmallTime v2.0.1 (declares minimum v13 compatibility) tested on FoundryVTT v13.351.
   - Widget renders: `#smalltime-app` visible with correct dimensions.
