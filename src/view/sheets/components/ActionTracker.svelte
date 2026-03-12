@@ -213,8 +213,8 @@
 				position: relative;
 				opacity: 1;
 				cursor: pointer;
-				background: hsl(210, 55%, 50%);
-				border-color: hsl(210, 55%, 42%);
+				background: hsl(145, 50%, 42%);
+				border-color: hsl(145, 50%, 35%);
 				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 
 				i {
@@ -226,7 +226,7 @@
 					content: '';
 					position: absolute;
 					inset: -2px;
-					border: 2px solid hsl(210, 55%, 50%);
+					border: 2px solid hsl(145, 50%, 42%);
 					border-radius: 6px;
 					opacity: 0;
 					animation: end-turn-ping 2s ease-out infinite;
@@ -237,8 +237,8 @@
 				}
 
 				&:hover {
-					background: hsl(210, 55%, 58%);
-					border-color: hsl(210, 55%, 50%);
+					background: hsl(145, 50%, 50%);
+					border-color: hsl(145, 50%, 42%);
 					box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
 
 					&::before,
@@ -249,7 +249,7 @@
 				}
 
 				&:active {
-					background: hsl(210, 55%, 45%);
+					background: hsl(145, 50%, 38%);
 					box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 				}
 			}
