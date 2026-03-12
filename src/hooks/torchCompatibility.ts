@@ -32,12 +32,21 @@ export default function registerTorchCompatibility(): void {
 		return;
 	}
 
-	game.settings.set(
-		'torch' as 'core',
-		'gameLightSources' as 'rollMode',
-		'systems/nimble/torch-nimble.json' as never,
-	);
-	console.log(
-		'Nimble | Torch compatibility: configured gameLightSources to systems/nimble/torch-nimble.json',
-	);
+	if (!game.user?.isGM) {
+		console.debug('Nimble | Torch compatibility: skipping gameLightSources configuration for non-GM user');
+		return;
+	}
+
+	try {
+		game.settings.set(
+			'torch' as 'core',
+			'gameLightSources' as 'rollMode',
+			'systems/nimble/torch-nimble.json' as never,
+		);
+		console.log(
+			'Nimble | Torch compatibility: configured gameLightSources to systems/nimble/torch-nimble.json',
+		);
+	} catch (err) {
+		console.error('Nimble | Torch compatibility: failed to configure gameLightSources', err);
+	}
 }
