@@ -38,7 +38,9 @@ export default async function registerTorchCompatibility(): Promise<void> {
 	}
 
 	if (!game.user?.isGM) {
-		console.debug('Nimble | Torch compatibility: skipping gameLightSources configuration for non-GM user');
+		console.debug(
+			'Nimble | Torch compatibility: skipping gameLightSources configuration for non-GM user',
+		);
 		return;
 	}
 
