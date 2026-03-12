@@ -14,7 +14,7 @@
 		showEmbeddedDocumentImages = true,
 	} = $props();
 
-	const state = createOpportunityPanelState(
+	const panelState = createOpportunityPanelState(
 		() => actor,
 		() => onDeductAction,
 	);
@@ -89,12 +89,12 @@
 	</div>
 
 	<div class="reaction-card__weapons">
-		{#if state.showUnarmedStrike}
+		{#if panelState.showUnarmedStrike}
 			<button
 				class="weapon-option"
 				class:weapon-option--disabled={isDisabled}
 				disabled={isDisabled}
-				onclick={() => state.handleUnarmedStrike()}
+				onclick={() => panelState.handleUnarmedStrike()}
 			>
 				<div class="weapon-option__icon">
 					<i class="fa-solid fa-hand-fist"></i>
@@ -102,13 +102,13 @@
 				<span class="weapon-option__name">Unarmed Strike</span>
 				<span class="weapon-option__damage">
 					<i class="fa-solid fa-burst"></i>
-					{state.getUnarmedDamageDisplay()}
+					{panelState.getUnarmedDamageDisplay()}
 				</span>
 			</button>
 		{/if}
 
-		{#each state.sortItems(state.meleeWeapons) as item (item._id)}
-			{@const damage = state.getWeaponDamage(item)}
+		{#each panelState.sortItems(panelState.meleeWeapons) as item (item._id)}
+			{@const damage = panelState.getWeaponDamage(item)}
 			<button
 				class="weapon-option"
 				class:weapon-option--disabled={isDisabled}
@@ -116,7 +116,7 @@
 				data-item-id={item._id}
 				draggable="true"
 				ondragstart={(event) => sheet._onDragStart(event)}
-				onclick={() => state.handleItemClick(item._id)}
+				onclick={() => panelState.handleItemClick(item._id)}
 			>
 				{#if showEmbeddedDocumentImages}
 					<img class="weapon-option__img" src={item.reactive.img} alt={item.reactive.name} />
@@ -135,7 +135,7 @@
 			</button>
 		{/each}
 
-		{#if !state.showUnarmedStrike && state.meleeWeapons.length === 0}
+		{#if !panelState.showUnarmedStrike && panelState.meleeWeapons.length === 0}
 			<p class="reaction-card__empty">No melee weapons available</p>
 		{/if}
 	</div>
