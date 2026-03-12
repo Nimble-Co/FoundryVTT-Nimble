@@ -1,6 +1,6 @@
 <script>
 	import localize from '../../../utils/localize.js';
-	import { createFloatingCombatBarState, getDiceIcon } from './FloatingCombatBar.svelte.ts';
+	import { createActionTrackerState, getDiceIcon } from './ActionTracker.svelte.ts';
 
 	// ============================================================================
 	// Props
@@ -12,18 +12,18 @@
 	// State
 	// ============================================================================
 
-	const state = createFloatingCombatBarState(() => actor);
+	const state = createActionTrackerState(() => actor);
 
 	// Initialize the pip animation effect
 	state.setupPipAnimationEffect();
 </script>
 
 {#if state.showCombatBar}
-	<div class="floating-combat-bar">
-		<div class="floating-combat-bar__panel">
+	<div class="action-tracker">
+		<div class="action-tracker__panel">
 			{#if state.needsInitiative}
 				<button
-					class="floating-combat-bar__initiative-btn"
+					class="action-tracker__initiative-btn"
 					type="button"
 					aria-label={localize('NIMBLE.ui.heroicActions.rollInitiative')}
 					data-tooltip={localize('NIMBLE.ui.heroicActions.rollInitiative')}
@@ -32,17 +32,17 @@
 					<i class="fa-solid fa-dice-d20"></i>
 				</button>
 			{:else if state.hasInitiative}
-				<div class="floating-combat-bar__pips">
+				<div class="action-tracker__pips">
 					{#each { length: state.actionsData.max }, i}
 						{@const isAvailable = i < state.actionsData.current}
 						{@const isJustSpent = state.justSpentPips.has(i)}
 						{@const diceIcon = getDiceIcon(i)}
 
 						<button
-							class="floating-combat-bar__pip"
-							class:floating-combat-bar__pip--available={isAvailable}
-							class:floating-combat-bar__pip--spent={!isAvailable}
-							class:floating-combat-bar__pip--just-spent={isJustSpent}
+							class="action-tracker__pip"
+							class:action-tracker__pip--available={isAvailable}
+							class:action-tracker__pip--spent={!isAvailable}
+							class:action-tracker__pip--just-spent={isJustSpent}
 							type="button"
 							aria-label={state.getPipAriaLabel(i, isAvailable)}
 							data-tooltip={state.getPipTooltip(isAvailable)}
@@ -56,8 +56,8 @@
 				{#if state.isMyTurn}
 					{@const canEndTurn = state.actionsData.current === 0}
 					<button
-						class="floating-combat-bar__end-turn"
-						class:floating-combat-bar__end-turn--ready={canEndTurn}
+						class="action-tracker__end-turn"
+						class:action-tracker__end-turn--ready={canEndTurn}
 						type="button"
 						disabled={!canEndTurn}
 						aria-label={localize('NIMBLE.ui.heroicActions.endTurn')}
@@ -75,7 +75,7 @@
 {/if}
 
 <style lang="scss">
-	.floating-combat-bar {
+	.action-tracker {
 		position: absolute;
 		top: 15rem;
 		left: 0;
@@ -212,39 +212,36 @@
 			&--ready {
 				opacity: 1;
 				cursor: pointer;
-				background: hsl(139, 50%, 45%);
-				border-color: hsl(139, 50%, 38%);
-				box-shadow:
-					0 0 8px hsla(139, 50%, 45%, 0.5),
-					inset 0 1px 0 hsla(139, 50%, 70%, 0.3);
+				background: hsl(210, 55%, 50%);
+				border-color: hsl(210, 55%, 42%);
+				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+				animation: end-turn-pulse 2.5s ease-in-out infinite;
 
 				i {
 					color: white;
-					filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
 				}
 
 				&:hover {
-					background: hsl(139, 50%, 40%);
-					border-color: hsl(139, 50%, 32%);
-					box-shadow:
-						0 0 12px hsla(139, 50%, 45%, 0.6),
-						inset 0 1px 0 hsla(139, 50%, 70%, 0.3);
+					background: hsl(210, 55%, 45%);
+					border-color: hsl(210, 55%, 38%);
+					box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+					animation: none;
 				}
 
 				&:active {
-					background: hsl(139, 50%, 35%);
-					box-shadow: 0 0 6px hsla(139, 50%, 45%, 0.4);
+					background: hsl(210, 55%, 40%);
+					box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 				}
 			}
 		}
 	}
 
-	:global(.theme-dark) .floating-combat-bar__panel {
+	:global(.theme-dark) .action-tracker__panel {
 		background: hsla(220, 15%, 15%, 0.95);
 		border-color: hsl(220, 10%, 30%);
 	}
 
-	:global(.theme-dark) .floating-combat-bar__pip {
+	:global(.theme-dark) .action-tracker__pip {
 		background: hsl(220, 15%, 18%);
 		border-color: hsl(220, 10%, 30%);
 
@@ -254,7 +251,7 @@
 		}
 	}
 
-	:global(.theme-dark) .floating-combat-bar__end-turn {
+	:global(.theme-dark) .action-tracker__end-turn {
 		background: hsl(220, 15%, 18%);
 		border-color: hsl(220, 10%, 30%);
 	}
@@ -289,6 +286,16 @@
 			color: var(--nimble-medium-text-color);
 			opacity: 0.5;
 			transform: scale(1);
+		}
+	}
+
+	@keyframes end-turn-pulse {
+		0%,
+		100% {
+			background: hsl(210, 55%, 50%);
+		}
+		50% {
+			background: hsl(210, 55%, 58%);
 		}
 	}
 </style>

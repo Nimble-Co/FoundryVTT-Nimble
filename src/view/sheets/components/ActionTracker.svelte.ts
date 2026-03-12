@@ -36,7 +36,7 @@ export function getDiceIcon(index: number): string {
 // State Factory
 // ============================================================================
 
-export function createFloatingCombatBarState(getActor: () => NimbleCharacter) {
+export function createActionTrackerState(getActor: () => NimbleCharacter) {
 	// ============================================================================
 	// Combat State Subscription
 	// ============================================================================
