@@ -1,0 +1,40 @@
+{
+	"nimble": {
+		"topology": "standard",
+		"quantity": "quantity",
+		"sources": {
+			"Torch (Stack of 2)": {
+				"type": "equipment",
+				"consumable": true,
+				"states": 2,
+				"light": [
+					{
+						"bright": 3,
+						"dim": 6,
+						"angle": 360,
+						"color": "#ffaa66",
+						"alpha": 0.5,
+						"attenuation": 0.6,
+						"animation": { "type": "torch", "speed": 1, "intensity": 2, "reverse": false }
+					}
+				]
+			},
+			"Lantern & Oil": {
+				"type": "equipment",
+				"consumable": false,
+				"states": 2,
+				"light": [
+					{
+						"bright": 5,
+						"dim": 10,
+						"angle": 360,
+						"color": "#ffcc88",
+						"alpha": 0.4,
+						"attenuation": 0.6,
+						"animation": { "type": "torch", "speed": 1, "intensity": 3, "reverse": false }
+					}
+				]
+			}
+		}
+	}
+}

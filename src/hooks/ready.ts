@@ -7,6 +7,7 @@ import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CombatTracker from '../view/ui/CombatTracker.svelte';
 import combatStateGuards from './combatStateGuards.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
+import registerTorchCompatibility from './torchCompatibility.js';
 
 let canvasConditionsPanelComponent: object | null = null;
 
@@ -57,6 +58,7 @@ export default async function ready() {
 
 	combatStateGuards();
 	registerMinionGroupTokenActions();
+	await registerTorchCompatibility();
 
 	const combatTrackerConfig = game.settings.get('core', 'combatTrackerConfig') ?? {};
 	combatTrackerConfig.skipDefeated ??= true;
