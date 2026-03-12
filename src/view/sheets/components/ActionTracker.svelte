@@ -213,8 +213,8 @@
 				position: relative;
 				opacity: 1;
 				cursor: pointer;
-				background: hsl(145, 50%, 42%);
-				border-color: hsl(145, 50%, 35%);
+				background: hsl(139, 47%, 44%);
+				border-color: hsl(139, 47%, 36%);
 				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 
 				i {
@@ -226,13 +226,13 @@
 					content: '';
 					position: absolute;
 					inset: -2px;
-					border: 2px solid hsl(145, 40%, 25%);
+					border: 2px solid hsl(139, 40%, 25%);
 					border-radius: 6px;
 					opacity: 0;
 					animation: end-turn-ping 2s ease-out infinite;
 
 					:global(.theme-dark) & {
-						border-color: hsl(145, 40%, 65%);
+						border-color: hsl(139, 40%, 65%);
 					}
 				}
 
@@ -241,8 +241,8 @@
 				}
 
 				&:hover {
-					background: hsl(145, 45%, 38%);
-					border-color: hsl(145, 45%, 32%);
+					background: hsl(139, 47%, 38%);
+					border-color: hsl(139, 47%, 30%);
 					box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
 
 					&::before,
@@ -253,7 +253,7 @@
 				}
 
 				&:active {
-					background: hsl(145, 50%, 38%);
+					background: hsl(139, 47%, 34%);
 					box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 				}
 			}
