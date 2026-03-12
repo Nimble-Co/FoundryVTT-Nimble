@@ -271,7 +271,7 @@
 		}
 	}
 
-	:global(.theme-dark) .action-tracker__end-turn {
+	:global(.theme-dark) .action-tracker__end-turn:not(.action-tracker__end-turn--ready) {
 		background: hsl(220, 15%, 18%);
 		border-color: hsl(220, 10%, 30%);
 	}
