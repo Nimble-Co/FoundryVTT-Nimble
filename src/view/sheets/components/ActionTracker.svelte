@@ -226,13 +226,13 @@
 					content: '';
 					position: absolute;
 					inset: -2px;
-					border: 2px solid hsl(139, 40%, 25%);
+					border: 2px solid hsl(145, 40%, 25%);
 					border-radius: 6px;
 					opacity: 0;
 					animation: end-turn-ping 2s ease-out infinite;
 
 					:global(.theme-dark) & {
-						border-color: hsl(139, 40%, 65%);
+						border-color: hsl(145, 40%, 65%);
 					}
 				}
 
