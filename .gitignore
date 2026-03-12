@@ -1,3 +1,6 @@
+# Local secrets (never commit)
+.env.local
+
 # IDE
 .idea/
 .nova/

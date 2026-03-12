@@ -122,6 +122,9 @@ declare global {
 			nimble: NimbleItemFlags;
 		};
 	}
+
+	/** Injected at build time by Vite — the git branch active when `pnpm build` ran */
+	const __BRANCH__: string;
 }
 
 export default (something = {});

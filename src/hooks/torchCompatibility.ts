@@ -17,7 +17,7 @@
  * source definitions. Only runs when the Torch module is active and the GM has
  * not already provided a custom configuration file.
  */
-export default function registerTorchCompatibility(): void {
+export default async function registerTorchCompatibility(): Promise<void> {
 	if (!game.modules.get('torch')?.active) {
 		console.debug('Nimble | Torch module not active; skipping compatibility configuration');
 		return;
@@ -38,7 +38,7 @@ export default function registerTorchCompatibility(): void {
 	}
 
 	try {
-		game.settings.set(
+		await game.settings.set(
 			'torch' as 'core',
 			'gameLightSources' as 'rollMode',
 			'systems/nimble/torch-nimble.json' as never,
