@@ -31,9 +31,9 @@
 
 #### Medium — Verify + Minor Config / Patches
 
-- [ ] **[Fix] Torch — configure for Nimble item schema** — Read `~/foundryVTT/foundrydata/Data/modules/torch/torch.js` to find how it searches an actor's inventory for a torch item (item type, name pattern, uses/quantity field path). Compare against Nimble's item data model in `src/models/item/`. Either configure Torch's module settings to match Nimble field paths, or add a small compatibility hook in `src/hooks/` that exposes torch item data in the format Torch expects. Test: equip a torch item on an actor; confirm the Torch HUD button appears and toggling it lights the token. Run `/nimble-review`. Run `/nimble-e2e-tester`. Update `progress.txt`.
+- [x] **[Fix] Torch — configure for Nimble item schema** — Read `~/foundryVTT/foundrydata/Data/modules/torch/torch.js` to find how it searches an actor's inventory for a torch item (item type, name pattern, uses/quantity field path). Compare against Nimble's item data model in `src/models/item/`. Either configure Torch's module settings to match Nimble field paths, or add a small compatibility hook in `src/hooks/` that exposes torch item data in the format Torch expects. Test: equip a torch item on an actor; confirm the Torch HUD button appears and toggling it lights the token. Run `/nimble-review`. Run `/nimble-e2e-tester`. Update `progress.txt`.
 
-- [ ] **[Audit] Foundry MCP Bridge actor creation** — Use the MCP bridge to create a Nimble actor via the AI interface. Observe the network/console for schema errors or missing required fields. If a Nimble required field is absent and has a safe default, add it to the actor data model default in `src/models/actor/`. Run `/nimble-review`. Update `progress.txt` with any mismatches found.
+- [x] **[Audit] Foundry MCP Bridge actor creation** — Use the MCP bridge to create a Nimble actor via the AI interface. Observe the network/console for schema errors or missing required fields. If a Nimble required field is absent and has a safe default, add it to the actor data model default in `src/models/actor/`. Run `/nimble-review`. Update `progress.txt` with any mismatches found.
 
 #### Complex — New Assets / Configuration
 
