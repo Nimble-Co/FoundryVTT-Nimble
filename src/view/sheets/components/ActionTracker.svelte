@@ -66,7 +66,6 @@
 							: localize('NIMBLE.ui.heroicActions.useActionsFirst')}
 						onclick={state.endTurn}
 					>
-						<span class="action-tracker__end-turn-ring"></span>
 						<i class="fa-solid fa-forward-step"></i>
 					</button>
 				{/if}
@@ -223,16 +222,14 @@
 				}
 
 				&::before,
-				&::after,
-				.action-tracker__end-turn-ring {
+				&::after {
 					content: '';
 					position: absolute;
 					inset: -2px;
 					border: 2px solid hsl(145, 40%, 25%);
 					border-radius: 6px;
 					opacity: 0;
-					pointer-events: none;
-					animation: end-turn-ping 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+					animation: end-turn-ping 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 
 					:global(.theme-dark) & {
 						border-color: hsl(145, 40%, 65%);
@@ -240,11 +237,7 @@
 				}
 
 				&::after {
-					animation-delay: 0.6s;
-				}
-
-				.action-tracker__end-turn-ring {
-					animation-delay: 1.2s;
+					animation-delay: 0.7s;
 				}
 
 				&:hover {
@@ -253,8 +246,7 @@
 					box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
 
 					&::before,
-					&::after,
-					.action-tracker__end-turn-ring {
+					&::after {
 						animation: none;
 						opacity: 0;
 					}
