@@ -57,6 +57,7 @@ jobs:
           commit_message: 'Format code with Biome'
           branch: ${{ github.head_ref }}
           file_pattern: '*.ts *.tsx *.js *.jsx *.json *.svelte *.css *.scss *.md'
+          add_options: '--ignore-missing'
 
       - name: Check format (fork PRs)
         if: github.event.pull_request.head.repo.full_name != github.repository
