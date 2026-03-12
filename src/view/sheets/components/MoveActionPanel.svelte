@@ -5,14 +5,13 @@
 	let { actor, inCombat = false, actionsRemaining = 0, onDeductAction = async () => {} } = $props();
 
 	let movementSpeeds = $derived(getMovementSpeeds(actor));
+	let primarySpeed = $derived(movementSpeeds.find((s) => s.type === 'walk') ?? movementSpeeds[0]);
 
 	async function handleMove() {
 		if (!inCombat || actionsRemaining <= 0) return;
 
-		// Deduct action pip
 		await onDeductAction();
 
-		// Send chat message
 		await ChatMessage.create({
 			speaker: ChatMessage.getSpeaker({ actor }),
 			content: localize('NIMBLE.ui.heroicActions.moveAction', { name: actor.name }),
@@ -20,85 +19,146 @@
 	}
 </script>
 
-<section class="move-panel">
-	<header class="nimble-section-header">
-		<h3 class="nimble-heading" data-heading-variant="section">
-			{localize('NIMBLE.ui.heroicActions.move.title')}
-		</h3>
-	</header>
-
-	<div class="move-panel__content">
-		{#if movementSpeeds.length > 0}
-			<div class="move-panel__speeds">
-				<span class="move-panel__speeds-label">
-					{localize('NIMBLE.ui.heroicActions.move.yourMovement')}
-				</span>
-				<div class="move-panel__speeds-list">
-					{#each movementSpeeds as speed}
-						<div class="move-panel__speed">
-							<i class={speed.icon}></i>
-							<span class="move-panel__speed-value">{speed.value}</span>
-							<span class="move-panel__speed-label">
-								{localize('NIMBLE.ui.heroicActions.move.spaces')}
-							</span>
-						</div>
-					{/each}
-				</div>
-			</div>
-		{:else}
-			<p class="move-panel__no-movement">
-				{localize('NIMBLE.ui.heroicActions.move.noMovement')}
-			</p>
-		{/if}
-
-		<div class="move-panel__info">
-			<i class="fa-solid fa-circle-info"></i>
-			<span>{localize('NIMBLE.ui.heroicActions.move.actionCost')}</span>
-		</div>
-
-		<button
-			class="nimble-button move-panel__confirm"
-			data-button-variant="primary"
-			disabled={!inCombat || actionsRemaining <= 0}
-			onclick={handleMove}
-		>
+<section class="action-card action-card--move">
+	<div class="action-card__header">
+		<div class="action-card__icon">
 			<i class="fa-solid fa-person-running"></i>
-			{localize('NIMBLE.ui.heroicActions.move.confirm')}
-		</button>
+		</div>
+		<div class="action-card__title-group">
+			<h3 class="action-card__title">
+				{localize('NIMBLE.ui.heroicActions.move.title')}
+			</h3>
+			<span class="action-card__cost">
+				<i class="fa-solid fa-bolt"></i> 1 Action
+			</span>
+		</div>
+		{#if primarySpeed}
+			<div class="action-card__stat">
+				<span class="action-card__stat-label">Speed</span>
+				<span class="action-card__stat-value">{primarySpeed.value}</span>
+			</div>
+		{/if}
 	</div>
+
+	<p class="action-card__description">
+		Move up to your speed. You can split movement around other actions and move multiple times per
+		turn.
+	</p>
+
+	{#if movementSpeeds.length > 1}
+		<div class="action-card__speeds">
+			{#each movementSpeeds as speed}
+				<div class="action-card__speed">
+					<i class={speed.icon}></i>
+					<span class="action-card__speed-value">{speed.value}</span>
+				</div>
+			{/each}
+		</div>
+	{/if}
+
+	<button
+		class="action-card__button"
+		disabled={!inCombat || actionsRemaining <= 0}
+		onclick={handleMove}
+	>
+		<i class="fa-solid fa-person-running"></i>
+		Confirm Move
+	</button>
 </section>
 
 <style lang="scss">
-	.move-panel {
+	.action-card {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.625rem;
+		padding: 0.75rem;
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 8px;
 
-		&__content {
-			display: flex;
-			flex-direction: column;
-			gap: 0.5rem;
-		}
-
-		&__speeds {
+		&__header {
 			display: flex;
 			align-items: center;
-			gap: 0.5rem;
-			padding: 0.5rem;
-			background: var(--nimble-box-background-color);
-			border: 1px solid var(--nimble-card-border-color);
+			gap: 0.625rem;
+		}
+
+		&__icon {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 2.5rem;
+			height: 2.5rem;
+			background: linear-gradient(135deg, hsl(185, 60%, 45%) 0%, hsl(185, 60%, 35%) 100%);
+			border-radius: 6px;
+			flex-shrink: 0;
+
+			i {
+				font-size: 1.125rem;
+				color: white;
+			}
+		}
+
+		&__title-group {
+			display: flex;
+			flex-direction: column;
+			gap: 0.125rem;
+			flex: 1;
+		}
+
+		&__title {
+			margin: 0;
+			font-size: var(--nimble-base-text);
+			font-weight: 700;
+			color: var(--nimble-dark-text-color);
+			line-height: 1.2;
+		}
+
+		&__cost {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.25rem;
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
+			color: var(--nimble-medium-text-color);
+
+			i {
+				font-size: 0.625rem;
+			}
+		}
+
+		&__stat {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding: 0.375rem 0.625rem;
+			background: var(--nimble-basic-button-background-color);
 			border-radius: 6px;
 		}
 
-		&__speeds-label {
+		&__stat-label {
 			font-size: var(--nimble-xs-text);
 			font-weight: 600;
 			color: var(--nimble-medium-text-color);
 			text-transform: uppercase;
-			letter-spacing: 0.05em;
+			letter-spacing: 0.03em;
 		}
 
-		&__speeds-list {
+		&__stat-value {
+			font-size: var(--nimble-lg-text);
+			font-weight: 700;
+			color: hsl(185, 60%, 40%);
+			line-height: 1;
+		}
+
+		&__description {
+			margin: 0;
+			font-size: var(--nimble-sm-text);
+			font-weight: 500;
+			color: var(--nimble-dark-text-color);
+			line-height: 1.5;
+		}
+
+		&__speeds {
 			display: flex;
 			flex-wrap: wrap;
 			gap: 0.375rem;
@@ -107,66 +167,70 @@
 		&__speed {
 			display: flex;
 			align-items: center;
-			gap: 0.25rem;
-			padding: 0.25rem 0.5rem;
+			gap: 0.375rem;
+			padding: 0.375rem 0.625rem;
 			background: var(--nimble-basic-button-background-color);
-			border-radius: 4px;
+			border-radius: 6px;
 
 			i {
-				font-size: 0.75rem;
-				color: var(--nimble-action-icon-color);
+				font-size: 0.875rem;
+				color: hsl(185, 60%, 40%);
 			}
 		}
 
 		&__speed-value {
 			font-size: var(--nimble-sm-text);
-			font-weight: 600;
+			font-weight: 700;
 			color: var(--nimble-dark-text-color);
-		}
 
-		&__speed-label {
-			font-size: var(--nimble-sm-text);
-			font-weight: 500;
-			color: var(--nimble-dark-text-color);
-		}
-
-		&__no-movement {
-			margin: 0;
-			padding: 0.5rem;
-			text-align: center;
-			font-size: var(--nimble-sm-text);
-			color: var(--nimble-medium-text-color);
-		}
-
-		&__info {
-			display: flex;
-			align-items: center;
-			gap: 0.375rem;
-			padding: 0.375rem 0.5rem;
-			background: var(--nimble-action-info-background);
-			border: 1px solid var(--nimble-action-info-border-color);
-			border-radius: 4px;
-			font-size: var(--nimble-xs-text);
-			font-weight: 500;
-			color: var(--nimble-action-info-text-color);
-
-			i {
-				color: var(--nimble-action-info-icon-color);
+			&::after {
+				content: ' spaces';
+				font-weight: 500;
+				color: var(--nimble-medium-text-color);
 			}
 		}
 
-		&__confirm {
+		&__button {
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			gap: 0.375rem;
-			padding: 0.5rem 0.75rem;
+			gap: 0.5rem;
+			padding: 0.625rem 1rem;
 			font-size: var(--nimble-sm-text);
-			font-weight: 600;
+			font-weight: 700;
+			color: white;
+			background: linear-gradient(135deg, hsl(185, 60%, 45%) 0%, hsl(185, 60%, 35%) 100%);
+			border: none;
+			border-radius: 6px;
+			cursor: pointer;
+			transition: all 0.15s ease;
+
+			&:hover:not(:disabled) {
+				background: linear-gradient(135deg, hsl(185, 60%, 50%) 0%, hsl(185, 60%, 40%) 100%);
+				transform: translateY(-1px);
+			}
+
+			&:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
 
 			i {
 				font-size: 0.875rem;
 			}
 		}
+	}
+
+	:global(.theme-dark) .action-card {
+		background: hsl(220, 15%, 18%);
+		border-color: hsl(220, 10%, 28%);
+	}
+
+	:global(.theme-dark) .action-card__stat-value {
+		color: hsl(185, 70%, 60%);
+	}
+
+	:global(.theme-dark) .action-card__speed i {
+		color: hsl(185, 70%, 60%);
 	}
 </style>

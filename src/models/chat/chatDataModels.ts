@@ -5,6 +5,7 @@ import { NimbleFieldRestCardData } from './FieldRestCardDataModel.js';
 import { NimbleLevelUpSummaryCardData } from './LevelUpSummaryCardDataModel.js';
 import { NimbleMinionGroupAttackCardData } from './MinionGroupAttackCardDataModel.js';
 import { NimbleObjectCardData } from './ObjectCardDataModel.js';
+import { NimbleReactionCardData } from './ReactionCardDataModel.js';
 import { NimbleSafeRestCardData } from './SafeRestCardDataModel.js';
 import { NimbleSavingThrowCardData } from './SavingThrowCardDataModel.js';
 import { NimbleSkillCheckCardData } from './SkillCheckCardDataModel.js';
@@ -18,6 +19,7 @@ const chatDataModels = {
 	levelUpSummary: NimbleLevelUpSummaryCardData,
 	minionGroupAttack: NimbleMinionGroupAttackCardData,
 	object: NimbleObjectCardData,
+	reaction: NimbleReactionCardData,
 	safeRest: NimbleSafeRestCardData,
 	savingThrow: NimbleSavingThrowCardData,
 	skillCheck: NimbleSkillCheckCardData,
@@ -37,6 +39,7 @@ declare global {
 			levelUpSummary: NimbleLevelUpSummaryCardData;
 			minionGroupAttack: NimbleMinionGroupAttackCardData;
 			object: NimbleObjectCardData;
+			reaction: NimbleReactionCardData;
 			safeRest: NimbleSafeRestCardData;
 			savingThrow: NimbleSavingThrowCardData;
 			skillCheck: NimbleSkillCheckCardData;

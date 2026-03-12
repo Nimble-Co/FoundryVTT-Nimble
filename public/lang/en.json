@@ -680,7 +680,48 @@
 			"heroicActions": {
 				"title": "Heroic Actions",
 				"reactionsTitle": "Heroic Reactions",
-				"reactionsPlaceholder": "Reactions coming soon...",
+				"reactions": {
+					"actionCost": "This will use 1 action (reaction)",
+					"cost": "1 Action",
+					"defend": {
+						"label": "Defend",
+						"description": "Reduce damage from any single attack by your Armor value. At the GM's discretion, some damage may not be avoidable (e.g., psychic damage, or some areas of effect).",
+						"title": "Defend",
+						"armorValue": "Your Armor",
+						"confirm": "Use Defend Reaction",
+						"chatMessage": "<p><strong>{name}</strong> uses their reaction to <strong>Defend</strong>, reducing damage by their Armor value ({armor}).</p>"
+					},
+					"interpose": {
+						"label": "Interpose",
+						"description": "When a creature within 2 spaces would be struck with an attack, you can push them out of the way and become the new target. You enter their space and move them to an adjacent space of your choice.",
+						"title": "Interpose",
+						"range": "Range: 2 spaces",
+						"tip": "You can combine Interpose AND Defend if you have enough actions to spend!",
+						"confirm": "Use Interpose Reaction",
+						"protecting": "Protecting",
+						"chatMessage": "<p><strong>{name}</strong> uses their reaction to <strong>Interpose</strong>, stepping in front of <strong>{target}</strong> to become the target of an attack.</p>"
+					},
+					"opportunity": {
+						"label": "Opportunity Attack",
+						"description": "Make a melee attack against an adjacent enemy as it willingly moves away. Only heroes can make opportunity attacks - monsters cannot.",
+						"title": "Opportunity Attack",
+						"disadvantage": "This attack is made with disadvantage",
+						"selectWeapon": "Select a melee weapon",
+						"noMeleeWeapons": "No melee weapons available",
+						"unarmedOpportunity": "Opportunity Attack (Unarmed)",
+						"confirm": "Make Opportunity Attack"
+					},
+					"help": {
+						"label": "Help",
+						"description": "Grant an ally advantage on a roll if you can reasonably explain to the GM how you could help in the situation. Limited to one Help reaction per roll.",
+						"title": "Help",
+						"effect": "Grants an ally advantage on their roll",
+						"tip": "Think quickly when your ally fails! The GM may call for a skill check or grant advantage automatically depending on how good the idea is.",
+						"confirm": "Use Help Reaction",
+						"helping": "Helping",
+						"chatMessage": "<p><strong>{name}</strong> uses their reaction to <strong>Help</strong> <strong>{target}</strong>, granting them advantage on their roll.</p>"
+					}
+				},
 				"enterCombat": "Enter combat to use actions",
 				"outsideCombat": "You are outside of combat",
 				"noActions": "You don't have any actions",

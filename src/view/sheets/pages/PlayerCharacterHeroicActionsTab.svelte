@@ -8,6 +8,11 @@
 	import CastSpellActionPanel from '../components/CastSpellActionPanel.svelte';
 	import MoveActionPanel from '../components/MoveActionPanel.svelte';
 
+	import DefendReactionPanel from '../components/DefendReactionPanel.svelte';
+	import InterposeReactionPanel from '../components/InterposeReactionPanel.svelte';
+	import OpportunityReactionPanel from '../components/OpportunityReactionPanel.svelte';
+	import HelpReactionPanel from '../components/HelpReactionPanel.svelte';
+
 	// ============================================================================
 	// Context & State
 	// ============================================================================
@@ -71,8 +76,20 @@
 		{/if}
 
 		{#if state.activeHeroicTab === 'reactions'}
-			<div class="heroic-reactions-placeholder">
-				<p>{localize('NIMBLE.ui.heroicActions.reactionsPlaceholder')}</p>
+			<div class="heroic-actions-tabs">
+				{#each state.HEROIC_REACTIONS as reaction (reaction.id)}
+					<button
+						class="heroic-action-tab"
+						class:heroic-action-tab--active={state.expandedReactionPanel === reaction.id}
+						type="button"
+						aria-label={localize(reaction.labelKey)}
+						data-tooltip={state.getReactionTooltip(reaction)}
+						onclick={() => state.handleReactionClick(reaction)}
+					>
+						<i class={reaction.icon}></i>
+						<span class="heroic-action-tab__indicator"></span>
+					</button>
+				{/each}
 			</div>
 		{/if}
 	</section>
@@ -110,6 +127,43 @@
 
 	{#if state.activeHeroicTab === 'actions' && state.expandedPanel === 'assess'}
 		<AssessActionPanel {actor} onDeductAction={() => state.deductActionPips(1)} />
+	{/if}
+
+	{#if state.activeHeroicTab === 'reactions' && state.expandedReactionPanel === 'defend'}
+		<DefendReactionPanel
+			{actor}
+			inCombat={state.inCombat}
+			actionsRemaining={state.actionsData.current}
+			onDeductAction={() => state.deductActionPips(1)}
+		/>
+	{/if}
+
+	{#if state.activeHeroicTab === 'reactions' && state.expandedReactionPanel === 'interpose'}
+		<InterposeReactionPanel
+			{actor}
+			inCombat={state.inCombat}
+			actionsRemaining={state.actionsData.current}
+			onDeductAction={() => state.deductActionPips(1)}
+		/>
+	{/if}
+
+	{#if state.activeHeroicTab === 'reactions' && state.expandedReactionPanel === 'opportunity'}
+		<OpportunityReactionPanel
+			{actor}
+			inCombat={state.inCombat}
+			actionsRemaining={state.actionsData.current}
+			onDeductAction={() => state.deductActionPips(1)}
+			showEmbeddedDocumentImages={state.showEmbeddedDocumentImages}
+		/>
+	{/if}
+
+	{#if state.activeHeroicTab === 'reactions' && state.expandedReactionPanel === 'help'}
+		<HelpReactionPanel
+			{actor}
+			inCombat={state.inCombat}
+			actionsRemaining={state.actionsData.current}
+			onDeductAction={() => state.deductActionPips(1)}
+		/>
 	{/if}
 </section>
 
@@ -158,18 +212,6 @@
 
 		&:hover i {
 			color: var(--nimble-dark-text-color);
-		}
-	}
-
-	.heroic-reactions-placeholder {
-		padding: 1rem;
-		text-align: center;
-		font-size: var(--nimble-sm-text);
-		color: var(--nimble-medium-text-color);
-		font-style: italic;
-
-		p {
-			margin: 0;
 		}
 	}
 
