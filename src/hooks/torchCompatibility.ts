@@ -23,6 +23,11 @@ export default function registerTorchCompatibility(): void {
 		return;
 	}
 
+	if (!game.user?.isGM) {
+		console.debug('Nimble | Torch compatibility: skipping (non-GM user)');
+		return;
+	}
+
 	// Torch settings require unsafe type casts because the module is external
 	// and not represented in FoundryVTT's core type definitions.
 	const current = game.settings.get('torch' as 'core', 'gameLightSources' as 'rollMode') as string;
