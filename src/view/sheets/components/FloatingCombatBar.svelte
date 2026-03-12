@@ -76,31 +76,35 @@
 
 <style lang="scss">
 	.floating-combat-bar {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		margin-top: 0.5rem;
+		position: absolute;
+		top: 15rem;
+		left: 0;
 
 		&__panel {
 			display: flex;
 			flex-direction: column;
 			align-items: center;
-			gap: 0.25rem;
-			padding: 0.375rem;
+			gap: 0.125rem;
+			padding: 0.25rem;
 			background: color-mix(in srgb, var(--nimble-sheet-background) 85%, transparent);
 			border: 1px solid var(--nimble-card-border-color);
-			border-radius: 6px;
+			border-left: none;
+			border-radius: 0 6px 6px 0;
 			box-shadow:
 				0 2px 4px rgba(0, 0, 0, 0.15),
 				inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+			:global(.theme-light) & {
+				border-color: hsl(220, 10%, 70%);
+			}
 		}
 
 		&__initiative-btn {
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			width: 2rem;
-			height: 2rem;
+			width: 1.625rem;
+			height: 1.625rem;
 			padding: 0;
 			background: hsl(210, 60%, 50%);
 			border: 1px solid hsl(210, 60%, 44%);
@@ -109,7 +113,7 @@
 			transition: all 0.15s ease;
 
 			i {
-				font-size: 1rem;
+				font-size: 0.875rem;
 				color: var(--nimble-light-text-color);
 			}
 
@@ -122,15 +126,15 @@
 		&__pips {
 			display: flex;
 			flex-direction: column;
-			gap: 0.25rem;
+			gap: 0.125rem;
 		}
 
 		&__pip {
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			width: 2rem;
-			height: 2rem;
+			width: 1.625rem;
+			height: 1.625rem;
 			padding: 0;
 			background: var(--nimble-box-background-color);
 			border: 1px solid var(--nimble-card-border-color);
@@ -138,8 +142,12 @@
 			cursor: pointer;
 			transition: all 0.15s ease;
 
+			:global(.theme-light) & {
+				border-color: hsl(220, 10%, 70%);
+			}
+
 			i {
-				font-size: 1.5rem;
+				font-size: 1.25rem;
 				transition: all 0.15s ease;
 			}
 
@@ -182,8 +190,8 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			width: 2rem;
-			height: 2rem;
+			width: 1.625rem;
+			height: 1.625rem;
 			padding: 0;
 			background: var(--nimble-box-background-color);
 			border: 1px solid var(--nimble-card-border-color);
@@ -192,8 +200,12 @@
 			cursor: not-allowed;
 			transition: all 0.2s ease;
 
+			:global(.theme-light) & {
+				border-color: hsl(220, 10%, 70%);
+			}
+
 			i {
-				font-size: 0.875rem;
+				font-size: 0.75rem;
 				color: var(--nimble-medium-text-color);
 			}
 
