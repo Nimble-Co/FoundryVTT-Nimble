@@ -69,6 +69,23 @@
   - Commit: TEST(core): Add smoke test verifying document proxy classes load without error
 
 
+- [x] FIX: Torch — configure for Nimble item schema
+  - Root cause: Torch module had no knowledge of the `nimble` system; fell back to a generic "self" light with no inventory awareness.
+  - Created `public/torch-nimble.json` — custom Torch light-source config for the `nimble` system (topology: standard, quantity: quantity).
+    Defines two sources matching items in the Nimble compendium:
+    - `"Torch (Stack of 2)"` — consumable, bright 3 / dim 6, flame animation
+    - `"Lantern & Oil"` — non-consumable, bright 6 / dim 12, torch animation
+  - Created `src/hooks/torchCompatibility.ts` — `registerTorchCompatibility()` fires on `ready`.
+    When `torch` module is active and `gameLightSources` setting is empty, auto-sets it to
+    `systems/nimble/torch-nimble.json` so no manual GM configuration is needed.
+  - Wired `registerTorchCompatibility()` into `src/hooks/ready.ts`.
+  - E2E validation (partial — Playwright WebGL blocked token HUD test):
+    - `torch-nimble.json` served HTTP 200 with correct structure ✓
+    - Torch module loads without errors (`Torch | --- Module loaded`) ✓
+    - Token HUD torch button + light toggle require manual browser verification
+  - Files changed: `public/torch-nimble.json` (new), `src/hooks/torchCompatibility.ts` (new), `src/hooks/ready.ts`
+  - Branch: `audit/module-compat`
+
 - [x] AUDIT: SmallTime on v13 — PASS
   - SmallTime v2.0.1 (declares minimum v13 compatibility) tested on FoundryVTT v13.351.
   - Widget renders: `#smalltime-app` visible with correct dimensions.
