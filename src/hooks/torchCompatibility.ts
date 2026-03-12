@@ -17,7 +17,7 @@
  * source definitions. Only runs when the Torch module is active and the GM has
  * not already provided a custom configuration file.
  */
-export default function registerTorchCompatibility(): void {
+export default async function registerTorchCompatibility(): Promise<void> {
 	if (!game.modules.get('torch')?.active) {
 		console.debug('Nimble | Torch module not active; skipping compatibility configuration');
 		return;
@@ -32,12 +32,16 @@ export default function registerTorchCompatibility(): void {
 		return;
 	}
 
-	game.settings.set(
-		'torch' as 'core',
-		'gameLightSources' as 'rollMode',
-		'systems/nimble/torch-nimble.json' as never,
-	);
-	console.log(
-		'Nimble | Torch compatibility: configured gameLightSources to systems/nimble/torch-nimble.json',
-	);
+	try {
+		await game.settings.set(
+			'torch' as 'core',
+			'gameLightSources' as 'rollMode',
+			'systems/nimble/torch-nimble.json' as never,
+		);
+		console.log(
+			'Nimble | Torch compatibility: configured gameLightSources to systems/nimble/torch-nimble.json',
+		);
+	} catch (err) {
+		console.error('Nimble | Torch compatibility: failed to configure gameLightSources', err);
+	}
 }
