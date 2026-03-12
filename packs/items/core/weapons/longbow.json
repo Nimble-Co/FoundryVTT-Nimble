@@ -75,7 +75,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Damage:</strong> 1d6+Dex Piercing</p><p><strong>Properties:</strong> 2-Handed, Range 16 (Req. 1 STR)</p><p><strong>Cost:</strong> 30 gp</p>",
+			"public": "<p><strong>Damage:</strong> 1d8+Dex Piercing</p><p><strong>Properties:</strong> 2-Handed, Range 16 (Req. 1 STR)</p><p><strong>Cost:</strong> 30 gp</p>",
 			"unidentified": "",
 			"secret": ""
 		},
