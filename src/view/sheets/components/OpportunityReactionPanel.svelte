@@ -3,6 +3,7 @@
 	import localize from '../../../utils/localize.js';
 	import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 	import { createOpportunityPanelState } from './OpportunityReactionPanel.svelte.ts';
+	import WeaponCard from './WeaponCard.svelte';
 
 	const sheet = getContext('application');
 
@@ -88,57 +89,37 @@
 		{/if}
 	</div>
 
-	<div class="reaction-card__weapons">
+	<ul class="reaction-card__weapons">
 		{#if panelState.showUnarmedStrike}
-			<button
-				class="weapon-option"
-				class:weapon-option--disabled={isDisabled}
+			<WeaponCard
+				name={localize('NIMBLE.ui.heroicActions.unarmedStrike')}
+				icon="fa-solid fa-hand-fist"
+				damage={panelState.getUnarmedDamageDisplay()}
+				properties={[localize('NIMBLE.npcSheet.melee')]}
 				disabled={isDisabled}
+				showImage={false}
 				onclick={() => panelState.handleUnarmedStrike()}
-			>
-				<div class="weapon-option__icon">
-					<i class="fa-solid fa-hand-fist"></i>
-				</div>
-				<span class="weapon-option__name">Unarmed Strike</span>
-				<span class="weapon-option__damage">
-					<i class="fa-solid fa-burst"></i>
-					{panelState.getUnarmedDamageDisplay()}
-				</span>
-			</button>
+			/>
 		{/if}
 
 		{#each panelState.sortItems(panelState.meleeWeapons) as item (item._id)}
-			{@const damage = panelState.getWeaponDamage(item)}
-			<button
-				class="weapon-option"
-				class:weapon-option--disabled={isDisabled}
+			<WeaponCard
+				name={item.reactive.name}
+				image={item.reactive.img}
+				damage={panelState.getWeaponDamage(item)}
+				properties={panelState.getWeaponProperties(item)}
 				disabled={isDisabled}
-				data-item-id={item._id}
-				draggable="true"
-				ondragstart={(event) => sheet._onDragStart(event)}
+				showImage={showEmbeddedDocumentImages}
+				itemId={item._id}
 				onclick={() => panelState.handleItemClick(item._id)}
-			>
-				{#if showEmbeddedDocumentImages}
-					<img class="weapon-option__img" src={item.reactive.img} alt={item.reactive.name} />
-				{:else}
-					<div class="weapon-option__icon">
-						<i class="fa-solid fa-sword"></i>
-					</div>
-				{/if}
-				<span class="weapon-option__name">{item.reactive.name}</span>
-				{#if damage}
-					<span class="weapon-option__damage">
-						<i class="fa-solid fa-burst"></i>
-						{damage}
-					</span>
-				{/if}
-			</button>
+				ondragstart={(event) => sheet._onDragStart(event)}
+			/>
 		{/each}
 
 		{#if !panelState.showUnarmedStrike && panelState.meleeWeapons.length === 0}
 			<p class="reaction-card__empty">No melee weapons available</p>
 		{/if}
-	</div>
+	</ul>
 </section>
 
 <style lang="scss">
@@ -302,89 +283,20 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.25rem;
-			max-height: 180px;
+			max-height: 200px;
 			overflow-y: auto;
+			margin: 0;
+			padding: 0;
+			list-style: none;
 		}
 
 		&__empty {
 			margin: 0;
-			padding: 0.5rem;
+			padding: 0.75rem;
 			font-size: var(--nimble-sm-text);
 			font-weight: 500;
 			text-align: center;
 			color: var(--nimble-medium-text-color);
-		}
-	}
-
-	.weapon-option {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem;
-		background: var(--nimble-basic-button-background-color);
-		border: 1px solid transparent;
-		border-radius: 6px;
-		cursor: pointer;
-		transition: all 0.15s ease;
-		text-align: left;
-
-		&:hover:not(:disabled) {
-			background: hsla(15, 70%, 50%, 0.1);
-			border-color: hsla(15, 70%, 50%, 0.3);
-		}
-
-		&--disabled,
-		&:disabled {
-			opacity: 0.5;
-			cursor: not-allowed;
-		}
-
-		&__icon {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			width: 1.75rem;
-			height: 1.75rem;
-			background: var(--nimble-box-background-color);
-			border-radius: 4px;
-			flex-shrink: 0;
-
-			i {
-				font-size: 0.875rem;
-				color: var(--nimble-medium-text-color);
-			}
-		}
-
-		&__img {
-			width: 1.75rem;
-			height: 1.75rem;
-			object-fit: cover;
-			border-radius: 4px;
-			flex-shrink: 0;
-		}
-
-		&__name {
-			flex: 1;
-			font-size: var(--nimble-sm-text);
-			font-weight: 600;
-			color: var(--nimble-dark-text-color);
-		}
-
-		&__damage {
-			display: inline-flex;
-			align-items: center;
-			gap: 0.25rem;
-			padding: 0.125rem 0.375rem;
-			font-size: var(--nimble-xs-text);
-			font-weight: 600;
-			color: var(--nimble-dark-text-color);
-			background: var(--nimble-box-background-color);
-			border-radius: 4px;
-
-			i {
-				font-size: 0.625rem;
-				color: hsl(0, 60%, 50%);
-			}
 		}
 	}
 
@@ -411,10 +323,5 @@
 		color: hsl(40, 90%, 75%);
 		background: hsl(30, 60%, 22%);
 		border-color: hsl(35, 60%, 35%);
-	}
-
-	:global(.theme-dark) .weapon-option:hover:not(:disabled) {
-		background: hsla(15, 70%, 50%, 0.15);
-		border-color: hsla(15, 70%, 50%, 0.4);
 	}
 </style>
