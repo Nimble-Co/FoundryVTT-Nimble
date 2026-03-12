@@ -226,7 +226,7 @@
 					content: '';
 					position: absolute;
 					inset: -2px;
-					border: 2px solid hsl(145, 50%, 42%);
+					border: 2px solid hsl(145, 50%, 32%);
 					border-radius: 6px;
 					opacity: 0;
 					animation: end-turn-ping 2s ease-out infinite;
