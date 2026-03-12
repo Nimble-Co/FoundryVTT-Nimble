@@ -229,7 +229,7 @@
 					border: 2px solid hsl(145, 40%, 25%);
 					border-radius: 6px;
 					opacity: 0;
-					animation: end-turn-ping 2s ease-out infinite;
+					animation: end-turn-ping 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 
 					:global(.theme-dark) & {
 						border-color: hsl(145, 40%, 65%);
@@ -237,7 +237,7 @@
 				}
 
 				&::after {
-					animation-delay: 1s;
+					animation-delay: 0.7s;
 				}
 
 				&:hover {
@@ -315,11 +315,14 @@
 
 	@keyframes end-turn-ping {
 		0% {
-			inset: -2px;
-			opacity: 0.8;
+			inset: -1px;
+			opacity: 0.6;
+		}
+		50% {
+			opacity: 0.3;
 		}
 		100% {
-			inset: -8px;
+			inset: -10px;
 			opacity: 0;
 		}
 	}
