@@ -222,14 +222,14 @@
 				}
 
 				&:hover {
-					background: hsl(210, 55%, 45%);
-					border-color: hsl(210, 55%, 38%);
+					background: hsl(210, 55%, 58%);
+					border-color: hsl(210, 55%, 50%);
 					box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
 					animation: none;
 				}
 
 				&:active {
-					background: hsl(210, 55%, 40%);
+					background: hsl(210, 55%, 45%);
 					box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 				}
 			}
