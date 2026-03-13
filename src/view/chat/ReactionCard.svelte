@@ -1,12 +1,13 @@
-<script>
+<script lang="ts">
 	import { setContext, untrack } from 'svelte';
+	import type { ReactionCardProps } from '../../../types/components/ReactionCard.d.ts';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import localize from '../../utils/localize.js';
 
 	import CardHeader from './components/CardHeader.svelte';
 	import Targets from './components/Targets.svelte';
 
-	const { messageDocument } = $props();
+	const { messageDocument }: ReactionCardProps = $props();
 
 	const system = $derived(messageDocument.reactive.system);
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
@@ -90,22 +91,22 @@
 		{#if reactionType === 'defend' && armorValue !== null}
 			<div class="reaction-card__badge reaction-card__badge--defend">
 				<i class="fa-solid fa-shield"></i>
-				Armor {armorValue}
+				{localize('NIMBLE.ui.heroicActions.reactions.defend.armorBadge', { armor: armorValue })}
 			</div>
 		{:else if reactionType === 'opportunity'}
 			<div class="reaction-card__badge reaction-card__badge--warning">
 				<i class="fa-solid fa-dice"></i>
-				Disadvantage
+				{localize('NIMBLE.ui.heroicActions.reactions.disadvantage')}
 			</div>
 		{:else if reactionType === 'help'}
 			<div class="reaction-card__badge reaction-card__badge--success">
 				<i class="fa-solid fa-dice-d20"></i>
-				Advantage
+				{localize('NIMBLE.ui.heroicActions.reactions.advantage')}
 			</div>
 		{:else if reactionType === 'interpose'}
 			<div class="reaction-card__badge reaction-card__badge--interpose">
 				<i class="fa-solid fa-ruler"></i>
-				2 spaces
+				{localize('NIMBLE.ui.heroicActions.reactions.interpose.rangeBadge')}
 			</div>
 		{/if}
 	</header>
@@ -114,7 +115,7 @@
 		<div class="reaction-card__weapon">
 			<span class="reaction-card__weapon-label">
 				<i class="fa-solid fa-sword"></i>
-				Weapon
+				{localize('NIMBLE.ui.heroicActions.reactions.weapon')}
 			</span>
 			<span class="reaction-card__weapon-name">{weaponName}</span>
 			{#if weaponDamage}

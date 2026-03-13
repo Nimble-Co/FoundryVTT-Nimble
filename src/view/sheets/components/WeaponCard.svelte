@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+	import type { WeaponCardProps } from '../../../../types/components/WeaponCard.d.ts';
 	import localize from '../../../utils/localize.js';
 
 	let {
@@ -15,7 +16,7 @@
 		onToggleDescription = null,
 		onclick,
 		ondragstart = null,
-	} = $props();
+	}: WeaponCardProps = $props();
 </script>
 
 <li
