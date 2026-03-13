@@ -900,7 +900,9 @@
 					"noMovement": "No movement speeds available",
 					"actionCost": "This will use 1 action",
 					"confirm": "Use Action to Move",
-					"cancel": "Cancel"
+					"cancel": "Cancel",
+					"speedBadge": "Speed {speed}",
+					"chatMessage": "<p><strong>{name}</strong> used an action to <strong>Move</strong>, with a speed of {speed} spaces.</p>"
 				}
 			},
 			"clearAll": "Clear All",

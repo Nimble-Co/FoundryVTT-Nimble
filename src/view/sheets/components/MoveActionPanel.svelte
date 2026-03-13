@@ -12,10 +12,17 @@
 
 		await onDeductAction();
 
-		await ChatMessage.create({
+		const chatData = {
+			author: game.user?.id,
 			speaker: ChatMessage.getSpeaker({ actor }),
-			content: localize('NIMBLE.ui.heroicActions.moveAction', { name: actor.name }),
-		});
+			type: 'moveAction',
+			system: {
+				actorName: actor.name,
+				speed: primarySpeed?.value ?? 0,
+			},
+		};
+
+		await ChatMessage.create(chatData);
 	}
 </script>
 
