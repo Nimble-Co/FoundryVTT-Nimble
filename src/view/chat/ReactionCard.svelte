@@ -17,6 +17,34 @@
 	const armorValue = $derived(system.armorValue);
 	const weaponName = $derived(system.weaponName);
 	const weaponDamage = $derived(system.weaponDamage);
+	const actorName = $derived(system.actorName);
+
+	const chatMessage = $derived.by(() => {
+		switch (reactionType) {
+			case 'defend':
+				return localize('NIMBLE.ui.heroicActions.reactions.defend.chatMessage', {
+					name: actorName,
+					armor: armorValue ?? 0,
+				});
+			case 'interpose':
+				return localize('NIMBLE.ui.heroicActions.reactions.interpose.chatMessage', {
+					name: actorName,
+					target: 'an ally',
+				});
+			case 'opportunity':
+				return localize('NIMBLE.ui.heroicActions.reactions.opportunity.chatMessage', {
+					name: actorName,
+					weapon: weaponName ?? 'a weapon',
+				});
+			case 'help':
+				return localize('NIMBLE.ui.heroicActions.reactions.help.chatMessage', {
+					name: actorName,
+					target: 'an ally',
+				});
+			default:
+				return null;
+		}
+	});
 
 	const reactionConfig = $derived.by(() => {
 		switch (reactionType) {
@@ -129,6 +157,12 @@
 
 	{#if reactionConfig.showTargets}
 		<Targets />
+	{/if}
+
+	{#if chatMessage}
+		<div class="reaction-card__message">
+			{@html chatMessage}
+		</div>
 	{/if}
 </article>
 
@@ -288,6 +322,17 @@
 			i {
 				font-size: 0.625rem;
 				color: hsl(0, 60%, 50%);
+			}
+		}
+
+		&__message {
+			padding: var(--nimble-card-section-padding, 0.5rem);
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-dark-text-color);
+			line-height: 1.5;
+
+			:global(p) {
+				margin: 0;
 			}
 		}
 	}

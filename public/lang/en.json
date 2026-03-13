@@ -726,7 +726,8 @@
 						"selectWeapon": "Select a melee weapon",
 						"noMeleeWeapons": "No melee weapons available",
 						"unarmedOpportunity": "Opportunity Attack (Unarmed)",
-						"confirm": "Make Opportunity Attack"
+						"confirm": "Make Opportunity Attack",
+						"chatMessage": "<p><strong>{name}</strong> uses their reaction to make an <strong>Opportunity Attack</strong> with {weapon}.</p>"
 					},
 					"help": {
 						"label": "Help",
