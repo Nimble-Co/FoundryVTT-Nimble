@@ -17,6 +17,9 @@ export function getActorHealthState(
 	if (hpValue <= 0) return 'unknown';
 
 	if (actor.type === 'soloMonster') {
+		const statusSet = actor.statuses instanceof Set ? actor.statuses : null;
+		if (statusSet?.has('lastStand')) return 'lastStand';
+
 		const lastStandThreshold = getActorLastStandThreshold(actor);
 		if (lastStandThreshold !== null && hpValue <= lastStandThreshold) {
 			return 'lastStand';

@@ -13,8 +13,6 @@ import {
 	canOwnerUseHeroicReaction,
 	getHeroicReactionAvailability,
 	getHeroicReactionAvailabilityUpdate,
-	getHeroicReactionSideEffectConditionId,
-	getHeroicReactionSideEffectConditionIds,
 	HEROIC_REACTIONS,
 	type HeroicReactionKey,
 } from '../../utils/heroicActions.js';
@@ -714,61 +712,6 @@ class NimbleCombat extends Combat {
 		await this.updateEmbeddedDocuments('Combatant', updates);
 	}
 
-	async #setCombatantStatusEffect(
-		combatant: Combatant.Implementation,
-		statusId: string,
-		active: boolean,
-	): Promise<void> {
-		const actor = (combatant.actor ?? null) as
-			| (Actor.Implementation & {
-					statuses?: Set<string>;
-					toggleStatusEffect?: (
-						statusId: string,
-						options?: { active?: boolean },
-					) => Promise<unknown> | unknown;
-			  })
-			| null;
-		if (!actor || typeof actor.toggleStatusEffect !== 'function') return;
-
-		const statusSet = actor.statuses instanceof Set ? actor.statuses : null;
-		if (statusSet) {
-			const hasStatus = statusSet.has(statusId);
-			if (active && hasStatus) return;
-			if (!active && !hasStatus) return;
-		}
-
-		await actor.toggleStatusEffect(statusId, { active });
-	}
-
-	async #syncHeroicReactionSideEffects(
-		combatant: Combatant.Implementation,
-		reactionKey: HeroicReactionKey,
-		available: boolean,
-	): Promise<void> {
-		const sideEffectConditionId = getHeroicReactionSideEffectConditionId(reactionKey);
-		if (!sideEffectConditionId) return;
-		await this.#setCombatantStatusEffect(combatant, sideEffectConditionId, !available);
-	}
-
-	async #clearCombatantHeroicReactionSideEffects(
-		combatant: Combatant.Implementation,
-	): Promise<void> {
-		await Promise.all(
-			getHeroicReactionSideEffectConditionIds().map((sideEffectConditionId) =>
-				this.#setCombatantStatusEffect(combatant, sideEffectConditionId, false),
-			),
-		);
-	}
-
-	async #clearCharacterHeroicReactionSideEffects(): Promise<void> {
-		const characters = this.combatants.contents.filter(
-			(combatant) => combatant.type === 'character',
-		);
-		await Promise.all(
-			characters.map((combatant) => this.#clearCombatantHeroicReactionSideEffects(combatant)),
-		);
-	}
-
 	#buildHeroicReactionAvailabilityUpdate(available: boolean): Record<string, unknown> {
 		const update: Record<string, unknown> = {};
 		for (const reactionKey of HEROIC_REACTIONS) {
@@ -829,7 +772,6 @@ class NimbleCombat extends Combat {
 
 		await this.#applyNpcActionResetUpdates();
 		await this.#refreshCharacterHeroicReactions();
-		await this.#clearCharacterHeroicReactionSideEffects();
 
 		// After combat starts, always begin on the top player card.
 		// This preserves pre-combat manual ordering as the first-turn source of truth.
@@ -883,7 +825,6 @@ class NimbleCombat extends Combat {
 			await combatant.update({
 				'system.actions.base.current': system.actions.base.max,
 			} as Record<string, unknown>);
-			await this.#clearCombatantHeroicReactionSideEffects(combatant);
 		}
 	}
 
@@ -934,7 +875,6 @@ class NimbleCombat extends Combat {
 					...getHeroicReactionAvailabilityUpdate(reactionKey, true),
 				},
 			]);
-			await this.#syncHeroicReactionSideEffects(combatant, reactionKey, true);
 			return true;
 		}
 
@@ -953,7 +893,6 @@ class NimbleCombat extends Combat {
 				'system.actions.base.current': Math.max(0, currentActions - 1),
 			} as Record<string, unknown>,
 		]);
-		await this.#syncHeroicReactionSideEffects(combatant, reactionKey, false);
 		return true;
 	}
 
@@ -1565,7 +1504,6 @@ class NimbleCombat extends Combat {
 		this.#syncTurnIndexWithAliveTurns({ preferredTurnIdentity: preferredFirstTurnIdentity });
 		await this.#persistExpandedTurnState();
 		await this.#refreshCharacterHeroicReactions();
-		await this.#clearCharacterHeroicReactionSideEffects();
 		return result;
 	}
 
