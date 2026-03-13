@@ -4,6 +4,9 @@ export default defineConfig({
   title: 'Nimble FoundryVTT',
   description: 'Documentation hub for the Nimble FoundryVTT system',
 
+  // Ignore dead links from included CONTRIBUTING.md (repo-relative links to source files)
+  ignoreDeadLinks: true,
+
   // Set base path for GitHub Pages, update if using a custom domain
   base: '/FoundryVTT-Nimble/',
 
@@ -81,7 +84,7 @@ export default defineConfig({
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/Nimble-Co/FoundryVTT-Nimble' },
-      { icon: 'discord', link: 'https://discord.gg/APTKATGeJW' },
+      { icon: 'discord', link: 'https://discord.gg/WRf5hBqM' },
     ],
 
     search: {
@@ -95,7 +98,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024-2025 Nimble Co.',
+      copyright: 'Copyright © 2026 Nimble Co.',
     },
   },
 })
