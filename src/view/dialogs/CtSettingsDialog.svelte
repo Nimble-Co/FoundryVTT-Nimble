@@ -1,249 +1,21 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import {
-		CT_CARD_SIZE_PREVIEW_EVENT_NAME,
-		CT_WIDTH_PREVIEW_EVENT_NAME,
-	} from '../ui/ctTopTracker/constants.js';
-	import {
-		getCombatTrackerActionDiceColor,
-		getCombatTrackerCtCardSizeLevel,
-		getCombatTrackerCtWidthLevel,
-		getCombatTrackerNonPlayerHpBarEnabled,
-		getCombatTrackerNonPlayerHpBarTextMode,
-		getCombatTrackerPlayerHpBarTextMode,
-		getCombatTrackerReactionColor,
-		getCombatTrackerResourceDrawerHoverEnabled,
-		isCombatTrackerActionDiceColorSettingKey,
-		isCombatTrackerCardSizeLevelSettingKey,
-		isCombatTrackerNonPlayerHpBarEnabledSettingKey,
-		isCombatTrackerNonPlayerHpBarTextModeSettingKey,
-		isCombatTrackerPlayerHpBarTextModeSettingKey,
-		isCombatTrackerReactionColorSettingKey,
-		isCombatTrackerResourceDrawerHoverSettingKey,
-		isCombatTrackerWidthLevelSettingKey,
-		normalizeHexColor,
-		setCombatTrackerActionDiceColor,
-		setCombatTrackerCtCardSizeLevel,
-		setCombatTrackerCtWidthLevel,
-		setCombatTrackerNonPlayerHpBarEnabled,
-		setCombatTrackerNonPlayerHpBarTextMode,
-		setCombatTrackerPlayerHpBarTextMode,
-		setCombatTrackerReactionColor,
-		setCombatTrackerResourceDrawerHoverEnabled,
-		type CombatTrackerNonPlayerHpBarTextMode,
-		type CombatTrackerPlayerHpBarTextMode,
-	} from '../../settings/combatTrackerSettings.js';
+		COLOR_PRESETS,
+		CtSettingsDialogState,
+		HP_BAR_TEXT_MODE_OPTIONS,
+		MAX_LEVEL,
+		MIN_LEVEL,
+	} from './ctSettingsDialog/state.svelte.js';
 
-	const MIN_LEVEL = 1;
-	const MAX_LEVEL = 10;
-	const COLOR_PRESETS = [
-		{ label: 'White', color: '#ffffff' },
-		{ label: 'Green', color: '#6ce685' },
-		{ label: 'Red', color: '#ef5350' },
-		{ label: 'Blue', color: '#4fc3f7' },
-		{ label: 'Yellow', color: '#f6d44c' },
-		{ label: 'Purple', color: '#b388ff' },
-	] as const;
-	const HP_BAR_TEXT_MODE_OPTIONS: ReadonlyArray<{
-		value: CombatTrackerPlayerHpBarTextMode;
-		label: string;
-	}> = [
-		{ value: 'none', label: 'None' },
-		{ value: 'hpState', label: 'Health State' },
-		{ value: 'percentage', label: 'HP %' },
-	];
-
-	let updateSettingHook: number | undefined;
-	let sliderPreviewGlobalPointerUpListener: (() => void) | undefined;
-	let widthLevel = $state(getCombatTrackerCtWidthLevel());
-	let cardSizeLevel = $state(getCombatTrackerCtCardSizeLevel());
-	let resourceDrawerHoverEnabled = $state(getCombatTrackerResourceDrawerHoverEnabled());
-	let playerHpBarTextMode = $state(getCombatTrackerPlayerHpBarTextMode());
-	let nonPlayerHpBarEnabled = $state(getCombatTrackerNonPlayerHpBarEnabled());
-	let nonPlayerHpBarTextMode = $state(getCombatTrackerNonPlayerHpBarTextMode());
-	let actionColor = $state(getCombatTrackerActionDiceColor());
-	let reactionColor = $state(getCombatTrackerReactionColor());
-	let canManageSharedCtSettings = $derived(Boolean(game.user?.isGM));
-	let isWidthSliderPreviewActive = $state(false);
-	let isCardSizeSliderPreviewActive = $state(false);
-
-	function dispatchCtWidthPreviewEvent(params: { active: boolean; widthLevel: number }): void {
-		if (typeof window === 'undefined') return;
-		window.dispatchEvent(
-			new CustomEvent(CT_WIDTH_PREVIEW_EVENT_NAME, {
-				detail: params,
-			}),
-		);
-	}
-
-	function setWidthSliderPreviewActive(active: boolean, previewLevel = widthLevel): void {
-		if (isWidthSliderPreviewActive === active && previewLevel === widthLevel) return;
-		isWidthSliderPreviewActive = active;
-		dispatchCtWidthPreviewEvent({
-			active,
-			widthLevel: clampLevel(previewLevel),
-		});
-	}
-
-	function dispatchCtCardSizePreviewEvent(params: {
-		active: boolean;
-		cardSizeLevel: number;
-	}): void {
-		if (typeof window === 'undefined') return;
-		window.dispatchEvent(
-			new CustomEvent(CT_CARD_SIZE_PREVIEW_EVENT_NAME, {
-				detail: params,
-			}),
-		);
-	}
-
-	function setCardSizeSliderPreviewActive(active: boolean, previewLevel = cardSizeLevel): void {
-		if (isCardSizeSliderPreviewActive === active && previewLevel === cardSizeLevel) return;
-		isCardSizeSliderPreviewActive = active;
-		dispatchCtCardSizePreviewEvent({
-			active,
-			cardSizeLevel: clampLevel(previewLevel),
-		});
-	}
-
-	function clampLevel(value: unknown): number {
-		const numericValue = Number(value);
-		if (!Number.isFinite(numericValue)) return MIN_LEVEL;
-		return Math.min(MAX_LEVEL, Math.max(MIN_LEVEL, Math.round(numericValue)));
-	}
-
-	function persistCtSetting(action: string, write: Promise<void>): void {
-		void write.catch((error) => {
-			console.error(`[Nimble][CT Settings] Failed to persist ${action}`, { error });
-		});
-	}
-
-	function handleWidthLevelInput(event: Event): void {
-		const input = event.currentTarget as HTMLInputElement;
-		const nextValue = clampLevel(input.value);
-		widthLevel = nextValue;
-		if (isWidthSliderPreviewActive) {
-			dispatchCtWidthPreviewEvent({
-				active: true,
-				widthLevel: nextValue,
-			});
-		}
-		persistCtSetting('width level', setCombatTrackerCtWidthLevel(nextValue));
-	}
-
-	function handleCardSizeLevelInput(event: Event): void {
-		const input = event.currentTarget as HTMLInputElement;
-		const nextValue = clampLevel(input.value);
-		cardSizeLevel = nextValue;
-		if (isCardSizeSliderPreviewActive) {
-			dispatchCtCardSizePreviewEvent({
-				active: true,
-				cardSizeLevel: nextValue,
-			});
-		}
-		persistCtSetting('card size level', setCombatTrackerCtCardSizeLevel(nextValue));
-	}
-
-	function handleResourceDrawerHoverChange(event: Event): void {
-		const checkbox = event.currentTarget as HTMLInputElement;
-		resourceDrawerHoverEnabled = checkbox.checked;
-		persistCtSetting(
-			'resource drawer hover',
-			setCombatTrackerResourceDrawerHoverEnabled(checkbox.checked),
-		);
-	}
-
-	function handlePlayerHpBarTextModeChange(event: Event): void {
-		const select = event.currentTarget as HTMLSelectElement;
-		const nextValue = select.value as CombatTrackerPlayerHpBarTextMode;
-		playerHpBarTextMode = nextValue;
-		persistCtSetting('player hp bar text mode', setCombatTrackerPlayerHpBarTextMode(nextValue));
-	}
-
-	function handleNonPlayerHpBarEnabledChange(event: Event): void {
-		if (!canManageSharedCtSettings) return;
-		const checkbox = event.currentTarget as HTMLInputElement;
-		nonPlayerHpBarEnabled = checkbox.checked;
-		persistCtSetting('non-player hp bar', setCombatTrackerNonPlayerHpBarEnabled(checkbox.checked));
-	}
-
-	function handleNonPlayerHpBarTextModeChange(event: Event): void {
-		if (!canManageSharedCtSettings) return;
-		const select = event.currentTarget as HTMLSelectElement;
-		const nextValue = select.value as CombatTrackerNonPlayerHpBarTextMode;
-		nonPlayerHpBarTextMode = nextValue;
-		persistCtSetting(
-			'non-player hp bar text mode',
-			setCombatTrackerNonPlayerHpBarTextMode(nextValue),
-		);
-	}
-
-	function applyActionColor(color: string): void {
-		const normalizedColor = normalizeHexColor(color);
-		actionColor = normalizedColor;
-		persistCtSetting('action color', setCombatTrackerActionDiceColor(normalizedColor));
-	}
-
-	function applyReactionColor(color: string): void {
-		const normalizedColor = normalizeHexColor(color);
-		reactionColor = normalizedColor;
-		persistCtSetting('reaction color', setCombatTrackerReactionColor(normalizedColor));
-	}
+	const state = new CtSettingsDialogState();
 
 	onMount(() => {
-		sliderPreviewGlobalPointerUpListener = () => {
-			if (isWidthSliderPreviewActive) {
-				setWidthSliderPreviewActive(false);
-			}
-			if (isCardSizeSliderPreviewActive) {
-				setCardSizeSliderPreviewActive(false);
-			}
-		};
-		window.addEventListener('pointerup', sliderPreviewGlobalPointerUpListener);
-
-		updateSettingHook = Hooks.on('updateSetting', (setting) => {
-			const settingKey = foundry.utils.getProperty(setting, 'key');
-			if (isCombatTrackerWidthLevelSettingKey(settingKey)) {
-				widthLevel = getCombatTrackerCtWidthLevel();
-				if (isWidthSliderPreviewActive) {
-					dispatchCtWidthPreviewEvent({ active: true, widthLevel });
-				}
-			}
-			if (isCombatTrackerCardSizeLevelSettingKey(settingKey)) {
-				cardSizeLevel = getCombatTrackerCtCardSizeLevel();
-			}
-			if (isCombatTrackerResourceDrawerHoverSettingKey(settingKey)) {
-				resourceDrawerHoverEnabled = getCombatTrackerResourceDrawerHoverEnabled();
-			}
-			if (isCombatTrackerPlayerHpBarTextModeSettingKey(settingKey)) {
-				playerHpBarTextMode = getCombatTrackerPlayerHpBarTextMode();
-			}
-			if (isCombatTrackerNonPlayerHpBarEnabledSettingKey(settingKey)) {
-				nonPlayerHpBarEnabled = getCombatTrackerNonPlayerHpBarEnabled();
-			}
-			if (isCombatTrackerNonPlayerHpBarTextModeSettingKey(settingKey)) {
-				nonPlayerHpBarTextMode = getCombatTrackerNonPlayerHpBarTextMode();
-			}
-			if (isCombatTrackerActionDiceColorSettingKey(settingKey)) {
-				actionColor = getCombatTrackerActionDiceColor();
-			}
-			if (isCombatTrackerReactionColorSettingKey(settingKey)) {
-				reactionColor = getCombatTrackerReactionColor();
-			}
-		});
+		state.mount();
 	});
 
 	onDestroy(() => {
-		if (updateSettingHook !== undefined) Hooks.off('updateSetting', updateSettingHook);
-		if (sliderPreviewGlobalPointerUpListener) {
-			window.removeEventListener('pointerup', sliderPreviewGlobalPointerUpListener);
-		}
-		if (isWidthSliderPreviewActive) {
-			setWidthSliderPreviewActive(false);
-		}
-		if (isCardSizeSliderPreviewActive) {
-			setCardSizeSliderPreviewActive(false);
-		}
+		state.destroy();
 	});
 </script>
 
@@ -261,16 +33,16 @@
 						min={MIN_LEVEL}
 						max={MAX_LEVEL}
 						step="1"
-						value={widthLevel}
-						oninput={handleWidthLevelInput}
-						onchange={handleWidthLevelInput}
-						onpointerdown={() => setWidthSliderPreviewActive(true)}
-						onpointerup={() => setWidthSliderPreviewActive(false)}
-						onpointercancel={() => setWidthSliderPreviewActive(false)}
-						onfocus={() => setWidthSliderPreviewActive(true)}
-						onblur={() => setWidthSliderPreviewActive(false)}
+						value={state.widthLevel}
+						oninput={state.handleWidthLevelInput}
+						onchange={state.handleWidthLevelInput}
+						onpointerdown={() => state.setWidthSliderPreviewActive(true)}
+						onpointerup={() => state.setWidthSliderPreviewActive(false)}
+						onpointercancel={() => state.setWidthSliderPreviewActive(false)}
+						onfocus={() => state.setWidthSliderPreviewActive(true)}
+						onblur={() => state.setWidthSliderPreviewActive(false)}
 					/>
-					<span class="nimble-ct-settings__slider-value">{widthLevel}</span>
+					<span class="nimble-ct-settings__slider-value">{state.widthLevel}</span>
 				</div>
 			</div>
 			<div class="nimble-ct-settings__row nimble-ct-settings__row--slider">
@@ -283,16 +55,16 @@
 						min={MIN_LEVEL}
 						max={MAX_LEVEL}
 						step="1"
-						value={cardSizeLevel}
-						oninput={handleCardSizeLevelInput}
-						onchange={handleCardSizeLevelInput}
-						onpointerdown={() => setCardSizeSliderPreviewActive(true)}
-						onpointerup={() => setCardSizeSliderPreviewActive(false)}
-						onpointercancel={() => setCardSizeSliderPreviewActive(false)}
-						onfocus={() => setCardSizeSliderPreviewActive(true)}
-						onblur={() => setCardSizeSliderPreviewActive(false)}
+						value={state.cardSizeLevel}
+						oninput={state.handleCardSizeLevelInput}
+						onchange={state.handleCardSizeLevelInput}
+						onpointerdown={() => state.setCardSizeSliderPreviewActive(true)}
+						onpointerup={() => state.setCardSizeSliderPreviewActive(false)}
+						onpointercancel={() => state.setCardSizeSliderPreviewActive(false)}
+						onfocus={() => state.setCardSizeSliderPreviewActive(true)}
+						onblur={() => state.setCardSizeSliderPreviewActive(false)}
 					/>
-					<span class="nimble-ct-settings__slider-value">{cardSizeLevel}</span>
+					<span class="nimble-ct-settings__slider-value">{state.cardSizeLevel}</span>
 				</div>
 			</div>
 		</div>
@@ -308,8 +80,8 @@
 				<input
 					id="nimble-ct-resource-drawer-hover"
 					type="checkbox"
-					checked={resourceDrawerHoverEnabled}
-					onchange={handleResourceDrawerHoverChange}
+					checked={state.resourceDrawerHoverEnabled}
+					onchange={state.handleResourceDrawerHoverChange}
 				/>
 			</div>
 			<div class="nimble-ct-settings__row">
@@ -319,15 +91,15 @@
 				<select
 					id="nimble-ct-player-hp-bar-text-mode"
 					class="nimble-ct-settings__select"
-					value={playerHpBarTextMode}
-					onchange={handlePlayerHpBarTextModeChange}
+					value={state.playerHpBarTextMode}
+					onchange={state.handlePlayerHpBarTextModeChange}
 				>
 					{#each HP_BAR_TEXT_MODE_OPTIONS as option}
 						<option value={option.value}>{option.label}</option>
 					{/each}
 				</select>
 			</div>
-			{#if canManageSharedCtSettings}
+			{#if state.canManageSharedCtSettings}
 				<div class="nimble-ct-settings__row">
 					<label class="nimble-ct-settings__label" for="nimble-ct-non-player-hp-bar">
 						Show Non-player HP Bar
@@ -335,8 +107,8 @@
 					<input
 						id="nimble-ct-non-player-hp-bar"
 						type="checkbox"
-						checked={nonPlayerHpBarEnabled}
-						onchange={handleNonPlayerHpBarEnabledChange}
+						checked={state.nonPlayerHpBarEnabled}
+						onchange={state.handleNonPlayerHpBarEnabledChange}
 					/>
 				</div>
 				<div class="nimble-ct-settings__row">
@@ -346,9 +118,9 @@
 					<select
 						id="nimble-ct-non-player-hp-bar-text-mode"
 						class="nimble-ct-settings__select"
-						value={nonPlayerHpBarTextMode}
-						disabled={!nonPlayerHpBarEnabled}
-						onchange={handleNonPlayerHpBarTextModeChange}
+						value={state.nonPlayerHpBarTextMode}
+						disabled={!state.nonPlayerHpBarEnabled}
+						onchange={state.handleNonPlayerHpBarTextModeChange}
 					>
 						{#each HP_BAR_TEXT_MODE_OPTIONS as option}
 							<option value={option.value}>{option.label}</option>
@@ -371,20 +143,22 @@
 						<button
 							type="button"
 							class="nimble-ct-settings__color-swatch"
-							class:nimble-ct-settings__color-swatch--active={actionColor === preset.color}
+							class:nimble-ct-settings__color-swatch--active={state.actionColor === preset.color}
 							style={`--nimble-ct-color: ${preset.color};`}
 							aria-label={preset.label}
 							data-tooltip={preset.label}
-							onclick={() => applyActionColor(preset.color)}
+							onclick={() => state.applyActionColor(preset.color)}
 						></button>
 					{/each}
 					<input
 						id="nimble-ct-action-color"
 						type="color"
 						class="nimble-ct-settings__color-picker"
-						value={actionColor}
-						oninput={(event) => applyActionColor((event.currentTarget as HTMLInputElement).value)}
-						onchange={(event) => applyActionColor((event.currentTarget as HTMLInputElement).value)}
+						value={state.actionColor}
+						oninput={(event) =>
+							state.applyActionColor((event.currentTarget as HTMLInputElement).value)}
+						onchange={(event) =>
+							state.applyActionColor((event.currentTarget as HTMLInputElement).value)}
 					/>
 				</div>
 			</div>
@@ -399,21 +173,22 @@
 						<button
 							type="button"
 							class="nimble-ct-settings__color-swatch"
-							class:nimble-ct-settings__color-swatch--active={reactionColor === preset.color}
+							class:nimble-ct-settings__color-swatch--active={state.reactionColor === preset.color}
 							style={`--nimble-ct-color: ${preset.color};`}
 							aria-label={preset.label}
 							data-tooltip={preset.label}
-							onclick={() => applyReactionColor(preset.color)}
+							onclick={() => state.applyReactionColor(preset.color)}
 						></button>
 					{/each}
 					<input
 						id="nimble-ct-reaction-color"
 						type="color"
 						class="nimble-ct-settings__color-picker"
-						value={reactionColor}
-						oninput={(event) => applyReactionColor((event.currentTarget as HTMLInputElement).value)}
+						value={state.reactionColor}
+						oninput={(event) =>
+							state.applyReactionColor((event.currentTarget as HTMLInputElement).value)}
 						onchange={(event) =>
-							applyReactionColor((event.currentTarget as HTMLInputElement).value)}
+							state.applyReactionColor((event.currentTarget as HTMLInputElement).value)}
 					/>
 				</div>
 			</div>

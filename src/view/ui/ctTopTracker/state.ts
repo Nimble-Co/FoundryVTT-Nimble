@@ -16,7 +16,7 @@ import {
 	isCombatTrackerResourceDrawerHoverSettingKey,
 	isCombatTrackerWidthLevelSettingKey,
 } from '../../../settings/combatTrackerSettings.js';
-import { getCombatForCurrentScene, syncCombatTurnsForCt } from './helpers.js';
+import { getCombatForCurrentScene, syncCombatTurnsForCt } from './combatTracker.utils.js';
 import type { CtTopTrackerSettingPatch } from './types.js';
 
 export function resolveCtTopTrackerSettingPatch(

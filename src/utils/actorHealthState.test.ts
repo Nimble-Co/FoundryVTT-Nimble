@@ -44,6 +44,20 @@ describe('getActorHealthState', () => {
 		expect(getActorHealthState(actor)).toBe('lastStand');
 	});
 
+	it('keeps solo monsters in lastStand after it has already been triggered', () => {
+		const actor = Object.assign(
+			createCombatActorFixture({
+				type: 'soloMonster',
+				hp: 8,
+				hpMax: 20,
+				lastStandThreshold: 4,
+			}),
+			{ statuses: new Set(['lastStand']) },
+		);
+
+		expect(getActorHealthState(actor as Actor.Implementation)).toBe('lastStand');
+	});
+
 	it('returns bloodied for solo monsters below half HP but above last stand threshold', () => {
 		const actor = createCombatActorFixture({
 			type: 'soloMonster',

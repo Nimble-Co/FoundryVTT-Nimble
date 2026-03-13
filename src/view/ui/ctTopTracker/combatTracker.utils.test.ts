@@ -14,7 +14,7 @@ import {
 	getPlayerCombatantDrawerData,
 	shouldRenderCombatantActions,
 	syncCombatTurnsForCt,
-} from './helpers.js';
+} from './combatTracker.utils.js';
 
 describe('ctTopTracker helpers', () => {
 	beforeEach(() => {

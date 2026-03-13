@@ -25,7 +25,7 @@ describe('registerCombatantHealthStateSync', () => {
 		globals().foundry.utils.hasProperty = createHasPropertyMock();
 	});
 
-	it('applies bloodied and clears last stand when an actor becomes bloodied', async () => {
+	it('applies bloodied before last stand is reached', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
 			.default;
@@ -67,6 +67,38 @@ describe('registerCombatantHealthStateSync', () => {
 		const updateActor = callbacks.get('updateActor');
 		updateActor?.(actor, {
 			system: { attributes: { hp: { value: 3, lastStandThreshold: 3 } } },
+		});
+		await flushAsync();
+
+		expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
+			active: false,
+			overlay: false,
+		});
+		expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'lastStand', {
+			active: true,
+			overlay: false,
+		});
+	});
+
+	it('keeps solo monsters in last stand after the state has already been triggered', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
+			.default;
+		registerCombatantHealthStateSync();
+
+		const actor = Object.assign(
+			createMockCombatActor({
+				type: 'soloMonster',
+				hp: 8,
+				hpMax: 20,
+				lastStandThreshold: 3,
+			}),
+			{ statuses: new Set(['lastStand']) },
+		);
+
+		const updateActor = callbacks.get('updateActor');
+		updateActor?.(actor, {
+			system: { attributes: { hp: { value: 8, lastStandThreshold: 3 } } },
 		});
 		await flushAsync();
 

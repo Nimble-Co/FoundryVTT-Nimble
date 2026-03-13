@@ -71,13 +71,13 @@
 		trackDependency,
 		getActionState,
 		getCtCardScale,
-	} from './ctTopTracker/helpers.js';
+	} from './ctTopTracker/combatTracker.utils.js';
 	import { registerCtTopTrackerHooks } from './ctTopTracker/hooks.js';
 	import {
 		resolveActionCombatState,
 		resolveCtTopTrackerSettingPatch,
-		resolveMonsterCardsExpandedState,
 	} from './ctTopTracker/state.js';
+	import { CtTopTrackerUiState } from './ctTopTracker/uiState.svelte.js';
 	import type {
 		CanvasTokenLike,
 		CombatantDropPreview,
@@ -87,6 +87,7 @@
 	} from './ctTopTracker/types.js';
 
 	let preferredCombatId: string | null = null;
+	const uiState = new CtTopTrackerUiState();
 
 	function resolveActionCombat(): Combat | null {
 		const resolvedState = resolveActionCombatState({
@@ -282,8 +283,7 @@
 	function toggleMonsterCardExpansion(event: MouseEvent): void {
 		event.preventDefault();
 		event.stopPropagation();
-		if (!canCurrentUserExpandMonsterCards) return;
-		monsterCardsExpanded = !monsterCardsExpanded;
+		if (!uiState.toggleMonsterCardsExpanded(canCurrentUserExpandMonsterCards)) return;
 		void tick().then(() => {
 			void centerActiveEntryInView(activeEntryKey);
 		});
@@ -965,7 +965,6 @@
 	let ctEnabled = $state(getCombatTrackerCtEnabled());
 	let ctWidthLevel = $state(getCombatTrackerCtWidthLevel());
 	let ctCardSizeLevel = $state(getCombatTrackerCtCardSizeLevel());
-	let monsterCardsExpanded = $state(false);
 	let layoutVersion = $state(0);
 	let trackElement: HTMLOListElement | null = $state(null);
 	let trackScrollLeft = $state(0);
@@ -995,7 +994,7 @@
 	let canCurrentUserExpandMonsterCards = $derived(
 		Boolean(game.user?.isGM) || playersCanExpandMonsterCards,
 	);
-	let shouldCollapseMonsterCards = $derived(hasMonsterCombatants && !monsterCardsExpanded);
+	let shouldCollapseMonsterCards = $derived(hasMonsterCombatants && !uiState.monsterCardsExpanded);
 	let renderedDeadCombatants = $derived(
 		sceneDeadCombatants.filter((combatant) => isPlayerCombatant(combatant)),
 	);
@@ -1220,14 +1219,10 @@
 	});
 
 	$effect(() => {
-		const normalizedMonsterCardsExpanded = resolveMonsterCardsExpandedState({
+		uiState.syncMonsterCardsExpanded({
 			hasMonsterCombatants,
 			canCurrentUserExpandMonsterCards,
-			monsterCardsExpanded,
 		});
-		if (monsterCardsExpanded !== normalizedMonsterCardsExpanded) {
-			monsterCardsExpanded = normalizedMonsterCardsExpanded;
-		}
 	});
 </script>
 
@@ -1373,12 +1368,13 @@
 					{#if hasMonsterCombatants && canCurrentUserExpandMonsterCards}
 						<button
 							class="nimble-ct__icon-button"
-							aria-label={monsterCardsExpanded ? 'Collapse Monsters' : 'Expand Monsters'}
-							data-tooltip={monsterCardsExpanded ? 'Collapse Monsters' : 'Expand Monsters'}
+							aria-label={uiState.monsterCardsExpanded ? 'Collapse Monsters' : 'Expand Monsters'}
+							data-tooltip={uiState.monsterCardsExpanded ? 'Collapse Monsters' : 'Expand Monsters'}
 							data-tooltip-direction="LEFT"
 							onclick={toggleMonsterCardExpansion}
 						>
-							<i class={`fa-solid ${monsterCardsExpanded ? 'fa-compress' : 'fa-expand'}`}></i>
+							<i class={`fa-solid ${uiState.monsterCardsExpanded ? 'fa-compress' : 'fa-expand'}`}
+							></i>
 						</button>
 					{/if}
 					{#if game.user?.isGM}

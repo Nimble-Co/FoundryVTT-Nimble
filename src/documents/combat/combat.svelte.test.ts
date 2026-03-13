@@ -707,7 +707,7 @@ describe('NimbleCombat', () => {
 		]);
 	});
 
-	it('lets an owner use Defend off-turn and applies the Defending condition', async () => {
+	it('lets an owner use Defend off-turn without applying a condition', async () => {
 		globals().game.user.isGM = false;
 		globals().game.user.role = 1;
 		const combatId = 'combat-defend-owner-use';
@@ -768,10 +768,10 @@ describe('NimbleCombat', () => {
 				'system.actions.base.current': 2,
 			},
 		]);
-		expect(defendingActor.toggleStatusEffect).toHaveBeenCalledWith('defending', { active: true });
+		expect(defendingActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
-	it('lets an owner use Interpose off-turn and applies the Interposing condition', async () => {
+	it('lets an owner use Interpose off-turn without applying a condition', async () => {
 		globals().game.user.isGM = false;
 		globals().game.user.role = 1;
 		const combatId = 'combat-interpose-owner-use';
@@ -834,12 +834,10 @@ describe('NimbleCombat', () => {
 				'system.actions.base.current': 2,
 			},
 		]);
-		expect(interposingActor.toggleStatusEffect).toHaveBeenCalledWith('interposing', {
-			active: true,
-		});
+		expect(interposingActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
-	it('lets an owner use Opportunity Attack off-turn and applies the Opportunity Attack condition', async () => {
+	it('lets an owner use Opportunity Attack off-turn without applying a condition', async () => {
 		globals().game.user.isGM = false;
 		globals().game.user.role = 1;
 		const combatId = 'combat-opportunity-attack-owner-use';
@@ -902,12 +900,10 @@ describe('NimbleCombat', () => {
 				'system.actions.base.current': 2,
 			},
 		]);
-		expect(reactingActor.toggleStatusEffect).toHaveBeenCalledWith('opportunityAttacking', {
-			active: true,
-		});
+		expect(reactingActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
-	it('lets an owner use Help off-turn and applies the Helping condition', async () => {
+	it('lets an owner use Help off-turn without applying a condition', async () => {
 		globals().game.user.isGM = false;
 		globals().game.user.role = 1;
 		const combatId = 'combat-help-owner-use';
@@ -967,10 +963,10 @@ describe('NimbleCombat', () => {
 				'system.actions.base.current': 2,
 			},
 		]);
-		expect(helpingActor.toggleStatusEffect).toHaveBeenCalledWith('helping', { active: true });
+		expect(helpingActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
-	it('clears the Defending condition when the GM re-enables Defend', async () => {
+	it('re-enables Defend without touching actor conditions', async () => {
 		const combatId = 'combat-defend-gm-reenable-clears-condition';
 		const activeCharacter = createMockCombatant({
 			id: 'active-character',
@@ -1022,10 +1018,10 @@ describe('NimbleCombat', () => {
 		const changed = await combat.toggleHeroicReactionAvailability('defending-character', 'defend');
 
 		expect(changed).toBe(true);
-		expect(defendingActor.toggleStatusEffect).toHaveBeenCalledWith('defending', { active: false });
+		expect(defendingActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
-	it('clears the Interposing condition when the GM re-enables Interpose', async () => {
+	it('re-enables Interpose without touching actor conditions', async () => {
 		const combatId = 'combat-interpose-gm-reenable-clears-condition';
 		const activeCharacter = createMockCombatant({
 			id: 'active-character',
@@ -1084,12 +1080,10 @@ describe('NimbleCombat', () => {
 		);
 
 		expect(changed).toBe(true);
-		expect(interposingActor.toggleStatusEffect).toHaveBeenCalledWith('interposing', {
-			active: false,
-		});
+		expect(interposingActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
-	it('clears the Opportunity Attack condition when the GM re-enables Opportunity Attack', async () => {
+	it('re-enables Opportunity Attack without touching actor conditions', async () => {
 		const combatId = 'combat-opportunity-attack-gm-reenable-clears-condition';
 		const activeCharacter = createMockCombatant({
 			id: 'active-character',
@@ -1148,12 +1142,10 @@ describe('NimbleCombat', () => {
 		);
 
 		expect(changed).toBe(true);
-		expect(reactingActor.toggleStatusEffect).toHaveBeenCalledWith('opportunityAttacking', {
-			active: false,
-		});
+		expect(reactingActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
-	it('clears the Helping condition when the GM re-enables Help', async () => {
+	it('re-enables Help without touching actor conditions', async () => {
 		const combatId = 'combat-help-gm-reenable-clears-condition';
 		const activeCharacter = createMockCombatant({
 			id: 'active-character',
@@ -1205,7 +1197,7 @@ describe('NimbleCombat', () => {
 		const changed = await combat.toggleHeroicReactionAvailability('helping-character', 'help');
 
 		expect(changed).toBe(true);
-		expect(helpingActor.toggleStatusEffect).toHaveBeenCalledWith('helping', { active: false });
+		expect(helpingActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
 	it('allows the GM to toggle a heroic reaction on the combatants own turn', async () => {
@@ -1258,9 +1250,7 @@ describe('NimbleCombat', () => {
 				'system.actions.base.current': 2,
 			},
 		]);
-		expect(activeActor.toggleStatusEffect).toHaveBeenCalledWith('opportunityAttacking', {
-			active: true,
-		});
+		expect(activeActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
 	it('blocks an owner from using a heroic reaction on their own active turn', async () => {
@@ -1386,31 +1376,10 @@ describe('NimbleCombat', () => {
 					toggleStatusEffect: ReturnType<typeof vi.fn>;
 				}
 			).toggleStatusEffect,
-		).toHaveBeenCalledWith('defending', { active: false });
-		expect(
-			(
-				characterOne.actor as Actor.Implementation & {
-					toggleStatusEffect: ReturnType<typeof vi.fn>;
-				}
-			).toggleStatusEffect,
-		).toHaveBeenCalledWith('interposing', { active: false });
-		expect(
-			(
-				characterOne.actor as Actor.Implementation & {
-					toggleStatusEffect: ReturnType<typeof vi.fn>;
-				}
-			).toggleStatusEffect,
-		).toHaveBeenCalledWith('opportunityAttacking', { active: false });
-		expect(
-			(
-				characterOne.actor as Actor.Implementation & {
-					toggleStatusEffect: ReturnType<typeof vi.fn>;
-				}
-			).toggleStatusEffect,
-		).toHaveBeenCalledWith('helping', { active: false });
+		).not.toHaveBeenCalled();
 	});
 
-	it('clears reaction side-effect conditions at the end of the characters turn', async () => {
+	it('resets actions at the end of the characters turn without touching reaction conditions', async () => {
 		const defendingActor = createCombatActorFixture({
 			hp: 8,
 			woundsValue: 0,
@@ -1443,16 +1412,7 @@ describe('NimbleCombat', () => {
 		expect(combatant.update).toHaveBeenCalledWith({
 			'system.actions.base.current': 3,
 		});
-		expect(defendingActor.toggleStatusEffect).toHaveBeenCalledWith('defending', { active: false });
-		expect(defendingActor.toggleStatusEffect).toHaveBeenCalledWith('interposing', {
-			active: false,
-		});
-		expect(defendingActor.toggleStatusEffect).toHaveBeenCalledWith('opportunityAttacking', {
-			active: false,
-		});
-		expect(defendingActor.toggleStatusEffect).toHaveBeenCalledWith('helping', {
-			active: false,
-		});
+		expect(defendingActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
 	it('auto-dissolves grouped minions at round boundary in ncs mode', async () => {
