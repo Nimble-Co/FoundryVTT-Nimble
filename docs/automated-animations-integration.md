@@ -39,8 +39,9 @@ Each entry in the JSON array represents one autorec rule. Top-level fields:
 
 | Field | Type | Purpose | Example |
 |---|---|---|---|
+| `label` | string | Item name AA matches against (substring, after lowercasing + stripping spaces) | `"Shortsword"` |
 | `menu` | string | Autorec category AA uses to group the entry | `"melee"`, `"range"`, `"ontoken"` |
-| `metaData.name` | string | Item name AA matches against (case-insensitive) | `"Shortsword"` |
+| `metaData` | object | Ownership/provenance metadata — **not** used for matching | `{}` |
 | `primary` | object | Main animation played on use | see sub-fields below |
 | `secondary` | object | Impact / explosion FX (optional) | same video sub-fields |
 | `source` | object | FX attached to the source token (optional) | on-attack glow, etc. |
@@ -62,10 +63,12 @@ These four fields build the Sequencer path: `autoanimations.<dbSection>.<menuTyp
 
 ### `macro` sub-fields
 
+All entries in this file have `"macro": { "enable": false }`. The additional fields below are only required when `enable` is `true`.
+
 | Field | Type | Purpose | Example |
 |---|---|---|---|
 | `enable` | boolean | Whether to run the macro | `true` |
-| `name` | string | Name of the macro in Foundry's macro directory | `"Apply Burning"` |
+| `name` | string | Name of the macro in Foundry's macro directory (required when enabled) | `"Apply Burning"` |
 | `args` | string | Arguments passed to the macro | `""` |
 | `playWhen` | string | When to fire: `"0"` = always, `"1"` = on hit | `"0"` |
 
@@ -73,8 +76,9 @@ These four fields build the Sequencer path: `autoanimations.<dbSection>.<menuTyp
 
 ## How Item Names Are Matched
 
-- AA normalizes item names before comparing: it strips leading/trailing whitespace and compares case-insensitively.
-- `metaData.name` must exactly match the item's name in Foundry (after normalization).
+- AA matches on the entry's **`label`** field, not `metaData.name`. `metaData` is used for ownership/provenance metadata only and is not part of the matching logic.
+- AA normalizes both the item name and the label before comparing: it strips spaces and lowercases both strings (`rinseName()`), then checks whether the normalized item name **contains** the normalized label as a substring. For example, label `"Shortsword"` matches item name `"Shortsword Attack"`.
+- Use `advanced: { "exactMatch": true }` on an entry to require a full string match instead of substring.
 - Priority order when multiple sources could trigger: **ammo flags → item flags → autorec entry → no animation**.
 - If no autorec entry matches, AA silently skips the animation (no error).
 
@@ -86,7 +90,7 @@ These four fields build the Sequencer path: `autoanimations.<dbSection>.<menuTyp
 2. **Open the JSON file** at `public/module-compat/automated-animations-nimble.json`.
 3. **Copy an existing entry** that uses the same `menu` category as your new item (e.g., copy a melee entry for a new melee weapon).
 4. **Edit the copy**:
-   - Set `metaData.name` to the exact item name as it appears in Foundry (e.g., `"Handaxe"`).
+   - Set `label` to the item name (or a distinctive substring of it) as it appears in Foundry (e.g., `"Handaxe"`).
    - Set `primary.video.dbSection`, `menuType`, `animation`, `variant`, and `color` to the values you found in step 1.
    - Clear or adjust `secondary`, `source`, `target` if the new item doesn't need those effects.
 5. **Save the file** and re-import it into AA following the steps in [How to Install / Import](#how-to-install--import).
@@ -96,17 +100,32 @@ These four fields build the Sequencer path: `autoanimations.<dbSection>.<menuTyp
 
 ```json
 {
+  "id": "<uuid>",
+  "label": "Hand Axe",
   "menu": "melee",
-  "metaData": { "name": "Handaxe" },
+  "metaData": {},
   "primary": {
     "video": {
       "dbSection": "melee",
       "menuType": "weapon",
       "animation": "handaxe",
-      "variant": "01",
-      "color": "white"
+      "variant": "standard",
+      "color": "white",
+      "enableCustom": false,
+      "customPath": ""
+    },
+    "sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+    "options": {
+      "contrast": 0, "delay": 0, "elevation": 1000, "isWait": false,
+      "opacity": 1, "repeat": 1, "repeatDelay": 500, "saturate": 0,
+      "size": 1, "tint": false, "tintColor": "#FFFFFF", "zIndex": 1
     }
-  }
+  },
+  "secondary": { "enable": false },
+  "source": { "enable": false },
+  "target": { "enable": false },
+  "macro": { "enable": false },
+  "soundOnly": { "sound": { "enable": false } }
 }
 ```
 
