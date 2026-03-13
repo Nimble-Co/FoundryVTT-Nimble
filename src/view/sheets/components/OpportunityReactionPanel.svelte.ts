@@ -143,7 +143,7 @@ export function createOpportunityPanelState(
 			getActor(),
 			unarmedItem,
 			localize('NIMBLE.ui.heroicActions.reactions.opportunity.unarmedOpportunity'),
-			{ rollMode: 2 }, // Default to disadvantage
+			{ rollMode: -1 }, // Default to disadvantage
 		);
 		await dialog.render(true);
 		const result = await dialog.promise;
@@ -153,7 +153,7 @@ export function createOpportunityPanelState(
 		const roll = new DamageRoll(rollFormula, getActor().getRollData(), {
 			canCrit: true,
 			canMiss: true,
-			rollMode: result.rollMode ?? 2, // Disadvantage by default
+			rollMode: result.rollMode ?? -1, // Disadvantage by default
 			primaryDieValue: result.primaryDieValue ?? 0,
 			primaryDieModifier: Number(result.primaryDieModifier) || 0,
 			damageType: 'bludgeoning',
@@ -208,7 +208,7 @@ export function createOpportunityPanelState(
 				actorType: getActor().type,
 				image: unarmedItem.img,
 				permissions: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER,
-				rollMode: result.rollMode ?? 2,
+				rollMode: result.rollMode ?? -1,
 				name: localize('NIMBLE.ui.heroicActions.reactions.opportunity.unarmedOpportunity'),
 				description: '',
 				featureType: 'feature',
@@ -235,7 +235,7 @@ export function createOpportunityPanelState(
 
 	async function handleItemClick(itemId: string): Promise<unknown> {
 		const item = getActor().items.get(itemId);
-		const result = await getActor().activateItem(itemId, { rollMode: 2 }); // Disadvantage
+		const result = await getActor().activateItem(itemId, { rollMode: -1 }); // Disadvantage
 
 		if (result && item) {
 			await getOnDeductAction()();
