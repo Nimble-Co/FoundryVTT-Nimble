@@ -2,6 +2,19 @@
 
 ### Completed
 
+- [x] BUILD: Automated Animations Nimble preset config
+  - Created `public/module-compat/automated-animations-nimble.json` — 20 entries covering 11 melee weapons,
+    3 ranged weapons, and 7 spells mapped to JB2A animation keys.
+  - AA matching logic confirmed: matches on `label` field (substring after rinseName()), not `metaData.name`.
+  - JB2A keys used: greatsword/01/white, dagger/01/white, greataxe/01/white, handaxe/standard/white,
+    halberd/01/white, mace/01/white, arrow/physical/blue, bolt/physical/orange, fire_bolt/01/orange,
+    fireball/explosion/orange, lightning_bolt/wide/blue, lightning_strike/01/blue, cone_of_cold/01/blue.
+  - Fixed `docs/automated-animations-integration.md`: corrected `metaData.name` → `label` as the match field;
+    updated schema table and example JSON.
+  - Live import/animation test: pending manual verification in FoundryVTT
+    (AA Custom Automations → Import → use item in scene).
+  - Branch: `audit/module-compat`
+
 - [x] LOCALIZATION: Audit src/config.ts constants against en.json
   - Performed full audit of all user-facing string keys in `src/config.ts` against `public/lang/en.json`.
   - All config values are NIMBLE.* key references (no raw English strings) — pattern is correct throughout.

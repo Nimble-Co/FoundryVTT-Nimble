@@ -1,0 +1,790 @@
+{
+	"version": "4.0.0",
+	"melee": [
+		{
+			"id": "a6483abf-3526-4bb1-997d-12e47ba9700e",
+			"label": "Greatsword",
+			"menu": "melee",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "melee",
+					"menuType": "weapon",
+					"animation": "greatsword",
+					"variant": "01",
+					"color": "white",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "7a06fb84-9bc4-412d-8bc6-bd4c482ddb18",
+			"label": "Longsword",
+			"menu": "melee",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "melee",
+					"menuType": "weapon",
+					"animation": "greatsword",
+					"variant": "01",
+					"color": "white",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "101940f7-1002-4fa7-aef6-40194bcab9f8",
+			"label": "Shortsword",
+			"menu": "melee",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "melee",
+					"menuType": "weapon",
+					"animation": "dagger",
+					"variant": "01",
+					"color": "white",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "e8c10369-a9ce-4e46-8653-a1b28709626e",
+			"label": "Short Sword",
+			"menu": "melee",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "melee",
+					"menuType": "weapon",
+					"animation": "dagger",
+					"variant": "01",
+					"color": "white",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "19dee755-a5eb-4682-b217-c065b49cd3b0",
+			"label": "Dagger",
+			"menu": "melee",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "melee",
+					"menuType": "weapon",
+					"animation": "dagger",
+					"variant": "01",
+					"color": "white",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "76d52c2c-5a87-43b2-a0f8-9e128c5bc756",
+			"label": "Battleaxe",
+			"menu": "melee",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "melee",
+					"menuType": "weapon",
+					"animation": "greataxe",
+					"variant": "01",
+					"color": "white",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "d6b81781-e298-4032-859b-f3921cde2a2c",
+			"label": "Hand Axe",
+			"menu": "melee",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "melee",
+					"menuType": "weapon",
+					"animation": "handaxe",
+					"variant": "standard",
+					"color": "white",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "4ff83cbe-3da5-4a66-807f-b60d068694c4",
+			"label": "Glaive",
+			"menu": "melee",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "melee",
+					"menuType": "weapon",
+					"animation": "halberd",
+					"variant": "01",
+					"color": "white",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "5833dc2e-24cb-43a1-8c2b-c7c434efc963",
+			"label": "Spear",
+			"menu": "melee",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "melee",
+					"menuType": "weapon",
+					"animation": "halberd",
+					"variant": "01",
+					"color": "white",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "efbe7f12-6adf-4e04-ae11-f03afe2c78fe",
+			"label": "Pole Hammer",
+			"menu": "melee",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "melee",
+					"menuType": "weapon",
+					"animation": "halberd",
+					"variant": "01",
+					"color": "white",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "32b3b8e7-8a68-446a-a05d-a4c8ef17ae1f",
+			"label": "Mace",
+			"menu": "melee",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "melee",
+					"menuType": "weapon",
+					"animation": "mace",
+					"variant": "01",
+					"color": "white",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		}
+	],
+	"range": [
+		{
+			"id": "8347fa0c-a11f-4a3e-9a08-d8acd7790d28",
+			"label": "Longbow",
+			"menu": "range",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "range",
+					"menuType": "weapon",
+					"animation": "arrow",
+					"variant": "physical",
+					"color": "blue",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "2392282a-5942-47ad-8b01-00f7438a1733",
+			"label": "Shortbow",
+			"menu": "range",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "range",
+					"menuType": "weapon",
+					"animation": "arrow",
+					"variant": "physical",
+					"color": "blue",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "ec004bae-9f35-4896-bdca-e59e3a8f83dd",
+			"label": "Crossbow",
+			"menu": "range",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "range",
+					"menuType": "weapon",
+					"animation": "bolt",
+					"variant": "physical",
+					"color": "orange",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		}
+	],
+	"ontoken": [
+		{
+			"id": "02ba9499-0248-4569-9689-5a4c075963bf",
+			"label": "Flame Dart",
+			"menu": "ontoken",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "static",
+					"menuType": "spell",
+					"animation": "fire_bolt",
+					"variant": "01",
+					"color": "orange",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "b3ae4987-8c49-4265-8a31-e278ea02d7fe",
+			"label": "Pyroclasm",
+			"menu": "ontoken",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "static",
+					"menuType": "spell",
+					"animation": "fireball",
+					"variant": "explosion",
+					"color": "orange",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "37103b8b-ffa7-4c09-aeac-c7d9999dd12b",
+			"label": "Arc Lightning",
+			"menu": "ontoken",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "static",
+					"menuType": "spell",
+					"animation": "lightning_bolt",
+					"variant": "wide",
+					"color": "blue",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "465bc43a-c6d8-4915-8e14-0f20c6e651b7",
+			"label": "Zap",
+			"menu": "ontoken",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "static",
+					"menuType": "spell",
+					"animation": "lightning_strike",
+					"variant": "01",
+					"color": "blue",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "6ff202f7-a8dd-4375-bebd-76bb6b988ede",
+			"label": "Snowblind",
+			"menu": "ontoken",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "static",
+					"menuType": "spell",
+					"animation": "cone_of_cold",
+					"variant": "01",
+					"color": "blue",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "767adee4-74d6-4788-884a-2f4659087ff0",
+			"label": "Ice Lance",
+			"menu": "ontoken",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "static",
+					"menuType": "spell",
+					"animation": "cone_of_cold",
+					"variant": "01",
+					"color": "blue",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		},
+		{
+			"id": "b3ae4987-8c49-4265-8a31-e278ea02d7ff",
+			"label": "Ignite",
+			"menu": "ontoken",
+			"metaData": {},
+			"primary": {
+				"video": {
+					"dbSection": "static",
+					"menuType": "spell",
+					"animation": "fire_bolt",
+					"variant": "01",
+					"color": "orange",
+					"enableCustom": false,
+					"customPath": ""
+				},
+				"sound": { "enable": false, "delay": 0, "startTime": 0, "volume": 0.75 },
+				"options": {
+					"contrast": 0,
+					"delay": 0,
+					"elevation": 1000,
+					"isWait": false,
+					"opacity": 1,
+					"repeat": 1,
+					"repeatDelay": 500,
+					"saturate": 0,
+					"size": 1,
+					"tint": false,
+					"tintColor": "#FFFFFF",
+					"zIndex": 1
+				}
+			},
+			"secondary": { "enable": false },
+			"source": { "enable": false },
+			"target": { "enable": false },
+			"macro": { "enable": false },
+			"soundOnly": { "sound": { "enable": false } }
+		}
+	],
+	"templatefx": [],
+	"aura": [],
+	"preset": [],
+	"aefx": []
+}

@@ -37,7 +37,7 @@
 
 #### Complex — New Assets / Configuration
 
-- [ ] **[Build] Automated Animations Nimble preset config** — Create `docs/automated-animations-nimble.json` containing a custom automations config for the `autoanimations` module. Map common Nimble spell and item names (e.g., Fireball, Magic Missile, Shortsword) to JB2A animation keys from the installed `JB2A_DnD5e` pack. Cover at minimum: 5 spells, melee attack, ranged attack. Import the JSON via Automated Animations → Custom Automations and confirm animations fire in a live test. Run `/nimble-e2e-tester`. Update `progress.txt`.
+- [x] **[Build] Automated Animations Nimble preset config** — Create `docs/automated-animations-nimble.json` containing a custom automations config for the `autoanimations` module. Map common Nimble spell and item names (e.g., Fireball, Magic Missile, Shortsword) to JB2A animation keys from the installed `JB2A_DnD5e` pack. Cover at minimum: 5 spells, melee attack, ranged attack. Import the JSON via Automated Animations → Custom Automations and confirm animations fire in a live test. Run `/nimble-e2e-tester`. Update `progress.txt`.
 
 #### Roadmap (out of scope for this repo)
 
