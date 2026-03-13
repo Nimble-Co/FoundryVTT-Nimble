@@ -6,16 +6,26 @@ import { PrimaryDie } from './terms/PrimaryDie.js';
 const Terms = foundry.dice.terms;
 
 declare namespace DamageRoll {
+	/** Roll data for damage rolls. */
 	interface Data extends Record<string, number | string | boolean | object | null> {}
 
+	/** Configuration options for damage rolls. */
 	interface Options extends foundry.dice.Roll.Options {
+		/** Whether this roll can score a critical hit (exploding die). */
 		canCrit: boolean;
+		/** Whether this roll can miss (rolling a 1 on the primary die). */
 		canMiss: boolean;
+		/** The minimum roll value needed to score a critical hit. */
 		criticalThreshold?: number;
+		/** The damage type for this roll (e.g., "fire", "slashing"). */
 		damageType?: string;
+		/** The maximum roll value that counts as a fumble/miss. */
 		fumbleThreshold?: number;
+		/** The roll mode: positive for advantage, negative for disadvantage, 0 for normal. */
 		rollMode: number;
+		/** A predetermined value for the primary die result. */
 		primaryDieValue: number;
+		/** A modifier to add to the primary die result. */
 		primaryDieModifier: number;
 		/**
 		 * Whether the primary die's base result contributes to damage.
@@ -26,6 +36,7 @@ declare namespace DamageRoll {
 		primaryDieAsDamage?: boolean;
 	}
 
+	/** Data structure for serializing/deserializing a DamageRoll. */
 	interface SerializedData {
 		formula: string;
 		terms?: foundry.dice.Roll.Data['terms'] | foundry.dice.terms.RollTerm[] | object[];
@@ -46,6 +57,10 @@ declare namespace DamageRoll {
 		excludedPrimaryDieValue?: number;
 	}
 
+	/**
+	 * Represents an evaluated DamageRoll with guaranteed total value.
+	 * @template T - The DamageRoll type being evaluated.
+	 */
 	type Evaluated<T extends DamageRoll> = T & {
 		_evaluated: true;
 		_total: number;
@@ -53,15 +68,42 @@ declare namespace DamageRoll {
 	};
 }
 
+/**
+ * A specialized roll class for handling damage calculations in the Nimble system.
+ *
+ * DamageRoll extends Foundry's Roll class with support for:
+ * - Critical hit detection via exploding primary dice
+ * - Miss detection when rolling a 1 on the primary die
+ * - Advantage/disadvantage on damage (roll multiple primary dice, keep highest/lowest)
+ * - Automatic separation and tracking of the "primary die" from the formula
+ *
+ * The primary die is the first die term in the formula and determines critical/miss status.
+ * When the primary die explodes (rolls max value), the roll is a critical hit.
+ * When the primary die rolls a 1, the roll is a miss.
+ *
+ * @extends {foundry.dice.Roll<DamageRoll.Data>}
+ *
+ * @example
+ * ```typescript
+ * const roll = new DamageRoll("2d6+3", actorData, { canCrit: true, canMiss: true, rollMode: 0 });
+ * await roll.evaluate();
+ * if (roll.isCritical) console.log("Critical hit!");
+ * if (roll.isMiss) console.log("Miss!");
+ * ```
+ */
 class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	declare options: DamageRoll.Options;
 
+	/** Whether this roll resulted in a critical hit. Undefined until evaluated. */
 	isCritical: undefined | boolean = undefined;
 
+	/** Whether this roll resulted in a miss. Undefined until evaluated. */
 	isMiss: undefined | boolean = undefined;
 
+	/** The original formula before preprocessing (e.g., before primary die extraction). */
 	originalFormula: string;
 
+	/** The primary die term used for critical/miss detection. */
 	primaryDie: PrimaryDie | undefined = undefined;
 
 	override _formula: string = '';
@@ -72,6 +114,13 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 */
 	excludedPrimaryDieValue: number = 0;
 
+	/*
+	 * Creates a new DamageRoll instance.
+	 *
+	 * @param formula - The dice formula for the damage roll (e.g., "2d6+3").
+	 * @param data - Roll data containing actor/item attributes for formula resolution.
+	 * @param options - Configuration options including critical/miss settings and roll mode.
+	 */
 	constructor(formula: string, data: DamageRoll.Data = {}, options?: DamageRoll.Options) {
 		super(formula, data, options);
 
@@ -96,6 +145,19 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** ------------------------------------------------------ */
 	/**                  Data Prep Helpers                     */
 	/** ------------------------------------------------------ */
+
+	/**
+	 * Preprocesses the roll formula to extract and configure the primary die.
+	 *
+	 * This method separates the first die term from the formula as the "primary die",
+	 * which is used for critical hit and miss detection. The primary die is configured with:
+	 * - Explosion modifier ('x') for critical detection if canCrit is true
+	 * - Keep highest ('kh') or keep lowest ('kl') modifiers based on rollMode
+	 *
+	 * @param _formula - The original dice formula (unused, kept for signature compatibility).
+	 * @param _data - Roll data (unused, kept for signature compatibility).
+	 * @param options - Roll options containing canCrit, canMiss, and rollMode settings.
+	 */
 	_preProcessFormula(_formula: string, _data: DamageRoll.Data, options: DamageRoll.Options) {
 		// Separate out the primary die
 		if (options.canCrit || options.canMiss) {
@@ -211,6 +273,15 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** ------------------------------------------------------ */
 	/**                       Helpers                          */
 	/** ------------------------------------------------------ */
+
+	/**
+	 * Updates the face count of the primary die term.
+	 *
+	 * Use this method to change the primary die size after roll creation
+	 * (e.g., when a feature modifies the damage die).
+	 *
+	 * @param dieSize - The new number of faces for the primary die (e.g., 8 for a d8).
+	 */
 	updatePrimaryTerm(dieSize: number) {
 		if (!this.primaryDie) return;
 
@@ -228,6 +299,17 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** ------------------------------------------------------ */
 	/**                       Overrides                        */
 	/** ------------------------------------------------------ */
+
+	/**
+	 * Evaluates the roll and determines critical/miss status.
+	 *
+	 * After evaluation, checks the primary die's results to determine:
+	 * - `isCritical`: true if the primary die exploded (rolled max value)
+	 * - `isMiss`: true if the primary die rolled a 1
+	 *
+	 * @param options - Evaluation options passed to the parent Roll class.
+	 * @returns The evaluated roll with isCritical and isMiss populated.
+	 */
 	override async _evaluate(
 		options?: InexactPartial<foundry.dice.Roll.Options>,
 	): Promise<DamageRoll.Evaluated<this>> {
@@ -257,6 +339,13 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		return this as DamageRoll.Evaluated<this>;
 	}
 
+	/**
+	 * Serializes the roll to a JSON-compatible object for storage or transmission.
+	 *
+	 * Includes all DamageRoll-specific properties: originalFormula, isMiss, and isCritical.
+	 *
+	 * @returns The serialized roll data.
+	 */
 	override toJSON() {
 		return {
 			...super.toJSON(),
@@ -271,18 +360,37 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** ------------------------------------------------------ */
 	/**                    Static Methods                      */
 	/** ------------------------------------------------------ */
+
+	/**
+	 * Type guard to check if terms array contains RollTerm instances.
+	 *
+	 * @param terms - The terms array to check.
+	 * @returns True if all items in the array are RollTerm instances.
+	 */
 	private static _isRollTermArray(
 		terms: DamageRoll.SerializedData['terms'],
 	): terms is foundry.dice.terms.RollTerm[] {
 		return Array.isArray(terms) && terms.every((t) => t instanceof foundry.dice.terms.RollTerm);
 	}
 
+	/**
+	 * Sets the internal evaluated state of a roll.
+	 *
+	 * @param roll - The DamageRoll to mark as evaluated.
+	 * @param total - The total value to set.
+	 */
 	private static _setEvaluatedState(roll: DamageRoll, total: number): void {
 		const internals = roll as object as { _evaluated: boolean; _total: number };
 		internals._evaluated = true;
 		internals._total = total;
 	}
 
+	/**
+	 * Creates a base Roll from serialized data for reconstruction.
+	 *
+	 * @param data - The serialized roll data.
+	 * @returns A base Roll instance with reconstructed terms.
+	 */
 	private static _baseRollFromSerializedData(data: DamageRoll.SerializedData): Roll<AnyObject> {
 		// Temporarily remove the class property to avoid infinite recursion
 		// when calling the parent's fromData method
@@ -294,12 +402,31 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		return foundry.dice.Roll.fromData(dataWithoutClass as object as foundry.dice.Roll.Data);
 	}
 
+	/**
+	 * Converts a standard Foundry Roll into a DamageRoll instance.
+	 *
+	 * @param roll - The Roll instance to convert.
+	 * @returns A new DamageRoll with the same formula, data, options, and evaluated state.
+	 */
 	static fromRoll(roll) {
 		const newRoll = new DamageRoll(roll.formula, roll.data, roll.options);
 		Object.assign(newRoll, roll);
 		return newRoll;
 	}
 
+	/**
+	 * Reconstructs a DamageRoll from serialized data.
+	 *
+	 * This method properly restores all DamageRoll-specific state including:
+	 * - The primary die term
+	 * - Critical and miss status
+	 * - Original formula
+	 * - Evaluated state
+	 *
+	 * @template T - The Roll constructor type.
+	 * @param data - The serialized roll data from `toJSON()`.
+	 * @returns A fully reconstructed DamageRoll instance.
+	 */
 	static override fromData<T extends foundry.dice.Roll.AnyConstructor>(
 		this: T,
 		data: DamageRoll.SerializedData,
