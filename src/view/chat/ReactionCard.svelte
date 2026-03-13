@@ -133,6 +133,20 @@
 </article>
 
 <style lang="scss">
+	// Override global _reaction-card.scss styles meant for PC sheet panels
+	:global(.system-nimble .nimble-chat-card__body.reaction-card) {
+		padding: 0;
+		gap: 0;
+		background: transparent;
+		border: none;
+		border-radius: 0;
+	}
+
+	:global(.system-nimble .nimble-chat-card__body.reaction-card .reaction-card__icon) {
+		width: 1.875rem;
+		height: 1.875rem;
+	}
+
 	.reaction-card {
 		--reaction-color: hsl(var(--reaction-hue, 210), 60%, 45%);
 		--reaction-color-light: hsl(var(--reaction-hue, 210), 60%, 92%);
@@ -141,8 +155,8 @@
 		&__header {
 			display: flex;
 			align-items: center;
-			gap: 0.625rem;
-			padding: 0.625rem;
+			gap: 0.5rem;
+			padding: var(--nimble-card-section-padding, 0.5rem);
 			border-bottom: 1px solid var(--nimble-card-border-color);
 		}
 
@@ -150,8 +164,8 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			width: 2.25rem;
-			height: 2.25rem;
+			width: 1.875rem;
+			height: 1.875rem;
 			background: linear-gradient(
 				135deg,
 				hsl(var(--reaction-hue), 60%, 50%) 0%,
@@ -161,7 +175,7 @@
 			flex-shrink: 0;
 
 			i {
-				font-size: 1rem;
+				font-size: 0.875rem;
 				color: white;
 			}
 		}
@@ -232,7 +246,7 @@
 			display: flex;
 			align-items: center;
 			gap: 0.5rem;
-			padding: 0.5rem 0.625rem;
+			padding: var(--nimble-card-section-padding, 0.5rem);
 			background: var(--nimble-box-background-color);
 			border-bottom: 1px solid var(--nimble-card-border-color);
 		}
