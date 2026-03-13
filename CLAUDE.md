@@ -18,7 +18,19 @@ Seven slash commands invoke specialized sub-agents for this project. All agents 
 | `/nimble-git-ops` | Full deliberate Git workflow: survey → code review (`nimble-review`) → `pnpm check` → grouped commits (confirmed) → push → PR/issue management. Use when you want a thorough, interactive commit cycle. |
 | `/nimble-commit-push` | Quick automated pipeline: auto-group changes → `pnpm check` → commit all groups → push → open PR to `stage`. Use when code is ready and you want zero friction. |
 
-### When to Auto-Invoke
+## Skills
+
+| Skill | When to Use |
+|-------|-------------|
+| `/nimble-ability-refs` | Looking up spell names by school, monster attack names by group, or hero ability names by class — before writing macros, auto-animations configs, or other content that references item names. |
+
+### When to Auto-Invoke Skills
+
+- **Looking up spell/attack/ability names** → load `/nimble-ability-refs` before writing macros or animation configs.
+
+---
+
+### When to Auto-Invoke Agents
 
 - **New sheet needed** → run `/nimble-scaffold SheetName Actor character` before writing any code.
 - **New macro needed** → run `/nimble-macro "Macro Name"` to draft the JSON.

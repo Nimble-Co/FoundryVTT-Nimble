@@ -14,14 +14,6 @@
 
 ## Tasks
 
-### Module Compatibility Audit
-> Ordered simplest → most complex. **Before starting any task here, create a separate git worktree:**
-> ```bash
-> git worktree add ~/foundryVTT/nimble-module-audit -b audit/module-compat
-> cd ~/foundryVTT/nimble-module-audit
-> ```
-> Do all audit and fix work inside that worktree. Branch from `stage`. DO NOT COMMIT. Run `/nimble-review` + `/nimble-e2e-tester`. Leave staged for user review.
-
 #### Simple — Smoke Tests (no code changes expected)
 
 - [x] **[Audit] SmallTime on v13** — Enable `smalltime`. Confirm the time widget renders, the clock updates, and there are no console errors. No code changes expected. Update `progress.txt` with pass/fail.
