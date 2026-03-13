@@ -2,23 +2,12 @@
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
-	import {
-		COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME,
-		getCombatTrackerPlayerHpBarTextMode,
-		getCombatTrackerNonPlayerHpBarEnabled,
-		getCombatTrackerNonPlayerHpBarTextMode,
-		getCombatTrackerResourceDrawerHoverEnabled,
-		getCombatTrackerCtCardSizeLevel,
-		getCombatTrackerCtEnabled,
-		getCombatTrackerCtWidthLevel,
-		getCombatTrackerPlayersCanExpandMonsterCards,
-	} from '../../settings/combatTrackerSettings.js';
+	import { COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME } from '../../settings/combatTrackerSettings.js';
 	import CtSettingsDialogComponent from '../dialogs/CtSettingsDialog.svelte';
 	import { canCurrentUserReorderCombatant } from '../../utils/combatantOrdering.js';
-	import { canOwnerUseHeroicReaction, type HeroicReactionKey } from '../../utils/heroicActions.js';
+	import type { HeroicReactionKey } from '../../utils/heroicActions.js';
 	import {
 		COMBATANT_ACTIONS_CURRENT_PATH,
-		canCurrentUserEndTurn as canCurrentUserEndCombatantTurn,
 		getCombatantCurrentActions,
 		getCombatantMaxActions,
 		resolveCombatantCurrentActionsAfterDelta,
@@ -31,14 +20,9 @@
 		CT_WIDTH_PREVIEW_EVENT_NAME,
 	} from './ctTopTracker/constants.js';
 	import {
-		buildAliveEntries,
-		buildCombatSyncSignature,
 		buildVirtualizedAliveEntries,
 		canCurrentUserAdjustCombatantActions,
 		canCurrentUserRollInitiativeForCombatant,
-		getActiveCombatant,
-		getActiveCombatantId,
-		getActiveCombatantOccurrence,
 		getCombatantId,
 		getCombatantDisplayName,
 		getCombatantImageForDisplay,
@@ -46,38 +30,23 @@
 		getPlayerCombatantDrawerData,
 		getNonPlayerCombatantHpBarData,
 		getCombatantSceneId,
-		getCombatantsForScene,
-		getCombatForCurrentScene,
 		getCombatantOutlineClass,
 		getDragTargetExpansionPx,
 		getEstimatedCtEntryWidthPx,
-		getRoundBoundaryKey,
-		getRoundSeparatorInsertionIndex,
 		isCombatRoundStarted,
 		isCombatStarted,
 		isEligibleForInitiativeRoll,
 		isMonsterOrMinionCombatant,
 		isPlayerCombatant,
 		localizeWithFallback,
-		normalizeCtCardSizeLevel,
-		normalizeCtWidthLevel,
-		orderEntriesForCenteredActive,
-		resolveActiveEntryKey,
-		resolveCtTrackMaxWidth,
 		resolvePreviewBeforeState,
 		shouldRenderCombatantActions,
 		shouldShowInitiativePromptForCombatant,
-		syncCombatTurnsForCt,
 		trackDependency,
 		getActionState,
-		getCtCardScale,
 	} from './ctTopTracker/combatTracker.utils.js';
 	import { registerCtTopTrackerHooks } from './ctTopTracker/hooks.js';
-	import {
-		resolveActionCombatState,
-		resolveCtTopTrackerSettingPatch,
-	} from './ctTopTracker/state.js';
-	import { CtTopTrackerUiState } from './ctTopTracker/uiState.svelte.js';
+	import { CtTopTrackerStore } from './ctTopTracker/topTrackerStore.svelte.js';
 	import type {
 		CanvasTokenLike,
 		CombatantDropPreview,
@@ -86,16 +55,10 @@
 		CtWidthPreviewEventDetail,
 	} from './ctTopTracker/types.js';
 
-	let preferredCombatId: string | null = null;
-	const uiState = new CtTopTrackerUiState();
+	const trackerStore = new CtTopTrackerStore();
 
 	function resolveActionCombat(): Combat | null {
-		const resolvedState = resolveActionCombatState({
-			currentCombat,
-			preferredCombatId,
-		});
-		preferredCombatId = resolvedState.preferredCombatId;
-		return resolvedState.combat;
+		return trackerStore.resolveActionCombat();
 	}
 
 	async function rollEligibleInitiative(combat: Combat): Promise<void> {
@@ -177,7 +140,7 @@
 	}
 
 	function updatePlayerMonsterExpansionPermission(): void {
-		playersCanExpandMonsterCards = getCombatTrackerPlayersCanExpandMonsterCards();
+		trackerStore.updatePlayerMonsterExpansionPermission();
 	}
 
 	async function centerActiveEntryInView(
@@ -215,18 +178,7 @@
 
 	function updateCurrentCombat(force = false): void {
 		queueMicrotask(() => {
-			const combat = getCombatForCurrentScene(preferredCombatId);
-			syncCombatTurnsForCt(combat);
-			const sceneId = canvas.scene?.id;
-			const signature = buildCombatSyncSignature(combat, sceneId);
-			if (!force && signature === lastCombatSignature) return;
-			lastCombatSignature = signature;
-			const { aliveCombatants, deadCombatants } = getCombatantsForScene(combat, sceneId);
-			currentCombat = combat;
-			preferredCombatId = combat?.id ?? combat?._id ?? null;
-			sceneAliveCombatants = aliveCombatants;
-			sceneDeadCombatants = deadCombatants;
-			renderVersion += 1;
+			if (!trackerStore.refreshCurrentCombat(force)) return;
 			queueMicrotask(() => {
 				updateTrackViewportMetrics();
 			});
@@ -283,9 +235,9 @@
 	function toggleMonsterCardExpansion(event: MouseEvent): void {
 		event.preventDefault();
 		event.stopPropagation();
-		if (!uiState.toggleMonsterCardsExpanded(canCurrentUserExpandMonsterCards)) return;
+		if (!trackerStore.toggleMonsterCardsExpanded()) return;
 		void tick().then(() => {
-			void centerActiveEntryInView(activeEntryKey);
+			void centerActiveEntryInView(trackerStore.activeEntryKey);
 		});
 	}
 
@@ -336,12 +288,7 @@
 		reactionKey: HeroicReactionKey,
 		reactionActive: boolean | undefined,
 	): boolean {
-		if (game.user?.isGM) return true;
-		if (reactionActive === false) return false;
-		if (!isCombatStarted(currentCombat)) return false;
-		if ((currentCombat?.combatant?.id ?? null) === getCombatantId(combatant)) return false;
-		if (getCombatantCurrentActions(combatant) < 1) return false;
-		return canOwnerUseHeroicReaction(reactionKey) && Boolean(combatant.actor?.isOwner);
+		return trackerStore.canToggleHeroicReactionFromDrawer(combatant, reactionKey, reactionActive);
 	}
 
 	async function handleHeroicReactionToggle(
@@ -549,28 +496,26 @@
 	}
 
 	function clearDropPreview(): void {
-		dragPreview = null;
+		trackerStore.clearDropPreview();
 	}
 
 	function clearDragState(): void {
-		activeDragSourceId = null;
-		dragHandleArmedCombatantId = null;
-		clearDropPreview();
+		trackerStore.clearDragState();
 	}
 
 	function handleCombatantCardPointerDown(event: PointerEvent, combatantId: string): void {
 		const target = event.target;
 		if (!(target instanceof HTMLElement)) {
-			dragHandleArmedCombatantId = null;
+			trackerStore.dragHandleArmedCombatantId = null;
 			return;
 		}
 		const handle = target.closest<HTMLElement>('[data-ct-drag-handle="true"]');
 		if (!handle) {
-			dragHandleArmedCombatantId = null;
+			trackerStore.dragHandleArmedCombatantId = null;
 			return;
 		}
 		const handleCombatantId = handle.dataset.combatantId ?? '';
-		dragHandleArmedCombatantId =
+		trackerStore.dragHandleArmedCombatantId =
 			handleCombatantId && handleCombatantId === combatantId ? handleCombatantId : null;
 	}
 
@@ -795,7 +740,7 @@
 			dragPreview?.targetId === preview.targetId &&
 			dragPreview?.before === preview.before;
 		if (!isUnchanged) {
-			dragPreview = preview;
+			trackerStore.dragPreview = preview;
 		}
 	}
 
@@ -820,8 +765,8 @@
 		}
 
 		const combatantDocument = combat.combatants.get(combatantId) ?? combatant;
-		activeDragSourceId = combatantDocument.id ?? null;
-		dragHandleArmedCombatantId = null;
+		trackerStore.activeDragSourceId = combatantDocument.id ?? null;
+		trackerStore.dragHandleArmedCombatantId = null;
 		clearDropPreview();
 
 		if (event.dataTransfer) {
@@ -914,9 +859,8 @@
 
 					const refreshedCombat =
 						combatId && game.combats.get(combatId) ? game.combats.get(combatId) : actionCombat;
-					preferredCombatId = combatId;
-					currentCombat = refreshedCombat ?? actionCombat;
-					renderVersion += 1;
+					trackerStore.preferredCombatId = combatId;
+					trackerStore.replaceCurrentCombat(refreshedCombat ?? actionCombat);
 
 					if (!isCombatStarted(refreshedCombat ?? null)) {
 						ui.notifications?.warn('Combat did not enter Round 1. Check the browser console logs.');
@@ -931,7 +875,7 @@
 					const confirmed = await confirmEndEncounter();
 					if (!confirmed) return;
 					await actionCombat.delete();
-					if (preferredCombatId === combatId) preferredCombatId = null;
+					if (trackerStore.preferredCombatId === combatId) trackerStore.preferredCombatId = null;
 					ui.combat?.render(true);
 					updateCurrentCombat(true);
 					return;
@@ -954,18 +898,6 @@
 		}
 	}
 
-	let currentCombat: Combat | null = $state(null);
-	let sceneAliveCombatants: Combatant.Implementation[] = $state([]);
-	let sceneDeadCombatants: Combatant.Implementation[] = $state([]);
-	let playersCanExpandMonsterCards = $state(getCombatTrackerPlayersCanExpandMonsterCards());
-	let playerHpBarTextMode = $state(getCombatTrackerPlayerHpBarTextMode());
-	let nonPlayerHpBarEnabled = $state(getCombatTrackerNonPlayerHpBarEnabled());
-	let nonPlayerHpBarTextMode = $state(getCombatTrackerNonPlayerHpBarTextMode());
-	let resourceDrawerHoverEnabled = $state(getCombatTrackerResourceDrawerHoverEnabled());
-	let ctEnabled = $state(getCombatTrackerCtEnabled());
-	let ctWidthLevel = $state(getCombatTrackerCtWidthLevel());
-	let ctCardSizeLevel = $state(getCombatTrackerCtCardSizeLevel());
-	let layoutVersion = $state(0);
 	let trackElement: HTMLOListElement | null = $state(null);
 	let trackScrollLeft = $state(0);
 	let trackClientWidth = $state(0);
@@ -974,55 +906,25 @@
 	let trackScrollbarWidth = $state(0);
 	let scrollbarDragPointerId: number | null = $state(null);
 	let scrollbarDragOffsetPx = $state(0);
-	let activeDragSourceId: string | null = $state(null);
-	let dragHandleArmedCombatantId: string | null = $state(null);
-	let dragPreview: CombatantDropPreview | null = $state(null);
-	let renderVersion = $state(0);
-	let lastCombatSignature = $state('');
-
-	let sceneMonsterAliveCombatants = $derived(
-		sceneAliveCombatants.filter((combatant) => isMonsterOrMinionCombatant(combatant)),
-	);
-	let sceneMonsterDeadCombatants = $derived(
-		sceneDeadCombatants.filter((combatant) => isMonsterOrMinionCombatant(combatant)),
-	);
-	let sceneAllMonsterCombatants = $derived([
-		...sceneMonsterAliveCombatants,
-		...sceneMonsterDeadCombatants,
-	]);
-	let hasMonsterCombatants = $derived(sceneAllMonsterCombatants.length > 0);
-	let canCurrentUserExpandMonsterCards = $derived(
-		Boolean(game.user?.isGM) || playersCanExpandMonsterCards,
-	);
-	let shouldCollapseMonsterCards = $derived(hasMonsterCombatants && !uiState.monsterCardsExpanded);
-	let renderedDeadCombatants = $derived(
-		sceneDeadCombatants.filter((combatant) => isPlayerCombatant(combatant)),
-	);
-	let aliveEntries = $derived.by(() =>
-		buildAliveEntries(sceneAliveCombatants, shouldCollapseMonsterCards, hasMonsterCombatants),
-	);
-	let activeCombatantId = $derived.by(() => {
-		trackDependency(renderVersion);
-		return getActiveCombatantId(currentCombat);
-	});
-	let activeCombatant = $derived.by(() => {
-		trackDependency(renderVersion);
-		return getActiveCombatant(currentCombat);
-	});
-	let canCurrentUserEndTurn = $derived.by(() => canCurrentUserEndCombatantTurn(activeCombatant));
-	let activeEntryKey = $derived.by(() => {
-		const activeOccurrence = getActiveCombatantOccurrence(currentCombat, activeCombatantId);
-		return resolveActiveEntryKey({
-			activeCombatantId,
-			activeOccurrence,
-			aliveEntries,
-			collapseMonsters: shouldCollapseMonsterCards,
-			monsterCombatants: sceneAllMonsterCombatants,
-		});
-	});
-	let orderedAliveEntries = $derived.by(() =>
-		orderEntriesForCenteredActive(aliveEntries, activeEntryKey, true),
-	);
+	let currentCombat = $derived(trackerStore.currentCombat);
+	let sceneAliveCombatants = $derived(trackerStore.sceneAliveCombatants);
+	let playerHpBarTextMode = $derived(trackerStore.playerHpBarTextMode);
+	let nonPlayerHpBarEnabled = $derived(trackerStore.nonPlayerHpBarEnabled);
+	let nonPlayerHpBarTextMode = $derived(trackerStore.nonPlayerHpBarTextMode);
+	let resourceDrawerHoverEnabled = $derived(trackerStore.resourceDrawerHoverEnabled);
+	let ctEnabled = $derived(trackerStore.ctEnabled);
+	let activeDragSourceId = $derived(trackerStore.activeDragSourceId);
+	let dragHandleArmedCombatantId = $derived(trackerStore.dragHandleArmedCombatantId);
+	let dragPreview = $derived(trackerStore.dragPreview);
+	let sceneMonsterAliveCombatants = $derived(trackerStore.sceneMonsterAliveCombatants);
+	let sceneAllMonsterCombatants = $derived(trackerStore.sceneAllMonsterCombatants);
+	let hasMonsterCombatants = $derived(trackerStore.hasMonsterCombatants);
+	let canCurrentUserExpandMonsterCards = $derived(trackerStore.canCurrentUserExpandMonsterCards);
+	let renderedDeadCombatants = $derived(trackerStore.renderedDeadCombatants);
+	let monsterCardsExpanded = $derived(trackerStore.monsterCardsExpanded);
+	let orderedAliveEntries = $derived(trackerStore.orderedAliveEntries);
+	let activeEntryKey = $derived(trackerStore.activeEntryKey);
+	let canCurrentUserEndTurn = $derived(trackerStore.canCurrentUserEndTurn);
 	let shouldVirtualizeAliveEntries = $derived(
 		orderedAliveEntries.length >= CT_VIRTUALIZATION_ENTRY_THRESHOLD,
 	);
@@ -1034,36 +936,18 @@
 				scrollLeft: trackScrollLeft,
 				viewportWidth: trackClientWidth,
 			},
-			ctEffectiveCardSizeLevel,
+			trackerStore.ctEffectiveCardSizeLevel,
 		),
 	);
-	let roundBoundaryKey = $derived.by(() =>
-		getRoundBoundaryKey(sceneAliveCombatants, shouldCollapseMonsterCards),
-	);
-	let roundSeparatorIndex = $derived.by(() =>
-		getRoundSeparatorInsertionIndex(orderedAliveEntries, roundBoundaryKey),
-	);
-	let combatStarted = $derived.by(() => {
-		trackDependency(renderVersion);
-		return isCombatStarted(currentCombat);
-	});
-	let currentRoundLabel = $derived.by(() => {
-		trackDependency(renderVersion);
-		return Math.max(1, currentCombat?.round ?? 1);
-	});
-	let ctTrackMaxWidth = $derived.by(() => {
-		trackDependency(layoutVersion);
-		return resolveCtTrackMaxWidth(ctWidthLevel);
-	});
-	let ctWidthPreviewLevel = $state<number | null>(null);
-	let ctWidthPreviewVisible = $derived(ctWidthPreviewLevel !== null);
-	let ctWidthPreviewMaxWidth = $derived.by(() =>
-		resolveCtTrackMaxWidth(ctWidthPreviewLevel ?? ctWidthLevel),
-	);
-	let ctCardSizePreviewLevel = $state<number | null>(null);
-	let ctCardSizePreviewActive = $derived(ctCardSizePreviewLevel !== null);
-	let ctEffectiveCardSizeLevel = $derived(ctCardSizePreviewLevel ?? ctCardSizeLevel);
-	let ctCardScale = $derived.by(() => getCtCardScale(ctEffectiveCardSizeLevel));
+	let roundSeparatorIndex = $derived(trackerStore.roundSeparatorIndex);
+	let combatStarted = $derived(trackerStore.combatStarted);
+	let currentRoundLabel = $derived(trackerStore.currentRoundLabel);
+	let ctTrackMaxWidth = $derived(trackerStore.ctTrackMaxWidth);
+	let ctWidthPreviewVisible = $derived(trackerStore.ctWidthPreviewVisible);
+	let ctWidthPreviewMaxWidth = $derived(trackerStore.ctWidthPreviewMaxWidth);
+	let ctCardSizePreviewActive = $derived(trackerStore.ctCardSizePreviewActive);
+	let ctEffectiveCardSizeLevel = $derived(trackerStore.ctEffectiveCardSizeLevel);
+	let ctCardScale = $derived(trackerStore.ctCardScale);
 	let trackScrollbarMetrics = $derived.by(() => getTrackScrollbarMetrics());
 	let showTrackScrollbar = $derived(Boolean(trackScrollbarMetrics));
 
@@ -1080,38 +964,10 @@
 	}
 
 	function applyCtTopTrackerSettingPatch(settingKey: unknown): void {
-		const patch = resolveCtTopTrackerSettingPatch(settingKey);
+		const patch = trackerStore.applySettingPatch(settingKey);
 		if (!patch) return;
-
-		if (patch.playersCanExpandMonsterCards !== undefined) {
-			playersCanExpandMonsterCards = patch.playersCanExpandMonsterCards;
-		}
-		if (patch.resourceDrawerHoverEnabled !== undefined) {
-			resourceDrawerHoverEnabled = patch.resourceDrawerHoverEnabled;
-		}
-		if (patch.playerHpBarTextMode !== undefined) {
-			playerHpBarTextMode = patch.playerHpBarTextMode;
-		}
-		if (patch.nonPlayerHpBarEnabled !== undefined) {
-			nonPlayerHpBarEnabled = patch.nonPlayerHpBarEnabled;
-		}
-		if (patch.nonPlayerHpBarTextMode !== undefined) {
-			nonPlayerHpBarTextMode = patch.nonPlayerHpBarTextMode;
-		}
-		if (patch.ctEnabled !== undefined) {
-			ctEnabled = patch.ctEnabled;
-		}
-		if (patch.ctWidthLevel !== undefined) {
-			ctWidthLevel = patch.ctWidthLevel;
-		}
-		if (patch.ctCardSizeLevel !== undefined) {
-			ctCardSizeLevel = patch.ctCardSizeLevel;
-		}
-		if (patch.layoutVersionDelta) {
-			layoutVersion += patch.layoutVersionDelta;
-		}
 		if (patch.shouldCenterActiveEntry) {
-			void centerActiveEntryInView(activeEntryKey, 'auto');
+			void centerActiveEntryInView(trackerStore.activeEntryKey, 'auto');
 		}
 	}
 
@@ -1124,7 +980,7 @@
 
 		resizeListener = () => {
 			updateTrackViewportMetrics();
-			layoutVersion += 1;
+			trackerStore.invalidateLayout();
 		};
 		window.addEventListener('resize', resizeListener);
 		trackWheelListener = (event: WheelEvent) => {
@@ -1142,23 +998,13 @@
 		ctWidthPreviewListener = (event: Event) => {
 			if (!(event instanceof CustomEvent)) return;
 			const detail = (event.detail ?? {}) as CtWidthPreviewEventDetail;
-			if (detail.active === false) {
-				ctWidthPreviewLevel = null;
-				return;
-			}
-			if (detail.active !== true) return;
-			ctWidthPreviewLevel = normalizeCtWidthLevel(detail.widthLevel);
+			trackerStore.applyWidthPreviewDetail(detail);
 		};
 		window.addEventListener(CT_WIDTH_PREVIEW_EVENT_NAME, ctWidthPreviewListener);
 		ctCardSizePreviewListener = (event: Event) => {
 			if (!(event instanceof CustomEvent)) return;
 			const detail = (event.detail ?? {}) as { active?: boolean; cardSizeLevel?: unknown };
-			if (detail.active === false) {
-				ctCardSizePreviewLevel = null;
-				return;
-			}
-			if (detail.active !== true) return;
-			ctCardSizePreviewLevel = normalizeCtCardSizeLevel(detail.cardSizeLevel);
+			trackerStore.applyCardSizePreviewDetail(detail);
 		};
 		window.addEventListener(CT_CARD_SIZE_PREVIEW_EVENT_NAME, ctCardSizePreviewListener);
 		ctClientSettingUpdatedListener = (event: Event) => {
@@ -1173,7 +1019,7 @@
 		unregisterCtHooks = registerCtTopTrackerHooks({
 			updateCurrentCombat: (force = true) => updateCurrentCombat(force),
 			onLayoutInvalidated: () => {
-				layoutVersion += 1;
+				trackerStore.invalidateLayout();
 			},
 			onSettingKeyUpdated: (settingKey: unknown) => {
 				applyCtTopTrackerSettingPatch(settingKey);
@@ -1211,17 +1057,10 @@
 
 	$effect(() => {
 		trackDependency(orderedAliveEntries.length);
-		trackDependency(layoutVersion);
-		trackDependency(ctEffectiveCardSizeLevel);
+		trackDependency(trackerStore.layoutVersion);
+		trackDependency(trackerStore.ctEffectiveCardSizeLevel);
 		void tick().then(() => {
 			updateTrackViewportMetrics();
-		});
-	});
-
-	$effect(() => {
-		uiState.syncMonsterCardsExpanded({
-			hasMonsterCombatants,
-			canCurrentUserExpandMonsterCards,
 		});
 	});
 </script>
@@ -1368,13 +1207,12 @@
 					{#if hasMonsterCombatants && canCurrentUserExpandMonsterCards}
 						<button
 							class="nimble-ct__icon-button"
-							aria-label={uiState.monsterCardsExpanded ? 'Collapse Monsters' : 'Expand Monsters'}
-							data-tooltip={uiState.monsterCardsExpanded ? 'Collapse Monsters' : 'Expand Monsters'}
+							aria-label={monsterCardsExpanded ? 'Collapse Monsters' : 'Expand Monsters'}
+							data-tooltip={monsterCardsExpanded ? 'Collapse Monsters' : 'Expand Monsters'}
 							data-tooltip-direction="LEFT"
 							onclick={toggleMonsterCardExpansion}
 						>
-							<i class={`fa-solid ${uiState.monsterCardsExpanded ? 'fa-compress' : 'fa-expand'}`}
-							></i>
+							<i class={`fa-solid ${monsterCardsExpanded ? 'fa-compress' : 'fa-expand'}`}></i>
 						</button>
 					{/if}
 					{#if game.user?.isGM}
