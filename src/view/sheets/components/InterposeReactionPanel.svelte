@@ -10,20 +10,18 @@
 		onDeductAction = async () => {},
 	}: ReactionPanelProps = $props();
 
-	const {
-		availableTargets,
-		selectedTarget,
-		isDisabled,
-		canDefendAndInterpose,
-		getTargetName,
-		handleInterpose,
-		handleDefendAndInterpose,
-	} = createInterposePanelState(
+	const state = createInterposePanelState(
 		() => actor,
 		() => onDeductAction,
 		() => inCombat,
 		() => actionsRemaining,
 	);
+
+	const availableTargets = $derived(state.availableTargets);
+	const selectedTarget = $derived(state.selectedTarget);
+	const isDisabled = $derived(state.isDisabled);
+	const canInterposeAndDefend = $derived(state.canInterposeAndDefend);
+	const { getTargetName, handleInterpose, handleInterposeAndDefend } = state;
 </script>
 
 <section class="reaction-panel">
@@ -85,14 +83,14 @@
 
 		<button
 			class="reaction-panel__button reaction-panel__button--combined"
-			disabled={!canDefendAndInterpose}
-			onclick={handleDefendAndInterpose}
+			disabled={!canInterposeAndDefend}
+			onclick={handleInterposeAndDefend}
 		>
 			<i class="fa-solid fa-shield"></i>
 			<i class="fa-solid fa-people-arrows"></i>
-			{localize('NIMBLE.ui.heroicActions.reactions.defendAndInterpose.confirm')}
+			{localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm')}
 			<span class="reaction-panel__button-cost">
-				({localize('NIMBLE.ui.heroicActions.reactions.defendAndInterpose.cost')})
+				({localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.cost')})
 			</span>
 		</button>
 	</div>

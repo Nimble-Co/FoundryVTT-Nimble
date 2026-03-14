@@ -716,8 +716,8 @@
 						"protecting": "Protecting",
 						"chatMessage": "<p><strong>{name}</strong> uses their reaction to <strong>Interpose</strong>, stepping in front of <strong>{target}</strong> to become the target of an attack.</p>"
 					},
-					"defendAndInterpose": {
-						"confirm": "Defend & Interpose",
+					"interposeAndDefend": {
+						"confirm": "Interpose & Defend",
 						"cost": "2 Actions",
 						"chatMessage": "<p><strong>{name}</strong> uses <strong>2 reactions</strong> to <strong>Interpose</strong> for <strong>{target}</strong> and <strong>Defend</strong>, reducing damage by their Armor value ({armor}).</p>"
 					},

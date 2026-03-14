@@ -15,12 +15,19 @@
 		showEmbeddedDocumentImages = true,
 	}: OpportunityReactionPanelProps = $props();
 
+	const state = createOpportunityPanelState(
+		() => actor,
+		() => onDeductAction,
+		() => inCombat,
+		() => actionsRemaining,
+	);
+
+	const meleeWeapons = $derived(state.meleeWeapons);
+	const showUnarmedStrike = $derived(state.showUnarmedStrike);
+	const availableTargets = $derived(state.availableTargets);
+	const selectedTarget = $derived(state.selectedTarget);
+	const isDisabled = $derived(state.isDisabled);
 	const {
-		meleeWeapons,
-		showUnarmedStrike,
-		availableTargets,
-		selectedTarget,
-		isDisabled,
 		sortItems,
 		getWeaponDamage,
 		getWeaponProperties,
@@ -28,12 +35,7 @@
 		getUnarmedDamageDisplay,
 		handleUnarmedStrike,
 		handleItemClick,
-	} = createOpportunityPanelState(
-		() => actor,
-		() => onDeductAction,
-		() => inCombat,
-		() => actionsRemaining,
-	);
+	} = state;
 </script>
 
 <section class="reaction-panel">

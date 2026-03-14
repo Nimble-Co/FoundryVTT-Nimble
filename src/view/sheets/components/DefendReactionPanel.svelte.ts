@@ -21,7 +21,7 @@ export function createDefendPanelState(
 
 	const isDisabled = $derived(!getInCombat() || getActionsRemaining() <= 0);
 
-	const canDefendAndInterpose = $derived(getInCombat() && getActionsRemaining() >= 2);
+	const canInterposeAndDefend = $derived(getInCombat() && getActionsRemaining() >= 2);
 
 	// Set up hook listener for target changes
 	$effect(() => {
@@ -37,6 +37,7 @@ export function createDefendPanelState(
 		await getOnDeductAction()();
 
 		const actor = getActor();
+		const currentArmorValue = actor.reactive.system.attributes.armor.value ?? 0;
 		const chatData = {
 			author: game.user?.id,
 			speaker: ChatMessage.getSpeaker({ actor }),
@@ -48,23 +49,22 @@ export function createDefendPanelState(
 				permissions: actor.permission,
 				rollMode: 0,
 				reactionType: 'defend',
-				armorValue,
+				armorValue: currentArmorValue,
 				targets: [],
 			},
 		};
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		await ChatMessage.create(chatData as any);
+		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	}
 
-	async function handleDefendAndInterpose(): Promise<void> {
+	async function handleInterposeAndDefend(): Promise<void> {
 		if (!getInCombat() || getActionsRemaining() < 2) return;
 
 		const actor = getActor();
-		const targetUuids = availableTargets.map((t) => t.document.uuid);
+		const currentArmorValue = actor.reactive.system.attributes.armor.value ?? 0;
+		const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
 
 		// Create Interpose message first (stepping in front of ally)
 		await getOnDeductAction()();
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		await ChatMessage.create({
 			author: game.user?.id,
 			speaker: ChatMessage.getSpeaker({ actor }),
@@ -78,11 +78,10 @@ export function createDefendPanelState(
 				reactionType: 'interpose',
 				targets: targetUuids,
 			},
-		} as any);
+		} as unknown as ChatMessage.CreateData);
 
 		// Then create Defend message (reducing damage taken)
 		await getOnDeductAction()();
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		await ChatMessage.create({
 			author: game.user?.id,
 			speaker: ChatMessage.getSpeaker({ actor }),
@@ -94,20 +93,30 @@ export function createDefendPanelState(
 				permissions: actor.permission,
 				rollMode: 0,
 				reactionType: 'defend',
-				armorValue,
+				armorValue: currentArmorValue,
 				targets: [],
 			},
-		} as any);
+		} as unknown as ChatMessage.CreateData);
 	}
 
 	return {
-		availableTargets,
-		selectedTarget,
-		armorValue,
-		isDisabled,
-		canDefendAndInterpose,
+		get availableTargets() {
+			return availableTargets;
+		},
+		get selectedTarget() {
+			return selectedTarget;
+		},
+		get armorValue() {
+			return armorValue;
+		},
+		get isDisabled() {
+			return isDisabled;
+		},
+		get canInterposeAndDefend() {
+			return canInterposeAndDefend;
+		},
 		getTargetName,
 		handleDefend,
-		handleDefendAndInterpose,
+		handleInterposeAndDefend,
 	};
 }

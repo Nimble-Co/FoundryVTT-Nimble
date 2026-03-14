@@ -10,13 +10,17 @@
 		onDeductAction = async () => {},
 	}: ReactionPanelProps = $props();
 
-	const { availableTargets, selectedTarget, isDisabled, getTargetName, handleHelp } =
-		createHelpPanelState(
-			() => actor,
-			() => onDeductAction,
-			() => inCombat,
-			() => actionsRemaining,
-		);
+	const state = createHelpPanelState(
+		() => actor,
+		() => onDeductAction,
+		() => inCombat,
+		() => actionsRemaining,
+	);
+
+	const availableTargets = $derived(state.availableTargets);
+	const selectedTarget = $derived(state.selectedTarget);
+	const isDisabled = $derived(state.isDisabled);
+	const { getTargetName, handleHelp } = state;
 </script>
 
 <section class="reaction-panel">

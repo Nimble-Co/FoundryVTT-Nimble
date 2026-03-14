@@ -251,8 +251,7 @@ export function createOpportunityPanelState(
 			type: 'feature',
 		};
 
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		await ChatMessage.create(chatData as any);
+		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 		await getOnDeductAction()();
 	}
 
@@ -268,11 +267,21 @@ export function createOpportunityPanelState(
 	}
 
 	return {
-		meleeWeapons,
-		showUnarmedStrike,
-		availableTargets,
-		selectedTarget,
-		isDisabled,
+		get meleeWeapons() {
+			return meleeWeapons;
+		},
+		get showUnarmedStrike() {
+			return showUnarmedStrike;
+		},
+		get availableTargets() {
+			return availableTargets;
+		},
+		get selectedTarget() {
+			return selectedTarget;
+		},
+		get isDisabled() {
+			return isDisabled;
+		},
 		sortItems,
 		getWeaponDamage,
 		getWeaponProperties,

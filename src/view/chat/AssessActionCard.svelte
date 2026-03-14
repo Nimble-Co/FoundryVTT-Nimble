@@ -2,29 +2,53 @@
 	import { getRollModeSummary } from '../dataPreparationHelpers/getRollModeSummary.js';
 	import prepareRollTooltip from '../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 	import localize from '../../utils/localize.js';
-	import { createAssessActionCardState, getTargetToken } from './AssessActionCard.svelte.ts';
+	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import CardHeader from './components/CardHeader.svelte';
 	import RollSummary from './components/RollSummary.svelte';
 
 	const { messageDocument } = $props();
 
-	const {
-		rolls,
-		headerBackgroundColor,
-		headerTextColor,
-		actorType,
-		permissions,
-		rollMode,
-		optionTitle,
-		resultMessage,
-		target,
-		targetName,
-		label,
-		resultLabel,
-		hintClass,
-		hintIcon,
-	} = createAssessActionCardState(() => messageDocument);
+	const { skills } = CONFIG.NIMBLE;
+
+	const system = $derived(messageDocument.reactive.system);
+	const rolls = $derived(messageDocument.reactive.rolls);
+	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
+	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
+
+	const actorType = $derived(system.actorType);
+	const permissions = $derived(system.permissions);
+	const rollMode = $derived(system.rollMode);
+	const skillKey = $derived(system.skillKey);
+	const dc = $derived(system.dc);
+	const isSuccess = $derived(system.isSuccess);
+	const optionTitle = $derived(system.optionTitle);
+	const resultMessage = $derived(system.resultMessage);
+	const target = $derived(system.target);
+	const targetName = $derived(system.targetName);
+
+	const label = $derived(
+		localize('NIMBLE.ui.heroicActions.assess.checkVsDC', {
+			skill: skills[skillKey],
+			dc: String(dc),
+		}),
+	);
+	const resultLabel = $derived(
+		localize(
+			isSuccess
+				? 'NIMBLE.ui.heroicActions.assess.success'
+				: 'NIMBLE.ui.heroicActions.assess.failure',
+		),
+	);
+	const hintClass = $derived(isSuccess ? 'nimble-hint--success' : 'nimble-hint--warning');
+	const hintIcon = $derived(
+		isSuccess ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-exclamation',
+	);
+
+	async function getTargetToken(targetUuid) {
+		if (!targetUuid) return null;
+		return fromUuid(targetUuid);
+	}
 </script>
 
 <CardHeader {messageDocument} />

@@ -49,14 +49,19 @@ export function createHelpPanelState(
 				targets: targetUuids,
 			},
 		};
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		await ChatMessage.create(chatData as any);
+		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
 	}
 
 	return {
-		availableTargets,
-		selectedTarget,
-		isDisabled,
+		get availableTargets() {
+			return availableTargets;
+		},
+		get selectedTarget() {
+			return selectedTarget;
+		},
+		get isDisabled() {
+			return isDisabled;
+		},
 		getTargetName,
 		handleHelp,
 	};
