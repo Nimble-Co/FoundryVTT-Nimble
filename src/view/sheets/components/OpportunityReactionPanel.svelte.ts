@@ -5,6 +5,7 @@ import { getPrimaryDamageFormulaFromActivationEffects } from '../../../utils/act
 import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
+import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 
 // Default unarmed: roll 1d4 for hit determination, damage is 1 + STR
 const DEFAULT_UNARMED_DAMAGE = '1d4 + 1 + @abilities.strength.mod';
@@ -30,8 +31,30 @@ interface CharacterSystemExtension {
 export function createOpportunityPanelState(
 	getActor: () => NimbleCharacter,
 	getOnDeductAction: () => () => Promise<void>,
+	getInCombat: () => boolean,
+	getActionsRemaining: () => number,
 ) {
 	const { weaponProperties } = CONFIG.NIMBLE;
+
+	// Targeting state
+	let targetingVersion = $state(0);
+
+	const availableTargets = $derived.by(() => {
+		void targetingVersion;
+		return getTargetedTokens(getActor().id ?? '');
+	});
+
+	const selectedTarget = $derived(availableTargets.length === 1 ? availableTargets[0] : null);
+
+	const isDisabled = $derived(!getInCombat() || getActionsRemaining() <= 0);
+
+	// Set up hook listener for target changes
+	$effect(() => {
+		const hookId = Hooks.on('targetToken', () => {
+			targetingVersion++;
+		});
+		return () => Hooks.off('targetToken', hookId);
+	});
 
 	function evaluateFormula(formula: string | undefined): string {
 		return evalFormula(formula, getActor());
@@ -245,15 +268,15 @@ export function createOpportunityPanelState(
 	}
 
 	return {
-		get meleeWeapons() {
-			return meleeWeapons;
-		},
-		get showUnarmedStrike() {
-			return showUnarmedStrike;
-		},
+		meleeWeapons,
+		showUnarmedStrike,
+		availableTargets,
+		selectedTarget,
+		isDisabled,
 		sortItems,
 		getWeaponDamage,
 		getWeaponProperties,
+		getTargetName,
 		handleKeydown,
 		getUnarmedDamageDisplay,
 		handleUnarmedStrike,

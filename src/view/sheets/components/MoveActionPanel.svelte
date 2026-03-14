@@ -1,8 +1,14 @@
-<script>
+<script lang="ts">
+	import type { MoveActionPanelProps } from '../../../../types/components/MoveActionPanel.d.ts';
 	import localize from '../../../utils/localize.js';
 	import { getMovementSpeeds } from '../../../utils/movementSpeeds.js';
 
-	let { actor, inCombat = false, actionsRemaining = 0, onDeductAction = async () => {} } = $props();
+	let {
+		actor,
+		inCombat = false,
+		actionsRemaining = 0,
+		onDeductAction = async () => {},
+	}: MoveActionPanelProps = $props();
 
 	let movementSpeeds = $derived(getMovementSpeeds(actor));
 	let primarySpeed = $derived(movementSpeeds.find((s) => s.type === 'walk') ?? movementSpeeds[0]);
@@ -36,20 +42,21 @@
 				{localize('NIMBLE.ui.heroicActions.move.title')}
 			</h3>
 			<span class="action-card__cost">
-				<i class="fa-solid fa-bolt"></i> 1 Action
+				<i class="fa-solid fa-bolt"></i>
+				{localize('NIMBLE.ui.heroicActions.move.cost')}
 			</span>
 		</div>
 		{#if primarySpeed}
 			<div class="action-card__stat">
-				<span class="action-card__stat-label">Speed</span>
+				<span class="action-card__stat-label">{localize('NIMBLE.ui.heroicActions.move.speed')}</span
+				>
 				<span class="action-card__stat-value">{primarySpeed.value}</span>
 			</div>
 		{/if}
 	</div>
 
 	<p class="action-card__description">
-		Move up to your speed. You can split movement around other actions and move multiple times per
-		turn.
+		{localize('NIMBLE.ui.heroicActions.move.panelDescription')}
 	</p>
 
 	{#if movementSpeeds.length > 1}
@@ -57,7 +64,12 @@
 			{#each movementSpeeds as speed}
 				<div class="action-card__speed">
 					<i class={speed.icon}></i>
-					<span class="action-card__speed-value">{speed.value}</span>
+					<span class="action-card__speed-value">
+						{speed.value}
+						<span class="action-card__speed-unit"
+							>{localize('NIMBLE.ui.heroicActions.move.spaces')}</span
+						>
+					</span>
 				</div>
 			{/each}
 		</div>
@@ -69,7 +81,7 @@
 		onclick={handleMove}
 	>
 		<i class="fa-solid fa-person-running"></i>
-		Confirm Move
+		{localize('NIMBLE.ui.heroicActions.move.confirmMove')}
 	</button>
 </section>
 
@@ -176,25 +188,24 @@
 			align-items: center;
 			gap: 0.375rem;
 			padding: 0.375rem 0.625rem;
-			background: var(--nimble-basic-button-background-color);
+			background: hsl(185, 50%, 93%);
 			border-radius: 6px;
 
 			i {
 				font-size: 0.875rem;
-				color: hsl(185, 60%, 40%);
+				color: hsl(185, 60%, 35%);
 			}
 		}
 
 		&__speed-value {
 			font-size: var(--nimble-sm-text);
 			font-weight: 700;
-			color: var(--nimble-dark-text-color);
+			color: hsl(185, 60%, 25%);
+		}
 
-			&::after {
-				content: ' spaces';
-				font-weight: 500;
-				color: var(--nimble-medium-text-color);
-			}
+		&__speed-unit {
+			font-weight: 500;
+			color: hsl(185, 50%, 30%);
 		}
 
 		&__button {
@@ -237,7 +248,19 @@
 		color: hsl(185, 70%, 60%);
 	}
 
-	:global(.theme-dark) .action-card__speed i {
-		color: hsl(185, 70%, 60%);
+	:global(.theme-dark) .action-card__speed {
+		background: hsl(185, 40%, 20%);
+
+		i {
+			color: hsl(185, 70%, 60%);
+		}
+	}
+
+	:global(.theme-dark) .action-card__speed-value {
+		color: hsl(185, 70%, 75%);
+	}
+
+	:global(.theme-dark) .action-card__speed-unit {
+		color: hsl(185, 50%, 70%);
 	}
 </style>

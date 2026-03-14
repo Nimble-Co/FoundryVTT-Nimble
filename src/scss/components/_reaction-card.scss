@@ -1,5 +1,5 @@
 // Base reaction card styles - shared structure and layout
-.system-nimble .reaction-card {
+.system-nimble .reaction-panel {
 	display: flex;
 	flex-direction: column;
 	gap: 0.625rem;
@@ -221,7 +221,7 @@
 }
 
 // Dark theme base overrides
-.theme-dark .system-nimble .reaction-card {
+.theme-dark .system-nimble .reaction-panel {
 	background: hsl(220, 15%, 18%);
 	border-color: hsl(220, 10%, 28%);
 
