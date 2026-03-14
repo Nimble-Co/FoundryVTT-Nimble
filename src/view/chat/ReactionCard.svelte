@@ -257,23 +257,23 @@
 			}
 
 			&--defend {
-				color: hsl(210, 70%, 30%);
-				background: hsl(210, 60%, 92%);
+				color: var(--nimble-reaction-defend-text);
+				background: var(--nimble-reaction-defend-light);
 			}
 
 			&--warning {
-				color: hsl(25, 75%, 25%);
-				background: hsl(35, 80%, 90%);
+				color: var(--nimble-reaction-opportunity-text);
+				background: var(--nimble-reaction-opportunity-accent);
 			}
 
 			&--success {
-				color: hsl(145, 60%, 25%);
-				background: hsl(145, 55%, 90%);
+				color: var(--nimble-reaction-help-text);
+				background: var(--nimble-reaction-help-light);
 			}
 
 			&--interpose {
-				color: hsl(270, 60%, 30%);
-				background: hsl(270, 50%, 92%);
+				color: var(--nimble-reaction-interpose-text);
+				background: var(--nimble-reaction-interpose-light);
 			}
 		}
 
@@ -336,25 +336,5 @@
 				margin: 0;
 			}
 		}
-	}
-
-	:global(.theme-dark) .reaction-card__badge--defend {
-		color: hsl(210, 80%, 75%);
-		background: hsl(210, 50%, 25%);
-	}
-
-	:global(.theme-dark) .reaction-card__badge--warning {
-		color: hsl(40, 90%, 75%);
-		background: hsl(30, 60%, 22%);
-	}
-
-	:global(.theme-dark) .reaction-card__badge--success {
-		color: hsl(145, 70%, 70%);
-		background: hsl(145, 45%, 22%);
-	}
-
-	:global(.theme-dark) .reaction-card__badge--interpose {
-		color: hsl(270, 70%, 75%);
-		background: hsl(270, 40%, 25%);
 	}
 </style>

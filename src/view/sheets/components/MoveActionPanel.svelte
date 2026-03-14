@@ -107,7 +107,11 @@
 			justify-content: center;
 			width: 2.5rem;
 			height: 2.5rem;
-			background: linear-gradient(135deg, hsl(185, 60%, 45%) 0%, hsl(185, 60%, 35%) 100%);
+			background: linear-gradient(
+				135deg,
+				var(--nimble-reaction-move-primary) 0%,
+				var(--nimble-reaction-move-secondary) 100%
+			);
 			border-radius: 6px;
 			flex-shrink: 0;
 
@@ -165,7 +169,7 @@
 		&__stat-value {
 			font-size: var(--nimble-lg-text);
 			font-weight: 700;
-			color: hsl(185, 60%, 40%);
+			color: var(--nimble-reaction-move-accent);
 			line-height: 1;
 		}
 
@@ -188,24 +192,24 @@
 			align-items: center;
 			gap: 0.375rem;
 			padding: 0.375rem 0.625rem;
-			background: hsl(185, 50%, 93%);
+			background: var(--nimble-reaction-move-light);
 			border-radius: 6px;
 
 			i {
 				font-size: 0.875rem;
-				color: hsl(185, 60%, 35%);
+				color: var(--nimble-reaction-move-secondary);
 			}
 		}
 
 		&__speed-value {
 			font-size: var(--nimble-sm-text);
 			font-weight: 700;
-			color: hsl(185, 60%, 25%);
+			color: var(--nimble-reaction-move-text);
 		}
 
 		&__speed-unit {
 			font-weight: 500;
-			color: hsl(185, 50%, 30%);
+			color: var(--nimble-reaction-move-text);
 		}
 
 		&__button {
@@ -217,14 +221,18 @@
 			font-size: var(--nimble-sm-text);
 			font-weight: 700;
 			color: white;
-			background: linear-gradient(135deg, hsl(185, 60%, 45%) 0%, hsl(185, 60%, 35%) 100%);
+			background: linear-gradient(
+				135deg,
+				var(--nimble-reaction-move-primary) 0%,
+				var(--nimble-reaction-move-secondary) 100%
+			);
 			border: none;
 			border-radius: 6px;
 			cursor: pointer;
-			transition: all 0.15s ease;
+			transition: var(--nimble-standard-transition);
 
 			&:hover:not(:disabled) {
-				background: linear-gradient(135deg, hsl(185, 60%, 50%) 0%, hsl(185, 60%, 40%) 100%);
+				filter: brightness(1.1);
 				transform: translateY(-1px);
 			}
 
@@ -237,30 +245,5 @@
 				font-size: 0.875rem;
 			}
 		}
-	}
-
-	:global(.theme-dark) .action-card {
-		background: hsl(220, 15%, 18%);
-		border-color: hsl(220, 10%, 28%);
-	}
-
-	:global(.theme-dark) .action-card__stat-value {
-		color: hsl(185, 70%, 60%);
-	}
-
-	:global(.theme-dark) .action-card__speed {
-		background: hsl(185, 40%, 20%);
-
-		i {
-			color: hsl(185, 70%, 60%);
-		}
-	}
-
-	:global(.theme-dark) .action-card__speed-value {
-		color: hsl(185, 70%, 75%);
-	}
-
-	:global(.theme-dark) .action-card__speed-unit {
-		color: hsl(185, 50%, 70%);
 	}
 </style>

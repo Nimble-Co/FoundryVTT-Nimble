@@ -3,6 +3,7 @@
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import { createOpportunityPanelState } from './OpportunityReactionPanel.svelte.ts';
+	import TargetSelector from './TargetSelector.svelte';
 	import WeaponCard from './WeaponCard.svelte';
 
 	const sheet = getContext('application');
@@ -62,32 +63,16 @@
 		{localize('NIMBLE.ui.heroicActions.reactions.opportunity.panelDescription')}
 	</p>
 
-	<div class="reaction-panel__target-section">
-		<span class="reaction-panel__target-label">
-			<i class="fa-solid fa-crosshairs"></i>
-			{localize('NIMBLE.ui.heroicActions.reactions.target')}
-		</span>
-		{#if availableTargets.length === 0}
-			<div class="reaction-panel__no-target">
-				<span>{localize('NIMBLE.ui.heroicActions.reactions.targetEnemy')}</span>
-			</div>
-		{:else if availableTargets.length === 1}
-			<div class="reaction-panel__target">
-				<img
-					class="reaction-panel__target-img"
-					src={selectedTarget?.document?.texture?.src || 'icons/svg/mystery-man.svg'}
-					alt={getTargetName(selectedTarget)}
-				/>
-				<span class="reaction-panel__target-name">{getTargetName(selectedTarget)}</span>
-				<i class="fa-solid fa-check reaction-panel__target-check"></i>
-			</div>
-		{:else}
-			<div class="reaction-panel__no-target reaction-panel__no-target--warning">
-				<i class="fa-solid fa-triangle-exclamation"></i>
-				<span>{localize('NIMBLE.ui.heroicActions.reactions.multipleTargets')}</span>
-			</div>
-		{/if}
-	</div>
+	<TargetSelector
+		label="NIMBLE.ui.heroicActions.reactions.target"
+		noTargetMessage="NIMBLE.ui.heroicActions.reactions.targetEnemy"
+		multipleTargetsMessage="NIMBLE.ui.heroicActions.reactions.multipleTargets"
+		{availableTargets}
+		{selectedTarget}
+		{getTargetName}
+		targetBackground="var(--nimble-reaction-opportunity-light)"
+		targetBorderColor="var(--nimble-reaction-opportunity-secondary)"
+	/>
 
 	<ul class="reaction-panel__weapons">
 		{#if showUnarmedStrike}
@@ -127,30 +112,15 @@
 <style lang="scss">
 	// Opportunity-specific colors
 	.reaction-panel__icon {
-		background: linear-gradient(135deg, hsl(15, 70%, 50%) 0%, hsl(15, 70%, 40%) 100%);
+		background: linear-gradient(
+			135deg,
+			var(--nimble-reaction-opportunity-primary) 0%,
+			var(--nimble-reaction-opportunity-secondary) 100%
+		);
 	}
 
 	.reaction-panel__badge {
-		color: hsl(25, 75%, 25%);
-		background: hsl(35, 80%, 90%);
-	}
-
-	.reaction-panel__target {
-		background: hsl(15, 70%, 95%);
-		border-color: hsl(15, 60%, 70%);
-	}
-
-	.reaction-panel__target-img {
-		border-color: hsl(15, 50%, 60%);
-	}
-
-	:global(.theme-dark) .reaction-panel__badge {
-		color: hsl(40, 90%, 75%);
-		background: hsl(30, 60%, 22%);
-	}
-
-	:global(.theme-dark) .reaction-panel__target {
-		background: hsl(15, 50%, 22%);
-		border-color: hsl(15, 60%, 45%);
+		color: var(--nimble-reaction-opportunity-text);
+		background: var(--nimble-reaction-opportunity-accent);
 	}
 </style>
