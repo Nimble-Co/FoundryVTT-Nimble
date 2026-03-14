@@ -15,7 +15,7 @@ const schema = () => ({
 			required: true,
 			nullable: false,
 			initial: [],
-			options: ['concentration', 'range', 'reach', 'utilitySpell'],
+			options: ['concentration', 'range', 'reach', 'secretSpell', 'utilitySpell'],
 		}),
 	}),
 	school: new fields.StringField({ required: true, initial: '', nullable: false }),

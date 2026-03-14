@@ -1026,18 +1026,6 @@
 				"vengeance": "C0TMU6el43PzVsp0",
 				"warding-bond": "iL26UVOBVgarmeFH"
 			},
-			"secret": {
-				"cryotomb": "gDg4NlUQHWqbu9tV",
-				"greater-windform": "21OMcsYYwn5C7CLR",
-				"hearth-and-home": "Mkw21dquWBdFBG9Y",
-				"lesser-windform": "eX8CJssX3F2vqFi1",
-				"memory-veil": "PeLuUpKawDLOPHhv",
-				"radiant-bond": "pGCVd6N7Ed0AeEBE",
-				"revive": "iFCKExxkdI48bWxH",
-				"sparkfetch": "GXxJYF05KxMKG4bM",
-				"speak-with-dead": "JQPywIEOHDp0dPYS",
-				"teleport": "np6pQWIzyOomWi7B"
-			},
 			"utility": {
 				"beautify": "Bl4w343YQKXukTyg",
 				"bond-of-peace": "iTCGTLVJpvcqdhl0",
@@ -1069,6 +1057,32 @@
 				"thousand-cuts": "UZCSfngNtbXATH3B",
 				"updraft": "rxzdEK621oVYuWQ8",
 				"vicious-mockery": "kTJSEElZSzeOMXBO"
+			}
+		}
+	},
+	"secretSpells": {
+		"core": {
+			"fire": {
+				"hearth-and-home": "Mkw21dquWBdFBG9Y"
+			},
+			"ice": {
+				"cryotomb": "gDg4NlUQHWqbu9tV"
+			},
+			"lightning": {
+				"sparkfetch": "GXxJYF05KxMKG4bM",
+				"teleport": "np6pQWIzyOomWi7B"
+			},
+			"necrotic": {
+				"memory-veil": "PeLuUpKawDLOPHhv",
+				"speak-with-dead": "JQPywIEOHDp0dPYS"
+			},
+			"radiant": {
+				"radiant-bond": "pGCVd6N7Ed0AeEBE",
+				"revive": "iFCKExxkdI48bWxH"
+			},
+			"wind": {
+				"greater-windform": "21OMcsYYwn5C7CLR",
+				"lesser-windform": "eX8CJssX3F2vqFi1"
 			}
 		}
 	},
