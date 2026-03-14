@@ -240,10 +240,13 @@ export function registerCombatTrackerSettings(): void {
 	registerWorldSetting(COMBAT_TRACKER_ENABLED_SETTING_KEY, {
 		name: 'Enable Combat Tracker',
 		hint: 'Show the Combat Tracker at the top of the screen',
-		scope: 'world',
+		scope: 'client',
 		config: true,
 		type: Boolean,
 		default: DEFAULT_CT_ENABLED_SETTING,
+		onChange: () => {
+			dispatchCtClientSettingUpdated(COMBAT_TRACKER_ENABLED_SETTING_KEY);
+		},
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY, {
