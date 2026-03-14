@@ -747,6 +747,14 @@
 						"chatMessage": "<p><strong>{name}</strong> uses their reaction to <strong>Help</strong> <strong>{target}</strong>, granting them advantage on their roll.</p>"
 					}
 				},
+				"move": {
+					"title": "Move",
+					"cost": "1 Action",
+					"speed": "Speed",
+					"panelDescription": "Move up to your speed. You can split movement around other actions.",
+					"spaces": "spaces",
+					"confirmMove": "Confirm Move"
+				},
 				"enterCombat": "Enter combat to use actions",
 				"outsideCombat": "You are outside of combat",
 				"noActions": "You don't have any actions",
