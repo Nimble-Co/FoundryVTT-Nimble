@@ -5,6 +5,7 @@ This file provides guidance for AI assistants working on this codebase.
 ## References
 
 Before making changes, read the full coding style guide: [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md)
+Always use MCP context7 for documentation
 
 For detailed technology stack, Foundry VTT integration patterns, and testing infrastructure: [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md)
 
