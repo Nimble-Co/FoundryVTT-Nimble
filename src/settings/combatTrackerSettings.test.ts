@@ -126,6 +126,10 @@ describe('combatTrackerSettings', () => {
 				default: 'none',
 			},
 		);
+		expect(registeredOptions[COMBAT_TRACKER_ENABLED_SETTING_KEY]).toMatchObject({
+			scope: 'client',
+			default: true,
+		});
 		expect(registeredOptions[COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY]).toMatchObject({
 			scope: 'client',
 			default: '#ffffff',
