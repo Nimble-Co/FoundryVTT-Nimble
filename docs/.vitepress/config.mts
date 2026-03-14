@@ -4,6 +4,9 @@ export default defineConfig({
   title: 'Nimble FoundryVTT',
   description: 'Documentation hub for the Nimble FoundryVTT system',
 
+  // Exclude agent-only docs from the site build
+  srcExclude: ['PROJECT_CONTEXT.md'],
+
   // Ignore dead links from included CONTRIBUTING.md (repo-relative links to source files)
   ignoreDeadLinks: true,
 
