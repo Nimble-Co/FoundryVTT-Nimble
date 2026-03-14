@@ -28,7 +28,7 @@ interface CharacterSystemExtension {
 	unarmedDamage?: string;
 }
 
-export function createOpportunityPanelState(
+export function createOpportunityAttackPanelState(
 	getActor: () => NimbleCharacter,
 	getOnDeductAction: () => () => Promise<void>,
 	getInCombat: () => boolean,

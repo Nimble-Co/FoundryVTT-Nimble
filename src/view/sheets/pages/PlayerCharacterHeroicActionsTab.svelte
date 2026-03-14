@@ -10,7 +10,7 @@
 
 	import DefendReactionPanel from '../components/DefendReactionPanel.svelte';
 	import InterposeReactionPanel from '../components/InterposeReactionPanel.svelte';
-	import OpportunityReactionPanel from '../components/OpportunityReactionPanel.svelte';
+	import OpportunityAttackPanel from '../components/OpportunityAttackPanel.svelte';
 	import HelpReactionPanel from '../components/HelpReactionPanel.svelte';
 
 	// ============================================================================
@@ -148,7 +148,7 @@
 	{/if}
 
 	{#if state.activeHeroicTab === 'reactions' && state.expandedReactionPanel === 'opportunity'}
-		<OpportunityReactionPanel
+		<OpportunityAttackPanel
 			{actor}
 			inCombat={state.inCombat}
 			actionsRemaining={state.actionsData.current}

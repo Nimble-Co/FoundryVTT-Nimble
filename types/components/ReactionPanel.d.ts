@@ -7,6 +7,6 @@ export interface ReactionPanelProps {
 	onDeductAction?: () => Promise<void>;
 }
 
-export interface OpportunityReactionPanelProps extends ReactionPanelProps {
+export interface OpportunityAttackPanelProps extends ReactionPanelProps {
 	showEmbeddedDocumentImages?: boolean;
 }

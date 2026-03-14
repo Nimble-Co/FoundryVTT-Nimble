@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { OpportunityReactionPanelProps } from '../../../../types/components/ReactionPanel.d.ts';
+	import type { OpportunityAttackPanelProps } from '../../../../types/components/ReactionPanel.d.ts';
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
-	import { createOpportunityPanelState } from './OpportunityReactionPanel.svelte.ts';
+	import { createOpportunityAttackPanelState } from './OpportunityAttackPanel.svelte.ts';
 	import TargetSelector from './TargetSelector.svelte';
 	import WeaponCard from './WeaponCard.svelte';
 
@@ -14,9 +14,9 @@
 		actionsRemaining = 0,
 		onDeductAction = async () => {},
 		showEmbeddedDocumentImages = true,
-	}: OpportunityReactionPanelProps = $props();
+	}: OpportunityAttackPanelProps = $props();
 
-	const state = createOpportunityPanelState(
+	const state = createOpportunityAttackPanelState(
 		() => actor,
 		() => onDeductAction,
 		() => inCombat,
