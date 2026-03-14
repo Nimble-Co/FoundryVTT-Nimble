@@ -39,3 +39,8 @@ public/packs/**/MANIFEST
 public/packs/**/CURRENT
 public/packs/**/LOG
 public/packs/**/MANIFEST-*
+
+# BMAD
+_bmad/
+_bmad-*/
+.claude/commands/bmad-*.md
