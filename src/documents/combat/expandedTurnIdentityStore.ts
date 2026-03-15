@@ -43,6 +43,7 @@ export function clearExpandedTurnIdentityHint(combatId: string | null | undefine
 }
 
 export function getPersistedExpandedTurnIdentity(target: unknown): TurnIdentity | null {
+	if (!target || typeof target !== 'object') return null;
 	return normalizeTurnIdentity(foundry.utils.getProperty(target, EXPANDED_TURN_IDENTITY_FLAG_PATH));
 }
 
