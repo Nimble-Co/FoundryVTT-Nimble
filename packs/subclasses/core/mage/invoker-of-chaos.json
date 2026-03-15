@@ -7,7 +7,7 @@
 		"macro": "",
 		"identifier": "chaos",
 		"rules": [],
-		"description": "<p>LEVEL 3 </p><p><strong>Force of Chaos</strong>. Whenever you cast a spell, you can choose to spend 1 less mana. Whenever you do this and whenever you crit, Invoke Chaos: Roll on the Chaos Table.</p><p>LEVEL 7</p><p><strong>Tempest Mage.</strong> Learn 1 cantrip and 1 tiered spell from the Wind school.</p><p><strong>Chaos Lash.</strong> (1/encounter) Reaction (when an enemy moves adjacent to you): They are pushed back 2 spaces, and on a failed WIL save, knocked Prone as well. Invoke Chaos.</p><p>LEVEL 11 </p><p><strong>Thrive in Chaos</strong>. Whenever you Invoke Chaos, you may roll twice and cause both effects. (1/Safe Rest) You may choose which roll to use instead.</p><p>LEVEL 15 </p><p><strong>Master of Chaos.</strong> Whenever you Invoke Chaos, roll with advantage.</p>",
+		"description": "<p>LEVEL 3 </p><p><strong>Force of Chaos</strong>. Whenever you cast a spell, you can choose to spend 1 less mana. Whenever you do this and whenever you crit, Invoke Chaos: Roll on the Chaos Table.</p><p>LEVEL 7</p><p><strong>Tempest Mage.</strong> Learn 1 cantrip and 1 tiered spell from the Wind school.</p><p><strong>Chaos Lash.</strong> <em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you): They are pushed back 2 spaces, and on a failed WIL save, knocked Prone as well. Invoke Chaos.</p><p>LEVEL 11 </p><p><strong>Thrive in Chaos</strong>. Whenever you Invoke Chaos, you may roll twice and cause both effects. (1/Safe Rest) You may choose which roll to use instead.</p><p>LEVEL 15 </p><p><strong>Master of Chaos.</strong> Whenever you Invoke Chaos, roll with advantage.</p>",
 		"parentClass": "mage",
 		"resources": []
 	},

@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p><em>(1/encounter)</em> Reaction (when an enemy moves adjacent to you or an ally within 6 spaces): Move them back 1 space, they are Restrained until they can escape (DC 10+WIL).</p>",
+		"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you or an ally within 6 spaces): Move them back 1 space, they are Restrained until they can escape (DC 10+WIL).</p>",
 		"featureType": "class",
 		"class": "hunter",
 		"group": "thrill-of-the-hunt",

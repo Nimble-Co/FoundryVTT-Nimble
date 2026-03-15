@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p><em>(1/encounter)</em> Reaction (when an enemy moves adjacent to you or an ally within 6 spaces): Target falls Prone, is vulnerable to the next fire damage it takes, and is treated as if it is Smoldering.</p>",
+		"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you or an ally within 6 spaces): Target falls Prone, is vulnerable to the next fire damage it takes, and is treated as if it is Smoldering.</p>",
 		"featureType": "class",
 		"class": "hunter",
 		"group": "thrill-of-the-hunt",
