@@ -3,18 +3,15 @@ import {
 	createCombatActorFixture,
 	createCombatantFixture,
 } from '../../../../tests/fixtures/combat.js';
-import {
-	clearExpandedTurnIdentityHint,
-	setExpandedTurnIdentityHint,
-} from '../../../documents/combat/expandedTurnIdentityStore.js';
+import { clearExpandedTurnIdentityHint } from '../../../documents/combat/expandedTurnIdentityStore.js';
+import { syncCombatTurnsForCt } from './combat.utils.js';
 import {
 	getCombatantCardResourceChips,
 	getCombatantOutlineClass,
 	getNonPlayerCombatantHpBarData,
 	getPlayerCombatantDrawerData,
 	shouldRenderCombatantActions,
-	syncCombatTurnsForCt,
-} from './combatTracker.utils.js';
+} from './resources.utils.js';
 
 describe('ctTopTracker helpers', () => {
 	beforeEach(() => {
@@ -274,12 +271,16 @@ describe('ctTopTracker helpers', () => {
 
 		const expandedTurns = [playerOne, solo, playerTwo, solo] as Combatant.Implementation[];
 		const rawTurns = [playerOne, playerTwo, solo] as Combatant.Implementation[];
-		setExpandedTurnIdentityHint('combat-legendary-ct-sync', {
-			combatantId: 'legendary-one',
-			occurrence: 1,
-		});
 		const combat = {
 			id: 'combat-legendary-ct-sync',
+			flags: {
+				nimble: {
+					expandedTurnIdentity: {
+						combatantId: 'legendary-one',
+						occurrence: 1,
+					},
+				},
+			},
 			turns: rawTurns,
 			turn: 2,
 			combatant: solo,

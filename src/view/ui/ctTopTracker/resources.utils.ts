@@ -18,6 +18,7 @@ import {
 	getHeroicReactionAvailability,
 	getHeroicReactionAvailabilityTitle,
 } from '../../../utils/heroicActions.js';
+import localize from '../../../utils/localize.js';
 import {
 	isFriendlyCombatant,
 	isLegendaryCombatant,
@@ -37,6 +38,13 @@ function getNestedStringProperty(target: unknown, path: string): string | null {
 	const value = foundry.utils.getProperty(target, path);
 	return typeof value === 'string' && value.length > 0 ? value : null;
 }
+
+const CT_WOUNDS_LABEL = 'NIMBLE.ui.combatTracker.wounds';
+const CT_MANA_LABEL = 'NIMBLE.ui.combatTracker.mana';
+const CT_HIT_POINTS_LABEL = 'NIMBLE.ui.combatTracker.hitPoints';
+const CT_HIT_POINTS_HIDDEN_LABEL = 'NIMBLE.ui.combatTracker.hitPointsHidden';
+const CT_WOUNDS_HIDDEN_LABEL = 'NIMBLE.ui.combatTracker.woundsHidden';
+const CT_WOUNDS_VALUE_LABEL = 'NIMBLE.ui.combatTracker.woundsValue';
 
 type TokenBarLike = {
 	displayBars?: number | null;
@@ -295,7 +303,7 @@ export function getCombatantCardResourceChips(
 			key: 'wounds',
 			iconClass: 'fa-solid fa-droplet',
 			text: `${Math.max(0, Math.floor(wounds.value))}/${Math.max(0, Math.floor(wounds.max))}`,
-			title: 'Wounds',
+			title: localizeWithFallback(CT_WOUNDS_LABEL, 'Wounds'),
 			tone: 'wounds',
 		});
 	}
@@ -306,7 +314,7 @@ export function getCombatantCardResourceChips(
 			key: 'mana',
 			iconClass: 'fa-solid fa-sparkles',
 			text: `${Math.max(0, Math.floor(mana.value))}/${Math.max(0, Math.floor(mana.max))}`,
-			title: 'Mana',
+			title: localizeWithFallback(CT_MANA_LABEL, 'Mana'),
 			tone: 'mana',
 		});
 	}
@@ -348,7 +356,8 @@ export function getPlayerCombatantDrawerData(
 	);
 	const hpFillPercent =
 		hpVisible && hpValue !== null && hpMax !== null ? clampBarFillPercent(hpValue, hpMax) : 0;
-	const hpTitle = getCombatantHpBarTooltip(combatant) ?? 'Hit Points';
+	const hpTitle =
+		getCombatantHpBarTooltip(combatant) ?? localizeWithFallback(CT_HIT_POINTS_LABEL, 'Hit Points');
 	const hpBar: PlayerCombatantBarData = {
 		key: 'hp',
 		visible: hpVisible,
@@ -356,7 +365,9 @@ export function getPlayerCombatantDrawerData(
 		centerText: hpVisible
 			? getPlayerHpBarCenterText(combatant, playerHpBarTextMode, hpFillPercent)
 			: null,
-		title: hpVisible ? hpTitle : 'Hit Points hidden',
+		title: hpVisible
+			? hpTitle
+			: localizeWithFallback(CT_HIT_POINTS_HIDDEN_LABEL, 'Hit Points hidden'),
 		toneClass: getPlayerHpBarToneClass(combatant),
 	};
 
@@ -374,8 +385,11 @@ export function getPlayerCombatantDrawerData(
 				: null,
 		title:
 			woundsVisible && wounds
-				? `Wounds ${Math.max(0, Math.floor(wounds.value))}/${Math.max(0, Math.floor(wounds.max))}`
-				: 'Wounds hidden',
+				? localize(CT_WOUNDS_VALUE_LABEL, {
+						current: String(Math.max(0, Math.floor(wounds.value))),
+						max: String(Math.max(0, Math.floor(wounds.max))),
+					})
+				: localizeWithFallback(CT_WOUNDS_HIDDEN_LABEL, 'Wounds hidden'),
 		toneClass: 'nimble-ct__player-resource-bar--wounds',
 		iconClass: 'fa-solid fa-droplet',
 	};

@@ -22,20 +22,22 @@ import {
 	getCombatantId,
 	getCombatantsForScene,
 	getCombatForCurrentScene,
-	getCtCardScale,
 	getRoundBoundaryKey,
 	getRoundSeparatorInsertionIndex,
 	isCombatStarted,
 	isMonsterOrMinionCombatant,
 	isPlayerCombatant,
-	normalizeCtCardSizeLevel,
-	normalizeCtWidthLevel,
 	orderEntriesForCenteredActive,
 	resolveActiveEntryKey,
-	resolveCtTrackMaxWidth,
 	syncCombatTurnsForCt,
+} from './combat.utils.js';
+import {
+	getCtCardScale,
+	normalizeCtCardSizeLevel,
+	normalizeCtWidthLevel,
+	resolveCtTrackMaxWidth,
 	trackDependency,
-} from './combatTracker.utils.js';
+} from './layout.utils.js';
 import {
 	resolveActionCombatState,
 	resolveCtTopTrackerSettingPatch,

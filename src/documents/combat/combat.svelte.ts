@@ -63,7 +63,10 @@ import type {
 	TurnIdentity,
 } from './combatTypes.js';
 import {
+	areTurnIdentitiesEqual,
+	buildExpandedTurnIdentityUpdate,
 	getExpandedTurnIdentityHint,
+	getPersistedExpandedTurnIdentity,
 	setExpandedTurnIdentityHint,
 } from './expandedTurnIdentityStore.js';
 import { handleInitiativeRules } from './handleInitiativeRules.js';
@@ -129,6 +132,11 @@ class NimbleCombat extends Combat {
 	#expandedTurnIdentity: TurnIdentity | null = null;
 
 	#readStoredExpandedTurnIdentity(): TurnIdentity | null {
+		const persistedTurnIdentity = getPersistedExpandedTurnIdentity(this);
+		if (persistedTurnIdentity) {
+			setExpandedTurnIdentityHint(this.id ?? null, persistedTurnIdentity);
+			return persistedTurnIdentity;
+		}
 		return getExpandedTurnIdentityHint(this.id ?? null);
 	}
 
@@ -136,6 +144,19 @@ class NimbleCombat extends Combat {
 		this.#expandedTurnIdentity = turnIdentity;
 		(this as CombatWithTurnIdentityHint)._nimbleExpandedTurnIdentity = turnIdentity;
 		setExpandedTurnIdentityHint(this.id ?? null, turnIdentity);
+	}
+
+	#resolveTurnIdentityForPersistence(
+		turns: Combatant.Implementation[] = this.turns,
+	): TurnIdentity | null {
+		const indexedTurnIdentity = this.#resolveTurnIdentityAtIndex(
+			turns,
+			typeof this.turn === 'number' ? this.turn : null,
+		);
+		const turnIdentity = indexedTurnIdentity ?? this.#expandedTurnIdentity;
+		if (!turnIdentity?.combatantId) return null;
+		if (this.#findTurnIndexByOccurrence(turns, turnIdentity.combatantId, 1) < 0) return null;
+		return turnIdentity;
 	}
 
 	#resolveTurnIdentityAtIndex(
@@ -164,10 +185,13 @@ class NimbleCombat extends Combat {
 	): TurnIdentity | null {
 		if (this.#expandedTurnIdentity) return this.#expandedTurnIdentity;
 
-		const storedTurnIdentity = this.#readStoredExpandedTurnIdentity();
-		if (storedTurnIdentity) return storedTurnIdentity;
-
 		const explicitCombatantId = fallbackCombatantId ?? this.combatant?.id ?? null;
+		const storedTurnIdentity = this.#readStoredExpandedTurnIdentity();
+		if (storedTurnIdentity) {
+			if (!explicitCombatantId || explicitCombatantId === storedTurnIdentity.combatantId) {
+				return storedTurnIdentity;
+			}
+		}
 
 		const normalizedCurrentTurn =
 			typeof this.turn === 'number' && this.turn >= 0 && this.turn < turns.length
@@ -217,8 +241,17 @@ class NimbleCombat extends Combat {
 		);
 	}
 
-	async #persistExpandedTurnState(): Promise<void> {
-		this.#readStoredExpandedTurnIdentity();
+	async #persistExpandedTurnState(updateData: Record<string, unknown> = {}): Promise<void> {
+		const persistedTurnIdentity = this.#resolveTurnIdentityForPersistence();
+		const storedTurnIdentity = getPersistedExpandedTurnIdentity(this);
+		const nextUpdateData = { ...updateData };
+
+		if (!areTurnIdentitiesEqual(persistedTurnIdentity, storedTurnIdentity)) {
+			Object.assign(nextUpdateData, buildExpandedTurnIdentityUpdate(persistedTurnIdentity));
+		}
+
+		if (Object.keys(nextUpdateData).length < 1) return;
+		await this.update(nextUpdateData);
 	}
 
 	#resolveCombatantsByIds(ids: string[]): Combatant.Implementation[] {
@@ -284,10 +317,8 @@ class NimbleCombat extends Combat {
 		this.#storeExpandedTurnIdentity(
 			this.#resolveTurnIdentityAtIndex(this.turns, nextTurnIndex) ?? turnIdentity,
 		);
-		const shouldPersist = options.persist ?? true;
-		if (!shouldPersist || !game.user?.isGM) return;
-
-		await this.update({ turn: nextTurnIndex });
+		if (options.persist === false) return;
+		await this.#persistExpandedTurnState({ turn: nextTurnIndex });
 	}
 
 	#getCombatantOccurrenceAtIndex(
@@ -778,9 +809,10 @@ class NimbleCombat extends Combat {
 		this.turns = this.setupTurns();
 		if (this.turns.length > 0) {
 			const nextTurnIndex = this.#resolveStartCombatTurnIndex();
+			const nextTurnIdentity = this.#resolveTurnIdentityAtIndex(this.turns, nextTurnIndex);
 			this.turn = nextTurnIndex;
-			this.#storeExpandedTurnIdentity(this.#resolveTurnIdentityAtIndex(this.turns, nextTurnIndex));
-			await this.#persistExpandedTurnState();
+			this.#storeExpandedTurnIdentity(nextTurnIdentity);
+			await this.#persistExpandedTurnState({ turn: nextTurnIndex });
 		}
 
 		return result;

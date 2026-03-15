@@ -678,6 +678,15 @@
 		},
 		"ui": {
 			"cancel": "Cancel",
+			"combatTracker": {
+				"scrollbar": "Combat turn order scrollbar",
+				"hitPoints": "Hit Points",
+				"hitPointsHidden": "Hit Points hidden",
+				"mana": "Mana",
+				"wounds": "Wounds",
+				"woundsHidden": "Wounds hidden",
+				"woundsValue": "Wounds {current}/{max}"
+			},
 			"heroicActions": {
 				"title": "Heroic Actions",
 				"reactionsTitle": "Heroic Reactions",
@@ -720,6 +729,16 @@
 				},
 				"actionsHeader": "Actions",
 				"moveAction": "<p><strong>{name}</strong> used an action to move.</p>",
+				"reactionLabels": {
+					"defend": "Defend",
+					"interpose": "Interpose",
+					"opportunityAttack": "Opportunity Attack",
+					"help": "Help"
+				},
+				"reactionAvailability": {
+					"available": "{label} available",
+					"spent": "{label} spent"
+				},
 				"actions": {
 					"attack": {
 						"label": "Attack",

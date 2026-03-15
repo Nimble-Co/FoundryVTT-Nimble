@@ -367,7 +367,12 @@ describe('NimbleCombat', () => {
 		expect(combat.combatant?.id).toBe('legendary-one');
 		expect(
 			(combat as NimbleCombat & { update: ReturnType<typeof vi.fn> }).update,
-		).not.toHaveBeenCalled();
+		).toHaveBeenCalledWith({
+			'flags.nimble.expandedTurnIdentity': {
+				combatantId: 'legendary-one',
+				occurrence: 1,
+			},
+		});
 	});
 
 	it('preserves the player turn when rewinding from a later solo turn occurrence', async () => {
@@ -488,7 +493,7 @@ describe('NimbleCombat', () => {
 
 		await combat.startCombat();
 
-		expect(combat.update).not.toHaveBeenCalled();
+		expect(combat.update).toHaveBeenCalledWith({ turn: 1 });
 		expect(combat.turn).toBe(1);
 	});
 
