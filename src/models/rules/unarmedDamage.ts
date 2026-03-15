@@ -1,8 +1,5 @@
 import { NimbleBaseRule } from './base.js';
 
-// Default unarmed damage per core rules: "roll 1d4; on hit: deal 1 + STR damage"
-const DEFAULT_UNARMED_DAMAGE = '1 + @abilities.strength.mod';
-
 function schema() {
 	const { fields } = foundry.data;
 
@@ -49,4 +46,4 @@ class UnarmedDamageRule extends NimbleBaseRule<UnarmedDamageRule.Schema> {
 	}
 }
 
-export { UnarmedDamageRule, DEFAULT_UNARMED_DAMAGE };
+export { UnarmedDamageRule };

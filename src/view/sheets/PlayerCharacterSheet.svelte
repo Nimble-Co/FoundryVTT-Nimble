@@ -17,9 +17,11 @@
 	import PlayerCharacterConditionsTab from './pages/PlayerCharacterConditionsTab.svelte';
 	import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';
 	import PlayerCharacterFeaturesTab from './pages/PlayerCharacterFeaturesTab.svelte';
+	import PlayerCharacterHeroicActionsTab from './pages/PlayerCharacterHeroicActionsTab.svelte';
 	import PlayerCharacterInventoryTab from './pages/PlayerCharacterInventoryTab.svelte';
 	import PlayerCharacterSettingsTab from './pages/PlayerCharacterSettingsTab.svelte';
 	import PlayerCharacterSpellsTab from './pages/PlayerCharacterSpellsTab.svelte';
+	import ActionTracker from './components/ActionTracker.svelte';
 
 	function getHitPointPercentage(currentHP, maxHP) {
 		return Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100);
@@ -192,6 +194,12 @@
 			icon: 'fa-solid fa-home',
 			tooltip: 'Core',
 			name: 'core',
+		},
+		{
+			component: PlayerCharacterHeroicActionsTab,
+			icon: 'fa-solid fa-bolt',
+			tooltip: 'Actions',
+			name: 'actions',
 		},
 		{
 			component: PlayerCharacterConditionsTab,
@@ -617,6 +625,8 @@
 	>
 		<i class="fa-solid fa-moon"></i>
 	</button>
+
+	<ActionTracker {actor} />
 </section>
 
 <style lang="scss">

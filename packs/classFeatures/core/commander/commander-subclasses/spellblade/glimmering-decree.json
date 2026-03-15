@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>(Replaces: Face Me!)</p><p>Reaction (after an ally within 12 spaces is crit): That enemy takes STR d8 radiant damage (ignoring armor), is pulled up to 4 spaces toward you, and is Taunted by you until you drop to 0 HP.</p>",
+		"description": "<p>(Replaces: Face Me!)</p><p><strong>Reaction</strong> (after an ally within 12 spaces is crit): That enemy takes STR d8 radiant damage (ignoring armor), is pulled up to 4 spaces toward you, and is Taunted by you until you drop to 0 HP.</p>",
 		"featureType": "class",
 		"class": "commander",
 		"group": "spellblade",

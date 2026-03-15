@@ -1,4 +1,10 @@
 import {
+	getPersistedNcswSidebarViewMode,
+	isNcswSidebarViewModeSettingRegistered,
+	type NcswSidebarViewMode,
+	setPersistedNcswSidebarViewMode,
+} from '../settings/ncswSettings.js';
+import {
 	flattenActivationEffects,
 	getUnsupportedActivationEffectTypes,
 } from '../utils/activationEffects.js';
@@ -25,7 +31,6 @@ const MINION_GROUP_TOKEN_UI_DEBUG_DISABLED_KEY = 'NIMBLE_DISABLE_GROUP_TOKEN_UI_
 const NCSW_PANEL_VIEWPORT_MARGIN_PX = 8;
 const NCSW_PANEL_MIN_WIDTH_REM = 20;
 const NCSW_PANEL_MAX_TARGETS_PER_ROW = 4;
-const NCSW_LOGO_PATH = '/systems/nimble/ncsw/logos/NimbleLogos.png';
 const NCSW_I18N_PREFIX = 'NIMBLE.nimbleCombatSystemWindow';
 const NCSW_SCENE_TOGGLE_TOOL_NAME = 'nimble-ncsw-toggle';
 const NCSW_SCENE_TOGGLE_ICON_CLASSES = 'fa-solid fa-crosshairs';
@@ -46,8 +51,6 @@ const FONT_AWESOME_BASE_CLASSES = new Set([
 	'fa-thin',
 	'fa-duotone',
 ]);
-
-export type NcswSidebarViewMode = 'combatTracker' | 'ncs';
 
 let didRegisterMinionGroupTokenActions = false;
 let refreshScheduled = false;
@@ -75,6 +78,7 @@ let groupAttackActionDescriptionPopoverElement: HTMLDivElement | null = null;
 let groupAttackImagePopoverElement: HTMLDivElement | null = null;
 let sceneControlsRefreshHandle: ReturnType<typeof setTimeout> | null = null;
 let ncswSidebarViewMode: NcswSidebarViewMode = 'ncs';
+let hasInitializedNcswSidebarViewMode = false;
 const rememberedGroupAttackSelectionsByActorType = new Map<string, string>();
 
 type HookRegistration = { hook: string; id: number };
@@ -198,22 +202,39 @@ function isTokenUiDebugEnabled(): boolean {
 	);
 }
 
+function ensureNcswSidebarViewModeInitialized(): void {
+	if (hasInitializedNcswSidebarViewMode) return;
+	if (!isNcswSidebarViewModeSettingRegistered()) return;
+	ncswSidebarViewMode = getPersistedNcswSidebarViewMode();
+	hasInitializedNcswSidebarViewMode = true;
+}
+
 function logTokenUi(message: string, details: Record<string, unknown> = {}): void {
 	if (!isTokenUiDebugEnabled()) return;
 	console.info(`[Nimble][MinionGrouping][TokenUI] ${message}`, details);
 }
 
 function isNcswSidebarModeActive(): boolean {
+	ensureNcswSidebarViewModeInitialized();
 	return ncswSidebarViewMode === 'ncs';
 }
 
 export function getNcswSidebarViewMode(): NcswSidebarViewMode {
+	ensureNcswSidebarViewModeInitialized();
 	return ncswSidebarViewMode;
 }
 
 export function setNcswSidebarViewMode(mode: NcswSidebarViewMode): void {
+	ensureNcswSidebarViewModeInitialized();
 	if (ncswSidebarViewMode === mode) return;
 	ncswSidebarViewMode = mode;
+	hasInitializedNcswSidebarViewMode = true;
+	void setPersistedNcswSidebarViewMode(mode).catch((error) => {
+		console.error('[Nimble][MinionGrouping][TokenUI] Failed to persist NCSW sidebar mode', {
+			mode,
+			error,
+		});
+	});
 	hideGroupAttackPanel();
 	if (didRegisterMinionGroupTokenActions) {
 		scheduleActionBarRefresh('setNcswSidebarViewMode');
@@ -1444,26 +1465,38 @@ function resetGroupAttackPanelForRender(panel: HTMLDivElement): void {
 	panel.style.removeProperty('width');
 }
 
+function closeNcswPanel(): void {
+	setNcswSidebarViewMode('combatTracker');
+}
+
 function renderGroupAttackPanelHeader(panel: HTMLDivElement): void {
 	const header = document.createElement('div');
 	header.className = 'nimble-minion-group-attack-panel__header';
 	header.title = localizeNcsw('tooltips.dragToMove');
 	header.addEventListener('pointerdown', handleGroupAttackPanelDragStart);
 
-	const logo = document.createElement('img');
-	logo.className = 'nimble-minion-group-attack-panel__logo';
-	logo.alt = localizeNcsw('logo.alt');
-	logo.draggable = false;
-	logo.src = NCSW_LOGO_PATH;
-	logo.addEventListener('error', () => {
-		logo.remove();
-	});
-
 	const title = document.createElement('h3');
 	title.className = 'nimble-minion-group-attack-panel__title';
 	title.textContent = localizeNcsw('title');
 
-	header.append(logo, title);
+	const closeButton = document.createElement('button');
+	closeButton.type = 'button';
+	closeButton.className = 'nimble-minion-group-attack-panel__close-button';
+	closeButton.ariaLabel = localizeNcsw('buttons.close');
+	closeButton.title = localizeNcsw('buttons.close');
+	const closeIcon = document.createElement('i');
+	closeIcon.className = 'fa-solid fa-xmark';
+	closeIcon.ariaHidden = 'true';
+	closeButton.append(closeIcon);
+	closeButton.addEventListener('pointerdown', (event) => {
+		event.stopPropagation();
+	});
+	closeButton.addEventListener('click', (event) => {
+		event.stopPropagation();
+		closeNcswPanel();
+	});
+
+	header.append(title, closeButton);
 	panel.append(header);
 }
 
@@ -1821,19 +1854,6 @@ function renderGroupAttackButtonSection(params: {
 			void executeGroupAttackRoll(true);
 		});
 		appendButtonWithOptionalTargetTooltip(buttons, rollEndTurnButton, missingTarget);
-	}
-
-	if (!isNcswCombatStateEnabled(getCombatForCurrentScene())) {
-		const closeButton = document.createElement('button');
-		closeButton.type = 'button';
-		closeButton.className =
-			'nimble-minion-group-attack-panel__button nimble-minion-group-attack-panel__button--negative';
-		closeButton.textContent = localizeNcsw('buttons.close');
-		closeButton.disabled = isExecutingAction;
-		closeButton.addEventListener('click', () => {
-			hideGroupAttackPanel();
-		});
-		buttons.append(closeButton);
 	}
 
 	if (buttons.childElementCount > 0) {
@@ -2931,6 +2951,7 @@ export function unregisterMinionGroupTokenActions(): void {
 	activeGroupAttackMembers = [];
 	activeGroupAttackWarnings = [];
 	groupAttackPanelPosition = null;
+	hasInitializedNcswSidebarViewMode = false;
 }
 
 export default function registerMinionGroupTokenActions(): void {
@@ -2944,6 +2965,7 @@ export default function registerMinionGroupTokenActions(): void {
 	didRegisterMinionGroupTokenActions = true;
 	(globalThis as Record<string, unknown>).__nimbleMinionGroupTokenActionsRegistered = true;
 	logTokenUi('registerMinionGroupTokenActions invoked');
+	ensureNcswSidebarViewModeInitialized();
 	hideGroupAttackPanel({ clearTargets: false });
 
 	windowResizeHandler = () => {

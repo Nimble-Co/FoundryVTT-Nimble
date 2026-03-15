@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>(Replaces: Hold the Line!)</p><p>(1/encounter) Reaction (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. Additionally, they gain that many temp HP. Enemies who reduce this temp HP in melee have their speed halved until the end of their next turn.</p>",
+		"description": "<p>(Replaces: Hold the Line!)</p><p><em>(1/encounter)</em> <strong>Reaction</strong> (when an ally drops to 0 HP): Command them to continue the fight! Set their HP to 3× your LVL. Additionally, they gain that many temp HP. Enemies who reduce this temp HP in melee have their speed halved until the end of their next turn.</p>",
 		"featureType": "class",
 		"class": "commander",
 		"group": "spellblade",

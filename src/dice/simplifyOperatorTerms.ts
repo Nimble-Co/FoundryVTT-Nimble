@@ -1,11 +1,25 @@
 /**
- * A helper function to strip redundant operators from an array of RollTerms and to perform
- * arithmetic simplification.
+ * Strips redundant operators from an array of RollTerms and performs arithmetic simplification.
  *
- * A new array of RollTerm objects is returned.
+ * This function cleans up roll formulas for better readability by:
+ * - Replacing consecutive `+ -` operators with a single `-`
+ * - Replacing double `- -` operators with a single `+`
+ * - Removing `+` operators that directly follow `+`, `*`, or `/`
+ * - Removing trailing operator terms from the end of the formula
  *
- * @param {Array<RollTerm>} terms An array of RollTerm objects that form a valid roll formula.
- * @returns {Array<RollTerm>} A new array of RollTerm objects.
+ * A new array of RollTerm objects is returned; the original array is not modified.
+ *
+ * @param terms - An array of RollTerm objects that form a valid roll formula.
+ * @returns A new array of RollTerm objects with simplified operators.
+ *
+ * @example
+ * ```typescript
+ * // Formula "1d20 + -3" becomes "1d20 - 3"
+ * // Formula "1d20 - -3" becomes "1d20 + 3"
+ * // Formula "1d20 + + 3" becomes "1d20 + 3"
+ * const simplified = simplifyOperatorTerms(roll.terms);
+ * const formula = Roll.getFormula(simplified);
+ * ```
  */
 export default function simplifyOperatorTerms(terms) {
 	const Terms = foundry.dice.terms;

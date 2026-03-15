@@ -37,6 +37,16 @@
 			"lang": "en",
 			"name": "English",
 			"path": "lang/en.json"
+		},
+		{
+			"lang": "es",
+			"name": "Español",
+			"path": "lang/es.json"
+		},
+		{
+			"lang": "fr",
+			"name": "Français",
+			"path": "lang/fr.json"
 		}
 	],
 	"grid": {
@@ -75,6 +85,7 @@
 		},
 		"ChatMessage": {
 			"abilityCheck": {},
+			"assessAction": {},
 			"boon": {},
 			"damage": {},
 			"feature": {},
