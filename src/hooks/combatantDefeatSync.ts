@@ -1,45 +1,21 @@
-import {
-	getActorHpValue,
-	getActorWoundsValueAndMax,
-	isCombatantDead,
-} from '../utils/isCombatantDead.js';
-
-type CombatantWithActions = Combatant.Implementation & {
-	system: {
-		actions?: {
-			base?: {
-				current?: number;
-				max?: number;
-			};
-		};
-	};
-};
+import { getActorHpValue, getActorWoundsValueAndMax } from '../utils/actorResources.js';
+import { isCombatantDead } from '../utils/isCombatantDead.js';
 
 let didRegisterCombatantDefeatSync = false;
 
 function getCombatantsForActor(
 	actorId: string,
-): Array<{ combat: Combat; combatant: CombatantWithActions }> {
-	const entries: Array<{ combat: Combat; combatant: CombatantWithActions }> = [];
+): Array<{ combat: Combat; combatant: Combatant.Implementation }> {
+	const entries: Array<{ combat: Combat; combatant: Combatant.Implementation }> = [];
 
 	for (const combat of game.combats?.contents ?? []) {
 		for (const combatant of combat.combatants.contents) {
 			if (combatant.actorId !== actorId) continue;
-			entries.push({ combat, combatant: combatant as CombatantWithActions });
+			entries.push({ combat, combatant });
 		}
 	}
 
 	return entries;
-}
-
-function getCombatantActionMax(combatant: CombatantWithActions): number {
-	const maxActions = Number(combatant.system?.actions?.base?.max ?? 0);
-	return Number.isFinite(maxActions) && maxActions >= 0 ? maxActions : 0;
-}
-
-function getCombatantActionCurrent(combatant: CombatantWithActions): number {
-	const currentActions = Number(combatant.system?.actions?.base?.current ?? 0);
-	return Number.isFinite(currentActions) && currentActions >= 0 ? currentActions : 0;
 }
 
 function hasAnyOtherAliveCombatant(combat: Combat, currentCombatantId: string | null): boolean {
@@ -48,7 +24,7 @@ function hasAnyOtherAliveCombatant(combat: Combat, currentCombatantId: string | 
 	);
 }
 
-function getShouldBeDefeatedFromActorState(combatant: CombatantWithActions): boolean | null {
+function getShouldBeDefeatedFromActorState(combatant: Combatant.Implementation): boolean | null {
 	if (combatant.type === 'character') {
 		const wounds = getActorWoundsValueAndMax(combatant.actor);
 		if (!wounds) return null;
@@ -88,23 +64,6 @@ async function syncActorCombatantDeathState(actor: Actor.Implementation): Promis
 			update.defeated = shouldBeDefeated;
 			hasChanges = true;
 		}
-
-		const actionCurrent = getCombatantActionCurrent(combatant);
-		const actionMax = getCombatantActionMax(combatant);
-		let desiredActions: number | null = null;
-
-		// Only touch current actions when defeat state changes, or while a combatant remains defeated.
-		if (shouldBeDefeated) {
-			desiredActions = 0;
-		} else if (combatant.defeated) {
-			desiredActions = actionMax;
-		}
-
-		if (desiredActions !== null && actionCurrent !== desiredActions) {
-			update['system.actions.base.current'] = desiredActions;
-			hasChanges = true;
-		}
-
 		if (!hasChanges) continue;
 
 		if (!updatesByCombat.has(combat.id)) {

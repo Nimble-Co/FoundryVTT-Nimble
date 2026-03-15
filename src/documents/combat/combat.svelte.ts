@@ -9,6 +9,13 @@ import {
 	canCurrentUserReorderCombatant,
 	getCombatantTypePriority,
 } from '../../utils/combatantOrdering.js';
+import {
+	canOwnerUseHeroicReaction,
+	getHeroicReactionAvailability,
+	getHeroicReactionAvailabilityUpdate,
+	HEROIC_REACTIONS,
+	type HeroicReactionKey,
+} from '../../utils/heroicActions.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
 import {
 	getEffectiveMinionGroupLeader,
@@ -53,11 +60,199 @@ import type {
 	NormalizedMinionGroupAttackParams,
 	ResolvedMinionAttackActionContext,
 	ResolvedMinionGroupAttackTargets,
+	TurnIdentity,
 } from './combatTypes.js';
+import {
+	areTurnIdentitiesEqual,
+	buildExpandedTurnIdentityUpdate,
+	getExpandedTurnIdentityHint,
+	getPersistedExpandedTurnIdentity,
+	setExpandedTurnIdentityHint,
+} from './expandedTurnIdentityStore.js';
 import { handleInitiativeRules } from './handleInitiativeRules.js';
+
+type CombatWithTurnIdentityHint = Combat & {
+	_nimbleExpandedTurnIdentity?: TurnIdentity | null;
+};
+
+function collectAliveMinionLeaderIds(
+	groupedSummaries: ReturnType<typeof getMinionGroupSummaries>,
+): Set<string> {
+	const leaderIds = new Set<string>();
+	for (const summary of groupedSummaries.values()) {
+		const leader = getEffectiveMinionGroupLeader(summary, { aliveOnly: true });
+		if (leader?.id) leaderIds.add(leader.id);
+	}
+	return leaderIds;
+}
+
+function normalizeMinionTurns(turns: Combatant.Implementation[]): Combatant.Implementation[] {
+	const groupedSummaries = getMinionGroupSummaries(turns);
+	if (groupedSummaries.size === 0) return turns;
+
+	const leaderIds = collectAliveMinionLeaderIds(groupedSummaries);
+	return turns.filter((combatant) => {
+		const groupId = getMinionGroupId(combatant);
+		if (!groupId) return true;
+		return leaderIds.has(combatant.id ?? '');
+	});
+}
+
+function expandLegendaryTurns(turns: Combatant.Implementation[]): Combatant.Implementation[] {
+	const characters: Combatant.Implementation[] = [];
+	const legendaryCombatants: Combatant.Implementation[] = [];
+	const nonCharacterNonLegendary: Combatant.Implementation[] = [];
+
+	for (const combatant of turns) {
+		if (combatant.type === 'character') {
+			characters.push(combatant);
+			continue;
+		}
+		if (combatant.type === 'soloMonster') {
+			legendaryCombatants.push(combatant);
+			continue;
+		}
+		nonCharacterNonLegendary.push(combatant);
+	}
+
+	if (characters.length === 0 || legendaryCombatants.length === 0) return turns;
+
+	// Solo monsters intentionally gain a turn after each character turn.
+	// Their original relative placement within the non-character section is not preserved.
+	const expandedTurns: Combatant.Implementation[] = [];
+	for (const character of characters) {
+		expandedTurns.push(character, ...legendaryCombatants);
+	}
+	expandedTurns.push(...nonCharacterNonLegendary);
+	return expandedTurns;
+}
 
 class NimbleCombat extends Combat {
 	#subscribe: ReturnType<typeof createSubscriber>;
+	#expandedTurnIdentity: TurnIdentity | null = null;
+
+	#readStoredExpandedTurnIdentity(): TurnIdentity | null {
+		const persistedTurnIdentity = getPersistedExpandedTurnIdentity(this);
+		if (persistedTurnIdentity) {
+			setExpandedTurnIdentityHint(this.id ?? null, persistedTurnIdentity);
+			return persistedTurnIdentity;
+		}
+		return getExpandedTurnIdentityHint(this.id ?? null);
+	}
+
+	#storeExpandedTurnIdentity(turnIdentity: TurnIdentity | null): void {
+		this.#expandedTurnIdentity = turnIdentity;
+		(this as CombatWithTurnIdentityHint)._nimbleExpandedTurnIdentity = turnIdentity;
+		setExpandedTurnIdentityHint(this.id ?? null, turnIdentity);
+	}
+
+	#resolveTurnIdentityForPersistence(
+		turns: Combatant.Implementation[] = this.turns,
+	): TurnIdentity | null {
+		const indexedTurnIdentity = this.#resolveTurnIdentityAtIndex(
+			turns,
+			typeof this.turn === 'number' ? this.turn : null,
+		);
+		const turnIdentity = indexedTurnIdentity ?? this.#expandedTurnIdentity;
+		if (!turnIdentity?.combatantId) return null;
+		if (this.#findTurnIndexByOccurrence(turns, turnIdentity.combatantId, 1) < 0) return null;
+		return turnIdentity;
+	}
+
+	#resolveTurnIdentityAtIndex(
+		turns: Combatant.Implementation[],
+		turnIndex: number | null,
+	): TurnIdentity | null {
+		if (
+			!Number.isInteger(turnIndex) ||
+			turnIndex == null ||
+			turnIndex < 0 ||
+			turnIndex >= turns.length
+		) {
+			return null;
+		}
+		const combatantId = turns[turnIndex]?.id ?? '';
+		if (!combatantId) return null;
+		return {
+			combatantId,
+			occurrence: this.#getCombatantOccurrenceAtIndex(turns, combatantId, turnIndex),
+		};
+	}
+
+	#resolveCurrentTurnIdentity(
+		turns: Combatant.Implementation[] = this.turns,
+		fallbackCombatantId?: string | null,
+	): TurnIdentity | null {
+		if (this.#expandedTurnIdentity) return this.#expandedTurnIdentity;
+
+		const explicitCombatantId = fallbackCombatantId ?? this.combatant?.id ?? null;
+		const storedTurnIdentity = this.#readStoredExpandedTurnIdentity();
+		if (storedTurnIdentity) {
+			if (!explicitCombatantId || explicitCombatantId === storedTurnIdentity.combatantId) {
+				return storedTurnIdentity;
+			}
+		}
+
+		const normalizedCurrentTurn =
+			typeof this.turn === 'number' && this.turn >= 0 && this.turn < turns.length
+				? this.turn
+				: null;
+		const indexedTurnIdentity = this.#resolveTurnIdentityAtIndex(turns, normalizedCurrentTurn);
+		if (indexedTurnIdentity) {
+			if (!explicitCombatantId || explicitCombatantId === indexedTurnIdentity.combatantId) {
+				return indexedTurnIdentity;
+			}
+		}
+
+		if (explicitCombatantId) {
+			return { combatantId: explicitCombatantId, occurrence: null };
+		}
+
+		return this.#expandedTurnIdentity ?? storedTurnIdentity ?? indexedTurnIdentity;
+	}
+
+	#resolveNextTurnIdentity(turns: Combatant.Implementation[] = this.turns): TurnIdentity | null {
+		if (turns.length < 1) return null;
+		const normalizedCurrentTurn =
+			typeof this.turn === 'number' && this.turn >= 0 && this.turn < turns.length ? this.turn : 0;
+		const nextTurnIndex = (normalizedCurrentTurn + 1) % turns.length;
+		return this.#resolveTurnIdentityAtIndex(turns, nextTurnIndex);
+	}
+
+	#resolvePreviousTurnIdentity(
+		turns: Combatant.Implementation[] = this.turns,
+	): TurnIdentity | null {
+		if (turns.length < 1) return null;
+		const normalizedCurrentTurn =
+			typeof this.turn === 'number' && this.turn >= 0 && this.turn < turns.length ? this.turn : 0;
+		const previousTurnIndex = (normalizedCurrentTurn - 1 + turns.length) % turns.length;
+		return this.#resolveTurnIdentityAtIndex(turns, previousTurnIndex);
+	}
+
+	#findTurnIndexByIdentity(
+		turns: Combatant.Implementation[],
+		turnIdentity: TurnIdentity | null,
+	): number {
+		if (!turnIdentity?.combatantId) return -1;
+		return this.#findTurnIndexByOccurrence(
+			turns,
+			turnIdentity.combatantId,
+			turnIdentity.occurrence,
+		);
+	}
+
+	async #persistExpandedTurnState(updateData: Record<string, unknown> = {}): Promise<void> {
+		const persistedTurnIdentity = this.#resolveTurnIdentityForPersistence();
+		const storedTurnIdentity = getPersistedExpandedTurnIdentity(this);
+		const nextUpdateData = { ...updateData };
+
+		if (!areTurnIdentitiesEqual(persistedTurnIdentity, storedTurnIdentity)) {
+			Object.assign(nextUpdateData, buildExpandedTurnIdentityUpdate(persistedTurnIdentity));
+		}
+
+		if (Object.keys(nextUpdateData).length < 1) return;
+		await this.update(nextUpdateData);
+	}
 
 	#resolveCombatantsByIds(ids: string[]): Combatant.Implementation[] {
 		const seen = new Set<string>();
@@ -103,51 +298,84 @@ class NimbleCombat extends Combat {
 	}
 
 	async #syncTurnToCombatant(
-		combatantId: string | null | undefined,
+		combatantIdOrIdentity: string | TurnIdentity | null | undefined,
 		options: { persist?: boolean } = {},
 	): Promise<void> {
-		if (!combatantId) return;
+		const turnIdentity =
+			typeof combatantIdOrIdentity === 'string'
+				? { combatantId: combatantIdOrIdentity, occurrence: null }
+				: (combatantIdOrIdentity ?? null);
+		if (!turnIdentity?.combatantId) return;
 
-		const nextTurnIndex = this.turns.findIndex((turnCombatant) => turnCombatant.id === combatantId);
+		const nextTurnIndex = this.#findTurnIndexByIdentity(this.turns, turnIdentity);
 		if (nextTurnIndex < 0) return;
 		const normalizedCurrentTurn = Number.isInteger(this.turn) ? Number(this.turn) : 0;
 		if (nextTurnIndex === normalizedCurrentTurn) return;
 
 		// Keep local state consistent immediately; persist for GM-driven operations.
 		this.turn = nextTurnIndex;
-		const shouldPersist = options.persist ?? true;
-		if (!shouldPersist || !game.user?.isGM) return;
-
-		await this.update({ turn: nextTurnIndex });
+		this.#storeExpandedTurnIdentity(
+			this.#resolveTurnIdentityAtIndex(this.turns, nextTurnIndex) ?? turnIdentity,
+		);
+		if (options.persist === false) return;
+		await this.#persistExpandedTurnState({ turn: nextTurnIndex });
 	}
 
-	#syncTurnIndexWithAliveTurns() {
-		const currentCombatantId =
-			typeof this.turn === 'number' && this.turn >= 0 && this.turn < this.turns.length
-				? (this.turns[this.turn]?.id ?? null)
-				: (this.combatant?.id ?? null);
+	#getCombatantOccurrenceAtIndex(
+		turns: Combatant.Implementation[],
+		combatantId: string,
+		inclusiveIndex: number,
+	): number {
+		let occurrence = -1;
+		for (let index = 0; index <= inclusiveIndex && index < turns.length; index += 1) {
+			if ((turns[index]?.id ?? '') === combatantId) occurrence += 1;
+		}
+		return occurrence;
+	}
 
+	#findTurnIndexByOccurrence(
+		turns: Combatant.Implementation[],
+		combatantId: string,
+		desiredOccurrence: number | null,
+	): number {
+		let occurrence = -1;
+		for (const [index, turnCombatant] of turns.entries()) {
+			if ((turnCombatant?.id ?? '') !== combatantId) continue;
+			occurrence += 1;
+			if (desiredOccurrence === null || occurrence === desiredOccurrence) return index;
+		}
+		return -1;
+	}
+
+	#syncTurnIndexWithAliveTurns(options: { preferredTurnIdentity?: TurnIdentity | null } = {}) {
+		const currentTurnIdentity =
+			options.preferredTurnIdentity ?? this.#resolveCurrentTurnIdentity(this.turns);
 		const aliveTurns = this.setupTurns();
 		this.turns = aliveTurns;
 
 		if (aliveTurns.length === 0) {
 			this.turn = 0;
+			this.#storeExpandedTurnIdentity(null);
 			return;
 		}
 
-		if (currentCombatantId) {
-			const matchedIndex = aliveTurns.findIndex((combatant) => combatant.id === currentCombatantId);
+		if (currentTurnIdentity?.combatantId) {
+			const matchedIndex = this.#findTurnIndexByIdentity(aliveTurns, currentTurnIdentity);
 			if (matchedIndex >= 0) {
 				this.turn = matchedIndex;
+				this.#storeExpandedTurnIdentity(
+					this.#resolveTurnIdentityAtIndex(aliveTurns, matchedIndex) ?? currentTurnIdentity,
+				);
 				return;
 			}
 		}
 
 		const currentTurn = Number.isInteger(this.turn) ? Number(this.turn) : 0;
 		this.turn = Math.min(Math.max(currentTurn, 0), aliveTurns.length - 1);
+		this.#storeExpandedTurnIdentity(this.#resolveTurnIdentityAtIndex(aliveTurns, this.turn));
 	}
 	#combatantHasAnyActionsRemaining(combatant: Combatant.Implementation): boolean {
-		if (combatant.type === 'character') return true;
+		if (combatant.type === 'character' || combatant.type === 'soloMonster') return true;
 
 		const groupId = getMinionGroupId(combatant);
 		if (groupId) {
@@ -173,12 +401,14 @@ class NimbleCombat extends Combat {
 		for (let iteration = 0; iteration < maxIterations; iteration += 1) {
 			const activeCombatant = this.combatant;
 			if (!activeCombatant) break;
-			if (activeCombatant.type === 'character') break;
+			if (activeCombatant.type === 'character' || activeCombatant.type === 'soloMonster') break;
 			if (this.#combatantHasAnyActionsRemaining(activeCombatant)) break;
 
 			const previousActiveId = activeCombatant.id ?? null;
+			const preferredNextTurnIdentity = this.#resolveNextTurnIdentity();
 			nextResult = (await super.nextTurn()) as this;
-			this.#syncTurnIndexWithAliveTurns();
+			this.#syncTurnIndexWithAliveTurns({ preferredTurnIdentity: preferredNextTurnIdentity });
+			await this.#persistExpandedTurnState();
 			const nextActiveId = this.combatant?.id ?? null;
 			if (!nextActiveId || nextActiveId === previousActiveId) break;
 		}
@@ -231,7 +461,7 @@ class NimbleCombat extends Combat {
 		);
 		if (targetGroupIds.size === 0) return [];
 
-		const previousActiveCombatantId = this.combatant?.id;
+		const previousActiveTurnIdentity = this.#resolveCurrentTurnIdentity();
 		const updates = this.combatants.contents.reduce<Record<string, unknown>[]>((acc, combatant) => {
 			if (!combatant.id || !isMinionCombatant(combatant)) return acc;
 
@@ -248,7 +478,7 @@ class NimbleCombat extends Combat {
 
 		const updated = await this.updateEmbeddedDocuments('Combatant', updates);
 		this.turns = this.setupTurns();
-		await this.#syncTurnToCombatant(previousActiveCombatantId);
+		await this.#syncTurnToCombatant(previousActiveTurnIdentity);
 		logMinionGroupingCombat('dissolved minion groups', {
 			combatId: this.id ?? null,
 			groupIds: [...targetGroupIds],
@@ -419,7 +649,7 @@ class NimbleCombat extends Combat {
 		const leader = orderedMembers[0];
 		if (!leader?.id) return;
 
-		const previousActiveCombatantId = this.combatant?.id;
+		const previousActiveTurnIdentity = this.#resolveCurrentTurnIdentity();
 		const temporaryGroupId = foundry.utils.randomID();
 		const sharedInitiative = Number(leader.initiative ?? 0);
 		const sharedSort = getCombatantManualSortValue(leader);
@@ -437,11 +667,16 @@ class NimbleCombat extends Combat {
 		this.turns = this.setupTurns();
 
 		const desiredActiveId = this.#resolveDesiredActiveIdAfterRegroup({
-			previousActiveCombatantId,
+			previousActiveCombatantId: previousActiveTurnIdentity?.combatantId,
 			leaderId: leader.id,
 			orderedMembers,
 		});
-		await this.#syncTurnToCombatant(desiredActiveId, { persist: false });
+		await this.#syncTurnToCombatant(
+			desiredActiveId && previousActiveTurnIdentity?.combatantId === desiredActiveId
+				? previousActiveTurnIdentity
+				: desiredActiveId,
+			{ persist: false },
+		);
 
 		logMinionGroupingCombat('assigned ncs temporary attack group', {
 			combatId: this.id ?? null,
@@ -508,6 +743,35 @@ class NimbleCombat extends Combat {
 		await this.updateEmbeddedDocuments('Combatant', updates);
 	}
 
+	#buildHeroicReactionAvailabilityUpdate(available: boolean): Record<string, unknown> {
+		const update: Record<string, unknown> = {};
+		for (const reactionKey of HEROIC_REACTIONS) {
+			for (const [path, value] of Object.entries(
+				getHeroicReactionAvailabilityUpdate(reactionKey, available),
+			)) {
+				update[path] = value;
+			}
+		}
+		return update;
+	}
+
+	async #refreshCharacterHeroicReactions(): Promise<void> {
+		const updates = this.combatants.contents.reduce<Record<string, unknown>[]>((acc, combatant) => {
+			if (combatant.type !== 'character' || !combatant.id) return acc;
+			const needsRefresh = HEROIC_REACTIONS.some(
+				(reactionKey) => !getHeroicReactionAvailability(combatant, reactionKey),
+			);
+			if (!needsRefresh) return acc;
+			acc.push({
+				_id: combatant.id,
+				...this.#buildHeroicReactionAvailabilityUpdate(true),
+			});
+			return acc;
+		}, []);
+		if (updates.length < 1) return;
+		await this.updateEmbeddedDocuments('Combatant', updates);
+	}
+
 	#resolveStartCombatTurnIndex(): number {
 		if (this.turns.length < 1) return 0;
 		const firstCharacterTurnIndex = this.turns.findIndex(
@@ -519,29 +783,36 @@ class NimbleCombat extends Combat {
 	override async startCombat(): Promise<this> {
 		const result = await super.startCombat();
 
-		// Roll initiative for any unrolled combatants
 		const sceneId = this.scene?.id;
-		if (!sceneId) return result;
+		const unrolledCharacterIds =
+			sceneId == null
+				? []
+				: this.combatants
+						.filter(
+							(combatant) =>
+								combatant.initiative === null &&
+								combatant.type === 'character' &&
+								combatant.sceneId === sceneId,
+						)
+						.map((combatant) => combatant.id)
+						.filter((combatantId): combatantId is string => combatantId != null);
 
-		const unrolled = this.combatants.filter(
-			(c) => c.initiative === null && c.type === 'character' && c.sceneId === sceneId,
-		);
-		if (unrolled.length > 0) {
-			await this.rollInitiative(
-				unrolled.map((c) => c.id).filter((id): id is string => id !== null),
-				{ updateTurn: false },
-			);
+		if (unrolledCharacterIds.length > 0) {
+			await this.rollInitiative(unrolledCharacterIds, { updateTurn: false });
 		}
 
-		// Initialize actions for non-character combatants.
 		await this.#applyNpcActionResetUpdates();
+		await this.#refreshCharacterHeroicReactions();
 
-		// After start + auto-roll updates, always begin on the top player card.
+		// After combat starts, always begin on the top player card.
 		// This preserves pre-combat manual ordering as the first-turn source of truth.
 		this.turns = this.setupTurns();
 		if (this.turns.length > 0) {
 			const nextTurnIndex = this.#resolveStartCombatTurnIndex();
-			await this.update({ turn: nextTurnIndex });
+			const nextTurnIdentity = this.#resolveTurnIdentityAtIndex(this.turns, nextTurnIndex);
+			this.turn = nextTurnIndex;
+			this.#storeExpandedTurnIdentity(nextTurnIdentity);
+			await this.#persistExpandedTurnState({ turn: nextTurnIndex });
 		}
 
 		return result;
@@ -610,6 +881,51 @@ class NimbleCombat extends Combat {
 		}
 
 		return combatant.update(updates);
+	}
+
+	async toggleHeroicReactionAvailability(
+		combatantId: string,
+		reactionKey: HeroicReactionKey,
+	): Promise<boolean> {
+		if (!combatantId) return false;
+
+		const combatant = this.combatants.get(combatantId);
+		if (!combatant || combatant.parent?.id !== this.id) return false;
+		if (combatant.type !== 'character') return false;
+		if (isCombatantDead(combatant)) return false;
+
+		const currentlyAvailable = getHeroicReactionAvailability(combatant, reactionKey);
+		const canAdministerSpentReaction = Boolean(game.user?.isGM);
+		const canSpendAvailableReaction = Boolean(
+			game.user?.isGM || (canOwnerUseHeroicReaction(reactionKey) && combatant.actor?.isOwner),
+		);
+		if (!currentlyAvailable) {
+			if (!canAdministerSpentReaction) return false;
+			await this.updateEmbeddedDocuments('Combatant', [
+				{
+					_id: combatantId,
+					...getHeroicReactionAvailabilityUpdate(reactionKey, true),
+				},
+			]);
+			return true;
+		}
+
+		if (!canSpendAvailableReaction) return false;
+		const currentActions = getCombatantCurrentActions(combatant);
+		if (!game.user?.isGM) {
+			if ((this.round ?? 0) < 1) return false;
+			if ((this.combatant?.id ?? null) === combatantId) return false;
+			if (currentActions < 1) return false;
+		}
+
+		await this.updateEmbeddedDocuments('Combatant', [
+			{
+				_id: combatantId,
+				...getHeroicReactionAvailabilityUpdate(reactionKey, false),
+				'system.actions.base.current': Math.max(0, currentActions - 1),
+			} as Record<string, unknown>,
+		]);
+		return true;
 	}
 
 	#buildSelectionsMap(selections: MinionGroupAttackSelection[]): Map<string, string> {
@@ -1199,34 +1515,50 @@ class NimbleCombat extends Combat {
 
 	override setupTurns(): Combatant.Implementation[] {
 		const aliveTurns = super.setupTurns().filter((combatant) => !isCombatantDead(combatant));
-		const groupedSummaries = getMinionGroupSummaries(aliveTurns);
-		if (groupedSummaries.size === 0) return aliveTurns;
-
-		const leaderIds = new Set<string>();
-		for (const summary of groupedSummaries.values()) {
-			const leader = getEffectiveMinionGroupLeader(summary, { aliveOnly: true });
-			if (leader?.id) leaderIds.add(leader.id);
-		}
-
-		return aliveTurns.filter((combatant) => {
-			const groupId = getMinionGroupId(combatant);
-			if (!groupId) return true;
-			return leaderIds.has(combatant.id ?? '');
-		});
+		const minionNormalizedTurns = normalizeMinionTurns(aliveTurns);
+		return expandLegendaryTurns(minionNormalizedTurns);
 	}
 
 	override async nextTurn(): Promise<this> {
 		this.#syncTurnIndexWithAliveTurns();
+		const preferredNextTurnIdentity = this.#resolveNextTurnIdentity();
 		let result = (await super.nextTurn()) as this;
-		this.#syncTurnIndexWithAliveTurns();
+		this.#syncTurnIndexWithAliveTurns({ preferredTurnIdentity: preferredNextTurnIdentity });
+		await this.#persistExpandedTurnState();
 		result = await this.#advancePastExhaustedTurns(result);
 		return result;
 	}
 
 	override async nextRound(): Promise<this> {
 		this.#syncTurnIndexWithAliveTurns();
+		const preferredFirstTurnIdentity = this.#resolveTurnIdentityAtIndex(this.turns, 0);
 		const result = (await super.nextRound()) as this;
+		this.#syncTurnIndexWithAliveTurns({ preferredTurnIdentity: preferredFirstTurnIdentity });
+		await this.#persistExpandedTurnState();
+		await this.#refreshCharacterHeroicReactions();
+		return result;
+	}
+
+	override async previousTurn(): Promise<this> {
 		this.#syncTurnIndexWithAliveTurns();
+		const preferredPreviousTurnIdentity = this.#resolvePreviousTurnIdentity();
+		const result = (await super.previousTurn()) as this;
+		this.#syncTurnIndexWithAliveTurns({
+			preferredTurnIdentity: preferredPreviousTurnIdentity,
+		});
+		await this.#persistExpandedTurnState();
+		return result;
+	}
+
+	override async previousRound(): Promise<this> {
+		this.#syncTurnIndexWithAliveTurns();
+		const preferredLastTurnIdentity = this.#resolveTurnIdentityAtIndex(
+			this.turns,
+			Math.max(this.turns.length - 1, 0),
+		);
+		const result = (await super.previousRound()) as this;
+		this.#syncTurnIndexWithAliveTurns({ preferredTurnIdentity: preferredLastTurnIdentity });
+		await this.#persistExpandedTurnState();
 		return result;
 	}
 
@@ -1319,31 +1651,30 @@ class NimbleCombat extends Combat {
 	}
 
 	#isValidDropPair(source: Combatant.Implementation, target: Combatant.Implementation): boolean {
-		const sourceTypePriority = getCombatantTypePriority(source);
-		const targetTypePriority = getCombatantTypePriority(target);
-		if (sourceTypePriority !== targetTypePriority) return false;
 		if (source.id === target.id) return false;
-		return true;
+		if (game.user?.isGM) return true;
+		return source.type === 'character' && target.type === 'character';
 	}
 
-	#resolveDropSiblings(
-		source: Combatant.Implementation,
-		sourceTypePriority: number,
-	): Combatant.Implementation[] {
-		return this.turns.filter(
-			(combatant) =>
-				combatant.id !== source.id &&
-				!isCombatantDead(combatant) &&
-				getCombatantTypePriority(combatant) === sourceTypePriority,
-		);
+	#resolveDropSiblings(source: Combatant.Implementation): Combatant.Implementation[] {
+		const enforcePlayerSectionOnly = !game.user?.isGM;
+		const seenCombatantIds = new Set<string>();
+		return this.turns.filter((combatant) => {
+			const combatantId = combatant.id ?? '';
+			if (!combatantId || seenCombatantIds.has(combatantId)) return false;
+			seenCombatantIds.add(combatantId);
+			if (combatantId === source.id) return false;
+			if (isCombatantDead(combatant)) return false;
+			return !enforcePlayerSectionOnly || combatant.type === 'character';
+		});
 	}
 
 	#resolveDropContext(
 		event: DragEvent & { target: EventTarget & HTMLElement },
 	): DropResolution | null {
-		const trackerListElement = (event.target as HTMLElement).closest<HTMLElement>(
-			'.nimble-combatants',
-		);
+		const trackerListElement =
+			(event.target as HTMLElement).closest<HTMLElement>('[data-nimble-combat-drop-target]') ??
+			(event.target as HTMLElement).closest<HTMLElement>('.nimble-combatants');
 		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(
 			event,
 		) as unknown as Record<string, string>;
@@ -1354,14 +1685,13 @@ class NimbleCombat extends Combat {
 		if (!dropTargetResolution) return null;
 		if (!this.#isValidDropPair(source, dropTargetResolution.target)) return null;
 
-		const sourceTypePriority = getCombatantTypePriority(source);
-		const siblings = this.#resolveDropSiblings(source, sourceTypePriority);
+		const siblings = this.#resolveDropSiblings(source);
 		return {
 			source,
 			target: dropTargetResolution.target,
 			siblings,
 			sortBefore: dropTargetResolution.sortBefore,
-			previousActiveCombatantId: this.combatant?.id ?? null,
+			previousActiveTurnIdentity: this.#resolveCurrentTurnIdentity(),
 		};
 	}
 
@@ -1388,7 +1718,7 @@ class NimbleCombat extends Combat {
 
 		const updates = await this.updateEmbeddedDocuments('Combatant', updateData);
 		this.turns = this.setupTurns();
-		await this.#syncTurnToCombatant(dropResolution.previousActiveCombatantId);
+		await this.#syncTurnToCombatant(dropResolution.previousActiveTurnIdentity);
 		return updates;
 	}
 
@@ -1406,7 +1736,9 @@ class NimbleCombat extends Combat {
 			'system.sort': newSortValue,
 		} as Record<string, unknown>);
 		this.turns = this.setupTurns();
-		await this.#syncTurnToCombatant(dropResolution.previousActiveCombatantId, { persist: false });
+		await this.#syncTurnToCombatant(dropResolution.previousActiveTurnIdentity, {
+			persist: false,
+		});
 		return updated ? [updated] : [];
 	}
 

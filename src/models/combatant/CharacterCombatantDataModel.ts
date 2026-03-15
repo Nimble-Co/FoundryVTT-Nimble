@@ -29,6 +29,16 @@ const nimbleCharacterCombatantSchema = () => ({
 				initial: true,
 				nullable: false,
 			}),
+			opportunityAttackAvailable: new fields.BooleanField({
+				required: true,
+				initial: true,
+				nullable: false,
+			}),
+			helpAvailable: new fields.BooleanField({
+				required: true,
+				initial: true,
+				nullable: false,
+			}),
 		}),
 	}),
 	sort: new fields.NumberField({ required: true, nullable: false, initial: 0 }),

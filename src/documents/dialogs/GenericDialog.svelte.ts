@@ -10,6 +10,8 @@ interface GenericDialogOptions {
 	icon?: string;
 	/** Width of the dialog in pixels */
 	width?: number;
+	/** Whether the dialog window can be resized */
+	resizable?: boolean;
 	/** Unique ID for singleton behavior - only one dialog with this ID can be open at a time */
 	uniqueId?: string;
 }
@@ -46,6 +48,7 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 				},
 				window: {
 					icon: options.icon ?? 'fa-solid fa-note',
+					resizable: options.resizable ?? GenericDialog.DEFAULT_OPTIONS.window.resizable,
 					title,
 				},
 			}) as DeepPartial<foundry.applications.api.ApplicationV2.Configuration>,
