@@ -1,6 +1,10 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import GenericDialog from '../../../documents/dialogs/GenericDialog.svelte.js';
+import {
+	getActiveCombatForCurrentScene,
+	registerCombatStateHooks,
+} from '../../../utils/combatState.js';
 import localize from '../../../utils/localize.js';
 import filterItems from '../../dataPreparationHelpers/filterItems.js';
 import HeroicActionsHelpDialog from '../../dialogs/HeroicActionsHelpDialog.svelte';
@@ -67,54 +71,7 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	// Combat State Management
 	// ============================================================================
 
-	const subscribeCombatState = createSubscriber((update) => {
-		const hookNames = [
-			'combatStart',
-			'createCombat',
-			'updateCombat',
-			'deleteCombat',
-			'createCombatant',
-			'updateCombatant',
-			'deleteCombatant',
-			'canvasInit',
-			'canvasReady',
-		];
-
-		const hookIds = hookNames.map((hookName) => ({
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			hookId: Hooks.on(hookName as any, () => update()),
-			hookName,
-		}));
-
-		return () => {
-			hookIds.forEach(({ hookName, hookId }) => {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				Hooks.off(hookName as any, hookId);
-			});
-		};
-	});
-
-	function getActiveCombatForCurrentScene(): Combat | null {
-		const sceneId = canvas?.scene?.id;
-		if (!sceneId) return null;
-
-		const activeCombat = game.combat;
-		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
-			return activeCombat;
-		}
-
-		const activeByScene = game.combats?.contents?.find(
-			(combat) => combat?.active && combat.scene?.id === sceneId,
-		);
-		if (activeByScene) return activeByScene;
-
-		const viewedCombat = game.combats?.viewed ?? null;
-		if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
-			return viewedCombat;
-		}
-
-		return null;
-	}
+	const subscribeCombatState = createSubscriber(registerCombatStateHooks);
 
 	function getCombatantInCombat(): Combatant | null {
 		const combat = getActiveCombatForCurrentScene();

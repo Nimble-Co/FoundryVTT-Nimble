@@ -1,3 +1,5 @@
+import localize from './localize.js';
+
 export const HEROIC_ACTIONS = ['attack', 'castSpell', 'move', 'assess'] as const;
 export const HEROIC_REACTIONS = ['defend', 'interpose', 'opportunityAttack', 'help'] as const;
 
@@ -6,45 +8,33 @@ export type HeroicReactionKey = (typeof HEROIC_REACTIONS)[number];
 export type HeroicActionCategory = 'heroicAction' | 'heroicReaction';
 
 interface HeroicReactionDefinition {
-	label: string;
+	labelKey: string;
 	availabilityPath: string;
 	ownerUsable: boolean;
 }
 
 const HEROIC_REACTION_DEFINITIONS = {
 	defend: {
-		label: 'Defend',
+		labelKey: 'NIMBLE.ui.heroicActions.reactionLabels.defend',
 		availabilityPath: 'system.actions.heroic.defendAvailable',
 		ownerUsable: true,
 	},
 	interpose: {
-		label: 'Interpose',
+		labelKey: 'NIMBLE.ui.heroicActions.reactionLabels.interpose',
 		availabilityPath: 'system.actions.heroic.interposeAvailable',
 		ownerUsable: true,
 	},
 	opportunityAttack: {
-		label: 'Opportunity Attack',
+		labelKey: 'NIMBLE.ui.heroicActions.reactionLabels.opportunityAttack',
 		availabilityPath: 'system.actions.heroic.opportunityAttackAvailable',
 		ownerUsable: true,
 	},
 	help: {
-		label: 'Help',
+		labelKey: 'NIMBLE.ui.heroicActions.reactionLabels.help',
 		availabilityPath: 'system.actions.heroic.helpAvailable',
 		ownerUsable: true,
 	},
 } as const satisfies Record<HeroicReactionKey, HeroicReactionDefinition>;
-
-export const HEROIC_ACTION_CATEGORY_LABELS: Record<HeroicActionCategory, string> = {
-	heroicAction: 'Heroic Actions',
-	heroicReaction: 'Heroic Reactions',
-};
-
-export const HEROIC_REACTION_LABELS: Record<HeroicReactionKey, string> = Object.fromEntries(
-	HEROIC_REACTIONS.map((reactionKey) => [
-		reactionKey,
-		HEROIC_REACTION_DEFINITIONS[reactionKey].label,
-	]),
-) as Record<HeroicReactionKey, string>;
 
 export const HEROIC_REACTION_AVAILABILITY_PATHS: Record<HeroicReactionKey, string> =
 	Object.fromEntries(
@@ -56,6 +46,16 @@ export const HEROIC_REACTION_AVAILABILITY_PATHS: Record<HeroicReactionKey, strin
 
 export function canOwnerUseHeroicReaction(reactionKey: HeroicReactionKey): boolean {
 	return HEROIC_REACTION_DEFINITIONS[reactionKey].ownerUsable;
+}
+
+export function getHeroicActionCategoryLabel(category: HeroicActionCategory): string {
+	return category === 'heroicAction'
+		? localize('NIMBLE.ui.heroicActions.title')
+		: localize('NIMBLE.ui.heroicActions.reactionsTitle');
+}
+
+export function getHeroicReactionLabel(reactionKey: HeroicReactionKey): string {
+	return localize(HEROIC_REACTION_DEFINITIONS[reactionKey].labelKey);
 }
 
 export function getHeroicReactionAvailability(
@@ -82,6 +82,11 @@ export function getHeroicReactionAvailabilityTitle(
 	reactionKey: HeroicReactionKey,
 	available: boolean,
 ): string {
-	const label = HEROIC_REACTION_LABELS[reactionKey];
-	return `${label} ${available ? 'available' : 'spent'}`;
+	const label = getHeroicReactionLabel(reactionKey);
+	return localize(
+		available
+			? 'NIMBLE.ui.heroicActions.reactionAvailability.available'
+			: 'NIMBLE.ui.heroicActions.reactionAvailability.spent',
+		{ label },
+	);
 }

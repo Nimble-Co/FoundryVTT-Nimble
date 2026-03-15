@@ -1,6 +1,7 @@
 import type { TurnIdentity } from '../../../documents/combat/combatTypes.js';
 import {
 	getExpandedTurnIdentityHint,
+	getPersistedExpandedTurnIdentity,
 	setExpandedTurnIdentityHint,
 } from '../../../documents/combat/expandedTurnIdentityStore.js';
 import {
@@ -34,12 +35,20 @@ function resolveCurrentTurnIdentity(
 		return combatWithHint._nimbleExpandedTurnIdentity;
 	}
 
-	const storedTurnIdentity = getExpandedTurnIdentityHint(combat.id ?? null);
-	if (storedTurnIdentity) {
-		return storedTurnIdentity;
+	const explicitCombatantId = getCombatantId(combat.combatant);
+	const persistedTurnIdentity = getPersistedExpandedTurnIdentity(combat);
+	if (persistedTurnIdentity) {
+		if (!explicitCombatantId || explicitCombatantId === persistedTurnIdentity.combatantId) {
+			return persistedTurnIdentity;
+		}
 	}
 
-	const explicitCombatantId = getCombatantId(combat.combatant);
+	const storedTurnIdentity = getExpandedTurnIdentityHint(combat.id ?? null);
+	if (storedTurnIdentity) {
+		if (!explicitCombatantId || explicitCombatantId === storedTurnIdentity.combatantId) {
+			return storedTurnIdentity;
+		}
+	}
 
 	const normalizedCurrentTurn =
 		typeof combat.turn === 'number' && combat.turn >= 0 && combat.turn < existingTurns.length
@@ -64,7 +73,7 @@ function resolveCurrentTurnIdentity(
 		return { combatantId: explicitCombatantId, occurrence: null };
 	}
 
-	return null;
+	return persistedTurnIdentity ?? storedTurnIdentity ?? null;
 }
 
 export function isLegendaryCombatant(combatant: Combatant.Implementation): boolean {

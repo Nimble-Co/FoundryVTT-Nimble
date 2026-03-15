@@ -20,31 +20,35 @@
 		CT_WIDTH_PREVIEW_EVENT_NAME,
 	} from './ctTopTracker/constants.js';
 	import {
-		buildVirtualizedAliveEntries,
 		canCurrentUserAdjustCombatantActions,
 		canCurrentUserRollInitiativeForCombatant,
 		getCombatantId,
-		getCombatantDisplayName,
-		getCombatantImageForDisplay,
-		getCombatantCardResourceChips,
-		getPlayerCombatantDrawerData,
-		getNonPlayerCombatantHpBarData,
 		getCombatantSceneId,
-		getCombatantOutlineClass,
-		getDragTargetExpansionPx,
-		getEstimatedCtEntryWidthPx,
 		isCombatRoundStarted,
 		isCombatStarted,
 		isEligibleForInitiativeRoll,
 		isMonsterOrMinionCombatant,
 		isPlayerCombatant,
 		localizeWithFallback,
-		resolvePreviewBeforeState,
-		shouldRenderCombatantActions,
 		shouldShowInitiativePromptForCombatant,
+	} from './ctTopTracker/combat.utils.js';
+	import {
+		buildVirtualizedAliveEntries,
+		getDragTargetExpansionPx,
+		getEstimatedCtEntryWidthPx,
+		resolvePreviewBeforeState,
 		trackDependency,
+	} from './ctTopTracker/layout.utils.js';
+	import {
 		getActionState,
-	} from './ctTopTracker/combatTracker.utils.js';
+		getCombatantCardResourceChips,
+		getCombatantDisplayName,
+		getCombatantImageForDisplay,
+		getCombatantOutlineClass,
+		getNonPlayerCombatantHpBarData,
+		getPlayerCombatantDrawerData,
+		shouldRenderCombatantActions,
+	} from './ctTopTracker/resources.utils.js';
 	import { registerCtTopTrackerHooks } from './ctTopTracker/hooks.js';
 	import { CtTopTrackerStore } from './ctTopTracker/topTrackerStore.svelte.js';
 	import type {
@@ -575,6 +579,35 @@
 		const normalizedRatio = Math.min(1, Math.max(0, ratio));
 		trackElement.scrollLeft = Math.round(maxScrollLeftPx * normalizedRatio);
 		updateTrackViewportMetrics();
+	}
+
+	function handleTrackScrollbarKeyDown(event: KeyboardEvent): void {
+		const metrics = getTrackScrollbarMetrics();
+		if (!metrics || metrics.maxScrollLeftPx <= 0) return;
+
+		const currentRatio = trackScrollLeft / metrics.maxScrollLeftPx;
+		const stepRatio = Math.min(1, Math.max(trackClientWidth, 48) / metrics.maxScrollLeftPx);
+
+		switch (event.key) {
+			case 'Home':
+				event.preventDefault();
+				scrollTrackToRatio(0);
+				return;
+			case 'End':
+				event.preventDefault();
+				scrollTrackToRatio(1);
+				return;
+			case 'ArrowLeft':
+				event.preventDefault();
+				scrollTrackToRatio(currentRatio - stepRatio);
+				return;
+			case 'ArrowRight':
+				event.preventDefault();
+				scrollTrackToRatio(currentRatio + stepRatio);
+				return;
+			default:
+				return;
+		}
 	}
 
 	function handleTrackScrollbarPointerDown(event: PointerEvent): void {
@@ -1603,10 +1636,22 @@
 					<div
 						class="nimble-ct__scrollbar"
 						bind:this={trackScrollbarElement}
+						role="scrollbar"
+						tabindex="0"
+						aria-label={localizeWithFallback(
+							'NIMBLE.ui.combatTracker.scrollbar',
+							'Combat turn order scrollbar',
+						)}
+						aria-controls="combatants"
+						aria-orientation="horizontal"
+						aria-valuemin={0}
+						aria-valuemax={trackScrollbarMetrics.maxScrollLeftPx}
+						aria-valuenow={Math.round(trackScrollLeft)}
 						onpointerdown={handleTrackScrollbarPointerDown}
 						onpointermove={handleTrackScrollbarPointerMove}
 						onpointerup={handleTrackScrollbarPointerRelease}
 						onpointercancel={handleTrackScrollbarPointerRelease}
+						onkeydown={handleTrackScrollbarKeyDown}
 						onlostpointercapture={(event) => {
 							handleTrackScrollbarPointerRelease(event);
 						}}

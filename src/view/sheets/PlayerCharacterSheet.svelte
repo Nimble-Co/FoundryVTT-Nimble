@@ -2,6 +2,10 @@
 	import { createSubscriber } from 'svelte/reactivity';
 	import { setContext, untrack } from 'svelte';
 	import { readable } from 'svelte/store';
+	import {
+		getActiveCombatForCurrentScene,
+		registerCombatStateHooks,
+	} from '../../utils/combatState.js';
 	import localize from '../../utils/localize.js';
 	import {
 		getInitiativeCombatManaRules,
@@ -50,28 +54,6 @@
 	function hasInitiativeCombatManaRule(character, _primeVersion = 0) {
 		const rules = getInitiativeCombatManaRules(character);
 		return rules.length > 0;
-	}
-
-	function getActiveCombatForCurrentScene() {
-		const sceneId = canvas?.scene?.id;
-		if (!sceneId) return null;
-
-		const activeCombat = game.combat;
-		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
-			return activeCombat;
-		}
-
-		const activeByScene = game.combats?.contents?.find(
-			(combat) => combat?.active && combat.scene?.id === sceneId,
-		);
-		if (activeByScene) return activeByScene;
-
-		const viewedCombat = game.combats?.viewed ?? null;
-		if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
-			return viewedCombat;
-		}
-
-		return null;
 	}
 
 	function hasRolledInitiativeInActiveCombat(character) {
@@ -164,29 +146,7 @@
 		});
 	});
 
-	const subscribeCombatState = createSubscriber((update) => {
-		const hookNames = [
-			'combatStart',
-			'createCombat',
-			'updateCombat',
-			'deleteCombat',
-			'createCombatant',
-			'updateCombatant',
-			'deleteCombatant',
-			'canvasInit',
-			'canvasReady',
-		];
-		const hookIds = hookNames.map((hookName) => ({
-			hookId: Hooks.on(hookName, () => update()),
-			hookName,
-		}));
-
-		return () => {
-			for (const { hookName, hookId } of hookIds) {
-				Hooks.off(hookName, hookId);
-			}
-		};
-	});
+	const subscribeCombatState = createSubscriber(registerCombatStateHooks);
 
 	const navigation = $state([
 		{

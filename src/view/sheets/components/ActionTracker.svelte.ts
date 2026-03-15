@@ -2,6 +2,10 @@ import { untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import type { CombatantSystemWithActions } from '../../../documents/combat/combatTypes.js';
+import {
+	getActiveCombatForCurrentScene,
+	registerCombatStateHooks,
+} from '../../../utils/combatState.js';
 import localize from '../../../utils/localize.js';
 
 // ============================================================================
@@ -42,58 +46,11 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 	// Combat State Subscription
 	// ============================================================================
 
-	const subscribeCombatState = createSubscriber((update) => {
-		const hookNames = [
-			'combatStart',
-			'createCombat',
-			'updateCombat',
-			'deleteCombat',
-			'createCombatant',
-			'updateCombatant',
-			'deleteCombatant',
-			'canvasInit',
-			'canvasReady',
-		] as const;
-
-		type HookName = (typeof hookNames)[number];
-
-		const hookIds = hookNames.map((hookName: HookName) => ({
-			hookId: Hooks.on(hookName, () => update()),
-			hookName,
-		}));
-
-		return () => {
-			hookIds.forEach(({ hookName, hookId }) => {
-				Hooks.off(hookName, hookId);
-			});
-		};
-	});
+	const subscribeCombatState = createSubscriber(registerCombatStateHooks);
 
 	// ============================================================================
 	// Combat Helper Functions
 	// ============================================================================
-
-	function getActiveCombatForCurrentScene(): Combat | null {
-		const sceneId = canvas?.scene?.id;
-		if (!sceneId) return null;
-
-		const activeCombat = game.combat;
-		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
-			return activeCombat;
-		}
-
-		const activeByScene = game.combats?.contents?.find(
-			(combat) => combat?.active && combat.scene?.id === sceneId,
-		);
-		if (activeByScene) return activeByScene;
-
-		const viewedCombat = game.combats?.viewed ?? null;
-		if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
-			return viewedCombat;
-		}
-
-		return null;
-	}
 
 	function getCombatantInCombat(): Combatant | null {
 		const combat = getActiveCombatForCurrentScene();
