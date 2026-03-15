@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>(2×WIL times/Safe Rest) Free Reaction: Allow an ally to reroll a single die related to an attack or save (must keep either result).</p>",
+		"description": "<p><em>(2×WIL times/Safe Rest)</em> <strong>Free Reaction</strong>: Allow an ally to reroll a single die related to an attack or save (must keep either result).</p>",
 		"featureType": "class",
 		"class": "songweaver",
 		"group": "songweaver-progression",
