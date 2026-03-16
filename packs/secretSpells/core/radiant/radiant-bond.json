@@ -1,8 +1,8 @@
 {
 	"folder": null,
-	"name": "Speak With Dead",
+	"name": "Radiant Bond",
 	"type": "spell",
-	"img": "icons/magic/death/hand-dirt-undead-zombie.webp",
+	"img": "icons/magic/holy/meditation-chi-focus-blue.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -18,7 +18,7 @@
 			"duration": {
 				"details": "",
 				"quantity": 1,
-				"type": "none"
+				"type": "minute"
 			},
 			"effects": [],
 			"showDescription": true,
@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<p>Temporarily animate a corpse, allowing it to answer up to 3 questions before returning to rest. The corpse must answer, but it isn't required to be truthful if it dislikes the questioner or the questions.</p>",
+			"baseEffect": "<p><strong>Concentration: up to 10 minutes.</strong></p><p>Telepathically communicate across any distance with a creature that holds a gift you have freely given.</p>",
 			"higherLevelEffect": "",
 			"upcastEffect": ""
 		},
@@ -47,10 +47,13 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": []
+			"selected": [
+				"concentration",
+				"secretSpell"
+			]
 		},
-		"school": "necrotic",
-		"tier": 4
+		"school": "radiant",
+		"tier": 3
 	},
 	"effects": [],
 	"flags": {},
@@ -59,8 +62,8 @@
 		"systemId": "nimble",
 		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1762397632511,
+		"modifiedTime": 1762397466256,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "JQPywIEOHDp0dPYS"
+	"_id": "pGCVd6N7Ed0AeEBE"
 }

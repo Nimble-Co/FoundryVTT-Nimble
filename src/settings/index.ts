@@ -1,5 +1,6 @@
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
+import { registerNcswSettings } from './ncswSettings.js';
 
 export const settings = [];
 
@@ -31,6 +32,7 @@ export default function registerSystemSettings() {
 	);
 
 	registerCombatTrackerSettings();
+	registerNcswSettings();
 
 	game.settings.register(
 		'nimble' as 'core',

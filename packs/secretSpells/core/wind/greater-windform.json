@@ -1,8 +1,8 @@
 {
 	"folder": null,
-	"name": "Lesser Windform",
+	"name": "Greater Windform",
 	"type": "spell",
-	"img": "icons/magic/air/weather-wind-gust.webp",
+	"img": "icons/magic/air/wind-tornado-funnel-blue.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -21,13 +21,6 @@
 				"type": "minute"
 			},
 			"effects": [
-				{
-					"id": "zZYtdX6Z0KjLKpK3",
-					"type": "condition",
-					"condition": "blinded",
-					"parentContext": null,
-					"parentNode": null
-				},
 				{
 					"id": "z7U64ITrBXdEXOo5",
 					"type": "condition",
@@ -49,7 +42,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<p><strong>Concentration: up to 10 minutes</strong>. </p><p>You are invisible and blinded for the duration of the spell.</p>",
+			"baseEffect": "<p><strong>Concentration: up to 10 minutes.</strong></p><p> Gain invisibility, a flying speed, and the ability to slip through any space that wind can pass through.</p>",
 			"higherLevelEffect": "",
 			"upcastEffect": ""
 		},
@@ -63,11 +56,12 @@
 				"max": null
 			},
 			"selected": [
-				"concentration"
+				"concentration",
+				"secretSpell"
 			]
 		},
 		"school": "wind",
-		"tier": 0
+		"tier": 5
 	},
 	"effects": [],
 	"flags": {},
@@ -76,8 +70,8 @@
 		"systemId": "nimble",
 		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1762397253681,
+		"modifiedTime": 1762397126428,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "eX8CJssX3F2vqFi1"
+	"_id": "21OMcsYYwn5C7CLR"
 }

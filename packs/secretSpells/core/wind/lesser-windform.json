@@ -1,8 +1,8 @@
 {
 	"folder": null,
-	"name": "Revive",
+	"name": "Lesser Windform",
 	"type": "spell",
-	"img": "icons/magic/life/heart-cross-strong-flame-purple-orange.webp",
+	"img": "icons/magic/air/weather-wind-gust.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -12,15 +12,30 @@
 			"cost": {
 				"details": "",
 				"quantity": 1,
-				"type": "hour",
+				"type": "none",
 				"isReaction": false
 			},
 			"duration": {
 				"details": "",
 				"quantity": 1,
-				"type": "none"
+				"type": "minute"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "zZYtdX6Z0KjLKpK3",
+					"type": "condition",
+					"condition": "blinded",
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "z7U64ITrBXdEXOo5",
+					"type": "condition",
+					"condition": "invisible",
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
@@ -34,7 +49,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<p><strong>Casting time: 1 hour</strong></p><p>Bring a dead creature back to life, provided they've been dead no more than 10 days and have not been revived by this spell before. Attempting to revive a creature already brought back with this spell risks raising a mindless, zombified husk instead.</p>",
+			"baseEffect": "<p><strong>Concentration: up to 10 minutes</strong>. </p><p>You are invisible and blinded for the duration of the spell.</p>",
 			"higherLevelEffect": "",
 			"upcastEffect": ""
 		},
@@ -47,10 +62,13 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": []
+			"selected": [
+				"concentration",
+				"secretSpell"
+			]
 		},
-		"school": "radiant",
-		"tier": 3
+		"school": "wind",
+		"tier": 0
 	},
 	"effects": [],
 	"flags": {},
@@ -59,8 +77,8 @@
 		"systemId": "nimble",
 		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1762397545040,
+		"modifiedTime": 1762397253681,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "iFCKExxkdI48bWxH"
+	"_id": "eX8CJssX3F2vqFi1"
 }

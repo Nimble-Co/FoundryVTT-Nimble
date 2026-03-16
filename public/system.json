@@ -187,6 +187,13 @@
 			"system": "nimble"
 		},
 		{
+			"name": "nimble-secret-spells",
+			"label": "Nimble Secret Spells",
+			"path": "packs/secretSpells.db",
+			"type": "Item",
+			"system": "nimble"
+		},
+		{
 			"name": "nimble-subclasses",
 			"label": "Nimble Subclasses",
 			"path": "packs/subclasses.db",

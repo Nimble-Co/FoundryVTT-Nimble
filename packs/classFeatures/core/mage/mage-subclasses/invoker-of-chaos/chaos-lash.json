@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>(1/encounter) Reaction (when an enemy moves adjacent to you): They are pushed back 2 spaces, and on a failed WIL save, knocked Prone as well. Invoke Chaos.</p>",
+		"description": "<p><em>(1/encounter)</em> <strong>Reaction</strong> (when an enemy moves adjacent to you): They are pushed back 2 spaces, and on a failed WIL save, knocked Prone as well. Invoke Chaos.</p>",
 		"featureType": "class",
 		"class": "mage",
 		"group": "invoker-of-chaos",

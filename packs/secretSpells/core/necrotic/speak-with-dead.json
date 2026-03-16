@@ -1,8 +1,8 @@
 {
 	"folder": null,
-	"name": "Teleport",
+	"name": "Speak With Dead",
 	"type": "spell",
-	"img": "icons/skills/movement/feet-winged-boots-glowing-yellow.webp",
+	"img": "icons/magic/death/hand-dirt-undead-zombie.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -12,7 +12,7 @@
 			"cost": {
 				"details": "",
 				"quantity": 10,
-				"type": "minute",
+				"type": "none",
 				"isReaction": false
 			},
 			"duration": {
@@ -23,7 +23,7 @@
 			"effects": [],
 			"showDescription": true,
 			"targets": {
-				"count": 10,
+				"count": 1,
 				"restrictions": ""
 			},
 			"template": {
@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<p><strong>Casting time: 10 minutes</strong> </p><p>You and up to 10 willing creatures within 2 spaces are instantly teleported to a place of your choice that you have visited before.</p>",
+			"baseEffect": "<p>Temporarily animate a corpse, allowing it to answer up to 3 questions before returning to rest. The corpse must answer, but it isn't required to be truthful if it dislikes the questioner or the questions.</p>",
 			"higherLevelEffect": "",
 			"upcastEffect": ""
 		},
@@ -45,14 +45,14 @@
 			},
 			"reach": {
 				"min": 1,
-				"max": 2
+				"max": null
 			},
 			"selected": [
-				"reach"
+				"secretSpell"
 			]
 		},
-		"school": "lightning",
-		"tier": 6
+		"school": "necrotic",
+		"tier": 4
 	},
 	"effects": [],
 	"flags": {},
@@ -61,8 +61,8 @@
 		"systemId": "nimble",
 		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1762397678429,
+		"modifiedTime": 1762397632511,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "np6pQWIzyOomWi7B"
+	"_id": "JQPywIEOHDp0dPYS"
 }

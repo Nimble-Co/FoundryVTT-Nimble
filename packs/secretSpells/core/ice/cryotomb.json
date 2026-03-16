@@ -69,7 +69,8 @@
 				"max": null
 			},
 			"selected": [
-				"range"
+				"range",
+				"secretSpell"
 			]
 		},
 		"school": "ice",
