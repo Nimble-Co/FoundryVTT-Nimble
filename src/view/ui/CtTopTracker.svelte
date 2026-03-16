@@ -338,14 +338,18 @@
 								style={isPlayerEntry && resourceDrawerData
 									? `--nimble-ct-resource-drawer-row-count: ${resourceDrawerData.rowCount};`
 									: undefined}
-								onclick={(event) => handleCombatantCardClick(event, entry.combatant)}
-								oncontextmenu={(event) => handleCombatantCardContextMenu(event, entry.combatant)}
 								onpointerdown={(event) => handleCombatantCardPointerDown(event, combatantId)}
 								draggable={canDragEntry}
 								ondragstart={(event) => handleCombatantCardDragStart(event, entry.combatant)}
 								ondragend={handleCombatantCardDragEnd}
 							>
-								<div class={`nimble-ct__portrait-card ${isPlayerEntry ? cardOutlineClass : ''}`}>
+								<!-- svelte-ignore a11y_click_events_have_key_events -->
+								<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+								<div
+									class={`nimble-ct__portrait-card ${isPlayerEntry ? cardOutlineClass : ''}`}
+									onclick={(event) => handleCombatantCardClick(event, entry.combatant)}
+									oncontextmenu={(event) => handleCombatantCardContextMenu(event, entry.combatant)}
+								>
 									<img
 										class="nimble-ct__image"
 										src={getCombatantImageForDisplay(entry.combatant)}
@@ -460,16 +464,18 @@
 								{/if}
 							</li>
 						{:else}
-							<!-- svelte-ignore a11y_click_events_have_key_events -->
-							<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 							<li
 								class="nimble-ct__portrait nimble-ct__portrait--monster nimble-ct__portrait--name-drawer nimble-ct__portrait--outline-monster"
 								class:nimble-ct__portrait--active={activeEntryKey === entry.key}
 								data-track-key={entry.key}
-								onclick={handleMonsterStackClick}
-								oncontextmenu={handleMonsterStackContextMenu}
 							>
-								<div class="nimble-ct__portrait-card">
+								<!-- svelte-ignore a11y_click_events_have_key_events -->
+								<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+								<div
+									class="nimble-ct__portrait-card"
+									onclick={handleMonsterStackClick}
+									oncontextmenu={handleMonsterStackContextMenu}
+								>
 									<span class="nimble-ct__monster-stack-icon" aria-hidden="true">
 										<i class="fa-solid fa-dragon"></i>
 									</span>
@@ -526,8 +532,6 @@
 								: null}
 							{@const cardName = getCombatantDisplayName(combatant)}
 							{@const canShowActions = shouldRenderCombatantActions()}
-							<!-- svelte-ignore a11y_click_events_have_key_events -->
-							<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 							<li
 								class={`nimble-ct__portrait nimble-ct__portrait--dead ${cardOutlineClass} ${isPlayerEntry ? 'nimble-ct__portrait--resource-drawer' : 'nimble-ct__portrait--name-drawer'}`}
 								class:nimble-ct__portrait--non-player-hp-bar={Boolean(nonPlayerHpBarData?.visible)}
@@ -535,10 +539,14 @@
 								style={isPlayerEntry && resourceDrawerData
 									? `--nimble-ct-resource-drawer-row-count: ${resourceDrawerData.rowCount};`
 									: undefined}
-								onclick={(event) => handleCombatantCardClick(event, combatant)}
-								oncontextmenu={(event) => handleCombatantCardContextMenu(event, combatant)}
 							>
-								<div class={`nimble-ct__portrait-card ${isPlayerEntry ? cardOutlineClass : ''}`}>
+								<!-- svelte-ignore a11y_click_events_have_key_events -->
+								<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+								<div
+									class={`nimble-ct__portrait-card ${isPlayerEntry ? cardOutlineClass : ''}`}
+									onclick={(event) => handleCombatantCardClick(event, combatant)}
+									oncontextmenu={(event) => handleCombatantCardContextMenu(event, combatant)}
+								>
 									<img
 										class="nimble-ct__image"
 										src={getCombatantImageForDisplay(combatant)}
