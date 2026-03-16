@@ -1,8 +1,8 @@
 {
 	"folder": null,
-	"name": "Sparkfetch",
+	"name": "Hearth & Home",
 	"type": "spell",
-	"img": "icons/magic/lightning/fist-unarmed-strike-blue.webp",
+	"img": "icons/environment/settlement/house-farmland-small.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -11,14 +11,14 @@
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
-				"quantity": 1,
-				"type": "none",
+				"quantity": 10,
+				"type": "minute",
 				"isReaction": false
 			},
 			"duration": {
 				"details": "",
 				"quantity": 1,
-				"type": "none"
+				"type": "hour"
 			},
 			"effects": [],
 			"showDescription": true,
@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<p>Loudly teleport a tiny, unheld metal item you can see to yourself.</p>",
+			"baseEffect": "<p><strong>Casting time 10 minutes.</strong> </p><p>Conjure a welcoming inn, complete with sturdy wooden tables, plush chairs, and a soft rug underfoot. At its heart burns a cozy fire in a fireplace, filling the space with warmth and light. The inn lasts for 12 hours and vanishes without a trace afterward.</p>",
 			"higherLevelEffect": "",
 			"upcastEffect": ""
 		},
@@ -47,10 +47,12 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": []
+			"selected": [
+				"secretSpell"
+			]
 		},
-		"school": "lightning",
-		"tier": 0
+		"school": "fire",
+		"tier": 3
 	},
 	"effects": [],
 	"flags": {},
@@ -59,8 +61,8 @@
 		"systemId": "nimble",
 		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1762397595368,
+		"modifiedTime": 1762397186698,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "GXxJYF05KxMKG4bM"
+	"_id": "Mkw21dquWBdFBG9Y"
 }

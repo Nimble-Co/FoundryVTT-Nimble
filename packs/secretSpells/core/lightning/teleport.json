@@ -1,8 +1,8 @@
 {
 	"folder": null,
-	"name": "Greater Windform",
+	"name": "Teleport",
 	"type": "spell",
-	"img": "icons/magic/air/wind-tornado-funnel-blue.webp",
+	"img": "icons/skills/movement/feet-winged-boots-glowing-yellow.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -11,27 +11,19 @@
 			"acquireTargetsFromTemplate": false,
 			"cost": {
 				"details": "",
-				"quantity": 1,
-				"type": "none",
+				"quantity": 10,
+				"type": "minute",
 				"isReaction": false
 			},
 			"duration": {
 				"details": "",
 				"quantity": 1,
-				"type": "minute"
+				"type": "none"
 			},
-			"effects": [
-				{
-					"id": "z7U64ITrBXdEXOo5",
-					"type": "condition",
-					"condition": "invisible",
-					"parentContext": null,
-					"parentNode": null
-				}
-			],
+			"effects": [],
 			"showDescription": true,
 			"targets": {
-				"count": 1,
+				"count": 10,
 				"restrictions": ""
 			},
 			"template": {
@@ -42,7 +34,7 @@
 			}
 		},
 		"description": {
-			"baseEffect": "<p><strong>Concentration: up to 10 minutes.</strong></p><p> Gain invisibility, a flying speed, and the ability to slip through any space that wind can pass through.</p>",
+			"baseEffect": "<p><strong>Casting time: 10 minutes</strong> </p><p>You and up to 10 willing creatures within 2 spaces are instantly teleported to a place of your choice that you have visited before.</p>",
 			"higherLevelEffect": "",
 			"upcastEffect": ""
 		},
@@ -53,14 +45,15 @@
 			},
 			"reach": {
 				"min": 1,
-				"max": null
+				"max": 2
 			},
 			"selected": [
-				"concentration"
+				"reach",
+				"secretSpell"
 			]
 		},
-		"school": "wind",
-		"tier": 5
+		"school": "lightning",
+		"tier": 6
 	},
 	"effects": [],
 	"flags": {},
@@ -69,8 +62,8 @@
 		"systemId": "nimble",
 		"systemVersion": "0.2.0",
 		"createdTime": 1757106811491,
-		"modifiedTime": 1762397126428,
+		"modifiedTime": 1762397678429,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "21OMcsYYwn5C7CLR"
+	"_id": "np6pQWIzyOomWi7B"
 }
