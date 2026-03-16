@@ -624,7 +624,7 @@ describe('NimbleCombat', () => {
 		]);
 	});
 
-	it('spends one action and marks a heroic reaction unavailable when the GM toggles it off-turn', async () => {
+	it('marks a heroic reaction unavailable without spending an action when the GM toggles it off-turn', async () => {
 		const combatId = 'combat-heroic-reaction-toggle';
 		const activeCharacter = createMockCombatant({
 			id: 'active-character',
@@ -668,7 +668,6 @@ describe('NimbleCombat', () => {
 			{
 				_id: 'reacting-character',
 				'system.actions.heroic.defendAvailable': false,
-				'system.actions.base.current': 2,
 			},
 		]);
 	});
@@ -1218,7 +1217,7 @@ describe('NimbleCombat', () => {
 		expect(helpingActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
-	it('allows the GM to toggle a heroic reaction on the combatants own turn', async () => {
+	it('allows the GM to toggle a heroic reaction on the combatants own turn without spending an action', async () => {
 		const combatId = 'combat-heroic-reaction-own-turn';
 		const activeActor = createCombatActorFixture({
 			hp: 8,
@@ -1265,7 +1264,6 @@ describe('NimbleCombat', () => {
 			{
 				_id: 'active-character',
 				'system.actions.heroic.opportunityAttackAvailable': false,
-				'system.actions.base.current': 2,
 			},
 		]);
 		expect(activeActor.toggleStatusEffect).not.toHaveBeenCalled();

@@ -71,8 +71,10 @@
 	const handleHeroicReactionToggle = trackerViewState.handleHeroicReactionToggle;
 	const handleCombatantCardClick = trackerViewState.handleCombatantCardClick;
 	const handleCombatantCardContextMenu = trackerViewState.handleCombatantCardContextMenu;
+	const handleCombatantCardKeyDown = trackerViewState.handleCombatantCardKeyDown;
 	const handleMonsterStackClick = trackerViewState.handleMonsterStackClick;
 	const handleMonsterStackContextMenu = trackerViewState.handleMonsterStackContextMenu;
+	const handleMonsterStackKeyDown = trackerViewState.handleMonsterStackKeyDown;
 	const handleTrackDragOver = trackerViewState.handleTrackDragOver;
 	const handleTrackDrop = trackerViewState.handleTrackDrop;
 	const handleTrackScroll = trackerViewState.handleTrackScroll;
@@ -343,12 +345,13 @@
 								ondragstart={(event) => handleCombatantCardDragStart(event, entry.combatant)}
 								ondragend={handleCombatantCardDragEnd}
 							>
-								<!-- svelte-ignore a11y_click_events_have_key_events -->
-								<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 								<div
 									class={`nimble-ct__portrait-card ${isPlayerEntry ? cardOutlineClass : ''}`}
+									role="button"
+									tabindex="0"
 									onclick={(event) => handleCombatantCardClick(event, entry.combatant)}
 									oncontextmenu={(event) => handleCombatantCardContextMenu(event, entry.combatant)}
+									onkeydown={(event) => handleCombatantCardKeyDown(event, entry.combatant)}
 								>
 									<img
 										class="nimble-ct__image"
@@ -469,12 +472,13 @@
 								class:nimble-ct__portrait--active={activeEntryKey === entry.key}
 								data-track-key={entry.key}
 							>
-								<!-- svelte-ignore a11y_click_events_have_key_events -->
-								<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 								<div
 									class="nimble-ct__portrait-card"
+									role="button"
+									tabindex="0"
 									onclick={handleMonsterStackClick}
 									oncontextmenu={handleMonsterStackContextMenu}
+									onkeydown={handleMonsterStackKeyDown}
 								>
 									<span class="nimble-ct__monster-stack-icon" aria-hidden="true">
 										<i class="fa-solid fa-dragon"></i>
@@ -540,12 +544,13 @@
 									? `--nimble-ct-resource-drawer-row-count: ${resourceDrawerData.rowCount};`
 									: undefined}
 							>
-								<!-- svelte-ignore a11y_click_events_have_key_events -->
-								<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 								<div
 									class={`nimble-ct__portrait-card ${isPlayerEntry ? cardOutlineClass : ''}`}
+									role="button"
+									tabindex="0"
 									onclick={(event) => handleCombatantCardClick(event, combatant)}
 									oncontextmenu={(event) => handleCombatantCardContextMenu(event, combatant)}
+									onkeydown={(event) => handleCombatantCardKeyDown(event, combatant)}
 								>
 									<img
 										class="nimble-ct__image"

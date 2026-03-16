@@ -379,6 +379,10 @@ export function createCtTopTrackerState() {
 		}
 	}
 
+	function isCombatTrackerContextMenuKey(event: KeyboardEvent): boolean {
+		return event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10');
+	}
+
 	function handleCombatantCardClick(event: MouseEvent, combatant: Combatant.Implementation): void {
 		event.preventDefault();
 		event.stopPropagation();
@@ -394,15 +398,39 @@ export function createCtTopTrackerState() {
 		void pingCombatantToken(combatant);
 	}
 
-	function handleMonsterStackClick(event: MouseEvent): void {
+	function handleCombatantCardKeyDown(
+		event: KeyboardEvent,
+		combatant: Combatant.Implementation,
+	): void {
+		if (event.target !== event.currentTarget) return;
+
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			event.stopPropagation();
+			void panCanvasToCombatant(combatant);
+			return;
+		}
+
+		if (!isCombatTrackerContextMenuKey(event)) return;
+
 		event.preventDefault();
 		event.stopPropagation();
+		void pingCombatantToken(combatant);
+	}
+
+	function resolveMonsterStackCombatant(): Combatant.Implementation | null {
 		const activeMonsterCombatant =
 			currentCombat?.combatant && isMonsterOrMinionCombatant(currentCombat.combatant)
 				? currentCombat.combatant
 				: null;
 		const fallbackMonsterCombatant = sceneMonsterAliveCombatants[0] ?? sceneAllMonsterCombatants[0];
-		const combatantToPan = activeMonsterCombatant ?? fallbackMonsterCombatant;
+		return activeMonsterCombatant ?? fallbackMonsterCombatant ?? null;
+	}
+
+	function handleMonsterStackClick(event: MouseEvent): void {
+		event.preventDefault();
+		event.stopPropagation();
+		const combatantToPan = resolveMonsterStackCombatant();
 		if (!combatantToPan) return;
 		void panCanvasToCombatant(combatantToPan);
 	}
@@ -410,14 +438,29 @@ export function createCtTopTrackerState() {
 	function handleMonsterStackContextMenu(event: MouseEvent): void {
 		event.preventDefault();
 		event.stopPropagation();
-		const activeMonsterCombatant =
-			currentCombat?.combatant && isMonsterOrMinionCombatant(currentCombat.combatant)
-				? currentCombat.combatant
-				: null;
-		const fallbackMonsterCombatant = sceneMonsterAliveCombatants[0] ?? sceneAllMonsterCombatants[0];
-		const combatantToPing = activeMonsterCombatant ?? fallbackMonsterCombatant;
+		const combatantToPing = resolveMonsterStackCombatant();
 		if (!combatantToPing) return;
 		void pingCombatantToken(combatantToPing);
+	}
+
+	function handleMonsterStackKeyDown(event: KeyboardEvent): void {
+		if (event.target !== event.currentTarget) return;
+
+		const combatant = resolveMonsterStackCombatant();
+		if (!combatant) return;
+
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			event.stopPropagation();
+			void panCanvasToCombatant(combatant);
+			return;
+		}
+
+		if (!isCombatTrackerContextMenuKey(event)) return;
+
+		event.preventDefault();
+		event.stopPropagation();
+		void pingCombatantToken(combatant);
 	}
 
 	function handleTrackWheel(event: WheelEvent): void {
@@ -1218,8 +1261,10 @@ export function createCtTopTrackerState() {
 		handleHeroicReactionToggle,
 		handleCombatantCardClick,
 		handleCombatantCardContextMenu,
+		handleCombatantCardKeyDown,
 		handleMonsterStackClick,
 		handleMonsterStackContextMenu,
+		handleMonsterStackKeyDown,
 		handleTrackDragOver,
 		handleTrackDrop,
 		handleTrackScroll,

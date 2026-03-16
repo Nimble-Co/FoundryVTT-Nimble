@@ -569,13 +569,15 @@ class NimbleCombat extends Combat {
 			if (currentActions < 1) return false;
 		}
 
-		await this.updateEmbeddedDocuments('Combatant', [
-			{
-				_id: combatantId,
-				...getHeroicReactionAvailabilityUpdate(reactionKey, false),
-				'system.actions.base.current': Math.max(0, currentActions - 1),
-			} as Record<string, unknown>,
-		]);
+		const reactionAvailabilityUpdate = {
+			_id: combatantId,
+			...getHeroicReactionAvailabilityUpdate(reactionKey, false),
+		} as Record<string, unknown>;
+		if (!game.user?.isGM) {
+			reactionAvailabilityUpdate['system.actions.base.current'] = Math.max(0, currentActions - 1);
+		}
+
+		await this.updateEmbeddedDocuments('Combatant', [reactionAvailabilityUpdate]);
 		return true;
 	}
 
