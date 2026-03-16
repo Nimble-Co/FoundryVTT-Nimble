@@ -6,7 +6,9 @@ import NimbleFeatureCard from '../view/chat/FeatureCard.svelte';
 import NimbleFieldRestCard from '../view/chat/FieldRestCard.svelte';
 import NimbleLevelUpSummaryCard from '../view/chat/LevelUpSummaryCard.svelte';
 import NimbleMinionGroupAttackCard from '../view/chat/MinionGroupAttackCard.svelte';
+import NimbleMoveActionCard from '../view/chat/MoveActionCard.svelte';
 import NimbleObjectCard from '../view/chat/ObjectCard.svelte';
+import NimbleReactionCard from '../view/chat/ReactionCard.svelte';
 import NimbleSafeRestCard from '../view/chat/SafeRestCard.svelte';
 import NimbleSavingThrowCard from '../view/chat/SavingThrowCard.svelte';
 import NimbleSkillCheckCard from '../view/chat/SkillCheckCard.svelte';
@@ -92,6 +94,8 @@ export default function renderChatMessageHTML(message, html) {
 		| typeof NimbleObjectCard
 		| typeof NimbleFeatureCard
 		| typeof NimbleFieldRestCard
+		| typeof NimbleMoveActionCard
+		| typeof NimbleReactionCard
 		| typeof NimbleSafeRestCard
 		| typeof NimbleMinionGroupAttackCard
 		| typeof NimbleSavingThrowCard
@@ -126,6 +130,9 @@ export default function renderChatMessageHTML(message, html) {
 			case 'object':
 				component = NimbleObjectCard;
 				break;
+			case 'reaction':
+				component = NimbleReactionCard;
+				break;
 			case 'safeRest':
 				component = NimbleSafeRestCard;
 				break;
@@ -134,6 +141,9 @@ export default function renderChatMessageHTML(message, html) {
 				break;
 			case 'minionGroupAttack':
 				component = NimbleMinionGroupAttackCard;
+				break;
+			case 'moveAction':
+				component = NimbleMoveActionCard;
 				break;
 			case 'savingThrow':
 				component = NimbleSavingThrowCard;

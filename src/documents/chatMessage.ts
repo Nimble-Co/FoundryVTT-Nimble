@@ -5,7 +5,7 @@ import type { EffectNode } from '#types/effectTree.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 
 /** Types for activation cards that have targets and effects */
-type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'spell';
+type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'reaction' | 'spell';
 
 /** Record of applied healing for undo functionality */
 export interface AppliedHealingRecord {
@@ -119,7 +119,7 @@ class NimbleChatMessage extends ChatMessage {
 	/**                       Getters                          */
 	/** ------------------------------------------------------ */
 	get activationCardTypes(): ActivationCardTypes[] {
-		return ['feature', 'minionGroupAttack', 'object', 'spell'];
+		return ['feature', 'minionGroupAttack', 'object', 'reaction', 'spell'];
 	}
 
 	get reactive() {

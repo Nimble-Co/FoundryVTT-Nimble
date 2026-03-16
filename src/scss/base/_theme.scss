@@ -90,4 +90,40 @@
 	--nimble-action-info-text-color: hsl(45, 60%, 65%);
 	--nimble-action-info-icon-color: hsl(45, 70%, 55%);
 	--nimble-action-button-icon-color: hsl(210, 70%, 65%);
+
+	/** REACTION COLORS **/
+	// Defend (blue)
+	--nimble-reaction-defend-primary: hsl(210, 60%, 55%);
+	--nimble-reaction-defend-secondary: hsl(210, 60%, 45%);
+	--nimble-reaction-defend-light: hsl(210, 50%, 25%);
+	--nimble-reaction-defend-text: hsl(210, 80%, 75%);
+	--nimble-reaction-defend-accent: hsl(210, 70%, 65%);
+
+	// Interpose (purple)
+	--nimble-reaction-interpose-primary: hsl(270, 50%, 60%);
+	--nimble-reaction-interpose-secondary: hsl(270, 50%, 50%);
+	--nimble-reaction-interpose-light: hsl(270, 40%, 25%);
+	--nimble-reaction-interpose-text: hsl(270, 70%, 75%);
+	--nimble-reaction-interpose-accent: hsl(270, 60%, 70%);
+
+	// Help (green)
+	--nimble-reaction-help-primary: hsl(145, 55%, 50%);
+	--nimble-reaction-help-secondary: hsl(145, 55%, 40%);
+	--nimble-reaction-help-light: hsl(145, 45%, 22%);
+	--nimble-reaction-help-text: hsl(145, 70%, 70%);
+	--nimble-reaction-help-accent: hsl(145, 55%, 60%);
+
+	// Opportunity (orange)
+	--nimble-reaction-opportunity-primary: hsl(15, 70%, 55%);
+	--nimble-reaction-opportunity-secondary: hsl(15, 70%, 45%);
+	--nimble-reaction-opportunity-light: hsl(15, 50%, 22%);
+	--nimble-reaction-opportunity-text: hsl(40, 90%, 75%);
+	--nimble-reaction-opportunity-accent: hsl(30, 60%, 22%);
+
+	// Move (teal)
+	--nimble-reaction-move-primary: hsl(185, 60%, 50%);
+	--nimble-reaction-move-secondary: hsl(185, 60%, 40%);
+	--nimble-reaction-move-light: hsl(185, 40%, 20%);
+	--nimble-reaction-move-text: hsl(185, 70%, 75%);
+	--nimble-reaction-move-accent: hsl(185, 70%, 60%);
 }
