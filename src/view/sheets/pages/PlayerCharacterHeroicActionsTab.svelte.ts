@@ -18,6 +18,14 @@ interface HeroicAction {
 	requiresCombat?: boolean;
 }
 
+interface HeroicReaction {
+	id: string;
+	icon: string;
+	labelKey: string;
+	descriptionKey: string;
+	type: string;
+}
+
 interface ActionsData {
 	current: number;
 	max: number;
@@ -58,10 +66,42 @@ export const HEROIC_ACTIONS: HeroicAction[] = [
 	},
 ];
 
+export const HEROIC_REACTIONS: HeroicReaction[] = [
+	{
+		id: 'defend',
+		icon: 'fa-solid fa-shield',
+		labelKey: 'NIMBLE.ui.heroicActions.reactions.defend.label',
+		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.defend.description',
+		type: 'panel',
+	},
+	{
+		id: 'interpose',
+		icon: 'fa-solid fa-people-arrows',
+		labelKey: 'NIMBLE.ui.heroicActions.reactions.interpose.label',
+		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.interpose.description',
+		type: 'panel',
+	},
+	{
+		id: 'opportunity',
+		icon: 'fa-solid fa-bullseye',
+		labelKey: 'NIMBLE.ui.heroicActions.reactions.opportunity.label',
+		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.opportunity.description',
+		type: 'panel',
+	},
+	{
+		id: 'help',
+		icon: 'fa-solid fa-handshake-angle',
+		labelKey: 'NIMBLE.ui.heroicActions.reactions.help.label',
+		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.help.description',
+		type: 'panel',
+	},
+];
+
 export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	// Top-level tab for switching between Actions and Reactions
 	let activeHeroicTab = $state<'actions' | 'reactions'>('actions');
 	let expandedPanel = $state('attack');
+	let expandedReactionPanel = $state('defend');
 
 	// ============================================================================
 	// Combat State Management
@@ -191,6 +231,21 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		}
 	}
 
+	function toggleReactionPanel(panelName: string): void {
+		if (expandedReactionPanel === panelName) {
+			return;
+		}
+		expandedReactionPanel = panelName;
+	}
+
+	function handleReactionClick(reaction: HeroicReaction): void {
+		switch (reaction.type) {
+			case 'panel':
+				toggleReactionPanel(reaction.id);
+				break;
+		}
+	}
+
 	function handleHelpDialog(): void {
 		GenericDialog.getOrCreate(
 			localize('NIMBLE.ui.heroicActions.help.dialogTitle'),
@@ -241,6 +296,10 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		return label;
 	}
 
+	function getReactionTooltip(reaction: HeroicReaction): string {
+		return localize(reaction.labelKey);
+	}
+
 	return {
 		get activeHeroicTab() {
 			return activeHeroicTab;
@@ -250,6 +309,9 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		},
 		get expandedPanel() {
 			return expandedPanel;
+		},
+		get expandedReactionPanel() {
+			return expandedReactionPanel;
 		},
 		get inCombat() {
 			return inCombat;
@@ -264,10 +326,13 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 			return showEmbeddedDocumentImages;
 		},
 		HEROIC_ACTIONS,
+		HEROIC_REACTIONS,
 		deductActionPips,
 		handleActionClick,
+		handleReactionClick,
 		handleHelpDialog,
 		isActionDisabled,
 		getActionTooltip,
+		getReactionTooltip,
 	};
 }

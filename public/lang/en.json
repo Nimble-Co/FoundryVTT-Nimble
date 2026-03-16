@@ -681,7 +681,81 @@
 			"heroicActions": {
 				"title": "Heroic Actions",
 				"reactionsTitle": "Heroic Reactions",
-				"reactionsPlaceholder": "Reactions coming soon...",
+				"reactions": {
+					"actionCost": "This will use 1 action (reaction)",
+					"cost": "1 Action",
+					"armor": "Armor",
+					"advantage": "Advantage",
+					"disadvantage": "Disadvantage",
+					"weapon": "Weapon",
+					"spaces": "{count} spaces",
+					"target": "Target",
+					"targetAlly": "Target an ally token",
+					"targetAllyOptional": "Target an ally token (optional)",
+					"targetEnemy": "Target an enemy token (optional)",
+					"selectOneTarget": "Select only one target",
+					"multipleTargets": "Multiple targets selected",
+					"defend": {
+						"label": "Defend",
+						"description": "Reduce damage from any single attack by your Armor value. At the GM's discretion, some damage may not be avoidable (e.g., psychic damage, or some areas of effect).",
+						"panelDescription": "Reduce damage from any single attack by your <strong>Armor ({armor})</strong>. Some damage like psychic or certain area effects may not be avoidable.",
+						"title": "Defend",
+						"armorValue": "Your Armor",
+						"armorBadge": "Armor {armor}",
+						"confirm": "Defend",
+						"chatMessage": "<p><strong>{name}</strong> uses their reaction to <strong>Defend</strong>, reducing damage by their Armor value ({armor}).</p>"
+					},
+					"interpose": {
+						"label": "Interpose",
+						"description": "When a creature within 2 spaces would be struck with an attack, you can push them out of the way and become the new target. You enter their space and move them to an adjacent space of your choice.",
+						"panelDescription": "When an ally within <strong>2 spaces</strong> would be hit, push them aside and become the new target. You enter their space and move them adjacent.",
+						"title": "Interpose",
+						"range": "Range: 2 spaces",
+						"rangeBadge": "2 spaces",
+						"tip": "Combine with <strong>Defend</strong> to also reduce the damage you take!",
+						"confirm": "Interpose",
+						"protecting": "Protecting",
+						"chatMessage": "<p><strong>{name}</strong> uses their reaction to <strong>Interpose</strong>, stepping in front of <strong>{target}</strong> to become the target of an attack.</p>"
+					},
+					"interposeAndDefend": {
+						"confirm": "Interpose & Defend",
+						"cost": "2 Actions",
+						"chatMessage": "<p><strong>{name}</strong> uses <strong>2 reactions</strong> to <strong>Interpose</strong> for <strong>{target}</strong> and <strong>Defend</strong>, reducing damage by their Armor value ({armor}).</p>"
+					},
+					"opportunity": {
+						"label": "Opportunity Attack",
+						"description": "Make a melee attack against an adjacent enemy as it willingly moves away. Only heroes can make opportunity attacks - monsters cannot.",
+						"panelDescription": "Strike an adjacent enemy as they willingly move away. Only heroes can make opportunity attacks.",
+						"title": "Opportunity Attack",
+						"disadvantage": "This attack is made with disadvantage",
+						"disadvantageBadge": "Disadvantage",
+						"selectWeapon": "Select a melee weapon",
+						"noMeleeWeapons": "No melee weapons available",
+						"unarmedOpportunity": "Opportunity Attack (Unarmed)",
+						"confirm": "Make Opportunity Attack",
+						"chatMessage": "<p><strong>{name}</strong> uses their reaction to make an <strong>Opportunity Attack</strong> with {weapon}.</p>"
+					},
+					"help": {
+						"label": "Help",
+						"description": "Grant an ally advantage on a roll if you can reasonably explain to the GM how you could help in the situation. Limited to one Help reaction per roll.",
+						"panelDescription": "Grant an ally <strong>advantage</strong> on a roll by explaining how you help. The GM may require a skill check. Limited to one Help per roll.",
+						"title": "Help",
+						"effect": "Grants an ally advantage on their roll",
+						"advantageBadge": "Advantage",
+						"tip": "Think fast when an ally fails! A creative explanation might turn failure into success.",
+						"confirm": "Help an Ally",
+						"helping": "Helping",
+						"chatMessage": "<p><strong>{name}</strong> uses their reaction to <strong>Help</strong> <strong>{target}</strong>, granting them advantage on their roll.</p>"
+					}
+				},
+				"move": {
+					"title": "Move",
+					"cost": "1 Action",
+					"speed": "Speed",
+					"panelDescription": "Move up to your speed. You can split movement around other actions.",
+					"spaces": "spaces",
+					"confirmMove": "Confirm Move"
+				},
 				"enterCombat": "Enter combat to use actions",
 				"outsideCombat": "You are outside of combat",
 				"noActions": "You don't have any actions",
@@ -832,6 +906,10 @@
 				},
 				"move": {
 					"title": "Move",
+					"cost": "1 Action",
+					"speed": "Speed",
+					"panelDescription": "Move up to your speed. You can split movement around other actions and move multiple times per turn.",
+					"confirmMove": "Confirm Move",
 					"dialogTitle": "Move Action",
 					"confirmTitle": "Did you move?",
 					"confirmDescription": "Confirm that you've repositioned your character on the battlefield.",
@@ -840,7 +918,9 @@
 					"noMovement": "No movement speeds available",
 					"actionCost": "This will use 1 action",
 					"confirm": "Use Action to Move",
-					"cancel": "Cancel"
+					"cancel": "Cancel",
+					"speedBadge": "Speed {speed}",
+					"chatMessage": "<p><strong>{name}</strong> used an action to <strong>Move</strong>, with a speed of {speed} spaces.</p>"
 				}
 			},
 			"clearAll": "Clear All",
