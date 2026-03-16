@@ -53,13 +53,14 @@ class PrimaryDie extends foundry.dice.terms.Die {
 	 * - Has a value of 1
 	 * - Is marked as active
 	 * - Is not discarded (e.g., from keep highest/lowest)
-	 * - Did not trigger an explosion
+	 * - The roll did not explode (crits cannot be misses)
 	 *
 	 * @returns `true` if the roll is a miss, `false` if not, or `undefined` if not yet evaluated.
 	 */
 	get isMiss() {
 		if (!this._evaluated) return undefined;
-		return this.results.some((r) => r.result === 1 && r.active && !r.discarded && !r.exploded);
+		if (this.exploded) return false;
+		return this.results.some((r) => r.result === 1 && r.active && !r.discarded);
 	}
 }
 
