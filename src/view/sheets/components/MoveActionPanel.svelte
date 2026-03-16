@@ -161,7 +161,7 @@
 		&__stat-label {
 			font-size: var(--nimble-xs-text);
 			font-weight: 600;
-			color: var(--nimble-medium-text-color);
+			color: var(--nimble-dark-text-color);
 			text-transform: uppercase;
 			letter-spacing: 0.03em;
 		}

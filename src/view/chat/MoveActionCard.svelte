@@ -1,15 +1,11 @@
 <script lang="ts">
-	import type { NimbleChatMessage } from '../../documents/chatMessage.js';
+	import type { MoveActionCardProps } from '../../../types/components/MoveActionCard.d.ts';
+
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import localize from '../../utils/localize.js';
-
 	import CardHeader from './components/CardHeader.svelte';
 
-	interface Props {
-		messageDocument: NimbleChatMessage;
-	}
-
-	const { messageDocument }: Props = $props();
+	const { messageDocument }: MoveActionCardProps = $props();
 
 	const system = $derived(messageDocument.reactive.system);
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
@@ -34,7 +30,7 @@
 			<h3 class="move-action-card__title">{localize('NIMBLE.ui.heroicActions.move.title')}</h3>
 			<span class="move-action-card__cost">
 				<i class="fa-solid fa-bolt"></i>
-				{localize('NIMBLE.ui.heroicActions.reactions.cost')}
+				{localize('NIMBLE.ui.heroicActions.move.cost')}
 			</span>
 		</div>
 		<div class="move-action-card__badge">
@@ -64,7 +60,11 @@
 			justify-content: center;
 			width: 1.875rem;
 			height: 1.875rem;
-			background: linear-gradient(135deg, hsl(185, 60%, 45%) 0%, hsl(185, 60%, 35%) 100%);
+			background: linear-gradient(
+				135deg,
+				var(--nimble-reaction-move-primary) 0%,
+				var(--nimble-reaction-move-secondary) 100%
+			);
 			border-radius: 6px;
 			flex-shrink: 0;
 
@@ -110,8 +110,8 @@
 			font-size: var(--nimble-xs-text);
 			font-weight: 700;
 			border-radius: 6px;
-			color: hsl(185, 70%, 25%);
-			background: hsl(185, 50%, 90%);
+			color: var(--nimble-reaction-move-text);
+			background: var(--nimble-reaction-move-light);
 
 			i {
 				font-size: 0.75rem;
@@ -128,10 +128,5 @@
 				margin: 0;
 			}
 		}
-	}
-
-	:global(.theme-dark) .move-action-card__badge {
-		color: hsl(185, 80%, 75%);
-		background: hsl(185, 40%, 25%);
 	}
 </style>

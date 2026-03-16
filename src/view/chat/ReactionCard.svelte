@@ -1,10 +1,12 @@
 <script lang="ts">
 	import type { ReactionCardProps } from '../../../types/components/ReactionCard.d.ts';
+
 	import { setContext, untrack } from 'svelte';
+
+	import { createReactionCardState } from './ReactionCardState.svelte.ts';
 	import localize from '../../utils/localize.js';
 	import CardHeader from './components/CardHeader.svelte';
 	import Targets from './components/Targets.svelte';
-	import { createReactionCardState } from './ReactionCardState.svelte.ts';
 
 	const { messageDocument }: ReactionCardProps = $props();
 
