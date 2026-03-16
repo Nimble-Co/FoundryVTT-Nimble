@@ -1,3 +1,5 @@
+import { syncCombatTurns } from './combatTurnSync.js';
+
 export const COMBAT_STATE_HOOK_NAMES = [
 	'combatStart',
 	'combatTurn',
@@ -38,16 +40,21 @@ export function getActiveCombatForCurrentScene(): Combat | null {
 
 	const activeCombat = game.combat;
 	if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
+		syncCombatTurns(activeCombat);
 		return activeCombat;
 	}
 
 	const activeByScene = game.combats?.contents?.find(
 		(combat) => combat?.active && combat.scene?.id === sceneId,
 	);
-	if (activeByScene) return activeByScene;
+	if (activeByScene) {
+		syncCombatTurns(activeByScene);
+		return activeByScene;
+	}
 
 	const viewedCombat = game.combats?.viewed ?? null;
 	if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
+		syncCombatTurns(viewedCombat);
 		return viewedCombat;
 	}
 

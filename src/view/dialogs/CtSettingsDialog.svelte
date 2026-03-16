@@ -70,6 +70,26 @@
 		</div>
 	</fieldset>
 
+	{#if state.canManageSharedCtSettings}
+		<fieldset class="nimble-ct-settings__section">
+			<legend class="nimble-ct-settings__section-title">Permissions</legend>
+			<div class="nimble-ct-settings__rows">
+				<div class="nimble-ct-settings__row">
+					<label class="nimble-ct-settings__label" for="nimble-ct-players-view-expanded-monsters">
+						Allow Players to View Expanded Monsters
+					</label>
+					<input
+						id="nimble-ct-players-view-expanded-monsters"
+						type="checkbox"
+						checked={state.playersCanViewExpandedMonsters}
+						disabled={!state.canManageMonsterExpansionPermission}
+						onchange={state.handlePlayersCanViewExpandedMonstersChange}
+					/>
+				</div>
+			</div>
+		</fieldset>
+	{/if}
+
 	<fieldset class="nimble-ct-settings__section">
 		<legend class="nimble-ct-settings__section-title">Drawers &amp; Bars</legend>
 		<div class="nimble-ct-settings__rows">
@@ -440,8 +460,8 @@
 	.nimble-ct-settings__color-picker {
 		-webkit-appearance: none;
 		appearance: none;
-		inline-size: 3.45rem;
-		block-size: 2.1rem;
+		inline-size: 3.11rem;
+		block-size: 1.89rem;
 		min-width: 0;
 		min-height: 0;
 		box-sizing: border-box;

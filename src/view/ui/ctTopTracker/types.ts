@@ -111,7 +111,6 @@ export interface BuildVirtualizedAliveEntriesParams {
 }
 
 export interface CtTopTrackerSettingPatch {
-	playersCanExpandMonsterCards?: boolean;
 	resourceDrawerHoverEnabled?: boolean;
 	playerHpBarTextMode?: CombatTrackerPlayerHpBarTextMode;
 	nonPlayerHpBarEnabled?: boolean;

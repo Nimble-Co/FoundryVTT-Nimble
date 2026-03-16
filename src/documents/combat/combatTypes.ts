@@ -1,11 +1,6 @@
-export interface CombatantSystemWithActions {
-	actions: {
-		base: {
-			current: number;
-			max: number;
-		};
-	};
-}
+export type NimbleCombatantSystemMap = DataModelConfig['Combatant'];
+export type NimbleCombatantSystem = NimbleCombatantSystemMap[keyof NimbleCombatantSystemMap];
+export type CombatantBaseActions = NimbleCombatantSystem['actions']['base'];
 
 export interface MinionGroupAttackSelection {
 	memberCombatantId: string;

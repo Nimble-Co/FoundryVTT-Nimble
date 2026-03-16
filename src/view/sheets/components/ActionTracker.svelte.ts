@@ -1,11 +1,13 @@
 import { untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
-import type { CombatantSystemWithActions } from '../../../documents/combat/combatTypes.js';
+import { getCombatantBaseActions } from '../../../documents/combat/combatantSystem.js';
 import {
 	getActiveCombatForCurrentScene,
 	registerCombatStateHooks,
 } from '../../../utils/combatState.js';
+import { requestAdvanceCombatTurn } from '../../../utils/combatTurnActions.js';
+import { getActiveCombatant } from '../../../utils/combatTurnSync.js';
 import localize from '../../../utils/localize.js';
 
 // ============================================================================
@@ -74,11 +76,10 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		const combatant = getCombatantInCombat();
 		if (!combatant) return { current: 0, max: 3 };
 
-		const system = combatant.system as unknown as CombatantSystemWithActions;
-		const actions = system?.actions?.base;
+		const actions = getCombatantBaseActions(combatant);
 		return {
-			current: actions?.current ?? 0,
-			max: actions?.max ?? 3,
+			current: actions.current,
+			max: actions.max || 3,
 		};
 	}
 
@@ -86,7 +87,7 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		const combat = getActiveCombatForCurrentScene();
 		if (!combat?.started) return false;
 
-		const currentCombatant = combat.combatant;
+		const currentCombatant = getActiveCombatant(combat);
 		if (!currentCombatant) return false;
 
 		return currentCombatant.actorId === getActor().id;
@@ -120,7 +121,10 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		if (!combat) return;
 
 		try {
-			await combat.nextTurn();
+			const advanced = await requestAdvanceCombatTurn({ combat });
+			if (!advanced) {
+				ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionEndTurn'));
+			}
 		} catch (_error) {
 			ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionEndTurn'));
 		}

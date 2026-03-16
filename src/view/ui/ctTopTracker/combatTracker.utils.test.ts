@@ -297,4 +297,50 @@ describe('ctTopTracker helpers', () => {
 			occurrence: 1,
 		});
 	});
+
+	it('prefers the persisted expanded turn identity over a mismatched raw combatant', () => {
+		const playerOne = createCombatantFixture({
+			id: 'player-one',
+			type: 'character',
+			actor: createCombatActorFixture({ type: 'character' }),
+		});
+		const playerTwo = createCombatantFixture({
+			id: 'player-two',
+			type: 'character',
+			actor: createCombatActorFixture({ type: 'character' }),
+		});
+		const solo = createCombatantFixture({
+			id: 'legendary-one',
+			type: 'soloMonster',
+			actor: createCombatActorFixture({ type: 'soloMonster' }),
+		});
+
+		const expandedTurns = [playerOne, solo, playerTwo, solo] as Combatant.Implementation[];
+		const rawTurns = [playerOne, playerTwo, solo] as Combatant.Implementation[];
+		const combat = {
+			id: 'combat-legendary-ct-sync',
+			flags: {
+				nimble: {
+					expandedTurnIdentity: {
+						combatantId: 'player-two',
+						occurrence: 0,
+					},
+				},
+			},
+			turns: rawTurns,
+			turn: 0,
+			combatant: playerOne,
+			setupTurns: vi.fn(() => expandedTurns),
+		} as unknown as Combat & {
+			_nimbleExpandedTurnIdentity?: { combatantId: string; occurrence: number | null } | null;
+		};
+
+		syncCombatTurnsForCt(combat);
+
+		expect(combat.turn).toBe(2);
+		expect(combat._nimbleExpandedTurnIdentity).toEqual({
+			combatantId: 'player-two',
+			occurrence: 0,
+		});
+	});
 });

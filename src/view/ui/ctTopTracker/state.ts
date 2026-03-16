@@ -5,14 +5,12 @@ import {
 	getCombatTrackerNonPlayerHpBarEnabled,
 	getCombatTrackerNonPlayerHpBarTextMode,
 	getCombatTrackerPlayerHpBarTextMode,
-	getCombatTrackerPlayersCanExpandMonsterCards,
 	getCombatTrackerResourceDrawerHoverEnabled,
 	isCombatTrackerCardSizeLevelSettingKey,
 	isCombatTrackerEnabledSettingKey,
 	isCombatTrackerNonPlayerHpBarEnabledSettingKey,
 	isCombatTrackerNonPlayerHpBarTextModeSettingKey,
 	isCombatTrackerPlayerHpBarTextModeSettingKey,
-	isCombatTrackerPlayerMonsterExpansionSettingKey,
 	isCombatTrackerResourceDrawerHoverSettingKey,
 	isCombatTrackerWidthLevelSettingKey,
 } from '../../../settings/combatTrackerSettings.js';
@@ -22,11 +20,6 @@ import type { CtTopTrackerSettingPatch } from './types.js';
 export function resolveCtTopTrackerSettingPatch(
 	settingKey: unknown,
 ): CtTopTrackerSettingPatch | null {
-	if (isCombatTrackerPlayerMonsterExpansionSettingKey(settingKey)) {
-		return {
-			playersCanExpandMonsterCards: getCombatTrackerPlayersCanExpandMonsterCards(),
-		};
-	}
 	if (isCombatTrackerResourceDrawerHoverSettingKey(settingKey)) {
 		return {
 			resourceDrawerHoverEnabled: getCombatTrackerResourceDrawerHoverEnabled(),
@@ -99,10 +92,10 @@ export function resolveActionCombatState(params: {
 
 export function resolveMonsterCardsExpandedState(params: {
 	hasMonsterCombatants: boolean;
-	canCurrentUserExpandMonsterCards: boolean;
-	monsterCardsExpanded: boolean;
+	canCurrentUserViewExpandedMonsters: boolean;
+	sharedMonsterCardsExpanded: boolean;
 }): boolean {
 	if (!params.hasMonsterCombatants) return false;
-	if (!params.canCurrentUserExpandMonsterCards) return false;
-	return params.monsterCardsExpanded;
+	if (!params.canCurrentUserViewExpandedMonsters) return false;
+	return params.sharedMonsterCardsExpanded;
 }

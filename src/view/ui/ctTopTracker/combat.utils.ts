@@ -31,24 +31,15 @@ function resolveCurrentTurnIdentity(
 	existingTurns: Combatant.Implementation[],
 ): TurnIdentity | null {
 	const combatWithHint = combat as CombatWithTurnIdentityHint;
+	const persistedTurnIdentity = getPersistedExpandedTurnIdentity(combat);
+	if (persistedTurnIdentity) return persistedTurnIdentity;
+
 	if (combatWithHint._nimbleExpandedTurnIdentity) {
 		return combatWithHint._nimbleExpandedTurnIdentity;
 	}
 
-	const explicitCombatantId = getCombatantId(combat.combatant);
-	const persistedTurnIdentity = getPersistedExpandedTurnIdentity(combat);
-	if (persistedTurnIdentity) {
-		if (!explicitCombatantId || explicitCombatantId === persistedTurnIdentity.combatantId) {
-			return persistedTurnIdentity;
-		}
-	}
-
 	const storedTurnIdentity = getExpandedTurnIdentityHint(combat.id ?? null);
-	if (storedTurnIdentity) {
-		if (!explicitCombatantId || explicitCombatantId === storedTurnIdentity.combatantId) {
-			return storedTurnIdentity;
-		}
-	}
+	if (storedTurnIdentity) return storedTurnIdentity;
 
 	const normalizedCurrentTurn =
 		typeof combat.turn === 'number' && combat.turn >= 0 && combat.turn < existingTurns.length
@@ -57,23 +48,22 @@ function resolveCurrentTurnIdentity(
 	const indexedCombatantId =
 		normalizedCurrentTurn !== null ? getCombatantId(existingTurns[normalizedCurrentTurn]) : '';
 	if (indexedCombatantId && normalizedCurrentTurn !== null) {
-		if (!explicitCombatantId || explicitCombatantId === indexedCombatantId) {
-			return {
-				combatantId: indexedCombatantId,
-				occurrence: getCombatantOccurrenceAtIndex(
-					existingTurns,
-					indexedCombatantId,
-					normalizedCurrentTurn,
-				),
-			};
-		}
+		return {
+			combatantId: indexedCombatantId,
+			occurrence: getCombatantOccurrenceAtIndex(
+				existingTurns,
+				indexedCombatantId,
+				normalizedCurrentTurn,
+			),
+		};
 	}
 
+	const explicitCombatantId = getCombatantId(combat.combatant);
 	if (explicitCombatantId) {
 		return { combatantId: explicitCombatantId, occurrence: null };
 	}
 
-	return persistedTurnIdentity ?? storedTurnIdentity ?? null;
+	return null;
 }
 
 export function isLegendaryCombatant(combatant: Combatant.Implementation): boolean {

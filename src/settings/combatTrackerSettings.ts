@@ -177,8 +177,8 @@ function dispatchCtClientSettingUpdated(settingKey: string): void {
 
 export function registerCombatTrackerSettings(): void {
 	registerWorldSetting(COMBAT_TRACKER_PLAYER_MONSTER_EXPANSION_SETTING_KEY, {
-		name: 'Combat Tracker Player Monster Card Expansion',
-		hint: 'Allow non-GM users to expand grouped monster and minion cards into individual cards',
+		name: 'Combat Tracker Player Expanded Monster Visibility',
+		hint: 'Allow players to view individual monster and minion cards when the GM expands them',
 		scope: 'world',
 		config: false,
 		type: Boolean,

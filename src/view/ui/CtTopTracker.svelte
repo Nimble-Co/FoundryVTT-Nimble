@@ -10,6 +10,7 @@
 		COMBATANT_ACTIONS_CURRENT_PATH,
 		getCombatantCurrentActions,
 		getCombatantMaxActions,
+		requestAdvanceCombatTurn,
 		resolveCombatantCurrentActionsAfterDelta,
 	} from '../../utils/combatTurnActions.js';
 	import { isCombatantDead } from '../../utils/isCombatantDead.js';
@@ -143,10 +144,6 @@
 		}
 	}
 
-	function updatePlayerMonsterExpansionPermission(): void {
-		trackerStore.updatePlayerMonsterExpansionPermission();
-	}
-
 	async function centerActiveEntryInView(
 		activeKey: string | null,
 		behavior: ScrollBehavior = 'smooth',
@@ -232,17 +229,23 @@
 		if (!canCurrentUserEndTurn) return;
 		const actionCombat = resolveActionCombat();
 		if (!actionCombat) return;
-		await actionCombat.nextTurn();
+		const advanced = await requestAdvanceCombatTurn({ combat: actionCombat });
+		if (!advanced) return;
 		updateCurrentCombat(true);
 	}
 
-	function toggleMonsterCardExpansion(event: MouseEvent): void {
+	async function toggleMonsterCardExpansion(event: MouseEvent): Promise<void> {
 		event.preventDefault();
 		event.stopPropagation();
-		if (!trackerStore.toggleMonsterCardsExpanded()) return;
-		void tick().then(() => {
-			void centerActiveEntryInView(trackerStore.activeEntryKey);
-		});
+		try {
+			if (!(await trackerStore.toggleMonsterCardsExpanded())) return;
+			updateCurrentCombat(true);
+			await tick();
+			await centerActiveEntryInView(trackerStore.activeEntryKey);
+		} catch (error) {
+			console.error('[Nimble][CT] Failed to toggle monster expansion', { error });
+			ui.notifications?.error('Unable to toggle monster expansion.');
+		}
 	}
 
 	async function handleActionDeltaClick(
@@ -500,10 +503,21 @@
 	}
 
 	function clearDropPreview(): void {
+		pendingDropPreview = null;
+		if (trackElement) {
+			delete trackElement.dataset.dropTargetId;
+			delete trackElement.dataset.dropBefore;
+		}
 		trackerStore.clearDropPreview();
 	}
 
 	function clearDragState(): void {
+		pendingDropPreview = null;
+		if (trackElement) {
+			delete trackElement.dataset.dragSourceId;
+			delete trackElement.dataset.dropTargetId;
+			delete trackElement.dataset.dropBefore;
+		}
 		trackerStore.clearDragState();
 	}
 
@@ -735,7 +749,11 @@
 
 		if (!bestMatch) return null;
 		const relative = (clientX - bestMatch.rect.left) / Math.max(1, bestMatch.rect.width);
-		const before = resolvePreviewBeforeState(relative, bestMatch.targetId, dragPreview);
+		const before = resolvePreviewBeforeState(
+			relative,
+			bestMatch.targetId,
+			pendingDropPreview ?? dragPreview,
+		);
 		return { target: bestMatch.target, before };
 	}
 
@@ -766,6 +784,12 @@
 		if (!preview) {
 			clearDropPreview();
 			return;
+		}
+
+		pendingDropPreview = preview;
+		if (trackElement) {
+			trackElement.dataset.dropTargetId = preview.targetId;
+			trackElement.dataset.dropBefore = String(preview.before);
 		}
 
 		const isUnchanged =
@@ -801,6 +825,9 @@
 		trackerStore.activeDragSourceId = combatantDocument.id ?? null;
 		trackerStore.dragHandleArmedCombatantId = null;
 		clearDropPreview();
+		if (trackElement) {
+			trackElement.dataset.dragSourceId = combatantDocument.id ?? '';
+		}
 
 		if (event.dataTransfer) {
 			event.dataTransfer.effectAllowed = 'move';
@@ -824,14 +851,15 @@
 			clearDragState();
 			return;
 		}
-		if (!activeDragSourceId || !dragPreview?.targetId) {
+		const dropPreview = pendingDropPreview ?? dragPreview ?? getDragPreview(event);
+		if (!activeDragSourceId || !dropPreview?.targetId) {
 			clearDragState();
 			return;
 		}
 
 		trackElement.dataset.dragSourceId = activeDragSourceId ?? '';
-		trackElement.dataset.dropTargetId = dragPreview?.targetId ?? '';
-		trackElement.dataset.dropBefore = dragPreview ? String(dragPreview.before) : '';
+		trackElement.dataset.dropTargetId = dropPreview.targetId;
+		trackElement.dataset.dropBefore = String(dropPreview.before);
 
 		try {
 			const dropEvent = {
@@ -939,6 +967,7 @@
 	let trackScrollbarWidth = $state(0);
 	let scrollbarDragPointerId: number | null = $state(null);
 	let scrollbarDragOffsetPx = $state(0);
+	let pendingDropPreview: CombatantDropPreview | null = null;
 	let currentCombat = $derived(trackerStore.currentCombat);
 	let sceneAliveCombatants = $derived(trackerStore.sceneAliveCombatants);
 	let playerHpBarTextMode = $derived(trackerStore.playerHpBarTextMode);
@@ -952,7 +981,7 @@
 	let sceneMonsterAliveCombatants = $derived(trackerStore.sceneMonsterAliveCombatants);
 	let sceneAllMonsterCombatants = $derived(trackerStore.sceneAllMonsterCombatants);
 	let hasMonsterCombatants = $derived(trackerStore.hasMonsterCombatants);
-	let canCurrentUserExpandMonsterCards = $derived(trackerStore.canCurrentUserExpandMonsterCards);
+	let canCurrentUserToggleMonsterCards = $derived(trackerStore.canCurrentUserToggleMonsterCards);
 	let renderedDeadCombatants = $derived(trackerStore.renderedDeadCombatants);
 	let monsterCardsExpanded = $derived(trackerStore.monsterCardsExpanded);
 	let orderedAliveEntries = $derived(trackerStore.orderedAliveEntries);
@@ -1005,7 +1034,6 @@
 	}
 
 	onMount(() => {
-		updatePlayerMonsterExpansionPermission();
 		updateCurrentCombat(true);
 		queueMicrotask(() => {
 			updateTrackViewportMetrics();
@@ -1235,9 +1263,9 @@
 			</div>
 		{/if}
 		<div class="nimble-ct">
-			{#if game.user?.isGM || (hasMonsterCombatants && canCurrentUserExpandMonsterCards)}
+			{#if game.user?.isGM}
 				<div class="nimble-ct__controls faded-ui" aria-label="Combat controls left">
-					{#if hasMonsterCombatants && canCurrentUserExpandMonsterCards}
+					{#if hasMonsterCombatants && canCurrentUserToggleMonsterCards}
 						<button
 							class="nimble-ct__icon-button"
 							aria-label={monsterCardsExpanded ? 'Collapse Monsters' : 'Expand Monsters'}
@@ -1973,6 +2001,9 @@
 		overflow-y: hidden;
 		scrollbar-width: none;
 	}
+	.nimble-ct__track[data-drag-source-id]:not([data-drag-source-id='']) {
+		pointer-events: auto;
+	}
 	.nimble-ct__track::-webkit-scrollbar {
 		height: 0;
 	}
@@ -2076,6 +2107,15 @@
 			width 140ms ease,
 			height 140ms ease,
 			margin 140ms ease,
+			border-color 140ms ease,
+			box-shadow 140ms ease,
+			opacity 140ms ease;
+	}
+	.nimble-ct__track[data-drag-source-id]:not([data-drag-source-id='']) .nimble-ct__portrait {
+		transition:
+			width 140ms ease,
+			height 140ms ease,
+			margin 0ms linear,
 			border-color 140ms ease,
 			box-shadow 140ms ease,
 			opacity 140ms ease;
@@ -2230,10 +2270,10 @@
 		cursor: grabbing;
 	}
 	.nimble-ct__portrait--preview-gap-before {
-		margin-inline-start: 0.95rem;
+		margin-inline-start: 1.15rem;
 	}
 	.nimble-ct__portrait--preview-gap-after {
-		margin-inline-end: 0.95rem;
+		margin-inline-end: 1.15rem;
 	}
 	.nimble-ct__portrait--active {
 		width: calc(7.5rem * var(--nimble-ct-card-scale, 1));

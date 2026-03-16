@@ -368,6 +368,7 @@ describe('NimbleCombat', () => {
 		expect(
 			(combat as NimbleCombat & { update: ReturnType<typeof vi.fn> }).update,
 		).toHaveBeenCalledWith({
+			turn: 3,
 			'flags.nimble.expandedTurnIdentity': {
 				combatantId: 'legendary-one',
 				occurrence: 1,
@@ -436,7 +437,13 @@ describe('NimbleCombat', () => {
 		expect(combat.combatant?.id).toBe('player-two');
 		expect(
 			(combat as NimbleCombat & { update: ReturnType<typeof vi.fn> }).update,
-		).not.toHaveBeenCalled();
+		).toHaveBeenCalledWith({
+			turn: 2,
+			'flags.nimble.expandedTurnIdentity': {
+				combatantId: 'player-two',
+				occurrence: 0,
+			},
+		});
 	});
 
 	it('starts combat on the top-most character card after start initialization', async () => {
@@ -493,7 +500,13 @@ describe('NimbleCombat', () => {
 
 		await combat.startCombat();
 
-		expect(combat.update).toHaveBeenCalledWith({ turn: 1 });
+		expect(combat.update).toHaveBeenCalledWith({
+			turn: 1,
+			'flags.nimble.expandedTurnIdentity': {
+				combatantId: 'player-top',
+				occurrence: 0,
+			},
+		});
 		expect(combat.turn).toBe(1);
 	});
 
@@ -1350,9 +1363,11 @@ describe('NimbleCombat', () => {
 			combatant: characterOne,
 		} as unknown as Combat.CreateData) as NimbleCombat & {
 			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
 		};
 
 		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+		combat.update = vi.fn().mockResolvedValue(combat);
 
 		await combat.nextRound();
 
@@ -2044,7 +2059,11 @@ describe('NimbleCombat', () => {
 			turns: [exhaustedNpcA, exhaustedNpcB, character],
 			turn: 0,
 			combatant: exhaustedNpcA,
-		} as unknown as Combat.CreateData);
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			update: ReturnType<typeof vi.fn>;
+		};
+
+		combat.update = vi.fn().mockResolvedValue(combat);
 
 		await combat.nextTurn();
 
@@ -2256,7 +2275,13 @@ describe('NimbleCombat', () => {
 		await combat._onDrop(dropEvent);
 
 		expect(combat.turn).toBe(0);
-		expect(combat.update).toHaveBeenCalledWith({ turn: 0 });
+		expect(combat.update).toHaveBeenCalledWith({
+			turn: 0,
+			'flags.nimble.expandedTurnIdentity': {
+				combatantId: 'active-npc',
+				occurrence: 0,
+			},
+		});
 	});
 
 	it('allows player owners to reorder their own character cards', async () => {

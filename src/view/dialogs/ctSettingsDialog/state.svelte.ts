@@ -27,8 +27,10 @@ import {
 	setCombatTrackerReactionColor,
 	setCombatTrackerResourceDrawerHoverEnabled,
 } from '../../../settings/combatTrackerSettings.js';
+import { getCombatForCurrentScene } from '../../ui/ctTopTracker/combat.utils.js';
 import {
 	CT_CARD_SIZE_PREVIEW_EVENT_NAME,
+	CT_PLAYERS_CAN_VIEW_EXPANDED_MONSTERS_FLAG_PATH,
 	CT_WIDTH_PREVIEW_EVENT_NAME,
 } from '../../ui/ctTopTracker/constants.js';
 
@@ -38,8 +40,9 @@ export const COLOR_PRESETS = [
 	{ label: 'White', color: '#ffffff' },
 	{ label: 'Green', color: '#6ce685' },
 	{ label: 'Red', color: '#ef5350' },
-	{ label: 'Blue', color: '#4fc3f7' },
+	{ label: 'Orange', color: '#ff9800' },
 	{ label: 'Yellow', color: '#f6d44c' },
+	{ label: 'Blue', color: '#4fc3f7' },
 	{ label: 'Purple', color: '#b388ff' },
 ] as const;
 export const HP_BAR_TEXT_MODE_OPTIONS: ReadonlyArray<{
@@ -51,10 +54,19 @@ export const HP_BAR_TEXT_MODE_OPTIONS: ReadonlyArray<{
 	{ value: 'percentage', label: 'HP %' },
 ];
 
+function getPlayersCanViewExpandedMonstersForCombat(combat: Combat | null): boolean {
+	if (!combat) return false;
+	return Boolean(
+		foundry.utils.getProperty(combat, CT_PLAYERS_CAN_VIEW_EXPANDED_MONSTERS_FLAG_PATH),
+	);
+}
+
 export class CtSettingsDialogState {
 	updateSettingHook: number | undefined;
 
 	sliderPreviewGlobalPointerUpListener: (() => void) | undefined;
+
+	combatHookIds: Array<{ hook: string; id: number }> = [];
 
 	widthLevel = $state(getCombatTrackerCtWidthLevel());
 
@@ -63,6 +75,12 @@ export class CtSettingsDialogState {
 	resourceDrawerHoverEnabled = $state(getCombatTrackerResourceDrawerHoverEnabled());
 
 	playerHpBarTextMode = $state(getCombatTrackerPlayerHpBarTextMode());
+
+	currentCombat = $state<Combat | null>(getCombatForCurrentScene(null));
+
+	playersCanViewExpandedMonsters = $state(
+		getPlayersCanViewExpandedMonstersForCombat(this.currentCombat),
+	);
 
 	nonPlayerHpBarEnabled = $state(getCombatTrackerNonPlayerHpBarEnabled());
 
@@ -73,6 +91,10 @@ export class CtSettingsDialogState {
 	reactionColor = $state(getCombatTrackerReactionColor());
 
 	canManageSharedCtSettings = $derived(Boolean(game.user?.isGM));
+
+	canManageMonsterExpansionPermission = $derived(
+		Boolean(game.user?.isGM) && Boolean(this.currentCombat),
+	);
 
 	isWidthSliderPreviewActive = $state(false);
 
@@ -127,6 +149,13 @@ export class CtSettingsDialogState {
 			console.error(`[Nimble][CT Settings] Failed to persist ${action}`, { error });
 		});
 	}
+
+	refreshCombatPermissionState = (): void => {
+		this.currentCombat = getCombatForCurrentScene(null);
+		this.playersCanViewExpandedMonsters = getPlayersCanViewExpandedMonstersForCombat(
+			this.currentCombat,
+		);
+	};
 
 	handleWidthLevelInput = (event: Event): void => {
 		const input = event.currentTarget as HTMLInputElement;
@@ -183,6 +212,18 @@ export class CtSettingsDialogState {
 		);
 	};
 
+	handlePlayersCanViewExpandedMonstersChange = (event: Event): void => {
+		if (!this.canManageMonsterExpansionPermission || !this.currentCombat) return;
+		const checkbox = event.currentTarget as HTMLInputElement;
+		this.playersCanViewExpandedMonsters = checkbox.checked;
+		this.persistCtSetting(
+			'player expanded monster visibility',
+			this.currentCombat.update({
+				[CT_PLAYERS_CAN_VIEW_EXPANDED_MONSTERS_FLAG_PATH]: checkbox.checked,
+			} as Record<string, unknown>) as Promise<void>,
+		);
+	};
+
 	handleNonPlayerHpBarTextModeChange = (event: Event): void => {
 		if (!this.canManageSharedCtSettings) return;
 		const select = event.currentTarget as HTMLSelectElement;
@@ -207,6 +248,7 @@ export class CtSettingsDialogState {
 	};
 
 	mount(): void {
+		this.refreshCombatPermissionState();
 		this.sliderPreviewGlobalPointerUpListener = () => {
 			if (this.isWidthSliderPreviewActive) {
 				this.setWidthSliderPreviewActive(false);
@@ -216,6 +258,22 @@ export class CtSettingsDialogState {
 			}
 		};
 		window.addEventListener('pointerup', this.sliderPreviewGlobalPointerUpListener);
+
+		const hooksApi = Hooks as unknown as {
+			on: (hook: string, listener: (...args: unknown[]) => void) => number;
+			off: (hook: string, id: number) => void;
+		};
+		const registerCombatHook = (hook: string) => {
+			this.combatHookIds.push({
+				hook,
+				id: hooksApi.on(hook, () => this.refreshCombatPermissionState()),
+			});
+		};
+		registerCombatHook('createCombat');
+		registerCombatHook('updateCombat');
+		registerCombatHook('deleteCombat');
+		registerCombatHook('canvasReady');
+		registerCombatHook('updateScene');
 
 		this.updateSettingHook = Hooks.on('updateSetting', (setting) => {
 			const settingKey = foundry.utils.getProperty(setting, 'key');
@@ -251,6 +309,12 @@ export class CtSettingsDialogState {
 
 	destroy(): void {
 		if (this.updateSettingHook !== undefined) Hooks.off('updateSetting', this.updateSettingHook);
+		const hooksApi = Hooks as unknown as {
+			off: (hook: string, id: number) => void;
+		};
+		for (const { hook, id } of this.combatHookIds) {
+			hooksApi.off(hook, id);
+		}
 		if (this.sliderPreviewGlobalPointerUpListener) {
 			window.removeEventListener('pointerup', this.sliderPreviewGlobalPointerUpListener);
 		}

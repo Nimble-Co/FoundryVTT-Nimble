@@ -5,7 +5,6 @@ import {
 	getCombatTrackerNonPlayerHpBarEnabled,
 	getCombatTrackerNonPlayerHpBarTextMode,
 	getCombatTrackerPlayerHpBarTextMode,
-	getCombatTrackerPlayersCanExpandMonsterCards,
 	getCombatTrackerResourceDrawerHoverEnabled,
 } from '../../../settings/combatTrackerSettings.js';
 import {
@@ -32,6 +31,10 @@ import {
 	syncCombatTurnsForCt,
 } from './combat.utils.js';
 import {
+	CT_MONSTER_CARDS_EXPANDED_FLAG_PATH,
+	CT_PLAYERS_CAN_VIEW_EXPANDED_MONSTERS_FLAG_PATH,
+} from './constants.js';
+import {
 	getCtCardScale,
 	normalizeCtCardSizeLevel,
 	normalizeCtWidthLevel,
@@ -49,6 +52,18 @@ import type {
 	CtWidthPreviewEventDetail,
 } from './types.js';
 
+function getSharedMonsterCardsExpanded(combat: Combat | null): boolean {
+	if (!combat) return false;
+	return Boolean(foundry.utils.getProperty(combat, CT_MONSTER_CARDS_EXPANDED_FLAG_PATH));
+}
+
+function getPlayersCanViewExpandedMonsters(combat: Combat | null): boolean {
+	if (!combat) return false;
+	return Boolean(
+		foundry.utils.getProperty(combat, CT_PLAYERS_CAN_VIEW_EXPANDED_MONSTERS_FLAG_PATH),
+	);
+}
+
 export class CtTopTrackerStore {
 	preferredCombatId = $state<string | null>(null);
 
@@ -58,7 +73,7 @@ export class CtTopTrackerStore {
 
 	sceneDeadCombatants = $state<Combatant.Implementation[]>([]);
 
-	playersCanExpandMonsterCards = $state(getCombatTrackerPlayersCanExpandMonsterCards());
+	playersCanViewExpandedMonsters = $state(false);
 
 	playerHpBarTextMode = $state(getCombatTrackerPlayerHpBarTextMode());
 
@@ -90,6 +105,8 @@ export class CtTopTrackerStore {
 
 	ctCardSizePreviewLevel = $state<number | null>(null);
 
+	sharedMonsterCardsExpanded = $state(false);
+
 	monsterCardsExpanded = $state(false);
 
 	sceneMonsterAliveCombatants = $derived(
@@ -107,8 +124,10 @@ export class CtTopTrackerStore {
 
 	hasMonsterCombatants = $derived(this.sceneAllMonsterCombatants.length > 0);
 
-	canCurrentUserExpandMonsterCards = $derived(
-		Boolean(game.user?.isGM) || this.playersCanExpandMonsterCards,
+	canCurrentUserToggleMonsterCards = $derived(Boolean(game.user?.isGM));
+
+	canCurrentUserViewExpandedMonsters = $derived(
+		Boolean(game.user?.isGM) || this.playersCanViewExpandedMonsters,
 	);
 
 	shouldCollapseMonsterCards = $derived(this.hasMonsterCombatants && !this.monsterCardsExpanded);
@@ -210,27 +229,31 @@ export class CtTopTrackerStore {
 		this.preferredCombatId = combat?.id ?? combat?._id ?? null;
 		this.sceneAliveCombatants = aliveCombatants;
 		this.sceneDeadCombatants = deadCombatants;
+		this.playersCanViewExpandedMonsters = getPlayersCanViewExpandedMonsters(combat);
+		this.sharedMonsterCardsExpanded = getSharedMonsterCardsExpanded(combat);
 		this.renderVersion += 1;
 		this.syncMonsterCardsExpanded();
 		return true;
 	}
 
-	updatePlayerMonsterExpansionPermission(): void {
-		this.playersCanExpandMonsterCards = getCombatTrackerPlayersCanExpandMonsterCards();
+	async toggleMonsterCardsExpanded(): Promise<boolean> {
+		if (!this.canCurrentUserToggleMonsterCards) return false;
+		const combat = this.resolveActionCombat();
+		if (!combat) return false;
+		const nextExpanded = !this.sharedMonsterCardsExpanded;
+		await combat.update({
+			[CT_MONSTER_CARDS_EXPANDED_FLAG_PATH]: nextExpanded,
+		} as Record<string, unknown>);
+		this.sharedMonsterCardsExpanded = nextExpanded;
 		this.syncMonsterCardsExpanded();
-	}
-
-	toggleMonsterCardsExpanded(): boolean {
-		if (!this.canCurrentUserExpandMonsterCards) return false;
-		this.monsterCardsExpanded = !this.monsterCardsExpanded;
 		return true;
 	}
 
 	syncMonsterCardsExpanded(): void {
 		const normalizedMonsterCardsExpanded = resolveMonsterCardsExpandedState({
 			hasMonsterCombatants: this.hasMonsterCombatants,
-			canCurrentUserExpandMonsterCards: this.canCurrentUserExpandMonsterCards,
-			monsterCardsExpanded: this.monsterCardsExpanded,
+			canCurrentUserViewExpandedMonsters: this.canCurrentUserViewExpandedMonsters,
+			sharedMonsterCardsExpanded: this.sharedMonsterCardsExpanded,
 		});
 		if (this.monsterCardsExpanded !== normalizedMonsterCardsExpanded) {
 			this.monsterCardsExpanded = normalizedMonsterCardsExpanded;
@@ -251,9 +274,6 @@ export class CtTopTrackerStore {
 		const patch = resolveCtTopTrackerSettingPatch(settingKey);
 		if (!patch) return null;
 
-		if (patch.playersCanExpandMonsterCards !== undefined) {
-			this.playersCanExpandMonsterCards = patch.playersCanExpandMonsterCards;
-		}
 		if (patch.resourceDrawerHoverEnabled !== undefined) {
 			this.resourceDrawerHoverEnabled = patch.resourceDrawerHoverEnabled;
 		}
