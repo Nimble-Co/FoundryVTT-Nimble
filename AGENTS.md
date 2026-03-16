@@ -27,6 +27,7 @@ These are mandatory implementation constraints, not slogans.
 **KISS**: Use explicit control flow (`if`/`switch`). Avoid dynamic component lookups, runtime string-to-function dispatch, or Svelte action factories that obscure what runs and when.
 **YAGNI**: Every abstraction (utility, store, component) must have a current caller. If a code path isn't supported yet, throw an error, don't add a stub or no-op fallback.
 **DRY + Rule of Three**: Two similar blocks in the same file are fine. Extract to a shared utility or component only after the same pattern appears three times across different files, and only if the extracted code respects [Code Promotion Rules](#code-promotion-rules).
+**One Export Per File**: Each TypeScript module exports one public function, class, constant, or store. Internal helpers used only by that export stay in the file but are not exported. Svelte components are inherently one-per-file.
 
 ### Foundational Principles
 
@@ -73,9 +74,19 @@ These are mandatory implementation constraints, not slogans.
 
 ### Code Promotion Rules
 
-- **Local**: Keep helpers in the file if only used there
-- **Feature**: Move to feature directory if shared within feature
-- **Global**: Move to `src/utils/` or `src/view/components/` if shared across features
+Code lives at the narrowest scope that serves all its callers. Promote only when needed, never preemptively.
+
+| Level | Location | When |
+|-------|----------|------|
+| **Local** | Same file (top of `<script>` or nearby function) | Only one caller in this file |
+| **Feature** | Feature directory (e.g., `src/view/sheets/character/utils.ts`) | 2+ files within the same feature need it |
+| **Global** | `src/utils/` or `src/view/components/` | 3+ files across different features need it |
+
+**Rules:**
+- Never skip a level — local → feature → global, one step at a time
+- The promoting PR must update all existing call-sites to use the new location
+- Global utilities must be added to the [Shared Code Inventory](docs/STYLE_GUIDE.md#shared-code-inventory)
+- If a "global" helper ends up with callers in only one feature after refactoring, demote it back
 
 ### Before Committing
 
