@@ -54,16 +54,13 @@
 				</div>
 
 				{#if state.isMyTurn}
-					{@const canEndTurn = state.actionsData.current === 0}
+					{@const allActionsUsed = state.actionsData.current === 0}
 					<button
 						class="action-tracker__end-turn"
-						class:action-tracker__end-turn--ready={canEndTurn}
+						class:action-tracker__end-turn--ready={allActionsUsed}
 						type="button"
-						disabled={!canEndTurn}
 						aria-label={localize('NIMBLE.ui.heroicActions.endTurn')}
-						data-tooltip={canEndTurn
-							? localize('NIMBLE.ui.heroicActions.endTurn')
-							: localize('NIMBLE.ui.heroicActions.useActionsFirst')}
+						data-tooltip={localize('NIMBLE.ui.heroicActions.endTurn')}
 						onclick={state.endTurn}
 					>
 						<i class="fa-solid fa-forward-step"></i>
@@ -196,8 +193,7 @@
 			background: var(--nimble-box-background-color);
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
-			opacity: 0.4;
-			cursor: not-allowed;
+			cursor: pointer;
 			transition: all 0.2s ease;
 
 			:global(.theme-light) & {
@@ -209,10 +205,12 @@
 				color: var(--nimble-medium-text-color);
 			}
 
+			&:hover {
+				border-color: var(--nimble-accent-color);
+			}
+
 			&--ready {
 				position: relative;
-				opacity: 1;
-				cursor: pointer;
 				background: hsl(139, 47%, 44%);
 				border-color: hsl(139, 47%, 36%);
 				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -278,6 +276,11 @@
 	:global(.theme-dark) .action-tracker__end-turn:not(.action-tracker__end-turn--ready) {
 		background: hsl(220, 15%, 18%);
 		border-color: hsl(220, 10%, 30%);
+
+		&:hover {
+			border-color: hsl(220, 15%, 45%);
+			background: hsl(220, 15%, 22%);
+		}
 	}
 
 	@keyframes pip-spent {

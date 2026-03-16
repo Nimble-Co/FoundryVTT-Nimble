@@ -1,25 +1,21 @@
 <script>
-	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 	import { getRollModeSummary } from '../dataPreparationHelpers/getRollModeSummary.js';
 	import prepareRollTooltip from '../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 	import localize from '../../utils/localize.js';
+	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import CardHeader from './components/CardHeader.svelte';
 	import RollSummary from './components/RollSummary.svelte';
 
-	async function getTargetToken(targetUuid) {
-		if (!targetUuid) return null;
-		return fromUuid(targetUuid);
-	}
-
 	const { messageDocument } = $props();
+
+	const { skills } = CONFIG.NIMBLE;
 
 	const system = $derived(messageDocument.reactive.system);
 	const rolls = $derived(messageDocument.reactive.rolls);
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
-	const { skills } = CONFIG.NIMBLE;
 	const actorType = $derived(system.actorType);
 	const permissions = $derived(system.permissions);
 	const rollMode = $derived(system.rollMode);
@@ -32,7 +28,10 @@
 	const targetName = $derived(system.targetName);
 
 	const label = $derived(
-		localize('NIMBLE.ui.heroicActions.assess.checkVsDC', { skill: skills[skillKey], dc }),
+		localize('NIMBLE.ui.heroicActions.assess.checkVsDC', {
+			skill: skills[skillKey],
+			dc: String(dc),
+		}),
 	);
 	const resultLabel = $derived(
 		localize(
@@ -45,6 +44,11 @@
 	const hintIcon = $derived(
 		isSuccess ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-exclamation',
 	);
+
+	async function getTargetToken(targetUuid) {
+		if (!targetUuid) return null;
+		return fromUuid(targetUuid);
+	}
 </script>
 
 <CardHeader {messageDocument} />
