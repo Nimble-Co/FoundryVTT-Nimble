@@ -1,0 +1,52 @@
+{
+	"permissions": {
+		"allow": [
+			"Bash(find:*)",
+			"Bash(ls:*)",
+			"Bash(cat:*)",
+			"Bash(sed:*)",
+			"Bash(pnpm:*)",
+			"Bash(git:*)",
+			"Bash(cd * && git diff *)",
+			"Bash(cd * && git log *)",
+			"Bash(gh pr list:*)",
+			"Bash(gh pr view:*)",
+			"Bash(gh pr status:*)",
+			"Bash(gh pr checks:*)",
+			"Bash(gh pr diff:*)",
+			"Bash(gh issue list:*)",
+			"Bash(gh issue view:*)",
+			"Bash(gh issue status:*)",
+			"Bash(gh repo view:*)",
+			"Bash(gh run list:*)",
+			"Bash(gh run view:*)",
+			"Bash(git commit *)"
+		],
+		"ask": [
+			"Bash(git push *)",
+			"Bash(cd * && git push *)",
+			"Bash(cd * && git commit *)",
+			"Bash(gh pr create:*)",
+			"Bash(gh pr comment:*)",
+			"Bash(gh pr merge:*)",
+			"Bash(gh pr close:*)",
+			"Bash(gh pr edit:*)",
+			"Bash(gh issue create:*)",
+			"Bash(gh issue comment:*)",
+			"Bash(gh issue close:*)",
+			"Bash(gh issue edit:*)",
+			"Bash(gh run rerun:*)",
+			"Bash(gh run cancel:*)"
+		],
+		"deny": [
+			"Bash(rm -rf:*)",
+			"Bash(Remove-Item:*)",
+			"Bash(ri :*)",
+			"Bash(del /s:*)",
+			"Bash(rmdir /s:*)",
+			"Bash(rd /s:*)",
+			"Bash(git reset --hard:*)",
+			"Bash(git push --force:*)"
+		]
+	}
+}

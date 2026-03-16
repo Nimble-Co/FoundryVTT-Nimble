@@ -1,3 +1,7 @@
+---
+title: Release Guide
+---
+
 # Release Guide
 
 Instructions for creating GitHub Releases for the Nimble FoundryVTT system.
