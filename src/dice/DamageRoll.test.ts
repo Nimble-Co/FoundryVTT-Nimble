@@ -8,14 +8,22 @@ describe('DamageRoll preprocessing', () => {
 
 	describe('Primary die extraction (attacks with canCrit or canMiss)', () => {
 		it('should extract primary die from single die formula', () => {
-			const roll = new DamageRoll('1d6', {}, { canCrit: true, canMiss: true, rollMode: 0 });
+			const roll = new DamageRoll(
+				'1d6',
+				{},
+				{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			expect(roll.formula).toBe('1d6x');
 			expect(roll.primaryDie).toBeDefined();
 		});
 
 		it('should extract primary die from multi-die formula', () => {
-			const roll = new DamageRoll('2d6', {}, { canCrit: true, canMiss: true, rollMode: 0 });
+			const roll = new DamageRoll(
+				'2d6',
+				{},
+				{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			// 2d6 becomes: 1d6x (primary) + 1d6 (damage)
 			expect(roll.formula).toBe('1d6x + 1d6');
@@ -23,7 +31,11 @@ describe('DamageRoll preprocessing', () => {
 		});
 
 		it('should apply advantage to primary die only', () => {
-			const roll = new DamageRoll('2d6', {}, { canCrit: true, canMiss: true, rollMode: 1 });
+			const roll = new DamageRoll(
+				'2d6',
+				{},
+				{ canCrit: true, canMiss: true, rollMode: 1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			// Primary die gets advantage (2d6kh), rest stays as damage
 			// 2d6 with advantage → 2d6khx (primary) + 1d6 (damage)
@@ -33,7 +45,11 @@ describe('DamageRoll preprocessing', () => {
 		});
 
 		it('should apply disadvantage to primary die only', () => {
-			const roll = new DamageRoll('2d6', {}, { canCrit: true, canMiss: true, rollMode: -1 });
+			const roll = new DamageRoll(
+				'2d6',
+				{},
+				{ canCrit: true, canMiss: true, rollMode: -1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			// Primary die gets disadvantage (2d6kl), rest stays as damage
 			expect(roll.formula).toBe('2d6klx + 1d6');
@@ -42,7 +58,11 @@ describe('DamageRoll preprocessing', () => {
 		});
 
 		it('should apply multiple levels of advantage to primary die', () => {
-			const roll = new DamageRoll('1d8', {}, { canCrit: true, canMiss: true, rollMode: 2 });
+			const roll = new DamageRoll(
+				'1d8',
+				{},
+				{ canCrit: true, canMiss: true, rollMode: 2, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			// 1d8 with advantage 2 → 3d8khx (roll 3, keep 1)
 			expect(roll.formula).toBe('3d8khx');
@@ -50,13 +70,21 @@ describe('DamageRoll preprocessing', () => {
 		});
 
 		it('should add explosion modifier when canCrit is true', () => {
-			const roll = new DamageRoll('1d6', {}, { canCrit: true, canMiss: false, rollMode: 0 });
+			const roll = new DamageRoll(
+				'1d6',
+				{},
+				{ canCrit: true, canMiss: false, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			expect(roll.formula).toBe('1d6x');
 		});
 
 		it('should not add explosion modifier when canCrit is false', () => {
-			const roll = new DamageRoll('1d6', {}, { canCrit: false, canMiss: true, rollMode: 0 });
+			const roll = new DamageRoll(
+				'1d6',
+				{},
+				{ canCrit: false, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			expect(roll.formula).toBe('1d6');
 			expect(roll.primaryDie).toBeDefined();
@@ -65,7 +93,11 @@ describe('DamageRoll preprocessing', () => {
 
 	describe('AoE advantage/disadvantage (no primary die)', () => {
 		it('should apply advantage to entire first die term for AoE', () => {
-			const roll = new DamageRoll('2d8', {}, { canCrit: false, canMiss: false, rollMode: 1 });
+			const roll = new DamageRoll(
+				'2d8',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			// 2d8 with advantage → 3d8kh2 (roll 3, keep highest 2)
 			expect(roll.formula).toBe('3d8kh2');
@@ -73,7 +105,11 @@ describe('DamageRoll preprocessing', () => {
 		});
 
 		it('should apply disadvantage to entire first die term for AoE', () => {
-			const roll = new DamageRoll('2d8', {}, { canCrit: false, canMiss: false, rollMode: -1 });
+			const roll = new DamageRoll(
+				'2d8',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: -1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			// 2d8 with disadvantage → 3d8kl2 (roll 3, keep lowest 2)
 			expect(roll.formula).toBe('3d8kl2');
@@ -81,7 +117,11 @@ describe('DamageRoll preprocessing', () => {
 		});
 
 		it('should apply advantage to single die AoE', () => {
-			const roll = new DamageRoll('1d8', {}, { canCrit: false, canMiss: false, rollMode: 1 });
+			const roll = new DamageRoll(
+				'1d8',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			// 1d8 with advantage → 2d8kh (roll 2, keep 1)
 			expect(roll.formula).toBe('2d8kh');
@@ -89,21 +129,33 @@ describe('DamageRoll preprocessing', () => {
 		});
 
 		it('should apply multiple levels of advantage to AoE', () => {
-			const roll = new DamageRoll('2d6', {}, { canCrit: false, canMiss: false, rollMode: 2 });
+			const roll = new DamageRoll(
+				'2d6',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 2, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			// 2d6 with advantage 2 → 4d6kh2 (roll 4, keep highest 2)
 			expect(roll.formula).toBe('4d6kh2');
 		});
 
 		it('should apply multiple levels of disadvantage to AoE', () => {
-			const roll = new DamageRoll('3d6', {}, { canCrit: false, canMiss: false, rollMode: -2 });
+			const roll = new DamageRoll(
+				'3d6',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: -2, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			// 3d6 with disadvantage 2 → 5d6kl3 (roll 5, keep lowest 3)
 			expect(roll.formula).toBe('5d6kl3');
 		});
 
 		it('should preserve formula modifiers for AoE with advantage', () => {
-			const roll = new DamageRoll('2d8 + 4', {}, { canCrit: false, canMiss: false, rollMode: 1 });
+			const roll = new DamageRoll(
+				'2d8 + 4',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			// 2d8 + 4 with advantage → 3d8kh2 + 4
 			expect(roll.formula).toBe('3d8kh2 + 4');
@@ -112,14 +164,22 @@ describe('DamageRoll preprocessing', () => {
 
 	describe('No processing needed', () => {
 		it('should not modify formula when canCrit=false, canMiss=false, rollMode=0', () => {
-			const roll = new DamageRoll('2d8', {}, { canCrit: false, canMiss: false, rollMode: 0 });
+			const roll = new DamageRoll(
+				'2d8',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			expect(roll.formula).toBe('2d8');
 			expect(roll.primaryDie).toBeUndefined();
 		});
 
 		it('should not modify formula with modifiers when no processing needed', () => {
-			const roll = new DamageRoll('2d8 + 5', {}, { canCrit: false, canMiss: false, rollMode: 0 });
+			const roll = new DamageRoll(
+				'2d8 + 5',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			expect(roll.formula).toBe('2d8 + 5');
 		});
@@ -127,20 +187,32 @@ describe('DamageRoll preprocessing', () => {
 
 	describe('Edge cases', () => {
 		it('should handle formula with only numeric terms', () => {
-			const roll = new DamageRoll('5', {}, { canCrit: false, canMiss: false, rollMode: 1 });
+			const roll = new DamageRoll(
+				'5',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			// No die term to modify
 			expect(roll.formula).toBe('5');
 		});
 
 		it('should set isCritical to false when canCrit is false', () => {
-			const roll = new DamageRoll('2d8', {}, { canCrit: false, canMiss: false, rollMode: 0 });
+			const roll = new DamageRoll(
+				'2d8',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			expect(roll.isCritical).toBe(false);
 		});
 
 		it('should set isMiss to false when canMiss is false', () => {
-			const roll = new DamageRoll('2d8', {}, { canCrit: false, canMiss: false, rollMode: 0 });
+			const roll = new DamageRoll(
+				'2d8',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
 
 			expect(roll.isMiss).toBe(false);
 		});
