@@ -95,23 +95,71 @@ export const globalFoundryMocks = {
  * This is useful for tests that need to verify Roll constructor invocations
  * @returns An object with the mock function and the constructor function for resetting
  */
+// Shared mock term classes - these are used both by MockRollClass and exported via foundryApiMocks
+// This ensures instanceof checks work correctly
+
+class SharedMockDie {
+	faces: number;
+	number: number;
+	modifiers: string[] = [];
+	results: any[] = [];
+	options: Record<string, unknown> = {};
+	_evaluated = false;
+
+	constructor(termData?: any) {
+		this.faces = termData?.faces ?? 6;
+		this.number = termData?.number ?? 1;
+		if (termData?.modifiers) this.modifiers = [...termData.modifiers];
+		if (termData?.options) this.options = termData.options;
+	}
+}
+
+class SharedMockOperatorTerm {
+	operator: string;
+	options: Record<string, unknown> = {};
+
+	constructor(termData?: { operator: string }) {
+		this.operator = termData?.operator ?? '+';
+	}
+}
+
+class SharedMockNumericTerm {
+	number: number;
+	options: Record<string, unknown> = {};
+
+	constructor(termData?: { number: number }) {
+		this.number = termData?.number ?? 0;
+	}
+}
+
+class SharedMockRollTerm {
+	options: Record<string, unknown> = {};
+
+	constructor(termData?: any) {
+		if (termData) Object.assign(this, termData);
+	}
+}
+
 export function createTrackableRollMock() {
 	// Use a proper class that can be extended by DamageRoll etc.
 	class MockRollClass {
-		formula: string;
 		data?: unknown;
 		options: Record<string, unknown>;
 		terms: unknown[];
 		_evaluated?: boolean;
 		_total?: number;
-		_formula?: string;
+		_formula: string;
 
 		constructor(formula: string, data?: unknown, options?: Record<string, unknown>) {
-			this.formula = formula;
 			this.data = data ?? {};
 			this.options = options ?? {};
-			this.terms = [];
+			this.terms = MockRollClass.parseFormula(formula);
 			this._formula = formula;
+		}
+
+		// Getter that returns the current formula (reflects modifications)
+		get formula(): string {
+			return this._formula;
 		}
 
 		toJSON() {
@@ -122,28 +170,83 @@ export function createTrackableRollMock() {
 			this._formula = MockRollClass.getFormula(this.terms);
 		}
 
+		/**
+		 * Parse a simple dice formula into term objects.
+		 * Supports: NdF, +, -, and numeric modifiers
+		 * Examples: "2d8", "1d6 + 3", "2d6 + 1d4 + 5"
+		 */
+		static parseFormula(formula: string): unknown[] {
+			const terms: unknown[] = [];
+			// Split by + or - while preserving the operators
+			const parts = formula.split(/\s*([+-])\s*/).filter(Boolean);
+
+			for (let i = 0; i < parts.length; i++) {
+				const part = parts[i].trim();
+
+				if (part === '+' || part === '-') {
+					terms.push(new SharedMockOperatorTerm({ operator: part }));
+				} else if (/^\d+d\d+/i.test(part)) {
+					// Dice term like "2d8" or "1d6x"
+					const diceMatch = part.match(/^(\d+)d(\d+)(.*)$/i);
+					if (diceMatch) {
+						const num = parseInt(diceMatch[1], 10);
+						const faces = parseInt(diceMatch[2], 10);
+						const modifierStr = diceMatch[3] || '';
+						// Parse modifiers like "kh", "kl2", "x"
+						const modifiers: string[] = [];
+						const modMatch = modifierStr.match(/([a-z]+\d*)/gi);
+						if (modMatch) {
+							modifiers.push(...modMatch);
+						}
+						terms.push(new SharedMockDie({ number: num, faces, modifiers }));
+					}
+				} else if (/^\d+$/.test(part)) {
+					// Numeric term
+					terms.push(new SharedMockNumericTerm({ number: parseInt(part, 10) }));
+				}
+			}
+
+			return terms;
+		}
+
 		static getFormula(terms: unknown[]): string {
-			// Simple implementation that reconstructs formula from terms
+			// Reconstruct formula from terms including modifiers
 			if (!terms || terms.length === 0) return '';
-			return terms
-				.map((term) => {
-					const t = term as Record<string, unknown>;
-					if (t.operator) return t.operator;
-					if (t.number && t.faces) return `${t.number}d${t.faces}`;
-					if (t.number !== undefined) return String(t.number);
-					return '';
-				})
-				.filter(Boolean)
-				.join('');
+			const parts: string[] = [];
+
+			for (let i = 0; i < terms.length; i++) {
+				const term = terms[i];
+				const t = term as Record<string, unknown>;
+				if (t.operator) {
+					// Add spaces around operators for readability (matches Foundry behavior)
+					parts.push(` ${t.operator} `);
+				} else if (t.faces !== undefined && t.number !== undefined) {
+					// Die term
+					let dieStr = `${t.number}d${t.faces}`;
+					const modifiers = t.modifiers as string[] | undefined;
+					if (modifiers && modifiers.length > 0) {
+						dieStr += modifiers.join('');
+					}
+					parts.push(dieStr);
+				} else if (t.number !== undefined) {
+					parts.push(String(t.number));
+				}
+			}
+
+			return parts.join('').trim();
 		}
 
 		static fromData(data: Record<string, unknown>) {
+			const formula = data.formula as string;
 			const roll = new MockRollClass(
-				data.formula as string,
+				formula,
 				data.data as unknown,
 				data.options as Record<string, unknown>,
 			);
-			if (data.terms) roll.terms = data.terms as unknown[];
+			// If terms are provided in data, use them; otherwise keep parsed terms
+			if (data.terms && Array.isArray(data.terms) && data.terms.length > 0) {
+				roll.terms = data.terms as unknown[];
+			}
 			// Preserve other properties that might be in the data object
 			if (data._evaluated !== undefined) roll._evaluated = data._evaluated as boolean;
 			if (data._total !== undefined) roll._total = data._total as number;
@@ -169,7 +272,7 @@ export function createTrackableRollMock() {
 			const data = this.data as Record<string, unknown>;
 
 			// Handle @-references by replacing them with values from rollData
-			let resolvedFormula = formula.replace(/@([\w.]+)/g, (_match, path: string) => {
+			const resolvedFormula = formula.replace(/@([\w.]+)/g, (_match, path: string) => {
 				const value = path.split('.').reduce((obj: unknown, key: string) => {
 					if (obj && typeof obj === 'object') {
 						return (obj as Record<string, unknown>)[key];
@@ -215,6 +318,7 @@ export function createTrackableRollMock() {
 					// Skip super() call by returning the custom object
 					// This is a trick: we call super() but then override everything
 					super(formula, data, options);
+					// biome-ignore lint/correctness/noConstructorReturn: Intentional for mock behavior - allows custom implementations to override instance
 					return result as MockRoll;
 				}
 			}
@@ -286,15 +390,10 @@ export const foundryApiMocks = {
 	dice: {
 		Roll: trackableRollMock,
 		terms: {
-			Die: class Die {
-				faces?: number;
-				number?: number;
-				results: any[] = [];
-
-				constructor(termData: any) {
-					Object.assign(this, termData);
-				}
-			},
+			Die: SharedMockDie,
+			OperatorTerm: SharedMockOperatorTerm,
+			NumericTerm: SharedMockNumericTerm,
+			RollTerm: SharedMockRollTerm,
 		},
 	},
 	utils: {

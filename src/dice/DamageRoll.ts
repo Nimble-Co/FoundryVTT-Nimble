@@ -147,127 +147,157 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** ------------------------------------------------------ */
 
 	/**
-	 * Preprocesses the roll formula to extract and configure the primary die.
+	 * Applies advantage or disadvantage to a die term.
 	 *
-	 * This method separates the first die term from the formula as the "primary die",
-	 * which is used for critical hit and miss detection. The primary die is configured with:
+	 * Adds extra dice and a keep modifier based on rollMode:
+	 * - Positive rollMode (advantage): adds dice and keeps highest N (original count)
+	 * - Negative rollMode (disadvantage): adds dice and keeps lowest N (original count)
+	 *
+	 * @param dieTerm - The die term to modify.
+	 * @param rollMode - Positive for advantage, negative for disadvantage.
+	 * @param keepCount - Number of dice to keep (defaults to original die count).
+	 */
+	private _applyRollMode(
+		dieTerm: foundry.dice.terms.Die,
+		rollMode: number,
+		keepCount?: number,
+	): void {
+		if (!rollMode) return;
+
+		const originalCount = dieTerm.number ?? 1;
+		const keep = keepCount ?? originalCount;
+
+		dieTerm.number = originalCount + Math.abs(rollMode);
+		if (!dieTerm.modifiers) dieTerm.modifiers = [];
+
+		if (rollMode > 0) {
+			dieTerm.modifiers.push(keep === 1 ? 'kh' : `kh${keep}`);
+		} else {
+			dieTerm.modifiers.push(keep === 1 ? 'kl' : `kl${keep}`);
+		}
+	}
+
+	/**
+	 * Extracts and configures a primary die from the first die term.
+	 *
+	 * The primary die is used for critical hit and miss detection. It is configured with:
 	 * - Explosion modifier ('x') for critical detection if canCrit is true
 	 * - Keep highest ('kh') or keep lowest ('kl') modifiers based on rollMode
+	 *
+	 * @param options - Roll options containing canCrit, canMiss, rollMode, and preset values.
+	 */
+	private _extractPrimaryDie(options: DamageRoll.Options): void {
+		const { rollMode = 0 } = options;
+		const shouldExplode = options.canCrit;
+		const firstDieTerm = this.terms.find((t) => t instanceof Terms.Die);
+
+		if (!firstDieTerm) return;
+
+		const { number = 1, faces } = firstDieTerm;
+		let primaryTerm: PrimaryDie;
+
+		if (number > 1) {
+			// Multi-die formula: extract one die as primary, leave rest as damage
+			firstDieTerm.number = (number ?? 1) - 1;
+
+			const operatorTerm = new Terms.OperatorTerm({ operator: '+' });
+			this.terms.unshift(operatorTerm);
+
+			primaryTerm = new PrimaryDie({
+				number: 1,
+				faces: faces ?? 6,
+				modifiers: [],
+				options: { flavor: 'Primary Die' },
+			});
+
+			// Apply advantage/disadvantage to primary die only (keeps 1)
+			this._applyRollMode(primaryTerm, rollMode, 1);
+
+			if (shouldExplode) primaryTerm.modifiers.push('x');
+
+			this._applyPrimaryDiePresets(primaryTerm, options);
+			this.terms.unshift(primaryTerm);
+		} else {
+			// Single-die formula: convert to PrimaryDie
+			primaryTerm = new PrimaryDie({
+				number: 1,
+				faces: firstDieTerm.faces ?? 6,
+				modifiers: [],
+			});
+
+			// Apply advantage/disadvantage (keeps 1)
+			this._applyRollMode(primaryTerm, rollMode, 1);
+
+			if (shouldExplode) primaryTerm.modifiers.push('x');
+
+			this._applyPrimaryDiePresets(primaryTerm, options);
+
+			const idx = this.terms.findIndex((t) => t instanceof Terms.Die);
+			if (idx !== -1) this.terms[idx] = primaryTerm;
+		}
+
+		this.primaryDie = primaryTerm;
+	}
+
+	/**
+	 * Applies preset values to a primary die term.
+	 *
+	 * @param primaryTerm - The primary die to configure.
+	 * @param options - Roll options containing primaryDieValue and primaryDieModifier.
+	 */
+	private _applyPrimaryDiePresets(primaryTerm: PrimaryDie, options: DamageRoll.Options): void {
+		if (options.primaryDieValue) {
+			primaryTerm.results = [{ result: options.primaryDieValue, active: true }];
+		}
+
+		const faces = primaryTerm.faces;
+		if (options.primaryDieModifier && faces) {
+			const baseResult = Math.ceil(Math.random() * faces);
+			const modifiedResult = baseResult + options.primaryDieModifier;
+			if (modifiedResult > faces) {
+				primaryTerm.results = [{ result: faces, active: true }];
+				const excess = modifiedResult - faces;
+				const excessTerm = new Terms.NumericTerm({ number: excess });
+				const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
+				this.terms.splice(this.terms.indexOf(primaryTerm) + 1, 0, operatorTermExcess, excessTerm);
+			} else {
+				primaryTerm.results = [{ result: modifiedResult, active: true }];
+			}
+		}
+	}
+
+	/**
+	 * Preprocesses the roll formula based on roll options.
+	 *
+	 * Handles two scenarios:
+	 * 1. Primary die extraction: When canCrit or canMiss is true, extracts the first die
+	 *    as a primary die for hit/miss/crit detection.
+	 * 2. AoE advantage/disadvantage: When neither canCrit nor canMiss is true but rollMode
+	 *    is set, applies advantage/disadvantage directly to the first die term.
 	 *
 	 * @param _formula - The original dice formula (unused, kept for signature compatibility).
 	 * @param _data - Roll data (unused, kept for signature compatibility).
 	 * @param options - Roll options containing canCrit, canMiss, and rollMode settings.
 	 */
 	_preProcessFormula(_formula: string, _data: DamageRoll.Data, options: DamageRoll.Options) {
-		// Separate out the primary die
-		if (options.canCrit || options.canMiss) {
-			const { rollMode = 0 } = options;
-			const shouldExplode = options.canCrit;
-			const firstDieTerm = this.terms.find((t) => t instanceof Terms.Die);
+		const { rollMode = 0 } = options;
+		const needsPrimaryDie = options.canCrit || options.canMiss;
 
-			if (firstDieTerm) {
-				const { number = 1, faces } = firstDieTerm;
+		if (!needsPrimaryDie && !rollMode) return;
 
-				let primaryTerm: PrimaryDie;
+		const firstDieTerm = this.terms.find((t) => t instanceof Terms.Die);
+		if (!firstDieTerm) return;
 
-				if (number > 1) {
-					// Reduce number of original term by one
-					firstDieTerm.number = (number ?? 1) - 1;
-
-					// Add Operator Term before Primary Term
-					const operatorTerm = new Terms.OperatorTerm({ operator: '+' });
-					this.terms.unshift(operatorTerm);
-
-					// Create Primary Term
-					primaryTerm = new PrimaryDie({
-						number: 1 + Math.abs(rollMode),
-						faces: faces ?? 6,
-						modifiers: [],
-						options: { flavor: 'Primary Die' },
-					});
-
-					if (rollMode > 0) primaryTerm.modifiers.push('kh');
-					else if (rollMode < 0) primaryTerm.modifiers.push('kl');
-
-					// Add Explosion after adv/div has been calculated
-					if (shouldExplode) primaryTerm.modifiers.push('x');
-
-					if (options.primaryDieValue) {
-						primaryTerm.results = [{ result: options.primaryDieValue, active: true }];
-					}
-
-					if (options.primaryDieModifier && faces) {
-						const baseResult = Math.ceil(Math.random() * faces);
-						const modifiedResult = baseResult + options.primaryDieModifier;
-						if (modifiedResult > faces) {
-							primaryTerm.results = [{ result: faces, active: true }];
-							// Add excess as a separate numeric term
-							const excess = modifiedResult - faces;
-							const excessTerm = new Terms.NumericTerm({ number: excess });
-							const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
-							this.terms.splice(
-								this.terms.indexOf(primaryTerm) + 1,
-								0,
-								operatorTermExcess,
-								excessTerm,
-							);
-						} else {
-							primaryTerm.results = [{ result: modifiedResult, active: true }];
-						}
-					}
-
-					this.terms.unshift(primaryTerm);
-				} else {
-					primaryTerm = new PrimaryDie({
-						number: 1,
-						faces: firstDieTerm.faces ?? 6,
-						modifiers: [],
-					});
-
-					// Add rollMode
-					primaryTerm.number = (number ?? 1) + Math.abs(rollMode);
-
-					if (rollMode > 0) primaryTerm.modifiers.push('kh');
-					else if (rollMode < 0) primaryTerm.modifiers.push('kl');
-
-					// Add Explosion for critical after adv/dis
-					if (shouldExplode) primaryTerm.modifiers.push('x');
-
-					if (options.primaryDieValue) {
-						primaryTerm.results = [{ result: options.primaryDieValue, active: true }];
-					}
-
-					if (options.primaryDieModifier && faces) {
-						const baseResult = Math.ceil(Math.random() * faces);
-						const modifiedResult = baseResult + options.primaryDieModifier;
-						if (modifiedResult > faces) {
-							primaryTerm.results = [{ result: faces, active: true }];
-							// Add excess as a separate numeric term
-							const excess = modifiedResult - faces;
-							const excessTerm = new Terms.NumericTerm({ number: excess });
-							const operatorTermExcess = new Terms.OperatorTerm({ operator: '+' });
-							this.terms.splice(
-								this.terms.indexOf(primaryTerm) + 1,
-								0,
-								operatorTermExcess,
-								excessTerm,
-							);
-						} else {
-							primaryTerm.results = [{ result: modifiedResult, active: true }];
-						}
-					}
-
-					// Update term
-					const idx = this.terms.findIndex((t) => t instanceof Terms.Die);
-					if (idx !== -1) this.terms[idx] = primaryTerm;
-				}
-
-				this.primaryDie = primaryTerm;
-
-				// Alter formula
-				this.resetFormula();
-			}
+		if (needsPrimaryDie) {
+			// Extract primary die for crit/miss detection
+			this._extractPrimaryDie(options);
+		} else if (rollMode) {
+			// AoE case: apply advantage/disadvantage to entire first die term
+			// 2d8 with advantage → 3d8kh2
+			this._applyRollMode(firstDieTerm, rollMode);
 		}
+
+		this.resetFormula();
 	}
 
 	/** ------------------------------------------------------ */
