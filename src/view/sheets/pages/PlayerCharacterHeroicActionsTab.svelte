@@ -180,28 +180,39 @@
 
 		&__tabs {
 			display: flex;
-			gap: 0;
+			gap: 0.5rem;
 		}
 
 		&__tab {
-			padding: 0.25rem 0.75rem;
+			padding: 0.5rem 1rem;
 			font-size: var(--nimble-sm-text);
-			font-weight: 700;
+			font-weight: 600;
 			text-transform: uppercase;
+			letter-spacing: 0.025em;
 			color: var(--nimble-medium-text-color);
-			background: transparent;
-			border: none;
-			border-bottom: 2px solid transparent;
+			background: var(--nimble-box-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 6px;
 			cursor: pointer;
-			transition: all 0.15s ease;
+			transition: all 0.2s ease;
 
 			&:hover:not(&--active) {
 				color: var(--nimble-dark-text-color);
+				border-color: var(--nimble-accent-color);
+				background: color-mix(
+					in srgb,
+					var(--nimble-box-background-color) 80%,
+					var(--nimble-accent-color)
+				);
 			}
 
 			&--active {
-				color: var(--nimble-dark-text-color);
-				border-bottom-color: var(--nimble-accent-color);
+				color: var(--nimble-action-info-text-color);
+				background: var(--nimble-action-info-background);
+				border-color: var(--nimble-action-info-border-color);
+				box-shadow:
+					0 0 8px var(--nimble-action-info-background),
+					inset 0 1px 0 rgba(255, 255, 255, 0.1);
 			}
 		}
 	}

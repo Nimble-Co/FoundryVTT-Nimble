@@ -8,3 +8,4 @@ export { Migration007WildOneHitDiceAdvantage } from './Migration007WildOneHitDic
 export { Migration008FieldMedicHealingPotionBonus } from './Migration008FieldMedicHealingPotionBonus.js';
 export { Migration009HealingEffects } from './Migration009HealingEffects.js';
 export { Migration010SwiftFistsUnarmedDamage } from './Migration010SwiftFistsUnarmedDamage.js';
+export { Migration011SwiftFistsUnarmedProficiency } from './Migration011SwiftFistsUnarmedProficiency.js';

@@ -5,8 +5,16 @@
 	"img": "icons/skills/melee/strike-hammer-destructive-blue.webp",
 	"system": {
 		"macro": "",
-		"identifier": "",
-		"rules": [],
+		"identifier": "reverberating-strikes",
+		"rules": [
+			{
+				"id": "reverberating-strikes-melee-damage",
+				"type": "meleeDamageBonus",
+				"label": "Reverberating Strikes",
+				"value": "@level",
+				"damageType": "bludgeoning"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

@@ -535,6 +535,7 @@
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
 			"maxWounds": "Wounds",
+			"meleeDamageBonus": "Melee Damage Bonus",
 			"note": "Note",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",

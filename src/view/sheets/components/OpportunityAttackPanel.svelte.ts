@@ -6,9 +6,7 @@ import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.j
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
 import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
-
-// Default unarmed: roll 1d4 for hit determination, damage is 1 + STR
-const DEFAULT_UNARMED_DAMAGE = '1d4 + 1 + @abilities.strength.mod';
+import { getUnarmedDamageFormula, hasUnarmedProficiency } from './attackUtils.js';
 
 interface WeaponSystemData {
 	objectType: string;
@@ -22,10 +20,6 @@ interface WeaponSystemData {
 		range?: { max?: number };
 		thrownRange?: number;
 	};
-}
-
-interface CharacterSystemExtension {
-	unarmedDamage?: string;
 }
 
 export function createOpportunityAttackPanelState(
@@ -118,30 +112,19 @@ export function createOpportunityAttackPanelState(
 		}
 	}
 
-	function getCharacterSystem(): CharacterSystemExtension {
-		return getActor().system as CharacterSystemExtension;
-	}
-
-	function getUnarmedDamageFormula(): string {
-		return getCharacterSystem().unarmedDamage ?? DEFAULT_UNARMED_DAMAGE;
-	}
-
-	function hasCustomUnarmedDamage(): boolean {
-		return getCharacterSystem().unarmedDamage !== undefined;
-	}
+	// ============================================================================
+	// Unarmed Strike
+	// ============================================================================
 
 	function getUnarmedDamageDisplay(): string {
-		if (hasCustomUnarmedDamage()) {
-			return evaluateFormula(getCharacterSystem().unarmedDamage);
-		}
-		return evaluateFormula('1 + @abilities.strength.mod');
+		return evaluateFormula(getUnarmedDamageFormula(getActor()));
 	}
 
 	async function handleUnarmedStrike(): Promise<void> {
 		if (getReactionDisabled()) return;
 
-		const rollFormula = getUnarmedDamageFormula();
-		const primaryDieAsDamage = hasCustomUnarmedDamage();
+		const rollFormula = getUnarmedDamageFormula(getActor());
+		const canCrit = hasUnarmedProficiency(getActor()); // Only characters proficient with unarmed (e.g., Zephyr with Swift Fists) can crit
 
 		const unarmedItem = {
 			name: localize('NIMBLE.ui.heroicActions.reactions.opportunity.unarmedOpportunity'),
@@ -153,7 +136,7 @@ export function createOpportunityAttackPanelState(
 							type: 'damage',
 							formula: rollFormula,
 							damageType: 'bludgeoning',
-							canCrit: true,
+							canCrit,
 							canMiss: true,
 						},
 					],
@@ -176,13 +159,13 @@ export function createOpportunityAttackPanelState(
 		if (!reactionUsed) return;
 
 		const roll = new DamageRoll(rollFormula, getActor().getRollData(), {
-			canCrit: true,
+			canCrit,
 			canMiss: true,
 			rollMode: result.rollMode ?? -1, // Disadvantage by default
 			primaryDieValue: result.primaryDieValue ?? 0,
 			primaryDieModifier: Number(result.primaryDieModifier) || 0,
 			damageType: 'bludgeoning',
-			primaryDieAsDamage,
+			primaryDieAsDamage: true,
 		});
 
 		await roll.evaluate();
@@ -195,7 +178,7 @@ export function createOpportunityAttackPanelState(
 				type: 'damage',
 				formula: rollFormula,
 				damageType: 'bludgeoning',
-				canCrit: true,
+				canCrit,
 				canMiss: true,
 				roll: rollData,
 				parentNode: null,

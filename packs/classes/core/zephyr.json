@@ -103,7 +103,8 @@
 		},
 		"resources": [],
 		"weaponProficiencies": [
-			"Melee"
+			"Melee",
+			"Unarmed Strike"
 		]
 	},
 	"effects": [],
@@ -111,7 +112,7 @@
 	"_stats": {
 		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.9",
+		"systemVersion": "0.7.2",
 		"createdTime": 1762052319244,
 		"modifiedTime": 1762052627941,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
