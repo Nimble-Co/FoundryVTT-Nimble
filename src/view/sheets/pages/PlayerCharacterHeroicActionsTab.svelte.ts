@@ -121,7 +121,7 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 
 	function getCombatant(): Combatant | null {
 		const combat = getActiveCombatForCurrentScene();
-		if (!combat?.started) return null;
+		if (!combat) return null;
 		return combat.combatants.find((entry) => entry.actorId === getActor().id) ?? null;
 	}
 
@@ -146,8 +146,7 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	async function updateActionPips(newValue: number): Promise<void> {
 		const combatant = getCombatantInCombat();
 		if (!combatant) return;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		await combatant.update({ 'system.actions.base.current': newValue } as any);
+		await combatant.update({ 'system.actions.base.current': newValue } as Record<string, unknown>);
 	}
 
 	async function deductActionPips(count = 1): Promise<void> {

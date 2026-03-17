@@ -4,7 +4,6 @@ import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 export function createHelpPanelState(
 	getActor: () => NimbleCharacter,
 	getOnDeductAction: () => () => Promise<void>,
-	getInCombat: () => boolean,
 	getActionsRemaining: () => number,
 ) {
 	// Targeting state
@@ -17,8 +16,6 @@ export function createHelpPanelState(
 
 	const selectedTarget = $derived(availableTargets.length === 1 ? availableTargets[0] : null);
 
-	const isDisabled = $derived(!getInCombat() || getActionsRemaining() <= 0);
-
 	// Set up hook listener for target changes
 	$effect(() => {
 		const hookId = Hooks.on('targetToken', () => {
@@ -28,7 +25,7 @@ export function createHelpPanelState(
 	});
 
 	async function handleHelp(): Promise<void> {
-		if (!getInCombat() || getActionsRemaining() <= 0) return;
+		if (getActionsRemaining() <= 0) return;
 
 		await getOnDeductAction()();
 
@@ -58,9 +55,6 @@ export function createHelpPanelState(
 		},
 		get selectedTarget() {
 			return selectedTarget;
-		},
-		get isDisabled() {
-			return isDisabled;
 		},
 		getTargetName,
 		handleHelp,
