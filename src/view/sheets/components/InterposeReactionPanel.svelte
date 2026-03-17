@@ -14,14 +14,14 @@
 	const state = createInterposePanelState(
 		() => actor,
 		() => onDeductAction,
-		() => inCombat,
 		() => actionsRemaining,
 	);
 
 	const availableTargets = $derived(state.availableTargets);
 	const selectedTarget = $derived(state.selectedTarget);
-	const isDisabled = $derived(state.isDisabled);
-	const canInterposeAndDefend = $derived(state.canInterposeAndDefend);
+	// Compute disabled state directly from props for proper reactivity
+	const isDisabled = $derived(inCombat && actionsRemaining <= 0);
+	const canInterposeAndDefend = $derived(!inCombat || actionsRemaining >= 2);
 	const { getTargetName, handleInterpose, handleInterposeAndDefend } = state;
 </script>
 
@@ -71,8 +71,8 @@
 			disabled={!canInterposeAndDefend}
 			onclick={handleInterposeAndDefend}
 		>
-			<i class="fa-solid fa-shield"></i>
 			<i class="fa-solid fa-people-arrows"></i>
+			<i class="fa-solid fa-shield"></i>
 			{localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm')}
 			<span class="reaction-panel__button-cost">
 				({localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.cost')})
