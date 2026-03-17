@@ -4,7 +4,6 @@ import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 export function createDefendPanelState(
 	getActor: () => NimbleCharacter,
 	getOnDeductAction: () => () => Promise<void>,
-	getInCombat: () => boolean,
 	getActionsRemaining: () => number,
 ) {
 	// Targeting state
@@ -19,10 +18,6 @@ export function createDefendPanelState(
 
 	const armorValue = $derived(getActor().reactive.system.attributes.armor.value ?? 0);
 
-	const isDisabled = $derived(!getInCombat() || getActionsRemaining() <= 0);
-
-	const canInterposeAndDefend = $derived(getInCombat() && getActionsRemaining() >= 2);
-
 	// Set up hook listener for target changes
 	$effect(() => {
 		const hookId = Hooks.on('targetToken', () => {
@@ -32,7 +27,7 @@ export function createDefendPanelState(
 	});
 
 	async function handleDefend(): Promise<void> {
-		if (!getInCombat() || getActionsRemaining() <= 0) return;
+		if (getActionsRemaining() <= 0) return;
 
 		await getOnDeductAction()();
 
@@ -57,7 +52,7 @@ export function createDefendPanelState(
 	}
 
 	async function handleInterposeAndDefend(): Promise<void> {
-		if (!getInCombat() || getActionsRemaining() < 2) return;
+		if (getActionsRemaining() < 2) return;
 
 		const actor = getActor();
 		const currentArmorValue = actor.reactive.system.attributes.armor.value ?? 0;
@@ -108,12 +103,6 @@ export function createDefendPanelState(
 		},
 		get armorValue() {
 			return armorValue;
-		},
-		get isDisabled() {
-			return isDisabled;
-		},
-		get canInterposeAndDefend() {
-			return canInterposeAndDefend;
 		},
 		getTargetName,
 		handleDefend,

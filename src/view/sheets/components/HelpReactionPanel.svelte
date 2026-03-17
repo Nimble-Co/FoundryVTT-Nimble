@@ -14,13 +14,13 @@
 	const state = createHelpPanelState(
 		() => actor,
 		() => onDeductAction,
-		() => inCombat,
 		() => actionsRemaining,
 	);
 
 	const availableTargets = $derived(state.availableTargets);
 	const selectedTarget = $derived(state.selectedTarget);
-	const isDisabled = $derived(state.isDisabled);
+	// Compute disabled state directly from props for proper reactivity
+	const isDisabled = $derived(inCombat && actionsRemaining <= 0);
 	const { getTargetName, handleHelp } = state;
 </script>
 

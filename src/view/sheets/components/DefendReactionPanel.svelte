@@ -14,15 +14,15 @@
 	const state = createDefendPanelState(
 		() => actor,
 		() => onDeductAction,
-		() => inCombat,
 		() => actionsRemaining,
 	);
 
 	const availableTargets = $derived(state.availableTargets);
 	const selectedTarget = $derived(state.selectedTarget);
 	const armorValue = $derived(state.armorValue);
-	const isDisabled = $derived(state.isDisabled);
-	const canInterposeAndDefend = $derived(state.canInterposeAndDefend);
+	// Compute disabled state directly from props for proper reactivity
+	const isDisabled = $derived(inCombat && actionsRemaining <= 0);
+	const canInterposeAndDefend = $derived(!inCombat || actionsRemaining >= 2);
 	const { getTargetName, handleDefend, handleInterposeAndDefend } = state;
 </script>
 
@@ -57,16 +57,19 @@
 		{localize('NIMBLE.ui.heroicActions.reactions.defend.confirm')}
 	</button>
 
-	<div class="reaction-panel__divider"></div>
-
 	<div class="reaction-panel__combined-section">
-		<div class="reaction-panel__combined-header">
-			<span class="reaction-panel__combined-cost">
-				<i class="fa-solid fa-bolt"></i>
-				<i class="fa-solid fa-bolt"></i>
-				{localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.cost')}
+		<button
+			class="reaction-panel__button reaction-panel__button--combined"
+			disabled={!canInterposeAndDefend}
+			onclick={handleInterposeAndDefend}
+		>
+			<i class="fa-solid fa-people-arrows"></i>
+			<i class="fa-solid fa-shield"></i>
+			{localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm')}
+			<span class="reaction-panel__button-cost">
+				({localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.cost')})
 			</span>
-		</div>
+		</button>
 
 		<TargetSelector
 			label="NIMBLE.ui.heroicActions.reactions.interpose.protecting"
@@ -78,16 +81,6 @@
 			targetBackground="var(--nimble-reaction-interpose-light)"
 			targetBorderColor="var(--nimble-reaction-interpose-accent)"
 		/>
-
-		<button
-			class="reaction-panel__button reaction-panel__button--combined"
-			disabled={!canInterposeAndDefend}
-			onclick={handleInterposeAndDefend}
-		>
-			<i class="fa-solid fa-shield"></i>
-			<i class="fa-solid fa-people-arrows"></i>
-			{localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm')}
-		</button>
 	</div>
 </section>
 
@@ -135,33 +128,15 @@
 		}
 	}
 
-	.reaction-panel__divider {
-		height: 1px;
-		background: var(--nimble-card-border-color);
-		margin: 0.25rem 0;
-	}
-
 	.reaction-panel__combined-section {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
 	}
 
-	.reaction-panel__combined-header {
-		display: flex;
-		align-items: center;
-	}
-
-	.reaction-panel__combined-cost {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
+	.reaction-panel__button-cost {
 		font-size: var(--nimble-xs-text);
-		font-weight: 600;
-		color: var(--nimble-medium-text-color);
-
-		i {
-			font-size: 0.625rem;
-		}
+		font-weight: 500;
+		opacity: 0.9;
 	}
 </style>
