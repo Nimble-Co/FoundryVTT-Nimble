@@ -78,3 +78,26 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Check circular dependencies
         run: pnpm circular-deps
+
+  migration-version:
+    name: Migration Version Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: Check migration count matches schema version
+        run: |
+          MIGRATION_COUNT=$(ls -1 src/migration/migrations/Migration*.ts 2>/dev/null | wc -l | tr -d ' ')
+          SCHEMA_VERSION=$(grep -E 'static LATEST_SCHEMA_VERSION\s*=' src/migration/MigrationRunnerBase.ts | grep -oE '[0-9]+')
+
+          echo "Migration files found: $MIGRATION_COUNT"
+          echo "LATEST_SCHEMA_VERSION: $SCHEMA_VERSION"
+
+          if [ "$MIGRATION_COUNT" != "$SCHEMA_VERSION" ]; then
+            echo ""
+            echo "ERROR: Migration count ($MIGRATION_COUNT) does not match LATEST_SCHEMA_VERSION ($SCHEMA_VERSION)"
+            echo "Please update LATEST_SCHEMA_VERSION in src/migration/MigrationRunnerBase.ts to $MIGRATION_COUNT"
+            exit 1
+          fi
+
+          echo "Migration version check passed!"
