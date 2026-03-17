@@ -74,17 +74,16 @@ export default async function ready() {
 	combatTrackerConfig.skipDefeated ??= true;
 	game.settings.set('core', 'combatTrackerConfig', combatTrackerConfig);
 
+	// Enable combat toggle visibility for GM/Assistant users via CSS
+	if (canUserToggleCombat()) {
+		document.body.classList.add('nimble-combat-toggle-enabled');
+	}
+
 	// Intercept the combat sidebar button to toggle combat for the scene
 	const combatSidebarButton = document.querySelector<HTMLElement>(
 		'#sidebar-tabs [data-tab="combat"]',
 	);
 	if (combatSidebarButton) {
-		// Hide the button for users who can't toggle combat
-		if (!canUserToggleCombat()) {
-			combatSidebarButton.style.display = 'none';
-			return;
-		}
-
 		combatSidebarButton.addEventListener(
 			'click',
 			async (event) => {
