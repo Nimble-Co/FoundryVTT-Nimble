@@ -103,7 +103,8 @@
 		},
 		"resources": [],
 		"weaponProficiencies": [
-			"Melee"
+			"Melee",
+			"Unarmed Strike"
 		]
 	},
 	"effects": [],

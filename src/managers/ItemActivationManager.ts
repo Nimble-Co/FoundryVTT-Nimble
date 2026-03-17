@@ -287,8 +287,17 @@ class ItemActivationManager {
 		const isConsumable = itemSystem.objectType === 'consumable';
 
 		// Get healing bonus from actor if applicable
-		const actorSystem = this.actor?.system as { healingPotionBonus?: number } | undefined;
+		const actorSystem = this.actor?.system as
+			| {
+					healingPotionBonus?: number;
+					meleeDamageBonus?: { value: number; damageType: string };
+			  }
+			| undefined;
 		const healingBonus = isConsumable ? (actorSystem?.healingPotionBonus ?? 0) : 0;
+
+		// Check if this is a melee attack and get melee damage bonus
+		const isMeleeAttack = this.activationData?.targets?.attackType === 'reach';
+		const meleeDamageBonus = isMeleeAttack ? (actorSystem?.meleeDamageBonus?.value ?? 0) : 0;
 
 		for (const node of flattenEffectsTree(effects)) {
 			if (node.type === 'damage' || node.type === 'healing') {
@@ -304,7 +313,12 @@ class ItemActivationManager {
 					node.rollMode = dialogData.rollMode ?? 0;
 
 					// Use modified formula if provided
-					const formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
+					let formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
+
+					// Apply melee damage bonus if applicable
+					if (meleeDamageBonus > 0) {
+						formula = `${formula} + ${meleeDamageBonus}`;
+					}
 
 					roll = new dependencies.DamageRoll(
 						formula,
