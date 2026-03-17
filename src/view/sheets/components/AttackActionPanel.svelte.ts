@@ -233,14 +233,6 @@ export function createAttackPanelState(
 							parentContext: 'hit',
 						},
 					],
-					criticalHit: [
-						{
-							id: 'unarmed-damage-crit',
-							type: 'damageOutcome',
-							parentNode: 'unarmed-damage',
-							parentContext: 'criticalHit',
-						},
-					],
 				},
 			},
 		];
