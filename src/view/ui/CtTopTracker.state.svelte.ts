@@ -51,6 +51,12 @@ import type {
 	TrackEntry,
 } from './ctTopTracker/types.js';
 
+interface ExpandedMonsterGroupBar {
+	key: string;
+	leftPx: number;
+	widthPx: number;
+}
+
 export function createCtTopTrackerState() {
 	const trackerStore = new CtTopTrackerStore();
 
@@ -588,6 +594,69 @@ export function createCtTopTrackerState() {
 			handleTrackKey && handleTrackKey === trackKey ? handleTrackKey : null;
 	}
 
+	function getTrackEntryElement(trackKey: string): HTMLElement | null {
+		if (!trackElement || !trackKey) return null;
+		return trackElement.querySelector<HTMLElement>(
+			`.nimble-ct__portrait[data-track-key='${trackKey}']`,
+		);
+	}
+
+	function getExpandedMonsterGroupTrackKeys(entries: TrackEntry[]): string[][] {
+		const groups: string[][] = [];
+		let currentGroupKeys: string[] = [];
+
+		function flushCurrentGroup(): void {
+			if (currentGroupKeys.length > 1) {
+				groups.push(currentGroupKeys);
+			}
+			currentGroupKeys = [];
+		}
+
+		for (const entry of entries) {
+			if (entry.kind === 'combatant' && isMonsterOrMinionCombatant(entry.combatant)) {
+				currentGroupKeys.push(entry.key);
+				continue;
+			}
+
+			flushCurrentGroup();
+		}
+
+		flushCurrentGroup();
+
+		return groups;
+	}
+
+	function updateExpandedMonsterGroupBars(): void {
+		if (!trackElement || !monsterCardsExpanded) {
+			expandedMonsterGroupBars = [];
+			return;
+		}
+
+		const nextBars: ExpandedMonsterGroupBar[] = [];
+		const visibleMonsterGroups = getExpandedMonsterGroupTrackKeys(virtualizedAliveEntries.entries);
+
+		for (const groupKeys of visibleMonsterGroups) {
+			const groupElements = groupKeys
+				.map((trackKey) => getTrackEntryElement(trackKey))
+				.filter((element): element is HTMLElement => Boolean(element));
+			if (groupElements.length < 1) continue;
+
+			const firstElement = groupElements[0];
+			const lastElement = groupElements[groupElements.length - 1];
+			if (!firstElement || !lastElement) continue;
+
+			const leftPx = firstElement.offsetLeft;
+			const rightPx = lastElement.offsetLeft + lastElement.offsetWidth;
+			nextBars.push({
+				key: `expanded-monster-group-${groupKeys[0]}-${groupKeys[groupKeys.length - 1]}`,
+				leftPx,
+				widthPx: Math.max(0, rightPx - leftPx),
+			});
+		}
+
+		expandedMonsterGroupBars = nextBars;
+	}
+
 	function updateTrackViewportMetrics(): void {
 		if (!trackElement) {
 			trackScrollLeft = 0;
@@ -1052,6 +1121,7 @@ export function createCtTopTrackerState() {
 	let scrollbarDragPointerId: number | null = $state(null);
 	let scrollbarDragOffsetPx = $state(0);
 	let pendingDropPreview: CombatantDropPreview | null = null;
+	let expandedMonsterGroupBars = $state<ExpandedMonsterGroupBar[]>([]);
 	const currentCombat = $derived(trackerStore.currentCombat);
 	const playerHpBarTextMode = $derived(trackerStore.playerHpBarTextMode);
 	const nonPlayerHpBarEnabled = $derived(trackerStore.nonPlayerHpBarEnabled);
@@ -1207,6 +1277,22 @@ export function createCtTopTrackerState() {
 			updateTrackViewportMetrics();
 		});
 	});
+
+	$effect(() => {
+		const visibleEntrySignature = virtualizedAliveEntries.entries
+			.map((entry) => entry.key)
+			.join('|');
+		const dragPreviewSignature = dragPreview
+			? `${dragPreview.sourceKey}:${dragPreview.targetKey}:${String(dragPreview.before)}`
+			: 'none';
+		trackDependency(visibleEntrySignature);
+		trackDependency(dragPreviewSignature);
+		trackDependency(activeEntryKey ?? 'none');
+		trackDependency(String(monsterCardsExpanded));
+		void tick().then(() => {
+			updateExpandedMonsterGroupBars();
+		});
+	});
 	return {
 		get trackElement() {
 			return trackElement;
@@ -1276,6 +1362,9 @@ export function createCtTopTrackerState() {
 		},
 		get virtualizedAliveEntries() {
 			return virtualizedAliveEntries;
+		},
+		get expandedMonsterGroupBars() {
+			return expandedMonsterGroupBars;
 		},
 		get roundSeparatorIndex() {
 			return roundSeparatorIndex;

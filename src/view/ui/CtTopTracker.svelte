@@ -44,6 +44,7 @@
 	let activeEntryKey = $derived(trackerViewState.activeEntryKey);
 	let canCurrentUserEndTurn = $derived(trackerViewState.canCurrentUserEndTurn);
 	let virtualizedAliveEntries = $derived(trackerViewState.virtualizedAliveEntries);
+	let expandedMonsterGroupBars = $derived(trackerViewState.expandedMonsterGroupBars);
 	let roundSeparatorIndex = $derived(trackerViewState.roundSeparatorIndex);
 	let combatStarted = $derived(trackerViewState.combatStarted);
 	let currentRoundLabel = $derived(trackerViewState.currentRoundLabel);
@@ -290,6 +291,15 @@
 					}}
 					onscroll={handleTrackScroll}
 				>
+					{#if expandedMonsterGroupBars.length > 0}
+						{#each expandedMonsterGroupBars as expandedMonsterGroupBar (expandedMonsterGroupBar.key)}
+							<li
+								class="nimble-ct__expanded-monster-group-bar"
+								aria-hidden="true"
+								style={`left: ${expandedMonsterGroupBar.leftPx}px; width: ${expandedMonsterGroupBar.widthPx}px;`}
+							></li>
+						{/each}
+					{/if}
 					{#if virtualizedAliveEntries.leadingWidthPx > 0}
 						<li
 							class="nimble-ct__virtual-spacer"
@@ -977,6 +987,7 @@
 		cursor: not-allowed;
 	}
 	.nimble-ct__viewport {
+		--nimble-ct-non-player-hp-bar-height: calc(1.18rem * var(--nimble-ct-card-scale, 1));
 		position: relative;
 		width: fit-content;
 		max-width: var(--nimble-ct-track-max-width);
@@ -984,6 +995,7 @@
 		pointer-events: none;
 	}
 	.nimble-ct__track {
+		position: relative;
 		pointer-events: none;
 		display: flex;
 		align-items: flex-start;
@@ -1016,6 +1028,16 @@
 		flex: 0 0 auto;
 		height: 0.1rem;
 		pointer-events: none;
+	}
+	.nimble-ct__expanded-monster-group-bar {
+		position: absolute;
+		top: 0;
+		height: 0.3rem;
+		box-sizing: border-box;
+		background: #8f0f0f;
+		border-radius: 0 0 0.18rem 0.18rem;
+		pointer-events: none;
+		z-index: 4;
 	}
 	.nimble-ct__portrait,
 	.nimble-ct__round-separator,
@@ -1203,7 +1225,6 @@
 		height: calc(9.4rem * var(--nimble-ct-card-scale, 1) + var(--nimble-ct-name-drawer-height));
 	}
 	.nimble-ct__portrait--non-player-hp-bar {
-		--nimble-ct-non-player-hp-bar-height: calc(1.18rem * var(--nimble-ct-card-scale, 1));
 		height: calc(
 			9.4rem * var(--nimble-ct-card-scale, 1) + var(--nimble-ct-non-player-hp-bar-height)
 		);
