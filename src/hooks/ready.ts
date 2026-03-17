@@ -4,10 +4,19 @@ import { MigrationList } from '../migration/MigrationList.js';
 import { MigrationRunner } from '../migration/MigrationRunner.js';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js';
+import localize from '../utils/localize.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
 import combatStateGuards from './combatStateGuards.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
+
+function canUserToggleCombat(): boolean {
+	const user = game.user;
+	if (!user) return false;
+	if (user.isGM) return true;
+	const assistantRoleValue = Number(CONST.USER_ROLES?.ASSISTANT ?? 3);
+	return (user.role ?? 0) >= assistantRoleValue;
+}
 
 let canvasConditionsPanelComponent: object | null = null;
 
@@ -77,6 +86,10 @@ export default async function ready() {
 				event.stopPropagation();
 				event.stopImmediatePropagation();
 
+				if (!canUserToggleCombat()) {
+					return;
+				}
+
 				const scene = canvas.scene;
 				if (!scene) {
 					ui.notifications?.warn('No active scene to create combat for.');
@@ -89,23 +102,25 @@ export default async function ready() {
 				);
 
 				if (existingCombat) {
-					// If combat hasn't started yet, just delete it
-					if ((existingCombat.round ?? 0) === 0) {
-						await existingCombat.delete();
-						return;
-					}
+					const hasCombatants = existingCombat.combatants.size > 0;
+					const hasStarted = (existingCombat.round ?? 0) > 0;
 
-					// If combat has started, show confirmation dialog
-					const confirmed = await foundry.applications.api.DialogV2.confirm({
-						window: { title: 'End Combat' },
-						content: '<p>End this combat encounter?</p>',
-						yes: { label: 'End Combat' },
-						no: { label: 'Continue Combat' },
-						rejectClose: false,
-						modal: true,
-					});
+					// Confirm before ending combat if there are combatants or combat has started
+					if (hasCombatants || hasStarted) {
+						const confirmed = await foundry.applications.api.DialogV2.confirm({
+							window: { title: localize('NIMBLE.combatControls.endCombatTitle') },
+							content: `<p>${localize('NIMBLE.combatControls.endCombatContent')}</p>`,
+							yes: { label: localize('NIMBLE.combatControls.endCombat') },
+							no: { label: localize('NIMBLE.combatControls.continueCombat') },
+							rejectClose: false,
+							modal: true,
+						});
 
-					if (confirmed === true) {
+						if (confirmed === true) {
+							await existingCombat.delete();
+						}
+					} else {
+						// No combatants and not started, delete without confirmation
 						await existingCombat.delete();
 					}
 				} else {
