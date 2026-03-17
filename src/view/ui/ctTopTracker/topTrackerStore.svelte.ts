@@ -7,18 +7,15 @@ import {
 	getCombatTrackerPlayerHpBarTextMode,
 	getCombatTrackerResourceDrawerHoverEnabled,
 } from '../../../settings/combatTrackerSettings.js';
-import {
-	canCurrentUserEndTurn as canCurrentUserEndCombatantTurn,
-	getCombatantCurrentActions,
-} from '../../../utils/combatTurnActions.js';
-import { canOwnerUseHeroicReaction, type HeroicReactionKey } from '../../../utils/heroicActions.js';
+import { canCurrentUserEndTurn as canCurrentUserEndCombatantTurn } from '../../../utils/combatTurnActions.js';
+import { getHeroicReactionUsageState } from '../../../utils/getHeroicReactionUsageState.js';
+import type { HeroicReactionKey } from '../../../utils/heroicActions.js';
 import {
 	buildAliveEntries,
 	buildCombatSyncSignature,
 	getActiveCombatant,
 	getActiveCombatantId,
 	getActiveCombatantOccurrence,
-	getCombatantId,
 	getCombatantsForScene,
 	getCombatForCurrentScene,
 	getRoundBoundaryKey,
@@ -338,9 +335,11 @@ export class CtTopTrackerStore {
 	): boolean {
 		if (game.user?.isGM) return true;
 		if (reactionActive === false) return false;
-		if (!isCombatStarted(this.currentCombat)) return false;
-		if ((this.currentCombat?.combatant?.id ?? null) === getCombatantId(combatant)) return false;
-		if (getCombatantCurrentActions(combatant) < 1) return false;
-		return canOwnerUseHeroicReaction(reactionKey) && Boolean(combatant.actor?.isOwner);
+		const usageState = getHeroicReactionUsageState({
+			combat: this.currentCombat,
+			combatant,
+			reactionKeys: [reactionKey],
+		});
+		return usageState.canUse;
 	}
 }

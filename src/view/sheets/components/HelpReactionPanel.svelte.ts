@@ -3,8 +3,8 @@ import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 
 export function createHelpPanelState(
 	getActor: () => NimbleCharacter,
-	getOnDeductAction: () => () => Promise<void>,
-	getActionsRemaining: () => number,
+	getReactionDisabled: () => boolean,
+	getOnUseReaction: () => () => Promise<boolean>,
 ) {
 	// Targeting state
 	let targetingVersion = $state(0);
@@ -25,9 +25,10 @@ export function createHelpPanelState(
 	});
 
 	async function handleHelp(): Promise<void> {
-		if (getActionsRemaining() <= 0) return;
+		if (getReactionDisabled()) return;
 
-		await getOnDeductAction()();
+		const reactionUsed = await getOnUseReaction()();
+		if (!reactionUsed) return;
 
 		const actor = getActor();
 		const targetUuids = availableTargets.map((t) => t.document.uuid);

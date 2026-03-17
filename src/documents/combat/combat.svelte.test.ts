@@ -983,6 +983,170 @@ describe('NimbleCombat', () => {
 		expect(helpingActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
+	it('uses a heroic reaction for sheet workflows and spends one action', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-sheet-defend-use';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: false,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const defendingCharacter = createMockCombatant({
+			id: 'defending-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 2,
+			actionsMax: 3,
+			actor: createCombatActorFixture({
+				hp: 8,
+				woundsValue: 0,
+				woundsMax: 6,
+				isOwner: true,
+			}),
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, defendingCharacter]),
+			turns: [activeCharacter, defendingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.useHeroicReactions('defending-character', ['defend']);
+
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'defending-character',
+				'system.actions.base.current': 1,
+				'system.actions.heroic.defendAvailable': false,
+			},
+		]);
+	});
+
+	it('uses combined heroic reactions for sheet workflows and spends two actions', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-sheet-interpose-defend-use';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: false,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const reactingCharacter = createMockCombatant({
+			id: 'reacting-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({
+				hp: 8,
+				woundsValue: 0,
+				woundsMax: 6,
+				isOwner: true,
+			}),
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, reactingCharacter]),
+			turns: [activeCharacter, reactingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.useHeroicReactions('reacting-character', ['interpose', 'defend']);
+
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'reacting-character',
+				'system.actions.base.current': 1,
+				'system.actions.heroic.interposeAvailable': false,
+				'system.actions.heroic.defendAvailable': false,
+			},
+		]);
+	});
+
+	it('blocks combined sheet heroic reaction use when one reaction is already spent', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-sheet-combined-reaction-spent';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: false,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const reactingCharacter = createMockCombatant({
+			id: 'reacting-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({
+				hp: 8,
+				woundsValue: 0,
+				woundsMax: 6,
+				isOwner: true,
+			}),
+			combatId,
+		});
+		foundry.utils.setProperty(reactingCharacter, 'system.actions.heroic.interposeAvailable', false);
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, reactingCharacter]),
+			turns: [activeCharacter, reactingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.useHeroicReactions('reacting-character', ['interpose', 'defend']);
+
+		expect(changed).toBe(false);
+		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
 	it('re-enables Defend without touching actor conditions', async () => {
 		const combatId = 'combat-defend-gm-reenable-clears-condition';
 		const activeCharacter = createMockCombatant({

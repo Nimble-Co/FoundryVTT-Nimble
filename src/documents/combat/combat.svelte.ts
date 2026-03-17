@@ -1,4 +1,5 @@
 import { createSubscriber } from 'svelte/reactivity';
+import { getHeroicReactionUsageState } from '../../utils/getHeroicReactionUsageState.js';
 import {
 	canOwnerUseHeroicReaction,
 	getHeroicReactionAvailability,
@@ -533,6 +534,42 @@ class NimbleCombat extends Combat {
 		}
 
 		return combatant.update(updates);
+	}
+
+	async useHeroicReactions(
+		combatantId: string,
+		reactionKeys: HeroicReactionKey[],
+	): Promise<boolean> {
+		if (!combatantId || reactionKeys.length < 1) return false;
+
+		const combatant = this.combatants.get(combatantId);
+		if (!combatant || combatant.parent?.id !== this.id) return false;
+		if (combatant.type !== 'character') return false;
+
+		const usageState = getHeroicReactionUsageState({
+			combat: this,
+			combatant,
+			reactionKeys,
+		});
+		if (!usageState.canUse) return false;
+
+		const reactionAvailabilityUpdate = {
+			_id: combatantId,
+			'system.actions.base.current': Math.max(
+				0,
+				usageState.currentActions - usageState.requiredActions,
+			),
+		} as Record<string, unknown>;
+
+		for (const reactionKey of usageState.reactionKeys) {
+			Object.assign(
+				reactionAvailabilityUpdate,
+				getHeroicReactionAvailabilityUpdate(reactionKey, false),
+			);
+		}
+
+		await this.updateEmbeddedDocuments('Combatant', [reactionAvailabilityUpdate]);
+		return true;
 	}
 
 	async toggleHeroicReactionAvailability(

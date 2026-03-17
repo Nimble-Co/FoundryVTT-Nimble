@@ -6,21 +6,19 @@
 
 	let {
 		actor,
-		inCombat = false,
-		actionsRemaining = 0,
-		onDeductAction = async () => {},
+		reactionDisabled = true,
+		onUseReaction = async () => false,
 	}: ReactionPanelProps = $props();
 
 	const state = createHelpPanelState(
 		() => actor,
-		() => onDeductAction,
-		() => actionsRemaining,
+		() => reactionDisabled,
+		() => onUseReaction,
 	);
 
 	const availableTargets = $derived(state.availableTargets);
 	const selectedTarget = $derived(state.selectedTarget);
-	// Compute disabled state directly from props for proper reactivity
-	const isDisabled = $derived(inCombat && actionsRemaining <= 0);
+	const isDisabled = $derived(reactionDisabled);
 	const { getTargetName, handleHelp } = state;
 </script>
 
