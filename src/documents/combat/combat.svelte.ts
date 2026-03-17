@@ -502,6 +502,7 @@ class NimbleCombat extends Combat {
 		if (combatant.type === 'character') {
 			await combatant.update({
 				'system.actions.base.current': getCombatantBaseActionMax(combatant),
+				...this.#buildHeroicReactionAvailabilityUpdate(true),
 			} as Record<string, unknown>);
 		}
 	}
@@ -680,7 +681,6 @@ class NimbleCombat extends Combat {
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
 		}
-		await this.#refreshCharacterHeroicReactions();
 		return result;
 	}
 

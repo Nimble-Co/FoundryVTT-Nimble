@@ -1315,7 +1315,7 @@ describe('NimbleCombat', () => {
 		expect(activeActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
 
-	it('refreshes all heroic reactions for characters when a new round starts', async () => {
+	it('does not refresh heroic reactions for characters when a new round starts', async () => {
 		const combatId = 'combat-heroic-reaction-round-refresh';
 		const characterOne = createMockCombatant({
 			id: 'character-one',
@@ -1369,25 +1369,7 @@ describe('NimbleCombat', () => {
 
 		await combat.nextRound();
 
-		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith(
-			'Combatant',
-			expect.arrayContaining([
-				expect.objectContaining({
-					_id: 'character-one',
-					'system.actions.heroic.defendAvailable': true,
-					'system.actions.heroic.interposeAvailable': true,
-					'system.actions.heroic.opportunityAttackAvailable': true,
-					'system.actions.heroic.helpAvailable': true,
-				}),
-				expect.objectContaining({
-					_id: 'character-two',
-					'system.actions.heroic.defendAvailable': true,
-					'system.actions.heroic.interposeAvailable': true,
-					'system.actions.heroic.opportunityAttackAvailable': true,
-					'system.actions.heroic.helpAvailable': true,
-				}),
-			]),
-		);
+		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
 		expect(
 			(
 				characterOne.actor as Actor.Implementation & {
@@ -1397,7 +1379,7 @@ describe('NimbleCombat', () => {
 		).not.toHaveBeenCalled();
 	});
 
-	it('resets actions at the end of the characters turn without touching reaction conditions', async () => {
+	it('resets actions and refreshes heroic reactions at the end of the characters turn without touching reaction conditions', async () => {
 		const defendingActor = createCombatActorFixture({
 			hp: 8,
 			woundsValue: 0,
@@ -1420,6 +1402,10 @@ describe('NimbleCombat', () => {
 			actionsMax: 3,
 			actor: defendingActor,
 		});
+		foundry.utils.setProperty(combatant, 'system.actions.heroic.defendAvailable', false);
+		foundry.utils.setProperty(combatant, 'system.actions.heroic.interposeAvailable', false);
+		foundry.utils.setProperty(combatant, 'system.actions.heroic.opportunityAttackAvailable', false);
+		foundry.utils.setProperty(combatant, 'system.actions.heroic.helpAvailable', false);
 		const combat = new NimbleCombat({
 			id: 'combat-end-turn-defending',
 			combatants: createCombatantsCollectionFixture([combatant]),
@@ -1429,6 +1415,10 @@ describe('NimbleCombat', () => {
 
 		expect(combatant.update).toHaveBeenCalledWith({
 			'system.actions.base.current': 3,
+			'system.actions.heroic.defendAvailable': true,
+			'system.actions.heroic.interposeAvailable': true,
+			'system.actions.heroic.opportunityAttackAvailable': true,
+			'system.actions.heroic.helpAvailable': true,
 		});
 		expect(defendingActor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
