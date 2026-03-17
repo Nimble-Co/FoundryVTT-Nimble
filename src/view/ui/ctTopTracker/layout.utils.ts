@@ -143,11 +143,11 @@ export function getDragTargetExpansionPx(): number {
 
 export function resolvePreviewBeforeState(
 	relative: number,
-	targetId: string,
+	targetKey: string,
 	dragPreview: CombatantDropPreview | null,
 ): boolean {
 	if (relative <= DRAG_SWITCH_UPPER_RATIO) return true;
 	if (relative >= DRAG_SWITCH_LOWER_RATIO) return false;
-	if (dragPreview?.targetId === targetId) return dragPreview.before;
+	if (dragPreview?.targetKey === targetKey) return dragPreview.before;
 	return relative < 0.5;
 }

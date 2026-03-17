@@ -31,9 +31,9 @@
 	let nonPlayerHpBarTextMode = $derived(trackerViewState.nonPlayerHpBarTextMode);
 	let resourceDrawerHoverEnabled = $derived(trackerViewState.resourceDrawerHoverEnabled);
 	let ctEnabled = $derived(trackerViewState.ctEnabled);
-	let activeDragSourceId = $derived(trackerViewState.activeDragSourceId);
+	let activeDragSourceKey = $derived(trackerViewState.activeDragSourceKey);
+	let activeDragSourceCombatantIds = $derived(trackerViewState.activeDragSourceCombatantIds);
 	let dragPreview = $derived(trackerViewState.dragPreview);
-	let sceneAllMonsterCombatants = $derived(trackerViewState.sceneAllMonsterCombatants);
 	let hasMonsterCombatants = $derived(trackerViewState.hasMonsterCombatants);
 	let canCurrentUserToggleMonsterCards = $derived(
 		trackerViewState.canCurrentUserToggleMonsterCards,
@@ -78,15 +78,16 @@
 	const handleTrackDragOver = trackerViewState.handleTrackDragOver;
 	const handleTrackDrop = trackerViewState.handleTrackDrop;
 	const handleTrackScroll = trackerViewState.handleTrackScroll;
-	const handleCombatantCardPointerDown = trackerViewState.handleCombatantCardPointerDown;
-	const handleCombatantCardDragStart = trackerViewState.handleCombatantCardDragStart;
-	const handleCombatantCardDragEnd = trackerViewState.handleCombatantCardDragEnd;
+	const handleTrackEntryPointerDown = trackerViewState.handleTrackEntryPointerDown;
+	const handleTrackEntryDragStart = trackerViewState.handleTrackEntryDragStart;
+	const handleTrackEntryDragEnd = trackerViewState.handleTrackEntryDragEnd;
 	const handleControlAction = trackerViewState.handleControlAction;
 	const handleTrackScrollbarKeyDown = trackerViewState.handleTrackScrollbarKeyDown;
 	const handleTrackScrollbarPointerDown = trackerViewState.handleTrackScrollbarPointerDown;
 	const handleTrackScrollbarPointerMove = trackerViewState.handleTrackScrollbarPointerMove;
 	const handleTrackScrollbarPointerRelease = trackerViewState.handleTrackScrollbarPointerRelease;
 	const canDragCombatant = trackerViewState.canDragCombatant;
+	const canDragTrackEntry = trackerViewState.canDragTrackEntry;
 </script>
 
 {#snippet renderNameDrawer(cardName)}
@@ -231,8 +232,12 @@
 					{#if hasMonsterCombatants && canCurrentUserToggleMonsterCards}
 						<button
 							class="nimble-ct__icon-button"
-							aria-label={monsterCardsExpanded ? 'Collapse Monsters' : 'Expand Monsters'}
-							data-tooltip={monsterCardsExpanded ? 'Collapse Monsters' : 'Expand Monsters'}
+							aria-label={monsterCardsExpanded
+								? localizeWithFallback('NIMBLE.ct.unstackMonsterGroups', 'Unstack Monster Groups')
+								: localizeWithFallback('NIMBLE.ct.stackMonsterGroups', 'Stack Monster Groups')}
+							data-tooltip={monsterCardsExpanded
+								? localizeWithFallback('NIMBLE.ct.unstackMonsterGroups', 'Unstack Monster Groups')
+								: localizeWithFallback('NIMBLE.ct.stackMonsterGroups', 'Stack Monster Groups')}
 							data-tooltip-direction="LEFT"
 							onclick={toggleMonsterCardExpansion}
 						>
@@ -274,8 +279,10 @@
 					bind:this={trackElement}
 					id="combatants"
 					data-nimble-combat-drop-target="true"
-					data-drag-source-id={activeDragSourceId ?? ''}
-					data-drop-target-id={dragPreview?.targetId ?? ''}
+					data-drag-source-key={activeDragSourceKey ?? ''}
+					data-drag-source-combatant-ids={activeDragSourceCombatantIds.join(',')}
+					data-drop-target-key={dragPreview?.targetKey ?? ''}
+					data-drop-target-combatant-ids={dragPreview?.targetCombatantIds.join(',') ?? ''}
 					data-drop-before={dragPreview ? String(dragPreview.before) : ''}
 					ondragover={handleTrackDragOver}
 					ondrop={(event) => {
@@ -300,7 +307,7 @@
 								>
 							</li>
 						{/if}
-						{#if entry.kind === 'combatant' && entry.combatant}
+						{#if entry.kind === 'combatant'}
 							{@const actionState = getActionState(entry.combatant)}
 							{@const combatantId = getCombatantId(entry.combatant)}
 							{@const isPlayerEntry = isPlayerCombatant(entry.combatant)}
@@ -331,19 +338,19 @@
 								class:nimble-ct__portrait--active={activeEntryKey === entry.key}
 								class:nimble-ct__portrait--dead={entry.combatant.defeated}
 								class:nimble-ct__portrait--draggable={canDragEntry}
-								class:nimble-ct__portrait--preview-gap-before={dragPreview?.targetId ===
-									combatantId && dragPreview.before}
-								class:nimble-ct__portrait--preview-gap-after={dragPreview?.targetId ===
-									combatantId && !dragPreview.before}
+								class:nimble-ct__portrait--preview-gap-before={dragPreview?.targetKey ===
+									entry.key && dragPreview.before}
+								class:nimble-ct__portrait--preview-gap-after={dragPreview?.targetKey ===
+									entry.key && !dragPreview.before}
 								data-track-key={entry.key}
 								data-combatant-id={combatantId}
 								style={isPlayerEntry && resourceDrawerData
 									? `--nimble-ct-resource-drawer-row-count: ${resourceDrawerData.rowCount};`
 									: undefined}
-								onpointerdown={(event) => handleCombatantCardPointerDown(event, combatantId)}
+								onpointerdown={(event) => handleTrackEntryPointerDown(event, entry.key)}
 								draggable={canDragEntry}
-								ondragstart={(event) => handleCombatantCardDragStart(event, entry.combatant)}
-								ondragend={handleCombatantCardDragEnd}
+								ondragstart={(event) => handleTrackEntryDragStart(event, entry)}
+								ondragend={handleTrackEntryDragEnd}
 							>
 								<div
 									class={`nimble-ct__portrait-card ${isPlayerEntry ? cardOutlineClass : ''}`}
@@ -363,7 +370,7 @@
 										<div
 											class="nimble-ct__drag-handle"
 											data-ct-drag-handle="true"
-											data-combatant-id={combatantId}
+											data-track-key={entry.key}
 										></div>
 									{/if}
 									{#if resourceChips.length > 0}
@@ -466,24 +473,41 @@
 									{@render renderNonPlayerFooter(cardName, nonPlayerHpBarData)}
 								{/if}
 							</li>
-						{:else}
+						{:else if entry.kind === 'monster-stack'}
+							{@const canDragEntry = canDragTrackEntry(entry)}
 							<li
 								class="nimble-ct__portrait nimble-ct__portrait--monster nimble-ct__portrait--name-drawer nimble-ct__portrait--outline-monster"
 								class:nimble-ct__portrait--active={activeEntryKey === entry.key}
+								class:nimble-ct__portrait--draggable={canDragEntry}
+								class:nimble-ct__portrait--preview-gap-before={dragPreview?.targetKey ===
+									entry.key && dragPreview.before}
+								class:nimble-ct__portrait--preview-gap-after={dragPreview?.targetKey ===
+									entry.key && !dragPreview.before}
 								data-track-key={entry.key}
+								onpointerdown={(event) => handleTrackEntryPointerDown(event, entry.key)}
+								draggable={canDragEntry}
+								ondragstart={(event) => handleTrackEntryDragStart(event, entry)}
+								ondragend={handleTrackEntryDragEnd}
 							>
 								<div
 									class="nimble-ct__portrait-card"
 									role="button"
 									tabindex="0"
-									onclick={handleMonsterStackClick}
-									oncontextmenu={handleMonsterStackContextMenu}
-									onkeydown={handleMonsterStackKeyDown}
+									onclick={(event) => handleMonsterStackClick(event, entry)}
+									oncontextmenu={(event) => handleMonsterStackContextMenu(event, entry)}
+									onkeydown={(event) => handleMonsterStackKeyDown(event, entry)}
 								>
+									{#if canDragEntry}
+										<div
+											class="nimble-ct__drag-handle"
+											data-ct-drag-handle="true"
+											data-track-key={entry.key}
+										></div>
+									{/if}
 									<span class="nimble-ct__monster-stack-icon" aria-hidden="true">
 										<i class="fa-solid fa-dragon"></i>
 									</span>
-									<span class="nimble-ct__badge">x{sceneAllMonsterCombatants.length}</span>
+									<span class="nimble-ct__badge">x{entry.combatants.length}</span>
 									{#if combatStarted && activeEntryKey === entry.key && canCurrentUserEndTurn}
 										<button
 											class="nimble-ct__end-turn-overlay"
@@ -975,7 +999,7 @@
 		overflow-y: hidden;
 		scrollbar-width: none;
 	}
-	.nimble-ct__track[data-drag-source-id]:not([data-drag-source-id='']) {
+	.nimble-ct__track[data-drag-source-key]:not([data-drag-source-key='']) {
 		pointer-events: auto;
 	}
 	.nimble-ct__track::-webkit-scrollbar {
@@ -1085,7 +1109,7 @@
 			box-shadow 140ms ease,
 			opacity 140ms ease;
 	}
-	.nimble-ct__track[data-drag-source-id]:not([data-drag-source-id='']) .nimble-ct__portrait {
+	.nimble-ct__track[data-drag-source-key]:not([data-drag-source-key='']) .nimble-ct__portrait {
 		transition:
 			width 140ms ease,
 			height 140ms ease,

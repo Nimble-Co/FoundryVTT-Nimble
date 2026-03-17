@@ -75,8 +75,12 @@ type MockCombatOptions = {
 };
 
 type DropEventOptions = {
-	sourceId: string;
-	targetId: string;
+	sourceId?: string;
+	targetId?: string;
+	sourceCombatantIds?: string[];
+	targetCombatantIds?: string[];
+	sourceKey?: string;
+	targetKey?: string;
 	before: boolean;
 };
 
@@ -155,12 +159,23 @@ export function createMockCombat({
 export function createCombatDropEvent({
 	sourceId,
 	targetId,
+	sourceCombatantIds,
+	targetCombatantIds,
+	sourceKey,
+	targetKey,
 	before,
 }: DropEventOptions): DragEvent & { target: EventTarget & HTMLElement } {
+	const normalizedSourceCombatantIds = sourceCombatantIds ?? (sourceId ? [sourceId] : []);
+	const normalizedTargetCombatantIds = targetCombatantIds ?? (targetId ? [targetId] : []);
+
 	const trackerListElement = {
 		dataset: {
-			dragSourceId: sourceId,
-			dropTargetId: targetId,
+			dragSourceId: sourceId ?? normalizedSourceCombatantIds[0] ?? '',
+			dragSourceCombatantIds: normalizedSourceCombatantIds.join(','),
+			dragSourceKey: sourceKey ?? '',
+			dropTargetId: targetId ?? normalizedTargetCombatantIds[0] ?? '',
+			dropTargetCombatantIds: normalizedTargetCombatantIds.join(','),
+			dropTargetKey: targetKey ?? '',
 			dropBefore: String(before),
 		},
 		querySelector: vi.fn(),

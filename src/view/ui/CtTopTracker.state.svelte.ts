@@ -17,6 +17,7 @@ import {
 	canCurrentUserRollInitiativeForCombatant,
 	getCombatantId,
 	getCombatantSceneId,
+	getTrackEntryCombatantIds,
 	isCombatRoundStarted,
 	isCombatStarted,
 	isEligibleForInitiativeRoll,
@@ -46,6 +47,8 @@ import type {
 	CombatWithDrop,
 	CombatWithHeroicReactionToggle,
 	CtWidthPreviewEventDetail,
+	MonsterStackTrackEntry,
+	TrackEntry,
 } from './ctTopTracker/types.js';
 
 export function createCtTopTrackerState() {
@@ -418,35 +421,48 @@ export function createCtTopTrackerState() {
 		void pingCombatantToken(combatant);
 	}
 
-	function resolveMonsterStackCombatant(): Combatant.Implementation | null {
+	function resolveMonsterStackCombatant(
+		entry: MonsterStackTrackEntry,
+	): Combatant.Implementation | null {
 		const activeMonsterCombatant =
 			currentCombat?.combatant && isMonsterOrMinionCombatant(currentCombat.combatant)
 				? currentCombat.combatant
 				: null;
-		const fallbackMonsterCombatant = sceneMonsterAliveCombatants[0] ?? sceneAllMonsterCombatants[0];
-		return activeMonsterCombatant ?? fallbackMonsterCombatant ?? null;
+		const activeMonsterCombatantId = getCombatantId(activeMonsterCombatant);
+		if (activeMonsterCombatantId) {
+			const entryActiveCombatant =
+				entry.combatants.find(
+					(combatant) => getCombatantId(combatant) === activeMonsterCombatantId,
+				) ?? null;
+			if (entryActiveCombatant) return entryActiveCombatant;
+		}
+
+		return entry.combatants[0] ?? null;
 	}
 
-	function handleMonsterStackClick(event: MouseEvent): void {
+	async function pingMonsterStackCombatants(entry: MonsterStackTrackEntry): Promise<void> {
+		await Promise.allSettled(entry.combatants.map((combatant) => pingCombatantToken(combatant)));
+	}
+
+	function handleMonsterStackClick(event: MouseEvent, entry: MonsterStackTrackEntry): void {
 		event.preventDefault();
 		event.stopPropagation();
-		const combatantToPan = resolveMonsterStackCombatant();
+		const combatantToPan = resolveMonsterStackCombatant(entry);
 		if (!combatantToPan) return;
 		void panCanvasToCombatant(combatantToPan);
 	}
 
-	function handleMonsterStackContextMenu(event: MouseEvent): void {
+	function handleMonsterStackContextMenu(event: MouseEvent, entry: MonsterStackTrackEntry): void {
 		event.preventDefault();
 		event.stopPropagation();
-		const combatantToPing = resolveMonsterStackCombatant();
-		if (!combatantToPing) return;
-		void pingCombatantToken(combatantToPing);
+		if (entry.combatants.length < 1) return;
+		void pingMonsterStackCombatants(entry);
 	}
 
-	function handleMonsterStackKeyDown(event: KeyboardEvent): void {
+	function handleMonsterStackKeyDown(event: KeyboardEvent, entry: MonsterStackTrackEntry): void {
 		if (event.target !== event.currentTarget) return;
 
-		const combatant = resolveMonsterStackCombatant();
+		const combatant = resolveMonsterStackCombatant(entry);
 		if (!combatant) return;
 
 		if (event.key === 'Enter' || event.key === ' ') {
@@ -460,7 +476,7 @@ export function createCtTopTrackerState() {
 
 		event.preventDefault();
 		event.stopPropagation();
-		void pingCombatantToken(combatant);
+		void pingMonsterStackCombatants(entry);
 	}
 
 	function handleTrackWheel(event: WheelEvent): void {
@@ -537,7 +553,8 @@ export function createCtTopTrackerState() {
 	function clearDropPreview(): void {
 		pendingDropPreview = null;
 		if (trackElement) {
-			delete trackElement.dataset.dropTargetId;
+			delete trackElement.dataset.dropTargetKey;
+			delete trackElement.dataset.dropTargetCombatantIds;
 			delete trackElement.dataset.dropBefore;
 		}
 		trackerStore.clearDropPreview();
@@ -546,27 +563,29 @@ export function createCtTopTrackerState() {
 	function clearDragState(): void {
 		pendingDropPreview = null;
 		if (trackElement) {
-			delete trackElement.dataset.dragSourceId;
-			delete trackElement.dataset.dropTargetId;
+			delete trackElement.dataset.dragSourceKey;
+			delete trackElement.dataset.dragSourceCombatantIds;
+			delete trackElement.dataset.dropTargetKey;
+			delete trackElement.dataset.dropTargetCombatantIds;
 			delete trackElement.dataset.dropBefore;
 		}
 		trackerStore.clearDragState();
 	}
 
-	function handleCombatantCardPointerDown(event: PointerEvent, combatantId: string): void {
+	function handleTrackEntryPointerDown(event: PointerEvent, trackKey: string): void {
 		const target = event.target;
 		if (!(target instanceof HTMLElement)) {
-			trackerStore.dragHandleArmedCombatantId = null;
+			trackerStore.dragHandleArmedEntryKey = null;
 			return;
 		}
 		const handle = target.closest<HTMLElement>('[data-ct-drag-handle="true"]');
 		if (!handle) {
-			trackerStore.dragHandleArmedCombatantId = null;
+			trackerStore.dragHandleArmedEntryKey = null;
 			return;
 		}
-		const handleCombatantId = handle.dataset.combatantId ?? '';
-		trackerStore.dragHandleArmedCombatantId =
-			handleCombatantId && handleCombatantId === combatantId ? handleCombatantId : null;
+		const handleTrackKey = handle.dataset.trackKey ?? '';
+		trackerStore.dragHandleArmedEntryKey =
+			handleTrackKey && handleTrackKey === trackKey ? handleTrackKey : null;
 	}
 
 	function updateTrackViewportMetrics(): void {
@@ -724,42 +743,48 @@ export function createCtTopTrackerState() {
 		return canCurrentUserReorderCombatant(combatant);
 	}
 
-	function getDragPreviewCandidates(source: Combatant.Implementation): Combatant.Implementation[] {
-		const sourceId = getCombatantId(source);
+	function canDragTrackEntry(entry: TrackEntry): boolean {
+		if (entry.kind === 'combatant') return canDragCombatant(entry.combatant);
+		return (
+			entry.combatants.length > 0 &&
+			entry.combatants.every((combatant) => canDragCombatant(combatant))
+		);
+	}
+
+	function getDragPreviewCandidates(sourceCombatantIds: string[]): TrackEntry[] {
+		const sourceCombatantIdSet = new Set(sourceCombatantIds);
 		const restrictToPlayers = !game.user?.isGM;
-		return sceneAliveCombatants.filter((combatant) => {
-			if (getCombatantId(combatant) === sourceId) return false;
-			if (isCombatantDead(combatant)) return false;
-			return !restrictToPlayers || isPlayerCombatant(combatant);
+		return orderedAliveEntries.filter((entry) => {
+			const entryCombatantIds = getTrackEntryCombatantIds(entry);
+			if (entryCombatantIds.length < 1) return false;
+			if (entryCombatantIds.some((combatantId) => sourceCombatantIdSet.has(combatantId))) {
+				return false;
+			}
+			if (!restrictToPlayers) return true;
+			return entry.kind === 'combatant' && isPlayerCombatant(entry.combatant);
 		});
 	}
 
-	function getCombatantTrackCardElement(combatantId: string): HTMLElement | null {
-		if (!trackElement || !combatantId) return null;
-		return trackElement.querySelector<HTMLElement>(
-			`.nimble-ct__portrait[data-combatant-id="${combatantId}"]`,
-		);
+	function getTrackEntryCardElement(trackKey: string): HTMLElement | null {
+		if (!trackElement || !trackKey) return null;
+		return trackElement.querySelector<HTMLElement>(`[data-track-key='${trackKey}']`);
 	}
 
 	function getPreviewTargetFromPointer(
 		clientX: number,
-		source: Combatant.Implementation,
-	): { target: Combatant.Implementation; before: boolean } | null {
+		sourceCombatantIds: string[],
+	): { targetEntry: TrackEntry; before: boolean } | null {
 		if (!trackElement) return null;
 
-		const candidates = getDragPreviewCandidates(source);
+		const candidates = getDragPreviewCandidates(sourceCombatantIds);
 		if (candidates.length < 1) return null;
 
 		const expansionPx = getDragTargetExpansionPx();
-		let bestMatch: { target: Combatant.Implementation; rect: DOMRect; targetId: string } | null =
-			null;
+		let bestMatch: { targetEntry: TrackEntry; rect: DOMRect } | null = null;
 		let bestDistance = Number.POSITIVE_INFINITY;
 
 		for (const candidate of candidates) {
-			const candidateId = getCombatantId(candidate);
-			if (!candidateId) continue;
-
-			const row = getCombatantTrackCardElement(candidateId);
+			const row = getTrackEntryCardElement(candidate.key);
 			if (!row) continue;
 
 			const rect = row.getBoundingClientRect();
@@ -775,7 +800,7 @@ export function createCtTopTrackerState() {
 
 			if (distance < bestDistance) {
 				bestDistance = distance;
-				bestMatch = { target: candidate, rect, targetId: candidateId };
+				bestMatch = { targetEntry: candidate, rect };
 			}
 		}
 
@@ -783,27 +808,32 @@ export function createCtTopTrackerState() {
 		const relative = (clientX - bestMatch.rect.left) / Math.max(1, bestMatch.rect.width);
 		const before = resolvePreviewBeforeState(
 			relative,
-			bestMatch.targetId,
+			bestMatch.targetEntry.key,
 			pendingDropPreview ?? dragPreview,
 		);
-		return { target: bestMatch.target, before };
+		return { targetEntry: bestMatch.targetEntry, before };
 	}
 
 	function getDragPreview(event: DragEvent): CombatantDropPreview | null {
 		if (!currentCombat) return null;
-		if (!activeDragSourceId) return null;
+		if (!activeDragSourceKey || activeDragSourceCombatantIds.length < 1) return null;
 
-		const source = currentCombat.combatants.get(activeDragSourceId);
-		if (!source?.id) return null;
-		if (source.parent?.id !== currentCombat.id) return null;
-		if (!canDragCombatant(source)) return null;
+		const sourceCombatants = activeDragSourceCombatantIds
+			.map((combatantId) => currentCombat.combatants.get(combatantId) ?? null)
+			.filter((combatant): combatant is Combatant.Implementation => Boolean(combatant));
+		if (sourceCombatants.length !== activeDragSourceCombatantIds.length) return null;
+		if (sourceCombatants.some((combatant) => combatant.parent?.id !== currentCombat.id))
+			return null;
+		if (!sourceCombatants.every((combatant) => canDragCombatant(combatant))) return null;
 
-		const pointerTarget = getPreviewTargetFromPointer(event.clientX, source);
-		if (!pointerTarget?.target.id) return null;
+		const pointerTarget = getPreviewTargetFromPointer(event.clientX, activeDragSourceCombatantIds);
+		if (!pointerTarget) return null;
 
 		return {
-			sourceId: source.id,
-			targetId: pointerTarget.target.id,
+			sourceKey: activeDragSourceKey,
+			sourceCombatantIds: [...activeDragSourceCombatantIds],
+			targetKey: pointerTarget.targetEntry.key,
+			targetCombatantIds: getTrackEntryCombatantIds(pointerTarget.targetEntry),
 			before: pointerTarget.before,
 		};
 	}
@@ -820,58 +850,76 @@ export function createCtTopTrackerState() {
 
 		pendingDropPreview = preview;
 		if (trackElement) {
-			trackElement.dataset.dropTargetId = preview.targetId;
+			trackElement.dataset.dropTargetKey = preview.targetKey;
+			trackElement.dataset.dropTargetCombatantIds = preview.targetCombatantIds.join(',');
 			trackElement.dataset.dropBefore = String(preview.before);
 		}
 
 		const isUnchanged =
-			dragPreview?.sourceId === preview.sourceId &&
-			dragPreview?.targetId === preview.targetId &&
+			dragPreview?.sourceKey === preview.sourceKey &&
+			dragPreview?.targetKey === preview.targetKey &&
+			dragPreview?.sourceCombatantIds.join(',') === preview.sourceCombatantIds.join(',') &&
+			dragPreview?.targetCombatantIds.join(',') === preview.targetCombatantIds.join(',') &&
 			dragPreview?.before === preview.before;
 		if (!isUnchanged) {
 			trackerStore.dragPreview = preview;
 		}
 	}
 
-	function handleCombatantCardDragStart(
-		event: DragEvent,
-		combatant: Combatant.Implementation,
-	): void {
-		if (!canDragCombatant(combatant)) {
+	function handleTrackEntryDragStart(event: DragEvent, entry: TrackEntry): void {
+		if (!canDragTrackEntry(entry)) {
 			event.preventDefault();
 			return;
 		}
 
-		const combat = (combatant.parent as Combat | null) ?? resolveActionCombat();
-		const combatantId = combatant.id ?? '';
-		if (!combat || !combatantId) {
+		const sourceCombatants = entry.kind === 'combatant' ? [entry.combatant] : [...entry.combatants];
+		const sourceCombatantIds = sourceCombatants
+			.map((combatant) => getCombatantId(combatant))
+			.filter((combatantId): combatantId is string => combatantId.length > 0);
+		const combat = (sourceCombatants[0]?.parent as Combat | null) ?? resolveActionCombat();
+		if (!combat || sourceCombatantIds.length !== sourceCombatants.length) {
 			event.preventDefault();
 			return;
 		}
-		if (dragHandleArmedCombatantId !== combatantId) {
+		if (dragHandleArmedEntryKey !== entry.key) {
 			event.preventDefault();
 			return;
 		}
 
-		const combatantDocument = combat.combatants.get(combatantId) ?? combatant;
-		trackerStore.activeDragSourceId = combatantDocument.id ?? null;
-		trackerStore.dragHandleArmedCombatantId = null;
+		const sourceDocuments = sourceCombatantIds
+			.map((combatantId) => combat.combatants.get(combatantId) ?? null)
+			.filter((combatant): combatant is Combatant.Implementation => Boolean(combatant));
+		if (sourceDocuments.length !== sourceCombatantIds.length) {
+			event.preventDefault();
+			return;
+		}
+
+		const primarySourceDocument = sourceDocuments[0];
+		if (!primarySourceDocument) {
+			event.preventDefault();
+			return;
+		}
+
+		trackerStore.activeDragSourceKey = entry.key;
+		trackerStore.activeDragSourceCombatantIds = [...sourceCombatantIds];
+		trackerStore.dragHandleArmedEntryKey = null;
 		clearDropPreview();
 		if (trackElement) {
-			trackElement.dataset.dragSourceId = combatantDocument.id ?? '';
+			trackElement.dataset.dragSourceKey = entry.key;
+			trackElement.dataset.dragSourceCombatantIds = sourceCombatantIds.join(',');
 		}
 
 		if (event.dataTransfer) {
 			event.dataTransfer.effectAllowed = 'move';
 			const dragData =
-				typeof combatantDocument.toDragData === 'function'
-					? combatantDocument.toDragData()
-					: { uuid: combatantDocument.uuid };
+				typeof primarySourceDocument.toDragData === 'function'
+					? primarySourceDocument.toDragData()
+					: { uuid: primarySourceDocument.uuid };
 			event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
 		}
 	}
 
-	function handleCombatantCardDragEnd(): void {
+	function handleTrackEntryDragEnd(): void {
 		clearDragState();
 	}
 
@@ -884,13 +932,15 @@ export function createCtTopTrackerState() {
 			return;
 		}
 		const dropPreview = pendingDropPreview ?? dragPreview ?? getDragPreview(event);
-		if (!activeDragSourceId || !dropPreview?.targetId) {
+		if (!activeDragSourceKey || !dropPreview?.targetKey) {
 			clearDragState();
 			return;
 		}
 
-		trackElement.dataset.dragSourceId = activeDragSourceId ?? '';
-		trackElement.dataset.dropTargetId = dropPreview.targetId;
+		trackElement.dataset.dragSourceKey = activeDragSourceKey;
+		trackElement.dataset.dragSourceCombatantIds = activeDragSourceCombatantIds.join(',');
+		trackElement.dataset.dropTargetKey = dropPreview.targetKey;
+		trackElement.dataset.dropTargetCombatantIds = dropPreview.targetCombatantIds.join(',');
 		trackElement.dataset.dropBefore = String(dropPreview.before);
 
 		try {
@@ -907,8 +957,10 @@ export function createCtTopTrackerState() {
 			await combat._onDrop(dropEvent);
 			updateCurrentCombat(true);
 		} finally {
-			delete trackElement.dataset.dragSourceId;
-			delete trackElement.dataset.dropTargetId;
+			delete trackElement.dataset.dragSourceKey;
+			delete trackElement.dataset.dragSourceCombatantIds;
+			delete trackElement.dataset.dropTargetKey;
+			delete trackElement.dataset.dropTargetCombatantIds;
 			delete trackElement.dataset.dropBefore;
 			clearDragState();
 		}
@@ -1001,16 +1053,15 @@ export function createCtTopTrackerState() {
 	let scrollbarDragOffsetPx = $state(0);
 	let pendingDropPreview: CombatantDropPreview | null = null;
 	const currentCombat = $derived(trackerStore.currentCombat);
-	const sceneAliveCombatants = $derived(trackerStore.sceneAliveCombatants);
 	const playerHpBarTextMode = $derived(trackerStore.playerHpBarTextMode);
 	const nonPlayerHpBarEnabled = $derived(trackerStore.nonPlayerHpBarEnabled);
 	const nonPlayerHpBarTextMode = $derived(trackerStore.nonPlayerHpBarTextMode);
 	const resourceDrawerHoverEnabled = $derived(trackerStore.resourceDrawerHoverEnabled);
 	const ctEnabled = $derived(trackerStore.ctEnabled);
-	const activeDragSourceId = $derived(trackerStore.activeDragSourceId);
-	const dragHandleArmedCombatantId = $derived(trackerStore.dragHandleArmedCombatantId);
+	const activeDragSourceKey = $derived(trackerStore.activeDragSourceKey);
+	const activeDragSourceCombatantIds = $derived(trackerStore.activeDragSourceCombatantIds);
+	const dragHandleArmedEntryKey = $derived(trackerStore.dragHandleArmedEntryKey);
 	const dragPreview = $derived(trackerStore.dragPreview);
-	const sceneMonsterAliveCombatants = $derived(trackerStore.sceneMonsterAliveCombatants);
 	const sceneAllMonsterCombatants = $derived(trackerStore.sceneAllMonsterCombatants);
 	const hasMonsterCombatants = $derived(trackerStore.hasMonsterCombatants);
 	const canCurrentUserToggleMonsterCards = $derived(trackerStore.canCurrentUserToggleMonsterCards);
@@ -1190,8 +1241,11 @@ export function createCtTopTrackerState() {
 		get ctEnabled() {
 			return ctEnabled;
 		},
-		get activeDragSourceId() {
-			return activeDragSourceId;
+		get activeDragSourceKey() {
+			return activeDragSourceKey;
+		},
+		get activeDragSourceCombatantIds() {
+			return activeDragSourceCombatantIds;
 		},
 		get dragPreview() {
 			return dragPreview;
@@ -1268,14 +1322,15 @@ export function createCtTopTrackerState() {
 		handleTrackDragOver,
 		handleTrackDrop,
 		handleTrackScroll,
-		handleCombatantCardPointerDown,
-		handleCombatantCardDragStart,
-		handleCombatantCardDragEnd,
+		handleTrackEntryPointerDown,
+		handleTrackEntryDragStart,
+		handleTrackEntryDragEnd,
 		handleControlAction,
 		handleTrackScrollbarKeyDown,
 		handleTrackScrollbarPointerDown,
 		handleTrackScrollbarPointerMove,
 		handleTrackScrollbarPointerRelease,
 		canDragCombatant,
+		canDragTrackEntry,
 	};
 }

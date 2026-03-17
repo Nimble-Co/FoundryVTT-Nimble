@@ -64,7 +64,9 @@ export interface TurnIdentity {
 
 export interface DropResolution {
 	source: Combatant.Implementation;
+	sourceCombatants: Combatant.Implementation[];
 	target: Combatant.Implementation;
+	targetCombatantIds: string[];
 	siblings: Combatant.Implementation[];
 	sortBefore: boolean;
 	previousActiveTurnIdentity: TurnIdentity | null;
@@ -72,6 +74,7 @@ export interface DropResolution {
 
 export interface DropTargetResolution {
 	target: Combatant.Implementation;
+	targetCombatantIds: string[];
 	sortBefore: boolean;
 }
 

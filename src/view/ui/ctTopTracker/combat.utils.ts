@@ -315,25 +315,73 @@ export function isEligibleForInitiativeRoll(combatant: Combatant.Implementation)
 }
 
 export function getTrackEntryCombatantId(entry: TrackEntry): string {
-	return getCombatantId(entry.combatant);
+	if (entry.kind === 'combatant') return getCombatantId(entry.combatant);
+	return getCombatantId(entry.combatants[0]);
+}
+
+export function getTrackEntryCombatantIds(entry: TrackEntry): string[] {
+	if (entry.kind === 'combatant') {
+		const combatantId = getCombatantId(entry.combatant);
+		return combatantId ? [combatantId] : [];
+	}
+
+	return entry.combatants
+		.map((combatant) => getCombatantId(combatant))
+		.filter((combatantId): combatantId is string => combatantId.length > 0);
+}
+
+function createMonsterStackEntry(
+	combatants: Combatant.Implementation[],
+	stackIndex: number,
+): TrackEntry | null {
+	if (combatants.length < 1) return null;
+	const firstCombatantId = getCombatantId(combatants[0]) || `group-${stackIndex}`;
+	return {
+		key: `monster-stack-${firstCombatantId}-${stackIndex}`,
+		kind: 'monster-stack',
+		combatants,
+	};
+}
+
+function findTrackEntryContainingCombatantId(
+	aliveEntries: TrackEntry[],
+	combatantId: string,
+): TrackEntry | null {
+	return (
+		aliveEntries.find((entry) => getTrackEntryCombatantIds(entry).includes(combatantId)) ?? null
+	);
 }
 
 export function buildAliveEntries(
 	combatants: Combatant.Implementation[],
 	collapseMonsters: boolean,
-	includeMonsterStack: boolean,
 ): TrackEntry[] {
 	const entries: TrackEntry[] = [];
 	const occurrenceByCombatantId = new Map<string, number>();
-	let stackInserted = false;
+	let pendingMonsterStack: Combatant.Implementation[] = [];
+	let monsterStackIndex = 0;
+
+	function flushPendingMonsterStack(): void {
+		if (!collapseMonsters) {
+			pendingMonsterStack = [];
+			return;
+		}
+
+		const stackEntry = createMonsterStackEntry(pendingMonsterStack, monsterStackIndex);
+		pendingMonsterStack = [];
+		if (!stackEntry) return;
+		entries.push(stackEntry);
+		monsterStackIndex += 1;
+	}
+
 	for (const combatant of combatants) {
 		if (collapseMonsters && isMonsterOrMinionCombatant(combatant)) {
-			if (!stackInserted) {
-				entries.push({ key: 'monster-stack', kind: 'monster-stack' });
-				stackInserted = true;
-			}
+			pendingMonsterStack.push(combatant);
 			continue;
 		}
+
+		flushPendingMonsterStack();
+
 		const combatantId = getCombatantId(combatant);
 		const occurrence = occurrenceByCombatantId.get(combatantId) ?? 0;
 		occurrenceByCombatantId.set(combatantId, occurrence + 1);
@@ -346,9 +394,7 @@ export function buildAliveEntries(
 		});
 	}
 
-	if (collapseMonsters && includeMonsterStack && !stackInserted) {
-		entries.push({ key: 'monster-stack', kind: 'monster-stack' });
-	}
+	flushPendingMonsterStack();
 	return entries;
 }
 
@@ -384,15 +430,12 @@ export function getActiveCombatantOccurrence(
 }
 
 export function resolveActiveEntryKey(params: ResolveActiveEntryKeyParams): string | null {
-	const { activeCombatantId, activeOccurrence, aliveEntries, collapseMonsters, monsterCombatants } =
-		params;
+	const { activeCombatantId, activeOccurrence, aliveEntries, collapseMonsters } = params;
 	if (!activeCombatantId) return aliveEntries[0]?.key ?? null;
 
-	if (
-		collapseMonsters &&
-		monsterCombatants.some((combatant) => getCombatantId(combatant) === activeCombatantId)
-	) {
-		return 'monster-stack';
+	if (collapseMonsters) {
+		const monsterStackEntry = findTrackEntryContainingCombatantId(aliveEntries, activeCombatantId);
+		if (monsterStackEntry?.kind === 'monster-stack') return monsterStackEntry.key;
 	}
 
 	if (activeOccurrence !== null) {
@@ -433,6 +476,7 @@ export function findRoundBoundaryIndex(sceneAliveCombatants: Combatant.Implement
 
 export function getRoundBoundaryKey(
 	sceneAliveCombatants: Combatant.Implementation[],
+	aliveEntries: TrackEntry[],
 	collapseMonsters: boolean,
 ): string | null {
 	const boundaryIndex = findRoundBoundaryIndex(sceneAliveCombatants);
@@ -442,7 +486,14 @@ export function getRoundBoundaryKey(
 	if (!lastCurrentRoundCombatant) return null;
 
 	if (collapseMonsters && isMonsterOrMinionCombatant(lastCurrentRoundCombatant)) {
-		return 'monster-stack';
+		const boundaryCombatantId = getCombatantId(lastCurrentRoundCombatant);
+		if (!boundaryCombatantId) return null;
+		const monsterStackEntry = findTrackEntryContainingCombatantId(
+			aliveEntries,
+			boundaryCombatantId,
+		);
+		if (monsterStackEntry?.kind === 'monster-stack') return monsterStackEntry.key;
+		return null;
 	}
 
 	const combatantId = getCombatantId(lastCurrentRoundCombatant);

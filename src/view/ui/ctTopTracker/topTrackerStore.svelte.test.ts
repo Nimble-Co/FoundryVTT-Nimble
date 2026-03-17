@@ -208,7 +208,7 @@ describe('CtTopTrackerStore', () => {
 
 		expect(store.canCurrentUserToggleMonsterCards).toBe(false);
 		expect(store.monsterCardsExpanded).toBe(false);
-		expect(store.aliveEntries.map((entry) => entry.key)).toContain('monster-stack');
+		expect(store.aliveEntries.some((entry) => entry.kind === 'monster-stack')).toBe(true);
 
 		(
 			combat.flags as { nimble: { ctPlayersCanViewExpandedMonsters: boolean } }
@@ -217,6 +217,107 @@ describe('CtTopTrackerStore', () => {
 
 		expect(store.monsterCardsExpanded).toBe(true);
 		expect(store.aliveEntries.map((entry) => entry.key)).toContain('combatant-monster-one-0');
+	});
+
+	it('builds separate collapsed stacks for each contiguous monster run', () => {
+		const playerOne = createCombatantFixture({
+			id: 'player-one',
+			type: 'character',
+			actor: createCombatActorFixture({ type: 'character' }),
+			sceneId: 'scene-1',
+		});
+		(playerOne as unknown as { visible: boolean }).visible = true;
+		const monsterOne = createCombatantFixture({
+			id: 'monster-one',
+			type: 'npc',
+			actor: createCombatActorFixture({ type: 'npc' }),
+			sceneId: 'scene-1',
+		});
+		(monsterOne as unknown as { visible: boolean }).visible = true;
+		const monsterTwo = createCombatantFixture({
+			id: 'monster-two',
+			type: 'npc',
+			actor: createCombatActorFixture({ type: 'npc' }),
+			sceneId: 'scene-1',
+		});
+		(monsterTwo as unknown as { visible: boolean }).visible = true;
+		const playerTwo = createCombatantFixture({
+			id: 'player-two',
+			type: 'character',
+			actor: createCombatActorFixture({ type: 'character' }),
+			sceneId: 'scene-1',
+		});
+		(playerTwo as unknown as { visible: boolean }).visible = true;
+		const monsterThree = createCombatantFixture({
+			id: 'monster-three',
+			type: 'npc',
+			actor: createCombatActorFixture({ type: 'npc' }),
+			sceneId: 'scene-1',
+		});
+		(monsterThree as unknown as { visible: boolean }).visible = true;
+
+		const turns = [
+			playerOne,
+			monsterOne,
+			monsterTwo,
+			playerTwo,
+			monsterThree,
+		] as Combatant.Implementation[];
+		const combat = {
+			id: 'combat-store-multi-stack',
+			active: true,
+			round: 1,
+			turn: 0,
+			combatant: playerOne,
+			combatants: createCombatantsCollectionFixture([
+				playerOne,
+				monsterOne,
+				monsterTwo,
+				playerTwo,
+				monsterThree,
+			]),
+			turns,
+			setupTurns: vi.fn(() => turns),
+			scene: { id: 'scene-1' },
+			flags: {
+				nimble: {
+					ctMonsterCardsExpanded: false,
+					ctPlayersCanViewExpandedMonsters: false,
+				},
+			},
+		} as unknown as Combat;
+
+		const globals = globalThis as unknown as {
+			game: {
+				combats: { contents: Combat[]; viewed?: Combat | null };
+				combat?: Combat | null;
+			};
+		};
+		globals.game.combats = {
+			contents: [combat],
+			viewed: combat,
+		};
+		globals.game.combat = combat;
+
+		const store = new CtTopTrackerStore();
+		store.refreshCurrentCombat(true);
+
+		expect(store.aliveEntries.map((entry) => entry.kind)).toEqual([
+			'combatant',
+			'monster-stack',
+			'combatant',
+			'monster-stack',
+		]);
+		expect(
+			store.aliveEntries
+				.filter(
+					(
+						entry,
+					): entry is Extract<(typeof store.aliveEntries)[number], { kind: 'monster-stack' }> =>
+						entry.kind === 'monster-stack',
+				)
+				.map((entry) => entry.combatants.length),
+		).toEqual([2, 1]);
 	});
 
 	it('updates the shared monster expansion flag when the GM toggles expansion', async () => {

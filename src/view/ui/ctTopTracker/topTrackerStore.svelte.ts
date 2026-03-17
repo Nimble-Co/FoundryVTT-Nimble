@@ -91,9 +91,11 @@ export class CtTopTrackerStore {
 
 	layoutVersion = $state(0);
 
-	activeDragSourceId = $state<string | null>(null);
+	activeDragSourceKey = $state<string | null>(null);
 
-	dragHandleArmedCombatantId = $state<string | null>(null);
+	activeDragSourceCombatantIds = $state<string[]>([]);
+
+	dragHandleArmedEntryKey = $state<string | null>(null);
 
 	dragPreview = $state<CombatantDropPreview | null>(null);
 
@@ -137,11 +139,7 @@ export class CtTopTrackerStore {
 	);
 
 	aliveEntries = $derived.by(() =>
-		buildAliveEntries(
-			this.sceneAliveCombatants,
-			this.shouldCollapseMonsterCards,
-			this.hasMonsterCombatants,
-		),
+		buildAliveEntries(this.sceneAliveCombatants, this.shouldCollapseMonsterCards),
 	);
 
 	activeCombatantId = $derived.by(() => {
@@ -165,7 +163,6 @@ export class CtTopTrackerStore {
 			activeOccurrence,
 			aliveEntries: this.aliveEntries,
 			collapseMonsters: this.shouldCollapseMonsterCards,
-			monsterCombatants: this.sceneAllMonsterCombatants,
 		});
 	});
 
@@ -174,7 +171,11 @@ export class CtTopTrackerStore {
 	);
 
 	roundBoundaryKey = $derived.by(() =>
-		getRoundBoundaryKey(this.sceneAliveCombatants, this.shouldCollapseMonsterCards),
+		getRoundBoundaryKey(
+			this.sceneAliveCombatants,
+			this.aliveEntries,
+			this.shouldCollapseMonsterCards,
+		),
 	);
 
 	roundSeparatorIndex = $derived.by(() =>
@@ -265,8 +266,9 @@ export class CtTopTrackerStore {
 	}
 
 	clearDragState(): void {
-		this.activeDragSourceId = null;
-		this.dragHandleArmedCombatantId = null;
+		this.activeDragSourceKey = null;
+		this.activeDragSourceCombatantIds = [];
+		this.dragHandleArmedEntryKey = null;
 		this.dragPreview = null;
 	}
 

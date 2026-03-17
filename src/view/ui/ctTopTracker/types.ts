@@ -8,15 +8,25 @@ export interface SceneCombatantLists {
 	deadCombatants: Combatant.Implementation[];
 }
 
-export interface TrackEntry {
+export interface CombatantTrackEntry {
 	key: string;
-	kind: 'combatant' | 'monster-stack';
-	combatant?: Combatant.Implementation;
+	kind: 'combatant';
+	combatant: Combatant.Implementation;
 }
 
+export interface MonsterStackTrackEntry {
+	key: string;
+	kind: 'monster-stack';
+	combatants: Combatant.Implementation[];
+}
+
+export type TrackEntry = CombatantTrackEntry | MonsterStackTrackEntry;
+
 export interface CombatantDropPreview {
-	sourceId: string;
-	targetId: string;
+	sourceKey: string;
+	sourceCombatantIds: string[];
+	targetKey: string;
+	targetCombatantIds: string[];
 	before: boolean;
 }
 
@@ -100,7 +110,6 @@ export interface ResolveActiveEntryKeyParams {
 	activeOccurrence: number | null;
 	aliveEntries: TrackEntry[];
 	collapseMonsters: boolean;
-	monsterCombatants: Combatant.Implementation[];
 }
 
 export interface BuildVirtualizedAliveEntriesParams {

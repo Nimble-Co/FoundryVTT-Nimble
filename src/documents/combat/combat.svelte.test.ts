@@ -2172,6 +2172,142 @@ describe('NimbleCombat', () => {
 		expect(siblings.map((combatant) => combatant.id)).toEqual(['target-npc']);
 	});
 
+	it('moves a collapsed monster stack as one block in real turn order', async () => {
+		globals().game.user.isGM = true;
+		const combatId = 'combat-drop-gm-stack-block';
+		const playerOne = createMockCombatant({
+			id: 'player-one',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 15,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const sourceOne = createMockCombatant({
+			id: 'source-one',
+			type: 'npc',
+			sort: 2,
+			isOwner: false,
+			initiative: 12,
+			actor: createCombatActorFixture({ hp: 10 }),
+			combatId,
+		});
+		const sourceTwo = createMockCombatant({
+			id: 'source-two',
+			type: 'npc',
+			sort: 3,
+			isOwner: false,
+			initiative: 11,
+			actor: createCombatActorFixture({ hp: 10 }),
+			combatId,
+		});
+		const activePlayer = createMockCombatant({
+			id: 'active-player',
+			type: 'character',
+			sort: 4,
+			isOwner: true,
+			initiative: 10,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const targetOne = createMockCombatant({
+			id: 'target-one',
+			type: 'npc',
+			sort: 5,
+			isOwner: false,
+			initiative: 9,
+			actor: createCombatActorFixture({ hp: 10 }),
+			combatId,
+		});
+		const targetTwo = createMockCombatant({
+			id: 'target-two',
+			type: 'npc',
+			sort: 6,
+			isOwner: false,
+			initiative: 8,
+			actor: createCombatActorFixture({ hp: 10 }),
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([
+				playerOne,
+				sourceOne,
+				sourceTwo,
+				activePlayer,
+				targetOne,
+				targetTwo,
+			]),
+			turns: [playerOne, sourceOne, sourceTwo, activePlayer, targetOne, targetTwo],
+			turn: 3,
+			combatant: activePlayer,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+		};
+
+		combat.setupTurns = vi.fn(() =>
+			[...combat.combatants.contents].sort((a, b) => combat._sortCombatants(a, b)),
+		);
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(
+				async (_documentName: string, updates: Array<Record<string, unknown>>) => {
+					for (const update of updates) {
+						const id = update._id as string | undefined;
+						if (!id) continue;
+						const combatant = combat.combatants.get(id);
+						if (!combatant) continue;
+						const sort = update['system.sort'];
+						if (typeof sort === 'number') {
+							foundry.utils.setProperty(combatant, 'system.sort', sort);
+						}
+					}
+					return updates as unknown as Combatant.Implementation[];
+				},
+			);
+		combat.update = vi.fn().mockImplementation(async (updateData: Record<string, unknown>) => {
+			for (const [path, value] of Object.entries(updateData)) {
+				if (path.includes('.')) {
+					foundry.utils.setProperty(combat, path, value);
+					continue;
+				}
+				(combat as unknown as Record<string, unknown>)[path] = value;
+			}
+			return combat;
+		});
+
+		const dropEvent = createCombatDropEvent({
+			sourceCombatantIds: ['source-one', 'source-two'],
+			targetCombatantIds: ['target-one', 'target-two'],
+			sourceKey: 'monster-stack-source-0',
+			targetKey: 'monster-stack-target-1',
+			before: false,
+		});
+
+		await combat._onDrop(dropEvent);
+
+		expect(globals().SortingHelpers.performIntegerSort).not.toHaveBeenCalled();
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{ _id: 'player-one', 'system.sort': 1 },
+			{ _id: 'active-player', 'system.sort': 2 },
+			{ _id: 'target-one', 'system.sort': 3 },
+			{ _id: 'target-two', 'system.sort': 4 },
+			{ _id: 'source-one', 'system.sort': 5 },
+			{ _id: 'source-two', 'system.sort': 6 },
+		]);
+		expect(combat.turns.map((combatant) => combatant.id)).toEqual([
+			'player-one',
+			'active-player',
+			'target-one',
+			'target-two',
+			'source-one',
+			'source-two',
+		]);
+		expect(combat.turn).toBe(1);
+	});
+
 	it('keeps the same active combatant when GM reorders cards mid-round', async () => {
 		globals().game.user.isGM = true;
 		const combatId = 'combat-drop-gm-preserve-active';
