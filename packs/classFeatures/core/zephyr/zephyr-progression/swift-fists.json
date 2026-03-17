@@ -6,14 +6,7 @@
 	"system": {
 		"macro": "",
 		"identifier": "swift-fists",
-		"rules": [
-			{
-				"id": "swift-fists-unarmed-damage",
-				"type": "unarmedDamage",
-				"label": "Swift Fists",
-				"value": "1d4 + @abilities.strength.mod"
-			}
-		],
+		"rules": [],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -40,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Your unarmed strikes are not subject to disadvantage imposed by Rushed Attacks (see pg. 13 of the Core Rules), and their damage is 1d4+STR.</p>",
+		"description": "<p>Your unarmed strikes are not subject to disadvantage imposed by Rushed Attacks (see pg. 13 of the Core Rules).</p>",
 		"featureType": "class",
 		"class": "zephyr",
 		"group": "zephyr-progression",
