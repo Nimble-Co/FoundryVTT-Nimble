@@ -39,13 +39,13 @@ export function getActiveCombatForCurrentScene(): Combat | null {
 	if (!sceneId) return null;
 
 	const activeCombat = game.combat;
-	if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
+	if (activeCombat?.scene?.id === sceneId && (activeCombat.active || activeCombat.started)) {
 		syncCombatTurns(activeCombat);
 		return activeCombat;
 	}
 
 	const activeByScene = game.combats?.contents?.find(
-		(combat) => combat?.active && combat.scene?.id === sceneId,
+		(combat) => combat?.scene?.id === sceneId && (combat.active || combat.started),
 	);
 	if (activeByScene) {
 		syncCombatTurns(activeByScene);
@@ -53,7 +53,7 @@ export function getActiveCombatForCurrentScene(): Combat | null {
 	}
 
 	const viewedCombat = game.combats?.viewed ?? null;
-	if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
+	if (viewedCombat?.scene?.id === sceneId && (viewedCombat.active || viewedCombat.started)) {
 		syncCombatTurns(viewedCombat);
 		return viewedCombat;
 	}
