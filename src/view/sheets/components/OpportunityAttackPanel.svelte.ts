@@ -40,7 +40,7 @@ export function createOpportunityAttackPanelState(
 
 	const selectedTarget = $derived(availableTargets.length === 1 ? availableTargets[0] : null);
 
-	const isDisabled = $derived(!getInCombat() || getActionsRemaining() <= 0);
+	const isDisabled = $derived(getInCombat() && getActionsRemaining() <= 0);
 
 	// Set up hook listener for target changes
 	$effect(() => {
