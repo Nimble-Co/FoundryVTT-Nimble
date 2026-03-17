@@ -77,18 +77,21 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		const sceneId = canvas?.scene?.id;
 		if (!sceneId) return null;
 
+		// Check game.combat first (the currently viewed combat)
 		const activeCombat = game.combat;
-		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
+		if (activeCombat?.scene?.id === sceneId && (activeCombat.active || activeCombat.started)) {
 			return activeCombat;
 		}
 
-		const activeByScene = game.combats?.contents?.find(
-			(combat) => combat?.active && combat.scene?.id === sceneId,
+		// Find any combat for this scene that is active or started
+		const combatForScene = game.combats?.contents?.find(
+			(combat) => combat?.scene?.id === sceneId && (combat.active || combat.started),
 		);
-		if (activeByScene) return activeByScene;
+		if (combatForScene) return combatForScene;
 
+		// Check viewed combat as fallback
 		const viewedCombat = game.combats?.viewed ?? null;
-		if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
+		if (viewedCombat?.scene?.id === sceneId && (viewedCombat.active || viewedCombat.started)) {
 			return viewedCombat;
 		}
 
