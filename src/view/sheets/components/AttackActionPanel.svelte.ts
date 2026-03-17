@@ -157,8 +157,18 @@ export function createAttackPanelState(
 	}
 
 	async function handleUnarmedStrike(): Promise<void> {
-		const rollFormula = getUnarmedDamageFormula(getActor());
-		const canCrit = hasUnarmedProficiency(getActor()); // Only characters proficient with unarmed (e.g., Zephyr with Swift Fists) can crit
+		const actor = getActor();
+		let rollFormula = getUnarmedDamageFormula(actor);
+		const canCrit = hasUnarmedProficiency(actor); // Only characters proficient with unarmed (e.g., Zephyr with Swift Fists) can crit
+
+		// Apply melee damage bonus (e.g., Reverberating Strikes)
+		const actorSystem = actor.system as {
+			meleeDamageBonus?: { value: number; damageType: string };
+		};
+		const meleeDamageBonus = actorSystem.meleeDamageBonus?.value ?? 0;
+		if (meleeDamageBonus > 0) {
+			rollFormula = `${rollFormula} + ${meleeDamageBonus}`;
+		}
 
 		const unarmedItem = {
 			name: localize('NIMBLE.ui.heroicActions.unarmedStrike'),
