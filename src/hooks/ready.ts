@@ -79,16 +79,18 @@ export default async function ready() {
 		'#sidebar-tabs [data-tab="combat"]',
 	);
 	if (combatSidebarButton) {
+		// Hide the button for users who can't toggle combat
+		if (!canUserToggleCombat()) {
+			combatSidebarButton.style.display = 'none';
+			return;
+		}
+
 		combatSidebarButton.addEventListener(
 			'click',
 			async (event) => {
 				event.preventDefault();
 				event.stopPropagation();
 				event.stopImmediatePropagation();
-
-				if (!canUserToggleCombat()) {
-					return;
-				}
 
 				const scene = canvas.scene;
 				if (!scene) {
