@@ -19,9 +19,9 @@ export function createInterposePanelState(
 
 	const armorValue = $derived(getActor().reactive.system.attributes.armor.value ?? 0);
 
-	const isDisabled = $derived(getInCombat() && getActionsRemaining() <= 0);
+	const isDisabled = $derived(!getInCombat() || getActionsRemaining() <= 0);
 
-	const canInterposeAndDefend = $derived(!getInCombat() || getActionsRemaining() >= 2);
+	const canInterposeAndDefend = $derived(getInCombat() && getActionsRemaining() >= 2);
 
 	// Set up hook listener for target changes
 	$effect(() => {
