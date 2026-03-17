@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Your unarmed strikes are not subject to disadvantage imposed by Rushed Attacks (see pg. 13 of the Core Rules), and can score critical hits.</p>",
+		"description": "<p>Your unarmed strikes are not subject to disadvantage imposed by Rushed Attacks (see pg. 13 of the Core Rules).</p>",
 		"featureType": "class",
 		"class": "zephyr",
 		"group": "zephyr-progression",
