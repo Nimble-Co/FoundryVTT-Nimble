@@ -1,6 +1,8 @@
 import {
+	getNcswEnabled,
 	getPersistedNcswSidebarViewMode,
 	isNcswSidebarViewModeSettingRegistered,
+	NCSW_ENABLED_SETTING_CHANGED_EVENT_NAME,
 	type NcswSidebarViewMode,
 	setPersistedNcswSidebarViewMode,
 } from '../settings/ncswSettings.js';
@@ -8,12 +10,12 @@ import {
 	flattenActivationEffects,
 	getUnsupportedActivationEffectTypes,
 } from '../utils/activationEffects.js';
+import { getCombatantImage } from '../utils/combatantImage.js';
 import {
 	consumeCombatantAction,
 	getCombatantCurrentActions,
 	maybeAdvanceTurnForCombatant,
 } from '../utils/combatTurnActions.js';
-import { getCombatantImage } from '../utils/combatantImage.js';
 import { isCombatantDead } from '../utils/isCombatantDead.js';
 import {
 	createMinionGroupAttackSelectionState,
@@ -222,6 +224,10 @@ function isNcswSidebarModeActive(): boolean {
 export function getNcswSidebarViewMode(): NcswSidebarViewMode {
 	ensureNcswSidebarViewModeInitialized();
 	return ncswSidebarViewMode;
+}
+
+export function hideNcswPanel(): void {
+	hideGroupAttackPanel();
 }
 
 export function setNcswSidebarViewMode(mode: NcswSidebarViewMode): void {
@@ -1091,6 +1097,12 @@ function bindActionSelectDescriptionPopover(options: {
 function getGroupAttackPanelElement(): HTMLDivElement {
 	if (minionGroupAttackPanelElement && document.body.contains(minionGroupAttackPanelElement)) {
 		return minionGroupAttackPanelElement;
+	}
+
+	const existingElement = document.getElementById(NCSW_PANEL_ID) as HTMLDivElement | null;
+	if (existingElement) {
+		minionGroupAttackPanelElement = existingElement;
+		return existingElement;
 	}
 
 	const element = document.createElement('div');
@@ -2242,6 +2254,7 @@ async function executeNonMinionAttackRoll(
 
 function canUseNcswPanel(context: SelectionContext): boolean {
 	return (
+		getNcswEnabled() &&
 		Boolean(game.user?.isGM) &&
 		Boolean(canvas?.ready) &&
 		isNcswCombatStateEnabled(context.combat) &&
@@ -2411,6 +2424,7 @@ function resolveNcswSceneToggleOrder(tools: SceneControlToolLike[]): number {
 }
 
 function isNcswSceneToggleVisible(): boolean {
+	if (!getNcswEnabled()) return false;
 	const combat = getCombatForNcswSceneToggleVisibility();
 	return Boolean(game.user?.isGM) && isNcswCombatStateEnabled(combat);
 }
@@ -2981,6 +2995,11 @@ export default function registerMinionGroupTokenActions(): void {
 		}
 	};
 	window.addEventListener('resize', windowResizeHandler);
+
+	window.addEventListener(NCSW_ENABLED_SETTING_CHANGED_EVENT_NAME, () => {
+		hideGroupAttackPanel();
+		scheduleSceneControlsRefresh('ncsw-setting-disabled');
+	});
 
 	const refreshActionBarAndSceneControls = (source: string): void => {
 		scheduleActionBarRefresh(source);
