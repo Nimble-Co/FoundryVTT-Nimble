@@ -535,6 +535,9 @@
 							</li>
 						{/if}
 					{/each}
+					{#if orderedAliveEntries.length === 0 && renderedDeadCombatants.length === 0}
+						<li class="nimble-ct__empty-state">No combatants added</li>
+					{/if}
 					{#if combatStarted && orderedAliveEntries.length > 0 && roundSeparatorIndex < 0}
 						<li class="nimble-ct__round-separator" data-tooltip="Current Round">
 							<span class="nimble-ct__round-separator-line"></span>
@@ -2233,6 +2236,22 @@
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
 		color: hsl(0 0% 79%);
+	}
+	.nimble-ct__empty-state {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: calc(7.5rem * var(--nimble-ct-card-scale, 1));
+		height: calc(11.2rem * var(--nimble-ct-card-scale, 1));
+		padding-inline: 0.5rem;
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 0.36rem;
+		background: var(--nimble-combat-tracker-background);
+		font-size: calc(0.7rem * var(--nimble-ct-card-scale, 1));
+		font-weight: 500;
+		letter-spacing: 0.02em;
+		text-align: center;
+		color: var(--nimble-medium-text-color);
 	}
 	.nimble-ct__round-separator {
 		display: inline-flex;
