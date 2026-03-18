@@ -311,7 +311,7 @@ export async function applyGmSort(params: {
 
 	// Perform the sort with full integer normalization for GM reorders.
 	type SortableCombatant = Combatant.Implementation & { id: string };
-	const sortUpdates = SortingHelpers.performIntegerSort(
+	const sortUpdates = foundry.utils.performIntegerSort(
 		params.dropResolution.source as SortableCombatant,
 		{
 			target: params.dropResolution.target as SortableCombatant | null,

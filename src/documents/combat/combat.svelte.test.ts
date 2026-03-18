@@ -16,6 +16,14 @@ function globals() {
 	return getTestGlobals<NimbleCombatDocumentTestGlobals>();
 }
 
+type FoundryUtilsWithPerformIntegerSort = {
+	performIntegerSort: ReturnType<typeof vi.fn>;
+};
+
+function foundryUtils(): FoundryUtilsWithPerformIntegerSort {
+	return globals().foundry.utils as unknown as FoundryUtilsWithPerformIntegerSort;
+}
+
 describe('NimbleCombat', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -36,9 +44,7 @@ describe('NimbleCombat', () => {
 			}),
 		};
 		globals().fromUuidSync = vi.fn().mockReturnValue(null);
-		globals().SortingHelpers = {
-			performIntegerSort: vi.fn(),
-		};
+		foundryUtils().performIntegerSort = vi.fn();
 
 		const combatPrototype = globals().Combat.prototype;
 		combatPrototype.startCombat = vi.fn(async function (this: Combat) {
@@ -2253,7 +2259,7 @@ describe('NimbleCombat', () => {
 		};
 
 		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
-		globals().SortingHelpers.performIntegerSort.mockReturnValue([
+		foundryUtils().performIntegerSort.mockReturnValue([
 			{ target: source, update: { 'system.sort': 3 } },
 			{ target: target, update: { 'system.sort': 4 } },
 		]);
@@ -2266,7 +2272,7 @@ describe('NimbleCombat', () => {
 
 		await combat._onDrop(dropEvent);
 
-		expect(globals().SortingHelpers.performIntegerSort).toHaveBeenCalled();
+		expect(foundryUtils().performIntegerSort).toHaveBeenCalled();
 		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
 			{
 				_id: 'source-character',
@@ -2318,7 +2324,7 @@ describe('NimbleCombat', () => {
 		};
 
 		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
-		globals().SortingHelpers.performIntegerSort.mockReturnValue([
+		foundryUtils().performIntegerSort.mockReturnValue([
 			{ target: source, update: { 'system.sort': 3 } },
 			{ target: target, update: { 'system.sort': 4 } },
 		]);
@@ -2331,7 +2337,7 @@ describe('NimbleCombat', () => {
 
 		await combat._onDrop(dropEvent);
 
-		const siblings = globals().SortingHelpers.performIntegerSort.mock.calls[0]?.[1]
+		const siblings = foundryUtils().performIntegerSort.mock.calls[0]?.[1]
 			?.siblings as Combatant.Implementation[];
 		expect(siblings.map((combatant) => combatant.id)).toEqual(['target-npc']);
 	});
@@ -2452,7 +2458,7 @@ describe('NimbleCombat', () => {
 
 		await combat._onDrop(dropEvent);
 
-		expect(globals().SortingHelpers.performIntegerSort).not.toHaveBeenCalled();
+		expect(foundryUtils().performIntegerSort).not.toHaveBeenCalled();
 		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
 			{ _id: 'player-one', 'system.sort': 1 },
 			{ _id: 'active-player', 'system.sort': 2 },
@@ -2548,7 +2554,7 @@ describe('NimbleCombat', () => {
 			return combat;
 		});
 
-		globals().SortingHelpers.performIntegerSort.mockReturnValue([
+		foundryUtils().performIntegerSort.mockReturnValue([
 			{ target: source, update: { 'system.sort': 4 } },
 			{ target: active, update: { 'system.sort': 1 } },
 			{ target: target, update: { 'system.sort': 2 } },

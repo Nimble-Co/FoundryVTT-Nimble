@@ -175,12 +175,49 @@ export function createCtTopTrackerState() {
 		updateTrackViewportMetrics();
 	}
 
-	function updateCurrentCombat(force = false): void {
+	let expandedMonsterGroupBarsUpdateFrameId: number | null = null;
+
+	function requestTrackAnimationFrame(callback: FrameRequestCallback): number {
+		if (typeof globalThis.requestAnimationFrame === 'function') {
+			return globalThis.requestAnimationFrame(callback);
+		}
+		return globalThis.setTimeout(() => callback(performance.now()), 0) as unknown as number;
+	}
+
+	function clearExpandedMonsterGroupBarsUpdateFrame(): void {
+		if (expandedMonsterGroupBarsUpdateFrameId === null) return;
+		const cancelFrame = globalThis.cancelAnimationFrame ?? globalThis.clearTimeout;
+		cancelFrame(expandedMonsterGroupBarsUpdateFrameId);
+		expandedMonsterGroupBarsUpdateFrameId = null;
+	}
+
+	function scheduleExpandedMonsterGroupBarsUpdate(): void {
+		clearExpandedMonsterGroupBarsUpdateFrame();
+		void tick().then(() => {
+			expandedMonsterGroupBarsUpdateFrameId = requestTrackAnimationFrame(() => {
+				expandedMonsterGroupBarsUpdateFrameId = null;
+				updateExpandedMonsterGroupBars();
+			});
+		});
+	}
+
+	function updateCurrentCombat(force = false, onRefreshed?: () => void): void {
 		queueMicrotask(() => {
-			if (!trackerStore.refreshCurrentCombat(force)) return;
+			if (!trackerStore.refreshCurrentCombat(force)) {
+				onRefreshed?.();
+				return;
+			}
 			queueMicrotask(() => {
 				updateTrackViewportMetrics();
+				scheduleExpandedMonsterGroupBarsUpdate();
+				onRefreshed?.();
 			});
+		});
+	}
+
+	function updateCurrentCombatAsync(force = false): Promise<void> {
+		return new Promise((resolve) => {
+			updateCurrentCombat(force, resolve);
 		});
 	}
 
@@ -566,16 +603,19 @@ export function createCtTopTrackerState() {
 		trackerStore.clearDropPreview();
 	}
 
-	function clearDragState(): void {
-		pendingDropPreview = null;
+	function clearDragSourceState(): void {
 		if (trackElement) {
 			delete trackElement.dataset.dragSourceKey;
 			delete trackElement.dataset.dragSourceCombatantIds;
-			delete trackElement.dataset.dropTargetKey;
-			delete trackElement.dataset.dropTargetCombatantIds;
-			delete trackElement.dataset.dropBefore;
 		}
-		trackerStore.clearDragState();
+		trackerStore.activeDragSourceKey = null;
+		trackerStore.activeDragSourceCombatantIds = [];
+		trackerStore.dragHandleArmedEntryKey = null;
+	}
+
+	function clearDragState(): void {
+		clearDropPreview();
+		clearDragSourceState();
 	}
 
 	function handleTrackEntryPointerDown(event: PointerEvent, trackKey: string): void {
@@ -1024,7 +1064,16 @@ export function createCtTopTrackerState() {
 				y: event.y,
 			} as unknown as DragEvent & { target: EventTarget & HTMLElement };
 			await combat._onDrop(dropEvent);
-			updateCurrentCombat(true);
+			clearDropPreview();
+			await tick();
+			await updateCurrentCombatAsync(true);
+			await tick();
+			await new Promise<void>((resolve) => {
+				requestTrackAnimationFrame(() => {
+					updateExpandedMonsterGroupBars();
+					resolve();
+				});
+			});
 		} finally {
 			delete trackElement.dataset.dragSourceKey;
 			delete trackElement.dataset.dragSourceCombatantIds;
@@ -1242,6 +1291,7 @@ export function createCtTopTrackerState() {
 	});
 
 	onDestroy(() => {
+		clearExpandedMonsterGroupBarsUpdateFrame();
 		if (resizeListener) window.removeEventListener('resize', resizeListener);
 		if (trackWheelListener) {
 			window.removeEventListener('wheel', trackWheelListener, { capture: true });
@@ -1286,12 +1336,13 @@ export function createCtTopTrackerState() {
 			? `${dragPreview.sourceKey}:${dragPreview.targetKey}:${String(dragPreview.before)}`
 			: 'none';
 		trackDependency(visibleEntrySignature);
+		trackDependency(trackerStore.renderVersion);
+		trackDependency(virtualizedAliveEntries.leadingWidthPx);
+		trackDependency(trackerStore.layoutVersion);
 		trackDependency(dragPreviewSignature);
 		trackDependency(activeEntryKey ?? 'none');
 		trackDependency(String(monsterCardsExpanded));
-		void tick().then(() => {
-			updateExpandedMonsterGroupBars();
-		});
+		scheduleExpandedMonsterGroupBarsUpdate();
 	});
 	return {
 		get trackElement() {
