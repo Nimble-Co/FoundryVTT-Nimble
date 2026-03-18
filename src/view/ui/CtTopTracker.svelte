@@ -792,6 +792,7 @@
 		justify-content: center;
 		z-index: 30;
 		pointer-events: none;
+		overflow: visible;
 	}
 	.nimble-ct__width-preview {
 		position: absolute;
@@ -869,6 +870,7 @@
 		/* Extend hover/focus activation zone slightly past side control bars. */
 		padding-inline: var(--nimble-ct-hover-hitbox-inline);
 		margin-inline: calc(var(--nimble-ct-hover-hitbox-inline) * -1);
+		overflow: visible;
 	}
 	.nimble-ct__controls {
 		position: relative;
@@ -993,6 +995,7 @@
 		max-width: var(--nimble-ct-track-max-width);
 		min-width: 0;
 		pointer-events: none;
+		overflow: visible;
 	}
 	.nimble-ct__track {
 		position: relative;
@@ -1002,13 +1005,13 @@
 		justify-content: flex-start;
 		gap: 0.28rem;
 		margin: 0;
-		padding: 0 0.45rem 0;
+		padding: 0 0.45rem 2rem;
 		list-style: none;
 		width: fit-content;
 		max-width: var(--nimble-ct-track-max-width);
 		min-width: 0;
 		overflow-x: auto;
-		overflow-y: hidden;
+		overflow-y: visible;
 		scrollbar-width: none;
 	}
 	.nimble-ct__track[data-drag-source-key]:not([data-drag-source-key='']) {
@@ -1121,7 +1124,7 @@
 		border: 1px solid color-mix(in srgb, hsl(0 0% 96%) 38%, transparent);
 		border-top-width: 0;
 		border-radius: 0 0 0.36rem 0.36rem;
-		overflow: hidden;
+		overflow: visible;
 		background: color-mix(in srgb, hsl(226 26% 8%) 90%, transparent);
 		transition:
 			width 140ms ease,
@@ -1145,6 +1148,8 @@
 		width: 100%;
 		height: 100%;
 		z-index: 2;
+		overflow: hidden;
+		border-radius: 0 0 0.36rem 0.36rem;
 	}
 	.nimble-ct__portrait--outline-player {
 		--nimble-ct-outline-border-color: color-mix(in srgb, hsl(212 92% 72%) 82%, white 18%);
