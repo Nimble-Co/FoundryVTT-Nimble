@@ -673,6 +673,7 @@ export function createCtTopTrackerState() {
 		}
 
 		const nextBars: ExpandedMonsterGroupBar[] = [];
+		const trackRect = trackElement.getBoundingClientRect();
 		const visibleMonsterGroups = getExpandedMonsterGroupTrackKeys(virtualizedAliveEntries.entries);
 
 		for (const groupKeys of visibleMonsterGroups) {
@@ -685,8 +686,10 @@ export function createCtTopTrackerState() {
 			const lastElement = groupElements[groupElements.length - 1];
 			if (!firstElement || !lastElement) continue;
 
-			const leftPx = firstElement.offsetLeft;
-			const rightPx = lastElement.offsetLeft + lastElement.offsetWidth;
+			const firstElementRect = firstElement.getBoundingClientRect();
+			const lastElementRect = lastElement.getBoundingClientRect();
+			const leftPx = firstElementRect.left - trackRect.left + trackElement.scrollLeft;
+			const rightPx = lastElementRect.right - trackRect.left + trackElement.scrollLeft;
 			nextBars.push({
 				key: `expanded-monster-group-${groupKeys[0]}-${groupKeys[groupKeys.length - 1]}`,
 				leftPx,
@@ -1220,6 +1223,7 @@ export function createCtTopTrackerState() {
 	let ctWidthPreviewListener: ((event: Event) => void) | undefined;
 	let ctCardSizePreviewListener: ((event: Event) => void) | undefined;
 	let ctClientSettingUpdatedListener: ((event: Event) => void) | undefined;
+	let trackMutationObserver: MutationObserver | undefined;
 	let trackWheelListener: ((event: WheelEvent) => void) | undefined;
 	let trackHoverListener: ((event: MouseEvent) => void) | undefined;
 
@@ -1233,6 +1237,12 @@ export function createCtTopTrackerState() {
 		if (patch.shouldCenterActiveEntry) {
 			void centerActiveEntryInView(trackerStore.activeEntryKey, 'auto');
 		}
+	}
+
+	function disconnectTrackMutationObserver(): void {
+		if (!trackMutationObserver) return;
+		trackMutationObserver.disconnect();
+		trackMutationObserver = undefined;
 	}
 
 	onMount(() => {
@@ -1292,6 +1302,7 @@ export function createCtTopTrackerState() {
 
 	onDestroy(() => {
 		clearExpandedMonsterGroupBarsUpdateFrame();
+		disconnectTrackMutationObserver();
 		if (resizeListener) window.removeEventListener('resize', resizeListener);
 		if (trackWheelListener) {
 			window.removeEventListener('wheel', trackWheelListener, { capture: true });
@@ -1326,6 +1337,26 @@ export function createCtTopTrackerState() {
 		void tick().then(() => {
 			updateTrackViewportMetrics();
 		});
+	});
+
+	$effect(() => {
+		disconnectTrackMutationObserver();
+		if (!trackElement || typeof MutationObserver === 'undefined') return;
+
+		trackMutationObserver = new MutationObserver(() => {
+			updateTrackViewportMetrics();
+			scheduleExpandedMonsterGroupBarsUpdate();
+		});
+		trackMutationObserver.observe(trackElement, {
+			attributeFilter: ['class', 'style', 'data-track-key'],
+			attributes: true,
+			childList: true,
+			subtree: true,
+		});
+
+		return () => {
+			disconnectTrackMutationObserver();
+		};
 	});
 
 	$effect(() => {
