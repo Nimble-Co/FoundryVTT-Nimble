@@ -219,6 +219,107 @@ describe('DamageRoll preprocessing', () => {
 	});
 });
 
+describe('DamageRoll vicious weapon preprocessing', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it('should not add explosion modifier when isVicious is true', () => {
+		const roll = new DamageRoll(
+			'1d6',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: true,
+			},
+		);
+
+		// Vicious weapons should NOT have 'x' modifier - they handle explosion manually
+		expect(roll.formula).toBe('1d6');
+		expect(roll.primaryDie).toBeDefined();
+	});
+
+	it('should add explosion modifier when isVicious is false (default)', () => {
+		const roll = new DamageRoll(
+			'1d6',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: false,
+			},
+		);
+
+		// Non-vicious weapons should have 'x' modifier for automatic explosion
+		expect(roll.formula).toBe('1d6x');
+		expect(roll.primaryDie).toBeDefined();
+	});
+
+	it('should apply advantage to vicious primary die without explosion modifier', () => {
+		const roll = new DamageRoll(
+			'2d6',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 1,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: true,
+			},
+		);
+
+		// Should have advantage modifier but no explosion modifier
+		expect(roll.formula).toBe('2d6kh + 1d6');
+		expect(roll.primaryDie).toBeDefined();
+		expect(roll.primaryDie?.number).toBe(2);
+	});
+
+	it('should pass isVicious flag to primary die options', () => {
+		const roll = new DamageRoll(
+			'1d6',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: true,
+			},
+		);
+
+		expect(roll.primaryDie).toBeDefined();
+		expect(roll.primaryDie?.options.isVicious).toBe(true);
+	});
+
+	it('should not add isVicious to primary die when isVicious is false', () => {
+		const roll = new DamageRoll(
+			'1d6',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: false,
+			},
+		);
+
+		expect(roll.primaryDie).toBeDefined();
+		// isVicious should be undefined or false (not explicitly true)
+		expect(roll.primaryDie?.options.isVicious).toBeFalsy();
+	});
+});
+
 describe('DamageRoll.fromData', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();

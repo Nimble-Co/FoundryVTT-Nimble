@@ -384,6 +384,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 			if (this.options.canMiss) this.isMiss = primaryTerm.isMiss;
 
+			// Recalculate total if vicious explosion added dice
+			// This must happen BEFORE primaryDieAsDamage exclusion to avoid double-counting
+			if (isVicious && this.isCritical) {
+				this._recalculateTotal();
+			}
+
 			// When primaryDieAsDamage is false, exclude the base die value from damage
 			// (explosions still count toward damage)
 			if (!this.options.primaryDieAsDamage) {
@@ -396,11 +402,6 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					const internals = this as object as { _total: number };
 					internals._total = (this._total ?? 0) - this.excludedPrimaryDieValue;
 				}
-			}
-
-			// Recalculate total if vicious explosion added dice
-			if (isVicious && this.isCritical) {
-				this._recalculateTotal();
 			}
 		}
 
@@ -420,7 +421,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 */
 	private async _evaluateViciousExplosion(primaryTerm: PrimaryDie): Promise<void> {
 		const faces = primaryTerm.faces ?? 6;
-		const maxIterations = 1000;
+		const maxIterations = 100; // Safety guard - even 100 consecutive max rolls is astronomically unlikely
 		let iterations = 0;
 
 		// Find the initial result (the base roll)
