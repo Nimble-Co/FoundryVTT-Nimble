@@ -118,11 +118,10 @@
 
 		&--combined {
 			background: linear-gradient(
-				90deg,
-				var(--nimble-reaction-interpose-primary) 0%,
-				var(--nimble-reaction-interpose-secondary) 43%,
-				var(--nimble-reaction-defend-primary) 57%,
-				var(--nimble-reaction-defend-secondary) 100%
+				135deg,
+				var(--nimble-reaction-defend-primary) 0%,
+				var(--nimble-reaction-interpose-secondary) 50%,
+				var(--nimble-reaction-interpose-secondary) 100%
 			);
 
 			&:hover:not(:disabled) {
