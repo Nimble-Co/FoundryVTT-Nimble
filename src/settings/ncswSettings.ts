@@ -1,6 +1,9 @@
 export const NCSW_SIDEBAR_VIEW_MODE_SETTING_KEY = 'ncswSidebarViewMode';
+export const NCSW_ENABLED_SETTING_KEY = 'ncswEnabled';
+export const NCSW_ENABLED_SETTING_CHANGED_EVENT_NAME = 'nimble:ncsw-enabled-changed';
 
 const NCSW_SIDEBAR_VIEW_MODE_VALUES = ['combatTracker', 'ncs'] as const;
+const DEFAULT_NCSW_ENABLED_SETTING = true;
 export type NcswSidebarViewMode = (typeof NCSW_SIDEBAR_VIEW_MODE_VALUES)[number];
 const DEFAULT_NCSW_SIDEBAR_VIEW_MODE = 'ncs';
 const NCSW_SIDEBAR_VIEW_MODE_SET = new Set<NcswSidebarViewMode>(NCSW_SIDEBAR_VIEW_MODE_VALUES);
@@ -27,6 +30,24 @@ export function registerNcswSettings(): void {
 			default: DEFAULT_NCSW_SIDEBAR_VIEW_MODE,
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
+
+	game.settings.register(
+		'nimble' as 'core',
+		NCSW_ENABLED_SETTING_KEY as 'rollMode',
+		{
+			name: 'NIMBLE.settings.ncswEnabled.name',
+			hint: 'NIMBLE.settings.ncswEnabled.hint',
+			scope: 'client',
+			config: true,
+			type: Boolean,
+			default: DEFAULT_NCSW_ENABLED_SETTING,
+			onChange: (enabled) => {
+				if (!enabled) {
+					window.dispatchEvent(new CustomEvent(NCSW_ENABLED_SETTING_CHANGED_EVENT_NAME));
+				}
+			},
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
 }
 
 export function isNcswSidebarViewModeSettingRegistered(): boolean {
@@ -50,4 +71,14 @@ export async function setPersistedNcswSidebarViewMode(mode: NcswSidebarViewMode)
 		NCSW_SIDEBAR_VIEW_MODE_SETTING_KEY as 'rollMode',
 		normalizeNcswSidebarViewMode(mode) as never,
 	);
+}
+
+export function isNcswEnabledSettingRegistered(): boolean {
+	const settings = game.settings?.settings as { has: (key: string) => boolean } | undefined;
+	return settings?.has(`nimble.${NCSW_ENABLED_SETTING_KEY}`) ?? false;
+}
+
+export function getNcswEnabled(): boolean {
+	if (!isNcswEnabledSettingRegistered()) return true;
+	return Boolean(game.settings.get('nimble' as 'core', NCSW_ENABLED_SETTING_KEY as 'rollMode'));
 }
