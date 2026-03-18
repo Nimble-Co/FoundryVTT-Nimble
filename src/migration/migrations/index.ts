@@ -9,3 +9,4 @@ export { Migration008FieldMedicHealingPotionBonus } from './Migration008FieldMed
 export { Migration009HealingEffects } from './Migration009HealingEffects.js';
 export { Migration010SwiftFistsUnarmedDamage } from './Migration010SwiftFistsUnarmedDamage.js';
 export { Migration011SwiftFistsUnarmedProficiency } from './Migration011SwiftFistsUnarmedProficiency.js';
+export { Migration012ViciousExplosionDamage } from './Migration012ViciousExplosionDamage.js';
