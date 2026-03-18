@@ -73,6 +73,8 @@
 	const handleCombatantCardClick = trackerViewState.handleCombatantCardClick;
 	const handleCombatantCardContextMenu = trackerViewState.handleCombatantCardContextMenu;
 	const handleCombatantCardKeyDown = trackerViewState.handleCombatantCardKeyDown;
+	const canRemoveCombatant = trackerViewState.canRemoveCombatant;
+	const handleRemoveCombatant = trackerViewState.handleRemoveCombatant;
 	const handleMonsterStackClick = trackerViewState.handleMonsterStackClick;
 	const handleMonsterStackContextMenu = trackerViewState.handleMonsterStackContextMenu;
 	const handleMonsterStackKeyDown = trackerViewState.handleMonsterStackKeyDown;
@@ -89,6 +91,7 @@
 	const handleTrackScrollbarPointerRelease = trackerViewState.handleTrackScrollbarPointerRelease;
 	const canDragCombatant = trackerViewState.canDragCombatant;
 	const canDragTrackEntry = trackerViewState.canDragTrackEntry;
+	const localize = game.i18n.localize.bind(game.i18n);
 </script>
 
 {#snippet renderNameDrawer(cardName)}
@@ -477,6 +480,20 @@
 										</button>
 									{/if}
 								</div>
+								{#if canRemoveCombatant()}
+									<button
+										type="button"
+										class="nimble-ct__remove-combatant"
+										aria-label={localize('NIMBLE.ui.combatTracker.removeFromCombat')}
+										data-tooltip={localize('NIMBLE.ui.combatTracker.removeFromCombat')}
+										data-tooltip-direction="LEFT"
+										onclick={(event) => {
+											void handleRemoveCombatant(event, entry.combatant);
+										}}
+									>
+										<i class="fa-solid fa-trash"></i>
+									</button>
+								{/if}
 								{#if isPlayerEntry && resourceDrawerData && cardName}
 									{@render renderResourceDrawer(entry.combatant, resourceDrawerData, cardName)}
 								{:else if cardName}
@@ -659,6 +676,20 @@
 										</div>
 									{/if}
 								</div>
+								{#if canRemoveCombatant()}
+									<button
+										type="button"
+										class="nimble-ct__remove-combatant"
+										aria-label={localize('NIMBLE.ui.combatTracker.removeFromCombat')}
+										data-tooltip={localize('NIMBLE.ui.combatTracker.removeFromCombat')}
+										data-tooltip-direction="LEFT"
+										onclick={(event) => {
+											void handleRemoveCombatant(event, combatant);
+										}}
+									>
+										<i class="fa-solid fa-trash"></i>
+									</button>
+								{/if}
 								{#if isPlayerEntry && resourceDrawerData && cardName}
 									{@render renderResourceDrawer(combatant, resourceDrawerData, cardName)}
 								{:else if cardName}
@@ -1940,6 +1971,43 @@
 	.nimble-ct__initiative-roll:disabled {
 		opacity: 0.45;
 		cursor: not-allowed;
+	}
+	.nimble-ct__remove-combatant {
+		position: absolute;
+		top: 0.25rem;
+		right: 0.25rem;
+		width: 1.55rem;
+		height: 1.55rem;
+		margin: 0;
+		padding: 0;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.78rem;
+		color: hsl(0 0% 93%);
+		background: color-mix(in srgb, hsl(226 17% 16%) 92%, transparent);
+		border: 1px solid color-mix(in srgb, hsl(38 24% 58%) 62%, transparent);
+		border-radius: 0.2rem;
+		cursor: pointer;
+		z-index: 5;
+		opacity: 0;
+		pointer-events: none;
+		transition:
+			opacity 120ms ease,
+			color 120ms ease,
+			background 120ms ease,
+			border-color 120ms ease;
+	}
+	.nimble-ct__portrait:hover .nimble-ct__remove-combatant,
+	.nimble-ct__portrait:focus-within .nimble-ct__remove-combatant {
+		opacity: 1;
+		pointer-events: all;
+	}
+	.nimble-ct__remove-combatant:hover,
+	.nimble-ct__remove-combatant:focus-visible {
+		color: hsl(36 92% 86%);
+		border-color: color-mix(in srgb, hsl(36 90% 84%) 75%, white);
+		background: color-mix(in srgb, hsl(225 16% 23%) 90%, transparent);
 	}
 	.nimble-ct__pips {
 		position: absolute;

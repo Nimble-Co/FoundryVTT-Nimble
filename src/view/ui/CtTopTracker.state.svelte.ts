@@ -464,6 +464,35 @@ export function createCtTopTrackerState() {
 		void pingCombatantToken(combatant);
 	}
 
+	function canRemoveCombatant(): boolean {
+		return Boolean(game.user?.isGM);
+	}
+
+	async function handleRemoveCombatant(
+		event: MouseEvent,
+		combatant: Combatant.Implementation,
+	): Promise<void> {
+		event.preventDefault();
+		event.stopPropagation();
+
+		if (!canRemoveCombatant()) return;
+
+		const actionCombat = resolveActionCombat();
+		if (!actionCombat) return;
+
+		const combatantId = getCombatantId(combatant);
+		if (!combatantId) return;
+
+		try {
+			await actionCombat.deleteEmbeddedDocuments('Combatant', [combatantId]);
+			updateCurrentCombat(true);
+		} catch (error) {
+			console.error('[Nimble][CT] Failed to remove combatant', { combatantId, error });
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			ui.notifications?.error(`Unable to remove combatant: ${errorMessage}`);
+		}
+	}
+
 	function resolveMonsterStackCombatant(
 		entry: MonsterStackTrackEntry,
 	): Combatant.Implementation | null {
@@ -1487,6 +1516,8 @@ export function createCtTopTrackerState() {
 		handleCombatantCardClick,
 		handleCombatantCardContextMenu,
 		handleCombatantCardKeyDown,
+		canRemoveCombatant,
+		handleRemoveCombatant,
 		handleMonsterStackClick,
 		handleMonsterStackContextMenu,
 		handleMonsterStackKeyDown,
