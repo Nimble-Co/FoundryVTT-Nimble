@@ -6,6 +6,7 @@ import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
+import registerCombatSidebarToggle from './combatSidebarToggle.js';
 import combatStateGuards from './combatStateGuards.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
 
@@ -64,4 +65,6 @@ export default async function ready() {
 	const combatTrackerConfig = game.settings.get('core', 'combatTrackerConfig') ?? {};
 	combatTrackerConfig.skipDefeated ??= true;
 	game.settings.set('core', 'combatTrackerConfig', combatTrackerConfig);
+
+	registerCombatSidebarToggle();
 }
