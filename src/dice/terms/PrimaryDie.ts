@@ -1,8 +1,18 @@
 import type { InexactPartial } from 'fvtt-types/utils';
 
 declare namespace PrimaryDie {
+	/** Options for PrimaryDie that extend standard die options. */
+	interface Options extends foundry.dice.terms.RollTerm.Options {
+		/** Whether the weapon has the vicious property. */
+		isVicious?: boolean;
+		/** Optional flavor text for the die. */
+		flavor?: string;
+	}
+
 	/** Term data for configuring a PrimaryDie. */
-	interface TermData extends foundry.dice.terms.Die.TermData {}
+	interface TermData extends Omit<foundry.dice.terms.Die.TermData, 'options'> {
+		options?: Options;
+	}
 }
 
 /**
@@ -11,9 +21,12 @@ declare namespace PrimaryDie {
  * PrimaryDie extends Foundry's Die term to provide:
  * - `exploded` getter: Checks if the die exploded (rolled max value), indicating a critical hit
  * - `isMiss` getter: Checks if the die rolled a 1, indicating a miss
+ * - Vicious weapon support: When `isVicious` option is true, the DamageRoll class handles
+ *   explosions manually to avoid preemptive dice rolling.
  *
  * This term is automatically created by DamageRoll when processing the first die in a formula.
- * The explosion modifier ('x') is added to detect critical hits.
+ * For non-vicious weapons, the explosion modifier ('x') is added to detect critical hits.
+ * For vicious weapons, explosion is handled manually in DamageRoll._evaluateViciousExplosion().
  *
  * @extends {foundry.dice.terms.Die}
  *
@@ -26,6 +39,8 @@ declare namespace PrimaryDie {
  * ```
  */
 class PrimaryDie extends foundry.dice.terms.Die {
+	declare options: PrimaryDie.Options;
+
 	/**
 	 * Creates a new PrimaryDie instance.
 	 *

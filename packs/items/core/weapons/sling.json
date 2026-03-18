@@ -48,16 +48,6 @@
 								"text": "CRIT",
 								"parentContext": "criticalHit",
 								"parentNode": "iRVuywoznjR9UjTZ"
-							},
-							{
-								"id": "R0cGF71afkJNvVdS",
-								"type": "damage",
-								"damageType": "bludgeoning",
-								"formula": "1d4",
-								"parentContext": "criticalHit",
-								"parentNode": "iRVuywoznjR9UjTZ",
-								"ignoreArmor": true,
-								"on": {}
 							}
 						],
 						"hit": [
