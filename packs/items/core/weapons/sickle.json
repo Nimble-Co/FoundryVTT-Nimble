@@ -96,7 +96,9 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": ["vicious"],
+			"selected": [
+				"vicious"
+			],
 			"strengthRequirement": {
 				"value": null,
 				"overridesTwoHanded": false
