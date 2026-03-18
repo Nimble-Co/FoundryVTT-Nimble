@@ -3,8 +3,10 @@ import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 
 export function createInterposePanelState(
 	getActor: () => NimbleCharacter,
-	getOnDeductAction: () => () => Promise<void>,
-	getActionsRemaining: () => number,
+	getReactionDisabled: () => boolean,
+	getOnUseReaction: () => () => Promise<boolean>,
+	getCombinedReactionDisabled: () => boolean,
+	getOnUseCombinedReaction: () => () => Promise<boolean>,
 ) {
 	// Targeting state
 	let targetingVersion = $state(0);
@@ -27,9 +29,10 @@ export function createInterposePanelState(
 	});
 
 	async function handleInterpose(): Promise<void> {
-		if (getActionsRemaining() <= 0) return;
+		if (getReactionDisabled()) return;
 
-		await getOnDeductAction()();
+		const reactionUsed = await getOnUseReaction()();
+		if (!reactionUsed) return;
 
 		const actor = getActor();
 		const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
@@ -52,14 +55,16 @@ export function createInterposePanelState(
 	}
 
 	async function handleInterposeAndDefend(): Promise<void> {
-		if (getActionsRemaining() < 2) return;
+		if (getCombinedReactionDisabled()) return;
+
+		const reactionUsed = await getOnUseCombinedReaction()();
+		if (!reactionUsed) return;
 
 		const actor = getActor();
 		const currentArmorValue = actor.reactive.system.attributes.armor.value ?? 0;
 		const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
 
 		// Create Interpose message first (stepping in front of ally)
-		await getOnDeductAction()();
 		await ChatMessage.create({
 			author: game.user?.id,
 			speaker: ChatMessage.getSpeaker({ actor }),
@@ -76,7 +81,6 @@ export function createInterposePanelState(
 		} as unknown as ChatMessage.CreateData);
 
 		// Then create Defend message (reducing damage taken)
-		await getOnDeductAction()();
 		await ChatMessage.create({
 			author: game.user?.id,
 			speaker: ChatMessage.getSpeaker({ actor }),

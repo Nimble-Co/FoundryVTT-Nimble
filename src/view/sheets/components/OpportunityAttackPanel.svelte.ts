@@ -24,9 +24,8 @@ interface WeaponSystemData {
 
 export function createOpportunityAttackPanelState(
 	getActor: () => NimbleCharacter,
-	getOnDeductAction: () => () => Promise<void>,
-	getInCombat: () => boolean,
-	getActionsRemaining: () => number,
+	getReactionDisabled: () => boolean,
+	getOnUseReaction: () => () => Promise<boolean>,
 ) {
 	const { weaponProperties } = CONFIG.NIMBLE;
 
@@ -39,8 +38,6 @@ export function createOpportunityAttackPanelState(
 	});
 
 	const selectedTarget = $derived(availableTargets.length === 1 ? availableTargets[0] : null);
-
-	const isDisabled = $derived(getInCombat() && getActionsRemaining() <= 0);
 
 	// Set up hook listener for target changes
 	$effect(() => {
@@ -124,6 +121,8 @@ export function createOpportunityAttackPanelState(
 	}
 
 	async function handleUnarmedStrike(): Promise<void> {
+		if (getReactionDisabled()) return;
+
 		const rollFormula = getUnarmedDamageFormula(getActor());
 		const canCrit = hasUnarmedProficiency(getActor()); // Only characters proficient with unarmed (e.g., Zephyr with Swift Fists) can crit
 
@@ -155,6 +154,9 @@ export function createOpportunityAttackPanelState(
 		const result = await dialog.promise;
 
 		if (!result) return;
+
+		const reactionUsed = await getOnUseReaction()();
+		if (!reactionUsed) return;
 
 		const roll = new DamageRoll(rollFormula, getActor().getRollData(), {
 			canCrit,
@@ -235,15 +237,18 @@ export function createOpportunityAttackPanelState(
 		};
 
 		await ChatMessage.create(chatData as unknown as ChatMessage.CreateData);
-		await getOnDeductAction()();
 	}
 
 	async function handleItemClick(itemId: string): Promise<unknown> {
+		if (getReactionDisabled()) return null;
+
 		const item = getActor().items.get(itemId);
 		const result = await getActor().activateItem(itemId, { rollMode: -1 }); // Disadvantage
 
 		if (result && item) {
-			await getOnDeductAction()();
+			// Item activation owns its own dialog flow, so consume the reaction only after success.
+			const reactionUsed = await getOnUseReaction()();
+			if (!reactionUsed) return null;
 		}
 
 		return result;
@@ -261,9 +266,6 @@ export function createOpportunityAttackPanelState(
 		},
 		get selectedTarget() {
 			return selectedTarget;
-		},
-		get isDisabled() {
-			return isDisabled;
 		},
 		sortItems,
 		getWeaponDamage,

@@ -1,6 +1,15 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import GenericDialog from '../../../documents/dialogs/GenericDialog.svelte.js';
+import {
+	getActiveCombatForCurrentScene,
+	registerCombatStateHooks,
+} from '../../../utils/combatState.js';
+import { getHeroicReactionUsageState } from '../../../utils/getHeroicReactionUsageState.js';
+import {
+	getHeroicReactionAvailabilityTitle,
+	type HeroicReactionKey,
+} from '../../../utils/heroicActions.js';
 import localize from '../../../utils/localize.js';
 import filterItems from '../../dataPreparationHelpers/filterItems.js';
 import HeroicActionsHelpDialog from '../../dialogs/HeroicActionsHelpDialog.svelte';
@@ -23,6 +32,7 @@ interface HeroicReaction {
 	icon: string;
 	labelKey: string;
 	descriptionKey: string;
+	reactionKey: HeroicReactionKey;
 	type: string;
 }
 
@@ -72,6 +82,7 @@ export const HEROIC_REACTIONS: HeroicReaction[] = [
 		icon: 'fa-solid fa-shield',
 		labelKey: 'NIMBLE.ui.heroicActions.reactions.defend.label',
 		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.defend.description',
+		reactionKey: 'defend',
 		type: 'panel',
 	},
 	{
@@ -79,6 +90,7 @@ export const HEROIC_REACTIONS: HeroicReaction[] = [
 		icon: 'fa-solid fa-people-arrows',
 		labelKey: 'NIMBLE.ui.heroicActions.reactions.interpose.label',
 		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.interpose.description',
+		reactionKey: 'interpose',
 		type: 'panel',
 	},
 	{
@@ -86,6 +98,7 @@ export const HEROIC_REACTIONS: HeroicReaction[] = [
 		icon: 'fa-solid fa-bullseye',
 		labelKey: 'NIMBLE.ui.heroicActions.reactions.opportunity.label',
 		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.opportunity.description',
+		reactionKey: 'opportunityAttack',
 		type: 'panel',
 	},
 	{
@@ -93,9 +106,18 @@ export const HEROIC_REACTIONS: HeroicReaction[] = [
 		icon: 'fa-solid fa-handshake-angle',
 		labelKey: 'NIMBLE.ui.heroicActions.reactions.help.label',
 		descriptionKey: 'NIMBLE.ui.heroicActions.reactions.help.description',
+		reactionKey: 'help',
 		type: 'panel',
 	},
 ];
+
+type HeroicReactionUsageState = ReturnType<typeof getHeroicReactionUsageState>;
+type HeroicReactionId = (typeof HEROIC_REACTIONS)[number]['id'];
+type ReactionUsageStateMap = Record<HeroicReactionId, HeroicReactionUsageState>;
+
+type CombatWithHeroicReactionUse = Combat & {
+	useHeroicReactions?: (combatantId: string, reactionKeys: HeroicReactionKey[]) => Promise<boolean>;
+};
 
 export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	// Top-level tab for switching between Actions and Reactions
@@ -107,63 +129,20 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	// Combat State Management
 	// ============================================================================
 
-	const subscribeCombatState = createSubscriber((update) => {
-		const hookNames = [
-			'combatStart',
-			'createCombat',
-			'updateCombat',
-			'deleteCombat',
-			'createCombatant',
-			'updateCombatant',
-			'deleteCombatant',
-			'canvasInit',
-			'canvasReady',
-		];
+	const subscribeCombatState = createSubscriber(registerCombatStateHooks);
 
-		const hookIds = hookNames.map((hookName) => ({
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			hookId: Hooks.on(hookName as any, () => update()),
-			hookName,
-		}));
-
-		return () => {
-			hookIds.forEach(({ hookName, hookId }) => {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				Hooks.off(hookName as any, hookId);
-			});
-		};
-	});
-
-	function getActiveCombatForCurrentScene(): Combat | null {
-		const sceneId = canvas?.scene?.id;
-		if (!sceneId) return null;
-
-		const activeCombat = game.combat;
-		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
-			return activeCombat;
-		}
-
-		const activeByScene = game.combats?.contents?.find(
-			(combat) => combat?.active && combat.scene?.id === sceneId,
-		);
-		if (activeByScene) return activeByScene;
-
-		const viewedCombat = game.combats?.viewed ?? null;
-		if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
-			return viewedCombat;
-		}
-
-		return null;
+	function getCombat(): CombatWithHeroicReactionUse | null {
+		return getActiveCombatForCurrentScene() as CombatWithHeroicReactionUse | null;
 	}
 
 	function getCombatantInCombat(): Combatant | null {
-		const combat = getActiveCombatForCurrentScene();
+		const combat = getCombat();
 		if (!combat) return null;
 		return combat.combatants.find((entry) => entry.actorId === getActor().id) ?? null;
 	}
 
 	function getCombatant(): Combatant | null {
-		const combat = getActiveCombatForCurrentScene();
+		const combat = getCombat();
 		if (!combat) return null;
 		return combat.combatants.find((entry) => entry.actorId === getActor().id) ?? null;
 	}
@@ -211,6 +190,29 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		return getActionsData();
 	});
 
+	const reactionUsageStates = $derived.by((): ReactionUsageStateMap => {
+		subscribeCombatState();
+		const combat = getCombat();
+		const combatant = getCombatant();
+		return HEROIC_REACTIONS.reduce((acc, reaction) => {
+			acc[reaction.id as HeroicReactionId] = getHeroicReactionUsageState({
+				combat,
+				combatant,
+				reactionKeys: [reaction.reactionKey],
+			});
+			return acc;
+		}, {} as ReactionUsageStateMap);
+	});
+
+	const interposeAndDefendUsageState = $derived.by((): HeroicReactionUsageState => {
+		subscribeCombatState();
+		return getHeroicReactionUsageState({
+			combat: getCombat(),
+			combatant: getCombatant(),
+			reactionKeys: ['interpose', 'defend'],
+		});
+	});
+
 	// ============================================================================
 	// Panel State & Action Handlers
 	// ============================================================================
@@ -243,6 +245,34 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 				toggleReactionPanel(reaction.id);
 				break;
 		}
+	}
+
+	function getReactionUsageState(reaction: HeroicReaction): HeroicReactionUsageState {
+		return reactionUsageStates[reaction.id as HeroicReactionId];
+	}
+
+	function isReactionAvailable(reactionKey: HeroicReactionKey): boolean {
+		const reaction = HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
+		if (!reaction) return false;
+		return getReactionUsageState(reaction).isAvailable;
+	}
+
+	function canUseReaction(reactionKey: HeroicReactionKey): boolean {
+		const reaction = HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
+		if (!reaction) return false;
+		return getReactionUsageState(reaction).canUse;
+	}
+
+	async function useReaction(reactionKey: HeroicReactionKey): Promise<boolean> {
+		return useReactionCombo([reactionKey]);
+	}
+
+	async function useReactionCombo(reactionKeys: HeroicReactionKey[]): Promise<boolean> {
+		const combat = getCombat();
+		const combatant = getCombatant();
+		const combatantId = combatant?.id ?? combatant?._id ?? null;
+		if (!combat?.useHeroicReactions || !combatantId) return false;
+		return combat.useHeroicReactions(combatantId, reactionKeys);
 	}
 
 	function handleHelpDialog(): void {
@@ -296,7 +326,19 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	}
 
 	function getReactionTooltip(reaction: HeroicReaction): string {
-		return localize(reaction.labelKey);
+		const usageState = getReactionUsageState(reaction);
+		const label = localize(reaction.labelKey);
+
+		if (!usageState.isAvailable) {
+			return getHeroicReactionAvailabilityTitle(reaction.reactionKey, false);
+		}
+		if (usageState.blockedReason === 'outsideCombat') {
+			return `${label} (${localize('NIMBLE.ui.heroicActions.outsideCombat')})`;
+		}
+		if (usageState.blockedReason === 'noActions') {
+			return `${label} (${localize('NIMBLE.ui.heroicActions.noActions')})`;
+		}
+		return getHeroicReactionAvailabilityTitle(reaction.reactionKey, true);
 	}
 
 	return {
@@ -318,6 +360,12 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		get actionsData() {
 			return actionsData;
 		},
+		get reactionUsageStates() {
+			return reactionUsageStates;
+		},
+		get canUseInterposeAndDefendCombo() {
+			return interposeAndDefendUsageState.canUse;
+		},
 		get hasSpells() {
 			return hasSpells;
 		},
@@ -326,12 +374,16 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		},
 		HEROIC_ACTIONS,
 		HEROIC_REACTIONS,
+		canUseReaction,
 		deductActionPips,
 		handleActionClick,
 		handleReactionClick,
 		handleHelpDialog,
+		isReactionAvailable,
 		isActionDisabled,
 		getActionTooltip,
 		getReactionTooltip,
+		useReaction,
+		useReactionCombo,
 	};
 }

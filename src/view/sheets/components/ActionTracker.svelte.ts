@@ -1,7 +1,13 @@
 import { untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
-import type { CombatantSystemWithActions } from '../../../documents/combat/combatTypes.js';
+import { getCombatantBaseActions } from '../../../documents/combat/combatantSystem.js';
+import {
+	getActiveCombatForCurrentScene,
+	registerCombatStateHooks,
+} from '../../../utils/combatState.js';
+import { requestAdvanceCombatTurn } from '../../../utils/combatTurnActions.js';
+import { getActiveCombatant } from '../../../utils/combatTurnSync.js';
 import localize from '../../../utils/localize.js';
 
 // ============================================================================
@@ -42,61 +48,11 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 	// Combat State Subscription
 	// ============================================================================
 
-	const subscribeCombatState = createSubscriber((update) => {
-		const hookNames = [
-			'combatStart',
-			'createCombat',
-			'updateCombat',
-			'deleteCombat',
-			'createCombatant',
-			'updateCombatant',
-			'deleteCombatant',
-			'canvasInit',
-			'canvasReady',
-		] as const;
-
-		type HookName = (typeof hookNames)[number];
-
-		const hookIds = hookNames.map((hookName: HookName) => ({
-			hookId: Hooks.on(hookName, () => update()),
-			hookName,
-		}));
-
-		return () => {
-			hookIds.forEach(({ hookName, hookId }) => {
-				Hooks.off(hookName, hookId);
-			});
-		};
-	});
+	const subscribeCombatState = createSubscriber(registerCombatStateHooks);
 
 	// ============================================================================
 	// Combat Helper Functions
 	// ============================================================================
-
-	function getActiveCombatForCurrentScene(): Combat | null {
-		const sceneId = canvas?.scene?.id;
-		if (!sceneId) return null;
-
-		// Check game.combat first (the currently viewed combat)
-		const activeCombat = game.combat;
-		if (activeCombat?.scene?.id === sceneId && (activeCombat.active || activeCombat.started)) {
-			return activeCombat;
-		}
-
-		// Find any combat for this scene that is active or started
-		const combatForScene = game.combats?.contents?.find(
-			(combat) => combat?.scene?.id === sceneId && (combat.active || combat.started),
-		);
-		if (combatForScene) return combatForScene;
-
-		// Check viewed combat as fallback
-		const viewedCombat = game.combats?.viewed ?? null;
-		if (viewedCombat?.scene?.id === sceneId && (viewedCombat.active || viewedCombat.started)) {
-			return viewedCombat;
-		}
-
-		return null;
-	}
 
 	function getCombatantInCombat(): Combatant | null {
 		const combat = getActiveCombatForCurrentScene();
@@ -120,11 +76,10 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		const combatant = getCombatantInCombat();
 		if (!combatant) return { current: 0, max: 3 };
 
-		const system = combatant.system as unknown as CombatantSystemWithActions;
-		const actions = system?.actions?.base;
+		const actions = getCombatantBaseActions(combatant);
 		return {
-			current: actions?.current ?? 0,
-			max: actions?.max ?? 3,
+			current: actions.current,
+			max: actions.max || 3,
 		};
 	}
 
@@ -132,7 +87,7 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		const combat = getActiveCombatForCurrentScene();
 		if (!combat?.started) return false;
 
-		const currentCombatant = combat.combatant;
+		const currentCombatant = getActiveCombatant(combat);
 		if (!currentCombatant) return false;
 
 		return currentCombatant.actorId === getActor().id;
@@ -166,7 +121,10 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		if (!combat) return;
 
 		try {
-			await combat.nextTurn();
+			const advanced = await requestAdvanceCombatTurn({ combat });
+			if (!advanced) {
+				ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionEndTurn'));
+			}
 		} catch (_error) {
 			ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionEndTurn'));
 		}

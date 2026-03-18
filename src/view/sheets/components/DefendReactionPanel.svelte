@@ -6,23 +6,25 @@
 
 	let {
 		actor,
-		inCombat = false,
-		actionsRemaining = 0,
-		onDeductAction = async () => {},
+		reactionDisabled = true,
+		combinedReactionDisabled = true,
+		onUseReaction = async () => false,
+		onUseCombinedReaction = async () => false,
 	}: ReactionPanelProps = $props();
 
 	const state = createDefendPanelState(
 		() => actor,
-		() => onDeductAction,
-		() => actionsRemaining,
+		() => reactionDisabled,
+		() => onUseReaction,
+		() => combinedReactionDisabled,
+		() => onUseCombinedReaction,
 	);
 
 	const availableTargets = $derived(state.availableTargets);
 	const selectedTarget = $derived(state.selectedTarget);
 	const armorValue = $derived(state.armorValue);
-	// Compute disabled state directly from props for proper reactivity
-	const isDisabled = $derived(inCombat && actionsRemaining <= 0);
-	const canInterposeAndDefend = $derived(!inCombat || actionsRemaining >= 2);
+	const isDisabled = $derived(reactionDisabled);
+	const canInterposeAndDefend = $derived(!combinedReactionDisabled);
 	const { getTargetName, handleDefend, handleInterposeAndDefend } = state;
 </script>
 

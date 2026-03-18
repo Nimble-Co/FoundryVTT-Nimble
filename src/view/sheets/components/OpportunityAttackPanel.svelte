@@ -10,24 +10,22 @@
 
 	let {
 		actor,
-		inCombat = false,
-		actionsRemaining = 0,
-		onDeductAction = async () => {},
+		reactionDisabled = true,
+		onUseReaction = async () => false,
 		showEmbeddedDocumentImages = true,
 	}: OpportunityAttackPanelProps = $props();
 
 	const state = createOpportunityAttackPanelState(
 		() => actor,
-		() => onDeductAction,
-		() => inCombat,
-		() => actionsRemaining,
+		() => reactionDisabled,
+		() => onUseReaction,
 	);
 
 	const meleeWeapons = $derived(state.meleeWeapons);
 	const showUnarmedStrike = $derived(state.showUnarmedStrike);
 	const availableTargets = $derived(state.availableTargets);
 	const selectedTarget = $derived(state.selectedTarget);
-	const isDisabled = $derived(state.isDisabled);
+	const isDisabled = $derived(reactionDisabled);
 	const {
 		sortItems,
 		getWeaponDamage,

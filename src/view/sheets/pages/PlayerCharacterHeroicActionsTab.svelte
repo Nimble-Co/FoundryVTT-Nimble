@@ -81,8 +81,12 @@
 					<button
 						class="heroic-action-tab"
 						class:heroic-action-tab--active={state.expandedReactionPanel === reaction.id}
+						class:heroic-action-tab--available={state.isReactionAvailable(reaction.reactionKey)}
+						class:heroic-action-tab--spent={!state.isReactionAvailable(reaction.reactionKey)}
+						class:heroic-action-tab--disabled={!state.canUseReaction(reaction.reactionKey)}
 						type="button"
 						aria-label={localize(reaction.labelKey)}
+						aria-disabled={!state.canUseReaction(reaction.reactionKey)}
 						data-tooltip={state.getReactionTooltip(reaction)}
 						onclick={() => state.handleReactionClick(reaction)}
 					>
@@ -132,27 +136,28 @@
 	{#if state.activeHeroicTab === 'reactions' && state.expandedReactionPanel === 'defend'}
 		<DefendReactionPanel
 			{actor}
-			inCombat={state.inCombat}
-			actionsRemaining={state.actionsData.current}
-			onDeductAction={() => state.deductActionPips(1)}
+			reactionDisabled={!state.canUseReaction('defend')}
+			combinedReactionDisabled={!state.canUseInterposeAndDefendCombo}
+			onUseReaction={() => state.useReaction('defend')}
+			onUseCombinedReaction={() => state.useReactionCombo(['interpose', 'defend'])}
 		/>
 	{/if}
 
 	{#if state.activeHeroicTab === 'reactions' && state.expandedReactionPanel === 'interpose'}
 		<InterposeReactionPanel
 			{actor}
-			inCombat={state.inCombat}
-			actionsRemaining={state.actionsData.current}
-			onDeductAction={() => state.deductActionPips(1)}
+			reactionDisabled={!state.canUseReaction('interpose')}
+			combinedReactionDisabled={!state.canUseInterposeAndDefendCombo}
+			onUseReaction={() => state.useReaction('interpose')}
+			onUseCombinedReaction={() => state.useReactionCombo(['interpose', 'defend'])}
 		/>
 	{/if}
 
 	{#if state.activeHeroicTab === 'reactions' && state.expandedReactionPanel === 'opportunity'}
 		<OpportunityAttackPanel
 			{actor}
-			inCombat={state.inCombat}
-			actionsRemaining={state.actionsData.current}
-			onDeductAction={() => state.deductActionPips(1)}
+			reactionDisabled={!state.canUseReaction('opportunityAttack')}
+			onUseReaction={() => state.useReaction('opportunityAttack')}
 			showEmbeddedDocumentImages={state.showEmbeddedDocumentImages}
 		/>
 	{/if}
@@ -160,9 +165,8 @@
 	{#if state.activeHeroicTab === 'reactions' && state.expandedReactionPanel === 'help'}
 		<HelpReactionPanel
 			{actor}
-			inCombat={state.inCombat}
-			actionsRemaining={state.actionsData.current}
-			onDeductAction={() => state.deductActionPips(1)}
+			reactionDisabled={!state.canUseReaction('help')}
+			onUseReaction={() => state.useReaction('help')}
 		/>
 	{/if}
 </section>
@@ -289,8 +293,19 @@
 		}
 
 		&--disabled {
-			opacity: 0.5;
-			cursor: not-allowed;
+			opacity: 0.65;
+		}
+
+		&--available:not(&--active) .heroic-action-tab__indicator {
+			background: hsl(145, 55%, 48%);
+			border-color: hsl(145, 55%, 36%);
+			box-shadow: 0 0 8px hsla(145, 55%, 48%, 0.35);
+		}
+
+		&--spent:not(&--active) .heroic-action-tab__indicator {
+			background: hsla(0, 0%, 100%, 0.1);
+			border-color: hsl(8, 65%, 48%);
+			box-shadow: 0 0 6px hsla(8, 65%, 48%, 0.18);
 		}
 	}
 

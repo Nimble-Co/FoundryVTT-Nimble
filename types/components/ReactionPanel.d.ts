@@ -2,9 +2,10 @@ import type { NimbleCharacter } from '../../src/documents/actor/actor';
 
 export interface ReactionPanelProps {
 	actor: NimbleCharacter;
-	inCombat?: boolean;
-	actionsRemaining?: number;
-	onDeductAction?: () => Promise<void>;
+	reactionDisabled?: boolean;
+	combinedReactionDisabled?: boolean;
+	onUseReaction?: () => Promise<boolean>;
+	onUseCombinedReaction?: () => Promise<boolean>;
 }
 
 export interface OpportunityAttackPanelProps extends ReactionPanelProps {

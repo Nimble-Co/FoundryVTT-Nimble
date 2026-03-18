@@ -1,18 +1,12 @@
 <script>
-	import { createSubscriber } from 'svelte/reactivity';
-	import { setContext, untrack } from 'svelte';
-	import { readable } from 'svelte/store';
 	import localize from '../../utils/localize.js';
-	import {
-		getInitiativeCombatManaRules,
-		primeActorCombatManaSourceRules,
-	} from '../../utils/combatManaRules.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
-	import HitPointBar from './components/HitPointBar.svelte';
+	import ActionTracker from './components/ActionTracker.svelte';
 	import HitDiceBar from './components/HitDiceBar.svelte';
+	import HitPointBar from './components/HitPointBar.svelte';
 	import ManaBar from './components/ManaBar.svelte';
-	import { incrementDieSize } from '../../managers/HitDiceManager.js';
+	import { createPlayerCharacterSheetState } from './PlayerCharacterSheet.state.svelte.js';
 	import PlayerCharacterBioTab from './pages/PlayerCharacterBioTab.svelte';
 	import PlayerCharacterConditionsTab from './pages/PlayerCharacterConditionsTab.svelte';
 	import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';
@@ -21,364 +15,52 @@
 	import PlayerCharacterInventoryTab from './pages/PlayerCharacterInventoryTab.svelte';
 	import PlayerCharacterSettingsTab from './pages/PlayerCharacterSettingsTab.svelte';
 	import PlayerCharacterSpellsTab from './pages/PlayerCharacterSpellsTab.svelte';
-	import ActionTracker from './components/ActionTracker.svelte';
-
-	function getHitPointPercentage(currentHP, maxHP) {
-		return Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100);
-	}
-
-	function prepareCharacterMetadata(characterClass, subclass, ancestry, sizeCategory) {
-		const origins = [];
-
-		if (ancestry) {
-			origins.push(`${ancestry.name} (${sizeCategories[sizeCategory] ?? sizeCategory})`);
-		}
-
-		if (characterClass) {
-			if (subclass) {
-				origins.push(
-					`${characterClass.name} (${subclass.name}, ${characterClass.system.classLevel})`,
-				);
-			} else {
-				origins.push(`${characterClass.name} (${characterClass.system.classLevel})`);
-			}
-		}
-
-		return origins.filter(Boolean).join(' ⟡ ');
-	}
-
-	function hasInitiativeCombatManaRule(character, _primeVersion = 0) {
-		const rules = getInitiativeCombatManaRules(character);
-		return rules.length > 0;
-	}
-
-	function getActiveCombatForCurrentScene() {
-		const sceneId = canvas?.scene?.id;
-		if (!sceneId) return null;
-
-		const activeCombat = game.combat;
-		if (activeCombat?.active && activeCombat.scene?.id === sceneId) {
-			return activeCombat;
-		}
-
-		const activeByScene = game.combats?.contents?.find(
-			(combat) => combat?.active && combat.scene?.id === sceneId,
-		);
-		if (activeByScene) return activeByScene;
-
-		const viewedCombat = game.combats?.viewed ?? null;
-		if (viewedCombat?.active && viewedCombat.scene?.id === sceneId) {
-			return viewedCombat;
-		}
-
-		return null;
-	}
-
-	function hasRolledInitiativeInActiveCombat(character) {
-		const combat = getActiveCombatForCurrentScene();
-		if (!combat?.started) return false;
-
-		const sceneId = canvas?.scene?.id;
-		if (sceneId && combat.scene?.id !== sceneId) return false;
-
-		const combatant = combat.combatants.find((entry) => entry.actorId === character.id);
-		if (!combatant) return false;
-
-		return combatant.initiative !== null;
-	}
-
-	function toggleWounds(woundLevel) {
-		let newWoundsValue = woundLevel;
-
-		if (woundLevel <= wounds.value) newWoundsValue = woundLevel - 1;
-
-		actor.update({
-			'system.attributes.wounds.value': newWoundsValue,
-		});
-	}
-
-	function updateCurrentHP(newValue) {
-		actor.update({
-			'system.attributes.hp.value': newValue,
-		});
-	}
-
-	function updateMaxHP(newValue) {
-		actor.update({
-			'system.attributes.hp.max': newValue,
-		});
-	}
-
-	function updateTempHP(newValue) {
-		actor.update({
-			'system.attributes.hp.temp': newValue,
-		});
-	}
-
-	function updateCurrentMana(newValue) {
-		actor.update({
-			'system.resources.mana.current': newValue,
-		});
-	}
-
-	function updateMaxMana(newValue) {
-		const manaData = actor.reactive.system.resources.mana;
-		const baseMax = manaData.baseMax ?? 0;
-		const max = manaData.max || baseMax;
-		const formulaBonus = max - baseMax;
-		const adjustedBaseMax = Math.max(0, newValue - formulaBonus);
-
-		actor.update({
-			'system.resources.mana.baseMax': adjustedBaseMax,
-		});
-	}
-
-	async function updateCurrentHitDice(newValue) {
-		await actor.updateCurrentHitDice(newValue);
-	}
-
-	async function rollHitDice() {
-		await actor.rollHitDice();
-	}
-
-	async function editCurrentHitDice() {
-		await actor.editCurrentHitDice();
-	}
-
-	async function toggleEditingEnabled() {
-		await actor.setFlag('nimble', 'editingEnabled', !editingEnabled);
-	}
 
 	let { actor, sheet } = $props();
-	let combatManaRulesPrimeVersion = $state(0);
-	let lastCombatManaPrimeActorId = $state(null);
+
+	const playerCharacterSheetState = createPlayerCharacterSheetState({
+		actor: () => actor,
+		sheet: () => sheet,
+		navigationComponents: {
+			core: PlayerCharacterCoreTab,
+			actions: PlayerCharacterHeroicActionsTab,
+			conditions: PlayerCharacterConditionsTab,
+			inventory: PlayerCharacterInventoryTab,
+			features: PlayerCharacterFeaturesTab,
+			spells: PlayerCharacterSpellsTab,
+			bio: PlayerCharacterBioTab,
+			settings: PlayerCharacterSettingsTab,
+		},
+	});
+
+	const navigation = playerCharacterSheetState.navigation;
+	let currentTab = $state(playerCharacterSheetState.currentTab);
+	let isBloodied = $derived(playerCharacterSheetState.isBloodied);
+	let classItem = $derived(playerCharacterSheetState.classItem);
+	let wounds = $derived(playerCharacterSheetState.wounds);
+	let mana = $derived(playerCharacterSheetState.mana);
+	let hasMana = $derived(playerCharacterSheetState.hasMana);
+	let actorImageXOffset = $derived(playerCharacterSheetState.actorImageXOffset);
+	let actorImageYOffset = $derived(playerCharacterSheetState.actorImageYOffset);
+	let actorImageScale = $derived(playerCharacterSheetState.actorImageScale);
+	let editingEnabled = $derived(playerCharacterSheetState.editingEnabled);
+	let metaData = $derived(playerCharacterSheetState.metaData);
+	let hitDiceData = $derived(playerCharacterSheetState.hitDiceData);
 
 	$effect(() => {
-		const actorId = actor?.id ?? null;
-		if (!actorId) return;
-		if (lastCombatManaPrimeActorId === actorId) return;
-
-		lastCombatManaPrimeActorId = actorId;
-		void primeActorCombatManaSourceRules(actor).then(() => {
-			combatManaRulesPrimeVersion += 1;
-		});
+		playerCharacterSheetState.currentTab = currentTab;
 	});
 
-	const subscribeCombatState = createSubscriber((update) => {
-		const hookNames = [
-			'combatStart',
-			'createCombat',
-			'updateCombat',
-			'deleteCombat',
-			'createCombatant',
-			'updateCombatant',
-			'deleteCombatant',
-			'canvasInit',
-			'canvasReady',
-		];
-		const hookIds = hookNames.map((hookName) => ({
-			hookId: Hooks.on(hookName, () => update()),
-			hookName,
-		}));
-
-		return () => {
-			for (const { hookName, hookId } of hookIds) {
-				Hooks.off(hookName, hookId);
-			}
-		};
-	});
-
-	const navigation = $state([
-		{
-			component: PlayerCharacterCoreTab,
-			icon: 'fa-solid fa-home',
-			tooltip: 'Core',
-			name: 'core',
-		},
-		{
-			component: PlayerCharacterHeroicActionsTab,
-			icon: 'fa-solid fa-bolt',
-			tooltip: 'Actions',
-			name: 'actions',
-		},
-		{
-			component: PlayerCharacterConditionsTab,
-			icon: 'fa-solid fa-heart-pulse',
-			tooltip: 'NIMBLE.ui.conditions',
-			name: 'conditions',
-		},
-		{
-			component: PlayerCharacterInventoryTab,
-			icon: 'fa-solid fa-box-open',
-			tooltip: 'Inventory',
-			name: 'inventory',
-		},
-		{
-			component: PlayerCharacterFeaturesTab,
-			icon: 'fa-solid fa-table-list',
-			tooltip: 'Features',
-			name: 'features',
-		},
-		{
-			component: PlayerCharacterSpellsTab,
-			icon: 'fa-solid fa-wand-sparkles',
-			tooltip: 'Spells',
-			name: 'spells',
-		},
-		{
-			component: PlayerCharacterBioTab,
-			icon: 'fa-solid fa-file-lines',
-			tooltip: 'Bio',
-			name: 'bio',
-		},
-		{
-			component: PlayerCharacterSettingsTab,
-			icon: 'fa-solid fa-cog',
-			tooltip: 'Settings',
-			name: 'settings',
-		},
-	]);
-
-	const { sizeCategories } = CONFIG.NIMBLE;
-
-	let currentTab = $state(navigation[0]);
-
-	let isBloodied = $derived.by(
-		() =>
-			getHitPointPercentage(
-				actor.reactive.system.attributes.hp.value,
-				actor.reactive.system.attributes.hp.max,
-			) <= 50,
-	);
-
-	let classItem = $derived(actor.reactive.items.find((item) => item.type === 'class') ?? null);
-	let wounds = $derived(actor.reactive.system.attributes.wounds);
-	let mana = $derived(actor.reactive.system.resources.mana);
-	let hasInitiativeCombatMana = $derived.by(() => {
-		return hasInitiativeCombatManaRule(actor, combatManaRulesPrimeVersion);
-	});
-	let combatManaVisible = $derived.by(() => {
-		subscribeCombatState();
-		return hasInitiativeCombatMana && hasRolledInitiativeInActiveCombat(actor);
-	});
-	let hasMana = $derived.by(() => {
-		subscribeCombatState();
-
-		const classHasManaFormula = actor.reactive.items.some(
-			(item) => item.type === 'class' && item.system?.mana?.formula?.length,
-		);
-
-		if (hasInitiativeCombatMana) {
-			return combatManaVisible;
-		}
-
-		if ((mana.max ?? 0) > 0 || (mana.baseMax ?? 0) > 0) return true;
-		return classHasManaFormula;
-	});
-
-	// Flags
-	let flags = $derived(actor.reactive.flags.nimble);
-	let actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
-	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
-	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
-	let editingEnabled = $derived(flags?.editingEnabled ?? false);
-	const editingEnabledStore = readable(false, (set) => {
-		$effect(() => set(editingEnabled));
-		return () => {};
-	});
-
-	let metaData = $derived.by(() => {
-		const c = actor.reactive.items.find((i) => i.type === 'class') ?? null;
-		const sub = actor.reactive.items.find((i) => i.type === 'subclass') ?? null;
-		const anc = actor.reactive.items.find((i) => i.type === 'ancestry') ?? null;
-		const size = actor.reactive.system.attributes.sizeCategory;
-		return prepareCharacterMetadata(c, sub, anc, size);
-	});
-
-	// Reactive hit dice computations
-	let hitDiceData = $derived.by(() => {
-		const hitDiceAttr = actor.reactive.system.attributes.hitDice;
-		const bonusHitDice = actor.reactive.system.attributes.bonusHitDice ?? [];
-		const classes = actor.reactive.items.filter((i) => i.type === 'class');
-
-		// Get hit dice size bonus from rules (e.g., Oozeling's Odd Constitution)
-		const hitDiceSizeBonus = actor.reactive.system.attributes.hitDiceSizeBonus ?? 0;
-
-		// Build bySize from classes and bonus hit dice
-		const bySize = {};
-
-		// Add from classes (apply hitDiceSizeBonus to get effective size)
-		for (const cls of classes) {
-			const baseSize = cls.system.hitDieSize;
-			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
-			const classLevel = cls.system.classLevel;
-			bySize[size] ??= { current: 0, total: 0 };
-			bySize[size].total += classLevel;
-			bySize[size].current = hitDiceAttr[size]?.current ?? 0;
-		}
-
-		// Get effective class sizes (after applying bonus) for later checks
-		const effectiveClassSizes = classes.map((cls) =>
-			incrementDieSize(cls.system.hitDieSize, hitDiceSizeBonus),
-		);
-
-		// Add from bonusHitDice array (apply hitDiceSizeBonus to increment)
-		for (const entry of bonusHitDice) {
-			const size = incrementDieSize(entry.size, hitDiceSizeBonus);
-			bySize[size] ??= { current: hitDiceAttr[size]?.current ?? 0, total: 0 };
-			bySize[size].total += entry.value;
-			// Get current from hitDice record if not already set
-			if (!effectiveClassSizes.includes(size)) {
-				bySize[size].current = hitDiceAttr[size]?.current ?? 0;
-			}
-		}
-
-		// Get effective bonus array sizes (after increment) for later checks
-		const effectiveBonusArraySizes = bonusHitDice.map((entry) =>
-			incrementDieSize(entry.size, hitDiceSizeBonus),
-		);
-
-		// Add from rule-based bonuses (hitDice[size].bonus)
-		// Rule bonuses add to total; current comes from stored value (restored on rest)
-		// Apply hitDiceSizeBonus to increment these dice as well
-		for (const [sizeStr, hitDieData] of Object.entries(hitDiceAttr ?? {})) {
-			const baseSize = Number(sizeStr);
-			const size = incrementDieSize(baseSize, hitDiceSizeBonus);
-			const bonus = hitDieData?.bonus ?? 0;
-			if (bonus > 0) {
-				bySize[size] ??= { current: 0, total: 0 };
-				bySize[size].total += bonus;
-
-				// If this size wasn't from a class or bonusHitDice array (after increment), get stored current
-				const fromClass = effectiveClassSizes.includes(size);
-				const fromBonusArray = effectiveBonusArraySizes.includes(size);
-				if (!fromClass && !fromBonusArray) {
-					bySize[size].current = hitDiceAttr[size]?.current ?? 0;
-				}
-			}
-		}
-
-		// Calculate totals
-		let value = 0;
-		let max = 0;
-		for (const data of Object.values(bySize)) {
-			value += data.current;
-			max += data.total;
-		}
-
-		return { bySize, value, max };
-	});
-
-	// Set context synchronously during component initialization (not in $effect)
-	// Wrapped in untrack to suppress warnings - actor/sheet don't change during sheet lifecycle
-	{
-		const actorRef = untrack(() => actor);
-		const sheetRef = untrack(() => sheet);
-		setContext('actor', actorRef);
-		setContext('document', actorRef);
-		setContext('application', sheetRef);
-		setContext('editingEnabled', editingEnabledStore);
-	}
+	const toggleWounds = playerCharacterSheetState.toggleWounds;
+	const updateCurrentHP = playerCharacterSheetState.updateCurrentHP;
+	const updateMaxHP = playerCharacterSheetState.updateMaxHP;
+	const updateTempHP = playerCharacterSheetState.updateTempHP;
+	const updateCurrentMana = playerCharacterSheetState.updateCurrentMana;
+	const updateMaxMana = playerCharacterSheetState.updateMaxMana;
+	const updateCurrentHitDice = playerCharacterSheetState.updateCurrentHitDice;
+	const rollHitDice = playerCharacterSheetState.rollHitDice;
+	const editCurrentHitDice = playerCharacterSheetState.editCurrentHitDice;
+	const toggleEditingEnabled = playerCharacterSheetState.toggleEditingEnabled;
 </script>
 
 <header class="nimble-sheet__header">
