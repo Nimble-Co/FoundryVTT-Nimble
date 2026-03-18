@@ -284,6 +284,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					rollMode: 2,
 					primaryDieValue: 0,
 					primaryDieModifier: 0,
+					isVicious: false,
 				},
 			);
 		});
@@ -324,6 +325,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					rollMode: 0,
 					primaryDieValue: 0,
 					primaryDieModifier: 0,
+					isVicious: false,
 				},
 			);
 		});
@@ -403,6 +405,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					rollMode: 0,
 					primaryDieValue: 0,
 					primaryDieModifier: 0,
+					isVicious: false,
 				},
 			);
 		});
@@ -446,6 +449,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					rollMode: 0,
 					primaryDieValue: 0,
 					primaryDieModifier: 0,
+					isVicious: false,
 				},
 			);
 			expect(mockRoll.evaluate).toHaveBeenCalled();
@@ -490,6 +494,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					rollMode: 0,
 					primaryDieValue: 0,
 					primaryDieModifier: 0,
+					isVicious: false,
 				},
 			);
 		});
@@ -533,6 +538,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					rollMode: 0,
 					primaryDieValue: 0,
 					primaryDieModifier: 0,
+					isVicious: false,
 				},
 			);
 		});
@@ -630,6 +636,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					rollMode: 0,
 					primaryDieValue: 0,
 					primaryDieModifier: 0,
+					isVicious: false,
 				},
 			);
 		});
@@ -862,6 +869,7 @@ describe('ItemActivationManager.getData (rolls)', () => {
 					rollMode: 0,
 					primaryDieValue: 0,
 					primaryDieModifier: 0,
+					isVicious: false,
 				},
 			);
 		});

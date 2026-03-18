@@ -312,6 +312,10 @@ class ItemActivationManager {
 					const resolvedCanMiss = isMinion || (canMiss ?? true);
 					node.rollMode = dialogData.rollMode ?? 0;
 
+					// Check if item has vicious property
+					const itemSystem = this.#item.system as { properties?: { selected?: string[] } };
+					const isVicious = itemSystem.properties?.selected?.includes('vicious') ?? false;
+
 					// Use modified formula if provided
 					let formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
 
@@ -329,6 +333,7 @@ class ItemActivationManager {
 							rollMode: node.rollMode ?? 0,
 							primaryDieValue: dialogData.primaryDieValue ?? 0,
 							primaryDieModifier: Number(dialogData.primaryDieModifier) || 0,
+							isVicious,
 						},
 					);
 
