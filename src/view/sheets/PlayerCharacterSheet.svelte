@@ -8,7 +8,11 @@
 	import HitPointBar from './components/HitPointBar.svelte';
 	import ManaBar from './components/ManaBar.svelte';
 	import { createPlayerCharacterSheetState } from './PlayerCharacterSheet.state.svelte.js';
-	import { getDroppedItemFlashIds, type SheetDropItemFlashState } from './dropItemFlashState.js';
+	import {
+		DROP_ITEM_SCROLL_OBSERVER_TIMEOUT_MS,
+		getDroppedItemFlashIds,
+		type SheetDropItemFlashState,
+	} from './dropItemFlashState.js';
 	import PlayerCharacterBioTab from './pages/PlayerCharacterBioTab.svelte';
 	import PlayerCharacterConditionsTab from './pages/PlayerCharacterConditionsTab.svelte';
 	import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';
@@ -96,6 +100,8 @@
 		if (didSwitchTab) {
 			const droppedItemIds = getDroppedItemFlashIds(sheetState);
 			if (droppedItemIds.length > 0) {
+				// Move flash IDs across the tab change: clear untracked to avoid self-triggering this effect,
+				// then restore after tick so flash/scroll runs against the newly rendered tab DOM.
 				untrack(() => {
 					sheetState.droppedItemFlashIds = [];
 				});
@@ -137,8 +143,13 @@
 
 		const observer = new MutationObserver(() => {
 			if (!tryScrollToDroppedItem()) return;
+			globalThis.clearTimeout(observerTimeoutId);
 			observer.disconnect();
 		});
+
+		const observerTimeoutId = globalThis.setTimeout(() => {
+			observer.disconnect();
+		}, DROP_ITEM_SCROLL_OBSERVER_TIMEOUT_MS);
 
 		observer.observe(rootElement, {
 			childList: true,
@@ -146,6 +157,7 @@
 		});
 
 		return () => {
+			globalThis.clearTimeout(observerTimeoutId);
 			observer.disconnect();
 		};
 	});
