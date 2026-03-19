@@ -1,6 +1,7 @@
 import type { PrimaryTabName } from './playerCharacterPrimaryTabConfig.js';
 
 export const DROP_ITEM_FLASH_ANIMATION_NAME = 'nimble-drop-item-flash';
+export const DROP_ITEM_SCROLL_OBSERVER_TIMEOUT_MS = 3000;
 
 export type SheetDropItemFlashState = {
 	activePrimaryTab?: PrimaryTabName | null;
