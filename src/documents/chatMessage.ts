@@ -374,7 +374,7 @@ class NimbleChatMessage extends ChatMessage {
 
 			const updates: Record<string, unknown> = {};
 
-			if (healingRecord.healingType === 'temporaryHealing') {
+			if (healingRecord.healingType === 'tempHealing') {
 				// Revert temp HP
 				updates['system.attributes.hp.temp'] = targetRecord.previousTempHp;
 			} else {
