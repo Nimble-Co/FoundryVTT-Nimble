@@ -41,6 +41,11 @@ export const globalFoundryMocks = {
 			if (data) Object.assign(this, data);
 		}
 	},
+	Scene: class Scene {
+		constructor(data?: any, _context?: any) {
+			if (data) Object.assign(this, data);
+		}
+	},
 	TokenDocument: class TokenDocument {
 		constructor(data?: any, _context?: any) {
 			if (data) Object.assign(this, data);
@@ -665,6 +670,7 @@ export const configStructure = {
 	Item: {
 		dataModels: {},
 	},
+	Scene: {},
 	Token: {},
 	ActiveEffect: {
 		dataModels: {},

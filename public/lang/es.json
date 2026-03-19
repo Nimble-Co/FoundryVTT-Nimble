@@ -685,10 +685,6 @@
 			"round": "asalto",
 			"turn": "turno"
 		},
-		"sceneDirectoryContext": {
-			"convertFeetToSpaces": "Convertir pies a espacios",
-			"convertFeetToSpacesFailed": "No se pudo convertir la escena de pies a espacios."
-		},
 		"ui": {
 			"cancel": "Cancelar",
 			"heroicActions": {
