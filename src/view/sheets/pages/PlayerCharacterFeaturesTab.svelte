@@ -121,7 +121,10 @@
 		sheet.clearDroppedItemFlash(itemId);
 	}
 
-	function sortItemCategories([categoryA], [categoryB]) {
+	function sortItemCategories(
+		[categoryA]: [string, unknown],
+		[categoryB]: [string, unknown],
+	): number {
 		return validTypes.indexOf(categoryA) - validTypes.indexOf(categoryB);
 	}
 

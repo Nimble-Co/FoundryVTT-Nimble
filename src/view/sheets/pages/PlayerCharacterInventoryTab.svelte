@@ -17,6 +17,14 @@
 
 	import SearchBar from '../components/SearchBar.svelte';
 
+	type InventorySortableItem = {
+		_id: string;
+	};
+
+	function isDropDataRecord(value: unknown): value is Record<string, unknown> {
+		return typeof value === 'object' && value !== null;
+	}
+
 	async function configureItem(event, id) {
 		event.stopPropagation();
 
@@ -96,9 +104,9 @@
 		}
 	}
 
-	async function handleItemDrop(event, item) {
+	async function handleItemDrop(event: DragEvent, item: InventorySortableItem): Promise<void> {
 		const dropData = foundry.applications.ux.TextEditor.implementation.getDragEventData(event);
-		if (dropData?.type === 'Item') {
+		if (isDropDataRecord(dropData) && dropData.type === 'Item') {
 			await sheet._onDropItem(event, dropData);
 			return;
 		}
