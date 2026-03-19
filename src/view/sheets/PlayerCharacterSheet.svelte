@@ -83,6 +83,34 @@
 		return combatant.initiative !== null;
 	}
 
+	function findLatestDroppedItemCard(rootElement: HTMLElement, droppedItemIds: string[]) {
+		for (let i = droppedItemIds.length - 1; i >= 0; i--) {
+			const itemId = droppedItemIds[i];
+			const escapedItemId = globalThis.CSS?.escape ? globalThis.CSS.escape(itemId) : itemId;
+			const droppedItemCard = rootElement.querySelector<HTMLElement>(
+				`.nimble-sheet__body [data-item-id="${escapedItemId}"]`,
+			);
+			if (droppedItemCard) return droppedItemCard;
+		}
+
+		return null;
+	}
+
+	function scrollDroppedItemCardIntoView(droppedItemCard: HTMLElement) {
+		const scrollContainer = droppedItemCard.closest<HTMLElement>('.nimble-sheet__body');
+		if (!(scrollContainer instanceof HTMLElement)) return;
+
+		const isScrollable = scrollContainer.scrollHeight > scrollContainer.clientHeight + 1;
+		if (!isScrollable) return;
+
+		const containerRect = scrollContainer.getBoundingClientRect();
+		const itemRect = droppedItemCard.getBoundingClientRect();
+		const isOutOfView = itemRect.top < containerRect.top || itemRect.bottom > containerRect.bottom;
+		if (!isOutOfView) return;
+
+		droppedItemCard.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+	}
+
 	function toggleWounds(woundLevel) {
 		let newWoundsValue = woundLevel;
 
@@ -189,7 +217,6 @@
 	const { sizeCategories } = CONFIG.NIMBLE;
 
 	let currentTab = $state(navigation[0]);
-	let lastDroppedItemScrollSignature = $state('');
 
 	$effect(() => {
 		const sheetState = appState as SheetDropItemFlashState;
@@ -270,47 +297,38 @@
 
 	$effect(() => {
 		const sheetState = appState as SheetDropItemFlashState;
-		const actorItemCount = actor?.reactive?.items?.length ?? 0;
+		const activeTabName = currentTab?.name ?? '';
 		const droppedItemIds = getDroppedItemFlashIds(sheetState);
 		if (droppedItemIds.length < 1) {
-			lastDroppedItemScrollSignature = '';
 			return;
 		}
+		if (activeTabName.length < 1) return;
 
-		const scrollSignature = `${currentTab?.name ?? ''}:${actorItemCount}:${droppedItemIds.join(',')}`;
-		if (scrollSignature === lastDroppedItemScrollSignature) return;
-		lastDroppedItemScrollSignature = scrollSignature;
+		const rootElement = sheet?.element;
+		if (!(rootElement instanceof HTMLElement)) return;
 
-		void tick().then(() => {
-			const rootElement = sheet?.element;
-			if (!(rootElement instanceof HTMLElement)) return;
+		const tryScrollToDroppedItem = (): boolean => {
+			const droppedItemCard = findLatestDroppedItemCard(rootElement, droppedItemIds);
+			if (!(droppedItemCard instanceof HTMLElement)) return false;
+			scrollDroppedItemCardIntoView(droppedItemCard);
+			return true;
+		};
 
-			let droppedItemCard: HTMLElement | null = null;
-			for (let i = droppedItemIds.length - 1; i >= 0; i--) {
-				const itemId = droppedItemIds[i];
-				const escapedItemId = globalThis.CSS?.escape ? globalThis.CSS.escape(itemId) : itemId;
-				droppedItemCard = rootElement.querySelector<HTMLElement>(
-					`.nimble-sheet__body [data-item-id="${escapedItemId}"]`,
-				);
-				if (droppedItemCard) break;
-			}
+		if (tryScrollToDroppedItem()) return;
 
-			if (!(droppedItemCard instanceof HTMLElement)) return;
-
-			const scrollContainer = droppedItemCard.closest<HTMLElement>('.nimble-sheet__body');
-			if (!(scrollContainer instanceof HTMLElement)) return;
-
-			const isScrollable = scrollContainer.scrollHeight > scrollContainer.clientHeight + 1;
-			if (!isScrollable) return;
-
-			const containerRect = scrollContainer.getBoundingClientRect();
-			const itemRect = droppedItemCard.getBoundingClientRect();
-			const isOutOfView =
-				itemRect.top < containerRect.top || itemRect.bottom > containerRect.bottom;
-			if (!isOutOfView) return;
-
-			droppedItemCard.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+		const observer = new MutationObserver(() => {
+			if (!tryScrollToDroppedItem()) return;
+			observer.disconnect();
 		});
+
+		observer.observe(rootElement, {
+			childList: true,
+			subtree: true,
+		});
+
+		return () => {
+			observer.disconnect();
+		};
 	});
 
 	let metaData = $derived.by(() => {
