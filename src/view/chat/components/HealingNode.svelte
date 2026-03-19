@@ -76,7 +76,11 @@
 						<div class="healing-applied__targets">
 							{#each healingRecord.targets as target}
 								<span class="healing-applied__target">
-									{target.tokenName}: {target.previousHp} → {target.newHp} HP
+									{#if healingRecord.healingType === 'tempHealing'}
+										{target.tokenName}: {target.previousTempHp} → {target.newTempHp} Temp HP
+									{:else}
+										{target.tokenName}: {target.previousHp} → {target.newHp} HP
+									{/if}
 								</span>
 							{/each}
 						</div>

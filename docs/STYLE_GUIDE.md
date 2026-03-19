@@ -1,3 +1,7 @@
+---
+title: Code Style Guide
+---
+
 # Code Style Guide
 
 This guide documents the coding conventions and patterns for the Nimble FoundryVTT system. It adapts Svelte best practices for the unique requirements of the Nimble FoundryVTT system module.
@@ -51,10 +55,10 @@ const activeItems = items.filter((item) => item.isActive && !item.isDeleted);
 
 Code should be:
 
-- **Well-organized** — Group related logic together, separate concerns appropriately
-- **Easy to reason about** — A developer should understand the flow without extensive documentation
-- **Easy to understand** — Prefer clarity over cleverness; straightforward code is better than clever one-liners
-- **Clear for humans to follow** — Structure code so the intent is obvious at a glance
+- **Well-organized**, Group related logic together, separate concerns appropriately
+- **Easy to reason about**, A developer should understand the flow without extensive documentation
+- **Easy to understand**, Prefer clarity over cleverness; straightforward code is better than clever one-liners
+- **Clear for humans to follow**, Structure code so the intent is obvious at a glance
 
 ---
 
@@ -91,12 +95,12 @@ src/view/sheets/components/AbilityScores.svelte  ← helper function used only h
 
 When code is reused, promote it to the narrowest common ancestor:
 
-1. **Shared within a feature** — Move to feature's root directory
+1. **Shared within a feature**, Move to feature's root directory
    ```
    src/view/sheets/helpers/calculateModifier.ts  ← used by multiple sheet components
    ```
 
-2. **Shared across features** — Move to global shared location
+2. **Shared across features**, Move to global shared location
    ```
    src/utils/calculateModifier.ts  ← used by sheets AND dialogs AND chat
    ```
@@ -109,7 +113,7 @@ If a file imports from a distant, unrelated directory for a helper that seems fe
 
 **Avoid over-extraction:**
 - Keep small private helpers in the same file unless there's a clear "domain module" boundary
-- Don't create micro-files for single helpers — prefer one cohesive module per domain
+- Don't create micro-files for single helpers, prefer one cohesive module per domain
 
 ---
 
@@ -117,20 +121,20 @@ If a file imports from a distant, unrelated directory for a helper that seems fe
 
 Write clear, correct code first. Optimize only when you have evidence of a performance problem.
 
-> "Premature optimization is the root of all evil" — Donald Knuth
+> "Premature optimization is the root of all evil", Donald Knuth
 
 #### Principles
 
-- **Correctness first** — Code that works correctly but slowly is better than fast code that's wrong or unmaintainable
-- **Measure before optimizing** — Use browser profilers or logging to identify actual bottlenecks
-- **Optimize the right thing** — The perceived slow spot is often not the actual bottleneck
-- **Readability matters** — Optimized code is often harder to understand and maintain
+- **Correctness first**, Code that works correctly but slowly is better than fast code that's wrong or unmaintainable
+- **Measure before optimizing**, Use browser profilers or logging to identify actual bottlenecks
+- **Optimize the right thing**, The perceived slow spot is often not the actual bottleneck
+- **Readability matters**, Optimized code is often harder to understand and maintain
 
 #### When NOT to Optimize
 
 ```svelte
 <script lang="ts">
-  // Unnecessary — simple derivation, no expensive computation
+  // Unnecessary, simple derivation, no expensive computation
   const fullName = $derived(`${firstName} ${lastName}`);
 
   // Just use the simple version
@@ -148,7 +152,7 @@ Optimize when you have:
 
 ```svelte
 <script lang="ts">
-  // Large dataset transformation — worth memoizing with $derived
+  // Large dataset transformation, worth memoizing with $derived
   const sortedAndFilteredItems = $derived(
     items
       .filter((item) => item.status === activeFilter)
@@ -449,8 +453,8 @@ Use callback props for child-to-parent communication:
 ### Component Size Guidelines
 
 - **Small components (< 100 lines)**: Keep in single file
-- **Medium components (100-300 lines)**: Consider extracting sub-components
-- **Large components (> 300 lines)**: Definitely split into sub-components
+- **Medium components (100-500 lines)**: Consider extracting sub-components
+- **Large components (> 500 lines)**: Definitely split into sub-components
 
 Signs a component should be split:
 - Multiple unrelated concerns
@@ -464,7 +468,7 @@ Signs a component should be split:
 
 Components should require the minimum number of props necessary. If the consumer has to pass more than a few props, consider whether some can be defaults, derived internally, or split into composition.
 
-**Good example — minimal required props:**
+**Good example, minimal required props:**
 
 ```svelte
 <!-- Just the essential data, component handles the rest -->
@@ -476,7 +480,7 @@ Components should require the minimum number of props necessary. If the consumer
 />
 ```
 
-**Good example — composable via slots:**
+**Good example, composable via slots:**
 
 ```svelte
 <Sheet {actor}>
@@ -490,7 +494,7 @@ Components should require the minimum number of props necessary. If the consumer
 </Sheet>
 ```
 
-**Avoid — too many props when a single object would suffice:**
+**Avoid, too many props when a single object would suffice:**
 
 ```svelte
 <!-- Bad: spreading every field as a separate prop -->
@@ -516,7 +520,7 @@ Every component that depends on async data should account for three states:
 | State | Treatment |
 |-------|-----------|
 | **Loading** | Show skeleton placeholders matching expected content shape |
-| **Empty** | Show clear empty-state message — never render bare empty containers |
+| **Empty** | Show clear empty-state message, never render bare empty containers |
 | **Error** | Show inline error message with retry option where possible |
 
 ```svelte
@@ -1025,13 +1029,13 @@ Tests should verify logic and behavior, not just that code runs without crashing
 **Avoid shallow existence checks:**
 
 ```typescript
-// Bad — no assertions about behavior
+// Bad, no assertions about behavior
 it('renders', () => {
   const result = calculateModifier(10);
   // Test passes but doesn't verify anything useful
 });
 
-// Bad — just checking it doesn't throw
+// Bad, just checking it doesn't throw
 it('works', () => {
   expect(() => isCombatantDead(combatant)).not.toThrow();
 });
@@ -1040,7 +1044,7 @@ it('works', () => {
 **Test specific behavior, state transitions, and edge cases:**
 
 ```typescript
-// Good — tests specific behavior
+// Good, tests specific behavior
 describe('calculateModifier', () => {
   it('returns 0 for ability score of 10', () => {
     expect(calculateModifier(10)).toBe(0);
@@ -1096,7 +1100,7 @@ describe('isCombatantDead', () => {
 | **Validation rules** | Input validation, error conditions |
 | **Data transformations** | Model preparation, data parsing, formatting |
 
-**Example — testing state transitions:**
+**Example, testing state transitions:**
 
 ```typescript
 describe('HitDiceManager', () => {
@@ -1120,7 +1124,7 @@ describe('HitDiceManager', () => {
 });
 ```
 
-**Example — testing edge cases:**
+**Example, testing edge cases:**
 
 ```typescript
 describe('getActorHpValue', () => {
@@ -1295,7 +1299,7 @@ Use these rules as a pre-review gate. They help keep files focused by extracting
 
 **Components:**
 - [ ] Components used by 2+ features are in `src/view/components/`
-- [ ] Large components (300+ lines) are split into sub-components
+- [ ] Large components (500+ lines) are split into sub-components
 
 **State:**
 - [ ] Loading, empty, and error states are handled

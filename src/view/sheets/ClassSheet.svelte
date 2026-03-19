@@ -139,19 +139,19 @@
 		{
 			component: descriptionTab,
 			icon: 'fa-solid fa-file-lines',
-			tooltip: 'Description',
+			tooltip: localize('NIMBLE.classSheet.description'),
 			name: 'description',
 		},
 		{
 			component: configTab,
 			icon: 'fa-solid fa-gears',
-			tooltip: 'Config',
+			tooltip: localize('NIMBLE.classSheet.config'),
 			name: 'config',
 		},
 		{
 			component: rulesTab,
 			icon: 'fa-solid fa-bolt',
-			tooltip: 'Rules',
+			tooltip: localize('NIMBLE.classSheet.rules'),
 			name: 'rules',
 		},
 	];
@@ -192,7 +192,9 @@
 	<section class="nimble-sheet__body nimble-sheet__body--item">
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">Identifier</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{localize('NIMBLE.classSheet.identifier')}
+				</h3>
 			</header>
 
 			<input
@@ -204,7 +206,9 @@
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">Class Complexity</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{localize('NIMBLE.classSheet.classComplexity')}
+				</h3>
 			</header>
 
 			<input
@@ -219,7 +223,9 @@
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">Key Stats</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{localize('NIMBLE.classSheet.keyStats')}
+				</h3>
 			</header>
 
 			<TagGroup
@@ -262,7 +268,9 @@
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">Hit Die Size</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{localize('NIMBLE.classSheet.hitDieSize')}
+				</h3>
 			</header>
 
 			<TagGroup
@@ -276,7 +284,9 @@
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">Mana Formula</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{localize('NIMBLE.classSheet.manaFormula')}
+				</h3>
 			</header>
 
 			<input
@@ -290,7 +300,9 @@
 		{#if item.reactive.system.mana.formula.length}
 			<section>
 				<header class="nimble-section-header">
-					<h3 class="nimble-heading" data-heading-variant="field">Mana Recovery</h3>
+					<h3 class="nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.classSheet.manaRecovery')}
+					</h3>
 				</header>
 
 				<TagGroup
@@ -305,7 +317,9 @@
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">Armor Proficiencies</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{localize('NIMBLE.classSheet.armorProficiencies')}
+				</h3>
 			</header>
 
 			<TagGroup
@@ -317,14 +331,16 @@
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">Weapon Proficiencies</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{localize('NIMBLE.classSheet.weaponProficiencies')}
+				</h3>
 
 				<button
 					class="nimble-button"
 					data-button-variant="icon"
 					type="button"
-					data-tooltip="Add Weapon Proficiency"
-					aria-label="Add Weapon Proficiency"
+					data-tooltip="NIMBLE.classSheet.addWeaponProficiency"
+					aria-label={localize('NIMBLE.classSheet.addWeaponProficiency')}
 					onclick={addWeaponProficiency}
 				>
 					<i class="fa-solid fa-square-plus"></i>
@@ -344,8 +360,8 @@
 							<button
 								class="nimble-button nimble-weapon-proficiency-list__delete-button"
 								data-button-variant="icon"
-								data-tooltip="Delete Weapon Proficiency"
-								aria-label="Delete Weapon Proficiency"
+								data-tooltip="NIMBLE.classSheet.deleteWeaponProficiency"
+								aria-label={localize('NIMBLE.classSheet.deleteWeaponProficiency')}
 								onclick={() => deleteWeaponProficiency(index)}
 								type="button"
 							>
@@ -353,7 +369,9 @@
 							</button>
 						</li>
 					{:else}
-						<li class="nimble-weapon-proficiency-list__item">None</li>
+						<li class="nimble-weapon-proficiency-list__item">
+							{localize('NIMBLE.classSheet.none')}
+						</li>
 					{/each}
 				{/key}
 			</ul>
@@ -361,14 +379,16 @@
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">Feature Groups</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{localize('NIMBLE.classSheet.featureGroups')}
+				</h3>
 
 				<button
 					class="nimble-button"
 					data-button-variant="icon"
 					type="button"
-					data-tooltip="Add Feature Group"
-					aria-label="Add Feature Group"
+					data-tooltip="NIMBLE.classSheet.addFeatureGroup"
+					aria-label={localize('NIMBLE.classSheet.addFeatureGroup')}
 					onclick={addFeatureGroup}
 				>
 					<i class="fa-solid fa-square-plus"></i>
@@ -388,8 +408,8 @@
 							<button
 								class="nimble-button nimble-weapon-proficiency-list__delete-button"
 								data-button-variant="icon"
-								data-tooltip="Delete Feature Group"
-								aria-label="Delete Feature Group"
+								data-tooltip="NIMBLE.classSheet.deleteFeatureGroup"
+								aria-label={localize('NIMBLE.classSheet.deleteFeatureGroup')}
 								onclick={() => deleteFeatureGroup(index)}
 								type="button"
 							>
@@ -397,7 +417,9 @@
 							</button>
 						</li>
 					{:else}
-						<li class="nimble-weapon-proficiency-list__item">None</li>
+						<li class="nimble-weapon-proficiency-list__item">
+							{localize('NIMBLE.classSheet.none')}
+						</li>
 					{/each}
 				{/key}
 			</ul>
@@ -415,7 +437,9 @@
 	{#key item.reactive.system.description}
 		<section class="nimble-sheet__body">
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="section">Description</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.classSheet.description')}
+				</h3>
 			</header>
 
 			<Editor

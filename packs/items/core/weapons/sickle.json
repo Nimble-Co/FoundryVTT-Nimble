@@ -49,16 +49,6 @@
 								"text": "CRIT",
 								"parentContext": "criticalHit",
 								"parentNode": "U6gCmj6bnwqPWkjK"
-							},
-							{
-								"id": "k8N1yLZnT8u1D3Lh",
-								"type": "damage",
-								"damageType": "slashing",
-								"formula": "1d4",
-								"parentContext": "criticalHit",
-								"parentNode": "U6gCmj6bnwqPWkjK",
-								"ignoreArmor": true,
-								"on": {}
 							}
 						],
 						"hit": [

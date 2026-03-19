@@ -22,6 +22,17 @@
     --nimble-hint-icon-color: var(--nimble-warning-icon-color);
   }
 
+  &--success {
+    --nimble-hint-background-color: hsla(139, 50%, 45%, 0.15);
+    --nimble-hint-border-color: hsl(139, 50%, 45%);
+    --nimble-hint-icon-color: hsl(139, 50%, 35%);
+
+    .theme-dark & {
+      --nimble-hint-background-color: hsla(139, 50%, 45%, 0.2);
+      --nimble-hint-icon-color: hsl(139, 50%, 65%);
+    }
+  }
+
   &__icon {
     font-size: var(--nimble-md-text);
     color: var(--nimble-hint-icon-color);

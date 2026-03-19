@@ -7,3 +7,6 @@ export { Migration006DwarfMaxHitDice } from './Migration006DwarfMaxHitDice.js';
 export { Migration007WildOneHitDiceAdvantage } from './Migration007WildOneHitDiceAdvantage.js';
 export { Migration008FieldMedicHealingPotionBonus } from './Migration008FieldMedicHealingPotionBonus.js';
 export { Migration009HealingEffects } from './Migration009HealingEffects.js';
+export { Migration010SwiftFistsUnarmedDamage } from './Migration010SwiftFistsUnarmedDamage.js';
+export { Migration011SwiftFistsUnarmedProficiency } from './Migration011SwiftFistsUnarmedProficiency.js';
+export { Migration012ViciousExplosionDamage } from './Migration012ViciousExplosionDamage.js';

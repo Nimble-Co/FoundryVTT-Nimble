@@ -13,7 +13,6 @@
 @use "components/card";
 @use "components/chat-card";
 @use "components/code-block";
-@use "components/combat-tracker";
 @use "components/community-buttons";
 @use "components/die";
 @use "components/document-card";
@@ -28,6 +27,7 @@
 @use "components/logo";
 @use "components/minion-group-token-actions";
 @use "components/primary-navigation";
+@use "components/reaction-card";
 @use "components/roll-details";
 @use "components/roll-formula";
 @use "components/saving-throw";

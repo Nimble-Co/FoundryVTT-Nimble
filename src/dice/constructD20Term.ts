@@ -1,9 +1,40 @@
+/**
+ * Options for constructing a d20 die term.
+ */
 export type d20TermOptions = {
+	/** The actor making the roll (currently unused but reserved for future features). */
 	actor: Actor;
+	/** Minimum value for the d20 roll (e.g., 10 for reliable talent). */
 	minRoll: number;
+	/** Roll mode: positive for advantage, negative for disadvantage, 0 for normal. */
 	rollMode: number;
 };
 
+/**
+ * Constructs the d20 portion of a roll formula with advantage/disadvantage and minimum roll support.
+ *
+ * This function builds a d20 term string based on:
+ * - **rollMode**: Determines advantage/disadvantage
+ *   - Positive: Roll multiple d20s and keep highest (e.g., `2d20kh` for advantage)
+ *   - Negative: Roll multiple d20s and keep lowest (e.g., `2d20kl` for disadvantage)
+ *   - Zero: Roll a single d20
+ * - **minRoll**: Adds a minimum modifier (e.g., `1d20min10` for reliable talent)
+ *
+ * @param options - Configuration options for the d20 term.
+ * @param options.actor - The actor making the roll (reserved for future use).
+ * @param options.minRoll - Minimum d20 value. Values > 1 add a `min` modifier.
+ * @param options.rollMode - Advantage level (positive), disadvantage level (negative), or normal (0).
+ * @returns A d20 term string (e.g., "1d20", "2d20kh", "2d20min10kl").
+ *
+ * @example
+ * ```typescript
+ * constructD20Term({ actor, minRoll: 1, rollMode: 0 });  // "1d20"
+ * constructD20Term({ actor, minRoll: 1, rollMode: 1 });  // "2d20kh" (advantage)
+ * constructD20Term({ actor, minRoll: 1, rollMode: -1 }); // "2d20kl" (disadvantage)
+ * constructD20Term({ actor, minRoll: 10, rollMode: 0 }); // "1d20min10" (reliable talent)
+ * constructD20Term({ actor, minRoll: 10, rollMode: 1 }); // "2d20min10kh"
+ * ```
+ */
 export default function constructD20Term({ actor: _actor, minRoll, rollMode }: d20TermOptions) {
 	let d20Term = '1d20';
 

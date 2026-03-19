@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { mapTierForCompendiumDisplay } from './compendiumSpellsFilter.js';
+import {
+	isSupportedSpellCompendium,
+	mapTierForCompendiumDisplay,
+} from './compendiumSpellsFilter.js';
 
 describe('mapTierForCompendiumDisplay', () => {
 	it('maps utility spells to display tier 0', () => {
@@ -25,5 +28,17 @@ describe('mapTierForCompendiumDisplay', () => {
 	it('falls back to cantrip display tier for invalid non-utility values', () => {
 		expect(mapTierForCompendiumDisplay(undefined, ['range'])).toBe(1);
 		expect(mapTierForCompendiumDisplay('not-a-number', ['range'])).toBe(1);
+	});
+});
+
+describe('isSupportedSpellCompendium', () => {
+	it('supports both public spell compendia', () => {
+		expect(isSupportedSpellCompendium('nimble.nimble-spells')).toBe(true);
+		expect(isSupportedSpellCompendium('nimble.nimble-secret-spells')).toBe(true);
+	});
+
+	it('rejects non-spell compendia', () => {
+		expect(isSupportedSpellCompendium('nimble.nimble-items')).toBe(false);
+		expect(isSupportedSpellCompendium(undefined)).toBe(false);
 	});
 });

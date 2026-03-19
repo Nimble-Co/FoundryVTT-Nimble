@@ -1,8 +1,11 @@
 import { getCombatantImage } from '../../utils/combatantImage.js';
 import { getTargetTokenUuid } from '../../utils/tokenTargetLookup.js';
+import {
+	getCombatantBaseActionCurrent,
+	getCombatantManualSortValue as readCombatantManualSortValue,
+} from './combatantSystem.js';
 import type {
 	ActorWithActivateItem,
-	CombatantSystemWithActions,
 	ItemLike,
 	MinionGroupAttackResult,
 	MinionGroupAttackRollEntry,
@@ -11,7 +14,7 @@ import type {
 } from './combatTypes.js';
 
 export function getCombatantManualSortValue(combatant: Combatant.Implementation): number {
-	return Number((combatant.system as unknown as { sort?: number }).sort ?? 0);
+	return readCombatantManualSortValue(combatant);
 }
 
 export function getSourceSortValueForDrop(
@@ -52,9 +55,7 @@ export function logMinionGroupingCombat(
 }
 
 export function getCombatantCurrentActions(combatant: Combatant.Implementation): number {
-	const currentActions = Number(
-		(combatant.system as unknown as CombatantSystemWithActions).actions?.base?.current ?? 0,
-	);
+	const currentActions = getCombatantBaseActionCurrent(combatant);
 	if (!Number.isFinite(currentActions)) return 0;
 	return currentActions;
 }

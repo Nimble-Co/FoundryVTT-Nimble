@@ -2,6 +2,21 @@
   display: none;
 }
 
-#sidebar li:has(> [data-tab="combat"]) {
+// Hide the combat sidebar panel content - we use our custom combat tracker instead
+#combat:is(.sidebar-tab) {
+  display: none !important;
+}
+
+// When combat tab is active, show chat tab content instead
+#sidebar:has([data-tab="combat"].active) #chat:is(.sidebar-tab) {
+  display: block !important;
+}
+
+// Hide combat sidebar button by default, show only for GM/Assistant GM
+#sidebar-tabs li:has([data-tab="combat"]) {
   display: none;
+
+  .nimble-combat-toggle-enabled & {
+    display: revert;
+  }
 }

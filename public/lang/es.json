@@ -8,7 +8,7 @@
 		},
 		"Item": {
 			"background": "Trasfondo",
-			"boon": "Mejora",
+			"boon": "Don",
 			"class": "Clase",
 			"feature": "Rasgo",
 			"monsterFeature": "Rasgo de monstruo",
@@ -41,6 +41,51 @@
 		},
 		"abilityScoreControls": {
 			"confirmStatAssignments": "Confirmar asignación de atributos"
+		},
+		"statConfig": {
+			"baseStats": "Atributos base",
+			"baseStatsSubtitle": "Atributos iniciales de creación de personaje",
+			"selectArray": "Seleccionar conjunto",
+			"currentArray": "Conjunto actual",
+			"bonusTotal": "Bono total",
+			"asiTotal": "ASI total",
+			"keyStat": "Atributo Clave",
+			"keyStats": "Atributos Clave",
+			"advOnSaves": "Vent. salvaciones",
+			"disOnSaves": "Desv. salvaciones",
+			"primary": "Primario",
+			"secondary": "Secundario",
+			"capstone": "Límite",
+			"dropHere": "Soltar aquí",
+			"noStatIncreasesYet": "Mejoras de atributo aún no disponibles",
+			"statIncreaseHint": "Las mejores de atributo se obtienen a niveles 4, 5, 8, 9, 12, 13, 16, 17 y 20",
+			"baseScoresWarning": "Tus puntuaciones base no coinciden con ningún conjunto de atributos de Nimble.",
+			"bonuses": "Bonos",
+			"bonusesSubtitle": "Modificadores de dotes, objetos y otras fuentes",
+			"noBonuses": "Sin bonos de dotes u objetos",
+			"statIncreases": "Mejoras de atributo",
+			"statIncreasesSubtitle": "Mejoras obtenidas a niveles de clase concretos",
+			"finalModifier": "Modificador final",
+			"editBaseStats": "Editar atributos base",
+			"cancel": "Cancelar",
+			"applyChanges": "Aplicar cambios",
+			"toggleStatIncrease": "Alternar mejoras de atributo",
+			"primaryTooltip": "+1 a uno de tus Atributos Clave",
+			"secondaryTooltip": "+1 a uno de tus Atributos Secundarios",
+			"capstoneTooltip": "+1 a cualquiera 2 de tus atributos",
+			"specialBoonAvailable": "Don especial disponible",
+			"boon": "Don"
+		},
+		"chat": {
+			"applyHealing": "Aplicar curación",
+			"healing": "Curación",
+			"healingApplied": "Curación aplicada",
+			"undoHealing": "Cancelar curación",
+			"undo": "Cancelar",
+			"noTargetsSelected": "No hay objetivos seleccionados",
+			"healingAlreadyApplied": "Curación ya aplicada",
+			"healingUndone": "Curación cancelada",
+			"noHealingRecord": "No se ha encontrado registro de curación para cancelar"
 		},
 		"characterCreationStages": {
 			"stepFourStartingEquipment": "Paso 4. Equipo inicial",
@@ -144,7 +189,7 @@
 		"boonTypes": {
 			"minor": "Menor",
 			"major": "Mayor",
-			"epic": "Épica"
+			"epic": "Épico"
 		},
 		"classes": {
 			"berserker": "Bersérker",
@@ -168,6 +213,10 @@
 			"confused": "Confudido",
 			"dazed": "Atontado",
 			"dead": "Muerto",
+			"defending": "Defendiendo",
+			"interposing": "Interponiéndose",
+			"opportunityAttacking": "Ataque de oportunidad",
+			"helping": "Ayudando",
 			"despair": "Desesperado",
 			"distracted": "Distraído",
 			"dying": "Moribundo",
@@ -176,6 +225,7 @@
 			"hampered": "Entorpecido",
 			"incapacitated": "Incapacitado",
 			"invisible": "Invisible",
+			"lastStand": "Último Aliento",
 			"paralyzed": "Paralizado",
 			"petrified": "Petrificado",
 			"poisoned": "Envenenado",
@@ -196,9 +246,13 @@
 			"charged": "<p>Cuando recibes daño por relámpago estás Cargado durante 1 minuto.</p>",
 			"charmed": "<p>Tratas al conjurador como un aliado. Tiene ventaja en interacciones sociales contigo.</p>",
 			"concentration": "<p>Sólo puedes Concentrarte en una cosa a la vez. Salvación de FUE CD 10 con un crítico o pierdes la concentración.</p>",
-			"confused": "<p>El DJ hace tu siguiente acción.</p>",
+			"confused": "<p>El DJ elige tu siguiente acción.</p>",
 			"dazed": "<p><b>Héroes:</b> pierde 1 acción.</p> <p><b>Monstruos:</b> tienen una acción menos en su próximo turno.</p>",
 			"dead": "<p>Mueres al sufrir 6 Heridas (a menos que tengas alguna característica que cambie este número). Hay maneras de revivir a un héroe caído, pero son raras y normalmente muy costosas.</p>",
+			"defending": "<p>Esta criatura ha usado Defender y permanece en una postura defensiva hasta el final de su turno.</p>",
+			"interposing": "<p>Esta criatura ha usado Interponer reaccion.</p>",
+			"opportunityAttacking": "<p>Esta criatura ha usado Ataque de oportunidad.</p>",
+			"helping": "<p>Esta criatura ha usado Ayudar reaccion.</p>",
 			"despair": "<p>Desventaja en tu siguiente ataque realizado este encuentro.</p>",
 			"distracted": "<p>Un objetivo está distraído si está adyacente a un aliado o es Provocado por él, o si no puede verte.</p>",
 			"dying": "<p>A 0 PG. Si recibes daño en este estado, sufres 2 Heridas; un crítico te causa 3 Heridas en su lugar.</p>",
@@ -207,6 +261,7 @@
 			"hampered": "<p>Cualquier criatura con sus acciones o movimiento reducidos (ej. Atontado, Agarrado, Derribado, Terreno difícil).</p>",
 			"incapacitated": "<p>No puedes hacer nada. Los ataques contra ti tienen ventaja, y si un ataque cuerpo a cuerpo te impacta, es crítico.</p>",
 			"invisible": "<p>No pueden verte. Tienes ventaja en tus ataques, y los ataques contra ti, desventaja.</p>",
+			"lastStand": "<p>En o por debajo de su umbral configurado de Ultimo Aliento.</p>",
 			"paralyzed": "<p>Incapacitado. No puedes hacer nada. Los ataques contra ti tienen ventaja, y los ataques cuerpo a cuerpo que impacten son crítico.</p>",
 			"petrified": "<p>Incapacitado. Tienes todas las ventajas y desventajas de una piedra. Eres inmune a la mayoría de los daños, excepto a explosiones violentas, picos u otras herramientas similares.</p>",
 			"poisoned": "<p>Desventaja en todas las tiradas.</p>",
@@ -278,13 +333,13 @@
 		"featureTypes": {
 			"ancestry": "Ascendencia",
 			"background": "Trasfondo",
-			"boon": "Mejora",
+			"boon": "Don",
 			"class": "Clase"
 		},
 		"featureTypeHeadings": {
 			"ancestry": "Ascendencia",
 			"background": "Trasfondo",
-			"boon": "Mejora",
+			"boon": "Don",
 			"feature": "Rasgos de clase"
 		},
 		"healingTypes": {
@@ -370,7 +425,7 @@
 		},
 		"prompts": {
 			"changeActorImage": "Modificar imagen de actor",
-			"changeBoonImage": "Modificar imagen de mejora",
+			"changeBoonImage": "Modificar imagen de don",
 			"changeClassImage": "Modificar imagen de clase",
 			"changeFeatureImage": "Modificar imagen de rasgo",
 			"changeItemImage": "Modificar imagen de objeto",
@@ -480,6 +535,7 @@
 			"combatMana": "Maná de combate",
 			"grantItem": "Objeto",
 			"grantProficiency": "Competencia",
+			"healingPotionBonus": "Bono de poción de curación",
 			"hitDiceAdvantage": "Ventaja en Dados de Golpe",
 			"incrementHitDice": "Incrementar Dado de Golpe",
 			"initiativeBonus": "Bono de iniciativa",
@@ -492,13 +548,14 @@
 			"savingThrowBonus": "Bono de salvación",
 			"savingThrowRollMode": "Modo de tirada de salvación",
 			"skillBonus": "Bono de habilidad",
-			"speedBonus": "Bono de velocidad"
+			"speedBonus": "Bono de velocidad",
+			"unarmedDamage": "Daño sin armas"
 		},
 		"creatureFeatures": {
 			"noFeatures": "Sin rasgos aún.",
 			"actionSequence": "Tras el turno de cada héroe, elige uno.",
 			"expand": "Expandir",
-			"collapse": "Contraer"
+			"collapse": "Colapsar"
 		},
 		"saves": {
 			"save": "Salvación",
@@ -601,7 +658,7 @@
 		},
 		"sheets": {
 			"background": "Hoja de trasfondos de Nimble",
-			"boon": "Hoja de mejoras de Nimble",
+			"boon": "Hoja de dones de Nimble",
 			"class": "Hoja de clase de Nimble",
 			"feature": "Hoja de características de Nimble",
 			"monsterFeature": "Hoja de características de monstruo de Nimble",
@@ -629,6 +686,172 @@
 			"turn": "turno"
 		},
 		"ui": {
+			"cancel": "Cancelar",
+			"heroicActions": {
+				"title": "Acciones heroicas",
+				"reactionsTitle": "Reacciones heroicas",
+				"reactionsPlaceholder": "Reacciones próximamente...",
+				"enterCombat": "Entra en combate para usar acciones",
+				"outsideCombat": "No estás en combate",
+				"noActions": "No te quedan acciones",
+				"noSpells": "No te quedan conjuros",
+				"endTurn": "Terminar turno",
+				"rollInitiative": "Tirada de iniciativa",
+				"useActionsFirst": "Usa tus acciones primero",
+				"noPermissionEndTurn": "No tienes permiso para terminar turnos.",
+				"noPermissionRollInitiative": "No tienes permiso para tirar iniciativa.",
+				"selectAttack": "Atacar",
+				"selectSpell": "Lanzar conjuro",
+				"noWeapons": "No hay armas ni ataques disponibles.",
+				"noSpellsFound": "No se han encontrado conjuros.",
+				"unarmedStrike": "Ataque sin armas",
+				"feature": "Rasgo",
+				"mana": "Maná {cost}",
+				"thrown": "Lanzado: {distance}",
+				"baseEffect": "Efecto",
+				"higherLevelEffect": "A niveles superiores",
+				"cantrip": "Truco",
+				"spellTier": "Nivel {tier}",
+				"rangeDistance": "Distancia: {distance}",
+				"reachDistance": "Alcance: {distance}",
+				"targetTypes": {
+					"self": "Uno mismo",
+					"singleTarget": "Objetivo único",
+					"twoTargets": "2 objetivos",
+					"multiTarget": "{count} objetivos",
+					"aoe": "AdE"
+				},
+				"pip": {
+					"spendAction": "Utilizar acción {number}",
+					"restoreAction": "Recuperar acción {number}",
+					"clickToSpend": "Presiona para utilizar acción",
+					"clickToRestore": "Presiona para recuperar acción"
+				},
+				"actionsHeader": "Acciones",
+				"moveAction": "<p><strong>{name}</strong> usó una acción para mover.</p>",
+				"actions": {
+					"attack": {
+						"label": "Ataque",
+						"description": "Atacar con un arma"
+					},
+					"spell": {
+						"label": "Lanzar un conjuro",
+						"description": "Canalizar energía mágica"
+					},
+					"move": {
+						"label": "Mover",
+						"description": "Reubicarse en el campo de batalla"
+					},
+					"assess": {
+						"label": "Evaluar",
+						"description": "Analiza tu entorno"
+					}
+				},
+				"help": {
+					"dialogTitle": "Referencia de combate",
+					"tooltip": "¿Qué puedo hacer en combate?",
+					"tabs": {
+						"actions": "Acciones",
+						"reactions": "Reacciones"
+					},
+					"actions": {
+						"intro": "En tu turno, tienes 3 acciones. Las recuperas al final de tu turno, ¡así que úsalas todas! En general, cada cosa cuesta 1 acción.",
+						"footer": "Ataques apresurados: ataques adicionales después del primero tienen desventaja acumulativa.",
+						"attack": {
+							"title": "Atacar",
+							"description": "Tira el dado indicado en tu arma o habilidad. Sacar un 1 es un fallo. Sacar el máximo en el Dado Primario es un golpe crítico: tira de nuevo y ¡súmalo! Los críticos ignoran la armadura."
+						},
+						"spell": {
+							"title": "Lanzar un conjuro",
+							"description": "Requiere de una mano libre (o foco) y la capacidad de hablar. Cuesta una cantidad de maná igual al nivel del conjuro (los trucos son gratis). Puedes potenciar conjuros para efectos mayores."
+						},
+						"move": {
+							"title": "Mover",
+							"description": "Mueve hasta tu velocidad (por defecto 6 casillas). Puedes dividir el movimiento e intercalarlo con otras acciones y Mover varias veces por turno. El terreno difícil reduce la velocidad a mitad."
+						},
+						"assess": {
+							"title": "Evaluar",
+							"description": "Haz una prueba de habilidad CD 12 para: hacer una pregunta (el DJ responde con sinceridad), crear una apertura (+1 al Dado primario contra el objetivo), o anticipar el peligro (-1 al Dado primario contra ti). ¡No puedes volver a utilizar la misma habilidad en un encuentro!"
+						},
+						"free": {
+							"title": "Acciones gratuitas",
+							"description": "Cosas sencillas como abrir una puerta sin llave, gritar algo, soltar un objeto, o terminar concentración. Limitadas a una vez por turno."
+						}
+					},
+					"reactions": {
+						"intro": "Las reacciones cuestan 1 acción y se utilizan cuando no es tu turno. Cada reacción sólo puede usarse una vez por asalto, con lo que empezarás tu siguiente turno con menos acciones.",
+						"footer": "Puedes combinar reacciones (como Interponer o Defender) si tienes suficientes acciones disponibles.",
+						"defend": {
+							"title": "Defender",
+							"description": "Reduce el daño de un único ataque en una cantidad igual a tu Armadura. A discreción del DJ, algunos tipos de daño pueden ser inevitables (como el daño psíquico o ciertas áreas de efecto)."
+						},
+						"interpose": {
+							"title": "Interponer",
+							"description": "Si una criatura que se encuentra como máximo a 2 casillas fuera golpeada por un ataque, podrías empujarla fuera de la trayectoria y convertirte en el nuevo objetivo del ataque. Para hacerlo, ocupas su espacio y la mueves a una casilla adyacente a tu elección."
+						},
+						"opportunity": {
+							"title": "Ataque de oportunidad",
+							"description": "Haz un ataque cuerpo a cuerpo con desventaja contra un enemigo adyacente cuando éste se aleja voluntariamente. Los monstruos no pueden realizar ataques de oportunidad, sólo los héroes pueden."
+						},
+						"help": {
+							"title": "Ayudar",
+							"description": "Concede ventaja a un alaido en una tirada, siempre que puedas explicar de manera razonable cómo le ayudas en la situación. El DJ puede pedir una prueba de habilidad o dar la ventaja automáticamente. Limitada a una reacción de Ayudar por tirada."
+						}
+					}
+				},
+				"collapse": "Colapsar",
+				"expand": "Expandir",
+				"unknown": "Desconocido",
+				"targetLabel": "Objetivo:",
+				"assess": {
+					"dialogTitle": "Acción de Evaluar",
+					"header": "Evaluar",
+					"selectOption": "Selecciona una opción",
+					"selectSkill": "Selecciona una habilidad",
+					"selectSkillPlaceholder": "Selecciona una habilidad...",
+					"selectTarget": "Objetivo",
+					"noTargetsHint": "Apunta a un token en el escenario para seleccionarlo",
+					"tooManyTargetsHint": "Esta acción solo puede tener un objetivo a la vez.",
+					"cannotTargetSelf": "No puedes apuntarte a ti mismo. Elige a otra criatura del escenario.",
+					"rollToAssess": "Tirar {skill}",
+					"checkVsDC": "Prueba de {skill} contra una CD {dc}",
+					"success": "Éxito",
+					"failure": "Fallo",
+					"askQuestion": {
+						"title": "Haz una pregunta",
+						"chatTitle": "Evaluar: Haz una pregunta",
+						"description": "Pregúntale al DJ sobre la situación. Debe contestarte con sinceridad en función de lo que perciba tu personaje.",
+						"success": "<p><strong>{name}</strong> utilizó una acción para evaluar y puede hacerle una pregunta al DJ. El DJ responderá con sinceridad.</p>",
+						"failure": "<p><strong>{name}</strong> utilizó una acción para evaluar pero no logró obtener ninguna información útil.</p>"
+					},
+					"createOpening": {
+						"title": "Crear una apertura",
+						"chatTitle": "Evaluar: Crear una apertura",
+						"description": "Tu siguiente ataque contra el objetivo obtiene un +1 al Dado primario este asalto.",
+						"success": "<p><strong>{name}</strong> utilizó una acción para evaluar a <strong>{target}</strong> y crear una apertura. Su siguiente ataque contra <strong>{target}</strong> obtiene <strong>+1 al Dado primario </strong>.</p>",
+						"failure": "<p><strong>{name}</strong> utilizó una acción para evaluar a <strong>{target}</strong> pero falló en crear una apertura.</p>"
+					},
+					"anticipateDanger": {
+						"title": "Anticipar el peligro",
+						"chatTitle": "Evaluar: Anticipar el peligro",
+						"description": "Todos los dados primarios contra ti se reducen en 1 este asalto.",
+						"success": "<p><strong>{name}</strong> utilizó una acción para evaluar y anticipar el peligro. Todos los dados primarios contra él <strong>se reducen en 1</strong> este asalto.</p>",
+						"failure": "<p><strong>{name}</strong> utilizó una acción para evaluar pero falló en anticipar el peligro.</p>"
+					}
+				},
+				"move": {
+					"title": "Mover",
+					"dialogTitle": "Acción de Mover",
+					"confirmTitle": "¿Moviste?",
+					"confirmDescription": "Confirma que has reubicado a tu personaje en el campo de batalla.",
+					"yourMovement": "Tu movimiento",
+					"spaces": "casillas",
+					"noMovement": "Sin velocidad de movimiento disponible",
+					"actionCost": "Esto costará 1 acción",
+					"confirm": "Usar acción para mover",
+					"cancel": "Cancelar"
+				}
+			},
 			"clearAll": "Borrar todo",
 			"core": "Principal",
 			"conditions": "Estados",
@@ -791,6 +1014,158 @@
 			"range": "Distancia {distance}",
 			"dropError": "No se pudo procesar el objeto soltado. Por favor, informa de este problema."
 		},
+		"npcConfig": {
+			"level": "Nivel",
+			"creatureType": "Tipo de criatura",
+			"sizeCategory": "Categoría de tamaño",
+			"flunky": "Lacayo"
+		},
+		"classSheet": {
+			"identifier": "Identificador",
+			"classComplexity": "Complejidad de la clase",
+			"keyStats": "Atributos Clave",
+			"hitDieSize": "Tamaño de Dado de Golpe",
+			"manaFormula": "Fórmula de maná",
+			"manaRecovery": "Recuperación de maná",
+			"armorProficiencies": "Competencias con armaduras",
+			"weaponProficiencies": "Competencias con armas",
+			"featureGroups": "Grupos de rasgos",
+			"none": "Ninguno",
+			"addWeaponProficiency": "Añadir competencia con armas",
+			"deleteWeaponProficiency": "Eliminar competencia con armas",
+			"addFeatureGroup": "Añadir grupo de rasgos",
+			"deleteFeatureGroup": "Eliminar grupo de rasgos",
+			"description": "Descripción",
+			"config": "Config",
+			"rules": "Reglas"
+		},
+		"skillsConfig": {
+			"skill": "Habilidad",
+			"abilityModifier": "Modificador de habilidad",
+			"skillBonus": "Bono de habilidad",
+			"skillPoints": "Puntos de habilidad",
+			"total": "Total",
+			"decrementSkillPoints": "Reducir puntos de habilidad",
+			"incrementSkillPoints": "Aumentar puntos de habilidad"
+		},
+		"movementConfig": {
+			"gridSpacesNote": "Todas las medidas están en casillas.",
+			"total": "Total",
+			"spaces": "casillas"
+		},
+		"proficiencyConfig": {
+			"armorProficiencies": "Competencias con armaduras",
+			"languageProficiencies": "Competencias con idiomas",
+			"weaponProficiencies": "Competencias con armas",
+			"addWeaponProficiency": "Añadir competencia con arma",
+			"deleteWeaponProficiency": "Elimiinar competencia con arma",
+			"none": "Ninguno"
+		},
+		"scalingDialog": {
+			"level": "Nivel",
+			"formula": "Fórmula",
+			"scalingByCharacterLevel": "Escalado por nivel de personaje",
+			"scaleByLevel": "Escalado por nivel",
+			"scaleBySpellLevel": "Escalado por nivel de conjuro"
+		},
+		"editCurrentHitDiceDialog": {
+			"currentHitDice": "Dados de Golpe actuales",
+			"empty": "Vacío",
+			"max": "Máximo",
+			"restoreAll": "Recuperar todos",
+			"total": "Total",
+			"save": "Guardar",
+			"removeOneDie": "Elimina un d{die}",
+			"addOneDie": "Añade un d{die}",
+			"setToMax": "Establece d{die} al máximo"
+		},
+		"itemMacro": {
+			"command": "Comando"
+		},
+		"chatTargets": {
+			"targets": "Objetivos",
+			"noTargetsSelected": "Objetivos no seleccionados",
+			"addSelectedTokensAsTargets": "Añade los tokens seleccionados como objetivos",
+			"addTargetedTokensAsTargets": "Añade los tokens señalados como objetivos",
+			"removeTarget": "Deseleccionar objetivo"
+		},
+		"chatEffects": {
+			"noEffect": "Sin efecto"
+		},
+		"activationEffects": {
+			"effects": "Efectos",
+			"addEffect": "Añadir efecto",
+			"condition": "Estado",
+			"damage": "Daño",
+			"damageOutcome": "Resultado del daño",
+			"healing": "Curación",
+			"note": "Nota",
+			"onFailedSave": "Al fallar la salvación",
+			"onPassedSave": "Al superar la salvación",
+			"onCriticalHit": "Con un golpe crítico",
+			"onHit": "Al impactar",
+			"onMiss": "Al fallar",
+			"fullDamage": "Daño completo",
+			"halfDamage": "Daño mitad",
+			"general": "General",
+			"flavor": "Descripción",
+			"reminder": "Recordatorio",
+			"warning": "Advertencia",
+			"canMiss": "Puede fallar",
+			"canCrit": "Puede ser crítico",
+			"noAdditionalEffects": "Sin efectos adicionales"
+		},
+		"characterSettings": {
+			"actorImageSettings": "Ajustes de imagen de actor",
+			"xOffset": "X-Offset (px)",
+			"yOffset": "Y-Offset (px)",
+			"scale": "Escala (%)",
+			"embeddedDocumentSettings": "Ajustes de documento integrado",
+			"executeItemMacros": "Ejecutar macros de objeto al activar objeto",
+			"showEmbeddedDocumentImages": "Mostrar imágenes de documento integrado",
+			"inventorySettings": "Ajustes de inventario",
+			"trackInventorySlots": "Rastrear espacios de inventario",
+			"includeCurrencyBulk": "Incluir automáticamente el total de moneda",
+			"bonusInventorySlots": "Bonificador de espacios de inventario",
+			"decrementBonusInventorySlots": "Reducir bonificador de espacios de inventario",
+			"incrementBonusInventorySlots": "Aumentar bonificador de espacios de inventario",
+			"skillSettings": "Ajustes de habilidades",
+			"useTwoColumnSkillsView": "Visualización en dos columnas",
+			"showPassiveSkillScores": "Mostrar puntuaciones pasivas de habilidades",
+			"spellSettings": "Ajustes de conjuros",
+			"highestUnlockedSpellTier": "Nivel más alto de conjuro desbloqueado",
+			"decrementHighestUnlockedSpellTier": "Reducir nivel más alto de conjuro desbloqueado",
+			"incrementHighestUnlockedSpellTier": "Aumentar nivel más alto de conjuro desbloqueado",
+			"resetSpellTier": "Reiniciar nivel de conjuro",
+			"resetHighestUnlockedSpellTier": "Reiniciar nivel más alto de conjuro desbloqueado"
+		},
+		"classSelection": {
+			"stepSelectClass": "Paso 1: Elige una clase",
+			"noDescriptionAvailable": "Sin descripción disponible",
+			"classComplexity": "Complejidad de la clase:",
+			"editClassSelection": "Modificar selección de clase",
+			"unknown": "Desconocido",
+			"noClassesAvailable": "No hay clases disponibles en los compendios de este mundo."
+		},
+		"savingThrowConfig": {
+			"dis": "Desventaja",
+			"normal": "Normal",
+			"adv": "Ventaja",
+			"advMultiplied": "Ventaja ×{count}",
+			"disMultiplied": "Desventaja ×{count}",
+			"currentSelection": "Selección actual",
+			"select": "Seleccionar {save}"
+		},
+		"combatControls": {
+			"endCombatTitle": "¿Finalizar combate?",
+			"endCombatContent": "¿Finalizar este encuentro de combate?",
+			"endCombat": "Finalizar combate",
+			"continueCombat": "Continuar combate",
+			"previousRound": "Asalto anterior",
+			"previousTurn": "Turno anterior",
+			"nextTurn": "Turno siguiente",
+			"nextRound": "Asalto siguiente"
+		},
 		"itemConfig": {
 			"areaSize": "Tamaño de área",
 			"targets": "Objetivos",
@@ -875,6 +1250,38 @@
 				"name": "Expandir tiradas automáticamente",
 				"hint": "Al activarse, los detalles de la tirada de dados se muestran directamente debajo de cada tirada en los mensajes del chat, sin necesidad de pasar el cursor"
 			}
+		},
+		"combatTrackerSettings": {
+			"title": "Ajustes de Gestor de Combate",
+			"introText": "Los controles de animación del turno actual están activos. Todas las demás secciones permanecen solo en vista previa.",
+			"currentRolePreview": "Vista previa del rol activo:",
+			"gm": "DJ",
+			"player": "Jugador",
+			"currentTurnAnimations": "Animaciones actuales del turno",
+			"pulseAnimation": "Animación pulsante",
+			"borderGlow": "Brillo del borde",
+			"edgeCrawler": "Recorrido del borde",
+			"combatTrackerLocation": "Localización del Gestor de Combate",
+			"layoutPosition": "Posición de la interfaz",
+			"layoutHint": "Elige dónde ubicar el gestor en la pantalla.",
+			"playerPermissions": "Permisos de jugadores",
+			"allowPlayersToMoveCards": "Permitir que otros jugadores muevan la ficha de otro jugador",
+			"turnManagementSafety": "Seguridad de gestión de turnos",
+			"warnOnEndTurn": "Advertir a los jugadores al pulsar \"Finalizar turno\" con las acciones restantes",
+			"roleBasedControls": "Controles según rol (Vista previa)",
+			"roleBasedControlsHint": "La matriz de permisos mostrada a continuación solo funciona como interfaz; aún no controla nada.",
+			"setting": "Ajuste",
+			"gmView": "Vista de DJ",
+			"gmModify": "Modificar DJ",
+			"playerView": "Vista de jugador",
+			"playerModify": "Modificar jugador",
+			"extensibility": "Extensibilidad",
+			"extensibilityHint": "Con el tiempo se podrán agregar más configuraciones del rastreador de combate a esta ventana.",
+			"close": "Cerrar",
+			"currentTurnAnimationsLabel": "Animaciones de turno activas",
+			"combatTrackerLocationLabel": "Ubicación del Gestor de Combate",
+			"playersCanMoveCards": "Los jugadores pueden mover las fichas de otros jugadores",
+			"warnOnEndTurnLabel": "Advierte al finalizar turno con las acciones restantes"
 		},
 		"nimbleCombatSystemWindow": {
 			"title": "Sistema de combate",

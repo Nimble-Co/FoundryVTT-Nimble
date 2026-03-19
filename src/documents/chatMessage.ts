@@ -5,7 +5,7 @@ import type { EffectNode } from '#types/effectTree.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 
 /** Types for activation cards that have targets and effects */
-type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'spell';
+type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'reaction' | 'spell';
 
 /** Record of applied healing for undo functionality */
 export interface AppliedHealingRecord {
@@ -119,7 +119,7 @@ class NimbleChatMessage extends ChatMessage {
 	/**                       Getters                          */
 	/** ------------------------------------------------------ */
 	get activationCardTypes(): ActivationCardTypes[] {
-		return ['feature', 'minionGroupAttack', 'object', 'spell'];
+		return ['feature', 'minionGroupAttack', 'object', 'reaction', 'spell'];
 	}
 
 	get reactive() {
@@ -226,6 +226,7 @@ class NimbleChatMessage extends ChatMessage {
 
 	async applyDamage(value: number, options?: Record<string, unknown>): Promise<void> {
 		if (!this.isActivationCard()) return;
+		if (!game.user?.isGM) return;
 
 		if (options?.outcome === 'noDamage') {
 			ui.notifications?.info('No damage to apply.');
@@ -373,7 +374,7 @@ class NimbleChatMessage extends ChatMessage {
 
 			const updates: Record<string, unknown> = {};
 
-			if (healingRecord.healingType === 'temporaryHealing') {
+			if (healingRecord.healingType === 'tempHealing') {
 				// Revert temp HP
 				updates['system.attributes.hp.temp'] = targetRecord.previousTempHp;
 			} else {

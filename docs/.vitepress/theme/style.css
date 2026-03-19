@@ -1,0 +1,25 @@
+:root {
+  --vp-c-brand-1: #4a90d9;
+  --vp-c-brand-2: #3a7bc8;
+  --vp-c-brand-3: #2e6ab5;
+  --vp-c-brand-soft: rgba(74, 144, 217, 0.14);
+}
+
+.dark {
+  --vp-c-brand-1: #5a9ee6;
+  --vp-c-brand-2: #4a90d9;
+  --vp-c-brand-3: #3a7bc8;
+  --vp-c-brand-soft: rgba(74, 144, 217, 0.16);
+}
+
+:root {
+  --vp-button-brand-bg: var(--vp-c-brand-1);
+  --vp-button-brand-hover-bg: var(--vp-c-brand-2);
+  --vp-button-brand-active-bg: var(--vp-c-brand-3);
+}
+
+/* Home page hero tweaks */
+.VPHero .VPImage {
+  max-width: 180px;
+  max-height: 180px;
+}

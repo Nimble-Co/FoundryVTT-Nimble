@@ -12,11 +12,13 @@ import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
 import { MaximizeHitDiceRule } from '../models/rules/maximizeHitDice.js';
 import { MaxWoundsRule } from '../models/rules/maxWounds.js';
+import { MeleeDamageBonusRule } from '../models/rules/meleeDamageBonus.js';
 import { NoteRule } from '../models/rules/note.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SkillBonusRule } from '../models/rules/skillBonus.js';
 import { SpeedBonusRule } from '../models/rules/speedBonus.js';
+import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 
 export default function registerRulesConfig() {
 	const ruleTypes = {
@@ -34,11 +36,13 @@ export default function registerRulesConfig() {
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
 		maximizeHitDice: 'NIMBLE.ruleTypes.maximizeHitDice',
 		maxWounds: 'NIMBLE.ruleTypes.maxWounds',
+		meleeDamageBonus: 'NIMBLE.ruleTypes.meleeDamageBonus',
 		note: 'NIMBLE.ruleTypes.note',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
 		skillBonus: 'NIMBLE.ruleTypes.skillBonus',
 		speedBonus: 'NIMBLE.ruleTypes.speedBonus',
+		unarmedDamage: 'NIMBLE.ruleTypes.unarmedDamage',
 	};
 
 	const ruleDataModels = {
@@ -56,11 +60,13 @@ export default function registerRulesConfig() {
 		maxHpBonus: MaxHpBonusRule,
 		maximizeHitDice: MaximizeHitDiceRule,
 		maxWounds: MaxWoundsRule,
+		meleeDamageBonus: MeleeDamageBonusRule,
 		note: NoteRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,
 		skillBonus: SkillBonusRule,
 		speedBonus: SpeedBonusRule,
+		unarmedDamage: UnarmedDamageRule,
 	} as const;
 
 	return { ruleDataModels, ruleTypes };

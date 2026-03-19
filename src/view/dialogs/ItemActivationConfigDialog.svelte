@@ -15,6 +15,7 @@
 
 	// Get all damage effects from the item's activation effects
 	// This searches recursively through the effects tree, including sharedRolls
+	// Only include top-level damage effects (not nested ones like criticalHit, miss, etc.)
 	let damageEffects = $derived.by(() => {
 		const effects = item.system.activation?.effects ?? [];
 		const allDamageEffects = [];
@@ -22,7 +23,13 @@
 		// Flatten the tree to get all effects including those in sharedRolls
 		const flattened = flattenEffectsTree(effects);
 		for (const effect of flattened) {
-			if (effect.type === 'damage') {
+			// Only include top-level damage effects or sharedRolls
+			// Exclude conditional damage (criticalHit, miss, hit, failedSaveBy, etc.)
+			const isConditional =
+				(effect.parentContext && ['criticalHit', 'miss', 'hit'].includes(effect.parentContext)) ||
+				effect.parentContext?.startsWith('failedSaveBy');
+
+			if (effect.type === 'damage' && !isConditional) {
 				allDamageEffects.push({
 					formula: effect.formula || '0',
 					damageType: effect.damageType,

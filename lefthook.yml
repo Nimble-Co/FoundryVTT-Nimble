@@ -27,7 +27,7 @@ pre-push:
       exclude: "packs/**"
       run: npx @biomejs/biome check --no-errors-on-unmatched --error-on-warnings --files-ignore-unknown=true {push_files} 2>&1 | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b\]11;rgb:[^;]*;[^R]*R//g'
     typecheck:
-      run: npm run type-check 2>&1 | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b\]11;rgb:[^;]*;[^R]*R//g'
+      run: pnpm run type-check 2>&1 | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b\]11;rgb:[^;]*;[^R]*R//g'
     tests:
       glob: "*.{js,ts,mjs,mts,svelte}"
-      run: npm run test 2>&1 | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b\]11;rgb:[^;]*;[^R]*R//g'
+      run: pnpm run test 2>&1 | sed -E 's/\x1b\[[0-9;]*[a-zA-Z]//g; s/\x1b\]11;rgb:[^;]*;[^R]*R//g'

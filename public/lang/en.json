@@ -42,6 +42,40 @@
 		"abilityScoreControls": {
 			"confirmStatAssignments": "Confirm Stat Assignments"
 		},
+		"statConfig": {
+			"baseStats": "Base Stats",
+			"baseStatsSubtitle": "Starting stats from character creation",
+			"selectArray": "Select Array",
+			"currentArray": "Current Array",
+			"bonusTotal": "Bonus Total",
+			"asiTotal": "ASI Total",
+			"keyStat": "Key Stat",
+			"keyStats": "Key Stats",
+			"advOnSaves": "Adv. on Saves",
+			"disOnSaves": "Dis. on Saves",
+			"primary": "Primary",
+			"secondary": "Secondary",
+			"capstone": "Capstone",
+			"dropHere": "Drop here",
+			"noStatIncreasesYet": "No stat increases available yet",
+			"statIncreaseHint": "Stat increases are gained at levels 4, 5, 8, 9, 12, 13, 16, 17, and 20",
+			"baseScoresWarning": "Your base scores do not match any of the standard Nimble stat arrays.",
+			"bonuses": "Bonuses",
+			"bonusesSubtitle": "Modifiers from feats, items, and other sources",
+			"noBonuses": "No bonuses from feats or items",
+			"statIncreases": "Stat Increases",
+			"statIncreasesSubtitle": "Improvements gained at certain class levels",
+			"finalModifier": "Final Modifier",
+			"editBaseStats": "Edit Base Stats",
+			"cancel": "Cancel",
+			"applyChanges": "Apply Changes",
+			"toggleStatIncrease": "Toggle Stat Increase",
+			"primaryTooltip": "+1 to one of your Key Stats",
+			"secondaryTooltip": "+1 to one of your Secondary Stats",
+			"capstoneTooltip": "+1 to any 2 of your stats",
+			"specialBoonAvailable": "Special Boon Available",
+			"boon": "Boon"
+		},
 		"chat": {
 			"applyHealing": "Apply Healing",
 			"healing": "Healing",
@@ -476,6 +510,7 @@
 			"reach": "Reach",
 			"range": "Range",
 			"load": "Load",
+			"secretSpell": "Secret Spell",
 			"thrown": "Thrown",
 			"twoHanded": "2-Handed",
 			"utilitySpell": "Utility",
@@ -500,11 +535,13 @@
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
 			"maxWounds": "Wounds",
+			"meleeDamageBonus": "Melee Damage Bonus",
 			"note": "Note",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
 			"skillBonus": "Skill Bonus",
-			"speedBonus": "Speed Bonus"
+			"speedBonus": "Speed Bonus",
+			"unarmedDamage": "Unarmed Damage"
 		},
 		"creatureFeatures": {
 			"noFeatures": "No features yet.",
@@ -641,6 +678,272 @@
 			"turn": "turn"
 		},
 		"ui": {
+			"cancel": "Cancel",
+			"combatTracker": {
+				"scrollbar": "Combat turn order scrollbar",
+				"hitPoints": "Hit Points",
+				"hitPointsHidden": "Hit Points hidden",
+				"mana": "Mana",
+				"wounds": "Wounds",
+				"woundsHidden": "Wounds hidden",
+				"woundsValue": "Wounds {current}/{max}",
+				"removeFromCombat": "Remove from Combat"
+			},
+			"heroicActions": {
+				"title": "Heroic Actions",
+				"reactionsTitle": "Heroic Reactions",
+				"reactions": {
+					"actionCost": "This will use 1 action (reaction)",
+					"cost": "1 Action",
+					"armor": "Armor",
+					"advantage": "Advantage",
+					"disadvantage": "Disadvantage",
+					"weapon": "Weapon",
+					"spaces": "{count} spaces",
+					"target": "Target",
+					"targetAlly": "Target an ally token",
+					"targetAllyOptional": "Target an ally token (optional)",
+					"targetEnemy": "Target an enemy token (optional)",
+					"selectOneTarget": "Select only one target",
+					"multipleTargets": "Multiple targets selected",
+					"defend": {
+						"label": "Defend",
+						"description": "Reduce damage from any single attack by your Armor value. At the GM's discretion, some damage may not be avoidable (e.g., psychic damage, or some areas of effect).",
+						"panelDescription": "Reduce damage from any single attack by your <strong>Armor ({armor})</strong>. Some damage like psychic or certain area effects may not be avoidable.",
+						"title": "Defend",
+						"armorValue": "Your Armor",
+						"armorBadge": "Armor {armor}",
+						"confirm": "Defend",
+						"chatMessage": "<p><strong>{name}</strong> uses their reaction to <strong>Defend</strong>, reducing damage by their Armor value ({armor}).</p>"
+					},
+					"interpose": {
+						"label": "Interpose",
+						"description": "When a creature within 2 spaces would be struck with an attack, you can push them out of the way and become the new target. You enter their space and move them to an adjacent space of your choice.",
+						"panelDescription": "When an ally within <strong>2 spaces</strong> would be hit, push them aside and become the new target. You enter their space and move them adjacent.",
+						"title": "Interpose",
+						"range": "Range: 2 spaces",
+						"rangeBadge": "2 spaces",
+						"tip": "Combine with <strong>Defend</strong> to also reduce the damage you take!",
+						"confirm": "Interpose",
+						"protecting": "Protecting",
+						"chatMessage": "<p><strong>{name}</strong> uses their reaction to <strong>Interpose</strong>, stepping in front of <strong>{target}</strong> to become the target of an attack.</p>"
+					},
+					"interposeAndDefend": {
+						"confirm": "Interpose & Defend",
+						"cost": "2 Actions",
+						"chatMessage": "<p><strong>{name}</strong> uses <strong>2 reactions</strong> to <strong>Interpose</strong> for <strong>{target}</strong> and <strong>Defend</strong>, reducing damage by their Armor value ({armor}).</p>"
+					},
+					"opportunity": {
+						"label": "Opportunity Attack",
+						"description": "Make a melee attack against an adjacent enemy as it willingly moves away. Only heroes can make opportunity attacks - monsters cannot.",
+						"panelDescription": "Strike an adjacent enemy as they willingly move away. Only heroes can make opportunity attacks.",
+						"title": "Opportunity Attack",
+						"disadvantage": "This attack is made with disadvantage",
+						"disadvantageBadge": "Disadvantage",
+						"selectWeapon": "Select a melee weapon",
+						"noMeleeWeapons": "No melee weapons available",
+						"unarmedOpportunity": "Opportunity Attack (Unarmed)",
+						"confirm": "Make Opportunity Attack",
+						"chatMessage": "<p><strong>{name}</strong> uses their reaction to make an <strong>Opportunity Attack</strong> with {weapon}.</p>"
+					},
+					"help": {
+						"label": "Help",
+						"description": "Grant an ally advantage on a roll if you can reasonably explain to the GM how you could help in the situation. Limited to one Help reaction per roll.",
+						"panelDescription": "Grant an ally <strong>advantage</strong> on a roll by explaining how you help. The GM may require a skill check. Limited to one Help per roll.",
+						"title": "Help",
+						"effect": "Grants an ally advantage on their roll",
+						"advantageBadge": "Advantage",
+						"tip": "Think fast when an ally fails! A creative explanation might turn failure into success.",
+						"confirm": "Help an Ally",
+						"helping": "Helping",
+						"chatMessage": "<p><strong>{name}</strong> uses their reaction to <strong>Help</strong> <strong>{target}</strong>, granting them advantage on their roll.</p>"
+					}
+				},
+				"move": {
+					"title": "Move",
+					"cost": "1 Action",
+					"speed": "Speed",
+					"panelDescription": "Move up to your speed. You can split movement around other actions.",
+					"spaces": "spaces",
+					"confirmMove": "Confirm Move"
+				},
+				"enterCombat": "Enter combat to use actions",
+				"outsideCombat": "You are outside of combat",
+				"noActions": "You don't have any actions",
+				"noSpells": "You don't have any spells",
+				"endTurn": "End Turn",
+				"rollInitiative": "Roll Initiative",
+				"useActionsFirst": "Use your actions first",
+				"noPermissionEndTurn": "You do not have permission to end turns.",
+				"noPermissionRollInitiative": "You do not have permission to roll initiative.",
+				"selectAttack": "Attack",
+				"selectSpell": "Cast Spell",
+				"noWeapons": "No weapons or attack features found.",
+				"noSpellsFound": "No spells found.",
+				"unarmedStrike": "Unarmed Strike",
+				"feature": "Feature",
+				"mana": "{cost} Mana",
+				"thrown": "Thrown: {distance}",
+				"baseEffect": "Effect",
+				"higherLevelEffect": "At Higher Levels",
+				"cantrip": "Cantrip",
+				"spellTier": "Tier {tier}",
+				"rangeDistance": "Range: {distance}",
+				"reachDistance": "Reach: {distance}",
+				"targetTypes": {
+					"self": "Self",
+					"singleTarget": "Single Target",
+					"twoTargets": "2 Targets",
+					"multiTarget": "{count} Targets",
+					"aoe": "AoE"
+				},
+				"pip": {
+					"spendAction": "Spend action {number}",
+					"restoreAction": "Restore action {number}",
+					"clickToSpend": "Click to spend action",
+					"clickToRestore": "Click to restore action"
+				},
+				"actionsHeader": "Actions",
+				"moveAction": "<p><strong>{name}</strong> used an action to move.</p>",
+				"reactionLabels": {
+					"defend": "Defend",
+					"interpose": "Interpose",
+					"opportunityAttack": "Opportunity Attack",
+					"help": "Help"
+				},
+				"reactionAvailability": {
+					"available": "{label} available",
+					"spent": "{label} spent"
+				},
+				"actions": {
+					"attack": {
+						"label": "Attack",
+						"description": "Strike with a weapon"
+					},
+					"spell": {
+						"label": "Cast a Spell",
+						"description": "Channel magical energy"
+					},
+					"move": {
+						"label": "Move",
+						"description": "Reposition on the battlefield"
+					},
+					"assess": {
+						"label": "Assess",
+						"description": "Study your surroundings"
+					}
+				},
+				"help": {
+					"dialogTitle": "Combat Reference",
+					"tooltip": "What can I do in combat?",
+					"tabs": {
+						"actions": "Actions",
+						"reactions": "Reactions"
+					},
+					"actions": {
+						"intro": "On your turn, you get 3 actions. All 3 recharge at the end of your turn, so spend them all! Generally, doing any single thing costs 1 action.",
+						"footer": "Rushed Attacks: Additional attacks after the first impose cumulative disadvantage.",
+						"attack": {
+							"title": "Attack",
+							"description": "Roll the die listed on your weapon or ability. Rolling a 1 is a miss. Rolling max on the Primary Die is a critical hit - roll again and add! Crits ignore armor."
+						},
+						"spell": {
+							"title": "Cast a Spell",
+							"description": "Requires a free hand (or focus) and the ability to speak. Costs mana equal to the spell's tier (cantrips are free). You can upcast spells for greater effect."
+						},
+						"move": {
+							"title": "Move",
+							"description": "Move up to your speed (usually 6 spaces). You can split movement around other actions and Move multiple times per turn. Difficult terrain halves speed."
+						},
+						"assess": {
+							"title": "Assess",
+							"description": "Make a DC 12 skill check to: Ask a Question (GM answers honestly), Create an Opening (+1 to Primary Die vs target), or Anticipate Danger (-1 to Primary Dice against you). Can't reuse the same skill in an encounter!"
+						},
+						"free": {
+							"title": "Free Actions",
+							"description": "Simple tasks like opening an unlocked door, shouting a phrase, dropping an item, or ending concentration. Limited to once per turn."
+						}
+					},
+					"reactions": {
+						"intro": "Reactions cost 1 action and are used when it's not your turn. Each reaction can only be used once per round, and you'll start your next turn with fewer actions.",
+						"footer": "You can combine reactions (like Interpose + Defend) if you have enough actions to spend!",
+						"defend": {
+							"title": "Defend",
+							"description": "Reduce damage from any single attack by your Armor value. Some damage (like psychic or certain area effects) may not be avoidable at the GM's discretion."
+						},
+						"interpose": {
+							"title": "Interpose",
+							"description": "When a creature within 2 spaces would be hit, push them aside and become the new target. You enter their space and move them to an adjacent space of your choice."
+						},
+						"opportunity": {
+							"title": "Opportunity Attack",
+							"description": "Make a melee attack with disadvantage against an adjacent enemy as it willingly moves away. Only heroes can make opportunity attacks - monsters cannot."
+						},
+						"help": {
+							"title": "Help",
+							"description": "Grant an ally advantage on a roll if you can explain how you'd help. The GM may call for a skill check or grant it automatically. Limited to one Help per roll."
+						}
+					}
+				},
+				"collapse": "Collapse",
+				"expand": "Expand",
+				"unknown": "Unknown",
+				"targetLabel": "Target:",
+				"assess": {
+					"dialogTitle": "Assess Action",
+					"header": "Assess",
+					"selectOption": "Select an Option",
+					"selectSkill": "Select a Skill",
+					"selectSkillPlaceholder": "Choose a skill...",
+					"selectTarget": "Target",
+					"noTargetsHint": "Target a token on the canvas to select it",
+					"tooManyTargetsHint": "You can only target one creature at a time for this action",
+					"cannotTargetSelf": "You cannot target yourself. Target another creature on the canvas.",
+					"rollToAssess": "Roll {skill}",
+					"checkVsDC": "{skill} Check vs DC {dc}",
+					"success": "Success",
+					"failure": "Failure",
+					"askQuestion": {
+						"title": "Ask a Question",
+						"chatTitle": "Assess: Ask a Question",
+						"description": "Ask the GM a question about the situation. They must answer truthfully based on what your character could reasonably perceive.",
+						"success": "<p><strong>{name}</strong> used an action to assess and may ask the GM one question. The GM will answer honestly.</p>",
+						"failure": "<p><strong>{name}</strong> used an action to assess but failed to glean any useful information.</p>"
+					},
+					"createOpening": {
+						"title": "Create an Opening",
+						"chatTitle": "Assess: Create an Opening",
+						"description": "Your next attack against the target gains +1 to the Primary Die this round.",
+						"success": "<p><strong>{name}</strong> used an action to assess <strong>{target}</strong> and create an opening. Their next attack against <strong>{target}</strong> gains <strong>+1 to the Primary Die</strong>.</p>",
+						"failure": "<p><strong>{name}</strong> used an action to assess <strong>{target}</strong> but failed to create an opening.</p>"
+					},
+					"anticipateDanger": {
+						"title": "Anticipate Danger",
+						"chatTitle": "Assess: Anticipate Danger",
+						"description": "All Primary Dice rolled against you are reduced by 1 this round.",
+						"success": "<p><strong>{name}</strong> used an action to assess and anticipate danger. All Primary Dice rolled against them are <strong>reduced by 1</strong> this round.</p>",
+						"failure": "<p><strong>{name}</strong> used an action to assess but failed to anticipate danger.</p>"
+					}
+				},
+				"move": {
+					"title": "Move",
+					"cost": "1 Action",
+					"speed": "Speed",
+					"panelDescription": "Move up to your speed. You can split movement around other actions and move multiple times per turn.",
+					"confirmMove": "Confirm Move",
+					"dialogTitle": "Move Action",
+					"confirmTitle": "Did you move?",
+					"confirmDescription": "Confirm that you've repositioned your character on the battlefield.",
+					"yourMovement": "Your Movement",
+					"spaces": "spaces",
+					"noMovement": "No movement speeds available",
+					"actionCost": "This will use 1 action",
+					"confirm": "Use Action to Move",
+					"cancel": "Cancel",
+					"speedBadge": "Speed {speed}",
+					"chatMessage": "<p><strong>{name}</strong> used an action to <strong>Move</strong>, with a speed of {speed} spaces.</p>"
+				}
+			},
 			"clearAll": "Clear All",
 			"core": "Core",
 			"conditions": "Conditions",
@@ -803,6 +1106,158 @@
 			"range": "Range {distance}",
 			"dropError": "Failed to process dropped item. Please report this issue."
 		},
+		"npcConfig": {
+			"level": "Level",
+			"creatureType": "Creature Type",
+			"sizeCategory": "Size Category",
+			"flunky": "Flunky"
+		},
+		"classSheet": {
+			"identifier": "Identifier",
+			"classComplexity": "Class Complexity",
+			"keyStats": "Key Stats",
+			"hitDieSize": "Hit Die Size",
+			"manaFormula": "Mana Formula",
+			"manaRecovery": "Mana Recovery",
+			"armorProficiencies": "Armor Proficiencies",
+			"weaponProficiencies": "Weapon Proficiencies",
+			"featureGroups": "Feature Groups",
+			"none": "None",
+			"addWeaponProficiency": "Add Weapon Proficiency",
+			"deleteWeaponProficiency": "Delete Weapon Proficiency",
+			"addFeatureGroup": "Add Feature Group",
+			"deleteFeatureGroup": "Delete Feature Group",
+			"description": "Description",
+			"config": "Config",
+			"rules": "Rules"
+		},
+		"skillsConfig": {
+			"skill": "Skill",
+			"abilityModifier": "Ability Modifier",
+			"skillBonus": "Skill Bonus",
+			"skillPoints": "Skill Points",
+			"total": "Total",
+			"decrementSkillPoints": "Decrement Skill Points",
+			"incrementSkillPoints": "Increment Skill Points"
+		},
+		"movementConfig": {
+			"gridSpacesNote": "All measurements are in grid spaces.",
+			"total": "Total",
+			"spaces": "spaces"
+		},
+		"proficiencyConfig": {
+			"armorProficiencies": "Armor Proficiencies",
+			"languageProficiencies": "Language Proficiencies",
+			"weaponProficiencies": "Weapon Proficiencies",
+			"addWeaponProficiency": "Add Weapon Proficiency",
+			"deleteWeaponProficiency": "Delete Weapon Proficiency",
+			"none": "None"
+		},
+		"scalingDialog": {
+			"level": "Level",
+			"formula": "Formula",
+			"scalingByCharacterLevel": "Scaling by Character Level",
+			"scaleByLevel": "Scale by Level",
+			"scaleBySpellLevel": "Scale by Spell Level"
+		},
+		"editCurrentHitDiceDialog": {
+			"currentHitDice": "Current Hit Dice",
+			"empty": "Empty",
+			"max": "Max",
+			"restoreAll": "Restore all",
+			"total": "Total",
+			"save": "Save",
+			"removeOneDie": "Remove one d{die}",
+			"addOneDie": "Add one d{die}",
+			"setToMax": "Set d{die} to max"
+		},
+		"itemMacro": {
+			"command": "Command"
+		},
+		"chatTargets": {
+			"targets": "Targets",
+			"noTargetsSelected": "No targets selected",
+			"addSelectedTokensAsTargets": "Add Selected Tokens as Targets",
+			"addTargetedTokensAsTargets": "Add Targeted Tokens as Targets",
+			"removeTarget": "Remove Target"
+		},
+		"chatEffects": {
+			"noEffect": "No Effect"
+		},
+		"activationEffects": {
+			"effects": "Effects",
+			"addEffect": "Add Effect",
+			"condition": "Condition",
+			"damage": "Damage",
+			"damageOutcome": "Damage Outcome",
+			"healing": "Healing",
+			"note": "Note",
+			"onFailedSave": "On Failed Save",
+			"onPassedSave": "On Passed Save",
+			"onCriticalHit": "On Critical Hit",
+			"onHit": "On Hit",
+			"onMiss": "On Miss",
+			"fullDamage": "Full Damage",
+			"halfDamage": "Half Damage",
+			"general": "General",
+			"flavor": "Flavor",
+			"reminder": "Reminder",
+			"warning": "Warning",
+			"canMiss": "Can Miss",
+			"canCrit": "Can Crit",
+			"noAdditionalEffects": "No additional effects"
+		},
+		"characterSettings": {
+			"actorImageSettings": "Actor Image Settings",
+			"xOffset": "X-Offset (px)",
+			"yOffset": "Y-Offset (px)",
+			"scale": "Scale (%)",
+			"embeddedDocumentSettings": "Embedded Document Settings",
+			"executeItemMacros": "Execute Item Macros on Item Activation",
+			"showEmbeddedDocumentImages": "Show Embedded Document Images",
+			"inventorySettings": "Inventory Settings",
+			"trackInventorySlots": "Track Inventory Slots",
+			"includeCurrencyBulk": "Automatically Include Currency Bulk",
+			"bonusInventorySlots": "Bonus Inventory Slots",
+			"decrementBonusInventorySlots": "Decrement Bonus Inventory Slots",
+			"incrementBonusInventorySlots": "Increment Bonus Inventory Slots",
+			"skillSettings": "Skill Settings",
+			"useTwoColumnSkillsView": "Use Two-Column Skills View",
+			"showPassiveSkillScores": "Show Passive Skill Scores",
+			"spellSettings": "Spell settings",
+			"highestUnlockedSpellTier": "Highest Unlocked Spell Tier",
+			"decrementHighestUnlockedSpellTier": "Decrement Highest Unlocked Spell Tier",
+			"incrementHighestUnlockedSpellTier": "Increment Highest Unlocked Spell Tier",
+			"resetSpellTier": "Reset spell tier",
+			"resetHighestUnlockedSpellTier": "Reset Highest Unlocked Spell Tier"
+		},
+		"classSelection": {
+			"stepSelectClass": "Step 1: Select Class",
+			"noDescriptionAvailable": "No Description Available",
+			"classComplexity": "Class Complexity:",
+			"editClassSelection": "Edit Class Selection",
+			"unknown": "Unknown",
+			"noClassesAvailable": "There are no classes available in this world's compendium packs."
+		},
+		"savingThrowConfig": {
+			"dis": "Dis",
+			"normal": "Normal",
+			"adv": "Adv",
+			"advMultiplied": "Adv ×{count}",
+			"disMultiplied": "Dis ×{count}",
+			"currentSelection": "Current selection",
+			"select": "Select {save}"
+		},
+		"combatControls": {
+			"endCombatTitle": "End Combat?",
+			"endCombatContent": "End this combat encounter?",
+			"endCombat": "End Combat",
+			"continueCombat": "Continue Combat",
+			"previousRound": "Previous Round",
+			"previousTurn": "Previous Turn",
+			"nextTurn": "Next Turn",
+			"nextRound": "Next Round"
+		},
 		"itemConfig": {
 			"areaSize": "Area Size",
 			"targets": "Targets",
@@ -886,7 +1341,43 @@
 			"autoExpandRolls": {
 				"name": "Auto-Expand Rolls",
 				"hint": "When enabled, dice roll details are shown inline below each roll in chat messages, without needing to hover."
+			},
+			"ncswEnabled": {
+				"name": "Enable Combat System",
+				"hint": "Show the Combat System panel during combat. Helps GMs quickly target heroes and roll attacks for minions, monsters, and legendary monsters."
 			}
+		},
+		"combatTrackerSettings": {
+			"title": "Combat Tracker Settings",
+			"introText": "Current Turn Animation controls are live. All other sections remain preview-only.",
+			"currentRolePreview": "Current role preview:",
+			"gm": "GM",
+			"player": "Player",
+			"currentTurnAnimations": "Current Turn Animations",
+			"pulseAnimation": "Pulse animation",
+			"borderGlow": "Border glow",
+			"edgeCrawler": "Edge crawler",
+			"combatTrackerLocation": "Combat Tracker Location",
+			"layoutPosition": "Layout position",
+			"layoutHint": "Choose where the tracker docks on screen.",
+			"playerPermissions": "Player Permissions",
+			"allowPlayersToMoveCards": "Allow players to move other players' cards",
+			"turnManagementSafety": "Turn Management Safety",
+			"warnOnEndTurn": "Warn players when clicking \"End Turn\" with actions remaining",
+			"roleBasedControls": "Role-Based Controls (Preview)",
+			"roleBasedControlsHint": "The GM-facing permission matrix below is UI-only and not yet wired to behavior.",
+			"setting": "Setting",
+			"gmView": "GM View",
+			"gmModify": "GM Modify",
+			"playerView": "Player View",
+			"playerModify": "Player Modify",
+			"extensibility": "Extensibility",
+			"extensibilityHint": "Additional combat tracker settings can be added to this window over time.",
+			"close": "Close",
+			"currentTurnAnimationsLabel": "Current turn animations",
+			"combatTrackerLocationLabel": "Combat tracker location",
+			"playersCanMoveCards": "Players can move other players cards",
+			"warnOnEndTurnLabel": "Warn on End Turn with actions left"
 		},
 		"nimbleCombatSystemWindow": {
 			"title": "Combat System",

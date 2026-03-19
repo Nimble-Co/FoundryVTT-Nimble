@@ -1,6 +1,325 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DamageRoll } from './DamageRoll.js';
 
+describe('DamageRoll preprocessing', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	describe('Primary die extraction (attacks with canCrit or canMiss)', () => {
+		it('should extract primary die from single die formula', () => {
+			const roll = new DamageRoll(
+				'1d6',
+				{},
+				{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			expect(roll.formula).toBe('1d6x');
+			expect(roll.primaryDie).toBeDefined();
+		});
+
+		it('should extract primary die from multi-die formula', () => {
+			const roll = new DamageRoll(
+				'2d6',
+				{},
+				{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			// 2d6 becomes: 1d6x (primary) + 1d6 (damage)
+			expect(roll.formula).toBe('1d6x + 1d6');
+			expect(roll.primaryDie).toBeDefined();
+		});
+
+		it('should apply advantage to primary die only', () => {
+			const roll = new DamageRoll(
+				'2d6',
+				{},
+				{ canCrit: true, canMiss: true, rollMode: 1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			// Primary die gets advantage (2d6kh), rest stays as damage
+			// 2d6 with advantage → 2d6khx (primary) + 1d6 (damage)
+			expect(roll.formula).toBe('2d6khx + 1d6');
+			expect(roll.primaryDie).toBeDefined();
+			expect(roll.primaryDie?.number).toBe(2);
+		});
+
+		it('should apply disadvantage to primary die only', () => {
+			const roll = new DamageRoll(
+				'2d6',
+				{},
+				{ canCrit: true, canMiss: true, rollMode: -1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			// Primary die gets disadvantage (2d6kl), rest stays as damage
+			expect(roll.formula).toBe('2d6klx + 1d6');
+			expect(roll.primaryDie).toBeDefined();
+			expect(roll.primaryDie?.number).toBe(2);
+		});
+
+		it('should apply multiple levels of advantage to primary die', () => {
+			const roll = new DamageRoll(
+				'1d8',
+				{},
+				{ canCrit: true, canMiss: true, rollMode: 2, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			// 1d8 with advantage 2 → 3d8khx (roll 3, keep 1)
+			expect(roll.formula).toBe('3d8khx');
+			expect(roll.primaryDie?.number).toBe(3);
+		});
+
+		it('should add explosion modifier when canCrit is true', () => {
+			const roll = new DamageRoll(
+				'1d6',
+				{},
+				{ canCrit: true, canMiss: false, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			expect(roll.formula).toBe('1d6x');
+		});
+
+		it('should not add explosion modifier when canCrit is false', () => {
+			const roll = new DamageRoll(
+				'1d6',
+				{},
+				{ canCrit: false, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			expect(roll.formula).toBe('1d6');
+			expect(roll.primaryDie).toBeDefined();
+		});
+	});
+
+	describe('AoE advantage/disadvantage (no primary die)', () => {
+		it('should apply advantage to entire first die term for AoE', () => {
+			const roll = new DamageRoll(
+				'2d8',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			// 2d8 with advantage → 3d8kh2 (roll 3, keep highest 2)
+			expect(roll.formula).toBe('3d8kh2');
+			expect(roll.primaryDie).toBeUndefined();
+		});
+
+		it('should apply disadvantage to entire first die term for AoE', () => {
+			const roll = new DamageRoll(
+				'2d8',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: -1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			// 2d8 with disadvantage → 3d8kl2 (roll 3, keep lowest 2)
+			expect(roll.formula).toBe('3d8kl2');
+			expect(roll.primaryDie).toBeUndefined();
+		});
+
+		it('should apply advantage to single die AoE', () => {
+			const roll = new DamageRoll(
+				'1d8',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			// 1d8 with advantage → 2d8kh (roll 2, keep 1)
+			expect(roll.formula).toBe('2d8kh');
+			expect(roll.primaryDie).toBeUndefined();
+		});
+
+		it('should apply multiple levels of advantage to AoE', () => {
+			const roll = new DamageRoll(
+				'2d6',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 2, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			// 2d6 with advantage 2 → 4d6kh2 (roll 4, keep highest 2)
+			expect(roll.formula).toBe('4d6kh2');
+		});
+
+		it('should apply multiple levels of disadvantage to AoE', () => {
+			const roll = new DamageRoll(
+				'3d6',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: -2, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			// 3d6 with disadvantage 2 → 5d6kl3 (roll 5, keep lowest 3)
+			expect(roll.formula).toBe('5d6kl3');
+		});
+
+		it('should preserve formula modifiers for AoE with advantage', () => {
+			const roll = new DamageRoll(
+				'2d8 + 4',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			// 2d8 + 4 with advantage → 3d8kh2 + 4
+			expect(roll.formula).toBe('3d8kh2 + 4');
+		});
+	});
+
+	describe('No processing needed', () => {
+		it('should not modify formula when canCrit=false, canMiss=false, rollMode=0', () => {
+			const roll = new DamageRoll(
+				'2d8',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			expect(roll.formula).toBe('2d8');
+			expect(roll.primaryDie).toBeUndefined();
+		});
+
+		it('should not modify formula with modifiers when no processing needed', () => {
+			const roll = new DamageRoll(
+				'2d8 + 5',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			expect(roll.formula).toBe('2d8 + 5');
+		});
+	});
+
+	describe('Edge cases', () => {
+		it('should handle formula with only numeric terms', () => {
+			const roll = new DamageRoll(
+				'5',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 1, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			// No die term to modify
+			expect(roll.formula).toBe('5');
+		});
+
+		it('should set isCritical to false when canCrit is false', () => {
+			const roll = new DamageRoll(
+				'2d8',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			expect(roll.isCritical).toBe(false);
+		});
+
+		it('should set isMiss to false when canMiss is false', () => {
+			const roll = new DamageRoll(
+				'2d8',
+				{},
+				{ canCrit: false, canMiss: false, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+			);
+
+			expect(roll.isMiss).toBe(false);
+		});
+	});
+});
+
+describe('DamageRoll vicious weapon preprocessing', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it('should not add explosion modifier when isVicious is true', () => {
+		const roll = new DamageRoll(
+			'1d6',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: true,
+			},
+		);
+
+		// Vicious weapons should NOT have 'x' modifier - they handle explosion manually
+		expect(roll.formula).toBe('1d6');
+		expect(roll.primaryDie).toBeDefined();
+	});
+
+	it('should add explosion modifier when isVicious is false (default)', () => {
+		const roll = new DamageRoll(
+			'1d6',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: false,
+			},
+		);
+
+		// Non-vicious weapons should have 'x' modifier for automatic explosion
+		expect(roll.formula).toBe('1d6x');
+		expect(roll.primaryDie).toBeDefined();
+	});
+
+	it('should apply advantage to vicious primary die without explosion modifier', () => {
+		const roll = new DamageRoll(
+			'2d6',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 1,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: true,
+			},
+		);
+
+		// Should have advantage modifier but no explosion modifier
+		expect(roll.formula).toBe('2d6kh + 1d6');
+		expect(roll.primaryDie).toBeDefined();
+		expect(roll.primaryDie?.number).toBe(2);
+	});
+
+	it('should pass isVicious flag to primary die options', () => {
+		const roll = new DamageRoll(
+			'1d6',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: true,
+			},
+		);
+
+		expect(roll.primaryDie).toBeDefined();
+		expect(roll.primaryDie?.options.isVicious).toBe(true);
+	});
+
+	it('should not add isVicious to primary die when isVicious is false', () => {
+		const roll = new DamageRoll(
+			'1d6',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: false,
+			},
+		);
+
+		expect(roll.primaryDie).toBeDefined();
+		// isVicious should be undefined or false (not explicitly true)
+		expect(roll.primaryDie?.options.isVicious).toBeFalsy();
+	});
+});
+
 describe('DamageRoll.fromData', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -468,7 +787,8 @@ describe('DamageRoll.fromData', () => {
 
 			const roll = DamageRoll.fromData(data);
 
-			expect(roll._formula).toBe('');
+			// When terms array is empty, formula is parsed from the formula string
+			expect(roll._formula).toBe('1d6');
 		});
 
 		it('should handle complex formula with multiple terms', () => {
@@ -488,7 +808,8 @@ describe('DamageRoll.fromData', () => {
 
 			const roll = DamageRoll.fromData(data);
 
-			expect(roll._formula).toBe('1d6+2');
+			// Foundry adds spaces around operators when reconstructing formulas
+			expect(roll._formula).toBe('1d6 + 2');
 			expect(roll.originalFormula).toBe('1d6+2');
 		});
 
@@ -529,7 +850,12 @@ describe('DamageRoll.fromData', () => {
 			expect(roll.formula).toBe('1d6');
 			expect(roll.originalFormula).toBe('1d6');
 			expect(roll.data).toEqual({ test: 'value' });
-			expect(roll.options).toEqual({ canCrit: true, canMiss: true, rollMode: 0 });
+			expect(roll.options).toEqual({
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieAsDamage: true,
+			});
 		});
 
 		it('should preserve parent class properties', () => {
@@ -544,9 +870,15 @@ describe('DamageRoll.fromData', () => {
 
 			const roll = DamageRoll.fromData(data);
 
-			expect(roll.formula).toBe('1d6+2');
+			// Foundry adds spaces around operators when reconstructing formulas
+			expect(roll.formula).toBe('1d6 + 2');
 			expect(roll.data).toEqual({ level: 3 });
-			expect(roll.options).toEqual({ canCrit: true, canMiss: true, rollMode: 1 });
+			expect(roll.options).toEqual({
+				canCrit: true,
+				canMiss: true,
+				rollMode: 1,
+				primaryDieAsDamage: true,
+			});
 		});
 	});
 });

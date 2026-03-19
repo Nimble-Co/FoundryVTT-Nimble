@@ -1,4 +1,5 @@
 <script lang="ts">
+	import localize from '../../utils/localize.js';
 	import TagGroup from '../components/TagGroup.svelte';
 	import MovementSpeed from '../sheets/components/MovementSpeed.svelte';
 
@@ -16,7 +17,9 @@
 
 <section class="nimble-sheet__body nimble-sheet__body--item">
 	<label class="nimble-field" data-field-variant="stacked">
-		<h3 class="nimble-heading" data-heading-variant="field">Level</h3>
+		<h3 class="nimble-heading" data-heading-variant="field">
+			{localize('NIMBLE.npcConfig.level')}
+		</h3>
 
 		<input
 			type="text"
@@ -26,7 +29,9 @@
 	</label>
 
 	<label class="nimble-field" data-field-variant="stacked">
-		<h3 class="nimble-heading" data-heading-variant="field">Creature Type</h3>
+		<h3 class="nimble-heading" data-heading-variant="field">
+			{localize('NIMBLE.npcConfig.creatureType')}
+		</h3>
 
 		<input
 			type="text"
@@ -36,7 +41,9 @@
 	</label>
 
 	<div class="nimble-field" data-field-variant="stacked">
-		<h3 class="nimble-heading" data-heading-variant="field">Size Category</h3>
+		<h3 class="nimble-heading" data-heading-variant="field">
+			{localize('NIMBLE.npcConfig.sizeCategory')}
+		</h3>
 
 		<TagGroup
 			options={prepareSizeCategoryOptions()}
@@ -53,11 +60,13 @@
 				onchange={({ target }) => actor.update({ 'system.details.isFlunky': target.checked })}
 			/>
 
-			<h3 class="nimble-heading" data-heading-variant="field">Flunky</h3>
+			<h3 class="nimble-heading" data-heading-variant="field">
+				{localize('NIMBLE.npcConfig.flunky')}
+			</h3>
 		</label>
 	{/if}
 
-	<MovementSpeed {actor} showDefaultSpeed={true} />
+	<MovementSpeed {actor} showDefaultSpeed editingEnabled />
 </section>
 
 <style>

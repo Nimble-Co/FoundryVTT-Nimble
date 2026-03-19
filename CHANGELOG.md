@@ -6,6 +6,88 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.8.0] - 2026-03-18
+
+### Added
+
+- [#377] Combat tracker v1.0. @7D7D
+- [#412] Apply Damage button affecting action count. @7D7D
+- [#424] Floating combat actions tracker on PC sheet. @trevlar
+- [#426] Data-driven unarmed damage rule system. @trevlar
+- [#427] Assess action chat card. @trevlar
+- [#428] Heroic Actions tab to PC sheet. @trevlar
+- [#431] Heroic Reactions tab with chat card targeting system. @trevlar
+- [#440] NCS persistent Show/Hide. @7D7D
+- [#441] Secret Spells compendium. @7D7D
+- [#447] Zephyr unarmed strike proficiency and Reverberating Strikes. @trevlar
+- [#448] Repurpose combat sidebar button to toggle combat. @trevlar
+- [#452] CI check for migration version consistency. @trevlar
+- [#456] Setting to enable/disable Combat System panel. @trevlar
+- [#458] Empty state for combat tracker with no combatants. @trevlar
+- [#459] Remove combatant button to combat tracker cards. @trevlar
+
+### Fixed
+
+- [#397] Editing of monster movement. @trevlar
+- [#414] Enable editing saves on NPC monster sheets. @trevlar
+- [#416] Stabilize reactive chat card mounting. @trevlar
+- [#417] Grid-area styles to inventory and features delete buttons. @trevlar
+- [#421] Use reactive accessors in chat card components. @trevlar
+- [#432] Longbow damage. @trevlar
+- [#445] Crits cannot miss. @trevlar
+- [#446] Apply advantage/disadvantage to AoE spells without primary die. @trevlar
+- [#449] ActionTracker shows for started combat even if not active. @trevlar
+- [#454] Implement vicious weapon explosion mechanic. @trevlar
+- [#457] Resolve hover name cutoff when no heroes in combat. @trevlar
+- [#460] Apply temp healing to temp HP instead of regular HP. @trevlar
+
+### Changed
+
+- [#419] Add missing translation strings for user-facing UI. @trevlar
+- [#423] Update Twist the Blade 2 to level 13. @trevlar
+- [#430] Register Spanish and French translation files. @trevlar
+- [#438] Update Spanish translation. @carlosvgs
+- [#443] Class features clean up text formatting. @7D7D
+- [#450] Improve reaction panel reactivity and UI. @trevlar
+- [#451] Improve Heroic Actions tab button styling. @trevlar
+- [#455] Style update to Interpose & Defend buttons. @7D7D
+
+---
+
+
+## [0.7.2] - 2026-03-05
+
+### Added
+
+- [#394] NCS Hide/Show toggle button. @7D7D
+- [#375] Apply Healing button and healingPotionBonus rule. @trevlar
+- [#361] Item activation hooks and chat message flags. @fronix
+- [#332] Improved Active Effects and Conditions display on actor sheets and token HUD. @fronix
+
+### Fixed
+
+- [#355] NPCSheet image and Hit Point overlap. @7D7D
+- [#352] Gnoll damage formula. @fronix
+- [#384] Journal Source HTML not displaying and Save button inaccessible. @trevlar
+- [#383] Elf initiative roll mode accumulating. @trevlar
+- [#373] Edit mode toggle on sheets. @fronix
+- [#360] Symlink permissions error on Windows. @fronix
+- [#389] Spell Compendium sorting. @7D7D
+
+### Changed
+
+- [#354] [#379] Spanish translation updates. @carlosvgs
+
+### Maintenance
+
+- [#391] Migrate from npm to pnpm. @fronix
+- [#392] Svelte preprocess part of approved builds. @fronix
+- [#362] Resolve Svelte compile warnings in components and build. @fronix
+- [#359] Worktree cleanup script. @trevlar
+
+---
+
+
 ## [0.7.1] - 2026-02-26
 
 ### Added

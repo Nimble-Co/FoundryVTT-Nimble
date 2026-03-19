@@ -1,11 +1,6 @@
-export interface CombatantSystemWithActions {
-	actions: {
-		base: {
-			current: number;
-			max: number;
-		};
-	};
-}
+export type NimbleCombatantSystemMap = DataModelConfig['Combatant'];
+export type NimbleCombatantSystem = NimbleCombatantSystemMap[keyof NimbleCombatantSystemMap];
+export type CombatantBaseActions = NimbleCombatantSystem['actions']['base'];
 
 export interface MinionGroupAttackSelection {
 	memberCombatantId: string;
@@ -62,16 +57,24 @@ export interface ResolvedMinionAttackActionContext {
 	unsupportedWarning: string | null;
 }
 
+export interface TurnIdentity {
+	combatantId: string;
+	occurrence: number | null;
+}
+
 export interface DropResolution {
 	source: Combatant.Implementation;
+	sourceCombatants: Combatant.Implementation[];
 	target: Combatant.Implementation;
+	targetCombatantIds: string[];
 	siblings: Combatant.Implementation[];
 	sortBefore: boolean;
-	previousActiveCombatantId: string | null;
+	previousActiveTurnIdentity: TurnIdentity | null;
 }
 
 export interface DropTargetResolution {
 	target: Combatant.Implementation;
+	targetCombatantIds: string[];
 	sortBefore: boolean;
 }
 
