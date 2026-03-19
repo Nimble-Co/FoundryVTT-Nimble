@@ -529,6 +529,7 @@ const spellUpcastDialog = {
 const spellProperties = {
 	...genericProperties,
 	concentration: 'NIMBLE.properties.concentration',
+	secretSpell: 'NIMBLE.properties.secretSpell',
 	utilitySpell: 'NIMBLE.properties.utilitySpell',
 };
 

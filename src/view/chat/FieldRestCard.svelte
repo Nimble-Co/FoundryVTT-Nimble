@@ -8,8 +8,8 @@
 
 	let { messageDocument } = $props();
 
-	const system = $derived(messageDocument.system);
-	const rolls = $derived(messageDocument.rolls);
+	const system = $derived(messageDocument.reactive.system);
+	const rolls = $derived(messageDocument.reactive.rolls);
 	const actorType = $derived(system.actorType);
 	const permissions = $derived(system.permissions);
 	const restType = $derived(system.restType);
@@ -19,7 +19,7 @@
 	const hadAdvantage = $derived(system.hadAdvantage);
 	const advantageSource = $derived(system.advantageSource);
 
-	const headerBackgroundColor = $derived(messageDocument.author.color);
+	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
 
 	// Determine rest type label and icon

@@ -212,6 +212,7 @@
 
 							<button
 								class="nimble-button"
+								style="grid-area: configureButton"
 								data-button-variant="icon"
 								type="button"
 								aria-label="Configure {item.reactive.name}"
@@ -222,6 +223,7 @@
 
 							<button
 								class="nimble-button"
+								style="grid-area: deleteButton"
 								data-button-variant="icon"
 								type="button"
 								aria-label="Delete {item.reactive.name}"
@@ -266,6 +268,7 @@
 
 									<button
 										class="nimble-button"
+										style="grid-area: configureButton"
 										data-button-variant="icon"
 										type="button"
 										aria-label="Configure {subclass.reactive.name}"
@@ -276,6 +279,7 @@
 
 									<button
 										class="nimble-button"
+										style="grid-area: deleteButton"
 										data-button-variant="icon"
 										type="button"
 										aria-label="Delete {subclass.reactive.name}"

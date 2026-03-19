@@ -54,7 +54,7 @@ export type DamageOutcomeNode = {
 export type HealingNode = {
 	id: string;
 	type: 'healing';
-	healingType: 'healing' | 'temporaryHealing';
+	healingType: 'healing' | 'tempHealing';
 	formula: string;
 	parentContext: string | null;
 	parentNode: string | null;

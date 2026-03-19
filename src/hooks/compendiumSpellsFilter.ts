@@ -1,9 +1,14 @@
 /**
- * Spell School Icon Filter for Nimble Spells Compendium
- * Adds clickable icon buttons to filter spells by school and sorts by tier with group headers
+ * Spell school filters for Nimble spell compendia.
+ * Adds clickable icon buttons and groups spells by tier and school.
  */
 
-const GLOBAL_NIMBLE_SPELLS_COLLECTION = 'nimble.nimble-spells';
+const SPELL_COMPENDIUM_COLLECTIONS = [
+	'nimble.nimble-spells',
+	'nimble.nimble-secret-spells',
+] as const;
+const DEFAULT_SPELL_COMPENDIUM_COLLECTION = SPELL_COMPENDIUM_COLLECTIONS[0];
+const SPELL_COMPENDIUM_COLLECTION_SET = new Set<string>(SPELL_COMPENDIUM_COLLECTIONS);
 
 const SCHOOL_KEYS = [
 	'fire',
@@ -66,6 +71,12 @@ type CompendiumFilterState = {
 
 const compendiumStateByApp = new WeakMap<object, CompendiumFilterState>();
 
+export function isSupportedSpellCompendium(
+	collectionId: string | null | undefined,
+): collectionId is string {
+	return typeof collectionId === 'string' && SPELL_COMPENDIUM_COLLECTION_SET.has(collectionId);
+}
+
 function createCompendiumFilterState(): CompendiumFilterState {
 	return {
 		activeSchoolFilter: '',
@@ -87,6 +98,90 @@ function getCompendiumFilterState(app: any): CompendiumFilterState {
 		compendiumStateByApp.set(app, state);
 	}
 	return state;
+}
+
+function resolveCompendiumCollectionId(app: any, collection?: any): string | null {
+	const collectionId =
+		app?.collection?.metadata?.id ||
+		app?.collection?.id ||
+		collection?.metadata?.id ||
+		collection?.id ||
+		app?.pack ||
+		collection?.collection ||
+		null;
+
+	return typeof collectionId === 'string' ? collectionId : null;
+}
+
+function getCompendiumCollectionAttr(collectionId: string): string {
+	return (
+		collectionId.split('.').pop() ||
+		DEFAULT_SPELL_COMPENDIUM_COLLECTION.split('.').pop() ||
+		'nimble-spells'
+	);
+}
+
+function getSpellCompendiumElement(app: any, collectionId: string): HTMLElement | null {
+	if (app?.element) {
+		return app.element;
+	}
+
+	if (typeof document === 'undefined') {
+		return null;
+	}
+
+	const collectionAttr = getCompendiumCollectionAttr(collectionId);
+	return (document.querySelector(`.compendium[data-collection="${collectionAttr}"]`) ||
+		document.querySelector(`.compendium[data-pack="${collectionAttr}"]`) ||
+		document.querySelector(
+			`.directory[data-collection="${collectionAttr}"]`,
+		)) as HTMLElement | null;
+}
+
+function getSpellPack(pack: any, collectionId: string): any {
+	return pack || game.packs.get(collectionId) || null;
+}
+
+async function loadSpellIndex(pack: any, collectionId: string): Promise<any[]> {
+	const resolvedPack = getSpellPack(pack, collectionId);
+	if (!resolvedPack) {
+		return [];
+	}
+
+	let index: any[] = [];
+
+	if (typeof resolvedPack.getIndex === 'function') {
+		const indexData = await resolvedPack.getIndex({
+			fields: ['system.school', 'system.tier', 'system.properties.selected', 'name'],
+		});
+		if (indexData && indexData.size > 0) {
+			index = Array.from(indexData);
+		} else if (resolvedPack.index && resolvedPack.index.size > 0) {
+			index = Array.from(resolvedPack.index);
+		}
+	}
+
+	if (index.length === 0 && typeof resolvedPack.getDocuments === 'function') {
+		const docs = await resolvedPack.getDocuments();
+		index = docs.map((doc: any) => ({
+			_id: doc.id,
+			name: doc.name || '',
+			system: {
+				school: doc.system?.school || '',
+				tier: doc.system?.tier ?? 0,
+				properties: { selected: doc.system?.properties?.selected || [] },
+			},
+		}));
+	}
+
+	if (index.length === 0) {
+		const gamePack = game.packs.get(collectionId);
+		if ((gamePack?.index?.size ?? 0) > 0) {
+			index = Array.from(gamePack!.index);
+		}
+	}
+
+	return index;
 }
 
 function ensureSchoolFilterStyles(): void {
@@ -492,6 +587,7 @@ function setupClearFiltersButton(
 	app: any,
 	collection: any,
 	state: CompendiumFilterState,
+	collectionId: string,
 ): void {
 	const searchInput = header.querySelector(SEARCH_INPUT_SELECTOR) as HTMLInputElement | null;
 	let clearButton = header.querySelector(
@@ -530,7 +626,7 @@ function setupClearFiltersButton(
 			}
 		}
 
-		applyFilter('', app?.collection || collection, app, collection, state);
+		applyFilter('', app?.collection || collection, app, collection, state, collectionId);
 	};
 
 	if (!clearButton.dataset.nimbleClearFiltersBound) {
@@ -593,77 +689,33 @@ async function applyFilter(
 	app: any,
 	collection: any,
 	state: CompendiumFilterState,
+	collectionId: string,
 ): Promise<void> {
-	const TARGET_COLLECTION = GLOBAL_NIMBLE_SPELLS_COLLECTION;
-
 	try {
 		if (state.isApplyingFilter) {
 			return;
 		}
 		state.isApplyingFilter = true;
 
-		// Get the pack from packFromApp
-		const pack = packFromApp || collection;
+		const pack = getSpellPack(packFromApp || collection, collectionId);
 		if (!pack) {
 			console.warn('Nimble: Unable to find pack for filtering');
 			return;
 		}
 
-		// Load index with fallback chain
 		let index: any[] = [];
 		try {
-			// Try primary method
-			if (typeof pack.getIndex === 'function') {
-				const indexData = await pack.getIndex({
-					fields: ['system.school', 'system.tier', 'system.properties.selected', 'name'],
-				});
-				if (indexData && indexData.size > 0) {
-					index = Array.from(indexData);
-				} else if (pack.index && pack.index.size > 0) {
-					// Fallback 1: use pack.index directly
-					index = Array.from(pack.index);
-				}
-			}
-
-			// Fallback 2: get documents directly
-			if (index.length === 0 && typeof pack.getDocuments === 'function') {
-				const docs = await pack.getDocuments();
-				index = docs.map((doc: any) => ({
-					_id: doc.id,
-					name: doc.name || '',
-					system: {
-						school: doc.system?.school || '',
-						tier: doc.system?.tier ?? 0,
-						properties: { selected: doc.system?.properties?.selected || [] },
-					},
-				}));
-			}
-
-			// Fallback 3: use game.packs
-			if (index.length === 0) {
-				const gamePack = game.packs.get(TARGET_COLLECTION);
-				if ((gamePack?.index?.size ?? 0) > 0) {
-					index = Array.from(gamePack!.index);
-				}
-			}
+			index = await loadSpellIndex(pack, collectionId);
 		} catch (error) {
 			console.warn('Nimble: Error loading pack index:', error);
 			return;
 		}
-
-		// Get the compendium element with multiple selector fallbacks
-		let compendiumElement: HTMLElement | null = null;
-		const collectionAttr = TARGET_COLLECTION.split('.').pop() || 'nimble-spells';
-
-		if (app?.element) {
-			compendiumElement = app.element;
-		} else if (typeof document !== 'undefined') {
-			compendiumElement =
-				document.querySelector(`.compendium[data-collection="${collectionAttr}"]`) ||
-				document.querySelector(`.compendium[data-pack="${collectionAttr}"]`) ||
-				document.querySelector(`.directory[data-collection="${collectionAttr}"]`);
+		if (index.length === 0) {
+			console.warn('Nimble: Unable to load pack index for filtering');
+			return;
 		}
 
+		const compendiumElement = getSpellCompendiumElement(app, collectionId);
 		if (!compendiumElement) {
 			console.warn('Nimble: Unable to find compendium element for filtering');
 			return;
@@ -905,55 +957,27 @@ function initializeSchoolButtons(
 	app: any,
 	collection: any,
 	state: CompendiumFilterState,
+	collectionId: string,
 ): void {
 	async function loadAndRenderButtons() {
-		const TARGET_COLLECTION = GLOBAL_NIMBLE_SPELLS_COLLECTION;
-
 		try {
 			ensureSchoolFilterStyles();
 
-			// Extract CompendiumCollection from app or use directly
-			const pack = app?.collection || collection;
+			const pack = getSpellPack(app?.collection || collection, collectionId);
 			if (!pack) {
 				console.warn('Nimble: Unable to find collection for button initialization');
 				return;
 			}
 
-			// Load pack index
 			let index: any[] = [];
 			try {
-				if (typeof pack.getIndex === 'function') {
-					const indexData = await pack.getIndex({
-						fields: ['system.school', 'system.tier', 'system.properties.selected', 'name'],
-					});
-					if (indexData && indexData.size > 0) {
-						index = Array.from(indexData);
-					} else if (pack.index && pack.index.size > 0) {
-						index = Array.from(pack.index);
-					}
-				}
-
-				if (index.length === 0 && typeof pack.getDocuments === 'function') {
-					const docs = await pack.getDocuments();
-					index = docs.map((doc: any) => ({
-						_id: doc.id,
-						name: doc.name || '',
-						system: {
-							school: doc.system?.school || '',
-							tier: doc.system?.tier ?? 0,
-							properties: { selected: doc.system?.properties?.selected || [] },
-						},
-					}));
-				}
-
-				if (index.length === 0) {
-					const gamePack = game.packs.get(TARGET_COLLECTION);
-					if ((gamePack?.index?.size ?? 0) > 0) {
-						index = Array.from(gamePack!.index);
-					}
-				}
+				index = await loadSpellIndex(pack, collectionId);
 			} catch (error) {
 				console.warn('Nimble: Error loading index for button initialization:', error);
+				return;
+			}
+			if (index.length === 0) {
+				console.warn('Nimble: Unable to load index for button initialization');
 				return;
 			}
 
@@ -1001,7 +1025,7 @@ function initializeSchoolButtons(
 				e.preventDefault();
 				e.stopPropagation();
 				state.activeSchoolFilter = '';
-				applyFilter('', pack, app, collection, state);
+				applyFilter('', pack, app, collection, state, collectionId);
 				// Update active state
 				btnGroup.querySelectorAll('.header-button.nimble-spell-school').forEach((btn) => {
 					btn.classList.remove('active');
@@ -1025,7 +1049,7 @@ function initializeSchoolButtons(
 						e.preventDefault();
 						e.stopPropagation();
 						state.activeSchoolFilter = school;
-						applyFilter(school, pack, app, collection, state);
+						applyFilter(school, pack, app, collection, state, collectionId);
 						// Update active state
 						btnGroup.querySelectorAll('.header-button.nimble-spell-school').forEach((b) => {
 							b.classList.remove('active');
@@ -1050,50 +1074,22 @@ async function addIconsToAllSpells(
 	app: any,
 	collection: any,
 	state: CompendiumFilterState,
+	collectionId: string,
 ): Promise<void> {
-	const TARGET_COLLECTION = GLOBAL_NIMBLE_SPELLS_COLLECTION;
-
 	try {
-		const pack = app?.collection || collection;
+		const pack = getSpellPack(app?.collection || collection, collectionId);
 		if (!pack) {
 			return;
 		}
 
-		// Load pack index
 		let index: any[] = [];
 		try {
-			if (typeof pack.getIndex === 'function') {
-				const indexData = await pack.getIndex({
-					fields: ['system.school', 'system.tier', 'system.properties.selected', 'name'],
-				});
-				if (indexData && indexData.size > 0) {
-					index = Array.from(indexData);
-				} else if (pack.index && pack.index.size > 0) {
-					index = Array.from(pack.index);
-				}
-			}
-
-			if (index.length === 0 && typeof pack.getDocuments === 'function') {
-				const docs = await pack.getDocuments();
-				index = docs.map((doc: any) => ({
-					_id: doc.id,
-					name: doc.name || '',
-					system: {
-						school: doc.system?.school || '',
-						tier: doc.system?.tier ?? 0,
-						properties: { selected: doc.system?.properties?.selected || [] },
-					},
-				}));
-			}
-
-			if (index.length === 0) {
-				const gamePack = game.packs.get(TARGET_COLLECTION);
-				if ((gamePack?.index?.size ?? 0) > 0) {
-					index = Array.from(gamePack!.index);
-				}
-			}
+			index = await loadSpellIndex(pack, collectionId);
 		} catch (error) {
 			console.warn('Nimble: Error loading index for icon render:', error);
+			return;
+		}
+		if (index.length === 0) {
 			return;
 		}
 
@@ -1116,19 +1112,7 @@ async function addIconsToAllSpells(
 		state.cachedSpellDataById = dataById;
 		state.cachedSpellNameById = nameById;
 
-		// Find compendium element
-		let compendiumElement: HTMLElement | null = null;
-		const collectionAttr = TARGET_COLLECTION.split('.').pop() || 'nimble-spells';
-
-		if (app?.element) {
-			compendiumElement = app.element;
-		} else if (typeof document !== 'undefined') {
-			compendiumElement =
-				document.querySelector(`.compendium[data-collection="${collectionAttr}"]`) ||
-				document.querySelector(`.compendium[data-pack="${collectionAttr}"]`) ||
-				document.querySelector(`.directory[data-collection="${collectionAttr}"]`);
-		}
-
+		const compendiumElement = getSpellCompendiumElement(app, collectionId);
 		if (!compendiumElement) {
 			return;
 		}
@@ -1163,23 +1147,19 @@ async function addIconsToAllSpells(
  * Register the renderCompendium hook to add filter buttons
  */
 export default function registerCompendiumSpellsFilter(): void {
-	const TARGET_COLLECTION = GLOBAL_NIMBLE_SPELLS_COLLECTION;
-
 	Hooks.on('renderCompendium', (app: any, html: any) => {
 		try {
-			// Handle both string collection and CompendiumCollection object
-			let collectionId = app?.collection?.metadata?.id || app?.collection?.id || app?.pack;
-
-			// Additional fallback for collection resolution
+			let collectionId = resolveCompendiumCollectionId(app);
 			if (!collectionId && app?.document?.pack) {
 				collectionId = app.document.pack;
 			}
 
-			if (collectionId !== TARGET_COLLECTION) {
+			if (!isSupportedSpellCompendium(collectionId)) {
 				return;
 			}
 			const state = getCompendiumFilterState(app);
 			ensureSchoolFilterStyles();
+			const compendiumElement = getSpellCompendiumElement(app, collectionId);
 
 			// Find header element
 			const header =
@@ -1197,20 +1177,20 @@ export default function registerCompendiumSpellsFilter(): void {
 			}
 
 			// Initialize the buttons
-			initializeSchoolButtons(header, app, app?.collection, state);
-			setupClearFiltersButton(header, app, app?.collection, state);
+			initializeSchoolButtons(header, app, app?.collection, state, collectionId);
+			setupClearFiltersButton(header, app, app?.collection, state, collectionId);
 
 			// Add school icons to the initial list (no filtering)
-			addIconsToAllSpells(app, app?.collection, state);
+			addIconsToAllSpells(app, app?.collection, state, collectionId);
 
-			applySchoolFilterClass(app?.element || null, state.activeSchoolFilter);
+			applySchoolFilterClass(compendiumElement, state.activeSchoolFilter);
 
 			const searchInput = html?.querySelector?.(SEARCH_INPUT_SELECTOR) as HTMLInputElement | null;
 			if (searchInput && !searchInput.dataset.nimbleSpellSearchBound) {
 				searchInput.dataset.nimbleSpellSearchBound = '1';
 				const applyActiveSchoolClass = () => {
-					applySchoolFilterClass(app?.element || null, state.activeSchoolFilter);
-					applyCachedMetadataToListItems(app?.element || null, state.cachedSpellDataById);
+					applySchoolFilterClass(compendiumElement, state.activeSchoolFilter);
+					applyCachedMetadataToListItems(compendiumElement, state.cachedSpellDataById);
 				};
 
 				searchInput.addEventListener(
@@ -1222,13 +1202,20 @@ export default function registerCompendiumSpellsFilter(): void {
 						applyActiveSchoolClass();
 						const term = searchInput.value || '';
 						if (!term.trim()) {
-							applyFilter(state.activeSchoolFilter, app?.collection, app, app?.collection, state);
+							applyFilter(
+								state.activeSchoolFilter,
+								app?.collection,
+								app,
+								app?.collection,
+								state,
+								collectionId,
+							);
 							return;
 						}
 						html?.querySelectorAll?.(SPELL_HEADER_SELECTOR).forEach((header: Element) => {
 							header.remove();
 						});
-						applySearchFilter(app?.element || null, term, state.cachedSpellNameById);
+						applySearchFilter(compendiumElement, term, state.cachedSpellNameById);
 					},
 					true,
 				);
@@ -1241,7 +1228,7 @@ export default function registerCompendiumSpellsFilter(): void {
 			if (listContainer && !(listContainer as HTMLElement).dataset.nimbleSpellObserver) {
 				(listContainer as HTMLElement).dataset.nimbleSpellObserver = '1';
 				const observer = new MutationObserver(() => {
-					scheduleMetadataRefresh(app?.element || null, state);
+					scheduleMetadataRefresh(compendiumElement, state);
 				});
 				observer.observe(listContainer, { childList: true, subtree: true });
 			}

@@ -20,6 +20,20 @@ const dependencies = {
 
 export const testDependencies = dependencies;
 
+/**
+ * Normalizes and validates a damage roll formula string.
+ *
+ * This function cleans up potentially malformed damage formulas by:
+ * - Trimming whitespace and normalizing multiple spaces
+ * - Fixing common OCR/input errors in dice notation (e.g., 'O' -> '0', 'l' -> '1')
+ * - Extracting valid dice expressions from complex strings
+ * - Validating the resulting formula
+ *
+ * If the formula cannot be normalized to a valid roll formula, returns '0'.
+ *
+ * @param formula - The formula to normalize (may be malformed or contain errors).
+ * @returns A valid, normalized roll formula string.
+ */
 function normalizeDamageRollFormula(formula: unknown): string {
 	const normalized = typeof formula === 'string' ? formula.replace(/\s+/g, ' ').trim() : '';
 	if (!normalized) return '0';
@@ -65,15 +79,43 @@ function normalizeDamageRollFormula(formula: unknown): string {
 	return normalizedDiceFaces;
 }
 
+/**
+ * Manages the activation of items (weapons, spells, abilities) including roll generation.
+ *
+ * ItemActivationManager orchestrates the complete item activation flow:
+ * - Displaying configuration dialogs for roll options
+ * - Handling spell upcasting and scaling
+ * - Creating DamageRoll instances for damage effects
+ * - Creating standard Roll instances for healing effects
+ * - Processing effect trees and storing roll results
+ *
+ * The manager supports both interactive activation (with dialogs) and fast-forward
+ * activation (skipping dialogs with predetermined options).
+ *
+ * @example
+ * ```typescript
+ * const manager = new ItemActivationManager(item, { fastForward: false });
+ * const { rolls, activation } = await manager.getData();
+ * // Use rolls for chat message, activation contains updated effect data
+ * ```
+ */
 class ItemActivationManager {
 	#item: NimbleBaseItem;
 
 	#options: ItemActivationManager.ActivationOptions;
 
+	/** The activation data from the item, potentially modified by upcasting. */
 	activationData: any;
 
+	/** Result of spell upcasting, if applicable. */
 	upcastResult: UpcastResult | null = null;
 
+	/**
+	 * Creates a new ItemActivationManager.
+	 *
+	 * @param item - The item being activated.
+	 * @param options - Configuration options for the activation.
+	 */
 	constructor(item: NimbleBaseItem, options: ItemActivationManager.ActivationOptions) {
 		this.#item = item;
 		this.#options = options;
@@ -83,10 +125,27 @@ class ItemActivationManager {
 		);
 	}
 
+	/**
+	 * Gets the actor that owns the item being activated.
+	 * @returns The actor, or null if the item has no parent actor.
+	 */
 	get actor() {
 		return this.#item.actor;
 	}
 
+	/**
+	 * Prepares and returns all data needed for item activation.
+	 *
+	 * This is the main entry point for item activation. It:
+	 * 1. Determines if dialogs should be shown based on options and item type
+	 * 2. Displays appropriate dialogs (ItemActivationConfigDialog or SpellUpcastDialog)
+	 * 3. Applies upcast modifications for spells
+	 * 4. Creates rolls for all damage and healing effects
+	 * 5. Returns the rolls and updated activation data
+	 *
+	 * @returns Object containing `rolls` (array of Roll/DamageRoll), `activation` data,
+	 *          and `rollHidden` flag. Returns `{ activation: null, rolls: null }` if cancelled.
+	 */
 	async getData() {
 		const options = this.#options;
 
@@ -199,6 +258,21 @@ class ItemActivationManager {
 		return { rolls, activation: this.activationData, rollHidden: dialogData.rollHidden ?? false };
 	}
 
+	/**
+	 * Creates Roll instances for all damage and healing effects in the activation.
+	 *
+	 * Processes the effect tree and creates:
+	 * - DamageRoll for the first damage effect (with critical/miss tracking)
+	 * - Standard Roll for subsequent damage effects and all healing effects
+	 *
+	 * Special handling:
+	 * - Skips rolling for certain item types (ancestry, background, boon, class, subclass)
+	 * - Applies healing potion bonuses to consumable healing effects
+	 * - Minions cannot score critical hits
+	 *
+	 * @param dialogData - Configuration from the activation dialog.
+	 * @returns Array of evaluated Roll/DamageRoll instances.
+	 */
 	async #getRolls(dialogData: ItemActivationManager.DialogData): Promise<(Roll | DamageRoll)[]> {
 		if (['ancestry', 'background', 'boon', 'class', 'subclass'].includes(this.#item.type))
 			return [];
@@ -213,8 +287,17 @@ class ItemActivationManager {
 		const isConsumable = itemSystem.objectType === 'consumable';
 
 		// Get healing bonus from actor if applicable
-		const actorSystem = this.actor?.system as { healingPotionBonus?: number } | undefined;
+		const actorSystem = this.actor?.system as
+			| {
+					healingPotionBonus?: number;
+					meleeDamageBonus?: { value: number; damageType: string };
+			  }
+			| undefined;
 		const healingBonus = isConsumable ? (actorSystem?.healingPotionBonus ?? 0) : 0;
+
+		// Check if this is a melee attack and get melee damage bonus
+		const isMeleeAttack = this.activationData?.targets?.attackType === 'reach';
+		const meleeDamageBonus = isMeleeAttack ? (actorSystem?.meleeDamageBonus?.value ?? 0) : 0;
 
 		for (const node of flattenEffectsTree(effects)) {
 			if (node.type === 'damage' || node.type === 'healing') {
@@ -229,8 +312,17 @@ class ItemActivationManager {
 					const resolvedCanMiss = isMinion || (canMiss ?? true);
 					node.rollMode = dialogData.rollMode ?? 0;
 
+					// Check if item has vicious property
+					const itemSystem = this.#item.system as { properties?: { selected?: string[] } };
+					const isVicious = itemSystem.properties?.selected?.includes('vicious') ?? false;
+
 					// Use modified formula if provided
-					const formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
+					let formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
+
+					// Apply melee damage bonus if applicable
+					if (meleeDamageBonus > 0) {
+						formula = `${formula} + ${meleeDamageBonus}`;
+					}
 
 					roll = new dependencies.DamageRoll(
 						formula,
@@ -241,6 +333,7 @@ class ItemActivationManager {
 							rollMode: node.rollMode ?? 0,
 							primaryDieValue: dialogData.primaryDieValue ?? 0,
 							primaryDieModifier: Number(dialogData.primaryDieModifier) || 0,
+							isVicious,
 						},
 					);
 
@@ -290,18 +383,41 @@ class ItemActivationManager {
 		return formula.replace(/(\d*)d(\d+)/, `${newCount}d${diceSize}`);
 	}
 
+	/**
+	 * Creates default dialog data when skipping the activation dialog.
+	 *
+	 * @param options - The roll options to use as defaults.
+	 * @returns Default dialog data based on the provided options.
+	 */
 	#getDefaultDialogData(options): ItemActivationManager.DialogData {
 		return {
 			...options,
 		};
 	}
 
+	/**
+	 * Gets the domain set for modifier lookup.
+	 *
+	 * @returns A set of domain strings applicable to this item activation.
+	 */
 	#getItemDomain(): Set<string> {
 		const domain = new Set<string>();
 
 		return domain;
 	}
 
+	/**
+	 * Gets measured template configuration data based on the item's area of effect.
+	 *
+	 * Creates template configuration for various shape types:
+	 * - circle: Standard circular area
+	 * - cone: Cone-shaped area with configurable angle
+	 * - emanation: Circular area that scales with token size
+	 * - line: Ray/line area with width
+	 * - square: Square area (rendered as rotated rectangle)
+	 *
+	 * @returns Template configuration object, or undefined if no template shape is defined.
+	 */
 	#getTemplateData() {
 		const item = this.#item;
 		interface TemplateShape {
@@ -383,26 +499,48 @@ class ItemActivationManager {
 }
 
 namespace ItemActivationManager {
+	/**
+	 * Options for configuring item activation behavior.
+	 */
 	export interface ActivationOptions {
+		/** Whether to execute the item's custom macro after activation. */
 		executeMacro?: boolean;
+		/** Skip dialogs and use provided/default values directly. */
 		fastForward?: boolean;
+		/** Roll mode: positive for advantage, negative for disadvantage, 0 for normal. */
 		rollMode?: number;
+		/** How the roll should be displayed (public, private, blind, self). */
 		visibilityMode?: keyof foundry.CONST.DICE_ROLL_MODES;
+		/** Override formula for the damage roll. */
 		rollFormula?: string;
+		/** Predetermined value for the primary damage die. */
 		primaryDieValue?: number;
+		/** Modifier to apply to the primary die roll. */
 		primaryDieModifier?: string;
+		/** Whether to hide the roll from other players. */
 		rollHidden?: boolean;
 	}
 
+	/**
+	 * Data returned from the activation configuration dialog.
+	 */
 	export interface DialogData {
+		/** Roll mode selected in the dialog. */
 		rollMode: number | undefined;
+		/** Modified roll formula from the dialog. */
 		rollFormula?: string;
+		/** Primary die value if predetermined. */
 		primaryDieValue?: number;
+		/** Modifier for the primary die. */
 		primaryDieModifier?: string;
+		/** Upcast configuration for spells. */
 		upcast?: {
+			/** Amount of mana to spend on upcasting. */
 			manaToSpend: number;
+			/** Index of the upcast choice selected. */
 			choiceIndex?: number;
 		};
+		/** Whether to hide the roll. */
 		rollHidden?: boolean;
 	}
 }

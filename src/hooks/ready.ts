@@ -3,8 +3,10 @@ import { mount, unmount } from 'svelte';
 import { MigrationList } from '../migration/MigrationList.js';
 import { MigrationRunner } from '../migration/MigrationRunner.js';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
+import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
-import CombatTracker from '../view/ui/CombatTracker.svelte';
+import CtTopTracker from '../view/ui/CtTopTracker.svelte';
+import registerCombatSidebarToggle from './combatSidebarToggle.js';
 import combatStateGuards from './combatStateGuards.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
 
@@ -32,13 +34,15 @@ export default async function ready() {
 	}
 
 	game.nimble.conditions.configureStatusEffects();
+	registerCombatTurnSocketListener();
 
 	const target = document.body;
 	const anchor = document.querySelector('#notifications');
 
 	if (!target || !anchor) return;
 
-	mount(CombatTracker, {
+	// Mount the top Combat Tracker.
+	mount(CtTopTracker, {
 		anchor,
 		target,
 	});
@@ -61,4 +65,6 @@ export default async function ready() {
 	const combatTrackerConfig = game.settings.get('core', 'combatTrackerConfig') ?? {};
 	combatTrackerConfig.skipDefeated ??= true;
 	game.settings.set('core', 'combatTrackerConfig', combatTrackerConfig);
+
+	registerCombatSidebarToggle();
 }

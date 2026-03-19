@@ -2,7 +2,7 @@
 	"id": "nimble",
 	"title": "Nimble",
 	"description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
-	"version": "0.7.1",
+	"version": "0.8.0",
 	"authors": [
 		{
 			"name": "Trevor Carlston",
@@ -37,6 +37,16 @@
 			"lang": "en",
 			"name": "English",
 			"path": "lang/en.json"
+		},
+		{
+			"lang": "es",
+			"name": "Español",
+			"path": "lang/es.json"
+		},
+		{
+			"lang": "fr",
+			"name": "Français",
+			"path": "lang/fr.json"
 		}
 	],
 	"grid": {
@@ -75,13 +85,16 @@
 		},
 		"ChatMessage": {
 			"abilityCheck": {},
+			"assessAction": {},
 			"boon": {},
 			"damage": {},
 			"feature": {},
 			"fieldRest": {},
 			"levelUpSummary": {},
 			"minionGroupAttack": {},
+			"moveAction": {},
 			"object": {},
+			"reaction": {},
 			"safeRest": {},
 			"savingThrow": {},
 			"skillCheck": {},
@@ -176,6 +189,13 @@
 			"system": "nimble"
 		},
 		{
+			"name": "nimble-secret-spells",
+			"label": "Nimble Secret Spells",
+			"path": "packs/secretSpells.db",
+			"type": "Item",
+			"system": "nimble"
+		},
+		{
 			"name": "nimble-subclasses",
 			"label": "Nimble Subclasses",
 			"path": "packs/subclasses.db",
@@ -193,5 +213,5 @@
 	"background": "systems/nimble/assets/banners/manticoreFight.webp",
 	"url": "https://github.com/Nimble-Co/FoundryVTT-Nimble",
 	"manifest": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/latest/download/system.json",
-	"download": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/download/0.7.1/nimble.zip"
+	"download": "https://github.com/Nimble-Co/FoundryVTT-Nimble/releases/download/0.8.0/nimble.zip"
 }

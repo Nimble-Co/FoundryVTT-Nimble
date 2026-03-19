@@ -1,6 +1,7 @@
 <script>
 	import arraysAreEqual from '../../utils/arraysAreEqual.js';
 	import generateBlankAttributeSet from '../../utils/generateBlankAttributeSet.js';
+	import localize from '../../utils/localize.js';
 	import replaceHyphenWithMinusSign from '../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
 	function checkBaseStatsMatchCoreArray(characterAbilityScores) {
@@ -203,18 +204,18 @@
 
 	function getStatIncreaseTypeLabel(type) {
 		const labels = {
-			primary: 'Primary',
-			secondary: 'Secondary',
-			capstone: 'Capstone',
+			primary: localize('NIMBLE.statConfig.primary'),
+			secondary: localize('NIMBLE.statConfig.secondary'),
+			capstone: localize('NIMBLE.statConfig.capstone'),
 		};
 		return labels[type] ?? type;
 	}
 
 	function getStatIncreaseTypeTooltip(type) {
 		const tooltips = {
-			primary: '+1 to one of your Key Stats',
-			secondary: '+1 to one of your Secondary Stats',
-			capstone: '+1 to any 2 of your stats',
+			primary: localize('NIMBLE.statConfig.primaryTooltip'),
+			secondary: localize('NIMBLE.statConfig.secondaryTooltip'),
+			capstone: localize('NIMBLE.statConfig.capstoneTooltip'),
 		};
 		return tooltips[type] ?? '';
 	}
@@ -418,7 +419,7 @@
 	{#if !baseStatsMatchCoreArray && !isEditing}
 		<aside class="nimble-stat-config__warning">
 			<i class="nimble-stat-config__warning-icon fa-solid fa-circle-exclamation"></i>
-			<span>Your base scores do not match any of the standard Nimble stat arrays.</span>
+			<span>{localize('NIMBLE.statConfig.baseScoresWarning')}</span>
 		</aside>
 	{/if}
 
@@ -427,17 +428,19 @@
 		<div class="nimble-stat-config__base-section">
 			<header class="nimble-stat-config__base-header">
 				<div class="nimble-stat-config__base-title">
-					<span class="nimble-stat-config__section-title-text">Base Stats</span>
+					<span class="nimble-stat-config__section-title-text"
+						>{localize('NIMBLE.statConfig.baseStats')}</span
+					>
 					<span class="nimble-stat-config__section-subtitle"
-						>Starting stats from character creation</span
+						>{localize('NIMBLE.statConfig.baseStatsSubtitle')}</span
 					>
 				</div>
 				{#if !isEditing}
 					<button
 						class="nimble-button"
 						data-button-variant="icon"
-						aria-label="Edit Base Stats"
-						data-tooltip="Edit Base Stats"
+						aria-label={localize('NIMBLE.statConfig.editBaseStats')}
+						data-tooltip="NIMBLE.statConfig.editBaseStats"
 						onclick={startEditing}
 					>
 						<i class="fa-solid fa-edit"></i>
@@ -448,7 +451,9 @@
 			{#if isEditing}
 				<!-- Array Selection -->
 				<div class="nimble-stat-config__array-selection">
-					<span class="nimble-stat-config__array-label">Select Array:</span>
+					<span class="nimble-stat-config__array-label"
+						>{localize('NIMBLE.statConfig.selectArray')}:</span
+					>
 					<ul class="nimble-stat-config__stat-arrays">
 						{#each statArrayOptions as arrayOption}
 							<li class="nimble-stat-config__stat-arrays-option">
@@ -477,15 +482,15 @@
 					<aside class="nimble-cc-legend">
 						<div class="nimble-cc-legend__item">
 							<i class="fa-solid fa-star nimble-cc-legend__icon--key"></i>
-							<span>Key Stat</span>
+							<span>{localize('NIMBLE.statConfig.keyStat')}</span>
 						</div>
 						<div class="nimble-cc-legend__item">
 							<i class="fa-solid fa-circle-plus nimble-cc-legend__icon--advantage"></i>
-							<span>Adv. on Saves</span>
+							<span>{localize('NIMBLE.statConfig.advOnSaves')}</span>
 						</div>
 						<div class="nimble-cc-legend__item">
 							<i class="fa-solid fa-circle-minus nimble-cc-legend__icon--disadvantage"></i>
-							<span>Dis. on Saves</span>
+							<span>{localize('NIMBLE.statConfig.disOnSaves')}</span>
 						</div>
 					</aside>
 
@@ -536,7 +541,7 @@
 								{:else}
 									<div class="nimble-cc-ability-score__drop-zone">
 										<i class="fa-solid fa-arrow-down drop-icon"></i>
-										<span class="drop-text">Drop here</span>
+										<span class="drop-text">{localize('NIMBLE.statConfig.dropHere')}</span>
 									</div>
 								{/if}
 
@@ -588,7 +593,7 @@
 							type="button"
 							onclick={cancelEditing}
 						>
-							Cancel
+							{localize('NIMBLE.statConfig.cancel')}
 						</button>
 						<button
 							class="nimble-button nimble-stat-config__apply-btn"
@@ -597,7 +602,7 @@
 							disabled={!allStatsSelected}
 							onclick={applyBaseScoreChanges}
 						>
-							Apply Changes
+							{localize('NIMBLE.statConfig.applyChanges')}
 						</button>
 					</div>
 				{/if}
@@ -645,9 +650,12 @@
 
 				{#if detectedArrayInfo}
 					<div class="nimble-stat-config__current-array">
-						<span class="nimble-stat-config__current-array-label">Current Array:</span>
+						<span class="nimble-stat-config__current-array-label"
+							>{localize('NIMBLE.statConfig.currentArray')}:</span
+						>
 						<span class="nimble-stat-config__current-array-name"
-							>{detectedArrayInfo.arrayOption?.name ?? 'Unknown'}</span
+							>{detectedArrayInfo.arrayOption?.name ??
+								localize('NIMBLE.classSelection.unknown')}</span
 						>
 					</div>
 				{/if}
@@ -679,13 +687,16 @@
 
 			<tbody>
 				<!-- Bonuses Section -->
-				{@render sectionHeader('Bonuses', 'Modifiers from feats, items, and other sources')}
+				{@render sectionHeader(
+					localize('NIMBLE.statConfig.bonuses'),
+					localize('NIMBLE.statConfig.bonusesSubtitle'),
+				)}
 
 				{#if Object.values(abilityBonusSources).every((sources) => sources.length === 0)}
 					<tr class="nimble-stat-config__data-row nimble-stat-config__data-row--empty">
 						<td colspan={abilityScoreCount + 1} class="nimble-stat-config__empty-message">
 							<i class="fa-regular fa-circle-info"></i>
-							No bonuses from feats or items
+							{localize('NIMBLE.statConfig.noBonuses')}
 						</td>
 					</tr>
 				{:else}
@@ -724,7 +735,8 @@
 
 					<!-- Bonus Subtotal -->
 					<tr class="nimble-stat-config__subtotal-row">
-						<th class="nimble-stat-config__row-label">Bonus Total</th>
+						<th class="nimble-stat-config__row-label">{localize('NIMBLE.statConfig.bonusTotal')}</th
+						>
 						{#each abilityScoreKeys as abilityKey}
 							<td class="nimble-stat-config__value-cell">
 								{#if bonusTotals[abilityKey] !== 0}
@@ -740,7 +752,10 @@
 				{/if}
 
 				<!-- Level-Up Increases Section -->
-				{@render sectionHeader('Stat Increases', 'Improvements gained at certain class levels')}
+				{@render sectionHeader(
+					localize('NIMBLE.statConfig.statIncreases'),
+					localize('NIMBLE.statConfig.statIncreasesSubtitle'),
+				)}
 
 				{#if abilityScoreIncreases.length === 0}
 					<tr class="nimble-stat-config__data-row nimble-stat-config__data-row--empty">
@@ -748,10 +763,10 @@
 							<div class="nimble-stat-config__empty-state-content">
 								<i class="fa-regular fa-hourglass-half nimble-stat-config__empty-state-icon"></i>
 								<span class="nimble-stat-config__empty-state-text"
-									>No stat increases available yet</span
+									>{localize('NIMBLE.statConfig.noStatIncreasesYet')}</span
 								>
 								<span class="nimble-stat-config__empty-state-hint"
-									>Stat increases are gained at levels 4, 5, 8, 9, 12, 13, 16, 17, and 20</span
+									>{localize('NIMBLE.statConfig.statIncreaseHint')}</span
 								>
 							</div>
 						</td>
@@ -763,12 +778,12 @@
 								<th class="nimble-stat-config__row-label">
 									{increase.label}
 									<span class="nimble-stat-config__type-badge nimble-stat-config__type-badge--boon">
-										Boon
+										{localize('NIMBLE.statConfig.boon')}
 									</span>
 								</th>
 								<td colspan={abilityScoreCount} class="nimble-stat-config__boon-cell">
 									<i class="fa-solid fa-gift"></i>
-									Special Boon Available
+									{localize('NIMBLE.statConfig.specialBoonAvailable')}
 								</td>
 							</tr>
 						{:else}
@@ -797,7 +812,7 @@
 
 					<!-- ASI Subtotal -->
 					<tr class="nimble-stat-config__subtotal-row">
-						<th class="nimble-stat-config__row-label">ASI Total</th>
+						<th class="nimble-stat-config__row-label">{localize('NIMBLE.statConfig.asiTotal')}</th>
 						{#each abilityScoreKeys as abilityKey}
 							<td class="nimble-stat-config__value-cell">
 								{#if asiTotals[abilityKey] > 0}
@@ -822,7 +837,7 @@
 			<tfoot>
 				<tr class="nimble-stat-config__total-row">
 					<th class="nimble-stat-config__row-label nimble-stat-config__row-label--total">
-						Final Modifier
+						{localize('NIMBLE.statConfig.finalModifier')}
 					</th>
 					{#each abilityScoreKeys as abilityKey}
 						<td class="nimble-stat-config__total-cell">
@@ -840,35 +855,35 @@
 			<div class="nimble-stat-config__legend-row">
 				<div class="nimble-stat-config__legend-item">
 					<i class="fa-solid fa-star nimble-stat-config__legend-icon--key"></i>
-					<span>Key Stat</span>
+					<span>{localize('NIMBLE.statConfig.keyStat')}</span>
 				</div>
 				<div class="nimble-stat-config__legend-item">
 					<i class="fa-solid fa-circle-plus nimble-stat-config__legend-icon--advantage"></i>
-					<span>Adv. on Saves</span>
+					<span>{localize('NIMBLE.statConfig.advOnSaves')}</span>
 				</div>
 				<div class="nimble-stat-config__legend-item">
 					<i class="fa-solid fa-circle-minus nimble-stat-config__legend-icon--disadvantage"></i>
-					<span>Dis. on Saves</span>
+					<span>{localize('NIMBLE.statConfig.disOnSaves')}</span>
 				</div>
 			</div>
 			<div class="nimble-stat-config__legend-row">
 				<div class="nimble-stat-config__legend-item">
 					<span class="nimble-stat-config__type-badge nimble-stat-config__type-badge--primary"
-						>Primary</span
+						>{localize('NIMBLE.statConfig.primary')}</span
 					>
-					<span>+1 Key Stat</span>
+					<span>{localize('NIMBLE.statConfig.primaryTooltip')}</span>
 				</div>
 				<div class="nimble-stat-config__legend-item">
 					<span class="nimble-stat-config__type-badge nimble-stat-config__type-badge--secondary"
-						>Secondary</span
+						>{localize('NIMBLE.statConfig.secondary')}</span
 					>
-					<span>+1 Secondary Stat</span>
+					<span>{localize('NIMBLE.statConfig.secondaryTooltip')}</span>
 				</div>
 				<div class="nimble-stat-config__legend-item">
 					<span class="nimble-stat-config__type-badge nimble-stat-config__type-badge--capstone"
-						>Capstone</span
+						>{localize('NIMBLE.statConfig.capstone')}</span
 					>
-					<span>+1 to any 2 Stats</span>
+					<span>{localize('NIMBLE.statConfig.capstoneTooltip')}</span>
 				</div>
 			</div>
 		</aside>

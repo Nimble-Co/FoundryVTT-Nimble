@@ -1,5 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
+	import localize from '../../../utils/localize.js';
 
 	function addSelectedTokensAsTargets() {
 		messageDocument.addSelectedTokensAsTargets();
@@ -69,18 +70,20 @@
 	const { npcArmorEffects, npcArmorIcons, npcArmorTypes } = CONFIG.NIMBLE;
 
 	let messageDocument = getContext('messageDocument');
-	let targets = messageDocument?.system?.targets ?? [];
+	let targets = $derived(messageDocument?.reactive?.system?.targets ?? []);
 </script>
 
 <section class="nimble-card-section nimble-card-section--targets">
 	<header class="nimble-section-header">
-		<h3 class="nimble-heading" data-heading-variant="section">Targets</h3>
+		<h3 class="nimble-heading" data-heading-variant="section">
+			{localize('NIMBLE.chatTargets.targets')}
+		</h3>
 
 		<button
 			class="nimble-button"
 			data-button-variant="icon"
-			aria-label="Add Selected Tokens as Targets"
-			data-tooltip="Add Selected Tokens as Targets"
+			aria-label={localize('NIMBLE.chatTargets.addSelectedTokensAsTargets')}
+			data-tooltip="NIMBLE.chatTargets.addSelectedTokensAsTargets"
 			type="button"
 			onclick={addSelectedTokensAsTargets}
 		>
@@ -90,8 +93,8 @@
 		<button
 			class="nimble-button"
 			data-button-variant="icon"
-			aria-label="Add Targeted Tokens as Targets"
-			data-tooltip="Add Targeted Tokens as Targets"
+			aria-label={localize('NIMBLE.chatTargets.addTargetedTokensAsTargets')}
+			data-tooltip="NIMBLE.chatTargets.addTargetedTokensAsTargets"
 			type="button"
 			onclick={addTargetedTokensAsTargets}
 		>
@@ -123,9 +126,9 @@
 
 					<button
 						class="nimble-button"
-						aria-label="Remove Target"
+						aria-label={localize('NIMBLE.chatTargets.removeTarget')}
 						data-button-variant="icon"
-						data-tooltip="Remove Target"
+						data-tooltip="NIMBLE.chatTargets.removeTarget"
 						type="button"
 						onclick={() => removeTarget(token.uuid)}
 					>
@@ -133,7 +136,9 @@
 					</button>
 				</li>
 			{:else}
-				<li style="color: var(--nimble-medium-text-color);">No targets selected</li>
+				<li style="color: var(--nimble-medium-text-color);">
+					{localize('NIMBLE.chatTargets.noTargetsSelected')}
+				</li>
 			{/each}
 		{/await}
 	</ul>

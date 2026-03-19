@@ -1,0 +1,362 @@
+<script>
+	import localize from '../../../utils/localize.js';
+	import { createAssessPanelState } from './AssessActionPanel.svelte.ts';
+
+	let { actor, onDeductAction = async () => {} } = $props();
+
+	const state = createAssessPanelState(
+		() => actor,
+		() => onDeductAction,
+	);
+
+	// Track targeting changes
+	$effect(() => {
+		return state.setupTargetingHook();
+	});
+</script>
+
+<section class="assess-panel">
+	<header class="nimble-section-header">
+		<h3 class="nimble-heading" data-heading-variant="section">
+			{localize('NIMBLE.ui.heroicActions.assess.header')}
+		</h3>
+	</header>
+
+	<div class="assess-panel__content">
+		<div class="assess-panel__options">
+			{#each state.assessOptions as option}
+				<label
+					class="assess-option"
+					class:assess-option--active={state.selectedOption === option.id}
+				>
+					<input
+						class="assess-option__input"
+						type="radio"
+						name="assess-option"
+						value={option.id}
+						bind:group={state.selectedOption}
+					/>
+					<i class="assess-option__icon {option.icon}"></i>
+					<div class="assess-option__content">
+						<span class="assess-option__title">{localize(option.titleKey)}</span>
+						<span class="assess-option__description">{localize(option.descriptionKey)}</span>
+					</div>
+					<div class="assess-option__indicator"></div>
+				</label>
+			{/each}
+		</div>
+
+		<select class="assess-panel__select" bind:value={state.selectedSkill}>
+			<option value={null} disabled>
+				{localize('NIMBLE.ui.heroicActions.assess.selectSkillPlaceholder')}
+			</option>
+			{#each state.sortedSkills as [skillKey, skillName]}
+				<option value={skillKey}>{skillName}</option>
+			{/each}
+		</select>
+
+		{#if state.currentOptionRequiresTarget}
+			<header class="nimble-section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.ui.heroicActions.assess.selectTarget')}
+				</h3>
+			</header>
+
+			{#if state.availableTargets.length === 0}
+				<div class="assess-panel__no-targets">
+					<i class="fa-solid fa-crosshairs"></i>
+					{#if state.hasTargetedSelf}
+						<span>{localize('NIMBLE.ui.heroicActions.assess.cannotTargetSelf')}</span>
+					{:else}
+						<span>{localize('NIMBLE.ui.heroicActions.assess.noTargetsHint')}</span>
+					{/if}
+				</div>
+			{:else if state.availableTargets.length === 1}
+				<div class="assess-panel__targets">
+					<div class="assess-target assess-target--active">
+						<img
+							class="assess-target__img"
+							src={state.availableTargets[0].document?.texture?.src || 'icons/svg/mystery-man.svg'}
+							alt={state.getTargetName(state.availableTargets[0])}
+						/>
+						<span class="assess-target__name">{state.getTargetName(state.availableTargets[0])}</span
+						>
+						<i class="fa-solid fa-check assess-target__check"></i>
+					</div>
+				</div>
+			{:else}
+				<div class="assess-panel__no-targets assess-panel__no-targets--warning">
+					<i class="fa-solid fa-triangle-exclamation"></i>
+					<span>{localize('NIMBLE.ui.heroicActions.assess.tooManyTargetsHint')}</span>
+				</div>
+			{/if}
+		{/if}
+
+		<button
+			class="nimble-button assess-panel__roll"
+			data-button-variant="primary"
+			disabled={state.isSubmitDisabled}
+			onclick={state.handleRoll}
+		>
+			<i class="fa-solid fa-dice-d20"></i>
+			{#if !state.selectedOption}
+				{localize('NIMBLE.ui.heroicActions.assess.selectOption')}
+			{:else if !state.selectedSkill}
+				{localize('NIMBLE.ui.heroicActions.assess.selectSkill')}
+			{:else}
+				{localize('NIMBLE.ui.heroicActions.assess.rollToAssess', {
+					skill: state.skillNames[state.selectedSkill],
+				})}
+			{/if}
+		</button>
+	</div>
+</section>
+
+<style lang="scss">
+	.assess-panel {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+
+		&__content {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+		}
+
+		&__options {
+			display: flex;
+			flex-direction: column;
+			gap: 0.375rem;
+		}
+
+		&__select {
+			width: 100%;
+			padding: 0.375rem 0.5rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 500;
+			color: var(--nimble-dark-text-color);
+			background: var(--nimble-input-background-color);
+			border: 1px solid var(--nimble-input-border-color);
+			border-radius: 4px;
+			cursor: pointer;
+
+			&:focus {
+				outline: none;
+				border-color: var(--nimble-input-focus-border-color);
+			}
+		}
+
+		&__no-targets {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.5rem;
+			color: var(--nimble-medium-text-color);
+			font-size: var(--nimble-sm-text);
+			background: var(--nimble-box-background-color);
+			border: 1px dashed var(--nimble-card-border-color);
+			border-radius: 4px;
+
+			i {
+				font-size: var(--nimble-md-text);
+				opacity: 0.5;
+			}
+
+			&--warning {
+				color: #fff;
+				background: hsl(35, 85%, 55%);
+				border-color: hsl(35, 85%, 45%);
+				border-style: solid;
+
+				i {
+					opacity: 1;
+				}
+			}
+		}
+
+		&__targets {
+			display: flex;
+			flex-direction: column;
+			gap: 0.25rem;
+		}
+
+		&__roll {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0.375rem;
+			padding: 0.5rem 0.75rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			margin-top: 0.25rem;
+
+			&:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
+
+			i {
+				font-size: 0.875rem;
+			}
+		}
+	}
+
+	.assess-option {
+		position: relative;
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+		padding: 0.5rem;
+		background: var(--nimble-box-background-color);
+		border: 2px solid var(--nimble-card-border-color);
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+
+		&:hover:not(&--active) {
+			border-color: var(--nimble-accent-color);
+		}
+
+		&--active {
+			border-color: hsl(45, 60%, 45%);
+			background: hsla(45, 60%, 50%, 0.12);
+		}
+
+		&__input {
+			position: absolute;
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		&__icon {
+			flex-shrink: 0;
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-medium-text-color);
+			margin-top: 0.125rem;
+			transition: color 0.2s ease;
+
+			.assess-option--active & {
+				color: hsl(45, 60%, 40%);
+			}
+		}
+
+		&__content {
+			display: flex;
+			flex-direction: column;
+			gap: 0.125rem;
+			flex: 1;
+			min-width: 0;
+		}
+
+		&__title {
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			color: var(--nimble-dark-text-color);
+			line-height: 1.2;
+
+			.assess-option--active & {
+				color: hsl(45, 50%, 30%);
+			}
+		}
+
+		&__description {
+			font-size: var(--nimble-xs-text);
+			font-weight: 500;
+			color: var(--nimble-medium-text-color);
+			line-height: 1.3;
+		}
+
+		&__indicator {
+			position: absolute;
+			top: 0.375rem;
+			right: 0.375rem;
+			width: 0.5rem;
+			height: 0.5rem;
+			border-radius: 50%;
+			background: transparent;
+			transition: all 0.2s ease;
+
+			.assess-option--active & {
+				background: hsl(45, 70%, 50%);
+				box-shadow: 0 0 6px hsla(45, 70%, 50%, 0.6);
+			}
+		}
+	}
+
+	.assess-target {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.375rem 0.5rem;
+		background: var(--nimble-box-background-color);
+		border: 2px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+
+		&--active {
+			border-color: hsl(45, 60%, 45%);
+			background: hsla(45, 60%, 50%, 0.12);
+		}
+
+		&__img {
+			width: 1.5rem;
+			height: 1.5rem;
+			border-radius: 3px;
+			object-fit: cover;
+			border: 1px solid var(--nimble-card-border-color);
+		}
+
+		&__name {
+			flex: 1;
+			font-size: var(--nimble-sm-text);
+			font-weight: 500;
+			color: var(--nimble-dark-text-color);
+		}
+
+		&__check {
+			color: hsl(139, 50%, 40%);
+			font-size: var(--nimble-sm-text);
+		}
+	}
+
+	:global(.theme-dark) .assess-option {
+		background: hsl(220, 15%, 18%);
+		border-color: hsl(220, 10%, 30%);
+
+		&:hover:not(.assess-option--active) {
+			border-color: hsl(220, 15%, 45%);
+		}
+	}
+
+	:global(.theme-dark) .assess-option--active {
+		border-color: hsl(45, 70%, 55%);
+		background: hsla(45, 60%, 50%, 0.15);
+
+		.assess-option__icon {
+			color: hsl(45, 70%, 65%);
+		}
+
+		.assess-option__title {
+			color: hsl(45, 60%, 75%);
+		}
+
+		.assess-option__indicator {
+			background: hsl(45, 70%, 55%);
+			box-shadow: 0 0 8px hsla(45, 70%, 55%, 0.7);
+		}
+	}
+
+	:global(.theme-dark) .assess-target {
+		background: hsl(220, 15%, 18%);
+		border-color: hsl(220, 10%, 30%);
+	}
+
+	:global(.theme-dark) .assess-target--active {
+		border-color: hsl(45, 70%, 55%);
+		background: hsla(45, 60%, 50%, 0.15);
+	}
+
+	:global(.theme-dark) .assess-target__check {
+		color: hsl(139, 50%, 55%);
+	}
+</style>

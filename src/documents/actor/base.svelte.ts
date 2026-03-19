@@ -260,7 +260,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		const { value, max, temp } = systemData.attributes.hp;
 		const healingAmount = Math.floor(healing);
 
-		if (healingType === 'temporaryHealing') {
+		if (healingType === 'tempHealing') {
 			if (healingAmount <= temp) {
 				ui.notifications.warn('Temporary hit points were not granted to {this.name}. ', {
 					localize: true,

@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Reaction (when an enemy within Range 12 misses an attack): You may cast Vicious Mockery at them; it deals double damage when cast this way.</p>",
+		"description": "<p><strong>Reaction</strong> (when an enemy within Range 12 misses an attack): You may cast Vicious Mockery at them; it deals double damage when cast this way.</p>",
 		"featureType": "class",
 		"class": "songweaver",
 		"group": "herald-of-snark",

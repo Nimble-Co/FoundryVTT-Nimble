@@ -1,6 +1,7 @@
 <script>
 	import { getContext, setContext } from 'svelte';
 	import { getNodeComponent } from '../../dataPreparationHelpers/effectTree/getNodeComponent.js';
+	import localize from '../../../utils/localize.js';
 
 	// Provide getNodeComponent via context to avoid circular dependencies
 	// (SavingThrowNode needs to render child nodes but can't import getNodeComponent directly)
@@ -32,7 +33,7 @@
 	{/if}
 {:else}
 	<section class="nimble-card-section">
-		<p>No Effect</p>
+		<p>{localize('NIMBLE.chatEffects.noEffect')}</p>
 	</section>
 {/each}
 
