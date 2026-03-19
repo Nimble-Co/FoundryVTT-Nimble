@@ -45,6 +45,12 @@ export const globalFoundryMocks = {
 		constructor(data?: any, _context?: any) {
 			if (data) Object.assign(this, data);
 		}
+
+		updateSource(_changes?: any, _options?: any) {}
+
+		async _preCreate(_data?: any, _options?: any, _user?: any) {
+			return true;
+		}
 	},
 	TokenDocument: class TokenDocument {
 		constructor(data?: any, _context?: any) {
