@@ -59,7 +59,7 @@ class Migration009HealingEffects extends MigrationBase {
 		// Only process feature items
 		if (source.type !== 'feature') return;
 
-		const sourceId = source.flags?.core?.sourceId;
+		const sourceId = this.getSourceId(source);
 		const name = source.name;
 
 		// Handle Healing Salve

@@ -30,7 +30,7 @@ class Migration011SwiftFistsUnarmedProficiency extends MigrationBase {
 	override async updateItem(source: any): Promise<void> {
 		// Handle feature items
 		if (source.type === 'feature') {
-			const sourceId = source.flags?.core?.sourceId;
+			const sourceId = this.getSourceId(source);
 
 			// Swift Fists - remove old rules
 			if (sourceId === SWIFT_FISTS_SOURCE_ID) {
@@ -77,7 +77,7 @@ class Migration011SwiftFistsUnarmedProficiency extends MigrationBase {
 
 		// Handle Zephyr class - add Unarmed Strike proficiency
 		if (source.type === 'class') {
-			const isZephyr = source.flags?.core?.sourceId === ZEPHYR_CLASS_SOURCE_ID;
+			const isZephyr = this.getSourceId(source) === ZEPHYR_CLASS_SOURCE_ID;
 
 			if (isZephyr) {
 				if (!source.system.weaponProficiencies) {

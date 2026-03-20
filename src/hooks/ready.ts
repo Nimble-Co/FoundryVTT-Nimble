@@ -13,24 +13,26 @@ import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
 let canvasConditionsPanelComponent: object | null = null;
 
 export default async function ready() {
-	// Run migrations if needed
-	const worldSchemaVersion = game.settings.get(
-		'nimble' as 'core',
-		'worldSchemaVersion' as 'rollMode',
-	) as unknown as number;
-	const latestSchemaVersion = MigrationRunnerBase.LATEST_SCHEMA_VERSION;
+	// Only the GM should run migrations (requires world-level write permissions)
+	if (game.user?.isGM) {
+		const worldSchemaVersion = game.settings.get(
+			'nimble' as 'core',
+			'worldSchemaVersion' as 'rollMode',
+		) as unknown as number;
+		const latestSchemaVersion = MigrationRunnerBase.LATEST_SCHEMA_VERSION;
 
-	if (worldSchemaVersion < latestSchemaVersion) {
-		console.log(
-			`Nimble | Migration needed: world schema version ${worldSchemaVersion} < latest schema version ${latestSchemaVersion}`,
-		);
-		const migrations = MigrationList.constructFromVersion(worldSchemaVersion);
-		const runner = new MigrationRunner(migrations);
-		await runner.runMigration();
-	} else {
-		console.log(
-			`Nimble | No migration needed: world schema version ${worldSchemaVersion} is up to date`,
-		);
+		if (worldSchemaVersion < latestSchemaVersion) {
+			console.log(
+				`Nimble | Migration needed: world schema version ${worldSchemaVersion} < latest schema version ${latestSchemaVersion}`,
+			);
+			const migrations = MigrationList.constructFromVersion(worldSchemaVersion);
+			const runner = new MigrationRunner(migrations);
+			await runner.runMigration();
+		} else {
+			console.log(
+				`Nimble | No migration needed: world schema version ${worldSchemaVersion} is up to date`,
+			);
+		}
 	}
 
 	game.nimble.conditions.configureStatusEffects();
