@@ -28,7 +28,7 @@ class Migration008FieldMedicHealingPotionBonus extends MigrationBase {
 
 		// Check if this is the Field Medic feature by sourceId or name
 		const isFieldMedic =
-			source.flags?.core?.sourceId === FIELD_MEDIC_SOURCE_ID || source.name === 'Field Medic';
+			this.getSourceId(source) === FIELD_MEDIC_SOURCE_ID || source.name === 'Field Medic';
 
 		if (!isFieldMedic) return;
 
