@@ -1,4 +1,5 @@
-<script>
+<script lang="ts">
+	import { setContext, tick, untrack } from 'svelte';
 	import localize from '../../utils/localize.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
@@ -7,6 +8,11 @@
 	import HitPointBar from './components/HitPointBar.svelte';
 	import ManaBar from './components/ManaBar.svelte';
 	import { createPlayerCharacterSheetState } from './PlayerCharacterSheet.state.svelte.js';
+	import {
+		DROP_ITEM_SCROLL_OBSERVER_TIMEOUT_MS,
+		getDroppedItemFlashIds,
+		type SheetDropItemFlashState,
+	} from './dropItemFlashState.js';
 	import PlayerCharacterBioTab from './pages/PlayerCharacterBioTab.svelte';
 	import PlayerCharacterConditionsTab from './pages/PlayerCharacterConditionsTab.svelte';
 	import PlayerCharacterCoreTab from './pages/PlayerCharacterCoreTab.svelte';
@@ -16,7 +22,35 @@
 	import PlayerCharacterSettingsTab from './pages/PlayerCharacterSettingsTab.svelte';
 	import PlayerCharacterSpellsTab from './pages/PlayerCharacterSpellsTab.svelte';
 
-	let { actor, sheet } = $props();
+	function findLatestDroppedItemCard(rootElement: HTMLElement, droppedItemIds: string[]) {
+		for (let i = droppedItemIds.length - 1; i >= 0; i--) {
+			const itemId = droppedItemIds[i];
+			const escapedItemId = globalThis.CSS?.escape ? globalThis.CSS.escape(itemId) : itemId;
+			const droppedItemCard = rootElement.querySelector<HTMLElement>(
+				`.nimble-sheet__body [data-item-id="${escapedItemId}"]`,
+			);
+			if (droppedItemCard) return droppedItemCard;
+		}
+
+		return null;
+	}
+
+	function scrollDroppedItemCardIntoView(droppedItemCard: HTMLElement) {
+		const scrollContainer = droppedItemCard.closest<HTMLElement>('.nimble-sheet__body');
+		if (!(scrollContainer instanceof HTMLElement)) return;
+
+		const isScrollable = scrollContainer.scrollHeight > scrollContainer.clientHeight + 1;
+		if (!isScrollable) return;
+
+		const containerRect = scrollContainer.getBoundingClientRect();
+		const itemRect = droppedItemCard.getBoundingClientRect();
+		const isOutOfView = itemRect.top < containerRect.top || itemRect.bottom > containerRect.bottom;
+		if (!isOutOfView) return;
+
+		droppedItemCard.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+	}
+
+	let { actor, sheet, state: appState } = $props();
 
 	const playerCharacterSheetState = createPlayerCharacterSheetState({
 		actor: () => actor,
@@ -50,6 +84,88 @@
 	$effect(() => {
 		playerCharacterSheetState.currentTab = currentTab;
 	});
+
+	$effect(() => {
+		const sheetState = appState as SheetDropItemFlashState;
+		const requestedTabName = sheetState.activePrimaryTab;
+		if (typeof requestedTabName !== 'string' || requestedTabName.length < 1) return;
+
+		const requestedTab = navigation.find((tab) => tab.name === requestedTabName);
+		const didSwitchTab =
+			!!requestedTab && !!currentTab?.name && currentTab.name !== requestedTab.name;
+		if (requestedTab && didSwitchTab) {
+			currentTab = requestedTab;
+		}
+
+		if (didSwitchTab) {
+			const droppedItemIds = getDroppedItemFlashIds(sheetState);
+			if (droppedItemIds.length > 0) {
+				// Move flash IDs across the tab change: clear untracked to avoid self-triggering this effect,
+				// then restore after tick so flash/scroll runs against the newly rendered tab DOM.
+				untrack(() => {
+					sheetState.droppedItemFlashIds = [];
+				});
+
+				void tick().then(() => {
+					const currentDroppedItemIds = getDroppedItemFlashIds(sheetState);
+					sheetState.droppedItemFlashIds = Array.from(
+						new Set([...currentDroppedItemIds, ...droppedItemIds]),
+					);
+				});
+			}
+		}
+
+		untrack(() => {
+			sheetState.activePrimaryTab = null;
+		});
+	});
+
+	$effect(() => {
+		const sheetState = appState as SheetDropItemFlashState;
+		const activeTabName = currentTab?.name ?? '';
+		const droppedItemIds = getDroppedItemFlashIds(sheetState);
+		if (droppedItemIds.length < 1) {
+			return;
+		}
+		if (activeTabName.length < 1) return;
+
+		const rootElement = sheet?.element;
+		if (!(rootElement instanceof HTMLElement)) return;
+
+		const tryScrollToDroppedItem = (): boolean => {
+			const droppedItemCard = findLatestDroppedItemCard(rootElement, droppedItemIds);
+			if (!(droppedItemCard instanceof HTMLElement)) return false;
+			scrollDroppedItemCardIntoView(droppedItemCard);
+			return true;
+		};
+
+		if (tryScrollToDroppedItem()) return;
+
+		const observer = new MutationObserver(() => {
+			if (!tryScrollToDroppedItem()) return;
+			globalThis.clearTimeout(observerTimeoutId);
+			observer.disconnect();
+		});
+
+		const observerTimeoutId = globalThis.setTimeout(() => {
+			observer.disconnect();
+		}, DROP_ITEM_SCROLL_OBSERVER_TIMEOUT_MS);
+
+		observer.observe(rootElement, {
+			childList: true,
+			subtree: true,
+		});
+
+		return () => {
+			globalThis.clearTimeout(observerTimeoutId);
+			observer.disconnect();
+		};
+	});
+
+	{
+		const sheetStateRef = untrack(() => appState) as SheetDropItemFlashState;
+		setContext<SheetDropItemFlashState>('sheetState', sheetStateRef);
+	}
 
 	const toggleWounds = playerCharacterSheetState.toggleWounds;
 	const updateCurrentHP = playerCharacterSheetState.updateCurrentHP;
