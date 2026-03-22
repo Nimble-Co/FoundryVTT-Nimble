@@ -1,7 +1,30 @@
 import type { NimbleObjectData } from '../../models/item/ObjectDataModel.js';
-import type { NimbleBaseRule } from '../../models/rules/base.ts';
 
 import { NimbleBaseItem } from './base.svelte.js';
+
+type RuleSourceLike = {
+	disabled?: boolean;
+	[key: string]: unknown;
+};
+
+function getRuleSources(item: NimbleObjectItem): RuleSourceLike[] {
+	const rules = foundry.utils.getProperty(item, 'system.rules');
+	return Array.isArray(rules) ? (rules as RuleSourceLike[]) : [];
+}
+
+function syncRuleSourcesToEquippedState(item: NimbleObjectItem): void {
+	const rules = getRuleSources(item);
+	if (rules.length < 1) return;
+
+	const updatedRules = rules.map((rule) => ({
+		...rule,
+		disabled: !item.system.equipped,
+	}));
+
+	item.updateSource({
+		'system.rules': updatedRules,
+	} as Record<string, unknown>);
+}
 
 export class NimbleObjectItem extends NimbleBaseItem {
 	declare system: NimbleObjectData;
@@ -73,6 +96,10 @@ export class NimbleObjectItem extends NimbleBaseItem {
 			return false;
 		}
 
+		if (this.isEmbedded) {
+			syncRuleSourcesToEquippedState(this);
+		}
+
 		return super._preCreate(data, options, user);
 	}
 
@@ -80,12 +107,15 @@ export class NimbleObjectItem extends NimbleBaseItem {
 	//                 Data Functions
 	/** ------------------------------------------------------ */
 
-	toggleArmor(): void {
-		if (this.rules.hasRuleOfType('armorClass')) {
-			const rule = this.rules.getRuleOfType('armorClass') as NimbleBaseRule | undefined;
-			if (rule) {
-				rule.disabled = !rule.disabled;
-			}
-		}
+	async toggleEquipment(): Promise<void> {
+		const newEquippedState = !this.system.equipped;
+		const rulesUpdated = newEquippedState
+			? await this.rules.enableAllRules()
+			: await this.rules.disableAllRules();
+		if (!rulesUpdated) return;
+
+		await this.update({
+			'system.equipped': newEquippedState,
+		} as Record<string, unknown>);
 	}
 }

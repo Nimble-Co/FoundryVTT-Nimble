@@ -789,6 +789,7 @@
 			"configureSavingThrows": "Configurer les Sauvegardes",
 			"configureSkills": "Configurer les Compétences",
 			"configureWeaponProficiencies": "Configurer les Maîtrises d'Arme",
+			"toggleEquipment": "Toggle Equipped State of {name}",
 			"editRoll": "Modifier le Jet",
 			"fieldRest": "Repos de terrain",
 			"hideRoll": "Hide From Players?",

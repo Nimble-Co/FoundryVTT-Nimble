@@ -438,6 +438,7 @@
 			"configureSavingThrows": "Configurar salvaciones",
 			"configureSkills": "Configurar habilidades",
 			"configureWeaponProficiencies": "Configurar competencia con armas",
+			"toggleEquipment": "Toggle Equipped State of {name}",
 			"editRoll": "Editar tirada",
 			"levelUp": "Subir de nivel",
 			"safeRest": "Descanso Seguro",
