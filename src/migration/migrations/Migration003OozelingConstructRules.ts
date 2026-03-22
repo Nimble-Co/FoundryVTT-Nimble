@@ -35,7 +35,7 @@ class Migration003OozelingConstructRules extends MigrationBase {
 
 		// Check if this is the Oozeling/Construct ancestry by sourceId or name
 		const isOozelingConstruct =
-			source.flags?.core?.sourceId === OOZELING_CONSTRUCT_SOURCE_ID ||
+			this.getSourceId(source) === OOZELING_CONSTRUCT_SOURCE_ID ||
 			source.name === 'Oozeling/Construct';
 
 		if (!isOozelingConstruct) return;

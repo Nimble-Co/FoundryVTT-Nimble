@@ -24,6 +24,10 @@ abstract class MigrationBase {
 	updateUser?(source: any): Promise<void>;
 
 	migrate?(): Promise<void>;
+
+	protected getSourceId(source: any): string | undefined {
+		return source._stats?.compendiumSource ?? source.flags?.core?.sourceId;
+	}
 }
 
 export { MigrationBase };

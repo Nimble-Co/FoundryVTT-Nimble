@@ -14,6 +14,8 @@ interface CompendiumPack {
 }
 
 class MigrationRunner extends MigrationRunnerBase {
+	#migrationErrors: string[] = [];
+
 	override needsMigration(): boolean {
 		return super.needsMigration(
 			game.settings.get(
@@ -82,6 +84,7 @@ class MigrationRunner extends MigrationRunnerBase {
 					await documentClass.updateDocuments(updateGroup, { noHook: true, pack });
 				} catch (e) {
 					console.error(e);
+					this.#migrationErrors.push(`Batch update failed for ${pack ?? 'world'}: ${e}`);
 				} finally {
 					// TODO: Update progress bar
 					updateGroup.length = 0;
@@ -100,8 +103,8 @@ class MigrationRunner extends MigrationRunnerBase {
 			try {
 				await documentClass.updateDocuments(updateGroup, { noHook: true, pack });
 			} catch (e) {
-				// TODO: Update progress bar
 				console.warn(e);
+				this.#migrationErrors.push(`Batch update failed for ${pack ?? 'world'}: ${e}`);
 			}
 		}
 	}
@@ -157,7 +160,9 @@ class MigrationRunner extends MigrationRunnerBase {
 			} catch (error) {
 				// Output the error, since this means a migration threw it
 				if (error instanceof Error) {
-					console.error(`Error thrown while migrating ${actor.uuid}: ${error.message}`);
+					const message = `Error thrown while migrating ${actor.uuid}: ${error.message}`;
+					console.error(message);
+					this.#migrationErrors.push(message);
 				}
 				return null;
 			}
@@ -223,7 +228,9 @@ class MigrationRunner extends MigrationRunnerBase {
 				return this.getUpdatedItem(baseItem, migrations);
 			} catch (e) {
 				if (e instanceof Error) {
-					console.error(`Error thrown while migrating ${item.uuid}: ${e.message}`);
+					const message = `Error thrown while migrating ${item.uuid}: ${e.message}`;
+					console.error(message);
+					this.#migrationErrors.push(message);
 				}
 				return null;
 			}
@@ -296,7 +303,7 @@ class MigrationRunner extends MigrationRunnerBase {
 			const changes = foundry.utils.diffObject(table.toObject(), updatedMacro);
 
 			if (Object.keys(changes).length > 0) {
-				table.update(changes, { noHook: true });
+				await table.update(changes, { noHook: true });
 			}
 		} catch (error) {
 			console.warn(error);
@@ -468,14 +475,27 @@ class MigrationRunner extends MigrationRunnerBase {
 		}
 
 		for (const phase of migrationPhases) {
-			if (phase.length > 0) await this.runMigrations(phase);
+			if (phase.length > 0) {
+				await this.runMigrations(phase);
+				const lastVersion = phase[phase.length - 1].version;
+				await game.settings.set(
+					'nimble' as 'core',
+					'worldSchemaVersion' as 'rollMode',
+					lastVersion as unknown as foundry.CONST.DICE_ROLL_MODES,
+				);
+			}
 		}
 
-		await game.settings.set(
-			'nimble' as 'core',
-			'worldSchemaVersion' as 'rollMode',
-			migrationVersion.latest as unknown as foundry.CONST.DICE_ROLL_MODES,
-		);
+		if (this.#migrationErrors.length > 0) {
+			console.warn('Nimble | Migration errors:', this.#migrationErrors);
+			ui.notifications.warn(
+				localize('NIMBLE.migration.world.completedWithErrors', {
+					count: this.#migrationErrors.length.toString(),
+				}),
+			);
+		} else {
+			ui.notifications.info(localize('NIMBLE.migration.world.completed'));
+		}
 	}
 }
 

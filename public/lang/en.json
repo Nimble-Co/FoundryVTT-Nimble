@@ -946,8 +946,14 @@
 				}
 			},
 			"clearAll": "Clear All",
+			"core": "Core",
 			"conditions": "Conditions",
 			"condition": "Condition",
+			"inventory": "Inventory",
+			"features": "Features",
+			"spells": "Spells",
+			"bio": "Bio",
+			"settings": "Settings",
 			"duration": "Duration",
 			"unlimited": "Unlimited",
 			"source": "Source",
@@ -1439,6 +1445,17 @@
 				"monsterAttackFailed": "Monster attack failed. See console for details.",
 				"selectedGroupHasNoAliveMinions": "Selected group has no alive minions to attack.",
 				"couldNotOpenPanel": "Could not open group attack panel. See console for details."
+			}
+		},
+		"migration": {
+			"world": {
+				"starting": "Migrating world data to Nimble v{version}.",
+				"completed": "World migration complete.",
+				"completedWithErrors": "World migration completed with {count} error(s). Check the browser console (F12) for details."
+			},
+			"compendium": {
+				"starting": "Migrating compendium: {packName}...",
+				"finished": "Finished migrating compendium: {packName}."
 			}
 		},
 		"actorImport": {

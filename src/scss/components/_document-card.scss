@@ -21,6 +21,11 @@
   cursor: pointer;
   transition: var(--nimble-standard-transition);
 
+  &--drop-flash {
+    position: relative;
+    animation: nimble-drop-item-flash 2.5s ease-in-out forwards;
+  }
+
   &--actor-inventory {
     grid-template-areas:
       "img name quantity configureButton deleteButton"
@@ -328,5 +333,43 @@
     text-align: center;
     line-height: 1;
     height: 1.5rem;
+  }
+}
+
+@keyframes nimble-drop-item-flash {
+  0% {
+    border-color: var(--nimble-card-border-color);
+    box-shadow: var(--nimble-box-shadow);
+    background-color: var(--nimble-card-background-color);
+  }
+
+  16% {
+    border-color: hsl(var(--nimble-drop-flash-color-values) / 0.9);
+    box-shadow:
+      var(--nimble-box-shadow),
+      0 0 10px hsl(var(--nimble-drop-flash-color-values) / 0.55);
+    background-color: hsl(var(--nimble-drop-flash-color-values) / 0.14);
+  }
+
+  42% {
+    border-color: hsl(var(--nimble-drop-flash-color-values) / 0.55);
+    box-shadow:
+      var(--nimble-box-shadow),
+      0 0 7px hsl(var(--nimble-drop-flash-color-values) / 0.38);
+    background-color: hsl(var(--nimble-drop-flash-color-values) / 0.09);
+  }
+
+  72% {
+    border-color: hsl(var(--nimble-drop-flash-color-values) / 0.2);
+    box-shadow:
+      var(--nimble-box-shadow),
+      0 0 3px hsl(var(--nimble-drop-flash-color-values) / 0.14);
+    background-color: hsl(var(--nimble-drop-flash-color-values) / 0.04);
+  }
+
+  100% {
+    border-color: var(--nimble-card-border-color);
+    box-shadow: var(--nimble-box-shadow);
+    background-color: var(--nimble-card-background-color);
   }
 }

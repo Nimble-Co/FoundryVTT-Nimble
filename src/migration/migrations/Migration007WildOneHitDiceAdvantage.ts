@@ -26,8 +26,7 @@ class Migration007WildOneHitDiceAdvantage extends MigrationBase {
 		if (source.type !== 'background') return;
 
 		// Check if this is the Wild One background by sourceId or name
-		const isWildOne =
-			source.flags?.core?.sourceId === WILD_ONE_SOURCE_ID || source.name === 'Wild One';
+		const isWildOne = this.getSourceId(source) === WILD_ONE_SOURCE_ID || source.name === 'Wild One';
 
 		if (!isWildOne) return;
 

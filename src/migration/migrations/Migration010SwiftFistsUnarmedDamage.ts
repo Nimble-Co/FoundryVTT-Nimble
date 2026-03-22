@@ -29,7 +29,7 @@ class Migration010SwiftFistsUnarmedDamage extends MigrationBase {
 
 		// Check if this is the Swift Fists feature by sourceId
 		// Name-only matching is avoided to prevent false positives with homebrew items
-		const isSwiftFists = source.flags?.core?.sourceId === SWIFT_FISTS_SOURCE_ID;
+		const isSwiftFists = this.getSourceId(source) === SWIFT_FISTS_SOURCE_ID;
 
 		if (!isSwiftFists) return;
 

@@ -12,14 +12,24 @@ async function syncActorHealthState(actor: Actor.Implementation): Promise<void> 
 	const isBloodied = healthState === 'bloodied';
 	const isLastStand = healthState === 'lastStand';
 
-	await actor.toggleStatusEffect(BLOODIED_STATUS_ID, {
-		active: isBloodied,
-		overlay: false,
-	});
-	await actor.toggleStatusEffect(LAST_STAND_STATUS_ID, {
-		active: isLastStand,
-		overlay: false,
-	});
+	// Wrap in try-catch to handle race conditions with concurrent status effect modifications
+	try {
+		await actor.toggleStatusEffect(BLOODIED_STATUS_ID, {
+			active: isBloodied,
+			overlay: false,
+		});
+	} catch {
+		// Ignore errors from concurrent status effect modifications
+	}
+
+	try {
+		await actor.toggleStatusEffect(LAST_STAND_STATUS_ID, {
+			active: isLastStand,
+			overlay: false,
+		});
+	} catch {
+		// Ignore errors from concurrent status effect modifications
+	}
 }
 
 export default function registerCombatantHealthStateSync() {

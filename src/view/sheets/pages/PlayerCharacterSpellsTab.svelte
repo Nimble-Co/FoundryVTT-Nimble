@@ -1,8 +1,16 @@
-<script>
+<script lang="ts">
+	import type { NimbleCharacter } from '../../../documents/actor/character.js';
+	import type PlayerCharacterSheet from '../../../documents/sheets/PlayerCharacterSheet.svelte.js';
 	import filterItems from '../../dataPreparationHelpers/filterItems.js';
 	import { getContext } from 'svelte';
 	import prepareSpellTooltip from '../../dataPreparationHelpers/documentTooltips/prepareSpellTooltip';
+	import shouldFlashDroppedItem from '../../../utils/shouldFlashDroppedItem.js';
 	import sortItems from '../../../utils/sortItems.js';
+	import {
+		DROP_ITEM_FLASH_ANIMATION_NAME,
+		getDroppedItemFlashIds,
+		type SheetDropItemFlashState,
+	} from '../dropItemFlashState.js';
 
 	import SearchBar from '../components/SearchBar.svelte';
 	import SecondaryNavigation from '../../components/SecondaryNavigation.svelte';
@@ -148,8 +156,10 @@
 		spellTierHeadings,
 	} = CONFIG.NIMBLE;
 
-	let actor = getContext('actor');
-	let sheet = getContext('application');
+	let actor = getContext<NimbleCharacter>('actor');
+	let sheet = getContext<PlayerCharacterSheet>('application');
+	const sheetState = getContext<SheetDropItemFlashState>('sheetState');
+	let droppedItemFlashIds = $derived(new Set(getDroppedItemFlashIds(sheetState)));
 
 	// Settings
 	let flags = $derived(actor.reactive.flags.nimble);
@@ -200,6 +210,11 @@
 			});
 		}
 	}
+
+	function handleDropFlashAnimationEnd(event: AnimationEvent, itemId: string) {
+		if (event.animationName !== DROP_ITEM_FLASH_ANIMATION_NAME) return;
+		sheet.clearDroppedItemFlash(itemId);
+	}
 </script>
 
 <SecondaryNavigation bind:currentTab {subNavigation} />
@@ -231,7 +246,7 @@
 			</header>
 
 			<ul class="nimble-item-list">
-				{#each sortItems(tierSpells) as spell (spell._id)}
+				{#each sortItems(tierSpells) as spell (spell.reactive._id)}
 					{@const meta = getSpellMetadata(spell)}
 					{@const requiresConcentration =
 						spell.reactive.system.properties.selected.includes('concentration')}
@@ -243,7 +258,11 @@
 						class="nimble-document-card"
 						class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
 						class:nimble-document-card--no-meta={!meta}
-						data-item-id={spell._id}
+						class:nimble-document-card--drop-flash={shouldFlashDroppedItem(
+							droppedItemFlashIds,
+							spell.reactive._id,
+						)}
+						data-item-id={spell.reactive._id}
 						data-tooltip={tooltipCache.get(spell.reactive._id) || ''}
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 						data-tooltip-direction="LEFT"
@@ -251,6 +270,7 @@
 						draggable="true"
 						role="button"
 						ondragstart={(event) => sheet._onDragStart(event)}
+						onanimationend={(event) => handleDropFlashAnimationEnd(event, spell.reactive._id)}
 						onclick={() => actor.activateItem(spell._id)}
 					>
 						{#if showEmbeddedDocumentImages}

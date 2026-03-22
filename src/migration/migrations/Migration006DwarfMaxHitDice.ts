@@ -27,7 +27,7 @@ class Migration006DwarfMaxHitDice extends MigrationBase {
 		if (source.type !== 'ancestry') return;
 
 		// Check if this is the Dwarf ancestry by sourceId or name
-		const isDwarf = source.flags?.core?.sourceId === DWARF_SOURCE_ID || source.name === 'Dwarf';
+		const isDwarf = this.getSourceId(source) === DWARF_SOURCE_ID || source.name === 'Dwarf';
 
 		if (!isDwarf) return;
 
