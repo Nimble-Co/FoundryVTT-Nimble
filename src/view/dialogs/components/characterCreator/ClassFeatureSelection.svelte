@@ -27,6 +27,25 @@
 	let hasSelectionGroups = $derived((classFeatures?.selectionGroups?.size ?? 0) > 0);
 	let hasAnyFeatures = $derived(hasAutoGrant || hasSelectionGroups);
 
+	// Auto-select features for groups that only have one option
+	$effect(() => {
+		if (!classFeatures?.selectionGroups) return;
+
+		const newSelections = new Map(selectedFeatures);
+		let hasChanges = false;
+
+		for (const [groupName, features] of classFeatures.selectionGroups) {
+			if (features.length === 1 && !newSelections.has(groupName)) {
+				newSelections.set(groupName, features[0]);
+				hasChanges = true;
+			}
+		}
+
+		if (hasChanges) {
+			selectedFeatures = newSelections;
+		}
+	});
+
 	function handleFeatureSelect(groupName: string, feature: NimbleFeatureItem) {
 		const newSelections = new Map(selectedFeatures);
 		if (newSelections.get(groupName)?.uuid === feature.uuid) {
