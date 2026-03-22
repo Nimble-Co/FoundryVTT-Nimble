@@ -69,7 +69,7 @@
 	>
 		<header class="nimble-section-header" data-header-variant="character-creator">
 			<h3 class="nimble-heading" data-heading-variant="section">
-				Step 1b: Class Features
+				Class Features
 
 				{#if !active && hasSelectionGroups}
 					<button
@@ -92,18 +92,11 @@
 		{/if}
 
 		{#if hasAutoGrant}
-			<div class="granted-features">
-				<header class="granted-features__header">
-					<h4 class="nimble-heading" data-heading-variant="section">Granted Features</h4>
-					<span class="granted-features__hint">(Automatically granted)</span>
-				</header>
-
-				<ul class="granted-features__list">
-					{#each classFeatures?.autoGrant ?? [] as feature (feature.uuid)}
-						<FeatureCard {feature} />
-					{/each}
-				</ul>
-			</div>
+			<ul class="granted-features__list">
+				{#each classFeatures?.autoGrant ?? [] as feature (feature.uuid)}
+					<FeatureCard {feature} />
+				{/each}
+			</ul>
 		{/if}
 
 		{#if hasSelectionGroups}
@@ -120,27 +113,10 @@
 {/if}
 
 <style lang="scss">
-	.granted-features {
-		margin-top: 1rem;
-
-		&__header {
-			display: flex;
-			align-items: baseline;
-			gap: 0.5rem;
-			margin-bottom: 0.75rem;
-		}
-
-		&__hint {
-			font-size: 0.875rem;
-			font-weight: normal;
-			color: var(--nimble-medium-text-color);
-		}
-
-		&__list {
-			display: flex;
-			flex-direction: column;
-			margin: 0;
-			padding: 0;
-		}
+	.granted-features__list {
+		display: flex;
+		flex-direction: column;
+		margin: 0.5rem 0 0 0;
+		padding: 0;
 	}
 </style>
