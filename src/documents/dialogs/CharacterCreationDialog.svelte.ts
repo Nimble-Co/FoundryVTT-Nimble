@@ -42,7 +42,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		},
 		position: {
 			height: 'auto' as const,
-			top: 5,
+			top: 0,
 			width: 608,
 		},
 		actions: {},
