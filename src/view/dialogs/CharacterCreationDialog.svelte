@@ -1,7 +1,11 @@
-<script>
+<script lang="ts">
+	import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
+	import type { NimbleFeatureItem } from '#documents/item/feature.js';
+
 	import { setContext, untrack } from 'svelte';
 	import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 	import generateBlankAttributeSet from '../../utils/generateBlankAttributeSet.js';
+	import getClassFeatures from '../../utils/getClassFeatures.js';
 	import scrollIntoView from '../../utils/scrollIntoView.js';
 
 	import AncestrySelection from './components/characterCreator/AncestrySelection.svelte';
@@ -9,6 +13,7 @@
 	import BackgroundOptionsSelection from './components/characterCreator/BackgroundOptionsSelection.svelte';
 	import BackgroundSelection from './components/characterCreator/BackgroundSelection.svelte';
 	import BonusLanguageSelection from './components/characterCreator/BonusLanguageSelection.svelte';
+	import ClassFeatureSelection from './components/characterCreator/ClassFeatureSelection.svelte';
 	import ClassSelection from './components/characterCreator/ClassSelection.svelte';
 	import SkillPointAssignment from './components/characterCreator/SkillPointAssignment.svelte';
 	import StartingEquipmentSelection from './components/characterCreator/StartingEquipmentSelection.svelte';
@@ -17,6 +22,7 @@
 
 	const CHARACTER_CREATION_STAGES = {
 		CLASS: 0,
+		CLASS_FEATURES: '0b',
 		ANCESTRY: '1a',
 		ANCESTRY_OPTIONS: '1b',
 		BACKGROUND: 2,
@@ -126,6 +132,27 @@
 		return background?.name?.toLowerCase().includes('raised by');
 	}
 
+	function classFeaturesComplete(
+		features: ClassFeatureResult | null,
+		selections: Map<string, NimbleFeatureItem>,
+	): boolean {
+		if (!features) return true; // No features to select
+
+		// If there are selection groups, all must have a selection
+		for (const groupName of features.selectionGroups.keys()) {
+			if (!selections.has(groupName)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	function hasClassFeatures(features: ClassFeatureResult | null): boolean {
+		if (!features) return false;
+		return features.autoGrant.length > 0 || features.selectionGroups.size > 0;
+	}
+
 	function getCurrentStage(
 		selectedClass,
 		selectedAncestry,
@@ -138,6 +165,8 @@
 		selectedAbilityScores,
 		remainingSkillPoints,
 		bonusLanguages,
+		classFeatures,
+		selectedClassFeatures,
 	) {
 		const classOptionCount = classOptions.then((classes) => classes.length);
 
@@ -148,6 +177,14 @@
 		const backgroundCount = backgroundOptions.then((backgrounds) => backgrounds.length);
 
 		if (classOptionCount && !selectedClass) return CHARACTER_CREATION_STAGES.CLASS;
+
+		// Check class features stage (only if class has features at level 1)
+		if (
+			hasClassFeatures(classFeatures) &&
+			!classFeaturesComplete(classFeatures, selectedClassFeatures)
+		) {
+			return CHARACTER_CREATION_STAGES.CLASS_FEATURES;
+		}
 
 		if (ancestryCount && !selectedAncestry) {
 			return CHARACTER_CREATION_STAGES.ANCESTRY;
@@ -193,6 +230,12 @@
 	}
 
 	function submit() {
+		// Prepare class features data
+		const classFeatureData = {
+			autoGrant: classFeatures?.autoGrant?.map((f) => f.uuid) ?? [],
+			selected: selectedClassFeatures,
+		};
+
 		dialog.submitCharacterCreation({
 			name,
 			origins: {
@@ -223,6 +266,8 @@
 			}, {}),
 			// Only include common + bonus languages; rule-granted languages are handled by the rules at runtime
 			languages: ['common', ...bonusLanguages],
+			// Class features
+			classFeatures: classFeatureData,
 		});
 	}
 
@@ -274,6 +319,10 @@
 	let selectedAncestrySave = $state(null);
 	let selectedRaisedByAncestry = $state(null);
 	let startingEquipmentChoice = $state(null);
+
+	// Class features state
+	let classFeatures = $state<ClassFeatureResult | null>(null);
+	let selectedClassFeatures = $state<Map<string, NimbleFeatureItem>>(new Map());
 
 	let abilityBonuses = $derived(
 		getAbilityBonuses(selectedAncestry, selectedBackground, selectedClass),
@@ -358,6 +407,8 @@
 			selectedAbilityScores,
 			remainingSkillPoints,
 			bonusLanguages,
+			classFeatures,
+			selectedClassFeatures,
 		),
 	);
 
@@ -371,6 +422,20 @@
 
 	$effect(() => {
 		scrollIntoView(`${dialog.id}-stage-${stage}`);
+	});
+
+	$effect(() => {
+		// Fetch class features when class changes
+		const classIdentifier = selectedClass?.system?.identifier;
+		if (classIdentifier) {
+			getClassFeatures(classIdentifier, 1).then((result) => {
+				classFeatures = result;
+			});
+		} else {
+			classFeatures = null;
+		}
+		// Reset class feature selections when class changes
+		selectedClassFeatures = new Map();
 	});
 
 	$effect(() => {
@@ -430,6 +495,12 @@
 			bind:selectedClass
 		/>
 	{/await}
+
+	<ClassFeatureSelection
+		active={stage === CHARACTER_CREATION_STAGES.CLASS_FEATURES}
+		{classFeatures}
+		bind:selectedFeatures={selectedClassFeatures}
+	/>
 
 	{#await ancestryOptions then ancestries}
 		<AncestrySelection
