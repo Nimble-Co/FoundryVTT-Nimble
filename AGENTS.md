@@ -15,6 +15,7 @@ This file provides guidance for AI assistants working on this codebase.
 - **Don't add new entry points**: All code must be reachable from `src/nimble.ts` via imports
 - **Don't modify test infrastructure**: `tests/setup.ts` and `tests/mocks/foundry.js` are stable shared infrastructure — fix your test, not the setup
 - **English localization only**: Agents may add or modify English source strings in `en.json` but must flag all changes for human review. Never generate, modify, or translate locale files for any other language.
+- **Base branch is `dev`**: When comparing against remote, creating PRs, or referencing the base branch, always use `dev` — never `main`.
 
 ## References
 
