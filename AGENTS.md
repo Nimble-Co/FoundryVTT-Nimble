@@ -2,6 +2,20 @@
 
 This file provides guidance for AI assistants working on this codebase.
 
+## Critical Rules
+
+- **Foundry globals**: `game`, `CONFIG`, `Hooks`, `Roll`, `Actor`, `Item` are globals — never import them
+- **`.svelte.ts` extension**: Any `.ts` file using runes (`$state`, `$derived`, `$effect`) outside a `.svelte` component must use `.svelte.ts`
+- **No Svelte 4 syntax**: No `export let`, `$:`, `on:click`, or `createEventDispatcher()` — use `$props()`, `$derived`, `$effect`, `onclick`
+- **No barrel exports**: No `index.ts` re-exports — they cause circular dependency chains
+- **Unused vars**: Prefix with `_` (e.g., `_event`), don't delete parameters
+- **Don't mutate documents directly**: Use `actor.update()` / `item.update()` — direct assignment won't persist
+- **Extend `NimbleBaseActor`/`NimbleBaseItem`**: Never extend Foundry's `Actor`/`Item` directly
+- **`@ts-expect-error` not `@ts-ignore`**: Use `@ts-expect-error` with a comment explaining why
+- **Don't add new entry points**: All code must be reachable from `src/nimble.ts` via imports
+- **Don't modify test infrastructure**: `tests/setup.ts` and `tests/mocks/foundry.js` are stable shared infrastructure — fix your test, not the setup
+- **English localization only**: Agents may add or modify English source strings in `en.json` but must flag all changes for human review. Never generate, modify, or translate locale files for any other language.
+
 ## References
 
 Before making changes, read the full coding style guide: [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md)
@@ -95,16 +109,3 @@ Run `pnpm check` to verify formatting, linting, types, and tests pass.
 Use **Conventional Commits**: `type(scope): description` (types: `feat`, `fix`, `chore`, `docs`).
 
 See [Pre-Review Extraction Checks](docs/STYLE_GUIDE.md#pre-review-extraction-checks) for the full checklist.
-
-### Critical Rules
-
-- **Foundry globals**: `game`, `CONFIG`, `Hooks`, `Roll`, `Actor`, `Item` are globals — never import them
-- **`.svelte.ts` extension**: Any `.ts` file using runes (`$state`, `$derived`, `$effect`) outside a `.svelte` component must use `.svelte.ts`
-- **No Svelte 4 syntax**: No `export let`, `$:`, `on:click`, or `createEventDispatcher()` — use `$props()`, `$derived`, `$effect`, `onclick`
-- **No barrel exports**: No `index.ts` re-exports — they cause circular dependency chains
-- **Unused vars**: Prefix with `_` (e.g., `_event`), don't delete parameters
-- **Don't mutate documents directly**: Use `actor.update()` / `item.update()` — direct assignment won't persist
-- **Extend `NimbleBaseActor`/`NimbleBaseItem`**: Never extend Foundry's `Actor`/`Item` directly
-- **`@ts-expect-error` not `@ts-ignore`**: Use `@ts-expect-error` with a comment explaining why
-- **Don't add new entry points**: All code must be reachable from `src/nimble.ts` via imports
-- **Don't modify test infrastructure**: `tests/setup.ts` and `tests/mocks/foundry.js` are stable shared infrastructure — fix your test, not the setup
