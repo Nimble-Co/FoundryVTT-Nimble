@@ -8,17 +8,13 @@ import type {
 	StageValue,
 } from './types.js';
 
-// Type alias for origin items with rules - these are dynamic Foundry types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type OriginItem = any;
-
 /**
  * Calculates ability score bonuses from ancestry, background, and class rules
  */
 export function getAbilityBonuses(
-	ancestry: OriginItem,
-	background: OriginItem,
-	characterClass: OriginItem,
+	ancestry: NimbleAncestryItem | null,
+	background: NimbleBackgroundItem | null,
+	characterClass: NimbleClassItem | null,
 ): Map<string, number> | null {
 	const abilityKeys = Object.keys(CONFIG.NIMBLE.abilityScores);
 
@@ -37,12 +33,12 @@ export function getAbilityBonuses(
 	const bonuses = new Map(abilityKeys.map((key) => [key, 0]));
 
 	statBonusRules.forEach((rule) => {
-		let targetAbilities = rule.abilities;
+		let targetAbilities = rule.abilities ?? [];
 
 		if (!targetAbilities.length) return;
 		if (targetAbilities.includes('all')) targetAbilities = abilityKeys;
 
-		const bonus = getDeterministicBonus(rule.value, {});
+		const bonus = getDeterministicBonus(rule.value ?? '', {});
 
 		targetAbilities.forEach((abilityKey: string) => {
 			bonuses.set(abilityKey, (bonuses.get(abilityKey) ?? 0) + Number.parseInt(String(bonus), 10));
@@ -56,9 +52,9 @@ export function getAbilityBonuses(
  * Calculates skill bonuses from ancestry, background, and class rules
  */
 export function getSkillBonuses(
-	ancestry: OriginItem,
-	background: OriginItem,
-	characterClass: OriginItem,
+	ancestry: NimbleAncestryItem | null,
+	background: NimbleBackgroundItem | null,
+	characterClass: NimbleClassItem | null,
 ): Map<string, number> | null {
 	const skillKeys = Object.keys(CONFIG.NIMBLE.skills);
 
@@ -75,12 +71,12 @@ export function getSkillBonuses(
 	const bonuses = new Map(skillKeys.map((key) => [key, 0]));
 
 	skillBonusRules.forEach((rule) => {
-		let targetSkills = rule.skills;
+		let targetSkills = rule.skills ?? [];
 
 		if (!targetSkills.length) return;
 		if (targetSkills.includes('all')) targetSkills = skillKeys;
 
-		const bonus = getDeterministicBonus(rule.value, {});
+		const bonus = getDeterministicBonus(rule.value ?? '', {});
 
 		targetSkills.forEach((skillKey: string) => {
 			bonuses.set(skillKey, (bonuses.get(skillKey) ?? 0) + Number.parseInt(String(bonus), 10));
@@ -93,7 +89,7 @@ export function getSkillBonuses(
 /**
  * Checks if an ancestry has a saving throw choice rule
  */
-export function ancestryRequiresSaveChoice(ancestry: OriginItem): boolean {
+export function ancestryRequiresSaveChoice(ancestry: NimbleAncestryItem | null): boolean {
 	const rules = [...(ancestry?.rules?.values() ?? [])];
 	if (!rules.length) return false;
 
@@ -109,7 +105,7 @@ export function ancestryRequiresSaveChoice(ancestry: OriginItem): boolean {
 /**
  * Checks if an ancestry has any options that need to be selected
  */
-export function hasAncestryOptions(ancestry: OriginItem): boolean {
+export function hasAncestryOptions(ancestry: NimbleAncestryItem | null): boolean {
 	const hasSizeChoice = (ancestry?.system?.size?.length ?? 0) > 1;
 	const hasSaveChoice = ancestryRequiresSaveChoice(ancestry);
 	return hasSizeChoice || hasSaveChoice;
@@ -119,7 +115,7 @@ export function hasAncestryOptions(ancestry: OriginItem): boolean {
  * Checks if all ancestry options have been selected
  */
 export function ancestryOptionsComplete(
-	ancestry: OriginItem,
+	ancestry: NimbleAncestryItem | null,
 	selectedAncestrySize: string | null,
 	selectedAncestrySave: string | null,
 ): boolean {
@@ -135,7 +131,7 @@ export function ancestryOptionsComplete(
 /**
  * Checks if a background is a "Raised by" type that allows ancestry selection
  */
-export function isRaisedByBackground(background: OriginItem): boolean {
+export function isRaisedByBackground(background: NimbleBackgroundItem | null): boolean {
 	return background?.name?.toLowerCase().includes('raised by') ?? false;
 }
 
@@ -170,12 +166,7 @@ export function hasClassFeatures(features: ClassFeatureResult | null): boolean {
  * Extracts language grants from rules, checking INT predicate
  */
 export function getLanguageGrantsFromRules(
-	rules: Array<{
-		type: string;
-		proficiencyType?: string;
-		predicate?: { intelligence?: { min?: number } };
-		values?: string[];
-	}>,
+	rules: NimbleBaseRule[],
 	intMod: number,
 	source: 'ancestry' | 'background',
 ): GrantedLanguage[] {
@@ -199,11 +190,11 @@ export function getLanguageGrantsFromRules(
  * Parameters for determining the current stage
  */
 export interface GetCurrentStageParams {
-	selectedClass: OriginItem;
-	selectedAncestry: OriginItem;
+	selectedClass: NimbleClassItem | null;
+	selectedAncestry: NimbleAncestryItem | null;
 	selectedAncestrySize: string | null;
 	selectedAncestrySave: string | null;
-	selectedBackground: OriginItem;
+	selectedBackground: NimbleBackgroundItem | null;
 	selectedRaisedByAncestry: { language: string; label: string } | null;
 	startingEquipmentChoice: 'equipment' | 'gold' | null;
 	selectedArray: { array?: number[] } | null;

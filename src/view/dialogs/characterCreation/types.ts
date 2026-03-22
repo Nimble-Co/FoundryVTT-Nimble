@@ -1,9 +1,11 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
 
-// Type alias for origin items - these are dynamic Foundry types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type OriginItem = any;
+/**
+ * Union type for origin items used in character creation.
+ * These are the item types that define a character's origins.
+ */
+export type OriginItem = NimbleClassItem | NimbleAncestryItem | NimbleBackgroundItem | null;
 
 /**
  * Represents a language granted by ancestry or background rules
@@ -17,10 +19,10 @@ export interface GrantedLanguage {
  * Props passed to the CharacterCreationDialog Svelte component
  */
 export interface CharacterCreationDialogProps {
-	ancestryOptions: Promise<Record<'core' | 'exotic', OriginItem[]>>;
-	backgroundOptions: Promise<OriginItem[]>;
+	ancestryOptions: Promise<Record<'core' | 'exotic', NimbleAncestryItem[]>>;
+	backgroundOptions: Promise<NimbleBackgroundItem[]>;
 	bonusLanguageOptions: Array<{ value: string; label: string; tooltip: string }>;
-	classOptions: Promise<OriginItem[]>;
+	classOptions: Promise<NimbleClassItem[]>;
 	dialog: CharacterCreationDialogInstance;
 	statArrayOptions: StatArrayOption[];
 }
@@ -55,9 +57,9 @@ export interface CharacterCreationResults {
 	languages?: string[];
 	startingEquipmentChoice?: 'equipment' | 'gold';
 	origins?: {
-		background?: OriginItem;
-		characterClass?: OriginItem;
-		ancestry?: OriginItem;
+		background?: NimbleBackgroundItem;
+		characterClass?: NimbleClassItem;
+		ancestry?: NimbleAncestryItem;
 	};
 	classFeatures?: {
 		autoGrant: string[];

@@ -21,17 +21,13 @@ import {
 	isRaisedByBackground,
 } from './utils.js';
 
-// Type alias for origin items - these are dynamic Foundry types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type OriginItem = any;
-
 /**
  * Parameters for creating the character creation state
  */
 export interface CharacterCreationStateParams {
-	ancestryOptions: Promise<Record<'core' | 'exotic', OriginItem[]>>;
-	backgroundOptions: Promise<OriginItem[]>;
-	classOptions: Promise<OriginItem[]>;
+	ancestryOptions: Promise<Record<'core' | 'exotic', NimbleAncestryItem[]>>;
+	backgroundOptions: Promise<NimbleBackgroundItem[]>;
+	classOptions: Promise<NimbleClassItem[]>;
 	dialog: CharacterCreationDialogInstance;
 }
 
@@ -44,11 +40,11 @@ export interface CharacterCreationStateParams {
 export function createCharacterCreationState(params: CharacterCreationStateParams) {
 	// Core selections
 	let name = $state('');
-	let selectedClass = $state<OriginItem>(null);
-	let selectedAncestry = $state<OriginItem>(null);
+	let selectedClass = $state<NimbleClassItem | null>(null);
+	let selectedAncestry = $state<NimbleAncestryItem | null>(null);
 	let selectedAncestrySize = $state<string>('medium');
 	let selectedAncestrySave = $state<string | null>(null);
-	let selectedBackground = $state<OriginItem>(null);
+	let selectedBackground = $state<NimbleBackgroundItem | null>(null);
 	let selectedRaisedByAncestry = $state<{ language: string; label: string } | null>(null);
 	let startingEquipmentChoice = $state<'equipment' | 'gold' | null>(null);
 	let selectedArray = $state<StatArrayOption | null>(null);
@@ -99,11 +95,10 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		// For other backgrounds with grantProficiency rules
 		const rules = [...(selectedBackground?.system?.rules ?? [])];
 		const grantRules = rules.filter(
-			(r: { type: string; proficiencyType?: string }) =>
-				r.type === 'grantProficiency' && r.proficiencyType === 'languages',
+			(r) => r.type === 'grantProficiency' && r.proficiencyType === 'languages',
 		);
-		return grantRules.flatMap((r: { values?: string[] }) =>
-			(r.values ?? []).map((v: string) => ({
+		return grantRules.flatMap((r) =>
+			(r.values ?? []).map((v) => ({
 				key: v.toLowerCase(),
 				source: 'background' as const,
 			})),
@@ -291,13 +286,13 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		get selectedClass() {
 			return selectedClass;
 		},
-		set selectedClass(value: OriginItem) {
+		set selectedClass(value: NimbleClassItem | null) {
 			selectedClass = value;
 		},
 		get selectedAncestry() {
 			return selectedAncestry;
 		},
-		set selectedAncestry(value: OriginItem) {
+		set selectedAncestry(value: NimbleAncestryItem | null) {
 			selectedAncestry = value;
 		},
 		get selectedAncestrySize() {
@@ -315,7 +310,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		get selectedBackground() {
 			return selectedBackground;
 		},
-		set selectedBackground(value: OriginItem) {
+		set selectedBackground(value: NimbleBackgroundItem | null) {
 			selectedBackground = value;
 		},
 		get selectedRaisedByAncestry() {
