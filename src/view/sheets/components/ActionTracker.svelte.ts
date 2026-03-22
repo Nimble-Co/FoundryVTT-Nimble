@@ -163,12 +163,16 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 	function handlePipClick(index: number): void {
 		if (!hasInitiative) return;
 
-		const pipNumber = index + 1;
+		const isAvailable = index < actionsData.current;
 
-		if (pipNumber <= actionsData.current) {
-			updateActionPips(index);
+		if (isAvailable) {
+			// Spend one action
+			const newValue = Math.max(actionsData.current - 1, 0);
+			updateActionPips(newValue);
 		} else {
-			updateActionPips(pipNumber);
+			// Restore one action
+			const newValue = Math.min(actionsData.current + 1, actionsData.max);
+			updateActionPips(newValue);
 		}
 	}
 

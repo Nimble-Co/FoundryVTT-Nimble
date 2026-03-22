@@ -27,6 +27,7 @@
 					type="button"
 					aria-label={localize('NIMBLE.ui.heroicActions.rollInitiative')}
 					data-tooltip={localize('NIMBLE.ui.heroicActions.rollInitiative')}
+					data-tooltip-direction="RIGHT"
 					onclick={state.rollInitiative}
 				>
 					<i class="fa-solid fa-dice-d20"></i>
@@ -46,6 +47,7 @@
 							type="button"
 							aria-label={state.getPipAriaLabel(i, isAvailable)}
 							data-tooltip={state.getPipTooltip(isAvailable)}
+							data-tooltip-direction="RIGHT"
 							onclick={() => state.handlePipClick(i)}
 						>
 							<i class="fa-solid {diceIcon}"></i>
@@ -61,6 +63,7 @@
 						type="button"
 						aria-label={localize('NIMBLE.ui.heroicActions.endTurn')}
 						data-tooltip={localize('NIMBLE.ui.heroicActions.endTurn')}
+						data-tooltip-direction="RIGHT"
 						onclick={state.endTurn}
 					>
 						<i class="fa-solid fa-forward-step"></i>
