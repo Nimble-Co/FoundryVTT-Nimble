@@ -14,6 +14,7 @@
 	}
 
 	let formattedGroupName = $derived(formatGroupName(groupName));
+	let isSingleOption = $derived(features.length === 1);
 </script>
 
 <div class="feature-group">
@@ -21,15 +22,17 @@
 		<h4 class="nimble-heading" data-heading-variant="section">
 			{formattedGroupName}
 		</h4>
-		<span class="feature-group__hint">(Choose one)</span>
+		{#if !isSingleOption}
+			<span class="feature-group__hint">(Choose one)</span>
+		{/if}
 	</header>
 
 	<ul class="feature-group__list">
 		{#each features as feature (feature.uuid)}
 			<FeatureCard
 				{feature}
-				isSelected={selectedFeature?.uuid === feature.uuid}
-				onSelect={() => onSelect(feature)}
+				isSelected={isSingleOption ? false : selectedFeature?.uuid === feature.uuid}
+				onSelect={isSingleOption ? undefined : () => onSelect(feature)}
 			/>
 		{/each}
 	</ul>
