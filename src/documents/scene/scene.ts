@@ -1,29 +1,7 @@
+import type { AmbientLightLike, AmbientSoundLike, SceneGridLike, TokenLike } from '#types/scene.ts';
+
 const FEET_PER_SPACE = 5;
 const CONVERSION_DECIMAL_PRECISION = 3;
-
-type AmbientLightLike = {
-	config?: {
-		dim?: number;
-		bright?: number;
-	};
-	updateSource: (changes: Record<string, unknown>) => void;
-};
-
-type TokenLike = {
-	light?: {
-		dim?: number;
-		bright?: number;
-	};
-	sight?: {
-		range?: number | null;
-	};
-	updateSource: (changes: Record<string, unknown>) => void;
-};
-
-type AmbientSoundLike = {
-	radius?: number;
-	updateSource: (changes: Record<string, unknown>) => void;
-};
 
 function normalizeGridUnit(unit: string | undefined): string {
 	return (unit ?? '').trim().toLowerCase();
@@ -41,6 +19,26 @@ function isMultipleOfFive(value: number | undefined): boolean {
 function convertFeetToSpacesDistance(value: number): number {
 	const converted = value / FEET_PER_SPACE;
 	return Number.parseFloat(converted.toFixed(CONVERSION_DECIMAL_PRECISION));
+}
+
+function hasUpdateSource(
+	value: unknown,
+): value is { updateSource: (changes: Record<string, unknown>) => void } {
+	if (!value || typeof value !== 'object') return false;
+	const sceneElement = value as { updateSource?: unknown };
+	return typeof sceneElement.updateSource === 'function';
+}
+
+function isAmbientLightLike(value: unknown): value is AmbientLightLike {
+	return hasUpdateSource(value);
+}
+
+function isTokenLike(value: unknown): value is TokenLike {
+	return hasUpdateSource(value);
+}
+
+function isAmbientSoundLike(value: unknown): value is AmbientSoundLike {
+	return hasUpdateSource(value);
 }
 
 function convertAmbientLightRange(light: AmbientLightLike): void {
@@ -100,7 +98,7 @@ function convertAmbientSoundRadius(sound: AmbientSoundLike): void {
 	});
 }
 
-function shouldConvertSceneFromFeetToSpaces(scene: Scene.Implementation): boolean {
+function shouldConvertSceneFromFeetToSpaces(scene: SceneGridLike): boolean {
 	if (!isFeetUnit(scene.grid?.units)) return false;
 	return isMultipleOfFive(scene.grid?.distance);
 }
@@ -112,28 +110,30 @@ export class NimbleScene extends Scene {
 		user: User.Implementation,
 		// biome-ignore lint/suspicious/noConfusingVoidType: Matching parent class signature
 	): Promise<boolean | void> {
-		if (!shouldConvertSceneFromFeetToSpaces(this as Scene.Implementation)) {
+		if (!shouldConvertSceneFromFeetToSpaces(this)) {
 			return super._preCreate(data, options, user);
 		}
 
 		const convertedGridDistance = convertFeetToSpacesDistance(this.grid.distance);
-		this.updateSource(
-			{
-				'grid.distance': convertedGridDistance,
-				'grid.units': 'spaces',
-			} as Record<string, unknown>,
-			{} as Record<string, unknown>,
-		);
+		const sceneUpdate: Record<string, unknown> = {
+			'grid.distance': convertedGridDistance,
+			'grid.units': 'spaces',
+		};
 
-		for (const light of this.lights.contents as unknown as AmbientLightLike[]) {
+		this.updateSource(sceneUpdate, {});
+
+		for (const light of this.lights.contents) {
+			if (!isAmbientLightLike(light)) continue;
 			convertAmbientLightRange(light);
 		}
 
-		for (const token of this.tokens.contents as unknown as TokenLike[]) {
+		for (const token of this.tokens.contents) {
+			if (!isTokenLike(token)) continue;
 			convertTokenLightRange(token);
 		}
 
-		for (const sound of this.sounds.contents as unknown as AmbientSoundLike[]) {
+		for (const sound of this.sounds.contents) {
+			if (!isAmbientSoundLike(sound)) continue;
 			convertAmbientSoundRadius(sound);
 		}
 
