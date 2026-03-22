@@ -420,7 +420,20 @@
 		untrack(() => dialog),
 	);
 
+	// Track if we should scroll to class features (when class is selected with features)
+	let shouldScrollToClassFeatures = $state(false);
+
 	$effect(() => {
+		// Scroll to class features section if we just populated features, otherwise scroll to current stage
+		if (shouldScrollToClassFeatures && classFeatures) {
+			const hasFeatures =
+				classFeatures.autoGrant.length > 0 || classFeatures.selectionGroups.size > 0;
+			if (hasFeatures) {
+				scrollIntoView(`${dialog.id}-stage-${CHARACTER_CREATION_STAGES.CLASS_FEATURES}`);
+				shouldScrollToClassFeatures = false;
+				return;
+			}
+		}
 		scrollIntoView(`${dialog.id}-stage-${stage}`);
 	});
 
@@ -428,11 +441,13 @@
 		// Fetch class features when class changes
 		const classIdentifier = selectedClass?.system?.identifier;
 		if (classIdentifier) {
+			shouldScrollToClassFeatures = true;
 			getClassFeatures(classIdentifier, 1).then((result) => {
 				classFeatures = result;
 			});
 		} else {
 			classFeatures = null;
+			shouldScrollToClassFeatures = false;
 		}
 		// Reset class feature selections when class changes
 		selectedClassFeatures = new Map();
