@@ -25,6 +25,17 @@
 	const isDisabled = $derived(reactionDisabled);
 	const canInterposeAndDefend = $derived(!combinedReactionDisabled);
 	const { getTargetName, handleInterpose, handleInterposeAndDefend } = state;
+
+	function handleInterposeAndDefendDragStart(event: DragEvent) {
+		if (!event.dataTransfer) return;
+		const dragData = {
+			type: 'HeroicAction',
+			actionId: 'interposeAndDefend',
+			actionType: 'reaction',
+			name: localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm'),
+		};
+		event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+	}
 </script>
 
 <section class="reaction-panel">
@@ -71,6 +82,8 @@
 		<button
 			class="reaction-panel__button reaction-panel__button--combined"
 			disabled={!canInterposeAndDefend}
+			draggable="true"
+			ondragstart={handleInterposeAndDefendDragStart}
 			onclick={handleInterposeAndDefend}
 		>
 			<i class="fa-solid fa-people-arrows"></i>

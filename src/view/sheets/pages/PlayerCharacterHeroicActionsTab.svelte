@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import { createHeroicActionsTabState } from './PlayerCharacterHeroicActionsTab.svelte.js';
 
@@ -17,8 +17,57 @@
 	// Context & State
 	// ============================================================================
 
+	interface HeroicActionTarget {
+		actionId: string;
+		actionType: 'action' | 'reaction';
+	}
+
+	interface SheetState {
+		heroicActionTarget?: HeroicActionTarget | null;
+	}
+
 	let actor = getContext('actor');
+	const sheetState = getContext<SheetState>('sheetState');
 	const state = createHeroicActionsTabState(() => actor);
+
+	// React to heroicActionTarget from macro activation
+	$effect(() => {
+		const target = sheetState?.heroicActionTarget;
+		if (!target) return;
+
+		if (target.actionType === 'action') {
+			state.activeHeroicTab = 'actions';
+			state.expandedPanel = target.actionId;
+		} else if (target.actionType === 'reaction') {
+			state.activeHeroicTab = 'reactions';
+			// Handle interposeAndDefend combo by navigating to defend panel
+			const panelId = target.actionId === 'interposeAndDefend' ? 'defend' : target.actionId;
+			state.expandedReactionPanel = panelId;
+		}
+
+		// Clear the target after handling
+		untrack(() => {
+			if (sheetState) {
+				sheetState.heroicActionTarget = null;
+			}
+		});
+	});
+
+	function handleActionDragStart(
+		event: DragEvent,
+		actionId: string,
+		actionType: 'action' | 'reaction',
+		labelKey: string,
+	) {
+		if (!event.dataTransfer) return;
+		const dragData = {
+			type: 'HeroicAction',
+			actionId,
+			actionType,
+			name: localize(labelKey),
+		};
+		event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+	}
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
@@ -66,6 +115,9 @@
 						aria-label={localize(action.labelKey)}
 						data-tooltip={state.getActionTooltip(action)}
 						disabled={state.isActionDisabled(action)}
+						draggable="true"
+						ondragstart={(event) =>
+							handleActionDragStart(event, action.id, 'action', action.labelKey)}
 						onclick={() => state.handleActionClick(action)}
 					>
 						<i class={action.icon}></i>
@@ -88,6 +140,9 @@
 						aria-label={localize(reaction.labelKey)}
 						aria-disabled={!state.canUseReaction(reaction.reactionKey)}
 						data-tooltip={state.getReactionTooltip(reaction)}
+						draggable="true"
+						ondragstart={(event) =>
+							handleActionDragStart(event, reaction.id, 'reaction', reaction.labelKey)}
 						onclick={() => state.handleReactionClick(reaction)}
 					>
 						<i class={reaction.icon}></i>

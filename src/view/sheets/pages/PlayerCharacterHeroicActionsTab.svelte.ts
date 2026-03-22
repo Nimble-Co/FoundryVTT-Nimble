@@ -359,8 +359,14 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		get expandedPanel() {
 			return expandedPanel;
 		},
+		set expandedPanel(value: string) {
+			expandedPanel = value;
+		},
 		get expandedReactionPanel() {
 			return expandedReactionPanel;
+		},
+		set expandedReactionPanel(value: string) {
+			expandedReactionPanel = value;
 		},
 		get inCombat() {
 			return inCombat;
