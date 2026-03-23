@@ -1,8 +1,8 @@
 {
 	"folder": null,
-	"name": "Hear-ring",
+	"name": "Doomcaller's Horn",
 	"type": "object",
-	"img": "icons/commodities/treasure/brooch-jewel-gold-blue.webp",
+	"img": "icons/tools/instruments/horn-carved-orange.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -12,7 +12,7 @@
 			"cost": {
 				"details": "",
 				"quantity": 1,
-				"type": "none",
+				"type": "action",
 				"isReaction": false
 			},
 			"duration": {
@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Rarity:</strong> Uncommon</p><hr><p>A simple piece of jewelry worn on the ear. While worn, wearers can communicate with one another no matter the distance. Frequently crafted as a pair, sometimes as a larger set.</p>",
+			"public": "<p><strong>Rarity:</strong> Rare</p><hr><p>A twisted horn that, when blown, summons a storm of ash and fire. Summons fiends if used under a blood moon.</p>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -42,9 +42,9 @@
 		"objectType": "misc",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "smallSized",
+		"objectSizeType": "slots",
 		"slotsRequired": 1,
-		"stackSize": 2,
+		"stackSize": 1,
 		"properties": {
 			"range": {
 				"min": 2,
@@ -62,19 +62,19 @@
 			"thrownRange": 4
 		},
 		"price": {
-			"value": 250,
+			"value": 6000,
 			"denomination": "gp"
 		}
 	},
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.345",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
-		"createdTime": 1756840278525,
-		"modifiedTime": 1756958240731,
-		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+		"systemVersion": "0.8.0",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
 	},
-	"_id": "TWuTdviXfmMxti1H"
+	"_id": "gmg029DoomcallrHorn"
 }
