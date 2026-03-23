@@ -23,3 +23,21 @@ export interface FeatureGroupSelectionProps {
 	selectedFeature: NimbleFeatureItem | null;
 	onSelect: (feature: NimbleFeatureItem) => void;
 }
+
+/**
+ * Represents a part of a feature description after parsing
+ */
+export interface DescriptionPart {
+	type: 'text' | 'spell';
+	content: string;
+	spell?: Item;
+}
+
+/**
+ * Represents a matched spell UUID in a description
+ */
+export interface SpellUuidMatch {
+	uuid: string;
+	start: number;
+	end: number;
+}

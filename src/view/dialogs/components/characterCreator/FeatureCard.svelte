@@ -1,34 +1,14 @@
 <script lang="ts">
 	import type { FeatureCardProps } from '#types/components/ClassFeatureSelection.d.ts';
+	import { createFeatureCardState } from './FeatureCard.svelte.ts';
+	import SpellReferenceCard from './SpellReferenceCard.svelte';
 
 	let { feature, isSelected = false, onSelect }: FeatureCardProps = $props();
 
-	let isExpanded = $state(false);
-	let enrichedDescription = $state('');
-
-	$effect(() => {
-		if (feature?.system?.description) {
-			foundry.applications.ux.TextEditor.implementation
-				.enrichHTML(feature.system.description)
-				.then((html: string) => {
-					enrichedDescription = html;
-				});
-		} else {
-			enrichedDescription = '';
-		}
-	});
-
-	function toggleExpanded() {
-		isExpanded = !isExpanded;
-	}
+	const state = createFeatureCardState(() => feature);
 
 	function handleSelect() {
 		onSelect?.();
-	}
-
-	function viewDetails(event: MouseEvent) {
-		event.stopPropagation();
-		feature.sheet?.render(true);
 	}
 </script>
 
@@ -36,11 +16,11 @@
 	<div
 		class="feature-row"
 		class:selected={isSelected}
-		class:expanded={isExpanded}
-		onclick={toggleExpanded}
+		class:expanded={state.isExpanded}
+		onclick={state.toggleExpanded}
 		role="button"
 		tabindex="0"
-		onkeydown={(e) => e.key === 'Enter' && toggleExpanded()}
+		onkeydown={(e) => e.key === 'Enter' && state.toggleExpanded()}
 	>
 		{#if !isSelected}
 			<i class="fa-solid fa-chevron-up expand-arrow"></i>
@@ -58,7 +38,7 @@
 
 		<button
 			class="view-details-button"
-			onclick={viewDetails}
+			onclick={state.viewDetails}
 			title="View Details"
 			aria-label="View {feature.name} details"
 		>
@@ -66,11 +46,17 @@
 		</button>
 	</div>
 
-	{#if isExpanded}
+	{#if state.isExpanded}
 		<div class="accordion-content">
 			<div class="description">
-				{#if enrichedDescription}
-					{@html enrichedDescription}
+				{#if state.descriptionParts.length > 0}
+					{#each state.descriptionParts as part}
+						{#if part.type === 'spell' && part.spell}
+							<SpellReferenceCard spell={part.spell} />
+						{:else if part.type === 'text'}
+							{@html part.content}
+						{/if}
+					{/each}
 				{:else}
 					<p>No description available.</p>
 				{/if}
