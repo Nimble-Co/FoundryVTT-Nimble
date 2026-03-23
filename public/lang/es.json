@@ -213,19 +213,14 @@
 			"confused": "Confudido",
 			"dazed": "Atontado",
 			"dead": "Muerto",
-			"defending": "Defendiendo",
-			"interposing": "Interponiéndose",
-			"opportunityAttacking": "Ataque de oportunidad",
-			"helping": "Ayudando",
 			"despair": "Desesperado",
 			"distracted": "Distraído",
 			"dying": "Moribundo",
 			"frightened": "Asustado",
-			"grappled": "Agarrado",
+			"grappled": "Apresado",
 			"hampered": "Entorpecido",
 			"incapacitated": "Incapacitado",
 			"invisible": "Invisible",
-			"lastStand": "Último Aliento",
 			"paralyzed": "Paralizado",
 			"petrified": "Petrificado",
 			"poisoned": "Envenenado",
@@ -249,19 +244,14 @@
 			"confused": "<p>El DJ elige tu siguiente acción.</p>",
 			"dazed": "<p><b>Héroes:</b> pierde 1 acción.</p> <p><b>Monstruos:</b> tienen una acción menos en su próximo turno.</p>",
 			"dead": "<p>Mueres al sufrir 6 Heridas (a menos que tengas alguna característica que cambie este número). Hay maneras de revivir a un héroe caído, pero son raras y normalmente muy costosas.</p>",
-			"defending": "<p>Esta criatura ha usado Defender y permanece en una postura defensiva hasta el final de su turno.</p>",
-			"interposing": "<p>Esta criatura ha usado Interponer reaccion.</p>",
-			"opportunityAttacking": "<p>Esta criatura ha usado Ataque de oportunidad.</p>",
-			"helping": "<p>Esta criatura ha usado Ayudar reaccion.</p>",
 			"despair": "<p>Desventaja en tu siguiente ataque realizado este encuentro.</p>",
 			"distracted": "<p>Un objetivo está distraído si está adyacente a un aliado o es Provocado por él, o si no puede verte.</p>",
 			"dying": "<p>A 0 PG. Si recibes daño en este estado, sufres 2 Heridas; un crítico te causa 3 Heridas en su lugar.</p>",
 			"frightened": "<p>Desventaja en tiradas mientras el origen del miedo esté cerca. Moverse hacia él, reduce la velocidad a la mitad.</p>",
 			"grappled": "<p>No puedes mover. Los ataques contra ti tienen ventaja.</p>",
-			"hampered": "<p>Cualquier criatura con sus acciones o movimiento reducidos (ej. Atontado, Agarrado, Derribado, Terreno difícil).</p>",
+			"hampered": "<p>Cualquier criatura con sus acciones o movimiento reducidos (ej. Atontado, Apresado, Derribado, Terreno difícil).</p>",
 			"incapacitated": "<p>No puedes hacer nada. Los ataques contra ti tienen ventaja, y si un ataque cuerpo a cuerpo te impacta, es crítico.</p>",
 			"invisible": "<p>No pueden verte. Tienes ventaja en tus ataques, y los ataques contra ti, desventaja.</p>",
-			"lastStand": "<p>En o por debajo de su umbral configurado de Ultimo Aliento.</p>",
 			"paralyzed": "<p>Incapacitado. No puedes hacer nada. Los ataques contra ti tienen ventaja, y los ataques cuerpo a cuerpo que impacten son crítico.</p>",
 			"petrified": "<p>Incapacitado. Tienes todas las ventajas y desventajas de una piedra. Eres inmune a la mayoría de los daños, excepto a explosiones violentas, picos u otras herramientas similares.</p>",
 			"poisoned": "<p>Desventaja en todas las tiradas.</p>",
@@ -520,6 +510,7 @@
 			"reach": "Alcance",
 			"range": "Distancia",
 			"load": "Recarga",
+			"secretSpell": "Conjuro secreto",
 			"thrown": "Arrojadiza",
 			"twoHanded": "A dos manos",
 			"utilitySpell": "Utilidad",
@@ -544,6 +535,7 @@
 			"maxHpBonus": "Puntos de golpe",
 			"maximizeHitDice": "Maximizar Dado de Golpe",
 			"maxWounds": "Heridas",
+			"meleeDamageBonus": "Bono de daño cuerpo a cuerpo",
 			"note": "Nota",
 			"savingThrowBonus": "Bono de salvación",
 			"savingThrowRollMode": "Modo de tirada de salvación",
@@ -660,8 +652,8 @@
 			"background": "Hoja de trasfondos de Nimble",
 			"boon": "Hoja de dones de Nimble",
 			"class": "Hoja de clase de Nimble",
-			"feature": "Hoja de características de Nimble",
-			"monsterFeature": "Hoja de características de monstruo de Nimble",
+			"feature": "Hoja de rasgos de Nimble",
+			"monsterFeature": "Hoja de rasgos de monstruo de Nimble",
 			"npc": "Hoja de PNJ de Nimble",
 			"object": "Hoja de objetos de Nimble",
 			"playerCharacter": "Hoja de personaje jugador de Nimble",
@@ -687,39 +679,123 @@
 		},
 		"ui": {
 			"cancel": "Cancelar",
+			"combatTracker": {
+				"scrollbar": "Barra de desplazamiento de orden de turnos en combate",
+				"hitPoints": "Puntos de golpe",
+				"hitPointsHidden": "Puntos de golpe ocultos",
+				"mana": "Maná",
+				"wounds": "Heridas",
+				"woundsHidden": "Heridas ocultas",
+				"woundsValue": "Heridas {current}/{max}",
+				"removeFromCombat": "Eliminar del combate"
+			},
 			"heroicActions": {
 				"title": "Acciones heroicas",
 				"reactionsTitle": "Reacciones heroicas",
-				"reactionsPlaceholder": "Reacciones próximamente...",
+				"reactions": {
+					"actionCost": "Esto requerirá 1 acción (reacción)",
+					"cost": "1 acción",
+					"armor": "Armadura",
+					"advantage": "Ventaja",
+					"disadvantage": "Desventaja",
+					"weapon": "Arma",
+					"spaces": "{count} casillas",
+					"target": "Asignar objetivo",
+					"targetAlly": "Asignar token aliado como objetivo",
+					"targetAllyOptional": "Asignar token aliado como objetivo (opcional)",
+					"targetEnemy": "Asignar token enemigo como objetivo (opcional)",
+					"selectOneTarget": "Selecciona un único objetivo",
+					"multipleTargets": "Varios objetivos seleccionados",
+					"defend": {
+						"label": "Defender",
+						"description": "Reduce el daño de un único ataque en una cantidad igual a tu Armadura. A discreción del DJ, algunos tipos de daño pueden ser inevitables (como el daño psíquico o ciertas áreas de efecto).",
+						"panelDescription": "Reduce el daño de un únio ataque en <strong> Armadura ({armor})</strong>. Algunos tipos de daño pueden ser inevitables (como el daño psíquico o ciertas áreas de efecto).",
+						"title": "Defender",
+						"armorValue": "Tu armadura",
+						"armorBadge": "Armadura {armor}",
+						"confirm": "Defender",
+						"chatMessage": "<p><strong>{name}</strong> utiliza su reacción para <strong>Defender</strong>, reduciendo el daño por un valor igual a Armadura ({armor}).</p>"
+					},
+					"interpose": {
+						"label": "Interponer",
+						"description": "Cuando una criatura a 2 casillas sea alcanzada por un ataque, puedes apartarla a un lado para convertirte en el nuevo objetivo. Ocupas su casillas y la mueves a una casilla adyacente de tu elección.",
+						"panelDescription": "Cuando un aliado a <strong>2 casillas</strong> sea golpeado, empújales a un lado para convertirte en el nuevo objetivo. Ocupas su casilla y le mueves a una adyacente.",
+						"title": "Interponer",
+						"range": "Alcance: 2 casillas",
+						"rangeBadge": "2 casillas",
+						"tip": "¡Combínala con <strong>Defender</strong> para reducir el daño que recibas!",
+						"confirm": "Interponer",
+						"protecting": "Protegiendo",
+						"chatMessage": "<p><strong>{name}</strong> utiliza su reacción para <strong>Interponer</strong>, poniéndose delante de <strong>{target}</strong> para convertirse en el objetivo del ataque.</p>"
+					},
+					"interposeAndDefend": {
+						"confirm": "Interponer y defender",
+						"cost": "2 acciones",
+						"chatMessage": "<p><strong>{name}</strong> utiliza <strong>2 reacciones</strong> para <strong>Interponer</strong> </strong> y <strong>Defender</strong> a <strong>{target}, reduciendo el daño por el valor de su armadura ({armor}).</p>"
+					},
+					"opportunity": {
+						"label": "Ataque de oportunidad",
+						"description": "Haz un ataque cuerpo a cuerpo contra un enemigo adyacente si se aleja por su propia voluntad. Los monstruos no pueden hacer ataques de oportunidad, sólo los héroes pueden.",
+						"panelDescription": "Ataca a un enemigo adyacente que se aleja voluntariamente. Sólo los héroes pueden hacer ataques de oportunidad.",
+						"title": "Ataque de oportunidad",
+						"disadvantage": "Este ataque se realiza con desventaja",
+						"disadvantageBadge": "Desventaja",
+						"selectWeapon": "Selecciona un arma cuerpo a cuerpo",
+						"noMeleeWeapons": "No hay armas cuerpo a cuerpo disponibles",
+						"unarmedOpportunity": "Ataque de oportunidad (desarmado)",
+						"confirm": "Haz un ataque de oportunidad",
+						"chatMessage": "<p><strong>{name}</strong> utiliza su reacción para hacer un <strong>ataque de oportunidad</strong> con su {weapon}.</p>"
+					},
+					"help": {
+						"label": "Ayudar",
+						"description": "Concede ventaja a un aliado en una tirada, siempre que puedas explicar de manera razonable cómo le ayudas en la situación. El DJ puede pedir una prueba de habilidad o dar la ventaja automáticamente. Limitada a una reacción de Ayudar por tirada.",
+						"panelDescription": "Concede <strong>ventaja</strong> a un aliado en una tirada explicando cómo ayudas. El DJ puede pedir una prueba de habilidad. Limitada a una reacción de Ayudar por tirada.",
+						"title": "Ayudar",
+						"effect": "Concede ventaja a un aliado en su tirada.",
+						"advantageBadge": "Ventaja",
+						"tip": "¡Piensa rápido cuando un aliado falle! Una explicación creativa puede convertir un fracaso en un éxito.",
+						"confirm": "Ayudar a un aliado",
+						"helping": "Ayudando",
+						"chatMessage": "<p><strong>{name}</strong> utiliza su reacción para <strong>Ayudar</strong> a <strong>{target}</strong>, dándole ventaja en su tirada.</p>"
+					}
+				},
+				"move": {
+					"title": "Mover",
+					"cost": "1 acción",
+					"speed": "Velocidad",
+					"panelDescription": "Mueve hasta tu velocidad. Puedes divir el movimiento entre otras acciones.",
+					"spaces": "casillas",
+					"confirmMove": "Confirmar movimiento"
+				},
 				"enterCombat": "Entra en combate para usar acciones",
 				"outsideCombat": "No estás en combate",
 				"noActions": "No te quedan acciones",
 				"noSpells": "No te quedan conjuros",
-				"endTurn": "Terminar turno",
-				"rollInitiative": "Tirada de iniciativa",
-				"useActionsFirst": "Usa tus acciones primero",
-				"noPermissionEndTurn": "No tienes permiso para terminar turnos.",
-				"noPermissionRollInitiative": "No tienes permiso para tirar iniciativa.",
-				"selectAttack": "Atacar",
-				"selectSpell": "Lanzar conjuro",
-				"noWeapons": "No hay armas ni ataques disponibles.",
-				"noSpellsFound": "No se han encontrado conjuros.",
-				"unarmedStrike": "Ataque sin armas",
-				"feature": "Rasgo",
-				"mana": "Maná {cost}",
-				"thrown": "Lanzado: {distance}",
-				"baseEffect": "Efecto",
-				"higherLevelEffect": "A niveles superiores",
-				"cantrip": "Truco",
-				"spellTier": "Nivel {tier}",
-				"rangeDistance": "Distancia: {distance}",
-				"reachDistance": "Alcance: {distance}",
+				"endTurn": "End Turn",
+				"rollInitiative": "Roll Initiative",
+				"useActionsFirst": "Use your actions first",
+				"noPermissionEndTurn": "You do not have permission to end turns.",
+				"noPermissionRollInitiative": "You do not have permission to roll initiative.",
+				"selectAttack": "Attack",
+				"selectSpell": "Cast Spell",
+				"noWeapons": "No weapons or attack features found.",
+				"noSpellsFound": "No spells found.",
+				"unarmedStrike": "Unarmed Strike",
+				"feature": "Feature",
+				"mana": "{cost} Mana",
+				"thrown": "Thrown: {distance}",
+				"baseEffect": "Effect",
+				"higherLevelEffect": "At Higher Levels",
+				"cantrip": "Cantrip",
+				"spellTier": "Tier {tier}",
+				"rangeDistance": "Range: {distance}",
+				"reachDistance": "Reach: {distance}",
 				"targetTypes": {
-					"self": "Uno mismo",
-					"singleTarget": "Objetivo único",
-					"twoTargets": "2 objetivos",
-					"multiTarget": "{count} objetivos",
-					"aoe": "AdE"
+					"self": "Self",
+					"singleTarget": "Single Target",
+					"twoTargets": "2 Targets",
+					"multiTarget": "{count} Targets",
+					"aoe": "AoE"
 				},
 				"pip": {
 					"spendAction": "Utilizar acción {number}",
@@ -729,18 +805,28 @@
 				},
 				"actionsHeader": "Acciones",
 				"moveAction": "<p><strong>{name}</strong> usó una acción para mover.</p>",
+				"reactionLabels": {
+					"defend": "Defender",
+					"interpose": "Interponer",
+					"opportunityAttack": "Ataque de oportunidad",
+					"help": "Ayudar"
+				},
+				"reactionAvailability": {
+					"available": "{label} disponible",
+					"spent": "{label} utilizado"
+				},
 				"actions": {
 					"attack": {
 						"label": "Ataque",
-						"description": "Atacar con un arma"
+						"description": "Ataca con un arma"
 					},
 					"spell": {
 						"label": "Lanzar un conjuro",
-						"description": "Canalizar energía mágica"
+						"description": "Canaliza energía mágica"
 					},
 					"move": {
 						"label": "Mover",
-						"description": "Reubicarse en el campo de batalla"
+						"description": "Reubícate en el campo de batalla"
 					},
 					"assess": {
 						"label": "Evaluar",
@@ -795,7 +881,7 @@
 						},
 						"help": {
 							"title": "Ayudar",
-							"description": "Concede ventaja a un alaido en una tirada, siempre que puedas explicar de manera razonable cómo le ayudas en la situación. El DJ puede pedir una prueba de habilidad o dar la ventaja automáticamente. Limitada a una reacción de Ayudar por tirada."
+							"description": "Concede ventaja a un aliado en una tirada, siempre que puedas explicar de manera razonable cómo le ayudas en la situación. El DJ puede pedir una prueba de habilidad o dar la ventaja automáticamente. Limitada a una reacción de Ayudar por tirada."
 						}
 					}
 				},
@@ -841,6 +927,10 @@
 				},
 				"move": {
 					"title": "Mover",
+					"cost": "1 acción",
+					"speed": "Velocidad",
+					"panelDescription": "Mueve hasta tu velocidad. Puedes divir el movimiento entre otras acciones.",
+					"confirmMove": "Confirmar Mover",
 					"dialogTitle": "Acción de Mover",
 					"confirmTitle": "¿Moviste?",
 					"confirmDescription": "Confirma que has reubicado a tu personaje en el campo de batalla.",
@@ -849,7 +939,9 @@
 					"noMovement": "Sin velocidad de movimiento disponible",
 					"actionCost": "Esto costará 1 acción",
 					"confirm": "Usar acción para mover",
-					"cancel": "Cancelar"
+					"cancel": "Cancelar",
+					"speedBadge": "Velocidad {speed}",
+					"chatMessage": "<p><strong>{name}</strong> utilizó una acción para <strong>Mover</strong>, desplazándose {speed} casillas.</p>"
 				}
 			},
 			"clearAll": "Borrar todo",
@@ -857,7 +949,7 @@
 			"conditions": "Estados",
 			"condition": "Estado",
 			"inventory": "Inventario",
-			"features": "Características",
+			"features": "Rasgos",
 			"spells": "Hechizos",
 			"bio": "Biografía",
 			"settings": "Configuración",
@@ -1000,8 +1092,8 @@
 			"armor": "Armadura",
 			"decreaseArmor": "Disminuir Armadura",
 			"increaseArmor": "Incrementar Armadura",
-			"features": "Características",
-			"createFeature": "Crear característica",
+			"features": "Rasgos",
+			"createFeature": "Crear rasgo",
 			"expandAllDescriptions": "Expandir todas las descripciones",
 			"collapseAllDescriptions": "Contraer todas las descripciones",
 			"editAttackSequence": "Editar secuencia de ataque",
@@ -1249,6 +1341,10 @@
 			"autoExpandRolls": {
 				"name": "Expandir tiradas automáticamente",
 				"hint": "Al activarse, los detalles de la tirada de dados se muestran directamente debajo de cada tirada en los mensajes del chat, sin necesidad de pasar el cursor"
+			},
+			"ncswEnabled": {
+				"name": "Habilitar sistema de combate",
+				"hint": "Mostrar panel de sistema de combate durante el combate. Ayuda a los DJ asignar a los héroes como objetivos y hacer tiradas de ataque de lacayos, monstruos y monstruos legendarios."
 			}
 		},
 		"combatTrackerSettings": {
@@ -1348,6 +1444,17 @@
 				"monsterAttackFailed": "Ataque de monstruo fallido. Revisa la consola para más información.",
 				"selectedGroupHasNoAliveMinions": "Grupo seleccionado sin esbirros vivos para atacar.",
 				"couldNotOpenPanel": "No se pudo abrir el panel de ataque en grupo. Revisa la consola para más información."
+			}
+		},
+		"migration": {
+			"world": {
+				"starting": "Migrando datos del mundo a Nimble v{version}.",
+				"completed": "Migración de mundo finalizada.",
+				"completedWithErrors": "Migración del mundo finalizada con {count} error(es). Comprueba la consola del navegador (F12) para detalles adicionales."
+			},
+			"compendium": {
+				"starting": "Migrando compendio: {packName}...",
+				"finished": "Migración de compendio finalizada: {packName}."
 			}
 		},
 		"actorImport": {
