@@ -195,13 +195,28 @@
     display: contents;
   }
 
-  &__img {
-    grid-area: img;
-    flex-shrink: 0;
-    height: var(--nimble-card-image-height, 2rem);
+	&__img-wrapper {
+		grid-area: img;
+		position: relative;
+		flex-shrink: 0;
+		margin-inline-end: 0.5rem;
+		height: var(--nimble-card-image-height, 2rem);
     width: var(--nimble-card-image-width, 2rem);
+
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			right: -1px;
+			border-right: 1px solid var(--nimble-card-border-color);
+			pointer-events: none;
+			z-index: 1;
+		}
+	}
+
+  &__img {
+    flex-shrink: 0;
     border: 0;
-    border-right: 1px solid var(--nimble-card-border-color);
     border-radius: 0;
     background-color: rgba(0, 0, 0, 0.7);
     aspect-ratio: 1 / 1;
@@ -284,11 +299,6 @@
       outline: none !important;
       outline-color: transparent !important;
       box-shadow: none !important;
-    }
-
-    .nimble-document-card__img {
-      flex-shrink: 0;
-      margin-inline-end: 0.5rem;
     }
 
     .nimble-document-card__indicator {

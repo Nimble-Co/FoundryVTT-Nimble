@@ -254,11 +254,13 @@
 						onclick={() => actor.activateItem(spell._id)}
 					>
 						{#if showEmbeddedDocumentImages}
-							<img
-								class="nimble-document-card__img"
-								src={spell.reactive.img}
-								alt={spell.reactive.name}
-							/>
+							<div class="nimble-document-card__img-wrapper">
+								<img
+									class="nimble-document-card__img"
+									src={spell.reactive.img}
+									alt={spell.reactive.name}
+								/>
+							</div>
 						{/if}
 
 						<header class="u-semantic-only">
