@@ -54,6 +54,50 @@ function getShouldBeDefeatedFromActor(actor: Actor.Implementation): boolean | nu
 	return hpValue <= 0;
 }
 
+/**
+ * Sync death state for a single combatant. Used when a new combatant is created.
+ */
+async function syncSingleCombatantDeathState(combatant: Combatant.Implementation): Promise<void> {
+	if (!game.user?.isGM) return;
+
+	const combat = combatant.parent;
+	if (!combat?.id || !combatant.id) return;
+
+	const combatantActor = combatant.actor;
+	if (!combatantActor) return;
+
+	const shouldBeDefeated = getShouldBeDefeatedFromActorState(combatant);
+	if (shouldBeDefeated === null) return;
+
+	// Update combatant defeated flag if needed
+	if (combatant.defeated !== shouldBeDefeated) {
+		await combat.updateEmbeddedDocuments('Combatant', [
+			{ _id: combatant.id, defeated: shouldBeDefeated },
+		]);
+	}
+
+	// Update actor status effect
+	try {
+		await combatantActor.toggleStatusEffect(CONFIG.specialStatusEffects.DEFEATED, {
+			overlay: true,
+			active: shouldBeDefeated,
+		});
+	} catch {
+		// Ignore errors from concurrent status effect modifications
+	}
+
+	// Advance turn if this combatant just died and is the active combatant
+	const isActiveCombatant = combat.combatant?.id === combatant.id;
+	if (
+		shouldBeDefeated &&
+		isActiveCombatant &&
+		combat.round > 0 &&
+		hasAnyOtherAliveCombatant(combat, combatant.id)
+	) {
+		await combat.nextTurn();
+	}
+}
+
 async function syncActorCombatantDeathState(actor: Actor.Implementation): Promise<void> {
 	if (!game.user?.isGM) return;
 	if (!actor.id) return;
@@ -79,11 +123,11 @@ async function syncActorCombatantDeathState(actor: Actor.Implementation): Promis
 	const updatesByCombat = new Map<string, { combat: Combat; updates: Record<string, unknown>[] }>();
 	const combatsToAdvanceTurn = new Set<Combat>();
 
-	// Track defeat state for the triggering actor separately
-	let triggeringActorShouldBeDefeated: boolean | null = null;
+	// Track defeat states per actor instance for status effect updates
+	const actorDefeatStates = new Map<Actor.Implementation, boolean>();
 
-	// Track defeat states for other actors (unlinked tokens have different actor instances)
-	const otherActorDefeatStates = new Map<Actor.Implementation, boolean>();
+	// Track whether we found a combatant with matching actor identity
+	let foundTriggeringActor = false;
 
 	for (const { combat, combatant } of matches) {
 		if (!combat.id || !combatant.id) continue;
@@ -93,22 +137,16 @@ async function syncActorCombatantDeathState(actor: Actor.Implementation): Promis
 		const combatantActor = combatant.actor;
 		if (!combatantActor) continue;
 
-		// Check if this combatant's actor is the same as the triggering actor
-		// For unlinked tokens, combatant.actor should match the actor that triggered the hook
-		const isTriggeringActor = combatantActor === actor;
-
-		if (isTriggeringActor) {
-			// For linked tokens, use || to ensure defeated if ANY combatant should be defeated
-			if (triggeringActorShouldBeDefeated === null) {
-				triggeringActorShouldBeDefeated = shouldBeDefeated;
-			} else {
-				triggeringActorShouldBeDefeated = triggeringActorShouldBeDefeated || shouldBeDefeated;
-			}
-		} else {
-			// Different actor instance (other unlinked tokens of the same base type)
-			const currentState = otherActorDefeatStates.get(combatantActor) ?? false;
-			otherActorDefeatStates.set(combatantActor, currentState || shouldBeDefeated);
+		// Check if this combatant's actor is the same instance as the triggering actor
+		if (combatantActor === actor) {
+			foundTriggeringActor = true;
 		}
+
+		// Track defeat state per actor instance
+		// For linked tokens, all combatants share the same actor instance
+		// For unlinked tokens, each combatant has its own synthetic actor instance
+		const currentState = actorDefeatStates.get(combatantActor) ?? false;
+		actorDefeatStates.set(combatantActor, currentState || shouldBeDefeated);
 
 		const update: Record<string, unknown> = { _id: combatant.id };
 		let hasChanges = false;
@@ -143,40 +181,31 @@ async function syncActorCombatantDeathState(actor: Actor.Implementation): Promis
 
 	const defeatedStatusId = CONFIG.specialStatusEffects.DEFEATED;
 
-	// Toggle status on the triggering actor based on HP state
-	// If no combatant matched via identity check, fall back to getting state from the actor directly
-	// Wrap in try-catch to handle race conditions with concurrent status effect modifications
-	try {
-		if (triggeringActorShouldBeDefeated !== null) {
-			await actor.toggleStatusEffect(defeatedStatusId, {
-				overlay: true,
-				active: triggeringActorShouldBeDefeated,
-			});
-		} else if (matches.length > 0) {
-			// Fallback: identity check failed for all combatants, but we have matches
-			// This can happen with synthetic actors where combatant.actor !== actor despite being the same logical actor
-			// Use the first matching combatant's state since they should all have the same HP
-			const fallbackShouldBeDefeated = getShouldBeDefeatedFromActorState(matches[0].combatant);
-			if (fallbackShouldBeDefeated !== null) {
-				await actor.toggleStatusEffect(defeatedStatusId, {
-					overlay: true,
-					active: fallbackShouldBeDefeated,
-				});
-			}
-		}
-	} catch {
-		// Ignore errors from concurrent status effect modifications
-	}
-
-	// Toggle status on other unlinked token actors
-	for (const [otherActor, shouldBeDefeated] of otherActorDefeatStates) {
+	// Toggle status on each combatant's actor based on its HP state
+	for (const [actorInstance, shouldBeDefeated] of actorDefeatStates) {
 		try {
-			await otherActor.toggleStatusEffect(defeatedStatusId, {
+			await actorInstance.toggleStatusEffect(defeatedStatusId, {
 				overlay: true,
 				active: shouldBeDefeated,
 			});
 		} catch {
 			// Ignore errors from concurrent status effect modifications
+		}
+	}
+
+	// If the triggering actor wasn't found via identity check (can happen with synthetic actors),
+	// ensure we still toggle status on it based on its own HP state
+	if (!foundTriggeringActor) {
+		const triggeringActorShouldBeDefeated = getShouldBeDefeatedFromActor(actor);
+		if (triggeringActorShouldBeDefeated !== null) {
+			try {
+				await actor.toggleStatusEffect(defeatedStatusId, {
+					overlay: true,
+					active: triggeringActorShouldBeDefeated,
+				});
+			} catch {
+				// Ignore errors from concurrent status effect modifications
+			}
 		}
 	}
 
@@ -200,9 +229,8 @@ export default function registerCombatantDefeatSync() {
 	});
 
 	Hooks.on('createCombatant', (combatant: Combatant.Implementation) => {
-		const actor = combatant.actor;
-		if (!actor) return;
-
-		void syncActorCombatantDeathState(actor);
+		// Use the targeted single-combatant sync to avoid affecting other unlinked tokens
+		// that share the same base actor ID but have independent HP
+		void syncSingleCombatantDeathState(combatant);
 	});
 }
