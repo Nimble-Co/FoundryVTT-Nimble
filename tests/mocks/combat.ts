@@ -140,6 +140,7 @@ export function createMockCombat({
 	round,
 }: MockCombatOptions): Combat & {
 	updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+	deleteEmbeddedDocuments: ReturnType<typeof vi.fn>;
 	nextTurn: ReturnType<typeof vi.fn>;
 } {
 	return {
@@ -149,9 +150,11 @@ export function createMockCombat({
 		combatant: activeCombatant,
 		round,
 		updateEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+		deleteEmbeddedDocuments: vi.fn().mockResolvedValue([]),
 		nextTurn: vi.fn().mockResolvedValue(undefined),
 	} as unknown as Combat & {
 		updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		deleteEmbeddedDocuments: ReturnType<typeof vi.fn>;
 		nextTurn: ReturnType<typeof vi.fn>;
 	};
 }

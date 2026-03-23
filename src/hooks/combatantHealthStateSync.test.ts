@@ -159,4 +159,146 @@ describe('registerCombatantHealthStateSync', () => {
 
 		expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
 	});
+
+	describe('createCombatant hook', () => {
+		it('syncs health state when combatant is created with bloodied actor', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
+				.default;
+			registerCombatantHealthStateSync();
+
+			const actor = createMockCombatActor({
+				type: 'npc',
+				hp: 5,
+				hpMax: 10,
+			});
+
+			const createCombatant = callbacks.get('createCombatant');
+			expect(createCombatant).toBeDefined();
+
+			const combatant = { actor } as unknown as Combatant.Implementation;
+			createCombatant?.(combatant);
+			await flushAsync();
+
+			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
+				active: true,
+				overlay: false,
+			});
+			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'lastStand', {
+				active: false,
+				overlay: false,
+			});
+		});
+
+		it('syncs health state when combatant is created with healthy actor', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
+				.default;
+			registerCombatantHealthStateSync();
+
+			const actor = createMockCombatActor({
+				type: 'npc',
+				hp: 10,
+				hpMax: 10,
+			});
+
+			const createCombatant = callbacks.get('createCombatant');
+
+			const combatant = { actor } as unknown as Combatant.Implementation;
+			createCombatant?.(combatant);
+			await flushAsync();
+
+			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
+				active: false,
+				overlay: false,
+			});
+			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'lastStand', {
+				active: false,
+				overlay: false,
+			});
+		});
+
+		it('syncs health state when combatant is created with last stand solo monster', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
+				.default;
+			registerCombatantHealthStateSync();
+
+			const actor = createMockCombatActor({
+				type: 'soloMonster',
+				hp: 3,
+				hpMax: 20,
+				lastStandThreshold: 3,
+			});
+
+			const createCombatant = callbacks.get('createCombatant');
+
+			const combatant = { actor } as unknown as Combatant.Implementation;
+			createCombatant?.(combatant);
+			await flushAsync();
+
+			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
+				active: false,
+				overlay: false,
+			});
+			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'lastStand', {
+				active: true,
+				overlay: false,
+			});
+		});
+
+		it('does nothing when combatant has no actor', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
+				.default;
+			registerCombatantHealthStateSync();
+
+			const createCombatant = callbacks.get('createCombatant');
+
+			const combatant = { actor: null } as unknown as Combatant.Implementation;
+			createCombatant?.(combatant);
+			await flushAsync();
+
+			// No errors should occur, and no status effects should be toggled
+		});
+
+		it('only affects the specific combatant actor, not other unlinked tokens', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
+				.default;
+			registerCombatantHealthStateSync();
+
+			// Actor for the new combatant (bloodied)
+			const newActor = createMockCombatActor({
+				id: 'base-goblin',
+				type: 'npc',
+				hp: 5,
+				hpMax: 10,
+			});
+
+			// Actor for an existing combatant (healthy, same base actor ID)
+			const existingActor = createMockCombatActor({
+				id: 'base-goblin',
+				type: 'npc',
+				hp: 10,
+				hpMax: 10,
+			});
+
+			const createCombatant = callbacks.get('createCombatant');
+
+			// Only pass the new combatant to the hook
+			const combatant = { actor: newActor } as unknown as Combatant.Implementation;
+			createCombatant?.(combatant);
+			await flushAsync();
+
+			// New actor should have bloodied applied
+			expect(newActor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
+				active: true,
+				overlay: false,
+			});
+
+			// Existing actor should NOT be affected
+			expect(existingActor.toggleStatusEffect).not.toHaveBeenCalled();
+		});
+	});
 });
