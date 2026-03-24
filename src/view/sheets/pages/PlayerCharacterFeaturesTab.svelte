@@ -223,11 +223,13 @@
 					>
 						<header class="u-semantic-only">
 							{#if showEmbeddedDocumentImages}
-								<img
-									class="nimble-document-card__img"
-									src={item.reactive.img}
-									alt={item.reactive.name}
-								/>
+								<div class="nimble-document-card__img-wrapper">
+									<img
+										class="nimble-document-card__img"
+										src={item.reactive.img}
+										alt={item.reactive.name}
+									/>
+								</div>
 							{/if}
 
 							<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
@@ -285,11 +287,13 @@
 									onclick={() => actor.activateItem(subclass._id)}
 								>
 									{#if showEmbeddedDocumentImages}
-										<img
-											class="nimble-document-card__img"
-											src={subclass.reactive.img}
-											alt={subclass.reactive.name}
-										/>
+										<div class="nimble-document-card__img-wrapper">
+											<img
+												class="nimble-document-card__img"
+												src={subclass.reactive.img}
+												alt={subclass.reactive.name}
+											/>
+										</div>
 									{/if}
 
 									<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">

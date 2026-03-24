@@ -289,11 +289,13 @@
 				<ul class="nimble-item-list">
 					{#each passiveEffects as effect}
 						<li class="nimble-document-card nimble-document-card--no-meta">
-							<img
-								class="nimble-document-card__img"
-								src={effect.img}
-								alt={effect.name ?? effect.id}
-							/>
+							<div class="nimble-document-card__img-wrapper">
+								<img
+									class="nimble-document-card__img"
+									src={effect.img}
+									alt={effect.name ?? effect.id}
+								/>
+							</div>
 							<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
 								{effect.name ?? effect.id}
 							</h4>
