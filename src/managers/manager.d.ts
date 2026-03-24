@@ -9,4 +9,6 @@ declare interface RulesManagerInterface extends Map<string, NimbleBaseRule> {
 	getRuleOfType(type: string): NimbleBaseRule | undefined;
 	deleteRule(id: string): Promise<any>;
 	updateRule(id: string, data: string | Record<string, any>): Promise<boolean>;
+	disableAllRules(): Promise<boolean>;
+	enableAllRules(): Promise<boolean>;
 }

@@ -91,6 +91,7 @@ declare interface NimbleObjectItem extends NimbleBaseItem<'object'> {
 		objectSizeType: 'slots' | 'stackable' | 'smallSized';
 		slotsRequired: number;
 		quantity: number;
+		equipped: boolean;
 		stackSize: number;
 		objectType: string;
 		identified: boolean;

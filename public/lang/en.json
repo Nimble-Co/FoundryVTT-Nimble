@@ -428,6 +428,7 @@
 			"configureSavingThrows": "Configure Saves",
 			"configureSkills": "Configure Skills",
 			"configureWeaponProficiencies": "Configure Weapon Proficiencies",
+			"toggleEquipment": "Toggle Equipped State of {name}",
 			"editRoll": "Edit Roll",
 			"levelUp": "Level Up",
 			"safeRest": "Safe Rest",

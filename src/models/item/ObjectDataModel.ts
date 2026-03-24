@@ -31,6 +31,11 @@ const schema = () => ({
 		nullable: false,
 		min: 0,
 	}),
+	equipped: new fields.BooleanField({
+		required: true,
+		initial: false,
+		nullable: false,
+	}),
 	unidentifiedName: new fields.StringField({
 		required: true,
 		initial: 'Unidentified Object',
@@ -127,6 +132,7 @@ class NimbleObjectData extends NimbleBaseItemData<
 		denomination: 'cp' | 'sp' | 'gp';
 	};
 	declare quantity: number;
+	declare equipped: boolean;
 	declare unidentifiedName: string;
 	declare objectSizeType: 'slots' | 'stackable' | 'smallSized';
 	declare slotsRequired: number;
