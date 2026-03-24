@@ -34,6 +34,43 @@ function createActivationMessage(targets: string[] = ['Scene.scene.Token.token']
 	} as unknown as ChatMessage.CreateData);
 }
 
+function createSerializedDamageRoll(params: {
+	diceResults: number[];
+	flatBonus?: number;
+	isCritical?: boolean;
+	excludedPrimaryDieValue?: number;
+}) {
+	const flatBonus = params.flatBonus ?? 0;
+	const diceTotal = params.diceResults.reduce((sum, result) => sum + result, 0);
+	const total = diceTotal + flatBonus;
+
+	const terms: Record<string, unknown>[] = [
+		{
+			number: params.diceResults.length || 1,
+			faces: 6,
+			results: params.diceResults.map((result) => ({
+				result,
+				active: true,
+				discarded: false,
+			})),
+		},
+	];
+
+	if (flatBonus !== 0) {
+		terms.push({ operator: '+' });
+		terms.push({ number: flatBonus });
+	}
+
+	return {
+		class: 'DamageRoll',
+		formula: `${params.diceResults.length || 1}d6${flatBonus ? ` + ${flatBonus}` : ''}`,
+		total,
+		isCritical: params.isCritical ?? false,
+		excludedPrimaryDieValue: params.excludedPrimaryDieValue ?? 0,
+		terms,
+	};
+}
+
 describe('NimbleChatMessage.applyHealing', () => {
 	beforeEach(() => {
 		globals().fromUuidSync = vi.fn();
@@ -327,5 +364,234 @@ describe('NimbleChatMessage.applyDamage', () => {
 		await message.applyDamage(4, { outcome: 'fullDamage' });
 
 		expect(actor.update).not.toHaveBeenCalled();
+	});
+
+	it('applies medium armor by using dice-only damage on non-critical hits', async () => {
+		const actor = {
+			system: {
+				attributes: {
+					armor: 'medium',
+					hp: {
+						value: 10,
+						temp: 0,
+						max: 10,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({
+			diceResults: [6],
+			flatBonus: 2,
+			isCritical: false,
+		});
+
+		const message = createActivationMessage();
+		await message.applyDamage(8, { outcome: 'fullDamage', roll });
+
+		expect(actor.update).toHaveBeenCalledWith({
+			'system.attributes.hp.value': 4,
+		});
+	});
+
+	it('applies heavy armor by halving dice-only damage and rounding up on non-critical hits', async () => {
+		const actor = {
+			system: {
+				attributes: {
+					armor: 'heavy',
+					hp: {
+						value: 10,
+						temp: 0,
+						max: 10,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({
+			diceResults: [5],
+			flatBonus: 5,
+			isCritical: false,
+		});
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', roll });
+
+		expect(actor.update).toHaveBeenCalledWith({
+			'system.attributes.hp.value': 7,
+		});
+	});
+
+	it('stacks heavy armor reduction with halfDamage outcome', async () => {
+		const actor = {
+			system: {
+				attributes: {
+					armor: 'heavy',
+					hp: {
+						value: 10,
+						temp: 0,
+						max: 10,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({
+			diceResults: [5],
+			flatBonus: 5,
+			isCritical: false,
+		});
+
+		const message = createActivationMessage();
+		await message.applyDamage(5, { outcome: 'halfDamage', roll });
+
+		expect(actor.update).toHaveBeenCalledWith({
+			'system.attributes.hp.value': 8,
+		});
+	});
+
+	it('applies full damage to armored targets on critical hits', async () => {
+		const actor = {
+			system: {
+				attributes: {
+					armor: 'heavy',
+					hp: {
+						value: 10,
+						temp: 0,
+						max: 10,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({
+			diceResults: [5],
+			flatBonus: 5,
+			isCritical: true,
+		});
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, { outcome: 'fullDamage', roll });
+
+		expect(actor.update).toHaveBeenCalledWith({
+			'system.attributes.hp.value': 0,
+		});
+	});
+
+	it('applies halfDamage to critical hits but still ignores armor reduction', async () => {
+		const actor = {
+			system: {
+				attributes: {
+					armor: 'heavy',
+					hp: {
+						value: 10,
+						temp: 0,
+						max: 10,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({
+			diceResults: [5],
+			flatBonus: 5,
+			isCritical: true,
+		});
+
+		const message = createActivationMessage();
+		await message.applyDamage(5, { outcome: 'halfDamage', roll });
+
+		expect(actor.update).toHaveBeenCalledWith({
+			'system.attributes.hp.value': 5,
+		});
+	});
+
+	it('bypasses armor rules when ignoreArmor is enabled', async () => {
+		const actor = {
+			system: {
+				attributes: {
+					armor: 'heavy',
+					hp: {
+						value: 10,
+						temp: 0,
+						max: 10,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const roll = createSerializedDamageRoll({
+			diceResults: [5],
+			flatBonus: 5,
+			isCritical: false,
+		});
+
+		const message = createActivationMessage();
+		await message.applyDamage(10, {
+			outcome: 'fullDamage',
+			roll,
+			ignoreArmor: true,
+		});
+
+		expect(actor.update).toHaveBeenCalledWith({
+			'system.attributes.hp.value': 0,
+		});
+	});
+
+	it('applies armor reduction per roll when only some grouped rolls are critical', async () => {
+		const actor = {
+			system: {
+				attributes: {
+					armor: 'heavy',
+					hp: {
+						value: 20,
+						temp: 0,
+						max: 20,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const nonCriticalRoll = createSerializedDamageRoll({
+			diceResults: [4],
+			flatBonus: 2,
+			isCritical: false,
+		});
+		const criticalRoll = createSerializedDamageRoll({
+			diceResults: [6],
+			flatBonus: 3,
+			isCritical: true,
+		});
+
+		const message = createActivationMessage();
+		await message.applyDamage(15, {
+			outcome: 'fullDamage',
+			rolls: [nonCriticalRoll, criticalRoll],
+		});
+
+		expect(actor.update).toHaveBeenCalledWith({
+			'system.attributes.hp.value': 9,
+		});
 	});
 });

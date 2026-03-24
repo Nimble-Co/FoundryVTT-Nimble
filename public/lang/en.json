@@ -83,6 +83,7 @@
 			"undoHealing": "Undo Healing",
 			"undo": "Undo",
 			"noTargetsSelected": "No targets selected",
+			"noDamageToApply": "No damage to apply.",
 			"healingAlreadyApplied": "Healing has already been applied",
 			"healingUndone": "Healing has been undone",
 			"noHealingRecord": "No healing record found to undo"

@@ -1,8 +1,9 @@
 export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.SubType, 'base'>;
 
 import { createSubscriber } from 'svelte/reactivity';
-import type { EffectNode } from '#types/effectTree.js';
+import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
+import type { DamageRoll } from '../dice/DamageRoll.js';
 
 /** Types for activation cards that have targets and effects */
 type ActivationCardTypes = 'feature' | 'minionGroupAttack' | 'object' | 'reaction' | 'spell';
@@ -34,6 +35,131 @@ interface ActivationCardSystemData {
 	};
 	appliedHealing?: Record<string, AppliedHealingRecord>;
 	[key: string]: unknown;
+}
+
+type DamageApplyOutcome = DamageOutcomeNode['outcome'] | 'noDamage';
+
+type DamageApplyOptions = {
+	ignoreArmor?: boolean;
+	outcome?: DamageApplyOutcome;
+	roll?: DamageRoll.SerializedData | null;
+	rolls?: Array<DamageRoll.SerializedData | null | undefined>;
+	isCritical?: boolean;
+};
+
+function getActorArmorType(actor: Actor.Implementation): 'none' | 'medium' | 'heavy' {
+	const armor = foundry.utils.getProperty(actor, 'system.attributes.armor');
+	if (armor === 'medium' || armor === 'heavy') return armor;
+	return 'none';
+}
+
+function getDamageRollTotal(serializedRoll: DamageRoll.SerializedData): number {
+	const total = Number(serializedRoll.total ?? 0);
+	if (!Number.isFinite(total) || total <= 0) return 0;
+	return Math.floor(total);
+}
+
+function getSerializedDamageRolls(
+	options: DamageApplyOptions | undefined,
+): DamageRoll.SerializedData[] {
+	const serializedRolls =
+		options?.rolls?.filter((roll): roll is DamageRoll.SerializedData => roll != null) ?? [];
+	if (options?.roll) serializedRolls.push(options.roll);
+	return serializedRolls;
+}
+
+function getDiceDamageTotal(serializedRoll: DamageRoll.SerializedData): number | null {
+	let diceDamage = 0;
+	let hasDiceTerm = false;
+
+	if (!Array.isArray(serializedRoll.terms)) return null;
+
+	for (const term of serializedRoll.terms) {
+		if (term instanceof foundry.dice.terms.Die) {
+			hasDiceTerm = true;
+			for (const result of term.results) {
+				if (result.active === false || result.discarded === true) continue;
+				diceDamage += result.result;
+			}
+			continue;
+		}
+
+		const serializedTerm = term as { faces?: unknown; results?: unknown };
+		const faces = Number(serializedTerm.faces);
+		if (!Number.isFinite(faces) || faces <= 0) continue;
+
+		hasDiceTerm = true;
+
+		if (!Array.isArray(serializedTerm.results)) continue;
+		for (const result of serializedTerm.results) {
+			const serializedResult = result as {
+				result?: unknown;
+				active?: unknown;
+				discarded?: unknown;
+			};
+			if (serializedResult.active === false || serializedResult.discarded === true) continue;
+
+			const resultValue = Number(serializedResult.result);
+			if (!Number.isFinite(resultValue)) continue;
+			diceDamage += resultValue;
+		}
+	}
+
+	if (!hasDiceTerm) return null;
+
+	const excludedPrimaryDieValue = Number(serializedRoll.excludedPrimaryDieValue ?? 0);
+	if (Number.isFinite(excludedPrimaryDieValue) && excludedPrimaryDieValue > 0) {
+		diceDamage -= excludedPrimaryDieValue;
+	}
+
+	return Math.max(0, Math.floor(diceDamage));
+}
+
+function resolveArmorAdjustedDamage(params: {
+	actor: Actor.Implementation;
+	damage: number;
+	options?: DamageApplyOptions;
+}): number {
+	const armorType = getActorArmorType(params.actor);
+	if (armorType === 'none') return params.damage;
+
+	const damageOptions = params.options;
+	if (damageOptions?.ignoreArmor === true) return params.damage;
+	const serializedRolls = getSerializedDamageRolls(damageOptions);
+	const applyOutcomeHalfDamage = damageOptions?.outcome === 'halfDamage';
+	const applyHeavyArmor = armorType === 'heavy';
+
+	if (serializedRolls.length < 1) {
+		if (damageOptions?.isCritical === true) {
+			if (applyOutcomeHalfDamage) return Math.ceil(params.damage * 0.5);
+			return params.damage;
+		}
+
+		// Without roll metadata, the incoming value already includes outcome scaling.
+		// In this fallback, only apply armor reduction.
+		if (applyHeavyArmor) return Math.ceil(params.damage * 0.5);
+		return params.damage;
+	}
+
+	let totalAdjustedDamage = 0;
+	for (const serializedRoll of serializedRolls) {
+		const rollTotal = getDamageRollTotal(serializedRoll);
+		const isCritical = serializedRoll.isCritical === true;
+
+		if (isCritical) {
+			const critAdjustedDamage = applyOutcomeHalfDamage ? Math.ceil(rollTotal * 0.5) : rollTotal;
+			totalAdjustedDamage += critAdjustedDamage;
+			continue;
+		}
+
+		const diceDamage = getDiceDamageTotal(serializedRoll) ?? rollTotal;
+		let adjustedDamage = diceDamage;
+		if (applyOutcomeHalfDamage) adjustedDamage = Math.ceil(adjustedDamage * 0.5);
+		if (applyHeavyArmor) adjustedDamage = Math.ceil(adjustedDamage * 0.5);
+		totalAdjustedDamage += adjustedDamage;
+	}
+
+	return Math.max(0, Math.floor(totalAdjustedDamage));
 }
 
 class NimbleChatMessage extends ChatMessage {
@@ -224,12 +350,12 @@ class NimbleChatMessage extends ChatMessage {
 		} as Record<string, unknown>) as Promise<ChatMessage | undefined>;
 	}
 
-	async applyDamage(value: number, options?: Record<string, unknown>): Promise<void> {
+	async applyDamage(value: number, options?: DamageApplyOptions): Promise<void> {
 		if (!this.isActivationCard()) return;
 		if (!game.user?.isGM) return;
 
 		if (options?.outcome === 'noDamage') {
-			ui.notifications?.info('No damage to apply.');
+			ui.notifications?.info(game.i18n.localize('NIMBLE.chat.noDamageToApply'));
 			return;
 		}
 
@@ -240,7 +366,7 @@ class NimbleChatMessage extends ChatMessage {
 		const targets = systemData.targets || [];
 
 		if (!targets.length) {
-			ui.notifications?.warn('No targets selected');
+			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.noTargetsSelected'));
 			return;
 		}
 
@@ -258,10 +384,13 @@ class NimbleChatMessage extends ChatMessage {
 			const currentHp = hpData?.value;
 			if (typeof currentHp !== 'number' || Number.isNaN(currentHp)) continue;
 
+			const adjustedDamage = resolveArmorAdjustedDamage({ actor, damage, options });
+			if (!Number.isFinite(adjustedDamage) || adjustedDamage <= 0) continue;
+
 			const currentTemp = typeof hpData?.temp === 'number' ? hpData.temp : 0;
-			const absorbedByTemp = Math.min(currentTemp, damage);
+			const absorbedByTemp = Math.min(currentTemp, adjustedDamage);
 			const nextTemp = currentTemp - absorbedByTemp;
-			const remainingDamage = damage - absorbedByTemp;
+			const remainingDamage = adjustedDamage - absorbedByTemp;
 			const nextHp = Math.max(currentHp - remainingDamage, 0);
 
 			const updates: Record<string, unknown> = {};
