@@ -10,6 +10,11 @@ import {
 } from '../../../utils/combatTurnActions.js';
 import { getHeroicReactionAvailability } from '../../../utils/heroicActions.js';
 import { isCombatantDead } from '../../../utils/isCombatantDead.js';
+import {
+	getEffectiveMinionGroupLeader,
+	getMinionGroupId,
+	getMinionGroupSummaries,
+} from '../../../utils/minionGrouping.js';
 import type { ResolveActiveEntryKeyParams, SceneCombatantLists, TrackEntry } from './types.js';
 
 type CombatWithTurnIdentityHint = Combat & {
@@ -298,9 +303,75 @@ export function getCombatantsForScene(
 	return { aliveCombatants, deadCombatants };
 }
 
-export function hasCombatantTurnRemainingThisRound(combatant: Combatant.Implementation): boolean {
+function getActiveTurnIndex(combat: Combat): number {
+	const turnIndex = Number(combat.turn ?? -1);
+	if (Number.isInteger(turnIndex) && turnIndex >= 0 && turnIndex < combat.turns.length) {
+		return turnIndex;
+	}
+
+	const currentTurnIdentity = resolveCurrentTurnIdentity(combat, combat.turns);
+	if (!currentTurnIdentity?.combatantId) return -1;
+	return findTurnIndexByOccurrence(
+		combat.turns,
+		currentTurnIdentity.combatantId,
+		currentTurnIdentity.occurrence,
+	);
+}
+
+function getTurnOrderIndexForCombatant(
+	combat: Combat,
+	combatant: Combatant.Implementation,
+	groupSummaries: ReturnType<typeof getMinionGroupSummaries>,
+): number {
+	const combatantId = getCombatantId(combatant);
+	if (!combatantId) return -1;
+
+	const directIndex = combat.turns.findIndex(
+		(turnCombatant) => getCombatantId(turnCombatant) === combatantId,
+	);
+	if (directIndex >= 0) return directIndex;
+
+	const groupId = getMinionGroupId(combatant);
+	if (!groupId) return -1;
+
+	const groupSummary = groupSummaries.get(groupId);
+	if (!groupSummary) return -1;
+
+	const leader =
+		getEffectiveMinionGroupLeader(groupSummary, { aliveOnly: true }) ??
+		getEffectiveMinionGroupLeader(groupSummary);
+	if (!leader?.id) return -1;
+
+	return combat.turns.findIndex((turnCombatant) => getCombatantId(turnCombatant) === leader.id);
+}
+
+function hasCombatantTurnEndedThisRound(
+	combat: Combat,
+	combatant: Combatant.Implementation,
+	groupSummaries: ReturnType<typeof getMinionGroupSummaries>,
+): boolean {
+	if ((combat.round ?? 0) < 1) return false;
+
+	const activeTurnIndex = getActiveTurnIndex(combat);
+	if (activeTurnIndex < 0) return false;
+
+	const combatantTurnIndex = getTurnOrderIndexForCombatant(combat, combatant, groupSummaries);
+	if (combatantTurnIndex < 0) return false;
+
+	return combatantTurnIndex < activeTurnIndex;
+}
+
+export function hasCombatantTurnRemainingThisRound(
+	combat: Combat | null,
+	combatant: Combatant.Implementation,
+	groupSummaries?: ReturnType<typeof getMinionGroupSummaries>,
+): boolean {
 	if (isPlayerCombatant(combatant) || isLegendaryCombatant(combatant)) return true;
-	return getCombatantCurrentActions(combatant) > 0;
+	if (!combat) return true;
+
+	const resolvedGroupSummaries =
+		groupSummaries ?? getMinionGroupSummaries(combat.combatants.contents);
+	return !hasCombatantTurnEndedThisRound(combat, combatant, resolvedGroupSummaries);
 }
 
 export function isFriendlyCombatant(combatant: Combatant.Implementation): boolean {
@@ -466,20 +537,27 @@ export function orderEntriesForCenteredActive(
 	});
 }
 
-export function findRoundBoundaryIndex(sceneAliveCombatants: Combatant.Implementation[]): number {
+export function findRoundBoundaryIndex(
+	combat: Combat | null,
+	sceneAliveCombatants: Combatant.Implementation[],
+): number {
 	if (sceneAliveCombatants.length < 1) return -1;
+	const groupSummaries = combat ? getMinionGroupSummaries(combat.combatants.contents) : undefined;
 	for (let index = sceneAliveCombatants.length - 1; index >= 0; index -= 1) {
-		if (hasCombatantTurnRemainingThisRound(sceneAliveCombatants[index])) return index;
+		if (hasCombatantTurnRemainingThisRound(combat, sceneAliveCombatants[index], groupSummaries)) {
+			return index;
+		}
 	}
 	return sceneAliveCombatants.length - 1;
 }
 
 export function getRoundBoundaryKey(
+	combat: Combat | null,
 	sceneAliveCombatants: Combatant.Implementation[],
 	aliveEntries: TrackEntry[],
 	collapseMonsters: boolean,
 ): string | null {
-	const boundaryIndex = findRoundBoundaryIndex(sceneAliveCombatants);
+	const boundaryIndex = findRoundBoundaryIndex(combat, sceneAliveCombatants);
 	if (boundaryIndex < 0) return null;
 
 	const lastCurrentRoundCombatant = sceneAliveCombatants[boundaryIndex];

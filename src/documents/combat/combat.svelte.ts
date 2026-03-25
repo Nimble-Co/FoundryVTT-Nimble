@@ -282,19 +282,6 @@ class NimbleCombat extends Combat {
 		this.turn = Math.min(Math.max(currentTurn, 0), aliveTurns.length - 1);
 		this.#storeExpandedTurnIdentity(this.#resolveTurnIdentityAtIndex(aliveTurns, this.turn));
 	}
-	#combatantHasAnyActionsRemaining(combatant: Combatant.Implementation): boolean {
-		if (combatant.type === 'character' || combatant.type === 'soloMonster') return true;
-
-		const groupId = getMinionGroupId(combatant);
-		if (groupId) {
-			const summary = getMinionGroupSummaries(this.combatants.contents).get(groupId);
-			if (summary?.aliveMembers.length) {
-				return summary.aliveMembers.some((member) => getCombatantCurrentActions(member) > 0);
-			}
-		}
-
-		return getCombatantCurrentActions(combatant) > 0;
-	}
 
 	#getNonCharacterTurnResetTargets(
 		combatant: Combatant.Implementation | null,
@@ -359,40 +346,6 @@ class NimbleCombat extends Combat {
 			: 1;
 		foundry.utils.setProperty(normalizedEntry, 'system.actions.base.current', initialActions);
 		return { normalizedEntry, normalizedMinionType };
-	}
-
-	async #advancePastExhaustedTurns(result: this): Promise<this> {
-		if (!this.turns.length) return result;
-
-		const hasTurnWithActions = this.turns.some((combatant) =>
-			this.#combatantHasAnyActionsRemaining(combatant),
-		);
-		if (!hasTurnWithActions) return result;
-
-		let nextResult = result;
-		const maxIterations = Math.max(this.turns.length, 1);
-		for (let iteration = 0; iteration < maxIterations; iteration += 1) {
-			const activeCombatant = this.combatant;
-			if (!activeCombatant) break;
-			if (activeCombatant.type === 'character' || activeCombatant.type === 'soloMonster') break;
-			if (this.#combatantHasAnyActionsRemaining(activeCombatant)) break;
-
-			const previousActiveId = activeCombatant.id ?? null;
-			const preferredNextTurnIdentity = this.#resolveNextTurnIdentity();
-			const { intercepted, result: nextTurnResult } = await this.#runAtomicTurnStateOperation(
-				preferredNextTurnIdentity,
-				async () => (await super.nextTurn()) as this,
-			);
-			nextResult = nextTurnResult;
-			this.#syncTurnIndexWithAliveTurns({ preferredTurnIdentity: preferredNextTurnIdentity });
-			if (!intercepted) {
-				await this.#persistAtomicTurnState({ turn: this.turn });
-			}
-			const nextActiveId = this.combatant?.id ?? null;
-			if (!nextActiveId || nextActiveId === previousActiveId) break;
-		}
-
-		return nextResult;
 	}
 
 	constructor(
@@ -759,16 +712,14 @@ class NimbleCombat extends Combat {
 	override async nextTurn(): Promise<this> {
 		this.#syncTurnIndexWithAliveTurns();
 		const preferredNextTurnIdentity = this.#resolveNextTurnIdentity();
-		const { intercepted, result: nextTurnResult } = await this.#runAtomicTurnStateOperation(
+		const { intercepted, result } = await this.#runAtomicTurnStateOperation(
 			preferredNextTurnIdentity,
 			async () => (await super.nextTurn()) as this,
 		);
-		let result = nextTurnResult;
 		this.#syncTurnIndexWithAliveTurns({ preferredTurnIdentity: preferredNextTurnIdentity });
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
 		}
-		result = await this.#advancePastExhaustedTurns(result);
 		return result;
 	}
 

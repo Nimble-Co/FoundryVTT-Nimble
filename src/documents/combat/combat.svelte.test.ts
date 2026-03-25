@@ -2417,12 +2417,21 @@ describe('NimbleCombat', () => {
 		).not.toHaveBeenCalled();
 	});
 
-	it('skips exhausted non-character turns when advancing initiative', async () => {
+	it('does not skip exhausted non-character turns when advancing initiative', async () => {
 		const combatId = 'combat-next-turn-skip-exhausted';
+		const character = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 14,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
 		const exhaustedNpcA = createMockCombatant({
 			id: 'exhausted-npc-a',
 			type: 'npc',
-			sort: 1,
+			sort: 2,
 			isOwner: false,
 			initiative: 13,
 			actionsCurrent: 0,
@@ -2432,20 +2441,11 @@ describe('NimbleCombat', () => {
 		const exhaustedNpcB = createMockCombatant({
 			id: 'exhausted-npc-b',
 			type: 'npc',
-			sort: 2,
+			sort: 3,
 			isOwner: false,
 			initiative: 12,
 			actionsCurrent: 0,
 			actor: createCombatActorFixture({ hp: 6 }),
-			combatId,
-		});
-		const character = createMockCombatant({
-			id: 'active-character',
-			type: 'character',
-			sort: 3,
-			isOwner: true,
-			initiative: 11,
-			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
 			combatId,
 		});
 
@@ -2465,10 +2465,10 @@ describe('NimbleCombat', () => {
 
 		const combat = new NimbleCombat({
 			id: combatId,
-			combatants: createCombatantsCollectionFixture([exhaustedNpcA, exhaustedNpcB, character]),
-			turns: [exhaustedNpcA, exhaustedNpcB, character],
+			combatants: createCombatantsCollectionFixture([character, exhaustedNpcA, exhaustedNpcB]),
+			turns: [character, exhaustedNpcA, exhaustedNpcB],
 			turn: 0,
-			combatant: exhaustedNpcA,
+			combatant: character,
 		} as unknown as Combat.CreateData) as NimbleCombat & {
 			update: ReturnType<typeof vi.fn>;
 		};
@@ -2477,8 +2477,8 @@ describe('NimbleCombat', () => {
 
 		await combat.nextTurn();
 
-		expect(combat.combatant?.id).toBe('active-character');
-		expect(superNextTurn).toHaveBeenCalledTimes(2);
+		expect(combat.combatant?.id).toBe('exhausted-npc-a');
+		expect(superNextTurn).toHaveBeenCalledTimes(1);
 	});
 
 	it('allows GM drop reorder for all active combatant types', async () => {
