@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
+	import type { ClassFeatureSelectionProps } from '#types/components/ClassFeatureSelection.d.ts';
 	import type { NimbleFeatureItem } from '#documents/item/feature.js';
 
 	import { getContext } from 'svelte';
@@ -7,16 +7,13 @@
 	import FeatureCard from './FeatureCard.svelte';
 	import FeatureGroupSelection from './FeatureGroupSelection.svelte';
 	import Hint from '../../../components/Hint.svelte';
+	import localize from '#utils/localize.js';
 
 	let {
 		active,
 		classFeatures,
 		selectedFeatures = $bindable(),
-	}: {
-		active: boolean;
-		classFeatures: ClassFeatureResult | null;
-		selectedFeatures: Map<string, NimbleFeatureItem>;
-	} = $props();
+	}: ClassFeatureSelectionProps = $props();
 
 	const CHARACTER_CREATION_STAGES = getContext<Record<string, string | number>>(
 		'CHARACTER_CREATION_STAGES',
@@ -69,14 +66,14 @@
 	>
 		<header class="nimble-section-header" data-header-variant="character-creator">
 			<h3 class="nimble-heading" data-heading-variant="section">
-				Class Features
+				{localize('NIMBLE.classFeatureSelection.header')}
 
 				{#if !active && hasSelectionGroups}
 					<button
 						class="nimble-button"
 						data-button-variant="icon"
-						aria-label="Edit Class Feature Selection"
-						data-tooltip="Edit Class Feature Selection"
+						aria-label={localize('NIMBLE.classFeatureSelection.editSelection')}
+						data-tooltip={localize('NIMBLE.classFeatureSelection.editSelection')}
 						onclick={clearSelections}
 					>
 						<i class="fa-solid fa-edit"></i>
@@ -86,9 +83,7 @@
 		</header>
 
 		{#if active}
-			<Hint
-				hintText="The following features are available at level 1 for your class. Some features are automatically granted, while others require you to make a choice."
-			/>
+			<Hint hintText={localize('NIMBLE.classFeatureSelection.hint')} />
 		{/if}
 
 		{#if hasAutoGrant}

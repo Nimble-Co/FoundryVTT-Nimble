@@ -2,6 +2,7 @@
 	import type { FeatureCardProps } from '#types/components/ClassFeatureSelection.d.ts';
 	import { createFeatureCardState } from './FeatureCard.svelte.ts';
 	import SpellReferenceCard from './SpellReferenceCard.svelte';
+	import localize from '#utils/localize.js';
 
 	let { feature, isSelected = false, onSelect }: FeatureCardProps = $props();
 
@@ -23,7 +24,7 @@
 		onkeydown={(e) => e.key === 'Enter' && state.toggleExpanded()}
 	>
 		{#if !isSelected}
-			<i class="fa-solid fa-chevron-up expand-arrow"></i>
+			<i class="fa-solid fa-chevron-down expand-arrow"></i>
 		{/if}
 
 		<img
@@ -58,7 +59,7 @@
 						{/if}
 					{/each}
 				{:else}
-					<p>No description available.</p>
+					<p>{localize('NIMBLE.classFeatureSelection.noDescriptionAvailable')}</p>
 				{/if}
 			</div>
 
@@ -71,9 +72,9 @@
 				>
 					{#if isSelected}
 						<i class="fa-solid fa-check"></i>
-						Selected
+						{localize('NIMBLE.classFeatureSelection.selected')}
 					{:else}
-						Confirm Selection
+						{localize('NIMBLE.classFeatureSelection.confirmSelection')}
 					{/if}
 				</button>
 			{/if}

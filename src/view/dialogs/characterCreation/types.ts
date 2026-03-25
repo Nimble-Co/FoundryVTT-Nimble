@@ -1,5 +1,4 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
-import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
 
 /**
  * Union type for origin items used in character creation.
@@ -81,8 +80,3 @@ export type AbilityScoreAssignment = Record<string, number | null>;
  * Map of skills to their assigned points
  */
 export type SkillPointAssignment = Record<string, number>;
-
-/**
- * Re-export types from other modules for convenience
- */
-export type { ClassFeatureResult, NimbleFeatureItem };

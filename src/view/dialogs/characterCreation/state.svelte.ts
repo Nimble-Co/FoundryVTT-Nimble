@@ -1,25 +1,269 @@
+import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
+
+import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
 import generateBlankAttributeSet from '../../../utils/generateBlankAttributeSet.js';
 import getClassFeatures from '../../../utils/getClassFeatures.js';
 import scrollIntoView from '../../../utils/scrollIntoView.js';
-import { CHARACTER_CREATION_STAGES } from './constants.js';
+import { CHARACTER_CREATION_STAGES, DEFAULT_SKILL_POINTS } from './constants.js';
 import type {
 	AbilityScoreAssignment,
 	CharacterCreationDialogInstance,
-	ClassFeatureResult,
 	GrantedLanguage,
-	NimbleFeatureItem,
 	SkillPointAssignment,
+	StageValue,
 	StatArrayOption,
 } from './types.js';
-import {
-	calculateRemainingSkillPoints,
-	getAbilityBonuses,
-	getCurrentStage,
-	getLanguageGrantsFromRules,
-	getSkillBonuses,
-	getStageNumber,
-	isRaisedByBackground,
-} from './utils.js';
+
+// --- Internal helper functions ---
+
+function getAbilityBonuses(
+	ancestry: NimbleAncestryItem | null,
+	background: NimbleBackgroundItem | null,
+	characterClass: NimbleClassItem | null,
+): Map<string, number> | null {
+	const abilityKeys = Object.keys(CONFIG.NIMBLE.abilityScores);
+
+	const rules = [
+		...(ancestry?.rules?.values() ?? []),
+		...(background?.rules?.values() ?? []),
+		...(characterClass?.rules?.values() ?? []),
+	];
+
+	if (!rules.length) return null;
+
+	const statBonusRules = rules.filter((rule) => rule.type === 'abilityBonus');
+
+	if (!statBonusRules.length) return null;
+
+	const bonuses = new Map(abilityKeys.map((key) => [key, 0]));
+
+	statBonusRules.forEach((rule) => {
+		let targetAbilities = rule.abilities ?? [];
+
+		if (!targetAbilities.length) return;
+		if (targetAbilities.includes('all')) targetAbilities = abilityKeys;
+
+		const bonus = getDeterministicBonus(rule.value ?? '', {});
+
+		targetAbilities.forEach((abilityKey: string) => {
+			bonuses.set(abilityKey, (bonuses.get(abilityKey) ?? 0) + Number.parseInt(String(bonus), 10));
+		});
+	});
+
+	return bonuses;
+}
+
+function getSkillBonuses(
+	ancestry: NimbleAncestryItem | null,
+	background: NimbleBackgroundItem | null,
+	characterClass: NimbleClassItem | null,
+): Map<string, number> | null {
+	const skillKeys = Object.keys(CONFIG.NIMBLE.skills);
+
+	const rules = [
+		...(ancestry?.rules?.values() ?? []),
+		...(background?.rules?.values() ?? []),
+		...(characterClass?.rules?.values() ?? []),
+	];
+
+	const skillBonusRules = rules.filter((rule) => rule.type === 'skillBonus');
+
+	if (!rules.length) return null;
+
+	const bonuses = new Map(skillKeys.map((key) => [key, 0]));
+
+	skillBonusRules.forEach((rule) => {
+		let targetSkills = rule.skills ?? [];
+
+		if (!targetSkills.length) return;
+		if (targetSkills.includes('all')) targetSkills = skillKeys;
+
+		const bonus = getDeterministicBonus(rule.value ?? '', {});
+
+		targetSkills.forEach((skillKey: string) => {
+			bonuses.set(skillKey, (bonuses.get(skillKey) ?? 0) + Number.parseInt(String(bonus), 10));
+		});
+	});
+
+	return bonuses;
+}
+
+function ancestryRequiresSaveChoice(ancestry: NimbleAncestryItem | null): boolean {
+	const rules = [...(ancestry?.rules?.values() ?? [])];
+	if (!rules.length) return false;
+
+	for (const rule of rules) {
+		if (rule.type === 'savingThrowRollMode' && rule.requiresChoice && rule.target === 'neutral') {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+function hasAncestryOptions(ancestry: NimbleAncestryItem | null): boolean {
+	const hasSizeChoice = (ancestry?.system?.size?.length ?? 0) > 1;
+	const hasSaveChoice = ancestryRequiresSaveChoice(ancestry);
+	return hasSizeChoice || hasSaveChoice;
+}
+
+function ancestryOptionsComplete(
+	ancestry: NimbleAncestryItem | null,
+	selectedAncestrySize: string | null,
+	selectedAncestrySave: string | null,
+): boolean {
+	const hasSizeChoice = (ancestry?.system?.size?.length ?? 0) > 1;
+	const hasSaveChoice = ancestryRequiresSaveChoice(ancestry);
+
+	if (hasSizeChoice && !selectedAncestrySize) return false;
+	if (hasSaveChoice && !selectedAncestrySave) return false;
+
+	return true;
+}
+
+function isRaisedByBackground(background: NimbleBackgroundItem | null): boolean {
+	return background?.name?.toLowerCase().includes('raised by') ?? false;
+}
+
+function classFeaturesComplete(
+	features: ClassFeatureResult | null,
+	selections: Map<string, NimbleFeatureItem>,
+): boolean {
+	if (!features) return true;
+
+	for (const groupName of features.selectionGroups.keys()) {
+		if (!selections.has(groupName)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+function hasClassFeatures(features: ClassFeatureResult | null): boolean {
+	if (!features) return false;
+	return features.autoGrant.length > 0 || features.selectionGroups.size > 0;
+}
+
+function getLanguageGrantsFromRules(
+	rules: NimbleBaseRule[],
+	intMod: number,
+	source: 'ancestry' | 'background',
+): GrantedLanguage[] {
+	if (!rules?.length) return [];
+
+	const grantRules = rules.filter(
+		(r) => r.type === 'grantProficiency' && r.proficiencyType === 'languages',
+	);
+
+	return grantRules.flatMap((r) => {
+		const intPredicate = r.predicate?.intelligence;
+		if (intPredicate?.min !== undefined && intMod < intPredicate.min) {
+			return [];
+		}
+		return (r.values ?? []).map((v) => ({ key: v.toLowerCase(), source }));
+	});
+}
+
+interface GetCurrentStageParams {
+	selectedClass: NimbleClassItem | null;
+	selectedAncestry: NimbleAncestryItem | null;
+	selectedAncestrySize: string | null;
+	selectedAncestrySave: string | null;
+	selectedBackground: NimbleBackgroundItem | null;
+	selectedRaisedByAncestry: { language: string; label: string } | null;
+	startingEquipmentChoice: 'equipment' | 'gold' | null;
+	selectedArray: { array?: number[] } | null;
+	selectedAbilityScores: AbilityScoreAssignment;
+	remainingSkillPoints: number;
+	bonusLanguages: string[];
+	classFeatures: ClassFeatureResult | null;
+	selectedClassFeatures: Map<string, NimbleFeatureItem>;
+	hasClasses: boolean;
+	hasAncestries: boolean;
+	hasBackgrounds: boolean;
+}
+
+function getCurrentStage(params: GetCurrentStageParams): StageValue {
+	const {
+		selectedClass,
+		selectedAncestry,
+		selectedAncestrySize,
+		selectedAncestrySave,
+		selectedBackground,
+		selectedRaisedByAncestry,
+		startingEquipmentChoice,
+		selectedArray,
+		selectedAbilityScores,
+		remainingSkillPoints,
+		bonusLanguages,
+		classFeatures,
+		selectedClassFeatures,
+		hasClasses,
+		hasAncestries,
+		hasBackgrounds,
+	} = params;
+
+	if (hasClasses && !selectedClass) return CHARACTER_CREATION_STAGES.CLASS;
+
+	if (
+		hasClassFeatures(classFeatures) &&
+		!classFeaturesComplete(classFeatures, selectedClassFeatures)
+	) {
+		return CHARACTER_CREATION_STAGES.CLASS_FEATURES;
+	}
+
+	if (hasAncestries && !selectedAncestry) {
+		return CHARACTER_CREATION_STAGES.ANCESTRY;
+	}
+
+	if (
+		hasAncestryOptions(selectedAncestry) &&
+		!ancestryOptionsComplete(selectedAncestry, selectedAncestrySize, selectedAncestrySave)
+	) {
+		return CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS;
+	}
+
+	if (hasBackgrounds && !selectedBackground) {
+		return CHARACTER_CREATION_STAGES.BACKGROUND;
+	}
+
+	if (isRaisedByBackground(selectedBackground) && selectedRaisedByAncestry === null) {
+		return CHARACTER_CREATION_STAGES.BACKGROUND_OPTIONS;
+	}
+
+	if (!startingEquipmentChoice) return CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT;
+
+	if (!selectedArray) return CHARACTER_CREATION_STAGES.ARRAY;
+
+	const hasUnassignedAbilityScores = Object.values(selectedAbilityScores).some(
+		(mod) => mod === null,
+	);
+
+	if (hasUnassignedAbilityScores) return CHARACTER_CREATION_STAGES.STATS;
+	if (remainingSkillPoints) return CHARACTER_CREATION_STAGES.SKILLS;
+
+	const intelligenceModifier = selectedArray.array?.[selectedAbilityScores.intelligence ?? 0] ?? 0;
+
+	if (
+		!remainingSkillPoints &&
+		intelligenceModifier > 0 &&
+		bonusLanguages.length < intelligenceModifier
+	) {
+		return CHARACTER_CREATION_STAGES.LANGUAGES;
+	}
+
+	return CHARACTER_CREATION_STAGES.SUBMIT;
+}
+
+function calculateRemainingSkillPoints(assignedSkillPoints: Record<string, number>): number {
+	return DEFAULT_SKILL_POINTS - Object.values(assignedSkillPoints).reduce((a, b) => a + b, 0);
+}
+
+function getStageNumber(stage: StageValue): string {
+	return stage.toString().match(/\d+/)?.[0] ?? '0';
+}
 
 /**
  * Parameters for creating the character creation state
@@ -167,17 +411,21 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		// Fetch class features when class changes
 		const classIdentifier = selectedClass?.system?.identifier;
 		if (classIdentifier) {
-			getClassFeatures(classIdentifier, 1).then((result) => {
-				classFeatures = result;
-				// Scroll to class features after they're loaded, if there are any
-				// Use requestAnimationFrame to ensure this runs after other reactive updates
-				const hasFeatures = result.autoGrant.length > 0 || result.selectionGroups.size > 0;
-				if (hasFeatures) {
-					requestAnimationFrame(() => {
-						scrollIntoView(`${params.dialog.id}-stage-${CHARACTER_CREATION_STAGES.CLASS_FEATURES}`);
-					});
-				}
-			});
+			getClassFeatures(classIdentifier, 1)
+				.then((result) => {
+					classFeatures = result;
+					// Scroll to class features after they're loaded, if there are any
+					// Use requestAnimationFrame to ensure this runs after other reactive updates
+					const hasFeatures = result.autoGrant.length > 0 || result.selectionGroups.size > 0;
+					if (hasFeatures) {
+						requestAnimationFrame(() => {
+							scrollIntoView(
+								`${params.dialog.id}-stage-${CHARACTER_CREATION_STAGES.CLASS_FEATURES}`,
+							);
+						});
+					}
+				})
+				.catch(console.error);
 		} else {
 			classFeatures = null;
 		}

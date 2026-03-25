@@ -5,5 +5,5 @@ export default function scrollIntoView(href: string): void {
 
 	if (!element) return;
 
-	element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	element.scrollIntoView({ behavior: 'smooth' });
 }

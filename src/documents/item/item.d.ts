@@ -71,10 +71,10 @@ declare interface NimbleSubclassItem extends NimbleBaseItem<'subclass'> {
 declare interface NimbleAncestryItem extends NimbleBaseItem<'ancestry'> {
 	type: 'ancestry';
 	system: {
+		description?: string;
 		exotic: boolean;
 		size?: string[];
 		rules?: NimbleBaseRule[];
-		[key: string]: unknown;
 	};
 }
 
@@ -84,8 +84,8 @@ declare interface NimbleAncestryItem extends NimbleBaseItem<'ancestry'> {
 declare interface NimbleBackgroundItem extends NimbleBaseItem<'background'> {
 	type: 'background';
 	system: {
+		description?: string;
 		rules?: NimbleBaseRule[];
-		[key: string]: unknown;
 	};
 }
 

@@ -2,6 +2,7 @@
 	import type { FeatureGroupSelectionProps } from '#types/components/ClassFeatureSelection.d.ts';
 
 	import FeatureCard from './FeatureCard.svelte';
+	import localize from '#utils/localize.js';
 
 	let { groupName, features, selectedFeature, onSelect }: FeatureGroupSelectionProps = $props();
 
@@ -23,7 +24,7 @@
 			{formattedGroupName}
 		</h4>
 		{#if !isSingleOption}
-			<span class="feature-group__hint">(Choose one)</span>
+			<span class="feature-group__hint">{localize('NIMBLE.classFeatureSelection.chooseOne')}</span>
 		{/if}
 	</header>
 
