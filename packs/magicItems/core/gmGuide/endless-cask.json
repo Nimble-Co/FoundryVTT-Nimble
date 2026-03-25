@@ -1,8 +1,8 @@
 {
 	"folder": null,
-	"name": "Hear-ring",
+	"name": "Endless Cask",
 	"type": "object",
-	"img": "icons/commodities/treasure/brooch-jewel-gold-blue.webp",
+	"img": "icons/containers/barrels/barrel-iron-tied-brown.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Rarity:</strong> Uncommon</p><hr><p>A simple piece of jewelry worn on the ear. While worn, wearers can communicate with one another no matter the distance. Frequently crafted as a pair, sometimes as a larger set.</p>",
+			"public": "<p><strong>Rarity:</strong> Uncommon</p><hr><p>A dwarven cask made of enchanted oak. Refills itself with potent brews that heal wounds and bolster courage.</p>",
 			"unidentified": "",
 			"secret": ""
 		},
@@ -42,9 +42,9 @@
 		"objectType": "misc",
 		"quantity": 1,
 		"unidentifiedName": "Unidentified Object",
-		"objectSizeType": "smallSized",
-		"slotsRequired": 1,
-		"stackSize": 2,
+		"objectSizeType": "slots",
+		"slotsRequired": 2,
+		"stackSize": 1,
 		"properties": {
 			"range": {
 				"min": 2,
@@ -62,19 +62,19 @@
 			"thrownRange": 4
 		},
 		"price": {
-			"value": 250,
+			"value": 2000,
 			"denomination": "gp"
 		}
 	},
 	"effects": [],
 	"flags": {},
 	"_stats": {
-		"coreVersion": "13.347",
+		"coreVersion": "13.345",
 		"systemId": "nimble",
-		"systemVersion": "0.1.7",
-		"createdTime": 1756840278525,
-		"modifiedTime": 1756958240731,
-		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
+		"systemVersion": "0.8.0",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
 	},
-	"_id": "TWuTdviXfmMxti1H"
+	"_id": "gmg012EndlessCask00"
 }
