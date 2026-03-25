@@ -1,5 +1,5 @@
-import { getActorHpValue, getActorWoundsValueAndMax } from '../utils/actorResources.js';
-import { isCombatantDead } from '../utils/isCombatantDead.js';
+import { getActorHpValue, getActorWoundsValueAndMax } from '../../utils/actorResources.js';
+import { isCombatantDead } from '../../utils/isCombatantDead.js';
 
 let didRegisterCombatantDefeatSync = false;
 
@@ -24,7 +24,7 @@ function hasAnyOtherAliveCombatant(combat: Combat, currentCombatantId: string | 
 	);
 }
 
-function getShouldBeDefeatedFromActorState(combatant: Combatant.Implementation): boolean | null {
+function getShouldBeDefeatedFromCombatant(combatant: Combatant.Implementation): boolean | null {
 	if (combatant.type === 'character') {
 		const wounds = getActorWoundsValueAndMax(combatant.actor);
 		if (!wounds) return null;
@@ -66,7 +66,7 @@ async function syncSingleCombatantDeathState(combatant: Combatant.Implementation
 	const combatantActor = combatant.actor;
 	if (!combatantActor) return;
 
-	const shouldBeDefeated = getShouldBeDefeatedFromActorState(combatant);
+	const shouldBeDefeated = getShouldBeDefeatedFromCombatant(combatant);
 	if (shouldBeDefeated === null) return;
 
 	// Update combatant defeated flag if needed
@@ -131,7 +131,7 @@ async function syncActorCombatantDeathState(actor: Actor.Implementation): Promis
 
 	for (const { combat, combatant } of matches) {
 		if (!combat.id || !combatant.id) continue;
-		const shouldBeDefeated = getShouldBeDefeatedFromActorState(combatant);
+		const shouldBeDefeated = getShouldBeDefeatedFromCombatant(combatant);
 		if (shouldBeDefeated === null) continue;
 
 		const combatantActor = combatant.actor;

@@ -1,7 +1,8 @@
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import canvasInit from './hooks/canvasInit.js';
-import registerCombatantDefeatSync from './hooks/combatantDefeatSync.js';
-import registerCombatantHealthStateSync from './hooks/combatantHealthStateSync.js';
+import registerCombatantDefeatSync from './hooks/combatantHooks/combatantDefeatSync.js';
+import registerCombatantHealthStateSync from './hooks/combatantHooks/combatantHealthStateSync.js';
+import registerTokenCombatantSync from './hooks/combatantHooks/tokenCombatantSync.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
 import init from './hooks/init.js';
@@ -12,7 +13,6 @@ import renderChatMessageHTML from './hooks/renderChatMessage.js';
 import renderCompendium from './hooks/renderCompendium.js';
 import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import setup from './hooks/setup.js';
-import registerTokenCombatantSync from './hooks/tokenCombatantSync.js';
 import './scss/main.scss';
 import { getCombatManaGrantForCombat, getCombatManaGrantMap } from './utils/combatManaRules.js';
 import { injectViteHmrClient } from './utils/viteHmr.js';

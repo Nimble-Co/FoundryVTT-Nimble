@@ -5,6 +5,7 @@ import {
 	createCombatActorFixture,
 	createCombatantFixture,
 } from '../fixtures/combat.js';
+import { flushAsync, getTestGlobals } from '../helpers.js';
 
 type HookCallback = (...args: unknown[]) => unknown;
 
@@ -86,9 +87,8 @@ type DropEventOptions = {
 
 export type { CombatDefeatSyncTestGlobals, HookCallback, NimbleCombatDocumentTestGlobals };
 
-export function getTestGlobals<T>() {
-	return globalThis as unknown as T;
-}
+// Re-export shared test helpers for backward compatibility
+export { flushAsync, getTestGlobals };
 
 export function createHasPropertyMock(): (obj: unknown, path: string) => boolean {
 	return (obj: unknown, path: string): boolean => {

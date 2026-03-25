@@ -1,4 +1,4 @@
-import { getActorHealthState } from '../utils/actorHealthState.js';
+import { getActorHealthState } from '../../utils/actorHealthState.js';
 
 const BLOODIED_STATUS_ID = 'bloodied';
 const LAST_STAND_STATUS_ID = 'lastStand';

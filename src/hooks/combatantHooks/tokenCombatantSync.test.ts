@@ -1,21 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { flushAsync, getTestGlobals } from '../../../tests/helpers.js';
 import {
 	type CombatDefeatSyncTestGlobals,
 	createHookCapture,
 	createMockCombat,
 	createMockCombatant,
-} from '../../tests/mocks/combat.js';
+} from '../../../tests/mocks/combat.js';
 
 function globals() {
 	return getTestGlobals<CombatDefeatSyncTestGlobals>();
-}
-
-function getTestGlobals<T>() {
-	return globalThis as unknown as T;
-}
-
-async function flushAsync() {
-	await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 describe('registerTokenCombatantSync', () => {
