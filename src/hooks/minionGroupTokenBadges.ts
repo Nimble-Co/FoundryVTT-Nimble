@@ -17,12 +17,6 @@ type TurnCompleteBadgeContainer = PIXI.Container & {
 	label?: PIXI.Text;
 };
 
-function getCombatantCurrentActions(combatant: Combatant.Implementation): number {
-	const actions = Number(foundry.utils.getProperty(combatant, 'system.actions.base.current') ?? 0);
-	if (!Number.isFinite(actions)) return 0;
-	return Math.max(0, actions);
-}
-
 function getTurnOrderIndexForCombatant(
 	combat: Combat,
 	combatant: Combatant.Implementation,
@@ -118,8 +112,7 @@ function buildTurnCompleteBadgeTokenIdsForCurrentScene(): Set<string> {
 			continue;
 		}
 
-		const actionsRemaining = getCombatantCurrentActions(combatant);
-		if (actionsRemaining > 0 && !turnEnded) continue;
+		if (!turnEnded) continue;
 
 		tokenIds.add(combatant.tokenId);
 	}

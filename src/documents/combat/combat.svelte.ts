@@ -296,6 +296,71 @@ class NimbleCombat extends Combat {
 		return getCombatantCurrentActions(combatant) > 0;
 	}
 
+	#getNonCharacterTurnResetTargets(
+		combatant: Combatant.Implementation | null,
+	): Combatant.Implementation[] {
+		if (!combatant || combatant.type === 'character') return [];
+
+		const groupId = getMinionGroupId(combatant);
+		if (!groupId) return [combatant];
+
+		const summary = getMinionGroupSummaries(this.combatants.contents).get(groupId);
+		if (!summary?.aliveMembers.length) return [combatant];
+		return summary.aliveMembers;
+	}
+
+	async #restoreNonCharacterTurnState(combatant: Combatant.Implementation | null): Promise<void> {
+		const updates = this.#getNonCharacterTurnResetTargets(combatant).reduce<
+			Record<string, unknown>[]
+		>((accumulator, targetCombatant) => {
+			const combatantId = targetCombatant.id ?? null;
+			if (!combatantId) return accumulator;
+
+			const nextActions = getCombatantBaseActionMax(targetCombatant);
+			if (getCombatantCurrentActions(targetCombatant) === nextActions) return accumulator;
+
+			accumulator.push({
+				_id: combatantId,
+				'system.actions.base.current': nextActions,
+			});
+			return accumulator;
+		}, []);
+		if (updates.length < 1) return;
+		await this.updateEmbeddedDocuments('Combatant', updates);
+	}
+
+	#normalizeCombatantCreateData(entry: Record<string, unknown>): {
+		normalizedEntry: Record<string, unknown>;
+		normalizedMinionType: boolean;
+	} {
+		const normalizedEntry = { ...entry };
+		const normalizedMinionType = normalizedEntry.type === 'minion';
+		if (normalizedMinionType) {
+			normalizedEntry.type = 'npc';
+		}
+
+		if (normalizedEntry.type === 'character') {
+			return { normalizedEntry, normalizedMinionType };
+		}
+
+		const currentActions = foundry.utils.getProperty(
+			normalizedEntry,
+			'system.actions.base.current',
+		);
+		if (currentActions !== undefined && currentActions !== null) {
+			return { normalizedEntry, normalizedMinionType };
+		}
+
+		const explicitMaxActions = Number(
+			foundry.utils.getProperty(normalizedEntry, 'system.actions.base.max') ?? Number.NaN,
+		);
+		const initialActions = Number.isFinite(explicitMaxActions)
+			? Math.max(0, Math.trunc(explicitMaxActions))
+			: 1;
+		foundry.utils.setProperty(normalizedEntry, 'system.actions.base.current', initialActions);
+		return { normalizedEntry, normalizedMinionType };
+	}
+
 	async #advancePastExhaustedTurns(result: this): Promise<this> {
 		if (!this.turns.length) return result;
 
@@ -477,13 +542,13 @@ class NimbleCombat extends Combat {
 			let normalizedCount = 0;
 			normalizedData = data.map((entry) => {
 				if (!entry || typeof entry !== 'object') return entry;
-				const asRecord = entry as Record<string, unknown>;
-				if (asRecord.type !== 'minion') return entry;
-				normalizedCount += 1;
-				return {
-					...asRecord,
-					type: 'npc',
-				};
+				const { normalizedEntry, normalizedMinionType } = this.#normalizeCombatantCreateData(
+					entry as Record<string, unknown>,
+				);
+				if (normalizedMinionType) {
+					normalizedCount += 1;
+				}
+				return normalizedEntry;
 			}) as foundry.abstract.Document.CreateDataForName<EmbeddedName>[];
 
 			if (normalizedCount > 0) {
@@ -734,6 +799,7 @@ class NimbleCombat extends Combat {
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
 		}
+		await this.#restoreNonCharacterTurnState(this.combatant ?? null);
 		return result;
 	}
 
@@ -751,6 +817,7 @@ class NimbleCombat extends Combat {
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
 		}
+		await this.#restoreNonCharacterTurnState(this.combatant ?? null);
 		return result;
 	}
 
