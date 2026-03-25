@@ -51,7 +51,7 @@ function getViewportCtTrackWidthPx(): number {
 
 export function normalizeCtWidthLevel(value: unknown): number {
 	const numericValue = Number(value);
-	if (!Number.isFinite(numericValue)) return 10;
+	if (!Number.isFinite(numericValue)) return 5;
 	const roundedValue = Math.round(numericValue);
 	return Math.min(CT_MAX_WIDTH_LEVEL, Math.max(CT_MIN_WIDTH_LEVEL, roundedValue));
 }

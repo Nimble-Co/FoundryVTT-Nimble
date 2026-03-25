@@ -110,7 +110,7 @@ describe('combatTrackerSettings', () => {
 		});
 		expect(registeredOptions[COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY]).toMatchObject({
 			scope: 'client',
-			default: 10,
+			default: 5,
 		});
 		expect(registeredOptions[COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY]).toMatchObject({
 			scope: 'client',
