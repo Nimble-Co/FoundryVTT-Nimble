@@ -50,10 +50,6 @@ export function createClassFeatureSelectionState(
 		setSelectedFeatures(newSelections);
 	}
 
-	function clearSelections() {
-		setSelectedFeatures(new Map());
-	}
-
 	return {
 		get hasAutoGrant() {
 			return (getState().classFeatures?.autoGrant?.length ?? 0) > 0;
@@ -68,6 +64,5 @@ export function createClassFeatureSelectionState(
 			return hasAuto || hasSelection;
 		},
 		handleFeatureSelect,
-		clearSelections,
 	};
 }

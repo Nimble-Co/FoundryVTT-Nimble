@@ -34,18 +34,6 @@
 		<header class="nimble-section-header" data-header-variant="character-creator">
 			<h3 class="nimble-heading" data-heading-variant="section">
 				{localize('NIMBLE.classFeatureSelection.header')}
-
-				{#if !active && state.hasSelectionGroups}
-					<button
-						class="nimble-button"
-						data-button-variant="icon"
-						aria-label={localize('NIMBLE.classFeatureSelection.editSelection')}
-						data-tooltip={localize('NIMBLE.classFeatureSelection.editSelection')}
-						onclick={state.clearSelections}
-					>
-						<i class="fa-solid fa-edit"></i>
-					</button>
-				{/if}
 			</h3>
 		</header>
 

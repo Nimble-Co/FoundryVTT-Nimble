@@ -5,7 +5,7 @@
 
 	import { CHARACTER_CREATION_STAGES } from './characterCreation/constants.js';
 	import { createCharacterCreationState } from './characterCreation/state.svelte.js';
-	import { isRaisedByBackground } from './characterCreation/utils.js';
+	import { isRaisedByBackground } from './characterCreation/utils.ts';
 
 	import AncestrySelection from './components/characterCreator/AncestrySelection.svelte';
 	import AncestrySizeSelection from './components/characterCreator/AncestrySizeSelection.svelte';
@@ -23,6 +23,7 @@
 		ancestryOptions,
 		backgroundOptions,
 		bonusLanguageOptions,
+		classFeatureIndex,
 		classOptions,
 		dialog,
 		statArrayOptions,
@@ -34,6 +35,9 @@
 		},
 		get backgroundOptions() {
 			return backgroundOptions;
+		},
+		get classFeatureIndex() {
+			return classFeatureIndex;
 		},
 		get classOptions() {
 			return classOptions;

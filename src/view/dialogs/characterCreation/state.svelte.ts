@@ -1,9 +1,10 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
+import type { ClassFeatureIndex } from '#utils/getClassFeatures.js';
 
 import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
 import generateBlankAttributeSet from '../../../utils/generateBlankAttributeSet.js';
-import getClassFeatures from '../../../utils/getClassFeatures.js';
+import getClassFeaturesFromIndex from '../../../utils/getClassFeatures.js';
 import scrollIntoView from '../../../utils/scrollIntoView.js';
 import { CHARACTER_CREATION_STAGES, DEFAULT_SKILL_POINTS } from './constants.js';
 import type {
@@ -14,6 +15,7 @@ import type {
 	StageValue,
 	StatArrayOption,
 } from './types.js';
+import { isRaisedByBackground } from './utils.ts';
 
 // --- Internal helper functions ---
 
@@ -120,10 +122,6 @@ function ancestryOptionsComplete(
 	if (hasSaveChoice && !selectedAncestrySave) return false;
 
 	return true;
-}
-
-function isRaisedByBackground(background: NimbleBackgroundItem | null): boolean {
-	return background?.name?.toLowerCase().includes('raised by') ?? false;
 }
 
 function classFeaturesComplete(
@@ -271,6 +269,7 @@ function getStageNumber(stage: StageValue): string {
 export interface CharacterCreationStateParams {
 	ancestryOptions: Promise<Record<'core' | 'exotic', NimbleAncestryItem[]>>;
 	backgroundOptions: Promise<NimbleBackgroundItem[]>;
+	classFeatureIndex: Promise<ClassFeatureIndex>;
 	classOptions: Promise<NimbleClassItem[]>;
 	dialog: CharacterCreationDialogInstance;
 }
@@ -411,7 +410,8 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		// Fetch class features when class changes
 		const classIdentifier = selectedClass?.system?.identifier;
 		if (classIdentifier) {
-			getClassFeatures(classIdentifier, 1)
+			params.classFeatureIndex
+				.then((index) => getClassFeaturesFromIndex(index, classIdentifier, 1))
 				.then((result) => {
 					classFeatures = result;
 					// Scroll to class features after they're loaded, if there are any

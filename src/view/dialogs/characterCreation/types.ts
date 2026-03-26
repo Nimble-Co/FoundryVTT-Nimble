@@ -1,4 +1,5 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { ClassFeatureIndex } from '#utils/getClassFeatures.js';
 
 /**
  * Union type for origin items used in character creation.
@@ -21,6 +22,7 @@ export interface CharacterCreationDialogProps {
 	ancestryOptions: Promise<Record<'core' | 'exotic', NimbleAncestryItem[]>>;
 	backgroundOptions: Promise<NimbleBackgroundItem[]>;
 	bonusLanguageOptions: Array<{ value: string; label: string; tooltip: string }>;
+	classFeatureIndex: Promise<ClassFeatureIndex>;
 	classOptions: Promise<NimbleClassItem[]>;
 	dialog: CharacterCreationDialogInstance;
 	statArrayOptions: StatArrayOption[];
