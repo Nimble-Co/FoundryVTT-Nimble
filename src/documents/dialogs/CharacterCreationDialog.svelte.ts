@@ -2,7 +2,7 @@ import type { DeepPartial } from 'fvtt-types/utils';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
-import { buildClassFeatureIndex } from '../../utils/getClassFeatures.js';
+import { buildClassFeatureIndex, type ClassFeatureIndex } from '../../utils/getClassFeatures.js';
 import sortDocumentsByName from '../../utils/sortDocumentsByName.js';
 import CharacterCreationDialogComponent from '../../view/dialogs/CharacterCreationDialog.svelte';
 
@@ -12,6 +12,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	data: Record<string, any>;
 	parent: any;
 	pack: any;
+	classFeatureIndex: Promise<ClassFeatureIndex> | null = null;
 
 	protected root;
 
@@ -58,7 +59,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		const bonusLanguageOptions = this.prepareBonusLanguageOptions();
 		const classOptions = this.prepareClassOptions();
 		const statArrayOptions = this.prepareArrayOptions();
-		const classFeatureIndex = buildClassFeatureIndex();
+		const classFeatureIndex = (this.classFeatureIndex ??= buildClassFeatureIndex());
 
 		return {
 			ancestryOptions,
