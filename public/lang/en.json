@@ -1232,6 +1232,15 @@
 			"resetSpellTier": "Reset spell tier",
 			"resetHighestUnlockedSpellTier": "Reset Highest Unlocked Spell Tier"
 		},
+		"classFeatureSelection": {
+			"header": "Class Features",
+			"editSelection": "Edit Class Feature Selection",
+			"hint": "The following features are available at level 1 for your class. Some features are automatically granted, while others require you to make a choice.",
+			"chooseOne": "(Choose one)",
+			"noDescriptionAvailable": "No description available.",
+			"selected": "Selected",
+			"confirmSelection": "Confirm Selection"
+		},
 		"classSelection": {
 			"stepSelectClass": "Step 1: Select Class",
 			"noDescriptionAvailable": "No Description Available",
