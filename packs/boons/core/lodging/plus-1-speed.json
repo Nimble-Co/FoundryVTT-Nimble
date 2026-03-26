@@ -5,7 +5,13 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "speedBonus",
+				"value": "1",
+				"label": "+1 Speed"
+			}
+		],
 		"description": "<p>+1 Speed.</p>",
 		"boonType": "lodging"
 	},

@@ -6,7 +6,33 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "speedBonus",
+				"value": "2",
+				"label": "Swift Feet",
+				"predicate": {
+					"unarmored": true
+				}
+			},
+			{
+				"type": "initiativeBonus",
+				"value": "1",
+				"label": "Swift Feet Initiative Bonus",
+				"predicate": {
+					"unarmored": true
+				}
+			},
+			{
+				"type": "speedBonus",
+				"value": "2",
+				"label": "Swift Feet Speed Bonus",
+				"predicate": {
+					"level": 9,
+					"unarmored": true
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -39,9 +65,7 @@
 		"group": "zephyr-progression",
 		"gainedAtLevel": 2,
 		"subclass": false,
-		"gainedAtLevels": [
-			2
-		]
+		"gainedAtLevels": [2, 9]
 	},
 	"effects": [],
 	"flags": {},
