@@ -42,6 +42,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		},
 		position: {
 			height: 'auto' as const,
+			// Foundry ignores small top values in practice; 0 is equivalent to the previous value of 5
 			top: 0,
 			width: 608,
 		},
