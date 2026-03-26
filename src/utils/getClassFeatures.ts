@@ -47,6 +47,9 @@ export default async function getClassFeatures(
 	}
 
 	// Process compendium packs - only Item packs can contain features
+	// Note: We must fetch all features before filtering by class/level because Foundry's
+	// pack index doesn't include system data (like class identifier). Custom index fields
+	// could optimize this but would require system-level configuration.
 	for (const pack of game.packs) {
 		if (pack.documentName !== 'Item') continue;
 

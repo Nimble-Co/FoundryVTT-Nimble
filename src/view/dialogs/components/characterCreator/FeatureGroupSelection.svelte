@@ -1,29 +1,21 @@
 <script lang="ts">
 	import type { FeatureGroupSelectionProps } from '#types/components/ClassFeatureSelection.d.ts';
 
+	import { createFeatureGroupSelectionState } from './FeatureGroupSelection.svelte.ts';
 	import FeatureCard from './FeatureCard.svelte';
 	import localize from '#utils/localize.js';
 
 	let { groupName, features, selectedFeature, onSelect }: FeatureGroupSelectionProps = $props();
 
-	function formatGroupName(name: string): string {
-		// Convert kebab-case to Title Case (e.g., "thrill-of-the-hunt" -> "Thrill Of The Hunt")
-		return name
-			.split('-')
-			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-			.join(' ');
-	}
-
-	let formattedGroupName = $derived(formatGroupName(groupName));
-	let isSingleOption = $derived(features.length === 1);
+	const state = createFeatureGroupSelectionState(() => ({ groupName, features }));
 </script>
 
 <div class="feature-group">
 	<header class="feature-group__header">
 		<h4 class="nimble-heading" data-heading-variant="section">
-			{formattedGroupName}
+			{state.formattedGroupName}
 		</h4>
-		{#if !isSingleOption}
+		{#if !state.isSingleOption}
 			<span class="feature-group__hint">{localize('NIMBLE.classFeatureSelection.chooseOne')}</span>
 		{/if}
 	</header>
@@ -32,8 +24,8 @@
 		{#each features as feature (feature.uuid)}
 			<FeatureCard
 				{feature}
-				isSelected={isSingleOption ? false : selectedFeature?.uuid === feature.uuid}
-				onSelect={isSingleOption ? undefined : () => onSelect(feature)}
+				isSelected={state.isSingleOption ? false : selectedFeature?.uuid === feature.uuid}
+				onSelect={state.isSingleOption ? undefined : () => onSelect(feature)}
 			/>
 		{/each}
 	</ul>
