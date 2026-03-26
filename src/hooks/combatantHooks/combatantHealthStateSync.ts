@@ -1,4 +1,4 @@
-import { getActorHealthState } from '../utils/actorHealthState.js';
+import { getActorHealthState } from '../../utils/actorHealthState.js';
 
 const BLOODIED_STATUS_ID = 'bloodied';
 const LAST_STAND_STATUS_ID = 'lastStand';
@@ -32,6 +32,17 @@ async function syncActorHealthState(actor: Actor.Implementation): Promise<void> 
 	}
 }
 
+/**
+ * Sync health state for a single combatant's actor. Used when a new combatant is created
+ * to avoid affecting other unlinked tokens that share the same base actor ID.
+ */
+async function syncCombatantHealthState(combatant: Combatant.Implementation): Promise<void> {
+	const actor = combatant.actor;
+	if (!actor) return;
+
+	await syncActorHealthState(actor);
+}
+
 export default function registerCombatantHealthStateSync() {
 	if (didRegisterCombatantHealthStateSync) return;
 	didRegisterCombatantHealthStateSync = true;
@@ -47,9 +58,8 @@ export default function registerCombatantHealthStateSync() {
 	});
 
 	Hooks.on('createCombatant', (combatant: Combatant.Implementation) => {
-		const actor = combatant.actor;
-		if (!actor) return;
-
-		void syncActorHealthState(actor);
+		// Use the combatant's actor directly to avoid cross-contamination
+		// between unlinked tokens sharing the same base actor ID
+		void syncCombatantHealthState(combatant);
 	});
 }

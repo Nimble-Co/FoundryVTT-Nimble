@@ -22,6 +22,7 @@ export type CombatantFixtureOptions = {
 	combatId?: string;
 	actorId?: string;
 	sceneId?: string;
+	tokenId?: string;
 	actionsCurrent?: number;
 	actionsMax?: number;
 };
@@ -77,6 +78,7 @@ export function createCombatantFixture({
 	combatId = 'combat-1',
 	actorId = '',
 	sceneId = 'scene-1',
+	tokenId = '',
 	actionsCurrent = 1,
 	actionsMax = 2,
 }: CombatantFixtureOptions = {}): Combatant.Implementation {
@@ -91,6 +93,7 @@ export function createCombatantFixture({
 		initiative,
 		actor,
 		actorId: resolvedActorId,
+		tokenId,
 		parent: { id: combatId },
 		sceneId,
 		system: {

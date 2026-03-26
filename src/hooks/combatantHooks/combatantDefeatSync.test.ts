@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { flushAsync, getTestGlobals } from '../../../tests/helpers.js';
 import {
 	type CombatDefeatSyncTestGlobals,
 	createHasPropertyMock,
@@ -6,15 +7,10 @@ import {
 	createMockCombat,
 	createMockCombatActor,
 	createMockCombatant,
-	getTestGlobals,
-} from '../../tests/mocks/combat.js';
+} from '../../../tests/mocks/combat.js';
 
 function globals() {
 	return getTestGlobals<CombatDefeatSyncTestGlobals>();
-}
-
-async function flushAsync() {
-	await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 describe('registerCombatantDefeatSync', () => {
@@ -558,6 +554,286 @@ describe('registerCombatantDefeatSync', () => {
 		expect(triggeringActor.toggleStatusEffect).toHaveBeenCalledWith('defeated', {
 			overlay: true,
 			active: true,
+		});
+	});
+
+	describe('createCombatant hook', () => {
+		it('syncs death state when combatant is created with defeated actor', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
+			registerCombatantDefeatSync();
+
+			const actor = createMockCombatActor({
+				id: 'actor-new',
+				hp: 0,
+			});
+			const combatant = createMockCombatant({
+				id: 'combatant-new',
+				type: 'npc',
+				actorId: 'actor-new',
+				actor,
+				defeated: false,
+			});
+			const combat = createMockCombat({
+				id: 'combat-new',
+				combatants: [combatant],
+				turns: [combatant],
+				activeCombatant: null,
+				round: 1,
+			});
+
+			// Set up the parent reference for the combatant
+			(combatant as unknown as { parent: Combat }).parent = combat;
+
+			globals().game.combats.contents = [combat];
+
+			const createCombatant = callbacks.get('createCombatant');
+			expect(createCombatant).toBeDefined();
+			createCombatant?.(combatant);
+			await flushAsync();
+
+			expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+				{ _id: 'combatant-new', defeated: true },
+			]);
+			expect(actor.toggleStatusEffect).toHaveBeenCalledWith('defeated', {
+				overlay: true,
+				active: true,
+			});
+		});
+
+		it('syncs death state when combatant is created with alive actor', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
+			registerCombatantDefeatSync();
+
+			const actor = createMockCombatActor({
+				id: 'actor-alive',
+				hp: 10,
+			});
+			const combatant = createMockCombatant({
+				id: 'combatant-alive',
+				type: 'npc',
+				actorId: 'actor-alive',
+				actor,
+				defeated: false,
+			});
+			const combat = createMockCombat({
+				id: 'combat-alive',
+				combatants: [combatant],
+				turns: [combatant],
+				activeCombatant: null,
+				round: 1,
+			});
+
+			(combatant as unknown as { parent: Combat }).parent = combat;
+
+			globals().game.combats.contents = [combat];
+
+			const createCombatant = callbacks.get('createCombatant');
+			createCombatant?.(combatant);
+			await flushAsync();
+
+			// Should not update combatant since it's already not defeated
+			expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
+			// Should still toggle status effect to ensure it's not active
+			expect(actor.toggleStatusEffect).toHaveBeenCalledWith('defeated', {
+				overlay: true,
+				active: false,
+			});
+		});
+
+		it('does not affect other unlinked tokens when creating a combatant', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
+			registerCombatantDefeatSync();
+
+			// Existing combatant with alive actor (different instance, same base actor ID)
+			const existingActor = createMockCombatActor({
+				id: 'base-goblin',
+				hp: 10,
+			});
+			const existingCombatant = createMockCombatant({
+				id: 'existing-goblin',
+				type: 'npc',
+				actorId: 'base-goblin',
+				actor: existingActor,
+				defeated: false,
+			});
+
+			// New combatant being added with dead actor (different instance, same base actor ID)
+			const newActor = createMockCombatActor({
+				id: 'base-goblin',
+				hp: 0,
+			});
+			const newCombatant = createMockCombatant({
+				id: 'new-goblin',
+				type: 'npc',
+				actorId: 'base-goblin',
+				actor: newActor,
+				defeated: false,
+			});
+
+			const combat = createMockCombat({
+				id: 'combat-unlinked',
+				combatants: [existingCombatant, newCombatant],
+				turns: [existingCombatant, newCombatant],
+				activeCombatant: existingCombatant,
+				round: 1,
+			});
+
+			(newCombatant as unknown as { parent: Combat }).parent = combat;
+
+			globals().game.combats.contents = [combat];
+
+			const createCombatant = callbacks.get('createCombatant');
+			createCombatant?.(newCombatant);
+			await flushAsync();
+
+			// Should only update the new combatant, not the existing one
+			expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+				{ _id: 'new-goblin', defeated: true },
+			]);
+			// Should only toggle status on the new combatant's actor
+			expect(newActor.toggleStatusEffect).toHaveBeenCalledWith('defeated', {
+				overlay: true,
+				active: true,
+			});
+			// The existing actor should NOT be affected
+			expect(existingActor.toggleStatusEffect).not.toHaveBeenCalled();
+		});
+
+		it('advances turn when created combatant is active and defeated', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
+			registerCombatantDefeatSync();
+
+			const deadActor = createMockCombatActor({
+				id: 'actor-active-dead',
+				hp: 0,
+			});
+			const deadCombatant = createMockCombatant({
+				id: 'combatant-active-dead',
+				type: 'npc',
+				actorId: 'actor-active-dead',
+				actor: deadActor,
+				defeated: false,
+			});
+
+			const aliveActor = createMockCombatActor({
+				id: 'actor-other',
+				hp: 10,
+			});
+			const aliveCombatant = createMockCombatant({
+				id: 'combatant-other',
+				type: 'npc',
+				actorId: 'actor-other',
+				actor: aliveActor,
+				defeated: false,
+			});
+
+			const combat = createMockCombat({
+				id: 'combat-advance',
+				combatants: [deadCombatant, aliveCombatant],
+				turns: [deadCombatant, aliveCombatant],
+				activeCombatant: deadCombatant,
+				round: 1,
+			});
+
+			(deadCombatant as unknown as { parent: Combat }).parent = combat;
+
+			globals().game.combats.contents = [combat];
+
+			const createCombatant = callbacks.get('createCombatant');
+			createCombatant?.(deadCombatant);
+			await flushAsync();
+
+			expect(combat.nextTurn).toHaveBeenCalledTimes(1);
+		});
+
+		it('does not advance turn at round 0', async () => {
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
+			registerCombatantDefeatSync();
+
+			const deadActor = createMockCombatActor({
+				id: 'actor-round0',
+				hp: 0,
+			});
+			const deadCombatant = createMockCombatant({
+				id: 'combatant-round0',
+				type: 'npc',
+				actorId: 'actor-round0',
+				actor: deadActor,
+				defeated: false,
+			});
+
+			const aliveActor = createMockCombatActor({
+				id: 'actor-round0-other',
+				hp: 10,
+			});
+			const aliveCombatant = createMockCombatant({
+				id: 'combatant-round0-other',
+				type: 'npc',
+				actorId: 'actor-round0-other',
+				actor: aliveActor,
+				defeated: false,
+			});
+
+			const combat = createMockCombat({
+				id: 'combat-round0',
+				combatants: [deadCombatant, aliveCombatant],
+				turns: [deadCombatant, aliveCombatant],
+				activeCombatant: deadCombatant,
+				round: 0,
+			});
+
+			(deadCombatant as unknown as { parent: Combat }).parent = combat;
+
+			globals().game.combats.contents = [combat];
+
+			const createCombatant = callbacks.get('createCombatant');
+			createCombatant?.(deadCombatant);
+			await flushAsync();
+
+			expect(combat.nextTurn).not.toHaveBeenCalled();
+		});
+
+		it('does nothing when user is not GM', async () => {
+			globals().game.user = { isGM: false };
+
+			const callbacks = createHookCapture(globals().Hooks.on);
+			const registerCombatantDefeatSync = (await import('./combatantDefeatSync.js')).default;
+			registerCombatantDefeatSync();
+
+			const actor = createMockCombatActor({
+				id: 'actor-non-gm',
+				hp: 0,
+			});
+			const combatant = createMockCombatant({
+				id: 'combatant-non-gm',
+				type: 'npc',
+				actorId: 'actor-non-gm',
+				actor,
+				defeated: false,
+			});
+			const combat = createMockCombat({
+				id: 'combat-non-gm',
+				combatants: [combatant],
+				turns: [combatant],
+				activeCombatant: null,
+				round: 1,
+			});
+
+			(combatant as unknown as { parent: Combat }).parent = combat;
+
+			globals().game.combats.contents = [combat];
+
+			const createCombatant = callbacks.get('createCombatant');
+			createCombatant?.(combatant);
+			await flushAsync();
+
+			expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
+			expect(actor.toggleStatusEffect).not.toHaveBeenCalled();
 		});
 	});
 
