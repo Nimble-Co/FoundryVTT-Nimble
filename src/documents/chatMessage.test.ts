@@ -235,6 +235,51 @@ describe('NimbleChatMessage.undoHealing', () => {
 		expect(globals().ui.notifications.info).toHaveBeenCalledWith('Healing has been undone');
 	});
 
+	it('uses actor hp setter methods when undoing healing', async () => {
+		const actor = {
+			setCurrentHP: vi.fn().mockResolvedValue(undefined),
+			setTempHP: vi.fn().mockResolvedValue(undefined),
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = new NimbleChatMessage({
+			type: 'spell',
+			system: {
+				targets: ['Scene.scene.Token.token'],
+				isCritical: false,
+				isMiss: false,
+				activation: { effects: [] },
+				appliedHealing: {
+					'effect-123': {
+						effectId: 'effect-123',
+						healingType: 'healing',
+						amount: 5,
+						targets: [
+							{
+								uuid: 'Scene.scene.Token.token',
+								tokenName: 'Test Token',
+								previousHp: 5,
+								previousTempHp: 0,
+								newHp: 10,
+								newTempHp: 0,
+							},
+						],
+						appliedAt: Date.now(),
+					},
+				},
+			},
+		} as unknown as ChatMessage.CreateData);
+
+		message.update = vi.fn().mockResolvedValue(undefined);
+
+		await message.undoHealing('effect-123');
+
+		expect(actor.setCurrentHP).toHaveBeenCalledWith(5);
+		expect(actor.update).not.toHaveBeenCalled();
+	});
+
 	it('warns when no healing record found', async () => {
 		const message = createActivationMessage();
 
@@ -273,6 +318,30 @@ describe('NimbleChatMessage.applyDamage', () => {
 			'system.attributes.hp.temp': 0,
 			'system.attributes.hp.value': 8,
 		});
+	});
+
+	it('delegates damage application to actor.applyDamage when available', async () => {
+		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
+			system: {
+				attributes: {
+					hp: {
+						value: 10,
+						temp: 2,
+						max: 10,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(4, { outcome: 'fullDamage' });
+
+		expect(actor.applyDamage).toHaveBeenCalledWith(4);
+		expect(actor.update).not.toHaveBeenCalled();
 	});
 
 	it('does not apply damage when outcome is noDamage', async () => {

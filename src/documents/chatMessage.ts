@@ -36,6 +36,11 @@ interface ActivationCardSystemData {
 	[key: string]: unknown;
 }
 
+type HpMutableActor = Actor.Implementation &
+	Partial<
+		Pick<NimbleBaseActorInterface, 'applyDamage' | 'applyHealing' | 'setCurrentHP' | 'setTempHP'>
+	>;
+
 class NimbleChatMessage extends ChatMessage {
 	declare type: SystemChatMessageTypes;
 
@@ -246,8 +251,13 @@ class NimbleChatMessage extends ChatMessage {
 
 		for (const uuid of targets) {
 			const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
-			const actor = tokenDocument?.actor as Actor.Implementation | null;
+			const actor = tokenDocument?.actor as HpMutableActor | null;
 			if (!actor) continue;
+
+			if (typeof actor.applyDamage === 'function') {
+				await actor.applyDamage(damage);
+				continue;
+			}
 
 			const hpData = foundry.utils.getProperty(actor, 'system.attributes.hp') as
 				| {
@@ -304,11 +314,7 @@ class NimbleChatMessage extends ChatMessage {
 
 		for (const uuid of targets) {
 			const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
-			const actor = tokenDocument?.actor as
-				| (Actor.Implementation & {
-						applyHealing?: (healing: number, healingType?: string) => Promise<void>;
-				  })
-				| null;
+			const actor = tokenDocument?.actor as HpMutableActor | null;
 			if (!actor) continue;
 
 			// Get current HP values before healing
@@ -369,21 +375,25 @@ class NimbleChatMessage extends ChatMessage {
 		// Revert HP for each target
 		for (const targetRecord of healingRecord.targets) {
 			const tokenDocument = fromUuidSync(targetRecord.uuid) as TokenDocument | null;
-			const actor = tokenDocument?.actor as Actor.Implementation | null;
+			const actor = tokenDocument?.actor as HpMutableActor | null;
 			if (!actor) continue;
 
-			const updates: Record<string, unknown> = {};
-
 			if (healingRecord.healingType === 'tempHealing') {
-				// Revert temp HP
-				updates['system.attributes.hp.temp'] = targetRecord.previousTempHp;
+				if (typeof actor.setTempHP === 'function') {
+					await actor.setTempHP(targetRecord.previousTempHp);
+				} else {
+					await actor.update({
+						'system.attributes.hp.temp': targetRecord.previousTempHp,
+					} as Actor.UpdateData);
+				}
 			} else {
-				// Revert regular HP
-				updates['system.attributes.hp.value'] = targetRecord.previousHp;
-			}
-
-			if (Object.keys(updates).length > 0) {
-				await actor.update(updates as Actor.UpdateData);
+				if (typeof actor.setCurrentHP === 'function') {
+					await actor.setCurrentHP(targetRecord.previousHp);
+				} else {
+					await actor.update({
+						'system.attributes.hp.value': targetRecord.previousHp,
+					} as Actor.UpdateData);
+				}
 			}
 		}
 

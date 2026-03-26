@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { setContext, untrack } from 'svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
@@ -8,20 +8,25 @@
 	import NPCNotesTab from './pages/NPCNotesTab.svelte';
 	import NPCSettingsTab from './pages/NPCSettingsTab.svelte';
 
-	function getHitPointPercentage(currentHP, maxHP) {
-		return Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100);
+	function getHitPointPercentage(
+		currentHP: number | null | undefined,
+		maxHP: number | null | undefined,
+	): number {
+		const safeCurrentHP = typeof currentHP === 'number' ? currentHP : 0;
+		const safeMaxHP = typeof maxHP === 'number' && maxHP > 0 ? maxHP : 1;
+		return Math.clamp(0, Math.round((safeCurrentHP / safeMaxHP) * 100), 100);
 	}
 
-	function updateCurrentHP(newValue) {
-		actor.update({ 'system.attributes.hp.value': newValue });
+	function updateCurrentHP(newValue: number): void {
+		void actor.setCurrentHP(newValue);
 	}
 
-	function updateMaxHP(newValue) {
-		actor.update({ 'system.attributes.hp.max': newValue });
+	function updateMaxHP(newValue: number): void {
+		void actor.setMaxHP(newValue);
 	}
 
-	function updateTempHP(newValue) {
-		actor.update({ 'system.attributes.hp.temp': newValue });
+	function updateTempHP(newValue: number): void {
+		void actor.setTempHP(newValue);
 	}
 
 	let { actor } = $props();

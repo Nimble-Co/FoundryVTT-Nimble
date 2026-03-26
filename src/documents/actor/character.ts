@@ -734,7 +734,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			healingApplied = newHP - currentHP;
 
 			if (healingApplied > 0) {
-				await this.update({ 'system.attributes.hp.value': newHP } as Record<string, unknown>);
+				await this.setCurrentHP(newHP);
 			}
 		}
 
