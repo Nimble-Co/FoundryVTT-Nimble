@@ -630,10 +630,23 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			selected: selectedClassFeatures,
 		};
 
-		// Prepare spell data
+		// Prepare spell data with selection options for filtering during creation
+		const selectionOptions = new Map<
+			string,
+			{ includeUtility: boolean; forClass: string; tiers: number[] }
+		>();
+		for (const group of spellGrants?.schoolSelections ?? []) {
+			selectionOptions.set(group.ruleId, {
+				includeUtility: group.includeUtility,
+				forClass: group.forClass,
+				tiers: group.tiers,
+			});
+		}
+
 		const spellData = {
 			autoGrant: spellGrants?.autoGrant?.map((s) => s.uuid) ?? [],
 			selectedSchools: selectedSchools,
+			selectionOptions,
 		};
 
 		params.dialog.submitCharacterCreation({

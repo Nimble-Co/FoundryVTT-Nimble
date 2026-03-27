@@ -3,6 +3,7 @@ import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
 import { buildClassFeatureIndex, type ClassFeatureIndex } from '../../utils/getClassFeatures.js';
+import { buildSpellIndex, getSpellsFromIndex, type SpellIndex } from '../../utils/getSpells.js';
 import sortDocumentsByName from '../../utils/sortDocumentsByName.js';
 import CharacterCreationDialogComponent from '../../view/dialogs/CharacterCreationDialog.svelte';
 
@@ -13,6 +14,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	parent: any;
 	pack: any;
 	classFeatureIndex: Promise<ClassFeatureIndex> | null = null;
+	spellIndex: Promise<SpellIndex> | null = null;
 
 	protected root;
 
@@ -60,6 +62,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		const classOptions = this.prepareClassOptions();
 		const statArrayOptions = this.prepareArrayOptions();
 		const classFeatureIndex = (this.classFeatureIndex ??= buildClassFeatureIndex());
+		const spellIndex = (this.spellIndex ??= buildSpellIndex());
 
 		return {
 			ancestryOptions,
@@ -67,6 +70,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			bonusLanguageOptions,
 			classOptions,
 			classFeatureIndex,
+			spellIndex,
 			statArrayOptions,
 			dialog: this,
 		} as object as ReturnType<
@@ -93,6 +97,14 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		classFeatures?: {
 			autoGrant: string[];
 			selected: Map<string, NimbleFeatureItem>;
+		};
+		spells?: {
+			autoGrant: string[];
+			selectedSchools: Map<string, string[]>;
+			selectionOptions?: Map<
+				string,
+				{ includeUtility: boolean; forClass: string; tiers: number[] }
+			>;
 		};
 	}) {
 		const actor = await Actor.create(
@@ -248,6 +260,53 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		// Create all features
 		if (featureDocumentSources.length > 0) {
 			await actor?.createEmbeddedDocuments('Item', featureDocumentSources);
+		}
+
+		// Create spell documents
+		const spellDocumentSources: Item.CreateData[] = [];
+		const spellIndex = this.spellIndex ? await this.spellIndex : null;
+
+		// Add auto-granted spells
+		for (const uuid of results.spells?.autoGrant ?? []) {
+			const spell = await fromUuid(uuid as `Item.${string}`);
+			if (spell) {
+				const source = (spell as Item).toObject();
+				source._stats.compendiumSource = uuid;
+				spellDocumentSources.push(source as object as Item.CreateData);
+			}
+		}
+
+		// Add spells from school selections
+		if (spellIndex && results.spells?.selectedSchools) {
+			const selectionOptions = results.spells.selectionOptions ?? new Map();
+
+			for (const [ruleId, schools] of results.spells.selectedSchools) {
+				// Get filtering options for this rule, with sensible defaults
+				const options = selectionOptions.get(ruleId) ?? {
+					includeUtility: false,
+					forClass: classDocument?.system?.identifier ?? '',
+					tiers: [0],
+				};
+
+				const spells = getSpellsFromIndex(spellIndex, schools, options.tiers, {
+					includeUtility: options.includeUtility,
+					forClass: options.forClass,
+				});
+
+				for (const spellEntry of spells) {
+					const spell = await fromUuid(spellEntry.uuid as `Item.${string}`);
+					if (spell) {
+						const source = (spell as Item).toObject();
+						source._stats.compendiumSource = spellEntry.uuid;
+						spellDocumentSources.push(source as object as Item.CreateData);
+					}
+				}
+			}
+		}
+
+		// Create all spells
+		if (spellDocumentSources.length > 0) {
+			await actor?.createEmbeddedDocuments('Item', spellDocumentSources);
 		}
 
 		const updateData: Record<string, unknown> = {

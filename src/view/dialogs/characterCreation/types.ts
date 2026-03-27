@@ -93,6 +93,8 @@ export interface CharacterCreationResults {
 	spells?: {
 		autoGrant: string[];
 		selectedSchools: Map<string, string[]>;
+		/** Filtering options for each school selection rule */
+		selectionOptions: Map<string, { includeUtility: boolean; forClass: string; tiers: number[] }>;
 	};
 }
 
