@@ -164,7 +164,9 @@ function spellSelectionsComplete(
 	// Check that all school selection groups have enough schools selected
 	for (const group of grants.schoolSelections) {
 		const selected = selectedSchools.get(group.ruleId) ?? [];
-		if (selected.length < group.count) {
+		// Cap required count at available options to prevent stuck state
+		const requiredCount = Math.min(group.count, group.availableSchools.length);
+		if (selected.length < requiredCount) {
 			return false;
 		}
 	}
@@ -172,7 +174,9 @@ function spellSelectionsComplete(
 	// Check that all spell selection groups have enough spells selected
 	for (const group of grants.spellSelections) {
 		const selected = selectedSpells.get(group.ruleId) ?? [];
-		if (selected.length < group.count) {
+		// Cap required count at available options to prevent stuck state
+		const requiredCount = Math.min(group.count, group.availableSpells.length);
+		if (selected.length < requiredCount) {
 			return false;
 		}
 	}
@@ -356,9 +360,13 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	let resolvedSpellIndex = $state<SpellIndex | null>(null);
 
 	// Resolve spell index on load
-	params.spellIndex.then((index) => {
-		resolvedSpellIndex = index;
-	});
+	params.spellIndex
+		.then((index) => {
+			resolvedSpellIndex = index;
+		})
+		.catch((error) => {
+			console.error('Failed to load spell index:', error);
+		});
 
 	// Derived values
 	const abilityBonuses = $derived(

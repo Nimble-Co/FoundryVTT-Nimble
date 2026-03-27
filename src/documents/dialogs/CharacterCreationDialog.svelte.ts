@@ -266,9 +266,14 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		// Create spell documents
 		const spellDocumentSources: Item.CreateData[] = [];
 		const spellIndex = this.spellIndex ? await this.spellIndex : null;
+		// Track seen UUIDs to prevent duplicate spells
+		const seenSpellUuids = new Set<string>();
 
 		// Add auto-granted spells
 		for (const uuid of results.spells?.autoGrant ?? []) {
+			if (seenSpellUuids.has(uuid)) continue;
+			seenSpellUuids.add(uuid);
+
 			const spell = await fromUuid(uuid as `Item.${string}`);
 			if (spell) {
 				const source = (spell as Item).toObject();
@@ -295,6 +300,9 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 				});
 
 				for (const spellEntry of spells) {
+					if (seenSpellUuids.has(spellEntry.uuid)) continue;
+					seenSpellUuids.add(spellEntry.uuid);
+
 					const spell = await fromUuid(spellEntry.uuid as `Item.${string}`);
 					if (spell) {
 						const source = (spell as Item).toObject();
@@ -309,6 +317,9 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		if (results.spells?.selectedSpells) {
 			for (const [_ruleId, spellUuids] of results.spells.selectedSpells) {
 				for (const uuid of spellUuids) {
+					if (seenSpellUuids.has(uuid)) continue;
+					seenSpellUuids.add(uuid);
+
 					const spell = await fromUuid(uuid as `Item.${string}`);
 					if (spell) {
 						const source = (spell as Item).toObject();
