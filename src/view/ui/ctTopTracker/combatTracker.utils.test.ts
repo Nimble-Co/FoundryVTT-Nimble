@@ -2,9 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
 	createCombatActorFixture,
 	createCombatantFixture,
+	createCombatantsCollectionFixture,
 } from '../../../../tests/fixtures/combat.js';
 import { clearExpandedTurnIdentityHint } from '../../../documents/combat/expandedTurnIdentityStore.js';
-import { syncCombatTurnsForCt } from './combat.utils.js';
+import { hasCombatantTurnRemainingThisRound, syncCombatTurnsForCt } from './combat.utils.js';
 import {
 	getCombatantCardResourceChips,
 	getCombatantOutlineClass,
@@ -342,5 +343,43 @@ describe('ctTopTracker helpers', () => {
 			combatantId: 'player-two',
 			occurrence: 0,
 		});
+	});
+
+	it('keeps an active zero-action non-player in the current round until initiative advances past it', () => {
+		const firstMonster = createCombatantFixture({
+			id: 'monster-one',
+			type: 'npc',
+			actor: createCombatActorFixture({ type: 'npc' }),
+			actionsCurrent: 0,
+			actionsMax: 1,
+		});
+		const secondMonster = createCombatantFixture({
+			id: 'monster-two',
+			type: 'npc',
+			actor: createCombatActorFixture({ type: 'npc' }),
+			actionsCurrent: 0,
+			actionsMax: 1,
+		});
+		const combat = {
+			round: 1,
+			turn: 0,
+			turns: [firstMonster, secondMonster],
+			combatant: firstMonster,
+			combatants: createCombatantsCollectionFixture([firstMonster, secondMonster]),
+		} as unknown as Combat;
+
+		expect(hasCombatantTurnRemainingThisRound(combat, firstMonster)).toBe(true);
+		expect(hasCombatantTurnRemainingThisRound(combat, secondMonster)).toBe(true);
+
+		(combat as { turn: number; combatant: Combatant.Implementation }).turn = 1;
+		(combat as { turn: number; combatant: Combatant.Implementation }).combatant = secondMonster;
+
+		expect(hasCombatantTurnRemainingThisRound(combat, firstMonster)).toBe(false);
+		expect(hasCombatantTurnRemainingThisRound(combat, secondMonster)).toBe(true);
+
+		(combat as { turn: number; combatant: Combatant.Implementation }).turn = 0;
+		(combat as { turn: number; combatant: Combatant.Implementation }).combatant = firstMonster;
+
+		expect(hasCombatantTurnRemainingThisRound(combat, firstMonster)).toBe(true);
 	});
 });

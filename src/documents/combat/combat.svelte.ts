@@ -282,52 +282,70 @@ class NimbleCombat extends Combat {
 		this.turn = Math.min(Math.max(currentTurn, 0), aliveTurns.length - 1);
 		this.#storeExpandedTurnIdentity(this.#resolveTurnIdentityAtIndex(aliveTurns, this.turn));
 	}
-	#combatantHasAnyActionsRemaining(combatant: Combatant.Implementation): boolean {
-		if (combatant.type === 'character' || combatant.type === 'soloMonster') return true;
+
+	#getNonCharacterTurnResetTargets(
+		combatant: Combatant.Implementation | null,
+	): Combatant.Implementation[] {
+		if (!combatant || combatant.type === 'character') return [];
 
 		const groupId = getMinionGroupId(combatant);
-		if (groupId) {
-			const summary = getMinionGroupSummaries(this.combatants.contents).get(groupId);
-			if (summary?.aliveMembers.length) {
-				return summary.aliveMembers.some((member) => getCombatantCurrentActions(member) > 0);
-			}
-		}
+		if (!groupId) return [combatant];
 
-		return getCombatantCurrentActions(combatant) > 0;
+		const summary = getMinionGroupSummaries(this.combatants.contents).get(groupId);
+		if (!summary?.aliveMembers.length) return [combatant];
+		return summary.aliveMembers;
 	}
 
-	async #advancePastExhaustedTurns(result: this): Promise<this> {
-		if (!this.turns.length) return result;
+	async #restoreNonCharacterTurnState(combatant: Combatant.Implementation | null): Promise<void> {
+		const updates = this.#getNonCharacterTurnResetTargets(combatant).reduce<
+			Record<string, unknown>[]
+		>((accumulator, targetCombatant) => {
+			const combatantId = targetCombatant.id ?? null;
+			if (!combatantId) return accumulator;
 
-		const hasTurnWithActions = this.turns.some((combatant) =>
-			this.#combatantHasAnyActionsRemaining(combatant),
-		);
-		if (!hasTurnWithActions) return result;
+			const nextActions = getCombatantBaseActionMax(targetCombatant);
+			if (getCombatantCurrentActions(targetCombatant) === nextActions) return accumulator;
 
-		let nextResult = result;
-		const maxIterations = Math.max(this.turns.length, 1);
-		for (let iteration = 0; iteration < maxIterations; iteration += 1) {
-			const activeCombatant = this.combatant;
-			if (!activeCombatant) break;
-			if (activeCombatant.type === 'character' || activeCombatant.type === 'soloMonster') break;
-			if (this.#combatantHasAnyActionsRemaining(activeCombatant)) break;
+			accumulator.push({
+				_id: combatantId,
+				'system.actions.base.current': nextActions,
+			});
+			return accumulator;
+		}, []);
+		if (updates.length < 1) return;
+		await this.updateEmbeddedDocuments('Combatant', updates);
+	}
 
-			const previousActiveId = activeCombatant.id ?? null;
-			const preferredNextTurnIdentity = this.#resolveNextTurnIdentity();
-			const { intercepted, result: nextTurnResult } = await this.#runAtomicTurnStateOperation(
-				preferredNextTurnIdentity,
-				async () => (await super.nextTurn()) as this,
-			);
-			nextResult = nextTurnResult;
-			this.#syncTurnIndexWithAliveTurns({ preferredTurnIdentity: preferredNextTurnIdentity });
-			if (!intercepted) {
-				await this.#persistAtomicTurnState({ turn: this.turn });
-			}
-			const nextActiveId = this.combatant?.id ?? null;
-			if (!nextActiveId || nextActiveId === previousActiveId) break;
+	#normalizeCombatantCreateData(entry: Record<string, unknown>): {
+		normalizedEntry: Record<string, unknown>;
+		normalizedMinionType: boolean;
+	} {
+		const normalizedEntry = { ...entry };
+		const normalizedMinionType = normalizedEntry.type === 'minion';
+		if (normalizedMinionType) {
+			normalizedEntry.type = 'npc';
 		}
 
-		return nextResult;
+		if (normalizedEntry.type === 'character') {
+			return { normalizedEntry, normalizedMinionType };
+		}
+
+		const currentActions = foundry.utils.getProperty(
+			normalizedEntry,
+			'system.actions.base.current',
+		);
+		if (currentActions !== undefined && currentActions !== null) {
+			return { normalizedEntry, normalizedMinionType };
+		}
+
+		const explicitMaxActions = Number(
+			foundry.utils.getProperty(normalizedEntry, 'system.actions.base.max') ?? Number.NaN,
+		);
+		const initialActions = Number.isFinite(explicitMaxActions)
+			? Math.max(0, Math.trunc(explicitMaxActions))
+			: 1;
+		foundry.utils.setProperty(normalizedEntry, 'system.actions.base.current', initialActions);
+		return { normalizedEntry, normalizedMinionType };
 	}
 
 	constructor(
@@ -477,13 +495,13 @@ class NimbleCombat extends Combat {
 			let normalizedCount = 0;
 			normalizedData = data.map((entry) => {
 				if (!entry || typeof entry !== 'object') return entry;
-				const asRecord = entry as Record<string, unknown>;
-				if (asRecord.type !== 'minion') return entry;
-				normalizedCount += 1;
-				return {
-					...asRecord,
-					type: 'npc',
-				};
+				const { normalizedEntry, normalizedMinionType } = this.#normalizeCombatantCreateData(
+					entry as Record<string, unknown>,
+				);
+				if (normalizedMinionType) {
+					normalizedCount += 1;
+				}
+				return normalizedEntry;
 			}) as foundry.abstract.Document.CreateDataForName<EmbeddedName>[];
 
 			if (normalizedCount > 0) {
@@ -694,16 +712,14 @@ class NimbleCombat extends Combat {
 	override async nextTurn(): Promise<this> {
 		this.#syncTurnIndexWithAliveTurns();
 		const preferredNextTurnIdentity = this.#resolveNextTurnIdentity();
-		const { intercepted, result: nextTurnResult } = await this.#runAtomicTurnStateOperation(
+		const { intercepted, result } = await this.#runAtomicTurnStateOperation(
 			preferredNextTurnIdentity,
 			async () => (await super.nextTurn()) as this,
 		);
-		let result = nextTurnResult;
 		this.#syncTurnIndexWithAliveTurns({ preferredTurnIdentity: preferredNextTurnIdentity });
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
 		}
-		result = await this.#advancePastExhaustedTurns(result);
 		return result;
 	}
 
@@ -734,6 +750,7 @@ class NimbleCombat extends Combat {
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
 		}
+		await this.#restoreNonCharacterTurnState(this.combatant ?? null);
 		return result;
 	}
 
@@ -751,6 +768,7 @@ class NimbleCombat extends Combat {
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
 		}
+		await this.#restoreNonCharacterTurnState(this.combatant ?? null);
 		return result;
 	}
 
