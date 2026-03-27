@@ -1,17 +1,21 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
 import type { ClassFeatureIndex } from '#utils/getClassFeatures.js';
+import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 
 import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
 import generateBlankAttributeSet from '../../../utils/generateBlankAttributeSet.js';
 import getClassFeaturesFromIndex from '../../../utils/getClassFeatures.js';
+import { getSpellsFromIndex } from '../../../utils/getSpells.js';
 import scrollIntoView from '../../../utils/scrollIntoView.js';
 import { CHARACTER_CREATION_STAGES, DEFAULT_SKILL_POINTS } from './constants.js';
 import type {
 	AbilityScoreAssignment,
 	CharacterCreationDialogInstance,
 	GrantedLanguage,
+	SchoolSelectionGroup,
 	SkillPointAssignment,
+	SpellGrantResult,
 	StageValue,
 	StatArrayOption,
 } from './types.js';
@@ -144,6 +148,28 @@ function hasClassFeatures(features: ClassFeatureResult | null): boolean {
 	return features.autoGrant.length > 0 || features.selectionGroups.size > 0;
 }
 
+function hasSpellGrants(grants: SpellGrantResult | null): boolean {
+	if (!grants) return false;
+	return grants.hasGrants;
+}
+
+function spellSelectionsComplete(
+	grants: SpellGrantResult | null,
+	selectedSchools: Map<string, string[]>,
+): boolean {
+	if (!grants) return true;
+
+	// Check that all school selection groups have enough schools selected
+	for (const group of grants.schoolSelections) {
+		const selected = selectedSchools.get(group.ruleId) ?? [];
+		if (selected.length < group.count) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 function getLanguageGrantsFromRules(
 	rules: NimbleBaseRule[],
 	intMod: number,
@@ -178,6 +204,8 @@ interface GetCurrentStageParams {
 	bonusLanguages: string[];
 	classFeatures: ClassFeatureResult | null;
 	selectedClassFeatures: Map<string, NimbleFeatureItem>;
+	spellGrants: SpellGrantResult | null;
+	selectedSchools: Map<string, string[]>;
 	hasClasses: boolean;
 	hasAncestries: boolean;
 	hasBackgrounds: boolean;
@@ -198,6 +226,8 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		bonusLanguages,
 		classFeatures,
 		selectedClassFeatures,
+		spellGrants,
+		selectedSchools,
 		hasClasses,
 		hasAncestries,
 		hasBackgrounds,
@@ -210,6 +240,10 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		!classFeaturesComplete(classFeatures, selectedClassFeatures)
 	) {
 		return CHARACTER_CREATION_STAGES.CLASS_FEATURES;
+	}
+
+	if (hasSpellGrants(spellGrants) && !spellSelectionsComplete(spellGrants, selectedSchools)) {
+		return CHARACTER_CREATION_STAGES.SPELLS;
 	}
 
 	if (hasAncestries && !selectedAncestry) {
@@ -272,6 +306,7 @@ export interface CharacterCreationStateParams {
 	classFeatureIndex: Promise<ClassFeatureIndex>;
 	classOptions: Promise<NimbleClassItem[]>;
 	dialog: CharacterCreationDialogInstance;
+	spellIndex: Promise<SpellIndex>;
 }
 
 /**
@@ -298,6 +333,16 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	// Class features state
 	let classFeatures = $state<ClassFeatureResult | null>(null);
 	let selectedClassFeatures = $state<Map<string, NimbleFeatureItem>>(new Map());
+
+	// Spell grants state
+	let spellGrants = $state<SpellGrantResult | null>(null);
+	let selectedSchools = $state<Map<string, string[]>>(new Map());
+	let resolvedSpellIndex = $state<SpellIndex | null>(null);
+
+	// Resolve spell index on load
+	params.spellIndex.then((index) => {
+		resolvedSpellIndex = index;
+	});
 
 	// Derived values
 	const abilityBonuses = $derived(
@@ -392,6 +437,8 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			bonusLanguages,
 			classFeatures,
 			selectedClassFeatures,
+			spellGrants,
+			selectedSchools,
 			hasClasses,
 			hasAncestries,
 			hasBackgrounds,
@@ -431,6 +478,94 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		}
 		// Reset class feature selections when class changes
 		selectedClassFeatures = new Map();
+		// Reset spell selections when class changes
+		selectedSchools = new Map();
+		spellGrants = null;
+	});
+
+	// Process spell grants when class features change
+	$effect(() => {
+		if (!classFeatures || !resolvedSpellIndex) {
+			spellGrants = null;
+			return;
+		}
+
+		const autoGrant: SpellIndexEntry[] = [];
+		const schoolSelections: SchoolSelectionGroup[] = [];
+
+		// Extract grantSpells rules from auto-granted features
+		for (const feature of classFeatures.autoGrant) {
+			const rules = feature.system?.rules ?? [];
+			for (const rule of rules) {
+				if (rule.type !== 'grantSpells') continue;
+
+				const grantRule = rule as {
+					id: string;
+					label: string;
+					schools?: string[];
+					tiers?: number[];
+					includeUtility?: boolean;
+					uuids?: string[];
+					mode?: 'auto' | 'selectSchool';
+					count?: number | null;
+				};
+
+				const mode = grantRule.mode ?? 'auto';
+				const tiers = grantRule.tiers ?? [0];
+				const includeUtility = grantRule.includeUtility ?? false;
+
+				if (mode === 'auto') {
+					// Auto-grant mode: add spells directly
+					if (grantRule.uuids && grantRule.uuids.length > 0) {
+						// Grant by specific UUIDs - we'll resolve these later during submission
+						// For now, we don't add them to autoGrant since they need async resolution
+						// Instead, we'll mark them for later
+						for (const uuid of grantRule.uuids) {
+							// Try to find spell in index by UUID
+							for (const tierMap of resolvedSpellIndex.values()) {
+								for (const spells of tierMap.values()) {
+									const spell = spells.find((s) => s.uuid === uuid);
+									if (spell) {
+										autoGrant.push(spell);
+									}
+								}
+							}
+						}
+					} else if (grantRule.schools && grantRule.schools.length > 0) {
+						// Grant by school + tier
+						const spells = getSpellsFromIndex(resolvedSpellIndex, grantRule.schools, tiers, {
+							includeUtility,
+						});
+						autoGrant.push(...spells);
+					}
+				} else if (mode === 'selectSchool') {
+					// School selection mode: add to selection groups
+					schoolSelections.push({
+						ruleId: grantRule.id,
+						label: grantRule.label || 'Choose Schools',
+						availableSchools: grantRule.schools ?? [],
+						tiers,
+						count: grantRule.count ?? 1,
+						includeUtility,
+					});
+				}
+			}
+		}
+
+		const hasGrants = autoGrant.length > 0 || schoolSelections.length > 0;
+
+		spellGrants = {
+			autoGrant,
+			schoolSelections,
+			hasGrants,
+		};
+
+		// Scroll to spells section if there are spell grants
+		if (hasGrants) {
+			requestAnimationFrame(() => {
+				scrollIntoView(`${params.dialog.id}-stage-${CHARACTER_CREATION_STAGES.SPELLS}`);
+			});
+		}
 	});
 
 	$effect(() => {
@@ -492,6 +627,12 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			selected: selectedClassFeatures,
 		};
 
+		// Prepare spell data
+		const spellData = {
+			autoGrant: spellGrants?.autoGrant?.map((s) => s.uuid) ?? [],
+			selectedSchools: selectedSchools,
+		};
+
 		params.dialog.submitCharacterCreation({
 			name,
 			origins: {
@@ -520,6 +661,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			// Only include common + bonus languages; rule-granted languages are handled by the rules at runtime
 			languages: ['common', ...bonusLanguages],
 			classFeatures: classFeatureData,
+			spells: spellData,
 		});
 	}
 
@@ -605,6 +747,18 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		},
 		set selectedClassFeatures(value: Map<string, NimbleFeatureItem>) {
 			selectedClassFeatures = value;
+		},
+		get spellGrants() {
+			return spellGrants;
+		},
+		get selectedSchools() {
+			return selectedSchools;
+		},
+		set selectedSchools(value: Map<string, string[]>) {
+			selectedSchools = value;
+		},
+		get spellIndex() {
+			return resolvedSpellIndex;
 		},
 
 		// Derived values

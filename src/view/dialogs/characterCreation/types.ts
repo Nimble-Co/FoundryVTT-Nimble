@@ -1,11 +1,33 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureIndex } from '#utils/getClassFeatures.js';
+import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 
 /**
  * Union type for origin items used in character creation.
  * These are the item types that define a character's origins.
  */
 export type OriginItem = NimbleClassItem | NimbleAncestryItem | NimbleBackgroundItem | null;
+
+/**
+ * Represents a group of spells that requires school selection
+ */
+export interface SchoolSelectionGroup {
+	ruleId: string;
+	label: string;
+	availableSchools: string[];
+	tiers: number[];
+	count: number;
+	includeUtility: boolean;
+}
+
+/**
+ * Result of extracting spell grants from class features
+ */
+export interface SpellGrantResult {
+	autoGrant: SpellIndexEntry[];
+	schoolSelections: SchoolSelectionGroup[];
+	hasGrants: boolean;
+}
 
 /**
  * Represents a language granted by ancestry or background rules
@@ -25,6 +47,7 @@ export interface CharacterCreationDialogProps {
 	classFeatureIndex: Promise<ClassFeatureIndex>;
 	classOptions: Promise<NimbleClassItem[]>;
 	dialog: CharacterCreationDialogInstance;
+	spellIndex: Promise<SpellIndex>;
 	statArrayOptions: StatArrayOption[];
 }
 
@@ -65,6 +88,10 @@ export interface CharacterCreationResults {
 	classFeatures?: {
 		autoGrant: string[];
 		selected: Map<string, NimbleFeatureItem>;
+	};
+	spells?: {
+		autoGrant: string[];
+		selectedSchools: Map<string, string[]>;
 	};
 }
 
