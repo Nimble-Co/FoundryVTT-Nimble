@@ -1228,7 +1228,7 @@ function hideGroupAttackPanel(options: { clearTargets?: boolean } = {}): void {
 		minionGroupAttackPanelElement.hidden = true;
 		minionGroupAttackPanelElement.replaceChildren();
 	}
-	if (options.clearTargets ?? true) {
+	if (options.clearTargets === true) {
 		clearAllUserSelectedTargetsFromNcsw();
 	}
 	hideGroupAttackTargetPopover();
