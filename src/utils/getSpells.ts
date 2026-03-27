@@ -84,7 +84,12 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 		};
 		if (!system.school) continue;
 
-		const isUtility = system.properties?.selected?.includes('utilitySpell') ?? false;
+		const selectedProperties = system.properties?.selected ?? [];
+
+		// Skip secret spells - they should never be granted during character creation
+		if (selectedProperties.includes('secretSpell')) continue;
+
+		const isUtility = selectedProperties.includes('utilitySpell');
 
 		addToIndex({
 			uuid: item.uuid,
@@ -111,7 +116,12 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 			const system = packEntry.system;
 			if (!system?.school) continue;
 
-			const isUtility = system.properties?.selected?.includes('utilitySpell') ?? false;
+			const selectedProperties = system.properties?.selected ?? [];
+
+			// Skip secret spells - they should never be granted during character creation
+			if (selectedProperties.includes('secretSpell')) continue;
+
+			const isUtility = selectedProperties.includes('utilitySpell');
 
 			addToIndex({
 				uuid: packEntry.uuid,
