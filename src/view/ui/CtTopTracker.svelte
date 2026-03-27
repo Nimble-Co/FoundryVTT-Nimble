@@ -239,11 +239,11 @@
 						<button
 							class="nimble-ct__icon-button"
 							aria-label={monsterCardsExpanded
-								? localizeWithFallback('NIMBLE.ct.unstackMonsterGroups', 'Unstack Monster Groups')
-								: localizeWithFallback('NIMBLE.ct.stackMonsterGroups', 'Stack Monster Groups')}
+								? localizeWithFallback('NIMBLE.ct.stackMonsterGroups', 'Stack Monster Groups')
+								: localizeWithFallback('NIMBLE.ct.unstackMonsterGroups', 'Unstack Monster Groups')}
 							data-tooltip={monsterCardsExpanded
-								? localizeWithFallback('NIMBLE.ct.unstackMonsterGroups', 'Unstack Monster Groups')
-								: localizeWithFallback('NIMBLE.ct.stackMonsterGroups', 'Stack Monster Groups')}
+								? localizeWithFallback('NIMBLE.ct.stackMonsterGroups', 'Stack Monster Groups')
+								: localizeWithFallback('NIMBLE.ct.unstackMonsterGroups', 'Unstack Monster Groups')}
 							data-tooltip-direction="LEFT"
 							onclick={toggleMonsterCardExpansion}
 						>
