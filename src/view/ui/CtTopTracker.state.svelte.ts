@@ -6,6 +6,7 @@ import {
 	COMBATANT_ACTIONS_CURRENT_PATH,
 	getCombatantCurrentActions,
 	getCombatantMaxActions,
+	queueCombatantActionMutation,
 	requestAdvanceCombatTurn,
 	resolveCombatantCurrentActionsAfterDelta,
 } from '../../utils/combatTurnActions.js';
@@ -296,30 +297,35 @@ export function createCtTopTrackerState() {
 		const combatantId = getCombatantId(combatant);
 		if (!combat || !combatantId) return;
 
-		const combatantDocument = combat.combatants.get(combatantId) ?? combatant;
-		const currentActions = getCombatantCurrentActions(combatantDocument);
-		const maxActions = getCombatantMaxActions(combatantDocument);
-		const nextActions = resolveCombatantCurrentActionsAfterDelta({
-			currentActions,
-			maxActions,
-			delta,
-			allowOverflow: Boolean(game.user?.isGM),
-		});
-		if (nextActions === currentActions) return;
-
 		try {
-			await combat.updateEmbeddedDocuments('Combatant', [
-				{
-					_id: combatantId,
-					[COMBATANT_ACTIONS_CURRENT_PATH]: nextActions,
-				} as Record<string, unknown>,
-			]);
+			await queueCombatantActionMutation({
+				combat,
+				combatantId,
+				mutation: async () => {
+					const currentCombatant = combat.combatants.get(combatantId) ?? combatant;
+					const currentActions = getCombatantCurrentActions(currentCombatant);
+					const maxActions = getCombatantMaxActions(currentCombatant);
+					const nextActions = resolveCombatantCurrentActionsAfterDelta({
+						currentActions,
+						maxActions,
+						delta,
+						allowOverflow: Boolean(game.user?.isGM),
+					});
+					if (nextActions === currentActions) return;
+
+					await combat.updateEmbeddedDocuments('Combatant', [
+						{
+							_id: combatantId,
+							[COMBATANT_ACTIONS_CURRENT_PATH]: nextActions,
+						} as Record<string, unknown>,
+					]);
+				},
+			});
 			updateCurrentCombat(true);
 		} catch (error) {
 			console.error('[Nimble][CT] Failed to update combatant actions via delta', {
 				combatantId,
 				delta,
-				nextActions,
 				error,
 			});
 		}

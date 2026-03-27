@@ -101,9 +101,9 @@
 	{#if state.activeHeroicTab === 'actions' && state.expandedPanel === 'attack'}
 		<AttackActionPanel
 			showEmbeddedDocumentImages={state.showEmbeddedDocumentImages}
-			onActivateItem={(cost) => {
+			onActivateItem={async (cost) => {
 				if (state.inCombat && state.actionsData.current > 0) {
-					state.deductActionPips(cost);
+					await state.deductActionPips(cost);
 				}
 			}}
 		/>
@@ -112,9 +112,9 @@
 	{#if state.activeHeroicTab === 'actions' && state.expandedPanel === 'spell'}
 		<CastSpellActionPanel
 			showEmbeddedDocumentImages={state.showEmbeddedDocumentImages}
-			onActivateItem={(cost) => {
+			onActivateItem={async (cost) => {
 				if (state.inCombat && state.actionsData.current > 0) {
-					state.deductActionPips(cost);
+					await state.deductActionPips(cost);
 				}
 			}}
 		/>

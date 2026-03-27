@@ -10,6 +10,59 @@ type AdvanceCombatTurnRequest = {
 	activeCombatantId: string | null;
 };
 
+type CombatantActionMutationParams<T> = {
+	combat: Combat;
+	combatantId: string | null | undefined;
+	mutation: () => Promise<T>;
+};
+
+const pendingCombatantActionMutations = new Map<string, Promise<void>>();
+
+function getCombatDocumentId(combat: Combat): string {
+	const combatId = combat.id ?? combat._id ?? '';
+	return String(combatId);
+}
+
+function getCombatantActionMutationKey(params: {
+	combat: Combat;
+	combatantId: string | null | undefined;
+}): string | null {
+	if (!params.combatantId) return null;
+	const combatId = getCombatDocumentId(params.combat);
+	if (!combatId) return null;
+	return `${combatId}:${params.combatantId}`;
+}
+
+export function queueCombatantActionMutation<T>(
+	params: CombatantActionMutationParams<T>,
+): Promise<T> {
+	const mutationKey = getCombatantActionMutationKey(params);
+	if (!mutationKey) return params.mutation();
+
+	const previousMutation = pendingCombatantActionMutations.get(mutationKey) ?? Promise.resolve();
+	const mutationPromise = previousMutation.catch(() => undefined).then(() => params.mutation());
+	const queuePromise = mutationPromise.then(
+		() => undefined,
+		() => undefined,
+	);
+	pendingCombatantActionMutations.set(mutationKey, queuePromise);
+	void queuePromise.finally(() => {
+		if (pendingCombatantActionMutations.get(mutationKey) === queuePromise) {
+			pendingCombatantActionMutations.delete(mutationKey);
+		}
+	});
+	return mutationPromise;
+}
+
+async function waitForPendingCombatantActionMutations(params: {
+	combat: Combat;
+	combatantId: string | null | undefined;
+}): Promise<void> {
+	const mutationKey = getCombatantActionMutationKey(params);
+	if (!mutationKey) return;
+	await (pendingCombatantActionMutations.get(mutationKey) ?? Promise.resolve());
+}
+
 function toFiniteNonNegativeNumber(value: unknown): number {
 	const numericValue = Number(value);
 	if (!Number.isFinite(numericValue)) return 0;
@@ -136,6 +189,11 @@ export async function requestAdvanceCombatTurn(params: {
 }): Promise<boolean> {
 	const activeCombatant = params.combat.combatant ?? null;
 	if (!activeCombatant) return false;
+	const activeCombatantId = params.activeCombatantId ?? activeCombatant.id ?? null;
+	await waitForPendingCombatantActionMutations({
+		combat: params.combat,
+		combatantId: activeCombatantId,
+	});
 
 	if (game.user?.isGM) {
 		await params.combat.nextTurn();
@@ -157,7 +215,7 @@ export async function requestAdvanceCombatTurn(params: {
 		type: ADVANCE_COMBAT_TURN_REQUEST_TYPE,
 		combatId: params.combat.id ?? params.combat._id ?? '',
 		userId: game.user.id,
-		activeCombatantId: params.activeCombatantId ?? activeCombatant.id ?? null,
+		activeCombatantId,
 	});
 	return true;
 }

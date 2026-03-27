@@ -1,4 +1,5 @@
 import { createSubscriber } from 'svelte/reactivity';
+import { queueCombatantActionMutation } from '../../utils/combatTurnActions.js';
 import { getHeroicReactionUsageState } from '../../utils/getHeroicReactionUsageState.js';
 import {
 	canOwnerUseHeroicReaction,
@@ -542,34 +543,40 @@ class NimbleCombat extends Combat {
 	): Promise<boolean> {
 		if (!combatantId || reactionKeys.length < 1) return false;
 
-		const combatant = this.combatants.get(combatantId);
-		if (!combatant || combatant.parent?.id !== this.id) return false;
-		if (combatant.type !== 'character') return false;
-
-		const usageState = getHeroicReactionUsageState({
+		return queueCombatantActionMutation({
 			combat: this,
-			combatant,
-			reactionKeys,
+			combatantId,
+			mutation: async () => {
+				const combatant = this.combatants.get(combatantId);
+				if (!combatant || combatant.parent?.id !== this.id) return false;
+				if (combatant.type !== 'character') return false;
+
+				const usageState = getHeroicReactionUsageState({
+					combat: this,
+					combatant,
+					reactionKeys,
+				});
+				if (!usageState.canUse) return false;
+
+				const reactionAvailabilityUpdate = {
+					_id: combatantId,
+					'system.actions.base.current': Math.max(
+						0,
+						usageState.currentActions - usageState.requiredActions,
+					),
+				} as Record<string, unknown>;
+
+				for (const reactionKey of usageState.reactionKeys) {
+					Object.assign(
+						reactionAvailabilityUpdate,
+						getHeroicReactionAvailabilityUpdate(reactionKey, false),
+					);
+				}
+
+				await this.updateEmbeddedDocuments('Combatant', [reactionAvailabilityUpdate]);
+				return true;
+			},
 		});
-		if (!usageState.canUse) return false;
-
-		const reactionAvailabilityUpdate = {
-			_id: combatantId,
-			'system.actions.base.current': Math.max(
-				0,
-				usageState.currentActions - usageState.requiredActions,
-			),
-		} as Record<string, unknown>;
-
-		for (const reactionKey of usageState.reactionKeys) {
-			Object.assign(
-				reactionAvailabilityUpdate,
-				getHeroicReactionAvailabilityUpdate(reactionKey, false),
-			);
-		}
-
-		await this.updateEmbeddedDocuments('Combatant', [reactionAvailabilityUpdate]);
-		return true;
 	}
 
 	async toggleHeroicReactionAvailability(
@@ -578,45 +585,54 @@ class NimbleCombat extends Combat {
 	): Promise<boolean> {
 		if (!combatantId) return false;
 
-		const combatant = this.combatants.get(combatantId);
-		if (!combatant || combatant.parent?.id !== this.id) return false;
-		if (combatant.type !== 'character') return false;
-		if (isCombatantDead(combatant)) return false;
+		return queueCombatantActionMutation({
+			combat: this,
+			combatantId,
+			mutation: async () => {
+				const combatant = this.combatants.get(combatantId);
+				if (!combatant || combatant.parent?.id !== this.id) return false;
+				if (combatant.type !== 'character') return false;
+				if (isCombatantDead(combatant)) return false;
 
-		const currentlyAvailable = getHeroicReactionAvailability(combatant, reactionKey);
-		const canAdministerSpentReaction = Boolean(game.user?.isGM);
-		const canSpendAvailableReaction = Boolean(
-			game.user?.isGM || (canOwnerUseHeroicReaction(reactionKey) && combatant.actor?.isOwner),
-		);
-		if (!currentlyAvailable) {
-			if (!canAdministerSpentReaction) return false;
-			await this.updateEmbeddedDocuments('Combatant', [
-				{
+				const currentlyAvailable = getHeroicReactionAvailability(combatant, reactionKey);
+				const canAdministerSpentReaction = Boolean(game.user?.isGM);
+				const canSpendAvailableReaction = Boolean(
+					game.user?.isGM || (canOwnerUseHeroicReaction(reactionKey) && combatant.actor?.isOwner),
+				);
+				if (!currentlyAvailable) {
+					if (!canAdministerSpentReaction) return false;
+					await this.updateEmbeddedDocuments('Combatant', [
+						{
+							_id: combatantId,
+							...getHeroicReactionAvailabilityUpdate(reactionKey, true),
+						},
+					]);
+					return true;
+				}
+
+				if (!canSpendAvailableReaction) return false;
+				const currentActions = getCombatantCurrentActions(combatant);
+				if (!game.user?.isGM) {
+					if ((this.round ?? 0) < 1) return false;
+					if ((this.combatant?.id ?? null) === combatantId) return false;
+					if (currentActions < 1) return false;
+				}
+
+				const reactionAvailabilityUpdate = {
 					_id: combatantId,
-					...getHeroicReactionAvailabilityUpdate(reactionKey, true),
-				},
-			]);
-			return true;
-		}
+					...getHeroicReactionAvailabilityUpdate(reactionKey, false),
+				} as Record<string, unknown>;
+				if (!game.user?.isGM) {
+					reactionAvailabilityUpdate['system.actions.base.current'] = Math.max(
+						0,
+						currentActions - 1,
+					);
+				}
 
-		if (!canSpendAvailableReaction) return false;
-		const currentActions = getCombatantCurrentActions(combatant);
-		if (!game.user?.isGM) {
-			if ((this.round ?? 0) < 1) return false;
-			if ((this.combatant?.id ?? null) === combatantId) return false;
-			if (currentActions < 1) return false;
-		}
-
-		const reactionAvailabilityUpdate = {
-			_id: combatantId,
-			...getHeroicReactionAvailabilityUpdate(reactionKey, false),
-		} as Record<string, unknown>;
-		if (!game.user?.isGM) {
-			reactionAvailabilityUpdate['system.actions.base.current'] = Math.max(0, currentActions - 1);
-		}
-
-		await this.updateEmbeddedDocuments('Combatant', [reactionAvailabilityUpdate]);
-		return true;
+				await this.updateEmbeddedDocuments('Combatant', [reactionAvailabilityUpdate]);
+				return true;
+			},
+		});
 	}
 
 	async performMinionGroupAttack(

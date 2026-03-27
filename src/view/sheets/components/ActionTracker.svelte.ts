@@ -6,7 +6,10 @@ import {
 	getActiveCombatForCurrentScene,
 	registerCombatStateHooks,
 } from '../../../utils/combatState.js';
-import { requestAdvanceCombatTurn } from '../../../utils/combatTurnActions.js';
+import {
+	queueCombatantActionMutation,
+	requestAdvanceCombatTurn,
+} from '../../../utils/combatTurnActions.js';
 import { getActiveCombatant } from '../../../utils/combatTurnSync.js';
 import localize from '../../../utils/localize.js';
 
@@ -111,9 +114,21 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 	}
 
 	async function updateActionPips(newValue: number): Promise<void> {
+		const combat = getActiveCombatForCurrentScene();
 		const combatant = getCombatantInCombat();
-		if (!combatant) return;
-		await combatant.update({ 'system.actions.base.current': newValue } as Record<string, unknown>);
+		const combatantId = combatant?.id ?? null;
+		if (!combat || !combatant || !combatantId) return;
+
+		await queueCombatantActionMutation({
+			combat,
+			combatantId,
+			mutation: async () => {
+				const currentCombatant = combat.combatants.get(combatantId) ?? combatant;
+				await currentCombatant.update({
+					'system.actions.base.current': newValue,
+				} as Record<string, unknown>);
+			},
+		});
 	}
 
 	async function endTurn(): Promise<void> {
@@ -168,11 +183,11 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		if (isAvailable) {
 			// Spend one action
 			const newValue = Math.max(actionsData.current - 1, 0);
-			updateActionPips(newValue);
+			void updateActionPips(newValue);
 		} else {
 			// Restore one action
 			const newValue = Math.min(actionsData.current + 1, actionsData.max);
-			updateActionPips(newValue);
+			void updateActionPips(newValue);
 		}
 	}
 
