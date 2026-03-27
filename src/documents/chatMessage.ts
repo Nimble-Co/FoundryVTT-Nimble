@@ -2,6 +2,7 @@ export type SystemChatMessageTypes = Exclude<foundry.documents.BaseChatMessage.S
 
 import { createSubscriber } from 'svelte/reactivity';
 import type { DamageOutcomeNode, EffectNode } from '#types/effectTree.js';
+import localize from '#utils/localize.ts';
 import { getRelevantNodes } from '#view/dataPreparationHelpers/effectTree/getRelevantNodes.ts';
 import type { DamageRoll } from '../dice/DamageRoll.js';
 
@@ -47,6 +48,19 @@ type DamageApplyOptions = {
 	isCritical?: boolean;
 };
 
+interface DamageApplicationTarget {
+	actor: Actor.Implementation;
+	currentHp: number;
+	currentTemp: number;
+	adjustedDamage: number;
+}
+
+interface DamageApplicationPlan {
+	hasTargets: boolean;
+	applicableTargets: DamageApplicationTarget[];
+	zeroDamageTargetNames: string[];
+}
+
 function getActorArmorType(actor: Actor.Implementation): 'none' | 'medium' | 'heavy' {
 	const armor = foundry.utils.getProperty(actor, 'system.attributes.armor');
 	if (armor === 'medium' || armor === 'heavy') return armor;
@@ -75,15 +89,6 @@ function getDiceDamageTotal(serializedRoll: DamageRoll.SerializedData): number |
 	if (!Array.isArray(serializedRoll.terms)) return null;
 
 	for (const term of serializedRoll.terms) {
-		if (term instanceof foundry.dice.terms.Die) {
-			hasDiceTerm = true;
-			for (const result of term.results) {
-				if (result.active === false || result.discarded === true) continue;
-				diceDamage += result.result;
-			}
-			continue;
-		}
-
 		const serializedTerm = term as { faces?: unknown; results?: unknown };
 		const faces = Number(serializedTerm.faces);
 		if (!Number.isFinite(faces) || faces <= 0) continue;
@@ -115,7 +120,42 @@ function getDiceDamageTotal(serializedRoll: DamageRoll.SerializedData): number |
 	return Math.max(0, Math.floor(diceDamage));
 }
 
-function resolveArmorAdjustedDamage(params: {
+function getNegativeModifierTotal(serializedRoll: DamageRoll.SerializedData): number {
+	if (!Array.isArray(serializedRoll.terms)) return 0;
+
+	let negativeModifierTotal = 0;
+	let pendingOperator: '+' | '-' = '+';
+
+	for (const term of serializedRoll.terms) {
+		const serializedTerm = term as { operator?: unknown; number?: unknown; faces?: unknown };
+
+		if (serializedTerm.operator === '+' || serializedTerm.operator === '-') {
+			pendingOperator = serializedTerm.operator;
+			continue;
+		}
+
+		const faces = Number(serializedTerm.faces);
+		if (Number.isFinite(faces) && faces > 0) {
+			pendingOperator = '+';
+			continue;
+		}
+
+		const numericValue = Number(serializedTerm.number);
+		if (!Number.isFinite(numericValue)) {
+			pendingOperator = '+';
+			continue;
+		}
+
+		let signedModifier = numericValue;
+		if (pendingOperator === '-') signedModifier = -signedModifier;
+		if (signedModifier < 0) negativeModifierTotal += signedModifier;
+		pendingOperator = '+';
+	}
+
+	return Math.floor(negativeModifierTotal);
+}
+
+function calculateArmorAdjustedDamage(params: {
 	actor: Actor.Implementation;
 	damage: number;
 	options?: DamageApplyOptions;
@@ -153,13 +193,66 @@ function resolveArmorAdjustedDamage(params: {
 		}
 
 		const diceDamage = getDiceDamageTotal(serializedRoll) ?? rollTotal;
+		const negativeModifierTotal = getNegativeModifierTotal(serializedRoll);
 		let adjustedDamage = diceDamage;
 		if (applyOutcomeHalfDamage) adjustedDamage = Math.ceil(adjustedDamage * 0.5);
 		if (applyHeavyArmor) adjustedDamage = Math.ceil(adjustedDamage * 0.5);
+		adjustedDamage += negativeModifierTotal;
 		totalAdjustedDamage += adjustedDamage;
 	}
 
 	return Math.max(0, Math.floor(totalAdjustedDamage));
+}
+
+function buildDamageApplicationPlan(params: {
+	targets: string[];
+	damage: number;
+	options?: DamageApplyOptions;
+}): DamageApplicationPlan {
+	const applicableTargets: DamageApplicationTarget[] = [];
+	const zeroDamageTargetNames = new Set<string>();
+
+	for (const uuid of params.targets) {
+		const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
+		const actor = tokenDocument?.actor as Actor.Implementation | null;
+		if (!actor) continue;
+
+		const hpData = foundry.utils.getProperty(actor, 'system.attributes.hp') as
+			| {
+					value?: number;
+					temp?: number;
+			  }
+			| undefined;
+		const currentHp = hpData?.value;
+		if (typeof currentHp !== 'number' || Number.isNaN(currentHp)) continue;
+
+		const currentTemp = typeof hpData?.temp === 'number' ? hpData.temp : 0;
+		const adjustedDamage = calculateArmorAdjustedDamage({
+			actor,
+			damage: params.damage,
+			options: params.options,
+		});
+
+		if (!Number.isFinite(adjustedDamage) || adjustedDamage <= 0) {
+			zeroDamageTargetNames.add(
+				tokenDocument?.name || actor.name || localize('NIMBLE.ui.heroicActions.unknown'),
+			);
+			continue;
+		}
+
+		applicableTargets.push({
+			actor,
+			currentHp,
+			currentTemp,
+			adjustedDamage,
+		});
+	}
+
+	return {
+		hasTargets: params.targets.length > 0,
+		applicableTargets,
+		zeroDamageTargetNames: [...zeroDamageTargetNames],
+	};
 }
 
 class NimbleChatMessage extends ChatMessage {
@@ -355,7 +448,7 @@ class NimbleChatMessage extends ChatMessage {
 		if (!game.user?.isGM) return;
 
 		if (options?.outcome === 'noDamage') {
-			ui.notifications?.info(game.i18n.localize('NIMBLE.chat.noDamageToApply'));
+			ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
 			return;
 		}
 
@@ -364,43 +457,52 @@ class NimbleChatMessage extends ChatMessage {
 
 		const systemData = this.system as ActivationCardSystemData;
 		const targets = systemData.targets || [];
-
-		if (!targets.length) {
-			ui.notifications?.warn(game.i18n.localize('NIMBLE.chat.noTargetsSelected'));
+		const damageApplicationPlan = buildDamageApplicationPlan({ targets, damage, options });
+		if (!damageApplicationPlan.hasTargets) {
+			ui.notifications?.warn(localize('NIMBLE.chat.noTargetsSelected'));
 			return;
 		}
 
-		for (const uuid of targets) {
-			const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
-			const actor = tokenDocument?.actor as Actor.Implementation | null;
-			if (!actor) continue;
+		if (damageApplicationPlan.applicableTargets.length < 1) {
+			ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
+			return;
+		}
 
-			const hpData = foundry.utils.getProperty(actor, 'system.attributes.hp') as
-				| {
-						value?: number;
-						temp?: number;
-				  }
-				| undefined;
-			const currentHp = hpData?.value;
-			if (typeof currentHp !== 'number' || Number.isNaN(currentHp)) continue;
-
-			const adjustedDamage = resolveArmorAdjustedDamage({ actor, damage, options });
-			if (!Number.isFinite(adjustedDamage) || adjustedDamage <= 0) continue;
-
-			const currentTemp = typeof hpData?.temp === 'number' ? hpData.temp : 0;
-			const absorbedByTemp = Math.min(currentTemp, adjustedDamage);
-			const nextTemp = currentTemp - absorbedByTemp;
-			const remainingDamage = adjustedDamage - absorbedByTemp;
-			const nextHp = Math.max(currentHp - remainingDamage, 0);
+		for (const target of damageApplicationPlan.applicableTargets) {
+			const absorbedByTemp = Math.min(target.currentTemp, target.adjustedDamage);
+			const nextTemp = target.currentTemp - absorbedByTemp;
+			const remainingDamage = target.adjustedDamage - absorbedByTemp;
+			const nextHp = Math.max(target.currentHp - remainingDamage, 0);
 
 			const updates: Record<string, unknown> = {};
-			if (nextTemp !== currentTemp) updates['system.attributes.hp.temp'] = nextTemp;
-			if (nextHp !== currentHp) updates['system.attributes.hp.value'] = nextHp;
+			if (nextTemp !== target.currentTemp) updates['system.attributes.hp.temp'] = nextTemp;
+			if (nextHp !== target.currentHp) updates['system.attributes.hp.value'] = nextHp;
 
 			if (Object.keys(updates).length > 0) {
-				await actor.update(updates as Actor.UpdateData);
+				await target.actor.update(updates as Actor.UpdateData);
 			}
 		}
+
+		for (const tokenName of damageApplicationPlan.zeroDamageTargetNames) {
+			ui.notifications?.info(
+				localize('NIMBLE.chat.targetSkippedZeroDamage', {
+					tokenName,
+				}),
+			);
+		}
+	}
+
+	canApplyDamage(value: number, options?: DamageApplyOptions): boolean {
+		if (!this.isActivationCard()) return false;
+		if (options?.outcome === 'noDamage') return false;
+
+		const damage = Math.floor(Math.abs(Number(value)));
+		if (!Number.isFinite(damage) || damage <= 0) return false;
+
+		const targets = (this.system as ActivationCardSystemData).targets || [];
+		const damageApplicationPlan = buildDamageApplicationPlan({ targets, damage, options });
+		if (!damageApplicationPlan.hasTargets) return true;
+		return damageApplicationPlan.applicableTargets.length > 0;
 	}
 
 	async applyHealing(value: number, healingType?: string, effectId?: string): Promise<void> {
@@ -460,7 +562,7 @@ class NimbleChatMessage extends ChatMessage {
 
 			healingRecord.targets.push({
 				uuid,
-				tokenName: tokenDocument?.name || 'Unknown',
+				tokenName: tokenDocument?.name || localize('NIMBLE.ui.heroicActions.unknown'),
 				previousHp,
 				previousTempHp,
 				newHp,
