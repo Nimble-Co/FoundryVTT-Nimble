@@ -14,6 +14,8 @@ export interface SpellIndexEntry {
 	school: string;
 	tier: number;
 	isUtility: boolean;
+	/** Class restrictions - empty array means available to all classes */
+	classes: string[];
 }
 
 /**
@@ -34,6 +36,7 @@ interface SpellPackIndexEntry {
 	system?: {
 		school?: string;
 		tier?: number;
+		classes?: string[];
 		properties?: {
 			selected?: string[];
 		};
@@ -80,6 +83,7 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 		const system = item.system as {
 			school?: string;
 			tier?: number;
+			classes?: string[];
 			properties?: { selected?: string[] };
 		};
 		if (!system.school) continue;
@@ -98,11 +102,17 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 			school: system.school,
 			tier: system.tier ?? 0,
 			isUtility,
+			classes: system.classes ?? [],
 		});
 	}
 
 	// Process compendium packs
-	const indexFields = ['system.school', 'system.tier', 'system.properties.selected'] as string[];
+	const indexFields = [
+		'system.school',
+		'system.tier',
+		'system.classes',
+		'system.properties.selected',
+	] as string[];
 
 	for (const pack of game.packs) {
 		if (pack.documentName !== 'Item') continue;
@@ -130,6 +140,7 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 				school: system.school,
 				tier: system.tier ?? 0,
 				isUtility,
+				classes: system.classes ?? [],
 			});
 		}
 	}
@@ -150,6 +161,8 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 export interface GetSpellsOptions {
 	/** Whether to include utility spells (default: true) */
 	includeUtility?: boolean;
+	/** Filter spells by class - only includes spells available to this class */
+	forClass?: string;
 }
 
 /**
@@ -161,7 +174,7 @@ export function getSpellsFromIndex(
 	tiers: number[],
 	options: GetSpellsOptions = {},
 ): SpellIndexEntry[] {
-	const { includeUtility = true } = options;
+	const { includeUtility = true, forClass } = options;
 	const results: SpellIndexEntry[] = [];
 
 	for (const school of schools) {
@@ -174,6 +187,13 @@ export function getSpellsFromIndex(
 				for (const spell of spells) {
 					// Filter out utility spells if not requested
 					if (!includeUtility && spell.isUtility) continue;
+
+					// Filter by class restriction - if spell has class restrictions,
+					// only include it if the requesting class is in the list
+					if (forClass && spell.classes.length > 0 && !spell.classes.includes(forClass)) {
+						continue;
+					}
+
 					results.push(spell);
 				}
 			}

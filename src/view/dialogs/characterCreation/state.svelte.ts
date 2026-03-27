@@ -485,11 +485,12 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 
 	// Process spell grants when class features change
 	$effect(() => {
-		if (!classFeatures || !resolvedSpellIndex) {
+		if (!classFeatures || !resolvedSpellIndex || !selectedClass) {
 			spellGrants = null;
 			return;
 		}
 
+		const classIdentifier = selectedClass.system?.identifier ?? '';
 		const autoGrant: SpellIndexEntry[] = [];
 		const schoolSelections: SchoolSelectionGroup[] = [];
 
@@ -535,6 +536,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 						// Grant by school + tier
 						const spells = getSpellsFromIndex(resolvedSpellIndex, grantRule.schools, tiers, {
 							includeUtility,
+							forClass: classIdentifier,
 						});
 						autoGrant.push(...spells);
 					}
@@ -547,6 +549,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 						tiers,
 						count: grantRule.count ?? 1,
 						includeUtility,
+						forClass: classIdentifier,
 					});
 				}
 			}

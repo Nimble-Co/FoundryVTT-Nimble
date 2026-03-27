@@ -18,6 +18,7 @@ export interface SchoolSelectionGroup {
 	tiers: number[];
 	count: number;
 	includeUtility: boolean;
+	forClass: string;
 }
 
 /**

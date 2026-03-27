@@ -38,6 +38,7 @@
 			? sortSpellsBySchoolThenName(
 					getSpellsFromIndex(spellIndex, selected, group.tiers, {
 						includeUtility: group.includeUtility,
+						forClass: group.forClass,
 					}),
 				)
 			: [],
