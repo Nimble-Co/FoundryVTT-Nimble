@@ -22,11 +22,24 @@ export interface SchoolSelectionGroup {
 }
 
 /**
+ * Represents a group of spells that requires individual spell selection
+ */
+export interface SpellSelectionGroup {
+	ruleId: string;
+	label: string;
+	availableSpells: SpellIndexEntry[];
+	count: number;
+	includeUtility: boolean;
+	forClass: string;
+}
+
+/**
  * Result of extracting spell grants from class features
  */
 export interface SpellGrantResult {
 	autoGrant: SpellIndexEntry[];
 	schoolSelections: SchoolSelectionGroup[];
+	spellSelections: SpellSelectionGroup[];
 	hasGrants: boolean;
 }
 
@@ -93,6 +106,8 @@ export interface CharacterCreationResults {
 	spells?: {
 		autoGrant: string[];
 		selectedSchools: Map<string, string[]>;
+		/** Directly selected spell UUIDs (from selectSpell mode) */
+		selectedSpells: Map<string, string[]>;
 		/** Filtering options for each school selection rule */
 		selectionOptions: Map<string, { includeUtility: boolean; forClass: string; tiers: number[] }>;
 	};

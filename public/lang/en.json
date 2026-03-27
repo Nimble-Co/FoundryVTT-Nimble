@@ -532,6 +532,7 @@
 			"combatMana": "Combat Mana",
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
+			"grantSpells": "Spells",
 			"healingPotionBonus": "Healing Potion Bonus",
 			"hitDiceAdvantage": "Hit Dice Advantage",
 			"incrementHitDice": "Increment Hit Dice",
@@ -1275,6 +1276,15 @@
 			"noDescriptionAvailable": "No description available.",
 			"selected": "Selected",
 			"confirmSelection": "Confirm Selection"
+		},
+		"spellGrants": {
+			"header": "Starting Spells",
+			"hint": "Your class or background grants you these spells.",
+			"grantedSpells": "Granted Spells",
+			"chooseSchools": "Choose {count} school(s):",
+			"chooseSpells": "Choose {count} spell(s):",
+			"spellsFromSelection": "Spells from Selected School(s)",
+			"selectedCount": "{selected} of {total} selected"
 		},
 		"classSelection": {
 			"stepSelectClass": "Step 1: Select Class",

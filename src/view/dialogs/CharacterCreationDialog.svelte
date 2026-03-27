@@ -15,6 +15,7 @@
 	import ClassFeatureSelection from './components/characterCreator/ClassFeatureSelection.svelte';
 	import ClassSelection from './components/characterCreator/ClassSelection.svelte';
 	import SkillPointAssignment from './components/characterCreator/SkillPointAssignment.svelte';
+	import SpellGrantDisplay from './components/characterCreator/SpellGrantDisplay.svelte';
 	import StartingEquipmentSelection from './components/characterCreator/StartingEquipmentSelection.svelte';
 	import StatArraySelection from './components/characterCreator/StatArraySelection.svelte';
 	import StatAssignment from './components/characterCreator/StatAssignment.svelte';
@@ -26,6 +27,7 @@
 		classFeatureIndex,
 		classOptions,
 		dialog,
+		spellIndex,
 		statArrayOptions,
 	}: CharacterCreationDialogProps = $props();
 
@@ -44,6 +46,9 @@
 		},
 		get dialog() {
 			return dialog;
+		},
+		get spellIndex() {
+			return spellIndex;
 		},
 	});
 
@@ -86,6 +91,14 @@
 		active={state.stage === CHARACTER_CREATION_STAGES.CLASS_FEATURES}
 		classFeatures={state.classFeatures}
 		bind:selectedFeatures={state.selectedClassFeatures}
+	/>
+
+	<SpellGrantDisplay
+		active={state.stage === CHARACTER_CREATION_STAGES.SPELLS}
+		spellGrants={state.spellGrants}
+		spellIndex={state.spellIndex}
+		bind:selectedSchools={state.selectedSchools}
+		bind:selectedSpells={state.selectedSpells}
 	/>
 
 	{#await ancestryOptions then ancestries}

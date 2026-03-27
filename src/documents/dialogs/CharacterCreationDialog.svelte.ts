@@ -101,6 +101,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		spells?: {
 			autoGrant: string[];
 			selectedSchools: Map<string, string[]>;
+			selectedSpells: Map<string, string[]>;
 			selectionOptions?: Map<
 				string,
 				{ includeUtility: boolean; forClass: string; tiers: number[] }
@@ -298,6 +299,20 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 					if (spell) {
 						const source = (spell as Item).toObject();
 						source._stats.compendiumSource = spellEntry.uuid;
+						spellDocumentSources.push(source as object as Item.CreateData);
+					}
+				}
+			}
+		}
+
+		// Add directly selected spells (from selectSpell mode)
+		if (results.spells?.selectedSpells) {
+			for (const [_ruleId, spellUuids] of results.spells.selectedSpells) {
+				for (const uuid of spellUuids) {
+					const spell = await fromUuid(uuid as `Item.${string}`);
+					if (spell) {
+						const source = (spell as Item).toObject();
+						source._stats.compendiumSource = uuid;
 						spellDocumentSources.push(source as object as Item.CreateData);
 					}
 				}

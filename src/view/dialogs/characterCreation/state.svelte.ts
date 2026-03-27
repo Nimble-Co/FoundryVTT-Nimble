@@ -16,6 +16,7 @@ import type {
 	SchoolSelectionGroup,
 	SkillPointAssignment,
 	SpellGrantResult,
+	SpellSelectionGroup,
 	StageValue,
 	StatArrayOption,
 } from './types.js';
@@ -156,12 +157,21 @@ function hasSpellGrants(grants: SpellGrantResult | null): boolean {
 function spellSelectionsComplete(
 	grants: SpellGrantResult | null,
 	selectedSchools: Map<string, string[]>,
+	selectedSpells: Map<string, string[]>,
 ): boolean {
 	if (!grants) return true;
 
 	// Check that all school selection groups have enough schools selected
 	for (const group of grants.schoolSelections) {
 		const selected = selectedSchools.get(group.ruleId) ?? [];
+		if (selected.length < group.count) {
+			return false;
+		}
+	}
+
+	// Check that all spell selection groups have enough spells selected
+	for (const group of grants.spellSelections) {
+		const selected = selectedSpells.get(group.ruleId) ?? [];
 		if (selected.length < group.count) {
 			return false;
 		}
@@ -206,6 +216,7 @@ interface GetCurrentStageParams {
 	selectedClassFeatures: Map<string, NimbleFeatureItem>;
 	spellGrants: SpellGrantResult | null;
 	selectedSchools: Map<string, string[]>;
+	selectedSpells: Map<string, string[]>;
 	hasClasses: boolean;
 	hasAncestries: boolean;
 	hasBackgrounds: boolean;
@@ -228,6 +239,7 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		selectedClassFeatures,
 		spellGrants,
 		selectedSchools,
+		selectedSpells,
 		hasClasses,
 		hasAncestries,
 		hasBackgrounds,
@@ -242,7 +254,10 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		return CHARACTER_CREATION_STAGES.CLASS_FEATURES;
 	}
 
-	if (hasSpellGrants(spellGrants) && !spellSelectionsComplete(spellGrants, selectedSchools)) {
+	if (
+		hasSpellGrants(spellGrants) &&
+		!spellSelectionsComplete(spellGrants, selectedSchools, selectedSpells)
+	) {
 		return CHARACTER_CREATION_STAGES.SPELLS;
 	}
 
@@ -337,6 +352,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	// Spell grants state
 	let spellGrants = $state<SpellGrantResult | null>(null);
 	let selectedSchools = $state<Map<string, string[]>>(new Map());
+	let selectedSpells = $state<Map<string, string[]>>(new Map());
 	let resolvedSpellIndex = $state<SpellIndex | null>(null);
 
 	// Resolve spell index on load
@@ -439,6 +455,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			selectedClassFeatures,
 			spellGrants,
 			selectedSchools,
+			selectedSpells,
 			hasClasses,
 			hasAncestries,
 			hasBackgrounds,
@@ -480,86 +497,152 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		selectedClassFeatures = new Map();
 		// Reset spell selections when class changes
 		selectedSchools = new Map();
+		selectedSpells = new Map();
 		spellGrants = null;
 	});
 
-	// Process spell grants when class features change
+	// Helper to process grantSpells rules from any source
+	// Type for grantSpells rule properties
+	interface GrantSpellsRuleData {
+		id: string;
+		label: string;
+		schools?: string[];
+		tiers?: number[];
+		includeUtility?: boolean;
+		uuids?: string[];
+		mode?: 'auto' | 'selectSchool' | 'selectSpell';
+		count?: number | null;
+	}
+
+	function processGrantSpellsRules(
+		rules: Array<{ type: string; [key: string]: unknown }>,
+		spellIndex: SpellIndex,
+		classIdentifier: string,
+		autoGrant: SpellIndexEntry[],
+		schoolSelections: SchoolSelectionGroup[],
+		spellSelections: SpellSelectionGroup[],
+	) {
+		for (const rule of rules) {
+			if (rule.type !== 'grantSpells') continue;
+
+			const grantRule = rule as unknown as GrantSpellsRuleData;
+
+			const mode = grantRule.mode ?? 'auto';
+			const tiers = grantRule.tiers ?? [0];
+			const includeUtility = grantRule.includeUtility ?? false;
+
+			if (mode === 'auto') {
+				// Auto-grant mode: add spells directly
+				if (grantRule.uuids && grantRule.uuids.length > 0) {
+					for (const uuid of grantRule.uuids) {
+						// Try to find spell in index by UUID
+						for (const tierMap of spellIndex.values()) {
+							for (const spells of tierMap.values()) {
+								const spell = spells.find((s) => s.uuid === uuid);
+								if (spell) {
+									autoGrant.push(spell);
+								}
+							}
+						}
+					}
+				} else if (grantRule.schools && grantRule.schools.length > 0) {
+					// Grant by school + tier
+					const spells = getSpellsFromIndex(spellIndex, grantRule.schools, tiers, {
+						includeUtility,
+						forClass: classIdentifier,
+					});
+					autoGrant.push(...spells);
+				}
+			} else if (mode === 'selectSchool') {
+				// School selection mode: add to selection groups
+				schoolSelections.push({
+					ruleId: grantRule.id,
+					label: grantRule.label || 'Choose Schools',
+					availableSchools: grantRule.schools ?? [],
+					tiers,
+					count: grantRule.count ?? 1,
+					includeUtility,
+					forClass: classIdentifier,
+				});
+			} else if (mode === 'selectSpell') {
+				// Spell selection mode: user picks individual spells from the pool
+				const availableSpells = getSpellsFromIndex(spellIndex, grantRule.schools ?? [], tiers, {
+					includeUtility,
+					forClass: classIdentifier,
+				});
+				spellSelections.push({
+					ruleId: grantRule.id,
+					label: grantRule.label || 'Choose Spells',
+					availableSpells,
+					count: grantRule.count ?? 1,
+					includeUtility,
+					forClass: classIdentifier,
+				});
+			}
+		}
+	}
+
+	// Process spell grants when class features or background change
 	$effect(() => {
-		if (!classFeatures || !resolvedSpellIndex || !selectedClass) {
+		if (!resolvedSpellIndex) {
 			spellGrants = null;
 			return;
 		}
 
-		const classIdentifier = selectedClass.system?.identifier ?? '';
+		// Need either class features or a background with spell grants
+		const hasClassFeatureGrants = classFeatures && selectedClass;
+		const hasBackgroundGrants = selectedBackground?.system?.rules?.some(
+			(r) => r.type === 'grantSpells',
+		);
+
+		if (!hasClassFeatureGrants && !hasBackgroundGrants) {
+			spellGrants = null;
+			return;
+		}
+
+		const classIdentifier = selectedClass?.system?.identifier ?? '';
 		const autoGrant: SpellIndexEntry[] = [];
 		const schoolSelections: SchoolSelectionGroup[] = [];
+		const spellSelections: SpellSelectionGroup[] = [];
 
-		// Extract grantSpells rules from auto-granted features
-		for (const feature of classFeatures.autoGrant) {
-			const rules = feature.system?.rules ?? [];
-			for (const rule of rules) {
-				if (rule.type !== 'grantSpells') continue;
+		// Type alias for rules array
+		type RulesArray = Array<{ type: string; [key: string]: unknown }>;
 
-				const grantRule = rule as {
-					id: string;
-					label: string;
-					schools?: string[];
-					tiers?: number[];
-					includeUtility?: boolean;
-					uuids?: string[];
-					mode?: 'auto' | 'selectSchool';
-					count?: number | null;
-				};
-
-				const mode = grantRule.mode ?? 'auto';
-				const tiers = grantRule.tiers ?? [0];
-				const includeUtility = grantRule.includeUtility ?? false;
-
-				if (mode === 'auto') {
-					// Auto-grant mode: add spells directly
-					if (grantRule.uuids && grantRule.uuids.length > 0) {
-						// Grant by specific UUIDs - we'll resolve these later during submission
-						// For now, we don't add them to autoGrant since they need async resolution
-						// Instead, we'll mark them for later
-						for (const uuid of grantRule.uuids) {
-							// Try to find spell in index by UUID
-							for (const tierMap of resolvedSpellIndex.values()) {
-								for (const spells of tierMap.values()) {
-									const spell = spells.find((s) => s.uuid === uuid);
-									if (spell) {
-										autoGrant.push(spell);
-									}
-								}
-							}
-						}
-					} else if (grantRule.schools && grantRule.schools.length > 0) {
-						// Grant by school + tier
-						const spells = getSpellsFromIndex(resolvedSpellIndex, grantRule.schools, tiers, {
-							includeUtility,
-							forClass: classIdentifier,
-						});
-						autoGrant.push(...spells);
-					}
-				} else if (mode === 'selectSchool') {
-					// School selection mode: add to selection groups
-					schoolSelections.push({
-						ruleId: grantRule.id,
-						label: grantRule.label || 'Choose Schools',
-						availableSchools: grantRule.schools ?? [],
-						tiers,
-						count: grantRule.count ?? 1,
-						includeUtility,
-						forClass: classIdentifier,
-					});
-				}
+		// Process class feature rules
+		if (classFeatures) {
+			for (const feature of classFeatures.autoGrant) {
+				const rules = (feature.system?.rules ?? []) as unknown as RulesArray;
+				processGrantSpellsRules(
+					rules,
+					resolvedSpellIndex,
+					classIdentifier,
+					autoGrant,
+					schoolSelections,
+					spellSelections,
+				);
 			}
 		}
 
-		const hasGrants = autoGrant.length > 0 || schoolSelections.length > 0;
+		// Process background rules
+		if (selectedBackground?.system?.rules) {
+			const backgroundRules = selectedBackground.system.rules as unknown as RulesArray;
+			processGrantSpellsRules(
+				backgroundRules,
+				resolvedSpellIndex,
+				classIdentifier,
+				autoGrant,
+				schoolSelections,
+				spellSelections,
+			);
+		}
+
+		const hasGrants =
+			autoGrant.length > 0 || schoolSelections.length > 0 || spellSelections.length > 0;
 
 		spellGrants = {
 			autoGrant,
 			schoolSelections,
+			spellSelections,
 			hasGrants,
 		};
 
@@ -578,9 +661,12 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	});
 
 	$effect(() => {
-		// Reset raised-by selection when background changes
+		// Reset raised-by selection and spell selections when background changes
 		void selectedBackground;
 		selectedRaisedByAncestry = null;
+		// Only reset spell selections that come from background rules
+		// For now, we reset all since we can't easily distinguish
+		selectedSpells = new Map();
 	});
 
 	$effect(() => {
@@ -646,6 +732,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		const spellData = {
 			autoGrant: spellGrants?.autoGrant?.map((s) => s.uuid) ?? [],
 			selectedSchools: selectedSchools,
+			selectedSpells: selectedSpells,
 			selectionOptions,
 		};
 
@@ -772,6 +859,12 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		},
 		set selectedSchools(value: Map<string, string[]>) {
 			selectedSchools = value;
+		},
+		get selectedSpells() {
+			return selectedSpells;
+		},
+		set selectedSpells(value: Map<string, string[]>) {
+			selectedSpells = value;
 		},
 		get spellIndex() {
 			return resolvedSpellIndex;

@@ -33,9 +33,10 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'auto',
-			choices: ['auto', 'selectSchool'],
+			choices: ['auto', 'selectSchool', 'selectSpell'],
 		}),
 		// For selectSchool mode: how many schools to choose
+		// For selectSpell mode: how many spells to choose
 		count: new fields.NumberField({
 			required: false,
 			nullable: true,
@@ -53,10 +54,11 @@ declare namespace GrantSpellsRule {
 /**
  * Rule that grants spells during character creation.
  *
- * Supports three grant modes:
+ * Supports four grant modes:
  * 1. Auto-grant by school - Grant all spells matching school(s) + tier(s)
  * 2. Auto-grant by UUID - Grant specific spells by UUID
  * 3. School selection - User chooses N schools, then grants all matching spells
+ * 4. Spell selection - User chooses N individual spells from the filtered pool
  */
 class GrantSpellsRule extends NimbleBaseRule<GrantSpellsRule.Schema> {
 	declare schools: string[];
@@ -67,7 +69,7 @@ class GrantSpellsRule extends NimbleBaseRule<GrantSpellsRule.Schema> {
 
 	declare uuids: string[];
 
-	declare mode: 'auto' | 'selectSchool';
+	declare mode: 'auto' | 'selectSchool' | 'selectSpell';
 
 	declare count: number | null;
 
@@ -85,17 +87,17 @@ class GrantSpellsRule extends NimbleBaseRule<GrantSpellsRule.Schema> {
 				['tiers', 'number[]'],
 				['includeUtility', 'boolean'],
 				['uuids', 'string[]'],
-				['mode', "'auto' | 'selectSchool'"],
+				['mode', "'auto' | 'selectSchool' | 'selectSpell'"],
 				['count', 'number | null'],
 			]),
 		);
 	}
 
 	/**
-	 * Returns whether this rule requires user selection (school selection mode)
+	 * Returns whether this rule requires user selection (school or spell selection mode)
 	 */
 	get requiresSelection(): boolean {
-		return this.mode === 'selectSchool';
+		return this.mode === 'selectSchool' || this.mode === 'selectSpell';
 	}
 
 	/**
