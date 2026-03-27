@@ -8,13 +8,10 @@ import {
 	getCombatantCurrentActions,
 	getCombatantMaxActions,
 } from '../../../utils/combatTurnActions.js';
+import { hasCombatantTurnEndedThisRound } from '../../../utils/combatTurnProgress.js';
 import { getHeroicReactionAvailability } from '../../../utils/heroicActions.js';
 import { isCombatantDead } from '../../../utils/isCombatantDead.js';
-import {
-	getEffectiveMinionGroupLeader,
-	getMinionGroupId,
-	getMinionGroupSummaries,
-} from '../../../utils/minionGrouping.js';
+import { getMinionGroupSummaries } from '../../../utils/minionGrouping.js';
 import type { ResolveActiveEntryKeyParams, SceneCombatantLists, TrackEntry } from './types.js';
 
 type CombatWithTurnIdentityHint = Combat & {
@@ -301,64 +298,6 @@ export function getCombatantsForScene(
 		.sort(sortDeadCombatants);
 
 	return { aliveCombatants, deadCombatants };
-}
-
-function getActiveTurnIndex(combat: Combat): number {
-	const turnIndex = Number(combat.turn ?? -1);
-	if (Number.isInteger(turnIndex) && turnIndex >= 0 && turnIndex < combat.turns.length) {
-		return turnIndex;
-	}
-
-	const currentTurnIdentity = resolveCurrentTurnIdentity(combat, combat.turns);
-	if (!currentTurnIdentity?.combatantId) return -1;
-	return findTurnIndexByOccurrence(
-		combat.turns,
-		currentTurnIdentity.combatantId,
-		currentTurnIdentity.occurrence,
-	);
-}
-
-function getTurnOrderIndexForCombatant(
-	combat: Combat,
-	combatant: Combatant.Implementation,
-	groupSummaries: ReturnType<typeof getMinionGroupSummaries>,
-): number {
-	const combatantId = getCombatantId(combatant);
-	if (!combatantId) return -1;
-
-	const directIndex = combat.turns.findIndex(
-		(turnCombatant) => getCombatantId(turnCombatant) === combatantId,
-	);
-	if (directIndex >= 0) return directIndex;
-
-	const groupId = getMinionGroupId(combatant);
-	if (!groupId) return -1;
-
-	const groupSummary = groupSummaries.get(groupId);
-	if (!groupSummary) return -1;
-
-	const leader =
-		getEffectiveMinionGroupLeader(groupSummary, { aliveOnly: true }) ??
-		getEffectiveMinionGroupLeader(groupSummary);
-	if (!leader?.id) return -1;
-
-	return combat.turns.findIndex((turnCombatant) => getCombatantId(turnCombatant) === leader.id);
-}
-
-function hasCombatantTurnEndedThisRound(
-	combat: Combat,
-	combatant: Combatant.Implementation,
-	groupSummaries: ReturnType<typeof getMinionGroupSummaries>,
-): boolean {
-	if ((combat.round ?? 0) < 1) return false;
-
-	const activeTurnIndex = getActiveTurnIndex(combat);
-	if (activeTurnIndex < 0) return false;
-
-	const combatantTurnIndex = getTurnOrderIndexForCombatant(combat, combatant, groupSummaries);
-	if (combatantTurnIndex < 0) return false;
-
-	return combatantTurnIndex < activeTurnIndex;
 }
 
 export function hasCombatantTurnRemainingThisRound(
