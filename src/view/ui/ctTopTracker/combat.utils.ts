@@ -10,6 +10,7 @@ import {
 } from '../../../utils/combatTurnActions.js';
 import { hasCombatantTurnEndedThisRound } from '../../../utils/combatTurnProgress.js';
 import { getHeroicReactionAvailability } from '../../../utils/heroicActions.js';
+import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
 import { isCombatantDead } from '../../../utils/isCombatantDead.js';
 import { getMinionGroupSummaries } from '../../../utils/minionGrouping.js';
 import type { ResolveActiveEntryKeyParams, SceneCombatantLists, TrackEntry } from './types.js';
@@ -566,6 +567,7 @@ export function buildCombatSyncSignature(
 export function canCurrentUserRollInitiativeForCombatant(
 	combatant: Combatant.Implementation,
 ): boolean {
+	if (initiativeRollLock.hasActiveLock(combatant)) return false;
 	const currentUser = game.user;
 	if (!currentUser) return false;
 	if (currentUser.isGM) return true;
@@ -577,6 +579,7 @@ export function shouldShowInitiativePromptForCombatant(
 	combatant: Combatant.Implementation,
 ): boolean {
 	if (!isPlayerCombatant(combatant)) return false;
+	if (initiativeRollLock.hasActiveLock(combatant)) return false;
 	return combatant.initiative == null;
 }
 

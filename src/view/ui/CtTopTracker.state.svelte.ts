@@ -10,6 +10,7 @@ import {
 	resolveCombatantCurrentActionsAfterDelta,
 } from '../../utils/combatTurnActions.js';
 import type { HeroicReactionKey } from '../../utils/heroicActions.js';
+import { initiativeRollLock } from '../../utils/initiativeRollLock.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
 import CtSettingsDialogComponent from '../dialogs/CtSettingsDialog.svelte';
 import {
@@ -70,6 +71,7 @@ export function createCtTopTrackerState() {
 			.filter((combatant) => {
 				if (sceneId && getCombatantSceneId(combatant) !== sceneId) return false;
 				if (!isEligibleForInitiativeRoll(combatant)) return false;
+				if (initiativeRollLock.hasActiveLock(combatant)) return false;
 				return combatant.initiative == null;
 			})
 			.map((combatant) => combatant.id)
@@ -89,6 +91,7 @@ export function createCtTopTrackerState() {
 		event.stopPropagation();
 
 		if (!shouldShowInitiativePromptForCombatant(combatant)) return;
+		if (initiativeRollLock.hasActiveLock(combatant)) return;
 		if (!canCurrentUserRollInitiativeForCombatant(combatant)) {
 			ui.notifications?.warn('Only the GM or the hero owner can roll initiative.');
 			return;

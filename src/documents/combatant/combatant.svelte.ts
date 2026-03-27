@@ -1,4 +1,22 @@
 import { createSubscriber } from 'svelte/reactivity';
+import { initiativeRollLock } from '../../utils/initiativeRollLock.js';
+
+function getRequestedInitiativeRollLockData(
+	changes: Record<string, unknown>,
+): ReturnType<typeof initiativeRollLock.get> | null | undefined {
+	const nextLock =
+		changes[initiativeRollLock.path] ?? foundry.utils.getProperty(changes, initiativeRollLock.path);
+	if (nextLock === undefined) return undefined;
+	if (nextLock === null) return null;
+
+	return initiativeRollLock.get({
+		flags: {
+			nimble: {
+				initiativeRollLock: nextLock,
+			},
+		},
+	});
+}
 
 export class NimbleCombatant extends Combatant {
 	#subscribe: any;
@@ -58,6 +76,33 @@ export class NimbleCombatant extends Combatant {
 		await roll.evaluate();
 
 		return this.update({ initiative: roll.total ?? 0 });
+	}
+
+	override async _preUpdate(changes, options, user) {
+		const changesAsRecord = changes as Record<string, unknown>;
+		const currentLock = initiativeRollLock.get(this);
+		const requestedLock = getRequestedInitiativeRollLockData(changesAsRecord);
+
+		if (
+			currentLock &&
+			!initiativeRollLock.isStale(currentLock) &&
+			requestedLock !== undefined &&
+			requestedLock !== null &&
+			requestedLock?.requestId !== currentLock.requestId
+		) {
+			return false;
+		}
+
+		const parentPrototype = Object.getPrototypeOf(NimbleCombatant.prototype) as {
+			_preUpdate?: (
+				changes: Combatant.UpdateData,
+				options: Combatant.Database.PreUpdateOptions,
+				user: User.Implementation,
+			) => Promise<boolean | undefined> | boolean | undefined;
+		};
+		const parentPreUpdate = parentPrototype._preUpdate;
+		if (typeof parentPreUpdate !== 'function') return true;
+		return parentPreUpdate.call(this, changes, options, user);
 	}
 
 	override toObject(source = true) {
