@@ -93,16 +93,8 @@ export class NimbleCombatant extends Combatant {
 			return false;
 		}
 
-		const parentPrototype = Object.getPrototypeOf(NimbleCombatant.prototype) as {
-			_preUpdate?: (
-				changes: Combatant.UpdateData,
-				options: Combatant.Database.PreUpdateOptions,
-				user: User.Implementation,
-			) => Promise<boolean | undefined> | boolean | undefined;
-		};
-		const parentPreUpdate = parentPrototype._preUpdate;
-		if (typeof parentPreUpdate !== 'function') return true;
-		return parentPreUpdate.call(this, changes, options, user);
+		if (typeof super._preUpdate !== 'function') return true;
+		return super._preUpdate(changes, options, user);
 	}
 
 	override toObject(source = true) {
