@@ -9,6 +9,8 @@ export const CHARACTER_CREATION_STAGES = {
 	CLASS: 0,
 	/** Class features granted at level 1 (optional sub-stage) */
 	CLASS_FEATURES: '0b',
+	/** Spells granted at level 1 (optional sub-stage) */
+	SPELLS: '0c',
 	/** Select an ancestry */
 	ANCESTRY: '1a',
 	/** Ancestry-specific options like size or save selection (optional sub-stage) */
