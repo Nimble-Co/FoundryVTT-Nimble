@@ -452,8 +452,11 @@ class NimbleChatMessage extends ChatMessage {
 			return;
 		}
 
-		const damage = Math.floor(Math.abs(Number(value)));
-		if (!Number.isFinite(damage) || damage <= 0) return;
+		const damage = Math.floor(Number(value));
+		if (!Number.isFinite(damage) || damage <= 0) {
+			ui.notifications?.info(localize('NIMBLE.chat.noDamageToApply'));
+			return;
+		}
 
 		const systemData = this.system as ActivationCardSystemData;
 		const targets = systemData.targets || [];
@@ -496,7 +499,7 @@ class NimbleChatMessage extends ChatMessage {
 		if (!this.isActivationCard()) return false;
 		if (options?.outcome === 'noDamage') return false;
 
-		const damage = Math.floor(Math.abs(Number(value)));
+		const damage = Math.floor(Number(value));
 		if (!Number.isFinite(damage) || damage <= 0) return false;
 
 		const targets = (this.system as ActivationCardSystemData).targets || [];

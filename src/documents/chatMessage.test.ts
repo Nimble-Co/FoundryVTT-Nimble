@@ -338,6 +338,31 @@ describe('NimbleChatMessage.applyDamage', () => {
 		expect(globals().ui.notifications.info).toHaveBeenCalledWith('No damage to apply.');
 	});
 
+	it('shows no-damage feedback when total damage is 0 or negative', async () => {
+		const actor = {
+			system: {
+				attributes: {
+					hp: {
+						value: 10,
+						temp: 2,
+						max: 10,
+					},
+				},
+			},
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+
+		globals().fromUuidSync.mockReturnValue({ actor });
+
+		const message = createActivationMessage();
+		await message.applyDamage(0, { outcome: 'fullDamage' });
+		await message.applyDamage(-4, { outcome: 'fullDamage' });
+
+		expect(globals().fromUuidSync).not.toHaveBeenCalled();
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(globals().ui.notifications.info).toHaveBeenCalledWith('No damage to apply.');
+	});
+
 	it('warns when there are no targets', async () => {
 		const message = createActivationMessage([]);
 		await message.applyDamage(4, { outcome: 'fullDamage' });
