@@ -11,6 +11,7 @@ import {
 	requestAdvanceCombatTurn,
 } from '../../../utils/combatTurnActions.js';
 import { getActiveCombatant } from '../../../utils/combatTurnSync.js';
+import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
 import localize from '../../../utils/localize.js';
 
 // ============================================================================
@@ -72,7 +73,14 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 	function needsToRollInitiative(): boolean {
 		const combatant = getCombatantInCombat();
 		if (!combatant) return false;
+		if (initiativeRollLock.hasActiveLock(combatant)) return false;
 		return combatant.initiative === null;
+	}
+
+	function isInitiativePending(): boolean {
+		const combatant = getCombatantInCombat();
+		if (!combatant) return false;
+		return initiativeRollLock.hasActiveLock(combatant);
 	}
 
 	function getActionsData(): ActionsData {
@@ -105,6 +113,7 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		if (!combat) return;
 		const combatant = combat.combatants.find((entry) => entry.actorId === getActor().id);
 		if (!combatant?.id) return;
+		if (initiativeRollLock.hasActiveLock(combatant)) return;
 
 		try {
 			await combat.rollInitiative([combatant.id]);
@@ -159,6 +168,11 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		return hasRolledInitiative();
 	});
 
+	const initiativePending = $derived.by(() => {
+		subscribeCombatState();
+		return isInitiativePending();
+	});
+
 	const actionsData = $derived.by(() => {
 		subscribeCombatState();
 		return getActionsData();
@@ -169,7 +183,7 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		return isCharactersTurn();
 	});
 
-	const showCombatBar = $derived(hasInitiative || needsInitiative);
+	const showCombatBar = $derived(hasInitiative || needsInitiative || initiativePending);
 
 	// ============================================================================
 	// Pip Interaction
@@ -245,6 +259,9 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		},
 		get hasInitiative() {
 			return hasInitiative;
+		},
+		get initiativePending() {
+			return initiativePending;
 		},
 		get actionsData() {
 			return actionsData;

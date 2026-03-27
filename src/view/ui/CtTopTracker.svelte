@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import { createCtTopTrackerState } from './CtTopTracker.state.svelte.js';
+	import { CT_SHELL_EXTRA_WIDTH_REM } from './ctTopTracker/constants.js';
 	import {
 		canCurrentUserAdjustCombatantActions,
 		canCurrentUserRollInitiativeForCombatant,
@@ -21,6 +22,7 @@
 	} from './ctTopTracker/resources.utils.js';
 
 	const trackerViewState = createCtTopTrackerState();
+	const ctShellExtraWidth = `${CT_SHELL_EXTRA_WIDTH_REM}rem`;
 
 	let trackElement: HTMLOListElement | null = $state(null);
 	let trackScrollbarElement: HTMLDivElement | null = $state(null);
@@ -197,7 +199,7 @@
 		class="nimble-ct-shell"
 		class:nimble-ct-shell--card-size-preview-active={ctCardSizePreviewActive}
 		class:nimble-ct-shell--resource-drawer-pinned={!resourceDrawerHoverEnabled}
-		style={`--nimble-ct-track-max-width: ${ctTrackMaxWidth}; --nimble-ct-card-scale: ${ctCardScale};`}
+		style={`--nimble-ct-track-max-width: ${ctTrackMaxWidth}; --nimble-ct-shell-extra-width: ${ctShellExtraWidth}; --nimble-ct-card-scale: ${ctCardScale};`}
 		in:fade={{ duration: 120 }}
 	>
 		{#if ctWidthPreviewVisible}
@@ -900,7 +902,7 @@
 		align-items: start;
 		justify-content: center;
 		width: fit-content;
-		max-width: calc(var(--nimble-ct-track-max-width) + 7rem);
+		max-width: calc(var(--nimble-ct-track-max-width) + var(--nimble-ct-shell-extra-width));
 		/* Extend hover/focus activation zone slightly past side control bars. */
 		padding-inline: var(--nimble-ct-hover-hitbox-inline);
 		margin-inline: calc(var(--nimble-ct-hover-hitbox-inline) * -1);

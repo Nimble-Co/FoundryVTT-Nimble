@@ -9,10 +9,10 @@ export const CT_MAX_WIDTH_LEVEL = 10;
 export const CT_MIN_CARD_SIZE_LEVEL = 1;
 export const CT_MAX_CARD_SIZE_LEVEL = 10;
 export const CT_MIN_SAFE_TRACK_WIDTH_PX = 420;
-export const CT_FALLBACK_SIDE_RESERVED_PX = 84;
 export const CT_EDGE_GUTTER_PX = 12;
+export const CT_SHELL_EXTRA_WIDTH_REM = 7;
 export const CT_MIN_WIDTH_RATIO = 0.52;
-export const CT_MAX_WIDTH_RATIO = 2;
+export const CT_MAX_WIDTH_RATIO = 1;
 export const CT_MIN_CARD_SCALE = 0.78;
 export const CT_MAX_CARD_SCALE = 1.4;
 
