@@ -16,11 +16,11 @@
 		getCombatantDisplayName,
 		getCombatantImageForDisplay,
 		getCombatantOutlineClass,
+		getPortraitFallbackForCombatant,
 		getNonPlayerCombatantHpBarData,
 		getPlayerCombatantDrawerData,
 		shouldRenderCombatantActions,
 	} from './ctTopTracker/resources.utils.js';
-
 	const trackerViewState = createCtTopTrackerState();
 	const ctShellExtraWidth = `${CT_SHELL_EXTRA_WIDTH_REM}rem`;
 
@@ -94,6 +94,15 @@
 	const canDragCombatant = trackerViewState.canDragCombatant;
 	const canDragTrackEntry = trackerViewState.canDragTrackEntry;
 	const localize = game.i18n.localize.bind(game.i18n);
+
+	function handleCombatantPortraitImageError(event: Event) {
+		const img = event.currentTarget;
+		if (!(img instanceof HTMLImageElement)) return;
+		const fallback = img.dataset.portraitFallback;
+		if (!fallback) return;
+		if (img.src.includes(fallback)) return;
+		img.src = fallback;
+	}
 </script>
 
 {#snippet renderNameDrawer(cardName)}
@@ -380,6 +389,8 @@
 										src={getCombatantImageForDisplay(entry.combatant)}
 										alt="Combatant portrait"
 										draggable="false"
+										data-portrait-fallback={getPortraitFallbackForCombatant(entry.combatant)}
+										onerror={handleCombatantPortraitImageError}
 									/>
 									{#if canDragEntry}
 										<div
@@ -613,6 +624,8 @@
 										src={getCombatantImageForDisplay(combatant)}
 										alt="Dead combatant portrait"
 										draggable="false"
+										data-portrait-fallback={getPortraitFallbackForCombatant(combatant)}
+										onerror={handleCombatantPortraitImageError}
 									/>
 									{#if resourceChips.length > 0}
 										<div class="nimble-ct__resource-chips">

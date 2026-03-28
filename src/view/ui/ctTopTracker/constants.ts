@@ -1,4 +1,8 @@
-export const PORTRAIT_FALLBACK_IMAGE = 'icons/svg/mystery-man.svg';
+/** Foundry core: humanoid silhouette — default portrait for player characters when missing or failed to load. */
+export const PLAYER_PORTRAIT_FALLBACK_IMAGE = 'icons/svg/mystery-man.svg';
+
+/** Foundry core combat HUD icon — default portrait for monsters, NPCs, minions, and solo when missing or failed to load. */
+export const NON_PLAYER_PORTRAIT_FALLBACK_IMAGE = 'icons/svg/combat.svg';
 
 export const DRAG_TARGET_EXPANSION_REM = 0.85;
 export const DRAG_SWITCH_UPPER_RATIO = 0.4;
