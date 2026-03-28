@@ -236,7 +236,8 @@
 			"stunned": "Stunned",
 			"taunted": "Taunted",
 			"unconscious": "Unconscious",
-			"wounded": "Wounded"
+			"wounded": "Wounded",
+			"lastStand": "Last Stand"
 		},
 		"conditionDescriptions": {
 			"blinded": "<p>Can't see. Attacks against you have advantage, and your attacks have disadvantage.</p>",
@@ -255,6 +256,7 @@
 			"hampered": "<p>Any creature with their actions or movement reduce (e.g. Dazed, Grappled, Prone, Difficult Terrain).</p>",
 			"incapacitated": "<p>Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"invisible": "<p>Cannot be seen. Your attacks have advantage, and attacks against you have disadvantage.</p>",
+			"lastStand": "<p>At or below the Last Stand threshold. Triggers Last Stand abilities.</p>",
 			"paralyzed": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"petrified": "<p>Incapacitated. You have all the benefits and drawbacks of being a rock! Immune to most damage except from large explosions, picks, or similar tools.</p>",
 			"poisoned": "<p>Disadvantage on rolls.</p>",
