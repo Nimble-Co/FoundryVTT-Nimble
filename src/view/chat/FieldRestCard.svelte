@@ -18,6 +18,7 @@
 	const wasMaximized = $derived(system.wasMaximized);
 	const hadAdvantage = $derived(system.hadAdvantage);
 	const advantageSource = $derived(system.advantageSource);
+	const manaRestored = $derived(system.manaRestored);
 
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
@@ -75,8 +76,16 @@
 				tooltip={rollTooltip}
 				total={totalHealing}
 			/>
-		{:else if !hitDiceDisplay}
+		{:else if !hitDiceDisplay && !manaRestored}
 			<div class="no-dice-message">{CONFIG.NIMBLE.fieldRest.restedWithoutSpending}</div>
+		{/if}
+
+		{#if manaRestored > 0}
+			<div class="mana-restored">
+				<i class="mana-restored__icon fa-solid fa-sparkles"></i>
+				<span class="mana-restored__label">{CONFIG.NIMBLE.fieldRest.manaRestored}</span>
+				<span class="mana-restored__value">+{manaRestored}</span>
+			</div>
 		{/if}
 
 		{#if wasMaximized || hadAdvantage}
@@ -130,6 +139,35 @@
 			font-size: var(--nimble-sm-text);
 			font-weight: 700;
 			color: hsl(45, 70%, 40%);
+		}
+	}
+
+	.mana-restored {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.375rem 0.5rem;
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+
+		&__icon {
+			width: 1rem;
+			text-align: center;
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__label {
+			flex: 1;
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-dark-text-color);
+		}
+
+		&__value {
+			font-size: var(--nimble-sm-text);
+			font-weight: 700;
+			color: hsl(220, 70%, 50%);
 		}
 	}
 
@@ -197,6 +235,16 @@
 
 		&__value {
 			color: hsl(45, 80%, 60%);
+		}
+	}
+
+	:global(.theme-dark) .mana-restored {
+		&__label {
+			color: hsl(0, 0%, 90%);
+		}
+
+		&__value {
+			color: hsl(220, 75%, 70%);
 		}
 	}
 

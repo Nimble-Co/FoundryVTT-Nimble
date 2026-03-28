@@ -2141,11 +2141,8 @@ describe('NimbleCombat', () => {
 
 		expect(chatCreate).toHaveBeenCalledTimes(1);
 		const createdChatData = chatCreate.mock.calls[0]?.[0] as Record<string, unknown>;
-		expect(createdChatData.type).toBe('base');
+		expect(createdChatData.type).toBe('minionGroupAttack');
 		expect(createdChatData.content).toBe('');
-		const createdFlags = createdChatData.flags as Record<string, unknown>;
-		expect(createdFlags).toBeDefined();
-		expect((createdFlags.nimble as Record<string, unknown>).chatCardType).toBe('minionGroupAttack');
 		const createdSystem = createdChatData.system as Record<string, unknown>;
 		expect(createdSystem.actorName).toBe('Selected Minions');
 		expect(createdSystem.targetName).toBe('Target');
