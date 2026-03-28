@@ -51,16 +51,28 @@
 	function getSchoolIcon(school: string): string {
 		return CONFIG.NIMBLE.spellSchoolIcons[school] ?? 'fa-solid fa-sparkles';
 	}
+
+	// Check if selection is complete
+	const isSelectionComplete = $derived(selected.length >= group.count);
+
+	// Get formatted list of selected school names
+	const selectedSchoolNames = $derived(selected.map((s) => getSchoolLabel(s)).join(', '));
 </script>
 
 <div class="school-selection">
 	<h4 class="school-selection__label nimble-heading" data-heading-variant="subsection">
-		{group.label}
+		{#if isSelectionComplete}
+			{localize('NIMBLE.spellGrants.schoolsSelected', { schools: selectedSchoolNames })}
+		{:else}
+			{group.label}
+		{/if}
 	</h4>
 
-	<p class="school-selection__hint">
-		{localize('NIMBLE.spellGrants.chooseSchools', { count: String(group.count) })}
-	</p>
+	{#if !isSelectionComplete}
+		<p class="school-selection__hint">
+			{localize('NIMBLE.spellGrants.chooseSchools', { count: String(group.count) })}
+		</p>
+	{/if}
 
 	<div class="school-selection__options">
 		{#each group.availableSchools as school (school)}

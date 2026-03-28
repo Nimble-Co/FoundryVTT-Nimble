@@ -16,6 +16,9 @@
 		spellIndex,
 		selectedSchools = $bindable(),
 		selectedSpells = $bindable(),
+		sourceFilter,
+		header,
+		sectionId,
 	}: SpellGrantDisplayProps = $props();
 
 	const CHARACTER_CREATION_STAGES = getContext<Record<string, string | number>>(
@@ -48,24 +51,45 @@
 		});
 	}
 
-	const hasAutoGrant = $derived((spellGrants?.autoGrant?.length ?? 0) > 0);
-	const hasSchoolSelections = $derived((spellGrants?.schoolSelections?.length ?? 0) > 0);
-	const hasSpellSelections = $derived((spellGrants?.spellSelections?.length ?? 0) > 0);
+	// Filter selections by source if sourceFilter is provided
+	const filteredSchoolSelections = $derived(
+		sourceFilter
+			? (spellGrants?.schoolSelections ?? []).filter((g) => g.source === sourceFilter)
+			: (spellGrants?.schoolSelections ?? []),
+	);
+
+	const filteredSpellSelections = $derived(
+		sourceFilter
+			? (spellGrants?.spellSelections ?? []).filter((g) => g.source === sourceFilter)
+			: (spellGrants?.spellSelections ?? []),
+	);
+
+	// For auto-grants, we currently don't track source - only show if no filter or filter is 'class'
+	const showAutoGrant = $derived(!sourceFilter || sourceFilter === 'class');
+	const hasAutoGrant = $derived(showAutoGrant && (spellGrants?.autoGrant?.length ?? 0) > 0);
+	const hasSchoolSelections = $derived(filteredSchoolSelections.length > 0);
+	const hasSpellSelections = $derived(filteredSpellSelections.length > 0);
+	const hasAnyGrants = $derived(hasAutoGrant || hasSchoolSelections || hasSpellSelections);
 
 	// Sort auto-granted spells by school then name
 	const sortedAutoGrant = $derived(
 		spellGrants?.autoGrant ? sortSpellsBySchoolThenName(spellGrants.autoGrant) : [],
 	);
+
+	// Determine section ID for scroll targeting
+	const effectiveSectionId = $derived(
+		sectionId ?? `${dialog.id}-stage-${CHARACTER_CREATION_STAGES.SPELLS}`,
+	);
+
+	// Determine header text
+	const headerText = $derived(header ?? localize('NIMBLE.spellGrants.header'));
 </script>
 
-{#if spellGrants?.hasGrants && spellIndex}
-	<section
-		class="nimble-character-creation-section"
-		id="{dialog.id}-stage-{CHARACTER_CREATION_STAGES.SPELLS}"
-	>
+{#if hasAnyGrants && spellIndex}
+	<section class="nimble-character-creation-section" id={effectiveSectionId}>
 		<header class="nimble-section-header" data-header-variant="character-creator">
 			<h3 class="nimble-heading" data-heading-variant="section">
-				{localize('NIMBLE.spellGrants.header')}
+				{headerText}
 			</h3>
 		</header>
 
@@ -87,7 +111,7 @@
 		{/if}
 
 		{#if hasSchoolSelections}
-			{#each spellGrants.schoolSelections as group (group.ruleId)}
+			{#each filteredSchoolSelections as group (group.ruleId)}
 				<SchoolSelection
 					{group}
 					{spellIndex}
@@ -98,7 +122,7 @@
 		{/if}
 
 		{#if hasSpellSelections}
-			{#each spellGrants.spellSelections as group (group.ruleId)}
+			{#each filteredSpellSelections as group (group.ruleId)}
 				<SpellSelection
 					{group}
 					selected={selectedSpells.get(group.ruleId) ?? []}

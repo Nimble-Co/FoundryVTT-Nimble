@@ -2,6 +2,7 @@ import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 import type {
 	SchoolSelectionGroup,
 	SpellGrantResult,
+	SpellGrantSource,
 	SpellSelectionGroup,
 } from '../../src/view/dialogs/characterCreation/types.js';
 
@@ -11,6 +12,12 @@ export interface SpellGrantDisplayProps {
 	spellIndex: SpellIndex | null;
 	selectedSchools: Map<string, string[]>;
 	selectedSpells: Map<string, string[]>;
+	/** Filter grants to only show from this source. If not provided, shows all. */
+	sourceFilter?: SpellGrantSource;
+	/** Custom header text. If not provided, uses default localization. */
+	header?: string;
+	/** Custom section ID for scroll targeting. If not provided, uses default. */
+	sectionId?: string;
 }
 
 export interface SchoolSelectionProps {

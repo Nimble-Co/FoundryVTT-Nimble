@@ -93,12 +93,14 @@
 		bind:selectedFeatures={state.selectedClassFeatures}
 	/>
 
+	<!-- Class spell grants (from class features) -->
 	<SpellGrantDisplay
 		active={state.stage === CHARACTER_CREATION_STAGES.SPELLS}
 		spellGrants={state.spellGrants}
 		spellIndex={state.spellIndex}
 		bind:selectedSchools={state.selectedSchools}
 		bind:selectedSpells={state.selectedSpells}
+		sourceFilter="class"
 	/>
 
 	{#await ancestryOptions then ancestries}
@@ -134,6 +136,18 @@
 			bind:selectedRaisedByAncestry={state.selectedRaisedByAncestry}
 		/>
 	{/if}
+
+	<!-- Background spell grants (from background rules like Academy Dropout) -->
+	<SpellGrantDisplay
+		active={state.stage === CHARACTER_CREATION_STAGES.SPELLS}
+		spellGrants={state.spellGrants}
+		spellIndex={state.spellIndex}
+		bind:selectedSchools={state.selectedSchools}
+		bind:selectedSpells={state.selectedSpells}
+		sourceFilter="background"
+		header={game.i18n.localize('NIMBLE.spellGrants.backgroundHeader')}
+		sectionId="{dialog.id}-background-spells"
+	/>
 
 	<StartingEquipmentSelection
 		active={state.stage === CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT}

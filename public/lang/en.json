@@ -1279,10 +1279,15 @@
 		},
 		"spellGrants": {
 			"header": "Starting Spells",
+			"backgroundHeader": "Background Spells",
 			"hint": "Your class or background grants you these spells.",
 			"grantedSpells": "Granted Spells",
 			"chooseSchools": "Choose {count} school(s):",
+			"schoolsSelected": "Selected: {schools}",
 			"chooseSpells": "Choose {count} spell(s):",
+			"spellsSelected": "Selected: {spells}",
+			"changeSelection": "Change",
+			"hideOptions": "Hide Options",
 			"spellsFromSelection": "Spells from Selected School(s)",
 			"selectedCount": "{selected} of {total} selected"
 		},

@@ -6,16 +6,24 @@
 
 	let { group, selected, onSelect }: SpellSelectionProps = $props();
 
+	// Track whether to show all spells or just selected ones
+	let showAllSpells = $state(false);
+
 	function toggleSpell(spellUuid: string) {
 		const currentSelection = [...selected];
 
 		if (currentSelection.includes(spellUuid)) {
-			// Remove spell
+			// Remove spell - show all options again
 			const filtered = currentSelection.filter((s) => s !== spellUuid);
 			onSelect(filtered);
+			showAllSpells = true;
 		} else if (currentSelection.length < group.count) {
 			// Add spell (only if we haven't reached the limit)
 			onSelect([...currentSelection, spellUuid]);
+			// If selection is now complete, collapse to show only selected
+			if (currentSelection.length + 1 >= group.count) {
+				showAllSpells = false;
+			}
 		}
 	}
 
@@ -41,19 +49,53 @@
 	}
 
 	const sortedSpells = $derived(sortSpellsBySchoolThenName(group.availableSpells));
+
+	// Check if selection is complete
+	const isSelectionComplete = $derived(selected.length >= group.count);
+
+	// Get the selected spell(s) for display
+	const selectedSpells = $derived(sortedSpells.filter((spell) => selected.includes(spell.uuid)));
+
+	// Get the selected spell names for the label
+	const selectedSpellNames = $derived(selectedSpells.map((s) => s.name).join(', '));
+
+	// Determine which spells to display
+	const displayedSpells = $derived(
+		isSelectionComplete && !showAllSpells ? selectedSpells : sortedSpells,
+	);
 </script>
 
 <div class="spell-selection">
-	<h4 class="spell-selection__label nimble-heading" data-heading-variant="subsection">
-		{group.label}
-	</h4>
+	<div class="spell-selection__header">
+		<h4 class="spell-selection__label nimble-heading" data-heading-variant="subsection">
+			{#if isSelectionComplete}
+				{localize('NIMBLE.spellGrants.spellsSelected', { spells: selectedSpellNames })}
+			{:else}
+				{group.label}
+			{/if}
+		</h4>
 
-	<p class="spell-selection__hint">
-		{localize('NIMBLE.spellGrants.chooseSpells', { count: String(group.count) })}
-	</p>
+		{#if isSelectionComplete}
+			<button
+				type="button"
+				class="spell-selection__toggle-button"
+				onclick={() => (showAllSpells = !showAllSpells)}
+			>
+				{showAllSpells
+					? localize('NIMBLE.spellGrants.hideOptions')
+					: localize('NIMBLE.spellGrants.changeSelection')}
+			</button>
+		{/if}
+	</div>
+
+	{#if !isSelectionComplete}
+		<p class="spell-selection__hint">
+			{localize('NIMBLE.spellGrants.chooseSpells', { count: String(group.count) })}
+		</p>
+	{/if}
 
 	<ul class="spell-selection__spell-list">
-		{#each sortedSpells as spell (spell.uuid)}
+		{#each displayedSpells as spell (spell.uuid)}
 			<SpellCard
 				{spell}
 				isSelected={isSelected(spell.uuid)}
@@ -62,17 +104,6 @@
 			/>
 		{/each}
 	</ul>
-
-	{#if selected.length > 0}
-		<div class="spell-selection__summary">
-			<span class="spell-selection__count">
-				{localize('NIMBLE.spellGrants.selectedCount', {
-					selected: String(selected.length),
-					total: String(group.count),
-				})}
-			</span>
-		</div>
-	{/if}
 </div>
 
 <style lang="scss">
@@ -83,8 +114,32 @@
 		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 4px;
 
+		&__header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 0.5rem;
+			margin-bottom: 0.25rem;
+		}
+
 		&__label {
-			margin: 0 0 0.25rem 0;
+			margin: 0;
+		}
+
+		&__toggle-button {
+			padding: 0.25rem 0.5rem;
+			font-size: var(--nimble-xs-text);
+			background: transparent;
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			cursor: pointer;
+			color: var(--nimble-medium-text-color);
+			transition: var(--nimble-standard-transition);
+
+			&:hover {
+				border-color: var(--nimble-accent-color);
+				color: var(--nimble-light-text-color);
+			}
 		}
 
 		&__hint {
@@ -99,17 +154,6 @@
 			margin: 0;
 			padding: 0;
 			list-style: none;
-		}
-
-		&__summary {
-			margin-top: 0.75rem;
-			padding-top: 0.5rem;
-			border-top: 1px solid var(--nimble-card-border-color);
-		}
-
-		&__count {
-			font-size: var(--nimble-sm-text);
-			color: var(--nimble-medium-text-color);
 		}
 	}
 </style>

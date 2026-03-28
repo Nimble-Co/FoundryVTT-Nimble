@@ -16,6 +16,7 @@ import type {
 	SchoolSelectionGroup,
 	SkillPointAssignment,
 	SpellGrantResult,
+	SpellGrantSource,
 	SpellSelectionGroup,
 	StageValue,
 	StatArrayOption,
@@ -149,20 +150,36 @@ function hasClassFeatures(features: ClassFeatureResult | null): boolean {
 	return features.autoGrant.length > 0 || features.selectionGroups.size > 0;
 }
 
-function hasSpellGrants(grants: SpellGrantResult | null): boolean {
+function hasSpellGrants(grants: SpellGrantResult | null, sourceFilter?: SpellGrantSource): boolean {
 	if (!grants) return false;
-	return grants.hasGrants;
+
+	// If no filter, check if there are any grants
+	if (!sourceFilter) {
+		return grants.hasGrants;
+	}
+
+	// Check if there are grants from the specified source
+	// Auto-grants are always from class features
+	const hasAutoGrant = sourceFilter === 'class' && grants.autoGrant.length > 0;
+	const hasSchoolSelections = grants.schoolSelections.some((g) => g.source === sourceFilter);
+	const hasSpellSelections = grants.spellSelections.some((g) => g.source === sourceFilter);
+
+	return hasAutoGrant || hasSchoolSelections || hasSpellSelections;
 }
 
 function spellSelectionsComplete(
 	grants: SpellGrantResult | null,
 	selectedSchools: Map<string, string[]>,
 	selectedSpells: Map<string, string[]>,
+	sourceFilter?: SpellGrantSource,
 ): boolean {
 	if (!grants) return true;
 
 	// Check that all school selection groups have enough schools selected
 	for (const group of grants.schoolSelections) {
+		// Skip if filtering by source and this group doesn't match
+		if (sourceFilter && group.source !== sourceFilter) continue;
+
 		const selected = selectedSchools.get(group.ruleId) ?? [];
 		// Cap required count at available options to prevent stuck state
 		const requiredCount = Math.min(group.count, group.availableSchools.length);
@@ -173,6 +190,9 @@ function spellSelectionsComplete(
 
 	// Check that all spell selection groups have enough spells selected
 	for (const group of grants.spellSelections) {
+		// Skip if filtering by source and this group doesn't match
+		if (sourceFilter && group.source !== sourceFilter) continue;
+
 		const selected = selectedSpells.get(group.ruleId) ?? [];
 		// Cap required count at available options to prevent stuck state
 		const requiredCount = Math.min(group.count, group.availableSpells.length);
@@ -258,9 +278,10 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		return CHARACTER_CREATION_STAGES.CLASS_FEATURES;
 	}
 
+	// Check class spell selections (from class features)
 	if (
-		hasSpellGrants(spellGrants) &&
-		!spellSelectionsComplete(spellGrants, selectedSchools, selectedSpells)
+		hasSpellGrants(spellGrants, 'class') &&
+		!spellSelectionsComplete(spellGrants, selectedSchools, selectedSpells, 'class')
 	) {
 		return CHARACTER_CREATION_STAGES.SPELLS;
 	}
@@ -282,6 +303,16 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 
 	if (isRaisedByBackground(selectedBackground) && selectedRaisedByAncestry === null) {
 		return CHARACTER_CREATION_STAGES.BACKGROUND_OPTIONS;
+	}
+
+	// Check background spell selections (from background rules like Academy Dropout)
+	// This appears after background options so selecting a background doesn't scroll back
+	if (
+		hasSpellGrants(spellGrants, 'background') &&
+		!spellSelectionsComplete(spellGrants, selectedSchools, selectedSpells, 'background')
+	) {
+		// Return SPELLS stage but scroll handling will go to the right section
+		return CHARACTER_CREATION_STAGES.SPELLS;
 	}
 
 	if (!startingEquipmentChoice) return CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT;
@@ -472,10 +503,22 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 
 	const stageNumber = $derived(getStageNumber(stage));
 
+	// Determine if background spells need selection (for scroll targeting)
+	const needsBackgroundSpellSelection = $derived(
+		hasSpellGrants(spellGrants, 'background') &&
+			!spellSelectionsComplete(spellGrants, selectedSchools, selectedSpells, 'background'),
+	);
+
 	// Effects
 	$effect(() => {
 		// Scroll to current stage when it changes
-		scrollIntoView(`${params.dialog.id}-stage-${stage}`);
+		// Special handling for SPELLS stage - scroll to the appropriate spell section
+		if (stage === CHARACTER_CREATION_STAGES.SPELLS && needsBackgroundSpellSelection) {
+			// If background spells need selection, scroll to background spell section
+			scrollIntoView(`${params.dialog.id}-background-spells`);
+		} else {
+			scrollIntoView(`${params.dialog.id}-stage-${stage}`);
+		}
 	});
 
 	$effect(() => {
@@ -526,6 +569,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		rules: Array<{ type: string; [key: string]: unknown }>,
 		spellIndex: SpellIndex,
 		classIdentifier: string,
+		source: SpellGrantSource,
 		autoGrant: SpellIndexEntry[],
 		schoolSelections: SchoolSelectionGroup[],
 		spellSelections: SpellSelectionGroup[],
@@ -571,6 +615,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 					count: grantRule.count ?? 1,
 					utilityOnly,
 					forClass: classIdentifier,
+					source,
 				});
 			} else if (mode === 'selectSpell') {
 				// Spell selection mode: user picks individual spells from the pool
@@ -585,6 +630,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 					count: grantRule.count ?? 1,
 					utilityOnly,
 					forClass: classIdentifier,
+					source,
 				});
 			}
 		}
@@ -624,6 +670,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 					rules,
 					resolvedSpellIndex,
 					classIdentifier,
+					'class',
 					autoGrant,
 					schoolSelections,
 					spellSelections,
@@ -638,6 +685,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 				backgroundRules,
 				resolvedSpellIndex,
 				classIdentifier,
+				'background',
 				autoGrant,
 				schoolSelections,
 				spellSelections,
@@ -654,12 +702,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			hasGrants,
 		};
 
-		// Scroll to spells section if there are spell grants
-		if (hasGrants) {
-			requestAnimationFrame(() => {
-				scrollIntoView(`${params.dialog.id}-stage-${CHARACTER_CREATION_STAGES.SPELLS}`);
-			});
-		}
+		// Note: We no longer scroll here - scrolling is handled by the stage change effect
 	});
 
 	$effect(() => {

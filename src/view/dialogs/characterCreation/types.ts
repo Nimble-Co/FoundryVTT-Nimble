@@ -9,6 +9,11 @@ import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 export type OriginItem = NimbleClassItem | NimbleAncestryItem | NimbleBackgroundItem | null;
 
 /**
+ * Source of spell grants
+ */
+export type SpellGrantSource = 'class' | 'background';
+
+/**
  * Represents a group of spells that requires school selection
  */
 export interface SchoolSelectionGroup {
@@ -19,6 +24,7 @@ export interface SchoolSelectionGroup {
 	count: number;
 	utilityOnly: boolean;
 	forClass: string;
+	source: SpellGrantSource;
 }
 
 /**
@@ -31,6 +37,7 @@ export interface SpellSelectionGroup {
 	count: number;
 	utilityOnly: boolean;
 	forClass: string;
+	source: SpellGrantSource;
 }
 
 /**

@@ -19,10 +19,14 @@
 	const isSelectable = $derived(!!onSelect);
 
 	function handleRowClick() {
-		if (isSelectable && !isDisabled) {
+		// Clicking the row always toggles expansion
+		state.toggleExpanded();
+	}
+
+	function handleSelectClick(e: MouseEvent) {
+		e.stopPropagation(); // Prevent row click from firing
+		if (!isDisabled) {
 			onSelect?.();
-		} else {
-			state.toggleExpanded();
 		}
 	}
 
@@ -57,14 +61,35 @@
 			</span>
 		</div>
 
-		<button
-			class="view-details-button"
-			onclick={state.viewDetails}
-			title="View Details"
-			aria-label="View {spell.name} details"
-		>
-			<i class="fa-solid fa-book-open"></i>
-		</button>
+		<div class="spell-row__actions">
+			{#if isSelectable}
+				<button
+					type="button"
+					class="select-button"
+					class:selected={isSelected}
+					onclick={handleSelectClick}
+					disabled={isDisabled}
+					data-tooltip={isSelected ? 'Deselect spell' : 'Select spell'}
+					data-tooltip-direction="LEFT"
+					aria-label={isSelected ? `Deselect ${spell.name}` : `Select ${spell.name}`}
+				>
+					<i class="fa-solid {isSelected ? 'fa-circle-check' : 'fa-circle'}"></i>
+				</button>
+			{/if}
+
+			<button
+				type="button"
+				class="view-details-button"
+				onclick={(e) => {
+					e.stopPropagation();
+					state.viewDetails();
+				}}
+				title="View Details"
+				aria-label="View {spell.name} details"
+			>
+				<i class="fa-solid fa-book-open"></i>
+			</button>
+		</div>
 	</div>
 
 	{#if state.isExpanded}
@@ -119,13 +144,6 @@
 			);
 		}
 
-		&.selectable {
-			// Hide the expand arrow in selectable mode
-			.expand-arrow {
-				display: none;
-			}
-		}
-
 		&.expanded {
 			border-bottom-left-radius: 0;
 			border-bottom-right-radius: 0;
@@ -134,47 +152,88 @@
 				transform: rotate(180deg);
 			}
 		}
+	}
 
-		.expand-arrow {
-			font-size: 0.875rem;
-			transition: transform 0.3s ease;
-			color: var(--nimble-medium-text-color);
+	.expand-arrow {
+		font-size: 0.875rem;
+		transition: transform 0.3s ease;
+		color: var(--nimble-medium-text-color);
+	}
+
+	.spell-row__img {
+		width: 36px;
+		height: 36px;
+		margin: 0;
+		padding: 0;
+		display: block;
+		border-radius: 4px;
+		object-fit: cover;
+	}
+
+	.spell-row__content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+		min-width: 0;
+	}
+
+	.spell-row__name {
+		margin: 0;
+		padding: 0;
+		line-height: 1;
+	}
+
+	.spell-row__meta {
+		font-size: var(--nimble-xs-text);
+		color: var(--nimble-medium-text-color);
+	}
+
+	.spell-row__actions {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-left: auto;
+	}
+
+	.select-button {
+		width: 2rem;
+		height: 2rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: transparent;
+		border: none;
+		border-radius: 4px;
+		color: rgba(255, 255, 255, 0.5);
+		cursor: pointer;
+		transition: all 0.2s ease;
+
+		&:hover:not(:disabled) {
+			color: rgba(255, 255, 255, 0.8);
+			transform: scale(1.1);
 		}
 
-		.spell-row__img {
-			width: 36px;
-			height: 36px;
-			margin: 0;
-			padding: 0;
-			display: block;
-			border-radius: 4px;
-			object-fit: cover;
+		&.selected {
+			color: var(--nimble-accent-color);
+
+			&:hover:not(:disabled) {
+				filter: brightness(1.2);
+				transform: scale(1.1);
+			}
 		}
 
-		.spell-row__content {
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-			gap: 0.125rem;
-			min-width: 0;
+		&:disabled {
+			opacity: 0.3;
+			cursor: not-allowed;
 		}
 
-		.spell-row__name {
-			margin: 0;
-			padding: 0;
-			line-height: 1;
-		}
-
-		.spell-row__meta {
-			font-size: var(--nimble-xs-text);
-			color: var(--nimble-medium-text-color);
+		i {
+			font-size: 1.25rem;
 		}
 	}
 
 	.view-details-button {
-		position: absolute;
-		top: 0.5rem;
-		right: 0.5rem;
 		width: 2rem;
 		height: 2rem;
 		display: flex;
@@ -186,7 +245,6 @@
 		color: var(--nimble-light-text-color);
 		cursor: pointer;
 		transition: all 0.2s ease;
-		z-index: 1;
 
 		&:hover {
 			filter: brightness(1.2);
