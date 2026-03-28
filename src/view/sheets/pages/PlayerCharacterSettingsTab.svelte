@@ -1,6 +1,11 @@
-<script>
+<script lang="ts">
+	import CharacterPdfExportButton from '#view/sheets/character/pdfExport/CharacterPdfExportButton.svelte';
+
 	import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
+	import localize from '#utils/localize.ts';
+
 	import { getContext } from 'svelte';
+
 	let actor = getContext('actor');
 	let flags = $derived(actor.reactive.flags.nimble);
 
@@ -254,6 +259,18 @@
 			>
 				Reset spell tier
 			</button>
+		</div>
+	</section>
+
+	<section>
+		<header class="nimble-section-header">
+			<h3 class="nimble-heading" data-heading-variant="section">
+				{localize('NIMBLE.pdfExport.sectionHeader')}
+			</h3>
+		</header>
+
+		<div class="nimble-field">
+			<CharacterPdfExportButton {actor} />
 		</div>
 	</section>
 </section>
