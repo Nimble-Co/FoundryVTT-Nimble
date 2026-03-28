@@ -63,7 +63,10 @@
 				"min": 1,
 				"max": null
 			},
-			"selected": ["two-handed", "heavy"],
+			"selected": [
+				"two-handed",
+				"heavy"
+			],
 			"strengthRequirement": {
 				"value": null,
 				"overridesTwoHanded": false
@@ -85,5 +88,5 @@
 		"modifiedTime": null,
 		"lastModifiedBy": null
 	},
-	"_id": "gmg047Manglemaul000"
+	"_id": "wav5q8mcXBFyNvD6"
 }

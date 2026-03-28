@@ -65,7 +65,10 @@
 		"group": "zephyr-progression",
 		"gainedAtLevel": 2,
 		"subclass": false,
-		"gainedAtLevels": [2, 9]
+		"gainedAtLevels": [
+			2,
+			9
+		]
 	},
 	"effects": [],
 	"flags": {},
