@@ -138,7 +138,7 @@
 		&__value {
 			font-size: var(--nimble-sm-text);
 			font-weight: 700;
-			color: hsl(45, 70%, 40%);
+			color: var(--nimble-chat-hit-dice-value-color);
 		}
 	}
 
@@ -167,7 +167,7 @@
 		&__value {
 			font-size: var(--nimble-sm-text);
 			font-weight: 700;
-			color: hsl(220, 70%, 50%);
+			color: var(--nimble-chat-mana-value-color);
 		}
 	}
 
@@ -196,15 +196,15 @@
 		border-radius: 3px;
 
 		&--maximize {
-			background: hsla(120, 45%, 45%, 0.15);
-			color: hsl(120, 45%, 35%);
-			border: 1px solid hsla(120, 45%, 45%, 0.3);
+			background: var(--nimble-chat-maximize-background);
+			color: var(--nimble-chat-maximize-color);
+			border: 1px solid var(--nimble-chat-maximize-border-color);
 		}
 
 		&--advantage {
-			background: hsla(210, 70%, 50%, 0.15);
-			color: hsl(210, 70%, 40%);
-			border: 1px solid hsla(210, 70%, 50%, 0.3);
+			background: var(--nimble-chat-advantage-background);
+			color: var(--nimble-chat-advantage-color);
+			border: 1px solid var(--nimble-chat-advantage-border-color);
 		}
 
 		&__source {
@@ -212,43 +212,5 @@
 			font-style: italic;
 			opacity: 0.8;
 		}
-	}
-
-	:global(.theme-dark) .modifier-badge {
-		&--maximize {
-			background: hsla(120, 45%, 45%, 0.2);
-			color: hsl(120, 50%, 60%);
-			border-color: hsla(120, 45%, 45%, 0.4);
-		}
-
-		&--advantage {
-			background: hsla(210, 70%, 50%, 0.2);
-			color: hsl(210, 70%, 65%);
-			border-color: hsla(210, 70%, 50%, 0.4);
-		}
-	}
-
-	:global(.theme-dark) .hit-dice-spent {
-		&__label {
-			color: hsl(0, 0%, 70%);
-		}
-
-		&__value {
-			color: hsl(45, 80%, 60%);
-		}
-	}
-
-	:global(.theme-dark) .mana-restored {
-		&__label {
-			color: hsl(0, 0%, 90%);
-		}
-
-		&__value {
-			color: hsl(220, 75%, 70%);
-		}
-	}
-
-	:global(.theme-dark) .no-dice-message {
-		color: hsl(0, 0%, 70%);
 	}
 </style>
