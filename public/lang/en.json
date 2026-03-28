@@ -2469,6 +2469,13 @@
 			"exportButton": "Export Character Sheet (JSON)",
 			"success": "Character exported successfully",
 			"error": "Failed to export character"
+		},
+		"pdfExport": {
+			"sectionHeader": "Export",
+			"exportButton": "Export Character Sheet (PDF)",
+			"exporting": "Exporting...",
+			"success": "Character sheet exported successfully",
+			"error": "Failed to export character sheet"
 		}
 	}
 }

@@ -83,6 +83,16 @@ const config = defineConfig({
 			[`${systemBase}nimble.css`]: 'http://localhost:30000',
 			[`${systemBase}style.css`]: 'http://localhost:30000',
 			[`${systemBase}assets`]: 'http://localhost:30000',
+			// Proxy assets to Foundry, but bypass for pdf folder (served from local public/)
+			'/systems/nimble/assets': {
+				target: 'http://localhost:30000',
+				bypass(req) {
+					if (req.url?.includes('/assets/pdf/')) {
+						// Return false to skip proxy and let Vite serve from public/
+						return req.url;
+					}
+				},
+			},
 			// During dev, Foundry loads the system stylesheet from system.json ("nimble.css").
 			// Proxy it (and assets) back to the Foundry server.
 			[`^${systemBase}(assets|nimble\\.css|style\\.css)`]: 'http://localhost:30000',

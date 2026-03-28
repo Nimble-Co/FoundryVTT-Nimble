@@ -1,10 +1,12 @@
-<script>
+<script lang="ts">
 	import CharacterJsonExportButton from '#view/sheets/components/CharacterJsonExportButton.svelte';
+	import CharacterPdfExportButton from '#view/sheets/character/pdfExport/CharacterPdfExportButton.svelte';
 
 	import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 	import { SYSTEM_ID } from '#system';
 	import localize from '#utils/localize.ts';
 	import { getContext } from 'svelte';
+
 	let actor = getContext('actor');
 	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 
@@ -271,6 +273,9 @@
 
 		<div class="nimble-field">
 			<CharacterJsonExportButton {actor} />
+		</div>
+		<div class="nimble-field">
+			<CharacterPdfExportButton {actor} />
 		</div>
 	</section>
 </section>
