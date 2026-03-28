@@ -1,6 +1,6 @@
 <script>
 	import { setContext, untrack } from 'svelte';
-	import { NON_PLAYER_PORTRAIT_FALLBACK_IMAGE } from '../ui/ctTopTracker/constants.js';
+	import { PORTRAIT_FALLBACK_IMAGE } from '../ui/ctTopTracker/constants.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import HitPointBar from './components/HitPointBar.svelte';
@@ -99,8 +99,8 @@
 	function handleActorPortraitImageError(event) {
 		const img = event.currentTarget;
 		if (!(img instanceof HTMLImageElement)) return;
-		if (img.src.includes(NON_PLAYER_PORTRAIT_FALLBACK_IMAGE)) return;
-		img.src = NON_PLAYER_PORTRAIT_FALLBACK_IMAGE;
+		if (img.src.includes(PORTRAIT_FALLBACK_IMAGE)) return;
+		img.src = PORTRAIT_FALLBACK_IMAGE;
 	}
 
 	// Set context synchronously during component initialization (not in $effect)

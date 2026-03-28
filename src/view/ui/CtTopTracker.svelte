@@ -389,7 +389,7 @@
 										src={getCombatantImageForDisplay(entry.combatant)}
 										alt="Combatant portrait"
 										draggable="false"
-										data-portrait-fallback={getPortraitFallbackForCombatant(entry.combatant)}
+										data-portrait-fallback={getPortraitFallbackForCombatant()}
 										onerror={handleCombatantPortraitImageError}
 									/>
 									{#if canDragEntry}
@@ -624,7 +624,7 @@
 										src={getCombatantImageForDisplay(combatant)}
 										alt="Dead combatant portrait"
 										draggable="false"
-										data-portrait-fallback={getPortraitFallbackForCombatant(combatant)}
+										data-portrait-fallback={getPortraitFallbackForCombatant()}
 										onerror={handleCombatantPortraitImageError}
 									/>
 									{#if resourceChips.length > 0}

@@ -25,7 +25,7 @@ import {
 	isPlayerCombatant,
 	localizeWithFallback,
 } from './combat.utils.js';
-import { NON_PLAYER_PORTRAIT_FALLBACK_IMAGE, PLAYER_PORTRAIT_FALLBACK_IMAGE } from './constants.js';
+import { PORTRAIT_FALLBACK_IMAGE } from './constants.js';
 import type {
 	CombatantCardResourceChip,
 	NonPlayerCombatantHpBarData,
@@ -453,14 +453,12 @@ export function getActionState(combatant: Combatant.Implementation): {
 	};
 }
 
-export function getPortraitFallbackForCombatant(combatant: Combatant.Implementation): string {
-	return isPlayerCombatant(combatant)
-		? PLAYER_PORTRAIT_FALLBACK_IMAGE
-		: NON_PLAYER_PORTRAIT_FALLBACK_IMAGE;
+export function getPortraitFallbackForCombatant(): string {
+	return PORTRAIT_FALLBACK_IMAGE;
 }
 
 export function getCombatantImageForDisplay(combatant: Combatant.Implementation): string {
-	const fallback = getPortraitFallbackForCombatant(combatant);
+	const fallback = getPortraitFallbackForCombatant();
 	return (
 		getCombatantImage(combatant, {
 			includeActorImage: true,

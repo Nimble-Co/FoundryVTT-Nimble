@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { setContext, tick, untrack } from 'svelte';
 	import localize from '../../utils/localize.js';
-	import { PLAYER_PORTRAIT_FALLBACK_IMAGE } from '../ui/ctTopTracker/constants.js';
+	import { PORTRAIT_FALLBACK_IMAGE } from '../ui/ctTopTracker/constants.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import ActionTracker from './components/ActionTracker.svelte';
@@ -85,8 +85,8 @@
 	function handleActorPortraitImageError(event: Event) {
 		const img = event.currentTarget;
 		if (!(img instanceof HTMLImageElement)) return;
-		if (img.src.includes(PLAYER_PORTRAIT_FALLBACK_IMAGE)) return;
-		img.src = PLAYER_PORTRAIT_FALLBACK_IMAGE;
+		if (img.src.includes(PORTRAIT_FALLBACK_IMAGE)) return;
+		img.src = PORTRAIT_FALLBACK_IMAGE;
 	}
 
 	$effect(() => {
@@ -339,7 +339,7 @@
 			value={actor.reactive.name}
 			autocomplete="off"
 			spellcheck="false"
-			onchange={({ target }) => actor.update({ name: target.value })}
+			onchange={({ target }) => actor.update({ name: (target as HTMLInputElement)?.value })}
 			disabled={!editingEnabled}
 		/>
 
