@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { setContext, tick, untrack } from 'svelte';
 	import localize from '../../utils/localize.js';
+	import { PLAYER_PORTRAIT_FALLBACK_IMAGE } from '../ui/ctTopTracker/constants.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import ActionTracker from './components/ActionTracker.svelte';
@@ -80,6 +81,13 @@
 	let editingEnabled = $derived(playerCharacterSheetState.editingEnabled);
 	let metaData = $derived(playerCharacterSheetState.metaData);
 	let hitDiceData = $derived(playerCharacterSheetState.hitDiceData);
+
+	function handleActorPortraitImageError(event: Event) {
+		const img = event.currentTarget;
+		if (!(img instanceof HTMLImageElement)) return;
+		if (img.src.includes(PLAYER_PORTRAIT_FALLBACK_IMAGE)) return;
+		img.src = PLAYER_PORTRAIT_FALLBACK_IMAGE;
+	}
 
 	$effect(() => {
 		playerCharacterSheetState.currentTab = currentTab;
@@ -214,6 +222,8 @@
 				class="nimble-icon__image nimble-icon__image--actor"
 				src={actor.reactive.img}
 				alt={actor.reactive.name}
+				draggable="false"
+				onerror={handleActorPortraitImageError}
 				style="
 					--nimble-actor-image-x-offset: {actorImageXOffset}px;
 					--nimble-actor-image-y-offset: {actorImageYOffset}px;
