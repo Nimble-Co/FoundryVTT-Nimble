@@ -13,7 +13,7 @@
 	// Get current (derived) movement values with bonuses applied
 	let currentMovement = $derived(document.reactive?.system?.attributes?.movement ?? {});
 
-	// Collect speed bonuses from rules, grouped by movement type
+	// Collect speed bonuses from rules, grouped by movement type and item
 	let speedBonusesByType = $derived.by(() => {
 		const bonusesByType = {};
 		const rollData = document.getRollData?.() ?? {};
@@ -21,35 +21,51 @@
 		for (const item of document.items ?? []) {
 			if (!item.rules) continue;
 
+			// Group bonuses by movement type for this item
+			// Track value and unique labels that differ from item name
+			const itemBonusesByType = {};
+
 			for (const rule of item.rules.values()) {
 				if (rule.type !== 'speedBonus') continue;
 				if (rule.disabled) continue;
+
+				// Only include rules that pass their predicate
+				if (rule.test && !rule.test()) continue;
 
 				const value = getDeterministicBonus(rule.value, rollData) ?? 0;
 				if (value === 0) continue;
 
 				// Check if movementType was explicitly set in source data
 				const hasExplicitMovementType = rule._source?.movementType !== undefined;
+				const movementType = hasExplicitMovementType ? rule.movementType : 'walk';
 
-				if (hasExplicitMovementType) {
-					// Specific movement type bonus (e.g., "gain climb = walk")
-					const movementType = rule.movementType;
-					bonusesByType[movementType] ??= [];
-					bonusesByType[movementType].push({
-						itemName: item.name,
-						label: rule.label,
-						value,
-					});
-				} else {
-					// Generic speed bonus: only applies to walk
-					// (other movement types granted via formula inherit walk's bonuses)
-					bonusesByType['walk'] ??= [];
-					bonusesByType['walk'].push({
-						itemName: item.name,
-						label: rule.label,
-						value,
-					});
+				// Initialize tracking for this movement type
+				itemBonusesByType[movementType] ??= { value: 0, labels: new Set() };
+				itemBonusesByType[movementType].value += value;
+
+				// Track label if it's meaningfully different from the item name
+				// (not just the item name with a suffix like "(2)" or "(9)")
+				const label = rule.label ?? '';
+				const isLabelDifferent = label && !label.startsWith(item.name);
+				if (isLabelDifferent) {
+					itemBonusesByType[movementType].labels.add(label);
 				}
+			}
+
+			// Add accumulated bonuses for this item to the main list
+			for (const [movementType, data] of Object.entries(itemBonusesByType)) {
+				if (data.value === 0) continue;
+				bonusesByType[movementType] ??= [];
+
+				// Build display name: "ItemName" or "ItemName — Label" if label differs
+				const uniqueLabels = [...data.labels];
+				const displayName =
+					uniqueLabels.length > 0 ? `${item.name} — ${uniqueLabels.join(', ')}` : item.name;
+
+				bonusesByType[movementType].push({
+					itemName: displayName,
+					value: data.value,
+				});
 			}
 		}
 
@@ -111,12 +127,7 @@
 						<div class="movement-card__bonus-list">
 							{#each bonuses as bonus}
 								<div class="movement-card__bonus-item">
-									<div class="movement-card__bonus-source">
-										<span class="movement-card__bonus-item-name">{bonus.itemName}</span>
-										{#if bonus.label && bonus.label !== bonus.itemName}
-											<span class="movement-card__bonus-label">{bonus.label}</span>
-										{/if}
-									</div>
+									<span class="movement-card__bonus-item-name">{bonus.itemName}</span>
 									<span
 										class="movement-card__bonus-value"
 										class:movement-card__bonus-value--negative={bonus.value < 0}
@@ -270,20 +281,9 @@
 			font-size: var(--nimble-xs-text);
 		}
 
-		&__bonus-source {
-			display: flex;
-			flex-direction: column;
-			gap: 0.0625rem;
-		}
-
 		&__bonus-item-name {
 			color: var(--nimble-dark-text-color);
 			font-weight: 500;
-		}
-
-		&__bonus-label {
-			color: var(--nimble-medium-text-color);
-			font-size: var(--nimble-2xs-text, 0.625rem);
 		}
 
 		&__bonus-value {

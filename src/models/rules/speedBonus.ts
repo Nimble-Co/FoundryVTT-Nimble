@@ -97,6 +97,7 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 	 */
 	prePrepareData(): void {
 		if (!this.isNumericValue()) return;
+		if (!this.test()) return;
 		this.applySpeedBonus();
 	}
 
@@ -105,6 +106,7 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 	 */
 	override afterPrepareData(): void {
 		if (this.isNumericValue()) return;
+		if (!this.test()) return;
 		this.applySpeedBonus();
 	}
 }

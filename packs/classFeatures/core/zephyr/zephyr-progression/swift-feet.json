@@ -10,26 +10,28 @@
 			{
 				"type": "speedBonus",
 				"value": "2",
-				"label": "Swift Feet",
+				"label": "Swift Feet (2)",
 				"predicate": {
-					"unarmored": true
+					"armor": "unarmored"
 				}
 			},
 			{
 				"type": "initiativeBonus",
-				"value": "1",
+				"value": "@level",
 				"label": "Swift Feet Initiative Bonus",
 				"predicate": {
-					"unarmored": true
+					"armor": "unarmored"
 				}
 			},
 			{
 				"type": "speedBonus",
 				"value": "2",
-				"label": "Swift Feet Speed Bonus",
+				"label": "Swift Feet (9)",
 				"predicate": {
-					"level": 9,
-					"unarmored": true
+					"armor": "unarmored",
+					"level": {
+						"min": 9
+					}
 				}
 			}
 		],

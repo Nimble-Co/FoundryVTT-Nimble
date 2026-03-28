@@ -250,12 +250,13 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	override prepareDerivedData(): void {
 		super.prepareDerivedData();
 
+		// Populate derived tags before rules run so predicates can evaluate against them
+		this._populateDerivedTags();
+
 		// Call rule hooks
 		this.rules.forEach((rule) => {
 			rule.prePrepareData?.();
 		});
-
-		this._populateDerivedTags();
 	}
 
 	_populateDerivedTags(): void {}
