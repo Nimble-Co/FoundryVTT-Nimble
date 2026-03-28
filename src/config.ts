@@ -822,6 +822,7 @@ const fieldRest = {
 	rolled: 'NIMBLE.fieldRest.rolled',
 	advantage: 'NIMBLE.fieldRest.advantage',
 	restedWithoutSpending: 'NIMBLE.fieldRest.restedWithoutSpending',
+	manaRestored: 'NIMBLE.fieldRest.manaRestored',
 };
 
 const itemConfig = {

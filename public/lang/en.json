@@ -1092,7 +1092,8 @@
 			"healing": "Healing",
 			"rolled": "Rolled",
 			"advantage": "Advantage",
-			"restedWithoutSpending": "Rested without spending hit dice"
+			"restedWithoutSpending": "Rested without spending hit dice",
+			"manaRestored": "Mana Restored"
 		},
 		"npcSheet": {
 			"armor": "Armor",

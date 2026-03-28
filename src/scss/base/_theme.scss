@@ -92,6 +92,16 @@
 	--nimble-action-info-icon-color: hsl(45, 70%, 55%);
 	--nimble-action-button-icon-color: hsl(210, 70%, 65%);
 
+	/** CHAT CARD COLORS **/
+	--nimble-chat-hit-dice-value-color: hsl(45, 80%, 60%);
+	--nimble-chat-mana-value-color: hsl(220, 75%, 70%);
+	--nimble-chat-maximize-background: hsla(120, 45%, 45%, 0.2);
+	--nimble-chat-maximize-color: hsl(120, 50%, 60%);
+	--nimble-chat-maximize-border-color: hsla(120, 45%, 45%, 0.4);
+	--nimble-chat-advantage-background: hsla(210, 70%, 50%, 0.2);
+	--nimble-chat-advantage-color: hsl(210, 70%, 65%);
+	--nimble-chat-advantage-border-color: hsla(210, 70%, 50%, 0.4);
+
 	/** REACTION COLORS **/
 	// Defend (blue)
 	--nimble-reaction-defend-primary: hsl(210, 60%, 55%);

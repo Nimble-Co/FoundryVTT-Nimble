@@ -313,18 +313,7 @@ class NimbleChatMessage extends ChatMessage {
 	}
 
 	isMinionGroupAttackCard(): boolean {
-		if (this.type === 'minionGroupAttack') return true;
-		const messageType = this.type as string;
-		if (messageType !== 'base') return false;
-
-		const nimbleChatCardType = (
-			this as unknown as {
-				flags?: {
-					nimble?: { chatCardType?: string };
-				};
-			}
-		).flags?.nimble?.chatCardType;
-		return nimbleChatCardType === 'minionGroupAttack';
+		return this.type === 'minionGroupAttack';
 	}
 
 	/** Check if this chat message is an activation card type (feature, object, or spell) */
