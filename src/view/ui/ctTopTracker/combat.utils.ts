@@ -12,7 +12,11 @@ import { hasCombatantTurnEndedThisRound } from '../../../utils/combatTurnProgres
 import { getHeroicReactionAvailability } from '../../../utils/heroicActions.js';
 import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
 import { isCombatantDead } from '../../../utils/isCombatantDead.js';
-import { getMinionGroupSummaries } from '../../../utils/minionGrouping.js';
+import {
+	getEffectiveMinionGroupLeader,
+	getMinionGroupId,
+	getMinionGroupSummaries,
+} from '../../../utils/minionGrouping.js';
 import type { ResolveActiveEntryKeyParams, SceneCombatantLists, TrackEntry } from './types.js';
 
 type CombatWithTurnIdentityHint = Combat & {
@@ -67,6 +71,21 @@ function resolveCurrentTurnIdentity(
 	}
 
 	return null;
+}
+
+function shouldExcludeNonTurnCombatantFromCtTrack(
+	combatant: Combatant.Implementation,
+	groupSummaries: ReturnType<typeof getMinionGroupSummaries>,
+): boolean {
+	const groupId = getMinionGroupId(combatant);
+	if (!groupId) return false;
+
+	const summary = groupSummaries.get(groupId);
+	if (!summary) return false;
+
+	const effectiveLeader = getEffectiveMinionGroupLeader(summary, { aliveOnly: true });
+	if (!effectiveLeader?.id) return false;
+	return effectiveLeader.id !== (combatant.id ?? '');
 }
 
 export function isLegendaryCombatant(combatant: Combatant.Implementation): boolean {
@@ -270,6 +289,7 @@ export function getCombatantsForScene(
 ): SceneCombatantLists {
 	if (!combat || !sceneId) return { aliveCombatants: [], deadCombatants: [] };
 
+	const groupSummaries = getMinionGroupSummaries(combat.combatants.contents);
 	const combatantsForScene = combat.combatants.contents.filter(
 		(combatant) =>
 			getCombatantSceneId(combatant) === sceneId && combatant.visible && combatant._id != null,
@@ -291,6 +311,7 @@ export function getCombatantsForScene(
 		...turnCombatants.filter((combatant) => !isCombatantDead(combatant)),
 		...combatantsForScene.filter((combatant) => {
 			if (isCombatantDead(combatant)) return false;
+			if (shouldExcludeNonTurnCombatantFromCtTrack(combatant, groupSummaries)) return false;
 			return !turnCombatantIds.has(combatant.id ?? '');
 		}),
 	];

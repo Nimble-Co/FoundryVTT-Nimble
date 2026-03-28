@@ -5,7 +5,11 @@ import {
 	createCombatantsCollectionFixture,
 } from '../../../../tests/fixtures/combat.js';
 import { clearExpandedTurnIdentityHint } from '../../../documents/combat/expandedTurnIdentityStore.js';
-import { hasCombatantTurnRemainingThisRound, syncCombatTurnsForCt } from './combat.utils.js';
+import {
+	getCombatantsForScene,
+	hasCombatantTurnRemainingThisRound,
+	syncCombatTurnsForCt,
+} from './combat.utils.js';
 import {
 	getCombatantCardResourceChips,
 	getCombatantOutlineClass,
@@ -330,19 +334,73 @@ describe('ctTopTracker helpers', () => {
 			},
 			turns: rawTurns,
 			turn: 0,
-			combatant: playerOne,
 			setupTurns: vi.fn(() => expandedTurns),
 		} as unknown as Combat & {
 			_nimbleExpandedTurnIdentity?: { combatantId: string; occurrence: number | null } | null;
 		};
+		Object.defineProperty(combat, 'combatant', {
+			configurable: true,
+			get() {
+				const turnIndex =
+					typeof combat.turn === 'number' && combat.turn >= 0 && combat.turn < combat.turns.length
+						? combat.turn
+						: 0;
+				return combat.turns[turnIndex] ?? null;
+			},
+		});
 
 		syncCombatTurnsForCt(combat);
 
 		expect(combat.turn).toBe(2);
+		expect(combat.combatant?.id).toBe('player-two');
 		expect(combat._nimbleExpandedTurnIdentity).toEqual({
 			combatantId: 'player-two',
 			occurrence: 0,
 		});
+	});
+
+	it('keeps grouped minion members out of the CT turn track while preserving other non-turn combatants', () => {
+		const minionLeader = createCombatantFixture({
+			id: 'minion-leader',
+			type: 'npc',
+			actor: createCombatActorFixture({ type: 'minion' }),
+			sceneId: 'scene-1',
+			flags: {
+				nimble: { minionGroup: { id: 'group-1', role: 'leader' } },
+			},
+		});
+		(minionLeader as unknown as { visible: boolean }).visible = true;
+		const minionMember = createCombatantFixture({
+			id: 'minion-member',
+			type: 'npc',
+			actor: createCombatActorFixture({ type: 'minion' }),
+			sceneId: 'scene-1',
+			flags: {
+				nimble: { minionGroup: { id: 'group-1', role: 'member' } },
+			},
+		});
+		(minionMember as unknown as { visible: boolean }).visible = true;
+		const lateJoiner = createCombatantFixture({
+			id: 'late-joiner',
+			type: 'npc',
+			actor: createCombatActorFixture({ type: 'npc' }),
+			sceneId: 'scene-1',
+		});
+		(lateJoiner as unknown as { visible: boolean }).visible = true;
+
+		const combat = {
+			combatants: createCombatantsCollectionFixture([minionLeader, minionMember, lateJoiner]),
+			turns: [minionLeader],
+			turn: 0,
+			combatant: minionLeader,
+		} as unknown as Combat;
+
+		const { aliveCombatants } = getCombatantsForScene(combat, 'scene-1');
+
+		expect(aliveCombatants.map((combatant) => combatant.id)).toEqual([
+			'minion-leader',
+			'late-joiner',
+		]);
 	});
 
 	it('keeps an active zero-action non-player in the current round until initiative advances past it', () => {
