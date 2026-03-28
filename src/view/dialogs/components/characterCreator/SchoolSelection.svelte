@@ -37,7 +37,7 @@
 		selected.length > 0
 			? sortSpellsBySchoolThenName(
 					getSpellsFromIndex(spellIndex, selected, group.tiers, {
-						includeUtility: group.includeUtility,
+						utilityOnly: group.utilityOnly,
 						forClass: group.forClass,
 					}),
 				)

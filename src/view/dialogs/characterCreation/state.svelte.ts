@@ -516,7 +516,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		label: string;
 		schools?: string[];
 		tiers?: number[];
-		includeUtility?: boolean;
+		utilityOnly?: boolean;
 		uuids?: string[];
 		mode?: 'auto' | 'selectSchool' | 'selectSpell';
 		count?: number | null;
@@ -537,7 +537,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 
 			const mode = grantRule.mode ?? 'auto';
 			const tiers = grantRule.tiers ?? [0];
-			const includeUtility = grantRule.includeUtility ?? false;
+			const utilityOnly = grantRule.utilityOnly ?? false;
 
 			if (mode === 'auto') {
 				// Auto-grant mode: add spells directly
@@ -556,7 +556,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 				} else if (grantRule.schools && grantRule.schools.length > 0) {
 					// Grant by school + tier
 					const spells = getSpellsFromIndex(spellIndex, grantRule.schools, tiers, {
-						includeUtility,
+						utilityOnly,
 						forClass: classIdentifier,
 					});
 					autoGrant.push(...spells);
@@ -569,13 +569,13 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 					availableSchools: grantRule.schools ?? [],
 					tiers,
 					count: grantRule.count ?? 1,
-					includeUtility,
+					utilityOnly,
 					forClass: classIdentifier,
 				});
 			} else if (mode === 'selectSpell') {
 				// Spell selection mode: user picks individual spells from the pool
 				const availableSpells = getSpellsFromIndex(spellIndex, grantRule.schools ?? [], tiers, {
-					includeUtility,
+					utilityOnly,
 					forClass: classIdentifier,
 				});
 				spellSelections.push({
@@ -583,7 +583,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 					label: grantRule.label || 'Choose Spells',
 					availableSpells,
 					count: grantRule.count ?? 1,
-					includeUtility,
+					utilityOnly,
 					forClass: classIdentifier,
 				});
 			}
@@ -727,11 +727,11 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		// Prepare spell data with selection options for filtering during creation
 		const selectionOptions = new Map<
 			string,
-			{ includeUtility: boolean; forClass: string; tiers: number[] }
+			{ utilityOnly: boolean; forClass: string; tiers: number[] }
 		>();
 		for (const group of spellGrants?.schoolSelections ?? []) {
 			selectionOptions.set(group.ruleId, {
-				includeUtility: group.includeUtility,
+				utilityOnly: group.utilityOnly,
 				forClass: group.forClass,
 				tiers: group.tiers,
 			});

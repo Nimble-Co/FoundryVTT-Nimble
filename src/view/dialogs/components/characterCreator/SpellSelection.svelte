@@ -54,17 +54,12 @@
 
 	<ul class="spell-selection__spell-list">
 		{#each sortedSpells as spell (spell.uuid)}
-			<li class="spell-selection__spell-item">
-				<button
-					type="button"
-					class="spell-selection__spell-button"
-					class:selected={isSelected(spell.uuid)}
-					disabled={isDisabled(spell.uuid)}
-					onclick={() => toggleSpell(spell.uuid)}
-				>
-					<SpellCard {spell} />
-				</button>
-			</li>
+			<SpellCard
+				{spell}
+				isSelected={isSelected(spell.uuid)}
+				isDisabled={isDisabled(spell.uuid)}
+				onSelect={() => toggleSpell(spell.uuid)}
+			/>
 		{/each}
 	</ul>
 
@@ -101,44 +96,9 @@
 		&__spell-list {
 			display: flex;
 			flex-direction: column;
-			gap: 0.25rem;
 			margin: 0;
 			padding: 0;
 			list-style: none;
-		}
-
-		&__spell-item {
-			margin: 0;
-			padding: 0;
-		}
-
-		&__spell-button {
-			width: 100%;
-			padding: 0;
-			background: transparent;
-			border: 2px solid transparent;
-			border-radius: 4px;
-			cursor: pointer;
-			transition: var(--nimble-standard-transition);
-			text-align: left;
-
-			&:hover:not(:disabled) {
-				border-color: var(--nimble-accent-color);
-			}
-
-			&:disabled {
-				opacity: 0.5;
-				cursor: not-allowed;
-			}
-
-			&.selected {
-				border-color: var(--nimble-accent-color);
-				background: color-mix(
-					in srgb,
-					var(--nimble-accent-color) 10%,
-					var(--nimble-basic-button-background-color)
-				);
-			}
 		}
 
 		&__summary {

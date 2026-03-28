@@ -17,7 +17,7 @@ export interface SchoolSelectionGroup {
 	availableSchools: string[];
 	tiers: number[];
 	count: number;
-	includeUtility: boolean;
+	utilityOnly: boolean;
 	forClass: string;
 }
 
@@ -29,7 +29,7 @@ export interface SpellSelectionGroup {
 	label: string;
 	availableSpells: SpellIndexEntry[];
 	count: number;
-	includeUtility: boolean;
+	utilityOnly: boolean;
 	forClass: string;
 }
 
@@ -109,7 +109,7 @@ export interface CharacterCreationResults {
 		/** Directly selected spell UUIDs (from selectSpell mode) */
 		selectedSpells: Map<string, string[]>;
 		/** Filtering options for each school selection rule */
-		selectionOptions: Map<string, { includeUtility: boolean; forClass: string; tiers: number[] }>;
+		selectionOptions: Map<string, { utilityOnly: boolean; forClass: string; tiers: number[] }>;
 	};
 }
 

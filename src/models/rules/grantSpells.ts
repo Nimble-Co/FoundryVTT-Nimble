@@ -16,8 +16,8 @@ function schema() {
 			nullable: false,
 			initial: [0],
 		}),
-		// Whether to include utility spells (default: false)
-		includeUtility: new fields.BooleanField({
+		// When true, only grant utility spells; when false, only grant non-utility spells
+		utilityOnly: new fields.BooleanField({
 			required: false,
 			nullable: false,
 			initial: false,
@@ -65,7 +65,7 @@ class GrantSpellsRule extends NimbleBaseRule<GrantSpellsRule.Schema> {
 
 	declare tiers: number[];
 
-	declare includeUtility: boolean;
+	declare utilityOnly: boolean;
 
 	declare uuids: string[];
 
@@ -85,7 +85,7 @@ class GrantSpellsRule extends NimbleBaseRule<GrantSpellsRule.Schema> {
 			new Map([
 				['schools', 'string[]'],
 				['tiers', 'number[]'],
-				['includeUtility', 'boolean'],
+				['utilityOnly', 'boolean'],
 				['uuids', 'string[]'],
 				['mode', "'auto' | 'selectSchool' | 'selectSpell'"],
 				['count', 'number | null'],

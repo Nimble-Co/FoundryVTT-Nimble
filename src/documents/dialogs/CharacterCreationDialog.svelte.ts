@@ -102,10 +102,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			autoGrant: string[];
 			selectedSchools: Map<string, string[]>;
 			selectedSpells: Map<string, string[]>;
-			selectionOptions?: Map<
-				string,
-				{ includeUtility: boolean; forClass: string; tiers: number[] }
-			>;
+			selectionOptions?: Map<string, { utilityOnly: boolean; forClass: string; tiers: number[] }>;
 		};
 	}) {
 		const actor = await Actor.create(
@@ -289,13 +286,13 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			for (const [ruleId, schools] of results.spells.selectedSchools) {
 				// Get filtering options for this rule, with sensible defaults
 				const options = selectionOptions.get(ruleId) ?? {
-					includeUtility: false,
+					utilityOnly: false,
 					forClass: classDocument?.system?.identifier ?? '',
 					tiers: [0],
 				};
 
 				const spells = getSpellsFromIndex(spellIndex, schools, options.tiers, {
-					includeUtility: options.includeUtility,
+					utilityOnly: options.utilityOnly,
 					forClass: options.forClass,
 				});
 

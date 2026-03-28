@@ -28,4 +28,10 @@ export interface SpellSelectionProps {
 
 export interface SpellCardProps {
 	spell: SpellIndexEntry;
+	/** Whether this spell is currently selected (for selectable mode) */
+	isSelected?: boolean;
+	/** Whether this spell is disabled (can't be selected) */
+	isDisabled?: boolean;
+	/** Callback when spell is selected/deselected */
+	onSelect?: () => void;
 }

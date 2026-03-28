@@ -159,8 +159,12 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
  * Options for filtering spells from the index.
  */
 export interface GetSpellsOptions {
-	/** Whether to include utility spells (default: true) */
-	includeUtility?: boolean;
+	/**
+	 * Filter by utility spell status:
+	 * - true: Only return utility spells
+	 * - false (default): Only return non-utility spells (cantrips/combat spells)
+	 */
+	utilityOnly?: boolean;
 	/** Filter spells by class - only includes spells available to this class */
 	forClass?: string;
 }
@@ -174,7 +178,7 @@ export function getSpellsFromIndex(
 	tiers: number[],
 	options: GetSpellsOptions = {},
 ): SpellIndexEntry[] {
-	const { includeUtility = true, forClass } = options;
+	const { utilityOnly = false, forClass } = options;
 	const results: SpellIndexEntry[] = [];
 
 	for (const school of schools) {
@@ -185,8 +189,9 @@ export function getSpellsFromIndex(
 			const spells = tierMap.get(tier);
 			if (spells) {
 				for (const spell of spells) {
-					// Filter out utility spells if not requested
-					if (!includeUtility && spell.isUtility) continue;
+					// Filter by utility status - mutually exclusive categories
+					if (utilityOnly && !spell.isUtility) continue;
+					if (!utilityOnly && spell.isUtility) continue;
 
 					// Filter by class restriction - if spell has class restrictions,
 					// only include it if the requesting class is in the list
