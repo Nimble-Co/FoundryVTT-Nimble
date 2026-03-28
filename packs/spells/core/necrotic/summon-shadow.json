@@ -53,7 +53,9 @@
 		},
 		"school": "necrotic",
 		"tier": 0,
-		"classes": ["shadowmancer"]
+		"classes": [
+			"shadowmancer"
+		]
 	},
 	"effects": [],
 	"flags": {},
