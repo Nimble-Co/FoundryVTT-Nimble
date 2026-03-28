@@ -1091,9 +1091,11 @@
 		pointer-events: none;
 		z-index: 4;
 	}
-	.nimble-ct__portrait,
 	.nimble-ct__round-separator,
 	.nimble-ct__dead {
+		pointer-events: auto;
+	}
+	.nimble-ct__portrait-card {
 		pointer-events: auto;
 	}
 	.nimble-ct__scrollbar {
@@ -1393,6 +1395,7 @@
 		gap: var(--nimble-ct-resource-row-gap);
 		border: 1px solid var(--nimble-ct-outline-border-color);
 		border-radius: 0 0 0.44rem 0.44rem;
+		pointer-events: none;
 		background: linear-gradient(
 			180deg,
 			color-mix(in srgb, hsl(224 38% 14%) 94%, black 6%) 0%,
@@ -1519,6 +1522,7 @@
 		box-shadow:
 			0 0 0.48rem color-mix(in srgb, hsl(42 90% 66%) 20%, transparent),
 			0 0.18rem 0.45rem color-mix(in srgb, black 42%, transparent);
+		pointer-events: none;
 		transition:
 			width 180ms ease,
 			max-width 180ms ease,
@@ -1653,13 +1657,32 @@
 	.nimble-ct__portrait--resource-drawer:has(
 			.nimble-ct__portrait-card:hover,
 			.nimble-ct__portrait-card:focus-within,
-			.nimble-ct__resource-drawer-stack:hover,
-			.nimble-ct__resource-drawer-stack:focus-within
+			.nimble-ct__resource-drawer:hover,
+			.nimble-ct__resource-drawer:focus-within
 		)
 		.nimble-ct__resource-drawer-stack {
 		opacity: 1;
 		visibility: visible;
+		transform: translate(-50%, 0) scaleY(1);
+		transition:
+			opacity 170ms ease,
+			transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+			visibility 0s linear 0s;
+	}
+	.nimble-ct__portrait--resource-drawer:has(
+			.nimble-ct__portrait-card:hover,
+			.nimble-ct__portrait-card:focus-within,
+			.nimble-ct__resource-drawer:hover,
+			.nimble-ct__resource-drawer:focus-within
+		)
+		.nimble-ct__resource-drawer {
 		pointer-events: auto;
+	}
+	.nimble-ct-shell--resource-drawer-pinned
+		.nimble-ct__portrait--resource-drawer
+		.nimble-ct__resource-drawer-stack {
+		opacity: 1;
+		visibility: visible;
 		transform: translate(-50%, 0) scaleY(1);
 		transition:
 			opacity 170ms ease,
@@ -1668,15 +1691,8 @@
 	}
 	.nimble-ct-shell--resource-drawer-pinned
 		.nimble-ct__portrait--resource-drawer
-		.nimble-ct__resource-drawer-stack {
-		opacity: 1;
-		visibility: visible;
+		.nimble-ct__resource-drawer {
 		pointer-events: auto;
-		transform: translate(-50%, 0) scaleY(1);
-		transition:
-			opacity 170ms ease,
-			transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-			visibility 0s linear 0s;
 	}
 	.nimble-ct-shell--resource-drawer-pinned
 		.nimble-ct__portrait--resource-drawer
@@ -1687,8 +1703,8 @@
 		.nimble-ct__portrait--resource-drawer:has(
 			.nimble-ct__portrait-card:hover,
 			.nimble-ct__portrait-card:focus-within,
-			.nimble-ct__resource-drawer-stack:hover,
-			.nimble-ct__resource-drawer-stack:focus-within
+			.nimble-ct__resource-drawer:hover,
+			.nimble-ct__resource-drawer:focus-within
 		)
 		.nimble-ct__player-name-drawer {
 		display: inline-flex;

@@ -622,6 +622,11 @@ export function createCtTopTrackerState() {
 		);
 	}
 
+	function isPointerOverPortraitCard(clientX: number, clientY: number): boolean {
+		const elements = document.elementsFromPoint(clientX, clientY);
+		return elements.some((el) => el.classList.contains('nimble-ct__portrait-card'));
+	}
+
 	function clearDropPreview(): void {
 		pendingDropPreview = null;
 		if (trackElement) {
@@ -1299,7 +1304,7 @@ export function createCtTopTrackerState() {
 			capture: true,
 		});
 		trackHoverListener = (event: MouseEvent) => {
-			updateTrackGapCursor(isPointerWithinTrackWheelZone(event.clientX, event.clientY));
+			updateTrackGapCursor(isPointerOverPortraitCard(event.clientX, event.clientY));
 		};
 		window.addEventListener('mousemove', trackHoverListener);
 		ctWidthPreviewListener = (event: Event) => {
