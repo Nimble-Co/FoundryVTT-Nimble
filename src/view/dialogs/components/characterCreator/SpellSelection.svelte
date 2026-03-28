@@ -68,7 +68,7 @@
 <div class="spell-selection">
 	<div class="spell-selection__header">
 		<h4 class="spell-selection__label nimble-heading" data-heading-variant="subsection">
-			{#if isSelectionComplete}
+			{#if isSelectionComplete && !showAllSpells}
 				{localize('NIMBLE.spellGrants.spellsSelected', { spells: selectedSpellNames })}
 			{:else}
 				{group.label}
@@ -94,16 +94,37 @@
 		</p>
 	{/if}
 
-	<ul class="spell-selection__spell-list">
-		{#each displayedSpells as spell (spell.uuid)}
-			<SpellCard
-				{spell}
-				isSelected={isSelected(spell.uuid)}
-				isDisabled={isDisabled(spell.uuid)}
-				onSelect={() => toggleSpell(spell.uuid)}
-			/>
-		{/each}
-	</ul>
+	{#if isSelectionComplete && !showAllSpells}
+		<!-- Collapsed view: show selected spells in compact card style -->
+		<ul class="spell-selection__selected-list">
+			{#each selectedSpells as spell (spell.uuid)}
+				<li>
+					<button class="nimble-card" data-card-option="non-clickable">
+						<img
+							class="nimble-card__img"
+							src={spell.img || 'icons/svg/item-bag.svg'}
+							alt={spell.name}
+						/>
+						<h3 class="nimble-card__title nimble-heading" data-heading-variant="item">
+							{spell.name}
+						</h3>
+					</button>
+				</li>
+			{/each}
+		</ul>
+	{:else}
+		<!-- Expanded view: show all spells with selection capability -->
+		<ul class="spell-selection__spell-list">
+			{#each displayedSpells as spell (spell.uuid)}
+				<SpellCard
+					{spell}
+					isSelected={isSelected(spell.uuid)}
+					isDisabled={isDisabled(spell.uuid)}
+					onSelect={() => toggleSpell(spell.uuid)}
+				/>
+			{/each}
+		</ul>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -152,6 +173,15 @@
 			display: flex;
 			flex-direction: column;
 			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		&__selected-list {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+			margin: 0.5rem 0 0 0;
 			padding: 0;
 			list-style: none;
 		}

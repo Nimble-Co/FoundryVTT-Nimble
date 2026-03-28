@@ -4,19 +4,36 @@
 	import localize from '#utils/localize.js';
 	import SpellCard from './SpellCard.svelte';
 
-	let { group, spellIndex, selected, onSelect }: SchoolSelectionProps = $props();
+	let {
+		group,
+		spellIndex,
+		selected,
+		onSelect,
+		isConfirmed = false,
+		onConfirm,
+	}: SchoolSelectionProps = $props();
 
-	function toggleSchool(school: string) {
+	function selectSchool(school: string) {
 		const currentSelection = [...selected];
 
 		if (currentSelection.includes(school)) {
-			// Remove school
+			// Deselect school
 			const filtered = currentSelection.filter((s) => s !== school);
 			onSelect(filtered);
-		} else if (currentSelection.length < group.count) {
-			// Add school (only if we haven't reached the limit)
-			onSelect([...currentSelection, school]);
+		} else {
+			// Select school (replace current selection if at limit, otherwise add)
+			if (currentSelection.length >= group.count) {
+				// Replace the current selection
+				onSelect([school]);
+			} else {
+				// Add to selection
+				onSelect([...currentSelection, school]);
+			}
 		}
+	}
+
+	function confirmSelection() {
+		onConfirm?.();
 	}
 
 	/**
@@ -24,15 +41,13 @@
 	 */
 	function sortSpellsBySchoolThenName(spells: SpellIndexEntry[]): SpellIndexEntry[] {
 		return [...spells].sort((a, b) => {
-			// First sort by school
 			const schoolCompare = a.school.localeCompare(b.school);
 			if (schoolCompare !== 0) return schoolCompare;
-			// Then sort by name
 			return a.name.localeCompare(b.name);
 		});
 	}
 
-	// Get spells from selected schools for preview, sorted by school then name
+	// Get spells from selected schools for preview
 	const selectedSpells = $derived(
 		selected.length > 0
 			? sortSpellsBySchoolThenName(
@@ -59,49 +74,58 @@
 	const selectedSchoolNames = $derived(selected.map((s) => getSchoolLabel(s)).join(', '));
 </script>
 
-<div class="school-selection">
-	<h4 class="school-selection__label nimble-heading" data-heading-variant="subsection">
-		{#if isSelectionComplete}
-			{localize('NIMBLE.spellGrants.schoolsSelected', { schools: selectedSchoolNames })}
-		{:else}
-			{group.label}
-		{/if}
-	</h4>
+{#if !isConfirmed}
+	<div class="school-selection">
+		<div class="school-selection__header">
+			<h4 class="school-selection__label nimble-heading" data-heading-variant="subsection">
+				{group.label}
+			</h4>
 
-	{#if !isSelectionComplete}
-		<p class="school-selection__hint">
-			{localize('NIMBLE.spellGrants.chooseSchools', { count: String(group.count) })}
-		</p>
-	{/if}
-
-	<div class="school-selection__options">
-		{#each group.availableSchools as school (school)}
-			<button
-				type="button"
-				class="school-selection__button"
-				class:selected={selected.includes(school)}
-				disabled={!selected.includes(school) && selected.length >= group.count}
-				onclick={() => toggleSchool(school)}
-			>
-				<i class="school-selection__icon {getSchoolIcon(school)}"></i>
-				<span class="school-selection__school-name">{getSchoolLabel(school)}</span>
-			</button>
-		{/each}
-	</div>
-
-	{#if selectedSpells.length > 0}
-		<div class="school-selection__preview">
-			<h5 class="school-selection__preview-label nimble-heading" data-heading-variant="subsection">
-				{localize('NIMBLE.spellGrants.spellsFromSelection')}
-			</h5>
-			<ul class="school-selection__spell-list">
-				{#each selectedSpells as spell (spell.uuid)}
-					<SpellCard {spell} />
-				{/each}
-			</ul>
+			{#if isSelectionComplete}
+				<button type="button" class="school-selection__confirm-button" onclick={confirmSelection}>
+					{localize('NIMBLE.spellGrants.confirmSelection')}
+				</button>
+			{/if}
 		</div>
-	{/if}
-</div>
+
+		{#if !isSelectionComplete}
+			<p class="school-selection__hint">
+				{localize('NIMBLE.spellGrants.chooseSchools', { count: String(group.count) })}
+			</p>
+		{/if}
+
+		<!-- Always show all school options - none are disabled -->
+		<div class="school-selection__options">
+			{#each group.availableSchools as school (school)}
+				<button
+					type="button"
+					class="school-selection__button"
+					class:selected={selected.includes(school)}
+					onclick={() => selectSchool(school)}
+				>
+					<i class="school-selection__icon {getSchoolIcon(school)}"></i>
+					<span class="school-selection__school-name">{getSchoolLabel(school)}</span>
+				</button>
+			{/each}
+		</div>
+
+		{#if selectedSpells.length > 0}
+			<div class="school-selection__preview">
+				<h5
+					class="school-selection__preview-label nimble-heading"
+					data-heading-variant="subsection"
+				>
+					{localize('NIMBLE.spellGrants.spellsFromSelection')}
+				</h5>
+				<ul class="school-selection__spell-list">
+					{#each selectedSpells as spell (spell.uuid)}
+						<SpellCard {spell} />
+					{/each}
+				</ul>
+			</div>
+		{/if}
+	</div>
+{/if}
 
 <style lang="scss">
 	.school-selection {
@@ -111,8 +135,32 @@
 		border: 1px solid var(--nimble-card-border-color);
 		border-radius: 4px;
 
+		&__header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 0.5rem;
+			margin-bottom: 0.25rem;
+		}
+
 		&__label {
-			margin: 0 0 0.25rem 0;
+			margin: 0;
+		}
+
+		&__confirm-button {
+			padding: 0.25rem 0.75rem;
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			background: var(--nimble-accent-color);
+			border: 1px solid var(--nimble-accent-color);
+			border-radius: 4px;
+			cursor: pointer;
+			color: var(--nimble-light-text-color);
+			transition: var(--nimble-standard-transition);
+
+			&:hover {
+				filter: brightness(1.1);
+			}
 		}
 
 		&__hint {
@@ -139,13 +187,8 @@
 			transition: var(--nimble-standard-transition);
 			font-size: var(--nimble-sm-text);
 
-			&:hover:not(:disabled) {
+			&:hover {
 				border-color: var(--nimble-accent-color);
-			}
-
-			&:disabled {
-				opacity: 0.5;
-				cursor: not-allowed;
 			}
 
 			&.selected {

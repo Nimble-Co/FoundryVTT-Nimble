@@ -171,11 +171,12 @@ function spellSelectionsComplete(
 	grants: SpellGrantResult | null,
 	selectedSchools: Map<string, string[]>,
 	selectedSpells: Map<string, string[]>,
+	confirmedSchools: Set<string>,
 	sourceFilter?: SpellGrantSource,
 ): boolean {
 	if (!grants) return true;
 
-	// Check that all school selection groups have enough schools selected
+	// Check that all school selection groups have enough schools selected AND are confirmed
 	for (const group of grants.schoolSelections) {
 		// Skip if filtering by source and this group doesn't match
 		if (sourceFilter && group.source !== sourceFilter) continue;
@@ -184,6 +185,10 @@ function spellSelectionsComplete(
 		// Cap required count at available options to prevent stuck state
 		const requiredCount = Math.min(group.count, group.availableSchools.length);
 		if (selected.length < requiredCount) {
+			return false;
+		}
+		// Also require confirmation
+		if (!confirmedSchools.has(group.ruleId)) {
 			return false;
 		}
 	}
@@ -241,6 +246,7 @@ interface GetCurrentStageParams {
 	spellGrants: SpellGrantResult | null;
 	selectedSchools: Map<string, string[]>;
 	selectedSpells: Map<string, string[]>;
+	confirmedSchools: Set<string>;
 	hasClasses: boolean;
 	hasAncestries: boolean;
 	hasBackgrounds: boolean;
@@ -264,6 +270,7 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		spellGrants,
 		selectedSchools,
 		selectedSpells,
+		confirmedSchools,
 		hasClasses,
 		hasAncestries,
 		hasBackgrounds,
@@ -281,7 +288,13 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 	// Check class spell selections (from class features)
 	if (
 		hasSpellGrants(spellGrants, 'class') &&
-		!spellSelectionsComplete(spellGrants, selectedSchools, selectedSpells, 'class')
+		!spellSelectionsComplete(
+			spellGrants,
+			selectedSchools,
+			selectedSpells,
+			confirmedSchools,
+			'class',
+		)
 	) {
 		return CHARACTER_CREATION_STAGES.SPELLS;
 	}
@@ -309,7 +322,13 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 	// This appears after background options so selecting a background doesn't scroll back
 	if (
 		hasSpellGrants(spellGrants, 'background') &&
-		!spellSelectionsComplete(spellGrants, selectedSchools, selectedSpells, 'background')
+		!spellSelectionsComplete(
+			spellGrants,
+			selectedSchools,
+			selectedSpells,
+			confirmedSchools,
+			'background',
+		)
 	) {
 		// Return SPELLS stage but scroll handling will go to the right section
 		return CHARACTER_CREATION_STAGES.SPELLS;
@@ -388,6 +407,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	let spellGrants = $state<SpellGrantResult | null>(null);
 	let selectedSchools = $state<Map<string, string[]>>(new Map());
 	let selectedSpells = $state<Map<string, string[]>>(new Map());
+	let confirmedSchools = $state<Set<string>>(new Set());
 	let resolvedSpellIndex = $state<SpellIndex | null>(null);
 
 	// Resolve spell index on load
@@ -495,6 +515,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			spellGrants,
 			selectedSchools,
 			selectedSpells,
+			confirmedSchools,
 			hasClasses,
 			hasAncestries,
 			hasBackgrounds,
@@ -506,7 +527,13 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	// Determine if background spells need selection (for scroll targeting)
 	const needsBackgroundSpellSelection = $derived(
 		hasSpellGrants(spellGrants, 'background') &&
-			!spellSelectionsComplete(spellGrants, selectedSchools, selectedSpells, 'background'),
+			!spellSelectionsComplete(
+				spellGrants,
+				selectedSchools,
+				selectedSpells,
+				confirmedSchools,
+				'background',
+			),
 	);
 
 	// Effects
@@ -916,6 +943,12 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		},
 		set selectedSpells(value: Map<string, string[]>) {
 			selectedSpells = value;
+		},
+		get confirmedSchools() {
+			return confirmedSchools;
+		},
+		set confirmedSchools(value: Set<string>) {
+			confirmedSchools = value;
 		},
 		get spellIndex() {
 			return resolvedSpellIndex;

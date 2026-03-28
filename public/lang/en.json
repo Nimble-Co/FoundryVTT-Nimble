@@ -1289,7 +1289,14 @@
 			"changeSelection": "Change",
 			"hideOptions": "Hide Options",
 			"spellsFromSelection": "Spells from Selected School(s)",
-			"selectedCount": "{selected} of {total} selected"
+			"selectedCount": "{selected} of {total} selected",
+			"editSelection": "Edit Spell Selection",
+			"schoolsLabel": "Schools",
+			"spellsLabel": "Spells",
+			"confirmSelection": "Confirm",
+			"selectedSchoolLabel": "Selected School",
+			"grantedSchoolLabel": "Granted School",
+			"selectedSpellLabel": "Selected Spell"
 		},
 		"classSelection": {
 			"stepSelectClass": "Step 1: Select Class",

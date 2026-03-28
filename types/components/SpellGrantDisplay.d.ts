@@ -12,6 +12,8 @@ export interface SpellGrantDisplayProps {
 	spellIndex: SpellIndex | null;
 	selectedSchools: Map<string, string[]>;
 	selectedSpells: Map<string, string[]>;
+	/** Track which school selections have been confirmed */
+	confirmedSchools: Set<string>;
 	/** Filter grants to only show from this source. If not provided, shows all. */
 	sourceFilter?: SpellGrantSource;
 	/** Custom header text. If not provided, uses default localization. */
@@ -25,6 +27,10 @@ export interface SchoolSelectionProps {
 	spellIndex: SpellIndex;
 	selected: string[];
 	onSelect: (schools: string[]) => void;
+	/** Whether this selection has been confirmed */
+	isConfirmed?: boolean;
+	/** Callback when selection is confirmed */
+	onConfirm?: () => void;
 }
 
 export interface SpellSelectionProps {

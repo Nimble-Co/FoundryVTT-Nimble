@@ -100,6 +100,7 @@
 		spellIndex={state.spellIndex}
 		bind:selectedSchools={state.selectedSchools}
 		bind:selectedSpells={state.selectedSpells}
+		bind:confirmedSchools={state.confirmedSchools}
 		sourceFilter="class"
 	/>
 
@@ -144,6 +145,7 @@
 		spellIndex={state.spellIndex}
 		bind:selectedSchools={state.selectedSchools}
 		bind:selectedSpells={state.selectedSpells}
+		bind:confirmedSchools={state.confirmedSchools}
 		sourceFilter="background"
 		header={game.i18n.localize('NIMBLE.spellGrants.backgroundHeader')}
 		sectionId="{dialog.id}-background-spells"
