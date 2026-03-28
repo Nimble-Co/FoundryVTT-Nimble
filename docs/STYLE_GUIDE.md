@@ -1396,6 +1396,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `prelocalize()` | `src/utils/prelocalize.ts` | Pre-localize configuration objects |
 | `getChoicesFromCompendium()` | `src/utils/getChoicesFromCompendium.ts` | Fetch selectable options from compendiums |
 | `getSubclassChoices()` | `src/utils/getSubclassChoices.ts` | Get available subclass options |
+| `resolveItemActionCost()` | `src/utils/resolveItemActionCost.ts` | Get an item's activation action cost (defaults to 1) |
 | `spell/*` | `src/utils/spell/` | Spell-related utilities |
 | `treeManipulation/*` | `src/utils/treeManipulation/` | Tree data structure utilities |
 

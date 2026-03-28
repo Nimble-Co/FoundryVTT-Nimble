@@ -102,7 +102,7 @@
 		<AttackActionPanel
 			showEmbeddedDocumentImages={state.showEmbeddedDocumentImages}
 			onActivateItem={(cost) => {
-				if (state.inCombat && state.actionsData.current > 0) {
+				if (state.inCombat && state.actionsData.current >= cost) {
 					state.deductActionPips(cost);
 				}
 			}}
@@ -113,7 +113,7 @@
 		<CastSpellActionPanel
 			showEmbeddedDocumentImages={state.showEmbeddedDocumentImages}
 			onActivateItem={(cost) => {
-				if (state.inCombat && state.actionsData.current > 0) {
+				if (state.inCombat && state.actionsData.current >= cost) {
 					state.deductActionPips(cost);
 				}
 			}}

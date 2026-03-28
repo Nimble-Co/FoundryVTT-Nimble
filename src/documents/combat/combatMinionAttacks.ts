@@ -6,6 +6,7 @@ import {
 import { getCombatantImage } from '../../utils/combatantImage.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
 import { isMinionCombatant } from '../../utils/minionGrouping.js';
+import resolveItemActionCost from '../../utils/resolveItemActionCost.js';
 import { getCurrentUserTargetTokenIds, getTargetTokenName } from '../../utils/tokenTargetLookup.js';
 import {
 	appendMinionAttackRollOutcome,
@@ -250,6 +251,7 @@ async function rollSingleMinionAttack(params: {
 		});
 		await damageRoll.evaluate();
 
+		const actionCost = resolveItemActionCost(resolvedActionContext.selectedAction);
 		return {
 			rollEntry: buildMinionAttackRollEntry({
 				member: params.member,
@@ -261,7 +263,10 @@ async function rollSingleMinionAttack(params: {
 			}),
 			actionUpdate: {
 				_id: resolvedActionContext.memberId,
-				'system.actions.base.current': Math.max(0, resolvedActionContext.currentActions - 1),
+				'system.actions.base.current': Math.max(
+					0,
+					resolvedActionContext.currentActions - actionCost,
+				),
 			},
 			skippedMember: null,
 			unsupportedWarning: resolvedActionContext.unsupportedWarning,

@@ -166,6 +166,7 @@ export async function consumeCombatantAction(params: {
 	combat: Combat;
 	combatantId: string;
 	fallbackCombatant?: Combatant.Implementation | null;
+	actionCost?: number;
 }): Promise<number> {
 	const combatant =
 		params.combat.combatants.get(params.combatantId) ?? params.fallbackCombatant ?? null;
@@ -174,7 +175,9 @@ export async function consumeCombatantAction(params: {
 	const currentActions = getCombatantCurrentActions(combatant);
 	if (currentActions < 1) return 0;
 
-	const nextActions = Math.max(0, currentActions - 1);
+	const cost = Number(params.actionCost ?? 1);
+	const normalizedCost = Number.isFinite(cost) && cost >= 1 ? cost : 1;
+	const nextActions = Math.max(0, currentActions - normalizedCost);
 	const actionUpdate: Record<string, unknown> = {
 		_id: params.combatantId,
 		[COMBATANT_ACTIONS_CURRENT_PATH]: nextActions,
