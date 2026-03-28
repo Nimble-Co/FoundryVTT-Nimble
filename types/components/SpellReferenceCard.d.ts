@@ -4,6 +4,7 @@
 export interface SpellSystemData {
 	tier: number;
 	school: string;
+	description?: string;
 	activation: {
 		cost: { type: string; quantity: number };
 		targets: { count: number };

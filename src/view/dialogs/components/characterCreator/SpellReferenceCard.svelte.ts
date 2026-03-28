@@ -132,7 +132,7 @@ export function createSpellCardState(getSpell: () => Item) {
 		isLoading = true;
 		try {
 			const spell = getSpell();
-			const description = (spell.system as SpellSystemData).description ?? '';
+			const description = (spell.system as unknown as SpellSystemData).description ?? '';
 			enrichedDescription =
 				await foundry.applications.ux.TextEditor.implementation.enrichHTML(description);
 		} catch (error) {

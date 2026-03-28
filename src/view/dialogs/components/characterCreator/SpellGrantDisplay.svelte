@@ -99,37 +99,6 @@
 		return true;
 	});
 
-	// Get all spells for summary display (granted + selected)
-	const summarySpells = $derived.by(() => {
-		const spells: SpellIndexEntry[] = [];
-
-		// Add auto-granted spells
-		spells.push(...sortedAutoGrant);
-
-		// Add spells from school selections
-		for (const group of filteredSchoolSelections) {
-			const schools = selectedSchools.get(group.ruleId) ?? [];
-			if (schools.length > 0 && spellIndex) {
-				const schoolSpells = getSpellsFromIndex(spellIndex, schools, group.tiers, {
-					utilityOnly: group.utilityOnly,
-					forClass: group.forClass,
-				});
-				spells.push(...schoolSpells);
-			}
-		}
-
-		// Add spells from spell selections
-		for (const group of filteredSpellSelections) {
-			const selectedUuids = selectedSpells.get(group.ruleId) ?? [];
-			for (const uuid of selectedUuids) {
-				const spell = group.availableSpells.find((s) => s.uuid === uuid);
-				if (spell) spells.push(spell);
-			}
-		}
-
-		return spells;
-	});
-
 	// Group auto-granted spells by school for display
 	const autoGrantsBySchool = $derived.by(() => {
 		const grouped = new Map<string, SpellIndexEntry[]>();
@@ -139,16 +108,6 @@
 			grouped.set(spell.school, existing);
 		}
 		return grouped;
-	});
-
-	// Get selected schools for summary display
-	const summarySchools = $derived.by(() => {
-		const schools: string[] = [];
-		for (const group of filteredSchoolSelections) {
-			const selected = selectedSchools.get(group.ruleId) ?? [];
-			schools.push(...selected);
-		}
-		return schools;
 	});
 
 	// Determine section ID for scroll targeting

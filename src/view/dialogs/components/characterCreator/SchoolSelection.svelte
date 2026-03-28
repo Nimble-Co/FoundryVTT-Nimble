@@ -69,9 +69,6 @@
 
 	// Check if selection is complete
 	const isSelectionComplete = $derived(selected.length >= group.count);
-
-	// Get formatted list of selected school names
-	const selectedSchoolNames = $derived(selected.map((s) => getSchoolLabel(s)).join(', '));
 </script>
 
 {#if !isConfirmed}
