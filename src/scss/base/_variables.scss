@@ -179,6 +179,16 @@
 	--nimble-reaction-move-text: hsl(185, 60%, 25%);
 	--nimble-reaction-move-accent: hsl(185, 60%, 40%);
 
+	/** CHAT CARD COLORS **/
+	--nimble-chat-hit-dice-value-color: hsl(45, 70%, 40%);
+	--nimble-chat-mana-value-color: hsl(220, 70%, 50%);
+	--nimble-chat-maximize-background: hsla(120, 45%, 45%, 0.15);
+	--nimble-chat-maximize-color: hsl(120, 45%, 35%);
+	--nimble-chat-maximize-border-color: hsla(120, 45%, 45%, 0.3);
+	--nimble-chat-advantage-background: hsla(210, 70%, 50%, 0.15);
+	--nimble-chat-advantage-color: hsl(210, 70%, 40%);
+	--nimble-chat-advantage-border-color: hsla(210, 70%, 50%, 0.3);
+
 	/** ANIMATION **/
 	--nimble-standard-transition: all 0.15s ease-in-out;
 	--nimble-slow-transition: all 0.25s ease-in-out;

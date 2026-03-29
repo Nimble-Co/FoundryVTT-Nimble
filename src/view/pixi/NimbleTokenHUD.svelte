@@ -68,7 +68,7 @@
 <style lang="scss">
 	.status-effects-container {
 		display: grid;
-		grid-template-columns: repeat(3, minmax(8em, 1fr));
+		grid-template-columns: repeat(3, 12em);
 		gap: 0.75rem;
 		padding: 0.75rem;
 		padding-block-end: 0.5rem;

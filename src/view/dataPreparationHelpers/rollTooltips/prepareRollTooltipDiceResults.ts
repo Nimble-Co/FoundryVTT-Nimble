@@ -1,4 +1,6 @@
-export default function prepareRollTooltipDiceResults({ faces, results }) {
+export default function prepareRollTooltipDiceResults({ faces, flavor, results }) {
+	const isPrimaryDie = flavor === 'Primary Die';
+
 	return results.reduce((acc, { rerolled, discarded, result }) => {
 		const isCritical = (faces === 20 && result === 20) || result === faces;
 
@@ -8,8 +10,8 @@ export default function prepareRollTooltipDiceResults({ faces, results }) {
 		let classes = `nimble-die nimble-die--${faces}`;
 
 		if (isDiscarded) classes += ' nimble-die--discarded';
-		else if (isFumble) classes += ' nimble-die--min';
-		else if (isCritical) classes += ' nimble-die--max';
+		else if (isPrimaryDie && isFumble) classes += ' nimble-die--min';
+		else if (isPrimaryDie && isCritical) classes += ' nimble-die--max';
 
 		return `${acc}<li class="${classes}">${result}</li>`;
 	}, '');

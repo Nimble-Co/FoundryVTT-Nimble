@@ -6,6 +6,31 @@ declare interface NimbleBaseRule<Schema = any, Parent = any> {
 	actor: NimbleCharacter;
 	disabled: boolean;
 	priority: number;
+
+	// Common rule properties used by various rule types
+	type: string;
+	value?: string;
+
+	// AbilityBonusRule properties
+	abilities?: string[];
+
+	// SkillBonusRule properties
+	skills?: string[];
+
+	// SavingThrowRollModeRule properties
+	requiresChoice?: boolean;
+	target?: string;
+	selectedSave?: string;
+
+	// GrantProficiencyRule properties
+	proficiencyType?: string;
+	values?: string[];
+	predicate?: {
+		intelligence?: { min?: number };
+		[key: string]: unknown;
+	};
+
+	// Lifecycle hooks
 	prePrepareData?(): void;
 	afterPrepareData?(): void;
 	preCreate?(args: Record<string, any>): Promise<void>;

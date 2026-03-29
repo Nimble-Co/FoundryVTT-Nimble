@@ -6,6 +6,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.8.1] - 2026-03-27
+
+### Added
+
+- [#497] Class feature grants during character creation. @trevlar
+- [#466] Custom items for character creation. @trevlar
+- [#396] Enhancements for drag and drop on items in the character sheet. @Insax
+
+### Fixed
+
+- [#525] Turn tracking. @7D7D
+- [#524] Add backup images. @trevlar
+- [#521] Reversed tooltips in combat tracker. @7D7D
+- [#518] Preserve user targets when group attack panel refreshes. @Insax
+- [#515] Duplicate initiative. @7D7D
+- [#514] Combat tracker window width. @7D7D
+- [#513] Monsters marked as finished their turn on their turn. @7D7D
+- [#507] Apply NPC armor rules in combat damage application. @Insax
+- [#503] Remove combatant when token deleted, fix death state. @trevlar
+- [#502] Only show red/green dice styling on Primary Die. @trevlar
+- [#506] Replace `__img` border with `::after` overlay divider. @underscoreRobin
+- [#495] Make equipped the source of truth for object rule state. @Insax
+- [#494] Make action dice discrete and show tooltips to the right. @trevlar
+- [#463] Condition and hit point tracking unique per token. @trevlar
+- [#464] Improve migration reliability. @Fronix
+
+### Changed
+
+- [#517] Added speedbonus to Zephyr and Lodging boon. @trevlar
+- [#523] Update missing ids in packs. @trevlar
+- [#522] Added different backup images for heroes/monsters. @trevlar
+- [#504] Add GM Items from Adventures and locations. @trevlar
+- [#505] Updated Spanish translation. @carlosvgs
+- [#461] Convert to spaces. @Insax
+
+---
+
+
 ## [0.8.0] - 2026-03-18
 
 ### Added

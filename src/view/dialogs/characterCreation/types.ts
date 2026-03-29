@@ -1,0 +1,84 @@
+import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { ClassFeatureIndex } from '#utils/getClassFeatures.js';
+
+/**
+ * Union type for origin items used in character creation.
+ * These are the item types that define a character's origins.
+ */
+export type OriginItem = NimbleClassItem | NimbleAncestryItem | NimbleBackgroundItem | null;
+
+/**
+ * Represents a language granted by ancestry or background rules
+ */
+export interface GrantedLanguage {
+	key: string;
+	source: 'ancestry' | 'background';
+}
+
+/**
+ * Props passed to the CharacterCreationDialog Svelte component
+ */
+export interface CharacterCreationDialogProps {
+	ancestryOptions: Promise<Record<'core' | 'exotic', NimbleAncestryItem[]>>;
+	backgroundOptions: Promise<NimbleBackgroundItem[]>;
+	bonusLanguageOptions: Array<{ value: string; label: string; tooltip: string }>;
+	classFeatureIndex: Promise<ClassFeatureIndex>;
+	classOptions: Promise<NimbleClassItem[]>;
+	dialog: CharacterCreationDialogInstance;
+	statArrayOptions: StatArrayOption[];
+}
+
+/**
+ * A stat array option for character creation
+ */
+export interface StatArrayOption {
+	key: string;
+	array: number[];
+	name: string;
+}
+
+/**
+ * Interface for the CharacterCreationDialog class instance
+ */
+export interface CharacterCreationDialogInstance {
+	id: string;
+	submitCharacterCreation: (results: CharacterCreationResults) => Promise<void>;
+}
+
+/**
+ * Results submitted when character creation is complete
+ */
+export interface CharacterCreationResults {
+	name?: string;
+	sizeCategory?: string;
+	selectedAncestrySave?: string | null;
+	selectedRaisedByAncestry?: { language: string; label: string } | null;
+	abilityScores?: Record<string, number>;
+	skills?: Record<string, number>;
+	languages?: string[];
+	startingEquipmentChoice?: 'equipment' | 'gold';
+	origins?: {
+		background?: NimbleBackgroundItem;
+		characterClass?: NimbleClassItem;
+		ancestry?: NimbleAncestryItem;
+	};
+	classFeatures?: {
+		autoGrant: string[];
+		selected: Map<string, NimbleFeatureItem>;
+	};
+}
+
+/**
+ * Stage values type - can be a number or a string like '0b', '1a', etc.
+ */
+export type StageValue = number | string;
+
+/**
+ * Map of ability scores to their assigned array indices
+ */
+export type AbilityScoreAssignment = Record<string, number | null>;
+
+/**
+ * Map of skills to their assigned points
+ */
+export type SkillPointAssignment = Record<string, number>;

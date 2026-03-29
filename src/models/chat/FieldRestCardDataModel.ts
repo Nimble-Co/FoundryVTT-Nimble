@@ -20,6 +20,8 @@ const fieldRestCardSchema = () => ({
 	hadAdvantage: new fields.BooleanField({ required: true, initial: false, nullable: false }),
 	// Source of advantage (e.g., "Wild One - in the wild")
 	advantageSource: new fields.StringField({ required: false, nullable: true, initial: null }),
+	// Mana restored during the rest
+	manaRestored: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 });
 
 declare namespace NimbleFieldRestCardData {
