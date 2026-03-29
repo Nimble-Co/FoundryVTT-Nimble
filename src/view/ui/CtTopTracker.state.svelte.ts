@@ -1254,6 +1254,7 @@ export function createCtTopTrackerState() {
 
 	let unregisterCtHooks: (() => void) | undefined;
 	let resizeListener: (() => void) | undefined;
+	let visualViewportResizeTarget: VisualViewport | undefined;
 	let ctWidthPreviewListener: ((event: Event) => void) | undefined;
 	let ctCardSizePreviewListener: ((event: Event) => void) | undefined;
 	let ctClientSettingUpdatedListener: ((event: Event) => void) | undefined;
@@ -1290,6 +1291,10 @@ export function createCtTopTrackerState() {
 			trackerStore.invalidateLayout();
 		};
 		window.addEventListener('resize', resizeListener);
+		visualViewportResizeTarget = window.visualViewport ?? undefined;
+		if (visualViewportResizeTarget) {
+			visualViewportResizeTarget.addEventListener('resize', resizeListener);
+		}
 		trackWheelListener = (event: WheelEvent) => {
 			if (!isPointerWithinTrackWheelZone(event.clientX, event.clientY)) return;
 			handleTrackWheel(event);
@@ -1338,6 +1343,9 @@ export function createCtTopTrackerState() {
 		clearExpandedMonsterGroupBarsUpdateFrame();
 		disconnectTrackMutationObserver();
 		if (resizeListener) window.removeEventListener('resize', resizeListener);
+		if (visualViewportResizeTarget && resizeListener) {
+			visualViewportResizeTarget.removeEventListener('resize', resizeListener);
+		}
 		if (trackWheelListener) {
 			window.removeEventListener('wheel', trackWheelListener, { capture: true });
 		}

@@ -1,8 +1,5 @@
-﻿import {
-	getEffectiveMinionGroupLeader,
-	getMinionGroupId,
-	getMinionGroupSummaries,
-} from '../utils/minionGrouping.js';
+﻿import { hasCombatantTurnEndedThisRound } from '../utils/combatTurnProgress.js';
+import { getMinionGroupSummaries } from '../utils/minionGrouping.js';
 
 const TOKEN_TURN_COMPLETE_BADGE_KEY = '_nimbleTurnCompleteBadge';
 
@@ -16,58 +13,6 @@ type TurnCompleteBadgeContainer = PIXI.Container & {
 	background?: PIXI.Graphics;
 	label?: PIXI.Text;
 };
-
-function getCombatantCurrentActions(combatant: Combatant.Implementation): number {
-	const actions = Number(foundry.utils.getProperty(combatant, 'system.actions.base.current') ?? 0);
-	if (!Number.isFinite(actions)) return 0;
-	return Math.max(0, actions);
-}
-
-function getTurnOrderIndexForCombatant(
-	combat: Combat,
-	combatant: Combatant.Implementation,
-	groupSummaries: ReturnType<typeof getMinionGroupSummaries>,
-): number {
-	const combatantId = combatant.id ?? '';
-	if (!combatantId) return -1;
-
-	const directIndex = combat.turns.findIndex((turnCombatant) => turnCombatant.id === combatantId);
-	if (directIndex >= 0) return directIndex;
-
-	const groupId = getMinionGroupId(combatant);
-	if (!groupId) return -1;
-
-	const groupSummary = groupSummaries.get(groupId);
-	if (!groupSummary) return -1;
-
-	const leader =
-		getEffectiveMinionGroupLeader(groupSummary, { aliveOnly: true }) ??
-		getEffectiveMinionGroupLeader(groupSummary);
-	if (!leader?.id) return -1;
-
-	return combat.turns.findIndex((turnCombatant) => turnCombatant.id === leader.id);
-}
-
-function hasCombatantTurnEndedThisRound(
-	combat: Combat,
-	combatant: Combatant.Implementation,
-	groupSummaries: ReturnType<typeof getMinionGroupSummaries>,
-): boolean {
-	if ((combat.round ?? 0) < 1) return false;
-
-	const activeCombatantId = combat.combatant?.id ?? '';
-	if (!activeCombatantId) return false;
-
-	const activeTurnIndex = combat.turns.findIndex(
-		(turnCombatant) => turnCombatant.id === activeCombatantId,
-	);
-	if (activeTurnIndex < 0) return false;
-
-	const combatantTurnIndex = getTurnOrderIndexForCombatant(combat, combatant, groupSummaries);
-	if (combatantTurnIndex < 0) return false;
-
-	return combatantTurnIndex < activeTurnIndex;
-}
 
 function getCombatantSceneId(combatant: Combatant.Implementation): string | undefined {
 	if (combatant.sceneId) return combatant.sceneId;
@@ -118,8 +63,7 @@ function buildTurnCompleteBadgeTokenIdsForCurrentScene(): Set<string> {
 			continue;
 		}
 
-		const actionsRemaining = getCombatantCurrentActions(combatant);
-		if (actionsRemaining > 0 && !turnEnded) continue;
+		if (!turnEnded) continue;
 
 		tokenIds.add(combatant.tokenId);
 	}

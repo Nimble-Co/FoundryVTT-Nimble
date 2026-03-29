@@ -1,11 +1,35 @@
-<script>
-	import { getContext } from 'svelte';
+<script lang="ts">
+	import type { NimbleChatMessage } from '#documents/chatMessage.ts';
+	import type { RollSummaryProps } from '#types/components/RollSummary.d.ts';
 
-	let { label, subheading, tooltip, total, options, showRollDetails, type = '' } = $props();
+	import { getContext } from 'svelte';
+	import localize from '#utils/localize.ts';
+
+	const {
+		label,
+		subheading,
+		tooltip,
+		total,
+		options,
+		showRollDetails,
+		type = '',
+	}: RollSummaryProps = $props();
 	const { hitDice } = CONFIG.NIMBLE;
 	const autoExpand = game.settings.get('nimble', 'autoExpandRolls');
-	const messageDocument = getContext('messageDocument');
+	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
 	let expanded = $state(autoExpand);
+	let canApplyDamage = $derived.by(() => {
+		if (type !== 'damage' || !game.user?.isGM) return false;
+
+		const canApplyDamageFunction = messageDocument?.canApplyDamage;
+		if (typeof canApplyDamageFunction !== 'function') return true;
+
+		return canApplyDamageFunction.call(messageDocument, total, options);
+	});
+	let applyDamageLabel = $derived(localize('NIMBLE.chat.applyDamage'));
+	let applyDamageTooltip = $derived(
+		canApplyDamage ? applyDamageLabel : localize('NIMBLE.chat.noDamageToApply'),
+	);
 </script>
 
 <div class="roll" class:roll--no-subheading={!subheading}>
@@ -55,12 +79,13 @@
 {#if type === 'damage' && game.user?.isGM}
 	<button
 		class="nimble-button nimble-button--apply-damage"
-		aria-label="Apply Damage"
-		data-tooltip="Apply Damage"
+		aria-label={applyDamageLabel}
+		data-tooltip={applyDamageTooltip}
 		data-tooltip-direction="UP"
+		disabled={!canApplyDamage}
 		onclick={() => messageDocument?.applyDamage(total, options)}
 	>
-		Apply Damage
+		{applyDamageLabel}
 	</button>
 {/if}
 

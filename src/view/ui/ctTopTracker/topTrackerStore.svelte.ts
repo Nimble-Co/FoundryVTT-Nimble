@@ -169,6 +169,7 @@ export class CtTopTrackerStore {
 
 	roundBoundaryKey = $derived.by(() =>
 		getRoundBoundaryKey(
+			this.currentCombat,
 			this.sceneAliveCombatants,
 			this.aliveEntries,
 			this.shouldCollapseMonsterCards,
