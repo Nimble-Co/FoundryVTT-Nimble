@@ -4,8 +4,8 @@ import {
 	createCombatantsCollectionFixture,
 } from '../../tests/fixtures/combat.js';
 import { createMockCombatant } from '../../tests/mocks/combat.js';
+import { combatantActionMutationQueue } from './combatantActionMutationQueue.js';
 import {
-	queueCombatantActionMutation,
 	registerCombatTurnSocketListener,
 	requestAdvanceCombatTurn,
 	resolveCombatantCurrentActionsAfterDelta,
@@ -119,7 +119,7 @@ describe('requestAdvanceCombatTurn', () => {
 		const mutationBlocker = new Promise<void>((resolve) => {
 			releaseMutationBlocker = resolve;
 		});
-		const mutationPromise = queueCombatantActionMutation({
+		const mutationPromise = combatantActionMutationQueue.queue({
 			combat,
 			combatantId: 'combatant-gm-pending-actions',
 			mutation: async () => await mutationBlocker,

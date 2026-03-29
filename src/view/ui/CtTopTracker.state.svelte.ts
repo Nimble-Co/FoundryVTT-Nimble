@@ -1,18 +1,18 @@
 import { onDestroy, onMount, tick } from 'svelte';
-import GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
-import { COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME } from '../../settings/combatTrackerSettings.js';
-import { canCurrentUserReorderCombatant } from '../../utils/combatantOrdering.js';
+import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
+import { canCurrentUserReorderCombatant } from '#utils/combatantOrdering.js';
 import {
 	COMBATANT_ACTIONS_CURRENT_PATH,
 	getCombatantCurrentActions,
 	getCombatantMaxActions,
-	queueCombatantActionMutation,
 	requestAdvanceCombatTurn,
 	resolveCombatantCurrentActionsAfterDelta,
-} from '../../utils/combatTurnActions.js';
-import type { HeroicReactionKey } from '../../utils/heroicActions.js';
-import { isCombatantDead } from '../../utils/isCombatantDead.js';
-import CtSettingsDialogComponent from '../dialogs/CtSettingsDialog.svelte';
+} from '#utils/combatTurnActions.js';
+import type { HeroicReactionKey } from '#utils/heroicActions.js';
+import { isCombatantDead } from '#utils/isCombatantDead.js';
+import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
+import CtSettingsDialogComponent from '#view/dialogs/CtSettingsDialog.svelte';
+import { COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME } from '../../settings/combatTrackerSettings.js';
 import {
 	canCurrentUserAdjustCombatantActions,
 	canCurrentUserRollInitiativeForCombatant,
@@ -298,11 +298,10 @@ export function createCtTopTrackerState() {
 		if (!combat || !combatantId) return;
 
 		try {
-			await queueCombatantActionMutation({
+			await queueCombatantMutationWithFreshDocument({
 				combat,
 				combatantId,
-				mutation: async () => {
-					const currentCombatant = combat.combatants.get(combatantId) ?? combatant;
+				mutation: async (currentCombatant) => {
 					const currentActions = getCombatantCurrentActions(currentCombatant);
 					const maxActions = getCombatantMaxActions(currentCombatant);
 					const nextActions = resolveCombatantCurrentActionsAfterDelta({

@@ -1,17 +1,12 @@
 import { untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
-import type { NimbleCharacter } from '../../../documents/actor/character.js';
-import { getCombatantBaseActions } from '../../../documents/combat/combatantSystem.js';
-import {
-	getActiveCombatForCurrentScene,
-	registerCombatStateHooks,
-} from '../../../utils/combatState.js';
-import {
-	queueCombatantActionMutation,
-	requestAdvanceCombatTurn,
-} from '../../../utils/combatTurnActions.js';
-import { getActiveCombatant } from '../../../utils/combatTurnSync.js';
-import localize from '../../../utils/localize.js';
+import type { NimbleCharacter } from '#documents/actor/character.js';
+import { getCombatantBaseActions } from '#documents/combat/combatantSystem.js';
+import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
+import { requestAdvanceCombatTurn } from '#utils/combatTurnActions.js';
+import { getActiveCombatant } from '#utils/combatTurnSync.js';
+import localize from '#utils/localize.js';
+import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 
 // ============================================================================
 // Types
@@ -115,15 +110,13 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 
 	async function updateActionPips(newValue: number): Promise<void> {
 		const combat = getActiveCombatForCurrentScene();
-		const combatant = getCombatantInCombat();
-		const combatantId = combatant?.id ?? null;
-		if (!combat || !combatant || !combatantId) return;
+		const combatantId = getCombatantInCombat()?.id ?? null;
+		if (!combat || !combatantId) return;
 
-		await queueCombatantActionMutation({
+		await queueCombatantMutationWithFreshDocument({
 			combat,
 			combatantId,
-			mutation: async () => {
-				const currentCombatant = combat.combatants.get(combatantId) ?? combatant;
+			mutation: async (currentCombatant) => {
 				await currentCombatant.update({
 					'system.actions.base.current': newValue,
 				} as Record<string, unknown>);

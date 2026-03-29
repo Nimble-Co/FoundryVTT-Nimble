@@ -1384,7 +1384,8 @@ export const myStore = writable<MyStoreState>(initialState);
 |---------|----------|---------|
 | `localize()` | `src/utils/localize.ts` | Format i18n strings with optional interpolation |
 | `isCombatantDead()` | `src/utils/isCombatantDead.ts` | Check if a combatant is dead based on HP/wounds |
-| `queueCombatantActionMutation()` | `src/utils/combatTurnActions.ts` | Serialize combatant action/reaction updates to prevent stale writes during turn transitions |
+| `combatantActionMutationQueue` | `src/utils/combatantActionMutationQueue.ts` | Serialize combatant action/reaction updates and clear combat-scoped pending entries |
+| `queueCombatantMutationWithFreshDocument()` | `src/utils/queueCombatantMutationWithFreshDocument.ts` | Queue a mutation and re-resolve the combatant document to avoid stale references |
 | `getActorHpValue()` | `src/utils/isCombatantDead.ts` | Get an actor's current HP value |
 | `getActorWoundsValueAndMax()` | `src/utils/isCombatantDead.ts` | Get an actor's wounds value and max |
 | `calculateRollMode()` | `src/utils/calculateRollMode.ts` | Determine roll mode based on modifier keys |

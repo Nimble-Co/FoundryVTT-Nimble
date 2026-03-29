@@ -1,3 +1,5 @@
+import { combatantActionMutationQueue } from './combatantActionMutationQueue.js';
+
 export const COMBATANT_ACTIONS_CURRENT_PATH = 'system.actions.base.current';
 export const COMBATANT_ACTIONS_MAX_PATH = 'system.actions.base.max';
 const COMBAT_TURN_SOCKET_NAME = 'system.nimble';
@@ -9,59 +11,6 @@ type AdvanceCombatTurnRequest = {
 	userId: string;
 	activeCombatantId: string | null;
 };
-
-type CombatantActionMutationParams<T> = {
-	combat: Combat;
-	combatantId: string | null | undefined;
-	mutation: () => Promise<T>;
-};
-
-const pendingCombatantActionMutations = new Map<string, Promise<void>>();
-
-function getCombatDocumentId(combat: Combat): string {
-	const combatId = combat.id ?? combat._id ?? '';
-	return String(combatId);
-}
-
-function getCombatantActionMutationKey(params: {
-	combat: Combat;
-	combatantId: string | null | undefined;
-}): string | null {
-	if (!params.combatantId) return null;
-	const combatId = getCombatDocumentId(params.combat);
-	if (!combatId) return null;
-	return `${combatId}:${params.combatantId}`;
-}
-
-export function queueCombatantActionMutation<T>(
-	params: CombatantActionMutationParams<T>,
-): Promise<T> {
-	const mutationKey = getCombatantActionMutationKey(params);
-	if (!mutationKey) return params.mutation();
-
-	const previousMutation = pendingCombatantActionMutations.get(mutationKey) ?? Promise.resolve();
-	const mutationPromise = previousMutation.catch(() => undefined).then(() => params.mutation());
-	const queuePromise = mutationPromise.then(
-		() => undefined,
-		() => undefined,
-	);
-	pendingCombatantActionMutations.set(mutationKey, queuePromise);
-	void queuePromise.finally(() => {
-		if (pendingCombatantActionMutations.get(mutationKey) === queuePromise) {
-			pendingCombatantActionMutations.delete(mutationKey);
-		}
-	});
-	return mutationPromise;
-}
-
-async function waitForPendingCombatantActionMutations(params: {
-	combat: Combat;
-	combatantId: string | null | undefined;
-}): Promise<void> {
-	const mutationKey = getCombatantActionMutationKey(params);
-	if (!mutationKey) return;
-	await (pendingCombatantActionMutations.get(mutationKey) ?? Promise.resolve());
-}
 
 function toFiniteNonNegativeNumber(value: unknown): number {
 	const numericValue = Number(value);
@@ -172,7 +121,12 @@ async function handleAdvanceCombatTurnRequest(payload: unknown): Promise<void> {
 	await combat.nextTurn();
 }
 
+let hasRegisteredCombatTurnSocketListener = false;
+
 export function registerCombatTurnSocketListener(): void {
+	if (hasRegisteredCombatTurnSocketListener) return;
+	hasRegisteredCombatTurnSocketListener = true;
+
 	const socket = game.socket as
 		| {
 				on?: (eventName: string, listener: (payload: unknown) => void) => void;
@@ -180,6 +134,9 @@ export function registerCombatTurnSocketListener(): void {
 		| undefined;
 	socket?.on?.(COMBAT_TURN_SOCKET_NAME, (payload) => {
 		void handleAdvanceCombatTurnRequest(payload);
+	});
+	Hooks.on('deleteCombat', (combat: Combat) => {
+		combatantActionMutationQueue.clearForCombat(combat.id ?? combat._id ?? null);
 	});
 }
 
@@ -190,7 +147,7 @@ export async function requestAdvanceCombatTurn(params: {
 	const activeCombatant = params.combat.combatant ?? null;
 	if (!activeCombatant) return false;
 	const activeCombatantId = params.activeCombatantId ?? activeCombatant.id ?? null;
-	await waitForPendingCombatantActionMutations({
+	await combatantActionMutationQueue.waitForCombatant({
 		combat: params.combat,
 		combatantId: activeCombatantId,
 	});
