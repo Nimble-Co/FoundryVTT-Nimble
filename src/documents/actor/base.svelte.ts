@@ -61,21 +61,6 @@ interface HpTrackingOptions {
 
 type HpScrollingEffectType = keyof typeof HP_SCROLLING_TEXT_COLORS;
 
-type CanvasScrollingTextInterface = {
-	createScrollingText: (
-		origin: { x: number; y: number },
-		content: string,
-		options?: {
-			anchor?: number;
-			jitter?: number;
-			fontSize?: number;
-			fill?: number;
-			stroke?: number;
-			strokeThickness?: number;
-		},
-	) => Promise<void>;
-};
-
 function toFiniteInteger(value: unknown): number {
 	const numericValue = Number(value);
 	if (!Number.isFinite(numericValue)) return 0;
@@ -329,11 +314,26 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 			globalThis as {
 				canvas?: {
 					ready?: boolean;
-					interface?: CanvasScrollingTextInterface;
+					interface?: unknown;
 				};
 			}
 		).canvas;
-		const canvasInterface = canvasReference?.interface;
+		const canvasInterface = canvasReference?.interface as
+			| {
+					createScrollingText?: (
+						origin: { x: number; y: number },
+						content: string,
+						options?: {
+							anchor?: number;
+							jitter?: number;
+							fontSize?: number;
+							fill?: number;
+							stroke?: number;
+							strokeThickness?: number;
+						},
+					) => Promise<void>;
+			  }
+			| undefined;
 		if (!canvasReference?.ready || !canvasInterface?.createScrollingText) return;
 
 		const tokens = this.isToken ? [this.token] : this.getActiveTokens(true, true);

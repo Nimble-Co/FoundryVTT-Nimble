@@ -9,6 +9,8 @@
 	import NPCNotesTab from './pages/NPCNotesTab.svelte';
 	import NPCSettingsTab from './pages/NPCSettingsTab.svelte';
 
+	let { actor } = $props();
+
 	function getHitPointPercentage(
 		currentHP: number | null | undefined,
 		maxHP: number | null | undefined,
@@ -29,8 +31,6 @@
 	function updateTempHP(newValue: number): void {
 		void actor.setTempHP(newValue);
 	}
-
-	let { actor } = $props();
 
 	let isBloodied = $derived.by(() => {
 		if (actor.type === 'minion') return false;

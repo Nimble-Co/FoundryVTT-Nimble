@@ -115,12 +115,8 @@ describe('NimbleChatMessage.applyHealing', () => {
 		expect(globals().ui.notifications.warn).toHaveBeenCalledWith('No targets selected');
 	});
 
-	it('skips actors without applyHealing method', async () => {
-		const actor = {
-			system: { attributes: { hp: { value: 5, temp: 0, max: 10 } } },
-		};
-
-		globals().fromUuidSync.mockReturnValue({ actor, name: 'Test Token' });
+	it('skips targets when the uuid does not resolve to an actor', async () => {
+		globals().fromUuidSync.mockReturnValue(null);
 
 		const message = createActivationMessage();
 		await message.applyHealing(5, 'healing');
@@ -231,7 +227,7 @@ describe('NimbleChatMessage.undoHealing', () => {
 
 	it('reverts HP and removes healing record', async () => {
 		const actor = {
-			update: vi.fn().mockResolvedValue(undefined),
+			setCurrentHP: vi.fn().mockResolvedValue(undefined),
 		};
 
 		globals().fromUuidSync.mockReturnValue({ actor });
@@ -268,9 +264,7 @@ describe('NimbleChatMessage.undoHealing', () => {
 
 		await message.undoHealing('effect-123');
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 5,
-		});
+		expect(actor.setCurrentHP).toHaveBeenCalledWith(5);
 		expect(message.update).toHaveBeenCalled();
 		expect(globals().ui.notifications.info).toHaveBeenCalledWith('Healing has been undone');
 	});
@@ -337,6 +331,7 @@ describe('NimbleChatMessage.applyDamage', () => {
 
 	it('applies damage to target actor and consumes temporary hit points first', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					hp: {
@@ -354,10 +349,7 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(5, { outcome: 'fullDamage' });
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.temp': 0,
-			'system.attributes.hp.value': 8,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
 	});
 
 	it('delegates damage application to actor.applyDamage when available', async () => {
@@ -386,6 +378,7 @@ describe('NimbleChatMessage.applyDamage', () => {
 
 	it('does not apply damage when outcome is noDamage', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					hp: {
@@ -403,12 +396,13 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(4, { outcome: 'noDamage' });
 
-		expect(actor.update).not.toHaveBeenCalled();
+		expect(actor.applyDamage).not.toHaveBeenCalled();
 		expect(globals().ui.notifications.info).toHaveBeenCalledWith('No damage to apply.');
 	});
 
 	it('shows no-damage feedback when total damage is 0 or negative', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					hp: {
@@ -428,7 +422,7 @@ describe('NimbleChatMessage.applyDamage', () => {
 		await message.applyDamage(-4, { outcome: 'fullDamage' });
 
 		expect(globals().fromUuidSync).not.toHaveBeenCalled();
-		expect(actor.update).not.toHaveBeenCalled();
+		expect(actor.applyDamage).not.toHaveBeenCalled();
 		expect(globals().ui.notifications.info).toHaveBeenCalledWith('No damage to apply.');
 	});
 
@@ -442,6 +436,7 @@ describe('NimbleChatMessage.applyDamage', () => {
 
 	it('does not apply damage when the current user is not a GM', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					hp: {
@@ -460,11 +455,12 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(4, { outcome: 'fullDamage' });
 
-		expect(actor.update).not.toHaveBeenCalled();
+		expect(actor.applyDamage).not.toHaveBeenCalled();
 	});
 
 	it('applies medium armor by using dice-only damage on non-critical hits', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'medium',
@@ -489,13 +485,12 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(8, { outcome: 'fullDamage', roll });
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 4,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(6);
 	});
 
 	it('applies medium armor with halfDamage outcome using halved dice-only damage', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'medium',
@@ -520,13 +515,12 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(5, { outcome: 'halfDamage', roll });
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 7,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(3);
 	});
 
 	it('applies negative modifiers after medium armor dice-only calculation', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'medium',
@@ -551,13 +545,12 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(3, { outcome: 'fullDamage', roll });
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 7,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(3);
 	});
 
 	it('applies all negative modifiers and ignores positive modifiers for medium armor', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'medium',
@@ -597,13 +590,12 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(5, { outcome: 'fullDamage', roll });
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 7,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(3);
 	});
 
 	it('applies heavy armor by halving dice-only damage and rounding up on non-critical hits', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'heavy',
@@ -628,13 +620,12 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(10, { outcome: 'fullDamage', roll });
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 7,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(3);
 	});
 
 	it('includes situational dice modifiers (e.g. +2d8) in heavy armor dice-only reduction', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'heavy',
@@ -679,13 +670,12 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(17, { outcome: 'fullDamage', roll });
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 3,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(7);
 	});
 
 	it('applies negative modifiers after heavy armor reduction', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'heavy',
@@ -710,13 +700,12 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(3, { outcome: 'fullDamage', roll });
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 9,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(1);
 	});
 
 	it('applies heavy armor fallback reduction when no roll metadata is provided', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'heavy',
@@ -735,13 +724,12 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(9, { outcome: 'fullDamage' });
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 5,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
 	});
 
 	it('shows no-damage feedback when all targets are reduced to 0 damage by armor', async () => {
 		const ironGuard = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'heavy',
@@ -755,6 +743,7 @@ describe('NimbleChatMessage.applyDamage', () => {
 			update: vi.fn().mockResolvedValue(undefined),
 		};
 		const stoneSentinel = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'heavy',
@@ -784,13 +773,14 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage(['Scene.scene.Token.alpha', 'Scene.scene.Token.beta']);
 		await message.applyDamage(1, { outcome: 'fullDamage', roll });
 
-		expect(ironGuard.update).not.toHaveBeenCalled();
-		expect(stoneSentinel.update).not.toHaveBeenCalled();
+		expect(ironGuard.applyDamage).not.toHaveBeenCalled();
+		expect(stoneSentinel.applyDamage).not.toHaveBeenCalled();
 		expect(globals().ui.notifications.info).toHaveBeenCalledWith('No damage to apply.');
 	});
 
 	it('notifies the GM when a target is skipped because adjusted damage is 0', async () => {
 		const ironGuard = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'heavy',
@@ -804,6 +794,7 @@ describe('NimbleChatMessage.applyDamage', () => {
 			update: vi.fn().mockResolvedValue(undefined),
 		};
 		const scout = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'medium',
@@ -832,10 +823,8 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage(['Scene.scene.Token.alpha', 'Scene.scene.Token.beta']);
 		await message.applyDamage(1, { outcome: 'fullDamage', roll });
 
-		expect(ironGuard.update).not.toHaveBeenCalled();
-		expect(scout.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 9,
-		});
+		expect(ironGuard.applyDamage).not.toHaveBeenCalled();
+		expect(scout.applyDamage).toHaveBeenCalledWith(1);
 		expect(globals().ui.notifications.info).toHaveBeenCalledWith(
 			'Ignored Iron Guard because the result is 0.',
 		);
@@ -843,6 +832,7 @@ describe('NimbleChatMessage.applyDamage', () => {
 
 	it('stacks heavy armor reduction with halfDamage outcome', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'heavy',
@@ -867,13 +857,12 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(5, { outcome: 'halfDamage', roll });
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 8,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(2);
 	});
 
 	it('applies full damage to armored targets on critical hits', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'heavy',
@@ -898,13 +887,12 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(10, { outcome: 'fullDamage', roll });
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 0,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(10);
 	});
 
 	it('applies halfDamage to critical hits but still ignores armor reduction', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'heavy',
@@ -929,13 +917,12 @@ describe('NimbleChatMessage.applyDamage', () => {
 		const message = createActivationMessage();
 		await message.applyDamage(5, { outcome: 'halfDamage', roll });
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 5,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(5);
 	});
 
 	it('bypasses armor rules when ignoreArmor is enabled', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'heavy',
@@ -964,13 +951,12 @@ describe('NimbleChatMessage.applyDamage', () => {
 			ignoreArmor: true,
 		});
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 0,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(10);
 	});
 
 	it('applies armor reduction per roll when only some grouped rolls are critical', async () => {
 		const actor = {
+			applyDamage: vi.fn().mockResolvedValue(undefined),
 			system: {
 				attributes: {
 					armor: 'heavy',
@@ -1003,8 +989,6 @@ describe('NimbleChatMessage.applyDamage', () => {
 			rolls: [nonCriticalRoll, criticalRoll],
 		});
 
-		expect(actor.update).toHaveBeenCalledWith({
-			'system.attributes.hp.value': 9,
-		});
+		expect(actor.applyDamage).toHaveBeenCalledWith(11);
 	});
 });

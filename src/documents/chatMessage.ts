@@ -39,9 +39,7 @@ interface ActivationCardSystemData {
 }
 
 type HpMutableActor = Actor.Implementation &
-	Partial<
-		Pick<NimbleBaseActorInterface, 'applyDamage' | 'applyHealing' | 'setCurrentHP' | 'setTempHP'>
-	>;
+	Pick<NimbleBaseActorInterface, 'applyDamage' | 'applyHealing' | 'setCurrentHP' | 'setTempHP'>;
 
 type DamageApplyOutcome = DamageOutcomeNode['outcome'] | 'noDamage';
 
@@ -55,8 +53,6 @@ type DamageApplyOptions = {
 
 interface DamageApplicationTarget {
 	actor: HpMutableActor;
-	currentHp: number;
-	currentTemp: number;
 	adjustedDamage: number;
 }
 
@@ -219,19 +215,8 @@ function buildDamageApplicationPlan(params: {
 
 	for (const uuid of params.targets) {
 		const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
-		const actor = tokenDocument?.actor as Actor.Implementation | null;
+		const actor = tokenDocument?.actor as HpMutableActor | null;
 		if (!actor) continue;
-
-		const hpData = foundry.utils.getProperty(actor, 'system.attributes.hp') as
-			| {
-					value?: number;
-					temp?: number;
-			  }
-			| undefined;
-		const currentHp = hpData?.value;
-		if (typeof currentHp !== 'number' || Number.isNaN(currentHp)) continue;
-
-		const currentTemp = typeof hpData?.temp === 'number' ? hpData.temp : 0;
 		const adjustedDamage = calculateArmorAdjustedDamage({
 			actor,
 			damage: params.damage,
@@ -247,8 +232,6 @@ function buildDamageApplicationPlan(params: {
 
 		applicableTargets.push({
 			actor,
-			currentHp,
-			currentTemp,
 			adjustedDamage,
 		});
 	}
@@ -466,23 +449,7 @@ class NimbleChatMessage extends ChatMessage {
 		}
 
 		for (const target of damageApplicationPlan.applicableTargets) {
-			if (typeof target.actor.applyDamage === 'function') {
-				await target.actor.applyDamage(target.adjustedDamage);
-				continue;
-			}
-
-			const absorbedByTemp = Math.min(target.currentTemp, target.adjustedDamage);
-			const nextTemp = target.currentTemp - absorbedByTemp;
-			const remainingDamage = target.adjustedDamage - absorbedByTemp;
-			const nextHp = Math.max(target.currentHp - remainingDamage, 0);
-
-			const updates: Record<string, unknown> = {};
-			if (nextTemp !== target.currentTemp) updates['system.attributes.hp.temp'] = nextTemp;
-			if (nextHp !== target.currentHp) updates['system.attributes.hp.value'] = nextHp;
-
-			if (Object.keys(updates).length > 0) {
-				await target.actor.update(updates as Actor.UpdateData);
-			}
+			await target.actor.applyDamage(target.adjustedDamage);
 		}
 
 		for (const tokenName of damageApplicationPlan.zeroDamageTargetNames) {
@@ -547,9 +514,7 @@ class NimbleChatMessage extends ChatMessage {
 			const previousHp = typeof hpData?.value === 'number' ? hpData.value : 0;
 			const previousTempHp = typeof hpData?.temp === 'number' ? hpData.temp : 0;
 
-			if (actor.applyHealing) {
-				await actor.applyHealing(healing, healingType);
-			}
+			await actor.applyHealing(healing, healingType);
 
 			// Get new HP values after healing
 			const newHpData = foundry.utils.getProperty(actor, 'system.attributes.hp') as
@@ -602,21 +567,9 @@ class NimbleChatMessage extends ChatMessage {
 			if (!actor) continue;
 
 			if (healingRecord.healingType === 'tempHealing') {
-				if (typeof actor.setTempHP === 'function') {
-					await actor.setTempHP(targetRecord.previousTempHp);
-				} else {
-					await actor.update({
-						'system.attributes.hp.temp': targetRecord.previousTempHp,
-					} as Actor.UpdateData);
-				}
+				await actor.setTempHP(targetRecord.previousTempHp);
 			} else {
-				if (typeof actor.setCurrentHP === 'function') {
-					await actor.setCurrentHP(targetRecord.previousHp);
-				} else {
-					await actor.update({
-						'system.attributes.hp.value': targetRecord.previousHp,
-					} as Actor.UpdateData);
-				}
+				await actor.setCurrentHP(targetRecord.previousHp);
 			}
 		}
 
