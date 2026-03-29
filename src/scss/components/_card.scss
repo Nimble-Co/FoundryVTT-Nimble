@@ -74,6 +74,7 @@
     border-bottom-left-radius: var(--nimble-card-image-bl-border-radius,
     2px);
     filter: var(--nimble-card-image-filter);
+		transition: filter 0.3s ease;
 
     &[src$=".svg" i] {
       padding: 0.1rem;

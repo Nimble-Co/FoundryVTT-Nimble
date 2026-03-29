@@ -124,8 +124,7 @@
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
 		align-items: stretch;
-		gap: 1rem;
-		padding: 0.5rem;
+		gap: 0.5rem;
 	}
 
 	.starting-equipment-option {
