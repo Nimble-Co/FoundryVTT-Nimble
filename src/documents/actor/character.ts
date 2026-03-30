@@ -227,6 +227,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		// Prepare Wounds
 		actorData.attributes.wounds.max = 6 + actorData.attributes.wounds.bonus;
+
+		// Add ability score modifier tags for predicate evaluation
+		// This must happen after ability mods are calculated above
+		Object.entries(actorData.abilities).forEach(([key, ability]) => {
+			this.tags.add(`${key}:${ability.mod}`);
+		});
 	}
 
 	override _populateDerivedTags(): void {
