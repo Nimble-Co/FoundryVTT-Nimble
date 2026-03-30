@@ -37,10 +37,9 @@
 		"featureType": "class",
 		"class": "stormshifter",
 		"group": "stormshifter-progression",
-		"gainedAtLevel": 8,
+		"gainedAtLevel": 13,
 		"subclass": false,
 		"gainedAtLevels": [
-			8,
 			13
 		]
 	},
