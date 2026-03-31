@@ -161,11 +161,6 @@ export function buildNcsGroupAttackChatData(params: {
 		style: CONST.CHAT_MESSAGE_STYLES.OTHER,
 		sound: CONFIG.sounds.dice,
 		rollMode: game.settings.get('core', 'rollMode'),
-		flags: {
-			nimble: {
-				chatCardType: 'minionGroupAttack',
-			},
-		},
 		system: {
 			actorName: params.speakerAlias,
 			actorType: params.speakerCombatant?.actor?.type ?? 'minion',
@@ -181,7 +176,7 @@ export function buildNcsGroupAttackChatData(params: {
 			unsupportedWarnings: [...params.unsupportedWarnings],
 		},
 		content: '',
-		type: 'base',
+		type: 'minionGroupAttack',
 	};
 }
 

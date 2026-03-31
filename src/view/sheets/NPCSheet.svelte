@@ -1,5 +1,6 @@
-<script>
+<script lang="ts">
 	import { setContext, untrack } from 'svelte';
+	import { PORTRAIT_FALLBACK_IMAGE } from '../ui/ctTopTracker/constants.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import HitPointBar from './components/HitPointBar.svelte';
@@ -8,23 +9,28 @@
 	import NPCNotesTab from './pages/NPCNotesTab.svelte';
 	import NPCSettingsTab from './pages/NPCSettingsTab.svelte';
 
-	function getHitPointPercentage(currentHP, maxHP) {
-		return Math.clamp(0, Math.round((currentHP / maxHP) * 100), 100);
-	}
-
-	function updateCurrentHP(newValue) {
-		actor.update({ 'system.attributes.hp.value': newValue });
-	}
-
-	function updateMaxHP(newValue) {
-		actor.update({ 'system.attributes.hp.max': newValue });
-	}
-
-	function updateTempHP(newValue) {
-		actor.update({ 'system.attributes.hp.temp': newValue });
-	}
-
 	let { actor } = $props();
+
+	function getHitPointPercentage(
+		currentHP: number | null | undefined,
+		maxHP: number | null | undefined,
+	): number {
+		const safeCurrentHP = typeof currentHP === 'number' ? currentHP : 0;
+		const safeMaxHP = typeof maxHP === 'number' && maxHP > 0 ? maxHP : 1;
+		return Math.clamp(0, Math.round((safeCurrentHP / safeMaxHP) * 100), 100);
+	}
+
+	function updateCurrentHP(newValue: number): void {
+		void actor.setCurrentHP(newValue);
+	}
+
+	function updateMaxHP(newValue: number): void {
+		void actor.setMaxHP(newValue);
+	}
+
+	function updateTempHP(newValue: number): void {
+		void actor.setTempHP(newValue);
+	}
 
 	let isBloodied = $derived.by(() => {
 		if (actor.type === 'minion') return false;
@@ -95,6 +101,13 @@
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
 
+	function handleActorPortraitImageError(event) {
+		const img = event.currentTarget;
+		if (!(img instanceof HTMLImageElement)) return;
+		if (img.src.includes(PORTRAIT_FALLBACK_IMAGE)) return;
+		img.src = PORTRAIT_FALLBACK_IMAGE;
+	}
+
 	// Set context synchronously during component initialization (not in $effect)
 	// Wrapped in untrack to suppress warnings - actor doesn't change during sheet lifecycle
 	{
@@ -116,6 +129,8 @@
 				class="nimble-icon__image nimble-icon__image--actor"
 				src={actor.reactive.img}
 				alt={actor.reactive.name}
+				draggable="false"
+				onerror={handleActorPortraitImageError}
 				style="
                     --nimble-actor-image-x-offset: {actorImageXOffset}px;
                     --nimble-actor-image-y-offset: {actorImageYOffset}px;

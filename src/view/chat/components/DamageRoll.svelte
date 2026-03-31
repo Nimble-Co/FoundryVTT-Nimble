@@ -53,7 +53,7 @@
 		subheading={secondaryInfo}
 		total={Math.ceil(roll.total * multiplier)}
 		type="damage"
-		options={{ damageType, ignoreArmor, outcome, rollOptions }}
+		options={{ damageType, ignoreArmor, outcome, rollOptions, roll, isCritical: roll?.isCritical }}
 		showRollDetails={rollOptions.primaryDieValue != '0' || rollOptions?.primaryDieModifier != '0'}
 	/>
 {:else}
@@ -63,7 +63,7 @@
 		subheading={secondaryInfo}
 		total={Math.ceil((roll?.total ?? 0) * multiplier)}
 		type="damage"
-		options={{ damageType, ignoreArmor, outcome, rollOptions }}
+		options={{ damageType, ignoreArmor, outcome, rollOptions, roll, isCritical: roll?.isCritical }}
 		showRollDetails={false}
 	/>
 {/if}

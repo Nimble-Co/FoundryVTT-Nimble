@@ -811,12 +811,58 @@
 				"weapon-of-wounding": "JPgGnUpNqdoYNsXT"
 			},
 			"gmGuide": {
+				"aerolith-crystal": "jMAozLgLDDE8EqDs",
+				"ashen-harp": "Nepwa0qnKVcdZ6KT",
+				"belt-of-hill-giant-strength": "SMKjseddDUTqF8YV",
+				"cloak-of-lesser-windform": "R8tUgZsxOMV9IQDT",
+				"cloudstriders-tome": "AA6deeBqh4hEN6Cp",
+				"crablords-crown": "Dl3zKczfqDUdyu5S",
+				"cursed-stash": "IwEbUhYoq6yjffCK",
+				"deepstone-charm": "bvy1MzbTj2xGfWNb",
+				"doomcallers-horn": "PiD5epx6jhFlUBqk",
+				"dwarven-compass": "SRCqoBa1r24npt17",
+				"endless-cask": "ClZr5DVGMTLGR6v2",
+				"fiendish-runeblade": "NIAAt3nrRmsuvrZL",
+				"flying-carpet": "vVXPXc8fZilcSEy2",
+				"forgefathers-crown": "KXG0qRBhNKLCQ44O",
+				"frostwardens-shield": "p8tnC9CgsPaoxutj",
 				"gem-of-escape": "iE2FWMzQt5ionLEk",
 				"glacier-in-a-bottle": "W0pOOfp8KmGPheai",
+				"glowing-grass": "emxFnxMVhySM19T0",
+				"golden-urn": "a1UPhWUlie2Jwcdt",
+				"grimbeards-warhammer": "3UrdnS0by2muqXoH",
+				"grimskull-helm": "qdVO0h6xUSsg25lI",
 				"hear-ring": "TWuTdviXfmMxti1H",
+				"heart-of-the-sky": "XHQi5EZSFMSdgwxn",
+				"hex-hand": "a3o7lwcgyoazlGxe",
+				"homunculus-dough": "cwS1X8OXaJS2FWEX",
+				"lientern": "Vd9eW18wnc2usuJp",
 				"lumina-living-sunbeam": "p6EPhzwmIw0ahmV7",
+				"lung-of-the-mire": "I2rl4ORtIunRTpKd",
+				"manglemaul": "wav5q8mcXBFyNvD6",
+				"moonshadow-cloak": "bvUMmW7eZeotMuv0",
+				"mourning-heart": "8NMY8rEMyeIhYkeo",
+				"obsidian-gauntlets": "Q3LzSjasZmS5Csqg",
+				"pipecrawlers-charm": "2j8VxZOaBEHFQ6M0",
 				"pocket-cauldron": "ogxzx3J53DPSbaeQ",
-				"the-grimoire-of-truths": "UnfRerkw6E8atr1q"
+				"prismatic-frog": "mW7LiDPFzO5LCtPF",
+				"purple-berries": "x8lybqd90W2t0ARL",
+				"red-sap": "sBOUFP73tWoSnogr",
+				"reed-flute": "xBLB5Cr7kQMxSxgF",
+				"sky-scourge-crown": "GDdxPmLQ4vHADOW7",
+				"soulshard-amulet": "fNHDvJQtotpKZlDC",
+				"stormcaller": "2xzTwiYeBXZIUMhj",
+				"the-grimoire-of-truths": "UnfRerkw6E8atr1q",
+				"trainers-whistle": "aKleQsjCFWKoVWNM",
+				"trueflame": "D9Rl0Ma3LKdShVvq",
+				"venomfang-dagger": "9g6AyWhjO3vrD2i4",
+				"vortex-sigil": "gPPtTNOK3KMdIhLU",
+				"wand-of-rat": "K5FUzoSJIc4zk2iL",
+				"windcloak": "1MPg66EBDPIHgeT3",
+				"windforged-mail": "gcHGOYfguZXCZTPz",
+				"witchs-eye": "7kRPDs4d1TFWJWWR",
+				"yellow-mushroom": "5Y7s4RNUMi4HZMA3",
+				"zephyr-boots": "Z7dnpLZ27Nrjgcpc"
 			},
 			"spellScrollTemplates": {
 				"spell-scroll-cantrip": "1UL6G7MDgUqtt4fN",
@@ -966,6 +1012,32 @@
 			}
 		}
 	},
+	"secretSpells": {
+		"core": {
+			"fire": {
+				"hearth-and-home": "Mkw21dquWBdFBG9Y"
+			},
+			"ice": {
+				"cryotomb": "gDg4NlUQHWqbu9tV"
+			},
+			"lightning": {
+				"sparkfetch": "GXxJYF05KxMKG4bM",
+				"teleport": "np6pQWIzyOomWi7B"
+			},
+			"necrotic": {
+				"memory-veil": "PeLuUpKawDLOPHhv",
+				"speak-with-dead": "JQPywIEOHDp0dPYS"
+			},
+			"radiant": {
+				"radiant-bond": "pGCVd6N7Ed0AeEBE",
+				"revive": "iFCKExxkdI48bWxH"
+			},
+			"wind": {
+				"greater-windform": "21OMcsYYwn5C7CLR",
+				"lesser-windform": "eX8CJssX3F2vqFi1"
+			}
+		}
+	},
 	"spells": {
 		"core": {
 			"fire": {
@@ -1057,32 +1129,6 @@
 				"thousand-cuts": "UZCSfngNtbXATH3B",
 				"updraft": "rxzdEK621oVYuWQ8",
 				"vicious-mockery": "kTJSEElZSzeOMXBO"
-			}
-		}
-	},
-	"secretSpells": {
-		"core": {
-			"fire": {
-				"hearth-and-home": "Mkw21dquWBdFBG9Y"
-			},
-			"ice": {
-				"cryotomb": "gDg4NlUQHWqbu9tV"
-			},
-			"lightning": {
-				"sparkfetch": "GXxJYF05KxMKG4bM",
-				"teleport": "np6pQWIzyOomWi7B"
-			},
-			"necrotic": {
-				"memory-veil": "PeLuUpKawDLOPHhv",
-				"speak-with-dead": "JQPywIEOHDp0dPYS"
-			},
-			"radiant": {
-				"radiant-bond": "pGCVd6N7Ed0AeEBE",
-				"revive": "iFCKExxkdI48bWxH"
-			},
-			"wind": {
-				"greater-windform": "21OMcsYYwn5C7CLR",
-				"lesser-windform": "eX8CJssX3F2vqFi1"
 			}
 		}
 	},

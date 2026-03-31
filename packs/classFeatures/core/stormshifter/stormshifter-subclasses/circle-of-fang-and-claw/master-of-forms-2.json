@@ -37,10 +37,9 @@
 		"featureType": "class",
 		"class": "stormshifter",
 		"group": "circle-of-fang-and-claw",
-		"gainedAtLevel": 11,
+		"gainedAtLevel": 15,
 		"subclass": true,
 		"gainedAtLevels": [
-			11,
 			15
 		]
 	},

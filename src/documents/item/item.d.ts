@@ -28,6 +28,7 @@ declare interface NimbleBaseItem<TypeName extends string = string> extends Item 
 declare interface NimbleClassItem extends NimbleBaseItem<'class'> {
 	type: 'class';
 	system: {
+		identifier: string;
 		classLevel: number;
 		hitDieSize: number;
 		hpData: number[];
@@ -70,7 +71,10 @@ declare interface NimbleSubclassItem extends NimbleBaseItem<'subclass'> {
 declare interface NimbleAncestryItem extends NimbleBaseItem<'ancestry'> {
 	type: 'ancestry';
 	system: {
+		description?: string;
 		exotic: boolean;
+		size?: string[];
+		rules?: NimbleBaseRule[];
 	};
 }
 
@@ -79,7 +83,10 @@ declare interface NimbleAncestryItem extends NimbleBaseItem<'ancestry'> {
  */
 declare interface NimbleBackgroundItem extends NimbleBaseItem<'background'> {
 	type: 'background';
-	system: Record<string, unknown>;
+	system: {
+		description?: string;
+		rules?: NimbleBaseRule[];
+	};
 }
 
 /**
@@ -91,6 +98,7 @@ declare interface NimbleObjectItem extends NimbleBaseItem<'object'> {
 		objectSizeType: 'slots' | 'stackable' | 'smallSized';
 		slotsRequired: number;
 		quantity: number;
+		equipped: boolean;
 		stackSize: number;
 		objectType: string;
 		identified: boolean;

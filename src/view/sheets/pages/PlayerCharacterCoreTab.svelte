@@ -3,7 +3,10 @@
 
 	// Helper Functions
 	import { getContext } from 'svelte';
+	import { createSubscriber } from 'svelte/reactivity';
 	import type { NimbleCharacter } from '../../../documents/actor/character.js';
+	import { registerCombatStateHooks } from '../../../utils/combatState.js';
+	import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
 	import localize from '../../../utils/localize.js';
 	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 	// Components
@@ -29,6 +32,13 @@
 		return [...proficiencies];
 	}
 
+	function getViewedCombatantForCurrentScene(): Combatant | null {
+		const combat = game.combats?.viewed;
+		const sceneId = canvas.scene?.id;
+		if (!combat || !sceneId || combat.scene?.id !== sceneId) return null;
+		return combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
+	}
+
 	async function rollInitiative() {
 		// Check if there's an active combat on the current scene with this character
 		const combat = game.combats?.viewed;
@@ -36,7 +46,8 @@
 
 		// If character is in combat for the current scene and hasn't rolled, use combat.rollInitiative
 		if (combat && sceneId && combat.scene?.id === sceneId) {
-			const combatant = combat.combatants.find((c) => c.actorId === actor.id);
+			const combatant = getViewedCombatantForCurrentScene();
+			if (combatant && initiativeRollLock.hasActiveLock(combatant)) return;
 
 			if (combatant && combatant.initiative === null && combatant.id) {
 				await combat.rollInitiative([combatant.id]);
@@ -57,6 +68,7 @@
 
 	const { armorTypesPlural, languages } = CONFIG.NIMBLE;
 	let actor: NimbleCharacter = getContext('actor');
+	const subscribeCombatState = createSubscriber(registerCombatStateHooks);
 
 	let flags = $derived(actor.reactive.flags.nimble);
 	let editingEnabled = $derived(flags?.editingEnabled ?? false);
@@ -65,6 +77,12 @@
 	let abilities = $derived(actor.reactive.system.abilities);
 	let characterSavingThrows = $derived(actor.reactive.system.savingThrows);
 	let initiative = $derived(actor.reactive.system.attributes.initiative.mod);
+	let initiativePending = $derived.by(() => {
+		subscribeCombatState();
+		const combatant = getViewedCombatantForCurrentScene();
+		if (!combatant) return false;
+		return initiativeRollLock.hasActiveLock(combatant);
+	});
 
 	// Proficiencies
 	let armorProficiencies = $derived(
@@ -96,6 +114,8 @@
 				type="button"
 				aria-label={localize('NIMBLE.prompts.rollInitiative')}
 				data-tooltip="NIMBLE.prompts.rollInitiative"
+				aria-busy={initiativePending}
+				disabled={initiativePending}
 				onclick={rollInitiative}
 			>
 				{replaceHyphenWithMinusSign(
@@ -176,6 +196,11 @@
 		&:focus {
 			border-color: var(--color-border-highlight);
 			box-shadow: 0 0 6px var(--color-border-highlight);
+		}
+
+		&:disabled {
+			cursor: wait;
+			opacity: 0.7;
 		}
 	}
 

@@ -7,6 +7,9 @@
 CLAUDE.local.md
 .claude/settings.local.json
 
+# Release notes drafts
+release-notes-*.md
+
 # Node Modules
 node_modules/
 .npm/

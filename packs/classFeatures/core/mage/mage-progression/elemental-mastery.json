@@ -37,10 +37,12 @@
 		"featureType": "class",
 		"class": "mage",
 		"group": "mage-progression",
-		"gainedAtLevel": 2,
+		"gainedAtLevel": 3,
 		"subclass": false,
 		"gainedAtLevels": [
-			2
+			3,
+			6,
+			14
 		]
 	},
 	"effects": [],

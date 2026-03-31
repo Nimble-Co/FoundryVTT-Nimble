@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import { createCtTopTrackerState } from './CtTopTracker.state.svelte.js';
+	import { CT_SHELL_EXTRA_WIDTH_REM } from './ctTopTracker/constants.js';
 	import {
 		canCurrentUserAdjustCombatantActions,
 		canCurrentUserRollInitiativeForCombatant,
@@ -15,12 +16,13 @@
 		getCombatantDisplayName,
 		getCombatantImageForDisplay,
 		getCombatantOutlineClass,
+		getPortraitFallbackForCombatant,
 		getNonPlayerCombatantHpBarData,
 		getPlayerCombatantDrawerData,
 		shouldRenderCombatantActions,
 	} from './ctTopTracker/resources.utils.js';
-
 	const trackerViewState = createCtTopTrackerState();
+	const ctShellExtraWidth = `${CT_SHELL_EXTRA_WIDTH_REM}rem`;
 
 	let trackElement: HTMLOListElement | null = $state(null);
 	let trackScrollbarElement: HTMLDivElement | null = $state(null);
@@ -92,6 +94,15 @@
 	const canDragCombatant = trackerViewState.canDragCombatant;
 	const canDragTrackEntry = trackerViewState.canDragTrackEntry;
 	const localize = game.i18n.localize.bind(game.i18n);
+
+	function handleCombatantPortraitImageError(event: Event) {
+		const img = event.currentTarget;
+		if (!(img instanceof HTMLImageElement)) return;
+		const fallback = img.dataset.portraitFallback;
+		if (!fallback) return;
+		if (img.src.includes(fallback)) return;
+		img.src = fallback;
+	}
 </script>
 
 {#snippet renderNameDrawer(cardName)}
@@ -197,7 +208,7 @@
 		class="nimble-ct-shell"
 		class:nimble-ct-shell--card-size-preview-active={ctCardSizePreviewActive}
 		class:nimble-ct-shell--resource-drawer-pinned={!resourceDrawerHoverEnabled}
-		style={`--nimble-ct-track-max-width: ${ctTrackMaxWidth}; --nimble-ct-card-scale: ${ctCardScale};`}
+		style={`--nimble-ct-track-max-width: ${ctTrackMaxWidth}; --nimble-ct-shell-extra-width: ${ctShellExtraWidth}; --nimble-ct-card-scale: ${ctCardScale};`}
 		in:fade={{ duration: 120 }}
 	>
 		{#if ctWidthPreviewVisible}
@@ -237,11 +248,11 @@
 						<button
 							class="nimble-ct__icon-button"
 							aria-label={monsterCardsExpanded
-								? localizeWithFallback('NIMBLE.ct.unstackMonsterGroups', 'Unstack Monster Groups')
-								: localizeWithFallback('NIMBLE.ct.stackMonsterGroups', 'Stack Monster Groups')}
+								? localizeWithFallback('NIMBLE.ct.stackMonsterGroups', 'Stack Monster Groups')
+								: localizeWithFallback('NIMBLE.ct.unstackMonsterGroups', 'Unstack Monster Groups')}
 							data-tooltip={monsterCardsExpanded
-								? localizeWithFallback('NIMBLE.ct.unstackMonsterGroups', 'Unstack Monster Groups')
-								: localizeWithFallback('NIMBLE.ct.stackMonsterGroups', 'Stack Monster Groups')}
+								? localizeWithFallback('NIMBLE.ct.stackMonsterGroups', 'Stack Monster Groups')
+								: localizeWithFallback('NIMBLE.ct.unstackMonsterGroups', 'Unstack Monster Groups')}
 							data-tooltip-direction="LEFT"
 							onclick={toggleMonsterCardExpansion}
 						>
@@ -378,6 +389,8 @@
 										src={getCombatantImageForDisplay(entry.combatant)}
 										alt="Combatant portrait"
 										draggable="false"
+										data-portrait-fallback={getPortraitFallbackForCombatant()}
+										onerror={handleCombatantPortraitImageError}
 									/>
 									{#if canDragEntry}
 										<div
@@ -611,6 +624,8 @@
 										src={getCombatantImageForDisplay(combatant)}
 										alt="Dead combatant portrait"
 										draggable="false"
+										data-portrait-fallback={getPortraitFallbackForCombatant()}
+										onerror={handleCombatantPortraitImageError}
 									/>
 									{#if resourceChips.length > 0}
 										<div class="nimble-ct__resource-chips">
@@ -900,7 +915,7 @@
 		align-items: start;
 		justify-content: center;
 		width: fit-content;
-		max-width: calc(var(--nimble-ct-track-max-width) + 7rem);
+		max-width: calc(var(--nimble-ct-track-max-width) + var(--nimble-ct-shell-extra-width));
 		/* Extend hover/focus activation zone slightly past side control bars. */
 		padding-inline: var(--nimble-ct-hover-hitbox-inline);
 		margin-inline: calc(var(--nimble-ct-hover-hitbox-inline) * -1);
@@ -1076,9 +1091,11 @@
 		pointer-events: none;
 		z-index: 4;
 	}
-	.nimble-ct__portrait,
 	.nimble-ct__round-separator,
 	.nimble-ct__dead {
+		pointer-events: auto;
+	}
+	.nimble-ct__portrait-card {
 		pointer-events: auto;
 	}
 	.nimble-ct__scrollbar {
@@ -1378,6 +1395,7 @@
 		gap: var(--nimble-ct-resource-row-gap);
 		border: 1px solid var(--nimble-ct-outline-border-color);
 		border-radius: 0 0 0.44rem 0.44rem;
+		pointer-events: none;
 		background: linear-gradient(
 			180deg,
 			color-mix(in srgb, hsl(224 38% 14%) 94%, black 6%) 0%,
@@ -1504,6 +1522,7 @@
 		box-shadow:
 			0 0 0.48rem color-mix(in srgb, hsl(42 90% 66%) 20%, transparent),
 			0 0.18rem 0.45rem color-mix(in srgb, black 42%, transparent);
+		pointer-events: none;
 		transition:
 			width 180ms ease,
 			max-width 180ms ease,
@@ -1638,13 +1657,32 @@
 	.nimble-ct__portrait--resource-drawer:has(
 			.nimble-ct__portrait-card:hover,
 			.nimble-ct__portrait-card:focus-within,
-			.nimble-ct__resource-drawer-stack:hover,
-			.nimble-ct__resource-drawer-stack:focus-within
+			.nimble-ct__resource-drawer:hover,
+			.nimble-ct__resource-drawer:focus-within
 		)
 		.nimble-ct__resource-drawer-stack {
 		opacity: 1;
 		visibility: visible;
+		transform: translate(-50%, 0) scaleY(1);
+		transition:
+			opacity 170ms ease,
+			transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+			visibility 0s linear 0s;
+	}
+	.nimble-ct__portrait--resource-drawer:has(
+			.nimble-ct__portrait-card:hover,
+			.nimble-ct__portrait-card:focus-within,
+			.nimble-ct__resource-drawer:hover,
+			.nimble-ct__resource-drawer:focus-within
+		)
+		.nimble-ct__resource-drawer {
 		pointer-events: auto;
+	}
+	.nimble-ct-shell--resource-drawer-pinned
+		.nimble-ct__portrait--resource-drawer
+		.nimble-ct__resource-drawer-stack {
+		opacity: 1;
+		visibility: visible;
 		transform: translate(-50%, 0) scaleY(1);
 		transition:
 			opacity 170ms ease,
@@ -1653,15 +1691,8 @@
 	}
 	.nimble-ct-shell--resource-drawer-pinned
 		.nimble-ct__portrait--resource-drawer
-		.nimble-ct__resource-drawer-stack {
-		opacity: 1;
-		visibility: visible;
+		.nimble-ct__resource-drawer {
 		pointer-events: auto;
-		transform: translate(-50%, 0) scaleY(1);
-		transition:
-			opacity 170ms ease,
-			transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-			visibility 0s linear 0s;
 	}
 	.nimble-ct-shell--resource-drawer-pinned
 		.nimble-ct__portrait--resource-drawer
@@ -1672,8 +1703,8 @@
 		.nimble-ct__portrait--resource-drawer:has(
 			.nimble-ct__portrait-card:hover,
 			.nimble-ct__portrait-card:focus-within,
-			.nimble-ct__resource-drawer-stack:hover,
-			.nimble-ct__resource-drawer-stack:focus-within
+			.nimble-ct__resource-drawer:hover,
+			.nimble-ct__resource-drawer:focus-within
 		)
 		.nimble-ct__player-name-drawer {
 		display: inline-flex;

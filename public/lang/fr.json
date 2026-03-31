@@ -1173,6 +1173,12 @@
 		"ui": {
 			"applyCondition": "Appliquer l'etat",
 			"clearAll": "Tout effacer",
+			"core": "Principal",
+			"inventory": "Inventaire",
+			"features": "Caractéristiques",
+			"spells": "Sorts",
+			"bio": "Biographie",
+			"settings": "Paramètres",
 			"condition": "Condition",
 			"conditionDescriptionUnavailable": "<p>Aucune description disponible.</p>",
 			"conditions": "Conditions",

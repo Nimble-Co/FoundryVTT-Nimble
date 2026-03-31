@@ -293,7 +293,6 @@
 		display: flex;
 		justify-content: center;
 		gap: 1rem;
-		margin-bottom: 0.5rem;
 		padding: 0.375rem 0.5rem;
 		font-size: var(--nimble-xs-text);
 		color: var(--nimble-medium-text-color);
@@ -384,7 +383,6 @@
 
 	.nimble-cc-ability-score {
 		padding: 0.5rem;
-		margin: 0.5rem 0;
 		gap: 0.25rem;
 		display: flex;
 		flex-direction: column;

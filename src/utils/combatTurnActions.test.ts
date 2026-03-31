@@ -4,6 +4,7 @@ import {
 	createCombatantsCollectionFixture,
 } from '../../tests/fixtures/combat.js';
 import { createMockCombatant } from '../../tests/mocks/combat.js';
+import { combatantActionMutationQueue } from './combatantActionMutationQueue.js';
 import {
 	consumeCombatantAction,
 	registerCombatTurnSocketListener,
@@ -98,6 +99,40 @@ describe('requestAdvanceCombatTurn', () => {
 		).game.user = { id: 'gm-user', isGM: true };
 
 		await expect(requestAdvanceCombatTurn({ combat })).resolves.toBe(true);
+		expect(nextTurn).toHaveBeenCalledTimes(1);
+	});
+
+	it('waits for queued combatant action mutations before advancing turn', async () => {
+		const nextTurn = vi.fn().mockResolvedValue(undefined);
+		const combat = {
+			id: 'combat-gm-pending-actions',
+			combatant: createMockCombatant({ id: 'combatant-gm-pending-actions' }),
+			nextTurn,
+		} as unknown as Combat;
+
+		(
+			globalThis as unknown as {
+				game: { user: { id: string; isGM: boolean } };
+			}
+		).game.user = { id: 'gm-user', isGM: true };
+
+		let releaseMutationBlocker: () => void = () => undefined;
+		const mutationBlocker = new Promise<void>((resolve) => {
+			releaseMutationBlocker = resolve;
+		});
+		const mutationPromise = combatantActionMutationQueue.queue({
+			combat,
+			combatantId: 'combatant-gm-pending-actions',
+			mutation: async () => await mutationBlocker,
+		});
+
+		const advancePromise = requestAdvanceCombatTurn({ combat });
+		await Promise.resolve();
+		expect(nextTurn).not.toHaveBeenCalled();
+
+		releaseMutationBlocker();
+		await mutationPromise;
+		await expect(advancePromise).resolves.toBe(true);
 		expect(nextTurn).toHaveBeenCalledTimes(1);
 	});
 

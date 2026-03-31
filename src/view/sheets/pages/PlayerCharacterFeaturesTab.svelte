@@ -1,4 +1,7 @@
-<script>
+<script lang="ts">
+	import type { NimbleCharacter } from '../../../documents/actor/character.js';
+	import type PlayerCharacterSheet from '../../../documents/sheets/PlayerCharacterSheet.svelte.js';
+	import type { Readable } from 'svelte/store';
 	import filterItems from '../../dataPreparationHelpers/filterItems.js';
 	import { getContext } from 'svelte';
 	import prepareAncestryTooltip from '../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js';
@@ -7,7 +10,13 @@
 	import prepareBoonTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBoonTooltip.js';
 	import prepareBackgroundTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBackgroundTooltip.js';
 	import prepareFeatureTooltip from '../../dataPreparationHelpers/documentTooltips/prepareFeatureTooltip.js';
+	import shouldFlashDroppedItem from '../../../utils/shouldFlashDroppedItem.js';
 	import sortItems from '../../../utils/sortItems.js';
+	import {
+		DROP_ITEM_FLASH_ANIMATION_NAME,
+		getDroppedItemFlashIds,
+		type SheetDropItemFlashState,
+	} from '../dropItemFlashState.js';
 
 	import SearchBar from '../components/SearchBar.svelte';
 
@@ -107,7 +116,15 @@
 		}
 	}
 
-	function sortItemCategories([categoryA], [categoryB]) {
+	function handleDropFlashAnimationEnd(event: AnimationEvent, itemId: string) {
+		if (event.animationName !== DROP_ITEM_FLASH_ANIMATION_NAME) return;
+		sheet.clearDroppedItemFlash(itemId);
+	}
+
+	function sortItemCategories(
+		[categoryA]: [string, unknown],
+		[categoryB]: [string, unknown],
+	): number {
 		return validTypes.indexOf(categoryA) - validTypes.indexOf(categoryB);
 	}
 
@@ -115,9 +132,11 @@
 	const validTypes = ['feature', 'boon', 'ancestry', 'background', 'class'];
 	const { featureTypeHeadings } = CONFIG.NIMBLE;
 
-	let actor = getContext('actor');
-	let sheet = getContext('application');
-	const editingEnabledStore = getContext('editingEnabled');
+	let actor = getContext<NimbleCharacter>('actor');
+	let sheet = getContext<PlayerCharacterSheet>('application');
+	const sheetState = getContext<SheetDropItemFlashState>('sheetState');
+	const editingEnabledStore = getContext<Readable<boolean>>('editingEnabled');
+	let droppedItemFlashIds = $derived(new Set(getDroppedItemFlashIds(sheetState)));
 	let editingEnabled = $derived($editingEnabledStore ?? true);
 
 	let searchTerm = $state('');
@@ -187,6 +206,10 @@
 						class="nimble-document-card nimble-document-card--no-meta"
 						class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
 						class:nimble-document-card--no-meta={!metadata}
+						class:nimble-document-card--drop-flash={shouldFlashDroppedItem(
+							droppedItemFlashIds,
+							item.reactive._id,
+						)}
 						data-item-id={item.reactive._id}
 						data-tooltip={getItemTooltip(item)}
 						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
@@ -194,16 +217,19 @@
 						draggable="true"
 						role="button"
 						ondragstart={(event) => sheet._onDragStart(event)}
+						onanimationend={(event) => handleDropFlashAnimationEnd(event, item.reactive._id)}
 						onmouseenter={(event) => handleTooltipMouseEnter(event, item)}
 						onclick={() => actor.activateItem(item.reactive._id)}
 					>
 						<header class="u-semantic-only">
 							{#if showEmbeddedDocumentImages}
-								<img
-									class="nimble-document-card__img"
-									src={item.reactive.img}
-									alt={item.reactive.name}
-								/>
+								<div class="nimble-document-card__img-wrapper">
+									<img
+										class="nimble-document-card__img"
+										src={item.reactive.img}
+										alt={item.reactive.name}
+									/>
+								</div>
 							{/if}
 
 							<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
@@ -244,22 +270,30 @@
 									class="nimble-document-card nimble-document-card--no-meta"
 									class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
 									class:nimble-document-card--no-meta={!metadata}
-									data-item-id={subclass._id}
+									class:nimble-document-card--drop-flash={shouldFlashDroppedItem(
+										droppedItemFlashIds,
+										subclass.reactive._id,
+									)}
+									data-item-id={subclass.reactive._id}
 									data-tooltip={getItemTooltip(subclass)}
 									data-tooltip-class="nimble-tooltip nimble-tooltip--item"
 									data-tooltip-direction="LEFT"
 									draggable="true"
 									role="button"
 									ondragstart={(event) => sheet._onDragStart(event)}
+									onanimationend={(event) =>
+										handleDropFlashAnimationEnd(event, subclass.reactive._id)}
 									onmouseenter={(event) => handleTooltipMouseEnter(event, subclass)}
 									onclick={() => actor.activateItem(subclass._id)}
 								>
 									{#if showEmbeddedDocumentImages}
-										<img
-											class="nimble-document-card__img"
-											src={subclass.reactive.img}
-											alt={subclass.reactive.name}
-										/>
+										<div class="nimble-document-card__img-wrapper">
+											<img
+												class="nimble-document-card__img"
+												src={subclass.reactive.img}
+												alt={subclass.reactive.name}
+											/>
+										</div>
 									{/if}
 
 									<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">

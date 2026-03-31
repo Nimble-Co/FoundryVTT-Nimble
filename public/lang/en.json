@@ -77,12 +77,15 @@
 			"boon": "Boon"
 		},
 		"chat": {
+			"applyDamage": "Apply Damage",
 			"applyHealing": "Apply Healing",
 			"healing": "Healing",
 			"healingApplied": "Healing Applied",
 			"undoHealing": "Undo Healing",
 			"undo": "Undo",
 			"noTargetsSelected": "No targets selected",
+			"noDamageToApply": "No damage to apply.",
+			"targetSkippedZeroDamage": "Ignored {tokenName} because the result is 0.",
 			"healingAlreadyApplied": "Healing has already been applied",
 			"healingUndone": "Healing has been undone",
 			"noHealingRecord": "No healing record found to undo"
@@ -233,7 +236,8 @@
 			"stunned": "Stunned",
 			"taunted": "Taunted",
 			"unconscious": "Unconscious",
-			"wounded": "Wounded"
+			"wounded": "Wounded",
+			"lastStand": "Last Stand"
 		},
 		"conditionDescriptions": {
 			"blinded": "<p>Can't see. Attacks against you have advantage, and your attacks have disadvantage.</p>",
@@ -252,6 +256,7 @@
 			"hampered": "<p>Any creature with their actions or movement reduce (e.g. Dazed, Grappled, Prone, Difficult Terrain).</p>",
 			"incapacitated": "<p>Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"invisible": "<p>Cannot be seen. Your attacks have advantage, and attacks against you have disadvantage.</p>",
+			"lastStand": "<p>At or below the Last Stand threshold. Triggers Last Stand abilities.</p>",
 			"paralyzed": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"petrified": "<p>Incapacitated. You have all the benefits and drawbacks of being a rock! Immune to most damage except from large explosions, picks, or similar tools.</p>",
 			"poisoned": "<p>Disadvantage on rolls.</p>",
@@ -428,6 +433,7 @@
 			"configureSavingThrows": "Configure Saves",
 			"configureSkills": "Configure Skills",
 			"configureWeaponProficiencies": "Configure Weapon Proficiencies",
+			"toggleEquipment": "Toggle Equipped State of {name}",
 			"editRoll": "Edit Roll",
 			"levelUp": "Level Up",
 			"safeRest": "Safe Rest",
@@ -945,8 +951,14 @@
 				}
 			},
 			"clearAll": "Clear All",
+			"core": "Core",
 			"conditions": "Conditions",
 			"condition": "Condition",
+			"inventory": "Inventory",
+			"features": "Features",
+			"spells": "Spells",
+			"bio": "Bio",
+			"settings": "Settings",
 			"duration": "Duration",
 			"unlimited": "Unlimited",
 			"source": "Source",
@@ -1080,7 +1092,8 @@
 			"healing": "Healing",
 			"rolled": "Rolled",
 			"advantage": "Advantage",
-			"restedWithoutSpending": "Rested without spending hit dice"
+			"restedWithoutSpending": "Rested without spending hit dice",
+			"manaRestored": "Mana Restored"
 		},
 		"npcSheet": {
 			"armor": "Armor",
@@ -1224,6 +1237,15 @@
 			"incrementHighestUnlockedSpellTier": "Increment Highest Unlocked Spell Tier",
 			"resetSpellTier": "Reset spell tier",
 			"resetHighestUnlockedSpellTier": "Reset Highest Unlocked Spell Tier"
+		},
+		"classFeatureSelection": {
+			"header": "Class Features",
+			"editSelection": "Edit Class Feature Selection",
+			"hint": "The following features are available at level 1 for your class. Some features are automatically granted, while others require you to make a choice.",
+			"chooseOne": "(Choose one)",
+			"noDescriptionAvailable": "No description available.",
+			"selected": "Selected",
+			"confirmSelection": "Confirm Selection"
 		},
 		"classSelection": {
 			"stepSelectClass": "Step 1: Select Class",
@@ -1438,6 +1460,17 @@
 				"monsterAttackFailed": "Monster attack failed. See console for details.",
 				"selectedGroupHasNoAliveMinions": "Selected group has no alive minions to attack.",
 				"couldNotOpenPanel": "Could not open group attack panel. See console for details."
+			}
+		},
+		"migration": {
+			"world": {
+				"starting": "Migrating world data to Nimble v{version}.",
+				"completed": "World migration complete.",
+				"completedWithErrors": "World migration completed with {count} error(s). Check the browser console (F12) for details."
+			},
+			"compendium": {
+				"starting": "Migrating compendium: {packName}...",
+				"finished": "Finished migrating compendium: {packName}."
 			}
 		},
 		"actorImport": {

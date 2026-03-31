@@ -638,10 +638,19 @@ function getCombatantRowImage(combatant: Combatant.Implementation): string {
 	);
 }
 
+function getSceneFriendlyAndCharacterTokens(): Token[] {
+	const placeables = (canvas?.tokens?.placeables ?? []) as Token[];
+	return placeables.filter((token) => isEligibleTargetToken(token));
+}
+
 function getCandidateTargetTokens(): Token[] {
 	const controlledTokens = (canvas?.tokens?.controlled ?? []) as Token[];
 	const candidateTokensById = new Map<string, Token>();
-	for (const token of [...controlledTokens, ...getCurrentUserTargetTokens()]) {
+	for (const token of [
+		...controlledTokens,
+		...getCurrentUserTargetTokens(),
+		...getSceneFriendlyAndCharacterTokens(),
+	]) {
 		const tokenId = getTargetTokenId(token);
 		if (!tokenId || candidateTokensById.has(tokenId)) continue;
 		candidateTokensById.set(tokenId, token);
@@ -649,9 +658,16 @@ function getCandidateTargetTokens(): Token[] {
 	return [...candidateTokensById.values()];
 }
 
-function isCharacterTargetToken(token: Token): boolean {
+function isFriendlyDispositionToken(token: Token): boolean {
+	// @ts-expect-error -- Token.disposition is not in the FoundryVTT type stubs but exists at runtime
+	const disposition = Number(token.document?.disposition ?? token.disposition);
+	return disposition === CONST.TOKEN_DISPOSITIONS.FRIENDLY;
+}
+
+function isEligibleTargetToken(token: Token): boolean {
 	const actorType = (token.actor?.type ?? token.document?.actor?.type ?? '').trim().toLowerCase();
-	return actorType === 'character';
+	if (actorType === 'character') return true;
+	return isFriendlyDispositionToken(token);
 }
 
 function resolveTargetTokenImage(token: Token): string {
@@ -673,7 +689,7 @@ function buildTargetTokenView(
 	token: Token,
 	selectedTargetIds: ReadonlySet<string>,
 ): TargetTokenView | null {
-	if (!isCharacterTargetToken(token)) return null;
+	if (!isEligibleTargetToken(token)) return null;
 	const tokenId = getTargetTokenId(token);
 	if (!tokenId) return null;
 
@@ -1231,7 +1247,7 @@ function hideGroupAttackPanel(options: { clearTargets?: boolean } = {}): void {
 		minionGroupAttackPanelElement.hidden = true;
 		minionGroupAttackPanelElement.replaceChildren();
 	}
-	if (options.clearTargets ?? true) {
+	if (options.clearTargets === true) {
 		clearAllUserSelectedTargetsFromNcsw();
 	}
 	hideGroupAttackTargetPopover();

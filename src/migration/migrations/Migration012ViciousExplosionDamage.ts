@@ -34,7 +34,7 @@ class Migration012ViciousExplosionDamage extends MigrationBase {
 
 		// Check if item is a known vicious compendium item OR has the vicious property
 		// This handles both official items and player-created vicious items
-		const sourceId = source.flags?.core?.sourceId;
+		const sourceId = this.getSourceId(source);
 		const isKnownViciousItem = sourceId && VICIOUS_ITEM_SOURCE_IDS.has(sourceId);
 		const hasVicious = hasViciousProperty(source);
 

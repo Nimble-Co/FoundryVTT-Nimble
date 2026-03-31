@@ -453,11 +453,16 @@ export function getActionState(combatant: Combatant.Implementation): {
 	};
 }
 
+export function getPortraitFallbackForCombatant(): string {
+	return PORTRAIT_FALLBACK_IMAGE;
+}
+
 export function getCombatantImageForDisplay(combatant: Combatant.Implementation): string {
+	const fallback = getPortraitFallbackForCombatant();
 	return (
 		getCombatantImage(combatant, {
 			includeActorImage: true,
-			fallback: PORTRAIT_FALLBACK_IMAGE,
-		}) ?? PORTRAIT_FALLBACK_IMAGE
+			fallback,
+		}) ?? fallback
 	);
 }

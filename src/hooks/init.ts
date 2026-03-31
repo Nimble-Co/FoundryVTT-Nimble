@@ -9,6 +9,7 @@ import { NimbleChatMessage } from '../documents/chatMessage.js';
 import { NimbleCombat } from '../documents/combat/combat.svelte.js';
 import { NimbleCombatant } from '../documents/combatant/combatant.svelte.js';
 import ItemProxy from '../documents/item/itemProxy.js';
+import { NimbleScene } from '../documents/scene/scene.js';
 import AncestrySheet from '../documents/sheets/AncestrySheet.svelte.js';
 import BackgroundSheet from '../documents/sheets/BackgroundSheet.svelte.js';
 import BoonSheet from '../documents/sheets/BoonSheet.svelte.js';
@@ -36,6 +37,7 @@ export default function init() {
 	CONFIG.Combatant.documentClass = NimbleCombatant as typeof CONFIG.Combatant.documentClass;
 	CONFIG.ChatMessage.documentClass = NimbleChatMessage as typeof CONFIG.ChatMessage.documentClass;
 	CONFIG.Item.documentClass = ItemProxy as typeof CONFIG.Item.documentClass;
+	CONFIG.Scene.documentClass = NimbleScene as typeof CONFIG.Scene.documentClass;
 	CONFIG.Token.documentClass = NimbleTokenDocument as typeof CONFIG.Token.documentClass;
 
 	// Add data models

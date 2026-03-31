@@ -320,6 +320,80 @@ describe('CtTopTrackerStore', () => {
 		).toEqual([2, 1]);
 	});
 
+	it('does not expose grouped minion members as separate expanded monster turns', () => {
+		const player = createCombatantFixture({
+			id: 'player-one',
+			type: 'character',
+			actor: createCombatActorFixture({ type: 'character' }),
+			sceneId: 'scene-1',
+		});
+		(player as unknown as { visible: boolean }).visible = true;
+		const minionLeader = createCombatantFixture({
+			id: 'minion-leader',
+			type: 'npc',
+			actor: createCombatActorFixture({ type: 'minion' }),
+			sceneId: 'scene-1',
+			flags: {
+				nimble: { minionGroup: { id: 'group-1', role: 'leader' } },
+			},
+		});
+		(minionLeader as unknown as { visible: boolean }).visible = true;
+		const minionMember = createCombatantFixture({
+			id: 'minion-member',
+			type: 'npc',
+			actor: createCombatActorFixture({ type: 'minion' }),
+			sceneId: 'scene-1',
+			flags: {
+				nimble: { minionGroup: { id: 'group-1', role: 'member' } },
+			},
+		});
+		(minionMember as unknown as { visible: boolean }).visible = true;
+
+		const turns = [player, minionLeader] as Combatant.Implementation[];
+		const combat = {
+			id: 'combat-store-expanded-minion-group',
+			active: true,
+			round: 1,
+			turn: 0,
+			combatant: player,
+			combatants: createCombatantsCollectionFixture([player, minionLeader, minionMember]),
+			turns,
+			setupTurns: vi.fn(() => turns),
+			scene: { id: 'scene-1' },
+			flags: {
+				nimble: {
+					ctMonsterCardsExpanded: true,
+					ctPlayersCanViewExpandedMonsters: true,
+				},
+			},
+		} as unknown as Combat;
+
+		const globals = globalThis as unknown as {
+			game: {
+				combats: { contents: Combat[]; viewed?: Combat | null };
+				combat?: Combat | null;
+			};
+		};
+		globals.game.combats = {
+			contents: [combat],
+			viewed: combat,
+		};
+		globals.game.combat = combat;
+
+		const store = new CtTopTrackerStore();
+		store.refreshCurrentCombat(true);
+
+		expect(store.monsterCardsExpanded).toBe(true);
+		expect(store.sceneAliveCombatants.map((combatant) => combatant.id)).toEqual([
+			'player-one',
+			'minion-leader',
+		]);
+		expect(store.aliveEntries.map((entry) => entry.key)).toEqual([
+			'combatant-player-one-0',
+			'combatant-minion-leader-0',
+		]);
+	});
+
 	it('updates the shared monster expansion flag when the GM toggles expansion', async () => {
 		const globals = globalThis as unknown as {
 			game: {
