@@ -1,18 +1,16 @@
 import { createSubscriber } from 'svelte/reactivity';
-import type { NimbleCharacter } from '../../../documents/actor/character.js';
-import GenericDialog from '../../../documents/dialogs/GenericDialog.svelte.js';
-import {
-	getActiveCombatForCurrentScene,
-	registerCombatStateHooks,
-} from '../../../utils/combatState.js';
-import { getHeroicReactionUsageState } from '../../../utils/getHeroicReactionUsageState.js';
+import type { NimbleCharacter } from '#documents/actor/character.js';
+import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
+import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
+import { getHeroicReactionUsageState } from '#utils/getHeroicReactionUsageState.js';
 import {
 	getHeroicReactionAvailabilityTitle,
 	type HeroicReactionKey,
-} from '../../../utils/heroicActions.js';
-import localize from '../../../utils/localize.js';
-import filterItems from '../../dataPreparationHelpers/filterItems.js';
-import HeroicActionsHelpDialog from '../../dialogs/HeroicActionsHelpDialog.svelte';
+} from '#utils/heroicActions.js';
+import localize from '#utils/localize.js';
+import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
+import filterItems from '#view/dataPreparationHelpers/filterItems.js';
+import HeroicActionsHelpDialog from '#view/dialogs/HeroicActionsHelpDialog.svelte';
 
 // ============================================================================
 // Types
@@ -166,9 +164,19 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	}
 
 	async function updateActionPips(newValue: number): Promise<void> {
-		const combatant = getCombatantInCombat();
-		if (!combatant) return;
-		await combatant.update({ 'system.actions.base.current': newValue } as Record<string, unknown>);
+		const combat = getCombat();
+		const combatantId = getCombatantInCombat()?.id ?? null;
+		if (!combat || !combatantId) return;
+
+		await queueCombatantMutationWithFreshDocument({
+			combat,
+			combatantId,
+			mutation: async (currentCombatant) => {
+				await currentCombatant.update({
+					'system.actions.base.current': newValue,
+				} as Record<string, unknown>);
+			},
+		});
 	}
 
 	async function deductActionPips(count = 1): Promise<void> {
