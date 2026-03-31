@@ -37,6 +37,8 @@ function resolveCurrentTurnIdentity(
 	combat: Combat,
 	existingTurns: Combatant.Implementation[],
 ): TurnIdentity | null {
+	if (!isCombatStarted(combat)) return null;
+
 	const combatWithHint = combat as CombatWithTurnIdentityHint;
 	const persistedTurnIdentity = getPersistedExpandedTurnIdentity(combat);
 	if (persistedTurnIdentity) return persistedTurnIdentity;
@@ -154,6 +156,12 @@ export function syncCombatTurnsForCt(combat: Combat | null): void {
 	combat.turns = normalizedTurns;
 	if (normalizedTurns.length === 0) {
 		combat.turn = 0;
+		combatWithHint._nimbleExpandedTurnIdentity = null;
+		setExpandedTurnIdentityHint(combat.id ?? null, null);
+		return;
+	}
+
+	if (!isCombatStarted(combat)) {
 		combatWithHint._nimbleExpandedTurnIdentity = null;
 		setExpandedTurnIdentityHint(combat.id ?? null, null);
 		return;
@@ -432,6 +440,7 @@ export function buildAliveEntries(
 
 export function getActiveCombatantId(combat: Combat | null): string | null {
 	if (!combat) return null;
+	if (!isCombatStarted(combat)) return null;
 	const turnIndex = Number(combat.turn ?? -1);
 	if (Number.isInteger(turnIndex) && turnIndex >= 0 && turnIndex < combat.turns.length) {
 		return combat.turns[turnIndex]?.id ?? null;
@@ -455,6 +464,7 @@ export function getActiveCombatantOccurrence(
 	activeId: string,
 ): number | null {
 	if (!combat) return null;
+	if (!isCombatStarted(combat)) return null;
 	const turnIndex = Number(combat.turn ?? -1);
 	if (!Number.isInteger(turnIndex) || turnIndex < 0 || turnIndex >= combat.turns.length)
 		return null;
@@ -463,7 +473,7 @@ export function getActiveCombatantOccurrence(
 
 export function resolveActiveEntryKey(params: ResolveActiveEntryKeyParams): string | null {
 	const { activeCombatantId, activeOccurrence, aliveEntries, collapseMonsters } = params;
-	if (!activeCombatantId) return aliveEntries[0]?.key ?? null;
+	if (!activeCombatantId) return null;
 
 	if (collapseMonsters) {
 		const monsterStackEntry = findTrackEntryContainingCombatantId(aliveEntries, activeCombatantId);

@@ -443,11 +443,7 @@ class NimbleCombat extends Combat {
 	}
 
 	#resolveStartCombatTurnIndex(): number {
-		if (this.turns.length < 1) return 0;
-		const firstCharacterTurnIndex = this.turns.findIndex(
-			(combatant) => combatant.type === 'character',
-		);
-		return firstCharacterTurnIndex >= 0 ? firstCharacterTurnIndex : 0;
+		return 0;
 	}
 
 	override async startCombat(): Promise<this> {

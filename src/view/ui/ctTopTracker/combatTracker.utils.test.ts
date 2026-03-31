@@ -278,6 +278,8 @@ describe('ctTopTracker helpers', () => {
 		const rawTurns = [playerOne, playerTwo, solo] as Combatant.Implementation[];
 		const combat = {
 			id: 'combat-legendary-ct-sync',
+			started: true,
+			round: 1,
 			flags: {
 				nimble: {
 					expandedTurnIdentity: {
@@ -324,6 +326,8 @@ describe('ctTopTracker helpers', () => {
 		const rawTurns = [playerOne, playerTwo, solo] as Combatant.Implementation[];
 		const combat = {
 			id: 'combat-legendary-ct-sync',
+			started: true,
+			round: 1,
 			flags: {
 				nimble: {
 					expandedTurnIdentity: {

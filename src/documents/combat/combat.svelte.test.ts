@@ -326,6 +326,73 @@ describe('NimbleCombat', () => {
 		]);
 	});
 
+	it('does not use initiative as a turn-order tiebreaker', () => {
+		const combatId = 'combat-order-ignores-initiative';
+		const alpha = createMockCombatant({
+			id: 'alpha',
+			type: 'character',
+			sort: 0,
+			isOwner: true,
+			initiative: 5,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		(alpha as unknown as { name: string }).name = 'Alpha';
+		const beta = createMockCombatant({
+			id: 'beta',
+			type: 'character',
+			sort: 0,
+			isOwner: true,
+			initiative: 20,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		(beta as unknown as { name: string }).name = 'Beta';
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([alpha, beta]),
+		} as unknown as Combat.CreateData);
+
+		const turns = combat.setupTurns();
+		expect(turns.map((combatant) => combatant.id)).toEqual(['alpha', 'beta']);
+	});
+
+	it('defaults non-player combatants after players when manual sort ties', () => {
+		const combatId = 'combat-order-players-before-monsters';
+		const monster = createMockCombatant({
+			id: 'monster',
+			type: 'npc',
+			sort: 0,
+			isOwner: false,
+			initiative: null,
+			actor: createCombatActorFixture({ hp: 10 }),
+			combatId,
+		});
+		(monster as unknown as { name: string }).name = 'A Monster';
+		const player = createMockCombatant({
+			id: 'player',
+			type: 'character',
+			sort: 0,
+			isOwner: true,
+			initiative: null,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		(player as unknown as { name: string }).name = 'Z Player';
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([monster, player]),
+		} as unknown as Combat.CreateData);
+		combat.setupTurns = vi.fn(() =>
+			[...combat.combatants.contents].sort((a, b) => combat._sortCombatants(a, b)),
+		);
+
+		const turns = combat.setupTurns();
+		expect(turns.map((combatant) => combatant.id)).toEqual(['player', 'monster']);
+	});
+
 	it('preserves the second solo turn occurrence when advancing from the second player turn', async () => {
 		const combatId = 'combat-legendary-next-turn-occurrence';
 		const playerOne = createMockCombatant({
@@ -652,7 +719,7 @@ describe('NimbleCombat', () => {
 		expect(foundry.utils.getProperty(member, 'system.actions.base.current')).toBe(1);
 	});
 
-	it('starts combat on the top-most character card after start initialization', async () => {
+	it('starts combat on the left-most card after start initialization', async () => {
 		const combatId = 'combat-start-order';
 		const monster = createMockCombatant({
 			id: 'monster-top',
@@ -707,16 +774,16 @@ describe('NimbleCombat', () => {
 		await combat.startCombat();
 
 		expect(combat.update).toHaveBeenCalledWith({
-			turn: 1,
+			turn: 0,
 			'flags.nimble.expandedTurnIdentity': {
-				combatantId: 'player-top',
+				combatantId: 'monster-top',
 				occurrence: 0,
 			},
 		});
-		expect(combat.turn).toBe(1);
+		expect(combat.turn).toBe(0);
 	});
 
-	it('seeds the expanded turn identity hint for the chosen starting player turn at combat start', async () => {
+	it('seeds the expanded turn identity hint for the chosen starting turn at combat start', async () => {
 		const combatId = 'combat-start-local-combatant-sync';
 		const monster = createMockCombatant({
 			id: 'monster-top',
@@ -741,8 +808,8 @@ describe('NimbleCombat', () => {
 			id: combatId,
 			scene: { id: 'scene-1' },
 			combatants,
-			turn: 0,
-			combatant: monster,
+			turn: 1,
+			combatant: playerTop,
 		} as unknown as Combat.CreateData) as NimbleCombat & {
 			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
 			update: ReturnType<typeof vi.fn>;
@@ -763,9 +830,9 @@ describe('NimbleCombat', () => {
 
 		await combat.startCombat();
 
-		expect(combat.turn).toBe(1);
+		expect(combat.turn).toBe(0);
 		expect(combat._nimbleExpandedTurnIdentity).toEqual({
-			combatantId: 'player-top',
+			combatantId: 'monster-top',
 			occurrence: 0,
 		});
 	});

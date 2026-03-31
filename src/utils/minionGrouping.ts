@@ -37,19 +37,12 @@ function getCombatantManualSortValue(combatant: Combatant.Implementation): numbe
 	return Number(foundry.utils.getProperty(combatant, 'system.sort') ?? 0);
 }
 
-function getCombatantInitiativeValue(combatant: Combatant.Implementation): number {
-	return Number(combatant.initiative ?? Number.NEGATIVE_INFINITY);
-}
-
 function compareCombatantsForGroupResolution(
 	a: Combatant.Implementation,
 	b: Combatant.Implementation,
 ): number {
 	const manualSortDiff = getCombatantManualSortValue(a) - getCombatantManualSortValue(b);
 	if (manualSortDiff !== 0) return manualSortDiff;
-
-	const initiativeDiff = getCombatantInitiativeValue(b) - getCombatantInitiativeValue(a);
-	if (initiativeDiff !== 0) return initiativeDiff;
 
 	return (a.name ?? '').localeCompare(b.name ?? '');
 }

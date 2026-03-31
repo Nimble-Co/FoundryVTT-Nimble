@@ -152,11 +152,6 @@ function sortCombatantsByCurrentTurnOrder(
 		const manualSortDiff = getCombatantManualSortValue(a) - getCombatantManualSortValue(b);
 		if (manualSortDiff !== 0) return manualSortDiff;
 
-		const initiativeDiff =
-			Number(b.initiative ?? Number.NEGATIVE_INFINITY) -
-			Number(a.initiative ?? Number.NEGATIVE_INFINITY);
-		if (initiativeDiff !== 0) return initiativeDiff;
-
 		return (a.name ?? '').localeCompare(b.name ?? '');
 	});
 }

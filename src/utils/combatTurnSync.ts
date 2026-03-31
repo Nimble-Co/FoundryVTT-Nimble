@@ -9,10 +9,19 @@ type CombatWithTurnIdentityHint = Combat & {
 	_nimbleExpandedTurnIdentity?: TurnIdentity | null;
 };
 
+function isCombatStarted(combat: Combat | null): boolean {
+	if (!combat) return false;
+	const asRecord = combat as unknown as { started?: boolean };
+	if (typeof asRecord.started === 'boolean') return asRecord.started;
+	return (combat.round ?? 0) > 0;
+}
+
 function resolveCurrentTurnIdentity(
 	combat: Combat,
 	existingTurns: Combatant.Implementation[],
 ): TurnIdentity | null {
+	if (!isCombatStarted(combat)) return null;
+
 	const combatWithHint = combat as CombatWithTurnIdentityHint;
 	const persistedTurnIdentity = getPersistedExpandedTurnIdentity(combat);
 	if (persistedTurnIdentity) return persistedTurnIdentity;
@@ -104,6 +113,12 @@ export function syncCombatTurns(combat: Combat | null): void {
 		return;
 	}
 
+	if (!isCombatStarted(combat)) {
+		combatWithHint._nimbleExpandedTurnIdentity = null;
+		setExpandedTurnIdentityHint(combat.id ?? null, null);
+		return;
+	}
+
 	if (currentTurnIdentity?.combatantId) {
 		const matchedIndex = findTurnIndexByOccurrence(
 			normalizedTurns,
@@ -143,6 +158,7 @@ export function syncCombatTurns(combat: Combat | null): void {
 
 export function getActiveCombatantId(combat: Combat | null): string | null {
 	if (!combat) return null;
+	if (!isCombatStarted(combat)) return null;
 	const turnIndex = Number(combat.turn ?? -1);
 	if (Number.isInteger(turnIndex) && turnIndex >= 0 && turnIndex < combat.turns.length) {
 		return combat.turns[turnIndex]?.id ?? null;
@@ -166,6 +182,7 @@ export function getActiveCombatantOccurrence(
 	activeId: string,
 ): number | null {
 	if (!combat) return null;
+	if (!isCombatStarted(combat)) return null;
 	const turnIndex = Number(combat.turn ?? -1);
 	if (!Number.isInteger(turnIndex) || turnIndex < 0 || turnIndex >= combat.turns.length)
 		return null;
