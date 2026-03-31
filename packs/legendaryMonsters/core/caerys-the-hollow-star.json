@@ -47,7 +47,7 @@
 		"width": 4,
 		"height": 4,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "systems/nimble/assets/legendaryMonsterImages/core/caerys.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
