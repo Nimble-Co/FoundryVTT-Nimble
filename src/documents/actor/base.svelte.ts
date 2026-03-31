@@ -529,7 +529,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	}
 
 	async showCheckRollDialog(
-		type: 'abilityCheck' | 'savingThrow' | 'skillCheck',
+		type: 'abilityCheck' | 'initiative' | 'savingThrow' | 'skillCheck',
 		data: CheckRollDialogData,
 	): Promise<any> {
 		let title = '';
@@ -542,6 +542,9 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 				break;
 			case 'savingThrow':
 				title = `${this.name}: Configure ${CONFIG.NIMBLE.savingThrows[data?.saveKey ?? '']} Save`;
+				break;
+			case 'initiative':
+				title = `${this.name}: Configure Initiative`;
 				break;
 			case 'skillCheck':
 				title = `${this.name}: Configure ${CONFIG.NIMBLE.skills[data?.skillKey ?? '']} Skill Check`;
@@ -557,6 +560,53 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		const dialogData = await dialog.promise;
 
 		return dialogData;
+	}
+
+	async getInitiativeRollData(options: ActorRollOptions = {}) {
+		const systemData = this.system as unknown as BaseActorSystemData & {
+			attributes: { initiative: { defaultRollMode?: number } };
+		};
+		const baseRollMode = calculateRollMode(
+			this.isType('character') ? (systemData.attributes.initiative?.defaultRollMode ?? 0) : 0,
+			options.rollModeModifier,
+			options.rollMode,
+		);
+
+		return options.skipRollDialog
+			? this.getDefaultInitiativeRollData(baseRollMode, options)
+			: await this.showCheckRollDialog('initiative', {
+					...options,
+					rollMode: baseRollMode,
+				});
+	}
+
+	getDefaultInitiativeRollData(rollMode: number, options = {} as ActorRollOptions) {
+		const rollFormula = this._getInitiativeFormula({ rollMode });
+		return { rollFormula, rollMode, visibilityMode: options.visibilityMode };
+	}
+
+	async rollInitiativeToChat(options: ActorRollOptions = {}): Promise<ChatMessage | null> {
+		const rollData = await this.getInitiativeRollData(options);
+		if (!rollData) return null;
+
+		const roll = new Roll(rollData.rollFormula, {
+			...this.getRollData(),
+			prompted: options.prompted ?? false,
+			respondentId: this.uuid,
+		} as Record<string, any>);
+		await roll.evaluate();
+
+		const rollMode = rollData.visibilityMode ?? game.settings.get('core', 'rollMode');
+		const message = await roll.toMessage(
+			{
+				speaker: ChatMessage.getSpeaker({ actor: this }),
+				flavor: game.i18n.format('COMBAT.RollsInitiative', { name: this.name }),
+				flags: { core: { initiativeRoll: true } },
+			},
+			{ rollMode },
+		);
+
+		return (message as ChatMessage | null) ?? null;
 	}
 
 	override async rollInitiative({

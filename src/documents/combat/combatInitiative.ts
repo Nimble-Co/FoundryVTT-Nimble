@@ -63,15 +63,22 @@ export async function rollInitiativeForCombatant(params: {
 	formula: string | null;
 	messageOptions: ChatMessage.CreateData;
 	chatRollMode: string | null;
+	rollOptions?: Record<string, unknown>;
 	rollIndex: number;
 	combatManaUpdates: Promise<unknown>[];
 }): Promise<InitiativeRollOutcome | null> {
 	const combatant = params.combat.combatants.get(params.combatantId);
 	if (!combatant?.isOwner) return null;
+	const combatantWithRollOptions = combatant as Combatant.Implementation & {
+		getInitiativeRoll: (formula?: string, rollOptions?: Record<string, unknown>) => Roll;
+	};
 
 	const combatantUpdates: Record<string, unknown> = { _id: params.combatantId };
 
-	const roll = combatant.getInitiativeRoll(params.formula ?? undefined);
+	const roll = combatantWithRollOptions.getInitiativeRoll(
+		params.formula ?? undefined,
+		params.rollOptions ?? {},
+	);
 	await roll.evaluate();
 	const rollTotal = roll.total ?? 0;
 	combatantUpdates.initiative = rollTotal;

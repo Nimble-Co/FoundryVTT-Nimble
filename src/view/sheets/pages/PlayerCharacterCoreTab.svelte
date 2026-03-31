@@ -5,10 +5,14 @@
 	import { getContext } from 'svelte';
 	import { createSubscriber } from 'svelte/reactivity';
 	import type { NimbleCharacter } from '../../../documents/actor/character.js';
-	import { registerCombatStateHooks } from '../../../utils/combatState.js';
+	import {
+		getActiveCombatForCurrentScene,
+		registerCombatStateHooks,
+	} from '../../../utils/combatState.js';
 	import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
 	import localize from '../../../utils/localize.js';
 	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
+	import { characterInitiativeRoll } from '../rollCharacterInitiative.js';
 	// Components
 	import AbilityScores from '../components/AbilityScores.svelte';
 	import ArmorClass from '../components/ArmorClass.svelte';
@@ -32,38 +36,21 @@
 		return [...proficiencies];
 	}
 
-	function getViewedCombatantForCurrentScene(): Combatant | null {
-		const combat = game.combats?.viewed;
-		const sceneId = canvas.scene?.id;
-		if (!combat || !sceneId || combat.scene?.id !== sceneId) return null;
+	function getCombatantForCurrentScene(): Combatant | null {
+		const combat = getActiveCombatForCurrentScene();
+		if (!combat) return null;
 		return combat.combatants.find((entry) => entry.actorId === actor.id) ?? null;
 	}
 
 	async function rollInitiative() {
-		// Check if there's an active combat on the current scene with this character
-		const combat = game.combats?.viewed;
-		const sceneId = canvas.scene?.id;
+		if (initiativePending) return;
 
-		// If character is in combat for the current scene and hasn't rolled, use combat.rollInitiative
-		if (combat && sceneId && combat.scene?.id === sceneId) {
-			const combatant = getViewedCombatantForCurrentScene();
-			if (combatant && initiativeRollLock.hasActiveLock(combatant)) return;
-
-			if (combatant && combatant.initiative === null && combatant.id) {
-				await combat.rollInitiative([combatant.id]);
-				return;
-			}
+		isRollingInitiative = true;
+		try {
+			await characterInitiativeRoll.roll(actor);
+		} finally {
+			isRollingInitiative = false;
 		}
-
-		// Always roll initiative to chat
-		const roll = Roll.create(actor._getInitiativeFormula({}), actor.getRollData());
-		await roll.evaluate();
-
-		await roll.toMessage({
-			speaker: ChatMessage.getSpeaker({ actor }),
-			flavor: game.i18n.format('COMBAT.RollsInitiative', { name: actor.name }),
-			flags: { core: { initiativeRoll: true } },
-		});
 	}
 
 	const { armorTypesPlural, languages } = CONFIG.NIMBLE;
@@ -76,12 +63,13 @@
 	let skills = $derived(actor.reactive.system.skills);
 	let abilities = $derived(actor.reactive.system.abilities);
 	let characterSavingThrows = $derived(actor.reactive.system.savingThrows);
+	let isRollingInitiative = $state(false);
 	let initiative = $derived(actor.reactive.system.attributes.initiative.mod);
 	let initiativePending = $derived.by(() => {
 		subscribeCombatState();
-		const combatant = getViewedCombatantForCurrentScene();
-		if (!combatant) return false;
-		return initiativeRollLock.hasActiveLock(combatant);
+		const combatant = getCombatantForCurrentScene();
+		if (combatant && initiativeRollLock.hasActiveLock(combatant)) return true;
+		return isRollingInitiative;
 	});
 
 	// Proficiencies

@@ -707,6 +707,7 @@ class NimbleCombat extends Combat {
 		formula: string | null;
 		messageOptions: ChatMessage.CreateData;
 		chatRollMode: string | null;
+		rollOptions?: Record<string, unknown>;
 		rollIndex: number;
 		combatManaUpdates: Promise<unknown>[];
 	}): Promise<LockedInitiativeRollOutcome | null> {
@@ -732,6 +733,7 @@ class NimbleCombat extends Combat {
 				formula: params.formula,
 				messageOptions: params.messageOptions,
 				chatRollMode: params.chatRollMode,
+				rollOptions: params.rollOptions,
 				rollIndex: params.rollIndex,
 				combatManaUpdates: params.combatManaUpdates,
 			});
@@ -757,6 +759,7 @@ class NimbleCombat extends Combat {
 		formula: string | null;
 		messageOptions: ChatMessage.CreateData;
 		chatRollMode: string | null;
+		rollOptions?: Record<string, unknown>;
 		rollIndex: number;
 		combatManaUpdates: Promise<unknown>[];
 	}): Promise<LockedInitiativeRollOutcome | null> {
@@ -782,7 +785,7 @@ class NimbleCombat extends Combat {
 		ids: string | string[],
 		options?: Combat.InitiativeOptions & { rollOptions?: Record<string, unknown> },
 	): Promise<this> {
-		const { formula = null, updateTurn = true, messageOptions = {} } = options ?? {};
+		const { formula = null, updateTurn = true, messageOptions = {}, rollOptions } = options ?? {};
 
 		// Structure Input data
 		const combatantIds = [...new Set((typeof ids === 'string' ? [ids] : ids).filter(Boolean))];
@@ -801,6 +804,7 @@ class NimbleCombat extends Combat {
 				formula,
 				messageOptions,
 				chatRollMode,
+				rollOptions,
 				rollIndex: messages.length,
 				combatManaUpdates,
 			});

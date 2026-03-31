@@ -1,4 +1,5 @@
 import { onDestroy, onMount, tick } from 'svelte';
+import type { NimbleCharacter } from '../../documents/actor/character.js';
 import GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
 import { COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME } from '../../settings/combatTrackerSettings.js';
 import { canCurrentUserReorderCombatant } from '../../utils/combatantOrdering.js';
@@ -12,6 +13,7 @@ import {
 import type { HeroicReactionKey } from '../../utils/heroicActions.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
 import CtSettingsDialogComponent from '../dialogs/CtSettingsDialog.svelte';
+import { characterInitiativeRoll } from '../sheets/rollCharacterInitiative.js';
 import {
 	canCurrentUserAdjustCombatantActions,
 	canCurrentUserRollInitiativeForCombatant,
@@ -99,7 +101,11 @@ export function createCtTopTrackerState() {
 		if (!actionCombat || !combatantId) return;
 
 		try {
-			await actionCombat.rollInitiative([combatantId], { updateTurn: false });
+			if (combatant.type === 'character' && combatant.actor) {
+				await characterInitiativeRoll.roll(combatant.actor as NimbleCharacter);
+			} else {
+				await actionCombat.rollInitiative([combatantId], { updateTurn: false });
+			}
 			updateCurrentCombat(true);
 		} catch (error) {
 			console.error('[Nimble][CT] Initiative roll failed', { combatantId, error });

@@ -999,6 +999,81 @@ describe('NimbleCombat', () => {
 		]);
 	});
 
+	it('passes initiative roll options through to the combatant roll', async () => {
+		const combatId = 'combat-initiative-roll-options';
+		const actor = createCombatActorFixture({
+			id: 'actor-initiative-roll-options',
+			type: 'character',
+			isOwner: true,
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+		}) as Actor.Implementation & {
+			update: ReturnType<typeof vi.fn>;
+		};
+		actor.update = vi.fn().mockResolvedValue(actor);
+
+		const combatant = createMockCombatant({
+			id: 'character-initiative-roll-options',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: null,
+			actor,
+			combatId,
+			flags: {},
+		}) as unknown as Combatant.Implementation & {
+			getInitiativeRoll: ReturnType<typeof vi.fn>;
+		};
+
+		const initiativeRoll = {
+			total: 11,
+			evaluate: vi.fn().mockResolvedValue(undefined),
+			toMessage: vi.fn().mockResolvedValue({ id: 'initiative-roll-options-chat' }),
+		};
+		combatant.getInitiativeRoll = vi.fn().mockReturnValue(initiativeRoll);
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: 'scene-1' },
+			combatants: createCombatantsCollectionFixture([combatant]),
+			turns: [],
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(async (_embeddedName: string, updates: Record<string, unknown>[]) => {
+				for (const update of updates) {
+					const combatantId = update._id as string;
+					const targetCombatant = combat.combatants.get(combatantId) as unknown as Record<
+						string,
+						unknown
+					> | null;
+					if (!targetCombatant) continue;
+
+					for (const [path, value] of Object.entries(update)) {
+						if (path === '_id') continue;
+						foundry.utils.setProperty(targetCombatant, path, value);
+					}
+				}
+
+				return [];
+			});
+		combat.update = vi.fn().mockResolvedValue(combat);
+
+		await combat.rollInitiative(['character-initiative-roll-options'], {
+			rollOptions: { rollMode: -1 },
+			updateTurn: false,
+		});
+
+		expect(combatant.getInitiativeRoll).toHaveBeenCalledWith(undefined, { rollMode: -1 });
+		expect(initiativeRoll.evaluate).toHaveBeenCalledTimes(1);
+		expect(combatant.initiative).toBe(11);
+	});
+
 	it('skips rolling initiative when another client already holds the combatant lock', async () => {
 		const combatId = 'combat-initiative-foreign-lock';
 		globals().game.user = {

@@ -8,12 +8,17 @@
 	let { actor, dialog, ...data } = $props();
 	let selectedRollMode = $state(untrack(() => Math.clamp(data.rollMode ?? 0, -6, 6)));
 	let shouldRollBeHidden = $state(!!game.settings.get('nimble', 'hideRolls'));
+	let resolvedRollMode = $derived(
+		Array.isArray(selectedRollMode) ? (selectedRollMode[0] ?? 0) : selectedRollMode,
+	);
 
 	let rollFormula = $derived(
-		getRollFormula(actor, {
-			...data,
-			rollMode: selectedRollMode,
-		}),
+		data.type === 'initiative'
+			? actor._getInitiativeFormula({ rollMode: resolvedRollMode })
+			: getRollFormula(actor, {
+					...data,
+					rollMode: resolvedRollMode,
+				}),
 	);
 </script>
 
@@ -36,7 +41,7 @@
 		data-button-variant="basic"
 		onclick={() =>
 			dialog.submitRoll({
-				rollMode: selectedRollMode[0],
+				rollMode: resolvedRollMode,
 				rollFormula,
 				visibilityMode: shouldRollBeHidden ? 'blindroll' : 'publicroll',
 			})}

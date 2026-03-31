@@ -10,6 +10,7 @@ import { requestAdvanceCombatTurn } from '../../../utils/combatTurnActions.js';
 import { getActiveCombatant } from '../../../utils/combatTurnSync.js';
 import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
 import localize from '../../../utils/localize.js';
+import { characterInitiativeRoll } from '../rollCharacterInitiative.js';
 
 // ============================================================================
 // Types
@@ -45,6 +46,8 @@ export function getDiceIcon(index: number): string {
 // ============================================================================
 
 export function createActionTrackerState(getActor: () => NimbleCharacter) {
+	let isRollingInitiative = $state(false);
+
 	// ============================================================================
 	// Combat State Subscription
 	// ============================================================================
@@ -75,6 +78,7 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 	}
 
 	function isInitiativePending(): boolean {
+		if (isRollingInitiative) return true;
 		const combatant = getCombatantInCombat();
 		if (!combatant) return false;
 		return initiativeRollLock.hasActiveLock(combatant);
@@ -107,15 +111,18 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 
 	async function rollInitiative(): Promise<void> {
 		const combat = getActiveCombatForCurrentScene();
-		if (!combat) return;
+		if (!combat || isRollingInitiative) return;
 		const combatant = combat.combatants.find((entry) => entry.actorId === getActor().id);
 		if (!combatant?.id) return;
 		if (initiativeRollLock.hasActiveLock(combatant)) return;
 
+		isRollingInitiative = true;
 		try {
-			await combat.rollInitiative([combatant.id]);
+			await characterInitiativeRoll.roll(getActor());
 		} catch (_error) {
 			ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionRollInitiative'));
+		} finally {
+			isRollingInitiative = false;
 		}
 	}
 
