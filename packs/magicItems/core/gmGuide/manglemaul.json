@@ -2,7 +2,7 @@
 	"folder": null,
 	"name": "Manglemaul",
 	"type": "object",
-	"img": "icons/weapons/hammers/hammer-war-spiked-grey.webp",
+	"img": "systems/nimble/assets/magicItems/MangleMaul.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -27,7 +27,20 @@
 					"damageType": "bludgeoning",
 					"formula": "1d6+@str",
 					"parentContext": null,
-					"parentNode": null
+					"parentNode": null,
+					"canCrit": true,
+					"canMiss": true,
+					"on": {
+						"hit": [
+							{
+								"id": "ManglemaulFullDmg",
+								"type": "damageOutcome",
+								"outcome": "fullDamage",
+								"parentContext": "hit",
+								"parentNode": "ManglemaulDmg"
+							}
+						]
+					}
 				}
 			],
 			"showDescription": true,
@@ -43,7 +56,7 @@
 			}
 		},
 		"description": {
-			"public": "<p><strong>Rarity:</strong> Rare</p><hr><p><strong>2-handed Maul.</strong> 1d6+STR bludgeoning damage. On hit: you may Grapple a creature smaller than you (escape DC 10). Action: You may swing a creature Grappled this way at another creature within Reach, damaging both of them and ending the Grapple.</p>",
+			"public": "<p><strong>Manglemaul.</strong> (Rare, 2-handed Maul.)</p><hr><p>1d6+STR bludgeoning damage. On hit: you may Grapple a creature smaller than you (escape DC 10). <strong>Action:</strong> You may swing a creature Grappled this way at another creature within Reach, damaging both of them and ending the Grapple.</p>",
 			"unidentified": "",
 			"secret": ""
 		},

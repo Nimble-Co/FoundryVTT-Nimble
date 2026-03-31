@@ -2,7 +2,7 @@
 	"folder": null,
 	"name": "Phoenix Helm",
 	"type": "object",
-	"img": "icons/equipment/head/helm-barbute-horned-tan.webp",
+	"img": "systems/nimble/assets/magicItems/PheonixHelm.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
