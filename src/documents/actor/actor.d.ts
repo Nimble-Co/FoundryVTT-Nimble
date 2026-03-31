@@ -6,6 +6,11 @@ declare interface NimbleBaseActorInterface extends Actor {
 	type: string;
 	getDomain(): Set<string>;
 	getRollData(item?: unknown): Record<string, unknown>;
+	applyDamage(damage: number): Promise<void>;
+	applyHealing(healing: number, healingType?: string): Promise<void>;
+	setCurrentHP(value: number): Promise<void>;
+	setMaxHP(value: number): Promise<void>;
+	setTempHP(value: number): Promise<void>;
 }
 
 /** Hit dice record entry type */
@@ -28,7 +33,6 @@ declare interface NimbleCharacterInterface extends NimbleBaseActorInterface {
 	type: 'character';
 	classes: Record<string, NimbleClassItem>;
 	update(changes: Record<string, unknown>): Promise<NimbleCharacterInterface | undefined>;
-	applyHealing(healing: number, healingType?: string): Promise<void>;
 	system: {
 		abilities: {
 			strength: { mod: number };

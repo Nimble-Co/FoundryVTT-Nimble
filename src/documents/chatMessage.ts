@@ -38,6 +38,9 @@ interface ActivationCardSystemData {
 	[key: string]: unknown;
 }
 
+type HpMutableActor = Actor.Implementation &
+	Pick<NimbleBaseActorInterface, 'applyDamage' | 'applyHealing' | 'setCurrentHP' | 'setTempHP'>;
+
 type DamageApplyOutcome = DamageOutcomeNode['outcome'] | 'noDamage';
 
 type DamageApplyOptions = {
@@ -49,9 +52,7 @@ type DamageApplyOptions = {
 };
 
 interface DamageApplicationTarget {
-	actor: Actor.Implementation;
-	currentHp: number;
-	currentTemp: number;
+	actor: HpMutableActor;
 	adjustedDamage: number;
 }
 
@@ -214,19 +215,8 @@ function buildDamageApplicationPlan(params: {
 
 	for (const uuid of params.targets) {
 		const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
-		const actor = tokenDocument?.actor as Actor.Implementation | null;
+		const actor = tokenDocument?.actor as HpMutableActor | null;
 		if (!actor) continue;
-
-		const hpData = foundry.utils.getProperty(actor, 'system.attributes.hp') as
-			| {
-					value?: number;
-					temp?: number;
-			  }
-			| undefined;
-		const currentHp = hpData?.value;
-		if (typeof currentHp !== 'number' || Number.isNaN(currentHp)) continue;
-
-		const currentTemp = typeof hpData?.temp === 'number' ? hpData.temp : 0;
 		const adjustedDamage = calculateArmorAdjustedDamage({
 			actor,
 			damage: params.damage,
@@ -242,8 +232,6 @@ function buildDamageApplicationPlan(params: {
 
 		applicableTargets.push({
 			actor,
-			currentHp,
-			currentTemp,
 			adjustedDamage,
 		});
 	}
@@ -461,18 +449,7 @@ class NimbleChatMessage extends ChatMessage {
 		}
 
 		for (const target of damageApplicationPlan.applicableTargets) {
-			const absorbedByTemp = Math.min(target.currentTemp, target.adjustedDamage);
-			const nextTemp = target.currentTemp - absorbedByTemp;
-			const remainingDamage = target.adjustedDamage - absorbedByTemp;
-			const nextHp = Math.max(target.currentHp - remainingDamage, 0);
-
-			const updates: Record<string, unknown> = {};
-			if (nextTemp !== target.currentTemp) updates['system.attributes.hp.temp'] = nextTemp;
-			if (nextHp !== target.currentHp) updates['system.attributes.hp.value'] = nextHp;
-
-			if (Object.keys(updates).length > 0) {
-				await target.actor.update(updates as Actor.UpdateData);
-			}
+			await target.actor.applyDamage(target.adjustedDamage);
 		}
 
 		for (const tokenName of damageApplicationPlan.zeroDamageTargetNames) {
@@ -527,11 +504,7 @@ class NimbleChatMessage extends ChatMessage {
 
 		for (const uuid of targets) {
 			const tokenDocument = fromUuidSync(uuid) as TokenDocument | null;
-			const actor = tokenDocument?.actor as
-				| (Actor.Implementation & {
-						applyHealing?: (healing: number, healingType?: string) => Promise<void>;
-				  })
-				| null;
+			const actor = tokenDocument?.actor as HpMutableActor | null;
 			if (!actor) continue;
 
 			// Get current HP values before healing
@@ -541,9 +514,7 @@ class NimbleChatMessage extends ChatMessage {
 			const previousHp = typeof hpData?.value === 'number' ? hpData.value : 0;
 			const previousTempHp = typeof hpData?.temp === 'number' ? hpData.temp : 0;
 
-			if (actor.applyHealing) {
-				await actor.applyHealing(healing, healingType);
-			}
+			await actor.applyHealing(healing, healingType);
 
 			// Get new HP values after healing
 			const newHpData = foundry.utils.getProperty(actor, 'system.attributes.hp') as
@@ -592,21 +563,13 @@ class NimbleChatMessage extends ChatMessage {
 		// Revert HP for each target
 		for (const targetRecord of healingRecord.targets) {
 			const tokenDocument = fromUuidSync(targetRecord.uuid) as TokenDocument | null;
-			const actor = tokenDocument?.actor as Actor.Implementation | null;
+			const actor = tokenDocument?.actor as HpMutableActor | null;
 			if (!actor) continue;
 
-			const updates: Record<string, unknown> = {};
-
 			if (healingRecord.healingType === 'tempHealing') {
-				// Revert temp HP
-				updates['system.attributes.hp.temp'] = targetRecord.previousTempHp;
+				await actor.setTempHP(targetRecord.previousTempHp);
 			} else {
-				// Revert regular HP
-				updates['system.attributes.hp.value'] = targetRecord.previousHp;
-			}
-
-			if (Object.keys(updates).length > 0) {
-				await actor.update(updates as Actor.UpdateData);
+				await actor.setCurrentHP(targetRecord.previousHp);
 			}
 		}
 
