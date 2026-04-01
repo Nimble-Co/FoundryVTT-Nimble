@@ -1394,6 +1394,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `sortDocumentsByName()` | `src/utils/sortDocumentsByName.ts` | Sort Foundry documents alphabetically |
 | `isValidDiceModifier()` | `src/utils/isValidDiceModifier.ts` | Validate dice modifier strings |
 | `combatManaRules` | `src/utils/combatManaRules.ts` | Combat mana calculation and rules |
+| `itemSourceRules` | `src/utils/itemSourceRules.ts` | Resolve compendium source IDs and rules for embedded items |
 | `manaRecovery` | `src/utils/manaRecovery.ts` | Mana recovery calculations |
 | `prelocalize()` | `src/utils/prelocalize.ts` | Pre-localize configuration objects |
 | `getChoicesFromCompendium()` | `src/utils/getChoicesFromCompendium.ts` | Fetch selectable options from compendiums |
