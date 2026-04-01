@@ -4,17 +4,11 @@ import {
 	getPersistedExpandedTurnIdentity,
 	setExpandedTurnIdentityHint,
 } from '../documents/combat/expandedTurnIdentityStore.js';
+import { isCombatStarted } from './isCombatStarted.js';
 
 type CombatWithTurnIdentityHint = Combat & {
 	_nimbleExpandedTurnIdentity?: TurnIdentity | null;
 };
-
-function isCombatStarted(combat: Combat | null): boolean {
-	if (!combat) return false;
-	const asRecord = combat as unknown as { started?: boolean };
-	if (typeof asRecord.started === 'boolean') return asRecord.started;
-	return (combat.round ?? 0) > 0;
-}
 
 function resolveCurrentTurnIdentity(
 	combat: Combat,

@@ -10,6 +10,7 @@ import {
 import { canCurrentUserEndTurn as canCurrentUserEndCombatantTurn } from '../../../utils/combatTurnActions.js';
 import { getHeroicReactionUsageState } from '../../../utils/getHeroicReactionUsageState.js';
 import type { HeroicReactionKey } from '../../../utils/heroicActions.js';
+import { isCombatStarted } from '../../../utils/isCombatStarted.js';
 import {
 	buildAliveEntries,
 	buildCombatSyncSignature,
@@ -20,7 +21,6 @@ import {
 	getCombatForCurrentScene,
 	getRoundBoundaryKey,
 	getRoundSeparatorInsertionIndex,
-	isCombatStarted,
 	isMonsterOrMinionCombatant,
 	isPlayerCombatant,
 	orderEntriesForCenteredActive,

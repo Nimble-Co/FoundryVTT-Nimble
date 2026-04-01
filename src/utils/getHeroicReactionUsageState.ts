@@ -4,6 +4,7 @@ import {
 	type HeroicReactionKey,
 } from './heroicActions.js';
 import { isCombatantDead } from './isCombatantDead.js';
+import { isCombatStarted } from './isCombatStarted.js';
 
 type HeroicReactionUsageBlockedReason =
 	| 'outsideCombat'
@@ -22,10 +23,6 @@ interface GetHeroicReactionUsageStateParams {
 
 function getCombatantId(combatant: Combatant.Implementation | null | undefined): string | null {
 	return combatant?.id ?? combatant?._id ?? null;
-}
-
-function isCombatStarted(combat: Combat | null): boolean {
-	return Number(combat?.round ?? 0) >= 1;
 }
 
 function getCombatantCurrentActions(

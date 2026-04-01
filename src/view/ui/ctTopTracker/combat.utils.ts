@@ -12,6 +12,7 @@ import { hasCombatantTurnEndedThisRound } from '../../../utils/combatTurnProgres
 import { getHeroicReactionAvailability } from '../../../utils/heroicActions.js';
 import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
 import { isCombatantDead } from '../../../utils/isCombatantDead.js';
+import { isCombatStarted } from '../../../utils/isCombatStarted.js';
 import {
 	getEffectiveMinionGroupLeader,
 	getMinionGroupId,
@@ -219,13 +220,6 @@ export function getCombatantSceneId(combatant: Combatant.Implementation): string
 
 export function hasCombatantsForScene(combat: Combat, sceneId: string): boolean {
 	return combat.combatants.contents.some((combatant) => getCombatantSceneId(combatant) === sceneId);
-}
-
-export function isCombatStarted(combat: Combat | null): boolean {
-	if (!combat) return false;
-	const asRecord = combat as unknown as { started?: boolean };
-	if (typeof asRecord.started === 'boolean') return asRecord.started;
-	return (combat.round ?? 0) > 0;
 }
 
 export function isCombatRoundStarted(combat: Combat | null): boolean {
