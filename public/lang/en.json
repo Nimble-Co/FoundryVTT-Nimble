@@ -782,6 +782,7 @@
 				"useActionsFirst": "Use your actions first",
 				"noPermissionEndTurn": "You do not have permission to end turns.",
 				"noPermissionRollInitiative": "You do not have permission to roll initiative.",
+				"initiativeAlreadyRolled": "Initiative has already been rolled for this combatant.",
 				"selectAttack": "Attack",
 				"selectSpell": "Cast Spell",
 				"noWeapons": "No weapons or attack features found.",
