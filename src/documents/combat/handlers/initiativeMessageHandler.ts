@@ -1,4 +1,5 @@
 import { InitiativeMessageRule } from '../../../models/rules/initiativeMessage.js';
+import { getRulesFromCompendiumSource } from '../../../utils/itemSourceRules.js';
 
 type ItemLike = {
 	uuid?: string;
@@ -13,28 +14,8 @@ type ActorWithRules = Actor & {
 	items?: Iterable<ItemLike>;
 };
 
-function getItemSourceId(item: ItemLike): string | undefined {
-	return item.sourceId ?? item._stats?.compendiumSource ?? item.flags?.core?.source;
-}
-
-function getRulesFromCompendiumSource(item: ItemLike): Record<string, unknown>[] {
-	const sourceId = getItemSourceId(item);
-	if (!sourceId) return [];
-
-	const fromUuidSyncFn = (globalThis as Record<string, unknown>).fromUuidSync as
-		| ((uuid: string) => unknown)
-		| undefined;
-	if (typeof fromUuidSyncFn !== 'function') return [];
-
-	const sourceItem = fromUuidSyncFn(sourceId) as {
-		system?: { rules?: Record<string, unknown>[] };
-	} | null;
-
-	return Array.isArray(sourceItem?.system?.rules) ? sourceItem.system.rules : [];
-}
-
 // Prefers embedded rules; falls back to compendium source for items that predate the rule addition.
-function getInitiativeMessageRuleSources(item: ItemLike): Record<string, unknown>[] {
+export function getInitiativeMessageRuleSources(item: ItemLike): Record<string, unknown>[] {
 	const embeddedRules = item.system?.rules ?? [];
 	const hasLocalDefinition = embeddedRules.some((r) => r.type === 'initiativeMessage');
 
@@ -61,18 +42,19 @@ export default async function initiativeMessageHandler(
 	for (const item of actor.items ?? []) {
 		for (const ruleSource of getInitiativeMessageRuleSources(item)) {
 			const rule = new InitiativeMessageRule(
-				ruleSource as Parameters<typeof InitiativeMessageRule.prototype.resolveMessage>[never],
+				ruleSource as ConstructorParameters<typeof InitiativeMessageRule>[0],
 				{ parent: item as unknown as foundry.abstract.DataModel.Any },
 			);
 
 			const content = rule.resolveMessage();
 			if (!content) continue;
 
+			const label = foundry.utils.escapeHTML(rule.label);
 			await ChatMessage.create({
 				author: game.user?.id,
 				speaker,
 				whisper: whisperTargets,
-				content: `<p><strong>${rule.label}</strong>: ${content}</p>`,
+				content: `<p><strong>${label}</strong>: ${content}</p>`,
 			} as ChatMessage.CreateData);
 		}
 	}
