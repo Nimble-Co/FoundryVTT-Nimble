@@ -1,0 +1,2 @@
+export const AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY =
+	'autoAddCharacterToCombatOnInitiativeRoll';

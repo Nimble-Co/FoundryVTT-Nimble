@@ -1,5 +1,6 @@
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
+import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from './initiativeSettings.js';
 import { registerNcswSettings } from './ncswSettings.js';
 
 export const settings = [];
@@ -25,6 +26,19 @@ export default function registerSystemSettings() {
 			name: 'NIMBLE.hints.hideRollsFromPlayersByDefault',
 			hint: 'NIMBLE.hints.hideRollsFromPlayersByDefaultHint',
 			scope: 'client',
+			config: true,
+			type: Boolean,
+			default: false,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
+
+	game.settings.register(
+		'nimble' as 'core',
+		AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY as 'rollMode',
+		{
+			name: 'NIMBLE.settings.autoAddCharacterToCombatOnInitiativeRoll.name',
+			hint: 'NIMBLE.settings.autoAddCharacterToCombatOnInitiativeRoll.hint',
+			scope: 'world',
 			config: true,
 			type: Boolean,
 			default: false,

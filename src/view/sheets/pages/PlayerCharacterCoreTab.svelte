@@ -15,6 +15,7 @@
 	import MovementSpeed from '../components/MovementSpeed.svelte';
 	import SavingThrows from '../components/SavingThrows.svelte';
 	import Skills from '../components/Skills.svelte';
+	import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from '../../../settings/initiativeSettings.js';
 
 	type CombatWithLateJoinCharacterSupport = Combat & {
 		ensureCharacterCombatantForActorInCurrentScene?: (
@@ -53,9 +54,16 @@
 			const combat = game.combats?.viewed;
 			const sceneId = canvas.scene?.id;
 			const lateJoinCombat = combat as CombatWithLateJoinCharacterSupport;
+			const autoAddCharacterToCombatOnInitiativeRoll = Boolean(
+				game.settings?.get?.(
+					'nimble' as 'core',
+					AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY as 'rollMode',
+				),
+			);
 			let combatant = getViewedCombatantForCurrentScene();
 			if (
 				!combatant &&
+				autoAddCharacterToCombatOnInitiativeRoll &&
 				combat &&
 				sceneId &&
 				combat.scene?.id === sceneId &&
