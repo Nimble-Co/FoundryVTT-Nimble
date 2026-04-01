@@ -16,6 +16,12 @@
 	import SavingThrows from '../components/SavingThrows.svelte';
 	import Skills from '../components/Skills.svelte';
 
+	type CombatWithLateJoinCharacterSupport = Combat & {
+		ensureCharacterCombatantForActorInCurrentScene?: (
+			actor: Actor.Implementation,
+		) => Promise<Combatant | null>;
+	};
+
 	function getArmorProficiencies(proficiencies: Iterable<string>) {
 		return [...proficiencies]
 			.map((key): string => armorTypesPlural[key] ?? key)
@@ -45,7 +51,18 @@
 
 		try {
 			const combat = game.combats?.viewed;
-			const combatant = getViewedCombatantForCurrentScene();
+			const sceneId = canvas.scene?.id;
+			const lateJoinCombat = combat as CombatWithLateJoinCharacterSupport;
+			let combatant = getViewedCombatantForCurrentScene();
+			if (
+				!combatant &&
+				combat &&
+				sceneId &&
+				combat.scene?.id === sceneId &&
+				typeof lateJoinCombat.ensureCharacterCombatantForActorInCurrentScene === 'function'
+			) {
+				combatant = await lateJoinCombat.ensureCharacterCombatantForActorInCurrentScene(actor);
+			}
 
 			if (combatant) {
 				if (initiativeRollLock.hasActiveLock(combatant)) return;

@@ -12,7 +12,7 @@ import { initiativeRollLock } from '#utils/initiativeRollLock.js';
 import { isCombatantDead } from '#utils/isCombatantDead.js';
 import { getMinionGroupId, getMinionGroupSummaries } from '#utils/minionGrouping.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
-import { getCombatantBaseActionMax } from './combatantSystem.js';
+import { getCombatantBaseActionMax, getCombatantManualSortValue } from './combatantSystem.js';
 import { getCombatantCurrentActions, logMinionGroupingCombat } from './combatCommon.js';
 import { rollInitiativeForCombatant } from './combatInitiative.js';
 import { performMinionGroupAttack } from './combatMinionAttacks.js';
@@ -44,6 +44,47 @@ type CombatWithTurnIdentityHint = Combat & {
 	_nimbleExpandedTurnIdentity?: TurnIdentity | null;
 };
 
+type ActorWithCurrentSceneTokens = Actor.Implementation & {
+	getActiveTokens?: (linked?: boolean, document?: boolean) => TokenDocument[];
+	isToken?: boolean;
+	token?: TokenDocument | null;
+};
+
+function getCombatantSceneId(combatant: Combatant.Implementation): string | null {
+	return combatant.sceneId ?? combatant.token?.parent?.id ?? null;
+}
+
+function isCombatantInScene(combatant: Combatant.Implementation, sceneId: string): boolean {
+	return getCombatantSceneId(combatant) === sceneId;
+}
+
+function resolveInsertedCombatantSortValue(params: {
+	nextCombatant?: Combatant.Implementation | null;
+	previousCombatant?: Combatant.Implementation | null;
+}): number {
+	const previousCombatant = params.previousCombatant ?? null;
+	const nextCombatant = params.nextCombatant ?? null;
+
+	if (previousCombatant && nextCombatant) {
+		const previousSort = getCombatantManualSortValue(previousCombatant);
+		const nextSort = getCombatantManualSortValue(nextCombatant);
+		if (previousSort === nextSort) {
+			return previousSort + 0.5;
+		}
+		return previousSort + (nextSort - previousSort) / 2;
+	}
+
+	if (previousCombatant) {
+		return getCombatantManualSortValue(previousCombatant) + 1;
+	}
+
+	if (nextCombatant) {
+		return getCombatantManualSortValue(nextCombatant) - 1;
+	}
+
+	return 0;
+}
+
 interface LockedInitiativeRollOutcome {
 	combatantId: string;
 	requestId: string;
@@ -56,6 +97,118 @@ class NimbleCombat extends Combat {
 	#pendingAtomicTurnIdentity: TurnIdentity | null = null;
 	#didInterceptAtomicTurnStateUpdate = false;
 	#initiativeRollRequests = new Map<string, Promise<LockedInitiativeRollOutcome | null>>();
+
+	#findActorCombatantInScene(actorId: string, sceneId: string): Combatant.Implementation | null {
+		return (
+			this.combatants.find(
+				(combatant) => combatant.actorId === actorId && isCombatantInScene(combatant, sceneId),
+			) ?? null
+		);
+	}
+
+	#resolveActorTokenForCurrentScene(
+		actor: Actor.Implementation,
+		sceneId: string,
+	): TokenDocument | null {
+		const actorWithTokens = actor as ActorWithCurrentSceneTokens;
+
+		if (actorWithTokens.isToken && actorWithTokens.token?.parent?.id === sceneId) {
+			return actorWithTokens.token;
+		}
+
+		const activeTokens =
+			typeof actorWithTokens.getActiveTokens === 'function'
+				? actorWithTokens.getActiveTokens(true, true)
+				: [];
+		return activeTokens.find((token) => token.parent?.id === sceneId) ?? null;
+	}
+
+	async #getSceneCombatantsWithNormalizedSorts(
+		sceneId: string,
+	): Promise<Combatant.Implementation[]> {
+		const orderedCombatants = this.combatants.contents
+			.filter((combatant) => isCombatantInScene(combatant, sceneId))
+			.sort(sortCombatants);
+
+		const updates = orderedCombatants.reduce<Record<string, unknown>[]>(
+			(accumulator, combatant, index) => {
+				const combatantId = combatant.id ?? combatant._id ?? null;
+				if (!combatantId) return accumulator;
+
+				const nextSort = index + 1;
+				if (getCombatantManualSortValue(combatant) === nextSort) {
+					return accumulator;
+				}
+
+				accumulator.push({
+					_id: combatantId,
+					'system.sort': nextSort,
+				});
+				return accumulator;
+			},
+			[],
+		);
+
+		if (updates.length > 0) {
+			await this.updateEmbeddedDocuments('Combatant', updates);
+		}
+
+		return this.combatants.contents
+			.filter((combatant) => isCombatantInScene(combatant, sceneId))
+			.sort(sortCombatants);
+	}
+
+	#resolveLateJoinCharacterSortValue(sceneCombatants: Combatant.Implementation[]): number {
+		let lastAliveCharacterIndex = -1;
+
+		for (const [index, combatant] of sceneCombatants.entries()) {
+			if (combatant.type === 'character' && !isCombatantDead(combatant)) {
+				lastAliveCharacterIndex = index;
+			}
+		}
+
+		if (lastAliveCharacterIndex < 0) {
+			return resolveInsertedCombatantSortValue({
+				nextCombatant: sceneCombatants.find((combatant) => !isCombatantDead(combatant)) ?? null,
+			});
+		}
+
+		return resolveInsertedCombatantSortValue({
+			previousCombatant: sceneCombatants[lastAliveCharacterIndex] ?? null,
+			nextCombatant: sceneCombatants[lastAliveCharacterIndex + 1] ?? null,
+		});
+	}
+
+	async ensureCharacterCombatantForActorInCurrentScene(
+		actor: Actor.Implementation,
+	): Promise<Combatant.Implementation | null> {
+		const actorId = actor.id ?? actor._id ?? null;
+		const sceneId = canvas.scene?.id ?? this.scene?.id ?? null;
+		if (!actorId || !sceneId) return null;
+		if (this.scene?.id && this.scene.id !== sceneId) return null;
+
+		const existingCombatant = this.#findActorCombatantInScene(actorId, sceneId);
+		if (existingCombatant) return existingCombatant;
+
+		const sceneCombatants = await this.#getSceneCombatantsWithNormalizedSorts(sceneId);
+		const token = this.#resolveActorTokenForCurrentScene(actor, sceneId);
+		const createData = {
+			type: 'character',
+			actorId,
+			tokenId: token?.id ?? '',
+			sceneId,
+			hidden: token?.hidden ?? false,
+			system: {
+				sort: this.#resolveLateJoinCharacterSortValue(sceneCombatants),
+			},
+		};
+
+		const createdCombatants = (await this.createEmbeddedDocuments('Combatant', [
+			createData as foundry.abstract.Document.CreateDataForName<'Combatant'>,
+		])) as Combatant.Implementation[] | undefined;
+
+		return createdCombatants?.[0] ?? this.#findActorCombatantInScene(actorId, sceneId);
+	}
 
 	#readStoredExpandedTurnIdentity(): TurnIdentity | null {
 		const persistedTurnIdentity = getPersistedExpandedTurnIdentity(this);
