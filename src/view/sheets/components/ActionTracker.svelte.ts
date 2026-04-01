@@ -18,6 +18,10 @@ interface ActionsData {
 	max: number;
 }
 
+type PromptedInitiativeOptions = Combat.InitiativeOptions & {
+	promptRollDialog: boolean;
+};
+
 // ============================================================================
 // Dice Icons
 // ============================================================================
@@ -111,7 +115,9 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		if (initiativeRollLock.hasActiveLock(combatant)) return;
 
 		try {
-			await combat.rollInitiative([combatant.id]);
+			await combat.rollInitiative([combatant.id], {
+				promptRollDialog: true,
+			} as PromptedInitiativeOptions);
 		} catch (_error) {
 			ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionRollInitiative'));
 		}

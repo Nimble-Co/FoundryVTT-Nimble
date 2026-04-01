@@ -16,6 +16,10 @@
 	import SavingThrows from '../components/SavingThrows.svelte';
 	import Skills from '../components/Skills.svelte';
 
+	type PromptedInitiativeOptions = Combat.InitiativeOptions & {
+		promptRollDialog: boolean;
+	};
+
 	function getArmorProficiencies(proficiencies: Iterable<string>) {
 		return [...proficiencies]
 			.map((key): string => armorTypesPlural[key] ?? key)
@@ -55,18 +59,13 @@
 				}
 				if (!combat || !combatant.id) return;
 
-				await combat.rollInitiative([combatant.id]);
+				await combat.rollInitiative([combatant.id], {
+					promptRollDialog: true,
+				} as PromptedInitiativeOptions);
 				return;
 			}
 
-			const roll = Roll.create(actor._getInitiativeFormula({}), actor.getRollData());
-			await roll.evaluate();
-
-			await roll.toMessage({
-				speaker: ChatMessage.getSpeaker({ actor }),
-				flavor: game.i18n.format('COMBAT.RollsInitiative', { name: actor.name }),
-				flags: { core: { initiativeRoll: true } },
-			});
+			await actor.rollInitiativeToChat();
 		} finally {
 			initiativeRequestPending = false;
 		}

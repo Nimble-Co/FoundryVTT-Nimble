@@ -59,6 +59,12 @@ interface HpTrackingOptions {
 	};
 }
 
+interface InitiativeRollData {
+	rollFormula: string;
+	rollMode: number;
+	visibilityMode?: string | undefined;
+}
+
 type HpScrollingEffectType = keyof typeof HP_SCROLLING_TEXT_COLORS;
 
 function toFiniteInteger(value: unknown): number {
@@ -632,6 +638,29 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		return chatCard ?? null;
 	}
 
+	async rollInitiativeToChat(options = {} as ActorRollOptions): Promise<ChatMessage | null> {
+		const rollData = await this.resolveInitiativeRollData(options);
+		if (!rollData) return null;
+
+		const roll = Roll.create(rollData.rollFormula, this.getRollData());
+		await roll.evaluate();
+
+		const chatData = (await roll.toMessage(
+			{
+				speaker: ChatMessage.getSpeaker({ actor: this }),
+				flavor: game.i18n.format('COMBAT.RollsInitiative', { name: this.name }),
+				flags: { core: { initiativeRoll: true } },
+			},
+			{ create: false },
+		)) as ChatMessage.CreateData;
+		const visibilityMode = (rollData.visibilityMode ??
+			(game.settings.get('core', 'rollMode') as CONST.DICE_ROLL_MODES)) as CONST.DICE_ROLL_MODES;
+
+		ChatMessage.applyRollMode(chatData as Record<string, unknown>, visibilityMode);
+
+		return (await ChatMessage.create(chatData)) ?? null;
+	}
+
 	async rollSavingThrow(saveKey: SaveKeyType, options: ActorRollOptions = {}) {
 		const systemData = this.system as unknown as BaseActorSystemData;
 		const baseRollMode = calculateRollMode(
@@ -676,6 +705,34 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		return { rollFormula, rollMode, visibilityMode: options.visibilityMode };
 	}
 
+	async resolveInitiativeRollData(
+		options = {} as ActorRollOptions,
+	): Promise<InitiativeRollData | null> {
+		const systemData = this.system as unknown as BaseActorSystemData & {
+			attributes: { initiative: { defaultRollMode?: number } };
+		};
+		const baseRollMode = calculateRollMode(
+			systemData.attributes.initiative?.defaultRollMode ?? 0,
+			options.rollModeModifier,
+			options.rollMode,
+		);
+
+		return options.skipRollDialog
+			? this.getDefaultInitiativeData(baseRollMode, options)
+			: await this.showCheckRollDialog('initiative', {
+					...options,
+					rollMode: baseRollMode,
+				});
+	}
+
+	getDefaultInitiativeData(rollMode: number, options = {} as ActorRollOptions): InitiativeRollData {
+		return {
+			rollFormula: this._getInitiativeFormula({ ...options, rollMode }),
+			rollMode,
+			visibilityMode: options.visibilityMode,
+		};
+	}
+
 	async prepareSavingThrowChatCardData(
 		saveKey: SaveKeyType,
 		roll: NimbleRoll | Roll<Record<string, unknown>>,
@@ -697,7 +754,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	}
 
 	async showCheckRollDialog(
-		type: 'abilityCheck' | 'savingThrow' | 'skillCheck',
+		type: 'abilityCheck' | 'savingThrow' | 'skillCheck' | 'initiative',
 		data: CheckRollDialogData,
 	): Promise<any> {
 		let title = '';
@@ -713,6 +770,9 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 				break;
 			case 'skillCheck':
 				title = `${this.name}: Configure ${CONFIG.NIMBLE.skills[data?.skillKey ?? '']} Skill Check`;
+				break;
+			case 'initiative':
+				title = `${this.name}: Configure Initiative`;
 				break;
 			default:
 				return null;

@@ -58,6 +58,10 @@ interface ExpandedMonsterGroupBar {
 	widthPx: number;
 }
 
+type PromptedInitiativeOptions = Combat.InitiativeOptions & {
+	promptRollDialog: boolean;
+};
+
 export function createCtTopTrackerState() {
 	const trackerStore = new CtTopTrackerStore();
 
@@ -100,7 +104,10 @@ export function createCtTopTrackerState() {
 		if (!actionCombat || !combatantId) return;
 
 		try {
-			await actionCombat.rollInitiative([combatantId], { updateTurn: false });
+			await actionCombat.rollInitiative([combatantId], {
+				promptRollDialog: true,
+				updateTurn: false,
+			} as PromptedInitiativeOptions);
 			updateCurrentCombat(true);
 		} catch (error) {
 			console.error('[Nimble][CT] Initiative roll failed', { combatantId, error });
