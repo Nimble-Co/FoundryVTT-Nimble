@@ -72,6 +72,23 @@
 
 	{#if state.canManageSharedCtSettings}
 		<fieldset class="nimble-ct-settings__section">
+			<legend class="nimble-ct-settings__section-title">Layout</legend>
+			<div class="nimble-ct-settings__rows">
+				<div class="nimble-ct-settings__row">
+					<label class="nimble-ct-settings__label" for="nimble-ct-left-to-right-ordering">
+						Left to Right Ordering
+					</label>
+					<input
+						id="nimble-ct-left-to-right-ordering"
+						type="checkbox"
+						checked={state.leftToRightOrdering}
+						onchange={state.handleLeftToRightOrderingChange}
+					/>
+				</div>
+			</div>
+		</fieldset>
+
+		<fieldset class="nimble-ct-settings__section">
 			<legend class="nimble-ct-settings__section-title">Permissions</legend>
 			<div class="nimble-ct-settings__rows">
 				<div class="nimble-ct-settings__row">

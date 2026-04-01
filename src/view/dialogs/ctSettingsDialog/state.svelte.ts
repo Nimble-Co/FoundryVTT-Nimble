@@ -3,6 +3,7 @@ import {
 	type CombatTrackerPlayerHpBarTextMode,
 	getCombatTrackerActionDiceColor,
 	getCombatTrackerCtCardSizeLevel,
+	getCombatTrackerCtLeftToRightOrdering,
 	getCombatTrackerCtWidthLevel,
 	getCombatTrackerNonPlayerHpBarEnabled,
 	getCombatTrackerNonPlayerHpBarTextMode,
@@ -11,6 +12,7 @@ import {
 	getCombatTrackerResourceDrawerHoverEnabled,
 	isCombatTrackerActionDiceColorSettingKey,
 	isCombatTrackerCardSizeLevelSettingKey,
+	isCombatTrackerLeftToRightOrderingSettingKey,
 	isCombatTrackerNonPlayerHpBarEnabledSettingKey,
 	isCombatTrackerNonPlayerHpBarTextModeSettingKey,
 	isCombatTrackerPlayerHpBarTextModeSettingKey,
@@ -20,6 +22,7 @@ import {
 	normalizeHexColor,
 	setCombatTrackerActionDiceColor,
 	setCombatTrackerCtCardSizeLevel,
+	setCombatTrackerCtLeftToRightOrdering,
 	setCombatTrackerCtWidthLevel,
 	setCombatTrackerNonPlayerHpBarEnabled,
 	setCombatTrackerNonPlayerHpBarTextMode,
@@ -89,6 +92,8 @@ export class CtSettingsDialogState {
 	actionColor = $state(getCombatTrackerActionDiceColor());
 
 	reactionColor = $state(getCombatTrackerReactionColor());
+
+	leftToRightOrdering = $state(getCombatTrackerCtLeftToRightOrdering());
 
 	canManageSharedCtSettings = $derived(Boolean(game.user?.isGM));
 
@@ -235,6 +240,16 @@ export class CtSettingsDialogState {
 		);
 	};
 
+	handleLeftToRightOrderingChange = (event: Event): void => {
+		if (!this.canManageSharedCtSettings) return;
+		const checkbox = event.currentTarget as HTMLInputElement;
+		this.leftToRightOrdering = checkbox.checked;
+		this.persistCtSetting(
+			'left-to-right ordering',
+			setCombatTrackerCtLeftToRightOrdering(checkbox.checked),
+		);
+	};
+
 	applyActionColor = (color: string): void => {
 		const normalizedColor = normalizeHexColor(color);
 		this.actionColor = normalizedColor;
@@ -303,6 +318,9 @@ export class CtSettingsDialogState {
 			}
 			if (isCombatTrackerReactionColorSettingKey(settingKey)) {
 				this.reactionColor = getCombatTrackerReactionColor();
+			}
+			if (isCombatTrackerLeftToRightOrderingSettingKey(settingKey)) {
+				this.leftToRightOrdering = getCombatTrackerCtLeftToRightOrdering();
 			}
 		});
 	}
