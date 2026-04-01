@@ -534,6 +534,7 @@
 			"hitDiceAdvantage": "Hit Dice Advantage",
 			"incrementHitDice": "Increment Hit Dice",
 			"initiativeBonus": "Initiative Bonus",
+			"initiativeMessage": "Initiative Message",
 			"initiativeRollMode": "Initiative Roll Mode",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",

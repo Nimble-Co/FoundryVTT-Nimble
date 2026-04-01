@@ -7,6 +7,7 @@ import { HealingPotionBonusRule } from '../models/rules/healingPotionBonus.js';
 import { HitDiceAdvantageRule } from '../models/rules/hitDiceAdvantage.js';
 import { IncrementHitDiceRule } from '../models/rules/incrementHitDice.js';
 import { InitiativeBonusRule } from '../models/rules/initiativeBonus.js';
+import { InitiativeMessageRule } from '../models/rules/initiativeMessage.js';
 import { InitiativeRollModeRule } from '../models/rules/initiativeRollMode.js';
 import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
@@ -31,6 +32,7 @@ export default function registerRulesConfig() {
 		hitDiceAdvantage: 'NIMBLE.ruleTypes.hitDiceAdvantage',
 		incrementHitDice: 'NIMBLE.ruleTypes.incrementHitDice',
 		initiativeBonus: 'NIMBLE.ruleTypes.initiativeBonus',
+		initiativeMessage: 'NIMBLE.ruleTypes.initiativeMessage',
 		initiativeRollMode: 'NIMBLE.ruleTypes.initiativeRollMode',
 		maxHitDice: 'NIMBLE.ruleTypes.maxHitDice',
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
@@ -55,6 +57,7 @@ export default function registerRulesConfig() {
 		hitDiceAdvantage: HitDiceAdvantageRule,
 		incrementHitDice: IncrementHitDiceRule,
 		initiativeBonus: InitiativeBonusRule,
+		initiativeMessage: InitiativeMessageRule,
 		initiativeRollMode: InitiativeRollModeRule,
 		maxHitDice: MaxHitDiceRule,
 		maxHpBonus: MaxHpBonusRule,
