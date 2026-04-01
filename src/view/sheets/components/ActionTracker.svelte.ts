@@ -2,6 +2,7 @@ import { untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import { getCombatantBaseActions } from '#documents/combat/combatantSystem.js';
+import type { PromptedInitiativeOptions } from '#types/combat.js';
 import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
 import { requestAdvanceCombatTurn } from '#utils/combatTurnActions.js';
 import { getActiveCombatant } from '#utils/combatTurnSync.js';
@@ -17,10 +18,6 @@ interface ActionsData {
 	current: number;
 	max: number;
 }
-
-type PromptedInitiativeOptions = Combat.InitiativeOptions & {
-	promptRollDialog: boolean;
-};
 
 // ============================================================================
 // Dice Icons

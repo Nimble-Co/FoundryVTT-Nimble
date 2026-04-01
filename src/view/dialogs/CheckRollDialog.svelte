@@ -1,31 +1,12 @@
 <script lang="ts">
+	import type { CheckRollDialogProps } from '#types/components/CheckRollDialog.d.ts';
+
 	import { untrack } from 'svelte';
+
 	import getRollFormula from '../../utils/getRollFormula.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 
 	const { skillCheckDialog } = CONFIG.NIMBLE;
-
-	type RollDialogType = 'abilityCheck' | 'savingThrow' | 'skillCheck' | 'initiative';
-
-	interface InitiativeDialogActor extends Actor {
-		_getInitiativeFormula: (options: Record<string, unknown>) => string;
-	}
-
-	interface CheckRollDialogProps {
-		actor: InitiativeDialogActor;
-		dialog: {
-			submitRoll: (results: {
-				rollMode: number;
-				rollFormula: string;
-				visibilityMode: string;
-			}) => void;
-		};
-		type?: RollDialogType;
-		abilityKey?: string;
-		rollMode?: number;
-		saveKey?: string;
-		skillKey?: string;
-	}
 
 	let { actor, dialog, type = 'abilityCheck', ...data }: CheckRollDialogProps = $props();
 	let selectedRollMode = $state(untrack(() => [Math.clamp(Number(data.rollMode ?? 0), -6, 6)]));

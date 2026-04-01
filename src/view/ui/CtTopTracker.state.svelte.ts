@@ -1,5 +1,6 @@
 import { onDestroy, onMount, tick } from 'svelte';
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
+import type { PromptedInitiativeOptions } from '#types/combat.js';
 import { canCurrentUserReorderCombatant } from '#utils/combatantOrdering.js';
 import {
 	COMBATANT_ACTIONS_CURRENT_PATH,
@@ -57,10 +58,6 @@ interface ExpandedMonsterGroupBar {
 	leftPx: number;
 	widthPx: number;
 }
-
-type PromptedInitiativeOptions = Combat.InitiativeOptions & {
-	promptRollDialog: boolean;
-};
 
 export function createCtTopTrackerState() {
 	const trackerStore = new CtTopTrackerStore();

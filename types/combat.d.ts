@@ -23,3 +23,7 @@ export type ActorResourceData = {
 };
 
 export type ActorHpData = ActorResourceData;
+
+export type PromptedInitiativeOptions = Combat.InitiativeOptions & {
+	promptRollDialog: boolean;
+};

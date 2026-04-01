@@ -1,5 +1,6 @@
 <script lang="ts">
 	// Types
+	import type { PromptedInitiativeOptions } from '#types/combat.js';
 
 	// Helper Functions
 	import { getContext } from 'svelte';
@@ -15,10 +16,6 @@
 	import MovementSpeed from '../components/MovementSpeed.svelte';
 	import SavingThrows from '../components/SavingThrows.svelte';
 	import Skills from '../components/Skills.svelte';
-
-	type PromptedInitiativeOptions = Combat.InitiativeOptions & {
-		promptRollDialog: boolean;
-	};
 
 	function getArmorProficiencies(proficiencies: Iterable<string>) {
 		return [...proficiencies]
