@@ -37,9 +37,7 @@ function createMockToken(x: number, y: number, disposition: number) {
 
 function createLionheartedActor(options: { id?: string; isActive?: boolean } = {}) {
 	const actor = createMockCombatActor({ id: options.id ?? 'actor-1', type: 'character' });
-	(actor as unknown as { items: Array<{ system: { rules: Array<{ type: string }> } }> }).items = [
-		{ system: { rules: [{ type: 'lionheartedBonus' }] } },
-	];
+	(actor as unknown as { rules: Array<{ type: string }> }).rules = [{ type: 'lionheartedBonus' }];
 	(actor as unknown as { statuses: Set<string> }).statuses = new Set(
 		options.isActive ? ['lionhearted'] : [],
 	);
@@ -213,7 +211,7 @@ describe('syncLionheartedAdjacencyState', () => {
 
 	it('skips combatants without the lionheartedBonus rule', async () => {
 		const actor = createMockCombatActor({ type: 'character' });
-		(actor as unknown as { items: unknown[] }).items = [];
+		(actor as unknown as { rules: Array<{ type: string }> }).rules = [];
 		(actor as unknown as { statuses: Set<string> }).statuses = new Set();
 
 		const playerToken = createMockToken(0, 0, 1);
