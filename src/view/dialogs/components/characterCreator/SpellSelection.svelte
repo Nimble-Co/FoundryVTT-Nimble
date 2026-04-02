@@ -1,90 +1,51 @@
 <script lang="ts">
 	import type { SpellSelectionProps } from '#types/components/SpellGrantDisplay.d.ts';
-	import { sortSpellsBySchoolThenName } from '#utils/getSpells.js';
 	import localize from '#utils/localize.js';
 	import SpellCard from './SpellCard.svelte';
+	import { createSpellSelectionState } from './SpellSelection.svelte.ts';
 
 	let { group, selected, onSelect }: SpellSelectionProps = $props();
 
-	// Track whether to show all spells or just selected ones
-	let showAllSpells = $state(false);
-
-	function toggleSpell(spellUuid: string) {
-		const currentSelection = [...selected];
-
-		if (currentSelection.includes(spellUuid)) {
-			// Remove spell - show all options again
-			const filtered = currentSelection.filter((s) => s !== spellUuid);
-			onSelect(filtered);
-			showAllSpells = true;
-		} else if (currentSelection.length < group.count) {
-			// Add spell (only if we haven't reached the limit)
-			onSelect([...currentSelection, spellUuid]);
-			// If selection is now complete, collapse to show only selected
-			if (currentSelection.length + 1 >= group.count) {
-				showAllSpells = false;
-			}
-		}
-	}
-
-	function isSelected(spellUuid: string): boolean {
-		return selected.includes(spellUuid);
-	}
-
-	function isDisabled(spellUuid: string): boolean {
-		return !isSelected(spellUuid) && selected.length >= group.count;
-	}
-
-	const sortedSpells = $derived(sortSpellsBySchoolThenName(group.availableSpells));
-
-	// Check if selection is complete
-	const isSelectionComplete = $derived(selected.length >= group.count);
-
-	// Get the selected spell(s) for display
-	const selectedSpells = $derived(sortedSpells.filter((spell) => selected.includes(spell.uuid)));
-
-	// Get the selected spell names for the label
-	const selectedSpellNames = $derived(selectedSpells.map((s) => s.name).join(', '));
-
-	// Determine which spells to display
-	const displayedSpells = $derived(
-		isSelectionComplete && !showAllSpells ? selectedSpells : sortedSpells,
-	);
+	const state = createSpellSelectionState({
+		group: () => group,
+		selected: () => selected,
+		onSelect,
+	});
 </script>
 
 <div class="spell-selection">
 	<div class="spell-selection__header">
 		<h4 class="spell-selection__label nimble-heading" data-heading-variant="subsection">
-			{#if isSelectionComplete && !showAllSpells}
-				{localize('NIMBLE.spellGrants.spellsSelected', { spells: selectedSpellNames })}
+			{#if state.isSelectionComplete && !state.showAllSpells}
+				{localize('NIMBLE.spellGrants.spellsSelected', { spells: state.selectedSpellNames })}
 			{:else}
 				{group.label}
 			{/if}
 		</h4>
 
-		{#if isSelectionComplete}
+		{#if state.isSelectionComplete}
 			<button
 				type="button"
 				class="spell-selection__toggle-button"
-				onclick={() => (showAllSpells = !showAllSpells)}
+				onclick={() => state.setShowAllSpells(!state.showAllSpells)}
 			>
-				{showAllSpells
+				{state.showAllSpells
 					? localize('NIMBLE.spellGrants.hideOptions')
 					: localize('NIMBLE.spellGrants.changeSelection')}
 			</button>
 		{/if}
 	</div>
 
-	{#if !isSelectionComplete}
+	{#if !state.isSelectionComplete}
 		<p class="spell-selection__hint">
 			{localize('NIMBLE.spellGrants.chooseSpells', { count: String(group.count) })}
 		</p>
 	{/if}
 
-	{#if isSelectionComplete && !showAllSpells}
+	{#if state.isSelectionComplete && !state.showAllSpells}
 		<!-- Collapsed view: show selected spells in compact card style -->
 		<ul class="spell-selection__selected-list">
-			{#each selectedSpells as spell (spell.uuid)}
+			{#each state.selectedSpells as spell (spell.uuid)}
 				<li>
 					<button class="nimble-card" data-card-option="non-clickable">
 						<img
@@ -102,12 +63,12 @@
 	{:else}
 		<!-- Expanded view: show all spells with selection capability -->
 		<ul class="spell-selection__spell-list">
-			{#each displayedSpells as spell (spell.uuid)}
+			{#each state.displayedSpells as spell (spell.uuid)}
 				<SpellCard
 					{spell}
-					isSelected={isSelected(spell.uuid)}
-					isDisabled={isDisabled(spell.uuid)}
-					onSelect={() => toggleSpell(spell.uuid)}
+					isSelected={state.isSelected(spell.uuid)}
+					isDisabled={state.isDisabled(spell.uuid)}
+					onSelect={() => state.toggleSpell(spell.uuid)}
 				/>
 			{/each}
 		</ul>

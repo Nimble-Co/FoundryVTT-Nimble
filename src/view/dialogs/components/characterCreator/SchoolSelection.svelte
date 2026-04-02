@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { SchoolSelectionProps } from '#types/components/SpellGrantDisplay.d.ts';
-	import { getSpellsFromIndex, sortSpellsBySchoolThenName } from '#utils/getSpells.js';
 	import localize from '#utils/localize.js';
+	import { createSchoolSelectionState } from './SchoolSelection.svelte.ts';
 	import SpellCard from './SpellCard.svelte';
 
 	let {
@@ -13,51 +13,13 @@
 		onConfirm,
 	}: SchoolSelectionProps = $props();
 
-	function selectSchool(school: string) {
-		const currentSelection = [...selected];
-
-		if (currentSelection.includes(school)) {
-			// Deselect school
-			const filtered = currentSelection.filter((s) => s !== school);
-			onSelect(filtered);
-		} else {
-			// Select school (replace current selection if at limit, otherwise add)
-			if (currentSelection.length >= group.count) {
-				// Replace the current selection
-				onSelect([school]);
-			} else {
-				// Add to selection
-				onSelect([...currentSelection, school]);
-			}
-		}
-	}
-
-	function confirmSelection() {
-		onConfirm?.();
-	}
-
-	// Get spells from selected schools for preview
-	const selectedSpells = $derived(
-		selected.length > 0
-			? sortSpellsBySchoolThenName(
-					getSpellsFromIndex(spellIndex, selected, group.tiers, {
-						utilityOnly: group.utilityOnly,
-						forClass: group.forClass,
-					}),
-				)
-			: [],
-	);
-
-	function getSchoolLabel(school: string): string {
-		return localize(CONFIG.NIMBLE.spellSchools[school] ?? school);
-	}
-
-	function getSchoolIcon(school: string): string {
-		return CONFIG.NIMBLE.spellSchoolIcons[school] ?? 'fa-solid fa-sparkles';
-	}
-
-	// Check if selection is complete
-	const isSelectionComplete = $derived(selected.length >= group.count);
+	const state = createSchoolSelectionState({
+		group: () => group,
+		spellIndex: () => spellIndex,
+		selected: () => selected,
+		onSelect,
+		onConfirm: () => onConfirm?.(),
+	});
 </script>
 
 {#if !isConfirmed}
@@ -67,14 +29,18 @@
 				{group.label}
 			</h4>
 
-			{#if isSelectionComplete}
-				<button type="button" class="school-selection__confirm-button" onclick={confirmSelection}>
+			{#if state.isSelectionComplete}
+				<button
+					type="button"
+					class="school-selection__confirm-button"
+					onclick={state.confirmSelection}
+				>
 					{localize('NIMBLE.spellGrants.confirmSelection')}
 				</button>
 			{/if}
 		</div>
 
-		{#if !isSelectionComplete}
+		{#if !state.isSelectionComplete}
 			<p class="school-selection__hint">
 				{localize('NIMBLE.spellGrants.chooseSchools', { count: String(group.count) })}
 			</p>
@@ -87,15 +53,15 @@
 					type="button"
 					class="school-selection__button"
 					class:selected={selected.includes(school)}
-					onclick={() => selectSchool(school)}
+					onclick={() => state.selectSchool(school)}
 				>
-					<i class="school-selection__icon {getSchoolIcon(school)}"></i>
-					<span class="school-selection__school-name">{getSchoolLabel(school)}</span>
+					<i class="school-selection__icon {state.getSchoolIcon(school)}"></i>
+					<span class="school-selection__school-name">{state.getSchoolLabel(school)}</span>
 				</button>
 			{/each}
 		</div>
 
-		{#if selectedSpells.length > 0}
+		{#if state.selectedSpells.length > 0}
 			<div class="school-selection__preview">
 				<h5
 					class="school-selection__preview-label nimble-heading"
@@ -104,7 +70,7 @@
 					{localize('NIMBLE.spellGrants.spellsFromSelection')}
 				</h5>
 				<ul class="school-selection__spell-list">
-					{#each selectedSpells as spell (spell.uuid)}
+					{#each state.selectedSpells as spell (spell.uuid)}
 						<SpellCard {spell} />
 					{/each}
 				</ul>
