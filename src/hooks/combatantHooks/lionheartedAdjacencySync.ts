@@ -155,4 +155,6 @@ export default function registerLionheartedAdjacencySync() {
 		{ event: 'canvasReady', id: Hooks.on('canvasReady', scheduleSync) },
 		{ event: 'deleteCombat', id: Hooks.on('deleteCombat', onDeleteCombat) },
 	);
+
+	if (canvas?.ready) scheduleSync();
 }
