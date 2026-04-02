@@ -1384,6 +1384,8 @@ export const myStore = writable<MyStoreState>(initialState);
 |---------|----------|---------|
 | `localize()` | `src/utils/localize.ts` | Format i18n strings with optional interpolation |
 | `isCombatantDead()` | `src/utils/isCombatantDead.ts` | Check if a combatant is dead based on HP/wounds |
+| `combatantActionMutationQueue` | `src/utils/combatantActionMutationQueue.ts` | Serialize combatant action/reaction updates and clear combat-scoped pending entries |
+| `queueCombatantMutationWithFreshDocument()` | `src/utils/queueCombatantMutationWithFreshDocument.ts` | Queue a mutation and re-resolve the combatant document to avoid stale references |
 | `getActorHpValue()` | `src/utils/isCombatantDead.ts` | Get an actor's current HP value |
 | `getActorWoundsValueAndMax()` | `src/utils/isCombatantDead.ts` | Get an actor's wounds value and max |
 | `calculateRollMode()` | `src/utils/calculateRollMode.ts` | Determine roll mode based on modifier keys |
@@ -1392,6 +1394,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | `sortDocumentsByName()` | `src/utils/sortDocumentsByName.ts` | Sort Foundry documents alphabetically |
 | `isValidDiceModifier()` | `src/utils/isValidDiceModifier.ts` | Validate dice modifier strings |
 | `combatManaRules` | `src/utils/combatManaRules.ts` | Combat mana calculation and rules |
+| `itemSourceRules` | `src/utils/itemSourceRules.ts` | Resolve compendium source IDs and rules for embedded items |
 | `manaRecovery` | `src/utils/manaRecovery.ts` | Mana recovery calculations |
 | `prelocalize()` | `src/utils/prelocalize.ts` | Pre-localize configuration objects |
 | `getChoicesFromCompendium()` | `src/utils/getChoicesFromCompendium.ts` | Fetch selectable options from compendiums |

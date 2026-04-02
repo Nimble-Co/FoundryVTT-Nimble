@@ -1,15 +1,17 @@
 import { createSubscriber } from 'svelte/reactivity';
-import { getHeroicReactionUsageState } from '../../utils/getHeroicReactionUsageState.js';
+import type { NimbleCombatant } from '#documents/combatant/combatant.svelte.js';
+import { getHeroicReactionUsageState } from '#utils/getHeroicReactionUsageState.js';
 import {
 	canOwnerUseHeroicReaction,
 	getHeroicReactionAvailability,
 	getHeroicReactionAvailabilityUpdate,
 	HEROIC_REACTIONS,
 	type HeroicReactionKey,
-} from '../../utils/heroicActions.js';
-import { isCombatantDead } from '../../utils/isCombatantDead.js';
-import { getMinionGroupId, getMinionGroupSummaries } from '../../utils/minionGrouping.js';
-import type { NimbleCombatant } from '../combatant/combatant.svelte.js';
+} from '#utils/heroicActions.js';
+import { initiativeRollLock } from '#utils/initiativeRollLock.js';
+import { isCombatantDead } from '#utils/isCombatantDead.js';
+import { getMinionGroupId, getMinionGroupSummaries } from '#utils/minionGrouping.js';
+import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 import { getCombatantBaseActionMax } from './combatantSystem.js';
 import { getCombatantCurrentActions, logMinionGroupingCombat } from './combatCommon.js';
 import { rollInitiativeForCombatant } from './combatInitiative.js';
@@ -26,6 +28,7 @@ import {
 } from './combatSorting.js';
 import { expandLegendaryTurns, normalizeMinionTurns } from './combatTurns.js';
 import type {
+	InitiativeRollOutcome,
 	MinionGroupAttackParams,
 	MinionGroupAttackResult,
 	TurnIdentity,
@@ -41,11 +44,18 @@ type CombatWithTurnIdentityHint = Combat & {
 	_nimbleExpandedTurnIdentity?: TurnIdentity | null;
 };
 
+interface LockedInitiativeRollOutcome {
+	combatantId: string;
+	requestId: string;
+	outcome: InitiativeRollOutcome;
+}
+
 class NimbleCombat extends Combat {
 	#subscribe: ReturnType<typeof createSubscriber>;
 	#expandedTurnIdentity: TurnIdentity | null = null;
 	#pendingAtomicTurnIdentity: TurnIdentity | null = null;
 	#didInterceptAtomicTurnStateUpdate = false;
+	#initiativeRollRequests = new Map<string, Promise<LockedInitiativeRollOutcome | null>>();
 
 	#readStoredExpandedTurnIdentity(): TurnIdentity | null {
 		const persistedTurnIdentity = getPersistedExpandedTurnIdentity(this);
@@ -282,52 +292,70 @@ class NimbleCombat extends Combat {
 		this.turn = Math.min(Math.max(currentTurn, 0), aliveTurns.length - 1);
 		this.#storeExpandedTurnIdentity(this.#resolveTurnIdentityAtIndex(aliveTurns, this.turn));
 	}
-	#combatantHasAnyActionsRemaining(combatant: Combatant.Implementation): boolean {
-		if (combatant.type === 'character' || combatant.type === 'soloMonster') return true;
+
+	#getNonCharacterTurnResetTargets(
+		combatant: Combatant.Implementation | null,
+	): Combatant.Implementation[] {
+		if (!combatant || combatant.type === 'character') return [];
 
 		const groupId = getMinionGroupId(combatant);
-		if (groupId) {
-			const summary = getMinionGroupSummaries(this.combatants.contents).get(groupId);
-			if (summary?.aliveMembers.length) {
-				return summary.aliveMembers.some((member) => getCombatantCurrentActions(member) > 0);
-			}
-		}
+		if (!groupId) return [combatant];
 
-		return getCombatantCurrentActions(combatant) > 0;
+		const summary = getMinionGroupSummaries(this.combatants.contents).get(groupId);
+		if (!summary?.aliveMembers.length) return [combatant];
+		return summary.aliveMembers;
 	}
 
-	async #advancePastExhaustedTurns(result: this): Promise<this> {
-		if (!this.turns.length) return result;
+	async #restoreNonCharacterTurnState(combatant: Combatant.Implementation | null): Promise<void> {
+		const updates = this.#getNonCharacterTurnResetTargets(combatant).reduce<
+			Record<string, unknown>[]
+		>((accumulator, targetCombatant) => {
+			const combatantId = targetCombatant.id ?? null;
+			if (!combatantId) return accumulator;
 
-		const hasTurnWithActions = this.turns.some((combatant) =>
-			this.#combatantHasAnyActionsRemaining(combatant),
-		);
-		if (!hasTurnWithActions) return result;
+			const nextActions = getCombatantBaseActionMax(targetCombatant);
+			if (getCombatantCurrentActions(targetCombatant) === nextActions) return accumulator;
 
-		let nextResult = result;
-		const maxIterations = Math.max(this.turns.length, 1);
-		for (let iteration = 0; iteration < maxIterations; iteration += 1) {
-			const activeCombatant = this.combatant;
-			if (!activeCombatant) break;
-			if (activeCombatant.type === 'character' || activeCombatant.type === 'soloMonster') break;
-			if (this.#combatantHasAnyActionsRemaining(activeCombatant)) break;
+			accumulator.push({
+				_id: combatantId,
+				'system.actions.base.current': nextActions,
+			});
+			return accumulator;
+		}, []);
+		if (updates.length < 1) return;
+		await this.updateEmbeddedDocuments('Combatant', updates);
+	}
 
-			const previousActiveId = activeCombatant.id ?? null;
-			const preferredNextTurnIdentity = this.#resolveNextTurnIdentity();
-			const { intercepted, result: nextTurnResult } = await this.#runAtomicTurnStateOperation(
-				preferredNextTurnIdentity,
-				async () => (await super.nextTurn()) as this,
-			);
-			nextResult = nextTurnResult;
-			this.#syncTurnIndexWithAliveTurns({ preferredTurnIdentity: preferredNextTurnIdentity });
-			if (!intercepted) {
-				await this.#persistAtomicTurnState({ turn: this.turn });
-			}
-			const nextActiveId = this.combatant?.id ?? null;
-			if (!nextActiveId || nextActiveId === previousActiveId) break;
+	#normalizeCombatantCreateData(entry: Record<string, unknown>): {
+		normalizedEntry: Record<string, unknown>;
+		normalizedMinionType: boolean;
+	} {
+		const normalizedEntry = { ...entry };
+		const normalizedMinionType = normalizedEntry.type === 'minion';
+		if (normalizedMinionType) {
+			normalizedEntry.type = 'npc';
 		}
 
-		return nextResult;
+		if (normalizedEntry.type === 'character') {
+			return { normalizedEntry, normalizedMinionType };
+		}
+
+		const currentActions = foundry.utils.getProperty(
+			normalizedEntry,
+			'system.actions.base.current',
+		);
+		if (currentActions !== undefined && currentActions !== null) {
+			return { normalizedEntry, normalizedMinionType };
+		}
+
+		const explicitMaxActions = Number(
+			foundry.utils.getProperty(normalizedEntry, 'system.actions.base.max') ?? Number.NaN,
+		);
+		const initialActions = Number.isFinite(explicitMaxActions)
+			? Math.max(0, Math.trunc(explicitMaxActions))
+			: 1;
+		foundry.utils.setProperty(normalizedEntry, 'system.actions.base.current', initialActions);
+		return { normalizedEntry, normalizedMinionType };
 	}
 
 	constructor(
@@ -477,13 +505,13 @@ class NimbleCombat extends Combat {
 			let normalizedCount = 0;
 			normalizedData = data.map((entry) => {
 				if (!entry || typeof entry !== 'object') return entry;
-				const asRecord = entry as Record<string, unknown>;
-				if (asRecord.type !== 'minion') return entry;
-				normalizedCount += 1;
-				return {
-					...asRecord,
-					type: 'npc',
-				};
+				const { normalizedEntry, normalizedMinionType } = this.#normalizeCombatantCreateData(
+					entry as Record<string, unknown>,
+				);
+				if (normalizedMinionType) {
+					normalizedCount += 1;
+				}
+				return normalizedEntry;
 			}) as foundry.abstract.Document.CreateDataForName<EmbeddedName>[];
 
 			if (normalizedCount > 0) {
@@ -542,34 +570,42 @@ class NimbleCombat extends Combat {
 	): Promise<boolean> {
 		if (!combatantId || reactionKeys.length < 1) return false;
 
-		const combatant = this.combatants.get(combatantId);
-		if (!combatant || combatant.parent?.id !== this.id) return false;
-		if (combatant.type !== 'character') return false;
+		const changed =
+			(await queueCombatantMutationWithFreshDocument({
+				combat: this,
+				combatantId,
+				mutation: async (combatant) => {
+					if (combatant.parent?.id !== this.id) return false;
+					if (combatant.type !== 'character') return false;
 
-		const usageState = getHeroicReactionUsageState({
-			combat: this,
-			combatant,
-			reactionKeys,
-		});
-		if (!usageState.canUse) return false;
+					const usageState = getHeroicReactionUsageState({
+						combat: this,
+						combatant,
+						reactionKeys,
+					});
+					if (!usageState.canUse) return false;
 
-		const reactionAvailabilityUpdate = {
-			_id: combatantId,
-			'system.actions.base.current': Math.max(
-				0,
-				usageState.currentActions - usageState.requiredActions,
-			),
-		} as Record<string, unknown>;
+					const reactionAvailabilityUpdate = {
+						_id: combatantId,
+						'system.actions.base.current': Math.max(
+							0,
+							usageState.currentActions - usageState.requiredActions,
+						),
+					} as Record<string, unknown>;
 
-		for (const reactionKey of usageState.reactionKeys) {
-			Object.assign(
-				reactionAvailabilityUpdate,
-				getHeroicReactionAvailabilityUpdate(reactionKey, false),
-			);
-		}
+					for (const reactionKey of usageState.reactionKeys) {
+						Object.assign(
+							reactionAvailabilityUpdate,
+							getHeroicReactionAvailabilityUpdate(reactionKey, false),
+						);
+					}
 
-		await this.updateEmbeddedDocuments('Combatant', [reactionAvailabilityUpdate]);
-		return true;
+					await this.updateEmbeddedDocuments('Combatant', [reactionAvailabilityUpdate]);
+					return true;
+				},
+			})) ?? false;
+
+		return changed;
 	}
 
 	async toggleHeroicReactionAvailability(
@@ -578,45 +614,56 @@ class NimbleCombat extends Combat {
 	): Promise<boolean> {
 		if (!combatantId) return false;
 
-		const combatant = this.combatants.get(combatantId);
-		if (!combatant || combatant.parent?.id !== this.id) return false;
-		if (combatant.type !== 'character') return false;
-		if (isCombatantDead(combatant)) return false;
+		const changed =
+			(await queueCombatantMutationWithFreshDocument({
+				combat: this,
+				combatantId,
+				mutation: async (combatant) => {
+					if (combatant.parent?.id !== this.id) return false;
+					if (combatant.type !== 'character') return false;
+					if (isCombatantDead(combatant)) return false;
 
-		const currentlyAvailable = getHeroicReactionAvailability(combatant, reactionKey);
-		const canAdministerSpentReaction = Boolean(game.user?.isGM);
-		const canSpendAvailableReaction = Boolean(
-			game.user?.isGM || (canOwnerUseHeroicReaction(reactionKey) && combatant.actor?.isOwner),
-		);
-		if (!currentlyAvailable) {
-			if (!canAdministerSpentReaction) return false;
-			await this.updateEmbeddedDocuments('Combatant', [
-				{
-					_id: combatantId,
-					...getHeroicReactionAvailabilityUpdate(reactionKey, true),
+					const currentlyAvailable = getHeroicReactionAvailability(combatant, reactionKey);
+					const canAdministerSpentReaction = Boolean(game.user?.isGM);
+					const canSpendAvailableReaction = Boolean(
+						game.user?.isGM || (canOwnerUseHeroicReaction(reactionKey) && combatant.actor?.isOwner),
+					);
+					if (!currentlyAvailable) {
+						if (!canAdministerSpentReaction) return false;
+						await this.updateEmbeddedDocuments('Combatant', [
+							{
+								_id: combatantId,
+								...getHeroicReactionAvailabilityUpdate(reactionKey, true),
+							},
+						]);
+						return true;
+					}
+
+					if (!canSpendAvailableReaction) return false;
+					const currentActions = getCombatantCurrentActions(combatant);
+					if (!game.user?.isGM) {
+						if ((this.round ?? 0) < 1) return false;
+						if ((this.combatant?.id ?? null) === combatantId) return false;
+						if (currentActions < 1) return false;
+					}
+
+					const reactionAvailabilityUpdate = {
+						_id: combatantId,
+						...getHeroicReactionAvailabilityUpdate(reactionKey, false),
+					} as Record<string, unknown>;
+					if (!game.user?.isGM) {
+						reactionAvailabilityUpdate['system.actions.base.current'] = Math.max(
+							0,
+							currentActions - 1,
+						);
+					}
+
+					await this.updateEmbeddedDocuments('Combatant', [reactionAvailabilityUpdate]);
+					return true;
 				},
-			]);
-			return true;
-		}
+			})) ?? false;
 
-		if (!canSpendAvailableReaction) return false;
-		const currentActions = getCombatantCurrentActions(combatant);
-		if (!game.user?.isGM) {
-			if ((this.round ?? 0) < 1) return false;
-			if ((this.combatant?.id ?? null) === combatantId) return false;
-			if (currentActions < 1) return false;
-		}
-
-		const reactionAvailabilityUpdate = {
-			_id: combatantId,
-			...getHeroicReactionAvailabilityUpdate(reactionKey, false),
-		} as Record<string, unknown>;
-		if (!game.user?.isGM) {
-			reactionAvailabilityUpdate['system.actions.base.current'] = Math.max(0, currentActions - 1);
-		}
-
-		await this.updateEmbeddedDocuments('Combatant', [reactionAvailabilityUpdate]);
-		return true;
+		return changed;
 	}
 
 	async performMinionGroupAttack(
@@ -637,6 +684,120 @@ class NimbleCombat extends Combat {
 		});
 	}
 
+	async #acquireInitiativeRollLock(
+		combatantId: string,
+		lockData: ReturnType<typeof initiativeRollLock.create>,
+	): Promise<boolean> {
+		const combatant = this.combatants.get(combatantId);
+		if (!combatant || combatant.initiative !== null) return false;
+
+		const currentLock = initiativeRollLock.get(combatant);
+		if (currentLock && !initiativeRollLock.isStale(currentLock)) return false;
+
+		await this.updateEmbeddedDocuments('Combatant', [
+			{
+				_id: combatantId,
+				[initiativeRollLock.path]: lockData,
+			},
+		]);
+
+		const refreshedCombatant = this.combatants.get(combatantId);
+		if (!refreshedCombatant || refreshedCombatant.initiative !== null) {
+			await this.#releaseInitiativeRollLock(combatantId, lockData.requestId);
+			return false;
+		}
+
+		return initiativeRollLock.matches(refreshedCombatant, lockData.requestId);
+	}
+
+	async #releaseInitiativeRollLock(combatantId: string, requestId: string): Promise<void> {
+		const combatant = this.combatants.get(combatantId);
+		if (!combatant || !initiativeRollLock.matches(combatant, requestId)) return;
+
+		await this.updateEmbeddedDocuments('Combatant', [
+			{
+				_id: combatantId,
+				[initiativeRollLock.path]: null,
+			},
+		]);
+	}
+
+	async #performInitiativeRollForCombatant(params: {
+		combatantId: string;
+		formula: string | null;
+		messageOptions: ChatMessage.CreateData;
+		chatRollMode: string | null;
+		rollIndex: number;
+		combatManaUpdates: Promise<unknown>[];
+	}): Promise<LockedInitiativeRollOutcome | null> {
+		const combatant = this.combatants.get(params.combatantId);
+		if (!combatant?.isOwner) return null;
+		if (combatant.initiative !== null) return null;
+		if (initiativeRollLock.hasActiveLock(combatant)) return null;
+
+		const lockData = initiativeRollLock.create();
+		const acquiredLock = await this.#acquireInitiativeRollLock(params.combatantId, lockData);
+		if (!acquiredLock) return null;
+
+		let shouldReleaseLock = true;
+		try {
+			const lockedCombatant = this.combatants.get(params.combatantId);
+			if (!lockedCombatant?.isOwner) return null;
+			if (lockedCombatant.initiative !== null) return null;
+			if (!initiativeRollLock.matches(lockedCombatant, lockData.requestId)) return null;
+
+			const rollOutcome = await rollInitiativeForCombatant({
+				combat: this,
+				combatantId: params.combatantId,
+				formula: params.formula,
+				messageOptions: params.messageOptions,
+				chatRollMode: params.chatRollMode,
+				rollIndex: params.rollIndex,
+				combatManaUpdates: params.combatManaUpdates,
+			});
+			if (!rollOutcome) return null;
+
+			rollOutcome.combatantUpdate[initiativeRollLock.path] = null;
+			shouldReleaseLock = false;
+
+			return {
+				combatantId: params.combatantId,
+				requestId: lockData.requestId,
+				outcome: rollOutcome,
+			};
+		} finally {
+			if (shouldReleaseLock) {
+				await this.#releaseInitiativeRollLock(params.combatantId, lockData.requestId);
+			}
+		}
+	}
+
+	async #rollInitiativeForCombatant(params: {
+		combatantId: string;
+		formula: string | null;
+		messageOptions: ChatMessage.CreateData;
+		chatRollMode: string | null;
+		rollIndex: number;
+		combatManaUpdates: Promise<unknown>[];
+	}): Promise<LockedInitiativeRollOutcome | null> {
+		const inFlightRequest = this.#initiativeRollRequests.get(params.combatantId);
+		if (inFlightRequest) {
+			await inFlightRequest;
+			return null;
+		}
+
+		const request = this.#performInitiativeRollForCombatant(params);
+		this.#initiativeRollRequests.set(params.combatantId, request);
+
+		try {
+			return await request;
+		} finally {
+			if (this.#initiativeRollRequests.get(params.combatantId) === request) {
+				this.#initiativeRollRequests.delete(params.combatantId);
+			}
+		}
+	}
+
 	override async rollInitiative(
 		ids: string | string[],
 		options?: Combat.InitiativeOptions & { rollOptions?: Record<string, unknown> },
@@ -644,7 +805,7 @@ class NimbleCombat extends Combat {
 		const { formula = null, updateTurn = true, messageOptions = {} } = options ?? {};
 
 		// Structure Input data
-		const combatantIds = typeof ids === 'string' ? [ids] : ids;
+		const combatantIds = [...new Set((typeof ids === 'string' ? [ids] : ids).filter(Boolean))];
 		const currentId = this.combatant?.id;
 		const chatRollMode = game.settings.get('core', 'rollMode');
 
@@ -652,36 +813,49 @@ class NimbleCombat extends Combat {
 		const updates: Record<string, unknown>[] = [];
 		const combatManaUpdates: Promise<unknown>[] = [];
 		const messages: ChatMessage.CreateData[] = [];
+		const lockedRollOutcomes: LockedInitiativeRollOutcome[] = [];
 
-		for await (const [i, id] of combatantIds.entries()) {
-			const rollOutcome = await rollInitiativeForCombatant({
-				combat: this,
+		for (const id of combatantIds) {
+			const rollOutcome = await this.#rollInitiativeForCombatant({
 				combatantId: id,
 				formula,
 				messageOptions,
 				chatRollMode,
-				rollIndex: i,
+				rollIndex: messages.length,
 				combatManaUpdates,
 			});
 			if (!rollOutcome) continue;
-			updates.push(rollOutcome.combatantUpdate);
-			messages.push(rollOutcome.chatData);
+			lockedRollOutcomes.push(rollOutcome);
+			updates.push(rollOutcome.outcome.combatantUpdate);
+			messages.push(rollOutcome.outcome.chatData);
 		}
 
-		// Update multiple combatants
-		await this.updateEmbeddedDocuments('Combatant', updates);
+		try {
+			if (updates.length > 0) {
+				await this.updateEmbeddedDocuments('Combatant', updates);
+			}
+		} catch (error) {
+			await Promise.allSettled(
+				lockedRollOutcomes.map((rollOutcome) =>
+					this.#releaseInitiativeRollLock(rollOutcome.combatantId, rollOutcome.requestId),
+				),
+			);
+			throw error;
+		}
 
 		if (combatManaUpdates.length > 0) {
 			await Promise.all(combatManaUpdates);
 		}
 
 		// Ensure the turn order remains with the same combatant
-		if (updateTurn && currentId) {
+		if (updateTurn && currentId && updates.length > 0) {
 			await this.update({ turn: this.turns.findIndex((t) => t.id === currentId) });
 		}
 
 		// Create multiple chat messages
-		await ChatMessage.implementation.create(messages);
+		if (messages.length > 0) {
+			await ChatMessage.implementation.create(messages);
+		}
 		return this;
 	}
 
@@ -694,16 +868,14 @@ class NimbleCombat extends Combat {
 	override async nextTurn(): Promise<this> {
 		this.#syncTurnIndexWithAliveTurns();
 		const preferredNextTurnIdentity = this.#resolveNextTurnIdentity();
-		const { intercepted, result: nextTurnResult } = await this.#runAtomicTurnStateOperation(
+		const { intercepted, result } = await this.#runAtomicTurnStateOperation(
 			preferredNextTurnIdentity,
 			async () => (await super.nextTurn()) as this,
 		);
-		let result = nextTurnResult;
 		this.#syncTurnIndexWithAliveTurns({ preferredTurnIdentity: preferredNextTurnIdentity });
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
 		}
-		result = await this.#advancePastExhaustedTurns(result);
 		return result;
 	}
 
@@ -734,6 +906,7 @@ class NimbleCombat extends Combat {
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
 		}
+		await this.#restoreNonCharacterTurnState(this.combatant ?? null);
 		return result;
 	}
 
@@ -751,6 +924,7 @@ class NimbleCombat extends Combat {
 		if (!intercepted) {
 			await this.#persistAtomicTurnState({ turn: this.turn });
 		}
+		await this.#restoreNonCharacterTurnState(this.combatant ?? null);
 		return result;
 	}
 

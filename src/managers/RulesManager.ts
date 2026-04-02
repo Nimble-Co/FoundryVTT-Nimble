@@ -14,6 +14,7 @@ interface ItemSystemWithRules {
 interface RuleSource {
 	id: string;
 	type: string;
+	disabled?: boolean;
 	[key: string]: string | number | boolean | object | null | undefined;
 }
 
@@ -90,6 +91,32 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		const system = getSystemWithRules(this.#item);
 		await this.#item.update({
 			'system.rules': system.rules.map((r) => (r.id === id ? updateData : r)),
+		} as Record<string, unknown>);
+
+		return true;
+	}
+
+	async disableAllRules() {
+		return this.#setAllRulesDisabledState(true);
+	}
+
+	async enableAllRules() {
+		return this.#setAllRulesDisabledState(false);
+	}
+
+	async #setAllRulesDisabledState(disabled: boolean) {
+		const system = getSystemWithRules(this.#item);
+		const updatedRules = (system.rules ?? []).map((rule) => ({
+			...rule,
+			disabled,
+		}));
+
+		for (const rule of updatedRules) {
+			this.rulesTypeMap.set(rule.type, rule as object as InstanceType<typeof NimbleBaseRule>);
+		}
+
+		await this.#item.update({
+			'system.rules': updatedRules,
 		} as Record<string, unknown>);
 
 		return true;

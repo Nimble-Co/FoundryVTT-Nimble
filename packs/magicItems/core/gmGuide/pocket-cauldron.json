@@ -34,7 +34,7 @@
 			}
 		},
 		"description": {
-			"public": "<p>While Safe Resting, use this to brew your choice of 1 potion, to be consumed immediately:</p><ul><li><p><strong>Elixir of Futuresight</strong>: This potion grants the drinker a brief, cryptic vision of a future event.</p></li><li><p><strong>Elixir of Requiem</strong>: This potion allows the drinker to relive a crucial memory from their past.</p></li><li><p><strong>Elixir of Time</strong>: Once every 100 years, the cauldron can brew a potion that can take the drinker back in time 1 day.</p></li></ul>",
+			"public": "<p><strong>Rarity:</strong> Rare</p><hr><p>While Safe Resting, use this to brew your choice of 1 potion, to be consumed immediately:</p><ul><li><p><strong>Elixir of Futuresight</strong>: This potion grants the drinker a brief, cryptic vision of a future event.</p></li><li><p><strong>Elixir of Requiem</strong>: This potion allows the drinker to relive a crucial memory from their past.</p></li><li><p><strong>Elixir of Time</strong>: Once every 100 years, the cauldron can brew a potion that can take the drinker back in time 1 day.</p></li></ul>",
 			"unidentified": "",
 			"secret": ""
 		},

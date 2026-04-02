@@ -846,7 +846,9 @@
 					onclick={() => actor.activateItem(item.reactive._id)}
 				>
 					{#if showEmbeddedDocumentImages}
-						<img class="nimble-document-card__img" src={item.reactive.img} alt="" />
+						<div class="nimble-document-card__img-wrapper">
+							<img class="nimble-document-card__img" src={item.reactive.img} alt="" />
+						</div>
 					{/if}
 
 					<span class="nimble-document-card__indicator">
@@ -1014,7 +1016,9 @@
 					onclick={() => actor.activateItem(item.reactive._id)}
 				>
 					{#if showEmbeddedDocumentImages}
-						<img class="nimble-document-card__img" src={item.reactive.img} alt="" />
+						<div class="nimble-document-card__img-wrapper">
+							<img class="nimble-document-card__img" src={item.reactive.img} alt="" />
+						</div>
 					{/if}
 
 					<span class="nimble-document-card__indicator">

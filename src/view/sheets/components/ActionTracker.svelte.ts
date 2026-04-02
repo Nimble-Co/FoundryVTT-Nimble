@@ -1,14 +1,13 @@
 import { untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
-import type { NimbleCharacter } from '../../../documents/actor/character.js';
-import { getCombatantBaseActions } from '../../../documents/combat/combatantSystem.js';
-import {
-	getActiveCombatForCurrentScene,
-	registerCombatStateHooks,
-} from '../../../utils/combatState.js';
-import { requestAdvanceCombatTurn } from '../../../utils/combatTurnActions.js';
-import { getActiveCombatant } from '../../../utils/combatTurnSync.js';
-import localize from '../../../utils/localize.js';
+import type { NimbleCharacter } from '#documents/actor/character.js';
+import { getCombatantBaseActions } from '#documents/combat/combatantSystem.js';
+import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
+import { requestAdvanceCombatTurn } from '#utils/combatTurnActions.js';
+import { getActiveCombatant } from '#utils/combatTurnSync.js';
+import { initiativeRollLock } from '#utils/initiativeRollLock.js';
+import localize from '#utils/localize.js';
+import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 
 // ============================================================================
 // Types
@@ -69,7 +68,14 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 	function needsToRollInitiative(): boolean {
 		const combatant = getCombatantInCombat();
 		if (!combatant) return false;
+		if (initiativeRollLock.hasActiveLock(combatant)) return false;
 		return combatant.initiative === null;
+	}
+
+	function isInitiativePending(): boolean {
+		const combatant = getCombatantInCombat();
+		if (!combatant) return false;
+		return initiativeRollLock.hasActiveLock(combatant);
 	}
 
 	function getActionsData(): ActionsData {
@@ -102,6 +108,7 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		if (!combat) return;
 		const combatant = combat.combatants.find((entry) => entry.actorId === getActor().id);
 		if (!combatant?.id) return;
+		if (initiativeRollLock.hasActiveLock(combatant)) return;
 
 		try {
 			await combat.rollInitiative([combatant.id]);
@@ -111,9 +118,19 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 	}
 
 	async function updateActionPips(newValue: number): Promise<void> {
-		const combatant = getCombatantInCombat();
-		if (!combatant) return;
-		await combatant.update({ 'system.actions.base.current': newValue } as Record<string, unknown>);
+		const combat = getActiveCombatForCurrentScene();
+		const combatantId = getCombatantInCombat()?.id ?? null;
+		if (!combat || !combatantId) return;
+
+		await queueCombatantMutationWithFreshDocument({
+			combat,
+			combatantId,
+			mutation: async (currentCombatant) => {
+				await currentCombatant.update({
+					'system.actions.base.current': newValue,
+				} as Record<string, unknown>);
+			},
+		});
 	}
 
 	async function endTurn(): Promise<void> {
@@ -144,6 +161,11 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		return hasRolledInitiative();
 	});
 
+	const initiativePending = $derived.by(() => {
+		subscribeCombatState();
+		return isInitiativePending();
+	});
+
 	const actionsData = $derived.by(() => {
 		subscribeCombatState();
 		return getActionsData();
@@ -154,7 +176,7 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		return isCharactersTurn();
 	});
 
-	const showCombatBar = $derived(hasInitiative || needsInitiative);
+	const showCombatBar = $derived(hasInitiative || needsInitiative || initiativePending);
 
 	// ============================================================================
 	// Pip Interaction
@@ -163,12 +185,16 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 	function handlePipClick(index: number): void {
 		if (!hasInitiative) return;
 
-		const pipNumber = index + 1;
+		const isAvailable = index < actionsData.current;
 
-		if (pipNumber <= actionsData.current) {
-			updateActionPips(index);
+		if (isAvailable) {
+			// Spend one action
+			const newValue = Math.max(actionsData.current - 1, 0);
+			void updateActionPips(newValue);
 		} else {
-			updateActionPips(pipNumber);
+			// Restore one action
+			const newValue = Math.min(actionsData.current + 1, actionsData.max);
+			void updateActionPips(newValue);
 		}
 	}
 
@@ -226,6 +252,9 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		},
 		get hasInitiative() {
 			return hasInitiative;
+		},
+		get initiativePending() {
+			return initiativePending;
 		},
 		get actionsData() {
 			return actionsData;

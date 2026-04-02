@@ -13,6 +13,12 @@
 				"value": 1,
 				"mode": "adjust",
 				"label": "Eager for Battle (Advantage on Initiative)"
+			},
+			{
+				"type": "initiativeMessage",
+				"formula": "2 * @dexterity",
+				"label": "Eager for Battle",
+				"message": "You can move {value} spaces for free on your first turn!"
 			}
 		],
 		"activation": {

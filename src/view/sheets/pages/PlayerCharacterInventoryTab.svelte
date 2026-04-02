@@ -125,18 +125,12 @@
 	let categorizedItems = $derived(groupItemsByType(items));
 
 	let itemRulesManagers = new SvelteMap();
-	let itemsWithDisabledArmor = new SvelteMap();
 
 	$effect(() => {
 		// Rebuild the maps when items change
 		items.forEach((item) => {
 			const rulesManager = new RulesManager(item);
 			itemRulesManagers.set(item.id, rulesManager);
-
-			const armorClassRule = rulesManager.getRuleOfType('armorClass');
-			const isDisabled = armorClassRule?.disabled ?? false;
-
-			itemsWithDisabledArmor.set(item.id, isDisabled);
 		});
 	});
 
@@ -147,7 +141,6 @@
 	let flags = $derived(actor.reactive.flags.nimble);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 	let trackInventorySlots = $derived(flags?.trackInventorySlots ?? true);
-	let editingEnabled = $derived(flags?.editingEnabled ?? false);
 </script>
 
 <header class="nimble-sheet__static nimble-sheet__static--inventory">
@@ -243,45 +236,55 @@
 					>
 						<header class="u-semantic-only">
 							{#if showEmbeddedDocumentImages}
-								<img
-									class="nimble-document-card__img"
-									src={item.reactive.img}
-									alt={item.reactive.name}
-								/>
+								<div class="nimble-document-card__img-wrapper">
+									<img
+										class="nimble-document-card__img"
+										src={item.reactive.img}
+										alt={item.reactive.name}
+									/>
+								</div>
 							{/if}
 
 							<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
 								{item.reactive.name}
 							</h4>
 
-							{#if rules && rules.hasRuleOfType('armorClass')}
-								{#if editingEnabled}
-									<button
-										class="nimble-button"
-										data-button-variant="icon"
-										type="button"
-										aria-label="Toggle armor rule of {item.name}"
-										onclick={async (event) => {
-											event.stopPropagation();
-											const armorRule = rules.getRuleOfType('armorClass');
-											const newDisabledState = !armorRule.disabled;
+							{#if rules && (item.reactive.system.rules?.length ?? 0) > 0}
+								<button
+									class="nimble-button"
+									data-button-variant="icon"
+									type="button"
+									aria-label={localize('NIMBLE.prompts.toggleEquipment', {
+										name: item.reactive.name,
+									})}
+									onclick={async (event) => {
+										event.stopPropagation();
+										const newEquippedState = !item.reactive.system.equipped;
+										const rulesUpdated = newEquippedState
+											? await rules.enableAllRules()
+											: await rules.disableAllRules();
 
-											const updateData = {
-												...armorRule.toObject(),
-												disabled: newDisabledState,
-											};
+										if (!rulesUpdated) return;
 
-											await rules.updateRule(armorRule.id, updateData);
-											itemsWithDisabledArmor.set(item.id, newDisabledState);
-										}}
-									>
-										{#if itemsWithDisabledArmor.get(item.id)}
-											<i class="fa-regular fa-circle"></i>
-										{:else}
-											<i class="fa-solid fa-circle"></i>
-										{/if}
-									</button>
-								{/if}
+										const updatedItem = await actor.updateItem(item._id, {
+											'system.equipped': newEquippedState,
+										});
+
+										if (updatedItem) return;
+
+										if (newEquippedState) {
+											await rules.disableAllRules();
+										} else {
+											await rules.enableAllRules();
+										}
+									}}
+								>
+									{#if item.reactive.system.equipped}
+										<i class="fa-solid fa-circle"></i>
+									{:else}
+										<i class="fa-regular fa-circle"></i>
+									{/if}
+								</button>
 							{:else}
 								<input
 									class="nimble-document-card__quantity"

@@ -1,6 +1,8 @@
 import type { DeepPartial } from 'fvtt-types/utils';
+import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
+import { buildClassFeatureIndex, type ClassFeatureIndex } from '../../utils/getClassFeatures.js';
 import sortDocumentsByName from '../../utils/sortDocumentsByName.js';
 import CharacterCreationDialogComponent from '../../view/dialogs/CharacterCreationDialog.svelte';
 
@@ -10,6 +12,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	data: Record<string, any>;
 	parent: any;
 	pack: any;
+	classFeatureIndex: Promise<ClassFeatureIndex> | null = null;
 
 	protected root;
 
@@ -41,7 +44,8 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		},
 		position: {
 			height: 'auto' as const,
-			top: 5,
+			// Foundry ignores small top values in practice; 0 is equivalent to the previous value of 5
+			top: 0,
 			width: 608,
 		},
 		actions: {},
@@ -55,12 +59,14 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		const bonusLanguageOptions = this.prepareBonusLanguageOptions();
 		const classOptions = this.prepareClassOptions();
 		const statArrayOptions = this.prepareArrayOptions();
+		const classFeatureIndex = (this.classFeatureIndex ??= buildClassFeatureIndex());
 
 		return {
 			ancestryOptions,
 			backgroundOptions,
 			bonusLanguageOptions,
 			classOptions,
+			classFeatureIndex,
 			statArrayOptions,
 			dialog: this,
 		} as object as ReturnType<
@@ -83,6 +89,10 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			background?: { uuid?: string };
 			characterClass?: { uuid?: string };
 			ancestry?: { uuid?: string };
+		};
+		classFeatures?: {
+			autoGrant: string[];
+			selected: Map<string, NimbleFeatureItem>;
 		};
 	}) {
 		const actor = await Actor.create(
@@ -214,6 +224,31 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		// If equipment was chosen, items will be granted automatically
 		// If gold was chosen, grantItem rules were disabled above so no items are granted
 		await actor?.createEmbeddedDocuments('Item', originDocumentSources);
+
+		// Create class feature documents
+		const featureDocumentSources: Item.CreateData[] = [];
+
+		// Add auto-granted features
+		for (const uuid of results.classFeatures?.autoGrant ?? []) {
+			const feature = await fromUuid(uuid as `Item.${string}`);
+			if (feature) {
+				const source = (feature as NimbleFeatureItem).toObject();
+				source._stats.compendiumSource = uuid;
+				featureDocumentSources.push(source as object as Item.CreateData);
+			}
+		}
+
+		// Add selected features
+		for (const [_group, feature] of results.classFeatures?.selected ?? []) {
+			const source = feature.toObject();
+			source._stats.compendiumSource = feature.uuid;
+			featureDocumentSources.push(source as object as Item.CreateData);
+		}
+
+		// Create all features
+		if (featureDocumentSources.length > 0) {
+			await actor?.createEmbeddedDocuments('Item', featureDocumentSources);
+		}
 
 		const updateData: Record<string, unknown> = {
 			system: {

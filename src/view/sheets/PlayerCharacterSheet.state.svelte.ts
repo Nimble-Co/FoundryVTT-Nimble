@@ -278,21 +278,15 @@ export function createPlayerCharacterSheetState(params: {
 	}
 
 	function updateCurrentHP(newValue: number): void {
-		void actor.update({
-			'system.attributes.hp.value': newValue,
-		});
+		void actor.setCurrentHP(newValue);
 	}
 
 	function updateMaxHP(newValue: number): void {
-		void actor.update({
-			'system.attributes.hp.max': newValue,
-		});
+		void actor.setMaxHP(newValue);
 	}
 
 	function updateTempHP(newValue: number): void {
-		void actor.update({
-			'system.attributes.hp.temp': newValue,
-		});
+		void actor.setTempHP(newValue);
 	}
 
 	function updateCurrentMana(newValue: number): void {

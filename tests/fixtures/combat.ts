@@ -17,11 +17,13 @@ export type CombatantFixtureOptions = {
 	sort?: number;
 	isOwner?: boolean;
 	initiative?: number | null;
+	flags?: Record<string, unknown>;
 	defeated?: boolean;
 	actor?: Actor.Implementation | null;
 	combatId?: string;
 	actorId?: string;
 	sceneId?: string;
+	tokenId?: string;
 	actionsCurrent?: number;
 	actionsMax?: number;
 };
@@ -72,11 +74,13 @@ export function createCombatantFixture({
 	sort = 0,
 	isOwner = false,
 	initiative = null,
+	flags = {},
 	defeated = false,
 	actor = null,
 	combatId = 'combat-1',
 	actorId = '',
 	sceneId = 'scene-1',
+	tokenId = '',
 	actionsCurrent = 1,
 	actionsMax = 2,
 }: CombatantFixtureOptions = {}): Combatant.Implementation {
@@ -89,8 +93,10 @@ export function createCombatantFixture({
 		isOwner,
 		defeated,
 		initiative,
+		flags,
 		actor,
 		actorId: resolvedActorId,
+		tokenId,
 		parent: { id: combatId },
 		sceneId,
 		system: {

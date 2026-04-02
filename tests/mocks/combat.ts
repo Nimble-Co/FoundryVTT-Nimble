@@ -5,6 +5,7 @@ import {
 	createCombatActorFixture,
 	createCombatantFixture,
 } from '../fixtures/combat.js';
+import { flushAsync, getTestGlobals } from '../helpers.js';
 
 type HookCallback = (...args: unknown[]) => unknown;
 
@@ -86,9 +87,8 @@ type DropEventOptions = {
 
 export type { CombatDefeatSyncTestGlobals, HookCallback, NimbleCombatDocumentTestGlobals };
 
-export function getTestGlobals<T>() {
-	return globalThis as unknown as T;
-}
+// Re-export shared test helpers for backward compatibility
+export { flushAsync, getTestGlobals };
 
 export function createHasPropertyMock(): (obj: unknown, path: string) => boolean {
 	return (obj: unknown, path: string): boolean => {
@@ -140,6 +140,7 @@ export function createMockCombat({
 	round,
 }: MockCombatOptions): Combat & {
 	updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+	deleteEmbeddedDocuments: ReturnType<typeof vi.fn>;
 	nextTurn: ReturnType<typeof vi.fn>;
 } {
 	return {
@@ -149,9 +150,11 @@ export function createMockCombat({
 		combatant: activeCombatant,
 		round,
 		updateEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+		deleteEmbeddedDocuments: vi.fn().mockResolvedValue([]),
 		nextTurn: vi.fn().mockResolvedValue(undefined),
 	} as unknown as Combat & {
 		updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		deleteEmbeddedDocuments: ReturnType<typeof vi.fn>;
 		nextTurn: ReturnType<typeof vi.fn>;
 	};
 }

@@ -1,406 +1,57 @@
-<script>
+<script lang="ts">
+	import type { CharacterCreationDialogProps } from './characterCreation/types.js';
+
 	import { setContext, untrack } from 'svelte';
-	import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
-	import generateBlankAttributeSet from '../../utils/generateBlankAttributeSet.js';
-	import scrollIntoView from '../../utils/scrollIntoView.js';
+
+	import { CHARACTER_CREATION_STAGES } from './characterCreation/constants.js';
+	import { createCharacterCreationState } from './characterCreation/state.svelte.js';
+	import { isRaisedByBackground } from './characterCreation/utils.ts';
 
 	import AncestrySelection from './components/characterCreator/AncestrySelection.svelte';
 	import AncestrySizeSelection from './components/characterCreator/AncestrySizeSelection.svelte';
 	import BackgroundOptionsSelection from './components/characterCreator/BackgroundOptionsSelection.svelte';
 	import BackgroundSelection from './components/characterCreator/BackgroundSelection.svelte';
 	import BonusLanguageSelection from './components/characterCreator/BonusLanguageSelection.svelte';
+	import ClassFeatureSelection from './components/characterCreator/ClassFeatureSelection.svelte';
 	import ClassSelection from './components/characterCreator/ClassSelection.svelte';
 	import SkillPointAssignment from './components/characterCreator/SkillPointAssignment.svelte';
 	import StartingEquipmentSelection from './components/characterCreator/StartingEquipmentSelection.svelte';
 	import StatArraySelection from './components/characterCreator/StatArraySelection.svelte';
 	import StatAssignment from './components/characterCreator/StatAssignment.svelte';
 
-	const CHARACTER_CREATION_STAGES = {
-		CLASS: 0,
-		ANCESTRY: '1a',
-		ANCESTRY_OPTIONS: '1b',
-		BACKGROUND: 2,
-		BACKGROUND_OPTIONS: '2b',
-		STARTING_EQUIPMENT: 3,
-		ARRAY: 4,
-		STATS: 5,
-		SKILLS: 6,
-		LANGUAGES: 7,
-		SUBMIT: 8,
-	};
-
-	function getAbilityBonuses(ancestry, background, characterClass) {
-		const abilityKeys = Object.keys(CONFIG.NIMBLE.abilityScores);
-
-		const rules = [
-			...(ancestry?.rules?.values() ?? []),
-			...(background?.rules?.values() ?? []),
-			...(characterClass?.rules?.values() ?? []),
-		];
-
-		if (!rules.length) return null;
-
-		const statBonusRules = rules.filter((rule) => rule.type === 'abilityBonus');
-
-		if (!rules.length) return null;
-
-		const bonuses = new Map(abilityKeys.map((key) => [key, 0]));
-
-		statBonusRules.forEach((rule) => {
-			let targetAbilities = rule.abilities;
-
-			if (!targetAbilities.length) return;
-			if (targetAbilities.includes('all')) targetAbilities = abilityKeys;
-
-			const bonus = getDeterministicBonus(rule.value, {});
-
-			targetAbilities.forEach((abilityKey) => {
-				bonuses.set(abilityKey, bonuses.get(abilityKey) + Number.parseInt(bonus, 10));
-			});
-		});
-
-		return bonuses;
-	}
-
-	function getSkillBonuses(ancestry, background, characterClass) {
-		const skillKeys = Object.keys(CONFIG.NIMBLE.skills);
-
-		const rules = [
-			...(ancestry?.rules?.values() ?? []),
-			...(background?.rules?.values() ?? []),
-			...(characterClass?.rules?.values() ?? []),
-		];
-
-		const skillBonusRules = rules.filter((rule) => rule.type === 'skillBonus');
-
-		if (!rules.length) return null;
-
-		const bonuses = new Map(skillKeys.map((key) => [key, 0]));
-
-		skillBonusRules.forEach((rule) => {
-			let targetSkills = rule.skills;
-
-			if (!targetSkills.length) return;
-			if (targetSkills.includes('all')) targetSkills = skillKeys;
-
-			const bonus = getDeterministicBonus(rule.value, {});
-
-			targetSkills.forEach((skillKey) => {
-				bonuses.set(skillKey, bonuses.get(skillKey) + Number.parseInt(bonus, 10));
-			});
-		});
-
-		return bonuses;
-	}
-
-	function ancestryRequiresSaveChoice(ancestry) {
-		const rules = [...(ancestry?.rules?.values() ?? [])];
-		if (!rules.length) return false;
-
-		for (const rule of rules) {
-			if (rule.type === 'savingThrowRollMode' && rule.requiresChoice && rule.target === 'neutral') {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	function hasAncestryOptions(ancestry) {
-		const hasSizeChoice = ancestry?.system?.size?.length > 1;
-		const hasSaveChoice = ancestryRequiresSaveChoice(ancestry);
-		return hasSizeChoice || hasSaveChoice;
-	}
-
-	function ancestryOptionsComplete(ancestry, selectedAncestrySize, selectedAncestrySave) {
-		const hasSizeChoice = ancestry?.system?.size?.length > 1;
-		const hasSaveChoice = ancestryRequiresSaveChoice(ancestry);
-
-		if (hasSizeChoice && !selectedAncestrySize) return false;
-		if (hasSaveChoice && !selectedAncestrySave) return false;
-
-		return true;
-	}
-
-	function isRaisedByBackground(background) {
-		return background?.name?.toLowerCase().includes('raised by');
-	}
-
-	function getCurrentStage(
-		selectedClass,
-		selectedAncestry,
-		selectedAncestrySize,
-		selectedAncestrySave,
-		selectedBackground,
-		selectedRaisedByAncestry,
-		startingEquipmentChoice,
-		selectedArray,
-		selectedAbilityScores,
-		remainingSkillPoints,
-		bonusLanguages,
-	) {
-		const classOptionCount = classOptions.then((classes) => classes.length);
-
-		const ancestryCount = ancestryOptions
-			.then((x) => Object.values(x))
-			.then((x) => x.reduce((count, category) => count + category.length, 0));
-
-		const backgroundCount = backgroundOptions.then((backgrounds) => backgrounds.length);
-
-		if (classOptionCount && !selectedClass) return CHARACTER_CREATION_STAGES.CLASS;
-
-		if (ancestryCount && !selectedAncestry) {
-			return CHARACTER_CREATION_STAGES.ANCESTRY;
-		}
-
-		if (
-			hasAncestryOptions(selectedAncestry) &&
-			!ancestryOptionsComplete(selectedAncestry, selectedAncestrySize, selectedAncestrySave)
-		) {
-			return CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS;
-		}
-
-		if (backgroundCount && !selectedBackground) {
-			return CHARACTER_CREATION_STAGES.BACKGROUND;
-		}
-
-		if (isRaisedByBackground(selectedBackground) && selectedRaisedByAncestry === null) {
-			return CHARACTER_CREATION_STAGES.BACKGROUND_OPTIONS;
-		}
-
-		if (!startingEquipmentChoice) return CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT;
-
-		if (!selectedArray) return CHARACTER_CREATION_STAGES.ARRAY;
-
-		const hasUnassignedAbilityScores = Object.values(selectedAbilityScores).some(
-			(mod) => mod === null,
-		);
-
-		if (hasUnassignedAbilityScores) return CHARACTER_CREATION_STAGES.STATS;
-		if (remainingSkillPoints) return CHARACTER_CREATION_STAGES.SKILLS;
-
-		const intelligenceModifier = selectedArray.array?.[selectedAbilityScores.intelligence];
-
-		if (
-			!remainingSkillPoints &&
-			intelligenceModifier > 0 &&
-			bonusLanguages.length < intelligenceModifier
-		) {
-			return CHARACTER_CREATION_STAGES.LANGUAGES;
-		}
-
-		return CHARACTER_CREATION_STAGES.SUBMIT;
-	}
-
-	function submit() {
-		dialog.submitCharacterCreation({
-			name,
-			origins: {
-				background: selectedBackground,
-				characterClass: selectedClass,
-				ancestry: selectedAncestry,
-			},
-			startingEquipmentChoice,
-			abilityScores: Object.entries(selectedAbilityScores).reduce(
-				(assignedScores, [abilityKey, index]) => {
-					assignedScores[`${abilityKey}.baseValue`] = selectedArray?.array?.[index] ?? 0;
-					return assignedScores;
-				},
-				{},
-			),
-			sizeCategory: selectedAncestrySize,
-			selectedAncestrySave,
-			// Pass the selected "raised by" ancestry for backgrounds that allow choice
-			selectedRaisedByAncestry: selectedRaisedByAncestry
-				? {
-						language: selectedRaisedByAncestry.language,
-						label: selectedRaisedByAncestry.label,
-					}
-				: null,
-			skills: Object.entries(assignedSkillPoints).reduce((assignedPoints, [skillKey, points]) => {
-				assignedPoints[`${skillKey}.points`] = points;
-				return assignedPoints;
-			}, {}),
-			// Only include common + bonus languages; rule-granted languages are handled by the rules at runtime
-			languages: ['common', ...bonusLanguages],
-		});
-	}
-
-	async function handleCreateCharacter() {
-		if (stage === CHARACTER_CREATION_STAGES.SUBMIT) {
-			submit();
-			return;
-		}
-
-		const { characterCreation } = CONFIG.NIMBLE;
-		const confirmed = await foundry.applications.api.DialogV2.confirm({
-			window: {
-				title: characterCreation.incompleteCharacterTitle,
-			},
-			content: `<p>${characterCreation.incompleteCharacterMessage}</p>`,
-			yes: {
-				label: characterCreation.incompleteCharacterProceed,
-			},
-			no: {
-				label: characterCreation.incompleteCharacterReturn,
-			},
-			rejectClose: false,
-			modal: true,
-		});
-
-		if (confirmed) {
-			submit();
-		}
-	}
-
 	let {
 		ancestryOptions,
 		backgroundOptions,
 		bonusLanguageOptions,
+		classFeatureIndex,
 		classOptions,
 		dialog,
 		statArrayOptions,
-	} = $props();
+	}: CharacterCreationDialogProps = $props();
 
-	let assignedSkillPoints = $state({});
-	let bonusLanguages = $state([]);
-	let selectedAbilityScores = $state(generateBlankAttributeSet());
-	let name = $state('');
-	let selectedArray = $state(null);
-	let selectedBackground = $state('');
-	let selectedClass = $state('');
-	let selectedAncestry = $state('');
-	let selectedAncestrySize = $state('medium');
-	let selectedAncestrySave = $state(null);
-	let selectedRaisedByAncestry = $state(null);
-	let startingEquipmentChoice = $state(null);
-
-	let abilityBonuses = $derived(
-		getAbilityBonuses(selectedAncestry, selectedBackground, selectedClass),
-	);
-
-	let skillBonuses = $derived(getSkillBonuses(selectedAncestry, selectedBackground, selectedClass));
-
-	// Helper to extract language grants from rules, checking INT predicate
-	function getLanguageGrantsFromRules(rules, intMod, source) {
-		if (!rules?.length) return [];
-
-		const grantRules = rules.filter(
-			(r) => r.type === 'grantProficiency' && r.proficiencyType === 'languages',
-		);
-
-		return grantRules.flatMap((r) => {
-			// Check predicate for INT requirement
-			const intPredicate = r.predicate?.intelligence;
-			if (intPredicate?.min !== undefined && intMod < intPredicate.min) {
-				return [];
-			}
-			return r.values.map((v) => ({ key: v.toLowerCase(), source }));
-		});
-	}
-
-	// Languages granted by ancestry (based on rules with INT predicate)
-	let ancestryGrantedLanguages = $derived.by(() => {
-		if (!selectedAncestry || !selectedArray || selectedAbilityScores.intelligence === null)
-			return [];
-		const intMod = selectedArray.array?.[selectedAbilityScores.intelligence] ?? 0;
-
-		const rules = [...(selectedAncestry?.system?.rules ?? [])];
-		return getLanguageGrantsFromRules(rules, intMod, 'ancestry');
+	const state = createCharacterCreationState({
+		get ancestryOptions() {
+			return ancestryOptions;
+		},
+		get backgroundOptions() {
+			return backgroundOptions;
+		},
+		get classFeatureIndex() {
+			return classFeatureIndex;
+		},
+		get classOptions() {
+			return classOptions;
+		},
+		get dialog() {
+			return dialog;
+		},
 	});
-
-	// Languages granted by background
-	let backgroundGrantedLanguages = $derived.by(() => {
-		if (!selectedBackground) return [];
-
-		// For "Raised by" backgrounds, use the language stored with the selected ancestry
-		// selectedRaisedByAncestry is an object { ancestryKey, language }
-		if (isRaisedByBackground(selectedBackground)) {
-			if (!selectedRaisedByAncestry?.language) return [];
-			return [{ key: selectedRaisedByAncestry.language, source: 'background' }];
-		}
-
-		// For other backgrounds with grantProficiency rules
-		const rules = [...(selectedBackground?.system?.rules ?? [])];
-		const grantRules = rules.filter(
-			(r) => r.type === 'grantProficiency' && r.proficiencyType === 'languages',
-		);
-		return grantRules.flatMap((r) =>
-			r.values.map((v) => ({ key: v.toLowerCase(), source: 'background' })),
-		);
-	});
-
-	// Combined granted languages (deduplicated by key)
-	let grantedLanguages = $derived.by(() => {
-		const all = [...ancestryGrantedLanguages, ...backgroundGrantedLanguages];
-		const seen = new Set();
-		return all.filter((lang) => {
-			if (seen.has(lang.key)) return false;
-			seen.add(lang.key);
-			return true;
-		});
-	});
-
-	let remainingSkillPoints = $derived(
-		4 - Object.values(assignedSkillPoints).reduce((a, b) => a + b, 0),
-	);
-
-	let stage = $derived(
-		getCurrentStage(
-			selectedClass,
-			selectedAncestry,
-			selectedAncestrySize,
-			selectedAncestrySave,
-			selectedBackground,
-			selectedRaisedByAncestry,
-			startingEquipmentChoice,
-			selectedArray,
-			selectedAbilityScores,
-			remainingSkillPoints,
-			bonusLanguages,
-		),
-	);
-
-	let stageNumber = $derived(stage.toString().match(/\d+/)[0]);
 
 	setContext('CHARACTER_CREATION_STAGES', CHARACTER_CREATION_STAGES);
 	setContext(
 		'dialog',
 		untrack(() => dialog),
 	);
-
-	$effect(() => {
-		scrollIntoView(`${dialog.id}-stage-${stage}`);
-	});
-
-	$effect(() => {
-		// Reset ancestry save selection when ancestry changes
-		void selectedAncestry;
-		selectedAncestrySave = null;
-	});
-
-	$effect(() => {
-		// Reset raised-by selection when background changes
-		void selectedBackground;
-		selectedRaisedByAncestry = null;
-	});
-
-	// Track whether stats have been fully assigned (to avoid running during drag)
-	let statsFullyAssigned = $derived(
-		Object.values(selectedAbilityScores).every((mod) => mod !== null),
-	);
-
-	$effect(() => {
-		// Only run after stats are fully assigned (not during drag operations)
-		if (!statsFullyAssigned) return;
-
-		const intMod = selectedArray?.array?.[selectedAbilityScores.intelligence] ?? 0;
-
-		// Only reset if there are actually languages to clear
-		if (bonusLanguages.length > 0 && intMod < bonusLanguages.length) {
-			bonusLanguages = [];
-		}
-	});
 </script>
 
 <header class="nimble-sheet__header nimble-sheet__header--character-creator">
@@ -413,7 +64,7 @@
 			autocomplete="off"
 			spellcheck="false"
 			type="text"
-			bind:value={name}
+			bind:value={state.name}
 			placeholder={game.i18n.localize(CONFIG.NIMBLE.characterCreation.newCharacterPlaceholder)}
 		/>
 	</label>
@@ -425,109 +76,115 @@
 >
 	{#await classOptions then classes}
 		<ClassSelection
-			active={stage === CHARACTER_CREATION_STAGES.CLASS}
+			active={state.stage === CHARACTER_CREATION_STAGES.CLASS}
 			{classes}
-			bind:selectedClass
+			bind:selectedClass={state.selectedClass}
 		/>
 	{/await}
 
+	<ClassFeatureSelection
+		active={state.stage === CHARACTER_CREATION_STAGES.CLASS_FEATURES}
+		classFeatures={state.classFeatures}
+		bind:selectedFeatures={state.selectedClassFeatures}
+	/>
+
 	{#await ancestryOptions then ancestries}
 		<AncestrySelection
-			active={stage === CHARACTER_CREATION_STAGES.ANCESTRY}
+			active={state.stage === CHARACTER_CREATION_STAGES.ANCESTRY}
 			{ancestries}
-			bind:selectedAncestry
-			bind:selectedAncestrySize
+			bind:selectedAncestry={state.selectedAncestry}
+			bind:selectedAncestrySize={state.selectedAncestrySize}
 		/>
 	{/await}
 
 	<AncestrySizeSelection
-		active={stage === CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS}
-		{selectedAncestry}
-		{selectedClass}
-		bind:selectedAncestrySize
-		bind:selectedAncestrySave
+		active={state.stage === CHARACTER_CREATION_STAGES.ANCESTRY_OPTIONS}
+		selectedAncestry={state.selectedAncestry}
+		selectedClass={state.selectedClass}
+		bind:selectedAncestrySize={state.selectedAncestrySize}
+		bind:selectedAncestrySave={state.selectedAncestrySave}
 	/>
 
 	{#await backgroundOptions then backgrounds}
 		<BackgroundSelection
-			active={stage === CHARACTER_CREATION_STAGES.BACKGROUND}
+			active={state.stage === CHARACTER_CREATION_STAGES.BACKGROUND}
 			{backgrounds}
-			bind:selectedBackground
+			bind:selectedBackground={state.selectedBackground}
 		/>
 	{/await}
 
-	{#if isRaisedByBackground(selectedBackground)}
+	{#if isRaisedByBackground(state.selectedBackground)}
 		<BackgroundOptionsSelection
-			active={stage === CHARACTER_CREATION_STAGES.BACKGROUND_OPTIONS}
+			active={state.stage === CHARACTER_CREATION_STAGES.BACKGROUND_OPTIONS}
 			{ancestryOptions}
-			{selectedBackground}
-			bind:selectedRaisedByAncestry
+			selectedBackground={state.selectedBackground}
+			bind:selectedRaisedByAncestry={state.selectedRaisedByAncestry}
 		/>
 	{/if}
 
 	<StartingEquipmentSelection
-		active={stage === CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT}
-		{selectedClass}
-		{selectedBackground}
-		bind:startingEquipmentChoice
+		active={state.stage === CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT}
+		selectedClass={state.selectedClass}
+		selectedBackground={state.selectedBackground}
+		bind:startingEquipmentChoice={state.startingEquipmentChoice}
 	/>
 
 	<StatArraySelection
-		active={stage === CHARACTER_CREATION_STAGES.ARRAY}
-		bind:bonusLanguages
-		bind:selectedAbilityScores
-		bind:selectedArray
+		active={state.stage === CHARACTER_CREATION_STAGES.ARRAY}
+		bind:bonusLanguages={state.bonusLanguages}
+		bind:selectedAbilityScores={state.selectedAbilityScores}
+		bind:selectedArray={state.selectedArray}
 		{statArrayOptions}
 	/>
 
 	<StatAssignment
-		active={stage === CHARACTER_CREATION_STAGES.STATS}
-		bind:bonusLanguages
-		{selectedAncestry}
-		{selectedArray}
-		{selectedAncestrySave}
-		{selectedClass}
-		bind:selectedAbilityScores
+		active={state.stage === CHARACTER_CREATION_STAGES.STATS}
+		bind:bonusLanguages={state.bonusLanguages}
+		selectedAncestry={state.selectedAncestry}
+		selectedArray={state.selectedArray}
+		selectedAncestrySave={state.selectedAncestrySave}
+		selectedClass={state.selectedClass}
+		bind:selectedAbilityScores={state.selectedAbilityScores}
 	/>
 
 	<SkillPointAssignment
-		active={stage === CHARACTER_CREATION_STAGES.SKILLS}
-		bind:assignedSkillPoints
-		{abilityBonuses}
-		{remainingSkillPoints}
-		{selectedAbilityScores}
-		{selectedArray}
-		{skillBonuses}
+		active={state.stage === CHARACTER_CREATION_STAGES.SKILLS}
+		bind:assignedSkillPoints={state.assignedSkillPoints}
+		abilityBonuses={state.abilityBonuses}
+		skillBonuses={state.skillBonuses}
+		remainingSkillPoints={state.remainingSkillPoints}
+		selectedAbilityScores={state.selectedAbilityScores}
+		selectedArray={state.selectedArray}
 	/>
 
 	<BonusLanguageSelection
-		active={stage === CHARACTER_CREATION_STAGES.LANGUAGES}
-		bind:bonusLanguages
+		active={state.stage === CHARACTER_CREATION_STAGES.LANGUAGES}
+		bind:bonusLanguages={state.bonusLanguages}
 		{bonusLanguageOptions}
-		{grantedLanguages}
-		{remainingSkillPoints}
-		{selectedArray}
-		{selectedAbilityScores}
+		grantedLanguages={state.grantedLanguages}
+		remainingSkillPoints={state.remainingSkillPoints}
+		selectedArray={state.selectedArray}
+		selectedAbilityScores={state.selectedAbilityScores}
 	/>
 </article>
 
 <footer class="nimble-sheet__footer nimble-sheet__footer--character-creator">
-	<div class="nimble-progress-bar nimble-progress-bar--stage-{stageNumber}">
-		<span class="nimble-progress-bar__label"> {stageNumber} / 8 </span>
+	<div class="nimble-progress-bar nimble-progress-bar--stage-{state.stageNumber}">
+		<span class="nimble-progress-bar__label"> {state.stageNumber} / 8 </span>
 	</div>
 
 	<button
 		class="nimble-button"
 		data-button-variant="basic"
-		data-tooltip={stage !== CHARACTER_CREATION_STAGES['SUBMIT']
+		data-tooltip={state.stage !== CHARACTER_CREATION_STAGES['SUBMIT']
 			? game.i18n.localize(CONFIG.NIMBLE.characterCreation.incompleteStepsWarning)
 			: null}
 		data-tooltip-direction="UP"
-		onclick={handleCreateCharacter}
+		onclick={state.handleCreateCharacter}
 	>
 		{game.i18n.localize(CONFIG.NIMBLE.characterCreation.createCharacter)}
 
-		{#if stage !== CHARACTER_CREATION_STAGES['SUBMIT']}
+		{#if state.stage !== CHARACTER_CREATION_STAGES['SUBMIT']}
 			<i class="nimble-button__icon fa-solid fa-triangle-exclamation" data-icon-style="warning"></i>
 		{/if}
 	</button>

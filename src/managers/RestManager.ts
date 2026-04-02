@@ -1,5 +1,5 @@
-import { HitDiceManager } from './HitDiceManager.js';
 import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '../utils/manaRecovery.js';
+import { HitDiceManager } from './HitDiceManager.js';
 
 // Uses NimbleCharacterInterface ambient type from actor.d.ts
 
@@ -165,6 +165,7 @@ class RestManager {
 					wasMaximized,
 					hadAdvantage,
 					advantageSource,
+					manaRestored: this.#recovery.manaRestored,
 				},
 			} as unknown as ChatMessage.CreateData);
 		}

@@ -6,7 +6,7 @@ const nimbleSoloMonsterCombatantSchema = () => ({
 		base: new fields.SchemaField({
 			current: new fields.NumberField({
 				required: true,
-				initial: 0,
+				initial: 1,
 				nullable: false,
 				integer: true,
 				min: 0,

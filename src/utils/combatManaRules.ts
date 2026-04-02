@@ -1,4 +1,9 @@
 import getDeterministicBonus from '../dice/getDeterministicBonus.js';
+import {
+	getItemSourceId,
+	getRulesFromCompendiumSource,
+	sourceRuleCache,
+} from './itemSourceRules.js';
 
 interface CombatManaRuleLike {
 	id?: string;
@@ -25,15 +30,6 @@ type ActorWithCollections = Actor & {
 
 const COMBAT_MANA_FLAG_SCOPE = 'nimble';
 const COMBAT_MANA_FLAG_KEY = 'combatManaGrants';
-const sourceRuleCache = new Map<string, Record<string, unknown>[]>();
-
-function getItemSourceId(item: {
-	sourceId?: string;
-	_stats?: { compendiumSource?: string };
-	flags?: { core?: { source?: string } };
-}): string | undefined {
-	return item.sourceId ?? item._stats?.compendiumSource ?? item.flags?.core?.source;
-}
 
 function normalizeGrantMap(value: unknown): CombatManaGrantMap {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
@@ -85,27 +81,7 @@ function getRuleSourcesFromItemSource(item: {
 	_stats?: { compendiumSource?: string };
 	flags?: { core?: { source?: string } };
 }): Record<string, unknown>[] {
-	const sourceId = getItemSourceId(item);
-	if (!sourceId) return [];
-
-	const cachedRules = sourceRuleCache.get(sourceId);
-	if (cachedRules && cachedRules.length > 0) {
-		return foundry.utils.deepClone(cachedRules);
-	}
-
-	const fromUuidSyncFn = (globalThis as Record<string, unknown>).fromUuidSync as
-		| ((uuid: string) => unknown)
-		| undefined;
-	if (typeof fromUuidSyncFn !== 'function') return [];
-
-	const sourceItem = fromUuidSyncFn(sourceId) as {
-		system?: { rules?: Record<string, unknown>[] };
-	} | null;
-	const sourceRules = Array.isArray(sourceItem?.system?.rules) ? sourceItem.system.rules : [];
-	if (sourceRules.length > 0) {
-		sourceRuleCache.set(sourceId, foundry.utils.deepClone(sourceRules));
-	}
-	return foundry.utils.deepClone(sourceRules);
+	return getRulesFromCompendiumSource(item);
 }
 
 export async function primeActorCombatManaSourceRules(

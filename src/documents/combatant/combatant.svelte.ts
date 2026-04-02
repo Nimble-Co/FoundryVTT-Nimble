@@ -1,4 +1,22 @@
 import { createSubscriber } from 'svelte/reactivity';
+import { initiativeRollLock } from '../../utils/initiativeRollLock.js';
+
+function getRequestedInitiativeRollLockData(
+	changes: Record<string, unknown>,
+): ReturnType<typeof initiativeRollLock.get> | null | undefined {
+	const nextLock =
+		changes[initiativeRollLock.path] ?? foundry.utils.getProperty(changes, initiativeRollLock.path);
+	if (nextLock === undefined) return undefined;
+	if (nextLock === null) return null;
+
+	return initiativeRollLock.get({
+		flags: {
+			nimble: {
+				initiativeRollLock: nextLock,
+			},
+		},
+	});
+}
 
 export class NimbleCombatant extends Combatant {
 	#subscribe: any;
@@ -58,6 +76,25 @@ export class NimbleCombatant extends Combatant {
 		await roll.evaluate();
 
 		return this.update({ initiative: roll.total ?? 0 });
+	}
+
+	override async _preUpdate(changes, options, user) {
+		const changesAsRecord = changes as Record<string, unknown>;
+		const currentLock = initiativeRollLock.get(this);
+		const requestedLock = getRequestedInitiativeRollLockData(changesAsRecord);
+
+		if (
+			currentLock &&
+			!initiativeRollLock.isStale(currentLock) &&
+			requestedLock !== undefined &&
+			requestedLock !== null &&
+			requestedLock?.requestId !== currentLock.requestId
+		) {
+			return false;
+		}
+
+		if (typeof super._preUpdate !== 'function') return true;
+		return super._preUpdate(changes, options, user);
 	}
 
 	override toObject(source = true) {
