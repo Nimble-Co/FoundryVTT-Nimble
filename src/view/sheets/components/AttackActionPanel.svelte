@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import { createAttackPanelState } from './AttackActionPanel.svelte.ts';
@@ -15,6 +15,17 @@
 		() => actor,
 		() => onActivateItem,
 	);
+
+	function handleUnarmedStrikeDragStart(event: DragEvent) {
+		if (!event.dataTransfer) return;
+		const dragData = {
+			type: 'HeroicAction',
+			actionId: 'unarmedStrike',
+			actionType: 'action',
+			name: localize('NIMBLE.ui.heroicActions.unarmedStrike'),
+		};
+		event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+	}
 </script>
 
 <section class="attack-panel">
@@ -38,6 +49,7 @@
 					properties={[localize('NIMBLE.npcSheet.melee')]}
 					showImage={false}
 					onclick={state.handleUnarmedStrike}
+					ondragstart={handleUnarmedStrikeDragStart}
 				/>
 			{/if}
 

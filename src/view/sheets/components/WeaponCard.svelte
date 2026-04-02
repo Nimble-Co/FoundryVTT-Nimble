@@ -23,13 +23,13 @@
 	class="weapon-card"
 	class:weapon-card--expanded={isExpanded}
 	class:weapon-card--disabled={disabled}
-	data-item-id={itemId}
 >
 	<div
 		class="weapon-card__row"
 		role="button"
 		tabindex={disabled ? -1 : 0}
 		draggable={ondragstart ? 'true' : 'false'}
+		data-item-id={itemId}
 		{ondragstart}
 		onclick={disabled ? null : onclick}
 		onkeydown={(e) => {

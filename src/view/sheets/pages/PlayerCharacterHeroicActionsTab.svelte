@@ -193,8 +193,11 @@
 			{actor}
 			reactionDisabled={!state.canUseReaction('defend')}
 			combinedReactionDisabled={!state.canUseInterposeAndDefendCombo}
-			onUseReaction={() => state.useReaction('defend')}
-			onUseCombinedReaction={() => state.useReactionCombo(['interpose', 'defend'])}
+			defendSpent={!state.isReactionAvailable('defend')}
+			interposeSpent={!state.isReactionAvailable('interpose')}
+			noActions={state.actionsData.current <= 0}
+			onUseReaction={(options) => state.useReaction('defend', options)}
+			onUseCombinedReaction={(options) => state.useReactionCombo(['interpose', 'defend'], options)}
 		/>
 	{/if}
 
@@ -203,8 +206,11 @@
 			{actor}
 			reactionDisabled={!state.canUseReaction('interpose')}
 			combinedReactionDisabled={!state.canUseInterposeAndDefendCombo}
-			onUseReaction={() => state.useReaction('interpose')}
-			onUseCombinedReaction={() => state.useReactionCombo(['interpose', 'defend'])}
+			defendSpent={!state.isReactionAvailable('defend')}
+			interposeSpent={!state.isReactionAvailable('interpose')}
+			noActions={state.actionsData.current <= 0}
+			onUseReaction={(options) => state.useReaction('interpose', options)}
+			onUseCombinedReaction={(options) => state.useReactionCombo(['interpose', 'defend'], options)}
 		/>
 	{/if}
 
@@ -212,7 +218,9 @@
 		<OpportunityAttackPanel
 			{actor}
 			reactionDisabled={!state.canUseReaction('opportunityAttack')}
-			onUseReaction={() => state.useReaction('opportunityAttack')}
+			opportunitySpent={!state.isReactionAvailable('opportunityAttack')}
+			noActions={state.actionsData.current <= 0}
+			onUseReaction={(options) => state.useReaction('opportunityAttack', options)}
 			showEmbeddedDocumentImages={state.showEmbeddedDocumentImages}
 		/>
 	{/if}
@@ -221,7 +229,9 @@
 		<HelpReactionPanel
 			{actor}
 			reactionDisabled={!state.canUseReaction('help')}
-			onUseReaction={() => state.useReaction('help')}
+			helpSpent={!state.isReactionAvailable('help')}
+			noActions={state.actionsData.current <= 0}
+			onUseReaction={(options) => state.useReaction('help', options)}
 		/>
 	{/if}
 </section>

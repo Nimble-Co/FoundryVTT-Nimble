@@ -8,6 +8,9 @@
 		actor,
 		reactionDisabled = true,
 		combinedReactionDisabled = true,
+		defendSpent = false,
+		interposeSpent = false,
+		noActions = false,
 		onUseReaction = async () => false,
 		onUseCombinedReaction = async () => false,
 	}: ReactionPanelProps = $props();
@@ -15,6 +18,9 @@
 	const state = createDefendPanelState(
 		() => actor,
 		() => reactionDisabled,
+		() => defendSpent,
+		() => interposeSpent,
+		() => noActions,
 		() => onUseReaction,
 		() => combinedReactionDisabled,
 		() => onUseCombinedReaction,
@@ -23,9 +29,18 @@
 	const availableTargets = $derived(state.availableTargets);
 	const selectedTarget = $derived(state.selectedTarget);
 	const armorValue = $derived(state.armorValue);
-	const isDisabled = $derived(reactionDisabled);
-	const canInterposeAndDefend = $derived(!combinedReactionDisabled);
 	const { getTargetName, handleDefend, handleInterposeAndDefend } = state;
+
+	function handleDefendDragStart(event: DragEvent) {
+		if (!event.dataTransfer) return;
+		const dragData = {
+			type: 'HeroicAction',
+			actionId: 'defend',
+			actionType: 'reaction',
+			name: localize('NIMBLE.ui.heroicActions.reactions.defend.label'),
+		};
+		event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+	}
 
 	function handleInterposeAndDefendDragStart(event: DragEvent) {
 		if (!event.dataTransfer) return;
@@ -65,7 +80,12 @@
 		})}
 	</p>
 
-	<button class="reaction-panel__button" disabled={isDisabled} onclick={handleDefend}>
+	<button
+		class="reaction-panel__button"
+		draggable="true"
+		ondragstart={handleDefendDragStart}
+		onclick={handleDefend}
+	>
 		<i class="fa-solid fa-shield"></i>
 		{localize('NIMBLE.ui.heroicActions.reactions.defend.confirm')}
 	</button>
@@ -73,7 +93,6 @@
 	<div class="reaction-panel__combined-section">
 		<button
 			class="reaction-panel__button reaction-panel__button--combined"
-			disabled={!canInterposeAndDefend}
 			draggable="true"
 			ondragstart={handleInterposeAndDefendDragStart}
 			onclick={handleInterposeAndDefend}

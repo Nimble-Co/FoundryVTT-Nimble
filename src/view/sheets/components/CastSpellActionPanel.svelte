@@ -42,12 +42,13 @@
 					{@const isExpanded = state.expandedDescriptions.has(spell._id)}
 					{@const spellEffects = state.getSpellEffects(spell)}
 
-					<li class="spell-card" class:spell-card--expanded={isExpanded} data-item-id={spell._id}>
+					<li class="spell-card" class:spell-card--expanded={isExpanded}>
 						<div
 							class="spell-card__row"
 							role="button"
 							tabindex="0"
 							draggable="true"
+							data-item-id={spell._id}
 							ondragstart={(event) => sheet._onDragStart(event)}
 							onclick={() => state.handleSpellClick(spell._id)}
 							onkeydown={(e) => state.handleKeydown(e, () => state.handleSpellClick(spell._id))}

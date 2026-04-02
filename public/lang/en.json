@@ -804,6 +804,26 @@
 				"enterCombat": "Enter combat to use actions",
 				"outsideCombat": "You are outside of combat",
 				"noActions": "You don't have any actions",
+				"confirmReaction": {
+					"title": "Use Reaction?",
+					"noActionsMessage": "You don't have any actions remaining.",
+					"spentMessage": "You've already used {reaction} this round.",
+					"bothMessage": "You don't have any actions remaining and you've already used {reaction} this round.",
+					"confirmQuestion": "Do you still want to use the {reaction} reaction?",
+					"confirm": "Use Reaction",
+					"cancel": "Cancel"
+				},
+				"confirmMove": {
+					"title": "Move?",
+					"noActionsMessage": "You've used all your actions this round.",
+					"confirmQuestion": "Do you still want to move?",
+					"confirm": "Move",
+					"cancel": "Cancel"
+				},
+				"confirmAttack": {
+					"confirmQuestion": "Do you still want to attack?",
+					"confirm": "Attack"
+				},
 				"noSpells": "You don't have any spells",
 				"endTurn": "End Turn",
 				"rollInitiative": "Roll Initiative",

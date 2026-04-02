@@ -7,19 +7,33 @@
 	let {
 		actor,
 		reactionDisabled = true,
+		helpSpent = false,
+		noActions = false,
 		onUseReaction = async () => false,
 	}: ReactionPanelProps = $props();
 
 	const state = createHelpPanelState(
 		() => actor,
 		() => reactionDisabled,
+		() => helpSpent,
+		() => noActions,
 		() => onUseReaction,
 	);
 
 	const availableTargets = $derived(state.availableTargets);
 	const selectedTarget = $derived(state.selectedTarget);
-	const isDisabled = $derived(reactionDisabled);
 	const { getTargetName, handleHelp } = state;
+
+	function handleHelpDragStart(event: DragEvent) {
+		if (!event.dataTransfer) return;
+		const dragData = {
+			type: 'HeroicAction',
+			actionId: 'help',
+			actionType: 'reaction',
+			name: localize('NIMBLE.ui.heroicActions.reactions.help.label'),
+		};
+		event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+	}
 </script>
 
 <section class="reaction-panel">
@@ -62,7 +76,12 @@
 		{localize('NIMBLE.ui.heroicActions.reactions.help.tip')}
 	</p>
 
-	<button class="reaction-panel__button" disabled={isDisabled} onclick={handleHelp}>
+	<button
+		class="reaction-panel__button"
+		draggable="true"
+		ondragstart={handleHelpDragStart}
+		onclick={handleHelp}
+	>
 		<i class="fa-solid fa-handshake-angle"></i>
 		{localize('NIMBLE.ui.heroicActions.reactions.help.confirm')}
 	</button>

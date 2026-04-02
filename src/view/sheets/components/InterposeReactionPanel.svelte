@@ -8,6 +8,9 @@
 		actor,
 		reactionDisabled = true,
 		combinedReactionDisabled = true,
+		defendSpent = false,
+		interposeSpent = false,
+		noActions = false,
 		onUseReaction = async () => false,
 		onUseCombinedReaction = async () => false,
 	}: ReactionPanelProps = $props();
@@ -15,6 +18,9 @@
 	const state = createInterposePanelState(
 		() => actor,
 		() => reactionDisabled,
+		() => defendSpent,
+		() => interposeSpent,
+		() => noActions,
 		() => onUseReaction,
 		() => combinedReactionDisabled,
 		() => onUseCombinedReaction,
@@ -22,9 +28,18 @@
 
 	const availableTargets = $derived(state.availableTargets);
 	const selectedTarget = $derived(state.selectedTarget);
-	const isDisabled = $derived(reactionDisabled);
-	const canInterposeAndDefend = $derived(!combinedReactionDisabled);
 	const { getTargetName, handleInterpose, handleInterposeAndDefend } = state;
+
+	function handleInterposeDragStart(event: DragEvent) {
+		if (!event.dataTransfer) return;
+		const dragData = {
+			type: 'HeroicAction',
+			actionId: 'interpose',
+			actionType: 'reaction',
+			name: localize('NIMBLE.ui.heroicActions.reactions.interpose.label'),
+		};
+		event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+	}
 
 	function handleInterposeAndDefendDragStart(event: DragEvent) {
 		if (!event.dataTransfer) return;
@@ -74,14 +89,18 @@
 	/>
 
 	<div class="reaction-panel__button-group">
-		<button class="reaction-panel__button" disabled={isDisabled} onclick={handleInterpose}>
+		<button
+			class="reaction-panel__button"
+			draggable="true"
+			ondragstart={handleInterposeDragStart}
+			onclick={handleInterpose}
+		>
 			<i class="fa-solid fa-people-arrows"></i>
 			{localize('NIMBLE.ui.heroicActions.reactions.interpose.confirm')}
 		</button>
 
 		<button
 			class="reaction-panel__button reaction-panel__button--combined"
-			disabled={!canInterposeAndDefend}
 			draggable="true"
 			ondragstart={handleInterposeAndDefendDragStart}
 			onclick={handleInterposeAndDefend}

@@ -1,12 +1,16 @@
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
+import localize from '../../../utils/localize.js';
 import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 
 export function createInterposePanelState(
 	getActor: () => NimbleCharacter,
 	getReactionDisabled: () => boolean,
-	getOnUseReaction: () => () => Promise<boolean>,
+	getDefendSpent: () => boolean,
+	getInterposeSpent: () => boolean,
+	getNoActions: () => boolean,
+	getOnUseReaction: () => (options?: { force?: boolean }) => Promise<boolean>,
 	getCombinedReactionDisabled: () => boolean,
-	getOnUseCombinedReaction: () => () => Promise<boolean>,
+	getOnUseCombinedReaction: () => (options?: { force?: boolean }) => Promise<boolean>,
 ) {
 	// Targeting state
 	let targetingVersion = $state(0);
@@ -28,11 +32,60 @@ export function createInterposePanelState(
 		return () => Hooks.off('targetToken', hookId);
 	});
 
-	async function handleInterpose(): Promise<void> {
-		if (getReactionDisabled()) return;
+	async function showReactionConfirmation(
+		reactionName: string,
+		spentReactionNames: string,
+		noActions: boolean,
+		hasSpentReactions: boolean,
+	): Promise<boolean> {
+		const confirmReaction = 'NIMBLE.ui.heroicActions.confirmReaction';
 
-		const reactionUsed = await getOnUseReaction()();
-		if (!reactionUsed) return;
+		let message: string;
+		if (noActions && hasSpentReactions) {
+			message = localize(`${confirmReaction}.bothMessage`, { reaction: spentReactionNames });
+		} else if (noActions) {
+			message = localize(`${confirmReaction}.noActionsMessage`);
+		} else {
+			message = localize(`${confirmReaction}.spentMessage`, { reaction: spentReactionNames });
+		}
+
+		const confirmQuestion = localize(`${confirmReaction}.confirmQuestion`, {
+			reaction: reactionName,
+		});
+
+		const confirmed = await foundry.applications.api.DialogV2.confirm({
+			window: { title: localize(`${confirmReaction}.title`) },
+			content: `<p>${message}</p><p>${confirmQuestion}</p>`,
+			yes: { label: localize(`${confirmReaction}.confirm`) },
+			no: { label: localize(`${confirmReaction}.cancel`) },
+			rejectClose: false,
+		});
+
+		return confirmed === true;
+	}
+
+	async function handleInterpose(): Promise<void> {
+		const isDisabled = getReactionDisabled();
+
+		if (isDisabled) {
+			const interposeSpent = getInterposeSpent();
+			const noActions = getNoActions();
+			const reactionName = localize('NIMBLE.ui.heroicActions.reactions.interpose.label');
+
+			const confirmed = await showReactionConfirmation(
+				reactionName,
+				reactionName,
+				noActions,
+				interposeSpent,
+			);
+			if (!confirmed) return;
+
+			const reactionUsed = await getOnUseReaction()({ force: true });
+			if (!reactionUsed) return;
+		} else {
+			const reactionUsed = await getOnUseReaction()();
+			if (!reactionUsed) return;
+		}
 
 		const actor = getActor();
 		const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
@@ -55,10 +108,36 @@ export function createInterposePanelState(
 	}
 
 	async function handleInterposeAndDefend(): Promise<void> {
-		if (getCombinedReactionDisabled()) return;
+		const isDisabled = getCombinedReactionDisabled();
 
-		const reactionUsed = await getOnUseCombinedReaction()();
-		if (!reactionUsed) return;
+		if (isDisabled) {
+			const defendSpent = getDefendSpent();
+			const interposeSpent = getInterposeSpent();
+			const noActions = getNoActions();
+			const reactionName = localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm');
+
+			// Build spent reactions string
+			const spentReactions: string[] = [];
+			if (interposeSpent)
+				spentReactions.push(localize('NIMBLE.ui.heroicActions.reactionLabels.interpose'));
+			if (defendSpent)
+				spentReactions.push(localize('NIMBLE.ui.heroicActions.reactionLabels.defend'));
+			const spentReactionNames = spentReactions.join(' & ');
+
+			const confirmed = await showReactionConfirmation(
+				reactionName,
+				spentReactionNames,
+				noActions,
+				spentReactions.length > 0,
+			);
+			if (!confirmed) return;
+
+			const reactionUsed = await getOnUseCombinedReaction()({ force: true });
+			if (!reactionUsed) return;
+		} else {
+			const reactionUsed = await getOnUseCombinedReaction()();
+			if (!reactionUsed) return;
+		}
 
 		const actor = getActor();
 		const currentArmorValue = actor.reactive.system.attributes.armor.value ?? 0;
