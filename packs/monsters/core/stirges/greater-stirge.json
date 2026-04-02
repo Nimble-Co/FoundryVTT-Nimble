@@ -2,7 +2,7 @@
 	"name": "Greater Stirge",
 	"type": "npc",
 	"folder": "d36ca31a175222a1",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/abilities/stinger-poison-green.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 0.5,
 		"height": 0.5,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/abilities/stinger-poison-green.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Evasive Flier.",
 			"type": "monsterFeature",
 			"_id": "1KIizw29U5eSzdds",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/creatures/abilities/wing-membrane-red.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",
@@ -188,7 +188,7 @@
 			"name": "Latched On.",
 			"type": "monsterFeature",
 			"_id": "zgu8nLeSNgApN0Bo",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/creatures/abilities/wing-membrane-red.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

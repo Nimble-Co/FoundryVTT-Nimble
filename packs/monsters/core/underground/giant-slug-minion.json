@@ -2,7 +2,7 @@
 	"name": "Giant Slug Minion",
 	"type": "minion",
 	"folder": "1e695c5c5b1b3293",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/environment/creatures/bug-centipede-brown.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -42,7 +42,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/environment/creatures/bug-centipede-brown.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,

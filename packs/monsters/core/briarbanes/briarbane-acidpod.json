@@ -2,7 +2,7 @@
 	"name": "Briarbane Acidpod",
 	"type": "npc",
 	"folder": "0476e3533a26f1de",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/magic/acid/projectile-faceted-glob.webp",
 	"system": {
 		"attributes": {
 			"armor": "heavy",
@@ -48,7 +48,7 @@
 		"width": 0.5,
 		"height": 0.5,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/magic/acid/projectile-faceted-glob.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Peeling Bark.",
 			"type": "monsterFeature",
 			"_id": "FlLSbnYWGLy1dyRq",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/nature/tree-elm-roots-brown.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",
@@ -188,7 +188,7 @@
 			"name": "Caustic Eruption.",
 			"type": "monsterFeature",
 			"_id": "7yeM34vkzQIjNh57",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/nature/tree-elm-roots-brown.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

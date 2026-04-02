@@ -2,7 +2,7 @@
 	"name": "Druid",
 	"type": "npc",
 	"folder": "6ca61bb961e872ce",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/magic/nature/plant-sprout-hand-flower-pink.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/magic/nature/plant-sprout-hand-flower-pink.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,

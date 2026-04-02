@@ -2,7 +2,7 @@
 	"name": "Spiny Fiend",
 	"type": "npc",
 	"folder": "91a6874c8954288c",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/unholy/demons-horned-glowing-pink.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/unholy/demons-horned-glowing-pink.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Spines.",
 			"type": "monsterFeature",
 			"_id": "zlJvsbtiOUgpIsl6",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/creatures/abilities/tail-strike-bone-orange.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

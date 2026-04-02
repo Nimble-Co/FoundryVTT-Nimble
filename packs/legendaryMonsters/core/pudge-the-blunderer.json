@@ -2,7 +2,7 @@
 	"name": "Pudge the Blunderer",
 	"type": "soloMonster",
 	"folder": null,
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/magical/humanoid-giant-forest-blue.webp",
 	"system": {
 		"attributes": {
 			"armor": "medium",
@@ -47,7 +47,7 @@
 		"width": 2,
 		"height": 2,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/magical/humanoid-giant-forest-blue.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,

@@ -2,7 +2,7 @@
 	"folder": null,
 	"name": "Wand of Rat",
 	"type": "object",
-	"img": "icons/weapons/wands/wand-carved-bone-white.webp",
+	"img": "icons/creatures/mammals/rodent-rat-diseaed-gray.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",

@@ -2,7 +2,7 @@
 	"name": "Gray Ooze",
 	"type": "npc",
 	"folder": "b46bff9abe4a012b",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/slimes/slime-movement-dripping-pseudopods-green.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/slimes/slime-movement-dripping-pseudopods-green.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Digestive Touch.",
 			"type": "monsterFeature",
 			"_id": "lIo7EYlBHMEavbIy",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/acid/dissolve-bone-white.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",
@@ -188,7 +188,7 @@
 			"name": "Goopy.",
 			"type": "monsterFeature",
 			"_id": "gLsdGYzxUAyYXKYB",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/creatures/slimes/slime-movement-dripping-pseudopods-green.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

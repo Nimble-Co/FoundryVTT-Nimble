@@ -2,7 +2,7 @@
 	"name": "Gnoll Packleader",
 	"type": "npc",
 	"folder": "e4c215cd64d7d6f8",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
 	"system": {
 		"attributes": {
 			"armor": "medium",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/abilities/mouth-teeth-long-red.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Frenzy.",
 			"type": "monsterFeature",
 			"_id": "BXW0v2cA4Iy5LfHo",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/skills/wounds/blood-drip-droplet-red.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

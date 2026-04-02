@@ -2,7 +2,7 @@
 	"name": "Duskprowler",
 	"type": "npc",
 	"folder": "6ca61bb961e872ce",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/mammals/wolf-shadow-black.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 2,
 		"height": 2,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/mammals/wolf-shadow-black.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Illusory Aura.",
 			"type": "monsterFeature",
 			"_id": "2pr9fr6WZQbYRsk6",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/control/silhouette-aura-energy-purple.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

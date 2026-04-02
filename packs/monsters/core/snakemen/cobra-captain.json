@@ -2,7 +2,7 @@
 	"name": "Cobra Captain",
 	"type": "npc",
 	"folder": "186fd36bd601cbc8",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/magic/nature/root-vine-coiled-crook.webp",
 	"system": {
 		"attributes": {
 			"armor": "medium",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/magic/nature/root-vine-coiled-crook.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -288,7 +288,7 @@
 			"name": "Coiling Strike.",
 			"type": "monsterFeature",
 			"_id": "iUPaVF4MDEPoq7JR",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/creatures/reptiles/snake-tail-green.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

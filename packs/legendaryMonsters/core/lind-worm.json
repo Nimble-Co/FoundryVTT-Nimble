@@ -2,7 +2,7 @@
 	"name": "Lind Worm",
 	"type": "soloMonster",
 	"folder": null,
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/reptiles/serpent-horned-green.webp",
 	"system": {
 		"attributes": {
 			"armor": "medium",
@@ -47,7 +47,7 @@
 		"width": 3,
 		"height": 3,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/reptiles/serpent-horned-green.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,

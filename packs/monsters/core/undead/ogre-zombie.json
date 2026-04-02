@@ -2,7 +2,7 @@
 	"name": "Ogre Zombie",
 	"type": "npc",
 	"folder": "523dda610883c011",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/magic/death/hand-dirt-undead-zombie.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 2,
 		"height": 2,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/magic/death/hand-dirt-undead-zombie.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Unliving, Undying.",
 			"type": "monsterFeature",
 			"_id": "XXzAzmfPkncFJEXV",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/life/heart-cross-strong-flame-purple-orange.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

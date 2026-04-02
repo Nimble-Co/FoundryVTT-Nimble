@@ -2,7 +2,7 @@
 	"name": "Cultist",
 	"type": "npc",
 	"folder": "3f82818ca74b49f9",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/magic/unholy/silhouette-robe-evil-glow.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/magic/unholy/silhouette-robe-evil-glow.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Fanatical Zeal.",
 			"type": "monsterFeature",
 			"_id": "2unpi58GaSgsT7x9",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/unholy/beam-impact-purple.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",
@@ -417,7 +417,7 @@
 			"name": "Despair.",
 			"type": "monsterFeature",
 			"_id": "hSPjwhPQdgoCC8B6",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/unholy/beam-impact-purple.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

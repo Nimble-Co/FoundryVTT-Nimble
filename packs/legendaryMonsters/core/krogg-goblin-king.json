@@ -2,7 +2,7 @@
 	"name": "Krogg, Goblin King",
 	"type": "soloMonster",
 	"folder": null,
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/magical/humanoid-giant-forest-blue.webp",
 	"system": {
 		"attributes": {
 			"armor": "medium",
@@ -47,7 +47,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/magical/humanoid-giant-forest-blue.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,

@@ -2,7 +2,7 @@
 	"name": "Kobold Clanger",
 	"type": "npc",
 	"folder": "fbd108fbd999fb4e",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "modules/nimble/assets/monsterImages/Kobold.webp",
 	"system": {
 		"attributes": {
 			"armor": "heavy",
@@ -48,7 +48,7 @@
 		"width": 0.5,
 		"height": 0.5,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "modules/nimble/assets/monsterImages/Kobold.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "CLANG!",
 			"type": "monsterFeature",
 			"_id": "1jCcbMSgYbekPvVb",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/tools/instruments/cymbal-gong-gold.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

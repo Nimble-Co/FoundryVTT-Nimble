@@ -2,7 +2,7 @@
 	"name": "Giant Venus Flytrap",
 	"type": "npc",
 	"folder": "0476e3533a26f1de",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/abilities/mouth-teeth-long-red.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 3,
 		"height": 3,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/abilities/mouth-teeth-long-red.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,

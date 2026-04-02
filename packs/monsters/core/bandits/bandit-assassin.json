@@ -2,7 +2,7 @@
 	"name": "Bandit Assassin",
 	"type": "npc",
 	"folder": "718123f1f5a7d7b3",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "modules/nimble/assets/monsterImages/Bandit.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "modules/nimble/assets/monsterImages/Bandit.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Parry.",
 			"type": "monsterFeature",
 			"_id": "PJi4lZ14qn7A9s83",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/skills/melee/swords-parry-block-yellow.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",
@@ -188,7 +188,7 @@
 			"name": "Sneak.",
 			"type": "monsterFeature",
 			"_id": "Juc4sTI1xRFF5fMD",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/perception/silhouette-stealth-shadow.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

@@ -2,7 +2,7 @@
 	"name": "Worg",
 	"type": "npc",
 	"folder": "ed190d32f397df62",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/mammals/rabbit-movement-glowing-green.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 2,
 		"height": 2,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/mammals/rabbit-movement-glowing-green.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Savage.",
 			"type": "monsterFeature",
 			"_id": "GZDj8Md6Qk0EnkSo",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/creatures/abilities/fangs-teeth-sharp.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

@@ -2,7 +2,7 @@
 	"name": "Goblin Taskmaster",
 	"type": "npc",
 	"folder": "6e14050118400068",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "modules/nimble/assets/monsterImages/Goblin.webp",
 	"system": {
 		"attributes": {
 			"armor": "medium",
@@ -48,7 +48,7 @@
 		"width": 0.5,
 		"height": 0.5,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "modules/nimble/assets/monsterImages/Goblin.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Haha, Missed Me!",
 			"type": "monsterFeature",
 			"_id": "UVNyhHRwTZbmJcGX",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/skills/social/trading-justice-scale-yellow.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",
@@ -188,7 +188,7 @@
 			"name": "Meat Shield.",
 			"type": "monsterFeature",
 			"_id": "E9oFUhnyB7PssXIs",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/equipment/shield/buckler-wooden-round.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",
@@ -417,7 +417,7 @@
 				"subtype": "action"
 			},
 			"_id": "rkjPMI3oZQdXCchG",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/skills/social/wave-halt-stop.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,

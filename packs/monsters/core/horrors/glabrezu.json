@@ -2,7 +2,7 @@
 	"name": "Glabrezu",
 	"type": "npc",
 	"folder": "91a6874c8954288c",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/unholy/demons-horned-glowing-pink.webp",
 	"system": {
 		"attributes": {
 			"armor": "heavy",
@@ -48,7 +48,7 @@
 		"width": 2,
 		"height": 2,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/unholy/demons-horned-glowing-pink.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,

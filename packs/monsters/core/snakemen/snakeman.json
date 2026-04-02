@@ -2,7 +2,7 @@
 	"name": "Snakeman",
 	"type": "npc",
 	"folder": "186fd36bd601cbc8",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/reptiles/snake-fangs-bite-green.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/reptiles/snake-fangs-bite-green.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Coiling strike.",
 			"type": "monsterFeature",
 			"_id": "QOaXFOO39SzKnszc",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/creatures/reptiles/snake-tail-green.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",
@@ -318,7 +318,7 @@
 				"subtype": "action"
 			},
 			"_id": "HAwzrIkXLFFxeQTY",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/creatures/reptiles/snake-tail-green.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,
