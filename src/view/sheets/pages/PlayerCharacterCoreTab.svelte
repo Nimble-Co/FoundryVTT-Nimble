@@ -40,35 +40,42 @@
 	}
 
 	async function rollInitiative() {
-		// Check if there's an active combat on the current scene with this character
-		const combat = game.combats?.viewed;
-		const sceneId = canvas.scene?.id;
+		if (initiativeRequestPending) return;
+		initiativeRequestPending = true;
 
-		// If character is in combat for the current scene and hasn't rolled, use combat.rollInitiative
-		if (combat && sceneId && combat.scene?.id === sceneId) {
+		try {
+			const combat = game.combats?.viewed;
 			const combatant = getViewedCombatantForCurrentScene();
-			if (combatant && initiativeRollLock.hasActiveLock(combatant)) return;
 
-			if (combatant && combatant.initiative === null && combatant.id) {
+			if (combatant) {
+				if (initiativeRollLock.hasActiveLock(combatant)) return;
+				if (combatant.initiative !== null) {
+					ui.notifications?.info(localize('NIMBLE.ui.heroicActions.initiativeAlreadyRolled'));
+					return;
+				}
+				if (!combat || !combatant.id) return;
+
 				await combat.rollInitiative([combatant.id]);
 				return;
 			}
+
+			const roll = Roll.create(actor._getInitiativeFormula({}), actor.getRollData());
+			await roll.evaluate();
+
+			await roll.toMessage({
+				speaker: ChatMessage.getSpeaker({ actor }),
+				flavor: game.i18n.format('COMBAT.RollsInitiative', { name: actor.name }),
+				flags: { core: { initiativeRoll: true } },
+			});
+		} finally {
+			initiativeRequestPending = false;
 		}
-
-		// Always roll initiative to chat
-		const roll = Roll.create(actor._getInitiativeFormula({}), actor.getRollData());
-		await roll.evaluate();
-
-		await roll.toMessage({
-			speaker: ChatMessage.getSpeaker({ actor }),
-			flavor: game.i18n.format('COMBAT.RollsInitiative', { name: actor.name }),
-			flags: { core: { initiativeRoll: true } },
-		});
 	}
 
 	const { armorTypesPlural, languages } = CONFIG.NIMBLE;
 	let actor: NimbleCharacter = getContext('actor');
 	const subscribeCombatState = createSubscriber(registerCombatStateHooks);
+	let initiativeRequestPending = $state(false);
 
 	let flags = $derived(actor.reactive.flags.nimble);
 	let editingEnabled = $derived(flags?.editingEnabled ?? false);
@@ -79,6 +86,7 @@
 	let initiative = $derived(actor.reactive.system.attributes.initiative.mod);
 	let initiativePending = $derived.by(() => {
 		subscribeCombatState();
+		if (initiativeRequestPending) return true;
 		const combatant = getViewedCombatantForCurrentScene();
 		if (!combatant) return false;
 		return initiativeRollLock.hasActiveLock(combatant);

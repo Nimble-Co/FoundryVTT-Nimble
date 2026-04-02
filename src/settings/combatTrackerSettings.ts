@@ -13,6 +13,8 @@ export const COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY = 'combatTrackerCtWidthLevel
 export const COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY = 'combatTrackerCtCardSizeLevel';
 export const COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY = 'combatTrackerCtActionDiceColor';
 export const COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY = 'combatTrackerCtReactionColor';
+export const COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY =
+	'combatTrackerCtLeftToRightOrdering';
 export const COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME = 'nimble:ct-client-setting-updated';
 export const CURRENT_TURN_ANIMATION_SETTING_KEYS = {
 	pulseAnimation: 'combatTrackerCurrentTurnPulseAnimation',
@@ -49,6 +51,7 @@ const DEFAULT_CT_WIDTH_LEVEL_SETTING = 5;
 const DEFAULT_CT_CARD_SIZE_LEVEL_SETTING = 5;
 const DEFAULT_CT_ACTION_DICE_COLOR_SETTING = '#ffffff';
 const DEFAULT_CT_REACTION_COLOR_SETTING = '#4fc3f7';
+const DEFAULT_CT_LEFT_TO_RIGHT_ORDERING_SETTING = false;
 const DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS: CurrentTurnAnimationSettings = {
 	pulseAnimation: true,
 	pulseSpeed: 50,
@@ -299,6 +302,15 @@ export function registerCombatTrackerSettings(): void {
 		},
 	});
 
+	registerWorldSetting(COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY, {
+		name: 'Combat Tracker Left-to-Right Ordering',
+		hint: 'Display combatants in fixed left-to-right order instead of centering the active combatant',
+		scope: 'world',
+		config: false,
+		type: Boolean,
+		default: DEFAULT_CT_LEFT_TO_RIGHT_ORDERING_SETTING,
+	});
+
 	// Legacy settings retained as hidden registrations so existing worlds keep their values.
 	registerWorldSetting(LEGACY_CURRENT_TURN_COLOR_SETTING_KEY, {
 		name: 'Combat Tracker Current Turn Color (Legacy)',
@@ -449,6 +461,15 @@ export function getCombatTrackerCtCardSizeLevel(): number {
 	);
 }
 
+export function getCombatTrackerCtLeftToRightOrdering(): boolean {
+	return Boolean(
+		game.settings.get(
+			'nimble' as 'core',
+			COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY as 'rollMode',
+		),
+	);
+}
+
 export function getCombatTrackerActionDiceColor(): string {
 	return normalizeHexColor(
 		game.settings.get(
@@ -504,6 +525,12 @@ export function isCombatTrackerCardSizeLevelSettingKey(settingKey: unknown): boo
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY) return true;
 	return settingKey === `nimble.${COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY}`;
+}
+
+export function isCombatTrackerLeftToRightOrderingSettingKey(settingKey: unknown): boolean {
+	if (typeof settingKey !== 'string') return false;
+	if (settingKey === COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY) return true;
+	return settingKey === `nimble.${COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY}`;
 }
 
 export function isCombatTrackerActionDiceColorSettingKey(settingKey: unknown): boolean {
@@ -650,6 +677,14 @@ export async function setCombatTrackerCtCardSizeLevel(value: number): Promise<vo
 		'nimble' as 'core',
 		COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY as 'rollMode',
 		normalizeCtCardSizeLevel(value) as never,
+	);
+}
+
+export async function setCombatTrackerCtLeftToRightOrdering(value: boolean): Promise<void> {
+	await game.settings.set(
+		'nimble' as 'core',
+		COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY as 'rollMode',
+		Boolean(value) as never,
 	);
 }
 

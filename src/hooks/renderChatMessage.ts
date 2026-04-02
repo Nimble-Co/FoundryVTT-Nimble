@@ -103,60 +103,48 @@ export default function renderChatMessageHTML(message, html) {
 		| typeof NimbleSpellCard
 		| typeof NimbleLevelUpSummaryCard;
 
-	const nimbleChatCardType = (
-		message as {
-			flags?: {
-				nimble?: { chatCardType?: string };
-			};
-		}
-	).flags?.nimble?.chatCardType;
-
-	if (message.type === 'base' && nimbleChatCardType === 'minionGroupAttack') {
-		component = NimbleMinionGroupAttackCard;
-	} else {
-		switch (message.type) {
-			case 'abilityCheck':
-				component = NimbleAbilityCheckCard;
-				break;
-			case 'assessAction':
-				component = NimbleAssessActionCard;
-				break;
-			case 'feature':
-				component = NimbleFeatureCard;
-				break;
-			case 'fieldRest':
-				component = NimbleFieldRestCard;
-				break;
-			case 'object':
-				component = NimbleObjectCard;
-				break;
-			case 'reaction':
-				component = NimbleReactionCard;
-				break;
-			case 'safeRest':
-				component = NimbleSafeRestCard;
-				break;
-			case 'levelUpSummary':
-				component = NimbleLevelUpSummaryCard;
-				break;
-			case 'minionGroupAttack':
-				component = NimbleMinionGroupAttackCard;
-				break;
-			case 'moveAction':
-				component = NimbleMoveActionCard;
-				break;
-			case 'savingThrow':
-				component = NimbleSavingThrowCard;
-				break;
-			case 'skillCheck':
-				component = NimbleSkillCheckCard;
-				break;
-			case 'spell':
-				component = NimbleSpellCard;
-				break;
-			default:
-				return;
-		}
+	switch (message.type) {
+		case 'abilityCheck':
+			component = NimbleAbilityCheckCard;
+			break;
+		case 'assessAction':
+			component = NimbleAssessActionCard;
+			break;
+		case 'feature':
+			component = NimbleFeatureCard;
+			break;
+		case 'fieldRest':
+			component = NimbleFieldRestCard;
+			break;
+		case 'object':
+			component = NimbleObjectCard;
+			break;
+		case 'reaction':
+			component = NimbleReactionCard;
+			break;
+		case 'safeRest':
+			component = NimbleSafeRestCard;
+			break;
+		case 'levelUpSummary':
+			component = NimbleLevelUpSummaryCard;
+			break;
+		case 'minionGroupAttack':
+			component = NimbleMinionGroupAttackCard;
+			break;
+		case 'moveAction':
+			component = NimbleMoveActionCard;
+			break;
+		case 'savingThrow':
+			component = NimbleSavingThrowCard;
+			break;
+		case 'skillCheck':
+			component = NimbleSkillCheckCard;
+			break;
+		case 'spell':
+			component = NimbleSpellCard;
+			break;
+		default:
+			return;
 	}
 
 	target.classList.add('nimble-chat-card');

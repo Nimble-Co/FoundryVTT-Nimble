@@ -7,6 +7,7 @@ import calculateRollMode from '../../utils/calculateRollMode.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
+import { HP_SCROLLING_TEXT_COLORS } from './hpScrollingTextColors.ts';
 
 export type { ActorRollOptions, CheckRollDialogData, SystemActorTypes };
 
@@ -46,6 +47,32 @@ interface BaseActorSystemData {
 	savingThrows?: Record<string, { mod: number; defaultRollMode?: number }>;
 }
 
+interface HpSnapshot {
+	value: number;
+	max: number;
+	temp: number;
+}
+
+interface HpTrackingOptions {
+	nimble?: {
+		previousHp?: HpSnapshot;
+	};
+}
+
+type HpScrollingEffectType = keyof typeof HP_SCROLLING_TEXT_COLORS;
+
+function toFiniteInteger(value: unknown): number {
+	const numericValue = Number(value);
+	if (!Number.isFinite(numericValue)) return 0;
+	return Math.floor(numericValue);
+}
+
+function toSignedIntegerString(value: number): string {
+	const integerValue = Math.trunc(value);
+	if (integerValue >= 0) return `+${integerValue}`;
+	return `${integerValue}`;
+}
+
 class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> extends Actor {
 	declare type: ActorType;
 
@@ -56,12 +83,14 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	declare items: foundry.abstract.EmbeddedCollection<NimbleBaseItem, Actor.Implementation>;
 
 	#subscribe: ReturnType<typeof createSubscriber>;
+	#lastHpSnapshot: HpSnapshot | null = null;
 
 	tags: Set<string> = new Set();
 
 	// *************************************************
 	constructor(data: Actor.CreateData, context?: Actor.ConstructionContext) {
 		super(data, context);
+		this.#lastHpSnapshot = this.#getCurrentHpSnapshot();
 
 		this.#subscribe = createSubscriber((update) => {
 			const updateActorHook = Hooks.on('updateActor', (triggeringDocument, _, { diff }) => {
@@ -254,11 +283,154 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	/** ------------------------------------------------------ */
 	/**                Data Update Helpers                     */
 	/** ------------------------------------------------------ */
-	async applyHealing(healing: number, healingType?: string) {
+	#getCurrentHpSnapshot(): HpSnapshot {
+		const systemData = this.system as unknown as BaseActorSystemData | undefined;
+		const hpData = systemData?.attributes?.hp ?? { value: 0, max: 0, temp: 0 };
+		return {
+			value: Math.max(0, toFiniteInteger(hpData.value)),
+			max: Math.max(0, toFiniteInteger(hpData.max)),
+			temp: Math.max(0, toFiniteInteger(hpData.temp)),
+		};
+	}
+
+	#emitHpChangeScrollingText(changes: { hp: number; temp: number; total: number }): void {
+		let effectType: HpScrollingEffectType | null = null;
+		let effectValue = 0;
+
+		if (changes.hp < 0) {
+			effectType = 'damage';
+			effectValue = changes.total;
+		} else if (changes.hp > 0) {
+			effectType = 'healing';
+			effectValue = changes.total;
+		} else if (changes.temp !== 0) {
+			effectType = 'temp';
+			effectValue = changes.temp;
+		}
+
+		if (!effectType || effectValue === 0) return;
+
+		const canvasReference = (
+			globalThis as {
+				canvas?: {
+					ready?: boolean;
+					interface?: unknown;
+				};
+			}
+		).canvas;
+		const canvasInterface = canvasReference?.interface as
+			| {
+					createScrollingText?: (
+						origin: { x: number; y: number },
+						content: string,
+						options?: {
+							anchor?: number;
+							jitter?: number;
+							fontSize?: number;
+							fill?: number;
+							stroke?: number;
+							strokeThickness?: number;
+						},
+					) => Promise<void>;
+			  }
+			| undefined;
+		if (!canvasReference?.ready || !canvasInterface?.createScrollingText) return;
+
+		const tokens = this.isToken ? [this.token] : this.getActiveTokens(true, true);
+		if (tokens.length < 1) return;
+
+		const fill = HP_SCROLLING_TEXT_COLORS[effectType];
+
+		for (const tokenDocument of tokens) {
+			if (!tokenDocument) continue;
+
+			const isSecret = (tokenDocument as TokenDocument & { isSecret?: boolean }).isSecret === true;
+			const tokenObject = tokenDocument.object as {
+				visible?: boolean;
+				center?: { x: number; y: number };
+			} | null;
+			if (!tokenObject?.visible || !tokenObject.center || isSecret) continue;
+
+			const ringToken = tokenDocument as TokenDocument & {
+				hasDynamicRing?: boolean;
+				flashRing?: (ringType: string) => void;
+			};
+			if (ringToken.hasDynamicRing && ringToken.flashRing) {
+				ringToken.flashRing(effectType);
+			}
+
+			void canvasInterface.createScrollingText(
+				tokenObject.center,
+				toSignedIntegerString(effectValue),
+				{
+					anchor: CONST.TEXT_ANCHOR_POINTS.TOP,
+					jitter: 0.25,
+					fill,
+				},
+			);
+		}
+	}
+
+	async applyDamage(damage: number): Promise<void> {
+		const damageAmount = Math.floor(Math.abs(Number(damage)));
+		if (!Number.isFinite(damageAmount) || damageAmount <= 0) return;
+
+		const { value, temp } = this.#getCurrentHpSnapshot();
+		const absorbedByTemp = Math.min(temp, damageAmount);
+		const nextTemp = temp - absorbedByTemp;
+		const remainingDamage = damageAmount - absorbedByTemp;
+		const nextHp = Math.max(value - remainingDamage, 0);
+
 		const updates: Record<string, unknown> = {};
-		const systemData = this.system as unknown as BaseActorSystemData;
-		const { value, max, temp } = systemData.attributes.hp;
-		const healingAmount = Math.floor(healing);
+		if (nextTemp !== temp) updates['system.attributes.hp.temp'] = nextTemp;
+		if (nextHp !== value) updates['system.attributes.hp.value'] = nextHp;
+
+		if (Object.keys(updates).length < 1) return;
+		await this.update(updates as Actor.UpdateData);
+	}
+
+	async setCurrentHP(value: number): Promise<void> {
+		const hpData = this.#getCurrentHpSnapshot();
+		const requestedValue = Math.floor(Number(value));
+		if (!Number.isFinite(requestedValue)) return;
+
+		const nextValue = Math.clamp(requestedValue, 0, hpData.max);
+		if (nextValue === hpData.value) return;
+
+		await this.update({ 'system.attributes.hp.value': nextValue } as Actor.UpdateData);
+	}
+
+	async setMaxHP(value: number): Promise<void> {
+		const hpData = this.#getCurrentHpSnapshot();
+		const requestedMax = Math.floor(Number(value));
+		if (!Number.isFinite(requestedMax)) return;
+
+		const nextMax = Math.max(0, requestedMax);
+		const nextCurrent = Math.min(hpData.value, nextMax);
+
+		const updates: Record<string, unknown> = {};
+		if (nextMax !== hpData.max) updates['system.attributes.hp.max'] = nextMax;
+		if (nextCurrent !== hpData.value) updates['system.attributes.hp.value'] = nextCurrent;
+
+		if (Object.keys(updates).length < 1) return;
+		await this.update(updates as Actor.UpdateData);
+	}
+
+	async setTempHP(value: number): Promise<void> {
+		const hpData = this.#getCurrentHpSnapshot();
+		const requestedTemp = Math.floor(Number(value));
+		if (!Number.isFinite(requestedTemp)) return;
+
+		const nextTemp = Math.max(0, requestedTemp);
+		if (nextTemp === hpData.temp) return;
+
+		await this.update({ 'system.attributes.hp.temp': nextTemp } as Actor.UpdateData);
+	}
+
+	async applyHealing(healing: number, healingType?: string) {
+		const { value, temp } = this.#getCurrentHpSnapshot();
+		const healingAmount = Math.floor(Number(healing));
+		if (!Number.isFinite(healingAmount) || healingAmount <= 0) return;
 
 		if (healingType === 'tempHealing') {
 			if (healingAmount <= temp) {
@@ -268,15 +440,11 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 				return;
 			}
 
-			updates['system.attributes.hp.temp'] = healingAmount;
-		} else {
-			updates['system.attributes.hp.value'] = Math.clamp(value + healingAmount, value, max);
+			await this.setTempHP(healingAmount);
+			return;
 		}
 
-		// TODO: Add cascading numbers
-
-		// TODO: Call Hook
-		await this.update(updates);
+		await this.setCurrentHP(value + healingAmount);
 	}
 
 	/** ------------------------------------------------------ */
@@ -613,6 +781,15 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		user: User.Implementation,
 	) {
 		const changesObj = changes as Record<string, unknown>;
+		const hpWasChanged =
+			foundry.utils.hasProperty(changesObj, 'system.attributes.hp.value') ||
+			foundry.utils.hasProperty(changesObj, 'system.attributes.hp.temp');
+		if (hpWasChanged) {
+			const optionsWithTracking = options as Actor.Database.PreUpdateOptions & HpTrackingOptions;
+			optionsWithTracking.nimble ??= {};
+			optionsWithTracking.nimble.previousHp = this.#getCurrentHpSnapshot();
+		}
+
 		// If hp drops below 0, set the value to 0.
 		const hpValue = foundry.utils.getProperty(changesObj, 'system.attributes.hp.value');
 		if (typeof hpValue === 'number' && hpValue < 0) {
@@ -635,6 +812,31 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		}
 
 		return super._preUpdate(changes, options, user);
+	}
+
+	override _onUpdate(
+		_changed: Actor.UpdateData,
+		options: Actor.Database.OnUpdateOperation,
+		_userId: string,
+	): void {
+		super._onUpdate(_changed, options, _userId);
+
+		const currentHp = this.#getCurrentHpSnapshot();
+		const optionsWithTracking = options as Actor.Database.OnUpdateOperation & HpTrackingOptions;
+		const previousHp = optionsWithTracking.nimble?.previousHp ?? this.#lastHpSnapshot;
+
+		this.#lastHpSnapshot = currentHp;
+		if (!previousHp) return;
+
+		const hpDelta = currentHp.value - previousHp.value;
+		const tempDelta = currentHp.temp - previousHp.temp;
+		if (hpDelta === 0 && tempDelta === 0) return;
+
+		this.#emitHpChangeScrollingText({
+			hp: hpDelta,
+			temp: tempDelta,
+			total: hpDelta + tempDelta,
+		});
 	}
 }
 

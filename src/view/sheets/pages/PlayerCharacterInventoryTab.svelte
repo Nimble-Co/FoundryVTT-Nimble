@@ -249,7 +249,7 @@
 								{item.reactive.name}
 							</h4>
 
-							{#if rules && rules.hasRuleOfType('armorClass')}
+							{#if rules && (item.reactive.system.rules?.length ?? 0) > 0}
 								<button
 									class="nimble-button"
 									data-button-variant="icon"

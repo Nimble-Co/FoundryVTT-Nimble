@@ -237,6 +237,7 @@
 			"taunted": "Taunted",
 			"unconscious": "Unconscious",
 			"wounded": "Wounded",
+			"lastStand": "Last Stand",
 			"lionhearted": "Lionhearted"
 		},
 		"conditionDescriptions": {
@@ -256,6 +257,7 @@
 			"hampered": "<p>Any creature with their actions or movement reduce (e.g. Dazed, Grappled, Prone, Difficult Terrain).</p>",
 			"incapacitated": "<p>Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"invisible": "<p>Cannot be seen. Your attacks have advantage, and attacks against you have disadvantage.</p>",
+			"lastStand": "<p>At or below the Last Stand threshold. Triggers Last Stand abilities.</p>",
 			"paralyzed": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"petrified": "<p>Incapacitated. You have all the benefits and drawbacks of being a rock! Immune to most damage except from large explosions, picks, or similar tools.</p>",
 			"poisoned": "<p>Disadvantage on rolls.</p>",
@@ -536,9 +538,9 @@
 			"hitDiceAdvantage": "Hit Dice Advantage",
 			"incrementHitDice": "Increment Hit Dice",
 			"initiativeBonus": "Initiative Bonus",
-			"lionheartedBonus": "Lionhearted Bonus",
 			"initiativeMessage": "Initiative Message",
 			"initiativeRollMode": "Initiative Roll Mode",
+			"lionheartedBonus": "Lionhearted Bonus",
 			"maxHitDice": "Hit Dice",
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
@@ -701,6 +703,33 @@
 				"woundsValue": "Wounds {current}/{max}",
 				"removeFromCombat": "Remove from Combat"
 			},
+			"ctSettings": {
+				"sizeSection": "Size",
+				"width": "Width",
+				"cardSize": "Card Size",
+				"layoutSection": "Layout",
+				"leftToRightOrdering": "Left to Right Ordering",
+				"permissionsSection": "Permissions",
+				"allowPlayersViewExpandedMonsters": "Allow Players to View Expanded Monsters",
+				"drawersAndBarsSection": "Drawers & Bars",
+				"resourceDrawerOpensOnHover": "Resource Drawer Opens On Hover",
+				"playerHpBarText": "Player HP Bar Text",
+				"showNonPlayerHpBar": "Show Non-player HP Bar",
+				"nonPlayerHpBarText": "Non-player HP Bar Text",
+				"colorsSection": "Colors",
+				"actionColor": "Action Color",
+				"reactionColor": "Reaction Color",
+				"colorWhite": "White",
+				"colorGreen": "Green",
+				"colorRed": "Red",
+				"colorOrange": "Orange",
+				"colorYellow": "Yellow",
+				"colorBlue": "Blue",
+				"colorPurple": "Purple",
+				"hpBarTextNone": "None",
+				"hpBarTextHealthState": "Health State",
+				"hpBarTextPercentage": "HP %"
+			},
 			"heroicActions": {
 				"title": "Heroic Actions",
 				"reactionsTitle": "Heroic Reactions",
@@ -788,6 +817,7 @@
 				"useActionsFirst": "Use your actions first",
 				"noPermissionEndTurn": "You do not have permission to end turns.",
 				"noPermissionRollInitiative": "You do not have permission to roll initiative.",
+				"initiativeAlreadyRolled": "Initiative has already been rolled for this combatant.",
 				"selectAttack": "Attack",
 				"selectSpell": "Cast Spell",
 				"noWeapons": "No weapons or attack features found.",
@@ -1098,7 +1128,8 @@
 			"healing": "Healing",
 			"rolled": "Rolled",
 			"advantage": "Advantage",
-			"restedWithoutSpending": "Rested without spending hit dice"
+			"restedWithoutSpending": "Rested without spending hit dice",
+			"manaRestored": "Mana Restored"
 		},
 		"npcSheet": {
 			"armor": "Armor",

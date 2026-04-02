@@ -1,3 +1,5 @@
+import { combatantActionMutationQueue } from './combatantActionMutationQueue.js';
+
 export const COMBATANT_ACTIONS_CURRENT_PATH = 'system.actions.base.current';
 export const COMBATANT_ACTIONS_MAX_PATH = 'system.actions.base.max';
 const COMBAT_TURN_SOCKET_NAME = 'system.nimble';
@@ -119,7 +121,12 @@ async function handleAdvanceCombatTurnRequest(payload: unknown): Promise<void> {
 	await combat.nextTurn();
 }
 
+let hasRegisteredCombatTurnSocketListener = false;
+
 export function registerCombatTurnSocketListener(): void {
+	if (hasRegisteredCombatTurnSocketListener) return;
+	hasRegisteredCombatTurnSocketListener = true;
+
 	const socket = game.socket as
 		| {
 				on?: (eventName: string, listener: (payload: unknown) => void) => void;
@@ -127,6 +134,9 @@ export function registerCombatTurnSocketListener(): void {
 		| undefined;
 	socket?.on?.(COMBAT_TURN_SOCKET_NAME, (payload) => {
 		void handleAdvanceCombatTurnRequest(payload);
+	});
+	Hooks.on('deleteCombat', (combat: Combat) => {
+		combatantActionMutationQueue.clearForCombat(combat.id ?? combat._id ?? null);
 	});
 }
 
@@ -136,6 +146,11 @@ export async function requestAdvanceCombatTurn(params: {
 }): Promise<boolean> {
 	const activeCombatant = params.combat.combatant ?? null;
 	if (!activeCombatant) return false;
+	const activeCombatantId = params.activeCombatantId ?? activeCombatant.id ?? null;
+	await combatantActionMutationQueue.waitForCombatant({
+		combat: params.combat,
+		combatantId: activeCombatantId,
+	});
 
 	if (game.user?.isGM) {
 		await params.combat.nextTurn();
@@ -157,7 +172,7 @@ export async function requestAdvanceCombatTurn(params: {
 		type: ADVANCE_COMBAT_TURN_REQUEST_TYPE,
 		combatId: params.combat.id ?? params.combat._id ?? '',
 		userId: game.user.id,
-		activeCombatantId: params.activeCombatantId ?? activeCombatant.id ?? null,
+		activeCombatantId,
 	});
 	return true;
 }

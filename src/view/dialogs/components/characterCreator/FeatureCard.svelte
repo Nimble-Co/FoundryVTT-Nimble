@@ -13,14 +13,13 @@
 	}
 </script>
 
-<li class="feature-item">
+<li class="feature-item" class:expanded={state.isExpanded}>
 	<div
 		class="feature-row"
 		class:selected={isSelected}
-		class:expanded={state.isExpanded}
-		onclick={state.toggleExpanded}
 		role="button"
 		tabindex="0"
+		onclick={state.toggleExpanded}
 		onkeydown={(e) => e.key === 'Enter' && state.toggleExpanded()}
 	>
 		{#if !isSelected}
@@ -47,45 +46,67 @@
 		</button>
 	</div>
 
-	{#if state.isExpanded}
-		<div class="accordion-content">
-			<div class="description">
-				{#if state.descriptionParts.length > 0}
-					{#each state.descriptionParts as part}
-						{#if part.type === 'spell' && part.spell}
-							<SpellReferenceCard spell={part.spell} />
-						{:else if part.type === 'text'}
-							{@html part.content}
-						{/if}
-					{/each}
-				{:else}
-					<p>{localize('NIMBLE.classFeatureSelection.noDescriptionAvailable')}</p>
-				{/if}
-			</div>
-
-			{#if onSelect}
-				<button
-					class="nimble-button"
-					data-button-variant="full-width"
-					type="button"
-					onclick={handleSelect}
-				>
-					{#if isSelected}
-						<i class="fa-solid fa-check"></i>
-						{localize('NIMBLE.classFeatureSelection.selected')}
-					{:else}
-						{localize('NIMBLE.classFeatureSelection.confirmSelection')}
+	<div class="accordion-content">
+		<div class="description">
+			{#if state.descriptionParts.length > 0}
+				{#each state.descriptionParts as part}
+					{#if part.type === 'spell' && part.spell}
+						<SpellReferenceCard spell={part.spell} />
+					{:else if part.type === 'text'}
+						{@html part.content}
 					{/if}
-				</button>
+				{/each}
+			{:else}
+				<p>{localize('NIMBLE.classFeatureSelection.noDescriptionAvailable')}</p>
 			{/if}
 		</div>
-	{/if}
+
+		{#if onSelect}
+			<button
+				class="nimble-button"
+				data-button-variant="full-width"
+				type="button"
+				onclick={handleSelect}
+			>
+				{#if isSelected}
+					<i class="fa-solid fa-check"></i>
+					{localize('NIMBLE.classFeatureSelection.selected')}
+				{:else}
+					{localize('NIMBLE.classFeatureSelection.confirmSelection')}
+				{/if}
+			</button>
+		{/if}
+	</div>
 </li>
 
 <style lang="scss">
 	.feature-item {
 		margin-bottom: 0.5rem;
+		&:last-child {
+			margin-bottom: 0;
+		}
 		list-style: none;
+		overflow: hidden;
+		display: grid;
+		grid-template-rows: 50px 0fr;
+		transition: grid-template-rows 0.3s ease;
+
+		&.expanded {
+			grid-template-rows: 50px 1fr;
+
+			.feature-row {
+				border-bottom-left-radius: 0;
+				border-bottom-right-radius: 0;
+			}
+
+			.expand-arrow {
+				transform: rotate(180deg);
+			}
+
+			.accordion-content {
+				opacity: 1;
+			}
+		}
 	}
 
 	.feature-row {
@@ -112,15 +133,6 @@
 				var(--nimble-accent-color) 10%,
 				var(--nimble-box-background-color)
 			);
-		}
-
-		&.expanded {
-			border-bottom-left-radius: 0;
-			border-bottom-right-radius: 0;
-
-			.expand-arrow {
-				transform: rotate(180deg);
-			}
 		}
 
 		.expand-arrow {
@@ -179,8 +191,10 @@
 		border: 1px solid var(--nimble-card-border-color);
 		border-top: none;
 		border-radius: 0 0 4px 4px;
-		padding: 0.75rem;
-		animation: slideDown 0.3s ease;
+		padding: 0rem 0.75rem;
+		overflow: hidden;
+		opacity: 0;
+		transition: opacity 0.3s ease;
 
 		.description {
 			margin-bottom: 0.5rem;
@@ -202,21 +216,6 @@
 					margin-bottom: 0;
 				}
 			}
-		}
-	}
-
-	@keyframes slideDown {
-		from {
-			opacity: 0;
-			max-height: 0;
-			padding-top: 0;
-			padding-bottom: 0;
-		}
-		to {
-			opacity: 1;
-			max-height: 400px;
-			padding-top: 0.75rem;
-			padding-bottom: 0.75rem;
 		}
 	}
 </style>

@@ -18,6 +18,7 @@
 	const wasMaximized = $derived(system.wasMaximized);
 	const hadAdvantage = $derived(system.hadAdvantage);
 	const advantageSource = $derived(system.advantageSource);
+	const manaRestored = $derived(system.manaRestored);
 
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
@@ -75,8 +76,16 @@
 				tooltip={rollTooltip}
 				total={totalHealing}
 			/>
-		{:else if !hitDiceDisplay}
+		{:else if !hitDiceDisplay && !manaRestored}
 			<div class="no-dice-message">{CONFIG.NIMBLE.fieldRest.restedWithoutSpending}</div>
+		{/if}
+
+		{#if manaRestored > 0}
+			<div class="mana-restored">
+				<i class="mana-restored__icon fa-solid fa-sparkles"></i>
+				<span class="mana-restored__label">{CONFIG.NIMBLE.fieldRest.manaRestored}</span>
+				<span class="mana-restored__value">+{manaRestored}</span>
+			</div>
 		{/if}
 
 		{#if wasMaximized || hadAdvantage}
@@ -129,7 +138,36 @@
 		&__value {
 			font-size: var(--nimble-sm-text);
 			font-weight: 700;
-			color: hsl(45, 70%, 40%);
+			color: var(--nimble-chat-hit-dice-value-color);
+		}
+	}
+
+	.mana-restored {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.375rem 0.5rem;
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+
+		&__icon {
+			width: 1rem;
+			text-align: center;
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-medium-text-color);
+		}
+
+		&__label {
+			flex: 1;
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-dark-text-color);
+		}
+
+		&__value {
+			font-size: var(--nimble-sm-text);
+			font-weight: 700;
+			color: var(--nimble-chat-mana-value-color);
 		}
 	}
 
@@ -158,15 +196,15 @@
 		border-radius: 3px;
 
 		&--maximize {
-			background: hsla(120, 45%, 45%, 0.15);
-			color: hsl(120, 45%, 35%);
-			border: 1px solid hsla(120, 45%, 45%, 0.3);
+			background: var(--nimble-chat-maximize-background);
+			color: var(--nimble-chat-maximize-color);
+			border: 1px solid var(--nimble-chat-maximize-border-color);
 		}
 
 		&--advantage {
-			background: hsla(210, 70%, 50%, 0.15);
-			color: hsl(210, 70%, 40%);
-			border: 1px solid hsla(210, 70%, 50%, 0.3);
+			background: var(--nimble-chat-advantage-background);
+			color: var(--nimble-chat-advantage-color);
+			border: 1px solid var(--nimble-chat-advantage-border-color);
 		}
 
 		&__source {
@@ -174,33 +212,5 @@
 			font-style: italic;
 			opacity: 0.8;
 		}
-	}
-
-	:global(.theme-dark) .modifier-badge {
-		&--maximize {
-			background: hsla(120, 45%, 45%, 0.2);
-			color: hsl(120, 50%, 60%);
-			border-color: hsla(120, 45%, 45%, 0.4);
-		}
-
-		&--advantage {
-			background: hsla(210, 70%, 50%, 0.2);
-			color: hsl(210, 70%, 65%);
-			border-color: hsla(210, 70%, 50%, 0.4);
-		}
-	}
-
-	:global(.theme-dark) .hit-dice-spent {
-		&__label {
-			color: hsl(0, 0%, 70%);
-		}
-
-		&__value {
-			color: hsl(45, 80%, 60%);
-		}
-	}
-
-	:global(.theme-dark) .no-dice-message {
-		color: hsl(0, 0%, 70%);
 	}
 </style>

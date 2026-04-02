@@ -1,15 +1,13 @@
 import { untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
-import type { NimbleCharacter } from '../../../documents/actor/character.js';
-import { getCombatantBaseActions } from '../../../documents/combat/combatantSystem.js';
-import {
-	getActiveCombatForCurrentScene,
-	registerCombatStateHooks,
-} from '../../../utils/combatState.js';
-import { requestAdvanceCombatTurn } from '../../../utils/combatTurnActions.js';
-import { getActiveCombatant } from '../../../utils/combatTurnSync.js';
-import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
-import localize from '../../../utils/localize.js';
+import type { NimbleCharacter } from '#documents/actor/character.js';
+import { getCombatantBaseActions } from '#documents/combat/combatantSystem.js';
+import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
+import { requestAdvanceCombatTurn } from '#utils/combatTurnActions.js';
+import { getActiveCombatant } from '#utils/combatTurnSync.js';
+import { initiativeRollLock } from '#utils/initiativeRollLock.js';
+import localize from '#utils/localize.js';
+import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 
 // ============================================================================
 // Types
@@ -120,9 +118,19 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 	}
 
 	async function updateActionPips(newValue: number): Promise<void> {
-		const combatant = getCombatantInCombat();
-		if (!combatant) return;
-		await combatant.update({ 'system.actions.base.current': newValue } as Record<string, unknown>);
+		const combat = getActiveCombatForCurrentScene();
+		const combatantId = getCombatantInCombat()?.id ?? null;
+		if (!combat || !combatantId) return;
+
+		await queueCombatantMutationWithFreshDocument({
+			combat,
+			combatantId,
+			mutation: async (currentCombatant) => {
+				await currentCombatant.update({
+					'system.actions.base.current': newValue,
+				} as Record<string, unknown>);
+			},
+		});
 	}
 
 	async function endTurn(): Promise<void> {
@@ -182,11 +190,11 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		if (isAvailable) {
 			// Spend one action
 			const newValue = Math.max(actionsData.current - 1, 0);
-			updateActionPips(newValue);
+			void updateActionPips(newValue);
 		} else {
 			// Restore one action
 			const newValue = Math.min(actionsData.current + 1, actionsData.max);
-			updateActionPips(newValue);
+			void updateActionPips(newValue);
 		}
 	}
 
