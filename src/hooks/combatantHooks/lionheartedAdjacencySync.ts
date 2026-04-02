@@ -125,9 +125,14 @@ export default function registerLionheartedAdjacencySync() {
 		if (scheduled) return;
 		scheduled = true;
 		setTimeout(() => {
-			scheduled = false;
 			const combat = game.combat;
-			if (combat?.active) void syncLionheartedAdjacencyState(combat);
+			if (combat?.active) {
+				void syncLionheartedAdjacencyState(combat).finally(() => {
+					scheduled = false;
+				});
+			} else {
+				scheduled = false;
+			}
 		}, 0);
 	}
 
