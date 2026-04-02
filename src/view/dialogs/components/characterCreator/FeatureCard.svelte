@@ -191,7 +191,7 @@
 		border: 1px solid var(--nimble-card-border-color);
 		border-top: none;
 		border-radius: 0 0 4px 4px;
-		padding: 0rem 0.75rem;
+		padding: 0 0.75rem;
 		overflow: hidden;
 		opacity: 0;
 		transition: opacity 0.3s ease;
