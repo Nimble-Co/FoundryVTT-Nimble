@@ -309,28 +309,47 @@ function extractClassFeaturesSectionHtml(actor: NimbleCharacter): ContentSection
  */
 function extractSpellDetails(spell: NimbleSpellItem): string {
 	const parts: string[] = [];
+	const properties = spell.system.properties;
+	const cost = spell.system.activation?.cost;
+	const template = spell.system.activation?.template;
+
+	// Build casting time string (e.g., "1 action AOE", "1 action self", "casting time 1 minute")
+	const hasTemplate =
+		template?.shape && template.shape !== 'none' && (template.radius || template.length);
+	const hasRange = properties?.selected?.includes('range') && properties.range?.max;
+	const hasReach = properties?.selected?.includes('reach') && properties.reach?.min;
+
+	if (cost?.type && cost.type !== 'none' && cost.type !== 'mana') {
+		let castingTimeStr = cost.quantity > 1 ? `${cost.quantity} ${cost.type}s` : `1 ${cost.type}`;
+
+		// Add target type suffix
+		if (hasTemplate) {
+			castingTimeStr += ' AOE';
+		} else if (!hasRange && !hasReach) {
+			castingTimeStr += ' self';
+		}
+
+		parts.push(castingTimeStr);
+	}
 
 	// Mana cost
-	const cost = spell.system.activation?.cost;
-	if (cost?.quantity && cost.quantity > 0) {
-		const costType = cost.type === 'mana' ? 'Mana' : (cost.type ?? '');
-		parts.push(`${cost.quantity} ${costType}`);
+	if (cost?.quantity && cost.quantity > 0 && cost.type === 'mana') {
+		parts.push(`${cost.quantity} Mana`);
 	}
 
 	// Range or reach
-	const properties = spell.system.properties;
-	if (properties?.selected?.includes('range') && properties.range?.max) {
+	if (hasRange) {
 		parts.push(`Range ${properties.range.min}-${properties.range.max}`);
-	} else if (properties?.selected?.includes('reach') && properties.reach) {
+	} else if (hasReach) {
 		const reachStr = properties.reach.max
 			? `${properties.reach.min}-${properties.reach.max}`
 			: `${properties.reach.min}`;
 		parts.push(`Reach ${reachStr}`);
 	}
 
-	// Duration
+	// Duration (skip if "none")
 	const duration = spell.system.activation?.duration;
-	if (duration?.quantity && duration.quantity > 0 && duration.type) {
+	if (duration?.quantity && duration.quantity > 0 && duration.type && duration.type !== 'none') {
 		const durationStr =
 			duration.quantity === 1 ? duration.type : `${duration.quantity} ${duration.type}s`;
 		parts.push(durationStr);
@@ -341,9 +360,8 @@ function extractSpellDetails(spell: NimbleSpellItem): string {
 		parts.push('Conc.');
 	}
 
-	// Template/AoE
-	const template = spell.system.activation?.template;
-	if (template?.shape && (template.radius || template.length)) {
+	// Template/AoE details (size info)
+	if (hasTemplate) {
 		let aoeStr = '';
 		if (template.shape === 'circle' || template.shape === 'emanation') {
 			aoeStr = `${template.radius} sp ${template.shape}`;
