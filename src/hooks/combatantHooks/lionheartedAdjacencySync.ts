@@ -3,8 +3,6 @@ import { countAdjacentByDisposition } from '../../utils/tokenAdjacency.js';
 
 const LIONHEARTED_STATUS_ID = 'lionhearted';
 
-let didRegisterLionheartedAdjacencySync = false;
-
 function actorHasLionheartedBonusRule(actor: Actor): boolean {
 	return (
 		(actor as { rules?: Array<{ type: string }> }).rules?.some(
@@ -115,38 +113,39 @@ export async function clearLionheartedAdjacencyState(combat: Combat): Promise<vo
 	}
 }
 
-export default function registerLionheartedAdjacencySync() {
-	if (didRegisterLionheartedAdjacencySync) return;
-	didRegisterLionheartedAdjacencySync = true;
+const registeredHooks: Array<{ event: string; id: number }> = [];
+const hooksOff = Hooks.off.bind(Hooks) as (event: string, id: number) => void;
 
-	let scheduled = false;
+export default function registerLionheartedAdjacencySync() {
+	for (const { event, id } of registeredHooks) hooksOff(event, id);
+	registeredHooks.length = 0;
+
+	let syncTimer: ReturnType<typeof setTimeout> | null = null;
 
 	function scheduleSync(): void {
-		if (scheduled) return;
-		scheduled = true;
-		setTimeout(() => {
+		if (syncTimer !== null) clearTimeout(syncTimer);
+		syncTimer = setTimeout(() => {
+			syncTimer = null;
 			const combat = game.combat;
-			if (combat?.active) {
-				void syncLionheartedAdjacencyState(combat).finally(() => {
-					scheduled = false;
-				});
-			} else {
-				scheduled = false;
-			}
+			if (combat?.active) void syncLionheartedAdjacencyState(combat);
 		}, 0);
 	}
 
-	Hooks.on('updateToken', (_token: TokenDocument, changes: Record<string, unknown>) => {
+	const onUpdateToken = (_token: TokenDocument, changes: Record<string, unknown>) => {
 		if (!foundry.utils.hasProperty(changes, 'x') && !foundry.utils.hasProperty(changes, 'y'))
 			return;
 		scheduleSync();
-	});
-	Hooks.on('createToken', scheduleSync);
-	Hooks.on('deleteToken', scheduleSync);
-	Hooks.on('createCombat', scheduleSync);
-	Hooks.on('canvasReady', scheduleSync);
-
-	Hooks.on('deleteCombat', (combat: Combat) => {
+	};
+	const onDeleteCombat = (combat: Combat) => {
 		void clearLionheartedAdjacencyState(combat);
-	});
+	};
+
+	registeredHooks.push(
+		{ event: 'updateToken', id: Hooks.on('updateToken', onUpdateToken) },
+		{ event: 'createToken', id: Hooks.on('createToken', scheduleSync) },
+		{ event: 'deleteToken', id: Hooks.on('deleteToken', scheduleSync) },
+		{ event: 'createCombat', id: Hooks.on('createCombat', scheduleSync) },
+		{ event: 'canvasReady', id: Hooks.on('canvasReady', scheduleSync) },
+		{ event: 'deleteCombat', id: Hooks.on('deleteCombat', onDeleteCombat) },
+	);
 }

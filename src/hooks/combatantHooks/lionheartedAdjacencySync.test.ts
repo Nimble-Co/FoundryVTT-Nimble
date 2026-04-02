@@ -11,7 +11,7 @@ import {
 } from './lionheartedAdjacencySync.js';
 
 type LionheartedAdjacencySyncTestGlobals = {
-	Hooks: { on: ReturnType<typeof vi.fn> };
+	Hooks: { on: ReturnType<typeof vi.fn>; off: ReturnType<typeof vi.fn> };
 	game: {
 		user: { isGM: boolean };
 		combat: Combat | null;
@@ -291,7 +291,7 @@ describe('registerLionheartedAdjacencySync', () => {
 	beforeEach(() => {
 		vi.resetModules();
 		vi.clearAllMocks();
-		globals().Hooks = { on: vi.fn() };
+		globals().Hooks = { on: vi.fn().mockReturnValue(1), off: vi.fn() };
 		globals().game.user = { isGM: true };
 		globals().game.combat = null;
 	});
@@ -310,16 +310,17 @@ describe('registerLionheartedAdjacencySync', () => {
 		expect(callbacks.has('deleteCombat')).toBe(true);
 	});
 
-	it('is idempotent when called multiple times', async () => {
+	it('deregisters previous hooks before re-registering when called multiple times', async () => {
 		const registerLionheartedAdjacencySync = (await import('./lionheartedAdjacencySync.js'))
 			.default;
 		registerLionheartedAdjacencySync();
 		registerLionheartedAdjacencySync();
 
+		expect(globals().Hooks.off).toHaveBeenCalled();
 		const updateTokenRegistrations = (
 			globals().Hooks.on as ReturnType<typeof vi.fn>
 		).mock.calls.filter((args: unknown[]) => args[0] === 'updateToken').length;
-		expect(updateTokenRegistrations).toBe(1);
+		expect(updateTokenRegistrations).toBe(2);
 	});
 
 	it('triggers sync when updateToken fires with a position change', async () => {
