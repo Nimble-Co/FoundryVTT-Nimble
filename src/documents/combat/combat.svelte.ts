@@ -333,7 +333,7 @@ class NimbleCombat extends Combat {
 
 		const requestedTurnIdentity =
 			this.#pendingAtomicTurnIdentity &&
-				this.#findTurnIndexByIdentity(normalizedTurns, this.#pendingAtomicTurnIdentity) >= 0
+			this.#findTurnIndexByIdentity(normalizedTurns, this.#pendingAtomicTurnIdentity) >= 0
 				? this.#pendingAtomicTurnIdentity
 				: null;
 		const fallbackTurn = Number.isInteger(nextUpdateData.turn)
@@ -628,14 +628,14 @@ class NimbleCombat extends Combat {
 			sceneId == null
 				? []
 				: this.combatants
-					.filter(
-						(combatant) =>
-							combatant.initiative === null &&
-							combatant.type === 'character' &&
-							combatant.sceneId === sceneId,
-					)
-					.map((combatant) => combatant.id)
-					.filter((combatantId): combatantId is string => combatantId != null);
+						.filter(
+							(combatant) =>
+								combatant.initiative === null &&
+								combatant.type === 'character' &&
+								combatant.sceneId === sceneId,
+						)
+						.map((combatant) => combatant.id)
+						.filter((combatantId): combatantId is string => combatantId != null);
 
 		if (unrolledCharacterIds.length > 0) {
 			await this.rollInitiative(unrolledCharacterIds, { updateTurn: false });
