@@ -1650,6 +1650,8 @@
 			"insertToColumn": "Insert to Column {column}",
 			"generatePdf": "Generate PDF",
 			"previewPdf": "Preview PDF",
+			"previewTitle": "Preview",
+			"generatingPreview": "Generating preview...",
 			"bold": "Bold",
 			"italic": "Italic",
 			"template": "Template",

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PdfExportDialogProps } from '#types/components/PdfExportDialog.js';
 
+	import GenericDialog from '#documents/dialogs/GenericDialog.svelte.ts';
 	import localize from '#utils/localize.ts';
 
 	import type { TemplateType } from '../sheets/character/pdfExport/exportCharacterPdf.ts';
@@ -11,6 +12,7 @@
 		type SelectableItem,
 	} from '../sheets/character/pdfExport/generatePdfContent.ts';
 	import { getPlainTextFromHtml } from '../sheets/character/pdfExport/parseHtmlToStyledSegments.ts';
+	import PdfPreviewDialog from './PdfPreviewDialog.svelte';
 
 	let { actor, dialog }: PdfExportDialogProps = $props();
 
@@ -79,16 +81,21 @@
 	// Reference to the contenteditable element
 	let editorElement: HTMLDivElement | null = $state(null);
 
-	// Track if we need to update the editor content
+	// Track the last active tab to detect tab changes
 	let lastActiveTab = $state(activeColumnTab);
 
-	// Update editor when tab changes
+	// Set editor content when element is bound or tab changes
 	$effect(() => {
-		if (activeColumnTab !== lastActiveTab) {
+		if (!editorElement) return;
+
+		// On mount or tab change, set the content
+		if (activeColumnTab !== lastActiveTab || editorElement.innerHTML === '') {
 			lastActiveTab = activeColumnTab;
-			if (editorElement) {
-				editorElement.innerHTML = activeColumnHtml;
-			}
+			// Get the correct content for the current tab
+			let content = column1Html;
+			if (activeColumnTab === 2) content = column2Html;
+			if (activeColumnTab === 3) content = column3Html;
+			editorElement.innerHTML = content;
 		}
 	});
 
@@ -152,6 +159,25 @@
 		}
 	}
 
+	/**
+	 * Stop keyboard events from propagating to Foundry's global handlers.
+	 * This ensures cut/copy/paste and other keyboard shortcuts work correctly in the editor.
+	 */
+	function handleEditorKeydown(event: KeyboardEvent) {
+		// Stop propagation to prevent Foundry from capturing these events
+		event.stopPropagation();
+	}
+
+	/**
+	 * Handle cut/paste events - update state after the browser modifies the DOM.
+	 */
+	function handleEditorCutPaste() {
+		// Use setTimeout to let the browser complete the cut/paste operation first
+		setTimeout(() => {
+			handleEditorInput();
+		}, 0);
+	}
+
 	function applyFormat(command: string) {
 		document.execCommand(command, false);
 		editorElement?.focus();
@@ -176,10 +202,22 @@
 		});
 	}
 
-	async function previewPdf() {
-		// Import the preview dialog dynamically to avoid circular dependencies
-		const { showPdfPreview } = await import('../sheets/character/pdfExport/showPdfPreview.ts');
-		await showPdfPreview(actor, [column1Html, column2Html, column3Html], selectedTemplate);
+	function openPreviewDialog() {
+		const previewDialog = new GenericDialog(
+			localize('NIMBLE.pdfExport.previewTitle'),
+			PdfPreviewDialog as unknown as Parameters<typeof GenericDialog>[1],
+			{
+				actor,
+				columnContent: [column1Html, column2Html, column3Html] as [string, string, string],
+				template: selectedTemplate,
+			},
+			{
+				icon: 'fa-solid fa-eye',
+				width: 700,
+				height: 900,
+			},
+		);
+		previewDialog.render(true);
 	}
 </script>
 
@@ -321,10 +359,14 @@
 				class="pdf-export-dialog__rich-editor"
 				class:pdf-export-dialog__rich-editor--over-limit={activeColumnOverLimit}
 				contenteditable="true"
+				role="textbox"
+				aria-multiline="true"
+				aria-label={localize('NIMBLE.pdfExport.columnEditor')}
 				oninput={handleEditorInput}
-			>
-				{@html activeColumnHtml}
-			</div>
+				onkeydown={handleEditorKeydown}
+				oncut={handleEditorCutPaste}
+				onpaste={handleEditorCutPaste}
+			></div>
 
 			<!-- Character Count -->
 			<div
@@ -338,7 +380,12 @@
 </article>
 
 <footer class="nimble-sheet__footer">
-	<button type="button" class="nimble-button" data-button-variant="basic" onclick={previewPdf}>
+	<button
+		type="button"
+		class="nimble-button"
+		data-button-variant="basic"
+		onclick={openPreviewDialog}
+	>
 		<i class="fa-solid fa-eye"></i>
 		{localize('NIMBLE.pdfExport.previewPdf')}
 	</button>

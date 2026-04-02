@@ -41,15 +41,18 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 		options: GenericDialogOptions = {},
 	) {
 		const width = options.width ?? 288;
-		const height = options.height ?? ('auto' as const);
+		// Build position object - only include height if explicitly provided
+		const position: { width: number; height?: number; top: number; left: number } = {
+			width,
+			top: Math.round(window.innerHeight * 0.1),
+			left: Math.round((window.innerWidth - width) / 2),
+		};
+		if (options.height !== undefined) {
+			position.height = options.height;
+		}
 		super(
 			foundry.utils.mergeObject(options as object, {
-				position: {
-					width,
-					height,
-					top: Math.round(window.innerHeight * 0.1),
-					left: Math.round((window.innerWidth - width) / 2),
-				},
+				position,
 				window: {
 					icon: options.icon ?? 'fa-solid fa-note',
 					resizable: options.resizable ?? GenericDialog.DEFAULT_OPTIONS.window.resizable,
@@ -106,12 +109,9 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 	}
 
 	static override DEFAULT_OPTIONS = {
-		classes: ['nimble-sheet', 'nimble-dialog'],
+		classes: ['nimble-sheet'],
 		window: {
 			resizable: true,
-		},
-		position: {
-			height: 'auto' as const,
 		},
 		actions: {},
 	};
