@@ -46,8 +46,8 @@
 		return groups;
 	});
 
-	// Category collapse state
-	let collapsedCategories = $state(new Set<string>());
+	// Category expansion state (empty = all collapsed by default)
+	let expandedCategories = $state(new Set<string>());
 
 	// Character counts (derived from plain text)
 	let column1Count = $derived(getPlainTextFromHtml(column1Html).length);
@@ -58,6 +58,16 @@
 	let column1OverLimit = $derived(column1Count > CHARS_PER_COLUMN);
 	let column2OverLimit = $derived(column2Count > CHARS_PER_COLUMN);
 	let column3OverLimit = $derived(column3Count > CHARS_PER_COLUMN);
+
+	// Tooltip text for over-limit columns (array indexed by column number - 1)
+	let columnTooltips = $derived.by(() => {
+		const tooltip = localize('NIMBLE.pdfExport.columnOverflow');
+		return [
+			column1OverLimit ? tooltip : undefined,
+			column2OverLimit ? tooltip : undefined,
+			column3OverLimit ? tooltip : undefined,
+		];
+	});
 
 	// Get current column data based on active tab
 	let activeColumnHtml = $derived.by(() => {
@@ -100,12 +110,22 @@
 	});
 
 	function toggleCategory(category: string) {
-		if (collapsedCategories.has(category)) {
-			collapsedCategories.delete(category);
+		if (expandedCategories.has(category)) {
+			expandedCategories.delete(category);
 		} else {
-			collapsedCategories.add(category);
+			expandedCategories.add(category);
 		}
-		collapsedCategories = new Set(collapsedCategories);
+		expandedCategories = new Set(expandedCategories);
+	}
+
+	function selectAllInCategory(category: string, event: Event) {
+		event.stopPropagation();
+		const items = itemsByCategory[category];
+		if (!items) return;
+		for (const item of items) {
+			selectedItems.add(item.id);
+		}
+		selectedItems = new Set(selectedItems);
 	}
 
 	function toggleItem(itemId: string) {
@@ -232,21 +252,32 @@
 			<div class="pdf-export-dialog__categories">
 				{#each Object.entries(itemsByCategory) as [category, items]}
 					<div class="pdf-export-dialog__category">
-						<button
-							type="button"
-							class="pdf-export-dialog__category-header"
-							onclick={() => toggleCategory(category)}
-						>
-							<i
-								class="fa-solid"
-								class:fa-chevron-down={!collapsedCategories.has(category)}
-								class:fa-chevron-right={collapsedCategories.has(category)}
-							></i>
-							<span>{getCategoryLabel(category)}</span>
-							<span class="pdf-export-dialog__category-count">({items.length})</span>
-						</button>
+						<div class="pdf-export-dialog__category-header">
+							<button
+								type="button"
+								class="pdf-export-dialog__category-toggle"
+								onclick={() => toggleCategory(category)}
+							>
+								<i
+									class="fa-solid"
+									class:fa-chevron-down={expandedCategories.has(category)}
+									class:fa-chevron-right={!expandedCategories.has(category)}
+								></i>
+								<span>{getCategoryLabel(category)}</span>
+								<span class="pdf-export-dialog__category-count">({items.length})</span>
+							</button>
+							<button
+								type="button"
+								class="pdf-export-dialog__select-all-btn"
+								data-tooltip={localize('NIMBLE.pdfExport.selectAll')}
+								data-tooltip-direction="UP"
+								onclick={(e) => selectAllInCategory(category, e)}
+							>
+								<i class="fa-solid fa-check-double"></i>
+							</button>
+						</div>
 
-						{#if !collapsedCategories.has(category)}
+						{#if expandedCategories.has(category)}
 							<div class="pdf-export-dialog__category-items">
 								{#each items as item}
 									<label class="pdf-export-dialog__item">
@@ -312,13 +343,17 @@
 			<!-- Column Tabs -->
 			<nav class="pdf-export-dialog__tabs">
 				{#each [1, 2, 3] as num}
+					{@const isOverLimit =
+						(num === 1 && column1OverLimit) ||
+						(num === 2 && column2OverLimit) ||
+						(num === 3 && column3OverLimit)}
 					<button
 						type="button"
 						class="pdf-export-dialog__tab"
 						class:pdf-export-dialog__tab--active={activeColumnTab === num}
-						class:pdf-export-dialog__tab--over-limit={(num === 1 && column1OverLimit) ||
-							(num === 2 && column2OverLimit) ||
-							(num === 3 && column3OverLimit)}
+						class:pdf-export-dialog__tab--over-limit={isOverLimit}
+						data-tooltip={columnTooltips[num - 1]}
+						data-tooltip-direction="UP"
 						onclick={() => (activeColumnTab = num)}
 					>
 						{localize('NIMBLE.pdfExport.column', { number: num })}
@@ -445,11 +480,20 @@
 		&__category-header {
 			display: flex;
 			align-items: center;
-			gap: 0.5rem;
-			padding: 0.375rem 0.5rem;
+			gap: 0.25rem;
 			background: var(--nimble-box-background-color);
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
+		}
+
+		&__category-toggle {
+			flex: 1;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.375rem 0.5rem;
+			background: transparent;
+			border: none;
 			cursor: pointer;
 			font-size: var(--nimble-sm-text);
 			font-weight: 600;
@@ -471,6 +515,23 @@
 			margin-left: auto;
 			font-weight: 400;
 			color: var(--nimble-medium-text-color);
+		}
+
+		&__select-all-btn {
+			padding: 0.25rem 0.5rem;
+			margin-right: 0.25rem;
+			background: transparent;
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			cursor: pointer;
+			color: var(--nimble-medium-text-color);
+			font-size: 0.625rem;
+
+			&:hover {
+				background: var(--nimble-accent-color, hsl(210, 70%, 50%));
+				color: white;
+				border-color: var(--nimble-accent-color, hsl(210, 70%, 50%));
+			}
 		}
 
 		&__category-items {

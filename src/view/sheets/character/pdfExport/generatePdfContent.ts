@@ -3,8 +3,6 @@ import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleObjectItem } from '#documents/item/object.js';
 import type { NimbleSpellItem } from '#documents/item/spell.js';
 
-import { pdfCoordinates } from './pdfCoordinates.ts';
-
 /** Estimated characters per column based on PDF config */
 const CHARS_PER_COLUMN = 1150;
 
@@ -362,11 +360,7 @@ function extractSpellDetails(spell: NimbleSpellItem): string {
 	// Base effect description (stripped)
 	const baseEffect = stripHtml(spell.system.description?.baseEffect ?? '');
 	if (baseEffect) {
-		// Truncate long descriptions
-		const maxLen = 150;
-		const truncated =
-			baseEffect.length > maxLen ? `${baseEffect.substring(0, maxLen)}...` : baseEffect;
-		parts.push(truncated);
+		parts.push(baseEffect);
 	}
 
 	return parts.join(' | ');
@@ -706,10 +700,17 @@ function getSelectableItems(actor: NimbleCharacter): SelectableItem[] {
 		const contentHtml = abilitiesHtml
 			? `<strong>ANCESTRY:</strong> ${ancestry.name} - ${abilitiesHtml}`
 			: `<strong>ANCESTRY:</strong> ${ancestry.name}`;
+
+		// Get size category display name
+		const sizeCategory = actor.system.attributes.sizeCategory ?? 'medium';
+		const { sizeCategories } = CONFIG.NIMBLE;
+		const sizeLabel = game.i18n.localize(sizeCategories[sizeCategory] ?? sizeCategory);
+		const ancestryLabel = `${ancestry.name ?? 'Unknown Ancestry'} (${sizeLabel})`;
+
 		items.push({
 			id: `ancestry-${ancestry.id}`,
 			category: 'ancestry',
-			label: ancestry.name ?? 'Unknown Ancestry',
+			label: ancestryLabel,
 			content,
 			contentHtml,
 		});
@@ -778,15 +779,26 @@ function getSelectableItems(actor: NimbleCharacter): SelectableItem[] {
 	// Spells (individual spells with details)
 	const spells = actor.items.filter((item) => item.isType('spell')) as NimbleSpellItem[];
 	if (spells.length > 0) {
+		// Sort by: utility first, then cantrips, then by tier, then alphabetically
 		spells.sort((a, b) => {
+			const aIsUtility = a.system.properties?.selected?.includes('utilitySpell') ? 1 : 0;
+			const bIsUtility = b.system.properties?.selected?.includes('utilitySpell') ? 1 : 0;
+
+			// Utility spells come first
+			if (aIsUtility !== bIsUtility) return bIsUtility - aIsUtility;
+
+			// Then sort by tier (cantrips/tier 0 first)
 			const tierDiff = (a.system.tier ?? 0) - (b.system.tier ?? 0);
 			if (tierDiff !== 0) return tierDiff;
+
+			// Then alphabetically
 			return (a.name ?? '').localeCompare(b.name ?? '');
 		});
 
 		for (const spell of spells) {
 			const tier = spell.system.tier ?? 0;
-			const tierLabel = tier === 0 ? 'Cantrip' : `Tier ${tier}`;
+			const isUtility = spell.system.properties?.selected?.includes('utilitySpell');
+			const tierLabel = isUtility ? 'Utility' : tier === 0 ? 'Cantrip' : `Tier ${tier}`;
 			const details = extractSpellDetails(spell);
 			const content = details ? `• ${spell.name}: ${details}` : `• ${spell.name}`;
 			const contentHtml = details
