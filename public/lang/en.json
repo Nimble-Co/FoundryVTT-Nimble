@@ -1657,6 +1657,8 @@
 			"template": "Template",
 			"templateLined": "With Lines",
 			"templateNoLines": "Without Lines",
+			"columnOverflow": "Content exceeds column capacity. Some text may be cut off.",
+			"selectAll": "Select All",
 			"categories": {
 				"ancestry": "Ancestry",
 				"background": "Background",
