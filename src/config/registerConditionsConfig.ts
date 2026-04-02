@@ -95,7 +95,7 @@ export default function registerConditionsConfig() {
 		taunted: 'systems/nimble/assets/icons/taunted.svg',
 		unconscious: 'icons/svg/unconscious.svg',
 		wounded: 'systems/nimble/assets/icons/wound.svg',
-		lionhearted: 'icons/creatures/abilities/lion-roar-yellow.webp',
+		lionhearted: 'systems/nimble/assets/icons/lionhearted.svg',
 	};
 
 	const conditionAliasedConditions = {
