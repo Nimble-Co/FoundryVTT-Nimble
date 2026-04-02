@@ -73,7 +73,9 @@
 					data-tooltip-direction="LEFT"
 					aria-label={isSelected ? `Deselect ${spell.name}` : `Select ${spell.name}`}
 				>
-					<i class="fa-solid {isSelected ? 'fa-circle-check' : 'fa-circle'}"></i>
+					{#if isSelected}
+						<i class="fa-solid fa-check"></i>
+					{/if}
 				</button>
 			{/if}
 		</div>
@@ -184,29 +186,37 @@
 	}
 
 	.select-button {
-		width: 2rem;
-		height: 2rem;
+		width: 1.25rem;
+		min-width: 1.25rem;
+		max-width: 1.25rem;
+		height: 1.25rem;
+		min-height: 1.25rem;
+		max-height: 1.25rem;
+		padding: 0;
+		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: transparent;
-		border: none;
-		border-radius: 4px;
-		color: rgba(255, 255, 255, 0.5);
+		background: color-mix(in srgb, var(--nimble-medium-text-color) 15%, transparent);
+		border: 2px solid color-mix(in srgb, var(--nimble-medium-text-color) 60%, transparent);
+		border-radius: 50%;
+		box-sizing: border-box;
+		color: transparent;
 		cursor: pointer;
 		transition: all 0.2s ease;
 
 		&:hover:not(:disabled) {
-			color: rgba(255, 255, 255, 0.8);
-			transform: scale(1.1);
+			border-color: color-mix(in srgb, var(--nimble-medium-text-color) 80%, transparent);
+			background: color-mix(in srgb, var(--nimble-medium-text-color) 35%, transparent);
 		}
 
 		&.selected {
-			color: var(--nimble-accent-color);
+			background: var(--nimble-accent-color);
+			border-color: var(--nimble-accent-color);
+			color: #fff;
 
 			&:hover:not(:disabled) {
-				filter: brightness(1.2);
-				transform: scale(1.1);
+				filter: brightness(1.15);
 			}
 		}
 
@@ -216,7 +226,7 @@
 		}
 
 		i {
-			font-size: 1.25rem;
+			font-size: 0.625rem;
 		}
 	}
 

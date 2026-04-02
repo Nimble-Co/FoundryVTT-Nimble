@@ -140,7 +140,7 @@
 			align-items: center;
 			justify-content: space-between;
 			gap: 0.5rem;
-			margin-bottom: 0.25rem;
+			margin-bottom: 0.5rem;
 		}
 
 		&__label {
@@ -164,7 +164,7 @@
 		}
 
 		&__hint {
-			margin: 0 0 0.5rem 0;
+			margin: 0 0 0.75rem 0;
 			font-size: var(--nimble-sm-text);
 			color: var(--nimble-medium-text-color);
 		}
@@ -181,7 +181,7 @@
 			display: flex;
 			flex-wrap: wrap;
 			gap: 0.5rem;
-			margin: 0.5rem 0 0 0;
+			margin: 0.375rem 0 0 0;
 			padding: 0;
 			list-style: none;
 		}

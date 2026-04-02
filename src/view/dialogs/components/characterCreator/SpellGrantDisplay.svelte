@@ -406,7 +406,7 @@
 			display: flex;
 			flex-wrap: wrap;
 			gap: 0.5rem;
-			margin: 0;
+			margin: 0.375rem 0 0 0;
 			padding: 0;
 			list-style: none;
 		}
@@ -420,7 +420,7 @@
 		}
 
 		&__school-label {
-			margin: 0 0 0.5rem 0;
+			margin: 0 0 1rem 0;
 		}
 
 		&__confirmed-group {
