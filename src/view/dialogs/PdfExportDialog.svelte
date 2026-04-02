@@ -17,6 +17,7 @@
 	let { actor, dialog }: PdfExportDialogProps = $props();
 
 	// Initialize columns with generated HTML content
+	// svelte-ignore state_referenced_locally
 	const initialContent = generateInitialColumnContentHtml(actor);
 	let column1Html = $state(initialContent[0]);
 	let column2Html = $state(initialContent[1]);
@@ -91,8 +92,8 @@
 	// Reference to the contenteditable element
 	let editorElement: HTMLDivElement | null = $state(null);
 
-	// Track the last active tab to detect tab changes
-	let lastActiveTab = $state(activeColumnTab);
+	// Track the last active tab to detect tab changes (starts at 1, same as activeColumnTab)
+	let lastActiveTab = $state(1);
 
 	// Set editor content when element is bound or tab changes
 	$effect(() => {
@@ -269,6 +270,7 @@
 							<button
 								type="button"
 								class="pdf-export-dialog__select-all-btn"
+								aria-label={localize('NIMBLE.pdfExport.selectAll')}
 								data-tooltip={localize('NIMBLE.pdfExport.selectAll')}
 								data-tooltip-direction="UP"
 								onclick={(e) => selectAllInCategory(category, e)}
@@ -395,6 +397,7 @@
 				class:pdf-export-dialog__rich-editor--over-limit={activeColumnOverLimit}
 				contenteditable="true"
 				role="textbox"
+				tabindex="0"
 				aria-multiline="true"
 				aria-label={localize('NIMBLE.pdfExport.columnEditor')}
 				oninput={handleEditorInput}
@@ -446,7 +449,7 @@
 		}
 
 		&__section-title {
-			margin: 0 0 0.75rem 0;
+			margin: 0.3125rem 0 0.125rem 0;
 			padding: 0;
 			font-size: var(--nimble-sm-text);
 			font-weight: 600;
@@ -462,6 +465,10 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.5rem;
+
+			.pdf-export-dialog__section-title {
+				padding-left: 1.6875rem;
+			}
 		}
 
 		&__categories {
@@ -538,7 +545,7 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.125rem;
-			padding: 0.25rem 0 0.25rem 1.25rem;
+			padding: 0.25rem 0 0.25rem 0.5rem;
 		}
 
 		&__item {
