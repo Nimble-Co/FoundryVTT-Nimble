@@ -13,7 +13,7 @@ function getActionIcon(actionId: string): string {
 		defend: 'icons/svg/shield.svg',
 		interpose: 'icons/svg/angel.svg',
 		opportunity: 'icons/svg/target.svg',
-		help: 'icons/svg/hand.svg',
+		help: 'icons/svg/upgrade.svg',
 		interposeAndDefend: 'icons/svg/combat.svg',
 		unarmedStrike: 'icons/skills/melee/unarmed-punch-fist.webp',
 	};
