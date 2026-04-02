@@ -1,5 +1,5 @@
 import localize from '../../utils/localize.js';
-import { countAdjacentByDisposition } from '../../utils/tokenAdjacency.js';
+import { countAdjacentByDisposition, type PositionOverrides } from '../../utils/tokenAdjacency.js';
 
 const LIONHEARTED_STATUS_ID = 'lionhearted';
 
@@ -56,7 +56,10 @@ function getCombatCharacterTokens(combat: Combat): Array<{
 	return results;
 }
 
-export async function syncLionheartedAdjacencyState(combat: Combat): Promise<void> {
+export async function syncLionheartedAdjacencyState(
+	combat: Combat,
+	overrides?: PositionOverrides,
+): Promise<void> {
 	if (!game.user?.isGM) return;
 	if (!canvas?.ready || !canvas.tokens) return;
 
@@ -67,7 +70,12 @@ export async function syncLionheartedAdjacencyState(combat: Combat): Promise<voi
 
 	const adjacencyCounts = characterEntries.map(({ actor, token }) => ({
 		actor,
-		count: countAdjacentByDisposition(token, allTokens, CONST.TOKEN_DISPOSITIONS.HOSTILE),
+		count: countAdjacentByDisposition(
+			token,
+			allTokens,
+			CONST.TOKEN_DISPOSITIONS.HOSTILE,
+			overrides,
+		),
 	}));
 
 	const maxCount = Math.max(...adjacencyCounts.map((e) => e.count));
@@ -127,22 +135,33 @@ export default function registerLionheartedAdjacencySync() {
 	for (const { event, id } of registeredHooks) hooksOff(event, id);
 	registeredHooks.length = 0;
 
+	const pendingPositions = new Map<string, { x: number; y: number }>();
 	let syncTimer: ReturnType<typeof setTimeout> | null = null;
 
 	function scheduleSync(): void {
 		if (syncTimer !== null) clearTimeout(syncTimer);
 		syncTimer = setTimeout(() => {
 			syncTimer = null;
+			const positions = new Map(pendingPositions);
+			pendingPositions.clear();
 			const combat = game.combat;
-			if (combat?.active) void syncLionheartedAdjacencyState(combat);
+			if (combat?.active) void syncLionheartedAdjacencyState(combat, positions);
 		}, 0);
 	}
 
 	const onUpdateToken = (_token: TokenDocument, changes: Record<string, unknown>) => {
-		if (!foundry.utils.hasProperty(changes, 'x') && !foundry.utils.hasProperty(changes, 'y'))
-			return;
+		const hasPos =
+			foundry.utils.hasProperty(changes, 'x') || foundry.utils.hasProperty(changes, 'y');
+		if (!hasPos) return;
+		if (_token.id) {
+			pendingPositions.set(_token.id, {
+				x: typeof changes.x === 'number' ? changes.x : _token.x,
+				y: typeof changes.y === 'number' ? changes.y : _token.y,
+			});
+		}
 		scheduleSync();
 	};
+
 	const onDeleteCombat = (combat: Combat) => {
 		void clearLionheartedAdjacencyState(combat);
 	};
