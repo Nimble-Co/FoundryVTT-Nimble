@@ -152,11 +152,11 @@
 			border: 1px solid var(--nimble-accent-color);
 			border-radius: 4px;
 			cursor: pointer;
-			color: var(--nimble-light-text-color);
+			color: #fff;
 			transition: var(--nimble-standard-transition);
 
 			&:hover {
-				filter: brightness(1.1);
+				filter: brightness(1.15);
 			}
 		}
 

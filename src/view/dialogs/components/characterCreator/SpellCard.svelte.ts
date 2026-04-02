@@ -64,15 +64,6 @@ export function createSpellCardState(getSpell: () => SpellIndexEntry) {
 		}
 	}
 
-	async function viewDetails(event: MouseEvent) {
-		event.stopPropagation();
-		const spell = getSpell();
-		const spellDoc = await fromUuid(spell.uuid as `Item.${string}`);
-		if (spellDoc) {
-			(spellDoc as Item).sheet?.render(true);
-		}
-	}
-
 	return {
 		get isExpanded() {
 			return isExpanded;
@@ -84,6 +75,5 @@ export function createSpellCardState(getSpell: () => SpellIndexEntry) {
 			return isLoading;
 		},
 		toggleExpanded,
-		viewDetails,
 	};
 }

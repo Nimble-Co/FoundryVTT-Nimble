@@ -121,10 +121,23 @@
 	// Show expanded view when active or editing
 	const showExpanded = $derived(active || isEditing);
 
+	// Auto-exit editing mode when all selections are complete
+	$effect(() => {
+		if (isEditing && allSelectionsComplete) {
+			isEditing = false;
+		}
+	});
+
 	function handleEditClick() {
 		isEditing = true;
 		// Clear confirmed schools so user can edit again
 		confirmedSchools = new Set();
+		// Clear spell selections so user starts fresh
+		const newSelectedSpells = new Map(selectedSpells);
+		for (const group of filteredSpellSelections) {
+			newSelectedSpells.delete(group.ruleId);
+		}
+		selectedSpells = newSelectedSpells;
 	}
 </script>
 

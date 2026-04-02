@@ -76,19 +76,6 @@
 					<i class="fa-solid {isSelected ? 'fa-circle-check' : 'fa-circle'}"></i>
 				</button>
 			{/if}
-
-			<button
-				type="button"
-				class="view-details-button"
-				onclick={(e) => {
-					e.stopPropagation();
-					state.viewDetails();
-				}}
-				title="View Details"
-				aria-label="View {spell.name} details"
-			>
-				<i class="fa-solid fa-book-open"></i>
-			</button>
 		</div>
 	</div>
 
@@ -230,29 +217,6 @@
 
 		i {
 			font-size: 1.25rem;
-		}
-	}
-
-	.view-details-button {
-		width: 2rem;
-		height: 2rem;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: var(--nimble-accent-color);
-		border: 1px solid var(--nimble-card-border-color);
-		border-radius: 4px;
-		color: var(--nimble-light-text-color);
-		cursor: pointer;
-		transition: all 0.2s ease;
-
-		&:hover {
-			filter: brightness(1.2);
-			transform: scale(1.05);
-		}
-
-		i {
-			font-size: 0.875rem;
 		}
 	}
 
