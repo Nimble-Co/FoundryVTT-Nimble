@@ -7,6 +7,7 @@ import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
 import generateBlankAttributeSet from '../../../utils/generateBlankAttributeSet.js';
 import getClassFeaturesFromIndex from '../../../utils/getClassFeatures.js';
 import { getSpellsFromIndex } from '../../../utils/getSpells.js';
+import localize from '../../../utils/localize.js';
 import scrollIntoView from '../../../utils/scrollIntoView.js';
 import { CHARACTER_CREATION_STAGES, DEFAULT_SKILL_POINTS } from './constants.js';
 import type {
@@ -636,7 +637,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 				// School selection mode: add to selection groups
 				schoolSelections.push({
 					ruleId: grantRule.id,
-					label: grantRule.label || 'Choose Schools',
+					label: grantRule.label || localize('NIMBLE.spellGrants.chooseSchoolsFallback'),
 					availableSchools: grantRule.schools ?? [],
 					tiers,
 					count: grantRule.count ?? 1,
@@ -652,7 +653,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 				});
 				spellSelections.push({
 					ruleId: grantRule.id,
-					label: grantRule.label || 'Choose Spells',
+					label: grantRule.label || localize('NIMBLE.spellGrants.chooseSpellsFallback'),
 					availableSpells,
 					count: grantRule.count ?? 1,
 					utilityOnly,

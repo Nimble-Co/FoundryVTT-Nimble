@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { SchoolSelectionProps } from '#types/components/SpellGrantDisplay.d.ts';
-	import { getSpellsFromIndex, type SpellIndexEntry } from '#utils/getSpells.js';
+	import { getSpellsFromIndex, sortSpellsBySchoolThenName } from '#utils/getSpells.js';
 	import localize from '#utils/localize.js';
 	import SpellCard from './SpellCard.svelte';
 
@@ -34,17 +34,6 @@
 
 	function confirmSelection() {
 		onConfirm?.();
-	}
-
-	/**
-	 * Sorts spells by school (alphabetically) then by name (alphabetically)
-	 */
-	function sortSpellsBySchoolThenName(spells: SpellIndexEntry[]): SpellIndexEntry[] {
-		return [...spells].sort((a, b) => {
-			const schoolCompare = a.school.localeCompare(b.school);
-			if (schoolCompare !== 0) return schoolCompare;
-			return a.name.localeCompare(b.name);
-		});
 	}
 
 	// Get spells from selected schools for preview

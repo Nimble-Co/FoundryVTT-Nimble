@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { SpellSelectionProps } from '#types/components/SpellGrantDisplay.d.ts';
-	import type { SpellIndexEntry } from '#utils/getSpells.js';
+	import { sortSpellsBySchoolThenName } from '#utils/getSpells.js';
 	import localize from '#utils/localize.js';
 	import SpellCard from './SpellCard.svelte';
 
@@ -33,19 +33,6 @@
 
 	function isDisabled(spellUuid: string): boolean {
 		return !isSelected(spellUuid) && selected.length >= group.count;
-	}
-
-	/**
-	 * Sorts spells by school (alphabetically) then by name (alphabetically)
-	 */
-	function sortSpellsBySchoolThenName(spells: SpellIndexEntry[]): SpellIndexEntry[] {
-		return [...spells].sort((a, b) => {
-			// First sort by school
-			const schoolCompare = a.school.localeCompare(b.school);
-			if (schoolCompare !== 0) return schoolCompare;
-			// Then sort by name
-			return a.name.localeCompare(b.name);
-		});
 	}
 
 	const sortedSpells = $derived(sortSpellsBySchoolThenName(group.availableSpells));

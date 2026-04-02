@@ -85,7 +85,7 @@
 		<div class="accordion-content">
 			<div class="description">
 				{#if state.isLoading}
-					<p class="loading">Loading...</p>
+					<p class="loading">{localize('NIMBLE.ui.loading')}</p>
 				{:else if state.enrichedDescription}
 					{@html state.enrichedDescription}
 				{:else}

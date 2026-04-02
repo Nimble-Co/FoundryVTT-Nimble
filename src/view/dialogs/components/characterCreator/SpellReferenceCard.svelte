@@ -88,8 +88,8 @@
 			type="button"
 			class="view-details-button"
 			onclick={handleViewDetails}
-			title="View Details"
-			aria-label="View {spell.name} details"
+			title={localize('NIMBLE.ui.viewDetails')}
+			aria-label="{localize('NIMBLE.ui.viewDetails')}: {spell.name}"
 		>
 			<i class="fa-solid fa-book-open"></i>
 		</button>
@@ -99,7 +99,7 @@
 		<div class="accordion-content">
 			<div class="description">
 				{#if state.isLoading}
-					<p class="loading">Loading...</p>
+					<p class="loading">{localize('NIMBLE.ui.loading')}</p>
 				{:else if state.enrichedDescription}
 					{@html state.enrichedDescription}
 				{:else}
@@ -219,11 +219,11 @@
 
 			i {
 				font-size: 0.875rem;
-				color: hsl(0, 60%, 50%);
+				color: var(--nimble-spell-damage-color);
 			}
 
 			&--healing i {
-				color: hsl(139, 50%, 40%);
+				color: var(--nimble-spell-healing-color);
 			}
 		}
 	}

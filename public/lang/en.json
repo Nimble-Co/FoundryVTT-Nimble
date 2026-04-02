@@ -687,6 +687,8 @@
 		},
 		"ui": {
 			"cancel": "Cancel",
+			"loading": "Loading...",
+			"viewDetails": "View Details",
 			"combatTracker": {
 				"scrollbar": "Combat turn order scrollbar",
 				"hitPoints": "Hit Points",
@@ -1296,7 +1298,9 @@
 			"confirmSelection": "Confirm",
 			"selectedSchoolLabel": "Selected School",
 			"grantedSchoolLabel": "Granted School",
-			"selectedSpellLabel": "Selected Spell"
+			"selectedSpellLabel": "Selected Spell",
+			"chooseSchoolsFallback": "Choose Schools",
+			"chooseSpellsFallback": "Choose Spells"
 		},
 		"classSelection": {
 			"stepSelectClass": "Step 1: Select Class",

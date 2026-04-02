@@ -237,3 +237,15 @@ export function getSpellsByTier(index: SpellIndex, tier: number): SpellIndexEntr
 
 	return results;
 }
+
+/**
+ * Sorts spells by school (alphabetically) then by name (alphabetically).
+ * Useful for consistent display ordering in spell selection UIs.
+ */
+export function sortSpellsBySchoolThenName(spells: SpellIndexEntry[]): SpellIndexEntry[] {
+	return [...spells].sort((a, b) => {
+		const schoolCompare = a.school.localeCompare(b.school);
+		if (schoolCompare !== 0) return schoolCompare;
+		return a.name.localeCompare(b.name);
+	});
+}
