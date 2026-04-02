@@ -388,6 +388,10 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	_prepareArmorClass(): void {
 		const { components } = this.system.attributes.armor;
 
+		if (this.statuses?.has('lionhearted')) {
+			components.push({ mode: 'add', priority: 1, source: 'Lionhearted', value: 2 });
+		}
+
 		components.sort((a, b) => {
 			if (a.mode === 'override' && b.mode === 'override') return a.priority - b.priority;
 			if (a.mode === 'override' && b.mode !== 'override') return 1;

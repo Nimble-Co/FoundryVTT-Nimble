@@ -1,9 +1,33 @@
+import { getRulesFromCompendiumSource } from '../../utils/itemSourceRules.js';
 import localize from '../../utils/localize.js';
 import { countAdjacentByDisposition } from '../../utils/tokenAdjacency.js';
 
 const LIONHEARTED_STATUS_ID = 'lionhearted';
 
 let didRegisterLionheartedAdjacencySync = false;
+
+type ItemLike = {
+	sourceId?: string;
+	_stats?: { compendiumSource?: string };
+	flags?: { core?: { source?: string } };
+	system?: { rules?: Record<string, unknown>[] };
+};
+
+// Prefers embedded rules; falls back to compendium source for items that predate the rule addition.
+function getLionheartedBonusRuleSources(item: ItemLike): Record<string, unknown>[] {
+	const embeddedRules = item.system?.rules ?? [];
+	const hasLocalDefinition = embeddedRules.some((r) => r.type === 'lionheartedBonus');
+
+	const ruleSources = hasLocalDefinition ? embeddedRules : getRulesFromCompendiumSource(item);
+	return ruleSources.filter((r) => r.type === 'lionheartedBonus' && r.disabled !== true);
+}
+
+function actorHasLionheartedBonusRule(actor: Actor): boolean {
+	for (const item of (actor as Actor & { items?: Iterable<ItemLike> }).items ?? []) {
+		if (getLionheartedBonusRuleSources(item).length > 0) return true;
+	}
+	return false;
+}
 
 function getActorOwnerIds(actor: Actor.Implementation): string[] {
 	return (game.users?.contents ?? [])
@@ -39,10 +63,7 @@ function getCombatCharacterTokens(combat: Combat): Array<{
 		const actor = combatant.actor;
 		if (!actor) continue;
 
-		const hasRule = (actor as { rules?: Array<{ type: string }> }).rules?.some(
-			(r) => r.type === 'lionheartedBonus',
-		);
-		if (!hasRule) continue;
+		if (!actorHasLionheartedBonusRule(actor)) continue;
 
 		const token = combatant.token?.object as Token | null;
 		if (!token) continue;
