@@ -110,12 +110,9 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 	}
 
 	static override DEFAULT_OPTIONS = {
-		classes: ['nimble-sheet', 'nimble-dialog'],
+		classes: ['nimble-sheet'],
 		window: {
 			resizable: true,
-		},
-		position: {
-			height: 'auto' as const,
 		},
 		actions: {},
 	};
