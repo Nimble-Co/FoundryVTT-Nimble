@@ -998,7 +998,7 @@ describe('NimbleCombat', () => {
 					isOwner: true,
 					initiative: null,
 					actor: lateActor,
-					actorId: lateActor.id,
+					actorId: lateActor.id ?? '',
 					tokenId: String(createData.tokenId ?? ''),
 					sceneId: String(createData.sceneId ?? ''),
 					combatId,
@@ -1051,7 +1051,7 @@ describe('NimbleCombat', () => {
 			isOwner: true,
 			initiative: null,
 			actor,
-			actorId: actor.id,
+			actorId: actor.id ?? '',
 			combatId,
 			sceneId: currentSceneId,
 		});

@@ -192,19 +192,19 @@ class NimbleCombat extends Combat {
 
 		const sceneCombatants = await this.#getSceneCombatantsWithNormalizedSorts(sceneId);
 		const token = this.#resolveActorTokenForCurrentScene(actor, sceneId);
-		const createData = {
+		const createData: Record<string, unknown> = {
 			type: 'character',
 			actorId,
 			tokenId: token?.id ?? '',
 			sceneId,
-			hidden: token?.hidden ?? false,
+			hidden: Boolean(token?.hidden),
 			system: {
 				sort: this.#resolveLateJoinCharacterSortValue(sceneCombatants),
 			},
 		};
 
 		const createdCombatants = (await this.createEmbeddedDocuments('Combatant', [
-			createData as foundry.abstract.Document.CreateDataForName<'Combatant'>,
+			createData as unknown as foundry.abstract.Document.CreateDataForName<'Combatant'>,
 		])) as Combatant.Implementation[] | undefined;
 
 		return createdCombatants?.[0] ?? this.#findActorCombatantInScene(actorId, sceneId);
