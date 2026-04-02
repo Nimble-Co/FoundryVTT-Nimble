@@ -4,6 +4,7 @@ import ItemActivationConfigDialog from '../../../documents/dialogs/ItemActivatio
 import { getPrimaryDamageFormulaFromActivationEffects } from '../../../utils/activationEffects.js';
 import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
 import localize from '../../../utils/localize.js';
+import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
 import sortItems from '../../../utils/sortItems.js';
 import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 import { getUnarmedDamageFormula, hasUnarmedProficiency } from './attackUtils.js';
@@ -114,38 +115,6 @@ export function createOpportunityAttackPanelState(
 		}
 	}
 
-	async function showReactionConfirmation(
-		reactionName: string,
-		spentReactionNames: string,
-		noActions: boolean,
-		hasSpentReactions: boolean,
-	): Promise<boolean> {
-		const confirmReaction = 'NIMBLE.ui.heroicActions.confirmReaction';
-
-		let message: string;
-		if (noActions && hasSpentReactions) {
-			message = localize(`${confirmReaction}.bothMessage`, { reaction: spentReactionNames });
-		} else if (noActions) {
-			message = localize(`${confirmReaction}.noActionsMessage`);
-		} else {
-			message = localize(`${confirmReaction}.spentMessage`, { reaction: spentReactionNames });
-		}
-
-		const confirmQuestion = localize(`${confirmReaction}.confirmQuestion`, {
-			reaction: reactionName,
-		});
-
-		const confirmed = await foundry.applications.api.DialogV2.confirm({
-			window: { title: localize(`${confirmReaction}.title`) },
-			content: `<p>${message}</p><p>${confirmQuestion}</p>`,
-			yes: { label: localize(`${confirmReaction}.confirm`) },
-			no: { label: localize(`${confirmReaction}.cancel`) },
-			rejectClose: false,
-		});
-
-		return confirmed === true;
-	}
-
 	async function checkAndConfirmReaction(): Promise<{ confirmed: boolean; force: boolean }> {
 		const isDisabled = getReactionDisabled();
 
@@ -154,12 +123,12 @@ export function createOpportunityAttackPanelState(
 			const noActions = getNoActions();
 			const reactionName = localize('NIMBLE.ui.heroicActions.reactions.opportunity.label');
 
-			const confirmed = await showReactionConfirmation(
+			const confirmed = await showReactionConfirmation({
 				reactionName,
-				reactionName,
+				spentReactionNames: reactionName,
 				noActions,
-				opportunitySpent,
-			);
+				hasSpentReactions: opportunitySpent,
+			});
 			return { confirmed, force: true };
 		}
 

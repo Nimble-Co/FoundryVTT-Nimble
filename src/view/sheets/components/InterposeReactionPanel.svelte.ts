@@ -1,5 +1,6 @@
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import localize from '../../../utils/localize.js';
+import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
 import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 
 export function createInterposePanelState(
@@ -32,38 +33,6 @@ export function createInterposePanelState(
 		return () => Hooks.off('targetToken', hookId);
 	});
 
-	async function showReactionConfirmation(
-		reactionName: string,
-		spentReactionNames: string,
-		noActions: boolean,
-		hasSpentReactions: boolean,
-	): Promise<boolean> {
-		const confirmReaction = 'NIMBLE.ui.heroicActions.confirmReaction';
-
-		let message: string;
-		if (noActions && hasSpentReactions) {
-			message = localize(`${confirmReaction}.bothMessage`, { reaction: spentReactionNames });
-		} else if (noActions) {
-			message = localize(`${confirmReaction}.noActionsMessage`);
-		} else {
-			message = localize(`${confirmReaction}.spentMessage`, { reaction: spentReactionNames });
-		}
-
-		const confirmQuestion = localize(`${confirmReaction}.confirmQuestion`, {
-			reaction: reactionName,
-		});
-
-		const confirmed = await foundry.applications.api.DialogV2.confirm({
-			window: { title: localize(`${confirmReaction}.title`) },
-			content: `<p>${message}</p><p>${confirmQuestion}</p>`,
-			yes: { label: localize(`${confirmReaction}.confirm`) },
-			no: { label: localize(`${confirmReaction}.cancel`) },
-			rejectClose: false,
-		});
-
-		return confirmed === true;
-	}
-
 	async function handleInterpose(): Promise<void> {
 		const isDisabled = getReactionDisabled();
 
@@ -72,12 +41,12 @@ export function createInterposePanelState(
 			const noActions = getNoActions();
 			const reactionName = localize('NIMBLE.ui.heroicActions.reactions.interpose.label');
 
-			const confirmed = await showReactionConfirmation(
+			const confirmed = await showReactionConfirmation({
 				reactionName,
-				reactionName,
+				spentReactionNames: reactionName,
 				noActions,
-				interposeSpent,
-			);
+				hasSpentReactions: interposeSpent,
+			});
 			if (!confirmed) return;
 
 			const reactionUsed = await getOnUseReaction()({ force: true });
@@ -124,12 +93,12 @@ export function createInterposePanelState(
 				spentReactions.push(localize('NIMBLE.ui.heroicActions.reactionLabels.defend'));
 			const spentReactionNames = spentReactions.join(' & ');
 
-			const confirmed = await showReactionConfirmation(
+			const confirmed = await showReactionConfirmation({
 				reactionName,
 				spentReactionNames,
 				noActions,
-				spentReactions.length > 0,
-			);
+				hasSpentReactions: spentReactions.length > 0,
+			});
 			if (!confirmed) return;
 
 			const reactionUsed = await getOnUseCombinedReaction()({ force: true });

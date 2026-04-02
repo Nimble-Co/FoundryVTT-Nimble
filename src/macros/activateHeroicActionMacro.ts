@@ -10,6 +10,7 @@ import {
 } from '../utils/heroicActions.js';
 import localize from '../utils/localize.js';
 import { getMovementSpeeds } from '../utils/movementSpeeds.js';
+import showReactionConfirmation from '../utils/showReactionConfirmation.js';
 import { getTargetedTokens } from '../utils/targeting.js';
 import {
 	getUnarmedDamageFormula,
@@ -125,7 +126,6 @@ async function checkReactionConfirmation(
 		return true;
 	}
 
-	const confirmReaction = 'NIMBLE.ui.heroicActions.confirmReaction';
 	const noActions =
 		usageState.blockedReason === 'noActions' ||
 		usageState.currentActions < usageState.requiredActions;
@@ -139,28 +139,12 @@ async function checkReactionConfirmation(
 	// Get the localized names of spent reactions
 	const spentReactionNames = spentReactions.map((key) => getHeroicReactionLabel(key)).join(' & ');
 
-	let message: string;
-	if (noActions && hasSpentReactions) {
-		message = localize(`${confirmReaction}.bothMessage`, { reaction: spentReactionNames });
-	} else if (noActions) {
-		message = localize(`${confirmReaction}.noActionsMessage`);
-	} else {
-		message = localize(`${confirmReaction}.spentMessage`, { reaction: spentReactionNames });
-	}
-
-	const confirmQuestion = localize(`${confirmReaction}.confirmQuestion`, {
-		reaction: reactionName,
+	return showReactionConfirmation({
+		reactionName,
+		spentReactionNames,
+		noActions,
+		hasSpentReactions,
 	});
-
-	const confirmed = await foundry.applications.api.DialogV2.confirm({
-		window: { title: localize(`${confirmReaction}.title`) },
-		content: `<p>${message}</p><p>${confirmQuestion}</p>`,
-		yes: { label: localize(`${confirmReaction}.confirm`) },
-		no: { label: localize(`${confirmReaction}.cancel`) },
-		rejectClose: false,
-	});
-
-	return confirmed === true;
 }
 
 async function executeMoveAction(actor: NimbleCharacter): Promise<void> {

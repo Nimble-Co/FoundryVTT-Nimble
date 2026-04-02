@@ -1,5 +1,6 @@
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import localize from '../../../utils/localize.js';
+import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
 import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 
 export function createHelpPanelState(
@@ -27,38 +28,6 @@ export function createHelpPanelState(
 		return () => Hooks.off('targetToken', hookId);
 	});
 
-	async function showReactionConfirmation(
-		reactionName: string,
-		spentReactionNames: string,
-		noActions: boolean,
-		hasSpentReactions: boolean,
-	): Promise<boolean> {
-		const confirmReaction = 'NIMBLE.ui.heroicActions.confirmReaction';
-
-		let message: string;
-		if (noActions && hasSpentReactions) {
-			message = localize(`${confirmReaction}.bothMessage`, { reaction: spentReactionNames });
-		} else if (noActions) {
-			message = localize(`${confirmReaction}.noActionsMessage`);
-		} else {
-			message = localize(`${confirmReaction}.spentMessage`, { reaction: spentReactionNames });
-		}
-
-		const confirmQuestion = localize(`${confirmReaction}.confirmQuestion`, {
-			reaction: reactionName,
-		});
-
-		const confirmed = await foundry.applications.api.DialogV2.confirm({
-			window: { title: localize(`${confirmReaction}.title`) },
-			content: `<p>${message}</p><p>${confirmQuestion}</p>`,
-			yes: { label: localize(`${confirmReaction}.confirm`) },
-			no: { label: localize(`${confirmReaction}.cancel`) },
-			rejectClose: false,
-		});
-
-		return confirmed === true;
-	}
-
 	async function handleHelp(): Promise<void> {
 		const isDisabled = getReactionDisabled();
 
@@ -67,12 +36,12 @@ export function createHelpPanelState(
 			const noActions = getNoActions();
 			const reactionName = localize('NIMBLE.ui.heroicActions.reactions.help.label');
 
-			const confirmed = await showReactionConfirmation(
+			const confirmed = await showReactionConfirmation({
 				reactionName,
-				reactionName,
+				spentReactionNames: reactionName,
 				noActions,
-				helpSpent,
-			);
+				hasSpentReactions: helpSpent,
+			});
 			if (!confirmed) return;
 
 			const reactionUsed = await getOnUseReaction()({ force: true });
