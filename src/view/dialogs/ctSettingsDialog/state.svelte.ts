@@ -3,6 +3,7 @@ import {
 	type CombatTrackerPlayerHpBarTextMode,
 	getCombatTrackerActionDiceColor,
 	getCombatTrackerCtCardSizeLevel,
+	getCombatTrackerCtLeftToRightOrdering,
 	getCombatTrackerCtWidthLevel,
 	getCombatTrackerNonPlayerHpBarEnabled,
 	getCombatTrackerNonPlayerHpBarTextMode,
@@ -11,6 +12,7 @@ import {
 	getCombatTrackerResourceDrawerHoverEnabled,
 	isCombatTrackerActionDiceColorSettingKey,
 	isCombatTrackerCardSizeLevelSettingKey,
+	isCombatTrackerLeftToRightOrderingSettingKey,
 	isCombatTrackerNonPlayerHpBarEnabledSettingKey,
 	isCombatTrackerNonPlayerHpBarTextModeSettingKey,
 	isCombatTrackerPlayerHpBarTextModeSettingKey,
@@ -20,6 +22,7 @@ import {
 	normalizeHexColor,
 	setCombatTrackerActionDiceColor,
 	setCombatTrackerCtCardSizeLevel,
+	setCombatTrackerCtLeftToRightOrdering,
 	setCombatTrackerCtWidthLevel,
 	setCombatTrackerNonPlayerHpBarEnabled,
 	setCombatTrackerNonPlayerHpBarTextMode,
@@ -37,21 +40,21 @@ import {
 export const MIN_LEVEL = 1;
 export const MAX_LEVEL = 10;
 export const COLOR_PRESETS = [
-	{ label: 'White', color: '#ffffff' },
-	{ label: 'Green', color: '#6ce685' },
-	{ label: 'Red', color: '#ef5350' },
-	{ label: 'Orange', color: '#ff9800' },
-	{ label: 'Yellow', color: '#f6d44c' },
-	{ label: 'Blue', color: '#4fc3f7' },
-	{ label: 'Purple', color: '#b388ff' },
+	{ labelKey: 'NIMBLE.ui.ctSettings.colorWhite', color: '#ffffff' },
+	{ labelKey: 'NIMBLE.ui.ctSettings.colorGreen', color: '#6ce685' },
+	{ labelKey: 'NIMBLE.ui.ctSettings.colorRed', color: '#ef5350' },
+	{ labelKey: 'NIMBLE.ui.ctSettings.colorOrange', color: '#ff9800' },
+	{ labelKey: 'NIMBLE.ui.ctSettings.colorYellow', color: '#f6d44c' },
+	{ labelKey: 'NIMBLE.ui.ctSettings.colorBlue', color: '#4fc3f7' },
+	{ labelKey: 'NIMBLE.ui.ctSettings.colorPurple', color: '#b388ff' },
 ] as const;
 export const HP_BAR_TEXT_MODE_OPTIONS: ReadonlyArray<{
 	value: CombatTrackerPlayerHpBarTextMode;
-	label: string;
+	labelKey: string;
 }> = [
-	{ value: 'none', label: 'None' },
-	{ value: 'hpState', label: 'Health State' },
-	{ value: 'percentage', label: 'HP %' },
+	{ value: 'none', labelKey: 'NIMBLE.ui.ctSettings.hpBarTextNone' },
+	{ value: 'hpState', labelKey: 'NIMBLE.ui.ctSettings.hpBarTextHealthState' },
+	{ value: 'percentage', labelKey: 'NIMBLE.ui.ctSettings.hpBarTextPercentage' },
 ];
 
 function getPlayersCanViewExpandedMonstersForCombat(combat: Combat | null): boolean {
@@ -89,6 +92,8 @@ export class CtSettingsDialogState {
 	actionColor = $state(getCombatTrackerActionDiceColor());
 
 	reactionColor = $state(getCombatTrackerReactionColor());
+
+	leftToRightOrdering = $state(getCombatTrackerCtLeftToRightOrdering());
 
 	canManageSharedCtSettings = $derived(Boolean(game.user?.isGM));
 
@@ -235,6 +240,16 @@ export class CtSettingsDialogState {
 		);
 	};
 
+	handleLeftToRightOrderingChange = (event: Event): void => {
+		if (!this.canManageSharedCtSettings) return;
+		const checkbox = event.currentTarget as HTMLInputElement;
+		this.leftToRightOrdering = checkbox.checked;
+		this.persistCtSetting(
+			'left-to-right ordering',
+			setCombatTrackerCtLeftToRightOrdering(checkbox.checked),
+		);
+	};
+
 	applyActionColor = (color: string): void => {
 		const normalizedColor = normalizeHexColor(color);
 		this.actionColor = normalizedColor;
@@ -303,6 +318,9 @@ export class CtSettingsDialogState {
 			}
 			if (isCombatTrackerReactionColorSettingKey(settingKey)) {
 				this.reactionColor = getCombatTrackerReactionColor();
+			}
+			if (isCombatTrackerLeftToRightOrderingSettingKey(settingKey)) {
+				this.leftToRightOrdering = getCombatTrackerCtLeftToRightOrdering();
 			}
 		});
 	}

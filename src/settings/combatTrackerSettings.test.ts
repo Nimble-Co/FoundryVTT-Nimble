@@ -3,6 +3,7 @@ import {
 	COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY,
 	COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY,
 	COMBAT_TRACKER_ENABLED_SETTING_KEY,
+	COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY,
 	COMBAT_TRACKER_NON_PLAYER_HP_BAR_ENABLED_SETTING_KEY,
 	COMBAT_TRACKER_NON_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY,
 	COMBAT_TRACKER_PLAYER_HP_BAR_TEXT_MODE_SETTING_KEY,
@@ -14,6 +15,7 @@ import {
 	getCombatTrackerActionDiceColor,
 	getCombatTrackerCtCardSizeLevel,
 	getCombatTrackerCtEnabled,
+	getCombatTrackerCtLeftToRightOrdering,
 	getCombatTrackerCtWidthLevel,
 	getCombatTrackerNonPlayerHpBarEnabled,
 	getCombatTrackerNonPlayerHpBarTextMode,
@@ -25,6 +27,7 @@ import {
 	isCombatTrackerActionDiceColorSettingKey,
 	isCombatTrackerCardSizeLevelSettingKey,
 	isCombatTrackerEnabledSettingKey,
+	isCombatTrackerLeftToRightOrderingSettingKey,
 	isCombatTrackerNonPlayerHpBarEnabledSettingKey,
 	isCombatTrackerNonPlayerHpBarTextModeSettingKey,
 	isCombatTrackerPlayerHpBarTextModeSettingKey,
@@ -37,6 +40,7 @@ import {
 	setCombatTrackerActionDiceColor,
 	setCombatTrackerCtCardSizeLevel,
 	setCombatTrackerCtEnabled,
+	setCombatTrackerCtLeftToRightOrdering,
 	setCombatTrackerCtWidthLevel,
 	setCombatTrackerNonPlayerHpBarEnabled,
 	setCombatTrackerNonPlayerHpBarTextMode,
@@ -92,6 +96,7 @@ describe('combatTrackerSettings', () => {
 				COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY,
 				COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY,
 				COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY,
+				COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY,
 				CURRENT_TURN_ANIMATION_SETTING_KEYS.pulseAnimation,
 			]),
 		);
@@ -138,6 +143,10 @@ describe('combatTrackerSettings', () => {
 			scope: 'client',
 			default: '#4fc3f7',
 		});
+		expect(registeredOptions[COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY]).toMatchObject({
+			scope: 'world',
+			default: false,
+		});
 	});
 
 	it('normalizes ct world settings', () => {
@@ -150,7 +159,7 @@ describe('combatTrackerSettings', () => {
 			.mockReturnValueOnce(false)
 			.mockReturnValueOnce(0)
 			.mockReturnValueOnce(11)
-			.mockReturnValueOnce(0);
+			.mockReturnValueOnce(true);
 
 		expect(getCombatTrackerPlayersCanExpandMonsterCards()).toBe(true);
 		expect(getCombatTrackerResourceDrawerHoverEnabled()).toBe(false);
@@ -160,6 +169,7 @@ describe('combatTrackerSettings', () => {
 		expect(getCombatTrackerCtEnabled()).toBe(false);
 		expect(getCombatTrackerCtWidthLevel()).toBe(1);
 		expect(getCombatTrackerCtCardSizeLevel()).toBe(10);
+		expect(getCombatTrackerCtLeftToRightOrdering()).toBe(true);
 	});
 
 	it('normalizes action and reaction colors', () => {
@@ -178,6 +188,7 @@ describe('combatTrackerSettings', () => {
 		await setCombatTrackerCtEnabled(false);
 		await setCombatTrackerCtWidthLevel(3.4);
 		await setCombatTrackerCtCardSizeLevel(4.6);
+		await setCombatTrackerCtLeftToRightOrdering(true);
 
 		expect(settingsMock.set.mock.calls).toEqual(
 			expect.arrayContaining([
@@ -189,6 +200,7 @@ describe('combatTrackerSettings', () => {
 				['nimble', COMBAT_TRACKER_ENABLED_SETTING_KEY, false],
 				['nimble', COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY, 3],
 				['nimble', COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY, 5],
+				['nimble', COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY, true],
 			]),
 		);
 	});
@@ -305,6 +317,16 @@ describe('combatTrackerSettings', () => {
 		expect(isCombatTrackerReactionColorSettingKey(COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY)).toBe(
 			true,
 		);
+		expect(
+			isCombatTrackerLeftToRightOrderingSettingKey(
+				COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY,
+			),
+		).toBe(true);
+		expect(
+			isCombatTrackerLeftToRightOrderingSettingKey(
+				`nimble.${COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY}`,
+			),
+		).toBe(true);
 		expect(isCombatTrackerReactionColorSettingKey('combatTrackerLocation')).toBe(false);
 	});
 

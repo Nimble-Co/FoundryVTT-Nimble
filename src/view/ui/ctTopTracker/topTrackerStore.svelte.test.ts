@@ -49,6 +49,8 @@ describe('CtTopTrackerStore', () => {
 						return false;
 					case 'combatTrackerNonPlayerHpBarTextMode':
 						return 'none';
+					case 'combatTrackerCtLeftToRightOrdering':
+						return false;
 					default:
 						return undefined;
 				}
@@ -180,6 +182,73 @@ describe('CtTopTrackerStore', () => {
 				'combatant-legendary-one-1',
 			]),
 		);
+	});
+
+	it('preserves natural entry order when left-to-right ordering is enabled', () => {
+		const playerOne = createCombatantFixture({
+			id: 'player-one',
+			type: 'character',
+			actor: createCombatActorFixture({ type: 'character' }),
+			sceneId: 'scene-1',
+		});
+		(playerOne as unknown as { visible: boolean }).visible = true;
+		const playerTwo = createCombatantFixture({
+			id: 'player-two',
+			type: 'character',
+			actor: createCombatActorFixture({ type: 'character' }),
+			sceneId: 'scene-1',
+		});
+		(playerTwo as unknown as { visible: boolean }).visible = true;
+		const playerThree = createCombatantFixture({
+			id: 'player-three',
+			type: 'character',
+			actor: createCombatActorFixture({ type: 'character' }),
+			sceneId: 'scene-1',
+		});
+		(playerThree as unknown as { visible: boolean }).visible = true;
+
+		const turns = [playerOne, playerTwo, playerThree] as Combatant.Implementation[];
+		const combat = {
+			id: 'combat-left-to-right',
+			active: true,
+			round: 1,
+			turn: 2,
+			combatant: playerThree,
+			combatants: createCombatantsCollectionFixture([playerOne, playerTwo, playerThree]),
+			turns,
+			setupTurns: vi.fn(() => turns),
+			scene: { id: 'scene-1' },
+		} as unknown as Combat;
+
+		const globals = globalThis as unknown as {
+			game: {
+				settings: { get: ReturnType<typeof vi.fn> };
+				combats: { contents: Combat[]; viewed?: Combat | null };
+				combat?: Combat | null;
+			};
+		};
+		globals.game.settings = {
+			get: vi.fn((namespace: string, key: string) => {
+				if (namespace !== 'nimble') return undefined;
+				if (key === 'combatTrackerCtLeftToRightOrdering') return true;
+				return undefined;
+			}),
+		};
+		globals.game.combats = {
+			contents: [combat],
+			viewed: combat,
+		};
+		globals.game.combat = combat;
+
+		const store = new CtTopTrackerStore();
+		store.refreshCurrentCombat(true);
+
+		expect(store.activeEntryKey).toBe('combatant-player-three-0');
+		expect(store.orderedAliveEntries.map((entry) => entry.key)).toEqual([
+			'combatant-player-one-0',
+			'combatant-player-two-0',
+			'combatant-player-three-0',
+		]);
 	});
 
 	it('mirrors shared monster expansion to players only when the current combat allows it', () => {

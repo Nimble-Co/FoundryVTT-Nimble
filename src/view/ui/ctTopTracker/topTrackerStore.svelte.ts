@@ -1,6 +1,7 @@
 import {
 	getCombatTrackerCtCardSizeLevel,
 	getCombatTrackerCtEnabled,
+	getCombatTrackerCtLeftToRightOrdering,
 	getCombatTrackerCtWidthLevel,
 	getCombatTrackerNonPlayerHpBarEnabled,
 	getCombatTrackerNonPlayerHpBarTextMode,
@@ -86,6 +87,8 @@ export class CtTopTrackerStore {
 
 	ctCardSizeLevel = $state(getCombatTrackerCtCardSizeLevel());
 
+	ctLeftToRightOrdering = $state(getCombatTrackerCtLeftToRightOrdering());
+
 	layoutVersion = $state(0);
 
 	activeDragSourceKey = $state<string | null>(null);
@@ -164,7 +167,11 @@ export class CtTopTrackerStore {
 	});
 
 	orderedAliveEntries = $derived.by(() =>
-		orderEntriesForCenteredActive(this.aliveEntries, this.activeEntryKey, true),
+		orderEntriesForCenteredActive(
+			this.aliveEntries,
+			this.activeEntryKey,
+			!this.ctLeftToRightOrdering,
+		),
 	);
 
 	roundBoundaryKey = $derived.by(() =>
@@ -294,6 +301,9 @@ export class CtTopTrackerStore {
 		}
 		if (patch.ctCardSizeLevel !== undefined) {
 			this.ctCardSizeLevel = patch.ctCardSizeLevel;
+		}
+		if (patch.ctLeftToRightOrdering !== undefined) {
+			this.ctLeftToRightOrdering = patch.ctLeftToRightOrdering;
 		}
 		if (patch.layoutVersionDelta) {
 			this.layoutVersion += patch.layoutVersionDelta;

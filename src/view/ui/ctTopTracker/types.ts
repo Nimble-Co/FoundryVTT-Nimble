@@ -127,6 +127,7 @@ export interface CtTopTrackerSettingPatch {
 	ctEnabled?: boolean;
 	ctWidthLevel?: number;
 	ctCardSizeLevel?: number;
+	ctLeftToRightOrdering?: boolean;
 	layoutVersionDelta?: number;
 	shouldCenterActiveEntry?: boolean;
 }
