@@ -213,15 +213,15 @@
 		}
 
 		&__preview-label {
-			margin: 0 0 0.5rem 0;
+			margin: 0;
 			font-size: var(--nimble-sm-text);
 		}
 
 		&__spell-list {
 			display: flex;
 			flex-direction: column;
-			gap: 0.25rem;
-			margin: 0;
+			gap: 0;
+			margin: 0.375rem 0 0 0;
 			padding: 0;
 			list-style: none;
 		}

@@ -436,7 +436,7 @@
 			align-items: center;
 			justify-content: space-between;
 			gap: 0.5rem;
-			margin-bottom: 0.5rem;
+			margin-bottom: 0.375rem;
 		}
 
 		&__confirmed-label {
