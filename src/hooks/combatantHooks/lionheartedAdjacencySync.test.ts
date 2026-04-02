@@ -20,7 +20,7 @@ type LionheartedAdjacencySyncTestGlobals = {
 	canvas: {
 		ready: boolean;
 		tokens: { placeables: unknown[] } | null;
-		grid: { testAdjacency: ReturnType<typeof vi.fn> };
+		grid: { size: number };
 	} | null;
 	CONST: { TOKEN_DISPOSITIONS: { HOSTILE: number } };
 	ChatMessage: { create: ReturnType<typeof vi.fn> };
@@ -32,7 +32,7 @@ function globals() {
 }
 
 function createMockToken(x: number, y: number, disposition: number) {
-	return { document: { x, y, disposition } };
+	return { document: { x, y, disposition, width: 1, height: 1 } };
 }
 
 function createLionheartedActor(options: { id?: string; isActive?: boolean } = {}) {
@@ -68,7 +68,7 @@ describe('syncLionheartedAdjacencyState', () => {
 		globals().canvas = {
 			ready: true,
 			tokens: { placeables: [] },
-			grid: { testAdjacency: vi.fn().mockReturnValue(false) },
+			grid: { size: 100 },
 		};
 	});
 
@@ -102,11 +102,7 @@ describe('syncLionheartedAdjacencyState', () => {
 		globals().canvas = {
 			ready: true,
 			tokens: { placeables: [playerToken, hostileToken] },
-			grid: {
-				testAdjacency: vi
-					.fn()
-					.mockImplementation((a: { x: number }, b: { x: number }) => a.x === 0 && b.x === 100),
-			},
+			grid: { size: 100 },
 		};
 
 		const combat = createMockCombat([createMockCombatant(actor, playerToken)]);
@@ -130,14 +126,7 @@ describe('syncLionheartedAdjacencyState', () => {
 		globals().canvas = {
 			ready: true,
 			tokens: { placeables: [tokenA, tokenB, hostileA, hostileB] },
-			grid: {
-				testAdjacency: vi
-					.fn()
-					.mockImplementation(
-						(a: { x: number }, b: { x: number }) =>
-							(a.x === 0 && b.x === 100) || (a.x === 300 && b.x === 400),
-					),
-			},
+			grid: { size: 100 },
 		};
 
 		const combat = createMockCombat([
@@ -165,7 +154,7 @@ describe('syncLionheartedAdjacencyState', () => {
 		globals().canvas = {
 			ready: true,
 			tokens: { placeables: [playerToken, hostileToken] },
-			grid: { testAdjacency: vi.fn().mockReturnValue(false) },
+			grid: { size: 100 },
 		};
 
 		const combat = createMockCombat([createMockCombatant(actor, playerToken)]);
@@ -185,11 +174,7 @@ describe('syncLionheartedAdjacencyState', () => {
 		globals().canvas = {
 			ready: true,
 			tokens: { placeables: [tokenA, tokenB, hostileNearB] },
-			grid: {
-				testAdjacency: vi
-					.fn()
-					.mockImplementation((a: { x: number }, b: { x: number }) => a.x === 300 && b.x === 400),
-			},
+			grid: { size: 100 },
 		};
 
 		const combat = createMockCombat([
@@ -218,7 +203,7 @@ describe('syncLionheartedAdjacencyState', () => {
 		globals().canvas = {
 			ready: true,
 			tokens: { placeables: [playerToken, createMockToken(100, 0, -1)] },
-			grid: { testAdjacency: vi.fn().mockReturnValue(true) },
+			grid: { size: 100 },
 		};
 
 		await syncLionheartedAdjacencyState(
@@ -235,7 +220,7 @@ describe('syncLionheartedAdjacencyState', () => {
 		globals().canvas = {
 			ready: true,
 			tokens: { placeables: [token, createMockToken(100, 0, -1)] },
-			grid: { testAdjacency: vi.fn().mockReturnValue(true) },
+			grid: { size: 100 },
 		};
 
 		const combat = createMockCombat([{ type: 'npc', actor, token: { object: token } }]);
@@ -252,7 +237,7 @@ describe('syncLionheartedAdjacencyState', () => {
 		globals().canvas = {
 			ready: true,
 			tokens: { placeables: [playerToken, createMockToken(100, 0, -1)] },
-			grid: { testAdjacency: vi.fn().mockReturnValue(true) },
+			grid: { size: 100 },
 		};
 
 		await syncLionheartedAdjacencyState(
@@ -348,7 +333,7 @@ describe('registerLionheartedAdjacencySync', () => {
 		globals().canvas = {
 			ready: true,
 			tokens: { placeables: [token] },
-			grid: { testAdjacency: vi.fn().mockReturnValue(false) },
+			grid: { size: 100 },
 		};
 		globals().foundry = { utils: { hasProperty: createHasPropertyMock() } };
 
