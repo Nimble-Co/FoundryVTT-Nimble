@@ -220,6 +220,13 @@ function extractClassFeaturesSection(actor: NimbleCharacter): ContentSection[] {
 			if (!item.isType('feature')) return false;
 			const feature = item as NimbleFeatureItem;
 			return feature.system.class === classId || feature.system.class === classItem.identifier;
+		}) as NimbleFeatureItem[];
+
+		// Sort features by level, then by name
+		classFeatures.sort((a, b) => {
+			const levelDiff = (a.system.gainedAtLevel ?? 0) - (b.system.gainedAtLevel ?? 0);
+			if (levelDiff !== 0) return levelDiff;
+			return (a.name ?? '').localeCompare(b.name ?? '');
 		});
 
 		if (classFeatures.length > 0) {
@@ -262,6 +269,13 @@ function extractClassFeaturesSectionHtml(actor: NimbleCharacter): ContentSection
 			if (!item.isType('feature')) return false;
 			const feature = item as NimbleFeatureItem;
 			return feature.system.class === classId || feature.system.class === classItem.identifier;
+		}) as NimbleFeatureItem[];
+
+		// Sort features by level, then by name
+		classFeatures.sort((a, b) => {
+			const levelDiff = (a.system.gainedAtLevel ?? 0) - (b.system.gainedAtLevel ?? 0);
+			if (levelDiff !== 0) return levelDiff;
+			return (a.name ?? '').localeCompare(b.name ?? '');
 		});
 
 		if (classFeatures.length > 0) {
@@ -596,59 +610,29 @@ function sectionsToLinesHtml(sections: ContentSectionHtml[]): string[] {
 }
 
 /**
- * Distribute lines across columns, trying to balance content.
+ * Distribute lines across columns, balancing content evenly.
  */
 function distributeToColumns(lines: string[]): [string, string, string] {
-	const { linesPerColumn } = pdfCoordinates.linedTextArea;
+	const totalLines = lines.length;
+	const linesPerColumn = Math.ceil(totalLines / 3);
 
-	const column1Lines: string[] = [];
-	const column2Lines: string[] = [];
-	const column3Lines: string[] = [];
-
-	let currentColumn = 0;
-	let currentColumnLines = 0;
-
-	for (const line of lines) {
-		const targetColumn =
-			currentColumn === 0 ? column1Lines : currentColumn === 1 ? column2Lines : column3Lines;
-
-		targetColumn.push(line);
-		currentColumnLines++;
-
-		if (currentColumnLines >= linesPerColumn && currentColumn < 2) {
-			currentColumn++;
-			currentColumnLines = 0;
-		}
-	}
+	const column1Lines = lines.slice(0, linesPerColumn);
+	const column2Lines = lines.slice(linesPerColumn, linesPerColumn * 2);
+	const column3Lines = lines.slice(linesPerColumn * 2);
 
 	return [column1Lines.join('\n'), column2Lines.join('\n'), column3Lines.join('\n')];
 }
 
 /**
- * Distribute HTML lines across columns.
+ * Distribute HTML lines across columns, balancing content evenly.
  */
 function distributeToColumnsHtml(lines: string[]): [string, string, string] {
-	const { linesPerColumn } = pdfCoordinates.linedTextArea;
+	const totalLines = lines.length;
+	const linesPerColumn = Math.ceil(totalLines / 3);
 
-	const column1Lines: string[] = [];
-	const column2Lines: string[] = [];
-	const column3Lines: string[] = [];
-
-	let currentColumn = 0;
-	let currentColumnLines = 0;
-
-	for (const line of lines) {
-		const targetColumn =
-			currentColumn === 0 ? column1Lines : currentColumn === 1 ? column2Lines : column3Lines;
-
-		targetColumn.push(line);
-		currentColumnLines++;
-
-		if (currentColumnLines >= linesPerColumn && currentColumn < 2) {
-			currentColumn++;
-			currentColumnLines = 0;
-		}
-	}
+	const column1Lines = lines.slice(0, linesPerColumn);
+	const column2Lines = lines.slice(linesPerColumn, linesPerColumn * 2);
+	const column3Lines = lines.slice(linesPerColumn * 2);
 
 	return [column1Lines.join('<br>'), column2Lines.join('<br>'), column3Lines.join('<br>')];
 }
@@ -758,6 +742,13 @@ function getSelectableItems(actor: NimbleCharacter): SelectableItem[] {
 			if (!item.isType('feature')) return false;
 			const feature = item as NimbleFeatureItem;
 			return feature.system.class === classId || feature.system.class === classItem.identifier;
+		}) as NimbleFeatureItem[];
+
+		// Sort features by level, then by name
+		classFeatures.sort((a, b) => {
+			const levelDiff = (a.system.gainedAtLevel ?? 0) - (b.system.gainedAtLevel ?? 0);
+			if (levelDiff !== 0) return levelDiff;
+			return (a.name ?? '').localeCompare(b.name ?? '');
 		});
 
 		for (const feature of classFeatures) {

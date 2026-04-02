@@ -482,13 +482,12 @@
 
 		&__item {
 			display: flex;
-			align-items: flex-start;
+			align-items: center;
 			gap: 0.375rem;
 			cursor: pointer;
 			font-size: var(--nimble-sm-text);
 
 			input[type='checkbox'] {
-				margin-top: 0.125rem;
 				flex-shrink: 0;
 			}
 		}
