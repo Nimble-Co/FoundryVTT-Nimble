@@ -323,13 +323,10 @@
 }
 
 .system-nimble .nimble-dialog {
-	max-height: 80vh;
-
 	.window-content {
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
-		max-height: calc(80vh - var(--header-height, 30px));
 	}
 
 	.nimble-sheet__body {
