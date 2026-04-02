@@ -116,6 +116,13 @@ export async function clearLionheartedAdjacencyState(combat: Combat): Promise<vo
 const registeredHooks: Array<{ event: string; id: number }> = [];
 const hooksOff = Hooks.off.bind(Hooks) as (event: string, id: number) => void;
 
+if (import.meta.hot) {
+	import.meta.hot.dispose(() => {
+		for (const { event, id } of registeredHooks) hooksOff(event, id);
+		registeredHooks.length = 0;
+	});
+}
+
 export default function registerLionheartedAdjacencySync() {
 	for (const { event, id } of registeredHooks) hooksOff(event, id);
 	registeredHooks.length = 0;
