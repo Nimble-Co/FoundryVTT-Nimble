@@ -824,6 +824,10 @@
 					"confirmQuestion": "Do you still want to attack?",
 					"confirm": "Attack"
 				},
+				"macroWarnings": {
+					"selectCharacterToken": "Select a character token to use this action",
+					"mustBeInCombat": "You must be in combat to use {action}"
+				},
 				"noSpells": "You don't have any spells",
 				"endTurn": "End Turn",
 				"rollInitiative": "Roll Initiative",

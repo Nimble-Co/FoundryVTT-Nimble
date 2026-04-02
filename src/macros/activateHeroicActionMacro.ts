@@ -41,7 +41,7 @@ export async function activateHeroicActionMacro(
 	if (!actor && speaker.actor) actor = game.actors.get(speaker.actor as string) ?? undefined;
 
 	if (!actor || actor.type !== 'character') {
-		ui.notifications.warn('Select a character token to use this action');
+		ui.notifications.warn(localize('NIMBLE.ui.heroicActions.macroWarnings.selectCharacterToken'));
 		return;
 	}
 
@@ -169,7 +169,10 @@ async function executeMoveAction(actor: NimbleCharacter): Promise<void> {
 	const inCombat = combatant?.initiative !== null;
 
 	if (!inCombat) {
-		ui.notifications.warn('You must be in combat to use the Move action');
+		const actionName = localize('NIMBLE.ui.heroicActions.actions.move.label');
+		ui.notifications.warn(
+			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: actionName }),
+		);
 		return;
 	}
 
@@ -218,12 +221,14 @@ async function executeDefendReaction(actor: NimbleCharacter): Promise<void> {
 	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
 	const combatantId = combatant?.id ?? combatant?._id ?? null;
 
+	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.defend.label');
+
 	if (!combat?.useHeroicReactions || !combatantId) {
-		ui.notifications.warn('You must be in combat to use the Defend reaction');
+		ui.notifications.warn(
+			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: reactionName }),
+		);
 		return;
 	}
-
-	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.defend.label');
 	const confirmed = await checkReactionConfirmation(actor, ['defend'], reactionName);
 	if (!confirmed) return;
 
@@ -254,12 +259,14 @@ async function executeInterposeReaction(actor: NimbleCharacter): Promise<void> {
 	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
 	const combatantId = combatant?.id ?? combatant?._id ?? null;
 
+	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.interpose.label');
+
 	if (!combat?.useHeroicReactions || !combatantId) {
-		ui.notifications.warn('You must be in combat to use the Interpose reaction');
+		ui.notifications.warn(
+			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: reactionName }),
+		);
 		return;
 	}
-
-	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.interpose.label');
 	const confirmed = await checkReactionConfirmation(actor, ['interpose'], reactionName);
 	if (!confirmed) return;
 
@@ -289,12 +296,14 @@ async function executeInterposeAndDefendReaction(actor: NimbleCharacter): Promis
 	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
 	const combatantId = combatant?.id ?? combatant?._id ?? null;
 
+	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm');
+
 	if (!combat?.useHeroicReactions || !combatantId) {
-		ui.notifications.warn('You must be in combat to use the Interpose & Defend reaction');
+		ui.notifications.warn(
+			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: reactionName }),
+		);
 		return;
 	}
-
-	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm');
 	const confirmed = await checkReactionConfirmation(actor, ['interpose', 'defend'], reactionName);
 	if (!confirmed) return;
 
@@ -345,12 +354,14 @@ async function executeHelpReaction(actor: NimbleCharacter): Promise<void> {
 	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
 	const combatantId = combatant?.id ?? combatant?._id ?? null;
 
+	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.help.label');
+
 	if (!combat?.useHeroicReactions || !combatantId) {
-		ui.notifications.warn('You must be in combat to use the Help reaction');
+		ui.notifications.warn(
+			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: reactionName }),
+		);
 		return;
 	}
-
-	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.help.label');
 	const confirmed = await checkReactionConfirmation(actor, ['help'], reactionName);
 	if (!confirmed) return;
 
@@ -380,12 +391,14 @@ async function executeOpportunityAttackReaction(actor: NimbleCharacter): Promise
 	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
 	const combatantId = combatant?.id ?? combatant?._id ?? null;
 
+	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.opportunity.label');
+
 	if (!combat?.useHeroicReactions || !combatantId) {
-		ui.notifications.warn('You must be in combat to use the Opportunity Attack reaction');
+		ui.notifications.warn(
+			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: reactionName }),
+		);
 		return;
 	}
-
-	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.opportunity.label');
 	const confirmed = await checkReactionConfirmation(actor, ['opportunityAttack'], reactionName);
 	if (!confirmed) return;
 
