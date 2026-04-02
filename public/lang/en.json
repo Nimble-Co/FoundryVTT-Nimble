@@ -236,7 +236,8 @@
 			"stunned": "Stunned",
 			"taunted": "Taunted",
 			"unconscious": "Unconscious",
-			"wounded": "Wounded"
+			"wounded": "Wounded",
+			"lionhearted": "Lionhearted"
 		},
 		"conditionDescriptions": {
 			"blinded": "<p>Can't see. Attacks against you have advantage, and your attacks have disadvantage.</p>",
@@ -267,7 +268,8 @@
 			"stunned": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
 			"taunted": "<p>Disadvantage on attacks except against the most recent taunter.</p>",
 			"unconscious": "<p>Incapacitated. Can't do anything. Attacks against you have advantage, and melee attacks that hit, crit.</p>",
-			"wounded": "<p>Has any Wounds (typically 6 Wounds and a hero is dead).</p>"
+			"wounded": "<p>Has any Wounds (typically 6 Wounds and a hero is dead).</p>",
+			"lionhearted": "<p>You have the most enemies adjacent to you. +2 Armor (Lionhearted boon).</p>"
 		},
 		"currency": {
 			"cp": "Copper",
@@ -534,6 +536,7 @@
 			"hitDiceAdvantage": "Hit Dice Advantage",
 			"incrementHitDice": "Increment Hit Dice",
 			"initiativeBonus": "Initiative Bonus",
+			"lionheartedBonus": "Lionhearted Bonus",
 			"initiativeMessage": "Initiative Message",
 			"initiativeRollMode": "Initiative Roll Mode",
 			"maxHitDice": "Hit Dice",
@@ -547,6 +550,10 @@
 			"skillBonus": "Skill Bonus",
 			"speedBonus": "Speed Bonus",
 			"unarmedDamage": "Unarmed Damage"
+		},
+		"lionheart": {
+			"gained": "+2 Armor — you have the most enemies adjacent to you.",
+			"lost": "+2 Armor bonus lost — you no longer have the most enemies adjacent to you."
 		},
 		"creatureFeatures": {
 			"noFeatures": "No features yet.",

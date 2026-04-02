@@ -6,6 +6,7 @@ import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
 import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
+import registerLionheartedAdjacencySync from './combatantHooks/lionheartedAdjacencySync.js';
 import registerCombatSidebarToggle from './combatSidebarToggle.js';
 import combatStateGuards from './combatStateGuards.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
@@ -62,6 +63,7 @@ export default async function ready() {
 	}
 
 	combatStateGuards();
+	registerLionheartedAdjacencySync();
 	registerMinionGroupTokenActions();
 
 	const combatTrackerConfig = game.settings.get('core', 'combatTrackerConfig') ?? {};

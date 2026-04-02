@@ -30,6 +30,7 @@ export default function registerConditionsConfig() {
 		taunted: 'NIMBLE.conditions.taunted',
 		unconscious: 'NIMBLE.conditions.unconscious',
 		wounded: 'NIMBLE.conditions.wounded',
+		lionhearted: 'NIMBLE.conditions.lionhearted',
 	};
 
 	const conditionDescriptions = {
@@ -60,6 +61,7 @@ export default function registerConditionsConfig() {
 		taunted: 'NIMBLE.conditionDescriptions.taunted',
 		unconscious: 'NIMBLE.conditionDescriptions.unconscious',
 		wounded: 'NIMBLE.conditionDescriptions.wounded',
+		lionhearted: 'NIMBLE.conditionDescriptions.lionhearted',
 	};
 
 	const conditionDefaultImages = {
@@ -93,6 +95,7 @@ export default function registerConditionsConfig() {
 		taunted: 'systems/nimble/assets/icons/taunted.svg',
 		unconscious: 'icons/svg/unconscious.svg',
 		wounded: 'systems/nimble/assets/icons/wound.svg',
+		lionhearted: 'icons/creatures/abilities/lion-roar-yellow.webp',
 	};
 
 	const conditionAliasedConditions = {
