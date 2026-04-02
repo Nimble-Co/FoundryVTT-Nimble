@@ -1,80 +1,26 @@
 import { jsPDF } from 'jspdf';
 
 import type { NimbleCharacter } from '#documents/actor/character.js';
-import type { NimbleFeatureItem } from '#documents/item/feature.js';
-import type { NimbleObjectItem } from '#documents/item/object.js';
-import type { NimbleSpellItem } from '#documents/item/spell.js';
 
+import { drawStyledText } from './drawStyledText.ts';
+import { parseHtmlToStyledSegments } from './parseHtmlToStyledSegments.ts';
 import { type LinedTextAreaConfig, pdfCoordinates, type TextPosition } from './pdfCoordinates.ts';
 
 /** PDF page dimensions in points (letter size) */
 const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
 
-interface ContentSection {
-	header: string;
-	items: string[];
-}
+/** Template options */
+type TemplateType = 'lined' | 'noLines';
 
-/**
- * Strip HTML tags from a string, preserving line breaks from block elements.
- */
-function stripHtml(html: string): string {
-	if (!html) return '';
-	// Replace block-level elements with newlines before stripping
-	const processed = html
-		.replace(/<\/p>/gi, '\n')
-		.replace(/<br\s*\/?>/gi, '\n')
-		.replace(/<\/div>/gi, '\n')
-		.replace(/<\/li>/gi, '\n');
-
-	const temp = document.createElement('div');
-	temp.innerHTML = processed;
-	const text = temp.textContent ?? temp.innerText ?? '';
-	// Normalize multiple spaces (but preserve newlines)
-	return text
-		.split('\n')
-		.map((line) => line.replace(/\s+/g, ' ').trim())
-		.filter((line) => line.length > 0)
-		.join(' | ');
-}
-
-/**
- * Extract mechanical abilities from ancestry/background description.
- * These are typically after an <hr> tag, with ability names in <strong> tags.
- */
-function extractMechanicalAbilities(html: string): string {
-	if (!html) return '';
-
-	// Split on <hr> and take the part after it (mechanical abilities)
-	const hrParts = html.split(/<hr\s*\/?>/i);
-	const mechanicalPart = hrParts.length > 1 ? hrParts.slice(1).join('') : html;
-
-	// Process the mechanical part
-	const processed = mechanicalPart
-		.replace(/<\/p>/gi, '\n')
-		.replace(/<br\s*\/?>/gi, '\n')
-		.replace(/<\/div>/gi, '\n')
-		.replace(/<\/li>/gi, '\n')
-		// Make strong text stand out with brackets
-		.replace(/<strong>([^<]*)<\/strong>/gi, '[$1]');
-
-	const temp = document.createElement('div');
-	temp.innerHTML = processed;
-	const text = temp.textContent ?? temp.innerText ?? '';
-
-	// Normalize whitespace and join lines
-	return text
-		.split('\n')
-		.map((line) => line.replace(/\s+/g, ' ').trim())
-		.filter((line) => line.length > 0)
-		.join(' | ');
+interface ExportOptions {
+	columnContent: [string, string, string];
+	template?: TemplateType;
+	returnPdf?: boolean;
 }
 
 /**
  * Format a modifier value with a sign prefix.
- * @param value - The numeric modifier value
- * @returns A string like "+3" or "-1" or "0"
  */
 function formatModifier(value: number): string {
 	if (value >= 0) return `+${value}`;
@@ -167,257 +113,65 @@ function extractCharacterData(actor: NimbleCharacter) {
 }
 
 /**
- * Extract ancestry and its associated features.
+ * Draw styled column content with HTML formatting preserved.
  */
-function extractAncestrySection(actor: NimbleCharacter): ContentSection | null {
-	const ancestry = actor.ancestry;
-	if (!ancestry) return null;
-
-	// Extract mechanical abilities (after <hr> tag) and combine with header
-	const abilities = extractMechanicalAbilities(ancestry.system.description);
-	const header = abilities
-		? `ANCESTRY: ${ancestry.name} - ${abilities}`
-		: `ANCESTRY: ${ancestry.name}`;
-
-	return {
-		header,
-		items: [],
-	};
-}
-
-/**
- * Extract background and its associated features.
- */
-function extractBackgroundSection(actor: NimbleCharacter): ContentSection | null {
-	const background = actor.background;
-	if (!background) return null;
-
-	// Extract mechanical abilities (after <hr> tag) and combine with header
-	const abilities = extractMechanicalAbilities(background.system.description);
-	const header = abilities
-		? `BACKGROUND: ${background.name} - ${abilities}`
-		: `BACKGROUND: ${background.name}`;
-
-	return {
-		header,
-		items: [],
-	};
-}
-
-/**
- * Check if a feature is about spell/mana progression (should be skipped since spells list covers it).
- */
-function isSpellProgressionFeature(name: string): boolean {
-	const lowerName = name.toLowerCase();
-	return (
-		lowerName.includes('unlock tier') ||
-		lowerName.includes('mana and unlock') ||
-		(lowerName.includes('unlock') && lowerName.includes('spell')) ||
-		lowerName === 'master of storms' ||
-		lowerName === 'stormcaller' ||
-		lowerName.includes('learn a utility spell')
-	);
-}
-
-/**
- * Extract class features grouped by class.
- */
-function extractClassFeaturesSection(actor: NimbleCharacter): ContentSection[] {
-	const sections: ContentSection[] = [];
-	const classes = actor.classes ?? {};
-
-	for (const [classId, classItem] of Object.entries(classes)) {
-		const classFeatures = actor.items.filter((item) => {
-			if (!item.isType('feature')) return false;
-			const feature = item as NimbleFeatureItem;
-			return feature.system.class === classId || feature.system.class === classItem.identifier;
-		});
-
-		if (classFeatures.length > 0) {
-			const items: string[] = [];
-			for (const feature of classFeatures) {
-				// Skip spell progression features
-				if (isSpellProgressionFeature(feature.name ?? '')) continue;
-
-				const feat = feature as NimbleFeatureItem;
-				const level = feat.system.gainedAtLevel;
-				const levelStr = level ? ` (Lvl ${level})` : '';
-				const desc = stripHtml(feat.system.description);
-				// Combine name, level, and description for compact display
-				if (desc) {
-					items.push(`• ${feature.name}${levelStr}: ${desc}`);
-				} else {
-					items.push(`• ${feature.name}${levelStr}`);
-				}
-			}
-
-			if (items.length > 0) {
-				sections.push({
-					header: `${classItem.name.toUpperCase()} FEATURES`,
-					items,
-				});
-			}
-		}
-	}
-
-	return sections;
-}
-
-/**
- * Extract spells grouped by tier.
- */
-function extractSpellsSection(actor: NimbleCharacter): ContentSection | null {
-	const spells = actor.items.filter((item) => item.isType('spell')) as NimbleSpellItem[];
-
-	if (spells.length === 0) return null;
-
-	// Sort by tier, then by name
-	spells.sort((a, b) => {
-		const tierDiff = (a.system.tier ?? 0) - (b.system.tier ?? 0);
-		if (tierDiff !== 0) return tierDiff;
-		return (a.name ?? '').localeCompare(b.name ?? '');
-	});
-
-	// Group spells by tier
-	const spellsByTier: Record<number, NimbleSpellItem[]> = {};
-	for (const spell of spells) {
-		const tier = spell.system.tier ?? 0;
-		if (!spellsByTier[tier]) spellsByTier[tier] = [];
-		spellsByTier[tier].push(spell);
-	}
-
-	const items: string[] = [];
-
-	// Output each tier with spell names on the same line (no descriptions for compactness)
-	for (const tier of Object.keys(spellsByTier)
-		.map(Number)
-		.sort((a, b) => a - b)) {
-		const tierSpells = spellsByTier[tier];
-		const spellNames = tierSpells.map((spell) => spell.name ?? '');
-		items.push(`Tier ${tier}: ${spellNames.join(' | ')}`);
-	}
-
-	return {
-		header: 'SPELLS',
-		items,
-	};
-}
-
-/**
- * Extract inventory items as a simple list.
- */
-function extractInventorySection(actor: NimbleCharacter): ContentSection | null {
-	const objects = actor.items.filter((item) => item.isType('object')) as NimbleObjectItem[];
-
-	if (objects.length === 0) return null;
-
-	// Combine all items into one line separated by |
-	const itemList = objects.map((obj) => {
-		const qty = obj.system.quantity ?? 1;
-		const qtyStr = qty > 1 ? ` (x${qty})` : '';
-		const equipped = obj.system.equipped ? ' [E]' : '';
-		return `${obj.name}${qtyStr}${equipped}`;
-	});
-
-	return {
-		header: 'INVENTORY',
-		items: [itemList.join(' | ')],
-	};
-}
-
-/**
- * Draw content sections in the lined text area using a multi-column layout.
- */
-function drawLinedTextContent(
+function drawStyledColumnContent(
 	pdf: jsPDF,
-	sections: ContentSection[],
+	columnContent: [string, string, string],
 	config: LinedTextAreaConfig,
 ): void {
-	const {
-		startY,
-		leftMargin,
-		columnWidth,
-		columnGap,
-		columnCount,
-		linesPerColumn,
-		lineHeight,
-		fontSize,
-		headerFontSize,
-	} = config;
-
-	let currentColumn = 0;
-	let currentLine = 0;
-	const maxLines = linesPerColumn * columnCount;
-	let totalLinesUsed = 0;
+	const { startY, leftMargin, columnWidth, columnGap, linesPerColumn, lineHeight, fontSize } =
+		config;
 
 	function getColumnX(column: number): number {
 		return leftMargin + column * (columnWidth + columnGap);
 	}
 
-	function getLineY(line: number): number {
-		return startY + line * lineHeight;
-	}
+	const maxWidth = columnWidth - 4;
 
-	function advanceLine(): boolean {
-		currentLine++;
-		totalLinesUsed++;
+	for (let colIndex = 0; colIndex < 3; colIndex++) {
+		const html = columnContent[colIndex];
+		if (!html) continue;
 
-		// Move to next column if current column is full
-		if (currentLine >= linesPerColumn) {
-			currentLine = 0;
-			currentColumn++;
-		}
+		// Parse HTML to styled segments
+		const styledLines = parseHtmlToStyledSegments(html);
 
-		return totalLinesUsed < maxLines;
-	}
-
-	function drawText(text: string, isHeader: boolean): boolean {
-		if (totalLinesUsed >= maxLines) return false;
-
-		pdf.setFont('helvetica', isHeader ? 'bold' : 'normal');
-		pdf.setFontSize(isHeader ? headerFontSize : fontSize);
-		pdf.setTextColor(0, 0, 0);
-
-		const maxWidth = columnWidth - 4;
-
-		// Split text into multiple lines that fit within column width
-		const lines = pdf.splitTextToSize(text, maxWidth);
-
-		for (const line of lines) {
-			if (totalLinesUsed >= maxLines) return false;
-
-			const x = getColumnX(currentColumn);
-			const y = getLineY(currentLine);
-
-			pdf.text(line, x, y);
-
-			if (!advanceLine()) return false;
-		}
-
-		return true;
-	}
-
-	for (const section of sections) {
-		// Draw header
-		if (!drawText(section.header, true)) break;
-
-		// Draw items
-		for (const item of section.items) {
-			if (item === '') {
-				// Empty string means skip a line for spacing, but don't waste lines
-				continue;
-			}
-			if (!drawText(item, false)) break;
-		}
+		// Draw styled text
+		drawStyledText({
+			pdf,
+			lines: styledLines,
+			startX: getColumnX(colIndex),
+			startY,
+			maxWidth,
+			lineHeight,
+			fontSize,
+			maxLines: linesPerColumn,
+		});
 	}
 }
 
 /**
- * Export a character sheet as a PDF file.
- * @param actor - The NimbleCharacter to export
- * @throws Error if the export fails
+ * Convert a Blob to a data URL string.
  */
-async function exportCharacterPdf(actor: NimbleCharacter): Promise<void> {
+function blobToDataUrl(blob: Blob): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => resolve(reader.result as string);
+		reader.onerror = () => reject(new Error('Failed to read blob'));
+		reader.readAsDataURL(blob);
+	});
+}
+
+/**
+ * Generate a PDF for a character.
+ * Can either save the PDF or return it for preview.
+ */
+async function generateCharacterPdf(
+	actor: NimbleCharacter,
+	options: ExportOptions,
+): Promise<jsPDF> {
+	const { columnContent, template = 'lined' } = options;
+
 	// Create a new PDF document (letter size in points)
 	const pdf = new jsPDF({
 		orientation: 'portrait',
@@ -425,8 +179,12 @@ async function exportCharacterPdf(actor: NimbleCharacter): Promise<void> {
 		format: [PAGE_WIDTH, PAGE_HEIGHT],
 	});
 
+	// Select template based on option
+	const templateFile =
+		template === 'noLines' ? 'CharacterSheet-Full-NoLines.png' : 'CharacterSheet-Full.png';
+	const templateUrl = `systems/nimble/assets/pdf/${templateFile}`;
+
 	// Load the template image
-	const templateUrl = 'systems/nimble/assets/pdf/CharacterSheet-Full.png';
 	const templateResponse = await fetch(templateUrl);
 
 	if (!templateResponse.ok) {
@@ -443,7 +201,6 @@ async function exportCharacterPdf(actor: NimbleCharacter): Promise<void> {
 	const data = extractCharacterData(actor);
 
 	// Helper to draw text at a position
-	// Coordinates are already in top-left origin (jsPDF native)
 	function drawText(text: string, position: TextPosition, useBold = false) {
 		const fontStyle = useBold ? 'bold' : 'normal';
 		pdf.setFont('helvetica', fontStyle);
@@ -451,10 +208,8 @@ async function exportCharacterPdf(actor: NimbleCharacter): Promise<void> {
 		pdf.setTextColor(0, 0, 0);
 
 		if (position.maxWidth) {
-			// Left-aligned text with max width
 			pdf.text(text, position.x, position.y, { maxWidth: position.maxWidth });
 		} else {
-			// Centered text
 			pdf.text(text, position.x, position.y, { align: 'center' });
 		}
 	}
@@ -482,18 +237,16 @@ async function exportCharacterPdf(actor: NimbleCharacter): Promise<void> {
 		rollMode: number,
 		arrowPos: { upX: number; upY: number; downX: number; downY: number; fontSize: number },
 	) {
-		if (rollMode === 0) return; // Normal, no arrow needed
+		if (rollMode === 0) return;
 
-		const size = arrowPos.fontSize * 0.4; // Triangle size based on font size
+		const size = arrowPos.fontSize * 0.4;
 		pdf.setFillColor(0, 0, 0);
 
 		if (rollMode > 0) {
-			// Advantage - draw up arrow (pointing up)
 			const x = arrowPos.upX;
 			const y = arrowPos.upY;
 			pdf.triangle(x, y - size, x - size, y + size * 0.5, x + size, y + size * 0.5, 'F');
 		} else {
-			// Disadvantage - draw down arrow (pointing down)
 			const x = arrowPos.downX;
 			const y = arrowPos.downY;
 			pdf.triangle(x, y + size, x - size, y - size * 0.5, x + size, y - size * 0.5, 'F');
@@ -517,31 +270,17 @@ async function exportCharacterPdf(actor: NimbleCharacter): Promise<void> {
 	drawText(data.skills.perception, pdfCoordinates.skills.perception);
 	drawText(data.skills.stealth, pdfCoordinates.skills.stealth);
 
-	// Extract and draw content sections in the lined text area
-	const contentSections: ContentSection[] = [];
+	// Draw styled column content
+	drawStyledColumnContent(pdf, columnContent, pdfCoordinates.linedTextArea);
 
-	// Add ancestry section
-	const ancestrySection = extractAncestrySection(actor);
-	if (ancestrySection) contentSections.push(ancestrySection);
+	return pdf;
+}
 
-	// Add background section
-	const backgroundSection = extractBackgroundSection(actor);
-	if (backgroundSection) contentSections.push(backgroundSection);
-
-	// Add class features sections
-	const classFeaturesSections = extractClassFeaturesSection(actor);
-	contentSections.push(...classFeaturesSections);
-
-	// Add spells section
-	const spellsSection = extractSpellsSection(actor);
-	if (spellsSection) contentSections.push(spellsSection);
-
-	// Add inventory section
-	const inventorySection = extractInventorySection(actor);
-	if (inventorySection) contentSections.push(inventorySection);
-
-	// Draw all sections in the lined text area
-	drawLinedTextContent(pdf, contentSections, pdfCoordinates.linedTextArea);
+/**
+ * Export a character sheet as a PDF file.
+ */
+async function exportCharacterPdf(actor: NimbleCharacter, options: ExportOptions): Promise<void> {
+	const pdf = await generateCharacterPdf(actor, options);
 
 	// Create filename from character name (sanitize for filesystem)
 	const safeName = (actor.name ?? 'character').replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '_');
@@ -552,15 +291,15 @@ async function exportCharacterPdf(actor: NimbleCharacter): Promise<void> {
 }
 
 /**
- * Convert a Blob to a data URL string.
+ * Generate a PDF and return it as a blob URL for preview.
  */
-function blobToDataUrl(blob: Blob): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = () => resolve(reader.result as string);
-		reader.onerror = () => reject(new Error('Failed to read blob'));
-		reader.readAsDataURL(blob);
-	});
+async function generatePdfPreviewUrl(
+	actor: NimbleCharacter,
+	options: ExportOptions,
+): Promise<string> {
+	const pdf = await generateCharacterPdf(actor, options);
+	return pdf.output('bloburl') as unknown as string;
 }
 
-export { exportCharacterPdf };
+export { exportCharacterPdf, generatePdfPreviewUrl };
+export type { ExportOptions, TemplateType };
