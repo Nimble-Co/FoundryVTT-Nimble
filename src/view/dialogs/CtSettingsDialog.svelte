@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
+	import localize from '../../utils/localize.js';
 	import {
 		COLOR_PRESETS,
 		CtSettingsDialogState,
@@ -21,10 +22,14 @@
 
 <section class="nimble-sheet__body nimble-ct-settings standard-form">
 	<fieldset class="nimble-ct-settings__section">
-		<legend class="nimble-ct-settings__section-title">Size</legend>
+		<legend class="nimble-ct-settings__section-title"
+			>{localize('NIMBLE.ui.ctSettings.sizeSection')}</legend
+		>
 		<div class="nimble-ct-settings__rows">
 			<div class="nimble-ct-settings__row nimble-ct-settings__row--slider">
-				<label class="nimble-ct-settings__label" for="nimble-ct-width">Width</label>
+				<label class="nimble-ct-settings__label" for="nimble-ct-width"
+					>{localize('NIMBLE.ui.ctSettings.width')}</label
+				>
 				<div class="nimble-ct-settings__slider-fields">
 					<input
 						id="nimble-ct-width"
@@ -46,7 +51,9 @@
 				</div>
 			</div>
 			<div class="nimble-ct-settings__row nimble-ct-settings__row--slider">
-				<label class="nimble-ct-settings__label" for="nimble-ct-card-size">Card Size</label>
+				<label class="nimble-ct-settings__label" for="nimble-ct-card-size"
+					>{localize('NIMBLE.ui.ctSettings.cardSize')}</label
+				>
 				<div class="nimble-ct-settings__slider-fields">
 					<input
 						id="nimble-ct-card-size"
@@ -72,11 +79,13 @@
 
 	{#if state.canManageSharedCtSettings}
 		<fieldset class="nimble-ct-settings__section">
-			<legend class="nimble-ct-settings__section-title">Layout</legend>
+			<legend class="nimble-ct-settings__section-title"
+				>{localize('NIMBLE.ui.ctSettings.layoutSection')}</legend
+			>
 			<div class="nimble-ct-settings__rows">
 				<div class="nimble-ct-settings__row">
 					<label class="nimble-ct-settings__label" for="nimble-ct-left-to-right-ordering">
-						Left to Right Ordering
+						{localize('NIMBLE.ui.ctSettings.leftToRightOrdering')}
 					</label>
 					<input
 						id="nimble-ct-left-to-right-ordering"
@@ -89,11 +98,13 @@
 		</fieldset>
 
 		<fieldset class="nimble-ct-settings__section">
-			<legend class="nimble-ct-settings__section-title">Permissions</legend>
+			<legend class="nimble-ct-settings__section-title"
+				>{localize('NIMBLE.ui.ctSettings.permissionsSection')}</legend
+			>
 			<div class="nimble-ct-settings__rows">
 				<div class="nimble-ct-settings__row">
 					<label class="nimble-ct-settings__label" for="nimble-ct-players-view-expanded-monsters">
-						Allow Players to View Expanded Monsters
+						{localize('NIMBLE.ui.ctSettings.allowPlayersViewExpandedMonsters')}
 					</label>
 					<input
 						id="nimble-ct-players-view-expanded-monsters"
@@ -108,11 +119,13 @@
 	{/if}
 
 	<fieldset class="nimble-ct-settings__section">
-		<legend class="nimble-ct-settings__section-title">Drawers &amp; Bars</legend>
+		<legend class="nimble-ct-settings__section-title"
+			>{localize('NIMBLE.ui.ctSettings.drawersAndBarsSection')}</legend
+		>
 		<div class="nimble-ct-settings__rows">
 			<div class="nimble-ct-settings__row">
 				<label class="nimble-ct-settings__label" for="nimble-ct-resource-drawer-hover">
-					Resource Drawer Opens On Hover
+					{localize('NIMBLE.ui.ctSettings.resourceDrawerOpensOnHover')}
 				</label>
 				<input
 					id="nimble-ct-resource-drawer-hover"
@@ -123,7 +136,7 @@
 			</div>
 			<div class="nimble-ct-settings__row">
 				<label class="nimble-ct-settings__label" for="nimble-ct-player-hp-bar-text-mode">
-					Player HP Bar Text
+					{localize('NIMBLE.ui.ctSettings.playerHpBarText')}
 				</label>
 				<select
 					id="nimble-ct-player-hp-bar-text-mode"
@@ -132,14 +145,14 @@
 					onchange={state.handlePlayerHpBarTextModeChange}
 				>
 					{#each HP_BAR_TEXT_MODE_OPTIONS as option}
-						<option value={option.value}>{option.label}</option>
+						<option value={option.value}>{localize(option.labelKey)}</option>
 					{/each}
 				</select>
 			</div>
 			{#if state.canManageSharedCtSettings}
 				<div class="nimble-ct-settings__row">
 					<label class="nimble-ct-settings__label" for="nimble-ct-non-player-hp-bar">
-						Show Non-player HP Bar
+						{localize('NIMBLE.ui.ctSettings.showNonPlayerHpBar')}
 					</label>
 					<input
 						id="nimble-ct-non-player-hp-bar"
@@ -150,7 +163,7 @@
 				</div>
 				<div class="nimble-ct-settings__row">
 					<label class="nimble-ct-settings__label" for="nimble-ct-non-player-hp-bar-text-mode">
-						Non-player HP Bar Text
+						{localize('NIMBLE.ui.ctSettings.nonPlayerHpBarText')}
 					</label>
 					<select
 						id="nimble-ct-non-player-hp-bar-text-mode"
@@ -160,7 +173,7 @@
 						onchange={state.handleNonPlayerHpBarTextModeChange}
 					>
 						{#each HP_BAR_TEXT_MODE_OPTIONS as option}
-							<option value={option.value}>{option.label}</option>
+							<option value={option.value}>{localize(option.labelKey)}</option>
 						{/each}
 					</select>
 				</div>
@@ -169,11 +182,15 @@
 	</fieldset>
 
 	<fieldset class="nimble-ct-settings__section">
-		<legend class="nimble-ct-settings__section-title">Colors</legend>
+		<legend class="nimble-ct-settings__section-title"
+			>{localize('NIMBLE.ui.ctSettings.colorsSection')}</legend
+		>
 		<div class="nimble-ct-settings__rows">
 			<div class="nimble-ct-settings__color-row">
 				<div class="nimble-ct-settings__color-head">
-					<label class="nimble-ct-settings__label" for="nimble-ct-action-color">Action Color</label>
+					<label class="nimble-ct-settings__label" for="nimble-ct-action-color"
+						>{localize('NIMBLE.ui.ctSettings.actionColor')}</label
+					>
 				</div>
 				<div class="nimble-ct-settings__color-controls">
 					{#each COLOR_PRESETS as preset}
@@ -182,8 +199,8 @@
 							class="nimble-ct-settings__color-swatch"
 							class:nimble-ct-settings__color-swatch--active={state.actionColor === preset.color}
 							style={`--nimble-ct-color: ${preset.color};`}
-							aria-label={preset.label}
-							data-tooltip={preset.label}
+							aria-label={localize(preset.labelKey)}
+							data-tooltip={localize(preset.labelKey)}
 							onclick={() => state.applyActionColor(preset.color)}
 						></button>
 					{/each}
@@ -202,7 +219,7 @@
 			<div class="nimble-ct-settings__color-row">
 				<div class="nimble-ct-settings__color-head">
 					<label class="nimble-ct-settings__label" for="nimble-ct-reaction-color"
-						>Reaction Color</label
+						>{localize('NIMBLE.ui.ctSettings.reactionColor')}</label
 					>
 				</div>
 				<div class="nimble-ct-settings__color-controls">
@@ -212,8 +229,8 @@
 							class="nimble-ct-settings__color-swatch"
 							class:nimble-ct-settings__color-swatch--active={state.reactionColor === preset.color}
 							style={`--nimble-ct-color: ${preset.color};`}
-							aria-label={preset.label}
-							data-tooltip={preset.label}
+							aria-label={localize(preset.labelKey)}
+							data-tooltip={localize(preset.labelKey)}
 							onclick={() => state.applyReactionColor(preset.color)}
 						></button>
 					{/each}
