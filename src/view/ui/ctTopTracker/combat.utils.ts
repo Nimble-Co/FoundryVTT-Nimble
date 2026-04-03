@@ -12,6 +12,7 @@ import { hasCombatantTurnEndedThisRound } from '../../../utils/combatTurnProgres
 import { getHeroicReactionAvailability } from '../../../utils/heroicActions.js';
 import { initiativeRollLock } from '../../../utils/initiativeRollLock.js';
 import { isCombatantDead } from '../../../utils/isCombatantDead.js';
+import { isCombatStarted } from '../../../utils/isCombatStarted.js';
 import {
 	getEffectiveMinionGroupLeader,
 	getMinionGroupId,
@@ -37,6 +38,8 @@ function resolveCurrentTurnIdentity(
 	combat: Combat,
 	existingTurns: Combatant.Implementation[],
 ): TurnIdentity | null {
+	if (!isCombatStarted(combat)) return null;
+
 	const combatWithHint = combat as CombatWithTurnIdentityHint;
 	const persistedTurnIdentity = getPersistedExpandedTurnIdentity(combat);
 	if (persistedTurnIdentity) return persistedTurnIdentity;
@@ -159,6 +162,12 @@ export function syncCombatTurnsForCt(combat: Combat | null): void {
 		return;
 	}
 
+	if (!isCombatStarted(combat)) {
+		combatWithHint._nimbleExpandedTurnIdentity = null;
+		setExpandedTurnIdentityHint(combat.id ?? null, null);
+		return;
+	}
+
 	if (currentTurnIdentity?.combatantId) {
 		const matchedIndex = findTurnIndexByOccurrence(
 			normalizedTurns,
@@ -211,13 +220,6 @@ export function getCombatantSceneId(combatant: Combatant.Implementation): string
 
 export function hasCombatantsForScene(combat: Combat, sceneId: string): boolean {
 	return combat.combatants.contents.some((combatant) => getCombatantSceneId(combatant) === sceneId);
-}
-
-export function isCombatStarted(combat: Combat | null): boolean {
-	if (!combat) return false;
-	const asRecord = combat as unknown as { started?: boolean };
-	if (typeof asRecord.started === 'boolean') return asRecord.started;
-	return (combat.round ?? 0) > 0;
 }
 
 export function isCombatRoundStarted(combat: Combat | null): boolean {
@@ -432,6 +434,7 @@ export function buildAliveEntries(
 
 export function getActiveCombatantId(combat: Combat | null): string | null {
 	if (!combat) return null;
+	if (!isCombatStarted(combat)) return null;
 	const turnIndex = Number(combat.turn ?? -1);
 	if (Number.isInteger(turnIndex) && turnIndex >= 0 && turnIndex < combat.turns.length) {
 		return combat.turns[turnIndex]?.id ?? null;
@@ -455,6 +458,7 @@ export function getActiveCombatantOccurrence(
 	activeId: string,
 ): number | null {
 	if (!combat) return null;
+	if (!isCombatStarted(combat)) return null;
 	const turnIndex = Number(combat.turn ?? -1);
 	if (!Number.isInteger(turnIndex) || turnIndex < 0 || turnIndex >= combat.turns.length)
 		return null;
@@ -463,7 +467,7 @@ export function getActiveCombatantOccurrence(
 
 export function resolveActiveEntryKey(params: ResolveActiveEntryKeyParams): string | null {
 	const { activeCombatantId, activeOccurrence, aliveEntries, collapseMonsters } = params;
-	if (!activeCombatantId) return aliveEntries[0]?.key ?? null;
+	if (!activeCombatantId) return null;
 
 	if (collapseMonsters) {
 		const monsterStackEntry = findTrackEntryContainingCombatantId(aliveEntries, activeCombatantId);

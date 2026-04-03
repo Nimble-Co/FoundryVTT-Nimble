@@ -10,6 +10,7 @@ import {
 } from '#utils/combatTurnActions.js';
 import type { HeroicReactionKey } from '#utils/heroicActions.js';
 import { isCombatantDead } from '#utils/isCombatantDead.js';
+import { isCombatStarted } from '#utils/isCombatStarted.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
 import CtSettingsDialogComponent from '#view/dialogs/CtSettingsDialog.svelte';
 import { COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME } from '../../settings/combatTrackerSettings.js';
@@ -20,7 +21,6 @@ import {
 	getCombatantSceneId,
 	getTrackEntryCombatantIds,
 	isCombatRoundStarted,
-	isCombatStarted,
 	isEligibleForInitiativeRoll,
 	isMonsterOrMinionCombatant,
 	isPlayerCombatant,

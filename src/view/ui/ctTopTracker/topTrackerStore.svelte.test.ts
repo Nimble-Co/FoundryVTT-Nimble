@@ -389,6 +389,65 @@ describe('CtTopTrackerStore', () => {
 		).toEqual([2, 1]);
 	});
 
+	it('does not mark an active entry before combat starts', () => {
+		const player = createCombatantFixture({
+			id: 'player-one',
+			type: 'character',
+			actor: createCombatActorFixture({ type: 'character' }),
+			sceneId: 'scene-1',
+		});
+		(player as unknown as { visible: boolean }).visible = true;
+		const monster = createCombatantFixture({
+			id: 'monster-one',
+			type: 'npc',
+			actor: createCombatActorFixture({ type: 'npc' }),
+			sceneId: 'scene-1',
+		});
+		(monster as unknown as { visible: boolean }).visible = true;
+
+		const turns = [player, monster] as Combatant.Implementation[];
+		const combat = {
+			id: 'combat-store-prestart',
+			active: true,
+			started: false,
+			round: 0,
+			turn: 0,
+			combatant: player,
+			combatants: createCombatantsCollectionFixture([player, monster]),
+			turns,
+			setupTurns: vi.fn(() => turns),
+			scene: { id: 'scene-1' },
+			flags: {
+				nimble: {
+					ctMonsterCardsExpanded: true,
+					ctPlayersCanViewExpandedMonsters: true,
+				},
+			},
+		} as unknown as Combat;
+
+		const globals = globalThis as unknown as {
+			game: {
+				combats: { contents: Combat[]; viewed?: Combat | null };
+				combat?: Combat | null;
+			};
+		};
+		globals.game.combats = {
+			contents: [combat],
+			viewed: combat,
+		};
+		globals.game.combat = combat;
+
+		const store = new CtTopTrackerStore();
+		store.refreshCurrentCombat(true);
+
+		expect(store.combatStarted).toBe(false);
+		expect(store.activeEntryKey).toBeNull();
+		expect(store.orderedAliveEntries.map((entry) => entry.key)).toEqual([
+			'combatant-player-one-0',
+			'combatant-monster-one-0',
+		]);
+	});
+
 	it('does not expose grouped minion members as separate expanded monster turns', () => {
 		const player = createCombatantFixture({
 			id: 'player-one',

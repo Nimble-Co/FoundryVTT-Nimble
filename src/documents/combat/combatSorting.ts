@@ -1,4 +1,7 @@
-import { canCurrentUserReorderCombatant } from '../../utils/combatantOrdering.js';
+import {
+	canCurrentUserReorderCombatant,
+	getCombatantTypePriority,
+} from '../../utils/combatantOrdering.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
 import { getCombatantManualSortValue } from './combatantSystem.js';
 import { getSourceSortValueForDrop } from './combatCommon.js';
@@ -37,10 +40,8 @@ export function sortCombatants(a: Combatant.Implementation, b: Combatant.Impleme
 	const manualSortDiff = sa - sb;
 	if (manualSortDiff !== 0) return manualSortDiff;
 
-	const initiativeA = Number(a.initiative ?? Number.NEGATIVE_INFINITY);
-	const initiativeB = Number(b.initiative ?? Number.NEGATIVE_INFINITY);
-	const initiativeDiff = initiativeB - initiativeA;
-	if (initiativeDiff !== 0) return initiativeDiff;
+	const typePriorityDiff = getCombatantTypePriority(a) - getCombatantTypePriority(b);
+	if (typePriorityDiff !== 0) return typePriorityDiff;
 
 	return (a.name ?? '').localeCompare(b.name ?? '');
 }

@@ -1383,6 +1383,7 @@ export const myStore = writable<MyStoreState>(initialState);
 | Utility | Location | Purpose |
 |---------|----------|---------|
 | `localize()` | `src/utils/localize.ts` | Format i18n strings with optional interpolation |
+| `isCombatStarted()` | `src/utils/isCombatStarted.ts` | Determine whether a combat encounter has started |
 | `isCombatantDead()` | `src/utils/isCombatantDead.ts` | Check if a combatant is dead based on HP/wounds |
 | `combatantActionMutationQueue` | `src/utils/combatantActionMutationQueue.ts` | Serialize combatant action/reaction updates and clear combat-scoped pending entries |
 | `queueCombatantMutationWithFreshDocument()` | `src/utils/queueCombatantMutationWithFreshDocument.ts` | Queue a mutation and re-resolve the combatant document to avoid stale references |

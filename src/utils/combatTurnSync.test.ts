@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createCombatActorFixture, createCombatantFixture } from '../../tests/fixtures/combat.js';
 import { clearExpandedTurnIdentityHint } from '../documents/combat/expandedTurnIdentityStore.js';
-import { syncCombatTurns } from './combatTurnSync.js';
+import { getActiveCombatantId, syncCombatTurns } from './combatTurnSync.js';
 
 describe('syncCombatTurns', () => {
 	beforeEach(() => {
@@ -29,6 +29,8 @@ describe('syncCombatTurns', () => {
 		const rawTurns = [playerOne, playerTwo, solo] as Combatant.Implementation[];
 		const combat = {
 			id: 'combat-turn-sync-active-combatant',
+			started: true,
+			round: 1,
 			flags: {
 				nimble: {
 					expandedTurnIdentity: {
@@ -62,5 +64,36 @@ describe('syncCombatTurns', () => {
 			combatantId: 'player-two',
 			occurrence: 0,
 		});
+	});
+
+	it('does not expose an active combatant before combat starts', () => {
+		const playerOne = createCombatantFixture({
+			id: 'player-one',
+			type: 'character',
+			actor: createCombatActorFixture({ type: 'character' }),
+		});
+		const playerTwo = createCombatantFixture({
+			id: 'player-two',
+			type: 'character',
+			actor: createCombatActorFixture({ type: 'character' }),
+		});
+
+		const turns = [playerOne, playerTwo] as Combatant.Implementation[];
+		const combat = {
+			id: 'combat-turn-sync-active-combatant',
+			started: false,
+			round: 0,
+			turns,
+			turn: 0,
+			setupTurns: vi.fn(() => turns),
+			combatant: playerOne,
+		} as unknown as Combat & {
+			_nimbleExpandedTurnIdentity?: { combatantId: string; occurrence: number | null } | null;
+		};
+
+		syncCombatTurns(combat);
+
+		expect(getActiveCombatantId(combat)).toBeNull();
+		expect(combat._nimbleExpandedTurnIdentity).toBeNull();
 	});
 });
