@@ -13,7 +13,7 @@
 			"feature": "Rasgo",
 			"monsterFeature": "Rasgo de monstruo",
 			"object": "Objeto",
-			"ancestry": "Ascendencia",
+			"ancestry": "Origen",
 			"spell": "Conjuro",
 			"subclass": "Subclase"
 		}
@@ -77,12 +77,15 @@
 			"boon": "Don"
 		},
 		"chat": {
+			"applyDamage": "Aplicar daño",			
 			"applyHealing": "Aplicar curación",
 			"healing": "Curación",
 			"healingApplied": "Curación aplicada",
 			"undoHealing": "Cancelar curación",
 			"undo": "Cancelar",
 			"noTargetsSelected": "No hay objetivos seleccionados",
+			"noDamageToApply": "Sin daño que aplicar.",
+			"targetSkippedZeroDamage": "{tokenName} excluido porque el resultado es 0.",			
 			"healingAlreadyApplied": "Curación ya aplicada",
 			"healingUndone": "Curación cancelada",
 			"noHealingRecord": "No se ha encontrado registro de curación para cancelar"
@@ -115,16 +118,16 @@
 			"incompleteCharacterReturn": "Atrás"
 		},
 		"ancestryOptions": {
-			"header": "Opciones de Ascendencia",
+			"header": "Opciones de Origen",
 			"sizeCategory": "Categoría de tamaño",
-			"sizeCategoryHint": "Elige la categoría de tamaño de tu personaje de las opciones disponibles de tu ascendencia.",
+			"sizeCategoryHint": "Elige la categoría de tamaño de tu personaje de las opciones disponibles de tu origen.",
 			"enhancedSave": "Salvación mejorada",
 			"enhancedSaveHint": "Elige una salvación neutra para mejorar con ventaja."
 		},
 		"backgroundOptionsSelection": {
-			"header": "Paso 2b. Elige Linaje de Ascendencia",
+			"header": "Paso 2b. Elige Linaje de Origen",
 			"editSelection": "Editar selección de Linaje",
-			"hint": "Tu trasfondo determina qué ascendencia te crió. Obtienes su lengua nativa.",
+			"hint": "Tu trasfondo determina qué Origen tienes. Obtienes su lengua nativa.",
 			"raisedBy": "Criado por",
 			"speaks": "Habla {language}",
 			"confirmSelection": "Confirmar selección",
@@ -145,7 +148,7 @@
 			"bonusPenaltySubtitle": "Modificadores fijos a las salvaciones",
 			"defaultRollMode": "Modo de tirada por defecto",
 			"defaultRollModeSubtitle": "Salvaciones con ventaja o desventaja",
-			"ancestryTraits": "Rasgos de Ascendencia",
+			"ancestryTraits": "Rasgos de Origen",
 			"ancestryTraitsSubtitle": "Rasgos que mejoran una salvación de tu elección",
 			"abilityMod": "Mod de característica",
 			"flatBonus": "Bono fijo",
@@ -321,13 +324,13 @@
 			"healing": "Curación"
 		},
 		"featureTypes": {
-			"ancestry": "Ascendencia",
+			"ancestry": "Origen",
 			"background": "Trasfondo",
 			"boon": "Don",
 			"class": "Clase"
 		},
 		"featureTypeHeadings": {
-			"ancestry": "Ascendencia",
+			"ancestry": "Origen",
 			"background": "Trasfondo",
 			"boon": "Don",
 			"feature": "Rasgos de clase"
@@ -428,6 +431,7 @@
 			"configureSavingThrows": "Configurar salvaciones",
 			"configureSkills": "Configurar habilidades",
 			"configureWeaponProficiencies": "Configurar competencia con armas",
+			"toggleEquipment": "Alternar estado del {name} equipado",		
 			"editRoll": "Editar tirada",
 			"levelUp": "Subir de nivel",
 			"safeRest": "Descanso Seguro",
@@ -530,6 +534,7 @@
 			"hitDiceAdvantage": "Ventaja en Dados de Golpe",
 			"incrementHitDice": "Incrementar Dado de Golpe",
 			"initiativeBonus": "Bono de iniciativa",
+			"initiativeMessage": "Mensaje de iniciativa",			
 			"initiativeRollMode": "Modo de tirada de iniciativa",
 			"maxHitDice": "Dado de Golpe",
 			"maxHpBonus": "Puntos de golpe",
@@ -657,7 +662,7 @@
 			"npc": "Hoja de PNJ de Nimble",
 			"object": "Hoja de objetos de Nimble",
 			"playerCharacter": "Hoja de personaje jugador de Nimble",
-			"ancestry": "Hoja de ascendencias de Nimble",
+			"ancestry": "Hoja de orígenes de Nimble",
 			"soloMonster": "Hoja de monstruo en solitario de Nimble",
 			"spell": "Hoja de conjuros de Nimble",
 			"subclass": "Hoja de subclases de Nimble"
@@ -688,6 +693,33 @@
 				"woundsHidden": "Heridas ocultas",
 				"woundsValue": "Heridas {current}/{max}",
 				"removeFromCombat": "Eliminar del combate"
+			},
+			"ctSettings": {
+				"sizeSection": "Tamaño",
+				"width": "Ancho",
+				"cardSize": "Tamaño de tarjeta",
+				"layoutSection": "Disposición",
+				"leftToRightOrdering": "Orden de izquierda a derecha",
+				"permissionsSection": "Permisos",
+				"allowPlayersViewExpandedMonsters": "Permitir a los jugadores vizualizar monstruos expandidos",
+				"drawersAndBarsSection": "Cajones y barras",
+				"resourceDrawerOpensOnHover": "Cajón de recursos se abre al pasar por encima",
+				"playerHpBarText": "Barra de texto de PG de jugador",
+				"showNonPlayerHpBar": "Mostrar barra de PG de PNJ",
+				"nonPlayerHpBarText": "Texto de barra de PG de PNJ",
+				"colorsSection": "Colores",
+				"actionColor": "Color de acción",
+				"reactionColor": "Color de reacción",
+				"colorWhite": "Blanco",
+				"colorGreen": "Verde",
+				"colorRed": "Rojo",
+				"colorOrange": "Naranja",
+				"colorYellow": "Amarillo",
+				"colorBlue": "Azul",
+				"colorPurple": "Púrpura",
+				"hpBarTextNone": "Ninguno",
+				"hpBarTextHealthState": "Estado de salud",
+				"hpBarTextPercentage": "PG %"
 			},
 			"heroicActions": {
 				"title": "Acciones heroicas",
@@ -772,30 +804,31 @@
 				"noActions": "No te quedan acciones",
 				"noSpells": "No te quedan conjuros",
 				"endTurn": "End Turn",
-				"rollInitiative": "Roll Initiative",
-				"useActionsFirst": "Use your actions first",
-				"noPermissionEndTurn": "You do not have permission to end turns.",
-				"noPermissionRollInitiative": "You do not have permission to roll initiative.",
-				"selectAttack": "Attack",
-				"selectSpell": "Cast Spell",
-				"noWeapons": "No weapons or attack features found.",
-				"noSpellsFound": "No spells found.",
-				"unarmedStrike": "Unarmed Strike",
-				"feature": "Feature",
-				"mana": "{cost} Mana",
-				"thrown": "Thrown: {distance}",
-				"baseEffect": "Effect",
-				"higherLevelEffect": "At Higher Levels",
-				"cantrip": "Cantrip",
-				"spellTier": "Tier {tier}",
-				"rangeDistance": "Range: {distance}",
-				"reachDistance": "Reach: {distance}",
+				"rollInitiative": "Tirar iniciativa",
+				"useActionsFirst": "Utiliza tus acciones primero",
+				"noPermissionEndTurn": "Sin permiso para finalizar turnos.",
+				"noPermissionRollInitiative": "Sin permiso para tirar iniciativa.",
+				"initiativeAlreadyRolled": "Ya se ha tirado la iniciativa para este combatiente.",				
+				"selectAttack": "Ataque",
+				"selectSpell": "Lanzar conjuro",
+				"noWeapons": "No se han encontrado armas ni rasgos de ataque.",
+				"noSpellsFound": "No se han encontrado conjuros.",
+				"unarmedStrike": "Ataque sin armas",
+				"feature": "Rasgo",
+				"mana": "{cost} de maná",
+				"thrown": "Lanzado: {distance}",
+				"baseEffect": "Efecto",
+				"higherLevelEffect": "A niveles altos",
+				"cantrip": "Truco",
+				"spellTier": "Nivel {tier}",
+				"rangeDistance": "Distancia: {distance}",
+				"reachDistance": "Alcance: {distance}",
 				"targetTypes": {
-					"self": "Self",
-					"singleTarget": "Single Target",
-					"twoTargets": "2 Targets",
-					"multiTarget": "{count} Targets",
-					"aoe": "AoE"
+					"self": "A uno mismo",
+					"singleTarget": "Objetivo único",
+					"twoTargets": "2 objetivos",
+					"multiTarget": "{count} objetivos",
+					"aoe": "AdE"
 				},
 				"pip": {
 					"spendAction": "Utilizar acción {number}",
@@ -1086,7 +1119,8 @@
 			"healing": "Curación",
 			"rolled": "Tirada",
 			"advantage": "Ventaja",
-			"restedWithoutSpending": "Descanso sin gastar Dados de Golpe"
+			"restedWithoutSpending": "Descanso sin gastar Dados de Golpe",
+			"manaRestored": "Maná recuperado"			
 		},
 		"npcSheet": {
 			"armor": "Armadura",
@@ -1231,6 +1265,15 @@
 			"resetSpellTier": "Reiniciar nivel de conjuro",
 			"resetHighestUnlockedSpellTier": "Reiniciar nivel más alto de conjuro desbloqueado"
 		},
+		"classFeatureSelection": {
+			"header": "Rasgos de clase",
+			"editSelection": "Editar selección de rasgos de clase",
+			"hint": "Los siguientes rasgos están disponibles a nivel 1 para tu clase. Algunos se consiguen automáticamente, pero otros debes elegirlos.",
+			"chooseOne": "(Elige uno)",
+			"noDescriptionAvailable": "Sin descripción disponible.",
+			"selected": "Seleccionado",
+			"confirmSelection": "Confirmar selección"
+		},		
 		"classSelection": {
 			"stepSelectClass": "Paso 1: Elige una clase",
 			"noDescriptionAvailable": "Sin descripción disponible",
