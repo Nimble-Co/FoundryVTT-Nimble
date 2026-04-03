@@ -9,6 +9,7 @@ export interface MinionGroupAttackOption {
 	rollFormula: string | null;
 	description?: string | null;
 	unsupportedReasons: string[];
+	actionCost: number;
 }
 
 export interface MinionGroupAttackMember {

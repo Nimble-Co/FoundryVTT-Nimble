@@ -85,6 +85,7 @@ export interface ItemLike {
 	system?: {
 		activation?: {
 			effects?: unknown[];
+			cost?: { type?: string; quantity?: number };
 		};
 	};
 }

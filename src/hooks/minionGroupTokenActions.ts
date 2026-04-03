@@ -26,6 +26,7 @@ import {
 	rememberMemberActionSelection,
 } from '../utils/minionGroupAttackSession.js';
 import { isMinionCombatant } from '../utils/minionGrouping.js';
+import resolveItemActionCost from '../utils/resolveItemActionCost.js';
 
 const NCSW_PANEL_ID = 'nimble-minion-group-attack-panel';
 const MINION_GROUP_TOKEN_UI_DEBUG_ENABLED_KEY = 'NIMBLE_ENABLE_GROUP_TOKEN_UI_LOGS';
@@ -133,6 +134,7 @@ interface MonsterFeatureActionItemLike {
 		subtype?: string;
 		activation?: {
 			effects?: unknown[];
+			cost?: { type?: string; quantity?: number };
 		};
 	};
 }
@@ -472,6 +474,7 @@ function buildGroupAttackActionOptions(
 				rollFormula: getActionRollFormulaLabel(item),
 				description: getActionDescriptionLabel(item),
 				unsupportedReasons,
+				actionCost: resolveItemActionCost(item),
 			};
 		})
 		.filter((option) => option.actionId.length > 0)
@@ -1744,12 +1747,16 @@ function renderGroupAttackNonMinionSection(panel: HTMLDivElement, hasAnyTarget: 
 			'nimble-minion-group-attack-panel__inline-buttons nimble-minion-group-attack-panel__inline-buttons--monster-row';
 
 		const selectedActionId = getNonMinionActionSelectValueForMember(member.combatantId);
+		const selectedOption = member.actionOptions.find(
+			(option) => option.actionId === selectedActionId,
+		);
+		const requiredActions = selectedOption?.actionCost ?? 1;
 		const canRollMonster =
 			hasAnyTarget &&
 			!isExecutingAction &&
-			member.actionsRemaining > 0 &&
+			member.actionsRemaining >= requiredActions &&
 			selectedActionId.trim().length > 0 &&
-			member.actionOptions.some((option) => option.actionId === selectedActionId);
+			Boolean(selectedOption);
 		const missingTarget = !hasAnyTarget;
 
 		const rollButton = document.createElement('button');
@@ -2137,9 +2144,10 @@ function resolveNonMinionAttackCombatant(
 function resolveNonMinionActionsRemaining(
 	combatant: Combatant.Implementation,
 	memberName: string,
+	requiredActions = 1,
 ): number | null {
 	const actionsRemaining = getCombatantActionsRemaining(combatant);
-	if (actionsRemaining >= 1) return actionsRemaining;
+	if (actionsRemaining >= requiredActions) return actionsRemaining;
 	ui.notifications?.warn(formatNcsw('notifications.monsterNoActionsLeft', { name: memberName }));
 	return null;
 }
@@ -2181,7 +2189,11 @@ async function validateNonMinionAttackRoll(
 	);
 	if (!combatant) return null;
 
-	if (resolveNonMinionActionsRemaining(combatant, member.combatantName) === null) return null;
+	if (
+		resolveNonMinionActionsRemaining(combatant, member.combatantName, selectedAction.actionCost) ===
+		null
+	)
+		return null;
 
 	const actor = resolveNonMinionAttackActor(combatant, member.combatantName);
 	if (!actor) return null;
@@ -2215,6 +2227,7 @@ async function executeNonMinionAttackActivation(
 		combat: validatedAttack.combat,
 		combatantId: validatedAttack.memberCombatantId,
 		fallbackCombatant: latestCombatant,
+		actionCost: validatedAttack.selectedAction.actionCost,
 	});
 
 	const rememberContext: MinionGroupAttackSessionContext = {
