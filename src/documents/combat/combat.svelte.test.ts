@@ -956,6 +956,191 @@ describe('NimbleCombat', () => {
 		);
 	});
 
+	it('creates a late-joining character after the last living character turn', async () => {
+		const combatId = 'combat-late-join-character';
+		const currentSceneId = 'scene-1';
+		(globalThis as unknown as { canvas: { scene: { id: string } } }).canvas = {
+			scene: { id: currentSceneId },
+		} as unknown as { scene: { id: string } };
+
+		const firstCharacter = createMockCombatant({
+			id: 'player-one',
+			type: 'character',
+			sort: 0,
+			isOwner: true,
+			initiative: 15,
+			actor: createCombatActorFixture({
+				id: 'actor-player-one',
+				type: 'character',
+				hp: 8,
+				woundsValue: 0,
+				woundsMax: 6,
+			}),
+			combatId,
+			sceneId: currentSceneId,
+		});
+		const secondCharacter = createMockCombatant({
+			id: 'player-two',
+			type: 'character',
+			sort: 0,
+			isOwner: true,
+			initiative: 12,
+			actor: createCombatActorFixture({
+				id: 'actor-player-two',
+				type: 'character',
+				hp: 8,
+				woundsValue: 0,
+				woundsMax: 6,
+			}),
+			combatId,
+			sceneId: currentSceneId,
+		});
+		const npc = createMockCombatant({
+			id: 'npc-one',
+			type: 'npc',
+			sort: 0,
+			isOwner: false,
+			initiative: 9,
+			actor: createCombatActorFixture({ id: 'actor-npc-one', type: 'npc', hp: 10 }),
+			combatId,
+			sceneId: currentSceneId,
+		});
+
+		const lateActor = createCombatActorFixture({
+			id: 'actor-late-joiner',
+			type: 'character',
+			isOwner: true,
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+		}) as Actor.Implementation & {
+			getActiveTokens: ReturnType<typeof vi.fn>;
+		};
+		lateActor.getActiveTokens = vi.fn().mockReturnValue([
+			{
+				id: 'token-late-joiner',
+				hidden: false,
+				parent: { id: currentSceneId },
+			},
+		]);
+
+		const combatants = createCombatantsCollectionFixture([firstCharacter, secondCharacter, npc]);
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: currentSceneId },
+			combatants,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			createEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(async (_embeddedName: string, updates: Record<string, unknown>[]) => {
+				for (const update of updates) {
+					const combatantId = update._id as string;
+					const targetCombatant = combat.combatants.get(combatantId) as unknown as Record<
+						string,
+						unknown
+					> | null;
+					if (!targetCombatant) continue;
+
+					for (const [path, value] of Object.entries(update)) {
+						if (path === '_id') continue;
+						foundry.utils.setProperty(targetCombatant, path, value);
+					}
+				}
+
+				return [];
+			});
+
+		combat.createEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(async (_embeddedName: string, data: Record<string, unknown>[]) => {
+				const createData = data[0] ?? {};
+				const createdCombatant = createMockCombatant({
+					id: 'late-joiner',
+					type: 'character',
+					sort: Number(foundry.utils.getProperty(createData, 'system.sort') ?? 0),
+					isOwner: true,
+					initiative: null,
+					actor: lateActor,
+					actorId: lateActor.id ?? '',
+					tokenId: String(createData.tokenId ?? ''),
+					sceneId: String(createData.sceneId ?? ''),
+					combatId,
+				});
+				combatants.push(createdCombatant);
+				return [createdCombatant];
+			});
+
+		const createdCombatant = await combat.ensureCharacterCombatantForActorInCurrentScene(lateActor);
+
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{ _id: 'player-one', 'system.sort': 1 },
+			{ _id: 'player-two', 'system.sort': 2 },
+			{ _id: 'npc-one', 'system.sort': 3 },
+		]);
+		expect(combat.createEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				type: 'character',
+				actorId: 'actor-late-joiner',
+				tokenId: 'token-late-joiner',
+				sceneId: currentSceneId,
+				hidden: false,
+				system: {
+					sort: 2.5,
+				},
+			},
+		]);
+		expect(createdCombatant?.id).toBe('late-joiner');
+	});
+
+	it('returns an existing current-scene character combatant without creating a duplicate', async () => {
+		const combatId = 'combat-existing-late-join-character';
+		const currentSceneId = 'scene-1';
+		(globalThis as unknown as { canvas: { scene: { id: string } } }).canvas = {
+			scene: { id: currentSceneId },
+		} as unknown as { scene: { id: string } };
+
+		const actor = createCombatActorFixture({
+			id: 'actor-existing-character',
+			type: 'character',
+			isOwner: true,
+			hp: 8,
+			woundsValue: 0,
+			woundsMax: 6,
+		});
+		const existingCombatant = createMockCombatant({
+			id: 'existing-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: null,
+			actor,
+			actorId: actor.id ?? '',
+			combatId,
+			sceneId: currentSceneId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: currentSceneId },
+			combatants: createCombatantsCollectionFixture([existingCombatant]),
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			createEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+		combat.createEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const resolvedCombatant = await combat.ensureCharacterCombatantForActorInCurrentScene(actor);
+
+		expect(resolvedCombatant).toBe(existingCombatant);
+		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
+		expect(combat.createEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
 	it('rolls initiative only once when concurrent requests target the same combatant', async () => {
 		const combatId = 'combat-initiative-request-lock';
 		const actor = createCombatActorFixture({
