@@ -49,8 +49,20 @@ export function createSpellGrantDisplayState(params: SpellGrantDisplayStateParam
 		isEditing = true;
 		const currentProps = props();
 
-		// Clear confirmed schools so user can edit again
-		onConfirmedChange(new Set());
+		// Clear only the confirmations for the groups this section owns
+		const newConfirmedSchools = currentProps.sourceFilter
+			? new Set(currentProps.confirmedSchools)
+			: new Set<string>();
+
+		if (currentProps.sourceFilter) {
+			const filteredSchoolSelections = (currentProps.spellGrants?.schoolSelections ?? []).filter(
+				(group) => group.source === currentProps.sourceFilter,
+			);
+			for (const group of filteredSchoolSelections) {
+				newConfirmedSchools.delete(group.ruleId);
+			}
+		}
+		onConfirmedChange(newConfirmedSchools);
 
 		// Clear spell selections so user starts fresh
 		const newSelectedSpells = new Map(currentProps.selectedSpells);

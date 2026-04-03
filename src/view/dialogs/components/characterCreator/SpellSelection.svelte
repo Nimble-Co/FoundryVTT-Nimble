@@ -9,7 +9,7 @@
 	const state = createSpellSelectionState({
 		group: () => group,
 		selected: () => selected,
-		onSelect,
+		onSelect: (spellUuids) => onSelect(spellUuids),
 	});
 </script>
 

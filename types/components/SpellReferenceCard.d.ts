@@ -4,7 +4,13 @@
 export interface SpellSystemData {
 	tier: number;
 	school: string;
-	description?: string;
+	description?:
+		| string
+		| {
+				baseEffect?: string;
+				higherLevelEffect?: string;
+				upcastEffect?: string;
+		  };
 	activation: {
 		cost: { type: string; quantity: number };
 		targets: { count: number };

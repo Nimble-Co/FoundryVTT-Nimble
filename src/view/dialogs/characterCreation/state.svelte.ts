@@ -168,6 +168,45 @@ function hasSpellGrants(grants: SpellGrantResult | null, sourceFilter?: SpellGra
 	return hasAutoGrant || hasSchoolSelections || hasSpellSelections;
 }
 
+function getGrantSpellSelectionRuleIds(
+	rules: Array<{ type: string; [key: string]: unknown }>,
+	mode: 'selectSchool' | 'selectSpell',
+): string[] {
+	return rules.flatMap((rule) => {
+		if (rule.type !== 'grantSpells') return [];
+		if ((rule.mode ?? 'auto') !== mode) return [];
+		return typeof rule.id === 'string' ? [rule.id] : [];
+	});
+}
+
+function removeSelectionsForRuleIds<T>(
+	selections: Map<string, T>,
+	ruleIds: string[],
+): Map<string, T> {
+	if (ruleIds.length === 0) return selections;
+
+	const nextSelections = new Map(selections);
+	for (const ruleId of ruleIds) {
+		nextSelections.delete(ruleId);
+	}
+
+	return nextSelections;
+}
+
+function removeConfirmedSchoolsForRuleIds(
+	confirmedSchools: Set<string>,
+	ruleIds: string[],
+): Set<string> {
+	if (ruleIds.length === 0) return confirmedSchools;
+
+	const nextConfirmedSchools = new Set(confirmedSchools);
+	for (const ruleId of ruleIds) {
+		nextConfirmedSchools.delete(ruleId);
+	}
+
+	return nextConfirmedSchools;
+}
+
 function spellSelectionsComplete(
 	grants: SpellGrantResult | null,
 	selectedSchools: Map<string, string[]>,
@@ -410,6 +449,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	let selectedSpells = $state<Map<string, string[]>>(new Map());
 	let confirmedSchools = $state<Set<string>>(new Set());
 	let resolvedSpellIndex = $state<SpellIndex | null>(null);
+	let previousBackground = $state<NimbleBackgroundItem | null>(null);
 
 	// Resolve spell index on load
 	params.spellIndex
@@ -525,6 +565,17 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 
 	const stageNumber = $derived(getStageNumber(stage));
 
+	const needsClassSpellSelection = $derived(
+		hasSpellGrants(spellGrants, 'class') &&
+			!spellSelectionsComplete(
+				spellGrants,
+				selectedSchools,
+				selectedSpells,
+				confirmedSchools,
+				'class',
+			),
+	);
+
 	// Determine if background spells need selection (for scroll targeting)
 	const needsBackgroundSpellSelection = $derived(
 		hasSpellGrants(spellGrants, 'background') &&
@@ -537,11 +588,18 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			),
 	);
 
+	const activeSpellSelectionSource = $derived.by((): SpellGrantSource | null => {
+		if (stage !== CHARACTER_CREATION_STAGES.SPELLS) return null;
+		if (needsClassSpellSelection) return 'class';
+		if (needsBackgroundSpellSelection) return 'background';
+		return null;
+	});
+
 	// Effects
 	$effect(() => {
 		// Scroll to current stage when it changes
 		// Special handling for SPELLS stage - scroll to the appropriate spell section
-		if (stage === CHARACTER_CREATION_STAGES.SPELLS && needsBackgroundSpellSelection) {
+		if (activeSpellSelectionSource === 'background') {
 			// If background spells need selection, scroll to background spell section
 			scrollIntoView(`${params.dialog.id}-background-spells`);
 		} else {
@@ -577,6 +635,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		// Reset spell selections when class changes
 		selectedSchools = new Map();
 		selectedSpells = new Map();
+		confirmedSchools = new Set();
 		spellGrants = null;
 	});
 
@@ -741,11 +800,27 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 
 	$effect(() => {
 		// Reset raised-by selection and spell selections when background changes
-		void selectedBackground;
+		const currentBackground = selectedBackground;
+		if (previousBackground === currentBackground) return;
+
+		const previousBackgroundRules = (previousBackground?.system?.rules ?? []) as unknown as Array<{
+			type: string;
+			[key: string]: unknown;
+		}>;
+		const backgroundSchoolRuleIds = getGrantSpellSelectionRuleIds(
+			previousBackgroundRules,
+			'selectSchool',
+		);
+		const backgroundSpellRuleIds = getGrantSpellSelectionRuleIds(
+			previousBackgroundRules,
+			'selectSpell',
+		);
+
 		selectedRaisedByAncestry = null;
-		// Only reset spell selections that come from background rules
-		// For now, we reset all since we can't easily distinguish
-		selectedSpells = new Map();
+		selectedSchools = removeSelectionsForRuleIds(selectedSchools, backgroundSchoolRuleIds);
+		confirmedSchools = removeConfirmedSchoolsForRuleIds(confirmedSchools, backgroundSchoolRuleIds);
+		selectedSpells = removeSelectionsForRuleIds(selectedSpells, backgroundSpellRuleIds);
+		previousBackground = currentBackground;
 	});
 
 	$effect(() => {
@@ -973,6 +1048,9 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		},
 		get stageNumber() {
 			return stageNumber;
+		},
+		get activeSpellSelectionSource() {
+			return activeSpellSelectionSource;
 		},
 
 		// Actions

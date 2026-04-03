@@ -103,6 +103,29 @@ function getSpellTargetType(system: SpellSystemData): string | null {
 	});
 }
 
+function getSpellDescription(system: SpellSystemData): string {
+	const description = system.description;
+
+	if (typeof description === 'string') {
+		return description;
+	}
+
+	if (!description || typeof description !== 'object') {
+		return '';
+	}
+
+	const parts: string[] = [];
+	if (description.baseEffect) parts.push(description.baseEffect);
+	if (description.higherLevelEffect) {
+		parts.push(`<p><strong>Higher Levels:</strong> ${description.higherLevelEffect}</p>`);
+	}
+	if (description.upcastEffect) {
+		parts.push(`<p><strong>Upcast:</strong> ${description.upcastEffect}</p>`);
+	}
+
+	return parts.join('');
+}
+
 /**
  * Creates reactive state for displaying spell card data
  *
@@ -132,7 +155,7 @@ export function createSpellCardState(getSpell: () => Item) {
 		isLoading = true;
 		try {
 			const spell = getSpell();
-			const description = (spell.system as unknown as SpellSystemData).description ?? '';
+			const description = getSpellDescription(spell.system as unknown as SpellSystemData);
 			enrichedDescription =
 				await foundry.applications.ux.TextEditor.implementation.enrichHTML(description);
 		} catch (error) {

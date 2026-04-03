@@ -17,7 +17,7 @@
 		group: () => group,
 		spellIndex: () => spellIndex,
 		selected: () => selected,
-		onSelect,
+		onSelect: (schools) => onSelect(schools),
 		onConfirm: () => onConfirm?.(),
 	});
 </script>

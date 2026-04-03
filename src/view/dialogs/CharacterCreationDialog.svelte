@@ -95,7 +95,7 @@
 
 	<!-- Class spell grants (from class features) -->
 	<SpellGrantDisplay
-		active={state.stage === CHARACTER_CREATION_STAGES.SPELLS}
+		active={state.activeSpellSelectionSource === 'class'}
 		spellGrants={state.spellGrants}
 		spellIndex={state.spellIndex}
 		bind:selectedSchools={state.selectedSchools}
@@ -140,7 +140,7 @@
 
 	<!-- Background spell grants (from background rules like Academy Dropout) -->
 	<SpellGrantDisplay
-		active={state.stage === CHARACTER_CREATION_STAGES.SPELLS}
+		active={state.activeSpellSelectionSource === 'background'}
 		spellGrants={state.spellGrants}
 		spellIndex={state.spellIndex}
 		bind:selectedSchools={state.selectedSchools}
