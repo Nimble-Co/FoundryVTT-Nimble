@@ -1,4 +1,18 @@
 {
+	"hooks": {
+		"PreToolUse": [
+			{
+				"matcher": "Read|Edit|Write",
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/rules-context.sh\"",
+						"timeout": 5
+					}
+				]
+			}
+		]
+	},
 	"permissions": {
 		"allow": [
 			"Bash(find:*)",
