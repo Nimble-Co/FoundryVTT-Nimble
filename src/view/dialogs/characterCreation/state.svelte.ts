@@ -22,7 +22,15 @@ import type {
 	StageValue,
 	StatArrayOption,
 } from './types.js';
-import { isRaisedByBackground } from './utils.ts';
+import { isRaisedByBackground } from './utils/backgroundChecks.js';
+import { processGrantSpellsRules } from './utils/processGrantSpellsRules.js';
+import {
+	getGrantSpellSelectionRuleIds,
+	hasSpellGrants,
+	removeConfirmedSchoolsForRuleIds,
+	removeSelectionsForRuleIds,
+	spellSelectionsComplete,
+} from './utils/spellHelpers.js';
 
 // --- Internal helper functions ---
 
@@ -149,104 +157,6 @@ function classFeaturesComplete(
 function hasClassFeatures(features: ClassFeatureResult | null): boolean {
 	if (!features) return false;
 	return features.autoGrant.length > 0 || features.selectionGroups.size > 0;
-}
-
-function hasSpellGrants(grants: SpellGrantResult | null, sourceFilter?: SpellGrantSource): boolean {
-	if (!grants) return false;
-
-	// If no filter, check if there are any grants
-	if (!sourceFilter) {
-		return grants.hasGrants;
-	}
-
-	// Check if there are grants from the specified source
-	// Auto-grants are always from class features
-	const hasAutoGrant = sourceFilter === 'class' && grants.autoGrant.length > 0;
-	const hasSchoolSelections = grants.schoolSelections.some((g) => g.source === sourceFilter);
-	const hasSpellSelections = grants.spellSelections.some((g) => g.source === sourceFilter);
-
-	return hasAutoGrant || hasSchoolSelections || hasSpellSelections;
-}
-
-function getGrantSpellSelectionRuleIds(
-	rules: Array<{ type: string; [key: string]: unknown }>,
-	mode: 'selectSchool' | 'selectSpell',
-): string[] {
-	return rules.flatMap((rule) => {
-		if (rule.type !== 'grantSpells') return [];
-		if ((rule.mode ?? 'auto') !== mode) return [];
-		return typeof rule.id === 'string' ? [rule.id] : [];
-	});
-}
-
-function removeSelectionsForRuleIds<T>(
-	selections: Map<string, T>,
-	ruleIds: string[],
-): Map<string, T> {
-	if (ruleIds.length === 0) return selections;
-
-	const nextSelections = new Map(selections);
-	for (const ruleId of ruleIds) {
-		nextSelections.delete(ruleId);
-	}
-
-	return nextSelections;
-}
-
-function removeConfirmedSchoolsForRuleIds(
-	confirmedSchools: Set<string>,
-	ruleIds: string[],
-): Set<string> {
-	if (ruleIds.length === 0) return confirmedSchools;
-
-	const nextConfirmedSchools = new Set(confirmedSchools);
-	for (const ruleId of ruleIds) {
-		nextConfirmedSchools.delete(ruleId);
-	}
-
-	return nextConfirmedSchools;
-}
-
-function spellSelectionsComplete(
-	grants: SpellGrantResult | null,
-	selectedSchools: Map<string, string[]>,
-	selectedSpells: Map<string, string[]>,
-	confirmedSchools: Set<string>,
-	sourceFilter?: SpellGrantSource,
-): boolean {
-	if (!grants) return true;
-
-	// Check that all school selection groups have enough schools selected AND are confirmed
-	for (const group of grants.schoolSelections) {
-		// Skip if filtering by source and this group doesn't match
-		if (sourceFilter && group.source !== sourceFilter) continue;
-
-		const selected = selectedSchools.get(group.ruleId) ?? [];
-		// Cap required count at available options to prevent stuck state
-		const requiredCount = Math.min(group.count, group.availableSchools.length);
-		if (selected.length < requiredCount) {
-			return false;
-		}
-		// Also require confirmation
-		if (!confirmedSchools.has(group.ruleId)) {
-			return false;
-		}
-	}
-
-	// Check that all spell selection groups have enough spells selected
-	for (const group of grants.spellSelections) {
-		// Skip if filtering by source and this group doesn't match
-		if (sourceFilter && group.source !== sourceFilter) continue;
-
-		const selected = selectedSpells.get(group.ruleId) ?? [];
-		// Cap required count at available options to prevent stuck state
-		const requiredCount = Math.min(group.count, group.availableSpells.length);
-		if (selected.length < requiredCount) {
-			return false;
-		}
-	}
-
-	return true;
 }
 
 function getLanguageGrantsFromRules(
@@ -638,90 +548,6 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		confirmedSchools = new Set();
 		spellGrants = null;
 	});
-
-	// Helper to process grantSpells rules from any source
-	// Type for grantSpells rule properties
-	interface GrantSpellsRuleData {
-		id: string;
-		label: string;
-		schools?: string[];
-		tiers?: number[];
-		utilityOnly?: boolean;
-		uuids?: string[];
-		mode?: 'auto' | 'selectSchool' | 'selectSpell';
-		count?: number | null;
-	}
-
-	function processGrantSpellsRules(
-		rules: Array<{ type: string; [key: string]: unknown }>,
-		spellIndex: SpellIndex,
-		classIdentifier: string,
-		source: SpellGrantSource,
-		autoGrant: SpellIndexEntry[],
-		schoolSelections: SchoolSelectionGroup[],
-		spellSelections: SpellSelectionGroup[],
-	) {
-		for (const rule of rules) {
-			if (rule.type !== 'grantSpells') continue;
-
-			const grantRule = rule as unknown as GrantSpellsRuleData;
-
-			const mode = grantRule.mode ?? 'auto';
-			const tiers = grantRule.tiers ?? [0];
-			const utilityOnly = grantRule.utilityOnly ?? false;
-
-			if (mode === 'auto') {
-				// Auto-grant mode: add spells directly
-				if (grantRule.uuids && grantRule.uuids.length > 0) {
-					for (const uuid of grantRule.uuids) {
-						// Try to find spell in index by UUID
-						for (const tierMap of spellIndex.values()) {
-							for (const spells of tierMap.values()) {
-								const spell = spells.find((s) => s.uuid === uuid);
-								if (spell) {
-									autoGrant.push(spell);
-								}
-							}
-						}
-					}
-				} else if (grantRule.schools && grantRule.schools.length > 0) {
-					// Grant by school + tier
-					const spells = getSpellsFromIndex(spellIndex, grantRule.schools, tiers, {
-						utilityOnly,
-						forClass: classIdentifier,
-					});
-					autoGrant.push(...spells);
-				}
-			} else if (mode === 'selectSchool') {
-				// School selection mode: add to selection groups
-				schoolSelections.push({
-					ruleId: grantRule.id,
-					label: grantRule.label || localize('NIMBLE.spellGrants.chooseSchoolsFallback'),
-					availableSchools: grantRule.schools ?? [],
-					tiers,
-					count: grantRule.count ?? 1,
-					utilityOnly,
-					forClass: classIdentifier,
-					source,
-				});
-			} else if (mode === 'selectSpell') {
-				// Spell selection mode: user picks individual spells from the pool
-				const availableSpells = getSpellsFromIndex(spellIndex, grantRule.schools ?? [], tiers, {
-					utilityOnly,
-					forClass: classIdentifier,
-				});
-				spellSelections.push({
-					ruleId: grantRule.id,
-					label: grantRule.label || localize('NIMBLE.spellGrants.chooseSpellsFallback'),
-					availableSpells,
-					count: grantRule.count ?? 1,
-					utilityOnly,
-					forClass: classIdentifier,
-					source,
-				});
-			}
-		}
-	}
 
 	// Process spell grants when class features or background change
 	$effect(() => {

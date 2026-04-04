@@ -37,9 +37,9 @@ describe('SpellSelection', () => {
 					school: 'lightning',
 				}),
 				createSpellEntry({
-					uuid: 'Compendium.nimble.nimble-spells.Item.blizzard',
-					name: 'Blizzard',
-					school: 'ice',
+					uuid: 'Compendium.nimble.nimble-spells.Item.chain-lightning',
+					name: 'Chain Lightning',
+					school: 'lightning',
 				}),
 			],
 			count: 1,
@@ -66,20 +66,22 @@ describe('SpellSelection', () => {
 			},
 		});
 
-		await fireEvent.click(screen.getByRole('button', { name: 'Select Blizzard' }));
-		expect(onSelect).toHaveBeenLastCalledWith(['Compendium.nimble.nimble-spells.Item.blizzard']);
+		await fireEvent.click(screen.getByRole('button', { name: 'Select Chain Lightning' }));
+		expect(onSelect).toHaveBeenLastCalledWith([
+			'Compendium.nimble.nimble-spells.Item.chain-lightning',
+		]);
 		expect(screen.getByRole('button', { name: 'Change' })).toBeInTheDocument();
 		expect(screen.queryByRole('button', { name: 'Select Arc Spark' })).not.toBeInTheDocument();
 
 		await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
 
-		expect(screen.getByRole('button', { name: 'Deselect Blizzard' })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Deselect Chain Lightning' })).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: 'Select Arc Spark' })).toBeDisabled();
 
-		await fireEvent.click(screen.getByRole('button', { name: 'Deselect Blizzard' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Deselect Chain Lightning' }));
 		expect(onSelect).toHaveBeenLastCalledWith([]);
 
 		expect(screen.getByRole('button', { name: 'Select Arc Spark' })).toBeEnabled();
-		expect(screen.getByRole('button', { name: 'Select Blizzard' })).toBeEnabled();
+		expect(screen.getByRole('button', { name: 'Select Chain Lightning' })).toBeEnabled();
 	});
 });

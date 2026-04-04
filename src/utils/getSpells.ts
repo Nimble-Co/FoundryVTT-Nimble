@@ -212,33 +212,6 @@ export function getSpellsFromIndex(
 }
 
 /**
- * Gets all available schools from the spell index.
- * Useful for displaying school selection options.
- */
-export function getAvailableSchools(index: SpellIndex): string[] {
-	return [...index.keys()].sort();
-}
-
-/**
- * Gets all spells of a specific tier from the index.
- * Useful for checking what cantrips (tier 0) exist in a school.
- */
-export function getSpellsByTier(index: SpellIndex, tier: number): SpellIndexEntry[] {
-	const results: SpellIndexEntry[] = [];
-
-	for (const tierMap of index.values()) {
-		const spells = tierMap.get(tier);
-		if (spells) {
-			results.push(...spells);
-		}
-	}
-
-	results.sort((a, b) => a.name.localeCompare(b.name));
-
-	return results;
-}
-
-/**
  * Sorts spells by school (alphabetically) then by name (alphabetically).
  * Useful for consistent display ordering in spell selection UIs.
  */

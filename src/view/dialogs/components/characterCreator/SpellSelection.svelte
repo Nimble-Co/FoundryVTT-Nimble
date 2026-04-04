@@ -11,6 +11,14 @@
 		selected: () => selected,
 		onSelect: (spellUuids) => onSelect(spellUuids),
 	});
+
+	function getSchoolLabel(school: string): string {
+		return localize(CONFIG.NIMBLE.spellSchools[school] ?? school);
+	}
+
+	function getSchoolIcon(school: string): string {
+		return CONFIG.NIMBLE.spellSchoolIcons?.[school] ?? 'fa-solid fa-hat-wizard';
+	}
 </script>
 
 <div class="spell-selection">
@@ -61,7 +69,23 @@
 			{/each}
 		</ul>
 	{:else}
-		<!-- Expanded view: show all spells with selection capability -->
+		<!-- School filter buttons -->
+		<div class="spell-selection__school-filters">
+			{#each state.availableSchools as school (school)}
+				<button
+					type="button"
+					class="spell-selection__school-button"
+					class:active={state.activeSchoolFilter === school}
+					onclick={() =>
+						state.setActiveSchoolFilter(state.activeSchoolFilter === school ? null : school)}
+				>
+					<i class="spell-selection__school-icon {getSchoolIcon(school)}"></i>
+					<span class="spell-selection__school-name">{getSchoolLabel(school)}</span>
+				</button>
+			{/each}
+		</div>
+
+		<!-- Filtered spells list -->
 		<ul class="spell-selection__spell-list">
 			{#each state.displayedSpells as spell (spell.uuid)}
 				<SpellCard
@@ -115,6 +139,47 @@
 			margin: 0 0 0.75rem 0;
 			font-size: var(--nimble-sm-text);
 			color: var(--nimble-medium-text-color);
+		}
+
+		&__school-filters {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+			margin-bottom: 0.75rem;
+		}
+
+		&__school-button {
+			display: flex;
+			align-items: center;
+			gap: 0.375rem;
+			padding: 0.375rem 0.75rem;
+			background: var(--nimble-basic-button-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			cursor: pointer;
+			transition: var(--nimble-standard-transition);
+			font-size: var(--nimble-sm-text);
+
+			&:hover {
+				border-color: var(--nimble-accent-color);
+			}
+
+			&.active {
+				background: color-mix(
+					in srgb,
+					var(--nimble-accent-color) 20%,
+					var(--nimble-basic-button-background-color)
+				);
+				border-color: var(--nimble-accent-color);
+			}
+		}
+
+		&__school-icon {
+			font-size: 0.875rem;
+		}
+
+		&__school-name {
+			font-weight: 500;
 		}
 
 		&__spell-list {

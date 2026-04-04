@@ -31,6 +31,17 @@
 		dialog: getContext<{ id: string }>('dialog'),
 	};
 
+	function getHintKey(source: typeof sourceFilter): string {
+		switch (source) {
+			case 'class':
+				return 'NIMBLE.spellGrants.hintClass';
+			case 'background':
+				return 'NIMBLE.spellGrants.hintBackground';
+			default:
+				return 'NIMBLE.spellGrants.hintAncestry';
+		}
+	}
+
 	const state = createSpellGrantDisplayState({
 		props: () => ({
 			active,
@@ -72,7 +83,7 @@
 
 		{#if state.showExpanded}
 			{#if active && state.hasAnySelections}
-				<Hint hintText={localize('NIMBLE.spellGrants.hint')} />
+				<Hint hintText={localize(getHintKey(sourceFilter))} />
 			{/if}
 
 			{#if state.hasAutoGrants}

@@ -5,7 +5,7 @@
 
 	import { CHARACTER_CREATION_STAGES } from './characterCreation/constants.js';
 	import { createCharacterCreationState } from './characterCreation/state.svelte.js';
-	import { isRaisedByBackground } from './characterCreation/utils.ts';
+	import { isRaisedByBackground } from './characterCreation/utils/backgroundChecks.js';
 
 	import AncestrySelection from './components/characterCreator/AncestrySelection.svelte';
 	import AncestrySizeSelection from './components/characterCreator/AncestrySizeSelection.svelte';

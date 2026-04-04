@@ -1282,7 +1282,9 @@
 		"spellGrants": {
 			"header": "Starting Spells",
 			"backgroundHeader": "Background Spells",
-			"hint": "Your class or background grants you these spells.",
+			"hintClass": "Your class grants you these spells.",
+			"hintBackground": "Your background grants you these spells.",
+			"hintAncestry": "Your ancestry grants you these spells.",
 			"grantedSpells": "Granted Spells",
 			"chooseSchools": "Choose {count} school(s):",
 			"schoolsSelected": "Selected: {schools}",
