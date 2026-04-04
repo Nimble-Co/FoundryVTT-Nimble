@@ -70,13 +70,6 @@
 		];
 	});
 
-	// Get current column data based on active tab
-	let activeColumnHtml = $derived.by(() => {
-		if (activeColumnTab === 1) return column1Html;
-		if (activeColumnTab === 2) return column2Html;
-		return column3Html;
-	});
-
 	let activeColumnCount = $derived.by(() => {
 		if (activeColumnTab === 1) return column1Count;
 		if (activeColumnTab === 2) return column2Count;
