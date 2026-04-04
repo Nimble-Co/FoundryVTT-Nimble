@@ -42,7 +42,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 - **TypeScript strict mode** - `verbatimModuleSyntax`, `noImplicitOverride`, `import type` enforced.
 - **No barrel exports** - Direct imports only, to prevent circular dependency chains.
 - **Document class hierarchy** - Must extend `NimbleBaseActor`/`NimbleBaseItem`, not Foundry base classes directly.
-- **Brownfield context** - 146 closed issues, established patterns, existing codebase conventions documented in style guide.
+- **Brownfield context** - Established patterns, existing codebase conventions documented in style guide. Phase 1 complete.
 
 ### Cross-Cutting Concerns Identified
 
@@ -379,55 +379,37 @@ src/
 
 ### Coherence Validation
 
-- Decision compatibility: All decisions extend existing patterns - no conflicts
+- Decision compatibility: All decisions extend existing patterns — no conflicts
 - Pattern consistency: Naming, structure, and communication patterns align with established conventions
 - Structure alignment: Every feature maps to a clear location in the existing directory hierarchy
 
 ### Requirements Coverage
 
-- **55/55 Functional Requirements** architecturally supported (FR31-35 and FR45-51 as new extensions, rest via existing systems)
-- **14/14 Non-Functional Requirements** addressed (performance via Svelte 5 reactivity, integration via FoundryVTT v13 API, accessibility via CSS custom properties)
+- **All Functional Requirements** architecturally supported — Phase 1 requirements delivered, Phase 2 extensions (GM Helper, automation toolbox) follow established patterns
+- **All Non-Functional Requirements** addressed (performance via Svelte 5 reactivity, integration via FoundryVTT v13 API, accessibility via CSS custom properties)
 - **All 4 phases** have clear architectural paths
 
-### Implementation Readiness
+### Current State (as of 2026-04)
 
-- Existing codebase provides proven patterns for every architectural decision
-- Style guide, project context, and contributing docs provide comprehensive implementation guidance
-- New features (GM Helper, automation toolbox) follow established extension patterns
-- No architectural rewrites needed between phases
+**Proven in production (Phase 1 complete):**
+- 4 actor types, 10 item types, 12+ chat card types, 21+ rule types
+- Full data preparation pipeline with predicate-gated rules
+- Reactive document bridge (`.reactive` + Svelte 5 runes) across all sheets and UI
+- Combat tracker carousel with side-based initiative, solo boss interleaving, minion grouping
+- Item activation system with activation dialog and automatic bookkeeping
+- 14 compendium packs with complete core content
 
-### Minor Gaps (Non-Blocking)
+**Phase 2 architectural focus:**
+- Chat card interactive layer (role-based actions, defend reactions, target management, undo/snapshot)
+- GM Helper as dockable `SvelteApplicationMixin(ApplicationV2)`
+- Automation toolbox via new rule types in `CONFIG.NIMBLE.ruleDataModels`
+- Overhauled dice roller with pre/post-roll per-die manipulation
 
-1. GM Helper sidebar docking - exact Foundry v13 mechanism TBD at implementation
-2. Dice roller Phase 2 transition - no abstraction; accepted trade-off
-3. Data migration details - covered by existing `src/migration/` conventions
+### Open Architectural Questions
 
-### Architecture Completeness Checklist
-
-- [x] Project context analyzed with constraints and cross-cutting concerns
-- [x] Existing technical foundation documented (brownfield)
-- [x] Critical architectural decisions made (GM Helper, automation toolbox, chat cards)
-- [x] Implementation patterns defined (reactivity, error handling, rule types)
-- [x] Project structure mapped with FR-to-directory mapping
-- [x] Architectural boundaries defined (document/view, model/document, rules/data-prep, chat card)
-- [x] All requirements verified against architecture
-
-### Architecture Readiness Assessment
-
-**Overall Status:** READY FOR IMPLEMENTATION
-
-**Confidence Level:** High - brownfield project with proven patterns; new features extend rather than replace.
-
-**Key Strengths:**
-- Mature rules engine directly supports Phase 2 automation toolbox
-- Established reactive document bridge (`.reactive` + Svelte 5) is well-tested
-- Clear separation of concerns (models → documents → views)
-- Effect tree pattern provides composable, extensible chat card interactions
-
-**Areas for Future Enhancement:**
-- GM Helper docking mechanism investigation
-- Dice roller abstraction if natural interface emerges
-- Performance profiling under 20+ creature combat load once GM Helper is built
+1. GM Helper sidebar docking — exact Foundry v13 mechanism TBD at implementation
+2. Dice roller overhaul transition — no abstraction layer; accepted trade-off, design alongside current roller
+3. Defend reaction permission model — GM-proxied socket vs Foundry message permissions, evaluate at implementation
 
 ### Implementation Handoff
 
@@ -438,8 +420,3 @@ src/
 - Register new rule types in `src/config/registerRulesConfig.ts`
 - Add new chat card nodes via the effect tree pattern
 - Use `pnpm run check` before submitting any changes
-
-**First Implementation Priorities:**
-1. Resolve remaining Phase 1 open issues
-2. Chat card redesign with new role-based action nodes
-3. GM Helper v1 as dockable ApplicationV2
