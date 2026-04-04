@@ -2,7 +2,7 @@
 	"name": "Kobold Minion",
 	"type": "minion",
 	"folder": "fbd108fbd999fb4e",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "modules/nimble/assets/monsterImages/Kobold.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -42,7 +42,7 @@
 		"width": 0.5,
 		"height": 0.5,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "modules/nimble/assets/monsterImages/Kobold.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -134,7 +134,7 @@
 			"name": "Nooooo!",
 			"type": "monsterFeature",
 			"_id": "J7n5esMxG3M9yeFd",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/skills/social/intimidation-impressing.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

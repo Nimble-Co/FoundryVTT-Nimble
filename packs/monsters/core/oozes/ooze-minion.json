@@ -2,7 +2,7 @@
 	"name": "Ooze Minion",
 	"type": "minion",
 	"folder": "b46bff9abe4a012b",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/slimes/slime-movement-dripping-pseudopods-green.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -42,7 +42,7 @@
 		"width": 0.5,
 		"height": 0.5,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/slimes/slime-movement-dripping-pseudopods-green.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -134,7 +134,7 @@
 			"name": "Digestive Touch.",
 			"type": "monsterFeature",
 			"_id": "T70WIXYMcD22yvoJ",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/acid/dissolve-bone-white.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

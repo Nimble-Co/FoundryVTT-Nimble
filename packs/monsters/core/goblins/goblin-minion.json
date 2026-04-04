@@ -2,7 +2,7 @@
 	"name": "Goblin Minion",
 	"type": "minion",
 	"folder": "6e14050118400068",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "modules/nimble/assets/monsterImages/Goblin.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -42,7 +42,7 @@
 		"width": 0.5,
 		"height": 0.5,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "modules/nimble/assets/monsterImages/Goblin.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -134,7 +134,7 @@
 			"name": "Haha, Missed Me!",
 			"type": "monsterFeature",
 			"_id": "cOFgqzqJUvJXfoWk",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/skills/social/trading-justice-scale-yellow.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

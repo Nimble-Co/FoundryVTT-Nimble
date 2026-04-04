@@ -2,7 +2,7 @@
 	"name": "Snakeman Minion",
 	"type": "minion",
 	"folder": "186fd36bd601cbc8",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/magic/nature/root-vine-coiled-crook.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -42,7 +42,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/magic/nature/root-vine-coiled-crook.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -216,7 +216,7 @@
 			"name": "Coiling Strike",
 			"type": "monsterFeature",
 			"_id": "Mmvb8GxTEjjgZU38",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/creatures/reptiles/snake-tail-green.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

@@ -2,7 +2,7 @@
 	"name": "Small Mimic",
 	"type": "npc",
 	"folder": "3823f3be6e4231e8",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/containers/chest/chest-reinforced-steel-brown.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 0.5,
 		"height": 0.5,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/containers/chest/chest-reinforced-steel-brown.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Ambusher.",
 			"type": "monsterFeature",
 			"_id": "Ybjefy758J7EUWLB",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/creatures/slimes/slime-face-melting-yellow-brown.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",
@@ -188,7 +188,7 @@
 			"name": "Sticky.",
 			"type": "monsterFeature",
 			"_id": "lyV7nZUJidR3oKuz",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/creatures/slimes/slime-face-melting-yellow-brown.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

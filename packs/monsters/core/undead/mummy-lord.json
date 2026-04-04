@@ -2,7 +2,7 @@
 	"name": "Mummy Lord",
 	"type": "npc",
 	"folder": "523dda610883c011",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "modules/nimble/assets/monsterImages/LargeMummy.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "modules/nimble/assets/monsterImages/LargeMummy.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Unliving, Undying.",
 			"type": "monsterFeature",
 			"_id": "Krk9941gUhY7Gghx",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/life/heart-cross-strong-flame-purple-orange.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",
@@ -320,7 +320,7 @@
 			"name": "Cursed Gaze.",
 			"type": "monsterFeature",
 			"_id": "jraNP0SQeBK9t0cF",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/perception/eye-ringed-glow-angry-large-red.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

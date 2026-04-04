@@ -2,7 +2,7 @@
 	"name": "Great Worm",
 	"type": "npc",
 	"folder": "1e695c5c5b1b3293",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "systems/nimble/assets/monsterImages/GreatWorm.webp",
 	"system": {
 		"attributes": {
 			"armor": "heavy",
@@ -48,7 +48,7 @@
 		"width": 3,
 		"height": 3,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "systems/nimble/assets/monsterImages/GreatWorm.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Tremor Sight.",
 			"type": "monsterFeature",
 			"_id": "TZNgsrsPQnLNEWhZ",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/perception/eye-ringed-glow-yellow.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

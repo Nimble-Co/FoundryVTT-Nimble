@@ -2,7 +2,7 @@
 	"name": "Nestweaver",
 	"type": "npc",
 	"folder": "1e695c5c5b1b3293",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/invertebrates/spider-web-black.webp",
 	"system": {
 		"attributes": {
 			"armor": "medium",
@@ -48,7 +48,7 @@
 		"width": 2,
 		"height": 2,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/invertebrates/spider-web-black.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -175,7 +175,7 @@
 				"subtype": "action"
 			},
 			"_id": "JyzNugiIZQ2of8AX",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/creatures/invertebrates/spider-swarm-green.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,

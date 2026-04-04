@@ -2,7 +2,7 @@
 	"name": "Wraith",
 	"type": "npc",
 	"folder": "523dda610883c011",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/magical/spirit-undead-winged-ghost.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/magical/spirit-undead-winged-ghost.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Unliving, Undying.",
 			"type": "monsterFeature",
 			"_id": "jQmxNYQBx0ydEVNL",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/life/heart-cross-strong-flame-purple-orange.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

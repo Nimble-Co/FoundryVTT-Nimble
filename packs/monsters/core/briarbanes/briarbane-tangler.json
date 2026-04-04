@@ -2,7 +2,7 @@
 	"name": "Briarbane Tangler",
 	"type": "npc",
 	"folder": "0476e3533a26f1de",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/magic/nature/root-vine-entangle-foot-green.webp",
 	"system": {
 		"attributes": {
 			"armor": "heavy",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/magic/nature/root-vine-entangle-foot-green.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -228,7 +228,7 @@
 			"name": "Peeling Bark.",
 			"type": "monsterFeature",
 			"_id": "T7tZki6vbFkbZhGu",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/nature/tree-elm-roots-brown.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

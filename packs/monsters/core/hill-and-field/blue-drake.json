@@ -2,7 +2,7 @@
 	"name": "Blue Drake",
 	"type": "npc",
 	"folder": "ed190d32f397df62",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/reptiles/dragon-horned-blue.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/reptiles/dragon-horned-blue.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "On Death.",
 			"type": "monsterFeature",
 			"_id": "skRyvAXV2LwQrTs1",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/lightning/bolt-strike-blue.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

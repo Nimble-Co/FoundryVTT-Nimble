@@ -2,7 +2,7 @@
 	"name": "Bandit",
 	"type": "npc",
 	"folder": "718123f1f5a7d7b3",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "modules/nimble/assets/monsterImages/Bandit.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "modules/nimble/assets/monsterImages/Bandit.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Parry.",
 			"type": "monsterFeature",
 			"_id": "rO2R4LUUCA2ae38q",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/skills/melee/swords-parry-block-yellow.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

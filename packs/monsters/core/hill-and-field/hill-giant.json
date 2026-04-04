@@ -2,7 +2,7 @@
 	"name": "Hill Giant",
 	"type": "npc",
 	"folder": "ed190d32f397df62",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/magic/unholy/silhouette-robe-evil-glow.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 3,
 		"height": 3,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/magic/unholy/silhouette-robe-evil-glow.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -214,7 +214,7 @@
 			"name": "Brute.",
 			"type": "monsterFeature",
 			"_id": "djYrYJCaMtAvKay5",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/skills/melee/strike-hammer-destructive-orange.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

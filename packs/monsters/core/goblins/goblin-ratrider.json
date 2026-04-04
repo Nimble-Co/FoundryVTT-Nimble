@@ -2,7 +2,7 @@
 	"name": "Goblin Ratrider",
 	"type": "npc",
 	"folder": "6e14050118400068",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/mammals/rodent-rat-green.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/mammals/rodent-rat-green.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Haha, Missed Me!",
 			"type": "monsterFeature",
 			"_id": "aTjIL20VyLtSRa2y",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/skills/social/trading-justice-scale-yellow.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",
@@ -188,7 +188,7 @@
 			"name": "CHAAARGE!",
 			"type": "monsterFeature",
 			"_id": "KUok8po5LnIHUZBr",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/skills/movement/figure-running-gray.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

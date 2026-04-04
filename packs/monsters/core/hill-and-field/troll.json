@@ -2,7 +2,7 @@
 	"name": "Troll",
 	"type": "npc",
 	"folder": "ed190d32f397df62",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/magic/unholy/silhouette-robe-evil-glow.webp",
 	"system": {
 		"attributes": {
 			"armor": "medium",
@@ -48,7 +48,7 @@
 		"width": 2,
 		"height": 2,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/magic/unholy/silhouette-robe-evil-glow.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Regenerate.",
 			"type": "monsterFeature",
 			"_id": "ImODE4jRC1Hf8k0t",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/life/heart-area-circle-green.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",
@@ -223,7 +223,7 @@
 				"subtype": "action"
 			},
 			"_id": "xHKXANPad6Z22qFQ",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/life/heart-area-circle-green.webp",
 			"effects": [],
 			"folder": null,
 			"sort": 0,

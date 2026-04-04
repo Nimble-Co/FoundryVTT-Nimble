@@ -2,7 +2,7 @@
 	"name": "Briarbane Rootbreaker",
 	"type": "npc",
 	"folder": "0476e3533a26f1de",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "systems/nimble/assets/monsterImages/Rootbreaker.webp",
 	"system": {
 		"attributes": {
 			"armor": "heavy",
@@ -48,7 +48,7 @@
 		"width": 2,
 		"height": 2,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "systems/nimble/assets/monsterImages/Rootbreaker.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Peeling Bark.",
 			"type": "monsterFeature",
 			"_id": "CBm0HqALpDNH0lLk",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/nature/tree-elm-roots-brown.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

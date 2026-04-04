@@ -47,7 +47,7 @@
 		"width": 3,
 		"height": 3,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "systems/nimble/assets/legendaryMonsterImages/core/azriel.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,

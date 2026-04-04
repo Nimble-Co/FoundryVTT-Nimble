@@ -2,7 +2,7 @@
 	"folder": null,
 	"name": "Prismatic Frog",
 	"type": "object",
-	"img": "icons/creatures/amphibians/frog-spotted-green.webp",
+	"img": "icons/creatures/amphibians/frog-water-teal.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",

@@ -47,7 +47,7 @@
 		"width": 2,
 		"height": 2,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "systems/nimble/assets/legendaryMonsterImages/core/ravager.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,

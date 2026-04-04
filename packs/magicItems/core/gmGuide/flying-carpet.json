@@ -2,7 +2,7 @@
 	"folder": null,
 	"name": "Flying Carpet",
 	"type": "object",
-	"img": "icons/sundries/survival/carpet-rolled-red.webp",
+	"img": "icons/magic/movement/trail-streak-zigzag-yellow.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",

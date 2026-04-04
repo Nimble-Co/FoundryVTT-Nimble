@@ -2,7 +2,7 @@
 	"name": "Umber Hulk",
 	"type": "npc",
 	"folder": "1e695c5c5b1b3293",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/magical/spirit-earth-stone-magma-yellow.webp",
 	"system": {
 		"attributes": {
 			"armor": "heavy",
@@ -48,7 +48,7 @@
 		"width": 2,
 		"height": 2,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/magical/spirit-earth-stone-magma-yellow.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
@@ -140,7 +140,7 @@
 			"name": "Confounding Pheromones.",
 			"type": "monsterFeature",
 			"_id": "RUZcSKNDMBOvWLXq",
-			"img": "icons/svg/item-bag.svg",
+			"img": "icons/magic/control/hypnosis-mesmerism-swirl.webp",
 			"system": {
 				"macro": "",
 				"identifier": "",

@@ -2,7 +2,7 @@
 	"name": "Bulette",
 	"type": "npc",
 	"folder": "ed190d32f397df62",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/reptiles/beast-armored-grey.webp",
 	"system": {
 		"attributes": {
 			"armor": "heavy",
@@ -48,7 +48,7 @@
 		"width": 2,
 		"height": 2,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/reptiles/beast-armored-grey.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,

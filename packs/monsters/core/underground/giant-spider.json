@@ -2,7 +2,7 @@
 	"name": "Giant Spider",
 	"type": "npc",
 	"folder": "1e695c5c5b1b3293",
-	"img": "icons/svg/mystery-man.svg",
+	"img": "icons/creatures/invertebrates/spider-mandibles-brown.webp",
 	"system": {
 		"attributes": {
 			"armor": "medium",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/svg/mystery-man.svg",
+			"src": "icons/creatures/invertebrates/spider-mandibles-brown.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
