@@ -6,8 +6,6 @@ import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
 import generateBlankAttributeSet from '../../../utils/generateBlankAttributeSet.js';
 import getClassFeaturesFromIndex from '../../../utils/getClassFeatures.js';
-import { getSpellsFromIndex } from '../../../utils/getSpells.js';
-import localize from '../../../utils/localize.js';
 import scrollIntoView from '../../../utils/scrollIntoView.js';
 import { CHARACTER_CREATION_STAGES, DEFAULT_SKILL_POINTS } from './constants.js';
 import type {
