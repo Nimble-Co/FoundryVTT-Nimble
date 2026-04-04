@@ -25,6 +25,11 @@ type CombatWithHeroicReactionUse = Combat & {
 	) => Promise<boolean>;
 };
 
+type ReactionConfirmationResult = {
+	confirmed: boolean;
+	force: boolean;
+};
+
 /**
  * The function called by macros created by dragging a heroic action/reaction to the macro hot bar.
  *
@@ -109,11 +114,11 @@ async function checkReactionConfirmation(
 	actor: NimbleCharacter,
 	reactionKeys: HeroicReactionKey[],
 	reactionName: string,
-): Promise<boolean> {
+): Promise<ReactionConfirmationResult> {
 	const combat = getActiveCombatForCurrentScene();
 	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
 
-	if (!combat || !combatant) return true;
+	if (!combat || !combatant) return { confirmed: true, force: false };
 
 	const usageState = getHeroicReactionUsageState({
 		combat,
@@ -123,7 +128,7 @@ async function checkReactionConfirmation(
 
 	// Only show confirmation for 'noActions' or 'spent' blocked reasons
 	if (usageState.blockedReason !== 'noActions' && usageState.blockedReason !== 'spent') {
-		return true;
+		return { confirmed: true, force: false };
 	}
 
 	const noActions =
@@ -139,12 +144,15 @@ async function checkReactionConfirmation(
 	// Get the localized names of spent reactions
 	const spentReactionNames = spentReactions.map((key) => getHeroicReactionLabel(key)).join(' & ');
 
-	return showReactionConfirmation({
-		reactionName,
-		spentReactionNames,
-		noActions,
-		hasSpentReactions,
-	});
+	return {
+		confirmed: await showReactionConfirmation({
+			reactionName,
+			spentReactionNames,
+			noActions,
+			hasSpentReactions,
+		}),
+		force: true,
+	};
 }
 
 async function executeMoveAction(actor: NimbleCharacter): Promise<void> {
@@ -213,10 +221,14 @@ async function executeDefendReaction(actor: NimbleCharacter): Promise<void> {
 		);
 		return;
 	}
-	const confirmed = await checkReactionConfirmation(actor, ['defend'], reactionName);
+	const { confirmed, force } = await checkReactionConfirmation(actor, ['defend'], reactionName);
 	if (!confirmed) return;
 
-	const reactionUsed = await combat.useHeroicReactions(combatantId, ['defend'], { force: true });
+	const reactionUsed = await combat.useHeroicReactions(
+		combatantId,
+		['defend'],
+		force ? { force: true } : undefined,
+	);
 	if (!reactionUsed) return;
 
 	const armorValue = actor.reactive.system.attributes.armor.value ?? 0;
@@ -251,10 +263,14 @@ async function executeInterposeReaction(actor: NimbleCharacter): Promise<void> {
 		);
 		return;
 	}
-	const confirmed = await checkReactionConfirmation(actor, ['interpose'], reactionName);
+	const { confirmed, force } = await checkReactionConfirmation(actor, ['interpose'], reactionName);
 	if (!confirmed) return;
 
-	const reactionUsed = await combat.useHeroicReactions(combatantId, ['interpose'], { force: true });
+	const reactionUsed = await combat.useHeroicReactions(
+		combatantId,
+		['interpose'],
+		force ? { force: true } : undefined,
+	);
 	if (!reactionUsed) return;
 
 	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
@@ -288,12 +304,18 @@ async function executeInterposeAndDefendReaction(actor: NimbleCharacter): Promis
 		);
 		return;
 	}
-	const confirmed = await checkReactionConfirmation(actor, ['interpose', 'defend'], reactionName);
+	const { confirmed, force } = await checkReactionConfirmation(
+		actor,
+		['interpose', 'defend'],
+		reactionName,
+	);
 	if (!confirmed) return;
 
-	const reactionUsed = await combat.useHeroicReactions(combatantId, ['interpose', 'defend'], {
-		force: true,
-	});
+	const reactionUsed = await combat.useHeroicReactions(
+		combatantId,
+		['interpose', 'defend'],
+		force ? { force: true } : undefined,
+	);
 	if (!reactionUsed) return;
 
 	const armorValue = actor.reactive.system.attributes.armor.value ?? 0;
@@ -346,10 +368,14 @@ async function executeHelpReaction(actor: NimbleCharacter): Promise<void> {
 		);
 		return;
 	}
-	const confirmed = await checkReactionConfirmation(actor, ['help'], reactionName);
+	const { confirmed, force } = await checkReactionConfirmation(actor, ['help'], reactionName);
 	if (!confirmed) return;
 
-	const reactionUsed = await combat.useHeroicReactions(combatantId, ['help'], { force: true });
+	const reactionUsed = await combat.useHeroicReactions(
+		combatantId,
+		['help'],
+		force ? { force: true } : undefined,
+	);
 	if (!reactionUsed) return;
 
 	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
@@ -383,7 +409,11 @@ async function executeOpportunityAttackReaction(actor: NimbleCharacter): Promise
 		);
 		return;
 	}
-	const confirmed = await checkReactionConfirmation(actor, ['opportunityAttack'], reactionName);
+	const { confirmed, force } = await checkReactionConfirmation(
+		actor,
+		['opportunityAttack'],
+		reactionName,
+	);
 	if (!confirmed) return;
 
 	// For opportunity attack, we open the sheet to let the user choose a weapon
@@ -395,7 +425,7 @@ async function executeOpportunityAttackReaction(actor: NimbleCharacter): Promise
 
 	const appState = sheet.$state;
 	appState.activePrimaryTab = 'actions';
-	appState.heroicActionTarget = { actionId: 'opportunity', actionType: 'reaction' };
+	appState.heroicActionTarget = { actionId: 'opportunity', actionType: 'reaction', force };
 }
 
 async function executeUnarmedStrike(actor: NimbleCharacter): Promise<void> {

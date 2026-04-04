@@ -39,7 +39,7 @@ export const assessOptions: AssessOption[] = [
 		descriptionKey: 'NIMBLE.ui.heroicActions.assess.createOpening.description',
 		successKey: 'NIMBLE.ui.heroicActions.assess.createOpening.success',
 		failureKey: 'NIMBLE.ui.heroicActions.assess.createOpening.failure',
-		requiresTarget: true,
+		requiresTarget: false,
 	},
 	{
 		id: 'anticipate-danger',

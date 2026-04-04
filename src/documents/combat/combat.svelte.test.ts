@@ -2031,6 +2031,257 @@ describe('NimbleCombat', () => {
 		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
 	});
 
+	it('allows force to override the no-actions heroic reaction blocker', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-sheet-force-no-actions';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: false,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const reactingCharacter = createMockCombatant({
+			id: 'reacting-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 0,
+			actionsMax: 3,
+			actor: createCombatActorFixture({
+				hp: 8,
+				woundsValue: 0,
+				woundsMax: 6,
+				isOwner: true,
+			}),
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, reactingCharacter]),
+			turns: [activeCharacter, reactingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.useHeroicReactions('reacting-character', ['help'], {
+			force: true,
+		});
+
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'reacting-character',
+				'system.actions.base.current': 0,
+				'system.actions.heroic.helpAvailable': false,
+			},
+		]);
+	});
+
+	it('allows force to override the spent heroic reaction blocker', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-sheet-force-spent';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: false,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const reactingCharacter = createMockCombatant({
+			id: 'reacting-character',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 2,
+			actionsMax: 3,
+			actor: createCombatActorFixture({
+				hp: 8,
+				woundsValue: 0,
+				woundsMax: 6,
+				isOwner: true,
+			}),
+			combatId,
+		});
+		foundry.utils.setProperty(reactingCharacter, 'system.actions.heroic.helpAvailable', false);
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, reactingCharacter]),
+			turns: [activeCharacter, reactingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.useHeroicReactions('reacting-character', ['help'], {
+			force: true,
+		});
+
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			{
+				_id: 'reacting-character',
+				'system.actions.base.current': 1,
+				'system.actions.heroic.helpAvailable': false,
+			},
+		]);
+	});
+
+	it('does not let force bypass the active-turn heroic reaction blocker', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-sheet-force-active-turn';
+		const reactingCharacter = createMockCombatant({
+			id: 'reacting-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({
+				hp: 8,
+				woundsValue: 0,
+				woundsMax: 6,
+				isOwner: true,
+			}),
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([reactingCharacter]),
+			turns: [reactingCharacter],
+			turn: 0,
+			combatant: reactingCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.useHeroicReactions('reacting-character', ['defend'], {
+			force: true,
+		});
+
+		expect(changed).toBe(false);
+		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('does not let force bypass the not-owner heroic reaction blocker', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-sheet-force-not-owner';
+		const activeCharacter = createMockCombatant({
+			id: 'active-character',
+			type: 'character',
+			sort: 1,
+			isOwner: false,
+			initiative: 15,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const reactingCharacter = createMockCombatant({
+			id: 'reacting-character',
+			type: 'character',
+			sort: 2,
+			isOwner: false,
+			initiative: 12,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({
+				hp: 8,
+				woundsValue: 0,
+				woundsMax: 6,
+				isOwner: false,
+			}),
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 1,
+			combatants: createCombatantsCollectionFixture([activeCharacter, reactingCharacter]),
+			turns: [activeCharacter, reactingCharacter],
+			turn: 0,
+			combatant: activeCharacter,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.useHeroicReactions('reacting-character', ['defend'], {
+			force: true,
+		});
+
+		expect(changed).toBe(false);
+		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
+	it('does not let force bypass the outside-combat heroic reaction blocker', async () => {
+		globals().game.user.isGM = false;
+		globals().game.user.role = 1;
+		const combatId = 'combat-sheet-force-outside-combat';
+		const reactingCharacter = createMockCombatant({
+			id: 'reacting-character',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 12,
+			actionsCurrent: 3,
+			actionsMax: 3,
+			actor: createCombatActorFixture({
+				hp: 8,
+				woundsValue: 0,
+				woundsMax: 6,
+				isOwner: true,
+			}),
+			combatId,
+		});
+		const combat = new NimbleCombat({
+			id: combatId,
+			round: 0,
+			combatants: createCombatantsCollectionFixture([reactingCharacter]),
+			turns: [reactingCharacter],
+			turn: null,
+			combatant: null,
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi.fn().mockResolvedValue([]);
+
+		const changed = await combat.useHeroicReactions('reacting-character', ['defend'], {
+			force: true,
+		});
+
+		expect(changed).toBe(false);
+		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
+	});
+
 	it('re-enables Defend without touching actor conditions', async () => {
 		const combatId = 'combat-defend-gm-reenable-clears-condition';
 		const activeCharacter = createMockCombatant({

@@ -15,4 +15,6 @@ export interface ReactionPanelProps {
 
 export interface OpportunityAttackPanelProps extends ReactionPanelProps {
 	showEmbeddedDocumentImages?: boolean;
+	forceNextReactionUse?: boolean;
+	onConsumeForcedReactionUse?: () => void;
 }

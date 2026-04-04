@@ -14,6 +14,8 @@
 		opportunitySpent = false,
 		noActions = false,
 		onUseReaction = async () => false,
+		forceNextReactionUse = false,
+		onConsumeForcedReactionUse = () => {},
 		showEmbeddedDocumentImages = true,
 	}: OpportunityAttackPanelProps = $props();
 
@@ -23,6 +25,8 @@
 		() => opportunitySpent,
 		() => noActions,
 		() => onUseReaction,
+		() => forceNextReactionUse,
+		() => onConsumeForcedReactionUse,
 	);
 
 	const meleeWeapons = $derived(state.meleeWeapons);

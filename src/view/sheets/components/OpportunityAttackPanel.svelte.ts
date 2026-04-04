@@ -29,6 +29,8 @@ export function createOpportunityAttackPanelState(
 	getOpportunitySpent: () => boolean,
 	getNoActions: () => boolean,
 	getOnUseReaction: () => (options?: { force?: boolean }) => Promise<boolean>,
+	getForceNextReactionUse: () => boolean,
+	getOnConsumeForcedReactionUse: () => () => void,
 ) {
 	const { weaponProperties } = CONFIG.NIMBLE;
 
@@ -116,6 +118,10 @@ export function createOpportunityAttackPanelState(
 	}
 
 	async function checkAndConfirmReaction(): Promise<{ confirmed: boolean; force: boolean }> {
+		if (getForceNextReactionUse()) {
+			return { confirmed: true, force: true };
+		}
+
 		const isDisabled = getReactionDisabled();
 
 		if (isDisabled) {
@@ -182,6 +188,10 @@ export function createOpportunityAttackPanelState(
 
 		const reactionUsed = await getOnUseReaction()(force ? { force: true } : undefined);
 		if (!reactionUsed) return;
+
+		if (force) {
+			getOnConsumeForcedReactionUse()();
+		}
 
 		const roll = new DamageRoll(rollFormula, getActor().getRollData(), {
 			canCrit,
@@ -276,6 +286,10 @@ export function createOpportunityAttackPanelState(
 			// Item activation owns its own dialog flow, so consume the reaction only after success.
 			const reactionUsed = await getOnUseReaction()(force ? { force: true } : undefined);
 			if (!reactionUsed) return null;
+
+			if (force) {
+				getOnConsumeForcedReactionUse()();
+			}
 		}
 
 		return result;

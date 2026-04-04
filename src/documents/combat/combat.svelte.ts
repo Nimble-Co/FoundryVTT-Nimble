@@ -747,8 +747,11 @@ class NimbleCombat extends Combat {
 						reactionKeys,
 					});
 
-					// If not forced and can't use, return false
-					if (!options?.force && !usageState.canUse) return false;
+					const canForceUsage =
+						options?.force === true &&
+						(usageState.blockedReason === 'noActions' || usageState.blockedReason === 'spent');
+
+					if (!usageState.canUse && !canForceUsage) return false;
 
 					const reactionAvailabilityUpdate = {
 						_id: combatantId,
