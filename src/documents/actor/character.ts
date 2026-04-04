@@ -255,6 +255,17 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		if (this.background) {
 			this.tags.add(`background:${this.background.identifier}`);
 		}
+
+		// Add armor status tag - only count items that actually provide armor (have armorClass rules)
+		const hasArmor = this.items.some((item) => {
+			if (!item.isType('object')) return false;
+			const objectItem = item as unknown as NimbleObjectItem;
+			if (objectItem.system.objectType !== 'armor') return false;
+			// Check if this armor item has any armorClass rules that provide actual protection
+			// Items like "Traveling Robes & Sandals" have objectType "armor" but no armorClass rules
+			return [...item.rules.values()].some((rule) => rule.type === 'armorClass');
+		});
+		this.tags.add(`armor:${hasArmor ? 'equipped' : 'unarmored'}`);
 	}
 
 	getClassAbilityBonuses() {
