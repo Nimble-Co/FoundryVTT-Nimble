@@ -5,6 +5,10 @@ import type {
 } from '#types/components/SpellReferenceCard.d.ts';
 import { flattenActivationEffects } from '../../../../utils/activationEffects.js';
 import localize from '../../../../utils/localize.js';
+import {
+	combineSpellDescriptionParts,
+	enrichSpellText,
+} from '../../../../utils/spellDescription.js';
 
 /**
  * Extracts the primary damage/healing effect from a spell's activation effects
@@ -103,29 +107,6 @@ function getSpellTargetType(system: SpellSystemData): string | null {
 	});
 }
 
-function getSpellDescription(system: SpellSystemData): string {
-	const description = system.description;
-
-	if (typeof description === 'string') {
-		return description;
-	}
-
-	if (!description || typeof description !== 'object') {
-		return '';
-	}
-
-	const parts: string[] = [];
-	if (description.baseEffect) parts.push(description.baseEffect);
-	if (description.higherLevelEffect) {
-		parts.push(`<p><strong>Higher Levels:</strong> ${description.higherLevelEffect}</p>`);
-	}
-	if (description.upcastEffect) {
-		parts.push(`<p><strong>Upcast:</strong> ${description.upcastEffect}</p>`);
-	}
-
-	return parts.join('');
-}
-
 /**
  * Creates reactive state for displaying spell card data
  *
@@ -155,9 +136,9 @@ export function createSpellCardState(getSpell: () => Item) {
 		isLoading = true;
 		try {
 			const spell = getSpell();
-			const description = getSpellDescription(spell.system as unknown as SpellSystemData);
-			enrichedDescription =
-				await foundry.applications.ux.TextEditor.implementation.enrichHTML(description);
+			const system = spell.system as unknown as SpellSystemData;
+			const description = combineSpellDescriptionParts(system.description);
+			enrichedDescription = await enrichSpellText(description);
 		} catch (error) {
 			console.error('Failed to enrich spell description:', error);
 			enrichedDescription = '';
