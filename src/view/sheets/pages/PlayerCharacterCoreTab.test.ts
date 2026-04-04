@@ -207,29 +207,13 @@ describe('PlayerCharacterCoreTab', () => {
 			} as unknown as Combat,
 		};
 
-		const roll = {
-			evaluate: vi.fn().mockResolvedValue(undefined),
-			toMessage: vi.fn().mockResolvedValue({ id: 'chat-message-initiative' }),
-		};
-		const rollCreate = vi.fn().mockReturnValue(roll);
-		(
-			globalThis as unknown as {
-				ChatMessage: {
-					getSpeaker: ReturnType<typeof vi.fn>;
-				};
-			}
-		).ChatMessage.getSpeaker = vi.fn().mockReturnValue({ actor: actor.id });
-		(globalThis as unknown as { Roll: { create: ReturnType<typeof vi.fn> } }).Roll.create =
-			rollCreate;
-
 		render(PlayerCharacterCoreTabTestHarness, { actor });
 
 		await fireEvent.click(screen.getByRole('button', { name: /roll initiative/i }));
 
 		expect(ensureCharacterCombatantForActorInCurrentScene).not.toHaveBeenCalled();
 		expect(combatRollInitiative).not.toHaveBeenCalled();
-		expect(rollCreate).toHaveBeenCalledTimes(1);
-		expect(roll.toMessage).toHaveBeenCalledTimes(1);
+		expect(actor.rollInitiativeToChat).toHaveBeenCalledTimes(1);
 	});
 
 	it('auto-adds the character to combat before rolling initiative when the setting is enabled', async () => {
@@ -287,7 +271,9 @@ describe('PlayerCharacterCoreTab', () => {
 		await fireEvent.click(screen.getByRole('button', { name: /roll initiative/i }));
 
 		expect(ensureCharacterCombatantForActorInCurrentScene).toHaveBeenCalledWith(actor);
-		expect(combatRollInitiative).toHaveBeenCalledWith(['late-join-combatant']);
+		expect(combatRollInitiative).toHaveBeenCalledWith(['late-join-combatant'], {
+			promptRollDialog: true,
+		});
 		expect(rollCreate).not.toHaveBeenCalled();
 	});
 });
