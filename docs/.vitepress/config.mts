@@ -79,7 +79,7 @@ export default defineConfig({
 
 		socialLinks: [
 			{ icon: 'github', link: 'https://github.com/Nimble-Co/FoundryVTT-Nimble' },
-			{ icon: 'discord', link: 'https://discord.gg/WRf5hBqM' },
+			{ icon: 'discord', link: 'https://discord.gg/SxVmHpu34R' },
 		],
 
 		search: {
