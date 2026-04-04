@@ -35,7 +35,7 @@ The system serves two audiences: **players** who need a responsive character she
 - **Project Type:** FoundryVTT system module (platform plugin / developer tool)
 - **Domain:** TTRPG digital tooling
 - **Complexity:** Medium - no regulatory requirements, but complex game rule implementation, FoundryVTT API integration, reactive Svelte 5 UI, and multi-contributor open source development
-- **Project Context:** Brownfield - active development with 146 closed issues, established codebase (Svelte 5, TypeScript, Foundry v13), phased roadmap (Phase 1–4)
+- **Project Context:** Brownfield - active development with established codebase (Svelte 5, TypeScript, Foundry v13), phased roadmap (Phase 1–4). Phase 1 complete, Phase 2 active.
 
 ## Success Criteria
 
@@ -55,14 +55,14 @@ The system serves two audiences: **players** who need a responsive character she
 
 ### Business Success
 
-- **Phase 1 / v1.0.0:** A polished, complete release that players already running sessions would recognize as "official quality" - rough edges resolved, core features solid
+- **Phase 1:** A polished, complete foundation that players already running sessions would recognize as "official quality" - rough edges resolved, core features solid
 - **Community adoption:** The system becomes the standard way to play Nimble on FoundryVTT
 - **Content readiness:** The system absorbs the upcoming Kickstarter content (200+ monsters, new classes, potential errata/new rules) without architectural rewrites
 
 ### Technical Success
 
 - **Svelte migration:** Convert all legacy Svelte components to TypeScript (`.svelte.ts` with Svelte 5 runes)
-- **Module support:** Expose hooks and APIs for third-party Foundry module integration (e.g., #353 `useItem` hook)
+- **Module support:** Expose hooks and APIs for third-party Foundry module integration (`useItem` hook shipped, expanding based on community needs)
 - **Performance:** System runs smoothly in large combat scenarios with many tokens, effects, and active UI elements
 - Codebase remains maintainable and extensible for ongoing content and rule updates
 - Established patterns and contribution standards (style guide, linting, type checking) keep the project accessible to community contributors
@@ -70,7 +70,7 @@ The system serves two audiences: **players** who need a responsive character she
 
 ### Measurable Outcomes
 
-- All Phase 1 open issues resolved for v1.0.0 release
+- All Phase 1 open issues resolved
 - GM can run combat with 8+ creatures using the GM Helper without opening individual sheets
 - Player attack/spell flow completes with automatic bookkeeping and clear outcome communication
 - New Kickstarter content (monsters, classes) can be added as compendium data without code changes
@@ -154,13 +154,13 @@ Reusable automation building blocks defined in the roadmap:
 
 ### Module Integration
 
-- **Current state:** Basic hook support started (`useItem` hook, #353). Expanding based on community requests and PRs.
-- **Key modules:** Tokenizer compatibility is a Phase 1 requirement. Other integrations case-by-case.
+- **Current state:** `useItem` hook shipped. Expanding based on community requests and PRs.
+- **Key modules:** Tokenizer compatibility confirmed. Other integrations case-by-case.
 - **Approach:** Expose stable hooks and data contracts. No proactive API design - respond to community needs.
 
 ### Documentation
 
-- **User wiki:** Planned post-v1.0.0, covering setup, gameplay features, and GM tools.
+- **User wiki:** Planned for a future phase, covering setup, gameplay features, and GM tools.
 - **Developer docs:** Module developers rely on hooks and source code. No dedicated API docs currently planned.
 
 ### Implementation Considerations
@@ -173,49 +173,60 @@ Reusable automation building blocks defined in the roadmap:
 
 ### MVP Strategy
 
-**Approach:** Problem-solving MVP - deliver a polished, complete play experience for the Nimble rules that exist today. People are already running sessions; v1.0.0 makes that experience official-quality.
+**Approach:** Problem-solving MVP - deliver a polished, complete play experience for the Nimble rules that exist today. People are already running sessions; Phase 1 makes that experience official-quality.
 
-**Resource Reality:** 3 active contributors, volunteer basis, no deadlines. Scope must be realistic - prioritize finishing and polishing over adding new capabilities.
+**Resource Reality:** Volunteer-driven open source with a growing contributor base. No fixed deadlines. Scope must be realistic - prioritize finishing and polishing over adding new capabilities.
 
-### Phase 1 - MVP (v1.0.0)
+### Phase 1 - MVP ✅ COMPLETE
 
-**Core Journeys Supported:**
-- Player combat flow (attack, damage, crit, defend - using current dice roller)
-- GM combat management (combat tracker carousel, basic GM Helper)
-- Character creation and level-up (existing flows, polished)
+Phase 1 delivered the core play experience. All Phase 1 issues are resolved.
 
-**Must-Have Capabilities:**
-- Character sheet - all values manually editable, edit/lock polish (#203), token/character art separation (#153)
-- Monster/NPC sheets - functional and complete
-- Combat tracker carousel - reliable turn order, side-based initiative, solo boss slots after each hero
-- Chat cards - redesigned with role-based actions. Requires UX design to determine must-have actions (apply damage, roll saves, crit prompts at minimum). (#358, #364)
-- GM Helper v1 - usable for horde combat, showing creature actions/HP/status at a glance. Not feature-complete but not discardable.
-- Damage/healing application via chat cards
-- Basic dice roller (current implementation, not the overhauled version)
-- Complete core compendium (ancestries, backgrounds, boons, classes, subclasses, features, items, monsters, spells, tables)
-- Tokenizer compatibility (#19, #153)
-- Remaining Phase 1 bug fixes (#369, #311, #309, #13, #9, #11)
+**What shipped:**
+- Character sheet with edit/lock mode, token/character art separation, full manual editability
+- Monster/NPC/Minion/Solo Monster sheets — functional and complete
+- Guided character creation flow (ancestry, background, class, ability scores, equipment)
+- Level-up and level-down dialogs with HP roll or average
+- Combat tracker carousel with side-based initiative, solo boss interleaving, minion grouping, configurable position
+- Item activation system with activation dialog (advantage/disadvantage, modifiers, primary die)
+- Chat cards for attacks, spells, features, skill checks, ability checks, saving throws, assess action, move action, reactions, minion group attacks
+- Damage and healing application via chat cards
+- Safe rest and field rest with chat card summaries
+- Complete core compendium (14 packs: ancestries, backgrounds, boons, classes, subclasses, class features, items, magic items, monsters, legendary monsters, spells, secret spells, tables)
+- Tokenizer compatibility
+- Automatic mana deduction, action tracking, condition application
+- 21+ rule types in the rules engine (ability bonuses, armor class, speed, saving throws, hit dice, skill bonuses, etc.)
+- useItem hook for module integration
+- Conditions system with token/sheet display
 
-**Explicitly NOT Phase 1:**
-- Overhauled dice roller (too complex for v1.0.0)
+**Deferred to Phase 2:**
+- Overhauled dice roller (too complex for Phase 1)
 - Automation toolbox
-- Spell/feature automation (#365)
-- Class resource tracking (#232)
+- Spell/feature automation
+- Class resource tracking
+- GM Helper (deprioritized — combat tracker and full sheets serve current needs)
 
-### Phase 2 - Automation
+### Phase 2 - Automation (ACTIVE)
 
-- Overhauled dice roller with full per-die manipulation
-- Automation toolbox (dice pool, resource/counter, toggle feature, ad hoc conditions, summon minion, shapeshift)
-- Passive bonuses from ancestries, backgrounds, boons
-- Class level progression mapping
-- GM Helper - full feature set (synergy reminders, complete creature management)
-- Chat cards - advanced interactions (crit chain UX, parry, assess)
-- Spell/feature/skill automation (#365 epic)
-- Key module integrations
+The current focus. Extending the solid foundation with deeper automation, richer combat interactions, and the tools for homebrewers and content creators.
+
+**Combat & Interaction Polish:**
+- Chat card interactive layer — role-based actions, target management, defend reactions, crit chain UX
+- Combat system bug fixes (targeting, initiative, action restoration, reactivity)
+- GM Helper — compact utility for horde combat management
+
+**Automation Toolbox:**
+- Overhauled dice roller with full per-die manipulation (pre-roll and post-roll editing)
+- Reusable building blocks: dice pools, resource counters, toggle features, ad hoc conditions, summon minion, shapeshift
+- Class/spell/feature automation (passive bonuses from ancestries, backgrounds, boons, subclasses)
+- Class resource tracking and class level progression mapping
+- Active effects creation and editing
+
+**Content & Tools:**
+- 5e statblock converter
+- Spell selection and auto-granting during creation and level-up
+- Class feature and ability selection during creation and level-up
 - "Starred" tab for quick access to favorite items/features/spells
-- 5e statblock converter (#329)
-- Active effects creation/editing (#333)
-- Major bug fixes
+- Key module integrations
 
 ### Phase 3 - Final Polish
 
@@ -223,10 +234,10 @@ Reusable automation building blocks defined in the roadmap:
 - Convenience features and shortcuts
 - Robust settings menu
 - More module integrations
-- Custom languages and aliases (#85)
-- Multi-class level-up (#88)
-- HUD elements (#251)
-- Minor bug fixes
+- Custom languages and aliases
+- Multi-class level-up
+- HUD elements
+- Minor bug fixes and UX refinements
 
 ### Phase 4 - What's Next
 
@@ -239,16 +250,16 @@ Reusable automation building blocks defined in the roadmap:
 ### Risk Mitigation
 
 **Technical Risks:**
-- *Chat card design* - biggest Phase 1 unknown. Must-have actions not fully defined. **Mitigation:** UX design chat cards early; prototype with the team before building.
-- *GM Helper v1 scope* - risk of over- or under-building. **Mitigation:** Define minimum viable tracker (creature list with HP, actions, status) and ship that. Iterate in Phase 2.
-- *Dice roller overhaul complexity* - deferred to Phase 2 intentionally. **Mitigation:** Keep current roller stable in Phase 1; design the overhaul architecture without building it.
+- *Chat card interactivity* — the biggest Phase 2 UX challenge. Role-based actions, defend reactions, and target management require careful design. **Mitigation:** UX spec already covers the interaction patterns; prototype with the team before building.
+- *Automation toolbox scope* — building blocks must be powerful enough for class mechanics but accessible to non-developer homebrewers. **Mitigation:** Extend the proven rules engine (21+ rule types) rather than building a new system.
+- *Dice roller overhaul complexity* — per-die manipulation is a significant UI/UX challenge. **Mitigation:** Design the architecture alongside current roller; don't rush the transition.
 
 **Resource Risks:**
-- *3 active volunteers* - any contributor stepping away impacts delivery significantly. **Mitigation:** Keep Phase 1 scope tight. Document architecture and patterns so new contributors can onboard.
-- *Kickstarter content timing* - 200+ monsters and new classes could land before the system is ready. **Mitigation:** Ensure compendium pipeline handles bulk additions. Phase 4 is the explicit catch-all.
+- *Volunteer contributors* — any contributor stepping away impacts delivery. **Mitigation:** Document architecture and patterns so new contributors can onboard. Growing contributor base mitigates single-point-of-failure risk.
+- *Kickstarter content timing* — 200+ monsters and new classes could land before the system is ready. **Mitigation:** Compendium pipeline already handles bulk additions (14 packs shipping). Phase 4 is the explicit catch-all.
 
 **Market Risks:**
-- *Community expectations* - players already using the system may expect faster progress. **Mitigation:** Communicate the roadmap openly. Ship incremental improvements rather than waiting for big-bang releases.
+- *Community expectations* — players already using the system may expect faster progress. **Mitigation:** Communicate the roadmap openly. Ship incremental improvements rather than waiting for big-bang releases.
 
 ## Functional Requirements
 

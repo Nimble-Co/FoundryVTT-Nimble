@@ -15,33 +15,41 @@ All planning documents are not final and are actively under construction. Detail
 
 ## Overview
 
-This document provides the complete epic and story breakdown for the Nimble system, decomposing the requirements from the PRD, UX Design, and Architecture into implementable stories.
+This document provides the epic and story breakdown for the Nimble system, decomposing the requirements from the PRD, UX Design, and Architecture into implementable work. Stories serve as reference for *what the system does and should do* — not as a live progress tracker. See GitHub issues for current work status.
 
 ## Epic List
 
-### Epic 1: Character Sheet & Management
+### Epic 1: Character Sheet & Management ✅
 Players can create, level up, and manage their characters with a polished, lockable sheet - all values editable, inventory manageable, spells trackable, effects visible.
+*Status: Core complete. Character creation, level-up, sheets, inventory, spells, conditions all shipped.*
 
-### Epic 2: Monster & NPC Management
+### Epic 2: Monster & NPC Management ✅
 GMs can create and manage monster/NPC sheets with all stats, features, and attacks ready for play.
+*Status: Complete. NPC, Minion, and Solo Monster sheets all functional.*
 
-### Epic 3: Dice Rolling & Combat Resolution
+### Epic 3: Dice Rolling & Combat Resolution ✅ (Phase 2: Advanced Roller)
 Players and GMs can initiate attacks/spells from sheets, roll dice with Nimble's unique mechanics (primary die, crits, exploding dice), and see clear results with automatic bookkeeping (mana, actions, effects).
+*Status: Core activation flow complete. Phase 2 adds overhauled per-die manipulation roller.*
 
-### Epic 4: Chat Card Interaction System
+### Epic 4: Chat Card Interaction System 🔨 (Phase 2)
 Chat cards serve as the shared resolution workspace - displaying results with role-based actions (GM applies damage/healing, players roll saves/react), progressive state evolution, target management, and undo/revert.
+*Status: 12+ card types shipped. Phase 2 focus: interactive layer (role-based actions, defend reactions, target management, undo/snapshot).*
 
-### Epic 5: Combat Tracker & Turn Management
+### Epic 5: Combat Tracker & Turn Management ✅
 GMs can run structured combat with a visual carousel showing turn order, side-based initiative, solo boss interleaving, minion grouping, and per-combatant action tracking.
+*Status: Complete. Carousel with all features shipped.*
 
-### Epic 6: GM Helper - Horde Combat Management
+### Epic 6: GM Helper - Horde Combat Management 📋 (Phase 2)
 GMs can manage multi-creature encounters efficiently through a compact utility showing all creatures at a glance, with quick action execution, synergy reminders, and minion batch operations.
+*Status: Not started. Architectural pattern defined (dockable ApplicationV2).*
 
-### Epic 7: Compendium, Content & System Integration
+### Epic 7: Compendium, Content & System Integration ✅
 System provides complete Nimble compendium content, supports homebrew creation, enables rest/recovery, exposes module hooks, and offers configurable settings.
+*Status: Core complete. 14 compendium packs, rest system, useItem hook, Tokenizer compatibility all shipped.*
 
-### Epic 8: Automation Toolbox & Advanced Dice Roller
+### Epic 8: Automation Toolbox & Advanced Dice Roller 📋 (Phase 2)
 GMs and homebrewers can attach reusable automation building blocks to content (dice pools, counters, toggles, conditions, summon, shapeshift), and players get full per-die manipulation in an overhauled dice roller.
+*Status: Rules engine foundation ready (21+ rule types). Building blocks and advanced roller are Phase 2 work.*
 
 ---
 
