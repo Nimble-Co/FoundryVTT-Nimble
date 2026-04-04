@@ -51,6 +51,7 @@ function createCoreTabActor() {
 		},
 		_getInitiativeFormula: vi.fn().mockReturnValue('1d20 + 2'),
 		getRollData: vi.fn().mockReturnValue({}),
+		rollInitiativeToChat: vi.fn(),
 		rollAbilityCheckToChat: vi.fn(),
 		configureAbilityScores: vi.fn(),
 		rollSavingThrowToChat: vi.fn(),
@@ -102,33 +103,17 @@ describe('PlayerCharacterCoreTab', () => {
 		).game.combats = { viewed: null };
 		setCurrentScene('scene-core-tab-test');
 
-		const roll = {
-			evaluate: vi.fn(),
-			toMessage: vi.fn().mockResolvedValue({ id: 'chat-message-initiative' }),
-		} as const;
-
-		let hasPendingEvaluate = false;
-		let resolveEvaluate: () => void = () => {
+		let hasPendingRoll = false;
+		let resolveRoll: () => void = () => {
 			throw new Error('Expected initiative roll evaluation to remain pending.');
 		};
-		roll.evaluate.mockImplementation(async () => {
+		actor.rollInitiativeToChat.mockImplementation(async () => {
 			await new Promise<void>((resolve) => {
-				hasPendingEvaluate = true;
-				resolveEvaluate = resolve;
+				hasPendingRoll = true;
+				resolveRoll = resolve;
 			});
-			return roll;
+			return null;
 		});
-
-		const rollCreate = vi.fn().mockReturnValue(roll);
-		(
-			globalThis as unknown as {
-				ChatMessage: {
-					getSpeaker: ReturnType<typeof vi.fn>;
-				};
-			}
-		).ChatMessage.getSpeaker = vi.fn().mockReturnValue({ actor: actor.id });
-		(globalThis as unknown as { Roll: { create: ReturnType<typeof vi.fn> } }).Roll.create =
-			rollCreate;
 
 		render(PlayerCharacterCoreTabTestHarness, { actor });
 
@@ -136,18 +121,15 @@ describe('PlayerCharacterCoreTab', () => {
 		await fireEvent.click(initiativeButton);
 		await fireEvent.click(initiativeButton);
 
-		expect(rollCreate).toHaveBeenCalledTimes(1);
-		expect(roll.evaluate).toHaveBeenCalledTimes(1);
-		expect(roll.toMessage).not.toHaveBeenCalled();
+		expect(actor.rollInitiativeToChat).toHaveBeenCalledTimes(1);
 
 		await waitFor(() => expect(initiativeButton).toBeDisabled());
 
-		if (!hasPendingEvaluate) {
+		if (!hasPendingRoll) {
 			throw new Error('Expected initiative roll evaluation to remain pending.');
 		}
-		resolveEvaluate();
+		resolveRoll();
 
-		await waitFor(() => expect(roll.toMessage).toHaveBeenCalledTimes(1));
 		await waitFor(() => expect(initiativeButton).not.toBeDisabled());
 	});
 
@@ -179,17 +161,13 @@ describe('PlayerCharacterCoreTab', () => {
 			} as unknown as Combat,
 		};
 
-		const rollCreate = vi.fn();
-		(globalThis as unknown as { Roll: { create: ReturnType<typeof vi.fn> } }).Roll.create =
-			rollCreate;
-
 		render(PlayerCharacterCoreTabTestHarness, { actor });
 
 		const initiativeButton = screen.getByRole('button', { name: /roll initiative/i });
 		await fireEvent.click(initiativeButton);
 
 		expect(combatRollInitiative).not.toHaveBeenCalled();
-		expect(rollCreate).not.toHaveBeenCalled();
+		expect(actor.rollInitiativeToChat).not.toHaveBeenCalled();
 		expect(
 			(
 				globalThis as unknown as {

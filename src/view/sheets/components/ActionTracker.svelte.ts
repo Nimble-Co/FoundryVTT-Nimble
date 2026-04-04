@@ -2,6 +2,7 @@ import { untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import { getCombatantBaseActions } from '#documents/combat/combatantSystem.js';
+import type { PromptedInitiativeOptions } from '#types/combat.js';
 import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
 import { requestAdvanceCombatTurn } from '#utils/combatTurnActions.js';
 import { getActiveCombatant } from '#utils/combatTurnSync.js';
@@ -111,7 +112,9 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		if (initiativeRollLock.hasActiveLock(combatant)) return;
 
 		try {
-			await combat.rollInitiative([combatant.id]);
+			await combat.rollInitiative([combatant.id], {
+				promptRollDialog: true,
+			} as PromptedInitiativeOptions);
 		} catch (_error) {
 			ui.notifications?.warn(localize('NIMBLE.ui.heroicActions.noPermissionRollInitiative'));
 		}

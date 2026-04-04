@@ -1251,6 +1251,192 @@ describe('NimbleCombat', () => {
 		]);
 	});
 
+	it('uses prompted initiative roll data for single-combatant initiative rolls', async () => {
+		const combatId = 'combat-initiative-prompted-roll';
+		const actor = Object.assign(
+			createCombatActorFixture({
+				id: 'actor-initiative-prompted-roll',
+				type: 'character',
+				isOwner: true,
+				hp: 8,
+				woundsValue: 0,
+				woundsMax: 6,
+			}),
+			{
+				resolveInitiativeRollData: vi.fn().mockResolvedValue({
+					rollFormula: '2d20kh + 5',
+					rollMode: 1,
+					visibilityMode: 'blindroll',
+				}),
+			},
+		) as Actor.Implementation & {
+			resolveInitiativeRollData: ReturnType<typeof vi.fn>;
+		};
+
+		const combatant = createMockCombatant({
+			id: 'character-initiative-prompted-roll',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: null,
+			actor,
+			combatId,
+			flags: {},
+		}) as unknown as Combatant.Implementation & {
+			getInitiativeRoll: ReturnType<typeof vi.fn>;
+		};
+
+		const initiativeRoll = {
+			total: 18,
+			evaluate: vi.fn().mockResolvedValue(null),
+			toMessage: vi.fn().mockResolvedValue({ id: 'initiative-chat-data' }),
+		};
+		combatant.getInitiativeRoll = vi.fn().mockReturnValue(initiativeRoll);
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: 'scene-1' },
+			combatants: createCombatantsCollectionFixture([combatant]),
+			turns: [],
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(async (_embeddedName: string, updates: Record<string, unknown>[]) => {
+				for (const update of updates) {
+					const combatantId = update._id as string;
+					const targetCombatant = combat.combatants.get(combatantId) as unknown as Record<
+						string,
+						unknown
+					> | null;
+					if (!targetCombatant) continue;
+
+					for (const [path, value] of Object.entries(update)) {
+						if (path === '_id') continue;
+						foundry.utils.setProperty(targetCombatant, path, value);
+					}
+				}
+
+				return [];
+			});
+		combat.update = vi.fn().mockResolvedValue(combat);
+
+		const chatMessageCreate = (
+			globalThis as unknown as {
+				ChatMessage: {
+					implementation: {
+						create: ReturnType<typeof vi.fn>;
+					};
+				};
+			}
+		).ChatMessage.implementation.create;
+
+		await combat.rollInitiative(['character-initiative-prompted-roll'], {
+			promptRollDialog: true,
+			updateTurn: false,
+		});
+
+		expect(actor.resolveInitiativeRollData).toHaveBeenCalledTimes(1);
+		expect(combatant.getInitiativeRoll).toHaveBeenCalledWith('2d20kh + 5');
+		expect(combatant.initiative).toBe(18);
+		expect(chatMessageCreate).toHaveBeenCalledWith([
+			expect.objectContaining({
+				id: 'initiative-chat-data',
+				rollMode: 'blindroll',
+			}),
+		]);
+	});
+
+	it('releases the initiative lock when the prompted initiative dialog is cancelled', async () => {
+		const combatId = 'combat-initiative-prompt-cancel';
+		const actor = Object.assign(
+			createCombatActorFixture({
+				id: 'actor-initiative-prompt-cancel',
+				type: 'character',
+				isOwner: true,
+				hp: 8,
+				woundsValue: 0,
+				woundsMax: 6,
+			}),
+			{
+				resolveInitiativeRollData: vi.fn().mockResolvedValue(null),
+			},
+		) as Actor.Implementation & {
+			resolveInitiativeRollData: ReturnType<typeof vi.fn>;
+		};
+
+		const combatant = createMockCombatant({
+			id: 'character-initiative-prompt-cancel',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: null,
+			actor,
+			combatId,
+			flags: {},
+		}) as unknown as Combatant.Implementation & {
+			getInitiativeRoll: ReturnType<typeof vi.fn>;
+		};
+		const getInitiativeRollSpy = vi.fn();
+		combatant.getInitiativeRoll =
+			getInitiativeRollSpy as unknown as typeof combatant.getInitiativeRoll;
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			scene: { id: 'scene-1' },
+			combatants: createCombatantsCollectionFixture([combatant]),
+			turns: [],
+		} as unknown as Combat.CreateData) as NimbleCombat & {
+			updateEmbeddedDocuments: ReturnType<typeof vi.fn>;
+			update: ReturnType<typeof vi.fn>;
+		};
+
+		combat.updateEmbeddedDocuments = vi
+			.fn()
+			.mockImplementation(async (_embeddedName: string, updates: Record<string, unknown>[]) => {
+				for (const update of updates) {
+					const combatantId = update._id as string;
+					const targetCombatant = combat.combatants.get(combatantId) as unknown as Record<
+						string,
+						unknown
+					> | null;
+					if (!targetCombatant) continue;
+
+					for (const [path, value] of Object.entries(update)) {
+						if (path === '_id') continue;
+						foundry.utils.setProperty(targetCombatant, path, value);
+					}
+				}
+
+				return [];
+			});
+		combat.update = vi.fn().mockResolvedValue(combat);
+
+		const chatMessageCreate = (
+			globalThis as unknown as {
+				ChatMessage: {
+					implementation: {
+						create: ReturnType<typeof vi.fn>;
+					};
+				};
+			}
+		).ChatMessage.implementation.create;
+
+		await combat.rollInitiative(['character-initiative-prompt-cancel'], {
+			promptRollDialog: true,
+			updateTurn: false,
+		});
+
+		expect(actor.resolveInitiativeRollData).toHaveBeenCalledTimes(1);
+		expect(getInitiativeRollSpy).not.toHaveBeenCalled();
+		expect(combatant.initiative).toBeNull();
+		expect(initiativeRollLock.hasActiveLock(combatant)).toBe(false);
+		expect(chatMessageCreate).not.toHaveBeenCalled();
+	});
+
 	it('skips rolling initiative when another client already holds the combatant lock', async () => {
 		const combatId = 'combat-initiative-foreign-lock';
 		globals().game.user = {

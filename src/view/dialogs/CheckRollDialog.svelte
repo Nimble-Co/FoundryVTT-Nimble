@@ -1,20 +1,29 @@
-<script>
+<script lang="ts">
+	import type { CheckRollDialogProps } from '#types/components/CheckRollDialog.d.ts';
+
 	import { untrack } from 'svelte';
-	import RollModeConfig from './components/RollModeConfig.svelte';
 
 	import getRollFormula from '../../utils/getRollFormula.js';
+	import RollModeConfig from './components/RollModeConfig.svelte';
+
 	const { skillCheckDialog } = CONFIG.NIMBLE;
 
-	let { actor, dialog, ...data } = $props();
-	let selectedRollMode = $state(untrack(() => Math.clamp(data.rollMode ?? 0, -6, 6)));
-	let shouldRollBeHidden = $state(!!game.settings.get('nimble', 'hideRolls'));
+	let { actor, dialog, type = 'abilityCheck', ...data }: CheckRollDialogProps = $props();
+	let selectedRollMode = $state(untrack(() => [Math.clamp(Number(data.rollMode ?? 0), -6, 6)]));
+	let shouldRollBeHidden = $state(Boolean(game.settings.get('nimble', 'hideRolls')));
 
-	let rollFormula = $derived(
-		getRollFormula(actor, {
+	let selectedRollModeValue = $derived(selectedRollMode[0] ?? 0);
+	let rollFormula = $derived.by(() => {
+		if (type === 'initiative') {
+			return actor._getInitiativeFormula({ rollMode: selectedRollModeValue });
+		}
+
+		return getRollFormula(actor as Parameters<typeof getRollFormula>[0], {
 			...data,
-			rollMode: selectedRollMode,
-		}),
-	);
+			rollMode: selectedRollModeValue,
+			type,
+		});
+	});
 </script>
 
 <article class="nimble-sheet__body" style="--nimble-sheet-body-padding-block-start: 0.5rem">
@@ -36,7 +45,7 @@
 		data-button-variant="basic"
 		onclick={() =>
 			dialog.submitRoll({
-				rollMode: selectedRollMode[0],
+				rollMode: selectedRollModeValue,
 				rollFormula,
 				visibilityMode: shouldRollBeHidden ? 'blindroll' : 'publicroll',
 			})}

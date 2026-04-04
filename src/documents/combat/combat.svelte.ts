@@ -1,4 +1,5 @@
 import { createSubscriber } from 'svelte/reactivity';
+import type { ActorRollOptions } from '#documents/actor/actorInterfaces.ts';
 import type { NimbleCombatant } from '#documents/combatant/combatant.svelte.js';
 import { getHeroicReactionUsageState } from '#utils/getHeroicReactionUsageState.js';
 import {
@@ -89,6 +90,18 @@ interface LockedInitiativeRollOutcome {
 	combatantId: string;
 	requestId: string;
 	outcome: InitiativeRollOutcome;
+}
+
+interface ResolvedInitiativeRollData {
+	rollFormula: string;
+	rollMode: number;
+	visibilityMode?: string | undefined;
+}
+
+interface ActorWithInitiativeRollConfiguration extends Actor {
+	resolveInitiativeRollData?: (
+		options?: ActorRollOptions,
+	) => Promise<ResolvedInitiativeRollData | null>;
 }
 
 class NimbleCombat extends Combat {
@@ -871,6 +884,15 @@ class NimbleCombat extends Combat {
 		]);
 	}
 
+	async #resolvePromptedInitiativeRollData(
+		combatantId: string,
+	): Promise<ResolvedInitiativeRollData | null | undefined> {
+		const actor = this.combatants.get(combatantId)
+			?.actor as ActorWithInitiativeRollConfiguration | null;
+		if (typeof actor?.resolveInitiativeRollData !== 'function') return undefined;
+		return actor.resolveInitiativeRollData();
+	}
+
 	async #performInitiativeRollForCombatant(params: {
 		combatantId: string;
 		formula: string | null;
@@ -878,6 +900,7 @@ class NimbleCombat extends Combat {
 		chatRollMode: string | null;
 		rollIndex: number;
 		combatManaUpdates: Promise<unknown>[];
+		promptRollDialog: boolean;
 	}): Promise<LockedInitiativeRollOutcome | null> {
 		const combatant = this.combatants.get(params.combatantId);
 		if (!combatant?.isOwner) return null;
@@ -895,11 +918,23 @@ class NimbleCombat extends Combat {
 			if (lockedCombatant.initiative !== null) return null;
 			if (!initiativeRollLock.matches(lockedCombatant, lockData.requestId)) return null;
 
+			const promptedRollData = params.promptRollDialog
+				? await this.#resolvePromptedInitiativeRollData(params.combatantId)
+				: undefined;
+			if (params.promptRollDialog && promptedRollData === null) return null;
+
+			const resolvedMessageOptions = {
+				...params.messageOptions,
+			} as ChatMessage.CreateData & { rollMode?: string };
+			if (promptedRollData?.visibilityMode) {
+				resolvedMessageOptions.rollMode = promptedRollData.visibilityMode;
+			}
+
 			const rollOutcome = await rollInitiativeForCombatant({
 				combat: this,
 				combatantId: params.combatantId,
-				formula: params.formula,
-				messageOptions: params.messageOptions,
+				formula: promptedRollData?.rollFormula ?? params.formula,
+				messageOptions: resolvedMessageOptions,
 				chatRollMode: params.chatRollMode,
 				rollIndex: params.rollIndex,
 				combatManaUpdates: params.combatManaUpdates,
@@ -928,6 +963,7 @@ class NimbleCombat extends Combat {
 		chatRollMode: string | null;
 		rollIndex: number;
 		combatManaUpdates: Promise<unknown>[];
+		promptRollDialog: boolean;
 	}): Promise<LockedInitiativeRollOutcome | null> {
 		const inFlightRequest = this.#initiativeRollRequests.get(params.combatantId);
 		if (inFlightRequest) {
@@ -949,14 +985,23 @@ class NimbleCombat extends Combat {
 
 	override async rollInitiative(
 		ids: string | string[],
-		options?: Combat.InitiativeOptions & { rollOptions?: Record<string, unknown> },
+		options?: Combat.InitiativeOptions & {
+			promptRollDialog?: boolean;
+			rollOptions?: Record<string, unknown>;
+		},
 	): Promise<this> {
-		const { formula = null, updateTurn = true, messageOptions = {} } = options ?? {};
+		const {
+			formula = null,
+			messageOptions = {},
+			promptRollDialog = false,
+			updateTurn = true,
+		} = options ?? {};
 
 		// Structure Input data
 		const combatantIds = [...new Set((typeof ids === 'string' ? [ids] : ids).filter(Boolean))];
 		const currentId = this.combatant?.id;
 		const chatRollMode = game.settings.get('core', 'rollMode');
+		const shouldPromptRollDialog = promptRollDialog && combatantIds.length === 1;
 
 		// Iterate over Combatants, performing an initiative roll for each
 		const updates: Record<string, unknown>[] = [];
@@ -972,6 +1017,7 @@ class NimbleCombat extends Combat {
 				chatRollMode,
 				rollIndex: messages.length,
 				combatManaUpdates,
+				promptRollDialog: shouldPromptRollDialog,
 			});
 			if (!rollOutcome) continue;
 			lockedRollOutcomes.push(rollOutcome);

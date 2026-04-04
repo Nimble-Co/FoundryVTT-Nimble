@@ -1,5 +1,6 @@
 import { onDestroy, onMount, tick } from 'svelte';
 import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
+import type { PromptedInitiativeOptions } from '#types/combat.js';
 import { canCurrentUserReorderCombatant } from '#utils/combatantOrdering.js';
 import {
 	COMBATANT_ACTIONS_CURRENT_PATH,
@@ -100,7 +101,10 @@ export function createCtTopTrackerState() {
 		if (!actionCombat || !combatantId) return;
 
 		try {
-			await actionCombat.rollInitiative([combatantId], { updateTurn: false });
+			await actionCombat.rollInitiative([combatantId], {
+				promptRollDialog: true,
+				updateTurn: false,
+			} as PromptedInitiativeOptions);
 			updateCurrentCombat(true);
 		} catch (error) {
 			console.error('[Nimble][CT] Initiative roll failed', { combatantId, error });
