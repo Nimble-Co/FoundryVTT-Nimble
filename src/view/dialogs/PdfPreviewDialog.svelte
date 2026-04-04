@@ -16,7 +16,7 @@
 		dialog: { close(): void };
 	}
 
-	let { actor, columnContent, template, dialog }: PdfPreviewDialogProps = $props();
+	let { actor, columnContent, template, dialog: _dialog }: PdfPreviewDialogProps = $props();
 
 	let previewUrl = $state<string | null>(null);
 	let isGenerating = $state(true);
