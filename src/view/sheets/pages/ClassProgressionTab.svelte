@@ -101,19 +101,62 @@
 		return expandedSubclasses.has(uuid);
 	}
 
-	$effect(() => {
+	async function loadProgressionData(): Promise<void> {
 		if (!identifier) return;
 
 		isLoading = true;
 
-		Promise.all([
+		const [progression, subclassChoices] = await Promise.all([
 			getClassProgressionData(identifier, groupIdentifiers),
 			getSubclassChoices(identifier),
-		]).then(([progression, subclassChoices]) => {
-			progressionData = progression;
-			subclasses = subclassChoices;
-			isLoading = false;
-		});
+		]);
+
+		progressionData = progression;
+		subclasses = subclassChoices;
+		isLoading = false;
+	}
+
+	// Load data when identifier changes
+	$effect(() => {
+		if (!identifier) return;
+		loadProgressionData();
+	});
+
+	// Listen for item changes and reload when features/subclasses are modified
+	$effect(() => {
+		if (!identifier) return;
+
+		function isRelevantItem(item: Item): boolean {
+			if (item.type === 'subclass') {
+				const subclass = item as { system?: { parentClass?: string } };
+				return subclass.system?.parentClass === identifier;
+			}
+			if (item.type === 'feature') {
+				const feature = item as { system?: { class?: string; group?: string } };
+				// Check if feature belongs to this class or one of its groups
+				if (feature.system?.class === identifier) return true;
+				if (feature.system?.group && groupIdentifiers.includes(feature.system.group)) return true;
+			}
+			return false;
+		}
+
+		function onItemChange(item: Item): void {
+			if (isRelevantItem(item)) {
+				loadProgressionData();
+			}
+		}
+
+		const hookIds = [
+			Hooks.on('createItem', onItemChange),
+			Hooks.on('updateItem', onItemChange),
+			Hooks.on('deleteItem', onItemChange),
+		];
+
+		return () => {
+			Hooks.off('createItem', hookIds[0]);
+			Hooks.off('updateItem', hookIds[1]);
+			Hooks.off('deleteItem', hookIds[2]);
+		};
 	});
 
 	function handleFeatureClick(feature: NimbleFeatureItem): void {
