@@ -659,6 +659,13 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 
 	// Actions
 	async function handleCreateCharacter() {
+		if (!name.trim()) {
+			ui.notifications?.warn(
+				game.i18n.localize(CONFIG.NIMBLE.characterCreation.missingCharacterName),
+			);
+			return;
+		}
+
 		if (stage === CHARACTER_CREATION_STAGES.SUBMIT) {
 			submit();
 			return;

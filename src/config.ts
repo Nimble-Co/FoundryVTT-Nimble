@@ -118,6 +118,7 @@ const characterCreation = {
 	incompleteCharacterMessage: 'NIMBLE.characterCreation.incompleteCharacterMessage',
 	incompleteCharacterProceed: 'NIMBLE.characterCreation.incompleteCharacterProceed',
 	incompleteCharacterReturn: 'NIMBLE.characterCreation.incompleteCharacterReturn',
+	missingCharacterName: 'NIMBLE.characterCreation.missingCharacterName',
 };
 
 const actorImport = {

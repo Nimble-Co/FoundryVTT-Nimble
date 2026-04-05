@@ -115,7 +115,8 @@
 			"incompleteCharacterTitle": "Unfinished Character",
 			"incompleteCharacterMessage": "This character isn’t finished. Create anyway?",
 			"incompleteCharacterProceed": "Create Anyway",
-			"incompleteCharacterReturn": "Back"
+			"incompleteCharacterReturn": "Back",
+			"missingCharacterName": "Please enter a name for your character before creating."
 		},
 		"ancestryOptions": {
 			"header": "Ancestry Options",
