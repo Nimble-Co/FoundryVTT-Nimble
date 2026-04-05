@@ -6,7 +6,36 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "songweaver-wind-spells",
+				"type": "grantSpells",
+				"schools": [
+					"wind"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "auto"
+			},
+			{
+				"id": "songweaver-bonus-school",
+				"type": "grantSpells",
+				"schools": [
+					"fire",
+					"ice",
+					"lightning",
+					"necrotic",
+					"radiant"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSchool",
+				"count": 1,
+				"label": "Choose One Additional School"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

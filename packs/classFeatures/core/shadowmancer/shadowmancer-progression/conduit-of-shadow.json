@@ -6,7 +6,17 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "shadowmancer-patron-spells",
+				"type": "grantSpells",
+				"uuids": [
+					"Compendium.nimble.nimble-spells.Item.9TNPdOXlCcGgxw6r",
+					"Compendium.nimble.nimble-spells.Item.ho2KADcmQWWTeYR0"
+				],
+				"mode": "auto"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

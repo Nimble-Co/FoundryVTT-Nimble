@@ -6,7 +6,27 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "academyDropoutUtilitySpell",
+				"type": "grantSpells",
+				"label": "Choose a Utility Spell",
+				"mode": "selectSpell",
+				"count": 1,
+				"schools": [
+					"fire",
+					"ice",
+					"lightning",
+					"necrotic",
+					"radiant",
+					"wind"
+				],
+				"tiers": [
+					0
+				],
+				"utilityOnly": true
+			}
+		],
 		"description": "<p>School just isn't for everyone! You learn by experience in the real world (or at least that's what you tell yourself). Learn any 1 Utility Spell.</p>"
 	},
 	"effects": [],

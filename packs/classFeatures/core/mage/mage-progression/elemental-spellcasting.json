@@ -6,7 +6,21 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "mage-elemental-spells",
+				"type": "grantSpells",
+				"schools": [
+					"fire",
+					"ice",
+					"lightning"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "auto"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -38,7 +52,10 @@
 		"class": "mage",
 		"group": "mage-progression",
 		"gainedAtLevel": 1,
-		"subclass": false
+		"subclass": false,
+		"gainedAtLevels": [
+			1
+		]
 	},
 	"effects": [],
 	"flags": {},
