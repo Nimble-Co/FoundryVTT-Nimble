@@ -529,6 +529,7 @@
 		"ruleTypes": {
 			"abilityBonus": "Stat Bonus",
 			"armorClass": "Armor Class",
+			"condition": "Condition",
 			"combatMana": "Combat Mana",
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
@@ -1390,6 +1391,10 @@
 			"autoAddCharacterToCombatOnInitiativeRoll": {
 				"name": "Auto-Add Character To Combat On Initiative Roll",
 				"hint": "When enabled, rolling initiative from a character sheet adds that character to the current scene combat before rolling, if they are not already in combat."
+			},
+			"autoTrackTokenAdjacency": {
+				"name": "Auto-Track Token Adjacency",
+				"hint": "When enabled, the system automatically tracks which combatants have the most adjacent enemies and makes that information available to rules. Disable this if your game does not use grid-based adjacency conditions."
 			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",

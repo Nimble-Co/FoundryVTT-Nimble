@@ -5,6 +5,7 @@ import type { SaveKeyType } from '#types/saveKey.d.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import getRollFormula from '../../utils/getRollFormula.js';
+import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import type { ActorRollOptions, CheckRollDialogData, SystemActorTypes } from './actorInterfaces.ts';
 import { HP_SCROLLING_TEXT_COLORS } from './hpScrollingTextColors.ts';
@@ -265,7 +266,23 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		});
 	}
 
-	_populateDerivedTags(): void {}
+	_populateDerivedTags(): void {
+		const adjacency = this.getFlag('nimble', 'adjacency') as
+			| { enemiesAdjacentCount?: number; hasMostAdjacentEnemies?: boolean }
+			| undefined;
+
+		if (!adjacency) return;
+
+		const { enemiesAdjacentCount: count, hasMostAdjacentEnemies: hasMost } = adjacency;
+
+		if (typeof count === 'number' && count > 0) {
+			this.tags.add(`enemiesAdjacent:${count}`);
+		}
+
+		if (hasMost) {
+			this.tags.add(`enemiesAdjacent:${ADJACENCY_QUALIFIER.MOST}`);
+		}
+	}
 
 	/** ------------------------------------------------------ */
 	/**                    Config Methods                      */

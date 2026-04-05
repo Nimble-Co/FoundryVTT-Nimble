@@ -18,6 +18,12 @@ declare interface NimbleActorFlags {
 	actorImageXOffset?: number;
 	actorImageYOffset?: number;
 	actorImageScale?: number;
+
+	// Combat adjacency state (managed by adjacencySync)
+	adjacency?: {
+		enemiesAdjacentCount: number;
+		hasMostAdjacentEnemies: boolean;
+	};
 }
 
 /** Nimble system flags for items */

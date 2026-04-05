@@ -33,6 +33,8 @@ class ArmorClassRule extends NimbleBaseRule<ArmorClassRule.Schema> {
 		const { actor } = this;
 		if (!actor || actor.type !== 'character') return;
 
+		if (!this.test()) return;
+
 		const value = this.resolveFormula(this.formula);
 		if (!value) return;
 

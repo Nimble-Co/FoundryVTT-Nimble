@@ -3,9 +3,11 @@ import { mount, unmount } from 'svelte';
 import { MigrationList } from '../migration/MigrationList.js';
 import { MigrationRunner } from '../migration/MigrationRunner.js';
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
+import { getAdjacencySyncEnabled } from '../settings/adjacencySettings.js';
 import { registerCombatTurnSocketListener } from '../utils/combatTurnActions.js';
 import CanvasConditionsPanel from '../view/ui/CanvasConditionsPanel.svelte';
 import CtTopTracker from '../view/ui/CtTopTracker.svelte';
+import registerAdjacencySync from './combatantHooks/adjacencySync.js';
 import registerCombatSidebarToggle from './combatSidebarToggle.js';
 import combatStateGuards from './combatStateGuards.js';
 import registerMinionGroupTokenActions from './minionGroupTokenActions.js';
@@ -62,6 +64,7 @@ export default async function ready() {
 	}
 
 	combatStateGuards();
+	if (getAdjacencySyncEnabled()) registerAdjacencySync();
 	registerMinionGroupTokenActions();
 
 	const combatTrackerConfig = game.settings.get('core', 'combatTrackerConfig') ?? {};
