@@ -10,9 +10,23 @@
 		abilityScoreEntry,
 		isSubclassLevel,
 		classIdentifier,
+		className,
+		keyAbilityScores,
 		onFeatureClick,
 		onAddFeature,
 	}: ClassProgressionLevelRowProps = $props();
+
+	const ALL_STATS = ['strength', 'dexterity', 'intelligence', 'will'] as const;
+
+	const secondaryAbilityScores = $derived(
+		ALL_STATS.filter((stat) => !keyAbilityScores.includes(stat)),
+	);
+
+	function formatStats(stats: readonly string[] | string[]): string {
+		return stats
+			.map((stat) => localize(`NIMBLE.abilityScoreAbbreviations.${stat}`).toUpperCase())
+			.join(' or ');
+	}
 
 	let isExpanded = $state(false);
 
@@ -56,11 +70,15 @@
 	function getStatIncreaseDescription(): string {
 		if (!abilityScoreEntry) return '';
 		if (abilityScoreEntry.statIncreaseType === 'primary') {
-			return '+1 to your Primary stat (STR or DEX)';
+			return localize('NIMBLE.classSheet.progressionKeyStatIncrease', {
+				stats: formatStats(keyAbilityScores),
+			});
 		} else if (abilityScoreEntry.statIncreaseType === 'secondary') {
-			return '+1 to your Secondary stat (STR or DEX)';
+			return localize('NIMBLE.classSheet.progressionSecondaryStatIncrease', {
+				stats: formatStats(secondaryAbilityScores),
+			});
 		} else if (abilityScoreEntry.statIncreaseType === 'capstone') {
-			return 'Capstone: +1 to any two stats';
+			return localize('NIMBLE.classSheet.progressionCapstoneIncrease');
 		}
 		return '';
 	}
@@ -155,20 +173,22 @@
 			{#if levelData.autoGrant.length > 0}
 				{#each levelData.autoGrant as feature (feature.uuid)}
 					<div class="class-progression-level-row__feature">
-						<button
-							type="button"
-							class="class-progression-level-row__feature-header"
-							onclick={(e) => handleFeatureClick(e, feature)}
-						>
-							<img src={feature.img} alt="" class="class-progression-level-row__feature-img" />
-							<h4 class="class-progression-level-row__feature-name">{feature.name}</h4>
-							<i class="fa-solid fa-external-link class-progression-level-row__link-icon"></i>
-						</button>
-						{#if feature.system?.description}
-							<div class="class-progression-level-row__feature-desc">
-								{@html feature.system.description}
-							</div>
-						{/if}
+						<img src={feature.img} alt="" class="class-progression-level-row__feature-img" />
+						<div class="class-progression-level-row__feature-content">
+							<button
+								type="button"
+								class="class-progression-level-row__feature-header nimble-u-unstyled-button"
+								onclick={(e) => handleFeatureClick(e, feature)}
+							>
+								<h4 class="class-progression-level-row__feature-name">{feature.name}</h4>
+								<i class="fa-solid fa-external-link class-progression-level-row__link-icon"></i>
+							</button>
+							{#if feature.system?.description}
+								<div class="class-progression-level-row__feature-desc">
+									{@html feature.system.description}
+								</div>
+							{/if}
+						</div>
 					</div>
 				{/each}
 			{/if}
@@ -183,24 +203,23 @@
 						<div class="class-progression-level-row__choices">
 							{#each features as feature (feature.uuid)}
 								<div class="class-progression-level-row__choice">
-									<button
-										type="button"
-										class="class-progression-level-row__feature-header"
-										onclick={(e) => handleFeatureClick(e, feature)}
-									>
-										<img
-											src={feature.img}
-											alt=""
-											class="class-progression-level-row__feature-img"
-										/>
-										<h4 class="class-progression-level-row__feature-name">{feature.name}</h4>
-										<i class="fa-solid fa-external-link class-progression-level-row__link-icon"></i>
-									</button>
-									{#if feature.system?.description}
-										<div class="class-progression-level-row__feature-desc">
-											{@html feature.system.description}
-										</div>
-									{/if}
+									<img src={feature.img} alt="" class="class-progression-level-row__feature-img" />
+									<div class="class-progression-level-row__feature-content">
+										<button
+											type="button"
+											class="class-progression-level-row__feature-header nimble-u-unstyled-button"
+											onclick={(e) => handleFeatureClick(e, feature)}
+										>
+											<h4 class="class-progression-level-row__feature-name">{feature.name}</h4>
+											<i class="fa-solid fa-external-link class-progression-level-row__link-icon"
+											></i>
+										</button>
+										{#if feature.system?.description}
+											<div class="class-progression-level-row__feature-desc">
+												{@html feature.system.description}
+											</div>
+										{/if}
+									</div>
 								</div>
 							{/each}
 						</div>
@@ -214,9 +233,9 @@
 					<i class="fa-solid fa-star class-progression-level-row__info-icon"></i>
 					<p class="class-progression-level-row__info-text">
 						{#if level === 3}
-							Choose your subclass and gain its level 3 feature.
+							{@html localize('NIMBLE.classSheet.progressionChooseSubclass', { className })}
 						{:else}
-							Gain your subclass feature for this level.
+							{@html localize('NIMBLE.classSheet.progressionGainSubclassFeature', { className })}
 						{/if}
 					</p>
 				</div>
@@ -227,7 +246,7 @@
 				<div class="class-progression-level-row__info-block">
 					<i class="fa-solid fa-arrow-up class-progression-level-row__info-icon"></i>
 					<p class="class-progression-level-row__info-text">
-						{getStatIncreaseDescription()}
+						{@html getStatIncreaseDescription()}
 					</p>
 				</div>
 			{/if}
@@ -295,6 +314,7 @@
 			font-size: var(--nimble-sm-text);
 			font-weight: 500;
 			line-height: 1.4;
+			color: var(--nimble-dark-text-color);
 		}
 
 		&__badges {
@@ -392,25 +412,23 @@
 
 		&__feature {
 			display: flex;
-			flex-direction: column;
+			flex-direction: row;
 			align-items: flex-start;
-			gap: 0.375rem;
+			gap: 0.5rem;
+		}
+
+		&__feature-content {
+			flex: 1;
+			min-width: 0;
 		}
 
 		&__feature-header {
-			display: inline-flex;
-			align-items: center;
-			gap: 0.5rem;
-			padding: 0;
-			background: transparent;
-			border: none;
+			color: var(--nimble-dark-text-color);
 			cursor: pointer;
-			color: inherit;
-			text-align: left;
-			transition: color 0.15s ease;
 
 			&:hover {
 				color: var(--nimble-accent-color);
+				text-decoration: underline;
 
 				.class-progression-level-row__link-icon {
 					color: var(--nimble-accent-color);
@@ -427,22 +445,25 @@
 		}
 
 		&__feature-name {
+			display: inline;
 			font-size: var(--nimble-sm-text);
 			font-weight: 600;
 			margin: 0;
-			line-height: 1.3;
+			padding: 0;
+			line-height: 1.4;
 			text-align: left;
 		}
 
 		&__link-icon {
+			display: inline;
 			font-size: var(--nimble-xxs-text);
 			color: var(--nimble-medium-text-color);
 			transition: color 0.15s ease;
+			margin-left: 0.25rem;
 		}
 
 		&__feature-desc {
-			padding-left: 2rem;
-			font-size: var(--nimble-xs-text);
+			font-size: var(--nimble-sm-text);
 			line-height: 1.5;
 			text-align: left;
 
@@ -504,8 +525,9 @@
 
 		&__choice {
 			display: flex;
-			flex-direction: column;
-			gap: 0.375rem;
+			flex-direction: row;
+			align-items: flex-start;
+			gap: 0.5rem;
 		}
 
 		&__info-block {
@@ -529,6 +551,7 @@
 			font-size: var(--nimble-sm-text);
 			line-height: 1.4;
 			text-align: left;
+			color: var(--nimble-dark-text-color);
 		}
 	}
 </style>
