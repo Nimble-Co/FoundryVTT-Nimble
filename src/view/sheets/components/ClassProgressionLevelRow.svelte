@@ -413,7 +413,7 @@
 				color: var(--nimble-accent-color);
 
 				.class-progression-level-row__link-icon {
-					opacity: 1;
+					color: var(--nimble-accent-color);
 				}
 			}
 		}
@@ -436,8 +436,8 @@
 
 		&__link-icon {
 			font-size: var(--nimble-xxs-text);
-			opacity: 0.4;
-			transition: opacity 0.15s ease;
+			color: var(--nimble-medium-text-color);
+			transition: color 0.15s ease;
 		}
 
 		&__feature-desc {
@@ -519,7 +519,7 @@
 
 		&__info-icon {
 			flex-shrink: 0;
-			color: var(--nimble-accent-color);
+			color: var(--nimble-dark-text-color);
 			font-size: var(--nimble-sm-text);
 			margin-top: 0.125rem;
 		}

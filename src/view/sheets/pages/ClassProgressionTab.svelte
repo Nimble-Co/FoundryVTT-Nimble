@@ -724,7 +724,7 @@
 				color: var(--nimble-accent-color);
 
 				.class-progression-tab__link-icon {
-					opacity: 1;
+					color: var(--nimble-accent-color);
 				}
 			}
 		}
@@ -747,8 +747,8 @@
 
 		&__link-icon {
 			font-size: var(--nimble-xxs-text);
-			opacity: 0.4;
-			transition: opacity 0.15s ease;
+			color: var(--nimble-medium-text-color);
+			transition: color 0.15s ease;
 		}
 
 		&__feature-desc {
