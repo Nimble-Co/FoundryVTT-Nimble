@@ -18,3 +18,4 @@ The following icons are sourced from [game-icons.net](https://game-icons.net/) a
 - [slowed.svg](https://game-icons.net/1x1/lorc/snail.html) (Created by Lorc)
 - [taunted.svg](https://game-icons.net/1x1/lorc/helmet-head-shot.html) (Created by Lorc)
 - [wound.svg](https://game-icons.net/1x1/lorc/open-wound.html) (Created by Lorc)
+- [lionhearted.svg](https://game-icons.net/1x1/lorc/lion.html) (Created by Lorc)
