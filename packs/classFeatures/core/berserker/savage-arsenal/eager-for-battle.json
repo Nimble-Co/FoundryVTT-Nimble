@@ -49,12 +49,13 @@
 		},
 		"description": "<p>Gain advantage on Initiative. Move 2×DEX spaces for free on your first turn each encounter.</p>",
 		"featureType": "class",
-		"class": "",
+		"class": "berserker",
 		"gainedAtLevel": 4,
 		"gainedAtLevels": [
 			4,
 			6,
 			8,
+			10,
 			12,
 			14,
 			16

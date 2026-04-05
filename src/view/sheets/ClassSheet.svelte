@@ -3,6 +3,7 @@
 	import localize from '../../utils/localize.js';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 
+	import ClassProgressionTab from './pages/ClassProgressionTab.svelte';
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
@@ -147,6 +148,12 @@
 			icon: 'fa-solid fa-gears',
 			tooltip: localize('NIMBLE.classSheet.config'),
 			name: 'config',
+		},
+		{
+			component: progressionTab,
+			icon: 'fa-solid fa-stairs',
+			tooltip: localize('NIMBLE.classSheet.progression'),
+			name: 'progression',
 		},
 		{
 			component: rulesTab,
@@ -449,6 +456,10 @@
 			/>
 		</section>
 	{/key}
+{/snippet}
+
+{#snippet progressionTab()}
+	<ClassProgressionTab />
 {/snippet}
 
 {#snippet rulesTab()}
