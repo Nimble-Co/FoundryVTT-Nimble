@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>(1/turn) Action: Roll a Fury Die [[/r 1d4]] and set it aside. Add it to every STR attack you make. You can have a max of KEY Fury Dice; they are lost when your Rage ends.</p><hr><p>Level 1: Gain 1 Fury Die</p><p>Level 5: Gain 2 Fury Dice</p>",
+		"description": "<p>(1/turn) Action: Roll a Fury Die [[/r 1d4]] and set it aside. Add it to every STR attack you make. You can have a max of KEY Fury Dice; they are lost when your Rage ends.</p><hr><p>Level 1: Gain 1 Fury Die</p><p>Level 5: Whenever you Rage, gain 2 Fury Dice instead.</p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "berserker-progression",

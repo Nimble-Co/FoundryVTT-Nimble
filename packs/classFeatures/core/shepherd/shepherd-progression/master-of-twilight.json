@@ -10,12 +10,8 @@
 			{
 				"id": "master-twilight-radiant-l3",
 				"type": "grantSpells",
-				"schools": [
-					"radiant"
-				],
-				"tiers": [
-					0
-				],
+				"schools": ["radiant"],
+				"tiers": [0],
 				"mode": "selectSpell",
 				"count": 1,
 				"utilityOnly": true,
@@ -29,12 +25,8 @@
 			{
 				"id": "master-twilight-necrotic-l3",
 				"type": "grantSpells",
-				"schools": [
-					"necrotic"
-				],
-				"tiers": [
-					0
-				],
+				"schools": ["necrotic"],
+				"tiers": [0],
 				"mode": "selectSpell",
 				"count": 1,
 				"utilityOnly": true,
@@ -48,12 +40,8 @@
 			{
 				"id": "master-twilight-radiant-l6",
 				"type": "grantSpells",
-				"schools": [
-					"radiant"
-				],
-				"tiers": [
-					0
-				],
+				"schools": ["radiant"],
+				"tiers": [0],
 				"mode": "selectSpell",
 				"count": 1,
 				"utilityOnly": true,
@@ -67,12 +55,8 @@
 			{
 				"id": "master-twilight-necrotic-l6",
 				"type": "grantSpells",
-				"schools": [
-					"necrotic"
-				],
-				"tiers": [
-					0
-				],
+				"schools": ["necrotic"],
+				"tiers": [0],
 				"mode": "selectSpell",
 				"count": 1,
 				"utilityOnly": true,
@@ -86,12 +70,8 @@
 			{
 				"id": "master-twilight-radiant-l11",
 				"type": "grantSpells",
-				"schools": [
-					"radiant"
-				],
-				"tiers": [
-					0
-				],
+				"schools": ["radiant"],
+				"tiers": [0],
 				"mode": "auto",
 				"utilityOnly": true,
 				"label": "Master of Twilight (3): All Radiant Utility Spells",
@@ -104,12 +84,8 @@
 			{
 				"id": "master-twilight-necrotic-l11",
 				"type": "grantSpells",
-				"schools": [
-					"necrotic"
-				],
-				"tiers": [
-					0
-				],
+				"schools": ["necrotic"],
+				"tiers": [0],
 				"mode": "auto",
 				"utilityOnly": true,
 				"label": "Master of Twilight (3): All Necrotic Utility Spells",
@@ -146,17 +122,13 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Choose 1 Necrotic and 1 Radiant Utility Spell.</p><hr><p>Level 6: Choose a 2nd of each</p><p>Level 11: You know all Necrotic and Radiant Utility Spells.</p>",
+		"description": "<p>Choose 1 Necrotic and 1 Radiant Utility Spell.</p><hr><p>Level 6: Choose a 2nd Necrotic and 2nd Radiant Utility Spell.</p><p>Level 11: Choose a 3rd Necrotic and 3rd Radiant Utility Spell.</p>",
 		"featureType": "class",
 		"class": "shepherd",
 		"group": "shepherd-progression",
 		"gainedAtLevel": 3,
 		"subclass": false,
-		"gainedAtLevels": [
-			3,
-			6,
-			11
-		]
+		"gainedAtLevels": [3, 6, 11]
 	},
 	"effects": [],
 	"flags": {},
