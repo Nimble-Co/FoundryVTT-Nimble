@@ -1,0 +1,84 @@
+{
+	"name": "Optional Rules",
+	"pages": [
+		{
+			"_id": "C4Xv5znLBXHK3QrB",
+			"name": "Optional Variant Rules",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>If your playgroup likes extra little tactical nuggets, your GM can allow you to try out some of these additional variants. You can always try out a rule for 1 session and see how you all like it before committing to it.</p><h3>Characters</h3><p><strong>Different Key Stats.</strong> Players can swap KEY or Secondary stats for a class if it makes sense (e.g., DEX and WIL for the Cheat).</p><p><strong>Complex Characters.</strong> A GM may allow heroes to pick 2 backgrounds and/or ancestry bonuses.</p><p><strong>Multiclassing.</strong> When heroes level up, they may choose any class. For example, when a level 4 Berserker levels up, they could pick Commander and take the level 1 Commander features instead of the level 5 Berserker features. A hero gains all the equipment proficiencies of all their classes but should use the advantaged/disadvantaged saves of whichever class has the highest level. <em>The GM may need to make the game substantially more challenging if multiclassing is allowed.</em></p><h3>Combat</h3><p><strong>Sucker Punch.</strong> A character standing up from Prone gives adjacent enemies the chance to take opportunity attacks (heroes and monsters alike).</p><p><strong>Playing Dead.</strong> Whenever a Hero drops to 0 HP, they can attempt to play dead by falling prone and making an Influence check (or other skill check as the situation demands).</p><p><strong>Retreat.</strong> Any hero may call for a retreat on their turn. If the party agrees, the GM allows them to flee. Each hero describes their escape. Consequences may follow, such as taking damage, suffering a Wound, or failing a quest. If the escape is particularly clever, the GM may allow the party to escape without additional consequence.</p><p><strong>Inspiration.</strong> Whenever a hero does something memorable (role-plays a great moment, makes everyone laugh, misses an attack multiple times in a row, or otherwise engages in desired behavior), the GM can grant Inspiration: the ability to reroll any single die. Inspiration expires after a Safe Rest.</p><p><strong>I Had the High Ground.</strong> Taking a crit while at a height may cause a character to fall down. A reasonable STR save may be called for, but a weak character may just fall automatically.</p><p><strong>Thrown Potions.</strong> Treat potions like Ranged attacks (Range 8). The potion misses on a 1; otherwise it heals for half as much since some splashes away and is wasted.</p><h3>Group Size</h3><p><strong>Small Groups.</strong> A GM and a single hero can play with the aid of a sidekick. Sidekicks are NPCs that the hero's player controls during combat and the GM controls outside of combat. Sidekicks get 2 actions and are always 1 level below the hero character.</p><p><strong>Large Groups.</strong> 3rd party adventures are typically balanced for parties of 3–5 players. Playing with very large groups (6–10+ heroes) can be made far more manageable simply by limiting each hero's actions to 2 instead of 3. No other rebalancing needs to be done.</p><h3>Resting</h3><p><strong>Fast Resting.</strong> For a much more heroic and fast-paced story, a Safe Rest can heal all Wounds.</p><h3>Dice</h3><p><strong>Custom Weapon Dice.</strong> For larger weapon die sizes, you can try using dice of a different size as long as they add up to the same initial die size. For example: a 1d10 glaive could be 1d4+1d6 or 1d6+1d4 (using the first die as the primary die).</p><p><strong>Critical Healing.</strong> Treat healing just like an attack roll. Rolling the max is a crit (rolling again just like an attack crit), rolling 1 is a failure to heal. Consider incrementing the die size by one step if you use this variant.</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 100000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "DZV29AOlPmFu8mJw",
+			"name": "Measuring Spaces",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Generally, speed is preferred above precision while playing a TTRPG — don't make other people wait unnecessarily, close enough is good enough! However, if your table prefers precise rulings, use the options below as a reference.</p><h3>Diagonal Spaces</h3><p>Treating diagonal spaces as adjacent is the default assumption, as it tends to be easier and faster (though it can cause some spatial \"weirdness\" that some may not prefer). Instead, you can treat diagonals as not adjacent at all, or count every other diagonal as adjacent (fiddly, but a good balance).</p><p>Whatever the heroes can do (moving or attacking diagonally), monsters can do as well.</p><h3>Cones &amp; Lines</h3><p><strong>Cone:</strong> Start at the character and extend X spaces outward. The cone can be up to X spaces wide at the farthest edge (you can make it narrower than X, but not wider).</p><p><strong>Line:</strong> Starting from the character, extend the area up to X spaces in a single direction (you can make it shorter, but not longer), and 1 space wide. If a space is at least halfway covered by the cone or line, it is included in the effect.</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 200000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	},
+	"_id": "vHuQF7yF37WYL6uR"
+}

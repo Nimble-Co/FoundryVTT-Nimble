@@ -1012,6 +1012,20 @@
 			}
 		}
 	},
+	"rules": {
+		"core": {
+			"ancestry-and-background": "xH5A2eJCr1PQLPLM",
+			"character-creation": "jTC8Q1wHRpyfcm3Z",
+			"combat": "7oaOqkg5Sp05mR2s",
+			"core-rules": "ZQjOBEMTFhOssTAV",
+			"equipment": "Oz9KSXS5xNFbsx3l",
+			"glossary": "ZuhDliTOf0Rp6Gng",
+			"optional-rules": "vHuQF7yF37WYL6uR",
+			"resting-and-downtime": "ZDLldXZlTUPQdNW0",
+			"spells": "vE3q1Ni1LLkfLlNK",
+			"start-here": "8aZw41YGlNWJ6OOP"
+		}
+	},
 	"secretSpells": {
 		"core": {
 			"fire": {
