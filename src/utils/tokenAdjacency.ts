@@ -35,10 +35,11 @@ function areAdjacentOnGrid(
 	tokenA: Token.Implementation,
 	tokenB: Token.Implementation,
 	overrides?: PositionOverrides,
+	includeDiagonals = getAdjacencyIncludesDiagonals(),
 ): boolean {
 	if (!canvas?.grid) return false;
 
-	const thresholdSquares = getAdjacencyIncludesDiagonals()
+	const thresholdSquares = includeDiagonals
 		? DIAGONAL_THRESHOLD_SQUARES
 		: ORTHOGONAL_THRESHOLD_SQUARES;
 	const threshold = thresholdSquares * canvas.grid.size;
@@ -64,10 +65,12 @@ function countAdjacentEnemies(
 	token: Token.Implementation,
 	allTokens: Token.Implementation[],
 	overrides?: PositionOverrides,
+	includeDiagonals = getAdjacencyIncludesDiagonals(),
 ): number {
 	return allTokens
 		.filter((t) => t !== token)
-		.filter((t) => areEnemies(token, t) && areAdjacentOnGrid(token, t, overrides)).length;
+		.filter((t) => areEnemies(token, t) && areAdjacentOnGrid(token, t, overrides, includeDiagonals))
+		.length;
 }
 
 export { countAdjacentEnemies };
