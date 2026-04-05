@@ -22,7 +22,7 @@ export function getAdjacencySyncEnabled(): boolean {
 	return Boolean(game.settings.get('nimble' as 'core', ADJACENCY_SYNC_SETTING_KEY as 'rollMode'));
 }
 
-export function registerAdjacencyIncludesDiagonalsSetting(): void {
+function registerAdjacencyIncludesDiagonalsSetting(): void {
 	game.settings.register(
 		'nimble' as 'core',
 		ADJACENCY_INCLUDES_DIAGONALS_SETTING_KEY as 'rollMode',
