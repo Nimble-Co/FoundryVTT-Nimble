@@ -1,0 +1,84 @@
+{
+	"name": "Start Here",
+	"pages": [
+		{
+			"_id": "95y5zwydde7LtrMg",
+			"name": "Start Here",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Nimble is a fast-paced, heroic fantasy TTRPG where bold choices and epic stories take center stage.</p><p>At least one player should familiarize themselves with the base rules in this book (no need for everyone to read through unless they really want to). The adventure included in the GM's Guide is designed to introduce the rules as you play.</p><p><strong>If you're new to TTRPGs</strong>, use one of the pre-made heroes (included in your digital downloads or at nimbleRPG.com/start). Level 1 for all of the classes is designed to be easy to pick up, giving a small flavor of the class and introducing the rules gradually without being overwhelming. Complexity and tactical depth is layered on as you level up and progress through an adventure.</p><p><strong>If you're experienced with RPGs</strong>, feel free to create your own hero from scratch (see @UUID[Compendium.nimble.nimble-rules.JournalEntry.jTC8Q1wHRpyfcm3Z]{Character Creation}). When building your hero, perhaps what will have the largest impact on how you interact with the world is your hero's class. Start there. Then you can flesh out other important aspects of your character's ancestry, background, and what languages you know, as well as your stats and any equipment you have. You can do these steps in any order, filling out your character sheet as you go.</p><p>Videos, digital downloads, FAQ, and more: <strong>nimbleRPG.com/start</strong></p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 100000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "ceotRQz1wScVcGWG",
+			"name": "How to Be a Good Player",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p><strong>Be heroic.</strong> Create a hero eager to dive into the adventure with the party. Reluctant, anti-social loners can drag down everyone's fun. Your games will shine when you lean into the shared adventure.</p><p><strong>Pay attention. Ask questions. Take notes.</strong> The more questions you ask, the more information you'll have to work with, and you'll be able to make more interesting decisions.</p><p><strong>Be creative!</strong> Frequently, the answer to a problem isn't found on your character sheet. A hammer (or anything else) can be used in lots of ways!</p><p><strong>Embrace failure.</strong> You shouldn't try to fail, but some of the best moments in a game can come from a failed roll or bad decision. Go with it!</p><p><strong>Respect everyone else's time.</strong> Swift, suboptimal decisions are better than slow, optimal ones. They will tend to be more fun anyway! If you can't decide what to do on your turn, attack and pass. Think when everyone else isn't waiting on you. Also, arrive on time.</p><p><strong>Share the spotlight.</strong> If you've been rolling or talking more than everyone else, call on your partymates to help you; shine the spotlight on them. Sneaky characters shouldn't spend a bunch of time sneaking around a dungeon without the rest of the party.</p><p><strong>Treat the world realistically.</strong> If you insult (or kill) other characters you come across, expect consequences! If you negotiate and haggle with every merchant, your reputation as penny pinchers will likely become widespread. If you do something foolish in front of a king, expect to be jailed (or worse).</p><p><strong>Describe your actions, not mechanics.</strong> The Game Master (GM) will tell you if you need to roll any dice. If your idea is good enough, you may not need to!</p><ul><li><em>No:</em> \"Can I make an Examination check?\" — <em>Yes:</em> \"I want to search the books and paintings on the walls, looking for a secret door.\"</li><li><em>No:</em> \"I make an attack roll.\" — <em>Yes:</em> \"I smack that goblin with my sword!\"</li></ul><p><strong>Be gracious to the GM.</strong> They put a lot of effort into running the game; avoid arguing over rulings. Give them a break sometimes and offer to run a session for them! Bring snacks.</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 200000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	},
+	"_id": "8aZw41YGlNWJ6OOP"
+}
