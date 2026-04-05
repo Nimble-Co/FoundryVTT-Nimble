@@ -1,9 +1,10 @@
 import type { DeepPartial } from 'fvtt-types/utils';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
+import { buildSpellIndex, type SpellIndex } from '#utils/getSpells.js';
+import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.js';
 import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
 import { buildClassFeatureIndex, type ClassFeatureIndex } from '../../utils/getClassFeatures.js';
-import { buildSpellIndex, getSpellsFromIndex, type SpellIndex } from '../../utils/getSpells.js';
 import sortDocumentsByName from '../../utils/sortDocumentsByName.js';
 import CharacterCreationDialogComponent from '../../view/dialogs/CharacterCreationDialog.svelte';
 

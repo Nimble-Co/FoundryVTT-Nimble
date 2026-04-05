@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { SpellIndex, SpellIndexEntry } from './getSpells.js';
-import { buildSpellIndex, getSpellsFromIndex } from './getSpells.js';
+import { buildSpellIndex } from './getSpells.js';
+import { getSpellsFromIndex } from './getSpellsFromIndex.js';
 
 interface TestSpellSource {
 	uuid: string;

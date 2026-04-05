@@ -1,8 +1,52 @@
 import type { SpellIndexEntry } from '#utils/getSpells.js';
-import {
-	enrichSpellText,
-	fetchSpellDescriptionByUuid,
-} from '../../../../utils/spellDescription.js';
+import enrichSpellText from '#utils/spellDescription.js';
+
+interface SpellDescriptionParts {
+	baseEffect?: string;
+	higherLevelEffect?: string;
+	upcastEffect?: string;
+}
+
+/**
+ * Combines spell description parts into a single HTML string
+ */
+function combineSpellDescriptionParts(
+	description: SpellDescriptionParts | string | null | undefined,
+): string {
+	if (typeof description === 'string') {
+		return description;
+	}
+
+	if (!description || typeof description !== 'object') {
+		return '';
+	}
+
+	const parts: string[] = [];
+	if (description.baseEffect) parts.push(description.baseEffect);
+	if (description.higherLevelEffect) {
+		parts.push(`<p><strong>Higher Levels:</strong> ${description.higherLevelEffect}</p>`);
+	}
+	if (description.upcastEffect) {
+		parts.push(`<p><strong>Upcast:</strong> ${description.upcastEffect}</p>`);
+	}
+
+	return parts.join('');
+}
+
+/**
+ * Fetches a spell by UUID and returns its combined description
+ */
+async function fetchSpellDescriptionByUuid(uuid: string): Promise<string> {
+	try {
+		const spell = (await fromUuid(uuid)) as Item | null;
+		if (!spell) return '';
+
+		const system = spell.system as { description?: SpellDescriptionParts };
+		return combineSpellDescriptionParts(system?.description);
+	} catch {
+		return '';
+	}
+}
 
 /**
  * Creates reactive state for the SpellCard component

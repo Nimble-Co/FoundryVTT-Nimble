@@ -1302,7 +1302,11 @@
 			"grantedSchoolLabel": "Granted School",
 			"selectedSpellLabel": "Selected Spell",
 			"chooseSchoolsFallback": "Choose Schools",
-			"chooseSpellsFallback": "Choose Spells"
+			"chooseSpellsFallback": "Choose Spells",
+			"selectSpell": "Select spell",
+			"deselectSpell": "Deselect spell",
+			"selectSpellAriaLabel": "Select {spellName}",
+			"deselectSpellAriaLabel": "Deselect {spellName}"
 		},
 		"classSelection": {
 			"stepSelectClass": "Step 1: Select Class",

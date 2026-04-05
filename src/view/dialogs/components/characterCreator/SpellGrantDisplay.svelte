@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { SpellGrantDisplayProps } from '#types/components/SpellGrantDisplay.d.ts';
-	import { getSpellsFromIndex } from '#utils/getSpells.js';
+	import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.js';
 	import localize from '#utils/localize.js';
 	import { getContext } from 'svelte';
 	import Hint from '../../../components/Hint.svelte';

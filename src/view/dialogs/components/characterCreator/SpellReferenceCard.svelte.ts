@@ -3,12 +3,41 @@ import type {
 	SpellEffect,
 	SpellSystemData,
 } from '#types/components/SpellReferenceCard.d.ts';
-import { flattenActivationEffects } from '../../../../utils/activationEffects.js';
-import localize from '../../../../utils/localize.js';
-import {
-	combineSpellDescriptionParts,
-	enrichSpellText,
-} from '../../../../utils/spellDescription.js';
+import { flattenActivationEffects } from '#utils/activationEffects.js';
+import localize from '#utils/localize.js';
+import enrichSpellText from '#utils/spellDescription.js';
+
+interface SpellDescriptionParts {
+	baseEffect?: string;
+	higherLevelEffect?: string;
+	upcastEffect?: string;
+}
+
+/**
+ * Combines spell description parts into a single HTML string
+ */
+function combineSpellDescriptionParts(
+	description: SpellDescriptionParts | string | null | undefined,
+): string {
+	if (typeof description === 'string') {
+		return description;
+	}
+
+	if (!description || typeof description !== 'object') {
+		return '';
+	}
+
+	const parts: string[] = [];
+	if (description.baseEffect) parts.push(description.baseEffect);
+	if (description.higherLevelEffect) {
+		parts.push(`<p><strong>Higher Levels:</strong> ${description.higherLevelEffect}</p>`);
+	}
+	if (description.upcastEffect) {
+		parts.push(`<p><strong>Upcast:</strong> ${description.upcastEffect}</p>`);
+	}
+
+	return parts.join('');
+}
 
 /**
  * Extracts the primary damage/healing effect from a spell's activation effects

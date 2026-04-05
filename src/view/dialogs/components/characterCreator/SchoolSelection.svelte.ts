@@ -1,10 +1,18 @@
-import {
-	getSpellsFromIndex,
-	type SpellIndex,
-	sortSpellsBySchoolThenName,
-} from '#utils/getSpells.js';
+import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
+import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.js';
 import localize from '#utils/localize.js';
 import type { SchoolSelectionGroup } from '../../characterCreation/types.js';
+
+/**
+ * Sorts spells by school (alphabetically) then by name (alphabetically).
+ */
+function sortSpellsBySchoolThenName(spells: SpellIndexEntry[]): SpellIndexEntry[] {
+	return [...spells].sort((a, b) => {
+		const schoolCompare = a.school.localeCompare(b.school);
+		if (schoolCompare !== 0) return schoolCompare;
+		return a.name.localeCompare(b.name);
+	});
+}
 
 interface SchoolSelectionStateParams {
 	group: () => SchoolSelectionGroup;

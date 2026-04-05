@@ -69,9 +69,13 @@
 					class:selected={isSelected}
 					onclick={handleSelectClick}
 					disabled={isDisabled}
-					data-tooltip={isSelected ? 'Deselect spell' : 'Select spell'}
+					data-tooltip={isSelected
+						? localize('NIMBLE.spellGrants.deselectSpell')
+						: localize('NIMBLE.spellGrants.selectSpell')}
 					data-tooltip-direction="LEFT"
-					aria-label={isSelected ? `Deselect ${spell.name}` : `Select ${spell.name}`}
+					aria-label={isSelected
+						? localize('NIMBLE.spellGrants.deselectSpellAriaLabel', { spellName: spell.name })
+						: localize('NIMBLE.spellGrants.selectSpellAriaLabel', { spellName: spell.name })}
 				>
 					{#if isSelected}
 						<i class="fa-solid fa-check"></i>

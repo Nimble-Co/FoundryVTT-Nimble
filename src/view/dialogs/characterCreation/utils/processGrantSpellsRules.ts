@@ -1,7 +1,6 @@
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
-
-import { getSpellsFromIndex } from '../../../../utils/getSpells.js';
-import localize from '../../../../utils/localize.js';
+import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.js';
+import localize from '#utils/localize.js';
 import type { SchoolSelectionGroup, SpellGrantSource, SpellSelectionGroup } from '../types.js';
 
 // Type for grantSpells rule properties
