@@ -10,12 +10,8 @@
 			{
 				"id": "stormcaller-utility-1",
 				"type": "grantSpells",
-				"schools": [
-					"known"
-				],
-				"tiers": [
-					0
-				],
+				"schools": ["known"],
+				"tiers": [0],
 				"mode": "selectSpell",
 				"count": 1,
 				"utilityOnly": true,
@@ -29,12 +25,8 @@
 			{
 				"id": "stormcaller-utility-2",
 				"type": "grantSpells",
-				"schools": [
-					"known"
-				],
-				"tiers": [
-					0
-				],
+				"schools": ["known"],
+				"tiers": [0],
 				"mode": "selectSpell",
 				"count": 1,
 				"utilityOnly": true,
@@ -78,10 +70,7 @@
 		"group": "stormshifter-progression",
 		"gainedAtLevel": 4,
 		"subclass": false,
-		"gainedAtLevels": [
-			4,
-			7
-		]
+		"gainedAtLevels": [4, 7]
 	},
 	"effects": [],
 	"flags": {},
