@@ -512,35 +512,6 @@
 			}
 		}
 
-		&__selection-group {
-			display: flex;
-			flex-direction: column;
-			gap: 0.5rem;
-			padding-left: 0.75rem;
-			border-left: 2px solid var(--nimble-box-color);
-		}
-
-		&__group-label {
-			font-size: var(--nimble-xs-text);
-			font-weight: 600;
-			color: var(--nimble-medium-text-color);
-			margin: 0;
-			text-align: left;
-		}
-
-		&__choices {
-			display: flex;
-			flex-direction: column;
-			gap: 0.625rem;
-		}
-
-		&__choice {
-			display: flex;
-			flex-direction: row;
-			align-items: flex-start;
-			gap: 0.5rem;
-		}
-
 		&__info-block {
 			display: flex;
 			align-items: center;

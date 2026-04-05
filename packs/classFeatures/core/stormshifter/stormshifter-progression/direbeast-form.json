@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>You can Beastshift into a Fearsome Beast.</p><hr><p>Level 3: Beast of the Pack</p><p>Level 5: Beast of Nightmares</p>",
+		"description": "<p>You can Beastshift into a Fearsome Beast.</p><hr><p>Level 3: You can Beastshift into a Beast of the Pack.</p><p>Level 5: You can Beastshift into a Beast of Nightmares.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
 		"group": "stormshifter-progression",

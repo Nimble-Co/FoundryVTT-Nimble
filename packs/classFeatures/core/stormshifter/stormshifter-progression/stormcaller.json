@@ -64,7 +64,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Learn a Utility Spell from each spell school you know.</p><hr><p>Level 7: Choose a 2nd of each</p></p>",
+		"description": "<p>Learn a Utility Spell from each spell school you know.</p><hr><p>Level 7: Learn a 2nd Utility Spell from each spell school you know.</p>",
 		"featureType": "class",
 		"class": "stormshifter",
 		"group": "stormshifter-progression",
