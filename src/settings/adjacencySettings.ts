@@ -1,4 +1,5 @@
 export const ADJACENCY_SYNC_SETTING_KEY = 'autoTrackTokenAdjacency';
+export const ADJACENCY_INCLUDES_DIAGONALS_SETTING_KEY = 'adjacencyIncludesDiagonals';
 
 export function registerAdjacencySettings(): void {
 	game.settings.register(
@@ -13,8 +14,31 @@ export function registerAdjacencySettings(): void {
 			default: true,
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
+
+	registerAdjacencyIncludesDiagonalsSetting();
 }
 
 export function getAdjacencySyncEnabled(): boolean {
 	return Boolean(game.settings.get('nimble' as 'core', ADJACENCY_SYNC_SETTING_KEY as 'rollMode'));
+}
+
+export function registerAdjacencyIncludesDiagonalsSetting(): void {
+	game.settings.register(
+		'nimble' as 'core',
+		ADJACENCY_INCLUDES_DIAGONALS_SETTING_KEY as 'rollMode',
+		{
+			name: 'NIMBLE.settings.adjacencyIncludesDiagonals.name',
+			hint: 'NIMBLE.settings.adjacencyIncludesDiagonals.hint',
+			scope: 'world',
+			config: true,
+			type: Boolean,
+			default: true,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
+}
+
+export function getAdjacencyIncludesDiagonals(): boolean {
+	return Boolean(
+		game.settings.get('nimble' as 'core', ADJACENCY_INCLUDES_DIAGONALS_SETTING_KEY as 'rollMode'),
+	);
 }

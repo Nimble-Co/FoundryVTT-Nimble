@@ -8,7 +8,7 @@
 		"identifier": "",
 		"rules": [
 			{
-				"type": "condition",
+				"type": "armorClass",
 				"disabled": false,
 				"id": "io7K8HETN3dgovbH",
 				"identifier": "",
@@ -17,18 +17,6 @@
 					"enemiesAdjacent": "most"
 				},
 				"priority": 1,
-				"value": "lionhearted"
-			},
-			{
-				"type": "armorClass",
-				"disabled": false,
-				"id": "Kq2mN9PXvR7sLwYe",
-				"identifier": "",
-				"label": "Lionhearted",
-				"predicate": {
-					"condition": "lionhearted"
-				},
-				"priority": 2,
 				"formula": "2",
 				"mode": "add"
 			}
