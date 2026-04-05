@@ -1,0 +1,118 @@
+{
+	"name": "Character Creation",
+	"pages": [
+		{
+			"_id": "obLgDP0QiZEuuE5t",
+			"name": "Making a Hero",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Your hero is how you will make your mark on the world. Here's how to make your own hero:</p><h3>Step 1: Choose Your Class</h3><p>This will have the largest impact on the other character choices you make and how you interact with the world (see the Heroes book for more details):</p><ul><li><strong>Berserker.</strong> An unstoppable force of wrath and ruin.</li><li><strong>The Cheat.</strong> Sneaky, backstabbing, dirty-fighting rogue.</li><li><strong>Commander.</strong> A battlefield tactician, leader, and weapon master.</li><li><strong>Hunter.</strong> Resourceful survivalist, bow master, and skilled tracker.</li><li><strong>Mage.</strong> Wield and shape the elements of fire, ice, and lightning.</li><li><strong>Oathsworn.</strong> Faithful guardian, protector, and avenger of the weak.</li><li><strong>Shadowmancer.</strong> Summon hordes of expendable minions.</li><li><strong>Shepherd.</strong> Master life and death. Lead a faithful companion.</li><li><strong>Songweaver.</strong> Inspiring presence, sharp wit, sharper tongue.</li><li><strong>Stormshifter.</strong> Master of weather, beast, and nature.</li><li><strong>Zephyr.</strong> A disciplined martial artist with swift hands and swift feet.</li></ul><h3>Step 2: Choose Your Ancestry &amp; Background</h3><p>What made your hero want to start adventuring? How do you know the other heroes? (See @UUID[Compendium.nimble.nimble-rules.JournalEntry.xH5A2eJCr1PQLPLM]{Ancestry &amp; Background}.)</p><h3>Step 3: Fill in Your Character Sheet</h3><p>This handy sheet of paper helps you track your stats, abilities, loot, and other important game info. (See the Character Sheet page below.)</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 100000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "he9BkEy0JCQGuyNV",
+			"name": "The Character Sheet",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<h3>1. Basic Details &amp; Stats</h3><p>Fill in your character details: Name, Ancestry, Class, Level, Height, and Weight. Fill in the arrow for your advantaged (+) and disadvantaged (–) Saves, and choose a stat array (recommended: place the highest numbers in the KEY stats for your class).</p><ul><li><strong>Standard:</strong> +2, +2, +0, –1</li><li><strong>Balanced:</strong> +2, +1, +1, +0</li><li><strong>Min–Max:</strong> +3, +1, –1, –1</li></ul><p><em>Example: The Cheat has DEX and INT as their KEY stats. With Min-Max, you might put +3 in DEX, +1 in INT, and –1 in WIL and STR. Mark ▲ for DEX saves and ▼ for WIL saves.</em></p><h3>2. Skill Points</h3><p>At level 1, mark your stat bonuses into each of your respective skills (e.g., a hero with +2 DEX marks +2 in Finesse and Stealth), then place 4 additional skill points wherever you like.</p><h3>3. Secondary Stats</h3><p>Mark your max HP and Hit Dice size (see your class), Hit Die amount (default: equal to your level), Initiative (default: DEX), Size, Speed (default: 6), max Wounds (default: 6), and inventory slots (10+STR).</p><h3>4. Equipment &amp; Money</h3><p>Heroes start at level 1 with the equipment listed for their class and background, OR 50 gp to buy their starting equipment. If starting at a higher level, multiply that by the level you are starting at.</p><h3>5. Languages</h3><p>All heroes speak Common by default. Each point of INT grants you an additional language known.</p><ul><li><strong>Common</strong> — Most intelligent creatures</li><li><strong>Dwarvish</strong> — Dwarves, Gnomes, and Giants</li><li><strong>Elvish</strong> — Elves, Fey, and Sylvan</li><li><strong>Goblin</strong> — Goblins and Orcs</li><li><strong>Infernal</strong> — Various Fiends and cultists</li><li><strong>Thieves' Cant</strong> — Scoundrels and rogues</li><li><strong>Celestial</strong> — Celestials and priests</li><li><strong>Draconic</strong> — Dragons, Dragonborn, and Kobolds</li><li><strong>Primordial</strong> — Elementals and Ancient Beings</li><li><strong>Deep Speak</strong> — Underworld dwellers</li></ul><h3>6. Other Abilities</h3><p>Mark any other special abilities you get from your class, ancestry, background, etc.</p><h3>7. Inventory Slots</h3><p>Each hero has 10+STR inventory slots for carrying equipment and loot (held, worn, or in a pack).</p><ul><li>1 slot: a one-handed weapon, shield, worn armor, stack of javelins, 500 gp, or 2 potions.</li><li>2 slots: a 2-handed weapon, unworn armor, or similarly bulky items.</li><li>Small, related items can be grouped into one slot (e.g., Camping Supplies: soap, blanket, brush, rations).</li></ul>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 200000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "ynBM3JEVE0xPjMyQ",
+			"name": "Leveling Up",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>The GM may allow you to gain a level (LVL) whenever you complete an appropriately challenging quest or adventure. When a hero gains a level:</p><ul><li><strong>HP Increase.</strong> Roll your Hit Die with advantage and increase your max HP by that much.</li><li><strong>More Endurance.</strong> Your Hit Die max increases by 1 (it is typically equal to your level).</li><li><strong>More Skilled.</strong> Gain 1 skill point. Additionally, you may move 1 point from one skill to another (as long as the skill doesn't become negative), reflecting your hero's evolving expertise and priorities. The maximum bonus a skill can have is +12.</li><li><strong>Class Features.</strong> Gain new class features for your level. This may mean increasing your mana pool, new spells, or even selecting a subclass!</li><li><strong>Other Adjustments.</strong> If any of your base stats increase, remember to adjust other elements of your character sheet as needed (skills, damage, Initiative, armor, mana, languages, etc.).</li></ul>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 300000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	},
+	"_id": "jTC8Q1wHRpyfcm3Z"
+}
