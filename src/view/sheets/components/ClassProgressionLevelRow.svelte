@@ -34,10 +34,16 @@
 		levelData.autoGrant.length > 0 || levelData.selectionGroups.size > 0,
 	);
 
-	// Row is expandable if it has features, subclass level, or ability score entry
-	const isExpandable = $derived(hasFeatures || isSubclassLevel || abilityScoreEntry !== null);
+	const isEpicBoonLevel = $derived(level === 19);
 
-	const hasContent = $derived(hasFeatures || abilityScoreEntry !== null || isSubclassLevel);
+	// Row is expandable if it has features, subclass level, ability score entry, or epic boon level
+	const isExpandable = $derived(
+		hasFeatures || isSubclassLevel || abilityScoreEntry !== null || isEpicBoonLevel,
+	);
+
+	const hasContent = $derived(
+		hasFeatures || abilityScoreEntry !== null || isSubclassLevel || isEpicBoonLevel,
+	);
 
 	function toggleExpanded(): void {
 		if (isExpandable) {
@@ -54,17 +60,25 @@
 		return groupName.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
 	}
 
-	function getFeatureNames(): string {
-		const names: string[] = [];
+	function getFeatureSummary(): string {
+		const parts: string[] = [];
+
+		// Add auto-granted feature names
 		for (const feature of levelData.autoGrant) {
-			names.push(feature.name);
+			parts.push(feature.name);
 		}
-		for (const [, features] of levelData.selectionGroups) {
-			for (const feature of features) {
-				names.push(feature.name);
-			}
+
+		// Add selection group names (not individual features)
+		for (const [groupName] of levelData.selectionGroups) {
+			parts.push(formatGroupName(groupName));
 		}
-		return names.join(', ');
+
+		// Add Epic Boon for level 19
+		if (isEpicBoonLevel) {
+			parts.push(localize('NIMBLE.classSheet.progressionEpicBoonLabel'));
+		}
+
+		return parts.join(', ');
 	}
 
 	function getStatIncreaseDescription(): string {
@@ -106,9 +120,9 @@
 		</span>
 
 		<div class="class-progression-level-row__summary">
-			{#if hasFeatures}
+			{#if hasFeatures || isEpicBoonLevel}
 				<span class="class-progression-level-row__feature-summary">
-					{getFeatureNames()}
+					{getFeatureSummary()}
 				</span>
 			{:else if isSubclassLevel && !abilityScoreEntry}
 				<span class="class-progression-level-row__feature-summary"> Subclass Feature </span>
@@ -169,6 +183,61 @@
 
 	{#if isExpanded && isExpandable}
 		<div class="class-progression-level-row__content">
+			<!-- Ability score increase info -->
+			{#if abilityScoreEntry}
+				<div class="class-progression-level-row__info-block">
+					<div class="class-progression-level-row__info-icon-wrapper">
+						<i class="fa-solid fa-arrow-up class-progression-level-row__info-icon"></i>
+					</div>
+					<p class="class-progression-level-row__info-text">
+						{@html getStatIncreaseDescription()}
+					</p>
+				</div>
+			{/if}
+
+			<!-- Selection groups - show reference to Feature Choices section -->
+			{#if levelData.selectionGroups.size > 0}
+				{#each [...levelData.selectionGroups.keys()] as groupName (groupName)}
+					<div class="class-progression-level-row__info-block">
+						<div class="class-progression-level-row__info-icon-wrapper">
+							<i class="fa-solid fa-list-check class-progression-level-row__info-icon"></i>
+						</div>
+						<p class="class-progression-level-row__info-text">
+							<strong>{formatGroupName(groupName)}.</strong> Choose one from the Feature Choices section
+							below.
+						</p>
+					</div>
+				{/each}
+			{/if}
+
+			<!-- Epic Boon (level 19) -->
+			{#if isEpicBoonLevel}
+				<div class="class-progression-level-row__info-block">
+					<div class="class-progression-level-row__info-icon-wrapper">
+						<i class="fa-solid fa-crown class-progression-level-row__info-icon"></i>
+					</div>
+					<p class="class-progression-level-row__info-text">
+						{@html localize('NIMBLE.classSheet.progressionEpicBoon')}
+					</p>
+				</div>
+			{/if}
+
+			<!-- Subclass feature info -->
+			{#if isSubclassLevel}
+				<div class="class-progression-level-row__info-block">
+					<div class="class-progression-level-row__info-icon-wrapper">
+						<i class="fa-solid fa-star class-progression-level-row__info-icon"></i>
+					</div>
+					<p class="class-progression-level-row__info-text">
+						{#if level === 3}
+							{@html localize('NIMBLE.classSheet.progressionChooseSubclass', { className })}
+						{:else}
+							{@html localize('NIMBLE.classSheet.progressionGainSubclassFeature', { className })}
+						{/if}
+					</p>
+				</div>
+			{/if}
+
 			<!-- Auto-granted features -->
 			{#if levelData.autoGrant.length > 0}
 				{#each levelData.autoGrant as feature (feature.uuid)}
@@ -191,64 +260,6 @@
 						</div>
 					</div>
 				{/each}
-			{/if}
-
-			<!-- Selection groups -->
-			{#if levelData.selectionGroups.size > 0}
-				{#each [...levelData.selectionGroups.entries()] as [groupName, features] (groupName)}
-					<div class="class-progression-level-row__selection-group">
-						<h5 class="class-progression-level-row__group-label">
-							{formatGroupName(groupName)} (Choose 1)
-						</h5>
-						<div class="class-progression-level-row__choices">
-							{#each features as feature (feature.uuid)}
-								<div class="class-progression-level-row__choice">
-									<img src={feature.img} alt="" class="class-progression-level-row__feature-img" />
-									<div class="class-progression-level-row__feature-content">
-										<button
-											type="button"
-											class="class-progression-level-row__feature-header nimble-u-unstyled-button"
-											onclick={(e) => handleFeatureClick(e, feature)}
-										>
-											<h4 class="class-progression-level-row__feature-name">{feature.name}</h4>
-											<i class="fa-solid fa-external-link class-progression-level-row__link-icon"
-											></i>
-										</button>
-										{#if feature.system?.description}
-											<div class="class-progression-level-row__feature-desc">
-												{@html feature.system.description}
-											</div>
-										{/if}
-									</div>
-								</div>
-							{/each}
-						</div>
-					</div>
-				{/each}
-			{/if}
-
-			<!-- Subclass feature info -->
-			{#if isSubclassLevel}
-				<div class="class-progression-level-row__info-block">
-					<i class="fa-solid fa-star class-progression-level-row__info-icon"></i>
-					<p class="class-progression-level-row__info-text">
-						{#if level === 3}
-							{@html localize('NIMBLE.classSheet.progressionChooseSubclass', { className })}
-						{:else}
-							{@html localize('NIMBLE.classSheet.progressionGainSubclassFeature', { className })}
-						{/if}
-					</p>
-				</div>
-			{/if}
-
-			<!-- Ability score increase info -->
-			{#if abilityScoreEntry}
-				<div class="class-progression-level-row__info-block">
-					<i class="fa-solid fa-arrow-up class-progression-level-row__info-icon"></i>
-					<p class="class-progression-level-row__info-text">
-						{@html getStatIncreaseDescription()}
-					</p>
-				</div>
 			{/if}
 		</div>
 	{/if}
@@ -281,7 +292,7 @@
 			align-items: center;
 			gap: 0.75rem;
 			padding: 0.5rem 0.625rem;
-			background: transparent;
+			background: rgba(0, 0, 0, 0.05);
 			color: inherit;
 			text-align: left;
 			width: 100%;
@@ -403,7 +414,7 @@
 		&__content {
 			display: flex;
 			flex-direction: column;
-			gap: 0.75rem;
+			gap: 0.5rem;
 			padding: 0.75rem;
 			padding-top: 0.5rem;
 			border-top: 1px solid var(--nimble-card-border-color);
@@ -532,24 +543,28 @@
 
 		&__info-block {
 			display: flex;
-			align-items: flex-start;
+			align-items: center;
 			gap: 0.5rem;
-			padding: 0.5rem 0.75rem;
-			background: rgba(0, 0, 0, 0.05);
-			border-radius: 4px;
+		}
+
+		&__info-icon-wrapper {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.5rem;
+			height: 1.5rem;
+			flex-shrink: 0;
 		}
 
 		&__info-icon {
-			flex-shrink: 0;
 			color: var(--nimble-dark-text-color);
-			font-size: var(--nimble-sm-text);
-			margin-top: 0.125rem;
+			font-size: 1rem;
 		}
 
 		&__info-text {
 			margin: 0;
 			font-size: var(--nimble-sm-text);
-			line-height: 1.4;
+			line-height: 1;
 			text-align: left;
 			color: var(--nimble-dark-text-color);
 		}

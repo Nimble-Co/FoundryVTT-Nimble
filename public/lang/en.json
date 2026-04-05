@@ -1216,7 +1216,9 @@
 			"progressionChooseFrom": "Choose from",
 			"progressionAvailableSubclasses": "Available Subclasses",
 			"progressionFeatureChoices": "Feature Choices",
-			"progressionLoading": "Loading progression data..."
+			"progressionLoading": "Loading progression data...",
+			"progressionEpicBoonLabel": "Epic Boon",
+			"progressionEpicBoon": "<strong>Epic Boon.</strong> Choose an Epic Boon."
 		},
 		"skillsConfig": {
 			"skill": "Skill",

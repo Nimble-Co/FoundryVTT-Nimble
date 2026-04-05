@@ -225,9 +225,12 @@ export default async function getClassFeaturesFromIndex(
 		featuresByGroup.get(groupName)!.push(featureItem);
 	}
 
-	// Categorize groups: names ending with -progression are auto-grant, others are selection
+	// Categorize groups:
+	// - Groups ending with -progression are always auto-grant
+	// - Groups with only 1 feature are auto-grant (no choice to make)
+	// - Groups with multiple features are selections
 	for (const [groupName, groupFeatures] of featuresByGroup) {
-		if (groupName.endsWith('-progression')) {
+		if (groupName.endsWith('-progression') || groupFeatures.length === 1) {
 			result.autoGrant.push(...groupFeatures);
 		} else {
 			result.selectionGroups.set(groupName, groupFeatures);
