@@ -101,6 +101,50 @@
 		event.stopPropagation();
 		onAddFeature(level, classIdentifier);
 	}
+
+	/**
+	 * Extracts the level-specific portion of a feature description.
+	 * Features often have a base description followed by level-specific upgrades like:
+	 * "<p>Base description...</p><hr><p>Level 4: Upgrade...</p><p>Level 6: Another upgrade...</p>"
+	 *
+	 * @param description - The full HTML description
+	 * @param currentLevel - The level being displayed
+	 * @param baseLevel - The level where the feature is first gained
+	 * @returns The relevant portion of the description for this level
+	 */
+	function getLevelSpecificDescription(
+		description: string,
+		currentLevel: number,
+		baseLevel: number,
+	): string {
+		if (!description) return '';
+
+		// If this is the base level, return everything before <hr> (or full description if no <hr>)
+		if (currentLevel === baseLevel) {
+			const hrIndex = description.indexOf('<hr');
+			if (hrIndex !== -1) {
+				return description.substring(0, hrIndex).trim();
+			}
+			return description;
+		}
+
+		// For upgrade levels, find the paragraph that starts with "Level {currentLevel}:"
+		// Match patterns like <p>Level 4: ..., <p>Level 4 : ..., etc.
+		const levelPattern = new RegExp(
+			`<p>\\s*Level\\s+${currentLevel}\\s*[:\\.]\\s*([^<]*(?:<(?!/p>)[^<]*)*)</p>`,
+			'i',
+		);
+		const match = description.match(levelPattern);
+
+		if (match) {
+			// Return just the content of the matching paragraph, wrapped in <p>
+			return `<p>${match[1].trim()}</p>`;
+		}
+
+		// Fallback: if no level-specific content found, return empty
+		// (the feature name itself already indicates what level it's for)
+		return '';
+	}
 </script>
 
 <article
@@ -241,6 +285,11 @@
 			<!-- Auto-granted features -->
 			{#if levelData.autoGrant.length > 0}
 				{#each levelData.autoGrant as feature (feature.uuid)}
+					{@const levelDescription = getLevelSpecificDescription(
+						feature.system?.description ?? '',
+						level,
+						feature.system?.gainedAtLevel ?? level,
+					)}
 					<div class="class-progression-level-row__feature">
 						<img src={feature.img} alt="" class="class-progression-level-row__feature-img" />
 						<div class="class-progression-level-row__feature-content">
@@ -252,9 +301,9 @@
 								<h4 class="class-progression-level-row__feature-name">{feature.name}</h4>
 								<i class="fa-solid fa-external-link class-progression-level-row__link-icon"></i>
 							</button>
-							{#if feature.system?.description}
+							{#if levelDescription}
 								<div class="class-progression-level-row__feature-desc">
-									{@html feature.system.description}
+									{@html levelDescription}
 								</div>
 							{/if}
 						</div>
