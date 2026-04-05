@@ -3,6 +3,9 @@
 .nova/
 .vs/
 
+# Local dev config (machine-specific overrides, not for the repo)
+vite.config.local.mts
+
 # Claude Code local files
 CLAUDE.local.md
 .claude/settings.local.json

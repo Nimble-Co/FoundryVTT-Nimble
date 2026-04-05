@@ -11,7 +11,7 @@ export function registerAdjacencySettings(): void {
 			scope: 'world',
 			config: true,
 			type: Boolean,
-			default: true,
+			default: false,
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 

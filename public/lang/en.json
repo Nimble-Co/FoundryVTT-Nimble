@@ -1393,7 +1393,7 @@
 			},
 			"autoTrackTokenAdjacency": {
 				"name": "Auto-Track Token Adjacency",
-				"hint": "When enabled, the system automatically tracks which combatants have the most adjacent enemies and makes that information available to rules."
+				"hint": "When enabled, the system automatically tracks the adjacency status of combatants."
 			},
 			"adjacencyIncludesDiagonals": {
 				"name": "Adjacency Includes Diagonals",
