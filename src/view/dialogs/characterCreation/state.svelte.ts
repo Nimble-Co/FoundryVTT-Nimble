@@ -21,14 +21,12 @@ import type {
 	StatArrayOption,
 } from './types.js';
 import { isRaisedByBackground } from './utils/backgroundChecks.js';
+import getGrantSpellSelectionRuleIds from './utils/getGrantSpellSelectionRuleIds.js';
+import hasSpellGrants from './utils/hasSpellGrants.js';
 import { processGrantSpellsRules } from './utils/processGrantSpellsRules.js';
-import {
-	getGrantSpellSelectionRuleIds,
-	hasSpellGrants,
-	removeConfirmedSchoolsForRuleIds,
-	removeSelectionsForRuleIds,
-	spellSelectionsComplete,
-} from './utils/spellHelpers.js';
+import removeConfirmedSchoolsForRuleIds from './utils/removeConfirmedSchoolsForRuleIds.js';
+import removeSelectionsForRuleIds from './utils/removeSelectionsForRuleIds.js';
+import spellSelectionsComplete from './utils/spellSelectionsComplete.js';
 
 // --- Internal helper functions ---
 
