@@ -1,0 +1,118 @@
+{
+	"name": "Resting & Downtime",
+	"pages": [
+		{
+			"_id": "tDb8Kp3Vcy71IMir",
+			"name": "Field Rests",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>While out adventuring, heroes can take Field Rests to regain HP.</p><h3>Catch Breath</h3><p>Requires at least 10 minutes to tend to your injuries. Expend any number of Hit Dice one at a time (roll them and add your STR to each), and regain that many HP.</p><h3>Make Camp</h3><p>If you rest for at least 8 hours with food and sleep, take the maximum value for each Hit Die you expend instead of rolling. Add your STR to each Hit Die as usual.</p><p><em>Note: If your STR is negative, subtract it from each HD you expend instead.</em></p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 100000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "ATqyZQc94c7JVLVR",
+			"name": "Safe Rests",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Safe Rests take place in a safe location designated by your GM — typically lodging at an inn overnight, but could also be at a secret oasis, a well-stocked cabin in the woods, near a sacred shrine, or similar. Camping in the open wilderness or in a dungeon is not sufficient for gaining the benefits of a Safe Rest.</p><p>After a Safe Rest, heroes recover:</p><ul><li>All of their HP</li><li>All Hit Dice</li><li>All mana (and other class-specific resources)</li><li>1 Wound healed</li></ul><p>Safe Rests are also a great opportunity for downtime activities.</p><h3>Lodging</h3><p>The cheapest rooms at an inn save you money but may lead to complications. Some inns may allow you to pay a premium for a nicer room and amenities, giving you a Temporary Boon. Typical prices (per person/day):</p><ul><li><strong>Poor:</strong> 5 sp</li><li><strong>Comfortable:</strong> 2 gp</li><li><strong>Lavish:</strong> 10 gp — allows players to gain one Temporary Boon the following day (see Lodging Boons table).</li></ul>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 200000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "nFamYWmTTUo8HnDF",
+			"name": "Downtime Activities",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>The time you aren't out adventuring is called <strong>Downtime</strong>. You can spend Downtime to recuperate from your adventures and partake in Downtime Activities. Not every moment of Downtime needs to be narrated or roleplayed — much Downtime can be skipped over to get back to adventuring if desired.</p><h3>Example Downtime Activities</h3><ul><li><strong>Retrain.</strong> Spend time doing activities to retrain any of your chosen abilities, features, or possibly even your subclass.</li><li><strong>Gather Information.</strong> Meet NPCs, pick up news, or collect rumors and job leads.</li><li><strong>Personal Goals.</strong> Pursue goals from your backstory or other smaller quests you've chosen.</li><li><strong>Buy &amp; Sell.</strong> Get new equipment, and sell treasures you've collected while out adventuring.</li><li><strong>Perform.</strong> Play music, tell stories, compete, or perform in public to earn gold or fame.</li><li><strong>Craft.</strong> Create weapons, armor, or simple items using materials you've acquired.</li><li><strong>Socialize.</strong> Build alliances, make new friends, or make new enemies.</li><li><strong>Invest.</strong> Use your gold to invest in businesses or trade ventures for future profit.</li><li><strong>Mentor.</strong> Teach a skill or ability to another character or NPC.</li><li><strong>Research.</strong> Investigate a mystery, study ancient texts, or uncover hidden knowledge.</li><li><strong>Serve.</strong> Aid a patron or a deity in exchange for a favor, or perform charity for townsfolk.</li><li><strong>Build.</strong> Establish a home base, start a business, craft siege weapons, or build anything else you can imagine (GM and setting-permitting).</li></ul>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 300000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	},
+	"_id": "ZDLldXZlTUPQdNW0"
+}
