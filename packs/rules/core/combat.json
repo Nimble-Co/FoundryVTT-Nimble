@@ -1,0 +1,152 @@
+{
+	"name": "Combat",
+	"pages": [
+		{
+			"_id": "88BfZWt1WsX6hQd0",
+			"name": "Actions",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>On your turn, heroes get <strong>3 actions</strong> to attack, move around the battlefield, cast spells, etc. Generally doing any single thing in combat costs 1 action. Some very strong spells or special abilities may cost more. All 3 actions recharge at the end of your turn.</p><h3>Attack</h3><p>Any spell or ability that can harm an enemy counts as an attack. Roll the die listed on the spell, weapon, or ability, and deal that much damage. If you roll a 1, you miss, and the attack has no effect. The leftmost die is the <strong>Primary Die</strong> — it determines whether the attack is a hit or a miss.</p><p><strong>Exploding Critical Hits.</strong> Rolling the max on a Primary Die is a critical hit (crit). When you crit, roll the Primary Die again and add the result to the total. Repeat each time you roll the maximum — there's no limit, except your luck! Crits also ignore monster armor.</p><p><strong>Rushed Attacks.</strong> A hero may attack more than once on their turn, but these additional attacks are rushed, imposing cumulative disadvantage for each additional attack after the first. For abilities that trigger a save (e.g. Grappling), enemies roll with increasing instances of advantage instead.</p><h3>Cast Spell</h3><p>Casting a spell requires a hero to have 1 hand free (or a held spellcasting focus), the ability to speak, and may require mana. A spell's mana cost is equal to its spell tier; cantrips cost no mana.</p><p><strong>Upcasting Spells.</strong> Some spells have a greater effect for each additional mana spent. A hero can upcast a spell only up to the tier they have unlocked.</p><h3>Move</h3><p>A character can move up to their speed (6 spaces, unless otherwise noted). This movement can be broken up with other actions if desired, and a hero can use multiple Move actions on one turn. When in Difficult Terrain, movement speed is halved. Moving on a climbable surface counts as Difficult Terrain.</p><h3>Assess</h3><p>Choose one of the following and make a DC 12 skill check to:</p><ul><li><strong>Ask a Question.</strong> About a weakness, ability, or immediate plans of enemies, the environment, story, etc. The GM will answer honestly.</li><li><strong>Create an Opening.</strong> Increase the next Primary Die Roll against a target by 1 this round.</li><li><strong>Anticipate Danger.</strong> Reduce all Primary Dice rolled against you by 1 this round.</li></ul><p>You cannot assess using the same skill more than once in a single encounter, as your foes adapt to your tactics.</p><h3>Free Actions</h3><p>Simple tasks (open an unlocked door, shout a simple phrase, drop an item, end concentration, etc.) do not cost an action. Heroes can perform one free action per turn.</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 100000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "D7MGafOpszttWdhz",
+			"name": "Reactions",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Reactions cost 1 action and are performed when it is not your turn. A hero can perform each reaction no more than 1/round, and they will start their turn with fewer actions.</p><h3>Defend</h3><p>Reduce damage from any single attack by your Armor whenever you use this reaction. At the GM's discretion, some damage may not be avoidable (e.g., psychic damage or some areas of effect).</p><h3>Interpose</h3><p>If a creature within 2 spaces would be struck with an attack, you can push them out of the way and become the new target of the attack. You enter their space and move them to an adjacent space of your choice.</p><p><em>Interpose AND Defend? Yes! As long as you have enough actions, you can Interpose and Defend at the same time.</em></p><h3>Opportunity Attack</h3><p>A melee attack made with disadvantage against an adjacent enemy as it willingly moves away. Monsters do not make opportunity attacks — only heroes can.</p><h3>Help</h3><p>Grant an ally advantage on a roll if you can reasonably explain to the GM how you could help in a given situation (limit: one Help reaction for each roll). The GM may call for a skill check or grant advantage automatically, depending on how good the idea is.</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 200000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "DbMyP7nSle3oP1CA",
+			"name": "Starting Combat & Turn Order",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<h2>Starting Combat</h2><p>A combat encounter begins when the GM tells the party to \"Roll Initiative!\" Each hero rolls 1d20 and adds their Initiative bonus (typically their DEX):</p><ul><li>A single digit: start combat with 1 action.</li><li>2 digits: start combat with 2 actions.</li><li>20+ (or a natural 20): start combat with all 3 actions.</li></ul><p>Regardless of Initiative, at the end of their turn every hero gains all 3 actions back.</p><p><strong>Surprise.</strong> If the party maneuvers so adeptly that their enemy is completely caught off guard, the GM may grant advantage on Initiative, or allow each hero to start with all 3 actions. Merely being hidden or punching first is not sufficient to gain Surprise — if an enemy is on guard or at all aware of your presence, they cannot be surprised. Heroes who are surprised may roll with disadvantage or start with only 1 action.</p><h2>Turn Order</h2><p>By default, the heroes go first. Whichever player is ready first goes first (or whoever makes the most sense story-wise), with play proceeding around the table clockwise. Monsters typically act last, though some may be fast enough to act sooner. A monster group should act at the same time each round.</p><h2>Turns, Rounds &amp; Encounters</h2><ul><li>A <strong>Turn</strong> is when 1 individual hero or monster group acts (roughly 6 seconds of in-world time).</li><li>A <strong>Round</strong> is when all players and monsters have taken a turn.</li><li>An <strong>Encounter</strong> is all of the rounds in a particular combat.</li></ul><p><strong>1/Turn Abilities:</strong> If you perform one on your turn, and can find a way to perform it on another creature's turn, you can do it again.</p><p><strong>1/Round Abilities:</strong> These reset whenever your own turn begins.</p><h2>Acting Over Multiple Turns</h2><p>For activities that cost more than 1 action, your actions can be spent over multiple turns in combat as long as Concentration is maintained and you do not perform other actions or reactions in the meantime (unless they are free).</p><p><em>Example: A Mage wants to cast Glacier Strike (3 actions) but only has 1 action left. She spends 1 action this turn to start casting, then spends 2 more on her next turn to finish.</em></p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 300000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "ri8qPrrkrXS14BOS",
+			"name": "Monsters & Minions",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<h2>Monster Armor</h2><p>Most monsters are unarmored, but some tougher foes might have:</p><ul><li><strong>Medium Armor:</strong> They take damage from only the dice rolled, ignoring all damage modifiers (unless negative).</li><li><strong>Heavy Armor:</strong> They take only half the damage from the dice, likewise ignoring damage modifiers.</li></ul><p>Crits and damage vulnerabilities ignore monster armor.</p><p>This means different heroes and different weapons, spells, and abilities will be more or less effective against various kinds of armor.</p><h2>Minions</h2><p>Minions are weak enemies that will die from any amount of damage. They move and attack at the same time, cannot crit, and their feeble attacks can be Defended against as if they were a single attack. Dealing a large amount of damage to a minion can (at the GM's discretion) overflow to other minions within range.</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 400000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	},
+	"_id": "7oaOqkg5Sp05mR2s"
+}

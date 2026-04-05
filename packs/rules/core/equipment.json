@@ -1,0 +1,186 @@
+{
+	"name": "Equipment",
+	"pages": [
+		{
+			"_id": "5k379xcPg8Zsysjl",
+			"name": "Armor",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Armor represents your hero's ability to dodge or block damage when you use the Defend reaction. While unarmored or wearing regular clothes, your Armor is equal to your DEX. Some items may grant additional Armor while equipped.</p><p><strong>Equipment Proficiency.</strong> Heroes can use any equipment they like; however, each class has a list of weapons and armor types they are most skilled with. Weapons used without proficiency cannot crit. Defending while wearing armor worn without proficiency costs 1 additional action.</p><p><strong>Swapping Equipment.</strong> A hero can sheathe weapons or shields they are proficient with and equip a different one for free 1/round.</p><table><thead><tr><th>Armor</th><th>Armor Value</th><th>Cost</th></tr></thead><tbody><tr><td colspan=\"3\"><strong>Cloth</strong></td></tr><tr><td>Adventurer's Garb</td><td>2+DEX</td><td>10 gp</td></tr><tr><td>Minor Enchantment</td><td>3+DEX</td><td>100 gp</td></tr><tr><td>Major Enchantment</td><td>4+DEX</td><td>1,000 gp</td></tr><tr><td>Epic Enchantment</td><td>5+DEX</td><td>10,000 gp</td></tr><tr><td colspan=\"3\"><strong>Leather</strong></td></tr><tr><td>Cheap Hides</td><td>3+DEX</td><td>5 gp</td></tr><tr><td>Ox Hide</td><td>4+DEX</td><td>45 gp</td></tr><tr><td>Hard Leather (Req. 1 STR)</td><td>5+DEX</td><td>300 gp</td></tr><tr><td>Wyrmhide (Req. 1 STR)</td><td>6+DEX</td><td>2,000 gp</td></tr><tr><td colspan=\"3\"><strong>Mail</strong></td></tr><tr><td>Rusty Mail</td><td>6+DEX (max 2)</td><td>15 gp</td></tr><tr><td>Chain Shirt (Req. 2 STR)</td><td>9+DEX (max 2)</td><td>60 gp</td></tr><tr><td>Scale Mail (Req. 3 STR)</td><td>12+DEX (max 2)</td><td>700 gp</td></tr><tr><td>Dragonscale (Req. 4 STR)</td><td>15+DEX (max 2)</td><td>3,000 gp</td></tr><tr><td colspan=\"3\"><strong>Plate</strong></td></tr><tr><td>Rusty Plate (Req. 2 STR)</td><td>10</td><td>25 gp</td></tr><tr><td>Half Plate (Req. 3 STR)</td><td>14</td><td>200 gp</td></tr><tr><td>Full Plate (Req. 4 STR)</td><td>18</td><td>2,000 gp</td></tr><tr><td>Mithril Plate (Req. 5 STR)</td><td>22</td><td>5,000 gp</td></tr><tr><td colspan=\"3\"><strong>Shields</strong></td></tr><tr><td>Wooden Buckler</td><td>2</td><td>5 gp</td></tr><tr><td>Iron Shield (Req. 2 STR)</td><td>4</td><td>80 gp</td></tr><tr><td>Tower Shield (Req. 3 STR)</td><td>6</td><td>1,500 gp</td></tr><tr><td>Dragon Shield (Req. 3 STR)</td><td>8</td><td>9,000 gp</td></tr></tbody></table><blockquote><p><strong>Deflect (Optional):</strong> Instead of adding your shield's armor to your total armor as normal, you may reduce the damage of an attack by your shield's armor value for free 1/round.</p></blockquote>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 100000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "koxqzkVhtXOYLWkY",
+			"name": "Weapons",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<h2>Weapon Properties</h2><ul><li><strong>2-handed.</strong> Can be held in a single hand, but must be wielded in 2 hands to attack with it.</li><li><strong>Load.</strong> Some weapons require extra actions to load before each shot.</li><li><strong>Reach X.</strong> How close an enemy must be to be affected by this attack. Default: Reach 1.</li><li><strong>Range X.</strong> Attacks can be made from afar. If any enemy is adjacent to you, Ranged attacks are made with disadvantage. Add 1 die of disadvantage to gain +2 Range.</li><li><strong>Thrown.</strong> Treat a melee weapon as if it had Range. Once thrown, you no longer have it!</li><li><strong>Vicious.</strong> Roll 1 additional die whenever you roll crit damage.</li></ul><h2>Melee Weapons</h2><table><thead><tr><th>Item</th><th>Damage</th><th>Properties</th><th>Cost</th></tr></thead><tbody><tr><td>Dagger</td><td>1d4+DEX Piercing</td><td>Light, Thrown 4</td><td>3 gp</td></tr><tr><td>Sickle</td><td>1d4+DEX Slashing</td><td>Vicious</td><td>10 gp</td></tr><tr><td>Club/Mace</td><td>1d6+STR Bludgeoning</td><td>—</td><td>2 gp</td></tr><tr><td>Hand Axe</td><td>1d6+STR Slashing</td><td>Thrown 4</td><td>8 gp</td></tr><tr><td>Short Sword</td><td>1d6+DEX Piercing</td><td>Light</td><td>10 gp</td></tr><tr><td>Rapier</td><td>2d4+DEX Piercing</td><td>—</td><td>60 gp</td></tr><tr><td>Staff</td><td>1d8+STR Bludgeoning</td><td>2-handed</td><td>8 gp</td></tr><tr><td>Longsword</td><td>1d8+STR Slashing</td><td>2-handed (1-handed: Req. 2 STR)</td><td>60 gp</td></tr><tr><td>Battleaxe</td><td>1d10+STR Slashing</td><td>2-handed</td><td>30 gp</td></tr><tr><td>Pole Hammer</td><td>1d10+STR Bludgeoning</td><td>2-handed, Reach 2</td><td>60 gp</td></tr><tr><td>Glaive</td><td>1d10+STR Slashing</td><td>2-handed, Reach 2</td><td>60 gp</td></tr><tr><td>Spear</td><td>1d10+STR Piercing</td><td>2-handed, Reach 2</td><td>60 gp</td></tr><tr><td>Greatmaul</td><td>1d12+STR Bludgeoning</td><td>2-handed (Req. 2 STR)</td><td>80 gp</td></tr><tr><td>Greataxe</td><td>2d6+STR Slashing</td><td>2-handed (Req. 2 STR)</td><td>100 gp</td></tr><tr><td>Greatsword</td><td>3d4+STR Slashing/Piercing</td><td>2-handed (Req. 2 STR)</td><td>120 gp</td></tr><tr><td>Unarmed</td><td>1d4 (on hit: 1+STR)</td><td>—</td><td>—</td></tr></tbody></table><h2>Ranged Weapons</h2><table><thead><tr><th>Item</th><th>Damage</th><th>Properties</th><th>Cost</th></tr></thead><tbody><tr><td>Sling</td><td>1d4+DEX Bludgeoning</td><td>2-handed, Range 12, Vicious</td><td>4 gp</td></tr><tr><td>Javelins</td><td>1d6+STR Piercing</td><td>Range 8, Stack of 4</td><td>20 gp</td></tr><tr><td>Throwing Hammers</td><td>1d8+STR Bludgeoning</td><td>Range 4, Stack of 3</td><td>25 gp</td></tr><tr><td>Shortbow</td><td>1d6+DEX Piercing</td><td>2-handed, Range 12</td><td>25 gp</td></tr><tr><td>Longbow</td><td>1d8+DEX Piercing</td><td>2-handed, Range 16 (Req. 1 STR)</td><td>30 gp</td></tr><tr><td>Crossbow</td><td>4d4+DEX Piercing</td><td>2-handed, Load: 1 action, Range 8</td><td>60 gp</td></tr><tr><td>Handheld Ballista</td><td>1d20+DEX Piercing</td><td>2-handed, Load: 2 actions, Range 8 (Req. 2 STR)</td><td>120 gp</td></tr></tbody></table><h2>Dual Wielding</h2><p>Heroes may wield 2 Light weapons at the same time. While dual wielding, you may gain advantage on an attack with those weapons, 1/round.</p><p>You may dual wield 1-handed weapons without the Light property if your STR is 3 or greater, or 1 weapon without the Light property if your STR is 2. If completely unarmed, fists/feet can be considered dual wielded.</p><p>Dual wielding different weapons? Roll dice for both weapons and choose either result (the 1/round limit still applies).</p><h2>Customizing Weapons</h2><p>Can you reflavor a staff as a greatclub? Sure! A sai instead of a dagger? Of course! Could you pay a blacksmith to make your 1d12 Greatmaul deal 2d6 or 3d4 damage instead? Since the dice all add up to 12, it won't break the game — ask your GM!</p><h2>Improvised Weapons</h2><p>Using an improvised weapon (a chair, a frying pan, a big rock), default to 1d4+STR or 1d6+STR. Your GM may allow you to use bigger dice or other properties if it makes sense. An improvised weapon may break if it lands a crit.</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 200000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "WeKK6oE6UUrcNQ1T",
+			"name": "Adventuring Equipment",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<h2>Key Equipment</h2><h3>Healing Potions</h3><p>Healing potions are deep, shimmering red elixirs. Potions require one action to drink or to administer to an adjacent willing creature. Small towns may have only a few; cities offer more (but not in unlimited supply).</p><table><thead><tr><th>Item</th><th>Effect</th><th>Cost</th></tr></thead><tbody><tr><td>Healing Potion</td><td>Heal 2d4+4 HP</td><td>50 gp</td></tr><tr><td>Greater Healing Potion</td><td>Heal 3d6+6 HP</td><td>150 gp</td></tr><tr><td>Supreme Healing Potion</td><td>Heal 4d8+8 HP</td><td>450 gp</td></tr></tbody></table><h3>Torches &amp; Lanterns</h3><p>Heroes cannot typically see in the dark — fighting in the dark imposes the Blinded condition. A torch typically lasts for 1 dungeon. A lantern with oil can typically last for 1 entire outing. Torches and lanterns cast light up to 6 spaces away.</p><h3>Currency</h3><p>Currency is made up of Silver (sp) and Gold pieces (gp). 10 silver = 1 gold. 1 sp is roughly the cost of a humble meal; 1 gp, a sumptuous feast. Most small towns will have equipment and items worth 50 gp or less.</p><h2>Misc Adventuring Equipment</h2><table><thead><tr><th>Item</th><th>Notes</th><th>Cost</th></tr></thead><tbody><tr><td>Torch (stack of 2)</td><td>For when it's dark</td><td>5 sp</td></tr><tr><td>Lantern &amp; Oil</td><td>Like a torch, but refillable (refill: 1 gp)</td><td>10 gp</td></tr><tr><td>Rope (50 ft.)</td><td>You always need rope</td><td>10 gp</td></tr><tr><td>Vial of Pitch</td><td>Sticky, and VERY flammable</td><td>2 gp</td></tr><tr><td>Grappling Hook</td><td>For climbing or catching BIG fish</td><td>4 gp</td></tr><tr><td>Lock Pick</td><td>It's not mine, honest!</td><td>5 gp</td></tr><tr><td>Hunting Trap</td><td>Snap snap, don't lose a finger!</td><td>10 gp</td></tr><tr><td>Camping Supplies</td><td>Bedroll, rations, simple tent</td><td>5 gp</td></tr><tr><td>Quiver &amp; Ammo</td><td>Don't leave home without it</td><td>10 gp</td></tr><tr><td>Manacles</td><td>For when someone has been bad</td><td>3 gp</td></tr><tr><td>Chain (10 ft.)</td><td>Like rope, but stronger (and heavy)</td><td>50 gp</td></tr><tr><td>Crowbar</td><td>It's LIKE a key</td><td>2 gp</td></tr><tr><td>Shovel</td><td>Sometimes you need a hole dug</td><td>3 gp</td></tr><tr><td>Magnifying Glass</td><td>Make the small, big</td><td>5 gp</td></tr><tr><td>Telescope</td><td>Arrr</td><td>10 gp</td></tr><tr><td>Mirror</td><td>For medusas AND spinach teeth</td><td>4 gp</td></tr><tr><td>Instrument</td><td>Drums, Horn, Lyre, Flute, etc.</td><td>5–50 gp</td></tr></tbody></table><p><em>Note: These are not all of the items available — merely a sampling. If you can think of it, you can likely buy it!</em></p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 300000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "AvMvxtWjZnHnUWfZ",
+			"name": "Magical Items",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Though some magical items can be purchased, most cannot. Some special shops may have a very small selection, but more typically these powerful items are acquired through adventuring.</p><table><thead><tr><th>Rarity</th><th>Typical Levels</th><th>Typical Cost</th></tr></thead><tbody><tr><td>Uncommon</td><td>Levels 2–6</td><td>50–500+ gp</td></tr><tr><td>Rare</td><td>Levels 5–12</td><td>500–5,000+ gp</td></tr><tr><td>Very Rare</td><td>Levels 8–18</td><td>5,000–500,000+ gp</td></tr><tr><td>Legendary</td><td>Levels 15–20</td><td>1,000,000+ gp or Priceless</td></tr></tbody></table><h3>Sample Magical Items</h3><p><strong>Weapon of Many Hands (Rarity varies).</strong> While equipped, this weapon grants the wearer additional arms. The wearer can use the extra arms to perform any task their normal hands can do but does not allow performing actions any faster. A weapon that grants 1 extra hand is likely Uncommon; 4 extra hands, Legendary.</p><p><strong>Weapon of Animosity (Rarity varies).</strong> Whenever you attack with this weapon, roll an additional animosity die. The weapon deals that much additional damage to your target on a hit. Whenever this weapon misses, you take that damage instead. A weapon adding 1d4 is likely Uncommon; 1d10 or greater, Legendary.</p><p><strong>Weapon of Slaying (Rarity varies).</strong> Whenever you attack with this weapon, it deals an additional die of damage against a particular creature type. Those creatures may try to kill you first.</p><p><strong>Weapon of Wounding (Uncommon).</strong> When you land a hit, you may suffer 1d6 damage to deal twice that much additional damage to your target.</p><p><strong>Gnatbane Weapon (Uncommon).</strong> Does not miss Small or Tiny creatures.</p><p><strong>Trinket of Ill Omen (Rare).</strong> While equipped, you have –1 to saves you roll and +1 to your save DC.</p><p><strong>Mindlink Daggers (Rare).</strong> A matched pair of slender, silver daggers with intertwining runes. Enables the sharing of thoughts between any who holds (or is stabbed by) one.</p><p><strong>Bloodstained Quill (Uncommon).</strong> If you dip this quill into the blood of a dead intelligent creature, the quill animates and writes the last words spoken by that creature.</p><p><strong>Pocket Cauldron (Rare).</strong> While Safe Resting, use this to brew your choice of 1 potion, to be consumed immediately: Elixir of Futuresight, Elixir of Requiem, or (once every 100 years) Elixir of Time.</p><p><strong>Grim Coronet (Rare).</strong> When you would die while wearing this crown, gain 3 actions and take a turn immediately. You die at the end of your turn.</p><p><strong>Key of Doors (Very Rare).</strong> Insert this key into any locked door to open it — not to the room beyond, but to any doorway you've previously walked through while holding this item.</p><p><strong>Button of Protection (Rare).</strong> When attacked, pull the button off and throw it into the air. The attacker must make a WIL save or be distracted, causing the attack to miss you. After use, the button becomes inert until a seamstress sews it back on during a Safe Rest.</p><p><strong>Eyes of the Street (Uncommon).</strong> While wearing these goggles, you can look at a rat or pigeon to see and hear through its senses for 10 minutes. After use, you must whisper a secret to the goggles before you can use them again.</p><p><strong>Skitter Shoes (Rare).</strong> While wearing these shoes, you can walk on vertical surfaces or ceilings as if they were flat ground, at half normal Speed.</p><p><strong>Handwraps of Force (Rare).</strong> Whenever you make an unarmed strike, you may push your target up to 2 spaces and yourself the same distance in the opposite direction.</p><p><strong>Resolute Fangs, Golden Bastion (Legendary Shield).</strong> +8 Armor. Reaction: When you reduce damage from a melee attack with this shield, it may Grapple the attacker regardless of its size (escape DC 20 STR, max 1 creature). Action: Speak this shield's command word to make it immovable, fixed in place, until it is spoken again.</p><p><strong>Phoenix Helm (Legendary).</strong> If you die while wearing this golden helm, your body explodes in flames and hot ash. You rise anew from the ashes...</p>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 400000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "NAiNRaAhDg2fiuCD",
+			"name": "Spell Scrolls & Wands",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<h2>Spell Scrolls</h2><p>Spell scrolls are single-use inscribed magical spells. Casting a spell with a spell scroll does not cost mana, nor does it require magical ability. Anyone who can read the language the scroll is written in can utilize it. Reading one aloud takes the same number of actions the spell normally takes and consumes the scroll.</p><p>A character must succeed on a DC 10 Arcana check to cast it successfully if they do not already know a spell from that school; on a failure, it is wasted.</p><table><thead><tr><th>Spell Tier</th><th>Cost</th><th>Spell Tier</th><th>Cost</th></tr></thead><tbody><tr><td>Cantrip</td><td>10 gp</td><td>Tier 5</td><td>3,000 gp</td></tr><tr><td>Tier 1</td><td>35 gp</td><td>Tier 6</td><td>10,000 gp</td></tr><tr><td>Tier 2</td><td>100 gp</td><td>Tier 7</td><td>25,000+ gp</td></tr><tr><td>Tier 3</td><td>300 gp</td><td>Tier 8</td><td>75,000+ gp</td></tr><tr><td>Tier 4</td><td>1,000 gp</td><td>Tier 9</td><td>200,000+ gp</td></tr></tbody></table><h2>Wands</h2><p>Like spell scrolls, wands can be used to cast spells without consuming mana and do not require magical ability. Unlike spell scrolls, wands can be recharged and used again. Characters proficient with wands can use one from any spell school, spending only the normal number of actions to cast the spell.</p><p>Characters not proficient with wands must succeed on a DC 10+spell tier Arcana check to successfully cast the spell. Success or failure, the charge is spent.</p><table><thead><tr><th>Spell Tier</th><th>Cost</th><th>Spell Tier</th><th>Cost</th></tr></thead><tbody><tr><td>Cantrip</td><td>50 gp</td><td>Tier 5</td><td>15,000 gp</td></tr><tr><td>Tier 1</td><td>175 gp</td><td>Tier 6</td><td>50,000 gp</td></tr><tr><td>Tier 2</td><td>500 gp</td><td>Tier 7</td><td>125,000+ gp</td></tr><tr><td>Tier 3</td><td>1,500 gp</td><td>Tier 8</td><td>375,000+ gp</td></tr><tr><td>Tier 4</td><td>5,000 gp</td><td>Tier 9</td><td>1,000,000+ gp</td></tr></tbody></table><h3>Example Wands</h3><ul><li><strong>Wand of Barrier of Wind</strong> — Uncommon, Cantrip (3 charges). Recharge: Heat in a blacksmith's forge until it glows, then quench it in oil.</li><li><strong>Wand of Dread Visage</strong> — Uncommon, Tier 2 (2 charges). Recharge: Place in a freshly slain corpse. Leave it until only bones remain.</li><li><strong>Wand of Fly</strong> — Rare, Tier 2 (3 charges). Recharge: Hang with wind chimes in a breezy area. Let it ring for 3 days.</li><li><strong>Wand of Firestep</strong> — Very Rare, Tier 6 (1 charge). Recharge: Plant it in a new garden, leave it undisturbed until the flowers bloom.</li><li><strong>Wand of Ride the Lightning</strong> — Very Rare, Tier 6 (2 charges). Recharge: Place at the highest point within 1 mile. Retrieve after 3 thunderstorms.</li><li><strong>Wand of Glacier Strike</strong> — Very Rare, Tier 8 (1 charge). Recharge: Leave the wand at the bottom of a lake until it freezes over and thaws naturally.</li><li><strong>Elderwyrm's Majesty</strong> — Legendary, Tier 9 (1 charge). Casts Dragonform, turning into the type of dragon that last charged it. Recharge: Give an ancient dragon a gift it truly desires.</li><li><strong>Heartwood, Splinter of the Tree of Life</strong> — Legendary, Tier 9 (1 charge). Cast Redeem with no required components. Recharge: A sacred hymn must be sung over it ceaselessly for 100 years.</li></ul>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 500000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	},
+	"_id": "Oz9KSXS5xNFbsx3l"
+}

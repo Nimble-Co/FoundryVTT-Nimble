@@ -1,0 +1,152 @@
+{
+	"name": "Ancestry & Background",
+	"pages": [
+		{
+			"_id": "mzrt9y9sXaFrXrxh",
+			"name": "Common Ancestries",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Your kin, lineage, heritage, or race — this is how your character was born and how others see you at first glance. Choose 1 ancestry and add its bonus to your character sheet.</p><h3>Human (Medium)</h3><p>Found in every terrain and environment, their curiosity and ambition drive them to explore every corner of the world, making them a ubiquitous and versatile race.</p><p><strong>Tenacious.</strong> +1 to all skills and Initiative.</p><h3>Dwarf (Medium)</h3><p>You are resilient, solid, stout. Even when driven to exhaustion, you will not falter.</p><p><strong>Stout.</strong> +2 max Hit Dice, +1 max Wounds, –1 Speed. You know Dwarvish if your INT is not negative.</p><h3>Elf (Medium)</h3><p>Elves epitomize swiftness and grace. Formidable in both diplomacy and combat, elves strike swiftly, often preventing the worst by acting first.</p><p><strong>Lithe.</strong> Advantage on Initiative, +1 Speed. You know Elvish if your INT is not negative.</p><blockquote><p><strong>What About Half-Elves?</strong> Mix the ancestries however makes sense in your world. You can pick one ancestral bonus and use it instead of both, or use both half as effectively or half as often.</p></blockquote><h3>Halfling (Small)</h3><p>Kind of like a human, but smaller (except for the feet). Where does our luck come from?</p><p><strong>Elusive.</strong> +1 to Stealth. If you fail a save, you can succeed instead, 1/Safe Rest.</p><h3>Gnome (Small)</h3><p>Eccentric, curious, and perpetually optimistic, gnomes are cheerful. Known for their tinkering, spreading cheer, and playful antics.</p><p><strong>Optimistic.</strong> Allow an ally within Reach 6 to reroll any single die, resets when healed to your max HP. –1 Speed. You know Dwarvish if your INT is not negative.</p><blockquote><p><strong>Flavor Is Free.</strong> Want to play a Stout Halfling instead of an Elusive one? An Optimistic Human instead of Tenacious? As long as it makes sense and the GM is on board, go for it!</p></blockquote>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 100000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "i4G3OeWVPcQuIhbL",
+			"name": "Exotic Ancestries",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p><em>Your setting may or may not support these choices — check with your GM first before selecting one.</em></p><h3>Birdfolk (Small or Medium)</h3><p>Birdfolk find sanctuary in the boundless expanse of the sky. However, the gift of flight comes at a cost — hollow bones, and commensurate frailty.</p><p><strong>Hollow Bones.</strong> You have a fly Speed as long as you are wearing armor no heavier than Leather. Crits against you are Vicious (the attacker rolls 1 additional die). Forced movement moves you twice as far.</p><h3>Bunbun (Small)</h3><p>Bunbun are agile and unpredictable, using their powerful legs to leap great distances and catch foes off guard.</p><p><strong>Bunny Legs.</strong> Before Interposing or after Defending (after damage), hop up to your Speed in any direction for free, 1/encounter.</p><h3>Celestial (Medium)</h3><p>Descendants of divine beings, Celestials carry an aura of nobility and grace.</p><p><strong>Highborn.</strong> Your disadvantaged save is Neutral instead. You know Celestial if your INT isn't negative.</p><h3>Changeling (Medium)</h3><p>Often hunted for their silver blood, Changelings are natural survivors, slipping into new identities with ease.</p><p><strong>New Place, New Face.</strong> +2 shifting skill points. You may take on the appearance of any ancestry. When you do, place your 2 shifting skill points into any 1 skill. 1/day.</p><h3>Crystalborn (Medium)</h3><p>Formed from living crystal, the Crystalborn are beings of dazzling beauty and otherworldly toughness.</p><p><strong>Reflective Aura.</strong> When you Defend, gain KEY armor and deal KEY damage back to the attacker. 1/encounter.</p><h3>Dragonborn (Medium)</h3><p>The soul of a dragon burns within you, the scales of your body are like forged steel.</p><p><strong>Draconic Heritage.</strong> +1 Armor. When you attack: deal an additional LVL+KEY damage (ignoring armor) divided as you choose among any of your targets; recharges whenever you Safe Rest or gain a Wound. You know Draconic if your INT is not negative.</p><h3>Dryad/Shroomling (Small or Medium)</h3><p>Tied to the natural world, Dryads and Shroomlings embody the balance between flora and fauna.</p><p><strong>Danger Pollen/Spores.</strong> Whenever an enemy causes you one or more Wounds, you excrete soporic spores: all adjacent enemies are Dazed. You know Elvish if your INT is not negative.</p><h3>Fiendkin (Medium)</h3><p>Said to have been born from the union of man and fiend, or from a cursed bloodline. Their ancestors didn't emerge from the depths of the Everflame to succumb to minor setbacks!</p><p><strong>Flameborn.</strong> 1 of your neutral saves is advantaged instead. You know Infernal if your INT is not negative.</p><h3>Goblin (Small)</h3><p>Green, cunning, and perpetually vilified, Goblins thrive on the edge of chaos.</p><p><strong>Skedaddle.</strong> Can move 2 spaces for free after you become the target of an attack or negative effect (after damage, ignoring difficult terrain). You know Goblin if your INT is not negative.</p><h3>Half-Giant (Large)</h3><p>Towering beings whose strength is as immovable as the mountains they call home.</p><p><strong>Strength of Stone.</strong> Force an enemy to reroll a crit against you, 1/encounter. +2 Might. You know Dwarvish if your INT is not negative.</p><h3>Kobold (Small)</h3><p>Small, often maniacal, and dragon-obsessed. Kobolds prove time and again that even the smallest among us can wield great power.</p><p><strong>Wily.</strong> Force an enemy to reroll a non-critical attack against you, 1/encounter. +3 to Influence friendly characters. Advantage on skill checks related to dragons. You know Draconic if your INT is not negative.</p><h3>Minotaur/Beastfolk (Medium)</h3><p>Embody a primal connection to The Wild, combining strength with natural agility.</p><p><strong>Charge.</strong> When you move at least 4 spaces, you can push a creature in your path. Medium: 1 space; Small/Tiny: up to 2 spaces. 1/turn.</p><h3>Oozeling/Construct (Small or Medium)</h3><p>What even is a \"people\" anyway? If you can squish yourself into a pair of pants, or swing a sword like everyone else, who's to say you can't be a people, too?</p><p><strong>Odd Constitution.</strong> Increment your Hit Dice one step (d6 &raquo; d8 &raquo; d10 &raquo; d12 &raquo; d20); they always heal you for the maximum amount. Magical healing always heals you for the minimum amount.</p><h3>Orc (Medium)</h3><p>Just when you think you've bested a mighty Orc, you've merely succeeded in rousing their anger.</p><p><strong>Relentless.</strong> When you would drop to 0 HP, you may set your HP to LVL instead, 1/Safe Rest. +1 Might. You know Goblin if your INT is not negative.</p><h3>Planarbeing (Medium)</h3><p>You are not from this plane of existence. With vulnerability comes power — the ability to temporarily shift from one plane to another.</p><p><strong>Planeshift.</strong> Whenever you Defend, you can gain 1 Wound to temporarily phase out of the material plane and ignore the damage. –2 max Wounds.</p><h3>Ratfolk (Small)</h3><p>Agile, resourceful, and fiercely loyal to their own, they have a knack for turning scraps into solutions.</p><p><strong>Scurry.</strong> Gain +2 armor if you moved on your last turn.</p><h3>Stoatling (Small)</h3><p>Fierce determination and warrior hearts. They can take down foes many times their size.</p><p><strong>Small But Ferocious.</strong> Whenever you make a single-target attack against a creature larger than you, roll 1 additional d6 for each size category it is larger. They do the same.</p><h3>Turtlefolk (Small or Medium)</h3><p>Patient, sturdy, and slow to anger. They rely on their thick shells for protection.</p><p><strong>Slow &amp; Steady.</strong> +4 Armor, –2 speed.</p><h3>Wyrdling (Small)</h3><p>Unpredictable and chaotic, the result of magic gone awry. Their bodies pulse with raw arcane energy.</p><p><strong>Chaotic Surge.</strong> Whenever you or a willing ally within Reach 6 casts a tiered spell, you may allow them to roll on the Chaos Table. 1/encounter.</p><blockquote><p><strong>Flavor Is Free.</strong> Want to be a leaping Frogfolk instead of a Bunbun? A Flameborn Kobold? A winged Fairy instead of a Birdfolk? As long as it makes sense and your GM is game, go for it!</p></blockquote>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 200000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "4zN2esPXpwdyu5vY",
+			"name": "Backgrounds",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>Backgrounds provide a glimpse into your character's past — how they were raised, the skills they honed before becoming an adventurer, or their defining personality traits. Feel free to adapt or reimagine these to suit your character's story. Choose 1 background.</p><ul><li><strong>Academy Dropout.</strong> Learn any 1 Utility Spell.</li><li><strong>Accidental Acrobat.</strong> (Req. 0 or negative DEX at creation.) Whenever you fail a DEX-related roll, you may roll again. If you still fail, the consequences are BAD.</li><li><strong>Acrobat.</strong> Can be thrown by a larger ally, REALLY far. Half damage from falling and forced movement.</li><li><strong>At Home Underground.</strong> You can dig twice as fast as others. Safe resting locations underground always count as Lavish lodging for you. You struggle to rest (INT save) while it's raining.</li><li><strong>Back Out of Retirement.</strong> You may gain 1 Wound to use an ability or cast a spell as if you were 1 level higher. –1 max Wounds.</li><li><strong>Bumblewise.</strong> (Req. 0 or negative WIL at creation.) A result of 1 or less on any WIL-related roll counts as a natural 20.</li><li><strong>Devoted Protector.</strong> Choose 1 ally in your party. You can survive +3 max Wounds as long as they are nearby. Whenever they take a Wound, you do too.</li><li><strong>Ear to the Ground.</strong> Advantage on checks to know or obtain gossip for events that will soon happen or have happened less than 1 year ago.</li><li><strong>Fearless.</strong> You are immune to the Frightened condition. +1 Initiative. –1 Armor.</li><li><strong>Fey Touched.</strong> You take half damage from all magical effects, double from weapons made of metal (before armor is applied).</li><li><strong>(Former) Con Artist.</strong> You can forge most documents or mimic voices flawlessly. You have a criminal contact in most major cities. However, your reputation often precedes you.</li><li><strong>Haunted Past.</strong> You are haunted by voices that occasionally give you cryptic advice — sometimes VERY helpful, sometimes wanting to see you suffer. Advantage against fear.</li><li><strong>History Buff.</strong> Advantage on all Lore checks related to knowledge about items, facts, or events that happened more than 100 years ago.</li><li><strong>Home at Sea.</strong> Recover twice as many Wounds and HP while resting on a ship or near water. Advantage on water-related skill checks.</li><li><strong>Made a BAD Choice.</strong> Start with 500 or 1000 extra gold, or an uncommon/rare magical item. Gain an equally powerful curse or enemy who wants it back.</li><li><strong>Raised by Goblins.</strong> You speak Goblin natively. You automatically notice and can avoid crudely-made traps and have advantage to notice and disarm more sophisticated traps.</li><li><strong>(Secretly) Undead.</strong> Immune to disease. Do not need to eat, drink, or breathe. Children, animals, and Celestials are uneasy in your presence.</li><li><strong>So Dumb I'm Smart Sometimes.</strong> (Req. 0 or negative INT at creation.) Reroll an INT-related skill check, 1/day. Reroll a failed INT save with advantage, 1/Safe Rest.</li><li><strong>Survivalist.</strong> You never run out of your own personal rations. Advantage against poison saves. +1 max Hit Die.</li><li><strong>Taste for the Finer Things.</strong> Always have up-to-date knowledge of the customs and dress of the upper classes. Advantage on Influence checks with the upper class.</li><li><strong>Tradesman/Artisan.</strong> Choose a profession. Checks you make related to that profession are made with advantage.</li><li><strong>What? I've Been Around.</strong> 1/per location, you happen to know JUST the person who has the information you're looking for, or could get you out of a jam. Roll 1d20: 1–5 they want you DEAD; 6–12 you owe them money; 13–19 they can be convinced to help; 20 they are your biggest fan.</li><li><strong>Wild One.</strong> Wild creatures are less frightened of you and more willing to aid you. +1 Naturecraft. While Field Resting, roll your Hit Dice with advantage while in the wild.</li><li><strong>Wily Underdog.</strong> (Req. 0 or negative STR at creation.) Reroll a failed STR-related roll and use another stat instead, 1/day.</li></ul><blockquote><p><strong>Make It Your Own!</strong> Backgrounds are just a starting point — you're free to adjust, reimagine, or completely rewrite them to suit your character's story. Work with your GM to ensure any changes align with your game's setting.</p></blockquote>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 300000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		},
+		{
+			"_id": "NzXP2xuxezHD9xpv",
+			"name": "Adventuring Motivation",
+			"type": "text",
+			"title": {
+				"show": true,
+				"level": 1
+			},
+			"text": {
+				"format": 1,
+				"content": "<p>The world is a dangerous place — people don't usually just \"go adventuring\" without a reason. Your motivation should make your character want to work with the rest of the group.</p><ul><li><strong>I owe a life debt to someone in my party.</strong> Chat with your party: Who else needs help with their backstory? What did they do to help you?</li><li><strong>I owe a LOT of money to some very dangerous people.</strong> What did you do with the money?</li><li><strong>I need to grow in power to defeat someone who has wronged me.</strong> Do you know who wronged you, or are they unknown?</li><li><strong>I am trying to get back home.</strong> Where is home for you, do you even remember? What caused you to leave?</li><li><strong>I was best friends with (and betrayed by) ______.</strong> Do you want to win them back? Get even? Warn others?</li><li><strong>I'm lost.</strong> Physically? Emotionally? Spiritually? Are you in the wrong country or even plane of existence?</li><li><strong>I am searching for a way to bring a loved one (or someone I hate) back from the dead.</strong> Who even told you this was possible?</li><li><strong>I am searching for the one who stole something valuable from me.</strong> Is it an object? A person? A memory?</li><li><strong>I was polymorphed into another kind of creature by a wizard.</strong> What did you do to anger the wizard?</li><li><strong>Duty calls. I am honor-bound to serve.</strong> Who calls you? Your king? Your family? An ancient alliance or grudge?</li><li><strong>Wanderlust/Pilgrimage.</strong> What amazing thing do you want to see or experience?</li><li><strong>My home town is in danger.</strong> Are you looking for a cure? Mercenaries? Personal strength?</li><li><strong>Curiosity! I want to learn the DEEP secrets.</strong> Which secrets? Magical, lore, politics, what really happened in history?</li><li><strong>To prove my worth.</strong> You were always underestimated — by your family, your village, your peers, or yourself.</li><li><strong>I'm following a prophecy.</strong> A mysterious figure or ancient text foretold that you would play a crucial role in the fate of the world.</li><li><strong>Or Make Your Own!</strong> A great character background has connections with the world, its people, your fellow heroes, or even the bad guys. Work with your GM and fellow players to find a motivation that will cross paths with where the story goes.</li></ul>"
+			},
+			"image": {
+				"caption": ""
+			},
+			"video": {
+				"controls": true,
+				"volume": 0.5
+			},
+			"src": null,
+			"sort": 400000,
+			"ownership": {
+				"default": -1
+			},
+			"flags": {},
+			"_stats": {
+				"coreVersion": "13.347",
+				"systemId": "nimble",
+				"systemVersion": "0.1.7",
+				"createdTime": null,
+				"modifiedTime": null,
+				"lastModifiedBy": null
+			}
+		}
+	],
+	"folder": null,
+	"flags": {},
+	"_stats": {
+		"coreVersion": "13.347",
+		"systemId": "nimble",
+		"systemVersion": "0.1.7",
+		"createdTime": null,
+		"modifiedTime": null,
+		"lastModifiedBy": null
+	},
+	"_id": "xH5A2eJCr1PQLPLM"
+}
