@@ -35,7 +35,7 @@
 		},
 		"description": "<p><em>Req. Sunder Armor (Medium).</em> Your Sunder Armor ability now also applies to enemies wearing heavy armor. </p>",
 		"featureType": "class",
-		"class": "cheat",
+		"class": "the-cheat",
 		"group": "underhanded-abilities",
 		"gainedAtLevel": 4,
 		"subclass": false,

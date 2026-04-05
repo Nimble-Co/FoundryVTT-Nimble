@@ -28,6 +28,7 @@
 	const identifier = $derived(item.reactive.system.identifier);
 	const groupIdentifiers = $derived(item.reactive.system.groupIdentifiers || []);
 	const abilityScoreData = $derived(item.reactive.system.abilityScoreData);
+	const keyAbilityScores = $derived(item.reactive.system.keyAbilityScores || []);
 
 	// Collect all unique selection groups across all levels
 	const selectionGroups = $derived.by(() => {
@@ -249,6 +250,31 @@
 			createdSubclass.sheet?.render(true);
 		}
 	}
+
+	async function handleAddNewFeatureChoice(): Promise<void> {
+		// Generate a unique group name for a new feature choice
+		const existingGroupCount = selectionGroups.size;
+		const newGroupName = `${identifier}-choice-${existingGroupCount + 1}`;
+
+		// Create a new feature item with the new group
+		const featureData = {
+			name: `New Feature Choice`,
+			type: 'feature',
+			system: {
+				featureType: 'class',
+				class: identifier,
+				gainedAtLevel: 1,
+				gainedAtLevels: [1],
+				group: newGroupName,
+				subclass: false,
+			},
+		};
+
+		const [createdFeature] = await Item.createDocuments([featureData]);
+		if (createdFeature) {
+			createdFeature.sheet?.render(true);
+		}
+	}
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--item class-progression-tab">
@@ -267,6 +293,8 @@
 					abilityScoreEntry={getAbilityScoreEntry(level)}
 					isSubclassLevel={isSubclassLevel(level)}
 					classIdentifier={identifier}
+					className={item.name}
+					{keyAbilityScores}
 					onFeatureClick={handleFeatureClick}
 					onAddFeature={handleAddFeature}
 				/>
@@ -344,13 +372,21 @@
 		</section>
 
 		<!-- Selection Groups (collapsible accordions) -->
-		{#if selectionGroups.size > 0}
-			<section class="class-progression-tab__section">
-				<header class="nimble-section-header">
-					<h3 class="nimble-heading" data-heading-variant="section">
-						{localize('NIMBLE.classSheet.progressionFeatureChoices')}
-					</h3>
-				</header>
+		<section class="class-progression-tab__section">
+			<header class="nimble-section-header class-progression-tab__section-header">
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{localize('NIMBLE.classSheet.progressionFeatureChoices')}
+				</h3>
+				<button
+					type="button"
+					class="class-progression-tab__section-add-btn"
+					onclick={handleAddNewFeatureChoice}
+					title="Add new feature choice group"
+				>
+					<i class="fa-solid fa-plus"></i>
+				</button>
+			</header>
+			{#if selectionGroups.size > 0}
 				{#each [...selectionGroups.entries()] as [groupName, features] (groupName)}
 					<article
 						class="class-progression-tab__group-accordion"
@@ -403,8 +439,12 @@
 						{/if}
 					</article>
 				{/each}
-			</section>
-		{/if}
+			{:else}
+				<p class="class-progression-tab__empty-message">
+					No feature choices available. Click the + button to create one.
+				</p>
+			{/if}
+		</section>
 	{/if}
 </section>
 

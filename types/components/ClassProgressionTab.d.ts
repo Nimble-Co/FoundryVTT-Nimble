@@ -27,6 +27,8 @@ export interface ClassProgressionLevelRowProps {
 	abilityScoreEntry: AbilityScoreDataEntry | null;
 	isSubclassLevel: boolean;
 	classIdentifier: string;
+	className: string;
+	keyAbilityScores: string[];
 	onFeatureClick: (feature: NimbleFeatureItem) => void;
 	onAddFeature: (level: number, classIdentifier: string) => void;
 }
