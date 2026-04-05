@@ -209,8 +209,10 @@ export default async function getClassFeaturesFromIndex(
 		allEntries.map((entry) => fromUuid(entry.uuid as `Item.${string}`)),
 	);
 
-	// Group by category
+	// Group by category, deduplicating by name within each group
+	// This handles cases where the same feature exists in both world items and compendium
 	const featuresByGroup = new Map<string, NimbleFeatureItem[]>();
+	const seenNamesPerGroup = new Map<string, Set<string>>();
 
 	for (let i = 0; i < features.length; i++) {
 		const feature = features[i];
@@ -219,9 +221,19 @@ export default async function getClassFeaturesFromIndex(
 		const featureItem = feature as NimbleFeatureItem;
 		const groupName = allEntries[i].group;
 
+		// Initialize tracking sets for this group
 		if (!featuresByGroup.has(groupName)) {
 			featuresByGroup.set(groupName, []);
+			seenNamesPerGroup.set(groupName, new Set());
 		}
+
+		// Skip if we've already seen a feature with this name in this group
+		const seenNames = seenNamesPerGroup.get(groupName)!;
+		if (seenNames.has(featureItem.name)) {
+			continue;
+		}
+		seenNames.add(featureItem.name);
+
 		featuresByGroup.get(groupName)!.push(featureItem);
 	}
 
