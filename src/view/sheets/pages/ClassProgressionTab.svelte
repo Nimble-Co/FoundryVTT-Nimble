@@ -61,19 +61,6 @@
 		return levels.sort((a, b) => a - b);
 	}
 
-	// Create level data without selection groups (for level rows)
-	function getLevelDataWithoutSelections(level: number): ClassProgressionLevelData {
-		const data = progressionData.get(level);
-		if (!data) {
-			return { autoGrant: [], selectionGroups: new Map() };
-		}
-		// Return data with empty selectionGroups - they're shown consolidated at bottom
-		return {
-			autoGrant: data.autoGrant,
-			selectionGroups: new Map(),
-		};
-	}
-
 	function toggleGroup(groupName: string): void {
 		if (expandedGroups.has(groupName)) {
 			expandedGroups.delete(groupName);
@@ -289,7 +276,11 @@
 			{#each Array.from({ length: 20 }, (_, i) => i + 1) as level (level)}
 				<ClassProgressionLevelRow
 					{level}
-					levelData={getLevelDataWithoutSelections(level)}
+					levelData={progressionData.get(level) ?? {
+						level,
+						autoGrant: [],
+						selectionGroups: new Map(),
+					}}
 					abilityScoreEntry={getAbilityScoreEntry(level)}
 					isSubclassLevel={isSubclassLevel(level)}
 					classIdentifier={identifier}
