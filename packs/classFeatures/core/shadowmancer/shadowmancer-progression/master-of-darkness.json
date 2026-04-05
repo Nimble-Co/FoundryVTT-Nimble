@@ -169,7 +169,13 @@
 		"gainedAtLevel": 2,
 		"subclass": false,
 		"gainedAtLevels": [
-			2
+			2,
+			5,
+			7,
+			10,
+			13,
+			16,
+			19
 		]
 	},
 	"effects": [],

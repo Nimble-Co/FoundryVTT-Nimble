@@ -40,7 +40,9 @@
 		"gainedAtLevel": 5,
 		"subclass": false,
 		"gainedAtLevels": [
-			5
+			5,
+			10,
+			17
 		]
 	},
 	"effects": [],
