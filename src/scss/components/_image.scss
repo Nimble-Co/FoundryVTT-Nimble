@@ -76,6 +76,8 @@
       top: var(--nimble-actor-image-y-offset, 0);
       left: var(--nimble-actor-image-x-offset, 0);
       scale: var(--nimble-actor-image-scale, 100%);
+      transform-origin: top center;
+      object-fit: none;
       object-position: top center;
       height: 100%;
     }
