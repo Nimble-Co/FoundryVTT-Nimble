@@ -8,8 +8,23 @@
 
 	const state = createFeatureCardState(() => feature);
 
-	function handleSelect() {
+	// Whether this card is in selectable mode
+	const isSelectable = $derived(!!onSelect);
+
+	function handleRowClick() {
+		// Clicking the row always toggles expansion
+		state.toggleExpanded();
+	}
+
+	function handleSelectClick(e: MouseEvent) {
+		e.stopPropagation(); // Prevent row click from firing
 		onSelect?.();
+	}
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter') {
+			handleRowClick();
+		}
 	}
 </script>
 
@@ -17,14 +32,13 @@
 	<div
 		class="feature-row"
 		class:selected={isSelected}
+		class:selectable={isSelectable}
 		role="button"
 		tabindex="0"
-		onclick={state.toggleExpanded}
-		onkeydown={(e) => e.key === 'Enter' && state.toggleExpanded()}
+		onclick={handleRowClick}
+		onkeydown={handleKeydown}
 	>
-		{#if !isSelected}
-			<i class="fa-solid fa-chevron-down expand-arrow"></i>
-		{/if}
+		<i class="fa-solid fa-chevron-down expand-arrow"></i>
 
 		<img
 			class="feature-row__img"
@@ -36,14 +50,31 @@
 			{feature.name}
 		</h4>
 
-		<button
-			class="view-details-button"
-			onclick={state.viewDetails}
-			title="View Details"
-			aria-label="View {feature.name} details"
-		>
-			<i class="fa-solid fa-book-open"></i>
-		</button>
+		{#if isSelectable}
+			<div class="feature-row__actions">
+				<button
+					type="button"
+					class="select-button"
+					class:selected={isSelected}
+					onclick={handleSelectClick}
+					data-tooltip={isSelected
+						? localize('NIMBLE.classFeatureSelection.deselectFeature')
+						: localize('NIMBLE.classFeatureSelection.selectFeature')}
+					data-tooltip-direction="LEFT"
+					aria-label={isSelected
+						? localize('NIMBLE.classFeatureSelection.deselectFeatureAriaLabel', {
+								featureName: feature.name,
+							})
+						: localize('NIMBLE.classFeatureSelection.selectFeatureAriaLabel', {
+								featureName: feature.name,
+							})}
+				>
+					{#if isSelected}
+						<i class="fa-solid fa-check"></i>
+					{/if}
+				</button>
+			</div>
+		{/if}
 	</div>
 
 	<div class="accordion-content">
@@ -60,22 +91,6 @@
 				<p>{localize('NIMBLE.classFeatureSelection.noDescriptionAvailable')}</p>
 			{/if}
 		</div>
-
-		{#if onSelect}
-			<button
-				class="nimble-button"
-				data-button-variant="full-width"
-				type="button"
-				onclick={handleSelect}
-			>
-				{#if isSelected}
-					<i class="fa-solid fa-check"></i>
-					{localize('NIMBLE.classFeatureSelection.selected')}
-				{:else}
-					{localize('NIMBLE.classFeatureSelection.confirmSelection')}
-				{/if}
-			</button>
-		{/if}
 	</div>
 </li>
 
@@ -157,32 +172,57 @@
 			padding: 0;
 			line-height: 1;
 		}
+
+		.feature-row__actions {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			margin-left: auto;
+		}
 	}
 
-	.view-details-button {
-		position: absolute;
-		top: 0.5rem;
-		right: 0.5rem;
-		width: 2rem;
-		height: 2rem;
+	.select-button {
+		width: 1.25rem;
+		min-width: 1.25rem;
+		max-width: 1.25rem;
+		height: 1.25rem;
+		min-height: 1.25rem;
+		max-height: 1.25rem;
+		padding: 0;
+		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--nimble-accent-color);
-		border: 1px solid var(--nimble-card-border-color);
-		border-radius: 4px;
-		color: var(--nimble-light-text-color);
+		background: color-mix(in srgb, var(--nimble-medium-text-color) 15%, transparent);
+		border: 2px solid color-mix(in srgb, var(--nimble-medium-text-color) 60%, transparent);
+		border-radius: 50%;
+		box-sizing: border-box;
+		color: transparent;
 		cursor: pointer;
 		transition: all 0.2s ease;
-		z-index: 1;
 
-		&:hover {
-			filter: brightness(1.2);
-			transform: scale(1.05);
+		&:hover:not(:disabled) {
+			border-color: color-mix(in srgb, var(--nimble-medium-text-color) 80%, transparent);
+			background: color-mix(in srgb, var(--nimble-medium-text-color) 35%, transparent);
+		}
+
+		&.selected {
+			background: var(--nimble-accent-color);
+			border-color: var(--nimble-accent-color);
+			color: #fff;
+
+			&:hover:not(:disabled) {
+				filter: brightness(1.15);
+			}
+		}
+
+		&:disabled {
+			opacity: 0.3;
+			cursor: not-allowed;
 		}
 
 		i {
-			font-size: 0.875rem;
+			font-size: 0.625rem;
 		}
 	}
 

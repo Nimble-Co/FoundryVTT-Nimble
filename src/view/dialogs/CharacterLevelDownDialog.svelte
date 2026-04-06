@@ -50,6 +50,13 @@
 	const willRemoveSubclass = $derived(lastHistory?.level <= 3);
 	const subclasses = $derived(actor.items.filter((i) => i.type === 'subclass'));
 	const hasSubclass = $derived(subclasses.length > 0);
+
+	// Get granted features that will be removed
+	const grantedFeatures = $derived(
+		(lastHistory?.grantedFeatureIds ?? [])
+			.map((id) => actor.items.get(id))
+			.filter((item): item is NonNullable<typeof item> => item !== undefined),
+	);
 </script>
 
 <article class="nimble-sheet__body">
@@ -78,7 +85,7 @@
 
 		<ul class="nimble-level-down-preview">
 			{#if lastHistory?.hpIncrease > 0}
-				<li class="nimble-level-down-preview__item nimble-level-down-preview__item--loss">
+				<li class="nimble-level-down-preview__item">
 					<span class="nimble-level-down-preview__label">
 						<i class="fa-solid fa-heart"></i>
 						{CONFIG.NIMBLE.levelDownDialog.hitPoints}
@@ -91,7 +98,7 @@
 			{/if}
 
 			{#if lastHistory?.hitDieAdded}
-				<li class="nimble-level-down-preview__item nimble-level-down-preview__item--loss">
+				<li class="nimble-level-down-preview__item">
 					<span class="nimble-level-down-preview__label">
 						<i class="fa-solid fa-dice-d20"></i>
 						{CONFIG.NIMBLE.levelDownDialog.hitDie}
@@ -104,7 +111,7 @@
 
 			{#if abilityChanges.length > 0}
 				{#each abilityChanges as ability}
-					<li class="nimble-level-down-preview__item nimble-level-down-preview__item--loss">
+					<li class="nimble-level-down-preview__item">
 						<span class="nimble-level-down-preview__label">
 							<i class="fa-solid fa-chart-simple"></i>
 							{ability.name}
@@ -118,7 +125,7 @@
 
 			{#if skillChanges.length > 0}
 				{#each skillChanges as skill}
-					<li class="nimble-level-down-preview__item nimble-level-down-preview__item--loss">
+					<li class="nimble-level-down-preview__item">
 						<span class="nimble-level-down-preview__label">
 							<i class="fa-solid fa-book"></i>
 							{skill.name}
@@ -135,13 +142,28 @@
 
 			{#if willRemoveSubclass && hasSubclass}
 				{#each subclasses as subclass}
-					<li class="nimble-level-down-preview__item nimble-level-down-preview__item--warning">
+					<li class="nimble-level-down-preview__item">
 						<span class="nimble-level-down-preview__label">
 							<i class="fa-solid fa-star"></i>
 							{CONFIG.NIMBLE.levelDownDialog.subclass}
 						</span>
 						<span class="nimble-level-down-preview__value">
 							{subclass.name}
+							{CONFIG.NIMBLE.levelDownDialog.removed}
+						</span>
+					</li>
+				{/each}
+			{/if}
+
+			{#if grantedFeatures.length > 0}
+				{#each grantedFeatures as feature}
+					<li class="nimble-level-down-preview__item">
+						<span class="nimble-level-down-preview__label">
+							<i class="fa-solid fa-scroll"></i>
+							{CONFIG.NIMBLE.levelDownDialog.feature}
+						</span>
+						<span class="nimble-level-down-preview__value">
+							{feature.name}
 							{CONFIG.NIMBLE.levelDownDialog.removed}
 						</span>
 					</li>
@@ -221,7 +243,6 @@
 
 	.nimble-level-new {
 		font-weight: 600;
-		color: var(--nimble-danger-color, hsl(0, 60%, 50%));
 	}
 
 	.nimble-level-down-preview {
@@ -240,20 +261,6 @@
 			background: var(--nimble-card-background);
 			border-radius: 4px;
 			box-shadow: var(--nimble-card-box-shadow);
-
-			&--loss {
-				.nimble-level-down-preview__value {
-					color: var(--nimble-danger-color, hsl(0, 60%, 50%));
-				}
-			}
-
-			&--warning {
-				border-left: 3px solid var(--nimble-warning-color, hsl(40, 90%, 50%));
-
-				.nimble-level-down-preview__value {
-					color: var(--nimble-warning-color, hsl(40, 90%, 50%));
-				}
-			}
 		}
 
 		&__label {

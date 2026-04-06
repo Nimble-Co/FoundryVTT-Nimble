@@ -1,8 +1,15 @@
 <script>
+	import localize from '#utils/localize.js';
+
 	let { subclasses, selectedSubclass = $bindable() } = $props();
 
 	let expandedSubclassUuid = $state(null);
 	let expandedSubclassData = $state(null);
+
+	// Filter to show only selected subclass when one is selected
+	const displayedSubclasses = $derived(
+		selectedSubclass ? subclasses.filter((s) => s.uuid === selectedSubclass.uuid) : subclasses,
+	);
 
 	async function toggleExpanded(subclassUuid) {
 		if (expandedSubclassUuid === subclassUuid) {
@@ -10,21 +17,30 @@
 			expandedSubclassData = null;
 		} else {
 			expandedSubclassUuid = subclassUuid;
-			selectedSubclass = null;
 			expandedSubclassData = await fromUuid(subclassUuid);
 		}
 	}
 
-	async function confirmSelection(subclassUuid) {
-		selectedSubclass = await fromUuid(subclassUuid);
-		expandedSubclassUuid = null;
-		expandedSubclassData = null;
+	async function handleSelectClick(subclassUuid, event) {
+		event.stopPropagation();
+
+		// If already selected, deselect
+		if (selectedSubclass?.uuid === subclassUuid) {
+			selectedSubclass = null;
+		} else {
+			// Select this subclass
+			selectedSubclass = await fromUuid(subclassUuid);
+		}
 	}
 
-	async function viewSubclass(subclassUuid, event) {
-		event.stopPropagation();
-		const subclass = await fromUuid(subclassUuid);
-		subclass?.sheet?.render(true);
+	function handleRowClick(subclassUuid) {
+		toggleExpanded(subclassUuid);
+	}
+
+	function handleKeydown(e, subclassUuid) {
+		if (e.key === 'Enter') {
+			handleRowClick(subclassUuid);
+		}
 	}
 </script>
 
@@ -35,60 +51,65 @@
 
 	{#if subclasses.length > 0}
 		<ul class="nimble-document-list">
-			{#each subclasses as subclass}
-				{#if subclass?.uuid === selectedSubclass?.uuid || !selectedSubclass}
-					<li class="u-semantic-only subclass-item">
-						<div
-							class="subclass-row"
-							class:selected={subclass?.uuid === selectedSubclass?.uuid}
-							class:expanded={expandedSubclassUuid === subclass.uuid}
-							onclick={() => toggleExpanded(subclass.uuid)}
-							role="button"
-							tabindex="0"
-							onkeydown={(e) => e.key === 'Enter' && toggleExpanded(subclass.uuid)}
-						>
-							{#if subclass?.uuid !== selectedSubclass?.uuid}
-								<i class="fa-solid fa-chevron-up expand-arrow"></i>
-							{/if}
-							<img
-								class="subclass-row__img"
-								src={subclass.img || 'icons/svg/item-bag.svg'}
-								alt={subclass.name}
-								onerror={(_e) => {
-									subclass.img = 'icons/svg/item-bag.svg';
-								}}
-							/>
+			{#each displayedSubclasses as subclass (subclass.uuid)}
+				<li class="u-semantic-only subclass-item">
+					<div
+						class="subclass-row"
+						class:selected={subclass.uuid === selectedSubclass?.uuid}
+						class:expanded={expandedSubclassUuid === subclass.uuid}
+						onclick={() => handleRowClick(subclass.uuid)}
+						role="button"
+						tabindex="0"
+						onkeydown={(e) => handleKeydown(e, subclass.uuid)}
+					>
+						<i class="fa-solid fa-chevron-down expand-arrow"></i>
 
-							<h4 class="subclass-row__name nimble-heading" data-heading-variant="item">
-								{subclass.name}
-							</h4>
+						<img
+							class="subclass-row__img"
+							src={subclass.img || 'icons/svg/item-bag.svg'}
+							alt={subclass.name}
+							onerror={(_e) => {
+								subclass.img = 'icons/svg/item-bag.svg';
+							}}
+						/>
+
+						<h4 class="subclass-row__name nimble-heading" data-heading-variant="item">
+							{subclass.name}
+						</h4>
+
+						<div class="subclass-row__actions">
 							<button
-								class="view-details-button"
-								onclick={(e) => viewSubclass(subclass.uuid, e)}
-								title="View Details"
-								aria-label="View {subclass.name} details"
+								type="button"
+								class="select-button"
+								class:selected={subclass.uuid === selectedSubclass?.uuid}
+								onclick={(e) => handleSelectClick(subclass.uuid, e)}
+								data-tooltip={subclass.uuid === selectedSubclass?.uuid
+									? localize('NIMBLE.subclassSelection.deselectSubclass')
+									: localize('NIMBLE.subclassSelection.selectSubclass')}
+								data-tooltip-direction="LEFT"
+								aria-label={subclass.uuid === selectedSubclass?.uuid
+									? localize('NIMBLE.subclassSelection.deselectSubclassAriaLabel', {
+											subclassName: subclass.name,
+										})
+									: localize('NIMBLE.subclassSelection.selectSubclassAriaLabel', {
+											subclassName: subclass.name,
+										})}
 							>
-								<i class="fa-solid fa-book-open"></i>
+								{#if subclass.uuid === selectedSubclass?.uuid}
+									<i class="fa-solid fa-check"></i>
+								{/if}
 							</button>
 						</div>
+					</div>
 
-						{#if expandedSubclassUuid === subclass.uuid}
-							<div class="accordion-content">
-								<div class="description">
-									{@html expandedSubclassData?.system?.description || 'Loading...'}
-								</div>
-								<button
-									class="nimble-button"
-									data-button-variant="full-width"
-									type="button"
-									onclick={(e) => confirmSelection(subclass.uuid, e)}
-								>
-									Confirm Selection
-								</button>
+					{#if expandedSubclassUuid === subclass.uuid}
+						<div class="accordion-content">
+							<div class="description">
+								{@html expandedSubclassData?.system?.description || 'Loading...'}
 							</div>
-						{/if}
-					</li>
-				{/if}
+						</div>
+					{/if}
+				</li>
 			{/each}
 		</ul>
 	{:else}
@@ -167,32 +188,57 @@
 			padding: 0;
 			line-height: 1;
 		}
+
+		.subclass-row__actions {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			margin-left: auto;
+		}
 	}
 
-	.view-details-button {
-		position: absolute;
-		top: 0.5rem;
-		right: 0.5rem;
-		width: 2rem;
-		height: 2rem;
+	.select-button {
+		width: 1.25rem;
+		min-width: 1.25rem;
+		max-width: 1.25rem;
+		height: 1.25rem;
+		min-height: 1.25rem;
+		max-height: 1.25rem;
+		padding: 0;
+		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: var(--nimble-accent-color);
-		border: 1px solid var(--nimble-card-border-color);
-		border-radius: 4px;
-		color: var(--nimble-light-text-color);
+		background: color-mix(in srgb, var(--nimble-medium-text-color) 15%, transparent);
+		border: 2px solid color-mix(in srgb, var(--nimble-medium-text-color) 60%, transparent);
+		border-radius: 50%;
+		box-sizing: border-box;
+		color: transparent;
 		cursor: pointer;
 		transition: all 0.2s ease;
-		z-index: 1;
 
-		&:hover {
-			filter: brightness(1.2);
-			transform: scale(1.05);
+		&:hover:not(:disabled) {
+			border-color: color-mix(in srgb, var(--nimble-medium-text-color) 80%, transparent);
+			background: color-mix(in srgb, var(--nimble-medium-text-color) 35%, transparent);
+		}
+
+		&.selected {
+			background: var(--nimble-accent-color);
+			border-color: var(--nimble-accent-color);
+			color: #fff;
+
+			&:hover:not(:disabled) {
+				filter: brightness(1.15);
+			}
+		}
+
+		&:disabled {
+			opacity: 0.3;
+			cursor: not-allowed;
 		}
 
 		i {
-			font-size: 0.875rem;
+			font-size: 0.625rem;
 		}
 	}
 
