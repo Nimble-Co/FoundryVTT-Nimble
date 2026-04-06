@@ -13,6 +13,7 @@ function createProps(overrides: Record<string, unknown> = {}) {
 			id: 'test-dialog',
 			submitCharacterCreation: vi.fn(),
 		},
+		spellIndex: Promise.resolve(new Map()),
 		statArrayOptions: [],
 		...overrides,
 	};
