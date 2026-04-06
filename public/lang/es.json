@@ -77,7 +77,7 @@
 			"boon": "Don"
 		},
 		"chat": {
-			"applyDamage": "Aplicar daño",			
+			"applyDamage": "Aplicar daño",
 			"applyHealing": "Aplicar curación",
 			"healing": "Curación",
 			"healingApplied": "Curación aplicada",
@@ -85,7 +85,7 @@
 			"undo": "Cancelar",
 			"noTargetsSelected": "No hay objetivos seleccionados",
 			"noDamageToApply": "Sin daño que aplicar.",
-			"targetSkippedZeroDamage": "{tokenName} excluido porque el resultado es 0.",			
+			"targetSkippedZeroDamage": "{tokenName} excluido porque el resultado es 0.",
 			"healingAlreadyApplied": "Curación ya aplicada",
 			"healingUndone": "Curación cancelada",
 			"noHealingRecord": "No se ha encontrado registro de curación para cancelar"
@@ -431,7 +431,7 @@
 			"configureSavingThrows": "Configurar salvaciones",
 			"configureSkills": "Configurar habilidades",
 			"configureWeaponProficiencies": "Configurar competencia con armas",
-			"toggleEquipment": "Alternar estado del {name} equipado",		
+			"toggleEquipment": "Alternar estado del {name} equipado",
 			"editRoll": "Editar tirada",
 			"levelUp": "Subir de nivel",
 			"safeRest": "Descanso Seguro",
@@ -534,7 +534,7 @@
 			"hitDiceAdvantage": "Ventaja en Dados de Golpe",
 			"incrementHitDice": "Incrementar Dado de Golpe",
 			"initiativeBonus": "Bono de iniciativa",
-			"initiativeMessage": "Mensaje de iniciativa",			
+			"initiativeMessage": "Mensaje de iniciativa",
 			"initiativeRollMode": "Modo de tirada de iniciativa",
 			"maxHitDice": "Dado de Golpe",
 			"maxHpBonus": "Puntos de golpe",
@@ -808,7 +808,7 @@
 				"useActionsFirst": "Utiliza tus acciones primero",
 				"noPermissionEndTurn": "Sin permiso para finalizar turnos.",
 				"noPermissionRollInitiative": "Sin permiso para tirar iniciativa.",
-				"initiativeAlreadyRolled": "Ya se ha tirado la iniciativa para este combatiente.",				
+				"initiativeAlreadyRolled": "Ya se ha tirado la iniciativa para este combatiente.",
 				"selectAttack": "Ataque",
 				"selectSpell": "Lanzar conjuro",
 				"noWeapons": "No se han encontrado armas ni rasgos de ataque.",
@@ -1120,7 +1120,7 @@
 			"rolled": "Tirada",
 			"advantage": "Ventaja",
 			"restedWithoutSpending": "Descanso sin gastar Dados de Golpe",
-			"manaRestored": "Maná recuperado"			
+			"manaRestored": "Maná recuperado"
 		},
 		"npcSheet": {
 			"armor": "Armadura",
@@ -1273,7 +1273,7 @@
 			"noDescriptionAvailable": "Sin descripción disponible.",
 			"selected": "Seleccionado",
 			"confirmSelection": "Confirmar selección"
-		},		
+		},
 		"classSelection": {
 			"stepSelectClass": "Paso 1: Elige una clase",
 			"noDescriptionAvailable": "Sin descripción disponible",
