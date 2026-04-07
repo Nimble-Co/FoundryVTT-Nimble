@@ -1487,6 +1487,28 @@
 			"ncswEnabled": {
 				"name": "Enable Combat System",
 				"hint": "Show the Combat System panel during combat. Helps GMs quickly target heroes and roll attacks for minions, monsters, and legendary monsters."
+			},
+			"debugMode": {
+				"name": "Debug Mode",
+				"hint": "Enables developer tools like the dice testbench. Changes take effect immediately.",
+				"openTestbench": "Open Dice Testbench"
+			}
+		},
+		"diceTestbench": {
+			"title": "Dice Testbench",
+			"scenarios": {
+				"title": "Scenarios",
+				"placeholder": "(presets will go here)"
+			},
+			"rollBuilder": {
+				"title": "Roll Builder",
+				"placeholder": "(formula, flags, roll buttons will go here)",
+				"actorLabel": "Actor",
+				"selectedLabel": "Selected"
+			},
+			"results": {
+				"title": "Results",
+				"placeholder": "(rolled dice and outcome will go here)"
 			}
 		},
 		"combatTrackerSettings": {
