@@ -1462,7 +1462,8 @@
 			"title": "Dice Testbench",
 			"scenarios": {
 				"title": "Scenarios",
-				"placeholder": "(presets will go here)"
+				"placeholder": "(presets will go here)",
+				"hint": "Click a preset to populate the Roll Builder with that scenario's configuration, then click Roll (or toggle Force Crit/Miss) to see how the engine handles it."
 			},
 			"rollBuilder": {
 				"title": "Roll Builder",
