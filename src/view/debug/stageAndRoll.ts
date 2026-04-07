@@ -3,9 +3,11 @@ import { DamageRoll } from '../../dice/DamageRoll.js';
 /**
  * A single staged die outcome for the testbench. The caller specifies both the
  * desired integer face value and the face count of the die that will consume
- * the next `randomUniform()` call. This pair lets us return a fractional value
- * `(value - 0.5) / faces` which Foundry's `Math.ceil(rv * faces)` reliably
- * maps back to `value`.
+ * the next `randomUniform()` call.
+ *
+ * Foundry v13's `Die.mapRandomFace(rv)` is `Math.ceil((1 - rv) * faces)`, so
+ * to produce `value` we return `(faces - value + 0.5) / faces`. The 0.5 lands
+ * the value safely in the middle of its bucket regardless of `value`.
  */
 export type StagedValue = { value: number; faces: number };
 
@@ -50,7 +52,9 @@ export async function stageAndRoll(
 	dice.randomUniform = () => {
 		const next = queue.shift();
 		if (next === undefined) return originalRandomUniform();
-		return (next.value - 0.5) / next.faces;
+		// Foundry v13 maps via `Math.ceil((1 - rv) * faces)`, so we return
+		// `(faces - value + 0.5) / faces` to land on `value`.
+		return (next.faces - next.value + 0.5) / next.faces;
 	};
 
 	try {

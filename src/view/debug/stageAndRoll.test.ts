@@ -46,7 +46,8 @@ function stubBaseRollEvaluate() {
 					if (term.results.length === 0) {
 						for (let i = 0; i < number; i++) {
 							const rv = (CONFIG as any).Dice.randomUniform();
-							const value = Math.ceil(rv * faces);
+							// Match real Foundry v13 Die.mapRandomFace: Math.ceil((1 - rv) * faces).
+							const value = Math.ceil((1 - rv) * faces);
 							const result: any = { result: value, active: true };
 							if (term instanceof PrimaryDie && value === faces) {
 								result.exploded = true;
