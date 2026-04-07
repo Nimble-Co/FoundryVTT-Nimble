@@ -252,14 +252,18 @@ class ItemActivationManager {
 					const isMinion =
 						actorTags?.has('minion') ?? (this.actor?.type as string | undefined) === 'minion';
 
-					// Bug #7: AoE / multi-target attacks cannot crit and cannot miss.
-					// Detect AoE from the activation template shape or from a multi-target count.
+					// AoE attacks share a single roll applied to all targets
+					// (CoreRules-2.md:1360), so they cannot crit and cannot miss.
+					// Detect AoE from a defined activation template shape.
+					// Multi-target abilities WITHOUT a template (e.g. Magic Missile,
+					// "make two attacks") roll separately per target and crit/miss
+					// normally — targets.count alone is NOT a signal here.
 					const activation = (this.#item.system as any)?.activation;
 					const templateShape: string = activation?.template?.shape ?? '';
-					const targetCount: number = activation?.targets?.count ?? 1;
-					const isAoE = templateShape !== '' || targetCount > 1;
+					const isAoE = templateShape !== '';
 
-					// Bug #8b: a wielder lacking proficiency in this weapon's type cannot crit.
+					// A wielder lacking proficiency in this weapon's type cannot crit
+					// (CoreRules-2.md:972).
 					const lacksProficiency = !hasWeaponProficiency(this.actor as any, this.#item as any);
 
 					const resolvedCanCrit = isAoE || isMinion || lacksProficiency ? false : (canCrit ?? true);
@@ -278,9 +282,10 @@ class ItemActivationManager {
 						formula = `${formula} + ${meleeDamageBonus}`;
 					}
 
-					// Bug #6: forward optional rollMode source list so DamageRoll can
-					// compute net rollMode itself. Only attached when callers supplied
-					// the array, to preserve backwards compatibility with single-source
+					// Forward the optional rollMode source list so DamageRoll can
+					// compute the net rollMode itself (adv/dis cancel 1-for-1 per
+					// CoreRules-2.md:256). Only attached when callers supplied the
+					// array, to preserve backwards compatibility with single-source
 					// callers (and existing constructor-call test expectations).
 					const damageOptions: DamageRoll.Options & { rollModeSources?: number[] } = {
 						canCrit: resolvedCanCrit,
@@ -474,8 +479,9 @@ namespace ItemActivationManager {
 		rollMode?: number;
 		/**
 		 * Optional list of advantage/disadvantage source contributions. When
-		 * provided, the manager sums them into a net rollMode (Phase -1 source
-		 * aggregation, Bug #6). Single-source callers can keep using `rollMode`.
+		 * provided, the manager sums them into a net rollMode (adv and dis
+		 * cancel 1-for-1 per CoreRules-2.md:256). Single-source callers can
+		 * keep using `rollMode`.
 		 */
 		rollModeSources?: number[];
 		/** How the roll should be displayed (public, private, blind, self). */

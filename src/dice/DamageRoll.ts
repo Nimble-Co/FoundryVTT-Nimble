@@ -145,10 +145,11 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		this.options.canMiss ??= true;
 		this.options.rollMode ??= 0;
 
-		// Phase -1: aggregate adv/dis sources into a net rollMode (Bug #6).
-		// If callers provide rollModeSources, sum them to compute the net and
-		// override the scalar rollMode. Single-source callers continue to work
-		// untouched (rollModeSources is optional).
+		// Aggregate multiple adv/dis sources into a single net rollMode.
+		// Per Nimble rules, advantage and disadvantage cancel 1-for-1
+		// (CoreRules-2.md:256). If callers supply rollModeSources, sum them
+		// to compute the net; single-source callers keep using the scalar
+		// rollMode unchanged.
 		if (Array.isArray(this.options.rollModeSources)) {
 			const net = this.options.rollModeSources.reduce(
 				(sum, n) => sum + (Number.isFinite(n) ? n : 0),
@@ -199,9 +200,9 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		dieTerm.number = originalCount + Math.abs(rollMode);
 		if (!dieTerm.modifiers) dieTerm.modifiers = [];
 
-		// Bug #5: Use Nimble's custom keep-modifiers (`khn`/`kln`) which enforce
-		// leftmost-on-tie discarding. Registered as Foundry Die modifiers in
-		// `nimbleDieModifiers.ts` and wired up at system init.
+		// Use Nimble's custom keep-modifiers (`khn`/`kln`) which enforce
+		// leftmost-on-tie discarding per CoreRules-2.md:264. Registered as
+		// Foundry Die modifiers in `nimbleDieModifiers.ts` at system init.
 		if (rollMode > 0) {
 			dieTerm.modifiers.push(keep === 1 ? 'khn' : `khn${keep}`);
 		} else {

@@ -1120,8 +1120,8 @@ describe('DamageRoll evaluation — primary die outcome', () => {
 		);
 		await (roll as any)._evaluate();
 		// Under current code, the kept die is the 6 (highest) → crit, not miss.
-		// We are NOT testing leftmost-tie-break here (that's bug5), just that
-		// the dropped 1 does not cause a miss.
+		// We are NOT testing leftmost-tie-break here, just that the dropped 1
+		// does not cause a miss.
 		expect(roll.isMiss).toBe(false);
 	});
 
@@ -1143,7 +1143,7 @@ describe('DamageRoll evaluation — primary die outcome', () => {
 		expect(roll.isCritical).toBe(false);
 	});
 
-	it('bug5_ties_drop_leftmost (adv, [1,2,6]): leftmost-lowest dropped, primary becomes 2, hit', async () => {
+	it('ties drop leftmost (adv, [1,2,6]): leftmost-lowest dropped, primary becomes 2, hit', async () => {
 		// Handler-level scenario: 3 dice, keep highest 2 with Nimble's
 		// leftmost-on-tie rule. With rolled [1, 2, 6] the lone lowest 1
 		// (index 0) must be discarded. The 2 at index 1 and the 6 at index 2
@@ -1179,7 +1179,7 @@ describe('DamageRoll evaluation — primary die outcome', () => {
 		expect(roll.isMiss).toBe(false);
 	});
 
-	it('bug5_ties_drop_leftmost (adv, [3,3,5]): leftmost tied-lowest dropped, primary kept = 3 at index 1', async () => {
+	it('ties drop leftmost (adv, [3,3,5]): leftmost tied-lowest dropped, primary kept = 3 at index 1', async () => {
 		const roll = new DamageRoll(
 			'2d6',
 			{},
@@ -1209,7 +1209,7 @@ describe('DamageRoll evaluation — primary die outcome', () => {
 		expect(roll.isCritical).toBe(false);
 	});
 
-	it('bug5_ties_drop_leftmost (dis, [5,5,2]): leftmost tied-highest dropped, primary kept = 5 at index 1, not crit', async () => {
+	it('ties drop leftmost (dis, [5,5,2]): leftmost tied-highest dropped, primary kept = 5 at index 1, not crit', async () => {
 		const roll = new DamageRoll(
 			'2d6',
 			{},
@@ -1239,8 +1239,8 @@ describe('DamageRoll evaluation — primary die outcome', () => {
 		expect(roll.isCritical).toBe(false);
 	});
 
-	it('bug5_integration_full_path_advantage: normally-built DamageRoll routes [1,2] through registered khn handler', async () => {
-		// End-to-end exercise of the bug5 fix:
+	it('full-path advantage integration: normally-built DamageRoll routes [1,2] through registered khn handler', async () => {
+		// End-to-end exercise of the leftmost-tie-break keep-modifier path:
 		//   1. DamageRoll is constructed exactly as ItemActivationManager would build it
 		//      (matching `regression_adv_resolved_before_primary` above) — no test-side
 		//      modifier injection.
@@ -1289,7 +1289,7 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 		stubBaseRollEvaluate();
 	});
 
-	it('bug6_adv_dis_cancel: +1 adv and -1 dis from two sources should net to 0', () => {
+	it('adv and dis sources cancel: +1 adv and -1 dis from two sources should net to 0', () => {
 		// The current code passes `rollMode` as a single signed integer. There is
 		// no aggregation layer: the caller must sum sources manually. This test
 		// asserts an API that does NOT yet exist — that a DamageRoll constructed
@@ -1324,7 +1324,7 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 		expect((roll.options as any).netRollMode).toBe(0);
 	});
 
-	it('bug6_adv_stacks: +1 and +1 from two sources should net +2', () => {
+	it('adv sources stack: +1 and +1 from two sources should net +2', () => {
 		const roll = new DamageRoll('1d8', {}, {
 			canCrit: true,
 			canMiss: true,
@@ -1338,7 +1338,7 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 		expect(roll.formula).toBe('3d8khnx');
 	});
 
-	it('bug7_aoe_flags_auto_set: AoE template forces canCrit=false and canMiss=false', async () => {
+	it('AoE template auto-sets canCrit=false and canMiss=false', async () => {
 		const MockDamageRoll = makeMockDamageRollClass();
 		const originalDR = testDependencies.DamageRoll;
 		const originalRecon = testDependencies.reconstructEffectsTree;
@@ -1383,7 +1383,7 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 		}
 	});
 
-	it('bug7_aoe_flags_auto_set: targets.count > 1 also forces canCrit=false and canMiss=false', async () => {
+	it('targets.count > 1 alone does NOT auto-flag — multi-target abilities without a template (e.g. Magic Missile, "make two attacks") roll separately per target and crit/miss normally', async () => {
 		const MockDamageRoll = makeMockDamageRollClass();
 		const originalDR = testDependencies.DamageRoll;
 		const originalRecon = testDependencies.reconstructEffectsTree;
@@ -1432,15 +1432,16 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 			await manager.getData();
 
 			const opts = (MockDamageRoll as any).calls[0].options;
-			expect(opts.canCrit).toBe(false);
-			expect(opts.canMiss).toBe(false);
+			// targets.count > 1 with NO template shape: crit and miss should remain enabled.
+			expect(opts.canCrit).toBe(true);
+			expect(opts.canMiss).toBe(true);
 		} finally {
 			(testDependencies as any).DamageRoll = originalDR;
 			(testDependencies as any).reconstructEffectsTree = originalRecon;
 		}
 	});
 
-	it('bug8b_no_prof_crit_suppressed: hasWeaponProficiency baseline cases', () => {
+	it('hasWeaponProficiency baseline cases', () => {
 		// Permissive default: empty weaponType allows everyone
 		expect(hasWeaponProficiency({} as any, { system: { weaponType: '' } })).toBe(true);
 		expect(hasWeaponProficiency({} as any, { system: {} })).toBe(true);
@@ -1469,7 +1470,7 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 		).toBe(true);
 	});
 
-	it('bug8b_no_prof_crit_suppressed: lacking proficiency forces canCrit=false through ItemActivationManager', async () => {
+	it('lacking proficiency forces canCrit=false through ItemActivationManager', async () => {
 		const MockDamageRoll = makeMockDamageRollClass();
 		const originalDR = testDependencies.DamageRoll;
 		const originalRecon = testDependencies.reconstructEffectsTree;
@@ -1527,7 +1528,7 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 		}
 	});
 
-	it('bug8b_no_prof_crit_suppressed: matching weaponType allows crit', async () => {
+	it('matching weaponType allows crit', async () => {
 		const MockDamageRoll = makeMockDamageRollClass();
 		const originalDR = testDependencies.DamageRoll;
 		const originalRecon = testDependencies.reconstructEffectsTree;

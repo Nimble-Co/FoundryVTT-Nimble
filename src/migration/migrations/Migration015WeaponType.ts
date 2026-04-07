@@ -3,10 +3,10 @@ import { MigrationBase } from '../MigrationBase.js';
 /**
  * Migration to add a `weaponType` string field to all object items.
  *
- * Bug #8b (Slice 2 of the dice engine refactor) introduces a per-weapon
- * proficiency check used to suppress crits when an actor lacks proficiency
- * with the weapon they're wielding. The check is gated on
- * `system.weaponType`, which previously did not exist on object items.
+ * The per-weapon proficiency check suppresses crits when an actor lacks
+ * proficiency with the weapon they're wielding (CoreRules-2.md:972). The
+ * check is gated on `system.weaponType`, which previously did not exist on
+ * object items.
  *
  * This migration backfills the field with an empty string for every existing
  * object item. Empty string is the **permissive default** — `hasWeaponProficiency`

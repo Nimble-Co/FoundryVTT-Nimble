@@ -41,7 +41,8 @@ export function hasUnarmedProficiency(actor: NimbleCharacter): boolean {
 /**
  * Check whether an actor is proficient with a given weapon item.
  *
- * Bug #8b: a wielder lacking proficiency in this weapon's type cannot crit.
+ * A wielder lacking proficiency in this weapon's type cannot crit
+ * (CoreRules-2.md:972).
  *
  * The check is permissive by default: weapons with `system.weaponType === ''`
  * (or unset) are treated as proficient for everyone. This is the migration
