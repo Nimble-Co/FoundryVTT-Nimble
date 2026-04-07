@@ -42,11 +42,11 @@ import { PrimaryDie } from './terms/PrimaryDie.js';
  *     outcome detection. Currently does nothing.
  *
  *   Phase 5 — Resolve hit/miss/crit + crit explosion + vicious.
- *     `_phase5_resolveOutcomeAndExplosions` (was `_evaluateViciousExplosion`)
- *     handles the manual crit explosion that bypasses Dice So Nice
- *     preempting. The `_evaluate` body's `isCritical`/`isMiss` reads happen
- *     here too — they consult the post-eval state set up by Phase 3 + Phase 5
- *     explosion.
+ *     Two methods: `_phase5_resolveOutcomeAndExplosions` (was
+ *     `_evaluateViciousExplosion`) handles the manual crit explosion that
+ *     bypasses Dice So Nice preempting, and `_phase5_finalizeOutcome`
+ *     interprets `isCritical`/`isMiss` from the post-eval state and adjusts
+ *     `_total` for vicious recalculation + primaryDieAsDamage exclusion.
  *
  *   Phase 6 — Roll bonus dice & sum.
  *     **Foundry-native** — non-primary dice in the formula are summed by
@@ -491,42 +491,59 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				await this._phase5_resolveOutcomeAndExplosions(primaryTerm);
 			}
 
-			// Determine crit status
-			// For non-vicious: check if the 'x' modifier caused explosion
-			// For vicious: check if we manually triggered explosion (marked with exploded flag)
-			if (this.options.canCrit) {
-				if (isVicious) {
-					// Check if any result was marked as exploded during vicious explosion
-					this.isCritical = primaryTerm.results.some((r) => r.exploded);
-				} else {
-					this.isCritical = primaryTerm.exploded;
-				}
-			}
-
-			if (this.options.canMiss) this.isMiss = primaryTerm.isMiss;
-
-			// Recalculate total if vicious explosion added dice
-			// This must happen BEFORE primaryDieAsDamage exclusion to avoid double-counting
-			if (isVicious && this.isCritical) {
-				this._recalculateTotal();
-			}
-
-			// When primaryDieAsDamage is false, exclude the base die value from damage
-			// (explosions still count toward damage)
-			if (!this.options.primaryDieAsDamage) {
-				// Find the first result (the base roll, not explosion rolls)
-				// The base result is the one that may have exploded: true flag
-				const baseResult = primaryTerm.results.find((r) => r.active && !r.discarded);
-				if (baseResult) {
-					this.excludedPrimaryDieValue = baseResult.result;
-					// Adjust the total by subtracting the base die value
-					const internals = this as object as { _total: number };
-					internals._total = (this._total ?? 0) - this.excludedPrimaryDieValue;
-				}
-			}
+			this._phase5_finalizeOutcome(primaryTerm);
 		}
 
 		return this as DamageRoll.Evaluated<this>;
+	}
+
+	/**
+	 * Phase 5 (finalization) — interpret outcome and adjust total.
+	 *
+	 * Consumes: post-evaluation primary die + any crit-explosion rerolls from
+	 * `_phase5_resolveOutcomeAndExplosions`.
+	 * Produces: `this._total` updated for vicious recalculation and
+	 * primaryDieAsDamage exclusion.
+	 *
+	 * Future primitives: P4 (rerunnable outcome) mutations from Phase 4.5 may
+	 * trigger this to run again — must remain idempotent.
+	 */
+	private _phase5_finalizeOutcome(primaryTerm: PrimaryDie): void {
+		const isVicious = this.options.isVicious ?? false;
+
+		// Determine crit status
+		// For non-vicious: check if the 'x' modifier caused explosion
+		// For vicious: check if we manually triggered explosion (marked with exploded flag)
+		if (this.options.canCrit) {
+			if (isVicious) {
+				// Check if any result was marked as exploded during vicious explosion
+				this.isCritical = primaryTerm.results.some((r) => r.exploded);
+			} else {
+				this.isCritical = primaryTerm.exploded;
+			}
+		}
+
+		if (this.options.canMiss) this.isMiss = primaryTerm.isMiss;
+
+		// Recalculate total if vicious explosion added dice
+		// This must happen BEFORE primaryDieAsDamage exclusion to avoid double-counting
+		if (isVicious && this.isCritical) {
+			this._recalculateTotal();
+		}
+
+		// When primaryDieAsDamage is false, exclude the base die value from damage
+		// (explosions still count toward damage)
+		if (!this.options.primaryDieAsDamage) {
+			// Find the first result (the base roll, not explosion rolls)
+			// The base result is the one that may have exploded: true flag
+			const baseResult = primaryTerm.results.find((r) => r.active && !r.discarded);
+			if (baseResult) {
+				this.excludedPrimaryDieValue = baseResult.result;
+				// Adjust the total by subtracting the base die value
+				const internals = this as object as { _total: number };
+				internals._total = (this._total ?? 0) - this.excludedPrimaryDieValue;
+			}
+		}
 	}
 
 	/**

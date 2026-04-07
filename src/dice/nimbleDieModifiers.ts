@@ -110,9 +110,13 @@ export function kln(this: DieLike, modifier: string): boolean {
  * Safe to call multiple times; subsequent calls are no-ops.
  */
 export function registerNimbleDieModifiers(): void {
-	const Die = foundry?.dice?.terms?.Die as
-		| (Function & { MODIFIERS: Record<string, string>; prototype: Record<string, unknown> })
-		| undefined;
+	type DieConstructor = (new (
+		...args: unknown[]
+	) => unknown) & {
+		MODIFIERS: Record<string, string>;
+		prototype: Record<string, unknown>;
+	};
+	const Die = foundry?.dice?.terms?.Die as DieConstructor | undefined;
 	if (!Die) return;
 
 	if (!Die.MODIFIERS) {
