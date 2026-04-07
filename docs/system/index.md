@@ -25,3 +25,7 @@ Documentation for the Nimble FoundryVTT system - covering gameplay mechanics, co
 - Data models and document structures
 - Extending the system with custom content
 - Automation building blocks API
+
+## Engine Internals
+
+- [Dice Engine](./dice-engine.md) — how `DamageRoll` and the primary-die rules work, plus the extension points for new content
