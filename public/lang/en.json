@@ -1504,7 +1504,52 @@
 				"title": "Roll Builder",
 				"placeholder": "(formula, flags, roll buttons will go here)",
 				"actorLabel": "Actor",
-				"selectedLabel": "Selected"
+				"selectedLabel": "Selected",
+				"formulaLabel": "Formula",
+				"templateShapeLabel": "AoE template shape",
+				"weaponTypeLabel": "Weapon type",
+				"proficiencyLine": "Proficient with '{weaponType}': {state}",
+				"critSuppressedLine": "Crit will be suppressed for non-proficiency: {state}",
+				"proficiency": {
+					"yes": "yes",
+					"no": "no",
+					"na": "N/A"
+				},
+				"flags": {
+					"isVicious": "isVicious",
+					"canCrit": "canCrit",
+					"canMiss": "canMiss",
+					"primaryDieAsDamage": "primaryDieAsDamage",
+					"overriddenByAoe": "forced off by AoE template"
+				},
+				"templateShape": {
+					"none": "(none)",
+					"circle": "Circle",
+					"cone": "Cone",
+					"emanation": "Emanation",
+					"line": "Line",
+					"square": "Square"
+				},
+				"rollModeSources": {
+					"title": "rollMode sources",
+					"add": "Add source",
+					"remove": "Remove",
+					"defaultLabel": "New source",
+					"net": "Net rollMode: {sum}"
+				},
+				"actions": {
+					"roll": "Roll",
+					"forceCrit": "Force Crit",
+					"forceMiss": "Force Miss",
+					"forceSpecific": "Force Specific Values"
+				},
+				"specific": {
+					"hint": "Enter exact values for each die. Blank = random.",
+					"rollWith": "Roll with these values"
+				},
+				"errors": {
+					"noPrimaryDie": "No primary die found in formula."
+				}
 			},
 			"results": {
 				"title": "Results",
