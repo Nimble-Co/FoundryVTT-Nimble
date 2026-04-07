@@ -342,7 +342,7 @@ describe('Dice slice 1 — BUG baseline (expected RED)', () => {
 		//   1. DamageRoll is constructed exactly as ItemActivationManager would build it
 		//      (matching `regression_adv_resolved_before_primary` above) — no test-side
 		//      modifier injection.
-		//   2. The constructor's `_extractPrimaryDie` + `_phase1_expandPoolForAdvDis` path
+		//   2. The constructor's `_extractPrimaryDie` + `_applyRollMode` path
 		//      emits the `khn` modifier on the primary term (2 dice, keep 1) plus `x` for crits.
 		//   3. We stage the underlying rolled values [1, 2] on the primary die's results
 		//      (the mock cannot drive RNG end-to-end — see file header note).

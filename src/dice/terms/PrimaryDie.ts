@@ -26,7 +26,7 @@ declare namespace PrimaryDie {
  *
  * This term is automatically created by DamageRoll when processing the first die in a formula.
  * For non-vicious weapons, the explosion modifier ('x') is added to detect critical hits.
- * For vicious weapons, explosion is handled manually in DamageRoll._phase5_resolveOutcomeAndExplosions().
+ * For vicious weapons, explosion is handled manually in DamageRoll._evaluateViciousExplosion().
  *
  * @extends {foundry.dice.terms.Die}
  *

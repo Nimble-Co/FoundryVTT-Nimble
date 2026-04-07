@@ -3,72 +3,6 @@ import type { InexactPartial } from '#types/utils.js';
 
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
-/**
- * Phase map — DamageRoll pipeline (per dice-rolling-design.md §4).
- *
- * This file is mid-refactor from a monolithic class into an explicit phase
- * pipeline. Today's method → phase mapping (code movement happens phase by
- * phase in follow-up dispatches; this is a documentation-only map):
- *
- *   Phase 0 — Build the roll request.
- *     constructor body (options defaulting, Phase -1 rollModeSources
- *     aggregation, originalFormula capture) + `_phase0_buildRollRequest`
- *     (formerly `_preProcessFormula`) which partitions the formula into
- *     primary pool + bonus dice and gathers flags.
- *
- *   Phase 1 — Primary pool construction.
- *     `_extractPrimaryDie` (PrimaryDie creation, multi-die vs single-die
- *     branching, term splicing) and `_phase1_expandPoolForAdvDis` (adv/dis
- *     modifier application, currently also used by Phase 0's AoE fallback
- *     branch — BLURS the 0/1 boundary, see note below).
- *
- *   Phase 2 — Preset application.
- *     `_phase2_applyPresets` (primaryDieValue / primaryDieModifier
- *     overrides, excess term splicing).
- *
- *   Phase 3 — Polymorphic advantage (future).
- *     Not yet implemented. Will extend Phase 0's roll request to carry
- *     pool-aware adv types and Phase 1 to honor them.
- *
- *   Phase 4 — Determine the Primary Die.
- *     Lives mostly in `PrimaryDie.ts` getters (`isCritical`, `isMiss`) which
- *     read post-eval discarded state from the `khn`/`kln` modifier handlers
- *     (Phase 3). The `super._evaluate` call in `_evaluate` is just dispatch —
- *     not a phase by itself.
- *
- *   Phase 4.5 — Mutation hook (no-op placeholder).
- *     `_phase4_5_applyMutationHooks` — slot for P4 (Vicious Opportunist
- *     family) primitives that mutate primary die values post-roll and re-run
- *     outcome detection. Currently does nothing.
- *
- *   Phase 5 — Resolve hit/miss/crit + crit explosion + vicious.
- *     Two methods: `_phase5_resolveOutcomeAndExplosions` (was
- *     `_evaluateViciousExplosion`) handles the manual crit explosion that
- *     bypasses Dice So Nice preempting, and `_phase5_finalizeOutcome`
- *     interprets `isCritical`/`isMiss` from the post-eval state and adjusts
- *     `_total` for vicious recalculation + primaryDieAsDamage exclusion.
- *
- *   Phase 6 — Roll bonus dice & sum.
- *     **Foundry-native** — non-primary dice in the formula are summed by
- *     `super._evaluate` automatically. No DamageRoll code lives here.
- *     Documented for completeness.
- *
- *   Phase 7 — Serialization / reconstruction.
- *     `toJSON`, `fromData`, `fromRoll`, `_isRollTermArray`,
- *     `_setEvaluatedState`, `_baseRollFromSerializedData`.
- *
- * Blurred boundaries noted for future dispatches:
- *   - `_preProcessFormula` (now `_phase0_buildRollRequest`) calls BOTH
- *     `_extractPrimaryDie` (Phase 1) AND `_phase1_expandPoolForAdvDis`
- *     directly on the first die term in its AoE fallback branch. The AoE
- *     branch arguably
- *     belongs in Phase 1, not Phase 0 — Phase 0 should only produce a
- *     request, not mutate terms.
- *   - The constructor's Phase -1 rollModeSources aggregation overwrites
- *     `options.rollMode` in-place; a cleaner Phase 0 would leave options
- *     immutable and emit a distinct request object.
- */
-
 const Terms = foundry.dice.terms;
 
 declare namespace DamageRoll {
@@ -232,7 +166,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		if (!this.options.canCrit) this.isCritical = false;
 		if (!this.options.canMiss) this.isMiss = false;
 
-		this._phase0_buildRollRequest(
+		this._preProcessFormula(
 			formula,
 			this.data ?? ({} as DamageRoll.Data),
 			(this.options ?? {}) as DamageRoll.Options,
@@ -244,15 +178,6 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** ------------------------------------------------------ */
 
 	/**
-	 * Phase 1 — Expand primary pool for advantage/disadvantage.
-	 *
-	 * Consumes: a die term + net rollMode.
-	 * Produces: term mutated with `|netRollMode|` extra dice and `khn`/`kln`
-	 * modifier emitted.
-	 *
-	 * Future primitives: P3 (polymorphic advantage) will allow per-pool die-type
-	 * selection here.
-	 *
 	 * Adds extra dice and a keep modifier based on rollMode:
 	 * - Positive rollMode (advantage): adds dice and keeps highest N (original count)
 	 * - Negative rollMode (disadvantage): adds dice and keeps lowest N (original count)
@@ -261,7 +186,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * @param rollMode - Positive for advantage, negative for disadvantage.
 	 * @param keepCount - Number of dice to keep (defaults to original die count).
 	 */
-	private _phase1_expandPoolForAdvDis(
+	private _applyRollMode(
 		dieTerm: foundry.dice.terms.Die,
 		rollMode: number,
 		keepCount?: number,
@@ -318,13 +243,13 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			});
 
 			// Apply advantage/disadvantage to primary die only (keeps 1)
-			this._phase1_expandPoolForAdvDis(primaryTerm, rollMode, 1);
+			this._applyRollMode(primaryTerm, rollMode, 1);
 
 			// Only add explosion modifier for non-vicious weapons
 			// Vicious weapons handle explosion manually after evaluation to avoid preemptive rolls
 			if (shouldExplode && !isVicious) primaryTerm.modifiers.push('x');
 
-			this._phase2_applyPresets(primaryTerm, options);
+			this._applyPrimaryDiePresets(primaryTerm, options);
 			this.terms.unshift(primaryTerm);
 		} else {
 			// Single-die formula: convert to PrimaryDie
@@ -336,13 +261,13 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			});
 
 			// Apply advantage/disadvantage (keeps 1)
-			this._phase1_expandPoolForAdvDis(primaryTerm, rollMode, 1);
+			this._applyRollMode(primaryTerm, rollMode, 1);
 
 			// Only add explosion modifier for non-vicious weapons
 			// Vicious weapons handle explosion manually after evaluation to avoid preemptive rolls
 			if (shouldExplode && !isVicious) primaryTerm.modifiers.push('x');
 
-			this._phase2_applyPresets(primaryTerm, options);
+			this._applyPrimaryDiePresets(primaryTerm, options);
 
 			const idx = this.terms.findIndex((t) => t instanceof Terms.Die);
 			if (idx !== -1) this.terms[idx] = primaryTerm;
@@ -352,19 +277,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	/**
-	 * Phase 2 — Apply primary die presets.
-	 *
-	 * Consumes: primary die term + presets from options.
-	 * Produces: term mutated with preset values applied (current minimal use;
-	 * expanded by P2/P4 future primitives).
-	 *
-	 * Future primitives: P2 (dice provenance) and P4 (primary die override)
-	 * will extend this.
+	 * Apply primaryDieValue / primaryDieModifier presets to the primary die.
 	 *
 	 * @param primaryTerm - The primary die to configure.
 	 * @param options - Roll options containing primaryDieValue and primaryDieModifier.
 	 */
-	private _phase2_applyPresets(primaryTerm: PrimaryDie, options: DamageRoll.Options): void {
+	private _applyPrimaryDiePresets(primaryTerm: PrimaryDie, options: DamageRoll.Options): void {
 		if (options.primaryDieValue) {
 			primaryTerm.results = [{ result: options.primaryDieValue, active: true }];
 		}
@@ -386,31 +304,15 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	/**
-	 * Phase 0 — Build the roll request.
-	 *
-	 * Consumes the raw formula (already parsed into `this.terms` by the base Roll
-	 * constructor) together with the resolved options bag.
-	 *
-	 * Produces mutated `this` state: the formula is partitioned into a primary
-	 * pool (extracted PrimaryDie term) plus bonus dice (remaining terms), and
-	 * roll flags (canCrit, canMiss, rollMode) are gathered onto the primary term
-	 * via modifiers. In the AoE fallback (no primary die needed) adv/dis is
-	 * applied directly to the first die term.
-	 *
-	 * Future primitives: P3 (polymorphic advantage) will extend this to support
-	 * pool-aware adv types.
-	 *
-	 * Handles two scenarios:
-	 * 1. Primary die extraction: When canCrit or canMiss is true, extracts the first die
-	 *    as a primary die for hit/miss/crit detection.
-	 * 2. AoE advantage/disadvantage: When neither canCrit nor canMiss is true but rollMode
-	 *    is set, applies advantage/disadvantage directly to the first die term.
+	 * Pre-processes the formula, partitioning it into a primary pool (PrimaryDie
+	 * term) plus bonus dice when crit/miss detection is needed, or applying
+	 * adv/dis directly to the first die term in the AoE fallback case.
 	 *
 	 * @param _formula - The original dice formula (unused, kept for signature compatibility).
 	 * @param _data - Roll data (unused, kept for signature compatibility).
 	 * @param options - Roll options containing canCrit, canMiss, and rollMode settings.
 	 */
-	_phase0_buildRollRequest(_formula: string, _data: DamageRoll.Data, options: DamageRoll.Options) {
+	_preProcessFormula(_formula: string, _data: DamageRoll.Data, options: DamageRoll.Options) {
 		const { rollMode = 0 } = options;
 		const needsPrimaryDie = options.canCrit || options.canMiss;
 
@@ -425,7 +327,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		} else if (rollMode) {
 			// AoE case: apply advantage/disadvantage to entire first die term
 			// 2d8 with advantage → 3d8khn2
-			this._phase1_expandPoolForAdvDis(firstDieTerm, rollMode);
+			this._applyRollMode(firstDieTerm, rollMode);
 		}
 
 		this.resetFormula();
@@ -479,7 +381,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	): Promise<DamageRoll.Evaluated<this>> {
 		await super._evaluate(options);
 
-		this._phase4_5_applyMutationHooks();
+		this._applyPostRollMutations();
 
 		const primaryTerm = this.terms.find((t) => t instanceof PrimaryDie);
 
@@ -488,27 +390,20 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 			// For vicious weapons, handle explosion manually after initial roll
 			if (isVicious && this.options.canCrit) {
-				await this._phase5_resolveOutcomeAndExplosions(primaryTerm);
+				await this._evaluateViciousExplosion(primaryTerm);
 			}
 
-			this._phase5_finalizeOutcome(primaryTerm);
+			this._finalizeOutcome(primaryTerm);
 		}
 
 		return this as DamageRoll.Evaluated<this>;
 	}
 
 	/**
-	 * Phase 5 (finalization) — interpret outcome and adjust total.
-	 *
-	 * Consumes: post-evaluation primary die + any crit-explosion rerolls from
-	 * `_phase5_resolveOutcomeAndExplosions`.
-	 * Produces: `this._total` updated for vicious recalculation and
-	 * primaryDieAsDamage exclusion.
-	 *
-	 * Future primitives: P4 (rerunnable outcome) mutations from Phase 4.5 may
-	 * trigger this to run again — must remain idempotent.
+	 * Interpret primary die outcome after evaluation and adjust total for
+	 * vicious recalculation and primaryDieAsDamage exclusion.
 	 */
-	private _phase5_finalizeOutcome(primaryTerm: PrimaryDie): void {
+	private _finalizeOutcome(primaryTerm: PrimaryDie): void {
 		const isVicious = this.options.isVicious ?? false;
 
 		// Determine crit status
@@ -547,33 +442,17 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	/**
-	 * Phase 4.5 — Mutation hook (placeholder, no-op).
-	 *
-	 * Consumes: post-evaluation primary die state.
-	 * Produces: nothing today. Future primitives (P4 — Vicious Opportunist
-	 * family) will mutate primary die values here and re-trigger outcome
-	 * detection in Phase 5 (which must be idempotent and rerunnable).
-	 *
-	 * This is intentional dead code: the slot exists so future primitives
-	 * have a place to live without growing the orchestrator.
+	 * Extension point for features that mutate primary die values after
+	 * rolling but before outcome resolution (e.g. Hexbinder Doomed,
+	 * Vicious Opportunist). Intentionally empty today.
 	 */
-	private _phase4_5_applyMutationHooks(): void {
-		// Intentionally empty. Slot for future P4 primitives.
+	private _applyPostRollMutations(): void {
+		// No-op. Reserved for future mutation features.
 	}
 
 	/**
-	 * Phase 5 — Resolve hit / miss / crit + crit explosion + vicious bonus dice.
-	 *
-	 * Consumes: post-evaluation primary die state (from Phase 3 modifier handlers).
-	 * Produces: primary die crit chain extended via manual reroll loop; vicious
-	 * bonus dice rolled if crit; total recalculated.
-	 *
-	 * **Delicate:** the manual explosion path exists to prevent Dice So Nice
-	 * from preempting the rolls. Do not replace with native `x` modifier
-	 * without DSN coordination.
-	 *
-	 * Future primitives: P1 (per-die crit detection — Dravok) and P4
-	 * (rerunnable outcome) will extend this. Phase 5 must remain idempotent.
+	 * Manually resolves vicious crit explosion to avoid Dice So Nice preempting
+	 * the rolls.
 	 *
 	 * Vicious explosion rules:
 	 * 1. If initial die = max, roll 2 explosion dice
@@ -583,7 +462,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 *
 	 * @param primaryTerm - The primary die term to evaluate for explosion
 	 */
-	private async _phase5_resolveOutcomeAndExplosions(primaryTerm: PrimaryDie): Promise<void> {
+	private async _evaluateViciousExplosion(primaryTerm: PrimaryDie): Promise<void> {
 		const faces = primaryTerm.faces ?? 6;
 		const maxIterations = 100; // Safety guard - even 100 consecutive max rolls is astronomically unlikely
 		let iterations = 0;
