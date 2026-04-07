@@ -116,7 +116,7 @@ export function registerNimbleDieModifiers(): void {
 		MODIFIERS: Record<string, string>;
 		prototype: Record<string, unknown>;
 	};
-	const Die = foundry?.dice?.terms?.Die as DieConstructor | undefined;
+	const Die = foundry?.dice?.terms?.Die as unknown as DieConstructor | undefined;
 	if (!Die) return;
 
 	if (!Die.MODIFIERS) {
