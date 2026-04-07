@@ -39,7 +39,7 @@ describe('DamageRoll preprocessing', () => {
 
 			// Primary die gets advantage (2d6kh), rest stays as damage
 			// 2d6 with advantage → 2d6khx (primary) + 1d6 (damage)
-			expect(roll.formula).toBe('2d6khx + 1d6');
+			expect(roll.formula).toBe('2d6khnx + 1d6');
 			expect(roll.primaryDie).toBeDefined();
 			expect(roll.primaryDie?.number).toBe(2);
 		});
@@ -52,7 +52,7 @@ describe('DamageRoll preprocessing', () => {
 			);
 
 			// Primary die gets disadvantage (2d6kl), rest stays as damage
-			expect(roll.formula).toBe('2d6klx + 1d6');
+			expect(roll.formula).toBe('2d6klnx + 1d6');
 			expect(roll.primaryDie).toBeDefined();
 			expect(roll.primaryDie?.number).toBe(2);
 		});
@@ -65,7 +65,7 @@ describe('DamageRoll preprocessing', () => {
 			);
 
 			// 1d8 with advantage 2 → 3d8khx (roll 3, keep 1)
-			expect(roll.formula).toBe('3d8khx');
+			expect(roll.formula).toBe('3d8khnx');
 			expect(roll.primaryDie?.number).toBe(3);
 		});
 
@@ -100,7 +100,7 @@ describe('DamageRoll preprocessing', () => {
 			);
 
 			// 2d8 with advantage → 3d8kh2 (roll 3, keep highest 2)
-			expect(roll.formula).toBe('3d8kh2');
+			expect(roll.formula).toBe('3d8khn2');
 			expect(roll.primaryDie).toBeUndefined();
 		});
 
@@ -112,7 +112,7 @@ describe('DamageRoll preprocessing', () => {
 			);
 
 			// 2d8 with disadvantage → 3d8kl2 (roll 3, keep lowest 2)
-			expect(roll.formula).toBe('3d8kl2');
+			expect(roll.formula).toBe('3d8kln2');
 			expect(roll.primaryDie).toBeUndefined();
 		});
 
@@ -124,7 +124,7 @@ describe('DamageRoll preprocessing', () => {
 			);
 
 			// 1d8 with advantage → 2d8kh (roll 2, keep 1)
-			expect(roll.formula).toBe('2d8kh');
+			expect(roll.formula).toBe('2d8khn');
 			expect(roll.primaryDie).toBeUndefined();
 		});
 
@@ -136,7 +136,7 @@ describe('DamageRoll preprocessing', () => {
 			);
 
 			// 2d6 with advantage 2 → 4d6kh2 (roll 4, keep highest 2)
-			expect(roll.formula).toBe('4d6kh2');
+			expect(roll.formula).toBe('4d6khn2');
 		});
 
 		it('should apply multiple levels of disadvantage to AoE', () => {
@@ -147,7 +147,7 @@ describe('DamageRoll preprocessing', () => {
 			);
 
 			// 3d6 with disadvantage 2 → 5d6kl3 (roll 5, keep lowest 3)
-			expect(roll.formula).toBe('5d6kl3');
+			expect(roll.formula).toBe('5d6kln3');
 		});
 
 		it('should preserve formula modifiers for AoE with advantage', () => {
@@ -158,7 +158,7 @@ describe('DamageRoll preprocessing', () => {
 			);
 
 			// 2d8 + 4 with advantage → 3d8kh2 + 4
-			expect(roll.formula).toBe('3d8kh2 + 4');
+			expect(roll.formula).toBe('3d8khn2 + 4');
 		});
 	});
 
@@ -277,7 +277,7 @@ describe('DamageRoll vicious weapon preprocessing', () => {
 		);
 
 		// Should have advantage modifier but no explosion modifier
-		expect(roll.formula).toBe('2d6kh + 1d6');
+		expect(roll.formula).toBe('2d6khn + 1d6');
 		expect(roll.primaryDie).toBeDefined();
 		expect(roll.primaryDie?.number).toBe(2);
 	});
@@ -854,6 +854,7 @@ describe('DamageRoll.fromData', () => {
 				canCrit: true,
 				canMiss: true,
 				rollMode: 0,
+				netRollMode: 0,
 				primaryDieAsDamage: true,
 			});
 		});
@@ -877,6 +878,7 @@ describe('DamageRoll.fromData', () => {
 				canCrit: true,
 				canMiss: true,
 				rollMode: 1,
+				netRollMode: 1,
 				primaryDieAsDamage: true,
 			});
 		});

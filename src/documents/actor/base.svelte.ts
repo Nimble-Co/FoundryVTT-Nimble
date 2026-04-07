@@ -838,12 +838,13 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		const rollMode =
 			rollModeOverride !== null ? rollModeOverride : defaultRollMode + rollModeModifier;
 
-		// Build the d20 term based on roll mode (following constructD20Term pattern)
+		// Build the d20 term based on roll mode (following constructD20Term pattern).
+		// Uses Nimble's leftmost-on-tie keep modifiers (`khn`/`kln`).
 		let d20Term = '1d20';
 		if (rollMode > 0) {
-			d20Term = `${rollMode + 1}d20kh`;
+			d20Term = `${rollMode + 1}d20khn`;
 		} else if (rollMode < 0) {
-			d20Term = `${Math.abs(rollMode) + 1}d20kl`;
+			d20Term = `${Math.abs(rollMode) + 1}d20kln`;
 		}
 
 		const bonus = systemData.attributes.initiative?.mod || '';

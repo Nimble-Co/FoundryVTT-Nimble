@@ -19,7 +19,7 @@ import { ModifierManager } from '../managers/ModifierManager.js';
  * @param rollData.rollMode - Advantage (positive), disadvantage (negative), or normal (0).
  * @param rollData.minRoll - Minimum d20 value (default 1).
  * @param rollData.item - Optional item providing additional context.
- * @returns The complete roll formula string (e.g., "2d20kh + 5[Strength] + 3[Athletics]").
+ * @returns The complete roll formula string (e.g., "2d20khn + 5[Strength] + 3[Athletics]").
  *
  * @example
  * ```typescript
@@ -29,7 +29,7 @@ import { ModifierManager } from '../managers/ModifierManager.js';
  *   abilityKey: 'str',
  *   rollMode: 1
  * });
- * // Returns something like "2d20kh + 3[Strength Mod]"
+ * // Returns something like "2d20khn + 3[Strength Mod]"
  *
  * // Fortitude save
  * const saveFormula = getRollFormula(actor, {

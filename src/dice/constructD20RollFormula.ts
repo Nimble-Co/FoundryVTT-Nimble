@@ -42,7 +42,7 @@ export type D20RollOptions = {
  *   modifiers: [{ label: "Strength", value: 3 }, { label: "Proficiency", value: 2 }],
  *   rollMode: 1  // advantage
  * });
- * // result.rollFormula might be "2d20kh + 3[Strength] + 2[Proficiency]"
+ * // result.rollFormula might be "2d20khn + 3[Strength] + 2[Proficiency]"
  * ```
  */
 export default function constructD20RollFormula({
