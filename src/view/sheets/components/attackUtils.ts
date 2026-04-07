@@ -1,5 +1,3 @@
-import type { NimbleCharacter } from '../../../documents/actor/character.js';
-
 /** Default unarmed: 1d4 + STR damage, but cannot crit without proficiency (e.g., Swift Fists) */
 export const DEFAULT_UNARMED_DAMAGE = '1d4 + @abilities.strength.mod';
 
@@ -15,23 +13,31 @@ export interface CharacterSystemExtension {
 }
 
 /**
+ * Structural shape for an actor that may carry the proficiency / unarmed
+ * extensions. Defined locally rather than importing `NimbleCharacter` to
+ * avoid a cycle: `attackUtils` is consumed by `ItemActivationManager` which
+ * is itself reachable from `character.ts`.
+ */
+type ProficiencyActor = { system: CharacterSystemExtension };
+
+/**
  * Get the character system data with unarmed extensions
  */
-export function getCharacterSystem(actor: NimbleCharacter): CharacterSystemExtension {
-	return actor.system as CharacterSystemExtension;
+export function getCharacterSystem(actor: ProficiencyActor): CharacterSystemExtension {
+	return actor.system;
 }
 
 /**
  * Get the unarmed damage formula for the actor
  */
-export function getUnarmedDamageFormula(actor: NimbleCharacter): string {
+export function getUnarmedDamageFormula(actor: ProficiencyActor): string {
 	return getCharacterSystem(actor).unarmedDamage ?? DEFAULT_UNARMED_DAMAGE;
 }
 
 /**
  * Check if the actor has weapon proficiency in unarmed strikes
  */
-export function hasUnarmedProficiency(actor: NimbleCharacter): boolean {
+export function hasUnarmedProficiency(actor: ProficiencyActor): boolean {
 	const weapons = getCharacterSystem(actor).proficiencies?.weapons;
 	if (!weapons) return false;
 	if (weapons instanceof Set) return weapons.has(UNARMED_STRIKE_PROFICIENCY);
@@ -55,15 +61,13 @@ export function hasUnarmedProficiency(actor: NimbleCharacter): boolean {
  *   not include the weapon's type.
  */
 export function hasWeaponProficiency(
-	actor: NimbleCharacter | { system?: unknown } | null | undefined,
+	actor: { system?: unknown } | null | undefined,
 	weapon: { system?: { weaponType?: string } } | null | undefined,
 ): boolean {
 	const weaponType = weapon?.system?.weaponType ?? '';
 	if (weaponType === '') return true; // permissive baseline
-	const proficiencies = (actor as NimbleCharacter | undefined)?.system as
-		| CharacterSystemExtension
-		| undefined;
-	const weapons = proficiencies?.proficiencies?.weapons;
+	const system = actor?.system as CharacterSystemExtension | undefined;
+	const weapons = system?.proficiencies?.weapons;
 	if (!weapons) return false;
 	if (weapons instanceof Set) return weapons.has(weaponType);
 	return Array.isArray(weapons) && weapons.includes(weaponType);
