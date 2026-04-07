@@ -17,6 +17,11 @@
 		formula: string;
 		faces: number | null;
 		results: DieResultDump[] | null;
+		/**
+		 * For Die terms: the configured die count (used to split base dice from
+		 * post-evaluation explosion rerolls in the results array).
+		 * For NumericTerm: the numeric value.
+		 */
 		number: number | null;
 		operator: string | null;
 	};
@@ -193,25 +198,41 @@
 	};
 	type CategorizedPrimary = { faces: number | null; dice: CategorizedDie[] };
 
-	function categorizeDie(r: DieResultDump): CategorizedDie['category'] {
+	/**
+	 * Categorize a single primary-die result by its position in the results
+	 * array (whether it's a base die or an explosion reroll) and its provenance
+	 * tag (set by manual vicious explosion).
+	 *
+	 * `baseCount` is the term's configured `number` — the count of dice that
+	 * Foundry rolled as the original pool. Anything beyond that index is an
+	 * explosion reroll.
+	 */
+	function categorizeDie(
+		r: DieResultDump,
+		index: number,
+		baseCount: number,
+	): CategorizedDie['category'] {
 		if (r.discarded) return 'dropped';
 		if (r.provenance === 'viciousChain') return 'viciousChain';
 		if (r.provenance === 'viciousBonus') return 'viciousBonus';
-		if (r.exploded) return 'critReroll';
-		return 'kept';
+		if (index < baseCount) return 'kept';
+		return 'critReroll';
 	}
 
 	const categorizedPrimary = $derived.by<CategorizedPrimary[]>(() => {
-		return primaryTerms.map((term) => ({
-			faces: term.faces,
-			dice: (term.results ?? []).map((r) => ({
-				result: r.result,
-				active: r.active,
-				discarded: r.discarded,
-				exploded: r.exploded,
-				category: categorizeDie(r),
-			})),
-		}));
+		return primaryTerms.map((term) => {
+			const baseCount = term.number ?? term.results?.length ?? 0;
+			return {
+				faces: term.faces,
+				dice: (term.results ?? []).map((r, i) => ({
+					result: r.result,
+					active: r.active,
+					discarded: r.discarded,
+					exploded: r.exploded,
+					category: categorizeDie(r, i, baseCount),
+				})),
+			};
+		});
 	});
 	const bonusDieTerms = $derived(
 		lastResult?.terms.filter((t) => t.type === 'Die' || t.type === 'NimbleDie') ?? [],
@@ -300,7 +321,7 @@
 									};
 								})
 							: null,
-						number: typeof anyT.number === 'number' && !isDie ? anyT.number : null,
+						number: typeof anyT.number === 'number' ? anyT.number : null,
 						operator: typeof anyT.operator === 'string' ? anyT.operator : null,
 					};
 				}),
