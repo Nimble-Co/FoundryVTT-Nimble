@@ -627,9 +627,17 @@
 							</div>
 							<div class="nimble-testbench__die-row">
 								{#each kept as r, ri (ri)}
-									<div class="nimble-testbench__die nimble-testbench__die--primary">
+									<div
+										class="nimble-testbench__die nimble-testbench__die--primary"
+										class:nimble-testbench__die--exploded={r.exploded}
+									>
 										<div class="nimble-testbench__die-value">{r.result}</div>
 										<div class="nimble-testbench__die-faces">d{term.faces}</div>
+										{#if r.exploded}
+											<div class="nimble-testbench__die-tag">
+												{localize('NIMBLE.diceTestbench.results.exploded')}
+											</div>
+										{/if}
 									</div>
 								{/each}
 							</div>
