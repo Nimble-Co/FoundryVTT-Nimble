@@ -245,8 +245,37 @@
 
 		<label class="nimble-testbench__field">
 			<span>{localize('NIMBLE.diceTestbench.rollBuilder.weaponTypeLabel')}</span>
-			<input type="text" bind:value={weaponType} />
+			<input type="text" list="nimble-testbench-weapon-types" bind:value={weaponType} />
 		</label>
+		<datalist id="nimble-testbench-weapon-types">
+			<option value="">(none — permissive, anyone can crit)</option>
+			<option value="Unarmed Strike"></option>
+			<option value="Battleaxe"></option>
+			<option value="Club/Mace"></option>
+			<option value="Crossbow"></option>
+			<option value="Dagger"></option>
+			<option value="Glaive"></option>
+			<option value="Greataxe"></option>
+			<option value="Greatmaul"></option>
+			<option value="Greatsword"></option>
+			<option value="Hand Axe"></option>
+			<option value="Handheld Ballista"></option>
+			<option value="Javelins"></option>
+			<option value="Longbow"></option>
+			<option value="Longsword"></option>
+			<option value="Pole Hammer"></option>
+			<option value="Rapier"></option>
+			<option value="Short Sword"></option>
+			<option value="Shortbow"></option>
+			<option value="Sickle"></option>
+			<option value="Sling"></option>
+			<option value="Spear"></option>
+			<option value="Staff"></option>
+			<option value="Throwing Hammers"></option>
+		</datalist>
+		<p class="nimble-testbench__hint">
+			{localize('NIMBLE.diceTestbench.rollBuilder.weaponTypeHint')}
+		</p>
 
 		<p class="nimble-testbench__prof">
 			{localize('NIMBLE.diceTestbench.rollBuilder.proficiencyLine', {
@@ -274,6 +303,9 @@
 					{localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.add')}
 				</button>
 			</div>
+			<p class="nimble-testbench__hint">
+				{localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.hint')}
+			</p>
 			{#each rollModeSources as src, i (i)}
 				<div class="nimble-testbench__source-row">
 					<input type="text" bind:value={src.label} />
@@ -412,6 +444,13 @@
 		font-size: 0.8rem;
 		color: #bbb;
 		margin: 0.2rem 0;
+	}
+	.nimble-testbench__hint {
+		font-size: 0.75rem;
+		color: #999;
+		font-style: italic;
+		margin: 0.2rem 0 0.4rem 0;
+		line-height: 1.35;
 	}
 	.nimble-testbench__sources {
 		border: 1px solid #444;

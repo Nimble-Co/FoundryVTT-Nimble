@@ -1472,6 +1472,7 @@
 				"formulaLabel": "Formula",
 				"templateShapeLabel": "AoE template shape",
 				"weaponTypeLabel": "Weapon type",
+				"weaponTypeHint": "Leave blank for a permissive weapon (anyone can crit). Set to a weapon type like 'Longsword' to require the attacker has that entry in their proficiencies — non-proficient wielders cannot crit (CoreRules-2.md:972). Pick from the suggestions or type your own to test edge cases.",
 				"proficiencyLine": "Proficient with '{weaponType}': {state}",
 				"critSuppressedLine": "Crit will be suppressed for non-proficiency: {state}",
 				"proficiency": {
@@ -1496,6 +1497,7 @@
 				},
 				"rollModeSources": {
 					"title": "rollMode sources",
+					"hint": "Each entry is an advantage (+1) or disadvantage (-1) source — e.g. flanking, prone, Hunter's Mark. Add one row per source. The engine sums them into a net rollMode (adv and dis cancel 1-for-1 per CoreRules-2.md:256). Use this to test how multiple adv/dis sources combine on a single roll.",
 					"add": "Add source",
 					"remove": "Remove",
 					"defaultLabel": "New source",
