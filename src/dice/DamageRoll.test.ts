@@ -1194,9 +1194,9 @@ describe('DamageRoll evaluation — primary die outcome', () => {
 	});
 
 	it('minion (canCrit=false) wielding a vicious weapon never explodes even on max roll', async () => {
-		// Minions cannot crit (CoreRules-2.md:478). Even rolling max on a
-		// vicious weapon, the manual explosion path requires canCrit, so no
-		// vicious explosion fires and isCritical stays false.
+		// Minions cannot crit. Even rolling max on a vicious weapon, the
+		// manual explosion path requires canCrit, so no vicious explosion
+		// fires and isCritical stays false.
 		const roll = new DamageRoll(
 			'1d6',
 			{},

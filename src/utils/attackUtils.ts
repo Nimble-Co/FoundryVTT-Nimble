@@ -41,8 +41,7 @@ export function hasUnarmedProficiency(actor: NimbleCharacter): boolean {
 /**
  * Check whether an actor is proficient with a given weapon item.
  *
- * A wielder lacking proficiency in this weapon's type cannot crit
- * (CoreRules-2.md:972).
+ * A wielder lacking proficiency in this weapon's type cannot crit.
  *
  * Behavior:
  * - If the weapon has no `weaponType` (empty string or unset), returns true
