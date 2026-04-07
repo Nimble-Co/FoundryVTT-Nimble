@@ -25,7 +25,6 @@ import { ItemActivationManager, testDependencies } from '../managers/ItemActivat
 import { hasWeaponProficiency } from '../view/sheets/components/attackUtils.js';
 import { DamageRoll } from './DamageRoll.js';
 import { khn as nimbleKhn, kln as nimbleKln } from './nimbleDieModifiers.js';
-import { PrimaryDie } from './terms/PrimaryDie.js';
 
 type DieResult = {
 	result: number;
