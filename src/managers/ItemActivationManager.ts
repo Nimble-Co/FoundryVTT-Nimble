@@ -325,6 +325,8 @@ class ItemActivationManager {
 					const lacksProficiency = !hasWeaponProficiency(this.actor as any, this.#item as any);
 
 					const resolvedCanCrit = isAoE || isMinion || lacksProficiency ? false : (canCrit ?? true);
+					// Minions cannot crit (CoreRules-2.md:478) but can still miss — the
+					// asymmetry with resolvedCanCrit above is intentional.
 					const resolvedCanMiss = isAoE ? false : isMinion || (canMiss ?? true);
 					node.rollMode = dialogData.rollMode ?? 0;
 

@@ -44,15 +44,16 @@ export function hasUnarmedProficiency(actor: NimbleCharacter): boolean {
  * A wielder lacking proficiency in this weapon's type cannot crit
  * (CoreRules-2.md:972).
  *
- * The check is permissive by default: weapons with `system.weaponType === ''`
- * (or unset) are treated as proficient for everyone. This is the migration
- * safety hatch — existing weapons that have not opted in to a weaponType keep
- * working unchanged. Only weapons with an explicit non-empty weaponType are
- * subject to the proficiency check.
- *
- * Non-character actors (monsters, NPCs without a proficiencies field) are
- * also treated as proficient — the restriction only meaningfully applies to
- * player characters.
+ * Behavior:
+ * - If the weapon has no `weaponType` (empty string or unset), returns true
+ *   regardless of actor. This is the permissive migration baseline so existing
+ *   weapons that have not opted in to a weaponType keep working unchanged.
+ * - Otherwise, returns true only if the actor has
+ *   `system.proficiencies.weapons` (as a Set or string array) containing the
+ *   weapon's `weaponType`.
+ * - Returns false for a null actor, an actor with no `proficiencies.weapons`
+ *   field (including monsters/NPCs), or an actor whose proficiency list does
+ *   not include the weapon's type.
  */
 export function hasWeaponProficiency(
 	actor: NimbleCharacter | { system?: unknown } | null | undefined,
