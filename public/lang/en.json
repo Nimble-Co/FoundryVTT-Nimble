@@ -1506,6 +1506,16 @@
 				"placeholder": "(formula, flags, roll buttons will go here)",
 				"actorLabel": "Actor",
 				"selectedLabel": "Selected",
+				"actorContextHint": "The selected actor's roll data is passed to the formula (so @abilities.strength.mod etc. resolve), and the actor's type and proficiency list determine whether canCrit gets suppressed.",
+				"resolved": {
+					"title": "Resolved engine flags"
+				},
+				"suppressionReason": {
+					"aoe": "AoE template forces it off",
+					"minion": "actor is a minion",
+					"nonProficient": "actor is not proficient with this weapon type",
+					"flagOff": "checkbox is off"
+				},
 				"formulaLabel": "Formula",
 				"templateShapeLabel": "AoE template shape",
 				"weaponTypeLabel": "Weapon type",

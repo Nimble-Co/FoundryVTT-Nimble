@@ -44,6 +44,7 @@ export async function stageAndRoll(
 	formula: string,
 	options: DamageRoll.Options,
 	stagedValues: StagedValue[],
+	data: DamageRoll.Data = {},
 ): Promise<StageAndRollResult> {
 	const queue: StagedValue[] = [...stagedValues];
 	const dice = (CONFIG as unknown as { Dice: { randomUniform: () => number } }).Dice;
@@ -58,7 +59,7 @@ export async function stageAndRoll(
 	};
 
 	try {
-		const roll = new DamageRoll(formula, {}, options);
+		const roll = new DamageRoll(formula, data, options);
 		await roll.evaluate();
 		return {
 			roll,

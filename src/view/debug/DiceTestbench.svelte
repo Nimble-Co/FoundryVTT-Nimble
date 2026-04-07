@@ -33,10 +33,17 @@
 		terms: TermDump[];
 	};
 
+	type TestbenchActor = {
+		id: string;
+		name: string;
+		type: string;
+		getRollData?: () => Record<string, unknown>;
+	};
+
 	let selectedActorId = $state<string | null>(null);
 
 	const actors = $derived.by(() => {
-		const all = (game.actors?.contents ?? []) as Array<{ id: string; name: string; type: string }>;
+		const all = (game.actors?.contents ?? []) as TestbenchActor[];
 		return all.filter((a) => a.type === 'character' || a.type === 'npc' || a.type === 'minion');
 	});
 
@@ -97,6 +104,41 @@
 
 	const isMinion = $derived(selectedActor?.type === 'minion');
 	const critSuppressedForNonProf = $derived(proficient === false);
+
+	// Computed flags the engine will actually receive (visible to the user
+	// before they roll, so it's clear WHY a crit/miss might be suppressed).
+	const resolvedCanCrit = $derived(
+		effectiveCanCrit && !isMinion && (proficient === null || proficient === true),
+	);
+	const resolvedCanMiss = $derived(effectiveCanMiss);
+
+	const critSuppressionReason = $derived.by<string | null>(() => {
+		if (resolvedCanCrit) return null;
+		if (templateShape !== '') {
+			return localize('NIMBLE.diceTestbench.rollBuilder.suppressionReason.aoe');
+		}
+		if (isMinion) {
+			return localize('NIMBLE.diceTestbench.rollBuilder.suppressionReason.minion');
+		}
+		if (proficient === false) {
+			return localize('NIMBLE.diceTestbench.rollBuilder.suppressionReason.nonProficient');
+		}
+		if (!canCrit) {
+			return localize('NIMBLE.diceTestbench.rollBuilder.suppressionReason.flagOff');
+		}
+		return null;
+	});
+
+	const missSuppressionReason = $derived.by<string | null>(() => {
+		if (resolvedCanMiss) return null;
+		if (templateShape !== '') {
+			return localize('NIMBLE.diceTestbench.rollBuilder.suppressionReason.aoe');
+		}
+		if (!canMiss) {
+			return localize('NIMBLE.diceTestbench.rollBuilder.suppressionReason.flagOff');
+		}
+		return null;
+	});
 
 	// Parse formula for individual dice (for Force Specific Values)
 	const parsedDice = $derived.by<ParsedDie[]>(() => {
@@ -177,19 +219,19 @@
 	async function performRoll(stagedValues: StagedValue[]) {
 		lastError = null;
 		try {
-			const resolvedCanCrit =
-				effectiveCanCrit && !isMinion && (proficient === null || proficient === true);
+			const actorData = (selectedActor?.getRollData?.() ?? {}) as Record<string, unknown>;
 			const result = await stageAndRoll(
 				formula,
 				{
 					isVicious,
 					canCrit: resolvedCanCrit,
-					canMiss: effectiveCanMiss,
+					canMiss: resolvedCanMiss,
 					primaryDieAsDamage,
 					rollMode: 0,
 					rollModeSources: rollModeSourcesArray,
 				},
 				stagedValues,
+				actorData as never,
 			);
 			lastResult = {
 				trace: result.trace,
@@ -306,6 +348,10 @@
 		{#if selectedActor}
 			<p class="nimble-testbench__confirm">
 				{localize('NIMBLE.diceTestbench.rollBuilder.selectedLabel')}: {selectedActor.name}
+				<span class="nimble-testbench__actor-type">({selectedActor.type})</span>
+			</p>
+			<p class="nimble-testbench__hint">
+				{localize('NIMBLE.diceTestbench.rollBuilder.actorContextHint')}
 			</p>
 		{/if}
 
@@ -423,6 +469,26 @@
 					sum: String(netRollMode),
 				})}
 			</p>
+		</div>
+
+		<div class="nimble-testbench__resolved">
+			<div class="nimble-testbench__resolved-title">
+				{localize('NIMBLE.diceTestbench.rollBuilder.resolved.title')}
+			</div>
+			<div class="nimble-testbench__resolved-row">
+				<span>canCrit:</span>
+				<strong class:is-off={!resolvedCanCrit}>{String(resolvedCanCrit)}</strong>
+				{#if critSuppressionReason}
+					<em>— {critSuppressionReason}</em>
+				{/if}
+			</div>
+			<div class="nimble-testbench__resolved-row">
+				<span>canMiss:</span>
+				<strong class:is-off={!resolvedCanMiss}>{String(resolvedCanMiss)}</strong>
+				{#if missSuppressionReason}
+					<em>— {missSuppressionReason}</em>
+				{/if}
+			</div>
 		</div>
 
 		<div class="nimble-testbench__force-row">
@@ -702,6 +768,42 @@
 		color: #e0e0e0;
 		border: 1px solid #555;
 		padding: 0.15rem;
+	}
+	.nimble-testbench__actor-type {
+		color: #888;
+		font-size: 0.75rem;
+		margin-left: 0.25rem;
+	}
+	.nimble-testbench__resolved {
+		margin: 0.5rem 0;
+		padding: 0.4rem 0.5rem;
+		border: 1px solid #444;
+		background: #181818;
+		font-size: 0.75rem;
+	}
+	.nimble-testbench__resolved-title {
+		color: #888;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		font-size: 0.65rem;
+		margin-bottom: 0.25rem;
+	}
+	.nimble-testbench__resolved-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin: 0.1rem 0;
+		color: #cfc;
+	}
+	.nimble-testbench__resolved-row span {
+		color: #aaa;
+	}
+	.nimble-testbench__resolved-row strong.is-off {
+		color: #f99;
+	}
+	.nimble-testbench__resolved-row em {
+		color: #888;
+		font-style: italic;
 	}
 	.nimble-testbench__force-row {
 		display: flex;
