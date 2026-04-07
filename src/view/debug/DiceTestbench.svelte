@@ -3,7 +3,6 @@
 	import { hasWeaponProficiency } from '#view/sheets/components/attackUtils.js';
 	import { stageAndRoll, type StagedValue } from '#view/debug/stageAndRoll.js';
 
-	type RollModeSource = { label: string; mode: number };
 	type ParsedDie = { termIndex: number; dieIndex: number; faces: number };
 	type TermDump = { type: string; formula: string; results: unknown };
 	type ResultDump = {
@@ -31,7 +30,10 @@
 	let primaryDieAsDamage = $state(true);
 	let templateShape = $state('');
 	let weaponType = $state('');
-	let rollModeSources = $state<RollModeSource[]>([]);
+	let advCount = $state(0);
+	let disCount = $state(0);
+	let forceCrit = $state(false);
+	let forceMiss = $state(false);
 	let specificValues = $state<Array<number | null>>([]);
 	let showSpecific = $state(false);
 
@@ -48,7 +50,22 @@
 	const effectiveCanMiss = $derived(templateShape !== '' ? false : canMiss);
 	const flagsLocked = $derived(templateShape !== '');
 
-	const netRollMode = $derived(rollModeSources.reduce((sum, s) => sum + (s.mode || 0), 0));
+	const netRollMode = $derived(advCount - disCount);
+
+	const rollModeSourcesArray = $derived([
+		...Array.from({ length: advCount }, () => 1),
+		...Array.from({ length: disCount }, () => -1),
+	]);
+
+	function setForceCrit(value: boolean) {
+		forceCrit = value;
+		if (value) forceMiss = false;
+	}
+
+	function setForceMiss(value: boolean) {
+		forceMiss = value;
+		if (value) forceCrit = false;
+	}
 
 	const proficient = $derived.by(() => {
 		if (weaponType === '') return null;
@@ -88,17 +105,6 @@
 	let lastResult = $state<ResultDump | null>(null);
 	let lastError = $state<string | null>(null);
 
-	function addRollModeSource() {
-		rollModeSources = [
-			...rollModeSources,
-			{ label: localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.defaultLabel'), mode: 1 },
-		];
-	}
-
-	function removeRollModeSource(index: number) {
-		rollModeSources = rollModeSources.filter((_, i) => i !== index);
-	}
-
 	function getPrimaryFaces(): number | null {
 		const first = parsedDice[0];
 		return first ? first.faces : null;
@@ -117,7 +123,7 @@
 					canMiss: effectiveCanMiss,
 					primaryDieAsDamage,
 					rollMode: 0,
-					rollModeSources: rollModeSources.map((s) => s.mode),
+					rollModeSources: rollModeSourcesArray,
 				},
 				stagedValues,
 			);
@@ -139,25 +145,17 @@
 	}
 
 	async function onRoll() {
+		if (forceCrit || forceMiss) {
+			const faces = getPrimaryFaces();
+			if (faces === null) {
+				lastError = localize('NIMBLE.diceTestbench.rollBuilder.errors.noPrimaryDie');
+				return;
+			}
+			const value = forceCrit ? faces : 1;
+			await performRoll([{ value, faces }]);
+			return;
+		}
 		await performRoll([]);
-	}
-
-	async function onForceCrit() {
-		const faces = getPrimaryFaces();
-		if (faces === null) {
-			lastError = localize('NIMBLE.diceTestbench.rollBuilder.errors.noPrimaryDie');
-			return;
-		}
-		await performRoll([{ value: faces, faces }]);
-	}
-
-	async function onForceMiss() {
-		const faces = getPrimaryFaces();
-		if (faces === null) {
-			lastError = localize('NIMBLE.diceTestbench.rollBuilder.errors.noPrimaryDie');
-			return;
-		}
-		await performRoll([{ value: 1, faces }]);
 	}
 
 	async function onRollWithSpecific() {
@@ -297,24 +295,22 @@
 		</p>
 
 		<div class="nimble-testbench__sources">
-			<div class="nimble-testbench__sources-header">
-				<span>{localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.title')}</span>
-				<button type="button" onclick={addRollModeSource}>
-					{localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.add')}
-				</button>
-			</div>
+			<span class="nimble-testbench__sources-title">
+				{localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.title')}
+			</span>
 			<p class="nimble-testbench__hint">
 				{localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.hint')}
 			</p>
-			{#each rollModeSources as src, i (i)}
-				<div class="nimble-testbench__source-row">
-					<input type="text" bind:value={src.label} />
-					<input type="number" min="-10" max="10" bind:value={src.mode} />
-					<button type="button" onclick={() => removeRollModeSource(i)}>
-						{localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.remove')}
-					</button>
-				</div>
-			{/each}
+			<div class="nimble-testbench__counter-row">
+				<label class="nimble-testbench__counter">
+					<span>{localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.advLabel')}</span>
+					<input type="number" min="0" max="10" bind:value={advCount} />
+				</label>
+				<label class="nimble-testbench__counter">
+					<span>{localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.disLabel')}</span>
+					<input type="number" min="0" max="10" bind:value={disCount} />
+				</label>
+			</div>
 			<p class="nimble-testbench__net">
 				{localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.net', {
 					sum: String(netRollMode),
@@ -322,15 +318,28 @@
 			</p>
 		</div>
 
+		<div class="nimble-testbench__force-row">
+			<label class="nimble-testbench__force">
+				<input
+					type="checkbox"
+					checked={forceCrit}
+					onchange={(e) => setForceCrit((e.currentTarget as HTMLInputElement).checked)}
+				/>
+				<span>{localize('NIMBLE.diceTestbench.rollBuilder.actions.forceCrit')}</span>
+			</label>
+			<label class="nimble-testbench__force">
+				<input
+					type="checkbox"
+					checked={forceMiss}
+					onchange={(e) => setForceMiss((e.currentTarget as HTMLInputElement).checked)}
+				/>
+				<span>{localize('NIMBLE.diceTestbench.rollBuilder.actions.forceMiss')}</span>
+			</label>
+		</div>
+
 		<div class="nimble-testbench__actions">
 			<button type="button" onclick={onRoll}>
 				{localize('NIMBLE.diceTestbench.rollBuilder.actions.roll')}
-			</button>
-			<button type="button" onclick={onForceCrit}>
-				{localize('NIMBLE.diceTestbench.rollBuilder.actions.forceCrit')}
-			</button>
-			<button type="button" onclick={onForceMiss}>
-				{localize('NIMBLE.diceTestbench.rollBuilder.actions.forceMiss')}
 			</button>
 			<button type="button" onclick={() => (showSpecific = !showSpecific)}>
 				{localize('NIMBLE.diceTestbench.rollBuilder.actions.forceSpecific')}
@@ -457,31 +466,41 @@
 		padding: 0.3rem;
 		margin: 0.5rem 0;
 	}
-	.nimble-testbench__sources-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
+	.nimble-testbench__sources-title {
+		display: block;
 		font-size: 0.8rem;
+		font-weight: 600;
 		margin-bottom: 0.3rem;
 	}
-	.nimble-testbench__source-row {
+	.nimble-testbench__counter-row {
 		display: flex;
-		gap: 0.25rem;
-		margin-bottom: 0.2rem;
+		gap: 0.75rem;
+		margin-bottom: 0.3rem;
 	}
-	.nimble-testbench__source-row input[type='text'] {
-		flex: 1 1 auto;
+	.nimble-testbench__counter {
+		display: flex;
+		flex-direction: column;
+		font-size: 0.75rem;
+		gap: 0.15rem;
+	}
+	.nimble-testbench__counter input[type='number'] {
+		width: 4rem;
 		background: #111;
 		color: #e0e0e0;
 		border: 1px solid #555;
 		padding: 0.15rem;
 	}
-	.nimble-testbench__source-row input[type='number'] {
-		width: 3.5rem;
-		background: #111;
-		color: #e0e0e0;
-		border: 1px solid #555;
-		padding: 0.15rem;
+	.nimble-testbench__force-row {
+		display: flex;
+		gap: 1rem;
+		margin: 0.4rem 0;
+	}
+	.nimble-testbench__force {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		font-size: 0.8rem;
+		cursor: pointer;
 	}
 	.nimble-testbench__net {
 		font-size: 0.8rem;
