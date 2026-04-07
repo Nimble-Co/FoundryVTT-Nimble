@@ -10,6 +10,7 @@
 		active: boolean;
 		discarded: boolean;
 		exploded: boolean;
+		provenance: string | null;
 	};
 	type TermDump = {
 		type: string;
@@ -182,6 +183,36 @@
 	);
 
 	const primaryTerms = $derived(lastResult?.terms.filter((t) => t.type === 'PrimaryDie') ?? []);
+
+	type CategorizedDie = {
+		result: number;
+		active: boolean;
+		discarded: boolean;
+		exploded: boolean;
+		category: 'kept' | 'dropped' | 'critReroll' | 'viciousChain' | 'viciousBonus';
+	};
+	type CategorizedPrimary = { faces: number | null; dice: CategorizedDie[] };
+
+	function categorizeDie(r: DieResultDump): CategorizedDie['category'] {
+		if (r.discarded) return 'dropped';
+		if (r.provenance === 'viciousChain') return 'viciousChain';
+		if (r.provenance === 'viciousBonus') return 'viciousBonus';
+		if (r.exploded) return 'critReroll';
+		return 'kept';
+	}
+
+	const categorizedPrimary = $derived.by<CategorizedPrimary[]>(() => {
+		return primaryTerms.map((term) => ({
+			faces: term.faces,
+			dice: (term.results ?? []).map((r) => ({
+				result: r.result,
+				active: r.active,
+				discarded: r.discarded,
+				exploded: r.exploded,
+				category: categorizeDie(r),
+			})),
+		}));
+	});
 	const bonusDieTerms = $derived(
 		lastResult?.terms.filter((t) => t.type === 'Die' || t.type === 'NimbleDie') ?? [],
 	);
@@ -258,12 +289,16 @@
 						formula: anyT.formula ?? '',
 						faces: typeof anyT.faces === 'number' ? anyT.faces : null,
 						results: isDie
-							? (anyT.results ?? []).map((r) => ({
-									result: r.result,
-									active: r.active !== false,
-									discarded: r.discarded === true,
-									exploded: r.exploded === true,
-								}))
+							? (anyT.results ?? []).map((r) => {
+									const provRaw = (r as { provenance?: unknown }).provenance;
+									return {
+										result: r.result,
+										active: r.active !== false,
+										discarded: r.discarded === true,
+										exploded: r.exploded === true,
+										provenance: typeof provRaw === 'string' ? provRaw : null,
+									};
+								})
 							: null,
 						number: typeof anyT.number === 'number' && !isDie ? anyT.number : null,
 						operator: typeof anyT.operator === 'string' ? anyT.operator : null,
@@ -556,36 +591,101 @@
 				</span>
 			</div>
 
-			{#if primaryTerms.length > 0}
-				<div class="nimble-testbench__group">
-					<div class="nimble-testbench__group-label">
-						{localize('NIMBLE.diceTestbench.results.primaryPool')}
-					</div>
-					{#each primaryTerms as term (term.formula)}
-						<div class="nimble-testbench__die-row">
-							{#each term.results ?? [] as r, ri (ri)}
-								<div
-									class="nimble-testbench__die nimble-testbench__die--primary"
-									class:nimble-testbench__die--discarded={r.discarded}
-									class:nimble-testbench__die--exploded={r.exploded}
-								>
-									<div class="nimble-testbench__die-value">{r.result}</div>
-									<div class="nimble-testbench__die-faces">d{term.faces}</div>
-									{#if r.discarded}
-										<div class="nimble-testbench__die-tag">
-											{localize('NIMBLE.diceTestbench.results.dropped')}
-										</div>
-									{/if}
-									{#if r.exploded}
-										<div class="nimble-testbench__die-tag">
-											{localize('NIMBLE.diceTestbench.results.exploded')}
-										</div>
-									{/if}
-								</div>
-							{/each}
+			{#if categorizedPrimary.length > 0}
+				{#each categorizedPrimary as term, ti (ti)}
+					{@const kept = term.dice.filter((d) => d.category === 'kept')}
+					{@const dropped = term.dice.filter((d) => d.category === 'dropped')}
+					{@const critRerolls = term.dice.filter((d) => d.category === 'critReroll')}
+					{@const viciousChain = term.dice.filter((d) => d.category === 'viciousChain')}
+					{@const viciousBonus = term.dice.filter((d) => d.category === 'viciousBonus')}
+
+					{#if kept.length > 0}
+						<div class="nimble-testbench__group">
+							<div class="nimble-testbench__group-label">
+								{localize('NIMBLE.diceTestbench.results.basePool')}
+							</div>
+							<div class="nimble-testbench__die-row">
+								{#each kept as r, ri (ri)}
+									<div class="nimble-testbench__die nimble-testbench__die--primary">
+										<div class="nimble-testbench__die-value">{r.result}</div>
+										<div class="nimble-testbench__die-faces">d{term.faces}</div>
+									</div>
+								{/each}
+							</div>
 						</div>
-					{/each}
-				</div>
+					{/if}
+
+					{#if dropped.length > 0}
+						<div class="nimble-testbench__group">
+							<div class="nimble-testbench__group-label">
+								{localize('NIMBLE.diceTestbench.results.dropped')}
+							</div>
+							<div class="nimble-testbench__die-row">
+								{#each dropped as r, ri (ri)}
+									<div
+										class="nimble-testbench__die nimble-testbench__die--primary nimble-testbench__die--discarded"
+									>
+										<div class="nimble-testbench__die-value">{r.result}</div>
+										<div class="nimble-testbench__die-faces">d{term.faces}</div>
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
+
+					{#if critRerolls.length > 0}
+						<div class="nimble-testbench__group">
+							<div class="nimble-testbench__group-label">
+								{localize('NIMBLE.diceTestbench.results.critRerolls')}
+							</div>
+							<div class="nimble-testbench__die-row">
+								{#each critRerolls as r, ri (ri)}
+									<div
+										class="nimble-testbench__die nimble-testbench__die--primary nimble-testbench__die--exploded"
+									>
+										<div class="nimble-testbench__die-value">{r.result}</div>
+										<div class="nimble-testbench__die-faces">d{term.faces}</div>
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
+
+					{#if viciousChain.length > 0}
+						<div class="nimble-testbench__group">
+							<div class="nimble-testbench__group-label">
+								{localize('NIMBLE.diceTestbench.results.viciousChain')}
+							</div>
+							<div class="nimble-testbench__die-row">
+								{#each viciousChain as r, ri (ri)}
+									<div
+										class="nimble-testbench__die nimble-testbench__die--vicious-chain"
+										class:nimble-testbench__die--exploded={r.exploded}
+									>
+										<div class="nimble-testbench__die-value">{r.result}</div>
+										<div class="nimble-testbench__die-faces">d{term.faces}</div>
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
+
+					{#if viciousBonus.length > 0}
+						<div class="nimble-testbench__group">
+							<div class="nimble-testbench__group-label">
+								{localize('NIMBLE.diceTestbench.results.viciousBonus')}
+							</div>
+							<div class="nimble-testbench__die-row">
+								{#each viciousBonus as r, ri (ri)}
+									<div class="nimble-testbench__die nimble-testbench__die--vicious-bonus">
+										<div class="nimble-testbench__die-value">{r.result}</div>
+										<div class="nimble-testbench__die-faces">d{term.faces}</div>
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
+				{/each}
 			{/if}
 
 			{#if bonusDieTerms.length > 0}
@@ -940,6 +1040,16 @@
 	.nimble-testbench__die--bonus {
 		border-color: #6a8;
 		background: #0f1a15;
+	}
+	.nimble-testbench__die--vicious-chain {
+		border-color: #d65;
+		background: #2a1009;
+		color: #fbb;
+	}
+	.nimble-testbench__die--vicious-bonus {
+		border-color: #c4a;
+		background: #2a0a20;
+		color: #fbe;
 	}
 	.nimble-testbench__die--discarded {
 		opacity: 0.45;

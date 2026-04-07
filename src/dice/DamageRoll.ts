@@ -499,8 +499,18 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				| undefined;
 			if (!dieTerm || dieTerm.results.length < 2) break;
 
-			const leftDie = dieTerm.results[0];
-			const rightDie = dieTerm.results[1];
+			const leftDie = dieTerm.results[0] as foundry.dice.terms.DiceTerm.Result & {
+				provenance?: string;
+			};
+			const rightDie = dieTerm.results[1] as foundry.dice.terms.DiceTerm.Result & {
+				provenance?: string;
+			};
+
+			// Tag provenance: left continues the explosion chain, right is the
+			// extra die added by the vicious property. Visualizers (testbench,
+			// chat card) can group / label each role.
+			leftDie.provenance = 'viciousChain';
+			rightDie.provenance = 'viciousBonus';
 
 			// Add both to primary term results
 			primaryTerm.results.push(leftDie);
