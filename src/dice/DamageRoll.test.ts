@@ -317,6 +317,35 @@ describe('DamageRoll preprocessing', () => {
 
 			expect(roll.isMiss).toBe(false);
 		});
+
+		it('primaryDieModifier overflow caps the die at faces and adds the excess as a NumericTerm', () => {
+			// Force baseResult inside _applyPrimaryDiePresets to roll the max face.
+			// On a d6, Math.random() = 0.9999 → ceil(0.9999 * 6) = 6.
+			// With primaryDieModifier = 5, modifiedResult = 11, overflow excess = 5.
+			const randSpy = vi.spyOn(Math, 'random').mockReturnValue(0.9999);
+			try {
+				const roll = new DamageRoll(
+					'1d6',
+					{},
+					{
+						canCrit: true,
+						canMiss: true,
+						rollMode: 0,
+						primaryDieValue: 0,
+						primaryDieModifier: 5,
+					},
+				);
+				// Primary die was capped at its max face value.
+				expect(roll.primaryDie?.results[0].result).toBe(6);
+				// A NumericTerm carrying the overflow (11 - 6 = 5) was spliced in.
+				const numericTerms = roll.terms.filter(
+					(t) => t instanceof foundry.dice.terms.NumericTerm,
+				) as Array<{ number: number }>;
+				expect(numericTerms.some((t) => t.number === 5)).toBe(true);
+			} finally {
+				randSpy.mockRestore();
+			}
+		});
 	});
 });
 
@@ -1125,6 +1154,70 @@ describe('DamageRoll evaluation — primary die outcome', () => {
 		expect(roll.isMiss).toBe(false);
 	});
 
+	it('vicious crit with primaryDieAsDamage=false excludes only the base die value, not explosion dice', async () => {
+		// Vicious weapon, crit on a 1d6, with primaryDieAsDamage=false:
+		//   - isCritical must be true
+		//   - excludedPrimaryDieValue must equal the BASE die value (6),
+		//     not an explosion die value
+		//   - vicious explosion dice are still counted in total
+		const roll = new DamageRoll(
+			'1d6',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: true,
+				primaryDieAsDamage: false,
+			},
+		);
+		// Stage the post-explosion state directly: base 6 (marked exploded by
+		// the vicious path), plus explosion dice [3, 2]. The base 6 must drive
+		// crit detection AND be the value excluded from total.
+		stagePrimaryDieResults(
+			roll,
+			[
+				{ result: 6, active: true, exploded: true },
+				{ result: 3, active: true },
+				{ result: 2, active: true },
+			],
+			11,
+		);
+		await (roll as any)._evaluate();
+		expect(roll.isCritical).toBe(true);
+		// The base die value (6) — not an explosion die — must be excluded.
+		expect(roll.excludedPrimaryDieValue).toBe(6);
+		// Explosion dice (3 + 2 = 5) remain in the damage total.
+		expect(roll.total).toBe(5);
+	});
+
+	it('minion (canCrit=false) wielding a vicious weapon never explodes even on max roll', async () => {
+		// Minions cannot crit (CoreRules-2.md:478). Even rolling max on a
+		// vicious weapon, the manual explosion path requires canCrit, so no
+		// vicious explosion fires and isCritical stays false.
+		const roll = new DamageRoll(
+			'1d6',
+			{},
+			{
+				canCrit: false,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: true,
+			},
+		);
+		expect(roll.formula).toBe('1d6');
+		stagePrimaryDieResults(roll, [{ result: 6, active: true }], 6);
+		await (roll as any)._evaluate();
+		expect(roll.isCritical).toBe(false);
+		// No explosion happened — only the single staged base result remains.
+		expect(roll.primaryDie?.results.length).toBe(1);
+		expect(roll.primaryDie?.results.some((r) => r.exploded)).toBe(false);
+	});
+
 	it('regression_minion_cannot_crit: minion damage roll with canCrit=false', async () => {
 		// ItemActivationManager sets canCrit=false for minions; we simulate
 		// that directly here to lock in the DamageRoll side of the contract.
@@ -1322,6 +1415,25 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 		// And we assert that the engine stored a NET rollMode derived from sources
 		// (this will fail: current engine does not compute this).
 		expect((roll.options as any).netRollMode).toBe(0);
+	});
+
+	it('empty rollModeSources array nets to 0 with no advantage applied to the primary die', () => {
+		// rollModeSources: [] should reduce to net 0 — no adv/dis modifier
+		// applied, no extra dice added to the primary pool, and the formula
+		// for a 2d6 attack matches the no-rollMode case.
+		const roll = new DamageRoll('2d6', {}, {
+			canCrit: true,
+			canMiss: true,
+			rollMode: 0,
+			primaryDieValue: 0,
+			primaryDieModifier: 0,
+			rollModeSources: [],
+		} as any);
+		expect((roll.options as any).netRollMode).toBe(0);
+		// Same shape as the no-rollMode 2d6 attack: primary 1d6x + bonus 1d6.
+		expect(roll.formula).toBe('1d6x + 1d6');
+		// Primary die has exactly 1 die rolled (no advantage doubling).
+		expect(roll.primaryDie?.number).toBe(1);
 	});
 
 	it('adv sources stack: +1 and +1 from two sources should net +2', () => {

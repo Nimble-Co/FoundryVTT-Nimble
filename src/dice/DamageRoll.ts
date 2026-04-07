@@ -430,8 +430,14 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		// When primaryDieAsDamage is false, exclude the base die value from damage
 		// (explosions still count toward damage)
 		if (!this.options.primaryDieAsDamage) {
-			// Find the first result (the base roll, not explosion rolls)
-			// The base result is the one that may have exploded: true flag
+			// Find the base roll. The base die is always at index 0 of
+			// `results` (pushed before any vicious explosion dice — see
+			// `_evaluateViciousExplosion`, which appends with `.push()`), and
+			// for non-vicious crits Foundry's native `x` modifier likewise
+			// keeps the original die at index 0. We therefore take the FIRST
+			// active, non-discarded result rather than filtering on the
+			// `exploded` flag — the base die itself is marked `exploded` by
+			// the vicious path, so a flag-based filter would skip it.
 			const baseResult = primaryTerm.results.find((r) => r.active && !r.discarded);
 			if (baseResult) {
 				this.excludedPrimaryDieValue = baseResult.result;
