@@ -4,9 +4,28 @@
 	import { stageAndRoll, type StagedValue } from '#view/debug/stageAndRoll.js';
 
 	type ParsedDie = { termIndex: number; dieIndex: number; faces: number };
-	type TermDump = { type: string; formula: string; results: unknown };
+	type DieResultDump = {
+		result: number;
+		active: boolean;
+		discarded: boolean;
+		exploded: boolean;
+	};
+	type TermDump = {
+		type: string;
+		formula: string;
+		faces: number | null;
+		results: DieResultDump[] | null;
+		number: number | null;
+		operator: string | null;
+	};
+	type TraceDump = {
+		isCritical: boolean;
+		isMiss: boolean;
+		total: number;
+		stagedValuesRemaining: number;
+	};
 	type ResultDump = {
-		trace: unknown;
+		trace: TraceDump;
 		isCritical: boolean | undefined;
 		isMiss: boolean | undefined;
 		total: number | null | undefined;
@@ -104,6 +123,28 @@
 
 	let lastResult = $state<ResultDump | null>(null);
 	let lastError = $state<string | null>(null);
+	let showRawJson = $state(false);
+
+	const outcomeBadge = $derived.by<{ label: string; kind: 'crit' | 'miss' | 'hit' | 'none' }>(
+		() => {
+			if (!lastResult) return { label: '', kind: 'none' };
+			if (lastResult.isCritical) {
+				return { label: localize('NIMBLE.diceTestbench.results.crit'), kind: 'crit' };
+			}
+			if (lastResult.isMiss) {
+				return { label: localize('NIMBLE.diceTestbench.results.miss'), kind: 'miss' };
+			}
+			return { label: localize('NIMBLE.diceTestbench.results.hit'), kind: 'hit' };
+		},
+	);
+
+	const primaryTerms = $derived(lastResult?.terms.filter((t) => t.type === 'PrimaryDie') ?? []);
+	const bonusDieTerms = $derived(
+		lastResult?.terms.filter((t) => t.type === 'Die' || t.type === 'NimbleDie') ?? [],
+	);
+	const numericTerms = $derived(
+		lastResult?.terms.filter((t) => t.type === 'NumericTerm' && t.number !== null) ?? [],
+	);
 
 	function getPrimaryFaces(): number | null {
 		const first = parsedDice[0];
@@ -132,11 +173,37 @@
 				isCritical: result.roll.isCritical,
 				isMiss: result.roll.isMiss,
 				total: result.roll.total,
-				terms: result.roll.terms.map((t) => ({
-					type: (t as { constructor: { name: string } }).constructor.name,
-					formula: (t as { formula?: string }).formula ?? '',
-					results: (t as { results?: unknown }).results,
-				})),
+				terms: result.roll.terms.map((t) => {
+					const anyT = t as {
+						constructor: { name: string };
+						formula?: string;
+						faces?: number;
+						results?: Array<{
+							result: number;
+							active?: boolean;
+							discarded?: boolean;
+							exploded?: boolean;
+						}>;
+						number?: number;
+						operator?: string;
+					};
+					const isDie = Array.isArray(anyT.results);
+					return {
+						type: anyT.constructor.name,
+						formula: anyT.formula ?? '',
+						faces: typeof anyT.faces === 'number' ? anyT.faces : null,
+						results: isDie
+							? (anyT.results ?? []).map((r) => ({
+									result: r.result,
+									active: r.active !== false,
+									discarded: r.discarded === true,
+									exploded: r.exploded === true,
+								}))
+							: null,
+						number: typeof anyT.number === 'number' && !isDie ? anyT.number : null,
+						operator: typeof anyT.operator === 'string' ? anyT.operator : null,
+					};
+				}),
 			};
 		} catch (err) {
 			lastError = err instanceof Error ? err.message : String(err);
@@ -373,8 +440,114 @@
 		{#if lastError}
 			<pre class="nimble-testbench__error">{lastError}</pre>
 		{/if}
-		{#if lastResult}
-			<pre class="nimble-testbench__dump">{resultJson}</pre>
+		{#if lastResult && !lastError}
+			<div class="nimble-testbench__outcome nimble-testbench__outcome--{outcomeBadge.kind}">
+				<span class="nimble-testbench__outcome-label">{outcomeBadge.label}</span>
+				<span class="nimble-testbench__outcome-total">
+					{localize('NIMBLE.diceTestbench.results.totalLabel', {
+						total: String(lastResult.total ?? 0),
+					})}
+				</span>
+			</div>
+
+			{#if primaryTerms.length > 0}
+				<div class="nimble-testbench__group">
+					<div class="nimble-testbench__group-label">
+						{localize('NIMBLE.diceTestbench.results.primaryPool')}
+					</div>
+					{#each primaryTerms as term (term.formula)}
+						<div class="nimble-testbench__die-row">
+							{#each term.results ?? [] as r, ri (ri)}
+								<div
+									class="nimble-testbench__die nimble-testbench__die--primary"
+									class:nimble-testbench__die--discarded={r.discarded}
+									class:nimble-testbench__die--exploded={r.exploded}
+								>
+									<div class="nimble-testbench__die-value">{r.result}</div>
+									<div class="nimble-testbench__die-faces">d{term.faces}</div>
+									{#if r.discarded}
+										<div class="nimble-testbench__die-tag">
+											{localize('NIMBLE.diceTestbench.results.dropped')}
+										</div>
+									{/if}
+									{#if r.exploded}
+										<div class="nimble-testbench__die-tag">
+											{localize('NIMBLE.diceTestbench.results.exploded')}
+										</div>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{/each}
+				</div>
+			{/if}
+
+			{#if bonusDieTerms.length > 0}
+				<div class="nimble-testbench__group">
+					<div class="nimble-testbench__group-label">
+						{localize('NIMBLE.diceTestbench.results.bonusDice')}
+					</div>
+					{#each bonusDieTerms as term, ti (ti)}
+						<div class="nimble-testbench__die-row">
+							{#each term.results ?? [] as r, ri (ri)}
+								<div
+									class="nimble-testbench__die nimble-testbench__die--bonus"
+									class:nimble-testbench__die--discarded={r.discarded}
+									class:nimble-testbench__die--exploded={r.exploded}
+								>
+									<div class="nimble-testbench__die-value">{r.result}</div>
+									<div class="nimble-testbench__die-faces">d{term.faces}</div>
+								</div>
+							{/each}
+						</div>
+					{/each}
+				</div>
+			{/if}
+
+			{#if numericTerms.length > 0}
+				<div class="nimble-testbench__group">
+					<div class="nimble-testbench__group-label">
+						{localize('NIMBLE.diceTestbench.results.flatBonuses')}
+					</div>
+					<div class="nimble-testbench__flat-row">
+						{#each numericTerms as term, ti (ti)}
+							<span class="nimble-testbench__flat">
+								{(term.number ?? 0) >= 0 ? '+' : ''}{term.number}
+							</span>
+						{/each}
+					</div>
+				</div>
+			{/if}
+
+			<div class="nimble-testbench__trace">
+				<span>
+					{localize('NIMBLE.diceTestbench.results.traceIsCritical', {
+						state: String(lastResult.trace.isCritical),
+					})}
+				</span>
+				<span>
+					{localize('NIMBLE.diceTestbench.results.traceIsMiss', {
+						state: String(lastResult.trace.isMiss),
+					})}
+				</span>
+				{#if lastResult.trace.stagedValuesRemaining > 0}
+					<span class="nimble-testbench__trace-warning">
+						{localize('NIMBLE.diceTestbench.results.stagedRemaining', {
+							count: String(lastResult.trace.stagedValuesRemaining),
+						})}
+					</span>
+				{/if}
+			</div>
+
+			<div class="nimble-testbench__raw-toggle">
+				<label>
+					<input type="checkbox" bind:checked={showRawJson} />
+					<span>{localize('NIMBLE.diceTestbench.results.showRawJson')}</span>
+				</label>
+			</div>
+			{#if showRawJson}
+				<pre class="nimble-testbench__dump">{resultJson}</pre>
+			{/if}
 		{:else if !lastError}
 			<p class="nimble-testbench__placeholder">
 				{localize('NIMBLE.diceTestbench.results.placeholder')}
@@ -559,5 +732,129 @@
 		color: #f99;
 		padding: 0.4rem;
 		border: 1px solid #844;
+	}
+	.nimble-testbench__outcome {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.5rem 0.7rem;
+		margin-bottom: 0.6rem;
+		border: 2px solid;
+		border-radius: 3px;
+		font-weight: 700;
+	}
+	.nimble-testbench__outcome--crit {
+		border-color: #f5c542;
+		background: #3a2d0a;
+		color: #ffe48a;
+	}
+	.nimble-testbench__outcome--hit {
+		border-color: #5a9;
+		background: #0f2a20;
+		color: #9fc;
+	}
+	.nimble-testbench__outcome--miss {
+		border-color: #a55;
+		background: #2d0f0f;
+		color: #f99;
+	}
+	.nimble-testbench__outcome-label {
+		font-size: 1rem;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+	}
+	.nimble-testbench__outcome-total {
+		font-size: 1.1rem;
+	}
+	.nimble-testbench__group {
+		margin-bottom: 0.6rem;
+	}
+	.nimble-testbench__group-label {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: #888;
+		margin-bottom: 0.3rem;
+	}
+	.nimble-testbench__die-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-bottom: 0.3rem;
+	}
+	.nimble-testbench__die {
+		position: relative;
+		min-width: 2.8rem;
+		padding: 0.3rem 0.4rem 0.4rem 0.4rem;
+		border: 2px solid #666;
+		background: #181818;
+		text-align: center;
+		border-radius: 3px;
+	}
+	.nimble-testbench__die--primary {
+		border-color: #f5c542;
+		background: #2a2107;
+	}
+	.nimble-testbench__die--bonus {
+		border-color: #6a8;
+		background: #0f1a15;
+	}
+	.nimble-testbench__die--discarded {
+		opacity: 0.45;
+		text-decoration: line-through;
+	}
+	.nimble-testbench__die--exploded {
+		box-shadow: 0 0 6px #f5c542 inset;
+	}
+	.nimble-testbench__die-value {
+		font-size: 1.15rem;
+		font-weight: 700;
+		line-height: 1.1;
+	}
+	.nimble-testbench__die-faces {
+		font-size: 0.65rem;
+		color: #aaa;
+	}
+	.nimble-testbench__die-tag {
+		font-size: 0.55rem;
+		color: #f99;
+		margin-top: 0.1rem;
+		text-decoration: none;
+	}
+	.nimble-testbench__flat-row {
+		display: flex;
+		gap: 0.4rem;
+	}
+	.nimble-testbench__flat {
+		font-size: 1rem;
+		font-weight: 600;
+		color: #cfc;
+		padding: 0.2rem 0.5rem;
+		border: 1px solid #444;
+		background: #181818;
+	}
+	.nimble-testbench__trace {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		font-size: 0.7rem;
+		color: #888;
+		margin: 0.5rem 0;
+		padding: 0.3rem;
+		border-top: 1px solid #333;
+	}
+	.nimble-testbench__trace-warning {
+		color: #fb3;
+	}
+	.nimble-testbench__raw-toggle {
+		font-size: 0.75rem;
+		margin: 0.4rem 0 0.3rem 0;
+	}
+	.nimble-testbench__raw-toggle label {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		cursor: pointer;
+		color: #888;
 	}
 </style>

@@ -1554,7 +1554,20 @@
 			},
 			"results": {
 				"title": "Results",
-				"placeholder": "(rolled dice and outcome will go here)"
+				"placeholder": "(rolled dice and outcome will go here)",
+				"crit": "Critical Hit",
+				"hit": "Hit",
+				"miss": "Miss",
+				"totalLabel": "Total: {total}",
+				"primaryPool": "Primary pool",
+				"bonusDice": "Bonus dice",
+				"flatBonuses": "Flat bonuses",
+				"dropped": "dropped",
+				"exploded": "exploded",
+				"traceIsCritical": "trace.isCritical: {state}",
+				"traceIsMiss": "trace.isMiss: {state}",
+				"stagedRemaining": "{count} staged value(s) unused",
+				"showRawJson": "Show raw JSON"
 			}
 		},
 		"combatTrackerSettings": {
