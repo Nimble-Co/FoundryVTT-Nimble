@@ -13,9 +13,10 @@ const schema = () => ({
 	objectType: new fields.StringField({ required: true, initial: '', nullable: false }),
 	/**
 	 * The weapon's type identifier (e.g. "Longsword", "Greatsword"). Used for
-	 * the per-weapon proficiency check (Bug #8b). Empty string is the
-	 * permissive default — no proficiency check is applied. Existing weapon
-	 * items that have not been migrated keep this empty and behave unchanged.
+	 * the per-weapon proficiency check that suppresses crits when the wielder
+	 * lacks proficiency (CoreRules-2.md:972). Empty string is the permissive
+	 * default — no proficiency check is applied. Existing weapon items that
+	 * have not been migrated keep this empty and behave unchanged.
 	 */
 	weaponType: new fields.StringField({ required: true, initial: '', nullable: false }),
 	price: new fields.SchemaField({
