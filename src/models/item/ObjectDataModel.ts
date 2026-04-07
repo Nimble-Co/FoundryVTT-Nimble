@@ -14,7 +14,7 @@ const schema = () => ({
 	/**
 	 * The weapon's type identifier (e.g. "Longsword", "Greatsword"). Used for
 	 * the per-weapon proficiency check that suppresses crits when the wielder
-	 * lacks proficiency (CoreRules-2.md:972). Empty string is the permissive
+	 * lacks proficiency with the weapon's type. Empty string is the permissive
 	 * default — no proficiency check is applied. Existing weapon items that
 	 * have not been migrated keep this empty and behave unchanged.
 	 */
