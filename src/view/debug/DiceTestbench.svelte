@@ -1,6 +1,7 @@
 <script lang="ts">
 	import localize from '#utils/localize.js';
 	import { hasWeaponProficiency } from '#view/sheets/components/attackUtils.js';
+	import { scenarios, type Scenario } from '#view/debug/scenarios.js';
 	import { stageAndRoll, type StagedValue } from '#view/debug/stageAndRoll.js';
 
 	type ParsedDie = { termIndex: number; dieIndex: number; faces: number };
@@ -146,6 +147,28 @@
 		lastResult?.terms.filter((t) => t.type === 'NumericTerm' && t.number !== null) ?? [],
 	);
 
+	let activeScenarioId = $state<string | null>(null);
+	const activeScenario = $derived(scenarios.find((s) => s.id === activeScenarioId) ?? null);
+
+	function applyScenario(scenario: Scenario) {
+		activeScenarioId = scenario.id;
+		formula = scenario.formula ?? '1d8';
+		isVicious = scenario.isVicious ?? false;
+		canCrit = scenario.canCrit ?? true;
+		canMiss = scenario.canMiss ?? true;
+		primaryDieAsDamage = scenario.primaryDieAsDamage ?? true;
+		templateShape = scenario.templateShape ?? '';
+		weaponType = scenario.weaponType ?? '';
+		advCount = scenario.advCount ?? 0;
+		disCount = scenario.disCount ?? 0;
+		forceCrit = scenario.forceCrit ?? false;
+		forceMiss = scenario.forceMiss ?? false;
+		specificValues = [];
+		showSpecific = false;
+		lastResult = null;
+		lastError = null;
+	}
+
 	function getPrimaryFaces(): number | null {
 		const first = parsedDice[0];
 		return first ? first.faces : null;
@@ -244,11 +267,28 @@
 </script>
 
 <div class="nimble-testbench">
-	<section class="nimble-testbench__col">
+	<section class="nimble-testbench__col nimble-testbench__col--scenarios">
 		<h2>{localize('NIMBLE.diceTestbench.scenarios.title')}</h2>
-		<p class="nimble-testbench__placeholder">
-			{localize('NIMBLE.diceTestbench.scenarios.placeholder')}
+		<p class="nimble-testbench__hint">
+			{localize('NIMBLE.diceTestbench.scenarios.hint')}
 		</p>
+		<ul class="nimble-testbench__scenario-list">
+			{#each scenarios as scenario (scenario.id)}
+				<li>
+					<button
+						type="button"
+						class="nimble-testbench__scenario"
+						class:nimble-testbench__scenario--active={activeScenarioId === scenario.id}
+						onclick={() => applyScenario(scenario)}
+					>
+						{scenario.label}
+					</button>
+				</li>
+			{/each}
+		</ul>
+		{#if activeScenario?.note}
+			<p class="nimble-testbench__scenario-note">{activeScenario.note}</p>
+		{/if}
 	</section>
 
 	<section class="nimble-testbench__col">
@@ -856,5 +896,45 @@
 		gap: 0.3rem;
 		cursor: pointer;
 		color: #888;
+	}
+	.nimble-testbench__col--scenarios {
+		flex: 0 0 14rem;
+	}
+	.nimble-testbench__scenario-list {
+		list-style: none;
+		padding: 0;
+		margin: 0.3rem 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+	}
+	.nimble-testbench__scenario {
+		width: 100%;
+		text-align: left;
+		padding: 0.35rem 0.5rem;
+		background: #1c1c1c;
+		border: 1px solid #444;
+		color: #e0e0e0;
+		font-size: 0.8rem;
+		cursor: pointer;
+	}
+	.nimble-testbench__scenario:hover {
+		background: #2a2a2a;
+		border-color: #666;
+	}
+	.nimble-testbench__scenario--active {
+		background: #2a2107;
+		border-color: #f5c542;
+		color: #ffe48a;
+	}
+	.nimble-testbench__scenario-note {
+		font-size: 0.75rem;
+		color: #aaa;
+		font-style: italic;
+		line-height: 1.35;
+		margin: 0.4rem 0 0 0;
+		padding: 0.4rem;
+		background: #1c1c1c;
+		border: 1px solid #333;
 	}
 </style>
