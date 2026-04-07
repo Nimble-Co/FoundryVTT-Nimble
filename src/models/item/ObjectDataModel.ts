@@ -11,6 +11,13 @@ const schema = () => ({
 	}),
 	identified: new fields.BooleanField({ required: true, nullable: false, initial: true }),
 	objectType: new fields.StringField({ required: true, initial: '', nullable: false }),
+	/**
+	 * The weapon's type identifier (e.g. "Longsword", "Greatsword"). Used for
+	 * the per-weapon proficiency check (Bug #8b). Empty string is the
+	 * permissive default — no proficiency check is applied. Existing weapon
+	 * items that have not been migrated keep this empty and behave unchanged.
+	 */
+	weaponType: new fields.StringField({ required: true, initial: '', nullable: false }),
 	price: new fields.SchemaField({
 		value: new fields.NumberField({
 			required: true,
@@ -127,6 +134,7 @@ class NimbleObjectData extends NimbleBaseItemData<
 	};
 	declare identified: boolean;
 	declare objectType: string;
+	declare weaponType: string;
 	declare price: {
 		value: number;
 		denomination: 'cp' | 'sp' | 'gp';

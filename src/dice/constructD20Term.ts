@@ -15,8 +15,8 @@ export type d20TermOptions = {
  *
  * This function builds a d20 term string based on:
  * - **rollMode**: Determines advantage/disadvantage
- *   - Positive: Roll multiple d20s and keep highest (e.g., `2d20kh` for advantage)
- *   - Negative: Roll multiple d20s and keep lowest (e.g., `2d20kl` for disadvantage)
+ *   - Positive: Roll multiple d20s and keep highest (e.g., `2d20khn` for advantage)
+ *   - Negative: Roll multiple d20s and keep lowest (e.g., `2d20kln` for disadvantage)
  *   - Zero: Roll a single d20
  * - **minRoll**: Adds a minimum modifier (e.g., `1d20min10` for reliable talent)
  *
@@ -24,15 +24,15 @@ export type d20TermOptions = {
  * @param options.actor - The actor making the roll (reserved for future use).
  * @param options.minRoll - Minimum d20 value. Values > 1 add a `min` modifier.
  * @param options.rollMode - Advantage level (positive), disadvantage level (negative), or normal (0).
- * @returns A d20 term string (e.g., "1d20", "2d20kh", "2d20min10kl").
+ * @returns A d20 term string (e.g., "1d20", "2d20khn", "2d20min10kln").
  *
  * @example
  * ```typescript
  * constructD20Term({ actor, minRoll: 1, rollMode: 0 });  // "1d20"
- * constructD20Term({ actor, minRoll: 1, rollMode: 1 });  // "2d20kh" (advantage)
- * constructD20Term({ actor, minRoll: 1, rollMode: -1 }); // "2d20kl" (disadvantage)
+ * constructD20Term({ actor, minRoll: 1, rollMode: 1 });  // "2d20khn" (advantage)
+ * constructD20Term({ actor, minRoll: 1, rollMode: -1 }); // "2d20kln" (disadvantage)
  * constructD20Term({ actor, minRoll: 10, rollMode: 0 }); // "1d20min10" (reliable talent)
- * constructD20Term({ actor, minRoll: 10, rollMode: 1 }); // "2d20min10kh"
+ * constructD20Term({ actor, minRoll: 10, rollMode: 1 }); // "2d20min10khn"
  * ```
  */
 export default function constructD20Term({ actor: _actor, minRoll, rollMode }: d20TermOptions) {
@@ -43,8 +43,9 @@ export default function constructD20Term({ actor: _actor, minRoll, rollMode }: d
 
 	if (minRoll > 1) d20Term += `min${minRoll}`;
 
-	if (rollMode > 0) d20Term += 'kh';
-	else if (rollMode < 0) d20Term += 'kl';
+	// Use Nimble's leftmost-on-tie keep modifiers (registered at init).
+	if (rollMode > 0) d20Term += 'khn';
+	else if (rollMode < 0) d20Term += 'kln';
 
 	return d20Term;
 }
