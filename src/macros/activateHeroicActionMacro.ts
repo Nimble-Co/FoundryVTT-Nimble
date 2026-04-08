@@ -60,27 +60,10 @@ export async function activateHeroicActionMacro(
 		return;
 	}
 
-	// Handle defend reaction directly
-	if (actionId === 'defend' && actionType === 'reaction') {
-		await executeDefendReaction(actor as NimbleCharacter);
-		return;
-	}
-
-	// Handle interpose reaction directly
-	if (actionId === 'interpose' && actionType === 'reaction') {
-		await executeInterposeReaction(actor as NimbleCharacter);
-		return;
-	}
-
-	// Handle interpose & defend combo directly
-	if (actionId === 'interposeAndDefend' && actionType === 'reaction') {
-		await executeInterposeAndDefendReaction(actor as NimbleCharacter);
-		return;
-	}
-
-	// Handle help reaction directly
-	if (actionId === 'help' && actionType === 'reaction') {
-		await executeHelpReaction(actor as NimbleCharacter);
+	// Handle chat-based reactions (defend, interpose, interposeAndDefend, help)
+	const reactionConfig = actionType === 'reaction' ? REACTION_CONFIGS[actionId] : undefined;
+	if (reactionConfig) {
+		await executeChatReaction(actor as NimbleCharacter, reactionConfig);
 		return;
 	}
 
@@ -263,55 +246,86 @@ async function executeMoveAction(actor: NimbleCharacter): Promise<void> {
 	} as unknown as ChatMessage.CreateData);
 }
 
-async function executeDefendReaction(actor: NimbleCharacter): Promise<void> {
-	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.defend.label');
-	if (!(await resolveAndUseReaction(actor, ['defend'], reactionName))) return;
-
-	await ChatMessage.create(
-		buildReactionChatData(actor, 'defend', {
-			armorValue: actor.reactive.system.attributes.armor.value ?? 0,
-			targets: [],
-		}) as ChatMessage.CreateData,
-	);
+interface ReactionChatConfig {
+	reactionKeys: HeroicReactionKey[];
+	localizationKey: string;
+	messages: Array<{
+		type: string;
+		buildSystem: (actor: NimbleCharacter, targetUuids: string[]) => Record<string, unknown>;
+	}>;
 }
 
-async function executeInterposeReaction(actor: NimbleCharacter): Promise<void> {
-	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.interpose.label');
-	if (!(await resolveAndUseReaction(actor, ['interpose'], reactionName))) return;
+const REACTION_CONFIGS: Record<string, ReactionChatConfig> = {
+	defend: {
+		reactionKeys: ['defend'],
+		localizationKey: 'NIMBLE.ui.heroicActions.reactions.defend.label',
+		messages: [
+			{
+				type: 'defend',
+				buildSystem: (actor) => ({
+					armorValue: actor.reactive.system.attributes.armor.value ?? 0,
+					targets: [],
+				}),
+			},
+		],
+	},
+	interpose: {
+		reactionKeys: ['interpose'],
+		localizationKey: 'NIMBLE.ui.heroicActions.reactions.interpose.label',
+		messages: [
+			{
+				type: 'interpose',
+				buildSystem: (_, targetUuids) => ({ targets: targetUuids }),
+			},
+		],
+	},
+	interposeAndDefend: {
+		reactionKeys: ['interpose', 'defend'],
+		localizationKey: 'NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm',
+		messages: [
+			{
+				type: 'interpose',
+				buildSystem: (_, targetUuids) => ({ targets: targetUuids }),
+			},
+			{
+				type: 'defend',
+				buildSystem: (actor) => ({
+					armorValue: actor.reactive.system.attributes.armor.value ?? 0,
+					targets: [],
+				}),
+			},
+		],
+	},
+	help: {
+		reactionKeys: ['help'],
+		localizationKey: 'NIMBLE.ui.heroicActions.reactions.help.label',
+		messages: [
+			{
+				type: 'help',
+				buildSystem: (_, targetUuids) => ({ targets: targetUuids }),
+			},
+		],
+	},
+};
+
+async function executeChatReaction(
+	actor: NimbleCharacter,
+	config: ReactionChatConfig,
+): Promise<void> {
+	const reactionName = localize(config.localizationKey);
+	if (!(await resolveAndUseReaction(actor, config.reactionKeys, reactionName))) return;
 
 	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
-	await ChatMessage.create(
-		buildReactionChatData(actor, 'interpose', { targets: targetUuids }) as ChatMessage.CreateData,
-	);
-}
 
-async function executeInterposeAndDefendReaction(actor: NimbleCharacter): Promise<void> {
-	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm');
-	if (!(await resolveAndUseReaction(actor, ['interpose', 'defend'], reactionName))) return;
-
-	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
-
-	await ChatMessage.create(
-		buildReactionChatData(actor, 'interpose', {
-			targets: targetUuids,
-		}) as ChatMessage.CreateData,
-	);
-	await ChatMessage.create(
-		buildReactionChatData(actor, 'defend', {
-			armorValue: actor.reactive.system.attributes.armor.value ?? 0,
-			targets: [],
-		}) as ChatMessage.CreateData,
-	);
-}
-
-async function executeHelpReaction(actor: NimbleCharacter): Promise<void> {
-	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.help.label');
-	if (!(await resolveAndUseReaction(actor, ['help'], reactionName))) return;
-
-	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
-	await ChatMessage.create(
-		buildReactionChatData(actor, 'help', { targets: targetUuids }) as ChatMessage.CreateData,
-	);
+	for (const msg of config.messages) {
+		await ChatMessage.create(
+			buildReactionChatData(
+				actor,
+				msg.type,
+				msg.buildSystem(actor, targetUuids),
+			) as ChatMessage.CreateData,
+		);
+	}
 }
 
 async function executeOpportunityAttackReaction(actor: NimbleCharacter): Promise<void> {
