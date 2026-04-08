@@ -1,65 +1,15 @@
 <script lang="ts">
-	import SelectionIndicator from '#view/components/SelectionIndicator.svelte';
+	import type { ExpandableDocumentItem } from '#types/components/ExpandableDocumentList.d.ts';
+
+	import ExpandableDocumentList from '#view/components/ExpandableDocumentList.svelte';
 	import localize from '#utils/localize.js';
 
-	interface EpicBoon {
-		uuid: string;
-		name: string;
-		img: string;
-		system: { boonType: string; description: string };
-	}
-
 	interface Props {
-		epicBoons: EpicBoon[];
-		selectedEpicBoon: EpicBoon | null;
+		epicBoons: ExpandableDocumentItem[];
+		selectedEpicBoon: ExpandableDocumentItem | null;
 	}
 
 	let { epicBoons, selectedEpicBoon = $bindable() }: Props = $props();
-
-	let expandedBoonUuids: Set<string> = $state(new Set());
-	let expandedBoonDataMap: Map<string, { system?: { description?: string } }> = $state(new Map());
-
-	// Filter to show only selected boon when one is selected
-	const displayedBoons = $derived(
-		selectedEpicBoon ? epicBoons.filter((b) => b.uuid === selectedEpicBoon.uuid) : epicBoons,
-	);
-
-	async function toggleExpanded(boonUuid: string) {
-		if (expandedBoonUuids.has(boonUuid)) {
-			expandedBoonUuids.delete(boonUuid);
-			expandedBoonUuids = new Set(expandedBoonUuids);
-			expandedBoonDataMap.delete(boonUuid);
-			expandedBoonDataMap = new Map(expandedBoonDataMap);
-		} else {
-			const boonData = await fromUuid(boonUuid);
-			expandedBoonUuids.add(boonUuid);
-			expandedBoonUuids = new Set(expandedBoonUuids);
-			expandedBoonDataMap.set(boonUuid, boonData as { system?: { description?: string } });
-			expandedBoonDataMap = new Map(expandedBoonDataMap);
-		}
-	}
-
-	async function handleSelectClick(boonUuid: string, event: MouseEvent) {
-		event.stopPropagation();
-
-		// If already selected, deselect
-		if (selectedEpicBoon?.uuid === boonUuid) {
-			selectedEpicBoon = null;
-		} else {
-			// Select this boon
-			selectedEpicBoon = await fromUuid(boonUuid);
-		}
-	}
-
-	function handleRowClick(boonUuid: string) {
-		toggleExpanded(boonUuid);
-	}
-
-	function handleKeydown(e: KeyboardEvent, boonUuid: string) {
-		if (e.key === 'Enter') {
-			handleRowClick(boonUuid);
-		}
-	}
 </script>
 
 <section class="epic-boon-selection">
@@ -71,61 +21,16 @@
 	</header>
 
 	{#if epicBoons.length > 0}
-		<ul class="nimble-document-list">
-			{#each displayedBoons as boon (boon.uuid)}
-				<li class="u-semantic-only boon-item">
-					<div
-						class="boon-row"
-						class:selected={boon.uuid === selectedEpicBoon?.uuid}
-						class:expanded={expandedBoonUuids.has(boon.uuid)}
-						onclick={() => handleRowClick(boon.uuid)}
-						role="button"
-						tabindex="0"
-						onkeydown={(e) => handleKeydown(e, boon.uuid)}
-					>
-						<i class="fa-solid fa-chevron-down expand-arrow"></i>
-
-						<img
-							class="boon-row__img"
-							src={boon.img || 'icons/svg/item-bag.svg'}
-							alt={boon.name}
-							onerror={() => {
-								boon.img = 'icons/svg/item-bag.svg';
-							}}
-						/>
-
-						<h4 class="boon-row__name nimble-heading" data-heading-variant="item">
-							{boon.name}
-						</h4>
-
-						<div class="boon-row__actions">
-							<SelectionIndicator
-								selected={boon.uuid === selectedEpicBoon?.uuid}
-								onclick={(e) => handleSelectClick(boon.uuid, e)}
-								tooltip={boon.uuid === selectedEpicBoon?.uuid
-									? localize('NIMBLE.epicBoonSelection.deselectBoon')
-									: localize('NIMBLE.epicBoonSelection.selectBoon')}
-								ariaLabel={boon.uuid === selectedEpicBoon?.uuid
-									? localize('NIMBLE.epicBoonSelection.deselectBoonAriaLabel', {
-											boonName: boon.name,
-										})
-									: localize('NIMBLE.epicBoonSelection.selectBoonAriaLabel', {
-											boonName: boon.name,
-										})}
-							/>
-						</div>
-					</div>
-
-					{#if expandedBoonUuids.has(boon.uuid)}
-						<div class="accordion-content">
-							<div class="description">
-								{@html expandedBoonDataMap.get(boon.uuid)?.system?.description || 'Loading...'}
-							</div>
-						</div>
-					{/if}
-				</li>
-			{/each}
-		</ul>
+		<ExpandableDocumentList
+			items={epicBoons}
+			bind:selectedItem={selectedEpicBoon}
+			selectTooltip={localize('NIMBLE.epicBoonSelection.selectBoon')}
+			deselectTooltip={localize('NIMBLE.epicBoonSelection.deselectBoon')}
+			selectAriaLabel={(name) =>
+				localize('NIMBLE.epicBoonSelection.selectBoonAriaLabel', { boonName: name })}
+			deselectAriaLabel={(name) =>
+				localize('NIMBLE.epicBoonSelection.deselectBoonAriaLabel', { boonName: name })}
+		/>
 	{:else}
 		<p class="nimble-hint">
 			{localize('NIMBLE.epicBoonSelection.noBoons')}
@@ -145,117 +50,6 @@
 			margin: 0 0 1rem 0;
 			font-size: var(--nimble-sm-text);
 			color: var(--nimble-medium-text-color);
-		}
-	}
-
-	.boon-item {
-		margin-bottom: 0.5rem;
-	}
-
-	.boon-row {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		height: 50px;
-		padding: 0.5rem;
-		position: relative;
-		cursor: pointer;
-		background: var(--nimble-box-background-color);
-		border: 1px solid var(--nimble-card-border-color);
-		border-radius: 4px;
-		transition: all 0.3s ease;
-
-		&:hover {
-			border-color: var(--nimble-accent-color);
-		}
-
-		&.selected {
-			border-color: var(--nimble-accent-color);
-			background: color-mix(
-				in srgb,
-				var(--nimble-accent-color) 10%,
-				var(--nimble-box-background-color)
-			);
-		}
-
-		&.expanded {
-			border-bottom-left-radius: 0;
-			border-bottom-right-radius: 0;
-
-			.expand-arrow {
-				transform: rotate(180deg);
-			}
-		}
-
-		.expand-arrow {
-			font-size: 0.875rem;
-			transition: transform 0.3s ease;
-			color: var(--nimble-medium-text-color);
-		}
-
-		.boon-row__img {
-			width: 36px;
-			height: 36px;
-			margin: 0;
-			padding: 0;
-			display: block;
-			border-radius: 4px;
-		}
-
-		.boon-row__name {
-			flex: 1;
-			margin: 0;
-			padding: 0;
-			line-height: 1;
-		}
-
-		.boon-row__actions {
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-			margin-left: auto;
-		}
-	}
-
-	.accordion-content {
-		background: transparent;
-		border: 1px solid var(--nimble-card-border-color);
-		border-top: none;
-		border-radius: 0 0 4px 4px;
-		padding: 0.5rem 0.75rem;
-		animation: slideDown 0.3s ease;
-
-		.description {
-			margin-bottom: 0;
-			max-height: 300px;
-			overflow-y: auto;
-			line-height: 1.5;
-
-			:global(h3) {
-				margin-top: 0.25rem;
-				margin-bottom: 0.25rem;
-				font-size: 0.95rem;
-				font-weight: 600;
-			}
-
-			:global(p) {
-				margin-bottom: 0.25rem;
-			}
-		}
-	}
-
-	@keyframes slideDown {
-		from {
-			opacity: 0;
-			max-height: 0;
-			padding-top: 0;
-			padding-bottom: 0;
-		}
-		to {
-			opacity: 1;
-			max-height: 400px;
-			padding-top: 0.5rem;
-			padding-bottom: 0.5rem;
 		}
 	}
 </style>

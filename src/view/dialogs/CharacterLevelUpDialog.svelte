@@ -21,6 +21,11 @@
 
 	const { forms, levelUpDialog } = CONFIG.NIMBLE;
 
+	/** Subclass is chosen when leveling to this class level */
+	const SUBCLASS_LEVEL = 3;
+	/** Epic boon is chosen when leveling to this class level (Nimble class rule) */
+	const EPIC_BOON_LEVEL = 19;
+
 	function submit() {
 		dialog.submit({
 			selectedAbilityScore: selectedAbilityScores,
@@ -78,7 +83,7 @@
 		img: string;
 		system: { parentClass: string };
 	}> = $state([]);
-	let hasSubclassSelection = $derived(levelingTo === 3);
+	let hasSubclassSelection = $derived(levelingTo === SUBCLASS_LEVEL);
 
 	// Epic boon state (level 19)
 	let epicBoons: Array<{
@@ -87,7 +92,7 @@
 		img: string;
 		system: { boonType: string; description: string };
 	}> = $state([]);
-	let hasEpicBoonSelection = $derived(levelingTo === 19);
+	let hasEpicBoonSelection = $derived(levelingTo === EPIC_BOON_LEVEL);
 
 	// Load subclasses filtered by parent class when leveling to 3
 	$effect(() => {
@@ -248,11 +253,11 @@
 		bind:skillPointsOverMax
 	/>
 
-	{#if levelingTo === 3 && subclasses.length}
+	{#if levelingTo === SUBCLASS_LEVEL && subclasses.length}
 		<SubclassSelection {subclasses} bind:selectedSubclass />
 	{/if}
 
-	{#if levelingTo === 19 && epicBoons.length}
+	{#if levelingTo === EPIC_BOON_LEVEL && epicBoons.length}
 		<EpicBoonSelection {epicBoons} bind:selectedEpicBoon />
 	{/if}
 
