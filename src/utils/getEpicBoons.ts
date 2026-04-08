@@ -32,38 +32,34 @@ export default async function getEpicBoons(): Promise<EpicBoonChoice[]> {
 		});
 	}
 
-	// Get epic boons from compendiums
+	// Get epic boons from compendiums (batch-load all boons per pack)
 	for (const pack of game.packs) {
-		const index = pack.index;
+		// Skip packs that have no boon-type entries in the index
+		const hasBoons = [...pack.index].some(
+			(entry) => (entry as object as { type?: string }).type === 'boon',
+		);
+		if (!hasBoons) continue;
 
-		for (const indexEntry of index) {
-			const entry = indexEntry as object as {
-				type?: string;
-				uuid: string;
-				name: string;
-				img?: string;
-				_id: string;
-			};
-			if (entry.type !== 'boon') continue;
+		try {
+			const documents = (await pack.getDocuments({
+				type: 'boon',
+			})) as object as NimbleBoonItem[];
 
-			// Load the full document to check boonType
-			try {
-				const document = (await pack.getDocument(entry._id)) as object as NimbleBoonItem | null;
-				if (!document) continue;
-				if (document.system.boonType !== 'epic') continue;
+			for (const boon of documents) {
+				if (boon.system.boonType !== 'epic') continue;
 
 				epicBoons.push({
-					uuid: entry.uuid,
-					name: entry.name,
-					img: entry.img ?? 'icons/svg/item-bag.svg',
+					uuid: boon.uuid,
+					name: boon.name,
+					img: (boon.img as string) ?? 'icons/svg/item-bag.svg',
 					system: {
-						boonType: document.system.boonType,
-						description: document.system.description,
+						boonType: boon.system.boonType,
+						description: boon.system.description,
 					},
 				});
-			} catch (err) {
-				console.warn(`Nimble | Failed to load boon ${entry.uuid}:`, err);
 			}
+		} catch (err) {
+			console.warn(`Nimble | Failed to load boons from pack ${pack.collection}:`, err);
 		}
 	}
 

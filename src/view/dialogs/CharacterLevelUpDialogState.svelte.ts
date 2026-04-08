@@ -70,18 +70,26 @@ export function createLevelUpState(
 	// Load subclasses filtered by parent class when leveling to 3
 	$effect(() => {
 		if (hasSubclassSelection && characterClass) {
-			getSubclassChoices(characterClass.identifier).then((choices) => {
-				subclasses = choices;
-			});
+			getSubclassChoices(characterClass.identifier)
+				.then((choices) => {
+					subclasses = choices;
+				})
+				.catch((err) => {
+					console.warn('Nimble | Failed to load subclass choices:', err);
+				});
 		}
 	});
 
 	// Load epic boons when leveling to 19
 	$effect(() => {
 		if (hasEpicBoonSelection) {
-			getEpicBoons().then((choices) => {
-				epicBoons = choices;
-			});
+			getEpicBoons()
+				.then((choices) => {
+					epicBoons = choices;
+				})
+				.catch((err) => {
+					console.warn('Nimble | Failed to load epic boons:', err);
+				});
 		}
 	});
 
@@ -107,46 +115,53 @@ export function createLevelUpState(
 		if (!characterClass) return;
 
 		featuresLoading = true;
-		buildClassFeatureIndex().then(async (index) => {
-			const rawFeatures = await getClassFeaturesFromIndex(
-				index,
-				characterClass.identifier,
-				levelingTo,
-			);
+		buildClassFeatureIndex()
+			.then(async (index) => {
+				const rawFeatures = await getClassFeaturesFromIndex(
+					index,
+					characterClass.identifier,
+					levelingTo,
+				);
 
-			// Get UUIDs of features the character already has (via compendiumSource)
-			const ownedFeatureUuids = new Set(
-				(getDocument().items ?? [])
-					.filter((item) => item.type === 'feature')
-					.map(
-						(item) =>
-							(item as unknown as { _stats?: { compendiumSource?: string } })._stats
-								?.compendiumSource,
-					)
-					.filter((uuid): uuid is string => !!uuid),
-			);
+				// Get UUIDs of features the character already has (via compendiumSource)
+				const ownedFeatureUuids = new Set(
+					(getDocument().items ?? [])
+						.filter((item) => item.type === 'feature')
+						.map(
+							(item) =>
+								(item as unknown as { _stats?: { compendiumSource?: string } })._stats
+									?.compendiumSource,
+						)
+						.filter((uuid): uuid is string => !!uuid),
+				);
 
-			// Filter out already-owned features from autoGrant
-			const filteredAutoGrant = rawFeatures.autoGrant.filter(
-				(feature) => !ownedFeatureUuids.has(feature.uuid),
-			);
+				// Filter out already-owned features from autoGrant
+				const filteredAutoGrant = rawFeatures.autoGrant.filter(
+					(feature) => !ownedFeatureUuids.has(feature.uuid),
+				);
 
-			// Filter out already-owned features from selection groups
-			const filteredSelectionGroups = new Map<string, NimbleFeatureItem[]>();
-			for (const [groupName, features] of rawFeatures.selectionGroups) {
-				const filteredFeatures = features.filter((feature) => !ownedFeatureUuids.has(feature.uuid));
-				// Only include groups that still have options
-				if (filteredFeatures.length > 0) {
-					filteredSelectionGroups.set(groupName, filteredFeatures);
+				// Filter out already-owned features from selection groups
+				const filteredSelectionGroups = new Map<string, NimbleFeatureItem[]>();
+				for (const [groupName, features] of rawFeatures.selectionGroups) {
+					const filteredFeatures = features.filter(
+						(feature) => !ownedFeatureUuids.has(feature.uuid),
+					);
+					// Only include groups that still have options
+					if (filteredFeatures.length > 0) {
+						filteredSelectionGroups.set(groupName, filteredFeatures);
+					}
 				}
-			}
 
-			classFeatures = {
-				autoGrant: filteredAutoGrant,
-				selectionGroups: filteredSelectionGroups,
-			};
-			featuresLoading = false;
-		});
+				classFeatures = {
+					autoGrant: filteredAutoGrant,
+					selectionGroups: filteredSelectionGroups,
+				};
+				featuresLoading = false;
+			})
+			.catch((err) => {
+				console.warn('Nimble | Failed to load class features:', err);
+				featuresLoading = false;
+			});
 	});
 
 	// Derived completion checks
