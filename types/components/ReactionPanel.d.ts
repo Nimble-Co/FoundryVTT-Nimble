@@ -1,5 +1,16 @@
 import type { NimbleCharacter } from '../../src/documents/actor/actor';
 
+export interface ReactionPanelStateOptions {
+	getActor: () => NimbleCharacter;
+	getReactionDisabled: () => boolean;
+	getDefendSpent: () => boolean;
+	getInterposeSpent: () => boolean;
+	getNoActions: () => boolean;
+	getOnUseReaction: () => (options?: { force?: boolean }) => Promise<boolean>;
+	getCombinedReactionDisabled: () => boolean;
+	getOnUseCombinedReaction: () => (options?: { force?: boolean }) => Promise<boolean>;
+}
+
 export interface ReactionPanelProps {
 	actor: NimbleCharacter;
 	reactionDisabled?: boolean;

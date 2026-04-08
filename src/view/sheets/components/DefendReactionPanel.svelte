@@ -15,16 +15,16 @@
 		onUseCombinedReaction = async () => false,
 	}: ReactionPanelProps = $props();
 
-	const state = createDefendPanelState(
-		() => actor,
-		() => reactionDisabled,
-		() => defendSpent,
-		() => interposeSpent,
-		() => noActions,
-		() => onUseReaction,
-		() => combinedReactionDisabled,
-		() => onUseCombinedReaction,
-	);
+	const state = createDefendPanelState({
+		getActor: () => actor,
+		getReactionDisabled: () => reactionDisabled,
+		getDefendSpent: () => defendSpent,
+		getInterposeSpent: () => interposeSpent,
+		getNoActions: () => noActions,
+		getOnUseReaction: () => onUseReaction,
+		getCombinedReactionDisabled: () => combinedReactionDisabled,
+		getOnUseCombinedReaction: () => onUseCombinedReaction,
+	});
 
 	const availableTargets = $derived(state.availableTargets);
 	const selectedTarget = $derived(state.selectedTarget);

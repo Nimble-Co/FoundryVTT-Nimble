@@ -2,12 +2,12 @@ import { DamageRoll } from '../../../dice/DamageRoll.js';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import ItemActivationConfigDialog from '../../../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { getPrimaryDamageFormulaFromActivationEffects } from '../../../utils/activationEffects.js';
+import { getUnarmedDamageFormula, hasUnarmedProficiency } from '../../../utils/attackUtils.js';
 import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
 import localize from '../../../utils/localize.js';
 import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
 import sortItems from '../../../utils/sortItems.js';
 import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
-import { getUnarmedDamageFormula, hasUnarmedProficiency } from './attackUtils.js';
 
 interface WeaponSystemData {
 	objectType: string;

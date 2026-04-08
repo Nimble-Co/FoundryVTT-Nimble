@@ -18,7 +18,7 @@ vi.mock('../documents/dialogs/ItemActivationConfigDialog.svelte.js', () => ({
 	default: itemActivationConfigDialogMock,
 }));
 
-vi.mock('../view/sheets/components/attackUtils.js', () => ({
+vi.mock('../utils/attackUtils.js', () => ({
 	getUnarmedDamageFormula: getUnarmedDamageFormulaMock,
 	hasUnarmedProficiency: hasUnarmedProficiencyMock,
 }));
@@ -229,7 +229,7 @@ describe('activateHeroicActionMacro', () => {
 		await activateHeroicActionMacro('move', 'action');
 
 		expect(combatant.update).toHaveBeenCalledWith({
-			'system.actions.base.current': -1,
+			'system.actions.base.current': 0,
 		});
 		expect(ChatMessage.create).toHaveBeenCalledWith(
 			expect.objectContaining({

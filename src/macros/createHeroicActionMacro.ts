@@ -26,7 +26,9 @@ export async function createHeroicActionMacro(data: HeroicActionMacroData, slot:
 
 	let macro: Macro | undefined = game.macros.find((m) => {
 		const sameCommand = m.command === command;
-		const perms = m.ownership?.default === 3 || m.ownership?.[game.user!.id] === 3;
+		const perms =
+			m.ownership?.default === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER ||
+			m.ownership?.[game.user!.id] === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
 
 		return sameCommand && perms;
 	});

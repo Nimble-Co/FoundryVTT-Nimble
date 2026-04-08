@@ -1,6 +1,7 @@
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { NimbleCharacter } from '../documents/actor/character.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
+import { getUnarmedDamageFormula, hasUnarmedProficiency } from '../utils/attackUtils.js';
 import { getActiveCombatForCurrentScene } from '../utils/combatState.js';
 import { getHeroicReactionUsageState } from '../utils/getHeroicReactionUsageState.js';
 import {
@@ -12,10 +13,6 @@ import localize from '../utils/localize.js';
 import { getMovementSpeeds } from '../utils/movementSpeeds.js';
 import showReactionConfirmation from '../utils/showReactionConfirmation.js';
 import { getTargetedTokens } from '../utils/targeting.js';
-import {
-	getUnarmedDamageFormula,
-	hasUnarmedProficiency,
-} from '../view/sheets/components/attackUtils.js';
 
 type CombatWithHeroicReactionUse = Combat & {
 	useHeroicReactions?: (
@@ -155,10 +152,68 @@ async function checkReactionConfirmation(
 	};
 }
 
+/**
+ * Resolves combat state, confirms the reaction with the user if needed,
+ * and uses the heroic reaction. Returns { force } on success, or null if
+ * the reaction should not proceed.
+ */
+async function resolveAndUseReaction(
+	actor: NimbleCharacter,
+	reactionKeys: HeroicReactionKey[],
+	reactionName: string,
+): Promise<{ force: boolean } | null> {
+	const combat = getActiveCombatForCurrentScene() as CombatWithHeroicReactionUse | null;
+	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
+	const combatantId = combatant?.id ?? combatant?._id ?? null;
+
+	if (!combat?.useHeroicReactions || !combatantId) {
+		ui.notifications.warn(
+			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: reactionName }),
+		);
+		return null;
+	}
+
+	const { confirmed, force } = await checkReactionConfirmation(actor, reactionKeys, reactionName);
+	if (!confirmed) return null;
+
+	const reactionUsed = await combat.useHeroicReactions(
+		combatantId,
+		reactionKeys,
+		force ? { force: true } : undefined,
+	);
+	if (!reactionUsed) return null;
+
+	return { force };
+}
+
+/**
+ * Builds the common chat message data for a reaction.
+ */
+function buildReactionChatData(
+	actor: NimbleCharacter,
+	reactionType: string,
+	system: Record<string, unknown>,
+): unknown {
+	return {
+		author: game.user?.id,
+		speaker: ChatMessage.getSpeaker({ actor }),
+		type: 'reaction',
+		system: {
+			actorName: actor.name,
+			actorType: actor.type,
+			image: actor.img,
+			permissions: actor.permission,
+			rollMode: 0,
+			reactionType,
+			...system,
+		},
+	};
+}
+
 async function executeMoveAction(actor: NimbleCharacter): Promise<void> {
 	const combat = getActiveCombatForCurrentScene();
 	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
-	const inCombat = combatant?.initiative !== null;
+	const inCombat = !!combatant && combatant.initiative !== null;
 
 	if (!inCombat) {
 		const actionName = localize('NIMBLE.ui.heroicActions.actions.move.label');
@@ -170,7 +225,7 @@ async function executeMoveAction(actor: NimbleCharacter): Promise<void> {
 
 	// Get current actions
 	// @ts-expect-error - combatant.system is not typed
-	const actions = combatant?.system?.actions?.base;
+	const actions = combatant.system?.actions?.base;
 	const actionsRemaining = actions?.current ?? 0;
 
 	if (actionsRemaining <= 0) {
@@ -187,9 +242,9 @@ async function executeMoveAction(actor: NimbleCharacter): Promise<void> {
 		if (confirmed !== true) return;
 	}
 
-	// Deduct action pip (will go negative if forced)
-	await combatant!.update({
-		'system.actions.base.current': actionsRemaining - 1,
+	// Deduct action pip (clamp at 0)
+	await combatant.update({
+		'system.actions.base.current': Math.max(0, actionsRemaining - 1),
 	} as Record<string, unknown>);
 
 	// Get movement speed
@@ -209,212 +264,60 @@ async function executeMoveAction(actor: NimbleCharacter): Promise<void> {
 }
 
 async function executeDefendReaction(actor: NimbleCharacter): Promise<void> {
-	const combat = getActiveCombatForCurrentScene() as CombatWithHeroicReactionUse | null;
-	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
-	const combatantId = combatant?.id ?? combatant?._id ?? null;
-
 	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.defend.label');
+	if (!(await resolveAndUseReaction(actor, ['defend'], reactionName))) return;
 
-	if (!combat?.useHeroicReactions || !combatantId) {
-		ui.notifications.warn(
-			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: reactionName }),
-		);
-		return;
-	}
-	const { confirmed, force } = await checkReactionConfirmation(actor, ['defend'], reactionName);
-	if (!confirmed) return;
-
-	const reactionUsed = await combat.useHeroicReactions(
-		combatantId,
-		['defend'],
-		force ? { force: true } : undefined,
-	);
-	if (!reactionUsed) return;
-
-	const armorValue = actor.reactive.system.attributes.armor.value ?? 0;
-
-	await ChatMessage.create({
-		author: game.user?.id,
-		speaker: ChatMessage.getSpeaker({ actor }),
-		type: 'reaction',
-		system: {
-			actorName: actor.name,
-			actorType: actor.type,
-			image: actor.img,
-			permissions: actor.permission,
-			rollMode: 0,
-			reactionType: 'defend',
-			armorValue,
+	await ChatMessage.create(
+		buildReactionChatData(actor, 'defend', {
+			armorValue: actor.reactive.system.attributes.armor.value ?? 0,
 			targets: [],
-		},
-	} as unknown as ChatMessage.CreateData);
+		}) as ChatMessage.CreateData,
+	);
 }
 
 async function executeInterposeReaction(actor: NimbleCharacter): Promise<void> {
-	const combat = getActiveCombatForCurrentScene() as CombatWithHeroicReactionUse | null;
-	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
-	const combatantId = combatant?.id ?? combatant?._id ?? null;
-
 	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.interpose.label');
-
-	if (!combat?.useHeroicReactions || !combatantId) {
-		ui.notifications.warn(
-			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: reactionName }),
-		);
-		return;
-	}
-	const { confirmed, force } = await checkReactionConfirmation(actor, ['interpose'], reactionName);
-	if (!confirmed) return;
-
-	const reactionUsed = await combat.useHeroicReactions(
-		combatantId,
-		['interpose'],
-		force ? { force: true } : undefined,
-	);
-	if (!reactionUsed) return;
+	if (!(await resolveAndUseReaction(actor, ['interpose'], reactionName))) return;
 
 	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
-
-	await ChatMessage.create({
-		author: game.user?.id,
-		speaker: ChatMessage.getSpeaker({ actor }),
-		type: 'reaction',
-		system: {
-			actorName: actor.name,
-			actorType: actor.type,
-			image: actor.img,
-			permissions: actor.permission,
-			rollMode: 0,
-			reactionType: 'interpose',
-			targets: targetUuids,
-		},
-	} as unknown as ChatMessage.CreateData);
+	await ChatMessage.create(
+		buildReactionChatData(actor, 'interpose', { targets: targetUuids }) as ChatMessage.CreateData,
+	);
 }
 
 async function executeInterposeAndDefendReaction(actor: NimbleCharacter): Promise<void> {
-	const combat = getActiveCombatForCurrentScene() as CombatWithHeroicReactionUse | null;
-	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
-	const combatantId = combatant?.id ?? combatant?._id ?? null;
-
 	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm');
+	if (!(await resolveAndUseReaction(actor, ['interpose', 'defend'], reactionName))) return;
 
-	if (!combat?.useHeroicReactions || !combatantId) {
-		ui.notifications.warn(
-			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: reactionName }),
-		);
-		return;
-	}
-	const { confirmed, force } = await checkReactionConfirmation(
-		actor,
-		['interpose', 'defend'],
-		reactionName,
-	);
-	if (!confirmed) return;
-
-	const reactionUsed = await combat.useHeroicReactions(
-		combatantId,
-		['interpose', 'defend'],
-		force ? { force: true } : undefined,
-	);
-	if (!reactionUsed) return;
-
-	const armorValue = actor.reactive.system.attributes.armor.value ?? 0;
 	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
 
-	// Create Interpose message first
-	await ChatMessage.create({
-		author: game.user?.id,
-		speaker: ChatMessage.getSpeaker({ actor }),
-		type: 'reaction',
-		system: {
-			actorName: actor.name,
-			actorType: actor.type,
-			image: actor.img,
-			permissions: actor.permission,
-			rollMode: 0,
-			reactionType: 'interpose',
+	await ChatMessage.create(
+		buildReactionChatData(actor, 'interpose', {
 			targets: targetUuids,
-		},
-	} as unknown as ChatMessage.CreateData);
-
-	// Then create Defend message
-	await ChatMessage.create({
-		author: game.user?.id,
-		speaker: ChatMessage.getSpeaker({ actor }),
-		type: 'reaction',
-		system: {
-			actorName: actor.name,
-			actorType: actor.type,
-			image: actor.img,
-			permissions: actor.permission,
-			rollMode: 0,
-			reactionType: 'defend',
-			armorValue,
+		}) as ChatMessage.CreateData,
+	);
+	await ChatMessage.create(
+		buildReactionChatData(actor, 'defend', {
+			armorValue: actor.reactive.system.attributes.armor.value ?? 0,
 			targets: [],
-		},
-	} as unknown as ChatMessage.CreateData);
+		}) as ChatMessage.CreateData,
+	);
 }
 
 async function executeHelpReaction(actor: NimbleCharacter): Promise<void> {
-	const combat = getActiveCombatForCurrentScene() as CombatWithHeroicReactionUse | null;
-	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
-	const combatantId = combatant?.id ?? combatant?._id ?? null;
-
 	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.help.label');
-
-	if (!combat?.useHeroicReactions || !combatantId) {
-		ui.notifications.warn(
-			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: reactionName }),
-		);
-		return;
-	}
-	const { confirmed, force } = await checkReactionConfirmation(actor, ['help'], reactionName);
-	if (!confirmed) return;
-
-	const reactionUsed = await combat.useHeroicReactions(
-		combatantId,
-		['help'],
-		force ? { force: true } : undefined,
-	);
-	if (!reactionUsed) return;
+	if (!(await resolveAndUseReaction(actor, ['help'], reactionName))) return;
 
 	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
-
-	await ChatMessage.create({
-		author: game.user?.id,
-		speaker: ChatMessage.getSpeaker({ actor }),
-		type: 'reaction',
-		system: {
-			actorName: actor.name,
-			actorType: actor.type,
-			image: actor.img,
-			permissions: actor.permission,
-			rollMode: 0,
-			reactionType: 'help',
-			targets: targetUuids,
-		},
-	} as unknown as ChatMessage.CreateData);
+	await ChatMessage.create(
+		buildReactionChatData(actor, 'help', { targets: targetUuids }) as ChatMessage.CreateData,
+	);
 }
 
 async function executeOpportunityAttackReaction(actor: NimbleCharacter): Promise<void> {
-	const combat = getActiveCombatForCurrentScene() as CombatWithHeroicReactionUse | null;
-	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
-	const combatantId = combatant?.id ?? combatant?._id ?? null;
-
 	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.opportunity.label');
-
-	if (!combat?.useHeroicReactions || !combatantId) {
-		ui.notifications.warn(
-			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: reactionName }),
-		);
-		return;
-	}
-	const { confirmed, force } = await checkReactionConfirmation(
-		actor,
-		['opportunityAttack'],
-		reactionName,
-	);
-	if (!confirmed) return;
+	const result = await resolveAndUseReaction(actor, ['opportunityAttack'], reactionName);
+	if (!result) return;
 
 	// For opportunity attack, we open the sheet to let the user choose a weapon
 	// since this requires more user interaction than the simple reactions
@@ -425,13 +328,17 @@ async function executeOpportunityAttackReaction(actor: NimbleCharacter): Promise
 
 	const appState = sheet.$state;
 	appState.activePrimaryTab = 'actions';
-	appState.heroicActionTarget = { actionId: 'opportunity', actionType: 'reaction', force };
+	appState.heroicActionTarget = {
+		actionId: 'opportunity',
+		actionType: 'reaction',
+		force: result.force,
+	};
 }
 
 async function executeUnarmedStrike(actor: NimbleCharacter): Promise<void> {
 	const combat = getActiveCombatForCurrentScene();
 	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
-	const inCombat = combatant?.initiative !== null;
+	const inCombat = !!combatant && combatant.initiative !== null;
 
 	// Get current actions if in combat
 	// @ts-expect-error - combatant.system is not typed
@@ -517,6 +424,8 @@ async function executeUnarmedStrike(actor: NimbleCharacter): Promise<void> {
 		},
 	];
 
+	const targetUuids = getTargetedTokens(actor.id ?? '').map((t) => t.document.uuid);
+
 	const chatData = {
 		author: game.user?.id,
 		flavor: `${actor.name}: ${localize('NIMBLE.ui.heroicActions.unarmedStrike')}`,
@@ -544,7 +453,7 @@ async function executeUnarmedStrike(actor: NimbleCharacter): Promise<void> {
 				duration: { type: 'none', quantity: 1 },
 				targets: { count: 1 },
 			},
-			targets: Array.from(game.user?.targets?.map((token) => token.document.uuid) ?? []),
+			targets: targetUuids,
 		},
 		type: 'feature',
 	};
@@ -555,7 +464,7 @@ async function executeUnarmedStrike(actor: NimbleCharacter): Promise<void> {
 	// Deduct action pip if in combat
 	if (inCombat && combatant) {
 		await combatant.update({
-			'system.actions.base.current': actionsRemaining - 1,
+			'system.actions.base.current': Math.max(0, actionsRemaining - 1),
 		} as Record<string, unknown>);
 	}
 }
