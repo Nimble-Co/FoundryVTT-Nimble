@@ -1424,9 +1424,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	async outputLevelUpSummary(data, roll: Roll | undefined) {
 		const rolls = roll ? [roll] : [];
 		const { currentClassLevel, takeAverageHp } = data;
-		console.log('currentClassLevel', currentClassLevel);
-		console.log('takeAverageHp', takeAverageHp);
-		console.log(data);
 
 		const chatData = {
 			author: game.user?.id,
