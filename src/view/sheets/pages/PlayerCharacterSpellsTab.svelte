@@ -1,19 +1,20 @@
 <script lang="ts">
-	import type { NimbleCharacter } from '../../../documents/actor/character.js';
-	import type PlayerCharacterSheet from '../../../documents/sheets/PlayerCharacterSheet.svelte.js';
-	import filterItems from '../../dataPreparationHelpers/filterItems.js';
-	import { getContext } from 'svelte';
-	import prepareSpellTooltip from '../../dataPreparationHelpers/documentTooltips/prepareSpellTooltip';
-	import shouldFlashDroppedItem from '../../../utils/shouldFlashDroppedItem.js';
-	import sortItems from '../../../utils/sortItems.js';
+	import type { NimbleCharacter } from '#documents/actor/character.js';
+	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
+	import { ChargePoolService } from '#utils/chargePoolService.js';
+	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
+	import sortItems from '#utils/sortItems.js';
+	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
+	import SecondaryNavigation from '#view/components/SecondaryNavigation.svelte';
+	import filterItems from '#view/dataPreparationHelpers/filterItems.js';
+	import prepareSpellTooltip from '#view/dataPreparationHelpers/documentTooltips/prepareSpellTooltip.js';
+	import SearchBar from '#view/sheets/components/SearchBar.svelte';
 	import {
 		DROP_ITEM_FLASH_ANIMATION_NAME,
 		getDroppedItemFlashIds,
 		type SheetDropItemFlashState,
-	} from '../dropItemFlashState.js';
-
-	import SearchBar from '../components/SearchBar.svelte';
-	import SecondaryNavigation from '../../components/SecondaryNavigation.svelte';
+	} from '#view/sheets/dropItemFlashState.js';
+	import { getContext } from 'svelte';
 
 	async function configureItem(event, id) {
 		event.stopPropagation();
@@ -187,6 +188,13 @@
 		});
 	});
 
+	// All charge pools for the actor
+	let allPools = $derived(ChargePoolService.getPools(actor.reactive));
+
+	function getItemPools(itemId: string) {
+		return ChargePoolService.getPoolsForItem(actor.reactive, itemId, allPools);
+	}
+
 	async function getSpellTooltip(spell) {
 		const cacheKey = spell.reactive._id;
 		if (tooltipCache.has(cacheKey)) {
@@ -307,6 +315,14 @@
 									{/if}
 								</div>
 							</h4>
+
+							<div class="nimble-document-card__charges">
+								<ChargeIndicator
+									pools={getItemPools(spell.reactive._id)}
+									{actor}
+									itemId={spell.reactive._id}
+								/>
+							</div>
 
 							<button
 								class="nimble-button"

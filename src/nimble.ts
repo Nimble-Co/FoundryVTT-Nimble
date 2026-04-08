@@ -1,5 +1,6 @@
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import canvasInit from './hooks/canvasInit.js';
+import registerChargeSystemHooks from './hooks/chargeSystem.js';
 import registerCombatantDefeatSync from './hooks/combatantHooks/combatantDefeatSync.js';
 import registerCombatantHealthStateSync from './hooks/combatantHooks/combatantHealthStateSync.js';
 import registerTokenCombatantSync from './hooks/combatantHooks/tokenCombatantSync.js';
@@ -16,8 +17,8 @@ import renderNimbleTokenHUD from './hooks/renderNimbleTokenHUD.js';
 import registerRuleEventDispatch from './hooks/ruleEventDispatch.js';
 import setup from './hooks/setup.js';
 import './scss/main.scss';
-import { getCombatManaGrantForCombat, getCombatManaGrantMap } from './utils/combatManaRules.js';
-import { injectViteHmrClient } from './utils/viteHmr.js';
+import { getCombatManaGrantForCombat, getCombatManaGrantMap } from '#utils/combatManaRules.js';
+import { injectViteHmrClient } from '#utils/viteHmr.js';
 
 async function clearCombatManaFromCombat(combat: Combat): Promise<void> {
 	const combatId = combat.id;
@@ -96,6 +97,7 @@ type HookFn = (...args: object[]) => undefined | boolean | Promise<undefined | b
 Hooks.on('hotbarDrop', onHotbarDrop);
 registerCombatantDefeatSync();
 registerCombatantHealthStateSync();
+registerChargeSystemHooks();
 registerMinionGroupTokenBadges();
 registerMinionGroupTokenActions();
 registerTokenCombatantSync();
