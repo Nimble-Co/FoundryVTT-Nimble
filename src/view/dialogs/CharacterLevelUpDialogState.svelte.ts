@@ -1,6 +1,7 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
 import type { ExpandableDocumentItem } from '#types/components/ExpandableDocumentList.d.ts';
+import type { EpicBoonChoice, SubclassChoice } from '#types/components/LevelUpChoices.d.ts';
 
 import generateBlankSkillSet from '#utils/generateBlankSkillSet.ts';
 import getChoicesFromCompendium from '#utils/getChoicesFromCompendium.ts';
@@ -20,20 +21,6 @@ interface ClassItemShape {
 interface LevelUpDocument {
 	classes: Record<string, ClassItemShape | undefined>;
 	items: Array<{ type: string; _stats?: { compendiumSource?: string } }>;
-}
-
-interface SubclassChoice {
-	uuid: string;
-	name: string;
-	img: string;
-	system: { parentClass: string };
-}
-
-interface EpicBoonChoice {
-	uuid: string;
-	name: string;
-	img: string;
-	system: { boonType: string; description: string };
 }
 
 /**

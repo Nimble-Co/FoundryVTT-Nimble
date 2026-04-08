@@ -2,6 +2,7 @@
 	import type { ExpandableDocumentListProps } from '#types/components/ExpandableDocumentList.d.ts';
 
 	import SelectionIndicator from '#view/components/SelectionIndicator.svelte';
+	import localize from '#utils/localize.js';
 	import { createExpandableDocumentListState } from './ExpandableDocumentList.svelte.ts';
 
 	let {
@@ -66,7 +67,8 @@
 			{#if expandedUuids.has(item.uuid)}
 				<div class="accordion-content">
 					<div class="description">
-						{@html expandedDataMap.get(item.uuid)?.system?.description || 'Loading...'}
+						{@html expandedDataMap.get(item.uuid)?.system?.description ||
+							localize('NIMBLE.ui.loading')}
 					</div>
 				</div>
 			{/if}

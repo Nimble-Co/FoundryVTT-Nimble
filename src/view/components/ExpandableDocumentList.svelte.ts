@@ -24,12 +24,16 @@ export function createExpandableDocumentListState(
 			expandedDataMap.delete(uuid);
 			expandedDataMap = new Map(expandedDataMap);
 		} else {
-			// @ts-expect-error — Foundry's fromUuid accepts any string at runtime
-			const data = await fromUuid(uuid);
-			expandedUuids.add(uuid);
-			expandedUuids = new Set(expandedUuids);
-			expandedDataMap.set(uuid, data as { system?: { description?: string } });
-			expandedDataMap = new Map(expandedDataMap);
+			try {
+				// @ts-expect-error — Foundry's fromUuid accepts any string at runtime
+				const data = await fromUuid(uuid);
+				expandedUuids.add(uuid);
+				expandedUuids = new Set(expandedUuids);
+				expandedDataMap.set(uuid, data as { system?: { description?: string } });
+				expandedDataMap = new Map(expandedDataMap);
+			} catch (err) {
+				console.warn(`Nimble | Failed to load document ${uuid}:`, err);
+			}
 		}
 	}
 
@@ -38,8 +42,12 @@ export function createExpandableDocumentListState(
 		if (getSelectedItem()?.uuid === uuid) {
 			setSelectedItem(null);
 		} else {
-			// @ts-expect-error — Foundry's fromUuid accepts any string at runtime
-			setSelectedItem(await fromUuid(uuid));
+			try {
+				// @ts-expect-error — Foundry's fromUuid accepts any string at runtime
+				setSelectedItem(await fromUuid(uuid));
+			} catch (err) {
+				console.warn(`Nimble | Failed to load document ${uuid}:`, err);
+			}
 		}
 	}
 
