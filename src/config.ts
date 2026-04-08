@@ -26,6 +26,13 @@ const abilityScores: Record<AbilityKeyType, string> = {
 	will: 'NIMBLE.abilityScores.will',
 };
 
+const abilities: Record<AbilityKeyType, { label: string }> = {
+	strength: { label: 'NIMBLE.abilityScores.strength' },
+	dexterity: { label: 'NIMBLE.abilityScores.dexterity' },
+	intelligence: { label: 'NIMBLE.abilityScores.intelligence' },
+	will: { label: 'NIMBLE.abilityScores.will' },
+};
+
 const abilityScoreAbbreviations: Record<AbilityKeyType, string> = {
 	strength: 'NIMBLE.abilityScoreAbbreviations.strength',
 	dexterity: 'NIMBLE.abilityScoreAbbreviations.dexterity',
@@ -849,6 +856,7 @@ const NIMBLE = {
 	ROLL_MODE,
 
 	// Config
+	abilities,
 	abilityScoreAbbreviations,
 	abilityScoreControls,
 	abilityScores,

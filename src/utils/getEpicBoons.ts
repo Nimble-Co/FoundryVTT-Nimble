@@ -18,7 +18,7 @@ export default async function getEpicBoons(): Promise<EpicBoonChoice[]> {
 	for (const item of game.items) {
 		if (item.type !== 'boon') continue;
 
-		const boon = item as object as NimbleBoonItem;
+		const boon = item as unknown as NimbleBoonItem;
 		if (boon.system.boonType !== 'epic') continue;
 
 		epicBoons.push({
@@ -36,14 +36,14 @@ export default async function getEpicBoons(): Promise<EpicBoonChoice[]> {
 	for (const pack of game.packs) {
 		// Skip packs that have no boon-type entries in the index
 		const hasBoons = [...pack.index].some(
-			(entry) => (entry as object as { type?: string }).type === 'boon',
+			(entry) => (entry as unknown as { type?: string }).type === 'boon',
 		);
 		if (!hasBoons) continue;
 
 		try {
 			const documents = (await pack.getDocuments({
 				type: 'boon',
-			})) as object as NimbleBoonItem[];
+			})) as unknown as NimbleBoonItem[];
 
 			for (const boon of documents) {
 				if (boon.system.boonType !== 'epic') continue;

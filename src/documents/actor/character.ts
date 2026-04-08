@@ -1240,42 +1240,36 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			}
 		}
 
-		// Create feature documents from autoGrant and selected features
-		let grantedFeatureIds: string[] = [];
+		// Build a single list of items to grant (class features + epic boon)
+		const itemsToGrant: { toObject(): object; uuid: string }[] = [];
 
 		if (typedDialogData.classFeatures) {
-			const featuresToGrant: NimbleFeatureItem[] = [
+			itemsToGrant.push(
 				...typedDialogData.classFeatures.autoGrant,
 				...typedDialogData.classFeatures.selected.values(),
-			];
-
-			if (featuresToGrant.length > 0) {
-				const featureDocumentSources = featuresToGrant.map((feature) => {
-					const featureData = feature.toObject();
-					(featureData as { _stats: { compendiumSource?: string } })._stats.compendiumSource =
-						feature.uuid;
-					return featureData;
-				});
-
-				const createdFeatures = await this.createEmbeddedDocuments('Item', featureDocumentSources);
-				grantedFeatureIds = (createdFeatures ?? [])
-					.map((f) => f.id)
-					.filter((id): id is string => id !== null);
-			}
+			);
 		}
 
-		// Grant epic boon at level 19
-		const epicBoon = typedDialogData.selectedEpicBoon;
-		if (epicBoon) {
-			const boonData = epicBoon.toObject();
-			(boonData as { _stats: { compendiumSource?: string } })._stats.compendiumSource =
-				epicBoon.uuid;
+		if (typedDialogData.selectedEpicBoon) {
+			itemsToGrant.push(typedDialogData.selectedEpicBoon);
+		}
 
-			const createdBoons = await this.createEmbeddedDocuments('Item', [boonData]);
-			const boonIds = (createdBoons ?? [])
-				.map((b) => b.id)
+		let grantedFeatureIds: string[] = [];
+
+		if (itemsToGrant.length > 0) {
+			const documentSources = itemsToGrant.map((item) => {
+				const data = item.toObject();
+				(data as { _stats: { compendiumSource?: string } })._stats.compendiumSource = item.uuid;
+				return data;
+			});
+
+			const created = await this.createEmbeddedDocuments(
+				'Item',
+				documentSources as Parameters<typeof this.createEmbeddedDocuments>[1],
+			);
+			grantedFeatureIds = (created ?? [])
+				.map((item) => item.id)
 				.filter((id): id is string => id !== null);
-			grantedFeatureIds = [...grantedFeatureIds, ...boonIds];
 		}
 
 		// Record level up history
