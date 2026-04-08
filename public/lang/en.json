@@ -472,7 +472,8 @@
 			"rollHitDice": "Roll Hit Dice",
 			"rollHitDiceTooltip": "Roll your Hit Die with advantage and increase your max HP by that much.",
 			"takeAverage": "Take Average ({average})",
-			"featuresHint": "The following features are available at this level for your class."
+			"featuresHint": "The following features are available at this level for your class.",
+			"loadingFeatures": "Loading features..."
 		},
 		"levelDownDialog": {
 			"level": "Level",
@@ -1284,9 +1285,7 @@
 			"selectFeature": "Select this feature",
 			"deselectFeature": "Deselect this feature",
 			"selectFeatureAriaLabel": "Select {featureName}",
-			"deselectFeatureAriaLabel": "Deselect {featureName}",
-			"changeSelection": "Change",
-			"hideOptions": "Hide Options"
+			"deselectFeatureAriaLabel": "Deselect {featureName}"
 		},
 		"subclassSelection": {
 			"selectSubclass": "Select this subclass",

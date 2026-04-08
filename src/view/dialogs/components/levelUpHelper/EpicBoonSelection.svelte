@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SelectionIndicator from '#view/components/SelectionIndicator.svelte';
 	import localize from '#utils/localize.js';
 
 	interface EpicBoon {
@@ -10,7 +11,7 @@
 
 	interface Props {
 		epicBoons: EpicBoon[];
-		selectedEpicBoon: object | null;
+		selectedEpicBoon: EpicBoon | null;
 	}
 
 	let { epicBoons, selectedEpicBoon = $bindable() }: Props = $props();
@@ -20,9 +21,7 @@
 
 	// Filter to show only selected boon when one is selected
 	const displayedBoons = $derived(
-		selectedEpicBoon
-			? epicBoons.filter((b) => b.uuid === (selectedEpicBoon as { uuid?: string }).uuid)
-			: epicBoons,
+		selectedEpicBoon ? epicBoons.filter((b) => b.uuid === selectedEpicBoon.uuid) : epicBoons,
 	);
 
 	async function toggleExpanded(boonUuid: string) {
@@ -44,7 +43,7 @@
 		event.stopPropagation();
 
 		// If already selected, deselect
-		if ((selectedEpicBoon as { uuid?: string })?.uuid === boonUuid) {
+		if (selectedEpicBoon?.uuid === boonUuid) {
 			selectedEpicBoon = null;
 		} else {
 			// Select this boon
@@ -77,7 +76,7 @@
 				<li class="u-semantic-only boon-item">
 					<div
 						class="boon-row"
-						class:selected={boon.uuid === (selectedEpicBoon as { uuid?: string })?.uuid}
+						class:selected={boon.uuid === selectedEpicBoon?.uuid}
 						class:expanded={expandedBoonUuids.has(boon.uuid)}
 						onclick={() => handleRowClick(boon.uuid)}
 						role="button"
@@ -100,27 +99,20 @@
 						</h4>
 
 						<div class="boon-row__actions">
-							<button
-								type="button"
-								class="select-button"
-								class:selected={boon.uuid === (selectedEpicBoon as { uuid?: string })?.uuid}
+							<SelectionIndicator
+								selected={boon.uuid === selectedEpicBoon?.uuid}
 								onclick={(e) => handleSelectClick(boon.uuid, e)}
-								data-tooltip={boon.uuid === (selectedEpicBoon as { uuid?: string })?.uuid
+								tooltip={boon.uuid === selectedEpicBoon?.uuid
 									? localize('NIMBLE.epicBoonSelection.deselectBoon')
 									: localize('NIMBLE.epicBoonSelection.selectBoon')}
-								data-tooltip-direction="LEFT"
-								aria-label={boon.uuid === (selectedEpicBoon as { uuid?: string })?.uuid
+								ariaLabel={boon.uuid === selectedEpicBoon?.uuid
 									? localize('NIMBLE.epicBoonSelection.deselectBoonAriaLabel', {
 											boonName: boon.name,
 										})
 									: localize('NIMBLE.epicBoonSelection.selectBoonAriaLabel', {
 											boonName: boon.name,
 										})}
-							>
-								{#if boon.uuid === (selectedEpicBoon as { uuid?: string })?.uuid}
-									<i class="fa-solid fa-check"></i>
-								{/if}
-							</button>
+							/>
 						</div>
 					</div>
 
@@ -222,51 +214,6 @@
 			align-items: center;
 			gap: 0.5rem;
 			margin-left: auto;
-		}
-	}
-
-	.select-button {
-		width: 1.25rem;
-		min-width: 1.25rem;
-		max-width: 1.25rem;
-		height: 1.25rem;
-		min-height: 1.25rem;
-		max-height: 1.25rem;
-		padding: 0;
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: color-mix(in srgb, var(--nimble-medium-text-color) 15%, transparent);
-		border: 2px solid color-mix(in srgb, var(--nimble-medium-text-color) 60%, transparent);
-		border-radius: 50%;
-		box-sizing: border-box;
-		color: transparent;
-		cursor: pointer;
-		transition: all 0.2s ease;
-
-		&:hover:not(:disabled) {
-			border-color: color-mix(in srgb, var(--nimble-medium-text-color) 80%, transparent);
-			background: color-mix(in srgb, var(--nimble-medium-text-color) 35%, transparent);
-		}
-
-		&.selected {
-			background: var(--nimble-accent-color);
-			border-color: var(--nimble-accent-color);
-			color: #fff;
-
-			&:hover:not(:disabled) {
-				filter: brightness(1.15);
-			}
-		}
-
-		&:disabled {
-			opacity: 0.3;
-			cursor: not-allowed;
-		}
-
-		i {
-			font-size: 0.625rem;
 		}
 	}
 

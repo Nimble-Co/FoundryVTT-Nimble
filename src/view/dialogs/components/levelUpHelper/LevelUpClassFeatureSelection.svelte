@@ -56,7 +56,7 @@
 				{localize('NIMBLE.classFeatureSelection.header')}
 			</h3>
 		</header>
-		<p class="nimble-hint">Loading features...</p>
+		<p class="nimble-hint">{localize('NIMBLE.levelUpDialog.loadingFeatures')}</p>
 	</section>
 {:else if hasAnyFeatures}
 	<section class="level-up-class-features">
