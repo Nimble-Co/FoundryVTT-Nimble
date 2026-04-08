@@ -1,5 +1,7 @@
 import { AbilityBonusRule } from '../models/rules/abilityBonus.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
+import { ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
+import { ChargePoolRule } from '../models/rules/chargePool.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
@@ -24,6 +26,8 @@ export default function registerRulesConfig() {
 	const ruleTypes = {
 		abilityBonus: 'NIMBLE.ruleTypes.abilityBonus',
 		armorClass: 'NIMBLE.ruleTypes.armorClass',
+		chargeConsumer: 'NIMBLE.ruleTypes.chargeConsumer',
+		chargePool: 'NIMBLE.ruleTypes.chargePool',
 		combatMana: 'NIMBLE.ruleTypes.combatMana',
 		grantItem: 'NIMBLE.ruleTypes.grantItem',
 		grantProficiency: 'NIMBLE.ruleTypes.grantProficiency',
@@ -48,6 +52,8 @@ export default function registerRulesConfig() {
 	const ruleDataModels = {
 		abilityBonus: AbilityBonusRule,
 		armorClass: ArmorClassRule,
+		chargeConsumer: ChargeConsumerRule,
+		chargePool: ChargePoolRule,
 		combatMana: CombatManaRule,
 		grantItem: ItemGrantRule,
 		grantProficiency: GrantProficiencyRule,

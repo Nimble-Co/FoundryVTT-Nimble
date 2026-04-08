@@ -1,24 +1,25 @@
 <script lang="ts">
-	import type { NimbleCharacter } from '../../../documents/actor/character.js';
-	import type PlayerCharacterSheet from '../../../documents/sheets/PlayerCharacterSheet.svelte.js';
+	import type { NimbleCharacter } from '#documents/actor/character.js';
+	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
 	import type { Readable } from 'svelte/store';
-	import filterItems from '../../dataPreparationHelpers/filterItems.js';
-	import { getContext } from 'svelte';
-	import prepareAncestryTooltip from '../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js';
-	import prepareClassTooltip from '../../dataPreparationHelpers/documentTooltips/prepareClassTooltip.js';
-	import prepareSubclassTooltip from '../../dataPreparationHelpers/documentTooltips/prepareSubclassTooltip.js';
-	import prepareBoonTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBoonTooltip.js';
-	import prepareBackgroundTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBackgroundTooltip.js';
-	import prepareFeatureTooltip from '../../dataPreparationHelpers/documentTooltips/prepareFeatureTooltip.js';
-	import shouldFlashDroppedItem from '../../../utils/shouldFlashDroppedItem.js';
-	import sortItems from '../../../utils/sortItems.js';
+	import { ChargePoolService } from '#utils/chargePoolService.js';
+	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
+	import sortItems from '#utils/sortItems.js';
+	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
+	import filterItems from '#view/dataPreparationHelpers/filterItems.js';
+	import prepareAncestryTooltip from '#view/dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js';
+	import prepareBackgroundTooltip from '#view/dataPreparationHelpers/documentTooltips/prepareBackgroundTooltip.js';
+	import prepareBoonTooltip from '#view/dataPreparationHelpers/documentTooltips/prepareBoonTooltip.js';
+	import prepareClassTooltip from '#view/dataPreparationHelpers/documentTooltips/prepareClassTooltip.js';
+	import prepareFeatureTooltip from '#view/dataPreparationHelpers/documentTooltips/prepareFeatureTooltip.js';
+	import prepareSubclassTooltip from '#view/dataPreparationHelpers/documentTooltips/prepareSubclassTooltip.js';
+	import SearchBar from '#view/sheets/components/SearchBar.svelte';
 	import {
 		DROP_ITEM_FLASH_ANIMATION_NAME,
 		getDroppedItemFlashIds,
 		type SheetDropItemFlashState,
-	} from '../dropItemFlashState.js';
-
-	import SearchBar from '../components/SearchBar.svelte';
+	} from '#view/sheets/dropItemFlashState.js';
+	import { getContext } from 'svelte';
 
 	async function configureItem(event, id) {
 		event.stopPropagation();
@@ -168,6 +169,13 @@
 	// Settings
 	let flags = $derived(actor.reactive.flags.nimble);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
+
+	// All charge pools for the actor
+	let allPools = $derived(ChargePoolService.getPools(actor.reactive));
+
+	function getItemPools(itemId: string) {
+		return ChargePoolService.getPoolsForItem(actor.reactive, itemId, allPools);
+	}
 </script>
 
 <header class="nimble-sheet__static nimble-sheet__static--features">
@@ -235,6 +243,14 @@
 							<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
 								{item.reactive.name}
 							</h4>
+
+							<div class="nimble-document-card__charges">
+								<ChargeIndicator
+									pools={getItemPools(item.reactive._id)}
+									{actor}
+									itemId={item.reactive._id}
+								/>
+							</div>
 
 							<button
 								class="nimble-button"

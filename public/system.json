@@ -87,6 +87,7 @@
 			"abilityCheck": {},
 			"assessAction": {},
 			"boon": {},
+			"chargeAdjustment": {},
 			"damage": {},
 			"feature": {},
 			"fieldRest": {},

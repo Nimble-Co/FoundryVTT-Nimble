@@ -765,6 +765,15 @@ const manaConfig = {
 	saveChanges: 'NIMBLE.manaConfig.saveChanges',
 };
 
+const charges = {
+	configure: 'NIMBLE.charges.configure',
+	source: 'NIMBLE.charges.source',
+	noPoolsForItem: 'NIMBLE.charges.noPoolsForItem',
+	saveChanges: 'NIMBLE.charges.saveChanges',
+	max: 'NIMBLE.charges.setMax',
+	empty: 'NIMBLE.charges.setEmpty',
+};
+
 const safeRest = {
 	dialogTitle: 'NIMBLE.safeRest.dialogTitle',
 	recoveryPreview: 'NIMBLE.safeRest.recoveryPreview',
@@ -864,6 +873,7 @@ const NIMBLE = {
 	actorImport,
 	characterCreation,
 	characterCreationStages,
+	charges,
 	classBanners,
 	classes,
 	creatureFeatures,

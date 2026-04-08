@@ -529,6 +529,8 @@
 		"ruleTypes": {
 			"abilityBonus": "Stat Bonus",
 			"armorClass": "Armor Class",
+			"chargeConsumer": "Charge Consumer",
+			"chargePool": "Charge Pool",
 			"combatMana": "Combat Mana",
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
@@ -548,6 +550,46 @@
 			"skillBonus": "Skill Bonus",
 			"speedBonus": "Speed Bonus",
 			"unarmedDamage": "Unarmed Damage"
+		},
+		"charges": {
+			"header": "Charges",
+			"empty": "No charge pools configured.",
+			"allFull": "All charges full.",
+			"unknownItem": "Unknown Item",
+			"source": "Source",
+			"current": "Current",
+			"max": "Max",
+			"setMax": "Set Max",
+			"setEmpty": "Set Empty",
+			"addOne": "Add +1",
+			"decreaseOne": "Decrease by 1",
+			"increaseOne": "Increase by 1",
+			"editCurrent": "Edit current charges for {pool}",
+			"setToMaxForPool": "Set {pool} to max",
+			"setToEmptyForPool": "Set {pool} to empty",
+			"recharge": "Recharge",
+			"set": "Set",
+			"recoveryMethods": "Recovery Methods",
+			"noRecoveryConfigured": "No recovery configured",
+			"recoveryMode": {
+				"add": "Add {value}",
+				"set": "Set to {value}",
+				"refresh": "Refill to max"
+			},
+			"recoveryTrigger": {
+				"encounterStart": "Encounter Start",
+				"encounterEnd": "Encounter End"
+			},
+			"configure": "Configure Charges",
+			"noPoolsForItem": "No charge pools for this item.",
+			"saveChanges": "Save Changes",
+			"manuallyAdjusted": "Manually Adjusted Charges",
+			"rechargePrompt": "Enter how many charges to add to {pool}.",
+			"setPrompt": "Set current charges for {pool}.",
+			"notifications": {
+				"poolMissing": "{item} requires the charge pool \"{pool}\", but it is not available.",
+				"insufficient": "{item} needs {required} charge(s) from \"{pool}\", but only {available} are available."
+			}
 		},
 		"creatureFeatures": {
 			"noFeatures": "No features yet.",

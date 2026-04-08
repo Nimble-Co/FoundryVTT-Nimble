@@ -1,8 +1,10 @@
 <script lang="ts">
-	import type { NimbleCharacter } from '../../documents/actor/character.js';
-	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
-	import { incrementDieSize } from '../../managers/HitDiceManager.js';
-	import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '../../utils/manaRecovery.js';
+	import type { NimbleCharacter } from '#documents/actor/character.js';
+	import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
+	import { incrementDieSize } from '#managers/HitDiceManager.js';
+	import { ChargePoolService } from '#utils/chargePoolService.js';
+	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
+	import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/manaRecovery.js';
 
 	interface Props {
 		document: NimbleCharacter;
@@ -16,6 +18,26 @@
 	}
 
 	let { document: actor, dialog }: Props = $props();
+
+	let reactiveActor = $derived(actor.reactive);
+
+	// All pools (for charges tab display)
+	let chargePoolRecovery = $derived(
+		ChargePoolService.previewRecovery(reactiveActor, 'safeRest').map((pool) => ({
+			label: pool.label,
+			icon: pool.icon,
+			recoveredAmount: pool.recoveredAmount,
+			current: pool.previousValue,
+			max: pool.maxValue,
+			isFull: pool.recoveredAmount === 0,
+			willRecover: pool.recoveredAmount > 0,
+		})),
+	);
+
+	// Check if any charge pool needs recovery
+	let hasAnyChargePoolRecovery = $derived(
+		chargePoolRecovery.length > 0 && chargePoolRecovery.some((pool) => pool.willRecover),
+	);
 
 	// Use reactive data so values update when the character sheet changes
 	let hp = $derived(actor.reactive.system.attributes.hp);
@@ -112,7 +134,8 @@
 			tempHpLoss > 0 ||
 			totalHitDiceRecovery > 0 ||
 			(restoresManaOnSafeRest && mana.max > 0 && manaRecovery > 0) ||
-			woundRecovery > 0,
+			woundRecovery > 0 ||
+			hasAnyChargePoolRecovery,
 	);
 </script>
 
@@ -219,6 +242,30 @@
 					</span>
 				</div>
 			</div>
+
+			<!-- Charge Pools -->
+			{#each chargePoolRecovery as pool}
+				<div class="recovery-card" class:recovery-card--inactive={pool.isFull}>
+					<div class="recovery-card__icon-wrapper recovery-card__icon-wrapper--charges">
+						<i class={pool.icon ?? ChargeUiConfig.defaultRecoveryIcon}></i>
+					</div>
+					<div class="recovery-card__content">
+						<span class="recovery-card__label">{pool.label}</span>
+						<span class="recovery-card__value">
+							{#if pool.isFull}
+								<span class="recovery-card__full">{CONFIG.NIMBLE.safeRest.alreadyFull}</span>
+							{:else}
+								<span class="recovery-card__change recovery-card__change--positive"
+									>+{pool.recoveredAmount}</span
+								>
+								<span class="recovery-card__detail"
+									>({pool.current} → {pool.current + pool.recoveredAmount})</span
+								>
+							{/if}
+						</span>
+					</div>
+				</div>
+			{/each}
 		</div>
 	</section>
 
@@ -340,6 +387,11 @@
 			&--wounds {
 				background: hsla(25, 70%, 50%, 0.15);
 				color: hsl(25, 70%, 40%);
+			}
+
+			&--charges {
+				background: hsla(45, 70%, 50%, 0.15);
+				color: hsl(45, 70%, 40%);
 			}
 		}
 

@@ -1,5 +1,6 @@
-import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '../utils/manaRecovery.js';
-import { HitDiceManager } from './HitDiceManager.js';
+import { HitDiceManager } from '#managers/HitDiceManager.js';
+import { ChargePoolService } from '#utils/chargePoolService.js';
+import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/manaRecovery.js';
 
 // Uses NimbleCharacterInterface ambient type from actor.d.ts
 
@@ -7,6 +8,14 @@ import { HitDiceManager } from './HitDiceManager.js';
 interface RestableCharacter extends NimbleCharacterInterface {
 	HitDiceManager: HitDiceManager;
 }
+
+type ChargePoolRecoveryEntry = {
+	label: string;
+	previousValue: number;
+	newValue: number;
+	amount: number;
+	icon?: string;
+};
 
 class RestManager {
 	#actor: RestableCharacter;
@@ -23,6 +32,7 @@ class RestManager {
 		tempHpRemoved: number;
 		manaRestored: number;
 		woundsRecovered: number;
+		chargePoolsRecovered: ChargePoolRecoveryEntry[];
 	};
 
 	#updates: { actor: Record<string, unknown>; items: Record<string, unknown>[] };
@@ -45,6 +55,7 @@ class RestManager {
 			tempHpRemoved: 0,
 			manaRestored: 0,
 			woundsRecovered: 0,
+			chargePoolsRecovered: [],
 		};
 
 		const defaultData: RestManager.Data = {
@@ -74,6 +85,7 @@ class RestManager {
 				this.#restoreMana();
 			}
 			this.#restoreWounds();
+			this.#restoreChargePools();
 		}
 		if (this.#restType === 'field' && this.#shouldRestoreMana('field')) {
 			this.#restoreMana();
@@ -88,13 +100,23 @@ class RestManager {
 		await this.#actor.update(this.#updates.actor);
 		await this.#actor.updateEmbeddedDocuments('Item', this.#updates.items);
 
+		// Broadcast rest completion for systems that react to rest events (e.g., charge recovery).
+		(Hooks.callAll as (event: string, ...args: unknown[]) => boolean)(
+			'nimble.restCompleted',
+			this.#actor,
+			{
+				restType: this.#restType,
+			},
+		);
+
 		// Broadcast stylized safe rest chat card
 		if (this.#restType === 'safe' && !skipChatCard) {
 			const hasRecovery =
 				Object.keys(this.#recovery.hitDiceRecovered).length > 0 ||
 				this.#recovery.hpRestored > 0 ||
 				this.#recovery.manaRestored > 0 ||
-				this.#recovery.woundsRecovered > 0;
+				this.#recovery.woundsRecovered > 0 ||
+				this.#recovery.chargePoolsRecovered.length > 0;
 
 			// Only show chat card if something was recovered
 			if (hasRecovery) {
@@ -116,6 +138,7 @@ class RestManager {
 						tempHpRemoved: this.#recovery.tempHpRemoved,
 						manaRestored: this.#recovery.manaRestored,
 						woundsRecovered: this.#recovery.woundsRecovered,
+						chargePoolsRecovered: this.#recovery.chargePoolsRecovered,
 					},
 				} as unknown as ChatMessage.CreateData);
 			}
@@ -276,6 +299,25 @@ class RestManager {
 		if (value !== 0) {
 			this.#recovery.woundsRecovered = 1;
 			this.#summary.push('Recovered 1 wound.');
+		}
+	}
+
+	#restoreChargePools() {
+		const recoveryPreview = ChargePoolService.previewRecovery(
+			this.#actor as unknown as Actor,
+			'safeRest',
+		);
+		for (const pool of recoveryPreview) {
+			if (pool.recoveredAmount > 0) {
+				this.#recovery.chargePoolsRecovered.push({
+					label: pool.label,
+					previousValue: pool.previousValue,
+					newValue: pool.newValue,
+					amount: pool.recoveredAmount,
+					icon: pool.icon,
+				});
+				this.#summary.push(`Recovered ${pool.recoveredAmount} ${pool.label}.`);
+			}
 		}
 	}
 }

@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import sortItems from '../../../utils/sortItems.js';
-	import ArmorClass from '../components/ArmorClass.svelte';
-	import MovementSpeed from '../components/MovementSpeed.svelte';
-	import SavingThrows from '../components/SavingThrows.svelte';
+	import { ChargePoolService } from '#utils/chargePoolService.js';
+	import sortItems from '#utils/sortItems.js';
+	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
+	import ArmorClass from '#view/sheets/components/ArmorClass.svelte';
+	import MovementSpeed from '#view/sheets/components/MovementSpeed.svelte';
+	import SavingThrows from '#view/sheets/components/SavingThrows.svelte';
 
 	async function configureItem(event, id) {
 		event.stopPropagation();
@@ -400,6 +402,13 @@
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
 	let allCollapsed = $derived(items.every((item) => getItemCollapsed(item)));
+
+	// All charge pools for the actor
+	let allPools = $derived(ChargePoolService.getPools(actor.reactive));
+
+	function getItemPools(itemId: string) {
+		return ChargePoolService.getPoolsForItem(actor.reactive, itemId, allPools);
+	}
 
 	// Track which category section is currently visible at the top
 	let visibleCategory = $state<string | null>(null);
@@ -864,6 +873,14 @@
 					</span>
 				</button>
 
+				<div class="nimble-document-card__charges">
+					<ChargeIndicator
+						pools={getItemPools(item.reactive._id)}
+						{actor}
+						itemId={item.reactive._id}
+					/>
+				</div>
+
 				<span class="nimble-document-card__actions">
 					{#if getReachRangeLabel(item)}
 						<span class="nimble-document-card__reach-range">
@@ -1033,6 +1050,14 @@
 						{item.reactive.name}
 					</span>
 				</button>
+
+				<div class="nimble-document-card__charges">
+					<ChargeIndicator
+						pools={getItemPools(item.reactive._id)}
+						{actor}
+						itemId={item.reactive._id}
+					/>
+				</div>
 
 				<span class="nimble-document-card__actions">
 					{#if getReachRangeLabel(item)}

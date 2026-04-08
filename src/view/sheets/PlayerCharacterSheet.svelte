@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { setContext, tick, untrack } from 'svelte';
-	import localize from '../../utils/localize.js';
-	import { PORTRAIT_FALLBACK_IMAGE } from '../ui/ctTopTracker/constants.js';
+	import localize from '#utils/localize.js';
+	import { PORTRAIT_FALLBACK_IMAGE } from '#view/ui/ctTopTracker/constants.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
-	import updateDocumentImage from '../handlers/updateDocumentImage.js';
+	import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
 	import ActionTracker from './components/ActionTracker.svelte';
 	import HitDiceBar from './components/HitDiceBar.svelte';
 	import HitPointBar from './components/HitPointBar.svelte';
