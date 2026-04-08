@@ -1288,6 +1288,8 @@
 			"deselectFeatureAriaLabel": "Deselect {featureName}"
 		},
 		"subclassSelection": {
+			"header": "Subclass",
+			"noSubclasses": "No subclasses available for this class. You may need to create or import subclass items.",
 			"selectSubclass": "Select this subclass",
 			"deselectSubclass": "Deselect this subclass",
 			"selectSubclassAriaLabel": "Select {subclassName}",

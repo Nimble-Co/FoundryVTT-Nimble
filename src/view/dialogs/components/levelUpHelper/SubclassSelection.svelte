@@ -14,7 +14,9 @@
 
 <section class="subclass-selection">
 	<header>
-		<h3 class="nimble-heading" data-heading-variant="section">Subclass</h3>
+		<h3 class="nimble-heading" data-heading-variant="section">
+			{localize('NIMBLE.subclassSelection.header')}
+		</h3>
 	</header>
 
 	{#if subclasses.length > 0}
@@ -30,7 +32,7 @@
 		/>
 	{:else}
 		<p class="nimble-hint">
-			No subclasses available for this class. You may need to create or import subclass items.
+			{localize('NIMBLE.subclassSelection.noSubclasses')}
 		</p>
 	{/if}
 </section>
