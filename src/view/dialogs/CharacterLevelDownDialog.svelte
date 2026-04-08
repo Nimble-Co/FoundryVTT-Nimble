@@ -1,55 +1,28 @@
 <script lang="ts">
-	import type { NimbleCharacter } from '../../documents/actor/character.js';
-	import type GenericDialog from '../../documents/dialogs/GenericDialog.svelte.js';
-	import type { NimbleClassItem } from '../../documents/item/class.js';
+	import type { CharacterLevelDownDialogProps } from '#types/components/CharacterLevelDownDialog.d.ts';
 
-	interface Props {
-		document: NimbleCharacter;
-		dialog: GenericDialog;
-	}
+	import { createLevelDownState } from './CharacterLevelDownDialogState.svelte.ts';
 
-	function submit() {
-		dialog.submit({
-			confirmed: true,
-		});
-	}
+	let { document: actor, dialog }: CharacterLevelDownDialogProps = $props();
 
-	let { document: actor, dialog }: Props = $props();
+	const { levelDownDialog } = CONFIG.NIMBLE;
 
-	const levelUpHistory = $derived(actor.system.levelUpHistory);
-	const lastHistory = $derived(levelUpHistory[levelUpHistory.length - 1]);
-
-	const characterClass: NimbleClassItem | undefined = $derived(
-		lastHistory ? actor.classes[lastHistory.classIdentifier] : undefined,
+	const state = createLevelDownState(
+		() => actor,
+		() => dialog,
 	);
 
-	const currentLevel = $derived(characterClass?.system?.classLevel ?? 1);
-	const newLevel = $derived(currentLevel - 1);
-
-	// Get skill names for display
-	const skillChanges = $derived(
-		Object.entries(lastHistory?.skillIncreases ?? {})
-			.filter(([, value]) => (value as number) > 0)
-			.map(([key, value]) => ({
-				name: CONFIG.NIMBLE.skills[key]?.label ?? key,
-				points: value as number,
-			})),
-	);
-
-	// Get ability score names for display
-	const abilityChanges = $derived(
-		Object.entries(lastHistory?.abilityIncreases ?? {})
-			.filter(([, value]) => (value as number) > 0)
-			.map(([key, value]) => ({
-				name: CONFIG.NIMBLE.abilities[key]?.label ?? key,
-				points: value as number,
-			})),
-	);
-
-	// Check if subclass will be removed
-	const willRemoveSubclass = $derived(lastHistory?.level <= 3);
-	const subclasses = $derived(actor.items.filter((i) => i.type === 'subclass'));
-	const hasSubclass = $derived(subclasses.length > 0);
+	const { submit } = state;
+	const lastHistory = $derived(state.lastHistory);
+	const characterClass = $derived(state.characterClass);
+	const currentLevel = $derived(state.currentLevel);
+	const newLevel = $derived(state.newLevel);
+	const skillChanges = $derived(state.skillChanges);
+	const abilityChanges = $derived(state.abilityChanges);
+	const willRemoveSubclass = $derived(state.willRemoveSubclass);
+	const subclasses = $derived(state.subclasses);
+	const hasSubclass = $derived(state.hasSubclass);
+	const grantedFeatures = $derived(state.grantedFeatures);
 </script>
 
 <article class="nimble-sheet__body">
@@ -60,11 +33,9 @@
 		<div class="nimble-level-down-info">
 			<h3 class="nimble-heading" data-heading-variant="section">{actor.name}</h3>
 			<p class="nimble-level-transition">
-				<span class="nimble-level-current"
-					>{CONFIG.NIMBLE.levelDownDialog.level} {currentLevel}</span
-				>
+				<span class="nimble-level-current">{levelDownDialog.level} {currentLevel}</span>
 				<i class="fa-solid fa-arrow-right"></i>
-				<span class="nimble-level-new">{CONFIG.NIMBLE.levelDownDialog.level} {newLevel}</span>
+				<span class="nimble-level-new">{levelDownDialog.level} {newLevel}</span>
 			</p>
 		</div>
 	</section>
@@ -72,29 +43,29 @@
 	<section>
 		<header class="nimble-section-header">
 			<h3 class="nimble-heading" data-heading-variant="section">
-				{CONFIG.NIMBLE.levelDownDialog.changesToRevert}
+				{levelDownDialog.changesToRevert}
 			</h3>
 		</header>
 
 		<ul class="nimble-level-down-preview">
 			{#if lastHistory?.hpIncrease > 0}
-				<li class="nimble-level-down-preview__item nimble-level-down-preview__item--loss">
+				<li class="nimble-level-down-preview__item">
 					<span class="nimble-level-down-preview__label">
 						<i class="fa-solid fa-heart"></i>
-						{CONFIG.NIMBLE.levelDownDialog.hitPoints}
+						{levelDownDialog.hitPoints}
 					</span>
 					<span class="nimble-level-down-preview__value">
 						-{lastHistory.hpIncrease}
-						{CONFIG.NIMBLE.levelDownDialog.hp}
+						{levelDownDialog.hp}
 					</span>
 				</li>
 			{/if}
 
 			{#if lastHistory?.hitDieAdded}
-				<li class="nimble-level-down-preview__item nimble-level-down-preview__item--loss">
+				<li class="nimble-level-down-preview__item">
 					<span class="nimble-level-down-preview__label">
 						<i class="fa-solid fa-dice-d20"></i>
-						{CONFIG.NIMBLE.levelDownDialog.hitDie}
+						{levelDownDialog.hitDie}
 					</span>
 					<span class="nimble-level-down-preview__value">
 						-1 d{characterClass?.system?.hitDieSize ?? '?'}
@@ -104,7 +75,7 @@
 
 			{#if abilityChanges.length > 0}
 				{#each abilityChanges as ability}
-					<li class="nimble-level-down-preview__item nimble-level-down-preview__item--loss">
+					<li class="nimble-level-down-preview__item">
 						<span class="nimble-level-down-preview__label">
 							<i class="fa-solid fa-chart-simple"></i>
 							{ability.name}
@@ -118,16 +89,14 @@
 
 			{#if skillChanges.length > 0}
 				{#each skillChanges as skill}
-					<li class="nimble-level-down-preview__item nimble-level-down-preview__item--loss">
+					<li class="nimble-level-down-preview__item">
 						<span class="nimble-level-down-preview__label">
 							<i class="fa-solid fa-book"></i>
 							{skill.name}
 						</span>
 						<span class="nimble-level-down-preview__value">
 							-{skill.points}
-							{skill.points !== 1
-								? CONFIG.NIMBLE.levelDownDialog.points
-								: CONFIG.NIMBLE.levelDownDialog.point}
+							{skill.points !== 1 ? levelDownDialog.points : levelDownDialog.point}
 						</span>
 					</li>
 				{/each}
@@ -135,14 +104,29 @@
 
 			{#if willRemoveSubclass && hasSubclass}
 				{#each subclasses as subclass}
-					<li class="nimble-level-down-preview__item nimble-level-down-preview__item--warning">
+					<li class="nimble-level-down-preview__item">
 						<span class="nimble-level-down-preview__label">
 							<i class="fa-solid fa-star"></i>
-							{CONFIG.NIMBLE.levelDownDialog.subclass}
+							{levelDownDialog.subclass}
 						</span>
 						<span class="nimble-level-down-preview__value">
 							{subclass.name}
-							{CONFIG.NIMBLE.levelDownDialog.removed}
+							{levelDownDialog.removed}
+						</span>
+					</li>
+				{/each}
+			{/if}
+
+			{#if grantedFeatures.length > 0}
+				{#each grantedFeatures as feature}
+					<li class="nimble-level-down-preview__item">
+						<span class="nimble-level-down-preview__label">
+							<i class="fa-solid fa-scroll"></i>
+							{levelDownDialog.feature}
+						</span>
+						<span class="nimble-level-down-preview__value">
+							{feature.name}
+							{levelDownDialog.removed}
 						</span>
 					</li>
 				{/each}
@@ -152,7 +136,7 @@
 
 	<section class="nimble-level-down-warning">
 		<i class="fa-solid fa-triangle-exclamation"></i>
-		<p>{CONFIG.NIMBLE.levelDownDialog.warningMessage}</p>
+		<p>{levelDownDialog.warningMessage}</p>
 	</section>
 </article>
 
@@ -162,7 +146,7 @@
 		data-button-variant="full-width"
 		onclick={submit}
 	>
-		{CONFIG.NIMBLE.levelDownDialog.confirmLevelDown}
+		{levelDownDialog.confirmLevelDown}
 	</button>
 </footer>
 
@@ -221,7 +205,6 @@
 
 	.nimble-level-new {
 		font-weight: 600;
-		color: var(--nimble-danger-color, hsl(0, 60%, 50%));
 	}
 
 	.nimble-level-down-preview {
@@ -240,20 +223,6 @@
 			background: var(--nimble-card-background);
 			border-radius: 4px;
 			box-shadow: var(--nimble-card-box-shadow);
-
-			&--loss {
-				.nimble-level-down-preview__value {
-					color: var(--nimble-danger-color, hsl(0, 60%, 50%));
-				}
-			}
-
-			&--warning {
-				border-left: 3px solid var(--nimble-warning-color, hsl(40, 90%, 50%));
-
-				.nimble-level-down-preview__value {
-					color: var(--nimble-warning-color, hsl(40, 90%, 50%));
-				}
-			}
 		}
 
 		&__label {

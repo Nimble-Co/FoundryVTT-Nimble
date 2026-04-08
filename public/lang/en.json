@@ -471,7 +471,9 @@
 			"hitDiceLabel": "Hit Dice:",
 			"rollHitDice": "Roll Hit Dice",
 			"rollHitDiceTooltip": "Roll your Hit Die with advantage and increase your max HP by that much.",
-			"takeAverage": "Take Average ({average})"
+			"takeAverage": "Take Average ({average})",
+			"featuresHint": "The following features are available at this level for your class.",
+			"loadingFeatures": "Loading features..."
 		},
 		"levelDownDialog": {
 			"level": "Level",
@@ -482,6 +484,7 @@
 			"point": "point",
 			"points": "points",
 			"subclass": "Subclass",
+			"feature": "Feature",
 			"removed": "removed",
 			"warningMessage": "This action will permanently revert the last level up. This cannot be undone.",
 			"confirmLevelDown": "Confirm Level Down",
@@ -1278,7 +1281,28 @@
 			"chooseOne": "(Choose one)",
 			"noDescriptionAvailable": "No description available.",
 			"selected": "Selected",
-			"confirmSelection": "Confirm Selection"
+			"confirmSelection": "Confirm Selection",
+			"selectFeature": "Select this feature",
+			"deselectFeature": "Deselect this feature",
+			"selectFeatureAriaLabel": "Select {featureName}",
+			"deselectFeatureAriaLabel": "Deselect {featureName}"
+		},
+		"subclassSelection": {
+			"header": "Subclass",
+			"noSubclasses": "No subclasses available for this class. You may need to create or import subclass items.",
+			"selectSubclass": "Select this subclass",
+			"deselectSubclass": "Deselect this subclass",
+			"selectSubclassAriaLabel": "Select {subclassName}",
+			"deselectSubclassAriaLabel": "Deselect {subclassName}"
+		},
+		"epicBoonSelection": {
+			"header": "Epic Boon",
+			"hint": "At level 19, choose an epic boon to enhance your character.",
+			"selectBoon": "Select this boon",
+			"deselectBoon": "Deselect this boon",
+			"selectBoonAriaLabel": "Select {boonName}",
+			"deselectBoonAriaLabel": "Deselect {boonName}",
+			"noBoons": "No epic boons available. You may need to create or import boon items."
 		},
 		"spellGrants": {
 			"header": "Starting Spells",
