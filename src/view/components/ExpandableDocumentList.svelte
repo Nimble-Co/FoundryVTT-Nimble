@@ -2,6 +2,7 @@
 	import type { ExpandableDocumentListProps } from '#types/components/ExpandableDocumentList.d.ts';
 
 	import SelectionIndicator from '#view/components/SelectionIndicator.svelte';
+	import { createExpandableDocumentListState } from './ExpandableDocumentList.svelte.ts';
 
 	let {
 		items,
@@ -12,46 +13,18 @@
 		deselectAriaLabel,
 	}: ExpandableDocumentListProps = $props();
 
-	let expandedUuids: Set<string> = $state(new Set());
-	let expandedDataMap: Map<string, { system?: { description?: string } }> = $state(new Map());
-
-	const displayedItems = $derived(
-		selectedItem ? items.filter((i) => i.uuid === selectedItem.uuid) : items,
+	const state = createExpandableDocumentListState(
+		() => items,
+		() => selectedItem,
+		(item) => {
+			selectedItem = item;
+		},
 	);
 
-	async function toggleExpanded(uuid: string) {
-		if (expandedUuids.has(uuid)) {
-			expandedUuids.delete(uuid);
-			expandedUuids = new Set(expandedUuids);
-			expandedDataMap.delete(uuid);
-			expandedDataMap = new Map(expandedDataMap);
-		} else {
-			const data = await fromUuid(uuid);
-			expandedUuids.add(uuid);
-			expandedUuids = new Set(expandedUuids);
-			expandedDataMap.set(uuid, data as { system?: { description?: string } });
-			expandedDataMap = new Map(expandedDataMap);
-		}
-	}
-
-	async function handleSelectClick(uuid: string, event: MouseEvent) {
-		event.stopPropagation();
-		if (selectedItem?.uuid === uuid) {
-			selectedItem = null;
-		} else {
-			selectedItem = await fromUuid(uuid);
-		}
-	}
-
-	function handleRowClick(uuid: string) {
-		toggleExpanded(uuid);
-	}
-
-	function handleKeydown(e: KeyboardEvent, uuid: string) {
-		if (e.key === 'Enter') {
-			handleRowClick(uuid);
-		}
-	}
+	const { handleSelectClick, handleRowClick, handleKeydown } = state;
+	const displayedItems = $derived(state.displayedItems);
+	const expandedUuids = $derived(state.expandedUuids);
+	const expandedDataMap = $derived(state.expandedDataMap);
 </script>
 
 <ul class="nimble-document-list">

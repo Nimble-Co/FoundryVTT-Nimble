@@ -1,47 +1,31 @@
 <script lang="ts">
 	import type { SpellCardProps } from '#types/components/SpellGrantDisplay.d.ts';
+
 	import SelectionIndicator from '#view/components/SelectionIndicator.svelte';
 	import localize from '#utils/localize.js';
 	import { createSpellCardState } from './SpellCard.svelte.ts';
 
 	let { spell, isSelected = false, isDisabled = false, onSelect }: SpellCardProps = $props();
 
-	const state = createSpellCardState(() => spell);
-
-	const tierLabel = $derived(
-		spell.tier === 0
-			? localize('NIMBLE.ui.heroicActions.cantrip')
-			: localize('NIMBLE.ui.heroicActions.spellTier', { tier: String(spell.tier) }),
+	const state = createSpellCardState(
+		() => spell,
+		() => onSelect,
+		() => isDisabled,
 	);
 
-	const schoolLabel = $derived(localize(CONFIG.NIMBLE.spellSchools[spell.school] ?? spell.school));
-
-	// Whether this card is in selectable mode
-	const isSelectable = $derived(!!onSelect);
-
-	function handleRowClick() {
-		// Clicking the row always toggles expansion
-		state.toggleExpanded();
-	}
-
-	function handleSelectClick(e: MouseEvent) {
-		e.stopPropagation(); // Prevent row click from firing
-		if (!isDisabled) {
-			onSelect?.();
-		}
-	}
-
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Enter') {
-			handleRowClick();
-		}
-	}
+	const { handleRowClick, handleSelectClick, handleKeydown } = state;
+	const isExpanded = $derived(state.isExpanded);
+	const isSelectable = $derived(state.isSelectable);
+	const tierLabel = $derived(state.tierLabel);
+	const schoolLabel = $derived(state.schoolLabel);
+	const isLoading = $derived(state.isLoading);
+	const enrichedDescription = $derived(state.enrichedDescription);
 </script>
 
 <li class="spell-item" class:disabled={isDisabled}>
 	<div
 		class="spell-row"
-		class:expanded={state.isExpanded}
+		class:expanded={isExpanded}
 		class:selected={isSelected}
 		class:selectable={isSelectable}
 		onclick={handleRowClick}
@@ -79,13 +63,13 @@
 		</div>
 	</div>
 
-	{#if state.isExpanded}
+	{#if isExpanded}
 		<div class="accordion-content">
 			<div class="description">
-				{#if state.isLoading}
+				{#if isLoading}
 					<p class="loading">{localize('NIMBLE.ui.loading')}</p>
-				{:else if state.enrichedDescription}
-					{@html state.enrichedDescription}
+				{:else if enrichedDescription}
+					{@html enrichedDescription}
 				{:else}
 					<p>{localize('NIMBLE.classFeatureSelection.noDescriptionAvailable')}</p>
 				{/if}

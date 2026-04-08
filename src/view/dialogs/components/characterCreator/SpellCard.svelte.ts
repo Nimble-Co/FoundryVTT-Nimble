@@ -1,4 +1,5 @@
 import type { SpellIndexEntry } from '#utils/getSpells.js';
+import localize from '#utils/localize.js';
 import enrichSpellText from '#utils/spellDescription.js';
 
 interface SpellDescriptionParts {
@@ -52,9 +53,15 @@ async function fetchSpellDescriptionByUuid(uuid: string): Promise<string> {
  * Creates reactive state for the SpellCard component
  *
  * @param getSpell - Getter function that returns the spell index entry
+ * @param getOnSelect - Optional getter for the select callback
+ * @param getIsDisabled - Optional getter for the disabled state
  * @returns Object containing state and actions for the spell card
  */
-export function createSpellCardState(getSpell: () => SpellIndexEntry) {
+export function createSpellCardState(
+	getSpell: () => SpellIndexEntry,
+	getOnSelect?: () => (() => void) | undefined,
+	getIsDisabled?: () => boolean,
+) {
 	let isExpanded = $state(false);
 	let enrichedDescription = $state<string>('');
 	let isLoading = $state(false);
@@ -79,6 +86,35 @@ export function createSpellCardState(getSpell: () => SpellIndexEntry) {
 		}
 	}
 
+	const tierLabel = $derived(
+		getSpell().tier === 0
+			? localize('NIMBLE.ui.heroicActions.cantrip')
+			: localize('NIMBLE.ui.heroicActions.spellTier', { tier: String(getSpell().tier) }),
+	);
+
+	const schoolLabel = $derived(
+		localize(CONFIG.NIMBLE.spellSchools[getSpell().school] ?? getSpell().school),
+	);
+
+	const isSelectable = $derived(!!getOnSelect?.());
+
+	function handleRowClick() {
+		toggleExpanded();
+	}
+
+	function handleSelectClick(e: MouseEvent) {
+		e.stopPropagation();
+		if (!getIsDisabled?.()) {
+			getOnSelect?.()?.();
+		}
+	}
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter') {
+			handleRowClick();
+		}
+	}
+
 	return {
 		get isExpanded() {
 			return isExpanded;
@@ -89,6 +125,18 @@ export function createSpellCardState(getSpell: () => SpellIndexEntry) {
 		get isLoading() {
 			return isLoading;
 		},
+		get tierLabel() {
+			return tierLabel;
+		},
+		get schoolLabel() {
+			return schoolLabel;
+		},
+		get isSelectable() {
+			return isSelectable;
+		},
 		toggleExpanded,
+		handleRowClick,
+		handleSelectClick,
+		handleKeydown,
 	};
 }

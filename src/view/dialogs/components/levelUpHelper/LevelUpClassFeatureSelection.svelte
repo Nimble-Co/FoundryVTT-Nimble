@@ -1,11 +1,11 @@
 <script lang="ts">
-	import type { NimbleFeatureItem } from '#documents/item/feature.js';
 	import type { LevelUpClassFeatureSelectionProps } from '#types/components/ClassFeatureSelection.d.ts';
 
 	import FeatureCard from '../characterCreator/FeatureCard.svelte';
 	import FeatureGroupSelection from '../characterCreator/FeatureGroupSelection.svelte';
 	import Hint from '../../../components/Hint.svelte';
 	import localize from '#utils/localize.js';
+	import { createClassFeatureSelectionState } from './LevelUpClassFeatureSelection.svelte.ts';
 
 	let {
 		classFeatures,
@@ -13,40 +13,18 @@
 		loading = false,
 	}: LevelUpClassFeatureSelectionProps = $props();
 
-	// Auto-select features for groups that only have one option
-	$effect(() => {
-		if (!classFeatures?.selectionGroups) return;
+	const state = createClassFeatureSelectionState(
+		() => classFeatures,
+		() => selectedFeatures,
+		(features) => {
+			selectedFeatures = features;
+		},
+	);
 
-		const newSelections = new Map(selectedFeatures);
-		let hasChanges = false;
-
-		for (const [groupName, features] of classFeatures.selectionGroups) {
-			if (features.length === 1 && !newSelections.has(groupName)) {
-				newSelections.set(groupName, features[0]);
-				hasChanges = true;
-			}
-		}
-
-		if (hasChanges) {
-			selectedFeatures = newSelections;
-		}
-	});
-
-	function handleFeatureSelect(groupName: string, feature: NimbleFeatureItem) {
-		const newSelections = new Map(selectedFeatures);
-
-		if (newSelections.get(groupName)?.uuid === feature.uuid) {
-			newSelections.delete(groupName);
-		} else {
-			newSelections.set(groupName, feature);
-		}
-
-		selectedFeatures = newSelections;
-	}
-
-	const hasAutoGrant = $derived((classFeatures?.autoGrant?.length ?? 0) > 0);
-	const hasSelectionGroups = $derived((classFeatures?.selectionGroups?.size ?? 0) > 0);
-	const hasAnyFeatures = $derived(hasAutoGrant || hasSelectionGroups);
+	const { handleFeatureSelect } = state;
+	const hasAnyFeatures = $derived(state.hasAnyFeatures);
+	const hasAutoGrant = $derived(state.hasAutoGrant);
+	const hasSelectionGroups = $derived(state.hasSelectionGroups);
 </script>
 
 {#if loading}
