@@ -62,8 +62,7 @@ export function createLevelDownState(
 		Object.entries(lastHistory?.abilityIncreases ?? {})
 			.filter(([, value]) => (value as number) > 0)
 			.map(([key, value]) => ({
-				// @ts-expect-error — abilities config exists at runtime but isn't in the type declarations
-				name: (CONFIG.NIMBLE.abilities[key]?.label as string) ?? key,
+				name: CONFIG.NIMBLE.abilities[key]?.label ?? key,
 				points: value as number,
 			})),
 	);

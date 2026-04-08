@@ -99,7 +99,10 @@ export function createLevelUpState(
 
 	// Load class features when dialog opens
 	$effect(() => {
-		if (!characterClass) return;
+		if (!characterClass) {
+			featuresLoading = false;
+			return;
+		}
 
 		featuresLoading = true;
 		buildClassFeatureIndex()
@@ -165,7 +168,9 @@ export function createLevelUpState(
 	});
 
 	const skillPointChangesAssigned = $derived.by(() => {
-		return Object.values(skillPointChanges).reduce((acc, change) => acc + (change ?? 0), 0) === 1;
+		return (
+			Object.values(skillPointChanges).reduce<number>((acc, change) => acc + (change ?? 0), 0) === 1
+		);
 	});
 
 	// Reset skills when ability score selection changes
@@ -312,7 +317,7 @@ export function createLevelUpState(
 		get skillPointChanges() {
 			return skillPointChanges;
 		},
-		set skillPointChanges(v: Record<string, null>) {
+		set skillPointChanges(v: Record<string, number | null>) {
 			skillPointChanges = v;
 		},
 		get hasStatIncrease() {
