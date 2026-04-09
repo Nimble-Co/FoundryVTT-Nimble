@@ -1,22 +1,11 @@
 <script lang="ts">
-	import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
-	import type { LevelUpSchoolSelection } from '../../CharacterLevelUpDialogState.svelte.ts';
-
+	import type { LevelUpSpellGrantsProps } from '#types/components/LevelUpSpellGrants.d.ts';
 	import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.js';
 	import localize from '#utils/localize.js';
 	import Hint from '../../../components/Hint.svelte';
 	import SchoolSelection from '../characterCreator/SchoolSelection.svelte';
 	import LevelUpSpellCard from './LevelUpSpellCard.svelte';
-
-	interface LevelUpSpellGrantsProps {
-		spells: SpellIndexEntry[];
-		schoolSelections: LevelUpSchoolSelection[];
-		spellIndex: SpellIndex | null;
-		selectedSchools: Map<string, string[]>;
-		confirmedSchools: Set<string>;
-		onSchoolsChange: (schools: Map<string, string[]>) => void;
-		onConfirmedChange: (confirmed: Set<string>) => void;
-	}
+	import { createLevelUpSpellGrantsState } from './LevelUpSpellGrants.svelte.ts';
 
 	let {
 		spells,
@@ -28,28 +17,18 @@
 		onConfirmedChange,
 	}: LevelUpSpellGrantsProps = $props();
 
-	const hasAnyGrants = $derived(spells.length > 0 || schoolSelections.length > 0);
-
-	const spellsBySchool = $derived.by(() => {
-		const grouped = new Map<string, SpellIndexEntry[]>();
-		for (const spell of spells) {
-			const existing = grouped.get(spell.school) ?? [];
-			existing.push(spell);
-			grouped.set(spell.school, existing);
-		}
-		return grouped;
-	});
-
-	function handleSchoolSelect(ruleId: string, schools: string[]) {
-		const newMap = new Map(selectedSchools);
-		newMap.set(ruleId, schools);
-		onSchoolsChange(newMap);
-	}
-
-	function handleSchoolConfirm(ruleId: string) {
-		const newSet = new Set([...confirmedSchools, ruleId]);
-		onConfirmedChange(newSet);
-	}
+	const state = createLevelUpSpellGrantsState(() => ({
+		spells,
+		schoolSelections,
+		spellIndex,
+		selectedSchools,
+		confirmedSchools,
+		onSchoolsChange,
+		onConfirmedChange,
+	}));
+	const { handleSchoolSelect, handleSchoolConfirm, handleSchoolEdit } = state;
+	const hasAnyGrants = $derived(state.hasAnyGrants);
+	const spellsBySchool = $derived(state.spellsBySchool);
 </script>
 
 {#if hasAnyGrants}
@@ -101,10 +80,7 @@
 								type="button"
 								class="level-up-spell-grants__edit-button"
 								aria-label={localize('NIMBLE.spellGrants.changeSelection')}
-								onclick={() => {
-									const newSet = new Set([...confirmedSchools].filter((id) => id !== group.ruleId));
-									onConfirmedChange(newSet);
-								}}
+								onclick={() => handleSchoolEdit(group.ruleId)}
 							>
 								<i class="fa-solid fa-edit"></i>
 							</button>

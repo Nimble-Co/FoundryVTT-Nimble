@@ -1,157 +1,14 @@
 <script lang="ts">
-	import type { SpellIndexEntry } from '#utils/getSpells.js';
-	import { flattenActivationEffects } from '#utils/activationEffects.js';
+	import type { LevelUpSpellCardProps } from '#types/components/LevelUpSpellCard.d.ts';
 	import localize from '#utils/localize.js';
-
-	interface LevelUpSpellCardProps {
-		spell: SpellIndexEntry;
-	}
-
-	interface SpellSystemData {
-		manaCost?: number;
-		tier?: number;
-		activation?: {
-			effects?: unknown[];
-			cost?: { type: string; quantity: number };
-			acquireTargetsFromTemplate?: boolean;
-			targets?: { count: number };
-		};
-		properties?: {
-			selected?: string[];
-			reach?: { max?: number };
-			range?: { max?: number };
-		};
-		description?: {
-			baseEffect?: string;
-			higherLevelEffect?: string;
-		};
-	}
-
-	interface SpellDisplayData {
-		meta: string | null;
-		requiresConcentration: boolean;
-		targetType: string | null;
-		spellRange: string | null;
-		manaCost: number;
-		effect: { formula: string; isHealing: boolean } | null;
-		baseEffect: string | null;
-		higherLevelEffect: string | null;
-	}
+	import { createLevelUpSpellCardState } from './LevelUpSpellCard.svelte.ts';
 
 	let { spell }: LevelUpSpellCardProps = $props();
 
-	let displayData = $state<SpellDisplayData | null>(null);
-	let isExpanded = $state(false);
-
-	// Load full spell data on mount to populate metadata
-	$effect(() => {
-		fromUuid(spell.uuid as `Item.${string}`).then((item) => {
-			if (!item) return;
-			const system = (item as Item).system as unknown as SpellSystemData;
-			displayData = extractDisplayData(system);
-		});
-	});
-
-	function extractDisplayData(system: SpellSystemData): SpellDisplayData {
-		const { activationCostTypes, activationCostTypesPlural } = CONFIG.NIMBLE;
-
-		// Action cost
-		let meta: string | null = null;
-		const activation = system.activation;
-		if (activation?.cost) {
-			const { type: activationType, quantity: activationCost } = activation.cost;
-			if (activationType && activationType !== 'none') {
-				if (['action', 'minute', 'hour'].includes(activationType)) {
-					const label =
-						activationCost > 1
-							? activationCostTypesPlural[activationType]
-							: activationCostTypes[activationType];
-					meta = `${activationCost || 1} ${label}`;
-				} else if (activationType === 'reaction' || activationType === 'special') {
-					meta = activationCostTypes[activationType];
-				}
-			}
-		}
-
-		// Concentration
-		const requiresConcentration = system.properties?.selected?.includes('concentration') ?? false;
-
-		// Target type
-		let targetType: string | null = null;
-		if (activation) {
-			if (activation.acquireTargetsFromTemplate) {
-				targetType = localize('NIMBLE.ui.heroicActions.targetTypes.aoe');
-			} else {
-				const targetCount = activation.targets?.count ?? 1;
-				if (targetCount === 0) targetType = localize('NIMBLE.ui.heroicActions.targetTypes.self');
-				else if (targetCount === 1)
-					targetType = localize('NIMBLE.ui.heroicActions.targetTypes.singleTarget');
-				else if (targetCount === 2)
-					targetType = localize('NIMBLE.ui.heroicActions.targetTypes.twoTargets');
-				else
-					targetType = localize('NIMBLE.ui.heroicActions.targetTypes.multiTarget', {
-						count: String(targetCount),
-					});
-			}
-		}
-
-		// Range
-		let spellRange: string | null = null;
-		const props = system.properties ?? {};
-		const selected = props.selected ?? [];
-		if (selected.includes('range') && props.range?.max) {
-			spellRange = localize('NIMBLE.ui.heroicActions.rangeDistance', {
-				distance: String(props.range.max),
-			});
-		} else if (selected.includes('reach') && props.reach?.max) {
-			spellRange = localize('NIMBLE.ui.heroicActions.reachDistance', {
-				distance: String(props.reach.max),
-			});
-		}
-
-		// Mana cost
-		const manaCost = system.manaCost ?? 0;
-
-		// Damage/healing effect
-		let effect: { formula: string; isHealing: boolean } | null = null;
-		const effects = activation?.effects;
-		const flattened = flattenActivationEffects(effects);
-		for (const node of flattened) {
-			const effectType = node.type;
-			if (effectType !== 'damage' && effectType !== 'healing') continue;
-			const formula = node.formula || node.roll;
-			if (typeof formula === 'string' && formula.trim().length > 0) {
-				effect = {
-					formula: formula.trim(),
-					isHealing: effectType === 'healing' || node.damageType === 'healing',
-				};
-				break;
-			}
-		}
-
-		// Description
-		const desc = system.description;
-		const hasContent = (text: unknown): text is string =>
-			typeof text === 'string' && text.replace(/<[^>]*>/g, '').trim().length > 0;
-
-		return {
-			meta,
-			requiresConcentration,
-			targetType,
-			spellRange,
-			manaCost,
-			effect,
-			baseEffect: hasContent(desc?.baseEffect) ? desc!.baseEffect : null,
-			higherLevelEffect: hasContent(desc?.higherLevelEffect) ? desc!.higherLevelEffect : null,
-		};
-	}
-
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.key === 'Enter' || e.key === ' ') {
-			e.preventDefault();
-			isExpanded = !isExpanded;
-		}
-	}
+	const state = createLevelUpSpellCardState(() => spell);
+	const { toggleExpanded, handleKeydown } = state;
+	const displayData = $derived(displayData);
+	const isExpanded = $derived(state.isExpanded);
 </script>
 
 <li class="spell-card" class:spell-card--expanded={isExpanded}>
@@ -159,7 +16,7 @@
 		class="spell-card__row"
 		role="button"
 		tabindex="0"
-		onclick={() => (isExpanded = !isExpanded)}
+		onclick={toggleExpanded}
 		onkeydown={handleKeydown}
 	>
 		<i class="fa-solid fa-chevron-down spell-card__chevron"></i>
@@ -221,7 +78,7 @@
 		{/if}
 	</div>
 
-	{#if isExpanded && displayData}
+	{#if state.isExpanded && displayData}
 		<div class="spell-card__description">
 			{#if displayData.baseEffect}
 				<div class="spell-card__effect-section">

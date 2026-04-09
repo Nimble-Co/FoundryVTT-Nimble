@@ -12,6 +12,7 @@ import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.ts';
 import getSubclassChoices from '#utils/getSubclassChoices.ts';
 import localize from '#utils/localize.ts';
 
+import type { SchoolSelectionGroup } from './characterCreation/types.js';
 import { EPIC_BOON_LEVEL, SUBCLASS_LEVEL } from './const/levelUpConstants.ts';
 
 /** Structural type for what the factory accesses on a class item */
@@ -33,22 +34,10 @@ interface LevelUpDocument {
 	}>;
 }
 
-/** A school selection group the user needs to complete during level-up */
-export interface LevelUpSchoolSelection {
-	ruleId: string;
-	label: string;
-	availableSchools: string[];
-	tiers: number[];
-	count: number;
-	utilityOnly: boolean;
-	forClass: string;
-	source: 'class';
-}
-
 /** Result of processing grantSpells rules */
 interface SpellGrantResult {
 	autoGrant: SpellIndexEntry[];
-	schoolSelections: LevelUpSchoolSelection[];
+	schoolSelections: SchoolSelectionGroup[];
 }
 
 /**
@@ -110,7 +99,7 @@ function collectSpellGrants(
 	knownSchools: Set<string>,
 ): SpellGrantResult {
 	const autoGrant: SpellIndexEntry[] = [];
-	const schoolSelections: LevelUpSchoolSelection[] = [];
+	const schoolSelections: SchoolSelectionGroup[] = [];
 	const seenUuids = new Set<string>();
 
 	for (const rules of rulesArrays) {
@@ -254,7 +243,7 @@ export function createLevelUpState(
 	// Spell grants state
 	let resolvedSpellIndex = $state<SpellIndex | null>(null);
 	let autoGrantedSpells = $state<SpellIndexEntry[]>([]);
-	let schoolSelections = $state<LevelUpSchoolSelection[]>([]);
+	let schoolSelections = $state<SchoolSelectionGroup[]>([]);
 	let selectedSchools = $state<Map<string, string[]>>(new Map());
 	let confirmedSchools = $state<Set<string>>(new Set());
 
