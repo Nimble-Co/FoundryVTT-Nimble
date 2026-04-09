@@ -6,7 +6,161 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "stormshifter-tier1-spells",
+				"type": "grantSpells",
+				"schools": [
+					"wind",
+					"lightning"
+				],
+				"tiers": [
+					1
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 2
+					}
+				}
+			},
+			{
+				"id": "stormshifter-tier2-spells",
+				"type": "grantSpells",
+				"schools": [
+					"wind",
+					"lightning"
+				],
+				"tiers": [
+					2
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 4
+					}
+				}
+			},
+			{
+				"id": "stormshifter-tier3-spells",
+				"type": "grantSpells",
+				"schools": [
+					"wind",
+					"lightning"
+				],
+				"tiers": [
+					3
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 6
+					}
+				}
+			},
+			{
+				"id": "stormshifter-tier4-spells",
+				"type": "grantSpells",
+				"schools": [
+					"wind",
+					"lightning"
+				],
+				"tiers": [
+					4
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 8
+					}
+				}
+			},
+			{
+				"id": "stormshifter-tier5-spells",
+				"type": "grantSpells",
+				"schools": [
+					"wind",
+					"lightning"
+				],
+				"tiers": [
+					5
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 10
+					}
+				}
+			},
+			{
+				"id": "stormshifter-tier6-spells",
+				"type": "grantSpells",
+				"schools": [
+					"wind",
+					"lightning"
+				],
+				"tiers": [
+					6
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 12
+					}
+				}
+			},
+			{
+				"id": "stormshifter-tier7-spells",
+				"type": "grantSpells",
+				"schools": [
+					"wind",
+					"lightning"
+				],
+				"tiers": [
+					7
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 14
+					}
+				}
+			},
+			{
+				"id": "stormshifter-tier8-spells",
+				"type": "grantSpells",
+				"schools": [
+					"wind",
+					"lightning"
+				],
+				"tiers": [
+					8
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 16
+					}
+				}
+			},
+			{
+				"id": "stormshifter-tier9-spells",
+				"type": "grantSpells",
+				"schools": [
+					"wind",
+					"lightning"
+				],
+				"tiers": [
+					9
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 18
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

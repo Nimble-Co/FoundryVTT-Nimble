@@ -75,6 +75,7 @@ interface LevelUpDialogData {
 		autoGrant: NimbleFeatureItem[];
 		selected: Map<string, NimbleFeatureItem>;
 	} | null;
+	spellUuids: string[];
 }
 
 export class NimbleCharacter extends NimbleBaseActor<'character'> {
@@ -1272,6 +1273,34 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				.filter((id): id is string => id !== null);
 		}
 
+		// Create spell documents
+		let grantedSpellIds: string[] = [];
+		const spellUuids = typedDialogData.spellUuids ?? [];
+
+		if (spellUuids.length > 0) {
+			const spellDocumentSources: Item.CreateData[] = [];
+			const seenSpellUuids = new Set<string>();
+
+			for (const uuid of spellUuids) {
+				if (seenSpellUuids.has(uuid)) continue;
+				seenSpellUuids.add(uuid);
+
+				const spell = await fromUuid(uuid as `Item.${string}`);
+				if (spell) {
+					const source = (spell as Item).toObject();
+					(source as { _stats: { compendiumSource?: string } })._stats.compendiumSource = uuid;
+					spellDocumentSources.push(source as object as Item.CreateData);
+				}
+			}
+
+			if (spellDocumentSources.length > 0) {
+				const createdSpells = await this.createEmbeddedDocuments('Item', spellDocumentSources);
+				grantedSpellIds = (createdSpells ?? [])
+					.map((item) => item.id)
+					.filter((id): id is string => id !== null);
+			}
+		}
+
 		// Record level up history
 		const historyEntry = {
 			level: nextClassLevel,
@@ -1281,6 +1310,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			hitDieAdded: true,
 			classIdentifier: characterClass.identifier,
 			grantedFeatureIds,
+			grantedSpellIds,
 		};
 
 		actorUpdates['system.levelUpHistory'] = [...this.system.levelUpHistory, historyEntry];
@@ -1396,6 +1426,14 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			const validIds = lastHistory.grantedFeatureIds.filter((id) => this.items.get(id));
 			if (validIds.length > 0) {
 				await this.deleteEmbeddedDocuments('Item', validIds);
+			}
+		}
+
+		// Remove granted spells
+		if (lastHistory.grantedSpellIds && lastHistory.grantedSpellIds.length > 0) {
+			const validSpellIds = lastHistory.grantedSpellIds.filter((id) => this.items.get(id));
+			if (validSpellIds.length > 0) {
+				await this.deleteEmbeddedDocuments('Item', validSpellIds);
 			}
 		}
 

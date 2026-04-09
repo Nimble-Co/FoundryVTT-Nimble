@@ -6,7 +6,136 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "shadowmancer-tier0-spells",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 2
+					}
+				}
+			},
+			{
+				"id": "shadowmancer-tier1-spells",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					1
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 2
+					}
+				}
+			},
+			{
+				"id": "shadowmancer-tier2-spells",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					2
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 5
+					}
+				}
+			},
+			{
+				"id": "shadowmancer-tier3-spells",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					3
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 7
+					}
+				}
+			},
+			{
+				"id": "shadowmancer-tier4-spells",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					4
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 10
+					}
+				}
+			},
+			{
+				"id": "shadowmancer-tier5-spells",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					5
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 13
+					}
+				}
+			},
+			{
+				"id": "shadowmancer-tier6-spells",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					6
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 16
+					}
+				}
+			},
+			{
+				"id": "shadowmancer-tier7-spells",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					7
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 19
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

@@ -2,12 +2,15 @@ import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
 import type { ExpandableDocumentItem } from '#types/components/ExpandableDocumentList.d.ts';
 import type { EpicBoonChoice, SubclassChoice } from '#types/components/LevelUpChoices.d.ts';
-
 import generateBlankSkillSet from '#utils/generateBlankSkillSet.ts';
 import getChoicesFromCompendium from '#utils/getChoicesFromCompendium.ts';
 import getClassFeaturesFromIndex, { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
 import getEpicBoons from '#utils/getEpicBoons.ts';
+import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
+import { buildSpellIndex } from '#utils/getSpells.ts';
+import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.ts';
 import getSubclassChoices from '#utils/getSubclassChoices.ts';
+import localize from '#utils/localize.ts';
 
 import { EPIC_BOON_LEVEL, SUBCLASS_LEVEL } from './const/levelUpConstants.ts';
 
@@ -20,14 +23,165 @@ interface ClassItemShape {
 /** Structural type for what the factory accesses on the actor document */
 interface LevelUpDocument {
 	classes: Record<string, ClassItemShape | undefined>;
-	items: Array<{ type: string; _stats?: { compendiumSource?: string } }>;
+	items: Array<{
+		type: string;
+		system?: {
+			rules?: Array<{ type: string; [key: string]: unknown }>;
+			school?: string;
+		};
+		_stats?: { compendiumSource?: string };
+	}>;
+}
+
+/** A school selection group the user needs to complete during level-up */
+export interface LevelUpSchoolSelection {
+	ruleId: string;
+	label: string;
+	availableSchools: string[];
+	tiers: number[];
+	count: number;
+	utilityOnly: boolean;
+	forClass: string;
+	source: 'class';
+}
+
+/** Result of processing grantSpells rules */
+interface SpellGrantResult {
+	autoGrant: SpellIndexEntry[];
+	schoolSelections: LevelUpSchoolSelection[];
+}
+
+/**
+ * Checks if a rule's level predicate passes at the given level.
+ * For selection modes (selectSchool/selectSpell), uses exact match on min
+ * since those are one-time choices. For auto mode, uses >= behavior.
+ */
+function predicatePassesAtLevel(
+	rule: { predicate?: Record<string, unknown>; mode?: unknown },
+	level: number,
+): boolean {
+	const predicate = rule.predicate;
+	if (!predicate) return true;
+
+	const levelPred = predicate.level;
+	if (!levelPred || typeof levelPred !== 'object') return true;
+
+	const { min, max } = levelPred as { min?: number; max?: number };
+
+	const mode = (rule.mode as string) ?? 'auto';
+	if (mode === 'selectSchool' || mode === 'selectSpell') {
+		// Selection modes fire only at the exact level they become available
+		if (min !== undefined && level !== min) return false;
+	} else {
+		// Auto mode fires at min level and above
+		if (min !== undefined && level < min) return false;
+	}
+
+	if (max !== undefined && level > max) return false;
+
+	return true;
+}
+
+type RulesArray = Array<{
+	type: string;
+	predicate?: Record<string, unknown>;
+	[key: string]: unknown;
+}>;
+
+/**
+ * Resolves the schools array for a rule. If the array contains "known",
+ * it is replaced with the character's known spell schools.
+ */
+function resolveSchools(schools: string[], knownSchools: Set<string>): string[] {
+	if (!schools.includes('known')) return schools;
+	return [...new Set([...schools.filter((s) => s !== 'known'), ...knownSchools])];
+}
+
+/**
+ * Collects spell grants from grantSpells rules, filtered by level predicate.
+ * Returns auto-granted spells (filtered by ownership) and school selection groups.
+ */
+function collectSpellGrants(
+	rulesArrays: RulesArray[],
+	spellIndex: SpellIndex,
+	classIdentifier: string,
+	targetLevel: number,
+	ownedSpellUuids: Set<string>,
+	knownSchools: Set<string>,
+): SpellGrantResult {
+	const autoGrant: SpellIndexEntry[] = [];
+	const schoolSelections: LevelUpSchoolSelection[] = [];
+	const seenUuids = new Set<string>();
+
+	for (const rules of rulesArrays) {
+		for (const rule of rules) {
+			if (rule.type !== 'grantSpells') continue;
+			if (!predicatePassesAtLevel(rule, targetLevel)) continue;
+
+			const mode = (rule.mode as string) ?? 'auto';
+			const tiers = (rule.tiers as number[]) ?? [0];
+			const utilityOnly = (rule.utilityOnly as boolean) ?? false;
+			const schools = Array.isArray(rule.schools) ? (rule.schools as string[]) : [];
+			const resolvedSchools = resolveSchools(schools, knownSchools);
+
+			if (mode === 'auto') {
+				if (Array.isArray(rule.uuids) && rule.uuids.length > 0) {
+					for (const uuid of rule.uuids as string[]) {
+						if (seenUuids.has(uuid) || ownedSpellUuids.has(uuid)) continue;
+						seenUuids.add(uuid);
+						for (const tierMap of spellIndex.values()) {
+							for (const spells of tierMap.values()) {
+								const spell = spells.find((s) => s.uuid === uuid);
+								if (spell) autoGrant.push(spell);
+							}
+						}
+					}
+				} else if (resolvedSchools.length > 0) {
+					const spells = getSpellsFromIndex(spellIndex, resolvedSchools, tiers, {
+						utilityOnly,
+						forClass: classIdentifier,
+					});
+					for (const spell of spells) {
+						if (seenUuids.has(spell.uuid) || ownedSpellUuids.has(spell.uuid)) continue;
+						seenUuids.add(spell.uuid);
+						autoGrant.push(spell);
+					}
+				}
+			} else if (mode === 'selectSchool' && resolvedSchools.length > 0) {
+				// Filter out schools where the character already owns all matching spells
+				// (i.e., that school was already selected at a previous level)
+				const availableSchools = resolvedSchools.filter((school) => {
+					const schoolSpells = getSpellsFromIndex(spellIndex, [school], tiers, {
+						utilityOnly,
+						forClass: classIdentifier,
+					});
+					return schoolSpells.some((s) => !ownedSpellUuids.has(s.uuid));
+				});
+
+				if (availableSchools.length > 0) {
+					schoolSelections.push({
+						ruleId: (rule.id as string) ?? '',
+						label: (rule.label as string) || localize('NIMBLE.spellGrants.chooseSchoolsFallback'),
+						availableSchools,
+						tiers,
+						count: (rule.count as number) ?? 1,
+						utilityOnly,
+						forClass: classIdentifier,
+						source: 'class',
+					});
+				}
+			}
+		}
+	}
+
+	return { autoGrant, schoolSelections };
 }
 
 /**
  * Creates reactive state for the CharacterLevelUpDialog component.
  *
  * Manages all level-up form state including ability scores, skill points,
- * subclass/boon selection, class features, and form completion validation.
+ * subclass/boon selection, class features, spell grants, and form completion validation.
  */
 export function createLevelUpState(
 	getDocument: () => LevelUpDocument,
@@ -97,6 +251,22 @@ export function createLevelUpState(
 	let selectedClassFeatures: Map<string, NimbleFeatureItem> = $state(new Map());
 	let featuresLoading = $state(true);
 
+	// Spell grants state
+	let resolvedSpellIndex = $state<SpellIndex | null>(null);
+	let autoGrantedSpells = $state<SpellIndexEntry[]>([]);
+	let schoolSelections = $state<LevelUpSchoolSelection[]>([]);
+	let selectedSchools = $state<Map<string, string[]>>(new Map());
+	let confirmedSchools = $state<Set<string>>(new Set());
+
+	// Load spell index
+	buildSpellIndex()
+		.then((index) => {
+			resolvedSpellIndex = index;
+		})
+		.catch((err) => {
+			console.warn('Nimble | Failed to load spell index:', err);
+		});
+
 	// Load class features when dialog opens
 	$effect(() => {
 		if (!characterClass) {
@@ -154,6 +324,129 @@ export function createLevelUpState(
 			});
 	});
 
+	// Process spell grants when class features and spell index are ready
+	$effect(() => {
+		if (!resolvedSpellIndex || featuresLoading) {
+			autoGrantedSpells = [];
+			schoolSelections = [];
+			return;
+		}
+
+		const classIdentifier = characterClass?.identifier ?? '';
+		const items = getDocument().items ?? [];
+
+		// Get already-owned spell UUIDs
+		const ownedSpellUuids = new Set<string>();
+		for (const item of items) {
+			if (item.type !== 'spell') continue;
+			const source = (item as unknown as { _stats?: { compendiumSource?: string } })._stats
+				?.compendiumSource;
+			if (source) ownedSpellUuids.add(source);
+		}
+
+		// Derive known schools from auto-mode grantSpells rules on class features,
+		// NOT from owned spells. A background-granted spell doesn't make a school "known".
+		const knownSchools = new Set<string>();
+
+		// Collect rules from multiple sources
+		const allRulesArrays: RulesArray[] = [];
+
+		// 1. Rules from NEW features being granted at this level
+		if (classFeatures) {
+			for (const feature of classFeatures.autoGrant) {
+				const featureItem = feature as unknown as {
+					name: string;
+					system?: { rules?: unknown[] };
+				};
+				const rules = (featureItem.system?.rules ?? []) as unknown as RulesArray;
+				if (rules.length > 0) allRulesArrays.push(rules);
+
+				// Collect known schools from auto-grant rules on class features
+				for (const rule of rules) {
+					if (rule.type !== 'grantSpells') continue;
+					if ((rule.mode as string) !== 'auto' && rule.mode !== undefined) continue;
+					const schools = rule.schools as string[] | undefined;
+					if (schools) {
+						for (const school of schools) {
+							if (school !== 'known') knownSchools.add(school);
+						}
+					}
+				}
+			}
+		}
+
+		// 2. Rules from EXISTING features already on the character
+		for (const item of items) {
+			if (item.type !== 'feature') continue;
+			const rules = (item.system?.rules ?? []) as unknown as RulesArray;
+			const hasGrantSpells = rules.some((r) => r.type === 'grantSpells');
+			if (hasGrantSpells) {
+				allRulesArrays.push(rules);
+
+				// Collect known schools from auto-grant rules on existing features
+				for (const rule of rules) {
+					if (rule.type !== 'grantSpells') continue;
+					if ((rule.mode as string) !== 'auto' && rule.mode !== undefined) continue;
+					const schools = rule.schools as string[] | undefined;
+					if (schools) {
+						for (const school of schools) {
+							if (school !== 'known') knownSchools.add(school);
+						}
+					}
+				}
+			}
+		}
+
+		const result = collectSpellGrants(
+			allRulesArrays,
+			resolvedSpellIndex,
+			classIdentifier,
+			levelingTo,
+			ownedSpellUuids,
+			knownSchools,
+		);
+
+		autoGrantedSpells = result.autoGrant;
+		schoolSelections = result.schoolSelections;
+
+		// Clean up selections for rules that no longer exist
+		const validRuleIds = new Set(result.schoolSelections.map((s) => s.ruleId));
+		for (const ruleId of selectedSchools.keys()) {
+			if (!validRuleIds.has(ruleId)) {
+				const newMap = new Map(selectedSchools);
+				newMap.delete(ruleId);
+				selectedSchools = newMap;
+			}
+		}
+	});
+
+	// Get all spell UUIDs that should be granted (auto + from school selections)
+	function getGrantedSpellUuids(): string[] {
+		const uuids: string[] = autoGrantedSpells.map((s) => s.uuid);
+
+		if (!resolvedSpellIndex) return uuids;
+
+		const seen = new Set(uuids);
+		for (const group of schoolSelections) {
+			const schools = selectedSchools.get(group.ruleId);
+			if (!schools || schools.length === 0) continue;
+
+			const spells = getSpellsFromIndex(resolvedSpellIndex, schools, group.tiers, {
+				utilityOnly: group.utilityOnly,
+				forClass: group.forClass,
+			});
+
+			for (const spell of spells) {
+				if (!seen.has(spell.uuid)) {
+					seen.add(spell.uuid);
+					uuids.push(spell.uuid);
+				}
+			}
+		}
+
+		return uuids;
+	}
+
 	// Derived completion checks
 	const classFeaturesComplete = $derived.by(() => {
 		if (featuresLoading) return false;
@@ -163,6 +456,15 @@ export function createLevelUpState(
 			if (!selectedClassFeatures.has(groupName)) {
 				return false;
 			}
+		}
+		return true;
+	});
+
+	const spellSelectionsComplete = $derived.by(() => {
+		for (const group of schoolSelections) {
+			const selected = selectedSchools.get(group.ruleId) ?? [];
+			if (selected.length < group.count) return false;
+			if (!confirmedSchools.has(group.ruleId)) return false;
 		}
 		return true;
 	});
@@ -204,7 +506,8 @@ export function createLevelUpState(
 			!overMax &&
 			(selectedSubclass || !hasSubclassSelection) &&
 			(selectedEpicBoon || !hasEpicBoonSelection) &&
-			classFeaturesComplete
+			classFeaturesComplete &&
+			spellSelectionsComplete
 		);
 	});
 
@@ -222,6 +525,7 @@ export function createLevelUpState(
 						selected: selectedClassFeatures,
 					}
 				: null,
+			spellUuids: getGrantedSpellUuids(),
 		});
 	}
 
@@ -274,6 +578,27 @@ export function createLevelUpState(
 		},
 		get featuresLoading() {
 			return featuresLoading;
+		},
+		get autoGrantedSpells() {
+			return autoGrantedSpells;
+		},
+		get schoolSelections() {
+			return schoolSelections;
+		},
+		get resolvedSpellIndex() {
+			return resolvedSpellIndex;
+		},
+		get selectedSchools() {
+			return selectedSchools;
+		},
+		set selectedSchools(v: Map<string, string[]>) {
+			selectedSchools = v;
+		},
+		get confirmedSchools() {
+			return confirmedSchools;
+		},
+		set confirmedSchools(v: Set<string>) {
+			confirmedSchools = v;
 		},
 		get isComplete() {
 			return isComplete;

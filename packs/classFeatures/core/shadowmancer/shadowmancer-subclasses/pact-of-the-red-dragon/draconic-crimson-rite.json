@@ -6,7 +6,136 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "crimson-rite-tier0-spells",
+				"type": "grantSpells",
+				"schools": [
+					"fire"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 3
+					}
+				}
+			},
+			{
+				"id": "crimson-rite-tier1-spells",
+				"type": "grantSpells",
+				"schools": [
+					"fire"
+				],
+				"tiers": [
+					1
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 3
+					}
+				}
+			},
+			{
+				"id": "crimson-rite-tier2-spells",
+				"type": "grantSpells",
+				"schools": [
+					"fire"
+				],
+				"tiers": [
+					2
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 5
+					}
+				}
+			},
+			{
+				"id": "crimson-rite-tier3-spells",
+				"type": "grantSpells",
+				"schools": [
+					"fire"
+				],
+				"tiers": [
+					3
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 7
+					}
+				}
+			},
+			{
+				"id": "crimson-rite-tier4-spells",
+				"type": "grantSpells",
+				"schools": [
+					"fire"
+				],
+				"tiers": [
+					4
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 10
+					}
+				}
+			},
+			{
+				"id": "crimson-rite-tier5-spells",
+				"type": "grantSpells",
+				"schools": [
+					"fire"
+				],
+				"tiers": [
+					5
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 13
+					}
+				}
+			},
+			{
+				"id": "crimson-rite-tier6-spells",
+				"type": "grantSpells",
+				"schools": [
+					"fire"
+				],
+				"tiers": [
+					6
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 16
+					}
+				}
+			},
+			{
+				"id": "crimson-rite-tier7-spells",
+				"type": "grantSpells",
+				"schools": [
+					"fire"
+				],
+				"tiers": [
+					7
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 19
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

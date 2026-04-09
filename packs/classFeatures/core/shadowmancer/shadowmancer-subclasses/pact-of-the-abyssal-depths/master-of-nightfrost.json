@@ -6,7 +6,136 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "nightfrost-tier0-spells",
+				"type": "grantSpells",
+				"schools": [
+					"ice"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 3
+					}
+				}
+			},
+			{
+				"id": "nightfrost-tier1-spells",
+				"type": "grantSpells",
+				"schools": [
+					"ice"
+				],
+				"tiers": [
+					1
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 3
+					}
+				}
+			},
+			{
+				"id": "nightfrost-tier2-spells",
+				"type": "grantSpells",
+				"schools": [
+					"ice"
+				],
+				"tiers": [
+					2
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 5
+					}
+				}
+			},
+			{
+				"id": "nightfrost-tier3-spells",
+				"type": "grantSpells",
+				"schools": [
+					"ice"
+				],
+				"tiers": [
+					3
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 7
+					}
+				}
+			},
+			{
+				"id": "nightfrost-tier4-spells",
+				"type": "grantSpells",
+				"schools": [
+					"ice"
+				],
+				"tiers": [
+					4
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 10
+					}
+				}
+			},
+			{
+				"id": "nightfrost-tier5-spells",
+				"type": "grantSpells",
+				"schools": [
+					"ice"
+				],
+				"tiers": [
+					5
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 13
+					}
+				}
+			},
+			{
+				"id": "nightfrost-tier6-spells",
+				"type": "grantSpells",
+				"schools": [
+					"ice"
+				],
+				"tiers": [
+					6
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 16
+					}
+				}
+			},
+			{
+				"id": "nightfrost-tier7-spells",
+				"type": "grantSpells",
+				"schools": [
+					"ice"
+				],
+				"tiers": [
+					7
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 19
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

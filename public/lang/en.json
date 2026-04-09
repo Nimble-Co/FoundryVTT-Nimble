@@ -1355,7 +1355,9 @@
 			"selectSpell": "Select spell",
 			"deselectSpell": "Deselect spell",
 			"selectSpellAriaLabel": "Select {spellName}",
-			"deselectSpellAriaLabel": "Deselect {spellName}"
+			"deselectSpellAriaLabel": "Deselect {spellName}",
+			"levelUpHeader": "Granted Spells",
+			"levelUpHint": "You gain the following spells at this level."
 		},
 		"classSelection": {
 			"stepSelectClass": "Step 1: Select Class",
