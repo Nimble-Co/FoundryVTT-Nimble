@@ -23,6 +23,7 @@
 	const subclasses = $derived(state.subclasses);
 	const hasSubclass = $derived(state.hasSubclass);
 	const grantedFeatures = $derived(state.grantedFeatures);
+	const grantedSpells = $derived(state.grantedSpells);
 </script>
 
 <article class="nimble-sheet__body">
@@ -126,6 +127,21 @@
 						</span>
 						<span class="nimble-level-down-preview__value">
 							{feature.name}
+							{levelDownDialog.removed}
+						</span>
+					</li>
+				{/each}
+			{/if}
+
+			{#if grantedSpells.length > 0}
+				{#each grantedSpells as spell}
+					<li class="nimble-level-down-preview__item">
+						<span class="nimble-level-down-preview__label">
+							<i class="fa-solid fa-wand-sparkles"></i>
+							{levelDownDialog.spell}
+						</span>
+						<span class="nimble-level-down-preview__value">
+							{spell.name}
 							{levelDownDialog.removed}
 						</span>
 					</li>

@@ -16,6 +16,7 @@ interface LevelDownActor {
 			skillIncreases: Record<string, number>;
 			abilityIncreases: Record<string, number>;
 			grantedFeatureIds: string[];
+			grantedSpellIds?: string[];
 		}>;
 	};
 	classes: Record<string, ClassItemShape | undefined>;
@@ -79,6 +80,13 @@ export function createLevelDownState(
 			.filter((item): item is NonNullable<typeof item> => item !== undefined),
 	);
 
+	// Get granted spells that will be removed
+	const grantedSpells = $derived(
+		(lastHistory?.grantedSpellIds ?? [])
+			.map((id) => getActor().items.get(id))
+			.filter((item): item is NonNullable<typeof item> => item !== undefined),
+	);
+
 	function submit() {
 		getDialog().submit({
 			confirmed: true,
@@ -115,6 +123,9 @@ export function createLevelDownState(
 		},
 		get grantedFeatures() {
 			return grantedFeatures;
+		},
+		get grantedSpells() {
+			return grantedSpells;
 		},
 		submit,
 	};
