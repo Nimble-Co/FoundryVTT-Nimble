@@ -1,8 +1,8 @@
 # Nimble for FoundryVTT
 
 [![License: MIT](https://img.shields.io/badge/Software_License-MIT-blue.svg)](https://mit-license.org/)
-[![Discord](https://img.shields.io/discord/957965481455788032?label=Discord%20Server&logo=discord&logoColor=white)](https://discord.gg/SxVmHpu34R)
-[![Patreon](https://img.shields.io/badge/Patreon-F96854?logo=patreon&logoColor=white)](https://www.patreon.com/ForgemasterModules)
+[![Nimble RPG Discord](https://img.shields.io/badge/Nimble_RPG-Discord-8B4513?logo=discord&logoColor=white)](https://discord.gg/APTKATGeJW)
+[![Nimble FoundryVTT Discord](https://img.shields.io/badge/Nimble_FoundryVTT-Discord-5865F2?logo=discord&logoColor=white)](https://discord.gg/SxVmHpu34R)
 
 An official implementation of the Nimble 2 RPG system for Foundry Virtual Tabletop, built with TypeScript and Svelte.
 
