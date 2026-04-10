@@ -6,7 +6,20 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "shepherd-twilight-spells",
+				"type": "grantSpells",
+				"schools": [
+					"radiant",
+					"necrotic"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "auto"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

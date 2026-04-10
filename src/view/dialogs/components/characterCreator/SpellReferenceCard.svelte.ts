@@ -3,8 +3,41 @@ import type {
 	SpellEffect,
 	SpellSystemData,
 } from '#types/components/SpellReferenceCard.d.ts';
-import { flattenActivationEffects } from '../../../../utils/activationEffects.js';
-import localize from '../../../../utils/localize.js';
+import { flattenActivationEffects } from '#utils/activationEffects.js';
+import localize from '#utils/localize.js';
+import enrichSpellText from '#utils/spellDescription.js';
+
+interface SpellDescriptionParts {
+	baseEffect?: string;
+	higherLevelEffect?: string;
+	upcastEffect?: string;
+}
+
+/**
+ * Combines spell description parts into a single HTML string
+ */
+function combineSpellDescriptionParts(
+	description: SpellDescriptionParts | string | null | undefined,
+): string {
+	if (typeof description === 'string') {
+		return description;
+	}
+
+	if (!description || typeof description !== 'object') {
+		return '';
+	}
+
+	const parts: string[] = [];
+	if (description.baseEffect) parts.push(description.baseEffect);
+	if (description.higherLevelEffect) {
+		parts.push(`<p><strong>Higher Levels:</strong> ${description.higherLevelEffect}</p>`);
+	}
+	if (description.upcastEffect) {
+		parts.push(`<p><strong>Upcast:</strong> ${description.upcastEffect}</p>`);
+	}
+
+	return parts.join('');
+}
 
 /**
  * Extracts the primary damage/healing effect from a spell's activation effects
@@ -121,9 +154,54 @@ export function createSpellCardState(getSpell: () => Item) {
 		targetType: getSpellTargetType(system),
 	}));
 
+	// Accordion state
+	let isExpanded = $state(false);
+	let enrichedDescription = $state<string | null>(null);
+	let isLoading = $state(false);
+
+	async function loadDescription() {
+		if (enrichedDescription !== null || isLoading) return;
+
+		isLoading = true;
+		try {
+			const spell = getSpell();
+			const system = spell.system as unknown as SpellSystemData;
+			const description = combineSpellDescriptionParts(system.description);
+			enrichedDescription = await enrichSpellText(description);
+		} catch (error) {
+			console.error('Failed to enrich spell description:', error);
+			enrichedDescription = '';
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	function toggleExpanded() {
+		isExpanded = !isExpanded;
+		if (isExpanded) {
+			loadDescription();
+		}
+	}
+
+	function viewDetails() {
+		const spell = getSpell();
+		spell.sheet?.render(true);
+	}
+
 	return {
 		get displayData() {
 			return displayData;
 		},
+		get isExpanded() {
+			return isExpanded;
+		},
+		get enrichedDescription() {
+			return enrichedDescription;
+		},
+		get isLoading() {
+			return isLoading;
+		},
+		toggleExpanded,
+		viewDetails,
 	};
 }

@@ -151,7 +151,7 @@ The system integrates deeply with FoundryVTT through:
 
 ### Community & Communication
 
-**Join our Discord server before contributing:** [Nimble FoundryVTT System](https://discord.gg/WRf5hBqM)
+**Join our Discord server before contributing:** [Nimble FoundryVTT System](https://discord.gg/SxVmHpu34R)
 
 We encourage all contributors to join the Discord and discuss changes before submitting large or architectural PRs. This helps ensure alignment with project direction and prevents wasted effort.
 

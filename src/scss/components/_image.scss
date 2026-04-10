@@ -14,8 +14,8 @@
 
   &--actor {
     position: relative;
-    height: 15rem;
     width: 100%;
+    max-height: 15rem;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
   }
@@ -76,8 +76,12 @@
       top: var(--nimble-actor-image-y-offset, 0);
       left: var(--nimble-actor-image-x-offset, 0);
       scale: var(--nimble-actor-image-scale, 100%);
+      transform-origin: top center;
+      object-fit: contain;
       object-position: top center;
-      height: 100%;
+      width: 100%;
+      height: auto;
+      max-height: 15rem;
     }
 
     &[src$=".svg" i] {

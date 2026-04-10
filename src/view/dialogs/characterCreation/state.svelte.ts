@@ -1,6 +1,7 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
 import type { ClassFeatureIndex } from '#utils/getClassFeatures.js';
+import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 
 import getDeterministicBonus from '../../../dice/getDeterministicBonus.js';
 import generateBlankAttributeSet from '../../../utils/generateBlankAttributeSet.js';
@@ -11,11 +12,21 @@ import type {
 	AbilityScoreAssignment,
 	CharacterCreationDialogInstance,
 	GrantedLanguage,
+	SchoolSelectionGroup,
 	SkillPointAssignment,
+	SpellGrantResult,
+	SpellGrantSource,
+	SpellSelectionGroup,
 	StageValue,
 	StatArrayOption,
 } from './types.js';
-import { isRaisedByBackground } from './utils.ts';
+import { isRaisedByBackground } from './utils/backgroundChecks.js';
+import getGrantSpellSelectionRuleIds from './utils/getGrantSpellSelectionRuleIds.js';
+import hasSpellGrants from './utils/hasSpellGrants.js';
+import { processGrantSpellsRules } from './utils/processGrantSpellsRules.js';
+import removeConfirmedSchoolsForRuleIds from './utils/removeConfirmedSchoolsForRuleIds.js';
+import removeSelectionsForRuleIds from './utils/removeSelectionsForRuleIds.js';
+import spellSelectionsComplete from './utils/spellSelectionsComplete.js';
 
 // --- Internal helper functions ---
 
@@ -178,6 +189,10 @@ interface GetCurrentStageParams {
 	bonusLanguages: string[];
 	classFeatures: ClassFeatureResult | null;
 	selectedClassFeatures: Map<string, NimbleFeatureItem>;
+	spellGrants: SpellGrantResult | null;
+	selectedSchools: Map<string, string[]>;
+	selectedSpells: Map<string, string[]>;
+	confirmedSchools: Set<string>;
 	hasClasses: boolean;
 	hasAncestries: boolean;
 	hasBackgrounds: boolean;
@@ -198,6 +213,10 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		bonusLanguages,
 		classFeatures,
 		selectedClassFeatures,
+		spellGrants,
+		selectedSchools,
+		selectedSpells,
+		confirmedSchools,
 		hasClasses,
 		hasAncestries,
 		hasBackgrounds,
@@ -210,6 +229,20 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 		!classFeaturesComplete(classFeatures, selectedClassFeatures)
 	) {
 		return CHARACTER_CREATION_STAGES.CLASS_FEATURES;
+	}
+
+	// Check class spell selections (from class features)
+	if (
+		hasSpellGrants(spellGrants, 'class') &&
+		!spellSelectionsComplete(
+			spellGrants,
+			selectedSchools,
+			selectedSpells,
+			confirmedSchools,
+			'class',
+		)
+	) {
+		return CHARACTER_CREATION_STAGES.SPELLS;
 	}
 
 	if (hasAncestries && !selectedAncestry) {
@@ -229,6 +262,22 @@ function getCurrentStage(params: GetCurrentStageParams): StageValue {
 
 	if (isRaisedByBackground(selectedBackground) && selectedRaisedByAncestry === null) {
 		return CHARACTER_CREATION_STAGES.BACKGROUND_OPTIONS;
+	}
+
+	// Check background spell selections (from background rules like Academy Dropout)
+	// This appears after background options so selecting a background doesn't scroll back
+	if (
+		hasSpellGrants(spellGrants, 'background') &&
+		!spellSelectionsComplete(
+			spellGrants,
+			selectedSchools,
+			selectedSpells,
+			confirmedSchools,
+			'background',
+		)
+	) {
+		// Return SPELLS stage but scroll handling will go to the right section
+		return CHARACTER_CREATION_STAGES.SPELLS;
 	}
 
 	if (!startingEquipmentChoice) return CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT;
@@ -272,6 +321,7 @@ export interface CharacterCreationStateParams {
 	classFeatureIndex: Promise<ClassFeatureIndex>;
 	classOptions: Promise<NimbleClassItem[]>;
 	dialog: CharacterCreationDialogInstance;
+	spellIndex: Promise<SpellIndex>;
 }
 
 /**
@@ -298,6 +348,23 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	// Class features state
 	let classFeatures = $state<ClassFeatureResult | null>(null);
 	let selectedClassFeatures = $state<Map<string, NimbleFeatureItem>>(new Map());
+
+	// Spell grants state
+	let spellGrants = $state<SpellGrantResult | null>(null);
+	let selectedSchools = $state<Map<string, string[]>>(new Map());
+	let selectedSpells = $state<Map<string, string[]>>(new Map());
+	let confirmedSchools = $state<Set<string>>(new Set());
+	let resolvedSpellIndex = $state<SpellIndex | null>(null);
+	let previousBackground = $state<NimbleBackgroundItem | null>(null);
+
+	// Resolve spell index on load
+	params.spellIndex
+		.then((index) => {
+			resolvedSpellIndex = index;
+		})
+		.catch((error) => {
+			console.error('Failed to load spell index:', error);
+		});
 
 	// Derived values
 	const abilityBonuses = $derived(
@@ -392,6 +459,10 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			bonusLanguages,
 			classFeatures,
 			selectedClassFeatures,
+			spellGrants,
+			selectedSchools,
+			selectedSpells,
+			confirmedSchools,
 			hasClasses,
 			hasAncestries,
 			hasBackgrounds,
@@ -400,10 +471,46 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 
 	const stageNumber = $derived(getStageNumber(stage));
 
+	const needsClassSpellSelection = $derived(
+		hasSpellGrants(spellGrants, 'class') &&
+			!spellSelectionsComplete(
+				spellGrants,
+				selectedSchools,
+				selectedSpells,
+				confirmedSchools,
+				'class',
+			),
+	);
+
+	// Determine if background spells need selection (for scroll targeting)
+	const needsBackgroundSpellSelection = $derived(
+		hasSpellGrants(spellGrants, 'background') &&
+			!spellSelectionsComplete(
+				spellGrants,
+				selectedSchools,
+				selectedSpells,
+				confirmedSchools,
+				'background',
+			),
+	);
+
+	const activeSpellSelectionSource = $derived.by((): SpellGrantSource | null => {
+		if (stage !== CHARACTER_CREATION_STAGES.SPELLS) return null;
+		if (needsClassSpellSelection) return 'class';
+		if (needsBackgroundSpellSelection) return 'background';
+		return null;
+	});
+
 	// Effects
 	$effect(() => {
 		// Scroll to current stage when it changes
-		scrollIntoView(`${params.dialog.id}-stage-${stage}`);
+		// Special handling for SPELLS stage - scroll to the appropriate spell section
+		if (activeSpellSelectionSource === 'background') {
+			// If background spells need selection, scroll to background spell section
+			scrollIntoView(`${params.dialog.id}-background-spells`);
+		} else {
+			scrollIntoView(`${params.dialog.id}-stage-${stage}`);
+		}
 	});
 
 	$effect(() => {
@@ -431,6 +538,80 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		}
 		// Reset class feature selections when class changes
 		selectedClassFeatures = new Map();
+		// Reset spell selections when class changes
+		selectedSchools = new Map();
+		selectedSpells = new Map();
+		confirmedSchools = new Set();
+		spellGrants = null;
+	});
+
+	// Process spell grants when class features or background change
+	$effect(() => {
+		if (!resolvedSpellIndex) {
+			spellGrants = null;
+			return;
+		}
+
+		// Need either class features or a background with spell grants
+		const hasClassFeatureGrants = classFeatures && selectedClass;
+		const hasBackgroundGrants = selectedBackground?.system?.rules?.some(
+			(r) => r.type === 'grantSpells',
+		);
+
+		if (!hasClassFeatureGrants && !hasBackgroundGrants) {
+			spellGrants = null;
+			return;
+		}
+
+		const classIdentifier = selectedClass?.system?.identifier ?? '';
+		const autoGrant: SpellIndexEntry[] = [];
+		const schoolSelections: SchoolSelectionGroup[] = [];
+		const spellSelections: SpellSelectionGroup[] = [];
+
+		// Type alias for rules array
+		type RulesArray = Array<{ type: string; [key: string]: unknown }>;
+
+		// Process class feature rules
+		if (classFeatures) {
+			for (const feature of classFeatures.autoGrant) {
+				const rules = (feature.system?.rules ?? []) as unknown as RulesArray;
+				processGrantSpellsRules(
+					rules,
+					resolvedSpellIndex,
+					classIdentifier,
+					'class',
+					autoGrant,
+					schoolSelections,
+					spellSelections,
+				);
+			}
+		}
+
+		// Process background rules
+		if (selectedBackground?.system?.rules) {
+			const backgroundRules = selectedBackground.system.rules as unknown as RulesArray;
+			processGrantSpellsRules(
+				backgroundRules,
+				resolvedSpellIndex,
+				classIdentifier,
+				'background',
+				autoGrant,
+				schoolSelections,
+				spellSelections,
+			);
+		}
+
+		const hasGrants =
+			autoGrant.length > 0 || schoolSelections.length > 0 || spellSelections.length > 0;
+
+		spellGrants = {
+			autoGrant,
+			schoolSelections,
+			spellSelections,
+			hasGrants,
+		};
+
+		// Note: We no longer scroll here - scrolling is handled by the stage change effect
 	});
 
 	$effect(() => {
@@ -440,9 +621,28 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 	});
 
 	$effect(() => {
-		// Reset raised-by selection when background changes
-		void selectedBackground;
+		// Reset raised-by selection and spell selections when background changes
+		const currentBackground = selectedBackground;
+		if (previousBackground === currentBackground) return;
+
+		const previousBackgroundRules = (previousBackground?.system?.rules ?? []) as unknown as Array<{
+			type: string;
+			[key: string]: unknown;
+		}>;
+		const backgroundSchoolRuleIds = getGrantSpellSelectionRuleIds(
+			previousBackgroundRules,
+			'selectSchool',
+		);
+		const backgroundSpellRuleIds = getGrantSpellSelectionRuleIds(
+			previousBackgroundRules,
+			'selectSpell',
+		);
+
 		selectedRaisedByAncestry = null;
+		selectedSchools = removeSelectionsForRuleIds(selectedSchools, backgroundSchoolRuleIds);
+		confirmedSchools = removeConfirmedSchoolsForRuleIds(confirmedSchools, backgroundSchoolRuleIds);
+		selectedSpells = removeSelectionsForRuleIds(selectedSpells, backgroundSpellRuleIds);
+		previousBackground = currentBackground;
 	});
 
 	$effect(() => {
@@ -459,6 +659,13 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 
 	// Actions
 	async function handleCreateCharacter() {
+		if (!name.trim()) {
+			ui.notifications?.warn(
+				game.i18n.localize(CONFIG.NIMBLE.characterCreation.missingCharacterName),
+			);
+			return;
+		}
+
 		if (stage === CHARACTER_CREATION_STAGES.SUBMIT) {
 			submit();
 			return;
@@ -492,6 +699,26 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			selected: selectedClassFeatures,
 		};
 
+		// Prepare spell data with selection options for filtering during creation
+		const selectionOptions = new Map<
+			string,
+			{ utilityOnly: boolean; forClass: string; tiers: number[] }
+		>();
+		for (const group of spellGrants?.schoolSelections ?? []) {
+			selectionOptions.set(group.ruleId, {
+				utilityOnly: group.utilityOnly,
+				forClass: group.forClass,
+				tiers: group.tiers,
+			});
+		}
+
+		const spellData = {
+			autoGrant: spellGrants?.autoGrant?.map((s) => s.uuid) ?? [],
+			selectedSchools: selectedSchools,
+			selectedSpells: selectedSpells,
+			selectionOptions,
+		};
+
 		params.dialog.submitCharacterCreation({
 			name,
 			origins: {
@@ -520,6 +747,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 			// Only include common + bonus languages; rule-granted languages are handled by the rules at runtime
 			languages: ['common', ...bonusLanguages],
 			classFeatures: classFeatureData,
+			spells: spellData,
 		});
 	}
 
@@ -606,6 +834,30 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		set selectedClassFeatures(value: Map<string, NimbleFeatureItem>) {
 			selectedClassFeatures = value;
 		},
+		get spellGrants() {
+			return spellGrants;
+		},
+		get selectedSchools() {
+			return selectedSchools;
+		},
+		set selectedSchools(value: Map<string, string[]>) {
+			selectedSchools = value;
+		},
+		get selectedSpells() {
+			return selectedSpells;
+		},
+		set selectedSpells(value: Map<string, string[]>) {
+			selectedSpells = value;
+		},
+		get confirmedSchools() {
+			return confirmedSchools;
+		},
+		set confirmedSchools(value: Set<string>) {
+			confirmedSchools = value;
+		},
+		get spellIndex() {
+			return resolvedSpellIndex;
+		},
 
 		// Derived values
 		get abilityBonuses() {
@@ -625,6 +877,9 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		},
 		get stageNumber() {
 			return stageNumber;
+		},
+		get activeSpellSelectionSource() {
+			return activeSpellSelectionSource;
 		},
 
 		// Actions

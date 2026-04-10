@@ -26,6 +26,13 @@ const schema = () => ({
 		max: 9,
 		nullable: false,
 	}),
+	// Class restrictions - if empty, spell is available to all classes that grant its school
+	// If populated, only the listed classes can use this spell
+	classes: new fields.ArrayField(new fields.StringField({ nullable: false, initial: '' }), {
+		required: false,
+		nullable: false,
+		initial: [],
+	}),
 	scaling: new fields.SchemaField(
 		{
 			mode: new fields.StringField({
@@ -192,6 +199,8 @@ class NimbleSpellData extends NimbleBaseItemData<
 	declare school: string;
 
 	declare tier: number;
+
+	declare classes: string[];
 
 	/** @inheritDoc */
 	static override defineSchema(): NimbleSpellData.Schema {

@@ -42,7 +42,7 @@ These are mandatory implementation constraints, not slogans.
 **KISS**: Use explicit control flow (`if`/`switch`). Avoid dynamic component lookups, runtime string-to-function dispatch, or Svelte action factories that obscure what runs and when.
 **YAGNI**: Every abstraction (utility, store, component) must have a current caller. If a code path isn't supported yet, throw an error, don't add a stub or no-op fallback.
 **DRY + Rule of Three**: Two similar blocks in the same file are fine. Extract to a shared utility or component only after the same pattern appears three times across different files, and only if the extracted code respects [Code Promotion Rules](#code-promotion-rules).
-**One Export Per File**: Each TypeScript module exports one public function, class, constant, or store. Internal helpers used only by that export stay in the file but are not exported. Svelte components are inherently one-per-file.
+**One Export Per File**: Each TypeScript module exports one public function (over 30 lines), class, or store. Related constants and types may share a file. Internal helpers used only by that export stay in the file but are not exported. Svelte components are inherently one-per-file.
 
 ### Foundational Principles
 

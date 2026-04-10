@@ -1,6 +1,8 @@
 import type { NimbleAncestryItem } from '#documents/item/ancestry.js';
 import type { NimbleBackgroundItem } from '#documents/item/background.js';
+import type { NimbleBoonItem } from '#documents/item/boon.js';
 import type { NimbleClassItem } from '#documents/item/class.js';
+import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleSubclassItem } from '#documents/item/subclass.js';
 import type { SkillKeyType } from '#types/skillKey.js';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
@@ -68,6 +70,11 @@ interface LevelUpDialogData {
 	selectedAbilityScore: string | null;
 	skillPointChanges: Record<string, number>;
 	selectedSubclass: NimbleSubclassItem | null;
+	selectedEpicBoon: NimbleBoonItem | null;
+	classFeatures: {
+		autoGrant: NimbleFeatureItem[];
+		selected: Map<string, NimbleFeatureItem>;
+	} | null;
 }
 
 export class NimbleCharacter extends NimbleBaseActor<'character'> {
@@ -1233,6 +1240,38 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			}
 		}
 
+		// Build a single list of items to grant (class features + epic boon)
+		const itemsToGrant: { toObject(): object; uuid: string }[] = [];
+
+		if (typedDialogData.classFeatures) {
+			itemsToGrant.push(
+				...typedDialogData.classFeatures.autoGrant,
+				...typedDialogData.classFeatures.selected.values(),
+			);
+		}
+
+		if (typedDialogData.selectedEpicBoon) {
+			itemsToGrant.push(typedDialogData.selectedEpicBoon);
+		}
+
+		let grantedFeatureIds: string[] = [];
+
+		if (itemsToGrant.length > 0) {
+			const documentSources = itemsToGrant.map((item) => {
+				const data = item.toObject();
+				(data as { _stats: { compendiumSource?: string } })._stats.compendiumSource = item.uuid;
+				return data;
+			});
+
+			const created = await this.createEmbeddedDocuments(
+				'Item',
+				documentSources as Parameters<typeof this.createEmbeddedDocuments>[1],
+			);
+			grantedFeatureIds = (created ?? [])
+				.map((item) => item.id)
+				.filter((id): id is string => id !== null);
+		}
+
 		// Record level up history
 		const historyEntry = {
 			level: nextClassLevel,
@@ -1241,6 +1280,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			skillIncreases: typedDialogData.skillPointChanges,
 			hitDieAdded: true,
 			classIdentifier: characterClass.identifier,
+			grantedFeatureIds,
 		};
 
 		actorUpdates['system.levelUpHistory'] = [...this.system.levelUpHistory, historyEntry];
@@ -1350,6 +1390,15 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			}
 		}
 
+		// Remove granted features
+		if (lastHistory.grantedFeatureIds && lastHistory.grantedFeatureIds.length > 0) {
+			// Filter to IDs that still exist on the actor (defensive)
+			const validIds = lastHistory.grantedFeatureIds.filter((id) => this.items.get(id));
+			if (validIds.length > 0) {
+				await this.deleteEmbeddedDocuments('Item', validIds);
+			}
+		}
+
 		// Revert class level
 		itemUpdates['system.classLevel'] = characterClass.system.classLevel - 1;
 
@@ -1369,9 +1418,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 	async outputLevelUpSummary(data, roll: Roll | undefined) {
 		const rolls = roll ? [roll] : [];
 		const { currentClassLevel, takeAverageHp } = data;
-		console.log('currentClassLevel', currentClassLevel);
-		console.log('takeAverageHp', takeAverageHp);
-		console.log(data);
 
 		const chatData = {
 			author: game.user?.id,

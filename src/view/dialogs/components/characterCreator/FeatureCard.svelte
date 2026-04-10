@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { FeatureCardProps } from '#types/components/ClassFeatureSelection.d.ts';
 	import { createFeatureCardState } from './FeatureCard.svelte.ts';
+	import SelectionIndicator from '#view/components/SelectionIndicator.svelte';
 	import SpellReferenceCard from './SpellReferenceCard.svelte';
 	import localize from '#utils/localize.js';
 
@@ -8,8 +9,23 @@
 
 	const state = createFeatureCardState(() => feature);
 
-	function handleSelect() {
+	// Whether this card is in selectable mode
+	const isSelectable = $derived(!!onSelect);
+
+	function handleRowClick() {
+		// Clicking the row always toggles expansion
+		state.toggleExpanded();
+	}
+
+	function handleSelectClick(e: MouseEvent) {
+		e.stopPropagation(); // Prevent row click from firing
 		onSelect?.();
+	}
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter') {
+			handleRowClick();
+		}
 	}
 </script>
 
@@ -17,14 +33,13 @@
 	<div
 		class="feature-row"
 		class:selected={isSelected}
+		class:selectable={isSelectable}
 		role="button"
 		tabindex="0"
-		onclick={state.toggleExpanded}
-		onkeydown={(e) => e.key === 'Enter' && state.toggleExpanded()}
+		onclick={handleRowClick}
+		onkeydown={handleKeydown}
 	>
-		{#if !isSelected}
-			<i class="fa-solid fa-chevron-down expand-arrow"></i>
-		{/if}
+		<i class="fa-solid fa-chevron-down expand-arrow"></i>
 
 		<img
 			class="feature-row__img"
@@ -36,14 +51,24 @@
 			{feature.name}
 		</h4>
 
-		<button
-			class="view-details-button"
-			onclick={state.viewDetails}
-			title="View Details"
-			aria-label="View {feature.name} details"
-		>
-			<i class="fa-solid fa-book-open"></i>
-		</button>
+		{#if isSelectable}
+			<div class="feature-row__actions">
+				<SelectionIndicator
+					selected={isSelected}
+					onclick={handleSelectClick}
+					tooltip={isSelected
+						? localize('NIMBLE.classFeatureSelection.deselectFeature')
+						: localize('NIMBLE.classFeatureSelection.selectFeature')}
+					ariaLabel={isSelected
+						? localize('NIMBLE.classFeatureSelection.deselectFeatureAriaLabel', {
+								featureName: feature.name,
+							})
+						: localize('NIMBLE.classFeatureSelection.selectFeatureAriaLabel', {
+								featureName: feature.name,
+							})}
+				/>
+			</div>
+		{/if}
 	</div>
 
 	<div class="accordion-content">
@@ -60,22 +85,6 @@
 				<p>{localize('NIMBLE.classFeatureSelection.noDescriptionAvailable')}</p>
 			{/if}
 		</div>
-
-		{#if onSelect}
-			<button
-				class="nimble-button"
-				data-button-variant="full-width"
-				type="button"
-				onclick={handleSelect}
-			>
-				{#if isSelected}
-					<i class="fa-solid fa-check"></i>
-					{localize('NIMBLE.classFeatureSelection.selected')}
-				{:else}
-					{localize('NIMBLE.classFeatureSelection.confirmSelection')}
-				{/if}
-			</button>
-		{/if}
 	</div>
 </li>
 
@@ -157,32 +166,12 @@
 			padding: 0;
 			line-height: 1;
 		}
-	}
 
-	.view-details-button {
-		position: absolute;
-		top: 0.5rem;
-		right: 0.5rem;
-		width: 2rem;
-		height: 2rem;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: var(--nimble-accent-color);
-		border: 1px solid var(--nimble-card-border-color);
-		border-radius: 4px;
-		color: var(--nimble-light-text-color);
-		cursor: pointer;
-		transition: all 0.2s ease;
-		z-index: 1;
-
-		&:hover {
-			filter: brightness(1.2);
-			transform: scale(1.05);
-		}
-
-		i {
-			font-size: 0.875rem;
+		.feature-row__actions {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			margin-left: auto;
 		}
 	}
 

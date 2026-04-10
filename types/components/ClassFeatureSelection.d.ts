@@ -24,6 +24,12 @@ export interface FeatureGroupSelectionProps {
 	onSelect: (feature: NimbleFeatureItem) => void;
 }
 
+export interface LevelUpClassFeatureSelectionProps {
+	classFeatures: ClassFeatureResult | null;
+	selectedFeatures: Map<string, NimbleFeatureItem>;
+	loading?: boolean;
+}
+
 /**
  * Represents a part of a feature description after parsing
  */

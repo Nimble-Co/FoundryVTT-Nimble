@@ -641,7 +641,9 @@ export function createGameMock(langData: any) {
 				// Yield mock subclasses for testing
 				yield {
 					type: 'subclass',
+					uuid: 'Item.mock-subclass-mountainheart',
 					name: 'Path of the Mountainheart',
+					img: 'icons/svg/item-bag.svg',
 					system: {
 						parentClass: 'warrior',
 						identifier: 'path-of-the-mountainheart',
@@ -649,7 +651,9 @@ export function createGameMock(langData: any) {
 				};
 				yield {
 					type: 'subclass',
+					uuid: 'Item.mock-subclass-storm',
 					name: 'Path of the Storm',
+					img: 'icons/svg/item-bag.svg',
 					system: {
 						parentClass: 'warrior',
 						identifier: 'path-of-the-storm',

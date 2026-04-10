@@ -6,7 +6,20 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "stormshifter-storm-spells",
+				"type": "grantSpells",
+				"schools": [
+					"lightning",
+					"wind"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "auto"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

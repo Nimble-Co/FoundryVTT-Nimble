@@ -5,7 +5,7 @@
 
 	import { CHARACTER_CREATION_STAGES } from './characterCreation/constants.js';
 	import { createCharacterCreationState } from './characterCreation/state.svelte.js';
-	import { isRaisedByBackground } from './characterCreation/utils.ts';
+	import { isRaisedByBackground } from './characterCreation/utils/backgroundChecks.js';
 
 	import AncestrySelection from './components/characterCreator/AncestrySelection.svelte';
 	import AncestrySizeSelection from './components/characterCreator/AncestrySizeSelection.svelte';
@@ -15,6 +15,7 @@
 	import ClassFeatureSelection from './components/characterCreator/ClassFeatureSelection.svelte';
 	import ClassSelection from './components/characterCreator/ClassSelection.svelte';
 	import SkillPointAssignment from './components/characterCreator/SkillPointAssignment.svelte';
+	import SpellGrantDisplay from './components/characterCreator/SpellGrantDisplay.svelte';
 	import StartingEquipmentSelection from './components/characterCreator/StartingEquipmentSelection.svelte';
 	import StatArraySelection from './components/characterCreator/StatArraySelection.svelte';
 	import StatAssignment from './components/characterCreator/StatAssignment.svelte';
@@ -26,6 +27,7 @@
 		classFeatureIndex,
 		classOptions,
 		dialog,
+		spellIndex,
 		statArrayOptions,
 	}: CharacterCreationDialogProps = $props();
 
@@ -44,6 +46,9 @@
 		},
 		get dialog() {
 			return dialog;
+		},
+		get spellIndex() {
+			return spellIndex;
 		},
 	});
 
@@ -88,6 +93,17 @@
 		bind:selectedFeatures={state.selectedClassFeatures}
 	/>
 
+	<!-- Class spell grants (from class features) -->
+	<SpellGrantDisplay
+		active={state.activeSpellSelectionSource === 'class'}
+		spellGrants={state.spellGrants}
+		spellIndex={state.spellIndex}
+		bind:selectedSchools={state.selectedSchools}
+		bind:selectedSpells={state.selectedSpells}
+		bind:confirmedSchools={state.confirmedSchools}
+		sourceFilter="class"
+	/>
+
 	{#await ancestryOptions then ancestries}
 		<AncestrySelection
 			active={state.stage === CHARACTER_CREATION_STAGES.ANCESTRY}
@@ -121,6 +137,19 @@
 			bind:selectedRaisedByAncestry={state.selectedRaisedByAncestry}
 		/>
 	{/if}
+
+	<!-- Background spell grants (from background rules like Academy Dropout) -->
+	<SpellGrantDisplay
+		active={state.activeSpellSelectionSource === 'background'}
+		spellGrants={state.spellGrants}
+		spellIndex={state.spellIndex}
+		bind:selectedSchools={state.selectedSchools}
+		bind:selectedSpells={state.selectedSpells}
+		bind:confirmedSchools={state.confirmedSchools}
+		sourceFilter="background"
+		header={game.i18n.localize('NIMBLE.spellGrants.backgroundHeader')}
+		sectionId="{dialog.id}-background-spells"
+	/>
 
 	<StartingEquipmentSelection
 		active={state.stage === CHARACTER_CREATION_STAGES.STARTING_EQUIPMENT}

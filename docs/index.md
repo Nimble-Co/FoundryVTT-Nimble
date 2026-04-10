@@ -11,7 +11,7 @@ hero:
       link: /contributing
     - theme: brand
       text: Join the Discord
-      link: https://discord.gg/WRf5hBqM
+      link: https://discord.gg/SxVmHpu34R
     - theme: alt
       text: View on GitHub
       link: https://github.com/Nimble-Co/FoundryVTT-Nimble
@@ -27,5 +27,5 @@ features:
   - icon: 🤝
     title: Community Driven!
     details: Open source under MIT. Contributions welcome, check the contributing guide to get started.
-		link: https://discord.gg/WRf5hBqM
+		link: https://discord.gg/SxVmHpu34R
 ---

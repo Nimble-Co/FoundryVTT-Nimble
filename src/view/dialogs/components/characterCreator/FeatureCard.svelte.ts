@@ -131,11 +131,6 @@ export function createFeatureCardState(getFeature: () => NimbleFeatureItem) {
 		isExpanded = !isExpanded;
 	}
 
-	function viewDetails(event: MouseEvent) {
-		event.stopPropagation();
-		getFeature().sheet?.render(true);
-	}
-
 	return {
 		get isExpanded() {
 			return isExpanded;
@@ -144,6 +139,5 @@ export function createFeatureCardState(getFeature: () => NimbleFeatureItem) {
 			return descriptionParts;
 		},
 		toggleExpanded,
-		viewDetails,
 	};
 }

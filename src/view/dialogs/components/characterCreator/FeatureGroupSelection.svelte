@@ -8,6 +8,14 @@
 	let { groupName, features, selectedFeature, onSelect }: FeatureGroupSelectionProps = $props();
 
 	const state = createFeatureGroupSelectionState(() => ({ groupName, features }));
+
+	// Selection is complete when a feature is selected and it's not a single-option group
+	const isSelectionComplete = $derived(!!selectedFeature && !state.isSingleOption);
+
+	// Filter to show only selected feature when selection is complete
+	const displayedFeatures = $derived(
+		isSelectionComplete ? features.filter((f) => f.uuid === selectedFeature?.uuid) : features,
+	);
 </script>
 
 <div class="feature-group">
@@ -15,13 +23,13 @@
 		<h4 class="nimble-heading" data-heading-variant="section">
 			{state.formattedGroupName}
 		</h4>
-		{#if !state.isSingleOption}
+		{#if !state.isSingleOption && !isSelectionComplete}
 			<span class="feature-group__hint">{localize('NIMBLE.classFeatureSelection.chooseOne')}</span>
 		{/if}
 	</header>
 
 	<ul class="feature-group__list">
-		{#each features as feature (feature.uuid)}
+		{#each displayedFeatures as feature (feature.uuid)}
 			<FeatureCard
 				{feature}
 				isSelected={state.isSingleOption ? false : selectedFeature?.uuid === feature.uuid}
