@@ -164,9 +164,11 @@ async function promptUser(title, infoLines, options) {
 
 /**
  * Setup the symlink to FoundryVTT
+ * @param {string} [customPath] - Custom FoundryVTT data path
+ * @param {boolean} [overwrite=false] - Always overwrite existing symlink without prompting
  * @returns {Promise<void>}
  */
-async function setupSymlink(customPath) {
+async function setupSymlink(customPath, overwrite = false) {
 	const foundryDataPath = customPath || getFoundryDataPath();
 	const systemsPath = path.join(foundryDataPath, 'systems');
 	const targetSymlinkPath = path.join(systemsPath, SYSTEM_NAME);
@@ -206,28 +208,33 @@ async function setupSymlink(customPath) {
 				return;
 			}
 
-			// Symlink exists but points elsewhere - ask user what to do
-			const choice = await promptUser(
-				'Existing symlink detected',
-				[`Location: ${targetSymlinkPath}`, `Currently points to: ${currentTarget}`],
-				[
-					{ key: '1', label: 'Replace symlink (point to this worktree)' },
-					{ key: '2', label: 'Skip (keep existing symlink)' },
-					{ key: '3', label: 'Cancel setup' },
-				],
-			);
+			if (overwrite) {
+				console.log(`Overwriting existing symlink (was: ${currentTarget})...`);
+				fs.unlinkSync(targetSymlinkPath);
+			} else {
+				// Symlink exists but points elsewhere - ask user what to do
+				const choice = await promptUser(
+					'Existing symlink detected',
+					[`Location: ${targetSymlinkPath}`, `Currently points to: ${currentTarget}`],
+					[
+						{ key: '1', label: 'Replace symlink (point to this worktree)' },
+						{ key: '2', label: 'Skip (keep existing symlink)' },
+						{ key: '3', label: 'Cancel setup' },
+					],
+				);
 
-			switch (choice) {
-				case '1':
-					console.log('Removing existing symlink...');
-					fs.unlinkSync(targetSymlinkPath);
-					break;
-				case '2':
-					console.log('Skipping symlink setup.');
-					return;
-				case '3':
-					console.log('Setup cancelled.');
-					process.exit(0);
+				switch (choice) {
+					case '1':
+						console.log('Removing existing symlink...');
+						fs.unlinkSync(targetSymlinkPath);
+						break;
+					case '2':
+						console.log('Skipping symlink setup.');
+						return;
+					case '3':
+						console.log('Setup cancelled.');
+						process.exit(0);
+				}
 			}
 		} else {
 			// Real file or directory exists - ask user what to do
@@ -288,8 +295,11 @@ async function setup() {
 	console.log('║     Worktree Setup for FoundryVTT      ║');
 	console.log('╚════════════════════════════════════════╝');
 
-	// Step 1: Get potential custom path from argument
-	const customPath = process.argv[2];
+	// Step 1: Parse arguments
+	const args = process.argv.slice(2);
+	const overwrite = args.includes('--overwrite');
+	const positionalArgs = args.filter((a) => !a.startsWith('--'));
+	const customPath = positionalArgs[0];
 	if (customPath) {
 		// Verify the custom path exists
 		if (!fs.existsSync(customPath)) {
@@ -309,7 +319,7 @@ async function setup() {
 	runCommand('pnpm build', 'Building system and compendia');
 
 	// Step 5: Setup symlink
-	await setupSymlink(customPath);
+	await setupSymlink(customPath, overwrite);
 
 	console.log('');
 	console.log('╔════════════════════════════════════════╗');
