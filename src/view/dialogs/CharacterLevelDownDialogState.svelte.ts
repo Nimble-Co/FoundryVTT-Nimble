@@ -21,8 +21,8 @@ interface LevelDownActor {
 	};
 	classes: Record<string, ClassItemShape | undefined>;
 	items: {
-		filter(fn: (i: { type: string }) => boolean): Array<{ name: string }>;
-		get(id: string): { name: string } | undefined;
+		filter(fn: (i: { type: string }) => boolean): Array<{ name: string; img?: string }>;
+		get(id: string): { name: string; img?: string } | undefined;
 	};
 }
 

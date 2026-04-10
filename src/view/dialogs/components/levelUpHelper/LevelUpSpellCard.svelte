@@ -7,7 +7,7 @@
 
 	const state = createLevelUpSpellCardState(() => spell);
 	const { toggleExpanded, handleKeydown } = state;
-	const displayData = $derived(displayData);
+	const displayData = $derived(state.displayData);
 	const isExpanded = $derived(state.isExpanded);
 </script>
 
