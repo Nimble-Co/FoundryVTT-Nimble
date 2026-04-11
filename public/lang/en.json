@@ -534,6 +534,7 @@
 		},
 		"ruleTypes": {
 			"abilityBonus": "Stat Bonus",
+			"applyCondition": "Apply Condition",
 			"armorClass": "Armor Class",
 			"combatMana": "Combat Mana",
 			"grantItem": "Item",

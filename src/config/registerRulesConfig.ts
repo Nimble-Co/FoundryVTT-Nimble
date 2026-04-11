@@ -1,4 +1,5 @@
 import { AbilityBonusRule } from '../models/rules/abilityBonus.js';
+import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
@@ -25,6 +26,7 @@ import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 export default function registerRulesConfig() {
 	const ruleTypes = {
 		abilityBonus: 'NIMBLE.ruleTypes.abilityBonus',
+		applyCondition: 'NIMBLE.ruleTypes.applyCondition',
 		armorClass: 'NIMBLE.ruleTypes.armorClass',
 		combatMana: 'NIMBLE.ruleTypes.combatMana',
 		grantItem: 'NIMBLE.ruleTypes.grantItem',
@@ -51,6 +53,7 @@ export default function registerRulesConfig() {
 
 	const ruleDataModels = {
 		abilityBonus: AbilityBonusRule,
+		applyCondition: ApplyConditionRule,
 		armorClass: ArmorClassRule,
 		combatMana: CombatManaRule,
 		grantItem: ItemGrantRule,
