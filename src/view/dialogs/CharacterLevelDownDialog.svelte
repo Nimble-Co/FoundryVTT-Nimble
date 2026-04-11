@@ -50,6 +50,13 @@
 	const willRemoveSubclass = $derived(lastHistory?.level <= 3);
 	const subclasses = $derived(actor.items.filter((i) => i.type === 'subclass'));
 	const hasSubclass = $derived(subclasses.length > 0);
+
+	// Get features that will be removed
+	const grantedFeatures = $derived(
+		(lastHistory?.grantedFeatureIds ?? [])
+			.map((id: string) => actor.items.get(id))
+			.filter((item: unknown): item is { id: string; name: string } => item != null),
+	);
 </script>
 
 <article class="nimble-sheet__body">
@@ -142,6 +149,21 @@
 						</span>
 						<span class="nimble-level-down-preview__value">
 							{subclass.name}
+							{CONFIG.NIMBLE.levelDownDialog.removed}
+						</span>
+					</li>
+				{/each}
+			{/if}
+
+			{#if grantedFeatures.length > 0}
+				{#each grantedFeatures as feature}
+					<li class="nimble-level-down-preview__item nimble-level-down-preview__item--loss">
+						<span class="nimble-level-down-preview__label">
+							<i class="fa-solid fa-scroll"></i>
+							{CONFIG.NIMBLE.levelDownDialog.feature}
+						</span>
+						<span class="nimble-level-down-preview__value">
+							{feature.name}
 							{CONFIG.NIMBLE.levelDownDialog.removed}
 						</span>
 					</li>

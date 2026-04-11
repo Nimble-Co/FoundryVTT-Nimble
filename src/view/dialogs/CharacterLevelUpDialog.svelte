@@ -1,13 +1,16 @@
 <script lang="ts">
 	import type { NimbleClassItem } from '../../documents/item/class.js';
+	import type { NimbleFeatureItem } from '../../documents/item/feature.js';
 	import generateBlankSkillSet from '../../utils/generateBlankSkillSet.js';
 	import getChoicesFromCompendium from '../../utils/getChoicesFromCompendium.js';
+	import getSubclassFeatures from '../../utils/getSubclassFeatures.js';
 
 	import getSubclassChoices from '../../utils/getSubclassChoices.js';
 
 	import AbilityScoreIncrease from './components/levelUpHelper/AbilityScoreIncrease.svelte';
 	import HitPointSelection from './components/levelUpHelper/HitPointSelection.svelte';
 	import SkillPointAssignment from './components/levelUpHelper/SkillPointAssignment.svelte';
+	import SubclassFeatureDisplay from './components/levelUpHelper/SubclassFeatureDisplay.svelte';
 	import SubclassSelection from './components/levelUpHelper/SubclassSelection.svelte';
 
 	const { forms, levelUpDialog } = CONFIG.NIMBLE;
@@ -18,6 +21,7 @@
 			selectedSubclass,
 			skillPointChanges,
 			takeAverageHp: hitPointRollSelection === 'average',
+			grantedFeatures: subclassFeatures,
 		});
 	}
 
@@ -70,6 +74,39 @@
 			getSubclassChoices(characterClass.identifier).then((choices) => {
 				subclasses = choices;
 			});
+		}
+	});
+
+	let subclassFeatures: NimbleFeatureItem[] = $state([]);
+
+	// Fetch subclass features at level 3 reactively when a subclass is selected
+	$effect(() => {
+		if (hasSubclassSelection && selectedSubclass && characterClass) {
+			const subclassIdentifier = (selectedSubclass as { name: string }).name.slugify({
+				strict: true,
+			});
+			getSubclassFeatures(characterClass.identifier, subclassIdentifier, [1, 2, 3]).then(
+				(features) => {
+					subclassFeatures = features;
+				},
+			);
+		} else if (hasSubclassSelection && !selectedSubclass) {
+			subclassFeatures = [];
+		}
+	});
+
+	// Fetch subclass features for levels after 3 from the character's existing subclass
+	$effect(() => {
+		if (!hasSubclassSelection && characterClass) {
+			const existingSubclass = document.items?.find((i: { type: string }) => i.type === 'subclass');
+			if (existingSubclass) {
+				const subclassIdentifier = existingSubclass.name.slugify({ strict: true });
+				getSubclassFeatures(characterClass.identifier, subclassIdentifier, [levelingTo]).then(
+					(features) => {
+						subclassFeatures = features;
+					},
+				);
+			}
 		}
 	});
 
@@ -148,6 +185,10 @@
 
 	{#if levelingTo === 3 && subclasses.length}
 		<SubclassSelection {subclasses} bind:selectedSubclass />
+	{/if}
+
+	{#if subclassFeatures.length > 0}
+		<SubclassFeatureDisplay features={subclassFeatures} />
 	{/if}
 </section>
 

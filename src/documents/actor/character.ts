@@ -1,6 +1,7 @@
 import type { NimbleAncestryItem } from '#documents/item/ancestry.js';
 import type { NimbleBackgroundItem } from '#documents/item/background.js';
 import type { NimbleClassItem } from '#documents/item/class.js';
+import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleSubclassItem } from '#documents/item/subclass.js';
 import type { SkillKeyType } from '#types/skillKey.js';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
@@ -68,6 +69,7 @@ interface LevelUpDialogData {
 	selectedAbilityScore: string | null;
 	skillPointChanges: Record<string, number>;
 	selectedSubclass: NimbleSubclassItem | null;
+	grantedFeatures: NimbleFeatureItem[];
 }
 
 export class NimbleCharacter extends NimbleBaseActor<'character'> {
@@ -1216,6 +1218,26 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			}
 		}
 
+		// Grant subclass features
+		const featuresToGrant = typedDialogData.grantedFeatures ?? [];
+		const grantedFeatureIds: string[] = [];
+
+		if (featuresToGrant.length > 0) {
+			const featureDocumentSources: Item.CreateData[] = [];
+			for (const feature of featuresToGrant) {
+				const source = (feature as NimbleFeatureItem).toObject();
+				(source as { _stats: { compendiumSource?: string } })._stats.compendiumSource =
+					feature.uuid;
+				featureDocumentSources.push(source as object as Item.CreateData);
+			}
+			const created = await this.createEmbeddedDocuments('Item', featureDocumentSources);
+			if (created) {
+				for (const doc of created) {
+					if (doc.id) grantedFeatureIds.push(doc.id);
+				}
+			}
+		}
+
 		// Record level up history
 		const historyEntry = {
 			level: nextClassLevel,
@@ -1224,6 +1246,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			skillIncreases: typedDialogData.skillPointChanges,
 			hitDieAdded: true,
 			classIdentifier: characterClass.identifier,
+			grantedFeatureIds,
 		};
 
 		actorUpdates['system.levelUpHistory'] = [...this.system.levelUpHistory, historyEntry];
@@ -1320,6 +1343,15 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				actorUpdates[path] = current - change;
 			}
 		});
+
+		// Remove granted subclass features
+		const grantedFeatureIds = lastHistory.grantedFeatureIds ?? [];
+		if (grantedFeatureIds.length > 0) {
+			const validIds = grantedFeatureIds.filter((id) => this.items.get(id));
+			if (validIds.length > 0) {
+				await this.deleteEmbeddedDocuments('Item', validIds);
+			}
+		}
 
 		// Remove all subclasses if reverting from level 3
 		if (lastHistory.level <= 3) {

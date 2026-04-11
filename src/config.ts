@@ -673,6 +673,7 @@ const levelUpDialog = {
 	rollHitDice: 'NIMBLE.levelUpDialog.rollHitDice',
 	rollHitDiceTooltip: 'NIMBLE.levelUpDialog.rollHitDiceTooltip',
 	takeAverage: 'NIMBLE.levelUpDialog.takeAverage',
+	subclassFeatures: 'NIMBLE.levelUpDialog.subclassFeatures',
 };
 
 const skillCheckDialog = {
@@ -688,6 +689,7 @@ const levelDownDialog = {
 	point: 'NIMBLE.levelDownDialog.point',
 	points: 'NIMBLE.levelDownDialog.points',
 	subclass: 'NIMBLE.levelDownDialog.subclass',
+	feature: 'NIMBLE.levelDownDialog.feature',
 	removed: 'NIMBLE.levelDownDialog.removed',
 	warningMessage: 'NIMBLE.levelDownDialog.warningMessage',
 	confirmLevelDown: 'NIMBLE.levelDownDialog.confirmLevelDown',

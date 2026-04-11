@@ -468,7 +468,8 @@
 			"hitDiceLabel": "Hit Dice:",
 			"rollHitDice": "Roll Hit Dice",
 			"rollHitDiceTooltip": "Roll your Hit Die with advantage and increase your max HP by that much.",
-			"takeAverage": "Take Average ({average})"
+			"takeAverage": "Take Average ({average})",
+			"subclassFeatures": "Subclass Features"
 		},
 		"levelDownDialog": {
 			"level": "Level",
@@ -479,6 +480,7 @@
 			"point": "point",
 			"points": "points",
 			"subclass": "Subclass",
+			"feature": "Feature",
 			"removed": "removed",
 			"warningMessage": "This action will permanently revert the last level up. This cannot be undone.",
 			"confirmLevelDown": "Confirm Level Down",

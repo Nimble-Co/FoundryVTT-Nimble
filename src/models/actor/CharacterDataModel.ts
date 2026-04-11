@@ -384,6 +384,10 @@ const characterSchema = () => ({
 				initial: '',
 				nullable: false,
 			}),
+			grantedFeatureIds: new fields.ArrayField(
+				new fields.StringField({ required: true, nullable: false }),
+				{ required: true, nullable: false, initial: () => [] },
+			),
 		}),
 		{ required: true, nullable: false, initial: () => [] },
 	),
@@ -480,6 +484,7 @@ interface LevelUpHistoryEntry {
 	skillIncreases: Record<string, number>;
 	hitDieAdded: boolean;
 	classIdentifier: string;
+	grantedFeatureIds: string[];
 }
 
 declare namespace NimbleCharacterData {
