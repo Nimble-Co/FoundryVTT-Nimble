@@ -1,3 +1,8 @@
+import {
+	ACTOR_HP_PATHS,
+	ACTOR_WOUNDS_PATHS,
+	hasAnyActorChangeAt,
+} from '../../utils/actorHpChangePaths.js';
 import { getActorHpValue, getActorWoundsValueAndMax } from '../../utils/actorResources.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
 
@@ -219,11 +224,8 @@ export default function registerCombatantDefeatSync() {
 	didRegisterCombatantDefeatSync = true;
 
 	Hooks.on('updateActor', (actor: Actor.Implementation, changes: Record<string, unknown>) => {
-		const hpChanged = foundry.utils.hasProperty(changes, 'system.attributes.hp.value');
-		const woundsChanged =
-			foundry.utils.hasProperty(changes, 'system.attributes.wounds.value') ||
-			foundry.utils.hasProperty(changes, 'system.attributes.wounds.max');
-		if (!hpChanged && !woundsChanged) return;
+		const watched = [ACTOR_HP_PATHS.value, ACTOR_WOUNDS_PATHS.value, ACTOR_WOUNDS_PATHS.max];
+		if (!hasAnyActorChangeAt(changes, watched)) return;
 
 		void syncActorCombatantDeathState(actor);
 	});

@@ -1,4 +1,5 @@
 import { getActorHealthState } from '../../utils/actorHealthState.js';
+import { ACTOR_HP_PATHS, hasAnyActorChangeAt } from '../../utils/actorHpChangePaths.js';
 
 const BLOODIED_STATUS_ID = 'bloodied';
 const LAST_STAND_STATUS_ID = 'lastStand';
@@ -48,11 +49,8 @@ export default function registerCombatantHealthStateSync() {
 	didRegisterCombatantHealthStateSync = true;
 
 	Hooks.on('updateActor', (actor: Actor.Implementation, changes: Record<string, unknown>) => {
-		const hpChanged =
-			foundry.utils.hasProperty(changes, 'system.attributes.hp.value') ||
-			foundry.utils.hasProperty(changes, 'system.attributes.hp.max') ||
-			foundry.utils.hasProperty(changes, 'system.attributes.hp.lastStandThreshold');
-		if (!hpChanged) return;
+		const watched = [ACTOR_HP_PATHS.value, ACTOR_HP_PATHS.max, ACTOR_HP_PATHS.lastStandThreshold];
+		if (!hasAnyActorChangeAt(changes, watched)) return;
 
 		void syncActorHealthState(actor);
 	});
