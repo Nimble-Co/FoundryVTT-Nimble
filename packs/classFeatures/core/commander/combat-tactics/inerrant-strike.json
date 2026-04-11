@@ -59,13 +59,15 @@
 		"featureType": "class",
 		"class": "commander",
 		"group": "combat-tactics",
-		"gainedAtLevel": 5,
+		"gainedAtLevel": 4,
 		"subclass": false,
 		"gainedAtLevels": [
-			5,
-			9,
-			13,
-			17
+			4,
+			6,
+			8,
+			10,
+			12,
+			16
 		]
 	},
 	"effects": [],
