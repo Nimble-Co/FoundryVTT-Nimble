@@ -1,8 +1,8 @@
 {
 	"name": "Rat Prince",
-	"type": "soloMonster",
-	"folder": null,
-	"img": "icons/creatures/mammals/rodent-rat-diseaed-gray.webp",
+	"type": "npc",
+	"folder": "1e695c5c5b1b3293",
+	"img": "icons/svg/mystery-man.svg",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -19,6 +19,7 @@
 		"description": "",
 		"details": {
 			"creatureType": "Ratfolk",
+			"isFlunky": false,
 			"level": "1"
 		},
 		"savingThrows": {
