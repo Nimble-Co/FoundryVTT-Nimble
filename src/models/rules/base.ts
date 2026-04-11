@@ -1,3 +1,4 @@
+import type { EffectNode } from '#types/effectTree.js';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import type { Predicate } from '../../etc/Predicate.js';
@@ -44,6 +45,52 @@ interface PreCreateArgs {
 	pendingItems: Array<foundry.data.fields.SchemaField.AssignmentData<Item.Schema>>;
 	tempItems: Item[];
 	operation: { keepId?: boolean };
+}
+
+// Context passed to onItemUsed — fires per target when damage from an item's
+// use is actually applied to that target (NOT when the roll lands). This
+// ensures rules don't trigger on a hit the GM later voids.
+interface ItemUsedContext {
+	sourceItem: NimbleBaseItem;
+	sourceActor: NimbleBaseActor;
+	targetActor: NimbleBaseActor;
+	card: ChatMessage | null;
+	isCritical: boolean;
+	isMiss: boolean;
+}
+
+// Context passed to getActivationCardNodes when a chat card renders.
+interface ActivationCardContext {
+	isCritical: boolean;
+	isMiss: boolean;
+}
+
+interface TurnContext {
+	combat: Combat;
+	combatant: Combatant;
+	actor: NimbleBaseActor;
+}
+
+interface ActorHealthContext {
+	actor: NimbleBaseActor;
+	previousHp: number;
+	currentHp: number;
+}
+
+interface SaveResolvedContext {
+	actor: NimbleBaseActor;
+	saveType: string;
+	outcome: 'pass' | 'fail';
+}
+
+interface RestContext {
+	actor: NimbleBaseActor;
+	restType: 'safe' | 'field';
+}
+
+interface InitiativeRolledContext {
+	actor: NimbleBaseActor;
+	combatant: Combatant;
 }
 
 abstract class NimbleBaseRule<
@@ -188,10 +235,74 @@ abstract class NimbleBaseRule<
 		// Default implementation does nothing
 	}
 
+	/**
+	 * Hook called after an item is used and a chat card is produced.
+	 * Dispatched by ruleEventDispatch for attack-outcome triggers (onHit/onCrit/onMiss).
+	 */
+	async onItemUsed(_context: ItemUsedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called at the start of a combatant's turn. */
+	async onTurnStart(_context: TurnContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called at the end of a combatant's turn. */
+	async onTurnEnd(_context: TurnContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called when an actor's HP drops to 0 or below. */
+	async onActorKilled(_context: ActorHealthContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called when an actor takes a wound (bloodied / lastStand transition). */
+	async onActorWounded(_context: ActorHealthContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called when a saving throw resolves. */
+	async onSaveResolved(_context: SaveResolvedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called when an actor completes a rest. */
+	async onRest(_context: RestContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called when an actor rolls initiative. */
+	async onInitiativeRolled(_context: InitiativeRolledContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/**
+	 * Called by the chat card renderer when an activation card resolves, for every
+	 * rule on the speaker actor. Returns zero or more EffectNode entries to inject
+	 * into the card's render tree — surfaces rule-driven outcomes (e.g. a
+	 * rule-derived ConditionNode) in the card regardless of automation settings.
+	 */
+	getActivationCardNodes(_context: ActivationCardContext): EffectNode[] {
+		// Default implementation contributes no nodes
+		return [];
+	}
+
 	override toString() {
 		const data = this.toJSON();
 		return JSON.stringify(data, null, 2);
 	}
 }
 
-export { NimbleBaseRule, type PreCreateArgs };
+export {
+	NimbleBaseRule,
+	type PreCreateArgs,
+	type ItemUsedContext,
+	type TurnContext,
+	type ActorHealthContext,
+	type SaveResolvedContext,
+	type RestContext,
+	type InitiativeRolledContext,
+	type ActivationCardContext,
+};
