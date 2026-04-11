@@ -1487,7 +1487,7 @@
 			},
 			"autoApplyConditions": {
 				"name": "Auto-Apply Conditions from Rules",
-				"hint": "When enabled, features and items with applyCondition rules will automatically apply the configured condition when their trigger fires (e.g. on crit, on turn start). When disabled, rules that would apply conditions are ignored."
+				"hint": "Automatically apply conditions from feature rules when their trigger fires. When off, rules still surface on the chat card for manual GM application."
 			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",
