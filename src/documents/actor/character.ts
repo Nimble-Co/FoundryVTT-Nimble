@@ -1521,6 +1521,12 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			restData,
 		);
 		await manager.rest();
+
+		// @ts-expect-error - nimble.rest is a custom Nimble hook consumed by ruleEventDispatch
+		Hooks.callAll('nimble.rest', {
+			actor: this,
+			restType: restData.restType,
+		});
 	}
 
 	/** ------------------------------------------------------ */

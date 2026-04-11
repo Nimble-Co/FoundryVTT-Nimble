@@ -1484,6 +1484,10 @@
 				"name": "Adjacency Includes Diagonals",
 				"hint": "When enabled, tokens that share only a corner are considered adjacent (diagonal adjacency). When disabled, only tokens sharing a full edge are adjacent (orthogonal only)."
 			},
+			"autoApplyConditions": {
+				"name": "Auto-Apply Conditions from Rules",
+				"hint": "When enabled, features and items with applyCondition rules will automatically apply the configured condition when their trigger fires (e.g. on crit, on turn start). When disabled, rules that would apply conditions are ignored."
+			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",
 				"hint": "Show the Combat System panel during combat. Helps GMs quickly target heroes and roll attacks for minions, monsters, and legendary monsters."

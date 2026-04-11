@@ -47,6 +47,21 @@ export default function registerSystemSettings() {
 	);
 
 	registerAdjacencySettings();
+
+	game.settings.register(
+		'nimble' as 'core',
+		'automation.autoApplyConditions' as 'rollMode',
+		{
+			name: 'NIMBLE.settings.autoApplyConditions.name',
+			hint: 'NIMBLE.settings.autoApplyConditions.hint',
+			scope: 'world',
+			config: true,
+			type: Boolean,
+			default: false,
+			requiresReload: true,
+		} as unknown as Parameters<typeof game.settings.register>[2],
+	);
+
 	registerCombatTrackerSettings();
 	registerNcswSettings();
 
