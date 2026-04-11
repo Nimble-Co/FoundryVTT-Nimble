@@ -4,29 +4,36 @@
 	import localize from '#utils/localize.js';
 	import Hint from '../../../components/Hint.svelte';
 	import SchoolSelection from '../characterCreator/SchoolSelection.svelte';
+	import SpellSelection from '../characterCreator/SpellSelection.svelte';
 	import LevelUpSpellCard from './LevelUpSpellCard.svelte';
 	import { createLevelUpSpellGrantsState } from './LevelUpSpellGrants.svelte.ts';
 
 	let {
 		spells,
 		schoolSelections,
+		spellSelections,
 		spellIndex,
 		selectedSchools,
+		selectedSpells,
 		confirmedSchools,
 		onSchoolsChange,
+		onSpellsChange,
 		onConfirmedChange,
 	}: LevelUpSpellGrantsProps = $props();
 
 	const state = createLevelUpSpellGrantsState(() => ({
 		spells,
 		schoolSelections,
+		spellSelections,
 		spellIndex,
 		selectedSchools,
+		selectedSpells,
 		confirmedSchools,
 		onSchoolsChange,
+		onSpellsChange,
 		onConfirmedChange,
 	}));
-	const { handleSchoolSelect, handleSchoolConfirm, handleSchoolEdit } = state;
+	const { handleSchoolSelect, handleSchoolConfirm, handleSchoolEdit, handleSpellSelect } = state;
 	const hasAnyGrants = $derived(state.hasAnyGrants);
 	const spellsBySchool = $derived(state.spellsBySchool);
 </script>
@@ -101,6 +108,16 @@
 						onConfirm={() => handleSchoolConfirm(group.ruleId)}
 					/>
 				{/if}
+			{/each}
+		{/if}
+
+		{#if spellSelections.length > 0}
+			{#each spellSelections as group (group.ruleId)}
+				<SpellSelection
+					{group}
+					selected={selectedSpells.get(group.ruleId) ?? []}
+					onSelect={(spellUuids) => handleSpellSelect(group.ruleId, spellUuids)}
+				/>
 			{/each}
 		{/if}
 	</section>

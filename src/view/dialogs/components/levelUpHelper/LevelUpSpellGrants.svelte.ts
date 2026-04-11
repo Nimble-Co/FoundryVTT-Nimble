@@ -9,7 +9,9 @@ import type { SpellIndexEntry } from '#utils/getSpells.js';
  */
 export function createLevelUpSpellGrantsState(getProps: () => LevelUpSpellGrantsProps) {
 	const hasAnyGrants = $derived(
-		getProps().spells.length > 0 || getProps().schoolSelections.length > 0,
+		getProps().spells.length > 0 ||
+			getProps().schoolSelections.length > 0 ||
+			getProps().spellSelections.length > 0,
 	);
 
 	const spellsBySchool = $derived.by(() => {
@@ -41,6 +43,13 @@ export function createLevelUpSpellGrantsState(getProps: () => LevelUpSpellGrants
 		props.onConfirmedChange(newSet);
 	}
 
+	function handleSpellSelect(ruleId: string, spellUuids: string[]) {
+		const props = getProps();
+		const newMap = new Map(props.selectedSpells);
+		newMap.set(ruleId, spellUuids);
+		props.onSpellsChange(newMap);
+	}
+
 	return {
 		get hasAnyGrants() {
 			return hasAnyGrants;
@@ -51,5 +60,6 @@ export function createLevelUpSpellGrantsState(getProps: () => LevelUpSpellGrants
 		handleSchoolSelect,
 		handleSchoolConfirm,
 		handleSchoolEdit,
+		handleSpellSelect,
 	};
 }

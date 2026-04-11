@@ -3,7 +3,12 @@ import { describe, expect, it } from 'vitest';
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 
 import type { RulesArray } from './spellGrantUtils.js';
-import { collectSpellGrants, predicatePassesAtLevel, resolveSchools } from './spellGrantUtils.js';
+import {
+	collectKnownSchools,
+	collectSpellGrants,
+	predicatePassesAtLevel,
+	resolveSchools,
+} from './spellGrantUtils.js';
 
 function createSpellEntry(
 	overrides: Partial<SpellIndexEntry> & { uuid: string; name: string },
@@ -128,6 +133,50 @@ describe('resolveSchools', () => {
 	});
 });
 
+describe('collectKnownSchools', () => {
+	it('collects schools from auto-mode grantSpells rules', () => {
+		const rules: RulesArray = [{ type: 'grantSpells', mode: 'auto', schools: ['fire', 'ice'] }];
+		const knownSchools = new Set<string>();
+		collectKnownSchools(rules, knownSchools);
+		expect([...knownSchools].sort()).toEqual(['fire', 'ice']);
+	});
+
+	it('skips "known" sentinel values', () => {
+		const rules: RulesArray = [{ type: 'grantSpells', mode: 'auto', schools: ['fire', 'known'] }];
+		const knownSchools = new Set<string>();
+		collectKnownSchools(rules, knownSchools);
+		expect([...knownSchools]).toEqual(['fire']);
+	});
+
+	it('skips non-auto mode rules', () => {
+		const rules: RulesArray = [{ type: 'grantSpells', mode: 'selectSchool', schools: ['fire'] }];
+		const knownSchools = new Set<string>();
+		collectKnownSchools(rules, knownSchools);
+		expect(knownSchools.size).toBe(0);
+	});
+
+	it('includes rules with undefined mode (defaults to auto)', () => {
+		const rules: RulesArray = [{ type: 'grantSpells', schools: ['lightning'] }];
+		const knownSchools = new Set<string>();
+		collectKnownSchools(rules, knownSchools);
+		expect([...knownSchools]).toEqual(['lightning']);
+	});
+
+	it('skips non-grantSpells rules', () => {
+		const rules: RulesArray = [{ type: 'otherRule', mode: 'auto', schools: ['fire'] }];
+		const knownSchools = new Set<string>();
+		collectKnownSchools(rules, knownSchools);
+		expect(knownSchools.size).toBe(0);
+	});
+
+	it('accumulates into an existing set', () => {
+		const rules: RulesArray = [{ type: 'grantSpells', mode: 'auto', schools: ['ice'] }];
+		const knownSchools = new Set(['fire']);
+		collectKnownSchools(rules, knownSchools);
+		expect([...knownSchools].sort()).toEqual(['fire', 'ice']);
+	});
+});
+
 describe('collectSpellGrants', () => {
 	const fireSpells = [
 		createSpellEntry({ uuid: 'fire-cantrip-1', name: 'Ember', school: 'fire', tier: 0 }),
@@ -143,6 +192,13 @@ describe('collectSpellGrants', () => {
 			uuid: 'fire-util-1',
 			name: 'Warm Hands',
 			school: 'fire',
+			tier: 0,
+			isUtility: true,
+		}),
+		createSpellEntry({
+			uuid: 'ice-util-1',
+			name: 'Chill Touch',
+			school: 'ice',
 			tier: 0,
 			isUtility: true,
 		}),
@@ -415,5 +471,162 @@ describe('collectSpellGrants', () => {
 
 		expect(result.autoGrant).toHaveLength(0);
 		expect(result.schoolSelections).toHaveLength(0);
+		expect(result.spellSelections).toHaveLength(0);
+	});
+
+	describe('selectSpell mode', () => {
+		it('creates one spell selection group per school at the exact target level', () => {
+			const index = buildTestIndex();
+			const rules: RulesArray = [
+				{
+					id: 'spell-choice-1',
+					type: 'grantSpells',
+					schools: ['fire'],
+					tiers: [0],
+					mode: 'selectSpell',
+					count: 1,
+					predicate: { level: { min: 4 } },
+				},
+			];
+
+			const result = collectSpellGrants([rules], index, 'mage', 4, new Set(), new Set());
+
+			expect(result.autoGrant).toHaveLength(0);
+			expect(result.spellSelections).toHaveLength(1);
+			expect(result.spellSelections[0].ruleId).toBe('spell-choice-1-fire');
+			expect(result.spellSelections[0].count).toBe(1);
+			expect(result.spellSelections[0].availableSpells.length).toBeGreaterThan(0);
+		});
+
+		it('creates a group for each resolved school', () => {
+			const index = buildTestIndex();
+			const rules: RulesArray = [
+				{
+					id: 'spell-choice-1',
+					type: 'grantSpells',
+					schools: ['fire', 'ice'],
+					tiers: [0],
+					mode: 'selectSpell',
+					count: 1,
+					predicate: { level: { min: 4 } },
+				},
+			];
+
+			const result = collectSpellGrants([rules], index, 'mage', 4, new Set(), new Set());
+
+			expect(result.spellSelections).toHaveLength(2);
+			expect(result.spellSelections[0].ruleId).toBe('spell-choice-1-fire');
+			expect(result.spellSelections[1].ruleId).toBe('spell-choice-1-ice');
+		});
+
+		it('does not create a spell selection above the exact level', () => {
+			const index = buildTestIndex();
+			const rules: RulesArray = [
+				{
+					id: 'spell-choice-1',
+					type: 'grantSpells',
+					schools: ['fire'],
+					tiers: [0],
+					mode: 'selectSpell',
+					count: 1,
+					predicate: { level: { min: 4 } },
+				},
+			];
+
+			const result = collectSpellGrants([rules], index, 'mage', 5, new Set(), new Set());
+
+			expect(result.spellSelections).toHaveLength(0);
+		});
+
+		it('filters out already-owned spells from available options', () => {
+			const index = buildTestIndex();
+			const rules: RulesArray = [
+				{
+					id: 'spell-choice-1',
+					type: 'grantSpells',
+					schools: ['fire'],
+					tiers: [0],
+					mode: 'selectSpell',
+					count: 1,
+					predicate: { level: { min: 4 } },
+				},
+			];
+
+			const owned = new Set(['fire-cantrip-1']);
+			const result = collectSpellGrants([rules], index, 'mage', 4, owned, new Set());
+
+			expect(result.spellSelections).toHaveLength(1);
+			const availableUuids = result.spellSelections[0].availableSpells.map((s) => s.uuid);
+			expect(availableUuids).not.toContain('fire-cantrip-1');
+			expect(availableUuids).toContain('fire-cantrip-2');
+		});
+
+		it('omits the group for a school when all its spells are already owned', () => {
+			const index = buildTestIndex();
+			const rules: RulesArray = [
+				{
+					id: 'spell-choice-1',
+					type: 'grantSpells',
+					schools: ['fire'],
+					tiers: [0],
+					mode: 'selectSpell',
+					count: 1,
+					utilityOnly: true,
+					predicate: { level: { min: 4 } },
+				},
+			];
+
+			const owned = new Set(['fire-util-1']);
+			const result = collectSpellGrants([rules], index, 'mage', 4, owned, new Set());
+
+			expect(result.spellSelections).toHaveLength(0);
+		});
+
+		it('resolves "known" schools and creates one group per known school', () => {
+			const index = buildTestIndex();
+			const rules: RulesArray = [
+				{
+					id: 'spell-choice-1',
+					type: 'grantSpells',
+					schools: ['known'],
+					tiers: [0],
+					mode: 'selectSpell',
+					count: 1,
+					utilityOnly: true,
+					predicate: { level: { min: 4 } },
+				},
+			];
+
+			const knownSchools = new Set(['fire', 'ice']);
+			const result = collectSpellGrants([rules], index, 'mage', 4, new Set(), knownSchools);
+
+			expect(result.spellSelections).toHaveLength(2);
+			expect(result.spellSelections[0].ruleId).toBe('spell-choice-1-fire');
+			expect(result.spellSelections[1].ruleId).toBe('spell-choice-1-ice');
+		});
+
+		it('skips schools with no available spells after ownership filter', () => {
+			const index = buildTestIndex();
+			const rules: RulesArray = [
+				{
+					id: 'spell-choice-1',
+					type: 'grantSpells',
+					schools: ['fire', 'ice'],
+					tiers: [0],
+					mode: 'selectSpell',
+					count: 1,
+					utilityOnly: true,
+					predicate: { level: { min: 4 } },
+				},
+			];
+
+			// Own all fire utility spells but not ice
+			const owned = new Set(['fire-util-1']);
+			const result = collectSpellGrants([rules], index, 'mage', 4, owned, new Set());
+
+			// Fire group omitted (all owned), ice group still available
+			expect(result.spellSelections).toHaveLength(1);
+			expect(result.spellSelections[0].ruleId).toBe('spell-choice-1-ice');
+		});
 	});
 });

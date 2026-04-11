@@ -72,10 +72,13 @@
 	<LevelUpSpellGrants
 		spells={autoGrantedSpells}
 		schoolSelections={state.schoolSelections}
+		spellSelections={state.spellSelections}
 		spellIndex={state.resolvedSpellIndex}
 		selectedSchools={state.selectedSchools}
+		selectedSpells={state.selectedSpells}
 		confirmedSchools={state.confirmedSchools}
 		onSchoolsChange={(schools) => (state.selectedSchools = schools)}
+		onSpellsChange={(spells) => (state.selectedSpells = spells)}
 		onConfirmedChange={(confirmed) => (state.confirmedSchools = confirmed)}
 	/>
 </section>

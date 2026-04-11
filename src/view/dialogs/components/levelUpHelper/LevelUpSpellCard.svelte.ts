@@ -122,11 +122,16 @@ export function createLevelUpSpellCardState(getSpell: () => SpellIndexEntry) {
 
 	$effect(() => {
 		const spell = getSpell();
-		fromUuid(spell.uuid as `Item.${string}`).then((item) => {
-			if (!item) return;
-			const system = (item as Item).system as unknown as SpellSystemDataWithMana;
-			displayData = extractDisplayData(system);
-		});
+		const currentUuid = spell.uuid;
+		fromUuid(spell.uuid as `Item.${string}`)
+			.then((item) => {
+				if (!item || getSpell().uuid !== currentUuid) return;
+				const system = (item as Item).system as unknown as SpellSystemDataWithMana;
+				displayData = extractDisplayData(system);
+			})
+			.catch((err) => {
+				console.warn('Nimble | Failed to load spell data:', err);
+			});
 	});
 
 	function toggleExpanded() {

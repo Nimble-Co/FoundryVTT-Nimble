@@ -11,9 +11,9 @@ import { buildSpellIndex } from '#utils/getSpells.ts';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.ts';
 import getSubclassChoices from '#utils/getSubclassChoices.ts';
 
-import type { SchoolSelectionGroup } from './characterCreation/types.js';
+import type { SchoolSelectionGroup, SpellSelectionGroup } from './characterCreation/types.js';
 import { EPIC_BOON_LEVEL, SUBCLASS_LEVEL } from './const/levelUpConstants.ts';
-import { collectSpellGrants, type RulesArray } from './spellGrantUtils.ts';
+import { collectKnownSchools, collectSpellGrants, type RulesArray } from './spellGrantUtils.ts';
 
 /** Structural type for what the factory accesses on a class item */
 interface ClassItemShape {
@@ -112,7 +112,9 @@ export function createLevelUpState(
 	let resolvedSpellIndex = $state<SpellIndex | null>(null);
 	let autoGrantedSpells = $state<SpellIndexEntry[]>([]);
 	let schoolSelections = $state<SchoolSelectionGroup[]>([]);
+	let spellSelections = $state<SpellSelectionGroup[]>([]);
 	let selectedSchools = $state<Map<string, string[]>>(new Map());
+	let selectedSpells = $state<Map<string, string[]>>(new Map());
 	let confirmedSchools = $state<Set<string>>(new Set());
 
 	// Load spell index
@@ -186,6 +188,7 @@ export function createLevelUpState(
 		if (!resolvedSpellIndex || featuresLoading) {
 			autoGrantedSpells = [];
 			schoolSelections = [];
+			spellSelections = [];
 			return;
 		}
 
@@ -196,8 +199,7 @@ export function createLevelUpState(
 		const ownedSpellUuids = new Set<string>();
 		for (const item of items) {
 			if (item.type !== 'spell') continue;
-			const source = (item as unknown as { _stats?: { compendiumSource?: string } })._stats
-				?.compendiumSource;
+			const source = item._stats?.compendiumSource;
 			if (source) ownedSpellUuids.add(source);
 		}
 
@@ -212,23 +214,11 @@ export function createLevelUpState(
 		if (classFeatures) {
 			for (const feature of classFeatures.autoGrant) {
 				const featureItem = feature as unknown as {
-					name: string;
 					system?: { rules?: unknown[] };
 				};
 				const rules = (featureItem.system?.rules ?? []) as unknown as RulesArray;
 				if (rules.length > 0) allRulesArrays.push(rules);
-
-				// Collect known schools from auto-grant rules on class features
-				for (const rule of rules) {
-					if (rule.type !== 'grantSpells') continue;
-					if ((rule.mode as string) !== 'auto' && rule.mode !== undefined) continue;
-					const schools = rule.schools as string[] | undefined;
-					if (schools) {
-						for (const school of schools) {
-							if (school !== 'known') knownSchools.add(school);
-						}
-					}
-				}
+				collectKnownSchools(rules, knownSchools);
 			}
 		}
 
@@ -239,18 +229,7 @@ export function createLevelUpState(
 			const hasGrantSpells = rules.some((r) => r.type === 'grantSpells');
 			if (hasGrantSpells) {
 				allRulesArrays.push(rules);
-
-				// Collect known schools from auto-grant rules on existing features
-				for (const rule of rules) {
-					if (rule.type !== 'grantSpells') continue;
-					if ((rule.mode as string) !== 'auto' && rule.mode !== undefined) continue;
-					const schools = rule.schools as string[] | undefined;
-					if (schools) {
-						for (const school of schools) {
-							if (school !== 'known') knownSchools.add(school);
-						}
-					}
-				}
+				collectKnownSchools(rules, knownSchools);
 			}
 		}
 
@@ -265,38 +244,58 @@ export function createLevelUpState(
 
 		autoGrantedSpells = result.autoGrant;
 		schoolSelections = result.schoolSelections;
+		spellSelections = result.spellSelections;
 
-		// Clean up selections for rules that no longer exist
+		// Clean up school selections for rules that no longer exist
 		const validRuleIds = new Set(result.schoolSelections.map((s) => s.ruleId));
-		for (const ruleId of selectedSchools.keys()) {
-			if (!validRuleIds.has(ruleId)) {
-				const newMap = new Map(selectedSchools);
-				newMap.delete(ruleId);
-				selectedSchools = newMap;
-			}
+		const cleaned = new Map<string, string[]>();
+		for (const [ruleId, value] of selectedSchools) {
+			if (validRuleIds.has(ruleId)) cleaned.set(ruleId, value);
+		}
+		if (cleaned.size !== selectedSchools.size) {
+			selectedSchools = cleaned;
+		}
+
+		// Clean up spell selections for rules that no longer exist
+		const validSpellRuleIds = new Set(result.spellSelections.map((s) => s.ruleId));
+		const cleanedSpells = new Map<string, string[]>();
+		for (const [ruleId, value] of selectedSpells) {
+			if (validSpellRuleIds.has(ruleId)) cleanedSpells.set(ruleId, value);
+		}
+		if (cleanedSpells.size !== selectedSpells.size) {
+			selectedSpells = cleanedSpells;
 		}
 	});
 
-	// Get all spell UUIDs that should be granted (auto + from school selections)
+	// Get all spell UUIDs that should be granted (auto + school selections + spell selections)
 	function getGrantedSpellUuids(): string[] {
 		const uuids: string[] = autoGrantedSpells.map((s) => s.uuid);
-
-		if (!resolvedSpellIndex) return uuids;
-
 		const seen = new Set(uuids);
-		for (const group of schoolSelections) {
-			const schools = selectedSchools.get(group.ruleId);
-			if (!schools || schools.length === 0) continue;
 
-			const spells = getSpellsFromIndex(resolvedSpellIndex, schools, group.tiers, {
-				utilityOnly: group.utilityOnly,
-				forClass: group.forClass,
-			});
+		if (resolvedSpellIndex) {
+			for (const group of schoolSelections) {
+				const schools = selectedSchools.get(group.ruleId);
+				if (!schools || schools.length === 0) continue;
 
-			for (const spell of spells) {
-				if (!seen.has(spell.uuid)) {
-					seen.add(spell.uuid);
-					uuids.push(spell.uuid);
+				const spells = getSpellsFromIndex(resolvedSpellIndex, schools, group.tiers, {
+					utilityOnly: group.utilityOnly,
+					forClass: group.forClass,
+				});
+
+				for (const spell of spells) {
+					if (!seen.has(spell.uuid)) {
+						seen.add(spell.uuid);
+						uuids.push(spell.uuid);
+					}
+				}
+			}
+		}
+
+		for (const spellUuids of selectedSpells.values()) {
+			for (const uuid of spellUuids) {
+				if (!seen.has(uuid)) {
+					seen.add(uuid);
+					uuids.push(uuid);
 				}
 			}
 		}
@@ -322,6 +321,10 @@ export function createLevelUpState(
 			const selected = selectedSchools.get(group.ruleId) ?? [];
 			if (selected.length < group.count) return false;
 			if (!confirmedSchools.has(group.ruleId)) return false;
+		}
+		for (const group of spellSelections) {
+			const selected = selectedSpells.get(group.ruleId) ?? [];
+			if (selected.length < group.count) return false;
 		}
 		return true;
 	});
@@ -442,6 +445,9 @@ export function createLevelUpState(
 		get schoolSelections() {
 			return schoolSelections;
 		},
+		get spellSelections() {
+			return spellSelections;
+		},
 		get resolvedSpellIndex() {
 			return resolvedSpellIndex;
 		},
@@ -450,6 +456,12 @@ export function createLevelUpState(
 		},
 		set selectedSchools(v: Map<string, string[]>) {
 			selectedSchools = v;
+		},
+		get selectedSpells() {
+			return selectedSpells;
+		},
+		set selectedSpells(v: Map<string, string[]>) {
+			selectedSpells = v;
 		},
 		get confirmedSchools() {
 			return confirmedSchools;

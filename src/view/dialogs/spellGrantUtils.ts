@@ -2,12 +2,13 @@ import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.ts';
 import localize from '#utils/localize.ts';
 
-import type { SchoolSelectionGroup } from './characterCreation/types.js';
+import type { SchoolSelectionGroup, SpellSelectionGroup } from './characterCreation/types.js';
 
 /** Result of processing grantSpells rules */
 export interface SpellGrantResult {
 	autoGrant: SpellIndexEntry[];
 	schoolSelections: SchoolSelectionGroup[];
+	spellSelections: SpellSelectionGroup[];
 }
 
 export type RulesArray = Array<{
@@ -57,6 +58,36 @@ export function resolveSchools(schools: string[], knownSchools: Set<string>): st
 }
 
 /**
+ * Collects known schools from auto-mode grantSpells rules.
+ * Only considers schools explicitly listed in auto-mode rules (not "known" sentinels).
+ */
+export function collectKnownSchools(rules: RulesArray, knownSchools: Set<string>): void {
+	for (const rule of rules) {
+		if (rule.type !== 'grantSpells') continue;
+		if ((rule.mode as string) !== 'auto' && rule.mode !== undefined) continue;
+		const schools = rule.schools as string[] | undefined;
+		if (schools) {
+			for (const school of schools) {
+				if (school !== 'known') knownSchools.add(school);
+			}
+		}
+	}
+}
+
+/** Builds a flat UUID→SpellIndexEntry map for O(1) lookups */
+function buildUuidLookup(spellIndex: SpellIndex): Map<string, SpellIndexEntry> {
+	const lookup = new Map<string, SpellIndexEntry>();
+	for (const tierMap of spellIndex.values()) {
+		for (const spells of tierMap.values()) {
+			for (const spell of spells) {
+				lookup.set(spell.uuid, spell);
+			}
+		}
+	}
+	return lookup;
+}
+
+/**
  * Collects spell grants from grantSpells rules, filtered by level predicate.
  * Returns auto-granted spells (filtered by ownership) and school selection groups.
  */
@@ -70,7 +101,9 @@ export function collectSpellGrants(
 ): SpellGrantResult {
 	const autoGrant: SpellIndexEntry[] = [];
 	const schoolSelections: SchoolSelectionGroup[] = [];
+	const spellSelections: SpellSelectionGroup[] = [];
 	const seenUuids = new Set<string>();
+	const uuidLookup = buildUuidLookup(spellIndex);
 
 	for (const rules of rulesArrays) {
 		for (const rule of rules) {
@@ -88,12 +121,8 @@ export function collectSpellGrants(
 					for (const uuid of rule.uuids as string[]) {
 						if (seenUuids.has(uuid) || ownedSpellUuids.has(uuid)) continue;
 						seenUuids.add(uuid);
-						for (const tierMap of spellIndex.values()) {
-							for (const spells of tierMap.values()) {
-								const spell = spells.find((s) => s.uuid === uuid);
-								if (spell) autoGrant.push(spell);
-							}
-						}
+						const spell = uuidLookup.get(uuid);
+						if (spell) autoGrant.push(spell);
 					}
 				} else if (resolvedSchools.length > 0) {
 					const spells = getSpellsFromIndex(spellIndex, resolvedSchools, tiers, {
@@ -129,9 +158,33 @@ export function collectSpellGrants(
 						source: 'class',
 					});
 				}
+			} else if (mode === 'selectSpell' && resolvedSchools.length > 0) {
+				const ruleId = (rule.id as string) ?? '';
+				const label = (rule.label as string) || localize('NIMBLE.spellGrants.chooseSpellsFallback');
+				const count = (rule.count as number) ?? 1;
+
+				// Create one selection group per school so the player picks count from each
+				for (const school of resolvedSchools) {
+					const availableSpells = getSpellsFromIndex(spellIndex, [school], tiers, {
+						utilityOnly,
+						forClass: classIdentifier,
+					}).filter((s) => !ownedSpellUuids.has(s.uuid));
+
+					if (availableSpells.length > 0) {
+						spellSelections.push({
+							ruleId: `${ruleId}-${school}`,
+							label,
+							availableSpells,
+							count,
+							utilityOnly,
+							forClass: classIdentifier,
+							source: 'class',
+						});
+					}
+				}
 			}
 		}
 	}
 
-	return { autoGrant, schoolSelections };
+	return { autoGrant, schoolSelections, spellSelections };
 }
