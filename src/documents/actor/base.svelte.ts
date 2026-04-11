@@ -3,6 +3,7 @@ import { createSubscriber } from 'svelte/reactivity';
 import type { AbilityKeyType } from '#types/abilityKey.d.ts';
 import type { SaveKeyType } from '#types/saveKey.d.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
+import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
@@ -267,6 +268,8 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	}
 
 	_populateDerivedTags(): void {
+		if (!getAdjacencySyncEnabled()) return;
+
 		const adjacency = this.getFlag('nimble', 'adjacency') as
 			| { enemiesAdjacentCount?: number; hasMostAdjacentEnemies?: boolean }
 			| undefined;

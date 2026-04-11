@@ -12,6 +12,7 @@ export function registerAdjacencySettings(): void {
 			config: true,
 			type: Boolean,
 			default: false,
+			requiresReload: true,
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
@@ -33,6 +34,7 @@ function registerAdjacencyIncludesDiagonalsSetting(): void {
 			config: true,
 			type: Boolean,
 			default: true,
+			requiresReload: true,
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 }
