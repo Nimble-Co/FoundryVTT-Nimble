@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import { createHeroicActionsTabState } from './PlayerCharacterHeroicActionsTab.svelte.js';
 
@@ -17,8 +17,60 @@
 	// Context & State
 	// ============================================================================
 
+	interface HeroicActionTarget {
+		actionId: string;
+		actionType: 'action' | 'reaction';
+		force?: boolean;
+	}
+
+	interface SheetState {
+		heroicActionTarget?: HeroicActionTarget | null;
+	}
+
 	let actor = getContext('actor');
-	const state = createHeroicActionsTabState(() => actor);
+	const sheetState = getContext<SheetState>('sheetState');
+	const heroicState = createHeroicActionsTabState(() => actor);
+	let forceNextOpportunityReactionUse = $state(false);
+
+	// React to heroicActionTarget from macro activation
+	$effect(() => {
+		const target = sheetState?.heroicActionTarget;
+		if (!target) return;
+
+		if (target.actionType === 'action') {
+			heroicState.activeHeroicTab = 'actions';
+			heroicState.expandedPanel = target.actionId;
+		} else if (target.actionType === 'reaction') {
+			heroicState.activeHeroicTab = 'reactions';
+			// Handle interposeAndDefend combo by navigating to defend panel
+			const panelId = target.actionId === 'interposeAndDefend' ? 'defend' : target.actionId;
+			heroicState.expandedReactionPanel = panelId;
+			forceNextOpportunityReactionUse = target.actionId === 'opportunity' && target.force === true;
+		}
+
+		// Clear the target after handling
+		untrack(() => {
+			if (sheetState) {
+				sheetState.heroicActionTarget = null;
+			}
+		});
+	});
+
+	function handleActionDragStart(
+		event: DragEvent,
+		actionId: string,
+		actionType: 'action' | 'reaction',
+		labelKey: string,
+	) {
+		if (!event.dataTransfer) return;
+		const dragData = {
+			type: 'HeroicAction',
+			actionId,
+			actionType,
+			name: localize(labelKey),
+		};
+		event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+	}
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
@@ -27,17 +79,17 @@
 			<div class="heroic-tab-header__tabs">
 				<button
 					class="heroic-tab-header__tab"
-					class:heroic-tab-header__tab--active={state.activeHeroicTab === 'actions'}
+					class:heroic-tab-header__tab--active={heroicState.activeHeroicTab === 'actions'}
 					type="button"
-					onclick={() => (state.activeHeroicTab = 'actions')}
+					onclick={() => (heroicState.activeHeroicTab = 'actions')}
 				>
 					{localize('NIMBLE.ui.heroicActions.title')}
 				</button>
 				<button
 					class="heroic-tab-header__tab"
-					class:heroic-tab-header__tab--active={state.activeHeroicTab === 'reactions'}
+					class:heroic-tab-header__tab--active={heroicState.activeHeroicTab === 'reactions'}
 					type="button"
-					onclick={() => (state.activeHeroicTab = 'reactions')}
+					onclick={() => (heroicState.activeHeroicTab = 'reactions')}
 				>
 					{localize('NIMBLE.ui.heroicActions.reactionsTitle')}
 				</button>
@@ -49,24 +101,27 @@
 				type="button"
 				aria-label={localize('NIMBLE.ui.heroicActions.help.tooltip')}
 				data-tooltip={localize('NIMBLE.ui.heroicActions.help.tooltip')}
-				onclick={state.handleHelpDialog}
+				onclick={heroicState.handleHelpDialog}
 			>
 				<i class="fa-solid fa-circle-question"></i>
 			</button>
 		</header>
 
-		{#if state.activeHeroicTab === 'actions'}
+		{#if heroicState.activeHeroicTab === 'actions'}
 			<div class="heroic-actions-tabs">
-				{#each state.HEROIC_ACTIONS as action (action.id)}
+				{#each heroicState.HEROIC_ACTIONS as action (action.id)}
 					<button
 						class="heroic-action-tab"
-						class:heroic-action-tab--active={state.expandedPanel === action.id}
-						class:heroic-action-tab--disabled={state.isActionDisabled(action)}
+						class:heroic-action-tab--active={heroicState.expandedPanel === action.id}
+						class:heroic-action-tab--disabled={heroicState.isActionDisabled(action)}
 						type="button"
 						aria-label={localize(action.labelKey)}
-						data-tooltip={state.getActionTooltip(action)}
-						disabled={state.isActionDisabled(action)}
-						onclick={() => state.handleActionClick(action)}
+						data-tooltip={heroicState.getActionTooltip(action)}
+						disabled={heroicState.isActionDisabled(action)}
+						draggable="true"
+						ondragstart={(event) =>
+							handleActionDragStart(event, action.id, 'action', action.labelKey)}
+						onclick={() => heroicState.handleActionClick(action)}
 					>
 						<i class={action.icon}></i>
 						<span class="heroic-action-tab__indicator"></span>
@@ -75,20 +130,25 @@
 			</div>
 		{/if}
 
-		{#if state.activeHeroicTab === 'reactions'}
+		{#if heroicState.activeHeroicTab === 'reactions'}
 			<div class="heroic-actions-tabs">
-				{#each state.HEROIC_REACTIONS as reaction (reaction.id)}
+				{#each heroicState.HEROIC_REACTIONS as reaction (reaction.id)}
 					<button
 						class="heroic-action-tab"
-						class:heroic-action-tab--active={state.expandedReactionPanel === reaction.id}
-						class:heroic-action-tab--available={state.isReactionAvailable(reaction.reactionKey)}
-						class:heroic-action-tab--spent={!state.isReactionAvailable(reaction.reactionKey)}
-						class:heroic-action-tab--disabled={!state.canUseReaction(reaction.reactionKey)}
+						class:heroic-action-tab--active={heroicState.expandedReactionPanel === reaction.id}
+						class:heroic-action-tab--available={heroicState.isReactionAvailable(
+							reaction.reactionKey,
+						)}
+						class:heroic-action-tab--spent={!heroicState.isReactionAvailable(reaction.reactionKey)}
+						class:heroic-action-tab--disabled={!heroicState.canUseReaction(reaction.reactionKey)}
 						type="button"
 						aria-label={localize(reaction.labelKey)}
-						aria-disabled={!state.canUseReaction(reaction.reactionKey)}
-						data-tooltip={state.getReactionTooltip(reaction)}
-						onclick={() => state.handleReactionClick(reaction)}
+						aria-disabled={!heroicState.canUseReaction(reaction.reactionKey)}
+						data-tooltip={heroicState.getReactionTooltip(reaction)}
+						draggable="true"
+						ondragstart={(event) =>
+							handleActionDragStart(event, reaction.id, 'reaction', reaction.labelKey)}
+						onclick={() => heroicState.handleReactionClick(reaction)}
 					>
 						<i class={reaction.icon}></i>
 						<span class="heroic-action-tab__indicator"></span>
@@ -98,75 +158,91 @@
 		{/if}
 	</section>
 
-	{#if state.activeHeroicTab === 'actions' && state.expandedPanel === 'attack'}
+	{#if heroicState.activeHeroicTab === 'actions' && heroicState.expandedPanel === 'attack'}
 		<AttackActionPanel
-			showEmbeddedDocumentImages={state.showEmbeddedDocumentImages}
+			showEmbeddedDocumentImages={heroicState.showEmbeddedDocumentImages}
 			onActivateItem={async (cost) => {
-				if (state.inCombat && state.actionsData.current > 0) {
-					await state.deductActionPips(cost);
+				if (heroicState.inCombat && heroicState.actionsData.current > 0) {
+					await heroicState.deductActionPips(cost);
 				}
 			}}
 		/>
 	{/if}
 
-	{#if state.activeHeroicTab === 'actions' && state.expandedPanel === 'spell'}
+	{#if heroicState.activeHeroicTab === 'actions' && heroicState.expandedPanel === 'spell'}
 		<CastSpellActionPanel
-			showEmbeddedDocumentImages={state.showEmbeddedDocumentImages}
+			showEmbeddedDocumentImages={heroicState.showEmbeddedDocumentImages}
 			onActivateItem={async (cost) => {
-				if (state.inCombat && state.actionsData.current > 0) {
-					await state.deductActionPips(cost);
+				if (heroicState.inCombat && heroicState.actionsData.current > 0) {
+					await heroicState.deductActionPips(cost);
 				}
 			}}
 		/>
 	{/if}
 
-	{#if state.activeHeroicTab === 'actions' && state.expandedPanel === 'move'}
+	{#if heroicState.activeHeroicTab === 'actions' && heroicState.expandedPanel === 'move'}
 		<MoveActionPanel
 			{actor}
-			inCombat={state.inCombat}
-			actionsRemaining={state.actionsData.current}
-			onDeductAction={() => state.deductActionPips(1)}
+			inCombat={heroicState.inCombat}
+			actionsRemaining={heroicState.actionsData.current}
+			onDeductAction={() => heroicState.deductActionPips(1)}
 		/>
 	{/if}
 
-	{#if state.activeHeroicTab === 'actions' && state.expandedPanel === 'assess'}
-		<AssessActionPanel {actor} onDeductAction={() => state.deductActionPips(1)} />
+	{#if heroicState.activeHeroicTab === 'actions' && heroicState.expandedPanel === 'assess'}
+		<AssessActionPanel {actor} onDeductAction={() => heroicState.deductActionPips(1)} />
 	{/if}
 
-	{#if state.activeHeroicTab === 'reactions' && state.expandedReactionPanel === 'defend'}
+	{#if heroicState.activeHeroicTab === 'reactions' && heroicState.expandedReactionPanel === 'defend'}
 		<DefendReactionPanel
 			{actor}
-			reactionDisabled={!state.canUseReaction('defend')}
-			combinedReactionDisabled={!state.canUseInterposeAndDefendCombo}
-			onUseReaction={() => state.useReaction('defend')}
-			onUseCombinedReaction={() => state.useReactionCombo(['interpose', 'defend'])}
+			reactionDisabled={!heroicState.canUseReaction('defend')}
+			combinedReactionDisabled={!heroicState.canUseInterposeAndDefendCombo}
+			defendSpent={!heroicState.isReactionAvailable('defend')}
+			interposeSpent={!heroicState.isReactionAvailable('interpose')}
+			noActions={heroicState.actionsData.current <= 0}
+			onUseReaction={(options) => heroicState.useReaction('defend', options)}
+			onUseCombinedReaction={(options) =>
+				heroicState.useReactionCombo(['interpose', 'defend'], options)}
 		/>
 	{/if}
 
-	{#if state.activeHeroicTab === 'reactions' && state.expandedReactionPanel === 'interpose'}
+	{#if heroicState.activeHeroicTab === 'reactions' && heroicState.expandedReactionPanel === 'interpose'}
 		<InterposeReactionPanel
 			{actor}
-			reactionDisabled={!state.canUseReaction('interpose')}
-			combinedReactionDisabled={!state.canUseInterposeAndDefendCombo}
-			onUseReaction={() => state.useReaction('interpose')}
-			onUseCombinedReaction={() => state.useReactionCombo(['interpose', 'defend'])}
+			reactionDisabled={!heroicState.canUseReaction('interpose')}
+			combinedReactionDisabled={!heroicState.canUseInterposeAndDefendCombo}
+			defendSpent={!heroicState.isReactionAvailable('defend')}
+			interposeSpent={!heroicState.isReactionAvailable('interpose')}
+			noActions={heroicState.actionsData.current <= 0}
+			onUseReaction={(options) => heroicState.useReaction('interpose', options)}
+			onUseCombinedReaction={(options) =>
+				heroicState.useReactionCombo(['interpose', 'defend'], options)}
 		/>
 	{/if}
 
-	{#if state.activeHeroicTab === 'reactions' && state.expandedReactionPanel === 'opportunity'}
+	{#if heroicState.activeHeroicTab === 'reactions' && heroicState.expandedReactionPanel === 'opportunity'}
 		<OpportunityAttackPanel
 			{actor}
-			reactionDisabled={!state.canUseReaction('opportunityAttack')}
-			onUseReaction={() => state.useReaction('opportunityAttack')}
-			showEmbeddedDocumentImages={state.showEmbeddedDocumentImages}
+			reactionDisabled={!heroicState.canUseReaction('opportunityAttack')}
+			opportunitySpent={!heroicState.isReactionAvailable('opportunityAttack')}
+			noActions={heroicState.actionsData.current <= 0}
+			onUseReaction={(options) => heroicState.useReaction('opportunityAttack', options)}
+			forceNextReactionUse={forceNextOpportunityReactionUse}
+			onConsumeForcedReactionUse={() => {
+				forceNextOpportunityReactionUse = false;
+			}}
+			showEmbeddedDocumentImages={heroicState.showEmbeddedDocumentImages}
 		/>
 	{/if}
 
-	{#if state.activeHeroicTab === 'reactions' && state.expandedReactionPanel === 'help'}
+	{#if heroicState.activeHeroicTab === 'reactions' && heroicState.expandedReactionPanel === 'help'}
 		<HelpReactionPanel
 			{actor}
-			reactionDisabled={!state.canUseReaction('help')}
-			onUseReaction={() => state.useReaction('help')}
+			reactionDisabled={!heroicState.canUseReaction('help')}
+			helpSpent={!heroicState.isReactionAvailable('help')}
+			noActions={heroicState.actionsData.current <= 0}
+			onUseReaction={(options) => heroicState.useReaction('help', options)}
 		/>
 	{/if}
 </section>

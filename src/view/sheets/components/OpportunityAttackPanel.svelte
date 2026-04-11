@@ -11,21 +11,28 @@
 	let {
 		actor,
 		reactionDisabled = true,
+		opportunitySpent = false,
+		noActions = false,
 		onUseReaction = async () => false,
+		forceNextReactionUse = false,
+		onConsumeForcedReactionUse = () => {},
 		showEmbeddedDocumentImages = true,
 	}: OpportunityAttackPanelProps = $props();
 
 	const state = createOpportunityAttackPanelState(
 		() => actor,
 		() => reactionDisabled,
+		() => opportunitySpent,
+		() => noActions,
 		() => onUseReaction,
+		() => forceNextReactionUse,
+		() => onConsumeForcedReactionUse,
 	);
 
 	const meleeWeapons = $derived(state.meleeWeapons);
 	const showUnarmedStrike = $derived(state.showUnarmedStrike);
 	const availableTargets = $derived(state.availableTargets);
 	const selectedTarget = $derived(state.selectedTarget);
-	const isDisabled = $derived(reactionDisabled);
 	const {
 		sortItems,
 		getWeaponDamage,
@@ -35,6 +42,17 @@
 		handleUnarmedStrike,
 		handleItemClick,
 	} = state;
+
+	function handleUnarmedStrikeDragStart(event: DragEvent) {
+		if (!event.dataTransfer) return;
+		const dragData = {
+			type: 'HeroicAction',
+			actionId: 'unarmedStrike',
+			actionType: 'action',
+			name: localize('NIMBLE.ui.heroicActions.unarmedStrike'),
+		};
+		event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+	}
 </script>
 
 <section class="reaction-panel">
@@ -79,9 +97,9 @@
 				icon="fa-solid fa-hand-fist"
 				damage={getUnarmedDamageDisplay()}
 				properties={[localize('NIMBLE.npcSheet.melee')]}
-				disabled={isDisabled}
 				showImage={false}
 				onclick={() => handleUnarmedStrike()}
+				ondragstart={handleUnarmedStrikeDragStart}
 			/>
 		{/if}
 
@@ -91,7 +109,6 @@
 				image={item.reactive.img}
 				damage={getWeaponDamage(item)}
 				properties={getWeaponProperties(item)}
-				disabled={isDisabled}
 				showImage={showEmbeddedDocumentImages}
 				itemId={item._id}
 				onclick={() => handleItemClick(item._id)}

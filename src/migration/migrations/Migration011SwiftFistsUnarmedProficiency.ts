@@ -1,4 +1,4 @@
-import { UNARMED_STRIKE_PROFICIENCY } from '../../view/sheets/components/attackUtils.js';
+import { UNARMED_STRIKE_PROFICIENCY } from '../../utils/attackUtils.js';
 import { MigrationBase } from '../MigrationBase.js';
 
 const SWIFT_FISTS_SOURCE_ID = 'Compendium.nimble.class-features.Item.kHJVcWe64VhHsOFu';

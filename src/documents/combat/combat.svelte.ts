@@ -729,6 +729,7 @@ class NimbleCombat extends Combat {
 	async useHeroicReactions(
 		combatantId: string,
 		reactionKeys: HeroicReactionKey[],
+		options?: { force?: boolean },
 	): Promise<boolean> {
 		if (!combatantId || reactionKeys.length < 1) return false;
 
@@ -745,7 +746,12 @@ class NimbleCombat extends Combat {
 						combatant,
 						reactionKeys,
 					});
-					if (!usageState.canUse) return false;
+
+					const canForceUsage =
+						options?.force === true &&
+						(usageState.blockedReason === 'noActions' || usageState.blockedReason === 'spent');
+
+					if (!usageState.canUse && !canForceUsage) return false;
 
 					const reactionAvailabilityUpdate = {
 						_id: combatantId,

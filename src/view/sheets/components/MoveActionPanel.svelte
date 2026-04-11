@@ -13,8 +13,33 @@
 	let movementSpeeds = $derived(getMovementSpeeds(actor));
 	let primarySpeed = $derived(movementSpeeds.find((s) => s.type === 'walk') ?? movementSpeeds[0]);
 
+	function handleMoveDragStart(event: DragEvent) {
+		if (!event.dataTransfer) return;
+		const dragData = {
+			type: 'HeroicAction',
+			actionId: 'move',
+			actionType: 'action',
+			name: localize('NIMBLE.ui.heroicActions.actions.move.label'),
+		};
+		event.dataTransfer.setData('text/plain', JSON.stringify(dragData));
+	}
+
 	async function handleMove() {
-		if (!inCombat || actionsRemaining <= 0) return;
+		if (!inCombat) return;
+
+		// Show confirmation dialog if no actions remaining
+		if (actionsRemaining <= 0) {
+			const confirmMove = 'NIMBLE.ui.heroicActions.confirmMove';
+			const confirmed = await foundry.applications.api.DialogV2.confirm({
+				window: { title: localize(`${confirmMove}.title`) },
+				content: `<p>${localize(`${confirmMove}.noActionsMessage`)}</p><p>${localize(`${confirmMove}.confirmQuestion`)}</p>`,
+				yes: { label: localize(`${confirmMove}.confirm`) },
+				no: { label: localize(`${confirmMove}.cancel`) },
+				rejectClose: false,
+			});
+
+			if (confirmed !== true) return;
+		}
 
 		await onDeductAction();
 
@@ -77,7 +102,9 @@
 
 	<button
 		class="action-card__button"
-		disabled={!inCombat || actionsRemaining <= 0}
+		disabled={!inCombat}
+		draggable="true"
+		ondragstart={handleMoveDragStart}
 		onclick={handleMove}
 	>
 		<i class="fa-solid fa-person-running"></i>

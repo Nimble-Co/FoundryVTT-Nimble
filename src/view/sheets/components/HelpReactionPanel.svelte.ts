@@ -1,10 +1,14 @@
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
+import localize from '../../../utils/localize.js';
+import showReactionConfirmation from '../../../utils/showReactionConfirmation.js';
 import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 
 export function createHelpPanelState(
 	getActor: () => NimbleCharacter,
 	getReactionDisabled: () => boolean,
-	getOnUseReaction: () => () => Promise<boolean>,
+	getHelpSpent: () => boolean,
+	getNoActions: () => boolean,
+	getOnUseReaction: () => (options?: { force?: boolean }) => Promise<boolean>,
 ) {
 	// Targeting state
 	let targetingVersion = $state(0);
@@ -25,10 +29,27 @@ export function createHelpPanelState(
 	});
 
 	async function handleHelp(): Promise<void> {
-		if (getReactionDisabled()) return;
+		const isDisabled = getReactionDisabled();
 
-		const reactionUsed = await getOnUseReaction()();
-		if (!reactionUsed) return;
+		if (isDisabled) {
+			const helpSpent = getHelpSpent();
+			const noActions = getNoActions();
+			const reactionName = localize('NIMBLE.ui.heroicActions.reactions.help.label');
+
+			const confirmed = await showReactionConfirmation({
+				reactionName,
+				spentReactionNames: reactionName,
+				noActions,
+				hasSpentReactions: helpSpent,
+			});
+			if (!confirmed) return;
+
+			const reactionUsed = await getOnUseReaction()({ force: true });
+			if (!reactionUsed) return;
+		} else {
+			const reactionUsed = await getOnUseReaction()();
+			if (!reactionUsed) return;
+		}
 
 		const actor = getActor();
 		const targetUuids = availableTargets.map((t) => t.document.uuid);

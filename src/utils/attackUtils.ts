@@ -1,4 +1,4 @@
-import type { NimbleCharacter } from '../../../documents/actor/character.js';
+import type { NimbleCharacter } from '../documents/actor/character.js';
 
 /** Default unarmed: 1d4 + STR damage, but cannot crit without proficiency (e.g., Swift Fists) */
 export const DEFAULT_UNARMED_DAMAGE = '1d4 + @abilities.strength.mod';

@@ -114,7 +114,11 @@ type HeroicReactionId = (typeof HEROIC_REACTIONS)[number]['id'];
 type ReactionUsageStateMap = Record<HeroicReactionId, HeroicReactionUsageState>;
 
 type CombatWithHeroicReactionUse = Combat & {
-	useHeroicReactions?: (combatantId: string, reactionKeys: HeroicReactionKey[]) => Promise<boolean>;
+	useHeroicReactions?: (
+		combatantId: string,
+		reactionKeys: HeroicReactionKey[],
+		options?: { force?: boolean },
+	) => Promise<boolean>;
 };
 
 export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
@@ -271,16 +275,22 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		return getReactionUsageState(reaction).canUse;
 	}
 
-	async function useReaction(reactionKey: HeroicReactionKey): Promise<boolean> {
-		return useReactionCombo([reactionKey]);
+	async function useReaction(
+		reactionKey: HeroicReactionKey,
+		options?: { force?: boolean },
+	): Promise<boolean> {
+		return useReactionCombo([reactionKey], options);
 	}
 
-	async function useReactionCombo(reactionKeys: HeroicReactionKey[]): Promise<boolean> {
+	async function useReactionCombo(
+		reactionKeys: HeroicReactionKey[],
+		options?: { force?: boolean },
+	): Promise<boolean> {
 		const combat = getCombat();
 		const combatant = getCombatant();
 		const combatantId = combatant?.id ?? combatant?._id ?? null;
 		if (!combat?.useHeroicReactions || !combatantId) return false;
-		return combat.useHeroicReactions(combatantId, reactionKeys);
+		return combat.useHeroicReactions(combatantId, reactionKeys, options);
 	}
 
 	function handleHelpDialog(): void {
@@ -359,8 +369,14 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		get expandedPanel() {
 			return expandedPanel;
 		},
+		set expandedPanel(value: string) {
+			expandedPanel = value;
+		},
 		get expandedReactionPanel() {
 			return expandedReactionPanel;
+		},
+		set expandedReactionPanel(value: string) {
+			expandedReactionPanel = value;
 		},
 		get inCombat() {
 			return inCombat;
