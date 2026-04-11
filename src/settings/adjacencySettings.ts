@@ -13,6 +13,17 @@ export function registerAdjacencySettings(): void {
 			type: Boolean,
 			default: false,
 			requiresReload: true,
+			onChange: (value: boolean) => {
+				if (!value) {
+					// Tracking disabled — clear adjacency flags on all actors so stale
+					// data doesn't persist across the required reload.
+					game.actors?.forEach((actor) => {
+						if (actor.getFlag('nimble', 'adjacency')) {
+							actor.unsetFlag('nimble', 'adjacency');
+						}
+					});
+				}
+			},
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
@@ -20,6 +31,8 @@ export function registerAdjacencySettings(): void {
 }
 
 export function getAdjacencySyncEnabled(): boolean {
+	if (!game.settings.settings.has(`nimble.${ADJACENCY_SYNC_SETTING_KEY}` as 'core.rollMode'))
+		return false;
 	return Boolean(game.settings.get('nimble' as 'core', ADJACENCY_SYNC_SETTING_KEY as 'rollMode'));
 }
 

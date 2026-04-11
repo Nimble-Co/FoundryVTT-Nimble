@@ -268,22 +268,22 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	}
 
 	_populateDerivedTags(): void {
-		if (!getAdjacencySyncEnabled()) return;
+		if (getAdjacencySyncEnabled()) {
+			const adjacency = this.getFlag('nimble', 'adjacency') as
+				| { enemiesAdjacentCount?: number; hasMostAdjacentEnemies?: boolean }
+				| undefined;
 
-		const adjacency = this.getFlag('nimble', 'adjacency') as
-			| { enemiesAdjacentCount?: number; hasMostAdjacentEnemies?: boolean }
-			| undefined;
+			if (adjacency) {
+				const { enemiesAdjacentCount: count, hasMostAdjacentEnemies: hasMost } = adjacency;
 
-		if (!adjacency) return;
+				if (typeof count === 'number' && count > 0) {
+					this.tags.add(`enemiesAdjacent:${count}`);
+				}
 
-		const { enemiesAdjacentCount: count, hasMostAdjacentEnemies: hasMost } = adjacency;
-
-		if (typeof count === 'number' && count > 0) {
-			this.tags.add(`enemiesAdjacent:${count}`);
-		}
-
-		if (hasMost) {
-			this.tags.add(`enemiesAdjacent:${ADJACENCY_QUALIFIER.MOST}`);
+				if (hasMost) {
+					this.tags.add(`enemiesAdjacent:${ADJACENCY_QUALIFIER.MOST}`);
+				}
+			}
 		}
 	}
 

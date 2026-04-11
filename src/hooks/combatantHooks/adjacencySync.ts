@@ -1,3 +1,4 @@
+import { getAdjacencyIncludesDiagonals } from '../../settings/adjacencySettings.js';
 import { countAdjacentEnemies, type PositionOverrides } from '../../utils/tokenAdjacency.js';
 
 const ADJACENCY_FLAG_PATH = 'flags.nimble.adjacency';
@@ -27,7 +28,10 @@ async function syncAdjacency(overrides?: PositionOverrides): Promise<void> {
 
 	if (tokens.length === 0) return;
 
-	const counts = tokens.map((token) => countAdjacentEnemies(token, tokens, overrides));
+	const includeDiagonals = getAdjacencyIncludesDiagonals();
+	const counts = tokens.map((token) =>
+		countAdjacentEnemies(token, tokens, overrides, includeDiagonals),
+	);
 	const maxCount = Math.max(...counts, 0);
 
 	const updates = activeCombatants
@@ -143,4 +147,8 @@ export default function registerAdjacencySync() {
 	});
 
 	Hooks.on('canvasReady', scheduleSync);
+
+	// In Foundry v13, canvasReady fires before ready, so the hook above won't catch the
+	// initial load. Sync immediately if the canvas is already ready when this runs.
+	if (canvas?.ready) scheduleSync();
 }
