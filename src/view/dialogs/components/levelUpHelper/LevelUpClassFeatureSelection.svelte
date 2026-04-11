@@ -59,7 +59,8 @@
 				<FeatureGroupSelection
 					{groupName}
 					{features}
-					selectedFeature={selectedFeatures.get(groupName) ?? null}
+					selectedFeatures={selectedFeatures.get(groupName) ?? []}
+					maxSelections={classFeatures?.selectionCounts?.get(groupName) ?? 1}
 					onSelect={(feature) => handleFeatureSelect(groupName, feature)}
 				/>
 			{/each}

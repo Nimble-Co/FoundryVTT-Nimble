@@ -5,17 +5,36 @@
 	import FeatureCard from './FeatureCard.svelte';
 	import localize from '#utils/localize.js';
 
-	let { groupName, features, selectedFeature, onSelect }: FeatureGroupSelectionProps = $props();
+	let {
+		groupName,
+		features,
+		selectedFeatures,
+		maxSelections,
+		onSelect,
+	}: FeatureGroupSelectionProps = $props();
 
-	const state = createFeatureGroupSelectionState(() => ({ groupName, features }));
+	const state = createFeatureGroupSelectionState(() => ({ groupName, features, maxSelections }));
 
-	// Selection is complete when a feature is selected and it's not a single-option group
-	const isSelectionComplete = $derived(!!selectedFeature && !state.isSingleOption);
+	function isFeatureSelected(featureUuid: string): boolean {
+		return selectedFeatures.some((f) => f.uuid === featureUuid);
+	}
 
-	// Filter to show only selected feature when selection is complete
-	const displayedFeatures = $derived(
-		isSelectionComplete ? features.filter((f) => f.uuid === selectedFeature?.uuid) : features,
+	// Selection is complete when all required selections are made
+	const isSelectionComplete = $derived(
+		selectedFeatures.length >= maxSelections && !state.isSingleOption,
 	);
+
+	// Filter to show only selected features when selection is complete
+	const displayedFeatures = $derived(
+		isSelectionComplete
+			? features.filter((f) => selectedFeatures.some((s) => s.uuid === f.uuid))
+			: features,
+	);
+
+	function getHintText(): string {
+		if (maxSelections === 1) return localize('NIMBLE.classFeatureSelection.chooseOne');
+		return localize('NIMBLE.classFeatureSelection.chooseN', { count: String(maxSelections) });
+	}
 </script>
 
 <div class="feature-group">
@@ -24,7 +43,7 @@
 			{state.formattedGroupName}
 		</h4>
 		{#if !state.isSingleOption && !isSelectionComplete}
-			<span class="feature-group__hint">{localize('NIMBLE.classFeatureSelection.chooseOne')}</span>
+			<span class="feature-group__hint">{getHintText()}</span>
 		{/if}
 	</header>
 
@@ -32,7 +51,7 @@
 		{#each displayedFeatures as feature (feature.uuid)}
 			<FeatureCard
 				{feature}
-				isSelected={state.isSingleOption ? false : selectedFeature?.uuid === feature.uuid}
+				isSelected={state.isSingleOption ? false : isFeatureSelected(feature.uuid)}
 				onSelect={state.isSingleOption ? undefined : () => onSelect(feature)}
 			/>
 		{/each}

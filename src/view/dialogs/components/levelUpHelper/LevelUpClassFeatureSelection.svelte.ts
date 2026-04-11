@@ -9,10 +9,10 @@ import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection
  */
 export function createClassFeatureSelectionState(
 	getClassFeatures: () => ClassFeatureResult | null,
-	getSelectedFeatures: () => Map<string, NimbleFeatureItem>,
-	setSelectedFeatures: (features: Map<string, NimbleFeatureItem>) => void,
+	getSelectedFeatures: () => Map<string, NimbleFeatureItem[]>,
+	setSelectedFeatures: (features: Map<string, NimbleFeatureItem[]>) => void,
 ) {
-	// Auto-select features for groups that only have one option
+	// Auto-select features for groups where available options equal the required count
 	$effect(() => {
 		const classFeatures = getClassFeatures();
 		if (!classFeatures?.selectionGroups) return;
@@ -21,8 +21,9 @@ export function createClassFeatureSelectionState(
 		let hasChanges = false;
 
 		for (const [groupName, features] of classFeatures.selectionGroups) {
-			if (features.length === 1 && !newSelections.has(groupName)) {
-				newSelections.set(groupName, features[0]);
+			const maxSelections = classFeatures.selectionCounts?.get(groupName) ?? 1;
+			if (features.length <= maxSelections && !newSelections.has(groupName)) {
+				newSelections.set(groupName, [...features]);
 				hasChanges = true;
 			}
 		}
@@ -33,12 +34,22 @@ export function createClassFeatureSelectionState(
 	});
 
 	function handleFeatureSelect(groupName: string, feature: NimbleFeatureItem) {
+		const classFeatures = getClassFeatures();
 		const newSelections = new Map(getSelectedFeatures());
+		const current = [...(newSelections.get(groupName) ?? [])];
+		const maxSelections = classFeatures?.selectionCounts?.get(groupName) ?? 1;
 
-		if (newSelections.get(groupName)?.uuid === feature.uuid) {
+		const existingIndex = current.findIndex((f) => f.uuid === feature.uuid);
+		if (existingIndex >= 0) {
+			current.splice(existingIndex, 1);
+		} else if (current.length < maxSelections) {
+			current.push(feature);
+		}
+
+		if (current.length === 0) {
 			newSelections.delete(groupName);
 		} else {
-			newSelections.set(groupName, feature);
+			newSelections.set(groupName, current);
 		}
 
 		setSelectedFeatures(newSelections);

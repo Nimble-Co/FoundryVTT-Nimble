@@ -3,12 +3,13 @@ import type { NimbleFeatureItem } from '#documents/item/feature.js';
 export interface ClassFeatureResult {
 	autoGrant: NimbleFeatureItem[];
 	selectionGroups: Map<string, NimbleFeatureItem[]>;
+	selectionCounts: Map<string, number>;
 }
 
 export interface ClassFeatureSelectionProps {
 	active: boolean;
 	classFeatures: ClassFeatureResult | null;
-	selectedFeatures: Map<string, NimbleFeatureItem>;
+	selectedFeatures: Map<string, NimbleFeatureItem[]>;
 }
 
 export interface FeatureCardProps {
@@ -20,13 +21,14 @@ export interface FeatureCardProps {
 export interface FeatureGroupSelectionProps {
 	groupName: string;
 	features: NimbleFeatureItem[];
-	selectedFeature: NimbleFeatureItem | null;
+	selectedFeatures: NimbleFeatureItem[];
+	maxSelections: number;
 	onSelect: (feature: NimbleFeatureItem) => void;
 }
 
 export interface LevelUpClassFeatureSelectionProps {
 	classFeatures: ClassFeatureResult | null;
-	selectedFeatures: Map<string, NimbleFeatureItem>;
+	selectedFeatures: Map<string, NimbleFeatureItem[]>;
 	loading?: boolean;
 }
 

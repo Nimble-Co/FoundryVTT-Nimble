@@ -48,7 +48,8 @@
 		"subclass": false,
 		"gainedAtLevels": [
 			2
-		]
+		],
+		"maxSelections": 2
 	},
 	"effects": [],
 	"folder": "406c4e162069a4a8",

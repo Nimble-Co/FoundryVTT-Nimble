@@ -35,6 +35,13 @@ const schema = () => ({
 			initial: [],
 		},
 	),
+	maxSelections: new fields.NumberField({
+		required: true,
+		nullable: false,
+		initial: 1,
+		integer: true,
+		min: 1,
+	}),
 });
 
 declare namespace NimbleFeatureData {
@@ -63,6 +70,8 @@ class NimbleFeatureData extends NimbleBaseItemData<
 	declare gainedAtLevel: number | null;
 
 	declare gainedAtLevels: number[];
+
+	declare maxSelections: number;
 
 	declare activation: {
 		showDescription: boolean;

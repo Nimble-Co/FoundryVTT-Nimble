@@ -18,14 +18,15 @@ export function formatGroupName(name: string): string {
  * @returns Object containing derived state
  */
 export function createFeatureGroupSelectionState(
-	getProps: () => { groupName: string; features: NimbleFeatureItem[] },
+	getProps: () => { groupName: string; features: NimbleFeatureItem[]; maxSelections: number },
 ) {
 	return {
 		get formattedGroupName() {
 			return formatGroupName(getProps().groupName);
 		},
 		get isSingleOption() {
-			return getProps().features.length === 1;
+			const { features, maxSelections } = getProps();
+			return features.length <= maxSelections;
 		},
 	};
 }

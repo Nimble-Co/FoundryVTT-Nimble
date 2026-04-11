@@ -73,7 +73,7 @@ interface LevelUpDialogData {
 	selectedEpicBoon: NimbleBoonItem | null;
 	classFeatures: {
 		autoGrant: NimbleFeatureItem[];
-		selected: Map<string, NimbleFeatureItem>;
+		selected: Map<string, NimbleFeatureItem[]>;
 	} | null;
 }
 
@@ -1244,10 +1244,10 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const itemsToGrant: { toObject(): object; uuid: string }[] = [];
 
 		if (typedDialogData.classFeatures) {
-			itemsToGrant.push(
-				...typedDialogData.classFeatures.autoGrant,
-				...typedDialogData.classFeatures.selected.values(),
-			);
+			itemsToGrant.push(...typedDialogData.classFeatures.autoGrant);
+			for (const features of typedDialogData.classFeatures.selected.values()) {
+				itemsToGrant.push(...features);
+			}
 		}
 
 		if (typedDialogData.selectedEpicBoon) {

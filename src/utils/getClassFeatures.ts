@@ -152,6 +152,7 @@ export default async function getClassFeaturesFromIndex(
 	const result: ClassFeatureResult = {
 		autoGrant: [],
 		selectionGroups: new Map(),
+		selectionCounts: new Map(),
 	};
 
 	if (!classIdentifier || level < 1) {
@@ -194,6 +195,16 @@ export default async function getClassFeaturesFromIndex(
 		} else {
 			result.selectionGroups.set(groupName, groupFeatures);
 		}
+	}
+
+	// Derive selection counts from maxSelections on features (take the max per group)
+	for (const [groupName, groupFeatures] of result.selectionGroups) {
+		let maxSel = 1;
+		for (const feature of groupFeatures) {
+			const featureMax = (feature.system as { maxSelections?: number }).maxSelections ?? 1;
+			if (featureMax > maxSel) maxSel = featureMax;
+		}
+		result.selectionCounts.set(groupName, maxSel);
 	}
 
 	return result;

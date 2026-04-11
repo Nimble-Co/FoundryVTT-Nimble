@@ -137,12 +137,14 @@ function ancestryOptionsComplete(
 
 function classFeaturesComplete(
 	features: ClassFeatureResult | null,
-	selections: Map<string, NimbleFeatureItem>,
+	selections: Map<string, NimbleFeatureItem[]>,
 ): boolean {
 	if (!features) return true;
 
 	for (const groupName of features.selectionGroups.keys()) {
-		if (!selections.has(groupName)) {
+		const required = features.selectionCounts?.get(groupName) ?? 1;
+		const selected = selections.get(groupName)?.length ?? 0;
+		if (selected < required) {
 			return false;
 		}
 	}
@@ -188,7 +190,7 @@ interface GetCurrentStageParams {
 	remainingSkillPoints: number;
 	bonusLanguages: string[];
 	classFeatures: ClassFeatureResult | null;
-	selectedClassFeatures: Map<string, NimbleFeatureItem>;
+	selectedClassFeatures: Map<string, NimbleFeatureItem[]>;
 	spellGrants: SpellGrantResult | null;
 	selectedSchools: Map<string, string[]>;
 	selectedSpells: Map<string, string[]>;
@@ -347,7 +349,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 
 	// Class features state
 	let classFeatures = $state<ClassFeatureResult | null>(null);
-	let selectedClassFeatures = $state<Map<string, NimbleFeatureItem>>(new Map());
+	let selectedClassFeatures = $state<Map<string, NimbleFeatureItem[]>>(new Map());
 
 	// Spell grants state
 	let spellGrants = $state<SpellGrantResult | null>(null);
@@ -831,7 +833,7 @@ export function createCharacterCreationState(params: CharacterCreationStateParam
 		get selectedClassFeatures() {
 			return selectedClassFeatures;
 		},
-		set selectedClassFeatures(value: Map<string, NimbleFeatureItem>) {
+		set selectedClassFeatures(value: Map<string, NimbleFeatureItem[]>) {
 			selectedClassFeatures = value;
 		},
 		get spellGrants() {

@@ -1303,6 +1303,7 @@
 			"editSelection": "Edit Class Feature Selection",
 			"hint": "The following features are available at level 1 for your class. Some features are automatically granted, while others require you to make a choice.",
 			"chooseOne": "(Choose one)",
+			"chooseN": "(Choose {count})",
 			"noDescriptionAvailable": "No description available.",
 			"selected": "Selected",
 			"confirmSelection": "Confirm Selection",

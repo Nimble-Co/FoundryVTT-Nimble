@@ -94,7 +94,7 @@ export function createLevelUpState(
 
 	// Class features state
 	let classFeatures: ClassFeatureResult | null = $state(null);
-	let selectedClassFeatures: Map<string, NimbleFeatureItem> = $state(new Map());
+	let selectedClassFeatures: Map<string, NimbleFeatureItem[]> = $state(new Map());
 	let featuresLoading = $state(true);
 
 	// Load class features when dialog opens
@@ -145,6 +145,7 @@ export function createLevelUpState(
 				classFeatures = {
 					autoGrant: filteredAutoGrant,
 					selectionGroups: filteredSelectionGroups,
+					selectionCounts: rawFeatures.selectionCounts,
 				};
 				featuresLoading = false;
 			})
@@ -160,9 +161,9 @@ export function createLevelUpState(
 		if (!classFeatures) return true;
 
 		for (const groupName of classFeatures.selectionGroups.keys()) {
-			if (!selectedClassFeatures.has(groupName)) {
-				return false;
-			}
+			const required = classFeatures.selectionCounts?.get(groupName) ?? 1;
+			const selected = selectedClassFeatures.get(groupName)?.length ?? 0;
+			if (selected < required) return false;
 		}
 		return true;
 	});
@@ -335,7 +336,7 @@ export function createLevelUpState(
 		get selectedClassFeatures() {
 			return selectedClassFeatures;
 		},
-		set selectedClassFeatures(v: Map<string, NimbleFeatureItem>) {
+		set selectedClassFeatures(v: Map<string, NimbleFeatureItem[]>) {
 			selectedClassFeatures = v;
 		},
 		submit,
