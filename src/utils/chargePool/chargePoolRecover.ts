@@ -10,6 +10,10 @@ import {
 } from './helpers.js';
 import type { CharacterActorLike, ChargeRestType, ManualAdjustMode } from './types.js';
 
+type CombatTrigger = 'encounterStart' | 'encounterEnd';
+type CombatEventTrigger = 'onTurnStart' | 'onTurnEnd' | 'onWound' | 'onKill' | 'onBloodied';
+type TriggerType = CombatTrigger | CombatEventTrigger;
+
 async function applyRestRecovery(
 	actor: Actor | null | undefined,
 	restType: ChargeRestType,
@@ -173,4 +177,59 @@ async function adjustPool(
 	return true;
 }
 
-export { applyRestRecovery, applyEncounterRecovery, adjustPool };
+async function applyRecoveryToActorIfEligible(
+	actor: Actor | null | undefined,
+	trigger: TriggerType,
+	_killTargetActor?: Actor.Implementation,
+): Promise<void> {
+	if (!isCharacterActor(actor)) return;
+
+	const currentPools = buildEffectiveChargePoolMap(actor);
+	const nextPools = applyRecoveryTriggersToPools(actor, currentPools, [trigger]);
+	if (areChargePoolMapsEqual(currentPools, nextPools)) return;
+
+	await persistChargePoolMap(actor, nextPools);
+
+	const recoveryEntries: Array<{
+		poolId: string;
+		poolLabel: string;
+		previousValue: number;
+		newValue: number;
+		recoveredAmount: number;
+	}> = [];
+
+	for (const [poolId, nextPool] of Object.entries(nextPools)) {
+		const prePool = currentPools[poolId];
+		if (!prePool || prePool.current === nextPool.current) continue;
+		recoveryEntries.push({
+			poolId,
+			poolLabel: nextPool.label,
+			previousValue: prePool.current,
+			newValue: nextPool.current,
+			recoveredAmount: nextPool.current - prePool.current,
+		});
+	}
+
+	if (recoveryEntries.length > 0) {
+		emitForCharacter(actor, 'recovered', {
+			actor: actor as CharacterActorLike,
+			trigger,
+			recovery: recoveryEntries,
+		});
+
+		for (const entry of recoveryEntries) {
+			emitForCharacter(actor, 'changed', {
+				actor: actor as CharacterActorLike,
+				poolId: entry.poolId,
+				poolLabel: entry.poolLabel,
+				previousValue: entry.previousValue,
+				newValue: entry.newValue,
+				maxValue: nextPools[entry.poolId]?.max ?? entry.newValue,
+				reason: 'recovery',
+				trigger,
+			});
+		}
+	}
+}
+
+export { applyRestRecovery, applyEncounterRecovery, adjustPool, applyRecoveryToActorIfEligible };
