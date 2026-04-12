@@ -138,7 +138,7 @@
 
 			&:hover {
 				background: var(--pill-color);
-				color: var(--nimble-card-background-color);
+				color: var(--nimble-light-text-color);
 			}
 		}
 
