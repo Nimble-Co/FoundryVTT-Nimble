@@ -270,8 +270,10 @@ function getChargeConsumers(
 	if (sourceItemId.length < 1) return [];
 
 	const consumers: ChargeConsumerState[] = [];
+	let hasExplicitConsumer = false;
 	for (const rule of rules.values()) {
 		if (rule.type !== 'chargeConsumer' || rule.disabled) continue;
+		hasExplicitConsumer = true;
 		const consumerRule = rule as ChargeConsumerRuleLike;
 		const poolIdentifier = normalizeIdentifier(
 			consumerRule.poolIdentifier || consumerRule.identifier || consumerRule.id,
@@ -285,6 +287,29 @@ function getChargeConsumers(
 			poolId,
 			poolIdentifier,
 			cost,
+		});
+	}
+
+	if (hasExplicitConsumer) return consumers;
+
+	if (item.flags == null || typeof item.flags !== 'object') return [];
+	const nimbleFlags = item.flags.nimble;
+	if (nimbleFlags == null || typeof nimbleFlags !== 'object') return [];
+	const chargePoolsOnItem = nimbleFlags.chargePools;
+	if (
+		!chargePoolsOnItem ||
+		typeof chargePoolsOnItem !== 'object' ||
+		Array.isArray(chargePoolsOnItem)
+	)
+		return [];
+
+	for (const poolIdentifier of Object.keys(chargePoolsOnItem)) {
+		const normalizedPoolId = normalizeIdentifier(poolIdentifier);
+		if (normalizedPoolId.length < 1) continue;
+		consumers.push({
+			poolId: normalizedPoolId,
+			poolIdentifier: normalizedPoolId,
+			cost: 1,
 		});
 	}
 
