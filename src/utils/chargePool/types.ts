@@ -80,7 +80,7 @@ type ChargeContext = {
 };
 
 type ChargeValidationFailure = {
-	code: 'poolMissing' | 'insufficientCharges';
+	code: 'poolMissing' | 'insufficientCharges' | 'consumptionBlocked';
 	poolIdentifier: string;
 	poolLabel: string;
 	required: number;
