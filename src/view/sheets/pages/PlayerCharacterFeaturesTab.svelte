@@ -5,7 +5,7 @@
 	import filterItems from '../../dataPreparationHelpers/filterItems.js';
 	import { getContext } from 'svelte';
 	import shouldFlashDroppedItem from '../../../utils/shouldFlashDroppedItem.js';
-	import { ChargePoolService } from '../../../utils/chargePoolService.js';
+	import { getPools, getPoolsForItem } from '../../../utils/chargePool/chargePoolSync.js';
 	import {
 		DROP_ITEM_FLASH_ANIMATION_NAME,
 		getDroppedItemFlashIds,
@@ -157,10 +157,10 @@
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 
 	// All charge pools for the actor
-	let allPools = $derived(ChargePoolService.getPools(actor.reactive));
+	let allPools = $derived(getPools(actor.reactive));
 
 	function getItemPools(itemId: string) {
-		return ChargePoolService.getPoolsForItem(actor.reactive, itemId, allPools);
+		return getPoolsForItem(actor.reactive, itemId, allPools);
 	}
 </script>
 

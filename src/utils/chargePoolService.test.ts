@@ -1,5 +1,15 @@
+import {
+	consumeOnResolvedItemUse,
+	validateItemChargeConsumption,
+} from '#utils/chargePool/chargePoolConsume.js';
+import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
+import {
+	adjustPool,
+	applyEncounterRecovery,
+	applyRestRecovery,
+} from '#utils/chargePool/chargePoolRecover.js';
+import { getPoolsForItem, syncActorPools } from '#utils/chargePool/chargePoolSync.js';
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
-import { ChargePoolService } from '#utils/chargePoolService.js';
 
 type MockRule = {
 	type: string;
@@ -219,9 +229,7 @@ describe('ChargePoolService', () => {
 		});
 
 		const item = actor.items.contents[0];
-		const validation = ChargePoolService.validateItemChargeConsumption(
-			item as unknown as Item.Implementation,
-		);
+		const validation = validateItemChargeConsumption(item as unknown as Item.Implementation);
 
 		expect(validation.ok).toBe(false);
 		expect(validation.failure?.code).toBe('insufficientCharges');
@@ -277,10 +285,10 @@ describe('ChargePoolService', () => {
 		});
 
 		const item = actor.items.contents[0];
-		const result = await ChargePoolService.consumeOnResolvedItemUse(
-			item as unknown as Item.Implementation,
-			{ isMiss: false, isCritical: true },
-		);
+		const result = await consumeOnResolvedItemUse(item as unknown as Item.Implementation, {
+			isMiss: false,
+			isCritical: true,
+		});
 
 		expect(result.ok).toBe(true);
 		expect(result.consumption).toEqual([
@@ -368,10 +376,10 @@ describe('ChargePoolService', () => {
 		});
 
 		const item = actor.items.contents[0];
-		const result = await ChargePoolService.consumeOnResolvedItemUse(
-			item as unknown as Item.Implementation,
-			{ isMiss: false, isCritical: true },
-		);
+		const result = await consumeOnResolvedItemUse(item as unknown as Item.Implementation, {
+			isMiss: false,
+			isCritical: true,
+		});
 
 		expect(result.ok).toBe(true);
 		expect(result.consumption).toEqual([
@@ -436,7 +444,7 @@ describe('ChargePoolService', () => {
 		});
 
 		const item = actor.items.contents[0];
-		await ChargePoolService.applyRestRecovery(actor as unknown as Actor.Implementation, 'safe');
+		await applyRestRecovery(actor as unknown as Actor.Implementation, 'safe');
 
 		expect(item.update).toHaveBeenCalled();
 		const updatedPool = (item.flags.nimble.chargePools as Record<string, unknown>)[
@@ -486,9 +494,7 @@ describe('ChargePoolService', () => {
 
 		const item = actor.items.contents[0];
 		const beforePool = (item.flags.nimble.chargePools as Record<string, unknown>).healing;
-		const result = await ChargePoolService.consumeOnResolvedItemUse(
-			item as unknown as Item.Implementation,
-		);
+		const result = await consumeOnResolvedItemUse(item as unknown as Item.Implementation);
 
 		expect(result.ok).toBe(true);
 		expect(item.update).toHaveBeenCalled();
@@ -570,12 +576,8 @@ describe('ChargePoolService', () => {
 		const potion1 = actor.items.contents[0];
 		const potion2 = actor.items.contents[1];
 
-		const validation1 = ChargePoolService.validateItemChargeConsumption(
-			potion1 as unknown as Item.Implementation,
-		);
-		const validation2 = ChargePoolService.validateItemChargeConsumption(
-			potion2 as unknown as Item.Implementation,
-		);
+		const validation1 = validateItemChargeConsumption(potion1 as unknown as Item.Implementation);
+		const validation2 = validateItemChargeConsumption(potion2 as unknown as Item.Implementation);
 
 		expect(validation1.ok).toBe(false);
 		expect(validation1.failure?.code).toBe('insufficientCharges');
@@ -615,12 +617,7 @@ describe('ChargePoolService', () => {
 		});
 
 		const item = actor.items.contents[0];
-		const adjusted = await ChargePoolService.adjustPool(
-			actor as unknown as Actor.Implementation,
-			'test',
-			'set',
-			10,
-		);
+		const adjusted = await adjustPool(actor as unknown as Actor.Implementation, 'test', 'set', 10);
 
 		expect(adjusted).toBe(true);
 		expect(item.update).toHaveBeenCalled();
@@ -665,10 +662,7 @@ describe('ChargePoolService', () => {
 		});
 
 		const item = actor.items.contents[0];
-		await ChargePoolService.applyEncounterRecovery(
-			actor as unknown as Actor.Implementation,
-			'encounterStart',
-		);
+		await applyEncounterRecovery(actor as unknown as Actor.Implementation, 'encounterStart');
 
 		expect(item.update).toHaveBeenCalled();
 		const updatedPool = (item.flags.nimble.chargePools as Record<string, unknown>).rage as Record<
@@ -712,10 +706,7 @@ describe('ChargePoolService', () => {
 		});
 
 		const item = actor.items.contents[0];
-		await ChargePoolService.applyEncounterRecovery(
-			actor as unknown as Actor.Implementation,
-			'encounterEnd',
-		);
+		await applyEncounterRecovery(actor as unknown as Actor.Implementation, 'encounterEnd');
 
 		expect(item.update).toHaveBeenCalled();
 		const updatedPool = (item.flags.nimble.chargePools as Record<string, unknown>)
@@ -758,10 +749,7 @@ describe('ChargePoolService', () => {
 			},
 		});
 
-		await ChargePoolService.applyEncounterRecovery(
-			actor as unknown as Actor.Implementation,
-			'encounterStart',
-		);
+		await applyEncounterRecovery(actor as unknown as Actor.Implementation, 'encounterStart');
 
 		expect(actor.update).toHaveBeenCalled();
 		const updatedPool = foundry.utils.getProperty(
@@ -804,10 +792,7 @@ describe('ChargePoolService', () => {
 		});
 
 		const item = actor.items.contents[0];
-		await ChargePoolService.applyEncounterRecovery(
-			actor as unknown as Actor.Implementation,
-			'encounterEnd',
-		);
+		await applyEncounterRecovery(actor as unknown as Actor.Implementation, 'encounterEnd');
 
 		expect(item.update).not.toHaveBeenCalled();
 		const pool = (item.flags.nimble.chargePools as Record<string, unknown>).cunning as Record<
@@ -852,10 +837,7 @@ describe('ChargePoolService', () => {
 			},
 		});
 
-		const preview = ChargePoolService.previewRecovery(
-			actor as unknown as Actor.Implementation,
-			'safeRest',
-		);
+		const preview = previewRecovery(actor as unknown as Actor.Implementation, 'safeRest');
 		expect(preview).toEqual([
 			{
 				poolId: 'actor:focus',
@@ -868,7 +850,7 @@ describe('ChargePoolService', () => {
 			},
 		]);
 
-		await ChargePoolService.applyRestRecovery(actor as unknown as Actor.Implementation, 'safe');
+		await applyRestRecovery(actor as unknown as Actor.Implementation, 'safe');
 		expect(
 			foundry.utils.getProperty(
 				actor.flags,
@@ -911,10 +893,7 @@ describe('ChargePoolService', () => {
 			},
 		});
 
-		const preview = ChargePoolService.previewRecovery(
-			actor as unknown as Actor.Implementation,
-			'safeRest',
-		);
+		const preview = previewRecovery(actor as unknown as Actor.Implementation, 'safeRest');
 		expect(preview).toEqual([
 			{
 				poolId: 'actor:reserve',
@@ -927,7 +906,7 @@ describe('ChargePoolService', () => {
 			},
 		]);
 
-		await ChargePoolService.applyRestRecovery(actor as unknown as Actor.Implementation, 'safe');
+		await applyRestRecovery(actor as unknown as Actor.Implementation, 'safe');
 		expect(
 			foundry.utils.getProperty(
 				actor.flags,
@@ -960,7 +939,7 @@ describe('ChargePoolService', () => {
 			},
 		});
 
-		await ChargePoolService.syncActorPools(actor as unknown as Actor.Implementation);
+		await syncActorPools(actor as unknown as Actor.Implementation);
 		expect(actor.update).toHaveBeenCalled();
 		expect(
 			foundry.utils.getProperty(
@@ -993,7 +972,7 @@ describe('ChargePoolService', () => {
 		});
 
 		const item = actor.items.contents[0];
-		await ChargePoolService.syncActorPools(actor as unknown as Actor.Implementation);
+		await syncActorPools(actor as unknown as Actor.Implementation);
 		expect(item.update).toHaveBeenCalled();
 		expect((item.flags.nimble.chargePools as Record<string, unknown>).legacy).toBeUndefined();
 	});
@@ -1054,14 +1033,11 @@ describe('ChargePoolService', () => {
 			],
 		});
 
-		const poolsForSource = ChargePoolService.getPoolsForItem(
-			actor as unknown as Actor.Implementation,
-			'item-1',
-		);
+		const poolsForSource = getPoolsForItem(actor as unknown as Actor.Implementation, 'item-1');
 		expect(poolsForSource).toHaveLength(1);
 		expect(poolsForSource[0]?.id).toBe('focus');
 
-		const poolsForMissingPrefixId = ChargePoolService.getPoolsForItem(
+		const poolsForMissingPrefixId = getPoolsForItem(
 			actor as unknown as Actor.Implementation,
 			'item-',
 		);

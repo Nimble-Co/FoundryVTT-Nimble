@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
-	import { ChargePoolService } from '#utils/chargePoolService.js';
+	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import sortItems from '#utils/sortItems.js';
 	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
 	import ArmorClass from '#view/sheets/components/ArmorClass.svelte';
@@ -404,10 +404,10 @@
 	let allCollapsed = $derived(items.every((item) => getItemCollapsed(item)));
 
 	// All charge pools for the actor
-	let allPools = $derived(ChargePoolService.getPools(actor.reactive));
+	let allPools = $derived(getPools(actor.reactive));
 
 	function getItemPools(itemId: string) {
-		return ChargePoolService.getPoolsForItem(actor.reactive, itemId, allPools);
+		return getPoolsForItem(actor.reactive, itemId, allPools);
 	}
 
 	// Track which category section is currently visible at the top

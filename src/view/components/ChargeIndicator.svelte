@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ChargeIndicatorProps } from '#types/components/ChargeIndicator.d.ts';
-	import { ChargePoolService } from '#utils/chargePoolService.js';
+	import { getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
 	import localize from '#utils/localize.js';
 	import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
@@ -76,7 +76,7 @@
 
 		const item = actor.items.get(itemId);
 		const itemName = item?.name ?? localize(ChargeUiConfig.unknownItemLocalizationKey);
-		const poolsForItem = ChargePoolService.getPoolsForItem(actor, itemId);
+		const poolsForItem = getPoolsForItem(actor, itemId);
 
 		const dialog = GenericDialog.getOrCreate(
 			`${localize('NIMBLE.charges.configure')}: ${itemName}`,
