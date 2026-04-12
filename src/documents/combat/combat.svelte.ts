@@ -525,6 +525,9 @@ class NimbleCombat extends Combat {
 	}
 
 	override async _onEndTurn(combatant: Combatant.Implementation, context: Combat.TurnEventContext) {
+		// @ts-expect-error Custom hook
+		Hooks.call('nimbleCombatTurnEnd', combatant);
+
 		await super._onEndTurn(combatant, context);
 
 		if (combatant.type === 'character') {

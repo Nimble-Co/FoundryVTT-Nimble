@@ -473,6 +473,14 @@ class NimbleChatMessage extends ChatMessage {
 			if (Object.keys(updates).length > 0) {
 				await target.actor.update(updates as Actor.UpdateData);
 			}
+
+			if (nextHp === 0) {
+				const attacker = (this as unknown as { actor: Actor.Implementation | null }).actor;
+				if (attacker) {
+					// @ts-expect-error Custom hook
+					Hooks.call('nimbleKillApplied', attacker, target.actor);
+				}
+			}
 		}
 
 		for (const tokenName of damageApplicationPlan.zeroDamageTargetNames) {
