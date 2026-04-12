@@ -14,10 +14,6 @@
 			: 'var(--nimble-roll-success-color, hsl(120, 45%, 55%))';
 	}
 
-	function formatChange(change) {
-		return change < 0 ? `(${change})` : `(+${change})`;
-	}
-
 	function formatSignedDelta(value: number): string {
 		return value < 0 ? String(value) : `+${value}`;
 	}
@@ -52,7 +48,7 @@
 						>
 							{useRecoveryDelta
 								? `(${formatSignedDelta(recoveryDelta)})`
-								: `(${formatChange(entry.change)})`}
+								: `(${formatSignedDelta(entry.change)})`}
 						</span>
 					{/if}
 					<span class="nimble-charge-consumption__label">{entry.poolLabel}</span>
