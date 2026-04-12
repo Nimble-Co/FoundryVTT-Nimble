@@ -30,6 +30,11 @@ function validateItemChargeConsumption(item: Item | null | undefined): ChargeVal
 	for (const consumer of consumers) {
 		const pool = pools[consumer.poolId];
 		if (!pool) {
+			console.warn(
+				`[Nimble] chargeConsumer could not resolve pool "${consumer.poolIdentifier}" ` +
+					`on item "${item.name}". Check that a matching chargePool rule exists ` +
+					`and the identifier is spelled correctly.`,
+			);
 			return {
 				ok: false,
 				failure: {
@@ -81,6 +86,11 @@ async function consumeOnResolvedItemUse(
 	for (const consumer of consumers) {
 		const pool = nextPools[consumer.poolId];
 		if (!pool) {
+			console.warn(
+				`[Nimble] chargeConsumer could not resolve pool "${consumer.poolIdentifier}" ` +
+					`on item "${item.name}". Check that a matching chargePool rule exists ` +
+					`and the identifier is spelled correctly.`,
+			);
 			return {
 				ok: false,
 				failure: {
