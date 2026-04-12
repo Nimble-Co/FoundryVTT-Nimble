@@ -35,28 +35,28 @@
 {#if consumption.length > 0}
 	<section class="nimble-charge-consumption">
 		{#each consumption as entry}
+			{@const recoveryDelta = entry.recovery
+				? entry.recovery.newValue - entry.recovery.previousValue
+				: 0}
+			{@const showDelta = entry.change !== 0 || recoveryDelta !== 0}
+			{@const useRecoveryDelta = entry.recovery && recoveryDelta !== entry.change}
 			<div class="nimble-charge-consumption__entry">
-				<span class="nimble-charge-consumption__label">{entry.poolLabel}:</span>
 				<span class="nimble-charge-consumption__values">
-					{entry.currentValue}/{entry.maxValue}
-					{#if entry.change !== 0}
+					{#if showDelta}
 						<span
-							class="nimble-charge-consumption__change"
-							style="color: {getChangeColor(entry.change)}"
+							class={useRecoveryDelta
+								? 'nimble-charge-consumption__recovery'
+								: 'nimble-charge-consumption__change'}
+							style="color: {getChangeColor(useRecoveryDelta ? recoveryDelta : entry.change)}"
+							title={entry.recovery ? formatRecoveryTrigger(entry.recovery.trigger) : ''}
 						>
-							{formatChange(entry.change)}
+							{useRecoveryDelta
+								? `(${formatSignedDelta(recoveryDelta)})`
+								: `(${formatChange(entry.change)})`}
 						</span>
 					{/if}
-					{#if entry.recovery}
-						<span
-							class="nimble-charge-consumption__recovery"
-							title={formatRecoveryTrigger(entry.recovery.trigger)}
-						>
-							→ {entry.recovery.newValue}
-							({formatRecoveryTrigger(entry.recovery.trigger)}
-							{formatSignedDelta(entry.recovery.newValue - entry.recovery.previousValue)})
-						</span>
-					{/if}
+					<span class="nimble-charge-consumption__label">{entry.poolLabel}</span>
+					({entry.recovery?.newValue ?? entry.currentValue}/{entry.maxValue})
 				</span>
 			</div>
 		{/each}
