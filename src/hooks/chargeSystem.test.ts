@@ -16,15 +16,19 @@ const {
 	validateItemChargeConsumptionMock: vi.fn(() => ({ ok: true })),
 }));
 
-vi.mock('#utils/chargePoolService.js', () => ({
-	ChargePoolService: {
-		applyEncounterRecovery: applyEncounterRecoveryMock,
-		applyRestRecovery: applyRestRecoveryMock,
-		consumeOnResolvedItemUse: consumeOnResolvedItemUseMock,
-		isChargePoolFlagUpdate: isChargePoolFlagUpdateMock,
-		syncActorPools: syncActorPoolsMock,
-		validateItemChargeConsumption: validateItemChargeConsumptionMock,
-	},
+vi.mock('#utils/chargePool/chargePoolConsume.js', () => ({
+	validateItemChargeConsumption: validateItemChargeConsumptionMock,
+	consumeOnResolvedItemUse: consumeOnResolvedItemUseMock,
+}));
+
+vi.mock('#utils/chargePool/chargePoolRecover.js', () => ({
+	applyRestRecovery: applyRestRecoveryMock,
+	applyEncounterRecovery: applyEncounterRecoveryMock,
+}));
+
+vi.mock('#utils/chargePool/chargePoolSync.js', () => ({
+	isChargePoolFlagUpdate: isChargePoolFlagUpdateMock,
+	syncActorPools: syncActorPoolsMock,
 }));
 
 vi.mock('#utils/localize.js', () => ({

@@ -2,7 +2,7 @@
 	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 	import { incrementDieSize } from '#managers/HitDiceManager.js';
-	import { ChargePoolService } from '#utils/chargePoolService.js';
+	import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
 	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
 	import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/manaRecovery.js';
 
@@ -23,7 +23,7 @@
 
 	// All pools (for charges tab display)
 	let chargePoolRecovery = $derived(
-		ChargePoolService.previewRecovery(reactiveActor, 'safeRest').map((pool) => ({
+		previewRecovery(reactiveActor, 'safeRest').map((pool) => ({
 			label: pool.label,
 			icon: pool.icon,
 			recoveredAmount: pool.recoveredAmount,

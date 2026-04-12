@@ -1,122 +1,22 @@
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
-import getDeterministicBonus from '../dice/getDeterministicBonus.js';
-
-type ChargePoolScope = (typeof ChargePoolRuleConfig.scopes)[number];
-type ChargePoolInitialMode = (typeof ChargePoolRuleConfig.initialModes)[number];
-type ChargeRecoveryTrigger = (typeof ChargePoolRuleConfig.recoveryTriggers)[number];
-type ChargeRecoveryMode = (typeof ChargePoolRuleConfig.recoveryModes)[number];
-type ChargeRestType = (typeof ChargePoolRuleConfig.restTypes)[number];
-type ManualAdjustMode = (typeof ChargePoolRuleConfig.recoveryModes)[number];
-type NumericInput = number | string | null | undefined;
-
-type ChargeRecoveryEntry = {
-	trigger: ChargeRecoveryTrigger;
-	mode: ChargeRecoveryMode;
-	value: string;
-};
-
-type ChargePoolState = {
-	id: string;
-	identifier: string;
-	scope: ChargePoolScope;
-	sourceItemId: string;
-	sourceItemName: string;
-	label: string;
-	current: number;
-	max: number;
-	icon?: string;
-	recoveries: ChargeRecoveryEntry[];
-};
-
-type ChargePoolMap = Record<string, ChargePoolState>;
-
-type ChargePoolDefinition = Omit<ChargePoolState, 'current'> & {
-	initial: ChargePoolInitialMode;
-};
-
-type ChargePoolRuleLike = {
-	type?: string;
-	disabled?: boolean;
-	id?: string;
-	identifier?: string;
-	label?: string;
-	scope?: string;
-	max?: string;
-	icon?: string;
-	initial?: string;
-	recoveries?: unknown;
-};
-
-type ChargeConsumerRuleLike = {
-	type?: string;
-	disabled?: boolean;
-	id?: string;
-	identifier?: string;
-	poolIdentifier?: string;
-	poolScope?: string;
-	cost?: string;
-};
-
-type RuleLike = ChargePoolRuleLike & ChargeConsumerRuleLike;
-
-type RuleBackedItem = Item.Implementation & {
-	rules?: Map<string, RuleLike>;
-};
-
-type CharacterActorLike = Actor.Implementation & {
-	type: 'character';
-	items: foundry.abstract.EmbeddedCollection<Item.Implementation, Actor.Implementation>;
-	getRollData(): Record<string, unknown>;
-};
-
-type ChargeConsumerState = {
-	poolId: string;
-	poolIdentifier: string;
-	cost: number;
-};
-
-type ChargeContext = {
-	isMiss?: boolean;
-	isCritical?: boolean;
-};
-
-type ChargeValidationFailure = {
-	code: 'poolMissing' | 'insufficientCharges';
-	poolIdentifier: string;
-	poolLabel: string;
-	required: number;
-	available: number;
-};
-
-type ChargeConsumptionDetail = {
-	poolLabel: string;
-	previousValue: number;
-	currentValue: number;
-	maxValue: number;
-	change: number;
-	recovery?: {
-		trigger: string;
-		previousValue: number;
-		newValue: number;
-	};
-};
-
-type ChargeValidationResult = {
-	ok: boolean;
-	failure?: ChargeValidationFailure;
-	consumption?: ChargeConsumptionDetail[];
-};
-
-type ChargePoolRecoveryPreview = {
-	poolId: string;
-	label: string;
-	icon?: string;
-	previousValue: number;
-	newValue: number;
-	maxValue: number;
-	recoveredAmount: number;
-};
+import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
+import type {
+	CharacterActorLike,
+	ChargeConsumerRuleLike,
+	ChargeConsumerState,
+	ChargePoolDefinition,
+	ChargePoolInitialMode,
+	ChargePoolMap,
+	ChargePoolRuleLike,
+	ChargePoolScope,
+	ChargePoolState,
+	ChargeRecoveryEntry,
+	ChargeRecoveryMode,
+	ChargeRecoveryTrigger,
+	NumericInput,
+	RuleBackedItem,
+} from './types.js';
 
 const VALID_RECOVERY_TRIGGERS: Set<ChargeRecoveryTrigger> = new Set(
 	ChargePoolRuleConfig.recoveryTriggers,
@@ -391,7 +291,10 @@ function getChargeConsumers(
 	return consumers;
 }
 
-function getApplicableUsageTriggers(context: ChargeContext): ChargeRecoveryTrigger[] {
+function getApplicableUsageTriggers(context: {
+	isMiss?: boolean;
+	isCritical?: boolean;
+}): ChargeRecoveryTrigger[] {
 	if (context.isMiss === true) return [];
 
 	const triggers: ChargeRecoveryTrigger[] = ['onHit'];
@@ -598,295 +501,29 @@ function areChargePoolMapsEqual(left: ChargePoolMap, right: ChargePoolMap): bool
 	return true;
 }
 
-const ChargePoolService = {
-	isChargePoolFlagUpdate(options: unknown): boolean {
-		if (!options || typeof options !== 'object') return false;
-		return Boolean(
-			foundry.utils.getProperty(options, `${ChargePoolRuleConfig.flagScope}.skipChargePoolSync`),
-		);
-	},
-
-	getPools(actor: Actor | null | undefined): ChargePoolState[] {
-		if (!isCharacterActor(actor)) return [];
-
-		return Object.values(buildEffectiveChargePoolMap(actor)).sort((a, b) =>
-			a.label.localeCompare(b.label),
-		);
-	},
-
-	getPoolsForItem(
-		actor: Actor | null | undefined,
-		itemId: string,
-		pools?: ChargePoolState[],
-	): ChargePoolState[] {
-		if (!isCharacterActor(actor)) return [];
-		const normalizedItemId = normalizeIdentifier(itemId);
-		if (normalizedItemId.length < 1) return [];
-
-		const availablePools = pools ?? ChargePoolService.getPools(actor);
-		const item = actor.items.get(normalizedItemId) as RuleBackedItem | undefined;
-		if (!item) {
-			return availablePools.filter((pool) => pool.sourceItemId === normalizedItemId);
-		}
-
-		const consumers = getChargeConsumers(actor, item);
-		const consumerPoolIds = new Set(consumers.map((consumer) => consumer.poolId));
-		return availablePools.filter(
-			(pool) => pool.sourceItemId === normalizedItemId || consumerPoolIds.has(pool.id),
-		);
-	},
-
-	previewRecovery(
-		actor: Actor | null | undefined,
-		trigger: ChargeRecoveryTrigger,
-	): ChargePoolRecoveryPreview[] {
-		if (!isCharacterActor(actor)) return [];
-
-		const currentPools = buildEffectiveChargePoolMap(actor);
-		const nextPools = applyRecoveryTriggersToPools(actor, currentPools, [trigger]);
-		const previews: ChargePoolRecoveryPreview[] = [];
-
-		for (const pool of Object.values(currentPools)) {
-			if (!pool.recoveries.some((recovery) => recovery.trigger === trigger)) continue;
-			const nextPool = nextPools[pool.id];
-			if (!nextPool) continue;
-
-			previews.push({
-				poolId: pool.id,
-				label: pool.label,
-				icon: pool.icon,
-				previousValue: pool.current,
-				newValue: nextPool.current,
-				maxValue: nextPool.max,
-				recoveredAmount: Math.max(0, nextPool.current - pool.current),
-			});
-		}
-
-		return previews.sort((a, b) => a.label.localeCompare(b.label));
-	},
-
-	async syncActorPools(actor: Actor | null | undefined): Promise<void> {
-		if (!isCharacterActor(actor)) return;
-
-		const existingPools = getChargePoolMapFromActor(actor);
-		const nextPools = buildEffectiveChargePoolMap(actor);
-		if (areChargePoolMapsEqual(existingPools, nextPools)) return;
-
-		await persistChargePoolMap(actor, nextPools);
-	},
-
-	validateItemChargeConsumption(item: Item | null | undefined): ChargeValidationResult {
-		if (!item) return { ok: true };
-		const ruleBackedItem = item as RuleBackedItem;
-		const actor = item.actor;
-		if (!isCharacterActor(actor)) return { ok: true };
-
-		const pools = buildEffectiveChargePoolMap(actor);
-		const consumers = getChargeConsumers(actor, ruleBackedItem);
-		for (const consumer of consumers) {
-			const pool = pools[consumer.poolId];
-			if (!pool) {
-				return {
-					ok: false,
-					failure: {
-						code: 'poolMissing',
-						poolIdentifier: consumer.poolIdentifier,
-						poolLabel: consumer.poolIdentifier,
-						required: consumer.cost,
-						available: 0,
-					},
-				};
-			}
-
-			const available = toFiniteNonNegativeInteger(pool.current);
-			if (available < consumer.cost) {
-				return {
-					ok: false,
-					failure: {
-						code: 'insufficientCharges',
-						poolIdentifier: consumer.poolIdentifier,
-						poolLabel: pool.label,
-						required: consumer.cost,
-						available,
-					},
-				};
-			}
-		}
-
-		return { ok: true };
-	},
-
-	async consumeOnResolvedItemUse(
-		item: Item | null | undefined,
-		context: ChargeContext = {},
-	): Promise<ChargeValidationResult> {
-		if (!item) return { ok: true };
-		const ruleBackedItem = item as RuleBackedItem;
-		const actor = item.actor;
-		if (!isCharacterActor(actor)) return { ok: true };
-
-		const currentPools = buildEffectiveChargePoolMap(actor);
-		const consumers = getChargeConsumers(actor, ruleBackedItem);
-
-		const consumption: ChargeConsumptionDetail[] = [];
-		const consumptionByPoolId = new Map<string, ChargeConsumptionDetail>();
-		const consumedPoolIds = new Set<string>();
-		const nextPools = foundry.utils.deepClone(currentPools) as ChargePoolMap;
-		const triggers = getApplicableUsageTriggers(context);
-
-		// Apply consumption
-		for (const consumer of consumers) {
-			const pool = nextPools[consumer.poolId];
-			if (!pool) {
-				return {
-					ok: false,
-					failure: {
-						code: 'poolMissing',
-						poolIdentifier: consumer.poolIdentifier,
-						poolLabel: consumer.poolIdentifier,
-						required: consumer.cost,
-						available: 0,
-					},
-				};
-			}
-
-			if (pool.current < consumer.cost) {
-				return {
-					ok: false,
-					failure: {
-						code: 'insufficientCharges',
-						poolIdentifier: consumer.poolIdentifier,
-						poolLabel: pool.label,
-						required: consumer.cost,
-						available: pool.current,
-					},
-				};
-			}
-
-			pool.current = clampCurrentToMax(pool.current - consumer.cost, pool.max);
-			consumedPoolIds.add(consumer.poolId);
-		}
-
-		// Apply recovery
-		const postRecoveryPools = applyRecoveryTriggersToPools(actor, nextPools, triggers);
-
-		// Capture consumption details for directly consumed pools
-		for (const poolId of consumedPoolIds) {
-			const preConsumptionPool = currentPools[poolId];
-			const postConsumptionPool = nextPools[poolId];
-			const postRecoveryPool = postRecoveryPools[poolId];
-
-			if (!preConsumptionPool || !postConsumptionPool || !postRecoveryPool) continue;
-
-			// What we consumed: pre-consumption -> post-consumption
-			const previousValue = preConsumptionPool.current;
-			const currentValue = postConsumptionPool.current;
-			const change = currentValue - previousValue;
-
-			consumptionByPoolId.set(poolId, {
-				poolLabel: postRecoveryPool.label,
-				previousValue,
-				currentValue,
-				maxValue: postRecoveryPool.max,
-				change,
-			});
-		}
-
-		// Attach recovery details for all pools changed by recovery triggers, including
-		// pools that were not directly consumed by this item use.
-		for (const [poolId, postRecoveryPool] of Object.entries(postRecoveryPools)) {
-			const postConsumptionPool = nextPools[poolId];
-			if (!postConsumptionPool) continue;
-			if (postConsumptionPool.current === postRecoveryPool.current) continue;
-
-			const recovery: NonNullable<ChargeConsumptionDetail['recovery']> = {
-				trigger: resolveRecoveryTrigger(postRecoveryPool, triggers),
-				previousValue: postConsumptionPool.current,
-				newValue: postRecoveryPool.current,
-			};
-
-			const existingEntry = consumptionByPoolId.get(poolId);
-			if (existingEntry) {
-				existingEntry.recovery = recovery;
-				continue;
-			}
-
-			const preConsumptionPool = currentPools[poolId];
-			const previousValue = preConsumptionPool?.current ?? postConsumptionPool.current;
-			const currentValue = postConsumptionPool.current;
-			const change = currentValue - previousValue;
-
-			consumptionByPoolId.set(poolId, {
-				poolLabel: postRecoveryPool.label,
-				previousValue,
-				currentValue,
-				maxValue: postRecoveryPool.max,
-				change,
-				recovery,
-			});
-		}
-
-		consumption.push(...consumptionByPoolId.values());
-
-		if (!areChargePoolMapsEqual(currentPools, postRecoveryPools)) {
-			await persistChargePoolMap(actor, postRecoveryPools);
-		}
-
-		return { ok: true, consumption };
-	},
-
-	async applyRestRecovery(
-		actor: Actor | null | undefined,
-		restType: ChargeRestType,
-	): Promise<void> {
-		if (!isCharacterActor(actor)) return;
-		const trigger: ChargeRecoveryTrigger = restType === 'safe' ? 'safeRest' : 'fieldRest';
-
-		const currentPools = buildEffectiveChargePoolMap(actor);
-		const nextPools = applyRecoveryTriggersToPools(actor, currentPools, [trigger]);
-		if (areChargePoolMapsEqual(currentPools, nextPools)) return;
-
-		await persistChargePoolMap(actor, nextPools);
-	},
-
-	async applyEncounterRecovery(
-		actor: Actor | null | undefined,
-		encounterTrigger: 'encounterStart' | 'encounterEnd',
-	): Promise<void> {
-		if (!isCharacterActor(actor)) return;
-
-		const currentPools = buildEffectiveChargePoolMap(actor);
-		const nextPools = applyRecoveryTriggersToPools(actor, currentPools, [encounterTrigger]);
-		if (areChargePoolMapsEqual(currentPools, nextPools)) return;
-
-		await persistChargePoolMap(actor, nextPools);
-	},
-
-	async adjustPool(
-		actor: Actor | null | undefined,
-		poolId: string,
-		mode: ManualAdjustMode,
-		value: number,
-	): Promise<boolean> {
-		if (!isCharacterActor(actor)) return false;
-		if (typeof poolId !== 'string' || poolId.length < 1) return false;
-
-		const currentPools = buildEffectiveChargePoolMap(actor);
-		const pool = currentPools[poolId];
-		if (!pool) return false;
-
-		const normalizedValue = toFiniteNonNegativeInteger(value);
-		if (mode === 'refresh') {
-			pool.current = pool.max;
-		} else if (mode === 'set') {
-			pool.current = clampCurrentToMax(normalizedValue, pool.max);
-		} else {
-			pool.current = clampCurrentToMax(pool.current + normalizedValue, pool.max);
-		}
-
-		await persistChargePoolMap(actor, currentPools);
-		return true;
-	},
+export {
+	VALID_RECOVERY_TRIGGERS,
+	VALID_RECOVERY_MODES,
+	isCharacterActor,
+	toFiniteNonNegativeInteger,
+	toNumericInput,
+	clampCurrentToMax,
+	normalizeIdentifier,
+	normalizeIcon,
+	buildChargePoolId,
+	toChargePoolScope,
+	getChargePoolMapFromActor,
+	resolveFormulaToInteger,
+	normalizeRecoveries,
+	getChargePoolDefinitions,
+	buildEffectiveChargePoolMap,
+	getChargeConsumers,
+	getApplicableUsageTriggers,
+	applyRecoveryTriggersToPools,
+	resolveRecoveryTrigger,
+	buildPoolUpdatePayload,
+	persistChargePoolMap,
+	areRecoveryEntriesEqual,
+	areChargePoolStatesEqual,
+	areChargePoolMapsEqual,
 };
-
-export { ChargePoolService };

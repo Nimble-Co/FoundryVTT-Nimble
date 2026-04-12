@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { ConfigureChargesDialogProps } from '#types/components/ConfigureChargesDialog.d.ts';
-	import { ChargePoolService } from '#utils/chargePoolService.js';
+	import { adjustPool } from '#utils/chargePool/chargePoolRecover.js';
 	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
 	import localize from '#utils/localize.js';
 
@@ -92,7 +92,7 @@
 			const pool = pools.find((p) => p.id === poolId);
 			if (pool && pool.current !== value) {
 				changes.push({ pool, oldValue: pool.current, newValue: value });
-				updates.push(ChargePoolService.adjustPool(actor, poolId, 'set', value));
+				updates.push(adjustPool(actor, poolId, 'set', value));
 			}
 		}
 

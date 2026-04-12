@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { NimbleCharacter } from '#documents/actor/character.js';
 	import type PlayerCharacterSheet from '#documents/sheets/PlayerCharacterSheet.svelte.js';
-	import { ChargePoolService } from '#utils/chargePoolService.js';
+	import { getPools, getPoolsForItem } from '#utils/chargePool/chargePoolSync.js';
 	import shouldFlashDroppedItem from '#utils/shouldFlashDroppedItem.js';
 	import sortItems from '#utils/sortItems.js';
 	import ChargeIndicator from '#view/components/ChargeIndicator.svelte';
@@ -189,10 +189,10 @@
 	});
 
 	// All charge pools for the actor
-	let allPools = $derived(ChargePoolService.getPools(actor.reactive));
+	let allPools = $derived(getPools(actor.reactive));
 
 	function getItemPools(itemId: string) {
-		return ChargePoolService.getPoolsForItem(actor.reactive, itemId, allPools);
+		return getPoolsForItem(actor.reactive, itemId, allPools);
 	}
 
 	async function getSpellTooltip(spell) {

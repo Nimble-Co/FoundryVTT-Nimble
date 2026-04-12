@@ -1,5 +1,10 @@
+import {
+	consumeOnResolvedItemUse,
+	validateItemChargeConsumption,
+} from '#utils/chargePool/chargePoolConsume.js';
+import { applyEncounterRecovery, applyRestRecovery } from '#utils/chargePool/chargePoolRecover.js';
+import { isChargePoolFlagUpdate, syncActorPools } from '#utils/chargePool/chargePoolSync.js';
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
-import { ChargePoolService } from '#utils/chargePoolService.js';
 import localize from '#utils/localize.js';
 
 type HookFn = (...args: unknown[]) => unknown;
@@ -15,7 +20,7 @@ type RestContext = {
 };
 
 type ChargeValidationFailure = NonNullable<
-	ReturnType<typeof ChargePoolService.validateItemChargeConsumption>['failure']
+	ReturnType<typeof validateItemChargeConsumption>['failure']
 >;
 
 function toCharacterItem(item: unknown): Item.Implementation | null {
@@ -83,7 +88,7 @@ function notifyChargeFailure(itemName: string, failure: ChargeValidationFailure)
 
 async function syncItemActorPools(item: Item.Implementation | null | undefined): Promise<void> {
 	if (!item?.actor || item.actor.type !== 'character') return;
-	await ChargePoolService.syncActorPools(item.actor);
+	await syncActorPools(item.actor);
 }
 
 function registerItemSyncHooks(): void {
@@ -92,7 +97,7 @@ function registerItemSyncHooks(): void {
 	});
 
 	Hooks.on('updateItem', (item: Item.Implementation, _changes, options) => {
-		if (ChargePoolService.isChargePoolFlagUpdate(options)) return;
+		if (isChargePoolFlagUpdate(options)) return;
 		void syncItemActorPools(item);
 	});
 
@@ -103,11 +108,11 @@ function registerItemSyncHooks(): void {
 
 function registerActorSyncHooks(): void {
 	Hooks.on('updateActor', (actor: Actor.Implementation, changes, options) => {
-		if (ChargePoolService.isChargePoolFlagUpdate(options)) return;
+		if (isChargePoolFlagUpdate(options)) return;
 		if (actor.type !== 'character') return;
 		if (foundry.utils.hasProperty(changes, ChargePoolRuleConfig.flagPath)) return;
 
-		void ChargePoolService.syncActorPools(actor);
+		void syncActorPools(actor);
 	});
 }
 
@@ -116,7 +121,7 @@ function registerItemUseHooks(): void {
 		const characterItem = toCharacterItem(item);
 		if (!characterItem) return true;
 
-		const validation = ChargePoolService.validateItemChargeConsumption(characterItem);
+		const validation = validateItemChargeConsumption(characterItem);
 		if (validation.ok) return true;
 		const failure = validation.failure;
 		if (!failure) return false;
@@ -133,24 +138,18 @@ function registerItemUseHooks(): void {
 			update?(data: Record<string, unknown>): Promise<unknown>;
 		} | null;
 
-		void ChargePoolService.consumeOnResolvedItemUse(characterItem, itemUseContext).then(
-			async (validation) => {
-				if (
-					validation.consumption &&
-					validation.consumption.length > 0 &&
-					typedChatMessage?.update
-				) {
-					await typedChatMessage.update({
-						'flags.nimble.chargeConsumption': validation.consumption,
-					} as Record<string, unknown>);
-				}
+		void consumeOnResolvedItemUse(characterItem, itemUseContext).then(async (validation) => {
+			if (validation.consumption && validation.consumption.length > 0 && typedChatMessage?.update) {
+				await typedChatMessage.update({
+					'flags.nimble.chargeConsumption': validation.consumption,
+				} as Record<string, unknown>);
+			}
 
-				if (validation.ok) return;
-				const failure = validation.failure;
-				if (!failure) return;
-				notifyChargeFailure(characterItem.name, failure);
-			},
-		);
+			if (validation.ok) return;
+			const failure = validation.failure;
+			if (!failure) return;
+			notifyChargeFailure(characterItem.name, failure);
+		});
 	});
 }
 
@@ -161,7 +160,7 @@ function registerRestHooks(): void {
 		const restContext = toRestContext(context);
 		if (!restContext.restType) return;
 
-		void ChargePoolService.applyRestRecovery(characterActor, restContext.restType);
+		void applyRestRecovery(characterActor, restContext.restType);
 	});
 }
 
@@ -180,7 +179,7 @@ function applyEncounterRecoveryToCombatants(
 	for (const combatant of combat.combatants.contents) {
 		const actor = combatant.actor;
 		if (!actor || actor.type !== 'character') continue;
-		void ChargePoolService.applyEncounterRecovery(actor, encounterTrigger);
+		void applyEncounterRecovery(actor, encounterTrigger);
 	}
 }
 

@@ -1,5 +1,5 @@
 import { HitDiceManager } from '#managers/HitDiceManager.js';
-import { ChargePoolService } from '#utils/chargePoolService.js';
+import { previewRecovery } from '#utils/chargePool/chargePoolPreview.js';
 import { getManaRecoveryTypesFromClasses, restoresManaOnRest } from '#utils/manaRecovery.js';
 
 // Uses NimbleCharacterInterface ambient type from actor.d.ts
@@ -303,10 +303,7 @@ class RestManager {
 	}
 
 	#restoreChargePools() {
-		const recoveryPreview = ChargePoolService.previewRecovery(
-			this.#actor as unknown as Actor,
-			'safeRest',
-		);
+		const recoveryPreview = previewRecovery(this.#actor as unknown as Actor, 'safeRest');
 		for (const pool of recoveryPreview) {
 			if (pool.recoveredAmount > 0) {
 				this.#recovery.chargePoolsRecovered.push({
