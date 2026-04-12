@@ -1,3 +1,4 @@
+import { emitCancelable, emitForCharacter } from './chargePoolHooks.js';
 import {
 	applyRecoveryTriggersToPools,
 	areChargePoolMapsEqual,
@@ -11,6 +12,7 @@ import {
 	toFiniteNonNegativeInteger,
 } from './helpers.js';
 import type {
+	CharacterActorLike,
 	ChargeConsumptionDetail,
 	ChargeContext,
 	ChargeValidationResult,
@@ -103,7 +105,38 @@ async function consumeOnResolvedItemUse(
 				},
 			};
 		}
+	}
 
+	const beforeConsumePayload = {
+		item: ruleBackedItem as Item.Implementation,
+		actor: actor as CharacterActorLike,
+		pools: consumers.map((c) => {
+			const pool = nextPools[c.poolId];
+			return {
+				poolId: c.poolId,
+				poolLabel: pool?.label ?? c.poolIdentifier,
+				cost: c.cost,
+				currentValue: pool?.current ?? 0,
+			};
+		}),
+		context,
+	};
+
+	if (!emitCancelable('beforeConsume', beforeConsumePayload)) {
+		return {
+			ok: false,
+			failure: {
+				code: 'consumptionBlocked',
+				poolIdentifier: '',
+				poolLabel: '',
+				required: 0,
+				available: 0,
+			},
+		};
+	}
+
+	for (const consumer of consumers) {
+		const pool = nextPools[consumer.poolId];
 		pool.current = clampCurrentToMax(pool.current - consumer.cost, pool.max);
 		consumedPoolIds.add(consumer.poolId);
 	}
@@ -166,6 +199,56 @@ async function consumeOnResolvedItemUse(
 
 	if (!areChargePoolMapsEqual(currentPools, postRecoveryPools)) {
 		await persistChargePoolMap(actor, postRecoveryPools);
+
+		emitForCharacter(actor, 'consumed', {
+			item: ruleBackedItem as Item.Implementation,
+			actor: actor as CharacterActorLike,
+			consumption: consumption.map((c) => ({
+				poolId:
+					Object.entries(postRecoveryPools).find(([, p]) => p.label === c.poolLabel)?.[0] ?? '',
+				poolLabel: c.poolLabel,
+				previousValue: c.previousValue,
+				currentValue: c.currentValue,
+				cost: Math.abs(c.change),
+			})),
+		});
+
+		const recoveryEntries = consumption
+			.filter((c) => c.recovery)
+			.map((c) => ({
+				poolId:
+					Object.entries(postRecoveryPools).find(([, p]) => p.label === c.poolLabel)?.[0] ?? '',
+				poolLabel: c.poolLabel,
+				previousValue: c.recovery!.previousValue,
+				newValue: c.recovery!.newValue,
+				recoveredAmount: c.recovery!.newValue - c.recovery!.previousValue,
+			}));
+
+		if (recoveryEntries.length > 0) {
+			const primaryTrigger = recoveryEntries[0].poolId
+				? resolveRecoveryTrigger(postRecoveryPools[recoveryEntries[0].poolId], triggers)
+				: (triggers[0] ?? 'onHit');
+			emitForCharacter(actor, 'recovered', {
+				actor: actor as CharacterActorLike,
+				trigger: primaryTrigger,
+				recovery: recoveryEntries,
+			});
+		}
+
+		for (const [poolId, postRecoveryPool] of Object.entries(postRecoveryPools)) {
+			const prePool = currentPools[poolId];
+			if (!prePool || prePool.current === postRecoveryPool.current) continue;
+			emitForCharacter(actor, 'changed', {
+				actor: actor as CharacterActorLike,
+				poolId,
+				poolLabel: postRecoveryPool.label,
+				previousValue: prePool.current,
+				newValue: postRecoveryPool.current,
+				maxValue: postRecoveryPool.max,
+				reason: 'consume',
+				trigger: triggers[0],
+			});
+		}
 	}
 
 	return { ok: true, consumption };

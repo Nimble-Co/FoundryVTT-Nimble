@@ -1,3 +1,4 @@
+import { emitForCharacter } from './chargePoolHooks.js';
 import {
 	applyRecoveryTriggersToPools,
 	areChargePoolMapsEqual,
@@ -7,7 +8,7 @@ import {
 	persistChargePoolMap,
 	toFiniteNonNegativeInteger,
 } from './helpers.js';
-import type { ChargeRestType, ManualAdjustMode } from './types.js';
+import type { CharacterActorLike, ChargeRestType, ManualAdjustMode } from './types.js';
 
 async function applyRestRecovery(
 	actor: Actor | null | undefined,
@@ -21,6 +22,47 @@ async function applyRestRecovery(
 	if (areChargePoolMapsEqual(currentPools, nextPools)) return;
 
 	await persistChargePoolMap(actor, nextPools);
+
+	const recoveryEntries: Array<{
+		poolId: string;
+		poolLabel: string;
+		previousValue: number;
+		newValue: number;
+		recoveredAmount: number;
+	}> = [];
+
+	for (const [poolId, nextPool] of Object.entries(nextPools)) {
+		const prePool = currentPools[poolId];
+		if (!prePool || prePool.current === nextPool.current) continue;
+		recoveryEntries.push({
+			poolId,
+			poolLabel: nextPool.label,
+			previousValue: prePool.current,
+			newValue: nextPool.current,
+			recoveredAmount: nextPool.current - prePool.current,
+		});
+	}
+
+	if (recoveryEntries.length > 0) {
+		emitForCharacter(actor, 'recovered', {
+			actor: actor as CharacterActorLike,
+			trigger,
+			recovery: recoveryEntries,
+		});
+
+		for (const entry of recoveryEntries) {
+			emitForCharacter(actor, 'changed', {
+				actor: actor as CharacterActorLike,
+				poolId: entry.poolId,
+				poolLabel: entry.poolLabel,
+				previousValue: entry.previousValue,
+				newValue: entry.newValue,
+				maxValue: nextPools[entry.poolId]?.max ?? entry.newValue,
+				reason: 'recovery',
+				trigger,
+			});
+		}
+	}
 }
 
 async function applyEncounterRecovery(
@@ -34,6 +76,47 @@ async function applyEncounterRecovery(
 	if (areChargePoolMapsEqual(currentPools, nextPools)) return;
 
 	await persistChargePoolMap(actor, nextPools);
+
+	const recoveryEntries: Array<{
+		poolId: string;
+		poolLabel: string;
+		previousValue: number;
+		newValue: number;
+		recoveredAmount: number;
+	}> = [];
+
+	for (const [poolId, nextPool] of Object.entries(nextPools)) {
+		const prePool = currentPools[poolId];
+		if (!prePool || prePool.current === nextPool.current) continue;
+		recoveryEntries.push({
+			poolId,
+			poolLabel: nextPool.label,
+			previousValue: prePool.current,
+			newValue: nextPool.current,
+			recoveredAmount: nextPool.current - prePool.current,
+		});
+	}
+
+	if (recoveryEntries.length > 0) {
+		emitForCharacter(actor, 'recovered', {
+			actor: actor as CharacterActorLike,
+			trigger: encounterTrigger,
+			recovery: recoveryEntries,
+		});
+
+		for (const entry of recoveryEntries) {
+			emitForCharacter(actor, 'changed', {
+				actor: actor as CharacterActorLike,
+				poolId: entry.poolId,
+				poolLabel: entry.poolLabel,
+				previousValue: entry.previousValue,
+				newValue: entry.newValue,
+				maxValue: nextPools[entry.poolId]?.max ?? entry.newValue,
+				reason: 'recovery',
+				trigger: encounterTrigger,
+			});
+		}
+	}
 }
 
 async function adjustPool(
@@ -49,6 +132,7 @@ async function adjustPool(
 	const pool = currentPools[poolId];
 	if (!pool) return false;
 
+	const previousValue = pool.current;
 	const normalizedValue = toFiniteNonNegativeInteger(value);
 	if (mode === 'refresh') {
 		pool.current = pool.max;
@@ -58,7 +142,34 @@ async function adjustPool(
 		pool.current = clampCurrentToMax(pool.current + normalizedValue, pool.max);
 	}
 
+	const newValue = pool.current;
 	await persistChargePoolMap(actor, currentPools);
+
+	emitForCharacter(actor, 'recovered', {
+		actor: actor as CharacterActorLike,
+		trigger: 'manual',
+		recovery: [
+			{
+				poolId,
+				poolLabel: pool.label,
+				previousValue,
+				newValue,
+				recoveredAmount: newValue - previousValue,
+			},
+		],
+	});
+
+	emitForCharacter(actor, 'changed', {
+		actor: actor as CharacterActorLike,
+		poolId,
+		poolLabel: pool.label,
+		previousValue,
+		newValue,
+		maxValue: pool.max,
+		reason: 'adjust',
+		trigger: 'manual',
+	});
+
 	return true;
 }
 
