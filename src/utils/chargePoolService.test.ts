@@ -715,6 +715,50 @@ describe('ChargePoolService', () => {
 		expect(updatedPool.current).toBe(1);
 	});
 
+	it('applies encounterEnd recovery with set 0 to reset pool to empty (Thrill of the Hunt pattern)', async () => {
+		const actor = createMockActor({
+			items: [
+				{
+					id: 'hunter-1',
+					name: 'Hunter: Thrill of the Hunt',
+					rules: [
+						{
+							type: 'chargePool',
+							id: 'pool-rule',
+							identifier: 'thrill',
+							scope: 'item',
+							max: '3',
+							initial: 'max',
+							recoveries: [{ trigger: 'encounterEnd', mode: 'set', value: '0' }],
+						},
+					],
+					itemFlags: {
+						nimble: {
+							chargePools: {
+								thrill: {
+									current: 2,
+									max: 3,
+									recoveries: [{ trigger: 'encounterEnd', mode: 'set', value: '0' }],
+								},
+							},
+						},
+					},
+				},
+			],
+		});
+
+		const item = actor.items.contents[0];
+		await applyEncounterRecovery(actor as unknown as Actor.Implementation, 'encounterEnd');
+
+		expect(item.update).toHaveBeenCalled();
+		const updatedPool = (item.flags.nimble.chargePools as Record<string, unknown>).thrill as Record<
+			string,
+			unknown
+		>;
+		expect(updatedPool).toBeDefined();
+		expect(updatedPool.current).toBe(0);
+	});
+
 	it('applies encounterStart recovery with add mode', async () => {
 		const actor = createMockActor({
 			items: [
