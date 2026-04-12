@@ -183,8 +183,30 @@ class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 		// dedupe only works for status effects with a static _id, which Nimble only
 		// assigns to conditions with linked statuses (see ConditionManager.ts).
 		if (target.statuses?.has(this.condition)) return;
+
+		// Blocking hook — listeners can return false to prevent condition application
+		// (e.g. condition immunity, resistance, or redirect).
+		// @ts-expect-error - nimble.preApplyCondition is a custom Nimble hook
+		const allowed = Hooks.call('nimble.preApplyCondition', {
+			target,
+			condition: this.condition,
+			source: this.item,
+			rule: this,
+		});
+		if (allowed === false) return;
+
 		const result = await target.toggleStatusEffect(this.condition, { active: true });
 		await this.#maybePatchDuration(result);
+
+		// Notify listeners that a condition was successfully applied.
+		// @ts-expect-error - nimble.conditionApplied is a custom Nimble hook
+		Hooks.callAll('nimble.conditionApplied', {
+			target,
+			condition: this.condition,
+			effect: typeof result === 'object' ? result : null,
+			source: this.item,
+			rule: this,
+		});
 	}
 
 	async #maybePatchDuration(result: ActiveEffectLike | boolean | undefined): Promise<void> {

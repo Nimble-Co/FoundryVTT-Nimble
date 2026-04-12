@@ -1,5 +1,10 @@
 import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const hooksCall = vi.fn().mockReturnValue(true);
+const hooksCallAll = vi.fn();
+vi.stubGlobal('Hooks', { call: hooksCall, callAll: hooksCallAll });
+
 import { ApplyConditionRule, type ApplyConditionTrigger } from './applyCondition.js';
 
 interface MockActiveEffect {
@@ -129,6 +134,7 @@ function buildItemUsedContext(
 describe('ApplyConditionRule', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		hooksCall.mockReturnValue(true);
 	});
 
 	describe('schema', () => {
@@ -380,6 +386,97 @@ describe('ApplyConditionRule', () => {
 			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
 
 			expect(targetActor.toggleStatusEffect).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('nimble.preApplyCondition hook', () => {
+		it('calls Hooks.call before applying the condition', async () => {
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'dazed', trigger: 'onCrit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
+
+			expect(hooksCall).toHaveBeenCalledWith(
+				'nimble.preApplyCondition',
+				expect.objectContaining({ target: targetActor, condition: 'dazed' }),
+			);
+			expect(targetActor.toggleStatusEffect).toHaveBeenCalled();
+		});
+
+		it('skips application when a listener returns false', async () => {
+			hooksCall.mockReturnValue(false);
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'dazed', trigger: 'onCrit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
+
+			expect(hooksCall).toHaveBeenCalledWith(
+				'nimble.preApplyCondition',
+				expect.objectContaining({ condition: 'dazed' }),
+			);
+			expect(targetActor.toggleStatusEffect).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('nimble.conditionApplied hook', () => {
+		it('fires Hooks.callAll after successfully applying a condition', async () => {
+			const attackerActor = createMockActor();
+			const effectUpdate = vi.fn().mockResolvedValue(undefined);
+			const targetActor = createMockActorWithAppliedEffect(effectUpdate);
+			const rule = createApplyConditionRule(
+				{ condition: 'smoldering', trigger: 'onCrit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
+
+			expect(hooksCallAll).toHaveBeenCalledWith(
+				'nimble.conditionApplied',
+				expect.objectContaining({
+					target: targetActor,
+					condition: 'smoldering',
+					effect: expect.objectContaining({ update: effectUpdate }),
+				}),
+			);
+		});
+
+		it('passes null effect when toggleStatusEffect returns true', async () => {
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			targetActor.toggleStatusEffect.mockResolvedValue(true);
+			const rule = createApplyConditionRule(
+				{ condition: 'dazed', trigger: 'onCrit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
+
+			expect(hooksCallAll).toHaveBeenCalledWith(
+				'nimble.conditionApplied',
+				expect.objectContaining({ condition: 'dazed', effect: null }),
+			);
+		});
+
+		it('does not fire when preApplyCondition blocks application', async () => {
+			hooksCall.mockReturnValue(false);
+			const attackerActor = createMockActor();
+			const targetActor = createMockActor();
+			const rule = createApplyConditionRule(
+				{ condition: 'dazed', trigger: 'onCrit' },
+				attackerActor,
+			);
+
+			await rule.onItemUsed(buildItemUsedContext(attackerActor, targetActor, { isCritical: true }));
+
+			expect(hooksCallAll).not.toHaveBeenCalledWith('nimble.conditionApplied', expect.anything());
 		});
 	});
 });
