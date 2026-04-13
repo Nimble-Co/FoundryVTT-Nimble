@@ -6,7 +6,21 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "armorClass",
+				"disabled": false,
+				"id": "io7K8HETN3dgovbH",
+				"identifier": "",
+				"label": "Lionhearted",
+				"predicate": {
+					"enemiesAdjacent": "most"
+				},
+				"priority": 1,
+				"formula": "2",
+				"mode": "add"
+			}
+		],
 		"description": "<p><span class=\"dig-1hicw9p1_4-2-0 dig-1hicw9p0_4-2-0 dig-ekabin0_4-2-0 dig-Theme-vis2023 dig-Theme-vis2023--dark dig-Mode--dark In-Theme-Provider\" style=\"display: contents;\">+2 Armor while you have the most enemies adjacent to you. [M]</span></p>",
 		"boonType": "major"
 	},

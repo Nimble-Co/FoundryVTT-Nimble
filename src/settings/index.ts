@@ -1,4 +1,5 @@
 import { MigrationRunnerBase } from '../migration/MigrationRunnerBase.js';
+import { registerAdjacencySettings } from './adjacencySettings.js';
 import { registerCombatTrackerSettings } from './combatTrackerSettings.js';
 import { AUTO_ADD_CHARACTER_TO_COMBAT_ON_INITIATIVE_ROLL_SETTING_KEY } from './initiativeSettings.js';
 import { registerNcswSettings } from './ncswSettings.js';
@@ -45,6 +46,7 @@ export default function registerSystemSettings() {
 		} as unknown as Parameters<typeof game.settings.register>[2],
 	);
 
+	registerAdjacencySettings();
 	registerCombatTrackerSettings();
 	registerNcswSettings();
 

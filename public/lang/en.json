@@ -1476,6 +1476,14 @@
 				"name": "Auto-Add Character To Combat On Initiative Roll",
 				"hint": "When enabled, rolling initiative from a character sheet adds that character to the current scene combat before rolling, if they are not already in combat."
 			},
+			"autoTrackTokenAdjacency": {
+				"name": "Auto-Track Token Adjacency",
+				"hint": "When enabled, the system automatically tracks the adjacency status of combatants."
+			},
+			"adjacencyIncludesDiagonals": {
+				"name": "Adjacency Includes Diagonals",
+				"hint": "When enabled, tokens that share only a corner are considered adjacent (diagonal adjacency). When disabled, only tokens sharing a full edge are adjacent (orthogonal only)."
+			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",
 				"hint": "Show the Combat System panel during combat. Helps GMs quickly target heroes and roll attacks for minions, monsters, and legendary monsters."
