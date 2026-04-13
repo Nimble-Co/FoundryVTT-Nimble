@@ -14,6 +14,14 @@ vi.mock('../../utils/getClassFeatures.ts', () => ({
 	),
 }));
 
+// Mock the subclass features utilities to return empty results immediately.
+// We mock via the path-alias that the source file uses so both the test and the
+// source resolve to the same mock instance, enabling vi.spyOn on the module.
+vi.mock('#utils/getSubclassFeatures.ts', () => ({
+	buildSubclassFeatureIndex: vi.fn(() => Promise.resolve(new Map())),
+	default: vi.fn(() => Promise.resolve([])),
+}));
+
 // Mock getSubclassChoices to return empty array (avoid SubclassSelection rendering issues in tests)
 vi.mock('../../utils/getSubclassChoices.ts', () => ({
 	default: vi.fn(() => Promise.resolve([])),

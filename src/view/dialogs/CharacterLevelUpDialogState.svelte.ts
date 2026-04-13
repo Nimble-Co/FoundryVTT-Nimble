@@ -10,6 +10,9 @@ import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 import { buildSpellIndex } from '#utils/getSpells.ts';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.ts';
 import getSubclassChoices from '#utils/getSubclassChoices.ts';
+import getSubclassFeaturesFromIndex, {
+	buildSubclassFeatureIndex,
+} from '#utils/getSubclassFeatures.ts';
 
 import type { SchoolSelectionGroup, SpellSelectionGroup } from './characterCreation/types.js';
 import { EPIC_BOON_LEVEL, SUBCLASS_LEVEL } from './const/levelUpConstants.ts';
@@ -26,9 +29,11 @@ interface LevelUpDocument {
 	classes: Record<string, ClassItemShape | undefined>;
 	items: Array<{
 		type: string;
+		identifier?: string;
 		system?: {
 			rules?: Array<{ type: string; [key: string]: unknown }>;
 			school?: string;
+			parentClass?: string;
 		};
 		_stats?: { compendiumSource?: string };
 	}>;
@@ -134,17 +139,36 @@ export function createLevelUpState(
 		}
 
 		featuresLoading = true;
-		buildClassFeatureIndex()
-			.then(async (index) => {
+		Promise.all([buildClassFeatureIndex(), buildSubclassFeatureIndex()])
+			.then(async ([classIndex, subclassIndex]) => {
+				const parentClassIdentifier = characterClass.identifier;
 				const rawFeatures = await getClassFeaturesFromIndex(
-					index,
-					characterClass.identifier,
+					classIndex,
+					parentClassIdentifier,
 					levelingTo,
 				);
 
+				// Find the actor's subclass for the class being leveled, if any.
+				// Subclass features are keyed by the subclass's identifier (slugified name),
+				// which matches the `group` field on each subclass feature.
+				const items = getDocument().items ?? [];
+				const subclassItem = items.find(
+					(item) => item.type === 'subclass' && item.system?.parentClass === parentClassIdentifier,
+				);
+				const subclassIdentifier = subclassItem?.identifier;
+
+				const subclassFeatures = subclassIdentifier
+					? await getSubclassFeaturesFromIndex(
+							subclassIndex,
+							parentClassIdentifier,
+							subclassIdentifier,
+							levelingTo,
+						)
+					: [];
+
 				// Get UUIDs of features the character already has (via compendiumSource)
 				const ownedFeatureUuids = new Set(
-					(getDocument().items ?? [])
+					items
 						.filter((item) => item.type === 'feature')
 						.map(
 							(item) =>
@@ -154,8 +178,8 @@ export function createLevelUpState(
 						.filter((uuid): uuid is string => !!uuid),
 				);
 
-				// Filter out already-owned features from autoGrant
-				const filteredAutoGrant = rawFeatures.autoGrant.filter(
+				// Filter out already-owned features from autoGrant and merge in subclass features
+				const filteredAutoGrant = [...rawFeatures.autoGrant, ...subclassFeatures].filter(
 					(feature) => !ownedFeatureUuids.has(feature.uuid),
 				);
 
