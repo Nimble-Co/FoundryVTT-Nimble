@@ -5,6 +5,7 @@
 	import EpicBoonSelection from './components/levelUpHelper/EpicBoonSelection.svelte';
 	import HitPointSelection from './components/levelUpHelper/HitPointSelection.svelte';
 	import LevelUpClassFeatureSelection from './components/levelUpHelper/LevelUpClassFeatureSelection.svelte';
+	import LevelUpSpellGrants from './components/levelUpHelper/LevelUpSpellGrants.svelte';
 	import SkillPointAssignment from './components/levelUpHelper/SkillPointAssignment.svelte';
 	import SubclassSelection from './components/levelUpHelper/SubclassSelection.svelte';
 	import { createLevelUpState } from './CharacterLevelUpDialogState.svelte.ts';
@@ -26,6 +27,7 @@
 	const epicBoons = $derived(state.epicBoons);
 	const classFeatures = $derived(state.classFeatures);
 	const featuresLoading = $derived(state.featuresLoading);
+	const autoGrantedSpells = $derived(state.autoGrantedSpells);
 	const isComplete = $derived(state.isComplete);
 </script>
 
@@ -65,6 +67,19 @@
 		{classFeatures}
 		bind:selectedFeatures={state.selectedClassFeatures}
 		loading={featuresLoading}
+	/>
+
+	<LevelUpSpellGrants
+		spells={autoGrantedSpells}
+		schoolSelections={state.schoolSelections}
+		spellSelections={state.spellSelections}
+		spellIndex={state.resolvedSpellIndex}
+		selectedSchools={state.selectedSchools}
+		selectedSpells={state.selectedSpells}
+		confirmedSchools={state.confirmedSchools}
+		onSchoolsChange={(schools) => (state.selectedSchools = schools)}
+		onSpellsChange={(spells) => (state.selectedSpells = spells)}
+		onConfirmedChange={(confirmed) => (state.confirmedSchools = confirmed)}
 	/>
 </section>
 

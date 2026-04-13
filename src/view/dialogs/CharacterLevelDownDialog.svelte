@@ -23,6 +23,7 @@
 	const subclasses = $derived(state.subclasses);
 	const hasSubclass = $derived(state.hasSubclass);
 	const grantedFeatures = $derived(state.grantedFeatures);
+	const grantedSpells = $derived(state.grantedSpells);
 </script>
 
 <article class="nimble-sheet__body">
@@ -134,6 +135,29 @@
 		</ul>
 	</section>
 
+	{#if grantedSpells.length > 0}
+		<section class="nimble-level-down-group">
+			<div class="nimble-level-down-group__header">
+				<i class="fa-solid fa-wand-sparkles"></i>
+				<h4 class="nimble-level-down-group__title">
+					{levelDownDialog.spellsRemoved}
+				</h4>
+			</div>
+			<ul class="nimble-level-down-group__list">
+				{#each grantedSpells as spell}
+					<li class="nimble-level-down-group__card">
+						<img
+							class="nimble-level-down-group__card-img"
+							src={spell.img || 'icons/svg/item-bag.svg'}
+							alt={spell.name}
+						/>
+						<span class="nimble-level-down-group__card-name">{spell.name}</span>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
 	<section class="nimble-level-down-warning">
 		<i class="fa-solid fa-triangle-exclamation"></i>
 		<p>{levelDownDialog.warningMessage}</p>
@@ -240,6 +264,67 @@
 
 		&__value {
 			font-weight: 500;
+		}
+	}
+
+	.nimble-level-down-group {
+		margin-top: 1rem;
+		padding: 0.75rem;
+		background: var(--nimble-card-background);
+		border-radius: 4px;
+		box-shadow: var(--nimble-card-box-shadow);
+
+		&__header {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			margin-bottom: 0.5rem;
+
+			i {
+				width: 1rem;
+				text-align: center;
+				opacity: 0.7;
+			}
+		}
+
+		&__title {
+			margin: 0;
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			color: var(--nimble-dark-text-color);
+		}
+
+		&__list {
+			display: flex;
+			flex-direction: column;
+			gap: 0.375rem;
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		&__card {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.375rem 0.5rem;
+			background: var(--nimble-box-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+		}
+
+		&__card-img {
+			width: 1.5rem;
+			height: 1.5rem;
+			object-fit: cover;
+			border-radius: 3px;
+			flex-shrink: 0;
+		}
+
+		&__card-name {
+			font-size: var(--nimble-sm-text);
+			font-weight: 500;
+			color: var(--nimble-dark-text-color);
 		}
 	}
 

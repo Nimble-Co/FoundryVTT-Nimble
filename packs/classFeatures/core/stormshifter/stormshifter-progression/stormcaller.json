@@ -6,7 +6,46 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "stormcaller-utility-1",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": true,
+				"label": "Choose a Utility Spell",
+				"predicate": {
+					"level": {
+						"min": 4
+					}
+				}
+			},
+			{
+				"id": "stormcaller-utility-2",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": true,
+				"label": "Choose a 2nd Utility Spell",
+				"predicate": {
+					"level": {
+						"min": 7
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -33,14 +72,15 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Learn a Utility Spell from each spell school you know.</p><hr><p>Level 6: Choose a 2nd of each</p><p>Level 11: Choose a 3rd of each</p>",
+		"description": "<p>Learn a Utility Spell from each spell school you know.</p><hr><p>Level 7: Choose a 2nd of each</p></p>",
 		"featureType": "class",
 		"class": "stormshifter",
 		"group": "stormshifter-progression",
 		"gainedAtLevel": 4,
 		"subclass": false,
 		"gainedAtLevels": [
-			4
+			4,
+			7
 		]
 	},
 	"effects": [],

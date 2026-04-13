@@ -6,7 +6,62 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "mage-utility-spell-1",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSchool",
+				"count": 1,
+				"utilityOnly": true,
+				"predicate": {
+					"level": {
+						"min": 3
+					}
+				}
+			},
+			{
+				"id": "mage-utility-spell-2",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSchool",
+				"count": 1,
+				"utilityOnly": true,
+				"predicate": {
+					"level": {
+						"min": 6
+					}
+				}
+			},
+			{
+				"id": "mage-utility-spell-3",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSchool",
+				"count": 1,
+				"utilityOnly": true,
+				"predicate": {
+					"level": {
+						"min": 14
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

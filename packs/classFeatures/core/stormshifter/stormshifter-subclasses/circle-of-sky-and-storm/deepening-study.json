@@ -6,7 +6,172 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "sky-storm-school-choice-tier0",
+				"type": "grantSpells",
+				"schools": [
+					"ice",
+					"radiant"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSchool",
+				"count": 1,
+				"predicate": {
+					"level": {
+						"min": 3
+					}
+				}
+			},
+			{
+				"id": "sky-storm-school-choice-tier1",
+				"type": "grantSpells",
+				"schools": [
+					"ice",
+					"radiant"
+				],
+				"tiers": [
+					1
+				],
+				"mode": "selectSchool",
+				"count": 1,
+				"predicate": {
+					"level": {
+						"min": 3
+					}
+				}
+			},
+			{
+				"id": "sky-storm-school-tier2",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					2
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 4
+					}
+				}
+			},
+			{
+				"id": "sky-storm-school-tier3",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					3
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 6
+					}
+				}
+			},
+			{
+				"id": "sky-storm-school-tier4",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					4
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 8
+					}
+				}
+			},
+			{
+				"id": "sky-storm-school-tier5",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					5
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 10
+					}
+				}
+			},
+			{
+				"id": "sky-storm-school-tier6",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					6
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 12
+					}
+				}
+			},
+			{
+				"id": "sky-storm-school-tier7",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					7
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 14
+					}
+				}
+			},
+			{
+				"id": "sky-storm-school-tier8",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					8
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 16
+					}
+				}
+			},
+			{
+				"id": "sky-storm-school-tier9",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					9
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 18
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

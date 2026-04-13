@@ -485,6 +485,8 @@
 			"points": "points",
 			"subclass": "Subclass",
 			"feature": "Feature",
+			"spell": "Spell",
+			"spellsRemoved": "Spells Removed",
 			"removed": "removed",
 			"warningMessage": "This action will permanently revert the last level up. This cannot be undone.",
 			"confirmLevelDown": "Confirm Level Down",
@@ -1355,7 +1357,9 @@
 			"selectSpell": "Select spell",
 			"deselectSpell": "Deselect spell",
 			"selectSpellAriaLabel": "Select {spellName}",
-			"deselectSpellAriaLabel": "Deselect {spellName}"
+			"deselectSpellAriaLabel": "Deselect {spellName}",
+			"levelUpHeader": "Granted Spells",
+			"levelUpHint": "You gain the following spells at this level."
 		},
 		"classSelection": {
 			"stepSelectClass": "Step 1: Select Class",

@@ -6,7 +6,136 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "oathsworn-tier0-spells",
+				"type": "grantSpells",
+				"schools": [
+					"radiant"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 2
+					}
+				}
+			},
+			{
+				"id": "oathsworn-tier1-spells",
+				"type": "grantSpells",
+				"schools": [
+					"radiant"
+				],
+				"tiers": [
+					1
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 2
+					}
+				}
+			},
+			{
+				"id": "oathsworn-tier2-spells",
+				"type": "grantSpells",
+				"schools": [
+					"radiant"
+				],
+				"tiers": [
+					2
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 4
+					}
+				}
+			},
+			{
+				"id": "oathsworn-tier3-spells",
+				"type": "grantSpells",
+				"schools": [
+					"radiant"
+				],
+				"tiers": [
+					3
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 6
+					}
+				}
+			},
+			{
+				"id": "oathsworn-tier4-spells",
+				"type": "grantSpells",
+				"schools": [
+					"radiant"
+				],
+				"tiers": [
+					4
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 8
+					}
+				}
+			},
+			{
+				"id": "oathsworn-tier5-spells",
+				"type": "grantSpells",
+				"schools": [
+					"radiant"
+				],
+				"tiers": [
+					5
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 10
+					}
+				}
+			},
+			{
+				"id": "oathsworn-tier6-spells",
+				"type": "grantSpells",
+				"schools": [
+					"radiant"
+				],
+				"tiers": [
+					6
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 13
+					}
+				}
+			},
+			{
+				"id": "oathsworn-tier7-spells",
+				"type": "grantSpells",
+				"schools": [
+					"radiant"
+				],
+				"tiers": [
+					7
+				],
+				"mode": "auto",
+				"predicate": {
+					"level": {
+						"min": 17
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

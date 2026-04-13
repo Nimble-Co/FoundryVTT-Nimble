@@ -20,4 +20,5 @@ export interface LevelUpSubmitData {
 		autoGrant: NimbleFeatureItem[];
 		selected: Map<string, NimbleFeatureItem>;
 	} | null;
+	spellUuids: string[];
 }
