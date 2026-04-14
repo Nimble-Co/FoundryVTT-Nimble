@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import getSubclassFeaturesFromIndex, { buildSubclassFeatureIndex } from './getSubclassFeatures.ts';
+import buildSubclassFeatureIndex from './buildSubclassFeatureIndex.ts';
+import getSubclassFeaturesFromIndex from './getSubclassFeatures.ts';
 
 interface MockFeatureItem {
 	type: 'feature';

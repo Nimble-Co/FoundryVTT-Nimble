@@ -2,6 +2,7 @@ import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
 import type { ExpandableDocumentItem } from '#types/components/ExpandableDocumentList.d.ts';
 import type { EpicBoonChoice, SubclassChoice } from '#types/components/LevelUpChoices.d.ts';
+import buildSubclassFeatureIndex from '#utils/buildSubclassFeatureIndex.ts';
 import generateBlankSkillSet from '#utils/generateBlankSkillSet.ts';
 import getChoicesFromCompendium from '#utils/getChoicesFromCompendium.ts';
 import getClassFeaturesFromIndex, { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
@@ -10,9 +11,7 @@ import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 import { buildSpellIndex } from '#utils/getSpells.ts';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.ts';
 import getSubclassChoices from '#utils/getSubclassChoices.ts';
-import getSubclassFeaturesFromIndex, {
-	buildSubclassFeatureIndex,
-} from '#utils/getSubclassFeatures.ts';
+import getSubclassFeaturesFromIndex from '#utils/getSubclassFeatures.ts';
 
 import type { SchoolSelectionGroup, SpellSelectionGroup } from './characterCreation/types.js';
 import { EPIC_BOON_LEVEL, SUBCLASS_LEVEL } from './const/levelUpConstants.ts';
