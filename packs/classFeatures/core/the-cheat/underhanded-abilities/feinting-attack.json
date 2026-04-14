@@ -35,7 +35,7 @@
 		},
 		"description": "<p>If you miss for the 2nd time in a single round, you may change the primary die roll to any result instead. </p>",
 		"featureType": "class",
-		"class": "cheat",
+		"class": "the-cheat",
 		"group": "underhanded-abilities",
 		"gainedAtLevel": 4,
 		"subclass": false,
