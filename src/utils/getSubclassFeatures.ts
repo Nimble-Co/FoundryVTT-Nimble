@@ -1,9 +1,5 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 
-/**
- * Lightweight entry stored in the subclass feature index.
- * Contains only the UUID needed for lookups, not full documents.
- */
 interface SubclassFeatureIndexEntry {
 	uuid: string;
 }
@@ -19,13 +15,11 @@ export type SubclassFeatureIndex = Map<
 
 /**
  * Shape of a feature's indexed fields in a compendium pack.
- * These fields are configured in init.ts via CONFIG.Item.compendiumIndexFields.
+ * Must stay in sync with the fields passed to pack.getIndex().
  */
 interface FeatureIndexEntry {
-	_id: string;
 	uuid: string;
 	type: string;
-	name: string;
 	system?: {
 		class?: string;
 		subclass?: boolean;
@@ -37,21 +31,11 @@ interface FeatureIndexEntry {
 
 function addToIndex(
 	index: SubclassFeatureIndex,
-	seen: Map<string, Set<string>>,
 	classId: string,
 	subclassId: string,
 	level: number,
 	entry: SubclassFeatureIndexEntry,
 ): void {
-	const key = `${classId}:${subclassId}:${level}`;
-	let seenForKey = seen.get(key);
-	if (!seenForKey) {
-		seenForKey = new Set();
-		seen.set(key, seenForKey);
-	}
-	if (seenForKey.has(entry.uuid)) return;
-	seenForKey.add(entry.uuid);
-
 	let classMap = index.get(classId);
 	if (!classMap) {
 		classMap = new Map();
@@ -67,19 +51,18 @@ function addToIndex(
 		levelArray = [];
 		subclassMap.set(level, levelArray);
 	}
+	if (levelArray.some((e) => e.uuid === entry.uuid)) return;
 	levelArray.push(entry);
 }
 
 /**
- * Builds a subclass feature index by scanning all packs once.
- * Subclass features are identified by `system.subclass === true` and are grouped
+ * Builds a subclass feature index by scanning world items and compendium packs.
+ * Subclass features are identified by `system.subclass === true` and grouped
  * under their parent class and subclass identifier (stored in `system.group`).
  */
 export async function buildSubclassFeatureIndex(): Promise<SubclassFeatureIndex> {
 	const index: SubclassFeatureIndex = new Map();
-	const seen = new Map<string, Set<string>>();
 
-	// Process world items
 	for (const item of game.items) {
 		if (item.type !== 'feature') continue;
 		const featureItem = item as NimbleFeatureItem;
@@ -90,17 +73,16 @@ export async function buildSubclassFeatureIndex(): Promise<SubclassFeatureIndex>
 		const entry: SubclassFeatureIndexEntry = { uuid: featureItem.uuid };
 
 		if (system.gainedAtLevel) {
-			addToIndex(index, seen, system.class, system.group, system.gainedAtLevel, entry);
+			addToIndex(index, system.class, system.group, system.gainedAtLevel, entry);
 		}
 		if (system.gainedAtLevels) {
 			for (const level of system.gainedAtLevels) {
-				addToIndex(index, seen, system.class, system.group, level, entry);
+				addToIndex(index, system.class, system.group, level, entry);
 			}
 		}
 	}
 
-	// Process compendium packs
-	// Must call getIndex() with explicit fields to ensure custom fields are loaded
+	// Explicit fields required so custom system fields are included in the pack index
 	const indexFields = [
 		'system.class',
 		'system.subclass',
@@ -123,11 +105,11 @@ export async function buildSubclassFeatureIndex(): Promise<SubclassFeatureIndex>
 			const entry: SubclassFeatureIndexEntry = { uuid: packEntry.uuid };
 
 			if (system.gainedAtLevel) {
-				addToIndex(index, seen, system.class, system.group, system.gainedAtLevel, entry);
+				addToIndex(index, system.class, system.group, system.gainedAtLevel, entry);
 			}
 			if (system.gainedAtLevels) {
 				for (const level of system.gainedAtLevels) {
-					addToIndex(index, seen, system.class, system.group, level, entry);
+					addToIndex(index, system.class, system.group, level, entry);
 				}
 			}
 		}
@@ -137,9 +119,8 @@ export async function buildSubclassFeatureIndex(): Promise<SubclassFeatureIndex>
 }
 
 /**
- * Gets subclass features granted at a specific level for a given class/subclass pairing
- * using a pre-built index. Returns an empty array when the class, subclass, or level
- * has no associated features, so callers can safely skip the granting step.
+ * Gets subclass features granted at a specific level for a given class/subclass pairing.
+ * Returns an empty array when no features match, so callers can safely skip granting.
  */
 export default async function getSubclassFeaturesFromIndex(
 	index: SubclassFeatureIndex,

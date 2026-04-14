@@ -29,7 +29,7 @@ interface LevelUpDocument {
 	classes: Record<string, ClassItemShape | undefined>;
 	items: Array<{
 		type: string;
-		identifier?: string;
+		name?: string;
 		system?: {
 			rules?: Array<{ type: string; [key: string]: unknown }>;
 			school?: string;
@@ -131,8 +131,11 @@ export function createLevelUpState(
 			console.warn('Nimble | Failed to load spell index:', err);
 		});
 
-	// Load class features when dialog opens
+	// Load class features when dialog opens, and re-run when a subclass is selected.
+	// Reading selectedSubclass synchronously ensures Svelte tracks it as a dependency.
 	$effect(() => {
+		const currentSelectedSubclass = selectedSubclass;
+
 		if (!characterClass) {
 			featuresLoading = false;
 			return;
@@ -148,20 +151,32 @@ export function createLevelUpState(
 					levelingTo,
 				);
 
-				// Find the actor's subclass for the class being leveled, if any.
-				// Subclass features are keyed by the subclass's identifier (slugified name),
-				// which matches the `group` field on each subclass feature.
+				// Determine the subclass group key for feature lookup.
+				// Features use a slugified subclass name as their system.group.
 				const items = getDocument().items ?? [];
-				const subclassItem = items.find(
-					(item) => item.type === 'subclass' && item.system?.parentClass === parentClassIdentifier,
-				);
-				const subclassIdentifier = subclassItem?.identifier;
+				let subclassGroup: string | undefined;
 
-				const subclassFeatures = subclassIdentifier
+				if (currentSelectedSubclass) {
+					subclassGroup = (
+						currentSelectedSubclass.name as string & { slugify(opts: { strict: boolean }): string }
+					).slugify({ strict: true });
+				} else {
+					const existingSubclass = items.find(
+						(item) =>
+							item.type === 'subclass' && item.system?.parentClass === parentClassIdentifier,
+					);
+					if (existingSubclass?.name) {
+						subclassGroup = (
+							existingSubclass.name as string & { slugify(opts: { strict: boolean }): string }
+						).slugify({ strict: true });
+					}
+				}
+
+				const subclassFeatures = subclassGroup
 					? await getSubclassFeaturesFromIndex(
 							subclassIndex,
 							parentClassIdentifier,
-							subclassIdentifier,
+							subclassGroup,
 							levelingTo,
 						)
 					: [];
