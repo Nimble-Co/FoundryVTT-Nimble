@@ -36,7 +36,7 @@
 		},
 		"description": "<p>Whenever an enemy crits you, gain 1 Fury Die.</p>",
 		"featureType": "class",
-		"class": "",
+		"class": "berserker",
 		"gainedAtLevel": 4,
 		"gainedAtLevels": [
 			4,

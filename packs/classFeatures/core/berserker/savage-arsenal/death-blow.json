@@ -36,7 +36,7 @@
 		},
 		"description": "<p>After you deal damage from a crit, you may expend any number of Fury Dice. Sum the dice and deal double that amount of damage</p>",
 		"featureType": "class",
-		"class": "",
+		"class": "berserker",
 		"gainedAtLevel": 4,
 		"gainedAtLevels": [
 			4,

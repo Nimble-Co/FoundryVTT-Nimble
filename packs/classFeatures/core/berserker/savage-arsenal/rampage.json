@@ -36,7 +36,7 @@
 		},
 		"description": "<p>(1/ turn) After you land a hit, you may treat your next attack this turn as if you rolled that same amount instead of rolling again.</p>",
 		"featureType": "class",
-		"class": "",
+		"class": "berserker",
 		"gainedAtLevel": 4,
 		"gainedAtLevels": [
 			4,
