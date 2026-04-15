@@ -43,7 +43,7 @@
 		},
 		"description": "<p>When an ally within 4 spaces is crit, you may turn invisible until the end of your next turn and then move up to half your speed for free. </p>",
 		"featureType": "class",
-		"class": "cheat",
+		"class": "the-cheat",
 		"group": "underhanded-abilities",
 		"gainedAtLevel": 4,
 		"subclass": false,

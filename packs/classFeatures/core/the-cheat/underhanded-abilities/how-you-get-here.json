@@ -35,7 +35,7 @@
 		},
 		"description": "<p>2 actions: “Teleport” up to 4 spaces away, adjacent to a Distracted target, and make a melee attack against them. If you crit, you may \"teleport\" again. </p>",
 		"featureType": "class",
-		"class": "cheat",
+		"class": "the-cheat",
 		"group": "underhanded-abilities",
 		"gainedAtLevel": 4,
 		"subclass": false,

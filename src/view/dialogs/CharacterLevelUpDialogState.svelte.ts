@@ -2,6 +2,7 @@ import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
 import type { ExpandableDocumentItem } from '#types/components/ExpandableDocumentList.d.ts';
 import type { EpicBoonChoice, SubclassChoice } from '#types/components/LevelUpChoices.d.ts';
+import buildSubclassFeatureIndex from '#utils/buildSubclassFeatureIndex.ts';
 import generateBlankSkillSet from '#utils/generateBlankSkillSet.ts';
 import getChoicesFromCompendium from '#utils/getChoicesFromCompendium.ts';
 import getClassFeaturesFromIndex, { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
@@ -10,6 +11,7 @@ import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
 import { buildSpellIndex } from '#utils/getSpells.ts';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.ts';
 import getSubclassChoices from '#utils/getSubclassChoices.ts';
+import getSubclassFeaturesFromIndex from '#utils/getSubclassFeatures.ts';
 
 import type { SchoolSelectionGroup, SpellSelectionGroup } from './characterCreation/types.js';
 import { EPIC_BOON_LEVEL, SUBCLASS_LEVEL } from './const/levelUpConstants.ts';
@@ -26,9 +28,11 @@ interface LevelUpDocument {
 	classes: Record<string, ClassItemShape | undefined>;
 	items: Array<{
 		type: string;
+		name?: string;
 		system?: {
 			rules?: Array<{ type: string; [key: string]: unknown }>;
 			school?: string;
+			parentClass?: string;
 		};
 		_stats?: { compendiumSource?: string };
 	}>;
@@ -126,25 +130,59 @@ export function createLevelUpState(
 			console.warn('Nimble | Failed to load spell index:', err);
 		});
 
-	// Load class features when dialog opens
+	// Load class features when dialog opens, and re-run when a subclass is selected.
+	// Reading selectedSubclass synchronously ensures Svelte tracks it as a dependency.
 	$effect(() => {
+		const currentSelectedSubclass = selectedSubclass;
+
 		if (!characterClass) {
 			featuresLoading = false;
 			return;
 		}
 
 		featuresLoading = true;
-		buildClassFeatureIndex()
-			.then(async (index) => {
+		Promise.all([buildClassFeatureIndex(), buildSubclassFeatureIndex()])
+			.then(async ([classIndex, subclassIndex]) => {
+				const parentClassIdentifier = characterClass.identifier;
 				const rawFeatures = await getClassFeaturesFromIndex(
-					index,
-					characterClass.identifier,
+					classIndex,
+					parentClassIdentifier,
 					levelingTo,
 				);
 
+				// Determine the subclass group key for feature lookup.
+				// Features use a slugified subclass name as their system.group.
+				const items = getDocument().items ?? [];
+				let subclassGroup: string | undefined;
+
+				if (currentSelectedSubclass) {
+					subclassGroup = (
+						currentSelectedSubclass.name as string & { slugify(opts: { strict: boolean }): string }
+					).slugify({ strict: true });
+				} else {
+					const existingSubclass = items.find(
+						(item) =>
+							item.type === 'subclass' && item.system?.parentClass === parentClassIdentifier,
+					);
+					if (existingSubclass?.name) {
+						subclassGroup = (
+							existingSubclass.name as string & { slugify(opts: { strict: boolean }): string }
+						).slugify({ strict: true });
+					}
+				}
+
+				const subclassFeatures = subclassGroup
+					? await getSubclassFeaturesFromIndex(
+							subclassIndex,
+							parentClassIdentifier,
+							subclassGroup,
+							levelingTo,
+						)
+					: [];
+
 				// Get UUIDs of features the character already has (via compendiumSource)
 				const ownedFeatureUuids = new Set(
-					(getDocument().items ?? [])
+					items
 						.filter((item) => item.type === 'feature')
 						.map(
 							(item) =>
@@ -154,8 +192,8 @@ export function createLevelUpState(
 						.filter((uuid): uuid is string => !!uuid),
 				);
 
-				// Filter out already-owned features from autoGrant
-				const filteredAutoGrant = rawFeatures.autoGrant.filter(
+				// Filter out already-owned features from autoGrant and merge in subclass features
+				const filteredAutoGrant = [...rawFeatures.autoGrant, ...subclassFeatures].filter(
 					(feature) => !ownedFeatureUuids.has(feature.uuid),
 				);
 

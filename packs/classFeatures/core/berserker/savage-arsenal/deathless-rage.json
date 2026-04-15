@@ -36,7 +36,7 @@
 		},
 		"description": "<p>(1/turn) While Dying, you may suffer 1 Wound to gain 1 action.</p>",
 		"featureType": "class",
-		"class": "",
+		"class": "berserker",
 		"gainedAtLevel": 4,
 		"gainedAtLevels": [
 			4,

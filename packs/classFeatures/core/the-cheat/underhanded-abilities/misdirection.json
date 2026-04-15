@@ -47,7 +47,7 @@
 		},
 		"description": "<p>Gain INT armor. </p><p>Whenever you Defend, you may halve the damage instead. </p>",
 		"featureType": "class",
-		"class": "cheat",
+		"class": "the-cheat",
 		"group": "underhanded-abilities",
 		"gainedAtLevel": 4,
 		"subclass": false,
