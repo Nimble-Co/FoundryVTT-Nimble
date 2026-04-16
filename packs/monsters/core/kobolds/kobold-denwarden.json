@@ -2,7 +2,7 @@
 	"name": "Kobold Denwarden",
 	"type": "npc",
 	"folder": "fbd108fbd999fb4e",
-	"img": "modules/nimble/assets/monsterImages/Kobold.webp",
+	"img": "systems/nimble/assets/monsterImages/Kobold.webp",
 	"system": {
 		"attributes": {
 			"armor": "medium",
@@ -48,7 +48,7 @@
 		"width": 0.5,
 		"height": 0.5,
 		"texture": {
-			"src": "modules/nimble/assets/monsterImages/Kobold.webp",
+			"src": "systems/nimble/assets/monsterImages/Kobold.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,

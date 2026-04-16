@@ -2,7 +2,7 @@
 	"folder": null,
 	"name": "Gem of Escape",
 	"type": "object",
-	"img": "modules/nimble/assets/magicItems/GemOfEscape.webp",
+	"img": "systems/nimble/assets/magicItems/GemOfEscape.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",

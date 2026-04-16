@@ -2,7 +2,7 @@
 	"name": "Goblin",
 	"type": "npc",
 	"folder": "6e14050118400068",
-	"img": "modules/nimble/assets/monsterImages/Goblin.webp",
+	"img": "systems/nimble/assets/monsterImages/Goblin.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 0.5,
 		"height": 0.5,
 		"texture": {
-			"src": "modules/nimble/assets/monsterImages/Goblin.webp",
+			"src": "systems/nimble/assets/monsterImages/Goblin.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,

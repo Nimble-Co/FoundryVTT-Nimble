@@ -2,7 +2,7 @@
 	"name": "Bandit Captain",
 	"type": "npc",
 	"folder": "718123f1f5a7d7b3",
-	"img": "modules/nimble/assets/monsterImages/Bandit.webp",
+	"img": "systems/nimble/assets/monsterImages/Bandit.webp",
 	"system": {
 		"attributes": {
 			"armor": "medium",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "modules/nimble/assets/monsterImages/Bandit.webp",
+			"src": "systems/nimble/assets/monsterImages/Bandit.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
