@@ -2,7 +2,7 @@
 	"name": "Mummy Lord",
 	"type": "npc",
 	"folder": "523dda610883c011",
-	"img": "modules/nimble/assets/monsterImages/LargeMummy.webp",
+	"img": "systems/nimble/assets/monsterImages/LargeMummy.webp",
 	"system": {
 		"attributes": {
 			"armor": "none",
@@ -48,7 +48,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "modules/nimble/assets/monsterImages/LargeMummy.webp",
+			"src": "systems/nimble/assets/monsterImages/LargeMummy.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
