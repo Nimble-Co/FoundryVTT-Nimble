@@ -6,6 +6,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.8.2] - 2026-04-15
+
+### Added
+
+- [#496] Drag heroic actions and reactions to macro bar. @trevlar
+- [#516] HP scrolling text and centralized HP manipulation flow. @Insax
+- [#520] Spell grants and school selection to character creation. @trevlar
+- [#528] Unarmored predicate for Zephyr Swift Feet. @trevlar
+- [#537] Improved PC creator UI consistency. @underscoreRobin
+- [#539] Allow equipping any object item with rules. @Insax
+- [#547] Initiative roll enricher. @7D7D
+- [#550] InitiativeMessage rule type. @joechaotic
+- [#551] Add character to combat with initiative roll. @7D7D
+- [#553] Left-to-right ordering setting for combat tracker. @Fronix
+- [#562] Adjacency rule sync and Lionhearted boon automation. @joechaotic
+- [#565] Require character name before creation. @joechaotic
+- [#571] Grant class features on level up and remove on level down. @trevlar
+- [#693] Grant spells on level up and remove on level down. @trevlar
+- [#704] Grant subclass features on level up. @trevlar
+
+### Fixed
+
+- [#519] End turn action refill race condition. @Insax
+- [#527] Combat tracker invisible area no longer blocks canvas clicks. @trevlar
+- [#529] Half-Giant Dwarvish predicate not evaluating INT condition. @trevlar
+- [#532] Conditions menu being incorrectly oversized. @Fronix
+- [#533] Allow targeting friendly-disposition tokens in combat tracker. @Fronix
+- [#534] Respect activation cost quantity when consuming combat actions. @Fronix
+- [#535] Minion roll chat propagation and field rest mana feedback. @Fronix
+- [#546] Choose turn order before starting combat. @7D7D
+- [#548] Prevent duplicate initiative rolls. @7D7D
+- [#572] Fixed portrait position on PC/NPC sheets. @joechaotic
+- [#586] Clean up level-up/level-down dialog state and grant logic. @trevlar
+- [#696] Preserve @key in damage formula normalization. @Fronix
+
+### Changed
+
+- [#536] Fix granted levels in compendium. @trevlar
+- [#545] Add image icons for monsters and magic items. @trevlar
+- [#554] Updated Spanish translation. @carlosvgs
+- [#697] Commander combat tactics levels and Rat Prince type corrections. @trevlar
+- [#705] Cleanup formatting in packs. @trevlar
+
+---
+
+
 ## [0.8.1] - 2026-03-27
 
 ### Added
