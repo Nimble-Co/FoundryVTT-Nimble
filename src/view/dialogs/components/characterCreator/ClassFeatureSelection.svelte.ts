@@ -3,7 +3,7 @@ import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection
 
 export interface ClassFeatureSelectionState {
 	classFeatures: ClassFeatureResult | null;
-	selectedFeatures: Map<string, NimbleFeatureItem>;
+	selectedFeatures: Map<string, NimbleFeatureItem[]>;
 }
 
 /**
@@ -15,9 +15,10 @@ export interface ClassFeatureSelectionState {
  */
 export function createClassFeatureSelectionState(
 	getState: () => ClassFeatureSelectionState,
-	setSelectedFeatures: (features: Map<string, NimbleFeatureItem>) => void,
+	setSelectedFeatures: (features: Map<string, NimbleFeatureItem[]>) => void,
 ) {
-	// Auto-select features for groups that only have one option
+	// Auto-select features for groups where the only available options already
+	// match the required selection count (e.g., "choose 1 of 1", or "choose 2 of 2").
 	$effect(() => {
 		const { classFeatures, selectedFeatures } = getState();
 		if (!classFeatures?.selectionGroups) return;
@@ -25,9 +26,11 @@ export function createClassFeatureSelectionState(
 		const newSelections = new Map(selectedFeatures);
 		let hasChanges = false;
 
-		for (const [groupName, features] of classFeatures.selectionGroups) {
-			if (features.length === 1 && !newSelections.has(groupName)) {
-				newSelections.set(groupName, features[0]);
+		for (const [groupName, group] of classFeatures.selectionGroups) {
+			if (newSelections.has(groupName)) continue;
+
+			if (group.features.length === group.selectionCount) {
+				newSelections.set(groupName, [...group.features]);
 				hasChanges = true;
 			}
 		}
@@ -38,16 +41,33 @@ export function createClassFeatureSelectionState(
 	});
 
 	function handleFeatureSelect(groupName: string, feature: NimbleFeatureItem) {
-		const { selectedFeatures } = getState();
-		const newSelections = new Map(selectedFeatures);
+		const { classFeatures, selectedFeatures } = getState();
+		const group = classFeatures?.selectionGroups.get(groupName);
+		if (!group) return;
 
-		if (newSelections.get(groupName)?.uuid === feature.uuid) {
-			newSelections.delete(groupName);
+		const currentSelections = selectedFeatures.get(groupName) ?? [];
+		const alreadySelectedIndex = currentSelections.findIndex((f) => f.uuid === feature.uuid);
+
+		let nextSelections: NimbleFeatureItem[];
+
+		if (alreadySelectedIndex !== -1) {
+			// Toggle off
+			nextSelections = currentSelections.filter((_, i) => i !== alreadySelectedIndex);
+		} else if (currentSelections.length >= group.selectionCount) {
+			// Already at cap — ignore the click
+			return;
 		} else {
-			newSelections.set(groupName, feature);
+			nextSelections = [...currentSelections, feature];
 		}
 
-		setSelectedFeatures(newSelections);
+		const newMap = new Map(selectedFeatures);
+		if (nextSelections.length === 0) {
+			newMap.delete(groupName);
+		} else {
+			newMap.set(groupName, nextSelections);
+		}
+
+		setSelectedFeatures(newMap);
 	}
 
 	return {

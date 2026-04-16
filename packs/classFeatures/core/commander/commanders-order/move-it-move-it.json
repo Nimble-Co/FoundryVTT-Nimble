@@ -70,7 +70,10 @@
 		"subclass": false,
 		"gainedAtLevels": [
 			2
-		]
+		],
+		"selectionCountByLevel": {
+			"2": 2
+		}
 	},
 	"effects": [],
 	"folder": "406c4e162069a4a8",

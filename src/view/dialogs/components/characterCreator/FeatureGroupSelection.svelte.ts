@@ -11,21 +11,43 @@ export function formatGroupName(name: string): string {
 		.join(' ');
 }
 
+interface FeatureGroupSelectionStateProps {
+	groupName: string;
+	features: NimbleFeatureItem[];
+	selectionCount: number;
+	selectedFeatures: NimbleFeatureItem[];
+}
+
 /**
  * Creates reactive state for the FeatureGroupSelection component
  *
  * @param getProps - Getter function that returns the current props
  * @returns Object containing derived state
  */
-export function createFeatureGroupSelectionState(
-	getProps: () => { groupName: string; features: NimbleFeatureItem[] },
-) {
+export function createFeatureGroupSelectionState(getProps: () => FeatureGroupSelectionStateProps) {
 	return {
 		get formattedGroupName() {
 			return formatGroupName(getProps().groupName);
 		},
-		get isSingleOption() {
-			return getProps().features.length === 1;
+		/**
+		 * A group is "fixed" when the only available options exactly match the required
+		 * count — nothing to choose, every card is granted. We still render the cards
+		 * (so players can read them), but we skip the selection hint and make each card
+		 * non-interactive since the outcome is predetermined.
+		 */
+		get isFixed() {
+			const { features, selectionCount } = getProps();
+			return features.length === selectionCount;
+		},
+		get selectedCount() {
+			return getProps().selectedFeatures.length;
+		},
+		get isComplete() {
+			const { selectionCount, selectedFeatures } = getProps();
+			return selectedFeatures.length >= selectionCount;
+		},
+		isFeatureSelected(feature: NimbleFeatureItem) {
+			return getProps().selectedFeatures.some((f) => f.uuid === feature.uuid);
 		},
 	};
 }

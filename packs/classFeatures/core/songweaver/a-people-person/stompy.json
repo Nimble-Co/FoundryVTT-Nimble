@@ -41,7 +41,10 @@
 		"subclass": false,
 		"gainedAtLevels": [
 			5
-		]
+		],
+		"selectionCountByLevel": {
+			"5": 2
+		}
 	},
 	"effects": [],
 	"flags": {},

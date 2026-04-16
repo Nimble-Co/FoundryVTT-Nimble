@@ -52,6 +52,43 @@
 		});
 	}
 
+	function parseSelectionCountByLevel(raw) {
+		if (typeof raw !== 'string') return {};
+
+		const entries = {};
+		for (const part of raw.split(',')) {
+			const trimmed = part.trim();
+			if (!trimmed) continue;
+
+			const [levelPart, countPart] = trimmed.split(':').map((value) => value?.trim());
+			const level = Number.parseInt(levelPart, 10);
+			const count = Number.parseInt(countPart, 10);
+
+			if (!Number.isInteger(level) || level < 1 || level > 20) continue;
+			if (!Number.isInteger(count) || count < 1) continue;
+
+			entries[String(level)] = count;
+		}
+
+		return entries;
+	}
+
+	function getSelectionCountByLevelInputValue() {
+		const map = item.reactive.system.selectionCountByLevel || {};
+		return Object.entries(map)
+			.map(([level, count]) => [Number.parseInt(level, 10), count])
+			.filter(([level]) => Number.isInteger(level))
+			.sort(([a], [b]) => a - b)
+			.map(([level, count]) => `${level}: ${count}`)
+			.join(', ');
+	}
+
+	function updateSelectionCountByLevel(rawInput) {
+		item.update({
+			'system.selectionCountByLevel': parseSelectionCountByLevel(rawInput),
+		});
+	}
+
 	function updateSubclassFlag(checked) {
 		item.update({
 			'system.subclass': checked,
@@ -184,6 +221,19 @@
 					value={getGainedAtLevelsInputValue()}
 					placeholder="e.g. 3 or 2, 6, 9"
 					onchange={({ target }) => updateGainedAtLevels(target.value)}
+				/>
+			</div>
+
+			<div>
+				<header class="nimble-section-header">
+					<h3 class="nimble-heading">Selection Count By Level</h3>
+				</header>
+
+				<input
+					type="text"
+					value={getSelectionCountByLevelInputValue()}
+					placeholder="e.g. 2: 2  (overrides default of 1)"
+					onchange={({ target }) => updateSelectionCountByLevel(target.value)}
 				/>
 			</div>
 		{/if}

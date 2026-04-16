@@ -1,5 +1,8 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
-import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
+import type {
+	ClassFeatureResult,
+	SelectionGroup,
+} from '#types/components/ClassFeatureSelection.d.ts';
 import type { ExpandableDocumentItem } from '#types/components/ExpandableDocumentList.d.ts';
 import type { EpicBoonChoice, SubclassChoice } from '#types/components/LevelUpChoices.d.ts';
 import buildSubclassFeatureIndex from '#utils/buildSubclassFeatureIndex.ts';
@@ -109,7 +112,7 @@ export function createLevelUpState(
 
 	// Class features state
 	let classFeatures: ClassFeatureResult | null = $state(null);
-	let selectedClassFeatures: Map<string, NimbleFeatureItem> = $state(new Map());
+	let selectedClassFeatures: Map<string, NimbleFeatureItem[]> = $state(new Map());
 	let featuresLoading = $state(true);
 
 	// Spell grants state
@@ -198,14 +201,17 @@ export function createLevelUpState(
 				);
 
 				// Filter out already-owned features from selection groups
-				const filteredSelectionGroups = new Map<string, NimbleFeatureItem[]>();
-				for (const [groupName, features] of rawFeatures.selectionGroups) {
-					const filteredFeatures = features.filter(
+				const filteredSelectionGroups = new Map<string, SelectionGroup>();
+				for (const [groupName, group] of rawFeatures.selectionGroups) {
+					const filteredFeatures = group.features.filter(
 						(feature) => !ownedFeatureUuids.has(feature.uuid),
 					);
 					// Only include groups that still have options
 					if (filteredFeatures.length > 0) {
-						filteredSelectionGroups.set(groupName, filteredFeatures);
+						filteredSelectionGroups.set(groupName, {
+							features: filteredFeatures,
+							selectionCount: group.selectionCount,
+						});
 					}
 				}
 
@@ -346,8 +352,9 @@ export function createLevelUpState(
 		if (featuresLoading) return false;
 		if (!classFeatures) return true;
 
-		for (const groupName of classFeatures.selectionGroups.keys()) {
-			if (!selectedClassFeatures.has(groupName)) {
+		for (const [groupName, group] of classFeatures.selectionGroups) {
+			const picks = selectedClassFeatures.get(groupName);
+			if (!picks || picks.length < group.selectionCount) {
 				return false;
 			}
 		}
@@ -419,10 +426,10 @@ export function createLevelUpState(
 			takeAverageHp: hitPointRollSelection === 'average',
 			classFeatures: classFeatures
 				? {
-						autoGrant: classFeatures.autoGrant,
+						autoGrant: classFeatures.autoGrant.map((f) => f.uuid),
 						selected: selectedClassFeatures,
 					}
-				: null,
+				: undefined,
 			spellUuids: getGrantedSpellUuids(),
 		});
 	}
@@ -567,7 +574,7 @@ export function createLevelUpState(
 		get selectedClassFeatures() {
 			return selectedClassFeatures;
 		},
-		set selectedClassFeatures(v: Map<string, NimbleFeatureItem>) {
+		set selectedClassFeatures(v: Map<string, NimbleFeatureItem[]>) {
 			selectedClassFeatures = v;
 		},
 		submit,

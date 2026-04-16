@@ -5,17 +5,41 @@
 	import FeatureCard from './FeatureCard.svelte';
 	import localize from '#utils/localize.js';
 
-	let { groupName, features, selectedFeature, onSelect }: FeatureGroupSelectionProps = $props();
+	let {
+		groupName,
+		features,
+		selectionCount,
+		selectedFeatures,
+		onSelect,
+	}: FeatureGroupSelectionProps = $props();
 
-	const state = createFeatureGroupSelectionState(() => ({ groupName, features }));
+	const state = createFeatureGroupSelectionState(() => ({
+		groupName,
+		features,
+		selectionCount,
+		selectedFeatures,
+	}));
 
-	// Selection is complete when a feature is selected and it's not a single-option group
-	const isSelectionComplete = $derived(!!selectedFeature && !state.isSingleOption);
+	function getHintText() {
+		if (state.isFixed) return null;
 
-	// Filter to show only selected feature when selection is complete
-	const displayedFeatures = $derived(
-		isSelectionComplete ? features.filter((f) => f.uuid === selectedFeature?.uuid) : features,
-	);
+		if (selectionCount === 1) {
+			return localize('NIMBLE.classFeatureSelection.chooseOne');
+		}
+
+		return game.i18n.format('NIMBLE.classFeatureSelection.chooseN', {
+			count: selectionCount,
+		});
+	}
+
+	function getProgressText() {
+		if (state.isFixed) return null;
+
+		return game.i18n.format('NIMBLE.classFeatureSelection.nOfMSelected', {
+			current: state.selectedCount,
+			required: selectionCount,
+		});
+	}
 </script>
 
 <div class="feature-group">
@@ -23,17 +47,26 @@
 		<h4 class="nimble-heading" data-heading-variant="section">
 			{state.formattedGroupName}
 		</h4>
-		{#if !state.isSingleOption && !isSelectionComplete}
-			<span class="feature-group__hint">{localize('NIMBLE.classFeatureSelection.chooseOne')}</span>
+		{#if !state.isFixed}
+			<span class="feature-group__hint">{getHintText()}</span>
+			<span
+				class="feature-group__progress"
+				class:feature-group__progress--complete={state.isComplete}
+			>
+				{getProgressText()}
+			</span>
 		{/if}
 	</header>
 
 	<ul class="feature-group__list">
-		{#each displayedFeatures as feature (feature.uuid)}
+		{#each features as feature (feature.uuid)}
+			{@const isSelected = state.isFeatureSelected(feature)}
+			{@const isDisabled = !state.isFixed && !isSelected && state.isComplete}
 			<FeatureCard
 				{feature}
-				isSelected={state.isSingleOption ? false : selectedFeature?.uuid === feature.uuid}
-				onSelect={state.isSingleOption ? undefined : () => onSelect(feature)}
+				isSelected={state.isFixed ? false : isSelected}
+				isDisabled={state.isFixed ? false : isDisabled}
+				onSelect={state.isFixed ? undefined : () => onSelect(feature)}
 			/>
 		{/each}
 	</ul>
@@ -54,6 +87,18 @@
 			font-size: 0.875rem;
 			font-weight: normal;
 			color: var(--nimble-medium-text-color);
+		}
+
+		&__progress {
+			margin-left: auto;
+			font-size: 0.875rem;
+			font-weight: normal;
+			color: var(--nimble-medium-text-color);
+
+			&--complete {
+				color: var(--nimble-accent-color);
+				font-weight: 600;
+			}
 		}
 
 		&__list {

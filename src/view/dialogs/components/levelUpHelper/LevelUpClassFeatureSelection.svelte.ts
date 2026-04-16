@@ -4,15 +4,16 @@ import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection
 /**
  * Creates reactive state for the LevelUpClassFeatureSelection component.
  *
- * Handles auto-selection of single-option groups, feature toggling,
- * and derived visibility flags.
+ * Handles auto-selection of fixed groups, feature toggling with multi-select
+ * support, and derived visibility flags.
  */
 export function createClassFeatureSelectionState(
 	getClassFeatures: () => ClassFeatureResult | null,
-	getSelectedFeatures: () => Map<string, NimbleFeatureItem>,
-	setSelectedFeatures: (features: Map<string, NimbleFeatureItem>) => void,
+	getSelectedFeatures: () => Map<string, NimbleFeatureItem[]>,
+	setSelectedFeatures: (features: Map<string, NimbleFeatureItem[]>) => void,
 ) {
-	// Auto-select features for groups that only have one option
+	// Auto-select features for groups where the only available options already
+	// match the required selection count (e.g., "choose 1 of 1", or "choose 2 of 2").
 	$effect(() => {
 		const classFeatures = getClassFeatures();
 		if (!classFeatures?.selectionGroups) return;
@@ -20,9 +21,11 @@ export function createClassFeatureSelectionState(
 		const newSelections = new Map(getSelectedFeatures());
 		let hasChanges = false;
 
-		for (const [groupName, features] of classFeatures.selectionGroups) {
-			if (features.length === 1 && !newSelections.has(groupName)) {
-				newSelections.set(groupName, features[0]);
+		for (const [groupName, group] of classFeatures.selectionGroups) {
+			if (newSelections.has(groupName)) continue;
+
+			if (group.features.length === group.selectionCount) {
+				newSelections.set(groupName, [...group.features]);
 				hasChanges = true;
 			}
 		}
@@ -33,15 +36,33 @@ export function createClassFeatureSelectionState(
 	});
 
 	function handleFeatureSelect(groupName: string, feature: NimbleFeatureItem) {
-		const newSelections = new Map(getSelectedFeatures());
+		const classFeatures = getClassFeatures();
+		const group = classFeatures?.selectionGroups.get(groupName);
+		if (!group) return;
 
-		if (newSelections.get(groupName)?.uuid === feature.uuid) {
-			newSelections.delete(groupName);
+		const currentSelections = getSelectedFeatures().get(groupName) ?? [];
+		const alreadySelectedIndex = currentSelections.findIndex((f) => f.uuid === feature.uuid);
+
+		let nextSelections: NimbleFeatureItem[];
+
+		if (alreadySelectedIndex !== -1) {
+			// Toggle off
+			nextSelections = currentSelections.filter((_, i) => i !== alreadySelectedIndex);
+		} else if (currentSelections.length >= group.selectionCount) {
+			// Already at cap — ignore the click
+			return;
 		} else {
-			newSelections.set(groupName, feature);
+			nextSelections = [...currentSelections, feature];
 		}
 
-		setSelectedFeatures(newSelections);
+		const newMap = new Map(getSelectedFeatures());
+		if (nextSelections.length === 0) {
+			newMap.delete(groupName);
+		} else {
+			newMap.set(groupName, nextSelections);
+		}
+
+		setSelectedFeatures(newMap);
 	}
 
 	const hasAutoGrant = $derived((getClassFeatures()?.autoGrant?.length ?? 0) > 0);
