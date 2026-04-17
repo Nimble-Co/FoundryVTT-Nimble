@@ -2,7 +2,7 @@
 	"name": "Kelebek, Entomancer",
 	"type": "soloMonster",
 	"folder": null,
-	"img": "icons/creatures/invertebrates/swarm-bees.webp",
+	"img": "icons/creatures/invertebrates/wasp-swarm-tan.webp",
 	"system": {
 		"attributes": {
 			"armor": "medium",
@@ -47,7 +47,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/creatures/invertebrates/swarm-bees.webp",
+			"src": "icons/creatures/invertebrates/wasp-swarm-tan.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,

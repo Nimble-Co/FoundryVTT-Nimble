@@ -2,7 +2,7 @@
 	"name": "Poppy, Giant Stinkbug",
 	"type": "soloMonster",
 	"folder": null,
-	"img": "icons/creatures/invertebrates/beetle-scarab-green.webp",
+	"img": "icons/creatures/invertebrates/beetle-stag-yellow-green.webp",
 	"system": {
 		"attributes": {
 			"armor": "heavy",
@@ -47,7 +47,7 @@
 		"width": 1,
 		"height": 1,
 		"texture": {
-			"src": "icons/creatures/invertebrates/beetle-scarab-green.webp",
+			"src": "icons/creatures/invertebrates/beetle-stag-yellow-green.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
