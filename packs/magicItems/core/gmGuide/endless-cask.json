@@ -2,7 +2,7 @@
 	"folder": null,
 	"name": "Endless Cask",
 	"type": "object",
-	"img": "icons/containers/barrels/barrel-iron-tied-brown.webp",
+	"img": "icons/containers/barrels/barrel-hogshead-cask-oak-brown.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",

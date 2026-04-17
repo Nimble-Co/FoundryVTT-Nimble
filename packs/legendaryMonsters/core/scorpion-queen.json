@@ -2,7 +2,7 @@
 	"name": "Scorpion Queen",
 	"type": "soloMonster",
 	"folder": null,
-	"img": "icons/creatures/invertebrates/scorpion-brown.webp",
+	"img": "icons/creatures/invertebrates/scorpion-yellow.webp",
 	"system": {
 		"attributes": {
 			"armor": "heavy",
@@ -47,7 +47,7 @@
 		"width": 2,
 		"height": 2,
 		"texture": {
-			"src": "icons/creatures/invertebrates/scorpion-brown.webp",
+			"src": "icons/creatures/invertebrates/scorpion-yellow.webp",
 			"anchorX": 0.5,
 			"anchorY": 0.5,
 			"offsetX": 0,
