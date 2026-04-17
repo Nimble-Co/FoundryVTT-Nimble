@@ -9,18 +9,17 @@
 	const { skillCheckDialog } = CONFIG.NIMBLE;
 
 	let { actor, dialog, type = 'abilityCheck', ...data }: CheckRollDialogProps = $props();
-	let selectedRollMode = $state(untrack(() => [Math.clamp(Number(data.rollMode ?? 0), -6, 6)]));
+	let selectedRollMode = $state(untrack(() => Math.clamp(Number(data.rollMode ?? 0), -6, 6)));
 	let shouldRollBeHidden = $state(Boolean(game.settings.get('nimble', 'hideRolls')));
 
-	let selectedRollModeValue = $derived(selectedRollMode[0] ?? 0);
 	let rollFormula = $derived.by(() => {
 		if (type === 'initiative') {
-			return actor._getInitiativeFormula({ rollMode: selectedRollModeValue });
+			return actor._getInitiativeFormula({ rollMode: selectedRollMode });
 		}
 
 		return getRollFormula(actor as Parameters<typeof getRollFormula>[0], {
 			...data,
-			rollMode: selectedRollModeValue,
+			rollMode: selectedRollMode,
 			type,
 		});
 	});
@@ -45,7 +44,7 @@
 		data-button-variant="basic"
 		onclick={() =>
 			dialog.submitRoll({
-				rollMode: selectedRollModeValue,
+				rollMode: selectedRollMode,
 				rollFormula,
 				visibilityMode: shouldRollBeHidden ? 'blindroll' : 'publicroll',
 			})}
