@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.8.3] - 2026-04-16
+
+### Fixed
+
+- [#711] Restore advantage/disadvantage on checks and initiative. @trevlar
+
+### Changed
+
+- [#710] Fix image references in compendium. @trevlar
+- [#712] Fix broken image references in compendium. @trevlar
+
+---
+
+
 ## [0.8.2] - 2026-04-15
 
 ### Added
