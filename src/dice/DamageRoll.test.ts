@@ -3,7 +3,16 @@ import type { EffectNode } from '#types/effectTree.js';
 import { ItemActivationManager, testDependencies } from '../managers/ItemActivationManager.js';
 import { hasWeaponProficiency } from '../view/sheets/components/attackUtils.js';
 import { DamageRoll } from './DamageRoll.js';
-import { khn as nimbleKhn, kln as nimbleKln } from './nimbleDieModifiers.js';
+import {
+	getNimbleMods,
+	nimbleCrit,
+	nimbleCritVicious,
+	khn as nimbleKhn,
+	kln as nimbleKln,
+	nimbleNeutral,
+	nimbleVicious,
+} from './nimbleDieModifiers.js';
+import type { PrimaryDie } from './terms/PrimaryDie.js';
 
 type DieResult = {
 	result: number;
@@ -35,6 +44,10 @@ function stubBaseRollEvaluate() {
 				for (const m of term.modifiers as string[]) {
 					if (/^khn\d*$/.test(m)) nimbleKhn.call(term, m);
 					else if (/^kln\d*$/.test(m)) nimbleKln.call(term, m);
+					else if (m === 'cv') nimbleCritVicious.call(term, m);
+					else if (m === 'c') nimbleCrit.call(term, m);
+					else if (m === 'v') nimbleVicious.call(term, m);
+					else if (m === 'n') nimbleNeutral.call(term, m);
 				}
 			}
 			return this;
@@ -427,7 +440,8 @@ describe('DamageRoll vicious weapon preprocessing', () => {
 		);
 
 		expect(roll.primaryDie).toBeDefined();
-		expect(roll.primaryDie?.options.isVicious).toBe(true);
+		const primary = roll.primaryDie as PrimaryDie;
+		expect(primary.options.isVicious).toBe(true);
 	});
 
 	it('should not add isVicious to primary die when isVicious is false', () => {
@@ -446,7 +460,8 @@ describe('DamageRoll vicious weapon preprocessing', () => {
 
 		expect(roll.primaryDie).toBeDefined();
 		// isVicious should be undefined or false (not explicitly true)
-		expect(roll.primaryDie?.options.isVicious).toBeFalsy();
+		const primary = roll.primaryDie as PrimaryDie;
+		expect(primary.options.isVicious).toBeFalsy();
 	});
 });
 
@@ -1827,5 +1842,504 @@ describe('explosionStyle option', () => {
 		expect(legacyRoll.options.explosionStyle).toBe('vicious');
 		expect(newRoll.options.explosionStyle).toBe('vicious');
 		expect(legacyRoll.primaryDie?.modifiers).toEqual(newRoll.primaryDie?.modifiers);
+	});
+});
+
+// ─── Die Modifier Vocabulary (modifier-mode) ────────────────────────
+
+/**
+ * Stage results on the Nth Die term (0-indexed among Die terms only) in a
+ * DamageRoll. Used for modifier-mode tests where there is no PrimaryDie.
+ */
+function stageDieTermResults(roll: DamageRoll, dieTermIndex: number, results: DieResult[]): void {
+	const Terms = foundry.dice.terms;
+	const dieTerms = roll.terms.filter((t) => t instanceof Terms.Die);
+	const term = dieTerms[dieTermIndex];
+	if (!term) throw new Error(`No die term at index ${dieTermIndex}`);
+	(term as any).results = results;
+	(term as any)._evaluated = true;
+}
+
+function stageModifierModeRoll(roll: DamageRoll, dieResults: DieResult[][], total: number): void {
+	for (let i = 0; i < dieResults.length; i++) {
+		stageDieTermResults(roll, i, dieResults[i]);
+	}
+	(roll as any)._evaluated = true;
+	(roll as any)._total = total;
+}
+
+describe('die modifier vocabulary — modifier-mode', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		stubBaseRollEvaluate();
+	});
+
+	describe('modifier-mode detection and parsing', () => {
+		it('1d8c enters modifier-mode', () => {
+			const roll = new DamageRoll(
+				'1d8c',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			expect(roll.modifierMode).toBe(true);
+			expect(roll.primaryDie).toBeUndefined(); // no PrimaryDie term
+		});
+
+		it('1d8cv enters modifier-mode', () => {
+			const roll = new DamageRoll(
+				'1d8cv',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			expect(roll.modifierMode).toBe(true);
+		});
+
+		it('1d8n enters modifier-mode', () => {
+			const roll = new DamageRoll(
+				'1d8n',
+				{},
+				{
+					canCrit: false,
+					canMiss: false,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			expect(roll.modifierMode).toBe(true);
+		});
+
+		it('1d8v enters modifier-mode', () => {
+			const roll = new DamageRoll(
+				'1d8v',
+				{},
+				{
+					canCrit: false,
+					canMiss: false,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			expect(roll.modifierMode).toBe(true);
+		});
+
+		it('formula without Nimble modifiers does NOT enter modifier-mode', () => {
+			const roll = new DamageRoll(
+				'1d8',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			expect(roll.modifierMode).toBe(false);
+			expect(roll.primaryDie).toBeDefined(); // legacy PrimaryDie
+		});
+	});
+
+	describe('per-die crit detection', () => {
+		it('1d8c: rolling max sets isCritical', async () => {
+			const roll = new DamageRoll(
+				'1d8c',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(roll, [[{ result: 8, active: true }]], 8);
+			await (roll as any)._evaluate();
+			expect(roll.isCritical).toBe(true);
+		});
+
+		it('1d8c: rolling non-max does not crit', async () => {
+			const roll = new DamageRoll(
+				'1d8c',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(roll, [[{ result: 5, active: true }]], 5);
+			await (roll as any)._evaluate();
+			expect(roll.isCritical).toBe(false);
+		});
+
+		it('4d4cv: 2 of 4 dice at max → isCritical true', async () => {
+			const roll = new DamageRoll(
+				'4d4cv',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(
+				roll,
+				[
+					[
+						{ result: 4, active: true },
+						{ result: 2, active: true },
+						{ result: 4, active: true },
+						{ result: 3, active: true },
+					],
+				],
+				13,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.isCritical).toBe(true);
+		});
+
+		it('4d4cv: no dice at max → isCritical false', async () => {
+			const roll = new DamageRoll(
+				'4d4cv',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(
+				roll,
+				[
+					[
+						{ result: 2, active: true },
+						{ result: 1, active: true },
+						{ result: 3, active: true },
+						{ result: 2, active: true },
+					],
+				],
+				8,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.isCritical).toBe(false);
+		});
+	});
+
+	describe('neutral dice (n modifier)', () => {
+		it('2d6n: max roll does NOT set isCritical even with canCrit: true', async () => {
+			// canCrit: true so the constructor does NOT pre-lock isCritical to false.
+			// The n modifier metadata is what must prevent crit detection.
+			const roll = new DamageRoll(
+				'2d6n',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(
+				roll,
+				[
+					[
+						{ result: 6, active: true },
+						{ result: 6, active: true },
+					],
+				],
+				12,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.isCritical).toBe(false);
+		});
+
+		it('2d6n: rolling 1 does NOT set isMiss even with canMiss: true', async () => {
+			// canMiss: true so the constructor does NOT pre-lock isMiss to false.
+			// The n modifier makes all dice neutral, so no die qualifies for miss detection.
+			const roll = new DamageRoll(
+				'2d6n',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(
+				roll,
+				[
+					[
+						{ result: 1, active: true },
+						{ result: 3, active: true },
+					],
+				],
+				4,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.isMiss).toBe(false);
+		});
+	});
+
+	describe('mixed pools', () => {
+		it('1d8c + 2d6n: d8 crits, d6s are neutral', async () => {
+			const roll = new DamageRoll(
+				'1d8c + 2d6n',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			expect(roll.modifierMode).toBe(true);
+			// d8 rolls max (8), d6s roll max (6, 6) — only d8 should trigger crit
+			stageModifierModeRoll(
+				roll,
+				[
+					[{ result: 8, active: true }],
+					[
+						{ result: 6, active: true },
+						{ result: 6, active: true },
+					],
+				],
+				20,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.isCritical).toBe(true);
+			// Verify the d6 max rolls did NOT influence the crit — check metadata
+			const Terms = foundry.dice.terms;
+			const d6Term = roll.terms.filter((t) => t instanceof Terms.Die)[1];
+			const d6Meta = getNimbleMods(d6Term);
+			expect(d6Meta?.canCrit).toBe(false);
+		});
+
+		it('1d8c + 2d6n: d8 rolls 1 → isMiss, neutral d6s ignored', async () => {
+			const roll = new DamageRoll(
+				'1d8c + 2d6n',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(
+				roll,
+				[
+					[{ result: 1, active: true }],
+					[
+						{ result: 5, active: true },
+						{ result: 3, active: true },
+					],
+				],
+				9,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.isMiss).toBe(true);
+			expect(roll.isCritical).toBe(false);
+		});
+
+		it('1d8cv + 2d6: unmodified d6s do not crit even if they roll max', async () => {
+			const roll = new DamageRoll(
+				'1d8cv + 2d6',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			// Any Nimble modifier triggers modifier-mode for the whole roll
+			expect(roll.modifierMode).toBe(true);
+			// d8 rolls 3 (not max), d6s roll 6+6 (max but no Nimble metadata)
+			stageModifierModeRoll(
+				roll,
+				[
+					[{ result: 3, active: true }],
+					[
+						{ result: 6, active: true },
+						{ result: 6, active: true },
+					],
+				],
+				15,
+			);
+			await (roll as any)._evaluate();
+			// d6s have no canCrit metadata → no crit from them
+			expect(roll.isCritical).toBe(false);
+		});
+	});
+
+	describe('miss detection in modifier-mode', () => {
+		it('leftmost non-neutral die rolling 1 → isMiss', async () => {
+			const roll = new DamageRoll(
+				'1d8c',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(roll, [[{ result: 1, active: true }]], 1);
+			await (roll as any)._evaluate();
+			expect(roll.isMiss).toBe(true);
+			expect(roll.isCritical).toBe(false);
+		});
+
+		it('canMiss: false suppresses miss even in modifier-mode', async () => {
+			const roll = new DamageRoll(
+				'1d8c',
+				{},
+				{
+					canCrit: true,
+					canMiss: false,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(roll, [[{ result: 1, active: true }]], 1);
+			await (roll as any)._evaluate();
+			expect(roll.isMiss).toBe(false);
+		});
+	});
+
+	describe('primaryDie assignment in modifier-mode', () => {
+		it('assigns leftmost c-tagged die as primaryDie', async () => {
+			const roll = new DamageRoll(
+				'1d8c + 2d6',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(
+				roll,
+				[
+					[{ result: 5, active: true }],
+					[
+						{ result: 3, active: true },
+						{ result: 2, active: true },
+					],
+				],
+				10,
+			);
+			await (roll as any)._evaluate();
+			// primaryDie should be the d8 (first Die term, tagged 'c')
+			expect(roll.primaryDie).toBeDefined();
+			expect(roll.primaryDie?.faces).toBe(8);
+		});
+	});
+
+	describe('primaryDieAsDamage: false in modifier-mode', () => {
+		it('excludes leftmost die base value from total', async () => {
+			const roll = new DamageRoll(
+				'1d8c + 2d6',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+					primaryDieAsDamage: false,
+				},
+			);
+			stageModifierModeRoll(
+				roll,
+				[
+					[{ result: 5, active: true }],
+					[
+						{ result: 3, active: true },
+						{ result: 4, active: true },
+					],
+				],
+				12,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.excludedPrimaryDieValue).toBe(5);
+			expect(roll.total).toBe(7); // 12 - 5
+		});
+	});
+
+	describe('c modifier adds x for standard explosion', () => {
+		it('1d8c die term gets x added by handler during evaluation', async () => {
+			const roll = new DamageRoll(
+				'1d8c',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			const Terms = foundry.dice.terms;
+			const dieTerm = roll.terms.find((t) => t instanceof Terms.Die);
+			// Before evaluation, the formula has 'c' but not yet 'x' (added by handler)
+			expect(dieTerm?.modifiers).toContain('c');
+			stageModifierModeRoll(roll, [[{ result: 5, active: true }]], 5);
+			await (roll as any)._evaluate();
+			// After evaluation, handler should have added 'x'
+			expect(dieTerm?.modifiers).toContain('x');
+		});
+	});
+
+	describe('cv modifier does NOT add x', () => {
+		it('1d8cv die term has cv but no x after evaluation', async () => {
+			const roll = new DamageRoll(
+				'1d8cv',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			const Terms = foundry.dice.terms;
+			const dieTerm = roll.terms.find((t) => t instanceof Terms.Die);
+			expect(dieTerm?.modifiers).toContain('cv');
+			stageModifierModeRoll(roll, [[{ result: 5, active: true }]], 5);
+			await (roll as any)._evaluate();
+			expect(dieTerm?.modifiers).not.toContain('x');
+		});
 	});
 });
