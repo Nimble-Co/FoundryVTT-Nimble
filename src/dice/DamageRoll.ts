@@ -846,6 +846,19 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** ------------------------------------------------------ */
 
 	/**
+	 * Claim formulas containing Nimble die modifiers for DamageRoll processing.
+	 * Called by Foundry's `Roll.create()` when iterating `CONFIG.Dice.rolls`.
+	 *
+	 * Alternation order matters: longer tokens first (`cv` before `c`,
+	 * `khn`/`kln` before `n`). The trailing `(?![a-z])` prevents false
+	 * positives against Foundry modifiers that share a prefix (e.g. `cs`
+	 * count-successes, `cf` count-failures must not match Nimble `c`).
+	 */
+	static matches(formula: string): boolean {
+		return /\d+d\d+(?:cv|c|v|khn|kln|n)(?![a-z])/.test(formula);
+	}
+
+	/**
 	 * Type guard to check if terms array contains RollTerm instances.
 	 *
 	 * @param terms - The terms array to check.
