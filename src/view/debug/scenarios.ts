@@ -201,4 +201,34 @@ export const scenarios: Scenario[] = [
 		note: "Sneak Attack at level 15 becomes 2d20. Unusual bonus die size — verify the bonus dice render correctly and don't try to crit-explode (bonus dice never crit).",
 		formula: '1d6 + 2d20',
 	},
+
+	// --- Modifier-mode scenarios ---
+	{
+		id: 'dravok-4d4cv',
+		label: 'Dravok 4d4cv',
+		formula: '4d4cv',
+		note: 'Every d4 can crit independently, each with vicious explosion. Roll several times — any d4 that hits 4 should spawn a vicious chain.',
+	},
+	{
+		id: 'd66-2d6n',
+		label: 'd66 roll 2d6n',
+		formula: '2d6n',
+		canCrit: false,
+		canMiss: false,
+		note: 'Neutral dice — no crit, no miss. Rolling max should NOT trigger a critical hit.',
+	},
+	{
+		id: 'mixed-1d8cv-2d6',
+		label: 'Vicious + bonus 1d8cv + 2d6',
+		formula: '1d8cv + 2d6',
+		note: 'Primary d8 crits viciously, 2d6 is plain damage. Only the d8 should trigger crit detection.',
+	},
+	{
+		id: 'aoe-modifier-2d8n',
+		label: 'AoE via modifier 2d8n',
+		formula: '2d8n',
+		canCrit: false,
+		canMiss: false,
+		note: 'AoE-style damage via n modifier. No crit, no miss — outcome should always be HIT.',
+	},
 ];
