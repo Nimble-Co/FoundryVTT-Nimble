@@ -3,6 +3,7 @@ import type { EffectNode } from '#types/effectTree.js';
 import { ItemActivationManager, testDependencies } from '../managers/ItemActivationManager.js';
 import { hasWeaponProficiency } from '../utils/attackUtils.js';
 import { DamageRoll } from './DamageRoll.js';
+import type { MutatedResult, MutationStep } from './mutations.js';
 import {
 	getNimbleMods,
 	nimbleCrit,
@@ -2833,4 +2834,245 @@ describe('DamageRoll.matches', () => {
 	it('does not match 4d6kh3 + 2d8 + 5', () =>
 		expect(DamageRoll.matches('4d6kh3 + 2d8 + 5')).toBe(false));
 	it('does not match 2d20kh + 1d6', () => expect(DamageRoll.matches('2d20kh + 1d6')).toBe(false));
+});
+
+describe('mutations pipeline', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		stubBaseRollEvaluate();
+	});
+
+	it('empty mutations array → no change (baseline)', async () => {
+		const roll = new DamageRoll(
+			'1d8c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				mutations: [],
+			},
+		);
+		stageModifierModeRoll(roll, [[{ result: 5, active: true }]], 5);
+		await (roll as any)._evaluate();
+		expect(roll.isCritical).toBe(false);
+		expect(roll.critCount).toBe(0);
+		// No mutation metadata on the result
+		const r = roll.terms.filter((t) => t instanceof foundry.dice.terms.Die)[0].results[0];
+		expect((r as MutatedResult).mutation).toBeUndefined();
+	});
+
+	it('Doomed: max all dice, countsAsCrit true, no explosion', async () => {
+		const mutations: MutationStep[] = [
+			{
+				target: { kind: 'all' },
+				operation: { type: 'max' },
+				countsAsCrit: true,
+				triggersExplosion: false,
+				source: 'Doomed',
+			},
+		];
+		const roll = new DamageRoll(
+			'1d8c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				mutations,
+			},
+		);
+		// Seed die to non-max value — mutation will set it to max
+		stageModifierModeRoll(roll, [[{ result: 3, active: true }]], 3);
+		await (roll as any)._evaluate();
+
+		// Value is now max
+		const dieTerm = roll.terms.filter((t) => t instanceof foundry.dice.terms.Die)[0];
+		expect(dieTerm.results[0].result).toBe(8);
+
+		// Crit detected (countsAsCrit: true)
+		expect(roll.isCritical).toBe(true);
+		expect(roll.critCount).toBe(1);
+
+		// Mutation metadata preserved
+		const m = (dieTerm.results[0] as MutatedResult).mutation;
+		expect(m).toBeDefined();
+		expect(m!.rolledValue).toBe(3);
+		expect(m!.source).toBe('Doomed');
+		expect(m!.triggersExplosion).toBe(false);
+
+		// No explosion dice — the c modifier has standard explosion via `x`,
+		// which runs during super._evaluate() BEFORE mutations. Since the die
+		// rolled 3 originally, no explosion fired. The mutation sets it to 8
+		// after, but standard explosion already resolved as a no-op.
+		// Verify no extra results were appended.
+		expect(dieTerm.results).toHaveLength(1);
+	});
+
+	it('Vicious Opportunist: set primary to max, crit detected and explosion not suppressed', async () => {
+		const mutations: MutationStep[] = [
+			{
+				target: { kind: 'primary' },
+				operation: { type: 'set', value: 8 },
+				countsAsCrit: true,
+				triggersExplosion: true,
+				source: 'Vicious Opportunist',
+			},
+		];
+		const roll = new DamageRoll(
+			'1d8cv',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				mutations,
+			},
+		);
+		// Seed die to non-max — mutation will set to max
+		stageModifierModeRoll(roll, [[{ result: 2, active: true }]], 2);
+		await (roll as any)._evaluate();
+
+		const dieTerm = roll.terms.filter((t) => t instanceof foundry.dice.terms.Die)[0];
+		expect(dieTerm.results[0].result).toBe(8);
+
+		// Crit detected (countsAsCrit: true on mutated max)
+		expect(roll.isCritical).toBe(true);
+		expect(roll.critCount).toBe(1);
+
+		// Mutation metadata
+		const m = (dieTerm.results[0] as MutatedResult).mutation;
+		expect(m).toBeDefined();
+		expect(m!.source).toBe('Vicious Opportunist');
+		expect(m!.triggersExplosion).toBe(true);
+
+		// Vicious explosion should fire (triggersExplosion: true) — verify
+		// the initial result was marked exploded to start the chain.
+		// (The mock Roll environment doesn't produce real explosion results,
+		// but the exploded flag proves the guard didn't suppress it.)
+		expect(dieTerm.results[0].exploded).toBe(true);
+	});
+
+	it('Juggernaut: bump +1, does not crit (countsAsCrit defaults false)', async () => {
+		const mutations: MutationStep[] = [
+			{
+				target: { kind: 'primary' },
+				operation: { type: 'bump', delta: 1 },
+				source: 'Juggernaut',
+			},
+		];
+		const roll = new DamageRoll(
+			'1d8c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				mutations,
+			},
+		);
+		// Seed to 5 → becomes 6 after bump
+		stageModifierModeRoll(roll, [[{ result: 5, active: true }]], 5);
+		await (roll as any)._evaluate();
+
+		const dieTerm = roll.terms.filter((t) => t instanceof foundry.dice.terms.Die)[0];
+		expect(dieTerm.results[0].result).toBe(6);
+		expect(roll.isCritical).toBe(false);
+
+		const m = (dieTerm.results[0] as MutatedResult).mutation;
+		expect(m!.rolledValue).toBe(5);
+	});
+
+	it('Juggernaut: bump to max does NOT crit (countsAsCrit: false)', async () => {
+		const mutations: MutationStep[] = [
+			{
+				target: { kind: 'primary' },
+				operation: { type: 'bump', delta: 1 },
+				source: 'Juggernaut',
+			},
+		];
+		const roll = new DamageRoll(
+			'1d8c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				mutations,
+			},
+		);
+		// Seed to 7 → becomes 8 (max) after bump, but countsAsCrit defaults false
+		stageModifierModeRoll(roll, [[{ result: 7, active: true }]], 7);
+		await (roll as any)._evaluate();
+
+		const dieTerm = roll.terms.filter((t) => t instanceof foundry.dice.terms.Die)[0];
+		expect(dieTerm.results[0].result).toBe(8);
+		expect(roll.isCritical).toBe(false);
+		expect(roll.critCount).toBe(0);
+	});
+
+	it('BOUNDLESS RAGE: floor 6 on d12, below minimum raised', async () => {
+		const mutations: MutationStep[] = [
+			{
+				target: { kind: 'all' },
+				operation: { type: 'floor', minimum: 6 },
+				source: 'BOUNDLESS RAGE',
+			},
+		];
+		const roll = new DamageRoll(
+			'1d12c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				mutations,
+			},
+		);
+		stageModifierModeRoll(roll, [[{ result: 3, active: true }]], 3);
+		await (roll as any)._evaluate();
+
+		const dieTerm = roll.terms.filter((t) => t instanceof foundry.dice.terms.Die)[0];
+		expect(dieTerm.results[0].result).toBe(6);
+		expect((dieTerm.results[0] as MutatedResult).mutation!.rolledValue).toBe(3);
+	});
+
+	it('BOUNDLESS RAGE: floor 6 on d12, above minimum unchanged', async () => {
+		const mutations: MutationStep[] = [
+			{
+				target: { kind: 'all' },
+				operation: { type: 'floor', minimum: 6 },
+				source: 'BOUNDLESS RAGE',
+			},
+		];
+		const roll = new DamageRoll(
+			'1d12c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				mutations,
+			},
+		);
+		stageModifierModeRoll(roll, [[{ result: 9, active: true }]], 9);
+		await (roll as any)._evaluate();
+
+		const dieTerm = roll.terms.filter((t) => t instanceof foundry.dice.terms.Die)[0];
+		expect(dieTerm.results[0].result).toBe(9);
+	});
 });

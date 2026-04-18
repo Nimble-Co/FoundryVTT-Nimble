@@ -1,6 +1,8 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { InexactPartial } from '#types/utils.js';
 
+import type { MutatedResult, MutationStep } from './mutations.js';
+import { applyMutationStep } from './mutations.js';
 import { getNimbleMods } from './nimbleDieModifiers.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
@@ -59,6 +61,8 @@ declare namespace DamageRoll {
 		 * Default: false
 		 */
 		brutalPrimary?: boolean;
+		/** Ordered list of post-roll value mutations to apply. */
+		mutations?: MutationStep[];
 		/**
 		 * @deprecated Use `explosionStyle: 'vicious'` instead. Translated to
 		 *   `explosionStyle` by the constructor shim for back-compat.
@@ -528,9 +532,11 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		// explosionStyle: 'none' — which never sets the exploded flag —
 		// still detects crit correctly.
 		if (this.options.canCrit) {
-			this.isCritical = primaryTerm.results.some(
-				(r) => r.active && !r.discarded && r.result === primaryTerm.faces,
-			);
+			this.isCritical = primaryTerm.results.some((r) => {
+				if (!r.active || r.discarded || r.result !== primaryTerm.faces) return false;
+				const m = (r as MutatedResult).mutation;
+				return !m || m.countsAsCrit;
+			});
 		}
 		this.critCount = this.isCritical ? 1 : 0;
 
@@ -568,12 +574,18 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	/**
-	 * Extension point for features that mutate primary die values after
-	 * rolling but before outcome resolution (e.g. Hexbinder Doomed,
-	 * Vicious Opportunist). Intentionally empty today.
+	 * Process declarative mutation steps that modify die results after rolling
+	 * but before crit detection and explosion dispatch (e.g. Hexbinder Doomed,
+	 * Vicious Opportunist). Each step tags results with metadata so downstream
+	 * logic can decide per-result crit/explosion behavior.
 	 */
 	private _applyPostRollMutations(): void {
-		// No-op. Reserved for future mutation features.
+		const mutations = this.options.mutations;
+		if (!mutations?.length) return;
+		const dieTerms = this.terms.filter((t): t is foundry.dice.terms.Die => t instanceof Terms.Die);
+		for (const step of mutations) {
+			applyMutationStep(step, dieTerms, this.primaryDie);
+		}
 	}
 
 	/**
@@ -599,6 +611,9 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 		// Check if initial roll is a crit (max value)
 		if (initialResult.result !== faces) return;
+		// Skip explosion for mutated results unless triggersExplosion is true
+		const mut = (initialResult as MutatedResult).mutation;
+		if (mut && !mut.triggersExplosion) return;
 
 		// Mark initial result as exploded
 		initialResult.exploded = true;
@@ -662,6 +677,9 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 		for (const result of baseResults) {
 			if (!result.active || result.discarded || result.result !== faces) continue;
+			// Skip explosion for mutated results unless triggersExplosion is true
+			const m = (result as MutatedResult).mutation;
+			if (m && !m.triggersExplosion) continue;
 
 			// Mark as exploded and chain
 			result.exploded = true;
@@ -731,9 +749,9 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			const meta = getNimbleMods(term);
 			if (!meta?.canCrit) continue;
 			for (const r of term.results) {
-				if (r.active && !r.discarded && r.result === term.faces) {
-					count++;
-				}
+				if (!r.active || r.discarded || r.result !== term.faces) continue;
+				const m = (r as MutatedResult).mutation;
+				if (!m || m.countsAsCrit) count++;
 			}
 		}
 		return count;
