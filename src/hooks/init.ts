@@ -54,6 +54,28 @@ export default function init() {
 	CONFIG.Dice.rolls.push(NimbleRoll as (typeof CONFIG.Dice.rolls)[number]);
 	CONFIG.Dice.types.push(PrimaryDie);
 
+	// Override Roll.create so /r formulas with Nimble modifiers route to DamageRoll.
+	// Foundry v13's default Roll.create just instantiates CONFIG.Dice.rolls[0] (the
+	// base Roll), so Nimble-modifier formulas would never reach DamageRoll without this.
+	if (typeof foundry.dice.Roll.create === 'function') {
+		const originalRollCreate = foundry.dice.Roll.create.bind(foundry.dice.Roll);
+		// @ts-expect-error — override is type-compatible at runtime; static generic signature is not re-expressible
+		foundry.dice.Roll.create = (
+			formula: string,
+			data?: Record<string, unknown>,
+			options?: Record<string, unknown>,
+		) => {
+			if (DamageRoll.matches(formula)) {
+				return new DamageRoll(
+					formula,
+					(data ?? {}) as DamageRoll.Data,
+					options as unknown as DamageRoll.Options,
+				);
+			}
+			return originalRollCreate(formula, data, options);
+		};
+	}
+
 	// Register Nimble custom Die modifiers (khn / kln — leftmost-on-tie keep).
 	registerNimbleDieModifiers();
 
