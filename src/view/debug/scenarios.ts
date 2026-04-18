@@ -47,6 +47,7 @@ export type Scenario = {
 	disCount?: number;
 	forceCrit?: boolean;
 	forceMiss?: boolean;
+	brutalPrimary?: boolean;
 };
 
 export const scenarios: Scenario[] = [
@@ -207,7 +208,7 @@ export const scenarios: Scenario[] = [
 		id: 'dravok-4d4cv',
 		label: 'Dravok 4d4cv',
 		formula: '4d4cv',
-		note: 'Every d4 can crit independently, each with vicious explosion. Roll several times — any d4 that hits 4 should spawn a vicious chain.',
+		note: 'Every d4 can crit independently, each with vicious explosion. Roll several times — any d4 that hits 4 should spawn a vicious chain. Check critCount reflects how many base dice critted (not chain dice).',
 	},
 	{
 		id: 'd66-2d6n',
@@ -230,5 +231,21 @@ export const scenarios: Scenario[] = [
 		canCrit: false,
 		canMiss: false,
 		note: 'AoE-style damage via n modifier. No crit, no miss — outcome should always be HIT.',
+	},
+
+	// --- Brutal trait scenarios ---
+	{
+		id: 'brutal-3d8c',
+		label: 'Brutal 3d8c',
+		formula: '3d8c',
+		brutalPrimary: true,
+		note: 'Brutal trait: highest-value die becomes primary (set via roll option, not formula). Roll a few times — primary should shift to whichever d8 rolled highest.',
+	},
+	{
+		id: 'brutal-dravok-4d4cv',
+		label: 'Brutal Dravok 4d4cv',
+		formula: '4d4cv',
+		brutalPrimary: true,
+		note: 'Dravok + Brutal: highest-value d4 is primary. Vicious explosions still fire on any d4 that crits. Check that primary shifts to the highest roller.',
 	},
 ];

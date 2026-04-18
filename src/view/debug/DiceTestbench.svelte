@@ -28,6 +28,7 @@
 	type TraceDump = {
 		isCritical: boolean;
 		isMiss: boolean;
+		critCount: number;
 		total: number;
 		stagedValuesRemaining: number;
 	};
@@ -65,6 +66,7 @@
 	let weaponType = $state('');
 	let advCount = $state(0);
 	let disCount = $state(0);
+	let brutalPrimary = $state(false);
 	let forceCrit = $state(false);
 	let forceMiss = $state(false);
 	let specificValues = $state<Array<number | null>>([]);
@@ -178,7 +180,10 @@
 		() => {
 			if (!lastResult) return { label: '', kind: 'none' };
 			if (lastResult.isCritical) {
-				return { label: localize('NIMBLE.diceTestbench.results.crit'), kind: 'crit' };
+				const critLabel = localize('NIMBLE.diceTestbench.results.crit');
+				const count = lastResult.trace.critCount;
+				const label = count > 1 ? `${critLabel} x${count}` : critLabel;
+				return { label, kind: 'crit' };
 			}
 			if (lastResult.isMiss) {
 				return { label: localize('NIMBLE.diceTestbench.results.miss'), kind: 'miss' };
@@ -255,6 +260,7 @@
 		weaponType = scenario.weaponType ?? '';
 		advCount = scenario.advCount ?? 0;
 		disCount = scenario.disCount ?? 0;
+		brutalPrimary = scenario.brutalPrimary ?? false;
 		forceCrit = scenario.forceCrit ?? false;
 		forceMiss = scenario.forceMiss ?? false;
 		specificValues = [];
@@ -279,6 +285,7 @@
 					canCrit: resolvedCanCrit,
 					canMiss: resolvedCanMiss,
 					primaryDieAsDamage,
+					brutalPrimary,
 					rollMode: 0,
 					rollModeSources: rollModeSourcesArray,
 				},
@@ -439,6 +446,10 @@
 				<input type="checkbox" bind:checked={primaryDieAsDamage} />
 				{localize('NIMBLE.diceTestbench.rollBuilder.flags.primaryDieAsDamage')}
 			</label>
+			<label>
+				<input type="checkbox" bind:checked={brutalPrimary} />
+				Brutal Primary (highest-value = primary)
+			</label>
 		</div>
 
 		<label class="nimble-testbench__field">
@@ -545,6 +556,13 @@
 					<em>— {missSuppressionReason}</em>
 				{/if}
 			</div>
+			{#if brutalPrimary}
+				<div class="nimble-testbench__resolved-row">
+					<span>brutalPrimary:</span>
+					<strong>true</strong>
+					<em>— highest-value die becomes primary</em>
+				</div>
+			{/if}
 		</div>
 
 		<div class="nimble-testbench__force-row">
@@ -765,6 +783,7 @@
 						state: String(lastResult.trace.isMiss),
 					})}
 				</span>
+				<span>critCount: {lastResult.trace.critCount}</span>
 				{#if lastResult.trace.stagedValuesRemaining > 0}
 					<span class="nimble-testbench__trace-warning">
 						{localize('NIMBLE.diceTestbench.results.stagedRemaining', {
