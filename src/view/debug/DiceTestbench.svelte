@@ -82,6 +82,10 @@
 				<input type="checkbox" bind:checked={state.primaryDieAsDamage} />
 				{localize('NIMBLE.diceTestbench.rollBuilder.flags.primaryDieAsDamage')}
 			</label>
+			<label>
+				<input type="checkbox" bind:checked={state.brutalPrimary} />
+				{localize('NIMBLE.diceTestbench.rollBuilder.flags.brutalPrimary')}
+			</label>
 		</div>
 
 		<label class="nimble-testbench__field">
@@ -408,6 +412,7 @@
 						state: String(state.lastResult.trace.isMiss),
 					})}
 				</span>
+				<span>critCount: {state.lastResult.trace.critCount}</span>
 				{#if state.lastResult.trace.stagedValuesRemaining > 0}
 					<span class="nimble-testbench__trace-warning">
 						{localize('NIMBLE.diceTestbench.results.stagedRemaining', {

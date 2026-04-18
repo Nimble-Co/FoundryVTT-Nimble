@@ -25,6 +25,7 @@ export type TermDump = {
 export type TraceDump = {
 	isCritical: boolean;
 	isMiss: boolean;
+	critCount: number;
 	total: number;
 	stagedValuesRemaining: number;
 };
