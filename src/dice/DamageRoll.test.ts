@@ -2762,3 +2762,75 @@ describe('primaryDieValue getter', () => {
 		expect(roll.primaryDieValue).toBe(6);
 	});
 });
+
+// ─── DamageRoll.matches ────────────────────────────────────────────────
+
+describe('DamageRoll.matches', () => {
+	// --- Single Nimble modifier ---
+	it('matches 4d4cv (crit-vicious)', () => expect(DamageRoll.matches('4d4cv')).toBe(true));
+	it('matches 1d8c (crit-standard)', () => expect(DamageRoll.matches('1d8c')).toBe(true));
+	it('matches 2d6n (neutral)', () => expect(DamageRoll.matches('2d6n')).toBe(true));
+	it('matches 1d8v (vicious standalone)', () => expect(DamageRoll.matches('1d8v')).toBe(true));
+	it('matches 2d8khn (keep-highest-nimble)', () => expect(DamageRoll.matches('2d8khn')).toBe(true));
+	it('matches 3d6kln2 (keep-lowest-nimble with count)', () =>
+		expect(DamageRoll.matches('3d6kln2')).toBe(true));
+
+	// --- Nimble modifier + plain terms ---
+	it('matches 1d8c + 2d6', () => expect(DamageRoll.matches('1d8c + 2d6')).toBe(true));
+	it('matches 1d12cv + 1d4', () => expect(DamageRoll.matches('1d12cv + 1d4')).toBe(true));
+	it('matches 3d8khn2 + 1d6', () => expect(DamageRoll.matches('3d8khn2 + 1d6')).toBe(true));
+	it('matches 1d8c + 2d6n + 3', () => expect(DamageRoll.matches('1d8c + 2d6n + 3')).toBe(true));
+
+	// --- Nimble modifier buried after plain dice ---
+	it('matches 2d6 + 1d8c + 4', () => expect(DamageRoll.matches('2d6 + 1d8c + 4')).toBe(true));
+	it('matches 1d4 + 2d6 + 1d8cv', () => expect(DamageRoll.matches('1d4 + 2d6 + 1d8cv')).toBe(true));
+
+	// --- Multiple Nimble modifiers across terms ---
+	it('matches 4d4cv + 2d6n (Dravok pool)', () =>
+		expect(DamageRoll.matches('4d4cv + 2d6n')).toBe(true));
+	it('matches 1d8c + 2d6n + 1d4v', () =>
+		expect(DamageRoll.matches('1d8c + 2d6n + 1d4v')).toBe(true));
+	it('matches 2d8c + 3d6n + 1d4v + 2d10khn + 5', () =>
+		expect(DamageRoll.matches('2d8c + 3d6n + 1d4v + 2d10khn + 5')).toBe(true));
+
+	// --- Nimble modifiers adjacent to operators (no spaces) ---
+	it('matches 1d8c+2d6', () => expect(DamageRoll.matches('1d8c+2d6')).toBe(true));
+	it('matches 2d4cv+1d6n+3', () => expect(DamageRoll.matches('2d4cv+1d6n+3')).toBe(true));
+
+	// --- Plain formulas (must NOT match) ---
+	it('does not match 2d6+3', () => expect(DamageRoll.matches('2d6+3')).toBe(false));
+	it('does not match 1d20', () => expect(DamageRoll.matches('1d20')).toBe(false));
+	it('does not match 5+3 (no dice)', () => expect(DamageRoll.matches('5+3')).toBe(false));
+	it('does not match 2d8 + 1d6 + 5', () => expect(DamageRoll.matches('2d8 + 1d6 + 5')).toBe(false));
+	it('does not match 4d6 + 2d8 + 1d4 + 10', () =>
+		expect(DamageRoll.matches('4d6 + 2d8 + 1d4 + 10')).toBe(false));
+
+	// --- Foundry built-in modifiers that share prefixes (must NOT match) ---
+	it('does not match 4d6kh3 (Foundry keep-highest)', () =>
+		expect(DamageRoll.matches('4d6kh3')).toBe(false));
+	it('does not match 2d20kh (Foundry keep-highest)', () =>
+		expect(DamageRoll.matches('2d20kh')).toBe(false));
+	it('does not match 4d6kl3 (Foundry keep-lowest)', () =>
+		expect(DamageRoll.matches('4d6kl3')).toBe(false));
+	it('does not match 8d6cs>3 (Foundry count-successes)', () =>
+		expect(DamageRoll.matches('8d6cs>3')).toBe(false));
+	it('does not match 8d6cf<2 (Foundry count-failures)', () =>
+		expect(DamageRoll.matches('8d6cf<2')).toBe(false));
+	it('does not match 1d6x (Foundry exploding)', () =>
+		expect(DamageRoll.matches('1d6x')).toBe(false));
+	it('does not match 1d6r1 (Foundry reroll)', () =>
+		expect(DamageRoll.matches('1d6r1')).toBe(false));
+	it('does not match 4d6dh (Foundry drop-highest)', () =>
+		expect(DamageRoll.matches('4d6dh')).toBe(false));
+	it('does not match 4d6dl (Foundry drop-lowest)', () =>
+		expect(DamageRoll.matches('4d6dl')).toBe(false));
+	it('does not match 2d6min2 (Foundry minimum)', () =>
+		expect(DamageRoll.matches('2d6min2')).toBe(false));
+	it('does not match 2d6max5 (Foundry maximum)', () =>
+		expect(DamageRoll.matches('2d6max5')).toBe(false));
+
+	// --- Mixed: Foundry modifiers + plain (no Nimble) ---
+	it('does not match 4d6kh3 + 2d8 + 5', () =>
+		expect(DamageRoll.matches('4d6kh3 + 2d8 + 5')).toBe(false));
+	it('does not match 2d20kh + 1d6', () => expect(DamageRoll.matches('2d20kh + 1d6')).toBe(false));
+});
