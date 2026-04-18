@@ -18,6 +18,7 @@ export type StagedValue = { value: number; faces: number };
 export type StageAndRollTrace = {
 	isCritical: boolean;
 	isMiss: boolean;
+	critCount: number;
 	total: number;
 	stagedValuesRemaining: number;
 };
@@ -66,6 +67,7 @@ export async function stageAndRoll(
 			trace: {
 				isCritical: roll.isCritical ?? false,
 				isMiss: roll.isMiss ?? false,
+				critCount: roll.critCount,
 				total: roll.total ?? 0,
 				stagedValuesRemaining: queue.length,
 			},
