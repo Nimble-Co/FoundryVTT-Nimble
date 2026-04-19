@@ -79,7 +79,7 @@ When a player clicks "Attack" on a weapon, here's what happens (all in `src/dice
 
 6. **`DamageRoll._evaluate` interprets the results.** In modifier-mode, the engine iterates all Die terms, reads their modifier metadata, and dispatches per-die: `cv`-tagged dice that rolled max get a vicious explosion chain, `c`-tagged dice use Foundry's native `x` explosion, `n`-tagged dice are skipped for crit/miss. In legacy mode, the engine reads the single primary die and dispatches based on the `explosionStyle` option (`'none'` / `'standard'` / `'vicious'`). Crit detection in both modes uses the same value-based check: did a kept (active, non-discarded) die roll its max face value?
 
-7. **Post-roll mutation hook.** A no-op method `_applyPostRollMutations` is called between the dice rolling and the outcome being finalized. Today it does nothing. It's there as an extension point (see below).
+7. **Post-roll mutations.** `_applyPostRollMutations` processes an optional `mutations: MutationStep[]` array from the roll options. Each step targets specific dice, applies an operation (set, bump, max, floor, ceiling, etc.), and tags the result with metadata recording the original rolled value and whether the mutation counts as a crit or triggers explosion. See "Post-roll mutation pipeline" below.
 
 8. **Finalize the total.** `_finalizeOutcome` sets `isCritical` / `isMiss` / `critCount` flags and adjusts the total for vicious recalculation and the `primaryDieAsDamage: false` case (where the primary die's value is excluded from damage but its explosions still count). `critCount` tracks how many crit-capable dice independently rolled max — for a standard weapon this is 0 or 1, but for multi-die pools like Dravok's `4d4cv` it can be 2, 3, or even 4. `isCritical` is `critCount > 0`. If the `brutalPrimary` option is set, the primary die is reassigned to whichever die rolled highest (instead of leftmost).
 
@@ -89,16 +89,36 @@ When a player clicks "Attack" on a weapon, here's what happens (all in `src/dice
 
 If you're adding a class feature, monster trait, or spell that does something unusual with dice, here's where it plugs in. **You should almost never have to modify `DamageRoll.ts` itself** — that's the whole point of the structure below.
 
-### Post-roll mutation hook — `_applyPostRollMutations`
+### Post-roll mutation pipeline — `_applyPostRollMutations`
 
-Today this is an empty method called from `_evaluate` after Foundry rolls the dice but before the outcome is finalized. It's reserved for features that need to **change a die's value after it's rolled**, then have hit/miss/crit re-evaluated against the new value. Examples of features that will land here:
+The mutation pipeline lets features **change die values after rolling** with explicit control over whether the change counts as a crit and whether it triggers explosion. This is the engine's answer to a class of Nimble rules that modify dice outcomes post-roll.
 
-- **Hexbinder "Doomed"** — "Next roll against target has every die treated as max." That's a post-roll value override on a subset of the pool.
-- **Cheat class "Vicious Opportunist"** — "On hitting a Distracted target, set the Primary Die to any value you choose. Setting it to max counts as a crit."
-- **Berserker "Blood Frenzy"** — "On crit, set a Fury Die to its maximum value."
-- **Hexbinder "Soothsayer"** — "Expend a Futuresight Die to add or subtract 1 from any die rolled, clamped to its natural range."
+Callers pass a `mutations: MutationStep[]` array in the roll options. Each step declares:
 
-When one of these lands, the feature's logic lives in its own rule file and gets invoked from `_applyPostRollMutations`. The rule mutates `primaryDie.results[].result` and returns. `_finalizeOutcome` then re-reads the primary die state and the outcome updates automatically.
+- **Target** — which dice to mutate: `'primary'` (primary die only), `'all'` (every die), `'tagged'` (dice with a specific modifier), or `'index'` (a specific result).
+- **Operation** — what to do:
+  - `set` — set to an exact value (Vicious Opportunist: "set Primary Die to any value")
+  - `bump` — add or subtract N, clamped to [1, faces] (Juggernaut: "+1 to primary die")
+  - `max` — set to face maximum (Doomed: "all dice treated as max")
+  - `min` — set to 1
+  - `floor` — if below minimum, raise to minimum (BOUNDLESS RAGE: "Fury Die can't be less than 6")
+  - `ceiling` — if above maximum, lower to maximum
+- **`countsAsCrit`** — does a mutated-to-max result count as a crit? (default: false)
+- **`triggersExplosion`** — does a mutated-to-max result trigger the explosion chain? (default: false)
+
+Each mutated result is tagged with metadata preserving the original rolled value and the mutation source. This lets the chat card show "rolled 3 → mutated to 8 (Doomed)" without the engine losing track of what actually happened.
+
+**The critical design insight** is the carveout table — different features that both "set to max" have different crit/explosion rules:
+
+| Feature | countsAsCrit | triggersExplosion |
+|---------|:---:|:---:|
+| Vicious Opportunist ("setting to max counts as a crit") | yes | yes |
+| Doomed ("counts as crit but subsequent crit damage is not included") | yes | **no** |
+| Cunning Strike ("Sneak Attack dice deal max") | no | no |
+| Juggernaut ("+1 to primary die") | no | no |
+| BOUNDLESS RAGE ("Fury Die can't be less than 6") | no | no |
+
+Individual class features don't live in the engine — they emit `MutationStep` objects from the rules layer, and the engine processes them generically. The engine's only job is to apply the operation, tag the metadata, and honor the flags during crit detection and explosion dispatch.
 
 ### Custom Die modifiers — `nimbleDieModifiers.ts`
 
@@ -159,7 +179,7 @@ Content authors can leave `weaponType` blank (nothing breaks) or set it for weap
 | Where custom modifiers get registered | `src/hooks/init.ts` (calls `registerNimbleDieModifiers()`) |
 | Roll construction from an item | `src/managers/ItemActivationManager.ts` |
 | Weapon proficiency check | `src/view/sheets/components/attackUtils.ts` (`hasWeaponProficiency`) |
-| The extension point for post-roll mutations | `DamageRoll._applyPostRollMutations` |
+| Post-roll mutation pipeline | `DamageRoll._applyPostRollMutations` + `src/dice/mutations.ts` |
 | Multi-crit count | `DamageRoll.critCount` |
 | Brutal primary remapping | `DamageRoll.Options.brutalPrimary` |
 | Primary die value getter | `DamageRoll.primaryDieValue` |
@@ -177,7 +197,7 @@ A rogue attacks a Distracted goblin with a shortsword (`1d6`), with advantage fr
 5. **`khn` handler runs:** the `1` is marked discarded (leftmost lowest), the `6` is active.
 6. **`_evaluate` reads the primary die:** it's the `6`, which is max → crit.
 7. **Crit explosion:** reroll the primary die, roll a `4`, add it. Not max, so stop.
-8. **`_applyPostRollMutations`:** no-op today. When Vicious Opportunist lands, this is where "set primary die to any value on hit against Distracted target" would run — potentially turning a hit into a crit.
+8. **`_applyPostRollMutations`:** if the target were Doomed, a mutation step `{ target: 'all', operation: 'max', countsAsCrit: true, triggersExplosion: false }` would set every die to max. The roll would count as a crit (for knockback, conditions, etc.) but no explosion chain would fire — matching the Doomed rule exactly. If instead the rogue used Vicious Opportunist to set the primary to max, the step would use `triggersExplosion: true` and the explosion chain would fire normally.
 9. **`_finalizeOutcome`:** sets `isCritical = true`, `isMiss = false`. Total: primary `6 + 4` (explosion) + sneak attack `4 + 5` = `19` damage, crit flag set. Chat card renders it all.
 
 ### Modifier-mode example: Dravok's Terrible Maw (`4d4cv`)
