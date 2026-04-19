@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EffectNode } from '#types/effectTree.js';
 import { ItemActivationManager, testDependencies } from '../managers/ItemActivationManager.js';
-import { hasWeaponProficiency } from '../view/sheets/components/attackUtils.js';
+import { hasWeaponProficiency } from '../utils/attackUtils.js';
 import { DamageRoll } from './DamageRoll.js';
 import { khn as nimbleKhn, kln as nimbleKln } from './nimbleDieModifiers.js';
 

@@ -5,12 +5,12 @@ import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
+import { hasWeaponProficiency } from '../utils/attackUtils.js';
 import getRollFormula from '../utils/getRollFormula.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
 import { flattenEffectsTree } from '../utils/treeManipulation/flattenEffectsTree.js';
 import { reconstructEffectsTree } from '../utils/treeManipulation/reconstructEffectsTree.js';
-import { hasWeaponProficiency } from '../view/sheets/components/attackUtils.js';
 
 // Dependencies are grouped to allow tests to override them without relying on module mocking.
 const dependencies = {
