@@ -1,8 +1,5 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
-import type {
-	ClassFeatureResult,
-	SelectionGroup,
-} from '#types/components/ClassFeatureSelection.d.ts';
+import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection.d.ts';
 import type { ExpandableDocumentItem } from '#types/components/ExpandableDocumentList.d.ts';
 import type { EpicBoonChoice, SubclassChoice } from '#types/components/LevelUpChoices.d.ts';
 import buildSubclassFeatureIndex from '#utils/buildSubclassFeatureIndex.ts';
@@ -31,6 +28,7 @@ interface LevelUpDocument {
 	classes: Record<string, ClassItemShape | undefined>;
 	items: Array<{
 		type: string;
+		uuid?: string;
 		name?: string;
 		system?: {
 			rules?: Array<{ type: string; [key: string]: unknown }>;
@@ -147,15 +145,28 @@ export function createLevelUpState(
 		Promise.all([buildClassFeatureIndex(), buildSubclassFeatureIndex()])
 			.then(async ([classIndex, subclassIndex]) => {
 				const parentClassIdentifier = characterClass.identifier;
+				const items = getDocument().items ?? [];
+				const ownedFeatureUuids = new Set(
+					items
+						.filter((item) => item.type === 'feature')
+						.flatMap((item) => {
+							const itemUuid = item.uuid;
+							const compendiumSource = item._stats?.compendiumSource;
+
+							return [itemUuid, compendiumSource].filter(
+								(uuid): uuid is string => typeof uuid === 'string' && uuid.length > 0,
+							);
+						}),
+				);
 				const rawFeatures = await getClassFeaturesFromIndex(
 					classIndex,
 					parentClassIdentifier,
 					levelingTo,
+					{ ownedFeatureUuids },
 				);
 
 				// Determine the subclass group key for feature lookup.
 				// Features use a slugified subclass name as their system.group.
-				const items = getDocument().items ?? [];
 				let subclassGroup: string | undefined;
 
 				if (currentSelectedSubclass) {
@@ -183,41 +194,15 @@ export function createLevelUpState(
 						)
 					: [];
 
-				// Get UUIDs of features the character already has (via compendiumSource)
-				const ownedFeatureUuids = new Set(
-					items
-						.filter((item) => item.type === 'feature')
-						.map(
-							(item) =>
-								(item as unknown as { _stats?: { compendiumSource?: string } })._stats
-									?.compendiumSource,
-						)
-						.filter((uuid): uuid is string => !!uuid),
-				);
-
-				// Filter out already-owned features from autoGrant and merge in subclass features
+				// Subclass features are resolved separately, so filter already-owned
+				// entries here before merging them into the current level grants.
 				const filteredAutoGrant = [...rawFeatures.autoGrant, ...subclassFeatures].filter(
 					(feature) => !ownedFeatureUuids.has(feature.uuid),
 				);
 
-				// Filter out already-owned features from selection groups
-				const filteredSelectionGroups = new Map<string, SelectionGroup>();
-				for (const [groupName, group] of rawFeatures.selectionGroups) {
-					const filteredFeatures = group.features.filter(
-						(feature) => !ownedFeatureUuids.has(feature.uuid),
-					);
-					// Only include groups that still have options
-					if (filteredFeatures.length > 0) {
-						filteredSelectionGroups.set(groupName, {
-							features: filteredFeatures,
-							selectionCount: group.selectionCount,
-						});
-					}
-				}
-
 				classFeatures = {
 					autoGrant: filteredAutoGrant,
-					selectionGroups: filteredSelectionGroups,
+					selectionGroups: rawFeatures.selectionGroups,
 				};
 				featuresLoading = false;
 			})

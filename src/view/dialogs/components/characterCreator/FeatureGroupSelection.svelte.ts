@@ -46,6 +46,17 @@ export function createFeatureGroupSelectionState(getProps: () => FeatureGroupSel
 			const { selectionCount, selectedFeatures } = getProps();
 			return selectedFeatures.length >= selectionCount;
 		},
+		get displayedFeatures() {
+			const { features, selectionCount, selectedFeatures } = getProps();
+			const isFixed = features.length === selectionCount;
+			const isComplete = selectedFeatures.length >= selectionCount;
+
+			if (isFixed || !isComplete) {
+				return features;
+			}
+
+			return selectedFeatures;
+		},
 		isFeatureSelected(feature: NimbleFeatureItem) {
 			return getProps().selectedFeatures.some((f) => f.uuid === feature.uuid);
 		},

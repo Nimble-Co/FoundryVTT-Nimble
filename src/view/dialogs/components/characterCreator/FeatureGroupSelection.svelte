@@ -59,13 +59,11 @@
 	</header>
 
 	<ul class="feature-group__list">
-		{#each features as feature (feature.uuid)}
+		{#each state.displayedFeatures as feature (feature.uuid)}
 			{@const isSelected = state.isFeatureSelected(feature)}
-			{@const isDisabled = !state.isFixed && !isSelected && state.isComplete}
 			<FeatureCard
 				{feature}
 				isSelected={state.isFixed ? false : isSelected}
-				isDisabled={state.isFixed ? false : isDisabled}
 				onSelect={state.isFixed ? undefined : () => onSelect(feature)}
 			/>
 		{/each}
