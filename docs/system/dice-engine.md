@@ -24,6 +24,33 @@ On top of that:
 - **AoE / multi-target attacks** can't miss and can't crit. One roll applies to everyone hit.
 - **Minions and no-proficiency weapons** can't crit.
 
+The "one primary die" model covers most weapons, but some abilities break it. Dravok's Terrible Maw rolls `4d4` where **every** die can independently crit with vicious explosion. d66/d88 lookup rolls use `2d6` where **neither** die can crit or miss. Mixed pools like a vicious weapon plus sneak attack (`1d8 + 2d6`) have one die that crits viciously while the rest are plain damage. The engine handles all of these through **die modifiers** — short tokens appended to individual dice in the formula that control their crit/miss/explosion behavior.
+
+## Die modifier vocabulary
+
+Each die in a formula can carry a modifier that tells the engine how to treat it:
+
+| Modifier | Meaning | Example |
+|----------|---------|---------|
+| `c` | Can crit. Max value → standard explosion chain (reroll, add to damage, repeat while max). | `1d8c` — standard weapon |
+| `cv` | Can crit with vicious explosion. Max value → roll 2 dice, left can chain, right cannot. | `1d8cv` — vicious weapon, `4d4cv` — Dravok |
+| `v` | Vicious metadata only. No crit detection. Warns if used without `c`. | — (rarely used alone) |
+| `n` | Neutral. No crit, no miss. Value contributes to damage normally. | `2d6n` — d66 roll, `2d8n` — AoE damage |
+
+**Formula examples:**
+
+| Formula | Meaning |
+|---------|---------|
+| `1d8c` | Standard single-die weapon. Primary die crits with standard explosion. |
+| `1d8cv` | Vicious weapon. Primary die crits with vicious explosion (2 dice per chain). |
+| `4d4cv` | Dravok's Terrible Maw. Each d4 independently checks crit, each with vicious explosion. |
+| `2d6n` | d66 tens-and-ones lookup. Neither die can crit or miss. |
+| `1d8cv + 2d6` | Vicious weapon plus sneak attack. The d8 crits viciously; the 2d6 are plain damage. |
+
+When a formula contains any Nimble modifier, the roll enters **modifier-mode** — the engine reads each die's modifier metadata instead of extracting a single primary die. This is transparent to callers: existing roll-level options (`canCrit`, `canMiss`, `isVicious`) are still accepted and translated to modifiers via a constructor shim.
+
+You can also type `/r 4d4cv` in Foundry chat to roll modifier-mode formulas directly. `DamageRoll.matches()` claims any formula containing Nimble modifiers, so the engine handles them instead of Foundry's base Roll class.
+
 ### The subtlety that breaks naive implementations
 
 Suppose you have `2d6` with advantage. That's a 3-dice pool: roll three, drop the lowest, keep two.
@@ -44,13 +71,13 @@ When a player clicks "Attack" on a weapon, here's what happens (all in `src/dice
 
 2. **Advantage and disadvantage sources are netted.** If two features give `+1 adv` and one gives `+1 dis`, the net is `+1 adv`. A single integer is passed to the next step.
 
-3. **`DamageRoll` constructs the formula.** The constructor separates the **primary pool** (the base weapon dice that can become primary) from the **bonus dice** (sneak attack, bonus elemental damage, etc.). It also applies the AoE / proficiency / minion flags that suppress crits or misses.
+3. **`DamageRoll` constructs the formula.** The constructor checks whether the formula contains Nimble die modifiers (`c`, `cv`, `n`). If so, the roll enters **modifier-mode** — each die's behavior comes from its modifier metadata, and no PrimaryDie extraction happens. If no Nimble modifiers are present, the **legacy path** runs: the constructor separates the primary pool from bonus dice and applies AoE / proficiency / minion flags.
 
-4. **Extra dice are added to the primary pool for advantage/disadvantage.** `|net|` extra dice get added, and a custom modifier (`khn` for advantage, `kln` for disadvantage) is emitted. `khn` = "keep highest Nimble." `kln` = "keep lowest Nimble." These are the Nimble-tie-aware versions of Foundry's built-in `kh`/`kl`.
+4. **Extra dice are added for advantage/disadvantage.** `|net|` extra dice get added, and a custom modifier (`khn` for advantage, `kln` for disadvantage) is emitted. This works in both modes. `khn` = "keep highest Nimble." `kln` = "keep lowest Nimble." These are the Nimble-tie-aware versions of Foundry's built-in `kh`/`kl`.
 
-5. **Foundry rolls the dice.** The custom `khn`/`kln` modifier handlers (in `src/dice/nimbleDieModifiers.ts`) sort the results and mark dice as discarded — crucially, they prefer dropping the **leftmost** tied die, which is the rule Foundry's native `kh`/`kl` does not guarantee.
+5. **Foundry rolls the dice.** The custom `khn`/`kln` modifier handlers sort results and mark dice as discarded (leftmost dropped on ties). In modifier-mode, the `c`, `cv`, `v`, and `n` handlers also run — they attach Symbol-keyed metadata to each Die instance describing its crit/miss/explosion behavior. These handlers don't roll extra dice; they only tag metadata.
 
-6. **`DamageRoll._evaluate` interprets the results.** It finds the primary die (leftmost non-discarded die of the primary pool), reads whether it rolled max (crit) or 1 (miss), and handles any crit explosion chain. Explosion behavior is controlled by the `explosionStyle` option: `'none'` (no explosions), `'standard'` (reroll on max, add to damage), or `'vicious'` (standard explosion plus the Vicious extra die). The legacy `isVicious` boolean is still accepted — a constructor shim maps it to the appropriate `explosionStyle`.
+6. **`DamageRoll._evaluate` interprets the results.** In modifier-mode, the engine iterates all Die terms, reads their modifier metadata, and dispatches per-die: `cv`-tagged dice that rolled max get a vicious explosion chain, `c`-tagged dice use Foundry's native `x` explosion, `n`-tagged dice are skipped for crit/miss. In legacy mode, the engine reads the single primary die and dispatches based on the `explosionStyle` option (`'none'` / `'standard'` / `'vicious'`). Crit detection in both modes uses the same value-based check: did a kept (active, non-discarded) die roll its max face value?
 
 7. **Post-roll mutation hook.** A no-op method `_applyPostRollMutations` is called between the dice rolling and the outcome being finalized. Today it does nothing. It's there as an extension point (see below).
 
@@ -75,12 +102,11 @@ When one of these lands, the feature's logic lives in its own rule file and gets
 
 ### Custom Die modifiers — `nimbleDieModifiers.ts`
 
-If you're adding a rule that changes how dice **resolve** (not just what their values are), register a new Foundry Die modifier here. Current examples: `khn` and `kln` for tie-aware drops. Future examples:
+Die modifiers control per-die behavior: crit capability, explosion style, and neutrality. The engine ships with `c`, `cv`, `v`, `n` (plus `khn`/`kln` for tie-aware advantage/disadvantage). Each modifier is a handler function registered on `Die.MODIFIERS` via `registerNimbleDieModifiers()` at system init.
 
-- **Dravok "Terrible Maw"** — "Every die in the pool independently checks crit, and each crit triggers Vicious." This is a custom modifier that marks individual dice with a crit flag, which `_finalizeOutcome` then reads.
-- **"Heads I Win, Tails You Lose"** — "Crit on 1 less than max." A modifier that shifts the crit threshold.
+Modifiers attach Symbol-keyed metadata to the Die instance during evaluation. The engine reads this metadata via `getNimbleMods(die)` during finalization. Modifiers never roll extra dice or mutate results — they're pure metadata. The explosion and crit logic lives in `DamageRoll._evaluate`.
 
-The pattern: write a handler function that mutates `this.results[]`, register it on `Die.MODIFIERS` via `registerNimbleDieModifiers()`, and emit the modifier token from wherever you build the roll.
+To add a new modifier: write a handler that attaches metadata via the `NIMBLE_MODS` symbol, register it in `registerNimbleDieModifiers()`, and emit the modifier token in the formula from wherever you build the roll. See the existing `c`/`cv`/`n` handlers in `nimbleDieModifiers.ts` for the pattern.
 
 ### AoE auto-flagging — `ItemActivationManager`
 
@@ -112,6 +138,7 @@ Content authors can leave `weaponType` blank (nothing breaks) or set it for weap
 | The roll formula preprocessing | `src/dice/DamageRoll.ts` (`_preProcessFormula`, `_applyRollMode`) |
 | The primary die logic | `src/dice/terms/PrimaryDie.ts` |
 | Tie-aware adv/dis handlers | `src/dice/nimbleDieModifiers.ts` |
+| Die modifier metadata (`c`, `cv`, `v`, `n`) | `src/dice/nimbleDieModifiers.ts` (`getNimbleMods()`, `NIMBLE_MODS`) |
 | Where custom modifiers get registered | `src/hooks/init.ts` (calls `registerNimbleDieModifiers()`) |
 | Roll construction from an item | `src/managers/ItemActivationManager.ts` |
 | Weapon proficiency check | `src/view/sheets/components/attackUtils.ts` (`hasWeaponProficiency`) |
@@ -132,6 +159,18 @@ A rogue attacks a Distracted goblin with a shortsword (`1d6`), with advantage fr
 7. **Crit explosion:** reroll the primary die, roll a `4`, add it. Not max, so stop.
 8. **`_applyPostRollMutations`:** no-op today. When Vicious Opportunist lands, this is where "set primary die to any value on hit against Distracted target" would run — potentially turning a hit into a crit.
 9. **`_finalizeOutcome`:** sets `isCritical = true`, `isMiss = false`. Total: primary `6 + 4` (explosion) + sneak attack `4 + 5` = `19` damage, crit flag set. Chat card renders it all.
+
+### Modifier-mode example: Dravok's Terrible Maw (`4d4cv`)
+
+A Dravok attacks with its Terrible Maw — `4d4cv`, every die can crit independently with vicious explosion.
+
+1. **Formula enters modifier-mode** because `cv` is a Nimble modifier. No PrimaryDie extraction.
+2. **Foundry rolls 4d4:** `[4, 2, 4, 1]`. The `cv` handler attaches crit-vicious metadata to the Die term.
+3. **Per-die crit check:** dice #1 and #3 rolled max (4 on a d4) → both are crits.
+4. **Vicious explosion for die #1:** roll 2d4 → `[3, 2]`. Left die (3) is not max, chain stops. +5 added.
+5. **Vicious explosion for die #3:** roll 2d4 → `[4, 1]`. Left die (4) is max → chain continues. Roll 2d4 again → `[2, 3]`. Chain stops. +10 added.
+6. **`isCritical = true`** (at least one die critted). Miss detection skipped (no non-neutral die rolled 1 — die #4 rolled 1 but miss reads leftmost die, which rolled 4).
+7. **Total:** `4 + 2 + 4 + 1` (base) + `3 + 2` (die #1 explosion) + `4 + 1 + 2 + 3` (die #3 explosion) = `26`.
 
 ## Developer testbench
 
