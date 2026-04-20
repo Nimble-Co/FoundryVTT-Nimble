@@ -1,367 +1,10 @@
 <script lang="ts">
 	import localize from '#utils/localize.js';
-	import { hasWeaponProficiency } from '#view/sheets/components/attackUtils.js';
-	import { scenarios, type Scenario } from '#view/debug/scenarios.js';
-	import { stageAndRoll, type StagedValue } from '#view/debug/stageAndRoll.js';
+	import { scenarios } from '#view/debug/scenarios.js';
+	import { templateShapeOptions } from './DiceTestbench.constants.js';
+	import { createDiceTestbenchState } from './DiceTestbench.state.svelte.ts';
 
-	type ParsedDie = { termIndex: number; dieIndex: number; faces: number };
-	type DieResultDump = {
-		result: number;
-		active: boolean;
-		discarded: boolean;
-		exploded: boolean;
-		provenance: string | null;
-	};
-	type TermDump = {
-		type: string;
-		formula: string;
-		faces: number | null;
-		results: DieResultDump[] | null;
-		/**
-		 * For Die terms: the configured die count (used to split base dice from
-		 * post-evaluation explosion rerolls in the results array).
-		 * For NumericTerm: the numeric value.
-		 */
-		number: number | null;
-		operator: string | null;
-	};
-	type TraceDump = {
-		isCritical: boolean;
-		isMiss: boolean;
-		total: number;
-		stagedValuesRemaining: number;
-	};
-	type ResultDump = {
-		trace: TraceDump;
-		isCritical: boolean | undefined;
-		isMiss: boolean | undefined;
-		total: number | null | undefined;
-		terms: TermDump[];
-	};
-
-	type TestbenchActor = {
-		id: string;
-		name: string;
-		type: string;
-		getRollData?: () => Record<string, unknown>;
-	};
-
-	let selectedActorId = $state<string | null>(null);
-
-	const actors = $derived.by(() => {
-		const all = (game.actors?.contents ?? []) as TestbenchActor[];
-		return all.filter((a) => a.type === 'character' || a.type === 'npc' || a.type === 'minion');
-	});
-
-	const selectedActor = $derived(actors.find((a) => a.id === selectedActorId) ?? null);
-
-	// Roll Builder state
-	let formula = $state('1d8');
-	let isVicious = $state(false);
-	let canCrit = $state(true);
-	let canMiss = $state(true);
-	let primaryDieAsDamage = $state(true);
-	let templateShape = $state('');
-	let weaponType = $state('');
-	let advCount = $state(0);
-	let disCount = $state(0);
-	let forceCrit = $state(false);
-	let forceMiss = $state(false);
-	let specificValues = $state<Array<number | null>>([]);
-	let showSpecific = $state(false);
-
-	const templateShapeOptions = [
-		{ value: '', labelKey: 'NIMBLE.diceTestbench.rollBuilder.templateShape.none' },
-		{ value: 'circle', labelKey: 'NIMBLE.diceTestbench.rollBuilder.templateShape.circle' },
-		{ value: 'cone', labelKey: 'NIMBLE.diceTestbench.rollBuilder.templateShape.cone' },
-		{ value: 'emanation', labelKey: 'NIMBLE.diceTestbench.rollBuilder.templateShape.emanation' },
-		{ value: 'line', labelKey: 'NIMBLE.diceTestbench.rollBuilder.templateShape.line' },
-		{ value: 'square', labelKey: 'NIMBLE.diceTestbench.rollBuilder.templateShape.square' },
-	];
-
-	const effectiveCanCrit = $derived(templateShape !== '' ? false : canCrit);
-	const effectiveCanMiss = $derived(templateShape !== '' ? false : canMiss);
-	const flagsLocked = $derived(templateShape !== '');
-
-	const netRollMode = $derived(advCount - disCount);
-
-	const rollModeSourcesArray = $derived([
-		...Array.from({ length: advCount }, () => 1),
-		...Array.from({ length: disCount }, () => -1),
-	]);
-
-	function setForceCrit(value: boolean) {
-		forceCrit = value;
-		if (value) forceMiss = false;
-	}
-
-	function setForceMiss(value: boolean) {
-		forceMiss = value;
-		if (value) forceCrit = false;
-	}
-
-	const proficient = $derived.by(() => {
-		if (weaponType === '') return null;
-		return hasWeaponProficiency(
-			selectedActor as unknown as Parameters<typeof hasWeaponProficiency>[0],
-			{ system: { weaponType } },
-		);
-	});
-
-	const isMinion = $derived(selectedActor?.type === 'minion');
-	const critSuppressedForNonProf = $derived(proficient === false);
-
-	// Computed flags the engine will actually receive (visible to the user
-	// before they roll, so it's clear WHY a crit/miss might be suppressed).
-	const resolvedCanCrit = $derived(
-		effectiveCanCrit && !isMinion && (proficient === null || proficient === true),
-	);
-	const resolvedCanMiss = $derived(effectiveCanMiss);
-
-	const critSuppressionReason = $derived.by<string | null>(() => {
-		if (resolvedCanCrit) return null;
-		if (templateShape !== '') {
-			return localize('NIMBLE.diceTestbench.rollBuilder.suppressionReason.aoe');
-		}
-		if (isMinion) {
-			return localize('NIMBLE.diceTestbench.rollBuilder.suppressionReason.minion');
-		}
-		if (proficient === false) {
-			return localize('NIMBLE.diceTestbench.rollBuilder.suppressionReason.nonProficient');
-		}
-		if (!canCrit) {
-			return localize('NIMBLE.diceTestbench.rollBuilder.suppressionReason.flagOff');
-		}
-		return null;
-	});
-
-	const missSuppressionReason = $derived.by<string | null>(() => {
-		if (resolvedCanMiss) return null;
-		if (templateShape !== '') {
-			return localize('NIMBLE.diceTestbench.rollBuilder.suppressionReason.aoe');
-		}
-		if (!canMiss) {
-			return localize('NIMBLE.diceTestbench.rollBuilder.suppressionReason.flagOff');
-		}
-		return null;
-	});
-
-	// Parse formula for individual dice (for Force Specific Values)
-	const parsedDice = $derived.by<ParsedDie[]>(() => {
-		const result: ParsedDie[] = [];
-		const re = /(\d+)?d(\d+)/g;
-		let match: RegExpExecArray | null;
-		let termIndex = 0;
-		while ((match = re.exec(formula)) !== null) {
-			const count = match[1] ? parseInt(match[1], 10) : 1;
-			const faces = parseInt(match[2], 10);
-			for (let i = 0; i < count; i += 1) {
-				result.push({ termIndex, dieIndex: i, faces });
-			}
-			termIndex += 1;
-		}
-		return result;
-	});
-
-	// Keep specificValues array sized to parsedDice
-	$effect(() => {
-		if (specificValues.length !== parsedDice.length) {
-			specificValues = parsedDice.map((_, i) => specificValues[i] ?? null);
-		}
-	});
-
-	let lastResult = $state<ResultDump | null>(null);
-	let lastError = $state<string | null>(null);
-	let showRawJson = $state(false);
-
-	const outcomeBadge = $derived.by<{ label: string; kind: 'crit' | 'miss' | 'hit' | 'none' }>(
-		() => {
-			if (!lastResult) return { label: '', kind: 'none' };
-			if (lastResult.isCritical) {
-				return { label: localize('NIMBLE.diceTestbench.results.crit'), kind: 'crit' };
-			}
-			if (lastResult.isMiss) {
-				return { label: localize('NIMBLE.diceTestbench.results.miss'), kind: 'miss' };
-			}
-			return { label: localize('NIMBLE.diceTestbench.results.hit'), kind: 'hit' };
-		},
-	);
-
-	const primaryTerms = $derived(lastResult?.terms.filter((t) => t.type === 'PrimaryDie') ?? []);
-
-	type CategorizedDie = {
-		result: number;
-		active: boolean;
-		discarded: boolean;
-		exploded: boolean;
-		category: 'kept' | 'dropped' | 'critReroll' | 'viciousChain' | 'viciousBonus';
-	};
-	type CategorizedPrimary = { faces: number | null; dice: CategorizedDie[] };
-
-	/**
-	 * Categorize a single primary-die result by its position in the results
-	 * array (whether it's a base die or an explosion reroll) and its provenance
-	 * tag (set by manual vicious explosion).
-	 *
-	 * `baseCount` is the term's configured `number` — the count of dice that
-	 * Foundry rolled as the original pool. Anything beyond that index is an
-	 * explosion reroll.
-	 */
-	function categorizeDie(
-		r: DieResultDump,
-		index: number,
-		baseCount: number,
-	): CategorizedDie['category'] {
-		if (r.discarded) return 'dropped';
-		if (r.provenance === 'viciousChain') return 'viciousChain';
-		if (r.provenance === 'viciousBonus') return 'viciousBonus';
-		if (index < baseCount) return 'kept';
-		return 'critReroll';
-	}
-
-	const categorizedPrimary = $derived.by<CategorizedPrimary[]>(() => {
-		return primaryTerms.map((term) => {
-			const baseCount = term.number ?? term.results?.length ?? 0;
-			return {
-				faces: term.faces,
-				dice: (term.results ?? []).map((r, i) => ({
-					result: r.result,
-					active: r.active,
-					discarded: r.discarded,
-					exploded: r.exploded,
-					category: categorizeDie(r, i, baseCount),
-				})),
-			};
-		});
-	});
-	const bonusDieTerms = $derived(
-		lastResult?.terms.filter((t) => t.type === 'Die' || t.type === 'NimbleDie') ?? [],
-	);
-	const numericTerms = $derived(
-		lastResult?.terms.filter((t) => t.type === 'NumericTerm' && t.number !== null) ?? [],
-	);
-
-	let activeScenarioId = $state<string | null>(null);
-	const activeScenario = $derived(scenarios.find((s) => s.id === activeScenarioId) ?? null);
-
-	function applyScenario(scenario: Scenario) {
-		activeScenarioId = scenario.id;
-		formula = scenario.formula ?? '1d8';
-		isVicious = scenario.isVicious ?? false;
-		canCrit = scenario.canCrit ?? true;
-		canMiss = scenario.canMiss ?? true;
-		primaryDieAsDamage = scenario.primaryDieAsDamage ?? true;
-		templateShape = scenario.templateShape ?? '';
-		weaponType = scenario.weaponType ?? '';
-		advCount = scenario.advCount ?? 0;
-		disCount = scenario.disCount ?? 0;
-		forceCrit = scenario.forceCrit ?? false;
-		forceMiss = scenario.forceMiss ?? false;
-		specificValues = [];
-		showSpecific = false;
-		lastResult = null;
-		lastError = null;
-	}
-
-	function getPrimaryFaces(): number | null {
-		const first = parsedDice[0];
-		return first ? first.faces : null;
-	}
-
-	async function performRoll(stagedValues: StagedValue[]) {
-		lastError = null;
-		try {
-			const actorData = (selectedActor?.getRollData?.() ?? {}) as Record<string, unknown>;
-			const result = await stageAndRoll(
-				formula,
-				{
-					isVicious,
-					canCrit: resolvedCanCrit,
-					canMiss: resolvedCanMiss,
-					primaryDieAsDamage,
-					rollMode: 0,
-					rollModeSources: rollModeSourcesArray,
-				},
-				stagedValues,
-				actorData as never,
-			);
-			lastResult = {
-				trace: result.trace,
-				isCritical: result.roll.isCritical,
-				isMiss: result.roll.isMiss,
-				total: result.roll.total,
-				terms: result.roll.terms.map((t) => {
-					const anyT = t as {
-						constructor: { name: string };
-						formula?: string;
-						faces?: number;
-						results?: Array<{
-							result: number;
-							active?: boolean;
-							discarded?: boolean;
-							exploded?: boolean;
-						}>;
-						number?: number;
-						operator?: string;
-					};
-					const isDie = Array.isArray(anyT.results);
-					return {
-						type: anyT.constructor.name,
-						formula: anyT.formula ?? '',
-						faces: typeof anyT.faces === 'number' ? anyT.faces : null,
-						results: isDie
-							? (anyT.results ?? []).map((r) => {
-									const provRaw = (r as { provenance?: unknown }).provenance;
-									return {
-										result: r.result,
-										active: r.active !== false,
-										discarded: r.discarded === true,
-										exploded: r.exploded === true,
-										provenance: typeof provRaw === 'string' ? provRaw : null,
-									};
-								})
-							: null,
-						number: typeof anyT.number === 'number' ? anyT.number : null,
-						operator: typeof anyT.operator === 'string' ? anyT.operator : null,
-					};
-				}),
-			};
-		} catch (err) {
-			lastError = err instanceof Error ? err.message : String(err);
-			lastResult = null;
-		}
-	}
-
-	async function onRoll() {
-		if (forceCrit || forceMiss) {
-			const faces = getPrimaryFaces();
-			if (faces === null) {
-				lastError = localize('NIMBLE.diceTestbench.rollBuilder.errors.noPrimaryDie');
-				return;
-			}
-			const value = forceCrit ? faces : 1;
-			await performRoll([{ value, faces }]);
-			return;
-		}
-		await performRoll([]);
-	}
-
-	async function onRollWithSpecific() {
-		const staged: StagedValue[] = [];
-		for (let i = 0; i < parsedDice.length; i += 1) {
-			const v = specificValues[i];
-			if (v && v > 0) {
-				staged.push({ value: v, faces: parsedDice[i].faces });
-			} else {
-				// Leave a hole — but stageAndRoll has no hole concept, so just stop staging
-				// once we hit a blank (subsequent dice roll real). Use a sentinel: break.
-				break;
-			}
-		}
-		await performRoll(staged);
-	}
-
-	const resultJson = $derived(lastResult ? JSON.stringify(lastResult, null, 2) : '');
+	const state = createDiceTestbenchState();
 </script>
 
 <div class="nimble-testbench">
@@ -376,16 +19,16 @@
 					<button
 						type="button"
 						class="nimble-testbench__scenario"
-						class:nimble-testbench__scenario--active={activeScenarioId === scenario.id}
-						onclick={() => applyScenario(scenario)}
+						class:nimble-testbench__scenario--active={state.activeScenarioId === scenario.id}
+						onclick={() => state.applyScenario(scenario)}
 					>
 						{scenario.label}
 					</button>
 				</li>
 			{/each}
 		</ul>
-		{#if activeScenario?.note}
-			<p class="nimble-testbench__scenario-note">{activeScenario.note}</p>
+		{#if state.activeScenario?.note}
+			<p class="nimble-testbench__scenario-note">{state.activeScenario.note}</p>
 		{/if}
 	</section>
 
@@ -394,17 +37,17 @@
 
 		<label class="nimble-testbench__field">
 			<span>{localize('NIMBLE.diceTestbench.rollBuilder.actorLabel')}</span>
-			<select bind:value={selectedActorId}>
+			<select bind:value={state.selectedActorId}>
 				<option value={null}>--</option>
-				{#each actors as actor (actor.id)}
+				{#each state.actors as actor (actor.id)}
 					<option value={actor.id}>{actor.name} ({actor.type})</option>
 				{/each}
 			</select>
 		</label>
-		{#if selectedActor}
+		{#if state.selectedActor}
 			<p class="nimble-testbench__confirm">
-				{localize('NIMBLE.diceTestbench.rollBuilder.selectedLabel')}: {selectedActor.name}
-				<span class="nimble-testbench__actor-type">({selectedActor.type})</span>
+				{localize('NIMBLE.diceTestbench.rollBuilder.selectedLabel')}: {state.selectedActor.name}
+				<span class="nimble-testbench__actor-type">({state.selectedActor.type})</span>
 			</p>
 			<p class="nimble-testbench__hint">
 				{localize('NIMBLE.diceTestbench.rollBuilder.actorContextHint')}
@@ -413,37 +56,37 @@
 
 		<label class="nimble-testbench__field">
 			<span>{localize('NIMBLE.diceTestbench.rollBuilder.formulaLabel')}</span>
-			<input type="text" bind:value={formula} />
+			<input type="text" bind:value={state.formula} />
 		</label>
 
-		<div class="nimble-testbench__flags" class:is-locked={flagsLocked}>
+		<div class="nimble-testbench__flags" class:is-locked={state.flagsLocked}>
 			<label>
-				<input type="checkbox" bind:checked={isVicious} />
+				<input type="checkbox" bind:checked={state.isVicious} />
 				{localize('NIMBLE.diceTestbench.rollBuilder.flags.isVicious')}
 			</label>
-			<label class:is-overridden={flagsLocked}>
-				<input type="checkbox" bind:checked={canCrit} disabled={flagsLocked} />
+			<label class:is-overridden={state.flagsLocked}>
+				<input type="checkbox" bind:checked={state.canCrit} disabled={state.flagsLocked} />
 				{localize('NIMBLE.diceTestbench.rollBuilder.flags.canCrit')}
-				{#if flagsLocked}
+				{#if state.flagsLocked}
 					<em>({localize('NIMBLE.diceTestbench.rollBuilder.flags.overriddenByAoe')})</em>
 				{/if}
 			</label>
-			<label class:is-overridden={flagsLocked}>
-				<input type="checkbox" bind:checked={canMiss} disabled={flagsLocked} />
+			<label class:is-overridden={state.flagsLocked}>
+				<input type="checkbox" bind:checked={state.canMiss} disabled={state.flagsLocked} />
 				{localize('NIMBLE.diceTestbench.rollBuilder.flags.canMiss')}
-				{#if flagsLocked}
+				{#if state.flagsLocked}
 					<em>({localize('NIMBLE.diceTestbench.rollBuilder.flags.overriddenByAoe')})</em>
 				{/if}
 			</label>
 			<label>
-				<input type="checkbox" bind:checked={primaryDieAsDamage} />
+				<input type="checkbox" bind:checked={state.primaryDieAsDamage} />
 				{localize('NIMBLE.diceTestbench.rollBuilder.flags.primaryDieAsDamage')}
 			</label>
 		</div>
 
 		<label class="nimble-testbench__field">
 			<span>{localize('NIMBLE.diceTestbench.rollBuilder.templateShapeLabel')}</span>
-			<select bind:value={templateShape}>
+			<select bind:value={state.templateShape}>
 				{#each templateShapeOptions as opt (opt.value)}
 					<option value={opt.value}>{localize(opt.labelKey)}</option>
 				{/each}
@@ -452,7 +95,7 @@
 
 		<label class="nimble-testbench__field">
 			<span>{localize('NIMBLE.diceTestbench.rollBuilder.weaponTypeLabel')}</span>
-			<input type="text" list="nimble-testbench-weapon-types" bind:value={weaponType} />
+			<input type="text" list="nimble-testbench-weapon-types" bind:value={state.weaponType} />
 		</label>
 		<datalist id="nimble-testbench-weapon-types">
 			<option value="">(none — permissive, anyone can crit)</option>
@@ -486,18 +129,18 @@
 
 		<p class="nimble-testbench__prof">
 			{localize('NIMBLE.diceTestbench.rollBuilder.proficiencyLine', {
-				weaponType: weaponType === '' ? '-' : weaponType,
+				weaponType: state.weaponType === '' ? '-' : state.weaponType,
 				state:
-					proficient === null
+					state.proficient === null
 						? localize('NIMBLE.diceTestbench.rollBuilder.proficiency.na')
-						: proficient
+						: state.proficient
 							? localize('NIMBLE.diceTestbench.rollBuilder.proficiency.yes')
 							: localize('NIMBLE.diceTestbench.rollBuilder.proficiency.no'),
 			})}
 		</p>
 		<p class="nimble-testbench__prof">
 			{localize('NIMBLE.diceTestbench.rollBuilder.critSuppressedLine', {
-				state: critSuppressedForNonProf
+				state: state.critSuppressedForNonProf
 					? localize('NIMBLE.diceTestbench.rollBuilder.proficiency.yes')
 					: localize('NIMBLE.diceTestbench.rollBuilder.proficiency.no'),
 			})}
@@ -513,16 +156,16 @@
 			<div class="nimble-testbench__counter-row">
 				<label class="nimble-testbench__counter">
 					<span>{localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.advLabel')}</span>
-					<input type="number" min="0" max="10" bind:value={advCount} />
+					<input type="number" min="0" max="10" bind:value={state.advCount} />
 				</label>
 				<label class="nimble-testbench__counter">
 					<span>{localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.disLabel')}</span>
-					<input type="number" min="0" max="10" bind:value={disCount} />
+					<input type="number" min="0" max="10" bind:value={state.disCount} />
 				</label>
 			</div>
 			<p class="nimble-testbench__net">
 				{localize('NIMBLE.diceTestbench.rollBuilder.rollModeSources.net', {
-					sum: String(netRollMode),
+					sum: String(state.netRollMode),
 				})}
 			</p>
 		</div>
@@ -533,16 +176,16 @@
 			</div>
 			<div class="nimble-testbench__resolved-row">
 				<span>canCrit:</span>
-				<strong class:is-off={!resolvedCanCrit}>{String(resolvedCanCrit)}</strong>
-				{#if critSuppressionReason}
-					<em>— {critSuppressionReason}</em>
+				<strong class:is-off={!state.resolvedCanCrit}>{String(state.resolvedCanCrit)}</strong>
+				{#if state.critSuppressionReason}
+					<em>— {state.critSuppressionReason}</em>
 				{/if}
 			</div>
 			<div class="nimble-testbench__resolved-row">
 				<span>canMiss:</span>
-				<strong class:is-off={!resolvedCanMiss}>{String(resolvedCanMiss)}</strong>
-				{#if missSuppressionReason}
-					<em>— {missSuppressionReason}</em>
+				<strong class:is-off={!state.resolvedCanMiss}>{String(state.resolvedCanMiss)}</strong>
+				{#if state.missSuppressionReason}
+					<em>— {state.missSuppressionReason}</em>
 				{/if}
 			</div>
 		</div>
@@ -551,46 +194,46 @@
 			<label class="nimble-testbench__force">
 				<input
 					type="checkbox"
-					checked={forceCrit}
-					onchange={(e) => setForceCrit((e.currentTarget as HTMLInputElement).checked)}
+					checked={state.forceCrit}
+					onchange={(e) => state.setForceCrit((e.currentTarget as HTMLInputElement).checked)}
 				/>
 				<span>{localize('NIMBLE.diceTestbench.rollBuilder.actions.forceCrit')}</span>
 			</label>
 			<label class="nimble-testbench__force">
 				<input
 					type="checkbox"
-					checked={forceMiss}
-					onchange={(e) => setForceMiss((e.currentTarget as HTMLInputElement).checked)}
+					checked={state.forceMiss}
+					onchange={(e) => state.setForceMiss((e.currentTarget as HTMLInputElement).checked)}
 				/>
 				<span>{localize('NIMBLE.diceTestbench.rollBuilder.actions.forceMiss')}</span>
 			</label>
 		</div>
 
 		<div class="nimble-testbench__actions">
-			<button type="button" onclick={onRoll}>
+			<button type="button" onclick={state.onRoll}>
 				{localize('NIMBLE.diceTestbench.rollBuilder.actions.roll')}
 			</button>
-			<button type="button" onclick={() => (showSpecific = !showSpecific)}>
+			<button type="button" onclick={() => (state.showSpecific = !state.showSpecific)}>
 				{localize('NIMBLE.diceTestbench.rollBuilder.actions.forceSpecific')}
 			</button>
 		</div>
 
-		{#if showSpecific}
+		{#if state.showSpecific}
 			<div class="nimble-testbench__specific">
 				<p>{localize('NIMBLE.diceTestbench.rollBuilder.specific.hint')}</p>
-				{#each parsedDice as die, i (i)}
+				{#each state.parsedDice as die, i (i)}
 					<label class="nimble-testbench__specific-row">
 						<span>d{die.faces} #{i + 1}</span>
 						<input
 							type="number"
 							min="1"
 							max={die.faces}
-							bind:value={specificValues[i]}
+							bind:value={state.specificValues[i]}
 							placeholder="1-{die.faces}"
 						/>
 					</label>
 				{/each}
-				<button type="button" onclick={onRollWithSpecific}>
+				<button type="button" onclick={state.onRollWithSpecific}>
 					{localize('NIMBLE.diceTestbench.rollBuilder.specific.rollWith')}
 				</button>
 			</div>
@@ -599,21 +242,21 @@
 
 	<section class="nimble-testbench__col">
 		<h2>{localize('NIMBLE.diceTestbench.results.title')}</h2>
-		{#if lastError}
-			<pre class="nimble-testbench__error">{lastError}</pre>
+		{#if state.lastError}
+			<pre class="nimble-testbench__error">{state.lastError}</pre>
 		{/if}
-		{#if lastResult && !lastError}
-			<div class="nimble-testbench__outcome nimble-testbench__outcome--{outcomeBadge.kind}">
-				<span class="nimble-testbench__outcome-label">{outcomeBadge.label}</span>
+		{#if state.lastResult && !state.lastError}
+			<div class="nimble-testbench__outcome nimble-testbench__outcome--{state.outcomeBadge.kind}">
+				<span class="nimble-testbench__outcome-label">{state.outcomeBadge.label}</span>
 				<span class="nimble-testbench__outcome-total">
 					{localize('NIMBLE.diceTestbench.results.totalLabel', {
-						total: String(lastResult.total ?? 0),
+						total: String(state.lastResult.total ?? 0),
 					})}
 				</span>
 			</div>
 
-			{#if categorizedPrimary.length > 0}
-				{#each categorizedPrimary as term, ti (ti)}
+			{#if state.categorizedPrimary.length > 0}
+				{#each state.categorizedPrimary as term, ti (ti)}
 					{@const kept = term.dice.filter((d) => d.category === 'kept')}
 					{@const dropped = term.dice.filter((d) => d.category === 'dropped')}
 					{@const critRerolls = term.dice.filter((d) => d.category === 'critReroll')}
@@ -717,12 +360,12 @@
 				{/each}
 			{/if}
 
-			{#if bonusDieTerms.length > 0}
+			{#if state.bonusDieTerms.length > 0}
 				<div class="nimble-testbench__group">
 					<div class="nimble-testbench__group-label">
 						{localize('NIMBLE.diceTestbench.results.bonusDice')}
 					</div>
-					{#each bonusDieTerms as term, ti (ti)}
+					{#each state.bonusDieTerms as term, ti (ti)}
 						<div class="nimble-testbench__die-row">
 							{#each term.results ?? [] as r, ri (ri)}
 								<div
@@ -739,13 +382,13 @@
 				</div>
 			{/if}
 
-			{#if numericTerms.length > 0}
+			{#if state.numericTerms.length > 0}
 				<div class="nimble-testbench__group">
 					<div class="nimble-testbench__group-label">
 						{localize('NIMBLE.diceTestbench.results.flatBonuses')}
 					</div>
 					<div class="nimble-testbench__flat-row">
-						{#each numericTerms as term, ti (ti)}
+						{#each state.numericTerms as term, ti (ti)}
 							<span class="nimble-testbench__flat">
 								{(term.number ?? 0) >= 0 ? '+' : ''}{term.number}
 							</span>
@@ -757,18 +400,18 @@
 			<div class="nimble-testbench__trace">
 				<span>
 					{localize('NIMBLE.diceTestbench.results.traceIsCritical', {
-						state: String(lastResult.trace.isCritical),
+						state: String(state.lastResult.trace.isCritical),
 					})}
 				</span>
 				<span>
 					{localize('NIMBLE.diceTestbench.results.traceIsMiss', {
-						state: String(lastResult.trace.isMiss),
+						state: String(state.lastResult.trace.isMiss),
 					})}
 				</span>
-				{#if lastResult.trace.stagedValuesRemaining > 0}
+				{#if state.lastResult.trace.stagedValuesRemaining > 0}
 					<span class="nimble-testbench__trace-warning">
 						{localize('NIMBLE.diceTestbench.results.stagedRemaining', {
-							count: String(lastResult.trace.stagedValuesRemaining),
+							count: String(state.lastResult.trace.stagedValuesRemaining),
 						})}
 					</span>
 				{/if}
@@ -776,14 +419,14 @@
 
 			<div class="nimble-testbench__raw-toggle">
 				<label>
-					<input type="checkbox" bind:checked={showRawJson} />
+					<input type="checkbox" bind:checked={state.showRawJson} />
 					<span>{localize('NIMBLE.diceTestbench.results.showRawJson')}</span>
 				</label>
 			</div>
-			{#if showRawJson}
-				<pre class="nimble-testbench__dump">{resultJson}</pre>
+			{#if state.showRawJson}
+				<pre class="nimble-testbench__dump">{state.resultJson}</pre>
 			{/if}
-		{:else if !lastError}
+		{:else if !state.lastError}
 			<p class="nimble-testbench__placeholder">
 				{localize('NIMBLE.diceTestbench.results.placeholder')}
 			</p>
