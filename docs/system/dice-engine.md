@@ -13,7 +13,7 @@ Most TTRPGs roll dice and add things up. Nimble does that too, but with a twist 
 
 **Only one die — the "Primary Die" — decides whether you hit, miss, or crit.** The rest of the dice in your damage pool just add to the total.
 
-The Primary Die is whichever base-weapon die is **leftmost** in your pool. Everything else (sneak attack, elemental riders, Vicious extras, +X damage from a buff) adds to damage but **can never** cause a crit or a miss.
+The Primary Die is whichever base-weapon die is **leftmost** in your pool. Everything else (sneak attack, bonus elemental damage, Vicious extras, +X damage from a buff) adds to damage but **can never** cause a crit or a miss.
 
 On top of that:
 
@@ -44,7 +44,7 @@ When a player clicks "Attack" on a weapon, here's what happens (all in `src/dice
 
 2. **Advantage and disadvantage sources are netted.** If two features give `+1 adv` and one gives `+1 dis`, the net is `+1 adv`. A single integer is passed to the next step.
 
-3. **`DamageRoll` constructs the formula.** The constructor separates the **primary pool** (the base weapon dice that can become primary) from the **bonus dice** (sneak attack, elemental riders, etc.). It also applies the AoE / proficiency / minion flags that suppress crits or misses.
+3. **`DamageRoll` constructs the formula.** The constructor separates the **primary pool** (the base weapon dice that can become primary) from the **bonus dice** (sneak attack, bonus elemental damage, etc.). It also applies the AoE / proficiency / minion flags that suppress crits or misses.
 
 4. **Extra dice are added to the primary pool for advantage/disadvantage.** `|net|` extra dice get added, and a custom modifier (`khn` for advantage, `kln` for disadvantage) is emitted. `khn` = "keep highest Nimble." `kln` = "keep lowest Nimble." These are the Nimble-tie-aware versions of Foundry's built-in `kh`/`kl`.
 
