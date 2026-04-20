@@ -33,7 +33,12 @@
 				],
 				"mode": "selectSchool",
 				"count": 1,
-				"label": "Choose One Additional School"
+				"label": "Choose One Additional School",
+				"predicate": {
+					"level": {
+						"min": 1
+					}
+				}
 			}
 		],
 		"activation": {
