@@ -679,7 +679,18 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 
 		ChatMessage.applyRollMode(chatData as Record<string, unknown>, visibilityMode);
 
-		return (await ChatMessage.create(chatData)) ?? null;
+		const message = (await ChatMessage.create(chatData)) ?? null;
+
+		const combatant = game.combat?.getCombatantByActor(this.id ?? '') ?? null;
+		if (combatant) {
+			// @ts-expect-error - nimble.initiativeRolled is a custom Nimble hook consumed by ruleEventDispatch
+			Hooks.callAll('nimble.initiativeRolled', {
+				actor: this,
+				combatant,
+			});
+		}
+
+		return message;
 	}
 
 	async rollSavingThrow(saveKey: SaveKeyType, options: ActorRollOptions = {}) {

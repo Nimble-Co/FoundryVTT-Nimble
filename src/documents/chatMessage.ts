@@ -363,7 +363,35 @@ class NimbleChatMessage extends ChatMessage {
 			}
 		}
 
+		// Let rules on the speaker actor contribute nodes to the card. Each rule
+		// decides independently what (if anything) to surface — chat card rendering
+		// stays rule-type-agnostic.
+		const ruleNodes = this.#collectRuleActivationCardNodes({
+			isCritical: systemData.isCritical,
+			isMiss: systemData.isMiss,
+		});
+		if (ruleNodes.length > 0) {
+			nodes.push(ruleNodes);
+		}
+
 		return nodes;
+	}
+
+	#collectRuleActivationCardNodes(context: { isCritical: boolean; isMiss: boolean }): EffectNode[] {
+		const actorId = this.speaker?.actor;
+		const actor = actorId ? game.actors?.get(actorId) : null;
+		const rules = (
+			actor as unknown as {
+				rules?: Array<{ getActivationCardNodes?: (ctx: typeof context) => EffectNode[] }>;
+			} | null
+		)?.rules;
+		if (!rules || rules.length === 0) return [];
+
+		const contributed: EffectNode[] = [];
+		for (const rule of rules) {
+			contributed.push(...(rule.getActivationCardNodes?.(context) ?? []));
+		}
+		return contributed;
 	}
 
 	/** ------------------------------------------------------ */
@@ -448,8 +476,23 @@ class NimbleChatMessage extends ChatMessage {
 			return;
 		}
 
+		const sourceActorId = this.speaker?.actor;
+		const sourceActor = sourceActorId ? (game.actors?.get(sourceActorId) ?? null) : null;
+		const sourceItemId = (this.flags as Record<string, { itemId?: string } | undefined>)?.nimble
+			?.itemId;
+		const sourceItem = sourceItemId ? (sourceActor?.items?.get(sourceItemId) ?? null) : null;
+
 		for (const target of damageApplicationPlan.applicableTargets) {
 			await target.actor.applyDamage(target.adjustedDamage);
+			// @ts-expect-error - nimble.damageApplied is a custom Nimble hook consumed by ruleEventDispatch
+			Hooks.callAll('nimble.damageApplied', {
+				sourceItem,
+				sourceActor,
+				targetActor: target.actor,
+				card: this,
+				isCritical: systemData.isCritical,
+				isMiss: systemData.isMiss,
+			});
 		}
 
 		for (const tokenName of damageApplicationPlan.zeroDamageTargetNames) {

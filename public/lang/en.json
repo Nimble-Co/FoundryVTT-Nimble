@@ -534,6 +534,7 @@
 		},
 		"ruleTypes": {
 			"abilityBonus": "Stat Bonus",
+			"applyCondition": "Apply Condition",
 			"armorClass": "Armor Class",
 			"combatMana": "Combat Mana",
 			"grantItem": "Item",
@@ -1483,6 +1484,10 @@
 			"adjacencyIncludesDiagonals": {
 				"name": "Adjacency Includes Diagonals",
 				"hint": "When enabled, tokens that share only a corner are considered adjacent (diagonal adjacency). When disabled, only tokens sharing a full edge are adjacent (orthogonal only)."
+			},
+			"autoApplyConditions": {
+				"name": "Auto-Apply Conditions from Rules",
+				"hint": "Automatically apply conditions from feature rules when their trigger fires. When off, rules still surface on the chat card for manual GM application."
 			},
 			"ncswEnabled": {
 				"name": "Enable Combat System",
