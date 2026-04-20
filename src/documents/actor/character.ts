@@ -1185,7 +1185,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		if (typedDialogData.takeAverageHp) {
 			formula = Math.ceil((effectiveHitDieSize + 1) / 2).toString();
 		} else {
-			formula = `2d${effectiveHitDieSize}kh`;
+			// Use Nimble's leftmost-on-tie keep modifier (`khn`) instead of Foundry's bare `kh`.
+			formula = `2d${effectiveHitDieSize}khn`;
 		}
 
 		const roll = new Roll(formula);

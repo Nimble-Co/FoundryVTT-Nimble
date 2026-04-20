@@ -5,6 +5,7 @@ import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
+import { hasWeaponProficiency } from '../utils/attackUtils.js';
 import getRollFormula from '../utils/getRollFormula.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
@@ -250,8 +251,24 @@ class ItemActivationManager {
 					const actorTags = (this.actor as { tags?: Set<string> } | null)?.tags;
 					const isMinion =
 						actorTags?.has('minion') ?? (this.actor?.type as string | undefined) === 'minion';
-					const resolvedCanCrit = isMinion ? false : (canCrit ?? true);
-					const resolvedCanMiss = isMinion || (canMiss ?? true);
+
+					// AoE attacks share a single roll applied to all targets,
+					// so they cannot crit and cannot miss. Detect AoE from a
+					// defined activation template shape.
+					// Multi-target abilities WITHOUT a template (e.g. Magic Missile,
+					// "make two attacks") roll separately per target and crit/miss
+					// normally — targets.count alone is NOT a signal here.
+					const activation = (this.#item.system as any)?.activation;
+					const templateShape: string = activation?.template?.shape ?? '';
+					const isAoE = templateShape !== '';
+
+					// A wielder lacking proficiency in this weapon's type cannot crit.
+					const lacksProficiency = !hasWeaponProficiency(this.actor as any, this.#item as any);
+
+					const resolvedCanCrit = isAoE || isMinion || lacksProficiency ? false : (canCrit ?? true);
+					// Minions cannot crit but can still miss — the asymmetry with
+					// resolvedCanCrit above is intentional.
+					const resolvedCanMiss = isAoE ? false : isMinion || (canMiss ?? true);
 					node.rollMode = dialogData.rollMode ?? 0;
 
 					// Check if item has vicious property
@@ -266,17 +283,27 @@ class ItemActivationManager {
 						formula = `${formula} + ${meleeDamageBonus}`;
 					}
 
+					// Forward the optional rollMode source list so DamageRoll can
+					// compute the net rollMode itself (advantage and disadvantage
+					// cancel 1-for-1). Only attached when callers supplied the
+					// array, to preserve backwards compatibility with single-source
+					// callers (and existing constructor-call test expectations).
+					const damageOptions: DamageRoll.Options & { rollModeSources?: number[] } = {
+						canCrit: resolvedCanCrit,
+						canMiss: resolvedCanMiss,
+						rollMode: node.rollMode ?? 0,
+						primaryDieValue: dialogData.primaryDieValue ?? 0,
+						primaryDieModifier: Number(dialogData.primaryDieModifier) || 0,
+						isVicious,
+					};
+					if (Array.isArray(this.#options.rollModeSources)) {
+						damageOptions.rollModeSources = this.#options.rollModeSources;
+					}
+
 					roll = new dependencies.DamageRoll(
 						formula,
 						this.actor!.getRollData() as DamageRoll.Data,
-						{
-							canCrit: resolvedCanCrit,
-							canMiss: resolvedCanMiss,
-							rollMode: node.rollMode ?? 0,
-							primaryDieValue: dialogData.primaryDieValue ?? 0,
-							primaryDieModifier: Number(dialogData.primaryDieModifier) || 0,
-							isVicious,
-						},
+						damageOptions,
 					);
 
 					foundDamageRoll = true;
@@ -451,6 +478,13 @@ namespace ItemActivationManager {
 		fastForward?: boolean;
 		/** Roll mode: positive for advantage, negative for disadvantage, 0 for normal. */
 		rollMode?: number;
+		/**
+		 * Optional list of advantage/disadvantage source contributions. When
+		 * provided, the manager sums them into a net rollMode (advantage and
+		 * disadvantage cancel 1-for-1). Single-source callers can keep using
+		 * `rollMode`.
+		 */
+		rollModeSources?: number[];
 		/** How the roll should be displayed (public, private, blind, self). */
 		visibilityMode?: keyof foundry.CONST.DICE_ROLL_MODES;
 		/** Override formula for the damage roll. */

@@ -1492,6 +1492,102 @@
 			"ncswEnabled": {
 				"name": "Enable Combat System",
 				"hint": "Show the Combat System panel during combat. Helps GMs quickly target heroes and roll attacks for minions, monsters, and legendary monsters."
+			},
+			"debugMode": {
+				"name": "Debug Mode",
+				"hint": "Enables developer tools like the dice testbench. Changes take effect immediately.",
+				"openTestbench": "Open Dice Testbench"
+			}
+		},
+		"diceTestbench": {
+			"title": "Dice Testbench",
+			"scenarios": {
+				"title": "Scenarios",
+				"placeholder": "(presets will go here)",
+				"hint": "Click a preset to populate the Roll Builder with that scenario's configuration, then click Roll (or toggle Force Crit/Miss) to see how the engine handles it."
+			},
+			"rollBuilder": {
+				"title": "Roll Builder",
+				"placeholder": "(formula, flags, roll buttons will go here)",
+				"actorLabel": "Actor",
+				"selectedLabel": "Selected",
+				"actorContextHint": "The selected actor's roll data is passed to the formula (so @abilities.strength.mod etc. resolve), and the actor's type and proficiency list determine whether canCrit gets suppressed.",
+				"resolved": {
+					"title": "Resolved engine flags"
+				},
+				"suppressionReason": {
+					"aoe": "AoE template forces it off",
+					"minion": "actor is a minion",
+					"nonProficient": "actor is not proficient with this weapon type",
+					"flagOff": "checkbox is off"
+				},
+				"formulaLabel": "Formula",
+				"templateShapeLabel": "AoE template shape",
+				"weaponTypeLabel": "Weapon type",
+				"weaponTypeHint": "Leave blank for a permissive weapon (anyone can crit). Set to a weapon type like 'Longsword' to require the attacker has that entry in their proficiencies — non-proficient wielders cannot crit. Pick from the suggestions or type your own to test edge cases.",
+				"proficiencyLine": "Proficient with '{weaponType}': {state}",
+				"critSuppressedLine": "Crit will be suppressed for non-proficiency: {state}",
+				"proficiency": {
+					"yes": "yes",
+					"no": "no",
+					"na": "N/A"
+				},
+				"flags": {
+					"isVicious": "isVicious",
+					"canCrit": "canCrit",
+					"canMiss": "canMiss",
+					"primaryDieAsDamage": "primaryDieAsDamage",
+					"overriddenByAoe": "forced off by AoE template"
+				},
+				"templateShape": {
+					"none": "(none)",
+					"circle": "Circle",
+					"cone": "Cone",
+					"emanation": "Emanation",
+					"line": "Line",
+					"square": "Square"
+				},
+				"rollModeSources": {
+					"title": "Advantage / disadvantage sources",
+					"hint": "Count how many advantage and disadvantage sources apply. The engine sums them into a net rollMode: advantage and disadvantage cancel 1-for-1. Use this to test how multiple sources combine on a single roll.",
+					"advLabel": "Advantage sources",
+					"disLabel": "Disadvantage sources",
+					"net": "Net rollMode: {sum}"
+				},
+				"actions": {
+					"roll": "Roll",
+					"forceCrit": "Force Crit",
+					"forceMiss": "Force Miss",
+					"forceSpecific": "Force Specific Values"
+				},
+				"specific": {
+					"hint": "Enter exact values for each die. Blank = random.",
+					"rollWith": "Roll with these values"
+				},
+				"errors": {
+					"noPrimaryDie": "No primary die found in formula."
+				}
+			},
+			"results": {
+				"title": "Results",
+				"placeholder": "(rolled dice and outcome will go here)",
+				"crit": "Critical Hit",
+				"hit": "Hit",
+				"miss": "Miss",
+				"totalLabel": "Total: {total}",
+				"primaryPool": "Primary pool",
+				"basePool": "Base pool (kept)",
+				"critRerolls": "Crit explosion rerolls",
+				"viciousChain": "Vicious chain (left, can re-explode)",
+				"viciousBonus": "Vicious bonus (right, extra die)",
+				"bonusDice": "Bonus dice",
+				"flatBonuses": "Flat bonuses",
+				"dropped": "Dropped",
+				"exploded": "exploded",
+				"traceIsCritical": "trace.isCritical: {state}",
+				"traceIsMiss": "trace.isMiss: {state}",
+				"stagedRemaining": "{count} staged value(s) unused",
+				"showRawJson": "Show raw JSON"
 			}
 		},
 		"combatTrackerSettings": {

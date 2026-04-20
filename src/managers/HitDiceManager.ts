@@ -188,11 +188,12 @@ class HitDiceManager {
 		// Format: (1d8 + STR) + (1d8 + STR) + ... to show each die gets the STR bonus
 		let formula: string;
 		if (hasAdvantage && !maximizeDie) {
-			// Advantage: roll each die twice and keep the higher, plus STR per die
-			// Build formula like "(2d8kh1 + 2) + (2d8kh1 + 2) + (2d8kh1 + 2)" for 3 dice with advantage
+			// Advantage: roll each die twice and keep the higher, plus STR per die.
+			// Uses Nimble's `khn` (leftmost-on-tie keep highest) instead of Foundry's bare `kh`.
+			// Build formula like "(2d8khn1 + 2) + (2d8khn1 + 2) + (2d8khn1 + 2)" for 3 dice with advantage
 			const advantageParts = Array(dQuantity)
 				.fill(null)
-				.map(() => `(2d${dSize}kh1 + ${strMod})`);
+				.map(() => `(2d${dSize}khn1 + ${strMod})`);
 			formula = advantageParts.join(' + ');
 		} else {
 			// Normal roll or maximized: show each die with STR bonus

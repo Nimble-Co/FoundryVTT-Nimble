@@ -2,6 +2,7 @@ import { NimbleTemplateLayer } from '../canvas/layers/templateLayer.js';
 import { NIMBLE } from '../config.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
+import { registerNimbleDieModifiers } from '../dice/nimbleDieModifiers.js';
 import { PrimaryDie } from '../dice/terms/PrimaryDie.js';
 import ActorProxy from '../documents/actor/actorProxy.js';
 import { trackableAttributes } from '../documents/actor/trackableAttributes.ts';
@@ -52,6 +53,9 @@ export default function init() {
 	CONFIG.Dice.rolls.push(DamageRoll as (typeof CONFIG.Dice.rolls)[number]);
 	CONFIG.Dice.rolls.push(NimbleRoll as (typeof CONFIG.Dice.rolls)[number]);
 	CONFIG.Dice.types.push(PrimaryDie);
+
+	// Register Nimble custom Die modifiers (khn / kln — leftmost-on-tie keep).
+	registerNimbleDieModifiers();
 
 	// Adds Scene data
 	CONFIG.Actor.trackableAttributes = trackableAttributes;

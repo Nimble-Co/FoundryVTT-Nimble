@@ -23,6 +23,15 @@ declare namespace DamageRoll {
 		fumbleThreshold?: number;
 		/** The roll mode: positive for advantage, negative for disadvantage, 0 for normal. */
 		rollMode: number;
+		/**
+		 * Optional list of advantage/disadvantage source contributions. If provided,
+		 * the engine sums them to compute a net rollMode (Phase -1: source aggregation).
+		 * Each entry is a signed integer: +1 per advantage source, -1 per disadvantage.
+		 * The aggregated net is written to `netRollMode` and overrides `rollMode`.
+		 */
+		rollModeSources?: number[];
+		/** Net rollMode after summing rollModeSources (computed; do not set manually). */
+		netRollMode?: number;
 		/** A predetermined value for the primary die result. */
 		primaryDieValue: number;
 		/** A modifier to add to the primary die result. */
@@ -135,6 +144,21 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		this.options.canCrit ??= true;
 		this.options.canMiss ??= true;
 		this.options.rollMode ??= 0;
+
+		// Aggregate multiple adv/dis sources into a single net rollMode.
+		// Per Nimble rules, advantage and disadvantage cancel 1-for-1.
+		// If callers supply rollModeSources, sum them to compute the net;
+		// single-source callers keep using the scalar rollMode unchanged.
+		if (Array.isArray(this.options.rollModeSources)) {
+			const net = this.options.rollModeSources.reduce(
+				(sum, n) => sum + (Number.isFinite(n) ? n : 0),
+				0,
+			);
+			this.options.netRollMode = net;
+			this.options.rollMode = net;
+		} else {
+			this.options.netRollMode = this.options.rollMode;
+		}
 		this.options.primaryDieAsDamage ??= true;
 		this.originalFormula = formula;
 		this._formula = formula;
@@ -154,8 +178,6 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** ------------------------------------------------------ */
 
 	/**
-	 * Applies advantage or disadvantage to a die term.
-	 *
 	 * Adds extra dice and a keep modifier based on rollMode:
 	 * - Positive rollMode (advantage): adds dice and keeps highest N (original count)
 	 * - Negative rollMode (disadvantage): adds dice and keeps lowest N (original count)
@@ -177,10 +199,13 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		dieTerm.number = originalCount + Math.abs(rollMode);
 		if (!dieTerm.modifiers) dieTerm.modifiers = [];
 
+		// Use Nimble's custom keep-modifiers (`khn`/`kln`) which enforce
+		// leftmost-on-tie discarding. Registered as Foundry Die modifiers
+		// in `nimbleDieModifiers.ts` at system init.
 		if (rollMode > 0) {
-			dieTerm.modifiers.push(keep === 1 ? 'kh' : `kh${keep}`);
+			dieTerm.modifiers.push(keep === 1 ? 'khn' : `khn${keep}`);
 		} else {
-			dieTerm.modifiers.push(keep === 1 ? 'kl' : `kl${keep}`);
+			dieTerm.modifiers.push(keep === 1 ? 'kln' : `kln${keep}`);
 		}
 	}
 
@@ -189,7 +214,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 *
 	 * The primary die is used for critical hit and miss detection. It is configured with:
 	 * - Explosion modifier ('x') for critical detection if canCrit is true
-	 * - Keep highest ('kh') or keep lowest ('kl') modifiers based on rollMode
+	 * - Keep highest ('khn') or keep lowest ('kln') Nimble modifiers based on rollMode
 	 *
 	 * @param options - Roll options containing canCrit, canMiss, rollMode, and preset values.
 	 */
@@ -252,7 +277,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	/**
-	 * Applies preset values to a primary die term.
+	 * Apply primaryDieValue / primaryDieModifier presets to the primary die.
 	 *
 	 * @param primaryTerm - The primary die to configure.
 	 * @param options - Roll options containing primaryDieValue and primaryDieModifier.
@@ -279,13 +304,9 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	/**
-	 * Preprocesses the roll formula based on roll options.
-	 *
-	 * Handles two scenarios:
-	 * 1. Primary die extraction: When canCrit or canMiss is true, extracts the first die
-	 *    as a primary die for hit/miss/crit detection.
-	 * 2. AoE advantage/disadvantage: When neither canCrit nor canMiss is true but rollMode
-	 *    is set, applies advantage/disadvantage directly to the first die term.
+	 * Pre-processes the formula, partitioning it into a primary pool (PrimaryDie
+	 * term) plus bonus dice when crit/miss detection is needed, or applying
+	 * adv/dis directly to the first die term in the AoE fallback case.
 	 *
 	 * @param _formula - The original dice formula (unused, kept for signature compatibility).
 	 * @param _data - Roll data (unused, kept for signature compatibility).
@@ -305,7 +326,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			this._extractPrimaryDie(options);
 		} else if (rollMode) {
 			// AoE case: apply advantage/disadvantage to entire first die term
-			// 2d8 with advantage → 3d8kh2
+			// 2d8 with advantage → 3d8khn2
 			this._applyRollMode(firstDieTerm, rollMode);
 		}
 
@@ -360,6 +381,8 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	): Promise<DamageRoll.Evaluated<this>> {
 		await super._evaluate(options);
 
+		this._applyPostRollMutations();
+
 		const primaryTerm = this.terms.find((t) => t instanceof PrimaryDie);
 
 		if (primaryTerm) {
@@ -370,46 +393,72 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				await this._evaluateViciousExplosion(primaryTerm);
 			}
 
-			// Determine crit status
-			// For non-vicious: check if the 'x' modifier caused explosion
-			// For vicious: check if we manually triggered explosion (marked with exploded flag)
-			if (this.options.canCrit) {
-				if (isVicious) {
-					// Check if any result was marked as exploded during vicious explosion
-					this.isCritical = primaryTerm.results.some((r) => r.exploded);
-				} else {
-					this.isCritical = primaryTerm.exploded;
-				}
-			}
-
-			if (this.options.canMiss) this.isMiss = primaryTerm.isMiss;
-
-			// Recalculate total if vicious explosion added dice
-			// This must happen BEFORE primaryDieAsDamage exclusion to avoid double-counting
-			if (isVicious && this.isCritical) {
-				this._recalculateTotal();
-			}
-
-			// When primaryDieAsDamage is false, exclude the base die value from damage
-			// (explosions still count toward damage)
-			if (!this.options.primaryDieAsDamage) {
-				// Find the first result (the base roll, not explosion rolls)
-				// The base result is the one that may have exploded: true flag
-				const baseResult = primaryTerm.results.find((r) => r.active && !r.discarded);
-				if (baseResult) {
-					this.excludedPrimaryDieValue = baseResult.result;
-					// Adjust the total by subtracting the base die value
-					const internals = this as object as { _total: number };
-					internals._total = (this._total ?? 0) - this.excludedPrimaryDieValue;
-				}
-			}
+			this._finalizeOutcome(primaryTerm);
 		}
 
 		return this as DamageRoll.Evaluated<this>;
 	}
 
 	/**
-	 * Handles vicious weapon explosion manually after initial roll.
+	 * Interpret primary die outcome after evaluation and adjust total for
+	 * vicious recalculation and primaryDieAsDamage exclusion.
+	 */
+	private _finalizeOutcome(primaryTerm: PrimaryDie): void {
+		const isVicious = this.options.isVicious ?? false;
+
+		// Determine crit status
+		// For non-vicious: check if the 'x' modifier caused explosion
+		// For vicious: check if we manually triggered explosion (marked with exploded flag)
+		if (this.options.canCrit) {
+			if (isVicious) {
+				// Check if any result was marked as exploded during vicious explosion
+				this.isCritical = primaryTerm.results.some((r) => r.exploded);
+			} else {
+				this.isCritical = primaryTerm.exploded;
+			}
+		}
+
+		if (this.options.canMiss) this.isMiss = primaryTerm.isMiss;
+
+		// Recalculate total if vicious explosion added dice
+		// This must happen BEFORE primaryDieAsDamage exclusion to avoid double-counting
+		if (isVicious && this.isCritical) {
+			this._recalculateTotal();
+		}
+
+		// When primaryDieAsDamage is false, exclude the base die value from damage
+		// (explosions still count toward damage)
+		if (!this.options.primaryDieAsDamage) {
+			// Find the base roll. The base die is always at index 0 of
+			// `results` (pushed before any vicious explosion dice — see
+			// `_evaluateViciousExplosion`, which appends with `.push()`), and
+			// for non-vicious crits Foundry's native `x` modifier likewise
+			// keeps the original die at index 0. We therefore take the FIRST
+			// active, non-discarded result rather than filtering on the
+			// `exploded` flag — the base die itself is marked `exploded` by
+			// the vicious path, so a flag-based filter would skip it.
+			const baseResult = primaryTerm.results.find((r) => r.active && !r.discarded);
+			if (baseResult) {
+				this.excludedPrimaryDieValue = baseResult.result;
+				// Adjust the total by subtracting the base die value
+				const internals = this as object as { _total: number };
+				internals._total = (this._total ?? 0) - this.excludedPrimaryDieValue;
+			}
+		}
+	}
+
+	/**
+	 * Extension point for features that mutate primary die values after
+	 * rolling but before outcome resolution (e.g. Hexbinder Doomed,
+	 * Vicious Opportunist). Intentionally empty today.
+	 */
+	private _applyPostRollMutations(): void {
+		// No-op. Reserved for future mutation features.
+	}
+
+	/**
+	 * Manually resolves vicious crit explosion to avoid Dice So Nice preempting
+	 * the rolls.
 	 *
 	 * Vicious explosion rules:
 	 * 1. If initial die = max, roll 2 explosion dice
@@ -450,8 +499,18 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				| undefined;
 			if (!dieTerm || dieTerm.results.length < 2) break;
 
-			const leftDie = dieTerm.results[0];
-			const rightDie = dieTerm.results[1];
+			const leftDie = dieTerm.results[0] as foundry.dice.terms.DiceTerm.Result & {
+				provenance?: string;
+			};
+			const rightDie = dieTerm.results[1] as foundry.dice.terms.DiceTerm.Result & {
+				provenance?: string;
+			};
+
+			// Tag provenance: left continues the explosion chain, right is the
+			// extra die added by the vicious property. Visualizers (testbench,
+			// chat card) can group / label each role.
+			leftDie.provenance = 'viciousChain';
+			rightDie.provenance = 'viciousBonus';
 
 			// Add both to primary term results
 			primaryTerm.results.push(leftDie);
