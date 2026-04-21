@@ -10,6 +10,94 @@ import CharacterCreationDialogComponent from '../../view/dialogs/CharacterCreati
 
 const { ApplicationV2 } = foundry.applications.api;
 
+type SavingThrowRollModeRuleData = {
+	type: string;
+	disabled?: boolean;
+	priority?: number;
+	requiresChoice?: boolean;
+	selectedSave?: string | null;
+	target?: string;
+	mode?: string;
+	value?: number;
+};
+
+function resolveTargetSaves(
+	target: string,
+	selectedSave: string | null,
+	rollModes: Record<string, number>,
+	savingThrowKeys: string[],
+): string[] {
+	if (selectedSave && savingThrowKeys.includes(selectedSave)) return [selectedSave];
+	if (savingThrowKeys.includes(target)) return [target];
+	switch (target) {
+		case 'all':
+			return savingThrowKeys;
+		case 'advantaged':
+			return savingThrowKeys.filter((key) => rollModes[key] > 0);
+		case 'disadvantaged':
+			return savingThrowKeys.filter((key) => rollModes[key] < 0);
+		case 'neutral':
+			return savingThrowKeys.filter((key) => rollModes[key] === 0);
+		default:
+			return [];
+	}
+}
+
+function resolveSavingThrowRollModes({
+	classDocument,
+	ancestryDocument,
+	backgroundDocument,
+	selectedAncestrySave,
+}: {
+	classDocument: NimbleClassItem | null;
+	ancestryDocument: NimbleAncestryItem | null;
+	backgroundDocument: NimbleBackgroundItem | null;
+	selectedAncestrySave: string | null;
+}): Record<string, number> {
+	const savingThrowKeys = Object.keys(CONFIG.NIMBLE.savingThrows ?? {});
+	const rollModes = Object.fromEntries(savingThrowKeys.map((key) => [key, 0]));
+
+	if (classDocument?.system.savingThrows.advantage) {
+		rollModes[classDocument.system.savingThrows.advantage] = 1;
+	}
+	if (classDocument?.system.savingThrows.disadvantage) {
+		rollModes[classDocument.system.savingThrows.disadvantage] = -1;
+	}
+
+	const rollModeRules = [classDocument, ancestryDocument, backgroundDocument]
+		.flatMap((doc) => {
+			if (!doc) return [];
+			const source = doc.toObject() as { system?: { rules?: SavingThrowRollModeRuleData[] } };
+			return source.system?.rules ?? [];
+		})
+		.filter((rule) => !rule.disabled && rule.type === 'savingThrowRollMode')
+		.sort((a, b) => (a.priority ?? 1) - (b.priority ?? 1));
+
+	for (const rule of rollModeRules) {
+		if (rule.requiresChoice && !selectedAncestrySave) continue;
+
+		const effectiveSave = rule.requiresChoice ? selectedAncestrySave : (rule.selectedSave ?? null);
+		const targets = resolveTargetSaves(
+			rule.target ?? 'all',
+			effectiveSave,
+			rollModes,
+			savingThrowKeys,
+		);
+
+		for (const saveKey of targets) {
+			if (rule.mode === 'adjust') {
+				rollModes[saveKey] = Math.max(-3, Math.min(3, rollModes[saveKey] + (rule.value ?? 0)));
+			} else {
+				rollModes[saveKey] = rule.value ?? 0;
+			}
+		}
+	}
+
+	return Object.fromEntries(
+		savingThrowKeys.map((key) => [`${key}.defaultRollMode`, rollModes[key]]),
+	);
+}
+
 export default class CharacterCreationDialog extends SvelteApplicationMixin(ApplicationV2) {
 	data: Record<string, any>;
 	parent: any;
@@ -333,15 +421,19 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			await actor?.createEmbeddedDocuments('Item', spellDocumentSources);
 		}
 
+		const savingThrowsUpdate = resolveSavingThrowRollModes({
+			classDocument,
+			ancestryDocument,
+			backgroundDocument,
+			selectedAncestrySave: results.selectedAncestrySave ?? null,
+		});
+
 		const updateData: Record<string, unknown> = {
 			system: {
 				'attributes.sizeCategory': results.sizeCategory,
 				abilities: results.abilityScores ?? {},
 				skills: results.skills ?? {},
-				savingThrows: {
-					[`${classDocument?.system.savingThrows.advantage}.defaultRollMode`]: 1,
-					[`${classDocument?.system.savingThrows.disadvantage}.defaultRollMode`]: -1,
-				},
+				savingThrows: savingThrowsUpdate,
 				proficiencies: {
 					languages: results.languages,
 				},
@@ -351,13 +443,6 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		// If gold was chosen, add 50 gp to the character
 		if (startingEquipmentChoice === 'gold') {
 			(updateData.system as Record<string, unknown>)['currency.gp.value'] = 50;
-		}
-
-		// If ancestry grants a save choice, apply the selected save's roll mode boost
-		if (results.selectedAncestrySave) {
-			const savingThrowsData = (updateData.system as Record<string, unknown>)
-				.savingThrows as Record<string, number>;
-			savingThrowsData[`${results.selectedAncestrySave}.defaultRollMode`] = 1;
 		}
 
 		await actor?.update(updateData);
