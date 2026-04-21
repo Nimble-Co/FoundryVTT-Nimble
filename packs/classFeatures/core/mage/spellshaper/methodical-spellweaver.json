@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>(\u20132 mana) Spend 1 additional action to reduce the mana cost of a spell by 2 (min 1).</p>",
+		"description": "<p>(–2 mana) Spend 1 additional action to reduce the mana cost of a spell by 2 (min 1).</p>",
 		"featureType": "class",
 		"class": "mage",
 		"group": "spellshaper",

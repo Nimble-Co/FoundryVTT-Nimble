@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p><em>(Half range)</em> 2 actions: Shoot all creatures within a 3\u00d73 area. Their speed is halved until the end of their next turn.</p>",
+		"description": "<p><em>(Half range)</em> 2 actions: Shoot all creatures within a 3×3 area. Their speed is halved until the end of their next turn.</p>",
 		"featureType": "class",
 		"class": "hunter",
 		"group": "thrill-of-the-hunt",
