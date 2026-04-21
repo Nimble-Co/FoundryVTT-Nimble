@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { setContext, untrack } from 'svelte';
 	import localize from '../../utils/localize.js';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
@@ -10,91 +10,12 @@
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import TagGroup from '../components/TagGroup.svelte';
-
-	function updateFeatureType(newSelection) {
-		item.update({
-			'system.featureType': newSelection,
-		});
-	}
-
-	function parseLevels(rawLevels) {
-		if (typeof rawLevels !== 'string') return [];
-
-		const levelValues = rawLevels
-			.split(',')
-			.map((value) => Number.parseInt(value.trim(), 10))
-			.filter((value) => Number.isInteger(value) && value >= 1 && value <= 20);
-
-		return [...new Set(levelValues)].sort((a, b) => a - b);
-	}
-
-	function getGainedAtLevelsInputValue() {
-		const levels = item.reactive.system.gainedAtLevels || [];
-		if (levels.length > 0) return levels.join(', ');
-
-		const level = item.reactive.system.gainedAtLevel;
-		return Number.isInteger(level) ? String(level) : '';
-	}
-
-	function updateGainedAtLevels(rawLevels) {
-		const levels = parseLevels(rawLevels);
-
-		item.update({
-			'system.gainedAtLevels': levels,
-			'system.gainedAtLevel': levels[0] ?? null,
-		});
-	}
-
-	function parseSelectionCountByLevel(raw) {
-		if (typeof raw !== 'string') return {};
-
-		const entries = {};
-		for (const part of raw.split(',')) {
-			const trimmed = part.trim();
-			if (!trimmed) continue;
-
-			const [levelPart, countPart] = trimmed.split(':').map((value) => value?.trim());
-			const level = Number.parseInt(levelPart, 10);
-			const count = Number.parseInt(countPart, 10);
-
-			if (!Number.isInteger(level) || level < 1 || level > 20) continue;
-			if (!Number.isInteger(count) || count < 1) continue;
-
-			entries[String(level)] = count;
-		}
-
-		return entries;
-	}
-
-	function getSelectionCountByLevelInputValue() {
-		const map = item.reactive.system.selectionCountByLevel || {};
-		return Object.entries(map)
-			.map(([level, count]) => [Number.parseInt(level, 10), count])
-			.filter(([level]) => Number.isInteger(level))
-			.sort(([a], [b]) => a - b)
-			.map(([level, count]) => `${level}: ${count}`)
-			.join(', ');
-	}
-
-	function updateSelectionCountByLevel(rawInput) {
-		item.update({
-			'system.selectionCountByLevel': parseSelectionCountByLevel(rawInput),
-		});
-	}
-
-	function updateSubclassFlag(checked) {
-		item.update({
-			'system.subclass': checked,
-		});
-	}
-
-	const { featureTypes } = CONFIG.NIMBLE;
-	const featureTypeOptions = Object.entries(featureTypes).map(([key, featureType]) => ({
-		label: featureType,
-		value: key,
-	}));
+	import { createFeatureSheetState } from './FeatureSheet.state.svelte.ts';
+	import { FEATURE_TYPE_CLASS } from './FeatureSheetConstants.js';
 
 	let { item, sheet } = $props();
+
+	const state = createFeatureSheetState(() => ({ item, sheet }));
 
 	const navigation = [
 		{
@@ -165,13 +86,13 @@
 			</header>
 
 			<TagGroup
-				options={featureTypeOptions}
+				options={state.featureTypeOptions}
 				selectedOptions={[item.reactive.system.featureType]}
-				toggleOption={updateFeatureType}
+				toggleOption={state.updateFeatureType}
 			/>
 		</div>
 
-		{#if item.reactive.system.featureType === 'class'}
+		{#if item.reactive.system.featureType === FEATURE_TYPE_CLASS}
 			<div>
 				<header class="nimble-section-header">
 					<h3 class="nimble-heading">Class Identifier</h3>
@@ -204,7 +125,7 @@
 				<input
 					type="checkbox"
 					checked={Boolean(item.reactive.system.subclass)}
-					onchange={({ target }) => updateSubclassFlag(target.checked)}
+					onchange={({ target }) => state.updateSubclassFlag((target as HTMLInputElement).checked)}
 				/>
 			</div>
 
@@ -215,9 +136,9 @@
 
 				<input
 					type="text"
-					value={getGainedAtLevelsInputValue()}
+					value={state.gainedAtLevelsInputValue}
 					placeholder="e.g. 3 or 2, 6, 9"
-					onchange={({ target }) => updateGainedAtLevels(target.value)}
+					onchange={({ target }) => state.updateGainedAtLevels((target as HTMLInputElement).value)}
 				/>
 			</div>
 
@@ -228,9 +149,10 @@
 
 				<input
 					type="text"
-					value={getSelectionCountByLevelInputValue()}
+					value={state.selectionCountByLevelInputValue}
 					placeholder="e.g. 2: 2  (overrides default of 1)"
-					onchange={({ target }) => updateSelectionCountByLevel(target.value)}
+					onchange={({ target }) =>
+						state.updateSelectionCountByLevel((target as HTMLInputElement).value)}
 				/>
 			</div>
 		{/if}
