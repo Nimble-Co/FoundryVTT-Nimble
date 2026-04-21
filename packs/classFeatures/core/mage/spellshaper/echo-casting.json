@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>(2\u00d7mana, min. 1 mana) When you cast a tiered, single-target spell, you may cast a copy of that spell on a 2nd target for free.</p>",
+		"description": "<p>(2×mana, min. 1 mana) When you cast a tiered, single-target spell, you may cast a copy of that spell on a 2nd target for free.</p>",
 		"featureType": "class",
 		"class": "mage",
 		"group": "spellshaper",
