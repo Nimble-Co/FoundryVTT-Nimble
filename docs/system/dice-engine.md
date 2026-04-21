@@ -50,11 +50,11 @@ When a player clicks "Attack" on a weapon, here's what happens (all in `src/dice
 
 5. **Foundry rolls the dice.** The custom `khn`/`kln` modifier handlers (in `src/dice/nimbleDieModifiers.ts`) sort the results and mark dice as discarded — crucially, they prefer dropping the **leftmost** tied die, which is the rule Foundry's native `kh`/`kl` does not guarantee.
 
-6. **`DamageRoll._evaluate` interprets the results.** It finds the primary die (leftmost non-discarded die of the primary pool), reads whether it rolled max (crit) or 1 (miss), and handles any crit explosion chain. Vicious weapons get their extra die here.
+6. **`DamageRoll._evaluate` interprets the results.** It finds the primary die (leftmost non-discarded die of the primary pool), reads whether it rolled max (crit) or 1 (miss), and handles any crit explosion chain. Explosion behavior is controlled by the `explosionStyle` option: `'none'` (no explosions), `'standard'` (reroll on max, add to damage), or `'vicious'` (standard explosion plus the Vicious extra die). The legacy `isVicious` boolean is still accepted — a constructor shim maps it to the appropriate `explosionStyle`.
 
 7. **Post-roll mutation hook.** A no-op method `_applyPostRollMutations` is called between the dice rolling and the outcome being finalized. Today it does nothing. It's there as an extension point (see below).
 
-8. **Finalize the total.** `_finalizeOutcome` sets `isCritical` / `isMiss` flags and adjusts the total for vicious recalculation and the `primaryDieAsDamage: false` case (where the primary die's value is excluded from damage but its explosions still count).
+8. **Finalize the total.** `_finalizeOutcome` sets `isCritical` / `isMiss` flags and adjusts the total for vicious recalculation and the `primaryDieAsDamage: false` case (where the primary die's value is excluded from damage but its explosions still count). Crit detection is a single value-based check — did the kept primary die roll its maximum? — and works the same regardless of which `explosionStyle` is active.
 
 9. **The chat card renders** (handled in `src/view/chat/components/`, outside the engine). The card shows the kept and dropped dice, the primary die, bonus dice, and the total.
 

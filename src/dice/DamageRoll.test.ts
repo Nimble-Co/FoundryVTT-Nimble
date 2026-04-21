@@ -986,6 +986,7 @@ describe('DamageRoll.fromData', () => {
 				rollMode: 0,
 				netRollMode: 0,
 				primaryDieAsDamage: true,
+				explosionStyle: 'standard',
 			});
 		});
 
@@ -1010,6 +1011,7 @@ describe('DamageRoll.fromData', () => {
 				rollMode: 1,
 				netRollMode: 1,
 				primaryDieAsDamage: true,
+				explosionStyle: 'standard',
 			});
 		});
 	});
@@ -1695,5 +1697,135 @@ describe('DamageRoll integration — ItemActivationManager AoE and proficiency',
 			(testDependencies as any).DamageRoll = originalDR;
 			(testDependencies as any).reconstructEffectsTree = originalRecon;
 		}
+	});
+});
+
+describe('explosionStyle option', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		stubBaseRollEvaluate();
+	});
+
+	it('defaults to standard when neither isVicious nor explosionStyle provided', () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+			},
+		);
+		expect(roll.options.explosionStyle).toBe('standard');
+		expect(roll.primaryDie?.modifiers).toContain('x');
+	});
+
+	it('legacy isVicious:true is shimmed to explosionStyle:vicious', () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: true,
+			},
+		);
+		expect(roll.options.explosionStyle).toBe('vicious');
+		expect(roll.primaryDie?.modifiers).not.toContain('x');
+	});
+
+	it('explicit explosionStyle wins over isVicious when both are supplied', () => {
+		const explicitStandard = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: true,
+				explosionStyle: 'standard',
+			},
+		);
+		expect(explicitStandard.options.explosionStyle).toBe('standard');
+		expect(explicitStandard.primaryDie?.modifiers).toContain('x');
+
+		const explicitVicious = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: false,
+				explosionStyle: 'vicious',
+			},
+		);
+		expect(explicitVicious.options.explosionStyle).toBe('vicious');
+		expect(explicitVicious.primaryDie?.modifiers).not.toContain('x');
+	});
+
+	it('explosionStyle:none suppresses the x modifier but still detects crit', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				explosionStyle: 'none',
+			},
+		);
+		expect(roll.options.explosionStyle).toBe('none');
+		expect(roll.primaryDie?.modifiers).not.toContain('x');
+
+		// Seed primary die to max — crit should be detected without continuation dice.
+		stagePrimaryDieResults(roll, [{ result: 8, active: true }], 8);
+		await (roll as any)._evaluate();
+
+		expect(roll.isCritical).toBe(true);
+		// No continuation dice should have been rolled.
+		expect(roll.primaryDie!.results).toHaveLength(1);
+	});
+
+	it('explosionStyle:vicious is equivalent to legacy isVicious:true', async () => {
+		const legacyRoll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				isVicious: true,
+			},
+		);
+		const newRoll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				explosionStyle: 'vicious',
+			},
+		);
+
+		expect(legacyRoll.options.explosionStyle).toBe('vicious');
+		expect(newRoll.options.explosionStyle).toBe('vicious');
+		expect(legacyRoll.primaryDie?.modifiers).toEqual(newRoll.primaryDie?.modifiers);
 	});
 });

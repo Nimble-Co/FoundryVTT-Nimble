@@ -44,10 +44,16 @@ declare namespace DamageRoll {
 		 */
 		primaryDieAsDamage?: boolean;
 		/**
-		 * Whether the weapon has the vicious property.
-		 * When true, explosions roll 2 dice instead of 1, but only the left die
-		 * can continue to explode.
-		 * Default: false
+		 * Explosion behavior for crit dice.
+		 * - 'none'     — crit detected, no continuation dice rolled
+		 * - 'standard' — Foundry's native `x` modifier chain
+		 * - 'vicious'  — roll 2 dice on crit, left can chain
+		 * Default: 'standard'
+		 */
+		explosionStyle?: 'none' | 'standard' | 'vicious';
+		/**
+		 * @deprecated Use `explosionStyle: 'vicious'` instead. Translated to
+		 *   `explosionStyle` by the constructor shim for back-compat.
 		 */
 		isVicious?: boolean;
 	}
@@ -160,6 +166,12 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			this.options.netRollMode = this.options.rollMode;
 		}
 		this.options.primaryDieAsDamage ??= true;
+
+		// Normalize explosion style. Explicit explosionStyle wins over legacy isVicious.
+		if (this.options.explosionStyle === undefined) {
+			this.options.explosionStyle = this.options.isVicious ? 'vicious' : 'standard';
+		}
+
 		this.originalFormula = formula;
 		this._formula = formula;
 
@@ -219,7 +231,9 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * @param options - Roll options containing canCrit, canMiss, rollMode, and preset values.
 	 */
 	private _extractPrimaryDie(options: DamageRoll.Options): void {
-		const { rollMode = 0, isVicious = false } = options;
+		const { rollMode = 0 } = options;
+		const explosionStyle = options.explosionStyle ?? 'standard';
+		const isVicious = explosionStyle === 'vicious';
 		const shouldExplode = options.canCrit;
 		const firstDieTerm = this.terms.find((t) => t instanceof Terms.Die);
 
@@ -247,7 +261,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 			// Only add explosion modifier for non-vicious weapons
 			// Vicious weapons handle explosion manually after evaluation to avoid preemptive rolls
-			if (shouldExplode && !isVicious) primaryTerm.modifiers.push('x');
+			if (shouldExplode && explosionStyle === 'standard') primaryTerm.modifiers.push('x');
 
 			this._applyPrimaryDiePresets(primaryTerm, options);
 			this.terms.unshift(primaryTerm);
@@ -265,7 +279,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 			// Only add explosion modifier for non-vicious weapons
 			// Vicious weapons handle explosion manually after evaluation to avoid preemptive rolls
-			if (shouldExplode && !isVicious) primaryTerm.modifiers.push('x');
+			if (shouldExplode && explosionStyle === 'standard') primaryTerm.modifiers.push('x');
 
 			this._applyPrimaryDiePresets(primaryTerm, options);
 
@@ -386,10 +400,9 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const primaryTerm = this.terms.find((t) => t instanceof PrimaryDie);
 
 		if (primaryTerm) {
-			const isVicious = this.options.isVicious ?? false;
-
 			// For vicious weapons, handle explosion manually after initial roll
-			if (isVicious && this.options.canCrit) {
+			// (avoids Dice So Nice preempting the chain).
+			if (this.options.canCrit && this.options.explosionStyle === 'vicious') {
 				await this._evaluateViciousExplosion(primaryTerm);
 			}
 
@@ -404,18 +417,16 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * vicious recalculation and primaryDieAsDamage exclusion.
 	 */
 	private _finalizeOutcome(primaryTerm: PrimaryDie): void {
-		const isVicious = this.options.isVicious ?? false;
+		const isVicious = this.options.explosionStyle === 'vicious';
 
-		// Determine crit status
-		// For non-vicious: check if the 'x' modifier caused explosion
-		// For vicious: check if we manually triggered explosion (marked with exploded flag)
+		// Crit = a kept (active, non-discarded) result from the primary die
+		// rolled max face value. Value-based (not flag-based) so that
+		// explosionStyle: 'none' — which never sets the exploded flag —
+		// still detects crit correctly.
 		if (this.options.canCrit) {
-			if (isVicious) {
-				// Check if any result was marked as exploded during vicious explosion
-				this.isCritical = primaryTerm.results.some((r) => r.exploded);
-			} else {
-				this.isCritical = primaryTerm.exploded;
-			}
+			this.isCritical = primaryTerm.results.some(
+				(r) => r.active && !r.discarded && r.result === primaryTerm.faces,
+			);
 		}
 
 		if (this.options.canMiss) this.isMiss = primaryTerm.isMiss;
@@ -466,15 +477,15 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * 3. If left die = max, roll 2 more dice
 	 * 4. Continue until left die is NOT max
 	 *
-	 * @param primaryTerm - The primary die term to evaluate for explosion
+	 * @param dieTerm - The die term to evaluate for explosion
 	 */
-	private async _evaluateViciousExplosion(primaryTerm: PrimaryDie): Promise<void> {
-		const faces = primaryTerm.faces ?? 6;
+	private async _evaluateViciousExplosion(dieTerm: foundry.dice.terms.Die): Promise<void> {
+		const faces = dieTerm.faces ?? 6;
 		const maxIterations = 100; // Safety guard - even 100 consecutive max rolls is astronomically unlikely
 		let iterations = 0;
 
 		// Find the initial result (the base roll)
-		const initialResult = primaryTerm.results.find((r) => r.active && !r.discarded);
+		const initialResult = dieTerm.results.find((r) => r.active && !r.discarded);
 		if (!initialResult) return;
 
 		// Check if initial roll is a crit (max value)
@@ -494,15 +505,15 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			await explosionRoll.evaluate();
 
 			// Extract results from the evaluated roll
-			const dieTerm = explosionRoll.terms.find((t) => t instanceof Terms.Die) as
+			const explosionDieTerm = explosionRoll.terms.find((t) => t instanceof Terms.Die) as
 				| foundry.dice.terms.Die
 				| undefined;
-			if (!dieTerm || dieTerm.results.length < 2) break;
+			if (!explosionDieTerm || explosionDieTerm.results.length < 2) break;
 
-			const leftDie = dieTerm.results[0] as foundry.dice.terms.DiceTerm.Result & {
+			const leftDie = explosionDieTerm.results[0] as foundry.dice.terms.DiceTerm.Result & {
 				provenance?: string;
 			};
-			const rightDie = dieTerm.results[1] as foundry.dice.terms.DiceTerm.Result & {
+			const rightDie = explosionDieTerm.results[1] as foundry.dice.terms.DiceTerm.Result & {
 				provenance?: string;
 			};
 
@@ -512,9 +523,9 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			leftDie.provenance = 'viciousChain';
 			rightDie.provenance = 'viciousBonus';
 
-			// Add both to primary term results
-			primaryTerm.results.push(leftDie);
-			primaryTerm.results.push(rightDie);
+			// Add both to die term results
+			dieTerm.results.push(leftDie);
+			dieTerm.results.push(rightDie);
 
 			// Left die determines if we continue
 			lastLeftResult = leftDie.result;
