@@ -15,7 +15,7 @@
 
 	let { item, sheet } = $props();
 
-	const state = createFeatureSheetState(() => ({ item, sheet }));
+	const featureState = createFeatureSheetState(() => ({ item, sheet }));
 
 	const navigation = [
 		{
@@ -86,9 +86,9 @@
 			</header>
 
 			<TagGroup
-				options={state.featureTypeOptions}
+				options={featureState.featureTypeOptions}
 				selectedOptions={[item.reactive.system.featureType]}
-				toggleOption={state.updateFeatureType}
+				toggleOption={featureState.updateFeatureType}
 			/>
 		</div>
 
@@ -125,7 +125,8 @@
 				<input
 					type="checkbox"
 					checked={Boolean(item.reactive.system.subclass)}
-					onchange={({ target }) => state.updateSubclassFlag((target as HTMLInputElement).checked)}
+					onchange={({ target }) =>
+						featureState.updateSubclassFlag((target as HTMLInputElement).checked)}
 				/>
 			</div>
 
@@ -136,9 +137,10 @@
 
 				<input
 					type="text"
-					value={state.gainedAtLevelsInputValue}
+					value={featureState.gainedAtLevelsInputValue}
 					placeholder="e.g. 3 or 2, 6, 9"
-					onchange={({ target }) => state.updateGainedAtLevels((target as HTMLInputElement).value)}
+					onchange={({ target }) =>
+						featureState.updateGainedAtLevels((target as HTMLInputElement).value)}
 				/>
 			</div>
 
@@ -149,10 +151,10 @@
 
 				<input
 					type="text"
-					value={state.selectionCountByLevelInputValue}
+					value={featureState.selectionCountByLevelInputValue}
 					placeholder="e.g. 2: 2  (overrides default of 1)"
 					onchange={({ target }) =>
-						state.updateSelectionCountByLevel((target as HTMLInputElement).value)}
+						featureState.updateSelectionCountByLevel((target as HTMLInputElement).value)}
 				/>
 			</div>
 		{/if}
