@@ -11,44 +11,28 @@
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import TagGroup from '../components/TagGroup.svelte';
 	import { createFeatureSheetState } from './FeatureSheet.state.svelte.ts';
-	import { FEATURE_TYPE_CLASS } from './FeatureSheetConstants.js';
+	import {
+		FEATURE_SHEET_TAB_CONFIG,
+		FEATURE_TYPE_CLASS,
+		type FeatureSheetTabName,
+	} from './FeatureSheetConstants.js';
 
 	let { item, sheet } = $props();
 
 	const featureState = createFeatureSheetState(() => ({ item, sheet }));
 
-	const navigation = [
-		{
-			component: descriptionTab,
-			icon: 'fa-solid fa-file-lines',
-			tooltip: 'Description',
-			name: 'description',
-		},
-		{
-			component: configTab,
-			icon: 'fa-solid fa-gears',
-			tooltip: 'Config',
-			name: 'config',
-		},
-		{
-			component: activationConfigTab,
-			icon: 'fa-solid fa-play',
-			tooltip: 'Activation',
-			name: 'activationConfig',
-		},
-		{
-			component: rulesTab,
-			icon: 'fa-solid fa-bolt',
-			tooltip: 'Rules',
-			name: 'rules',
-		},
-		{
-			component: macroTab,
-			icon: 'fa-solid fa-terminal',
-			tooltip: 'Macro',
-			name: 'macro',
-		},
-	];
+	const snippetsByTab: Record<FeatureSheetTabName, () => void> = {
+		description: descriptionTab,
+		config: configTab,
+		activationConfig: activationConfigTab,
+		rules: rulesTab,
+		macro: macroTab,
+	};
+
+	const navigation = FEATURE_SHEET_TAB_CONFIG.map((tab) => ({
+		...tab,
+		component: snippetsByTab[tab.name],
+	}));
 
 	let currentTab = $state(navigation[0]);
 
