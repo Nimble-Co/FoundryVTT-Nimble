@@ -486,6 +486,7 @@
 			"subclass": "Subclass",
 			"feature": "Feature",
 			"spell": "Spell",
+			"featuresRemoved": "Features Removed",
 			"spellsRemoved": "Spells Removed",
 			"removed": "removed",
 			"warningMessage": "This action will permanently revert the last level up. This cannot be undone.",
