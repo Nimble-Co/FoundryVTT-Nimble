@@ -50,12 +50,14 @@ export function createFeatureGroupSelectionState(getProps: () => FeatureGroupSel
 			const { features, selectionCount, selectedFeatures } = getProps();
 			const isFixed = features.length === selectionCount;
 			const isComplete = selectedFeatures.length >= selectionCount;
+			const sort = (list: NimbleFeatureItem[]) =>
+				[...list].sort((a, b) => a.name.localeCompare(b.name));
 
 			if (isFixed || !isComplete) {
-				return features;
+				return sort(features);
 			}
 
-			return selectedFeatures;
+			return sort(selectedFeatures);
 		},
 		isFeatureSelected(feature: NimbleFeatureItem) {
 			return getProps().selectedFeatures.some((f) => f.uuid === feature.uuid);
