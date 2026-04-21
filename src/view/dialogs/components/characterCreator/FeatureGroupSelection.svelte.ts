@@ -1,4 +1,5 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import sortDocumentsByName from '../../../../utils/sortDocumentsByName.js';
 
 /**
  * Converts kebab-case to Title Case
@@ -47,17 +48,13 @@ export function createFeatureGroupSelectionState(getProps: () => FeatureGroupSel
 			return selectedFeatures.length >= selectionCount;
 		},
 		get displayedFeatures() {
-			const { features, selectionCount, selectedFeatures } = getProps();
-			const isFixed = features.length === selectionCount;
-			const isComplete = selectedFeatures.length >= selectionCount;
-			const sort = (list: NimbleFeatureItem[]) =>
-				[...list].sort((a, b) => a.name.localeCompare(b.name));
+			const { features, selectedFeatures } = getProps();
 
-			if (isFixed || !isComplete) {
-				return sort(features);
+			if (this.isFixed || !this.isComplete) {
+				return sortDocumentsByName(features);
 			}
 
-			return sort(selectedFeatures);
+			return sortDocumentsByName(selectedFeatures);
 		},
 		isFeatureSelected(feature: NimbleFeatureItem) {
 			return getProps().selectedFeatures.some((f) => f.uuid === feature.uuid);

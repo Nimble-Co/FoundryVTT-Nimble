@@ -11,13 +11,6 @@
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import TagGroup from '../components/TagGroup.svelte';
 
-	function getFeatureTypeOptions() {
-		return Object.entries(featureTypes).map(([key, featureType]) => ({
-			label: featureType,
-			value: key,
-		}));
-	}
-
 	function updateFeatureType(newSelection) {
 		item.update({
 			'system.featureType': newSelection,
@@ -96,6 +89,10 @@
 	}
 
 	const { featureTypes } = CONFIG.NIMBLE;
+	const featureTypeOptions = Object.entries(featureTypes).map(([key, featureType]) => ({
+		label: featureType,
+		value: key,
+	}));
 
 	let { item, sheet } = $props();
 
@@ -168,7 +165,7 @@
 			</header>
 
 			<TagGroup
-				options={getFeatureTypeOptions()}
+				options={featureTypeOptions}
 				selectedOptions={[item.reactive.system.featureType]}
 				toggleOption={updateFeatureType}
 			/>
