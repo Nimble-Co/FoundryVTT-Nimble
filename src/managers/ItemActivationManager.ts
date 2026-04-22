@@ -252,6 +252,11 @@ class ItemActivationManager {
 					const isMinion =
 						actorTags?.has('minion') ?? (this.actor?.type as string | undefined) === 'minion';
 
+					// Flunkies cannot crit but can still miss, same as minions.
+					const actorDetails = (this.actor?.system as { details?: { isFlunky?: boolean } } | null)
+						?.details;
+					const isFlunky = actorDetails?.isFlunky ?? false;
+
 					// AoE attacks share a single roll applied to all targets,
 					// so they cannot crit and cannot miss. Detect AoE from a
 					// defined activation template shape.
@@ -265,7 +270,8 @@ class ItemActivationManager {
 					// A wielder lacking proficiency in this weapon's type cannot crit.
 					const lacksProficiency = !hasWeaponProficiency(this.actor as any, this.#item as any);
 
-					const resolvedCanCrit = isAoE || isMinion || lacksProficiency ? false : (canCrit ?? true);
+					const resolvedCanCrit =
+						isAoE || isMinion || isFlunky || lacksProficiency ? false : (canCrit ?? true);
 					// Minions cannot crit but can still miss — the asymmetry with
 					// resolvedCanCrit above is intentional.
 					const resolvedCanMiss = isAoE ? false : isMinion || (canMiss ?? true);
