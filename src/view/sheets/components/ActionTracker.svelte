@@ -35,8 +35,9 @@
 				</button>
 			{:else if state.hasInitiative}
 				<div class="action-tracker__pips">
-					{#each { length: state.actionsData.max }, i}
+					{#each { length: state.actionsData.effectiveMax }, i}
 						{@const isAvailable = i < state.actionsData.current}
+						{@const isBonus = i >= state.actionsData.max}
 						{@const isJustSpent = state.justSpentPips.has(i)}
 						{@const diceIcon = getDiceIcon(i)}
 
@@ -44,6 +45,7 @@
 							class="action-tracker__pip"
 							class:action-tracker__pip--available={isAvailable}
 							class:action-tracker__pip--spent={!isAvailable}
+							class:action-tracker__pip--bonus={isBonus}
 							class:action-tracker__pip--just-spent={isJustSpent}
 							type="button"
 							aria-label={state.getPipAriaLabel(i, isAvailable)}
@@ -51,9 +53,26 @@
 							data-tooltip-direction="RIGHT"
 							onclick={() => state.handlePipClick(i)}
 						>
-							<i class="fa-solid {diceIcon}"></i>
+							{#if diceIcon}
+								<i class="fa-solid {diceIcon}"></i>
+							{:else}
+								<span class="action-tracker__pip-number">{i + 1}</span>
+							{/if}
 						</button>
 					{/each}
+
+					{#if state.actionsData.effectiveMax < 10}
+						<button
+							class="action-tracker__add-bonus"
+							type="button"
+							aria-label="Add bonus action"
+							data-tooltip="Add bonus action"
+							data-tooltip-direction="RIGHT"
+							onclick={state.addBonusAction}
+						>
+							<i class="fa-solid fa-plus"></i>
+						</button>
+					{/if}
 				</div>
 
 				{#if state.isMyTurn}
@@ -183,11 +202,63 @@
 				}
 			}
 
+			&--bonus.action-tracker__pip--available {
+				i,
+				.action-tracker__pip-number {
+					color: hsl(45, 80%, 55%);
+				}
+
+				&:hover i,
+				&:hover .action-tracker__pip-number {
+					color: hsl(45, 80%, 65%);
+					filter: drop-shadow(0 0 4px hsl(45, 80%, 55%));
+				}
+			}
+
 			&--just-spent {
 				animation: pip-spent 0.6s ease-out;
 
 				i {
 					animation: pip-icon-spent 0.6s ease-out;
+				}
+			}
+		}
+
+		&__pip-number {
+			font-size: 0.75rem;
+			font-weight: 700;
+			line-height: 1;
+		}
+
+		&__add-bonus {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.625rem;
+			height: 1.625rem;
+			padding: 0;
+			background: var(--nimble-box-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			cursor: pointer;
+			opacity: 0.5;
+			transition: all 0.15s ease;
+
+			:global(.theme-light) & {
+				border-color: hsl(220, 10%, 70%);
+			}
+
+			i {
+				font-size: 0.625rem;
+				color: var(--nimble-medium-text-color);
+			}
+
+			&:hover {
+				opacity: 1;
+				border-color: hsl(45, 80%, 55%);
+
+				i {
+					color: hsl(45, 80%, 55%);
 				}
 			}
 		}
@@ -278,6 +349,16 @@
 
 		&:hover {
 			border-color: hsl(220, 15%, 45%);
+			background: hsl(220, 15%, 22%);
+		}
+	}
+
+	:global(.theme-dark) .action-tracker__add-bonus {
+		background: hsl(220, 15%, 18%);
+		border-color: hsl(220, 10%, 30%);
+
+		&:hover {
+			border-color: hsl(45, 80%, 55%);
 			background: hsl(220, 15%, 22%);
 		}
 	}

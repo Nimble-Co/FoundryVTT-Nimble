@@ -1,3 +1,4 @@
+import { getCombatantBonusActions } from '../../../documents/combat/combatantSystem.js';
 import type {
 	CombatTrackerNonPlayerHpBarTextMode,
 	CombatTrackerPlayerHpBarTextMode,
@@ -444,12 +445,17 @@ export function getCombatantOutlineClass(combatant: Combatant.Implementation): s
 export function getActionState(combatant: Combatant.Implementation): {
 	current: number;
 	max: number;
+	bonus: number;
+	effectiveMax: number;
 } {
 	const normalizedCurrent = getCombatantCurrentActions(combatant);
 	const normalizedMax = getCombatantMaxActions(combatant);
+	const bonus = getCombatantBonusActions(combatant);
 	return {
 		current: normalizedCurrent,
 		max: normalizedMax,
+		bonus,
+		effectiveMax: normalizedMax + bonus,
 	};
 }
 

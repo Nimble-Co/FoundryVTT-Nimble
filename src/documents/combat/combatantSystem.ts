@@ -20,6 +20,15 @@ export function getCombatantBaseActions(combatant: Combatant.Implementation): Co
 	};
 }
 
+export function getCombatantBonusActions(combatant: Combatant.Implementation): number {
+	const actions = getCombatantSystem(combatant)?.actions?.base;
+	return normalizeNonNegativeInteger((actions as { bonus?: unknown } | undefined)?.bonus);
+}
+
+export function getCombatantEffectiveMax(combatant: Combatant.Implementation): number {
+	return getCombatantBaseActionMax(combatant) + getCombatantBonusActions(combatant);
+}
+
 export function getCombatantBaseActionCurrent(combatant: Combatant.Implementation): number {
 	return getCombatantBaseActions(combatant).current;
 }
