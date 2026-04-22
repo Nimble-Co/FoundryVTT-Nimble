@@ -13,6 +13,7 @@ import { HitDiceManager, incrementDieSize } from '../../managers/HitDiceManager.
 import { RestManager } from '../../managers/RestManager.js';
 import type { NimbleCharacterData } from '../../models/actor/CharacterDataModel.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
+import { consumeCombatantAction } from '../../utils/combatTurnActions.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import CharacterArmorProficienciesConfigDialog from '../../view/dialogs/CharacterArmorProficienciesConfigDialog.svelte';
 import CharacterLanguageProficienciesConfigDialog from '../../view/dialogs/CharacterLanguageProficienciesConfigDialog.svelte';
@@ -1578,5 +1579,35 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		this.#dialogs.metaConfig.setTitle(`${this.name}: Configuration`);
 		this.#dialogs.metaConfig.render(true);
+	}
+
+	override async activateItem(
+		id: string,
+		options: Record<string, unknown> = {},
+	): Promise<ChatMessage | null> {
+		const item = this.items.get(id);
+		const result = await super.activateItem(id, options);
+
+		if (result && item) {
+			const activation = (
+				item.system as { activation?: { cost?: { type: string; quantity: number } } }
+			).activation;
+			if (activation?.cost?.type === 'action') {
+				const combat = game.combat as Combat | null;
+				const combatant =
+					combat?.combatants?.find(
+						(entry: Combatant.Implementation) => entry.actorId === this.id,
+					) ?? null;
+				if (combat?.started && combatant?.id) {
+					await consumeCombatantAction({
+						combat,
+						combatantId: combatant.id,
+						actionCost: activation.cost.quantity ?? 1,
+					});
+				}
+			}
+		}
+
+		return result;
 	}
 }

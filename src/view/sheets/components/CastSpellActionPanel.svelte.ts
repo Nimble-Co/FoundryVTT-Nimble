@@ -37,7 +37,7 @@ interface SpellSystemData {
 
 export function createSpellPanelState(
 	getActor: () => NimbleCharacter,
-	getOnActivateItem: () => (cost: number) => Promise<void>,
+	_getOnActivateItem: () => (cost: number) => Promise<void>,
 ) {
 	const { activationCostTypes, activationCostTypesPlural } = CONFIG.NIMBLE;
 	let searchTerm = $state('');
@@ -193,20 +193,7 @@ export function createSpellPanelState(
 	}
 
 	async function handleSpellClick(spellId: string): Promise<unknown> {
-		const spell = getActor().items.get(spellId);
-		const result = await getActor().activateItem(spellId);
-
-		if (result && spell) {
-			const activationCost = getSystemData(spell).activation?.cost;
-			const costType = activationCost?.type;
-			const costQuantity = activationCost?.quantity ?? 1;
-
-			if (costType === 'action') {
-				await getOnActivateItem()(costQuantity);
-			}
-		}
-
-		return result;
+		return getActor().activateItem(spellId);
 	}
 
 	return {
