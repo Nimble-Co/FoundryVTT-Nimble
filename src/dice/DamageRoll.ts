@@ -53,6 +53,13 @@ declare namespace DamageRoll {
 		 */
 		explosionStyle?: 'none' | 'standard' | 'vicious';
 		/**
+		 * When true, the primary die is the highest-value result in the pool,
+		 * not the leftmost. Driven by the Brutal monster trait (GM:1894).
+		 * Set by ItemActivationManager from actor traits — not baked into formulas.
+		 * Default: false
+		 */
+		brutalPrimary?: boolean;
+		/**
 		 * @deprecated Use `explosionStyle: 'vicious'` instead. Translated to
 		 *   `explosionStyle` by the constructor shim for back-compat.
 		 */
@@ -75,6 +82,7 @@ declare namespace DamageRoll {
 		evaluated?: boolean;
 		isCritical?: boolean;
 		isMiss?: boolean;
+		critCount?: number;
 		_total?: number;
 		_formula?: string;
 		excludedPrimaryDieValue?: number;
@@ -123,15 +131,43 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** Whether this roll resulted in a miss. Undefined until evaluated. */
 	isMiss: undefined | boolean = undefined;
 
+	/** Number of crit-capable dice that rolled max. 0 until evaluated. */
+	critCount: number = 0;
+
 	/** The original formula before preprocessing (e.g., before primary die extraction). */
 	originalFormula: string;
 
 	/**
-	 * The primary die term used for critical/miss detection.
-	 * In legacy mode this is a PrimaryDie instance; in modifier-mode it is the
-	 * leftmost Die tagged `c`/`cv` (or leftmost Die overall as fallback).
+	 * The primary die term used for crit/miss detection and rules-level value reads.
+	 *
+	 * **Reading the primary die value (stable API):**
+	 * ```typescript
+	 * const value = roll.primaryDieValue;          // convenience getter
+	 * const faces = roll.primaryDie?.faces;
+	 * ```
+	 *
+	 * In legacy mode: a PrimaryDie instance (leftmost, extracted from formula).
+	 * In modifier-mode: the leftmost Die tagged `c`/`cv`, or the highest-value
+	 * die if `brutalPrimary` is active, falling back to leftmost Die overall.
 	 */
 	primaryDie: PrimaryDie | foundry.dice.terms.Die | undefined = undefined;
+
+	/** The kept value of the primary die after evaluation. Undefined if unevaluated. */
+	get primaryDieValue(): number | undefined {
+		const die = this.primaryDie;
+		if (!die) return undefined;
+		if (this.options.brutalPrimary) {
+			// Brutal: the "primary" value is the highest active non-discarded result
+			let max = -1;
+			for (const r of die.results) {
+				if (r.active && !r.discarded && r.result > max) {
+					max = r.result;
+				}
+			}
+			return max >= 0 ? max : undefined;
+		}
+		return die.results.find((r) => r.active && !r.discarded)?.result;
+	}
 
 	/**
 	 * Whether this roll uses per-die modifier dispatch (modifier-mode).
@@ -454,6 +490,9 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		this._applyPostRollMutations();
 
 		if (this.modifierMode) {
+			// ── Count crits BEFORE vicious explosions to avoid counting chain dice ──
+			this.critCount = this._countModifierModeCrits();
+
 			// ── Modifier-mode: per-die vicious explosion ──
 			for (const term of this.terms) {
 				if (!(term instanceof Terms.Die)) continue;
@@ -493,8 +532,13 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 				(r) => r.active && !r.discarded && r.result === primaryTerm.faces,
 			);
 		}
+		this.critCount = this.isCritical ? 1 : 0;
 
 		if (this.options.canMiss) this.isMiss = primaryTerm.isMiss;
+
+		this._applyBrutalRemapping(
+			this.terms.filter((t): t is foundry.dice.terms.Die => t instanceof Terms.Die),
+		);
 
 		// Recalculate total if vicious explosion added dice
 		// This must happen BEFORE primaryDieAsDamage exclusion to avoid double-counting
@@ -656,24 +700,55 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	/**
+	 * When `brutalPrimary` is active, scan all Die terms and reassign
+	 * `primaryDie` to the term containing the highest active non-discarded
+	 * result. Ties: leftmost wins (strict `>`, not `>=`).
+	 */
+	private _applyBrutalRemapping(dieTerms: foundry.dice.terms.Die[]): void {
+		if (!this.options.brutalPrimary) return;
+		let highestValue = -1;
+		let highestDie: foundry.dice.terms.Die | undefined;
+		for (const term of dieTerms) {
+			for (const r of term.results) {
+				if (r.active && !r.discarded && r.result > highestValue) {
+					highestValue = r.result;
+					highestDie = term;
+				}
+			}
+		}
+		if (highestDie) this.primaryDie = highestDie;
+	}
+
+	/**
+	 * Count crit-capable dice that rolled max BEFORE vicious explosions append
+	 * chain dice to the results array. Called from `_evaluate` so that
+	 * `critCount` reflects base crits only, not continuation dice.
+	 */
+	private _countModifierModeCrits(): number {
+		let count = 0;
+		for (const term of this.terms) {
+			if (!(term instanceof Terms.Die)) continue;
+			const meta = getNimbleMods(term);
+			if (!meta?.canCrit) continue;
+			for (const r of term.results) {
+				if (r.active && !r.discarded && r.result === term.faces) {
+					count++;
+				}
+			}
+		}
+		return count;
+	}
+
+	/**
 	 * Modifier-mode outcome finalization. Replaces `_finalizeOutcome` when the
 	 * roll uses per-die modifiers instead of a PrimaryDie term.
 	 */
 	private _finalizeOutcomeModifierMode(): void {
 		const dieTerms = this.terms.filter((t): t is foundry.dice.terms.Die => t instanceof Terms.Die);
 
-		// ── Crit detection: any crit-capable die that rolled max ──
-		let anyCritted = false;
-		for (const term of dieTerms) {
-			const meta = getNimbleMods(term);
-			if (!meta?.canCrit) continue;
-			if (term.results.some((r) => r.active && !r.discarded && r.result === term.faces)) {
-				anyCritted = true;
-				break;
-			}
-		}
+		// ── Crit detection: critCount was computed before vicious explosions in _evaluate ──
 		if (this.options.canCrit) {
-			this.isCritical = anyCritted;
+			this.isCritical = this.critCount > 0;
 		}
 
 		// ── Miss detection: leftmost non-neutral Die ──
@@ -699,8 +774,10 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		});
 		this.primaryDie = taggedPrimary ?? dieTerms[0];
 
+		this._applyBrutalRemapping(dieTerms);
+
 		// ── Recalculate total if any vicious die critted ──
-		if (anyCritted) {
+		if (this.critCount > 0) {
 			const hasVicious = dieTerms.some((term) => {
 				const meta = getNimbleMods(term);
 				return meta?.canCrit && meta.explosionStyle === 'vicious';
@@ -759,6 +836,7 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			originalFormula: this.originalFormula,
 			isMiss: this.isMiss,
 			isCritical: this.isCritical,
+			critCount: this.critCount,
 			excludedPrimaryDieValue: this.excludedPrimaryDieValue,
 		};
 	}
@@ -766,6 +844,19 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** ------------------------------------------------------ */
 	/**                    Static Methods                      */
 	/** ------------------------------------------------------ */
+
+	/**
+	 * Claim formulas containing Nimble die modifiers for DamageRoll processing.
+	 * Called by Foundry's `Roll.create()` when iterating `CONFIG.Dice.rolls`.
+	 *
+	 * Alternation order matters: longer tokens first (`cv` before `c`,
+	 * `khn`/`kln` before `n`). The trailing `(?![a-z])` prevents false
+	 * positives against Foundry modifiers that share a prefix (e.g. `cs`
+	 * count-successes, `cf` count-failures must not match Nimble `c`).
+	 */
+	static matches(formula: string): boolean {
+		return /\d+d\d+(?:cv|c|v|khn|kln|n)(?![a-z])/.test(formula);
+	}
 
 	/**
 	 * Type guard to check if terms array contains RollTerm instances.
@@ -901,9 +992,14 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 					roll.primaryDie = primaryTerm;
 				}
 			}
+
+			roll._applyBrutalRemapping(
+				roll.terms.filter((t): t is foundry.dice.terms.Die => t instanceof Terms.Die),
+			);
 		}
 
-		// Restore excludedPrimaryDieValue if it was serialized
+		// Restore critCount and excludedPrimaryDieValue if serialized
+		roll.critCount = data.critCount ?? 0;
 		roll.excludedPrimaryDieValue = data.excludedPrimaryDieValue ?? 0;
 
 		return roll as FixedInstanceType<T>;

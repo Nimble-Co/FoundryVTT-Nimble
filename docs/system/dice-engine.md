@@ -81,7 +81,7 @@ When a player clicks "Attack" on a weapon, here's what happens (all in `src/dice
 
 7. **Post-roll mutation hook.** A no-op method `_applyPostRollMutations` is called between the dice rolling and the outcome being finalized. Today it does nothing. It's there as an extension point (see below).
 
-8. **Finalize the total.** `_finalizeOutcome` sets `isCritical` / `isMiss` flags and adjusts the total for vicious recalculation and the `primaryDieAsDamage: false` case (where the primary die's value is excluded from damage but its explosions still count). Crit detection is a single value-based check — did the kept primary die roll its maximum? — and works the same regardless of which `explosionStyle` is active.
+8. **Finalize the total.** `_finalizeOutcome` sets `isCritical` / `isMiss` / `critCount` flags and adjusts the total for vicious recalculation and the `primaryDieAsDamage: false` case (where the primary die's value is excluded from damage but its explosions still count). `critCount` tracks how many crit-capable dice independently rolled max — for a standard weapon this is 0 or 1, but for multi-die pools like Dravok's `4d4cv` it can be 2, 3, or even 4. `isCritical` is `critCount > 0`. If the `brutalPrimary` option is set, the primary die is reassigned to whichever die rolled highest (instead of leftmost).
 
 9. **The chat card renders** (handled in `src/view/chat/components/`, outside the engine). The card shows the kept and dropped dice, the primary die, bonus dice, and the total.
 
@@ -107,6 +107,23 @@ Die modifiers control per-die behavior: crit capability, explosion style, and ne
 Modifiers attach Symbol-keyed metadata to the Die instance during evaluation. The engine reads this metadata via `getNimbleMods(die)` during finalization. Modifiers never roll extra dice or mutate results — they're pure metadata. The explosion and crit logic lives in `DamageRoll._evaluate`.
 
 To add a new modifier: write a handler that attaches metadata via the `NIMBLE_MODS` symbol, register it in `registerNimbleDieModifiers()`, and emit the modifier token in the formula from wherever you build the roll. See the existing `c`/`cv`/`n` handlers in `nimbleDieModifiers.ts` for the pattern.
+
+### Reading the primary die — `primaryDieValue`
+
+After evaluation, the roll exposes a stable API for reading the primary die's value:
+
+```typescript
+const value = roll.primaryDieValue;   // convenience getter — the kept die's result
+const faces = roll.primaryDie?.faces; // face count (e.g. 8 for a d8)
+```
+
+Several Nimble rules read the primary die value for non-damage effects: Brute knockback scales off the primary die, Bludgeoning Weapon Mastery ignores Heavy Armor when primary ≥ 7, Guiding Spirit triggers a radiant glow when primary ≥ 6, and more. These downstream readers consume the getter — they don't need to know whether the roll used modifier-mode or legacy PrimaryDie extraction.
+
+### Brutal monster trait — `brutalPrimary`
+
+The Brutal monster trait (GM:1894) changes primary die selection: "Treat the highest die rolled as the Primary Die." This is a roll-level option (`brutalPrimary: true`) set by `ItemActivationManager` from the actor's traits — not baked into the formula. The formula stays clean (e.g. `4d4cv`), and the trait flows from the actor.
+
+When `brutalPrimary` is true, the engine reassigns `primaryDie` to the die with the highest active non-discarded result after rolling. On ties, leftmost wins.
 
 ### AoE auto-flagging — `ItemActivationManager`
 
@@ -143,6 +160,9 @@ Content authors can leave `weaponType` blank (nothing breaks) or set it for weap
 | Roll construction from an item | `src/managers/ItemActivationManager.ts` |
 | Weapon proficiency check | `src/view/sheets/components/attackUtils.ts` (`hasWeaponProficiency`) |
 | The extension point for post-roll mutations | `DamageRoll._applyPostRollMutations` |
+| Multi-crit count | `DamageRoll.critCount` |
+| Brutal primary remapping | `DamageRoll.Options.brutalPrimary` |
+| Primary die value getter | `DamageRoll.primaryDieValue` |
 | Test coverage | `src/dice/DamageRoll.test.ts` |
 | Developer testbench | `src/view/debug/DiceTestbench.svelte` (gated behind the Debug Mode setting) |
 

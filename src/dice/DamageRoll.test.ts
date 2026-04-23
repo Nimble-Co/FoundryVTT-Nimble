@@ -2343,3 +2343,494 @@ describe('die modifier vocabulary — modifier-mode', () => {
 		});
 	});
 });
+
+// ─── critCount ─────────────────────────────────────────────────────────
+
+describe('critCount', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		stubBaseRollEvaluate();
+	});
+
+	describe('modifier-mode', () => {
+		it('4d4cv with 0 of 4 at max → critCount === 0', async () => {
+			const roll = new DamageRoll(
+				'4d4cv',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(
+				roll,
+				[
+					[
+						{ result: 2, active: true },
+						{ result: 1, active: true },
+						{ result: 3, active: true },
+						{ result: 2, active: true },
+					],
+				],
+				8,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.critCount).toBe(0);
+			expect(roll.isCritical).toBe(false);
+		});
+
+		it('4d4cv with 1 of 4 at max → critCount === 1, isCritical === true', async () => {
+			const roll = new DamageRoll(
+				'4d4cv',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(
+				roll,
+				[
+					[
+						{ result: 4, active: true },
+						{ result: 1, active: true },
+						{ result: 3, active: true },
+						{ result: 2, active: true },
+					],
+				],
+				10,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.critCount).toBe(1);
+			expect(roll.isCritical).toBe(true);
+		});
+
+		it('4d4cv with 3 of 4 at max → critCount === 3, isCritical === true', async () => {
+			const roll = new DamageRoll(
+				'4d4cv',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stageModifierModeRoll(
+				roll,
+				[
+					[
+						{ result: 4, active: true },
+						{ result: 4, active: true },
+						{ result: 4, active: true },
+						{ result: 2, active: true },
+					],
+				],
+				14,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.critCount).toBe(3);
+			expect(roll.isCritical).toBe(true);
+		});
+	});
+
+	describe('legacy mode', () => {
+		it('standard crit → critCount === 1', async () => {
+			const roll = new DamageRoll(
+				'1d8',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stagePrimaryDieResults(
+				roll,
+				[
+					{ result: 8, active: true, exploded: true },
+					{ result: 5, active: true },
+				],
+				13,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.critCount).toBe(1);
+			expect(roll.isCritical).toBe(true);
+		});
+
+		it('no crit → critCount === 0', async () => {
+			const roll = new DamageRoll(
+				'1d8',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			stagePrimaryDieResults(roll, [{ result: 5, active: true }], 5);
+			await (roll as any)._evaluate();
+			expect(roll.critCount).toBe(0);
+			expect(roll.isCritical).toBe(false);
+		});
+	});
+
+	describe('serialization', () => {
+		it('critCount survives toJSON → fromData round-trip', () => {
+			const roll = new DamageRoll(
+				'4d4cv',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+				},
+			);
+			// Manually set critCount as if the roll was evaluated
+			roll.critCount = 3;
+			roll.isCritical = true;
+
+			const json = roll.toJSON();
+			expect(json.critCount).toBe(3);
+
+			const restored = DamageRoll.fromData(json as any);
+			expect(restored.critCount).toBe(3);
+		});
+
+		it('critCount defaults to 0 when missing from serialized data', () => {
+			const data = {
+				formula: '1d6',
+				data: {},
+				options: {},
+				terms: [],
+				originalFormula: '1d6',
+				evaluated: true,
+				isCritical: false,
+			};
+			const roll = DamageRoll.fromData(data);
+			expect(roll.critCount).toBe(0);
+		});
+	});
+});
+
+// ─── brutalPrimary option ──────────────────────────────────────────────
+
+describe('brutalPrimary option', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		stubBaseRollEvaluate();
+	});
+
+	describe('modifier-mode', () => {
+		it('3d8c with brutalPrimary: highest-value die becomes primary', async () => {
+			const roll = new DamageRoll(
+				'3d8c',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+					brutalPrimary: true,
+				},
+			);
+			// Stage 3 results on the single 3d8c term: [2, 7, 4]
+			stageModifierModeRoll(
+				roll,
+				[
+					[
+						{ result: 2, active: true },
+						{ result: 7, active: true },
+						{ result: 4, active: true },
+					],
+				],
+				13,
+			);
+			await (roll as any)._evaluate();
+			// The single term contains the result 7; primaryDie should be that term
+			expect(roll.primaryDie).toBeDefined();
+			expect(roll.primaryDieValue).toBe(7);
+		});
+
+		it('3d8c with brutalPrimary: ties go to leftmost', async () => {
+			const roll = new DamageRoll(
+				'3d8c',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+					brutalPrimary: true,
+				},
+			);
+			// Stage: [5, 5, 3] — tie at 5, leftmost (first encountered) wins
+			stageModifierModeRoll(
+				roll,
+				[
+					[
+						{ result: 5, active: true },
+						{ result: 5, active: true },
+						{ result: 3, active: true },
+					],
+				],
+				13,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.primaryDie).toBeDefined();
+			// The term is the same (single 3d8c term), primary value should be 5
+			expect(roll.primaryDieValue).toBe(5);
+		});
+
+		it('4d4cv with brutalPrimary: Dravok + Brutal → highest d4 is primary', async () => {
+			const roll = new DamageRoll(
+				'4d4cv',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+					brutalPrimary: true,
+				},
+			);
+			stageModifierModeRoll(
+				roll,
+				[
+					[
+						{ result: 2, active: true },
+						{ result: 4, active: true },
+						{ result: 1, active: true },
+						{ result: 3, active: true },
+					],
+				],
+				10,
+			);
+			await (roll as any)._evaluate();
+			expect(roll.primaryDie).toBeDefined();
+			expect(roll.primaryDieValue).toBe(4);
+		});
+
+		it('multi-term pool with brutalPrimary: picks term with highest result', async () => {
+			const roll = new DamageRoll(
+				'1d8c + 2d6n',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+					brutalPrimary: true,
+				},
+			);
+			// d8 rolls 3, d6s roll [5, 6] — d6 term has higher value
+			stageModifierModeRoll(
+				roll,
+				[
+					[{ result: 3, active: true }],
+					[
+						{ result: 5, active: true },
+						{ result: 6, active: true },
+					],
+				],
+				14,
+			);
+			await (roll as any)._evaluate();
+			// Brutal should pick the d6 term (which has the 6)
+			expect(roll.primaryDie?.faces).toBe(6);
+		});
+	});
+
+	describe('legacy mode', () => {
+		it('brutalPrimary on single-die roll is a no-op', async () => {
+			const roll = new DamageRoll(
+				'1d8',
+				{},
+				{
+					canCrit: true,
+					canMiss: true,
+					rollMode: 0,
+					primaryDieValue: 0,
+					primaryDieModifier: 0,
+					brutalPrimary: true,
+				},
+			);
+			stagePrimaryDieResults(roll, [{ result: 5, active: true }], 5);
+			await (roll as any)._evaluate();
+			// Only one die term — primaryDie stays the same
+			expect(roll.primaryDie).toBeDefined();
+			expect(roll.primaryDieValue).toBe(5);
+		});
+	});
+});
+
+// ─── primaryDieValue getter ────────────────────────────────────────────
+
+describe('primaryDieValue getter', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		stubBaseRollEvaluate();
+	});
+
+	it('returns the kept value of the primary die after evaluation', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 5, active: true }], 5);
+		await (roll as any)._evaluate();
+		expect(roll.primaryDieValue).toBe(5);
+	});
+
+	it('returns the active non-discarded result when advantage drops a die', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 1,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+			},
+		);
+		stagePrimaryDieResults(
+			roll,
+			[
+				{ result: 3, active: false, discarded: true },
+				{ result: 7, active: true },
+			],
+			7,
+		);
+		await (roll as any)._evaluate();
+		expect(roll.primaryDieValue).toBe(7);
+	});
+
+	it('returns undefined when no primaryDie exists', () => {
+		const roll = new DamageRoll(
+			'5',
+			{},
+			{
+				canCrit: false,
+				canMiss: false,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+			},
+		);
+		expect(roll.primaryDieValue).toBeUndefined();
+	});
+
+	it('works in modifier-mode', async () => {
+		const roll = new DamageRoll(
+			'1d8c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+			},
+		);
+		stageModifierModeRoll(roll, [[{ result: 6, active: true }]], 6);
+		await (roll as any)._evaluate();
+		expect(roll.primaryDieValue).toBe(6);
+	});
+});
+
+// ─── DamageRoll.matches ────────────────────────────────────────────────
+
+describe('DamageRoll.matches', () => {
+	// --- Single Nimble modifier ---
+	it('matches 4d4cv (crit-vicious)', () => expect(DamageRoll.matches('4d4cv')).toBe(true));
+	it('matches 1d8c (crit-standard)', () => expect(DamageRoll.matches('1d8c')).toBe(true));
+	it('matches 2d6n (neutral)', () => expect(DamageRoll.matches('2d6n')).toBe(true));
+	it('matches 1d8v (vicious standalone)', () => expect(DamageRoll.matches('1d8v')).toBe(true));
+	it('matches 2d8khn (keep-highest-nimble)', () => expect(DamageRoll.matches('2d8khn')).toBe(true));
+	it('matches 3d6kln2 (keep-lowest-nimble with count)', () =>
+		expect(DamageRoll.matches('3d6kln2')).toBe(true));
+
+	// --- Nimble modifier + plain terms ---
+	it('matches 1d8c + 2d6', () => expect(DamageRoll.matches('1d8c + 2d6')).toBe(true));
+	it('matches 1d12cv + 1d4', () => expect(DamageRoll.matches('1d12cv + 1d4')).toBe(true));
+	it('matches 3d8khn2 + 1d6', () => expect(DamageRoll.matches('3d8khn2 + 1d6')).toBe(true));
+	it('matches 1d8c + 2d6n + 3', () => expect(DamageRoll.matches('1d8c + 2d6n + 3')).toBe(true));
+
+	// --- Nimble modifier buried after plain dice ---
+	it('matches 2d6 + 1d8c + 4', () => expect(DamageRoll.matches('2d6 + 1d8c + 4')).toBe(true));
+	it('matches 1d4 + 2d6 + 1d8cv', () => expect(DamageRoll.matches('1d4 + 2d6 + 1d8cv')).toBe(true));
+
+	// --- Multiple Nimble modifiers across terms ---
+	it('matches 4d4cv + 2d6n (Dravok pool)', () =>
+		expect(DamageRoll.matches('4d4cv + 2d6n')).toBe(true));
+	it('matches 1d8c + 2d6n + 1d4v', () =>
+		expect(DamageRoll.matches('1d8c + 2d6n + 1d4v')).toBe(true));
+	it('matches 2d8c + 3d6n + 1d4v + 2d10khn + 5', () =>
+		expect(DamageRoll.matches('2d8c + 3d6n + 1d4v + 2d10khn + 5')).toBe(true));
+
+	// --- Nimble modifiers adjacent to operators (no spaces) ---
+	it('matches 1d8c+2d6', () => expect(DamageRoll.matches('1d8c+2d6')).toBe(true));
+	it('matches 2d4cv+1d6n+3', () => expect(DamageRoll.matches('2d4cv+1d6n+3')).toBe(true));
+
+	// --- Plain formulas (must NOT match) ---
+	it('does not match 2d6+3', () => expect(DamageRoll.matches('2d6+3')).toBe(false));
+	it('does not match 1d20', () => expect(DamageRoll.matches('1d20')).toBe(false));
+	it('does not match 5+3 (no dice)', () => expect(DamageRoll.matches('5+3')).toBe(false));
+	it('does not match 2d8 + 1d6 + 5', () => expect(DamageRoll.matches('2d8 + 1d6 + 5')).toBe(false));
+	it('does not match 4d6 + 2d8 + 1d4 + 10', () =>
+		expect(DamageRoll.matches('4d6 + 2d8 + 1d4 + 10')).toBe(false));
+
+	// --- Foundry built-in modifiers that share prefixes (must NOT match) ---
+	it('does not match 4d6kh3 (Foundry keep-highest)', () =>
+		expect(DamageRoll.matches('4d6kh3')).toBe(false));
+	it('does not match 2d20kh (Foundry keep-highest)', () =>
+		expect(DamageRoll.matches('2d20kh')).toBe(false));
+	it('does not match 4d6kl3 (Foundry keep-lowest)', () =>
+		expect(DamageRoll.matches('4d6kl3')).toBe(false));
+	it('does not match 8d6cs>3 (Foundry count-successes)', () =>
+		expect(DamageRoll.matches('8d6cs>3')).toBe(false));
+	it('does not match 8d6cf<2 (Foundry count-failures)', () =>
+		expect(DamageRoll.matches('8d6cf<2')).toBe(false));
+	it('does not match 1d6x (Foundry exploding)', () =>
+		expect(DamageRoll.matches('1d6x')).toBe(false));
+	it('does not match 1d6r1 (Foundry reroll)', () =>
+		expect(DamageRoll.matches('1d6r1')).toBe(false));
+	it('does not match 4d6dh (Foundry drop-highest)', () =>
+		expect(DamageRoll.matches('4d6dh')).toBe(false));
+	it('does not match 4d6dl (Foundry drop-lowest)', () =>
+		expect(DamageRoll.matches('4d6dl')).toBe(false));
+	it('does not match 2d6min2 (Foundry minimum)', () =>
+		expect(DamageRoll.matches('2d6min2')).toBe(false));
+	it('does not match 2d6max5 (Foundry maximum)', () =>
+		expect(DamageRoll.matches('2d6max5')).toBe(false));
+
+	// --- Mixed: Foundry modifiers + plain (no Nimble) ---
+	it('does not match 4d6kh3 + 2d8 + 5', () =>
+		expect(DamageRoll.matches('4d6kh3 + 2d8 + 5')).toBe(false));
+	it('does not match 2d20kh + 1d6', () => expect(DamageRoll.matches('2d20kh + 1d6')).toBe(false));
+});

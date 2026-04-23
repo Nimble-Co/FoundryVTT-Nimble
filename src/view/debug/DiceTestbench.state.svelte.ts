@@ -34,6 +34,7 @@ export function createDiceTestbenchState() {
 	let disCount = $state(0);
 	let forceCrit = $state(false);
 	let forceMiss = $state(false);
+	let brutalPrimary = $state(false);
 	let specificValues = $state<Array<number | null>>([]);
 	let showSpecific = $state(false);
 
@@ -183,6 +184,7 @@ export function createDiceTestbenchState() {
 		disCount = scenario.disCount ?? 0;
 		forceCrit = scenario.forceCrit ?? false;
 		forceMiss = scenario.forceMiss ?? false;
+		brutalPrimary = scenario.brutalPrimary ?? false;
 		specificValues = [];
 		showSpecific = false;
 		lastResult = null;
@@ -213,6 +215,7 @@ export function createDiceTestbenchState() {
 					primaryDieModifier: 0,
 					rollMode: 0,
 					rollModeSources: rollModeSourcesArray,
+					brutalPrimary,
 				},
 				stagedValues,
 				actorData as never,
@@ -372,6 +375,12 @@ export function createDiceTestbenchState() {
 		},
 		get forceMiss() {
 			return forceMiss;
+		},
+		get brutalPrimary() {
+			return brutalPrimary;
+		},
+		set brutalPrimary(v) {
+			brutalPrimary = v;
 		},
 		get specificValues() {
 			return specificValues;
