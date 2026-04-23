@@ -65,8 +65,8 @@
 						<button
 							class="action-tracker__add-bonus"
 							type="button"
-							aria-label="Add bonus action"
-							data-tooltip="Add bonus action"
+							aria-label={localize('NIMBLE.ui.heroicActions.addBonusAction')}
+							data-tooltip={localize('NIMBLE.ui.heroicActions.addBonusAction')}
 							data-tooltip-direction="RIGHT"
 							onclick={state.addBonusAction}
 						>

@@ -735,6 +735,7 @@
 			},
 			"heroicActions": {
 				"title": "Heroic Actions",
+				"addBonusAction": "Add bonus action",
 				"reactionsTitle": "Heroic Reactions",
 				"reactions": {
 					"actionCost": "This will use 1 action (reaction)",
