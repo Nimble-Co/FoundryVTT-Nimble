@@ -3,7 +3,9 @@ import type { InexactPartial } from '#types/utils.js';
 
 import type { MutatedResult, MutationStep } from './mutations.js';
 import { applyMutationStep } from './mutations.js';
-import { getNimbleMods } from './nimbleDieModifiers.js';
+import type { NimbleDieMetadata } from './nimbleDieModifiers.js';
+import { getNimbleMods, NIMBLE_MODS } from './nimbleDieModifiers.js';
+import type { RerollRequest, SingleDieRerollRequest, WholeRerollRequest } from './reroll.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
 const Terms = foundry.dice.terms;
@@ -63,6 +65,22 @@ declare namespace DamageRoll {
 		brutalPrimary?: boolean;
 		/** Ordered list of post-roll value mutations to apply. */
 		mutations?: MutationStep[];
+		/**
+		 * Forced-outcome overrides applied after natural resolution. Used for
+		 * features that set the outcome regardless of die values (Final Takedown,
+		 * Bubble of Light, etc.).
+		 *
+		 * - `crit: true` — injects a prepended mutation that sets the primary
+		 *   die to max with `countsAsCrit: true, triggersExplosion: true`, so
+		 *   the existing mutation + explosion pipelines fire normally.
+		 * - `miss: true` — sets `isMiss = true` after finalization. Die values
+		 *   are not changed. Natural or forced crit overrides a forced miss.
+		 */
+		forcedOutcome?: {
+			crit?: boolean;
+			miss?: boolean;
+			source?: string;
+		};
 		/**
 		 * @deprecated Use `explosionStyle: 'vicious'` instead. Translated to
 		 *   `explosionStyle` by the constructor shim for back-compat.
@@ -203,6 +221,14 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		this.options.canCrit ??= true;
 		this.options.canMiss ??= true;
 		this.options.rollMode ??= 0;
+
+		// Forced crit implies the roll can crit — otherwise the crit-detection
+		// branch in `_finalizeOutcome` wouldn't run and the forced-crit mutation
+		// would be invisible. `canMiss: false` (AoE) is deliberately NOT
+		// promoted: AoE rolls cannot miss regardless of `forcedOutcome.miss`.
+		if (this.options.forcedOutcome?.crit) {
+			this.options.canCrit = true;
+		}
 
 		// Aggregate multiple adv/dis sources into a single net rollMode.
 		// Per Nimble rules, advantage and disadvantage cancel 1-for-1.
@@ -517,6 +543,14 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			}
 		}
 
+		// Forced miss: flag-only override applied after natural finalization.
+		// Natural or forced crit wins. Engine-level `canMiss: false` (e.g. AoE
+		// rolls) also wins — forced miss cannot turn an "can't miss" roll into
+		// a miss.
+		if (this.options.forcedOutcome?.miss && !this.isCritical && this.options.canMiss !== false) {
+			this.isMiss = true;
+		}
+
 		return this as DamageRoll.Evaluated<this>;
 	}
 
@@ -528,19 +562,29 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		const isVicious = this.options.explosionStyle === 'vicious';
 
 		// Crit = a kept (active, non-discarded) result from the primary die
-		// rolled max face value. Value-based (not flag-based) so that
-		// explosionStyle: 'none' — which never sets the exploded flag —
-		// still detects crit correctly.
+		// that meets the crit threshold (default: faces). Value-based (not
+		// flag-based) so that explosionStyle: 'none' — which never sets the
+		// exploded flag — still detects crit correctly.
+		const critThreshold = this.options.criticalThreshold ?? primaryTerm.faces ?? Infinity;
 		if (this.options.canCrit) {
 			this.isCritical = primaryTerm.results.some((r) => {
-				if (!r.active || r.discarded || r.result !== primaryTerm.faces) return false;
+				if (!r.active || r.discarded || r.result < critThreshold) return false;
 				const m = (r as MutatedResult).mutation;
 				return !m || m.countsAsCrit;
 			});
 		}
 		this.critCount = this.isCritical ? 1 : 0;
 
-		if (this.options.canMiss) this.isMiss = primaryTerm.isMiss;
+		if (this.options.canMiss) {
+			if (this.isCritical) {
+				this.isMiss = false;
+			} else {
+				const fumbleThreshold = this.options.fumbleThreshold ?? 1;
+				this.isMiss = primaryTerm.results.some(
+					(r) => r.active && !r.discarded && r.result <= fumbleThreshold,
+				);
+			}
+		}
 
 		this._applyBrutalRemapping(
 			this.terms.filter((t): t is foundry.dice.terms.Die => t instanceof Terms.Die),
@@ -580,10 +624,24 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * logic can decide per-result crit/explosion behavior.
 	 */
 	private _applyPostRollMutations(): void {
-		const mutations = this.options.mutations;
-		if (!mutations?.length) return;
+		const configured = this.options.mutations ?? [];
+		const steps: MutationStep[] = [];
+		// Forced crit is implemented as a prepended mutation so it reuses the
+		// existing mutation + explosion pipelines (Stage 4) without duplicating
+		// crit/explosion logic.
+		if (this.options.forcedOutcome?.crit) {
+			steps.push({
+				target: { kind: 'primary' },
+				operation: { type: 'max' },
+				countsAsCrit: true,
+				triggersExplosion: true,
+				source: this.options.forcedOutcome.source ?? 'Forced Crit',
+			});
+		}
+		if (configured.length) steps.push(...configured);
+		if (!steps.length) return;
 		const dieTerms = this.terms.filter((t): t is foundry.dice.terms.Die => t instanceof Terms.Die);
-		for (const step of mutations) {
+		for (const step of steps) {
 			applyMutationStep(step, dieTerms, this.primaryDie);
 		}
 	}
@@ -748,8 +806,9 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			if (!(term instanceof Terms.Die)) continue;
 			const meta = getNimbleMods(term);
 			if (!meta?.canCrit) continue;
+			const critThreshold = this.options.criticalThreshold ?? term.faces ?? Infinity;
 			for (const r of term.results) {
-				if (!r.active || r.discarded || r.result !== term.faces) continue;
+				if (!r.active || r.discarded || r.result < critThreshold) continue;
 				const m = (r as MutatedResult).mutation;
 				if (!m || m.countsAsCrit) count++;
 			}
@@ -771,17 +830,27 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 		// ── Miss detection: leftmost non-neutral Die ──
 		if (this.options.canMiss) {
-			const missDie = dieTerms.find((term) => {
-				const meta = getNimbleMods(term);
-				// A die is "neutral" if tagged `n` (canCrit:false, explosionStyle:'none')
-				return !(meta && !meta.canCrit && meta.explosionStyle === 'none');
-			});
-			if (missDie) {
-				const firstActive = missDie.results.find((r) => r.active && !r.discarded);
-				this.isMiss = firstActive?.result === 1;
-			} else {
-				// All dice are neutral — no die qualifies for miss detection
+			if (this.isCritical) {
 				this.isMiss = false;
+			} else {
+				const missDie = dieTerms.find((term) => {
+					const meta = getNimbleMods(term);
+					// Miss detection runs on crit-capable dice only. Neutral
+					// (`n`) and vicious-without-crit (`v`) dice are not
+					// hit/miss arbiters. Untagged dice (no metadata — only
+					// reachable in edge-case constructions) fall through to
+					// the miss-detection path.
+					if (!meta) return true;
+					return meta.canCrit === true;
+				});
+				if (missDie) {
+					const firstActive = missDie.results.find((r) => r.active && !r.discarded);
+					const fumbleThreshold = this.options.fumbleThreshold ?? 1;
+					this.isMiss = firstActive !== undefined && firstActive.result <= fumbleThreshold;
+				} else {
+					// All dice are neutral — no die qualifies for miss detection
+					this.isMiss = false;
+				}
 			}
 		}
 
@@ -838,6 +907,224 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 		const internals = this as object as { _total: number };
 		internals._total = total;
+	}
+
+	/** ------------------------------------------------------ */
+	/**                     Reroll API                         */
+	/** ------------------------------------------------------ */
+
+	/**
+	 * Re-evaluate this roll under a Nimble reroll request. Always returns a
+	 * NEW DamageRoll — the original is never mutated. The caller (rules layer)
+	 * decides what to do with the two rolls (keep higher, keep lower, keep
+	 * either, keep new) via a `KeepPolicy`.
+	 *
+	 * - `kind: 'whole'` produces a fresh evaluated roll from `originalFormula`,
+	 *   optionally adjusting rollMode and/or adding mutations.
+	 * - `kind: 'single'` returns a deep copy of the current roll with one die
+	 *   re-rolled in place, finalization re-run, and NIMBLE_MODS preserved.
+	 *
+	 * Overloads the Foundry `Roll.reroll(options?)` signature so existing
+	 * callers that pass `Roll.Options` (or no argument) still work.
+	 */
+	override async reroll(options?: foundry.dice.Roll.Options): Promise<DamageRoll.Evaluated<this>>;
+	override async reroll(request: RerollRequest): Promise<DamageRoll>;
+	override async reroll(
+		arg?: RerollRequest | foundry.dice.Roll.Options,
+	): Promise<DamageRoll | DamageRoll.Evaluated<this>> {
+		if (arg && typeof arg === 'object' && 'kind' in arg) {
+			if (arg.kind === 'whole') return this._rerollWhole(arg);
+			if (arg.kind === 'single') return this._rerollSingleDie(arg);
+		}
+		// Delegate to the Foundry implementation for the legacy signature.
+		return super.reroll(arg as foundry.dice.Roll.Options | undefined) as Promise<
+			DamageRoll.Evaluated<this>
+		>;
+	}
+
+	/**
+	 * Implements the whole-roll reroll variant (AC#8).
+	 *
+	 * The new roll is constructed from `originalFormula` and a shallow copy of
+	 * `this.options` — the constructor re-runs preprocessing to re-extract a
+	 * PrimaryDie, so rollMode and mutation changes take effect naturally.
+	 */
+	private async _rerollWhole(request: WholeRerollRequest): Promise<DamageRoll> {
+		const newOptions: DamageRoll.Options = { ...this.options };
+		// Always force constructor to recompute netRollMode rather than reusing
+		// a stale cached value from the source options.
+		delete newOptions.netRollMode;
+
+		if (request.rollModeAdjust) {
+			if (Array.isArray(newOptions.rollModeSources)) {
+				newOptions.rollModeSources = [...newOptions.rollModeSources, request.rollModeAdjust];
+			} else {
+				newOptions.rollMode = (newOptions.rollMode ?? 0) + request.rollModeAdjust;
+			}
+		}
+
+		if (request.mutations?.length) {
+			newOptions.mutations = [...(newOptions.mutations ?? []), ...request.mutations];
+		}
+
+		// Shallow-copy `data` so feature-driven mutations on the reroll don't
+		// bleed back into the original roll's data.
+		const newData = { ...this.data };
+		const newRoll = new DamageRoll(this.originalFormula, newData, newOptions);
+		await newRoll.evaluate();
+		return newRoll;
+	}
+
+	/**
+	 * Implements the single-die reroll variant (AC#9, AC#10).
+	 *
+	 * Constructs a fresh DamageRoll shell from `originalFormula`/data/options,
+	 * then replaces its terms with structural clones of `this.terms` so the
+	 * prior evaluated state (rolled values, modifiers, discarded/active flags)
+	 * carries forward. NIMBLE_MODS metadata is re-attached from the cloned
+	 * modifiers. The targeted die is then re-rolled using a throwaway
+	 * `Roll(`1d{faces}`)` (so Foundry's RNG and DSN visualisation still apply),
+	 * outcome state is reset, and finalisation re-runs.
+	 */
+	private async _rerollSingleDie(request: SingleDieRerollRequest): Promise<DamageRoll> {
+		const copy = new DamageRoll(this.originalFormula, this.data, { ...this.options });
+		copy.terms = this.terms.map((t) => DamageRoll._cloneTerm(t));
+		copy.modifierMode = this.modifierMode;
+		// Constructor set `copy.primaryDie` to a throwaway PrimaryDie in the
+		// throwaway term array that we just replaced. Re-point it at the
+		// cloned PrimaryDie in `copy.terms` now so the stale reference can't
+		// leak out to callers (e.g. via `primaryDieValue`) if finalization
+		// doesn't explicitly reassign it.
+		copy.primaryDie = copy.terms.find(
+			(t): t is PrimaryDie | foundry.dice.terms.Die => t instanceof Terms.Die,
+		);
+		DamageRoll._reattachNimbleMods(copy.terms);
+
+		const dieTerms = copy.terms.filter((t): t is foundry.dice.terms.Die => t instanceof Terms.Die);
+		let flatIdx = 0;
+		let target: { term: foundry.dice.terms.Die; resultIdx: number } | undefined;
+		outer: for (const term of dieTerms) {
+			for (let i = 0; i < term.results.length; i++) {
+				const r = term.results[i];
+				if (r.active && !r.discarded) {
+					if (flatIdx === request.dieIndex) {
+						target = { term, resultIdx: i };
+						break outer;
+					}
+					flatIdx++;
+				}
+			}
+		}
+
+		if (!target) {
+			throw new Error(`DamageRoll.reroll: no active die result at index ${request.dieIndex}`);
+		}
+
+		const faces = target.term.faces ?? 6;
+		const newValue = Math.floor(Math.random() * faces) + 1;
+
+		const prev = target.term.results[target.resultIdx];
+		target.term.results[target.resultIdx] = {
+			...prev,
+			result: newValue,
+			// Drop stale flags/metadata from the prior evaluation. The mutation
+			// metadata and exploded flag described the pre-reroll value; they
+			// should not carry to the new value.
+			exploded: false,
+		};
+		delete (target.term.results[target.resultIdx] as MutatedResult).mutation;
+
+		// Reset outcome state before re-running finalization. excludedPrimaryDieValue
+		// gets recomputed by finalization when primaryDieAsDamage is false.
+		copy.isCritical = copy.options.canCrit ? undefined : false;
+		copy.isMiss = copy.options.canMiss ? undefined : false;
+		copy.critCount = 0;
+		copy.excludedPrimaryDieValue = 0;
+		copy._recalculateTotal();
+
+		if (copy.modifierMode) {
+			copy.critCount = copy._countModifierModeCrits();
+			copy._finalizeOutcomeModifierMode();
+		} else {
+			const primaryTerm = copy.terms.find((t) => t instanceof PrimaryDie);
+			if (primaryTerm) copy._finalizeOutcome(primaryTerm);
+		}
+
+		if (copy.options.forcedOutcome?.miss && !copy.isCritical && copy.options.canMiss !== false) {
+			copy.isMiss = true;
+		}
+
+		copy.resetFormula();
+		return copy;
+	}
+
+	/**
+	 * Structural clone of a RollTerm used by `_rerollSingleDie`. Preserves
+	 * values, modifiers, active/discarded flags, and evaluated state so the
+	 * cloned term is interchangeable with the source.
+	 */
+	private static _cloneTerm(term: foundry.dice.terms.RollTerm): foundry.dice.terms.RollTerm {
+		if (term instanceof PrimaryDie) {
+			const cloned = new PrimaryDie({
+				number: term.number ?? 1,
+				faces: term.faces ?? 6,
+				modifiers: (Array.isArray(term.modifiers)
+					? [...term.modifiers]
+					: []) as PrimaryDie.TermData['modifiers'],
+				options: { ...term.options },
+			});
+			cloned.results = term.results.map((r) => ({ ...r }));
+			(cloned as unknown as { _evaluated: boolean })._evaluated = (
+				term as unknown as { _evaluated: boolean }
+			)._evaluated;
+			return cloned;
+		}
+		if (term instanceof Terms.Die) {
+			const cloned = new Terms.Die({
+				number: term.number ?? 1,
+				faces: term.faces ?? 6,
+				modifiers: Array.isArray(term.modifiers) ? [...term.modifiers] : [],
+			} as unknown as foundry.dice.terms.Die.TermData);
+			cloned.results = term.results.map((r) => ({ ...r }));
+			(cloned as unknown as { _evaluated: boolean })._evaluated = (
+				term as unknown as { _evaluated: boolean }
+			)._evaluated;
+			return cloned;
+		}
+		// For non-dice terms (operators, numerics, parentheticals), shallow
+		// clone via the prototype — they carry no mutable roll state.
+		const proto = Object.getPrototypeOf(term) as object;
+		const cloned = Object.create(proto) as foundry.dice.terms.RollTerm;
+		Object.assign(cloned, term);
+		return cloned;
+	}
+
+	/**
+	 * Re-attach NIMBLE_MODS metadata to Die terms after a clone.
+	 * The symbol-keyed metadata is not copied by structural clone, but the
+	 * modifier strings (`c`, `cv`, `v`, `n`) survive and can be used to
+	 * rebuild it.
+	 */
+	private static _reattachNimbleMods(terms: foundry.dice.terms.RollTerm[]): void {
+		for (const term of terms) {
+			if (!(term instanceof Terms.Die)) continue;
+			if (!Array.isArray(term.modifiers)) continue;
+			const has = (m: string) => term.modifiers.includes(m);
+			let meta: NimbleDieMetadata | undefined;
+			// Treat a combined `c` + `v` (a hand-built array, unusual — formula
+			// parsing normalizes to `cv`) as crit-vicious. `cv` alone wins
+			// likewise.
+			if (has('cv') || (has('c') && has('v'))) {
+				meta = { canCrit: true, explosionStyle: 'vicious' };
+			} else if (has('c')) {
+				meta = { canCrit: true, explosionStyle: 'standard' };
+			} else if (has('v')) {
+				meta = { canCrit: false, explosionStyle: 'vicious' };
+			} else if (has('n')) {
+				meta = { canCrit: false, explosionStyle: 'none' };
+			}
+			if (meta) (term as unknown as Record<symbol, unknown>)[NIMBLE_MODS] = meta;
+		}
 	}
 
 	/**

@@ -77,11 +77,11 @@ When a player clicks "Attack" on a weapon, here's what happens (all in `src/dice
 
 5. **Foundry rolls the dice.** The custom `khn`/`kln` modifier handlers sort results and mark dice as discarded (leftmost dropped on ties). In modifier-mode, the `c`, `cv`, `v`, and `n` handlers also run — they attach Symbol-keyed metadata to each Die instance describing its crit/miss/explosion behavior. These handlers don't roll extra dice; they only tag metadata.
 
-6. **`DamageRoll._evaluate` interprets the results.** In modifier-mode, the engine iterates all Die terms, reads their modifier metadata, and dispatches per-die: `cv`-tagged dice that rolled max get a vicious explosion chain, `c`-tagged dice use Foundry's native `x` explosion, `n`-tagged dice are skipped for crit/miss. In legacy mode, the engine reads the single primary die and dispatches based on the `explosionStyle` option (`'none'` / `'standard'` / `'vicious'`). Crit detection in both modes uses the same value-based check: did a kept (active, non-discarded) die roll its max face value?
+6. **`DamageRoll._evaluate` interprets the results.** In modifier-mode, the engine iterates all Die terms, reads their modifier metadata, and dispatches per-die: `cv`-tagged dice that rolled max get a vicious explosion chain, `c`-tagged dice use Foundry's native `x` explosion, `n`-tagged dice are skipped for crit/miss. In legacy mode, the engine reads the single primary die and dispatches based on the `explosionStyle` option (`'none'` / `'standard'` / `'vicious'`). Crit detection in both modes uses a threshold check: did a kept (active, non-discarded) die meet `criticalThreshold` (defaults to the die's max face). Miss detection uses `fumbleThreshold` symmetrically (defaults to `1`).
 
-7. **Post-roll mutations.** `_applyPostRollMutations` processes an optional `mutations: MutationStep[]` array from the roll options. Each step targets specific dice, applies an operation (set, bump, max, floor, ceiling, etc.), and tags the result with metadata recording the original rolled value and whether the mutation counts as a crit or triggers explosion. See "Post-roll mutation pipeline" below.
+7. **Post-roll mutations.** `_applyPostRollMutations` processes an optional `mutations: MutationStep[]` array from the roll options. Each step targets specific dice, applies an operation (set, bump, max, floor, ceiling, etc.), and tags the result with metadata recording the original rolled value and whether the mutation counts as a crit or triggers explosion. See "Post-roll mutation pipeline" below. Forced crits (`forcedOutcome.crit = true`) are prepended to this pipeline as a `{ target: primary, operation: max, countsAsCrit: true, triggersExplosion: true }` step — the mutation pipeline then handles crit counting and vicious explosion dispatch.
 
-8. **Finalize the total.** `_finalizeOutcome` sets `isCritical` / `isMiss` / `critCount` flags and adjusts the total for vicious recalculation and the `primaryDieAsDamage: false` case (where the primary die's value is excluded from damage but its explosions still count). `critCount` tracks how many crit-capable dice independently rolled max — for a standard weapon this is 0 or 1, but for multi-die pools like Dravok's `4d4cv` it can be 2, 3, or even 4. `isCritical` is `critCount > 0`. If the `brutalPrimary` option is set, the primary die is reassigned to whichever die rolled highest (instead of leftmost).
+8. **Finalize the total.** `_finalizeOutcome` sets `isCritical` / `isMiss` / `critCount` flags and adjusts the total for vicious recalculation and the `primaryDieAsDamage: false` case (where the primary die's value is excluded from damage but its explosions still count). `critCount` tracks how many crit-capable dice independently rolled max — for a standard weapon this is 0 or 1, but for multi-die pools like Dravok's `4d4cv` it can be 2, 3, or even 4. `isCritical` is `critCount > 0`. If the `brutalPrimary` option is set, the primary die is reassigned to whichever die rolled highest (instead of leftmost). Finally, `forcedOutcome.miss = true` sets `isMiss = true` post-finalization unless a natural or forced crit has already fired (crit wins).
 
 9. **The chat card renders** (handled in `src/view/chat/components/`, outside the engine). The card shows the kept and dropped dice, the primary die, bonus dice, and the total.
 
@@ -119,6 +119,55 @@ Each mutated result is tagged with metadata preserving the original rolled value
 | BOUNDLESS RAGE ("Fury Die can't be less than 6") | no | no |
 
 Individual class features don't live in the engine — they emit `MutationStep` objects from the rules layer, and the engine processes them generically. The engine's only job is to apply the operation, tag the metadata, and honor the flags during crit detection and explosion dispatch.
+
+### Forced outcomes — `forcedOutcome`
+
+Some features override the roll's outcome regardless of what the dice actually rolled:
+
+- **Final Takedown** — "your next attack is a crit"
+- **Bubble of Light** — "the attack misses"
+- **Heads I Win, Tails You Lose** — forces crit
+- **Tuned Thrusters**, **Hexbinder no-valid-target** — force miss
+
+These are expressed declaratively via the `forcedOutcome` option:
+
+```typescript
+forcedOutcome?: {
+    crit?: boolean;   // force crit (prepended mutation, triggers explosion)
+    miss?: boolean;   // force miss (flag-only, post-finalization)
+    source?: string;  // label for chat card / logs
+}
+```
+
+**Forced crit** reuses the mutation pipeline: it injects a prepended `MutationStep` that sets the primary die to max with `countsAsCrit: true, triggersExplosion: true`. The existing pipeline then handles crit counting and vicious explosion dispatch — no duplicated logic.
+
+**Forced miss** is flag-only: it sets `isMiss = true` after finalization, leaving die values unchanged. Natural or forced crits override a forced miss (crit always wins).
+
+### Thresholds — `criticalThreshold` / `fumbleThreshold`
+
+Two roll-level options widen or narrow what counts as a crit or fumble:
+
+- **`criticalThreshold`** (default: `faces`) — a kept die crits if `result >= criticalThreshold`. Used by features like "Heads I Win, Tails You Lose" that let a die crit below max.
+- **`fumbleThreshold`** (default: `1`) — a kept die misses if `result <= fumbleThreshold`. Parry (monster trait) sets this to `2` on a d8, so both 1 and 2 miss.
+
+Thresholds apply in both modifier-mode and legacy mode. They affect crit/miss detection only — they do **not** alter explosion dispatch (a threshold-triggered crit below max will set `isCritical` but won't fire an explosion chain). Forced crit, not threshold, is the path for "crit with explosion regardless of value."
+
+### Reroll protocol — `DamageRoll.reroll(request)`
+
+Several features re-evaluate an already-rolled attack: Inerrant Strike, Mountain's Endurance, Songweaver's Inspiration, FAST, Pocket Sand, etc. The engine exposes a single entry point:
+
+```typescript
+await roll.reroll({ kind: 'whole', source: 'Inerrant Strike' });
+await roll.reroll({ kind: 'whole', rollModeAdjust: -1, source: 'FAST' });
+await roll.reroll({ kind: 'single', dieIndex: 2, source: 'Songweaver' });
+```
+
+Two variants:
+
+- **Whole-roll reroll** (`kind: 'whole'`) re-evaluates the roll from `originalFormula` with a fresh copy of the options. Callers can append `rollModeAdjust` (signed integer, added to `rollModeSources` or `rollMode` scalar) and/or `mutations` (appended to the options). Used for "reroll an attack with disadvantage" or "reroll and bump the primary +1."
+- **Single-die reroll** (`kind: 'single'`) clones the current roll, rerolls the die at the specified flattened active index, and re-runs finalization. NIMBLE_MODS metadata is preserved on the cloned die term. Used for "reroll one die, keep either" effects.
+
+The engine always returns a **new** `DamageRoll` — the original is never mutated. The caller (rules layer) decides what to do with the two rolls via a `KeepPolicy` (`'higher'` / `'lower'` / `'either'` / `'new'`). That decision is **not** engine logic — the engine produces rolls; the rules layer picks.
 
 ### Custom Die modifiers — `nimbleDieModifiers.ts`
 
@@ -180,6 +229,9 @@ Content authors can leave `weaponType` blank (nothing breaks) or set it for weap
 | Roll construction from an item | `src/managers/ItemActivationManager.ts` |
 | Weapon proficiency check | `src/view/sheets/components/attackUtils.ts` (`hasWeaponProficiency`) |
 | Post-roll mutation pipeline | `DamageRoll._applyPostRollMutations` + `src/dice/mutations.ts` |
+| Forced crit / forced miss | `DamageRoll.Options.forcedOutcome` |
+| Threshold wiring | `DamageRoll.Options.criticalThreshold` / `fumbleThreshold` |
+| Reroll protocol | `DamageRoll.reroll()` + `src/dice/reroll.ts` |
 | Multi-crit count | `DamageRoll.critCount` |
 | Brutal primary remapping | `DamageRoll.Options.brutalPrimary` |
 | Primary die value getter | `DamageRoll.primaryDieValue` |

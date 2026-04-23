@@ -3076,3 +3076,572 @@ describe('mutations pipeline', () => {
 		expect(dieTerm.results[0].result).toBe(9);
 	});
 });
+
+describe('forcedOutcome', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		stubBaseRollEvaluate();
+	});
+
+	it('forced crit: primary rolled non-max → isCritical true, critCount 1, primary mutated to max', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				forcedOutcome: { crit: true, source: 'Final Takedown' },
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 3, active: true }], 3);
+		await (roll as any)._evaluate();
+
+		expect(roll.isCritical).toBe(true);
+		expect(roll.critCount).toBe(1);
+		expect(roll.isMiss).toBe(false);
+
+		const primary = roll.primaryDie!;
+		expect(primary.results[0].result).toBe(8);
+		const m = (primary.results[0] as MutatedResult).mutation;
+		expect(m).toBeDefined();
+		expect(m!.rolledValue).toBe(3);
+		expect(m!.source).toBe('Final Takedown');
+		expect(m!.countsAsCrit).toBe(true);
+		expect(m!.triggersExplosion).toBe(true);
+	});
+
+	it('forced miss: primary rolled non-1 → isMiss true, die value unchanged', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				forcedOutcome: { miss: true, source: 'Bubble of Light' },
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 5, active: true }], 5);
+		await (roll as any)._evaluate();
+
+		expect(roll.isMiss).toBe(true);
+		expect(roll.isCritical).toBe(false);
+		// Die value unchanged (no mutation applied for forced miss)
+		expect(roll.primaryDie!.results[0].result).toBe(5);
+		expect((roll.primaryDie!.results[0] as MutatedResult).mutation).toBeUndefined();
+	});
+
+	it('forced crit + miss → crit wins', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				forcedOutcome: { crit: true, miss: true, source: 'Conflicting' },
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 4, active: true }], 4);
+		await (roll as any)._evaluate();
+
+		expect(roll.isCritical).toBe(true);
+		expect(roll.isMiss).toBe(false);
+	});
+
+	it('forced miss does not override natural crit (high natural roll)', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				forcedOutcome: { miss: true },
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 8, active: true, exploded: true }], 8);
+		await (roll as any)._evaluate();
+
+		expect(roll.isCritical).toBe(true);
+		expect(roll.isMiss).toBe(false);
+	});
+
+	it('forced miss is ignored when canMiss is false (AoE / engine-disallowed miss)', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: false,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				forcedOutcome: { miss: true, source: 'FireballAoE' },
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 5, active: true }], 5);
+		await (roll as any)._evaluate();
+		expect(roll.isMiss).toBe(false);
+	});
+
+	it('forced crit implicitly enables canCrit (so the mutation can flip isCritical)', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				// canCrit: false would normally lock isCritical to false. The
+				// constructor promotes it when forcedOutcome.crit is set.
+				canCrit: false,
+				canMiss: false,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				forcedOutcome: { crit: true, source: 'Auto-Crit' },
+			},
+		);
+		// canCrit was promoted to true, so a PrimaryDie was extracted.
+		expect(roll.options.canCrit).toBe(true);
+		expect(roll.primaryDie).toBeDefined();
+		stagePrimaryDieResults(roll, [{ result: 3, active: true }], 3);
+		await (roll as any)._evaluate();
+		expect(roll.isCritical).toBe(true);
+	});
+
+	it('modifier-mode 4d4cv: forced crit mutates primary to max and triggersExplosion fires', async () => {
+		const roll = new DamageRoll(
+			'4d4cv',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				forcedOutcome: { crit: true, source: 'Vulnerable Underbelly' },
+			},
+		);
+		stageModifierModeRoll(
+			roll,
+			[
+				[
+					{ result: 2, active: true },
+					{ result: 3, active: true },
+					{ result: 1, active: true },
+					{ result: 2, active: true },
+				],
+			],
+			8,
+		);
+		await (roll as any)._evaluate();
+
+		expect(roll.isCritical).toBe(true);
+		expect(roll.critCount).toBeGreaterThanOrEqual(1);
+
+		const dieTerm = roll.terms.filter((t) => t instanceof foundry.dice.terms.Die)[0];
+		// Forced crit targets the primary die — leftmost for cv tag, which in
+		// this test is the sole 4d4cv term. All its ACTIVE results get mutated
+		// to max since `target: primary` hits every active result of that die.
+		expect(dieTerm.results[0].result).toBe(4);
+		// First active result is exploded (triggersExplosion: true).
+		expect(dieTerm.results[0].exploded).toBe(true);
+	});
+});
+
+describe('fumbleThreshold', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		stubBaseRollEvaluate();
+	});
+
+	it('Parry: d8, fumbleThreshold 2, rolls 2 → miss', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				fumbleThreshold: 2,
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 2, active: true }], 2);
+		await (roll as any)._evaluate();
+		expect(roll.isMiss).toBe(true);
+		expect(roll.isCritical).toBe(false);
+	});
+
+	it('Parry: d8, fumbleThreshold 2, rolls 3 → not miss', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				fumbleThreshold: 2,
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 3, active: true }], 3);
+		await (roll as any)._evaluate();
+		expect(roll.isMiss).toBe(false);
+	});
+
+	it('default fumbleThreshold (1): rolls 1 → miss (regression)', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+		);
+		stagePrimaryDieResults(roll, [{ result: 1, active: true }], 1);
+		await (roll as any)._evaluate();
+		expect(roll.isMiss).toBe(true);
+	});
+
+	it('modifier-mode 1d8c: fumbleThreshold 2, rolls 2 → miss', async () => {
+		const roll = new DamageRoll(
+			'1d8c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				fumbleThreshold: 2,
+			},
+		);
+		stageModifierModeRoll(roll, [[{ result: 2, active: true }]], 2);
+		await (roll as any)._evaluate();
+		expect(roll.isMiss).toBe(true);
+	});
+});
+
+describe('criticalThreshold', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		stubBaseRollEvaluate();
+	});
+
+	it('d8 criticalThreshold 7, rolls 7 → crit', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				criticalThreshold: 7,
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 7, active: true }], 7);
+		await (roll as any)._evaluate();
+		expect(roll.isCritical).toBe(true);
+		expect(roll.critCount).toBe(1);
+	});
+
+	it('d8 criticalThreshold 7, rolls 6 → not crit', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				criticalThreshold: 7,
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 6, active: true }], 6);
+		await (roll as any)._evaluate();
+		expect(roll.isCritical).toBe(false);
+	});
+
+	it('default criticalThreshold (faces): rolls max → crit (regression)', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+		);
+		stagePrimaryDieResults(roll, [{ result: 8, active: true, exploded: true }], 8);
+		await (roll as any)._evaluate();
+		expect(roll.isCritical).toBe(true);
+	});
+
+	it('modifier-mode 1d8c: criticalThreshold 7, rolls 7 → crit', async () => {
+		const roll = new DamageRoll(
+			'1d8c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+				criticalThreshold: 7,
+			},
+		);
+		stageModifierModeRoll(roll, [[{ result: 7, active: true }]], 7);
+		await (roll as any)._evaluate();
+		expect(roll.isCritical).toBe(true);
+		expect(roll.critCount).toBe(1);
+	});
+});
+
+describe('reroll — whole', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		stubBaseRollEvaluate();
+	});
+
+	it('returns a new DamageRoll; original unchanged', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+		);
+		stagePrimaryDieResults(roll, [{ result: 3, active: true }], 3);
+		await (roll as any)._evaluate();
+
+		const originalTotal = roll.total;
+		const rerolled = await roll.reroll({ kind: 'whole', source: 'Inerrant Strike' });
+
+		expect(rerolled).not.toBe(roll);
+		expect(rerolled).toBeInstanceOf(DamageRoll);
+		// Original left intact
+		expect(roll.total).toBe(originalTotal);
+		expect(roll.primaryDie!.results[0].result).toBe(3);
+	});
+
+	it('rollModeAdjust appends to rollModeSources when present', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				rollModeSources: [1],
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+			},
+		);
+		stagePrimaryDieResults(roll, [{ result: 5, active: true }], 5);
+		await (roll as any)._evaluate();
+
+		const rerolled = await roll.reroll({
+			kind: 'whole',
+			rollModeAdjust: -1,
+			source: 'FAST',
+		});
+
+		// Net rollMode should be 1 + (-1) = 0
+		expect(rerolled.options.netRollMode).toBe(0);
+		expect(rerolled.options.rollModeSources).toEqual([1, -1]);
+	});
+
+	it('rollModeAdjust on a scalar rollMode adds to it directly', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+		);
+		stagePrimaryDieResults(roll, [{ result: 5, active: true }], 5);
+		await (roll as any)._evaluate();
+
+		const rerolled = await roll.reroll({
+			kind: 'whole',
+			rollModeAdjust: -1,
+			source: 'Pocket Sand',
+		});
+
+		expect(rerolled.options.rollMode).toBe(-1);
+	});
+
+	it('mutations passed via reroll are applied on the new roll (Inerrant Strike: bump +1)', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+		);
+		stagePrimaryDieResults(roll, [{ result: 2, active: true }], 2);
+		await (roll as any)._evaluate();
+
+		const rerolled = await roll.reroll({
+			kind: 'whole',
+			mutations: [
+				{
+					target: { kind: 'primary' },
+					operation: { type: 'bump', delta: 1 },
+					source: 'Inerrant Strike',
+				},
+			],
+			source: 'Inerrant Strike',
+		});
+
+		// The new roll will re-preprocess and its options.mutations includes
+		// our step. Since the mock base _evaluate doesn't actually roll,
+		// primaryDie results are whatever the constructor primed. Just verify
+		// mutations survived onto options.
+		expect(rerolled.options.mutations).toBeDefined();
+		expect(rerolled.options.mutations!.some((m) => m.source === 'Inerrant Strike')).toBe(true);
+	});
+});
+
+describe('reroll — single die', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		stubBaseRollEvaluate();
+	});
+
+	it('rerolls one die result; other results unchanged; original unchanged', async () => {
+		const roll = new DamageRoll(
+			'1d8c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+			},
+		);
+		stageModifierModeRoll(roll, [[{ result: 3, active: true }]], 3);
+		await (roll as any)._evaluate();
+
+		const rerolled = await roll.reroll({
+			kind: 'single',
+			dieIndex: 0,
+			source: 'Songweaver',
+		});
+
+		expect(rerolled).not.toBe(roll);
+		// Original unchanged
+		const origDie = roll.terms.filter((t) => t instanceof foundry.dice.terms.Die)[0];
+		expect(origDie.results[0].result).toBe(3);
+
+		// Rerolled die has some new value (1..8). Value is random, just
+		// assert it's a legal d8 value.
+		const newDie = rerolled.terms.filter((t) => t instanceof foundry.dice.terms.Die)[0];
+		const newValue = newDie.results[0].result;
+		expect(newValue).toBeGreaterThanOrEqual(1);
+		expect(newValue).toBeLessThanOrEqual(8);
+	});
+
+	it('preserves NIMBLE_MODS metadata (c tag) on the rerolled die term', async () => {
+		const { NIMBLE_MODS: NIMBLE_MODS_sym } = await import('./nimbleDieModifiers.js');
+		const roll = new DamageRoll(
+			'1d8c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+			},
+		);
+		stageModifierModeRoll(roll, [[{ result: 4, active: true }]], 4);
+		await (roll as any)._evaluate();
+
+		const rerolled = await roll.reroll({
+			kind: 'single',
+			dieIndex: 0,
+			source: 'Songweaver',
+		});
+
+		const newDie = rerolled.terms.filter((t) => t instanceof foundry.dice.terms.Die)[0];
+		const meta = (newDie as any)[NIMBLE_MODS_sym];
+		expect(meta).toBeDefined();
+		expect(meta.canCrit).toBe(true);
+		expect(meta.explosionStyle).toBe('standard');
+	});
+
+	it('re-finalization updates isCritical / isMiss based on new die value (mocked value)', async () => {
+		const roll = new DamageRoll(
+			'1d8c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+			},
+		);
+		stageModifierModeRoll(roll, [[{ result: 3, active: true }]], 3);
+		await (roll as any)._evaluate();
+		expect(roll.isCritical).toBe(false);
+
+		// Monkey-patch Math.random to force an 8 (max for d8)
+		const origRandom = Math.random;
+		Math.random = () => 0.99;
+		try {
+			const rerolled = await roll.reroll({
+				kind: 'single',
+				dieIndex: 0,
+				source: 'Songweaver',
+			});
+			expect(rerolled.isCritical).toBe(true);
+		} finally {
+			Math.random = origRandom;
+		}
+	});
+
+	it('legacy mode: primaryDie on the reroll copy points into the copy\u2019s terms, not the original\u2019s', async () => {
+		const roll = new DamageRoll(
+			'1d8',
+			{},
+			{ canCrit: true, canMiss: true, rollMode: 0, primaryDieValue: 0, primaryDieModifier: 0 },
+		);
+		stagePrimaryDieResults(roll, [{ result: 3, active: true }], 3);
+		await (roll as any)._evaluate();
+
+		const rerolled = await roll.reroll({ kind: 'single', dieIndex: 0, source: 'x' });
+
+		// The copy's primaryDie must be one of the copy's own terms, not the
+		// original's. This guards against the constructor's throwaway extraction
+		// leaking out when legacy-mode finalization doesn't reassign primaryDie.
+		expect(rerolled.primaryDie).toBeDefined();
+		expect(rerolled.terms).toContain(rerolled.primaryDie);
+		expect(rerolled.primaryDie).not.toBe(roll.primaryDie);
+		// primaryDieValue must read the rerolled value, not a stale preset.
+		expect(rerolled.primaryDieValue).toBe(rerolled.primaryDie!.results[0].result);
+	});
+
+	it('throws if dieIndex is out of range', async () => {
+		const roll = new DamageRoll(
+			'1d8c',
+			{},
+			{
+				canCrit: true,
+				canMiss: true,
+				rollMode: 0,
+				primaryDieValue: 0,
+				primaryDieModifier: 0,
+			},
+		);
+		stageModifierModeRoll(roll, [[{ result: 5, active: true }]], 5);
+		await (roll as any)._evaluate();
+
+		await expect(roll.reroll({ kind: 'single', dieIndex: 99, source: 'x' })).rejects.toThrow(
+			/no active die result at index 99/,
+		);
+	});
+});
