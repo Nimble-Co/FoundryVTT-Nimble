@@ -1,6 +1,7 @@
 import type { AnyObject, FixedInstanceType } from 'fvtt-types/utils';
 import type { InexactPartial } from '#types/utils.js';
 
+import { getNimbleMods } from './nimbleDieModifiers.js';
 import { PrimaryDie } from './terms/PrimaryDie.js';
 
 const Terms = foundry.dice.terms;
@@ -125,8 +126,20 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	/** The original formula before preprocessing (e.g., before primary die extraction). */
 	originalFormula: string;
 
-	/** The primary die term used for critical/miss detection. */
-	primaryDie: PrimaryDie | undefined = undefined;
+	/**
+	 * The primary die term used for critical/miss detection.
+	 * In legacy mode this is a PrimaryDie instance; in modifier-mode it is the
+	 * leftmost Die tagged `c`/`cv` (or leftmost Die overall as fallback).
+	 */
+	primaryDie: PrimaryDie | foundry.dice.terms.Die | undefined = undefined;
+
+	/**
+	 * Whether this roll uses per-die modifier dispatch (modifier-mode).
+	 * True when the formula contains Nimble die modifiers (`c`, `cv`, `v`, `n`).
+	 * When true, `_extractPrimaryDie` is skipped and crit/miss detection uses
+	 * per-die metadata instead of PrimaryDie.
+	 */
+	modifierMode: boolean = false;
 
 	override _formula: string = '';
 
@@ -183,6 +196,28 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 			this.data ?? ({} as DamageRoll.Data),
 			(this.options ?? {}) as DamageRoll.Options,
 		);
+	}
+
+	/** ------------------------------------------------------ */
+	/**                Modifier-Mode Detection                */
+	/** ------------------------------------------------------ */
+
+	/** Nimble modifier tokens that trigger modifier-mode when present on any Die term. */
+	private static readonly NIMBLE_MODIFIER_TOKENS = new Set(['c', 'cv', 'v', 'n']);
+
+	/**
+	 * Check whether any Die term in `this.terms` carries a Nimble modifier.
+	 * If so, the roll enters modifier-mode and skips PrimaryDie extraction.
+	 */
+	private _hasNimbleModifiers(): boolean {
+		for (const term of this.terms) {
+			if (!(term instanceof Terms.Die)) continue;
+			if (!Array.isArray(term.modifiers)) continue;
+			for (const m of term.modifiers) {
+				if (DamageRoll.NIMBLE_MODIFIER_TOKENS.has(m)) return true;
+			}
+		}
+		return false;
 	}
 
 	/** ------------------------------------------------------ */
@@ -322,11 +357,32 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	 * term) plus bonus dice when crit/miss detection is needed, or applying
 	 * adv/dis directly to the first die term in the AoE fallback case.
 	 *
+	 * If the formula already contains Nimble die modifiers (`c`, `cv`, `v`, `n`),
+	 * the roll enters modifier-mode: PrimaryDie extraction is skipped, and
+	 * crit/miss detection is deferred to per-die dispatch in `_evaluate`.
+	 *
 	 * @param _formula - The original dice formula (unused, kept for signature compatibility).
 	 * @param _data - Roll data (unused, kept for signature compatibility).
 	 * @param options - Roll options containing canCrit, canMiss, and rollMode settings.
 	 */
 	_preProcessFormula(_formula: string, _data: DamageRoll.Data, options: DamageRoll.Options) {
+		// ── Modifier-mode: formula already carries Nimble modifiers ──
+		if (this._hasNimbleModifiers()) {
+			this.modifierMode = true;
+			// Apply rollMode (advantage/disadvantage) to the first die term
+			// even in modifier-mode — it's orthogonal to crit/miss detection.
+			const { rollMode = 0 } = options;
+			if (rollMode) {
+				const firstDieTerm = this.terms.find((t) => t instanceof Terms.Die);
+				if (firstDieTerm) {
+					this._applyRollMode(firstDieTerm, rollMode);
+				}
+			}
+			this.resetFormula();
+			return;
+		}
+
+		// ── Legacy path: no Nimble modifiers in formula ──
 		const { rollMode = 0 } = options;
 		const needsPrimaryDie = options.canCrit || options.canMiss;
 
@@ -397,16 +453,25 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 
 		this._applyPostRollMutations();
 
-		const primaryTerm = this.terms.find((t) => t instanceof PrimaryDie);
-
-		if (primaryTerm) {
-			// For vicious weapons, handle explosion manually after initial roll
-			// (avoids Dice So Nice preempting the chain).
-			if (this.options.canCrit && this.options.explosionStyle === 'vicious') {
-				await this._evaluateViciousExplosion(primaryTerm);
+		if (this.modifierMode) {
+			// ── Modifier-mode: per-die vicious explosion ──
+			for (const term of this.terms) {
+				if (!(term instanceof Terms.Die)) continue;
+				const meta = getNimbleMods(term);
+				if (meta?.canCrit && meta.explosionStyle === 'vicious') {
+					await this._evaluateViciousExplosions(term);
+				}
 			}
-
-			this._finalizeOutcome(primaryTerm);
+			this._finalizeOutcomeModifierMode();
+		} else {
+			// ── Legacy path ──
+			const primaryTerm = this.terms.find((t) => t instanceof PrimaryDie);
+			if (primaryTerm) {
+				if (this.options.canCrit && this.options.explosionStyle === 'vicious') {
+					await this._evaluateViciousExplosion(primaryTerm);
+				}
+				this._finalizeOutcome(primaryTerm);
+			}
 		}
 
 		return this as DamageRoll.Evaluated<this>;
@@ -541,22 +606,136 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 	}
 
 	/**
-	 * Recalculates the roll total after vicious explosion added dice.
+	 * Per-die vicious explosion for modifier-mode. Unlike `_evaluateViciousExplosion`
+	 * which handles a single initial result, this method iterates ALL active,
+	 * non-discarded results that rolled max in a multi-die term (e.g. 4d4cv where
+	 * 2 of 4 dice crit) and fires a vicious explosion chain for each.
+	 */
+	private async _evaluateViciousExplosions(dieTerm: foundry.dice.terms.Die): Promise<void> {
+		const faces = dieTerm.faces ?? 6;
+		// Snapshot base results to avoid iterating over explosion dice we add
+		const baseResults = [...dieTerm.results];
+
+		for (const result of baseResults) {
+			if (!result.active || result.discarded || result.result !== faces) continue;
+
+			// Mark as exploded and chain
+			result.exploded = true;
+			let lastLeftResult = result.result;
+			let iterations = 0;
+			const maxIterations = 100;
+
+			while (lastLeftResult === faces && iterations < maxIterations) {
+				iterations++;
+				const explosionRoll = new Roll(`2d${faces}`);
+				await explosionRoll.evaluate();
+
+				const explosionDieTerm = explosionRoll.terms.find((t) => t instanceof Terms.Die) as
+					| foundry.dice.terms.Die
+					| undefined;
+				if (!explosionDieTerm || explosionDieTerm.results.length < 2) break;
+
+				const leftDie = explosionDieTerm.results[0] as foundry.dice.terms.DiceTerm.Result & {
+					provenance?: string;
+				};
+				const rightDie = explosionDieTerm.results[1] as foundry.dice.terms.DiceTerm.Result & {
+					provenance?: string;
+				};
+
+				leftDie.provenance = 'viciousChain';
+				rightDie.provenance = 'viciousBonus';
+				dieTerm.results.push(leftDie);
+				dieTerm.results.push(rightDie);
+
+				lastLeftResult = leftDie.result;
+				if (lastLeftResult === faces) leftDie.exploded = true;
+			}
+		}
+
+		this.resetFormula();
+	}
+
+	/**
+	 * Modifier-mode outcome finalization. Replaces `_finalizeOutcome` when the
+	 * roll uses per-die modifiers instead of a PrimaryDie term.
+	 */
+	private _finalizeOutcomeModifierMode(): void {
+		const dieTerms = this.terms.filter((t): t is foundry.dice.terms.Die => t instanceof Terms.Die);
+
+		// ── Crit detection: any crit-capable die that rolled max ──
+		let anyCritted = false;
+		for (const term of dieTerms) {
+			const meta = getNimbleMods(term);
+			if (!meta?.canCrit) continue;
+			if (term.results.some((r) => r.active && !r.discarded && r.result === term.faces)) {
+				anyCritted = true;
+				break;
+			}
+		}
+		if (this.options.canCrit) {
+			this.isCritical = anyCritted;
+		}
+
+		// ── Miss detection: leftmost non-neutral Die ──
+		if (this.options.canMiss) {
+			const missDie = dieTerms.find((term) => {
+				const meta = getNimbleMods(term);
+				// A die is "neutral" if tagged `n` (canCrit:false, explosionStyle:'none')
+				return !(meta && !meta.canCrit && meta.explosionStyle === 'none');
+			});
+			if (missDie) {
+				const firstActive = missDie.results.find((r) => r.active && !r.discarded);
+				this.isMiss = firstActive?.result === 1;
+			} else {
+				// All dice are neutral — no die qualifies for miss detection
+				this.isMiss = false;
+			}
+		}
+
+		// ── primaryDie assignment: leftmost c/cv tagged, or leftmost Die ──
+		const taggedPrimary = dieTerms.find((term) => {
+			const meta = getNimbleMods(term);
+			return meta?.canCrit === true;
+		});
+		this.primaryDie = taggedPrimary ?? dieTerms[0];
+
+		// ── Recalculate total if any vicious die critted ──
+		if (anyCritted) {
+			const hasVicious = dieTerms.some((term) => {
+				const meta = getNimbleMods(term);
+				return meta?.canCrit && meta.explosionStyle === 'vicious';
+			});
+			if (hasVicious) {
+				this._recalculateTotal();
+			}
+		}
+
+		// ── primaryDieAsDamage: false → exclude leftmost die's base value ──
+		if (!this.options.primaryDieAsDamage) {
+			const leftmostDie = dieTerms[0];
+			if (leftmostDie) {
+				const baseResult = leftmostDie.results.find((r) => r.active && !r.discarded);
+				if (baseResult) {
+					this.excludedPrimaryDieValue = baseResult.result;
+					const internals = this as object as { _total: number };
+					internals._total = (this._total ?? 0) - this.excludedPrimaryDieValue;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Recalculates the roll total from all terms. Works in both legacy and
+	 * modifier-mode by summing active results from all Die/PrimaryDie terms
+	 * and totals from other terms.
 	 */
 	private _recalculateTotal(): void {
-		const primaryTerm = this.terms.find((t) => t instanceof PrimaryDie);
-		if (!primaryTerm) return;
-
-		// Sum all active, non-discarded results from primary die
-		const primaryTotal = primaryTerm.results
-			.filter((r) => r.active && !r.discarded)
-			.reduce((sum, r) => sum + r.result, 0);
-
-		// Recalculate total from all terms
 		let total = 0;
 		for (const term of this.terms) {
-			if (term instanceof PrimaryDie) {
-				total += primaryTotal;
+			if (term instanceof Terms.Die) {
+				total += term.results
+					.filter((r) => r.active && !r.discarded)
+					.reduce((sum, r) => sum + r.result, 0);
 			} else if ('total' in term && typeof term.total === 'number') {
 				total += term.total;
 			}
@@ -704,10 +883,23 @@ class DamageRoll extends foundry.dice.Roll<DamageRoll.Data> {
 		}
 
 		if (roll.terms) {
-			// Restore primaryDie if it exists in terms
-			const primaryTerm = roll.terms.find((t) => t instanceof PrimaryDie);
-			if (primaryTerm) {
-				roll.primaryDie = primaryTerm;
+			if (roll.modifierMode) {
+				// Modifier-mode: primary is leftmost Die with c/cv modifier
+				const taggedPrimary = roll.terms.find(
+					(t) =>
+						t instanceof Terms.Die &&
+						Array.isArray(t.modifiers) &&
+						(t.modifiers.includes('c') || t.modifiers.includes('cv')),
+				);
+				roll.primaryDie =
+					(taggedPrimary as foundry.dice.terms.Die | undefined) ??
+					(roll.terms.find((t) => t instanceof Terms.Die) as foundry.dice.terms.Die | undefined);
+			} else {
+				// Legacy: restore PrimaryDie if it exists in terms
+				const primaryTerm = roll.terms.find((t) => t instanceof PrimaryDie);
+				if (primaryTerm) {
+					roll.primaryDie = primaryTerm;
+				}
 			}
 		}
 
