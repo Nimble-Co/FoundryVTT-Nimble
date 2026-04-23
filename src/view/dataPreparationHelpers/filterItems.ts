@@ -1,11 +1,6 @@
 import type { NimbleCharacter } from '../../documents/actor/character.js';
 import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
-
-const HTML_TAG_PATTERN = /<[^>]*>/g;
-
-function stripHtml(html: string): string {
-	return html.replace(HTML_TAG_PATTERN, '');
-}
+import { stripHtml } from '../../utils/stripHtml.js';
 
 /** Description can be a plain HTML string, an object with string fields, or absent. */
 type ItemDescription = string | Record<string, string> | null | undefined;

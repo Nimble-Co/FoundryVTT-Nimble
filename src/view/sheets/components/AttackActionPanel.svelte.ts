@@ -6,11 +6,7 @@ import { getUnarmedDamageFormula, hasUnarmedProficiency } from '../../../utils/a
 import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
-
-const HTML_TAG_PATTERN = /<[^>]*>/g;
-function stripHtml(html: string): string {
-	return html.replace(HTML_TAG_PATTERN, '');
-}
+import { stripHtml } from '../../../utils/stripHtml.js';
 
 /** System data for weapon items */
 interface WeaponSystemData {
@@ -141,7 +137,7 @@ export function createAttackPanelState(
 
 		if (!desc || typeof desc !== 'string') return '';
 
-		const stripped = desc.replace(/<[^>]*>/g, '').trim();
+		const stripped = stripHtml(desc).trim();
 		return stripped ? desc : '';
 	}
 
