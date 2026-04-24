@@ -17,7 +17,7 @@ const nimbleCharacterCombatantSchema = () => ({
 				integer: true,
 				min: 0,
 			}),
-			bonus: new fields.NumberField({
+			additional: new fields.NumberField({
 				required: true,
 				initial: 0,
 				nullable: false,

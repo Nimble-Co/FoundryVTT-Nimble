@@ -433,7 +433,7 @@
 									{#if canShowActions}
 										{@const displayCurrentActions = Math.max(0, Math.floor(actionState.current))}
 										{@const displayMaxActions = Math.max(0, Math.floor(actionState.effectiveMax))}
-										{@const hasBonus = actionState.bonus > 0}
+										{@const hasAdditional = actionState.additional > 0}
 										{@const canAdjustActions = canCurrentUserAdjustCombatantActions(
 											entry.combatant,
 										)}
@@ -459,12 +459,12 @@
 												{/if}
 												<span
 													class="nimble-ct__action-box"
-													class:nimble-ct__action-box--bonus={hasBonus}
+													class:nimble-ct__action-box--additional={hasAdditional}
 													data-tooltip={`Available actions: ${displayCurrentActions} / ${displayMaxActions}`}
 													data-tooltip-direction="UP"
 												>
-													{displayCurrentActions}/{#if hasBonus}<span
-															class="nimble-ct__action-max--bonus">{displayMaxActions}</span
+													{displayCurrentActions}/{#if hasAdditional}<span
+															class="nimble-ct__action-max--additional">{displayMaxActions}</span
 														>{:else}{displayMaxActions}{/if}
 												</span>
 												{#if canAdjustActions}
@@ -650,7 +650,7 @@
 									{#if canShowActions}
 										{@const displayCurrentActions = Math.max(0, Math.floor(actionState.current))}
 										{@const displayMaxActions = Math.max(0, Math.floor(actionState.effectiveMax))}
-										{@const hasBonus = actionState.bonus > 0}
+										{@const hasAdditional = actionState.additional > 0}
 										{@const canAdjustActions = canCurrentUserAdjustCombatantActions(combatant)}
 										<div class="nimble-ct__pips">
 											<div
@@ -674,12 +674,12 @@
 												{/if}
 												<span
 													class="nimble-ct__action-box"
-													class:nimble-ct__action-box--bonus={hasBonus}
+													class:nimble-ct__action-box--additional={hasAdditional}
 													data-tooltip={`Available actions: ${displayCurrentActions} / ${displayMaxActions}`}
 													data-tooltip-direction="UP"
 												>
-													{displayCurrentActions}/{#if hasBonus}<span
-															class="nimble-ct__action-max--bonus">{displayMaxActions}</span
+													{displayCurrentActions}/{#if hasAdditional}<span
+															class="nimble-ct__action-max--additional">{displayMaxActions}</span
 														>{:else}{displayMaxActions}{/if}
 												</span>
 												{#if canAdjustActions}
@@ -2115,11 +2115,11 @@
 		text-shadow: var(--nimble-ct-action-text-shadow);
 		box-shadow: 0 0 0.36rem var(--nimble-ct-action-box-glow);
 	}
-	.nimble-ct__action-box--bonus {
+	.nimble-ct__action-box--additional {
 		border-color: hsl(45, 60%, 40%);
 		box-shadow: 0 0 0.36rem hsla(45, 80%, 55%, 0.3);
 	}
-	.nimble-ct__action-max--bonus {
+	.nimble-ct__action-max--additional {
 		color: hsl(45, 80%, 55%);
 	}
 	.nimble-ct__action-adjust {

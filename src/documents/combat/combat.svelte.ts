@@ -693,7 +693,7 @@ class NimbleCombat extends Combat {
 		if (combatant.type === 'character') {
 			await combatant.update({
 				'system.actions.base.current': getCombatantBaseActionMax(combatant),
-				'system.actions.base.bonus': 0,
+				'system.actions.base.additional': 0,
 				...this.#buildHeroicReactionAvailabilityUpdate(true),
 			} as Record<string, unknown>);
 		}

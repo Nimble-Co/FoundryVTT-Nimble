@@ -2714,7 +2714,7 @@ describe('NimbleCombat', () => {
 
 		expect(combatant.update).toHaveBeenCalledWith({
 			'system.actions.base.current': 3,
-			'system.actions.base.bonus': 0,
+			'system.actions.base.additional': 0,
 			'system.actions.heroic.defendAvailable': true,
 			'system.actions.heroic.interposeAvailable': true,
 			'system.actions.heroic.opportunityAttackAvailable': true,

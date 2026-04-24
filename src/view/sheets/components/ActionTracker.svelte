@@ -37,7 +37,7 @@
 				<div class="action-tracker__pips">
 					{#each { length: state.actionsData.effectiveMax }, i}
 						{@const isAvailable = i < state.actionsData.current}
-						{@const isBonus = i >= state.actionsData.max}
+						{@const isAdditional = i >= state.actionsData.max}
 						{@const isJustSpent = state.justSpentPips.has(i)}
 						{@const diceIcon = getDiceIcon(i)}
 
@@ -45,7 +45,7 @@
 							class="action-tracker__pip"
 							class:action-tracker__pip--available={isAvailable}
 							class:action-tracker__pip--spent={!isAvailable}
-							class:action-tracker__pip--bonus={isBonus}
+							class:action-tracker__pip--additional={isAdditional}
 							class:action-tracker__pip--just-spent={isJustSpent}
 							type="button"
 							aria-label={state.getPipAriaLabel(i, isAvailable)}
@@ -63,12 +63,12 @@
 
 					{#if state.actionsData.effectiveMax < 10}
 						<button
-							class="action-tracker__add-bonus"
+							class="action-tracker__add-additional"
 							type="button"
-							aria-label={localize('NIMBLE.ui.heroicActions.addBonusAction')}
-							data-tooltip={localize('NIMBLE.ui.heroicActions.addBonusAction')}
+							aria-label={localize('NIMBLE.ui.heroicActions.addAdditionalAction')}
+							data-tooltip={localize('NIMBLE.ui.heroicActions.addAdditionalAction')}
 							data-tooltip-direction="RIGHT"
-							onclick={state.addBonusAction}
+							onclick={state.addAdditionalAction}
 						>
 							<i class="fa-solid fa-plus"></i>
 						</button>
@@ -202,7 +202,7 @@
 				}
 			}
 
-			&--bonus.action-tracker__pip--available {
+			&--additional.action-tracker__pip--available {
 				i,
 				.action-tracker__pip-number {
 					color: hsl(45, 80%, 55%);
@@ -230,7 +230,7 @@
 			line-height: 1;
 		}
 
-		&__add-bonus {
+		&__add-additional {
 			display: flex;
 			align-items: center;
 			justify-content: center;
@@ -353,7 +353,7 @@
 		}
 	}
 
-	:global(.theme-dark) .action-tracker__add-bonus {
+	:global(.theme-dark) .action-tracker__add-additional {
 		background: hsl(220, 15%, 18%);
 		border-color: hsl(220, 10%, 30%);
 

@@ -2,8 +2,8 @@ import { untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import {
+	getCombatantAdditionalActions,
 	getCombatantBaseActions,
-	getCombatantBonusActions,
 } from '#documents/combat/combatantSystem.js';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
 import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
@@ -20,7 +20,7 @@ import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMu
 interface ActionsData {
 	current: number;
 	max: number;
-	bonus: number;
+	additional: number;
 	effectiveMax: number;
 }
 
@@ -86,16 +86,16 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 
 	function getActionsData(): ActionsData {
 		const combatant = getCombatantInCombat();
-		if (!combatant) return { current: 0, max: 3, bonus: 0, effectiveMax: 3 };
+		if (!combatant) return { current: 0, max: 3, additional: 0, effectiveMax: 3 };
 
 		const actions = getCombatantBaseActions(combatant);
-		const bonus = getCombatantBonusActions(combatant);
+		const additional = getCombatantAdditionalActions(combatant);
 		const max = actions.max || 3;
 		return {
 			current: actions.current,
 			max,
-			bonus,
-			effectiveMax: max + bonus,
+			additional,
+			effectiveMax: max + additional,
 		};
 	}
 
@@ -145,15 +145,15 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		});
 	}
 
-	async function addBonusAction(): Promise<void> {
+	async function addAdditionalAction(): Promise<void> {
 		const combat = getActiveCombatForCurrentScene();
 		const combatantId = getCombatantInCombat()?.id ?? null;
 		if (!combat || !combatantId) return;
 
-		const maxBonusSlots = 10 - actionsData.max;
-		if (actionsData.bonus >= maxBonusSlots) return;
+		const maxAdditionalSlots = 10 - actionsData.max;
+		if (actionsData.additional >= maxAdditionalSlots) return;
 
-		const newBonus = actionsData.bonus + 1;
+		const newAdditional = actionsData.additional + 1;
 		const newCurrent = actionsData.current + 1;
 
 		await queueCombatantMutationWithFreshDocument({
@@ -161,7 +161,7 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 			combatantId,
 			mutation: async (currentCombatant) => {
 				await currentCombatant.update({
-					'system.actions.base.bonus': newBonus,
+					'system.actions.base.additional': newAdditional,
 					'system.actions.base.current': newCurrent,
 				} as Record<string, unknown>);
 			},
@@ -305,7 +305,7 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		// Actions
 		rollInitiative,
 		endTurn,
-		addBonusAction,
+		addAdditionalAction,
 		handlePipClick,
 
 		// Helpers
