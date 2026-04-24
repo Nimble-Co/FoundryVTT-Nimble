@@ -366,6 +366,90 @@ describe('ItemActivationManager.getData (rolls)', () => {
 	});
 
 	describe('Damage effects', () => {
+		it('should prevent flunky NPC damage rolls from critting', async () => {
+			mockActor.type = 'npc';
+			(mockActor.system as Record<string, unknown>).details = { isFlunky: true };
+			mockItem.actor = mockActor;
+
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 6 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			await manager.getData();
+
+			expect(DamageRoll).toHaveBeenCalledWith(
+				'1d8',
+				{ level: 1, strength: 10 },
+				expect.objectContaining({
+					canCrit: false,
+					canMiss: true,
+				}),
+			);
+		});
+
+		it('should allow non-flunky NPC damage rolls to crit normally', async () => {
+			mockActor.type = 'npc';
+			(mockActor.system as Record<string, unknown>).details = { isFlunky: false };
+			mockItem.actor = mockActor;
+
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'slashing',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode] };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 6 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			await manager.getData();
+
+			expect(DamageRoll).toHaveBeenCalledWith(
+				'1d8',
+				{ level: 1, strength: 10 },
+				expect.objectContaining({
+					canCrit: true,
+					canMiss: true,
+				}),
+			);
+		});
+
 		it('should force minion damage rolls to miss on 1 and never crit', async () => {
 			manager = new ItemActivationManager(
 				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
