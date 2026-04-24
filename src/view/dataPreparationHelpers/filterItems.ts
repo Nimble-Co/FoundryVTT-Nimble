@@ -1,15 +1,36 @@
 import type { NimbleCharacter } from '../../documents/actor/character.js';
 import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
+import { stripHtml } from '../../utils/stripHtml.js';
+
+/** Description can be a plain HTML string, an object with string fields, or absent. */
+type ItemDescription = string | Record<string, string> | null | undefined;
+
+function getDescriptionText(description: ItemDescription): string {
+	if (typeof description === 'string') return stripHtml(description);
+	if (typeof description === 'object' && description !== null) {
+		return Object.values(description)
+			.filter((v): v is string => typeof v === 'string')
+			.map(stripHtml)
+			.join(' ');
+	}
+	return '';
+}
 
 export default function filterItems(
 	actor: NimbleCharacter,
-	requiredItemTypes: string[],
+	requiredItemTypes: string[] | string,
 	searchTerm: string,
 ): NimbleBaseItem[] {
+	const types = Array.isArray(requiredItemTypes) ? requiredItemTypes : [requiredItemTypes];
 	return actor.items.filter((item) => {
-		if (!requiredItemTypes.includes(item.type)) return false;
+		if (!types.includes(item.type)) return false;
 		if (!searchTerm) return true;
 
-		return item.name.toLocaleLowerCase().includes(searchTerm.toLocaleLowerCase());
+		const term = searchTerm.toLocaleLowerCase();
+		if (item.name.toLocaleLowerCase().includes(term)) return true;
+
+		const system = item.system as { description?: ItemDescription };
+		const descriptionText = getDescriptionText(system.description);
+		return descriptionText.toLocaleLowerCase().includes(term);
 	}) as NimbleBaseItem[];
 }

@@ -6,6 +6,7 @@ import { getUnarmedDamageFormula, hasUnarmedProficiency } from '../../../utils/a
 import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
+import { stripHtml } from '../../../utils/stripHtml.js';
 
 /** System data for weapon items */
 interface WeaponSystemData {
@@ -61,7 +62,12 @@ export function createAttackPanelState(
 		if (!searchTerm) return weaponItems;
 
 		const search = searchTerm.toLocaleLowerCase();
-		return weaponItems.filter((item) => item.name.toLocaleLowerCase().includes(search));
+		return weaponItems.filter((item) => {
+			if (item.name.toLocaleLowerCase().includes(search)) return true;
+			const desc = getSystemData(item).description;
+			const text = typeof desc === 'object' ? desc?.public : desc;
+			return typeof text === 'string' && stripHtml(text).toLocaleLowerCase().includes(search);
+		});
 	});
 
 	const showUnarmedStrike = $derived(
@@ -82,7 +88,12 @@ export function createAttackPanelState(
 		if (!searchTerm) return features;
 
 		const search = searchTerm.toLocaleLowerCase();
-		return features.filter((item) => item.name.toLocaleLowerCase().includes(search));
+		return features.filter((item) => {
+			if (item.name.toLocaleLowerCase().includes(search)) return true;
+			const desc = getSystemData(item).description;
+			const text = typeof desc === 'object' ? desc?.public : desc;
+			return typeof text === 'string' && stripHtml(text).toLocaleLowerCase().includes(search);
+		});
 	});
 
 	function getWeaponDamage(item: Item): string {
@@ -126,7 +137,7 @@ export function createAttackPanelState(
 
 		if (!desc || typeof desc !== 'string') return '';
 
-		const stripped = desc.replace(/<[^>]*>/g, '').trim();
+		const stripped = stripHtml(desc).trim();
 		return stripped ? desc : '';
 	}
 
