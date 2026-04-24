@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Choose 1 Utility Spell from each spell school you know.</p><hr><p>Level 6: One additional utility spell per school</p><p>Level 14: All utility spells from your schools</p>",
+		"description": "<p>Choose 1 Utility Spell from each spell school you know.</p><hr><p>Level 6: Choose a 2nd Utility Spell from each spell school you know.</p><p>Level 14: You know all Utility Spells from the spell schools you know.</p>",
 		"featureType": "class",
 		"class": "songweaver",
 		"group": "songweaver-progression",

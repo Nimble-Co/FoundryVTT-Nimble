@@ -162,14 +162,20 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Your Patron grants you knowledge of Necrotic cantrips and tier 1 spells.</p><hr><p>Level 5: Tier 2</p><p>Level 7: Tier 3</p><p>Level 10: Tier 4</p><p>Level 13: Tier 5</p><p>Level 16: Tier 6</p><p>Level 19: Tier 7</p>",
+		"description": "<p>Your Patron grants you knowledge of Necrotic cantrips and tier 1 spells.</p><hr><p>Level 5: Tier 2 Spells: You may now cast tier 2 spells all of your spells are cast at this tier.</p><p>Level 7: Tier 3 Spells. You may now cast tier 3 spells; all of your spells are cast at this tier.</p><p>Level 10: Tier 4 Spells. You may now cast tier 4 spells; all of your spells are cast at this tier.</p><p>Level 13: Tier 5 Spells. You may now cast tier 5 spells; all of your spells are cast at this tier.</p><p>Level 16: Tier 6 Spells. You may now cast tier 6 spells; all of your spells are cast at this tier.</p><p>Level 19: Tier 7 Spells. You may now cast tier 7 spells; all of your spells are cast at this tier.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
 		"group": "shadowmancer-progression",
 		"gainedAtLevel": 2,
 		"subclass": false,
 		"gainedAtLevels": [
-			2
+			2,
+			5,
+			7,
+			10,
+			13,
+			16,
+			19
 		]
 	},
 	"effects": [],

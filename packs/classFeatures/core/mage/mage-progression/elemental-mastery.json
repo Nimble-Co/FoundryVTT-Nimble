@@ -88,7 +88,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Learn the Utility Spells from 1 spell school you know.</p><hr><p>Level 6: +1 School</p><p>Level 14: +1 School</p>",
+		"description": "<p>Learn the Utility Spells from 1 spell school you know.</p><hr><p>Level 6: Learn the Utility Spells from a 2nd spell school you know.</p><p>Level 14: Learn the Utility Spells from a 3rd spell school you know.</p>",
 		"featureType": "class",
 		"class": "mage",
 		"group": "mage-progression",

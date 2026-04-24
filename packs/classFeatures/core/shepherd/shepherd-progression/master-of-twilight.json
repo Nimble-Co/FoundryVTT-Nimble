@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Choose 1 Necrotic and 1 Radiant Utility Spell.</p><hr><p>Level 6: Choose a 2nd of each</p><p>Level 11: Choose a 3rd of each</p>",
+		"description": "<p>Choose 1 Necrotic and 1 Radiant Utility Spell.</p><hr><p>Level 6: Choose a 2nd Necrotic and 2nd Radiant Utility Spell.</p><p>Level 11: Choose a 3rd Necrotic and 3rd Radiant Utility Spell.</p>",
 		"featureType": "class",
 		"class": "shepherd",
 		"group": "shepherd-progression",
