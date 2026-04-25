@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { MoveActionPanelProps } from '../../../../types/components/MoveActionPanel.d.ts';
 	import localize from '../../../utils/localize.js';
-	import dialogConfirm from '../../../utils/dialogConfirm.js';
 	import { getMovementSpeeds } from '../../../utils/movementSpeeds.js';
 
 	let {
@@ -31,18 +30,15 @@
 		// Show confirmation dialog if no actions remaining
 		if (actionsRemaining <= 0) {
 			const confirmMove = 'NIMBLE.ui.heroicActions.confirmMove';
-			const confirmed = await dialogConfirm({
-				title: localize(`${confirmMove}.title`),
+			const confirmed = await foundry.applications.api.DialogV2.confirm({
+				window: { title: localize(`${confirmMove}.title`) },
 				content: `<p>${localize(`${confirmMove}.noActionsMessage`)}</p><p>${localize(`${confirmMove}.confirmQuestion`)}</p>`,
-				confirmLabel: localize(`${confirmMove}.confirm`),
-				cancelLabel: localize(`${confirmMove}.cancel`),
-				confirmIcon: 'fa-solid fa-check',
-				cancelIcon: 'fa-solid fa-xmark',
-				confirmOnRight: true,
+				yes: { label: localize(`${confirmMove}.confirm`) },
+				no: { label: localize(`${confirmMove}.cancel`) },
 				rejectClose: false,
 			});
 
-			if (!confirmed) return;
+			if (confirmed !== true) return;
 		}
 
 		await onDeductAction();

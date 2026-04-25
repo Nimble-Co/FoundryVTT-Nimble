@@ -3,7 +3,6 @@ import type { NimbleCharacter } from '../documents/actor/character.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { getUnarmedDamageFormula, hasUnarmedProficiency } from '../utils/attackUtils.js';
 import { getActiveCombatForCurrentScene } from '../utils/combatState.js';
-import dialogConfirm from '../utils/dialogConfirm.js';
 import { getHeroicReactionUsageState } from '../utils/getHeroicReactionUsageState.js';
 import {
 	getHeroicReactionAvailability,
@@ -218,18 +217,15 @@ async function executeMoveAction(actor: NimbleCharacter): Promise<void> {
 	if (actionsRemaining <= 0) {
 		// Show confirmation dialog
 		const confirmMove = 'NIMBLE.ui.heroicActions.confirmMove';
-		const confirmed = await dialogConfirm({
-			title: localize(`${confirmMove}.title`),
+		const confirmed = await foundry.applications.api.DialogV2.confirm({
+			window: { title: localize(`${confirmMove}.title`) },
 			content: `<p>${localize(`${confirmMove}.noActionsMessage`)}</p><p>${localize(`${confirmMove}.confirmQuestion`)}</p>`,
-			confirmLabel: localize(`${confirmMove}.confirm`),
-			cancelLabel: localize(`${confirmMove}.cancel`),
-			confirmIcon: 'fa-solid fa-check',
-			cancelIcon: 'fa-solid fa-xmark',
-			confirmOnRight: true,
+			yes: { label: localize(`${confirmMove}.confirm`) },
+			no: { label: localize(`${confirmMove}.cancel`) },
 			rejectClose: false,
 		});
 
-		if (!confirmed) return;
+		if (confirmed !== true) return;
 	}
 
 	// Deduct action pip (clamp at 0)

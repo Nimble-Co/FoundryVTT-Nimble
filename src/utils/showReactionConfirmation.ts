@@ -1,4 +1,3 @@
-import dialogConfirm from './dialogConfirm.js';
 import localize from './localize.js';
 
 interface ReactionConfirmationOptions {
@@ -40,17 +39,13 @@ export default async function showReactionConfirmation(
 		reaction: reactionName,
 	});
 
-	const confirmed = await dialogConfirm({
-		title: localize(`${confirmReaction}.title`),
+	const confirmed = await foundry.applications.api.DialogV2.confirm({
+		window: { title: localize(`${confirmReaction}.title`) },
 		content: `<p>${message}</p><p>${confirmQuestion}</p>`,
-		confirmLabel: localize(`${confirmReaction}.confirm`),
-		cancelLabel: localize(`${confirmReaction}.cancel`),
-		// Use the check/xmark icons to match the rest of the UI
-		confirmIcon: 'fa-solid fa-check',
-		cancelIcon: 'fa-solid fa-xmark',
-		confirmOnRight: true,
+		yes: { label: localize(`${confirmReaction}.confirm`) },
+		no: { label: localize(`${confirmReaction}.cancel`) },
 		rejectClose: false,
 	});
 
-	return confirmed;
+	return confirmed === true;
 }

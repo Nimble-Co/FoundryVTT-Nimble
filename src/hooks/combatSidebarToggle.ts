@@ -1,4 +1,3 @@
-import dialogConfirm from '../utils/dialogConfirm.js';
 import localize from '../utils/localize.js';
 
 /**
@@ -35,19 +34,16 @@ async function handleCombatToggleClick(event: Event): Promise<void> {
 
 		// Confirm before ending combat if there are combatants or combat has started
 		if (hasCombatants || hasStarted) {
-			const confirmed = await dialogConfirm({
-				title: localize('NIMBLE.combatControls.endCombatTitle'),
+			const confirmed = await foundry.applications.api.DialogV2.confirm({
+				window: { title: localize('NIMBLE.combatControls.endCombatTitle') },
 				content: `<p>${localize('NIMBLE.combatControls.endCombatContent')}</p>`,
-				confirmLabel: localize('NIMBLE.combatControls.endCombat'),
-				cancelLabel: localize('NIMBLE.combatControls.continueCombat'),
-				confirmIcon: 'fa-solid fa-check',
-				cancelIcon: 'fa-solid fa-xmark',
-				confirmOnRight: true,
+				yes: { label: localize('NIMBLE.combatControls.endCombat') },
+				no: { label: localize('NIMBLE.combatControls.continueCombat') },
 				rejectClose: false,
 				modal: true,
 			});
 
-			if (confirmed) {
+			if (confirmed === true) {
 				await existingCombat.delete();
 			}
 		} else {
