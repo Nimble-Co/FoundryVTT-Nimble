@@ -819,6 +819,7 @@
 					"noActionsMessage": "You don't have any actions remaining.",
 					"spentMessage": "You've already used {reaction} this round.",
 					"bothMessage": "You don't have any actions remaining and you've already used {reaction} this round.",
+					"activeTurnMessage": "It's currently your turn.",
 					"confirmQuestion": "Do you still want to use the {reaction} reaction?",
 					"confirm": "Use Reaction",
 					"cancel": "Cancel"

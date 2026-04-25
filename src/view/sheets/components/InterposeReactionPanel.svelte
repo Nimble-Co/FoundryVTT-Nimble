@@ -11,6 +11,8 @@
 		defendSpent = false,
 		interposeSpent = false,
 		noActions = false,
+		isActiveTurn = false,
+		combinedIsActiveTurn = false,
 		onUseReaction = async () => false,
 		onUseCombinedReaction = async () => false,
 	}: ReactionPanelProps = $props();
@@ -21,6 +23,8 @@
 		getDefendSpent: () => defendSpent,
 		getInterposeSpent: () => interposeSpent,
 		getNoActions: () => noActions,
+		getIsActiveTurn: () => isActiveTurn,
+		getCombinedIsActiveTurn: () => combinedIsActiveTurn,
 		getOnUseReaction: () => onUseReaction,
 		getCombinedReactionDisabled: () => combinedReactionDisabled,
 		getOnUseCombinedReaction: () => onUseCombinedReaction,

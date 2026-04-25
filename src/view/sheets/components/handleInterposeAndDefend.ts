@@ -10,6 +10,7 @@ export default async function handleInterposeAndDefend(
 		| 'getDefendSpent'
 		| 'getInterposeSpent'
 		| 'getNoActions'
+		| 'getCombinedIsActiveTurn'
 		| 'getCombinedReactionDisabled'
 		| 'getOnUseCombinedReaction'
 	>,
@@ -19,6 +20,7 @@ export default async function handleInterposeAndDefend(
 		getDefendSpent,
 		getInterposeSpent,
 		getNoActions,
+		getCombinedIsActiveTurn,
 		getCombinedReactionDisabled,
 		getOnUseCombinedReaction,
 	} = options;
@@ -29,6 +31,7 @@ export default async function handleInterposeAndDefend(
 		const defendSpent = getDefendSpent();
 		const interposeSpent = getInterposeSpent();
 		const noActions = getNoActions();
+		const isActiveTurn = getCombinedIsActiveTurn();
 		const reactionName = localize('NIMBLE.ui.heroicActions.reactions.interposeAndDefend.confirm');
 
 		const spentReactions: string[] = [];
@@ -42,6 +45,7 @@ export default async function handleInterposeAndDefend(
 			spentReactionNames,
 			noActions,
 			hasSpentReactions: spentReactions.length > 0,
+			isActiveTurn,
 		});
 		if (!confirmed) return;
 

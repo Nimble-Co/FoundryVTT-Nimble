@@ -3,6 +3,7 @@ import type { NimbleCharacter } from '../documents/actor/character.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { getUnarmedDamageFormula, hasUnarmedProficiency } from '../utils/attackUtils.js';
 import { getActiveCombatForCurrentScene } from '../utils/combatState.js';
+import dialogConfirm from '../utils/dialogConfirm.js';
 import { getHeroicReactionUsageState } from '../utils/getHeroicReactionUsageState.js';
 import {
 	getHeroicReactionAvailability,
@@ -18,7 +19,7 @@ type CombatWithHeroicReactionUse = Combat & {
 	useHeroicReactions?: (
 		combatantId: string,
 		reactionKeys: HeroicReactionKey[],
-		options?: { force?: boolean },
+		options?: { force?: boolean; skipActionDeduction?: boolean },
 	) => Promise<boolean>;
 };
 
@@ -86,9 +87,9 @@ export async function activateHeroicActionMacro(
 }
 
 /**
- * Checks if a reaction requires confirmation due to missing actions or being spent.
- * If confirmation is needed, shows a dialog and returns whether the user confirmed.
- * Returns true if the reaction can proceed (either no issues or user confirmed).
+ * Checks if a reaction requires confirmation due to a soft block (missing actions,
+ * already spent this round, or active turn). Shows the confirmation dialog so the
+ * player can acknowledge and bypass it. Returns true if the reaction can proceed.
  */
 async function checkReactionConfirmation(
 	actor: NimbleCharacter,
@@ -106,14 +107,16 @@ async function checkReactionConfirmation(
 		reactionKeys,
 	});
 
-	// Only show confirmation for 'noActions' or 'spent' blocked reasons
-	if (usageState.blockedReason !== 'noActions' && usageState.blockedReason !== 'spent') {
+	// Only show confirmation for soft block reasons that the player can bypass
+	const softBlockReasons: ReadonlySet<string> = new Set(['noActions', 'spent', 'activeTurn']);
+	if (usageState.blockedReason === null || !softBlockReasons.has(usageState.blockedReason)) {
 		return { confirmed: true, force: false };
 	}
 
 	const noActions =
 		usageState.blockedReason === 'noActions' ||
 		usageState.currentActions < usageState.requiredActions;
+	const isActiveTurn = usageState.isActiveTurn;
 
 	// Check which specific reactions are spent
 	const spentReactions = reactionKeys.filter(
@@ -130,6 +133,7 @@ async function checkReactionConfirmation(
 			spentReactionNames,
 			noActions,
 			hasSpentReactions,
+			isActiveTurn,
 		}),
 		force: true,
 	};
@@ -214,15 +218,18 @@ async function executeMoveAction(actor: NimbleCharacter): Promise<void> {
 	if (actionsRemaining <= 0) {
 		// Show confirmation dialog
 		const confirmMove = 'NIMBLE.ui.heroicActions.confirmMove';
-		const confirmed = await foundry.applications.api.DialogV2.confirm({
-			window: { title: localize(`${confirmMove}.title`) },
+		const confirmed = await dialogConfirm({
+			title: localize(`${confirmMove}.title`),
 			content: `<p>${localize(`${confirmMove}.noActionsMessage`)}</p><p>${localize(`${confirmMove}.confirmQuestion`)}</p>`,
-			yes: { label: localize(`${confirmMove}.confirm`) },
-			no: { label: localize(`${confirmMove}.cancel`) },
+			confirmLabel: localize(`${confirmMove}.confirm`),
+			cancelLabel: localize(`${confirmMove}.cancel`),
+			confirmIcon: 'fa-solid fa-check',
+			cancelIcon: 'fa-solid fa-xmark',
+			confirmOnRight: true,
 			rejectClose: false,
 		});
 
-		if (confirmed !== true) return;
+		if (!confirmed) return;
 	}
 
 	// Deduct action pip (clamp at 0)
@@ -330,11 +337,26 @@ async function executeChatReaction(
 
 async function executeOpportunityAttackReaction(actor: NimbleCharacter): Promise<void> {
 	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.opportunity.label');
-	const result = await resolveAndUseReaction(actor, ['opportunityAttack'], reactionName);
-	if (!result) return;
 
-	// For opportunity attack, we open the sheet to let the user choose a weapon
-	// since this requires more user interaction than the simple reactions
+	const combat = getActiveCombatForCurrentScene();
+	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
+	if (!combat || !combatant) {
+		ui.notifications.warn(
+			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: reactionName }),
+		);
+		return;
+	}
+
+	// Confirm with the player if soft-blocked, but don't deduct/spend yet —
+	// the panel's weapon click will deduct via activateItem and mark spent.
+	const { confirmed, force } = await checkReactionConfirmation(
+		actor,
+		['opportunityAttack'],
+		reactionName,
+	);
+	if (!confirmed) return;
+
+	// Open the sheet to let the user choose a weapon
 	const sheet = actor.sheet as foundry.applications.sheets.ActorSheetV2 & {
 		$state: Record<string, unknown>;
 	};
@@ -345,7 +367,7 @@ async function executeOpportunityAttackReaction(actor: NimbleCharacter): Promise
 	appState.heroicActionTarget = {
 		actionId: 'opportunity',
 		actionType: 'reaction',
-		force: result.force,
+		force,
 	};
 }
 
