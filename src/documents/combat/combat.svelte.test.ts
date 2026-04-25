@@ -2148,7 +2148,7 @@ describe('NimbleCombat', () => {
 		]);
 	});
 
-	it('does not let force bypass the active-turn heroic reaction blocker', async () => {
+	it('lets force bypass the active-turn heroic reaction blocker', async () => {
 		globals().game.user.isGM = false;
 		globals().game.user.role = 1;
 		const combatId = 'combat-sheet-force-active-turn';
@@ -2185,8 +2185,14 @@ describe('NimbleCombat', () => {
 			force: true,
 		});
 
-		expect(changed).toBe(false);
-		expect(combat.updateEmbeddedDocuments).not.toHaveBeenCalled();
+		expect(changed).toBe(true);
+		expect(combat.updateEmbeddedDocuments).toHaveBeenCalledWith('Combatant', [
+			expect.objectContaining({
+				_id: 'reacting-character',
+				'system.actions.base.current': 2,
+				'system.actions.heroic.defendAvailable': false,
+			}),
+		]);
 	});
 
 	it('does not let force bypass the not-owner heroic reaction blocker', async () => {
