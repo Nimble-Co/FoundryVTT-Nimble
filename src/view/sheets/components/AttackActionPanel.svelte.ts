@@ -286,20 +286,7 @@ export function createAttackPanelState(
 	}
 
 	async function handleItemClick(itemId: string): Promise<unknown> {
-		const item = getActor().items.get(itemId);
-		const result = await getActor().activateItem(itemId);
-
-		if (result && item) {
-			const activationCost = getSystemData(item).activation?.cost;
-			const costType = activationCost?.type;
-			const costQuantity = activationCost?.quantity ?? 1;
-
-			if (costType === 'action') {
-				await getOnActivateItem()(costQuantity);
-			}
-		}
-
-		return result;
+		return getActor().activateItem(itemId);
 	}
 
 	return {
