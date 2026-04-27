@@ -45,7 +45,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>When you roll Initiative, gain STR Combat Dice.<em>(1/attack)</em> You may expend a Combat Die to perform a special maneuver. Combat Dice are lost when combat ends.</p><hr><p>Levels  6, 8, 10, 12, 16:</p><p>Choose 1 Combat Ability and gain +1 Max Combat Dice</p>",
+		"description": "<p>Choose a Combat Tactic. When you roll Initiative, gain STR Combat Dice, each a d6. <em>(1/attack)</em> You may expend a Combat Die to perform a special maneuver. Combat Dice are lost when combat ends.</p><hr><p>Levels 6, 8, 10, 12, 16:</p><p>Choose another Combat Ability or gain +1 max Combat Dice</p>",
 		"featureType": "class",
 		"class": "commander",
 		"group": "commander-progression",
