@@ -1,5 +1,5 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
-import sortDocumentsByName from '../../../../utils/sortDocumentsByName.js';
+import sortDocumentsByName from '#utils/sortDocumentsByName.js';
 
 /**
  * Converts kebab-case to Title Case

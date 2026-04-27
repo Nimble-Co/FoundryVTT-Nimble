@@ -11,13 +11,14 @@
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import TagGroup from '../components/TagGroup.svelte';
 	import { createFeatureSheetState } from './FeatureSheet.state.svelte.ts';
+	import type { FeatureSheetProps } from '#types/components/FeatureSheet.d.ts';
 	import {
 		FEATURE_SHEET_TAB_CONFIG,
 		FEATURE_TYPE_CLASS,
 		type FeatureSheetTabName,
 	} from './FeatureSheetConstants.js';
 
-	let { item, sheet } = $props();
+	let { item, sheet }: FeatureSheetProps = $props();
 
 	const featureState = createFeatureSheetState(() => ({ item, sheet }));
 
@@ -130,13 +131,13 @@
 
 			<div>
 				<header class="nimble-section-header">
-					<h3 class="nimble-heading">Selection Count By Level</h3>
+					<h3 class="nimble-heading">{localize('NIMBLE.featureSheet.selectionCountByLevel')}</h3>
 				</header>
 
 				<input
 					type="text"
 					value={featureState.selectionCountByLevelInputValue}
-					placeholder="e.g. 2: 2  (overrides default of 1)"
+					placeholder={localize('NIMBLE.featureSheet.selectionCountByLevelPlaceholder')}
 					onchange={({ target }) =>
 						featureState.updateSelectionCountByLevel((target as HTMLInputElement).value)}
 				/>

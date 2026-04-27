@@ -1,4 +1,4 @@
-import type { FeatureSheetProps } from '#types/sheets/FeatureSheet.d.ts';
+import type { FeatureSheetProps } from '#types/components/FeatureSheet.d.ts';
 import {
 	getGainedAtLevelsDisplayValue,
 	getSelectionCountByLevelDisplayValue,

@@ -94,4 +94,33 @@ describe('FeatureGroupSelection', () => {
 		});
 		expect(screen.getByRole('button', { name: 'Select Order Three' })).toBeEnabled();
 	});
+
+	it('renders all features as non-interactive when feature count equals selectionCount (fixed group)', async () => {
+		const features = [
+			createFeatureItem({
+				uuid: 'Compendium.nimble.nimble-features.Item.style-one',
+				name: 'Style One',
+			}),
+			createFeatureItem({
+				uuid: 'Compendium.nimble.nimble-features.Item.style-two',
+				name: 'Style Two',
+			}),
+		];
+		const selectionCount = 2;
+		const onSelect = vi.fn();
+
+		render(FeatureGroupSelection, {
+			props: {
+				groupName: 'ranger-styles',
+				features,
+				selectionCount,
+				selectedFeatures: [],
+				onSelect,
+			},
+		});
+
+		expect(screen.getByText('Style One')).toBeInTheDocument();
+		expect(screen.getByText('Style Two')).toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: /Select/ })).not.toBeInTheDocument();
+	});
 });

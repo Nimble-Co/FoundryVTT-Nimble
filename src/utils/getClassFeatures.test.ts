@@ -92,4 +92,82 @@ describe('getClassFeaturesFromIndex', () => {
 		});
 		expect(fromUuidMock).toHaveBeenCalledTimes(3);
 	});
+
+	it('defaults selectionCount to 1 when selectionCountByLevel has no entry for the current level', async () => {
+		const index: ClassFeatureIndex = new Map([
+			[
+				'fighter',
+				new Map([
+					[
+						3,
+						[
+							{ uuid: 'Item.fighter-feat-one', group: 'fighter-feats', selectionCountByLevel: {} },
+							{ uuid: 'Item.fighter-feat-two', group: 'fighter-feats', selectionCountByLevel: {} },
+						],
+					],
+				]),
+			],
+		]);
+
+		const documentsByUuid = new Map<string, NimbleFeatureItem>([
+			[
+				'Item.fighter-feat-one',
+				createFeatureItem({ uuid: 'Item.fighter-feat-one', name: 'Feat One' }),
+			],
+			[
+				'Item.fighter-feat-two',
+				createFeatureItem({ uuid: 'Item.fighter-feat-two', name: 'Feat Two' }),
+			],
+		]);
+
+		const fromUuidMock = vi.fn(async (uuid: string) => documentsByUuid.get(uuid) ?? null);
+		(globalThis as unknown as { fromUuid: typeof fromUuidMock }).fromUuid = fromUuidMock;
+
+		const result = await getClassFeaturesFromIndex(index, 'fighter', 3);
+
+		expect(result.selectionGroups.get('fighter-feats')).toEqual({
+			features: [
+				expect.objectContaining({ uuid: 'Item.fighter-feat-one' }),
+				expect.objectContaining({ uuid: 'Item.fighter-feat-two' }),
+			],
+			selectionCount: 1,
+		});
+	});
+
+	it('places features into autoGrant for -progression groups', async () => {
+		const index: ClassFeatureIndex = new Map([
+			[
+				'ranger',
+				new Map([
+					[
+						1,
+						[
+							{
+								uuid: 'Item.ranger-class-progression',
+								group: 'ranger-progression',
+								selectionCountByLevel: {},
+							},
+						],
+					],
+				]),
+			],
+		]);
+
+		const documentsByUuid = new Map<string, NimbleFeatureItem>([
+			[
+				'Item.ranger-class-progression',
+				createFeatureItem({ uuid: 'Item.ranger-class-progression', name: 'Ranger Progression' }),
+			],
+		]);
+
+		const fromUuidMock = vi.fn(async (uuid: string) => documentsByUuid.get(uuid) ?? null);
+		(globalThis as unknown as { fromUuid: typeof fromUuidMock }).fromUuid = fromUuidMock;
+
+		const result = await getClassFeaturesFromIndex(index, 'ranger', 1);
+
+		expect(result.autoGrant).toEqual([
+			expect.objectContaining({ uuid: 'Item.ranger-class-progression' }),
+		]);
+		expect(result.selectionGroups.size).toBe(0);
+	});
 });

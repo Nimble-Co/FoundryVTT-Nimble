@@ -150,12 +150,10 @@ export function createLevelUpState(
 					items
 						.filter((item) => item.type === 'feature')
 						.flatMap((item) => {
-							const itemUuid = item.uuid;
 							const compendiumSource = item._stats?.compendiumSource;
-
-							return [itemUuid, compendiumSource].filter(
-								(uuid): uuid is string => typeof uuid === 'string' && uuid.length > 0,
-							);
+							return typeof compendiumSource === 'string' && compendiumSource.length > 0
+								? [compendiumSource]
+								: [];
 						}),
 				);
 				const rawFeatures = await getClassFeaturesFromIndex(

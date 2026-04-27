@@ -167,12 +167,21 @@ export async function buildClassFeatureIndex(): Promise<ClassFeatureIndex> {
 function resolveSelectionCount(entries: ClassFeatureIndexEntry[], level: number): number {
 	const levelKey = String(level);
 	let count = 1;
+	let firstExplicitCount: number | undefined;
 
 	for (const entry of entries) {
 		const candidate = entry.selectionCountByLevel?.[levelKey];
-		if (typeof candidate === 'number' && Number.isInteger(candidate) && candidate > count) {
-			count = candidate;
+		if (typeof candidate !== 'number' || !Number.isInteger(candidate)) continue;
+
+		if (firstExplicitCount === undefined) {
+			firstExplicitCount = candidate;
+		} else if (candidate !== firstExplicitCount) {
+			console.warn(
+				`[Nimble] selectionCountByLevel conflict at level ${level}: entries disagree (${firstExplicitCount} vs ${candidate}). Using the higher value.`,
+			);
 		}
+
+		if (candidate > count) count = candidate;
 	}
 
 	return count;

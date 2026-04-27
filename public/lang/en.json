@@ -1183,6 +1183,10 @@
 			"sizeCategory": "Size Category",
 			"flunky": "Flunky"
 		},
+		"featureSheet": {
+			"selectionCountByLevel": "Selection Count By Level",
+			"selectionCountByLevelPlaceholder": "e.g. 2: 2  (overrides default of 1)"
+		},
 		"classSheet": {
 			"identifier": "Identifier",
 			"classComplexity": "Class Complexity",
