@@ -205,13 +205,13 @@
 			&--additional.action-tracker__pip--available {
 				i,
 				.action-tracker__pip-number {
-					color: hsl(45, 80%, 55%);
+					color: var(--nimble-additional-action-color);
 				}
 
 				&:hover i,
 				&:hover .action-tracker__pip-number {
-					color: hsl(45, 80%, 65%);
-					filter: drop-shadow(0 0 4px hsl(45, 80%, 55%));
+					color: var(--nimble-additional-action-color-hover);
+					filter: drop-shadow(0 0 4px var(--nimble-additional-action-color));
 				}
 			}
 
@@ -255,10 +255,10 @@
 
 			&:hover {
 				opacity: 1;
-				border-color: hsl(45, 80%, 55%);
+				border-color: var(--nimble-additional-action-color);
 
 				i {
-					color: hsl(45, 80%, 55%);
+					color: var(--nimble-additional-action-color);
 				}
 			}
 		}
@@ -358,7 +358,7 @@
 		border-color: hsl(220, 10%, 30%);
 
 		&:hover {
-			border-color: hsl(45, 80%, 55%);
+			border-color: var(--nimble-additional-action-color);
 			background: hsl(220, 15%, 22%);
 		}
 	}
