@@ -17,6 +17,7 @@ interface LevelDownActor {
 			abilityIncreases: Record<string, number>;
 			grantedFeatureIds: string[];
 			grantedSpellIds?: string[];
+			removedSpells?: Array<{ uuid: string; name: string; img: string }>;
 		}>;
 	};
 	classes: Record<string, ClassItemShape | undefined>;
@@ -87,6 +88,9 @@ export function createLevelDownState(
 			.filter((item): item is NonNullable<typeof item> => item !== undefined),
 	);
 
+	// Get spells that were removed during subclass selection and will be restored
+	const removedSpells = $derived(lastHistory?.removedSpells ?? []);
+
 	function submit() {
 		getDialog().submit({
 			confirmed: true,
@@ -126,6 +130,9 @@ export function createLevelDownState(
 		},
 		get grantedSpells() {
 			return grantedSpells;
+		},
+		get removedSpells() {
+			return removedSpells;
 		},
 		submit,
 	};

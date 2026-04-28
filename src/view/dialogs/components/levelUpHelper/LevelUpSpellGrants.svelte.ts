@@ -11,7 +11,8 @@ export function createLevelUpSpellGrantsState(getProps: () => LevelUpSpellGrants
 	const hasAnyGrants = $derived(
 		getProps().spells.length > 0 ||
 			getProps().schoolSelections.length > 0 ||
-			getProps().spellSelections.length > 0,
+			getProps().spellSelections.length > 0 ||
+			getProps().spellsToRemove.length > 0,
 	);
 
 	const spellsBySchool = $derived.by(() => {
