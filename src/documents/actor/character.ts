@@ -184,6 +184,7 @@ interface LevelUpDialogData {
 	spellUuids: string[];
 	/** The schools the player chose, by the id of the school choice rule. */
 	schoolChoices?: Map<string, string[]>;
+	removedSpellUuids?: string[];
 }
 
 export class NimbleCharacter extends NimbleBaseActor<'character'> {
@@ -2014,6 +2015,39 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		await storeChosenSchools(this, typedDialogData.schoolChoices ?? new Map());
 
 		const grantedFeatureIds = [...epicBoonIds, ...classFeatureIds];
+		// Remove spells declared by removeSpells rules on granted features.
+		// Removal happens before grants so that a replacement scenario (remove X, grant X)
+		// does not accidentally delete the newly-granted copy.
+		const removedSpells: Array<{ uuid: string; name: string; img: string }> = [];
+		const removedSpellUuids = typedDialogData.removedSpellUuids ?? [];
+
+		if (removedSpellUuids.length > 0) {
+			const spellsToDelete = this.items.filter((item) => {
+				if (item.type !== 'spell') return false;
+				const source = (item as unknown as { _stats?: { compendiumSource?: string } })._stats
+					?.compendiumSource;
+				return !!source && removedSpellUuids.includes(source);
+			});
+
+			if (spellsToDelete.length > 0) {
+				for (const spell of spellsToDelete) {
+					removedSpells.push({
+						uuid: (spell as unknown as { _stats: { compendiumSource: string } })._stats
+							.compendiumSource,
+						name: spell.name ?? '',
+						img: spell.img ?? 'icons/svg/item-bag.svg',
+					});
+				}
+
+				const idsToDelete = spellsToDelete
+					.map((s) => s.id)
+					.filter((id): id is string => id !== null);
+
+				if (idsToDelete.length > 0) {
+					await this.deleteEmbeddedDocuments('Item', idsToDelete);
+				}
+			}
+		}
 
 		// Create spell documents
 		let grantedSpellIds: string[] = [];
@@ -2053,6 +2087,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			classIdentifier: characterClass.identifier,
 			grantedFeatureIds,
 			grantedSpellIds,
+			removedSpells,
 		};
 
 		actorUpdates['system.levelUpHistory'] = [...this.system.levelUpHistory, historyEntry];
@@ -2272,6 +2307,27 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		}
 
 		await forgetSchoolChoicesAt(this, lastHistory.level);
+
+		// Restore spells that were removed during subclass selection
+		const removedSpells = lastHistory.removedSpells;
+
+		if (removedSpells && removedSpells.length > 0) {
+			const spellDocumentSources: Item.CreateData[] = [];
+
+			for (const removedSpell of removedSpells) {
+				const spell = await fromUuid(removedSpell.uuid as `Item.${string}`);
+				if (spell) {
+					const source = (spell as Item).toObject();
+					(source as { _stats: { compendiumSource?: string } })._stats.compendiumSource =
+						removedSpell.uuid;
+					spellDocumentSources.push(source as object as Item.CreateData);
+				}
+			}
+
+			if (spellDocumentSources.length > 0) {
+				await this.createEmbeddedDocuments('Item', spellDocumentSources);
+			}
+		}
 
 		// Revert class level
 		itemUpdates['system.classLevel'] = characterClass.system.classLevel - 1;
