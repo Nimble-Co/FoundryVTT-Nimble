@@ -31,6 +31,7 @@ interface LevelDownActor {
 			grantedFeatureIds: string[];
 			grantedSpellIds?: string[];
 			poolMaxBonuses?: Record<string, number>;
+			removedSpells?: Array<{ uuid: string; name: string; img: string }>;
 		}>;
 	};
 	classes: Record<string, ClassItemShape | undefined>;
@@ -135,6 +136,9 @@ export function createLevelDownState(
 		}));
 	});
 
+	// Get spells that were removed during subclass selection and will be restored
+	const removedSpells = $derived(lastHistory?.removedSpells ?? []);
+
 	function submit() {
 		getDialog().submit({
 			confirmed: true,
@@ -177,6 +181,9 @@ export function createLevelDownState(
 		},
 		get poolBonusChanges() {
 			return poolBonusChanges;
+		},
+		get removedSpells() {
+			return removedSpells;
 		},
 		submit,
 	};
