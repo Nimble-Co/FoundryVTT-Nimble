@@ -256,13 +256,15 @@
 		<SearchBar bind:searchTerm />
 
 		<button
-			class="nimble-button {allExpanded ? 'fa-solid fa-angles-up' : 'fa-solid fa-angles-down'}"
+			class="nimble-button"
 			data-button-variant="basic"
 			type="button"
 			aria-label={allExpanded ? 'Collapse All' : 'Expand All'}
 			data-tooltip={allExpanded ? 'Collapse All' : 'Expand All'}
 			onclick={toggleAllExpanded}
-		></button>
+		>
+			<i class="fa-solid {allExpanded ? 'fa-compress' : 'fa-expand'}"></i>
+		</button>
 
 		{#if editingEnabled}
 			<button
