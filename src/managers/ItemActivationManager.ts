@@ -5,7 +5,7 @@ import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
-import { hasWeaponProficiency } from '../utils/attackUtils.js';
+import { getDamageBonusTotal, hasWeaponProficiency } from '../utils/attackUtils.js';
 import getRollFormula from '../utils/getRollFormula.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
@@ -233,14 +233,17 @@ class ItemActivationManager {
 		const actorSystem = this.actor?.system as
 			| {
 					healingPotionBonus?: number;
-					meleeDamageBonus?: { value: number; damageType: string };
 			  }
 			| undefined;
 		const healingBonus = isConsumable ? (actorSystem?.healingPotionBonus ?? 0) : 0;
 
-		// Check if this is a melee attack and get melee damage bonus
-		const isMeleeAttack = this.activationData?.targets?.attackType === 'reach';
-		const meleeDamageBonus = isMeleeAttack ? (actorSystem?.meleeDamageBonus?.value ?? 0) : 0;
+		// Get damage bonus based on attack type (melee/ranged/spell)
+		const attackType = this.activationData?.targets?.attackType;
+		const damageBonusAttackType =
+			attackType === 'reach' ? 'melee' : attackType === 'range' ? 'ranged' : null;
+		const damageBonus = damageBonusAttackType
+			? getDamageBonusTotal(this.actor, damageBonusAttackType)
+			: 0;
 
 		for (const node of flattenEffectsTree(effects)) {
 			if (node.type === 'damage' || node.type === 'healing') {
@@ -284,9 +287,9 @@ class ItemActivationManager {
 					// Use modified formula if provided
 					let formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
 
-					// Apply melee damage bonus if applicable
-					if (meleeDamageBonus > 0) {
-						formula = `${formula} + ${meleeDamageBonus}`;
+					// Apply damage bonus if applicable
+					if (damageBonus > 0) {
+						formula = `${formula} + ${damageBonus}`;
 					}
 
 					// Forward the optional rollMode source list so DamageRoll can

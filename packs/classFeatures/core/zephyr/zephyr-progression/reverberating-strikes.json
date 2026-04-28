@@ -9,10 +9,11 @@
 		"rules": [
 			{
 				"id": "reverberating-strikes-melee-damage",
-				"type": "meleeDamageBonus",
+				"type": "damageBonus",
 				"label": "Reverberating Strikes",
 				"value": "@level",
-				"damageType": "bludgeoning"
+				"damageType": "bludgeoning",
+				"appliesTo": "melee"
 			}
 		],
 		"activation": {

@@ -1,3 +1,5 @@
+import type { DamageBonusEntry, DamageBonusTarget } from '../models/rules/damageBonus.js';
+
 /** Default unarmed: 1d4 + STR damage, but cannot crit without proficiency (e.g., Swift Fists) */
 export const DEFAULT_UNARMED_DAMAGE = '1d4 + @abilities.strength.mod';
 
@@ -71,4 +73,29 @@ export function hasWeaponProficiency(
 	if (!weapons) return false;
 	if (weapons instanceof Set) return weapons.has(weaponType);
 	return Array.isArray(weapons) && weapons.includes(weaponType);
+}
+
+/**
+ * Sum all damage bonuses on an actor that match the given attack type.
+ * A bonus with `appliesTo: 'any'` matches all attack types.
+ *
+ * @param actor - The actor whose `system.damageBonuses` array to read
+ * @param attackType - The attack type to filter by ('melee' | 'ranged' | 'spell')
+ * @returns The total bonus value (0 if no matching bonuses)
+ */
+export function getDamageBonusTotal(
+	actor: { system?: unknown } | null | undefined,
+	attackType: DamageBonusTarget,
+): number {
+	const bonuses = (actor?.system as { damageBonuses?: DamageBonusEntry[] } | undefined)
+		?.damageBonuses;
+	if (!bonuses || bonuses.length === 0) return 0;
+
+	let total = 0;
+	for (const bonus of bonuses) {
+		if (bonus.appliesTo === 'any' || bonus.appliesTo === attackType) {
+			total += bonus.value;
+		}
+	}
+	return total;
 }
