@@ -6,6 +6,7 @@ import type { RulesArray } from './spellGrantUtils.js';
 import {
 	collectKnownSchools,
 	collectSpellGrants,
+	collectSpellRemovals,
 	predicatePassesAtLevel,
 	resolveSchools,
 } from './spellGrantUtils.js';
@@ -628,5 +629,113 @@ describe('collectSpellGrants', () => {
 			expect(result.spellSelections).toHaveLength(1);
 			expect(result.spellSelections[0].ruleId).toBe('spell-choice-1-ice');
 		});
+	});
+});
+
+describe('collectSpellRemovals', () => {
+	function makeOwnedSpell(overrides: { compendiumSource?: string; name?: string; img?: string }) {
+		return {
+			name: overrides.name ?? 'A Spell',
+			img: overrides.img ?? 'icons/svg/item-bag.svg',
+			_stats: overrides.compendiumSource
+				? { compendiumSource: overrides.compendiumSource }
+				: undefined,
+		};
+	}
+
+	it('returns empty array when no removeSpells rules exist', () => {
+		const rules: RulesArray = [{ type: 'grantSpells', schools: ['fire'] }];
+		const owned = [makeOwnedSpell({ compendiumSource: 'uuid-fire-1', name: 'Ember' })];
+		expect(collectSpellRemovals([rules], owned)).toEqual([]);
+	});
+
+	it('returns empty array when owned spells list is empty', () => {
+		const rules: RulesArray = [{ type: 'removeSpells', uuids: ['uuid-fire-1'] }];
+		expect(collectSpellRemovals([rules], [])).toEqual([]);
+	});
+
+	it('returns empty array when no owned spell matches the removal UUIDs', () => {
+		const rules: RulesArray = [{ type: 'removeSpells', uuids: ['uuid-ice-1'] }];
+		const owned = [makeOwnedSpell({ compendiumSource: 'uuid-fire-1', name: 'Ember' })];
+		expect(collectSpellRemovals([rules], owned)).toEqual([]);
+	});
+
+	it('does not remove spells without a compendiumSource', () => {
+		const rules: RulesArray = [{ type: 'removeSpells', uuids: ['uuid-fire-1'] }];
+		const owned = [{ name: 'Manual Spell', img: 'icons/svg/item-bag.svg', _stats: undefined }];
+		expect(collectSpellRemovals([rules], owned)).toEqual([]);
+	});
+
+	it('matches and returns a spell whose compendiumSource is in the removal UUIDs', () => {
+		const rules: RulesArray = [{ type: 'removeSpells', uuids: ['uuid-fire-1'] }];
+		const owned = [
+			makeOwnedSpell({ compendiumSource: 'uuid-fire-1', name: 'Ember', img: 'fire.png' }),
+		];
+		const result = collectSpellRemovals([rules], owned);
+		expect(result).toHaveLength(1);
+		expect(result[0]).toEqual({ uuid: 'uuid-fire-1', name: 'Ember', img: 'fire.png' });
+	});
+
+	it('collects removals from multiple rule arrays', () => {
+		const rules1: RulesArray = [{ type: 'removeSpells', uuids: ['uuid-fire-1'] }];
+		const rules2: RulesArray = [{ type: 'removeSpells', uuids: ['uuid-ice-1'] }];
+		const owned = [
+			makeOwnedSpell({ compendiumSource: 'uuid-fire-1', name: 'Ember' }),
+			makeOwnedSpell({ compendiumSource: 'uuid-ice-1', name: 'Frost' }),
+		];
+		const result = collectSpellRemovals([rules1, rules2], owned);
+		expect(result).toHaveLength(2);
+		expect(result.map((r) => r.uuid).sort()).toEqual(['uuid-fire-1', 'uuid-ice-1']);
+	});
+
+	it('deduplicates when multiple rules target the same UUID', () => {
+		const rules1: RulesArray = [{ type: 'removeSpells', uuids: ['uuid-fire-1'] }];
+		const rules2: RulesArray = [{ type: 'removeSpells', uuids: ['uuid-fire-1'] }];
+		const owned = [makeOwnedSpell({ compendiumSource: 'uuid-fire-1', name: 'Ember' })];
+		const result = collectSpellRemovals([rules1, rules2], owned);
+		expect(result).toHaveLength(1);
+	});
+
+	it('deduplicates when the same UUID appears twice in one rule', () => {
+		const rules: RulesArray = [{ type: 'removeSpells', uuids: ['uuid-fire-1', 'uuid-fire-1'] }];
+		const owned = [makeOwnedSpell({ compendiumSource: 'uuid-fire-1', name: 'Ember' })];
+		const result = collectSpellRemovals([rules], owned);
+		expect(result).toHaveLength(1);
+	});
+
+	it('only removes matching spells and preserves others', () => {
+		const rules: RulesArray = [{ type: 'removeSpells', uuids: ['uuid-fire-1'] }];
+		const owned = [
+			makeOwnedSpell({ compendiumSource: 'uuid-fire-1', name: 'Ember' }),
+			makeOwnedSpell({ compendiumSource: 'uuid-ice-1', name: 'Frost' }),
+		];
+		const result = collectSpellRemovals([rules], owned);
+		expect(result).toHaveLength(1);
+		expect(result[0].name).toBe('Ember');
+	});
+
+	it('uses fallback name and img when spell has none', () => {
+		const rules: RulesArray = [{ type: 'removeSpells', uuids: ['uuid-fire-1'] }];
+		const owned = [{ _stats: { compendiumSource: 'uuid-fire-1' } }];
+		const result = collectSpellRemovals([rules], owned);
+		expect(result[0].name).toBe('');
+		expect(result[0].img).toBe('icons/svg/item-bag.svg');
+	});
+
+	it('skips non-removeSpells rules', () => {
+		const rules: RulesArray = [
+			{ type: 'grantSpells', schools: ['fire'] },
+			{ type: 'removeSpells', uuids: ['uuid-ice-1'] },
+		];
+		const owned = [makeOwnedSpell({ compendiumSource: 'uuid-ice-1', name: 'Frost' })];
+		const result = collectSpellRemovals([rules], owned);
+		expect(result).toHaveLength(1);
+		expect(result[0].uuid).toBe('uuid-ice-1');
+	});
+
+	it('returns empty array when rules have no uuids field', () => {
+		const rules: RulesArray = [{ type: 'removeSpells' }];
+		const owned = [makeOwnedSpell({ compendiumSource: 'uuid-fire-1', name: 'Ember' })];
+		expect(collectSpellRemovals([rules], owned)).toEqual([]);
 	});
 });

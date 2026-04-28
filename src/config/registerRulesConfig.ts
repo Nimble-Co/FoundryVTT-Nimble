@@ -26,6 +26,7 @@ import { MaxWoundsRule } from '../models/rules/maxWounds.js';
 import { ModifyPoolRule } from '../models/rules/modifyPool.js';
 import { ModifyToggleRule } from '../models/rules/modifyToggle.js';
 import { NoteRule } from '../models/rules/note.js';
+import { RemoveSpellsRule } from '../models/rules/removeSpells.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
 import { SkillBonusRule } from '../models/rules/skillBonus.js';
@@ -50,6 +51,7 @@ export default function registerRulesConfig() {
 		grantItem: 'NIMBLE.ruleTypes.grantItem',
 		grantProficiency: 'NIMBLE.ruleTypes.grantProficiency',
 		grantSpells: 'NIMBLE.ruleTypes.grantSpells',
+		removeSpells: 'NIMBLE.ruleTypes.removeSpells',
 		healingPotionBonus: 'NIMBLE.ruleTypes.healingPotionBonus',
 		hitDiceAdvantage: 'NIMBLE.ruleTypes.hitDiceAdvantage',
 		incrementHitDice: 'NIMBLE.ruleTypes.incrementHitDice',
@@ -87,6 +89,7 @@ export default function registerRulesConfig() {
 		grantItem: ItemGrantRule,
 		grantProficiency: GrantProficiencyRule,
 		grantSpells: GrantSpellsRule,
+		removeSpells: RemoveSpellsRule,
 		healingPotionBonus: HealingPotionBonusRule,
 		hitDiceAdvantage: HitDiceAdvantageRule,
 		incrementHitDice: IncrementHitDiceRule,
