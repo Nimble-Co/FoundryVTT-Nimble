@@ -55,11 +55,6 @@
 			"url": "https://ko-fi.com/questluminary"
 		},
 		{
-			"name": "Phillip Best",
-			"email": "me@phillip.best",
-			"url": "https://bio.link/philbest"
-		},
-		{
 			"name": "NekroDarkmoon",
 			"url": "https://github.com/NekroDarkmoon/"
 		}
@@ -67,11 +62,7 @@
 	"funding": [
 		{
 			"type": "patreon",
-			"url": "https://www.patreon.com/ForgemasterModules"
-		},
-		{
-			"type": "individual",
-			"url": "https://ko-fi.com/philbest"
+			"url": "https://www.patreon.com/cw/QuestLuminary"
 		},
 		{
 			"type": "individual",
