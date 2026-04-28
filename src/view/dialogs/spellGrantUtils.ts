@@ -4,6 +4,13 @@ import localize from '#utils/localize.ts';
 
 import type { SchoolSelectionGroup, SpellSelectionGroup } from './characterCreation/types.js';
 
+/** A spell that will be removed during subclass selection */
+export interface SpellRemovalEntry {
+	uuid: string;
+	name: string;
+	img: string;
+}
+
 /** Result of processing grantSpells rules */
 export interface SpellGrantResult {
 	autoGrant: SpellIndexEntry[];
@@ -187,4 +194,50 @@ export function collectSpellGrants(
 	}
 
 	return { autoGrant, schoolSelections, spellSelections };
+}
+
+/**
+ * Collects spells to remove based on removeSpells rules on features being granted.
+ * Only matches spells that came from automation (have a compendiumSource matching a rule UUID).
+ * Manual player spells without a compendiumSource are never targeted.
+ */
+export function collectSpellRemovals(
+	rulesArrays: RulesArray[],
+	ownedSpells: Array<{
+		name?: string;
+		img?: string;
+		_stats?: { compendiumSource?: string };
+	}>,
+): SpellRemovalEntry[] {
+	const removalUuids = new Set<string>();
+
+	for (const rules of rulesArrays) {
+		for (const rule of rules) {
+			if (rule.type !== 'removeSpells') continue;
+			const uuids = rule.uuids as string[] | undefined;
+			if (!uuids) continue;
+			for (const uuid of uuids) {
+				removalUuids.add(uuid);
+			}
+		}
+	}
+
+	if (removalUuids.size === 0) return [];
+
+	const spellsToRemove: SpellRemovalEntry[] = [];
+	const seenUuids = new Set<string>();
+
+	for (const spell of ownedSpells) {
+		const source = spell._stats?.compendiumSource;
+		if (!source || !removalUuids.has(source)) continue;
+		if (seenUuids.has(source)) continue;
+		seenUuids.add(source);
+		spellsToRemove.push({
+			uuid: source,
+			name: spell.name ?? '',
+			img: spell.img ?? 'icons/svg/item-bag.svg',
+		});
+	}
+
+	return spellsToRemove;
 }
