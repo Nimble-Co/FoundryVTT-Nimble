@@ -4,14 +4,7 @@
 	import type { Readable } from 'svelte/store';
 	import filterItems from '../../dataPreparationHelpers/filterItems.js';
 	import { getContext } from 'svelte';
-	import prepareAncestryTooltip from '../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js';
-	import prepareClassTooltip from '../../dataPreparationHelpers/documentTooltips/prepareClassTooltip.js';
-	import prepareSubclassTooltip from '../../dataPreparationHelpers/documentTooltips/prepareSubclassTooltip.js';
-	import prepareBoonTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBoonTooltip.js';
-	import prepareBackgroundTooltip from '../../dataPreparationHelpers/documentTooltips/prepareBackgroundTooltip.js';
-	import prepareFeatureTooltip from '../../dataPreparationHelpers/documentTooltips/prepareFeatureTooltip.js';
 	import shouldFlashDroppedItem from '../../../utils/shouldFlashDroppedItem.js';
-	import sortItems from '../../../utils/sortItems.js';
 	import {
 		DROP_ITEM_FLASH_ANIMATION_NAME,
 		getDroppedItemFlashIds,
@@ -38,16 +31,26 @@
 		await actor.deleteItem(id);
 	}
 
-	function getFeatureMetadata(_item) {
-		return null;
+	function formatGroupName(name: string): string {
+		return name
+			.split('-')
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+			.join(' ');
 	}
 
 	function groupItemsByType(items) {
 		return items.reduce((categories, item) => {
 			const { type: itemType } = item.reactive;
 
-			categories[itemType] ??= [];
-			categories[itemType].push(item);
+			if (itemType === 'feature') {
+				const group = item.reactive.system.group;
+				const bucket = group || 'feature';
+				categories[bucket] ??= [];
+				categories[bucket].push(item);
+			} else {
+				categories[itemType] ??= [];
+				categories[itemType].push(item);
+			}
 
 			return categories;
 		}, {});
@@ -64,72 +67,53 @@
 		}, {});
 	}
 
-	const tooltipCache = new Map();
-
-	async function prepareItemTooltip(item) {
-		const cacheKey = item.reactive._id;
-		if (tooltipCache.has(cacheKey)) {
-			return tooltipCache.get(cacheKey);
-		}
-
-		let tooltip = null;
-		switch (item.type) {
-			case 'ancestry':
-				tooltip = await prepareAncestryTooltip(item.reactive);
-				break;
-			case 'background':
-				tooltip = await prepareBackgroundTooltip(item.reactive);
-				break;
-			case 'boon':
-				tooltip = await prepareBoonTooltip(item.reactive);
-				break;
-			case 'class':
-				tooltip = await prepareClassTooltip(item.reactive);
-				break;
-			case 'feature':
-				tooltip = await prepareFeatureTooltip(item.reactive);
-				break;
-			case 'subclass':
-				tooltip = await prepareSubclassTooltip(item.reactive);
-				break;
-		}
-
-		if (tooltip) {
-			tooltipCache.set(cacheKey, tooltip);
-		}
-		return tooltip;
-	}
-
-	function getItemTooltip(item) {
-		const cacheKey = item.reactive._id;
-		return tooltipCache.get(cacheKey) || '';
-	}
-
-	function handleTooltipMouseEnter(event, item) {
-		const element = event.currentTarget;
-		if (!tooltipCache.has(item.reactive._id)) {
-			prepareItemTooltip(item).then((tooltip) => {
-				if (tooltip) {
-					element.setAttribute('data-tooltip', tooltip);
-				}
-			});
-		}
-	}
-
 	function handleDropFlashAnimationEnd(event: AnimationEvent, itemId: string) {
 		if (event.animationName !== DROP_ITEM_FLASH_ANIMATION_NAME) return;
 		sheet.clearDroppedItemFlash(itemId);
+	}
+
+	function sortFeatureItems(items) {
+		return [...items].sort((a, b) => {
+			const levelA = a.reactive.system?.gainedAtLevel ?? Infinity;
+			const levelB = b.reactive.system?.gainedAtLevel ?? Infinity;
+			if (levelA !== levelB) return levelA - levelB;
+			return (a.reactive.sort ?? 0) - (b.reactive.sort ?? 0);
+		});
 	}
 
 	function sortItemCategories(
 		[categoryA]: [string, unknown],
 		[categoryB]: [string, unknown],
 	): number {
-		return validTypes.indexOf(categoryA) - validTypes.indexOf(categoryB);
+		const classOrder = validTypes.indexOf('class');
+
+		const getOrder = (cat: string): number => {
+			const idx = validTypes.indexOf(cat);
+			if (idx !== -1) return idx;
+			// Feature groups (non-empty system.group) sort just after 'class'
+			return classOrder + 0.5;
+		};
+
+		const orderA = getOrder(categoryA);
+		const orderB = getOrder(categoryB);
+
+		if (orderA !== orderB) return orderA - orderB;
+		return categoryA.localeCompare(categoryB);
+	}
+
+	// Local collapse state — resets when the sheet is closed/reopened
+	let collapsedState = $state<Record<string, boolean>>({});
+
+	function toggleCollapsed(itemId: string): void {
+		collapsedState[itemId] = !(collapsedState[itemId] ?? true);
+	}
+
+	function isCollapsed(itemId: string): boolean {
+		return collapsedState[itemId] ?? true;
 	}
 
 	// IMPORTANT: The order of these strings is used for sorting purposes.
-	const validTypes = ['feature', 'boon', 'ancestry', 'background', 'class'];
+	const validTypes = ['class', 'feature', 'ancestry', 'background', 'boon'];
 	const { featureTypeHeadings } = CONFIG.NIMBLE;
 
 	let actor = getContext<NimbleCharacter>('actor');
@@ -144,26 +128,6 @@
 	let categorizedItems = $derived(groupItemsByType(items));
 	let subclasses = $derived(filterItems(actor.reactive, 'subclass', searchTerm));
 	let categorizedSubclasses = $derived(groupSubclassesByParentClass(subclasses));
-
-	// Invalidate tooltip cache when items change (e.g., name or properties modified)
-	$effect(() => {
-		// Track changes in regular items
-		items.forEach((item) => {
-			// Access reactive properties to track changes
-			void item.reactive.name;
-			void item.reactive.img;
-			void item.reactive.system;
-			// Clear the cache entry so it will be regenerated on next hover
-			tooltipCache.delete(item.reactive._id);
-		});
-		// Track changes in subclasses
-		subclasses.forEach((subclass) => {
-			void subclass.reactive.name;
-			void subclass.reactive.img;
-			void subclass.reactive.system;
-			tooltipCache.delete(subclass.reactive._id);
-		});
-	});
 
 	// Settings
 	let flags = $derived(actor.reactive.flags.nimble);
@@ -192,135 +156,218 @@
 		<div>
 			<header>
 				<h3 class="nimble-heading" data-heading-variant="section">
-					{featureTypeHeadings[categoryName] ?? categoryName}
+					{featureTypeHeadings[categoryName] ?? formatGroupName(categoryName)}
 				</h3>
 			</header>
 
 			<ul class="nimble-item-list">
-				{#each sortItems(itemCategory) as item (item.reactive._id)}
-					{@const metadata = getFeatureMetadata(item)}
-
-					<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role  -->
-					<!-- svelte-ignore  a11y_click_events_have_key_events -->
+				{#each sortFeatureItems(itemCategory) as item (item.reactive._id)}
 					<li
-						class="nimble-document-card nimble-document-card--no-meta"
-						class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
-						class:nimble-document-card--no-meta={!metadata}
-						class:nimble-document-card--drop-flash={shouldFlashDroppedItem(
+						class="nimble-feature-card"
+						class:nimble-feature-card--drop-flash={shouldFlashDroppedItem(
 							droppedItemFlashIds,
 							item.reactive._id,
 						)}
 						data-item-id={item.reactive._id}
-						data-tooltip={getItemTooltip(item)}
-						data-tooltip-class="nimble-tooltip nimble-tooltip--item"
-						data-tooltip-direction="LEFT"
 						draggable="true"
-						role="button"
 						ondragstart={(event) => sheet._onDragStart(event)}
 						onanimationend={(event) => handleDropFlashAnimationEnd(event, item.reactive._id)}
-						onmouseenter={(event) => handleTooltipMouseEnter(event, item)}
-						onclick={() => actor.activateItem(item.reactive._id)}
 					>
-						<header class="u-semantic-only">
+						<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
+						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						<div
+							class="nimble-feature-card__header"
+							role="button"
+							tabindex="0"
+							aria-expanded={!isCollapsed(item.reactive._id)}
+							onclick={() => toggleCollapsed(item.reactive._id)}
+							onkeydown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									toggleCollapsed(item.reactive._id);
+								}
+							}}
+						>
 							{#if showEmbeddedDocumentImages}
-								<div class="nimble-document-card__img-wrapper">
+								<div class="nimble-feature-card__img-wrapper">
 									<img
-										class="nimble-document-card__img"
+										class="nimble-feature-card__img"
 										src={item.reactive.img}
 										alt={item.reactive.name}
 									/>
+									<button
+										class="nimble-feature-card__img-activate"
+										type="button"
+										aria-label="Send {item.reactive.name} to chat"
+										onclick={(event) => {
+											event.stopPropagation();
+											actor.activateItem(item.reactive._id);
+										}}
+									>
+										<i class="fa-solid fa-comment"></i>
+									</button>
 								</div>
 							{/if}
 
-							<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
+							<h4 class="nimble-feature-card__name nimble-heading" data-heading-variant="item">
 								{item.reactive.name}
 							</h4>
 
-							<button
-								class="nimble-button"
-								style="grid-area: configureButton"
-								data-button-variant="icon"
-								type="button"
-								aria-label="Configure {item.reactive.name}"
-								onclick={(event) => configureItem(event, item._id)}
-							>
-								<i class="fa-solid fa-edit"></i>
-							</button>
+							{#if item.reactive.system?.gainedAtLevel != null}
+								<span class="nimble-feature-card__level"
+									>Lv. {item.reactive.system.gainedAtLevel}</span
+								>
+							{/if}
 
-							<button
-								class="nimble-button"
-								style="grid-area: deleteButton"
-								data-button-variant="icon"
-								type="button"
-								aria-label="Delete {item.reactive.name}"
-								onclick={(event) => deleteItem(event, item._id)}
+							{#if editingEnabled}
+								<button
+									class="nimble-button"
+									data-button-variant="icon"
+									type="button"
+									aria-label="Configure {item.reactive.name}"
+									onclick={(event) => configureItem(event, item._id)}
+								>
+									<i class="fa-solid fa-edit"></i>
+								</button>
+
+								<button
+									class="nimble-button"
+									data-button-variant="icon"
+									type="button"
+									aria-label="Delete {item.reactive.name}"
+									onclick={(event) => deleteItem(event, item._id)}
+								>
+									<i class="fa-solid fa-trash"></i>
+								</button>
+							{/if}
+
+							<span
+								class="nimble-feature-card__chevron"
+								class:nimble-feature-card__chevron--collapsed={isCollapsed(item.reactive._id)}
+								aria-hidden="true"
 							>
-								<i class="fa-solid fa-trash"></i>
-							</button>
-						</header>
+								<i class="fa-solid fa-chevron-down"></i>
+							</span>
+						</div>
+
+						<div
+							class="nimble-feature-card__body"
+							class:nimble-feature-card__body--collapsed={isCollapsed(item.reactive._id)}
+						>
+							<div class="nimble-feature-card__description">
+								{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.reactive.system?.description || '') then description}
+									{@html description}
+								{/await}
+							</div>
+						</div>
 					</li>
 					{#if categoryName === 'class' && categorizedSubclasses[item.reactive.system.identifier]?.length}
 						<ul class="nimble-item-list nimble-item-list--sublist">
 							{#each categorizedSubclasses[item.reactive.system.identifier] as subclass}
-								{@const metadata = getFeatureMetadata(subclass)}
-
-								<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
-								<!-- svelte-ignore a11y_click_events_have_key_events -->
 								<li
-									class="nimble-document-card nimble-document-card--no-meta"
-									class:nimble-document-card--no-image={!showEmbeddedDocumentImages}
-									class:nimble-document-card--no-meta={!metadata}
-									class:nimble-document-card--drop-flash={shouldFlashDroppedItem(
+									class="nimble-feature-card"
+									class:nimble-feature-card--drop-flash={shouldFlashDroppedItem(
 										droppedItemFlashIds,
 										subclass.reactive._id,
 									)}
 									data-item-id={subclass.reactive._id}
-									data-tooltip={getItemTooltip(subclass)}
-									data-tooltip-class="nimble-tooltip nimble-tooltip--item"
-									data-tooltip-direction="LEFT"
 									draggable="true"
-									role="button"
 									ondragstart={(event) => sheet._onDragStart(event)}
 									onanimationend={(event) =>
 										handleDropFlashAnimationEnd(event, subclass.reactive._id)}
-									onmouseenter={(event) => handleTooltipMouseEnter(event, subclass)}
-									onclick={() => actor.activateItem(subclass._id)}
 								>
-									{#if showEmbeddedDocumentImages}
-										<div class="nimble-document-card__img-wrapper">
-											<img
-												class="nimble-document-card__img"
-												src={subclass.reactive.img}
-												alt={subclass.reactive.name}
-											/>
+									<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
+									<!-- svelte-ignore a11y_click_events_have_key_events -->
+									<div
+										class="nimble-feature-card__header"
+										role="button"
+										tabindex="0"
+										aria-expanded={!isCollapsed(subclass.reactive._id)}
+										onclick={() => toggleCollapsed(subclass.reactive._id)}
+										onkeydown={(e) => {
+											if (e.key === 'Enter' || e.key === ' ') {
+												e.preventDefault();
+												toggleCollapsed(subclass.reactive._id);
+											}
+										}}
+									>
+										{#if showEmbeddedDocumentImages}
+											<div class="nimble-feature-card__img-wrapper">
+												<img
+													class="nimble-feature-card__img"
+													src={subclass.reactive.img}
+													alt={subclass.reactive.name}
+												/>
+												<button
+													class="nimble-feature-card__img-activate"
+													type="button"
+													aria-label="Send {subclass.reactive.name} to chat"
+													onclick={(event) => {
+														event.stopPropagation();
+														actor.activateItem(subclass._id);
+													}}
+												>
+													<i class="fa-solid fa-comment"></i>
+												</button>
+											</div>
+										{/if}
+
+										<h4
+											class="nimble-feature-card__name nimble-heading"
+											data-heading-variant="item"
+										>
+											{subclass.reactive.name}
+										</h4>
+
+										{#if subclass.reactive.system?.gainedAtLevel != null}
+											<span class="nimble-feature-card__level"
+												>Lv. {subclass.reactive.system.gainedAtLevel}</span
+											>
+										{/if}
+
+										{#if editingEnabled}
+											<button
+												class="nimble-button"
+												data-button-variant="icon"
+												type="button"
+												aria-label="Configure {subclass.reactive.name}"
+												onclick={(event) => configureItem(event, subclass._id)}
+											>
+												<i class="fa-solid fa-edit"></i>
+											</button>
+
+											<button
+												class="nimble-button"
+												data-button-variant="icon"
+												type="button"
+												aria-label="Delete {subclass.reactive.name}"
+												onclick={(event) => deleteItem(event, subclass._id)}
+											>
+												<i class="fa-solid fa-trash"></i>
+											</button>
+										{/if}
+
+										<span
+											class="nimble-feature-card__chevron"
+											class:nimble-feature-card__chevron--collapsed={isCollapsed(
+												subclass.reactive._id,
+											)}
+											aria-hidden="true"
+										>
+											<i class="fa-solid fa-chevron-down"></i>
+										</span>
+									</div>
+
+									<div
+										class="nimble-feature-card__body"
+										class:nimble-feature-card__body--collapsed={isCollapsed(subclass.reactive._id)}
+									>
+										<div class="nimble-feature-card__description">
+											{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(subclass.reactive.system?.description || '') then description}
+												{@html description}
+											{/await}
 										</div>
-									{/if}
-
-									<h4 class="nimble-document-card__name nimble-heading" data-heading-variant="item">
-										{subclass.reactive.name}
-									</h4>
-
-									<button
-										class="nimble-button"
-										style="grid-area: configureButton"
-										data-button-variant="icon"
-										type="button"
-										aria-label="Configure {subclass.reactive.name}"
-										onclick={(event) => configureItem(event, subclass._id)}
-									>
-										<i class="fa-solid fa-edit"></i>
-									</button>
-
-									<button
-										class="nimble-button"
-										style="grid-area: deleteButton"
-										data-button-variant="icon"
-										type="button"
-										aria-label="Delete {subclass.reactive.name}"
-										onclick={(event) => deleteItem(event, subclass._id)}
-									>
-										<i class="fa-solid fa-trash"></i>
-									</button>
+									</div>
 								</li>
 							{/each}
 						</ul>
@@ -343,6 +390,161 @@
 		&--sublist {
 			margin-block-start: 0;
 			margin-inline-start: 1rem;
+		}
+	}
+
+	.nimble-feature-card {
+		--nimble-heading-color: var(--nimble-card-text-color);
+
+		background: var(--nimble-card-background-color);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+		box-shadow: var(--nimble-box-shadow);
+		color: var(--nimble-card-text-color);
+		overflow: hidden;
+		transition: var(--nimble-standard-transition);
+
+		&--drop-flash {
+			position: relative;
+			animation: nimble-drop-item-flash 2.5s ease-in-out forwards;
+		}
+	}
+
+	.nimble-feature-card__header {
+		display: flex;
+		align-items: center;
+		gap: 0.125rem;
+		min-height: 2rem;
+		padding-inline-end: 0.25rem;
+		cursor: pointer;
+
+		&:focus-visible {
+			outline: 2px solid var(--nimble-accent-color);
+			outline-offset: -2px;
+		}
+	}
+
+	.nimble-feature-card__img-wrapper {
+		position: relative;
+		flex-shrink: 0;
+		height: 2rem;
+		width: 2rem;
+		margin-inline-end: 0.5rem;
+
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			right: -1px;
+			border-right: 1px solid var(--nimble-card-border-color);
+			pointer-events: none;
+			z-index: 1;
+		}
+	}
+
+	.nimble-feature-card__img {
+		width: 100%;
+		height: 100%;
+		border: 0;
+		border-radius: 0;
+		background-color: rgba(0, 0, 0, 0.7);
+		object-fit: cover;
+		object-position: center;
+
+		&[src$='.svg' i] {
+			padding: 0.2rem;
+		}
+	}
+
+	.nimble-feature-card__img-activate {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: rgba(0, 0, 0, 0.55);
+		border: 0;
+		color: white;
+		cursor: pointer;
+		font-size: var(--nimble-sm-text);
+		opacity: 0;
+		padding: 0;
+		transition: opacity var(--nimble-standard-transition);
+		z-index: 2;
+
+		&:hover,
+		&:focus-visible {
+			opacity: 1;
+			outline: none;
+		}
+	}
+
+	.nimble-feature-card__name {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		line-height: 1;
+		color: var(--nimble-card-text-color);
+	}
+
+	.nimble-feature-card__level {
+		flex-shrink: 0;
+		font-size: var(--nimble-xs-text, 0.65rem);
+		color: var(--nimble-medium-text-color);
+		white-space: nowrap;
+	}
+
+	.nimble-feature-card__chevron {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.5rem;
+		color: var(--nimble-medium-text-color);
+		font-size: var(--nimble-sm-text);
+
+		i {
+			display: inline-block;
+			transition: transform 250ms ease-out;
+		}
+
+		&--collapsed i {
+			transform: rotateX(180deg);
+		}
+	}
+
+	.nimble-feature-card__body {
+		overflow: hidden;
+	}
+
+	.nimble-feature-card__description {
+		padding: 0.5rem;
+		font-size: var(--nimble-md-text);
+		line-height: 1.5;
+		border-top: 1px solid var(--nimble-card-border-color);
+		transition:
+			max-height 250ms ease-out,
+			padding 250ms ease-out,
+			opacity 250ms ease-out,
+			border-color 250ms ease-out;
+		max-height: 600px;
+		opacity: 1;
+
+		.nimble-feature-card__body--collapsed & {
+			max-height: 0;
+			padding-block: 0;
+			opacity: 0;
+			border-top-color: transparent;
+		}
+
+		:global(p) {
+			margin-block: 0;
+
+			& + :global(p) {
+				margin-block-start: 0.5rem;
+			}
 		}
 	}
 
