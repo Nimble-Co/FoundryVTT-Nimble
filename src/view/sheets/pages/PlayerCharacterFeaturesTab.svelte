@@ -47,15 +47,11 @@
 			const { type: itemType } = item.reactive;
 
 			if (itemType === 'feature') {
-				const group = item.reactive.system.group;
-				if (item.reactive.system.subclass) {
-					const bucket = `subclass-group:${group || 'default'}`;
-					categories[bucket] ??= [];
-					categories[bucket].push(item);
-				} else {
-					const bucket = group || 'feature';
-					categories[bucket] ??= [];
-					categories[bucket].push(item);
+				// Grouped class features and subclass features are rendered nested under their
+				// parent card — only ungrouped features get their own top-level section here.
+				if (!item.reactive.system.group && !item.reactive.system.subclass) {
+					categories['feature'] ??= [];
+					categories['feature'].push(item);
 				}
 			} else {
 				categories[itemType] ??= [];
@@ -95,20 +91,8 @@
 		[categoryA]: [string, unknown],
 		[categoryB]: [string, unknown],
 	): number {
-		const classOrder = validTypes.indexOf('class');
-		const subclassOrder = validTypes.indexOf('subclass');
-
-		const getOrder = (cat: string): number => {
-			const idx = validTypes.indexOf(cat);
-			if (idx !== -1) return idx;
-			// Subclass feature groups sort just after 'subclass' (but are rendered inline, not as sections)
-			if (cat.startsWith('subclass-group:')) return subclassOrder + 0.5;
-			// Class feature groups sort just after 'class'
-			return classOrder + 0.5;
-		};
-
-		const orderA = getOrder(categoryA);
-		const orderB = getOrder(categoryB);
+		const orderA = validTypes.indexOf(categoryA);
+		const orderB = validTypes.indexOf(categoryB);
 
 		if (orderA !== orderB) return orderA - orderB;
 		return categoryA.localeCompare(categoryB);
@@ -147,12 +131,22 @@
 	let items = $derived(filterItems(actor.reactive, validTypes, searchTerm));
 	let categorizedItems = $derived(groupItemsByType(items));
 
-	// All subclass feature items collected and sorted by level — rendered nested under the subclass section
+	// Class features (grouped, non-subclass) sorted by level — rendered nested under the class card
+	let classFeatureItems = $derived(
+		sortFeatureItems(
+			items.filter(
+				(item) =>
+					item.reactive.type === 'feature' &&
+					item.reactive.system.group &&
+					!item.reactive.system.subclass,
+			),
+		),
+	);
+
+	// Subclass features sorted by level — rendered nested under the subclass card
 	let subclassFeatureItems = $derived(
 		sortFeatureItems(
-			Object.entries(categorizedItems)
-				.filter(([key]) => key.startsWith('subclass-group:'))
-				.flatMap(([, groupItems]) => groupItems),
+			items.filter((item) => item.reactive.type === 'feature' && item.reactive.system.subclass),
 		),
 	);
 
@@ -285,29 +279,35 @@
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
 	{#each Object.entries(categorizedItems).sort(sortItemCategories) as [categoryName, itemCategory]}
-		{#if !categoryName.startsWith('subclass-group:')}
-			<div>
-				<header>
-					<h3 class="nimble-heading" data-heading-variant="section">
-						{getCategoryHeading(categoryName)}
-					</h3>
-				</header>
+		<div>
+			<header>
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{getCategoryHeading(categoryName)}
+				</h3>
+			</header>
 
-				<ul class="nimble-item-list">
-					{#each sortFeatureItems(itemCategory) as item (item.reactive._id)}
+			<ul class="nimble-item-list">
+				{#each sortFeatureItems(itemCategory) as item (item.reactive._id)}
+					{@render featureCard(item)}
+				{/each}
+			</ul>
+
+			{#if categoryName === 'class' && classFeatureItems.length}
+				<ul class="nimble-item-list nimble-item-list--sublist">
+					{#each classFeatureItems as item (item.reactive._id)}
 						{@render featureCard(item)}
 					{/each}
 				</ul>
+			{/if}
 
-				{#if categoryName === 'subclass' && subclassFeatureItems.length}
-					<ul class="nimble-item-list nimble-item-list--sublist">
-						{#each subclassFeatureItems as item (item.reactive._id)}
-							{@render featureCard(item)}
-						{/each}
-					</ul>
-				{/if}
-			</div>
-		{/if}
+			{#if categoryName === 'subclass' && subclassFeatureItems.length}
+				<ul class="nimble-item-list nimble-item-list--sublist">
+					{#each subclassFeatureItems as item (item.reactive._id)}
+						{@render featureCard(item)}
+					{/each}
+				</ul>
+			{/if}
+		</div>
 	{/each}
 </section>
 
