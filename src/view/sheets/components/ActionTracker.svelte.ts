@@ -1,7 +1,10 @@
 import { untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
-import { getCombatantBaseActions } from '#documents/combat/combatantSystem.js';
+import {
+	getCombatantAdditionalActions,
+	getCombatantBaseActions,
+} from '#documents/combat/combatantSystem.js';
 import type { PromptedInitiativeOptions } from '#types/combat.js';
 import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
 import { requestAdvanceCombatTurn } from '#utils/combatTurnActions.js';
@@ -17,6 +20,8 @@ import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMu
 interface ActionsData {
 	current: number;
 	max: number;
+	additional: number;
+	effectiveMax: number;
 }
 
 // ============================================================================
@@ -32,11 +37,11 @@ const DICE_ICONS = [
 	'fa-dice-six',
 ];
 
-export function getDiceIcon(index: number): string {
+export function getDiceIcon(index: number): string | null {
 	if (index < DICE_ICONS.length) {
 		return DICE_ICONS[index];
 	}
-	return 'fa-dice-d6';
+	return null;
 }
 
 // ============================================================================
@@ -81,12 +86,16 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 
 	function getActionsData(): ActionsData {
 		const combatant = getCombatantInCombat();
-		if (!combatant) return { current: 0, max: 3 };
+		if (!combatant) return { current: 0, max: 3, additional: 0, effectiveMax: 3 };
 
 		const actions = getCombatantBaseActions(combatant);
+		const additional = getCombatantAdditionalActions(combatant);
+		const max = actions.max || 3;
 		return {
 			current: actions.current,
-			max: actions.max || 3,
+			max,
+			additional,
+			effectiveMax: max + additional,
 		};
 	}
 
@@ -131,6 +140,29 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 			mutation: async (currentCombatant) => {
 				await currentCombatant.update({
 					'system.actions.base.current': newValue,
+				} as Record<string, unknown>);
+			},
+		});
+	}
+
+	async function addAdditionalAction(): Promise<void> {
+		const combat = getActiveCombatForCurrentScene();
+		const combatantId = getCombatantInCombat()?.id ?? null;
+		if (!combat || !combatantId) return;
+
+		const maxAdditionalSlots = 10 - actionsData.max;
+		if (actionsData.additional >= maxAdditionalSlots) return;
+
+		const newAdditional = actionsData.additional + 1;
+		const newCurrent = actionsData.current + 1;
+
+		await queueCombatantMutationWithFreshDocument({
+			combat,
+			combatantId,
+			mutation: async (currentCombatant) => {
+				await currentCombatant.update({
+					'system.actions.base.additional': newAdditional,
+					'system.actions.base.current': newCurrent,
 				} as Record<string, unknown>);
 			},
 		});
@@ -191,13 +223,11 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		const isAvailable = index < actionsData.current;
 
 		if (isAvailable) {
-			// Spend one action
-			const newValue = Math.max(actionsData.current - 1, 0);
-			void updateActionPips(newValue);
+			const newCurrent = Math.max(actionsData.current - 1, 0);
+			void updateActionPips(newCurrent);
 		} else {
-			// Restore one action
-			const newValue = Math.min(actionsData.current + 1, actionsData.max);
-			void updateActionPips(newValue);
+			const newCurrent = Math.min(actionsData.current + 1, actionsData.effectiveMax);
+			void updateActionPips(newCurrent);
 		}
 	}
 
@@ -275,6 +305,7 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		// Actions
 		rollInitiative,
 		endTurn,
+		addAdditionalAction,
 		handlePipClick,
 
 		// Helpers
