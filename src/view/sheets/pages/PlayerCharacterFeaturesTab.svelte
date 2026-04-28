@@ -38,30 +38,29 @@
 			.join(' ');
 	}
 
+	function getCategoryHeading(categoryName: string): string {
+		return featureTypeHeadings[categoryName] ?? formatGroupName(categoryName);
+	}
+
 	function groupItemsByType(items) {
 		return items.reduce((categories, item) => {
 			const { type: itemType } = item.reactive;
 
 			if (itemType === 'feature') {
 				const group = item.reactive.system.group;
-				const bucket = group || 'feature';
-				categories[bucket] ??= [];
-				categories[bucket].push(item);
+				if (item.reactive.system.subclass) {
+					const bucket = `subclass-group:${group || 'default'}`;
+					categories[bucket] ??= [];
+					categories[bucket].push(item);
+				} else {
+					const bucket = group || 'feature';
+					categories[bucket] ??= [];
+					categories[bucket].push(item);
+				}
 			} else {
 				categories[itemType] ??= [];
 				categories[itemType].push(item);
 			}
-
-			return categories;
-		}, {});
-	}
-
-	function groupSubclassesByParentClass(subclasses) {
-		return subclasses.reduce((categories, subclass) => {
-			const { parentClass } = subclass.reactive.system;
-
-			categories[parentClass] ??= [];
-			categories[parentClass].push(subclass);
 
 			return categories;
 		}, {});
@@ -73,9 +72,14 @@
 	}
 
 	function getEffectiveLevel(item): number {
-		return (
-			item.reactive.system?.gainedAtLevel ?? item.reactive.system?.gainedAtLevels?.[0] ?? Infinity
+		const explicit = item.reactive.system?.gainedAtLevel;
+		if (explicit != null) return explicit;
+		const levels = item.reactive.system?.gainedAtLevels;
+		if (levels?.length) return Math.min(...levels);
+		console.warn(
+			`[Nimble] Feature "${item.reactive.name}" has no level data — gainedAtLevel: ${explicit}, gainedAtLevels: ${JSON.stringify(levels)}`,
 		);
+		return Infinity;
 	}
 
 	function sortFeatureItems(items) {
@@ -92,11 +96,14 @@
 		[categoryB]: [string, unknown],
 	): number {
 		const classOrder = validTypes.indexOf('class');
+		const subclassOrder = validTypes.indexOf('subclass');
 
 		const getOrder = (cat: string): number => {
 			const idx = validTypes.indexOf(cat);
 			if (idx !== -1) return idx;
-			// Feature groups (non-empty system.group) sort just after 'class'
+			// Subclass feature groups sort just after 'subclass' (but are rendered inline, not as sections)
+			if (cat.startsWith('subclass-group:')) return subclassOrder + 0.5;
+			// Class feature groups sort just after 'class'
 			return classOrder + 0.5;
 		};
 
@@ -109,17 +116,24 @@
 
 	// Local collapse state — resets when the sheet is closed/reopened
 	let collapsedState = $state<Record<string, boolean>>({});
+	let allExpanded = $state(false);
+
+	function toggleAllExpanded(): void {
+		allExpanded = !allExpanded;
+		collapsedState = {};
+	}
 
 	function toggleCollapsed(itemId: string): void {
-		collapsedState[itemId] = !(collapsedState[itemId] ?? true);
+		collapsedState[itemId] = !isCollapsed(itemId);
 	}
 
 	function isCollapsed(itemId: string): boolean {
-		return collapsedState[itemId] ?? true;
+		if (itemId in collapsedState) return collapsedState[itemId];
+		return !allExpanded;
 	}
 
 	// IMPORTANT: The order of these strings is used for sorting purposes.
-	const validTypes = ['class', 'feature', 'ancestry', 'background', 'boon'];
+	const validTypes = ['class', 'subclass', 'feature', 'ancestry', 'background', 'boon'];
 	const { featureTypeHeadings } = CONFIG.NIMBLE;
 
 	let actor = getContext<NimbleCharacter>('actor');
@@ -132,17 +146,129 @@
 	let searchTerm = $state('');
 	let items = $derived(filterItems(actor.reactive, validTypes, searchTerm));
 	let categorizedItems = $derived(groupItemsByType(items));
-	let subclasses = $derived(filterItems(actor.reactive, 'subclass', searchTerm));
-	let categorizedSubclasses = $derived(groupSubclassesByParentClass(subclasses));
+
+	// All subclass feature items collected and sorted by level — rendered nested under the subclass section
+	let subclassFeatureItems = $derived(
+		sortFeatureItems(
+			Object.entries(categorizedItems)
+				.filter(([key]) => key.startsWith('subclass-group:'))
+				.flatMap(([, groupItems]) => groupItems),
+		),
+	);
 
 	// Settings
 	let flags = $derived(actor.reactive.flags.nimble);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
 </script>
 
+{#snippet featureCard(item)}
+	<li
+		class="nimble-feature-card"
+		class:nimble-feature-card--drop-flash={shouldFlashDroppedItem(
+			droppedItemFlashIds,
+			item.reactive._id,
+		)}
+		data-item-id={item.reactive._id}
+		draggable="true"
+		ondragstart={(event) => sheet._onDragStart(event)}
+		onanimationend={(event) => handleDropFlashAnimationEnd(event, item.reactive._id)}
+	>
+		<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<div
+			class="nimble-feature-card__header"
+			role="button"
+			tabindex="0"
+			aria-expanded={!isCollapsed(item.reactive._id)}
+			onclick={() => toggleCollapsed(item.reactive._id)}
+			onkeydown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					toggleCollapsed(item.reactive._id);
+				}
+			}}
+		>
+			{#if showEmbeddedDocumentImages}
+				<div class="nimble-feature-card__img-wrapper">
+					<img class="nimble-feature-card__img" src={item.reactive.img} alt={item.reactive.name} />
+					<button
+						class="nimble-feature-card__img-activate"
+						type="button"
+						aria-label="Send {item.reactive.name} to chat"
+						onclick={(event) => {
+							event.stopPropagation();
+							actor.activateItem(item.reactive._id);
+						}}
+					>
+						<i class="fa-solid fa-comment"></i>
+					</button>
+				</div>
+			{/if}
+
+			<h4 class="nimble-feature-card__name nimble-heading" data-heading-variant="item">
+				{item.reactive.name}
+			</h4>
+
+			{#if getEffectiveLevel(item) !== Infinity}
+				<span class="nimble-feature-card__level">Lv. {getEffectiveLevel(item)}</span>
+			{/if}
+
+			{#if editingEnabled}
+				<button
+					class="nimble-button"
+					data-button-variant="icon"
+					type="button"
+					aria-label="Configure {item.reactive.name}"
+					onclick={(event) => configureItem(event, item._id)}
+				>
+					<i class="fa-solid fa-edit"></i>
+				</button>
+
+				<button
+					class="nimble-button"
+					data-button-variant="icon"
+					type="button"
+					aria-label="Delete {item.reactive.name}"
+					onclick={(event) => deleteItem(event, item._id)}
+				>
+					<i class="fa-solid fa-trash"></i>
+				</button>
+			{/if}
+
+			<span
+				class="nimble-feature-card__chevron"
+				class:nimble-feature-card__chevron--collapsed={isCollapsed(item.reactive._id)}
+				aria-hidden="true"
+			>
+				<i class="fa-solid fa-chevron-down"></i>
+			</span>
+		</div>
+
+		<div
+			class="nimble-feature-card__body"
+			class:nimble-feature-card__body--collapsed={isCollapsed(item.reactive._id)}
+		>
+			<div class="nimble-feature-card__description">
+				{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.reactive.system?.description || '') then description}
+					{@html description}
+				{/await}
+			</div>
+		</div>
+	</li>
+{/snippet}
+
 <header class="nimble-sheet__static nimble-sheet__static--features">
 	<div class="nimble-search-wrapper">
 		<SearchBar bind:searchTerm />
+
+		<button
+			class="nimble-button {allExpanded ? 'fa-solid fa-angles-up' : 'fa-solid fa-angles-down'}"
+			data-button-variant="basic"
+			type="button"
+			aria-label={allExpanded ? 'Collapse All' : 'Expand All'}
+			data-tooltip={allExpanded ? 'Collapse All' : 'Expand All'}
+			onclick={toggleAllExpanded}
+		></button>
 
 		{#if editingEnabled}
 			<button
@@ -159,226 +285,29 @@
 
 <section class="nimble-sheet__body nimble-sheet__body--player-character">
 	{#each Object.entries(categorizedItems).sort(sortItemCategories) as [categoryName, itemCategory]}
-		<div>
-			<header>
-				<h3 class="nimble-heading" data-heading-variant="section">
-					{featureTypeHeadings[categoryName] ?? formatGroupName(categoryName)}
-				</h3>
-			</header>
+		{#if !categoryName.startsWith('subclass-group:')}
+			<div>
+				<header>
+					<h3 class="nimble-heading" data-heading-variant="section">
+						{getCategoryHeading(categoryName)}
+					</h3>
+				</header>
 
-			<ul class="nimble-item-list">
-				{#each sortFeatureItems(itemCategory) as item (item.reactive._id)}
-					<li
-						class="nimble-feature-card"
-						class:nimble-feature-card--drop-flash={shouldFlashDroppedItem(
-							droppedItemFlashIds,
-							item.reactive._id,
-						)}
-						data-item-id={item.reactive._id}
-						draggable="true"
-						ondragstart={(event) => sheet._onDragStart(event)}
-						onanimationend={(event) => handleDropFlashAnimationEnd(event, item.reactive._id)}
-					>
-						<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
-						<!-- svelte-ignore a11y_click_events_have_key_events -->
-						<div
-							class="nimble-feature-card__header"
-							role="button"
-							tabindex="0"
-							aria-expanded={!isCollapsed(item.reactive._id)}
-							onclick={() => toggleCollapsed(item.reactive._id)}
-							onkeydown={(e) => {
-								if (e.key === 'Enter' || e.key === ' ') {
-									e.preventDefault();
-									toggleCollapsed(item.reactive._id);
-								}
-							}}
-						>
-							{#if showEmbeddedDocumentImages}
-								<div class="nimble-feature-card__img-wrapper">
-									<img
-										class="nimble-feature-card__img"
-										src={item.reactive.img}
-										alt={item.reactive.name}
-									/>
-									<button
-										class="nimble-feature-card__img-activate"
-										type="button"
-										aria-label="Send {item.reactive.name} to chat"
-										onclick={(event) => {
-											event.stopPropagation();
-											actor.activateItem(item.reactive._id);
-										}}
-									>
-										<i class="fa-solid fa-comment"></i>
-									</button>
-								</div>
-							{/if}
+				<ul class="nimble-item-list">
+					{#each sortFeatureItems(itemCategory) as item (item.reactive._id)}
+						{@render featureCard(item)}
+					{/each}
+				</ul>
 
-							<h4 class="nimble-feature-card__name nimble-heading" data-heading-variant="item">
-								{item.reactive.name}
-							</h4>
-
-							{#if getEffectiveLevel(item) !== Infinity}
-								<span class="nimble-feature-card__level">Lv. {getEffectiveLevel(item)}</span>
-							{/if}
-
-							{#if editingEnabled}
-								<button
-									class="nimble-button"
-									data-button-variant="icon"
-									type="button"
-									aria-label="Configure {item.reactive.name}"
-									onclick={(event) => configureItem(event, item._id)}
-								>
-									<i class="fa-solid fa-edit"></i>
-								</button>
-
-								<button
-									class="nimble-button"
-									data-button-variant="icon"
-									type="button"
-									aria-label="Delete {item.reactive.name}"
-									onclick={(event) => deleteItem(event, item._id)}
-								>
-									<i class="fa-solid fa-trash"></i>
-								</button>
-							{/if}
-
-							<span
-								class="nimble-feature-card__chevron"
-								class:nimble-feature-card__chevron--collapsed={isCollapsed(item.reactive._id)}
-								aria-hidden="true"
-							>
-								<i class="fa-solid fa-chevron-down"></i>
-							</span>
-						</div>
-
-						<div
-							class="nimble-feature-card__body"
-							class:nimble-feature-card__body--collapsed={isCollapsed(item.reactive._id)}
-						>
-							<div class="nimble-feature-card__description">
-								{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(item.reactive.system?.description || '') then description}
-									{@html description}
-								{/await}
-							</div>
-						</div>
-					</li>
-					{#if categoryName === 'class' && categorizedSubclasses[item.reactive.system.identifier]?.length}
-						<ul class="nimble-item-list nimble-item-list--sublist">
-							{#each categorizedSubclasses[item.reactive.system.identifier] as subclass}
-								<li
-									class="nimble-feature-card"
-									class:nimble-feature-card--drop-flash={shouldFlashDroppedItem(
-										droppedItemFlashIds,
-										subclass.reactive._id,
-									)}
-									data-item-id={subclass.reactive._id}
-									draggable="true"
-									ondragstart={(event) => sheet._onDragStart(event)}
-									onanimationend={(event) =>
-										handleDropFlashAnimationEnd(event, subclass.reactive._id)}
-								>
-									<!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
-									<!-- svelte-ignore a11y_click_events_have_key_events -->
-									<div
-										class="nimble-feature-card__header"
-										role="button"
-										tabindex="0"
-										aria-expanded={!isCollapsed(subclass.reactive._id)}
-										onclick={() => toggleCollapsed(subclass.reactive._id)}
-										onkeydown={(e) => {
-											if (e.key === 'Enter' || e.key === ' ') {
-												e.preventDefault();
-												toggleCollapsed(subclass.reactive._id);
-											}
-										}}
-									>
-										{#if showEmbeddedDocumentImages}
-											<div class="nimble-feature-card__img-wrapper">
-												<img
-													class="nimble-feature-card__img"
-													src={subclass.reactive.img}
-													alt={subclass.reactive.name}
-												/>
-												<button
-													class="nimble-feature-card__img-activate"
-													type="button"
-													aria-label="Send {subclass.reactive.name} to chat"
-													onclick={(event) => {
-														event.stopPropagation();
-														actor.activateItem(subclass._id);
-													}}
-												>
-													<i class="fa-solid fa-comment"></i>
-												</button>
-											</div>
-										{/if}
-
-										<h4
-											class="nimble-feature-card__name nimble-heading"
-											data-heading-variant="item"
-										>
-											{subclass.reactive.name}
-										</h4>
-
-										{#if getEffectiveLevel(subclass) !== Infinity}
-											<span class="nimble-feature-card__level"
-												>Lv. {getEffectiveLevel(subclass)}</span
-											>
-										{/if}
-
-										{#if editingEnabled}
-											<button
-												class="nimble-button"
-												data-button-variant="icon"
-												type="button"
-												aria-label="Configure {subclass.reactive.name}"
-												onclick={(event) => configureItem(event, subclass._id)}
-											>
-												<i class="fa-solid fa-edit"></i>
-											</button>
-
-											<button
-												class="nimble-button"
-												data-button-variant="icon"
-												type="button"
-												aria-label="Delete {subclass.reactive.name}"
-												onclick={(event) => deleteItem(event, subclass._id)}
-											>
-												<i class="fa-solid fa-trash"></i>
-											</button>
-										{/if}
-
-										<span
-											class="nimble-feature-card__chevron"
-											class:nimble-feature-card__chevron--collapsed={isCollapsed(
-												subclass.reactive._id,
-											)}
-											aria-hidden="true"
-										>
-											<i class="fa-solid fa-chevron-down"></i>
-										</span>
-									</div>
-
-									<div
-										class="nimble-feature-card__body"
-										class:nimble-feature-card__body--collapsed={isCollapsed(subclass.reactive._id)}
-									>
-										<div class="nimble-feature-card__description">
-											{#await foundry.applications.ux.TextEditor.implementation.enrichHTML(subclass.reactive.system?.description || '') then description}
-												{@html description}
-											{/await}
-										</div>
-									</div>
-								</li>
-							{/each}
-						</ul>
-					{/if}
-				{/each}
-			</ul>
-		</div>
+				{#if categoryName === 'subclass' && subclassFeatureItems.length}
+					<ul class="nimble-item-list nimble-item-list--sublist">
+						{#each subclassFeatureItems as item (item.reactive._id)}
+							{@render featureCard(item)}
+						{/each}
+					</ul>
+				{/if}
+			</div>
+		{/if}
 	{/each}
 </section>
 
