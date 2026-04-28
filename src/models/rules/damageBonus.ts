@@ -82,16 +82,15 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 		if (resolvedValue === null || resolvedValue === 0) return;
 
 		const actorSystem = actor as object as ActorSystem;
-		const existing = actorSystem.system.damageBonuses ?? [];
+		if (!actorSystem.system.damageBonuses) {
+			foundry.utils.setProperty(actor.system, 'damageBonuses', []);
+		}
 
-		foundry.utils.setProperty(actor.system, 'damageBonuses', [
-			...existing,
-			{
-				value: resolvedValue,
-				damageType: this.damageType,
-				appliesTo: this.appliesTo,
-			},
-		]);
+		actorSystem.system.damageBonuses!.push({
+			value: resolvedValue,
+			damageType: this.damageType,
+			appliesTo: this.appliesTo,
+		});
 	}
 }
 
