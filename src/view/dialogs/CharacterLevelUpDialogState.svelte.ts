@@ -28,6 +28,7 @@ interface LevelUpDocument {
 	classes: Record<string, ClassItemShape | undefined>;
 	items: Array<{
 		type: string;
+		uuid?: string;
 		name?: string;
 		system?: {
 			rules?: Array<{ type: string; [key: string]: unknown }>;
@@ -109,7 +110,7 @@ export function createLevelUpState(
 
 	// Class features state
 	let classFeatures: ClassFeatureResult | null = $state(null);
-	let selectedClassFeatures: Map<string, NimbleFeatureItem> = $state(new Map());
+	let selectedClassFeatures: Map<string, NimbleFeatureItem[]> = $state(new Map());
 	let featuresLoading = $state(true);
 
 	// Spell grants state
@@ -144,15 +145,26 @@ export function createLevelUpState(
 		Promise.all([buildClassFeatureIndex(), buildSubclassFeatureIndex()])
 			.then(async ([classIndex, subclassIndex]) => {
 				const parentClassIdentifier = characterClass.identifier;
+				const items = getDocument().items ?? [];
+				const ownedFeatureUuids = new Set(
+					items
+						.filter((item) => item.type === 'feature')
+						.flatMap((item) => {
+							const compendiumSource = item._stats?.compendiumSource;
+							return typeof compendiumSource === 'string' && compendiumSource.length > 0
+								? [compendiumSource]
+								: [];
+						}),
+				);
 				const rawFeatures = await getClassFeaturesFromIndex(
 					classIndex,
 					parentClassIdentifier,
 					levelingTo,
+					{ ownedFeatureUuids },
 				);
 
 				// Determine the subclass group key for feature lookup.
 				// Features use a slugified subclass name as their system.group.
-				const items = getDocument().items ?? [];
 				let subclassGroup: string | undefined;
 
 				if (currentSelectedSubclass) {
@@ -180,38 +192,15 @@ export function createLevelUpState(
 						)
 					: [];
 
-				// Get UUIDs of features the character already has (via compendiumSource)
-				const ownedFeatureUuids = new Set(
-					items
-						.filter((item) => item.type === 'feature')
-						.map(
-							(item) =>
-								(item as unknown as { _stats?: { compendiumSource?: string } })._stats
-									?.compendiumSource,
-						)
-						.filter((uuid): uuid is string => !!uuid),
-				);
-
-				// Filter out already-owned features from autoGrant and merge in subclass features
+				// Subclass features are resolved separately, so filter already-owned
+				// entries here before merging them into the current level grants.
 				const filteredAutoGrant = [...rawFeatures.autoGrant, ...subclassFeatures].filter(
 					(feature) => !ownedFeatureUuids.has(feature.uuid),
 				);
 
-				// Filter out already-owned features from selection groups
-				const filteredSelectionGroups = new Map<string, NimbleFeatureItem[]>();
-				for (const [groupName, features] of rawFeatures.selectionGroups) {
-					const filteredFeatures = features.filter(
-						(feature) => !ownedFeatureUuids.has(feature.uuid),
-					);
-					// Only include groups that still have options
-					if (filteredFeatures.length > 0) {
-						filteredSelectionGroups.set(groupName, filteredFeatures);
-					}
-				}
-
 				classFeatures = {
 					autoGrant: filteredAutoGrant,
-					selectionGroups: filteredSelectionGroups,
+					selectionGroups: rawFeatures.selectionGroups,
 				};
 				featuresLoading = false;
 			})
@@ -346,8 +335,9 @@ export function createLevelUpState(
 		if (featuresLoading) return false;
 		if (!classFeatures) return true;
 
-		for (const groupName of classFeatures.selectionGroups.keys()) {
-			if (!selectedClassFeatures.has(groupName)) {
+		for (const [groupName, group] of classFeatures.selectionGroups) {
+			const picks = selectedClassFeatures.get(groupName);
+			if (!picks || picks.length < group.selectionCount) {
 				return false;
 			}
 		}
@@ -419,10 +409,10 @@ export function createLevelUpState(
 			takeAverageHp: hitPointRollSelection === 'average',
 			classFeatures: classFeatures
 				? {
-						autoGrant: classFeatures.autoGrant,
+						autoGrant: classFeatures.autoGrant.map((f) => f.uuid),
 						selected: selectedClassFeatures,
 					}
-				: null,
+				: undefined,
 			spellUuids: getGrantedSpellUuids(),
 		});
 	}
@@ -567,7 +557,7 @@ export function createLevelUpState(
 		get selectedClassFeatures() {
 			return selectedClassFeatures;
 		},
-		set selectedClassFeatures(v: Map<string, NimbleFeatureItem>) {
+		set selectedClassFeatures(v: Map<string, NimbleFeatureItem[]>) {
 			selectedClassFeatures = v;
 		},
 		submit,

@@ -20,8 +20,6 @@ export class NimbleFeatureItem extends NimbleBaseItem {
 		const description = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
 			this.system.description,
 		);
-		console.log(description);
-
 		return {
 			system: {
 				description: showDescription ? description : '',

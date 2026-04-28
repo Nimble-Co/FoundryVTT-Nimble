@@ -8,6 +8,7 @@ import type { ClassFeatureResult } from '#types/components/ClassFeatureSelection
 interface ClassFeatureIndexEntry {
 	uuid: string;
 	group: string;
+	selectionCountByLevel: Record<string, number>;
 }
 
 /**
@@ -31,7 +32,19 @@ interface FeatureIndexEntry {
 		gainedAtLevel?: number;
 		gainedAtLevels?: number[];
 		group?: string;
+		selectionCountByLevel?: Record<string, number>;
 	};
+}
+
+/**
+ * Options controlling how a class feature lookup is resolved.
+ */
+export interface GetClassFeaturesOptions {
+	/**
+	 * UUIDs and compendium-source UUIDs of features already owned by the actor.
+	 * Any feature whose uuid appears here is filtered out of selection groups and auto-grants.
+	 */
+	ownedFeatureUuids?: ReadonlySet<string>;
 }
 
 /**
@@ -82,6 +95,7 @@ export async function buildClassFeatureIndex(): Promise<ClassFeatureIndex> {
 		const entry: ClassFeatureIndexEntry = {
 			uuid: featureItem.uuid,
 			group: system.group || 'ungrouped',
+			selectionCountByLevel: system.selectionCountByLevel ?? {},
 		};
 
 		// Add to index for gainedAtLevel
@@ -105,6 +119,7 @@ export async function buildClassFeatureIndex(): Promise<ClassFeatureIndex> {
 		'system.gainedAtLevel',
 		'system.gainedAtLevels',
 		'system.group',
+		'system.selectionCountByLevel',
 	] as string[];
 	for (const pack of game.packs) {
 		if (pack.documentName !== 'Item') continue;
@@ -121,6 +136,7 @@ export async function buildClassFeatureIndex(): Promise<ClassFeatureIndex> {
 			const entry: ClassFeatureIndexEntry = {
 				uuid: packEntry.uuid,
 				group: system.group || 'ungrouped',
+				selectionCountByLevel: system.selectionCountByLevel ?? {},
 			};
 
 			// Add to index for gainedAtLevel
@@ -141,6 +157,37 @@ export async function buildClassFeatureIndex(): Promise<ClassFeatureIndex> {
 }
 
 /**
+ * Resolves the required number of selections for a group at a specific level.
+ *
+ * The count is taken from the `selectionCountByLevel` field on each feature entry;
+ * we use the max across features in the group so a single authoritative feature can
+ * drive the count even if other entries in the group omit the field. Missing values
+ * default to 1, preserving the pre-existing "choose one" behaviour.
+ */
+function resolveSelectionCount(entries: ClassFeatureIndexEntry[], level: number): number {
+	const levelKey = String(level);
+	let count = 1;
+	let firstExplicitCount: number | undefined;
+
+	for (const entry of entries) {
+		const candidate = entry.selectionCountByLevel?.[levelKey];
+		if (typeof candidate !== 'number' || !Number.isInteger(candidate)) continue;
+
+		if (firstExplicitCount === undefined) {
+			firstExplicitCount = candidate;
+		} else if (candidate !== firstExplicitCount) {
+			console.warn(
+				`[Nimble] selectionCountByLevel conflict at level ${level}: entries disagree (${firstExplicitCount} vs ${candidate}). Using the higher value.`,
+			);
+		}
+
+		if (candidate > count) count = candidate;
+	}
+
+	return count;
+}
+
+/**
  * Gets class features using a pre-built index for instant lookups.
  * Use this after building the index with buildClassFeatureIndex().
  */
@@ -148,6 +195,7 @@ export default async function getClassFeaturesFromIndex(
 	index: ClassFeatureIndex,
 	classIdentifier: string,
 	level: number,
+	options: GetClassFeaturesOptions = {},
 ): Promise<ClassFeatureResult> {
 	const result: ClassFeatureResult = {
 		autoGrant: [],
@@ -166,25 +214,32 @@ export default async function getClassFeaturesFromIndex(
 		return result;
 	}
 
+	const ownedUuids = options.ownedFeatureUuids ?? new Set<string>();
+
 	// Fetch the matching feature documents
 	const features = await Promise.all(
 		entries.map((entry) => fromUuid(entry.uuid as `Item.${string}`)),
 	);
 
-	// Group by category
+	// Group by category, keeping the backing index entries in parallel so we can
+	// compute per-group selection counts after filtering out owned features.
+	const entriesByGroup = new Map<string, ClassFeatureIndexEntry[]>();
 	const featuresByGroup = new Map<string, NimbleFeatureItem[]>();
 
 	for (let i = 0; i < features.length; i++) {
 		const feature = features[i];
 		if (!feature) continue;
+		if (ownedUuids.has(entries[i].uuid)) continue;
 
 		const featureItem = feature as NimbleFeatureItem;
 		const groupName = entries[i].group;
 
 		if (!featuresByGroup.has(groupName)) {
 			featuresByGroup.set(groupName, []);
+			entriesByGroup.set(groupName, []);
 		}
 		featuresByGroup.get(groupName)!.push(featureItem);
+		entriesByGroup.get(groupName)!.push(entries[i]);
 	}
 
 	// Categorize groups: names ending with -progression are auto-grant, others are selection
@@ -192,7 +247,12 @@ export default async function getClassFeaturesFromIndex(
 		if (groupName.endsWith('-progression')) {
 			result.autoGrant.push(...groupFeatures);
 		} else {
-			result.selectionGroups.set(groupName, groupFeatures);
+			const groupEntries = entriesByGroup.get(groupName) ?? [];
+			const selectionCount = resolveSelectionCount(groupEntries, level);
+			result.selectionGroups.set(groupName, {
+				features: groupFeatures,
+				selectionCount,
+			});
 		}
 	}
 

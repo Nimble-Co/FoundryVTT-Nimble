@@ -698,6 +698,7 @@ const levelDownDialog = {
 	subclass: 'NIMBLE.levelDownDialog.subclass',
 	feature: 'NIMBLE.levelDownDialog.feature',
 	spell: 'NIMBLE.levelDownDialog.spell',
+	featuresRemoved: 'NIMBLE.levelDownDialog.featuresRemoved',
 	spellsRemoved: 'NIMBLE.levelDownDialog.spellsRemoved',
 	removed: 'NIMBLE.levelDownDialog.removed',
 	warningMessage: 'NIMBLE.levelDownDialog.warningMessage',

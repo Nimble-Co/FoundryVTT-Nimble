@@ -51,7 +51,10 @@
 			9,
 			12,
 			17
-		]
+		],
+		"selectionCountByLevel": {
+			"6": 2
+		}
 	},
 	"effects": [],
 	"flags": {},

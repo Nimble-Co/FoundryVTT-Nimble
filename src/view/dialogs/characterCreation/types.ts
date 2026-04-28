@@ -108,7 +108,7 @@ export interface CharacterCreationResults {
 	};
 	classFeatures?: {
 		autoGrant: string[];
-		selected: Map<string, NimbleFeatureItem>;
+		selected: Map<string, NimbleFeatureItem[]>;
 	};
 	spells?: {
 		autoGrant: string[];

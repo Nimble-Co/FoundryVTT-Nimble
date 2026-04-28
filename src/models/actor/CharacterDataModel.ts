@@ -488,6 +488,7 @@ interface LevelUpHistoryEntry {
 	skillIncreases: Record<string, number>;
 	hitDieAdded: boolean;
 	classIdentifier: string;
+	/** Item ids of class features granted during this level-up (auto + selected). */
 	grantedFeatureIds: string[];
 	grantedSpellIds: string[];
 }

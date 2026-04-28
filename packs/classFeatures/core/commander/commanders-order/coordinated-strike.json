@@ -62,8 +62,16 @@
 		"gainedAtLevel": 1,
 		"subclass": false,
 		"gainedAtLevels": [
-			1
-		]
+			1,
+			6,
+			8,
+			10,
+			12,
+			16
+		],
+		"selectionCountByLevel": {
+			"2": 2
+		}
 	},
 	"effects": [],
 	"folder": "406c4e162069a4a8",

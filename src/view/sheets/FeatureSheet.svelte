@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { setContext, untrack } from 'svelte';
 	import localize from '../../utils/localize.js';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
@@ -10,90 +10,30 @@
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import TagGroup from '../components/TagGroup.svelte';
+	import { createFeatureSheetState } from './FeatureSheet.state.svelte.ts';
+	import type { FeatureSheetProps } from '#types/components/FeatureSheet.d.ts';
+	import {
+		FEATURE_SHEET_TAB_CONFIG,
+		FEATURE_TYPE_CLASS,
+		type FeatureSheetTabName,
+	} from './FeatureSheetConstants.js';
 
-	function getFeatureTypeOptions() {
-		return Object.entries(featureTypes).map(([key, featureType]) => ({
-			label: featureType,
-			value: key,
-		}));
-	}
+	let { item, sheet }: FeatureSheetProps = $props();
 
-	function updateFeatureType(newSelection) {
-		item.update({
-			'system.featureType': newSelection,
-		});
-	}
+	const featureState = createFeatureSheetState(() => ({ item, sheet }));
 
-	function parseLevels(rawLevels) {
-		if (typeof rawLevels !== 'string') return [];
+	const snippetsByTab: Record<FeatureSheetTabName, () => void> = {
+		description: descriptionTab,
+		config: configTab,
+		activationConfig: activationConfigTab,
+		rules: rulesTab,
+		macro: macroTab,
+	};
 
-		const levelValues = rawLevels
-			.split(',')
-			.map((value) => Number.parseInt(value.trim(), 10))
-			.filter((value) => Number.isInteger(value) && value >= 1 && value <= 20);
-
-		return [...new Set(levelValues)].sort((a, b) => a - b);
-	}
-
-	function getGainedAtLevelsInputValue() {
-		const levels = item.reactive.system.gainedAtLevels || [];
-		if (levels.length > 0) return levels.join(', ');
-
-		const level = item.reactive.system.gainedAtLevel;
-		return Number.isInteger(level) ? String(level) : '';
-	}
-
-	function updateGainedAtLevels(rawLevels) {
-		const levels = parseLevels(rawLevels);
-
-		item.update({
-			'system.gainedAtLevels': levels,
-			'system.gainedAtLevel': levels[0] ?? null,
-		});
-	}
-
-	function updateSubclassFlag(checked) {
-		item.update({
-			'system.subclass': checked,
-		});
-	}
-
-	const { featureTypes } = CONFIG.NIMBLE;
-
-	let { item, sheet } = $props();
-
-	const navigation = [
-		{
-			component: descriptionTab,
-			icon: 'fa-solid fa-file-lines',
-			tooltip: 'Description',
-			name: 'description',
-		},
-		{
-			component: configTab,
-			icon: 'fa-solid fa-gears',
-			tooltip: 'Config',
-			name: 'config',
-		},
-		{
-			component: activationConfigTab,
-			icon: 'fa-solid fa-play',
-			tooltip: 'Activation',
-			name: 'activationConfig',
-		},
-		{
-			component: rulesTab,
-			icon: 'fa-solid fa-bolt',
-			tooltip: 'Rules',
-			name: 'rules',
-		},
-		{
-			component: macroTab,
-			icon: 'fa-solid fa-terminal',
-			tooltip: 'Macro',
-			name: 'macro',
-		},
-	];
+	const navigation = FEATURE_SHEET_TAB_CONFIG.map((tab) => ({
+		...tab,
+		component: snippetsByTab[tab.name],
+	}));
 
 	let currentTab = $state(navigation[0]);
 
@@ -131,13 +71,13 @@
 			</header>
 
 			<TagGroup
-				options={getFeatureTypeOptions()}
+				options={featureState.featureTypeOptions}
 				selectedOptions={[item.reactive.system.featureType]}
-				toggleOption={updateFeatureType}
+				toggleOption={featureState.updateFeatureType}
 			/>
 		</div>
 
-		{#if item.reactive.system.featureType === 'class'}
+		{#if item.reactive.system.featureType === FEATURE_TYPE_CLASS}
 			<div>
 				<header class="nimble-section-header">
 					<h3 class="nimble-heading">Class Identifier</h3>
@@ -170,7 +110,8 @@
 				<input
 					type="checkbox"
 					checked={Boolean(item.reactive.system.subclass)}
-					onchange={({ target }) => updateSubclassFlag(target.checked)}
+					onchange={({ target }) =>
+						featureState.updateSubclassFlag((target as HTMLInputElement).checked)}
 				/>
 			</div>
 
@@ -181,9 +122,24 @@
 
 				<input
 					type="text"
-					value={getGainedAtLevelsInputValue()}
+					value={featureState.gainedAtLevelsInputValue}
 					placeholder="e.g. 3 or 2, 6, 9"
-					onchange={({ target }) => updateGainedAtLevels(target.value)}
+					onchange={({ target }) =>
+						featureState.updateGainedAtLevels((target as HTMLInputElement).value)}
+				/>
+			</div>
+
+			<div>
+				<header class="nimble-section-header">
+					<h3 class="nimble-heading">{localize('NIMBLE.featureSheet.selectionCountByLevel')}</h3>
+				</header>
+
+				<input
+					type="text"
+					value={featureState.selectionCountByLevelInputValue}
+					placeholder={localize('NIMBLE.featureSheet.selectionCountByLevelPlaceholder')}
+					onchange={({ target }) =>
+						featureState.updateSelectionCountByLevel((target as HTMLInputElement).value)}
 				/>
 			</div>
 		{/if}

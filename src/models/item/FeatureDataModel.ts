@@ -35,6 +35,11 @@ const schema = () => ({
 			initial: [],
 		},
 	),
+	selectionCountByLevel: new fields.ObjectField({
+		required: false,
+		nullable: false,
+		initial: {},
+	}),
 });
 
 declare namespace NimbleFeatureData {
@@ -63,6 +68,8 @@ class NimbleFeatureData extends NimbleBaseItemData<
 	declare gainedAtLevel: number | null;
 
 	declare gainedAtLevels: number[];
+
+	declare selectionCountByLevel: Record<string, number>;
 
 	declare activation: {
 		showDescription: boolean;

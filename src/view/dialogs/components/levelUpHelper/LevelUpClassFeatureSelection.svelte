@@ -55,11 +55,12 @@
 		{/if}
 
 		{#if hasSelectionGroups}
-			{#each [...(classFeatures?.selectionGroups ?? [])] as [groupName, features] (groupName)}
+			{#each [...(classFeatures?.selectionGroups ?? [])] as [groupName, group] (groupName)}
 				<FeatureGroupSelection
 					{groupName}
-					{features}
-					selectedFeature={selectedFeatures.get(groupName) ?? null}
+					features={group.features}
+					selectionCount={group.selectionCount}
+					selectedFeatures={selectedFeatures.get(groupName) ?? []}
 					onSelect={(feature) => handleFeatureSelect(groupName, feature)}
 				/>
 			{/each}

@@ -5,7 +5,7 @@
 	import SpellReferenceCard from './SpellReferenceCard.svelte';
 	import localize from '#utils/localize.js';
 
-	let { feature, isSelected = false, onSelect }: FeatureCardProps = $props();
+	let { feature, isSelected = false, isDisabled = false, onSelect }: FeatureCardProps = $props();
 
 	const state = createFeatureCardState(() => feature);
 
@@ -19,6 +19,7 @@
 
 	function handleSelectClick(e: MouseEvent) {
 		e.stopPropagation(); // Prevent row click from firing
+		if (isDisabled) return;
 		onSelect?.();
 	}
 
@@ -34,6 +35,7 @@
 		class="feature-row"
 		class:selected={isSelected}
 		class:selectable={isSelectable}
+		class:disabled={isDisabled}
 		role="button"
 		tabindex="0"
 		onclick={handleRowClick}
@@ -142,6 +144,10 @@
 				var(--nimble-accent-color) 10%,
 				var(--nimble-box-background-color)
 			);
+		}
+
+		&.disabled {
+			opacity: 0.5;
 		}
 
 		.expand-arrow {

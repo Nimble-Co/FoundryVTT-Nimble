@@ -43,7 +43,10 @@
 			4,
 			9,
 			13
-		]
+		],
+		"selectionCountByLevel": {
+			"4": 2
+		}
 	},
 	"effects": [],
 	"flags": {},

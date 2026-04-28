@@ -72,10 +72,10 @@ interface LevelUpDialogData {
 	skillPointChanges: Record<string, number>;
 	selectedSubclass: NimbleSubclassItem | null;
 	selectedEpicBoon: NimbleBoonItem | null;
-	classFeatures: {
-		autoGrant: NimbleFeatureItem[];
-		selected: Map<string, NimbleFeatureItem>;
-	} | null;
+	classFeatures?: {
+		autoGrant: string[];
+		selected: Map<string, NimbleFeatureItem[]>;
+	};
 	spellUuids: string[];
 }
 
@@ -1243,37 +1243,24 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			}
 		}
 
-		// Build a single list of items to grant (class features + epic boon)
-		const itemsToGrant: { toObject(): object; uuid: string }[] = [];
-
-		if (typedDialogData.classFeatures) {
-			itemsToGrant.push(
-				...typedDialogData.classFeatures.autoGrant,
-				...typedDialogData.classFeatures.selected.values(),
-			);
-		}
-
+		// Grant epic boon if selected
+		let epicBoonIds: string[] = [];
 		if (typedDialogData.selectedEpicBoon) {
-			itemsToGrant.push(typedDialogData.selectedEpicBoon);
-		}
-
-		let grantedFeatureIds: string[] = [];
-
-		if (itemsToGrant.length > 0) {
-			const documentSources = itemsToGrant.map((item) => {
-				const data = item.toObject();
-				(data as { _stats: { compendiumSource?: string } })._stats.compendiumSource = item.uuid;
-				return data;
-			});
-
-			const created = await this.createEmbeddedDocuments(
-				'Item',
-				documentSources as Parameters<typeof this.createEmbeddedDocuments>[1],
-			);
-			grantedFeatureIds = (created ?? [])
+			const boonData = typedDialogData.selectedEpicBoon.toObject();
+			(boonData as { _stats: { compendiumSource?: string } })._stats.compendiumSource =
+				typedDialogData.selectedEpicBoon.uuid;
+			const created = await this.createEmbeddedDocuments('Item', [boonData] as Parameters<
+				typeof this.createEmbeddedDocuments
+			>[1]);
+			epicBoonIds = (created ?? [])
 				.map((item) => item.id)
 				.filter((id): id is string => id !== null);
 		}
+
+		// Grant any class features gained at this level (auto + selected)
+		const classFeatureIds = await this.grantLevelUpFeatures(typedDialogData.classFeatures);
+
+		const grantedFeatureIds = [...epicBoonIds, ...classFeatureIds];
 
 		// Create spell documents
 		let grantedSpellIds: string[] = [];
@@ -1368,6 +1355,40 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		}
 	}
 
+	/**
+	 * Creates embedded feature documents for features gained on level-up (both
+	 * auto-grant groups and user-selected groups) and returns the newly created
+	 * item ids so they can be tracked in the level-up history for later reversal.
+	 */
+	async grantLevelUpFeatures(classFeatures: LevelUpDialogData['classFeatures']): Promise<string[]> {
+		if (!classFeatures) return [];
+
+		const featureDocumentSources: Item.CreateData[] = [];
+
+		for (const uuid of classFeatures.autoGrant ?? []) {
+			const feature = await fromUuid(uuid as `Item.${string}`);
+			if (!feature) continue;
+			const source = (feature as NimbleFeatureItem).toObject();
+			source._stats.compendiumSource = uuid;
+			featureDocumentSources.push(source as object as Item.CreateData);
+		}
+
+		for (const [, features] of classFeatures.selected ?? []) {
+			for (const feature of features) {
+				const source = feature.toObject();
+				source._stats.compendiumSource = feature.uuid;
+				featureDocumentSources.push(source as object as Item.CreateData);
+			}
+		}
+
+		if (featureDocumentSources.length === 0) return [];
+
+		const created = (await this.createEmbeddedDocuments('Item', featureDocumentSources)) ?? [];
+		return created
+			.map((doc) => (doc as unknown as { id: string | null }).id)
+			.filter((id): id is string => typeof id === 'string' && id.length > 0);
+	}
+
 	async revertLastLevelUp() {
 		if (this.system.levelUpHistory.length === 0) return;
 
@@ -1424,7 +1445,6 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 
 		// Remove granted features
 		if (lastHistory.grantedFeatureIds && lastHistory.grantedFeatureIds.length > 0) {
-			// Filter to IDs that still exist on the actor (defensive)
 			const validIds = lastHistory.grantedFeatureIds.filter((id) => this.items.get(id));
 			if (validIds.length > 0) {
 				await this.deleteEmbeddedDocuments('Item', validIds);

@@ -486,6 +486,7 @@
 			"subclass": "Subclass",
 			"feature": "Feature",
 			"spell": "Spell",
+			"featuresRemoved": "Features Removed",
 			"spellsRemoved": "Spells Removed",
 			"removed": "removed",
 			"warningMessage": "This action will permanently revert the last level up. This cannot be undone.",
@@ -1182,6 +1183,10 @@
 			"sizeCategory": "Size Category",
 			"flunky": "Flunky"
 		},
+		"featureSheet": {
+			"selectionCountByLevel": "Selection Count By Level",
+			"selectionCountByLevelPlaceholder": "e.g. 2: 2  (overrides default of 1)"
+		},
 		"classSheet": {
 			"identifier": "Identifier",
 			"classComplexity": "Class Complexity",
@@ -1305,7 +1310,10 @@
 			"header": "Class Features",
 			"editSelection": "Edit Class Feature Selection",
 			"hint": "The following features are available at level 1 for your class. Some features are automatically granted, while others require you to make a choice.",
+			"levelUpHint": "The following features become available at level {level}. Some are automatically granted; others require you to choose.",
 			"chooseOne": "(Choose one)",
+			"chooseN": "(Choose {count})",
+			"nOfMSelected": "{current} of {required} selected",
 			"noDescriptionAvailable": "No description available.",
 			"selected": "Selected",
 			"confirmSelection": "Confirm Selection",

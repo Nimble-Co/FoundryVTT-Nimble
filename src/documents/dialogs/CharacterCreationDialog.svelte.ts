@@ -185,7 +185,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		};
 		classFeatures?: {
 			autoGrant: string[];
-			selected: Map<string, NimbleFeatureItem>;
+			selected: Map<string, NimbleFeatureItem[]>;
 		};
 		spells?: {
 			autoGrant: string[];
@@ -337,11 +337,13 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			}
 		}
 
-		// Add selected features
-		for (const [_group, feature] of results.classFeatures?.selected ?? []) {
-			const source = feature.toObject();
-			source._stats.compendiumSource = feature.uuid;
-			featureDocumentSources.push(source as object as Item.CreateData);
+		// Add selected features — each group can contribute multiple picks
+		for (const [_group, features] of results.classFeatures?.selected ?? []) {
+			for (const feature of features) {
+				const source = feature.toObject();
+				source._stats.compendiumSource = feature.uuid;
+				featureDocumentSources.push(source as object as Item.CreateData);
+			}
 		}
 
 		// Create all features

@@ -117,23 +117,31 @@
 					</li>
 				{/each}
 			{/if}
-
-			{#if grantedFeatures.length > 0}
-				{#each grantedFeatures as feature}
-					<li class="nimble-level-down-preview__item">
-						<span class="nimble-level-down-preview__label">
-							<i class="fa-solid fa-scroll"></i>
-							{levelDownDialog.feature}
-						</span>
-						<span class="nimble-level-down-preview__value">
-							{feature.name}
-							{levelDownDialog.removed}
-						</span>
-					</li>
-				{/each}
-			{/if}
 		</ul>
 	</section>
+
+	{#if grantedFeatures.length > 0}
+		<section class="nimble-level-down-group">
+			<div class="nimble-level-down-group__header">
+				<i class="fa-solid fa-scroll"></i>
+				<h4 class="nimble-level-down-group__title">
+					{levelDownDialog.featuresRemoved}
+				</h4>
+			</div>
+			<ul class="nimble-level-down-group__list">
+				{#each grantedFeatures as feature}
+					<li class="nimble-level-down-group__card">
+						<img
+							class="nimble-level-down-group__card-img"
+							src={feature.img || 'icons/svg/item-bag.svg'}
+							alt={feature.name}
+						/>
+						<span class="nimble-level-down-group__card-name">{feature.name}</span>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
 
 	{#if grantedSpells.length > 0}
 		<section class="nimble-level-down-group">

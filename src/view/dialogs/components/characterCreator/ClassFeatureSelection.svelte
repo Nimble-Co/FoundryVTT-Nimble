@@ -13,17 +13,25 @@
 		active,
 		classFeatures,
 		selectedFeatures = $bindable(),
+		hintText,
 	}: ClassFeatureSelectionProps = $props();
 
-	const CHARACTER_CREATION_STAGES = getContext<Record<string, string | number>>(
+	// These contexts are provided by the character creation dialog so the section
+	// can participate in its stage scroll-tracking. In other hosts (e.g. the level-up
+	// dialog) the contexts are undefined and we fall back to neutral id generation.
+	const CHARACTER_CREATION_STAGES = getContext<Record<string, string | number> | undefined>(
 		'CHARACTER_CREATION_STAGES',
-	);
-	const dialog = getContext<{ id: string }>('dialog');
+	) ?? {
+		CLASS_FEATURES: 'class-features',
+	};
+	const dialog = getContext<{ id: string } | undefined>('dialog') ?? { id: 'class-features' };
 
 	const state = createClassFeatureSelectionState(
 		() => ({ classFeatures, selectedFeatures }),
 		(features) => (selectedFeatures = features),
 	);
+
+	const resolvedHintText = $derived(hintText ?? localize('NIMBLE.classFeatureSelection.hint'));
 </script>
 
 {#if state.hasAnyFeatures}
@@ -38,7 +46,7 @@
 		</header>
 
 		{#if active}
-			<Hint hintText={localize('NIMBLE.classFeatureSelection.hint')} />
+			<Hint hintText={resolvedHintText} />
 		{/if}
 
 		{#if state.hasAutoGrant}
@@ -50,11 +58,12 @@
 		{/if}
 
 		{#if state.hasSelectionGroups}
-			{#each [...(classFeatures?.selectionGroups ?? [])] as [groupName, features] (groupName)}
+			{#each [...(classFeatures?.selectionGroups ?? [])] as [groupName, group] (groupName)}
 				<FeatureGroupSelection
 					{groupName}
-					{features}
-					selectedFeature={selectedFeatures.get(groupName) ?? null}
+					features={group.features}
+					selectionCount={group.selectionCount}
+					selectedFeatures={selectedFeatures.get(groupName) ?? []}
 					onSelect={(feature) => state.handleFeatureSelect(groupName, feature)}
 				/>
 			{/each}
