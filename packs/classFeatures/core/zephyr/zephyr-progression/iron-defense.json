@@ -64,7 +64,8 @@
 		"gainedAtLevel": 1,
 		"subclass": false,
 		"gainedAtLevels": [
-			1
+			1,
+			13
 		]
 	},
 	"effects": [],
