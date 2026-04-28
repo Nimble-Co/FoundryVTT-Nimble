@@ -24,6 +24,7 @@
 	const hasSubclass = $derived(state.hasSubclass);
 	const grantedFeatures = $derived(state.grantedFeatures);
 	const grantedSpells = $derived(state.grantedSpells);
+	const removedSpells = $derived(state.removedSpells);
 </script>
 
 <article class="nimble-sheet__body">
@@ -145,6 +146,29 @@
 			</div>
 			<ul class="nimble-level-down-group__list">
 				{#each grantedSpells as spell}
+					<li class="nimble-level-down-group__card">
+						<img
+							class="nimble-level-down-group__card-img"
+							src={spell.img || 'icons/svg/item-bag.svg'}
+							alt={spell.name}
+						/>
+						<span class="nimble-level-down-group__card-name">{spell.name}</span>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
+	{#if removedSpells.length > 0}
+		<section class="nimble-level-down-group">
+			<div class="nimble-level-down-group__header">
+				<i class="fa-solid fa-wand-sparkles"></i>
+				<h4 class="nimble-level-down-group__title">
+					{levelDownDialog.spellsRestored}
+				</h4>
+			</div>
+			<ul class="nimble-level-down-group__list">
+				{#each removedSpells as spell}
 					<li class="nimble-level-down-group__card">
 						<img
 							class="nimble-level-down-group__card-img"

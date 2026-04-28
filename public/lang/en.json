@@ -487,6 +487,7 @@
 			"feature": "Feature",
 			"spell": "Spell",
 			"spellsRemoved": "Spells Removed",
+			"spellsRestored": "Spells Restored",
 			"removed": "removed",
 			"warningMessage": "This action will permanently revert the last level up. This cannot be undone.",
 			"confirmLevelDown": "Confirm Level Down",
@@ -539,6 +540,7 @@
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
 			"grantSpells": "Spells",
+			"removeSpells": "Remove Spells",
 			"healingPotionBonus": "Healing Potion Bonus",
 			"hitDiceAdvantage": "Hit Dice Advantage",
 			"incrementHitDice": "Increment Hit Dice",
@@ -1359,7 +1361,9 @@
 			"selectSpellAriaLabel": "Select {spellName}",
 			"deselectSpellAriaLabel": "Deselect {spellName}",
 			"levelUpHeader": "Granted Spells",
-			"levelUpHint": "You gain the following spells at this level."
+			"levelUpHint": "You gain the following spells at this level.",
+			"levelUpRemovalHeader": "Spells Removed by Subclass",
+			"levelUpRemovalHint": "Your subclass removes the following spells from your spell list."
 		},
 		"classSelection": {
 			"stepSelectClass": "Step 1: Select Class",

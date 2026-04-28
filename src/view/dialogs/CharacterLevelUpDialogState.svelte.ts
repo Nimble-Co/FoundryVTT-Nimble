@@ -15,7 +15,13 @@ import getSubclassFeaturesFromIndex from '#utils/getSubclassFeatures.ts';
 
 import type { SchoolSelectionGroup, SpellSelectionGroup } from './characterCreation/types.js';
 import { EPIC_BOON_LEVEL, SUBCLASS_LEVEL } from './const/levelUpConstants.ts';
-import { collectKnownSchools, collectSpellGrants, type RulesArray } from './spellGrantUtils.ts';
+import {
+	collectKnownSchools,
+	collectSpellGrants,
+	collectSpellRemovals,
+	type RulesArray,
+	type SpellRemovalEntry,
+} from './spellGrantUtils.ts';
 
 /** Structural type for what the factory accesses on a class item */
 interface ClassItemShape {
@@ -29,6 +35,7 @@ interface LevelUpDocument {
 	items: Array<{
 		type: string;
 		name?: string;
+		img?: string;
 		system?: {
 			rules?: Array<{ type: string; [key: string]: unknown }>;
 			school?: string;
@@ -120,6 +127,7 @@ export function createLevelUpState(
 	let selectedSchools = $state<Map<string, string[]>>(new Map());
 	let selectedSpells = $state<Map<string, string[]>>(new Map());
 	let confirmedSchools = $state<Set<string>>(new Set());
+	let spellsToRemove = $state<SpellRemovalEntry[]>([]);
 
 	// Load spell index
 	buildSpellIndex()
@@ -219,6 +227,26 @@ export function createLevelUpState(
 				console.warn('Nimble | Failed to load class features:', err);
 				featuresLoading = false;
 			});
+	});
+
+	// Compute spells to remove from removeSpells rules on features being granted
+	$effect(() => {
+		if (featuresLoading || !classFeatures) {
+			spellsToRemove = [];
+			return;
+		}
+
+		const items = getDocument().items ?? [];
+		const ownedSpellItems = items.filter((i) => i.type === 'spell');
+
+		const removalRulesArrays: RulesArray[] = [];
+		for (const feature of classFeatures.autoGrant) {
+			const featureItem = feature as unknown as { system?: { rules?: unknown[] } };
+			const rules = (featureItem.system?.rules ?? []) as unknown as RulesArray;
+			if (rules.length > 0) removalRulesArrays.push(rules);
+		}
+
+		spellsToRemove = collectSpellRemovals(removalRulesArrays, ownedSpellItems);
 	});
 
 	// Process spell grants when class features and spell index are ready
@@ -424,6 +452,7 @@ export function createLevelUpState(
 					}
 				: null,
 			spellUuids: getGrantedSpellUuids(),
+			removedSpellUuids: spellsToRemove.map((s) => s.uuid),
 		});
 	}
 
@@ -479,6 +508,9 @@ export function createLevelUpState(
 		},
 		get autoGrantedSpells() {
 			return autoGrantedSpells;
+		},
+		get spellsToRemove() {
+			return spellsToRemove;
 		},
 		get schoolSelections() {
 			return schoolSelections;
