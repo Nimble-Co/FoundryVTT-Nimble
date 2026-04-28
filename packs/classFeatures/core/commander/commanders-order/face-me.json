@@ -47,12 +47,7 @@
 		"gainedAtLevel": 2,
 		"subclass": false,
 		"gainedAtLevels": [
-			2,
-			6,
-			8,
-			10,
-			12,
-			16
+			2
 		],
 		"selectionCountByLevel": {
 			"2": 2

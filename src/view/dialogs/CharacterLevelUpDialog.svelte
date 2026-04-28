@@ -66,6 +66,9 @@
 	<LevelUpClassFeatureSelection
 		{classFeatures}
 		bind:selectedFeatures={state.selectedClassFeatures}
+		bind:selectedOptionIds={state.selectedFeatureOptions}
+		bind:selectedOptionSubItems={state.selectedOptionSubItems}
+		ownedItemUuids={state.ownedFeatureUuids}
 		loading={featuresLoading}
 	/>
 

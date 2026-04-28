@@ -75,6 +75,7 @@ interface LevelUpDialogData {
 	classFeatures?: {
 		autoGrant: string[];
 		selected: Map<string, NimbleFeatureItem[]>;
+		grantedOptionItems?: string[];
 	};
 	spellUuids: string[];
 }
@@ -1379,6 +1380,14 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 				source._stats.compendiumSource = feature.uuid;
 				featureDocumentSources.push(source as object as Item.CreateData);
 			}
+		}
+
+		for (const uuid of classFeatures.grantedOptionItems ?? []) {
+			const feature = await fromUuid(uuid as `Item.${string}`);
+			if (!feature) continue;
+			const source = (feature as NimbleFeatureItem).toObject();
+			source._stats.compendiumSource = uuid;
+			featureDocumentSources.push(source as object as Item.CreateData);
 		}
 
 		if (featureDocumentSources.length === 0) return [];

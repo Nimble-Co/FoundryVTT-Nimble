@@ -108,6 +108,7 @@ function createClassFeaturesResult(
 	return {
 		autoGrant,
 		selectionGroups: new Map(),
+		optionFeatures: [],
 	};
 }
 

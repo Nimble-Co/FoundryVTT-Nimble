@@ -11,6 +11,10 @@ export function createClassFeatureSelectionState(
 	getClassFeatures: () => ClassFeatureResult | null,
 	getSelectedFeatures: () => Map<string, NimbleFeatureItem[]>,
 	setSelectedFeatures: (features: Map<string, NimbleFeatureItem[]>) => void,
+	getSelectedOptionIds: () => Map<string, string>,
+	setSelectedOptionIds: (ids: Map<string, string>) => void,
+	getSelectedOptionSubItems: () => Map<string, string>,
+	setSelectedOptionSubItems: (items: Map<string, string>) => void,
 ) {
 	// Auto-select features for groups where the only available options already
 	// match the required selection count (e.g., "choose 1 of 1", or "choose 2 of 2").
@@ -65,9 +69,38 @@ export function createClassFeatureSelectionState(
 		setSelectedFeatures(newMap);
 	}
 
+	function handleOptionSelect(featureUuid: string, optionId: string) {
+		const current = getSelectedOptionIds();
+		const newMap = new Map(current);
+		if (newMap.get(featureUuid) === optionId) {
+			// Toggle off
+			newMap.delete(featureUuid);
+		} else {
+			newMap.set(featureUuid, optionId);
+			// Clear sub-item when option changes
+			const subItems = new Map(getSelectedOptionSubItems());
+			subItems.delete(featureUuid);
+			setSelectedOptionSubItems(subItems);
+		}
+		setSelectedOptionIds(newMap);
+	}
+
+	function handleSubItemSelect(featureUuid: string, itemUuid: string) {
+		const current = getSelectedOptionSubItems();
+		const newMap = new Map(current);
+		if (newMap.get(featureUuid) === itemUuid) {
+			// Toggle off
+			newMap.delete(featureUuid);
+		} else {
+			newMap.set(featureUuid, itemUuid);
+		}
+		setSelectedOptionSubItems(newMap);
+	}
+
 	const hasAutoGrant = $derived((getClassFeatures()?.autoGrant?.length ?? 0) > 0);
 	const hasSelectionGroups = $derived((getClassFeatures()?.selectionGroups?.size ?? 0) > 0);
-	const hasAnyFeatures = $derived(hasAutoGrant || hasSelectionGroups);
+	const hasOptionFeatures = $derived((getClassFeatures()?.optionFeatures?.length ?? 0) > 0);
+	const hasAnyFeatures = $derived(hasAutoGrant || hasSelectionGroups || hasOptionFeatures);
 
 	return {
 		get hasAutoGrant() {
@@ -76,9 +109,14 @@ export function createClassFeatureSelectionState(
 		get hasSelectionGroups() {
 			return hasSelectionGroups;
 		},
+		get hasOptionFeatures() {
+			return hasOptionFeatures;
+		},
 		get hasAnyFeatures() {
 			return hasAnyFeatures;
 		},
 		handleFeatureSelect,
+		handleOptionSelect,
+		handleSubItemSelect,
 	};
 }

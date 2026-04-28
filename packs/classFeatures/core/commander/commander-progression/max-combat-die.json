@@ -1,7 +1,7 @@
 {
-	"name": "Fit for Any Battlefield",
+	"name": "+1 Max Combat Die",
 	"type": "feature",
-	"img": "icons/equipment/head/greathelm-banded-steel.webp",
+	"img": "icons/sundries/gaming/dice-runed-brown.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -32,15 +32,13 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Choose a Combat Tactic. When you roll Initiative, gain STR Combat Dice, each a d6. <em>(1/attack)</em> You may expend a Combat Die to perform a special maneuver. Combat Dice are lost when combat ends.</p><hr><p>Levels 6, 8, 10, 12, 16:</p><p>Choose another Combat Ability or gain +1 max Combat Dice</p>",
+		"description": "<p>Gain +1 to your maximum Combat Dice.</p>",
 		"featureType": "class",
 		"class": "commander",
 		"group": "commander-progression",
-		"gainedAtLevel": 4,
+		"gainedAtLevel": 6,
 		"subclass": false,
-		"gainedAtLevels": [
-			4
-		]
+		"gainedAtLevels": []
 	},
 	"effects": [],
 	"folder": "406c4e162069a4a8",
@@ -49,9 +47,9 @@
 		"coreVersion": "13.347",
 		"systemId": "nimble",
 		"systemVersion": "0.1.8",
-		"createdTime": 1760384468062,
-		"modifiedTime": 1761434361014,
+		"createdTime": 1761434361016,
+		"modifiedTime": 1761434361016,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "JiNcaklfRjgJ7e5W"
+	"_id": "WnKpJ8RvCb4mX2Qt"
 }
