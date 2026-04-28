@@ -72,10 +72,16 @@
 		sheet.clearDroppedItemFlash(itemId);
 	}
 
+	function getEffectiveLevel(item): number {
+		return (
+			item.reactive.system?.gainedAtLevel ?? item.reactive.system?.gainedAtLevels?.[0] ?? Infinity
+		);
+	}
+
 	function sortFeatureItems(items) {
 		return [...items].sort((a, b) => {
-			const levelA = a.reactive.system?.gainedAtLevel ?? Infinity;
-			const levelB = b.reactive.system?.gainedAtLevel ?? Infinity;
+			const levelA = getEffectiveLevel(a);
+			const levelB = getEffectiveLevel(b);
 			if (levelA !== levelB) return levelA - levelB;
 			return (a.reactive.sort ?? 0) - (b.reactive.sort ?? 0);
 		});
@@ -213,10 +219,8 @@
 								{item.reactive.name}
 							</h4>
 
-							{#if item.reactive.system?.gainedAtLevel != null}
-								<span class="nimble-feature-card__level"
-									>Lv. {item.reactive.system.gainedAtLevel}</span
-								>
+							{#if getEffectiveLevel(item) !== Infinity}
+								<span class="nimble-feature-card__level">Lv. {getEffectiveLevel(item)}</span>
 							{/if}
 
 							{#if editingEnabled}
@@ -319,9 +323,9 @@
 											{subclass.reactive.name}
 										</h4>
 
-										{#if subclass.reactive.system?.gainedAtLevel != null}
+										{#if getEffectiveLevel(subclass) !== Infinity}
 											<span class="nimble-feature-card__level"
-												>Lv. {subclass.reactive.system.gainedAtLevel}</span
+												>Lv. {getEffectiveLevel(subclass)}</span
 											>
 										{/if}
 
