@@ -6,7 +6,38 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "at-any-cost-cantrip",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": false,
+				"label": "Choose a Necrotic Cantrip"
+			},
+			{
+				"id": "at-any-cost-tier1",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					1,
+					2,
+					3
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": false,
+				"label": "Choose a Tier 1-3 Necrotic Spell"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
