@@ -18,7 +18,7 @@ type CombatWithHeroicReactionUse = Combat & {
 	useHeroicReactions?: (
 		combatantId: string,
 		reactionKeys: HeroicReactionKey[],
-		options?: { force?: boolean },
+		options?: { force?: boolean; skipActionDeduction?: boolean },
 	) => Promise<boolean>;
 };
 
@@ -86,9 +86,9 @@ export async function activateHeroicActionMacro(
 }
 
 /**
- * Checks if a reaction requires confirmation due to missing actions or being spent.
- * If confirmation is needed, shows a dialog and returns whether the user confirmed.
- * Returns true if the reaction can proceed (either no issues or user confirmed).
+ * Checks if a reaction requires confirmation due to a soft block (missing actions,
+ * already spent this round, or active turn). Shows the confirmation dialog so the
+ * player can acknowledge and bypass it. Returns true if the reaction can proceed.
  */
 async function checkReactionConfirmation(
 	actor: NimbleCharacter,
@@ -106,14 +106,16 @@ async function checkReactionConfirmation(
 		reactionKeys,
 	});
 
-	// Only show confirmation for 'noActions' or 'spent' blocked reasons
-	if (usageState.blockedReason !== 'noActions' && usageState.blockedReason !== 'spent') {
+	// Only show confirmation for soft block reasons that the player can bypass
+	const softBlockReasons: ReadonlySet<string> = new Set(['noActions', 'spent', 'activeTurn']);
+	if (usageState.blockedReason === null || !softBlockReasons.has(usageState.blockedReason)) {
 		return { confirmed: true, force: false };
 	}
 
 	const noActions =
 		usageState.blockedReason === 'noActions' ||
 		usageState.currentActions < usageState.requiredActions;
+	const isActiveTurn = usageState.isActiveTurn;
 
 	// Check which specific reactions are spent
 	const spentReactions = reactionKeys.filter(
@@ -130,6 +132,7 @@ async function checkReactionConfirmation(
 			spentReactionNames,
 			noActions,
 			hasSpentReactions,
+			isActiveTurn,
 		}),
 		force: true,
 	};
@@ -330,11 +333,26 @@ async function executeChatReaction(
 
 async function executeOpportunityAttackReaction(actor: NimbleCharacter): Promise<void> {
 	const reactionName = localize('NIMBLE.ui.heroicActions.reactions.opportunity.label');
-	const result = await resolveAndUseReaction(actor, ['opportunityAttack'], reactionName);
-	if (!result) return;
 
-	// For opportunity attack, we open the sheet to let the user choose a weapon
-	// since this requires more user interaction than the simple reactions
+	const combat = getActiveCombatForCurrentScene();
+	const combatant = combat?.combatants.find((c) => c.actorId === actor.id);
+	if (!combat || !combatant) {
+		ui.notifications.warn(
+			localize('NIMBLE.ui.heroicActions.macroWarnings.mustBeInCombat', { action: reactionName }),
+		);
+		return;
+	}
+
+	// Confirm with the player if soft-blocked, but don't deduct/spend yet —
+	// the panel's weapon click will deduct via activateItem and mark spent.
+	const { confirmed, force } = await checkReactionConfirmation(
+		actor,
+		['opportunityAttack'],
+		reactionName,
+	);
+	if (!confirmed) return;
+
+	// Open the sheet to let the user choose a weapon
 	const sheet = actor.sheet as foundry.applications.sheets.ActorSheetV2 & {
 		$state: Record<string, unknown>;
 	};
@@ -345,7 +363,7 @@ async function executeOpportunityAttackReaction(actor: NimbleCharacter): Promise
 	appState.heroicActionTarget = {
 		actionId: 'opportunity',
 		actionType: 'reaction',
-		force: result.force,
+		force,
 	};
 }
 

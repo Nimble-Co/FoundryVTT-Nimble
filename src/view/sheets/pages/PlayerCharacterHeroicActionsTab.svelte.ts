@@ -275,6 +275,12 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		return getReactionUsageState(reaction).canUse;
 	}
 
+	function isReactionActiveTurnBlocked(reactionKey: HeroicReactionKey): boolean {
+		const reaction = HEROIC_REACTIONS.find((entry) => entry.reactionKey === reactionKey);
+		if (!reaction) return false;
+		return getReactionUsageState(reaction).isActiveTurn;
+	}
+
 	async function useReaction(
 		reactionKey: HeroicReactionKey,
 		options?: { force?: boolean },
@@ -390,6 +396,9 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		get canUseInterposeAndDefendCombo() {
 			return interposeAndDefendUsageState.canUse;
 		},
+		get interposeAndDefendActiveTurnBlocked() {
+			return interposeAndDefendUsageState.isActiveTurn;
+		},
 		get hasSpells() {
 			return hasSpells;
 		},
@@ -399,6 +408,7 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 		HEROIC_ACTIONS,
 		HEROIC_REACTIONS,
 		canUseReaction,
+		isReactionActiveTurnBlocked,
 		deductActionPips,
 		handleActionClick,
 		handleReactionClick,

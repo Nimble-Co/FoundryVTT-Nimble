@@ -202,6 +202,7 @@ describe('PlayerCharacterHeroicActionsTab opportunity macro handoff', () => {
 				['opportunityAttack'],
 				{
 					force: true,
+					skipActionDeduction: true,
 				},
 			),
 		);

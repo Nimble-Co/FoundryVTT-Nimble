@@ -201,6 +201,8 @@
 			defendSpent={!heroicState.isReactionAvailable('defend')}
 			interposeSpent={!heroicState.isReactionAvailable('interpose')}
 			noActions={heroicState.actionsData.current <= 0}
+			isActiveTurn={heroicState.isReactionActiveTurnBlocked('defend')}
+			combinedIsActiveTurn={heroicState.interposeAndDefendActiveTurnBlocked}
 			onUseReaction={(options) => heroicState.useReaction('defend', options)}
 			onUseCombinedReaction={(options) =>
 				heroicState.useReactionCombo(['interpose', 'defend'], options)}
@@ -215,6 +217,8 @@
 			defendSpent={!heroicState.isReactionAvailable('defend')}
 			interposeSpent={!heroicState.isReactionAvailable('interpose')}
 			noActions={heroicState.actionsData.current <= 0}
+			isActiveTurn={heroicState.isReactionActiveTurnBlocked('interpose')}
+			combinedIsActiveTurn={heroicState.interposeAndDefendActiveTurnBlocked}
 			onUseReaction={(options) => heroicState.useReaction('interpose', options)}
 			onUseCombinedReaction={(options) =>
 				heroicState.useReactionCombo(['interpose', 'defend'], options)}
@@ -227,6 +231,7 @@
 			reactionDisabled={!heroicState.canUseReaction('opportunityAttack')}
 			opportunitySpent={!heroicState.isReactionAvailable('opportunityAttack')}
 			noActions={heroicState.actionsData.current <= 0}
+			isActiveTurn={heroicState.isReactionActiveTurnBlocked('opportunityAttack')}
 			onUseReaction={(options) => heroicState.useReaction('opportunityAttack', options)}
 			forceNextReactionUse={forceNextOpportunityReactionUse}
 			onConsumeForcedReactionUse={() => {
@@ -242,6 +247,7 @@
 			reactionDisabled={!heroicState.canUseReaction('help')}
 			helpSpent={!heroicState.isReactionAvailable('help')}
 			noActions={heroicState.actionsData.current <= 0}
+			isActiveTurn={heroicState.isReactionActiveTurnBlocked('help')}
 			onUseReaction={(options) => heroicState.useReaction('help', options)}
 		/>
 	{/if}

@@ -9,6 +9,7 @@
 		reactionDisabled = true,
 		helpSpent = false,
 		noActions = false,
+		isActiveTurn = false,
 		onUseReaction = async () => false,
 	}: ReactionPanelProps = $props();
 
@@ -17,6 +18,7 @@
 		() => reactionDisabled,
 		() => helpSpent,
 		() => noActions,
+		() => isActiveTurn,
 		() => onUseReaction,
 	);
 

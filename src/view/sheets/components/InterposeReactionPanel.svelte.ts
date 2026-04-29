@@ -5,8 +5,14 @@ import { getTargetedTokens, getTargetName } from '../../../utils/targeting.js';
 import handleInterposeAndDefend from './handleInterposeAndDefend.js';
 
 export function createInterposePanelState(options: ReactionPanelStateOptions) {
-	const { getActor, getReactionDisabled, getInterposeSpent, getNoActions, getOnUseReaction } =
-		options;
+	const {
+		getActor,
+		getReactionDisabled,
+		getInterposeSpent,
+		getNoActions,
+		getIsActiveTurn,
+		getOnUseReaction,
+	} = options;
 
 	// Targeting state
 	let targetingVersion = $state(0);
@@ -34,6 +40,7 @@ export function createInterposePanelState(options: ReactionPanelStateOptions) {
 		if (isDisabled) {
 			const interposeSpent = getInterposeSpent();
 			const noActions = getNoActions();
+			const isActiveTurn = getIsActiveTurn();
 			const reactionName = localize('NIMBLE.ui.heroicActions.reactions.interpose.label');
 
 			const confirmed = await showReactionConfirmation({
@@ -41,6 +48,7 @@ export function createInterposePanelState(options: ReactionPanelStateOptions) {
 				spentReactionNames: reactionName,
 				noActions,
 				hasSpentReactions: interposeSpent,
+				isActiveTurn,
 			});
 			if (!confirmed) return;
 
