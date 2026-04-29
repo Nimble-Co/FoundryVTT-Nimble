@@ -6,7 +6,21 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "damageBonus",
+				"disabled": false,
+				"id": "keen-eye-ranged-weapon-damage",
+				"identifier": "",
+				"label": "Keen Eye, Steady Hand",
+				"predicate": {},
+				"priority": 1,
+				"value": "@abilities.will.mod",
+				"damageType": "",
+				"delivery": "ranged",
+				"source": "weapon"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
