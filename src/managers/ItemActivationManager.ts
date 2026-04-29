@@ -237,13 +237,10 @@ class ItemActivationManager {
 			| undefined;
 		const healingBonus = isConsumable ? (actorSystem?.healingPotionBonus ?? 0) : 0;
 
-		// Get damage bonus based on attack type (melee/ranged/spell)
+		// Determine delivery (melee/ranged) and source (weapon/spell) for damage bonus filtering
 		const attackType = this.activationData?.targets?.attackType;
-		const damageBonusAttackType =
-			attackType === 'reach' ? 'melee' : attackType === 'range' ? 'ranged' : null;
-		const damageBonus = damageBonusAttackType
-			? getDamageBonusTotal(this.actor, damageBonusAttackType)
-			: 0;
+		const delivery = attackType === 'reach' ? 'melee' : attackType === 'range' ? 'ranged' : null;
+		const source = this.#item.type === 'spell' ? 'spell' : 'weapon';
 
 		for (const node of flattenEffectsTree(effects)) {
 			if (node.type === 'damage' || node.type === 'healing') {
@@ -287,9 +284,12 @@ class ItemActivationManager {
 					// Use modified formula if provided
 					let formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
 
-					// Apply damage bonus if applicable
-					if (damageBonus > 0) {
-						formula = `${formula} + ${damageBonus}`;
+					// Apply damage bonus filtered by delivery, source, and damage type
+					if (delivery) {
+						const damageBonus = getDamageBonusTotal(this.actor, delivery, source, node.damageType);
+						if (damageBonus > 0) {
+							formula = `${formula} + ${damageBonus}`;
+						}
 					}
 
 					// Forward the optional rollMode source list so DamageRoll can

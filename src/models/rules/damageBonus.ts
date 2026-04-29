@@ -1,11 +1,13 @@
 import { NimbleBaseRule } from './base.js';
 
-type DamageBonusTarget = 'melee' | 'ranged' | 'spell' | 'any';
+type DamageBonusDelivery = 'melee' | 'ranged' | 'any';
+type DamageBonusSource = 'weapon' | 'spell' | 'any';
 
 interface DamageBonusEntry {
 	value: number;
 	damageType: string;
-	appliesTo: DamageBonusTarget;
+	delivery: DamageBonusDelivery;
+	source: DamageBonusSource;
 }
 
 function schema() {
@@ -20,13 +22,19 @@ function schema() {
 		damageType: new fields.StringField({
 			required: true,
 			nullable: false,
-			initial: 'bludgeoning',
+			initial: '',
 		}),
-		appliesTo: new fields.StringField({
+		delivery: new fields.StringField({
 			required: true,
 			nullable: false,
 			initial: 'any',
-			choices: ['melee', 'ranged', 'spell', 'any'],
+			choices: ['melee', 'ranged', 'any'],
+		}),
+		source: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'any',
+			choices: ['weapon', 'spell', 'any'],
 		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'damageBonus' }),
 	};
@@ -43,13 +51,22 @@ interface ActorSystem {
 }
 
 /**
- * Rule that adds bonus damage to attacks, scoped by attack type.
- * Bonuses are accumulated in an array on the actor and applied during item activation.
+ * Rule that adds bonus damage to attacks, scoped by delivery method and source type.
+ *
+ * Delivery (melee | ranged | any) — how the attack reaches the target.
+ * Source (weapon | spell | any) — what produces the attack.
+ *
+ * These are independent axes: a melee spell (Shocking Grasp) has delivery=melee, source=spell.
+ * A ranged weapon (bow) has delivery=ranged, source=weapon.
+ *
+ * Bonuses are accumulated in an array on the actor and filtered during item activation.
+ * An optional damageType field restricts the bonus to attacks dealing that damage type.
  */
 class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 	declare value: string;
 	declare damageType: string;
-	declare appliesTo: DamageBonusTarget;
+	declare delivery: DamageBonusDelivery;
+	declare source: DamageBonusSource;
 
 	static override defineSchema(): DamageBonusRule.Schema {
 		return {
@@ -63,7 +80,8 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 			new Map([
 				['value', 'string'],
 				['damageType', 'string'],
-				['appliesTo', 'string'],
+				['delivery', 'string'],
+				['source', 'string'],
 			]),
 		);
 	}
@@ -89,9 +107,10 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 		actorSystem.system.damageBonuses!.push({
 			value: resolvedValue,
 			damageType: this.damageType,
-			appliesTo: this.appliesTo,
+			delivery: this.delivery,
+			source: this.source,
 		});
 	}
 }
 
-export { DamageBonusRule, type DamageBonusEntry, type DamageBonusTarget };
+export { DamageBonusRule, type DamageBonusEntry, type DamageBonusDelivery, type DamageBonusSource };

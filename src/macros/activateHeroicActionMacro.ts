@@ -366,8 +366,8 @@ async function executeUnarmedStrike(actor: NimbleCharacter): Promise<void> {
 	let rollFormula = getUnarmedDamageFormula(actor);
 	const canCrit = hasUnarmedProficiency(actor);
 
-	// Apply melee damage bonus (unarmed strikes are always melee)
-	const meleeDamageBonus = getDamageBonusTotal(actor, 'melee');
+	// Apply damage bonus (unarmed strikes are melee + weapon + bludgeoning)
+	const meleeDamageBonus = getDamageBonusTotal(actor, 'melee', 'weapon', 'bludgeoning');
 	if (meleeDamageBonus > 0) {
 		rollFormula = `${rollFormula} + ${meleeDamageBonus}`;
 	}

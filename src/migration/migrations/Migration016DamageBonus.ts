@@ -4,11 +4,13 @@ import { MigrationBase } from '../MigrationBase.js';
  * Migration to convert `meleeDamageBonus` rules to the generalized `damageBonus` type.
  *
  * `meleeDamageBonus` was a narrow rule type that only applied to melee attacks.
- * `damageBonus` generalizes this with an `appliesTo` field that scopes the bonus
- * to melee, ranged, spell, or any attack type.
+ * `damageBonus` generalizes this with separate `delivery` and `source` fields
+ * that independently scope the bonus by how the attack reaches the target
+ * (melee/ranged) and what produces the attack (weapon/spell).
  *
  * This migration rewrites `{ type: 'meleeDamageBonus' }` rules to
- * `{ type: 'damageBonus', appliesTo: 'melee' }`, preserving all other fields.
+ * `{ type: 'damageBonus', delivery: 'melee', source: 'any' }`, preserving
+ * all other fields.
  */
 class Migration016DamageBonus extends MigrationBase {
 	static override readonly version = 16;
@@ -23,7 +25,9 @@ class Migration016DamageBonus extends MigrationBase {
 			if (rule.type !== 'meleeDamageBonus') continue;
 
 			rule.type = 'damageBonus';
-			rule.appliesTo = 'melee';
+			rule.delivery = 'melee';
+			rule.source = 'weapon';
+			delete rule.appliesTo;
 
 			// eslint-disable-next-line no-console
 			console.log(`Nimble Migration | ${source.name}: converted meleeDamageBonus to damageBonus`);

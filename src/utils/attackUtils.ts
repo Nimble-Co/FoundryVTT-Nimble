@@ -1,4 +1,8 @@
-import type { DamageBonusEntry, DamageBonusTarget } from '../models/rules/damageBonus.js';
+import type {
+	DamageBonusDelivery,
+	DamageBonusEntry,
+	DamageBonusSource,
+} from '../models/rules/damageBonus.js';
 
 /** Default unarmed: 1d4 + STR damage, but cannot crit without proficiency (e.g., Swift Fists) */
 export const DEFAULT_UNARMED_DAMAGE = '1d4 + @abilities.strength.mod';
@@ -76,16 +80,27 @@ export function hasWeaponProficiency(
 }
 
 /**
- * Sum all damage bonuses on an actor that match the given attack type.
- * A bonus with `appliesTo: 'any'` matches all attack types.
+ * Sum all damage bonuses on an actor that match the given delivery, source, and damage type.
+ *
+ * Delivery (melee | ranged) — how the attack reaches the target.
+ * Source (weapon | spell) — what produces the attack.
+ * These are independent axes: a bonus with delivery='any' matches both melee and ranged,
+ * and a bonus with source='any' matches both weapon and spell.
+ *
+ * If damageType is provided, only bonuses with a matching damageType (or no damageType filter)
+ * are included. An empty string damageType on a bonus means "any damage type."
  *
  * @param actor - The actor whose `system.damageBonuses` array to read
- * @param attackType - The attack type to filter by ('melee' | 'ranged' | 'spell')
+ * @param delivery - The delivery method ('melee' or 'ranged')
+ * @param source - The source type ('weapon' or 'spell')
+ * @param damageType - Optional damage type to filter by (e.g. 'lightning')
  * @returns The total bonus value (0 if no matching bonuses)
  */
 export function getDamageBonusTotal(
 	actor: { system?: unknown } | null | undefined,
-	attackType: DamageBonusTarget,
+	delivery: DamageBonusDelivery,
+	source: DamageBonusSource,
+	damageType?: string,
 ): number {
 	const bonuses = (actor?.system as { damageBonuses?: DamageBonusEntry[] } | undefined)
 		?.damageBonuses;
@@ -93,9 +108,10 @@ export function getDamageBonusTotal(
 
 	let total = 0;
 	for (const bonus of bonuses) {
-		if (bonus.appliesTo === 'any' || bonus.appliesTo === attackType) {
-			total += bonus.value;
-		}
+		if (bonus.delivery !== 'any' && bonus.delivery !== delivery) continue;
+		if (bonus.source !== 'any' && bonus.source !== source) continue;
+		if (bonus.damageType !== '' && damageType && bonus.damageType !== damageType) continue;
+		total += bonus.value;
 	}
 	return total;
 }
