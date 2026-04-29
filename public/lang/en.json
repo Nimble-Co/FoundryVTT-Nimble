@@ -1754,6 +1754,36 @@
 					"support": "Support"
 				}
 			}
+		},
+		"pdfExport": {
+			"sectionHeader": "Export",
+			"exportButton": "Export Character Sheet (PDF)",
+			"exporting": "Exporting...",
+			"success": "Character sheet exported successfully",
+			"error": "Failed to export character sheet",
+			"dialogTitle": "Export Character Sheet",
+			"contentPicker": "Content Picker",
+			"columnEditor": "Column Editor",
+			"column": "Column {number}",
+			"insertToColumn": "Insert to Column {column}",
+			"generatePdf": "Generate PDF",
+			"previewPdf": "Preview PDF",
+			"previewTitle": "Preview",
+			"generatingPreview": "Generating preview...",
+			"bold": "Bold",
+			"italic": "Italic",
+			"template": "Template",
+			"templateLined": "With Lines",
+			"templateNoLines": "Without Lines",
+			"columnOverflow": "Content exceeds column capacity. Some text may be cut off.",
+			"selectAll": "Select All",
+			"categories": {
+				"ancestry": "Ancestry",
+				"background": "Background",
+				"features": "Class Features",
+				"spells": "Spells",
+				"inventory": "Inventory"
+			}
 		}
 	}
 }
