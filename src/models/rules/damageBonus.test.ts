@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getDamageBonusTotal } from '../../utils/attackUtils.js';
+import { getDamageBonusFormulas, getDamageBonusTotal } from '../../utils/attackUtils.js';
 import {
 	type DamageBonusDelivery,
 	type DamageBonusEntry,
@@ -104,7 +104,7 @@ describe('DamageBonusRule', () => {
 			rule.afterPrepareData();
 
 			expect(actor.system.damageBonuses).toEqual([
-				{ value: 3, damageType: '', delivery: 'melee', source: 'weapon' },
+				{ value: 3, formula: null, damageType: '', delivery: 'melee', source: 'weapon' },
 			]);
 		});
 
@@ -118,7 +118,7 @@ describe('DamageBonusRule', () => {
 			rule.afterPrepareData();
 
 			expect(actor.system.damageBonuses).toEqual([
-				{ value: 10, damageType: '', delivery: 'any', source: 'any' },
+				{ value: 10, formula: null, damageType: '', delivery: 'any', source: 'any' },
 			]);
 		});
 
@@ -229,7 +229,7 @@ describe('DamageBonusRule', () => {
 			rule.afterPrepareData();
 
 			expect(actor.system.damageBonuses).toEqual([
-				{ value: 5, damageType: 'necrotic', delivery: 'any', source: 'spell' },
+				{ value: 5, formula: null, damageType: 'necrotic', delivery: 'any', source: 'spell' },
 			]);
 		});
 	});
@@ -266,8 +266,20 @@ describe('getDamageBonusTotal', () => {
 		const actor = {
 			system: {
 				damageBonuses: [
-					{ value: 3, damageType: '', delivery: 'melee' as const, source: 'weapon' as const },
-					{ value: 2, damageType: '', delivery: 'melee' as const, source: 'weapon' as const },
+					{
+						value: 3,
+						formula: null,
+						damageType: '',
+						delivery: 'melee' as const,
+						source: 'weapon' as const,
+					},
+					{
+						value: 2,
+						formula: null,
+						damageType: '',
+						delivery: 'melee' as const,
+						source: 'weapon' as const,
+					},
 				],
 			},
 		};
@@ -279,8 +291,20 @@ describe('getDamageBonusTotal', () => {
 		const actor = {
 			system: {
 				damageBonuses: [
-					{ value: 3, damageType: '', delivery: 'melee' as const, source: 'weapon' as const },
-					{ value: 4, damageType: '', delivery: 'any' as const, source: 'any' as const },
+					{
+						value: 3,
+						formula: null,
+						damageType: '',
+						delivery: 'melee' as const,
+						source: 'weapon' as const,
+					},
+					{
+						value: 4,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+					},
 				],
 			},
 		};
@@ -294,7 +318,13 @@ describe('getDamageBonusTotal', () => {
 		const actor = {
 			system: {
 				damageBonuses: [
-					{ value: 3, damageType: '', delivery: 'melee' as const, source: 'weapon' as const },
+					{
+						value: 3,
+						formula: null,
+						damageType: '',
+						delivery: 'melee' as const,
+						source: 'weapon' as const,
+					},
 				],
 			},
 		};
@@ -306,7 +336,13 @@ describe('getDamageBonusTotal', () => {
 		const actor = {
 			system: {
 				damageBonuses: [
-					{ value: 5, damageType: '', delivery: 'any' as const, source: 'spell' as const },
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'spell' as const,
+					},
 				],
 			},
 		};
@@ -321,12 +357,25 @@ describe('getDamageBonusTotal', () => {
 				damageBonuses: [
 					{
 						value: 3,
+						formula: null,
 						damageType: 'lightning',
 						delivery: 'any' as const,
 						source: 'spell' as const,
 					},
-					{ value: 2, damageType: 'fire', delivery: 'any' as const, source: 'spell' as const },
-					{ value: 1, damageType: '', delivery: 'any' as const, source: 'spell' as const },
+					{
+						value: 2,
+						formula: null,
+						damageType: 'fire',
+						delivery: 'any' as const,
+						source: 'spell' as const,
+					},
+					{
+						value: 1,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'spell' as const,
+					},
 				],
 			},
 		};
@@ -346,6 +395,7 @@ describe('getDamageBonusTotal', () => {
 					damageBonuses: [
 						{
 							value: 5,
+							formula: null,
 							damageType: 'bludgeoning',
 							delivery: 'melee' as const,
 							source: 'weapon' as const,
@@ -365,6 +415,7 @@ describe('getDamageBonusTotal', () => {
 					damageBonuses: [
 						{
 							value: 3,
+							formula: null,
 							damageType: '',
 							delivery: 'ranged' as const,
 							source: 'weapon' as const,
@@ -384,6 +435,7 @@ describe('getDamageBonusTotal', () => {
 					damageBonuses: [
 						{
 							value: 4,
+							formula: null,
 							damageType: 'lightning',
 							delivery: 'any' as const,
 							source: 'spell' as const,
@@ -404,6 +456,7 @@ describe('getDamageBonusTotal', () => {
 					damageBonuses: [
 						{
 							value: 3,
+							formula: null,
 							damageType: '',
 							delivery: 'any' as const,
 							source: 'spell' as const,
@@ -416,5 +469,156 @@ describe('getDamageBonusTotal', () => {
 			expect(getDamageBonusTotal(actor, 'melee', 'spell')).toBe(3);
 			expect(getDamageBonusTotal(actor, 'melee', 'weapon')).toBe(0);
 		});
+	});
+});
+
+describe('DamageBonusRule — dice-based values', () => {
+	it('should store dice formula as raw string instead of resolving', () => {
+		const actor = createMockActor({});
+		const rule = createDamageBonusRule({ value: '1d6', delivery: 'any', source: 'any' }, actor);
+
+		rule.afterPrepareData();
+
+		expect(actor.system.damageBonuses).toEqual([
+			{ value: null, formula: '1d6', damageType: '', delivery: 'any', source: 'any' },
+		]);
+	});
+
+	it('should store complex dice formula with modifiers', () => {
+		const actor = createMockActor({});
+		const rule = createDamageBonusRule(
+			{ value: '2d8+5', delivery: 'melee', source: 'weapon' },
+			actor,
+		);
+
+		rule.afterPrepareData();
+
+		expect(actor.system.damageBonuses![0].value).toBeNull();
+		expect(actor.system.damageBonuses![0].formula).toBe('2d8+5');
+	});
+
+	it('should stack numeric and dice bonuses in the same array', () => {
+		const actor = createMockActor({ level: 5 });
+
+		const numericRule = createDamageBonusRule(
+			{ value: '3', delivery: 'melee', source: 'weapon' },
+			actor,
+		);
+		const diceRule = createDamageBonusRule(
+			{ value: '1d6', delivery: 'melee', source: 'weapon' },
+			actor,
+		);
+
+		numericRule.afterPrepareData();
+		diceRule.afterPrepareData();
+
+		expect(actor.system.damageBonuses).toHaveLength(2);
+		expect(actor.system.damageBonuses![0].value).toBe(3);
+		expect(actor.system.damageBonuses![0].formula).toBeNull();
+		expect(actor.system.damageBonuses![1].value).toBeNull();
+		expect(actor.system.damageBonuses![1].formula).toBe('1d6');
+	});
+});
+
+describe('getDamageBonusFormulas', () => {
+	it('should return empty array for null actor', () => {
+		expect(getDamageBonusFormulas(null, 'melee', 'weapon')).toEqual([]);
+	});
+
+	it('should return empty array when no dice bonuses match', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'melee' as const,
+						source: 'weapon' as const,
+					},
+				],
+			},
+		};
+
+		expect(getDamageBonusFormulas(actor, 'melee', 'weapon')).toEqual([]);
+	});
+
+	it('should return matching dice formulas', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: null,
+						formula: '1d6',
+						damageType: '',
+						delivery: 'melee' as const,
+						source: 'weapon' as const,
+					},
+					{
+						value: null,
+						formula: '2d8',
+						damageType: '',
+						delivery: 'melee' as const,
+						source: 'weapon' as const,
+					},
+				],
+			},
+		};
+
+		expect(getDamageBonusFormulas(actor, 'melee', 'weapon')).toEqual(['1d6', '2d8']);
+	});
+
+	it('should filter dice formulas by delivery and source', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: null,
+						formula: '1d6',
+						damageType: '',
+						delivery: 'melee' as const,
+						source: 'weapon' as const,
+					},
+					{
+						value: null,
+						formula: '2d8',
+						damageType: '',
+						delivery: 'ranged' as const,
+						source: 'weapon' as const,
+					},
+				],
+			},
+		};
+
+		expect(getDamageBonusFormulas(actor, 'melee', 'weapon')).toEqual(['1d6']);
+		expect(getDamageBonusFormulas(actor, 'ranged', 'weapon')).toEqual(['2d8']);
+	});
+
+	it('should exclude numeric bonuses from formulas result', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'melee' as const,
+						source: 'weapon' as const,
+					},
+					{
+						value: null,
+						formula: '1d6',
+						damageType: '',
+						delivery: 'melee' as const,
+						source: 'weapon' as const,
+					},
+				],
+			},
+		};
+
+		// getDamageBonusTotal only sums numeric
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon')).toBe(5);
+		// getDamageBonusFormulas only returns dice
+		expect(getDamageBonusFormulas(actor, 'melee', 'weapon')).toEqual(['1d6']);
 	});
 });

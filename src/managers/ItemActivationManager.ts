@@ -5,7 +5,11 @@ import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
-import { getDamageBonusTotal, hasWeaponProficiency } from '../utils/attackUtils.js';
+import {
+	getDamageBonusFormulas,
+	getDamageBonusTotal,
+	hasWeaponProficiency,
+} from '../utils/attackUtils.js';
 import getRollFormula from '../utils/getRollFormula.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
@@ -284,11 +288,19 @@ class ItemActivationManager {
 					// Use modified formula if provided
 					let formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
 
-					// Apply damage bonus filtered by delivery, source, and damage type
+					// Apply damage bonuses filtered by delivery, source, and damage type
 					if (delivery) {
-						const damageBonus = getDamageBonusTotal(this.actor, delivery, source, node.damageType);
-						if (damageBonus > 0) {
-							formula = `${formula} + ${damageBonus}`;
+						const numericBonus = getDamageBonusTotal(this.actor, delivery, source, node.damageType);
+						if (numericBonus > 0) {
+							formula = `${formula} + ${numericBonus}`;
+						}
+						for (const diceFormula of getDamageBonusFormulas(
+							this.actor,
+							delivery,
+							source,
+							node.damageType,
+						)) {
+							formula = `${formula} + ${diceFormula}`;
 						}
 					}
 

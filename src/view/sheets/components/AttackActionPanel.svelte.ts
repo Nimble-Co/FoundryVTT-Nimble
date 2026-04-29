@@ -3,6 +3,7 @@ import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import ItemActivationConfigDialog from '../../../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { getPrimaryDamageFormulaFromActivationEffects } from '../../../utils/activationEffects.js';
 import {
+	getDamageBonusFormulas,
 	getDamageBonusTotal,
 	getUnarmedDamageFormula,
 	hasUnarmedProficiency,
@@ -176,10 +177,13 @@ export function createAttackPanelState(
 		let rollFormula = getUnarmedDamageFormula(actor);
 		const canCrit = hasUnarmedProficiency(actor); // Only characters proficient with unarmed (e.g., Zephyr with Swift Fists) can crit
 
-		// Apply damage bonus (unarmed strikes are melee + weapon + bludgeoning)
+		// Apply damage bonuses (unarmed strikes are melee + weapon + bludgeoning)
 		const meleeDamageBonus = getDamageBonusTotal(actor, 'melee', 'weapon', 'bludgeoning');
 		if (meleeDamageBonus > 0) {
 			rollFormula = `${rollFormula} + ${meleeDamageBonus}`;
+		}
+		for (const diceFormula of getDamageBonusFormulas(actor, 'melee', 'weapon', 'bludgeoning')) {
+			rollFormula = `${rollFormula} + ${diceFormula}`;
 		}
 
 		const unarmedItem = {
