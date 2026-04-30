@@ -32,6 +32,17 @@ interface ActorSystem {
 		attributes: {
 			movement: Record<string, number>;
 		};
+		movementGrants?: Record<string, number>;
+	};
+}
+
+interface ActorSource {
+	_source: {
+		system: {
+			attributes: {
+				movement: Record<string, number>;
+			};
+		};
 	};
 }
 
@@ -47,6 +58,10 @@ interface ActorSystem {
  *
  * Walk is intentionally excluded from mode choices — walk speed is always present
  * on every actor and is modified via speedBonus, not granted.
+ *
+ * Grants are accumulated in actor.system.movementGrants during both data prep phases.
+ * The final movement value is computed as: max(all grants) + bonuses already applied.
+ * This ensures speedBonus values stack on top of the granted base correctly.
  *
  * Uses two-phase processing (matching speedBonus):
  * - prePrepareData: numeric speeds (e.g. '12') — fast path, no Roll construction
@@ -81,8 +96,13 @@ class GrantMovementRule extends NimbleBaseRule<GrantMovementRule.Schema> {
 	}
 
 	/**
-	 * Apply the granted movement speed to the actor.
-	 * Uses Math.max so multiple grants take the highest base, not additive.
+	 * Store the grant and apply it to movement.
+	 *
+	 * Grants are tracked in actor.system.movementGrants so multiple grants
+	 * take the highest base (Math.max). The final movement value preserves
+	 * any speedBonus values already applied by computing:
+	 *   max_grant + (liveSpeed - sourceBase)
+	 * where (liveSpeed - sourceBase) captures bonuses applied in earlier phases.
 	 */
 	private applyGrantedMovement(): void {
 		const { item } = this;
@@ -95,10 +115,26 @@ class GrantMovementRule extends NimbleBaseRule<GrantMovementRule.Schema> {
 		if (resolvedSpeed === null || resolvedSpeed <= 0) return;
 
 		const actorSystem = actor as object as ActorSystem;
-		const currentSpeed = actorSystem.system.attributes.movement[this.mode] ?? 0;
-		const newSpeed = Math.max(currentSpeed, resolvedSpeed);
 
-		foundry.utils.setProperty(actor.system, `attributes.movement.${this.mode}`, newSpeed);
+		// Track the highest grant per mode in an accumulator
+		if (!actorSystem.system.movementGrants) {
+			foundry.utils.setProperty(actor.system, 'movementGrants', {});
+		}
+		const previousGrant = actorSystem.system.movementGrants![this.mode] ?? 0;
+		const bestGrant = Math.max(previousGrant, resolvedSpeed);
+		actorSystem.system.movementGrants![this.mode] = bestGrant;
+
+		// Compute bonuses already applied by speedBonus rules.
+		// Live speed includes both previous grants and bonuses — subtract the
+		// previous grant and the source base to isolate just the bonuses.
+		const actorSource = actor as object as ActorSource;
+		const sourceBase = actorSource._source.system.attributes.movement[this.mode] ?? 0;
+		const liveSpeed = actorSystem.system.attributes.movement[this.mode] ?? 0;
+		const appliedBonuses = liveSpeed - sourceBase - previousGrant;
+
+		// Final speed = highest grant + source base + bonuses from speedBonus
+		const finalSpeed = bestGrant + sourceBase + Math.max(0, appliedBonuses);
+		foundry.utils.setProperty(actor.system, `attributes.movement.${this.mode}`, finalSpeed);
 	}
 
 	/**
