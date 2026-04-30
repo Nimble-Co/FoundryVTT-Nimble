@@ -208,6 +208,13 @@
 			"path": "packs/tables.db",
 			"type": "RollTable",
 			"system": "nimble"
+		},
+		{
+			"name": "nimble-rules",
+			"label": "Nimble Core Rules",
+			"path": "packs/rules.db",
+			"type": "JournalEntry",
+			"system": "nimble"
 		}
 	],
 	"background": "systems/nimble/assets/banners/manticoreFight.webp",
