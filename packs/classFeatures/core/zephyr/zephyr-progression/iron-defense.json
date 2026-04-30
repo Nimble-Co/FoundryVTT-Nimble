@@ -6,7 +6,31 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "iron-defense-l1",
+				"type": "armorClass",
+				"mode": "override",
+				"formula": "@dexterity + @strength",
+				"label": "Iron Defense",
+				"predicate": {
+					"armor": "unarmored"
+				}
+			},
+			{
+				"id": "iron-defense-l13",
+				"type": "armorClass",
+				"mode": "multiply",
+				"formula": "2",
+				"label": "Iron Defense (2)",
+				"predicate": {
+					"armor": "unarmored",
+					"level": {
+						"min": 13
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -40,7 +64,8 @@
 		"gainedAtLevel": 1,
 		"subclass": false,
 		"gainedAtLevels": [
-			1
+			1,
+			13
 		]
 	},
 	"effects": [],

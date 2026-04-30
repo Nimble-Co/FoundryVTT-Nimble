@@ -6,7 +6,64 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "shadowmastery-l6",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": true,
+				"label": "Shadowmastery: Necrotic Utility Spell",
+				"predicate": {
+					"level": {
+						"min": 6
+					}
+				}
+			},
+			{
+				"id": "shadowmastery-l8",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": true,
+				"label": "Shadowmastery (2): Necrotic Utility Spell",
+				"predicate": {
+					"level": {
+						"min": 8
+					}
+				}
+			},
+			{
+				"id": "shadowmastery-l14",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "auto",
+				"utilityOnly": true,
+				"label": "Shadowmastery (3): All Necrotic Utility Spells",
+				"predicate": {
+					"level": {
+						"min": 14
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -33,7 +90,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Choose 1 Necrotic Utility Spell.</p><hr><p>Level 8: Choose 1 more Necrotic Utility Spell</p><p>Level 14: Choose 1 more Necrotic Utility Spell</p>",
+		"description": "<p>Choose 1 Necrotic Utility Spell.</p><hr><p>Level 8: Choose 1 more Necrotic Utility Spell</p><p>Level 14: You know all Necrotic Utility Spells.</p>",
 		"featureType": "class",
 		"class": "shadowmancer",
 		"group": "shadowmancer-progression",

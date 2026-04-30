@@ -6,7 +6,38 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "tempest-mage-cantrip",
+				"type": "grantSpells",
+				"schools": [
+					"wind"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": false,
+				"label": "Choose a Wind Cantrip"
+			},
+			{
+				"id": "tempest-mage-tier1",
+				"type": "grantSpells",
+				"schools": [
+					"wind"
+				],
+				"tiers": [
+					1,
+					2,
+					3
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": false,
+				"label": "Choose a Tier 1-3 Wind Spell"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

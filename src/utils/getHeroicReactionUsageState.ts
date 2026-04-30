@@ -6,7 +6,7 @@ import {
 import { isCombatantDead } from './isCombatantDead.js';
 import { isCombatStarted } from './isCombatStarted.js';
 
-type HeroicReactionUsageBlockedReason =
+export type HeroicReactionUsageBlockedReason =
 	| 'outsideCombat'
 	| 'dead'
 	| 'spent'
@@ -14,6 +14,16 @@ type HeroicReactionUsageBlockedReason =
 	| 'activeTurn'
 	| 'noActions'
 	| 'notUsable';
+
+const SOFT_BLOCK_REASONS = new Set<HeroicReactionUsageBlockedReason>([
+	'spent',
+	'noActions',
+	'activeTurn',
+]);
+
+export function isSoftBlockedReason(reason: HeroicReactionUsageBlockedReason | null): boolean {
+	return reason !== null && SOFT_BLOCK_REASONS.has(reason);
+}
 
 interface GetHeroicReactionUsageStateParams {
 	combat: Combat | null;
@@ -54,6 +64,12 @@ export function getHeroicReactionUsageState({
 		normalizedReactionKeys.every((reactionKey) =>
 			getHeroicReactionAvailability(combatant, reactionKey),
 		);
+	const isActiveTurn =
+		!!combat &&
+		!!combatant &&
+		isCombatStarted(combat) &&
+		activeCombatantId !== null &&
+		activeCombatantId === combatantId;
 
 	let blockedReason: HeroicReactionUsageBlockedReason | null = null;
 
@@ -69,7 +85,7 @@ export function getHeroicReactionUsageState({
 		blockedReason = 'notUsable';
 	} else if (!game.user?.isGM && !combatant.actor?.isOwner) {
 		blockedReason = 'notOwner';
-	} else if (activeCombatantId === combatantId) {
+	} else if (isActiveTurn) {
 		blockedReason = 'activeTurn';
 	} else if (currentActions < requiredActions) {
 		blockedReason = 'noActions';
@@ -79,6 +95,7 @@ export function getHeroicReactionUsageState({
 		canUse: blockedReason === null,
 		blockedReason,
 		currentActions,
+		isActiveTurn,
 		isAvailable,
 		reactionKeys: normalizedReactionKeys,
 		requiredActions,

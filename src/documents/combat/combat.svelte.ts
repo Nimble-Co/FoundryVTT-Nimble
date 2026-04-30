@@ -1,7 +1,10 @@
 import { createSubscriber } from 'svelte/reactivity';
 import type { ActorRollOptions } from '#documents/actor/actorInterfaces.ts';
 import type { NimbleCombatant } from '#documents/combatant/combatant.svelte.js';
-import { getHeroicReactionUsageState } from '#utils/getHeroicReactionUsageState.js';
+import {
+	getHeroicReactionUsageState,
+	isSoftBlockedReason,
+} from '#utils/getHeroicReactionUsageState.js';
 import {
 	canOwnerUseHeroicReaction,
 	getHeroicReactionAvailability,
@@ -730,7 +733,7 @@ class NimbleCombat extends Combat {
 	async useHeroicReactions(
 		combatantId: string,
 		reactionKeys: HeroicReactionKey[],
-		options?: { force?: boolean },
+		options?: { force?: boolean; skipActionDeduction?: boolean },
 	): Promise<boolean> {
 		if (!combatantId || reactionKeys.length < 1) return false;
 
@@ -749,18 +752,20 @@ class NimbleCombat extends Combat {
 					});
 
 					const canForceUsage =
-						options?.force === true &&
-						(usageState.blockedReason === 'noActions' || usageState.blockedReason === 'spent');
+						options?.force === true && isSoftBlockedReason(usageState.blockedReason);
 
 					if (!usageState.canUse && !canForceUsage) return false;
 
 					const reactionAvailabilityUpdate = {
 						_id: combatantId,
-						'system.actions.base.current': Math.max(
+					} as Record<string, unknown>;
+
+					if (!options?.skipActionDeduction) {
+						reactionAvailabilityUpdate['system.actions.base.current'] = Math.max(
 							0,
 							usageState.currentActions - usageState.requiredActions,
-						),
-					} as Record<string, unknown>;
+						);
+					}
 
 					for (const reactionKey of usageState.reactionKeys) {
 						Object.assign(

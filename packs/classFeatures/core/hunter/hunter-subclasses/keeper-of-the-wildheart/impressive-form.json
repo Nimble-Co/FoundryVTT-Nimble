@@ -6,7 +6,21 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "impressive-form-hp",
+				"type": "maxHpBonus",
+				"value": 5,
+				"perLevel": false,
+				"label": "Impressive Form"
+			},
+			{
+				"id": "impressive-form-hd",
+				"type": "incrementHitDice",
+				"value": "1",
+				"label": "Impressive Form"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

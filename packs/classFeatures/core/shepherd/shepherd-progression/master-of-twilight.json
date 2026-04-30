@@ -6,7 +6,120 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "master-twilight-radiant-l3",
+				"type": "grantSpells",
+				"schools": [
+					"radiant"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": true,
+				"label": "Master of Twilight: Radiant Utility Spell",
+				"predicate": {
+					"level": {
+						"min": 3
+					}
+				}
+			},
+			{
+				"id": "master-twilight-necrotic-l3",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": true,
+				"label": "Master of Twilight: Necrotic Utility Spell",
+				"predicate": {
+					"level": {
+						"min": 3
+					}
+				}
+			},
+			{
+				"id": "master-twilight-radiant-l6",
+				"type": "grantSpells",
+				"schools": [
+					"radiant"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": true,
+				"label": "Master of Twilight (2): Radiant Utility Spell",
+				"predicate": {
+					"level": {
+						"min": 6
+					}
+				}
+			},
+			{
+				"id": "master-twilight-necrotic-l6",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "selectSpell",
+				"count": 1,
+				"utilityOnly": true,
+				"label": "Master of Twilight (2): Necrotic Utility Spell",
+				"predicate": {
+					"level": {
+						"min": 6
+					}
+				}
+			},
+			{
+				"id": "master-twilight-radiant-l11",
+				"type": "grantSpells",
+				"schools": [
+					"radiant"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "auto",
+				"utilityOnly": true,
+				"label": "Master of Twilight (3): All Radiant Utility Spells",
+				"predicate": {
+					"level": {
+						"min": 11
+					}
+				}
+			},
+			{
+				"id": "master-twilight-necrotic-l11",
+				"type": "grantSpells",
+				"schools": [
+					"necrotic"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "auto",
+				"utilityOnly": true,
+				"label": "Master of Twilight (3): All Necrotic Utility Spells",
+				"predicate": {
+					"level": {
+						"min": 11
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -33,7 +146,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Choose 1 Necrotic and 1 Radiant Utility Spell.</p><hr><p>Level 6: Choose a 2nd of each</p><p>Level 11: Choose a 3rd of each</p>",
+		"description": "<p>Choose 1 Necrotic and 1 Radiant Utility Spell.</p><hr><p>Level 6: Choose a 2nd of each</p><p>Level 11: You know all Necrotic and Radiant Utility Spells.</p>",
 		"featureType": "class",
 		"class": "shepherd",
 		"group": "shepherd-progression",

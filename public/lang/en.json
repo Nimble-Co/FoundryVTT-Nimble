@@ -538,6 +538,7 @@
 			"applyCondition": "Apply Condition",
 			"armorClass": "Armor Class",
 			"combatMana": "Combat Mana",
+			"conditionImmunity": "Condition Immunity",
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
 			"grantSpells": "Spells",
@@ -818,9 +819,9 @@
 				"noActions": "You don't have any actions",
 				"confirmReaction": {
 					"title": "Use Reaction?",
-					"noActionsMessage": "You don't have any actions remaining.",
-					"spentMessage": "You've already used {reaction} this round.",
-					"bothMessage": "You don't have any actions remaining and you've already used {reaction} this round.",
+					"activeTurnMessage": "Reactions are performed when it is not your turn.",
+					"noActionsMessage": "Reactions cost 1 action and you have none remaining.",
+					"spentMessage": "Each reaction can be performed no more than 1/round, and you've already used {reaction} this round.",
 					"confirmQuestion": "Do you still want to use the {reaction} reaction?",
 					"confirm": "Use Reaction",
 					"cancel": "Cancel"

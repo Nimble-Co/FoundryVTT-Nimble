@@ -50,7 +50,9 @@
 		},
 		"school": "radiant",
 		"tier": 1,
-		"classes": ["shepherd"]
+		"classes": [
+			"shepherd"
+		]
 	},
 	"effects": [],
 	"folder": null,

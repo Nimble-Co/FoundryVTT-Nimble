@@ -2,6 +2,7 @@ import { AbilityBonusRule } from '../models/rules/abilityBonus.js';
 import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
+import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
@@ -29,6 +30,7 @@ export default function registerRulesConfig() {
 		applyCondition: 'NIMBLE.ruleTypes.applyCondition',
 		armorClass: 'NIMBLE.ruleTypes.armorClass',
 		combatMana: 'NIMBLE.ruleTypes.combatMana',
+		conditionImmunity: 'NIMBLE.ruleTypes.conditionImmunity',
 		grantItem: 'NIMBLE.ruleTypes.grantItem',
 		grantProficiency: 'NIMBLE.ruleTypes.grantProficiency',
 		grantSpells: 'NIMBLE.ruleTypes.grantSpells',
@@ -56,6 +58,7 @@ export default function registerRulesConfig() {
 		applyCondition: ApplyConditionRule,
 		armorClass: ArmorClassRule,
 		combatMana: CombatManaRule,
+		conditionImmunity: ConditionImmunityRule,
 		grantItem: ItemGrantRule,
 		grantProficiency: GrantProficiencyRule,
 		grantSpells: GrantSpellsRule,

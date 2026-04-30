@@ -297,6 +297,8 @@ describe('reaction panel confirmation wrappers', () => {
 		await fireEvent.click(screen.getByRole('button', { name: /spear/i }));
 
 		expect(actor.activateItem).toHaveBeenCalledWith('weapon-opportunity', { rollMode: -1 });
-		await waitFor(() => expect(onUseReaction).toHaveBeenCalledWith({ force: true }));
+		await waitFor(() =>
+			expect(onUseReaction).toHaveBeenCalledWith({ force: true, skipActionDeduction: true }),
+		);
 	});
 });
