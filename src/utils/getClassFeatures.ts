@@ -235,10 +235,10 @@ export default async function getClassFeaturesFromIndex(
 		const groupName = entries[i].group;
 
 		// Option features bypass ownership — they appear at every listed level
-		if (
-			groupName.endsWith('-progression') &&
-			(featureItem.system.levelUpOptions?.length ?? 0) > 0
-		) {
+		const applicableOptions = (featureItem.system.levelUpOptions ?? []).filter(
+			(opt) => opt.applyAtLevels.length === 0 || opt.applyAtLevels.includes(level),
+		);
+		if (groupName.endsWith('-progression') && applicableOptions.length > 0) {
 			result.optionFeatures.push(featureItem);
 			continue;
 		}

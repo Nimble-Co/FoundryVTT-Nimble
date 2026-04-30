@@ -350,9 +350,9 @@ export function createLevelUpState(
 		for (const feature of classFeatures.optionFeatures) {
 			const selectedOptionId = selectedFeatureOptions.get(feature.uuid);
 			if (!selectedOptionId) return false;
-			const selectedOption = (feature.system.levelUpOptions ?? []).find(
-				(o) => o.id === selectedOptionId,
-			);
+			const selectedOption = (feature.system.levelUpOptions ?? [])
+				.filter((o) => o.applyAtLevels.length === 0 || o.applyAtLevels.includes(levelingTo))
+				.find((o) => o.id === selectedOptionId);
 			if (
 				(selectedOption?.selectionGroups?.length ?? 0) > 0 &&
 				!selectedOptionSubItems.has(feature.uuid)
@@ -425,7 +425,9 @@ export function createLevelUpState(
 		for (const feature of classFeatures.optionFeatures) {
 			const selectedOptionId = selectedFeatureOptions.get(feature.uuid);
 			if (!selectedOptionId) continue;
-			const option = (feature.system.levelUpOptions ?? []).find((o) => o.id === selectedOptionId);
+			const option = (feature.system.levelUpOptions ?? [])
+				.filter((o) => o.applyAtLevels.length === 0 || o.applyAtLevels.includes(levelingTo))
+				.find((o) => o.id === selectedOptionId);
 			if (!option) continue;
 			if (option.selectionGroups?.length) {
 				const subItemUuid = selectedOptionSubItems.get(feature.uuid);

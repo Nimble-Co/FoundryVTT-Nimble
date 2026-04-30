@@ -10,6 +10,7 @@
 
 	let {
 		classFeatures,
+		levelingTo,
 		selectedFeatures = $bindable(),
 		selectedOptionIds = $bindable(),
 		selectedOptionSubItems = $bindable(),
@@ -71,6 +72,7 @@
 			{#each classFeatures?.optionFeatures ?? [] as feature (feature.uuid)}
 				<LevelUpFeatureOptionPicker
 					{feature}
+					{levelingTo}
 					selectedOptionId={selectedOptionIds.get(feature.uuid) ?? null}
 					selectedSubItemUuid={selectedOptionSubItems.get(feature.uuid) ?? null}
 					{ownedItemUuids}
