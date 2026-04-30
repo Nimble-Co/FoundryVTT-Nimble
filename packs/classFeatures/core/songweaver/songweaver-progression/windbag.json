@@ -6,7 +6,26 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"id": "windbag-l14-all-utility",
+				"type": "grantSpells",
+				"schools": [
+					"known"
+				],
+				"tiers": [
+					0
+				],
+				"mode": "auto",
+				"utilityOnly": true,
+				"label": "Windbag (3): All Utility Spells from Known Schools",
+				"predicate": {
+					"level": {
+						"min": 14
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
