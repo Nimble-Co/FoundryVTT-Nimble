@@ -22,6 +22,8 @@ export default class Pack {
 		['the-cheat', 1],
 	]);
 
+	static #GROUP_FOLDER_DISPLAY_NAME = new Map([['commanders-orders', "Commander's Orders"]]);
+
 	constructor(dirName, data) {
 		const metadata = Pack.#packsMetadata.find(
 			(p) => path.basename(p.path).split('.')[0] === path.basename(dirName),
@@ -254,15 +256,29 @@ export default class Pack {
 					name: className,
 					progressionName: `${className} Progression`,
 					subclasses: new Map(),
+					abilityGroups: new Map(),
 				};
 				classFolderData.set(classId, classData);
 			}
 
 			const subclassId = this.#getSubclassId(file, source);
-			if (!subclassId) continue;
+			if (subclassId) {
+				const subclassName = this.#getSubclassFolderName(file, source, subclassId);
+				if (!classData.subclasses.has(subclassId))
+					classData.subclasses.set(subclassId, subclassName);
+				continue;
+			}
 
-			const subclassName = this.#getSubclassFolderName(file, source, subclassId);
-			if (!classData.subclasses.has(subclassId)) classData.subclasses.set(subclassId, subclassName);
+			const groupName = source?.system?.group;
+			if (
+				groupName &&
+				!groupName.endsWith('-progression') &&
+				!classData.abilityGroups.has(groupName)
+			) {
+				const displayName =
+					Pack.#GROUP_FOLDER_DISPLAY_NAME.get(groupName) ?? this.#toDisplayClassName(groupName);
+				classData.abilityGroups.set(groupName, displayName);
+			}
 		}
 
 		const folders = [];
@@ -332,10 +348,34 @@ export default class Pack {
 				});
 			});
 
+			const groupFolderLookup = new Map();
+			const sortedGroups = [...classData.abilityGroups.entries()].sort(([, aName], [, bName]) =>
+				aName.localeCompare(bName, undefined, { sensitivity: 'base' }),
+			);
+
+			sortedGroups.forEach(([groupName, groupDisplayName], groupIndex) => {
+				const groupFolderId = Pack.#folderIdForGroupId(classId, groupName);
+				groupFolderLookup.set(groupName, groupFolderId);
+
+				folders.push({
+					_id: groupFolderId,
+					_stats: { ...statsTemplate },
+					color: null,
+					description: '',
+					flags: {},
+					folder: progressionFolderId,
+					name: groupDisplayName,
+					sort: groupIndex * 10,
+					sorting: 'a',
+					type: this.documentType,
+				});
+			});
+
 			classFolderLookup.set(classId, {
 				classFolderId,
 				progressionFolderId,
 				subclassFolderLookup,
+				groupFolderLookup,
 			});
 		});
 
@@ -352,6 +392,12 @@ export default class Pack {
 			const subclassId = this.#getSubclassId(file, source);
 			if (subclassId && classFolders.subclassFolderLookup.has(subclassId)) {
 				folderAssignments.set(source._id, classFolders.subclassFolderLookup.get(subclassId));
+				continue;
+			}
+
+			const groupName = source?.system?.group;
+			if (groupName && classFolders.groupFolderLookup.has(groupName)) {
+				folderAssignments.set(source._id, classFolders.groupFolderLookup.get(groupName));
 				continue;
 			}
 
@@ -628,5 +674,9 @@ export default class Pack {
 
 	static #folderIdForProgressionId(classId) {
 		return Pack.#folderIdForDocument(`nimble-class-features-${classId}-progression`);
+	}
+
+	static #folderIdForGroupId(classId, groupName) {
+		return Pack.#folderIdForDocument(`nimble-class-features-${classId}-group-${groupName}`);
 	}
 }

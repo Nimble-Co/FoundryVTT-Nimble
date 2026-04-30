@@ -50,7 +50,9 @@
 			{
 				"id": "combat-tactic",
 				"label": "Choose a Combat Tactic",
-				"applyAtLevels": [4],
+				"applyAtLevels": [
+					4
+				],
 				"rules": [],
 				"selectionGroups": [
 					"combat-tactics"
@@ -59,7 +61,13 @@
 			{
 				"id": "max-combat-die",
 				"label": "+1 Max Combat Die",
-				"applyAtLevels": [6, 8, 10, 12, 16],
+				"applyAtLevels": [
+					6,
+					8,
+					10,
+					12,
+					16
+				],
 				"rules": [
 					{
 						"type": "grantItem",
@@ -78,7 +86,13 @@
 			{
 				"id": "combat-ability",
 				"label": "Choose a Combat Ability",
-				"applyAtLevels": [6, 8, 10, 12, 16],
+				"applyAtLevels": [
+					6,
+					8,
+					10,
+					12,
+					16
+				],
 				"rules": [],
 				"selectionGroups": [
 					"combat-tactics",
