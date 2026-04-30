@@ -255,6 +255,7 @@ export default class Pack {
 				classData = {
 					name: className,
 					progressionName: `${className} Progression`,
+					subclassesName: `${className} Subclasses`,
 					subclasses: new Map(),
 					abilityGroups: new Map(),
 				};
@@ -325,6 +326,22 @@ export default class Pack {
 				type: this.documentType,
 			});
 
+			const subclassesFolderId = Pack.#folderIdForSubclassesId(classId);
+			if (classData.subclasses.size > 0) {
+				folders.push({
+					_id: subclassesFolderId,
+					_stats: { ...statsTemplate },
+					color: null,
+					description: '',
+					flags: {},
+					folder: classFolderId,
+					name: classData.subclassesName,
+					sort: 10,
+					sorting: 'm',
+					type: this.documentType,
+				});
+			}
+
 			const subclassFolderLookup = new Map();
 			const sortedSubclasses = [...classData.subclasses.entries()].sort(([, aName], [, bName]) =>
 				aName.localeCompare(bName, undefined, { sensitivity: 'base' }),
@@ -340,9 +357,9 @@ export default class Pack {
 					color: null,
 					description: '',
 					flags: {},
-					folder: classFolderId,
+					folder: subclassesFolderId,
 					name: subclassName,
-					sort: (subclassIndex + 1) * 10,
+					sort: subclassIndex * 10,
 					sorting: 'm',
 					type: this.documentType,
 				});
@@ -674,6 +691,10 @@ export default class Pack {
 
 	static #folderIdForProgressionId(classId) {
 		return Pack.#folderIdForDocument(`nimble-class-features-${classId}-progression`);
+	}
+
+	static #folderIdForSubclassesId(classId) {
+		return Pack.#folderIdForDocument(`nimble-class-features-${classId}-subclasses`);
 	}
 
 	static #folderIdForGroupId(classId, groupName) {
