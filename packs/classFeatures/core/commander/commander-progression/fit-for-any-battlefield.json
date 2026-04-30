@@ -5,20 +5,7 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [
-			{
-				"type": "grantItem",
-				"disabled": false,
-				"id": "OCPNZWXtQjoVmJsW",
-				"identifier": "Commander-lvl3-Choose a Combat Tactic",
-				"label": "Choose a Combat Tactic",
-				"predicate": {},
-				"priority": 1,
-				"allowDuplicate": true,
-				"inMemoryOnly": false,
-				"uuid": "Item.iICGKEwphgLbJY8i"
-			}
-		],
+		"rules": [],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -58,6 +45,60 @@
 			10,
 			12,
 			16
+		],
+		"levelUpOptions": [
+			{
+				"id": "combat-tactic",
+				"label": "Choose a Combat Tactic",
+				"applyAtLevels": [
+					4
+				],
+				"rules": [],
+				"selectionGroups": [
+					"combat-tactics"
+				]
+			},
+			{
+				"id": "max-combat-die",
+				"label": "+1 Max Combat Die",
+				"applyAtLevels": [
+					6,
+					8,
+					10,
+					12,
+					16
+				],
+				"rules": [
+					{
+						"type": "grantItem",
+						"disabled": false,
+						"id": "maxCombatDieGrant",
+						"label": "+1 Max Combat Die",
+						"predicate": {},
+						"priority": 1,
+						"allowDuplicate": true,
+						"inMemoryOnly": false,
+						"uuid": "Compendium.nimble.nimble-class-features.Item.WnKpJ8RvCb4mX2Qt"
+					}
+				],
+				"selectionGroups": []
+			},
+			{
+				"id": "combat-ability",
+				"label": "Choose a Combat Ability",
+				"applyAtLevels": [
+					6,
+					8,
+					10,
+					12,
+					16
+				],
+				"rules": [],
+				"selectionGroups": [
+					"combat-tactics",
+					"commanders-orders"
+				]
+			}
 		]
 	},
 	"effects": [],

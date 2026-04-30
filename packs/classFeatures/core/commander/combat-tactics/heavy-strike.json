@@ -62,16 +62,11 @@
 		"gainedAtLevel": 4,
 		"subclass": false,
 		"gainedAtLevels": [
-			4,
-			6,
-			8,
-			10,
-			12,
-			16
+			4
 		]
 	},
 	"effects": [],
-	"folder": "406c4e162069a4a8",
+	"folder": "f563302e535168ab",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

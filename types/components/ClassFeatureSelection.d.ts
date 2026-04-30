@@ -12,6 +12,7 @@ export interface SelectionGroup {
 export interface ClassFeatureResult {
 	autoGrant: NimbleFeatureItem[];
 	selectionGroups: Map<string, SelectionGroup>;
+	optionFeatures: NimbleFeatureItem[];
 }
 
 export interface ClassFeatureSelectionProps {
@@ -37,9 +38,23 @@ export interface FeatureGroupSelectionProps {
 	onSelect: (feature: NimbleFeatureItem) => void;
 }
 
+export interface LevelUpFeatureOptionPickerProps {
+	feature: NimbleFeatureItem;
+	levelingTo: number;
+	selectedOptionId: string | null;
+	selectedSubItemUuid: string | null;
+	ownedItemUuids: Set<string>;
+	onSelect: (optionId: string) => void;
+	onSubItemSelect: (uuid: string) => void;
+}
+
 export interface LevelUpClassFeatureSelectionProps {
 	classFeatures: ClassFeatureResult | null;
+	levelingTo: number;
 	selectedFeatures: Map<string, NimbleFeatureItem[]>;
+	selectedOptionIds: Map<string, string>;
+	selectedOptionSubItems: Map<string, string>;
+	ownedItemUuids: Set<string>;
 	loading?: boolean;
 }
 

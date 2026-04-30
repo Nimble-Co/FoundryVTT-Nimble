@@ -39,19 +39,14 @@
 		"gainedAtLevel": 2,
 		"subclass": false,
 		"gainedAtLevels": [
-			2,
-			6,
-			8,
-			10,
-			12,
-			16
+			2
 		],
 		"selectionCountByLevel": {
 			"2": 2
 		}
 	},
 	"effects": [],
-	"folder": "406c4e162069a4a8",
+	"folder": "6a51bc6ac831498c",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",

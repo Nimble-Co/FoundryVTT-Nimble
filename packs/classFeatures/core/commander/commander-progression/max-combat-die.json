@@ -1,8 +1,7 @@
 {
-	"folder": "08d09127eed3061c",
-	"name": "Heroic Ballad",
+	"name": "+1 Max Combat Die",
 	"type": "feature",
-	"img": "icons/tools/instruments/harp-lap-brown.webp",
+	"img": "icons/sundries/gaming/dice-runed-brown.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -33,28 +32,24 @@
 				"width": 1
 			}
 		},
-		"description": "<p>+2 max Songweaver's Inspiration charges. When used to reroll an ally's attack, your Songweaver's Inspiration also grants them +WIL damage on the attack.</p>",
+		"description": "<p>Gain +1 to your maximum Combat Dice.</p>",
 		"featureType": "class",
-		"class": "songweaver",
-		"group": "lyrical-weaponry",
-		"gainedAtLevel": 4,
+		"class": "commander",
+		"group": "commander-progression",
+		"gainedAtLevel": 6,
 		"subclass": false,
-		"gainedAtLevels": [
-			4,
-			9,
-			13,
-			17
-		]
+		"gainedAtLevels": []
 	},
 	"effects": [],
+	"folder": "406c4e162069a4a8",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",
 		"systemId": "nimble",
-		"systemVersion": "0.1.9",
-		"createdTime": 1761889653942,
-		"modifiedTime": 1761889917593,
+		"systemVersion": "0.1.8",
+		"createdTime": 1761434361016,
+		"modifiedTime": 1761434361016,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "99gdSBTmxCWmKTgZ"
+	"_id": "WnKpJ8RvCb4mX2Qt"
 }

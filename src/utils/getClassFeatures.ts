@@ -200,6 +200,7 @@ export default async function getClassFeaturesFromIndex(
 	const result: ClassFeatureResult = {
 		autoGrant: [],
 		selectionGroups: new Map(),
+		optionFeatures: [],
 	};
 
 	if (!classIdentifier || level < 1) {
@@ -229,10 +230,21 @@ export default async function getClassFeaturesFromIndex(
 	for (let i = 0; i < features.length; i++) {
 		const feature = features[i];
 		if (!feature) continue;
-		if (ownedUuids.has(entries[i].uuid)) continue;
 
 		const featureItem = feature as NimbleFeatureItem;
 		const groupName = entries[i].group;
+
+		// Option features bypass ownership — they appear at every listed level
+		const applicableOptions = (featureItem.system.levelUpOptions ?? []).filter(
+			(opt) => opt.applyAtLevels.length === 0 || opt.applyAtLevels.includes(level),
+		);
+		if (groupName.endsWith('-progression') && applicableOptions.length > 0) {
+			result.optionFeatures.push(featureItem);
+			continue;
+		}
+
+		// All other features: skip if already owned
+		if (ownedUuids.has(entries[i].uuid)) continue;
 
 		if (!featuresByGroup.has(groupName)) {
 			featuresByGroup.set(groupName, []);
