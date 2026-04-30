@@ -65,6 +65,7 @@
 
 	<LevelUpClassFeatureSelection
 		{classFeatures}
+		{levelingTo}
 		bind:selectedFeatures={state.selectedClassFeatures}
 		bind:selectedOptionIds={state.selectedFeatureOptions}
 		bind:selectedOptionSubItems={state.selectedOptionSubItems}

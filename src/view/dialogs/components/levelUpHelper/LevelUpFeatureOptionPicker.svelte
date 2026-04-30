@@ -7,6 +7,7 @@
 
 	let {
 		feature,
+		levelingTo,
 		selectedOptionId,
 		selectedSubItemUuid,
 		ownedItemUuids,
@@ -14,7 +15,11 @@
 		onSubItemSelect,
 	}: LevelUpFeatureOptionPickerProps = $props();
 
-	const options = $derived(feature.system.levelUpOptions ?? []);
+	const options = $derived(
+		(feature.system.levelUpOptions ?? []).filter(
+			(opt) => opt.applyAtLevels.length === 0 || opt.applyAtLevels.includes(levelingTo),
+		),
+	);
 	const selectedOption = $derived(options.find((o) => o.id === selectedOptionId) ?? null);
 	const hasSubSelection = $derived((selectedOption?.selectionGroups?.length ?? 0) > 0);
 	const isSelectionComplete = $derived(
@@ -43,7 +48,7 @@
 			const seenUuids = new Set<string>();
 			const indexFields = ['system.class', 'system.group', 'system.subclass'] as string[];
 
-			for (const pack of (game as Game).packs) {
+			for (const pack of game.packs) {
 				if (pack.documentName !== 'Item') continue;
 				// @ts-expect-error - custom index fields
 				const packIndex = await pack.getIndex({ fields: indexFields });
