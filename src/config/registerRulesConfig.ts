@@ -3,6 +3,7 @@ import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
+import { DamageBonusRule } from '../models/rules/damageBonus.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
 import { GrantSpellsRule } from '../models/rules/grantSpells.js';
@@ -16,7 +17,6 @@ import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
 import { MaximizeHitDiceRule } from '../models/rules/maximizeHitDice.js';
 import { MaxWoundsRule } from '../models/rules/maxWounds.js';
-import { MeleeDamageBonusRule } from '../models/rules/meleeDamageBonus.js';
 import { NoteRule } from '../models/rules/note.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
@@ -44,7 +44,7 @@ export default function registerRulesConfig() {
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
 		maximizeHitDice: 'NIMBLE.ruleTypes.maximizeHitDice',
 		maxWounds: 'NIMBLE.ruleTypes.maxWounds',
-		meleeDamageBonus: 'NIMBLE.ruleTypes.meleeDamageBonus',
+		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
 		note: 'NIMBLE.ruleTypes.note',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
@@ -72,7 +72,7 @@ export default function registerRulesConfig() {
 		maxHpBonus: MaxHpBonusRule,
 		maximizeHitDice: MaximizeHitDiceRule,
 		maxWounds: MaxWoundsRule,
-		meleeDamageBonus: MeleeDamageBonusRule,
+		damageBonus: DamageBonusRule,
 		note: NoteRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,

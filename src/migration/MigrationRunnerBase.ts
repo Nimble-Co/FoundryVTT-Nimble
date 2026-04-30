@@ -9,7 +9,7 @@ interface CollectionDiff<T = any> {
 class MigrationRunnerBase {
 	migrations: MigrationBase[];
 
-	static LATEST_SCHEMA_VERSION = 15;
+	static LATEST_SCHEMA_VERSION = 16;
 
 	static RECOMMENDED_SAFE_VERSION = 0;
 

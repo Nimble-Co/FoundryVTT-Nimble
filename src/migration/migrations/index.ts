@@ -13,3 +13,4 @@ export { Migration012ViciousExplosionDamage } from './Migration012ViciousExplosi
 export { Migration013SwiftFeetPredicates } from './Migration013SwiftFeetPredicates.js';
 export { Migration014GrantedFeatureIds } from './Migration014GrantedFeatureIds.js';
 export { Migration015WeaponType } from './Migration015WeaponType.js';
+export { Migration016DamageBonus } from './Migration016DamageBonus.js';
