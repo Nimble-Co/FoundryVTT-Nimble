@@ -2,6 +2,8 @@ import { NimbleBaseRule } from './base.js';
 
 type MovementMode = 'fly' | 'climb' | 'swim' | 'burrow';
 
+const ALLOWED_MODES: ReadonlySet<string> = new Set(['fly', 'climb', 'swim', 'burrow']);
+
 function schema() {
 	const { fields } = foundry.data;
 
@@ -42,6 +44,14 @@ interface ActorSystem {
  *
  * The speed field supports formulas: '@attributes.movement.walk' gives "fly = walk speed",
  * while '12' gives a fixed fly speed of 12.
+ *
+ * Walk is intentionally excluded from mode choices — walk speed is always present
+ * on every actor and is modified via speedBonus, not granted.
+ *
+ * Uses two-phase processing (matching speedBonus):
+ * - prePrepareData: numeric speeds (e.g. '12') — fast path, no Roll construction
+ * - afterPrepareData: formula speeds (e.g. '@attributes.movement.walk') — ensures
+ *   walk speed is fully resolved before referencing it
  */
 class GrantMovementRule extends NimbleBaseRule<GrantMovementRule.Schema> {
 	declare mode: MovementMode;
@@ -64,14 +74,21 @@ class GrantMovementRule extends NimbleBaseRule<GrantMovementRule.Schema> {
 	}
 
 	/**
-	 * Grant the movement mode to the actor.
-	 * Uses Math.max so multiple grants take the highest base, not additive.
-	 * Runs in prePrepareData so speedBonus can stack on top in its own phase.
+	 * Check if the speed value is a simple number (not a formula).
 	 */
-	prePrepareData(): void {
+	private isNumericValue(): boolean {
+		return /^-?\d+$/.test(this.speed.trim());
+	}
+
+	/**
+	 * Apply the granted movement speed to the actor.
+	 * Uses Math.max so multiple grants take the highest base, not additive.
+	 */
+	private applyGrantedMovement(): void {
 		const { item } = this;
 		if (!item.isEmbedded) return;
 		if (!this.test()) return;
+		if (!ALLOWED_MODES.has(this.mode)) return;
 
 		const { actor } = item;
 		const resolvedSpeed = this.resolveFormula(this.speed);
@@ -82,6 +99,24 @@ class GrantMovementRule extends NimbleBaseRule<GrantMovementRule.Schema> {
 		const newSpeed = Math.max(currentSpeed, resolvedSpeed);
 
 		foundry.utils.setProperty(actor.system, `attributes.movement.${this.mode}`, newSpeed);
+	}
+
+	/**
+	 * Phase 1: Process numeric speeds early so the base is established
+	 * before any formulas that reference movement values.
+	 */
+	prePrepareData(): void {
+		if (!this.isNumericValue()) return;
+		this.applyGrantedMovement();
+	}
+
+	/**
+	 * Phase 2: Process formula-based speeds (e.g. '@attributes.movement.walk')
+	 * after all numeric speed bonuses and grants have been applied.
+	 */
+	override afterPrepareData(): void {
+		if (this.isNumericValue()) return;
+		this.applyGrantedMovement();
 	}
 }
 

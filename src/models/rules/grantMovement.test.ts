@@ -112,20 +112,8 @@ describe('GrantMovementRule', () => {
 		vi.clearAllMocks();
 	});
 
-	describe('prePrepareData', () => {
-		it('should grant fly speed equal to walk speed', () => {
-			const actor = createMockActor({ walk: 8 });
-			const rule = createGrantMovementRule(
-				{ mode: 'fly', speed: '@attributes.movement.walk' },
-				actor,
-			);
-
-			rule.prePrepareData();
-
-			expect(actor.system.attributes.movement.fly).toBe(8);
-		});
-
-		it('should grant a fixed speed value', () => {
+	describe('prePrepareData (numeric speeds)', () => {
+		it('should grant a fixed fly speed', () => {
 			const actor = createMockActor();
 			const rule = createGrantMovementRule({ mode: 'fly', speed: '12' }, actor);
 
@@ -134,31 +122,7 @@ describe('GrantMovementRule', () => {
 			expect(actor.system.attributes.movement.fly).toBe(12);
 		});
 
-		it('should grant climb speed', () => {
-			const actor = createMockActor({ walk: 6 });
-			const rule = createGrantMovementRule(
-				{ mode: 'climb', speed: '@attributes.movement.walk' },
-				actor,
-			);
-
-			rule.prePrepareData();
-
-			expect(actor.system.attributes.movement.climb).toBe(6);
-		});
-
-		it('should grant swim speed', () => {
-			const actor = createMockActor({ walk: 6 });
-			const rule = createGrantMovementRule(
-				{ mode: 'swim', speed: '@attributes.movement.walk' },
-				actor,
-			);
-
-			rule.prePrepareData();
-
-			expect(actor.system.attributes.movement.swim).toBe(6);
-		});
-
-		it('should grant burrow speed', () => {
+		it('should grant a fixed burrow speed', () => {
 			const actor = createMockActor();
 			const rule = createGrantMovementRule({ mode: 'burrow', speed: '4' }, actor);
 
@@ -167,18 +131,13 @@ describe('GrantMovementRule', () => {
 			expect(actor.system.attributes.movement.burrow).toBe(4);
 		});
 
-		it('should use Math.max — take highest when multiple grants exist', () => {
-			const actor = createMockActor({ walk: 8 });
+		it('should use Math.max — take highest when multiple numeric grants exist', () => {
+			const actor = createMockActor();
 
-			// First grant: fly = walk (8)
-			const rule1 = createGrantMovementRule(
-				{ mode: 'fly', speed: '@attributes.movement.walk' },
-				actor,
-			);
+			const rule1 = createGrantMovementRule({ mode: 'fly', speed: '8' }, actor);
 			rule1.prePrepareData();
 			expect(actor.system.attributes.movement.fly).toBe(8);
 
-			// Second grant: fly = 12 (higher)
 			const rule2 = createGrantMovementRule({ mode: 'fly', speed: '12' }, actor);
 			rule2.prePrepareData();
 			expect(actor.system.attributes.movement.fly).toBe(12);
@@ -187,11 +146,23 @@ describe('GrantMovementRule', () => {
 		it('should not reduce existing higher speed', () => {
 			const actor = createMockActor({ fly: 12 });
 
-			// Grant fly = 8 (lower than existing 12)
 			const rule = createGrantMovementRule({ mode: 'fly', speed: '8' }, actor);
 			rule.prePrepareData();
 
 			expect(actor.system.attributes.movement.fly).toBe(12);
+		});
+
+		it('should not process formula values in prePrepareData', () => {
+			const actor = createMockActor({ walk: 8 });
+			const rule = createGrantMovementRule(
+				{ mode: 'fly', speed: '@attributes.movement.walk' },
+				actor,
+			);
+
+			rule.prePrepareData();
+
+			// Formula values should be skipped in prePrepareData
+			expect(actor.system.attributes.movement.fly).toBe(0);
 		});
 
 		it('should not modify movement when item is not embedded', () => {
@@ -214,7 +185,7 @@ describe('GrantMovementRule', () => {
 			expect(actor.system.attributes.movement.fly).toBe(0);
 		});
 
-		it('should not modify movement when speed resolves to 0', () => {
+		it('should not modify movement when speed is 0', () => {
 			const actor = createMockActor();
 			const rule = createGrantMovementRule({ mode: 'fly', speed: '0' }, actor);
 
@@ -222,18 +193,105 @@ describe('GrantMovementRule', () => {
 
 			expect(actor.system.attributes.movement.fly).toBe(0);
 		});
+	});
 
-		it('should leave walk speed unchanged', () => {
+	describe('afterPrepareData (formula speeds)', () => {
+		it('should grant fly speed equal to walk speed', () => {
+			const actor = createMockActor({ walk: 8 });
+			const rule = createGrantMovementRule(
+				{ mode: 'fly', speed: '@attributes.movement.walk' },
+				actor,
+			);
+
+			rule.afterPrepareData();
+
+			expect(actor.system.attributes.movement.fly).toBe(8);
+		});
+
+		it('should grant climb speed equal to walk speed', () => {
+			const actor = createMockActor({ walk: 6 });
+			const rule = createGrantMovementRule(
+				{ mode: 'climb', speed: '@attributes.movement.walk' },
+				actor,
+			);
+
+			rule.afterPrepareData();
+
+			expect(actor.system.attributes.movement.climb).toBe(6);
+		});
+
+		it('should grant swim speed equal to walk speed', () => {
+			const actor = createMockActor({ walk: 6 });
+			const rule = createGrantMovementRule(
+				{ mode: 'swim', speed: '@attributes.movement.walk' },
+				actor,
+			);
+
+			rule.afterPrepareData();
+
+			expect(actor.system.attributes.movement.swim).toBe(6);
+		});
+
+		it('should not process numeric values in afterPrepareData', () => {
+			const actor = createMockActor();
+			const rule = createGrantMovementRule({ mode: 'fly', speed: '12' }, actor);
+
+			rule.afterPrepareData();
+
+			// Numeric values should be skipped in afterPrepareData (already handled)
+			expect(actor.system.attributes.movement.fly).toBe(0);
+		});
+
+		it('should leave walk speed unchanged when granting fly = walk', () => {
 			const actor = createMockActor({ walk: 6 });
 			const rule = createGrantMovementRule(
 				{ mode: 'fly', speed: '@attributes.movement.walk' },
 				actor,
 			);
 
-			rule.prePrepareData();
+			rule.afterPrepareData();
 
 			expect(actor.system.attributes.movement.walk).toBe(6);
 			expect(actor.system.attributes.movement.fly).toBe(6);
+		});
+
+		it('should use Math.max with formula — higher grant wins', () => {
+			const actor = createMockActor({ walk: 8 });
+
+			// First: numeric grant fly = 12 (in prePrepareData)
+			const numericRule = createGrantMovementRule({ mode: 'fly', speed: '12' }, actor);
+			numericRule.prePrepareData();
+			expect(actor.system.attributes.movement.fly).toBe(12);
+
+			// Second: formula grant fly = walk (8) — lower, should not reduce
+			const formulaRule = createGrantMovementRule(
+				{ mode: 'fly', speed: '@attributes.movement.walk' },
+				actor,
+			);
+			formulaRule.afterPrepareData();
+			expect(actor.system.attributes.movement.fly).toBe(12);
+		});
+	});
+
+	describe('two-phase processing', () => {
+		it('should ensure formula grants see fully modified walk speed', () => {
+			const actor = createMockActor({ walk: 6 });
+
+			// Phase 1: a speedBonus would add +2 to walk (simulated)
+			actor.system.attributes.movement.walk = 8;
+			// Update getRollData to reflect new walk
+			actor.getRollData = vi.fn(() => ({
+				attributes: { movement: actor.system.attributes.movement },
+			}));
+
+			// Phase 2: formula grant reads the modified walk
+			const rule = createGrantMovementRule(
+				{ mode: 'climb', speed: '@attributes.movement.walk' },
+				actor,
+			);
+			rule.afterPrepareData();
+
+			expect(actor.system.attributes.movement.climb).toBe(8);
 		});
 	});
 
@@ -241,12 +299,12 @@ describe('GrantMovementRule', () => {
 		it('should allow speedBonus to stack on top of granted base', () => {
 			const actor = createMockActor({ walk: 8 });
 
-			// Grant fly = walk (8)
+			// Grant fly = walk (8) in afterPrepareData
 			const grantRule = createGrantMovementRule(
 				{ mode: 'fly', speed: '@attributes.movement.walk' },
 				actor,
 			);
-			grantRule.prePrepareData();
+			grantRule.afterPrepareData();
 			expect(actor.system.attributes.movement.fly).toBe(8);
 
 			// Simulate speedBonus adding +2 on top
