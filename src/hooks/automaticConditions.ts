@@ -1,4 +1,5 @@
 import type { NimbleBaseActor } from '../documents/actor/base.svelte.js';
+import { isConditionImmune } from './conditionImmunityGuard.js';
 
 interface AutomaticConditionContext {
 	automaticConditionSource?: string; // Track source of automatic conditions
@@ -49,8 +50,9 @@ export const handleAutomaticConditionApplication = {
 		try {
 			const actor = document.parent as NimbleBaseActor;
 
-			// Apply the automatic conditions
+			// Apply the automatic conditions (skip if actor is immune)
 			for (const conditionId of options.automaticConditionsToApply) {
+				if (isConditionImmune(actor, conditionId)) continue;
 				await actor.toggleStatusEffect(conditionId, {
 					overlay: false,
 					automaticConditionSource: document.id,

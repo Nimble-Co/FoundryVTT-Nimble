@@ -3,6 +3,7 @@ import canvasInit from './hooks/canvasInit.js';
 import registerCombatantDefeatSync from './hooks/combatantHooks/combatantDefeatSync.js';
 import registerCombatantHealthStateSync from './hooks/combatantHooks/combatantHealthStateSync.js';
 import registerTokenCombatantSync from './hooks/combatantHooks/tokenCombatantSync.js';
+import { conditionImmunityGuard } from './hooks/conditionImmunityGuard.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
 import init from './hooks/init.js';
@@ -84,6 +85,12 @@ type HookFn = (...args: object[]) => undefined | boolean | Promise<undefined | b
 (Hooks.on as (event: string, fn: HookFn) => number)(
 	'deleteActiveEffect',
 	handleAutomaticConditionApplication.postDelete as object as HookFn,
+);
+
+// Condition immunity — block protected conditions before application
+(Hooks.on as (event: string, fn: HookFn) => number)(
+	'nimble.preApplyCondition',
+	conditionImmunityGuard as object as HookFn,
 );
 
 Hooks.on('hotbarDrop', onHotbarDrop);
