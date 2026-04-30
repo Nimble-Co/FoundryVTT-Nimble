@@ -4,6 +4,7 @@ import { ArmorClassRule } from '../models/rules/armorClass.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
+import { GrantMovementRule } from '../models/rules/grantMovement.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
 import { GrantSpellsRule } from '../models/rules/grantSpells.js';
 import { HealingPotionBonusRule } from '../models/rules/healingPotionBonus.js';
@@ -31,6 +32,7 @@ export default function registerRulesConfig() {
 		armorClass: 'NIMBLE.ruleTypes.armorClass',
 		combatMana: 'NIMBLE.ruleTypes.combatMana',
 		conditionImmunity: 'NIMBLE.ruleTypes.conditionImmunity',
+		grantMovement: 'NIMBLE.ruleTypes.grantMovement',
 		grantItem: 'NIMBLE.ruleTypes.grantItem',
 		grantProficiency: 'NIMBLE.ruleTypes.grantProficiency',
 		grantSpells: 'NIMBLE.ruleTypes.grantSpells',
@@ -59,6 +61,7 @@ export default function registerRulesConfig() {
 		armorClass: ArmorClassRule,
 		combatMana: CombatManaRule,
 		conditionImmunity: ConditionImmunityRule,
+		grantMovement: GrantMovementRule,
 		grantItem: ItemGrantRule,
 		grantProficiency: GrantProficiencyRule,
 		grantSpells: GrantSpellsRule,

@@ -539,6 +539,7 @@
 			"armorClass": "Armor Class",
 			"combatMana": "Combat Mana",
 			"conditionImmunity": "Condition Immunity",
+			"grantMovement": "Grant Movement",
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
 			"grantSpells": "Spells",
