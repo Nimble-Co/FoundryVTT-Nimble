@@ -9,7 +9,7 @@ import { MigrationBase } from '../MigrationBase.js';
  * (melee/ranged) and what produces the attack (weapon/spell).
  *
  * This migration rewrites `{ type: 'meleeDamageBonus' }` rules to
- * `{ type: 'damageBonus', delivery: 'melee', source: 'any' }`, preserving
+ * `{ type: 'damageBonus', delivery: 'melee', source: 'weapon' }`, preserving
  * all other fields.
  */
 class Migration016DamageBonus extends MigrationBase {
@@ -27,7 +27,6 @@ class Migration016DamageBonus extends MigrationBase {
 			rule.type = 'damageBonus';
 			rule.delivery = 'melee';
 			rule.source = 'weapon';
-			delete rule.appliesTo;
 
 			// eslint-disable-next-line no-console
 			console.log(`Nimble Migration | ${source.name}: converted meleeDamageBonus to damageBonus`);

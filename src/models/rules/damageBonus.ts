@@ -13,8 +13,9 @@ interface DamageBonusEntry {
 	source: DamageBonusSource;
 }
 
-/** Matches dice notation: 1d6, 2d8, 3d20+5, 1d4+@level, etc. */
-const DICE_PATTERN = /\d*d\d+/i;
+/** Matches dice notation: 1d6, 2d8, 3d20+5, 1d4+@level, etc. Uses negative lookbehind
+ *  to avoid matching identifiers like "id6" while still matching "1d6" and bare "d20". */
+const DICE_PATTERN = /(?<![a-zA-Z])d\d+/i;
 
 function schema() {
 	const { fields } = foundry.data;
@@ -104,6 +105,19 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 	}
 
 	/**
+	 * Push a bonus entry to the actor's damageBonuses array,
+	 * initializing the array if it doesn't exist.
+	 */
+	private pushBonus(entry: DamageBonusEntry): void {
+		const { actor } = this.item;
+		const actorSystem = actor as object as ActorSystem;
+		if (!actorSystem.system.damageBonuses) {
+			foundry.utils.setProperty(actor.system, 'damageBonuses', []);
+		}
+		actorSystem.system.damageBonuses!.push(entry);
+	}
+
+	/**
 	 * Apply the damage bonus to the actor.
 	 * Bonuses are pushed to an array so multiple rules stack correctly.
 	 * Dice-based values are stored as raw formulas; numeric values are resolved.
@@ -113,16 +127,9 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 		if (!item.isEmbedded) return;
 		if (!this.test()) return;
 
-		const { actor } = item;
-
 		if (this.isDiceFormula()) {
 			// Dice expression — store raw formula, don't resolve to a number
-			const actorSystem = actor as object as ActorSystem;
-			if (!actorSystem.system.damageBonuses) {
-				foundry.utils.setProperty(actor.system, 'damageBonuses', []);
-			}
-
-			actorSystem.system.damageBonuses!.push({
+			this.pushBonus({
 				value: null,
 				formula: this.value,
 				damageType: this.damageType,
@@ -132,14 +139,9 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 		} else {
 			// Numeric formula — resolve to a number
 			const resolvedValue = this.resolveFormula(this.value);
-			if (resolvedValue === null || resolvedValue === 0) return;
+			if (resolvedValue === null || resolvedValue <= 0) return;
 
-			const actorSystem = actor as object as ActorSystem;
-			if (!actorSystem.system.damageBonuses) {
-				foundry.utils.setProperty(actor.system, 'damageBonuses', []);
-			}
-
-			actorSystem.system.damageBonuses!.push({
+			this.pushBonus({
 				value: resolvedValue,
 				formula: null,
 				damageType: this.damageType,

@@ -241,9 +241,14 @@ class ItemActivationManager {
 			| undefined;
 		const healingBonus = isConsumable ? (actorSystem?.healingPotionBonus ?? 0) : 0;
 
-		// Determine delivery (melee/ranged) and source (weapon/spell) for damage bonus filtering
+		// Determine delivery (melee/ranged) and source (weapon/spell) for damage bonus filtering.
+		// When attackType is empty (item has no attack), delivery is null and damage bonuses
+		// are skipped entirely — non-attack items (consumables, utilities) should not receive
+		// attack damage bonuses.
 		const attackType = this.activationData?.targets?.attackType;
 		const delivery = attackType === 'reach' ? 'melee' : attackType === 'range' ? 'ranged' : null;
+		// Source classification: spells are 'spell', everything else (weapons, monster features,
+		// class features) is 'weapon'. Monster features are physical attacks, not spells.
 		const source = this.#item.type === 'spell' ? 'spell' : 'weapon';
 
 		for (const node of flattenEffectsTree(effects)) {

@@ -99,8 +99,8 @@ function matchesBonus(
  * Dice-based bonuses are excluded — use getDamageBonusFormulas() for those.
  *
  * @param actor - The actor whose `system.damageBonuses` array to read
- * @param delivery - The delivery method ('melee' or 'ranged')
- * @param source - The source type ('weapon' or 'spell')
+ * @param delivery - The delivery method ('melee', 'ranged', or 'any')
+ * @param source - The source type ('weapon', 'spell', or 'any')
  * @param damageType - Optional damage type to filter by (e.g. 'lightning')
  * @returns The total numeric bonus value (0 if no matching bonuses)
  */
@@ -128,8 +128,8 @@ export function getDamageBonusTotal(
  * Numeric bonuses are excluded — use getDamageBonusTotal() for those.
  *
  * @param actor - The actor whose `system.damageBonuses` array to read
- * @param delivery - The delivery method ('melee' or 'ranged')
- * @param source - The source type ('weapon' or 'spell')
+ * @param delivery - The delivery method ('melee', 'ranged', or 'any')
+ * @param source - The source type ('weapon', 'spell', or 'any')
  * @param damageType - Optional damage type to filter by (e.g. 'lightning')
  * @returns Array of dice formula strings to append to the damage roll
  */
