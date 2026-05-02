@@ -3,7 +3,7 @@
 	import localize from '../../utils/localize.js';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import { CLASS_SHEET_TAB_CONFIG, type ClassSheetTabName } from './ClassSheetConstants.js';
-	import { createClassSheetState } from './ClassSheet.state.svelte.js';
+	import { createClassSheetState } from './ClassSheet.classState.svelte.js';
 	import type { ClassSheetProps } from '#types/components/ClassSheet.d.ts';
 
 	import ClassProgressionTab from './pages/ClassProgressionTab.svelte';
@@ -15,7 +15,7 @@
 
 	let { item, sheet }: ClassSheetProps = $props();
 
-	const state = createClassSheetState(() => ({ item, sheet }));
+	const classState = createClassSheetState(() => ({ item, sheet }));
 
 	const snippetsByTab: Record<ClassSheetTabName, () => void> = {
 		description: descriptionTab,
@@ -84,9 +84,9 @@
 
 			<TagGroup
 				grid={true}
-				options={state.abilityScoreOptions}
+				options={classState.abilityScoreOptions}
 				selectedOptions={item.reactive.system.keyAbilityScores}
-				toggleOption={state.toggleKeyAbilityScoreOption}
+				toggleOption={classState.toggleKeyAbilityScoreOption}
 				disabled={item.reactive.system.keyAbilityScores.length > 1}
 				--nimble-tag-group-grid-columns="repeat(4, 1fr)"
 			/>
@@ -94,28 +94,32 @@
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">{state.saves.advantageSave}</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{classState.saves.advantageSave}
+				</h3>
 			</header>
 
 			<TagGroup
 				grid={true}
-				options={state.savingThrowOptions}
+				options={classState.savingThrowOptions}
 				selectedOptions={[item.reactive.system.savingThrows.advantage]}
-				toggleOption={state.toggleAdvantageSavingThrow}
+				toggleOption={classState.toggleAdvantageSavingThrow}
 				--nimble-tag-group-grid-columns="repeat(4, 1fr)"
 			/>
 		</section>
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">{state.saves.disadvantageSave}</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{classState.saves.disadvantageSave}
+				</h3>
 			</header>
 
 			<TagGroup
 				grid={true}
-				options={state.savingThrowOptions}
+				options={classState.savingThrowOptions}
 				selectedOptions={[item.reactive.system.savingThrows.disadvantage]}
-				toggleOption={state.toggleDisadvantageSavingThrow}
+				toggleOption={classState.toggleDisadvantageSavingThrow}
 				--nimble-tag-group-grid-columns="repeat(4, 1fr)"
 			/>
 		</section>
@@ -129,9 +133,9 @@
 
 			<TagGroup
 				grid={true}
-				options={state.hitDieOptions}
+				options={classState.hitDieOptions}
 				selectedOptions={[item.reactive.system.hitDieSize]}
-				toggleOption={state.toggleHitDieSize}
+				toggleOption={classState.toggleHitDieSize}
 				--nimble-tag-group-grid-columns="repeat(7, 1fr)"
 			/>
 		</section>
@@ -161,9 +165,9 @@
 
 				<TagGroup
 					grid={true}
-					options={state.manaRecoveryOptions}
+					options={classState.manaRecoveryOptions}
 					selectedOptions={[item.reactive.system.mana.recovery]}
-					toggleOption={state.toggleManaRecoveryType}
+					toggleOption={classState.toggleManaRecoveryType}
 					--nimble-tag-group-grid-columns="repeat(3, 1fr)"
 				/>
 			</section>
@@ -177,9 +181,9 @@
 			</header>
 
 			<TagGroup
-				options={state.armorOptions}
+				options={classState.armorOptions}
 				selectedOptions={item.reactive.system.armorProficiencies}
-				toggleOption={state.toggleArmorProficiency}
+				toggleOption={classState.toggleArmorProficiency}
 			/>
 		</section>
 
@@ -195,7 +199,7 @@
 					type="button"
 					data-tooltip="NIMBLE.classSheet.addWeaponProficiency"
 					aria-label={localize('NIMBLE.classSheet.addWeaponProficiency')}
-					onclick={state.addWeaponProficiency}
+					onclick={classState.addWeaponProficiency}
 				>
 					<i class="fa-solid fa-square-plus"></i>
 				</button>
@@ -208,7 +212,7 @@
 							<input
 								type="text"
 								value={weapon}
-								onchange={(event) => state.updateWeaponProficiency(index, event.target.value)}
+								onchange={(event) => classState.updateWeaponProficiency(index, event.target.value)}
 							/>
 
 							<button
@@ -216,7 +220,7 @@
 								data-button-variant="icon"
 								data-tooltip="NIMBLE.classSheet.deleteWeaponProficiency"
 								aria-label={localize('NIMBLE.classSheet.deleteWeaponProficiency')}
-								onclick={() => state.deleteWeaponProficiency(index)}
+								onclick={() => classState.deleteWeaponProficiency(index)}
 								type="button"
 							>
 								<i class="fa-solid fa-trash"></i>
@@ -243,7 +247,7 @@
 					type="button"
 					data-tooltip="NIMBLE.classSheet.addFeatureGroup"
 					aria-label={localize('NIMBLE.classSheet.addFeatureGroup')}
-					onclick={state.addFeatureGroup}
+					onclick={classState.addFeatureGroup}
 				>
 					<i class="fa-solid fa-square-plus"></i>
 				</button>
@@ -256,7 +260,7 @@
 							<input
 								type="text"
 								value={featureGroup}
-								onchange={(event) => state.updateFeatureGroup(index, event.target.value)}
+								onchange={(event) => classState.updateFeatureGroup(index, event.target.value)}
 							/>
 
 							<button
@@ -264,7 +268,7 @@
 								data-button-variant="icon"
 								data-tooltip="NIMBLE.classSheet.deleteFeatureGroup"
 								aria-label={localize('NIMBLE.classSheet.deleteFeatureGroup')}
-								onclick={() => state.deleteFeatureGroup(index)}
+								onclick={() => classState.deleteFeatureGroup(index)}
 								type="button"
 							>
 								<i class="fa-solid fa-trash"></i>
