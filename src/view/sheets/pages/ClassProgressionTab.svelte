@@ -1,344 +1,41 @@
 <script lang="ts">
 	import type { NimbleClassItem } from '#documents/item/class.js';
-	import type { NimbleFeatureItem } from '#documents/item/feature.js';
-	import type {
-		AbilityScoreDataEntry,
-		ClassProgressionLevelData,
-		SubclassChoice,
-	} from '#types/components/ClassProgressionTab.d.ts';
-
 	import ClassProgressionLevelRow from '../components/ClassProgressionLevelRow.svelte';
-	import buildSubclassFeatureIndex from '../../../utils/buildSubclassFeatureIndex.js';
-	import getClassProgressionData from '../../../utils/getClassProgressionData.js';
-	import getSubclassFeaturesFromIndex from '../../../utils/getSubclassFeatures.js';
-	import getSubclassChoices from '../../../utils/getSubclassChoices.js';
-	import localize from '../../../utils/localize.js';
-
+	import localize from '#utils/localize.js';
 	import { getContext } from 'svelte';
+	import { createClassProgressionTabState } from './ClassProgressionTab.state.svelte.js';
 
-	const SUBCLASS_LEVELS = [3, 7, 11, 15] as const;
-	const ABILITY_SCORE_LEVELS = [4, 5, 8, 9, 12, 13, 16, 17, 20] as const;
-
-	let item: NimbleClassItem = getContext('document');
-
-	let progressionData = $state<Map<number, ClassProgressionLevelData>>(new Map());
-	let subclasses = $state<SubclassChoice[]>([]);
-	let subclassProgressionData = $state<Map<string, Map<number, NimbleFeatureItem[]>>>(new Map());
-	let isLoading = $state(true);
-	let expandedGroups = $state<Set<string>>(new Set());
-	let expandedSubclasses = $state<Set<string>>(new Set());
-
-	const identifier = $derived(item.reactive.system.identifier);
-	const groupIdentifiers = $derived(item.reactive.system.groupIdentifiers || []);
-	const abilityScoreData = $derived(item.reactive.system.abilityScoreData);
-	const keyAbilityScores = $derived(item.reactive.system.keyAbilityScores || []);
-
-	// Collect all unique selection groups across all levels
-	const selectionGroups = $derived.by(() => {
-		const groups = new Map<string, NimbleFeatureItem[]>();
-		for (const [, levelData] of progressionData) {
-			for (const [groupName, group] of levelData.selectionGroups) {
-				if (!groups.has(groupName)) {
-					groups.set(groupName, []);
-				}
-				// Add features we haven't seen yet
-				const existing = groups.get(groupName)!;
-				for (const feature of group.features) {
-					if (!existing.some((f) => f.uuid === feature.uuid)) {
-						existing.push(feature);
-					}
-				}
-			}
-		}
-		return groups;
-	});
-
-	// Get levels where a selection group is available
-	function getGroupLevels(groupName: string): number[] {
-		const levels: number[] = [];
-		for (const [level, levelData] of progressionData) {
-			if (levelData.selectionGroups.has(groupName)) {
-				levels.push(level);
-			}
-		}
-		return levels.sort((a, b) => a - b);
-	}
-
-	function toggleGroup(groupName: string): void {
-		if (expandedGroups.has(groupName)) {
-			expandedGroups.delete(groupName);
-			expandedGroups = new Set(expandedGroups);
-		} else {
-			expandedGroups.add(groupName);
-			expandedGroups = new Set(expandedGroups);
-		}
-	}
-
-	function isGroupExpanded(groupName: string): boolean {
-		return expandedGroups.has(groupName);
-	}
-
-	function toggleSubclass(uuid: string): void {
-		if (expandedSubclasses.has(uuid)) {
-			expandedSubclasses.delete(uuid);
-			expandedSubclasses = new Set(expandedSubclasses);
-		} else {
-			expandedSubclasses.add(uuid);
-			expandedSubclasses = new Set(expandedSubclasses);
-		}
-	}
-
-	function isSubclassExpanded(uuid: string): boolean {
-		return expandedSubclasses.has(uuid);
-	}
-
-	async function loadProgressionData(): Promise<void> {
-		if (!identifier) return;
-
-		isLoading = true;
-
-		const [progression, subclassChoices, subclassIndex] = await Promise.all([
-			getClassProgressionData(identifier, groupIdentifiers),
-			getSubclassChoices(identifier),
-			buildSubclassFeatureIndex(),
-		]);
-
-		progressionData = progression;
-		subclasses = subclassChoices;
-
-		const subclassData = new Map<string, Map<number, NimbleFeatureItem[]>>();
-		for (const subclass of subclassChoices) {
-			const levelMap = new Map<number, NimbleFeatureItem[]>();
-			await Promise.all(
-				SUBCLASS_LEVELS.map(async (level) => {
-					const features = await getSubclassFeaturesFromIndex(
-						subclassIndex,
-						identifier,
-						subclass.identifier,
-						level,
-					);
-					if (features.length > 0) levelMap.set(level, features);
-				}),
-			);
-			subclassData.set(subclass.identifier, levelMap);
-		}
-		subclassProgressionData = subclassData;
-
-		isLoading = false;
-	}
-
-	// Load data when identifier changes
-	$effect(() => {
-		if (!identifier) return;
-		loadProgressionData();
-	});
-
-	// Listen for item changes and reload when features/subclasses are modified
-	$effect(() => {
-		if (!identifier) return;
-
-		function isRelevantItem(item: Item): boolean {
-			if (item.type === 'subclass') {
-				const subclass = item as { system?: { parentClass?: string } };
-				return subclass.system?.parentClass === identifier;
-			}
-			if (item.type === 'feature') {
-				const feature = item as { system?: { class?: string; group?: string } };
-				// Check if feature belongs to this class or one of its groups
-				if (feature.system?.class === identifier) return true;
-				if (feature.system?.group && groupIdentifiers.includes(feature.system.group)) return true;
-			}
-			return false;
-		}
-
-		function onItemChange(item: Item): void {
-			if (isRelevantItem(item)) {
-				loadProgressionData();
-			}
-		}
-
-		const hookIds = [
-			Hooks.on('createItem', onItemChange),
-			Hooks.on('updateItem', onItemChange),
-			Hooks.on('deleteItem', onItemChange),
-		];
-
-		return () => {
-			Hooks.off('createItem', hookIds[0]);
-			Hooks.off('updateItem', hookIds[1]);
-			Hooks.off('deleteItem', hookIds[2]);
-		};
-	});
-
-	function handleFeatureClick(feature: NimbleFeatureItem): void {
-		feature.sheet?.render(true);
-	}
-
-	function handleSubclassClick(uuid: string): void {
-		fromUuid(uuid).then((subclass) => {
-			if (subclass) {
-				(subclass as Item).sheet?.render(true);
-			}
-		});
-	}
-
-	async function handleAddFeature(level: number, classIdentifier: string): Promise<void> {
-		// Create a new feature item as a world item with pre-populated values
-		const featureData = {
-			name: `New Feature (Level ${level})`,
-			type: 'feature',
-			system: {
-				featureType: 'class',
-				class: classIdentifier,
-				gainedAtLevel: level,
-				gainedAtLevels: [level],
-				group: `${classIdentifier}-progression`,
-				subclass: false,
-			},
-		};
-
-		const [createdFeature] = await Item.createDocuments([featureData]);
-		if (createdFeature) {
-			createdFeature.sheet?.render(true);
-		}
-	}
-
-	function getAbilityScoreEntry(level: number): AbilityScoreDataEntry | null {
-		if (!ABILITY_SCORE_LEVELS.includes(level as (typeof ABILITY_SCORE_LEVELS)[number])) {
-			return null;
-		}
-		return abilityScoreData[level as keyof typeof abilityScoreData] ?? null;
-	}
-
-	function isSubclassLevel(level: number): boolean {
-		return SUBCLASS_LEVELS.includes(level as (typeof SUBCLASS_LEVELS)[number]);
-	}
-
-	function formatGroupName(groupName: string): string {
-		return groupName.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
-	}
-
-	async function handleAddFeatureToGroup(
-		event: MouseEvent,
-		groupName: string,
-		levels: number[],
-	): Promise<void> {
-		event.stopPropagation();
-
-		// Create a new feature item pre-populated for this group
-		const featureData = {
-			name: `New ${formatGroupName(groupName)} Feature`,
-			type: 'feature',
-			system: {
-				featureType: 'class',
-				class: identifier,
-				gainedAtLevel: levels[0],
-				gainedAtLevels: levels,
-				group: groupName,
-				subclass: false,
-			},
-		};
-
-		const [createdFeature] = await Item.createDocuments([featureData]);
-		if (createdFeature) {
-			createdFeature.sheet?.render(true);
-		}
-	}
-
-	async function handleAddSubclass(): Promise<void> {
-		// Create a new subclass item pre-populated with this class as parent
-		const subclassData = {
-			name: `New ${item.name} Subclass`,
-			type: 'subclass',
-			system: {
-				parentClass: identifier,
-			},
-		};
-
-		const [createdSubclass] = await Item.createDocuments([subclassData]);
-		if (createdSubclass) {
-			createdSubclass.sheet?.render(true);
-		}
-	}
-
-	async function handleAddSubclassFeature(
-		subclassIdentifier: string,
-		subclassName: string,
-		level: number,
-	): Promise<void> {
-		const featureData = {
-			name: `New ${subclassName} Feature (Level ${level})`,
-			type: 'feature',
-			system: {
-				featureType: 'class',
-				class: identifier,
-				gainedAtLevel: level,
-				gainedAtLevels: [level],
-				group: subclassIdentifier,
-				subclass: true,
-			},
-		};
-		const [createdFeature] = await Item.createDocuments([featureData]);
-		if (createdFeature) {
-			createdFeature.sheet?.render(true);
-		}
-	}
-
-	async function handleAddNewFeatureChoice(): Promise<void> {
-		// Generate a unique group name for a new feature choice
-		const existingGroupCount = selectionGroups.size;
-		const newGroupName = `${identifier}-choice-${existingGroupCount + 1}`;
-
-		// Create a new feature item with the new group
-		const featureData = {
-			name: `New Feature Choice`,
-			type: 'feature',
-			system: {
-				featureType: 'class',
-				class: identifier,
-				gainedAtLevel: 1,
-				gainedAtLevels: [1],
-				group: newGroupName,
-				subclass: false,
-			},
-		};
-
-		const [createdFeature] = await Item.createDocuments([featureData]);
-		if (createdFeature) {
-			createdFeature.sheet?.render(true);
-		}
-	}
+	const item: NimbleClassItem = getContext('document');
+	const state = createClassProgressionTabState(() => item);
 </script>
 
 <section class="nimble-sheet__body nimble-sheet__body--item class-progression-tab">
-	{#if isLoading}
+	{#if state.isLoading}
 		<div class="class-progression-tab__loading">
 			<i class="fa-solid fa-spinner fa-spin"></i>
 			{localize('NIMBLE.classSheet.progressionLoading')}
 		</div>
 	{:else}
-		<!-- Level Progression Rows -->
 		<section class="class-progression-tab__levels">
 			{#each Array.from({ length: 20 }, (_, i) => i + 1) as level (level)}
 				<ClassProgressionLevelRow
 					{level}
-					levelData={progressionData.get(level) ?? {
+					levelData={state.progressionData.get(level) ?? {
 						level,
 						autoGrant: [],
 						selectionGroups: new Map(),
 					}}
-					abilityScoreEntry={getAbilityScoreEntry(level)}
-					isSubclassLevel={isSubclassLevel(level)}
-					classIdentifier={identifier}
-					className={item.name}
-					{keyAbilityScores}
-					onFeatureClick={handleFeatureClick}
-					onAddFeature={handleAddFeature}
+					abilityScoreEntry={state.getAbilityScoreEntry(level)}
+					isSubclassLevel={state.isSubclassLevel(level)}
+					classIdentifier={state.identifier}
+					className={state.className}
+					keyAbilityScores={state.keyAbilityScores}
+					onFeatureClick={state.handleFeatureClick}
+					onAddFeature={state.handleAddFeature}
 				/>
 			{/each}
 		</section>
 
-		<!-- Subclasses -->
 		<section class="class-progression-tab__section">
 			<header class="nimble-section-header class-progression-tab__section-header">
 				<h3 class="nimble-heading" data-heading-variant="section">
@@ -347,17 +44,17 @@
 				<button
 					type="button"
 					class="class-progression-tab__section-add-btn"
-					onclick={handleAddSubclass}
+					onclick={state.handleAddSubclass}
 					title="Add new subclass"
 				>
 					<i class="fa-solid fa-plus"></i>
 				</button>
 			</header>
-			{#if subclasses.length > 0}
-				{#each subclasses as subclass (subclass.uuid)}
+			{#if state.subclasses.length > 0}
+				{#each state.subclasses as subclass (subclass.uuid)}
 					<article
 						class="class-progression-tab__subclass-accordion"
-						class:class-progression-tab__subclass-accordion--expanded={isSubclassExpanded(
+						class:class-progression-tab__subclass-accordion--expanded={state.isSubclassExpanded(
 							subclass.uuid,
 						)}
 					>
@@ -365,11 +62,11 @@
 						<!-- svelte-ignore a11y_no_static_element_interactions -->
 						<div
 							class="class-progression-tab__subclass-header"
-							onclick={() => toggleSubclass(subclass.uuid)}
+							onclick={() => state.toggleSubclass(subclass.uuid)}
 						>
 							<i
 								class="fa-solid fa-chevron-right class-progression-tab__subclass-chevron"
-								class:class-progression-tab__subclass-chevron--expanded={isSubclassExpanded(
+								class:class-progression-tab__subclass-chevron--expanded={state.isSubclassExpanded(
 									subclass.uuid,
 								)}
 							></i>
@@ -380,7 +77,7 @@
 								class="class-progression-tab__subclass-open-btn"
 								onclick={(e) => {
 									e.stopPropagation();
-									handleSubclassClick(subclass.uuid);
+									state.handleSubclassClick(subclass.uuid);
 								}}
 								title="Open {subclass.name} sheet"
 							>
@@ -388,12 +85,12 @@
 							</button>
 						</div>
 
-						{#if isSubclassExpanded(subclass.uuid)}
+						{#if state.isSubclassExpanded(subclass.uuid)}
 							<div class="class-progression-tab__subclass-content">
 								<div class="class-progression-tab__subclass-progression">
-									{#each SUBCLASS_LEVELS as level (level)}
+									{#each state.SUBCLASS_LEVELS as level (level)}
 										{@const levelFeatures =
-											subclassProgressionData.get(subclass.identifier)?.get(level) ?? []}
+											state.subclassProgressionData.get(subclass.identifier)?.get(level) ?? []}
 										<div class="class-progression-tab__subclass-level">
 											<div class="class-progression-tab__subclass-level-header">
 												<span class="class-progression-tab__subclass-level-label"
@@ -403,7 +100,11 @@
 													type="button"
 													class="class-progression-tab__section-add-btn"
 													onclick={() =>
-														handleAddSubclassFeature(subclass.identifier, subclass.name, level)}
+														state.handleAddSubclassFeature(
+															subclass.identifier,
+															subclass.name,
+															level,
+														)}
 													title="Add feature at level {level}"
 												>
 													<i class="fa-solid fa-plus"></i>
@@ -420,7 +121,7 @@
 														<button
 															type="button"
 															class="class-progression-tab__feature-header"
-															onclick={() => handleFeatureClick(feature)}
+															onclick={() => state.handleFeatureClick(feature)}
 														>
 															<h4 class="class-progression-tab__feature-name">{feature.name}</h4>
 															<i class="fa-solid fa-external-link class-progression-tab__link-icon"
@@ -448,7 +149,6 @@
 			{/if}
 		</section>
 
-		<!-- Selection Groups (collapsible accordions) -->
 		<section class="class-progression-tab__section">
 			<header class="nimble-section-header class-progression-tab__section-header">
 				<h3 class="nimble-heading" data-heading-variant="section">
@@ -457,40 +157,50 @@
 				<button
 					type="button"
 					class="class-progression-tab__section-add-btn"
-					onclick={handleAddNewFeatureChoice}
+					onclick={state.handleAddNewFeatureChoice}
 					title="Add new feature choice group"
 				>
 					<i class="fa-solid fa-plus"></i>
 				</button>
 			</header>
-			{#if selectionGroups.size > 0}
-				{#each [...selectionGroups.entries()] as [groupName, features] (groupName)}
+			{#if state.selectionGroups.size > 0}
+				{#each [...state.selectionGroups.entries()] as [groupName, features] (groupName)}
 					<article
 						class="class-progression-tab__group-accordion"
-						class:class-progression-tab__group-accordion--expanded={isGroupExpanded(groupName)}
+						class:class-progression-tab__group-accordion--expanded={state.isGroupExpanded(
+							groupName,
+						)}
 					>
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
 						<!-- svelte-ignore a11y_no_static_element_interactions -->
-						<div class="class-progression-tab__group-header" onclick={() => toggleGroup(groupName)}>
+						<div
+							class="class-progression-tab__group-header"
+							onclick={() => state.toggleGroup(groupName)}
+						>
 							<i
 								class="fa-solid fa-chevron-right class-progression-tab__group-chevron"
-								class:class-progression-tab__group-chevron--expanded={isGroupExpanded(groupName)}
+								class:class-progression-tab__group-chevron--expanded={state.isGroupExpanded(
+									groupName,
+								)}
 							></i>
-							<span class="class-progression-tab__group-name">{formatGroupName(groupName)}</span>
+							<span class="class-progression-tab__group-name"
+								>{state.formatGroupName(groupName)}</span
+							>
 							<span class="class-progression-tab__group-meta">
-								{features.length} options · Levels {getGroupLevels(groupName).join(', ')}
+								{features.length} options · Levels {state.getGroupLevels(groupName).join(', ')}
 							</span>
 							<button
 								type="button"
 								class="class-progression-tab__group-add-btn"
-								onclick={(e) => handleAddFeatureToGroup(e, groupName, getGroupLevels(groupName))}
-								title="Add feature to {formatGroupName(groupName)}"
+								onclick={(e) =>
+									state.handleAddFeatureToGroup(e, groupName, state.getGroupLevels(groupName))}
+								title="Add feature to {state.formatGroupName(groupName)}"
 							>
 								<i class="fa-solid fa-plus"></i>
 							</button>
 						</div>
 
-						{#if isGroupExpanded(groupName)}
+						{#if state.isGroupExpanded(groupName)}
 							<div class="class-progression-tab__group-content">
 								<div class="class-progression-tab__feature-grid">
 									{#each features as feature (feature.uuid)}
@@ -498,7 +208,7 @@
 											<button
 												type="button"
 												class="class-progression-tab__feature-header"
-												onclick={() => handleFeatureClick(feature)}
+												onclick={() => state.handleFeatureClick(feature)}
 											>
 												<img src={feature.img} alt="" class="class-progression-tab__feature-img" />
 												<h4 class="class-progression-tab__feature-name">{feature.name}</h4>
@@ -549,7 +259,6 @@
 			gap: 0.25rem;
 		}
 
-		// Section styling
 		&__section {
 			display: flex;
 			flex-direction: column;
@@ -597,7 +306,6 @@
 			padding: 0.5rem;
 		}
 
-		// Subclass accordion
 		&__subclass-accordion {
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
@@ -720,7 +428,6 @@
 			min-width: 0;
 		}
 
-		// Group accordion
 		&__group-accordion {
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
@@ -801,7 +508,6 @@
 			background: var(--nimble-input-background-color);
 		}
 
-		// Two-column grid for features
 		&__feature-grid {
 			display: grid;
 			grid-template-columns: repeat(2, 1fr);

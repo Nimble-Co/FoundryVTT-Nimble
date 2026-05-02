@@ -1,8 +1,7 @@
 <script lang="ts">
 	import type { ClassProgressionLevelRowProps } from '#types/components/ClassProgressionTab.d.ts';
-	import type { NimbleFeatureItem } from '#documents/item/feature.js';
-
-	import localize from '../../../utils/localize.js';
+	import localize from '#utils/localize.js';
+	import { createClassProgressionLevelRowState } from './ClassProgressionLevelRow.state.svelte.js';
 
 	let {
 		level,
@@ -16,157 +15,39 @@
 		onAddFeature,
 	}: ClassProgressionLevelRowProps = $props();
 
-	const ALL_STATS = ['strength', 'dexterity', 'intelligence', 'will'] as const;
-
-	const secondaryAbilityScores = $derived(
-		ALL_STATS.filter((stat) => !keyAbilityScores.includes(stat)),
-	);
-
-	function formatStats(stats: readonly string[] | string[]): string {
-		return stats
-			.map((stat) => localize(`NIMBLE.abilityScoreAbbreviations.${stat}`).toUpperCase())
-			.join(' or ');
-	}
-
-	let isExpanded = $state(false);
-
-	const hasFeatures = $derived(
-		levelData.autoGrant.length > 0 || levelData.selectionGroups.size > 0,
-	);
-
-	const isEpicBoonLevel = $derived(level === 19);
-
-	// Row is expandable if it has features, subclass level, ability score entry, or epic boon level
-	const isExpandable = $derived(
-		hasFeatures || isSubclassLevel || abilityScoreEntry !== null || isEpicBoonLevel,
-	);
-
-	const hasContent = $derived(
-		hasFeatures || abilityScoreEntry !== null || isSubclassLevel || isEpicBoonLevel,
-	);
-
-	function toggleExpanded(): void {
-		if (isExpandable) {
-			isExpanded = !isExpanded;
-		}
-	}
-
-	function handleFeatureClick(event: MouseEvent, feature: NimbleFeatureItem): void {
-		event.stopPropagation();
-		onFeatureClick(feature);
-	}
-
-	function formatGroupName(groupName: string): string {
-		return groupName.replace(/-/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
-	}
-
-	function getFeatureSummary(): string {
-		const parts: string[] = [];
-
-		// Add auto-granted feature names
-		for (const feature of levelData.autoGrant) {
-			parts.push(feature.name);
-		}
-
-		// Add selection group names (not individual features)
-		for (const [groupName] of levelData.selectionGroups) {
-			parts.push(formatGroupName(groupName));
-		}
-
-		// Add Epic Boon for level 19
-		if (isEpicBoonLevel) {
-			parts.push(localize('NIMBLE.classSheet.progressionEpicBoonLabel'));
-		}
-
-		return parts.join(', ');
-	}
-
-	function getStatIncreaseDescription(): string {
-		if (!abilityScoreEntry) return '';
-		if (abilityScoreEntry.statIncreaseType === 'primary') {
-			return localize('NIMBLE.classSheet.progressionKeyStatIncrease', {
-				stats: formatStats(keyAbilityScores),
-			});
-		} else if (abilityScoreEntry.statIncreaseType === 'secondary') {
-			return localize('NIMBLE.classSheet.progressionSecondaryStatIncrease', {
-				stats: formatStats(secondaryAbilityScores),
-			});
-		} else if (abilityScoreEntry.statIncreaseType === 'capstone') {
-			return localize('NIMBLE.classSheet.progressionCapstoneIncrease');
-		}
-		return '';
-	}
-
-	function handleAddFeature(event: MouseEvent): void {
-		event.stopPropagation();
-		onAddFeature(level, classIdentifier);
-	}
-
-	/**
-	 * Extracts the level-specific portion of a feature description.
-	 * Features often have a base description followed by level-specific upgrades like:
-	 * "<p>Base description...</p><hr><p>Level 4: Upgrade...</p><p>Level 6: Another upgrade...</p>"
-	 *
-	 * @param description - The full HTML description
-	 * @param currentLevel - The level being displayed
-	 * @param baseLevel - The level where the feature is first gained
-	 * @returns The relevant portion of the description for this level
-	 */
-	function getLevelSpecificDescription(
-		description: string,
-		currentLevel: number,
-		baseLevel: number,
-	): string {
-		if (!description) return '';
-
-		// If this is the base level, return everything before <hr> (or full description if no <hr>)
-		if (currentLevel === baseLevel) {
-			const hrIndex = description.indexOf('<hr');
-			if (hrIndex !== -1) {
-				return description.substring(0, hrIndex).trim();
-			}
-			return description;
-		}
-
-		// For upgrade levels, find the paragraph that starts with "Level {currentLevel}:"
-		// Match patterns like <p>Level 4: ..., <p>Level 4 : ..., etc.
-		const levelPattern = new RegExp(
-			`<p>\\s*Level\\s+${currentLevel}\\s*[:\\.]\\s*([^<]*(?:<(?!/p>)[^<]*)*)</p>`,
-			'i',
-		);
-		const match = description.match(levelPattern);
-
-		if (match) {
-			// Return just the content of the matching paragraph, wrapped in <p>
-			return `<p>${match[1].trim()}</p>`;
-		}
-
-		// Fallback: if no level-specific content found, return empty
-		// (the feature name itself already indicates what level it's for)
-		return '';
-	}
+	const state = createClassProgressionLevelRowState(() => ({
+		level,
+		levelData,
+		abilityScoreEntry,
+		isSubclassLevel,
+		classIdentifier,
+		className,
+		keyAbilityScores,
+		onFeatureClick,
+		onAddFeature,
+	}));
 </script>
 
 <article
 	class="class-progression-level-row"
-	class:class-progression-level-row--empty={!hasContent}
-	class:class-progression-level-row--expanded={isExpanded}
-	class:class-progression-level-row--expandable={isExpandable}
+	class:class-progression-level-row--empty={!state.isExpandable}
+	class:class-progression-level-row--expanded={state.isExpanded}
+	class:class-progression-level-row--expandable={state.isExpandable}
 >
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		class="class-progression-level-row__header"
-		onclick={isExpandable ? toggleExpanded : undefined}
+		onclick={state.isExpandable ? state.toggleExpanded : undefined}
 	>
 		<span class="class-progression-level-row__level-badge">
 			{level}
 		</span>
 
 		<div class="class-progression-level-row__summary">
-			{#if hasFeatures || isEpicBoonLevel}
+			{#if state.hasFeatures || state.isEpicBoonLevel}
 				<span class="class-progression-level-row__feature-summary">
-					{getFeatureSummary()}
+					{state.featureSummary}
 				</span>
 			{:else if isSubclassLevel && !abilityScoreEntry}
 				<span class="class-progression-level-row__feature-summary"> Subclass Feature </span>
@@ -211,35 +92,33 @@
 		<button
 			type="button"
 			class="class-progression-level-row__add-btn"
-			onclick={handleAddFeature}
+			onclick={state.handleAddFeature}
 			title="Add feature at level {level}"
 		>
 			<i class="fa-solid fa-plus"></i>
 		</button>
 
-		{#if isExpandable}
+		{#if state.isExpandable}
 			<i
 				class="fa-solid fa-chevron-down class-progression-level-row__expand-icon"
-				class:class-progression-level-row__expand-icon--expanded={isExpanded}
+				class:class-progression-level-row__expand-icon--expanded={state.isExpanded}
 			></i>
 		{/if}
 	</div>
 
-	{#if isExpanded && isExpandable}
+	{#if state.isExpanded && state.isExpandable}
 		<div class="class-progression-level-row__content">
-			<!-- Ability score increase info -->
 			{#if abilityScoreEntry}
 				<div class="class-progression-level-row__info-block">
 					<div class="class-progression-level-row__info-icon-wrapper">
 						<i class="fa-solid fa-arrow-up class-progression-level-row__info-icon"></i>
 					</div>
 					<p class="class-progression-level-row__info-text">
-						{@html getStatIncreaseDescription()}
+						{@html state.statIncreaseDescription}
 					</p>
 				</div>
 			{/if}
 
-			<!-- Selection groups - show reference to Feature Choices section -->
 			{#if levelData.selectionGroups.size > 0}
 				{#each [...levelData.selectionGroups.keys()] as groupName (groupName)}
 					<div class="class-progression-level-row__info-block">
@@ -247,15 +126,14 @@
 							<i class="fa-solid fa-list-check class-progression-level-row__info-icon"></i>
 						</div>
 						<p class="class-progression-level-row__info-text">
-							<strong>{formatGroupName(groupName)}.</strong> Choose one from the Feature Choices section
-							below.
+							<strong>{state.formatGroupName(groupName)}.</strong> Choose one from the Feature Choices
+							section below.
 						</p>
 					</div>
 				{/each}
 			{/if}
 
-			<!-- Epic Boon (level 19) -->
-			{#if isEpicBoonLevel}
+			{#if state.isEpicBoonLevel}
 				<div class="class-progression-level-row__info-block">
 					<div class="class-progression-level-row__info-icon-wrapper">
 						<i class="fa-solid fa-crown class-progression-level-row__info-icon"></i>
@@ -266,7 +144,6 @@
 				</div>
 			{/if}
 
-			<!-- Subclass feature info -->
 			{#if isSubclassLevel}
 				<div class="class-progression-level-row__info-block">
 					<div class="class-progression-level-row__info-icon-wrapper">
@@ -282,21 +159,16 @@
 				</div>
 			{/if}
 
-			<!-- Auto-granted features -->
 			{#if levelData.autoGrant.length > 0}
 				{#each levelData.autoGrant as feature (feature.uuid)}
-					{@const levelDescription = getLevelSpecificDescription(
-						feature.system?.description ?? '',
-						level,
-						feature.system?.gainedAtLevel ?? level,
-					)}
+					{@const levelDescription = state.levelDescriptions.get(feature.uuid) ?? ''}
 					<div class="class-progression-level-row__feature">
 						<img src={feature.img} alt="" class="class-progression-level-row__feature-img" />
 						<div class="class-progression-level-row__feature-content">
 							<button
 								type="button"
 								class="class-progression-level-row__feature-header nimble-u-unstyled-button"
-								onclick={(e) => handleFeatureClick(e, feature)}
+								onclick={(e) => state.handleFeatureClick(e, feature)}
 							>
 								<h4 class="class-progression-level-row__feature-name">{feature.name}</h4>
 								<i class="fa-solid fa-external-link class-progression-level-row__link-icon"></i>
