@@ -892,6 +892,188 @@ describe('ItemActivationManager.getData (rolls)', () => {
 		});
 	});
 
+	describe('Damage bonus integration', () => {
+		it('should apply melee weapon damage bonus to melee weapon attacks', async () => {
+			(mockActor.system as Record<string, unknown>).damageBonuses = [
+				{ value: 5, damageType: 'bludgeoning', delivery: 'melee', source: 'weapon' },
+			];
+			mockItem.type = 'object';
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'bludgeoning',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode], targets: { attackType: 'reach' } };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 10 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			await manager.getData();
+
+			expect(DamageRoll).toHaveBeenCalledWith('1d8 + 5', expect.anything(), expect.anything());
+		});
+
+		it('should not apply melee weapon bonus to ranged weapon attacks', async () => {
+			(mockActor.system as Record<string, unknown>).damageBonuses = [
+				{ value: 5, damageType: 'bludgeoning', delivery: 'melee', source: 'weapon' },
+			];
+			mockItem.type = 'object';
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'piercing',
+				formula: '1d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode], targets: { attackType: 'range' } };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 5 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			await manager.getData();
+
+			expect(DamageRoll).toHaveBeenCalledWith('1d8', expect.anything(), expect.anything());
+		});
+
+		it('should apply spell bonus to spell attacks but not weapon attacks', async () => {
+			(mockActor.system as Record<string, unknown>).damageBonuses = [
+				{ value: 3, damageType: '', delivery: 'any', source: 'spell' },
+			];
+
+			// Spell item with ranged delivery
+			mockItem.type = 'spell';
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'fire',
+				formula: '2d6',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode], targets: { attackType: 'range' } };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 10 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			await manager.getData();
+
+			expect(DamageRoll).toHaveBeenCalledWith('2d6 + 3', expect.anything(), expect.anything());
+		});
+
+		it('should apply spell bonus to melee spell (delivery=melee, source=spell)', async () => {
+			(mockActor.system as Record<string, unknown>).damageBonuses = [
+				{ value: 3, damageType: '', delivery: 'any', source: 'spell' },
+				{ value: 5, damageType: '', delivery: 'melee', source: 'weapon' },
+			];
+			mockItem.type = 'spell';
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+
+			const damageNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'necrotic',
+				formula: '2d8',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [damageNode], targets: { attackType: 'reach' } };
+			mockReconstructEffectsTree.mockReturnValue([damageNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 12 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			await manager.getData();
+
+			// Spell bonus (+3) should apply, melee weapon bonus (+5) should NOT
+			expect(DamageRoll).toHaveBeenCalledWith('2d8 + 3', expect.anything(), expect.anything());
+		});
+
+		it('should filter by damageType — lightning bonus only applies to lightning damage', async () => {
+			(mockActor.system as Record<string, unknown>).damageBonuses = [
+				{ value: 4, damageType: 'lightning', delivery: 'any', source: 'spell' },
+			];
+			mockItem.type = 'spell';
+			manager = new ItemActivationManager(
+				mockItem as unknown as ConstructorParameters<typeof ItemActivationManager>[0],
+				{ fastForward: true },
+			);
+
+			const fireNode: EffectNode = {
+				id: 'damage-1',
+				type: 'damage',
+				damageType: 'fire',
+				formula: '2d6',
+				canCrit: true,
+				canMiss: true,
+				parentContext: null,
+				parentNode: null,
+			} as EffectNode;
+
+			manager.activationData = { effects: [fireNode], targets: { attackType: 'range' } };
+			mockReconstructEffectsTree.mockReturnValue([fireNode]);
+
+			const mockRoll = {
+				evaluate: vi.fn().mockResolvedValue(undefined),
+				toJSON: vi.fn().mockReturnValue({ total: 7 }),
+			};
+			vi.mocked(DamageRoll).mockImplementation(createMockConstructorImplementation(mockRoll));
+
+			await manager.getData();
+
+			// Lightning bonus should NOT apply to fire damage
+			expect(DamageRoll).toHaveBeenCalledWith('2d6', expect.anything(), expect.anything());
+		});
+	});
+
 	describe('Edge cases', () => {
 		it('should handle effects with no roll types (condition, note, etc.)', async () => {
 			manager = new ItemActivationManager(

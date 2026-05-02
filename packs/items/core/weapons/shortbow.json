@@ -65,7 +65,8 @@
 			"showDescription": false,
 			"targets": {
 				"count": 1,
-				"restrictions": ""
+				"restrictions": "",
+				"attackType": "range"
 			},
 			"template": {
 				"length": 1,

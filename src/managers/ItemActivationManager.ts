@@ -5,7 +5,11 @@ import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
-import { hasWeaponProficiency } from '../utils/attackUtils.js';
+import {
+	getDamageBonusFormulas,
+	getDamageBonusTotal,
+	hasWeaponProficiency,
+} from '../utils/attackUtils.js';
 import getRollFormula from '../utils/getRollFormula.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
@@ -233,14 +237,19 @@ class ItemActivationManager {
 		const actorSystem = this.actor?.system as
 			| {
 					healingPotionBonus?: number;
-					meleeDamageBonus?: { value: number; damageType: string };
 			  }
 			| undefined;
 		const healingBonus = isConsumable ? (actorSystem?.healingPotionBonus ?? 0) : 0;
 
-		// Check if this is a melee attack and get melee damage bonus
-		const isMeleeAttack = this.activationData?.targets?.attackType === 'reach';
-		const meleeDamageBonus = isMeleeAttack ? (actorSystem?.meleeDamageBonus?.value ?? 0) : 0;
+		// Determine delivery (melee/ranged) and source (weapon/spell) for damage bonus filtering.
+		// When attackType is empty (item has no attack), delivery is null and damage bonuses
+		// are skipped entirely — non-attack items (consumables, utilities) should not receive
+		// attack damage bonuses.
+		const attackType = this.activationData?.targets?.attackType;
+		const delivery = attackType === 'reach' ? 'melee' : attackType === 'range' ? 'ranged' : null;
+		// Source classification: spells are 'spell', everything else (weapons, monster features,
+		// class features) is 'weapon'. Monster features are physical attacks, not spells.
+		const source = this.#item.type === 'spell' ? 'spell' : 'weapon';
 
 		for (const node of flattenEffectsTree(effects)) {
 			if (node.type === 'damage' || node.type === 'healing') {
@@ -284,9 +293,20 @@ class ItemActivationManager {
 					// Use modified formula if provided
 					let formula = normalizeDamageRollFormula(dialogData.rollFormula || node.formula);
 
-					// Apply melee damage bonus if applicable
-					if (meleeDamageBonus > 0) {
-						formula = `${formula} + ${meleeDamageBonus}`;
+					// Apply damage bonuses filtered by delivery, source, and damage type
+					if (delivery) {
+						const numericBonus = getDamageBonusTotal(this.actor, delivery, source, node.damageType);
+						if (numericBonus > 0) {
+							formula = `${formula} + ${numericBonus}`;
+						}
+						for (const diceFormula of getDamageBonusFormulas(
+							this.actor,
+							delivery,
+							source,
+							node.damageType,
+						)) {
+							formula = `${formula} + ${diceFormula}`;
+						}
 					}
 
 					// Forward the optional rollMode source list so DamageRoll can

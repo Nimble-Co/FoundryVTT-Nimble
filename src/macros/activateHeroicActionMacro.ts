@@ -1,7 +1,12 @@
 import { DamageRoll } from '../dice/DamageRoll.js';
 import type { NimbleCharacter } from '../documents/actor/character.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
-import { getUnarmedDamageFormula, hasUnarmedProficiency } from '../utils/attackUtils.js';
+import {
+	getDamageBonusFormulas,
+	getDamageBonusTotal,
+	getUnarmedDamageFormula,
+	hasUnarmedProficiency,
+} from '../utils/attackUtils.js';
 import { getActiveCombatForCurrentScene } from '../utils/combatState.js';
 import { getHeroicReactionUsageState } from '../utils/getHeroicReactionUsageState.js';
 import {
@@ -380,13 +385,13 @@ async function executeUnarmedStrike(actor: NimbleCharacter): Promise<void> {
 	let rollFormula = getUnarmedDamageFormula(actor);
 	const canCrit = hasUnarmedProficiency(actor);
 
-	// Apply melee damage bonus (e.g., Reverberating Strikes)
-	const actorSystem = actor.system as {
-		meleeDamageBonus?: { value: number; damageType: string };
-	};
-	const meleeDamageBonus = actorSystem.meleeDamageBonus?.value ?? 0;
+	// Apply damage bonuses (unarmed strikes are melee + weapon + bludgeoning)
+	const meleeDamageBonus = getDamageBonusTotal(actor, 'melee', 'weapon', 'bludgeoning');
 	if (meleeDamageBonus > 0) {
 		rollFormula = `${rollFormula} + ${meleeDamageBonus}`;
+	}
+	for (const diceFormula of getDamageBonusFormulas(actor, 'melee', 'weapon', 'bludgeoning')) {
+		rollFormula = `${rollFormula} + ${diceFormula}`;
 	}
 
 	const unarmedItem = {

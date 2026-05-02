@@ -5,7 +5,21 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "damageBonus",
+				"disabled": false,
+				"id": "fiery-boon-fire-damage",
+				"identifier": "",
+				"label": "Fiery",
+				"predicate": {},
+				"priority": 1,
+				"value": "1",
+				"damageType": "fire",
+				"delivery": "any",
+				"source": "any"
+			}
+		],
 		"description": "<p>+1 fire damage. [M]</p>",
 		"boonType": "minor"
 	},
