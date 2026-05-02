@@ -3,7 +3,7 @@
 	import localize from '../../utils/localize.js';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
 	import { CLASS_SHEET_TAB_CONFIG, type ClassSheetTabName } from './ClassSheetConstants.js';
-	import { createClassSheetState } from './ClassSheet.classState.svelte.js';
+	import { createClassSheetState } from './ClassSheet.state.svelte.js';
 	import type { ClassSheetProps } from '#types/components/ClassSheet.d.ts';
 
 	import ClassProgressionTab from './pages/ClassProgressionTab.svelte';
