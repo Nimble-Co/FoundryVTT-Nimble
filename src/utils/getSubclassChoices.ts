@@ -9,6 +9,7 @@ export default async function getSubclassChoices(parentClassIdentifier: string):
 		name: string;
 		img: string;
 		description: string;
+		identifier: string;
 		system: { parentClass: string };
 	}>
 > {
@@ -17,6 +18,7 @@ export default async function getSubclassChoices(parentClassIdentifier: string):
 		name: string;
 		img: string;
 		description: string;
+		identifier: string;
 		system: { parentClass: string };
 	}> = [];
 
@@ -32,6 +34,9 @@ export default async function getSubclassChoices(parentClassIdentifier: string):
 			name: item.name,
 			img: item.img as string,
 			description: subclass.system.description || '',
+			identifier: (item.name as string & { slugify(opts: { strict: boolean }): string }).slugify({
+				strict: true,
+			}),
 			system: {
 				parentClass: subclass.system.parentClass,
 			},
@@ -65,6 +70,9 @@ export default async function getSubclassChoices(parentClassIdentifier: string):
 					name: entry.name,
 					img: entry.img ?? 'icons/svg/item-bag.svg',
 					description: document.system.description || '',
+					identifier: (
+						entry.name as string & { slugify(opts: { strict: boolean }): string }
+					).slugify({ strict: true }),
 					system: {
 						parentClass: document.system.parentClass,
 					},

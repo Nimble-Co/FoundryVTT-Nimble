@@ -8,7 +8,9 @@
 	} from '#types/components/ClassProgressionTab.d.ts';
 
 	import ClassProgressionLevelRow from '../components/ClassProgressionLevelRow.svelte';
+	import buildSubclassFeatureIndex from '../../../utils/buildSubclassFeatureIndex.js';
 	import getClassProgressionData from '../../../utils/getClassProgressionData.js';
+	import getSubclassFeaturesFromIndex from '../../../utils/getSubclassFeatures.js';
 	import getSubclassChoices from '../../../utils/getSubclassChoices.js';
 	import localize from '../../../utils/localize.js';
 
@@ -21,6 +23,7 @@
 
 	let progressionData = $state<Map<number, ClassProgressionLevelData>>(new Map());
 	let subclasses = $state<SubclassChoice[]>([]);
+	let subclassProgressionData = $state<Map<string, Map<number, NimbleFeatureItem[]>>>(new Map());
 	let isLoading = $state(true);
 	let expandedGroups = $state<Set<string>>(new Set());
 	let expandedSubclasses = $state<Set<string>>(new Set());
@@ -34,13 +37,13 @@
 	const selectionGroups = $derived.by(() => {
 		const groups = new Map<string, NimbleFeatureItem[]>();
 		for (const [, levelData] of progressionData) {
-			for (const [groupName, features] of levelData.selectionGroups) {
+			for (const [groupName, group] of levelData.selectionGroups) {
 				if (!groups.has(groupName)) {
 					groups.set(groupName, []);
 				}
 				// Add features we haven't seen yet
 				const existing = groups.get(groupName)!;
-				for (const feature of features) {
+				for (const feature of group.features) {
 					if (!existing.some((f) => f.uuid === feature.uuid)) {
 						existing.push(feature);
 					}
@@ -94,13 +97,33 @@
 
 		isLoading = true;
 
-		const [progression, subclassChoices] = await Promise.all([
+		const [progression, subclassChoices, subclassIndex] = await Promise.all([
 			getClassProgressionData(identifier, groupIdentifiers),
 			getSubclassChoices(identifier),
+			buildSubclassFeatureIndex(),
 		]);
 
 		progressionData = progression;
 		subclasses = subclassChoices;
+
+		const subclassData = new Map<string, Map<number, NimbleFeatureItem[]>>();
+		for (const subclass of subclassChoices) {
+			const levelMap = new Map<number, NimbleFeatureItem[]>();
+			await Promise.all(
+				SUBCLASS_LEVELS.map(async (level) => {
+					const features = await getSubclassFeaturesFromIndex(
+						subclassIndex,
+						identifier,
+						subclass.identifier,
+						level,
+					);
+					if (features.length > 0) levelMap.set(level, features);
+				}),
+			);
+			subclassData.set(subclass.identifier, levelMap);
+		}
+		subclassProgressionData = subclassData;
+
 		isLoading = false;
 	}
 
@@ -238,6 +261,29 @@
 		}
 	}
 
+	async function handleAddSubclassFeature(
+		subclassIdentifier: string,
+		subclassName: string,
+		level: number,
+	): Promise<void> {
+		const featureData = {
+			name: `New ${subclassName} Feature (Level ${level})`,
+			type: 'feature',
+			system: {
+				featureType: 'class',
+				class: identifier,
+				gainedAtLevel: level,
+				gainedAtLevels: [level],
+				group: subclassIdentifier,
+				subclass: true,
+			},
+		};
+		const [createdFeature] = await Item.createDocuments([featureData]);
+		if (createdFeature) {
+			createdFeature.sheet?.render(true);
+		}
+	}
+
 	async function handleAddNewFeatureChoice(): Promise<void> {
 		// Generate a unique group name for a new feature choice
 		const existingGroupCount = selectionGroups.size;
@@ -344,13 +390,53 @@
 
 						{#if isSubclassExpanded(subclass.uuid)}
 							<div class="class-progression-tab__subclass-content">
-								{#if subclass.description}
-									<div class="class-progression-tab__subclass-desc">
-										{@html subclass.description}
-									</div>
-								{:else}
-									<p class="class-progression-tab__subclass-no-desc">No description available.</p>
-								{/if}
+								<div class="class-progression-tab__subclass-progression">
+									{#each SUBCLASS_LEVELS as level (level)}
+										{@const levelFeatures =
+											subclassProgressionData.get(subclass.identifier)?.get(level) ?? []}
+										<div class="class-progression-tab__subclass-level">
+											<div class="class-progression-tab__subclass-level-header">
+												<span class="class-progression-tab__subclass-level-label"
+													>Level {level}</span
+												>
+												<button
+													type="button"
+													class="class-progression-tab__section-add-btn"
+													onclick={() =>
+														handleAddSubclassFeature(subclass.identifier, subclass.name, level)}
+													title="Add feature at level {level}"
+												>
+													<i class="fa-solid fa-plus"></i>
+												</button>
+											</div>
+											{#each levelFeatures as feature (feature.uuid)}
+												<div class="class-progression-tab__subclass-feature">
+													<img
+														src={feature.img}
+														alt=""
+														class="class-progression-tab__feature-img"
+													/>
+													<div class="class-progression-tab__feature-content">
+														<button
+															type="button"
+															class="class-progression-tab__feature-header"
+															onclick={() => handleFeatureClick(feature)}
+														>
+															<h4 class="class-progression-tab__feature-name">{feature.name}</h4>
+															<i class="fa-solid fa-external-link class-progression-tab__link-icon"
+															></i>
+														</button>
+														{#if feature.system?.description}
+															<div class="class-progression-tab__feature-desc">
+																{@html feature.system.description}
+															</div>
+														{/if}
+													</div>
+												</div>
+											{/each}
+										</div>
+									{/each}
+								</div>
 							</div>
 						{/if}
 					</article>
@@ -638,6 +724,46 @@
 			color: var(--nimble-medium-text-color);
 			font-style: italic;
 			margin: 0;
+		}
+
+		&__subclass-progression {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+		}
+
+		&__subclass-level {
+			display: flex;
+			flex-direction: column;
+			gap: 0.375rem;
+		}
+
+		&__subclass-level-header {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+		}
+
+		&__subclass-level-label {
+			font-size: var(--nimble-xs-text);
+			font-weight: 600;
+			color: var(--nimble-medium-text-color);
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			flex: 1;
+		}
+
+		&__subclass-feature {
+			display: flex;
+			flex-direction: row;
+			align-items: flex-start;
+			gap: 0.5rem;
+			padding-left: 0.25rem;
+		}
+
+		&__feature-content {
+			flex: 1;
+			min-width: 0;
 		}
 
 		// Group accordion

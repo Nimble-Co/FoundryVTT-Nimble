@@ -269,7 +269,7 @@ export default async function getClassFeaturesFromIndex(
 	for (let i = 0; i < features.length; i++) {
 		const feature = features[i];
 		if (!feature) continue;
-		if (ownedUuids.has(entries[i].uuid)) continue;
+		if (ownedUuids.has(allEntries[i].uuid)) continue;
 
 		const featureItem = feature as NimbleFeatureItem;
 		const groupName = allEntries[i].group;
@@ -289,7 +289,7 @@ export default async function getClassFeaturesFromIndex(
 		seenNames.add(featureItem.name);
 
 		featuresByGroup.get(groupName)!.push(featureItem);
-		entriesByGroup.get(groupName)!.push(entries[i]);
+		entriesByGroup.get(groupName)!.push(allEntries[i]);
 	}
 
 	// Categorize groups:

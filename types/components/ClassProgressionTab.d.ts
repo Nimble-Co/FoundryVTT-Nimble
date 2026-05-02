@@ -41,5 +41,6 @@ export interface SubclassChoice {
 	name: string;
 	img: string;
 	description: string;
+	identifier: string;
 	system: { parentClass: string };
 }
