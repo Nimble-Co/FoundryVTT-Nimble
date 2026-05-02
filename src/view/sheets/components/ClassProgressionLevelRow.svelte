@@ -213,7 +213,7 @@
 			align-items: center;
 			gap: 0.75rem;
 			padding: 0.5rem 0.625rem;
-			background: rgba(0, 0, 0, 0.05);
+			background: var(--nimble-secondary-navigation-background);
 			color: inherit;
 			text-align: left;
 			width: 100%;
@@ -267,25 +267,24 @@
 			text-transform: uppercase;
 			letter-spacing: 0.02em;
 
-			// High contrast colors for WCAG compliance
 			&[data-type='primary'] {
-				background: #1a5c1a;
-				color: #ffffff;
+				background: var(--nimble-badge-primary-bg);
+				color: white;
 			}
 
 			&[data-type='secondary'] {
-				background: #2d4a5e;
-				color: #ffffff;
+				background: var(--nimble-badge-secondary-bg);
+				color: white;
 			}
 
 			&[data-type='capstone'] {
-				background: #8b5a00;
-				color: #ffffff;
+				background: var(--nimble-badge-capstone-bg);
+				color: white;
 			}
 
 			&--subclass {
-				background: #5c3d7a;
-				color: #ffffff;
+				background: var(--nimble-badge-subclass-bg);
+				color: white;
 			}
 		}
 
