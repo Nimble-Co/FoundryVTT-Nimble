@@ -680,52 +680,6 @@
 			background: var(--nimble-input-background-color);
 		}
 
-		&__subclass-desc {
-			font-size: var(--nimble-sm-text);
-			line-height: 1.5;
-
-			:global(p) {
-				margin: 0 0 0.5rem;
-
-				&:last-child {
-					margin-bottom: 0;
-				}
-			}
-
-			:global(h3),
-			:global(h4),
-			:global(h5) {
-				margin: 0.5rem 0 0.25rem;
-				font-size: var(--nimble-sm-text);
-				font-weight: 600;
-
-				&:first-child {
-					margin-top: 0;
-				}
-			}
-
-			:global(ul),
-			:global(ol) {
-				margin: 0.25rem 0;
-				padding-left: 1.25rem;
-			}
-
-			:global(li) {
-				margin-bottom: 0.25rem;
-			}
-
-			:global(strong) {
-				font-weight: 600;
-			}
-		}
-
-		&__subclass-no-desc {
-			font-size: var(--nimble-sm-text);
-			color: var(--nimble-medium-text-color);
-			font-style: italic;
-			margin: 0;
-		}
-
 		&__subclass-progression {
 			display: flex;
 			flex-direction: column;

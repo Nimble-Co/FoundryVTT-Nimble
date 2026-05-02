@@ -34,6 +34,7 @@ export default async function getClassProgressionData(
 			index,
 			classIdentifier,
 			level,
+			{},
 			groupIdentifiers,
 		);
 

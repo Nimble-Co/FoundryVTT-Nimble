@@ -1,3 +1,12 @@
+function slugifyName(name: string): string {
+	const fn = (name as unknown as { slugify?: (opts: { strict: boolean }) => string }).slugify;
+	if (typeof fn === 'function') return fn.call(name, { strict: true });
+	return name
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/(^-|-$)/g, '');
+}
+
 /**
  * Get all available subclass choices filtered by parent class
  * @param parentClassIdentifier The identifier of the parent class to filter by
@@ -34,9 +43,7 @@ export default async function getSubclassChoices(parentClassIdentifier: string):
 			name: item.name,
 			img: item.img as string,
 			description: subclass.system.description || '',
-			identifier: (item.name as string & { slugify(opts: { strict: boolean }): string }).slugify({
-				strict: true,
-			}),
+			identifier: slugifyName(item.name),
 			system: {
 				parentClass: subclass.system.parentClass,
 			},
@@ -70,9 +77,7 @@ export default async function getSubclassChoices(parentClassIdentifier: string):
 					name: entry.name,
 					img: entry.img ?? 'icons/svg/item-bag.svg',
 					description: document.system.description || '',
-					identifier: (
-						entry.name as string & { slugify(opts: { strict: boolean }): string }
-					).slugify({ strict: true }),
+					identifier: slugifyName(entry.name),
 					system: {
 						parentClass: document.system.parentClass,
 					},

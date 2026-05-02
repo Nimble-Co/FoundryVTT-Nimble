@@ -1,4 +1,5 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { SelectionGroup } from '#types/components/ClassFeatureSelection.d.ts';
 
 /**
  * Data for a single level in the class progression
@@ -6,7 +7,7 @@ import type { NimbleFeatureItem } from '#documents/item/feature.js';
 export interface ClassProgressionLevelData {
 	level: number;
 	autoGrant: NimbleFeatureItem[];
-	selectionGroups: Map<string, NimbleFeatureItem[]>;
+	selectionGroups: Map<string, SelectionGroup>;
 }
 
 /**

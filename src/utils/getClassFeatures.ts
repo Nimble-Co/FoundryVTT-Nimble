@@ -103,6 +103,7 @@ export async function buildClassFeatureIndex(): Promise<ClassFeatureIndex> {
 			gainedAtLevel?: number | null;
 			gainedAtLevels?: number[];
 			group?: string;
+			selectionCountByLevel?: Record<string, number>;
 		},
 	): void {
 		// Skip subclass features
