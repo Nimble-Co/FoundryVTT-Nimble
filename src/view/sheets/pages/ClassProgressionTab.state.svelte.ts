@@ -8,12 +8,14 @@ import buildSubclassFeatureIndex from '#utils/buildSubclassFeatureIndex.js';
 import getClassProgressionData from '#utils/getClassProgressionData.js';
 import getSubclassChoices from '#utils/getSubclassChoices.js';
 import getSubclassFeaturesFromIndex from '#utils/getSubclassFeatures.js';
+import localize from '#utils/localize.js';
 import { SUBCLASS_LEVELS } from './ClassProgressionTabConstants.js';
 import {
 	collectSelectionGroups,
 	formatGroupName,
 	getAbilityScoreEntry,
 	getGroupLevels,
+	getItemSource,
 	isSubclassLevel,
 } from './ClassProgressionTabUtils.js';
 
@@ -24,8 +26,10 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 	let isLoading = $state(true);
 	let expandedGroups = $state<Set<string>>(new Set());
 	let expandedSubclasses = $state<Set<string>>(new Set());
+	let enrichedFeatureDescriptions = $state<Map<string, string>>(new Map());
 
 	const identifier = $derived(getItem().reactive.system.identifier);
+	const classSource = $derived(getItemSource(getItem().uuid));
 	const groupIdentifiers = $derived(getItem().reactive.system.groupIdentifiers || []);
 	const abilityScoreData = $derived(getItem().reactive.system.abilityScoreData);
 	const keyAbilityScores = $derived(getItem().reactive.system.keyAbilityScores || []);
@@ -110,6 +114,39 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 			Hooks.off('deleteItem', hookIds[2]);
 		};
 	});
+
+	$effect(() => {
+		const featuresToEnrich: NimbleFeatureItem[] = [];
+
+		for (const [, levelMap] of subclassProgressionData) {
+			for (const [, features] of levelMap) {
+				featuresToEnrich.push(...features);
+			}
+		}
+		for (const [, features] of selectionGroups) {
+			featuresToEnrich.push(...features);
+		}
+
+		async function enrich(): Promise<void> {
+			const result = new Map<string, string>();
+			await Promise.all(
+				featuresToEnrich.map(async (feature) => {
+					const desc = feature.system?.description ?? '';
+					if (!desc) return;
+					result.set(feature.uuid, await TextEditor.enrichHTML(desc));
+				}),
+			);
+			enrichedFeatureDescriptions = result;
+		}
+
+		enrich();
+	});
+
+	function getSourceTag(uuid: string): 'world' | 'pack' | null {
+		const itemSource = getItemSource(uuid);
+		if (itemSource === classSource) return null;
+		return itemSource === 'world' ? 'world' : 'pack';
+	}
 
 	function toggleGroup(groupName: string): void {
 		const updated = new Set(expandedGroups);
@@ -218,6 +255,18 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 		createdFeature?.sheet?.render(true);
 	}
 
+	async function handleDeleteWorldItem(uuid: string, name: string): Promise<void> {
+		const confirmed = await foundry.applications.api.DialogV2.confirm({
+			window: { title: localize('NIMBLE.classSheet.progressionDeleteWorldItemTitle') },
+			content: `<p>${localize('NIMBLE.classSheet.progressionDeleteWorldItemContent', { name })}</p>`,
+			yes: { label: localize('NIMBLE.classSheet.progressionDeleteWorldItemConfirm') },
+			no: { label: localize('NIMBLE.classSheet.progressionDeleteWorldItemCancel') },
+		});
+		if (confirmed !== true) return;
+		const item = await fromUuid(uuid as `Item.${string}`);
+		if (item) await (item as Item).delete();
+	}
+
 	async function handleAddNewFeatureChoice(): Promise<void> {
 		const newGroupName = `${identifier}-choice-${selectionGroups.size + 1}`;
 		const [createdFeature] = await Item.createDocuments([
@@ -253,6 +302,9 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 		get selectionGroups() {
 			return selectionGroups;
 		},
+		get enrichedFeatureDescriptions() {
+			return enrichedFeatureDescriptions;
+		},
 		get identifier() {
 			return identifier;
 		},
@@ -263,6 +315,7 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 			return getItem().name;
 		},
 		SUBCLASS_LEVELS,
+		getSourceTag,
 		isGroupExpanded: (groupName: string) => expandedGroups.has(groupName),
 		isSubclassExpanded: (uuid: string) => expandedSubclasses.has(uuid),
 		isSubclassLevel,
@@ -273,6 +326,7 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 		toggleSubclass,
 		handleFeatureClick,
 		handleSubclassClick,
+		handleDeleteWorldItem,
 		handleAddFeature,
 		handleAddSubclass,
 		handleAddSubclassFeature,

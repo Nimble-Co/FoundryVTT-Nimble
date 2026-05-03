@@ -1226,7 +1226,16 @@
 			"progressionFeatureChoices": "Feature Choices",
 			"progressionLoading": "Loading progression data...",
 			"progressionEpicBoonLabel": "Epic Boon",
-			"progressionEpicBoon": "<strong>Epic Boon.</strong> Choose an Epic Boon."
+			"progressionEpicBoon": "<strong>Epic Boon.</strong> Choose an Epic Boon.",
+			"progressionSourceTagWorldLabel": "World",
+			"progressionSourceTagWorldTooltip": "World Item: created or modified locally in this world",
+			"progressionSourceTagPackLabel": "Pack",
+			"progressionSourceTagPackTooltip": "Compendium Pack: from a published compendium pack",
+			"progressionDeleteWorldItemTitle": "Delete World Item",
+			"progressionDeleteWorldItemContent": "Delete <strong>{name}</strong>? This will permanently remove this locally created item from your world.",
+			"progressionDeleteWorldItemConfirm": "Delete",
+			"progressionDeleteWorldItemCancel": "Cancel",
+			"progressionDeleteWorldItemTooltip": "Delete this world item"
 		},
 		"skillsConfig": {
 			"skill": "Skill",

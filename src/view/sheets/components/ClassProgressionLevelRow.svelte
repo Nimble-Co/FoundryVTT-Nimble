@@ -13,6 +13,8 @@
 		keyAbilityScores,
 		onFeatureClick,
 		onAddFeature,
+		getSourceTag,
+		onDeleteWorldItem,
 	}: ClassProgressionLevelRowProps = $props();
 
 	const state = createClassProgressionLevelRowState(() => ({
@@ -25,6 +27,7 @@
 		keyAbilityScores,
 		onFeatureClick,
 		onAddFeature,
+		onDeleteWorldItem,
 	}));
 </script>
 
@@ -162,17 +165,46 @@
 			{#if levelData.autoGrant.length > 0}
 				{#each levelData.autoGrant as feature (feature.uuid)}
 					{@const levelDescription = state.levelDescriptions.get(feature.uuid) ?? ''}
+					{@const sourceTag = getSourceTag(feature.uuid)}
 					<div class="class-progression-level-row__feature">
 						<img src={feature.img} alt="" class="class-progression-level-row__feature-img" />
 						<div class="class-progression-level-row__feature-content">
-							<button
-								type="button"
-								class="class-progression-level-row__feature-header nimble-u-unstyled-button"
-								onclick={(e) => state.handleFeatureClick(e, feature)}
-							>
-								<h4 class="class-progression-level-row__feature-name">{feature.name}</h4>
-								<i class="fa-solid fa-external-link class-progression-level-row__link-icon"></i>
-							</button>
+							<div class="class-progression-level-row__feature-title-row">
+								<button
+									type="button"
+									class="class-progression-level-row__feature-header nimble-u-unstyled-button"
+									onclick={(e) => state.handleFeatureClick(e, feature)}
+								>
+									<h4 class="class-progression-level-row__feature-name">{feature.name}</h4>
+									<i class="fa-solid fa-external-link class-progression-level-row__link-icon"></i>
+								</button>
+								{#if sourceTag}
+									<span
+										class="class-progression-level-row__source-tag"
+										data-source={sourceTag}
+										data-tooltip={sourceTag === 'world'
+											? localize('NIMBLE.classSheet.progressionSourceTagWorldTooltip')
+											: localize('NIMBLE.classSheet.progressionSourceTagPackTooltip')}
+									>
+										{localize(
+											sourceTag === 'world'
+												? 'NIMBLE.classSheet.progressionSourceTagWorldLabel'
+												: 'NIMBLE.classSheet.progressionSourceTagPackLabel',
+										)}
+									</span>
+								{/if}
+								{#if sourceTag === 'world'}
+									<button
+										type="button"
+										class="nimble-button class-progression-level-row__delete-btn"
+										data-button-variant="icon"
+										data-tooltip={localize('NIMBLE.classSheet.progressionDeleteWorldItemTooltip')}
+										onclick={(e) => state.handleDeleteWorldItem(e, feature)}
+									>
+										<i class="fa-solid fa-trash"></i>
+									</button>
+								{/if}
+							</div>
 							{#if levelDescription}
 								<div class="class-progression-level-row__feature-desc">
 									{@html levelDescription}
@@ -353,7 +385,26 @@
 			min-width: 0;
 		}
 
+		&__feature-title-row {
+			display: flex;
+			align-items: center;
+			gap: 0.375rem;
+		}
+
+		&__delete-btn {
+			flex-shrink: 0;
+
+			&:hover {
+				color: var(--color-level-error, hsl(0, 65%, 45%));
+			}
+		}
+
+		&__feature-title-row &__source-tag {
+			margin-left: auto;
+		}
+
 		&__feature-header {
+			text-align: left;
 			color: var(--nimble-dark-text-color);
 			cursor: pointer;
 
@@ -391,6 +442,28 @@
 			color: var(--nimble-medium-text-color);
 			transition: color 0.15s ease;
 			margin-left: 0.25rem;
+		}
+
+		&__source-tag {
+			display: inline-flex;
+			align-items: center;
+			padding: 0.0625rem 0.3125rem;
+			border-radius: 3px;
+			font-size: 0.5625rem;
+			font-weight: 700;
+			white-space: nowrap;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: white;
+			flex-shrink: 0;
+
+			&[data-source='world'] {
+				background: var(--nimble-badge-world-bg);
+			}
+
+			&[data-source='pack'] {
+				background: var(--nimble-badge-pack-bg);
+			}
 		}
 
 		&__feature-desc {

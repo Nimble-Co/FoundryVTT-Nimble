@@ -32,6 +32,8 @@
 					keyAbilityScores={state.keyAbilityScores}
 					onFeatureClick={state.handleFeatureClick}
 					onAddFeature={state.handleAddFeature}
+					getSourceTag={state.getSourceTag}
+					onDeleteWorldItem={state.handleDeleteWorldItem}
 				/>
 			{/each}
 		</section>
@@ -52,6 +54,7 @@
 			</header>
 			{#if state.subclasses.length > 0}
 				{#each state.subclasses as subclass (subclass.uuid)}
+					{@const subclassTag = state.getSourceTag(subclass.uuid)}
 					<article
 						class="class-progression-tab__subclass-accordion"
 						class:class-progression-tab__subclass-accordion--expanded={state.isSubclassExpanded(
@@ -72,6 +75,35 @@
 							></i>
 							<img src={subclass.img} alt="" class="class-progression-tab__subclass-img" />
 							<span class="class-progression-tab__subclass-name">{subclass.name}</span>
+							{#if subclassTag}
+								<span
+									class="class-progression-tab__source-tag"
+									data-source={subclassTag}
+									data-tooltip={subclassTag === 'world'
+										? localize('NIMBLE.classSheet.progressionSourceTagWorldTooltip')
+										: localize('NIMBLE.classSheet.progressionSourceTagPackTooltip')}
+								>
+									{localize(
+										subclassTag === 'world'
+											? 'NIMBLE.classSheet.progressionSourceTagWorldLabel'
+											: 'NIMBLE.classSheet.progressionSourceTagPackLabel',
+									)}
+								</span>
+							{/if}
+							{#if subclassTag === 'world'}
+								<button
+									type="button"
+									class="nimble-button class-progression-tab__delete-btn"
+									data-button-variant="icon"
+									data-tooltip={localize('NIMBLE.classSheet.progressionDeleteWorldItemTooltip')}
+									onclick={(e) => {
+										e.stopPropagation();
+										state.handleDeleteWorldItem(subclass.uuid, subclass.name);
+									}}
+								>
+									<i class="fa-solid fa-trash"></i>
+								</button>
+							{/if}
 							<button
 								type="button"
 								class="class-progression-tab__subclass-open-btn"
@@ -111,6 +143,8 @@
 												</button>
 											</div>
 											{#each levelFeatures as feature (feature.uuid)}
+												{@const subclassFeatureTag = state.getSourceTag(feature.uuid)}
+												{@const enrichedDesc = state.enrichedFeatureDescriptions.get(feature.uuid)}
 												<div class="class-progression-tab__subclass-feature">
 													<img
 														src={feature.img}
@@ -118,18 +152,50 @@
 														class="class-progression-tab__feature-img"
 													/>
 													<div class="class-progression-tab__feature-content">
-														<button
-															type="button"
-															class="class-progression-tab__feature-header"
-															onclick={() => state.handleFeatureClick(feature)}
-														>
-															<h4 class="class-progression-tab__feature-name">{feature.name}</h4>
-															<i class="fa-solid fa-external-link class-progression-tab__link-icon"
-															></i>
-														</button>
-														{#if feature.system?.description}
+														<div class="class-progression-tab__feature-title-row">
+															<button
+																type="button"
+																class="class-progression-tab__feature-header"
+																onclick={() => state.handleFeatureClick(feature)}
+															>
+																<h4 class="class-progression-tab__feature-name">{feature.name}</h4>
+																<i
+																	class="fa-solid fa-external-link class-progression-tab__link-icon"
+																></i>
+															</button>
+															{#if subclassFeatureTag}
+																<span
+																	class="class-progression-tab__source-tag"
+																	data-source={subclassFeatureTag}
+																	data-tooltip={subclassFeatureTag === 'world'
+																		? localize('NIMBLE.classSheet.progressionSourceTagWorldTooltip')
+																		: localize('NIMBLE.classSheet.progressionSourceTagPackTooltip')}
+																>
+																	{localize(
+																		subclassFeatureTag === 'world'
+																			? 'NIMBLE.classSheet.progressionSourceTagWorldLabel'
+																			: 'NIMBLE.classSheet.progressionSourceTagPackLabel',
+																	)}
+																</span>
+															{/if}
+															{#if subclassFeatureTag === 'world'}
+																<button
+																	type="button"
+																	class="nimble-button class-progression-tab__delete-btn"
+																	data-button-variant="icon"
+																	data-tooltip={localize(
+																		'NIMBLE.classSheet.progressionDeleteWorldItemTooltip',
+																	)}
+																	onclick={() =>
+																		state.handleDeleteWorldItem(feature.uuid, feature.name)}
+																>
+																	<i class="fa-solid fa-trash"></i>
+																</button>
+															{/if}
+														</div>
+														{#if enrichedDesc || feature.system?.description}
 															<div class="class-progression-tab__feature-desc">
-																{@html feature.system.description}
+																{@html enrichedDesc ?? feature.system?.description ?? ''}
 															</div>
 														{/if}
 													</div>
@@ -204,19 +270,57 @@
 							<div class="class-progression-tab__group-content">
 								<div class="class-progression-tab__feature-grid">
 									{#each features as feature (feature.uuid)}
+										{@const choiceTag = state.getSourceTag(feature.uuid)}
+										{@const enrichedChoiceDesc = state.enrichedFeatureDescriptions.get(
+											feature.uuid,
+										)}
 										<article class="class-progression-tab__feature-card">
-											<button
-												type="button"
-												class="class-progression-tab__feature-header"
-												onclick={() => state.handleFeatureClick(feature)}
-											>
-												<img src={feature.img} alt="" class="class-progression-tab__feature-img" />
-												<h4 class="class-progression-tab__feature-name">{feature.name}</h4>
-												<i class="fa-solid fa-external-link class-progression-tab__link-icon"></i>
-											</button>
-											{#if feature.system?.description}
+											<div class="class-progression-tab__feature-title-row">
+												<button
+													type="button"
+													class="class-progression-tab__feature-header"
+													onclick={() => state.handleFeatureClick(feature)}
+												>
+													<img
+														src={feature.img}
+														alt=""
+														class="class-progression-tab__feature-img"
+													/>
+													<h4 class="class-progression-tab__feature-name">{feature.name}</h4>
+													<i class="fa-solid fa-external-link class-progression-tab__link-icon"></i>
+												</button>
+												{#if choiceTag}
+													<span
+														class="class-progression-tab__source-tag"
+														data-source={choiceTag}
+														data-tooltip={choiceTag === 'world'
+															? localize('NIMBLE.classSheet.progressionSourceTagWorldTooltip')
+															: localize('NIMBLE.classSheet.progressionSourceTagPackTooltip')}
+													>
+														{localize(
+															choiceTag === 'world'
+																? 'NIMBLE.classSheet.progressionSourceTagWorldLabel'
+																: 'NIMBLE.classSheet.progressionSourceTagPackLabel',
+														)}
+													</span>
+												{/if}
+												{#if choiceTag === 'world'}
+													<button
+														type="button"
+														class="nimble-button class-progression-tab__delete-btn"
+														data-button-variant="icon"
+														data-tooltip={localize(
+															'NIMBLE.classSheet.progressionDeleteWorldItemTooltip',
+														)}
+														onclick={() => state.handleDeleteWorldItem(feature.uuid, feature.name)}
+													>
+														<i class="fa-solid fa-trash"></i>
+													</button>
+												{/if}
+											</div>
+											{#if enrichedChoiceDesc || feature.system?.description}
 												<div class="class-progression-tab__feature-desc">
-													{@html feature.system.description}
+													{@html enrichedChoiceDesc ?? feature.system?.description ?? ''}
 												</div>
 											{/if}
 										</article>
@@ -428,6 +532,24 @@
 			min-width: 0;
 		}
 
+		&__feature-title-row {
+			display: flex;
+			align-items: center;
+			gap: 0.375rem;
+		}
+
+		&__delete-btn {
+			flex-shrink: 0;
+
+			&:hover {
+				color: var(--color-level-error, hsl(0, 65%, 45%));
+			}
+		}
+
+		&__feature-title-row &__source-tag {
+			margin-left: auto;
+		}
+
 		&__group-accordion {
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
@@ -568,8 +690,33 @@
 			transition: color 0.15s ease;
 		}
 
-		&__feature-desc {
+		&__source-tag {
+			display: inline-flex;
+			align-items: center;
+			padding: 0.0625rem 0.3125rem;
+			border-radius: 3px;
+			font-size: 0.5625rem;
+			font-weight: 700;
+			white-space: nowrap;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: white;
+			flex-shrink: 0;
+
+			&[data-source='world'] {
+				background: var(--nimble-badge-world-bg);
+			}
+
+			&[data-source='pack'] {
+				background: var(--nimble-badge-pack-bg);
+			}
+		}
+
+		&__feature-card &__feature-desc {
 			padding-left: 2rem;
+		}
+
+		&__feature-desc {
 			font-size: var(--nimble-xs-text);
 			line-height: 1.5;
 			text-align: left;

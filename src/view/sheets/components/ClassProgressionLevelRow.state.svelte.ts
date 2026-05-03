@@ -38,20 +38,29 @@ export function createClassProgressionLevelRowState(getProps: () => ClassProgres
 		),
 	);
 
-	const levelDescriptions = $derived.by(() => {
-		const result = new Map<string, string>();
+	let levelDescriptions = $state<Map<string, string>>(new Map());
+
+	$effect(() => {
 		const { level, levelData } = getProps();
-		for (const feature of levelData.autoGrant) {
-			result.set(
-				feature.uuid,
-				getLevelSpecificDescription(
-					feature.system?.description ?? '',
-					level,
-					feature.system?.gainedAtLevel ?? level,
-				),
+		const features = levelData.autoGrant;
+
+		async function enrichDescriptions(): Promise<void> {
+			const result = new Map<string, string>();
+			await Promise.all(
+				features.map(async (feature) => {
+					const raw = getLevelSpecificDescription(
+						feature.system?.description ?? '',
+						level,
+						feature.system?.gainedAtLevel ?? level,
+					);
+					if (!raw) return;
+					result.set(feature.uuid, await TextEditor.enrichHTML(raw));
+				}),
 			);
+			levelDescriptions = result;
 		}
-		return result;
+
+		enrichDescriptions();
 	});
 
 	function toggleExpanded(): void {
@@ -63,6 +72,11 @@ export function createClassProgressionLevelRowState(getProps: () => ClassProgres
 	function handleFeatureClick(event: MouseEvent, feature: NimbleFeatureItem): void {
 		event.stopPropagation();
 		getProps().onFeatureClick(feature);
+	}
+
+	function handleDeleteWorldItem(event: MouseEvent, feature: NimbleFeatureItem): void {
+		event.stopPropagation();
+		getProps().onDeleteWorldItem(feature.uuid, feature.name);
 	}
 
 	function handleAddFeature(event: MouseEvent): void {
@@ -95,6 +109,7 @@ export function createClassProgressionLevelRowState(getProps: () => ClassProgres
 		formatGroupName,
 		toggleExpanded,
 		handleFeatureClick,
+		handleDeleteWorldItem,
 		handleAddFeature,
 	};
 }

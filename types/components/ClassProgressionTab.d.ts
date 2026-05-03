@@ -32,6 +32,8 @@ export interface ClassProgressionLevelRowProps {
 	keyAbilityScores: string[];
 	onFeatureClick: (feature: NimbleFeatureItem) => void;
 	onAddFeature: (level: number, classIdentifier: string) => void;
+	getSourceTag: (uuid: string) => 'world' | 'pack' | null;
+	onDeleteWorldItem: (uuid: string, name: string) => void;
 }
 
 /**
