@@ -198,6 +198,7 @@
 										type="button"
 										class="nimble-button class-progression-level-row__delete-btn"
 										data-button-variant="icon"
+										aria-label={localize('NIMBLE.classSheet.progressionDeleteWorldItemTooltip')}
 										data-tooltip={localize('NIMBLE.classSheet.progressionDeleteWorldItemTooltip')}
 										onclick={(e) => state.handleDeleteWorldItem(e, feature)}
 									>

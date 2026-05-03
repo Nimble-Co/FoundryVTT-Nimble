@@ -95,6 +95,7 @@
 									type="button"
 									class="nimble-button class-progression-tab__delete-btn"
 									data-button-variant="icon"
+									aria-label={localize('NIMBLE.classSheet.progressionDeleteWorldItemTooltip')}
 									data-tooltip={localize('NIMBLE.classSheet.progressionDeleteWorldItemTooltip')}
 									onclick={(e) => {
 										e.stopPropagation();
@@ -183,6 +184,9 @@
 																	type="button"
 																	class="nimble-button class-progression-tab__delete-btn"
 																	data-button-variant="icon"
+																	aria-label={localize(
+																		'NIMBLE.classSheet.progressionDeleteWorldItemTooltip',
+																	)}
 																	data-tooltip={localize(
 																		'NIMBLE.classSheet.progressionDeleteWorldItemTooltip',
 																	)}
@@ -309,6 +313,9 @@
 														type="button"
 														class="nimble-button class-progression-tab__delete-btn"
 														data-button-variant="icon"
+														aria-label={localize(
+															'NIMBLE.classSheet.progressionDeleteWorldItemTooltip',
+														)}
 														data-tooltip={localize(
 															'NIMBLE.classSheet.progressionDeleteWorldItemTooltip',
 														)}
