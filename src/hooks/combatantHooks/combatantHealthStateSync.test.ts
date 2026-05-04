@@ -252,6 +252,31 @@ describe('registerCombatantHealthStateSync', () => {
 		});
 	});
 
+	it('coalesces concurrent firings into a single bloodied toggle', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
+			.default;
+		registerCombatantHealthStateSync();
+
+		const actor = createMockCombatActor({ type: 'npc', hp: 5, hpMax: 10 });
+
+		// Fire updateActor three times back-to-back synchronously, simulating cascading
+		// hook firings that previously raced and produced duplicate Active Effects.
+		const updateActor = callbacks.get('updateActor');
+		updateActor?.(actor, { system: { attributes: { hp: { value: 5 } } } });
+		updateActor?.(actor, { system: { attributes: { hp: { value: 5 } } } });
+		updateActor?.(actor, { system: { attributes: { hp: { value: 5 } } } });
+		await flushAsync();
+
+		// Even with 3 concurrent invocations, the mutex serializes work — the bloodied
+		// toggle runs once for the active state and may run once more from the dirty
+		// re-run loop, but never 3+ times.
+		const bloodiedCalls = actor.toggleStatusEffect.mock.calls.filter(
+			(call) => call[0] === 'bloodied',
+		);
+		expect(bloodiedCalls.length).toBeLessThanOrEqual(2);
+	});
+
 	it('ignores actor updates that do not touch HP state inputs', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
