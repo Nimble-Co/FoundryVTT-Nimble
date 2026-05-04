@@ -261,12 +261,10 @@ export default async function getClassFeaturesFromIndex(
 
 	// Group by category, keeping the backing index entries in parallel so we can
 	// compute per-group selection counts after filtering out owned features.
+	// Items are identified by UUID — no name-based deduplication so that distinct
+	// world items with the same name each appear as separate entries.
 	const entriesByGroup = new Map<string, ClassFeatureIndexEntry[]>();
 	const featuresByGroup = new Map<string, NimbleFeatureItem[]>();
-	// Deduplication tracks name seen per group per source, so a world item and a compendium
-	// item with the same name can both appear (source tags distinguish them), but two items
-	// from the same source with the same name collapse to one.
-	const seenNamesPerGroup = new Map<string, Map<'world' | 'compendium', Set<string>>>();
 
 	for (let i = 0; i < features.length; i++) {
 		const feature = features[i];
@@ -275,23 +273,11 @@ export default async function getClassFeaturesFromIndex(
 
 		const featureItem = feature as NimbleFeatureItem;
 		const groupName = allEntries[i].group;
-		const itemSource: 'world' | 'compendium' = featureItem.uuid.startsWith('Compendium.')
-			? 'compendium'
-			: 'world';
 
-		// Initialize tracking structures for this group
 		if (!featuresByGroup.has(groupName)) {
 			featuresByGroup.set(groupName, []);
 			entriesByGroup.set(groupName, []);
-			seenNamesPerGroup.set(groupName, new Map());
 		}
-
-		const sourceMap = seenNamesPerGroup.get(groupName)!;
-		if (!sourceMap.has(itemSource)) sourceMap.set(itemSource, new Set());
-		const seenNames = sourceMap.get(itemSource)!;
-
-		if (seenNames.has(featureItem.name)) continue;
-		seenNames.add(featureItem.name);
 
 		featuresByGroup.get(groupName)!.push(featureItem);
 		entriesByGroup.get(groupName)!.push(allEntries[i]);

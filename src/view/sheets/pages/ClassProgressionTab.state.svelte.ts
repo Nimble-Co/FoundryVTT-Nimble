@@ -38,8 +38,6 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 	async function loadProgressionData(): Promise<void> {
 		if (!identifier) return;
 
-		isLoading = true;
-
 		const [progression, subclassChoices, subclassIndex] = await Promise.all([
 			getClassProgressionData(identifier, groupIdentifiers),
 			getSubclassChoices(identifier),
@@ -232,6 +230,23 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 		createdFeature?.sheet?.render(true);
 	}
 
+	function generateUniqueFeatureName(groupName: string): string {
+		const base = `New ${formatGroupName(groupName)} Feature`;
+		const taken = new Set<string>();
+		for (const item of game.items) {
+			if (
+				item.type === 'feature' &&
+				(item as unknown as NimbleFeatureItem).system?.group === groupName
+			) {
+				taken.add(item.name);
+			}
+		}
+		if (!taken.has(base)) return base;
+		let n = 2;
+		while (taken.has(`${base} ${n}`)) n++;
+		return `${base} ${n}`;
+	}
+
 	async function handleAddFeatureToGroup(
 		event: MouseEvent,
 		groupName: string,
@@ -240,7 +255,7 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 		event.stopPropagation();
 		const [createdFeature] = await Item.createDocuments([
 			{
-				name: `New ${formatGroupName(groupName)} Feature`,
+				name: generateUniqueFeatureName(groupName),
 				type: 'feature',
 				system: {
 					featureType: 'class',
