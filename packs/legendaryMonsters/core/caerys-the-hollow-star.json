@@ -10,6 +10,7 @@
 			"damageVulnerabilities": [],
 			"damageImmunities": [],
 			"hp": {
+				"lastStandHp": 200,
 				"max": 620,
 				"temp": 0,
 				"value": 620
