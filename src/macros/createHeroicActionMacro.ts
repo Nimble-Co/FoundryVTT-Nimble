@@ -1,3 +1,5 @@
+import { SYSTEM_PATH } from '#utils/systemId.ts';
+
 interface HeroicActionMacroData {
 	actionId: string;
 	actionType: 'action' | 'reaction';
@@ -17,7 +19,7 @@ function getActionIcon(actionId: string): string {
 		interposeAndDefend: 'icons/svg/combat.svg',
 		unarmedStrike: 'icons/skills/melee/unarmed-punch-fist.webp',
 	};
-	return iconMap[actionId] ?? 'systems/nimble/assets/icons/d20.svg';
+	return iconMap[actionId] ?? `${SYSTEM_PATH}/assets/icons/d20.svg`;
 }
 
 export async function createHeroicActionMacro(data: HeroicActionMacroData, slot: number) {

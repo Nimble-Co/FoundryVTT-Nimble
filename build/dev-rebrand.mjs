@@ -16,6 +16,8 @@
  *      - `packs[*].system` → "nimble-dev" (Foundry rejects packs whose
  *                                          `system` field doesn't match the
  *                                          system id)
+ *      - `background`      path prefix `systems/nimble/` → `systems/nimble-dev/`
+ *                          (so the splash image resolves under the dev install)
  *
  *   2. packs/**\/*.json (compendium document sources)
  *      - `Compendium.nimble.<pack>.<docId>` → `Compendium.nimble-dev.<pack>.<docId>`
@@ -41,6 +43,9 @@ manifest.id = DEV_ID;
 manifest.title = DEV_TITLE;
 for (const pack of manifest.packs) {
 	if (pack.system === STABLE_ID) pack.system = DEV_ID;
+}
+if (typeof manifest.background === 'string') {
+	manifest.background = manifest.background.replace(`systems/${STABLE_ID}/`, `systems/${DEV_ID}/`);
 }
 writeFileSync(manifestPath, `${JSON.stringify(manifest, null, '\t')}\n`);
 console.log(`[rebrand] Updated ${manifestPath} (id=${DEV_ID}, title="${DEV_TITLE}")`);

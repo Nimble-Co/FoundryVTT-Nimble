@@ -1,6 +1,7 @@
 import type { AbilityKeyType } from '#types/abilityKey.js';
 import type { SaveKeyType } from '#types/saveKey.js';
 import type { SkillKeyType } from '#types/skillKey.js';
+import { SYSTEM_PATH } from '#utils/systemId.ts';
 import registerConditionsConfig from './config/registerConditionsConfig.js';
 import registerDocumentConfig from './config/registerDocumentConfig.js';
 import registerPredicateConfig from './config/registerPredicateConfig.js';
@@ -207,10 +208,10 @@ const activationCostTypesPlural = {
 };
 
 const actorTypeBanners = {
-	character: 'systems/nimble/assets/actorTypeBanners/character.webp',
-	minion: 'systems/nimble/assets/actorTypeBanners/minion.webp',
-	npc: 'systems/nimble/assets/actorTypeBanners/npc.webp',
-	soloMonster: 'systems/nimble/assets/actorTypeBanners/soloMonster.webp',
+	character: `${SYSTEM_PATH}/assets/actorTypeBanners/character.webp`,
+	minion: `${SYSTEM_PATH}/assets/actorTypeBanners/minion.webp`,
+	npc: `${SYSTEM_PATH}/assets/actorTypeBanners/npc.webp`,
+	soloMonster: `${SYSTEM_PATH}/assets/actorTypeBanners/soloMonster.webp`,
 };
 
 const armorTypes = {
@@ -236,17 +237,17 @@ const boonTypes = {
 };
 
 const classBanners = {
-	berserker: 'systems/nimble/assets/classImages/berserker.webp',
-	cheat: 'systems/nimble/assets/classImages/cheat.webp',
-	commander: 'systems/nimble/assets/classImages/commander.webp',
-	hunter: 'systems/nimble/assets/classImages/hunter.webp',
-	mage: 'systems/nimble/assets/classImages/mage.webp',
-	oathsworn: 'systems/nimble/assets/classImages/oathsworn.webp',
-	shadowmancer: 'systems/nimble/assets/classImages/shadowmancer.webp',
-	shepherd: 'systems/nimble/assets/classImages/shepherd.webp',
-	songweaver: 'systems/nimble/assets/classImages/songweaver.webp',
-	stormshifter: 'systems/nimble/assets/classImages/stormshifter.webp',
-	zephyr: 'systems/nimble/assets/classImages/zephyr.webp',
+	berserker: `${SYSTEM_PATH}/assets/classImages/berserker.webp`,
+	cheat: `${SYSTEM_PATH}/assets/classImages/cheat.webp`,
+	commander: `${SYSTEM_PATH}/assets/classImages/commander.webp`,
+	hunter: `${SYSTEM_PATH}/assets/classImages/hunter.webp`,
+	mage: `${SYSTEM_PATH}/assets/classImages/mage.webp`,
+	oathsworn: `${SYSTEM_PATH}/assets/classImages/oathsworn.webp`,
+	shadowmancer: `${SYSTEM_PATH}/assets/classImages/shadowmancer.webp`,
+	shepherd: `${SYSTEM_PATH}/assets/classImages/shepherd.webp`,
+	songweaver: `${SYSTEM_PATH}/assets/classImages/songweaver.webp`,
+	stormshifter: `${SYSTEM_PATH}/assets/classImages/stormshifter.webp`,
+	zephyr: `${SYSTEM_PATH}/assets/classImages/zephyr.webp`,
 };
 
 const classes = {

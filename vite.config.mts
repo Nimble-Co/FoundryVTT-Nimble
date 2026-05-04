@@ -1,24 +1,36 @@
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { sveltePreprocess } from 'svelte-preprocess';
 import { defineConfig } from 'vitest/config';
 
+const systemJson = JSON.parse(readFileSync(path.resolve(__dirname, 'public/system.json'), 'utf8'));
+const systemRoot = `/systems/${systemJson.id}`;
+const systemBase = `${systemRoot}/`;
+
 const config = defineConfig({
 	root: 'src/',
-	base: '/systems/nimble/',
+	base: systemBase,
 	publicDir: path.resolve(__dirname, 'public'),
 	server: {
 		port: 30001,
 		open: '/',
+		// Allow Vite's dev-mode `@fs/` to serve files from the project root
+		// (notably `public/system.json`, which `src/utils/systemId.ts` imports).
+		// Without this, Vite restricts `@fs/` to the `root: 'src/'` directory and
+		// the JSON import 404s in dev mode while production builds work.
+		fs: {
+			allow: [path.resolve(__dirname)],
+		},
 		proxy: {
 			// Explicit paths (Vite proxy keys are path prefixes; regex-like strings don't always match)
-			'/systems/nimble/nimble.css': 'http://localhost:30000',
-			'/systems/nimble/style.css': 'http://localhost:30000',
-			'/systems/nimble/assets': 'http://localhost:30000',
+			[`${systemBase}nimble.css`]: 'http://localhost:30000',
+			[`${systemBase}style.css`]: 'http://localhost:30000',
+			[`${systemBase}assets`]: 'http://localhost:30000',
 			// During dev, Foundry loads the system stylesheet from system.json ("nimble.css").
 			// Proxy it (and assets) back to the Foundry server.
-			'^/systems/nimble/(assets|nimble\\.css|style\\.css)': 'http://localhost:30000',
-			'^(?!/systems/nimble)': 'http://localhost:30000',
+			[`^${systemBase}(assets|nimble\\.css|style\\.css)`]: 'http://localhost:30000',
+			[`^(?!${systemRoot})`]: 'http://localhost:30000',
 			'/socket.io': {
 				target: 'ws://localhost:30000',
 				ws: true,
