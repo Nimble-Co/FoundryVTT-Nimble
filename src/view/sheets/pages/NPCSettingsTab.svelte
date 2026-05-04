@@ -54,28 +54,34 @@
 
 		{#if actor.reactive.type === 'soloMonster'}
 			<header>
-				<h3 class="nimble-heading" data-heading-variant="section">Last Stand</h3>
+				<h3 class="nimble-heading" data-heading-variant="section">
+					{game.i18n.localize('NIMBLE.npcSheet.lastStandHeading')}
+				</h3>
 			</header>
 
 			<div class="nimble-field-row">
 				<label class="nimble-field nimble-field--column">
 					<span class="nimble-heading nimble-heading--clickable" data-heading-variant="field">
-						Last Stand Threshold
+						{game.i18n.localize('NIMBLE.npcSheet.lastStandHpLabel')}
 					</span>
 
 					<input
 						type="number"
 						min="0"
-						value={actor.reactive.system.attributes.hp.lastStandThreshold ?? 0}
-						onchange={({ target }) =>
+						max={actor.reactive.system.attributes.hp.max ?? 0}
+						value={actor.reactive.system.attributes.hp.lastStandHp ?? 0}
+						onchange={({ target }) => {
+							const requested = Math.max(0, Math.trunc(Number(target.value) || 0));
+							const maxHp = Math.max(
+								0,
+								Math.trunc(Number(actor.reactive.system.attributes.hp.max) || 0),
+							);
 							actor.update({
-								'system.attributes.hp.lastStandThreshold': Math.max(
-									0,
-									Math.trunc(Number(target.value) || 0),
-								),
-							})}
+								'system.attributes.hp.lastStandHp': Math.min(requested, maxHp),
+							});
+						}}
 					/>
-					<span class="notes">0 disables Last Stand until a threshold is configured.</span>
+					<span class="notes">{game.i18n.localize('NIMBLE.npcSheet.lastStandHpHint')}</span>
 				</label>
 			</div>
 		{/if}

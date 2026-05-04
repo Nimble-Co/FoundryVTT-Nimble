@@ -1,11 +1,18 @@
-import {
-	getActorHpMaxValue,
-	getActorHpValue,
-	getActorLastStandThreshold,
-} from './actorResources.js';
+import { STATUS_EFFECT_IDS } from '../config/registerConditionsConfig.js';
+import { getActorHpMaxValue, getActorHpValue } from './actorResources.js';
 
 export type ActorHealthState = 'normal' | 'bloodied' | 'lastStand' | 'unknown';
 
+export function hasLastStandStatus(actor: Actor.Implementation | null | undefined): boolean {
+	if (!actor) return false;
+	return actor.statuses instanceof Set && actor.statuses.has(STATUS_EFFECT_IDS.lastStand);
+}
+
+/**
+ * Single-state classification used for UI/tooltip purposes. Last Stand takes priority
+ * over Bloodied when both are true, since it represents the more critical state.
+ * For independent toggling of statuses, use {@link isActorAtOrBelowHalfHp} directly.
+ */
 export function getActorHealthState(
 	actor: Actor.Implementation | null | undefined,
 ): ActorHealthState {
@@ -14,19 +21,21 @@ export function getActorHealthState(
 	const hpValue = getActorHpValue(actor);
 	const hpMax = getActorHpMaxValue(actor);
 	if (hpValue === null || hpMax === null) return 'unknown';
-	if (hpValue <= 0) return 'unknown';
 
-	if (actor.type === 'soloMonster') {
-		const statusSet = actor.statuses instanceof Set ? actor.statuses : null;
-		if (statusSet?.has('lastStand')) return 'lastStand';
-
-		const lastStandThreshold = getActorLastStandThreshold(actor);
-		if (lastStandThreshold !== null && hpValue <= lastStandThreshold) {
-			return 'lastStand';
-		}
+	if (actor.type === 'soloMonster' && hasLastStandStatus(actor) && hpValue > 0) {
+		return 'lastStand';
 	}
 
+	if (hpValue <= 0) return 'unknown';
 	return hpValue <= hpMax / 2 ? 'bloodied' : 'normal';
+}
+
+export function isActorAtOrBelowHalfHp(actor: Actor.Implementation | null | undefined): boolean {
+	if (!actor) return false;
+	const hpValue = getActorHpValue(actor);
+	const hpMax = getActorHpMaxValue(actor);
+	if (hpValue === null || hpMax === null) return false;
+	return hpValue > 0 && hpValue <= hpMax / 2;
 }
 
 export function isActorBloodied(actor: Actor.Implementation | null | undefined): boolean {

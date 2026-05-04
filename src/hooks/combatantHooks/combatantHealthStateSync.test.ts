@@ -21,62 +21,120 @@ describe('registerCombatantHealthStateSync', () => {
 		globals().foundry.utils.hasProperty = createHasPropertyMock();
 	});
 
-	it('applies bloodied before last stand is reached', async () => {
+	it('toggles bloodied on for actors at or below half HP', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
 			.default;
 		registerCombatantHealthStateSync();
 
-		const actor = createMockCombatActor({
-			type: 'npc',
-			hp: 5,
-			hpMax: 10,
-		});
+		const actor = createMockCombatActor({ type: 'npc', hp: 5, hpMax: 10 });
 
 		const updateActor = callbacks.get('updateActor');
 		updateActor?.(actor, { system: { attributes: { hp: { value: 5 } } } });
 		await flushAsync();
 
-		expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
+		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('bloodied', {
 			active: true,
 			overlay: false,
 		});
-		expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'lastStand', {
-			active: false,
-			overlay: false,
-		});
+		// Last Stand is never auto-toggled by sync (one-way, set only via tryEnterLastStand).
+		expect(actor.toggleStatusEffect).not.toHaveBeenCalledWith('lastStand', expect.anything());
 	});
 
-	it('applies last stand and clears bloodied for solo monsters at their threshold', async () => {
+	it('toggles bloodied off when healed above half HP', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
 			.default;
 		registerCombatantHealthStateSync();
 
-		const actor = createMockCombatActor({
-			type: 'soloMonster',
-			hp: 3,
-			hpMax: 20,
-			lastStandThreshold: 3,
-		});
+		const actor = createMockCombatActor({ type: 'npc', hp: 8, hpMax: 10 });
 
 		const updateActor = callbacks.get('updateActor');
-		updateActor?.(actor, {
-			system: { attributes: { hp: { value: 3, lastStandThreshold: 3 } } },
-		});
+		updateActor?.(actor, { system: { attributes: { hp: { value: 8 } } } });
 		await flushAsync();
 
-		expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
+		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('bloodied', {
 			active: false,
 			overlay: false,
 		});
-		expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'lastStand', {
+	});
+
+	it('enters Last Stand when HP hits 0 with lastStandHp configured', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
+			.default;
+		registerCombatantHealthStateSync();
+
+		const activateLastStandFeature = vi.fn().mockResolvedValue(null);
+		const actor = Object.assign(
+			createMockCombatActor({
+				type: 'soloMonster',
+				hp: 0,
+				hpMax: 320,
+				lastStandHp: 180,
+			}),
+			{ activateLastStandFeature },
+		);
+
+		const updateActor = callbacks.get('updateActor');
+		updateActor?.(actor, { system: { attributes: { hp: { value: 0 } } } });
+		await flushAsync();
+
+		expect(actor.update).toHaveBeenCalledWith({
+			'system.attributes.hp.value': 180,
+		});
+		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('lastStand', {
+			active: true,
+			overlay: false,
+		});
+		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('dying', {
+			active: true,
+			overlay: false,
+		});
+		expect(activateLastStandFeature).toHaveBeenCalledWith({ visibilityMode: 'gmroll' });
+	});
+
+	it('also applies bloodied on entry when lastStandHp is at or below half maxHp', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
+			.default;
+		registerCombatantHealthStateSync();
+
+		// Mutate hp.value when actor.update is called so the post-heal bloodied check
+		// sees the new value, mirroring real Foundry document update behavior.
+		const actor = Object.assign(
+			createMockCombatActor({
+				type: 'soloMonster',
+				hp: 0,
+				hpMax: 320,
+				lastStandHp: 100,
+			}),
+			{ activateLastStandFeature: vi.fn().mockResolvedValue(null) },
+		);
+		actor.update.mockImplementation(async (changes: Record<string, unknown>) => {
+			const value = changes['system.attributes.hp.value'];
+			if (typeof value === 'number') {
+				(
+					actor as unknown as { system: { attributes: { hp: { value: number } } } }
+				).system.attributes.hp.value = value;
+			}
+		});
+
+		const updateActor = callbacks.get('updateActor');
+		updateActor?.(actor, { system: { attributes: { hp: { value: 0 } } } });
+		await flushAsync();
+
+		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('lastStand', {
+			active: true,
+			overlay: false,
+		});
+		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('bloodied', {
 			active: true,
 			overlay: false,
 		});
 	});
 
-	it('keeps solo monsters in last stand after the state has already been triggered', async () => {
+	it('does NOT apply bloodied on entry when lastStandHp is above half maxHp', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
 			.default;
@@ -85,53 +143,110 @@ describe('registerCombatantHealthStateSync', () => {
 		const actor = Object.assign(
 			createMockCombatActor({
 				type: 'soloMonster',
-				hp: 8,
-				hpMax: 20,
-				lastStandThreshold: 3,
+				hp: 0,
+				hpMax: 320,
+				lastStandHp: 200,
 			}),
-			{ statuses: new Set(['lastStand']) },
+			{ activateLastStandFeature: vi.fn().mockResolvedValue(null) },
 		);
+		actor.update.mockImplementation(async (changes: Record<string, unknown>) => {
+			const value = changes['system.attributes.hp.value'];
+			if (typeof value === 'number') {
+				(
+					actor as unknown as { system: { attributes: { hp: { value: number } } } }
+				).system.attributes.hp.value = value;
+			}
+		});
 
 		const updateActor = callbacks.get('updateActor');
-		updateActor?.(actor, {
-			system: { attributes: { hp: { value: 8, lastStandThreshold: 3 } } },
-		});
+		updateActor?.(actor, { system: { attributes: { hp: { value: 0 } } } });
 		await flushAsync();
 
-		expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
+		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('bloodied', {
 			active: false,
-			overlay: false,
-		});
-		expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'lastStand', {
-			active: true,
 			overlay: false,
 		});
 	});
 
-	it('clears bloodied and last stand when an actor reaches 0 HP', async () => {
+	it('clamps the heal target to maxHp when lastStandHp exceeds it', async () => {
 		const callbacks = createHookCapture(globals().Hooks.on);
 		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
 			.default;
 		registerCombatantHealthStateSync();
 
-		const actor = createMockCombatActor({
-			type: 'soloMonster',
-			hp: 0,
-			hpMax: 20,
-			lastStandThreshold: 3,
-		});
+		const actor = Object.assign(
+			createMockCombatActor({
+				type: 'soloMonster',
+				hp: 0,
+				hpMax: 50,
+				lastStandHp: 999,
+			}),
+			{ activateLastStandFeature: vi.fn().mockResolvedValue(null) },
+		);
 
 		const updateActor = callbacks.get('updateActor');
-		updateActor?.(actor, {
-			system: { attributes: { hp: { value: 0, lastStandThreshold: 3 } } },
-		});
+		updateActor?.(actor, { system: { attributes: { hp: { value: 0 } } } });
 		await flushAsync();
 
-		expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
-			active: false,
-			overlay: false,
+		expect(actor.update).toHaveBeenCalledWith({
+			'system.attributes.hp.value': 50,
 		});
-		expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'lastStand', {
+	});
+
+	it('does NOT re-enter Last Stand once the status is already set', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
+			.default;
+		registerCombatantHealthStateSync();
+
+		const activateLastStandFeature = vi.fn().mockResolvedValue(null);
+		const actor = Object.assign(
+			createMockCombatActor({
+				type: 'soloMonster',
+				hp: 0,
+				hpMax: 320,
+				lastStandHp: 180,
+			}),
+			{ statuses: new Set(['lastStand']), activateLastStandFeature },
+		);
+
+		const updateActor = callbacks.get('updateActor');
+		updateActor?.(actor, { system: { attributes: { hp: { value: 0 } } } });
+		await flushAsync();
+
+		// No heal-back update, no chat re-fire.
+		expect(actor.update).not.toHaveBeenCalled();
+		expect(activateLastStandFeature).not.toHaveBeenCalled();
+		// Bloodied sync still runs.
+		expect(actor.toggleStatusEffect).toHaveBeenCalledWith(
+			'bloodied',
+			expect.objectContaining({ active: false }),
+		);
+	});
+
+	it('keeps the Last Stand status while healing above the threshold (one-way)', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
+			.default;
+		registerCombatantHealthStateSync();
+
+		const actor = Object.assign(
+			createMockCombatActor({
+				type: 'soloMonster',
+				hp: 250,
+				hpMax: 320,
+				lastStandHp: 180,
+			}),
+			{ statuses: new Set(['lastStand']) },
+		);
+
+		const updateActor = callbacks.get('updateActor');
+		updateActor?.(actor, { system: { attributes: { hp: { value: 250 } } } });
+		await flushAsync();
+
+		// Status is never auto-cleared. Bloodied is updated independently.
+		expect(actor.toggleStatusEffect).not.toHaveBeenCalledWith('lastStand', expect.anything());
+		expect(actor.toggleStatusEffect).toHaveBeenCalledWith('bloodied', {
 			active: false,
 			overlay: false,
 		});
@@ -143,11 +258,7 @@ describe('registerCombatantHealthStateSync', () => {
 			.default;
 		registerCombatantHealthStateSync();
 
-		const actor = createMockCombatActor({
-			type: 'npc',
-			hp: 10,
-			hpMax: 10,
-		});
+		const actor = createMockCombatActor({ type: 'npc', hp: 10, hpMax: 10 });
 
 		const updateActor = callbacks.get('updateActor');
 		updateActor?.(actor, { system: { details: { level: 2 } } });
@@ -157,17 +268,13 @@ describe('registerCombatantHealthStateSync', () => {
 	});
 
 	describe('createCombatant hook', () => {
-		it('syncs health state when combatant is created with bloodied actor', async () => {
+		it('syncs bloodied when combatant is created with bloodied actor', async () => {
 			const callbacks = createHookCapture(globals().Hooks.on);
 			const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
 				.default;
 			registerCombatantHealthStateSync();
 
-			const actor = createMockCombatActor({
-				type: 'npc',
-				hp: 5,
-				hpMax: 10,
-			});
+			const actor = createMockCombatActor({ type: 'npc', hp: 5, hpMax: 10 });
 
 			const createCombatant = callbacks.get('createCombatant');
 			expect(createCombatant).toBeDefined();
@@ -176,68 +283,7 @@ describe('registerCombatantHealthStateSync', () => {
 			createCombatant?.(combatant);
 			await flushAsync();
 
-			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
-				active: true,
-				overlay: false,
-			});
-			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'lastStand', {
-				active: false,
-				overlay: false,
-			});
-		});
-
-		it('syncs health state when combatant is created with healthy actor', async () => {
-			const callbacks = createHookCapture(globals().Hooks.on);
-			const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
-				.default;
-			registerCombatantHealthStateSync();
-
-			const actor = createMockCombatActor({
-				type: 'npc',
-				hp: 10,
-				hpMax: 10,
-			});
-
-			const createCombatant = callbacks.get('createCombatant');
-
-			const combatant = { actor } as unknown as Combatant.Implementation;
-			createCombatant?.(combatant);
-			await flushAsync();
-
-			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
-				active: false,
-				overlay: false,
-			});
-			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'lastStand', {
-				active: false,
-				overlay: false,
-			});
-		});
-
-		it('syncs health state when combatant is created with last stand solo monster', async () => {
-			const callbacks = createHookCapture(globals().Hooks.on);
-			const registerCombatantHealthStateSync = (await import('./combatantHealthStateSync.js'))
-				.default;
-			registerCombatantHealthStateSync();
-
-			const actor = createMockCombatActor({
-				type: 'soloMonster',
-				hp: 3,
-				hpMax: 20,
-				lastStandThreshold: 3,
-			});
-
-			const createCombatant = callbacks.get('createCombatant');
-
-			const combatant = { actor } as unknown as Combatant.Implementation;
-			createCombatant?.(combatant);
-			await flushAsync();
-
-			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
-				active: false,
-				overlay: false,
-			});
-			expect(actor.toggleStatusEffect).toHaveBeenNthCalledWith(2, 'lastStand', {
+			expect(actor.toggleStatusEffect).toHaveBeenCalledWith('bloodied', {
 				active: true,
 				overlay: false,
 			});
@@ -254,8 +300,6 @@ describe('registerCombatantHealthStateSync', () => {
 			const combatant = { actor: null } as unknown as Combatant.Implementation;
 			createCombatant?.(combatant);
 			await flushAsync();
-
-			// No errors should occur, and no status effects should be toggled
 		});
 
 		it('only affects the specific combatant actor, not other unlinked tokens', async () => {
@@ -264,7 +308,6 @@ describe('registerCombatantHealthStateSync', () => {
 				.default;
 			registerCombatantHealthStateSync();
 
-			// Actor for the new combatant (bloodied)
 			const newActor = createMockCombatActor({
 				id: 'base-goblin',
 				type: 'npc',
@@ -272,7 +315,6 @@ describe('registerCombatantHealthStateSync', () => {
 				hpMax: 10,
 			});
 
-			// Actor for an existing combatant (healthy, same base actor ID)
 			const existingActor = createMockCombatActor({
 				id: 'base-goblin',
 				type: 'npc',
@@ -282,18 +324,15 @@ describe('registerCombatantHealthStateSync', () => {
 
 			const createCombatant = callbacks.get('createCombatant');
 
-			// Only pass the new combatant to the hook
 			const combatant = { actor: newActor } as unknown as Combatant.Implementation;
 			createCombatant?.(combatant);
 			await flushAsync();
 
-			// New actor should have bloodied applied
-			expect(newActor.toggleStatusEffect).toHaveBeenNthCalledWith(1, 'bloodied', {
+			expect(newActor.toggleStatusEffect).toHaveBeenCalledWith('bloodied', {
 				active: true,
 				overlay: false,
 			});
 
-			// Existing actor should NOT be affected
 			expect(existingActor.toggleStatusEffect).not.toHaveBeenCalled();
 		});
 	});

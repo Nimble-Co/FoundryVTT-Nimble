@@ -4,7 +4,7 @@ export type CombatActorFixtureOptions = {
 	isOwner?: boolean;
 	hp?: number;
 	hpMax?: number;
-	lastStandThreshold?: number;
+	lastStandHp?: number;
 	woundsValue?: number;
 	woundsMax?: number;
 	manaValue?: number;
@@ -39,7 +39,7 @@ export function createCombatActorFixture({
 	isOwner = false,
 	hp = 10,
 	hpMax,
-	lastStandThreshold,
+	lastStandHp,
 	woundsValue,
 	woundsMax,
 	manaValue,
@@ -54,7 +54,7 @@ export function createCombatActorFixture({
 				hp: {
 					value: hp,
 					max: hpMax ?? Math.max(hp, 1),
-					lastStandThreshold,
+					lastStandHp,
 				},
 				wounds: { value: woundsValue, max: woundsMax },
 			},

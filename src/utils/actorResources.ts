@@ -19,16 +19,14 @@ export function getActorHpMaxValue(actor: Actor.Implementation | null | undefine
 	return hpMax;
 }
 
-export function getActorLastStandThreshold(
-	actor: Actor.Implementation | null | undefined,
-): number | null {
+export function getActorLastStandHp(actor: Actor.Implementation | null | undefined): number | null {
 	if (!actor) return null;
 
-	const threshold = toFiniteNumber(
-		(actor as unknown as ActorResourceData).system?.attributes?.hp?.lastStandThreshold,
+	const lastStandHp = toFiniteNumber(
+		(actor as unknown as ActorResourceData).system?.attributes?.hp?.lastStandHp,
 	);
-	if (threshold === null || threshold <= 0) return null;
-	return threshold;
+	if (lastStandHp === null || lastStandHp <= 0) return null;
+	return lastStandHp;
 }
 
 export function getActorWoundsValueAndMax(

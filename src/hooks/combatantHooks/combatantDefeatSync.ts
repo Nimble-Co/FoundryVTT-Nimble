@@ -1,9 +1,14 @@
+import { hasLastStandStatus } from '../../utils/actorHealthState.js';
 import {
 	ACTOR_HP_PATHS,
 	ACTOR_WOUNDS_PATHS,
 	hasAnyActorChangeAt,
 } from '../../utils/actorHpChangePaths.js';
-import { getActorHpValue, getActorWoundsValueAndMax } from '../../utils/actorResources.js';
+import {
+	getActorHpValue,
+	getActorLastStandHp,
+	getActorWoundsValueAndMax,
+} from '../../utils/actorResources.js';
 import { isCombatantDead } from '../../utils/isCombatantDead.js';
 
 let didRegisterCombatantDefeatSync = false;
@@ -29,6 +34,23 @@ function hasAnyOtherAliveCombatant(combat: Combat, currentCombatantId: string | 
 	);
 }
 
+/**
+ * A soloMonster at HP 0 is only defeated if they've already used their Last Stand
+ * (status is set) or have no Last Stand HP configured. Otherwise the health-state
+ * sync hook will heal them up and apply the status — defeat must wait for the
+ * second drop to 0.
+ *
+ * This predicate is what keeps defeat-sync correct regardless of hook firing order
+ * relative to combatantHealthStateSync: even if defeat-sync runs first, an actor
+ * with `lastStandHp` configured but no `lastStand` status is still "awaiting" and
+ * isn't defeated yet.
+ */
+function isSoloMonsterAwaitingLastStand(actor: Actor.Implementation | null | undefined): boolean {
+	if (!actor || actor.type !== 'soloMonster') return false;
+	if (hasLastStandStatus(actor)) return false;
+	return getActorLastStandHp(actor) !== null;
+}
+
 function getShouldBeDefeatedFromCombatant(combatant: Combatant.Implementation): boolean | null {
 	if (combatant.type === 'character') {
 		const wounds = getActorWoundsValueAndMax(combatant.actor);
@@ -39,8 +61,11 @@ function getShouldBeDefeatedFromCombatant(combatant: Combatant.Implementation): 
 
 	const hpValue = getActorHpValue(combatant.actor);
 	if (hpValue === null) return null;
+	if (hpValue > 0) return false;
 
-	return hpValue <= 0;
+	if (isSoloMonsterAwaitingLastStand(combatant.actor)) return false;
+
+	return true;
 }
 
 function getShouldBeDefeatedFromActor(actor: Actor.Implementation): boolean | null {
@@ -55,8 +80,11 @@ function getShouldBeDefeatedFromActor(actor: Actor.Implementation): boolean | nu
 	// For all other actor types (NPCs, monsters, etc.), use HP logic
 	const hpValue = getActorHpValue(actor);
 	if (hpValue === null) return null;
+	if (hpValue > 0) return false;
 
-	return hpValue <= 0;
+	if (isSoloMonsterAwaitingLastStand(actor)) return false;
+
+	return true;
 }
 
 /**
