@@ -70,5 +70,3 @@ export function getStatIncreaseDescription(
 	}
 	return localize('NIMBLE.classSheet.progressionCapstoneIncrease');
 }
-
-export { formatGroupName };

@@ -5,7 +5,7 @@ import getClassFeaturesFromIndex, {
 	type ClassFeatureIndex,
 } from './getClassFeatures.ts';
 
-const MAX_LEVEL = 20;
+export const MAX_LEVEL = 20;
 
 /**
  * Builds progression data for all 20 levels of a class.

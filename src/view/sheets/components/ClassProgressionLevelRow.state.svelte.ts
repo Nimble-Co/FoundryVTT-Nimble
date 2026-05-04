@@ -1,8 +1,8 @@
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { ClassProgressionLevelRowProps } from '#types/components/ClassProgressionTab.d.ts';
+import { formatGroupName } from '../pages/ClassProgressionTabUtils.js';
 import { ALL_STATS, EPIC_BOON_LEVEL } from './ClassProgressionLevelRowConstants.js';
 import {
-	formatGroupName,
 	getFeatureSummary,
 	getLevelSpecificDescription,
 	getStatIncreaseDescription,

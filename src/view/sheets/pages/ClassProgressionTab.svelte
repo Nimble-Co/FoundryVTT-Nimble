@@ -4,6 +4,7 @@
 	import localize from '#utils/localize.js';
 	import { getContext } from 'svelte';
 	import { createClassProgressionTabState } from './ClassProgressionTab.state.svelte.js';
+	import { MAX_LEVEL } from '#utils/getClassProgressionData.js';
 
 	const item: NimbleClassItem = getContext('document');
 	const state = createClassProgressionTabState(() => item);
@@ -17,7 +18,7 @@
 		</div>
 	{:else}
 		<section class="class-progression-tab__levels">
-			{#each Array.from({ length: 20 }, (_, i) => i + 1) as level (level)}
+			{#each Array.from({ length: MAX_LEVEL }, (_, i) => i + 1) as level (level)}
 				<ClassProgressionLevelRow
 					{level}
 					levelData={state.progressionData.get(level) ?? {
