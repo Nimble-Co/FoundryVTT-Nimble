@@ -298,11 +298,10 @@ export default async function getClassFeaturesFromIndex(
 	}
 
 	// Categorize groups:
-	// - Groups ending with -progression are always auto-grant
-	// - Groups with only 1 feature are auto-grant (no choice to make)
-	// - Groups with multiple features are selections
+	// - Features with no group ('ungrouped') or a -progression group are auto-grant
+	// - Features with an explicit named group (e.g. 'savage-arsenal') are selection groups
 	for (const [groupName, groupFeatures] of featuresByGroup) {
-		if (groupName.endsWith('-progression') || groupFeatures.length === 1) {
+		if (groupName === 'ungrouped' || groupName.endsWith('-progression')) {
 			result.autoGrant.push(...groupFeatures);
 		} else {
 			const groupEntries = entriesByGroup.get(groupName) ?? [];
