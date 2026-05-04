@@ -47,7 +47,7 @@
 					type="button"
 					class="class-progression-tab__section-add-btn"
 					onclick={state.handleAddSubclass}
-					title="Add new subclass"
+					data-tooltip={localize('NIMBLE.classSheet.progressionAddNewSubclass')}
 				>
 					<i class="fa-solid fa-plus"></i>
 				</button>
@@ -112,7 +112,9 @@
 									e.stopPropagation();
 									state.handleSubclassClick(subclass.uuid);
 								}}
-								title="Open {subclass.name} sheet"
+								data-tooltip={localize('NIMBLE.classSheet.progressionOpenSheet', {
+									name: subclass.name,
+								})}
 							>
 								<i class="fa-solid fa-external-link"></i>
 							</button>
@@ -138,7 +140,9 @@
 															subclass.name,
 															level,
 														)}
-													title="Add feature at level {level}"
+													data-tooltip={localize('NIMBLE.classSheet.progressionAddFeatureAtLevel', {
+														level,
+													})}
 												>
 													<i class="fa-solid fa-plus"></i>
 												</button>
@@ -217,7 +221,7 @@
 				{/each}
 			{:else}
 				<p class="class-progression-tab__empty-message">
-					No subclasses available. Click the + button to create one.
+					{localize('NIMBLE.classSheet.progressionNoSubclasses')}
 				</p>
 			{/if}
 		</section>
@@ -231,7 +235,7 @@
 					type="button"
 					class="class-progression-tab__section-add-btn"
 					onclick={state.handleAddNewFeatureChoice}
-					title="Add new feature choice group"
+					data-tooltip={localize('NIMBLE.classSheet.progressionAddNewFeatureChoiceGroup')}
 				>
 					<i class="fa-solid fa-plus"></i>
 				</button>
@@ -267,7 +271,9 @@
 								class="class-progression-tab__group-add-btn"
 								onclick={(e) =>
 									state.handleAddFeatureToGroup(e, groupName, state.getGroupLevels(groupName))}
-								title="Add feature to {state.formatGroupName(groupName)}"
+								data-tooltip={localize('NIMBLE.classSheet.progressionAddFeatureToGroup', {
+									groupName: state.formatGroupName(groupName),
+								})}
 							>
 								<i class="fa-solid fa-plus"></i>
 							</button>
@@ -349,7 +355,7 @@
 				{/each}
 			{:else}
 				<p class="class-progression-tab__empty-message">
-					No feature choices available. Click the + button to create one.
+					{localize('NIMBLE.classSheet.progressionNoFeatureChoices')}
 				</p>
 			{/if}
 		</section>

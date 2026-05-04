@@ -182,7 +182,7 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 	async function handleAddFeature(level: number, classIdentifier: string): Promise<void> {
 		const [createdFeature] = await Item.createDocuments([
 			{
-				name: `New Feature (Level ${level})`,
+				name: localize('NIMBLE.classSheet.progressionNewFeatureName', { level: String(level) }),
 				type: 'feature',
 				system: {
 					featureType: 'class',
@@ -200,7 +200,9 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 	async function handleAddSubclass(): Promise<void> {
 		const [createdSubclass] = await Item.createDocuments([
 			{
-				name: `New ${getItem().name} Subclass`,
+				name: localize('NIMBLE.classSheet.progressionNewSubclassName', {
+					className: getItem().name,
+				}),
 				type: 'subclass',
 				system: { parentClass: identifier },
 			},
@@ -215,7 +217,10 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 	): Promise<void> {
 		const [createdFeature] = await Item.createDocuments([
 			{
-				name: `New ${subclassName} Feature (Level ${level})`,
+				name: localize('NIMBLE.classSheet.progressionNewSubclassFeatureName', {
+					subclassName,
+					level: String(level),
+				}),
 				type: 'feature',
 				system: {
 					featureType: 'class',
@@ -231,7 +236,9 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 	}
 
 	function generateUniqueFeatureName(groupName: string): string {
-		const base = `New ${formatGroupName(groupName)} Feature`;
+		const base = localize('NIMBLE.classSheet.progressionNewGroupFeatureName', {
+			groupName: formatGroupName(groupName),
+		});
 		const taken = new Set<string>();
 		for (const item of game.items) {
 			if (
@@ -286,7 +293,7 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 		const newGroupName = `${identifier}-choice-${selectionGroups.size + 1}`;
 		const [createdFeature] = await Item.createDocuments([
 			{
-				name: `New Feature Choice`,
+				name: localize('NIMBLE.classSheet.progressionNewFeatureChoiceName'),
 				type: 'feature',
 				system: {
 					featureType: 'class',

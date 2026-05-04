@@ -53,12 +53,16 @@
 					{state.featureSummary}
 				</span>
 			{:else if isSubclassLevel && !abilityScoreEntry}
-				<span class="class-progression-level-row__feature-summary"> Subclass Feature </span>
+				<span class="class-progression-level-row__feature-summary">
+					{localize('NIMBLE.classSheet.progressionSubclassFeature')}
+				</span>
 			{:else if abilityScoreEntry && !isSubclassLevel}
-				<span class="class-progression-level-row__feature-summary"> Ability Score Increase </span>
+				<span class="class-progression-level-row__feature-summary">
+					{localize('NIMBLE.classSheet.progressionAbilityScoreIncrease')}
+				</span>
 			{:else if abilityScoreEntry && isSubclassLevel}
 				<span class="class-progression-level-row__feature-summary">
-					Subclass Feature, Ability Score Increase
+					{localize('NIMBLE.classSheet.progressionSubclassFeatureAndAsi')}
 				</span>
 			{:else}
 				<span class="class-progression-level-row__empty-text">
@@ -74,11 +78,11 @@
 					data-type={abilityScoreEntry.statIncreaseType}
 				>
 					{#if abilityScoreEntry.statIncreaseType === 'primary'}
-						+1 Primary
+						{localize('NIMBLE.classSheet.progressionPrimary')}
 					{:else if abilityScoreEntry.statIncreaseType === 'secondary'}
-						+1 Secondary
+						{localize('NIMBLE.classSheet.progressionSecondary')}
 					{:else if abilityScoreEntry.statIncreaseType === 'capstone'}
-						Capstone
+						{localize('NIMBLE.classSheet.progressionCapstone')}
 					{/if}
 				</span>
 			{/if}
@@ -87,7 +91,7 @@
 				<span
 					class="class-progression-level-row__badge class-progression-level-row__badge--subclass"
 				>
-					Subclass
+					{localize('NIMBLE.classSheet.progressionSubclassLevel')}
 				</span>
 			{/if}
 		</div>
@@ -96,7 +100,7 @@
 			type="button"
 			class="class-progression-level-row__add-btn"
 			onclick={state.handleAddFeature}
-			title="Add feature at level {level}"
+			data-tooltip={localize('NIMBLE.classSheet.progressionAddFeatureAtLevel', { level })}
 		>
 			<i class="fa-solid fa-plus"></i>
 		</button>
@@ -129,8 +133,8 @@
 							<i class="fa-solid fa-list-check class-progression-level-row__info-icon"></i>
 						</div>
 						<p class="class-progression-level-row__info-text">
-							<strong>{state.formatGroupName(groupName)}.</strong> Choose one from the Feature Choices
-							section below.
+							<strong>{state.formatGroupName(groupName)}.</strong>
+							{localize('NIMBLE.classSheet.progressionChooseFromBelow')}
 						</p>
 					</div>
 				{/each}
