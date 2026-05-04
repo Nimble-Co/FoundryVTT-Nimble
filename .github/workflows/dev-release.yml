@@ -39,6 +39,9 @@ jobs:
     - name: Install Dependencies
       run: pnpm install --frozen-lockfile
 
+    - name: Rebrand for dev build
+      run: node ./build/dev-rebrand.mjs
+
     - name: Build System
       run: pnpm build
 
@@ -60,11 +63,11 @@ jobs:
         version: ${{ steps.dev_version.outputs.version }}
         url: https://github.com/${{ github.repository }}
         manifest: https://github.com/${{ github.repository }}/releases/download/${{ env.dev_tag }}/system.json
-        download: https://github.com/${{ github.repository }}/releases/download/${{ env.dev_tag }}/nimble.zip
+        download: https://github.com/${{ github.repository }}/releases/download/${{ env.dev_tag }}/nimble-dev.zip
 
     - name: Zip Files
       working-directory: ./dist
-      run: zip -r ./nimble.zip ./*
+      run: zip -r ./nimble-dev.zip ./*
 
     - name: Update Rolling Dev Release
       uses: ncipollo/release-action@v1
@@ -77,7 +80,7 @@ jobs:
         prerelease: true
         makeLatest: false
         token: ${{ secrets.GITHUB_TOKEN }}
-        artifacts: './dist/system.json,./dist/nimble.zip'
+        artifacts: './dist/system.json,./dist/nimble-dev.zip'
         body: |
           Rolling development build from the `dev` branch. **Unstable — for testing only.**
 
