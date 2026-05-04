@@ -1235,7 +1235,8 @@
 			"progressionDeleteWorldItemContent": "Delete <strong>{name}</strong>? This will permanently remove this locally created item from your world.",
 			"progressionDeleteWorldItemConfirm": "Delete",
 			"progressionDeleteWorldItemCancel": "Cancel",
-			"progressionDeleteWorldItemTooltip": "Delete this world item"
+			"progressionDeleteWorldItemTooltip": "Delete this world item",
+			"progressionNoDescription": "No description"
 		},
 		"skillsConfig": {
 			"skill": "Skill",

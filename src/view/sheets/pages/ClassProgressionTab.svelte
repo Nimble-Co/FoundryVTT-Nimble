@@ -157,9 +157,12 @@
 															<button
 																type="button"
 																class="class-progression-tab__feature-header"
+																data-tooltip={feature.name}
 																onclick={() => state.handleFeatureClick(feature)}
 															>
-																<h4 class="class-progression-tab__feature-name">{feature.name}</h4>
+																<h4 class="class-progression-tab__feature-name">
+																	{feature.name}
+																</h4>
 																<i
 																	class="fa-solid fa-external-link class-progression-tab__link-icon"
 																></i>
@@ -283,6 +286,7 @@
 												<button
 													type="button"
 													class="class-progression-tab__feature-header"
+													data-tooltip={feature.name}
 													onclick={() => state.handleFeatureClick(feature)}
 												>
 													<img
@@ -290,7 +294,9 @@
 														alt=""
 														class="class-progression-tab__feature-img"
 													/>
-													<h4 class="class-progression-tab__feature-name">{feature.name}</h4>
+													<h4 class="class-progression-tab__feature-name">
+														{feature.name}
+													</h4>
 													<i class="fa-solid fa-external-link class-progression-tab__link-icon"></i>
 												</button>
 												{#if choiceTag}
@@ -329,6 +335,10 @@
 												<div class="class-progression-tab__feature-desc">
 													{@html enrichedChoiceDesc ?? feature.system?.description ?? ''}
 												</div>
+											{:else}
+												<p class="class-progression-tab__feature-no-desc">
+													{localize('NIMBLE.classSheet.progressionNoDescription')}
+												</p>
 											{/if}
 										</article>
 									{/each}
@@ -543,6 +553,7 @@
 			display: flex;
 			align-items: center;
 			gap: 0.375rem;
+			min-width: 0;
 		}
 
 		&__delete-btn {
@@ -646,16 +657,17 @@
 		&__feature-card {
 			display: flex;
 			flex-direction: column;
-			align-items: flex-start;
+			align-items: stretch;
 			gap: 0.375rem;
 			padding: 0.5rem;
 			background: var(--nimble-box-background-color);
 			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
+			min-width: 0;
 		}
 
 		&__feature-header {
-			display: inline-flex;
+			display: flex;
 			align-items: center;
 			gap: 0.5rem;
 			padding: 0;
@@ -665,6 +677,9 @@
 			color: inherit;
 			text-align: left;
 			transition: color 0.15s ease;
+			flex: 1;
+			min-width: 0;
+			overflow: hidden;
 
 			&:hover {
 				color: var(--nimble-accent-color);
@@ -689,6 +704,12 @@
 			margin: 0;
 			line-height: 1.3;
 			text-align: left;
+			flex: 1;
+			min-width: 0;
+			overflow: hidden;
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			-webkit-box-orient: vertical;
 		}
 
 		&__link-icon {
@@ -717,6 +738,16 @@
 			&[data-source='pack'] {
 				background: var(--nimble-badge-pack-bg);
 			}
+		}
+
+		&__feature-no-desc {
+			flex: 1;
+			margin: 0;
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+			font-style: italic;
+			text-align: center;
+			padding: 0.25rem 0;
 		}
 
 		&__feature-card &__feature-desc {
