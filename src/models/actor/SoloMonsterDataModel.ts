@@ -81,12 +81,6 @@ const soloMonsterSchema = () => ({
 		creatureType: new fields.StringField({ required: true, nullable: false, initial: '' }),
 		level: new fields.StringField({ required: true, nullable: false, initial: '1' }),
 	}),
-	bloodiedEffect: new fields.SchemaField({
-		description: new fields.HTMLField({ required: true, initial: '', nullable: false }),
-	}),
-	lastStandEffect: new fields.SchemaField({
-		description: new fields.HTMLField({ required: true, initial: '', nullable: false }),
-	}),
 });
 
 declare namespace NimbleSoloMonsterData {

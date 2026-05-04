@@ -4,6 +4,8 @@ import NPCMetaConfigDialog from '../../view/dialogs/NPCMetaConfigDialog.svelte';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
 import { NimbleBaseActor } from './base.svelte.js';
 
+type MonsterFeatureSubtype = 'bloodied' | 'lastStand';
+
 export class NimbleSoloMonster extends NimbleBaseActor {
 	declare system: NimbleSoloMonsterData;
 
@@ -33,10 +35,21 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 		});
 	}
 
+	/**
+	 * Look up the description prose for a phase by finding the matching monsterFeature
+	 * item. This is the canonical storage location — every shipped legendary monster
+	 * has a Bloodied and Last Stand item with the prose in its description field.
+	 */
+	#getPhaseDescription(subtype: MonsterFeatureSubtype): string {
+		type MonsterFeatureView = { system?: { subtype?: string; description?: string } };
+		const item = this.items.find((candidate) => {
+			if (candidate.type !== 'monsterFeature') return false;
+			return (candidate as unknown as MonsterFeatureView).system?.subtype === subtype;
+		}) as MonsterFeatureView | undefined;
+		return item?.system?.description ?? '';
+	}
+
 	async activateBloodiedFeature(options: { visibilityMode?: string } = {}) {
-		type SoloMonsterSystem = NimbleSoloMonsterData & {
-			bloodiedEffect?: { description: string };
-		};
 		const chatData = {
 			author: game.user?.id,
 			flavor: `${this?.name}: Bloodied`,
@@ -47,7 +60,7 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 			rollMode: options.visibilityMode ?? 'gmroll',
 			system: {
 				actorName: this.name,
-				description: (this.system as SoloMonsterSystem).bloodiedEffect?.description ?? '',
+				description: this.#getPhaseDescription('bloodied'),
 				image: 'icons/svg/blood.svg',
 				name: 'Bloodied',
 				permissions: this.permission,
@@ -66,9 +79,6 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 	}
 
 	async activateLastStandFeature(options: { visibilityMode?: string } = {}) {
-		type SoloMonsterSystem = NimbleSoloMonsterData & {
-			lastStandEffect?: { description: string };
-		};
 		const rollMode = (options.visibilityMode ?? 'gmroll') as foundry.CONST.DICE_ROLL_MODES;
 		const chatData = {
 			author: game.user?.id,
@@ -80,7 +90,7 @@ export class NimbleSoloMonster extends NimbleBaseActor {
 			whisper: ChatMessage.getWhisperRecipients('GM').map((u) => u.id) as string[],
 			system: {
 				actorName: this.name,
-				description: (this.system as SoloMonsterSystem).lastStandEffect?.description ?? '',
+				description: this.#getPhaseDescription('lastStand'),
 				image: 'icons/svg/combat.svg',
 				name: 'Last Stand',
 				permissions: this.permission,
