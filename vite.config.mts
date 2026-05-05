@@ -1,5 +1,6 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { sveltePreprocess } from 'svelte-preprocess';
 import { defineConfig } from 'vitest/config';
@@ -7,6 +8,61 @@ import { defineConfig } from 'vitest/config';
 const systemJson = JSON.parse(readFileSync(path.resolve(__dirname, 'public/system.json'), 'utf8'));
 const systemRoot = `/systems/${systemJson.id}`;
 const systemBase = `${systemRoot}/`;
+
+// Rewrites `.system-nimble` → `.system-<id>` in every SCSS unit at sass
+// compile time, so source files keep the literal `.system-nimble` selector
+// without authors needing to know about a build-time substitution.
+//
+// Mechanism: register our importer as `sassOptions.importer` (singular). Sass
+// associates that importer with the entry source, and relative `@use` paths
+// inside it cascade through our canonicalize first — see
+// https://sass-lang.com/documentation/js-api/interfaces/importer/ ("Sass first
+// attempts to resolve the URL relative to ... the original importer").
+const NAMESPACE_PATTERN = /\.system-nimble\b(?!-)/g;
+const namespaceReplacement = `.system-${systemJson.id}`;
+const rewriteNamespace = (source: string) =>
+	source.replace(NAMESPACE_PATTERN, namespaceReplacement);
+
+const namespaceRewriteImporter = {
+	canonicalize(url: string) {
+		// Sass passes either a bare/relative path (e.g. `components/foo`) or an
+		// already-resolved `file://` URL (sass's implicit URL importer resolves
+		// the @use target against the parent's URL before delegating to us).
+		// Either way, we need to find a real file via sass's partial-resolution
+		// rules and return its canonical file:// URL.
+		let basePath: string;
+		if (url.startsWith('file:')) {
+			basePath = fileURLToPath(new URL(url));
+		} else if (path.isAbsolute(url)) {
+			basePath = url;
+		} else {
+			// Bare relative path with no containing URL — uncommon for entries.
+			basePath = path.resolve(url);
+		}
+		const dir = path.dirname(basePath);
+		const filename = path.basename(basePath);
+		const candidates = [
+			path.join(dir, `_${filename}.scss`),
+			path.join(dir, `${filename}.scss`),
+			path.join(dir, filename, '_index.scss'),
+			path.join(dir, filename, 'index.scss'),
+		];
+		const resolved = candidates.find(existsSync);
+		return resolved ? pathToFileURL(resolved) : null;
+	},
+	load(canonicalUrl: URL) {
+		return {
+			contents: rewriteNamespace(readFileSync(fileURLToPath(canonicalUrl), 'utf-8')),
+			syntax: 'scss' as const,
+			sourceMapUrl: canonicalUrl,
+		};
+	},
+};
+
+const scssRewriteOptions = {
+	additionalData: (source: string) => rewriteNamespace(source),
+	importer: namespaceRewriteImporter,
+};
 
 const config = defineConfig({
 	root: 'src/',
@@ -55,6 +111,11 @@ const config = defineConfig({
 	esbuild: {
 		keepNames: true,
 	},
+	css: {
+		preprocessorOptions: {
+			scss: scssRewriteOptions,
+		},
+	},
 	plugins: [
 		svelte({
 			configFile: path.resolve(__dirname, 'svelte.config.js'),
@@ -63,11 +124,23 @@ const config = defineConfig({
 					return { runes: false };
 				}
 			},
-			preprocess: sveltePreprocess({
-				typescript: {
-					tsconfigFile: './tsconfig.json',
+			preprocess: [
+				// Rewrites `.system-nimble` in component <style lang="scss"> blocks
+				// before they hit sass. Component blocks don't @use our partials,
+				// so a string-level rewrite covers them — no sass importer needed.
+				{
+					name: 'system-namespace-rewrite',
+					style({ content, attributes }) {
+						if (attributes.lang !== 'scss' && attributes.lang !== 'sass') return;
+						return { code: rewriteNamespace(content) };
+					},
 				},
-			}),
+				sveltePreprocess({
+					typescript: {
+						tsconfigFile: './tsconfig.json',
+					},
+				}),
+			],
 			onwarn: (warning, handler) => {
 				// Suppress `a11y-missing-attribute` for missing href in <a> links.
 				// Foundry doesn't follow accessibility rules.

@@ -24,9 +24,16 @@
  *        Foundry resolves compendium UUIDs by system id; without this rewrite,
  *        cross-pack references (class progressions linking to spells, etc.)
  *        would dangle under the dev install.
+ *      - `systems/nimble/<asset>` → `systems/nimble-dev/<asset>`
+ *        Document `img`/`src` fields point at class images, monster portraits,
+ *        and other system assets. Without this rewrite, every Foundry document
+ *        loaded from a compendium would 404 on its image under the dev install.
  *
- * Idempotent: the regex `Compendium\.nimble\.` requires a literal dot after
- * `nimble`, so it does not match the already-rewritten `Compendium.nimble-dev.`.
+ * SCSS namespacing (`.system-#{system-id()}`) is handled by a sass function
+ * registered in `vite.config.mts` — no rebrand work needed here.
+ *
+ * Idempotent: every regex requires a non-`-` boundary immediately after
+ * `nimble`, so they don't match the already-rewritten `nimble-dev` form.
  * Running the script twice is a no-op on the second pass.
  */
 
@@ -50,14 +57,27 @@ if (typeof manifest.background === 'string') {
 writeFileSync(manifestPath, `${JSON.stringify(manifest, null, '\t')}\n`);
 console.log(`[rebrand] Updated ${manifestPath} (id=${DEV_ID}, title="${DEV_TITLE}")`);
 
-const packFiles = await glob('packs/**/*.json');
-const uuidPattern = /Compendium\.nimble\./g;
-let touched = 0;
-for (const file of packFiles) {
-	const original = readFileSync(file, 'utf8');
-	if (!uuidPattern.test(original)) continue;
-	const updated = original.replace(uuidPattern, `Compendium.${DEV_ID}.`);
-	writeFileSync(file, updated);
-	touched++;
+async function rewriteFiles(globPattern, replacements, label) {
+	const files = await glob(globPattern);
+	let touched = 0;
+	for (const file of files) {
+		const original = readFileSync(file, 'utf8');
+		let updated = original;
+		for (const [pattern, replacement] of replacements) {
+			updated = updated.replace(pattern, replacement);
+		}
+		if (updated === original) continue;
+		writeFileSync(file, updated);
+		touched++;
+	}
+	console.log(`[rebrand] Rewrote ${touched} ${label}`);
 }
-console.log(`[rebrand] Rewrote Compendium UUIDs in ${touched} pack files`);
+
+await rewriteFiles(
+	'packs/**/*.json',
+	[
+		[/Compendium\.nimble\./g, `Compendium.${DEV_ID}.`],
+		[/systems\/nimble\//g, `systems/${DEV_ID}/`],
+	],
+	'pack files (Compendium UUIDs + asset paths)',
+);
