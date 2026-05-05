@@ -212,11 +212,7 @@
 				{item.reactive.name}
 			</h4>
 
-			<ChargeIndicator
-				pools={getItemPools(item.reactive._id)}
-				{actor}
-				itemId={item.reactive._id}
-			/>
+			<ChargeIndicator pools={getItemPools(item.reactive._id)} {actor} itemId={item.reactive._id} />
 
 			{#if getEffectiveLevel(item) !== Infinity}
 				<span class="nimble-feature-card__level">Lv. {getEffectiveLevel(item)}</span>

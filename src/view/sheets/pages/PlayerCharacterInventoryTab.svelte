@@ -257,7 +257,7 @@
 								{item.reactive.name}
 							</h4>
 
-<div class="nimble-document-card__charges">
+							<div class="nimble-document-card__charges">
 								<ChargeIndicator
 									pools={getItemPools(item.reactive._id)}
 									{actor}
