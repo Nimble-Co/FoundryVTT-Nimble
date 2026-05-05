@@ -30,21 +30,24 @@ const LAST_STAND_HP_BY_NAME: Record<string, number> = {
 };
 
 /**
- * Migration to populate `system.attributes.hp.lastStandHp` on existing
- * soloMonster actors that match the shipped legendary monsters by name.
+ * Migration to populate `lastStandHp` on the embedded `monsterFeature` item
+ * with `subtype: 'lastStand'` for actors that match the shipped legendary
+ * monsters by name.
  *
- * The Last Stand mechanic was reworked in #747: `lastStandHp` is now the heal
- * target the boss is restored to when their HP first hits 0. The shipped pack
- * JSONs are updated, but actors already imported into user worlds get
- * `lastStandHp = 0` by schema default — silently disabling Last Stand for
- * them until set manually.
+ * The Last Stand mechanic was reworked in #747: configuration moved from the
+ * actor's `system.attributes.hp.lastStandHp` to the Last Stand feature item's
+ * `system.lastStandHp`. Existing imported actors otherwise get the schema
+ * default of 0 on the item, silently disabling Last Stand until set manually.
  *
- * Looks up the actor's name in a static table; if matched, sets the value.
- * Skips actors whose name doesn't match (homebrew or renamed bosses) and
- * actors that already have a non-zero value (don't stomp GM customization).
+ * Resolution order on each actor:
+ * 1. Skip if there's no `subtype: 'lastStand'` item to attach the value to.
+ * 2. Skip if the item already has a positive `lastStandHp` (don't stomp).
+ * 3. Use any leftover `system.attributes.hp.lastStandHp` from the previous
+ *    schema version, then clear it.
+ * 4. Otherwise fall back to the by-name table for shipped monsters.
  *
- * Reversibility: setting `lastStandHp` back to 0 fully disables the mechanic
- * with no other side effects.
+ * Skips actors whose name doesn't match the table (homebrew or renamed
+ * bosses) — those GMs configure the item manually via the feature sheet.
  */
 class Migration018LastStandHp extends MigrationBase {
 	static override readonly version = 18;
@@ -52,15 +55,30 @@ class Migration018LastStandHp extends MigrationBase {
 	override readonly version = Migration018LastStandHp.version;
 
 	override async updateActor(source: any): Promise<void> {
-		if (source.type !== 'soloMonster') return;
-		const hp = source.system?.attributes?.hp;
-		if (!hp) return;
-		if (typeof hp.lastStandHp === 'number' && hp.lastStandHp > 0) return;
+		const items = Array.isArray(source.items) ? source.items : null;
+		if (!items) return;
 
-		const value = LAST_STAND_HP_BY_NAME[source.name];
+		const lastStandItem = items.find(
+			(item: any) => item?.type === 'monsterFeature' && item?.system?.subtype === 'lastStand',
+		);
+		if (!lastStandItem?.system) return;
+		if (
+			typeof lastStandItem.system.lastStandHp === 'number' &&
+			lastStandItem.system.lastStandHp > 0
+		) {
+			return;
+		}
+
+		const stale = source.system?.attributes?.hp?.lastStandHp;
+		const carryOver = typeof stale === 'number' && stale > 0 ? stale : null;
+		const fallback = LAST_STAND_HP_BY_NAME[source.name];
+		const value = carryOver ?? fallback;
 		if (value === undefined) return;
 
-		hp.lastStandHp = value;
+		lastStandItem.system.lastStandHp = value;
+		if (typeof stale === 'number') {
+			delete source.system.attributes.hp.lastStandHp;
+		}
 	}
 }
 

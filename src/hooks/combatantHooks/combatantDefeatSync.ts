@@ -35,18 +35,18 @@ function hasAnyOtherAliveCombatant(combat: Combat, currentCombatantId: string | 
 }
 
 /**
- * A soloMonster at HP 0 is only defeated if they've already used their Last Stand
- * (status is set) or have no Last Stand HP configured. Otherwise the health-state
- * sync hook will heal them up and apply the status — defeat must wait for the
- * second drop to 0.
+ * An actor at HP 0 is only defeated if they've already used their Last Stand
+ * (status is set) or have no Last Stand HP configured on a feature item.
+ * Otherwise the health-state sync hook will heal them up and apply the status —
+ * defeat must wait for the second drop to 0.
  *
  * This predicate is what keeps defeat-sync correct regardless of hook firing order
  * relative to combatantHealthStateSync: even if defeat-sync runs first, an actor
- * with `lastStandHp` configured but no `lastStand` status is still "awaiting" and
- * isn't defeated yet.
+ * with a configured Last Stand item but no `lastStand` status is still "awaiting"
+ * and isn't defeated yet.
  */
-function isSoloMonsterAwaitingLastStand(actor: Actor.Implementation | null | undefined): boolean {
-	if (!actor || actor.type !== 'soloMonster') return false;
+function isAwaitingLastStand(actor: Actor.Implementation | null | undefined): boolean {
+	if (!actor) return false;
 	if (hasLastStandStatus(actor)) return false;
 	return getActorLastStandHp(actor) !== null;
 }
@@ -63,7 +63,7 @@ function getShouldBeDefeatedFromCombatant(combatant: Combatant.Implementation): 
 	if (hpValue === null) return null;
 	if (hpValue > 0) return false;
 
-	if (isSoloMonsterAwaitingLastStand(combatant.actor)) return false;
+	if (isAwaitingLastStand(combatant.actor)) return false;
 
 	return true;
 }
@@ -82,7 +82,7 @@ function getShouldBeDefeatedFromActor(actor: Actor.Implementation): boolean | nu
 	if (hpValue === null) return null;
 	if (hpValue > 0) return false;
 
-	if (isSoloMonsterAwaitingLastStand(actor)) return false;
+	if (isAwaitingLastStand(actor)) return false;
 
 	return true;
 }

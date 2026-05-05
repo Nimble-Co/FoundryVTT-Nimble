@@ -6,7 +6,6 @@
 export const ACTOR_HP_PATHS = {
 	value: 'system.attributes.hp.value',
 	max: 'system.attributes.hp.max',
-	lastStandHp: 'system.attributes.hp.lastStandHp',
 } as const;
 
 export const ACTOR_WOUNDS_PATHS = {

@@ -22,7 +22,7 @@ export function getActorHealthState(
 	const hpMax = getActorHpMaxValue(actor);
 	if (hpValue === null || hpMax === null) return 'unknown';
 
-	if (actor.type === 'soloMonster' && hasLastStandStatus(actor) && hpValue > 0) {
+	if (hasLastStandStatus(actor) && hpValue > 0) {
 		return 'lastStand';
 	}
 

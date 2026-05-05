@@ -28,13 +28,13 @@ type SoloMonsterLike = Actor.Implementation & {
 const actorSyncState = new Map<string, { running: boolean; dirty: boolean }>();
 
 /**
- * If a soloMonster's HP just hit 0 without the lastStand status, heal them up to
- * the configured Last Stand HP, apply the status, and fire the GM chat card.
- * Returns true when handled — the resulting heal triggers another hook firing
- * which proceeds through normal status sync.
+ * If an actor's HP just hit 0 without the lastStand status and the actor has
+ * a `monsterFeature` item with `subtype: 'lastStand'` configured with a
+ * positive `lastStandHp`, heal them up to that value, apply the status, and
+ * fire the GM chat card. Returns true when handled — the resulting heal
+ * triggers another hook firing which proceeds through normal status sync.
  */
 async function tryEnterLastStand(actor: Actor.Implementation): Promise<boolean> {
-	if (actor.type !== 'soloMonster') return false;
 	if (hasLastStandStatus(actor)) return false;
 
 	const hpValue = getActorHpValue(actor);
@@ -138,7 +138,7 @@ export default function registerCombatantHealthStateSync() {
 	didRegisterCombatantHealthStateSync = true;
 
 	Hooks.on('updateActor', (actor: Actor.Implementation, changes: Record<string, unknown>) => {
-		const watched = [ACTOR_HP_PATHS.value, ACTOR_HP_PATHS.max, ACTOR_HP_PATHS.lastStandHp];
+		const watched = [ACTOR_HP_PATHS.value, ACTOR_HP_PATHS.max];
 		if (!hasAnyActorChangeAt(changes, watched)) return;
 
 		void syncActorHealthState(actor);
