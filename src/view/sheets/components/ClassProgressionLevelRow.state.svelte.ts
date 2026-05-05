@@ -43,6 +43,7 @@ export function createClassProgressionLevelRowState(getProps: () => ClassProgres
 	$effect(() => {
 		const { level, levelData } = getProps();
 		const features = levelData.autoGrant;
+		let cancelled = false;
 
 		async function enrichDescriptions(): Promise<void> {
 			const result = new Map<string, string>();
@@ -57,10 +58,13 @@ export function createClassProgressionLevelRowState(getProps: () => ClassProgres
 					result.set(feature.uuid, await TextEditor.enrichHTML(raw));
 				}),
 			);
-			levelDescriptions = result;
+			if (!cancelled) levelDescriptions = result;
 		}
 
 		enrichDescriptions();
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	function toggleExpanded(): void {

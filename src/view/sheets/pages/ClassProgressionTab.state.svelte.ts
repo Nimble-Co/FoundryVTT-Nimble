@@ -125,6 +125,8 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 			featuresToEnrich.push(...features);
 		}
 
+		let cancelled = false;
+
 		async function enrich(): Promise<void> {
 			const result = new Map<string, string>();
 			await Promise.all(
@@ -134,10 +136,13 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 					result.set(feature.uuid, await TextEditor.enrichHTML(desc));
 				}),
 			);
-			enrichedFeatureDescriptions = result;
+			if (!cancelled) enrichedFeatureDescriptions = result;
 		}
 
 		enrich();
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	function getSourceTag(uuid: string): 'world' | 'pack' | null {
@@ -179,35 +184,36 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 		});
 	}
 
+	async function createItem(data: Record<string, unknown>): Promise<Item | undefined> {
+		const [item] = await Item.createDocuments([data] as unknown as Item.CreateData[]);
+		return item;
+	}
+
 	async function handleAddFeature(level: number, classIdentifier: string): Promise<void> {
-		const [createdFeature] = await Item.createDocuments([
-			{
-				name: localize('NIMBLE.classSheet.progressionNewFeatureName', { level: String(level) }),
-				type: 'feature',
-				system: {
-					featureType: 'class',
-					class: classIdentifier,
-					gainedAtLevel: level,
-					gainedAtLevels: [level],
-					group: `${classIdentifier}-progression`,
-					subclass: false,
-				},
+		const created = await createItem({
+			name: localize('NIMBLE.classSheet.progressionNewFeatureName', { level: String(level) }),
+			type: 'feature',
+			system: {
+				featureType: 'class',
+				class: classIdentifier,
+				gainedAtLevel: level,
+				gainedAtLevels: [level],
+				group: `${classIdentifier}-progression`,
+				subclass: false,
 			},
-		] as unknown as Item.CreateData[]);
-		createdFeature?.sheet?.render(true);
+		});
+		created?.sheet?.render(true);
 	}
 
 	async function handleAddSubclass(): Promise<void> {
-		const [createdSubclass] = await Item.createDocuments([
-			{
-				name: localize('NIMBLE.classSheet.progressionNewSubclassName', {
-					className: getItem().name,
-				}),
-				type: 'subclass',
-				system: { parentClass: identifier },
-			},
-		] as unknown as Item.CreateData[]);
-		createdSubclass?.sheet?.render(true);
+		const created = await createItem({
+			name: localize('NIMBLE.classSheet.progressionNewSubclassName', {
+				className: getItem().name,
+			}),
+			type: 'subclass',
+			system: { parentClass: identifier },
+		});
+		created?.sheet?.render(true);
 	}
 
 	async function handleAddSubclassFeature(
@@ -215,24 +221,22 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 		subclassName: string,
 		level: number,
 	): Promise<void> {
-		const [createdFeature] = await Item.createDocuments([
-			{
-				name: localize('NIMBLE.classSheet.progressionNewSubclassFeatureName', {
-					subclassName,
-					level: String(level),
-				}),
-				type: 'feature',
-				system: {
-					featureType: 'class',
-					class: identifier,
-					gainedAtLevel: level,
-					gainedAtLevels: [level],
-					group: subclassIdentifier,
-					subclass: true,
-				},
+		const created = await createItem({
+			name: localize('NIMBLE.classSheet.progressionNewSubclassFeatureName', {
+				subclassName,
+				level: String(level),
+			}),
+			type: 'feature',
+			system: {
+				featureType: 'class',
+				class: identifier,
+				gainedAtLevel: level,
+				gainedAtLevels: [level],
+				group: subclassIdentifier,
+				subclass: true,
 			},
-		] as unknown as Item.CreateData[]);
-		createdFeature?.sheet?.render(true);
+		});
+		created?.sheet?.render(true);
 	}
 
 	function generateUniqueFeatureName(groupName: string): string {
@@ -260,21 +264,19 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 		levels: number[],
 	): Promise<void> {
 		event.stopPropagation();
-		const [createdFeature] = await Item.createDocuments([
-			{
-				name: generateUniqueFeatureName(groupName),
-				type: 'feature',
-				system: {
-					featureType: 'class',
-					class: identifier,
-					gainedAtLevel: levels[0],
-					gainedAtLevels: levels,
-					group: groupName,
-					subclass: false,
-				},
+		const created = await createItem({
+			name: generateUniqueFeatureName(groupName),
+			type: 'feature',
+			system: {
+				featureType: 'class',
+				class: identifier,
+				gainedAtLevel: levels[0],
+				gainedAtLevels: levels,
+				group: groupName,
+				subclass: false,
 			},
-		] as unknown as Item.CreateData[]);
-		createdFeature?.sheet?.render(true);
+		});
+		created?.sheet?.render(true);
 	}
 
 	async function handleDeleteWorldItem(uuid: string, name: string): Promise<void> {
@@ -291,21 +293,19 @@ export function createClassProgressionTabState(getItem: () => NimbleClassItem) {
 
 	async function handleAddNewFeatureChoice(): Promise<void> {
 		const newGroupName = `${identifier}-choice-${selectionGroups.size + 1}`;
-		const [createdFeature] = await Item.createDocuments([
-			{
-				name: localize('NIMBLE.classSheet.progressionNewFeatureChoiceName'),
-				type: 'feature',
-				system: {
-					featureType: 'class',
-					class: identifier,
-					gainedAtLevel: 1,
-					gainedAtLevels: [1],
-					group: newGroupName,
-					subclass: false,
-				},
+		const created = await createItem({
+			name: localize('NIMBLE.classSheet.progressionNewFeatureChoiceName'),
+			type: 'feature',
+			system: {
+				featureType: 'class',
+				class: identifier,
+				gainedAtLevel: 1,
+				gainedAtLevels: [1],
+				group: newGroupName,
+				subclass: false,
 			},
-		] as unknown as Item.CreateData[]);
-		createdFeature?.sheet?.render(true);
+		});
+		created?.sheet?.render(true);
 	}
 
 	return {
