@@ -5,6 +5,7 @@
 	import filterItems from '../../dataPreparationHelpers/filterItems.js';
 	import { getContext } from 'svelte';
 	import shouldFlashDroppedItem from '../../../utils/shouldFlashDroppedItem.js';
+	import { getPools, getPoolsForItem } from '../../../utils/chargePool/chargePoolSync.js';
 	import {
 		DROP_ITEM_FLASH_ANIMATION_NAME,
 		getDroppedItemFlashIds,
@@ -12,6 +13,7 @@
 	} from '../dropItemFlashState.js';
 
 	import SearchBar from '../components/SearchBar.svelte';
+	import ChargeIndicator from '../../components/ChargeIndicator.svelte';
 
 	async function configureItem(event, id) {
 		event.stopPropagation();
@@ -153,6 +155,13 @@
 	// Settings
 	let flags = $derived(actor.reactive.flags.nimble);
 	let showEmbeddedDocumentImages = $derived(flags?.showEmbeddedDocumentImages ?? true);
+
+	// All charge pools for the actor
+	let allPools = $derived(getPools(actor.reactive));
+
+	function getItemPools(itemId: string) {
+		return getPoolsForItem(actor.reactive, itemId, allPools);
+	}
 </script>
 
 {#snippet featureCard(item)}
@@ -202,6 +211,8 @@
 			<h4 class="nimble-feature-card__name nimble-heading" data-heading-variant="item">
 				{item.reactive.name}
 			</h4>
+
+			<ChargeIndicator pools={getItemPools(item.reactive._id)} {actor} itemId={item.reactive._id} />
 
 			{#if getEffectiveLevel(item) !== Infinity}
 				<span class="nimble-feature-card__level">Lv. {getEffectiveLevel(item)}</span>

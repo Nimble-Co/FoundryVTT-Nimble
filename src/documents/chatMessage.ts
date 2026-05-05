@@ -483,7 +483,17 @@ class NimbleChatMessage extends ChatMessage {
 		const sourceItem = sourceItemId ? (sourceActor?.items?.get(sourceItemId) ?? null) : null;
 
 		for (const target of damageApplicationPlan.applicableTargets) {
+			const hpBefore = Number(
+				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
+			);
+
 			await target.actor.applyDamage(target.adjustedDamage);
+
+			const hpAfter = Number(
+				foundry.utils.getProperty(target.actor, 'system.attributes.hp.value') ?? 0,
+			);
+			const wasKilled = hpBefore > 0 && hpAfter === 0;
+
 			// @ts-expect-error - nimble.damageApplied is a custom Nimble hook consumed by ruleEventDispatch
 			Hooks.callAll('nimble.damageApplied', {
 				sourceItem,
@@ -493,6 +503,14 @@ class NimbleChatMessage extends ChatMessage {
 				isCritical: systemData.isCritical,
 				isMiss: systemData.isMiss,
 			});
+
+			if (wasKilled) {
+				const attacker = (this as unknown as { actor: Actor.Implementation | null }).actor;
+				if (attacker) {
+					// @ts-expect-error Custom hook
+					Hooks.call('nimbleKillApplied', attacker, target.actor);
+				}
+			}
 		}
 
 		for (const tokenName of damageApplicationPlan.zeroDamageTargetNames) {

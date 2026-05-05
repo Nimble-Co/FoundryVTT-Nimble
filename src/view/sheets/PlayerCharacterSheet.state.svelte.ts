@@ -1,15 +1,12 @@
 import { setContext, untrack } from 'svelte';
 import { createSubscriber } from 'svelte/reactivity';
 import { readable } from 'svelte/store';
-import { incrementDieSize } from '../../managers/HitDiceManager.js';
+import { incrementDieSize } from '#managers/HitDiceManager.js';
 import {
 	getInitiativeCombatManaRules,
 	primeActorCombatManaSourceRules,
-} from '../../utils/combatManaRules.js';
-import {
-	getActiveCombatForCurrentScene,
-	registerCombatStateHooks,
-} from '../../utils/combatState.js';
+} from '#utils/combatManaRules.js';
+import { getActiveCombatForCurrentScene, registerCombatStateHooks } from '#utils/combatState.js';
 
 type NavigationComponents = {
 	core: unknown;

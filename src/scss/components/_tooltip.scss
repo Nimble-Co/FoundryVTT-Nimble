@@ -45,6 +45,39 @@
     margin-inline-end: 0.5rem;
   }
 
+  &--charge {
+    width: 15rem;
+    margin-inline-start: 0.5rem;
+
+    .nimble-tooltip__description-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .nimble-charge-tooltip__section-label {
+      margin: 0;
+      font-size: var(--nimble-xs-text);
+      color: var(--nimble-medium-text-color);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .nimble-charge-tooltip__recovery-list {
+      margin: 0;
+      padding-inline-start: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      font-size: var(--nimble-sm-text);
+    }
+
+    .nimble-charge-tooltip__recovery {
+      margin: 0;
+      line-height: 1.3;
+    }
+  }
+
   &--condition {
     width: 18rem;
 

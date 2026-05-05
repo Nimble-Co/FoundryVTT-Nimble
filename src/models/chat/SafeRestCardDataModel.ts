@@ -13,6 +13,22 @@ const safeRestCardSchema = () => ({
 	manaRestored: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 	// Wounds recovered
 	woundsRecovered: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+	// Charge pools recovered: Array of { label, amount, previousValue, newValue, icon }
+	chargePoolsRecovered: new fields.ArrayField(
+		new fields.ObjectField({
+			required: true,
+			nullable: false,
+			initial: {},
+			model: {
+				label: new fields.StringField({ required: true }),
+				previousValue: new fields.NumberField({ required: true }),
+				newValue: new fields.NumberField({ required: true }),
+				amount: new fields.NumberField({ required: true }),
+				icon: new fields.StringField({ required: false }),
+			},
+		}),
+		{ required: true, nullable: false, initial: [] },
+	),
 });
 
 declare namespace NimbleSafeRestCardData {
