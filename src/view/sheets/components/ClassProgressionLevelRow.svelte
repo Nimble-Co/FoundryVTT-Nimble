@@ -100,6 +100,7 @@
 			type="button"
 			class="class-progression-level-row__add-btn"
 			onclick={state.handleAddFeature}
+			aria-label={localize('NIMBLE.classSheet.progressionAddFeatureAtLevel', { level })}
 			data-tooltip={localize('NIMBLE.classSheet.progressionAddFeatureAtLevel', { level })}
 		>
 			<i class="fa-solid fa-plus"></i>

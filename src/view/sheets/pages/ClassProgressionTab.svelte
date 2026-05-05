@@ -48,6 +48,7 @@
 					type="button"
 					class="class-progression-tab__section-add-btn"
 					onclick={state.handleAddSubclass}
+					aria-label={localize('NIMBLE.classSheet.progressionAddNewSubclass')}
 					data-tooltip={localize('NIMBLE.classSheet.progressionAddNewSubclass')}
 				>
 					<i class="fa-solid fa-plus"></i>
@@ -113,6 +114,9 @@
 									e.stopPropagation();
 									state.handleSubclassClick(subclass.uuid);
 								}}
+								aria-label={localize('NIMBLE.classSheet.progressionOpenSheet', {
+									name: subclass.name,
+								})}
 								data-tooltip={localize('NIMBLE.classSheet.progressionOpenSheet', {
 									name: subclass.name,
 								})}
@@ -141,6 +145,9 @@
 															subclass.name,
 															level,
 														)}
+													aria-label={localize('NIMBLE.classSheet.progressionAddFeatureAtLevel', {
+														level,
+													})}
 													data-tooltip={localize('NIMBLE.classSheet.progressionAddFeatureAtLevel', {
 														level,
 													})}
@@ -236,6 +243,7 @@
 					type="button"
 					class="class-progression-tab__section-add-btn"
 					onclick={state.handleAddNewFeatureChoice}
+					aria-label={localize('NIMBLE.classSheet.progressionAddNewFeatureChoiceGroup')}
 					data-tooltip={localize('NIMBLE.classSheet.progressionAddNewFeatureChoiceGroup')}
 				>
 					<i class="fa-solid fa-plus"></i>
@@ -272,6 +280,9 @@
 								class="class-progression-tab__group-add-btn"
 								onclick={(e) =>
 									state.handleAddFeatureToGroup(e, groupName, state.getGroupLevels(groupName))}
+								aria-label={localize('NIMBLE.classSheet.progressionAddFeatureToGroup', {
+									groupName: state.formatGroupName(groupName),
+								})}
 								data-tooltip={localize('NIMBLE.classSheet.progressionAddFeatureToGroup', {
 									groupName: state.formatGroupName(groupName),
 								})}
