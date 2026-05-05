@@ -195,6 +195,14 @@
 	--nimble-chat-advantage-color: hsl(210, 70%, 40%);
 	--nimble-chat-advantage-border-color: hsla(210, 70%, 50%, 0.3);
 
+	/** CLASS PROGRESSION BADGE COLORS **/
+	--nimble-badge-primary-bg: hsl(120, 55%, 22%);
+	--nimble-badge-secondary-bg: hsl(210, 35%, 25%);
+	--nimble-badge-capstone-bg: hsl(38, 100%, 25%);
+	--nimble-badge-subclass-bg: hsl(276, 30%, 33%);
+	--nimble-badge-world-bg: hsl(35, 80%, 22%);
+	--nimble-badge-pack-bg: hsl(195, 55%, 22%);
+
 	/** ANIMATION **/
 	--nimble-standard-transition: all 0.15s ease-in-out;
 	--nimble-slow-transition: all 0.25s ease-in-out;

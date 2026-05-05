@@ -1,6 +1,8 @@
 import { AbilityBonusRule } from '../models/rules/abilityBonus.js';
 import { ApplyConditionRule } from '../models/rules/applyCondition.js';
 import { ArmorClassRule } from '../models/rules/armorClass.js';
+import { ChargeConsumerRule } from '../models/rules/chargeConsumer.js';
+import { ChargePoolRule } from '../models/rules/chargePool.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
@@ -29,6 +31,8 @@ export default function registerRulesConfig() {
 		abilityBonus: 'NIMBLE.ruleTypes.abilityBonus',
 		applyCondition: 'NIMBLE.ruleTypes.applyCondition',
 		armorClass: 'NIMBLE.ruleTypes.armorClass',
+		chargeConsumer: 'NIMBLE.ruleTypes.chargeConsumer',
+		chargePool: 'NIMBLE.ruleTypes.chargePool',
 		combatMana: 'NIMBLE.ruleTypes.combatMana',
 		conditionImmunity: 'NIMBLE.ruleTypes.conditionImmunity',
 		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
@@ -57,6 +61,8 @@ export default function registerRulesConfig() {
 		abilityBonus: AbilityBonusRule,
 		applyCondition: ApplyConditionRule,
 		armorClass: ArmorClassRule,
+		chargeConsumer: ChargeConsumerRule,
+		chargePool: ChargePoolRule,
 		combatMana: CombatManaRule,
 		conditionImmunity: ConditionImmunityRule,
 		damageBonus: DamageBonusRule,

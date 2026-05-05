@@ -1,3 +1,5 @@
+import { SYSTEM_PATH } from '#utils/systemId.ts';
+
 /**
  * Canonical status-effect IDs for system-managed conditions. The keys here are the
  * source of truth — the dictionaries below are typed against this so adding/renaming
@@ -105,34 +107,34 @@ export default function registerConditionsConfig() {
 	const conditionDefaultImages: Record<StatusEffectId, string> = {
 		blinded: 'icons/svg/blind.svg',
 		bloodied: 'icons/svg/blood.svg',
-		charged: 'systems/nimble/assets/icons/charged.svg',
-		charmed: 'systems/nimble/assets/icons/charmed.svg',
-		concentration: 'systems/nimble/assets/icons/concentration.svg',
-		confused: 'systems/nimble/assets/icons/confused.svg',
-		dazed: 'systems/nimble/assets/icons/dazed.svg',
+		charged: `${SYSTEM_PATH}/assets/icons/charged.svg`,
+		charmed: `${SYSTEM_PATH}/assets/icons/charmed.svg`,
+		concentration: `${SYSTEM_PATH}/assets/icons/concentration.svg`,
+		confused: `${SYSTEM_PATH}/assets/icons/confused.svg`,
+		dazed: `${SYSTEM_PATH}/assets/icons/dazed.svg`,
 		dead: 'icons/svg/skull.svg',
-		despair: 'systems/nimble/assets/icons/despair.svg',
-		distracted: 'systems/nimble/assets/icons/distracted.svg',
-		dying: 'systems/nimble/assets/icons/dying.svg',
+		despair: `${SYSTEM_PATH}/assets/icons/despair.svg`,
+		distracted: `${SYSTEM_PATH}/assets/icons/distracted.svg`,
+		dying: `${SYSTEM_PATH}/assets/icons/dying.svg`,
 		frightened: 'icons/svg/terror.svg',
-		grappled: 'systems/nimble/assets/icons/grappled.svg',
-		hampered: 'systems/nimble/assets/icons//hampered.svg',
-		incapacitated: 'systems/nimble/assets/icons/incapacitated.svg',
+		grappled: `${SYSTEM_PATH}/assets/icons/grappled.svg`,
+		hampered: `${SYSTEM_PATH}/assets/icons/hampered.svg`,
+		incapacitated: `${SYSTEM_PATH}/assets/icons/incapacitated.svg`,
 		invisible: 'icons/svg/invisible.svg',
 		lastStand: 'icons/svg/combat.svg',
 		paralyzed: 'icons/svg/paralysis.svg',
-		petrified: 'systems/nimble/assets/icons/petrified.svg',
+		petrified: `${SYSTEM_PATH}/assets/icons/petrified.svg`,
 		poisoned: 'icons/svg/poison.svg',
 		prone: 'icons/svg/falling.svg',
 		restrained: 'icons/svg/net.svg',
-		riding: 'systems/nimble/assets/icons/riding.svg',
-		silenced: 'systems/nimble/assets/icons/silenced.svg',
-		slowed: 'systems/nimble/assets/icons/slowed.svg',
+		riding: `${SYSTEM_PATH}/assets/icons/riding.svg`,
+		silenced: `${SYSTEM_PATH}/assets/icons/silenced.svg`,
+		slowed: `${SYSTEM_PATH}/assets/icons/slowed.svg`,
 		smoldering: 'icons/svg/fire.svg',
-		stunned: 'systems/nimble/assets/icons/stunned.svg',
-		taunted: 'systems/nimble/assets/icons/taunted.svg',
+		stunned: `${SYSTEM_PATH}/assets/icons/stunned.svg`,
+		taunted: `${SYSTEM_PATH}/assets/icons/taunted.svg`,
 		unconscious: 'icons/svg/unconscious.svg',
-		wounded: 'systems/nimble/assets/icons/wound.svg',
+		wounded: `${SYSTEM_PATH}/assets/icons/wound.svg`,
 	};
 
 	const conditionAliasedConditions = {

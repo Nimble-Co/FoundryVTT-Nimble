@@ -1,182 +1,36 @@
-<script>
+<script lang="ts">
 	import { setContext, untrack } from 'svelte';
 	import localize from '../../utils/localize.js';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
+	import { CLASS_SHEET_TAB_CONFIG, type ClassSheetTabName } from './ClassSheetConstants.js';
+	import { createClassSheetState } from './ClassSheet.state.svelte.js';
+	import type { ClassSheetProps } from '#types/components/ClassSheet.d.ts';
 
+	import ClassProgressionTab from './pages/ClassProgressionTab.svelte';
 	import Editor from './components/Editor.svelte';
 	import ItemHeader from './components/ItemHeader.svelte';
 	import ItemRulesTab from './pages/ItemRulesTab.svelte';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import TagGroup from '../components/TagGroup.svelte';
 
-	function addWeaponProficiency() {
-		item.update({
-			'system.weaponProficiencies': [...weaponProficiencies, ''],
-		});
-	}
+	let { item, sheet }: ClassSheetProps = $props();
 
-	function deleteWeaponProficiency(index) {
-		item.update({
-			'system.weaponProficiencies': weaponProficiencies.filter((_, i) => i !== index),
-		});
-	}
+	const classState = createClassSheetState(() => ({ item, sheet }));
 
-	function updateWeaponProficiency(index, value) {
-		item.update({
-			'system.weaponProficiencies': weaponProficiencies.map((weapon, i) =>
-				i === index ? value : weapon,
-			),
-		});
-	}
+	const snippetsByTab: Record<ClassSheetTabName, () => void> = {
+		description: descriptionTab,
+		config: configTab,
+		progression: progressionTab,
+		rules: rulesTab,
+	};
 
-	function addFeatureGroup() {
-		item.update({
-			'system.groupIdentifiers': [...featureGroups, ''],
-		});
-	}
-
-	function deleteFeatureGroup(index) {
-		item.update({
-			'system.groupIdentifiers': featureGroups.filter((_, i) => i !== index),
-		});
-	}
-
-	function updateFeatureGroup(index, value) {
-		item.update({
-			'system.groupIdentifiers': featureGroups.map((group, i) => (i === index ? value : group)),
-		});
-	}
-
-	function prepareAbilityScoreTagOptions() {
-		return Object.entries(abilityScores).map(([key, label]) => ({
-			label,
-			value: key,
-		}));
-	}
-
-	function prepareArmorOptions() {
-		return Object.entries(armorTypesPlural)
-			.map(([key, label]) => ({ value: key, label }))
-			.sort((a, b) => a.label.localeCompare(b.label));
-	}
-
-	function prepareHitDieTagOptions() {
-		return [4, 6, 8, 10, 12].map((dieSize) => ({
-			label: `d${dieSize}`,
-			value: dieSize,
-		}));
-	}
-
-	function prepareManaRecoveryTypeOptions() {
-		return Object.entries(manaRecoveryTypes).map(([key, label]) => ({
-			label,
-			value: key,
-		}));
-	}
-
-	function prepareSavingThrowTagOptions() {
-		return Object.entries(savingThrows).map(([key, label]) => ({
-			label,
-			value: key,
-		}));
-	}
-
-	async function toggleAdvantageSavingThrow(savingThrow) {
-		await item.update({
-			'system.savingThrows.advantage': savingThrow,
-		});
-	}
-
-	async function toggleArmorProficiency(armorType) {
-		if (armorProficiencies.includes(armorType)) {
-			await item.update({
-				'system.armorProficiencies': armorProficiencies.filter(
-					(armorKey) => armorKey !== armorType,
-				),
-			});
-		} else {
-			await item.update({
-				'system.armorProficiencies': armorProficiencies.concat([armorType]),
-			});
-		}
-	}
-
-	async function toggleDisadvantageSavingThrow(savingThrow) {
-		await item.update({
-			'system.savingThrows.disadvantage': savingThrow,
-		});
-	}
-
-	async function toggleHitDieSize(hitDie) {
-		await item.update({
-			'system.hitDieSize': hitDie,
-		});
-	}
-
-	async function toggleManaRecoveryType(recoveryType) {
-		await item.update({
-			'system.mana.recovery': recoveryType,
-		});
-	}
-
-	async function toggleKeyAbilityScoreOption(abilityScore) {
-		if (keyAbilityScores.includes(abilityScore)) {
-			await item.update({
-				'system.keyAbilityScores': keyAbilityScores.filter(
-					(abilityKey) => abilityKey !== abilityScore,
-				),
-			});
-		} else {
-			await item.update({
-				'system.keyAbilityScores': keyAbilityScores.concat([abilityScore]),
-			});
-		}
-	}
-
-	let { item, sheet } = $props();
-
-	const navigation = [
-		{
-			component: descriptionTab,
-			icon: 'fa-solid fa-file-lines',
-			tooltip: localize('NIMBLE.classSheet.description'),
-			name: 'description',
-		},
-		{
-			component: configTab,
-			icon: 'fa-solid fa-gears',
-			tooltip: localize('NIMBLE.classSheet.config'),
-			name: 'config',
-		},
-		{
-			component: rulesTab,
-			icon: 'fa-solid fa-bolt',
-			tooltip: localize('NIMBLE.classSheet.rules'),
-			name: 'rules',
-		},
-	];
-
-	const { abilityScores, armorTypesPlural, manaRecoveryTypes, saves, savingThrows } = CONFIG.NIMBLE;
-
-	const abilityScoreOptions = prepareAbilityScoreTagOptions();
-	const armorOptions = prepareArmorOptions();
-	const hitDieOptions = prepareHitDieTagOptions();
-	const savingThrowOptions = prepareSavingThrowTagOptions();
-	const manaRecoveryOptions = prepareManaRecoveryTypeOptions();
+	const navigation = CLASS_SHEET_TAB_CONFIG.map((tab) => ({
+		...tab,
+		tooltip: localize(tab.tooltip),
+		component: snippetsByTab[tab.name],
+	}));
 
 	let currentTab = $state(navigation[0]);
-	let resources = $derived(item.reactive.system.resources);
-
-	let advantageSavingThrow = $derived(item.reactive.system.savingThrows.advantage);
-	let armorProficiencies = $derived(item.reactive.system.armorProficiencies);
-
-	let disadvantageSavingThrow = $derived(item.reactive.system.savingThrows.disadvantage);
-
-	let hitDieSize = $derived(item.reactive.system.hitDieSize);
-	let keyAbilityScores = $derived(item.reactive.system.keyAbilityScores);
-	let manaRecoveryType = $derived(item.reactive.system.mana.recovery);
-	let weaponProficiencies = $derived(item.reactive.system.weaponProficiencies);
-	let featureGroups = $derived(item.reactive.system.groupIdentifiers || []);
 
 	setContext(
 		'document',
@@ -230,38 +84,42 @@
 
 			<TagGroup
 				grid={true}
-				options={abilityScoreOptions}
-				selectedOptions={keyAbilityScores}
-				toggleOption={toggleKeyAbilityScoreOption}
-				disabled={keyAbilityScores.length > 1}
+				options={classState.abilityScoreOptions}
+				selectedOptions={item.reactive.system.keyAbilityScores}
+				toggleOption={classState.toggleKeyAbilityScoreOption}
+				disabled={item.reactive.system.keyAbilityScores.length > 1}
 				--nimble-tag-group-grid-columns="repeat(4, 1fr)"
 			/>
 		</section>
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">{saves.advantageSave}</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{classState.saves.advantageSave}
+				</h3>
 			</header>
 
 			<TagGroup
 				grid={true}
-				options={savingThrowOptions}
-				selectedOptions={[advantageSavingThrow]}
-				toggleOption={toggleAdvantageSavingThrow}
+				options={classState.savingThrowOptions}
+				selectedOptions={[item.reactive.system.savingThrows.advantage]}
+				toggleOption={classState.toggleAdvantageSavingThrow}
 				--nimble-tag-group-grid-columns="repeat(4, 1fr)"
 			/>
 		</section>
 
 		<section>
 			<header class="nimble-section-header">
-				<h3 class="nimble-heading" data-heading-variant="field">{saves.disadvantageSave}</h3>
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{classState.saves.disadvantageSave}
+				</h3>
 			</header>
 
 			<TagGroup
 				grid={true}
-				options={savingThrowOptions}
-				selectedOptions={[disadvantageSavingThrow]}
-				toggleOption={toggleDisadvantageSavingThrow}
+				options={classState.savingThrowOptions}
+				selectedOptions={[item.reactive.system.savingThrows.disadvantage]}
+				toggleOption={classState.toggleDisadvantageSavingThrow}
 				--nimble-tag-group-grid-columns="repeat(4, 1fr)"
 			/>
 		</section>
@@ -275,9 +133,9 @@
 
 			<TagGroup
 				grid={true}
-				options={hitDieOptions}
-				selectedOptions={[hitDieSize]}
-				toggleOption={toggleHitDieSize}
+				options={classState.hitDieOptions}
+				selectedOptions={[item.reactive.system.hitDieSize]}
+				toggleOption={classState.toggleHitDieSize}
 				--nimble-tag-group-grid-columns="repeat(7, 1fr)"
 			/>
 		</section>
@@ -307,9 +165,9 @@
 
 				<TagGroup
 					grid={true}
-					options={manaRecoveryOptions}
-					selectedOptions={[manaRecoveryType]}
-					toggleOption={toggleManaRecoveryType}
+					options={classState.manaRecoveryOptions}
+					selectedOptions={[item.reactive.system.mana.recovery]}
+					toggleOption={classState.toggleManaRecoveryType}
 					--nimble-tag-group-grid-columns="repeat(3, 1fr)"
 				/>
 			</section>
@@ -323,9 +181,9 @@
 			</header>
 
 			<TagGroup
-				options={armorOptions}
-				selectedOptions={armorProficiencies}
-				toggleOption={toggleArmorProficiency}
+				options={classState.armorOptions}
+				selectedOptions={item.reactive.system.armorProficiencies}
+				toggleOption={classState.toggleArmorProficiency}
 			/>
 		</section>
 
@@ -341,20 +199,20 @@
 					type="button"
 					data-tooltip="NIMBLE.classSheet.addWeaponProficiency"
 					aria-label={localize('NIMBLE.classSheet.addWeaponProficiency')}
-					onclick={addWeaponProficiency}
+					onclick={classState.addWeaponProficiency}
 				>
 					<i class="fa-solid fa-square-plus"></i>
 				</button>
 			</header>
 
 			<ul class="nimble-weapon-proficiency-list">
-				{#key weaponProficiencies}
-					{#each weaponProficiencies as weapon, index}
+				{#key item.reactive.system.weaponProficiencies}
+					{#each item.reactive.system.weaponProficiencies as weapon, index}
 						<li class="nimble-weapon-proficiency-list__item">
 							<input
 								type="text"
 								value={weapon}
-								onchange={(event) => updateWeaponProficiency(index, event.target.value)}
+								onchange={(event) => classState.updateWeaponProficiency(index, event.target.value)}
 							/>
 
 							<button
@@ -362,7 +220,7 @@
 								data-button-variant="icon"
 								data-tooltip="NIMBLE.classSheet.deleteWeaponProficiency"
 								aria-label={localize('NIMBLE.classSheet.deleteWeaponProficiency')}
-								onclick={() => deleteWeaponProficiency(index)}
+								onclick={() => classState.deleteWeaponProficiency(index)}
 								type="button"
 							>
 								<i class="fa-solid fa-trash"></i>
@@ -389,20 +247,20 @@
 					type="button"
 					data-tooltip="NIMBLE.classSheet.addFeatureGroup"
 					aria-label={localize('NIMBLE.classSheet.addFeatureGroup')}
-					onclick={addFeatureGroup}
+					onclick={classState.addFeatureGroup}
 				>
 					<i class="fa-solid fa-square-plus"></i>
 				</button>
 			</header>
 
 			<ul class="nimble-weapon-proficiency-list">
-				{#key featureGroups}
-					{#each featureGroups as featureGroup, index}
+				{#key item.reactive.system.groupIdentifiers}
+					{#each item.reactive.system.groupIdentifiers ?? [] as featureGroup, index}
 						<li class="nimble-weapon-proficiency-list__item">
 							<input
 								type="text"
 								value={featureGroup}
-								onchange={(event) => updateFeatureGroup(index, event.target.value)}
+								onchange={(event) => classState.updateFeatureGroup(index, event.target.value)}
 							/>
 
 							<button
@@ -410,7 +268,7 @@
 								data-button-variant="icon"
 								data-tooltip="NIMBLE.classSheet.deleteFeatureGroup"
 								aria-label={localize('NIMBLE.classSheet.deleteFeatureGroup')}
-								onclick={() => deleteFeatureGroup(index)}
+								onclick={() => classState.deleteFeatureGroup(index)}
 								type="button"
 							>
 								<i class="fa-solid fa-trash"></i>
@@ -425,7 +283,7 @@
 			</ul>
 		</section>
 
-		{#each resources as resource (resource.identifier)}
+		{#each item.reactive.system.resources as resource (resource.identifier)}
 			<div>
 				{resource.name}
 			</div>
@@ -449,6 +307,10 @@
 			/>
 		</section>
 	{/key}
+{/snippet}
+
+{#snippet progressionTab()}
+	<ClassProgressionTab />
 {/snippet}
 
 {#snippet rulesTab()}
