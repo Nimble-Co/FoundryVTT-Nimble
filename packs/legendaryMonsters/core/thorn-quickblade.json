@@ -10,7 +10,6 @@
 			"damageVulnerabilities": [],
 			"damageImmunities": [],
 			"hp": {
-				"lastStandHp": 30,
 				"max": 125,
 				"temp": 0,
 				"value": 125
@@ -490,6 +489,7 @@
 					"acquireTargetsFromTemplate": false,
 					"showDescription": true
 				},
+				"lastStandHp": 30,
 				"rules": [],
 				"subtype": "lastStand"
 			}
