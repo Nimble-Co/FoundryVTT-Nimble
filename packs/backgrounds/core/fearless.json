@@ -36,7 +36,9 @@
 				"label": "Fearless",
 				"predicate": {},
 				"priority": 1,
-				"conditions": ["frightened"]
+				"conditions": [
+					"frightened"
+				]
 			}
 		],
 		"description": "<p>You are immune to the Frightened condition. +1 Initiative. –1 Armor.</p><hr><p>+1 Initiative [A]</p><p>-1 Armor [A]</p>"
