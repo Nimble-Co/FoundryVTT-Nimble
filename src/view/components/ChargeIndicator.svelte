@@ -78,11 +78,29 @@
 		const itemName = item?.name ?? localize(ChargeUiConfig.unknownItemLocalizationKey);
 		const poolsForItem = getPoolsForItem(actor, itemId);
 
+		const width = 360;
+		const margin = 8;
+		const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+		const estimatedHeight = 220;
+		const left = Math.min(
+			Math.max(margin, rect.left - width - 4),
+			window.innerWidth - width - margin,
+		);
+		const top = Math.min(
+			Math.max(margin, rect.top - estimatedHeight - 4),
+			window.innerHeight - estimatedHeight - margin,
+		);
+
 		const dialog = GenericDialog.getOrCreate(
 			`${localize('NIMBLE.charges.configure')}: ${itemName}`,
 			ConfigureChargesDialog,
 			{ document: actor, pools: poolsForItem },
-			{ icon: 'fa-solid fa-bolt', width: 360, uniqueId: `${actor.id}-charges-${itemId}` },
+			{
+				icon: 'fa-solid fa-bolt',
+				width,
+				uniqueId: `${actor.id}-charges-${itemId}`,
+				position: { top, left },
+			},
 		);
 
 		await dialog.render(true);
