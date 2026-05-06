@@ -52,20 +52,9 @@ interface SpeedBonusSourceData {
 // Type for test instances where we need to access/modify internal properties
 interface SpeedBonusRuleTestInstance extends SpeedBonusRule {
 	value: string;
-	movementType: MovementType;
+	movementType: MovementType | null;
 	disabled: boolean;
 	label: string;
-}
-
-/**
- * Helper to set _source on a rule for testing hasExplicitMovementType()
- */
-function setRuleSource(rule: SpeedBonusRule, source: { movementType?: string }): void {
-	Object.defineProperty(rule, '_source', {
-		value: source,
-		writable: true,
-		configurable: true,
-	});
 }
 
 /**
@@ -135,16 +124,10 @@ function createSpeedBonusRule(
 
 	// Manually set properties since the mock DataModel doesn't do this automatically
 	rule.value = config.value;
-	rule.movementType = config.movementType ?? 'walk';
+	// Null `movementType` is the schema initial — represents a generic walk bonus.
+	rule.movementType = config.movementType ?? null;
 	rule.disabled = config.disabled ?? false;
 	rule.label = config.label ?? 'Test Rule';
-
-	// Override the _source to control hasExplicitMovementType() behavior
-	if (config.movementType !== undefined) {
-		setRuleSource(rule, { movementType: config.movementType });
-	} else {
-		setRuleSource(rule, {});
-	}
 
 	// Override the item getter to return our mock
 	Object.defineProperty(rule, 'item', {
@@ -279,10 +262,8 @@ describe('SpeedBonusRule', () => {
 				},
 				level: 5,
 			}));
-			// Generic formula bonus (no explicit movementType)
+			// Generic formula bonus (no explicit movementType — falls through to walk)
 			const rule = createSpeedBonusRule({ value: '@level' }, actor);
-			// Remove movementType from _source to make it generic
-			setRuleSource(rule, {});
 
 			rule.afterPrepareData();
 

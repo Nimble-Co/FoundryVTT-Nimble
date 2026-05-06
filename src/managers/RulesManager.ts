@@ -133,6 +133,39 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 		} as Record<string, unknown>);
 	}
 
+	async reorderRules(idsInOrder: string[]) {
+		return RulesManager.reorderRules(this.#item, idsInOrder);
+	}
+
+	/**
+	 * Writes `system.rules` reordered to match `idsInOrder`. Rules whose IDs are
+	 * not present in `idsInOrder` are appended in their original relative order
+	 * so an incomplete reorder does not silently drop data.
+	 */
+	static async reorderRules(item: NimbleBaseItem, idsInOrder: string[]) {
+		const system = getSystemWithRules(item);
+		const existing = system.rules ?? [];
+		const byId = new Map(existing.map((r) => [r.id, r]));
+		const seen = new Set<string>();
+
+		const reordered: RuleSource[] = [];
+		for (const id of idsInOrder) {
+			const rule = byId.get(id);
+			if (!rule || seen.has(id)) continue;
+			reordered.push(rule);
+			seen.add(id);
+		}
+		for (const rule of existing) {
+			if (!seen.has(rule.id)) reordered.push(rule);
+		}
+
+		await item.update({
+			'system.rules': reordered,
+		} as Record<string, unknown>);
+
+		return true;
+	}
+
 	async addRule(data: Record<string, unknown>, options: RulesManager.AddOptions = {}) {
 		return RulesManager.addRule(this.#item, data, options);
 	}
@@ -147,11 +180,9 @@ class RulesManager extends Map<string, InstanceType<typeof NimbleBaseRule>> {
 	) {
 		const system = getSystemWithRules(item);
 		const existingRules = system.rules;
-		const size: number = existingRules.length;
 
 		// Set defaults
 		options.update ??= true;
-		data.name ??= `New Rule ${size + 1}`;
 
 		// TODO: Add validation for new data
 
