@@ -13,7 +13,7 @@ interface ClassFeatureIndexEntry {
 
 /**
  * Index structure for fast class feature lookups.
- * Maps classIdentifier → level → array of feature entries.
+ * Maps classIdentifier (or groupName for group-based features) → level → array of feature entries.
  */
 export type ClassFeatureIndex = Map<string, Map<number, ClassFeatureIndexEntry[]>>;
 
@@ -51,31 +51,38 @@ export interface GetClassFeaturesOptions {
  * Builds a class feature index by scanning all packs once.
  * Call this when opening the character creator, then use getClassFeaturesFromIndex
  * for instant lookups.
+ *
+ * Features are indexed by:
+ * - Their `class` field if set (e.g., "berserker")
+ * - Their `group` field if class is not set (e.g., "savage-arsenal")
+ *
+ * This allows features without a class to be looked up by group name,
+ * which can then be matched against a class's groupIdentifiers.
  */
 export async function buildClassFeatureIndex(): Promise<ClassFeatureIndex> {
 	const index: ClassFeatureIndex = new Map();
 
-	// Track seen UUIDs per class+level to avoid duplicates
+	// Track seen UUIDs per key+level to avoid duplicates
 	const seen = new Map<string, Set<string>>();
 
 	/**
-	 * Adds a feature entry to the index for a specific class and level.
+	 * Adds a feature entry to the index for a specific key (class or group) and level.
 	 * Deduplicates by UUID to handle features with both gainedAtLevel and gainedAtLevels.
 	 */
-	function addToIndex(classId: string, level: number, entry: ClassFeatureIndexEntry): boolean {
-		const key = `${classId}:${level}`;
-		if (!seen.has(key)) {
-			seen.set(key, new Set());
+	function addToIndex(key: string, level: number, entry: ClassFeatureIndexEntry): boolean {
+		const lookupKey = `${key}:${level}`;
+		if (!seen.has(lookupKey)) {
+			seen.set(lookupKey, new Set());
 		}
-		if (seen.get(key)!.has(entry.uuid)) {
+		if (seen.get(lookupKey)!.has(entry.uuid)) {
 			return false; // Already added
 		}
-		seen.get(key)!.add(entry.uuid);
+		seen.get(lookupKey)!.add(entry.uuid);
 
-		if (!index.has(classId)) {
-			index.set(classId, new Map());
+		if (!index.has(key)) {
+			index.set(key, new Map());
 		}
-		const levelMap = index.get(classId)!;
+		const levelMap = index.get(key)!;
 		if (!levelMap.has(level)) {
 			levelMap.set(level, []);
 		}
@@ -83,32 +90,53 @@ export async function buildClassFeatureIndex(): Promise<ClassFeatureIndex> {
 		return true;
 	}
 
-	// Process world items
-	for (const item of game.items) {
-		if (item.type !== 'feature') continue;
-		const featureItem = item as NimbleFeatureItem;
-		const system = featureItem.system;
+	/**
+	 * Processes a feature and adds it to the index.
+	 * Features with a class are indexed by class.
+	 * Features without a class but with a group are indexed by group.
+	 */
+	function processFeature(
+		uuid: string,
+		system: {
+			class?: string;
+			subclass?: boolean | string;
+			gainedAtLevel?: number | null;
+			gainedAtLevels?: number[];
+			group?: string;
+			selectionCountByLevel?: Record<string, number>;
+		},
+	): void {
+		// Skip subclass features
+		if (system.subclass) return;
 
-		// Skip features without a class or with a subclass (those are subclass features)
-		if (!system.class || system.subclass) continue;
+		// Determine the index key: use class if set, otherwise use group
+		const indexKey = system.class || system.group;
+		if (!indexKey) return;
 
 		const entry: ClassFeatureIndexEntry = {
-			uuid: featureItem.uuid,
+			uuid,
 			group: system.group || 'ungrouped',
 			selectionCountByLevel: system.selectionCountByLevel ?? {},
 		};
 
 		// Add to index for gainedAtLevel
 		if (system.gainedAtLevel) {
-			addToIndex(system.class, system.gainedAtLevel, entry);
+			addToIndex(indexKey, system.gainedAtLevel, entry);
 		}
 
 		// Add to index for each level in gainedAtLevels
 		if (system.gainedAtLevels) {
 			for (const level of system.gainedAtLevels) {
-				addToIndex(system.class, level, entry);
+				addToIndex(indexKey, level, entry);
 			}
 		}
+	}
+
+	// Process world items
+	for (const item of game.items) {
+		if (item.type !== 'feature') continue;
+		const featureItem = item as NimbleFeatureItem;
+		processFeature(featureItem.uuid, featureItem.system);
 	}
 
 	// Process compendium packs
@@ -129,27 +157,9 @@ export async function buildClassFeatureIndex(): Promise<ClassFeatureIndex> {
 		for (const indexEntry of packIndex) {
 			const packEntry = indexEntry as FeatureIndexEntry;
 			if (packEntry.type !== 'feature') continue;
+			if (!packEntry.system) continue;
 
-			const system = packEntry.system;
-			if (!system?.class || system.subclass) continue;
-
-			const entry: ClassFeatureIndexEntry = {
-				uuid: packEntry.uuid,
-				group: system.group || 'ungrouped',
-				selectionCountByLevel: system.selectionCountByLevel ?? {},
-			};
-
-			// Add to index for gainedAtLevel
-			if (system.gainedAtLevel) {
-				addToIndex(system.class, system.gainedAtLevel, entry);
-			}
-
-			// Add to index for each level in gainedAtLevels
-			if (system.gainedAtLevels) {
-				for (const level of system.gainedAtLevels) {
-					addToIndex(system.class, level, entry);
-				}
-			}
+			processFeature(packEntry.uuid, packEntry.system);
 		}
 	}
 
@@ -190,12 +200,18 @@ function resolveSelectionCount(entries: ClassFeatureIndexEntry[], level: number)
 /**
  * Gets class features using a pre-built index for instant lookups.
  * Use this after building the index with buildClassFeatureIndex().
+ *
+ * @param index - The pre-built feature index
+ * @param classIdentifier - The class identifier (e.g., "berserker")
+ * @param level - The level to get features for
+ * @param groupIdentifiers - Optional array of group identifiers to also look up (e.g., ["savage-arsenal"])
  */
 export default async function getClassFeaturesFromIndex(
 	index: ClassFeatureIndex,
 	classIdentifier: string,
 	level: number,
 	options: GetClassFeaturesOptions = {},
+	groupIdentifiers: string[] = [],
 ): Promise<ClassFeatureResult> {
 	const result: ClassFeatureResult = {
 		autoGrant: [],
@@ -206,11 +222,33 @@ export default async function getClassFeaturesFromIndex(
 		return result;
 	}
 
-	// Instant lookup from index
-	const levelMap = index.get(classIdentifier);
-	const entries = levelMap?.get(level) ?? [];
+	// Collect entries from the class identifier and all group identifiers
+	const allEntries: ClassFeatureIndexEntry[] = [];
+	const seenUuids = new Set<string>();
 
-	if (entries.length === 0) {
+	// Look up by class identifier
+	const classLevelMap = index.get(classIdentifier);
+	const classEntries = classLevelMap?.get(level) ?? [];
+	for (const entry of classEntries) {
+		if (!seenUuids.has(entry.uuid)) {
+			seenUuids.add(entry.uuid);
+			allEntries.push(entry);
+		}
+	}
+
+	// Look up by each group identifier
+	for (const groupId of groupIdentifiers) {
+		const groupLevelMap = index.get(groupId);
+		const groupEntries = groupLevelMap?.get(level) ?? [];
+		for (const entry of groupEntries) {
+			if (!seenUuids.has(entry.uuid)) {
+				seenUuids.add(entry.uuid);
+				allEntries.push(entry);
+			}
+		}
+	}
+
+	if (allEntries.length === 0) {
 		return result;
 	}
 
@@ -218,33 +256,38 @@ export default async function getClassFeaturesFromIndex(
 
 	// Fetch the matching feature documents
 	const features = await Promise.all(
-		entries.map((entry) => fromUuid(entry.uuid as `Item.${string}`)),
+		allEntries.map((entry) => fromUuid(entry.uuid as `Item.${string}`)),
 	);
 
 	// Group by category, keeping the backing index entries in parallel so we can
 	// compute per-group selection counts after filtering out owned features.
+	// Items are identified by UUID — no name-based deduplication so that distinct
+	// world items with the same name each appear as separate entries.
 	const entriesByGroup = new Map<string, ClassFeatureIndexEntry[]>();
 	const featuresByGroup = new Map<string, NimbleFeatureItem[]>();
 
 	for (let i = 0; i < features.length; i++) {
 		const feature = features[i];
 		if (!feature) continue;
-		if (ownedUuids.has(entries[i].uuid)) continue;
+		if (ownedUuids.has(allEntries[i].uuid)) continue;
 
 		const featureItem = feature as NimbleFeatureItem;
-		const groupName = entries[i].group;
+		const groupName = allEntries[i].group;
 
 		if (!featuresByGroup.has(groupName)) {
 			featuresByGroup.set(groupName, []);
 			entriesByGroup.set(groupName, []);
 		}
+
 		featuresByGroup.get(groupName)!.push(featureItem);
-		entriesByGroup.get(groupName)!.push(entries[i]);
+		entriesByGroup.get(groupName)!.push(allEntries[i]);
 	}
 
-	// Categorize groups: names ending with -progression are auto-grant, others are selection
+	// Categorize groups:
+	// - Features with no group ('ungrouped') or a -progression group are auto-grant
+	// - Features with an explicit named group (e.g. 'savage-arsenal') are selection groups
 	for (const [groupName, groupFeatures] of featuresByGroup) {
-		if (groupName.endsWith('-progression')) {
+		if (groupName === 'ungrouped' || groupName.endsWith('-progression')) {
 			result.autoGrant.push(...groupFeatures);
 		} else {
 			const groupEntries = entriesByGroup.get(groupName) ?? [];

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ChargeUiConfig } from '#utils/chargeUiConfig.js';
 	import calculateHeaderTextColor from '../dataPreparationHelpers/calculateHeaderTextColor.js';
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
@@ -12,6 +13,7 @@
 	const tempHpRemoved = $derived(system.tempHpRemoved);
 	const manaRestored = $derived(system.manaRestored);
 	const woundsRecovered = $derived(system.woundsRecovered);
+	const chargePoolsRecovered = $derived(system.chargePoolsRecovered ?? []);
 
 	const headerBackgroundColor = $derived(messageDocument.reactive.author.color);
 	const headerTextColor = $derived(calculateHeaderTextColor(headerBackgroundColor));
@@ -26,7 +28,11 @@
 
 	// Check if anything was recovered
 	const hasRecovery = $derived(
-		hitDiceDisplay || hpRestored > 0 || manaRestored > 0 || woundsRecovered > 0,
+		hitDiceDisplay ||
+			hpRestored > 0 ||
+			manaRestored > 0 ||
+			woundsRecovered > 0 ||
+			chargePoolsRecovered.length > 0,
 	);
 </script>
 
@@ -85,6 +91,14 @@
 						<span class="recovery-item__value recovery-item__value--wounds">{woundsRecovered}</span>
 					</div>
 				{/if}
+
+				{#each chargePoolsRecovered as pool}
+					<div class="recovery-item">
+						<i class="recovery-item__icon {pool.icon ?? ChargeUiConfig.defaultRecoveryIcon}"></i>
+						<span class="recovery-item__label">{pool.label}</span>
+						<span class="recovery-item__value recovery-item__value--charges">+{pool.amount}</span>
+					</div>
+				{/each}
 			</div>
 		{:else}
 			<div class="no-recovery-message">{CONFIG.NIMBLE.safeRest.alreadyFullyRested}</div>
@@ -147,6 +161,10 @@
 
 			&--wounds {
 				color: hsl(30, 70%, 45%);
+			}
+
+			&--charges {
+				color: hsl(45, 70%, 40%);
 			}
 		}
 	}

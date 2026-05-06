@@ -14,6 +14,8 @@ interface GenericDialogOptions {
 	resizable?: boolean;
 	/** Unique ID for singleton behavior - only one dialog with this ID can be open at a time */
 	uniqueId?: string;
+	/** Caller-supplied viewport position. When omitted, the dialog is centered horizontally near the top. */
+	position?: { top?: number; left?: number };
 }
 
 export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2) {
@@ -39,12 +41,14 @@ export default class GenericDialog extends SvelteApplicationMixin(ApplicationV2)
 		options: GenericDialogOptions = {},
 	) {
 		const width = options.width ?? 288;
+		const top = options.position?.top ?? Math.round(window.innerHeight * 0.1);
+		const left = options.position?.left ?? Math.round((window.innerWidth - width) / 2);
 		super(
 			foundry.utils.mergeObject(options as object, {
 				position: {
 					width,
-					top: Math.round(window.innerHeight * 0.1),
-					left: Math.round((window.innerWidth - width) / 2),
+					top,
+					left,
 				},
 				window: {
 					icon: options.icon ?? 'fa-solid fa-note',

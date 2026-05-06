@@ -24,7 +24,8 @@
 			"showDescription": true,
 			"targets": {
 				"count": 1,
-				"restrictions": ""
+				"restrictions": "",
+				"attackType": "reach"
 			},
 			"template": {
 				"length": 1,

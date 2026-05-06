@@ -2,7 +2,12 @@ import { DamageRoll } from '../../../dice/DamageRoll.js';
 import type { NimbleCharacter } from '../../../documents/actor/character.js';
 import ItemActivationConfigDialog from '../../../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import { getPrimaryDamageFormulaFromActivationEffects } from '../../../utils/activationEffects.js';
-import { getUnarmedDamageFormula, hasUnarmedProficiency } from '../../../utils/attackUtils.js';
+import {
+	getDamageBonusFormulas,
+	getDamageBonusTotal,
+	getUnarmedDamageFormula,
+	hasUnarmedProficiency,
+} from '../../../utils/attackUtils.js';
 import { evaluateFormula as evalFormula } from '../../../utils/evaluateFormula.js';
 import localize from '../../../utils/localize.js';
 import sortItems from '../../../utils/sortItems.js';
@@ -172,13 +177,13 @@ export function createAttackPanelState(
 		let rollFormula = getUnarmedDamageFormula(actor);
 		const canCrit = hasUnarmedProficiency(actor); // Only characters proficient with unarmed (e.g., Zephyr with Swift Fists) can crit
 
-		// Apply melee damage bonus (e.g., Reverberating Strikes)
-		const actorSystem = actor.system as {
-			meleeDamageBonus?: { value: number; damageType: string };
-		};
-		const meleeDamageBonus = actorSystem.meleeDamageBonus?.value ?? 0;
+		// Apply damage bonuses (unarmed strikes are melee + weapon + bludgeoning)
+		const meleeDamageBonus = getDamageBonusTotal(actor, 'melee', 'weapon', 'bludgeoning');
 		if (meleeDamageBonus > 0) {
 			rollFormula = `${rollFormula} + ${meleeDamageBonus}`;
+		}
+		for (const diceFormula of getDamageBonusFormulas(actor, 'melee', 'weapon', 'bludgeoning')) {
+			rollFormula = `${rollFormula} + ${diceFormula}`;
 		}
 
 		const unarmedItem = {

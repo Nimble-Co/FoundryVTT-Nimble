@@ -32,7 +32,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>Your Combat Dice are now d8s.</p><hr><p>Level 5: d8</p><p>Level 9: d10</p><p>Level 13: d12</p><p>Level 17: d20</p>",
+		"description": "<p>Your Combat Dice are now d8s.</p><hr><p>Level 5: Your Combat Dice are now d8s</p><p>Level 9: Your Combat Dice are now d10s</p><p>Level 13: Your Combat Dice are now d12s</p><p>Level 17: Your Combat Dice are now d20s</p>",
 		"featureType": "class",
 		"class": "commander",
 		"group": "commander-progression",

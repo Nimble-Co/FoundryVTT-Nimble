@@ -33,7 +33,7 @@
 				"width": 1
 			}
 		},
-		"description": "<p>If you are Raging at the beginning of your turn, roll 1 Fury Die for free.</p><hr><p>Level 1: Fury Die is a d4</p><p>Level 6: Fury Die is a d6</p><p>Level 9: Fury Die is a d8</p><p>Level 13: Fury Die is a d10</p><p>Level 117: Fury Die is a d12</p>",
+		"description": "<p>If you are Raging at the beginning of your turn, roll 1 Fury Die for free.</p><hr><p>Level 1: Fury Die is a d4</p><p>Level 6: Your Fury Dice are now d6s</p><p>Level 9: Your Fury Dice are now d8s</p><p>Level 13: Your Fury Dice are now d10s</p><p>Level 17: Your Fury Dice are now d12s</p>",
 		"featureType": "class",
 		"class": "berserker",
 		"group": "berserker-progression",

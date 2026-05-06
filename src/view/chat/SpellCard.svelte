@@ -4,6 +4,7 @@
 
 	import CardBodyHeader from './components/CardBodyHeader.svelte';
 	import CardHeader from './components/CardHeader.svelte';
+	import ChargeConsumptionNode from './components/ChargeConsumptionNode.svelte';
 	import ItemCardEffects from './components/ItemCardEffects.svelte';
 	import Targets from './components/Targets.svelte';
 
@@ -104,6 +105,8 @@
 	{/if}
 
 	<ItemCardEffects />
+
+	<ChargeConsumptionNode />
 
 	{#if hasUpcast}
 		<section class="nimble-card-section nimble-upcast-indicator">

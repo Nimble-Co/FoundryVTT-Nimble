@@ -3,9 +3,9 @@
 
   display: grid;
   grid-template-areas:
-    "img name configureButton deleteButton"
-    "img meta configureButton deleteButton";
-  grid-template-columns: 2rem minmax(0, 1fr) max-content max-content;
+    "img name charges configureButton deleteButton"
+    "img meta charges configureButton deleteButton";
+  grid-template-columns: 2rem minmax(0, 1fr) max-content max-content max-content;
   grid-template-rows: repeat(2, max-content);
   align-items: center;
   gap: 0.125rem 0.5rem;
@@ -28,11 +28,11 @@
 
   &--actor-inventory {
     grid-template-areas:
-      "img name quantity configureButton deleteButton"
-      "img name quantity configureButton deleteButton";
+      "img name quantity charges configureButton deleteButton"
+      "img name quantity charges configureButton deleteButton";
     grid-template-columns:
       2rem minmax(0, 1fr)
-      fit-content fit-content fit-content;
+      fit-content fit-content fit-content fit-content;
     grid-template-rows: repeat(2, max-content);
   }
 
@@ -95,15 +95,15 @@
   &--no-meta {
     --nimble-document-card-name-alignment: "center";
 
-    grid-template-areas: "img name configureButton deleteButton";
+    grid-template-areas: "img name charges configureButton deleteButton";
     grid-template-rows: max-content;
   }
 
   &--no-meta.nimble-document-card--actor-inventory {
-    grid-template-areas: "img name quantity configureButton deleteButton";
+    grid-template-areas: "img name quantity charges configureButton deleteButton";
     grid-template-columns:
       2rem minmax(0, 1fr)
-      fit-content fit-content fit-content;
+      fit-content fit-content fit-content fit-content;
   }
 
   &--no-meta.nimble-document-card--character-creator {
@@ -111,14 +111,18 @@
   }
 
   &--no-meta.nimble-document-card--no-image {
-    grid-template-areas: "name configureButton deleteButton";
+    grid-template-areas: "name charges configureButton deleteButton";
   }
 
   &--no-meta.nimble-document-card--monster-sheet {
     display: flex;
     align-items: center;
-    gap: 0;
+    gap: 0.5rem;
     padding-inline-end: 0.25rem;
+
+    .nimble-document-card__charges {
+      margin-inline-start: auto;
+    }
   }
 
   &--no-meta.nimble-document-card--monster-sheet.nimble-document-card--no-image {
@@ -343,6 +347,14 @@
     text-align: center;
     line-height: 1;
     height: 1.5rem;
+  }
+
+  &__charges {
+    grid-area: charges;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.25rem;
   }
 }
 

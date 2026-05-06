@@ -1,0 +1,94 @@
+name: Nimble - Rolling Dev Release
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: dev-release
+  cancel-in-progress: true
+
+env:
+  node_version: 22
+  dev_tag: latest-dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ env.node_version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.node_version }}
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+
+    - name: Cache pnpm store
+      uses: actions/cache@v4
+      with:
+        path: ~/.local/share/pnpm/store/v10
+        key: pnpm-dev-${{ github.sha }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          pnpm-dev-
+
+    - name: Install Dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Rebrand for dev build
+      run: node ./build/dev-rebrand.mjs
+
+    - name: Build System
+      run: pnpm build
+
+    - name: Compute dev version
+      id: dev_version
+      run: |
+        base_version=$(node -p "require('./package.json').version")
+        short_sha=$(echo "${{ github.sha }}" | cut -c1-7)
+        dev_version="${base_version}-dev.${{ github.run_number }}+${short_sha}"
+        echo "version=${dev_version}" >> "$GITHUB_OUTPUT"
+        echo "short_sha=${short_sha}" >> "$GITHUB_OUTPUT"
+        echo "Dev version: ${dev_version}"
+
+    - name: Substitute Manifest and Download Links For Dev Build
+      uses: microsoft/variable-substitution@v1
+      with:
+        files: './dist/system.json'
+      env:
+        version: ${{ steps.dev_version.outputs.version }}
+        url: https://github.com/${{ github.repository }}
+        manifest: https://github.com/${{ github.repository }}/releases/download/${{ env.dev_tag }}/system.json
+        download: https://github.com/${{ github.repository }}/releases/download/${{ env.dev_tag }}/nimble-dev.zip
+
+    - name: Zip Files
+      working-directory: ./dist
+      run: zip -r ./nimble-dev.zip ./*
+
+    - name: Update Rolling Dev Release
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ env.dev_tag }}
+        commit: ${{ github.sha }}
+        name: Development Build
+        allowUpdates: true
+        removeArtifacts: true
+        prerelease: true
+        makeLatest: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+        artifacts: './dist/system.json,./dist/nimble-dev.zip'
+        body: |
+          Rolling development build from the `dev` branch. **Unstable — for testing only.**
+
+          - Version: `${{ steps.dev_version.outputs.version }}`
+          - Commit: [`${{ steps.dev_version.outputs.short_sha }}`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+          - Built: ${{ github.event.head_commit.timestamp }}
+
+          Install in Foundry via Manifest URL:
+          ```
+          https://github.com/${{ github.repository }}/releases/download/${{ env.dev_tag }}/system.json
+          ```

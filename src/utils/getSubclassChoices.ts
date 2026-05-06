@@ -1,15 +1,24 @@
 /**
  * Get all available subclass choices filtered by parent class
  * @param parentClassIdentifier The identifier of the parent class to filter by
- * @returns Array of subclass objects with uuid, name, img, and system.parentClass
+ * @returns Array of subclass objects with uuid, name, img, description, and system.parentClass
  */
-export default async function getSubclassChoices(
-	parentClassIdentifier: string,
-): Promise<Array<{ uuid: string; name: string; img: string; system: { parentClass: string } }>> {
+export default async function getSubclassChoices(parentClassIdentifier: string): Promise<
+	Array<{
+		uuid: string;
+		name: string;
+		img: string;
+		description: string;
+		identifier: string;
+		system: { parentClass: string };
+	}>
+> {
 	const subclasses: Array<{
 		uuid: string;
 		name: string;
 		img: string;
+		description: string;
+		identifier: string;
 		system: { parentClass: string };
 	}> = [];
 
@@ -24,6 +33,10 @@ export default async function getSubclassChoices(
 			uuid: item.uuid,
 			name: item.name,
 			img: item.img as string,
+			description: subclass.system.description || '',
+			identifier: (item.name as string & { slugify(opts: { strict: boolean }): string }).slugify({
+				strict: true,
+			}),
 			system: {
 				parentClass: subclass.system.parentClass,
 			},
@@ -56,6 +69,10 @@ export default async function getSubclassChoices(
 					uuid: entry.uuid,
 					name: entry.name,
 					img: entry.img ?? 'icons/svg/item-bag.svg',
+					description: document.system.description || '',
+					identifier: (
+						entry.name as string & { slugify(opts: { strict: boolean }): string }
+					).slugify({ strict: true }),
 					system: {
 						parentClass: document.system.parentClass,
 					},

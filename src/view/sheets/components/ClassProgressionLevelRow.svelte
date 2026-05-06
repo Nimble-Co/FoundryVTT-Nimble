@@ -1,0 +1,542 @@
+<script lang="ts">
+	import type { ClassProgressionLevelRowProps } from '#types/components/ClassProgressionTab.d.ts';
+	import localize from '#utils/localize.js';
+	import { createClassProgressionLevelRowState } from './ClassProgressionLevelRow.state.svelte.js';
+
+	let {
+		level,
+		levelData,
+		abilityScoreEntry,
+		isSubclassLevel,
+		classIdentifier,
+		className,
+		keyAbilityScores,
+		onFeatureClick,
+		onAddFeature,
+		getSourceTag,
+		onDeleteWorldItem,
+	}: ClassProgressionLevelRowProps = $props();
+
+	const state = createClassProgressionLevelRowState(() => ({
+		level,
+		levelData,
+		abilityScoreEntry,
+		isSubclassLevel,
+		classIdentifier,
+		className,
+		keyAbilityScores,
+		onFeatureClick,
+		onAddFeature,
+		onDeleteWorldItem,
+	}));
+</script>
+
+<article
+	class="class-progression-level-row"
+	class:class-progression-level-row--empty={!state.isExpandable}
+	class:class-progression-level-row--expanded={state.isExpanded}
+	class:class-progression-level-row--expandable={state.isExpandable}
+>
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div
+		class="class-progression-level-row__header"
+		onclick={state.isExpandable ? state.toggleExpanded : undefined}
+	>
+		<span class="class-progression-level-row__level-badge">
+			{level}
+		</span>
+
+		<div class="class-progression-level-row__summary">
+			{#if state.hasFeatures || state.isEpicBoonLevel}
+				<span class="class-progression-level-row__feature-summary">
+					{state.featureSummary}
+				</span>
+			{:else if isSubclassLevel && !abilityScoreEntry}
+				<span class="class-progression-level-row__feature-summary">
+					{localize('NIMBLE.classSheet.progressionSubclassFeature')}
+				</span>
+			{:else if abilityScoreEntry && !isSubclassLevel}
+				<span class="class-progression-level-row__feature-summary">
+					{localize('NIMBLE.classSheet.progressionAbilityScoreIncrease')}
+				</span>
+			{:else if abilityScoreEntry && isSubclassLevel}
+				<span class="class-progression-level-row__feature-summary">
+					{localize('NIMBLE.classSheet.progressionSubclassFeatureAndAsi')}
+				</span>
+			{:else}
+				<span class="class-progression-level-row__empty-text">
+					{localize('NIMBLE.classSheet.progressionNoFeatures')}
+				</span>
+			{/if}
+		</div>
+
+		<div class="class-progression-level-row__badges">
+			{#if abilityScoreEntry}
+				<span
+					class="class-progression-level-row__badge"
+					data-type={abilityScoreEntry.statIncreaseType}
+				>
+					{#if abilityScoreEntry.statIncreaseType === 'primary'}
+						{localize('NIMBLE.classSheet.progressionPrimary')}
+					{:else if abilityScoreEntry.statIncreaseType === 'secondary'}
+						{localize('NIMBLE.classSheet.progressionSecondary')}
+					{:else if abilityScoreEntry.statIncreaseType === 'capstone'}
+						{localize('NIMBLE.classSheet.progressionCapstone')}
+					{/if}
+				</span>
+			{/if}
+
+			{#if isSubclassLevel}
+				<span
+					class="class-progression-level-row__badge class-progression-level-row__badge--subclass"
+				>
+					{localize('NIMBLE.classSheet.progressionSubclassLevel')}
+				</span>
+			{/if}
+		</div>
+
+		<button
+			type="button"
+			class="class-progression-level-row__add-btn"
+			onclick={state.handleAddFeature}
+			aria-label={localize('NIMBLE.classSheet.progressionAddFeatureAtLevel', { level })}
+			data-tooltip={localize('NIMBLE.classSheet.progressionAddFeatureAtLevel', { level })}
+		>
+			<i class="fa-solid fa-plus"></i>
+		</button>
+
+		{#if state.isExpandable}
+			<i
+				class="fa-solid fa-chevron-down class-progression-level-row__expand-icon"
+				class:class-progression-level-row__expand-icon--expanded={state.isExpanded}
+			></i>
+		{/if}
+	</div>
+
+	{#if state.isExpanded && state.isExpandable}
+		<div class="class-progression-level-row__content">
+			{#if abilityScoreEntry}
+				<div class="class-progression-level-row__info-block">
+					<div class="class-progression-level-row__info-icon-wrapper">
+						<i class="fa-solid fa-arrow-up class-progression-level-row__info-icon"></i>
+					</div>
+					<p class="class-progression-level-row__info-text">
+						{@html state.statIncreaseDescription}
+					</p>
+				</div>
+			{/if}
+
+			{#if levelData.selectionGroups.size > 0}
+				{#each [...levelData.selectionGroups.keys()] as groupName (groupName)}
+					<div class="class-progression-level-row__info-block">
+						<div class="class-progression-level-row__info-icon-wrapper">
+							<i class="fa-solid fa-list-check class-progression-level-row__info-icon"></i>
+						</div>
+						<p class="class-progression-level-row__info-text">
+							<strong>{state.formatGroupName(groupName)}.</strong>
+							{localize('NIMBLE.classSheet.progressionChooseFromBelow')}
+						</p>
+					</div>
+				{/each}
+			{/if}
+
+			{#if state.isEpicBoonLevel}
+				<div class="class-progression-level-row__info-block">
+					<div class="class-progression-level-row__info-icon-wrapper">
+						<i class="fa-solid fa-crown class-progression-level-row__info-icon"></i>
+					</div>
+					<p class="class-progression-level-row__info-text">
+						{@html localize('NIMBLE.classSheet.progressionEpicBoon')}
+					</p>
+				</div>
+			{/if}
+
+			{#if isSubclassLevel}
+				<div class="class-progression-level-row__info-block">
+					<div class="class-progression-level-row__info-icon-wrapper">
+						<i class="fa-solid fa-star class-progression-level-row__info-icon"></i>
+					</div>
+					<p class="class-progression-level-row__info-text">
+						{#if level === 3}
+							{@html localize('NIMBLE.classSheet.progressionChooseSubclass', { className })}
+						{:else}
+							{@html localize('NIMBLE.classSheet.progressionGainSubclassFeature', { className })}
+						{/if}
+					</p>
+				</div>
+			{/if}
+
+			{#if levelData.autoGrant.length > 0}
+				{#each levelData.autoGrant as feature (feature.uuid)}
+					{@const levelDescription = state.levelDescriptions.get(feature.uuid) ?? ''}
+					{@const sourceTag = getSourceTag(feature.uuid)}
+					<div class="class-progression-level-row__feature">
+						<img src={feature.img} alt="" class="class-progression-level-row__feature-img" />
+						<div class="class-progression-level-row__feature-content">
+							<div class="class-progression-level-row__feature-title-row">
+								<button
+									type="button"
+									class="class-progression-level-row__feature-header nimble-u-unstyled-button"
+									onclick={(e) => state.handleFeatureClick(e, feature)}
+								>
+									<h4 class="class-progression-level-row__feature-name">{feature.name}</h4>
+									<i class="fa-solid fa-external-link class-progression-level-row__link-icon"></i>
+								</button>
+								{#if sourceTag}
+									<span
+										class="class-progression-level-row__source-tag"
+										data-source={sourceTag}
+										data-tooltip={sourceTag === 'world'
+											? localize('NIMBLE.classSheet.progressionSourceTagWorldTooltip')
+											: localize('NIMBLE.classSheet.progressionSourceTagPackTooltip')}
+									>
+										{localize(
+											sourceTag === 'world'
+												? 'NIMBLE.classSheet.progressionSourceTagWorldLabel'
+												: 'NIMBLE.classSheet.progressionSourceTagPackLabel',
+										)}
+									</span>
+								{/if}
+								{#if sourceTag === 'world'}
+									<button
+										type="button"
+										class="nimble-button class-progression-level-row__delete-btn"
+										data-button-variant="icon"
+										aria-label={localize('NIMBLE.classSheet.progressionDeleteWorldItemTooltip')}
+										data-tooltip={localize('NIMBLE.classSheet.progressionDeleteWorldItemTooltip')}
+										onclick={(e) => state.handleDeleteWorldItem(e, feature)}
+									>
+										<i class="fa-solid fa-trash"></i>
+									</button>
+								{/if}
+							</div>
+							{#if levelDescription}
+								<div class="class-progression-level-row__feature-desc">
+									{@html levelDescription}
+								</div>
+							{/if}
+						</div>
+					</div>
+				{/each}
+			{/if}
+		</div>
+	{/if}
+</article>
+
+<style lang="scss">
+	.class-progression-level-row {
+		display: flex;
+		flex-direction: column;
+		border-radius: 4px;
+		border: 1px solid var(--nimble-card-border-color);
+		background: var(--nimble-box-background-color);
+		color: inherit;
+		overflow: hidden;
+
+		&--empty {
+			opacity: 0.5;
+		}
+
+		&--expandable &__header {
+			cursor: pointer;
+
+			&:hover {
+				background: var(--nimble-input-background-color);
+			}
+		}
+
+		&__header {
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+			padding: 0.5rem 0.625rem;
+			background: var(--nimble-secondary-navigation-background);
+			color: inherit;
+			text-align: left;
+			width: 100%;
+			cursor: default;
+			transition: background 0.15s ease;
+			min-height: 2.5rem;
+		}
+
+		&__level-badge {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.75rem;
+			height: 1.75rem;
+			background: var(--nimble-navigation-background-color);
+			color: var(--nimble-navigation-text-color);
+			border-radius: 50%;
+			font-weight: bold;
+			font-size: var(--nimble-xs-text);
+			flex-shrink: 0;
+		}
+
+		&__summary {
+			flex: 1;
+			min-width: 0;
+			text-align: left;
+		}
+
+		&__feature-summary {
+			font-size: var(--nimble-sm-text);
+			font-weight: 500;
+			line-height: 1.4;
+			color: var(--nimble-dark-text-color);
+		}
+
+		&__badges {
+			display: flex;
+			flex-shrink: 0;
+			gap: 0.375rem;
+		}
+
+		&__badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.25rem;
+			padding: 0.1875rem 0.5rem;
+			border-radius: 3px;
+			font-size: 0.6875rem;
+			font-weight: 600;
+			white-space: nowrap;
+			text-transform: uppercase;
+			letter-spacing: 0.02em;
+
+			&[data-type='primary'] {
+				background: var(--nimble-badge-primary-bg);
+				color: white;
+			}
+
+			&[data-type='secondary'] {
+				background: var(--nimble-badge-secondary-bg);
+				color: white;
+			}
+
+			&[data-type='capstone'] {
+				background: var(--nimble-badge-capstone-bg);
+				color: white;
+			}
+
+			&--subclass {
+				background: var(--nimble-badge-subclass-bg);
+				color: white;
+			}
+		}
+
+		&__add-btn {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.5rem;
+			height: 1.5rem;
+			padding: 0;
+			background: transparent;
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 3px;
+			color: var(--nimble-medium-text-color);
+			cursor: pointer;
+			flex-shrink: 0;
+			transition:
+				background 0.15s ease,
+				border-color 0.15s ease,
+				color 0.15s ease;
+			font-size: var(--nimble-xs-text);
+
+			&:hover {
+				background: var(--nimble-accent-color);
+				border-color: var(--nimble-accent-color);
+				color: white;
+			}
+		}
+
+		&__expand-icon {
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+			transition: transform 0.2s ease;
+			flex-shrink: 0;
+
+			&--expanded {
+				transform: rotate(180deg);
+			}
+		}
+
+		&__empty-text {
+			font-size: var(--nimble-xs-text);
+			color: var(--nimble-medium-text-color);
+			font-style: italic;
+		}
+
+		&__content {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+			padding: 0.75rem;
+			padding-top: 0.5rem;
+			border-top: 1px solid var(--nimble-card-border-color);
+			background: var(--nimble-input-background-color);
+		}
+
+		&__feature {
+			display: flex;
+			flex-direction: row;
+			align-items: flex-start;
+			gap: 0.5rem;
+		}
+
+		&__feature-content {
+			flex: 1;
+			min-width: 0;
+		}
+
+		&__feature-title-row {
+			display: flex;
+			align-items: center;
+			gap: 0.375rem;
+		}
+
+		&__delete-btn {
+			flex-shrink: 0;
+
+			&:hover {
+				color: var(--color-level-error, hsl(0, 65%, 45%));
+			}
+		}
+
+		&__feature-title-row &__source-tag {
+			margin-left: auto;
+		}
+
+		&__feature-header {
+			text-align: left;
+			color: var(--nimble-dark-text-color);
+			cursor: pointer;
+
+			&:hover {
+				color: var(--nimble-accent-color);
+				text-decoration: underline;
+
+				.class-progression-level-row__link-icon {
+					color: var(--nimble-accent-color);
+				}
+			}
+		}
+
+		&__feature-img {
+			width: 1.5rem;
+			height: 1.5rem;
+			border-radius: 3px;
+			object-fit: cover;
+			flex-shrink: 0;
+		}
+
+		&__feature-name {
+			display: inline;
+			font-size: var(--nimble-sm-text);
+			font-weight: 600;
+			margin: 0;
+			padding: 0;
+			line-height: 1.4;
+			text-align: left;
+		}
+
+		&__link-icon {
+			display: inline;
+			font-size: var(--nimble-xxs-text);
+			color: var(--nimble-medium-text-color);
+			transition: color 0.15s ease;
+			margin-left: 0.25rem;
+		}
+
+		&__source-tag {
+			display: inline-flex;
+			align-items: center;
+			padding: 0.0625rem 0.3125rem;
+			border-radius: 3px;
+			font-size: 0.5625rem;
+			font-weight: 700;
+			white-space: nowrap;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+			color: white;
+			flex-shrink: 0;
+
+			&[data-source='world'] {
+				background: var(--nimble-badge-world-bg);
+			}
+
+			&[data-source='pack'] {
+				background: var(--nimble-badge-pack-bg);
+			}
+		}
+
+		&__feature-desc {
+			font-size: var(--nimble-sm-text);
+			line-height: 1.5;
+			text-align: left;
+
+			:global(p) {
+				margin: 0 0 0.5rem;
+				text-align: left;
+
+				&:last-child {
+					margin-bottom: 0;
+				}
+			}
+
+			:global(h3),
+			:global(h4),
+			:global(h5) {
+				margin: 0.5rem 0 0.25rem;
+				font-size: var(--nimble-sm-text);
+				font-weight: 600;
+				text-align: left;
+
+				&:first-child {
+					margin-top: 0;
+				}
+			}
+
+			:global(ul),
+			:global(ol) {
+				margin: 0.25rem 0;
+				padding-left: 1.25rem;
+				text-align: left;
+			}
+
+			:global(li) {
+				margin-bottom: 0.25rem;
+			}
+		}
+
+		&__info-block {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+		}
+
+		&__info-icon-wrapper {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 1.5rem;
+			height: 1.5rem;
+			flex-shrink: 0;
+		}
+
+		&__info-icon {
+			color: var(--nimble-dark-text-color);
+			font-size: 1rem;
+		}
+
+		&__info-text {
+			margin: 0;
+			font-size: var(--nimble-sm-text);
+			line-height: 1;
+			text-align: left;
+			color: var(--nimble-dark-text-color);
+		}
+	}
+</style>
