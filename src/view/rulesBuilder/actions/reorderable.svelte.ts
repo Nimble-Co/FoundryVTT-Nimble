@@ -49,6 +49,10 @@ export function reorderable(
 	let draggedItem: HTMLElement | null = null;
 	let draggedId: string | null = null;
 	let placeholder: HTMLElement | null = null;
+	// HTML5 dragstart fires with `event.target = the draggable element`, not the
+	// pointer's actual position. To gate drags by handle, capture where the
+	// user pressed down — that's the real origin of the gesture.
+	let mouseDownOnHandle = false;
 
 	function clearPlaceholder() {
 		if (placeholder?.parentElement) {
@@ -81,19 +85,28 @@ export function reorderable(
 		clearDragVisuals();
 	};
 
+	function onMouseDown(event: MouseEvent) {
+		if (!enabled) return;
+		const target = event.target;
+		if (!(target instanceof Element)) {
+			mouseDownOnHandle = false;
+			return;
+		}
+		mouseDownOnHandle = target.closest(`[${DRAG_HANDLE_ATTR}]`) !== null;
+	}
+
 	function onDragStart(event: DragEvent) {
 		if (!enabled) return;
-		// Only initiate from a reorder handle, not arbitrary content within an item.
-		// If the consumer doesn't provide a handle, fall back to the whole item.
 		const target = event.target;
 		if (target instanceof Element) {
-			const explicitHandle = target.closest(`[${DRAG_HANDLE_ATTR}]`);
 			const item = findItemElement(target, node);
 			if (!item) return;
 
-			// If any handle exists in the list, require the drag to originate inside one.
+			// If any handle exists in the list, require the drag gesture to have
+			// started on one. Use the captured mousedown — `event.target` for
+			// dragstart is the draggable element, not where the pointer pressed.
 			const hasHandles = node.querySelector(`[${DRAG_HANDLE_ATTR}]`) !== null;
-			if (hasHandles && !explicitHandle) {
+			if (hasHandles && !mouseDownOnHandle) {
 				event.preventDefault();
 				return;
 			}
@@ -176,6 +189,7 @@ export function reorderable(
 		}
 	}
 
+	node.addEventListener('mousedown', onMouseDown);
 	node.addEventListener('dragstart', onDragStart);
 	node.addEventListener('dragover', onDragOver);
 	node.addEventListener('drop', onDrop);
@@ -189,6 +203,7 @@ export function reorderable(
 		},
 		destroy() {
 			clearDragVisuals();
+			node.removeEventListener('mousedown', onMouseDown);
 			node.removeEventListener('dragstart', onDragStart);
 			node.removeEventListener('dragover', onDragOver);
 			node.removeEventListener('drop', onDrop);
