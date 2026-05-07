@@ -1,18 +1,19 @@
 /**
- * Svelte action for native HTML5 list reorder. Mirrors the pattern of
- * `draggable.svelte.ts` but is scoped to intra-list reorder rather than the
- * combat-tracker semantics. Per AGENTS.md Code Promotion Rules, kept as a
- * sibling action — extract a shared base if a third use case appears.
+ * Svelte action for native HTML5 list reorder. Apply to a list container;
+ * each child must carry a `data-reorder-id` attribute. On drop, calls
+ * `onReorder` with the new id order — the consumer typically routes that
+ * straight into `RulesManager.reorderRules` or equivalent.
  *
- * Apply to a list container; each child must carry a `data-reorder-id`
- * attribute. On drop, dispatches a `reorder` CustomEvent with
- * `{ detail: { ids: string[] } }` reflecting the new id order. The
- * consumer wires the event to e.g. `RulesManager.reorderRules`.
+ * Optional drag handles: any descendant carrying `data-reorder-handle`
+ * becomes the only valid drag origin. If no handle elements are present,
+ * the whole item is draggable.
  */
 
 interface ReorderableOptions {
 	/** Apply or remove the action. Allows toggling without re-mounting the list. */
 	enabled: boolean;
+	/** Called with the new id order after a successful drop. */
+	onReorder: (ids: string[]) => void;
 }
 
 interface ReorderableActionReturn {
@@ -41,9 +42,10 @@ function findItemElement(target: EventTarget | null, container: HTMLElement): HT
 
 export function reorderable(
 	node: HTMLElement,
-	options: ReorderableOptions = { enabled: true },
+	options: ReorderableOptions,
 ): ReorderableActionReturn {
 	let enabled = options.enabled;
+	let onReorder = options.onReorder;
 	let draggedItem: HTMLElement | null = null;
 	let draggedId: string | null = null;
 	let placeholder: HTMLElement | null = null;
@@ -162,12 +164,7 @@ export function reorderable(
 		clearPlaceholder();
 
 		const ids = readIds(node);
-		node.dispatchEvent(
-			new CustomEvent('reorder', {
-				bubbles: true,
-				detail: { ids },
-			}),
-		);
+		onReorder(ids);
 		clearDragVisuals();
 	}
 
@@ -187,6 +184,7 @@ export function reorderable(
 	return {
 		update(next: ReorderableOptions) {
 			enabled = next.enabled;
+			onReorder = next.onReorder;
 			if (!enabled) clearDragVisuals();
 		},
 		destroy() {
