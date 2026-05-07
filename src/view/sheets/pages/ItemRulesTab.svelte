@@ -1,39 +1,36 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 
+	import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 	import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
-	import { reorderable } from '#view/rulesBuilder/actions/reorderable.svelte.js';
-	import RuleCard from '#view/rulesBuilder/components/RuleCard.svelte';
-	import RuleTypePicker from '#view/rulesBuilder/components/RuleTypePicker.svelte';
+	import RulesBuilderWindow from '#view/rulesBuilder/RulesBuilderWindow.svelte';
 
 	interface RuleSource {
 		id: string;
 		type: string;
+		label?: string;
 		disabled?: boolean;
 		[key: string]: unknown;
 	}
 
 	const item: NimbleBaseItem = getContext('document');
 	const rules = $derived((item.reactive.system as unknown as { rules: RuleSource[] }).rules);
-	const allDisabled = $derived(rules.length > 0 && rules.every((r) => r.disabled));
 
-	async function handleReorder(ids: string[]) {
-		await item.rules.reorderRules(ids);
-	}
+	const { ruleTypes } = CONFIG.NIMBLE;
 
-	async function moveRule(ruleId: string, delta: -1 | 1) {
-		const order = rules.map((r) => r.id);
-		const idx = order.indexOf(ruleId);
-		if (idx < 0) return;
-		const target = idx + delta;
-		if (target < 0 || target >= order.length) return;
-		[order[idx], order[target]] = [order[target], order[idx]];
-		await item.rules.reorderRules(order);
-	}
-
-	async function toggleAll() {
-		if (allDisabled) await item.rules.enableAllRules();
-		else await item.rules.disableAllRules();
+	function openBuilder() {
+		const dialog = GenericDialog.getOrCreate(
+			`${item.name}: Rules Builder`,
+			RulesBuilderWindow as unknown as Parameters<typeof GenericDialog.getOrCreate>[1],
+			{ document: item },
+			{
+				uniqueId: `rules-builder-${item.uuid}`,
+				icon: 'fa-solid fa-sliders',
+				width: 720,
+				resizable: true,
+			},
+		);
+		dialog.render(true);
 	}
 </script>
 
@@ -44,40 +41,35 @@
 			{rules.length === 1 ? 'rule' : 'rules'}
 		</span>
 
-		{#if rules.length > 0}
-			<button type="button" class="nimble-button" data-button-variant="basic" onclick={toggleAll}>
-				<i class="fa-solid {allDisabled ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
-				{allDisabled ? 'Enable all' : 'Disable all'}
-			</button>
-		{/if}
+		<button type="button" class="nimble-button" data-button-variant="basic" onclick={openBuilder}>
+			<i class="fa-solid fa-sliders"></i>
+			Open Rules Builder
+		</button>
 	</header>
 
 	{#if rules.length === 0}
-		<p class="nimble-rules-tab__empty">No rules yet. Pick a rule type below to add one.</p>
+		<p class="nimble-rules-tab__empty">No rules defined. Open the builder to add one.</p>
 	{:else}
-		<ul
-			class="nimble-rules-tab__list"
-			use:reorderable={{ enabled: true, onReorder: handleReorder }}
-		>
-			{#each rules as rule, index (rule.id)}
-				<li class="nimble-rules-tab__list-item">
-					<RuleCard
-						{rule}
-						manager={item.rules}
-						onMoveUp={index === 0 ? undefined : () => moveRule(rule.id, -1)}
-						onMoveDown={index === rules.length - 1 ? undefined : () => moveRule(rule.id, 1)}
-						onDelete={() => item.rules.deleteRule(rule.id)}
-					/>
+		<ul class="nimble-rules-tab__list">
+			{#each rules as rule (rule.id)}
+				<li class="nimble-rules-tab__row" class:nimble-rules-tab__row--disabled={rule.disabled}>
+					<span class="nimble-rules-tab__label">
+						{rule.label || ruleTypes[rule.type] || rule.type}
+					</span>
+					<span class="nimble-rules-tab__type">
+						{ruleTypes[rule.type] ?? rule.type}
+					</span>
+					{#if rule.disabled}
+						<span class="nimble-rules-tab__badge" data-tooltip="This rule is disabled">
+							<i class="fa-solid fa-toggle-off"></i>
+							Disabled
+						</span>
+					{/if}
 				</li>
 			{/each}
 		</ul>
 	{/if}
 </section>
-
-<footer class="nimble-sheet__footer nimble-rules-tab__footer">
-	<h4 class="nimble-heading" data-heading-variant="section">Add a rule</h4>
-	<RuleTypePicker onPick={(ruleKey) => item.rules.addRule({ type: ruleKey })} />
-</footer>
 
 <style lang="scss">
 	.nimble-rules-tab__body {
@@ -109,32 +101,49 @@
 	.nimble-rules-tab__list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.25rem;
 		margin: 0;
 		padding: 0;
 		list-style: none;
-
-		// Drop-target placeholder rendered by the reorderable action.
-		:global(.nimble-reorderable__placeholder) {
-			height: 0.25rem;
-			margin: 0.125rem 0;
-			background: var(--nimble-accent-color);
-			border-radius: 2px;
-		}
-
-		:global(.nimble-reorderable__item--source-hidden) {
-			opacity: 0.35;
-		}
 	}
 
-	.nimble-rules-tab__list-item {
-		display: contents;
-	}
-
-	.nimble-rules-tab__footer {
+	.nimble-rules-tab__row {
 		display: flex;
-		flex-direction: column;
 		gap: 0.5rem;
-		padding: 0.5rem 0;
+		align-items: center;
+		padding: 0.375rem 0.5rem;
+		background: var(--nimble-box-background-color);
+		border: 1px solid var(--nimble-accent-color);
+		border-radius: 4px;
+		font-size: var(--nimble-sm-text);
+
+		&--disabled {
+			opacity: 0.55;
+		}
+	}
+
+	.nimble-rules-tab__label {
+		flex-grow: 1;
+		font-weight: 600;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.nimble-rules-tab__type {
+		padding: 0.125rem 0.375rem;
+		font-size: var(--nimble-xs-text);
+		color: var(--color-text-dark-secondary);
+		background: var(--nimble-sheet-background, transparent);
+		border-radius: 4px;
+	}
+
+	.nimble-rules-tab__badge {
+		display: inline-flex;
+		gap: 0.25rem;
+		align-items: center;
+		padding: 0.125rem 0.375rem;
+		font-size: var(--nimble-xs-text);
+		color: var(--color-text-dark-secondary);
 	}
 </style>
