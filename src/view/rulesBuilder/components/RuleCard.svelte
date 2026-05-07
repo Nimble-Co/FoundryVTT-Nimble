@@ -7,7 +7,7 @@
 	import PredicateBuilder from './PredicateBuilder.svelte';
 	import SchemaFieldRenderer from './SchemaFieldRenderer.svelte';
 
-	let { rule, manager, onMoveUp, onMoveDown, onDelete }: RuleCardProps = $props();
+	let { rule, manager, onMoveUp, onMoveDown, onDelete, advanced = false }: RuleCardProps = $props();
 
 	const { ruleDataModels, ruleTypes } = CONFIG.NIMBLE;
 	const RuleClass = $derived(ruleDataModels[rule.type as string]);
@@ -26,18 +26,12 @@
 	});
 
 	let showJson = $state(false);
-	// Surface a non-default priority to the author by opening the disclosure
-	// it lives in — otherwise it's hidden inside Advanced and easy to miss.
-	// `untrack` so the prop read is one-time; the disclosure stays user-toggleable.
 	let advancedOpen = $state(
 		untrack(() => typeof rule.priority === 'number' && rule.priority !== 1),
 	);
 	let jsonDraft = $state(untrack(() => JSON.stringify(rule, null, 2)));
 	let jsonError = $state<string | null>(null);
 
-	// Re-sync jsonDraft when rule changes from outside (e.g. after persistence
-	// completes and a fresh source is read back). The effect tracks `rule`
-	// reactively; the stored signature does not.
 	let lastSerialized = $state(untrack(() => JSON.stringify(rule)));
 	$effect(() => {
 		const next = JSON.stringify(rule);
@@ -82,25 +76,49 @@
 		'priority',
 		'predicate',
 	]);
+
+	/**
+	 * Display label for a schema field. Foundry's existing `label` option
+	 * wins; otherwise convert the camelCase property name into a readable
+	 * "Camel Case" string ("damageType" → "Damage Type").
+	 */
+	function fieldLabel(name: string, field: foundry.data.fields.DataField.Any): string {
+		const explicit = (field as { label?: string }).label;
+		if (explicit) return localize(explicit);
+		return name
+			.replace(/([A-Z])/g, ' $1')
+			.replace(/^./, (c) => c.toUpperCase())
+			.trim();
+	}
+
+	/** Read Foundry's `hint` option from a field, localized if present. */
+	function fieldHint(field: foundry.data.fields.DataField.Any): string {
+		const hint = (field as { hint?: string }).hint;
+		if (!hint) return '';
+		return localize(hint);
+	}
 </script>
 
 <article
 	class="nimble-rule-card"
 	class:nimble-rule-card--disabled={Boolean(rule.disabled)}
+	class:nimble-rule-card--advanced={advanced}
 	data-reorder-id={rule.id}
-	draggable="true"
+	draggable={advanced}
 >
 	<header class="nimble-rule-card__header">
-		<button
-			class="nimble-button nimble-rule-card__handle"
-			type="button"
-			data-button-variant="icon"
-			data-reorder-handle
-			data-tooltip="Drag to reorder (display order only — see Priority for application order)"
-			aria-label="Reorder handle"
-		>
-			<i class="fa-solid fa-grip-vertical"></i>
-		</button>
+		{#if advanced}
+			<button
+				class="nimble-button nimble-rule-card__handle"
+				type="button"
+				data-button-variant="icon"
+				data-reorder-handle
+				data-tooltip="Drag to reorder. Display order only — see Priority for application order."
+				aria-label="Reorder handle"
+			>
+				<i class="fa-solid fa-grip-vertical"></i>
+			</button>
+		{/if}
 
 		<input
 			class="nimble-rule-card__label"
@@ -113,10 +131,11 @@
 		<span class="nimble-rule-card__type">{ruleTypes[rule.type as string] ?? rule.type}</span>
 
 		{#if RuleClass}
-			{@const ruleInstance = manager && (rule.id as string) ? null : null}
 			<i
 				class="nimble-rule-card__help fa-solid fa-circle-question"
-				data-tooltip={(RuleClass as unknown as { description?: string }).description ?? ''}
+				data-tooltip={localize(
+					(RuleClass as unknown as { description?: string }).description ?? '',
+				)}
 				data-tooltip-direction="UP"
 			></i>
 		{:else}
@@ -139,7 +158,8 @@
 			>
 				<i class="fa-solid {rule.disabled ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
 			</button>
-			{#if onMoveUp}
+
+			{#if advanced && onMoveUp}
 				<button
 					type="button"
 					class="nimble-button"
@@ -151,7 +171,7 @@
 					<i class="fa-solid fa-arrow-up"></i>
 				</button>
 			{/if}
-			{#if onMoveDown}
+			{#if advanced && onMoveDown}
 				<button
 					type="button"
 					class="nimble-button"
@@ -163,16 +183,20 @@
 					<i class="fa-solid fa-arrow-down"></i>
 				</button>
 			{/if}
-			<button
-				type="button"
-				class="nimble-button"
-				data-button-variant="icon"
-				data-tooltip={showJson ? 'Switch to builder' : 'Edit raw JSON'}
-				aria-label={showJson ? 'Switch to builder' : 'Edit raw JSON'}
-				onclick={toggleJson}
-			>
-				<i class="fa-solid {showJson ? 'fa-list' : 'fa-code'}"></i>
-			</button>
+
+			{#if advanced}
+				<button
+					type="button"
+					class="nimble-button"
+					data-button-variant="icon"
+					data-tooltip={showJson ? 'Switch to builder' : 'Edit raw JSON'}
+					aria-label={showJson ? 'Switch to builder' : 'Edit raw JSON'}
+					onclick={toggleJson}
+				>
+					<i class="fa-solid {showJson ? 'fa-list' : 'fa-code'}"></i>
+				</button>
+			{/if}
+
 			{#if onDelete}
 				<button
 					type="button"
@@ -188,12 +212,7 @@
 		</div>
 	</header>
 
-	<small class="nimble-rule-card__reorder-hint">
-		Drag-reorder controls display order only. Application order is set by the
-		<strong>Priority</strong> advanced control below.
-	</small>
-
-	{#if showJson}
+	{#if advanced && showJson}
 		<div class="nimble-rule-card__json">
 			<textarea
 				class="nimble-code-block__text-area"
@@ -222,7 +241,7 @@
 		</div>
 	{:else if !schema}
 		<p class="nimble-rule-card__empty">
-			Could not load this rule's schema. Use raw-JSON edit to repair.
+			Could not load this rule's schema. Use raw-JSON edit (advanced) to repair.
 		</p>
 	{:else}
 		{@const editableEntries = Object.entries(schema).filter(
@@ -233,8 +252,9 @@
 				<p class="nimble-rule-card__empty">No further configuration needed.</p>
 			{:else}
 				{#each editableEntries as [fieldName, field] (fieldName)}
+					{@const hint = fieldHint(field)}
 					<div class="nimble-field-row">
-						<span class="nimble-field-row__label">{fieldName}</span>
+						<span class="nimble-field-row__label">{fieldLabel(fieldName, field)}</span>
 						<SchemaFieldRenderer
 							{field}
 							value={rule[fieldName]}
@@ -242,51 +262,56 @@
 							name={fieldName}
 							onChange={(v) => emitFieldChange(fieldName, v)}
 						/>
+						{#if hint}
+							<small class="nimble-field-row__hint">{hint}</small>
+						{/if}
 					</div>
 				{/each}
 			{/if}
 		</div>
 
-		<details class="nimble-rule-card__advanced" open={advancedOpen}>
-			<summary>
-				<i class="fa-solid fa-sliders"></i>
-				Advanced
-			</summary>
+		{#if advanced}
+			<details class="nimble-rule-card__advanced" open={advancedOpen}>
+				<summary>
+					<i class="fa-solid fa-sliders"></i>
+					Advanced
+				</summary>
 
-			<div class="nimble-rule-card__advanced-body">
-				<label class="nimble-field-row">
-					<span class="nimble-field-row__label">Identifier</span>
-					<input
-						type="text"
-						value={(rule.identifier as string) ?? ''}
-						onchange={(e) => emitFieldChange('identifier', (e.target as HTMLInputElement).value)}
-					/>
-				</label>
+				<div class="nimble-rule-card__advanced-body">
+					<label class="nimble-field-row">
+						<span class="nimble-field-row__label">Identifier</span>
+						<input
+							type="text"
+							value={(rule.identifier as string) ?? ''}
+							onchange={(e) => emitFieldChange('identifier', (e.target as HTMLInputElement).value)}
+						/>
+					</label>
 
-				<label class="nimble-field-row">
-					<span class="nimble-field-row__label">Priority</span>
-					<input
-						type="number"
-						value={(rule.priority as number) ?? 1}
-						onchange={(e) => {
-							const num = parseInt((e.target as HTMLInputElement).value, 10);
-							if (!Number.isNaN(num)) emitFieldChange('priority', num);
-						}}
-					/>
-					<small class="nimble-field-hint">
-						Application order during data prep. Independent of drag-reorder above.
-					</small>
-				</label>
+					<label class="nimble-field-row">
+						<span class="nimble-field-row__label">Priority</span>
+						<input
+							type="number"
+							value={(rule.priority as number) ?? 1}
+							onchange={(e) => {
+								const num = parseInt((e.target as HTMLInputElement).value, 10);
+								if (!Number.isNaN(num)) emitFieldChange('priority', num);
+							}}
+						/>
+						<small class="nimble-field-hint">
+							Application order during data prep. Independent of drag-reorder above.
+						</small>
+					</label>
 
-				<div class="nimble-field-row">
-					<span class="nimble-field-row__label">Predicate</span>
-					<PredicateBuilder
-						value={(rule.predicate as RawPredicate) ?? {}}
-						onChange={(v) => emitFieldChange('predicate', v)}
-					/>
+					<div class="nimble-field-row">
+						<span class="nimble-field-row__label">Predicate</span>
+						<PredicateBuilder
+							value={(rule.predicate as RawPredicate) ?? {}}
+							onChange={(v) => emitFieldChange('predicate', v)}
+						/>
+					</div>
 				</div>
-			</div>
-		</details>
+			</details>
+		{/if}
 	{/if}
 </article>
 
@@ -340,12 +365,6 @@
 		&__controls {
 			display: flex;
 			gap: 0.125rem;
-		}
-
-		&__reorder-hint {
-			color: var(--color-text-dark-secondary);
-			font-size: var(--nimble-xs-text);
-			font-style: italic;
 		}
 
 		&__body {
@@ -414,6 +433,13 @@
 			font-size: var(--nimble-xs-text);
 			font-weight: 600;
 			color: var(--color-text-dark-secondary);
+		}
+
+		&__hint {
+			margin-top: 0.0625rem;
+			font-size: var(--nimble-xs-text);
+			color: var(--color-text-dark-secondary);
+			line-height: 1.3;
 		}
 	}
 

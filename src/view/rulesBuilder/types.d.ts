@@ -69,6 +69,12 @@ export interface RuleCardProps {
 	onMoveUp?: () => void;
 	onMoveDown?: () => void;
 	onDelete?: () => void;
+	/**
+	 * When true, surface the power-user controls: drag handle, move-up/down,
+	 * raw JSON edit, and the Advanced disclosure (priority / predicate /
+	 * identifier). Off by default — most authors should never need them.
+	 */
+	advanced?: boolean;
 }
 
 export interface RuleTypePickerProps {
