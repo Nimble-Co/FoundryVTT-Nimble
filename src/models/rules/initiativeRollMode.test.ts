@@ -12,7 +12,7 @@ describe('InitiativeRollModeRule', () => {
 
 		it('declares the closed mode choice set', () => {
 			const schema = InitiativeRollModeRule.defineSchema();
-			const mode = schema.mode as { choices: string[] };
+			const mode = schema.mode as unknown as { choices: string[] };
 			expect(mode.choices).toEqual(['set', 'adjust']);
 		});
 	});

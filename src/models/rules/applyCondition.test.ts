@@ -148,7 +148,7 @@ describe('ApplyConditionRule', () => {
 
 		it('declares choices on the condition field (driven by CONFIG.NIMBLE.conditions)', () => {
 			const schema = ApplyConditionRule.defineSchema();
-			const condition = schema.condition as { choices: () => string[] };
+			const condition = schema.condition as unknown as { choices: () => string[] };
 			expect(typeof condition.choices).toBe('function');
 		});
 	});

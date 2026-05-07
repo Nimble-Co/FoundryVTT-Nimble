@@ -12,7 +12,7 @@ describe('GrantProficiencyRule', () => {
 
 		it('declares the closed proficiencyType choice set', () => {
 			const schema = GrantProficiencyRule.defineSchema();
-			const proficiencyType = schema.proficiencyType as { choices: string[] };
+			const proficiencyType = schema.proficiencyType as unknown as { choices: string[] };
 			expect(proficiencyType.choices).toEqual(['armor', 'languages', 'weapons']);
 		});
 	});

@@ -398,7 +398,7 @@ describe('SpeedBonusRule', () => {
 
 		it('declares closed movementType choice set', () => {
 			const schema = SpeedBonusRule.defineSchema();
-			const movementType = schema.movementType as { choices: string[] };
+			const movementType = schema.movementType as unknown as { choices: string[] };
 			expect(movementType.choices).toEqual(['walk', 'fly', 'climb', 'swim', 'burrow']);
 		});
 	});

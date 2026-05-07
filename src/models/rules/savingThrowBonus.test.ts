@@ -12,7 +12,7 @@ describe('SavingThrowBonusRule', () => {
 
 		it('declares choices on savingThrows array (with `all` sentinel)', () => {
 			const schema = SavingThrowBonusRule.defineSchema();
-			const arrayField = schema.savingThrows as { element: { choices: () => string[] } };
+			const arrayField = schema.savingThrows as unknown as { element: { choices: () => string[] } };
 			const choices = arrayField.element.choices();
 			expect(choices).toContain('all');
 			expect(choices).toContain('strength');

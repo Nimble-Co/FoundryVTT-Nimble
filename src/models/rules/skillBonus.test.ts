@@ -12,7 +12,7 @@ describe('SkillBonusRule', () => {
 
 		it('declares choices on skills array (with `all` sentinel)', () => {
 			const schema = SkillBonusRule.defineSchema();
-			const arrayField = schema.skills as { element: { choices: () => string[] } };
+			const arrayField = schema.skills as unknown as { element: { choices: () => string[] } };
 			const choices = arrayField.element.choices();
 			expect(choices).toContain('all');
 			expect(choices).toContain('arcana');

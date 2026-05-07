@@ -16,7 +16,7 @@ describe('GrantSpellsRule', () => {
 
 		it('declares choices on schools array (with `known` sentinel)', () => {
 			const schema = GrantSpellsRule.defineSchema();
-			const schoolsArray = schema.schools as { element: { choices: () => string[] } };
+			const schoolsArray = schema.schools as unknown as { element: { choices: () => string[] } };
 			const choices = schoolsArray.element.choices();
 			expect(choices).toContain('known');
 			expect(choices).toContain('fire');
@@ -24,7 +24,7 @@ describe('GrantSpellsRule', () => {
 
 		it('declares the closed mode choice set', () => {
 			const schema = GrantSpellsRule.defineSchema();
-			const mode = schema.mode as { choices: string[] };
+			const mode = schema.mode as unknown as { choices: string[] };
 			expect(mode.choices).toEqual(['auto', 'selectSchool', 'selectSpell']);
 		});
 	});

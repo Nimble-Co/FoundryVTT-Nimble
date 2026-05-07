@@ -14,7 +14,7 @@ describe('NoteRule', () => {
 
 		it('declares the closed visibility choice set', () => {
 			const schema = NoteRule.defineSchema();
-			const visibility = schema.visibility as { choices: string[] };
+			const visibility = schema.visibility as unknown as { choices: string[] };
 			expect(visibility.choices).toEqual(['all', 'gmOnly', 'owner']);
 		});
 	});

@@ -12,7 +12,7 @@ describe('AbilityBonusRule', () => {
 
 		it('declares choices on the abilities array element (with `all` sentinel)', () => {
 			const schema = AbilityBonusRule.defineSchema();
-			const arrayField = schema.abilities as { element: { choices: () => string[] } };
+			const arrayField = schema.abilities as unknown as { element: { choices: () => string[] } };
 			const choices = arrayField.element.choices();
 			expect(choices).toContain('all');
 			expect(choices).toContain('strength');

@@ -172,7 +172,7 @@ describe('ConditionImmunityRule', () => {
 
 		it('declares choices on the conditions array element', () => {
 			const schema = ConditionImmunityRule.defineSchema();
-			const arrayField = schema.conditions as { element: { choices: () => string[] } };
+			const arrayField = schema.conditions as unknown as { element: { choices: () => string[] } };
 			expect(typeof arrayField.element.choices).toBe('function');
 		});
 	});

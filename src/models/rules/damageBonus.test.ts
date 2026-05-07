@@ -249,9 +249,9 @@ describe('DamageBonusRule', () => {
 
 		it('declares choices on damageType, delivery, and source', () => {
 			const schema = DamageBonusRule.defineSchema();
-			const damageType = schema.damageType as { choices: () => Record<string, string> };
-			const delivery = schema.delivery as { choices: string[] };
-			const source = schema.source as { choices: string[] };
+			const damageType = schema.damageType as unknown as { choices: () => Record<string, string> };
+			const delivery = schema.delivery as unknown as { choices: string[] };
+			const source = schema.source as unknown as { choices: string[] };
 
 			expect(typeof damageType.choices).toBe('function');
 			expect(delivery.choices).toEqual(['melee', 'ranged', 'any']);

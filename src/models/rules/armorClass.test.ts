@@ -12,7 +12,7 @@ describe('ArmorClassRule', () => {
 
 		it('declares the closed mode choice set', () => {
 			const schema = ArmorClassRule.defineSchema();
-			const mode = schema.mode as { choices: string[] };
+			const mode = schema.mode as unknown as { choices: string[] };
 			expect(mode.choices).toEqual(['add', 'multiply', 'override']);
 		});
 	});
