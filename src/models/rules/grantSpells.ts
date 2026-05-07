@@ -15,18 +15,21 @@ function schema() {
 				required: false,
 				nullable: false,
 				initial: [],
+				label: 'Schools',
 			},
 		),
 		tiers: new fields.ArrayField(new fields.NumberField({ integer: true, min: 0 }), {
 			required: false,
 			nullable: false,
 			initial: [0],
+			label: 'Tiers',
 		}),
 		// When true, only grant utility spells; when false, only grant non-utility spells
 		utilityOnly: new fields.BooleanField({
 			required: false,
 			nullable: false,
 			initial: false,
+			label: 'Utility spells only',
 		}),
 		// Specific spell UUIDs (alternative to school/tier filtering)
 		uuids: new fields.ArrayField(
@@ -42,6 +45,7 @@ function schema() {
 				required: false,
 				nullable: false,
 				initial: [],
+				label: 'Specific spells',
 			},
 		),
 		// Grant mode
@@ -49,6 +53,7 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'auto',
+			label: 'Selection mode',
 			choices: ['auto', 'selectSchool', 'selectSpell'],
 		}),
 		// For selectSchool / selectSpell: how many schools/spells to choose. Hidden in `auto`.
@@ -58,6 +63,7 @@ function schema() {
 			initial: null,
 			integer: true,
 			min: 1,
+			label: 'How many to choose',
 			showWhen: (data) => data.mode === 'selectSchool' || data.mode === 'selectSpell',
 		} as unknown as never),
 	};

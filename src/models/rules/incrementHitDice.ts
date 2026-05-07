@@ -10,6 +10,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '1',
+				label: 'Die size bonus',
 				widget: 'formula',
 			}),
 		),

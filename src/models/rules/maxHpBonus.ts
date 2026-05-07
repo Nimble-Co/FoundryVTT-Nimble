@@ -19,8 +19,20 @@ function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
-		perLevel: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+		value: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			label: 'Bonus',
+			hint: 'Bonus HP added to maximum.',
+		}),
+		perLevel: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'Multiply by character level',
+			hint: 'When on, the bonus is applied per level (e.g. +2 per level → +20 at level 10).',
+		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'maxHpBonus' }),
 	};
 }

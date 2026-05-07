@@ -11,6 +11,8 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '',
+				label: 'Bonus',
+				hint: 'A flat number, formula, or dice expression added to the save.',
 				widget: 'formula',
 			}),
 		),
@@ -23,7 +25,12 @@ function schema() {
 				// "every saving throw". Must remain a valid choice.
 				choices: () => [...Object.keys(CONFIG.NIMBLE.savingThrows), 'all'],
 			}),
-			{ required: true, nullable: false },
+			{
+				required: true,
+				nullable: false,
+				label: 'Apply to',
+				hint: 'Pick one or more saves. Use “all” to apply to every save.',
+			},
 		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'savingThrowBonus' }),
 	};

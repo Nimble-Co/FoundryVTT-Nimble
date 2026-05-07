@@ -11,6 +11,8 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '',
+				label: 'Bonus',
+				hint: 'A flat number, formula (e.g. @level), or dice expression.',
 				widget: 'formula',
 			}),
 		),
@@ -21,7 +23,12 @@ function schema() {
 				initial: '',
 				choices: () => [...Object.keys(CONFIG.NIMBLE.abilityScores), 'all'],
 			}),
-			{ required: true, nullable: false },
+			{
+				required: true,
+				nullable: false,
+				label: 'Apply to',
+				hint: 'Pick one or more abilities. Use “all” to apply to every ability.',
+			},
 		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'abilityBonus' }),
 	};

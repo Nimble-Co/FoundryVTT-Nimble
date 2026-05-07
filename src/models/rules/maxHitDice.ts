@@ -10,11 +10,17 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '',
+				label: 'Bonus',
 				widget: 'formula',
 			}),
 		),
 		// dieSize of 0 means "use the character's class hit die size"
-		dieSize: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		dieSize: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			label: 'Die size (0 = class default)',
+		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'maxHitDice' }),
 	};
 }

@@ -6,14 +6,31 @@ function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		allowDuplicate: new fields.BooleanField({ required: true, nullable: false, initial: true }),
-		inMemoryOnly: new fields.BooleanField({ required: true, nullable: false, initial: false }),
-		quantity: new fields.NumberField({ required: false, nullable: true, initial: null, min: 1 }),
+		allowDuplicate: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: true,
+			label: 'Allow duplicates on the actor',
+		}),
+		inMemoryOnly: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'Don’t persist to actor inventory',
+		}),
+		quantity: new fields.NumberField({
+			required: false,
+			nullable: true,
+			initial: null,
+			min: 1,
+			label: 'Quantity (blank = item default)',
+		}),
 		uuid: new fields.StringField(
 			withWidget({
 				required: true,
 				nullable: false,
 				initial: '',
+				label: 'Item',
 				widget: 'documentUuid',
 			}),
 		),

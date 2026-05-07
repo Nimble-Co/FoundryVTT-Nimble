@@ -10,6 +10,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '',
+				label: 'Bonus',
 				widget: 'formula',
 			}),
 		),

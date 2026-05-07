@@ -11,7 +11,13 @@ function schema() {
 				blank: false,
 				choices: () => Object.keys(CONFIG.NIMBLE.conditions),
 			}),
-			{ required: true, nullable: false, initial: [] },
+			{
+				required: true,
+				nullable: false,
+				initial: [],
+				label: 'Immune to',
+				hint: 'The actor is fully immune to these conditions and cannot be affected by them.',
+			},
 		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'conditionImmunity' }),
 	};

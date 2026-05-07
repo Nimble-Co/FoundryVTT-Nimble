@@ -4,22 +4,39 @@ function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
-		target: new fields.StringField({ required: true, nullable: false, initial: 'all' }),
+		value: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			label: 'Roll mode value',
+		}),
+		target: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'all',
+			label: 'Target save',
+		}),
 		// Only meaningful when `requiresChoice` is true — hidden otherwise.
 		selectedSave: new fields.StringField({
 			required: false,
 			nullable: true,
 			initial: null,
+			label: 'Selected save',
 			showWhen: (data) => data.requiresChoice === true,
 		} as unknown as never),
 		mode: new fields.StringField({
 			required: true,
 			nullable: false,
 			initial: 'set',
+			label: 'How to apply',
 			choices: ['set', 'adjust'],
 		}),
-		requiresChoice: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+		requiresChoice: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'Player chooses save at use',
+		}),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,

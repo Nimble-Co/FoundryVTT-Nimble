@@ -11,6 +11,8 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '',
+				label: 'Bonus',
+				hint: 'A flat number, formula, or dice expression added to the skill check.',
 				widget: 'formula',
 			}),
 		),
@@ -23,7 +25,12 @@ function schema() {
 				// "every skill". Must remain a valid choice.
 				choices: () => [...Object.keys(CONFIG.NIMBLE.skills), 'all'],
 			}),
-			{ required: true, nullable: false },
+			{
+				required: true,
+				nullable: false,
+				label: 'Apply to',
+				hint: 'Pick one or more skills. Use “all” to apply to every skill.',
+			},
 		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'skillBonus' }),
 	};

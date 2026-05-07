@@ -4,10 +4,14 @@
 	let {
 		value,
 		onChange,
-		placeholder = '',
+		placeholder,
 		disabled = false,
 		dice = false,
 	}: FormulaInputProps = $props();
+
+	const resolvedPlaceholder = $derived(
+		placeholder ?? (dice ? 'e.g. 1d6 + @level' : 'e.g. 2 or 1d6 or @level'),
+	);
 
 	function handleChange(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -20,7 +24,7 @@
 	class:nimble-formula-input--dice={dice}
 	type="text"
 	{value}
-	{placeholder}
+	placeholder={resolvedPlaceholder}
 	{disabled}
 	autocapitalize="off"
 	autocomplete="off"

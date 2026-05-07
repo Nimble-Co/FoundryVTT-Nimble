@@ -34,12 +34,16 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: '',
+			label: 'Condition',
+			hint: 'The condition to apply.',
 			choices: () => Object.keys(CONFIG.NIMBLE.conditions),
 		}),
 		trigger: new fields.StringField({
 			required: true,
 			nullable: false,
 			initial: 'onCrit',
+			label: 'Trigger',
+			hint: 'When this condition is applied — on hit/crit, on save fail, on turn start, etc.',
 			choices: TRIGGER_CHOICES as unknown as string[],
 		}),
 		duration: new fields.SchemaField(

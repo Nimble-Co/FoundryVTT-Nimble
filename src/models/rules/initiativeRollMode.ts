@@ -4,11 +4,17 @@ function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.NumberField({ required: true, nullable: false, initial: 1 }),
+		value: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 1,
+			label: 'Roll mode value',
+		}),
 		mode: new fields.StringField({
 			required: true,
 			nullable: false,
 			initial: 'set',
+			label: 'How to apply',
 			choices: ['set', 'adjust'],
 		}),
 		type: new fields.StringField({

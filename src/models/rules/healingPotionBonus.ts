@@ -11,6 +11,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '1',
+				label: 'Bonus',
 				widget: 'formula',
 			}),
 		),

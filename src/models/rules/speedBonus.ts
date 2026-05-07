@@ -14,6 +14,8 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '',
+				label: 'Bonus',
+				hint: 'Bonus to speed in tiles. Negative numbers reduce speed.',
 				widget: 'formula',
 			}),
 		),
@@ -22,6 +24,8 @@ function schema() {
 			required: false,
 			nullable: true,
 			initial: null,
+			label: 'Movement type (blank = walk)',
+			hint: 'Leave blank to apply to walk speed only. Pick a specific type to grant or modify it.',
 			choices: ['walk', 'fly', 'climb', 'swim', 'burrow'],
 		}),
 	};
