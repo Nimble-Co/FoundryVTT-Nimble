@@ -51,8 +51,11 @@ interface SpellPackIndexEntry {
 export async function buildSpellIndex(): Promise<SpellIndex> {
 	const index: SpellIndex = new Map();
 
-	// Track seen UUIDs to avoid duplicates
+	// Track seen UUIDs to avoid duplicates.
+	// Also track compendium source UUIDs covered by world items so we can skip
+	// the original compendium entry when a world-item copy already exists.
 	const seen = new Set<string>();
+	const seenCompendiumSources = new Set<string>();
 
 	/**
 	 * Adds a spell entry to the index for a specific school and tier.
@@ -95,7 +98,7 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 
 		const isUtility = selectedProperties.includes('utilitySpell');
 
-		addToIndex({
+		const added = addToIndex({
 			uuid: item.uuid,
 			name: item.name ?? 'Unknown Spell',
 			img: item.img ?? 'icons/svg/item-bag.svg',
@@ -104,6 +107,15 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 			isUtility,
 			classes: system.classes ?? [],
 		});
+
+		// If this world item was imported from a compendium, mark that source UUID as
+		// covered so the compendium's own entry is skipped below (prevents duplicates
+		// when a player has world-item copies of compendium spells).
+		if (added) {
+			const compendiumSource = (item._stats as { compendiumSource?: string } | undefined)
+				?.compendiumSource;
+			if (compendiumSource) seenCompendiumSources.add(compendiumSource);
+		}
 	}
 
 	// Process compendium packs
@@ -122,6 +134,9 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 		for (const indexEntry of packIndex) {
 			const packEntry = indexEntry as SpellPackIndexEntry;
 			if (packEntry.type !== 'spell') continue;
+
+			// Skip if a world item imported from this compendium entry is already indexed
+			if (seenCompendiumSources.has(packEntry.uuid)) continue;
 
 			const system = packEntry.system;
 			if (!system?.school) continue;
