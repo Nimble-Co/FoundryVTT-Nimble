@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { Predicate, type RawPredicate } from '../../../etc/Predicate.js';
 	import type { PredicateBuilderProps } from '#view/rulesBuilder/types.js';
 
@@ -45,7 +46,9 @@
 		return Object.entries(v ?? {}).map(([key, stmt]) => rowFromEntry(key, stmt));
 	}
 
-	let rows = $state<RowState[]>(rowsFromValue(value));
+	// `rows` is a local edit buffer — initialized once from the prop, then
+	// resynced through the `$effect` below when the prop changes externally.
+	let rows = $state<RowState[]>(untrack(() => rowsFromValue(value)));
 	let lastSerializedValue = $state('');
 
 	// External-source-of-truth sync: when `value` changes from outside (e.g.

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { RawPredicate } from '../../../etc/Predicate.js';
 	import localize from '#utils/localize.js';
 	import overrideTextAreaBehavior from '#utils/overrideTextAreaBehavior.js';
@@ -27,12 +28,17 @@
 	let showJson = $state(false);
 	// Surface a non-default priority to the author by opening the disclosure
 	// it lives in — otherwise it's hidden inside Advanced and easy to miss.
-	let advancedOpen = $state(typeof rule.priority === 'number' && rule.priority !== 1);
-	let jsonDraft = $state(JSON.stringify(rule, null, 2));
+	// `untrack` so the prop read is one-time; the disclosure stays user-toggleable.
+	let advancedOpen = $state(
+		untrack(() => typeof rule.priority === 'number' && rule.priority !== 1),
+	);
+	let jsonDraft = $state(untrack(() => JSON.stringify(rule, null, 2)));
 	let jsonError = $state<string | null>(null);
 
-	// Re-sync jsonDraft when rule changes from outside (after persistence).
-	let lastSerialized = $state(JSON.stringify(rule));
+	// Re-sync jsonDraft when rule changes from outside (e.g. after persistence
+	// completes and a fresh source is read back). The effect tracks `rule`
+	// reactively; the stored signature does not.
+	let lastSerialized = $state(untrack(() => JSON.stringify(rule)));
 	$effect(() => {
 		const next = JSON.stringify(rule);
 		if (next !== lastSerialized) {
