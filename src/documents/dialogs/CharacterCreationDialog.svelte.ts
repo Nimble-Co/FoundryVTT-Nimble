@@ -1,5 +1,6 @@
 import type { DeepPartial } from 'fvtt-types/utils';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { NimbleObjectItem } from '#documents/item/object.js';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 import { buildSpellIndex, type SpellIndex } from '#utils/getSpells.js';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.js';
@@ -323,6 +324,14 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		// If equipment was chosen, items will be granted automatically
 		// If gold was chosen, grantItem rules were disabled above so no items are granted
 		await actor?.createEmbeddedDocuments('Item', originDocumentSources);
+
+		// Auto-equip all object items granted as starting equipment
+		if (startingEquipmentChoice === 'equipment' && actor) {
+			const objectItems = actor.items.filter((i) => i.type === 'object');
+			for (const item of objectItems) {
+				await (item as unknown as NimbleObjectItem).toggleEquipment();
+			}
+		}
 
 		// Create class feature documents
 		const featureDocumentSources: Item.CreateData[] = [];
