@@ -30,6 +30,11 @@ declare namespace MaxHpBonusRule {
 }
 
 class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
+	// `perLevel: true` re-interprets `value` as "per level" and multiplies by
+	// the actor's level on apply. The i18n description should call this out.
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.ruleDescriptions.maxHpBonus';
+
 	declare value: number;
 	declare perLevel: boolean;
 

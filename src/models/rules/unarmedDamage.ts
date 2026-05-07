@@ -1,14 +1,18 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: '1d4 + @abilities.strength.mod',
-		}),
+		value: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '1d4 + @abilities.strength.mod',
+				widget: 'diceFormula',
+			}),
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'unarmedDamage' }),
 	};
 }
@@ -18,6 +22,9 @@ declare namespace UnarmedDamageRule {
 }
 
 class UnarmedDamageRule extends NimbleBaseRule<UnarmedDamageRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.ruleDescriptions.unarmedDamage';
+
 	declare value: string;
 
 	static override defineSchema(): UnarmedDamageRule.Schema {

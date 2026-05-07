@@ -5,7 +5,12 @@ function schema() {
 
 	return {
 		value: new fields.NumberField({ required: true, nullable: false, initial: 1 }),
-		mode: new fields.StringField({ required: true, nullable: false, initial: 'set' }),
+		mode: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'set',
+			choices: ['set', 'adjust'],
+		}),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -19,8 +24,12 @@ declare namespace InitiativeRollModeRule {
 }
 
 class InitiativeRollModeRule extends NimbleBaseRule<InitiativeRollModeRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.ruleDescriptions.initiativeRollMode';
+
 	declare value: number;
-	declare mode: string;
+	// `mode` is inferred from the schema's `choices` (`'set' | 'adjust'`).
+	// No explicit declare — the wider `string` would clash.
 
 	static override defineSchema(): InitiativeRollModeRule.Schema {
 		return {

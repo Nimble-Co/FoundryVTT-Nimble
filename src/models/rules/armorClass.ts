@@ -1,10 +1,18 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		formula: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		formula: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				widget: 'formula',
+			}),
+		),
 		mode: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -20,6 +28,9 @@ declare namespace ArmorClassRule {
 }
 
 class ArmorClassRule extends NimbleBaseRule<ArmorClassRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.ruleDescriptions.armorClass';
+
 	static override defineSchema(): ArmorClassRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),

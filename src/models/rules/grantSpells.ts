@@ -1,3 +1,4 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
@@ -6,11 +7,16 @@ function schema() {
 	return {
 		type: new fields.StringField({ required: true, nullable: false, initial: 'grantSpells' }),
 		// Spell source filters
-		schools: new fields.ArrayField(new fields.StringField(), {
-			required: false,
-			nullable: false,
-			initial: [],
-		}),
+		schools: new fields.ArrayField(
+			new fields.StringField({
+				choices: () => [...Object.keys(CONFIG.NIMBLE.spellSchools), 'known'],
+			}),
+			{
+				required: false,
+				nullable: false,
+				initial: [],
+			},
+		),
 		tiers: new fields.ArrayField(new fields.NumberField({ integer: true, min: 0 }), {
 			required: false,
 			nullable: false,
@@ -23,11 +29,21 @@ function schema() {
 			initial: false,
 		}),
 		// Specific spell UUIDs (alternative to school/tier filtering)
-		uuids: new fields.ArrayField(new fields.StringField(), {
-			required: false,
-			nullable: false,
-			initial: [],
-		}),
+		uuids: new fields.ArrayField(
+			new fields.StringField(
+				withWidget({
+					required: false,
+					nullable: false,
+					initial: '',
+					widget: 'documentUuid',
+				}),
+			),
+			{
+				required: false,
+				nullable: false,
+				initial: [],
+			},
+		),
 		// Grant mode
 		mode: new fields.StringField({
 			required: true,
@@ -35,15 +51,15 @@ function schema() {
 			initial: 'auto',
 			choices: ['auto', 'selectSchool', 'selectSpell'],
 		}),
-		// For selectSchool mode: how many schools to choose
-		// For selectSpell mode: how many spells to choose
+		// For selectSchool / selectSpell: how many schools/spells to choose. Hidden in `auto`.
 		count: new fields.NumberField({
 			required: false,
 			nullable: true,
 			initial: null,
 			integer: true,
 			min: 1,
-		}),
+			showWhen: (data) => data.mode === 'selectSchool' || data.mode === 'selectSpell',
+		} as unknown as never),
 	};
 }
 
@@ -61,6 +77,9 @@ declare namespace GrantSpellsRule {
  * 4. Spell selection - User chooses N individual spells from the filtered pool
  */
 class GrantSpellsRule extends NimbleBaseRule<GrantSpellsRule.Schema> {
+	static override group = 'grants';
+	static override description = 'NIMBLE.ruleDescriptions.grantSpells';
+
 	declare schools: string[];
 
 	declare tiers: number[];

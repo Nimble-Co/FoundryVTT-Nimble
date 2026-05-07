@@ -1,10 +1,18 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		value: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				widget: 'formula',
+			}),
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'maxWounds' }),
 	};
 }
@@ -14,6 +22,9 @@ declare namespace MaxWoundsRule {
 }
 
 class MaxWoundsRule extends NimbleBaseRule<MaxWoundsRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.ruleDescriptions.maxWounds';
+
 	static override defineSchema(): MaxWoundsRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),

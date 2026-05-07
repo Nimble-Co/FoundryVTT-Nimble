@@ -6,8 +6,19 @@ function schema() {
 	return {
 		value: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
 		target: new fields.StringField({ required: true, nullable: false, initial: 'all' }),
-		selectedSave: new fields.StringField({ required: false, nullable: true, initial: null }),
-		mode: new fields.StringField({ required: true, nullable: false, initial: 'set' }),
+		// Only meaningful when `requiresChoice` is true — hidden otherwise.
+		selectedSave: new fields.StringField({
+			required: false,
+			nullable: true,
+			initial: null,
+			showWhen: (data) => data.requiresChoice === true,
+		} as unknown as never),
+		mode: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'set',
+			choices: ['set', 'adjust'],
+		}),
 		requiresChoice: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 		type: new fields.StringField({
 			required: true,
@@ -22,6 +33,9 @@ declare namespace SavingThrowRollModeRule {
 }
 
 class SavingThrowRollModeRule extends NimbleBaseRule<SavingThrowRollModeRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.ruleDescriptions.savingThrowRollMode';
+
 	static override defineSchema(): SavingThrowRollModeRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),

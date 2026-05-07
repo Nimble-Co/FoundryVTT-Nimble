@@ -1,4 +1,5 @@
 import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule, type PreCreateArgs } from './base.js';
 
 function schema() {
@@ -8,7 +9,14 @@ function schema() {
 		allowDuplicate: new fields.BooleanField({ required: true, nullable: false, initial: true }),
 		inMemoryOnly: new fields.BooleanField({ required: true, nullable: false, initial: false }),
 		quantity: new fields.NumberField({ required: false, nullable: true, initial: null, min: 1 }),
-		uuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		uuid: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				widget: 'documentUuid',
+			}),
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'grantItem' }),
 	};
 }
@@ -18,6 +26,9 @@ declare namespace ItemGrantRule {
 }
 
 class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
+	static override group = 'grants';
+	static override description = 'NIMBLE.ruleDescriptions.grantItem';
+
 	declare allowDuplicate: boolean;
 
 	declare inMemoryOnly: boolean;

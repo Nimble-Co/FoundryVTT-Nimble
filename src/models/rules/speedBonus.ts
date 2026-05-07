@@ -1,3 +1,4 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 type MovementType = 'walk' | 'fly' | 'climb' | 'swim' | 'burrow';
@@ -8,7 +9,14 @@ function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		value: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				widget: 'formula',
+			}),
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'speedBonus' }),
 		movementType: new fields.StringField({
 			required: false,
@@ -32,6 +40,9 @@ interface ActorSystem {
 }
 
 class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.ruleDescriptions.speedBonus';
+
 	declare value: string;
 	declare movementType: MovementType | null;
 

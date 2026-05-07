@@ -1,13 +1,28 @@
 import type { NimbleCharacter } from '../../documents/actor/character.js';
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		value: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				widget: 'formula',
+			}),
+		),
 		savingThrows: new fields.ArrayField(
-			new fields.StringField({ required: true, nullable: false, initial: '' }),
+			new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: '',
+				// `'all'` is a runtime sentinel resolved in prePrepareData to mean
+				// "every saving throw". Must remain a valid choice.
+				choices: () => [...Object.keys(CONFIG.NIMBLE.savingThrows), 'all'],
+			}),
 			{ required: true, nullable: false },
 		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'savingThrowBonus' }),
@@ -19,6 +34,9 @@ declare namespace SavingThrowBonusRule {
 }
 
 class SavingThrowBonusRule extends NimbleBaseRule<SavingThrowBonusRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.ruleDescriptions.savingThrowBonus';
+
 	static override defineSchema(): SavingThrowBonusRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),

@@ -15,6 +15,9 @@ declare namespace HitDiceAdvantageRule {
 }
 
 class HitDiceAdvantageRule extends NimbleBaseRule<HitDiceAdvantageRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.ruleDescriptions.hitDiceAdvantage';
+
 	declare condition: string;
 
 	static override defineSchema(): HitDiceAdvantageRule.Schema {

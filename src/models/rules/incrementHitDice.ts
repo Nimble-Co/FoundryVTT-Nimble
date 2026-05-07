@@ -1,10 +1,18 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.StringField({ required: true, nullable: false, initial: '1' }),
+		value: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '1',
+				widget: 'formula',
+			}),
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'incrementHitDice' }),
 	};
 }
@@ -14,6 +22,9 @@ declare namespace IncrementHitDiceRule {
 }
 
 class IncrementHitDiceRule extends NimbleBaseRule<IncrementHitDiceRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.ruleDescriptions.incrementHitDice';
+
 	declare value: string;
 
 	static override defineSchema(): IncrementHitDiceRule.Schema {

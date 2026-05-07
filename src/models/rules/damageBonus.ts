@@ -1,3 +1,4 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 type DamageBonusDelivery = 'melee' | 'ranged' | 'any';
@@ -21,15 +22,25 @@ function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: '@level',
-		}),
+		// `value` accepts both numeric formulas (`@level`, `5`) and dice expressions
+		// (`1d6`, `2d8+5`). The `formula` widget is a free text input — see ADR-003.
+		value: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '@level',
+				widget: 'formula',
+			}),
+		),
 		damageType: new fields.StringField({
 			required: true,
 			nullable: false,
+			// `blank: true` is explicit because adding `choices` flips Foundry's
+			// blank default to false — but the empty string is the "no specific
+			// damage type" sentinel here (matches everything during activation).
+			blank: true,
 			initial: '',
+			choices: () => CONFIG.NIMBLE.damageTypes,
 		}),
 		delivery: new fields.StringField({
 			required: true,
@@ -74,8 +85,14 @@ interface ActorSystem {
  * An optional damageType field restricts the bonus to attacks dealing that damage type.
  */
 class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.ruleDescriptions.damageBonus';
+
 	declare value: string;
-	declare damageType: string;
+	// `damageType` is inferred from the schema's `choices` (the keys of
+	// `CONFIG.NIMBLE.damageTypes`, plus `''` for the no-filter sentinel).
+	// No explicit declare — re-declaring as the wider `string` clashes with
+	// the narrower inferred initialized type.
 	declare delivery: DamageBonusDelivery;
 	declare source: DamageBonusSource;
 

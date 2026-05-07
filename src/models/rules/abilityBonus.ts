@@ -1,14 +1,26 @@
 import type { NimbleCharacter } from '../../documents/actor/character.js';
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.StringField({ required: true, nullable: false, initial: '' }),
-		// TODO: Implement choices
+		value: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				widget: 'formula',
+			}),
+		),
 		abilities: new fields.ArrayField(
-			new fields.StringField({ required: true, nullable: false, initial: '' }),
+			new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: '',
+				choices: () => [...Object.keys(CONFIG.NIMBLE.abilityScores), 'all'],
+			}),
 			{ required: true, nullable: false },
 		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'abilityBonus' }),
@@ -20,6 +32,9 @@ declare namespace AbilityBonusRule {
 }
 
 class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.ruleDescriptions.abilityBonus';
+
 	static override defineSchema(): AbilityBonusRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),

@@ -145,6 +145,19 @@ describe('ApplyConditionRule', () => {
 			expect(schema).toHaveProperty('trigger');
 			expect(schema).toHaveProperty('duration');
 		});
+
+		it('declares choices on the condition field (driven by CONFIG.NIMBLE.conditions)', () => {
+			const schema = ApplyConditionRule.defineSchema();
+			const condition = schema.condition as { choices: () => string[] };
+			expect(typeof condition.choices).toBe('function');
+		});
+	});
+
+	describe('class metadata', () => {
+		it('exposes the picker group and i18n description key', () => {
+			expect(ApplyConditionRule.group).toBe('triggers');
+			expect(ApplyConditionRule.description).toBe('NIMBLE.ruleDescriptions.applyCondition');
+		});
 	});
 
 	describe('onItemUsed (fires per target on damage-apply)', () => {

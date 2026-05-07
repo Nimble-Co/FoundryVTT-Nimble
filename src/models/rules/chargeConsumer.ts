@@ -1,4 +1,5 @@
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 const CHARGE_CONSUMER_SCOPES = [...ChargePoolRuleConfig.scopes];
@@ -14,7 +15,14 @@ function schema() {
 			initial: 'item',
 			choices: CHARGE_CONSUMER_SCOPES,
 		}),
-		cost: new fields.StringField({ required: true, nullable: false, initial: '1' }),
+		cost: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '1',
+				widget: 'formula',
+			}),
+		),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -28,6 +36,9 @@ declare namespace ChargeConsumerRule {
 }
 
 class ChargeConsumerRule extends NimbleBaseRule<ChargeConsumerRule.Schema> {
+	static override group = 'resource';
+	static override description = 'NIMBLE.ruleDescriptions.chargeConsumer';
+
 	declare poolIdentifier: string;
 
 	declare poolScope: (typeof ChargePoolRuleConfig.scopes)[number];

@@ -246,6 +246,24 @@ describe('DamageBonusRule', () => {
 			expect(schema).toHaveProperty('disabled');
 			expect(schema).toHaveProperty('label');
 		});
+
+		it('declares choices on damageType, delivery, and source', () => {
+			const schema = DamageBonusRule.defineSchema();
+			const damageType = schema.damageType as { choices: () => Record<string, string> };
+			const delivery = schema.delivery as { choices: string[] };
+			const source = schema.source as { choices: string[] };
+
+			expect(typeof damageType.choices).toBe('function');
+			expect(delivery.choices).toEqual(['melee', 'ranged', 'any']);
+			expect(source.choices).toEqual(['weapon', 'spell', 'any']);
+		});
+	});
+
+	describe('class metadata', () => {
+		it('exposes the picker group and i18n description key', () => {
+			expect(DamageBonusRule.group).toBe('bonuses');
+			expect(DamageBonusRule.description).toBe('NIMBLE.ruleDescriptions.damageBonus');
+		});
 	});
 });
 

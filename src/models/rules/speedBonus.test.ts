@@ -395,5 +395,18 @@ describe('SpeedBonusRule', () => {
 			expect(schema).toHaveProperty('disabled');
 			expect(schema).toHaveProperty('label');
 		});
+
+		it('declares closed movementType choice set', () => {
+			const schema = SpeedBonusRule.defineSchema();
+			const movementType = schema.movementType as { choices: string[] };
+			expect(movementType.choices).toEqual(['walk', 'fly', 'climb', 'swim', 'burrow']);
+		});
+	});
+
+	describe('class metadata', () => {
+		it('exposes the picker group and i18n description key', () => {
+			expect(SpeedBonusRule.group).toBe('bonuses');
+			expect(SpeedBonusRule.description).toBe('NIMBLE.ruleDescriptions.speedBonus');
+		});
 	});
 });

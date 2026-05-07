@@ -103,9 +103,14 @@ const ROLL_MODES = ['set', 'adjust'];
 // Each entry: { rule type → { field path → { kind: 'scalar'|'array', values: string[] } } }
 // Field paths are dot-notation against the rule object.
 
+// Sentinel values resolved at runtime — kept as valid choices so existing pack
+// data continues to validate. Mirror the schemas in src/models/rules/.
+const ALL_SENTINEL = 'all';
+const KNOWN_SENTINEL = 'known';
+
 const RULE_FIELD_AUDITS = {
 	abilityBonus: {
-		abilities: { kind: 'array', values: ABILITY_KEYS },
+		abilities: { kind: 'array', values: [...ABILITY_KEYS, ALL_SENTINEL] },
 	},
 	applyCondition: {
 		condition: { kind: 'scalar', values: CONDITIONS },
@@ -117,19 +122,19 @@ const RULE_FIELD_AUDITS = {
 		damageType: { kind: 'scalar', values: DAMAGE_TYPES },
 	},
 	grantSpells: {
-		schools: { kind: 'array', values: SPELL_SCHOOLS },
+		schools: { kind: 'array', values: [...SPELL_SCHOOLS, KNOWN_SENTINEL] },
 	},
 	initiativeRollMode: {
 		mode: { kind: 'scalar', values: ROLL_MODES },
 	},
 	savingThrowBonus: {
-		savingThrows: { kind: 'array', values: SAVE_KEYS },
+		savingThrows: { kind: 'array', values: [...SAVE_KEYS, ALL_SENTINEL] },
 	},
 	savingThrowRollMode: {
 		mode: { kind: 'scalar', values: ROLL_MODES },
 	},
 	skillBonus: {
-		skills: { kind: 'array', values: SKILL_KEYS },
+		skills: { kind: 'array', values: [...SKILL_KEYS, ALL_SENTINEL] },
 	},
 	speedBonus: {
 		movementType: { kind: 'scalar', values: MOVEMENT_TYPES },
