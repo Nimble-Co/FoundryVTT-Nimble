@@ -486,6 +486,7 @@
 					"acquireTargetsFromTemplate": false,
 					"showDescription": true
 				},
+				"lastStandHp": 180,
 				"rules": [],
 				"subtype": "lastStand"
 			}

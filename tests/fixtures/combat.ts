@@ -4,7 +4,7 @@ export type CombatActorFixtureOptions = {
 	isOwner?: boolean;
 	hp?: number;
 	hpMax?: number;
-	lastStandThreshold?: number;
+	lastStandHp?: number;
 	woundsValue?: number;
 	woundsMax?: number;
 	manaValue?: number;
@@ -39,22 +39,32 @@ export function createCombatActorFixture({
 	isOwner = false,
 	hp = 10,
 	hpMax,
-	lastStandThreshold,
+	lastStandHp,
 	woundsValue,
 	woundsMax,
 	manaValue,
 	manaMax,
 }: CombatActorFixtureOptions = {}): Actor.Implementation {
+	const items =
+		typeof lastStandHp === 'number'
+			? [
+					{
+						type: 'monsterFeature',
+						system: { subtype: 'lastStand', lastStandHp, description: '' },
+					},
+				]
+			: [];
+
 	return {
 		id,
 		type,
 		isOwner,
+		items,
 		system: {
 			attributes: {
 				hp: {
 					value: hp,
 					max: hpMax ?? Math.max(hp, 1),
-					lastStandThreshold,
 				},
 				wounds: { value: woundsValue, max: woundsMax },
 			},

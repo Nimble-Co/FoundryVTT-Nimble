@@ -4,7 +4,6 @@ export type ActorResourceData = {
 			hp?: {
 				value?: number;
 				max?: number;
-				lastStandThreshold?: number;
 			};
 			wounds?: {
 				value?: number;
