@@ -435,6 +435,8 @@
 			"configureSkills": "Configure Skills",
 			"configureWeaponProficiencies": "Configure Weapon Proficiencies",
 			"toggleEquipment": "Toggle Equipped State of {name}",
+			"equippedTooltip": "Equipped",
+			"unequippedTooltip": "Not Equipped",
 			"editRoll": "Edit Roll",
 			"levelUp": "Level Up",
 			"safeRest": "Safe Rest",
