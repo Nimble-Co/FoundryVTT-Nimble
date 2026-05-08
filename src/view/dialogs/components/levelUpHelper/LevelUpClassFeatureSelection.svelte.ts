@@ -13,8 +13,8 @@ export function createClassFeatureSelectionState(
 	setSelectedFeatures: (features: Map<string, NimbleFeatureItem[]>) => void,
 	getSelectedOptionIds: () => Map<string, string>,
 	setSelectedOptionIds: (ids: Map<string, string>) => void,
-	getSelectedOptionSubItems: () => Map<string, string>,
-	setSelectedOptionSubItems: (items: Map<string, string>) => void,
+	getSelectedOptionSubItems: () => Map<string, string[]>,
+	setSelectedOptionSubItems: (items: Map<string, string[]>) => void,
 ) {
 	// Auto-select features for groups where the only available options already
 	// match the required selection count (e.g., "choose 1 of 1", or "choose 2 of 2").
@@ -88,12 +88,20 @@ export function createClassFeatureSelectionState(
 	function handleSubItemSelect(featureUuid: string, itemUuid: string) {
 		const current = getSelectedOptionSubItems();
 		const newMap = new Map(current);
-		if (newMap.get(featureUuid) === itemUuid) {
-			// Toggle off
-			newMap.delete(featureUuid);
+		const currentSelections = newMap.get(featureUuid) ?? [];
+		const alreadySelected = currentSelections.includes(itemUuid);
+
+		if (alreadySelected) {
+			const next = currentSelections.filter((u) => u !== itemUuid);
+			if (next.length === 0) {
+				newMap.delete(featureUuid);
+			} else {
+				newMap.set(featureUuid, next);
+			}
 		} else {
-			newMap.set(featureUuid, itemUuid);
+			newMap.set(featureUuid, [...currentSelections, itemUuid]);
 		}
+
 		setSelectedOptionSubItems(newMap);
 	}
 

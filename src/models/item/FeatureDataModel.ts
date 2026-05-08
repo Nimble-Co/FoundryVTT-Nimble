@@ -53,6 +53,13 @@ const schema = () => ({
 				new fields.StringField({ required: true, nullable: false }),
 				{ required: false, nullable: false, initial: () => [] },
 			),
+			selectionCount: new fields.NumberField({
+				required: false,
+				nullable: false,
+				initial: 1,
+				integer: true,
+				min: 1,
+			}),
 			applyAtLevels: new fields.ArrayField(
 				new fields.NumberField({ required: true, nullable: false, integer: true }),
 				{ required: false, nullable: false, initial: () => [] },
@@ -96,6 +103,7 @@ class NimbleFeatureData extends NimbleBaseItemData<
 		label: string;
 		rules: Array<Record<string, unknown>>;
 		selectionGroups: string[];
+		selectionCount: number;
 		applyAtLevels: number[];
 	}>;
 

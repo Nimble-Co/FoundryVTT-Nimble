@@ -74,7 +74,7 @@
 					{feature}
 					{levelingTo}
 					selectedOptionId={selectedOptionIds.get(feature.uuid) ?? null}
-					selectedSubItemUuid={selectedOptionSubItems.get(feature.uuid) ?? null}
+					selectedSubItemUuids={selectedOptionSubItems.get(feature.uuid) ?? []}
 					{ownedItemUuids}
 					onSelect={(optionId) => handleOptionSelect(feature.uuid, optionId)}
 					onSubItemSelect={(uuid) => handleSubItemSelect(feature.uuid, uuid)}

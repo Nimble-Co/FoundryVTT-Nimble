@@ -295,13 +295,27 @@ export default async function getClassFeaturesFromIndex(
 		entriesByGroup.get(groupName)!.push(allEntries[i]);
 	}
 
+	// Collect every selectionGroup already claimed by an optionFeature's applicable options.
+	// Those groups are presented inside the option picker and must not also appear as direct
+	// selection groups, which would create a duplicate list.
+	const groupsCoveredByOptions = new Set<string>();
+	for (const optionFeature of result.optionFeatures) {
+		for (const opt of optionFeature.system.levelUpOptions ?? []) {
+			if (opt.applyAtLevels.length > 0 && !opt.applyAtLevels.includes(level)) continue;
+			for (const g of opt.selectionGroups ?? []) {
+				groupsCoveredByOptions.add(g);
+			}
+		}
+	}
+
 	// Categorize groups:
 	// - Features with no group ('ungrouped') or a -progression group are auto-grant
 	// - Features with an explicit named group (e.g. 'savage-arsenal') are selection groups
+	// - Groups already covered by an optionFeature's picker are excluded to avoid duplication
 	for (const [groupName, groupFeatures] of featuresByGroup) {
 		if (groupName === 'ungrouped' || groupName.endsWith('-progression')) {
 			result.autoGrant.push(...groupFeatures);
-		} else {
+		} else if (!groupsCoveredByOptions.has(groupName)) {
 			const groupEntries = entriesByGroup.get(groupName) ?? [];
 			const selectionCount = resolveSelectionCount(groupEntries, level);
 			result.selectionGroups.set(groupName, {

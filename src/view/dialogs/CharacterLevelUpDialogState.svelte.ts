@@ -112,7 +112,7 @@ export function createLevelUpState(
 	let classFeatures: ClassFeatureResult | null = $state(null);
 	let selectedClassFeatures: Map<string, NimbleFeatureItem[]> = $state(new Map());
 	let selectedFeatureOptions: Map<string, string> = $state(new Map());
-	let selectedOptionSubItems: Map<string, string> = $state(new Map());
+	let selectedOptionSubItems: Map<string, string[]> = $state(new Map());
 	let featuresLoading = $state(true);
 
 	// Spell grants state
@@ -353,11 +353,10 @@ export function createLevelUpState(
 			const selectedOption = (feature.system.levelUpOptions ?? [])
 				.filter((o) => o.applyAtLevels.length === 0 || o.applyAtLevels.includes(levelingTo))
 				.find((o) => o.id === selectedOptionId);
-			if (
-				(selectedOption?.selectionGroups?.length ?? 0) > 0 &&
-				!selectedOptionSubItems.has(feature.uuid)
-			) {
-				return false;
+			if ((selectedOption?.selectionGroups?.length ?? 0) > 0) {
+				const required = selectedOption?.selectionCount ?? 1;
+				const picks = selectedOptionSubItems.get(feature.uuid) ?? [];
+				if (picks.length < required) return false;
 			}
 		}
 
@@ -430,8 +429,8 @@ export function createLevelUpState(
 				.find((o) => o.id === selectedOptionId);
 			if (!option) continue;
 			if (option.selectionGroups?.length) {
-				const subItemUuid = selectedOptionSubItems.get(feature.uuid);
-				if (subItemUuid) result.push(subItemUuid);
+				const subItemUuids = selectedOptionSubItems.get(feature.uuid) ?? [];
+				result.push(...subItemUuids);
 			} else {
 				for (const rule of option.rules) {
 					if ((rule.type as string) === 'grantItem' && rule.uuid) result.push(rule.uuid as string);
@@ -612,7 +611,7 @@ export function createLevelUpState(
 		get selectedOptionSubItems() {
 			return selectedOptionSubItems;
 		},
-		set selectedOptionSubItems(v: Map<string, string>) {
+		set selectedOptionSubItems(v: Map<string, string[]>) {
 			selectedOptionSubItems = v;
 		},
 		get ownedFeatureUuids() {

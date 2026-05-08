@@ -9,7 +9,7 @@
 		feature,
 		levelingTo,
 		selectedOptionId,
-		selectedSubItemUuid,
+		selectedSubItemUuids,
 		ownedItemUuids,
 		onSelect,
 		onSubItemSelect,
@@ -20,11 +20,20 @@
 			(opt) => opt.applyAtLevels.length === 0 || opt.applyAtLevels.includes(levelingTo),
 		),
 	);
+	const isSingleOption = $derived(options.length === 1);
 	const selectedOption = $derived(options.find((o) => o.id === selectedOptionId) ?? null);
+	const subSelectionCount = $derived(selectedOption?.selectionCount ?? 1);
 	const hasSubSelection = $derived((selectedOption?.selectionGroups?.length ?? 0) > 0);
 	const isSelectionComplete = $derived(
-		selectedOptionId !== null && (!hasSubSelection || selectedSubItemUuid !== null),
+		selectedOptionId !== null &&
+			(!hasSubSelection || selectedSubItemUuids.length >= subSelectionCount),
 	);
+
+	$effect(() => {
+		if (isSingleOption && selectedOptionId !== options[0].id) {
+			onSelect(options[0].id);
+		}
+	});
 
 	let loadedSubItems = $state<NimbleFeatureItem[]>([]);
 	let subItemsLoading = $state(false);
@@ -76,8 +85,8 @@
 		});
 	});
 
-	const selectedSubItem = $derived(
-		loadedSubItems.find((i) => i.uuid === selectedSubItemUuid) ?? null,
+	const selectedSubItems = $derived(
+		loadedSubItems.filter((i) => selectedSubItemUuids.includes(i.uuid)),
 	);
 </script>
 
@@ -91,38 +100,40 @@
 		<h4 class="nimble-heading feature-option-picker__name" data-heading-variant="section">
 			{feature.name}
 		</h4>
-		{#if !isSelectionComplete}
+		{#if !isSingleOption && !isSelectionComplete}
 			<span class="feature-option-picker__hint">
 				{localize('NIMBLE.classFeatureSelection.chooseOne')}
 			</span>
 		{/if}
 	</header>
 
-	<ul class="feature-option-picker__list">
-		{#each options as option (option.id)}
-			{@const isSelected = selectedOptionId === option.id}
-			<li class="option-item" class:selected={isSelected}>
-				<button
-					class="option-item__button"
-					type="button"
-					aria-pressed={isSelected}
-					aria-label={isSelected
-						? localize('NIMBLE.levelUpDialog.deselectOption')
-						: localize('NIMBLE.levelUpDialog.selectOption')}
-					onclick={() => onSelect(option.id)}
-				>
-					<span class="option-item__indicator">
-						{#if isSelected}
-							<i class="fa-solid fa-circle-check"></i>
-						{:else}
-							<i class="fa-regular fa-circle"></i>
-						{/if}
-					</span>
-					<span class="option-item__label">{option.label}</span>
-				</button>
-			</li>
-		{/each}
-	</ul>
+	{#if !isSingleOption}
+		<ul class="feature-option-picker__list">
+			{#each options as option (option.id)}
+				{@const isSelected = selectedOptionId === option.id}
+				<li class="option-item" class:selected={isSelected}>
+					<button
+						class="option-item__button"
+						type="button"
+						aria-pressed={isSelected}
+						aria-label={isSelected
+							? localize('NIMBLE.levelUpDialog.deselectOption')
+							: localize('NIMBLE.levelUpDialog.selectOption')}
+						onclick={() => onSelect(option.id)}
+					>
+						<span class="option-item__indicator">
+							{#if isSelected}
+								<i class="fa-solid fa-circle-check"></i>
+							{:else}
+								<i class="fa-regular fa-circle"></i>
+							{/if}
+						</span>
+						<span class="option-item__label">{option.label}</span>
+					</button>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 
 	{#if hasSubSelection && selectedOptionId}
 		{#if subItemsLoading}
@@ -131,10 +142,10 @@
 			</p>
 		{:else if loadedSubItems.length > 0}
 			<FeatureGroupSelection
-				groupName="combat-abilities"
+				groupName={selectedOption?.selectionGroups?.join('-') ?? 'selection'}
 				features={loadedSubItems}
-				selectionCount={1}
-				selectedFeatures={selectedSubItem ? [selectedSubItem] : []}
+				selectionCount={subSelectionCount}
+				selectedFeatures={selectedSubItems}
 				onSelect={(item) => onSubItemSelect(item.uuid)}
 			/>
 		{/if}

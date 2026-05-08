@@ -42,7 +42,7 @@ export interface LevelUpFeatureOptionPickerProps {
 	feature: NimbleFeatureItem;
 	levelingTo: number;
 	selectedOptionId: string | null;
-	selectedSubItemUuid: string | null;
+	selectedSubItemUuids: string[];
 	ownedItemUuids: Set<string>;
 	onSelect: (optionId: string) => void;
 	onSubItemSelect: (uuid: string) => void;
@@ -53,7 +53,7 @@ export interface LevelUpClassFeatureSelectionProps {
 	levelingTo: number;
 	selectedFeatures: Map<string, NimbleFeatureItem[]>;
 	selectedOptionIds: Map<string, string>;
-	selectedOptionSubItems: Map<string, string>;
+	selectedOptionSubItems: Map<string, string[]>;
 	ownedItemUuids: Set<string>;
 	loading?: boolean;
 }

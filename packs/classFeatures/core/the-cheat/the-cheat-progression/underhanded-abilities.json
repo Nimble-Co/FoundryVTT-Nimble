@@ -1,7 +1,7 @@
 {
-	"name": "Weapon Mastery",
+	"name": "Underhanded Abilities",
 	"type": "feature",
-	"img": "icons/skills/melee/strike-sword-slashing-red.webp",
+	"img": "icons/skills/stealth/shadow-cloak-dagger.webp",
 	"system": {
 		"macro": "",
 		"identifier": "",
@@ -32,45 +32,55 @@
 				"width": 1
 			}
 		},
-		"description": "<p>You may sheathe a weapon and draw a different one 2x/round for free.<br>Choose a weapon type to specialize in.</p><hr><p>Level 6: Choose a weapon type to specialize in.</p><p>Level 10: Choose a 2nd weapon type to specialize in.</p><p>Level 14: You have complete mastery of all weapon types.</p>",
+		"description": "",
 		"featureType": "class",
-		"class": "commander",
-		"group": "commander-progression",
-		"gainedAtLevel": 6,
+		"class": "the-cheat",
+		"group": "the-cheat-progression",
+		"gainedAtLevel": 4,
 		"subclass": false,
 		"gainedAtLevels": [
+			4,
 			6,
+			8,
 			10,
-			14
+			12,
+			14,
+			16,
+			18
 		],
+		"selectionCountByLevel": {},
 		"levelUpOptions": [
 			{
-				"id": "weapon-mastery",
-				"label": "Choose a Weapon Mastery",
+				"id": "underhanded-ability",
+				"label": "Choose an Underhanded Ability",
 				"applyAtLevels": [
+					4,
 					6,
+					8,
 					10,
-					14
+					12,
+					14,
+					16,
+					18
 				],
 				"rules": [],
 				"selectionGroups": [
-					"weapon-mastery"
+					"underhanded-abilities"
 				],
 				"selectionCount": 1
 			}
-		],
-		"selectionCountByLevel": {}
+		]
 	},
 	"effects": [],
-	"folder": "406c4e162069a4a8",
+	"folder": "4915fea5a41fc733",
 	"flags": {},
 	"_stats": {
 		"coreVersion": "13.347",
 		"systemId": "nimble",
 		"systemVersion": "0.1.8",
-		"createdTime": 1760399170426,
-		"modifiedTime": 1760399194128,
+		"createdTime": 1761500000000,
+		"modifiedTime": 1761500000000,
 		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
 	},
-	"_id": "j7H3pLmQ2Vx9A4Rc"
+	"_id": "CP3fo1VpepROvWGu"
 }
