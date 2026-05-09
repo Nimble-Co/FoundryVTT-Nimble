@@ -433,7 +433,6 @@
 	>
 		<i class="fa-solid fa-moon"></i>
 	</button>
-
 	<ActionTracker {actor} />
 </section>
 

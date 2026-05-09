@@ -845,6 +845,8 @@
 				"endTurn": "End Turn",
 				"rollInitiative": "Roll Initiative",
 				"useActionsFirst": "Use your actions first",
+				"confirmEndTurnEarlyTitle": "End Turn Early?",
+				"confirmEndTurnEarlyBody": "You haven't used all your actions yet. Are you sure you want to end your turn?",
 				"noPermissionEndTurn": "You do not have permission to end turns.",
 				"noPermissionRollInitiative": "You do not have permission to roll initiative.",
 				"initiativeAlreadyRolled": "Initiative has already been rolled for this combatant.",

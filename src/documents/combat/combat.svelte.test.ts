@@ -951,9 +951,7 @@ describe('NimbleCombat', () => {
 		expect(normalizedData[2]?.type).toBe('soloMonster');
 		expect(foundry.utils.getProperty(normalizedData[2], 'system.actions.base.current')).toBe(1);
 		expect(normalizedData[3]?.type).toBe('character');
-		expect(foundry.utils.getProperty(normalizedData[3], 'system.actions.base.current')).toBe(
-			undefined,
-		);
+		expect(foundry.utils.getProperty(normalizedData[3], 'system.actions.base.current')).toBe(3);
 	});
 
 	it('creates a late-joining character after the last living character turn', async () => {

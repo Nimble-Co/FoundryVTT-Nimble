@@ -168,9 +168,46 @@ export function createActionTrackerState(getActor: () => NimbleCharacter) {
 		});
 	}
 
+	async function confirmEndTurnEarly(): Promise<boolean> {
+		const dialogApi = foundry.applications?.api?.DialogV2;
+		const title = localize('NIMBLE.ui.heroicActions.confirmEndTurnEarlyTitle');
+		const prompt = localize('NIMBLE.ui.heroicActions.confirmEndTurnEarlyBody');
+
+		if (!dialogApi?.wait) {
+			return globalThis.confirm(prompt);
+		}
+
+		const result = await dialogApi.wait({
+			window: { title },
+			content: `<p>${prompt}</p>`,
+			modal: true,
+			rejectClose: false,
+			buttons: [
+				{
+					action: 'no',
+					icon: 'fa-solid fa-xmark',
+					label: localize('No'),
+				},
+				{
+					action: 'yes',
+					icon: 'fa-solid fa-check',
+					label: localize('Yes'),
+					default: true,
+				},
+			],
+		});
+
+		return result === 'yes' || (result as unknown) === true;
+	}
+
 	async function endTurn(): Promise<void> {
 		const combat = getActiveCombatForCurrentScene();
 		if (!combat) return;
+
+		if (actionsData.current > 0) {
+			const confirmed = await confirmEndTurnEarly();
+			if (!confirmed) return;
+		}
 
 		try {
 			const advanced = await requestAdvanceCombatTurn({ combat });
