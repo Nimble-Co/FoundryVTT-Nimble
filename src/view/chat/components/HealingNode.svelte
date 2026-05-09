@@ -55,12 +55,12 @@
 		};
 	});
 
-	// When the effect has a targetDisposition tag, hide this button unless at least one
-	// effective target (message targets or currently controlled canvas tokens) has that
-	// exact Foundry disposition. If nothing is selected at all, keep it visible so the
-	// user can see the button exists (it will be disabled by hasTargets).
-	let showByDisposition = $derived.by(() => {
-		if (!targetDisposition) return true;
+	// Returns 'recommended' when the effective targets match this effect's targetDisposition,
+	// 'discouraged' when all targets are clearly the opposite type (hostile targets for a
+	// heal-only effect), or 'neutral' otherwise (no targets, neutral tokens, mixed).
+	// Both buttons are always visible — only the emphasis changes.
+	let dispositionState = $derived.by((): 'recommended' | 'neutral' | 'discouraged' => {
+		if (!targetDisposition) return 'neutral';
 
 		const dispMap: Record<string, number> = {
 			friendly: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
@@ -70,20 +70,26 @@
 		};
 		const required = dispMap[targetDisposition];
 
-		const messageTargets = systemData.targets ?? [];
-		const hasAnyEffectiveTargets = messageTargets.length > 0 || controlledDispositions.length > 0;
-		if (!hasAnyEffectiveTargets) return true;
-
-		for (const uuid of messageTargets) {
-			const tokenDoc = fromUuidSync(uuid) as TokenDocument | null;
-			if ((tokenDoc?.disposition as number | undefined) === required) return true;
+		const allDispositions: number[] = [...controlledDispositions];
+		for (const uuid of systemData.targets ?? []) {
+			const doc = fromUuidSync(uuid) as TokenDocument | null;
+			const disp = (doc as { disposition?: number } | null)?.disposition;
+			if (typeof disp === 'number') allDispositions.push(disp);
 		}
 
-		for (const disp of controlledDispositions) {
-			if (disp === required) return true;
-		}
+		if (allDispositions.length === 0) return 'neutral';
+		if (allDispositions.some((d) => d === required)) return 'recommended';
 
-		return false;
+		// Discouraged only when every target is clearly the opposing type
+		const oppositeDisp: Partial<Record<string, number>> = {
+			friendly: CONST.TOKEN_DISPOSITIONS.HOSTILE,
+			hostile: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
+		};
+		const opposite = oppositeDisp[targetDisposition];
+		if (opposite !== undefined && allDispositions.every((d) => d === opposite))
+			return 'discouraged';
+
+		return 'neutral';
 	});
 
 	// Localization
@@ -117,7 +123,7 @@
 	{/if}
 </div>
 
-{#if canInteract && showByDisposition}
+{#if canInteract}
 	<div class="healing-actions">
 		{#if isApplied}
 			<div class="healing-applied">
@@ -154,6 +160,8 @@
 			<button
 				class="nimble-button nimble-button--apply-healing"
 				class:nimble-button--disabled={!hasTargets}
+				class:nimble-button--recommended={dispositionState === 'recommended'}
+				class:nimble-button--discouraged={dispositionState === 'discouraged'}
 				aria-label={hasTargets ? localize('applyHealing') : localize('noTargetsSelected')}
 				data-tooltip={hasTargets ? localize('applyHealing') : localize('noTargetsSelected')}
 				data-tooltip-direction="UP"
@@ -347,6 +355,19 @@
 			&:hover:not(:disabled) {
 				background-color: color-mix(in srgb, var(--healing-button-color) 12%, transparent);
 				border-color: var(--healing-button-color);
+			}
+		}
+
+		&--recommended {
+			font-weight: 900;
+			border-width: 2px;
+		}
+
+		&--discouraged {
+			opacity: 0.45;
+
+			&:hover:not(:disabled) {
+				opacity: 0.65;
 			}
 		}
 
