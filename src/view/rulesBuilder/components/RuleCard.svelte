@@ -7,7 +7,7 @@
 	import PredicateBuilder from './PredicateBuilder.svelte';
 	import SchemaFieldRenderer from './SchemaFieldRenderer.svelte';
 
-	let { rule, manager, onMoveUp, onMoveDown, onDelete, advanced = false }: RuleCardProps = $props();
+	let { rule, manager, onDelete }: RuleCardProps = $props();
 
 	const { ruleDataModels, ruleTypes } = CONFIG.NIMBLE;
 	const RuleClass = $derived(ruleDataModels[rule.type as string]);
@@ -26,9 +26,6 @@
 	});
 
 	let showJson = $state(false);
-	let advancedOpen = $state(
-		untrack(() => typeof rule.priority === 'number' && rule.priority !== 1),
-	);
 	let jsonDraft = $state(untrack(() => JSON.stringify(rule, null, 2)));
 	let jsonError = $state<string | null>(null);
 
@@ -99,27 +96,8 @@
 	}
 </script>
 
-<article
-	class="nimble-rule-card"
-	class:nimble-rule-card--disabled={Boolean(rule.disabled)}
-	class:nimble-rule-card--advanced={advanced}
-	data-reorder-id={rule.id}
-	draggable={advanced}
->
+<article class="nimble-rule-card" class:nimble-rule-card--disabled={Boolean(rule.disabled)}>
 	<header class="nimble-rule-card__header">
-		{#if advanced}
-			<button
-				class="nimble-button nimble-rule-card__handle"
-				type="button"
-				data-button-variant="icon"
-				data-reorder-handle
-				data-tooltip="Drag to reorder. Display order only — see Priority for application order."
-				aria-label="Reorder handle"
-			>
-				<i class="fa-solid fa-grip-vertical"></i>
-			</button>
-		{/if}
-
 		<input
 			class="nimble-rule-card__label"
 			type="text"
@@ -129,6 +107,22 @@
 		/>
 
 		<span class="nimble-rule-card__type">{ruleTypes[rule.type as string] ?? rule.type}</span>
+
+		<label
+			class="nimble-rule-card__priority"
+			data-tooltip="Application order during data prep. Lower numbers run first."
+		>
+			<span class="nimble-rule-card__priority-label">Priority</span>
+			<input
+				type="number"
+				class="nimble-rule-card__priority-input"
+				value={(rule.priority as number) ?? 1}
+				onchange={(e) => {
+					const num = parseInt((e.target as HTMLInputElement).value, 10);
+					if (!Number.isNaN(num)) emitFieldChange('priority', num);
+				}}
+			/>
+		</label>
 
 		{#if RuleClass}
 			<i
@@ -159,43 +153,16 @@
 				<i class="fa-solid {rule.disabled ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
 			</button>
 
-			{#if advanced && onMoveUp}
-				<button
-					type="button"
-					class="nimble-button"
-					data-button-variant="icon"
-					data-tooltip="Move up"
-					aria-label="Move up"
-					onclick={onMoveUp}
-				>
-					<i class="fa-solid fa-arrow-up"></i>
-				</button>
-			{/if}
-			{#if advanced && onMoveDown}
-				<button
-					type="button"
-					class="nimble-button"
-					data-button-variant="icon"
-					data-tooltip="Move down"
-					aria-label="Move down"
-					onclick={onMoveDown}
-				>
-					<i class="fa-solid fa-arrow-down"></i>
-				</button>
-			{/if}
-
-			{#if advanced}
-				<button
-					type="button"
-					class="nimble-button"
-					data-button-variant="icon"
-					data-tooltip={showJson ? 'Switch to builder' : 'Edit raw JSON'}
-					aria-label={showJson ? 'Switch to builder' : 'Edit raw JSON'}
-					onclick={toggleJson}
-				>
-					<i class="fa-solid {showJson ? 'fa-list' : 'fa-code'}"></i>
-				</button>
-			{/if}
+			<button
+				type="button"
+				class="nimble-button"
+				data-button-variant="icon"
+				data-tooltip={showJson ? 'Switch to builder' : 'Edit raw JSON'}
+				aria-label={showJson ? 'Switch to builder' : 'Edit raw JSON'}
+				onclick={toggleJson}
+			>
+				<i class="fa-solid {showJson ? 'fa-list' : 'fa-code'}"></i>
+			</button>
 
 			{#if onDelete}
 				<button
@@ -212,7 +179,7 @@
 		</div>
 	</header>
 
-	{#if advanced && showJson}
+	{#if showJson}
 		<div class="nimble-rule-card__json">
 			<textarea
 				class="nimble-code-block__text-area"
@@ -241,7 +208,7 @@
 		</div>
 	{:else if !schema}
 		<p class="nimble-rule-card__empty">
-			Could not load this rule's schema. Use raw-JSON edit (advanced) to repair.
+			Could not load this rule's schema. Use the raw-JSON edit button to repair.
 		</p>
 	{:else}
 		{@const editableEntries = Object.entries(schema).filter(
@@ -270,48 +237,31 @@
 			{/if}
 		</div>
 
-		{#if advanced}
-			<details class="nimble-rule-card__advanced" open={advancedOpen}>
-				<summary>
-					<i class="fa-solid fa-sliders"></i>
-					Advanced
-				</summary>
+		<details class="nimble-rule-card__advanced">
+			<summary>
+				<i class="fa-solid fa-sliders"></i>
+				Advanced
+			</summary>
 
-				<div class="nimble-rule-card__advanced-body">
-					<label class="nimble-field-row">
-						<span class="nimble-field-row__label">Identifier</span>
-						<input
-							type="text"
-							value={(rule.identifier as string) ?? ''}
-							onchange={(e) => emitFieldChange('identifier', (e.target as HTMLInputElement).value)}
-						/>
-					</label>
+			<div class="nimble-rule-card__advanced-body">
+				<label class="nimble-field-row">
+					<span class="nimble-field-row__label">Identifier</span>
+					<input
+						type="text"
+						value={(rule.identifier as string) ?? ''}
+						onchange={(e) => emitFieldChange('identifier', (e.target as HTMLInputElement).value)}
+					/>
+				</label>
 
-					<label class="nimble-field-row">
-						<span class="nimble-field-row__label">Priority</span>
-						<input
-							type="number"
-							value={(rule.priority as number) ?? 1}
-							onchange={(e) => {
-								const num = parseInt((e.target as HTMLInputElement).value, 10);
-								if (!Number.isNaN(num)) emitFieldChange('priority', num);
-							}}
-						/>
-						<small class="nimble-field-hint">
-							Application order during data prep. Independent of drag-reorder above.
-						</small>
-					</label>
-
-					<div class="nimble-field-row">
-						<span class="nimble-field-row__label">Predicate</span>
-						<PredicateBuilder
-							value={(rule.predicate as RawPredicate) ?? {}}
-							onChange={(v) => emitFieldChange('predicate', v)}
-						/>
-					</div>
+				<div class="nimble-field-row">
+					<span class="nimble-field-row__label">Predicate</span>
+					<PredicateBuilder
+						value={(rule.predicate as RawPredicate) ?? {}}
+						onChange={(v) => emitFieldChange('predicate', v)}
+					/>
 				</div>
-			</details>
-		{/if}
+			</div>
+		</details>
 	{/if}
 </article>
 
@@ -335,8 +285,31 @@
 			align-items: center;
 		}
 
-		&__handle {
-			cursor: grab;
+		&__priority {
+			display: inline-flex;
+			gap: 0.25rem;
+			align-items: center;
+			padding: 0.125rem 0.375rem;
+			font-size: var(--nimble-xs-text);
+			color: var(--color-text-dark-secondary);
+			background: var(--nimble-box-background-color);
+			border-radius: 4px;
+		}
+
+		&__priority-label {
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+		}
+
+		&__priority-input {
+			width: 3rem;
+			padding: 0 0.25rem;
+			font-size: var(--nimble-xs-text);
+			text-align: center;
+			background: var(--nimble-sheet-background, transparent);
+			border: 1px solid var(--nimble-accent-color);
+			border-radius: 3px;
 		}
 
 		&__label {
@@ -441,13 +414,6 @@
 			color: var(--color-text-dark-secondary);
 			line-height: 1.3;
 		}
-	}
-
-	.nimble-field-hint {
-		display: block;
-		margin-top: 0.125rem;
-		color: var(--color-text-dark-secondary);
-		font-size: var(--nimble-xs-text);
 	}
 
 	.nimble-code-block__text-area {

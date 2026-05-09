@@ -3,6 +3,7 @@
 
 	import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 	import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
+	import { reorderable } from '#view/rulesBuilder/actions/reorderable.svelte.js';
 	import RulesBuilderWindow from '#view/rulesBuilder/RulesBuilderWindow.svelte';
 
 	interface RuleSource {
@@ -14,9 +15,15 @@
 	}
 
 	const item: NimbleBaseItem = getContext('document');
-	const rules = $derived((item.reactive.system as unknown as { rules: RuleSource[] }).rules);
+	const rawRules = $derived((item.reactive.system as unknown as { rules: RuleSource[] }).rules);
+	// Display order = application order (sort by ascending priority, stable).
+	const rules = $derived(
+		[...rawRules].sort((a, b) => ((a.priority as number) ?? 1) - ((b.priority as number) ?? 1)),
+	);
 
 	const { ruleTypes } = CONFIG.NIMBLE;
+
+	const COPY_TYPE = 'nimble.Rule';
 
 	function openBuilder() {
 		const dialog = GenericDialog.getOrCreate(
@@ -31,6 +38,24 @@
 			},
 		);
 		dialog.render(true);
+	}
+
+	function getDragPayload(id: string): Record<string, unknown> | null {
+		const source = rules.find((r) => r.id === id);
+		if (!source) return null;
+		const cloned = foundry.utils.deepClone(source) as Record<string, unknown>;
+		return {
+			rule: cloned,
+			sourceItemUuid: item.uuid,
+		};
+	}
+
+	async function copyRuleFromPayload(payload: Record<string, unknown>) {
+		if (payload.sourceItemUuid === item.uuid) return;
+		const incoming = payload.rule as Record<string, unknown> | undefined;
+		if (!incoming || typeof incoming !== 'object') return;
+		const { id: _id, ...rest } = incoming;
+		await item.rules.addRule(rest);
 	}
 </script>
 
@@ -50,9 +75,26 @@
 	{#if rules.length === 0}
 		<p class="nimble-rules-tab__empty">No rules defined. Open the builder to add one.</p>
 	{:else}
-		<ul class="nimble-rules-tab__list">
+		<ul
+			class="nimble-rules-tab__list"
+			use:reorderable={{
+				enabled: true,
+				getDragPayload,
+				onCopy: copyRuleFromPayload,
+				copyAcceptType: COPY_TYPE,
+			}}
+		>
 			{#each rules as rule (rule.id)}
-				<li class="nimble-rules-tab__row" class:nimble-rules-tab__row--disabled={rule.disabled}>
+				<li
+					class="nimble-rules-tab__row"
+					class:nimble-rules-tab__row--disabled={rule.disabled}
+					data-reorder-id={rule.id}
+					draggable="true"
+					data-tooltip="Drag onto another rules list to copy"
+				>
+					<span class="nimble-rules-tab__priority" data-tooltip="Priority (application order)">
+						{(rule.priority as number) ?? 1}
+					</span>
 					<span class="nimble-rules-tab__label">
 						{rule.label || ruleTypes[rule.type] || rule.type}
 					</span>
@@ -105,21 +147,45 @@
 		margin: 0;
 		padding: 0;
 		list-style: none;
+
+		:global(.nimble-reorderable__item--source-hidden) {
+			opacity: 0.35;
+		}
+	}
+
+	.nimble-rules-tab__list:global(.nimble-reorderable--foreign-drag) {
+		outline: 2px dashed var(--nimble-accent-color);
+		outline-offset: 4px;
+		border-radius: 4px;
 	}
 
 	.nimble-rules-tab__row {
 		display: flex;
-		gap: 0.5rem;
+		gap: 0.375rem;
 		align-items: center;
 		padding: 0.375rem 0.5rem;
 		background: var(--nimble-box-background-color);
 		border: 1px solid var(--nimble-accent-color);
 		border-radius: 4px;
 		font-size: var(--nimble-sm-text);
+		cursor: grab;
 
 		&--disabled {
 			opacity: 0.55;
 		}
+	}
+
+	.nimble-rules-tab__priority {
+		display: inline-flex;
+		justify-content: center;
+		align-items: center;
+		min-width: 1.5rem;
+		padding: 0 0.25rem;
+		font-size: var(--nimble-xs-text);
+		font-weight: 600;
+		color: var(--color-text-dark-secondary);
+		background: var(--nimble-sheet-background, transparent);
+		border-radius: 999px;
 	}
 
 	.nimble-rules-tab__label {

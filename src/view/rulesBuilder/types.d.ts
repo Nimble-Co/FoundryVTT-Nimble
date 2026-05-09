@@ -65,16 +65,7 @@ export interface RuleCardProps {
 	rule: Record<string, unknown>;
 	/** RulesManager instance bound to the parent item. */
 	manager: { updateRule: (id: string, data: Record<string, unknown>) => Promise<unknown> };
-	/** Reorder controls — provided by the parent list, not the card. */
-	onMoveUp?: () => void;
-	onMoveDown?: () => void;
 	onDelete?: () => void;
-	/**
-	 * When true, surface the power-user controls: drag handle, move-up/down,
-	 * raw JSON edit, and the Advanced disclosure (priority / predicate /
-	 * identifier). Off by default — most authors should never need them.
-	 */
-	advanced?: boolean;
 }
 
 export interface RuleTypePickerProps {

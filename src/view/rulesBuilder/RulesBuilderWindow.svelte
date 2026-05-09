@@ -17,25 +17,16 @@
 
 	const { document: item }: Props = $props();
 
-	const rules = $derived((item.reactive.system as unknown as { rules: RuleSource[] }).rules);
+	const rawRules = $derived((item.reactive.system as unknown as { rules: RuleSource[] }).rules);
+
+	// Sort by priority so display order matches the order Foundry actually
+	// applies rules in (Actor.prepareRules uses the same stable sort).
+	const rules = $derived(
+		[...rawRules].sort((a, b) => ((a.priority as number) ?? 1) - ((b.priority as number) ?? 1)),
+	);
 	const allDisabled = $derived(rules.length > 0 && rules.every((r) => r.disabled));
 
 	let pickerOpen = $state(false);
-	let advancedMode = $state(false);
-
-	async function handleReorder(ids: string[]) {
-		await item.rules.reorderRules(ids);
-	}
-
-	async function moveRule(ruleId: string, delta: -1 | 1) {
-		const order = rules.map((r) => r.id);
-		const idx = order.indexOf(ruleId);
-		if (idx < 0) return;
-		const target = idx + delta;
-		if (target < 0 || target >= order.length) return;
-		[order[idx], order[target]] = [order[target], order[idx]];
-		await item.rules.reorderRules(order);
-	}
 
 	async function toggleAll() {
 		if (allDisabled) await item.rules.enableAllRules();
@@ -45,6 +36,18 @@
 	async function pickRule(ruleKey: string) {
 		await item.rules.addRule({ type: ruleKey });
 		pickerOpen = false;
+	}
+
+	const COPY_TYPE = 'nimble.Rule';
+
+	// Drop target only — cards in here aren't draggable so the inline editing
+	// they're built for doesn't fight with drag gestures.
+	async function copyRuleFromPayload(payload: Record<string, unknown>) {
+		if (payload.sourceItemUuid === item.uuid) return;
+		const incoming = payload.rule as Record<string, unknown> | undefined;
+		if (!incoming || typeof incoming !== 'object') return;
+		const { id: _id, ...rest } = incoming;
+		await item.rules.addRule(rest);
 	}
 </script>
 
@@ -76,14 +79,6 @@
 					{allDisabled ? 'Enable all' : 'Disable all'}
 				</button>
 			{/if}
-
-			<label
-				class="nimble-rules-builder-window__advanced-toggle"
-				data-tooltip="Reveals identifier, priority, predicate, drag-reorder, and the raw JSON edit on every rule."
-			>
-				<input type="checkbox" bind:checked={advancedMode} />
-				<span>Show advanced</span>
-			</label>
 		</div>
 	</header>
 
@@ -97,18 +92,15 @@
 		{:else}
 			<ul
 				class="nimble-rules-builder-window__list"
-				use:reorderable={{ enabled: advancedMode, onReorder: handleReorder }}
+				use:reorderable={{
+					enabled: true,
+					onCopy: copyRuleFromPayload,
+					copyAcceptType: COPY_TYPE,
+				}}
 			>
-				{#each rules as rule, index (rule.id)}
+				{#each rules as rule (rule.id)}
 					<li class="nimble-rules-builder-window__list-item">
-						<RuleCard
-							{rule}
-							manager={item.rules}
-							advanced={advancedMode}
-							onMoveUp={index === 0 ? undefined : () => moveRule(rule.id, -1)}
-							onMoveDown={index === rules.length - 1 ? undefined : () => moveRule(rule.id, 1)}
-							onDelete={() => item.rules.deleteRule(rule.id)}
-						/>
+						<RuleCard {rule} manager={item.rules} onDelete={() => item.rules.deleteRule(rule.id)} />
 					</li>
 				{/each}
 			</ul>
@@ -154,20 +146,6 @@
 		font-size: var(--nimble-sm-text);
 	}
 
-	.nimble-rules-builder-window__advanced-toggle {
-		display: inline-flex;
-		gap: 0.25rem;
-		align-items: center;
-		font-size: var(--nimble-xs-text);
-		color: var(--color-text-dark-secondary);
-		cursor: pointer;
-		user-select: none;
-
-		input {
-			margin: 0;
-		}
-	}
-
 	.nimble-rules-builder-window__body {
 		flex: 1;
 		min-height: 0;
@@ -190,19 +168,18 @@
 		padding: 0;
 		list-style: none;
 
-		:global(.nimble-reorderable__placeholder) {
-			height: 0.25rem;
-			margin: 0.125rem 0;
-			background: var(--nimble-accent-color);
-			border-radius: 2px;
-		}
-
 		:global(.nimble-reorderable__item--source-hidden) {
 			opacity: 0.35;
 		}
 	}
 
+	.nimble-rules-builder-window__list:global(.nimble-reorderable--foreign-drag) {
+		outline: 2px dashed var(--nimble-accent-color);
+		outline-offset: 4px;
+		border-radius: 4px;
+	}
+
 	.nimble-rules-builder-window__list-item {
-		display: contents;
+		display: block;
 	}
 </style>
