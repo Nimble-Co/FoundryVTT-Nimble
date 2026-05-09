@@ -1,19 +1,37 @@
 /**
- * Svelte action for native HTML5 list reorder. Apply to a list container;
- * each child must carry a `data-reorder-id` attribute. On drop, calls
- * `onReorder` with the new id order — the consumer typically routes that
- * straight into `RulesManager.reorderRules` or equivalent.
+ * Svelte action for cross-list HTML5 drag/drop copy. Apply to a list
+ * container; each child must carry a `data-reorder-id` attribute and be
+ * `draggable`.
  *
- * Optional drag handles: any descendant carrying `data-reorder-handle`
- * becomes the only valid drag origin. If no handle elements are present,
- * the whole item is draggable.
+ * On drag from a list, encodes a JSON payload onto `dataTransfer` (built
+ * by the consumer's `getDragPayload`). On drop onto a different list with
+ * the matching `copyAcceptType`, calls the consumer's `onCopy(payload)`.
+ *
+ * Within-list drops are no-ops — application order is determined by the
+ * `priority` field on each rule, not by array order, so reordering by
+ * drag would be misleading. Use the inline priority input on each card
+ * to change application order.
  */
 
 interface ReorderableOptions {
 	/** Apply or remove the action. Allows toggling without re-mounting the list. */
 	enabled: boolean;
-	/** Called with the new id order after a successful drop. */
-	onReorder: (ids: string[]) => void;
+	/**
+	 * Build a JSON payload to attach to `dataTransfer` at dragstart. Returning
+	 * `null`/`undefined` means "no cross-list payload"; the drag still happens
+	 * for browser visual feedback but receivers won't accept it.
+	 */
+	getDragPayload?: (id: string) => Record<string, unknown> | null | undefined;
+	/**
+	 * Called when a payload from another reorderable list is dropped onto
+	 * this one. Receives the parsed payload.
+	 */
+	onCopy?: (payload: Record<string, unknown>) => void;
+	/**
+	 * The `type` value that `onCopy` will accept. Drops with any other type
+	 * are ignored. Defaults to `'reorderable'`.
+	 */
+	copyAcceptType?: string;
 }
 
 interface ReorderableActionReturn {
@@ -22,16 +40,9 @@ interface ReorderableActionReturn {
 }
 
 const ITEM_ATTR = 'data-reorder-id';
-const DRAG_HANDLE_ATTR = 'data-reorder-handle';
 const DRAGGING_CLASS = 'nimble-reorderable--dragging';
 const SOURCE_HIDDEN_CLASS = 'nimble-reorderable__item--source-hidden';
-const PLACEHOLDER_CLASS = 'nimble-reorderable__placeholder';
-
-function readIds(container: HTMLElement): string[] {
-	return Array.from(container.querySelectorAll<HTMLElement>(`[${ITEM_ATTR}]`))
-		.map((el) => el.dataset.reorderId)
-		.filter((id): id is string => Boolean(id));
-}
+const FOREIGN_DRAG_CLASS = 'nimble-reorderable--foreign-drag';
 
 function findItemElement(target: EventTarget | null, container: HTMLElement): HTMLElement | null {
 	if (!(target instanceof Element)) return null;
@@ -45,37 +56,18 @@ export function reorderable(
 	options: ReorderableOptions,
 ): ReorderableActionReturn {
 	let enabled = options.enabled;
-	let onReorder = options.onReorder;
+	let getDragPayload = options.getDragPayload;
+	let onCopy = options.onCopy;
+	let copyAcceptType = options.copyAcceptType ?? 'reorderable';
 	let draggedItem: HTMLElement | null = null;
-	let draggedId: string | null = null;
-	let placeholder: HTMLElement | null = null;
-	// HTML5 dragstart fires with `event.target = the draggable element`, not the
-	// pointer's actual position. To gate drags by handle, capture where the
-	// user pressed down — that's the real origin of the gesture.
-	let mouseDownOnHandle = false;
-
-	function clearPlaceholder() {
-		if (placeholder?.parentElement) {
-			placeholder.parentElement.removeChild(placeholder);
-		}
-		placeholder = null;
-	}
-
-	function ensurePlaceholder(): HTMLElement {
-		if (placeholder) return placeholder;
-		placeholder = document.createElement('div');
-		placeholder.className = PLACEHOLDER_CLASS;
-		return placeholder;
-	}
 
 	function clearDragVisuals() {
 		if (draggedItem) {
 			draggedItem.classList.remove(SOURCE_HIDDEN_CLASS);
 		}
-		clearPlaceholder();
 		node.classList.remove(DRAGGING_CLASS);
+		node.classList.remove(FOREIGN_DRAG_CLASS);
 		draggedItem = null;
-		draggedId = null;
 		window.removeEventListener('dragend', cleanupHandler);
 		window.removeEventListener('drop', cleanupHandler);
 		window.removeEventListener('blur', cleanupHandler);
@@ -85,40 +77,27 @@ export function reorderable(
 		clearDragVisuals();
 	};
 
-	function onMouseDown(event: MouseEvent) {
-		if (!enabled) return;
-		const target = event.target;
-		if (!(target instanceof Element)) {
-			mouseDownOnHandle = false;
-			return;
-		}
-		mouseDownOnHandle = target.closest(`[${DRAG_HANDLE_ATTR}]`) !== null;
-	}
-
 	function onDragStart(event: DragEvent) {
 		if (!enabled) return;
 		const target = event.target;
-		if (target instanceof Element) {
-			const item = findItemElement(target, node);
-			if (!item) return;
+		if (!(target instanceof Element)) return;
 
-			// If any handle exists in the list, require the drag gesture to have
-			// started on one. Use the captured mousedown — `event.target` for
-			// dragstart is the draggable element, not where the pointer pressed.
-			const hasHandles = node.querySelector(`[${DRAG_HANDLE_ATTR}]`) !== null;
-			if (hasHandles && !mouseDownOnHandle) {
-				event.preventDefault();
-				return;
-			}
+		const item = findItemElement(target, node);
+		if (!item) return;
+		const id = item.dataset.reorderId;
+		if (!id) return;
 
-			draggedItem = item;
-			draggedId = item.dataset.reorderId ?? null;
-		}
-		if (!draggedItem || !draggedId) return;
+		draggedItem = item;
 
 		if (event.dataTransfer) {
-			event.dataTransfer.effectAllowed = 'move';
-			event.dataTransfer.setData('text/plain', draggedId);
+			event.dataTransfer.effectAllowed = 'copy';
+			const payload = getDragPayload?.(id);
+			if (payload && copyAcceptType) {
+				const wrapped = { ...payload, type: copyAcceptType };
+				event.dataTransfer.setData('text/plain', JSON.stringify(wrapped));
+			} else {
+				event.dataTransfer.setData('text/plain', id);
+			}
 		}
 
 		node.classList.add(DRAGGING_CLASS);
@@ -133,63 +112,47 @@ export function reorderable(
 		window.addEventListener('blur', cleanupHandler);
 	}
 
-	function onDragOver(event: DragEvent) {
-		if (!enabled || !draggedItem) return;
-		event.preventDefault();
-		if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
-
-		const target = findItemElement(event.target, node);
-		const ph = ensurePlaceholder();
-
-		if (!target || target === draggedItem) {
-			// Hovering over the list container itself or the dragged item — append
-			// the placeholder at the end so the drop slot is always meaningful.
-			if (ph.parentElement !== node || ph.nextElementSibling !== null) {
-				node.appendChild(ph);
-			}
-			return;
-		}
-
-		const rect = target.getBoundingClientRect();
-		const midpoint = rect.top + rect.height / 2;
-		const insertBefore = event.clientY < midpoint;
-
-		if (insertBefore) {
-			if (target.previousElementSibling !== ph) {
-				target.parentElement?.insertBefore(ph, target);
-			}
-		} else {
-			if (target.nextElementSibling !== ph) {
-				target.parentElement?.insertBefore(ph, target.nextElementSibling);
-			}
-		}
+	function isForeignDrag(event: DragEvent): boolean {
+		// `dataTransfer` payload isn't readable mid-drag (browser security);
+		// the absence of a local `draggedItem` is the signal.
+		if (draggedItem) return false;
+		if (!onCopy) return false;
+		return event.dataTransfer?.types.includes('text/plain') === true;
 	}
 
-	function onDrop(event: DragEvent) {
-		if (!enabled || !draggedItem || !draggedId) return;
+	function onDragOver(event: DragEvent) {
+		if (!enabled) return;
+		if (!isForeignDrag(event)) return;
 		event.preventDefault();
-
-		// Move the dragged item to where the placeholder is sitting before
-		// computing the new id order, so readIds reflects the final layout.
-		if (placeholder?.parentElement) {
-			placeholder.parentElement.insertBefore(draggedItem, placeholder);
-		}
-		clearPlaceholder();
-
-		const ids = readIds(node);
-		onReorder(ids);
-		clearDragVisuals();
+		if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+		node.classList.add(FOREIGN_DRAG_CLASS);
 	}
 
 	function onDragLeave(event: DragEvent) {
-		// Only act when the cursor leaves the list container, not when crossing
-		// between child items (which fire dragleave on the previous child).
-		if (event.target === node && placeholder?.parentElement === node) {
-			clearPlaceholder();
-		}
+		if (event.target !== node) return;
+		node.classList.remove(FOREIGN_DRAG_CLASS);
 	}
 
-	node.addEventListener('mousedown', onMouseDown);
+	function onDrop(event: DragEvent) {
+		if (!enabled) return;
+		if (draggedItem) return; // within-list drops are no-ops
+		if (!onCopy) return;
+
+		const raw = event.dataTransfer?.getData('text/plain');
+		if (!raw) return;
+		let parsed: Record<string, unknown>;
+		try {
+			parsed = JSON.parse(raw) as Record<string, unknown>;
+		} catch {
+			return;
+		}
+		if (parsed.type !== copyAcceptType) return;
+
+		event.preventDefault();
+		node.classList.remove(FOREIGN_DRAG_CLASS);
+		onCopy(parsed);
+	}
+
 	node.addEventListener('dragstart', onDragStart);
 	node.addEventListener('dragover', onDragOver);
 	node.addEventListener('drop', onDrop);
@@ -198,12 +161,13 @@ export function reorderable(
 	return {
 		update(next: ReorderableOptions) {
 			enabled = next.enabled;
-			onReorder = next.onReorder;
+			getDragPayload = next.getDragPayload;
+			onCopy = next.onCopy;
+			copyAcceptType = next.copyAcceptType ?? 'reorderable';
 			if (!enabled) clearDragVisuals();
 		},
 		destroy() {
 			clearDragVisuals();
-			node.removeEventListener('mousedown', onMouseDown);
 			node.removeEventListener('dragstart', onDragStart);
 			node.removeEventListener('dragover', onDragOver);
 			node.removeEventListener('drop', onDrop);
