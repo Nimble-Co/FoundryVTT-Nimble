@@ -32,14 +32,29 @@
 		canApplyDamage ? applyDamageLabel : localize('NIMBLE.chat.noDamageToApply'),
 	);
 
-	// When targetDisposition is set, hide this button unless at least one selected target
-	// has that exact Foundry disposition. If no targets are selected yet, keep it visible.
+	// Tracks the dispositions of currently canvas-controlled tokens so the button responds
+	// to token selection in real time without requiring an explicit "Add Target" click.
+	let controlledDispositions = $state<number[]>([]);
+
+	$effect(() => {
+		function syncControlled() {
+			controlledDispositions = (canvas?.tokens?.controlled ?? []).map((t) => {
+				const doc = t.document as TokenDocument | null;
+				return doc?.disposition ?? CONST.TOKEN_DISPOSITIONS.FRIENDLY;
+			});
+		}
+		syncControlled();
+		const hookId = Hooks.on('controlToken', syncControlled);
+		return () => {
+			Hooks.off('controlToken', hookId);
+		};
+	});
+
+	// When targetDisposition is set, hide this button unless at least one effective target
+	// (message targets or currently controlled canvas tokens) has that exact Foundry
+	// disposition. If nothing is selected at all, keep it visible (disabled by other logic).
 	let showByDisposition = $derived.by(() => {
 		if (!targetDisposition) return true;
-		const targets =
-			(messageDocument?.reactive as unknown as { system?: { targets?: string[] } } | undefined)
-				?.system?.targets ?? [];
-		if (!targets.length) return true;
 
 		const dispMap: Record<string, number> = {
 			friendly: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
@@ -49,10 +64,21 @@
 		};
 		const required = dispMap[targetDisposition];
 
-		for (const uuid of targets) {
+		const messageTargets =
+			(messageDocument?.reactive as unknown as { system?: { targets?: string[] } } | undefined)
+				?.system?.targets ?? [];
+		const hasAnyEffectiveTargets = messageTargets.length > 0 || controlledDispositions.length > 0;
+		if (!hasAnyEffectiveTargets) return true;
+
+		for (const uuid of messageTargets) {
 			const tokenDoc = fromUuidSync(uuid) as TokenDocument | null;
 			if ((tokenDoc?.disposition as number | undefined) === required) return true;
 		}
+
+		for (const disp of controlledDispositions) {
+			if (disp === required) return true;
+		}
+
 		return false;
 	});
 </script>

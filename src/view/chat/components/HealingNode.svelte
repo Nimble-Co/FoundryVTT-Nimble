@@ -36,13 +36,31 @@
 		node.targetDisposition as 'friendly' | 'neutral' | 'hostile' | 'secret' | undefined,
 	);
 
+	// Tracks the dispositions of currently canvas-controlled tokens, updated live via
+	// the controlToken hook so the button responds to token selection without requiring
+	// the user to explicitly add a target to the message first.
+	let controlledDispositions = $state<number[]>([]);
+
+	$effect(() => {
+		function syncControlled() {
+			controlledDispositions = (canvas?.tokens?.controlled ?? []).map((t) => {
+				const doc = t.document as TokenDocument | null;
+				return doc?.disposition ?? CONST.TOKEN_DISPOSITIONS.FRIENDLY;
+			});
+		}
+		syncControlled();
+		const hookId = Hooks.on('controlToken', syncControlled);
+		return () => {
+			Hooks.off('controlToken', hookId);
+		};
+	});
+
 	// When the effect has a targetDisposition tag, hide this button unless at least one
-	// selected target has that exact Foundry disposition. If no targets are selected yet
-	// we keep the button visible so the user can still see it (disabled by hasTargets).
+	// effective target (message targets or currently controlled canvas tokens) has that
+	// exact Foundry disposition. If nothing is selected at all, keep it visible so the
+	// user can see the button exists (it will be disabled by hasTargets).
 	let showByDisposition = $derived.by(() => {
 		if (!targetDisposition) return true;
-		const targets = systemData.targets ?? [];
-		if (!targets.length) return true;
 
 		const dispMap: Record<string, number> = {
 			friendly: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
@@ -52,10 +70,19 @@
 		};
 		const required = dispMap[targetDisposition];
 
-		for (const uuid of targets) {
+		const messageTargets = systemData.targets ?? [];
+		const hasAnyEffectiveTargets = messageTargets.length > 0 || controlledDispositions.length > 0;
+		if (!hasAnyEffectiveTargets) return true;
+
+		for (const uuid of messageTargets) {
 			const tokenDoc = fromUuidSync(uuid) as TokenDocument | null;
 			if ((tokenDoc?.disposition as number | undefined) === required) return true;
 		}
+
+		for (const disp of controlledDispositions) {
+			if (disp === required) return true;
+		}
+
 		return false;
 	});
 
