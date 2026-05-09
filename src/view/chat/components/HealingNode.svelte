@@ -32,6 +32,33 @@
 	// Permission check - only GM or the message author can interact with healing buttons
 	let canInteract = $derived(game.user?.isGM || messageDocument.author?.id === game.user?.id);
 
+	let targetDisposition = $derived(
+		node.targetDisposition as 'friendly' | 'neutral' | 'hostile' | 'secret' | undefined,
+	);
+
+	// When the effect has a targetDisposition tag, hide this button unless at least one
+	// selected target has that exact Foundry disposition. If no targets are selected yet
+	// we keep the button visible so the user can still see it (disabled by hasTargets).
+	let showByDisposition = $derived.by(() => {
+		if (!targetDisposition) return true;
+		const targets = systemData.targets ?? [];
+		if (!targets.length) return true;
+
+		const dispMap: Record<string, number> = {
+			friendly: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
+			neutral: CONST.TOKEN_DISPOSITIONS.NEUTRAL,
+			hostile: CONST.TOKEN_DISPOSITIONS.HOSTILE,
+			secret: CONST.TOKEN_DISPOSITIONS.SECRET,
+		};
+		const required = dispMap[targetDisposition];
+
+		for (const uuid of targets) {
+			const tokenDoc = fromUuidSync(uuid) as TokenDocument | null;
+			if ((tokenDoc?.disposition as number | undefined) === required) return true;
+		}
+		return false;
+	});
+
 	// Localization
 	const localize = (key: string) => game.i18n.localize(`NIMBLE.chat.${key}`);
 
@@ -63,7 +90,7 @@
 	{/if}
 </div>
 
-{#if canInteract}
+{#if canInteract && showByDisposition}
 	<div class="healing-actions">
 		{#if isApplied}
 			<div class="healing-applied">

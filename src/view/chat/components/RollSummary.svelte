@@ -13,6 +13,7 @@
 		options,
 		showRollDetails,
 		type = '',
+		targetDisposition,
 	}: RollSummaryProps = $props();
 	const { hitDice } = CONFIG.NIMBLE;
 	const autoExpand = game.settings.get('nimble', 'autoExpandRolls');
@@ -30,6 +31,30 @@
 	let applyDamageTooltip = $derived(
 		canApplyDamage ? applyDamageLabel : localize('NIMBLE.chat.noDamageToApply'),
 	);
+
+	// When targetDisposition is set, hide this button unless at least one selected target
+	// has that exact Foundry disposition. If no targets are selected yet, keep it visible.
+	let showByDisposition = $derived.by(() => {
+		if (!targetDisposition) return true;
+		const targets =
+			(messageDocument?.reactive as unknown as { system?: { targets?: string[] } } | undefined)
+				?.system?.targets ?? [];
+		if (!targets.length) return true;
+
+		const dispMap: Record<string, number> = {
+			friendly: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
+			neutral: CONST.TOKEN_DISPOSITIONS.NEUTRAL,
+			hostile: CONST.TOKEN_DISPOSITIONS.HOSTILE,
+			secret: CONST.TOKEN_DISPOSITIONS.SECRET,
+		};
+		const required = dispMap[targetDisposition];
+
+		for (const uuid of targets) {
+			const tokenDoc = fromUuidSync(uuid) as TokenDocument | null;
+			if ((tokenDoc?.disposition as number | undefined) === required) return true;
+		}
+		return false;
+	});
 </script>
 
 <div class="roll" class:roll--no-subheading={!subheading}>
@@ -76,7 +101,7 @@
 	</div>
 {/if}
 
-{#if type === 'damage' && game.user?.isGM}
+{#if type === 'damage' && game.user?.isGM && showByDisposition}
 	<button
 		class="nimble-button nimble-button--apply-damage"
 		aria-label={applyDamageLabel}

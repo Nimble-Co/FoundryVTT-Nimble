@@ -39,7 +39,7 @@
 	const messageDocument = getContext('messageDocument');
 	const { actorType, permissions } = messageDocument.system;
 
-	let { damageType, ignoreArmor = false, outcome, roll } = $props();
+	let { damageType, ignoreArmor = false, outcome, roll, targetDisposition = undefined } = $props();
 	let rollOptions = $derived(roll?.options ?? {});
 	let label = $derived(damageTypes[damageType] ?? '');
 	let multiplier = $derived(getDamageMultiplier(outcome));
@@ -55,6 +55,7 @@
 		type="damage"
 		options={{ damageType, ignoreArmor, outcome, rollOptions, roll, isCritical: roll?.isCritical }}
 		showRollDetails={rollOptions.primaryDieValue != '0' || rollOptions?.primaryDieModifier != '0'}
+		{targetDisposition}
 	/>
 {:else}
 	<RollSummary
@@ -65,5 +66,6 @@
 		type="damage"
 		options={{ damageType, ignoreArmor, outcome, rollOptions, roll, isCritical: roll?.isCritical }}
 		showRollDetails={false}
+		{targetDisposition}
 	/>
 {/if}
