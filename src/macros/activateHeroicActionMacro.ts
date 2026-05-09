@@ -23,7 +23,7 @@ type CombatWithHeroicReactionUse = Combat & {
 	useHeroicReactions?: (
 		combatantId: string,
 		reactionKeys: HeroicReactionKey[],
-		options?: { force?: boolean; skipActionDeduction?: boolean },
+		options?: { force?: boolean },
 	) => Promise<boolean>;
 };
 

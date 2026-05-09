@@ -733,7 +733,7 @@ class NimbleCombat extends Combat {
 	async useHeroicReactions(
 		combatantId: string,
 		reactionKeys: HeroicReactionKey[],
-		options?: { force?: boolean; skipActionDeduction?: boolean },
+		options?: { force?: boolean },
 	): Promise<boolean> {
 		if (!combatantId || reactionKeys.length < 1) return false;
 
@@ -754,18 +754,17 @@ class NimbleCombat extends Combat {
 					const canForceUsage =
 						options?.force === true && isSoftBlockedReason(usageState.blockedReason);
 
-					if (!usageState.canUse && !canForceUsage) return false;
+					if (!usageState.canUse && !canForceUsage) {
+						return false;
+					}
 
 					const reactionAvailabilityUpdate = {
 						_id: combatantId,
-					} as Record<string, unknown>;
-
-					if (!options?.skipActionDeduction) {
-						reactionAvailabilityUpdate['system.actions.base.current'] = Math.max(
+						'system.actions.base.current': Math.max(
 							0,
 							usageState.currentActions - usageState.requiredActions,
-						);
-					}
+						),
+					} as Record<string, unknown>;
 
 					for (const reactionKey of usageState.reactionKeys) {
 						Object.assign(

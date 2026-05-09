@@ -9,10 +9,7 @@ export function createHelpPanelState(
 	getHelpSpent: () => boolean,
 	getNoActions: () => boolean,
 	getIsActiveTurn: () => boolean,
-	getOnUseReaction: () => (options?: {
-		force?: boolean;
-		skipActionDeduction?: boolean;
-	}) => Promise<boolean>,
+	getOnUseReaction: () => (options?: { force?: boolean }) => Promise<boolean>,
 ) {
 	// Targeting state
 	let targetingVersion = $state(0);

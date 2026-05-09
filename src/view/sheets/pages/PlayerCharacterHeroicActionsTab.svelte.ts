@@ -146,7 +146,8 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	function getCombatant(): Combatant | null {
 		const combat = getCombat();
 		if (!combat) return null;
-		return combat.combatants.find((entry) => entry.actorId === getActor().id) ?? null;
+		const actorId = getActor().id;
+		return combat.combatants.find((entry) => entry.actorId === actorId) ?? null;
 	}
 
 	function isInActiveCombat(): boolean {

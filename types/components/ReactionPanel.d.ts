@@ -8,15 +8,9 @@ export interface ReactionPanelStateOptions {
 	getNoActions: () => boolean;
 	getIsActiveTurn: () => boolean;
 	getCombinedIsActiveTurn: () => boolean;
-	getOnUseReaction: () => (options?: {
-		force?: boolean;
-		skipActionDeduction?: boolean;
-	}) => Promise<boolean>;
+	getOnUseReaction: () => (options?: { force?: boolean }) => Promise<boolean>;
 	getCombinedReactionDisabled: () => boolean;
-	getOnUseCombinedReaction: () => (options?: {
-		force?: boolean;
-		skipActionDeduction?: boolean;
-	}) => Promise<boolean>;
+	getOnUseCombinedReaction: () => (options?: { force?: boolean }) => Promise<boolean>;
 }
 
 export interface ReactionPanelProps {
@@ -30,14 +24,8 @@ export interface ReactionPanelProps {
 	noActions?: boolean;
 	isActiveTurn?: boolean;
 	combinedIsActiveTurn?: boolean;
-	onUseReaction?: (options?: {
-		force?: boolean;
-		skipActionDeduction?: boolean;
-	}) => Promise<boolean>;
-	onUseCombinedReaction?: (options?: {
-		force?: boolean;
-		skipActionDeduction?: boolean;
-	}) => Promise<boolean>;
+	onUseReaction?: (options?: { force?: boolean }) => Promise<boolean>;
+	onUseCombinedReaction?: (options?: { force?: boolean }) => Promise<boolean>;
 }
 
 export interface OpportunityAttackPanelProps extends ReactionPanelProps {
