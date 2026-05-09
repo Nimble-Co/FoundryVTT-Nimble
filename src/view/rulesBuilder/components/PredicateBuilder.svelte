@@ -294,15 +294,7 @@
 		</div>
 	{/each}
 
-	<button
-		type="button"
-		class="nimble-button"
-		data-button-variant="basic"
-		onclick={() => {
-			addRow();
-			// Don't emit yet — the new row is empty; emit when the key gets a value.
-		}}
-	>
+	<button type="button" class="nimble-button" data-button-variant="basic" onclick={addRow}>
 		<i class="fa-solid fa-plus"></i>
 		Add predicate row
 	</button>

@@ -1,9 +1,3 @@
-/**
- * PredicateBuilder unit tests. Cover the round-trip of the three statement
- * shapes (atomic, array, binary), add/remove rows, and the "currently
- * matches" preview against a synthetic domain.
- */
-
 import { fireEvent, render } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -57,7 +51,6 @@ describe('PredicateBuilder', () => {
 			onChange,
 		});
 
-		// Switch to binary kind for the only row (already binary, but commit emits).
 		const binaryRadio = container.querySelector(
 			'input[type="radio"][value="binary"]',
 		) as HTMLInputElement;
@@ -74,8 +67,6 @@ describe('PredicateBuilder', () => {
 			onChange,
 		});
 
-		// Re-emit by changing the first array item (also confirms the kind detection
-		// pre-populated the array editor with the existing values).
 		const arrayInputs = container.querySelectorAll(
 			'.nimble-predicate-builder__array-row input[type="text"]',
 		);

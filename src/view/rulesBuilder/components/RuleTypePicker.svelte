@@ -13,9 +13,6 @@
 		hasDevWarning: boolean;
 	}
 
-	// Authors picking a rule scan for visual shape first, label second —
-	// keeping these aligned with each rule's role helps the picker stop
-	// reading like a wall of text.
 	const RULE_ICONS: Record<string, string> = {
 		abilityBonus: 'fa-solid fa-dumbbell',
 		applyCondition: 'fa-solid fa-bolt-lightning',

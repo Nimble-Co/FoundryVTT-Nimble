@@ -1,26 +1,13 @@
-/**
- * Renderer dispatch-table coverage. For each (field type, widget) pair the
- * spec calls out, mount `<SchemaFieldRenderer>` and assert the right widget
- * shows up at the top of the rendered subtree.
- *
- * Out of scope: widget internals (covered by widget-specific tests). This
- * file is the contract that the renderer's switch arms stay aligned with the
- * tech-spec dispatch table.
- */
-
 import { render } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PredicateField } from '../../../models/fields/PredicateField.js';
 import SchemaFieldRenderer from './SchemaFieldRenderer.svelte';
 
-// `fromUuidSync` is a Foundry global used by `<DocumentPicker>`; the document
-// classes mocked in tests/setup.ts don't provide one, so stub a passthrough.
 vi.stubGlobal('fromUuidSync', () => null);
 
-// `HTMLProseMirrorElement.create` is wired in tests/mocks/foundry.ts already as a
-// `vi.fn()` — we only need it to not throw during `onMount`. Mock the return as
-// a div to avoid `replaceWith` errors.
+// HTMLProseMirrorElement.create is mocked in tests/mocks/foundry.ts; return a
+// real DOM node so onMount's `replaceWith` doesn't throw.
 const proseMirrorMock = foundry.applications.elements.HTMLProseMirrorElement
 	.create as unknown as ReturnType<typeof vi.fn>;
 proseMirrorMock.mockImplementation(() => document.createElement('div'));
