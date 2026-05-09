@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { SvelteSet } from 'svelte/reactivity';
+
 	import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
 	import { reorderable } from '#view/rulesBuilder/actions/reorderable.svelte.js';
 	import RuleCard from '#view/rulesBuilder/components/RuleCard.svelte';
@@ -27,6 +29,19 @@
 	const allDisabled = $derived(rules.length > 0 && rules.every((r) => r.disabled));
 
 	let pickerOpen = $state(false);
+	let collapsedIds = $state<Set<string>>(new SvelteSet());
+
+	const allCollapsed = $derived(rules.length > 0 && rules.every((r) => collapsedIds.has(r.id)));
+
+	function toggleCollapse(id: string) {
+		if (collapsedIds.has(id)) collapsedIds.delete(id);
+		else collapsedIds.add(id);
+	}
+
+	function toggleCollapseAll() {
+		if (allCollapsed) collapsedIds.clear();
+		else for (const r of rules) collapsedIds.add(r.id);
+	}
 
 	async function toggleAll() {
 		if (allDisabled) await item.rules.enableAllRules();
@@ -74,6 +89,15 @@
 
 		<div class="nimble-rules-builder-window__header-right">
 			{#if rules.length > 0}
+				<button
+					type="button"
+					class="nimble-button"
+					data-button-variant="basic"
+					onclick={toggleCollapseAll}
+				>
+					<i class="fa-solid {allCollapsed ? 'fa-angles-down' : 'fa-angles-up'}"></i>
+					{allCollapsed ? 'Expand all' : 'Collapse all'}
+				</button>
 				<button type="button" class="nimble-button" data-button-variant="basic" onclick={toggleAll}>
 					<i class="fa-solid {allDisabled ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
 					{allDisabled ? 'Enable all' : 'Disable all'}
@@ -100,7 +124,13 @@
 			>
 				{#each rules as rule (rule.id)}
 					<li class="nimble-rules-builder-window__list-item">
-						<RuleCard {rule} manager={item.rules} onDelete={() => item.rules.deleteRule(rule.id)} />
+						<RuleCard
+							{rule}
+							manager={item.rules}
+							collapsed={collapsedIds.has(rule.id)}
+							onToggleCollapse={() => toggleCollapse(rule.id)}
+							onDelete={() => item.rules.deleteRule(rule.id)}
+						/>
 					</li>
 				{/each}
 			</ul>

@@ -7,7 +7,7 @@
 	import PredicateBuilder from './PredicateBuilder.svelte';
 	import SchemaFieldRenderer from './SchemaFieldRenderer.svelte';
 
-	let { rule, manager, onDelete }: RuleCardProps = $props();
+	let { rule, manager, onDelete, collapsed = false, onToggleCollapse }: RuleCardProps = $props();
 
 	const { ruleDataModels, ruleTypes } = CONFIG.NIMBLE;
 	const RuleClass = $derived(ruleDataModels[rule.type as string]);
@@ -96,8 +96,26 @@
 	}
 </script>
 
-<article class="nimble-rule-card" class:nimble-rule-card--disabled={Boolean(rule.disabled)}>
+<article
+	class="nimble-rule-card"
+	class:nimble-rule-card--disabled={Boolean(rule.disabled)}
+	class:nimble-rule-card--collapsed={collapsed}
+>
 	<header class="nimble-rule-card__header">
+		{#if onToggleCollapse}
+			<button
+				type="button"
+				class="nimble-button nimble-rule-card__chevron"
+				data-button-variant="icon"
+				aria-expanded={!collapsed}
+				aria-label={collapsed ? 'Expand rule' : 'Collapse rule'}
+				data-tooltip={collapsed ? 'Expand' : 'Collapse'}
+				onclick={onToggleCollapse}
+			>
+				<i class="fa-solid {collapsed ? 'fa-chevron-right' : 'fa-chevron-down'}"></i>
+			</button>
+		{/if}
+
 		<input
 			class="nimble-rule-card__label"
 			type="text"
@@ -179,89 +197,91 @@
 		</div>
 	</header>
 
-	{#if showJson}
-		<div class="nimble-rule-card__json">
-			<textarea
-				class="nimble-code-block__text-area"
-				bind:value={jsonDraft}
-				rows="11"
-				autocapitalize="off"
-				autocomplete="off"
-				spellcheck="false"
-				wrap="soft"
-				onkeydown={overrideTextAreaBehavior}
-			></textarea>
-			<div class="nimble-rule-card__json-controls">
-				<button
-					type="button"
-					class="nimble-button"
-					data-button-variant="basic"
-					onclick={commitJson}
-				>
-					<i class="fa-solid fa-save"></i>
-					Save JSON
-				</button>
-				{#if jsonError}
-					<span class="nimble-rule-card__json-error">{jsonError}</span>
-				{/if}
-			</div>
-		</div>
-	{:else if !schema}
-		<p class="nimble-rule-card__empty">
-			Could not load this rule's schema. Use the raw-JSON edit button to repair.
-		</p>
-	{:else}
-		{@const editableEntries = Object.entries(schema).filter(
-			([fieldName]) => !FIXED_FIELDS.has(fieldName),
-		)}
-		<div class="nimble-rule-card__body">
-			{#if editableEntries.length === 0}
-				<p class="nimble-rule-card__empty">No further configuration needed.</p>
-			{:else}
-				{#each editableEntries as [fieldName, field] (fieldName)}
-					{@const hint = fieldHint(field)}
-					<div class="nimble-field-row">
-						<span class="nimble-field-row__label">{fieldLabel(fieldName, field)}</span>
-						<SchemaFieldRenderer
-							{field}
-							value={rule[fieldName]}
-							parentData={rule}
-							name={fieldName}
-							onChange={(v) => emitFieldChange(fieldName, v)}
-						/>
-						{#if hint}
-							<small class="nimble-field-row__hint">{hint}</small>
-						{/if}
-					</div>
-				{/each}
-			{/if}
-		</div>
-
-		<details class="nimble-rule-card__advanced">
-			<summary>
-				<i class="fa-solid fa-sliders"></i>
-				Advanced
-			</summary>
-
-			<div class="nimble-rule-card__advanced-body">
-				<label class="nimble-field-row">
-					<span class="nimble-field-row__label">Identifier</span>
-					<input
-						type="text"
-						value={(rule.identifier as string) ?? ''}
-						onchange={(e) => emitFieldChange('identifier', (e.target as HTMLInputElement).value)}
-					/>
-				</label>
-
-				<div class="nimble-field-row">
-					<span class="nimble-field-row__label">Predicate</span>
-					<PredicateBuilder
-						value={(rule.predicate as RawPredicate) ?? {}}
-						onChange={(v) => emitFieldChange('predicate', v)}
-					/>
+	{#if !collapsed}
+		{#if showJson}
+			<div class="nimble-rule-card__json">
+				<textarea
+					class="nimble-code-block__text-area"
+					bind:value={jsonDraft}
+					rows="11"
+					autocapitalize="off"
+					autocomplete="off"
+					spellcheck="false"
+					wrap="soft"
+					onkeydown={overrideTextAreaBehavior}
+				></textarea>
+				<div class="nimble-rule-card__json-controls">
+					<button
+						type="button"
+						class="nimble-button"
+						data-button-variant="basic"
+						onclick={commitJson}
+					>
+						<i class="fa-solid fa-save"></i>
+						Save JSON
+					</button>
+					{#if jsonError}
+						<span class="nimble-rule-card__json-error">{jsonError}</span>
+					{/if}
 				</div>
 			</div>
-		</details>
+		{:else if !schema}
+			<p class="nimble-rule-card__empty">
+				Could not load this rule's schema. Use the raw-JSON edit button to repair.
+			</p>
+		{:else}
+			{@const editableEntries = Object.entries(schema).filter(
+				([fieldName]) => !FIXED_FIELDS.has(fieldName),
+			)}
+			<div class="nimble-rule-card__body">
+				{#if editableEntries.length === 0}
+					<p class="nimble-rule-card__empty">No further configuration needed.</p>
+				{:else}
+					{#each editableEntries as [fieldName, field] (fieldName)}
+						{@const hint = fieldHint(field)}
+						<div class="nimble-field-row">
+							<span class="nimble-field-row__label">{fieldLabel(fieldName, field)}</span>
+							<SchemaFieldRenderer
+								{field}
+								value={rule[fieldName]}
+								parentData={rule}
+								name={fieldName}
+								onChange={(v) => emitFieldChange(fieldName, v)}
+							/>
+							{#if hint}
+								<small class="nimble-field-row__hint">{hint}</small>
+							{/if}
+						</div>
+					{/each}
+				{/if}
+			</div>
+
+			<details class="nimble-rule-card__advanced">
+				<summary>
+					<i class="fa-solid fa-sliders"></i>
+					Advanced
+				</summary>
+
+				<div class="nimble-rule-card__advanced-body">
+					<label class="nimble-field-row">
+						<span class="nimble-field-row__label">Identifier</span>
+						<input
+							type="text"
+							value={(rule.identifier as string) ?? ''}
+							onchange={(e) => emitFieldChange('identifier', (e.target as HTMLInputElement).value)}
+						/>
+					</label>
+
+					<div class="nimble-field-row">
+						<span class="nimble-field-row__label">Predicate</span>
+						<PredicateBuilder
+							value={(rule.predicate as RawPredicate) ?? {}}
+							onChange={(v) => emitFieldChange('predicate', v)}
+						/>
+					</div>
+				</div>
+			</details>
+		{/if}
 	{/if}
 </article>
 
@@ -279,10 +299,19 @@
 			opacity: 0.6;
 		}
 
+		&--collapsed {
+			gap: 0;
+		}
+
 		&__header {
 			display: flex;
 			gap: 0.375rem;
 			align-items: center;
+		}
+
+		&__chevron {
+			color: var(--color-text-dark-secondary);
+			flex-shrink: 0;
 		}
 
 		&__priority {

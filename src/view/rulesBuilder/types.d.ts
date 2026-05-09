@@ -66,6 +66,9 @@ export interface RuleCardProps {
 	/** RulesManager instance bound to the parent item. */
 	manager: { updateRule: (id: string, data: Record<string, unknown>) => Promise<unknown> };
 	onDelete?: () => void;
+	/** Hide the body + advanced section, keeping just the header visible. */
+	collapsed?: boolean;
+	onToggleCollapse?: () => void;
 }
 
 export interface RuleTypePickerProps {
