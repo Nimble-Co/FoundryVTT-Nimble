@@ -50,11 +50,11 @@
 		};
 	});
 
-	// When targetDisposition is set, hide this button unless at least one effective target
-	// (message targets or currently controlled canvas tokens) has that exact Foundry
-	// disposition. If nothing is selected at all, keep it visible (disabled by other logic).
-	let showByDisposition = $derived.by(() => {
-		if (!targetDisposition) return true;
+	// Returns 'recommended' when the effective targets match this effect's targetDisposition,
+	// 'discouraged' when all targets are clearly the opposite type, or 'neutral' otherwise.
+	// Both buttons are always visible — only the emphasis changes.
+	let dispositionState = $derived.by((): 'recommended' | 'neutral' | 'discouraged' => {
+		if (!targetDisposition) return 'neutral';
 
 		const dispMap: Record<string, number> = {
 			friendly: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
@@ -67,19 +67,26 @@
 		const messageTargets =
 			(messageDocument?.reactive as unknown as { system?: { targets?: string[] } } | undefined)
 				?.system?.targets ?? [];
-		const hasAnyEffectiveTargets = messageTargets.length > 0 || controlledDispositions.length > 0;
-		if (!hasAnyEffectiveTargets) return true;
-
+		const allDispositions: number[] = [...controlledDispositions];
 		for (const uuid of messageTargets) {
-			const tokenDoc = fromUuidSync(uuid) as TokenDocument | null;
-			if ((tokenDoc?.disposition as number | undefined) === required) return true;
+			const doc = fromUuidSync(uuid) as TokenDocument | null;
+			const disp = (doc as { disposition?: number } | null)?.disposition;
+			if (typeof disp === 'number') allDispositions.push(disp);
 		}
 
-		for (const disp of controlledDispositions) {
-			if (disp === required) return true;
-		}
+		if (allDispositions.length === 0) return 'neutral';
+		if (allDispositions.some((d) => d === required)) return 'recommended';
 
-		return false;
+		// Discouraged only when every target is clearly the opposing type
+		const oppositeDisp: Partial<Record<string, number>> = {
+			friendly: CONST.TOKEN_DISPOSITIONS.HOSTILE,
+			hostile: CONST.TOKEN_DISPOSITIONS.FRIENDLY,
+		};
+		const opposite = oppositeDisp[targetDisposition];
+		if (opposite !== undefined && allDispositions.every((d) => d === opposite))
+			return 'discouraged';
+
+		return 'neutral';
 	});
 </script>
 
@@ -127,9 +134,11 @@
 	</div>
 {/if}
 
-{#if type === 'damage' && game.user?.isGM && showByDisposition}
+{#if type === 'damage' && game.user?.isGM}
 	<button
 		class="nimble-button nimble-button--apply-damage"
+		class:nimble-button--recommended={dispositionState === 'recommended'}
+		class:nimble-button--discouraged={dispositionState === 'discouraged'}
 		aria-label={applyDamageLabel}
 		data-tooltip={applyDamageTooltip}
 		data-tooltip-direction="UP"
@@ -233,6 +242,8 @@
 	}
 
 	.nimble-button--apply-damage {
+		--damage-button-color: var(--color-level-error, #7a1e1e);
+
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -247,5 +258,32 @@
 		border-radius: 4px;
 		border: 1px solid var(--nimble-card-border-color);
 		margin-top: 0.5rem;
+		cursor: pointer;
+		transition:
+			background-color 0.15s ease,
+			border-color 0.15s ease;
+
+		&:hover:not(:disabled) {
+			background-color: color-mix(in srgb, currentColor 8%, transparent);
+		}
+
+		&.nimble-button--recommended {
+			color: var(--damage-button-color);
+			border-color: color-mix(in srgb, var(--damage-button-color) 50%, transparent);
+			border-width: 2px;
+
+			&:hover:not(:disabled) {
+				background-color: color-mix(in srgb, var(--damage-button-color) 12%, transparent);
+				border-color: var(--damage-button-color);
+			}
+		}
+
+		&.nimble-button--discouraged {
+			opacity: 0.45;
+
+			&:hover:not(:disabled) {
+				opacity: 0.65;
+			}
+		}
 	}
 </style>
