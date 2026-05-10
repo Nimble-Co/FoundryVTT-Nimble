@@ -1,7 +1,47 @@
 import { SYSTEM_PATH } from '#utils/systemId.ts';
 
+/**
+ * Canonical status-effect IDs for system-managed conditions. The keys here are the
+ * source of truth — the dictionaries below are typed against this so adding/renaming
+ * an ID in one place forces an update in the others.
+ */
+export const STATUS_EFFECT_IDS = {
+	blinded: 'blinded',
+	bloodied: 'bloodied',
+	charged: 'charged',
+	charmed: 'charmed',
+	concentration: 'concentration',
+	confused: 'confused',
+	dazed: 'dazed',
+	dead: 'dead',
+	despair: 'despair',
+	distracted: 'distracted',
+	dying: 'dying',
+	frightened: 'frightened',
+	grappled: 'grappled',
+	hampered: 'hampered',
+	incapacitated: 'incapacitated',
+	invisible: 'invisible',
+	lastStand: 'lastStand',
+	paralyzed: 'paralyzed',
+	petrified: 'petrified',
+	poisoned: 'poisoned',
+	prone: 'prone',
+	restrained: 'restrained',
+	riding: 'riding',
+	silenced: 'silenced',
+	slowed: 'slowed',
+	stunned: 'stunned',
+	smoldering: 'smoldering',
+	taunted: 'taunted',
+	unconscious: 'unconscious',
+	wounded: 'wounded',
+} as const;
+
+export type StatusEffectId = (typeof STATUS_EFFECT_IDS)[keyof typeof STATUS_EFFECT_IDS];
+
 export default function registerConditionsConfig() {
-	const conditions = {
+	const conditions: Record<StatusEffectId, string> = {
 		blinded: 'NIMBLE.conditions.blinded',
 		bloodied: 'NIMBLE.conditions.bloodied',
 		charged: 'NIMBLE.conditions.charged',
@@ -64,7 +104,7 @@ export default function registerConditionsConfig() {
 		wounded: 'NIMBLE.conditionDescriptions.wounded',
 	};
 
-	const conditionDefaultImages = {
+	const conditionDefaultImages: Record<StatusEffectId, string> = {
 		blinded: 'icons/svg/blind.svg',
 		bloodied: 'icons/svg/blood.svg',
 		charged: `${SYSTEM_PATH}/assets/icons/charged.svg`,
@@ -78,10 +118,10 @@ export default function registerConditionsConfig() {
 		dying: `${SYSTEM_PATH}/assets/icons/dying.svg`,
 		frightened: 'icons/svg/terror.svg',
 		grappled: `${SYSTEM_PATH}/assets/icons/grappled.svg`,
-		hampered: `${SYSTEM_PATH}/assets/icons//hampered.svg`,
+		hampered: `${SYSTEM_PATH}/assets/icons/hampered.svg`,
 		incapacitated: `${SYSTEM_PATH}/assets/icons/incapacitated.svg`,
 		invisible: 'icons/svg/invisible.svg',
-		lastStand: 'icons/svg/skull.svg',
+		lastStand: 'icons/svg/combat.svg',
 		paralyzed: 'icons/svg/paralysis.svg',
 		petrified: `${SYSTEM_PATH}/assets/icons/petrified.svg`,
 		poisoned: 'icons/svg/poison.svg',

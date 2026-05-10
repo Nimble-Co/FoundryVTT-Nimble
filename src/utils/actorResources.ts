@@ -19,16 +19,28 @@ export function getActorHpMaxValue(actor: Actor.Implementation | null | undefine
 	return hpMax;
 }
 
-export function getActorLastStandThreshold(
-	actor: Actor.Implementation | null | undefined,
-): number | null {
+/**
+ * Last Stand HP buffer is configured on the actor's embedded `monsterFeature`
+ * item with `subtype: 'lastStand'`. Returns null when no such item exists or
+ * the buffer is 0 (mechanic disabled).
+ */
+export function getActorLastStandHp(actor: Actor.Implementation | null | undefined): number | null {
 	if (!actor) return null;
 
-	const threshold = toFiniteNumber(
-		(actor as unknown as ActorResourceData).system?.attributes?.hp?.lastStandThreshold,
-	);
-	if (threshold === null || threshold <= 0) return null;
-	return threshold;
+	type LastStandItemView = { type?: string; system?: { subtype?: string; lastStandHp?: number } };
+	const items = (
+		actor as unknown as { items?: LastStandItemView[] | { contents?: LastStandItemView[] } }
+	).items;
+	const list: LastStandItemView[] = Array.isArray(items) ? items : (items?.contents ?? []);
+
+	for (const item of list) {
+		if (item?.type !== 'monsterFeature') continue;
+		if (item?.system?.subtype !== 'lastStand') continue;
+		const value = toFiniteNumber(item.system?.lastStandHp);
+		if (value === null || value <= 0) continue;
+		return value;
+	}
+	return null;
 }
 
 export function getActorWoundsValueAndMax(

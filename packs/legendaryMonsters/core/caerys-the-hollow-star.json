@@ -913,6 +913,7 @@
 					"acquireTargetsFromTemplate": false,
 					"showDescription": true
 				},
+				"lastStandHp": 200,
 				"rules": [],
 				"subtype": "lastStand"
 			}

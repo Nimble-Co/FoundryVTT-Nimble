@@ -86,7 +86,7 @@ export const DEFAULT_FEATURE_ICONS: Record<string, string> = {
 	action: 'icons/svg/sword.svg',
 	attackSequence: 'icons/svg/sword.svg',
 	bloodied: 'icons/svg/blood.svg',
-	lastStand: 'icons/svg/skull.svg',
+	lastStand: 'icons/svg/combat.svg',
 };
 
 /**

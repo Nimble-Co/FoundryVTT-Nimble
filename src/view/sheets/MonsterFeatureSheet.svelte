@@ -93,6 +93,28 @@
 				</select>
 			</label>
 		</div>
+
+		{#if item.reactive.system.subtype === 'lastStand'}
+			<label class="nimble-field nimble-field--full-width" data-field-variant="stacked">
+				<h3 class="nimble-heading" data-heading-variant="field">
+					{localize('NIMBLE.npcSheet.lastStandHpLabel')}
+				</h3>
+
+				<input
+					type="number"
+					min="0"
+					value={item.reactive.system.lastStandHp ?? 0}
+					onchange={({ target }) =>
+						item.update({
+							'system.lastStandHp': Math.max(
+								0,
+								Math.trunc(Number((target as HTMLInputElement).value) || 0),
+							),
+						})}
+				/>
+				<span class="notes">{localize('NIMBLE.npcSheet.lastStandHpHint')}</span>
+			</label>
+		{/if}
 	</section>
 {/snippet}
 

@@ -350,6 +350,7 @@
 					"acquireTargetsFromTemplate": false,
 					"showDescription": true
 				},
+				"lastStandHp": 0,
 				"rules": [],
 				"subtype": "lastStand"
 			}
