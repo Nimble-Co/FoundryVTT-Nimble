@@ -60,7 +60,12 @@ export function createSpellPanelState(
 	// Spell Data
 	// ============================================================================
 
-	const spells = $derived(filterItems(getActor().reactive, ['spell'], searchTerm));
+	const spells = $derived(
+		filterItems(getActor().reactive, ['spell'], searchTerm).filter((spell) => {
+			const costType = getSystemData(spell).activation?.cost?.type;
+			return costType !== 'minute' && costType !== 'hour';
+		}),
+	);
 
 	function getSpellEffect(spell: Item): SpellEffect | null {
 		const effects = getSystemData(spell).activation?.effects;

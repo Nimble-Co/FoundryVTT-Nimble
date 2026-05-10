@@ -312,7 +312,13 @@ export function createHeroicActionsTabState(getActor: () => NimbleCharacter) {
 	// Spell Data (for hasSpells check)
 	// ============================================================================
 
-	const allSpells = $derived(filterItems(getActor().reactive, ['spell'], ''));
+	const allSpells = $derived(
+		filterItems(getActor().reactive, ['spell'], '').filter((spell) => {
+			const costType = (spell.system as unknown as { activation?: { cost?: { type?: string } } })
+				.activation?.cost?.type;
+			return costType !== 'minute' && costType !== 'hour';
+		}),
+	);
 	const hasSpells = $derived(allSpells.length > 0);
 
 	// ============================================================================
