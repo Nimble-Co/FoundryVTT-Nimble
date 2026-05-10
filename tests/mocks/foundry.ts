@@ -533,50 +533,63 @@ export const foundryApiMocks = {
 		},
 	},
 	data: {
-		fields: {
-			StringField: class StringField {
-				constructor(options?: any) {
-					Object.assign(this, options);
-				}
-			},
-			NumberField: class NumberField {
-				constructor(options?: any) {
-					Object.assign(this, options);
-				}
-			},
-			BooleanField: class BooleanField {
-				constructor(options?: any) {
-					Object.assign(this, options);
-				}
-			},
-			HTMLField: class HTMLField {
-				constructor(options?: any) {
-					Object.assign(this, options);
-				}
-			},
-			ObjectField: class ObjectField {
-				constructor(options?: any) {
-					Object.assign(this, options);
-				}
-			},
-			ArrayField: class ArrayField {
-				constructor(element?: any, options?: any) {
-					Object.assign(this, { element, ...options });
-				}
-			},
-			DataField: class DataField {
-				constructor(options?: any) {
-					Object.assign(this, options);
-				}
-			},
-			SchemaField: class SchemaField {
-				constructor(fields?: any, options?: any) {
-					// Real Foundry stores the inner schema as `.fields`; consumers
-					// (e.g. the rules-builder renderer) read it from there.
-					Object.assign(this, { fields: fields ?? {}, ...options });
-				}
-			},
-		},
+		fields: (() => {
+			// Real Foundry keeps the original options on `field.options` and
+			// also lifts recognised keys onto the instance. The mock approximates
+			// this by storing the unmodified options on `.options` AND copying
+			// them flat onto the instance — that way consumers reading either
+			// `field.X` or `field.options.X` both work in tests.
+			const assignWithOptions = (instance: object, options: unknown) => {
+				(instance as { options: unknown }).options = options ?? {};
+				if (options && typeof options === 'object') Object.assign(instance, options);
+			};
+			return {
+				StringField: class StringField {
+					constructor(options?: any) {
+						assignWithOptions(this, options);
+					}
+				},
+				NumberField: class NumberField {
+					constructor(options?: any) {
+						assignWithOptions(this, options);
+					}
+				},
+				BooleanField: class BooleanField {
+					constructor(options?: any) {
+						assignWithOptions(this, options);
+					}
+				},
+				HTMLField: class HTMLField {
+					constructor(options?: any) {
+						assignWithOptions(this, options);
+					}
+				},
+				ObjectField: class ObjectField {
+					constructor(options?: any) {
+						assignWithOptions(this, options);
+					}
+				},
+				ArrayField: class ArrayField {
+					constructor(element?: any, options?: any) {
+						(this as { element: unknown }).element = element;
+						assignWithOptions(this, options);
+					}
+				},
+				DataField: class DataField {
+					constructor(options?: any) {
+						assignWithOptions(this, options);
+					}
+				},
+				SchemaField: class SchemaField {
+					constructor(fields?: any, options?: any) {
+						// Real Foundry stores the inner schema as `.fields`; consumers
+						// (e.g. the rules-builder renderer) read it from there.
+						(this as { fields: unknown }).fields = fields ?? {};
+						assignWithOptions(this, options);
+					}
+				},
+			};
+		})(),
 	},
 	canvas: {
 		layers: {

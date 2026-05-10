@@ -18,8 +18,9 @@ interface ReorderableOptions {
 	enabled: boolean;
 	/**
 	 * Build a JSON payload to attach to `dataTransfer` at dragstart. Returning
-	 * `null`/`undefined` means "no cross-list payload"; the drag still happens
-	 * for browser visual feedback but receivers won't accept it.
+	 * `null`/`undefined` means "no cross-list payload" — the drag still
+	 * happens for browser visual feedback but no MIME is set, so foreign
+	 * receivers won't acknowledge it.
 	 */
 	getDragPayload?: (id: string) => Record<string, unknown> | null | undefined;
 	/**
@@ -29,7 +30,9 @@ interface ReorderableOptions {
 	onCopy?: (payload: Record<string, unknown>) => void;
 	/**
 	 * The `type` value that `onCopy` will accept. Drops with any other type
-	 * are ignored. Defaults to `'reorderable'`.
+	 * are ignored. Also baked into the MIME so two reorderable lists with
+	 * different accept types don't show false drop affordances. Defaults to
+	 * `'reorderable'`.
 	 */
 	copyAcceptType?: string;
 }
@@ -43,9 +46,13 @@ const ITEM_ATTR = 'data-reorder-id';
 const DRAGGING_CLASS = 'nimble-reorderable--dragging';
 const SOURCE_HIDDEN_CLASS = 'nimble-reorderable__item--source-hidden';
 const FOREIGN_DRAG_CLASS = 'nimble-reorderable--foreign-drag';
-// Custom MIME used to disambiguate our own list drags from arbitrary
-// Foundry document drags (which also set text/plain).
-const REORDERABLE_MIME = 'application/x-nimble-reorderable';
+// Per-accept-type MIME. Distinct types produce distinct MIMEs so two
+// reorderable lists with different `copyAcceptType`s don't show drop
+// affordances for each other. Sanitised to MIME-safe characters.
+const MIME_PREFIX = 'application/x-nimble-reorderable+';
+function mimeFor(acceptType: string): string {
+	return MIME_PREFIX + acceptType.replace(/[^a-zA-Z0-9.+-]/g, '_').toLowerCase();
+}
 
 function findItemElement(target: EventTarget | null, container: HTMLElement): HTMLElement | null {
 	if (!(target instanceof Element)) return null;
@@ -62,11 +69,16 @@ export function reorderable(
 	let getDragPayload = options.getDragPayload;
 	let onCopy = options.onCopy;
 	let copyAcceptType = options.copyAcceptType ?? 'reorderable';
+	let mime = mimeFor(copyAcceptType);
 	let draggedItem: HTMLElement | null = null;
 
 	function clearDragVisuals() {
-		if (draggedItem) {
-			draggedItem.classList.remove(SOURCE_HIDDEN_CLASS);
+		// Remove SOURCE_HIDDEN_CLASS from any element in this list that has
+		// it — we may have lost the `draggedItem` reference (e.g. drag
+		// cancelled before the rAF that adds the class fired) but the class
+		// could still be present on a sibling render.
+		for (const el of node.querySelectorAll(`.${SOURCE_HIDDEN_CLASS}`)) {
+			el.classList.remove(SOURCE_HIDDEN_CLASS);
 		}
 		node.classList.remove(DRAGGING_CLASS);
 		node.classList.remove(FOREIGN_DRAG_CLASS);
@@ -91,28 +103,36 @@ export function reorderable(
 		if (!id) return;
 
 		draggedItem = item;
+		// Capture for the rAF closure so we can't accidentally hide a
+		// stale element if the drag ends or restarts before the frame fires.
+		const sourceEl = item;
 
 		if (event.dataTransfer) {
 			event.dataTransfer.effectAllowed = 'copy';
 			const payload = getDragPayload?.(id);
-			if (payload && copyAcceptType) {
+			if (payload) {
 				const wrapped = { ...payload, type: copyAcceptType };
 				const json = JSON.stringify(wrapped);
-				// Custom MIME is the reliable signal for `isForeignDrag`; the
-				// text/plain copy is a fallback for tools that only read it.
-				event.dataTransfer.setData(REORDERABLE_MIME, json);
+				// Custom MIME is the only signal `isForeignDrag` reads. The
+				// text/plain mirror is only for external tools that read it;
+				// the drop handler intentionally does NOT fall back to it.
+				event.dataTransfer.setData(mime, json);
 				event.dataTransfer.setData('text/plain', json);
-			} else {
-				event.dataTransfer.setData(REORDERABLE_MIME, id);
-				event.dataTransfer.setData('text/plain', id);
 			}
+			// No `else` branch: when there's no payload this list is drop-only
+			// (e.g. RulesBuilderWindow). Setting the MIME without a payload
+			// would falsely signal foreign-drag readiness to receivers.
 		}
 
 		node.classList.add(DRAGGING_CLASS);
 		// Defer hiding the source until the drag visibly starts to avoid the
 		// awkward flash where the item disappears before the drag image is set.
 		requestAnimationFrame(() => {
-			draggedItem?.classList.add(SOURCE_HIDDEN_CLASS);
+			// `draggedItem` may have been cleared by a cancel; only hide if
+			// the drag is still active for this same source.
+			if (draggedItem === sourceEl) {
+				sourceEl.classList.add(SOURCE_HIDDEN_CLASS);
+			}
 		});
 
 		window.addEventListener('dragend', cleanupHandler);
@@ -122,11 +142,15 @@ export function reorderable(
 
 	function isForeignDrag(event: DragEvent): boolean {
 		// `dataTransfer` payload isn't readable mid-drag (browser security);
-		// the custom MIME presence is the signal — text/plain alone matches
-		// arbitrary Foundry document drags too, which we must let pass.
+		// the per-accept-type MIME presence is the signal — text/plain alone
+		// matches arbitrary Foundry document drags too, which we must ignore.
 		if (draggedItem) return false;
 		if (!onCopy) return false;
-		return event.dataTransfer?.types.includes(REORDERABLE_MIME) === true;
+		const types = event.dataTransfer?.types;
+		if (!types) return false;
+		// `types` is a `DOMStringList`-ish in some older browsers; copy to a
+		// plain array so `.includes` is dependable.
+		return Array.from(types).includes(mime);
 	}
 
 	function onDragOver(event: DragEvent) {
@@ -147,8 +171,10 @@ export function reorderable(
 		if (draggedItem) return; // within-list drops are no-ops
 		if (!onCopy) return;
 
-		const raw =
-			event.dataTransfer?.getData(REORDERABLE_MIME) || event.dataTransfer?.getData('text/plain');
+		// Only read the typed MIME — never fall back to text/plain. A foreign
+		// drag whose text/plain happens to look like our payload should not
+		// trigger a copy when the typed MIME is absent.
+		const raw = event.dataTransfer?.getData(mime);
 		if (!raw) return;
 		let parsed: Record<string, unknown>;
 		try {
@@ -174,6 +200,7 @@ export function reorderable(
 			getDragPayload = next.getDragPayload;
 			onCopy = next.onCopy;
 			copyAcceptType = next.copyAcceptType ?? 'reorderable';
+			mime = mimeFor(copyAcceptType);
 			if (!enabled) clearDragVisuals();
 		},
 		destroy() {

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { PredicateField } from '../../../models/fields/PredicateField.js';
 	import type { RawPredicate } from '../../../etc/Predicate.js';
+	import { VALID_WIDGETS } from '../../../models/rules/_widgetOption.js';
 	import type { SchemaFieldRendererProps } from '#view/rulesBuilder/types.js';
 	import TagGroup from '#view/components/TagGroup.svelte';
 	import DocumentPicker from './DocumentPicker.svelte';
@@ -23,35 +24,34 @@
 
 	const { fields } = foundry.data;
 
-	// Foundry copies the original options object to `field.options` and also
-	// `Object.assign`s recognised option keys onto the field instance. Custom
-	// hints like `widget`/`showWhen` aren't recognised, so they only survive
-	// on `.options`. Read both — direct access first for the test mock.
-	type FieldExtras = {
-		widget?:
-			| 'formula'
-			| 'diceFormula'
-			| 'documentUuid'
-			| 'predicate'
-			| 'templateString'
-			| 'richText'
-			| 'hidden';
+	// Foundry keeps the original options object on `field.options` and only
+	// lifts recognised keys onto the field instance. The test mock now
+	// stores the same options on `.options` (see tests/mocks/foundry.ts) so
+	// `.options` is the canonical read site in both worlds.
+	interface FieldExtras {
+		widget?: string;
 		showWhen?: (data: Record<string, unknown>) => boolean;
 		documentTypes?: string[];
-		options?: FieldExtras;
-	};
+	}
+	type FieldWithOptions = { options?: FieldExtras };
 
-	const widget = $derived(
-		(field as unknown as FieldExtras).widget ?? (field as unknown as FieldExtras).options?.widget,
-	);
-	const documentTypes = $derived(
-		(field as unknown as FieldExtras).documentTypes ??
-			(field as unknown as FieldExtras).options?.documentTypes,
-	);
+	const widget = $derived((field as unknown as FieldWithOptions).options?.widget);
+	const documentTypes = $derived((field as unknown as FieldWithOptions).options?.documentTypes);
 	const visibleByPredicate = $derived.by(() => {
-		const extras = field as unknown as FieldExtras;
-		const showWhen = extras.showWhen ?? extras.options?.showWhen;
+		const showWhen = (field as unknown as FieldWithOptions).options?.showWhen;
 		return typeof showWhen === 'function' ? Boolean(showWhen(parentData)) : true;
+	});
+
+	// Warn if a rule schema set a widget hint we don't recognise — typos
+	// (`fromula`) would otherwise silently fall through to the type-default
+	// arm and look like a working plain input.
+	$effect(() => {
+		if (widget !== undefined && !VALID_WIDGETS.has(widget)) {
+			console.warn(
+				`Nimble | SchemaFieldRenderer: unknown widget hint "${widget}" on field "${name}". ` +
+					`Falling back to type default.`,
+			);
+		}
 	});
 
 	const isHidden = $derived(widget === 'hidden' || !visibleByPredicate);
@@ -126,7 +126,7 @@
 		<small class="nimble-field-hint"
 			>Use <code>{`{value}`}</code> to insert the formula result.</small
 		>
-	{:else if field instanceof PredicateField}
+	{:else if widget === 'predicate' || field instanceof PredicateField}
 		<PredicateBuilder value={(value as RawPredicate) ?? {}} onChange={(v) => onChange(v)} />
 	{:else if field instanceof fields.BooleanField}
 		<input type="checkbox" checked={Boolean(value)} {disabled} onchange={emitBoolean} />
@@ -299,23 +299,21 @@
 					<fieldset class="nimble-array-of-schema__entry">
 						<legend>#{i + 1}</legend>
 						{#each Object.entries((elementField as unknown as { fields: Record<string, foundry.data.fields.DataField.Any> }).fields) as [childName, childField]}
-							{#if childName !== 'id' && childName !== 'type'}
-								<div class="nimble-field-row">
-									<span class="nimble-field-row__label">{childName}</span>
-									<Self
-										field={childField}
-										value={entry[childName]}
-										parentData={entry}
-										name={childName}
-										{disabled}
-										onChange={(v) => {
-											const next = [...arrValue];
-											next[i] = { ...entry, [childName]: v };
-											onChange(next);
-										}}
-									/>
-								</div>
-							{/if}
+							<div class="nimble-field-row">
+								<span class="nimble-field-row__label">{childName}</span>
+								<Self
+									field={childField}
+									value={entry[childName]}
+									parentData={entry}
+									name={childName}
+									{disabled}
+									onChange={(v) => {
+										const next = [...arrValue];
+										next[i] = { ...entry, [childName]: v };
+										onChange(next);
+									}}
+								/>
+							</div>
 						{/each}
 						<button
 							type="button"
@@ -354,23 +352,21 @@
 	{:else if field instanceof fields.SchemaField}
 		<fieldset class="nimble-schema-field">
 			{#each Object.entries((field as unknown as { fields: Record<string, foundry.data.fields.DataField.Any> }).fields) as [childName, childField]}
-				{#if childName !== 'id' && childName !== 'type'}
-					<div class="nimble-field-row">
-						<span class="nimble-field-row__label">{childName}</span>
-						<Self
-							field={childField}
-							value={(value as Record<string, unknown> | undefined)?.[childName]}
-							parentData={(value as Record<string, unknown> | undefined) ?? {}}
-							name={childName}
-							{disabled}
-							onChange={(v) =>
-								onChange({
-									...((value as Record<string, unknown>) ?? {}),
-									[childName]: v,
-								})}
-						/>
-					</div>
-				{/if}
+				<div class="nimble-field-row">
+					<span class="nimble-field-row__label">{childName}</span>
+					<Self
+						field={childField}
+						value={(value as Record<string, unknown> | undefined)?.[childName]}
+						parentData={(value as Record<string, unknown> | undefined) ?? {}}
+						name={childName}
+						{disabled}
+						onChange={(v) =>
+							onChange({
+								...((value as Record<string, unknown>) ?? {}),
+								[childName]: v,
+							})}
+					/>
+				</div>
 			{/each}
 		</fieldset>
 	{:else}

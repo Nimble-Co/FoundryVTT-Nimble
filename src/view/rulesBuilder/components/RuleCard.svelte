@@ -14,12 +14,25 @@
 	const ruleLabel = $derived(
 		(rule.label as string) || localize(ruleTypes[rule.type as string] ?? (rule.type as string)),
 	);
+
+	// `defineSchema()` allocates fresh field instances on every call. The
+	// schema only depends on `rule.type`, so memoize per-type to avoid
+	// rebuilding the field tree on every keystroke.
+	const schemaCache = new Map<string, Record<string, foundry.data.fields.DataField.Any> | null>();
 	const schema = $derived.by(() => {
-		if (!RuleClass) return null;
+		const type = rule.type as string;
+		if (schemaCache.has(type)) return schemaCache.get(type) ?? null;
+		if (!RuleClass) {
+			schemaCache.set(type, null);
+			return null;
+		}
 		try {
-			return RuleClass.defineSchema() as Record<string, foundry.data.fields.DataField.Any>;
+			const built = RuleClass.defineSchema() as Record<string, foundry.data.fields.DataField.Any>;
+			schemaCache.set(type, built);
+			return built;
 		} catch (err) {
-			console.warn(`Nimble | RuleCard could not load schema for "${rule.type}"`, err);
+			console.warn(`Nimble | RuleCard could not load schema for "${type}"`, err);
+			schemaCache.set(type, null);
 			return null;
 		}
 	});
@@ -73,14 +86,26 @@
 		'predicate',
 	]);
 
+	const warnedMissingLabel = new Set<string>();
+
 	/**
 	 * Display label for a schema field. Foundry's existing `label` option
 	 * wins; otherwise convert the camelCase property name into a readable
-	 * "Camel Case" string ("damageType" → "Damage Type").
+	 * "Camel Case" string ("damageType" → "Damage Type"). The fallback is
+	 * English-only, so dev mode warns once per (type, field) pair to flag
+	 * the i18n trap.
 	 */
 	function fieldLabel(name: string, field: foundry.data.fields.DataField.Any): string {
 		const explicit = (field as { label?: string }).label;
 		if (explicit) return localize(explicit);
+		const key = `${rule.type}.${name}`;
+		if (!warnedMissingLabel.has(key)) {
+			warnedMissingLabel.add(key);
+			console.warn(
+				`Nimble | RuleCard: rule "${rule.type}" field "${name}" has no \`label:\` ` +
+					`option. Falling back to a camelCase-derived English-only label.`,
+			);
+		}
 		return name
 			.replace(/([A-Z])/g, ' $1')
 			.replace(/^./, (c) => c.toUpperCase())
@@ -226,7 +251,8 @@
 			</div>
 		{:else if !schema}
 			<p class="nimble-rule-card__empty">
-				Could not load this rule's schema. Use the raw-JSON edit button to repair.
+				Could not load schema for rule type <code>{rule.type}</code>. Use the raw-JSON edit button
+				to repair.
 			</p>
 		{:else}
 			{@const editableEntries = Object.entries(schema).filter(
