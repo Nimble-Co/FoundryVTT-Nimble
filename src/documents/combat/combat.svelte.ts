@@ -505,10 +505,6 @@ class NimbleCombat extends Combat {
 			normalizedEntry.type = 'npc';
 		}
 
-		if (normalizedEntry.type === 'character') {
-			return { normalizedEntry, normalizedMinionType };
-		}
-
 		const currentActions = foundry.utils.getProperty(
 			normalizedEntry,
 			'system.actions.base.current',
@@ -520,9 +516,10 @@ class NimbleCombat extends Combat {
 		const explicitMaxActions = Number(
 			foundry.utils.getProperty(normalizedEntry, 'system.actions.base.max') ?? Number.NaN,
 		);
+		const defaultActions = normalizedEntry.type === 'character' ? 3 : 1;
 		const initialActions = Number.isFinite(explicitMaxActions)
 			? Math.max(0, Math.trunc(explicitMaxActions))
-			: 1;
+			: defaultActions;
 		foundry.utils.setProperty(normalizedEntry, 'system.actions.base.current', initialActions);
 		return { normalizedEntry, normalizedMinionType };
 	}
