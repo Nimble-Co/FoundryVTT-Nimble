@@ -39,6 +39,7 @@ function schema() {
 					nullable: false,
 					initial: '',
 					widget: 'documentUuid',
+					documentTypes: ['Item.spell'],
 				}),
 			),
 			{
@@ -46,6 +47,7 @@ function schema() {
 				nullable: false,
 				initial: [],
 				label: 'Specific spells',
+				hint: 'Drag spells from a compendium or sidebar onto each slot to grant them directly.',
 			},
 		),
 		// Grant mode

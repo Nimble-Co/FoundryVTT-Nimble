@@ -43,6 +43,9 @@ const ITEM_ATTR = 'data-reorder-id';
 const DRAGGING_CLASS = 'nimble-reorderable--dragging';
 const SOURCE_HIDDEN_CLASS = 'nimble-reorderable__item--source-hidden';
 const FOREIGN_DRAG_CLASS = 'nimble-reorderable--foreign-drag';
+// Custom MIME used to disambiguate our own list drags from arbitrary
+// Foundry document drags (which also set text/plain).
+const REORDERABLE_MIME = 'application/x-nimble-reorderable';
 
 function findItemElement(target: EventTarget | null, container: HTMLElement): HTMLElement | null {
 	if (!(target instanceof Element)) return null;
@@ -94,8 +97,13 @@ export function reorderable(
 			const payload = getDragPayload?.(id);
 			if (payload && copyAcceptType) {
 				const wrapped = { ...payload, type: copyAcceptType };
-				event.dataTransfer.setData('text/plain', JSON.stringify(wrapped));
+				const json = JSON.stringify(wrapped);
+				// Custom MIME is the reliable signal for `isForeignDrag`; the
+				// text/plain copy is a fallback for tools that only read it.
+				event.dataTransfer.setData(REORDERABLE_MIME, json);
+				event.dataTransfer.setData('text/plain', json);
 			} else {
+				event.dataTransfer.setData(REORDERABLE_MIME, id);
 				event.dataTransfer.setData('text/plain', id);
 			}
 		}
@@ -114,10 +122,11 @@ export function reorderable(
 
 	function isForeignDrag(event: DragEvent): boolean {
 		// `dataTransfer` payload isn't readable mid-drag (browser security);
-		// the absence of a local `draggedItem` is the signal.
+		// the custom MIME presence is the signal — text/plain alone matches
+		// arbitrary Foundry document drags too, which we must let pass.
 		if (draggedItem) return false;
 		if (!onCopy) return false;
-		return event.dataTransfer?.types.includes('text/plain') === true;
+		return event.dataTransfer?.types.includes(REORDERABLE_MIME) === true;
 	}
 
 	function onDragOver(event: DragEvent) {
@@ -138,7 +147,8 @@ export function reorderable(
 		if (draggedItem) return; // within-list drops are no-ops
 		if (!onCopy) return;
 
-		const raw = event.dataTransfer?.getData('text/plain');
+		const raw =
+			event.dataTransfer?.getData(REORDERABLE_MIME) || event.dataTransfer?.getData('text/plain');
 		if (!raw) return;
 		let parsed: Record<string, unknown>;
 		try {

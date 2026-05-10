@@ -570,8 +570,10 @@ export const foundryApiMocks = {
 				}
 			},
 			SchemaField: class SchemaField {
-				constructor(schema?: any, options?: any) {
-					Object.assign(this, { schema, ...options });
+				constructor(fields?: any, options?: any) {
+					// Real Foundry stores the inner schema as `.fields`; consumers
+					// (e.g. the rules-builder renderer) read it from there.
+					Object.assign(this, { fields: fields ?? {}, ...options });
 				}
 			},
 		},

@@ -27,6 +27,11 @@ export type WidgetHint =
 export interface WidgetExtras {
 	widget?: WidgetHint;
 	showWhen?: (data: Record<string, unknown>) => boolean;
+	/**
+	 * Restrict accepted drops on `widget: 'documentUuid'` fields. Each entry
+	 * is either a top-level type (`'Item'`) or a subtype path (`'Item.spell'`).
+	 */
+	documentTypes?: string[];
 }
 
 export function withWidget<O>(options: O & WidgetExtras): O {

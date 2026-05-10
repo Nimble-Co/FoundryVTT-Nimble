@@ -40,11 +40,37 @@
 		}
 	});
 
-	function isAcceptable(droppedType: string | undefined): boolean {
+	function isAcceptable(payload: { uuid: string; type?: string }): boolean {
 		if (!documentTypes || documentTypes.length === 0) return true;
+		const droppedType = payload.type;
 		if (!droppedType) return false;
-		// Allow either exact match (`Item.spell`) or top-level type match (`Item`).
-		return documentTypes.some((t) => droppedType === t || droppedType.startsWith(`${t}.`));
+
+		// Foundry's drag payload only carries the top-level Document type
+		// (e.g. `"Item"`), never the system subtype. For constraints like
+		// `"Item.spell"` we have to resolve the document to inspect its
+		// subtype field.
+		let resolvedSubtype: string | null | undefined;
+		const getSubtype = () => {
+			if (resolvedSubtype !== undefined) return resolvedSubtype;
+			try {
+				const doc = fromUuidSync(payload.uuid as Parameters<typeof fromUuidSync>[0]) as {
+					type?: string;
+				} | null;
+				resolvedSubtype = doc?.type ?? null;
+			} catch {
+				resolvedSubtype = null;
+			}
+			return resolvedSubtype;
+		};
+
+		return documentTypes.some((t) => {
+			const dot = t.indexOf('.');
+			if (dot === -1) return droppedType === t;
+			const top = t.slice(0, dot);
+			const sub = t.slice(dot + 1);
+			if (droppedType !== top) return false;
+			return getSubtype() === sub;
+		});
 	}
 
 	function readDropPayload(event: DragEvent): { uuid: string; type?: string } | null {
@@ -79,7 +105,7 @@
 			resolveError = 'Drop payload was not a valid document reference';
 			return;
 		}
-		if (!isAcceptable(payload.type)) {
+		if (!isAcceptable(payload)) {
 			resolveError = `Expected ${documentTypes?.join(' or ')}, got ${payload.type ?? '<unknown>'}`;
 			return;
 		}

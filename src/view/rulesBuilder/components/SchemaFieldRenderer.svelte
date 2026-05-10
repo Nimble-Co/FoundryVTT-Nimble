@@ -20,8 +20,10 @@
 
 	const { fields } = foundry.data;
 
-	// Foundry's `Object.assign(this, options)` means widget/showWhen hints land
-	// on the field instance directly, not under `.options`.
+	// Foundry copies the original options object to `field.options` and also
+	// `Object.assign`s recognised option keys onto the field instance. Custom
+	// hints like `widget`/`showWhen` aren't recognised, so they only survive
+	// on `.options`. Read both — direct access first for the test mock.
 	type FieldExtras = {
 		widget?:
 			| 'formula'
@@ -32,11 +34,20 @@
 			| 'richText'
 			| 'hidden';
 		showWhen?: (data: Record<string, unknown>) => boolean;
+		documentTypes?: string[];
+		options?: FieldExtras;
 	};
 
-	const widget = $derived((field as unknown as FieldExtras).widget);
+	const widget = $derived(
+		(field as unknown as FieldExtras).widget ?? (field as unknown as FieldExtras).options?.widget,
+	);
+	const documentTypes = $derived(
+		(field as unknown as FieldExtras).documentTypes ??
+			(field as unknown as FieldExtras).options?.documentTypes,
+	);
 	const visibleByPredicate = $derived.by(() => {
-		const showWhen = (field as unknown as FieldExtras).showWhen;
+		const extras = field as unknown as FieldExtras;
+		const showWhen = extras.showWhen ?? extras.options?.showWhen;
 		return typeof showWhen === 'function' ? Boolean(showWhen(parentData)) : true;
 	});
 
@@ -93,7 +104,12 @@
 	{:else if widget === 'diceFormula'}
 		<FormulaInput value={String(value ?? '')} onChange={(v) => onChange(v)} {disabled} dice />
 	{:else if widget === 'documentUuid'}
-		<DocumentPicker value={String(value ?? '')} onChange={(v) => onChange(v)} {disabled} />
+		<DocumentPicker
+			value={String(value ?? '')}
+			onChange={(v) => onChange(v)}
+			{disabled}
+			{documentTypes}
+		/>
 	{:else if widget === 'richText' || field instanceof fields.HTMLField}
 		<RichTextEditor value={String(value ?? '')} onChange={(v) => onChange(v)} {disabled} />
 	{:else if widget === 'templateString'}
@@ -113,15 +129,35 @@
 		<input type="checkbox" checked={Boolean(value)} {disabled} onchange={emitBoolean} />
 	{:else if field instanceof fields.NumberField}
 		{@const numField = field as foundry.data.fields.NumberField}
+		{@const isInt = (numField as unknown as { integer?: boolean }).integer === true}
+		{@const allowsNegative = ((numField as unknown as { min?: number }).min ?? -Infinity) < 0}
 		<input
 			class="nimble-field-input"
 			type="number"
 			value={value === null || value === undefined ? '' : (value as number)}
 			min={(numField as unknown as { min?: number }).min}
 			max={(numField as unknown as { max?: number }).max}
-			step={(numField as unknown as { step?: number }).step ??
-				((numField as unknown as { integer?: boolean }).integer ? 1 : undefined)}
+			step={(numField as unknown as { step?: number }).step ?? (isInt ? 1 : undefined)}
+			inputmode={isInt ? 'numeric' : 'decimal'}
 			{disabled}
+			onbeforeinput={(e) => {
+				// `data` is the candidate insertion (null for deletions / IME).
+				const data = (e as InputEvent).data;
+				if (data == null) return;
+				const allowed = isInt
+					? allowsNegative
+						? /^-?\d*$/
+						: /^\d*$/
+					: allowsNegative
+						? /^-?\d*\.?\d*(?:[eE][+-]?\d*)?$/
+						: /^\d*\.?\d*(?:[eE][+-]?\d*)?$/;
+				const target = e.target as HTMLInputElement;
+				const next =
+					target.value.slice(0, target.selectionStart ?? target.value.length) +
+					data +
+					target.value.slice(target.selectionEnd ?? target.value.length);
+				if (!allowed.test(next)) e.preventDefault();
+			}}
 			onchange={emitNumber}
 		/>
 	{:else if field instanceof fields.StringField}
@@ -181,13 +217,15 @@
 				<div class="nimble-string-list">
 					{#each arrValue as item, i (i)}
 						<div class="nimble-string-list__row">
-							<input
-								type="text"
-								value={String(item)}
+							<Self
+								field={elementField}
+								value={item}
+								{parentData}
+								name={`${name}[${i}]`}
 								{disabled}
-								onchange={(e) => {
+								onChange={(v) => {
 									const next = [...arrValue];
-									next[i] = (e.target as HTMLInputElement).value;
+									next[i] = v as string;
 									onChange(next);
 								}}
 							/>
@@ -213,6 +251,49 @@
 					</button>
 				</div>
 			{/if}
+		{:else if elementField instanceof fields.NumberField}
+			{@const arrValue = (Array.isArray(value) ? value : []) as Array<number | null>}
+			{@const elNum = elementField as foundry.data.fields.NumberField}
+			<div class="nimble-string-list">
+				{#each arrValue as item, i (i)}
+					<div class="nimble-string-list__row">
+						<input
+							type="number"
+							value={item === null || item === undefined ? '' : item}
+							min={(elNum as unknown as { min?: number }).min}
+							max={(elNum as unknown as { max?: number }).max}
+							step={(elNum as unknown as { step?: number }).step ??
+								((elNum as unknown as { integer?: boolean }).integer ? 1 : undefined)}
+							{disabled}
+							onchange={(e) => {
+								const raw = (e.target as HTMLInputElement).value;
+								const parsed = raw === '' ? null : Number(raw);
+								const next = [...arrValue];
+								next[i] = Number.isNaN(parsed as number) ? null : parsed;
+								onChange(next);
+							}}
+						/>
+						<button
+							type="button"
+							class="nimble-button"
+							data-button-variant="icon"
+							aria-label="Remove"
+							onclick={() => onChange(arrValue.filter((_, idx) => idx !== i))}
+						>
+							<i class="fa-solid fa-xmark"></i>
+						</button>
+					</div>
+				{/each}
+				<button
+					type="button"
+					class="nimble-button"
+					data-button-variant="basic"
+					onclick={() => onChange([...arrValue, 0])}
+				>
+					<i class="fa-solid fa-plus"></i>
+					Add value
+				</button>
+			</div>
 		{:else if elementField instanceof fields.SchemaField}
 			{@const arrValue = (Array.isArray(value) ? value : []) as Array<Record<string, unknown>>}
 			<div class="nimble-array-of-schema">
