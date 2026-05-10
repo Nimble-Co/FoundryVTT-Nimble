@@ -256,23 +256,18 @@
 			{/if}
 		{:else if elementField instanceof fields.NumberField}
 			{@const arrValue = (Array.isArray(value) ? value : []) as Array<number | null>}
-			{@const elNum = elementField as foundry.data.fields.NumberField}
 			<div class="nimble-string-list">
 				{#each arrValue as item, i (i)}
 					<div class="nimble-string-list__row">
-						<input
-							type="number"
-							value={item === null || item === undefined ? '' : item}
-							min={(elNum as unknown as { min?: number }).min}
-							max={(elNum as unknown as { max?: number }).max}
-							step={(elNum as unknown as { step?: number }).step ??
-								((elNum as unknown as { integer?: boolean }).integer ? 1 : undefined)}
+						<Self
+							field={elementField}
+							value={item}
+							{parentData}
+							name={`${name}[${i}]`}
 							{disabled}
-							onchange={(e) => {
-								const raw = (e.target as HTMLInputElement).value;
-								const parsed = raw === '' ? null : Number(raw);
+							onChange={(v) => {
 								const next = [...arrValue];
-								next[i] = Number.isNaN(parsed as number) ? null : parsed;
+								next[i] = v as number | null;
 								onChange(next);
 							}}
 						/>
