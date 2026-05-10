@@ -8,8 +8,8 @@
 	import PredicateBuilder from './PredicateBuilder.svelte';
 	import RichTextEditor from './RichTextEditor.svelte';
 	// Self-import for recursive rendering (nested SchemaFields, ArrayField
-	// elements). Svelte 5 requires this over the deprecated `<svelte:self>`.
-	// eslint-disable-next-line import/no-self-import — see dep-cruiser exception.
+	// elements). Svelte 5 requires this over the deprecated `<svelte:self>`;
+	// dep-cruiser is configured to allow this specific cycle.
 	import Self from './SchemaFieldRenderer.svelte';
 
 	let {
