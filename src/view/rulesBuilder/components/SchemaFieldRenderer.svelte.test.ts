@@ -198,6 +198,33 @@ describe('SchemaFieldRenderer dispatch table', () => {
 		expect(container.querySelector('input')).toBeFalsy();
 	});
 
+	it('unknown widget hint → falls back to type default and warns', () => {
+		const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+		const field = new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			widget: 'fromula', // typo — should not match any arm
+		} as never);
+		const { container } = render(SchemaFieldRenderer, {
+			field,
+			value: 'hi',
+			parentData: {},
+			name: 'value',
+			onChange: noop,
+		});
+
+		// Falls through to StringField default → text input
+		expect(container.querySelector('input[type="text"]')).toBeTruthy();
+		expect(container.querySelector('.nimble-formula-input')).toBeFalsy();
+
+		const messages = warnSpy.mock.calls.map((c) => c[0] as string);
+		expect(messages.some((m) => m.includes('fromula') && m.includes('value'))).toBe(true);
+
+		warnSpy.mockRestore();
+	});
+
 	it('unsupported field type → renders the inline error block and warns', () => {
 		const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 

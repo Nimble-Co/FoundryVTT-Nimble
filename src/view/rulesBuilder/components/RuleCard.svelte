@@ -251,8 +251,7 @@
 			</div>
 		{:else if !schema}
 			<p class="nimble-rule-card__empty">
-				Could not load schema for rule type <code>{rule.type}</code>. Use the raw-JSON edit button
-				to repair.
+				{@html localize('NIMBLE.rulesBuilder.errorSchemaLoad', { type: rule.type as string })}
 			</p>
 		{:else}
 			{@const editableEntries = Object.entries(schema).filter(

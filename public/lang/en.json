@@ -533,6 +533,9 @@
 			"safeRest": "Safe Rest",
 			"fieldRest": "Field Rest"
 		},
+		"rulesBuilder": {
+			"errorSchemaLoad": "Could not load schema for rule type <code>{type}</code>. Use the raw-JSON edit button to repair."
+		},
 		"ruleTypes": {
 			"abilityBonus": "Stat Bonus",
 			"applyCondition": "Apply Condition",
