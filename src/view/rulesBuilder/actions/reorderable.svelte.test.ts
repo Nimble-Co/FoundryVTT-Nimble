@@ -48,11 +48,13 @@ function dragEvent(name: string, target: Element, dt: DataTransfer): Event {
 	return event;
 }
 
+type CopyFn = (payload: Record<string, unknown>) => void;
+
 describe('reorderable cross-list MIME isolation', () => {
 	let listA: HTMLElement;
 	let listB: HTMLElement;
-	let onCopyA: ReturnType<typeof vi.fn>;
-	let onCopyB: ReturnType<typeof vi.fn>;
+	let onCopyA: ReturnType<typeof vi.fn<CopyFn>>;
+	let onCopyB: ReturnType<typeof vi.fn<CopyFn>>;
 	let actionA: ReturnType<typeof reorderable>;
 	let actionB: ReturnType<typeof reorderable>;
 
@@ -62,8 +64,8 @@ describe('reorderable cross-list MIME isolation', () => {
 		listB = makeList(['b1']);
 		document.body.appendChild(listA);
 		document.body.appendChild(listB);
-		onCopyA = vi.fn();
-		onCopyB = vi.fn();
+		onCopyA = vi.fn<CopyFn>();
+		onCopyB = vi.fn<CopyFn>();
 		actionA = reorderable(listA, {
 			enabled: true,
 			copyAcceptType: 'nimble.Rule',
@@ -128,7 +130,7 @@ describe('reorderable cross-list MIME isolation', () => {
 		// from A onto it should succeed.
 		const listC = makeList([]);
 		document.body.appendChild(listC);
-		const onCopyC = vi.fn();
+		const onCopyC = vi.fn<CopyFn>();
 		const actionC = reorderable(listC, {
 			enabled: true,
 			copyAcceptType: 'nimble.Rule',
@@ -172,7 +174,7 @@ describe('reorderable cross-list MIME isolation', () => {
 		const action = reorderable(dropOnly, {
 			enabled: true,
 			copyAcceptType: 'nimble.Rule',
-			onCopy: vi.fn(),
+			onCopy: vi.fn<CopyFn>(),
 		});
 
 		const sourceItem = dropOnly.querySelector('[data-reorder-id="d1"]') as HTMLElement;

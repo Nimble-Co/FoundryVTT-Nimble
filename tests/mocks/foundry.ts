@@ -571,7 +571,7 @@ export const foundryApiMocks = {
 				},
 				ArrayField: class ArrayField {
 					constructor(element?: any, options?: any) {
-						(this as { element: unknown }).element = element;
+						(this as unknown as { element: unknown }).element = element;
 						assignWithOptions(this, options);
 					}
 				},
@@ -584,7 +584,7 @@ export const foundryApiMocks = {
 					constructor(fields?: any, options?: any) {
 						// Real Foundry stores the inner schema as `.fields`; consumers
 						// (e.g. the rules-builder renderer) read it from there.
-						(this as { fields: unknown }).fields = fields ?? {};
+						(this as unknown as { fields: unknown }).fields = fields ?? {};
 						assignWithOptions(this, options);
 					}
 				},
