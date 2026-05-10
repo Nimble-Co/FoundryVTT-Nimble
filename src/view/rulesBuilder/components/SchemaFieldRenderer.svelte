@@ -347,7 +347,6 @@
 				<code>SchemaFieldRenderer.svelte</code>.
 			</div>
 			{(() => {
-				// eslint-disable-next-line no-console
 				console.warn(
 					`Nimble | SchemaFieldRenderer has no widget for ArrayField<${(elementField as { constructor?: { name?: string } })?.constructor?.name ?? 'unknown'}> at field "${name}".`,
 				);
@@ -385,7 +384,6 @@
 			has no widget. Add one to <code>SchemaFieldRenderer.svelte</code>.
 		</div>
 		{(() => {
-			// eslint-disable-next-line no-console
 			console.warn(
 				`Nimble | SchemaFieldRenderer has no widget for "${name}" (${(field as { constructor?: { name?: string } })?.constructor?.name ?? 'unknown'}).`,
 			);

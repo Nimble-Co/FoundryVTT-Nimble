@@ -19,7 +19,6 @@
 		try {
 			return RuleClass.defineSchema() as Record<string, foundry.data.fields.DataField.Any>;
 		} catch (err) {
-			// eslint-disable-next-line no-console
 			console.warn(`Nimble | RuleCard could not load schema for "${rule.type}"`, err);
 			return null;
 		}

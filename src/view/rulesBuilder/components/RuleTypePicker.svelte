@@ -105,7 +105,7 @@
 		for (const { entries } of groupedEntries) {
 			for (const entry of entries) {
 				if (!entry.hasDevWarning) continue;
-				// eslint-disable-next-line no-console
+
 				console.warn(
 					`Nimble | Rule "${entry.key}" is missing presentation metadata (group=${entry.group}, description=${entry.description}). Picker will show a placeholder.`,
 				);

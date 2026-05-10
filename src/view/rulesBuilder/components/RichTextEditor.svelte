@@ -10,7 +10,6 @@
 	}
 
 	let mountPoint: HTMLElement;
-	let editor: ProseMirrorElement | null = null;
 
 	onMount(() => {
 		// `editable` isn't on `ProseMirrorInputConfig`. Editability is controlled
@@ -31,11 +30,6 @@
 		});
 
 		mountPoint.replaceWith(element);
-		editor = element;
-
-		return () => {
-			editor = null;
-		};
 	});
 </script>
 
