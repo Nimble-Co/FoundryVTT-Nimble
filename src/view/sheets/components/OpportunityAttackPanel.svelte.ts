@@ -29,10 +29,7 @@ export function createOpportunityAttackPanelState(
 	getOpportunitySpent: () => boolean,
 	getNoActions: () => boolean,
 	getIsActiveTurn: () => boolean,
-	getOnUseReaction: () => (options?: {
-		force?: boolean;
-		skipActionDeduction?: boolean;
-	}) => Promise<boolean>,
+	getOnUseReaction: () => (options?: { force?: boolean }) => Promise<boolean>,
 	getForceNextReactionUse: () => boolean,
 	getOnConsumeForcedReactionUse: () => () => void,
 ) {
@@ -286,11 +283,14 @@ export function createOpportunityAttackPanelState(
 		if (!confirmed) return null;
 
 		const item = getActor().items.get(itemId);
-		const result = await getActor().activateItem(itemId, { rollMode: -1 }); // Disadvantage
+		const result = await getActor().activateItem(itemId, {
+			rollMode: -1,
+			skipActionDeduction: true,
+		});
 
 		if (result && item) {
-			// activateItem already deducted the action; only mark the reaction spent.
-			const reactionUsed = await getOnUseReaction()({ force, skipActionDeduction: true });
+			const reactionOptions = force ? { force: true } : undefined;
+			const reactionUsed = await getOnUseReaction()(reactionOptions);
 			if (!reactionUsed) return null;
 
 			if (force) {

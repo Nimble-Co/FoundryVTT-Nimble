@@ -1608,7 +1608,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		const item = this.items.get(id);
 		const result = await super.activateItem(id, options);
 
-		if (result && item) {
+		if (result && item && !options.skipActionDeduction) {
 			const activation = (
 				item.system as { activation?: { cost?: { type: string; quantity: number } } }
 			).activation;
