@@ -1066,7 +1066,13 @@ class NimbleCombat extends Combat {
 	}
 
 	override setupTurns(): Combatant.Implementation[] {
+		// super.setupTurns() does `this.round++` when this.turn exceeds combatants.size, which fires
+		// spuriously once expandLegendaryTurns produces a turn list longer than the combatant count.
+		const savedRound = this.round;
+		const savedTurn = this.turn;
 		const aliveTurns = super.setupTurns().filter((combatant) => !isCombatantDead(combatant));
+		if (this.round !== savedRound) this.round = savedRound;
+		if (this.turn !== savedTurn) this.turn = savedTurn;
 		const minionNormalizedTurns = normalizeMinionTurns(aliveTurns);
 		return expandLegendaryTurns(minionNormalizedTurns);
 	}
