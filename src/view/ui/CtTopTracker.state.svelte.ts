@@ -301,7 +301,8 @@ export function createCtTopTrackerState() {
 		event.stopPropagation();
 		if (!canCurrentUserEndTurn) return;
 
-		if (!activeAllActionsUsed) {
+		const activeCombatant = trackerStore.activeCombatant;
+		if (!activeAllActionsUsed && activeCombatant && isPlayerCombatant(activeCombatant)) {
 			const confirmed = await confirmEndTurnEarly();
 			if (!confirmed) return;
 		}
