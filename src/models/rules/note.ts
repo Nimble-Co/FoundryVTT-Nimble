@@ -30,7 +30,7 @@ class NoteRule extends NimbleBaseRule<NoteRule.Schema> {
 	// tech-spec. `description` is `HTMLField` and dispatches to the rich-text
 	// editor by Foundry field type, no widget hint needed.
 	static override group = 'notes';
-	static override description = 'NIMBLE.ruleDescriptions.note';
+	static override description = 'NIMBLE.rules.note.description';
 
 	static override defineSchema(): NoteRule.Schema {
 		return {

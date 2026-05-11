@@ -14,7 +14,7 @@ declare namespace MaximizeHitDiceRule {
 
 class MaximizeHitDiceRule extends NimbleBaseRule<MaximizeHitDiceRule.Schema> {
 	static override group = 'bonuses';
-	static override description = 'NIMBLE.ruleDescriptions.maximizeHitDice';
+	static override description = 'NIMBLE.rules.maximizeHitDice.description';
 
 	static override defineSchema(): MaximizeHitDiceRule.Schema {
 		return {

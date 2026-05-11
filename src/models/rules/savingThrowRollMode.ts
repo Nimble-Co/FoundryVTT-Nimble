@@ -8,34 +8,34 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 0,
-			label: 'Roll mode value',
+			label: 'NIMBLE.rules.savingThrowRollMode.value.label',
 		}),
 		target: new fields.StringField({
 			required: true,
 			nullable: false,
 			initial: 'all',
-			label: 'Target save',
+			label: 'NIMBLE.rules.savingThrowRollMode.target.label',
 		}),
 		// Only meaningful when `requiresChoice` is true — hidden otherwise.
 		selectedSave: new fields.StringField({
 			required: false,
 			nullable: true,
 			initial: null,
-			label: 'Selected save',
+			label: 'NIMBLE.rules.savingThrowRollMode.selectedSave.label',
 			showWhen: (data) => data.requiresChoice === true,
 		} as unknown as never),
 		mode: new fields.StringField({
 			required: true,
 			nullable: false,
 			initial: 'set',
-			label: 'How to apply',
+			label: 'NIMBLE.rules.savingThrowRollMode.mode.label',
 			choices: ['set', 'adjust'],
 		}),
 		requiresChoice: new fields.BooleanField({
 			required: true,
 			nullable: false,
 			initial: false,
-			label: 'Player chooses save at use',
+			label: 'NIMBLE.rules.savingThrowRollMode.requiresChoice.label',
 		}),
 		type: new fields.StringField({
 			required: true,
@@ -51,7 +51,7 @@ declare namespace SavingThrowRollModeRule {
 
 class SavingThrowRollModeRule extends NimbleBaseRule<SavingThrowRollModeRule.Schema> {
 	static override group = 'bonuses';
-	static override description = 'NIMBLE.ruleDescriptions.savingThrowRollMode';
+	static override description = 'NIMBLE.rules.savingThrowRollMode.description';
 
 	static override defineSchema(): SavingThrowRollModeRule.Schema {
 		return {

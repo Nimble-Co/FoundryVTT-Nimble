@@ -20,7 +20,9 @@ describe('InitiativeRollModeRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(InitiativeRollModeRule.group).toBe('bonuses');
-			expect(InitiativeRollModeRule.description).toBe('NIMBLE.ruleDescriptions.initiativeRollMode');
+			expect(InitiativeRollModeRule.description).toBe(
+				'NIMBLE.rules.initiativeRollMode.description',
+			);
 		});
 	});
 });

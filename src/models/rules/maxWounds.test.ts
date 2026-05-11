@@ -13,7 +13,7 @@ describe('MaxWoundsRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(MaxWoundsRule.group).toBe('bonuses');
-			expect(MaxWoundsRule.description).toBe('NIMBLE.ruleDescriptions.maxWounds');
+			expect(MaxWoundsRule.description).toBe('NIMBLE.rules.maxWounds.description');
 		});
 	});
 });

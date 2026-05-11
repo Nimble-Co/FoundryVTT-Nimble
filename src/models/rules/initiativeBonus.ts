@@ -10,7 +10,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '',
-				label: 'Bonus',
+				label: 'NIMBLE.rules.initiativeBonus.value.label',
 				widget: 'formula',
 			}),
 		),
@@ -24,7 +24,7 @@ declare namespace InitiativeBonusRule {
 
 class InitiativeBonusRule extends NimbleBaseRule<InitiativeBonusRule.Schema> {
 	static override group = 'bonuses';
-	static override description = 'NIMBLE.ruleDescriptions.initiativeBonus';
+	static override description = 'NIMBLE.rules.initiativeBonus.description';
 
 	declare value: string;
 

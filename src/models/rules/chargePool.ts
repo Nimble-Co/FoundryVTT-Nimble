@@ -70,7 +70,7 @@ declare namespace ChargePoolRule {
 
 class ChargePoolRule extends NimbleBaseRule<ChargePoolRule.Schema> {
 	static override group = 'resource';
-	static override description = 'NIMBLE.ruleDescriptions.chargePool';
+	static override description = 'NIMBLE.rules.chargePool.description';
 
 	declare scope: (typeof ChargePoolRuleConfig.scopes)[number];
 

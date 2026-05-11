@@ -20,7 +20,7 @@ describe('ArmorClassRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(ArmorClassRule.group).toBe('bonuses');
-			expect(ArmorClassRule.description).toBe('NIMBLE.ruleDescriptions.armorClass');
+			expect(ArmorClassRule.description).toBe('NIMBLE.rules.armorClass.description');
 		});
 	});
 });

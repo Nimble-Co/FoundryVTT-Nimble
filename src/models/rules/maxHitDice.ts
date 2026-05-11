@@ -10,7 +10,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '',
-				label: 'Bonus',
+				label: 'NIMBLE.rules.maxHitDice.value.label',
 				widget: 'formula',
 			}),
 		),
@@ -19,7 +19,7 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 0,
-			label: 'Die size (0 = class default)',
+			label: 'NIMBLE.rules.maxHitDice.dieSize.label',
 		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'maxHitDice' }),
 	};
@@ -31,7 +31,7 @@ declare namespace MaxHitDiceRule {
 
 class MaxHitDiceRule extends NimbleBaseRule<MaxHitDiceRule.Schema> {
 	static override group = 'bonuses';
-	static override description = 'NIMBLE.ruleDescriptions.maxHitDice';
+	static override description = 'NIMBLE.rules.maxHitDice.description';
 
 	declare dieSize: number;
 

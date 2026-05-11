@@ -23,15 +23,15 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 0,
-			label: 'Bonus',
-			hint: 'Bonus HP added to maximum.',
+			label: 'NIMBLE.rules.maxHpBonus.value.label',
+			hint: 'NIMBLE.rules.maxHpBonus.value.hint',
 		}),
 		perLevel: new fields.BooleanField({
 			required: true,
 			nullable: false,
 			initial: false,
-			label: 'Multiply by character level',
-			hint: 'When on, the bonus is applied per level (e.g. +2 per level → +20 at level 10).',
+			label: 'NIMBLE.rules.maxHpBonus.perLevel.label',
+			hint: 'NIMBLE.rules.maxHpBonus.perLevel.hint',
 		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'maxHpBonus' }),
 	};
@@ -45,7 +45,7 @@ class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
 	// `perLevel: true` re-interprets `value` as "per level" and multiplies by
 	// the actor's level on apply. The i18n description should call this out.
 	static override group = 'bonuses';
-	static override description = 'NIMBLE.ruleDescriptions.maxHpBonus';
+	static override description = 'NIMBLE.rules.maxHpBonus.description';
 
 	declare value: number;
 	declare perLevel: boolean;

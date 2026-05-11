@@ -13,7 +13,9 @@ describe('HealingPotionBonusRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(HealingPotionBonusRule.group).toBe('bonuses');
-			expect(HealingPotionBonusRule.description).toBe('NIMBLE.ruleDescriptions.healingPotionBonus');
+			expect(HealingPotionBonusRule.description).toBe(
+				'NIMBLE.rules.healingPotionBonus.description',
+			);
 		});
 	});
 });

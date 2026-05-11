@@ -11,8 +11,8 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '',
-				label: 'Bonus',
-				hint: 'A flat number, formula (e.g. @level), or dice expression.',
+				label: 'NIMBLE.rules.abilityBonus.value.label',
+				hint: 'NIMBLE.rules.abilityBonus.value.hint',
 				widget: 'formula',
 			}),
 		),
@@ -26,8 +26,8 @@ function schema() {
 			{
 				required: true,
 				nullable: false,
-				label: 'Apply to',
-				hint: 'Pick one or more abilities. Use “all” to apply to every ability.',
+				label: 'NIMBLE.rules.abilityBonus.abilities.label',
+				hint: 'NIMBLE.rules.abilityBonus.abilities.hint',
 			},
 		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'abilityBonus' }),
@@ -40,7 +40,7 @@ declare namespace AbilityBonusRule {
 
 class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
 	static override group = 'bonuses';
-	static override description = 'NIMBLE.ruleDescriptions.abilityBonus';
+	static override description = 'NIMBLE.rules.abilityBonus.description';
 
 	static override defineSchema(): AbilityBonusRule.Schema {
 		return {

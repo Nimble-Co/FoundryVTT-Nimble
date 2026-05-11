@@ -13,7 +13,7 @@ describe('IncrementHitDiceRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(IncrementHitDiceRule.group).toBe('bonuses');
-			expect(IncrementHitDiceRule.description).toBe('NIMBLE.ruleDescriptions.incrementHitDice');
+			expect(IncrementHitDiceRule.description).toBe('NIMBLE.rules.incrementHitDice.description');
 		});
 	});
 });

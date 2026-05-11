@@ -38,7 +38,7 @@ declare namespace CombatManaRule {
 
 class CombatManaRule extends NimbleBaseRule<CombatManaRule.Schema> {
 	static override group = 'resource';
-	static override description = 'NIMBLE.ruleDescriptions.combatMana';
+	static override description = 'NIMBLE.rules.combatMana.description';
 
 	declare formula: string;
 	declare resource: string;

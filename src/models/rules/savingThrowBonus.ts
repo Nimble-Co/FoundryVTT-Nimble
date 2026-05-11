@@ -11,8 +11,8 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '',
-				label: 'Bonus',
-				hint: 'A flat number, formula, or dice expression added to the save.',
+				label: 'NIMBLE.rules.savingThrowBonus.value.label',
+				hint: 'NIMBLE.rules.savingThrowBonus.value.hint',
 				widget: 'formula',
 			}),
 		),
@@ -28,8 +28,8 @@ function schema() {
 			{
 				required: true,
 				nullable: false,
-				label: 'Apply to',
-				hint: 'Pick one or more saves. Use “all” to apply to every save.',
+				label: 'NIMBLE.rules.savingThrowBonus.savingThrows.label',
+				hint: 'NIMBLE.rules.savingThrowBonus.savingThrows.hint',
 			},
 		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'savingThrowBonus' }),
@@ -42,7 +42,7 @@ declare namespace SavingThrowBonusRule {
 
 class SavingThrowBonusRule extends NimbleBaseRule<SavingThrowBonusRule.Schema> {
 	static override group = 'bonuses';
-	static override description = 'NIMBLE.ruleDescriptions.savingThrowBonus';
+	static override description = 'NIMBLE.rules.savingThrowBonus.description';
 
 	static override defineSchema(): SavingThrowBonusRule.Schema {
 		return {

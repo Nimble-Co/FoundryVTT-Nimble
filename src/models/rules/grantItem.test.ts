@@ -16,7 +16,7 @@ describe('ItemGrantRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(ItemGrantRule.group).toBe('grants');
-			expect(ItemGrantRule.description).toBe('NIMBLE.ruleDescriptions.grantItem');
+			expect(ItemGrantRule.description).toBe('NIMBLE.rules.grantItem.description');
 		});
 	});
 });

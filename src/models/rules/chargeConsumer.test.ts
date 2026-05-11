@@ -15,7 +15,7 @@ describe('ChargeConsumerRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(ChargeConsumerRule.group).toBe('resource');
-			expect(ChargeConsumerRule.description).toBe('NIMBLE.ruleDescriptions.chargeConsumer');
+			expect(ChargeConsumerRule.description).toBe('NIMBLE.rules.chargeConsumer.description');
 		});
 	});
 });

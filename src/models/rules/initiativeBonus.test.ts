@@ -13,7 +13,7 @@ describe('InitiativeBonusRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(InitiativeBonusRule.group).toBe('bonuses');
-			expect(InitiativeBonusRule.description).toBe('NIMBLE.ruleDescriptions.initiativeBonus');
+			expect(InitiativeBonusRule.description).toBe('NIMBLE.rules.initiativeBonus.description');
 		});
 	});
 });

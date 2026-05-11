@@ -135,6 +135,6 @@ describe('InitiativeMessageRule.schema', () => {
 describe('InitiativeMessageRule class metadata', () => {
 	it('exposes the picker group and i18n description key', () => {
 		expect(InitiativeMessageRule.group).toBe('notes');
-		expect(InitiativeMessageRule.description).toBe('NIMBLE.ruleDescriptions.initiativeMessage');
+		expect(InitiativeMessageRule.description).toBe('NIMBLE.rules.initiativeMessage.description');
 	});
 });

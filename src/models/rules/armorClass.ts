@@ -10,8 +10,8 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '',
-				label: 'Formula',
-				hint: 'A flat number or formula. Combined per the mode below.',
+				label: 'NIMBLE.rules.armorClass.formula.label',
+				hint: 'NIMBLE.rules.armorClass.formula.hint',
 				widget: 'formula',
 			}),
 		),
@@ -19,8 +19,8 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'add',
-			label: 'How to apply',
-			hint: 'Add: stack on top of current AC. Multiply: scale current AC. Override: replace current AC.',
+			label: 'NIMBLE.rules.armorClass.mode.label',
+			hint: 'NIMBLE.rules.armorClass.mode.hint',
 			choices: ['add', 'multiply', 'override'],
 		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'armorClass' }),
@@ -33,7 +33,7 @@ declare namespace ArmorClassRule {
 
 class ArmorClassRule extends NimbleBaseRule<ArmorClassRule.Schema> {
 	static override group = 'bonuses';
-	static override description = 'NIMBLE.ruleDescriptions.armorClass';
+	static override description = 'NIMBLE.rules.armorClass.description';
 
 	static override defineSchema(): ArmorClassRule.Schema {
 		return {

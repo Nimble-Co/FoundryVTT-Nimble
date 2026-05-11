@@ -13,7 +13,7 @@ describe('UnarmedDamageRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(UnarmedDamageRule.group).toBe('bonuses');
-			expect(UnarmedDamageRule.description).toBe('NIMBLE.ruleDescriptions.unarmedDamage');
+			expect(UnarmedDamageRule.description).toBe('NIMBLE.rules.unarmedDamage.description');
 		});
 	});
 });

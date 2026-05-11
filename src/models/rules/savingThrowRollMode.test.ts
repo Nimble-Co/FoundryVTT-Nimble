@@ -24,7 +24,7 @@ describe('SavingThrowRollModeRule', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(SavingThrowRollModeRule.group).toBe('bonuses');
 			expect(SavingThrowRollModeRule.description).toBe(
-				'NIMBLE.ruleDescriptions.savingThrowRollMode',
+				'NIMBLE.rules.savingThrowRollMode.description',
 			);
 		});
 	});

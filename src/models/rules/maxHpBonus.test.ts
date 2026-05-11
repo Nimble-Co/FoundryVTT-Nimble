@@ -14,7 +14,7 @@ describe('MaxHpBonusRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(MaxHpBonusRule.group).toBe('bonuses');
-			expect(MaxHpBonusRule.description).toBe('NIMBLE.ruleDescriptions.maxHpBonus');
+			expect(MaxHpBonusRule.description).toBe('NIMBLE.rules.maxHpBonus.description');
 		});
 	});
 });

@@ -10,7 +10,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '1',
-				label: 'Die size bonus',
+				label: 'NIMBLE.rules.incrementHitDice.value.label',
 				widget: 'formula',
 			}),
 		),
@@ -24,7 +24,7 @@ declare namespace IncrementHitDiceRule {
 
 class IncrementHitDiceRule extends NimbleBaseRule<IncrementHitDiceRule.Schema> {
 	static override group = 'bonuses';
-	static override description = 'NIMBLE.ruleDescriptions.incrementHitDice';
+	static override description = 'NIMBLE.rules.incrementHitDice.description';
 
 	declare value: string;
 

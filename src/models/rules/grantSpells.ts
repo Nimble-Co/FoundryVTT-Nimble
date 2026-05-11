@@ -15,21 +15,21 @@ function schema() {
 				required: false,
 				nullable: false,
 				initial: [],
-				label: 'Schools',
+				label: 'NIMBLE.rules.grantSpells.schools.label',
 			},
 		),
 		tiers: new fields.ArrayField(new fields.NumberField({ integer: true, min: 0 }), {
 			required: false,
 			nullable: false,
 			initial: [0],
-			label: 'Tiers',
+			label: 'NIMBLE.rules.grantSpells.tiers.label',
 		}),
 		// When true, only grant utility spells; when false, only grant non-utility spells
 		utilityOnly: new fields.BooleanField({
 			required: false,
 			nullable: false,
 			initial: false,
-			label: 'Utility spells only',
+			label: 'NIMBLE.rules.grantSpells.utilityOnly.label',
 		}),
 		// Specific spell UUIDs (alternative to school/tier filtering)
 		uuids: new fields.ArrayField(
@@ -46,8 +46,8 @@ function schema() {
 				required: false,
 				nullable: false,
 				initial: [],
-				label: 'Specific spells',
-				hint: 'Drag spells from a compendium or sidebar onto each slot to grant them directly.',
+				label: 'NIMBLE.rules.grantSpells.uuids.label',
+				hint: 'NIMBLE.rules.grantSpells.uuids.hint',
 			},
 		),
 		// Grant mode
@@ -55,7 +55,7 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'auto',
-			label: 'Selection mode',
+			label: 'NIMBLE.rules.grantSpells.mode.label',
 			choices: ['auto', 'selectSchool', 'selectSpell'],
 		}),
 		// For selectSchool / selectSpell: how many schools/spells to choose. Hidden in `auto`.
@@ -65,7 +65,7 @@ function schema() {
 			initial: null,
 			integer: true,
 			min: 1,
-			label: 'How many to choose',
+			label: 'NIMBLE.rules.grantSpells.count.label',
 			showWhen: (data) => data.mode === 'selectSchool' || data.mode === 'selectSpell',
 		} as unknown as never),
 	};
@@ -86,7 +86,7 @@ declare namespace GrantSpellsRule {
  */
 class GrantSpellsRule extends NimbleBaseRule<GrantSpellsRule.Schema> {
 	static override group = 'grants';
-	static override description = 'NIMBLE.ruleDescriptions.grantSpells';
+	static override description = 'NIMBLE.rules.grantSpells.description';
 
 	declare schools: string[];
 

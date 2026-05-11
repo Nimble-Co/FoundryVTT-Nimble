@@ -20,7 +20,7 @@ describe('GrantProficiencyRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(GrantProficiencyRule.group).toBe('grants');
-			expect(GrantProficiencyRule.description).toBe('NIMBLE.ruleDescriptions.grantProficiency');
+			expect(GrantProficiencyRule.description).toBe('NIMBLE.rules.grantProficiency.description');
 		});
 	});
 });

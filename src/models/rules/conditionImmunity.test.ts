@@ -180,7 +180,7 @@ describe('ConditionImmunityRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(ConditionImmunityRule.group).toBe('conditions');
-			expect(ConditionImmunityRule.description).toBe('NIMBLE.ruleDescriptions.conditionImmunity');
+			expect(ConditionImmunityRule.description).toBe('NIMBLE.rules.conditionImmunity.description');
 		});
 	});
 });

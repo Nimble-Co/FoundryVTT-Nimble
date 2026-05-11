@@ -16,7 +16,7 @@ describe('CombatManaRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(CombatManaRule.group).toBe('resource');
-			expect(CombatManaRule.description).toBe('NIMBLE.ruleDescriptions.combatMana');
+			expect(CombatManaRule.description).toBe('NIMBLE.rules.combatMana.description');
 		});
 	});
 });

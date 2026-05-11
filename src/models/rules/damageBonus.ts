@@ -29,8 +29,8 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '@level',
-				label: 'Bonus',
-				hint: 'Flat (5), formula (@level), or dice (1d6+2).',
+				label: 'NIMBLE.rules.damageBonus.value.label',
+				hint: 'NIMBLE.rules.damageBonus.value.hint',
 				widget: 'formula',
 			}),
 		),
@@ -42,24 +42,24 @@ function schema() {
 			// damage type" sentinel here (matches everything during activation).
 			blank: true,
 			initial: '',
-			label: 'Damage type',
-			hint: 'Restrict to attacks of this type. Leave blank to match all.',
+			label: 'NIMBLE.rules.damageBonus.damageType.label',
+			hint: 'NIMBLE.rules.damageBonus.damageType.hint',
 			choices: () => CONFIG.NIMBLE.damageTypes,
 		}),
 		delivery: new fields.StringField({
 			required: true,
 			nullable: false,
 			initial: 'any',
-			label: 'Delivery',
-			hint: 'Restrict to melee or ranged attacks. “Any” matches both.',
+			label: 'NIMBLE.rules.damageBonus.delivery.label',
+			hint: 'NIMBLE.rules.damageBonus.delivery.hint',
 			choices: ['melee', 'ranged', 'any'],
 		}),
 		source: new fields.StringField({
 			required: true,
 			nullable: false,
 			initial: 'any',
-			label: 'Source',
-			hint: 'Restrict to weapon or spell attacks. “Any” matches both.',
+			label: 'NIMBLE.rules.damageBonus.source.label',
+			hint: 'NIMBLE.rules.damageBonus.source.hint',
 			choices: ['weapon', 'spell', 'any'],
 		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'damageBonus' }),
@@ -94,7 +94,7 @@ interface ActorSystem {
  */
 class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 	static override group = 'bonuses';
-	static override description = 'NIMBLE.ruleDescriptions.damageBonus';
+	static override description = 'NIMBLE.rules.damageBonus.description';
 
 	declare value: string;
 	// `damageType` is inferred from the schema's `choices` (the keys of

@@ -14,7 +14,7 @@ describe('MaxHitDiceRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(MaxHitDiceRule.group).toBe('bonuses');
-			expect(MaxHitDiceRule.description).toBe('NIMBLE.ruleDescriptions.maxHitDice');
+			expect(MaxHitDiceRule.description).toBe('NIMBLE.rules.maxHitDice.description');
 		});
 	});
 });

@@ -156,7 +156,7 @@ describe('ApplyConditionRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(ApplyConditionRule.group).toBe('triggers');
-			expect(ApplyConditionRule.description).toBe('NIMBLE.ruleDescriptions.applyCondition');
+			expect(ApplyConditionRule.description).toBe('NIMBLE.rules.applyCondition.description');
 		});
 	});
 

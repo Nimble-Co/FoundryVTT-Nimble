@@ -22,7 +22,7 @@ describe('NoteRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(NoteRule.group).toBe('notes');
-			expect(NoteRule.description).toBe('NIMBLE.ruleDescriptions.note');
+			expect(NoteRule.description).toBe('NIMBLE.rules.note.description');
 		});
 	});
 });

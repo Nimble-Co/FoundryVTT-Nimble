@@ -10,7 +10,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '',
-				label: 'Bonus',
+				label: 'NIMBLE.rules.maxWounds.value.label',
 				widget: 'formula',
 			}),
 		),
@@ -24,7 +24,7 @@ declare namespace MaxWoundsRule {
 
 class MaxWoundsRule extends NimbleBaseRule<MaxWoundsRule.Schema> {
 	static override group = 'bonuses';
-	static override description = 'NIMBLE.ruleDescriptions.maxWounds';
+	static override description = 'NIMBLE.rules.maxWounds.description';
 
 	static override defineSchema(): MaxWoundsRule.Schema {
 		return {

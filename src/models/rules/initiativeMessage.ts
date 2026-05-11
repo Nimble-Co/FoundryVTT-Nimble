@@ -36,7 +36,7 @@ declare namespace InitiativeMessageRule {
 
 class InitiativeMessageRule extends NimbleBaseRule<InitiativeMessageRule.Schema> {
 	static override group = 'notes';
-	static override description = 'NIMBLE.ruleDescriptions.initiativeMessage';
+	static override description = 'NIMBLE.rules.initiativeMessage.description';
 
 	declare formula: string;
 	declare message: string;

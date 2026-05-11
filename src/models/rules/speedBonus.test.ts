@@ -406,7 +406,7 @@ describe('SpeedBonusRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(SpeedBonusRule.group).toBe('bonuses');
-			expect(SpeedBonusRule.description).toBe('NIMBLE.ruleDescriptions.speedBonus');
+			expect(SpeedBonusRule.description).toBe('NIMBLE.rules.speedBonus.description');
 		});
 	});
 });

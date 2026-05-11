@@ -14,8 +14,8 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '',
-				label: 'Bonus',
-				hint: 'Bonus to speed in tiles. Negative numbers reduce speed.',
+				label: 'NIMBLE.rules.speedBonus.value.label',
+				hint: 'NIMBLE.rules.speedBonus.value.hint',
 				widget: 'formula',
 			}),
 		),
@@ -24,8 +24,8 @@ function schema() {
 			required: false,
 			nullable: true,
 			initial: null,
-			label: 'Movement type (blank = walk)',
-			hint: 'Leave blank to apply to walk speed only. Pick a specific type to grant or modify it.',
+			label: 'NIMBLE.rules.speedBonus.movementType.label',
+			hint: 'NIMBLE.rules.speedBonus.movementType.hint',
 			choices: ['walk', 'fly', 'climb', 'swim', 'burrow'],
 		}),
 	};
@@ -45,7 +45,7 @@ interface ActorSystem {
 
 class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 	static override group = 'bonuses';
-	static override description = 'NIMBLE.ruleDescriptions.speedBonus';
+	static override description = 'NIMBLE.rules.speedBonus.description';
 
 	declare value: string;
 	declare movementType: MovementType | null;

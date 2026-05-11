@@ -13,7 +13,7 @@ describe('HitDiceAdvantageRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(HitDiceAdvantageRule.group).toBe('bonuses');
-			expect(HitDiceAdvantageRule.description).toBe('NIMBLE.ruleDescriptions.hitDiceAdvantage');
+			expect(HitDiceAdvantageRule.description).toBe('NIMBLE.rules.hitDiceAdvantage.description');
 		});
 	});
 });

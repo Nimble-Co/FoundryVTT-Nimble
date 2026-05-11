@@ -11,7 +11,7 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: '1',
-				label: 'Bonus',
+				label: 'NIMBLE.rules.healingPotionBonus.value.label',
 				widget: 'formula',
 			}),
 		),
@@ -29,7 +29,7 @@ declare namespace HealingPotionBonusRule {
 
 class HealingPotionBonusRule extends NimbleBaseRule<HealingPotionBonusRule.Schema> {
 	static override group = 'bonuses';
-	static override description = 'NIMBLE.ruleDescriptions.healingPotionBonus';
+	static override description = 'NIMBLE.rules.healingPotionBonus.description';
 
 	static override defineSchema(): HealingPotionBonusRule.Schema {
 		return {

@@ -34,16 +34,16 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: '',
-			label: 'Condition',
-			hint: 'The condition to apply.',
+			label: 'NIMBLE.rules.applyCondition.condition.label',
+			hint: 'NIMBLE.rules.applyCondition.condition.hint',
 			choices: () => Object.keys(CONFIG.NIMBLE.conditions),
 		}),
 		trigger: new fields.StringField({
 			required: true,
 			nullable: false,
 			initial: 'onCrit',
-			label: 'Trigger',
-			hint: 'When this condition is applied — on hit/crit, on save fail, on turn start, etc.',
+			label: 'NIMBLE.rules.applyCondition.trigger.label',
+			hint: 'NIMBLE.rules.applyCondition.trigger.hint',
 			choices: TRIGGER_CHOICES as unknown as string[],
 		}),
 		duration: new fields.SchemaField(
@@ -84,7 +84,7 @@ interface ActorWithStatusEffect {
 
 class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
 	static override group = 'triggers';
-	static override description = 'NIMBLE.ruleDescriptions.applyCondition';
+	static override description = 'NIMBLE.rules.applyCondition.description';
 
 	declare condition: string;
 	declare trigger: ApplyConditionTrigger;

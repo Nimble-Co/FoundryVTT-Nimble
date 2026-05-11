@@ -37,7 +37,7 @@ declare namespace ChargeConsumerRule {
 
 class ChargeConsumerRule extends NimbleBaseRule<ChargeConsumerRule.Schema> {
 	static override group = 'resource';
-	static override description = 'NIMBLE.ruleDescriptions.chargeConsumer';
+	static override description = 'NIMBLE.rules.chargeConsumer.description';
 
 	declare poolIdentifier: string;
 

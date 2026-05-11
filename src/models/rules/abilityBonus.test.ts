@@ -22,7 +22,7 @@ describe('AbilityBonusRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(AbilityBonusRule.group).toBe('bonuses');
-			expect(AbilityBonusRule.description).toBe('NIMBLE.ruleDescriptions.abilityBonus');
+			expect(AbilityBonusRule.description).toBe('NIMBLE.rules.abilityBonus.description');
 		});
 	});
 });

@@ -262,7 +262,7 @@ describe('DamageBonusRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(DamageBonusRule.group).toBe('bonuses');
-			expect(DamageBonusRule.description).toBe('NIMBLE.ruleDescriptions.damageBonus');
+			expect(DamageBonusRule.description).toBe('NIMBLE.rules.damageBonus.description');
 		});
 	});
 });

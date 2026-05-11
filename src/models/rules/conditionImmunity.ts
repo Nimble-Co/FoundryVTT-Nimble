@@ -15,8 +15,8 @@ function schema() {
 				required: true,
 				nullable: false,
 				initial: [],
-				label: 'Immune to',
-				hint: 'The actor is fully immune to these conditions and cannot be affected by them.',
+				label: 'NIMBLE.rules.conditionImmunity.conditions.label',
+				hint: 'NIMBLE.rules.conditionImmunity.conditions.hint',
 			},
 		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'conditionImmunity' }),
@@ -40,7 +40,7 @@ interface ActorSystem {
  */
 class ConditionImmunityRule extends NimbleBaseRule<ConditionImmunityRule.Schema> {
 	static override group = 'conditions';
-	static override description = 'NIMBLE.ruleDescriptions.conditionImmunity';
+	static override description = 'NIMBLE.rules.conditionImmunity.description';
 
 	declare conditions: string[];
 

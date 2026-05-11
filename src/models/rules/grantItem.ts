@@ -10,27 +10,27 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: true,
-			label: 'Allow duplicates on the actor',
+			label: 'NIMBLE.rules.grantItem.allowDuplicate.label',
 		}),
 		inMemoryOnly: new fields.BooleanField({
 			required: true,
 			nullable: false,
 			initial: false,
-			label: 'Don’t persist to actor inventory',
+			label: 'NIMBLE.rules.grantItem.inMemoryOnly.label',
 		}),
 		quantity: new fields.NumberField({
 			required: false,
 			nullable: true,
 			initial: null,
 			min: 1,
-			label: 'Quantity (blank = item default)',
+			label: 'NIMBLE.rules.grantItem.quantity.label',
 		}),
 		uuid: new fields.StringField(
 			withWidget({
 				required: true,
 				nullable: false,
 				initial: '',
-				label: 'Item',
+				label: 'NIMBLE.rules.grantItem.uuid.label',
 				widget: 'documentUuid',
 			}),
 		),
@@ -44,7 +44,7 @@ declare namespace ItemGrantRule {
 
 class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
 	static override group = 'grants';
-	static override description = 'NIMBLE.ruleDescriptions.grantItem';
+	static override description = 'NIMBLE.rules.grantItem.description';
 
 	declare allowDuplicate: boolean;
 

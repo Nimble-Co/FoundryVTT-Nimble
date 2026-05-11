@@ -16,7 +16,7 @@ describe('ChargePoolRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(ChargePoolRule.group).toBe('resource');
-			expect(ChargePoolRule.description).toBe('NIMBLE.ruleDescriptions.chargePool');
+			expect(ChargePoolRule.description).toBe('NIMBLE.rules.chargePool.description');
 		});
 	});
 });

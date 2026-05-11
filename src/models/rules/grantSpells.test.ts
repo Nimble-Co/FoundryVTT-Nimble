@@ -32,7 +32,7 @@ describe('GrantSpellsRule', () => {
 	describe('class metadata', () => {
 		it('exposes the picker group and i18n description key', () => {
 			expect(GrantSpellsRule.group).toBe('grants');
-			expect(GrantSpellsRule.description).toBe('NIMBLE.ruleDescriptions.grantSpells');
+			expect(GrantSpellsRule.description).toBe('NIMBLE.rules.grantSpells.description');
 		});
 	});
 });
