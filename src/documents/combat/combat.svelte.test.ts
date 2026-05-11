@@ -142,6 +142,68 @@ describe('NimbleCombat', () => {
 		expect(turns.map((combatant) => combatant.id)).toEqual(['alive-character']);
 	});
 
+	it('does not let super.setupTurns bump round when turn exceeds combatant count', () => {
+		// Reproduces the legendary-expansion round-spike: Foundry's super.setupTurns does `this.round++`
+		// when `this.turn >= combatants.size`, which fires legitimately for the 2nd+ occurrence of a
+		// solo monster in the expanded order. The override must snapshot/restore round around super.
+		const combatId = 'combat-setup-turns-round-stability';
+		const playerOne = createMockCombatant({
+			id: 'player-one',
+			type: 'character',
+			sort: 1,
+			isOwner: true,
+			initiative: 16,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const playerTwo = createMockCombatant({
+			id: 'player-two',
+			type: 'character',
+			sort: 2,
+			isOwner: true,
+			initiative: 14,
+			actor: createCombatActorFixture({ hp: 8, woundsValue: 0, woundsMax: 6 }),
+			combatId,
+		});
+		const legendary = createMockCombatant({
+			id: 'legendary-one',
+			type: 'soloMonster',
+			sort: 3,
+			isOwner: false,
+			initiative: 12,
+			actor: createCombatActorFixture({ hp: 40 }),
+			combatId,
+		});
+
+		// Replicate Foundry core's setupTurns side effect so the regression has something to defend against.
+		globals().Combat.prototype.setupTurns = vi.fn(function (this: {
+			combatants?: { contents?: Combatant.Implementation[]; size?: number };
+			turn: number | null;
+			round: number;
+		}) {
+			const contents = this.combatants?.contents ?? [];
+			const size = this.combatants?.size ?? contents.length;
+			if (this.turn !== null && this.turn >= size) {
+				this.turn = 0;
+				this.round += 1;
+			}
+			return contents;
+		});
+
+		const combat = new NimbleCombat({
+			id: combatId,
+			combatants: createCombatantsCollectionFixture([playerOne, playerTwo, legendary]),
+		} as unknown as Combat.CreateData);
+		combat.round = 5;
+		// Expanded order is [PC1, SOLO, PC2, SOLO]; index 3 (last SOLO) sits beyond combatants.size of 3.
+		combat.turn = 3;
+
+		combat.setupTurns();
+
+		expect(combat.round).toBe(5);
+		expect(combat.turn).toBe(3);
+	});
+
 	it('collapses grouped minions into a single shared turn entry', () => {
 		const combatId = 'combat-minion-groups';
 		const minionActorLeader = {
