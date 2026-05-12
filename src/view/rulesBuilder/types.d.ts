@@ -65,6 +65,9 @@ export interface RuleCardProps {
 	rule: Record<string, unknown>;
 	/** RulesManager instance bound to the parent item. */
 	manager: { updateRule: (id: string, data: Record<string, unknown>) => Promise<unknown> };
+	/** Parent actor's tag domain, used to surface typeahead suggestions and a live
+	 *  match preview in `<PredicateBuilder>`. Undefined for unowned items. */
+	previewDomain?: Set<string>;
 	onDelete?: () => void;
 	/** Hide the body + advanced section, keeping just the header visible. */
 	collapsed?: boolean;

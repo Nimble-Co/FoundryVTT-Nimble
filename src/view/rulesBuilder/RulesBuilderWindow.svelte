@@ -26,6 +26,13 @@
 	const rules = $derived(
 		[...rawRules].sort((a, b) => ((a.priority as number) ?? 1) - ((b.priority as number) ?? 1)),
 	);
+
+	// Surface the parent actor's tag domain to predicate builders so the key
+	// input can offer typeahead suggestions. Undefined when the item isn't
+	// owned by an actor (e.g. compendium edit).
+	const previewDomain = $derived(
+		(item.actor as { getDomain?: () => Set<string> } | null)?.getDomain?.(),
+	);
 	const allDisabled = $derived(rules.length > 0 && rules.every((r) => r.disabled));
 
 	let pickerOpen = $state(false);
@@ -127,6 +134,7 @@
 						<RuleCard
 							{rule}
 							manager={item.rules}
+							{previewDomain}
 							collapsed={collapsedIds.has(rule.id)}
 							onToggleCollapse={() => toggleCollapse(rule.id)}
 							onDelete={() => item.rules.deleteRule(rule.id)}

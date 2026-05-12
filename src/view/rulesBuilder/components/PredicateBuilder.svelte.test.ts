@@ -44,20 +44,47 @@ describe('PredicateBuilder', () => {
 		expect(emitted).toEqual({ class: 'fighter' });
 	});
 
-	it('binary statement round-trips with min/max/equal', async () => {
+	it('range statement (min + max) detects as "is between" and round-trips', async () => {
 		const onChange = vi.fn();
 		const { container } = render(PredicateBuilder, {
 			value: { level: { min: 3, max: 7 } } as RawPredicate,
 			onChange,
 		});
 
-		const binaryRadio = container.querySelector(
-			'input[type="radio"][value="binary"]',
-		) as HTMLInputElement;
-		await fireEvent.change(binaryRadio);
+		const operatorSelect = container.querySelector(
+			'.nimble-predicate-builder__operator',
+		) as HTMLSelectElement;
+		expect(operatorSelect.value).toBe('isBetween');
+
+		// Trigger an emit by re-selecting the same operator.
+		await fireEvent.change(operatorSelect, { target: { value: 'isBetween' } });
 
 		const emitted = lastEmitted(onChange);
 		expect(emitted).toEqual({ level: { min: 3, max: 7 } });
+	});
+
+	it('"is at least" detects from `{min}` shape and round-trips the value', async () => {
+		const onChange = vi.fn();
+		const { container } = render(PredicateBuilder, {
+			value: { level: { min: 2 } } as RawPredicate,
+			onChange,
+		});
+
+		const operatorSelect = container.querySelector(
+			'.nimble-predicate-builder__operator',
+		) as HTMLSelectElement;
+		expect(operatorSelect.value).toBe('isAtLeast');
+
+		const numberInput = container.querySelector(
+			'.nimble-predicate-builder__value input[type="number"]',
+		) as HTMLInputElement;
+		expect(numberInput.value).toBe('2');
+
+		await fireEvent.input(numberInput, { target: { value: '4' } });
+		await fireEvent.change(numberInput, { target: { value: '4' } });
+
+		const emitted = lastEmitted(onChange);
+		expect(emitted).toEqual({ level: { min: 4 } });
 	});
 
 	it('array statement round-trips and supports add/remove', async () => {

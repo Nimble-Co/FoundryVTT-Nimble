@@ -1,43 +1,123 @@
+<script lang="ts" module>
+	let compendiumKeys = $state<Set<string>>(new Set());
+	let compendiumLoadPromise: Promise<void> | null = null;
+
+	function loadCompendiumKeys(): Promise<void> {
+		if (compendiumLoadPromise) return compendiumLoadPromise;
+		compendiumLoadPromise = (async () => {
+			const next = new Set<string>();
+			interface PackLike {
+				metadata?: { type?: string };
+				getDocuments?: () => Promise<Array<{ tags?: Set<string> }>>;
+			}
+			const packs = (game as unknown as { packs?: Iterable<PackLike> }).packs;
+			if (!packs) return;
+			for (const pack of packs) {
+				const type = pack.metadata?.type;
+				if (type !== 'Actor' && type !== 'Item') continue;
+				try {
+					const docs = (await pack.getDocuments?.()) ?? [];
+					for (const doc of docs) {
+						if (!doc.tags) continue;
+						for (const entry of doc.tags) {
+							const k = entry.split(':', 1)[0];
+							if (k) next.add(k);
+						}
+					}
+				} catch {
+					// Partial keys from other packs beat zero.
+				}
+			}
+			compendiumKeys = next;
+		})();
+		return compendiumLoadPromise;
+	}
+</script>
+
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { Predicate, type RawPredicate } from '../../../etc/Predicate.js';
 	import type { PredicateBuilderProps } from '#view/rulesBuilder/types.js';
 
 	let { value, onChange, previewDomain }: PredicateBuilderProps = $props();
 
-	type StatementKind = 'atomic' | 'array' | 'binary';
+	onMount(() => {
+		void loadCompendiumKeys();
+	});
+
+	type Operator = 'is' | 'isOneOf' | 'isAtLeast' | 'isAtMost' | 'isExactly' | 'isBetween';
+
+	const OPERATOR_LABELS: Record<Operator, string> = {
+		is: 'is',
+		isOneOf: 'is one of',
+		isAtLeast: 'is at least',
+		isAtMost: 'is at most',
+		isExactly: 'is exactly',
+		isBetween: 'is between',
+	};
+
+	const OPERATOR_HINTS: Record<Operator, string> = {
+		is: 'Actor must be tagged with this exact value.',
+		isOneOf: 'Actor must be tagged with any one of these values.',
+		isAtLeast: 'The numeric value associated with this key must be at least this.',
+		isAtMost: 'The numeric value associated with this key must be at most this.',
+		isExactly: 'The numeric value associated with this key must equal this.',
+		isBetween: 'The numeric value associated with this key must be within this range.',
+	};
 
 	interface RowState {
 		key: string;
-		kind: StatementKind;
-		atomic: string;
-		array: string[];
-		binary: { min: string; max: string; equal: string };
+		operator: Operator;
+		valueText: string;
+		valueArray: string[];
+		valueNumber: string;
+		valueRangeMin: string;
+		valueRangeMax: string;
 	}
 
-	function detectKind(stmt: unknown): StatementKind {
-		if (Array.isArray(stmt)) return 'array';
-		if (typeof stmt === 'string') return 'atomic';
-		return 'binary';
+	function detectOperator(stmt: unknown): Operator {
+		if (Array.isArray(stmt)) return 'isOneOf';
+		if (typeof stmt === 'string') return 'is';
+		if (stmt && typeof stmt === 'object') {
+			const s = stmt as { min?: unknown; max?: unknown; equal?: unknown };
+			const hasMin = s.min !== undefined && s.min !== null && s.min !== '';
+			const hasMax = s.max !== undefined && s.max !== null && s.max !== '';
+			const hasEqual = s.equal !== undefined && s.equal !== null && s.equal !== '';
+			if (hasEqual) return 'isExactly';
+			if (hasMin && hasMax) return 'isBetween';
+			if (hasMin) return 'isAtLeast';
+			if (hasMax) return 'isAtMost';
+		}
+		return 'isExactly';
 	}
 
 	function rowFromEntry(key: string, stmt: unknown): RowState {
+		const operator = detectOperator(stmt);
 		const row: RowState = {
 			key,
-			kind: detectKind(stmt),
-			atomic: '',
-			array: [],
-			binary: { min: '', max: '', equal: '' },
+			operator,
+			valueText: '',
+			valueArray: [],
+			valueNumber: '',
+			valueRangeMin: '',
+			valueRangeMax: '',
 		};
 		if (typeof stmt === 'string') {
-			row.atomic = stmt;
+			row.valueText = stmt;
 		} else if (Array.isArray(stmt)) {
-			row.array = stmt.map((v) => String(v));
+			row.valueArray = stmt.map((v) => String(v));
 		} else if (stmt && typeof stmt === 'object') {
 			const s = stmt as { min?: number | string; max?: number | string; equal?: number | string };
-			row.binary.min = s.min === undefined || s.min === null ? '' : String(s.min);
-			row.binary.max = s.max === undefined || s.max === null ? '' : String(s.max);
-			row.binary.equal = s.equal === undefined || s.equal === null ? '' : String(s.equal);
+			if (operator === 'isBetween') {
+				row.valueRangeMin = s.min === undefined || s.min === null ? '' : String(s.min);
+				row.valueRangeMax = s.max === undefined || s.max === null ? '' : String(s.max);
+			} else if (operator === 'isAtLeast') {
+				row.valueNumber = s.min === undefined || s.min === null ? '' : String(s.min);
+			} else if (operator === 'isAtMost') {
+				row.valueNumber = s.max === undefined || s.max === null ? '' : String(s.max);
+			} else if (operator === 'isExactly') {
+				row.valueNumber = s.equal === undefined || s.equal === null ? '' : String(s.equal);
+			}
 		}
 		return row;
 	}
@@ -46,15 +126,9 @@
 		return Object.entries(v ?? {}).map(([key, stmt]) => rowFromEntry(key, stmt));
 	}
 
-	// `rows` is a local edit buffer — initialized once from the prop, then
-	// resynced through the `$effect` below when the prop changes externally.
 	let rows = $state<RowState[]>(untrack(() => rowsFromValue(value)));
 	let lastSerializedValue = $state('');
 
-	// External-source-of-truth sync: when `value` changes from outside (e.g.
-	// after persistence completes and the source is re-read), rebuild rows
-	// from the new shape. JSON identity is fine here — predicate shape is
-	// small and primitive.
 	$effect(() => {
 		const next = JSON.stringify(value ?? {});
 		if (next !== lastSerializedValue) {
@@ -70,17 +144,23 @@
 	}
 
 	function rowToStatement(row: RowState): unknown {
-		if (row.kind === 'atomic') {
-			return row.atomic;
+		switch (row.operator) {
+			case 'is':
+				return row.valueText;
+			case 'isOneOf':
+				return row.valueArray.filter((v) => v !== '');
+			case 'isAtLeast':
+				return { min: maybeNumber(row.valueNumber) };
+			case 'isAtMost':
+				return { max: maybeNumber(row.valueNumber) };
+			case 'isExactly':
+				return { equal: maybeNumber(row.valueNumber) };
+			case 'isBetween':
+				return {
+					min: maybeNumber(row.valueRangeMin),
+					max: maybeNumber(row.valueRangeMax),
+				};
 		}
-		if (row.kind === 'array') {
-			return row.array.filter((v) => v !== '');
-		}
-		const bin: { min?: number | string; max?: number | string; equal?: number | string } = {};
-		if (row.binary.equal !== '') bin.equal = maybeNumber(row.binary.equal);
-		if (row.binary.min !== '') bin.min = maybeNumber(row.binary.min);
-		if (row.binary.max !== '') bin.max = maybeNumber(row.binary.max);
-		return bin;
 	}
 
 	function rowsToValue(): RawPredicate {
@@ -104,10 +184,12 @@
 			...rows,
 			{
 				key: '',
-				kind: 'atomic',
-				atomic: '',
-				array: [],
-				binary: { min: '', max: '', equal: '' },
+				operator: 'is',
+				valueText: '',
+				valueArray: [],
+				valueNumber: '',
+				valueRangeMin: '',
+				valueRangeMax: '',
 			},
 		];
 	}
@@ -121,93 +203,107 @@
 		rows = rows.map((row, i) => (i === index ? { ...row, ...patch } : row));
 	}
 
-	function updateKind(index: number, kind: StatementKind) {
-		updateRow(index, { kind });
+	function updateOperator(index: number, operator: Operator) {
+		updateRow(index, { operator });
 		emit();
 	}
 
 	function updateArrayValue(rowIndex: number, arrayIndex: number, value: string) {
 		const row = rows[rowIndex];
-		const nextArray = row.array.map((v, i) => (i === arrayIndex ? value : v));
-		updateRow(rowIndex, { array: nextArray });
+		const nextArray = row.valueArray.map((v, i) => (i === arrayIndex ? value : v));
+		updateRow(rowIndex, { valueArray: nextArray });
 	}
 
 	function addArrayValue(rowIndex: number) {
 		const row = rows[rowIndex];
-		updateRow(rowIndex, { array: [...row.array, ''] });
+		updateRow(rowIndex, { valueArray: [...row.valueArray, ''] });
 	}
 
 	function removeArrayValue(rowIndex: number, arrayIndex: number) {
 		const row = rows[rowIndex];
-		updateRow(rowIndex, { array: row.array.filter((_, i) => i !== arrayIndex) });
+		updateRow(rowIndex, { valueArray: row.valueArray.filter((_, i) => i !== arrayIndex) });
 		emit();
 	}
 
-	const statementKindHints: Record<StatementKind, string> = {
-		atomic: 'Matches when the actor’s domain contains the literal `key:value`.',
-		array: 'Matches if the actor’s domain contains any of the listed values for `key`.',
-		binary: 'Matches when the domain has `key:N` and N satisfies the min / max / equal bounds.',
-	};
+	const suggestionKeys = $derived.by(() => {
+		const keys = new Set<string>(compendiumKeys);
+		const collect = (tags: Set<string> | undefined) => {
+			if (!tags) return;
+			for (const entry of tags) {
+				const k = entry.split(':', 1)[0];
+				if (k) keys.add(k);
+			}
+		};
+
+		const worldActors = game.actors as Iterable<{ tags?: Set<string> }> | undefined;
+		const worldItems = game.items as Iterable<{ tags?: Set<string> }> | undefined;
+		if (worldActors) for (const a of worldActors) collect(a.tags);
+		if (worldItems) for (const i of worldItems) collect(i.tags);
+		collect(previewDomain);
+
+		return [...keys].sort();
+	});
+
+	// Unique `<datalist>` id so multiple builders on the same page don't collide.
+	const datalistId = `nimble-predicate-keys-${Math.random().toString(36).slice(2)}`;
 
 	let preview = $derived.by(() => {
 		if (!previewDomain) return null;
 		const raw = rowsToValue();
 		try {
 			const predicate = new Predicate(raw);
-			if (!predicate.size) return { matches: true, reason: 'Empty predicate — always matches.' };
-			if (!predicate.isValid) return { matches: false, reason: 'Predicate is malformed.' };
+			if (!predicate.size) return { matches: true, reason: 'No conditions — always applies.' };
+			if (!predicate.isValid) return { matches: false, reason: 'Conditions are incomplete.' };
 			return { matches: predicate.test(previewDomain), reason: null };
 		} catch (err) {
 			return {
 				matches: false,
-				reason: err instanceof Error ? err.message : 'Predicate evaluation threw.',
+				reason: err instanceof Error ? err.message : 'Evaluation failed.',
 			};
 		}
 	});
 </script>
 
 <div class="nimble-predicate-builder">
+	<p class="nimble-predicate-builder__intro">
+		Restrict when this rule fires. Every row below must match the actor's tags for the rule to
+		apply. Leave empty to always apply.
+	</p>
+
 	{#each rows as row, index (index)}
 		<div class="nimble-predicate-builder__row">
 			<input
 				class="nimble-predicate-builder__key"
 				type="text"
-				placeholder="key (e.g. level)"
+				placeholder={suggestionKeys.length ? 'pick or type a tag key' : 'tag key (e.g. level)'}
+				list={suggestionKeys.length ? datalistId : undefined}
 				value={row.key}
 				oninput={(e) => updateRow(index, { key: (e.target as HTMLInputElement).value })}
 				onchange={emit}
 			/>
 
-			<div class="nimble-predicate-builder__kind">
-				{#each ['atomic', 'array', 'binary'] as const as kind}
-					<label
-						class="nimble-predicate-builder__kind-option"
-						class:nimble-predicate-builder__kind-option--selected={row.kind === kind}
-					>
-						<input
-							type="radio"
-							name="kind-{index}"
-							value={kind}
-							checked={row.kind === kind}
-							onchange={() => updateKind(index, kind)}
-						/>
-						<span>{kind}</span>
-					</label>
+			<select
+				class="nimble-predicate-builder__operator"
+				value={row.operator}
+				onchange={(e) => updateOperator(index, (e.target as HTMLSelectElement).value as Operator)}
+			>
+				{#each Object.entries(OPERATOR_LABELS) as [op, label]}
+					<option value={op}>{label}</option>
 				{/each}
-			</div>
+			</select>
 
 			<div class="nimble-predicate-builder__value">
-				{#if row.kind === 'atomic'}
+				{#if row.operator === 'is'}
 					<input
 						type="text"
 						placeholder="value"
-						value={row.atomic}
-						oninput={(e) => updateRow(index, { atomic: (e.target as HTMLInputElement).value })}
+						value={row.valueText}
+						oninput={(e) => updateRow(index, { valueText: (e.target as HTMLInputElement).value })}
 						onchange={emit}
 					/>
-				{:else if row.kind === 'array'}
+				{:else if row.operator === 'isOneOf'}
 					<div class="nimble-predicate-builder__array">
-						{#each row.array as item, arrayIndex (arrayIndex)}
+						{#each row.valueArray as item, arrayIndex (arrayIndex)}
 							<div class="nimble-predicate-builder__array-row">
 								<input
 									type="text"
@@ -238,55 +334,44 @@
 							Add value
 						</button>
 					</div>
-				{:else}
-					<div class="nimble-predicate-builder__binary">
-						<label>
-							<span>min</span>
-							<input
-								type="text"
-								value={row.binary.min}
-								oninput={(e) =>
-									updateRow(index, {
-										binary: { ...row.binary, min: (e.target as HTMLInputElement).value },
-									})}
-								onchange={emit}
-							/>
-						</label>
-						<label>
-							<span>max</span>
-							<input
-								type="text"
-								value={row.binary.max}
-								oninput={(e) =>
-									updateRow(index, {
-										binary: { ...row.binary, max: (e.target as HTMLInputElement).value },
-									})}
-								onchange={emit}
-							/>
-						</label>
-						<label>
-							<span>equal</span>
-							<input
-								type="text"
-								value={row.binary.equal}
-								oninput={(e) =>
-									updateRow(index, {
-										binary: { ...row.binary, equal: (e.target as HTMLInputElement).value },
-									})}
-								onchange={emit}
-							/>
-						</label>
+				{:else if row.operator === 'isBetween'}
+					<div class="nimble-predicate-builder__range">
+						<input
+							type="number"
+							placeholder="min"
+							value={row.valueRangeMin}
+							oninput={(e) =>
+								updateRow(index, { valueRangeMin: (e.target as HTMLInputElement).value })}
+							onchange={emit}
+						/>
+						<span class="nimble-predicate-builder__range-sep">and</span>
+						<input
+							type="number"
+							placeholder="max"
+							value={row.valueRangeMax}
+							oninput={(e) =>
+								updateRow(index, { valueRangeMax: (e.target as HTMLInputElement).value })}
+							onchange={emit}
+						/>
 					</div>
+				{:else}
+					<input
+						type="number"
+						placeholder="value"
+						value={row.valueNumber}
+						oninput={(e) => updateRow(index, { valueNumber: (e.target as HTMLInputElement).value })}
+						onchange={emit}
+					/>
 				{/if}
 
-				<small class="nimble-predicate-builder__hint">{statementKindHints[row.kind]}</small>
+				<small class="nimble-predicate-builder__hint">{OPERATOR_HINTS[row.operator]}</small>
 			</div>
 
 			<button
 				type="button"
 				class="nimble-button nimble-predicate-builder__delete"
 				data-button-variant="icon"
-				aria-label="Delete predicate row"
+				aria-label="Delete condition"
 				onclick={() => deleteRow(index)}
 			>
 				<i class="fa-solid fa-trash"></i>
@@ -296,7 +381,7 @@
 
 	<button type="button" class="nimble-button" data-button-variant="basic" onclick={addRow}>
 		<i class="fa-solid fa-plus"></i>
-		Add predicate row
+		Add condition
 	</button>
 
 	{#if preview}
@@ -316,6 +401,14 @@
 			</span>
 		</div>
 	{/if}
+
+	{#if suggestionKeys.length}
+		<datalist id={datalistId}>
+			{#each suggestionKeys as key (key)}
+				<option value={key}></option>
+			{/each}
+		</datalist>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -328,9 +421,16 @@
 		border: 1px solid var(--nimble-accent-color);
 		border-radius: 4px;
 
+		&__intro {
+			margin: 0 0 0.25rem 0;
+			color: var(--color-text-dark-secondary);
+			font-size: var(--nimble-xs-text);
+			line-height: 1.3;
+		}
+
 		&__row {
 			display: grid;
-			grid-template-columns: minmax(7rem, 1fr) auto minmax(10rem, 2fr) auto;
+			grid-template-columns: minmax(7rem, 1fr) minmax(6rem, auto) minmax(10rem, 2fr) auto;
 			gap: 0.375rem;
 			align-items: start;
 			padding: 0.375rem;
@@ -338,31 +438,9 @@
 			border-radius: 4px;
 		}
 
-		&__kind {
-			display: flex;
-			gap: 0.125rem;
-		}
-
-		&__kind-option {
-			display: flex;
-			align-items: center;
-			gap: 0.125rem;
+		&__operator {
 			padding: 0.125rem 0.375rem;
-			font-size: var(--nimble-xs-text);
-			cursor: pointer;
-			border: 1px solid var(--nimble-accent-color);
-			border-radius: 4px;
-
-			input {
-				position: absolute;
-				opacity: 0;
-				pointer-events: none;
-			}
-
-			&--selected {
-				background: var(--nimble-selected-tag-background-color);
-				color: var(--nimble-selected-tag-text-color, var(--nimble-light-text-color));
-			}
+			font-size: var(--nimble-sm-text);
 		}
 
 		&__value {
@@ -383,16 +461,15 @@
 			align-items: center;
 		}
 
-		&__binary {
+		&__range {
 			display: flex;
-			gap: 0.5rem;
+			gap: 0.375rem;
+			align-items: center;
+		}
 
-			label {
-				display: flex;
-				flex-direction: column;
-				gap: 0.125rem;
-				font-size: var(--nimble-xs-text);
-			}
+		&__range-sep {
+			color: var(--color-text-dark-secondary);
+			font-size: var(--nimble-xs-text);
 		}
 
 		&__hint {
@@ -410,13 +487,13 @@
 			border-radius: 4px;
 
 			&--match {
-				background: var(--nimble-success-background, rgba(0, 128, 0, 0.12));
-				color: var(--nimble-success-text, darkgreen);
+				background: var(--nimble-roll-success-background-color);
+				color: var(--nimble-roll-success-color);
 			}
 
 			&--no-match {
-				background: var(--nimble-warning-background, rgba(200, 60, 60, 0.12));
-				color: var(--nimble-warning-text, darkred);
+				background: var(--nimble-roll-failure-background-color);
+				color: var(--nimble-roll-failure-color);
 			}
 		}
 	}

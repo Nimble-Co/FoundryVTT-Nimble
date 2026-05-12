@@ -7,7 +7,14 @@
 	import PredicateBuilder from './PredicateBuilder.svelte';
 	import SchemaFieldRenderer from './SchemaFieldRenderer.svelte';
 
-	let { rule, manager, onDelete, collapsed = false, onToggleCollapse }: RuleCardProps = $props();
+	let {
+		rule,
+		manager,
+		previewDomain,
+		onDelete,
+		collapsed = false,
+		onToggleCollapse,
+	}: RuleCardProps = $props();
 
 	const { ruleDataModels, ruleTypes } = CONFIG.NIMBLE;
 	const RuleClass = $derived(ruleDataModels[rule.type as string]);
@@ -297,10 +304,11 @@
 					</label>
 
 					<div class="nimble-field-row">
-						<span class="nimble-field-row__label">Predicate</span>
+						<span class="nimble-field-row__label">Applies when</span>
 						<PredicateBuilder
 							value={(rule.predicate as RawPredicate) ?? {}}
 							onChange={(v) => emitFieldChange('predicate', v)}
+							{previewDomain}
 						/>
 					</div>
 				</div>
