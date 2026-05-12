@@ -13,8 +13,7 @@
 			const packs = (game as unknown as { packs?: Iterable<PackLike> }).packs;
 			if (!packs) return;
 			for (const pack of packs) {
-				const type = pack.metadata?.type;
-				if (type !== 'Actor' && type !== 'Item') continue;
+				if (pack.metadata?.type !== 'Actor') continue;
 				try {
 					const docs = (await pack.getDocuments?.()) ?? [];
 					for (const doc of docs) {
@@ -236,9 +235,7 @@
 		};
 
 		const worldActors = game.actors as Iterable<{ tags?: Set<string> }> | undefined;
-		const worldItems = game.items as Iterable<{ tags?: Set<string> }> | undefined;
 		if (worldActors) for (const a of worldActors) collect(a.tags);
-		if (worldItems) for (const i of worldItems) collect(i.tags);
 		collect(previewDomain);
 
 		return [...keys].sort();

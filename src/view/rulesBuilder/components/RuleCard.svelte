@@ -294,15 +294,6 @@
 				</summary>
 
 				<div class="nimble-rule-card__advanced-body">
-					<label class="nimble-field-row">
-						<span class="nimble-field-row__label">Identifier</span>
-						<input
-							type="text"
-							value={(rule.identifier as string) ?? ''}
-							onchange={(e) => emitFieldChange('identifier', (e.target as HTMLInputElement).value)}
-						/>
-					</label>
-
 					<div class="nimble-field-row">
 						<span class="nimble-field-row__label">Applies when</span>
 						<PredicateBuilder
