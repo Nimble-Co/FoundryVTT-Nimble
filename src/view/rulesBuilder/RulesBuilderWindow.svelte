@@ -1,66 +1,17 @@
 <script lang="ts">
-	import { SvelteSet } from 'svelte/reactivity';
-
 	import localize from '#utils/localize.js';
 	import { reorderable } from '#view/rulesBuilder/actions/reorderable.svelte.js';
 	import RuleCard from '#view/rulesBuilder/components/RuleCard.svelte';
 	import RuleTypePicker from '#view/rulesBuilder/components/RuleTypePicker.svelte';
-	import type { RuleSource, RulesBuilderWindowProps } from '#view/rulesBuilder/types.js';
+	import {
+		COPY_TYPE,
+		createRulesBuilderWindowState,
+	} from '#view/rulesBuilder/RulesBuilderWindow.svelte.js';
+	import type { RulesBuilderWindowProps } from '#view/rulesBuilder/types.js';
 
 	const { document: item }: RulesBuilderWindowProps = $props();
 
-	const rawRules = $derived((item.reactive.system as unknown as { rules: RuleSource[] }).rules);
-
-	// Sort by priority so display order matches the order Foundry actually
-	// applies rules in (Actor.prepareRules uses the same stable sort).
-	const rules = $derived(
-		[...rawRules].sort((a, b) => ((a.priority as number) ?? 1) - ((b.priority as number) ?? 1)),
-	);
-
-	// Surface the parent actor's tag domain to predicate builders so the key
-	// input can offer typeahead suggestions. Undefined when the item isn't
-	// owned by an actor (e.g. compendium edit).
-	const previewDomain = $derived(
-		(item.actor as { getDomain?: () => Set<string> } | null)?.getDomain?.(),
-	);
-	const allDisabled = $derived(rules.length > 0 && rules.every((r) => r.disabled));
-
-	let pickerOpen = $state(false);
-	let collapsedIds = $state<Set<string>>(new SvelteSet());
-
-	const allCollapsed = $derived(rules.length > 0 && rules.every((r) => collapsedIds.has(r.id)));
-
-	function toggleCollapse(id: string) {
-		if (collapsedIds.has(id)) collapsedIds.delete(id);
-		else collapsedIds.add(id);
-	}
-
-	function toggleCollapseAll() {
-		if (allCollapsed) collapsedIds.clear();
-		else for (const r of rules) collapsedIds.add(r.id);
-	}
-
-	async function toggleAll() {
-		if (allDisabled) await item.rules.enableAllRules();
-		else await item.rules.disableAllRules();
-	}
-
-	async function pickRule(ruleKey: string) {
-		await item.rules.addRule({ type: ruleKey });
-		pickerOpen = false;
-	}
-
-	const COPY_TYPE = 'nimble.Rule';
-
-	// Drop target only — cards in here aren't draggable so the inline editing
-	// they're built for doesn't fight with drag gestures.
-	async function copyRuleFromPayload(payload: Record<string, unknown>) {
-		if (payload.sourceItemUuid === item.uuid) return;
-		const incoming = payload.rule as Record<string, unknown> | undefined;
-		if (!incoming || typeof incoming !== 'object') return;
-		const { id: _id, ...rest } = incoming;
-		await item.rules.addRule(rest);
-	}
+	const state = createRulesBuilderWindowState(() => item);
 </script>
 
 <section class="nimble-rules-builder-window">
@@ -70,40 +21,45 @@
 				type="button"
 				class="nimble-button nimble-rules-builder-window__add"
 				data-button-variant="basic"
-				class:nimble-rules-builder-window__add--open={pickerOpen}
-				onclick={() => (pickerOpen = !pickerOpen)}
-				aria-expanded={pickerOpen}
+				class:nimble-rules-builder-window__add--open={state.pickerOpen}
+				onclick={() => state.setPickerOpen(!state.pickerOpen)}
+				aria-expanded={state.pickerOpen}
 			>
-				<i class="fa-solid {pickerOpen ? 'fa-xmark' : 'fa-plus'}"></i>
-				{pickerOpen
+				<i class="fa-solid {state.pickerOpen ? 'fa-xmark' : 'fa-plus'}"></i>
+				{state.pickerOpen
 					? localize('NIMBLE.rulesBuilder.cancel')
 					: localize('NIMBLE.rulesBuilder.addRule')}
 			</button>
 
 			<span class="nimble-rules-builder-window__count">
-				{rules.length}
-				{rules.length === 1
+				{state.rules.length}
+				{state.rules.length === 1
 					? localize('NIMBLE.rulesBuilder.ruleSingular')
 					: localize('NIMBLE.rulesBuilder.rulePlural')}
 			</span>
 		</div>
 
 		<div class="nimble-rules-builder-window__header-right">
-			{#if rules.length > 0}
+			{#if state.rules.length > 0}
 				<button
 					type="button"
 					class="nimble-button"
 					data-button-variant="basic"
-					onclick={toggleCollapseAll}
+					onclick={state.toggleCollapseAll}
 				>
-					<i class="fa-solid {allCollapsed ? 'fa-angles-down' : 'fa-angles-up'}"></i>
-					{allCollapsed
+					<i class="fa-solid {state.allCollapsed ? 'fa-angles-down' : 'fa-angles-up'}"></i>
+					{state.allCollapsed
 						? localize('NIMBLE.rulesBuilder.expandAll')
 						: localize('NIMBLE.rulesBuilder.collapseAll')}
 				</button>
-				<button type="button" class="nimble-button" data-button-variant="basic" onclick={toggleAll}>
-					<i class="fa-solid {allDisabled ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
-					{allDisabled
+				<button
+					type="button"
+					class="nimble-button"
+					data-button-variant="basic"
+					onclick={state.toggleAll}
+				>
+					<i class="fa-solid {state.allDisabled ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
+					{state.allDisabled
 						? localize('NIMBLE.rulesBuilder.enableAll')
 						: localize('NIMBLE.rulesBuilder.disableAll')}
 				</button>
@@ -112,9 +68,9 @@
 	</header>
 
 	<div class="nimble-rules-builder-window__body">
-		{#if pickerOpen}
-			<RuleTypePicker onPick={pickRule} />
-		{:else if rules.length === 0}
+		{#if state.pickerOpen}
+			<RuleTypePicker onPick={state.pickRule} />
+		{:else if state.rules.length === 0}
 			<p class="nimble-rules-builder-window__empty">
 				{localize('NIMBLE.rulesBuilder.emptyHint', {
 					addRule: localize('NIMBLE.rulesBuilder.addRule'),
@@ -125,18 +81,18 @@
 				class="nimble-rules-builder-window__list"
 				use:reorderable={{
 					enabled: true,
-					onCopy: copyRuleFromPayload,
+					onCopy: state.copyRuleFromPayload,
 					copyAcceptType: COPY_TYPE,
 				}}
 			>
-				{#each rules as rule (rule.id)}
+				{#each state.rules as rule (rule.id)}
 					<li class="nimble-rules-builder-window__list-item">
 						<RuleCard
 							{rule}
 							manager={item.rules}
-							{previewDomain}
-							collapsed={collapsedIds.has(rule.id)}
-							onToggleCollapse={() => toggleCollapse(rule.id)}
+							previewDomain={state.previewDomain}
+							collapsed={state.collapsedIds.has(rule.id)}
+							onToggleCollapse={() => state.toggleCollapse(rule.id)}
 							onDelete={() => item.rules.deleteRule(rule.id)}
 						/>
 					</li>
