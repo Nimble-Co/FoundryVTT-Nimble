@@ -1,8 +1,11 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import type { RawPredicate } from '../../../etc/Predicate.js';
 	import localize from '#utils/localize.js';
 	import overrideTextAreaBehavior from '#utils/overrideTextAreaBehavior.js';
+	import {
+		createRuleCardState,
+		FIXED_FIELDS,
+	} from '#view/rulesBuilder/components/RuleCardState.svelte.js';
 	import type { RuleCardProps } from '#view/rulesBuilder/types.js';
 	import PredicateBuilder from './PredicateBuilder.svelte';
 	import SchemaFieldRenderer from './SchemaFieldRenderer.svelte';
@@ -16,115 +19,12 @@
 		onToggleCollapse,
 	}: RuleCardProps = $props();
 
-	const { ruleDataModels, ruleTypes } = CONFIG.NIMBLE;
-	const RuleClass = $derived(ruleDataModels[rule.type as string]);
-	const ruleLabel = $derived(
-		(rule.label as string) || localize(ruleTypes[rule.type as string] ?? (rule.type as string)),
+	const state = createRuleCardState(
+		() => rule,
+		() => manager,
 	);
 
-	// `defineSchema()` allocates fresh field instances on every call. The
-	// schema only depends on `rule.type`, so memoize per-type to avoid
-	// rebuilding the field tree on every keystroke.
-	const schemaCache = new Map<string, Record<string, foundry.data.fields.DataField.Any> | null>();
-	const schema = $derived.by(() => {
-		const type = rule.type as string;
-		if (schemaCache.has(type)) return schemaCache.get(type) ?? null;
-		if (!RuleClass) {
-			schemaCache.set(type, null);
-			return null;
-		}
-		try {
-			const built = RuleClass.defineSchema() as Record<string, foundry.data.fields.DataField.Any>;
-			schemaCache.set(type, built);
-			return built;
-		} catch (err) {
-			console.warn(`Nimble | RuleCard could not load schema for "${type}"`, err);
-			schemaCache.set(type, null);
-			return null;
-		}
-	});
-
-	let showJson = $state(false);
-	let jsonDraft = $state(untrack(() => JSON.stringify(rule, null, 2)));
-	let jsonError = $state<string | null>(null);
-
-	let lastSerialized = $state(untrack(() => JSON.stringify(rule)));
-	$effect(() => {
-		const next = JSON.stringify(rule);
-		if (next !== lastSerialized) {
-			lastSerialized = next;
-			if (!showJson) jsonDraft = JSON.stringify(rule, null, 2);
-		}
-	});
-
-	async function emitFieldChange(name: string, value: unknown) {
-		await manager.updateRule(rule.id as string, { ...rule, [name]: value });
-	}
-
-	function toggleJson() {
-		if (!showJson) {
-			jsonDraft = JSON.stringify(rule, null, 2);
-			jsonError = null;
-		}
-		showJson = !showJson;
-	}
-
-	async function commitJson() {
-		try {
-			const parsed = JSON.parse(jsonDraft);
-			await manager.updateRule(rule.id as string, parsed);
-			jsonError = null;
-		} catch (err) {
-			jsonError = err instanceof Error ? err.message : 'Invalid JSON';
-		}
-	}
-
-	async function toggleDisabled() {
-		await emitFieldChange('disabled', !rule.disabled);
-	}
-
-	const FIXED_FIELDS = new Set([
-		'id',
-		'type',
-		'disabled',
-		'identifier',
-		'label',
-		'priority',
-		'predicate',
-	]);
-
-	const warnedMissingLabel = new Set<string>();
-
-	/**
-	 * Display label for a schema field. Foundry's existing `label` option
-	 * wins; otherwise convert the camelCase property name into a readable
-	 * "Camel Case" string ("damageType" → "Damage Type"). The fallback is
-	 * English-only, so dev mode warns once per (type, field) pair to flag
-	 * the i18n trap.
-	 */
-	function fieldLabel(name: string, field: foundry.data.fields.DataField.Any): string {
-		const explicit = (field as { label?: string }).label;
-		if (explicit) return localize(explicit);
-		const key = `${rule.type}.${name}`;
-		if (!warnedMissingLabel.has(key)) {
-			warnedMissingLabel.add(key);
-			console.warn(
-				`Nimble | RuleCard: rule "${rule.type}" field "${name}" has no \`label:\` ` +
-					`option. Falling back to a camelCase-derived English-only label.`,
-			);
-		}
-		return name
-			.replace(/([A-Z])/g, ' $1')
-			.replace(/^./, (c) => c.toUpperCase())
-			.trim();
-	}
-
-	/** Read Foundry's `hint` option from a field, localized if present. */
-	function fieldHint(field: foundry.data.fields.DataField.Any): string {
-		const hint = (field as { hint?: string }).hint;
-		if (!hint) return '';
-		return localize(hint);
-	}
+	state.setupJsonSyncEffect();
 </script>
 
 <article
@@ -155,11 +55,11 @@
 			class="nimble-rule-card__label"
 			type="text"
 			value={rule.label as string}
-			placeholder={ruleLabel}
-			onchange={(e) => emitFieldChange('label', (e.target as HTMLInputElement).value)}
+			placeholder={state.ruleLabel}
+			onchange={(e) => state.emitFieldChange('label', (e.target as HTMLInputElement).value)}
 		/>
 
-		<span class="nimble-rule-card__type">{ruleTypes[rule.type as string] ?? rule.type}</span>
+		<span class="nimble-rule-card__type">{state.ruleTypes[rule.type as string] ?? rule.type}</span>
 
 		<label
 			class="nimble-rule-card__priority"
@@ -174,16 +74,16 @@
 				value={(rule.priority as number) ?? 1}
 				onchange={(e) => {
 					const num = parseInt((e.target as HTMLInputElement).value, 10);
-					if (!Number.isNaN(num)) emitFieldChange('priority', num);
+					if (!Number.isNaN(num)) state.emitFieldChange('priority', num);
 				}}
 			/>
 		</label>
 
-		{#if RuleClass}
+		{#if state.RuleClass}
 			<i
 				class="nimble-rule-card__help fa-solid fa-circle-question"
 				data-tooltip={localize(
-					(RuleClass as unknown as { description?: string }).description ?? '',
+					(state.RuleClass as unknown as { description?: string }).description ?? '',
 				)}
 				data-tooltip-direction="UP"
 			></i>
@@ -209,7 +109,7 @@
 				aria-label={rule.disabled
 					? localize('NIMBLE.rulesBuilder.enableRule')
 					: localize('NIMBLE.rulesBuilder.disableRule')}
-				onclick={toggleDisabled}
+				onclick={state.toggleDisabled}
 			>
 				<i class="fa-solid {rule.disabled ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
 			</button>
@@ -218,15 +118,15 @@
 				type="button"
 				class="nimble-button"
 				data-button-variant="icon"
-				data-tooltip={showJson
+				data-tooltip={state.showJson
 					? localize('NIMBLE.rulesBuilder.switchToBuilder')
 					: localize('NIMBLE.rulesBuilder.editRawJson')}
-				aria-label={showJson
+				aria-label={state.showJson
 					? localize('NIMBLE.rulesBuilder.switchToBuilder')
 					: localize('NIMBLE.rulesBuilder.editRawJson')}
-				onclick={toggleJson}
+				onclick={state.toggleJson}
 			>
-				<i class="fa-solid {showJson ? 'fa-list' : 'fa-code'}"></i>
+				<i class="fa-solid {state.showJson ? 'fa-list' : 'fa-code'}"></i>
 			</button>
 
 			{#if onDelete}
@@ -245,11 +145,12 @@
 	</header>
 
 	{#if !collapsed}
-		{#if showJson}
+		{#if state.showJson}
 			<div class="nimble-rule-card__json">
 				<textarea
 					class="nimble-code-block__text-area"
-					bind:value={jsonDraft}
+					value={state.jsonDraft}
+					oninput={(e) => state.setJsonDraft((e.target as HTMLTextAreaElement).value)}
 					rows="11"
 					autocapitalize="off"
 					autocomplete="off"
@@ -262,24 +163,24 @@
 						type="button"
 						class="nimble-button"
 						data-button-variant="basic"
-						onclick={commitJson}
+						onclick={state.commitJson}
 					>
 						<i class="fa-solid fa-save"></i>
 						{localize('NIMBLE.rulesBuilder.saveJson')}
 					</button>
-					{#if jsonError}
-						<span class="nimble-rule-card__json-error">{jsonError}</span>
+					{#if state.jsonError}
+						<span class="nimble-rule-card__json-error">{state.jsonError}</span>
 					{/if}
 				</div>
 			</div>
-		{:else if !schema}
+		{:else if !state.schema}
 			<p class="nimble-rule-card__empty">
 				{localize('NIMBLE.rulesBuilder.errorSchemaLoadBefore')}
 				<code>{rule.type}</code>
 				{localize('NIMBLE.rulesBuilder.errorSchemaLoadAfter')}
 			</p>
 		{:else}
-			{@const editableEntries = Object.entries(schema).filter(
+			{@const editableEntries = Object.entries(state.schema).filter(
 				([fieldName]) => !FIXED_FIELDS.has(fieldName),
 			)}
 			<div class="nimble-rule-card__body">
@@ -289,15 +190,15 @@
 					</p>
 				{:else}
 					{#each editableEntries as [fieldName, field] (fieldName)}
-						{@const hint = fieldHint(field)}
+						{@const hint = state.fieldHint(field)}
 						<div class="nimble-field-row">
-							<span class="nimble-field-row__label">{fieldLabel(fieldName, field)}</span>
+							<span class="nimble-field-row__label">{state.fieldLabel(fieldName, field)}</span>
 							<SchemaFieldRenderer
 								{field}
 								value={rule[fieldName]}
 								parentData={rule}
 								name={fieldName}
-								onChange={(v) => emitFieldChange(fieldName, v)}
+								onChange={(v) => state.emitFieldChange(fieldName, v)}
 							/>
 							{#if hint}
 								<small class="nimble-field-row__hint">{hint}</small>
@@ -320,7 +221,7 @@
 						>
 						<PredicateBuilder
 							value={(rule.predicate as RawPredicate) ?? {}}
-							onChange={(v) => emitFieldChange('predicate', v)}
+							onChange={(v) => state.emitFieldChange('predicate', v)}
 							{previewDomain}
 						/>
 					</div>
