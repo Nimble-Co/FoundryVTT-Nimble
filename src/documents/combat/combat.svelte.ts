@@ -1049,6 +1049,14 @@ class NimbleCombat extends Combat {
 			throw error;
 		}
 
+		for (const rollOutcome of lockedRollOutcomes) {
+			const combatant = this.combatants.get(rollOutcome.combatantId);
+			const actor = combatant?.actor;
+			if (!actor) continue;
+			// @ts-expect-error - nimble.initiativeRolled is a custom Nimble hook consumed by ruleEventDispatch and chargePool/dicePool triggers
+			Hooks.callAll('nimble.initiativeRolled', { actor, combatant });
+		}
+
 		if (combatManaUpdates.length > 0) {
 			await Promise.all(combatManaUpdates);
 		}
