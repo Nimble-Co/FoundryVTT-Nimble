@@ -14,10 +14,6 @@ type DiceRefillEntry = {
 	value: string;
 };
 
-type BankedDie = {
-	face: number;
-};
-
 type DicePoolState = {
 	id: string;
 	identifier: string;
@@ -74,7 +70,6 @@ type CharacterActorLike = Actor.Implementation & {
 };
 
 export type {
-	BankedDie,
 	CharacterActorLike,
 	DicePoolDefinition,
 	DicePoolInitialMode,
