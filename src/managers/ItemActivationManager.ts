@@ -1,15 +1,18 @@
-import type { EffectNode } from '#types/effectTree.js';
+import type { EffectNode, PoolNode } from '#types/effectTree.js';
 import type { UpcastResult } from '#types/spellScaling.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
+import { Predicate, type RawPredicate } from '../etc/Predicate.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusTotal,
 	hasWeaponProficiency,
 } from '../utils/attackUtils.js';
+import { adjustPool } from '../utils/chargePool/chargePoolRecover.js';
+import { rollDieIntoPool, rollPoolFresh, setPoolFaces } from '../utils/dicePool/dicePoolRefill.js';
 import getRollFormula from '../utils/getRollFormula.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
@@ -349,6 +352,10 @@ class ItemActivationManager {
 				rolls.push(roll);
 			}
 
+			if (node.type === 'pool') {
+				await this.#applyPoolNode(node as PoolNode);
+			}
+
 			updatedEffects.push(node);
 		}
 
@@ -356,6 +363,143 @@ class ItemActivationManager {
 		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
 
 		return rolls;
+	}
+
+	/**
+	 * Apply a `pool` effect node: mutate a dice or charge pool on the source
+	 * actor as a side effect of item activation. Records the outcome on the
+	 * node itself so the chat-card renderer can display what happened.
+	 *
+	 * Routes by (poolType, action):
+	 *   dice  + rollDie   -> roll `value` dice into the pool (one at a time)
+	 *   dice  + rollPool  -> roll the full pool fresh (max dice)
+	 *   dice  + clear     -> empty the pool
+	 *   charge + fillCount -> add `value` charges (clamped to max)
+	 *   charge + clear     -> set current to 0
+	 *
+	 * Skipped (with a skipReason) if predicate fails, actor missing, or the
+	 * action is not meaningful for the pool type.
+	 */
+	async #applyPoolNode(node: PoolNode): Promise<void> {
+		const actor = this.actor as Actor.Implementation | null;
+		if (!actor) {
+			node.result = { applied: false, skipReason: 'noActor' };
+			return;
+		}
+
+		const rawPredicate = node.predicate;
+		if (rawPredicate && Object.keys(rawPredicate).length > 0) {
+			const predicate = new Predicate(rawPredicate as object as RawPredicate);
+			const domain =
+				(actor as { getDomain?: () => string[] | Set<string> }).getDomain?.() ?? new Set<string>();
+			const domainSet = domain instanceof Set ? domain : new Set(domain);
+			if (!predicate.test(domainSet)) {
+				node.result = { applied: false, skipReason: 'predicate' };
+				return;
+			}
+		}
+
+		const count = Math.max(0, Math.floor(Number(node.value) || 0));
+		const poolId = node.poolIdentifier;
+
+		if (node.poolType === 'dice') {
+			const readPool = (): { label?: string; faces: number[] } => {
+				const map =
+					(foundry.utils.getProperty(actor, 'flags.nimble.dicePools') as
+						| Record<string, { label?: string; faces?: number[] }>
+						| undefined) ?? {};
+				const entry = map[poolId];
+				return { label: entry?.label, faces: Array.isArray(entry?.faces) ? entry.faces : [] };
+			};
+
+			if (node.action === 'rollDie') {
+				const before = readPool();
+				let applied = false;
+				for (let i = 0; i < count; i += 1) {
+					const ok = await rollDieIntoPool(actor, poolId);
+					if (!ok) break;
+					applied = true;
+				}
+				const after = readPool();
+				node.result = {
+					applied,
+					poolLabel: after.label ?? before.label,
+					previousCount: before.faces.length,
+					newCount: after.faces.length,
+					rolledFaces: after.faces.slice(before.faces.length),
+				};
+				return;
+			}
+			if (node.action === 'rollPool') {
+				const before = readPool();
+				const ok = await rollPoolFresh(actor, poolId);
+				const after = readPool();
+				node.result = {
+					applied: ok,
+					poolLabel: after.label ?? before.label,
+					previousCount: before.faces.length,
+					newCount: after.faces.length,
+					rolledFaces: after.faces,
+				};
+				return;
+			}
+			if (node.action === 'clear') {
+				const before = readPool();
+				const ok = await setPoolFaces(actor, poolId, []);
+				node.result = {
+					applied: ok,
+					poolLabel: before.label,
+					previousCount: before.faces.length,
+					newCount: 0,
+				};
+				return;
+			}
+			node.result = { applied: false, skipReason: 'invalidAction' };
+			return;
+		}
+
+		if (node.poolType === 'charge') {
+			const readChargePool = (): { label?: string; current: number } => {
+				for (const item of actor.items.contents) {
+					const map = foundry.utils.getProperty(item, 'flags.nimble.chargePools') as
+						| Record<string, { label?: string; current?: number; identifier?: string }>
+						| undefined;
+					if (!map) continue;
+					const entry = map[poolId];
+					if (!entry) continue;
+					return { label: entry.label, current: Number(entry.current) || 0 };
+				}
+				return { current: 0 };
+			};
+
+			if (node.action === 'fillCount') {
+				const before = readChargePool();
+				const ok = await adjustPool(actor, poolId, 'add', count);
+				const after = readChargePool();
+				node.result = {
+					applied: ok,
+					poolLabel: after.label ?? before.label,
+					previousCount: before.current,
+					newCount: after.current,
+				};
+				return;
+			}
+			if (node.action === 'clear') {
+				const before = readChargePool();
+				const ok = await adjustPool(actor, poolId, 'set', 0);
+				node.result = {
+					applied: ok,
+					poolLabel: before.label,
+					previousCount: before.current,
+					newCount: 0,
+				};
+				return;
+			}
+			node.result = { applied: false, skipReason: 'invalidAction' };
+			return;
+		}
+
+		node.result = { applied: false, skipReason: 'invalidAction' };
 	}
 
 	/**
