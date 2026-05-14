@@ -23,7 +23,7 @@ export type ConditionNode = {
 	parentNode: string | null;
 };
 
-export type EffectNodeDisposition = 'friendly' | 'neutral' | 'hostile' | 'secret';
+export type EffectNodeDisposition = 'any' | 'friendly' | 'neutral' | 'hostile' | 'secret';
 
 export type DamageNode = {
 	id: string;

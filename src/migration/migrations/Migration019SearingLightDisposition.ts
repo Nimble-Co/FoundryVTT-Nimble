@@ -1,6 +1,8 @@
 import { MigrationBase } from '../MigrationBase.js';
 
 const SEARING_LIGHT_SOURCE_ID = 'Compendium.nimble.class-features.Item.KQiBYDr1BBTE0iJq';
+const SEARING_LIGHT_CLASS = 'shepherd';
+const SEARING_LIGHT_GROUP = 'shepherd-progression';
 
 /**
  * Migration to add targetDisposition to Searing Light's activation effects.
@@ -18,16 +20,19 @@ class Migration019SearingLightDisposition extends MigrationBase {
 		if (source.type !== 'feature') return;
 
 		const sourceId = this.getSourceId(source);
-		if (sourceId !== SEARING_LIGHT_SOURCE_ID) return;
+		const isSearingLight =
+			sourceId === SEARING_LIGHT_SOURCE_ID ||
+			(source.system?.class === SEARING_LIGHT_CLASS &&
+				source.system?.group === SEARING_LIGHT_GROUP);
+		if (!isSearingLight) return;
 
 		const effects = source.system?.activation?.effects;
 		if (!Array.isArray(effects)) return;
 
 		for (const effect of effects) {
-			if (effect.id === 'SearingLightHealing1' && !effect.targetDisposition) {
+			if (effect.type === 'healing' && !effect.targetDisposition) {
 				effect.targetDisposition = 'friendly';
-			}
-			if (effect.id === 'SearingLightDamage1' && !effect.targetDisposition) {
+			} else if (effect.type === 'damage' && !effect.targetDisposition) {
 				effect.targetDisposition = 'hostile';
 			}
 		}
