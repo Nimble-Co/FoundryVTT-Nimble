@@ -327,21 +327,14 @@ Order sections consistently within `.svelte` files:
   // 6. Props
   let { currentHP, maxHP, onUpdate }: HitPointBarProps = $props();
 
-  // 7. Local state
-  let isEditing = $state(false);
+  // 7. State creation via factory (see "Co-located State Files")
+  const state = createHitPointBarState(() => ({ currentHP, maxHP, onUpdate }));
 
-  // 8. Derived values
-  const hpPercentage = $derived((currentHP / maxHP) * 100);
-
-  // 9. Effects
-  $effect(() => {
-    // Side effects here
-  });
-
-  // 10. Functions
-  function handleClick() {
-    // ...
-  }
+  // 8. Destructuring of state:
+  //    - Functions: const { handleClick } = state;
+  //    - Reactive getters: const hpPercentage = $derived(state.hpPercentage);
+  const { handleClick } = state;
+  const hpPercentage = $derived(state.hpPercentage);
 </script>
 
 <!-- Template -->
@@ -402,6 +395,74 @@ export type ValueEditorProps = Editable | ReadOnly;
   let props: ValueEditorProps = $props();
 </script>
 ```
+
+### Co-located State Files
+
+For components with significant reactive state or event-handling logic, extract that logic into a co-located `.svelte.ts` file. This keeps the `.svelte` component as a thin template layer and makes state logic independently testable.
+
+When the logic in a `.svelte` component's `<script>` block exceeds 30 lines, extract it into a co-located `.svelte.ts` file. This includes:
+
+- Reactive state (`$state`, `$derived`, `$effect`)
+- Event handlers and callbacks
+- Data extraction and transformation functions
+
+Only use the `.svelte.ts` extension when the file actually contains runes (`$state`, `$derived`, `$effect`). Plain TypeScript helpers use `.ts`.
+
+**State file structure:**
+
+Export a `create{ComponentName}State()` factory function that takes getter functions for reactive props and returns an object with `get` accessors for reactive values and direct references for functions:
+
+```typescript
+// HitPointBar.svelte.ts
+import type { HitPointBarProps } from '../../types/components/HitPointBar.d.ts';
+
+export function createHitPointBarState(getProps: () => HitPointBarProps) {
+  const hpPercentage = $derived((getProps().currentHP / getProps().maxHP) * 100);
+  let isEditing = $state(false);
+
+  function handleClick() {
+    isEditing = !isEditing;
+  }
+
+  return {
+    get hpPercentage() { return hpPercentage; },
+    get isEditing() { return isEditing; },
+    handleClick,
+  };
+}
+```
+
+Key rules for the factory:
+
+| Rule | Reason |
+|------|--------|
+| Props passed as getter functions (`() => props.value`) | Allows the factory to track reactivity — raw values would be stale snapshots |
+| Reactive values returned as `get` accessors | Caller observes live reactive values, not frozen copies |
+| Functions returned directly | Functions are stable references and don't need `get` accessors |
+
+**Wiring the factory in the component:**
+
+```svelte
+<script lang="ts">
+  // 1. Type imports
+  import type { HitPointBarProps } from '../../types/components/HitPointBar.d.ts';
+
+  // 2. State file import
+  import { createHitPointBarState } from './HitPointBar.svelte.ts';
+
+  // 3. Props
+  let { currentHP, maxHP, onUpdate }: HitPointBarProps = $props();
+
+  // 4. State creation via factory
+  const state = createHitPointBarState(() => ({ currentHP, maxHP, onUpdate }));
+
+  // 5. Destructure — functions directly, reactive values via $derived
+  const { handleClick } = state;
+  const hpPercentage = $derived(state.hpPercentage);
+</script>
+```
+
+---
 
 ### Context Usage
 
@@ -1304,6 +1365,8 @@ Use these rules as a pre-review gate. They help keep files focused by extracting
 **State:**
 - [ ] Loading, empty, and error states are handled
 - [ ] No duplicated state management logic → extract to a store if shared
+- [ ] Components whose `<script>` block logic exceeds 30 lines have state extracted to a co-located `.svelte.ts` file
+- [ ] `.svelte.ts` extension is only used for files that contain runes (`$state`, `$derived`, `$effect`)
 
 ---
 
