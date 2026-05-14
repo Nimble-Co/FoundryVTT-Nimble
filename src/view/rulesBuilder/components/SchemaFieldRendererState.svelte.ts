@@ -13,7 +13,6 @@ type FieldWithOptions = { options?: FieldExtras };
 
 export function createSchemaFieldRendererState(
 	getField: () => foundry.data.fields.DataField.Any,
-	getValue: () => unknown,
 	getParentData: () => Record<string, unknown>,
 	getOnChange: () => (next: unknown) => void,
 	getName: () => string,

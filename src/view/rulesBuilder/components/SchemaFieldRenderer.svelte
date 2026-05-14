@@ -27,7 +27,6 @@
 
 	const state = createSchemaFieldRendererState(
 		() => field,
-		() => value,
 		() => parentData,
 		() => onChange,
 		() => name,
