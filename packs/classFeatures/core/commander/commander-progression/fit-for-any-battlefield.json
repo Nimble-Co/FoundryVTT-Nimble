@@ -27,7 +27,7 @@
 				"predicate": {},
 				"priority": 2,
 				"scope": "item",
-				"max": "@abilities.strength.value",
+				"max": "@strength",
 				"dieSize": "d6",
 				"initial": "zero",
 				"recoveries": [
