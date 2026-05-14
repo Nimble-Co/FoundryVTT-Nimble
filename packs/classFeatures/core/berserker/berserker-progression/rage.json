@@ -17,7 +17,7 @@
 				"priority": 1,
 				"scope": "item",
 				"dieSize": "d4",
-				"max": "@abilities.key.value",
+				"max": "@key",
 				"initial": "zero",
 				"refills": []
 			}
