@@ -96,10 +96,6 @@
 
 <style lang="scss">
 	.action-tracker {
-		position: absolute;
-		top: 15rem;
-		left: 0;
-
 		&__panel {
 			display: flex;
 			flex-direction: column;
