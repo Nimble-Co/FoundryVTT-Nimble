@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import { SvelteSet } from 'svelte/reactivity';
 
 	import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 	import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
@@ -8,45 +7,12 @@
 	import overrideTextAreaBehavior from '#utils/overrideTextAreaBehavior.js';
 	import { reorderable } from '#view/rulesBuilder/actions/reorderable.svelte.js';
 	import RulesBuilderWindow from '#view/rulesBuilder/RulesBuilderWindow.svelte';
-	import type { RuleSource } from '#view/rulesBuilder/types.js';
+	import { COPY_TYPE, createItemRulesTabState } from './ItemRulesTab.svelte.js';
 
 	const item: NimbleBaseItem = getContext('document');
-	const rawRules = $derived((item.reactive.system as unknown as { rules: RuleSource[] }).rules);
-
-	// Per-row JSON-editor state. Lets a user repair a rule whose schema the
-	// builder can't render — e.g. a corrupt source from an older version.
-	const jsonOpenIds = $state<Set<string>>(new SvelteSet());
-	const jsonDrafts = $state<Record<string, string>>({});
-	const jsonErrors = $state<Record<string, string | null>>({});
-
-	function toggleJson(rule: RuleSource) {
-		if (jsonOpenIds.has(rule.id)) {
-			jsonOpenIds.delete(rule.id);
-			return;
-		}
-		jsonDrafts[rule.id] = JSON.stringify(rule, null, 2);
-		jsonErrors[rule.id] = null;
-		jsonOpenIds.add(rule.id);
-	}
-
-	async function commitJson(ruleId: string) {
-		try {
-			const parsed = JSON.parse(jsonDrafts[ruleId] ?? '');
-			await item.rules.updateRule(ruleId, parsed);
-			jsonErrors[ruleId] = null;
-			jsonOpenIds.delete(ruleId);
-		} catch (err) {
-			jsonErrors[ruleId] = err instanceof Error ? err.message : 'Invalid JSON';
-		}
-	}
-	// Display order = application order (sort by ascending priority, stable).
-	const rules = $derived(
-		[...rawRules].sort((a, b) => ((a.priority as number) ?? 1) - ((b.priority as number) ?? 1)),
-	);
+	const state = createItemRulesTabState(() => item);
 
 	const { ruleTypes } = CONFIG.NIMBLE;
-
-	const COPY_TYPE = 'nimble.Rule';
 
 	function openBuilder() {
 		const dialog = GenericDialog.getOrCreate(
@@ -62,31 +28,13 @@
 		);
 		dialog.render(true);
 	}
-
-	function getDragPayload(id: string): Record<string, unknown> | null {
-		const source = rules.find((r) => r.id === id);
-		if (!source) return null;
-		const cloned = foundry.utils.deepClone(source) as Record<string, unknown>;
-		return {
-			rule: cloned,
-			sourceItemUuid: item.uuid,
-		};
-	}
-
-	async function copyRuleFromPayload(payload: Record<string, unknown>) {
-		if (payload.sourceItemUuid === item.uuid) return;
-		const incoming = payload.rule as Record<string, unknown> | undefined;
-		if (!incoming || typeof incoming !== 'object') return;
-		const { id: _id, ...rest } = incoming;
-		await item.rules.addRule(rest);
-	}
 </script>
 
 <section class="nimble-sheet__body nimble-rules-tab__body">
 	<header class="nimble-rules-tab__header">
 		<span class="nimble-rules-tab__count">
-			{rules.length}
-			{rules.length === 1
+			{state.rules.length}
+			{state.rules.length === 1
 				? localize('NIMBLE.rulesBuilder.ruleSingular')
 				: localize('NIMBLE.rulesBuilder.rulePlural')}
 		</span>
@@ -97,20 +45,20 @@
 		</button>
 	</header>
 
-	{#if rules.length === 0}
+	{#if state.rules.length === 0}
 		<p class="nimble-rules-tab__empty">{localize('NIMBLE.rulesBuilder.noRulesDefined')}</p>
 	{:else}
 		<ul
 			class="nimble-rules-tab__list"
 			use:reorderable={{
 				enabled: true,
-				getDragPayload,
-				onCopy: copyRuleFromPayload,
+				getDragPayload: state.getDragPayload,
+				onCopy: state.copyRuleFromPayload,
 				copyAcceptType: COPY_TYPE,
 			}}
 		>
-			{#each rules as rule (rule.id)}
-				{@const jsonOpen = jsonOpenIds.has(rule.id)}
+			{#each state.rules as rule (rule.id)}
+				{@const jsonOpen = state.jsonOpenIds.has(rule.id)}
 				<li
 					class="nimble-rules-tab__row"
 					class:nimble-rules-tab__row--disabled={rule.disabled}
@@ -151,7 +99,7 @@
 								? localize('NIMBLE.rulesBuilder.closeJsonEditor')
 								: localize('NIMBLE.rulesBuilder.editRawJson')}
 							aria-expanded={jsonOpen}
-							onclick={() => toggleJson(rule)}
+							onclick={() => state.toggleJson(rule)}
 						>
 							<i class="fa-solid {jsonOpen ? 'fa-xmark' : 'fa-code'}"></i>
 						</button>
@@ -161,7 +109,7 @@
 						<div class="nimble-rules-tab__json">
 							<textarea
 								class="nimble-code-block__text-area"
-								bind:value={jsonDrafts[rule.id]}
+								bind:value={state.jsonDrafts[rule.id]}
 								rows="11"
 								autocapitalize="off"
 								autocomplete="off"
@@ -174,13 +122,13 @@
 									type="button"
 									class="nimble-button"
 									data-button-variant="basic"
-									onclick={() => commitJson(rule.id)}
+									onclick={() => state.commitJson(rule.id)}
 								>
 									<i class="fa-solid fa-save"></i>
 									{localize('NIMBLE.rulesBuilder.saveJson')}
 								</button>
-								{#if jsonErrors[rule.id]}
-									<span class="nimble-rules-tab__json-error">{jsonErrors[rule.id]}</span>
+								{#if state.jsonErrors[rule.id]}
+									<span class="nimble-rules-tab__json-error">{state.jsonErrors[rule.id]}</span>
 								{/if}
 							</div>
 						</div>
