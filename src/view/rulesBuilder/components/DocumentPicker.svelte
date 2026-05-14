@@ -1,5 +1,6 @@
 <script lang="ts">
 	import localize from '#utils/localize.js';
+	import { createDocumentPickerState } from '#view/rulesBuilder/components/DocumentPicker.svelte.js';
 	import type { DocumentPickerProps } from '#view/rulesBuilder/types.js';
 
 	let {
@@ -14,136 +15,37 @@
 		placeholder ?? localize('NIMBLE.rulesBuilder.dragDocumentHere'),
 	);
 
-	let resolvedName = $state<string | null>(null);
-	let resolveError = $state<string | null>(null);
-	let dragOver = $state(false);
+	const state = createDocumentPickerState(
+		() => value,
+		() => documentTypes,
+		() => onChange,
+		() => disabled,
+	);
 
-	$effect(() => {
-		if (!value) {
-			resolvedName = null;
-			resolveError = null;
-			return;
-		}
-		try {
-			// Cast: fromUuidSync's typed signature requires a literal `Doc.${string}`,
-			// but we accept any UUID at runtime — Foundry does the document-type
-			// dispatch internally and returns null for unknown types.
-			const doc = fromUuidSync(value as Parameters<typeof fromUuidSync>[0]) as {
-				name?: string;
-				documentName?: string;
-			} | null;
-			if (doc) {
-				resolvedName = doc.name ?? doc.documentName ?? value;
-				resolveError = null;
-			} else {
-				resolvedName = null;
-				resolveError = 'Unresolvable UUID';
-			}
-		} catch (err) {
-			resolvedName = null;
-			resolveError = err instanceof Error ? err.message : 'Unresolvable UUID';
-		}
-	});
-
-	function isAcceptable(payload: { uuid: string; type?: string }): boolean {
-		if (!documentTypes || documentTypes.length === 0) return true;
-		const droppedType = payload.type;
-		if (!droppedType) return false;
-
-		// Foundry's drag payload only carries the top-level Document type
-		// (e.g. `"Item"`), never the system subtype. For constraints like
-		// `"Item.spell"` we have to resolve the document to inspect its
-		// subtype field.
-		let resolvedSubtype: string | null | undefined;
-		const getSubtype = () => {
-			if (resolvedSubtype !== undefined) return resolvedSubtype;
-			try {
-				const doc = fromUuidSync(payload.uuid as Parameters<typeof fromUuidSync>[0]) as {
-					type?: string;
-				} | null;
-				resolvedSubtype = doc?.type ?? null;
-			} catch {
-				resolvedSubtype = null;
-			}
-			return resolvedSubtype;
-		};
-
-		return documentTypes.some((t) => {
-			const dot = t.indexOf('.');
-			if (dot === -1) return droppedType === t;
-			const top = t.slice(0, dot);
-			const sub = t.slice(dot + 1);
-			if (droppedType !== top) return false;
-			return getSubtype() === sub;
-		});
-	}
-
-	function readDropPayload(event: DragEvent): { uuid: string; type?: string } | null {
-		try {
-			const raw = event.dataTransfer?.getData('text/plain');
-			if (!raw) return null;
-			const parsed = JSON.parse(raw) as { uuid?: string; type?: string };
-			if (typeof parsed.uuid === 'string') return { uuid: parsed.uuid, type: parsed.type };
-			return null;
-		} catch {
-			return null;
-		}
-	}
-
-	function handleDragOver(event: DragEvent) {
-		if (disabled) return;
-		event.preventDefault();
-		dragOver = true;
-	}
-
-	function handleDragLeave() {
-		dragOver = false;
-	}
-
-	function handleDrop(event: DragEvent) {
-		if (disabled) return;
-		event.preventDefault();
-		dragOver = false;
-
-		const payload = readDropPayload(event);
-		if (!payload) {
-			resolveError = 'Drop payload was not a valid document reference';
-			return;
-		}
-		if (!isAcceptable(payload)) {
-			resolveError = `Expected ${documentTypes?.join(' or ')}, got ${payload.type ?? '<unknown>'}`;
-			return;
-		}
-		onChange(payload.uuid);
-	}
-
-	function handleClear() {
-		if (disabled) return;
-		onChange('');
-	}
+	state.setupResolveEffect();
 </script>
 
 <div
 	class="nimble-document-picker"
-	class:nimble-document-picker--drag-over={dragOver}
+	class:nimble-document-picker--drag-over={state.dragOver}
 	class:nimble-document-picker--filled={Boolean(value)}
-	class:nimble-document-picker--error={Boolean(resolveError)}
+	class:nimble-document-picker--error={Boolean(state.resolveError)}
 	class:nimble-document-picker--disabled={disabled}
 	role="region"
-	ondragover={handleDragOver}
-	ondragleave={handleDragLeave}
-	ondrop={handleDrop}
+	ondragover={state.handleDragOver}
+	ondragleave={state.handleDragLeave}
+	ondrop={state.handleDrop}
 >
 	{#if value}
 		<div class="nimble-document-picker__filled">
 			<i class="nimble-document-picker__icon fa-solid fa-file-lines"></i>
 
 			<div class="nimble-document-picker__label">
-				{#if resolveError}
-					<span class="nimble-document-picker__error">{resolveError}</span>
+				{#if state.resolveError}
+					<span class="nimble-document-picker__error">{state.resolveError}</span>
 					<small class="nimble-document-picker__uuid">{value}</small>
 				{:else}
-					<span class="nimble-document-picker__name">{resolvedName ?? value}</span>
+					<span class="nimble-document-picker__name">{state.resolvedName ?? value}</span>
 					<small class="nimble-document-picker__uuid">{value}</small>
 				{/if}
 			</div>
@@ -155,7 +57,7 @@
 				aria-label={localize('NIMBLE.rulesBuilder.clearDocument')}
 				data-tooltip={localize('NIMBLE.rulesBuilder.clear')}
 				{disabled}
-				onclick={handleClear}
+				onclick={state.handleClear}
 			>
 				<i class="fa-solid fa-xmark"></i>
 			</button>
