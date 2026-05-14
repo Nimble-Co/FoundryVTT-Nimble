@@ -48,16 +48,17 @@ type DicePoolRuleLike = {
 	refills?: unknown;
 };
 
-type ModifyDicePoolRuleLike = {
+type ModifyPoolRuleLike = {
 	type?: string;
 	disabled?: boolean;
 	id?: string;
+	poolType?: string;
 	poolIdentifier?: string;
 	dieSize?: string | null;
 	maxDelta?: string | null;
 };
 
-type DicePoolRuleAny = DicePoolRuleLike & ModifyDicePoolRuleLike;
+type DicePoolRuleAny = DicePoolRuleLike & ModifyPoolRuleLike;
 
 type RuleBackedItem = Item.Implementation & {
 	rules?: Map<string, DicePoolRuleAny>;
@@ -83,7 +84,7 @@ export type {
 	DiceRefillMode,
 	DiceRefillTrigger,
 	DiceRestType,
-	ModifyDicePoolRuleLike,
+	ModifyPoolRuleLike,
 	NumericInput,
 	RuleBackedItem,
 };

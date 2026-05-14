@@ -20,9 +20,11 @@ type MockRule = {
 	scope?: string;
 	max?: string;
 	dieSize?: string | null;
+	maxDelta?: string | null;
 	initial?: string;
 	recoveries?: unknown;
 	poolIdentifier?: string;
+	poolType?: string;
 	poolScope?: string;
 	cost?: string;
 };
@@ -1170,6 +1172,128 @@ describe('ChargePoolService', () => {
 
 			const pools = getPoolsForItem(actor as unknown as Actor.Implementation, 'item-1');
 			expect(pools[0]?.dieSize).toBeNull();
+		});
+	});
+
+	describe('modifyPool (poolType=charge)', () => {
+		it('upgrades the dieSize on a charge pool', async () => {
+			const actor = createMockActor({
+				items: [
+					{
+						id: 'item-1',
+						name: 'Combat Dice',
+						rules: [
+							{
+								type: 'chargePool',
+								id: 'pool-rule',
+								identifier: 'combat-dice',
+								scope: 'item',
+								max: '4',
+								dieSize: 'd6',
+								initial: 'zero',
+							},
+						],
+					},
+					{
+						id: 'item-2',
+						name: 'Combat Tactics L5',
+						rules: [
+							{
+								type: 'modifyPool',
+								id: 'mod-1',
+								poolType: 'charge',
+								poolIdentifier: 'combat-dice',
+								dieSize: 'd8',
+							},
+						],
+					},
+				],
+			});
+
+			await syncActorPools(actor as unknown as Actor.Implementation);
+
+			const pools = getPoolsForItem(actor as unknown as Actor.Implementation, 'item-1');
+			expect(pools[0]?.dieSize).toBe('d8');
+		});
+
+		it('applies additive maxDelta to a charge pool', async () => {
+			const actor = createMockActor({
+				items: [
+					{
+						id: 'item-1',
+						name: 'Combat Dice',
+						rules: [
+							{
+								type: 'chargePool',
+								id: 'pool-rule',
+								identifier: 'combat-dice',
+								scope: 'item',
+								max: '4',
+								dieSize: 'd6',
+								initial: 'max',
+							},
+						],
+					},
+					{
+						id: 'item-2',
+						name: 'Fit for Any Battlefield(2)',
+						rules: [
+							{
+								type: 'modifyPool',
+								id: 'mod-1',
+								poolType: 'charge',
+								poolIdentifier: 'combat-dice',
+								maxDelta: '+1',
+							},
+						],
+					},
+				],
+			});
+
+			await syncActorPools(actor as unknown as Actor.Implementation);
+
+			const pools = getPoolsForItem(actor as unknown as Actor.Implementation, 'item-1');
+			expect(pools[0]?.max).toBe(5);
+		});
+
+		it('ignores modifiers with poolType=dice when targeting a charge pool', async () => {
+			const actor = createMockActor({
+				items: [
+					{
+						id: 'item-1',
+						name: 'Combat Dice',
+						rules: [
+							{
+								type: 'chargePool',
+								id: 'pool-rule',
+								identifier: 'combat-dice',
+								scope: 'item',
+								max: '4',
+								dieSize: 'd6',
+								initial: 'max',
+							},
+						],
+					},
+					{
+						id: 'item-2',
+						name: 'Wrong-target modifier',
+						rules: [
+							{
+								type: 'modifyPool',
+								id: 'mod-1',
+								poolType: 'dice',
+								poolIdentifier: 'combat-dice',
+								dieSize: 'd10',
+							},
+						],
+					},
+				],
+			});
+
+			await syncActorPools(actor as unknown as Actor.Implementation);
+
+			const pools = getPoolsForItem(actor as unknown as Actor.Implementation, 'item-1');
+			expect(pools[0]?.dieSize).toBe('d6');
 		});
 	});
 });

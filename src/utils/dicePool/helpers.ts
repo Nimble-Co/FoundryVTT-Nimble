@@ -13,7 +13,7 @@ import type {
 	DiceRefillMode,
 	DiceRefillTrigger,
 	DieSize,
-	ModifyDicePoolRuleLike,
+	ModifyPoolRuleLike,
 	NumericInput,
 	RuleBackedItem,
 } from './types.js';
@@ -217,8 +217,8 @@ function getDicePoolMapFromActor(actor: CharacterActorLike): DicePoolMap {
 	return normalizedRecord;
 }
 
-function getDicePoolModifiers(actor: CharacterActorLike): Map<string, ModifyDicePoolRuleLike[]> {
-	const modifiersByIdentifier = new Map<string, ModifyDicePoolRuleLike[]>();
+function getDicePoolModifiers(actor: CharacterActorLike): Map<string, ModifyPoolRuleLike[]> {
+	const modifiersByIdentifier = new Map<string, ModifyPoolRuleLike[]>();
 
 	for (const item of actor.items.contents) {
 		const ruleBackedItem = item as RuleBackedItem;
@@ -226,8 +226,9 @@ function getDicePoolModifiers(actor: CharacterActorLike): Map<string, ModifyDice
 		if (!rules) continue;
 
 		for (const rule of rules.values()) {
-			if (rule.type !== 'modifyDicePool' || rule.disabled) continue;
-			const modifier = rule as ModifyDicePoolRuleLike;
+			if (rule.type !== 'modifyPool' || rule.disabled) continue;
+			const modifier = rule as ModifyPoolRuleLike;
+			if (modifier.poolType !== 'dice') continue;
 			const poolIdentifier = normalizeIdentifier(modifier.poolIdentifier);
 			if (poolIdentifier.length < 1) continue;
 
@@ -243,7 +244,7 @@ function getDicePoolModifiers(actor: CharacterActorLike): Map<string, ModifyDice
 function applyModifiersToDefinition(
 	actor: CharacterActorLike,
 	definition: DicePoolDefinition,
-	modifiers: ModifyDicePoolRuleLike[] | undefined,
+	modifiers: ModifyPoolRuleLike[] | undefined,
 ): DicePoolDefinition {
 	if (!modifiers || modifiers.length < 1) return definition;
 

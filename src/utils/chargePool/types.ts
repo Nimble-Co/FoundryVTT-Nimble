@@ -65,7 +65,17 @@ type ChargeConsumerRuleLike = {
 	cost?: string;
 };
 
-type RuleLike = ChargePoolRuleLike & ChargeConsumerRuleLike;
+type ModifyPoolRuleLike = {
+	type?: string;
+	disabled?: boolean;
+	id?: string;
+	poolType?: string;
+	poolIdentifier?: string;
+	dieSize?: string | null;
+	maxDelta?: string | null;
+};
+
+type RuleLike = ChargePoolRuleLike & ChargeConsumerRuleLike & ModifyPoolRuleLike;
 
 type RuleBackedItem = Item.Implementation & {
 	rules?: Map<string, RuleLike>;
@@ -140,6 +150,7 @@ export type {
 	ChargePoolDefinition,
 	ChargePoolRuleLike,
 	ChargeConsumerRuleLike,
+	ModifyPoolRuleLike,
 	RuleLike,
 	RuleBackedItem,
 	CharacterActorLike,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DicePoolRule } from './dicePool.js';
-import { ModifyDicePoolRule } from './modifyDicePool.js';
+import { ModifyPoolRule } from './modifyPool.js';
 
 describe('DicePoolRule schema', () => {
 	it('defines required schema fields', () => {
@@ -47,18 +47,19 @@ describe('DicePoolRule schema', () => {
 	});
 });
 
-describe('ModifyDicePoolRule schema', () => {
+describe('ModifyPoolRule schema', () => {
 	it('defines required schema fields', () => {
-		const schema = ModifyDicePoolRule.defineSchema();
+		const schema = ModifyPoolRule.defineSchema();
 
 		expect(schema).toHaveProperty('type');
+		expect(schema).toHaveProperty('poolType');
 		expect(schema).toHaveProperty('poolIdentifier');
 		expect(schema).toHaveProperty('dieSize');
 		expect(schema).toHaveProperty('maxDelta');
 	});
 
 	it('allows null dieSize and null maxDelta', () => {
-		const rule = new ModifyDicePoolRule(
+		const rule = new ModifyPoolRule(
 			{
 				id: 'mod-id',
 				identifier: '',
@@ -66,28 +67,31 @@ describe('ModifyDicePoolRule schema', () => {
 				disabled: false,
 				priority: 1,
 				predicate: {},
-				type: 'modifyDicePool',
+				type: 'modifyPool',
+				poolType: 'dice',
 				poolIdentifier: 'fury',
 				dieSize: null,
 				maxDelta: null,
 			} as unknown as foundry.data.fields.SchemaField.CreateData<
-				ModifyDicePoolRule['schema']['fields']
+				ModifyPoolRule['schema']['fields']
 			>,
 			{ strict: false },
 		);
 		// Tests run against a minimal DataModel mock that does not auto-assign schema fields;
 		// mirror the speedBonus.test.ts pattern of manual assignment.
+		(rule as unknown as { poolType: string }).poolType = 'dice';
 		(rule as unknown as { poolIdentifier: string }).poolIdentifier = 'fury';
 		(rule as unknown as { dieSize: null }).dieSize = null;
 		(rule as unknown as { maxDelta: null }).maxDelta = null;
 
+		expect(rule.poolType).toBe('dice');
 		expect(rule.poolIdentifier).toBe('fury');
 		expect(rule.dieSize).toBeNull();
 		expect(rule.maxDelta).toBeNull();
 	});
 
 	it('produces a tooltipInfo string describing all custom fields', () => {
-		const rule = new ModifyDicePoolRule(
+		const rule = new ModifyPoolRule(
 			{
 				id: 'mod-id',
 				identifier: '',
@@ -95,17 +99,19 @@ describe('ModifyDicePoolRule schema', () => {
 				disabled: false,
 				priority: 1,
 				predicate: {},
-				type: 'modifyDicePool',
-				poolIdentifier: 'fury',
-				dieSize: 'd6',
+				type: 'modifyPool',
+				poolType: 'charge',
+				poolIdentifier: 'combat-dice',
+				dieSize: 'd8',
 				maxDelta: '+1',
 			} as unknown as foundry.data.fields.SchemaField.CreateData<
-				ModifyDicePoolRule['schema']['fields']
+				ModifyPoolRule['schema']['fields']
 			>,
 			{ strict: false },
 		);
 
 		const tooltip = rule.tooltipInfo();
+		expect(tooltip).toContain('poolType');
 		expect(tooltip).toContain('poolIdentifier');
 		expect(tooltip).toContain('dieSize');
 		expect(tooltip).toContain('maxDelta');

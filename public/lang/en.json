@@ -558,7 +558,7 @@
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
 			"maxWounds": "Wounds",
-			"modifyDicePool": "Modify Dice Pool",
+			"modifyPool": "Modify Pool",
 			"note": "Note",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",

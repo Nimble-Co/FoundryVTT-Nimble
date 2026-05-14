@@ -15,6 +15,7 @@ import type {
 	ChargeRecoveryEntry,
 	ChargeRecoveryMode,
 	ChargeRecoveryTrigger,
+	ModifyPoolRuleLike,
 	NumericInput,
 	RuleBackedItem,
 } from './types.js';
@@ -175,6 +176,61 @@ function resolveFormulaToInteger(actor: CharacterActorLike, formula: unknown): n
 	return toFiniteNonNegativeInteger(resolvedValue);
 }
 
+function resolveSignedFormulaToInteger(actor: CharacterActorLike, formula: unknown): number {
+	if (typeof formula !== 'string' || formula.trim().length < 1) return 0;
+	const resolvedValue = getDeterministicBonus(formula, actor.getRollData() as NimbleRollData);
+	const numeric = typeof resolvedValue === 'number' ? resolvedValue : Number(resolvedValue);
+	if (!Number.isFinite(numeric)) return 0;
+	return Math.trunc(numeric);
+}
+
+function getChargePoolModifiers(actor: CharacterActorLike): Map<string, ModifyPoolRuleLike[]> {
+	const modifiersByIdentifier = new Map<string, ModifyPoolRuleLike[]>();
+
+	for (const item of actor.items.contents) {
+		const ruleBackedItem = item as RuleBackedItem;
+		const rules = ruleBackedItem.rules;
+		if (!rules) continue;
+
+		for (const rule of rules.values()) {
+			if (rule.type !== 'modifyPool' || rule.disabled) continue;
+			const modifier = rule as ModifyPoolRuleLike;
+			if (modifier.poolType !== 'charge') continue;
+			const poolIdentifier = normalizeIdentifier(modifier.poolIdentifier);
+			if (poolIdentifier.length < 1) continue;
+
+			const existing = modifiersByIdentifier.get(poolIdentifier) ?? [];
+			existing.push(modifier);
+			modifiersByIdentifier.set(poolIdentifier, existing);
+		}
+	}
+
+	return modifiersByIdentifier;
+}
+
+function applyModifiersToDefinition(
+	actor: CharacterActorLike,
+	definition: ChargePoolDefinition,
+	modifiers: ModifyPoolRuleLike[] | undefined,
+): ChargePoolDefinition {
+	if (!modifiers || modifiers.length < 1) return definition;
+
+	let dieSize = definition.dieSize;
+	let max = definition.max;
+
+	for (const modifier of modifiers) {
+		if (typeof modifier.dieSize === 'string' && modifier.dieSize.trim().length > 0) {
+			const next = toChargePoolDieSize(modifier.dieSize);
+			if (next !== null) dieSize = next;
+		}
+		if (typeof modifier.maxDelta === 'string' && modifier.maxDelta.trim().length > 0) {
+			max = Math.max(0, max + resolveSignedFormulaToInteger(actor, modifier.maxDelta));
+		}
+	}
+
+	return { ...definition, dieSize, max };
+}
+
 function normalizeRecoveries(value: unknown): ChargeRecoveryEntry[] {
 	if (!Array.isArray(value)) return [];
 
@@ -208,6 +264,7 @@ function normalizeRecoveries(value: unknown): ChargeRecoveryEntry[] {
 
 function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefinition[] {
 	const definitions: ChargePoolDefinition[] = [];
+	const modifiersByIdentifier = getChargePoolModifiers(actor);
 
 	for (const item of actor.items.contents) {
 		const ruleBackedItem = item as RuleBackedItem;
@@ -229,7 +286,7 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 			const recoveries = normalizeRecoveries(poolRule.recoveries);
 			const dieSize = toChargePoolDieSize(poolRule.dieSize);
 
-			definitions.push({
+			const baseDefinition: ChargePoolDefinition = {
 				id,
 				identifier,
 				scope,
@@ -241,7 +298,11 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 				icon: normalizeIcon(poolRule.icon),
 				initial,
 				recoveries,
-			});
+			};
+
+			definitions.push(
+				applyModifiersToDefinition(actor, baseDefinition, modifiersByIdentifier.get(identifier)),
+			);
 		}
 	}
 

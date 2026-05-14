@@ -1,40 +1,57 @@
+import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 import { DicePoolRuleConfig } from '#utils/dicePool/dicePoolRuleConfig.js';
 import { NimbleBaseRule } from './base.js';
 
-const DICE_POOL_DIE_SIZES = [...DicePoolRuleConfig.dieSizes];
+const POOL_TYPES = ['dice', 'charge'] as const;
+
+// Both subsystems use the same die-size vocabulary today. Union the lists so
+// the rule schema reflects every valid choice, regardless of pool type.
+const DIE_SIZES = Array.from(
+	new Set<string>([...DicePoolRuleConfig.dieSizes, ...ChargePoolRuleConfig.dieSizes]),
+);
+
+type PoolType = (typeof POOL_TYPES)[number];
 
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
+		poolType: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'dice',
+			choices: [...POOL_TYPES] as string[],
+		}),
 		poolIdentifier: new fields.StringField({ required: true, nullable: false, initial: '' }),
 		dieSize: new fields.StringField({
 			required: false,
 			nullable: true,
 			initial: null,
-			choices: DICE_POOL_DIE_SIZES,
+			choices: DIE_SIZES,
 		}),
 		maxDelta: new fields.StringField({ required: false, nullable: true, initial: null }),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
-			initial: 'modifyDicePool',
+			initial: 'modifyPool',
 		}),
 	};
 }
 
-declare namespace ModifyDicePoolRule {
+declare namespace ModifyPoolRule {
 	type Schema = NimbleBaseRule.Schema & ReturnType<typeof schema>;
 }
 
-class ModifyDicePoolRule extends NimbleBaseRule<ModifyDicePoolRule.Schema> {
+class ModifyPoolRule extends NimbleBaseRule<ModifyPoolRule.Schema> {
+	declare poolType: PoolType;
+
 	declare poolIdentifier: string;
 
-	declare dieSize: (typeof DicePoolRuleConfig.dieSizes)[number] | null;
+	declare dieSize: string | null;
 
 	declare maxDelta: string | null;
 
-	static override defineSchema(): ModifyDicePoolRule.Schema {
+	static override defineSchema(): ModifyPoolRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
 			...schema(),
@@ -44,6 +61,7 @@ class ModifyDicePoolRule extends NimbleBaseRule<ModifyDicePoolRule.Schema> {
 	override tooltipInfo(): string {
 		return super.tooltipInfo(
 			new Map([
+				['poolType', '"dice" | "charge"'],
 				['poolIdentifier', 'string'],
 				['dieSize', '"d4" | "d6" | "d8" | "d10" | "d12" | "d20" | null'],
 				['maxDelta', 'string | null'],
@@ -52,4 +70,4 @@ class ModifyDicePoolRule extends NimbleBaseRule<ModifyDicePoolRule.Schema> {
 	}
 }
 
-export { ModifyDicePoolRule };
+export { ModifyPoolRule, type PoolType };

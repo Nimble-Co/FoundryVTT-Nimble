@@ -207,20 +207,22 @@ describe('getDicePoolDefinitions', () => {
 });
 
 describe('getDicePoolModifiers', () => {
-	it('collects modifyDicePool rules keyed by poolIdentifier', () => {
+	it('collects modifyPool rules with poolType=dice keyed by poolIdentifier', () => {
 		const actor = createMockActor([
 			createMockItem('feat-1', 'Intensifying Fury L2', [
 				{
-					type: 'modifyDicePool',
+					type: 'modifyPool',
 					id: 'mod-1',
+					poolType: 'dice',
 					poolIdentifier: 'fury',
 					dieSize: 'd6',
 				},
 			]),
 			createMockItem('feat-2', 'Rage 2', [
 				{
-					type: 'modifyDicePool',
+					type: 'modifyPool',
 					id: 'mod-2',
+					poolType: 'dice',
 					poolIdentifier: 'fury',
 					maxDelta: '+1',
 				},
@@ -235,11 +237,28 @@ describe('getDicePoolModifiers', () => {
 		const actor = createMockActor([
 			createMockItem('feat-1', 'Disabled', [
 				{
-					type: 'modifyDicePool',
+					type: 'modifyPool',
 					id: 'mod-1',
+					poolType: 'dice',
 					poolIdentifier: 'fury',
 					dieSize: 'd6',
 					disabled: true,
+				},
+			]),
+		]);
+
+		expect(getDicePoolModifiers(actor).has('fury')).toBe(false);
+	});
+
+	it('ignores modifyPool rules targeting charge pools', () => {
+		const actor = createMockActor([
+			createMockItem('feat-1', 'Charge Modifier', [
+				{
+					type: 'modifyPool',
+					id: 'mod-1',
+					poolType: 'charge',
+					poolIdentifier: 'fury',
+					dieSize: 'd6',
 				},
 			]),
 		]);
@@ -271,7 +290,7 @@ describe('applyModifiersToDefinition', () => {
 	it('upgrades die size when a modifier provides one', () => {
 		const actor = createMockActor([]);
 		const result = applyModifiersToDefinition(actor, baseDefinition, [
-			{ type: 'modifyDicePool', poolIdentifier: 'fury', dieSize: 'd8' },
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', dieSize: 'd8' },
 		]);
 
 		expect(result.dieSize).toBe('d8');
@@ -281,7 +300,7 @@ describe('applyModifiersToDefinition', () => {
 	it('applies positive maxDelta additively', () => {
 		const actor = createMockActor([]);
 		const result = applyModifiersToDefinition(actor, baseDefinition, [
-			{ type: 'modifyDicePool', poolIdentifier: 'fury', maxDelta: '+2' },
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', maxDelta: '+2' },
 		]);
 
 		expect(result.max).toBe(5);
@@ -291,9 +310,9 @@ describe('applyModifiersToDefinition', () => {
 	it('stacks multiple modifiers', () => {
 		const actor = createMockActor([]);
 		const result = applyModifiersToDefinition(actor, baseDefinition, [
-			{ type: 'modifyDicePool', poolIdentifier: 'fury', dieSize: 'd6' },
-			{ type: 'modifyDicePool', poolIdentifier: 'fury', dieSize: 'd8' },
-			{ type: 'modifyDicePool', poolIdentifier: 'fury', maxDelta: '+1' },
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', dieSize: 'd6' },
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', dieSize: 'd8' },
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', maxDelta: '+1' },
 		]);
 
 		// Last dieSize wins, max sums.
@@ -304,7 +323,7 @@ describe('applyModifiersToDefinition', () => {
 	it('clamps negative maxDelta at zero', () => {
 		const actor = createMockActor([]);
 		const result = applyModifiersToDefinition(actor, baseDefinition, [
-			{ type: 'modifyDicePool', poolIdentifier: 'fury', maxDelta: '-10' },
+			{ type: 'modifyPool', poolType: 'dice', poolIdentifier: 'fury', maxDelta: '-10' },
 		]);
 		expect(result.max).toBe(0);
 	});
@@ -312,7 +331,13 @@ describe('applyModifiersToDefinition', () => {
 	it('ignores null/empty modifier fields', () => {
 		const actor = createMockActor([]);
 		const result = applyModifiersToDefinition(actor, baseDefinition, [
-			{ type: 'modifyDicePool', poolIdentifier: 'fury', dieSize: null, maxDelta: null },
+			{
+				type: 'modifyPool',
+				poolType: 'dice',
+				poolIdentifier: 'fury',
+				dieSize: null,
+				maxDelta: null,
+			},
 		]);
 		expect(result.dieSize).toBe('d4');
 		expect(result.max).toBe(3);
@@ -453,8 +478,9 @@ describe('buildEffectiveDicePoolMap', () => {
 			),
 			createMockItem('item-2', 'Intensifying Fury', [
 				{
-					type: 'modifyDicePool',
+					type: 'modifyPool',
 					id: 'mod-1',
+					poolType: 'dice',
 					poolIdentifier: 'fury',
 					dieSize: 'd6',
 					maxDelta: '+1',
