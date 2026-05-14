@@ -4,17 +4,11 @@
 
 	import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 	import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
+	import localize from '#utils/localize.js';
 	import overrideTextAreaBehavior from '#utils/overrideTextAreaBehavior.js';
 	import { reorderable } from '#view/rulesBuilder/actions/reorderable.svelte.js';
 	import RulesBuilderWindow from '#view/rulesBuilder/RulesBuilderWindow.svelte';
-
-	interface RuleSource {
-		id: string;
-		type: string;
-		label?: string;
-		disabled?: boolean;
-		[key: string]: unknown;
-	}
+	import type { RuleSource } from '#view/rulesBuilder/types.js';
 
 	const item: NimbleBaseItem = getContext('document');
 	const rawRules = $derived((item.reactive.system as unknown as { rules: RuleSource[] }).rules);
@@ -92,17 +86,19 @@
 	<header class="nimble-rules-tab__header">
 		<span class="nimble-rules-tab__count">
 			{rules.length}
-			{rules.length === 1 ? 'rule' : 'rules'}
+			{rules.length === 1
+				? localize('NIMBLE.rulesBuilder.ruleSingular')
+				: localize('NIMBLE.rulesBuilder.rulePlural')}
 		</span>
 
 		<button type="button" class="nimble-button" data-button-variant="basic" onclick={openBuilder}>
 			<i class="fa-solid fa-sliders"></i>
-			Open Rules Builder
+			{localize('NIMBLE.rulesBuilder.openRulesBuilder')}
 		</button>
 	</header>
 
 	{#if rules.length === 0}
-		<p class="nimble-rules-tab__empty">No rules defined. Open the builder to add one.</p>
+		<p class="nimble-rules-tab__empty">{localize('NIMBLE.rulesBuilder.noRulesDefined')}</p>
 	{:else}
 		<ul
 			class="nimble-rules-tab__list"
@@ -120,10 +116,13 @@
 					class:nimble-rules-tab__row--disabled={rule.disabled}
 					data-reorder-id={rule.id}
 					draggable="true"
-					data-tooltip="Drag onto another rules list to copy"
+					data-tooltip={localize('NIMBLE.rulesBuilder.dragToCopy')}
 				>
 					<div class="nimble-rules-tab__row-main">
-						<span class="nimble-rules-tab__priority" data-tooltip="Priority (application order)">
+						<span
+							class="nimble-rules-tab__priority"
+							data-tooltip={localize('NIMBLE.rulesBuilder.priorityApplicationOrder')}
+						>
 							{(rule.priority as number) ?? 1}
 						</span>
 						<span class="nimble-rules-tab__label">
@@ -133,17 +132,24 @@
 							{ruleTypes[rule.type] ?? rule.type}
 						</span>
 						{#if rule.disabled}
-							<span class="nimble-rules-tab__badge" data-tooltip="This rule is disabled">
+							<span
+								class="nimble-rules-tab__badge"
+								data-tooltip={localize('NIMBLE.rulesBuilder.ruleDisabled')}
+							>
 								<i class="fa-solid fa-toggle-off"></i>
-								Disabled
+								{localize('NIMBLE.rulesBuilder.disabled')}
 							</span>
 						{/if}
 						<button
 							type="button"
 							class="nimble-button nimble-rules-tab__json-toggle"
 							data-button-variant="icon"
-							data-tooltip={jsonOpen ? 'Close JSON editor' : 'Edit raw JSON'}
-							aria-label={jsonOpen ? 'Close JSON editor' : 'Edit raw JSON'}
+							data-tooltip={jsonOpen
+								? localize('NIMBLE.rulesBuilder.closeJsonEditor')
+								: localize('NIMBLE.rulesBuilder.editRawJson')}
+							aria-label={jsonOpen
+								? localize('NIMBLE.rulesBuilder.closeJsonEditor')
+								: localize('NIMBLE.rulesBuilder.editRawJson')}
 							aria-expanded={jsonOpen}
 							onclick={() => toggleJson(rule)}
 						>
@@ -171,7 +177,7 @@
 									onclick={() => commitJson(rule.id)}
 								>
 									<i class="fa-solid fa-save"></i>
-									Save JSON
+									{localize('NIMBLE.rulesBuilder.saveJson')}
 								</button>
 								{#if jsonErrors[rule.id]}
 									<span class="nimble-rules-tab__json-error">{jsonErrors[rule.id]}</span>

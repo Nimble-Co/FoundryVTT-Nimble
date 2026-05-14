@@ -2,6 +2,7 @@
 	import { PredicateField } from '../../../models/fields/PredicateField.js';
 	import type { RawPredicate } from '../../../etc/Predicate.js';
 	import { VALID_WIDGETS } from '../../../models/rules/_widgetOption.js';
+	import localize from '#utils/localize.js';
 	import type { SchemaFieldRendererProps } from '#view/rulesBuilder/types.js';
 	import TagGroup from '#view/components/TagGroup.svelte';
 	import DocumentPicker from './DocumentPicker.svelte';
@@ -123,9 +124,11 @@
 			{disabled}
 			onchange={emitString}
 		/>
-		<small class="nimble-field-hint"
-			>Use <code>{`{value}`}</code> to insert the formula result.</small
-		>
+		<small class="nimble-field-hint">
+			{localize('NIMBLE.rulesBuilder.templateValueHintBefore')}
+			<code>{`{value}`}</code>
+			{localize('NIMBLE.rulesBuilder.templateValueHintAfter')}
+		</small>
 	{:else if widget === 'predicate' || field instanceof PredicateField}
 		<PredicateBuilder value={(value as RawPredicate) ?? {}} onChange={(v) => onChange(v)} />
 	{:else if field instanceof fields.BooleanField}
@@ -236,7 +239,7 @@
 								type="button"
 								class="nimble-button"
 								data-button-variant="icon"
-								aria-label="Remove"
+								aria-label={localize('NIMBLE.rulesBuilder.remove')}
 								onclick={() => onChange(arrValue.filter((_, idx) => idx !== i))}
 							>
 								<i class="fa-solid fa-xmark"></i>
@@ -250,7 +253,7 @@
 						onclick={() => onChange([...arrValue, ''])}
 					>
 						<i class="fa-solid fa-plus"></i>
-						Add value
+						{localize('NIMBLE.rulesBuilder.addValue')}
 					</button>
 				</div>
 			{/if}
@@ -275,7 +278,7 @@
 							type="button"
 							class="nimble-button"
 							data-button-variant="icon"
-							aria-label="Remove"
+							aria-label={localize('NIMBLE.rulesBuilder.remove')}
 							onclick={() => onChange(arrValue.filter((_, idx) => idx !== i))}
 						>
 							<i class="fa-solid fa-xmark"></i>
@@ -289,7 +292,7 @@
 					onclick={() => onChange([...arrValue, 0])}
 				>
 					<i class="fa-solid fa-plus"></i>
-					Add value
+					{localize('NIMBLE.rulesBuilder.addValue')}
 				</button>
 			</div>
 		{:else if elementField instanceof fields.SchemaField}
@@ -322,7 +325,7 @@
 							onclick={() => onChange(arrValue.filter((_, idx) => idx !== i))}
 						>
 							<i class="fa-solid fa-trash"></i>
-							Remove
+							{localize('NIMBLE.rulesBuilder.remove')}
 						</button>
 					</fieldset>
 				{/each}
@@ -333,7 +336,7 @@
 					onclick={() => onChange([...arrValue, {}])}
 				>
 					<i class="fa-solid fa-plus"></i>
-					Add entry
+					{localize('NIMBLE.rulesBuilder.addEntry')}
 				</button>
 			</div>
 		{:else}

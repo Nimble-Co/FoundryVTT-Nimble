@@ -36,6 +36,7 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import { Predicate, type RawPredicate } from '../../../etc/Predicate.js';
+	import localize from '#utils/localize.js';
 	import type { PredicateBuilderProps } from '#view/rulesBuilder/types.js';
 
 	let { value, onChange, previewDomain }: PredicateBuilderProps = $props();
@@ -46,23 +47,22 @@
 
 	type Operator = 'is' | 'isOneOf' | 'isAtLeast' | 'isAtMost' | 'isExactly' | 'isBetween';
 
-	const OPERATOR_LABELS: Record<Operator, string> = {
-		is: 'is',
-		isOneOf: 'is one of',
-		isAtLeast: 'is at least',
-		isAtMost: 'is at most',
-		isExactly: 'is exactly',
-		isBetween: 'is between',
-	};
+	const OPERATORS: Operator[] = [
+		'is',
+		'isOneOf',
+		'isAtLeast',
+		'isAtMost',
+		'isExactly',
+		'isBetween',
+	];
 
-	const OPERATOR_HINTS: Record<Operator, string> = {
-		is: 'Actor must be tagged with this exact value.',
-		isOneOf: 'Actor must be tagged with any one of these values.',
-		isAtLeast: 'The numeric value associated with this key must be at least this.',
-		isAtMost: 'The numeric value associated with this key must be at most this.',
-		isExactly: 'The numeric value associated with this key must equal this.',
-		isBetween: 'The numeric value associated with this key must be within this range.',
-	};
+	function operatorLabel(op: Operator): string {
+		return localize(`NIMBLE.rulesBuilder.predicateOperators.${op}`);
+	}
+
+	function operatorHint(op: Operator): string {
+		return localize(`NIMBLE.rulesBuilder.predicateOperatorHints.${op}`);
+	}
 
 	interface RowState {
 		key: string;
@@ -249,13 +249,21 @@
 		const raw = rowsToValue();
 		try {
 			const predicate = new Predicate(raw);
-			if (!predicate.size) return { matches: true, reason: 'No conditions — always applies.' };
-			if (!predicate.isValid) return { matches: false, reason: 'Conditions are incomplete.' };
+			if (!predicate.size)
+				return { matches: true, reason: localize('NIMBLE.rulesBuilder.predicatePreviewAlways') };
+			if (!predicate.isValid)
+				return {
+					matches: false,
+					reason: localize('NIMBLE.rulesBuilder.predicatePreviewIncomplete'),
+				};
 			return { matches: predicate.test(previewDomain), reason: null };
 		} catch (err) {
 			return {
 				matches: false,
-				reason: err instanceof Error ? err.message : 'Evaluation failed.',
+				reason:
+					err instanceof Error
+						? err.message
+						: localize('NIMBLE.rulesBuilder.predicatePreviewError'),
 			};
 		}
 	});
@@ -263,8 +271,7 @@
 
 <div class="nimble-predicate-builder">
 	<p class="nimble-predicate-builder__intro">
-		Restrict when this rule fires. Every row below must match the actor's tags for the rule to
-		apply. Leave empty to always apply.
+		{localize('NIMBLE.rulesBuilder.predicateIntro')}
 	</p>
 
 	{#each rows as row, index (index)}
@@ -272,7 +279,9 @@
 			<input
 				class="nimble-predicate-builder__key"
 				type="text"
-				placeholder={suggestionKeys.length ? 'pick or type a tag key' : 'tag key (e.g. level)'}
+				placeholder={suggestionKeys.length
+					? localize('NIMBLE.rulesBuilder.predicateKeyPlaceholder')
+					: localize('NIMBLE.rulesBuilder.predicateKeyPlaceholderEmpty')}
 				list={suggestionKeys.length ? datalistId : undefined}
 				value={row.key}
 				oninput={(e) => updateRow(index, { key: (e.target as HTMLInputElement).value })}
@@ -284,8 +293,8 @@
 				value={row.operator}
 				onchange={(e) => updateOperator(index, (e.target as HTMLSelectElement).value as Operator)}
 			>
-				{#each Object.entries(OPERATOR_LABELS) as [op, label]}
-					<option value={op}>{label}</option>
+				{#each OPERATORS as op (op)}
+					<option value={op}>{operatorLabel(op)}</option>
 				{/each}
 			</select>
 
@@ -293,7 +302,7 @@
 				{#if row.operator === 'is'}
 					<input
 						type="text"
-						placeholder="value"
+						placeholder={localize('NIMBLE.rulesBuilder.predicateValuePlaceholder')}
 						value={row.valueText}
 						oninput={(e) => updateRow(index, { valueText: (e.target as HTMLInputElement).value })}
 						onchange={emit}
@@ -304,7 +313,7 @@
 							<div class="nimble-predicate-builder__array-row">
 								<input
 									type="text"
-									placeholder="value"
+									placeholder={localize('NIMBLE.rulesBuilder.predicateValuePlaceholder')}
 									value={item}
 									oninput={(e) =>
 										updateArrayValue(index, arrayIndex, (e.target as HTMLInputElement).value)}
@@ -314,7 +323,7 @@
 									type="button"
 									class="nimble-button"
 									data-button-variant="icon"
-									aria-label="Remove value"
+									aria-label={localize('NIMBLE.rulesBuilder.predicateRemoveValue')}
 									onclick={() => removeArrayValue(index, arrayIndex)}
 								>
 									<i class="fa-solid fa-xmark"></i>
@@ -328,23 +337,25 @@
 							onclick={() => addArrayValue(index)}
 						>
 							<i class="fa-solid fa-plus"></i>
-							Add value
+							{localize('NIMBLE.rulesBuilder.addValue')}
 						</button>
 					</div>
 				{:else if row.operator === 'isBetween'}
 					<div class="nimble-predicate-builder__range">
 						<input
 							type="number"
-							placeholder="min"
+							placeholder={localize('NIMBLE.rulesBuilder.predicateMinPlaceholder')}
 							value={row.valueRangeMin}
 							oninput={(e) =>
 								updateRow(index, { valueRangeMin: (e.target as HTMLInputElement).value })}
 							onchange={emit}
 						/>
-						<span class="nimble-predicate-builder__range-sep">and</span>
+						<span class="nimble-predicate-builder__range-sep"
+							>{localize('NIMBLE.rulesBuilder.predicateRangeAnd')}</span
+						>
 						<input
 							type="number"
-							placeholder="max"
+							placeholder={localize('NIMBLE.rulesBuilder.predicateMaxPlaceholder')}
 							value={row.valueRangeMax}
 							oninput={(e) =>
 								updateRow(index, { valueRangeMax: (e.target as HTMLInputElement).value })}
@@ -354,21 +365,21 @@
 				{:else}
 					<input
 						type="number"
-						placeholder="value"
+						placeholder={localize('NIMBLE.rulesBuilder.predicateValuePlaceholder')}
 						value={row.valueNumber}
 						oninput={(e) => updateRow(index, { valueNumber: (e.target as HTMLInputElement).value })}
 						onchange={emit}
 					/>
 				{/if}
 
-				<small class="nimble-predicate-builder__hint">{OPERATOR_HINTS[row.operator]}</small>
+				<small class="nimble-predicate-builder__hint">{operatorHint(row.operator)}</small>
 			</div>
 
 			<button
 				type="button"
 				class="nimble-button nimble-predicate-builder__delete"
 				data-button-variant="icon"
-				aria-label="Delete condition"
+				aria-label={localize('NIMBLE.rulesBuilder.predicateDeleteCondition')}
 				onclick={() => deleteRow(index)}
 			>
 				<i class="fa-solid fa-trash"></i>
@@ -378,7 +389,7 @@
 
 	<button type="button" class="nimble-button" data-button-variant="basic" onclick={addRow}>
 		<i class="fa-solid fa-plus"></i>
-		Add condition
+		{localize('NIMBLE.rulesBuilder.predicateAddCondition')}
 	</button>
 
 	{#if preview}
@@ -393,8 +404,8 @@
 			></i>
 			<span>
 				{preview.matches
-					? 'Currently matches the parent actor.'
-					: (preview.reason ?? 'Currently does not match the parent actor.')}
+					? localize('NIMBLE.rulesBuilder.predicatePreviewMatches')
+					: (preview.reason ?? localize('NIMBLE.rulesBuilder.predicatePreviewNoMatch'))}
 			</span>
 		</div>
 	{/if}

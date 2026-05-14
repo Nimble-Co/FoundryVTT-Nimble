@@ -1,23 +1,13 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
 
-	import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
+	import localize from '#utils/localize.js';
 	import { reorderable } from '#view/rulesBuilder/actions/reorderable.svelte.js';
 	import RuleCard from '#view/rulesBuilder/components/RuleCard.svelte';
 	import RuleTypePicker from '#view/rulesBuilder/components/RuleTypePicker.svelte';
+	import type { RuleSource, RulesBuilderWindowProps } from '#view/rulesBuilder/types.js';
 
-	interface RuleSource {
-		id: string;
-		type: string;
-		disabled?: boolean;
-		[key: string]: unknown;
-	}
-
-	interface Props {
-		document: NimbleBaseItem;
-	}
-
-	const { document: item }: Props = $props();
+	const { document: item }: RulesBuilderWindowProps = $props();
 
 	const rawRules = $derived((item.reactive.system as unknown as { rules: RuleSource[] }).rules);
 
@@ -85,12 +75,16 @@
 				aria-expanded={pickerOpen}
 			>
 				<i class="fa-solid {pickerOpen ? 'fa-xmark' : 'fa-plus'}"></i>
-				{pickerOpen ? 'Cancel' : 'Add Rule'}
+				{pickerOpen
+					? localize('NIMBLE.rulesBuilder.cancel')
+					: localize('NIMBLE.rulesBuilder.addRule')}
 			</button>
 
 			<span class="nimble-rules-builder-window__count">
 				{rules.length}
-				{rules.length === 1 ? 'rule' : 'rules'}
+				{rules.length === 1
+					? localize('NIMBLE.rulesBuilder.ruleSingular')
+					: localize('NIMBLE.rulesBuilder.rulePlural')}
 			</span>
 		</div>
 
@@ -103,11 +97,15 @@
 					onclick={toggleCollapseAll}
 				>
 					<i class="fa-solid {allCollapsed ? 'fa-angles-down' : 'fa-angles-up'}"></i>
-					{allCollapsed ? 'Expand all' : 'Collapse all'}
+					{allCollapsed
+						? localize('NIMBLE.rulesBuilder.expandAll')
+						: localize('NIMBLE.rulesBuilder.collapseAll')}
 				</button>
 				<button type="button" class="nimble-button" data-button-variant="basic" onclick={toggleAll}>
 					<i class="fa-solid {allDisabled ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
-					{allDisabled ? 'Enable all' : 'Disable all'}
+					{allDisabled
+						? localize('NIMBLE.rulesBuilder.enableAll')
+						: localize('NIMBLE.rulesBuilder.disableAll')}
 				</button>
 			{/if}
 		</div>
@@ -118,7 +116,9 @@
 			<RuleTypePicker onPick={pickRule} />
 		{:else if rules.length === 0}
 			<p class="nimble-rules-builder-window__empty">
-				No rules yet. Click <strong>Add Rule</strong> to pick a type.
+				{localize('NIMBLE.rulesBuilder.emptyHint', {
+					addRule: localize('NIMBLE.rulesBuilder.addRule'),
+				})}
 			</p>
 		{:else}
 			<ul

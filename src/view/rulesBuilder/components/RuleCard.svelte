@@ -139,8 +139,12 @@
 				class="nimble-button nimble-rule-card__chevron"
 				data-button-variant="icon"
 				aria-expanded={!collapsed}
-				aria-label={collapsed ? 'Expand rule' : 'Collapse rule'}
-				data-tooltip={collapsed ? 'Expand' : 'Collapse'}
+				aria-label={collapsed
+					? localize('NIMBLE.rulesBuilder.expandRule')
+					: localize('NIMBLE.rulesBuilder.collapseRule')}
+				data-tooltip={collapsed
+					? localize('NIMBLE.rulesBuilder.expand')
+					: localize('NIMBLE.rulesBuilder.collapse')}
 				onclick={onToggleCollapse}
 			>
 				<i class="fa-solid {collapsed ? 'fa-chevron-right' : 'fa-chevron-down'}"></i>
@@ -159,9 +163,11 @@
 
 		<label
 			class="nimble-rule-card__priority"
-			data-tooltip="Application order during data prep. Lower numbers run first."
+			data-tooltip={localize('NIMBLE.rulesBuilder.priorityTooltip')}
 		>
-			<span class="nimble-rule-card__priority-label">Priority</span>
+			<span class="nimble-rule-card__priority-label"
+				>{localize('NIMBLE.rulesBuilder.priority')}</span
+			>
 			<input
 				type="number"
 				class="nimble-rule-card__priority-input"
@@ -184,7 +190,9 @@
 		{:else}
 			<i
 				class="nimble-rule-card__help fa-solid fa-circle-exclamation"
-				data-tooltip={`Unknown rule type: ${rule.type}`}
+				data-tooltip={localize('NIMBLE.rulesBuilder.unknownRuleType', {
+					type: String(rule.type),
+				})}
 				data-tooltip-direction="UP"
 				style="color: var(--color-level-error);"
 			></i>
@@ -195,8 +203,12 @@
 				type="button"
 				class="nimble-button"
 				data-button-variant="icon"
-				data-tooltip={rule.disabled ? 'Enable rule' : 'Disable rule'}
-				aria-label={rule.disabled ? 'Enable rule' : 'Disable rule'}
+				data-tooltip={rule.disabled
+					? localize('NIMBLE.rulesBuilder.enableRule')
+					: localize('NIMBLE.rulesBuilder.disableRule')}
+				aria-label={rule.disabled
+					? localize('NIMBLE.rulesBuilder.enableRule')
+					: localize('NIMBLE.rulesBuilder.disableRule')}
 				onclick={toggleDisabled}
 			>
 				<i class="fa-solid {rule.disabled ? 'fa-toggle-off' : 'fa-toggle-on'}"></i>
@@ -206,8 +218,12 @@
 				type="button"
 				class="nimble-button"
 				data-button-variant="icon"
-				data-tooltip={showJson ? 'Switch to builder' : 'Edit raw JSON'}
-				aria-label={showJson ? 'Switch to builder' : 'Edit raw JSON'}
+				data-tooltip={showJson
+					? localize('NIMBLE.rulesBuilder.switchToBuilder')
+					: localize('NIMBLE.rulesBuilder.editRawJson')}
+				aria-label={showJson
+					? localize('NIMBLE.rulesBuilder.switchToBuilder')
+					: localize('NIMBLE.rulesBuilder.editRawJson')}
 				onclick={toggleJson}
 			>
 				<i class="fa-solid {showJson ? 'fa-list' : 'fa-code'}"></i>
@@ -218,8 +234,8 @@
 					type="button"
 					class="nimble-button"
 					data-button-variant="icon"
-					data-tooltip="Delete rule"
-					aria-label="Delete rule"
+					data-tooltip={localize('NIMBLE.rulesBuilder.deleteRule')}
+					aria-label={localize('NIMBLE.rulesBuilder.deleteRule')}
 					onclick={onDelete}
 				>
 					<i class="fa-solid fa-trash"></i>
@@ -249,7 +265,7 @@
 						onclick={commitJson}
 					>
 						<i class="fa-solid fa-save"></i>
-						Save JSON
+						{localize('NIMBLE.rulesBuilder.saveJson')}
 					</button>
 					{#if jsonError}
 						<span class="nimble-rule-card__json-error">{jsonError}</span>
@@ -258,7 +274,9 @@
 			</div>
 		{:else if !schema}
 			<p class="nimble-rule-card__empty">
-				{@html localize('NIMBLE.rulesBuilder.errorSchemaLoad', { type: rule.type as string })}
+				{localize('NIMBLE.rulesBuilder.errorSchemaLoadBefore')}
+				<code>{rule.type}</code>
+				{localize('NIMBLE.rulesBuilder.errorSchemaLoadAfter')}
 			</p>
 		{:else}
 			{@const editableEntries = Object.entries(schema).filter(
@@ -266,7 +284,9 @@
 			)}
 			<div class="nimble-rule-card__body">
 				{#if editableEntries.length === 0}
-					<p class="nimble-rule-card__empty">No further configuration needed.</p>
+					<p class="nimble-rule-card__empty">
+						{localize('NIMBLE.rulesBuilder.noFurtherConfig')}
+					</p>
 				{:else}
 					{#each editableEntries as [fieldName, field] (fieldName)}
 						{@const hint = fieldHint(field)}
@@ -290,12 +310,14 @@
 			<details class="nimble-rule-card__advanced">
 				<summary>
 					<i class="fa-solid fa-sliders"></i>
-					Advanced
+					{localize('NIMBLE.rulesBuilder.advanced')}
 				</summary>
 
 				<div class="nimble-rule-card__advanced-body">
 					<div class="nimble-field-row">
-						<span class="nimble-field-row__label">Applies when</span>
+						<span class="nimble-field-row__label"
+							>{localize('NIMBLE.rulesBuilder.appliesWhen')}</span
+						>
 						<PredicateBuilder
 							value={(rule.predicate as RawPredicate) ?? {}}
 							onChange={(v) => emitFieldChange('predicate', v)}

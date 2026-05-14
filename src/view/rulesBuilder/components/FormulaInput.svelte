@@ -1,4 +1,5 @@
 <script lang="ts">
+	import localize from '#utils/localize.js';
 	import type { FormulaInputProps } from '#view/rulesBuilder/types.js';
 
 	let {
@@ -10,7 +11,10 @@
 	}: FormulaInputProps = $props();
 
 	const resolvedPlaceholder = $derived(
-		placeholder ?? (dice ? 'e.g. 1d6 + @level' : 'e.g. 2 or 1d6 or @level'),
+		placeholder ??
+			(dice
+				? localize('NIMBLE.rulesBuilder.formulaPlaceholderDice')
+				: localize('NIMBLE.rulesBuilder.formulaPlaceholderFlat')),
 	);
 
 	function handleChange(event: Event) {

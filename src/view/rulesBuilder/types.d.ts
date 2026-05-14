@@ -8,7 +8,20 @@
  * rules.
  */
 
+import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
 import type { Predicate, RawPredicate } from '../../etc/Predicate.js';
+
+export interface RuleSource {
+	id: string;
+	type: string;
+	label?: string;
+	disabled?: boolean;
+	[key: string]: unknown;
+}
+
+export interface RulesBuilderWindowProps {
+	document: NimbleBaseItem;
+}
 
 export interface SchemaFieldRendererProps {
 	/** The Foundry schema field — output of `defineSchema()` for a rule. */
@@ -79,13 +92,6 @@ export interface RuleTypePickerProps {
 	disabled?: boolean;
 }
 
-export type WidgetHint =
-	| 'formula'
-	| 'diceFormula'
-	| 'documentUuid'
-	| 'predicate'
-	| 'templateString'
-	| 'richText'
-	| 'hidden';
+export type { WidgetHint } from '../../models/rules/_widgetOption.js';
 
 export type { Predicate, RawPredicate };

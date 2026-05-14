@@ -130,7 +130,7 @@
 						class="nimble-rule-type-picker__card"
 						class:nimble-rule-type-picker__card--warn={entry.hasDevWarning}
 						data-tooltip={entry.hasDevWarning
-							? 'Description missing — flag for review.'
+							? localize('NIMBLE.rulesBuilder.pickerMissingMetaTooltip')
 							: entry.description}
 						data-tooltip-direction="UP"
 						{disabled}

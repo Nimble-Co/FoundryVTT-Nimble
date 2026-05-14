@@ -1,4 +1,5 @@
 <script lang="ts">
+	import localize from '#utils/localize.js';
 	import type { DocumentPickerProps } from '#view/rulesBuilder/types.js';
 
 	let {
@@ -6,8 +7,12 @@
 		onChange,
 		disabled = false,
 		documentTypes,
-		placeholder = 'Drag a document here',
+		placeholder,
 	}: DocumentPickerProps = $props();
+
+	const resolvedPlaceholder = $derived(
+		placeholder ?? localize('NIMBLE.rulesBuilder.dragDocumentHere'),
+	);
 
 	let resolvedName = $state<string | null>(null);
 	let resolveError = $state<string | null>(null);
@@ -147,8 +152,8 @@
 				class="nimble-button"
 				type="button"
 				data-button-variant="icon"
-				aria-label="Clear document"
-				data-tooltip="Clear"
+				aria-label={localize('NIMBLE.rulesBuilder.clearDocument')}
+				data-tooltip={localize('NIMBLE.rulesBuilder.clear')}
 				{disabled}
 				onclick={handleClear}
 			>
@@ -158,7 +163,7 @@
 	{:else}
 		<div class="nimble-document-picker__empty">
 			<i class="nimble-document-picker__icon fa-solid fa-arrow-down-to-bracket"></i>
-			<span>{placeholder}</span>
+			<span>{resolvedPlaceholder}</span>
 		</div>
 	{/if}
 </div>
