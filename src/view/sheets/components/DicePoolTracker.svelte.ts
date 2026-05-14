@@ -1,3 +1,4 @@
+import { createSubscriber } from 'svelte/reactivity';
 import type { NimbleCharacter } from '#documents/actor/character.js';
 import { rollChargeDie } from '#utils/chargePool/chargePoolRoll.js';
 import { getPools as getChargePools } from '#utils/chargePool/chargePoolSync.js';
@@ -5,6 +6,33 @@ import type { ChargePoolState } from '#utils/chargePool/types.js';
 import { setPoolFaces } from '#utils/dicePool/dicePoolRefill.js';
 import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 import type { DicePoolState } from '#utils/dicePool/types.js';
+
+const POOL_STATE_HOOK_NAMES = [
+	'nimble.dicePool.changed',
+	'nimble.dicePool.refilled',
+	'nimble.chargePool.changed',
+	'nimble.chargePool.recovered',
+	'updateItem',
+	'updateActor',
+] as const;
+
+function registerPoolStateHooks(listener: () => void): () => void {
+	const hooksApi = Hooks as unknown as {
+		on: (hook: string, listener: () => void) => number;
+		off: (hook: string, id: number) => void;
+	};
+
+	const hookIds = POOL_STATE_HOOK_NAMES.map((hookName) => ({
+		hookName,
+		hookId: hooksApi.on(hookName, listener),
+	}));
+
+	return () => {
+		for (const { hookName, hookId } of hookIds) {
+			hooksApi.off(hookName, hookId);
+		}
+	};
+}
 
 // ============================================================================
 // Types
@@ -82,7 +110,10 @@ function countFromCharge(pool: ChargePoolState): CountPoolView {
 // ============================================================================
 
 export function createDicePoolTrackerState(getActor: () => NimbleCharacter) {
+	const subscribePoolState = createSubscriber(registerPoolStateHooks);
+
 	const pools = $derived.by((): LivePoolView[] => {
+		subscribePoolState();
 		const actor = getActor();
 
 		const dice = getDicePools(actor).map(rolledFromDice);
