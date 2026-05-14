@@ -6,7 +6,22 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "dicePool",
+				"disabled": false,
+				"id": "fury-pool-base",
+				"identifier": "fury",
+				"label": "Fury Dice",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"dieSize": "d4",
+				"max": "@abilities.key.value",
+				"initial": "zero",
+				"refills": []
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

@@ -6,7 +6,76 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "fury-d6-l6",
+				"identifier": "",
+				"label": "Fury Dice → d6",
+				"predicate": {
+					"level": {
+						"min": 6
+					}
+				},
+				"priority": 2,
+				"poolType": "dice",
+				"poolIdentifier": "fury",
+				"dieSize": "d6",
+				"maxDelta": null
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "fury-d8-l9",
+				"identifier": "",
+				"label": "Fury Dice → d8",
+				"predicate": {
+					"level": {
+						"min": 9
+					}
+				},
+				"priority": 3,
+				"poolType": "dice",
+				"poolIdentifier": "fury",
+				"dieSize": "d8",
+				"maxDelta": null
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "fury-d10-l13",
+				"identifier": "",
+				"label": "Fury Dice → d10",
+				"predicate": {
+					"level": {
+						"min": 13
+					}
+				},
+				"priority": 4,
+				"poolType": "dice",
+				"poolIdentifier": "fury",
+				"dieSize": "d10",
+				"maxDelta": null
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "fury-d12-l17",
+				"identifier": "",
+				"label": "Fury Dice → d12",
+				"predicate": {
+					"level": {
+						"min": 17
+					}
+				},
+				"priority": 5,
+				"poolType": "dice",
+				"poolIdentifier": "fury",
+				"dieSize": "d12",
+				"maxDelta": null
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
