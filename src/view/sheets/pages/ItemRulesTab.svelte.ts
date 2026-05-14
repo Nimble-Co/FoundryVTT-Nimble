@@ -1,11 +1,17 @@
 import { SvelteSet } from 'svelte/reactivity';
 
+import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
 import type { RuleSource } from '#view/rulesBuilder/types.js';
 
 export const COPY_TYPE = 'nimble.Rule';
 
-export function createItemRulesTabState(getItem: () => NimbleBaseItem) {
+type DialogComponent = Parameters<typeof GenericDialog.getOrCreate>[1];
+
+export function createItemRulesTabState(
+	getItem: () => NimbleBaseItem,
+	getRulesBuilderComponent: () => DialogComponent,
+) {
 	const rawRules = $derived(
 		(getItem().reactive.system as unknown as { rules: RuleSource[] }).rules,
 	);
@@ -61,6 +67,22 @@ export function createItemRulesTabState(getItem: () => NimbleBaseItem) {
 		await item.rules.addRule(rest);
 	}
 
+	function openBuilder() {
+		const item = getItem();
+		const dialog = GenericDialog.getOrCreate(
+			`${item.name}: Rules Builder`,
+			getRulesBuilderComponent(),
+			{ document: item },
+			{
+				uniqueId: `rules-builder-${item.uuid}`,
+				icon: 'fa-solid fa-sliders',
+				width: 720,
+				resizable: true,
+			},
+		);
+		dialog.render(true);
+	}
+
 	return {
 		get rules() {
 			return rules;
@@ -76,6 +98,7 @@ export function createItemRulesTabState(getItem: () => NimbleBaseItem) {
 		},
 		toggleJson,
 		commitJson,
+		openBuilder,
 		getDragPayload,
 		copyRuleFromPayload,
 	};

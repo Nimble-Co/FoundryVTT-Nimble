@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 
-	import GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
+	import type GenericDialog from '#documents/dialogs/GenericDialog.svelte.js';
 	import type { NimbleBaseItem } from '#documents/item/base.svelte.js';
 	import localize from '#utils/localize.js';
 	import overrideTextAreaBehavior from '#utils/overrideTextAreaBehavior.js';
@@ -10,24 +10,12 @@
 	import { COPY_TYPE, createItemRulesTabState } from './ItemRulesTab.svelte.js';
 
 	const item: NimbleBaseItem = getContext('document');
-	const state = createItemRulesTabState(() => item);
+	const state = createItemRulesTabState(
+		() => item,
+		() => RulesBuilderWindow as unknown as Parameters<typeof GenericDialog.getOrCreate>[1],
+	);
 
 	const { ruleTypes } = CONFIG.NIMBLE;
-
-	function openBuilder() {
-		const dialog = GenericDialog.getOrCreate(
-			`${item.name}: Rules Builder`,
-			RulesBuilderWindow as unknown as Parameters<typeof GenericDialog.getOrCreate>[1],
-			{ document: item },
-			{
-				uniqueId: `rules-builder-${item.uuid}`,
-				icon: 'fa-solid fa-sliders',
-				width: 720,
-				resizable: true,
-			},
-		);
-		dialog.render(true);
-	}
 </script>
 
 <section class="nimble-sheet__body nimble-rules-tab__body">
@@ -39,7 +27,12 @@
 				: localize('NIMBLE.rulesBuilder.rulePlural')}
 		</span>
 
-		<button type="button" class="nimble-button" data-button-variant="basic" onclick={openBuilder}>
+		<button
+			type="button"
+			class="nimble-button"
+			data-button-variant="basic"
+			onclick={state.openBuilder}
+		>
 			<i class="fa-solid fa-sliders"></i>
 			{localize('NIMBLE.rulesBuilder.openRulesBuilder')}
 		</button>
