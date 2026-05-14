@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { PredicateField } from '../../../models/fields/PredicateField.js';
 	import type { RawPredicate } from '../../../etc/Predicate.js';
-	import { VALID_WIDGETS } from '../../../models/rules/_widgetOption.js';
 	import localize from '#utils/localize.js';
+	import { createSchemaFieldRendererState } from '#view/rulesBuilder/components/SchemaFieldRendererState.svelte.js';
 	import type { SchemaFieldRendererProps } from '#view/rulesBuilder/types.js';
 	import TagGroup from '#view/components/TagGroup.svelte';
 	import DocumentPicker from './DocumentPicker.svelte';
@@ -25,114 +25,48 @@
 
 	const { fields } = foundry.data;
 
-	// Foundry keeps the original options object on `field.options` and only
-	// lifts recognised keys onto the field instance. The test mock now
-	// stores the same options on `.options` (see tests/mocks/foundry.ts) so
-	// `.options` is the canonical read site in both worlds.
-	interface FieldExtras {
-		widget?: string;
-		showWhen?: (data: Record<string, unknown>) => boolean;
-		documentTypes?: string[];
-	}
-	type FieldWithOptions = { options?: FieldExtras };
+	const state = createSchemaFieldRendererState(
+		() => field,
+		() => value,
+		() => parentData,
+		() => onChange,
+		() => name,
+	);
 
-	const widget = $derived((field as unknown as FieldWithOptions).options?.widget);
-	const documentTypes = $derived((field as unknown as FieldWithOptions).options?.documentTypes);
-	const visibleByPredicate = $derived.by(() => {
-		const showWhen = (field as unknown as FieldWithOptions).options?.showWhen;
-		return typeof showWhen === 'function' ? Boolean(showWhen(parentData)) : true;
-	});
-
-	// Warn if a rule schema set a widget hint we don't recognise — typos
-	// (`fromula`) would otherwise silently fall through to the type-default
-	// arm and look like a working plain input.
-	$effect(() => {
-		if (widget !== undefined && !VALID_WIDGETS.has(widget)) {
-			console.warn(
-				`Nimble | SchemaFieldRenderer: unknown widget hint "${widget}" on field "${name}". ` +
-					`Falling back to type default.`,
-			);
-		}
-	});
-
-	const isHidden = $derived(widget === 'hidden' || !visibleByPredicate);
-
-	function resolveChoices(): Array<[string, string]> | null {
-		const raw = (field as unknown as { choices?: unknown }).choices;
-		if (raw == null) return null;
-		const evaluated = typeof raw === 'function' ? (raw as () => unknown)() : raw;
-		if (Array.isArray(evaluated)) {
-			return (evaluated as string[]).map((v) => [v, v]);
-		}
-		if (evaluated && typeof evaluated === 'object') {
-			return Object.entries(evaluated as Record<string, string>).map(([key, label]) => [
-				key,
-				typeof label === 'string' ? label : key,
-			]);
-		}
-		return null;
-	}
-
-	function emitNumber(event: Event) {
-		const target = event.target as HTMLInputElement;
-		const raw = target.value;
-		if (raw === '') {
-			onChange((field as unknown as { nullable?: boolean }).nullable ? null : 0);
-			return;
-		}
-		const num = (field as unknown as { integer?: boolean }).integer
-			? parseInt(raw, 10)
-			: parseFloat(raw);
-		if (!Number.isNaN(num)) onChange(num);
-	}
-
-	function emitString(event: Event) {
-		const target = event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-		onChange(target.value);
-	}
-
-	function emitBoolean(event: Event) {
-		const target = event.target as HTMLInputElement;
-		onChange(target.checked);
-	}
-
-	function toggleArrayValue(arr: unknown[], v: string | number) {
-		const next = arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v];
-		onChange(next);
-	}
+	state.setupUnknownWidgetWarning();
 </script>
 
-{#if !isHidden}
-	{#if widget === 'formula'}
+{#if !state.isHidden}
+	{#if state.widget === 'formula'}
 		<FormulaInput value={String(value ?? '')} onChange={(v) => onChange(v)} {disabled} />
-	{:else if widget === 'diceFormula'}
+	{:else if state.widget === 'diceFormula'}
 		<FormulaInput value={String(value ?? '')} onChange={(v) => onChange(v)} {disabled} dice />
-	{:else if widget === 'documentUuid'}
+	{:else if state.widget === 'documentUuid'}
 		<DocumentPicker
 			value={String(value ?? '')}
 			onChange={(v) => onChange(v)}
 			{disabled}
-			{documentTypes}
+			documentTypes={state.documentTypes}
 		/>
-	{:else if widget === 'richText' || field instanceof fields.HTMLField}
+	{:else if state.widget === 'richText' || field instanceof fields.HTMLField}
 		<RichTextEditor value={String(value ?? '')} onChange={(v) => onChange(v)} {disabled} />
-	{:else if widget === 'templateString'}
+	{:else if state.widget === 'templateString'}
 		<input
 			class="nimble-template-string-input"
 			type="text"
 			value={String(value ?? '')}
 			{disabled}
-			onchange={emitString}
+			onchange={state.emitString}
 		/>
 		<small class="nimble-field-hint">
 			{localize('NIMBLE.rulesBuilder.templateValueHintBefore')}
 			<code>{`{value}`}</code>
 			{localize('NIMBLE.rulesBuilder.templateValueHintAfter')}
 		</small>
-	{:else if widget === 'predicate' || field instanceof PredicateField}
+	{:else if state.widget === 'predicate' || field instanceof PredicateField}
 		<PredicateBuilder value={(value as RawPredicate) ?? {}} onChange={(v) => onChange(v)} />
 	{:else if field instanceof fields.BooleanField}
-		<input type="checkbox" checked={Boolean(value)} {disabled} onchange={emitBoolean} />
+		<input type="checkbox" checked={Boolean(value)} {disabled} onchange={state.emitBoolean} />
 	{:else if field instanceof fields.NumberField}
 		{@const numField = field as foundry.data.fields.NumberField}
 		{@const isInt = (numField as unknown as { integer?: boolean }).integer === true}
@@ -164,16 +98,16 @@
 					target.value.slice(target.selectionEnd ?? target.value.length);
 				if (!allowed.test(next)) e.preventDefault();
 			}}
-			onchange={emitNumber}
+			onchange={state.emitNumber}
 		/>
 	{:else if field instanceof fields.StringField}
-		{@const choices = resolveChoices()}
+		{@const choices = state.resolveChoices()}
 		{#if choices}
 			<select
 				class="nimble-field-input"
 				value={String(value ?? '')}
 				{disabled}
-				onchange={emitString}
+				onchange={state.emitString}
 			>
 				{#if !(field as unknown as { required?: boolean }).required}
 					<option value=""></option>
@@ -188,7 +122,7 @@
 				type="text"
 				value={String(value ?? '')}
 				{disabled}
-				onchange={emitString}
+				onchange={state.emitString}
 			/>
 		{/if}
 	{:else if field instanceof fields.ArrayField}
@@ -217,7 +151,7 @@
 					options={elementChoices}
 					selectedOptions={arrValue}
 					{disabled}
-					toggleOption={async (v) => toggleArrayValue(arrValue, v)}
+					toggleOption={async (v) => state.toggleArrayValue(arrValue, v)}
 				/>
 			{:else}
 				<div class="nimble-string-list">
