@@ -404,12 +404,26 @@ class ItemActivationManager {
 
 		if (node.poolType === 'dice') {
 			const readPool = (): { label?: string; faces: number[] } => {
-				const map =
-					(foundry.utils.getProperty(actor, 'flags.nimble.dicePools') as
+				// Item-scoped pools live on item.flags.nimble.dicePools[identifier];
+				// actor-scoped pools (id "actor:identifier") live on actor.flags.nimble.dicePools.
+				if (poolId.startsWith('actor:')) {
+					const actorMap =
+						(foundry.utils.getProperty(actor, 'flags.nimble.dicePools') as
+							| Record<string, { label?: string; faces?: number[] }>
+							| undefined) ?? {};
+					const entry = actorMap[poolId];
+					return { label: entry?.label, faces: Array.isArray(entry?.faces) ? entry.faces : [] };
+				}
+				for (const item of actor.items.contents) {
+					const itemMap = foundry.utils.getProperty(item, 'flags.nimble.dicePools') as
 						| Record<string, { label?: string; faces?: number[] }>
-						| undefined) ?? {};
-				const entry = map[poolId];
-				return { label: entry?.label, faces: Array.isArray(entry?.faces) ? entry.faces : [] };
+						| undefined;
+					if (!itemMap) continue;
+					const entry = itemMap[poolId];
+					if (!entry) continue;
+					return { label: entry.label, faces: Array.isArray(entry.faces) ? entry.faces : [] };
+				}
+				return { faces: [] };
 			};
 
 			if (node.action === 'rollDie') {

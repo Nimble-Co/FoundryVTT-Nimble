@@ -1366,6 +1366,7 @@
 			"damageOutcome": "Damage Outcome",
 			"healing": "Healing",
 			"note": "Note",
+			"pool": "Pool",
 			"onFailedSave": "On Failed Save",
 			"onPassedSave": "On Passed Save",
 			"onCriticalHit": "On Critical Hit",
@@ -1379,7 +1380,23 @@
 			"warning": "Warning",
 			"canMiss": "Can Miss",
 			"canCrit": "Can Crit",
-			"noAdditionalEffects": "No additional effects"
+			"noAdditionalEffects": "No additional effects",
+			"poolNode": {
+				"defaultLabel": "Pool",
+				"noChange": "— no change",
+				"actions": {
+					"rollDie": "Rolled",
+					"rollPool": "Rolled fresh",
+					"fillCount": "Gained",
+					"clear": "Cleared"
+				},
+				"skipReasons": {
+					"predicate": "Skipped (predicate not met)",
+					"invalidAction": "Skipped (invalid action for pool type)",
+					"unknownPool": "Skipped (pool not found)",
+					"noActor": "Skipped (no actor)"
+				}
+			}
 		},
 		"characterSettings": {
 			"actorImageSettings": "Actor Image Settings",
