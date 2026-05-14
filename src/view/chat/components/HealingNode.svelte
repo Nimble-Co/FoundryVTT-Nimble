@@ -12,6 +12,11 @@
 
 	let { node } = $props();
 
+	// Tracks the dispositions of currently canvas-controlled tokens, updated live via
+	// the controlToken hook so the button responds to token selection without requiring
+	// the user to explicitly add a target to the message first.
+	let controlledDispositions = $state<number[]>([]);
+
 	let healingType = $derived(node.healingType);
 	let roll = $derived(node.roll);
 	let effectId = $derived(node.id);
@@ -35,25 +40,6 @@
 	let targetDisposition = $derived(
 		node.targetDisposition as 'friendly' | 'neutral' | 'hostile' | 'secret' | undefined,
 	);
-
-	// Tracks the dispositions of currently canvas-controlled tokens, updated live via
-	// the controlToken hook so the button responds to token selection without requiring
-	// the user to explicitly add a target to the message first.
-	let controlledDispositions = $state<number[]>([]);
-
-	$effect(() => {
-		function syncControlled() {
-			controlledDispositions = (canvas?.tokens?.controlled ?? []).map((t) => {
-				const doc = t.document as TokenDocument | null;
-				return doc?.disposition ?? CONST.TOKEN_DISPOSITIONS.FRIENDLY;
-			});
-		}
-		syncControlled();
-		const hookId = Hooks.on('controlToken', syncControlled);
-		return () => {
-			Hooks.off('controlToken', hookId);
-		};
-	});
 
 	// Returns 'recommended' when the effective targets match this effect's targetDisposition,
 	// 'discouraged' when all targets are clearly the opposite type (hostile targets for a
@@ -90,6 +76,20 @@
 			return 'discouraged';
 
 		return 'neutral';
+	});
+
+	$effect(() => {
+		function syncControlled() {
+			controlledDispositions = (canvas?.tokens?.controlled ?? []).map((t) => {
+				const doc = t.document as TokenDocument | null;
+				return doc?.disposition ?? CONST.TOKEN_DISPOSITIONS.FRIENDLY;
+			});
+		}
+		syncControlled();
+		const hookId = Hooks.on('controlToken', syncControlled);
+		return () => {
+			Hooks.off('controlToken', hookId);
+		};
 	});
 
 	// Localization

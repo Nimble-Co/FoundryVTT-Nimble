@@ -19,6 +19,10 @@
 	const autoExpand = game.settings.get('nimble', 'autoExpandRolls');
 	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
 	let expanded = $state(autoExpand);
+	// Tracks the dispositions of currently canvas-controlled tokens so the button responds
+	// to token selection in real time without requiring an explicit "Add Target" click.
+	let controlledDispositions = $state<number[]>([]);
+
 	let canApplyDamage = $derived.by(() => {
 		if (type !== 'damage' || !game.user?.isGM) return false;
 
@@ -31,24 +35,6 @@
 	let applyDamageTooltip = $derived(
 		canApplyDamage ? applyDamageLabel : localize('NIMBLE.chat.noDamageToApply'),
 	);
-
-	// Tracks the dispositions of currently canvas-controlled tokens so the button responds
-	// to token selection in real time without requiring an explicit "Add Target" click.
-	let controlledDispositions = $state<number[]>([]);
-
-	$effect(() => {
-		function syncControlled() {
-			controlledDispositions = (canvas?.tokens?.controlled ?? []).map((t) => {
-				const doc = t.document as TokenDocument | null;
-				return doc?.disposition ?? CONST.TOKEN_DISPOSITIONS.FRIENDLY;
-			});
-		}
-		syncControlled();
-		const hookId = Hooks.on('controlToken', syncControlled);
-		return () => {
-			Hooks.off('controlToken', hookId);
-		};
-	});
 
 	// Returns 'recommended' when the effective targets match this effect's targetDisposition,
 	// 'discouraged' when all targets are clearly the opposite type, or 'neutral' otherwise.
@@ -87,6 +73,20 @@
 			return 'discouraged';
 
 		return 'neutral';
+	});
+
+	$effect(() => {
+		function syncControlled() {
+			controlledDispositions = (canvas?.tokens?.controlled ?? []).map((t) => {
+				const doc = t.document as TokenDocument | null;
+				return doc?.disposition ?? CONST.TOKEN_DISPOSITIONS.FRIENDLY;
+			});
+		}
+		syncControlled();
+		const hookId = Hooks.on('controlToken', syncControlled);
+		return () => {
+			Hooks.off('controlToken', hookId);
+		};
 	});
 </script>
 

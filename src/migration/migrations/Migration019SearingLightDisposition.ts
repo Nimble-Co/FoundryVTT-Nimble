@@ -18,9 +18,7 @@ class Migration019SearingLightDisposition extends MigrationBase {
 		if (source.type !== 'feature') return;
 
 		const sourceId = this.getSourceId(source);
-		const name = source.name;
-
-		if (sourceId !== SEARING_LIGHT_SOURCE_ID && name !== 'Searing Light') return;
+		if (sourceId !== SEARING_LIGHT_SOURCE_ID) return;
 
 		const effects = source.system?.activation?.effects;
 		if (!Array.isArray(effects)) return;
