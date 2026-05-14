@@ -9,6 +9,7 @@ import registerCombatantDefeatSync from './hooks/combatantHooks/combatantDefeatS
 import registerCombatantHealthStateSync from './hooks/combatantHooks/combatantHealthStateSync.js';
 import registerTokenCombatantSync from './hooks/combatantHooks/tokenCombatantSync.js';
 import { conditionImmunityGuard } from './hooks/conditionImmunityGuard.js';
+import registerDicePoolSystemHooks from './hooks/dicePoolSystem.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
 import init from './hooks/init.js';
@@ -102,6 +103,7 @@ Hooks.on('hotbarDrop', onHotbarDrop);
 registerCombatantDefeatSync();
 registerCombatantHealthStateSync();
 registerChargeSystemHooks();
+registerDicePoolSystemHooks();
 registerWoundTriggerHooks();
 registerTurnTriggerHooks();
 registerKillTriggerHooks();

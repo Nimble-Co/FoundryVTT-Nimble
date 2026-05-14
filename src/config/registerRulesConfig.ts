@@ -6,6 +6,7 @@ import { ChargePoolRule } from '../models/rules/chargePool.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
+import { DicePoolRule } from '../models/rules/dicePool.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
 import { GrantSpellsRule } from '../models/rules/grantSpells.js';
@@ -19,6 +20,7 @@ import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
 import { MaximizeHitDiceRule } from '../models/rules/maximizeHitDice.js';
 import { MaxWoundsRule } from '../models/rules/maxWounds.js';
+import { ModifyDicePoolRule } from '../models/rules/modifyDicePool.js';
 import { NoteRule } from '../models/rules/note.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
@@ -36,6 +38,7 @@ export default function registerRulesConfig() {
 		combatMana: 'NIMBLE.ruleTypes.combatMana',
 		conditionImmunity: 'NIMBLE.ruleTypes.conditionImmunity',
 		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
+		dicePool: 'NIMBLE.ruleTypes.dicePool',
 		grantItem: 'NIMBLE.ruleTypes.grantItem',
 		grantProficiency: 'NIMBLE.ruleTypes.grantProficiency',
 		grantSpells: 'NIMBLE.ruleTypes.grantSpells',
@@ -49,6 +52,7 @@ export default function registerRulesConfig() {
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
 		maximizeHitDice: 'NIMBLE.ruleTypes.maximizeHitDice',
 		maxWounds: 'NIMBLE.ruleTypes.maxWounds',
+		modifyDicePool: 'NIMBLE.ruleTypes.modifyDicePool',
 		note: 'NIMBLE.ruleTypes.note',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
@@ -66,6 +70,7 @@ export default function registerRulesConfig() {
 		combatMana: CombatManaRule,
 		conditionImmunity: ConditionImmunityRule,
 		damageBonus: DamageBonusRule,
+		dicePool: DicePoolRule,
 		grantItem: ItemGrantRule,
 		grantProficiency: GrantProficiencyRule,
 		grantSpells: GrantSpellsRule,
@@ -79,6 +84,7 @@ export default function registerRulesConfig() {
 		maxHpBonus: MaxHpBonusRule,
 		maximizeHitDice: MaximizeHitDiceRule,
 		maxWounds: MaxWoundsRule,
+		modifyDicePool: ModifyDicePoolRule,
 		note: NoteRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,
