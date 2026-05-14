@@ -2,6 +2,7 @@ import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 import { NimbleBaseRule } from './base.js';
 
 const CHARGE_POOL_SCOPES = [...ChargePoolRuleConfig.scopes];
+const CHARGE_POOL_DIE_SIZES = [...ChargePoolRuleConfig.dieSizes];
 const CHARGE_POOL_INITIAL_VALUES = [...ChargePoolRuleConfig.initialModes];
 const CHARGE_RECOVERY_TRIGGERS = [...ChargePoolRuleConfig.recoveryTriggers];
 const CHARGE_RECOVERY_MODES = [...ChargePoolRuleConfig.recoveryModes];
@@ -17,6 +18,12 @@ function schema() {
 			choices: CHARGE_POOL_SCOPES,
 		}),
 		max: new fields.StringField({ required: true, nullable: false, initial: '1' }),
+		dieSize: new fields.StringField({
+			required: false,
+			nullable: true,
+			initial: null,
+			choices: CHARGE_POOL_DIE_SIZES,
+		}),
 		initial: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -58,6 +65,8 @@ class ChargePoolRule extends NimbleBaseRule<ChargePoolRule.Schema> {
 
 	declare max: string;
 
+	declare dieSize: (typeof ChargePoolRuleConfig.dieSizes)[number] | null;
+
 	declare initial: (typeof ChargePoolRuleConfig.initialModes)[number];
 
 	static override defineSchema(): ChargePoolRule.Schema {
@@ -72,6 +81,7 @@ class ChargePoolRule extends NimbleBaseRule<ChargePoolRule.Schema> {
 			new Map([
 				['scope', '"item" | "actor"'],
 				['max', 'string'],
+				['dieSize', '"d4" | "d6" | "d8" | "d10" | "d12" | "d20" | null'],
 				['initial', '"max" | "zero"'],
 				['recoveries', 'Array<{ trigger: string; mode: string; value: string }>'],
 			]),

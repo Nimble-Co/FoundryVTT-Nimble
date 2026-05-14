@@ -1,6 +1,7 @@
 import type { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 
 type ChargePoolScope = (typeof ChargePoolRuleConfig.scopes)[number];
+type ChargePoolDieSize = (typeof ChargePoolRuleConfig.dieSizes)[number];
 type ChargePoolInitialMode = (typeof ChargePoolRuleConfig.initialModes)[number];
 type ChargeRecoveryTrigger = (typeof ChargePoolRuleConfig.recoveryTriggers)[number];
 type ChargeRecoveryMode = (typeof ChargePoolRuleConfig.recoveryModes)[number];
@@ -23,6 +24,13 @@ type ChargePoolState = {
 	label: string;
 	current: number;
 	max: number;
+	/**
+	 * Optional die size hint for charges that represent rollable dice (e.g.
+	 * Commander Combat Dice, Artificer Mana Dice). Consumers roll a die of
+	 * this size at spend time. `null` means the charges are dimensionless
+	 * (a pure count of uses).
+	 */
+	dieSize: ChargePoolDieSize | null;
 	icon?: string;
 	recoveries: ChargeRecoveryEntry[];
 };
@@ -43,6 +51,7 @@ type ChargePoolRuleLike = {
 	max?: string;
 	icon?: string;
 	initial?: string;
+	dieSize?: string | null;
 	recoveries?: unknown;
 };
 
@@ -118,6 +127,7 @@ type ChargePoolRecoveryPreview = {
 
 export type {
 	ChargePoolScope,
+	ChargePoolDieSize,
 	ChargePoolInitialMode,
 	ChargeRecoveryTrigger,
 	ChargeRecoveryMode,

@@ -19,6 +19,7 @@ type MockRule = {
 	label?: string;
 	scope?: string;
 	max?: string;
+	dieSize?: string | null;
 	initial?: string;
 	recoveries?: unknown;
 	poolIdentifier?: string;
@@ -1086,5 +1087,89 @@ describe('ChargePoolService', () => {
 			'item-',
 		);
 		expect(poolsForMissingPrefixId).toEqual([]);
+	});
+
+	describe('dieSize', () => {
+		it('defaults to null when the rule does not declare one', async () => {
+			const actor = createMockActor({
+				items: [
+					{
+						id: 'item-1',
+						name: 'Wand',
+						rules: [
+							{
+								type: 'chargePool',
+								id: 'pool-rule',
+								identifier: 'wand',
+								scope: 'item',
+								max: '3',
+								initial: 'max',
+							},
+						],
+					},
+				],
+			});
+
+			await syncActorPools(actor as unknown as Actor.Implementation);
+
+			const pools = getPoolsForItem(actor as unknown as Actor.Implementation, 'item-1');
+			expect(pools).toHaveLength(1);
+			expect(pools[0]?.dieSize).toBeNull();
+		});
+
+		it('propagates a declared dieSize from rule into effective state', async () => {
+			const actor = createMockActor({
+				items: [
+					{
+						id: 'item-1',
+						name: 'Combat Dice',
+						rules: [
+							{
+								type: 'chargePool',
+								id: 'pool-rule',
+								identifier: 'combat-dice',
+								scope: 'item',
+								max: '4',
+								dieSize: 'd6',
+								initial: 'zero',
+							},
+						],
+					},
+				],
+			});
+
+			await syncActorPools(actor as unknown as Actor.Implementation);
+
+			const pools = getPoolsForItem(actor as unknown as Actor.Implementation, 'item-1');
+			expect(pools).toHaveLength(1);
+			expect(pools[0]?.dieSize).toBe('d6');
+		});
+
+		it('coerces invalid dieSize values to null', async () => {
+			const actor = createMockActor({
+				items: [
+					{
+						id: 'item-1',
+						name: 'Bogus',
+						rules: [
+							{
+								type: 'chargePool',
+								id: 'pool-rule',
+								identifier: 'bogus',
+								scope: 'item',
+								max: '1',
+								dieSize: 'd7' as unknown as string,
+								initial: 'max',
+							},
+						],
+					},
+				],
+			});
+
+			await syncActorPools(actor as unknown as Actor.Implementation);
+
+			const pools = getPoolsForItem(actor as unknown as Actor.Implementation, 'item-1');
+			expect(pools[0]?.dieSize).toBeNull();
+		});
 	});
 });

@@ -6,6 +6,7 @@ import type {
 	ChargeConsumerRuleLike,
 	ChargeConsumerState,
 	ChargePoolDefinition,
+	ChargePoolDieSize,
 	ChargePoolInitialMode,
 	ChargePoolMap,
 	ChargePoolRuleLike,
@@ -22,6 +23,7 @@ const VALID_RECOVERY_TRIGGERS: Set<ChargeRecoveryTrigger> = new Set(
 	ChargePoolRuleConfig.recoveryTriggers,
 );
 const VALID_RECOVERY_MODES: Set<ChargeRecoveryMode> = new Set(ChargePoolRuleConfig.recoveryModes);
+const VALID_DIE_SIZES: Set<ChargePoolDieSize> = new Set(ChargePoolRuleConfig.dieSizes);
 
 function isCharacterActor(actor: Actor | null | undefined): actor is CharacterActorLike {
 	return actor?.type === 'character';
@@ -71,6 +73,13 @@ function toChargePoolScope(value: unknown): ChargePoolScope {
 	return value === 'actor' ? 'actor' : 'item';
 }
 
+function toChargePoolDieSize(value: unknown): ChargePoolDieSize | null {
+	if (typeof value !== 'string') return null;
+	const trimmed = value.trim() as ChargePoolDieSize;
+	if (VALID_DIE_SIZES.has(trimmed)) return trimmed;
+	return null;
+}
+
 function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 	const normalizedRecord: ChargePoolMap = {};
 
@@ -93,6 +102,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 			const sourceItemId = normalizeIdentifier(sourcePool.sourceItemId);
 			const sourceItemName = normalizeIdentifier(sourcePool.sourceItemName);
 			const label = normalizeIdentifier(sourcePool.label);
+			const dieSize = toChargePoolDieSize(sourcePool.dieSize);
 			if (identifier.length < 1) continue;
 
 			normalizedRecord[poolId] = {
@@ -104,6 +114,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				label: label || sourceItemName || identifier,
 				current,
 				max,
+				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
 				recoveries,
 			};
@@ -135,6 +146,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 			);
 			const recoveries = normalizeRecoveries(sourcePool.recoveries);
 			const normalizedIdentifier = normalizeIdentifier(poolIdentifier);
+			const dieSize = toChargePoolDieSize(sourcePool.dieSize);
 			if (normalizedIdentifier.length < 1) continue;
 
 			const poolId = normalizedIdentifier;
@@ -147,6 +159,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				label: item.name || normalizedIdentifier,
 				current,
 				max,
+				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
 				recoveries,
 			};
@@ -214,6 +227,7 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 			const id = buildChargePoolId(scope, identifier, sourceItemId);
 			const initial: ChargePoolInitialMode = poolRule.initial === 'zero' ? 'zero' : 'max';
 			const recoveries = normalizeRecoveries(poolRule.recoveries);
+			const dieSize = toChargePoolDieSize(poolRule.dieSize);
 
 			definitions.push({
 				id,
@@ -223,6 +237,7 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 				sourceItemName: item.name,
 				label: normalizeIdentifier(poolRule.label) || item.name || identifier,
 				max,
+				dieSize,
 				icon: normalizeIcon(poolRule.icon),
 				initial,
 				recoveries,
@@ -252,6 +267,7 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 			label: definition.label,
 			current,
 			max: definition.max,
+			dieSize: definition.dieSize,
 			icon: existingPool?.icon ?? definition.icon,
 			recoveries: definition.recoveries,
 		};
@@ -504,6 +520,7 @@ function areChargePoolStatesEqual(left: ChargePoolState, right: ChargePoolState)
 		left.label === right.label &&
 		left.current === right.current &&
 		left.max === right.max &&
+		left.dieSize === right.dieSize &&
 		left.icon === right.icon &&
 		areRecoveryEntriesEqual(left.recoveries, right.recoveries)
 	);
@@ -529,6 +546,7 @@ function areChargePoolMapsEqual(left: ChargePoolMap, right: ChargePoolMap): bool
 export {
 	VALID_RECOVERY_TRIGGERS,
 	VALID_RECOVERY_MODES,
+	VALID_DIE_SIZES,
 	isCharacterActor,
 	toFiniteNonNegativeInteger,
 	toNumericInput,
@@ -537,6 +555,7 @@ export {
 	normalizeIcon,
 	buildChargePoolId,
 	toChargePoolScope,
+	toChargePoolDieSize,
 	getChargePoolMapFromActor,
 	resolveFormulaToInteger,
 	normalizeRecoveries,
