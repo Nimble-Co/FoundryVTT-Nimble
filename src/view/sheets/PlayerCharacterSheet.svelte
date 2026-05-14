@@ -5,6 +5,7 @@
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '#view/handlers/updateDocumentImage.js';
 	import ActionTracker from './components/ActionTracker.svelte';
+	import DicePoolTracker from './components/DicePoolTracker.svelte';
 	import HitDiceBar from './components/HitDiceBar.svelte';
 	import HitPointBar from './components/HitPointBar.svelte';
 	import ManaBar from './components/ManaBar.svelte';
@@ -433,12 +434,25 @@
 	>
 		<i class="fa-solid fa-moon"></i>
 	</button>
-	<ActionTracker {actor} />
+
+	<div class="nimble-sheet__left-trackers">
+		<ActionTracker {actor} />
+		<DicePoolTracker {actor} />
+	</div>
 </section>
 
 <style lang="scss">
 	.nimble-sheet__header {
 		position: relative;
+	}
+
+	.nimble-sheet__left-trackers {
+		position: absolute;
+		top: 15rem;
+		left: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
 	}
 
 	.nimble-edit-toggle__track {

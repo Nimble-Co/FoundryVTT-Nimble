@@ -1,6 +1,8 @@
 import type {
 	ActorHealthContext,
+	EncounterContext,
 	InitiativeRolledContext,
+	ItemActivatedContext,
 	ItemUsedContext,
 	NimbleBaseRule,
 	RestContext,
@@ -169,6 +171,51 @@ function handleInitiativeRolled(payload: NimbleInitiativePayload): void {
 	void dispatch(payload.actor, 'onInitiativeRolled', context);
 }
 
+async function handleUseItem(item: unknown, card: unknown, _options: unknown): Promise<void> {
+	if (!isAutoApplyEnabled()) return;
+	const typedItem = item as {
+		rules?: Map<string, NimbleBaseRule>;
+		actor?: unknown;
+	} | null;
+	if (!typedItem?.rules) return;
+	const context: ItemActivatedContext = {
+		item: typedItem as unknown as ItemActivatedContext['item'],
+		actor: typedItem.actor as unknown as ItemActivatedContext['actor'],
+		card: card as ChatMessage | null,
+	};
+	// Rules are awaited sequentially so each one sees the updated flag state
+	// written by the previous rule (e.g. two dicePool rules on the same pool).
+	for (const rule of typedItem.rules.values()) {
+		const method = (rule as unknown as Record<string, unknown>).onItemActivated as
+			| ((ctx: ItemActivatedContext) => Promise<void>)
+			| undefined;
+		if (typeof method !== 'function') continue;
+		try {
+			await method.call(rule, context);
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.warn(`Nimble | ruleEventDispatch onItemActivated failed`, error);
+		}
+	}
+}
+
+const encounterEndDispatchedCombatIds = new Set<string>();
+
+function didEncounterEndTransition(changes: Record<string, unknown>): boolean {
+	if (!foundry.utils.hasProperty(changes, 'started')) return false;
+	return foundry.utils.getProperty(changes, 'started') === false;
+}
+
+function handleEncounterEnd(combat: Combat): void {
+	if (!isAutoApplyEnabled()) return;
+	const context: EncounterContext = { combat };
+	for (const combatant of combat.combatants.contents) {
+		const actor = combatant.actor as unknown as ActorWithRules | null;
+		if (!actor) continue;
+		void dispatch(actor, 'onEncounterEnd', context);
+	}
+}
+
 let didRegister = false;
 
 type HookFn = (...args: unknown[]) => void;
@@ -179,12 +226,47 @@ export default function registerRuleEventDispatch(): void {
 	if (didRegister) return;
 	didRegister = true;
 
+	onHook('nimble.useItem', handleUseItem as HookFn);
 	onHook('nimble.damageApplied', handleDamageApplied as HookFn);
 	onHook('combatTurn', handleCombatTurn as HookFn);
 	onHook('updateActor', handleActorUpdate as HookFn);
 	onHook('nimble.saveResolved', handleSaveResolved as HookFn);
 	onHook('nimble.rest', handleRest as HookFn);
 	onHook('nimble.initiativeRolled', handleInitiativeRolled as HookFn);
+
+	// Fire onInitiativeRolled for any path that sets combatant initiative
+	// (actor sheet, ActionTracker, CtTopTracker, manual GM entry all go through updateCombatant)
+	onHook('updateCombatant', ((combatant: Combatant, changes: Record<string, unknown>) => {
+		if (typeof changes.initiative !== 'number') return;
+		if (!isAutoApplyEnabled()) return;
+		const actor = combatant.actor as unknown as ActorWithRules | null;
+		if (!actor) return;
+		const context: InitiativeRolledContext = {
+			actor: actor as unknown as InitiativeRolledContext['actor'],
+			combatant: combatant as unknown as InitiativeRolledContext['combatant'],
+		};
+		void dispatch(actor, 'onInitiativeRolled', context);
+	}) as HookFn);
+
+	onHook('deleteCombat', ((combat: Combat) => {
+		const combatId = combat.id ?? null;
+		if (combatId && encounterEndDispatchedCombatIds.has(combatId)) {
+			encounterEndDispatchedCombatIds.delete(combatId);
+			return;
+		}
+		handleEncounterEnd(combat);
+		if (combatId) encounterEndDispatchedCombatIds.delete(combatId);
+	}) as HookFn);
+
+	onHook('updateCombat', ((combat: Combat, changes: Record<string, unknown>) => {
+		if (!didEncounterEndTransition(changes)) return;
+		if (combat.started !== false) return;
+		if (combat.combatants.size === 0) return;
+		const combatId = combat.id ?? null;
+		if (combatId && encounterEndDispatchedCombatIds.has(combatId)) return;
+		if (combatId) encounterEndDispatchedCombatIds.add(combatId);
+		handleEncounterEnd(combat);
+	}) as HookFn);
 }
 
 export {

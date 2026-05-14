@@ -217,6 +217,7 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		super.prepareBaseData();
 
 		// Resets
+		(this as any).dicePools = {};
 		this.tags = new Set();
 		this._populateBaseTags();
 	}

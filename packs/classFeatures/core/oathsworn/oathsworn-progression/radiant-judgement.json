@@ -6,7 +6,42 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "dicePool",
+				"disabled": false,
+				"id": "OsJdgRdnt6wP3mKz",
+				"identifier": "judgment-dice",
+				"label": "Judgement Dice",
+				"predicate": {},
+				"priority": 1,
+				"faces": 6,
+				"quantity": "2",
+				"poolMode": "store",
+				"levels": {
+					"3": {
+						"faces": 8,
+						"quantity": ""
+					},
+					"5": {
+						"faces": 10,
+						"quantity": ""
+					},
+					"8": {
+						"faces": 12,
+						"quantity": ""
+					},
+					"10": {
+						"faces": 20,
+						"quantity": ""
+					},
+					"14": {
+						"faces": 0,
+						"quantity": "3"
+					}
+				}
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {

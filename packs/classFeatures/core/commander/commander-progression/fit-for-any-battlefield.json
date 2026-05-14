@@ -7,6 +7,102 @@
 		"identifier": "",
 		"rules": [
 			{
+				"type": "dicePool",
+				"disabled": false,
+				"id": "FfAbCmbtDc8p2QwNx",
+				"identifier": "combat-dice",
+				"label": "Combat Dice",
+				"predicate": {},
+				"priority": 1,
+				"faces": 6,
+				"quantity": "@strength",
+				"poolMode": "resource",
+				"resetOnEncounterEnd": true,
+				"fillOnInitiative": true,
+				"levels": {
+					"1": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"2": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"3": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"4": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"5": {
+						"faces": 8,
+						"quantity": ""
+					},
+					"6": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"7": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"8": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"9": {
+						"faces": 10,
+						"quantity": ""
+					},
+					"10": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"11": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"12": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"13": {
+						"faces": 12,
+						"quantity": ""
+					},
+					"14": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"15": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"16": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"17": {
+						"faces": 20,
+						"quantity": ""
+					},
+					"18": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"19": {
+						"faces": 0,
+						"quantity": ""
+					},
+					"20": {
+						"faces": 0,
+						"quantity": ""
+					}
+				}
+			},
+			{
 				"type": "grantItem",
 				"disabled": false,
 				"id": "OCPNZWXtQjoVmJsW",

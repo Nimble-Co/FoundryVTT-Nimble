@@ -537,6 +537,7 @@
 		},
 		"ruleTypes": {
 			"abilityBonus": "Stat Bonus",
+			"dicePool": "Dice Pool",
 			"applyCondition": "Apply Condition",
 			"armorClass": "Armor Class",
 			"chargeConsumer": "Charge Consumer",

@@ -6,6 +6,7 @@ import { ChargePoolRule } from '../models/rules/chargePool.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
+import { DicePoolRule } from '../models/rules/dicePool.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
 import { GrantSpellsRule } from '../models/rules/grantSpells.js';
@@ -29,6 +30,7 @@ import { UnarmedDamageRule } from '../models/rules/unarmedDamage.js';
 export default function registerRulesConfig() {
 	const ruleTypes = {
 		abilityBonus: 'NIMBLE.ruleTypes.abilityBonus',
+		dicePool: 'NIMBLE.ruleTypes.dicePool',
 		applyCondition: 'NIMBLE.ruleTypes.applyCondition',
 		armorClass: 'NIMBLE.ruleTypes.armorClass',
 		chargeConsumer: 'NIMBLE.ruleTypes.chargeConsumer',
@@ -59,6 +61,7 @@ export default function registerRulesConfig() {
 
 	const ruleDataModels = {
 		abilityBonus: AbilityBonusRule,
+		dicePool: DicePoolRule,
 		applyCondition: ApplyConditionRule,
 		armorClass: ArmorClassRule,
 		chargeConsumer: ChargeConsumerRule,

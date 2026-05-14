@@ -93,6 +93,16 @@ interface InitiativeRolledContext {
 	combatant: Combatant;
 }
 
+interface EncounterContext {
+	combat: Combat;
+}
+
+interface ItemActivatedContext {
+	item: NimbleBaseItem;
+	actor: NimbleBaseActor;
+	card: ChatMessage | null;
+}
+
 abstract class NimbleBaseRule<
 	Schema extends NimbleBaseRule.Schema = NimbleBaseRule.Schema,
 	Parent extends foundry.abstract.DataModel.Any = foundry.abstract.DataModel.Any,
@@ -278,6 +288,16 @@ abstract class NimbleBaseRule<
 		// Default implementation does nothing
 	}
 
+	/** Hook called when an encounter ends (combat deleted or started→false). */
+	async onEncounterEnd(_context: EncounterContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
+	/** Hook called when this rule's parent item is activated. Fires on the item's own rules only. */
+	async onItemActivated(_context: ItemActivatedContext): Promise<void> {
+		// Default implementation does nothing
+	}
+
 	/**
 	 * Called by the chat card renderer when an activation card resolves, for every
 	 * rule on the speaker actor. Returns zero or more EffectNode entries to inject
@@ -299,10 +319,12 @@ export {
 	NimbleBaseRule,
 	type PreCreateArgs,
 	type ItemUsedContext,
+	type ItemActivatedContext,
 	type TurnContext,
 	type ActorHealthContext,
 	type SaveResolvedContext,
 	type RestContext,
 	type InitiativeRolledContext,
+	type EncounterContext,
 	type ActivationCardContext,
 };

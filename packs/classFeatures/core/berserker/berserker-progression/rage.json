@@ -1,58 +1,128 @@
 {
-	"folder": "d40bf36abe9f4b0a",
-	"name": "Rage",
-	"type": "feature",
-	"img": "icons/skills/social/intimidation-impressing.webp",
-	"system": {
-		"macro": "",
-		"identifier": "",
-		"rules": [],
-		"activation": {
-			"acquireTargetsFromTemplate": false,
-			"cost": {
-				"details": "",
-				"quantity": 1,
-				"type": "action",
-				"isReaction": false
-			},
-			"duration": {
-				"details": "Your Rage Ends... If you leave combat, drop to 0 HP, or go 1 round without attacking or Raging.",
-				"quantity": 1,
-				"type": "special"
-			},
-			"effects": [],
-			"showDescription": true,
-			"targets": {
-				"count": 1,
-				"restrictions": ""
-			},
-			"template": {
-				"length": 1,
-				"radius": 1,
-				"shape": "",
-				"width": 1
-			}
-		},
-		"description": "<p>(1/turn) Action: Roll a Fury Die [[/r 1d4]] and set it aside. Add it to every STR attack you make. You can have a max of KEY Fury Dice; they are lost when your Rage ends.</p><hr><p>Level 1: Gain 1 Fury Die</p><p>Level 5: Whenever you Rage, gain 2 Fury Dice instead.</p>",
-		"featureType": "class",
-		"class": "berserker",
-		"group": "berserker-progression",
-		"gainedAtLevel": 1,
-		"gainedAtLevels": [
-			1,
-			5
-		],
-		"subclass": false
-	},
-	"effects": [],
-	"flags": {},
-	"_stats": {
-		"coreVersion": "13.347",
-		"systemId": "nimble",
-		"systemVersion": "0.1.8",
-		"createdTime": 1759180745583,
-		"modifiedTime": 1761434416421,
-		"lastModifiedBy": "zvcmZ9cAKxekqF5X"
-	},
-	"_id": "GjPt8evcIoVuQ6zg"
+  "folder": "d40bf36abe9f4b0a",
+  "name": "Rage",
+  "type": "feature",
+  "img": "icons/skills/social/intimidation-impressing.webp",
+  "system": {
+    "macro": "",
+    "identifier": "",
+    "rules": [
+      {
+        "type": "dicePool",
+        "disabled": false,
+        "id": "BkRfX2mN8pLqY4sW",
+        "identifier": "fury-dice",
+        "label": "Fury Dice",
+        "predicate": {},
+        "priority": 1,
+        "faces": 4,
+        "quantity": "@key",
+        "poolMode": "individual",
+        "resetOnEncounterEnd": true,
+        "levels": {
+          "6": {
+            "faces": 6,
+            "quantity": ""
+          },
+          "9": {
+            "faces": 8,
+            "quantity": ""
+          },
+          "13": {
+            "faces": 10,
+            "quantity": ""
+          },
+          "17": {
+            "faces": 12,
+            "quantity": ""
+          }
+        },
+        "rollOnActivation": true
+      },
+      {
+        "type": "dicePool",
+        "disabled": false,
+        "id": "Lm7xQ4wR9pKv3sTn",
+        "identifier": "fury-dice",
+        "label": "Fury Dice",
+        "predicate": {
+          "level": {
+            "min": 5
+          }
+        },
+        "priority": 2,
+        "faces": 4,
+        "quantity": "@key",
+        "poolMode": "individual",
+        "resetOnEncounterEnd": true,
+        "fillOnInitiative": false,
+        "rollOnActivation": true,
+        "levels": {
+          "6": {
+            "faces": 6,
+            "quantity": ""
+          },
+          "9": {
+            "faces": 8,
+            "quantity": ""
+          },
+          "13": {
+            "faces": 10,
+            "quantity": ""
+          },
+          "17": {
+            "faces": 12,
+            "quantity": ""
+          }
+        }
+      }
+    ],
+    "activation": {
+      "acquireTargetsFromTemplate": false,
+      "cost": {
+        "details": "",
+        "quantity": 1,
+        "type": "action",
+        "isReaction": false
+      },
+      "duration": {
+        "details": "Your Rage Ends... If you leave combat, drop to 0 HP, or go 1 round without attacking or Raging.",
+        "quantity": 1,
+        "type": "special"
+      },
+      "effects": [],
+      "showDescription": true,
+      "targets": {
+        "count": 0,
+        "restrictions": ""
+      },
+      "template": {
+        "length": 1,
+        "radius": 1,
+        "shape": "",
+        "width": 1
+      }
+    },
+    "description": "<p>(1/turn) Action: Roll a Fury Die [[/r 1d4]] and set it aside. Add it to every STR attack you make. You can have a max of KEY Fury Dice; they are lost when your Rage ends.</p><hr><p>Level 1: Gain 1 Fury Die</p><p>Level 5: Whenever you Rage, gain 2 Fury Dice instead.</p>",
+    "featureType": "class",
+    "class": "berserker",
+    "group": "berserker-progression",
+    "gainedAtLevel": 1,
+    "gainedAtLevels": [
+      1,
+      5
+    ],
+    "subclass": false
+  },
+  "effects": [],
+  "flags": {},
+  "_stats": {
+    "coreVersion": "13.347",
+    "systemId": "nimble",
+    "systemVersion": "0.1.8",
+    "createdTime": 1759180745583,
+    "modifiedTime": 1761434416421,
+    "lastModifiedBy": "zvcmZ9cAKxekqF5X"
+  },
+  "_id": "GjPt8evcIoVuQ6zg"
 }
