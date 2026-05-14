@@ -5,6 +5,7 @@ import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
 import { Predicate, type RawPredicate } from '../etc/Predicate.js';
+import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
 import {
 	getDamageBonusFormulas,
@@ -395,6 +396,16 @@ class ItemActivationManager {
 			const domainSet = domain instanceof Set ? domain : new Set(domain);
 			if (!predicate.test(domainSet)) {
 				node.result = { applied: false, skipReason: 'predicate' };
+				if (isDebugModeEnabled()) {
+					const itemName = this.#item.name ?? node.poolIdentifier;
+					ui.notifications?.info(
+						game.i18n.format('NIMBLE.activationEffects.poolNode.debugPredicateSkipped', {
+							item: itemName,
+							pool: node.poolIdentifier,
+							predicate: JSON.stringify(rawPredicate),
+						}),
+					);
+				}
 				return;
 			}
 		}

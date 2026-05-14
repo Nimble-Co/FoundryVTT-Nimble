@@ -1384,6 +1384,7 @@
 			"poolNode": {
 				"defaultLabel": "Pool",
 				"noChange": "— no change",
+				"debugPredicateSkipped": "{item}: pool node for \"{pool}\" skipped (predicate {predicate} not met)",
 				"actions": {
 					"rollDie": "Rolled",
 					"rollPool": "Rolled fresh",

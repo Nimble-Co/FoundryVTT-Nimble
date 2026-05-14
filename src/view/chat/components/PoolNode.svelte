@@ -23,34 +23,40 @@
 			? localize(`NIMBLE.activationEffects.poolNode.skipReasons.${skipReason}`) || skipReason
 			: '',
 	);
+	// Predicate-skipped nodes are noise on every activation (e.g. Rage's L5 node
+	// at low levels). Hide silently from the card; the dispatcher posts a
+	// debug-mode notification instead when authors want to confirm gating.
+	let hideSkippedNode = $derived(skipReason === 'predicate');
 </script>
 
-<div class="pool-node">
-	<i class="fa-solid fa-dice-d6 pool-node__icon"></i>
-	<span class="pool-node__label">{label}</span>
+{#if !hideSkippedNode}
+	<div class="pool-node">
+		<i class="fa-solid fa-dice-d6 pool-node__icon"></i>
+		<span class="pool-node__label">{label}</span>
 
-	{#if skipReason}
-		<span class="pool-node__skip">{skipLabel}</span>
-	{:else if node.result?.applied}
-		<span class="pool-node__action">{actionLabel}</span>
-		{#if rolledFaces.length > 0}
-			<span class="pool-node__faces">
-				{#each rolledFaces as face, index (index)}
-					<span class="pool-node__face">{face}</span>
-				{/each}
+		{#if skipReason}
+			<span class="pool-node__skip">{skipLabel}</span>
+		{:else if node.result?.applied}
+			<span class="pool-node__action">{actionLabel}</span>
+			{#if rolledFaces.length > 0}
+				<span class="pool-node__faces">
+					{#each rolledFaces as face, index (index)}
+						<span class="pool-node__face">{face}</span>
+					{/each}
+				</span>
+			{:else if delta !== null && delta > 0}
+				<span class="pool-node__delta">+{delta}</span>
+			{:else if delta !== null && delta < 0}
+				<span class="pool-node__delta">{delta}</span>
+			{/if}
+		{:else}
+			<span class="pool-node__action">{actionLabel}</span>
+			<span class="pool-node__skip">
+				{localize('NIMBLE.activationEffects.poolNode.noChange')}
 			</span>
-		{:else if delta !== null && delta > 0}
-			<span class="pool-node__delta">+{delta}</span>
-		{:else if delta !== null && delta < 0}
-			<span class="pool-node__delta">{delta}</span>
 		{/if}
-	{:else}
-		<span class="pool-node__action">{actionLabel}</span>
-		<span class="pool-node__skip">
-			{localize('NIMBLE.activationEffects.poolNode.noChange')}
-		</span>
-	{/if}
-</div>
+	</div>
+{/if}
 
 <style lang="scss">
 	.pool-node {
