@@ -73,6 +73,7 @@ class Predicate extends Map<string, Statement> {
 		const [key, val] = statement;
 
 		return (
+			(val === true && domain.has(key)) ||
 			(typeof val === 'string' && domain.has(`${key}:${val}`)) ||
 			(Predicate.isBinaryOperation(val) && this.#testBinaryOperation(key, val, domain)) ||
 			(Predicate.isArrayOperation(val) && this.#testArrayOperation(key, val, domain)) ||
@@ -156,6 +157,7 @@ class Predicate extends Map<string, Statement> {
 	/** Validators                                     */
 	/** ---------------------------------------------- */
 	static isStatement(statement: unknown): statement is PredicateStatement {
+		if (statement === true) return true;
 		if (isPlainObject(statement)) return Predicate.isBinaryOperation(statement);
 		if (Array.isArray(statement)) return Predicate.isArrayOperation(statement);
 		if (typeof statement === 'string') return Predicate.isAtomicOperation(statement);
@@ -199,7 +201,8 @@ type BinaryOperation = {
 	equal?: number | string;
 };
 
-type Statement = AtomicOperation | BinaryOperation | ArrayOperation;
+type PresenceCheck = true;
+type Statement = PresenceCheck | AtomicOperation | BinaryOperation | ArrayOperation;
 
 type PredicateStatement = [string, Statement];
 type RawPredicate = Record<string, Statement>;
