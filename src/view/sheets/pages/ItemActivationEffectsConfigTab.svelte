@@ -1,5 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
+	import localize from '#utils/localize.js';
 	import { createEffectNode } from '../../../utils/treeManipulation/createEffectNode.js';
 	import { deleteEffectNode } from '../../../utils/treeManipulation/deleteEffectNode.js';
 	import { updateEffectNode } from '../../../utils/treeManipulation/updateEffectNode.js';
@@ -10,11 +11,12 @@
 	function getNodeOptions(node) {
 		// Define available options for different node types
 		const nodeOptions = new Map([
-			['condition', 'Condition'],
-			['damage', 'Damage'],
-			['damageOutcome', 'Damage Outcome'],
-			['healing', 'Healing'],
-			['note', 'Note'],
+			['condition', localize('NIMBLE.activationEffects.condition')],
+			['damage', localize('NIMBLE.activationEffects.damage')],
+			['damageOutcome', localize('NIMBLE.activationEffects.damageOutcome')],
+			['healing', localize('NIMBLE.activationEffects.healing')],
+			['note', localize('NIMBLE.activationEffects.note')],
+			['pool', localize('NIMBLE.activationEffects.pool')],
 			['savingThrow', saves.save],
 		]);
 
@@ -22,7 +24,7 @@
 
 		// Determine included options based on the node type
 		if (node === null) {
-			includedOptions.push('damage', 'healing', 'condition', 'savingThrow');
+			includedOptions.push('damage', 'healing', 'condition', 'pool', 'savingThrow');
 		} else if (node.type === 'damage') {
 			includedOptions.push(
 				'damage',
@@ -52,6 +54,8 @@
 				return DamageOutcomeNode;
 			case 'healing':
 				return HealingNode;
+			case 'pool':
+				return PoolNode;
 			case 'savingThrow':
 				return SaveNode;
 			case 'note':
@@ -65,22 +69,22 @@
 		if (node.type === 'damage') {
 			if (node.parentContext === 'sharedRolls') {
 				return [
-					['failedSave', 'On Failed Save'],
-					['passedSave', 'On Passed Save'],
+					['failedSave', localize('NIMBLE.activationEffects.onFailedSave')],
+					['passedSave', localize('NIMBLE.activationEffects.onPassedSave')],
 				];
 			}
 
 			return [
-				['criticalHit', 'On Critical Hit'],
-				['hit', 'On Hit'],
-				['miss', 'On Miss'],
+				['criticalHit', localize('NIMBLE.activationEffects.onCriticalHit')],
+				['hit', localize('NIMBLE.activationEffects.onHit')],
+				['miss', localize('NIMBLE.activationEffects.onMiss')],
 			];
 		}
 
 		if (node.type === 'savingThrow') {
 			return [
-				['failedSave', 'On Failed Save'],
-				['passedSave', 'On Passed Save'],
+				['failedSave', localize('NIMBLE.activationEffects.onFailedSave')],
+				['passedSave', localize('NIMBLE.activationEffects.onPassedSave')],
 			];
 		}
 
@@ -115,16 +119,36 @@
 	const { conditions, damageTypes, healingTypes, savingThrows } = CONFIG.NIMBLE;
 
 	const damageOutcomes = [
-		{ value: 'fullDamage', label: 'Full Damage' },
-		{ value: 'halfDamage', label: 'Half Damage' },
+		{ value: 'fullDamage', label: localize('NIMBLE.activationEffects.fullDamage') },
+		{ value: 'halfDamage', label: localize('NIMBLE.activationEffects.halfDamage') },
 	];
 
 	const noteTypes = [
-		{ value: 'general', label: 'General' },
-		{ value: 'flavor', label: 'Flavor' },
-		{ value: 'reminder', label: 'Reminder' },
-		{ value: 'warning', label: 'Warning' },
+		{ value: 'general', label: localize('NIMBLE.activationEffects.general') },
+		{ value: 'flavor', label: localize('NIMBLE.activationEffects.flavor') },
+		{ value: 'reminder', label: localize('NIMBLE.activationEffects.reminder') },
+		{ value: 'warning', label: localize('NIMBLE.activationEffects.warning') },
 	];
+
+	const poolTypes = [
+		{ value: 'dice', label: localize('NIMBLE.activationEffects.poolNode.config.poolTypeDice') },
+		{ value: 'charge', label: localize('NIMBLE.activationEffects.poolNode.config.poolTypeCharge') },
+	];
+
+	const poolActions = [
+		{ value: 'rollDie', label: localize('NIMBLE.activationEffects.poolNode.config.actionRollDie') },
+		{
+			value: 'rollPool',
+			label: localize('NIMBLE.activationEffects.poolNode.config.actionRollPool'),
+		},
+		{
+			value: 'fillCount',
+			label: localize('NIMBLE.activationEffects.poolNode.config.actionFillCount'),
+		},
+		{ value: 'clear', label: localize('NIMBLE.activationEffects.poolNode.config.actionClear') },
+	];
+
+	const POOL_PREDICATE_PLACEHOLDER = '{ "level": { "min": 5 } }';
 
 	let document = getContext('document');
 
@@ -134,13 +158,15 @@
 
 <section>
 	<header class="nimble-section-header">
-		<h3 class="nimble-heading" data-heading-variant="section">Effects</h3>
+		<h3 class="nimble-heading" data-heading-variant="section">
+			{localize('NIMBLE.activationEffects.effects')}
+		</h3>
 
 		<button
 			class="nimble-button"
 			data-button-variant="icon"
-			aria-label="Add Effect"
-			data-tooltip="Add Effect"
+			aria-label={localize('NIMBLE.activationEffects.addEffect')}
+			data-tooltip={localize('NIMBLE.activationEffects.addEffect')}
 			onclick={toggleEffectCreationOptions}
 		>
 			<i class="fa-solid fa-square-plus"></i>
@@ -188,7 +214,7 @@
 						/>
 
 						<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-							Can Miss
+							{localize('NIMBLE.activationEffects.canMiss')}
 						</h5>
 					</label>
 
@@ -201,7 +227,7 @@
 						/>
 
 						<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-							Can Crit
+							{localize('NIMBLE.activationEffects.canCrit')}
 						</h5>
 					</label>
 				{/if}
@@ -215,7 +241,7 @@
 					/>
 
 					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-						Ignore Armor
+						{localize('NIMBLE.activationEffects.ignoreArmor')}
 					</h5>
 				</label>
 
@@ -228,7 +254,7 @@
 					/>
 
 					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-						Only Damage Hostile Actors
+						{localize('NIMBLE.activationEffects.onlyDamageHostile')}
 					</h5>
 				</label>
 
@@ -236,7 +262,7 @@
 					<label style="width: 100%; flex-grow: 1;">
 						<header class="nimble-header">
 							<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-								Roll Formula
+								{localize('NIMBLE.activationEffects.rollFormula')}
 							</h5>
 						</header>
 
@@ -264,7 +290,7 @@
 					<label>
 						<header class="nimble-header" style="padding-inline-end: 0.5rem;">
 							<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-								Damage Type
+								{localize('NIMBLE.activationEffects.damageType')}
 							</h5>
 						</header>
 
@@ -286,13 +312,15 @@
 		{#if !parentNode || node.parentContext === 'sharedRolls'}
 			<details open>
 				<summary class="nimble-tree-node-summary">
-					<h4 class="nimble-heading" data-heading-variant="field">Damage</h4>
+					<h4 class="nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.damage')}
+					</h4>
 
 					<button
 						class="nimble-button"
 						data-button-variant="icon"
-						aria-label="Delete damage roll"
-						data-tooltip="Delete damage roll"
+						aria-label={localize('NIMBLE.activationEffects.deleteDamage')}
+						data-tooltip={localize('NIMBLE.activationEffects.deleteDamage')}
 						type="button"
 						onclick={() => deleteEffectNode(document, effects, node.id)}
 					>
@@ -314,8 +342,8 @@
 									<button
 										class="nimble-button"
 										data-button-variant="icon"
-										aria-label="Add shared damage roll"
-										data-tooltip="Add shared damage roll"
+										aria-label={localize('NIMBLE.activationEffects.addSharedRoll')}
+										data-tooltip={localize('NIMBLE.activationEffects.addSharedRoll')}
 										type="button"
 										onclick={(event) =>
 											createEffectNode(document, effects, 'damageOutcome', event, key)}
@@ -326,8 +354,8 @@
 									<button
 										class="nimble-button"
 										data-button-variant="icon"
-										aria-label="Add cbild node"
-										data-tooltip="Add child node"
+										aria-label={localize('NIMBLE.activationEffects.addChild')}
+										data-tooltip={localize('NIMBLE.activationEffects.addChild')}
 										type="button"
 										onclick={toggleEffectCreationOptions}
 									>
@@ -345,7 +373,7 @@
 									{/each}
 								</ul>
 							{:else}
-								<span>No additional effects</span>
+								<span>{localize('NIMBLE.activationEffects.noAdditionalEffects')}</span>
 							{/if}
 						</li>
 					{/each}
@@ -353,13 +381,15 @@
 			</details>
 		{:else}
 			<header>
-				<h4 class="nimble-heading" data-heading-variant="field">Damage</h4>
+				<h4 class="nimble-heading" data-heading-variant="field">
+					{localize('NIMBLE.activationEffects.damage')}
+				</h4>
 
 				<button
 					class="nimble-button"
 					data-button-variant="icon"
-					aria-label="Delete damage roll"
-					data-tooltip="Delete damage roll"
+					aria-label={localize('NIMBLE.activationEffects.deleteDamage')}
+					data-tooltip={localize('NIMBLE.activationEffects.deleteDamage')}
 					type="button"
 					onclick={() => deleteEffectNode(document, effects, node.id)}
 				>
@@ -375,13 +405,15 @@
 {#snippet HealingNode(node, _parentNode = null)}
 	<li data-node-id={node.id}>
 		<header>
-			<h4 class="nimble-heading" data-heading-variant="field">Healing</h4>
+			<h4 class="nimble-heading" data-heading-variant="field">
+				{localize('NIMBLE.activationEffects.healing')}
+			</h4>
 
 			<button
 				class="nimble-button"
 				data-button-variant="icon"
-				aria-label="Delete damage roll"
-				data-tooltip="Delete damage roll"
+				aria-label={localize('NIMBLE.activationEffects.deleteHealing')}
+				data-tooltip={localize('NIMBLE.activationEffects.deleteHealing')}
 				type="button"
 				onclick={() => deleteEffectNode(document, effects, node.id)}
 			>
@@ -395,7 +427,7 @@
 					<label style="width: 100%; flex-grow: 1;">
 						<header class="nimble-header">
 							<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-								Roll Formula
+								{localize('NIMBLE.activationEffects.rollFormula')}
 							</h5>
 						</header>
 
@@ -422,7 +454,7 @@
 					<label>
 						<header class="nimble-header" style="padding-inline-end: 0.5rem;">
 							<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-								Healing Type
+								{localize('NIMBLE.activationEffects.healingType')}
 							</h5>
 						</header>
 
@@ -478,7 +510,7 @@
 					<label>
 						<header class="nimble-header">
 							<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-								Custom Save DC
+								{localize('NIMBLE.activationEffects.customSaveDC')}
 							</h5>
 						</header>
 
@@ -495,13 +527,15 @@
 			<ul>
 				<li>
 					<header>
-						<h4 class="nimble-heading" data-heading-variant="field">Shared Rolls</h4>
+						<h4 class="nimble-heading" data-heading-variant="field">
+							{localize('NIMBLE.activationEffects.sharedRolls')}
+						</h4>
 
 						<button
 							class="nimble-button"
 							data-button-variant="icon"
-							aria-label="Add shared damage roll"
-							data-tooltip="Add shared damage roll"
+							aria-label={localize('NIMBLE.activationEffects.addSharedRoll')}
+							data-tooltip={localize('NIMBLE.activationEffects.addSharedRoll')}
 							type="button"
 							onclick={(event) =>
 								createEffectNode(document, effects, 'damage', event, 'sharedRolls')}
@@ -517,19 +551,21 @@
 							{/each}
 						</ul>
 					{:else}
-						<span>None</span>
+						<span>{localize('NIMBLE.activationEffects.none')}</span>
 					{/if}
 				</li>
 
 				<li>
 					<header>
-						<h4 class="nimble-heading" data-heading-variant="field">On Failed Save</h4>
+						<h4 class="nimble-heading" data-heading-variant="field">
+							{localize('NIMBLE.activationEffects.onFailedSave')}
+						</h4>
 
 						<button
 							class="nimble-button"
 							data-button-variant="icon"
-							aria-label="Add on-fail effect"
-							data-tooltip="Add on-fail effect"
+							aria-label={localize('NIMBLE.activationEffects.addOnFail')}
+							data-tooltip={localize('NIMBLE.activationEffects.addOnFail')}
 							type="button"
 							onclick={toggleEffectCreationOptions}
 						>
@@ -546,19 +582,21 @@
 							{/each}
 						</ul>
 					{:else}
-						<span>No additional effects</span>
+						<span>{localize('NIMBLE.activationEffects.noAdditionalEffects')}</span>
 					{/if}
 				</li>
 
 				<li>
 					<header>
-						<h4 class="nimble-heading" data-heading-variant="field">On Passed Save</h4>
+						<h4 class="nimble-heading" data-heading-variant="field">
+							{localize('NIMBLE.activationEffects.onPassedSave')}
+						</h4>
 
 						<button
 							class="nimble-button"
 							data-button-variant="icon"
-							aria-label="Add on-save effect"
-							data-tooltip="Add on-save effect"
+							aria-label={localize('NIMBLE.activationEffects.addOnSave')}
+							data-tooltip={localize('NIMBLE.activationEffects.addOnSave')}
 							type="button"
 							onclick={toggleEffectCreationOptions}
 						>
@@ -575,7 +613,7 @@
 							{/each}
 						</ul>
 					{:else}
-						<span>No additional effects</span>
+						<span>{localize('NIMBLE.activationEffects.noAdditionalEffects')}</span>
 					{/if}
 				</li>
 			</ul>
@@ -586,13 +624,15 @@
 {#snippet ConditionNode(node, _parentNode = null)}
 	<li data-node-id={node.id}>
 		<header>
-			<h4 class="nimble-heading" data-heading-variant="field">Status Condition</h4>
+			<h4 class="nimble-heading" data-heading-variant="field">
+				{localize('NIMBLE.activationEffects.statusCondition')}
+			</h4>
 
 			<button
 				class="nimble-button"
 				data-button-variant="icon"
-				aria-label="Delete condition"
-				data-tooltip="Delete condition"
+				aria-label={localize('NIMBLE.activationEffects.deleteCondition')}
+				data-tooltip={localize('NIMBLE.activationEffects.deleteCondition')}
 				type="button"
 				onclick={() => deleteEffectNode(document, effects, node.id)}
 			>
@@ -622,13 +662,15 @@
 {#snippet DamageOutcomeNode(node, parentNode = null)}
 	<li data-node-id={node.id}>
 		<header>
-			<h4 class="nimble-heading" data-heading-variant="field">Damage Outcome</h4>
+			<h4 class="nimble-heading" data-heading-variant="field">
+				{localize('NIMBLE.activationEffects.damageOutcome')}
+			</h4>
 
 			<button
 				class="nimble-button"
 				data-button-variant="icon"
-				aria-label="Delete Damage Outcome"
-				data-tooltip="Delete Damage Outcome"
+				aria-label={localize('NIMBLE.activationEffects.deleteDamageOutcome')}
+				data-tooltip={localize('NIMBLE.activationEffects.deleteDamageOutcome')}
 				type="button"
 				onclick={() => deleteEffectNode(document, effects, node.id)}
 			>
@@ -641,7 +683,9 @@
 				<label class="nimble-field" style="gap: 0;" data-field-variant="stacked">
 					{#if parentNode.type === 'savingThrow'}
 						<header>
-							<h4 class="nimble-heading" data-heading-variant="field">Damage Outcome</h4>
+							<h4 class="nimble-heading" data-heading-variant="field">
+								{localize('NIMBLE.activationEffects.damageOutcome')}
+							</h4>
 						</header>
 					{/if}
 
@@ -661,16 +705,120 @@
 	</li>
 {/snippet}
 
-{#snippet TextNode(node, _parentNode = null)}
+{#snippet PoolNode(node, _parentNode = null)}
 	<li data-node-id={node.id}>
 		<header>
-			<h4 class="nimble-heading" data-heading-variant="field">Note</h4>
+			<h4 class="nimble-heading" data-heading-variant="field">
+				{localize('NIMBLE.activationEffects.pool')}
+			</h4>
 
 			<button
 				class="nimble-button"
 				data-button-variant="icon"
-				aria-label="Delete Note"
-				data-tooltip="Delete Note"
+				aria-label={localize('NIMBLE.activationEffects.poolNode.config.deleteLabel')}
+				data-tooltip={localize('NIMBLE.activationEffects.poolNode.config.deleteLabel')}
+				type="button"
+				onclick={() => deleteEffectNode(document, effects, node.id)}
+			>
+				<i class="fa-solid fa-trash"></i>
+			</button>
+		</header>
+
+		<div
+			class="nimble-effect-main-config nimble-effect-main-config--no-sub-config"
+			style="--nimble-card-width: 320px;"
+		>
+			<div class="nimble-config-block nimble-card">
+				<div style="width: 100%;">
+					<header class="nimble-header">
+						<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+							{localize('NIMBLE.activationEffects.poolNode.config.poolTypeLabel')}
+						</h5>
+					</header>
+					<TagGroup
+						options={poolTypes}
+						selectedOptions={[node.poolType]}
+						toggleOption={(value) => updateEffectNode(document, effects, node, 'poolType', value)}
+					/>
+				</div>
+
+				<div style="width: 100%;">
+					<header class="nimble-header">
+						<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+							{localize('NIMBLE.activationEffects.poolNode.config.actionLabel')}
+						</h5>
+					</header>
+					<TagGroup
+						options={poolActions}
+						selectedOptions={[node.action]}
+						toggleOption={(value) => updateEffectNode(document, effects, node, 'action', value)}
+					/>
+				</div>
+
+				<label class="nimble-field" style="width: 100%;">
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.poolNode.config.identifierLabel')}
+					</h5>
+					<input
+						type="text"
+						value={node.poolIdentifier}
+						onchange={({ target }) =>
+							updateEffectNode(document, effects, node, 'poolIdentifier', target.value)}
+					/>
+				</label>
+
+				<label class="nimble-field" style="width: 100%;">
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.poolNode.config.valueLabel')}
+					</h5>
+					<input
+						type="number"
+						min="0"
+						step="1"
+						value={node.value}
+						onchange={({ target }) =>
+							updateEffectNode(document, effects, node, 'value', Number(target.value) || 0)}
+					/>
+				</label>
+
+				<label class="nimble-field" style="width: 100%;">
+					<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+						{localize('NIMBLE.activationEffects.poolNode.config.predicateLabel')}
+					</h5>
+					<textarea
+						rows="2"
+						placeholder={POOL_PREDICATE_PLACEHOLDER}
+						value={JSON.stringify(node.predicate ?? {})}
+						onchange={({ target }) => {
+							try {
+								const parsed = target.value.trim() ? JSON.parse(target.value) : {};
+								updateEffectNode(document, effects, node, 'predicate', parsed);
+							} catch (_err) {
+								ui.notifications?.error(
+									localize('NIMBLE.activationEffects.poolNode.config.predicateInvalid'),
+								);
+								target.value = JSON.stringify(node.predicate ?? {});
+							}
+						}}
+					></textarea>
+				</label>
+			</div>
+		</div>
+	</li>
+{/snippet}
+
+{#snippet TextNode(node, _parentNode = null)}
+	<li data-node-id={node.id}>
+		<header>
+			<h4 class="nimble-heading" data-heading-variant="field">
+				{localize('NIMBLE.activationEffects.note')}
+			</h4>
+
+			<button
+				class="nimble-button"
+				data-button-variant="icon"
+				aria-label={localize('NIMBLE.activationEffects.deleteNote')}
+				data-tooltip={localize('NIMBLE.activationEffects.deleteNote')}
 				type="button"
 				onclick={() => deleteEffectNode(document, effects, node.id)}
 			>
@@ -692,7 +840,7 @@
 				<div style="width: 100%; flex-grow: 1;">
 					<header class="nimble-header">
 						<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
-							Note Type
+							{localize('NIMBLE.activationEffects.noteType')}
 						</h5>
 					</header>
 
