@@ -43,7 +43,11 @@
 					"action": "rollDie",
 					"poolIdentifier": "fury",
 					"value": 1,
-					"predicate": { "level": { "max": 4 } },
+					"predicate": {
+						"level": {
+							"max": 4
+						}
+					},
 					"parentContext": null,
 					"parentNode": null
 				},
@@ -54,7 +58,11 @@
 					"action": "rollDie",
 					"poolIdentifier": "fury",
 					"value": 2,
-					"predicate": { "level": { "min": 5 } },
+					"predicate": {
+						"level": {
+							"min": 5
+						}
+					},
 					"parentContext": null,
 					"parentNode": null
 				}
