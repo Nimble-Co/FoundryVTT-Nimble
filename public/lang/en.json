@@ -1433,6 +1433,10 @@
 				}
 			}
 		},
+		"activationDialog": {
+			"spendPoolDice": "Spend Pool Dice",
+			"spendPoolBonus": "+{bonus} to damage"
+		},
 		"characterSettings": {
 			"actorImageSettings": "Actor Image Settings",
 			"xOffset": "X-Offset (px)",

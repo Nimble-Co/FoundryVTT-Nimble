@@ -1,5 +1,7 @@
 <script>
 	import { untrack } from 'svelte';
+	import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
+	import localize from '#utils/localize.js';
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 	const { skillCheckDialog } = CONFIG.NIMBLE;
@@ -10,6 +12,57 @@
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
 	let shouldRollBeHidden = $state(!!game.settings.get('nimble', 'hideRolls'));
+
+	// Selected pool dice to spend on this roll, keyed as `${poolId}:${faceIndex}`.
+	let selectedDieKeys = $state(new Set());
+
+	// Snapshot the actor's rolled pools at dialog-open time so the UI is stable
+	// even if pool state changes mid-dialog.
+	let spendablePools = untrack(() =>
+		getDicePools(actor)
+			.filter((pool) => pool.faces.length > 0)
+			.map((pool) => ({
+				id: pool.id,
+				identifier: pool.identifier,
+				label: pool.label,
+				dieSize: pool.dieSize,
+				faces: [...pool.faces],
+			})),
+	);
+
+	function toggleDie(poolId, faceIndex) {
+		const key = `${poolId}:${faceIndex}`;
+		if (selectedDieKeys.has(key)) {
+			selectedDieKeys.delete(key);
+		} else {
+			selectedDieKeys.add(key);
+		}
+		selectedDieKeys = new Set(selectedDieKeys);
+	}
+
+	function isDieSelected(poolId, faceIndex) {
+		return selectedDieKeys.has(`${poolId}:${faceIndex}`);
+	}
+
+	let poolBonusEntries = $derived.by(() => {
+		const entries = [];
+		for (const key of selectedDieKeys) {
+			const [poolId, indexStr] = key.split(':');
+			const pool = spendablePools.find((p) => p.id === poolId);
+			if (!pool) continue;
+			const face = pool.faces[Number(indexStr)];
+			if (typeof face !== 'number') continue;
+			entries.push({ face, label: pool.label });
+		}
+		return entries;
+	});
+
+	let poolBonus = $derived(poolBonusEntries.reduce((sum, e) => sum + e.face, 0));
+
+	// Labeled formula fragment for the damage roll: "+3[Fury Dice]+4[Fury Dice]".
+	// Foundry parses [label] into term.options.flavor so the roll tooltip on the
+	// chat card credits each face to its source pool.
+	let poolBonusFormula = $derived(poolBonusEntries.map((e) => `+${e.face}[${e.label}]`).join(''));
 
 	const { damageTypes, hitDice } = CONFIG.NIMBLE;
 
@@ -69,12 +122,17 @@
 	// Get the first damage formula for backward compatibility (used in validation)
 	let damageFormula = $derived(damageEffects[0]?.formula || '0');
 
-	// Modify formulas by adding the situationalModifiers
+	// Modify formulas by adding the situationalModifiers and selected pool dice.
+	// Pool dice are appended as a flat bonus to the FIRST damage roll only —
+	// matches "Add a Fury Die to every STR attack" (one attack = one damage roll).
 	let modifiedFormulas = $derived.by(() => {
-		return damageEffects.map((effect) => {
+		return damageEffects.map((effect, index) => {
 			let formula = effect.formula;
 			if (situationalModifiers !== '') {
 				formula += `+${situationalModifiers}`;
+			}
+			if (index === 0 && poolBonusFormula) {
+				formula += poolBonusFormula;
 			}
 			return {
 				formula,
@@ -110,6 +168,39 @@
 			</label>
 		</div>
 	</div>
+
+	{#if spendablePools.length > 0}
+		<div class="nimble-roll-modifiers-container">
+			<div class="nimble-roll-modifiers nimble-pool-spend">
+				<h5 class="nimble-pool-spend__heading">
+					{localize('NIMBLE.activationDialog.spendPoolDice')}
+				</h5>
+				{#each spendablePools as pool (pool.id)}
+					<div class="nimble-pool-spend__row">
+						<span class="nimble-pool-spend__label">{pool.label}</span>
+						<div class="nimble-pool-spend__dice">
+							{#each pool.faces as face, faceIndex (faceIndex)}
+								<button
+									type="button"
+									class="nimble-pool-spend__die"
+									class:nimble-pool-spend__die--selected={isDieSelected(pool.id, faceIndex)}
+									aria-pressed={isDieSelected(pool.id, faceIndex)}
+									onclick={() => toggleDie(pool.id, faceIndex)}
+								>
+									{face}
+								</button>
+							{/each}
+						</div>
+					</div>
+				{/each}
+				{#if poolBonus > 0}
+					<span class="nimble-pool-spend__total">
+						{localize('NIMBLE.activationDialog.spendPoolBonus', { bonus: poolBonus })}
+					</span>
+				{/if}
+			</div>
+		</div>
+	{/if}
 
 	<div class="nimble-roll-formulas">
 		{#each modifiedFormulas as damageEffect}
@@ -156,6 +247,10 @@
 					return;
 				}
 			}
+			const consumedPoolDice = [...selectedDieKeys].map((key) => {
+				const [poolId, indexStr] = key.split(':');
+				return { poolId, faceIndex: Number(indexStr) };
+			});
 			dialog.submitActivation({
 				rollMode: selectedRollMode,
 				rollFormula: modifiedFormulas[0]?.formula || '0',
@@ -163,6 +258,7 @@
 				primaryDieValue: primaryDieValue,
 				primaryDieModifier: primaryDieModifier,
 				rollHidden: shouldRollBeHidden,
+				consumedPoolDice,
 			});
 		}}
 	>
@@ -229,6 +325,70 @@
 		&__formula {
 			font-family: var(--nimble-font-family-mono);
 			color: var(--nimble-text-color-secondary);
+		}
+	}
+
+	.nimble-pool-spend {
+		gap: 0.5rem;
+
+		&__heading {
+			margin: 0;
+			font-size: 0.875rem;
+			font-weight: 600;
+			color: var(--nimble-text-color-primary);
+		}
+
+		&__row {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			flex-wrap: wrap;
+		}
+
+		&__label {
+			min-width: 6rem;
+			font-size: 0.875rem;
+			font-weight: 500;
+		}
+
+		&__dice {
+			display: inline-flex;
+			gap: 0.25rem;
+		}
+
+		&__die {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 1.75rem;
+			min-height: 1.75rem;
+			padding: 0 0.4rem;
+			background: var(--nimble-background-color-secondary, hsl(210, 65%, 92%));
+			border: 2px solid hsl(210, 65%, 46%);
+			border-radius: 4px;
+			font-weight: 700;
+			color: hsl(210, 65%, 30%);
+			cursor: pointer;
+			transition:
+				background 0.15s ease,
+				transform 0.1s ease;
+
+			&:hover {
+				background: hsl(210, 75%, 85%);
+			}
+
+			&--selected {
+				background: hsl(0, 65%, 58%);
+				border-color: hsl(0, 65%, 35%);
+				color: white;
+				transform: scale(0.95);
+			}
+		}
+
+		&__total {
+			font-size: 0.875rem;
+			font-weight: 600;
+			color: hsl(150, 50%, 35%);
 		}
 	}
 </style>

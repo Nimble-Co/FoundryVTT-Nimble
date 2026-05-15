@@ -203,6 +203,10 @@ class ItemActivationManager {
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData);
 
+		// Persist consumption of pool dice the player spent in the dialog.
+		// The dialog already included their face value in rollFormula above.
+		await this.#consumePoolDice(dialogData);
+
 		// Get template data
 		const _templateData = this.#getTemplateData();
 
@@ -364,6 +368,65 @@ class ItemActivationManager {
 		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
 
 		return rolls;
+	}
+
+	/**
+	 * Persist consumption of pool dice the player spent in the activation dialog.
+	 * The dialog already added their face values to the damage formula; this is
+	 * the bookkeeping step that removes those faces from the pool's flag state.
+	 *
+	 * Indices in `consumedPoolDice` are dialog-snapshot indices — multiple dice
+	 * from the same pool are removed in descending index order so earlier
+	 * removals don't shift later indices.
+	 */
+	async #consumePoolDice(dialogData: ItemActivationManager.DialogData): Promise<void> {
+		const consumed = dialogData.consumedPoolDice;
+		if (!Array.isArray(consumed) || consumed.length < 1) return;
+
+		const actor = this.actor as Actor.Implementation | null;
+		if (!actor) return;
+
+		const byPool = new Map<string, number[]>();
+		for (const entry of consumed) {
+			if (!entry || typeof entry.poolId !== 'string') continue;
+			const indices = byPool.get(entry.poolId) ?? [];
+			indices.push(entry.faceIndex);
+			byPool.set(entry.poolId, indices);
+		}
+
+		for (const [poolId, indices] of byPool) {
+			// Read current faces. Item-scoped pools live on the source item; we scan
+			// items here since the dispatcher does the same elsewhere.
+			let currentFaces: number[] | null = null;
+			if (poolId.startsWith('actor:')) {
+				const map = foundry.utils.getProperty(actor, 'flags.nimble.dicePools') as
+					| Record<string, { faces?: number[] }>
+					| undefined;
+				const entry = map?.[poolId];
+				currentFaces = Array.isArray(entry?.faces) ? [...entry.faces] : null;
+			} else {
+				for (const item of actor.items.contents) {
+					const map = foundry.utils.getProperty(item, 'flags.nimble.dicePools') as
+						| Record<string, { faces?: number[] }>
+						| undefined;
+					const entry = map?.[poolId];
+					if (entry && Array.isArray(entry.faces)) {
+						currentFaces = [...entry.faces];
+						break;
+					}
+				}
+			}
+			if (!currentFaces) continue;
+
+			const sortedIndices = [...indices].sort((a, b) => b - a);
+			for (const index of sortedIndices) {
+				if (index >= 0 && index < currentFaces.length) {
+					currentFaces.splice(index, 1);
+				}
+			}
+
+			await setPoolFaces(actor, poolId, currentFaces);
+		}
 	}
 
 	/**
@@ -713,6 +776,12 @@ namespace ItemActivationManager {
 		};
 		/** Whether to hide the roll. */
 		rollHidden?: boolean;
+		/**
+		 * Dice the player chose to spend from rolled dice pools (Fury, Judgment, etc).
+		 * The dialog already appended the bonus to rollFormula; this list is used to
+		 * persist the consumption back onto the pool after the damage roll succeeds.
+		 */
+		consumedPoolDice?: Array<{ poolId: string; faceIndex: number }>;
 	}
 }
 
