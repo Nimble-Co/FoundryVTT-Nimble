@@ -2,6 +2,7 @@ import type { DeepPartial, InexactPartial } from 'fvtt-types/utils';
 import { createSubscriber } from 'svelte/reactivity';
 import type { AbilityKeyType } from '#types/abilityKey.d.ts';
 import type { SaveKeyType } from '#types/saveKey.d.ts';
+import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
@@ -268,6 +269,29 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	}
 
 	_populateDerivedTags(): void {
+		// Self-state tags — derived from status effects
+		const statuses = this.statuses as Set<string> | undefined;
+		if (statuses) {
+			if (statuses.has(STATUS_EFFECT_IDS.bloodied)) {
+				this.tags.add('self:bloodied');
+				this.tags.add('target:bloodied');
+			}
+			if (statuses.has(STATUS_EFFECT_IDS.lastStand)) {
+				this.tags.add('self:dying');
+			}
+			if (statuses.has(STATUS_EFFECT_IDS.concentration)) {
+				this.tags.add('self:concentrating');
+				this.tags.add('target:concentrating');
+			}
+		}
+
+		// self:fullHp — HP at maximum
+		const systemData = this.system as unknown as BaseActorSystemData;
+		const { value: hpValue, max: hpMax } = systemData.attributes.hp;
+		if (hpMax > 0 && hpValue >= hpMax) {
+			this.tags.add('self:fullHp');
+		}
+
 		if (getAdjacencySyncEnabled()) {
 			const adjacency = this.getFlag('nimble', 'adjacency') as
 				| { enemiesAdjacentCount?: number; hasMostAdjacentEnemies?: boolean }

@@ -275,6 +275,14 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			return [...item.rules.values()].some((rule) => rule.type === 'armorClass');
 		});
 		this.tags.add(`armor:${hasArmor ? 'equipped' : 'unarmored'}`);
+
+		// Shield status tag
+		const hasShield = this.items.some((item) => {
+			if (!item.isType('object')) return false;
+			const objectItem = item as unknown as NimbleObjectItem;
+			return objectItem.system.objectType === 'shield';
+		});
+		this.tags.add(hasShield ? 'self:shield' : 'self:noShield');
 	}
 
 	getClassAbilityBonuses() {
