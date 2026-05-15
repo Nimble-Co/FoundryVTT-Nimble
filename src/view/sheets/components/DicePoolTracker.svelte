@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { createDicePoolTrackerState, getDieFaceIcon } from './DicePoolTracker.svelte.ts';
+	import { getDieFaceIcon } from '#utils/dicePool/dieFaceIcons.js';
+	import { createDicePoolTrackerState } from './DicePoolTracker.svelte.ts';
 
 	let { actor } = $props();
 

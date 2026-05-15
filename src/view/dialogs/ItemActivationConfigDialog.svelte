@@ -4,7 +4,7 @@
 	import { getPools as getDicePools } from '#utils/dicePool/dicePoolSync.js';
 	import localize from '#utils/localize.js';
 	import { flattenEffectsTree } from '../../utils/treeManipulation/flattenEffectsTree.js';
-	import { getDieFaceIcon } from '../sheets/components/DicePoolTracker.svelte.ts';
+	import { getDieFaceIcon } from '#utils/dicePool/dieFaceIcons.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 	const { skillCheckDialog } = CONFIG.NIMBLE;
 
