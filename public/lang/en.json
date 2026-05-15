@@ -1499,7 +1499,7 @@
 			"targets": "Targets",
 			"target": "Target",
 			"duration": "Duration",
-			"acquireTargetsFromTemplate": "Acquire targets from template",
+			"acquireTargetsFromTemplate": "AoE targeting (can't miss or crit)",
 			"targetCount": "Target Count",
 			"targetRestrictions": "Target Restrictions",
 			"attackType": "Attack Type",
