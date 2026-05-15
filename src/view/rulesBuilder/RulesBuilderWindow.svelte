@@ -118,7 +118,7 @@
 		align-items: center;
 		justify-content: space-between;
 		padding: 0.5rem;
-		border-bottom: 1px solid hsla(41, 18%, 54%, 25%);
+		border-bottom: 1px solid var(--nimble-card-border-color);
 	}
 
 	.nimble-rules-builder-window__header-left,

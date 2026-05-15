@@ -58,7 +58,7 @@
 			gap: 0.25rem;
 			padding: 0.375rem 0.5rem 0.5rem;
 			background: var(--nimble-box-background-color);
-			border: 1px solid hsla(41, 18%, 54%, 25%);
+			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 6px;
 		}
 
@@ -72,7 +72,7 @@
 			text-transform: uppercase;
 			letter-spacing: 0.05em;
 			color: var(--color-text-dark-secondary);
-			border-bottom: 1px solid hsla(41, 18%, 54%, 15%);
+			border-bottom: 1px solid var(--nimble-card-border-color);
 
 			i {
 				color: var(--nimble-accent-color);
@@ -84,7 +84,7 @@
 			padding: 0 0.375rem;
 			font-size: var(--nimble-xs-text);
 			color: var(--color-text-dark-secondary);
-			background: var(--nimble-sheet-background, transparent);
+			background: var(--nimble-input-background-color);
 			border-radius: 999px;
 		}
 
@@ -100,10 +100,10 @@
 			align-items: center;
 			padding: 0.25rem 0.5rem;
 			min-height: 1.75rem;
-			background: var(--nimble-sheet-background);
+			background: var(--nimble-card-background-color);
 			color: inherit;
 			text-align: left;
-			border: 1px solid var(--nimble-accent-color);
+			border: 1px solid var(--nimble-card-border-color);
 			border-radius: 4px;
 			cursor: pointer;
 			overflow: hidden;
@@ -113,8 +113,12 @@
 
 			&:hover,
 			&:focus {
-				background: var(--nimble-selected-tag-background-color);
-				color: var(--nimble-selected-tag-text-color, var(--nimble-light-text-color));
+				background: color-mix(
+					in srgb,
+					var(--nimble-card-background-color) 80%,
+					var(--nimble-accent-color)
+				);
+				border-color: var(--nimble-accent-color);
 				outline: none;
 			}
 

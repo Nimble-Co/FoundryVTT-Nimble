@@ -281,10 +281,13 @@
 				</button>
 			</div>
 		{:else}
-			<div class="nimble-renderer-error">
-				Field <code>{name}</code> uses an unsupported ArrayField element type. The renderer's closed
-				widget catalog needs an extension to handle it — see
-				<code>SchemaFieldRenderer.svelte</code>.
+			<div class="nimble-hint nimble-hint--warning nimble-renderer-error">
+				<i class="nimble-hint__icon fa-solid fa-circle-exclamation"></i>
+				<span>
+					Field <code>{name}</code> uses an unsupported ArrayField element type. The renderer's
+					closed widget catalog needs an extension to handle it — see
+					<code>SchemaFieldRenderer.svelte</code>.
+				</span>
 			</div>
 			{(() => {
 				console.warn(
@@ -315,12 +318,15 @@
 			{/each}
 		</fieldset>
 	{:else}
-		<div class="nimble-renderer-error">
-			Field <code>{name}</code> of type
-			<code>
-				{(field as { constructor?: { name?: string } })?.constructor?.name ?? 'unknown'}
-			</code>
-			has no widget. Add one to <code>SchemaFieldRenderer.svelte</code>.
+		<div class="nimble-hint nimble-hint--warning nimble-renderer-error">
+			<i class="nimble-hint__icon fa-solid fa-circle-exclamation"></i>
+			<span>
+				Field <code>{name}</code> of type
+				<code>
+					{(field as { constructor?: { name?: string } })?.constructor?.name ?? 'unknown'}
+				</code>
+				has no widget. Add one to <code>SchemaFieldRenderer.svelte</code>.
+			</span>
 		</div>
 		{(() => {
 			console.warn(
@@ -407,17 +413,5 @@
 			font-weight: 600;
 			color: var(--color-text-dark-secondary);
 		}
-	}
-
-	.nimble-renderer-error {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-		padding: 0.5rem;
-		background: var(--nimble-warning-background, rgba(200, 60, 60, 0.12));
-		color: var(--nimble-warning-text, darkred);
-		border: 1px solid var(--color-level-error, crimson);
-		border-radius: 4px;
-		font-size: var(--nimble-sm-text);
 	}
 </style>
