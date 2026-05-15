@@ -206,6 +206,7 @@ class ItemActivationManager {
 		// Persist consumption of pool dice the player spent in the dialog.
 		// The dialog already included their face value in rollFormula above.
 		await this.#consumePoolDice(dialogData);
+		await this.#consumeChargePools(dialogData);
 
 		// Get template data
 		const _templateData = this.#getTemplateData();
@@ -426,6 +427,41 @@ class ItemActivationManager {
 			}
 
 			await setPoolFaces(actor, poolId, currentFaces);
+		}
+	}
+
+	/**
+	 * Persist consumption of charge-pool charges the player spent in the dialog.
+	 * The dialog already added `+Nd<size>[Label]` to the damage formula so the
+	 * dice roll as part of the damage roll; this step decrements the charge
+	 * pool's current count by the spent amount.
+	 */
+	async #consumeChargePools(dialogData: ItemActivationManager.DialogData): Promise<void> {
+		const consumed = dialogData.consumedChargePools;
+		if (!Array.isArray(consumed) || consumed.length < 1) return;
+
+		const actor = this.actor as Actor.Implementation | null;
+		if (!actor) return;
+
+		for (const entry of consumed) {
+			if (!entry || typeof entry.poolId !== 'string') continue;
+			const count = Math.max(0, Math.floor(Number(entry.count) || 0));
+			if (count < 1) continue;
+			// adjustPool with negative-equivalent: 'add' supports only non-negative
+			// values, so read current and 'set' to current - count.
+			let currentValue = 0;
+			for (const item of actor.items.contents) {
+				const map = foundry.utils.getProperty(item, 'flags.nimble.chargePools') as
+					| Record<string, { current?: number }>
+					| undefined;
+				const poolEntry = map?.[entry.poolId];
+				if (poolEntry && typeof poolEntry.current === 'number') {
+					currentValue = poolEntry.current;
+					break;
+				}
+			}
+			const next = Math.max(0, currentValue - count);
+			await adjustPool(actor, entry.poolId, 'set', next);
 		}
 	}
 
@@ -782,6 +818,13 @@ namespace ItemActivationManager {
 		 * persist the consumption back onto the pool after the damage roll succeeds.
 		 */
 		consumedPoolDice?: Array<{ poolId: string; faceIndex: number }>;
+		/**
+		 * Charges the player chose to spend from charge pools (Combat Dice, Mana
+		 * Dice, etc). The dialog already appended `+Nd<size>[Label]` to rollFormula
+		 * so the dice roll as part of the damage roll; this list decrements the
+		 * pool's current count after the roll succeeds.
+		 */
+		consumedChargePools?: Array<{ poolId: string; count: number }>;
 	}
 }
 

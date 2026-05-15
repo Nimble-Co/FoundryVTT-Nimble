@@ -1435,7 +1435,10 @@
 		},
 		"activationDialog": {
 			"spendPoolDice": "Spend Pool Dice",
-			"spendPoolBonus": "+{bonus} to damage"
+			"spendCharge": {
+				"increment": "Spend one more",
+				"decrement": "Spend one less"
+			}
 		},
 		"characterSettings": {
 			"actorImageSettings": "Actor Image Settings",
