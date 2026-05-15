@@ -85,6 +85,11 @@ function createDamageBonusRule(
 		configurable: true,
 	});
 
+	Object.defineProperty(rule, '_targetCondition', {
+		get: () => ({ size: 0 }),
+		configurable: true,
+	});
+
 	return rule;
 }
 
@@ -104,7 +109,14 @@ describe('DamageBonusRule', () => {
 			rule.afterPrepareData();
 
 			expect(actor.system.damageBonuses).toEqual([
-				{ value: 3, formula: null, damageType: '', delivery: 'melee', source: 'weapon' },
+				{
+					value: 3,
+					formula: null,
+					damageType: '',
+					delivery: 'melee',
+					source: 'weapon',
+					targetCondition: null,
+				},
 			]);
 		});
 
@@ -118,7 +130,14 @@ describe('DamageBonusRule', () => {
 			rule.afterPrepareData();
 
 			expect(actor.system.damageBonuses).toEqual([
-				{ value: 10, formula: null, damageType: '', delivery: 'any', source: 'any' },
+				{
+					value: 10,
+					formula: null,
+					damageType: '',
+					delivery: 'any',
+					source: 'any',
+					targetCondition: null,
+				},
 			]);
 		});
 
@@ -229,7 +248,14 @@ describe('DamageBonusRule', () => {
 			rule.afterPrepareData();
 
 			expect(actor.system.damageBonuses).toEqual([
-				{ value: 5, formula: null, damageType: 'necrotic', delivery: 'any', source: 'spell' },
+				{
+					value: 5,
+					formula: null,
+					damageType: 'necrotic',
+					delivery: 'any',
+					source: 'spell',
+					targetCondition: null,
+				},
 			]);
 		});
 	});
@@ -480,7 +506,14 @@ describe('DamageBonusRule — dice-based values', () => {
 		rule.afterPrepareData();
 
 		expect(actor.system.damageBonuses).toEqual([
-			{ value: null, formula: '1d6', damageType: '', delivery: 'any', source: 'any' },
+			{
+				value: null,
+				formula: '1d6',
+				damageType: '',
+				delivery: 'any',
+				source: 'any',
+				targetCondition: null,
+			},
 		]);
 	});
 

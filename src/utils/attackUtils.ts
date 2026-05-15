@@ -1,3 +1,4 @@
+import { Predicate } from '../etc/Predicate.js';
 import type {
 	DamageBonusDelivery,
 	DamageBonusEntry,
@@ -80,17 +81,23 @@ export function hasWeaponProficiency(
 }
 
 /**
- * Check if a bonus matches the given delivery, source, and damage type filters.
+ * Check if a bonus matches the given delivery, source, damage type, and target condition filters.
  */
 function matchesBonus(
 	bonus: DamageBonusEntry,
 	delivery: DamageBonusDelivery,
 	source: DamageBonusSource,
 	damageType?: string,
+	targetDomain?: Set<string>,
 ): boolean {
 	if (bonus.delivery !== 'any' && bonus.delivery !== delivery) return false;
 	if (bonus.source !== 'any' && bonus.source !== source) return false;
 	if (bonus.damageType !== '' && damageType && bonus.damageType !== damageType) return false;
+	if (bonus.targetCondition) {
+		if (!targetDomain) return false;
+		const predicate = new Predicate(bonus.targetCondition);
+		if (!predicate.test(targetDomain)) return false;
+	}
 	return true;
 }
 
@@ -102,6 +109,7 @@ function matchesBonus(
  * @param delivery - The delivery method ('melee', 'ranged', or 'any')
  * @param source - The source type ('weapon', 'spell', or 'any')
  * @param damageType - Optional damage type to filter by (e.g. 'lightning')
+ * @param targetDomain - Optional target actor domain for targetCondition evaluation
  * @returns The total numeric bonus value (0 if no matching bonuses)
  */
 export function getDamageBonusTotal(
@@ -109,6 +117,7 @@ export function getDamageBonusTotal(
 	delivery: DamageBonusDelivery,
 	source: DamageBonusSource,
 	damageType?: string,
+	targetDomain?: Set<string>,
 ): number {
 	const bonuses = (actor?.system as { damageBonuses?: DamageBonusEntry[] } | undefined)
 		?.damageBonuses;
@@ -117,7 +126,7 @@ export function getDamageBonusTotal(
 	let total = 0;
 	for (const bonus of bonuses) {
 		if (!bonus.value) continue;
-		if (!matchesBonus(bonus, delivery, source, damageType)) continue;
+		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain)) continue;
 		total += bonus.value;
 	}
 	return total;
@@ -131,6 +140,7 @@ export function getDamageBonusTotal(
  * @param delivery - The delivery method ('melee', 'ranged', or 'any')
  * @param source - The source type ('weapon', 'spell', or 'any')
  * @param damageType - Optional damage type to filter by (e.g. 'lightning')
+ * @param targetDomain - Optional target actor domain for targetCondition evaluation
  * @returns Array of dice formula strings to append to the damage roll
  */
 export function getDamageBonusFormulas(
@@ -138,6 +148,7 @@ export function getDamageBonusFormulas(
 	delivery: DamageBonusDelivery,
 	source: DamageBonusSource,
 	damageType?: string,
+	targetDomain?: Set<string>,
 ): string[] {
 	const bonuses = (actor?.system as { damageBonuses?: DamageBonusEntry[] } | undefined)
 		?.damageBonuses;
@@ -146,7 +157,7 @@ export function getDamageBonusFormulas(
 	const formulas: string[] = [];
 	for (const bonus of bonuses) {
 		if (!bonus.formula) continue;
-		if (!matchesBonus(bonus, delivery, source, damageType)) continue;
+		if (!matchesBonus(bonus, delivery, source, damageType, targetDomain)) continue;
 		formulas.push(bonus.formula);
 	}
 	return formulas;

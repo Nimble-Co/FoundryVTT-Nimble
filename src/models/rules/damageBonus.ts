@@ -1,3 +1,5 @@
+import type { Predicate, RawPredicate } from '../../etc/Predicate.js';
+import { PredicateField } from '../fields/PredicateField.js';
 import { NimbleBaseRule } from './base.js';
 
 type DamageBonusDelivery = 'melee' | 'ranged' | 'any';
@@ -11,6 +13,8 @@ interface DamageBonusEntry {
 	damageType: string;
 	delivery: DamageBonusDelivery;
 	source: DamageBonusSource;
+	/** Optional predicate evaluated against the target's domain at activation time */
+	targetCondition: RawPredicate | null;
 }
 
 /** Matches dice notation: 1d6, 2d8, 3d20+5, 1d4+@level, etc. Uses negative lookbehind
@@ -43,6 +47,7 @@ function schema() {
 			initial: 'any',
 			choices: ['weapon', 'spell', 'any'],
 		}),
+		targetCondition: new PredicateField(),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'damageBonus' }),
 	};
 }
@@ -79,6 +84,10 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 	declare delivery: DamageBonusDelivery;
 	declare source: DamageBonusSource;
 
+	private get _targetCondition(): Predicate {
+		return (this as object as { targetCondition: Predicate }).targetCondition;
+	}
+
 	static override defineSchema(): DamageBonusRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
@@ -93,6 +102,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 				['damageType', 'string'],
 				['delivery', 'string'],
 				['source', 'string'],
+				['targetCondition', 'object'],
 			]),
 		);
 	}
@@ -127,6 +137,9 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 		if (!item.isEmbedded) return;
 		if (!this.test()) return;
 
+		const targetConditionRaw =
+			this._targetCondition.size > 0 ? this._targetCondition.toObject() : null;
+
 		if (this.isDiceFormula()) {
 			// Dice expression — store raw formula, don't resolve to a number
 			this.pushBonus({
@@ -135,6 +148,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 				damageType: this.damageType,
 				delivery: this.delivery,
 				source: this.source,
+				targetCondition: targetConditionRaw,
 			});
 		} else {
 			// Numeric formula — resolve to a number
@@ -147,6 +161,7 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 				damageType: this.damageType,
 				delivery: this.delivery,
 				source: this.source,
+				targetCondition: targetConditionRaw,
 			});
 		}
 	}
