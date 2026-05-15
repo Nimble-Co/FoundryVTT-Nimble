@@ -17,6 +17,7 @@
 		onDelete,
 		collapsed = false,
 		onToggleCollapse,
+		document,
 	}: RuleCardProps = $props();
 
 	const state = createRuleCardState(
@@ -199,6 +200,7 @@
 								parentData={rule}
 								name={fieldName}
 								onChange={(v) => state.emitFieldChange(fieldName, v)}
+								{document}
 							/>
 							{#if hint}
 								<small class="nimble-field-row__hint">{hint}</small>

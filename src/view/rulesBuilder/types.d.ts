@@ -36,6 +36,9 @@ export interface SchemaFieldRendererProps {
 	name: string;
 	/** Disabled state (read-only mode). */
 	disabled?: boolean;
+	/** Parent item — passed through to widgets that need a document context
+	 *  (e.g. RichTextEditor for enrichHTML / documentUUID wiring). */
+	document?: NimbleBaseItem;
 }
 
 export interface FormulaInputProps {
@@ -60,6 +63,9 @@ export interface RichTextEditorProps {
 	onChange: (next: string) => void;
 	disabled?: boolean;
 	placeholder?: string;
+	/** Optional parent document — used to drive enrichHTML's rollData / secrets
+	 *  context and the underlying form-control's documentUUID binding. */
+	document?: NimbleBaseItem;
 }
 
 export interface PredicateBuilderProps {
@@ -85,6 +91,8 @@ export interface RuleCardProps {
 	/** Hide the body + advanced section, keeping just the header visible. */
 	collapsed?: boolean;
 	onToggleCollapse?: () => void;
+	/** Parent item — threaded through to rich-text widgets. */
+	document?: NimbleBaseItem;
 }
 
 export interface RuleTypePickerProps {

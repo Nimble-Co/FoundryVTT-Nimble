@@ -558,6 +558,7 @@
 			"editRawJson": "Edit raw JSON",
 			"deleteRule": "Delete rule",
 			"saveJson": "Save JSON",
+			"save": "Save",
 			"noFurtherConfig": "No further configuration needed.",
 			"advanced": "Advanced",
 			"appliesWhen": "Applies when",

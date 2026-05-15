@@ -94,6 +94,7 @@
 							collapsed={state.collapsedIds.has(rule.id)}
 							onToggleCollapse={() => state.toggleCollapse(rule.id)}
 							onDelete={() => item.rules.deleteRule(rule.id)}
+							document={item}
 						/>
 					</li>
 				{/each}

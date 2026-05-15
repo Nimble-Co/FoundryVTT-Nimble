@@ -21,6 +21,7 @@
 		onChange,
 		name,
 		disabled = false,
+		document,
 	}: SchemaFieldRendererProps = $props();
 
 	const { fields } = foundry.data;
@@ -48,7 +49,12 @@
 			documentTypes={state.documentTypes}
 		/>
 	{:else if state.widget === 'richText' || field instanceof fields.HTMLField}
-		<RichTextEditor value={String(value ?? '')} onChange={(v) => onChange(v)} {disabled} />
+		<RichTextEditor
+			value={String(value ?? '')}
+			onChange={(v) => onChange(v)}
+			{disabled}
+			{document}
+		/>
 	{:else if state.widget === 'templateString'}
 		<input
 			class="nimble-template-string-input"
@@ -162,6 +168,7 @@
 								{parentData}
 								name={`${name}[${i}]`}
 								{disabled}
+								{document}
 								onChange={(v) => {
 									const next = [...arrValue];
 									next[i] = v as string;
@@ -243,6 +250,7 @@
 									parentData={entry}
 									name={childName}
 									{disabled}
+									{document}
 									onChange={(v) => {
 										const next = [...arrValue];
 										next[i] = { ...entry, [childName]: v };
@@ -296,6 +304,7 @@
 						parentData={(value as Record<string, unknown> | undefined) ?? {}}
 						name={childName}
 						{disabled}
+						{document}
 						onChange={(v) =>
 							onChange({
 								...((value as Record<string, unknown>) ?? {}),
