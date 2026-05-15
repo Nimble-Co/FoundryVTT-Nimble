@@ -56,8 +56,8 @@
 					class="nimble-rules-tab__row"
 					class:nimble-rules-tab__row--disabled={rule.disabled}
 					data-reorder-id={rule.id}
-					draggable="true"
-					data-tooltip={localize('NIMBLE.rulesBuilder.dragToCopy')}
+					draggable={!jsonOpen}
+					data-tooltip={jsonOpen ? undefined : localize('NIMBLE.rulesBuilder.dragToCopy')}
 				>
 					<div class="nimble-rules-tab__row-main">
 						<span
@@ -101,7 +101,7 @@
 					{#if jsonOpen}
 						<div class="nimble-rules-tab__json">
 							<textarea
-								class="nimble-code-block__text-area"
+								class="nimble-rules-tab__json-textarea"
 								bind:value={state.jsonDrafts[rule.id]}
 								rows="11"
 								autocapitalize="off"
@@ -205,6 +205,17 @@
 		flex-direction: column;
 		gap: 0.375rem;
 		cursor: default;
+	}
+
+	.nimble-rules-tab__json-textarea {
+		padding: 0.5rem;
+		font-family: var(--nimble-mono-font);
+		font-size: var(--nimble-sm-text);
+		color: var(--nimble-code-editor-text-color);
+		background: var(--nimble-code-editor-background-color);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+		resize: vertical;
 	}
 
 	.nimble-rules-tab__json-controls {

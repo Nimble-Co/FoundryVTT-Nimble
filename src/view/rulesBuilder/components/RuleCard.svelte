@@ -149,7 +149,7 @@
 		{#if state.showJson}
 			<div class="nimble-rule-card__json">
 				<textarea
-					class="nimble-code-block__text-area"
+					class="nimble-rule-card__json-textarea"
 					value={state.jsonDraft}
 					oninput={(e) => state.setJsonDraft((e.target as HTMLTextAreaElement).value)}
 					rows="11"
@@ -356,6 +356,17 @@
 			display: flex;
 			flex-direction: column;
 			gap: 0.375rem;
+		}
+
+		&__json-textarea {
+			padding: 0.5rem;
+			font-family: var(--nimble-mono-font);
+			font-size: var(--nimble-sm-text);
+			color: var(--nimble-code-editor-text-color);
+			background: var(--nimble-code-editor-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 4px;
+			resize: vertical;
 		}
 
 		&__json-controls {
