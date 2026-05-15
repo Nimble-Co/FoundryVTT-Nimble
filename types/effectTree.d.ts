@@ -23,6 +23,8 @@ export type ConditionNode = {
 	parentNode: string | null;
 };
 
+export type EffectNodeDisposition = 'any' | 'friendly' | 'neutral' | 'hostile' | 'secret';
+
 export type DamageNode = {
 	id: string;
 	type: 'damage';
@@ -32,6 +34,7 @@ export type DamageNode = {
 	canMiss?: boolean;
 	ignoreArmor?: boolean;
 	ignoreAllies?: boolean;
+	targetDisposition?: EffectNodeDisposition;
 	on?: ActionConsequence;
 	parentContext: string | null;
 	parentNode: string | null;
@@ -56,6 +59,7 @@ export type HealingNode = {
 	type: 'healing';
 	healingType: 'healing' | 'tempHealing';
 	formula: string;
+	targetDisposition?: EffectNodeDisposition;
 	parentContext: string | null;
 	parentNode: string | null;
 	roll?: Record<string, any>;
