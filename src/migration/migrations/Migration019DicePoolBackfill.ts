@@ -24,6 +24,8 @@ const RAGE_RULES = [
 		max: '@key',
 		initial: 'zero',
 		refills: [],
+		consumption: 'autoBonus',
+		bonusOnAttackDelivery: 'melee',
 	},
 ];
 

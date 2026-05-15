@@ -19,7 +19,9 @@
 				"dieSize": "d4",
 				"max": "@key",
 				"initial": "zero",
-				"refills": []
+				"refills": [],
+				"consumption": "autoBonus",
+				"bonusOnAttackDelivery": "melee"
 			}
 		],
 		"activation": {

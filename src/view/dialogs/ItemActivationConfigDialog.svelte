@@ -18,9 +18,23 @@
 	// Selected rolled-pool dice to spend on this roll, keyed as `${poolId}:${faceIndex}`.
 	let selectedDieKeys = $state(new Set());
 
+	// Derive the activation's attack delivery (melee / ranged / null) from the
+	// item's activation targets. Mirrors ItemActivationManager#getRolls. Used to
+	// filter which autoBonus pools auto-apply to this attack.
+	const attackDelivery = (() => {
+		const attackType = item.system?.activation?.targets?.attackType;
+		if (attackType === 'reach') return 'melee';
+		if (attackType === 'range') return 'ranged';
+		return null;
+	})();
+
 	// Snapshot the actor's rolled pools at dialog-open time so the UI is stable
-	// even if pool state changes mid-dialog.
-	let spendablePools = untrack(() =>
+	// even if pool state changes mid-dialog. Pools split into two flavors:
+	//   - manual    : player opts in to spending individual faces (existing UX)
+	//   - autoBonus : every face is auto-added to qualifying attacks; never
+	//                 consumed by this dialog. Eligibility is filtered against
+	//                 the activation's delivery.
+	const allRolledPools = untrack(() =>
 		getDicePools(actor)
 			.filter((pool) => pool.faces.length > 0)
 			.map((pool) => ({
@@ -29,7 +43,20 @@
 				label: pool.label,
 				dieSize: pool.dieSize,
 				faces: [...pool.faces],
+				consumption: pool.consumption ?? 'manual',
+				bonusOnAttackDelivery: pool.bonusOnAttackDelivery ?? null,
 			})),
+	);
+
+	function matchesAttackDelivery(filter) {
+		if (filter === null || filter === undefined || filter === 'any') return true;
+		return filter === attackDelivery;
+	}
+
+	let spendablePools = allRolledPools.filter((pool) => pool.consumption !== 'autoBonus');
+
+	let autoBonusPools = allRolledPools.filter(
+		(pool) => pool.consumption === 'autoBonus' && matchesAttackDelivery(pool.bonusOnAttackDelivery),
 	);
 
 	// Charge pools with a die-size hint (roll-on-spend resources: Combat Dice,
@@ -87,6 +114,20 @@
 
 	let poolBonus = $derived(poolBonusEntries.reduce((sum, e) => sum + e.face, 0));
 
+	// Auto-bonus pools contribute every face on every qualifying attack with no
+	// player toggling and no consumption. Each face is appended as `+N[Label]`
+	// so the roll tooltip credits the source pool.
+	let autoBonusSummaries = autoBonusPools.map((pool) => ({
+		id: pool.id,
+		label: pool.label,
+		faces: pool.faces,
+		total: pool.faces.reduce((sum, face) => sum + face, 0),
+	}));
+
+	let autoBonusFormula = autoBonusPools
+		.flatMap((pool) => pool.faces.map((face) => `+${face}[${pool.label}]`))
+		.join('');
+
 	// Charge-pool spends produce dice expressions, not flat bonuses. Aggregate
 	// per pool: "+2d6[Combat Dice]" rather than two separate "+1d6" terms.
 	let chargeBonusFragments = $derived.by(() => {
@@ -103,16 +144,19 @@
 		return fragments;
 	});
 
-	// Labeled formula fragment for the damage roll: "+3[Fury Dice]+4[Fury Dice]+2d6[Combat Dice]".
-	// Foundry parses [label] into term.options.flavor so the roll tooltip on the
-	// chat card credits each face / die to its source pool.
+	// Labeled formula fragment for the damage roll. Foundry parses [label] into
+	// term.options.flavor so the roll tooltip credits each face/die to its
+	// source pool. Combines: manual selections + auto-bonus pools + charges.
 	let poolBonusFormula = $derived(
 		poolBonusEntries.map((e) => `+${e.face}[${e.label}]`).join('') +
+			autoBonusFormula +
 			chargeBonusFragments.map((f) => f.formula).join(''),
 	);
 
 	// Convenience flag for the UI: only render the spend section if anything is spendable.
-	let hasSpendablePools = $derived(spendablePools.length > 0 || spendableChargePools.length > 0);
+	let hasSpendablePools = $derived(
+		spendablePools.length > 0 || spendableChargePools.length > 0 || autoBonusPools.length > 0,
+	);
 
 	const { damageTypes, hitDice } = CONFIG.NIMBLE;
 
@@ -226,6 +270,23 @@
 					{localize('NIMBLE.activationDialog.spendPoolDice')}
 				</h5>
 
+				{#each autoBonusSummaries as summary (summary.id)}
+					<div class="nimble-pool-spend__row nimble-pool-spend__row--auto">
+						<span class="nimble-pool-spend__label">
+							<i class="fa-solid fa-bolt"></i>
+							{summary.label}
+						</span>
+						<div class="nimble-pool-spend__auto">
+							<span class="nimble-pool-spend__auto-faces">
+								{#each summary.faces as face, i (i)}
+									<span class="nimble-pool-spend__auto-face">{face}</span>
+								{/each}
+							</span>
+							<span class="nimble-pool-spend__auto-total">+{summary.total}</span>
+						</div>
+					</div>
+				{/each}
+
 				{#each spendablePools as pool (pool.id)}
 					<div class="nimble-pool-spend__row">
 						<span class="nimble-pool-spend__label">
@@ -284,8 +345,16 @@
 					</div>
 				{/each}
 
-				{#if poolBonus > 0 || chargeBonusFragments.length > 0}
+				{#if poolBonus > 0 || chargeBonusFragments.length > 0 || autoBonusSummaries.length > 0}
 					<div class="nimble-pool-spend__total">
+						{#each autoBonusSummaries as summary (summary.id)}
+							{#if summary.total > 0}
+								<span class="nimble-pool-spend__total-part">
+									+{summary.total}
+									<span class="nimble-pool-spend__total-label">{summary.label}</span>
+								</span>
+							{/if}
+						{/each}
 						{#if poolBonus > 0}
 							<span class="nimble-pool-spend__total-part">+{poolBonus}</span>
 						{/if}
@@ -509,6 +578,44 @@
 				color: white;
 				transform: scale(0.93);
 			}
+		}
+
+		&__row--auto {
+			.nimble-pool-spend__label i {
+				color: hsl(45, 90%, 60%);
+			}
+		}
+
+		&__auto {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+		}
+
+		&__auto-faces {
+			display: inline-flex;
+			gap: 0.25rem;
+		}
+
+		&__auto-face {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 1.5rem;
+			height: 1.5rem;
+			padding: 0 0.3rem;
+			background: color-mix(in srgb, hsl(45, 80%, 50%) 15%, transparent);
+			border: 1px solid hsl(45, 80%, 50%);
+			border-radius: 3px;
+			font-size: 0.8125rem;
+			font-weight: 700;
+			color: hsl(45, 85%, 72%);
+		}
+
+		&__auto-total {
+			font-weight: 700;
+			color: hsl(45, 90%, 60%);
+			font-variant-numeric: tabular-nums;
 		}
 
 		&__stepper {

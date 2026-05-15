@@ -6,6 +6,8 @@ type DicePoolInitialMode = (typeof DicePoolRuleConfig.initialModes)[number];
 type DiceRefillTrigger = (typeof DicePoolRuleConfig.refillTriggers)[number];
 type DiceRefillMode = (typeof DicePoolRuleConfig.refillModes)[number];
 type DiceRestType = (typeof DicePoolRuleConfig.restTypes)[number];
+type DiceConsumptionMode = (typeof DicePoolRuleConfig.consumptionModes)[number];
+type DiceAttackDeliveryFilter = (typeof DicePoolRuleConfig.attackDeliveryFilters)[number];
 type NumericInput = number | string | null | undefined;
 
 type DiceRefillEntry = {
@@ -26,6 +28,8 @@ type DicePoolState = {
 	faces: number[];
 	icon?: string;
 	refills: DiceRefillEntry[];
+	consumption: DiceConsumptionMode;
+	bonusOnAttackDelivery: DiceAttackDeliveryFilter | null;
 };
 
 type DicePoolMap = Record<string, DicePoolState>;
@@ -46,6 +50,8 @@ type DicePoolRuleLike = {
 	icon?: string;
 	initial?: string;
 	refills?: unknown;
+	consumption?: string;
+	bonusOnAttackDelivery?: string | null;
 };
 
 type ModifyPoolRuleLike = {
@@ -72,6 +78,8 @@ type CharacterActorLike = Actor.Implementation & {
 
 export type {
 	CharacterActorLike,
+	DiceAttackDeliveryFilter,
+	DiceConsumptionMode,
 	DicePoolDefinition,
 	DicePoolInitialMode,
 	DicePoolMap,
