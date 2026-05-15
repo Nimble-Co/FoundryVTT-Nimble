@@ -1,271 +1,30 @@
-<script lang="ts" module>
-	let compendiumKeys = $state<Set<string>>(new Set());
-	let compendiumLoadPromise: Promise<void> | null = null;
-
-	function loadCompendiumKeys(): Promise<void> {
-		if (compendiumLoadPromise) return compendiumLoadPromise;
-		compendiumLoadPromise = (async () => {
-			const next = new Set<string>();
-			interface PackLike {
-				metadata?: { type?: string };
-				getDocuments?: () => Promise<Array<{ tags?: Set<string> }>>;
-			}
-			const packs = (game as unknown as { packs?: Iterable<PackLike> }).packs;
-			if (!packs) return;
-			for (const pack of packs) {
-				if (pack.metadata?.type !== 'Actor') continue;
-				try {
-					const docs = (await pack.getDocuments?.()) ?? [];
-					for (const doc of docs) {
-						if (!doc.tags) continue;
-						for (const entry of doc.tags) {
-							const k = entry.split(':', 1)[0];
-							if (k) next.add(k);
-						}
-					}
-				} catch {
-					// Partial keys from other packs beat zero.
-				}
-			}
-			compendiumKeys = next;
-		})();
-		return compendiumLoadPromise;
-	}
-</script>
-
 <script lang="ts">
-	import { onMount, untrack } from 'svelte';
-	import { Predicate, type RawPredicate } from '../../../etc/Predicate.js';
+	import { onMount } from 'svelte';
+
 	import localize from '#utils/localize.js';
 	import type { PredicateBuilderProps } from '#view/rulesBuilder/types.js';
 
+	import {
+		createPredicateBuilderState,
+		OPERATORS,
+		operatorHint,
+		operatorLabel,
+		type Operator,
+	} from './PredicateBuilderState.svelte.js';
+	import { loadCompendiumKeys } from './predicateKeyCache.svelte.js';
+
 	let { value, onChange, previewDomain }: PredicateBuilderProps = $props();
+
+	const state = createPredicateBuilderState(
+		() => value,
+		() => onChange,
+		() => previewDomain,
+	);
+
+	state.setupSyncEffect();
 
 	onMount(() => {
 		void loadCompendiumKeys();
-	});
-
-	type Operator = 'is' | 'isOneOf' | 'isAtLeast' | 'isAtMost' | 'isExactly' | 'isBetween';
-
-	const OPERATORS: Operator[] = [
-		'is',
-		'isOneOf',
-		'isAtLeast',
-		'isAtMost',
-		'isExactly',
-		'isBetween',
-	];
-
-	function operatorLabel(op: Operator): string {
-		return localize(`NIMBLE.rulesBuilder.predicateOperators.${op}`);
-	}
-
-	function operatorHint(op: Operator): string {
-		return localize(`NIMBLE.rulesBuilder.predicateOperatorHints.${op}`);
-	}
-
-	interface RowState {
-		key: string;
-		operator: Operator;
-		valueText: string;
-		valueArray: string[];
-		valueNumber: string;
-		valueRangeMin: string;
-		valueRangeMax: string;
-	}
-
-	function detectOperator(stmt: unknown): Operator {
-		if (Array.isArray(stmt)) return 'isOneOf';
-		if (typeof stmt === 'string') return 'is';
-		if (stmt && typeof stmt === 'object') {
-			const s = stmt as { min?: unknown; max?: unknown; equal?: unknown };
-			const hasMin = s.min !== undefined && s.min !== null && s.min !== '';
-			const hasMax = s.max !== undefined && s.max !== null && s.max !== '';
-			const hasEqual = s.equal !== undefined && s.equal !== null && s.equal !== '';
-			if (hasEqual) return 'isExactly';
-			if (hasMin && hasMax) return 'isBetween';
-			if (hasMin) return 'isAtLeast';
-			if (hasMax) return 'isAtMost';
-		}
-		return 'isExactly';
-	}
-
-	function rowFromEntry(key: string, stmt: unknown): RowState {
-		const operator = detectOperator(stmt);
-		const row: RowState = {
-			key,
-			operator,
-			valueText: '',
-			valueArray: [],
-			valueNumber: '',
-			valueRangeMin: '',
-			valueRangeMax: '',
-		};
-		if (typeof stmt === 'string') {
-			row.valueText = stmt;
-		} else if (Array.isArray(stmt)) {
-			row.valueArray = stmt.map((v) => String(v));
-		} else if (stmt && typeof stmt === 'object') {
-			const s = stmt as { min?: number | string; max?: number | string; equal?: number | string };
-			if (operator === 'isBetween') {
-				row.valueRangeMin = s.min === undefined || s.min === null ? '' : String(s.min);
-				row.valueRangeMax = s.max === undefined || s.max === null ? '' : String(s.max);
-			} else if (operator === 'isAtLeast') {
-				row.valueNumber = s.min === undefined || s.min === null ? '' : String(s.min);
-			} else if (operator === 'isAtMost') {
-				row.valueNumber = s.max === undefined || s.max === null ? '' : String(s.max);
-			} else if (operator === 'isExactly') {
-				row.valueNumber = s.equal === undefined || s.equal === null ? '' : String(s.equal);
-			}
-		}
-		return row;
-	}
-
-	function rowsFromValue(v: RawPredicate): RowState[] {
-		return Object.entries(v ?? {}).map(([key, stmt]) => rowFromEntry(key, stmt));
-	}
-
-	let rows = $state<RowState[]>(untrack(() => rowsFromValue(value)));
-	let lastSerializedValue = $state('');
-
-	$effect(() => {
-		const next = JSON.stringify(value ?? {});
-		if (next !== lastSerializedValue) {
-			rows = rowsFromValue(value);
-			lastSerializedValue = next;
-		}
-	});
-
-	function maybeNumber(input: string): number | string {
-		if (input === '') return '';
-		const n = Number(input);
-		return Number.isNaN(n) ? input : n;
-	}
-
-	function rowToStatement(row: RowState): unknown {
-		switch (row.operator) {
-			case 'is':
-				return row.valueText;
-			case 'isOneOf':
-				return row.valueArray.filter((v) => v !== '');
-			case 'isAtLeast':
-				return { min: maybeNumber(row.valueNumber) };
-			case 'isAtMost':
-				return { max: maybeNumber(row.valueNumber) };
-			case 'isExactly':
-				return { equal: maybeNumber(row.valueNumber) };
-			case 'isBetween':
-				return {
-					min: maybeNumber(row.valueRangeMin),
-					max: maybeNumber(row.valueRangeMax),
-				};
-		}
-	}
-
-	function rowsToValue(): RawPredicate {
-		const out: RawPredicate = {};
-		for (const row of rows) {
-			const trimmedKey = row.key.trim();
-			if (!trimmedKey) continue;
-			out[trimmedKey] = rowToStatement(row) as RawPredicate[string];
-		}
-		return out;
-	}
-
-	function emit() {
-		const next = rowsToValue();
-		lastSerializedValue = JSON.stringify(next);
-		onChange(next);
-	}
-
-	function addRow() {
-		rows = [
-			...rows,
-			{
-				key: '',
-				operator: 'is',
-				valueText: '',
-				valueArray: [],
-				valueNumber: '',
-				valueRangeMin: '',
-				valueRangeMax: '',
-			},
-		];
-	}
-
-	function deleteRow(index: number) {
-		rows = rows.filter((_, i) => i !== index);
-		emit();
-	}
-
-	function updateRow(index: number, patch: Partial<RowState>) {
-		rows = rows.map((row, i) => (i === index ? { ...row, ...patch } : row));
-	}
-
-	function updateOperator(index: number, operator: Operator) {
-		updateRow(index, { operator });
-		emit();
-	}
-
-	function updateArrayValue(rowIndex: number, arrayIndex: number, value: string) {
-		const row = rows[rowIndex];
-		const nextArray = row.valueArray.map((v, i) => (i === arrayIndex ? value : v));
-		updateRow(rowIndex, { valueArray: nextArray });
-	}
-
-	function addArrayValue(rowIndex: number) {
-		const row = rows[rowIndex];
-		updateRow(rowIndex, { valueArray: [...row.valueArray, ''] });
-	}
-
-	function removeArrayValue(rowIndex: number, arrayIndex: number) {
-		const row = rows[rowIndex];
-		updateRow(rowIndex, { valueArray: row.valueArray.filter((_, i) => i !== arrayIndex) });
-		emit();
-	}
-
-	const suggestionKeys = $derived.by(() => {
-		const keys = new Set<string>(compendiumKeys);
-		const collect = (tags: Set<string> | undefined) => {
-			if (!tags) return;
-			for (const entry of tags) {
-				const k = entry.split(':', 1)[0];
-				if (k) keys.add(k);
-			}
-		};
-
-		const worldActors = game.actors as Iterable<{ tags?: Set<string> }> | undefined;
-		if (worldActors) for (const a of worldActors) collect(a.tags);
-		collect(previewDomain);
-
-		return [...keys].sort();
-	});
-
-	// Unique `<datalist>` id so multiple builders on the same page don't collide.
-	const datalistId = `nimble-predicate-keys-${Math.random().toString(36).slice(2)}`;
-
-	let preview = $derived.by(() => {
-		if (!previewDomain) return null;
-		const raw = rowsToValue();
-		try {
-			const predicate = new Predicate(raw);
-			if (!predicate.size)
-				return { matches: true, reason: localize('NIMBLE.rulesBuilder.predicatePreviewAlways') };
-			if (!predicate.isValid)
-				return {
-					matches: false,
-					reason: localize('NIMBLE.rulesBuilder.predicatePreviewIncomplete'),
-				};
-			return { matches: predicate.test(previewDomain), reason: null };
-		} catch (err) {
-			return {
-				matches: false,
-				reason:
-					err instanceof Error
-						? err.message
-						: localize('NIMBLE.rulesBuilder.predicatePreviewError'),
-			};
-		}
 	});
 </script>
 
@@ -274,24 +33,25 @@
 		{localize('NIMBLE.rulesBuilder.predicateIntro')}
 	</p>
 
-	{#each rows as row, index (index)}
+	{#each state.rows as row, index (index)}
 		<div class="nimble-predicate-builder__row">
 			<input
 				class="nimble-predicate-builder__key"
 				type="text"
-				placeholder={suggestionKeys.length
+				placeholder={state.suggestionKeys.length
 					? localize('NIMBLE.rulesBuilder.predicateKeyPlaceholder')
 					: localize('NIMBLE.rulesBuilder.predicateKeyPlaceholderEmpty')}
-				list={suggestionKeys.length ? datalistId : undefined}
+				list={state.suggestionKeys.length ? state.datalistId : undefined}
 				value={row.key}
-				oninput={(e) => updateRow(index, { key: (e.target as HTMLInputElement).value })}
-				onchange={emit}
+				oninput={(e) => state.updateRow(index, { key: (e.target as HTMLInputElement).value })}
+				onchange={state.emit}
 			/>
 
 			<select
 				class="nimble-predicate-builder__operator"
 				value={row.operator}
-				onchange={(e) => updateOperator(index, (e.target as HTMLSelectElement).value as Operator)}
+				onchange={(e) =>
+					state.updateOperator(index, (e.target as HTMLSelectElement).value as Operator)}
 			>
 				{#each OPERATORS as op (op)}
 					<option value={op}>{operatorLabel(op)}</option>
@@ -304,8 +64,9 @@
 						type="text"
 						placeholder={localize('NIMBLE.rulesBuilder.predicateValuePlaceholder')}
 						value={row.valueText}
-						oninput={(e) => updateRow(index, { valueText: (e.target as HTMLInputElement).value })}
-						onchange={emit}
+						oninput={(e) =>
+							state.updateRow(index, { valueText: (e.target as HTMLInputElement).value })}
+						onchange={state.emit}
 					/>
 				{:else if row.operator === 'isOneOf'}
 					<div class="nimble-predicate-builder__array">
@@ -316,15 +77,15 @@
 									placeholder={localize('NIMBLE.rulesBuilder.predicateValuePlaceholder')}
 									value={item}
 									oninput={(e) =>
-										updateArrayValue(index, arrayIndex, (e.target as HTMLInputElement).value)}
-									onchange={emit}
+										state.updateArrayValue(index, arrayIndex, (e.target as HTMLInputElement).value)}
+									onchange={state.emit}
 								/>
 								<button
 									type="button"
 									class="nimble-button"
 									data-button-variant="icon"
 									aria-label={localize('NIMBLE.rulesBuilder.predicateRemoveValue')}
-									onclick={() => removeArrayValue(index, arrayIndex)}
+									onclick={() => state.removeArrayValue(index, arrayIndex)}
 								>
 									<i class="fa-solid fa-xmark"></i>
 								</button>
@@ -334,7 +95,7 @@
 							type="button"
 							class="nimble-button"
 							data-button-variant="basic"
-							onclick={() => addArrayValue(index)}
+							onclick={() => state.addArrayValue(index)}
 						>
 							<i class="fa-solid fa-plus"></i>
 							{localize('NIMBLE.rulesBuilder.addValue')}
@@ -347,8 +108,8 @@
 							placeholder={localize('NIMBLE.rulesBuilder.predicateMinPlaceholder')}
 							value={row.valueRangeMin}
 							oninput={(e) =>
-								updateRow(index, { valueRangeMin: (e.target as HTMLInputElement).value })}
-							onchange={emit}
+								state.updateRow(index, { valueRangeMin: (e.target as HTMLInputElement).value })}
+							onchange={state.emit}
 						/>
 						<span class="nimble-predicate-builder__range-sep"
 							>{localize('NIMBLE.rulesBuilder.predicateRangeAnd')}</span
@@ -358,8 +119,8 @@
 							placeholder={localize('NIMBLE.rulesBuilder.predicateMaxPlaceholder')}
 							value={row.valueRangeMax}
 							oninput={(e) =>
-								updateRow(index, { valueRangeMax: (e.target as HTMLInputElement).value })}
-							onchange={emit}
+								state.updateRow(index, { valueRangeMax: (e.target as HTMLInputElement).value })}
+							onchange={state.emit}
 						/>
 					</div>
 				{:else}
@@ -367,8 +128,9 @@
 						type="number"
 						placeholder={localize('NIMBLE.rulesBuilder.predicateValuePlaceholder')}
 						value={row.valueNumber}
-						oninput={(e) => updateRow(index, { valueNumber: (e.target as HTMLInputElement).value })}
-						onchange={emit}
+						oninput={(e) =>
+							state.updateRow(index, { valueNumber: (e.target as HTMLInputElement).value })}
+						onchange={state.emit}
 					/>
 				{/if}
 
@@ -380,39 +142,39 @@
 				class="nimble-button nimble-predicate-builder__delete"
 				data-button-variant="icon"
 				aria-label={localize('NIMBLE.rulesBuilder.predicateDeleteCondition')}
-				onclick={() => deleteRow(index)}
+				onclick={() => state.deleteRow(index)}
 			>
 				<i class="fa-solid fa-trash"></i>
 			</button>
 		</div>
 	{/each}
 
-	<button type="button" class="nimble-button" data-button-variant="basic" onclick={addRow}>
+	<button type="button" class="nimble-button" data-button-variant="basic" onclick={state.addRow}>
 		<i class="fa-solid fa-plus"></i>
 		{localize('NIMBLE.rulesBuilder.predicateAddCondition')}
 	</button>
 
-	{#if preview}
+	{#if state.preview}
 		<div
 			class="nimble-predicate-builder__preview"
-			class:nimble-predicate-builder__preview--match={preview.matches}
-			class:nimble-predicate-builder__preview--no-match={!preview.matches}
+			class:nimble-predicate-builder__preview--match={state.preview.matches}
+			class:nimble-predicate-builder__preview--no-match={!state.preview.matches}
 		>
 			<i
-				class="fa-solid {preview.matches ? 'fa-circle-check' : 'fa-circle-xmark'}"
+				class="fa-solid {state.preview.matches ? 'fa-circle-check' : 'fa-circle-xmark'}"
 				aria-hidden="true"
 			></i>
 			<span>
-				{preview.matches
+				{state.preview.matches
 					? localize('NIMBLE.rulesBuilder.predicatePreviewMatches')
-					: (preview.reason ?? localize('NIMBLE.rulesBuilder.predicatePreviewNoMatch'))}
+					: (state.preview.reason ?? localize('NIMBLE.rulesBuilder.predicatePreviewNoMatch'))}
 			</span>
 		</div>
 	{/if}
 
-	{#if suggestionKeys.length}
-		<datalist id={datalistId}>
-			{#each suggestionKeys as key (key)}
+	{#if state.suggestionKeys.length}
+		<datalist id={state.datalistId}>
+			{#each state.suggestionKeys as key (key)}
 				<option value={key}></option>
 			{/each}
 		</datalist>
