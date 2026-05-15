@@ -19,8 +19,20 @@ function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
-		perLevel: new fields.BooleanField({ required: true, nullable: false, initial: false }),
+		value: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			label: 'NIMBLE.rules.maxHpBonus.value.label',
+			hint: 'NIMBLE.rules.maxHpBonus.value.hint',
+		}),
+		perLevel: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.maxHpBonus.perLevel.label',
+			hint: 'NIMBLE.rules.maxHpBonus.perLevel.hint',
+		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'maxHpBonus' }),
 	};
 }
@@ -30,6 +42,11 @@ declare namespace MaxHpBonusRule {
 }
 
 class MaxHpBonusRule extends NimbleBaseRule<MaxHpBonusRule.Schema> {
+	// `perLevel: true` re-interprets `value` as "per level" and multiplies by
+	// the actor's level on apply. The i18n description should call this out.
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.rules.maxHpBonus.description';
+
 	declare value: number;
 	declare perLevel: boolean;
 

@@ -24,6 +24,10 @@ Always use MCP context7 for documentation
 
 For detailed technology stack, Foundry VTT integration patterns, and testing infrastructure: [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md)
 
+System internals (read before touching the area):
+- [docs/system/rules.md](docs/system/rules.md) — Rules system architecture, lifecycle hooks, and the requirements a new rule type must meet to render in the Rules Builder
+- [docs/system/dice-engine.md](docs/system/dice-engine.md) — Dice engine, primary-die mechanics, and extension points
+
 ## Quick Reference
 
 ### Key Conventions

@@ -169,6 +169,19 @@ describe('ConditionImmunityRule', () => {
 			expect(schema).toHaveProperty('disabled');
 			expect(schema).toHaveProperty('label');
 		});
+
+		it('declares choices on the conditions array element', () => {
+			const schema = ConditionImmunityRule.defineSchema();
+			const arrayField = schema.conditions as unknown as { element: { choices: () => string[] } };
+			expect(typeof arrayField.element.choices).toBe('function');
+		});
+	});
+
+	describe('class metadata', () => {
+		it('exposes the picker group and i18n description key', () => {
+			expect(ConditionImmunityRule.group).toBe('conditions');
+			expect(ConditionImmunityRule.description).toBe('NIMBLE.rules.conditionImmunity.description');
+		});
 	});
 });
 

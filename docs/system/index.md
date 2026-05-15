@@ -29,3 +29,4 @@ Documentation for the Nimble FoundryVTT system - covering gameplay mechanics, co
 ## Engine Internals
 
 - [Dice Engine](./dice-engine.md) — how `DamageRoll` and the primary-die rules work, plus the extension points for new content
+- [Rules System](./rules.md) — how data-driven rules attached to items modify actors during data prep, and what's required to make a new rule type work in the Rules Builder UI

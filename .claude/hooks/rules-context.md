@@ -2,70 +2,48 @@
 
 You are working with Nimble's **Rules system** — generic, data-driven modifiers attached to items that automatically apply effects to actors during data preparation.
 
+**Authoritative reference**: [`docs/system/rules.md`](../../docs/system/rules.md). Read it before adding or modifying a rule type — it covers the lifecycle hooks, RulesManager API, the Rules Builder integration requirements (widget hints, `withWidget()`, `showWhen`, the field-type-to-widget table), and the envelope-field list. The summary below is just enough to keep context-grounded for in-flight edits.
+
 ## Design Philosophy
 
-Rules are **intentionally generic building blocks**, not named after specific features. A rule like `abilityBonus` can be used by any item — a class feature, a magic item, a racial trait — to grant an ability score bonus. This generality enables **homebrewing**: game masters can compose any combination of rules on any item to create custom features without code changes. When creating new rule types, keep them general-purpose. Name them after *what they do* (e.g., `speedBonus`, `grantProficiency`), never after a specific feature that uses them.
+Rules are **intentionally generic building blocks**, not named after specific features. A rule like `abilityBonus` can be used by any item — a class feature, a magic item, a racial trait — to grant an ability score bonus. This generality enables **homebrewing**. When creating new rule types, name them after *what they do* (`speedBonus`, `grantProficiency`), never after a specific feature.
 
-## Architecture
+## Architecture (one-liner each)
 
-- **Base class**: `NimbleBaseRule` (`src/models/rules/base.ts`) extends `foundry.abstract.DataModel`
-- **Registration**: `src/config/registerRulesConfig.ts` maps type strings to classes in `CONFIG.NIMBLE.ruleDataModels` and i18n labels in `CONFIG.NIMBLE.ruleTypes`
-- **Storage**: Plain objects in `item.system.rules` (`ArrayField` of `ObjectField`). Each has `id`, `type`, `disabled`, `priority`, `predicate`, and type-specific fields
-- **Instantiation**: `RulesManager` (`src/managers/RulesManager.ts`) is created per item in `prepareBaseData()`, looks up classes from `CONFIG.NIMBLE.ruleDataModels`, instantiates with item as parent
+- **Base class**: `NimbleBaseRule` (`src/models/rules/base.ts`) extends `foundry.abstract.DataModel`.
+- **Registration**: `src/config/registerRulesConfig.ts` maps type strings to classes in `CONFIG.NIMBLE.ruleDataModels` and i18n labels in `CONFIG.NIMBLE.ruleTypes`.
+- **Storage**: `item.system.rules` is an `ArrayField` of plain objects with `id`, `type`, `disabled`, `priority`, `predicate`, plus type-specific fields.
+- **Instantiation**: `RulesManager` (`src/managers/RulesManager.ts`) lives per-item; created in `prepareBaseData()`.
 
 ## Lifecycle Hooks (execution order)
 
-1. `prePrepareData()` — called during `actor.prepareDerivedData()`. Modify actor system data (bonuses, stats)
-2. `afterPrepareData()` — called after `actor.prepareData()` completes. Final adjustments
-3. `preCreate(args)` — before item creation on actor. Can grant other items, modify pending items
+1. `prePrepareData()` — during `actor.prepareDerivedData()`
+2. `afterPrepareData()` — after `actor.prepareData()` completes
+3. `preCreate(args)` — before item creation on actor
 4. `preUpdate(changes)` / `afterUpdate(changes)` — around item updates
-5. `afterDelete()` — after item deletion, revert modifications
-6. `preUpdateActor(changes)` — before actor update, can create/delete embedded items
+5. `afterDelete()` — after item deletion
+6. `preUpdateActor(changes)` — before actor update
 
-The actor collects all enabled rules from all items, sorts by `priority`, then calls hooks in order.
+Rules are sorted by `priority` (lower runs first) before each hook fires.
 
-## Creating a New Rule Type
+## Key Patterns (gotchas)
 
-1. Create `src/models/rules/yourRule.ts` extending `NimbleBaseRule`
-2. Define a local `schema()` function returning type-specific Foundry data fields
-3. Override `defineSchema()` merging `NimbleBaseRule.defineSchema()` with your schema
-4. Implement lifecycle hooks (most commonly `prePrepareData()`)
-5. Register in `src/config/registerRulesConfig.ts` — add to both `ruleTypes` and `ruleDataModels`
-6. Add the i18n label key to `en.json`
-7. Keep the rule **generic** — it should be reusable across any item type
-8. Add a co-located test file `src/models/rules/yourRule.test.ts` — see existing tests (e.g., `speedBonus.test.ts`) for the pattern: mock actor/item, instantiate the rule directly, and verify lifecycle hooks modify actor data correctly
+- **Guard with `isEmbedded`**: `if (!this.item.isEmbedded) return;` at the top of `prePrepareData()`.
+- **Predicate testing**: `this.test()` — empty predicate always passes.
+- **Formula resolution**: `this.resolveFormula(formula)` returns a number against actor roll data.
+- **Forward declarations**: Use local interfaces for `NimbleBaseActor`/`NimbleBaseItem` to avoid circular imports.
+- **Mutate via `foundry.utils.setProperty()`**: e.g., `foundry.utils.setProperty(actor.system, 'abilities.str.bonus', newValue)`.
 
-## Key Patterns
+## Adding a new rule type — quick checklist
 
-- **Guard with `isEmbedded`**: Always `if (!item.isEmbedded) return;` at start of `prePrepareData()`
-- **Predicate testing**: `this.test()` checks domain tags. Empty predicate = always apply
-- **Formula resolution**: `this.resolveFormula(formula)` evaluates against actor roll data
-- **Forward declarations**: Use local interfaces for `NimbleBaseActor`/`NimbleBaseItem` to avoid circular imports (see base.ts pattern)
-- **Modify actor via `foundry.utils.setProperty()`**: e.g., `foundry.utils.setProperty(actor.system, 'abilities.${ability}.bonus', newValue)`
+1. New file `src/models/rules/yourRule.ts` extending `NimbleBaseRule`
+2. Local `schema()` + override `defineSchema()` merging base + local
+3. Implement lifecycle hooks
+4. Register in `src/config/registerRulesConfig.ts` (both `ruleTypes` and `ruleDataModels`)
+5. Add `NIMBLE.ruleTypes.<key>` and `NIMBLE.ruleDescriptions.<key>` to `en.json`
+6. Set `static group` (one of `bonuses` / `grants` / `triggers` / `resources` / `flavor`) and `static description`
+7. Give every editable field a `label:` (and ideally a `hint:`) — without `label:`, the builder warns and ships English-only labels
+8. Use `withWidget()` for fields needing widget hints (`formula` / `diceFormula` / `documentUuid` / `predicate` / `templateString` / `richText` / `hidden`)
+9. Co-located test file `yourRule.test.ts`
 
-## RulesManager API
-
-`RulesManager` extends `Map<string, NimbleBaseRule>`:
-- `addRule(data, options?)` / `updateRule(id, data)` / `deleteRule(id)` — CRUD
-- `hasRuleOfType(type)` / `getRuleOfType(type)` — query by type
-- `disableAllRules()` / `enableAllRules()` — bulk toggle
-
-## Example: AbilityBonusRule pattern
-
-```typescript
-class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
-  static override defineSchema(): AbilityBonusRule.Schema {
-    return { ...NimbleBaseRule.defineSchema(), ...schema() };
-  }
-
-  prePrepareData(): void {
-    if (!this.item.isEmbedded) return;
-    const actor = this.item.actor as NimbleCharacter;
-    const value = this.resolveFormula(this.value);
-    for (const ability of this.abilities) {
-      const baseBonus = actor.system.abilities[ability]?.bonus ?? 0;
-      foundry.utils.setProperty(actor.system, `abilities.${ability}.bonus`, baseBonus + value);
-    }
-  }
-}
-```
+For everything else (full widget catalog, the field-type-to-widget table, `showWhen` patterns, envelope-field rules, the `RuleCard.allRules` coverage test), see [`docs/system/rules.md`](../../docs/system/rules.md).
