@@ -56,8 +56,8 @@
 		position: relative;
 		min-height: 6rem;
 		padding: 0.25rem;
-		background: var(--nimble-box-background-color);
-		border: 1px solid var(--nimble-accent-color);
+		background: var(--nimble-input-background-color);
+		border: 1px solid var(--nimble-input-border-color);
 		border-radius: 4px;
 
 		&--disabled {

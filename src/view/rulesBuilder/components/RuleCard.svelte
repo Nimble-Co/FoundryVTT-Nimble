@@ -239,9 +239,10 @@
 		flex-direction: column;
 		gap: 0.5rem;
 		padding: 0.625rem;
-		background: var(--nimble-sheet-background);
-		border: 1px solid var(--nimble-accent-color);
-		border-radius: 6px;
+		background: var(--nimble-card-background-color);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 4px;
+		box-shadow: var(--nimble-box-shadow);
 
 		&--disabled {
 			opacity: 0.6;
@@ -284,8 +285,8 @@
 			padding: 0 0.25rem;
 			font-size: var(--nimble-xs-text);
 			text-align: center;
-			background: var(--nimble-sheet-background, transparent);
-			border: 1px solid var(--nimble-accent-color);
+			background: var(--nimble-input-background-color);
+			border: 1px solid var(--nimble-input-border-color);
 			border-radius: 3px;
 		}
 
