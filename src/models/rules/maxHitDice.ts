@@ -1,12 +1,26 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		value: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: 'NIMBLE.rules.maxHitDice.value.label',
+				widget: 'formula',
+			}),
+		),
 		// dieSize of 0 means "use the character's class hit die size"
-		dieSize: new fields.NumberField({ required: true, nullable: false, initial: 0 }),
+		dieSize: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 0,
+			label: 'NIMBLE.rules.maxHitDice.dieSize.label',
+		}),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'maxHitDice' }),
 	};
 }
@@ -16,6 +30,9 @@ declare namespace MaxHitDiceRule {
 }
 
 class MaxHitDiceRule extends NimbleBaseRule<MaxHitDiceRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.rules.maxHitDice.description';
+
 	declare dieSize: number;
 
 	declare value: string;

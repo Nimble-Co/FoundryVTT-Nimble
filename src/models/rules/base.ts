@@ -97,6 +97,13 @@ abstract class NimbleBaseRule<
 	Schema extends NimbleBaseRule.Schema = NimbleBaseRule.Schema,
 	Parent extends foundry.abstract.DataModel.Any = foundry.abstract.DataModel.Any,
 > extends foundry.abstract.DataModel<Schema, Parent> {
+	// Class-level presentation metadata for the rules-builder UI.
+	// Subclasses override with concrete values; the picker treats `'unsorted'`
+	// or an empty `description` as a development-mode warning.
+	static group: string = 'unsorted';
+
+	static description: string = '';
+
 	declare type: string;
 
 	declare disabled: boolean;

@@ -45,10 +45,10 @@ const ACTIVATION_NODE_BACKFILL_BY_SOURCE_ID: Record<
  * Matches strictly on compendium source id; homebrew copies are left alone.
  * Idempotent: inserts a node only if no node with the same `id` is present.
  */
-class Migration020RagePoolActivation extends MigrationBase {
-	static override readonly version = 20;
+class Migration021RagePoolActivation extends MigrationBase {
+	static override readonly version = 21;
 
-	override readonly version = Migration020RagePoolActivation.version;
+	override readonly version = Migration021RagePoolActivation.version;
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;
@@ -87,4 +87,4 @@ class Migration020RagePoolActivation extends MigrationBase {
 	}
 }
 
-export { Migration020RagePoolActivation };
+export { Migration021RagePoolActivation };

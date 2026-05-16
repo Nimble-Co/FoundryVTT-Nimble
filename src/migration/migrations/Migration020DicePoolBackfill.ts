@@ -24,8 +24,6 @@ const RAGE_RULES = [
 		max: '@key',
 		initial: 'zero',
 		refills: [],
-		consumption: 'autoBonus',
-		bonusOnAttackDelivery: 'melee',
 	},
 ];
 
@@ -255,10 +253,10 @@ const RULE_BACKFILL_BY_SOURCE_ID: Record<string, ReadonlyArray<Record<string, un
  * The migration is idempotent: it only inserts a rule if no rule with the
  * same `id` is already present on the item.
  */
-class Migration019DicePoolBackfill extends MigrationBase {
-	static override readonly version = 19;
+class Migration020DicePoolBackfill extends MigrationBase {
+	static override readonly version = 20;
 
-	override readonly version = Migration019DicePoolBackfill.version;
+	override readonly version = Migration020DicePoolBackfill.version;
 
 	override async updateItem(source: any): Promise<void> {
 		if (source.type !== 'feature') return;
@@ -295,4 +293,4 @@ class Migration019DicePoolBackfill extends MigrationBase {
 	}
 }
 
-export { Migration019DicePoolBackfill };
+export { Migration020DicePoolBackfill };

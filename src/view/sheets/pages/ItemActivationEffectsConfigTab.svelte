@@ -123,6 +123,14 @@
 		{ value: 'halfDamage', label: localize('NIMBLE.activationEffects.halfDamage') },
 	];
 
+	const dispositionOptions = [
+		{ value: 'any', label: 'Any' },
+		{ value: 'friendly', label: 'Friendly' },
+		{ value: 'neutral', label: 'Neutral' },
+		{ value: 'hostile', label: 'Hostile' },
+		{ value: 'secret', label: 'Secret' },
+	];
+
 	const noteTypes = [
 		{ value: 'general', label: localize('NIMBLE.activationEffects.general') },
 		{ value: 'flavor', label: localize('NIMBLE.activationEffects.flavor') },
@@ -303,6 +311,25 @@
 							{/each}
 						</select>
 					</label>
+
+					<label>
+						<header class="nimble-header" style="padding-inline-end: 0.5rem;">
+							<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+								Target Disposition
+							</h5>
+						</header>
+
+						<select
+							onchange={({ target }) =>
+								updateEffectNode(document, effects, node, 'targetDisposition', target.value)}
+						>
+							{#each dispositionOptions as { value, label }}
+								<option {value} selected={value === (node.targetDisposition ?? 'any')}>
+									{label}
+								</option>
+							{/each}
+						</select>
+					</label>
 				</div>
 			</div>
 		</div>
@@ -464,6 +491,25 @@
 						>
 							{#each Object.entries(healingTypes) as [value, label]}
 								<option {value} selected={value === node.healingType}>{label}</option>
+							{/each}
+						</select>
+					</label>
+
+					<label>
+						<header class="nimble-header" style="padding-inline-end: 0.5rem;">
+							<h5 class="nimble-field__label nimble-heading" data-heading-variant="field">
+								Target Disposition
+							</h5>
+						</header>
+
+						<select
+							onchange={({ target }) =>
+								updateEffectNode(document, effects, node, 'targetDisposition', target.value)}
+						>
+							{#each dispositionOptions as { value, label }}
+								<option {value} selected={value === (node.targetDisposition ?? 'any')}>
+									{label}
+								</option>
 							{/each}
 						</select>
 					</label>

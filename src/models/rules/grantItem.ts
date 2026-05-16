@@ -1,14 +1,39 @@
 import type { NimbleBaseItem } from '../../documents/item/base.svelte.js';
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule, type PreCreateArgs } from './base.js';
 
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		allowDuplicate: new fields.BooleanField({ required: true, nullable: false, initial: true }),
-		inMemoryOnly: new fields.BooleanField({ required: true, nullable: false, initial: false }),
-		quantity: new fields.NumberField({ required: false, nullable: true, initial: null, min: 1 }),
-		uuid: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		allowDuplicate: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: true,
+			label: 'NIMBLE.rules.grantItem.allowDuplicate.label',
+		}),
+		inMemoryOnly: new fields.BooleanField({
+			required: true,
+			nullable: false,
+			initial: false,
+			label: 'NIMBLE.rules.grantItem.inMemoryOnly.label',
+		}),
+		quantity: new fields.NumberField({
+			required: false,
+			nullable: true,
+			initial: null,
+			min: 1,
+			label: 'NIMBLE.rules.grantItem.quantity.label',
+		}),
+		uuid: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: 'NIMBLE.rules.grantItem.uuid.label',
+				widget: 'documentUuid',
+			}),
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'grantItem' }),
 	};
 }
@@ -18,6 +43,9 @@ declare namespace ItemGrantRule {
 }
 
 class ItemGrantRule extends NimbleBaseRule<ItemGrantRule.Schema> {
+	static override group = 'grants';
+	static override description = 'NIMBLE.rules.grantItem.description';
+
 	declare allowDuplicate: boolean;
 
 	declare inMemoryOnly: boolean;

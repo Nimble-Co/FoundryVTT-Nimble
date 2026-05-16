@@ -61,8 +61,7 @@ type CountPoolView = {
 
 export type LivePoolView = RolledPoolView | CountPoolView;
 
-// ============================================================================
-// Die Face Icons
+// Die-face icons live in #utils/dicePool/dieFaceIcons.js (see DicePoolTracker.svelte).
 
 function rolledFromDice(pool: DicePoolState): RolledPoolView {
 	const total = pool.faces.reduce((sum, face) => sum + face, 0);

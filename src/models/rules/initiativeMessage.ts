@@ -1,3 +1,4 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
@@ -5,8 +6,22 @@ function schema() {
 
 	return {
 		// Supports @-references (e.g. @dexterity). Use {value} in message to insert the result.
-		formula: new fields.StringField({ required: true, nullable: false, initial: '' }),
-		message: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		formula: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				widget: 'formula',
+			}),
+		),
+		message: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				widget: 'templateString',
+			}),
+		),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -20,6 +35,9 @@ declare namespace InitiativeMessageRule {
 }
 
 class InitiativeMessageRule extends NimbleBaseRule<InitiativeMessageRule.Schema> {
+	static override group = 'notes';
+	static override description = 'NIMBLE.rules.initiativeMessage.description';
+
 	declare formula: string;
 	declare message: string;
 

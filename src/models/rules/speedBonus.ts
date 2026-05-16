@@ -1,3 +1,4 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 type MovementType = 'walk' | 'fly' | 'climb' | 'swim' | 'burrow';
@@ -8,12 +9,23 @@ function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		value: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: 'NIMBLE.rules.speedBonus.value.label',
+				hint: 'NIMBLE.rules.speedBonus.value.hint',
+				widget: 'formula',
+			}),
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'speedBonus' }),
 		movementType: new fields.StringField({
 			required: false,
-			nullable: false,
-			initial: 'walk',
+			nullable: true,
+			initial: null,
+			label: 'NIMBLE.rules.speedBonus.movementType.label',
+			hint: 'NIMBLE.rules.speedBonus.movementType.hint',
 			choices: ['walk', 'fly', 'climb', 'swim', 'burrow'],
 		}),
 	};
@@ -32,8 +44,11 @@ interface ActorSystem {
 }
 
 class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.rules.speedBonus.description';
+
 	declare value: string;
-	declare movementType: MovementType;
+	declare movementType: MovementType | null;
 
 	static override defineSchema(): SpeedBonusRule.Schema {
 		return {
@@ -55,14 +70,6 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 	}
 
 	/**
-	 * Check if movementType was explicitly set in source data
-	 */
-	private hasExplicitMovementType(): boolean {
-		const sourceData = this._source as { movementType?: string };
-		return sourceData.movementType !== undefined;
-	}
-
-	/**
 	 * Apply the speed bonus to the actor's movement
 	 */
 	private applySpeedBonus(): void {
@@ -73,7 +80,7 @@ class SpeedBonusRule extends NimbleBaseRule<SpeedBonusRule.Schema> {
 		const value = this.resolveFormula(this.value) ?? 0;
 		const actorSystem = actor as object as ActorSystem;
 
-		if (this.hasExplicitMovementType()) {
+		if (this.movementType !== null) {
 			// Apply bonus to specific movement type only
 			const movementType = this.movementType;
 			const defaultValue = movementType === 'walk' ? DEFAULT_WALK_SPEED : 0;
