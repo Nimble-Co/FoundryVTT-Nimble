@@ -90,27 +90,21 @@
 			justify-content: center;
 			min-width: 1.25rem;
 			padding: 0 0.25rem;
-			background: hsl(210, 65%, 92%);
-			border: 1px solid hsl(210, 65%, 46%);
+			background: var(--nimble-pool-node-face-background);
+			border: 1px solid var(--nimble-pool-node-face-border-color);
 			border-radius: 3px;
 			font-weight: 700;
-			color: hsl(210, 65%, 30%);
+			color: var(--nimble-pool-node-face-text-color);
 		}
 
 		&__delta {
 			font-weight: 700;
-			color: hsl(150, 50%, 35%);
+			color: var(--nimble-pool-node-delta-color);
 		}
 
 		&__skip {
 			opacity: 0.65;
 			font-style: italic;
 		}
-	}
-
-	:global(.theme-dark) .pool-node__face {
-		background: hsl(210, 40%, 25%);
-		border-color: hsl(210, 80%, 63%);
-		color: hsl(210, 80%, 80%);
 	}
 </style>

@@ -216,6 +216,12 @@
 	--nimble-dice-pool-tracker-badge-background: #fff;
 	--nimble-dice-pool-tracker-total-border-color: hsl(220, 10%, 78%);
 
+	/** POOL NODE (chat card) **/
+	--nimble-pool-node-face-background: hsl(210, 65%, 92%);
+	--nimble-pool-node-face-border-color: hsl(210, 65%, 46%);
+	--nimble-pool-node-face-text-color: hsl(210, 65%, 30%);
+	--nimble-pool-node-delta-color: hsl(150, 50%, 35%);
+
 	/** ANIMATION **/
 	--nimble-standard-transition: all 0.15s ease-in-out;
 	--nimble-slow-transition: all 0.25s ease-in-out;
