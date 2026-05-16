@@ -1,7 +1,9 @@
 <script lang="ts">
+	import type { DicePoolTrackerProps } from '#types/components/DicePoolTracker.d.ts';
+	import localize from '../../../utils/localize.js';
 	import { createDicePoolTrackerState, getDieFaceIcon } from './DicePoolTracker.svelte.ts';
 
-	let { actor } = $props();
+	let { actor }: DicePoolTrackerProps = $props();
 
 	const state = createDicePoolTrackerState(() => actor);
 </script>
@@ -14,7 +16,11 @@
 					<!-- Roll-on-spend (e.g. Commander Combat Dice): static die-face badge, then one pip per charge. -->
 					<div
 						class="dice-pool-tracker__badge dice-pool-tracker__badge--static"
-						data-tooltip="{pool.label} ({pool.current}/{pool.max})"
+						data-tooltip={localize('NIMBLE.dicePoolTracker.countTooltip', {
+							label: pool.label,
+							current: String(pool.current),
+							max: String(pool.max),
+						})}
 						data-tooltip-direction="RIGHT"
 					>
 						<i class="fa-solid {getDieFaceIcon(pool.dieSize)}"></i>
@@ -28,8 +34,12 @@
 							class:dice-pool-tracker__pip--spent={!isAvailable}
 							type="button"
 							disabled={!isAvailable}
-							aria-label={isAvailable ? `Roll and spend 1 ${pool.label}` : `${pool.label} spent`}
-							data-tooltip={isAvailable ? 'Click to roll & spend' : 'Spent'}
+							aria-label={isAvailable
+								? localize('NIMBLE.dicePoolTracker.rollAndSpendOne', { label: pool.label })
+								: localize('NIMBLE.dicePoolTracker.spent', { label: pool.label })}
+							data-tooltip={isAvailable
+								? localize('NIMBLE.dicePoolTracker.clickToRoll')
+								: localize('NIMBLE.dicePoolTracker.spent', { label: pool.label })}
 							data-tooltip-direction="RIGHT"
 							onclick={() => state.rollAndSpendCountPool(pool)}
 						>
@@ -40,7 +50,12 @@
 					<!-- Rolled pool with stored faces: static badge + one chip per rolled die. -->
 					<div
 						class="dice-pool-tracker__badge dice-pool-tracker__badge--static"
-						data-tooltip="{pool.label} ({pool.faces.length}/{pool.max}) – Total: {pool.total}"
+						data-tooltip={localize('NIMBLE.dicePoolTracker.rolledTooltip', {
+							label: pool.label,
+							count: String(pool.faces.length),
+							max: String(pool.max),
+							total: String(pool.total),
+						})}
 						data-tooltip-direction="RIGHT"
 					>
 						<i class="fa-solid {getDieFaceIcon(pool.dieSize)}"></i>
@@ -50,8 +65,13 @@
 						<button
 							class="dice-pool-tracker__die-chip"
 							type="button"
-							aria-label="Spend {pool.label} die (value: {value})"
-							data-tooltip="Rolled {value} – Click to spend"
+							aria-label={localize('NIMBLE.dicePoolTracker.spendDieAria', {
+								label: pool.label,
+								value: String(value),
+							})}
+							data-tooltip={localize('NIMBLE.dicePoolTracker.clickToSpend', {
+								value: String(value),
+							})}
 							data-tooltip-direction="RIGHT"
 							onclick={() => state.expendRolledDie(pool.id, i)}
 						>
@@ -63,8 +83,13 @@
 						<button
 							class="dice-pool-tracker__die-total"
 							type="button"
-							aria-label="Expend all {pool.label} ({pool.total})"
-							data-tooltip="Expend all – total {pool.total}"
+							aria-label={localize('NIMBLE.dicePoolTracker.expendAllAria', {
+								label: pool.label,
+								total: String(pool.total),
+							})}
+							data-tooltip={localize('NIMBLE.dicePoolTracker.expendAllTooltip', {
+								total: String(pool.total),
+							})}
 							data-tooltip-direction="RIGHT"
 							onclick={() => state.expendAllRolled(pool.id)}
 						>
@@ -77,7 +102,10 @@
 						 The tracker is a view, not the fill mechanism. -->
 					<div
 						class="dice-pool-tracker__badge dice-pool-tracker__badge--static"
-						data-tooltip="{pool.label} (0/{pool.max})"
+						data-tooltip={localize('NIMBLE.dicePoolTracker.emptyTooltip', {
+							label: pool.label,
+							max: String(pool.max),
+						})}
 						data-tooltip-direction="RIGHT"
 					>
 						<i class="fa-solid {getDieFaceIcon(pool.dieSize)}"></i>
@@ -90,13 +118,6 @@
 
 <style lang="scss">
 	.dice-pool-tracker {
-		// Color tokens — override per theme so a single var(--dp-*) works everywhere.
-		// Light: hsl(210,65%,46%) ~3.5:1 on white (WCAG AA for non-text UI elements)
-		// Dark:  hsl(210,80%,63%) ~5:1 on hsl(220,15%,16%)
-		--dp-available: hsl(210, 65%, 46%);
-		--dp-spent: hsl(220, 10%, 58%);
-		--dp-expend-hover: hsl(0, 65%, 58%);
-
 		&__panel {
 			display: flex;
 			flex-direction: column;
@@ -104,7 +125,7 @@
 			gap: 0.125rem;
 			padding: 0.25rem;
 			background: color-mix(in srgb, var(--nimble-sheet-background) 85%, transparent);
-			border: 1px solid hsl(220, 10%, 70%);
+			border: 1px solid var(--nimble-dice-pool-tracker-panel-border-color);
 			border-left: none;
 			border-radius: 0 6px 6px 0;
 			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
@@ -117,8 +138,8 @@
 			width: 1.625rem;
 			height: 1.625rem;
 			padding: 0;
-			background: #fff;
-			border: 2px solid var(--dp-available);
+			background: var(--nimble-dice-pool-tracker-badge-background);
+			border: 2px solid var(--nimble-dice-pool-tracker-available-color);
 			border-radius: 4px;
 			cursor: pointer;
 			transition:
@@ -127,7 +148,7 @@
 
 			i {
 				font-size: 1rem;
-				color: var(--dp-available);
+				color: var(--nimble-dice-pool-tracker-available-color);
 				transition: filter 0.15s ease;
 			}
 
@@ -149,8 +170,8 @@
 			width: 1.625rem;
 			height: 1.625rem;
 			padding: 0;
-			background: #fff;
-			border: 1px solid hsl(220, 10%, 78%);
+			background: var(--nimble-dice-pool-tracker-badge-background);
+			border: 1px solid var(--nimble-dice-pool-tracker-pip-border-color);
 			border-radius: 4px;
 			cursor: pointer;
 			transition:
@@ -165,24 +186,24 @@
 			}
 
 			&--available {
-				border-color: var(--dp-available);
+				border-color: var(--nimble-dice-pool-tracker-available-color);
 
 				i {
-					color: var(--dp-available);
+					color: var(--nimble-dice-pool-tracker-available-color);
 				}
 
 				&:hover {
-					background: hsl(210, 75%, 92%);
+					background: var(--nimble-dice-pool-tracker-pip-hover-background);
 
 					i {
-						filter: drop-shadow(0 0 4px var(--dp-available));
+						filter: drop-shadow(0 0 4px var(--nimble-dice-pool-tracker-available-color));
 					}
 				}
 			}
 
 			&--spent {
 				i {
-					color: var(--dp-spent);
+					color: var(--nimble-dice-pool-tracker-spent-color);
 				}
 			}
 
@@ -198,22 +219,22 @@
 			width: 1.625rem;
 			height: 1.625rem;
 			padding: 0;
-			background: #fff;
-			border: 2px solid var(--dp-available);
+			background: var(--nimble-dice-pool-tracker-badge-background);
+			border: 2px solid var(--nimble-dice-pool-tracker-available-color);
 			border-radius: 4px;
 			cursor: pointer;
 			font-size: 0.75rem;
 			font-weight: 700;
-			color: var(--dp-available);
+			color: var(--nimble-dice-pool-tracker-available-color);
 			transition:
 				border-color 0.15s ease,
 				color 0.15s ease,
 				background 0.15s ease;
 
 			&:hover {
-				border-color: var(--dp-expend-hover);
-				color: var(--dp-expend-hover);
-				background: hsl(0, 65%, 96%);
+				border-color: var(--nimble-dice-pool-tracker-expend-hover-color);
+				color: var(--nimble-dice-pool-tracker-expend-hover-color);
+				background: var(--nimble-dice-pool-tracker-chip-hover-background);
 			}
 		}
 
@@ -225,62 +246,38 @@
 			padding: 0.1rem 0;
 			font-size: 0.75rem;
 			font-weight: 600;
-			color: var(--dp-spent);
+			color: var(--nimble-dice-pool-tracker-spent-color);
 			background: transparent;
 			border: none;
-			border-top: 1px solid hsl(220, 10%, 78%);
+			border-top: 1px solid var(--nimble-dice-pool-tracker-total-border-color);
 			cursor: pointer;
 
 			&:hover {
-				color: var(--dp-expend-hover);
+				color: var(--nimble-dice-pool-tracker-expend-hover-color);
 			}
 		}
 	}
 
+	// Dark-theme-only structural overrides for pip background. Color tokens
+	// (border, hover, etc.) are themed via custom properties in _theme.scss.
 	:global(.theme-dark) .dice-pool-tracker {
-		--dp-available: hsl(210, 80%, 63%);
-		--dp-spent: hsl(220, 10%, 50%);
-	}
+		&__pip {
+			background: var(--nimble-dice-pool-tracker-pip-background);
 
-	:global(.theme-dark) .dice-pool-tracker__panel {
-		background: hsla(220, 15%, 13%, 0.97);
-		border-color: hsl(220, 10%, 28%);
-	}
+			&.dice-pool-tracker__pip--available {
+				border-color: var(--nimble-dice-pool-tracker-pip-available-border-color);
 
-	:global(.theme-dark) .dice-pool-tracker__badge {
-		background: hsl(220, 15%, 20%);
-		border-color: var(--nimble-dark-text-color);
-		box-shadow: none;
-
-		i {
-			color: var(--nimble-dark-text-color);
-			filter: none;
-		}
-	}
-
-	:global(.theme-dark) .dice-pool-tracker__pip {
-		background: hsl(220, 15%, 18%);
-		border-color: hsl(220, 10%, 30%);
-
-		&.dice-pool-tracker__pip--available {
-			border-color: hsl(210, 85%, 55%);
-
-			i {
-				color: var(--dp-available);
-			}
-
-			&:hover {
-				background: hsl(220, 18%, 26%);
-
-				i {
-					filter: drop-shadow(0 0 5px var(--dp-available));
+				&:hover i {
+					filter: drop-shadow(0 0 5px var(--nimble-dice-pool-tracker-available-color));
 				}
 			}
 		}
 
-		&.dice-pool-tracker__pip--spent {
-			i {
-				color: var(--dp-spent);
+		&__badge {
+			box-shadow: none;
+
+			&--static i {
+				filter: none;
 			}
 		}
 	}

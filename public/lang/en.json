@@ -956,6 +956,18 @@
 				"insufficient": "{item} needs {required} charge(s) from \"{pool}\", but only {available} are available."
 			}
 		},
+		"dicePoolTracker": {
+			"countTooltip": "{label} ({current}/{max})",
+			"emptyTooltip": "{label} (0/{max})",
+			"rolledTooltip": "{label} ({count}/{max}) – Total: {total}",
+			"rollAndSpendOne": "Roll and spend 1 {label}",
+			"spent": "{label} spent",
+			"clickToRoll": "Click to roll & spend",
+			"clickToSpend": "Rolled {value} – Click to spend",
+			"spendDieAria": "Spend {label} die (value: {value})",
+			"expendAllAria": "Expend all {label} ({total})",
+			"expendAllTooltip": "Expend all – total {total}"
+		},
 		"creatureFeatures": {
 			"noFeatures": "No features yet.",
 			"actionSequence": "After each hero's turn, choose one.",

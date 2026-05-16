@@ -176,104 +176,6 @@ function emitRefillEvents(
 }
 
 /**
- * Roll a single die of the pool's dieSize and push it onto the pool's faces.
- * Posts a chat message with the roll. No-op if the pool is already at max.
- * Used by sheet UI to drive activation-style "roll a die into the pool"
- * (e.g. Berserker Rage adding a Fury Die).
- */
-async function rollDieIntoPool(
-	actor: Actor | null | undefined,
-	poolId: string,
-	options: { flavor?: string } = {},
-): Promise<boolean> {
-	if (!isCharacterActor(actor)) return false;
-	if (typeof poolId !== 'string' || poolId.length < 1) return false;
-
-	const currentPools = buildEffectiveDicePoolMap(actor);
-	const pool = currentPools[poolId];
-	if (!pool) return false;
-	if (pool.faces.length >= pool.max) return false;
-
-	const RollCls = (globalThis as unknown as { Roll: typeof Roll }).Roll;
-	const roll = new RollCls(`1d${dieSizeToMaxFace(pool.dieSize)}`);
-	await roll.evaluate();
-	const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage }).ChatMessage;
-	await roll.toMessage({
-		speaker: ChatMessageCls.getSpeaker({ actor }),
-		flavor: options.flavor ?? pool.label,
-	});
-
-	const face = roll.total ?? 1;
-	const previousFaces = [...pool.faces];
-	pool.faces = [...pool.faces, face];
-
-	await persistDicePoolMap(actor, currentPools);
-
-	emitForCharacter(actor, 'changed', {
-		actor,
-		poolId,
-		poolLabel: pool.label,
-		previousFaces,
-		newFaces: [...pool.faces],
-		reason: 'manual',
-		trigger: 'manual',
-	});
-
-	return true;
-}
-
-/**
- * Roll `max` dice of the pool's dieSize and replace the pool's faces.
- * Posts a chat message with all rolls. Used by sheet UI for "roll your whole
- * pool" actions (e.g. Oathsworn Judgment Dice 2d6 on trigger).
- */
-async function rollPoolFresh(
-	actor: Actor | null | undefined,
-	poolId: string,
-	options: { flavor?: string } = {},
-): Promise<boolean> {
-	if (!isCharacterActor(actor)) return false;
-	if (typeof poolId !== 'string' || poolId.length < 1) return false;
-
-	const currentPools = buildEffectiveDicePoolMap(actor);
-	const pool = currentPools[poolId];
-	if (!pool) return false;
-	if (pool.max < 1) return false;
-
-	const RollCls = (globalThis as unknown as { Roll: typeof Roll }).Roll;
-	const roll = new RollCls(`${pool.max}d${dieSizeToMaxFace(pool.dieSize)}`);
-	await roll.evaluate();
-	const ChatMessageCls = (globalThis as unknown as { ChatMessage: typeof ChatMessage }).ChatMessage;
-	await roll.toMessage({
-		speaker: ChatMessageCls.getSpeaker({ actor }),
-		flavor: options.flavor ?? pool.label,
-	});
-
-	const previousFaces = [...pool.faces];
-	const newFaces: number[] = [];
-	for (const die of roll.dice) {
-		for (const result of die.results) {
-			newFaces.push(result.result);
-		}
-	}
-	pool.faces = newFaces.slice(0, pool.max);
-
-	await persistDicePoolMap(actor, currentPools);
-
-	emitForCharacter(actor, 'changed', {
-		actor,
-		poolId,
-		poolLabel: pool.label,
-		previousFaces,
-		newFaces: [...pool.faces],
-		reason: 'manual',
-		trigger: 'manual',
-	});
-
-	return true;
-}
-
-/**
  * Manually adjust a pool's faces (GM tool or sheet UI). Operates on a single pool by id.
  * Pass an explicit `faces` array to overwrite, or null to clear.
  */
@@ -319,8 +221,6 @@ export {
 	applyRefillToActorIfEligible,
 	applyRefillTriggersToPools,
 	applyRestRefill,
-	rollDieIntoPool,
-	rollPoolFresh,
 	setPoolFaces,
 };
 export type { RefilledEntry };
