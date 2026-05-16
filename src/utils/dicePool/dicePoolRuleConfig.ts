@@ -1,8 +1,8 @@
-const ChargePoolRuleConfig = {
+const DicePoolRuleConfig = {
 	scopes: ['item', 'actor'],
 	dieSizes: ['d4', 'd6', 'd8', 'd10', 'd12', 'd20'],
 	initialModes: ['max', 'zero'],
-	recoveryTriggers: [
+	refillTriggers: [
 		'safeRest',
 		'fieldRest',
 		'onHit',
@@ -14,13 +14,14 @@ const ChargePoolRuleConfig = {
 		'onTurnEnd',
 		'onKill',
 		'onBloodied',
+		'onAttacked',
 	],
-	recoveryModes: ['add', 'set', 'refresh'],
+	refillModes: ['add', 'set', 'refresh'],
 	restTypes: ['safe', 'field'],
 	encounterTriggerTypes: ['encounterStart', 'encounterEnd'] as const,
 	flagScope: 'nimble',
-	flagKey: 'chargePools',
-	flagPath: 'flags.nimble.chargePools',
+	flagKey: 'dicePools',
+	flagPath: 'flags.nimble.dicePools',
 } as const;
 
-export { ChargePoolRuleConfig };
+export { DicePoolRuleConfig };

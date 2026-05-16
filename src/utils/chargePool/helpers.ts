@@ -6,6 +6,7 @@ import type {
 	ChargeConsumerRuleLike,
 	ChargeConsumerState,
 	ChargePoolDefinition,
+	ChargePoolDieSize,
 	ChargePoolInitialMode,
 	ChargePoolMap,
 	ChargePoolRuleLike,
@@ -14,6 +15,7 @@ import type {
 	ChargeRecoveryEntry,
 	ChargeRecoveryMode,
 	ChargeRecoveryTrigger,
+	ModifyPoolRuleLike,
 	NumericInput,
 	RuleBackedItem,
 } from './types.js';
@@ -22,6 +24,7 @@ const VALID_RECOVERY_TRIGGERS: Set<ChargeRecoveryTrigger> = new Set(
 	ChargePoolRuleConfig.recoveryTriggers,
 );
 const VALID_RECOVERY_MODES: Set<ChargeRecoveryMode> = new Set(ChargePoolRuleConfig.recoveryModes);
+const VALID_DIE_SIZES: Set<ChargePoolDieSize> = new Set(ChargePoolRuleConfig.dieSizes);
 
 function isCharacterActor(actor: Actor | null | undefined): actor is CharacterActorLike {
 	return actor?.type === 'character';
@@ -71,6 +74,13 @@ function toChargePoolScope(value: unknown): ChargePoolScope {
 	return value === 'actor' ? 'actor' : 'item';
 }
 
+function toChargePoolDieSize(value: unknown): ChargePoolDieSize | null {
+	if (typeof value !== 'string') return null;
+	const trimmed = value.trim() as ChargePoolDieSize;
+	if (VALID_DIE_SIZES.has(trimmed)) return trimmed;
+	return null;
+}
+
 function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 	const normalizedRecord: ChargePoolMap = {};
 
@@ -93,6 +103,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 			const sourceItemId = normalizeIdentifier(sourcePool.sourceItemId);
 			const sourceItemName = normalizeIdentifier(sourcePool.sourceItemName);
 			const label = normalizeIdentifier(sourcePool.label);
+			const dieSize = toChargePoolDieSize(sourcePool.dieSize);
 			if (identifier.length < 1) continue;
 
 			normalizedRecord[poolId] = {
@@ -104,6 +115,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				label: label || sourceItemName || identifier,
 				current,
 				max,
+				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
 				recoveries,
 			};
@@ -135,6 +147,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 			);
 			const recoveries = normalizeRecoveries(sourcePool.recoveries);
 			const normalizedIdentifier = normalizeIdentifier(poolIdentifier);
+			const dieSize = toChargePoolDieSize(sourcePool.dieSize);
 			if (normalizedIdentifier.length < 1) continue;
 
 			const poolId = normalizedIdentifier;
@@ -147,6 +160,7 @@ function getChargePoolMapFromActor(actor: CharacterActorLike): ChargePoolMap {
 				label: item.name || normalizedIdentifier,
 				current,
 				max,
+				dieSize,
 				icon: normalizeIcon(sourcePool.icon),
 				recoveries,
 			};
@@ -160,6 +174,61 @@ function resolveFormulaToInteger(actor: CharacterActorLike, formula: unknown): n
 	if (typeof formula !== 'string' || formula.trim().length < 1) return 0;
 	const resolvedValue = getDeterministicBonus(formula, actor.getRollData() as NimbleRollData);
 	return toFiniteNonNegativeInteger(resolvedValue);
+}
+
+function resolveSignedFormulaToInteger(actor: CharacterActorLike, formula: unknown): number {
+	if (typeof formula !== 'string' || formula.trim().length < 1) return 0;
+	const resolvedValue = getDeterministicBonus(formula, actor.getRollData() as NimbleRollData);
+	const numeric = typeof resolvedValue === 'number' ? resolvedValue : Number(resolvedValue);
+	if (!Number.isFinite(numeric)) return 0;
+	return Math.trunc(numeric);
+}
+
+function getChargePoolModifiers(actor: CharacterActorLike): Map<string, ModifyPoolRuleLike[]> {
+	const modifiersByIdentifier = new Map<string, ModifyPoolRuleLike[]>();
+
+	for (const item of actor.items.contents) {
+		const ruleBackedItem = item as RuleBackedItem;
+		const rules = ruleBackedItem.rules;
+		if (!rules) continue;
+
+		for (const rule of rules.values()) {
+			if (rule.type !== 'modifyPool' || rule.disabled) continue;
+			const modifier = rule as ModifyPoolRuleLike;
+			if (modifier.poolType !== 'charge') continue;
+			const poolIdentifier = normalizeIdentifier(modifier.poolIdentifier);
+			if (poolIdentifier.length < 1) continue;
+
+			const existing = modifiersByIdentifier.get(poolIdentifier) ?? [];
+			existing.push(modifier);
+			modifiersByIdentifier.set(poolIdentifier, existing);
+		}
+	}
+
+	return modifiersByIdentifier;
+}
+
+function applyModifiersToDefinition(
+	actor: CharacterActorLike,
+	definition: ChargePoolDefinition,
+	modifiers: ModifyPoolRuleLike[] | undefined,
+): ChargePoolDefinition {
+	if (!modifiers || modifiers.length < 1) return definition;
+
+	let dieSize = definition.dieSize;
+	let max = definition.max;
+
+	for (const modifier of modifiers) {
+		if (typeof modifier.dieSize === 'string' && modifier.dieSize.trim().length > 0) {
+			const next = toChargePoolDieSize(modifier.dieSize);
+			if (next !== null) dieSize = next;
+		}
+		if (typeof modifier.maxDelta === 'string' && modifier.maxDelta.trim().length > 0) {
+			max = Math.max(0, max + resolveSignedFormulaToInteger(actor, modifier.maxDelta));
+		}
+	}
+
+	return { ...definition, dieSize, max };
 }
 
 function normalizeRecoveries(value: unknown): ChargeRecoveryEntry[] {
@@ -195,6 +264,7 @@ function normalizeRecoveries(value: unknown): ChargeRecoveryEntry[] {
 
 function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefinition[] {
 	const definitions: ChargePoolDefinition[] = [];
+	const modifiersByIdentifier = getChargePoolModifiers(actor);
 
 	for (const item of actor.items.contents) {
 		const ruleBackedItem = item as RuleBackedItem;
@@ -214,8 +284,9 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 			const id = buildChargePoolId(scope, identifier, sourceItemId);
 			const initial: ChargePoolInitialMode = poolRule.initial === 'zero' ? 'zero' : 'max';
 			const recoveries = normalizeRecoveries(poolRule.recoveries);
+			const dieSize = toChargePoolDieSize(poolRule.dieSize);
 
-			definitions.push({
+			const baseDefinition: ChargePoolDefinition = {
 				id,
 				identifier,
 				scope,
@@ -223,10 +294,15 @@ function getChargePoolDefinitions(actor: CharacterActorLike): ChargePoolDefiniti
 				sourceItemName: item.name,
 				label: normalizeIdentifier(poolRule.label) || item.name || identifier,
 				max,
+				dieSize,
 				icon: normalizeIcon(poolRule.icon),
 				initial,
 				recoveries,
-			});
+			};
+
+			definitions.push(
+				applyModifiersToDefinition(actor, baseDefinition, modifiersByIdentifier.get(identifier)),
+			);
 		}
 	}
 
@@ -252,6 +328,7 @@ function buildEffectiveChargePoolMap(actor: CharacterActorLike): ChargePoolMap {
 			label: definition.label,
 			current,
 			max: definition.max,
+			dieSize: definition.dieSize,
 			icon: existingPool?.icon ?? definition.icon,
 			recoveries: definition.recoveries,
 		};
@@ -504,6 +581,7 @@ function areChargePoolStatesEqual(left: ChargePoolState, right: ChargePoolState)
 		left.label === right.label &&
 		left.current === right.current &&
 		left.max === right.max &&
+		left.dieSize === right.dieSize &&
 		left.icon === right.icon &&
 		areRecoveryEntriesEqual(left.recoveries, right.recoveries)
 	);
@@ -529,6 +607,7 @@ function areChargePoolMapsEqual(left: ChargePoolMap, right: ChargePoolMap): bool
 export {
 	VALID_RECOVERY_TRIGGERS,
 	VALID_RECOVERY_MODES,
+	VALID_DIE_SIZES,
 	isCharacterActor,
 	toFiniteNonNegativeInteger,
 	toNumericInput,
@@ -537,6 +616,7 @@ export {
 	normalizeIcon,
 	buildChargePoolId,
 	toChargePoolScope,
+	toChargePoolDieSize,
 	getChargePoolMapFromActor,
 	resolveFormulaToInteger,
 	normalizeRecoveries,

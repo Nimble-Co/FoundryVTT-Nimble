@@ -623,6 +623,7 @@
 			"combatMana": "Combat Mana",
 			"conditionImmunity": "Condition Immunity",
 			"damageBonus": "Damage Bonus",
+			"dicePool": "Dice Pool",
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
 			"grantSpells": "Spells",
@@ -636,6 +637,7 @@
 			"maxHpBonus": "Hit Points",
 			"maximizeHitDice": "Maximize Hit Dice",
 			"maxWounds": "Wounds",
+			"modifyPool": "Modify Pool",
 			"note": "Note",
 			"savingThrowBonus": "Save Bonus",
 			"savingThrowRollMode": "Save Roll Mode",
@@ -681,7 +683,39 @@
 				"description": "Spend charges from an item or actor pool when this rule’s owner is activated."
 			},
 			"chargePool": {
-				"description": "Define a refillable pool of charges (per item or actor) with one or more recovery triggers."
+				"description": "Define a refillable pool of charges (per item or actor) with one or more recovery triggers.",
+				"scope": {
+					"label": "Scope",
+					"hint": "Where the pool lives. \"Item\" pools live on this item; \"Actor\" pools live on the actor and can be shared by features that reference the same identifier."
+				},
+				"max": {
+					"label": "Max charges",
+					"hint": "Capacity formula. Flat (3), formula (@key), or actor data (@strength)."
+				},
+				"dieSize": {
+					"label": "Die size",
+					"hint": "Optional. Set when charges are spent by rolling a die (e.g. Combat Dice). Leave blank for plain counters."
+				},
+				"initial": {
+					"label": "Initial",
+					"hint": "Whether the pool starts full or empty when first granted."
+				},
+				"recoveries": {
+					"label": "Recoveries",
+					"hint": "When and how charges are restored. Add an entry per trigger.",
+					"trigger": {
+						"label": "Trigger",
+						"hint": "Event that drives this recovery (rest type, encounter event, hit, etc.)."
+					},
+					"mode": {
+						"label": "Mode",
+						"hint": "How the value applies: \"add\" (gain N), \"set\" (set to N), or \"refresh\" (fill to max)."
+					},
+					"value": {
+						"label": "Value",
+						"hint": "Amount used by the mode. Flat or formula. Ignored when mode is \"refresh\"."
+					}
+				}
 			},
 			"combatMana": {
 				"description": "Grant a mana resource on a combat trigger and clear it on a configurable event."
@@ -710,6 +744,41 @@
 				"source": {
 					"label": "Source",
 					"hint": "Restrict to weapon or spell attacks. \"Any\" matches both."
+				}
+			},
+			"dicePool": {
+				"description": "Define a refillable pool of rolled dice (each die stores its rolled face). Used for snowballing damage pools (Fury Dice) and rolled resources (Judgment Dice).",
+				"scope": {
+					"label": "Scope",
+					"hint": "Where the pool lives. \"Item\" pools live on this item; \"Actor\" pools live on the actor and can be shared by features that reference the same identifier."
+				},
+				"dieSize": {
+					"label": "Die size",
+					"hint": "Size of each die stored in the pool."
+				},
+				"max": {
+					"label": "Max dice",
+					"hint": "Maximum number of dice the pool can hold. Flat (3), formula (@key), or actor data (@strength)."
+				},
+				"initial": {
+					"label": "Initial",
+					"hint": "Whether the pool starts full (pre-rolled to max) or empty when first granted."
+				},
+				"refills": {
+					"label": "Refills",
+					"hint": "When and how dice are added back to the pool. Add an entry per trigger.",
+					"trigger": {
+						"label": "Trigger",
+						"hint": "Event that drives this refill (rest type, encounter event, taken damage, etc.)."
+					},
+					"mode": {
+						"label": "Mode",
+						"hint": "How the value applies: \"add\" (roll N new dice), \"set\" (rebuild pool to N), or \"refresh\" (fill to max)."
+					},
+					"value": {
+						"label": "Value",
+						"hint": "Amount used by the mode. Flat or formula. Ignored when mode is \"refresh\"."
+					}
 				}
 			},
 			"grantItem": {
@@ -779,6 +848,25 @@
 			"maxWounds": {
 				"description": "Add to the actor’s maximum wounds before death.",
 				"value": { "label": "Bonus" }
+			},
+			"modifyPool": {
+				"description": "Override or scale an existing dice or charge pool (by identifier) — typically attached to a level-up feature to upgrade die size or expand max.",
+				"poolType": {
+					"label": "Pool type",
+					"hint": "Which subsystem to target: dice pools (rolled faces) or charge pools (counters)."
+				},
+				"poolIdentifier": {
+					"label": "Pool identifier",
+					"hint": "The `identifier` of the pool to modify (e.g. `fury`, `judgment`, `combat-dice`)."
+				},
+				"dieSize": {
+					"label": "Die size override",
+					"hint": "Replace the target pool's die size. Leave blank to keep it unchanged."
+				},
+				"maxDelta": {
+					"label": "Max delta",
+					"hint": "Signed amount added to the target pool's max (e.g. \"+1\", \"-1\", \"+@level\"). Leave blank to keep max unchanged."
+				}
 			},
 			"note": {
 				"description": "Display a free-form note on the sheet, with visibility scoped to the GM, the owner, or all viewers."

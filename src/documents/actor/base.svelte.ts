@@ -5,6 +5,7 @@ import type { SaveKeyType } from '#types/saveKey.d.ts';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
+import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
@@ -285,6 +286,14 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 				}
 			}
 		}
+
+		populateDicePoolTags(
+			this as unknown as {
+				flags?: unknown;
+				items?: { contents: Array<{ flags?: unknown }> };
+			},
+			this.tags,
+		);
 	}
 
 	/** ------------------------------------------------------ */
