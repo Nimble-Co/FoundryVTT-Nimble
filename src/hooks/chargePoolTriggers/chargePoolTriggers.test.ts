@@ -191,6 +191,59 @@ describe('registerKillTriggerHooks', () => {
 	});
 });
 
+describe('registerInitiativeTriggerHooks', () => {
+	beforeEach(() => {
+		vi.resetModules();
+		vi.clearAllMocks();
+		globals().game.combat = null;
+	});
+
+	it('registers nimble.initiativeRolled hook for initiative detection', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const { registerInitiativeTriggerHooks } = await import('./initiativeTrigger.js');
+		registerInitiativeTriggerHooks();
+
+		const initiativeHook = callbacks.get('nimble.initiativeRolled');
+		expect(initiativeHook).toBeDefined();
+	});
+
+	it('does not throw when actor is not a character', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const { registerInitiativeTriggerHooks } = await import('./initiativeTrigger.js');
+		registerInitiativeTriggerHooks();
+
+		const npcActor = {
+			id: 'npc-1',
+			type: 'npc',
+			name: 'Test NPC',
+		} as unknown as Actor.Implementation;
+
+		const initiativeHook = callbacks.get('nimble.initiativeRolled');
+		let threw = false;
+		try {
+			initiativeHook?.({ actor: npcActor });
+		} catch {
+			threw = true;
+		}
+		expect(threw).toBe(false);
+	});
+
+	it('does not throw when payload has no actor', async () => {
+		const callbacks = createHookCapture(globals().Hooks.on);
+		const { registerInitiativeTriggerHooks } = await import('./initiativeTrigger.js');
+		registerInitiativeTriggerHooks();
+
+		const initiativeHook = callbacks.get('nimble.initiativeRolled');
+		let threw = false;
+		try {
+			initiativeHook?.({});
+		} catch {
+			threw = true;
+		}
+		expect(threw).toBe(false);
+	});
+});
+
 describe('registerBloodiedTriggerHooks', () => {
 	beforeEach(() => {
 		vi.resetModules();

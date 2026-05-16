@@ -204,6 +204,18 @@
 	--nimble-badge-world-bg: hsl(35, 80%, 22%);
 	--nimble-badge-pack-bg: hsl(195, 55%, 22%);
 
+	/** DICE POOL TRACKER **/
+	// Light: ~3.5:1 on white (WCAG AA non-text); spent at ~3:1; expend hover red.
+	--nimble-dice-pool-tracker-available-color: hsl(210, 65%, 46%);
+	--nimble-dice-pool-tracker-spent-color: hsl(220, 10%, 58%);
+	--nimble-dice-pool-tracker-expend-hover-color: hsl(0, 65%, 58%);
+	--nimble-dice-pool-tracker-pip-border-color: hsl(220, 10%, 78%);
+	--nimble-dice-pool-tracker-pip-hover-background: hsl(210, 75%, 92%);
+	--nimble-dice-pool-tracker-chip-hover-background: hsl(0, 65%, 96%);
+	--nimble-dice-pool-tracker-panel-border-color: hsl(220, 10%, 70%);
+	--nimble-dice-pool-tracker-badge-background: #fff;
+	--nimble-dice-pool-tracker-total-border-color: hsl(220, 10%, 78%);
+
 	/** ANIMATION **/
 	--nimble-standard-transition: all 0.15s ease-in-out;
 	--nimble-slow-transition: all 0.25s ease-in-out;

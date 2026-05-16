@@ -178,8 +178,9 @@ function emitRefillEvents(
 /**
  * Roll a single die of the pool's dieSize and push it onto the pool's faces.
  * Posts a chat message with the roll. No-op if the pool is already at max.
- * Used by sheet UI to drive activation-style "roll a die into the pool"
- * (e.g. Berserker Rage adding a Fury Die).
+ * Called by ItemActivationManager's rollDie pool-node handler to drive
+ * activation-style "roll a die into the pool" (e.g. Berserker Rage adding a
+ * Fury Die).
  */
 async function rollDieIntoPool(
 	actor: Actor | null | undefined,
@@ -224,8 +225,9 @@ async function rollDieIntoPool(
 
 /**
  * Roll `max` dice of the pool's dieSize and replace the pool's faces.
- * Posts a chat message with all rolls. Used by sheet UI for "roll your whole
- * pool" actions (e.g. Oathsworn Judgment Dice 2d6 on trigger).
+ * Posts a chat message with all rolls. Called by ItemActivationManager's
+ * rollPool pool-node handler for "roll your whole pool" actions (e.g.
+ * Oathsworn Judgment Dice 2d6 on trigger).
  */
 async function rollPoolFresh(
 	actor: Actor | null | undefined,

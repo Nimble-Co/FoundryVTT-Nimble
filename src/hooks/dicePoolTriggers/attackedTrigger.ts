@@ -15,7 +15,9 @@ export function registerAttackedTriggerHooks(): void {
 	if (registered) return;
 	registered = true;
 
-	// @ts-expect-error Custom hook
+	// @ts-expect-error nimble.damageApplied is a custom Nimble hook not in
+	// Foundry's typed Hooks union; emitted by the damage application pipeline
+	// once per affected target, consumed here to drive onAttacked refill.
 	Hooks.on('nimble.damageApplied', (payload: { targetActor?: unknown }) => {
 		const target = payload?.targetActor;
 		if (!target || typeof target !== 'object') return;

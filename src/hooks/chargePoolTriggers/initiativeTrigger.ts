@@ -13,7 +13,9 @@ export function registerInitiativeTriggerHooks(): void {
 	if (registered) return;
 	registered = true;
 
-	// @ts-expect-error Custom hook
+	// @ts-expect-error nimble.initiativeRolled is a custom Nimble hook not in
+	// Foundry's typed Hooks union; emitted by combat.svelte.ts and the actor
+	// initiative-roll path, consumed here to drive onInitiativeRolled recovery.
 	Hooks.on('nimble.initiativeRolled', (payload: { actor?: unknown }) => {
 		const actor = payload?.actor;
 		if (!actor || typeof actor !== 'object') return;

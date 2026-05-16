@@ -152,4 +152,19 @@
 	--nimble-reaction-move-light: hsl(185, 40%, 20%);
 	--nimble-reaction-move-text: hsl(185, 70%, 75%);
 	--nimble-reaction-move-accent: hsl(185, 70%, 60%);
+
+	/** DICE POOL TRACKER **/
+	// Dark: ~5:1 on hsl(220,15%,16%) panel.
+	--nimble-dice-pool-tracker-available-color: hsl(210, 80%, 63%);
+	--nimble-dice-pool-tracker-spent-color: hsl(220, 10%, 50%);
+	--nimble-dice-pool-tracker-expend-hover-color: hsl(0, 65%, 58%);
+	--nimble-dice-pool-tracker-pip-border-color: hsl(220, 10%, 30%);
+	--nimble-dice-pool-tracker-pip-available-border-color: hsl(210, 85%, 55%);
+	--nimble-dice-pool-tracker-pip-background: hsl(220, 15%, 18%);
+	--nimble-dice-pool-tracker-pip-hover-background: hsl(220, 18%, 26%);
+	--nimble-dice-pool-tracker-chip-hover-background: hsl(0, 65%, 96%);
+	--nimble-dice-pool-tracker-panel-background: hsla(220, 15%, 13%, 0.97);
+	--nimble-dice-pool-tracker-panel-border-color: hsl(220, 10%, 28%);
+	--nimble-dice-pool-tracker-badge-background: hsl(220, 15%, 20%);
+	--nimble-dice-pool-tracker-total-border-color: hsl(220, 10%, 28%);
 }
