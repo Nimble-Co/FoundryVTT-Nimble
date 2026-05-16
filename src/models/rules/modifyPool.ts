@@ -1,5 +1,6 @@
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
 import { DicePoolRuleConfig } from '#utils/dicePool/dicePoolRuleConfig.js';
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 const POOL_TYPES = ['dice', 'charge'] as const;
@@ -20,16 +21,35 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'dice',
+			label: 'NIMBLE.rules.modifyPool.poolType.label',
+			hint: 'NIMBLE.rules.modifyPool.poolType.hint',
 			choices: [...POOL_TYPES] as string[],
 		}),
-		poolIdentifier: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		poolIdentifier: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			label: 'NIMBLE.rules.modifyPool.poolIdentifier.label',
+			hint: 'NIMBLE.rules.modifyPool.poolIdentifier.hint',
+		}),
 		dieSize: new fields.StringField({
 			required: false,
 			nullable: true,
 			initial: null,
+			label: 'NIMBLE.rules.modifyPool.dieSize.label',
+			hint: 'NIMBLE.rules.modifyPool.dieSize.hint',
 			choices: DIE_SIZES,
 		}),
-		maxDelta: new fields.StringField({ required: false, nullable: true, initial: null }),
+		maxDelta: new fields.StringField(
+			withWidget({
+				required: false,
+				nullable: true,
+				initial: null,
+				label: 'NIMBLE.rules.modifyPool.maxDelta.label',
+				hint: 'NIMBLE.rules.modifyPool.maxDelta.hint',
+				widget: 'formula',
+			}),
+		),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -43,6 +63,9 @@ declare namespace ModifyPoolRule {
 }
 
 class ModifyPoolRule extends NimbleBaseRule<ModifyPoolRule.Schema> {
+	static override group = 'resource';
+	static override description = 'NIMBLE.rules.modifyPool.description';
+
 	declare poolType: PoolType;
 
 	declare poolIdentifier: string;
