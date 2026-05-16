@@ -1,10 +1,19 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		value: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: 'NIMBLE.rules.initiativeBonus.value.label',
+				widget: 'formula',
+			}),
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'initiativeBonus' }),
 	};
 }
@@ -14,6 +23,9 @@ declare namespace InitiativeBonusRule {
 }
 
 class InitiativeBonusRule extends NimbleBaseRule<InitiativeBonusRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.rules.initiativeBonus.description';
+
 	declare value: string;
 
 	static override defineSchema(): InitiativeBonusRule.Schema {

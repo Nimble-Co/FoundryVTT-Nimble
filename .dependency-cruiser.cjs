@@ -5,7 +5,12 @@ module.exports = {
 			name: "no-circular",
 			severity: "error",
 			comment: "Circular dependencies can cause runtime issues and make code harder to understand",
-			from: {},
+			from: {
+				// Svelte 5 deprecated `<svelte:self>` in favour of self-imports.
+				// A recursive component importing itself is the supported pattern,
+				// not a true circular dependency.
+				pathNot: "src/view/rulesBuilder/components/SchemaFieldRenderer\\.svelte$",
+			},
 			to: {
 				circular: true,
 				// Exclude type-only imports since they're erased at compile time

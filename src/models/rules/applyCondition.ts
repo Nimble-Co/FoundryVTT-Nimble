@@ -30,18 +30,39 @@ function schema() {
 
 	return {
 		type: new fields.StringField({ required: true, nullable: false, initial: 'applyCondition' }),
-		condition: new fields.StringField({ required: true, nullable: false, initial: '' }),
+		condition: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: '',
+			label: 'NIMBLE.rules.applyCondition.condition.label',
+			hint: 'NIMBLE.rules.applyCondition.condition.hint',
+			choices: () => Object.keys(CONFIG.NIMBLE.conditions),
+		}),
 		trigger: new fields.StringField({
 			required: true,
 			nullable: false,
 			initial: 'onCrit',
+			label: 'NIMBLE.rules.applyCondition.trigger.label',
+			hint: 'NIMBLE.rules.applyCondition.trigger.hint',
 			choices: TRIGGER_CHOICES as unknown as string[],
 		}),
-		duration: new fields.SchemaField({
-			rounds: new fields.NumberField({ required: false, nullable: true, initial: null }),
-			turns: new fields.NumberField({ required: false, nullable: true, initial: null }),
-			seconds: new fields.NumberField({ required: false, nullable: true, initial: null }),
-		}),
+		duration: new fields.SchemaField(
+			{
+				rounds: new fields.NumberField({ required: false, nullable: true, initial: null }),
+				turns: new fields.NumberField({ required: false, nullable: true, initial: null }),
+				seconds: new fields.NumberField({ required: false, nullable: true, initial: null }),
+			},
+			{
+				required: true,
+				nullable: false,
+				// Self-target triggers fire on the rule owner; duration is the actor's,
+				// not an applied effect — hide the field rather than mislead authors.
+				showWhen: (data: Record<string, unknown>) => {
+					const trigger = data.trigger as ApplyConditionTrigger | undefined;
+					return trigger !== 'onTurnStart' && trigger !== 'onTurnEnd' && trigger !== 'onRest';
+				},
+			} as unknown as never,
+		),
 	};
 }
 
@@ -62,6 +83,9 @@ interface ActorWithStatusEffect {
 }
 
 class ApplyConditionRule extends NimbleBaseRule<ApplyConditionRule.Schema> {
+	static override group = 'triggers';
+	static override description = 'NIMBLE.rules.applyCondition.description';
+
 	declare condition: string;
 	declare trigger: ApplyConditionTrigger;
 	declare duration: { rounds: number | null; turns: number | null; seconds: number | null };

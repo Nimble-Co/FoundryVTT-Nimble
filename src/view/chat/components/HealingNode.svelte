@@ -2,6 +2,7 @@
 	import { getContext } from 'svelte';
 	import prepareRollTooltip from '../../dataPreparationHelpers/rollTooltips/prepareRollTooltip.js';
 	import type { NimbleChatMessage, AppliedHealingRecord } from '../../../documents/chatMessage.js';
+	import { useDispositionState } from '../utils/useDispositionState.svelte.ts';
 
 	const messageDocument = getContext('messageDocument') as NimbleChatMessage;
 	const { actorType, permissions } = messageDocument.system as {
@@ -31,6 +32,15 @@
 
 	// Permission check - only GM or the message author can interact with healing buttons
 	let canInteract = $derived(game.user?.isGM || messageDocument.author?.id === game.user?.id);
+
+	let targetDisposition = $derived(
+		node.targetDisposition as 'friendly' | 'neutral' | 'hostile' | 'secret' | undefined,
+	);
+
+	const { dispositionState } = useDispositionState(
+		() => targetDisposition,
+		() => systemData.targets ?? [],
+	);
 
 	// Localization
 	const localize = (key: string) => game.i18n.localize(`NIMBLE.chat.${key}`);
@@ -100,6 +110,8 @@
 			<button
 				class="nimble-button nimble-button--apply-healing"
 				class:nimble-button--disabled={!hasTargets}
+				class:nimble-button--recommended={dispositionState === 'recommended'}
+				class:nimble-button--discouraged={dispositionState === 'discouraged'}
 				aria-label={hasTargets ? localize('applyHealing') : localize('noTargetsSelected')}
 				data-tooltip={hasTargets ? localize('applyHealing') : localize('noTargetsSelected')}
 				data-tooltip-direction="UP"
@@ -293,6 +305,19 @@
 			&:hover:not(:disabled) {
 				background-color: color-mix(in srgb, var(--healing-button-color) 12%, transparent);
 				border-color: var(--healing-button-color);
+			}
+		}
+
+		&--recommended {
+			font-weight: 900;
+			border-width: 2px;
+		}
+
+		&--discouraged {
+			opacity: 0.45;
+
+			&:hover:not(:disabled) {
+				opacity: 0.65;
 			}
 		}
 

@@ -1,11 +1,20 @@
 import type { NimbleCharacter } from '../../documents/actor/character.js';
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.StringField({ required: true, nullable: false, initial: '1' }),
+		value: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '1',
+				label: 'NIMBLE.rules.healingPotionBonus.value.label',
+				widget: 'formula',
+			}),
+		),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -19,6 +28,9 @@ declare namespace HealingPotionBonusRule {
 }
 
 class HealingPotionBonusRule extends NimbleBaseRule<HealingPotionBonusRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.rules.healingPotionBonus.description';
+
 	static override defineSchema(): HealingPotionBonusRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),

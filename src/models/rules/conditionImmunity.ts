@@ -5,8 +5,19 @@ function schema() {
 
 	return {
 		conditions: new fields.ArrayField(
-			new fields.StringField({ required: true, nullable: false, blank: false }),
-			{ required: true, nullable: false, initial: [] },
+			new fields.StringField({
+				required: true,
+				nullable: false,
+				blank: false,
+				choices: () => Object.keys(CONFIG.NIMBLE.conditions),
+			}),
+			{
+				required: true,
+				nullable: false,
+				initial: [],
+				label: 'NIMBLE.rules.conditionImmunity.conditions.label',
+				hint: 'NIMBLE.rules.conditionImmunity.conditions.hint',
+			},
 		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'conditionImmunity' }),
 	};
@@ -28,6 +39,9 @@ interface ActorSystem {
  * by the nimble.preApplyCondition hook listener to block application.
  */
 class ConditionImmunityRule extends NimbleBaseRule<ConditionImmunityRule.Schema> {
+	static override group = 'conditions';
+	static override description = 'NIMBLE.rules.conditionImmunity.description';
+
 	declare conditions: string[];
 
 	static override defineSchema(): ConditionImmunityRule.Schema {

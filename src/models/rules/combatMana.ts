@@ -1,10 +1,22 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
 	const { fields } = foundry.data;
 
+	// `resource`, `trigger`, and `clearOn` are intentionally left as free
+	// `StringField`s for v1: the existing pack data does not yet describe a
+	// closed choice set for them, and tightening with a guess would risk
+	// rejecting future content. Documented as a follow-up in the tech-spec.
 	return {
-		formula: new fields.StringField({ required: true, nullable: false, initial: '0' }),
+		formula: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '0',
+				widget: 'formula',
+			}),
+		),
 		resource: new fields.StringField({ required: true, nullable: false, initial: 'mana' }),
 		trigger: new fields.StringField({
 			required: true,
@@ -25,6 +37,9 @@ declare namespace CombatManaRule {
 }
 
 class CombatManaRule extends NimbleBaseRule<CombatManaRule.Schema> {
+	static override group = 'resource';
+	static override description = 'NIMBLE.rules.combatMana.description';
+
 	declare formula: string;
 	declare resource: string;
 	declare trigger: string;

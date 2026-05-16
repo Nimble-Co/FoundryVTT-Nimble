@@ -535,6 +535,85 @@
 			"safeRest": "Safe Rest",
 			"fieldRest": "Field Rest"
 		},
+		"rulesBuilder": {
+			"errorSchemaLoadBefore": "Could not load schema for rule type",
+			"errorSchemaLoadAfter": ". Use the raw-JSON edit button to repair.",
+			"addRule": "Add Rule",
+			"cancel": "Cancel",
+			"ruleSingular": "rule",
+			"rulePlural": "rules",
+			"expandAll": "Expand all",
+			"collapseAll": "Collapse all",
+			"enableAll": "Enable all",
+			"disableAll": "Disable all",
+			"emptyHint": "No rules yet. Click {addRule} to pick a type.",
+			"expand": "Expand",
+			"collapse": "Collapse",
+			"expandRule": "Expand rule",
+			"collapseRule": "Collapse rule",
+			"priority": "Priority",
+			"priorityTooltip": "Application order during data prep. Lower numbers run first.",
+			"unknownRuleType": "Unknown rule type: {type}",
+			"enableRule": "Enable rule",
+			"disableRule": "Disable rule",
+			"switchToBuilder": "Switch to builder",
+			"editRawJson": "Edit raw JSON",
+			"deleteRule": "Delete rule",
+			"saveJson": "Save JSON",
+			"save": "Save",
+			"noFurtherConfig": "No further configuration needed.",
+			"advanced": "Advanced",
+			"appliesWhen": "Applies when",
+			"openRulesBuilder": "Open Rules Builder",
+			"noRulesDefined": "No rules defined. Open the builder to add one.",
+			"closeJsonEditor": "Close JSON editor",
+			"disabled": "Disabled",
+			"ruleDisabled": "This rule is disabled",
+			"priorityApplicationOrder": "Priority (application order)",
+			"dragToCopy": "Drag onto another rules list to copy",
+			"addValue": "Add value",
+			"addEntry": "Add entry",
+			"remove": "Remove",
+			"clearDocument": "Clear document",
+			"clear": "Clear",
+			"dragDocumentHere": "Drag a document here",
+			"templateValueHintBefore": "Use",
+			"templateValueHintAfter": "to insert the formula result.",
+			"pickerMissingMetaTooltip": "Description missing — flag for review.",
+			"formulaPlaceholderDice": "e.g. 1d6 + @level",
+			"formulaPlaceholderFlat": "e.g. 2 or 1d6 or @level",
+			"predicateKeyPlaceholder": "pick or type a tag key",
+			"predicateKeyPlaceholderEmpty": "tag key (e.g. level)",
+			"predicateValuePlaceholder": "value",
+			"predicateMinPlaceholder": "min",
+			"predicateMaxPlaceholder": "max",
+			"predicateRemoveValue": "Remove value",
+			"predicateDeleteCondition": "Delete condition",
+			"predicateRangeAnd": "and",
+			"predicateIntro": "Restrict when this rule fires. Every row below must match the actor's tags for the rule to apply. Leave empty to always apply.",
+			"predicateAddCondition": "Add condition",
+			"predicatePreviewAlways": "No conditions — always applies.",
+			"predicatePreviewIncomplete": "Conditions are incomplete.",
+			"predicatePreviewMatches": "Currently matches the parent actor.",
+			"predicatePreviewNoMatch": "Currently does not match the parent actor.",
+			"predicatePreviewError": "Evaluation failed.",
+			"predicateOperators": {
+				"is": "is",
+				"isOneOf": "is one of",
+				"isAtLeast": "is at least",
+				"isAtMost": "is at most",
+				"isExactly": "is exactly",
+				"isBetween": "is between"
+			},
+			"predicateOperatorHints": {
+				"is": "Actor must be tagged with this exact value.",
+				"isOneOf": "Actor must be tagged with any one of these values.",
+				"isAtLeast": "The numeric value associated with this key must be at least this.",
+				"isAtMost": "The numeric value associated with this key must be at most this.",
+				"isExactly": "The numeric value associated with this key must equal this.",
+				"isBetween": "The numeric value associated with this key must be within this range."
+			}
+		},
 		"ruleTypes": {
 			"abilityBonus": "Stat Bonus",
 			"applyCondition": "Apply Condition",
@@ -565,6 +644,191 @@
 			"skillBonus": "Skill Bonus",
 			"speedBonus": "Speed Bonus",
 			"unarmedDamage": "Unarmed Damage"
+		},
+		"rules": {
+			"abilityBonus": {
+				"description": "Add a flat or formula-based bonus to one or more ability scores. Use ‘all’ to apply to every ability.",
+				"value": {
+					"label": "Bonus",
+					"hint": "A flat number, formula (e.g. @level), or dice expression."
+				},
+				"abilities": {
+					"label": "Apply to",
+					"hint": "Pick one or more abilities. Use \"all\" to apply to every ability."
+				}
+			},
+			"applyCondition": {
+				"description": "Apply a status condition to a target (or self) when a trigger fires — on a hit, crit, miss, save fail, turn start, etc.",
+				"condition": {
+					"label": "Condition",
+					"hint": "The condition to apply."
+				},
+				"trigger": {
+					"label": "Trigger",
+					"hint": "When this condition is applied — on hit/crit, on save fail, on turn start, etc."
+				}
+			},
+			"armorClass": {
+				"description": "Add, multiply, or override the character’s armor class with a formula.",
+				"formula": {
+					"label": "Formula",
+					"hint": "A flat number or formula. Combined per the mode below."
+				},
+				"mode": {
+					"label": "How to apply",
+					"hint": "Add: stack on top of current AC. Multiply: scale current AC. Override: replace current AC."
+				}
+			},
+			"chargeConsumer": {
+				"description": "Spend charges from an item or actor pool when this rule’s owner is activated."
+			},
+			"chargePool": {
+				"description": "Define a refillable pool of charges (per item or actor) with one or more recovery triggers."
+			},
+			"combatMana": {
+				"description": "Grant a mana resource on a combat trigger and clear it on a configurable event."
+			},
+			"conditionImmunity": {
+				"description": "Make the actor immune to one or more named conditions.",
+				"conditions": {
+					"label": "Immune to",
+					"hint": "The actor is fully immune to these conditions and cannot be affected by them."
+				}
+			},
+			"damageBonus": {
+				"description": "Add a flat, formula, or dice-expression bonus to damage dealt by attacks of a given delivery (melee/ranged) and source (weapon/spell).",
+				"value": {
+					"label": "Bonus",
+					"hint": "Flat (5), formula (@level), or dice (1d6+2)."
+				},
+				"damageType": {
+					"label": "Damage type",
+					"hint": "Restrict to attacks of this type. Leave blank to match all."
+				},
+				"delivery": {
+					"label": "Delivery",
+					"hint": "Restrict to melee or ranged attacks. \"Any\" matches both."
+				},
+				"source": {
+					"label": "Source",
+					"hint": "Restrict to weapon or spell attacks. \"Any\" matches both."
+				}
+			},
+			"grantItem": {
+				"description": "Grant an item by UUID when this rule’s owner is created on an actor. Optional duplicate gating and quantity override.",
+				"allowDuplicate": { "label": "Allow duplicates on the actor" },
+				"inMemoryOnly": { "label": "Don’t persist to actor inventory" },
+				"quantity": { "label": "Quantity (blank = item default)" },
+				"uuid": { "label": "Item" }
+			},
+			"grantProficiency": {
+				"description": "Grant proficiency in armor, weapons, or languages. Use ‘all’ to grant every value of the chosen type."
+			},
+			"grantSpells": {
+				"description": "Grant spells by school + tier filter, by UUID, or by user choice.",
+				"schools": { "label": "Schools" },
+				"tiers": { "label": "Tiers" },
+				"utilityOnly": { "label": "Utility spells only" },
+				"uuids": {
+					"label": "Specific spells",
+					"hint": "Drag spells from a compendium or sidebar onto each slot to grant them directly."
+				},
+				"mode": { "label": "Selection mode" },
+				"count": { "label": "How many to choose" }
+			},
+			"healingPotionBonus": {
+				"description": "Add a flat or formula-based bonus to healing received from potions.",
+				"value": { "label": "Bonus" }
+			},
+			"hitDiceAdvantage": {
+				"description": "Grant advantage on hit-dice rolls under a specific narrative condition (e.g., ‘in the wild’)."
+			},
+			"incrementHitDice": {
+				"description": "Increase the size of the actor’s hit dice (e.g. d8 → d10) by a flat or formula amount.",
+				"value": { "label": "Die size bonus" }
+			},
+			"initiativeBonus": {
+				"description": "Add a flat or formula-based bonus to the actor’s initiative roll.",
+				"value": { "label": "Bonus" }
+			},
+			"initiativeMessage": {
+				"description": "Display a message at initiative roll time. Supports `{value}` interpolation from a formula."
+			},
+			"initiativeRollMode": {
+				"description": "Set or adjust the actor’s default initiative roll mode (advantage/disadvantage).",
+				"value": { "label": "Roll mode value" },
+				"mode": { "label": "How to apply" }
+			},
+			"maxHitDice": {
+				"description": "Add to the actor’s maximum hit dice. Optionally targets a specific die size.",
+				"value": { "label": "Bonus" },
+				"dieSize": { "label": "Die size (0 = class default)" }
+			},
+			"maxHpBonus": {
+				"description": "Add a flat bonus to the actor’s maximum HP. With `perLevel`, the bonus scales with character level.",
+				"value": {
+					"label": "Bonus",
+					"hint": "Bonus HP added to maximum."
+				},
+				"perLevel": {
+					"label": "Multiply by character level",
+					"hint": "When on, the bonus is applied per level (e.g. +2 per level → +20 at level 10)."
+				}
+			},
+			"maximizeHitDice": {
+				"description": "Causes hit-dice rolls to take their maximum value instead of rolling."
+			},
+			"maxWounds": {
+				"description": "Add to the actor’s maximum wounds before death.",
+				"value": { "label": "Bonus" }
+			},
+			"note": {
+				"description": "Display a free-form note on the sheet, with visibility scoped to the GM, the owner, or all viewers."
+			},
+			"savingThrowBonus": {
+				"description": "Add a flat or formula-based bonus to one or more saving throws. Use ‘all’ to apply to every save.",
+				"value": {
+					"label": "Bonus",
+					"hint": "A flat number, formula, or dice expression added to the save."
+				},
+				"savingThrows": {
+					"label": "Apply to",
+					"hint": "Pick one or more saves. Use \"all\" to apply to every save."
+				}
+			},
+			"savingThrowRollMode": {
+				"description": "Set or adjust the saving throw roll mode (advantage/disadvantage), optionally requiring a player choice at use.",
+				"value": { "label": "Roll mode value" },
+				"target": { "label": "Target save" },
+				"selectedSave": { "label": "Selected save" },
+				"mode": { "label": "How to apply" },
+				"requiresChoice": { "label": "Player chooses save at use" }
+			},
+			"skillBonus": {
+				"description": "Add a flat or formula-based bonus to one or more skills. Use ‘all’ to apply to every skill.",
+				"value": {
+					"label": "Bonus",
+					"hint": "A flat number, formula, or dice expression added to the skill check."
+				},
+				"skills": {
+					"label": "Apply to",
+					"hint": "Pick one or more skills. Use \"all\" to apply to every skill."
+				}
+			},
+			"speedBonus": {
+				"description": "Add a bonus to the actor’s speed. Without an explicit movement type, applies to walk; otherwise scoped to fly/swim/climb/burrow.",
+				"value": {
+					"label": "Bonus",
+					"hint": "Bonus to speed in tiles. Negative numbers reduce speed."
+				},
+				"movementType": {
+					"label": "Movement type (blank = walk)",
+					"hint": "Leave blank to apply to walk speed only. Pick a specific type to grant or modify it."
+				}
+			},
+			"unarmedDamage": {
+				"description": "Override the actor’s unarmed-strike damage formula."
+			}
 		},
 		"charges": {
 			"header": "Charges",
@@ -1501,7 +1765,7 @@
 			"targets": "Targets",
 			"target": "Target",
 			"duration": "Duration",
-			"acquireTargetsFromTemplate": "Acquire targets from template",
+			"acquireTargetsFromTemplate": "AoE targeting (can't miss or crit)",
 			"targetCount": "Target Count",
 			"targetRestrictions": "Target Restrictions",
 			"attackType": "Attack Type",

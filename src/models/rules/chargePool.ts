@@ -1,4 +1,5 @@
 import { ChargePoolRuleConfig } from '#utils/chargePoolRuleConfig.js';
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 const CHARGE_POOL_SCOPES = [...ChargePoolRuleConfig.scopes];
@@ -17,7 +18,14 @@ function schema() {
 			initial: 'item',
 			choices: CHARGE_POOL_SCOPES,
 		}),
-		max: new fields.StringField({ required: true, nullable: false, initial: '1' }),
+		max: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '1',
+				widget: 'formula',
+			}),
+		),
 		dieSize: new fields.StringField({
 			required: false,
 			nullable: true,
@@ -44,7 +52,14 @@ function schema() {
 					initial: 'add',
 					choices: CHARGE_RECOVERY_MODES,
 				}),
-				value: new fields.StringField({ required: true, nullable: false, initial: '1' }),
+				value: new fields.StringField(
+					withWidget({
+						required: true,
+						nullable: false,
+						initial: '1',
+						widget: 'formula',
+					}),
+				),
 			}),
 			{
 				required: true,
@@ -61,6 +76,9 @@ declare namespace ChargePoolRule {
 }
 
 class ChargePoolRule extends NimbleBaseRule<ChargePoolRule.Schema> {
+	static override group = 'resource';
+	static override description = 'NIMBLE.rules.chargePool.description';
+
 	declare scope: (typeof ChargePoolRuleConfig.scopes)[number];
 
 	declare max: string;

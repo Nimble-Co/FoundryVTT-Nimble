@@ -1,15 +1,34 @@
 import type { NimbleCharacter } from '../../documents/actor/character.js';
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.StringField({ required: true, nullable: false, initial: '' }),
-		// TODO: Implement choices
+		value: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '',
+				label: 'NIMBLE.rules.abilityBonus.value.label',
+				hint: 'NIMBLE.rules.abilityBonus.value.hint',
+				widget: 'formula',
+			}),
+		),
 		abilities: new fields.ArrayField(
-			new fields.StringField({ required: true, nullable: false, initial: '' }),
-			{ required: true, nullable: false },
+			new fields.StringField({
+				required: true,
+				nullable: false,
+				initial: '',
+				choices: () => [...Object.keys(CONFIG.NIMBLE.abilityScores), 'all'],
+			}),
+			{
+				required: true,
+				nullable: false,
+				label: 'NIMBLE.rules.abilityBonus.abilities.label',
+				hint: 'NIMBLE.rules.abilityBonus.abilities.hint',
+			},
 		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'abilityBonus' }),
 	};
@@ -20,6 +39,9 @@ declare namespace AbilityBonusRule {
 }
 
 class AbilityBonusRule extends NimbleBaseRule<AbilityBonusRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.rules.abilityBonus.description';
+
 	static override defineSchema(): AbilityBonusRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),
