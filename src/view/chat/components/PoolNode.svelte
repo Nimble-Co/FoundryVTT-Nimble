@@ -1,7 +1,8 @@
 <script lang="ts">
+	import type { PoolNodeProps } from '#types/components/PoolNode.d.ts';
 	import localize from '#utils/localize.js';
 
-	let { node } = $props();
+	let { node }: PoolNodeProps = $props();
 
 	let label = $derived(
 		node.result?.poolLabel ??
