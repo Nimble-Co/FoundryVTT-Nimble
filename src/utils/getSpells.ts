@@ -3,6 +3,8 @@
  * Used during character creation to quickly find spells by school and tier.
  */
 
+const DEFAULT_NIMBLE_SPELL_PACK = 'nimble.nimble-spells';
+
 /**
  * Lightweight entry stored in the spell index.
  * Contains only the data needed for display and granting.
@@ -14,8 +16,25 @@ export interface SpellIndexEntry {
 	school: string;
 	tier: number;
 	isUtility: boolean;
+	/** Semantic slug identifier from system.identifier, or empty string if unset */
+	identifier: string;
 	/** Class restrictions - empty array means available to all classes */
 	classes: string[];
+}
+
+/**
+ * Produces a stable deduplication key for a spell using its identifier (or name
+ * as fallback), tier, and school.  Two spells with the same key are treated as
+ * the same spell regardless of which pack they come from.
+ */
+export function spellSignature(
+	identifier: string,
+	name: string,
+	tier: number,
+	school: string,
+): string {
+	const key = identifier.trim() || name.toLowerCase().trim();
+	return `${key}:${tier}:${school}`;
 }
 
 /**
@@ -36,6 +55,7 @@ interface SpellPackIndexEntry {
 	system?: {
 		school?: string;
 		tier?: number;
+		identifier?: string;
 		classes?: string[];
 		properties?: {
 			selected?: string[];
@@ -54,8 +74,11 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 	// Track seen UUIDs to avoid duplicates.
 	// Also track compendium source UUIDs covered by world items so we can skip
 	// the original compendium entry when a world-item copy already exists.
+	// Finally, track spell signatures (identifier+tier+school) so that copy packs
+	// don't produce duplicate entries when the default Nimble pack is indexed first.
 	const seen = new Set<string>();
 	const seenCompendiumSources = new Set<string>();
+	const seenSignatures = new Set<string>();
 
 	/**
 	 * Adds a spell entry to the index for a specific school and tier.
@@ -86,6 +109,7 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 		const system = item.system as {
 			school?: string;
 			tier?: number;
+			identifier?: string;
 			classes?: string[];
 			properties?: { selected?: string[] };
 		};
@@ -97,14 +121,18 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 		if (selectedProperties.includes('secretSpell')) continue;
 
 		const isUtility = selectedProperties.includes('utilitySpell');
+		const identifier = system.identifier ?? '';
+		const name = item.name ?? 'Unknown Spell';
+		const tier = system.tier ?? 0;
 
 		const added = addToIndex({
 			uuid: item.uuid,
-			name: item.name ?? 'Unknown Spell',
+			name,
 			img: item.img ?? 'icons/svg/item-bag.svg',
 			school: system.school,
-			tier: system.tier ?? 0,
+			tier,
 			isUtility,
+			identifier,
 			classes: system.classes ?? [],
 		});
 
@@ -112,21 +140,30 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 		// covered so the compendium's own entry is skipped below (prevents duplicates
 		// when a player has world-item copies of compendium spells).
 		if (added) {
+			seenSignatures.add(spellSignature(identifier, name, tier, system.school));
 			const compendiumSource = (item._stats as { compendiumSource?: string } | undefined)
 				?.compendiumSource;
 			if (compendiumSource) seenCompendiumSources.add(compendiumSource);
 		}
 	}
 
-	// Process compendium packs
+	// Process compendium packs — default Nimble pack first so its entries win over
+	// any copy packs a GM may have created with different UUIDs.
 	const indexFields = [
 		'system.school',
 		'system.tier',
+		'system.identifier',
 		'system.classes',
 		'system.properties.selected',
 	] as string[];
 
-	for (const pack of game.packs) {
+	const sortedPacks = [...game.packs].sort((a, b) => {
+		if (a.collection === DEFAULT_NIMBLE_SPELL_PACK) return -1;
+		if (b.collection === DEFAULT_NIMBLE_SPELL_PACK) return 1;
+		return 0;
+	});
+
+	for (const pack of sortedPacks) {
 		if (pack.documentName !== 'Item') continue;
 
 		// @ts-expect-error - Foundry types don't include custom index fields, but the API accepts them
@@ -146,17 +183,29 @@ export async function buildSpellIndex(): Promise<SpellIndex> {
 			// Skip secret spells - they should never be granted during character creation
 			if (selectedProperties.includes('secretSpell')) continue;
 
+			const identifier = system.identifier ?? '';
+			const name = packEntry.name ?? 'Unknown Spell';
+			const tier = system.tier ?? 0;
+			const sig = spellSignature(identifier, name, tier, system.school);
+
+			// Skip if another pack (or a world item) already contributed a spell with this
+			// identifier+tier+school combination.  Processing the default Nimble pack first
+			// guarantees its entries take priority over any copy packs.
+			if (seenSignatures.has(sig)) continue;
+
 			const isUtility = selectedProperties.includes('utilitySpell');
 
-			addToIndex({
+			const added = addToIndex({
 				uuid: packEntry.uuid,
-				name: packEntry.name ?? 'Unknown Spell',
+				name,
 				img: packEntry.img ?? 'icons/svg/item-bag.svg',
 				school: system.school,
-				tier: system.tier ?? 0,
+				tier,
 				isUtility,
+				identifier,
 				classes: system.classes ?? [],
 			});
+			if (added) seenSignatures.add(sig);
 		}
 	}
 

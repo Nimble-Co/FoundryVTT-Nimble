@@ -1,4 +1,5 @@
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
+import { spellSignature } from '#utils/getSpells.ts';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.ts';
 import localize from '#utils/localize.ts';
 
@@ -90,6 +91,10 @@ function buildUuidLookup(spellIndex: SpellIndex): Map<string, SpellIndexEntry> {
 /**
  * Collects spell grants from grantSpells rules, filtered by level predicate.
  * Returns auto-granted spells (filtered by ownership) and school selection groups.
+ *
+ * Pass `ownedSpellSignatures` to also filter by identifier+tier+school, which
+ * handles actors that received spells from a copy pack whose UUIDs differ from
+ * the canonical Nimble compendium UUIDs now stored in the index.
  */
 export function collectSpellGrants(
 	rulesArrays: RulesArray[],
@@ -98,12 +103,22 @@ export function collectSpellGrants(
 	targetLevel: number,
 	ownedSpellUuids: Set<string>,
 	knownSchools: Set<string>,
+	ownedSpellSignatures: Set<string> = new Set(),
 ): SpellGrantResult {
 	const autoGrant: SpellIndexEntry[] = [];
 	const schoolSelections: SchoolSelectionGroup[] = [];
 	const spellSelections: SpellSelectionGroup[] = [];
 	const seenUuids = new Set<string>();
 	const uuidLookup = buildUuidLookup(spellIndex);
+
+	function isOwned(spell: SpellIndexEntry): boolean {
+		return (
+			ownedSpellUuids.has(spell.uuid) ||
+			ownedSpellSignatures.has(
+				spellSignature(spell.identifier, spell.name, spell.tier, spell.school),
+			)
+		);
+	}
 
 	for (const rules of rulesArrays) {
 		for (const rule of rules) {
@@ -122,7 +137,14 @@ export function collectSpellGrants(
 						if (seenUuids.has(uuid) || ownedSpellUuids.has(uuid)) continue;
 						seenUuids.add(uuid);
 						const spell = uuidLookup.get(uuid);
-						if (spell) autoGrant.push(spell);
+						if (!spell) continue;
+						if (
+							ownedSpellSignatures.has(
+								spellSignature(spell.identifier, spell.name, spell.tier, spell.school),
+							)
+						)
+							continue;
+						autoGrant.push(spell);
 					}
 				} else if (resolvedSchools.length > 0) {
 					const spells = getSpellsFromIndex(spellIndex, resolvedSchools, tiers, {
@@ -130,7 +152,7 @@ export function collectSpellGrants(
 						forClass: classIdentifier,
 					});
 					for (const spell of spells) {
-						if (seenUuids.has(spell.uuid) || ownedSpellUuids.has(spell.uuid)) continue;
+						if (seenUuids.has(spell.uuid) || isOwned(spell)) continue;
 						seenUuids.add(spell.uuid);
 						autoGrant.push(spell);
 					}
@@ -143,7 +165,7 @@ export function collectSpellGrants(
 						utilityOnly,
 						forClass: classIdentifier,
 					});
-					return schoolSpells.some((s) => !ownedSpellUuids.has(s.uuid));
+					return schoolSpells.some((s) => !isOwned(s));
 				});
 
 				if (availableSchools.length > 0) {
@@ -168,7 +190,7 @@ export function collectSpellGrants(
 					const availableSpells = getSpellsFromIndex(spellIndex, [school], tiers, {
 						utilityOnly,
 						forClass: classIdentifier,
-					}).filter((s) => !ownedSpellUuids.has(s.uuid));
+					}).filter((s) => !isOwned(s));
 
 					if (availableSpells.length > 0) {
 						spellSelections.push({

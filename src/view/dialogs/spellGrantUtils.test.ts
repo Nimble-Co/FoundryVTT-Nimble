@@ -18,6 +18,7 @@ function createSpellEntry(
 		school: 'fire',
 		tier: 0,
 		isUtility: false,
+		identifier: '',
 		classes: [],
 		...overrides,
 	};
@@ -240,6 +241,33 @@ describe('collectSpellGrants', () => {
 
 		const owned = new Set(['fire-cantrip-1']);
 		const result = collectSpellGrants([rules], index, 'mage', 2, owned, new Set());
+
+		expect(result.autoGrant.map((s) => s.uuid)).toEqual(['fire-cantrip-2']);
+	});
+
+	it('skips spells whose signature matches an owned spell from a different pack', () => {
+		const index = buildTestIndex();
+		const rules: RulesArray = [
+			{
+				type: 'grantSpells',
+				schools: ['fire'],
+				tiers: [0],
+				mode: 'auto',
+				predicate: { level: { min: 2 } },
+			},
+		];
+
+		// fire-cantrip-1 was granted from a copy pack; its signature matches the index entry
+		const ownedSignatures = new Set(['ember:0:fire']);
+		const result = collectSpellGrants(
+			[rules],
+			index,
+			'mage',
+			2,
+			new Set(),
+			new Set(),
+			ownedSignatures,
+		);
 
 		expect(result.autoGrant.map((s) => s.uuid)).toEqual(['fire-cantrip-2']);
 	});

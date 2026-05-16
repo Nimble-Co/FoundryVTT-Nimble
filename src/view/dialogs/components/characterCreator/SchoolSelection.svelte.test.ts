@@ -25,6 +25,7 @@ function createSpellEntry({
 		school,
 		tier: 0,
 		isUtility,
+		identifier: '',
 		classes,
 	};
 }

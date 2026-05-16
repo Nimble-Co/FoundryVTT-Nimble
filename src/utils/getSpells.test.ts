@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { SpellIndex, SpellIndexEntry } from './getSpells.js';
-import { buildSpellIndex } from './getSpells.js';
+import { buildSpellIndex, spellSignature } from './getSpells.js';
 import { getSpellsFromIndex } from './getSpellsFromIndex.js';
 
 interface TestSpellSource {
@@ -25,6 +25,7 @@ function createIndexedSpell({
 	school = 'fire',
 	tier = 0,
 	isUtility = false,
+	identifier = '',
 	classes = [],
 }: {
 	uuid: string;
@@ -32,6 +33,7 @@ function createIndexedSpell({
 	school?: string;
 	tier?: number;
 	isUtility?: boolean;
+	identifier?: string;
 	classes?: string[];
 }): SpellIndexEntry {
 	return {
@@ -41,6 +43,7 @@ function createIndexedSpell({
 		school,
 		tier,
 		isUtility,
+		identifier,
 		classes,
 	};
 }
@@ -170,7 +173,13 @@ describe('buildSpellIndex', () => {
 		const fireCantrips = index.get('fire')?.get(0) ?? [];
 
 		expect(itemPack.getIndex).toHaveBeenCalledWith({
-			fields: ['system.school', 'system.tier', 'system.classes', 'system.properties.selected'],
+			fields: [
+				'system.school',
+				'system.tier',
+				'system.identifier',
+				'system.classes',
+				'system.properties.selected',
+			],
 		});
 		expect(fireCantrips.map((spell) => spell.name)).toEqual([
 			'Class Bolt',
@@ -189,6 +198,76 @@ describe('buildSpellIndex', () => {
 			)?.classes,
 		).toEqual(['mage']);
 		expect(fireCantrips.some((spell) => spell.uuid === secretSpell.uuid)).toBe(false);
+	});
+
+	it('deduplicates spells across packs using identifier+tier+school signature', async () => {
+		const nimbleSpell = createSpellSource({
+			uuid: 'Compendium.nimble.nimble-spells.Item.original',
+			name: 'Flame Dart',
+			system: { school: 'fire', tier: 0, properties: { selected: [] } },
+		});
+		const copySpell = createSpellSource({
+			uuid: 'Compendium.world-copy.nimble-spells-copy.Item.copy',
+			name: 'Flame Dart',
+			system: { school: 'fire', tier: 0, properties: { selected: [] } },
+		});
+
+		const nimblePack = {
+			documentName: 'Item',
+			collection: 'nimble.nimble-spells',
+			getIndex: vi.fn().mockResolvedValue([nimbleSpell]),
+		};
+		const copyPack = {
+			documentName: 'Item',
+			collection: 'world-copy.nimble-spells-copy',
+			getIndex: vi.fn().mockResolvedValue([copySpell]),
+		};
+
+		// Copy pack listed first — nimble should still win because of sorting
+		(game as unknown as { packs: unknown[] }).packs = [copyPack, nimblePack];
+
+		const index = await buildSpellIndex();
+		const fireCantrips = index.get('fire')?.get(0) ?? [];
+
+		expect(fireCantrips).toHaveLength(1);
+		expect(fireCantrips[0].uuid).toBe(nimbleSpell.uuid);
+	});
+
+	it('stores identifier in index entries', async () => {
+		const spellWithId = createSpellSource({
+			uuid: 'Compendium.nimble.nimble-spells.Item.frost-bolt',
+			name: 'Frost Bolt',
+			system: { school: 'ice', tier: 1, properties: { selected: [] } },
+		});
+		(spellWithId as any).system!.identifier = 'frost-bolt';
+
+		const pack = {
+			documentName: 'Item',
+			collection: 'nimble.nimble-spells',
+			getIndex: vi.fn().mockResolvedValue([spellWithId]),
+		};
+		(game as unknown as { packs: unknown[] }).packs = [pack];
+
+		const index = await buildSpellIndex();
+		const iceT1 = index.get('ice')?.get(1) ?? [];
+
+		expect(iceT1).toHaveLength(1);
+		expect(iceT1[0].identifier).toBe('frost-bolt');
+	});
+});
+
+describe('spellSignature', () => {
+	it('uses identifier when set', () => {
+		expect(spellSignature('frost-bolt', 'Frost Bolt', 1, 'ice')).toBe('frost-bolt:1:ice');
+	});
+
+	it('falls back to lowercased name when identifier is empty', () => {
+		expect(spellSignature('', 'Frost Bolt', 1, 'ice')).toBe('frost bolt:1:ice');
+	});
+
+	it('trims whitespace from both identifier and name', () => {
+		expect(spellSignature('  frost-bolt  ', 'Frost Bolt', 1, 'ice')).toBe('frost-bolt:1:ice');
+		expect(spellSignature('', '  Frost Bolt  ', 1, 'ice')).toBe('frost bolt:1:ice');
 	});
 });
 

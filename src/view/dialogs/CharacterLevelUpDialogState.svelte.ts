@@ -8,7 +8,7 @@ import getChoicesFromCompendium from '#utils/getChoicesFromCompendium.ts';
 import getClassFeaturesFromIndex, { buildClassFeatureIndex } from '#utils/getClassFeatures.ts';
 import getEpicBoons from '#utils/getEpicBoons.ts';
 import type { SpellIndex, SpellIndexEntry } from '#utils/getSpells.js';
-import { buildSpellIndex } from '#utils/getSpells.ts';
+import { buildSpellIndex, spellSignature } from '#utils/getSpells.ts';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.ts';
 import getSubclassChoices from '#utils/getSubclassChoices.ts';
 import getSubclassFeaturesFromIndex from '#utils/getSubclassFeatures.ts';
@@ -33,6 +33,8 @@ interface LevelUpDocument {
 		system?: {
 			rules?: Array<{ type: string; [key: string]: unknown }>;
 			school?: string;
+			tier?: number;
+			identifier?: string;
 			parentClass?: string;
 		};
 		_stats?: { compendiumSource?: string };
@@ -222,12 +224,22 @@ export function createLevelUpState(
 		const classIdentifier = characterClass?.identifier ?? '';
 		const items = getDocument().items ?? [];
 
-		// Get already-owned spell UUIDs
+		// Get already-owned spell UUIDs and signatures.
+		// Signatures (identifier+tier+school) catch spells that were granted from a copy
+		// pack — their compendiumSource won't match the canonical Nimble UUID now in the
+		// index, so the UUID check alone would re-grant them.
 		const ownedSpellUuids = new Set<string>();
+		const ownedSpellSignatures = new Set<string>();
 		for (const item of items) {
 			if (item.type !== 'spell') continue;
 			const source = item._stats?.compendiumSource;
 			if (source) ownedSpellUuids.add(source);
+			const sys = item.system;
+			if (sys?.school && sys.tier !== undefined) {
+				ownedSpellSignatures.add(
+					spellSignature(sys.identifier ?? '', item.name ?? '', sys.tier, sys.school),
+				);
+			}
 		}
 
 		// Derive known schools from auto-mode grantSpells rules on class features,
@@ -267,6 +279,7 @@ export function createLevelUpState(
 			levelingTo,
 			ownedSpellUuids,
 			knownSchools,
+			ownedSpellSignatures,
 		);
 
 		autoGrantedSpells = result.autoGrant;
