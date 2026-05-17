@@ -265,6 +265,72 @@ describe('getDicePoolModifiers', () => {
 
 		expect(getDicePoolModifiers(actor).has('fury')).toBe(false);
 	});
+
+	it('skips modifiers whose appliesTo() predicate returns false (level-gating)', () => {
+		// Simulates Intensifying Fury L6: appliesTo checks actor level and returns
+		// false on a level 5 character, so the d6 upgrade must not apply.
+		const actor = createMockActor([
+			createMockItem('feat-1', 'Intensifying Fury L6', [
+				{
+					type: 'modifyPool',
+					id: 'mod-l6',
+					poolType: 'dice',
+					poolIdentifier: 'fury',
+					dieSize: 'd6',
+					appliesTo: () => false,
+				} as MockRule,
+			]),
+		]);
+
+		expect(getDicePoolModifiers(actor).has('fury')).toBe(false);
+	});
+
+	it('includes modifiers whose appliesTo() predicate returns true', () => {
+		const actor = createMockActor([
+			createMockItem('feat-1', 'Intensifying Fury L6', [
+				{
+					type: 'modifyPool',
+					id: 'mod-l6',
+					poolType: 'dice',
+					poolIdentifier: 'fury',
+					dieSize: 'd6',
+					appliesTo: () => true,
+				} as MockRule,
+			]),
+		]);
+
+		expect(getDicePoolModifiers(actor).get('fury')).toHaveLength(1);
+	});
+
+	it('sorts modifiers by priority ascending so higher priority wins last', () => {
+		const actor = createMockActor([
+			createMockItem('feat-1', 'Late Mod', [
+				{
+					type: 'modifyPool',
+					id: 'mod-late',
+					poolType: 'dice',
+					poolIdentifier: 'fury',
+					dieSize: 'd10',
+					priority: 10,
+				} as MockRule,
+			]),
+			createMockItem('feat-2', 'Early Mod', [
+				{
+					type: 'modifyPool',
+					id: 'mod-early',
+					poolType: 'dice',
+					poolIdentifier: 'fury',
+					dieSize: 'd6',
+					priority: 1,
+				} as MockRule,
+			]),
+		]);
+
+		const mods = getDicePoolModifiers(actor).get('fury');
+		expect(mods).toHaveLength(2);
+		expect((mods?.[0] as { id?: string }).id).toBe('mod-early');
+		expect((mods?.[1] as { id?: string }).id).toBe('mod-late');
+	});
 });
 
 describe('applyModifiersToDefinition', () => {
@@ -279,6 +345,8 @@ describe('applyModifiersToDefinition', () => {
 		max: 3,
 		initial: 'zero',
 		refills: [],
+		consumption: 'manual',
+		bonusOnAttackDelivery: null,
 	};
 
 	it('returns definition unchanged when no modifiers', () => {
@@ -356,6 +424,8 @@ describe('reconcileDicePoolState', () => {
 		max: 3,
 		initial: 'zero',
 		refills: [],
+		consumption: 'manual',
+		bonusOnAttackDelivery: null,
 	};
 
 	it('produces fresh state with empty faces when no existing state', () => {
@@ -539,6 +609,8 @@ describe('areDicePoolMapsEqual', () => {
 		max: 3,
 		faces: [2, 4],
 		refills: [],
+		consumption: 'manual',
+		bonusOnAttackDelivery: null,
 	};
 
 	it('returns true for matching maps', () => {

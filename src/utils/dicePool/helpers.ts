@@ -3,6 +3,8 @@ import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { DicePoolRuleConfig } from './dicePoolRuleConfig.js';
 import type {
 	CharacterActorLike,
+	DiceAttackDeliveryFilter,
+	DiceConsumptionMode,
 	DicePoolDefinition,
 	DicePoolInitialMode,
 	DicePoolMap,
@@ -21,7 +23,29 @@ import type {
 const VALID_REFILL_TRIGGERS: Set<DiceRefillTrigger> = new Set(DicePoolRuleConfig.refillTriggers);
 const VALID_REFILL_MODES: Set<DiceRefillMode> = new Set(DicePoolRuleConfig.refillModes);
 const VALID_DIE_SIZES: Set<DieSize> = new Set(DicePoolRuleConfig.dieSizes);
+const VALID_CONSUMPTION_MODES: Set<DiceConsumptionMode> = new Set(
+	DicePoolRuleConfig.consumptionModes,
+);
+const VALID_ATTACK_DELIVERY_FILTERS: Set<DiceAttackDeliveryFilter> = new Set(
+	DicePoolRuleConfig.attackDeliveryFilters,
+);
 const DEFAULT_DIE_SIZE: DieSize = 'd4';
+const DEFAULT_CONSUMPTION: DiceConsumptionMode = 'manual';
+
+function toConsumptionMode(value: unknown): DiceConsumptionMode {
+	if (typeof value !== 'string') return DEFAULT_CONSUMPTION;
+	const trimmed = value.trim() as DiceConsumptionMode;
+	if (VALID_CONSUMPTION_MODES.has(trimmed)) return trimmed;
+	return DEFAULT_CONSUMPTION;
+}
+
+function toAttackDeliveryFilter(value: unknown): DiceAttackDeliveryFilter | null {
+	if (value === null || value === undefined) return null;
+	if (typeof value !== 'string') return null;
+	const trimmed = value.trim() as DiceAttackDeliveryFilter;
+	if (VALID_ATTACK_DELIVERY_FILTERS.has(trimmed)) return trimmed;
+	return null;
+}
 
 function isCharacterActor(actor: Actor | null | undefined): actor is CharacterActorLike {
 	return actor?.type === 'character';
@@ -172,6 +196,8 @@ function getDicePoolMapFromActor(actor: CharacterActorLike): DicePoolMap {
 				faces,
 				icon: normalizeIcon(sourcePool.icon),
 				refills,
+				consumption: toConsumptionMode(sourcePool.consumption),
+				bonusOnAttackDelivery: toAttackDeliveryFilter(sourcePool.bonusOnAttackDelivery),
 			};
 		}
 	}
@@ -210,6 +236,8 @@ function getDicePoolMapFromActor(actor: CharacterActorLike): DicePoolMap {
 				faces,
 				icon: normalizeIcon(sourcePool.icon),
 				refills,
+				consumption: toConsumptionMode(sourcePool.consumption),
+				bonusOnAttackDelivery: toAttackDeliveryFilter(sourcePool.bonusOnAttackDelivery),
 			};
 		}
 	}
@@ -229,6 +257,9 @@ function getDicePoolModifiers(actor: CharacterActorLike): Map<string, ModifyPool
 			if (rule.type !== 'modifyPool' || rule.disabled) continue;
 			const modifier = rule as ModifyPoolRuleLike;
 			if (modifier.poolType !== 'dice') continue;
+			// Respect the rule's predicate (e.g. level: { min: 6 } gating).
+			const ruleWithApplies = rule as { appliesTo?: () => boolean };
+			if (typeof ruleWithApplies.appliesTo === 'function' && !ruleWithApplies.appliesTo()) continue;
 			const poolIdentifier = normalizeIdentifier(modifier.poolIdentifier);
 			if (poolIdentifier.length < 1) continue;
 
@@ -236,6 +267,14 @@ function getDicePoolModifiers(actor: CharacterActorLike): Map<string, ModifyPool
 			existing.push(modifier);
 			modifiersByIdentifier.set(poolIdentifier, existing);
 		}
+	}
+
+	// Stable sort by rule priority so later-priority modifiers override earlier ones.
+	for (const list of modifiersByIdentifier.values()) {
+		list.sort(
+			(a, b) =>
+				((a as { priority?: number }).priority ?? 0) - ((b as { priority?: number }).priority ?? 0),
+		);
 	}
 
 	return modifiersByIdentifier;
@@ -299,6 +338,8 @@ function getDicePoolDefinitions(actor: CharacterActorLike): DicePoolDefinition[]
 				icon: normalizeIcon(poolRule.icon),
 				initial,
 				refills,
+				consumption: toConsumptionMode(poolRule.consumption),
+				bonusOnAttackDelivery: toAttackDeliveryFilter(poolRule.bonusOnAttackDelivery),
 			};
 
 			definitions.push(
@@ -359,6 +400,8 @@ async function buildInitialDicePoolState(definition: DicePoolDefinition): Promis
 		faces,
 		icon: definition.icon,
 		refills: definition.refills,
+		consumption: definition.consumption,
+		bonusOnAttackDelivery: definition.bonusOnAttackDelivery,
 	};
 }
 
@@ -394,6 +437,8 @@ function reconcileDicePoolState(
 		faces: [...clampedFaces],
 		icon: existing?.icon ?? definition.icon,
 		refills: definition.refills,
+		consumption: definition.consumption,
+		bonusOnAttackDelivery: definition.bonusOnAttackDelivery,
 	};
 }
 

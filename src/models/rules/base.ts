@@ -210,6 +210,17 @@ abstract class NimbleBaseRule<
 		return (this as object as { predicate: Predicate }).predicate;
 	}
 
+	/**
+	 * Public predicate-check entry point for callers outside the rule class.
+	 * Returns `true` when the rule's predicate matches the actor's current
+	 * domain (and the rule is enabled). Wraps the protected `test()` so the
+	 * shape of `_predicate.test()` and the disabled/predicate handling stays
+	 * encapsulated.
+	 */
+	appliesTo(passedDomain?: string[] | Set<string>): boolean {
+		return this.test(passedDomain);
+	}
+
 	protected test(passedDomain?: string[] | Set<string>): boolean {
 		if (this.disabled) return false;
 		// Empty predicate means "no conditions" = always pass

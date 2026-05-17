@@ -1,6 +1,7 @@
 import { handleAutomaticConditionApplication } from './hooks/automaticConditions.js';
 import canvasInit from './hooks/canvasInit.js';
 import { registerBloodiedTriggerHooks } from './hooks/chargePoolTriggers/bloodiedTrigger.js';
+import { registerInitiativeTriggerHooks } from './hooks/chargePoolTriggers/initiativeTrigger.js';
 import { registerKillTriggerHooks } from './hooks/chargePoolTriggers/killTrigger.js';
 import { registerTurnTriggerHooks } from './hooks/chargePoolTriggers/turnTrigger.js';
 import { registerWoundTriggerHooks } from './hooks/chargePoolTriggers/woundTrigger.js';
@@ -10,6 +11,7 @@ import registerCombatantHealthStateSync from './hooks/combatantHooks/combatantHe
 import registerTokenCombatantSync from './hooks/combatantHooks/tokenCombatantSync.js';
 import { conditionImmunityGuard } from './hooks/conditionImmunityGuard.js';
 import registerDicePoolSystemHooks from './hooks/dicePoolSystem.js';
+import { registerAttackedTriggerHooks } from './hooks/dicePoolTriggers/attackedTrigger.js';
 import { hotbarDrop as onHotbarDrop } from './hooks/hotBarDrop.js';
 import i18nInit from './hooks/i18nInit.js';
 import init from './hooks/init.js';
@@ -108,6 +110,8 @@ registerWoundTriggerHooks();
 registerTurnTriggerHooks();
 registerKillTriggerHooks();
 registerBloodiedTriggerHooks();
+registerInitiativeTriggerHooks();
+registerAttackedTriggerHooks();
 registerMinionGroupTokenBadges();
 registerMinionGroupTokenActions();
 registerTokenCombatantSync();

@@ -3,8 +3,29 @@ export type EffectNode =
 	| DamageNode
 	| DamageOutcomeNode
 	| HealingNode
+	| PoolNode
 	| SavingThrowNode
 	| TextNode;
+
+export type PoolNode = {
+	id: string;
+	type: 'pool';
+	poolType: 'dice' | 'charge';
+	action: 'rollDie' | 'rollPool' | 'fillCount' | 'clear';
+	poolIdentifier: string;
+	value: number;
+	predicate?: Record<string, unknown>;
+	parentContext: string | null;
+	parentNode: string | null;
+	result?: {
+		applied: boolean;
+		skipReason?: 'predicate' | 'invalidAction' | 'unknownPool' | 'noActor';
+		poolLabel?: string;
+		previousCount?: number;
+		newCount?: number;
+		rolledFaces?: number[];
+	} | null;
+};
 
 export type ActionConsequence = {
 	criticalHit?: EffectNode[];
