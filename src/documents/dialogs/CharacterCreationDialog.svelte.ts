@@ -432,29 +432,10 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 			await actor?.createEmbeddedDocuments('Item', spellDocumentSources);
 		}
 
-		// When a world item was selected, prefer its compendium source for rule
-		// evaluation — world copies may predate rule changes in the pack (e.g. the
-		// Celestial ancestry's savingThrowRollMode rule being added after the item
-		// was imported). The world item is still embedded on the actor; only the
-		// rule lookup falls back to the authoritative compendium version.
-		const resolveForRules = async (doc: Item | null): Promise<Item | null> => {
-			if (!doc) return null;
-			const sourceId = (doc as object as { _stats?: { compendiumSource?: string } })._stats
-				?.compendiumSource;
-			if (!sourceId || !sourceId.startsWith('Compendium.')) return doc;
-			return ((await fromUuid(sourceId as `Item.${string}`)) as Item | null) ?? doc;
-		};
-
-		const [classForRules, ancestryForRules, backgroundForRules] = await Promise.all([
-			resolveForRules(classDocument),
-			resolveForRules(ancestryDocument),
-			resolveForRules(backgroundDocument),
-		]);
-
 		const savingThrowsUpdate = resolveSavingThrowRollModes({
-			classDocument: classForRules as NimbleClassItem | null,
-			ancestryDocument: ancestryForRules as NimbleAncestryItem | null,
-			backgroundDocument: backgroundForRules as NimbleBackgroundItem | null,
+			classDocument,
+			ancestryDocument,
+			backgroundDocument,
 			selectedAncestrySave: results.selectedAncestrySave ?? null,
 		});
 

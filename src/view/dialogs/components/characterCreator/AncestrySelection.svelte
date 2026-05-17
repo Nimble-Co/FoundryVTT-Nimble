@@ -3,6 +3,7 @@
 	import Hint from '../../../components/Hint.svelte';
 	import prepareAncestryTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js';
 	import prepareAncestryMetadata from '../../../dataPreparationHelpers/metaData/prepareAncestryMetadata.js';
+	import getDocumentSourceLabel from '../../../../utils/getDocumentSourceLabel.js';
 	import DocumentCard from './DocumentCard.svelte';
 
 	async function handleAncestrySelection(ancestry) {
@@ -80,6 +81,7 @@
 				<ul class="nimble-document-list">
 					{#each options as ancestry}
 						{@const metadata = prepareAncestryMetadata(ancestry)}
+						{@const sourceLabel = getDocumentSourceLabel(ancestry.uuid)}
 
 						<li class="u-semantic-only">
 							<DocumentCard
@@ -87,6 +89,7 @@
 								document={ancestry}
 								handler={handleAncestrySelection}
 								{metadata}
+								{sourceLabel}
 								getTooltip={prepareAncestryTooltip}
 							/>
 						</li>

@@ -152,23 +152,12 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 		expect(savingThrows['strength.defaultRollMode']).toBe(1);
 	});
 
-	it('uses compendium source rules when world item is missing the savingThrowRollMode rule', async () => {
+	it('uses world item rules as-is without falling back to the compendium source', async () => {
 		const actor = setupActorMock();
 
-		const compendiumClassUuid = 'Compendium.nimble.nimble-classes.Item.warrior';
-		const compendiumAncestryUuid = 'Compendium.nimble.nimble-ancestries.Item.celestial';
-
-		// World item has no savingThrowRollMode rule (imported before rule was added)
+		// World item with the rule present — should be used without any override
 		const worldAncestryDocument = createItemDocument({
-			uuid: 'Item.stale-world-celestial',
-			name: 'Celestial',
-			system: { rules: [] },
-			_stats: { compendiumSource: compendiumAncestryUuid },
-		});
-
-		// Compendium item has the correct rule
-		const compendiumAncestryDocument = createItemDocument({
-			uuid: compendiumAncestryUuid,
+			uuid: 'Item.world-celestial',
 			name: 'Celestial',
 			system: {
 				rules: [
@@ -181,10 +170,11 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 					},
 				],
 			},
+			_stats: { compendiumSource: 'Compendium.nimble.nimble-ancestries.Item.celestial' },
 		});
 
 		const classDocument = createItemDocument({
-			uuid: compendiumClassUuid,
+			uuid: 'Compendium.nimble.nimble-classes.Item.warrior',
 			name: 'Warrior',
 			system: {
 				identifier: 'warrior',
@@ -197,7 +187,6 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 			vi.fn(async (uuid: string) => {
 				if (uuid === classDocument.uuid) return classDocument;
 				if (uuid === worldAncestryDocument.uuid) return worldAncestryDocument;
-				if (uuid === compendiumAncestryUuid) return compendiumAncestryDocument;
 				return null;
 			}),
 		);
@@ -218,6 +207,7 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 			system: { savingThrows: Record<string, number> };
 		};
 		const savingThrows = updateCall.system.savingThrows;
+		// World item has the rule — disadvantage is correctly neutralised
 		expect(savingThrows['dexterity.defaultRollMode']).toBe(0);
 		expect(savingThrows['strength.defaultRollMode']).toBe(1);
 	});

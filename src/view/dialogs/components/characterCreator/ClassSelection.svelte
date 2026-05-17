@@ -3,6 +3,7 @@
 
 	import DocumentCard from './DocumentCard.svelte';
 	import Hint from '../../../components/Hint.svelte';
+	import getDocumentSourceLabel from '../../../../utils/getDocumentSourceLabel.js';
 
 	let { active, classes, selectedClass = $bindable() } = $props();
 
@@ -14,6 +15,7 @@
 </script>
 
 {#snippet classCard(characterClass)}
+	{@const sourceLabel = getDocumentSourceLabel(characterClass.uuid)}
 	<li class="nimble-list-option">
 		<button
 			class="nimble-card"
@@ -44,6 +46,8 @@
 					Unknown
 				{/if}
 			</div>
+
+			<span class="nimble-card__source-label">{sourceLabel}</span>
 		</button>
 	</li>
 {/snippet}
@@ -105,6 +109,25 @@
 		--nimble-heading-margin: 0.5rem 0 0.25rem 0;
 
 		overflow-y: hidden;
+
+		.nimble-card {
+			position: relative;
+		}
+
+		.nimble-card__source-label {
+			position: absolute;
+			top: 0.1875rem;
+			right: 0.25rem;
+			padding: 0.0625rem 0.25rem;
+			font-size: var(--nimble-xxs-text);
+			font-weight: 600;
+			line-height: 1.4;
+			color: var(--nimble-medium-text-color);
+			background: var(--nimble-card-background-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 2px;
+			pointer-events: none;
+		}
 	}
 
 	.nimble-card__complexity {

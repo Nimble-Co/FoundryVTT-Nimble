@@ -1,5 +1,5 @@
 <script>
-	let { document, handler, metadata, getTooltip, ...attributes } = $props();
+	let { document, handler, metadata, sourceLabel, getTooltip, ...attributes } = $props();
 
 	let tooltipContent = $state('');
 
@@ -30,4 +30,29 @@
 	{#if metadata}
 		<span class="nimble-card__meta">{metadata}</span>
 	{/if}
+
+	{#if sourceLabel}
+		<span class="nimble-card__source-label">{sourceLabel}</span>
+	{/if}
 </button>
+
+<style lang="scss">
+	button {
+		position: relative;
+	}
+
+	.nimble-card__source-label {
+		position: absolute;
+		top: 0.1875rem;
+		right: 0.25rem;
+		padding: 0.0625rem 0.25rem;
+		font-size: var(--nimble-xxs-text);
+		font-weight: 600;
+		line-height: 1.4;
+		color: var(--nimble-medium-text-color);
+		background: var(--nimble-card-background-color);
+		border: 1px solid var(--nimble-card-border-color);
+		border-radius: 2px;
+		pointer-events: none;
+	}
+</style>
