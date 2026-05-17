@@ -163,6 +163,9 @@
 
 		const { value, statIncreaseType } = currentData;
 
+		const isSelected = Array.isArray(value) ? value.includes(key) : value === key;
+		if (!isSelected && (classASI[key] ?? 0) >= 5) return;
+
 		// For capstone, toggle between adding/removing from array (max 2)
 		if (statIncreaseType === 'capstone') {
 			let newValue;
@@ -392,14 +395,20 @@
 			: type === 'primary'
 				? keyAbilityScores.includes(key)
 				: !keyAbilityScores.includes(key)}
+	{@const isAtMax = !active && (asiTotals[key] ?? 0) >= 5}
 
 	<td class="nimble-stat-config__toggle-cell">
 		{#if validityTest}
 			<button
 				class="nimble-stat-config__toggle"
 				class:nimble-stat-config__toggle--active={active}
-				aria-label="Toggle Stat Increase"
-				data-tooltip="Toggle Stat Increase"
+				aria-label={isAtMax
+					? localize('NIMBLE.statConfig.statAtMax')
+					: localize('NIMBLE.statConfig.toggleStatIncrease')}
+				data-tooltip={isAtMax
+					? 'NIMBLE.statConfig.statAtMax'
+					: 'NIMBLE.statConfig.toggleStatIncrease'}
+				disabled={isAtMax}
 				onclick={() => toggleStatIncreaseOption(level, key)}
 			>
 				{#if active}

@@ -70,6 +70,7 @@
 			"cancel": "Cancel",
 			"applyChanges": "Apply Changes",
 			"toggleStatIncrease": "Toggle Stat Increase",
+			"statAtMax": "Stat is at its maximum (+5 from increases)",
 			"primaryTooltip": "+1 to one of your Key Stats",
 			"secondaryTooltip": "+1 to one of your Secondary Stats",
 			"capstoneTooltip": "+1 to any 2 of your stats",
