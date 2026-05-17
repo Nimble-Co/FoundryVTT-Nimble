@@ -42,11 +42,13 @@
 		display: flex;
 		flex-direction: row;
 		align-items: center;
-		gap: 0.375rem;
+		flex-wrap: wrap;
+		gap: 0.125rem 0.375rem;
 	}
 
 	.nimble-card__source-label {
 		flex-shrink: 0;
+		margin-inline-start: auto;
 		padding: 0.0625rem 0.25rem;
 		font-size: var(--nimble-xxs-text);
 		font-weight: 600;
