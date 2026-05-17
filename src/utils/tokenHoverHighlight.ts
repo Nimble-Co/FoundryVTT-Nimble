@@ -13,7 +13,7 @@ function getHoverRingColor(): number {
 	}
 }
 
-let ringToken: unknown = null;
+let ringTokens: unknown[] = [];
 
 type TokenWithHover = {
 	isVisible?: boolean;
@@ -24,17 +24,17 @@ type TokenWithHover = {
 	children?: Array<{ name?: string }>;
 };
 
-function removeRing(): void {
-	if (!ringToken) return;
-	const t = ringToken as TokenWithHover;
-	ringToken = null;
-	if (!Array.isArray(t.children)) return;
-	const ring = t.children.find((c) => c.name === HOVER_RING_NAME);
-	if (ring) t.removeChild(ring);
+function removeAllRings(): void {
+	for (const raw of ringTokens) {
+		const t = raw as TokenWithHover;
+		if (!Array.isArray(t.children)) continue;
+		const ring = t.children.find((c) => c.name === HOVER_RING_NAME);
+		if (ring) t.removeChild(ring);
+	}
+	ringTokens = [];
 }
 
-function addRing(token: TokenWithHover): void {
-	removeRing();
+function addRingToToken(token: TokenWithHover): void {
 	if (typeof token.addChild !== 'function') return;
 	const PIXI = (
 		globalThis as unknown as {
@@ -55,17 +55,25 @@ function addRing(token: TokenWithHover): void {
 	g.lineStyle(4, getHoverRingColor(), 1);
 	g.drawCircle(w / 2, h / 2, Math.max(w, h) / 2 + 8);
 	token.addChild(g);
-	ringToken = token;
+	ringTokens.push(token);
 }
 
 export function tokenHoverIn(token: unknown, _event: MouseEvent): void {
+	removeAllRings();
 	const t = token as TokenWithHover;
 	if (!t || t.isVisible === false) return;
-	addRing(t);
+	addRingToToken(t);
 }
 
-export function tokenHoverOut(token: unknown, _event: MouseEvent): void {
-	const t = token as TokenWithHover;
-	if (!t || t.isVisible === false) return;
-	removeRing();
+export function tokenGroupHoverIn(tokens: unknown[], _event: MouseEvent): void {
+	removeAllRings();
+	for (const token of tokens) {
+		const t = token as TokenWithHover;
+		if (!t || t.isVisible === false) continue;
+		addRingToToken(t);
+	}
+}
+
+export function tokenHoverOut(_token: unknown, _event: MouseEvent): void {
+	removeAllRings();
 }

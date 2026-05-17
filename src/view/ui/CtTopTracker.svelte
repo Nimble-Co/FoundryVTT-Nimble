@@ -83,6 +83,8 @@
 	const handleMonsterStackClick = trackerViewState.handleMonsterStackClick;
 	const handleMonsterStackContextMenu = trackerViewState.handleMonsterStackContextMenu;
 	const handleMonsterStackKeyDown = trackerViewState.handleMonsterStackKeyDown;
+	const handleMonsterStackMouseEnter = trackerViewState.handleMonsterStackMouseEnter;
+	const handleMonsterStackMouseLeave = trackerViewState.handleMonsterStackMouseLeave;
 	const handleTrackDragOver = trackerViewState.handleTrackDragOver;
 	const handleTrackDrop = trackerViewState.handleTrackDrop;
 	const handleTrackScroll = trackerViewState.handleTrackScroll;
@@ -546,6 +548,8 @@
 									onclick={(event) => handleMonsterStackClick(event, entry)}
 									oncontextmenu={(event) => handleMonsterStackContextMenu(event, entry)}
 									onkeydown={(event) => handleMonsterStackKeyDown(event, entry)}
+									onmouseenter={(event) => handleMonsterStackMouseEnter(event, entry)}
+									onmouseleave={(event) => handleMonsterStackMouseLeave(event, entry)}
 								>
 									{#if canDragEntry}
 										<div

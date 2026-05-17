@@ -14,7 +14,7 @@ import { isCombatantDead } from '#utils/isCombatantDead.js';
 import { isCombatStarted } from '#utils/isCombatStarted.js';
 import localize from '#utils/localize.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
-import { tokenHoverIn, tokenHoverOut } from '#utils/tokenHoverHighlight.js';
+import { tokenGroupHoverIn, tokenHoverIn, tokenHoverOut } from '#utils/tokenHoverHighlight.js';
 import CtSettingsDialogComponent from '#view/dialogs/CtSettingsDialog.svelte';
 import { COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME } from '../../settings/combatTrackerSettings.js';
 import {
@@ -528,6 +528,17 @@ export function createCtTopTrackerState() {
 	): void {
 		if (!canvas?.ready) return;
 		tokenHoverOut(getCombatantToken(combatant), event);
+	}
+
+	function handleMonsterStackMouseEnter(event: MouseEvent, entry: MonsterStackTrackEntry): void {
+		if (!canvas?.ready) return;
+		const tokens = entry.combatants.map(getCombatantToken).filter((t) => t !== null);
+		tokenGroupHoverIn(tokens, event);
+	}
+
+	function handleMonsterStackMouseLeave(event: MouseEvent, _entry: MonsterStackTrackEntry): void {
+		if (!canvas?.ready) return;
+		tokenHoverOut(null, event);
 	}
 
 	function canRemoveCombatant(): boolean {
@@ -1613,6 +1624,8 @@ export function createCtTopTrackerState() {
 		handleMonsterStackClick,
 		handleMonsterStackContextMenu,
 		handleMonsterStackKeyDown,
+		handleMonsterStackMouseEnter,
+		handleMonsterStackMouseLeave,
 		handleTrackDragOver,
 		handleTrackDrop,
 		handleTrackScroll,
