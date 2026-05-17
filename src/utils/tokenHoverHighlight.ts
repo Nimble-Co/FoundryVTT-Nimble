@@ -17,14 +17,11 @@ let ringToken: unknown = null;
 
 type TokenWithHover = {
 	isVisible?: boolean;
-	controlled?: boolean;
 	w?: number;
 	h?: number;
 	addChild(child: unknown): unknown;
 	removeChild(child: unknown): void;
 	children?: Array<{ name?: string }>;
-	_onHoverIn?(event: MouseEvent, options?: { hoverOutOthers?: boolean }): void;
-	_onHoverOut?(event: MouseEvent): void;
 };
 
 function removeRing(): void {
@@ -61,23 +58,14 @@ function addRing(token: TokenWithHover): void {
 	ringToken = token;
 }
 
-export function tokenHoverIn(token: unknown, event: MouseEvent): void {
+export function tokenHoverIn(token: unknown, _event: MouseEvent): void {
 	const t = token as TokenWithHover;
 	if (!t || t.isVisible === false) return;
-	if (t.controlled) {
-		addRing(t);
-	} else {
-		removeRing();
-		t._onHoverIn?.(event, { hoverOutOthers: true });
-	}
+	addRing(t);
 }
 
-export function tokenHoverOut(token: unknown, event: MouseEvent): void {
+export function tokenHoverOut(token: unknown, _event: MouseEvent): void {
 	const t = token as TokenWithHover;
 	if (!t || t.isVisible === false) return;
-	if (t.controlled) {
-		removeRing();
-	} else {
-		t._onHoverOut?.(event);
-	}
+	removeRing();
 }
