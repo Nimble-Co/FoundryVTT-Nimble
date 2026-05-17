@@ -76,6 +76,8 @@
 	const handleCombatantCardClick = trackerViewState.handleCombatantCardClick;
 	const handleCombatantCardContextMenu = trackerViewState.handleCombatantCardContextMenu;
 	const handleCombatantCardKeyDown = trackerViewState.handleCombatantCardKeyDown;
+	const handleCombatantCardMouseEnter = trackerViewState.handleCombatantCardMouseEnter;
+	const handleCombatantCardMouseLeave = trackerViewState.handleCombatantCardMouseLeave;
 	const canRemoveCombatant = trackerViewState.canRemoveCombatant;
 	const handleRemoveCombatant = trackerViewState.handleRemoveCombatant;
 	const handleMonsterStackClick = trackerViewState.handleMonsterStackClick;
@@ -384,6 +386,8 @@
 									onclick={(event) => handleCombatantCardClick(event, entry.combatant)}
 									oncontextmenu={(event) => handleCombatantCardContextMenu(event, entry.combatant)}
 									onkeydown={(event) => handleCombatantCardKeyDown(event, entry.combatant)}
+									onmouseenter={(event) => handleCombatantCardMouseEnter(event, entry.combatant)}
+									onmouseleave={(event) => handleCombatantCardMouseLeave(event, entry.combatant)}
 								>
 									<img
 										class="nimble-ct__image"
