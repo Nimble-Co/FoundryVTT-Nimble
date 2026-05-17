@@ -52,19 +52,22 @@ function createItemDocument({
 	uuid,
 	name,
 	system,
+	_stats = {},
 }: {
 	uuid: string;
 	name: string;
 	system: Record<string, unknown>;
+	_stats?: Record<string, unknown>;
 }) {
 	return {
 		uuid,
 		name,
 		system,
+		_stats,
 		toObject: () => ({
 			name,
 			system: foundry.utils.deepClone(system),
-			_stats: {},
+			_stats: { ..._stats },
 		}),
 		sheet: {
 			render: vi.fn(),
@@ -135,6 +138,76 @@ describe('CharacterCreationDialog.submitCharacterCreation saving throw resolutio
 			origins: {
 				characterClass: { uuid: classDocument.uuid },
 				ancestry: { uuid: ancestryDocument.uuid },
+			},
+			languages: [],
+			classFeatures: { autoGrant: [], selected: new Map() },
+			spells: { autoGrant: [], selectedSchools: new Map(), selectedSpells: new Map() },
+		});
+
+		const updateCall = actor.update.mock.calls[0][0] as {
+			system: { savingThrows: Record<string, number> };
+		};
+		const savingThrows = updateCall.system.savingThrows;
+		expect(savingThrows['dexterity.defaultRollMode']).toBe(0);
+		expect(savingThrows['strength.defaultRollMode']).toBe(1);
+	});
+
+	it('uses compendium source rules when world item is missing the savingThrowRollMode rule', async () => {
+		const actor = setupActorMock();
+
+		const compendiumClassUuid = 'Compendium.nimble.nimble-classes.Item.warrior';
+		const compendiumAncestryUuid = 'Compendium.nimble.nimble-ancestries.Item.celestial';
+
+		// World item has no savingThrowRollMode rule (imported before rule was added)
+		const worldAncestryDocument = createItemDocument({
+			uuid: 'Item.stale-world-celestial',
+			name: 'Celestial',
+			system: { rules: [] },
+			_stats: { compendiumSource: compendiumAncestryUuid },
+		});
+
+		// Compendium item has the correct rule
+		const compendiumAncestryDocument = createItemDocument({
+			uuid: compendiumAncestryUuid,
+			name: 'Celestial',
+			system: {
+				rules: [
+					{
+						type: 'savingThrowRollMode',
+						label: 'Highborn',
+						value: 0,
+						target: 'disadvantaged',
+						mode: 'set',
+					},
+				],
+			},
+		});
+
+		const classDocument = createItemDocument({
+			uuid: compendiumClassUuid,
+			name: 'Warrior',
+			system: {
+				identifier: 'warrior',
+				savingThrows: { advantage: 'strength', disadvantage: 'dexterity' },
+			},
+		});
+
+		vi.stubGlobal(
+			'fromUuid',
+			vi.fn(async (uuid: string) => {
+				if (uuid === classDocument.uuid) return classDocument;
+				if (uuid === worldAncestryDocument.uuid) return worldAncestryDocument;
+				if (uuid === compendiumAncestryUuid) return compendiumAncestryDocument;
+				return null;
+			}),
+		);
+
+		const dialog = new CharacterCreationDialog();
+		await dialog.submitCharacterCreation({
+			name: 'Test Character',
+			origins: {
+				characterClass: { uuid: classDocument.uuid },
+				ancestry: { uuid: worldAncestryDocument.uuid },
 			},
 			languages: [],
 			classFeatures: { autoGrant: [], selected: new Map() },
