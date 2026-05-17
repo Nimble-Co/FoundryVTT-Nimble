@@ -404,14 +404,4 @@
 			line-height: 1.3;
 		}
 	}
-
-	.nimble-code-block__text-area {
-		width: 100%;
-		font-family: var(--nimble-font-monospace, monospace);
-		font-size: var(--nimble-sm-text);
-		background: var(--nimble-box-background-color);
-		color: inherit;
-		border: 1px solid var(--nimble-accent-color);
-		border-radius: 4px;
-	}
 </style>

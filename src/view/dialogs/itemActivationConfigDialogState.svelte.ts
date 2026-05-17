@@ -17,8 +17,8 @@ import {
 } from './itemActivationConfigDialogHelpers.js';
 
 export interface CreateItemActivationConfigDialogStateOptions {
-	actor: Actor;
-	item: Item;
+	actor: () => Actor;
+	item: () => Item;
 	initialRollMode?: number;
 	hideRollsDefault: boolean;
 }
@@ -26,7 +26,12 @@ export interface CreateItemActivationConfigDialogStateOptions {
 export function createItemActivationConfigDialogState(
 	options: CreateItemActivationConfigDialogStateOptions,
 ) {
-	const { actor, item, initialRollMode = 0, hideRollsDefault } = options;
+	const { initialRollMode = 0, hideRollsDefault } = options;
+
+	// Snapshot actor and item at dialog-open time — pools reflect what is
+	// available when the player initiates the roll, not mid-dialog changes.
+	const actor = options.actor();
+	const item = options.item();
 
 	const attackDelivery: AttackDelivery = getAttackDeliveryFromActivation(item);
 
@@ -122,7 +127,7 @@ export function createItemActivationConfigDialogState(
 		spendablePools.length > 0 || spendableChargePools.length > 0 || autoBonusPools.length > 0,
 	);
 
-	const damageEffects = $derived.by(() => extractDamageEffectsFromItem(item));
+	const damageEffects = $derived.by(() => extractDamageEffectsFromItem(options.item()));
 
 	const damageFormula = $derived(damageEffects[0]?.formula || '0');
 

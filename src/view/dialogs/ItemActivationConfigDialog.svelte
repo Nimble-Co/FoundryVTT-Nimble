@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { ItemActivationConfigDialogProps } from '#types/components/ItemActivationConfigDialog.d.ts';
 	import { getDieFaceIcon } from '#utils/dicePool/dieFaceIcons.js';
 	import localize from '#utils/localize.js';
@@ -10,9 +11,9 @@
 	let { actor, dialog, item, rollMode }: ItemActivationConfigDialogProps = $props();
 
 	const state = createItemActivationConfigDialogState({
-		actor,
-		item,
-		initialRollMode: rollMode,
+		actor: () => actor,
+		item: () => item,
+		initialRollMode: untrack(() => rollMode),
 		hideRollsDefault: !!game.settings.get('nimble', 'hideRolls'),
 	});
 
