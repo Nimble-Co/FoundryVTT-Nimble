@@ -1,3 +1,4 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 type MovementMode = 'fly' | 'climb' | 'swim' | 'burrow';
@@ -12,13 +13,20 @@ function schema() {
 			required: true,
 			nullable: false,
 			initial: 'fly',
+			label: 'NIMBLE.rules.grantMovement.mode.label',
+			hint: 'NIMBLE.rules.grantMovement.mode.hint',
 			choices: ['fly', 'climb', 'swim', 'burrow'],
 		}),
-		speed: new fields.StringField({
-			required: true,
-			nullable: false,
-			initial: '@attributes.movement.walk',
-		}),
+		speed: new fields.StringField(
+			withWidget({
+				required: true,
+				nullable: false,
+				initial: '@attributes.movement.walk',
+				label: 'NIMBLE.rules.grantMovement.speed.label',
+				hint: 'NIMBLE.rules.grantMovement.speed.hint',
+				widget: 'formula',
+			}),
+		),
 		type: new fields.StringField({ required: true, nullable: false, initial: 'grantMovement' }),
 	};
 }
@@ -69,6 +77,9 @@ interface ActorSource {
  *   walk speed is fully resolved before referencing it
  */
 class GrantMovementRule extends NimbleBaseRule<GrantMovementRule.Schema> {
+	static override group = 'grants';
+	static override description = 'NIMBLE.rules.grantMovement.description';
+
 	declare mode: MovementMode;
 	declare speed: string;
 

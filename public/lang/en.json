@@ -782,6 +782,17 @@
 					}
 				}
 			},
+			"grantMovement": {
+				"description": "Grant a base movement mode (fly, climb, swim, or burrow). Multiple grants of the same mode take the highest base; speed bonuses stack on top.",
+				"mode": {
+					"label": "Movement mode",
+					"hint": "Which movement mode to grant."
+				},
+				"speed": {
+					"label": "Speed",
+					"hint": "Base speed for this mode. Use a formula like @attributes.movement.walk to match walk speed, or a number like 12."
+				}
+			},
 			"grantItem": {
 				"description": "Grant an item by UUID when this rule’s owner is created on an actor. Optional duplicate gating and quantity override.",
 				"allowDuplicate": { "label": "Allow duplicates on the actor" },
