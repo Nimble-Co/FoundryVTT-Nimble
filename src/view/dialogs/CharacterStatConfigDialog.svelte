@@ -422,6 +422,8 @@
 			>
 				{#if active}
 					<span class="nimble-stat-config__toggle-value">+1</span>
+				{:else if isAtMax}
+					<i class="fa-solid fa-lock"></i>
 				{/if}
 			</button>
 		{:else}
@@ -1229,10 +1231,17 @@
 			cursor: pointer;
 			transition: var(--nimble-standard-transition);
 
-			&:hover {
+			&:hover:not(:disabled) {
 				background: hsla(0, 0%, 0%, 0.1);
 				border-color: var(--nimble-medium-text-color);
 				transform: scale(1.1);
+			}
+
+			&:disabled {
+				opacity: 0.4;
+				cursor: not-allowed;
+				border-style: dashed;
+				color: var(--nimble-medium-text-color);
 			}
 
 			&--active {
