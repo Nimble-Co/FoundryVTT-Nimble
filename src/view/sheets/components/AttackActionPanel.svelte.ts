@@ -31,7 +31,6 @@ interface WeaponSystemData {
 				public?: string;
 		  }
 		| string;
-	actionType?: string;
 }
 
 export function createAttackPanelState(
@@ -87,7 +86,7 @@ export function createAttackPanelState(
 			const activation = system.activation;
 			if (!activation) return false;
 
-			return activation.cost?.type === 'action' && Boolean(system.actionType?.includes('attack'));
+			return activation.cost?.type === 'action';
 		});
 
 		if (!searchTerm) return features;

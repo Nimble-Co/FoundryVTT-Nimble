@@ -273,6 +273,9 @@
 									aria-label={localize('NIMBLE.prompts.toggleEquipment', {
 										name: item.reactive.name,
 									})}
+									data-tooltip={item.reactive.system.equipped
+										? localize('NIMBLE.prompts.equippedTooltip')
+										: localize('NIMBLE.prompts.unequippedTooltip')}
 									onclick={async (event) => {
 										event.stopPropagation();
 										const newEquippedState = !item.reactive.system.equipped;
@@ -295,10 +298,16 @@
 										}
 									}}
 								>
-									{#if item.reactive.system.equipped}
-										<i class="fa-solid fa-circle"></i>
+									{#if ['armor', 'shield'].includes(item.reactive.system.objectType)}
+										{#if item.reactive.system.equipped}
+											<i class="fa-solid fa-shield"></i>
+										{:else}
+											<i class="fa-regular fa-shield"></i>
+										{/if}
+									{:else if item.reactive.system.equipped}
+										<i class="fa-solid fa-hand"></i>
 									{:else}
-										<i class="fa-regular fa-circle"></i>
+										<i class="fa-regular fa-hand"></i>
 									{/if}
 								</button>
 							{:else}

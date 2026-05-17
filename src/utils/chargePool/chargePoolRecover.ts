@@ -11,7 +11,13 @@ import {
 import type { CharacterActorLike, ChargeRestType, ManualAdjustMode } from './types.js';
 
 type CombatTrigger = 'encounterStart' | 'encounterEnd';
-type CombatEventTrigger = 'onTurnStart' | 'onTurnEnd' | 'onWound' | 'onKill' | 'onBloodied';
+type CombatEventTrigger =
+	| 'onTurnStart'
+	| 'onTurnEnd'
+	| 'onWound'
+	| 'onKill'
+	| 'onBloodied'
+	| 'onInitiativeRolled';
 type TriggerType = CombatTrigger | CombatEventTrigger;
 
 async function applyRestRecovery(

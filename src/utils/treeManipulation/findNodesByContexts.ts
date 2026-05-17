@@ -18,7 +18,11 @@ export function findNodesByContexts(
 
 	function traverse(node: EffectNode) {
 		if (!node.parentNode) {
-			if (includeBaseDamageNodes && node.type === 'damage') {
+			const hasTargetDisposition = 'targetDisposition' in node && node.targetDisposition != null;
+			if (node.type === 'damage' && hasTargetDisposition) {
+				// Disposition-targeted damage is a deliberate UI action, always present it
+				result.push(node);
+			} else if (includeBaseDamageNodes && node.type === 'damage') {
 				result.push(node);
 			} else if (!includeBaseNodes && node.type !== 'damage') {
 				result.push(node);

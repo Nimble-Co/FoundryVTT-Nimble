@@ -22,13 +22,6 @@ const soloMonsterSchema = () => ({
 		),
 		hp: new fields.SchemaField({
 			max: new fields.NumberField({ required: true, initial: 10, nullable: false }),
-			lastStandThreshold: new fields.NumberField({
-				required: true,
-				initial: 0,
-				nullable: false,
-				integer: true,
-				min: 0,
-			}),
 			temp: new fields.NumberField({ required: true, initial: 0, nullable: false }),
 			value: new fields.NumberField({ required: true, initial: 10, nullable: false }),
 		}),
@@ -80,12 +73,6 @@ const soloMonsterSchema = () => ({
 	details: new fields.SchemaField({
 		creatureType: new fields.StringField({ required: true, nullable: false, initial: '' }),
 		level: new fields.StringField({ required: true, nullable: false, initial: '1' }),
-	}),
-	bloodiedEffect: new fields.SchemaField({
-		description: new fields.HTMLField({ required: true, initial: '', nullable: false }),
-	}),
-	lastStandEffect: new fields.SchemaField({
-		description: new fields.HTMLField({ required: true, initial: '', nullable: false }),
 	}),
 });
 

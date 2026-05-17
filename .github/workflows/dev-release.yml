@@ -17,8 +17,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      pull-requests: read
+
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Use Node.js ${{ env.node_version }}
       uses: actions/setup-node@v4
@@ -69,6 +75,15 @@ jobs:
       working-directory: ./dist
       run: zip -r ./nimble-dev.zip ./*
 
+    - name: Generate dev changelog
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        VERSION: ${{ steps.dev_version.outputs.version }}
+        SHORT_SHA: ${{ steps.dev_version.outputs.short_sha }}
+        TIMESTAMP: ${{ github.event.head_commit.timestamp }}
+        MANIFEST_URL: https://github.com/${{ github.repository }}/releases/download/${{ env.dev_tag }}/system.json
+      run: node ./build/generate-dev-changelog.mjs
+
     - name: Update Rolling Dev Release
       uses: ncipollo/release-action@v1
       with:
@@ -81,14 +96,4 @@ jobs:
         makeLatest: false
         token: ${{ secrets.GITHUB_TOKEN }}
         artifacts: './dist/system.json,./dist/nimble-dev.zip'
-        body: |
-          Rolling development build from the `dev` branch. **Unstable — for testing only.**
-
-          - Version: `${{ steps.dev_version.outputs.version }}`
-          - Commit: [`${{ steps.dev_version.outputs.short_sha }}`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
-          - Built: ${{ github.event.head_commit.timestamp }}
-
-          Install in Foundry via Manifest URL:
-          ```
-          https://github.com/${{ github.repository }}/releases/download/${{ env.dev_tag }}/system.json
-          ```
+        bodyFile: ./release-body.md

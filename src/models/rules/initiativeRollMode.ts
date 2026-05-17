@@ -4,8 +4,19 @@ function schema() {
 	const { fields } = foundry.data;
 
 	return {
-		value: new fields.NumberField({ required: true, nullable: false, initial: 1 }),
-		mode: new fields.StringField({ required: true, nullable: false, initial: 'set' }),
+		value: new fields.NumberField({
+			required: true,
+			nullable: false,
+			initial: 1,
+			label: 'NIMBLE.rules.initiativeRollMode.value.label',
+		}),
+		mode: new fields.StringField({
+			required: true,
+			nullable: false,
+			initial: 'set',
+			label: 'NIMBLE.rules.initiativeRollMode.mode.label',
+			choices: ['set', 'adjust'],
+		}),
 		type: new fields.StringField({
 			required: true,
 			nullable: false,
@@ -19,8 +30,12 @@ declare namespace InitiativeRollModeRule {
 }
 
 class InitiativeRollModeRule extends NimbleBaseRule<InitiativeRollModeRule.Schema> {
+	static override group = 'bonuses';
+	static override description = 'NIMBLE.rules.initiativeRollMode.description';
+
 	declare value: number;
-	declare mode: string;
+	// `mode` is inferred from the schema's `choices` (`'set' | 'adjust'`).
+	// No explicit declare — the wider `string` would clash.
 
 	static override defineSchema(): InitiativeRollModeRule.Schema {
 		return {

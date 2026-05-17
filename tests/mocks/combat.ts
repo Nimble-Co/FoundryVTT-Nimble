@@ -113,11 +113,16 @@ export function createHookCapture(hooksOnMock: ReturnType<typeof vi.fn>) {
 
 export function createMockCombatActor(
 	options: CombatActorFixtureOptions = {},
-): Actor.Implementation & { toggleStatusEffect: ReturnType<typeof vi.fn> } {
+): Actor.Implementation & {
+	toggleStatusEffect: ReturnType<typeof vi.fn>;
+	update: ReturnType<typeof vi.fn>;
+} {
 	const actor = createCombatActorFixture(options) as Actor.Implementation & {
 		toggleStatusEffect: ReturnType<typeof vi.fn>;
+		update: ReturnType<typeof vi.fn>;
 	};
 	actor.toggleStatusEffect = vi.fn().mockResolvedValue(undefined);
+	actor.update = vi.fn().mockResolvedValue(undefined);
 	return actor;
 }
 

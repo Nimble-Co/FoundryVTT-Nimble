@@ -97,6 +97,13 @@ abstract class NimbleBaseRule<
 	Schema extends NimbleBaseRule.Schema = NimbleBaseRule.Schema,
 	Parent extends foundry.abstract.DataModel.Any = foundry.abstract.DataModel.Any,
 > extends foundry.abstract.DataModel<Schema, Parent> {
+	// Class-level presentation metadata for the rules-builder UI.
+	// Subclasses override with concrete values; the picker treats `'unsorted'`
+	// or an empty `description` as a development-mode warning.
+	static group: string = 'unsorted';
+
+	static description: string = '';
+
 	declare type: string;
 
 	declare disabled: boolean;
@@ -201,6 +208,17 @@ abstract class NimbleBaseRule<
 
 	protected get _predicate(): Predicate {
 		return (this as object as { predicate: Predicate }).predicate;
+	}
+
+	/**
+	 * Public predicate-check entry point for callers outside the rule class.
+	 * Returns `true` when the rule's predicate matches the actor's current
+	 * domain (and the rule is enabled). Wraps the protected `test()` so the
+	 * shape of `_predicate.test()` and the disabled/predicate handling stays
+	 * encapsulated.
+	 */
+	appliesTo(passedDomain?: string[] | Set<string>): boolean {
+		return this.test(passedDomain);
 	}
 
 	protected test(passedDomain?: string[] | Set<string>): boolean {

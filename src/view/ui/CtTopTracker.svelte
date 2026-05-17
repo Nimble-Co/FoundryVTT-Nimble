@@ -45,6 +45,7 @@
 	let orderedAliveEntries = $derived(trackerViewState.orderedAliveEntries);
 	let activeEntryKey = $derived(trackerViewState.activeEntryKey);
 	let canCurrentUserEndTurn = $derived(trackerViewState.canCurrentUserEndTurn);
+	let activeAllActionsUsed = $derived(trackerViewState.activeAllActionsUsed);
 	let virtualizedAliveEntries = $derived(trackerViewState.virtualizedAliveEntries);
 	let expandedMonsterGroupBars = $derived(trackerViewState.expandedMonsterGroupBars);
 	let roundSeparatorIndex = $derived(trackerViewState.roundSeparatorIndex);
@@ -489,6 +490,7 @@
 									{#if showEndTurnOverlay}
 										<button
 											class="nimble-ct__end-turn-overlay"
+											class:nimble-ct__end-turn-overlay--ready={activeAllActionsUsed}
 											type="button"
 											aria-label="End Turn"
 											onclick={handleEndTurnFromCard}
@@ -555,6 +557,7 @@
 									{#if combatStarted && activeEntryKey === entry.key && canCurrentUserEndTurn}
 										<button
 											class="nimble-ct__end-turn-overlay"
+											class:nimble-ct__end-turn-overlay--ready={activeAllActionsUsed}
 											type="button"
 											aria-label="End Turn"
 											onclick={handleEndTurnFromCard}
@@ -2338,6 +2341,25 @@
 	.nimble-ct__end-turn-overlay:hover,
 	.nimble-ct__end-turn-overlay:focus-visible {
 		filter: brightness(1.12);
+	}
+	.nimble-ct__end-turn-overlay--ready {
+		opacity: 1;
+		transform: translate(-50%, 0);
+		pointer-events: all;
+		animation: ct-end-turn-pulse 2.2s ease-in-out infinite;
+	}
+	.nimble-ct__end-turn-overlay--ready:hover,
+	.nimble-ct__end-turn-overlay--ready:focus-visible {
+		animation: none;
+	}
+	@keyframes ct-end-turn-pulse {
+		0%,
+		100% {
+			box-shadow: 0 0 0.4rem color-mix(in srgb, hsl(124 56% 52%) 40%, transparent);
+		}
+		50% {
+			box-shadow: 0 0 1.2rem color-mix(in srgb, hsl(124 56% 52%) 70%, transparent);
+		}
 	}
 	.nimble-ct__dead {
 		display: inline-flex;

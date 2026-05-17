@@ -25,6 +25,13 @@ declare namespace NoteRule {
 }
 
 class NoteRule extends NimbleBaseRule<NoteRule.Schema> {
+	// `target` is intentionally left as a free `string[]` for v1: the existing
+	// callers don't yet consume a closed set. Documented as a follow-up in the
+	// tech-spec. `description` is `HTMLField` and dispatches to the rich-text
+	// editor by Foundry field type, no widget hint needed.
+	static override group = 'notes';
+	static override description = 'NIMBLE.rules.note.description';
+
 	static override defineSchema(): NoteRule.Schema {
 		return {
 			...NimbleBaseRule.defineSchema(),

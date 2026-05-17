@@ -505,10 +505,6 @@ class NimbleCombat extends Combat {
 			normalizedEntry.type = 'npc';
 		}
 
-		if (normalizedEntry.type === 'character') {
-			return { normalizedEntry, normalizedMinionType };
-		}
-
 		const currentActions = foundry.utils.getProperty(
 			normalizedEntry,
 			'system.actions.base.current',
@@ -520,9 +516,10 @@ class NimbleCombat extends Combat {
 		const explicitMaxActions = Number(
 			foundry.utils.getProperty(normalizedEntry, 'system.actions.base.max') ?? Number.NaN,
 		);
+		const defaultActions = normalizedEntry.type === 'character' ? 3 : 1;
 		const initialActions = Number.isFinite(explicitMaxActions)
 			? Math.max(0, Math.trunc(explicitMaxActions))
-			: 1;
+			: defaultActions;
 		foundry.utils.setProperty(normalizedEntry, 'system.actions.base.current', initialActions);
 		return { normalizedEntry, normalizedMinionType };
 	}
@@ -736,7 +733,7 @@ class NimbleCombat extends Combat {
 	async useHeroicReactions(
 		combatantId: string,
 		reactionKeys: HeroicReactionKey[],
-		options?: { force?: boolean; skipActionDeduction?: boolean },
+		options?: { force?: boolean },
 	): Promise<boolean> {
 		if (!combatantId || reactionKeys.length < 1) return false;
 
@@ -757,18 +754,17 @@ class NimbleCombat extends Combat {
 					const canForceUsage =
 						options?.force === true && isSoftBlockedReason(usageState.blockedReason);
 
-					if (!usageState.canUse && !canForceUsage) return false;
+					if (!usageState.canUse && !canForceUsage) {
+						return false;
+					}
 
 					const reactionAvailabilityUpdate = {
 						_id: combatantId,
-					} as Record<string, unknown>;
-
-					if (!options?.skipActionDeduction) {
-						reactionAvailabilityUpdate['system.actions.base.current'] = Math.max(
+						'system.actions.base.current': Math.max(
 							0,
 							usageState.currentActions - usageState.requiredActions,
-						);
-					}
+						),
+					} as Record<string, unknown>;
 
 					for (const reactionKey of usageState.reactionKeys) {
 						Object.assign(
@@ -1053,6 +1049,14 @@ class NimbleCombat extends Combat {
 			throw error;
 		}
 
+		for (const rollOutcome of lockedRollOutcomes) {
+			const combatant = this.combatants.get(rollOutcome.combatantId);
+			const actor = combatant?.actor;
+			if (!actor) continue;
+			// @ts-expect-error - nimble.initiativeRolled is a custom Nimble hook consumed by ruleEventDispatch and chargePool/dicePool triggers
+			Hooks.callAll('nimble.initiativeRolled', { actor, combatant });
+		}
+
 		if (combatManaUpdates.length > 0) {
 			await Promise.all(combatManaUpdates);
 		}
@@ -1070,7 +1074,13 @@ class NimbleCombat extends Combat {
 	}
 
 	override setupTurns(): Combatant.Implementation[] {
+		// super.setupTurns() does `this.round++` when this.turn exceeds combatants.size, which fires
+		// spuriously once expandLegendaryTurns produces a turn list longer than the combatant count.
+		const savedRound = this.round;
+		const savedTurn = this.turn;
 		const aliveTurns = super.setupTurns().filter((combatant) => !isCombatantDead(combatant));
+		if (this.round !== savedRound) this.round = savedRound;
+		if (this.turn !== savedTurn) this.turn = savedTurn;
 		const minionNormalizedTurns = normalizeMinionTurns(aliveTurns);
 		return expandLegendaryTurns(minionNormalizedTurns);
 	}

@@ -195,15 +195,15 @@ describe('PlayerCharacterHeroicActionsTab opportunity macro handoff', () => {
 		await waitFor(() => expect(screen.getByRole('button', { name: /spear/i })).toBeInTheDocument());
 		await fireEvent.click(screen.getByRole('button', { name: /spear/i }));
 
-		expect(actor.activateItem).toHaveBeenCalledWith('weapon-opportunity', { rollMode: -1 });
+		expect(actor.activateItem).toHaveBeenCalledWith('weapon-opportunity', {
+			rollMode: -1,
+			skipActionDeduction: true,
+		});
 		await waitFor(() =>
 			expect(useHeroicReactions).toHaveBeenCalledWith(
 				'combatant-opportunity',
 				['opportunityAttack'],
-				{
-					force: true,
-					skipActionDeduction: true,
-				},
+				{ force: true },
 			),
 		);
 		expect(globals().foundry.applications.api.DialogV2.confirm).toHaveBeenCalledTimes(1);

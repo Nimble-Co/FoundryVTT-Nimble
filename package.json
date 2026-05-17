@@ -1,6 +1,6 @@
 {
 	"name": "nimble",
-	"version": "0.8.4",
+	"version": "0.8.5",
 	"description": "An official implementation of Nimble 2 for Foundry Virtual Tabletop.",
 	"main": "nimble.mjs",
 	"type": "module",
@@ -33,7 +33,8 @@
 		"prepare": "lefthook install",
 		"release": "node build/release.mjs",
 		"lang:reconcile": "node scripts/reconcile-languages.mjs",
-		"lang:detect-untranslated": "node scripts/detect-untranslated.mjs"
+		"lang:detect-untranslated": "node scripts/detect-untranslated.mjs",
+		"audit:rules-choices": "node build/scripts/audit-rule-choices.mjs"
 	},
 	"imports": {
 		"#documents/*": "./src/documents/*",

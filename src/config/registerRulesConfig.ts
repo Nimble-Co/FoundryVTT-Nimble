@@ -6,6 +6,7 @@ import { ChargePoolRule } from '../models/rules/chargePool.js';
 import { CombatManaRule } from '../models/rules/combatMana.js';
 import { ConditionImmunityRule } from '../models/rules/conditionImmunity.js';
 import { DamageBonusRule } from '../models/rules/damageBonus.js';
+import { DicePoolRule } from '../models/rules/dicePool.js';
 import { ItemGrantRule } from '../models/rules/grantItem.js';
 import { GrantMovementRule } from '../models/rules/grantMovement.js';
 import { GrantProficiencyRule } from '../models/rules/grantProficiencies.ts';
@@ -20,6 +21,7 @@ import { MaxHitDiceRule } from '../models/rules/maxHitDice.js';
 import { MaxHpBonusRule } from '../models/rules/maxHpBonus.js';
 import { MaximizeHitDiceRule } from '../models/rules/maximizeHitDice.js';
 import { MaxWoundsRule } from '../models/rules/maxWounds.js';
+import { ModifyPoolRule } from '../models/rules/modifyPool.js';
 import { NoteRule } from '../models/rules/note.js';
 import { SavingThrowBonusRule } from '../models/rules/savingThrowBonus.js';
 import { SavingThrowRollModeRule } from '../models/rules/savingThrowRollMode.js';
@@ -38,6 +40,7 @@ export default function registerRulesConfig() {
 		conditionImmunity: 'NIMBLE.ruleTypes.conditionImmunity',
 		damageBonus: 'NIMBLE.ruleTypes.damageBonus',
 		grantMovement: 'NIMBLE.ruleTypes.grantMovement',
+		dicePool: 'NIMBLE.ruleTypes.dicePool',
 		grantItem: 'NIMBLE.ruleTypes.grantItem',
 		grantProficiency: 'NIMBLE.ruleTypes.grantProficiency',
 		grantSpells: 'NIMBLE.ruleTypes.grantSpells',
@@ -51,6 +54,7 @@ export default function registerRulesConfig() {
 		maxHpBonus: 'NIMBLE.ruleTypes.maxHpBonus',
 		maximizeHitDice: 'NIMBLE.ruleTypes.maximizeHitDice',
 		maxWounds: 'NIMBLE.ruleTypes.maxWounds',
+		modifyPool: 'NIMBLE.ruleTypes.modifyPool',
 		note: 'NIMBLE.ruleTypes.note',
 		savingThrowBonus: 'NIMBLE.ruleTypes.savingThrowBonus',
 		savingThrowRollMode: 'NIMBLE.ruleTypes.savingThrowRollMode',
@@ -69,6 +73,7 @@ export default function registerRulesConfig() {
 		conditionImmunity: ConditionImmunityRule,
 		damageBonus: DamageBonusRule,
 		grantMovement: GrantMovementRule,
+		dicePool: DicePoolRule,
 		grantItem: ItemGrantRule,
 		grantProficiency: GrantProficiencyRule,
 		grantSpells: GrantSpellsRule,
@@ -82,6 +87,7 @@ export default function registerRulesConfig() {
 		maxHpBonus: MaxHpBonusRule,
 		maximizeHitDice: MaximizeHitDiceRule,
 		maxWounds: MaxWoundsRule,
+		modifyPool: ModifyPoolRule,
 		note: NoteRule,
 		savingThrowBonus: SavingThrowBonusRule,
 		savingThrowRollMode: SavingThrowRollModeRule,

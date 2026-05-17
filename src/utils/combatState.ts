@@ -34,18 +34,40 @@ export function registerCombatStateHooks(listener: () => void): () => void {
 	};
 }
 
+function isCombatActiveOrStarted(combat: Combat): boolean {
+	return combat.active === true || combat.started === true;
+}
+
+function getCombatSceneId(combat: Combat): string | null {
+	return combat.scene?.id ?? null;
+}
+
 export function getActiveCombatForCurrentScene(): Combat | null {
 	const sceneId = canvas?.scene?.id;
-	if (!sceneId) return null;
+	if (!sceneId) {
+		console.log('[combatState] getActiveCombatForCurrentScene: no canvas scene id');
+		return null;
+	}
+
+	function combatMatchesScene(combat: Combat): boolean {
+		// A combat with no scene link is globally available — treat it as matching
+		return !combat.scene?.id || combat.scene.id === sceneId;
+	}
 
 	const activeCombat = game.combat;
-	if (activeCombat?.scene?.id === sceneId && (activeCombat.active || activeCombat.started)) {
+	// Prefer an exact scene ID match from game.combat, then the full collection, then viewed.
+	if (
+		activeCombat &&
+		isCombatActiveOrStarted(activeCombat) &&
+		(activeCombat.active || activeCombat.started) &&
+		combatMatchesScene(activeCombat)
+	) {
 		syncCombatTurns(activeCombat);
 		return activeCombat;
 	}
 
 	const activeByScene = game.combats?.contents?.find(
-		(combat) => combat?.scene?.id === sceneId && (combat.active || combat.started),
+		(combat) => (combat.active || combat.started) && combatMatchesScene(combat),
 	);
 	if (activeByScene) {
 		syncCombatTurns(activeByScene);
@@ -53,9 +75,33 @@ export function getActiveCombatForCurrentScene(): Combat | null {
 	}
 
 	const viewedCombat = game.combats?.viewed ?? null;
-	if (viewedCombat?.scene?.id === sceneId && (viewedCombat.active || viewedCombat.started)) {
+	if (
+		viewedCombat &&
+		(viewedCombat.active || viewedCombat.started) &&
+		combatMatchesScene(viewedCombat)
+	) {
 		syncCombatTurns(viewedCombat);
 		return viewedCombat;
+	}
+
+	// Fallback: accept an active/started combat with no linked scene (theater-of-the-mind).
+	// Foundry does not always populate combat.scene when a combat has no scene association,
+	// so scene?.id comes back undefined. Treat these as valid for any canvas scene.
+	if (
+		activeCombat &&
+		isCombatActiveOrStarted(activeCombat) &&
+		getCombatSceneId(activeCombat) === null
+	) {
+		syncCombatTurns(activeCombat);
+		return activeCombat;
+	}
+
+	const sceneAgnostic = game.combats?.contents?.find(
+		(combat) => combat && isCombatActiveOrStarted(combat) && getCombatSceneId(combat) === null,
+	);
+	if (sceneAgnostic) {
+		syncCombatTurns(sceneAgnostic);
+		return sceneAgnostic;
 	}
 
 	return null;

@@ -446,7 +446,7 @@
 			"folder": null,
 			"sort": 0,
 			"system": {
-				"description": "<p>Yourfuture is dark, worm... <em>*occult mum-bling*</em></p><p>Whoever landed the killing blow: WIL save or become cursed; half as tall until cured.</p>",
+				"description": "<p>Your future is dark, worm... <em>*occult mum-bling*</em></p><p>Whoever landed the killing blow: WIL save or become cursed; half as tall until cured.</p>",
 				"macro": "",
 				"identifier": "",
 				"activation": {
@@ -475,6 +475,7 @@
 					"acquireTargetsFromTemplate": false,
 					"showDescription": true
 				},
+				"lastStandHp": 0,
 				"rules": [],
 				"subtype": "lastStand"
 			}

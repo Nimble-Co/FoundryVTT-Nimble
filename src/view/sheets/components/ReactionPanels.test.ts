@@ -296,9 +296,35 @@ describe('reaction panel confirmation wrappers', () => {
 
 		await fireEvent.click(screen.getByRole('button', { name: /spear/i }));
 
-		expect(actor.activateItem).toHaveBeenCalledWith('weapon-opportunity', { rollMode: -1 });
-		await waitFor(() =>
-			expect(onUseReaction).toHaveBeenCalledWith({ force: true, skipActionDeduction: true }),
-		);
+		expect(actor.activateItem).toHaveBeenCalledWith('weapon-opportunity', {
+			rollMode: -1,
+			skipActionDeduction: true,
+		});
+		await waitFor(() => expect(onUseReaction).toHaveBeenCalledWith({ force: true }));
+	});
+
+	it('deducts action via useHeroicReactions, not activateItem, when reaction is available', async () => {
+		const actor = createOpportunityActor();
+		const onUseReaction = vi.fn().mockResolvedValue(true);
+
+		render(OpportunityAttackPanel.default, {
+			props: {
+				actor,
+				reactionDisabled: false,
+				opportunitySpent: false,
+				noActions: false,
+				onUseReaction,
+				showEmbeddedDocumentImages: false,
+			},
+		});
+
+		await fireEvent.click(screen.getByRole('button', { name: /spear/i }));
+
+		expect(confirmDialog()).not.toHaveBeenCalled();
+		expect(actor.activateItem).toHaveBeenCalledWith('weapon-opportunity', {
+			rollMode: -1,
+			skipActionDeduction: true,
+		});
+		await waitFor(() => expect(onUseReaction).toHaveBeenCalledWith(undefined));
 	});
 });

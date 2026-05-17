@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [0.8.5] - 2026-05-13
+
+### Added
+
+- [#563] Class progression tab with editing workflow. @trevlar
+- [#680] End-to-end charge pool system with recovery mechanics. @Insax
+- [#742] Generalize meleeDamageBonus into damageBonus. @tristin-albers
+- [#749] Rework Last Stand to heal-and-tag mechanic. @Fronix
+- [#754] Auto-equip starting equipment items on character creation. @trevlar
+- [#755] Equip toggle button with contextual icons and tooltip. @trevlar
+
+### Fixed
+
+- [#753] Deduplicate world-item spells against compendium source in spell index. @trevlar
+- [#756] End turn QoL, action tracker visibility, and combatant init. @trevlar
+- [#757] Opportunity attack deducts 1 action, detect scene-agnostic combats. @trevlar
+- [#761] Remove long-cast spells from heroic action panel and show class features in attack panel. @trevlar
+- [#762] Skip end-turn confirmation for monsters and NPCs. @trevlar
+- [#763] Prevent runaway round counter with legendary turn expansion. @Fronix
+
+---
+
+
 ## [0.8.4] - 2026-04-29
 
 ### Added

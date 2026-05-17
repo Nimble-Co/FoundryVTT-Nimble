@@ -21,6 +21,16 @@ const schema = () => ({
 	}),
 	// Reference to parent attackSequence item (for grouping actions under attack sequences)
 	parentItemId: new fields.StringField({ required: false, initial: '', nullable: true }),
+	// Heal target used by the Last Stand mechanic. Meaningful only when subtype === 'lastStand';
+	// when the actor's HP would drop to 0, the health-state sync heals to this value, applies
+	// the lastStand and dying conditions, and fires a GM chat card. 0 disables the mechanic.
+	lastStandHp: new fields.NumberField({
+		required: true,
+		initial: 0,
+		nullable: false,
+		integer: true,
+		min: 0,
+	}),
 });
 
 declare namespace NimbleMonsterFeatureData {

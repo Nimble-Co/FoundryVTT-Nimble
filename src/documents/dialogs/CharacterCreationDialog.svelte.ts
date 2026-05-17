@@ -1,5 +1,6 @@
 import type { DeepPartial } from 'fvtt-types/utils';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
+import type { NimbleObjectItem } from '#documents/item/object.js';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
 import { buildSpellIndex, type SpellIndex } from '#utils/getSpells.js';
 import { getSpellsFromIndex } from '#utils/getSpellsFromIndex.js';
@@ -102,12 +103,16 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	data: Record<string, any>;
 	parent: any;
 	pack: any;
+	folder: string | null;
 	classFeatureIndex: Promise<ClassFeatureIndex> | null = null;
 	spellIndex: Promise<SpellIndex> | null = null;
 
 	protected root;
 
-	constructor(data = {}, { parent = null, pack = null, ...options } = {}) {
+	constructor(
+		data = {},
+		{ parent = null, pack = null, folder = null as string | null, ...options } = {},
+	) {
 		const width = 608;
 		super(
 			foundry.utils.mergeObject(options, {
@@ -124,6 +129,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		this.data = data;
 		this.parent = parent;
 		this.pack = pack;
+		this.folder = folder;
 	}
 
 	static override DEFAULT_OPTIONS = {
@@ -195,7 +201,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		};
 	}) {
 		const actor = await Actor.create(
-			{ name: results.name || 'New Character', type: 'character' },
+			{ name: results.name || 'New Character', type: 'character', folder: this.folder },
 			{ renderSheet: true },
 		);
 
@@ -323,6 +329,14 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		// If equipment was chosen, items will be granted automatically
 		// If gold was chosen, grantItem rules were disabled above so no items are granted
 		await actor?.createEmbeddedDocuments('Item', originDocumentSources);
+
+		// Auto-equip all object items granted as starting equipment
+		if (startingEquipmentChoice === 'equipment' && actor) {
+			const objectItems = actor.items.filter((i) => i.type === 'object');
+			for (const item of objectItems) {
+				await (item as unknown as NimbleObjectItem).toggleEquipment();
+			}
+		}
 
 		// Create class feature documents
 		const featureDocumentSources: Item.CreateData[] = [];

@@ -6,7 +6,24 @@
 	"system": {
 		"macro": "",
 		"identifier": "",
-		"rules": [],
+		"rules": [
+			{
+				"type": "dicePool",
+				"disabled": false,
+				"id": "fury-pool-base",
+				"identifier": "fury",
+				"label": "Fury Dice",
+				"predicate": {},
+				"priority": 1,
+				"scope": "item",
+				"dieSize": "d4",
+				"max": "@key",
+				"initial": "zero",
+				"refills": [],
+				"consumption": "autoBonus",
+				"bonusOnAttackDelivery": "melee"
+			}
+		],
 		"activation": {
 			"acquireTargetsFromTemplate": false,
 			"cost": {
@@ -20,7 +37,38 @@
 				"quantity": 1,
 				"type": "special"
 			},
-			"effects": [],
+			"effects": [
+				{
+					"id": "rage-fury-l1",
+					"type": "pool",
+					"poolType": "dice",
+					"action": "rollDie",
+					"poolIdentifier": "fury",
+					"value": 1,
+					"predicate": {
+						"level": {
+							"max": 4
+						}
+					},
+					"parentContext": null,
+					"parentNode": null
+				},
+				{
+					"id": "rage-fury-l5",
+					"type": "pool",
+					"poolType": "dice",
+					"action": "rollDie",
+					"poolIdentifier": "fury",
+					"value": 2,
+					"predicate": {
+						"level": {
+							"min": 5
+						}
+					},
+					"parentContext": null,
+					"parentNode": null
+				}
+			],
 			"showDescription": true,
 			"targets": {
 				"count": 1,
