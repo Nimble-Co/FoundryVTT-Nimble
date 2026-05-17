@@ -518,13 +518,13 @@ export function createCtTopTrackerState() {
 		combatant: Combatant.Implementation,
 	): void {
 		if (!canvas?.ready) return;
-		const token = getCombatantToken(combatant) as {
-			isVisible?: boolean;
-			controlled?: boolean;
-			_onHoverIn?: (event: MouseEvent, options?: { hoverOutOthers?: boolean }) => void;
-		} | null;
+		const token = getCombatantToken(combatant);
 		if (!token || token.isVisible === false || token.controlled) return;
-		token._onHoverIn?.(event, { hoverOutOthers: true });
+		(
+			token as unknown as {
+				_onHoverIn?: (e: MouseEvent, opts?: { hoverOutOthers?: boolean }) => void;
+			}
+		)._onHoverIn?.(event, { hoverOutOthers: true });
 	}
 
 	function handleCombatantCardMouseLeave(
@@ -532,13 +532,9 @@ export function createCtTopTrackerState() {
 		combatant: Combatant.Implementation,
 	): void {
 		if (!canvas?.ready) return;
-		const token = getCombatantToken(combatant) as {
-			isVisible?: boolean;
-			controlled?: boolean;
-			_onHoverOut?: (event: MouseEvent) => void;
-		} | null;
+		const token = getCombatantToken(combatant);
 		if (!token || token.isVisible === false || token.controlled) return;
-		token._onHoverOut?.(event);
+		(token as unknown as { _onHoverOut?: (e: MouseEvent) => void })._onHoverOut?.(event);
 	}
 
 	function canRemoveCombatant(): boolean {
