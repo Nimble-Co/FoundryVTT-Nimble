@@ -4,6 +4,7 @@ const CLASS_RESTRICTED_SPELL_SOURCE_IDS = new Map<string, string[]>([
 	['Compendium.nimble.spells.Item.KICmDNpyNoMuZ20E', ['shepherd']], // Lifebinding Spirit
 	['Compendium.nimble.spells.Item.9TNPdOXlCcGgxw6r', ['shadowmancer']], // Shadow Blast
 	['Compendium.nimble.spells.Item.ho2KADcmQWWTeYR0', ['shadowmancer']], // Summon Shadow
+	['Compendium.nimble.spells.Item.kTJSEElZSzeOMXBO', ['songweaver']], // Vicious Mockery
 ]);
 
 // Name-based fallback for spells in world compendiums duplicated from the official pack
@@ -12,6 +13,7 @@ const CLASS_RESTRICTED_SPELL_NAMES = new Map<string, string[]>([
 	['Lifebinding Spirit', ['shepherd']],
 	['Shadow Blast', ['shadowmancer']],
 	['Summon Shadow', ['shadowmancer']],
+	['Vicious Mockery', ['songweaver']],
 ]);
 
 /**
@@ -19,7 +21,8 @@ const CLASS_RESTRICTED_SPELL_NAMES = new Map<string, string[]>([
  * before the `classes` field was added to the compendium data.
  *
  * Affected spells (shepherd: Lifebinding Spirit; shadowmancer: Shadow Blast,
- * Summon Shadow) were added to the compendium with a `classes` array, but
+ * Summon Shadow; songweaver: Vicious Mockery) were added to the compendium
+ * with a `classes` array, but
  * copies already living in world items, actor sheets, or duplicated world
  * compendiums still have an empty array and therefore appear on every class's
  * spell list regardless of school.
