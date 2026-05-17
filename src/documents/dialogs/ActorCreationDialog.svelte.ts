@@ -1,9 +1,8 @@
 import type { DeepPartial } from 'fvtt-types/utils';
 import { SvelteApplicationMixin } from '#lib/SvelteApplicationMixin.svelte.js';
-
+import NimbleNexusImportDialog from '../../import/nimbleNexus/NimbleNexusImportDialog.svelte.js';
 import ActorCreationDialogComponent from '../../view/dialogs/ActorCreationDialog.svelte';
 import CharacterCreationDialog from './CharacterCreationDialog.svelte.js';
-import NimbleNexusImportDialog from '../../import/nimbleNexus/NimbleNexusImportDialog.svelte.js';
 
 const { ApplicationV2 } = foundry.applications.api;
 
@@ -62,7 +61,8 @@ export default class ActorCreationDialog extends SvelteApplicationMixin(Applicat
 		const { documentClasses } = CONFIG.NIMBLE.Actor;
 
 		if (actorType === 'character') {
-			const characterCreationDialog = new CharacterCreationDialog();
+			const folder = (this.data.folder as string | null | undefined) ?? null;
+			const characterCreationDialog = new CharacterCreationDialog({}, { folder });
 			characterCreationDialog.render(true);
 		} else {
 			(documentClasses as Record<string, typeof Actor>)[actorType].create(

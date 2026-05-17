@@ -103,12 +103,16 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 	data: Record<string, any>;
 	parent: any;
 	pack: any;
+	folder: string | null;
 	classFeatureIndex: Promise<ClassFeatureIndex> | null = null;
 	spellIndex: Promise<SpellIndex> | null = null;
 
 	protected root;
 
-	constructor(data = {}, { parent = null, pack = null, ...options } = {}) {
+	constructor(
+		data = {},
+		{ parent = null, pack = null, folder = null as string | null, ...options } = {},
+	) {
 		const width = 608;
 		super(
 			foundry.utils.mergeObject(options, {
@@ -125,6 +129,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		this.data = data;
 		this.parent = parent;
 		this.pack = pack;
+		this.folder = folder;
 	}
 
 	static override DEFAULT_OPTIONS = {
@@ -196,7 +201,7 @@ export default class CharacterCreationDialog extends SvelteApplicationMixin(Appl
 		};
 	}) {
 		const actor = await Actor.create(
-			{ name: results.name || 'New Character', type: 'character' },
+			{ name: results.name || 'New Character', type: 'character', folder: this.folder },
 			{ renderSheet: true },
 		);
 
