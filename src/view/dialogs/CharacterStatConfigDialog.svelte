@@ -164,7 +164,7 @@
 		const { value, statIncreaseType } = currentData;
 
 		const isSelected = Array.isArray(value) ? value.includes(key) : value === key;
-		if (!isSelected && (classASI[key] ?? 0) >= 5) return;
+		if (!isSelected && (allAssignedASI[key] ?? 0) >= 5) return;
 
 		// For capstone, toggle between adding/removing from array (max 2)
 		if (statIncreaseType === 'capstone') {
@@ -359,6 +359,25 @@
 		return classItem?.ASI ?? {};
 	});
 
+	// Counts all assigned stat increases across every level, regardless of current class level.
+	// Used for cap enforcement so future pre-assignments are counted against the +5 limit.
+	let allAssignedASI = $derived.by(() => {
+		const abilityScoreData = characterClass?.system?.abilityScoreData ?? {};
+		return Object.values(abilityScoreData).reduce(
+			(acc, data) => {
+				if (data.type !== 'statIncrease') return acc;
+				if (!data.value || data.value.length === 0) return acc;
+				const values = Array.isArray(data.value) ? data.value : [data.value];
+				for (const abilityKey of values) {
+					acc[abilityKey] ??= 0;
+					acc[abilityKey] += 1;
+				}
+				return acc;
+			},
+			{} as Record<string, number>,
+		);
+	});
+
 	// Calculate totals for each section
 	let bonusTotals = $derived(
 		abilityScoreKeys.reduce((acc, key) => {
@@ -395,7 +414,7 @@
 			: type === 'primary'
 				? keyAbilityScores.includes(key)
 				: !keyAbilityScores.includes(key)}
-	{@const isAtMax = !active && (asiTotals[key] ?? 0) >= 5}
+	{@const isAtMax = !active && (allAssignedASI[key] ?? 0) >= 5}
 
 	<td class="nimble-stat-config__toggle-cell">
 		{#if validityTest}
