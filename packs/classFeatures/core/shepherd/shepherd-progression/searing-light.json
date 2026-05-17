@@ -26,6 +26,7 @@
 					"type": "healing",
 					"healingType": "healing",
 					"formula": "(@will)d8",
+					"targetDisposition": "friendly",
 					"parentContext": null,
 					"parentNode": null
 				},
@@ -34,6 +35,7 @@
 					"type": "damage",
 					"damageType": "radiant",
 					"formula": "(@will)d8",
+					"targetDisposition": "hostile",
 					"parentContext": null,
 					"parentNode": null,
 					"canCrit": false,

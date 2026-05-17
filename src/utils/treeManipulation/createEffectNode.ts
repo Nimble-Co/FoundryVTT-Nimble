@@ -1,13 +1,14 @@
+import type { EffectNode } from '#types/effectTree.js';
+import type { NimbleBoonItem } from '../../documents/item/boon.js';
 import { createConditionNode } from './createConditionNode.js';
 import { createDamageNode } from './createDamageNode.js';
 import { createDamageOutcomeNode } from './createDamageOutcomeNode.js';
 import { createHealingNode } from './createHealingNode.js';
+import { createPoolNode } from './createPoolNode.js';
 import { createSavingThrowNode } from './createSavingThrowNode.js';
 import { createTextNode } from './createTextNode.js';
 import { flattenEffectsTree } from './flattenEffectsTree.js';
 import { reconstructEffectsTree } from './reconstructEffectsTree.js';
-import type { NimbleBoonItem } from '../../documents/item/boon.js';
-import type { EffectNode } from '#types/effectTree.js';
 
 export async function createEffectNode(
 	document: NimbleBoonItem,
@@ -33,6 +34,7 @@ export async function createEffectNode(
 	else if (nodeType === 'damageOutcome') newNode = createDamageOutcomeNode(parentId!, context);
 	else if (nodeType === 'healing') newNode = createHealingNode(parentId, context);
 	else if (nodeType === 'note') newNode = createTextNode(parentId, context);
+	else if (nodeType === 'pool') newNode = createPoolNode(parentId, context);
 	else if (nodeType === 'savingThrow') newNode = createSavingThrowNode(parentId, context);
 	else throw new Error('Invalid node type');
 

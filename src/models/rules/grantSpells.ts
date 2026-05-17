@@ -1,3 +1,4 @@
+import { withWidget } from './_widgetOption.js';
 import { NimbleBaseRule } from './base.js';
 
 function schema() {
@@ -6,44 +7,67 @@ function schema() {
 	return {
 		type: new fields.StringField({ required: true, nullable: false, initial: 'grantSpells' }),
 		// Spell source filters
-		schools: new fields.ArrayField(new fields.StringField(), {
-			required: false,
-			nullable: false,
-			initial: [],
-		}),
+		schools: new fields.ArrayField(
+			new fields.StringField({
+				choices: () => [...Object.keys(CONFIG.NIMBLE.spellSchools), 'known'],
+			}),
+			{
+				required: false,
+				nullable: false,
+				initial: [],
+				label: 'NIMBLE.rules.grantSpells.schools.label',
+			},
+		),
 		tiers: new fields.ArrayField(new fields.NumberField({ integer: true, min: 0 }), {
 			required: false,
 			nullable: false,
 			initial: [0],
+			label: 'NIMBLE.rules.grantSpells.tiers.label',
 		}),
 		// When true, only grant utility spells; when false, only grant non-utility spells
 		utilityOnly: new fields.BooleanField({
 			required: false,
 			nullable: false,
 			initial: false,
+			label: 'NIMBLE.rules.grantSpells.utilityOnly.label',
 		}),
 		// Specific spell UUIDs (alternative to school/tier filtering)
-		uuids: new fields.ArrayField(new fields.StringField(), {
-			required: false,
-			nullable: false,
-			initial: [],
-		}),
+		uuids: new fields.ArrayField(
+			new fields.StringField(
+				withWidget({
+					required: false,
+					nullable: false,
+					initial: '',
+					widget: 'documentUuid',
+					documentTypes: ['Item.spell'],
+				}),
+			),
+			{
+				required: false,
+				nullable: false,
+				initial: [],
+				label: 'NIMBLE.rules.grantSpells.uuids.label',
+				hint: 'NIMBLE.rules.grantSpells.uuids.hint',
+			},
+		),
 		// Grant mode
 		mode: new fields.StringField({
 			required: true,
 			nullable: false,
 			initial: 'auto',
+			label: 'NIMBLE.rules.grantSpells.mode.label',
 			choices: ['auto', 'selectSchool', 'selectSpell'],
 		}),
-		// For selectSchool mode: how many schools to choose
-		// For selectSpell mode: how many spells to choose
+		// For selectSchool / selectSpell: how many schools/spells to choose. Hidden in `auto`.
 		count: new fields.NumberField({
 			required: false,
 			nullable: true,
 			initial: null,
 			integer: true,
 			min: 1,
-		}),
+			label: 'NIMBLE.rules.grantSpells.count.label',
+			showWhen: (data) => data.mode === 'selectSchool' || data.mode === 'selectSpell',
+		} as unknown as never),
 	};
 }
 
@@ -61,6 +85,9 @@ declare namespace GrantSpellsRule {
  * 4. Spell selection - User chooses N individual spells from the filtered pool
  */
 class GrantSpellsRule extends NimbleBaseRule<GrantSpellsRule.Schema> {
+	static override group = 'grants';
+	static override description = 'NIMBLE.rules.grantSpells.description';
+
 	declare schools: string[];
 
 	declare tiers: number[];

@@ -16,3 +16,6 @@ export { Migration015WeaponType } from './Migration015WeaponType.js';
 export { Migration016DamageBonus } from './Migration016DamageBonus.js';
 export { Migration017WeaponAttackType } from './Migration017WeaponAttackType.js';
 export { Migration018LastStandHp } from './Migration018LastStandHp.js';
+export { Migration019SearingLightDisposition } from './Migration019SearingLightDisposition.js';
+export { Migration020DicePoolBackfill } from './Migration020DicePoolBackfill.js';
+export { Migration021RagePoolActivation } from './Migration021RagePoolActivation.js';

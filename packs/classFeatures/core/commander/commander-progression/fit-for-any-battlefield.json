@@ -17,6 +17,94 @@
 				"allowDuplicate": true,
 				"inMemoryOnly": false,
 				"uuid": "Item.iICGKEwphgLbJY8i"
+			},
+			{
+				"type": "chargePool",
+				"disabled": false,
+				"id": "combat-dice-pool",
+				"identifier": "combat-dice",
+				"label": "Combat Dice",
+				"predicate": {},
+				"priority": 2,
+				"scope": "item",
+				"max": "@strength",
+				"dieSize": "d6",
+				"initial": "zero",
+				"recoveries": [
+					{
+						"trigger": "onInitiativeRolled",
+						"mode": "refresh",
+						"value": "1"
+					}
+				]
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "combat-dice-d8-l5",
+				"identifier": "",
+				"label": "Combat Dice → d8",
+				"predicate": {
+					"level": {
+						"min": 5
+					}
+				},
+				"priority": 3,
+				"poolType": "charge",
+				"poolIdentifier": "combat-dice",
+				"dieSize": "d8",
+				"maxDelta": null
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "combat-dice-d10-l9",
+				"identifier": "",
+				"label": "Combat Dice → d10",
+				"predicate": {
+					"level": {
+						"min": 9
+					}
+				},
+				"priority": 4,
+				"poolType": "charge",
+				"poolIdentifier": "combat-dice",
+				"dieSize": "d10",
+				"maxDelta": null
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "combat-dice-d12-l13",
+				"identifier": "",
+				"label": "Combat Dice → d12",
+				"predicate": {
+					"level": {
+						"min": 13
+					}
+				},
+				"priority": 5,
+				"poolType": "charge",
+				"poolIdentifier": "combat-dice",
+				"dieSize": "d12",
+				"maxDelta": null
+			},
+			{
+				"type": "modifyPool",
+				"disabled": false,
+				"id": "combat-dice-d20-l17",
+				"identifier": "",
+				"label": "Combat Dice → d20",
+				"predicate": {
+					"level": {
+						"min": 17
+					}
+				},
+				"priority": 6,
+				"poolType": "charge",
+				"poolIdentifier": "combat-dice",
+				"dieSize": "d20",
+				"maxDelta": null
 			}
 		],
 		"activation": {

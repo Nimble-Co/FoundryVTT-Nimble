@@ -15,4 +15,5 @@ export interface RollSummaryProps {
 	options?: RollSummaryOptions;
 	showRollDetails?: boolean;
 	type?: string;
+	targetDisposition?: 'friendly' | 'neutral' | 'hostile' | 'secret';
 }

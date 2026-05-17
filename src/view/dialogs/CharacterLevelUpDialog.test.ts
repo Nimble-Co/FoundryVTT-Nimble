@@ -25,7 +25,7 @@ vi.mock('#utils/getSubclassFeatures.ts', () => ({
 }));
 
 // Mock getSubclassChoices to return empty array (avoid SubclassSelection rendering issues in tests)
-vi.mock('../../utils/getSubclassChoices.ts', () => ({
+vi.mock('#utils/getSubclassChoices.ts', () => ({
 	default: vi.fn(() => Promise.resolve([])),
 }));
 

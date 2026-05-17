@@ -3,8 +3,29 @@ export type EffectNode =
 	| DamageNode
 	| DamageOutcomeNode
 	| HealingNode
+	| PoolNode
 	| SavingThrowNode
 	| TextNode;
+
+export type PoolNode = {
+	id: string;
+	type: 'pool';
+	poolType: 'dice' | 'charge';
+	action: 'rollDie' | 'rollPool' | 'fillCount' | 'clear';
+	poolIdentifier: string;
+	value: number;
+	predicate?: Record<string, unknown>;
+	parentContext: string | null;
+	parentNode: string | null;
+	result?: {
+		applied: boolean;
+		skipReason?: 'predicate' | 'invalidAction' | 'unknownPool' | 'noActor';
+		poolLabel?: string;
+		previousCount?: number;
+		newCount?: number;
+		rolledFaces?: number[];
+	} | null;
+};
 
 export type ActionConsequence = {
 	criticalHit?: EffectNode[];
@@ -23,6 +44,8 @@ export type ConditionNode = {
 	parentNode: string | null;
 };
 
+export type EffectNodeDisposition = 'any' | 'friendly' | 'neutral' | 'hostile' | 'secret';
+
 export type DamageNode = {
 	id: string;
 	type: 'damage';
@@ -32,6 +55,7 @@ export type DamageNode = {
 	canMiss?: boolean;
 	ignoreArmor?: boolean;
 	ignoreAllies?: boolean;
+	targetDisposition?: EffectNodeDisposition;
 	on?: ActionConsequence;
 	parentContext: string | null;
 	parentNode: string | null;
@@ -56,6 +80,7 @@ export type HealingNode = {
 	type: 'healing';
 	healingType: 'healing' | 'tempHealing';
 	formula: string;
+	targetDisposition?: EffectNodeDisposition;
 	parentContext: string | null;
 	parentNode: string | null;
 	roll?: Record<string, any>;

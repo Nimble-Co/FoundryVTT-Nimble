@@ -1,15 +1,19 @@
-import type { EffectNode } from '#types/effectTree.js';
+import type { EffectNode, PoolNode } from '#types/effectTree.js';
 import type { UpcastResult } from '#types/spellScaling.js';
 import { DamageRoll } from '../dice/DamageRoll.js';
 import { NimbleRoll } from '../dice/NimbleRoll.js';
 import ItemActivationConfigDialog from '../documents/dialogs/ItemActivationConfigDialog.svelte.js';
 import SpellUpcastDialog from '../documents/dialogs/SpellUpcastDialog.svelte.js';
+import { Predicate, type RawPredicate } from '../etc/Predicate.js';
+import { isDebugModeEnabled } from '../settings/index.js';
 import { keyPressStore } from '../stores/keyPressStore.js';
 import {
 	getDamageBonusFormulas,
 	getDamageBonusTotal,
 	hasWeaponProficiency,
 } from '../utils/attackUtils.js';
+import { adjustPool } from '../utils/chargePool/chargePoolRecover.js';
+import { rollDieIntoPool, rollPoolFresh, setPoolFaces } from '../utils/dicePool/dicePoolRefill.js';
 import getRollFormula from '../utils/getRollFormula.js';
 import { normalizeDamageRollFormula } from '../utils/normalizeDamageRollFormula.js';
 import { applyUpcastDeltas } from '../utils/spell/applyUpcastDeltas.js';
@@ -200,6 +204,11 @@ class ItemActivationManager {
 		let rolls: (Roll | DamageRoll)[] = [];
 		rolls = await this.#getRolls(dialogData, targetDomain);
 
+		// Persist consumption of pool dice the player spent in the dialog.
+		// The dialog already included their face value in rollFormula above.
+		await this.#consumePoolDice(dialogData);
+		await this.#consumeChargePools(dialogData);
+
 		// Get template data
 		const _templateData = this.#getTemplateData();
 
@@ -360,6 +369,10 @@ class ItemActivationManager {
 				rolls.push(roll);
 			}
 
+			if (node.type === 'pool') {
+				await this.#applyPoolNode(node as PoolNode);
+			}
+
 			updatedEffects.push(node);
 		}
 
@@ -367,6 +380,261 @@ class ItemActivationManager {
 		this.activationData.effects = dependencies.reconstructEffectsTree(updatedEffects);
 
 		return rolls;
+	}
+
+	/**
+	 * Persist consumption of pool dice the player spent in the activation dialog.
+	 * The dialog already added their face values to the damage formula; this is
+	 * the bookkeeping step that removes those faces from the pool's flag state.
+	 *
+	 * Indices in `consumedPoolDice` are dialog-snapshot indices — multiple dice
+	 * from the same pool are removed in descending index order so earlier
+	 * removals don't shift later indices.
+	 */
+	async #consumePoolDice(dialogData: ItemActivationManager.DialogData): Promise<void> {
+		const consumed = dialogData.consumedPoolDice;
+		if (!Array.isArray(consumed) || consumed.length < 1) return;
+
+		const actor = this.actor as Actor.Implementation | null;
+		if (!actor) return;
+
+		const byPool = new Map<string, number[]>();
+		for (const entry of consumed) {
+			if (!entry || typeof entry.poolId !== 'string') continue;
+			const indices = byPool.get(entry.poolId) ?? [];
+			indices.push(entry.faceIndex);
+			byPool.set(entry.poolId, indices);
+		}
+
+		for (const [poolId, indices] of byPool) {
+			// Read current faces. Item-scoped pools live on the source item; we scan
+			// items here since the dispatcher does the same elsewhere.
+			let currentFaces: number[] | null = null;
+			if (poolId.startsWith('actor:')) {
+				const map = foundry.utils.getProperty(actor, 'flags.nimble.dicePools') as
+					| Record<string, { faces?: number[] }>
+					| undefined;
+				const entry = map?.[poolId];
+				currentFaces = Array.isArray(entry?.faces) ? [...entry.faces] : null;
+			} else {
+				for (const item of actor.items.contents) {
+					const map = foundry.utils.getProperty(item, 'flags.nimble.dicePools') as
+						| Record<string, { faces?: number[] }>
+						| undefined;
+					const entry = map?.[poolId];
+					if (entry && Array.isArray(entry.faces)) {
+						currentFaces = [...entry.faces];
+						break;
+					}
+				}
+			}
+			if (!currentFaces) continue;
+
+			const sortedIndices = [...indices].sort((a, b) => b - a);
+			for (const index of sortedIndices) {
+				if (index >= 0 && index < currentFaces.length) {
+					currentFaces.splice(index, 1);
+				}
+			}
+
+			await setPoolFaces(actor, poolId, currentFaces);
+		}
+	}
+
+	/**
+	 * Persist consumption of charge-pool charges the player spent in the dialog.
+	 * The dialog already added `+Nd<size>[Label]` to the damage formula so the
+	 * dice roll as part of the damage roll; this step decrements the charge
+	 * pool's current count by the spent amount.
+	 */
+	async #consumeChargePools(dialogData: ItemActivationManager.DialogData): Promise<void> {
+		const consumed = dialogData.consumedChargePools;
+		if (!Array.isArray(consumed) || consumed.length < 1) return;
+
+		const actor = this.actor as Actor.Implementation | null;
+		if (!actor) return;
+
+		for (const entry of consumed) {
+			if (!entry || typeof entry.poolId !== 'string') continue;
+			const count = Math.max(0, Math.floor(Number(entry.count) || 0));
+			if (count < 1) continue;
+			// adjustPool with negative-equivalent: 'add' supports only non-negative
+			// values, so read current and 'set' to current - count.
+			let currentValue = 0;
+			for (const item of actor.items.contents) {
+				const map = foundry.utils.getProperty(item, 'flags.nimble.chargePools') as
+					| Record<string, { current?: number }>
+					| undefined;
+				const poolEntry = map?.[entry.poolId];
+				if (poolEntry && typeof poolEntry.current === 'number') {
+					currentValue = poolEntry.current;
+					break;
+				}
+			}
+			const next = Math.max(0, currentValue - count);
+			await adjustPool(actor, entry.poolId, 'set', next);
+		}
+	}
+
+	/**
+	 * Apply a `pool` effect node: mutate a dice or charge pool on the source
+	 * actor as a side effect of item activation. Records the outcome on the
+	 * node itself so the chat-card renderer can display what happened.
+	 *
+	 * Routes by (poolType, action):
+	 *   dice  + rollDie   -> roll `value` dice into the pool (one at a time)
+	 *   dice  + rollPool  -> roll the full pool fresh (max dice)
+	 *   dice  + clear     -> empty the pool
+	 *   charge + fillCount -> add `value` charges (clamped to max)
+	 *   charge + clear     -> set current to 0
+	 *
+	 * Skipped (with a skipReason) if predicate fails, actor missing, or the
+	 * action is not meaningful for the pool type.
+	 */
+	async #applyPoolNode(node: PoolNode): Promise<void> {
+		const actor = this.actor as Actor.Implementation | null;
+		if (!actor) {
+			node.result = { applied: false, skipReason: 'noActor' };
+			return;
+		}
+
+		const rawPredicate = node.predicate;
+		if (rawPredicate && Object.keys(rawPredicate).length > 0) {
+			const predicate = new Predicate(rawPredicate as object as RawPredicate);
+			const domain =
+				(actor as { getDomain?: () => string[] | Set<string> }).getDomain?.() ?? new Set<string>();
+			const domainSet = domain instanceof Set ? domain : new Set(domain);
+			if (!predicate.test(domainSet)) {
+				node.result = { applied: false, skipReason: 'predicate' };
+				if (isDebugModeEnabled()) {
+					const itemName = this.#item.name ?? node.poolIdentifier;
+					ui.notifications?.info(
+						game.i18n.format('NIMBLE.activationEffects.poolNode.debugPredicateSkipped', {
+							item: itemName,
+							pool: node.poolIdentifier,
+							predicate: JSON.stringify(rawPredicate),
+						}),
+					);
+				}
+				return;
+			}
+		}
+
+		const count = Math.max(0, Math.floor(Number(node.value) || 0));
+		const poolId = node.poolIdentifier;
+
+		if (node.poolType === 'dice') {
+			const readPool = (): { label?: string; faces: number[] } => {
+				// Item-scoped pools live on item.flags.nimble.dicePools[identifier];
+				// actor-scoped pools (id "actor:identifier") live on actor.flags.nimble.dicePools.
+				if (poolId.startsWith('actor:')) {
+					const actorMap =
+						(foundry.utils.getProperty(actor, 'flags.nimble.dicePools') as
+							| Record<string, { label?: string; faces?: number[] }>
+							| undefined) ?? {};
+					const entry = actorMap[poolId];
+					return { label: entry?.label, faces: Array.isArray(entry?.faces) ? entry.faces : [] };
+				}
+				for (const item of actor.items.contents) {
+					const itemMap = foundry.utils.getProperty(item, 'flags.nimble.dicePools') as
+						| Record<string, { label?: string; faces?: number[] }>
+						| undefined;
+					if (!itemMap) continue;
+					const entry = itemMap[poolId];
+					if (!entry) continue;
+					return { label: entry.label, faces: Array.isArray(entry.faces) ? entry.faces : [] };
+				}
+				return { faces: [] };
+			};
+
+			if (node.action === 'rollDie') {
+				const before = readPool();
+				let applied = false;
+				for (let i = 0; i < count; i += 1) {
+					const ok = await rollDieIntoPool(actor, poolId);
+					if (!ok) break;
+					applied = true;
+				}
+				const after = readPool();
+				node.result = {
+					applied,
+					poolLabel: after.label ?? before.label,
+					previousCount: before.faces.length,
+					newCount: after.faces.length,
+					rolledFaces: after.faces.slice(before.faces.length),
+				};
+				return;
+			}
+			if (node.action === 'rollPool') {
+				const before = readPool();
+				const ok = await rollPoolFresh(actor, poolId);
+				const after = readPool();
+				node.result = {
+					applied: ok,
+					poolLabel: after.label ?? before.label,
+					previousCount: before.faces.length,
+					newCount: after.faces.length,
+					rolledFaces: after.faces,
+				};
+				return;
+			}
+			if (node.action === 'clear') {
+				const before = readPool();
+				const ok = await setPoolFaces(actor, poolId, []);
+				node.result = {
+					applied: ok,
+					poolLabel: before.label,
+					previousCount: before.faces.length,
+					newCount: 0,
+				};
+				return;
+			}
+			node.result = { applied: false, skipReason: 'invalidAction' };
+			return;
+		}
+
+		if (node.poolType === 'charge') {
+			const readChargePool = (): { label?: string; current: number } => {
+				for (const item of actor.items.contents) {
+					const map = foundry.utils.getProperty(item, 'flags.nimble.chargePools') as
+						| Record<string, { label?: string; current?: number; identifier?: string }>
+						| undefined;
+					if (!map) continue;
+					const entry = map[poolId];
+					if (!entry) continue;
+					return { label: entry.label, current: Number(entry.current) || 0 };
+				}
+				return { current: 0 };
+			};
+
+			if (node.action === 'fillCount') {
+				const before = readChargePool();
+				const ok = await adjustPool(actor, poolId, 'add', count);
+				const after = readChargePool();
+				node.result = {
+					applied: ok,
+					poolLabel: after.label ?? before.label,
+					previousCount: before.current,
+					newCount: after.current,
+				};
+				return;
+			}
+			if (node.action === 'clear') {
+				const before = readChargePool();
+				const ok = await adjustPool(actor, poolId, 'set', 0);
+				node.result = {
+					applied: ok,
+					poolLabel: before.label,
+					previousCount: before.current,
+					newCount: 0,
+				};
+				return;
+			}
+			node.result = { applied: false, skipReason: 'invalidAction' };
+			return;
+		}
+
+		node.result = { applied: false, skipReason: 'invalidAction' };
 	}
 
 	/**
@@ -568,6 +836,19 @@ namespace ItemActivationManager {
 		};
 		/** Whether to hide the roll. */
 		rollHidden?: boolean;
+		/**
+		 * Dice the player chose to spend from rolled dice pools (Fury, Judgment, etc).
+		 * The dialog already appended the bonus to rollFormula; this list is used to
+		 * persist the consumption back onto the pool after the damage roll succeeds.
+		 */
+		consumedPoolDice?: Array<{ poolId: string; faceIndex: number }>;
+		/**
+		 * Charges the player chose to spend from charge pools (Combat Dice, Mana
+		 * Dice, etc). The dialog already appended `+Nd<size>[Label]` to rollFormula
+		 * so the dice roll as part of the damage roll; this list decrements the
+		 * pool's current count after the roll succeeds.
+		 */
+		consumedChargePools?: Array<{ poolId: string; count: number }>;
 	}
 }
 

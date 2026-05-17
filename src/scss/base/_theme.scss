@@ -27,6 +27,7 @@
 
 	/** OTHER COLORS **/
 	--nimble-box-background-color: hsl(293, 10%, 17%);
+	--nimble-card-background-color: hsl(293, 10%, 17%);
 	--nimble-sheet-background-color: unset;
 	--nimble-accent-color: hsl(278, 10%, 42%);
 	--nimble-range-slider-handle-color: var(--nimble-dark-text-color);
@@ -151,4 +152,39 @@
 	--nimble-reaction-move-light: hsl(185, 40%, 20%);
 	--nimble-reaction-move-text: hsl(185, 70%, 75%);
 	--nimble-reaction-move-accent: hsl(185, 70%, 60%);
+
+	/** DICE POOL TRACKER **/
+	// Dark: ~5:1 on hsl(220,15%,16%) panel.
+	--nimble-dice-pool-tracker-available-color: hsl(210, 80%, 63%);
+	--nimble-dice-pool-tracker-spent-color: hsl(220, 10%, 50%);
+	--nimble-dice-pool-tracker-expend-hover-color: hsl(0, 65%, 58%);
+	--nimble-dice-pool-tracker-pip-border-color: hsl(220, 10%, 30%);
+	--nimble-dice-pool-tracker-pip-available-border-color: hsl(210, 85%, 55%);
+	--nimble-dice-pool-tracker-pip-background: hsl(220, 15%, 18%);
+	--nimble-dice-pool-tracker-pip-hover-background: hsl(220, 18%, 26%);
+	--nimble-dice-pool-tracker-chip-hover-background: hsl(0, 65%, 96%);
+	--nimble-dice-pool-tracker-panel-background: hsla(220, 15%, 13%, 0.97);
+	--nimble-dice-pool-tracker-panel-border-color: hsl(220, 10%, 28%);
+	--nimble-dice-pool-tracker-badge-background: hsl(220, 15%, 20%);
+	--nimble-dice-pool-tracker-total-border-color: hsl(220, 10%, 28%);
+
+	/** POOL NODE (chat card) **/
+	--nimble-pool-node-face-background: hsl(210, 40%, 25%);
+	--nimble-pool-node-face-border-color: hsl(210, 80%, 63%);
+	--nimble-pool-node-face-text-color: hsl(210, 80%, 80%);
+	--nimble-pool-node-delta-color: hsl(150, 55%, 55%);
+
+	/** POOL SPEND (activation dialog) **/
+	--nimble-pool-spend-icon-color: hsl(210, 65%, 56%);
+	--nimble-pool-spend-die-border-color: hsl(210, 65%, 46%);
+	--nimble-pool-spend-die-text-color: hsl(210, 70%, 70%);
+	--nimble-pool-spend-die-selected-background: hsl(0, 60%, 50%);
+	--nimble-pool-spend-die-selected-border-color: hsl(0, 60%, 38%);
+	--nimble-pool-spend-die-selected-text-color: white;
+	--nimble-pool-spend-auto-icon-color: hsl(45, 90%, 60%);
+	--nimble-pool-spend-auto-face-background: color-mix(in srgb, hsl(45, 80%, 50%) 15%, transparent);
+	--nimble-pool-spend-auto-face-border-color: hsl(45, 80%, 50%);
+	--nimble-pool-spend-auto-face-text-color: hsl(45, 85%, 72%);
+	--nimble-pool-spend-auto-total-color: hsl(45, 90%, 60%);
+	--nimble-pool-spend-total-color: hsl(150, 55%, 60%);
 }

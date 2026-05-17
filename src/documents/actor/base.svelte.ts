@@ -6,6 +6,7 @@ import { STATUS_EFFECT_IDS } from '../../config/registerConditionsConfig.js';
 import { NimbleRoll } from '../../dice/NimbleRoll.js';
 import { getAdjacencySyncEnabled } from '../../settings/adjacencySettings.js';
 import calculateRollMode from '../../utils/calculateRollMode.js';
+import { populateDicePoolTags } from '../../utils/dicePool/dicePoolTags.js';
 import getRollFormula from '../../utils/getRollFormula.js';
 import { ADJACENCY_QUALIFIER } from '../../utils/tokenAdjacency.js';
 import GenericDialog from '../dialogs/GenericDialog.svelte.js';
@@ -150,12 +151,19 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	): Promise<Actor.Stored | null | undefined> {
 		const { parent, pack, types } = context ?? {};
 
+		// Use folder from Foundry data if provided, otherwise fall back to the active folder in the sidebar
+		const folderId =
+			(data?.folder as string | null | undefined) ??
+			(ui.actors as unknown as { folder?: { id?: string } | null })?.folder?.id ??
+			null;
+
 		const { default: ActorCreationDialog } = await import(
 			'../dialogs/ActorCreationDialog.svelte.js'
 		);
 		const dialog = new ActorCreationDialog(
 			{
 				...data,
+				folder: folderId,
 				parent,
 				pack,
 				types,
@@ -309,6 +317,14 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 				}
 			}
 		}
+
+		populateDicePoolTags(
+			this as unknown as {
+				flags?: unknown;
+				items?: { contents: Array<{ flags?: unknown }> };
+			},
+			this.tags,
+		);
 	}
 
 	/** ------------------------------------------------------ */

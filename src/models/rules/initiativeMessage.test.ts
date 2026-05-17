@@ -122,3 +122,19 @@ describe('getInitiativeMessageRuleSources', () => {
 		expect(getInitiativeMessageRuleSources(item)).toHaveLength(0);
 	});
 });
+
+describe('InitiativeMessageRule.schema', () => {
+	it('defines the expected fields', () => {
+		const schema = InitiativeMessageRule.defineSchema();
+		expect(schema).toHaveProperty('type');
+		expect(schema).toHaveProperty('formula');
+		expect(schema).toHaveProperty('message');
+	});
+});
+
+describe('InitiativeMessageRule class metadata', () => {
+	it('exposes the picker group and i18n description key', () => {
+		expect(InitiativeMessageRule.group).toBe('notes');
+		expect(InitiativeMessageRule.description).toBe('NIMBLE.rules.initiativeMessage.description');
+	});
+});

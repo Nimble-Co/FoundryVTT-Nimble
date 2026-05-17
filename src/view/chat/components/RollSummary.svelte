@@ -4,6 +4,7 @@
 
 	import { getContext } from 'svelte';
 	import localize from '#utils/localize.ts';
+	import { useDispositionState } from '../utils/useDispositionState.svelte.ts';
 
 	const {
 		label,
@@ -13,11 +14,13 @@
 		options,
 		showRollDetails,
 		type = '',
+		targetDisposition,
 	}: RollSummaryProps = $props();
 	const { hitDice } = CONFIG.NIMBLE;
 	const autoExpand = game.settings.get('nimble', 'autoExpandRolls');
 	const messageDocument = getContext<NimbleChatMessage | undefined>('messageDocument');
 	let expanded = $state(autoExpand);
+
 	let canApplyDamage = $derived.by(() => {
 		if (type !== 'damage' || !game.user?.isGM) return false;
 
@@ -29,6 +32,13 @@
 	let applyDamageLabel = $derived(localize('NIMBLE.chat.applyDamage'));
 	let applyDamageTooltip = $derived(
 		canApplyDamage ? applyDamageLabel : localize('NIMBLE.chat.noDamageToApply'),
+	);
+
+	const { dispositionState } = useDispositionState(
+		() => targetDisposition,
+		() =>
+			(messageDocument?.reactive as unknown as { system?: { targets?: string[] } } | undefined)
+				?.system?.targets ?? [],
 	);
 </script>
 
@@ -79,6 +89,8 @@
 {#if type === 'damage' && game.user?.isGM}
 	<button
 		class="nimble-button nimble-button--apply-damage"
+		class:nimble-button--recommended={dispositionState === 'recommended'}
+		class:nimble-button--discouraged={dispositionState === 'discouraged'}
 		aria-label={applyDamageLabel}
 		data-tooltip={applyDamageTooltip}
 		data-tooltip-direction="UP"
@@ -182,6 +194,8 @@
 	}
 
 	.nimble-button--apply-damage {
+		--damage-button-color: var(--color-level-error, #7a1e1e);
+
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -196,5 +210,32 @@
 		border-radius: 4px;
 		border: 1px solid var(--nimble-card-border-color);
 		margin-top: 0.5rem;
+		cursor: pointer;
+		transition:
+			background-color 0.15s ease,
+			border-color 0.15s ease;
+
+		&:hover:not(:disabled) {
+			background-color: color-mix(in srgb, currentColor 8%, transparent);
+		}
+
+		&.nimble-button--recommended {
+			color: var(--damage-button-color);
+			border-color: color-mix(in srgb, var(--damage-button-color) 50%, transparent);
+			border-width: 2px;
+
+			&:hover:not(:disabled) {
+				background-color: color-mix(in srgb, var(--damage-button-color) 12%, transparent);
+				border-color: var(--damage-button-color);
+			}
+		}
+
+		&.nimble-button--discouraged {
+			opacity: 0.45;
+
+			&:hover:not(:disabled) {
+				opacity: 0.65;
+			}
+		}
 	}
 </style>
