@@ -73,6 +73,7 @@
 					class="nimble-stat-selection__option"
 					class:nimble-stat-selection__option--selected={isSelected}
 					class:nimble-stat-selection__option--disabled={isAtMax}
+					data-tooltip={isAtMax ? 'NIMBLE.statConfig.statAtMax' : undefined}
 				>
 					{abilityScores[abilityKey] ?? abilityKey}
 
