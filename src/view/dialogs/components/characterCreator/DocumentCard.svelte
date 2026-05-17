@@ -44,6 +44,7 @@
 		align-items: center;
 		flex-wrap: wrap;
 		gap: 0.125rem 0.375rem;
+		width: 100%;
 	}
 
 	.nimble-card__source-label {

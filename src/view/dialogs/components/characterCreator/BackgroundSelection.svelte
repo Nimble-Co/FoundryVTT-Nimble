@@ -2,6 +2,7 @@
 	import { getContext } from 'svelte';
 	import Hint from '../../../components/Hint.svelte';
 	import prepareBackgroundTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareBackgroundTooltip.js';
+	import getDocumentSourceLabel from '../../../../utils/getDocumentSourceLabel.js';
 	import DocumentCard from './DocumentCard.svelte';
 
 	let { active, backgrounds, selectedBackground = $bindable() } = $props();
@@ -40,10 +41,12 @@
 
 		<ul class="nimble-document-list">
 			{#each backgrounds as background}
+				{@const sourceLabel = getDocumentSourceLabel(background.uuid)}
 				<li class="u-semantic-only">
 					<DocumentCard
 						document={background}
 						handler={async (background) => (selectedBackground = await fromUuid(background.uuid))}
+						{sourceLabel}
 						getTooltip={prepareBackgroundTooltip}
 					/>
 				</li>
@@ -67,13 +70,29 @@
 
 <style lang="scss">
 	.nimble-document-list {
-		--nimble-card-content-grid: 'img title';
+		--nimble-card-content-grid: 'img title' 'img meta';
 		--nimble-card-column-dimensions: 2.5rem 1fr;
-		--nimble-card-row-dimensions: max-content;
-		--nimble-card-title-alignment: center;
-		--nimble-card-width: auto;
+		--nimble-card-row-dimensions: repeat(2, max-content);
+		--nimble-card-width: 100%;
 
 		--nimble-document-list-columns: repeat(2, 1fr);
 		--nimble-document-list-gap: 0.375rem;
+
+		:global(.nimble-card__img) {
+			height: auto;
+			align-self: stretch;
+		}
+
+		:global(.nimble-card__title) {
+			align-self: end;
+			padding-top: 0.25rem;
+			padding-bottom: 0.0625rem;
+		}
+
+		:global(.nimble-card__meta) {
+			align-self: start;
+			padding-top: 0.0625rem;
+			padding-bottom: 0.25rem;
+		}
 	}
 </style>
