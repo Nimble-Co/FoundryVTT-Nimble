@@ -25,10 +25,10 @@ const CELESTIAL_SAVING_THROW_RULE = {
  *    the "Reset to Class Defaults" button works correctly going forward.
  * 2. Sets the class's disadvantaged save `defaultRollMode` to 0 on the actor.
  */
-class Migration019CelestialSavingThrow extends MigrationBase {
-	static override readonly version = 19;
+class Migration022CelestialSavingThrow extends MigrationBase {
+	static override readonly version = 22;
 
-	override readonly version = Migration019CelestialSavingThrow.version;
+	override readonly version = Migration022CelestialSavingThrow.version;
 
 	override async updateActor(source: any): Promise<void> {
 		if (source.type !== 'character') return;
@@ -73,4 +73,4 @@ class Migration019CelestialSavingThrow extends MigrationBase {
 	}
 }
 
-export { Migration019CelestialSavingThrow };
+export { Migration022CelestialSavingThrow };
