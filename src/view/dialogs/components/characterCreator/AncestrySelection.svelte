@@ -124,17 +124,21 @@
 		--nimble-document-list-columns: repeat(3, 1fr);
 		--nimble-document-list-gap: 0.375rem;
 
-		// Image stretches flush to card top/bottom; text gets vertical breathing room
+		// Image stretches flush to card top/bottom; text rows get vertical breathing room
 		:global(.nimble-card__img) {
 			height: auto;
 			align-self: stretch;
 		}
 
 		:global(.nimble-card__title) {
+			align-self: end;
 			padding-top: 0.375rem;
+			padding-bottom: 0.125rem;
 		}
 
 		:global(.nimble-card__meta) {
+			align-self: start;
+			padding-top: 0.125rem;
 			padding-bottom: 0.375rem;
 		}
 	}

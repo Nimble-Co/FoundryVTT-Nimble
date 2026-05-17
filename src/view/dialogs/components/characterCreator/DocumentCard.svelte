@@ -40,13 +40,13 @@
 <style lang="scss">
 	.nimble-card__meta {
 		display: flex;
-		flex-direction: column;
-		gap: 0.0625rem;
+		flex-direction: row;
+		align-items: center;
+		gap: 0.375rem;
 	}
 
 	.nimble-card__source-label {
-		display: inline-block;
-		width: fit-content;
+		flex-shrink: 0;
 		padding: 0.0625rem 0.25rem;
 		font-size: var(--nimble-xxs-text);
 		font-weight: 600;
