@@ -2038,6 +2038,10 @@
 				"name": "Debug Mode",
 				"hint": "Enables developer tools like the dice testbench. Changes take effect immediately.",
 				"openTestbench": "Open Dice Testbench"
+			},
+			"combatTrackerHoverColor": {
+				"name": "Combat Tracker Hover Color",
+				"hint": "Choose your personal token hover highlight color"
 			}
 		},
 		"diceTestbench": {

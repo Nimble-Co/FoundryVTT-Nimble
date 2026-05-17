@@ -314,8 +314,8 @@ export function registerCombatTrackerSettings(): void {
 	});
 
 	registerWorldSetting(COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY, {
-		name: 'Combat Tracker Hover Color',
-		hint: 'Choose your personal token hover highlight color',
+		name: 'NIMBLE.settings.combatTrackerHoverColor.name',
+		hint: 'NIMBLE.settings.combatTrackerHoverColor.hint',
 		scope: 'client',
 		config: false,
 		type: String,
