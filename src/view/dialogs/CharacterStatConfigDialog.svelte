@@ -129,6 +129,17 @@
 
 			const { statIncreaseType, type, value } = data;
 
+			if (Number(level) === 20) {
+				console.log('[Nimble|StatConfig] Level 20 raw data:', {
+					level,
+					type,
+					statIncreaseType,
+					value,
+					valueType: typeof value,
+					isArray: Array.isArray(value),
+				});
+			}
+
 			if (type === 'boon') {
 				increases.push({
 					level: Number(level),
@@ -140,8 +151,12 @@
 				return;
 			}
 
-			// Handle both single values and arrays (for capstone)
-			const selectedValues = Array.isArray(value) ? value : value ? [value] : [];
+			// StringField coerces arrays to comma-separated strings on save; handle both forms.
+			const selectedValues = Array.isArray(value)
+				? value
+				: value
+					? value.split(',').filter(Boolean)
+					: [];
 
 			increases.push({
 				level: Number(level),
@@ -156,39 +171,59 @@
 	}
 
 	function toggleStatIncreaseOption(level, key) {
-		if (!characterClass) return;
+		console.log('[Nimble|StatConfig] toggleStatIncreaseOption called:', { level, key });
+		if (!characterClass) {
+			console.log('[Nimble|StatConfig] no characterClass, returning');
+			return;
+		}
 
 		const currentData = characterClass.system.abilityScoreData?.[level];
-		if (!currentData) return;
+		console.log('[Nimble|StatConfig] currentData for level', level, ':', currentData);
+		if (!currentData) {
+			console.log('[Nimble|StatConfig] no currentData, returning');
+			return;
+		}
 
 		const { value, statIncreaseType } = currentData;
 
-		const isSelected = Array.isArray(value) ? value.includes(key) : value === key;
+		// Normalize value: StringField coerces arrays to comma-separated strings on save.
+		const currentValues = Array.isArray(value)
+			? value
+			: value
+				? value.split(',').filter(Boolean)
+				: [];
+
+		const isSelected = currentValues.includes(key);
 		const baseValue = characterAbilityScores[key]?.baseValue ?? 0;
-		if (!isSelected && baseValue + (allAssignedASI[key] ?? 0) >= 5) return;
+		const asiCount = allAssignedASI[key] ?? 0;
+		console.log('[Nimble|StatConfig] toggle check:', {
+			key,
+			value,
+			currentValues,
+			isSelected,
+			baseValue,
+			asiCount,
+			wouldExceedCap: !isSelected && baseValue + asiCount >= 5,
+			statIncreaseType,
+		});
+		if (!isSelected && baseValue + asiCount >= 5) return;
 
-		// For capstone, toggle between adding/removing from array (max 2)
+		// For capstone, toggle between adding/removing from the selection (max 2)
 		if (statIncreaseType === 'capstone') {
-			let newValue;
+			let newValues;
 
-			if (!value || value.length === 0) {
-				newValue = [key];
-			} else if (Array.isArray(value)) {
-				if (value.includes(key)) {
-					newValue = value.filter((k) => k !== key);
-				} else if (value.length < 2) {
-					newValue = [...value, key];
-				} else {
-					// Already have 2 selected, replace the first one
-					newValue = [value[1], key];
-				}
+			if (currentValues.includes(key)) {
+				newValues = currentValues.filter((k) => k !== key);
+			} else if (currentValues.length < 2) {
+				newValues = [...currentValues, key];
 			} else {
-				// Value is a string, convert to array
-				newValue = value === key ? [] : [value, key];
+				// Already have 2 selected, replace the first one
+				newValues = [currentValues[1], key];
 			}
 
+			// Save as comma-separated string to avoid StringField coercion issues
 			return document.updateItem(characterClass._id, {
-				[`system.abilityScoreData.${level}.value`]: newValue,
+				[`system.abilityScoreData.${level}.value`]: newValues.join(','),
 			});
 		}
 

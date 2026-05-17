@@ -45,8 +45,11 @@ export class NimbleClassItem extends NimbleBaseItem {
 					if (filterByLevel && Number.parseInt(level, 10) > this.system.classLevel) return acc;
 					if (data.value.length === 0) return acc;
 
-					// Handle both single ability scores and arrays (for capstone)
-					const values = Array.isArray(data.value) ? data.value : [data.value];
+					// StringField coerces arrays to comma-separated strings on save;
+					// handle both the raw array case and the coerced string case.
+					const values = Array.isArray(data.value)
+						? data.value
+						: (data.value as string).split(',').filter(Boolean);
 
 					for (const abilityKey of values) {
 						acc[abilityKey] ??= 0;
