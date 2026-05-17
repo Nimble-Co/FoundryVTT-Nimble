@@ -233,16 +233,6 @@
 		margin-left: auto;
 	}
 
-	.nimble-code-block__text-area {
-		width: 100%;
-		font-family: var(--nimble-font-monospace, monospace);
-		font-size: var(--nimble-sm-text);
-		background: var(--nimble-sheet-background);
-		color: inherit;
-		border: 1px solid var(--nimble-accent-color);
-		border-radius: 4px;
-	}
-
 	.nimble-rules-tab__priority {
 		display: inline-flex;
 		justify-content: center;
