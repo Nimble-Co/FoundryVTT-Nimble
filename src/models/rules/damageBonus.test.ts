@@ -655,3 +655,150 @@ describe('getDamageBonusFormulas', () => {
 		expect(getDamageBonusFormulas(actor, 'melee', 'weapon')).toEqual(['1d6']);
 	});
 });
+
+describe('targetCondition filtering', () => {
+	it('should include bonus when targetCondition matches target domain', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: { target: 'bloodied' },
+					},
+				],
+			},
+		};
+
+		const targetDomain = new Set(['target:bloodied']);
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon', undefined, targetDomain)).toBe(5);
+	});
+
+	it('should exclude bonus when targetCondition does not match target domain', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: { target: 'bloodied' },
+					},
+				],
+			},
+		};
+
+		const targetDomain = new Set(['target:concentrating']);
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon', undefined, targetDomain)).toBe(0);
+	});
+
+	it('should exclude bonus with targetCondition when no target domain is provided', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: { target: 'marked' },
+					},
+				],
+			},
+		};
+
+		// No target selected — targetCondition bonuses should not apply
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon')).toBe(0);
+	});
+
+	it('should include bonus without targetCondition regardless of target domain', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 3,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: null,
+					},
+				],
+			},
+		};
+
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon')).toBe(3);
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon', undefined, new Set())).toBe(3);
+	});
+
+	it('should filter dice formulas by targetCondition', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: null,
+						formula: '1d6',
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: { target: 'marked' },
+					},
+					{
+						value: null,
+						formula: '2d8',
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: null,
+					},
+				],
+			},
+		};
+
+		// Without target — only unconditional bonus
+		expect(getDamageBonusFormulas(actor, 'melee', 'weapon')).toEqual(['2d8']);
+
+		// With matching target — both
+		const targetDomain = new Set(['target:marked']);
+		expect(getDamageBonusFormulas(actor, 'melee', 'weapon', undefined, targetDomain)).toEqual([
+			'1d6',
+			'2d8',
+		]);
+	});
+
+	it('should combine delivery/source filtering with targetCondition', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'melee' as const,
+						source: 'weapon' as const,
+						targetCondition: { target: 'bloodied' },
+					},
+				],
+			},
+		};
+
+		const targetDomain = new Set(['target:bloodied']);
+
+		// Matches delivery + source + target
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon', undefined, targetDomain)).toBe(5);
+
+		// Matches target but not delivery
+		expect(getDamageBonusTotal(actor, 'ranged', 'weapon', undefined, targetDomain)).toBe(0);
+
+		// Matches delivery but not target
+		expect(
+			getDamageBonusTotal(actor, 'melee', 'weapon', undefined, new Set(['target:fullHp'])),
+		).toBe(0);
+	});
+});
