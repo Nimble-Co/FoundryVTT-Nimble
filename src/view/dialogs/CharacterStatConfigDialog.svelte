@@ -129,17 +129,6 @@
 
 			const { statIncreaseType, type, value } = data;
 
-			if (Number(level) === 20) {
-				console.log('[Nimble|StatConfig] Level 20 raw data:', {
-					level,
-					type,
-					statIncreaseType,
-					value,
-					valueType: typeof value,
-					isArray: Array.isArray(value),
-				});
-			}
-
 			if (type === 'boon') {
 				increases.push({
 					level: Number(level),
@@ -171,18 +160,10 @@
 	}
 
 	function toggleStatIncreaseOption(level, key) {
-		console.log('[Nimble|StatConfig] toggleStatIncreaseOption called:', { level, key });
-		if (!characterClass) {
-			console.log('[Nimble|StatConfig] no characterClass, returning');
-			return;
-		}
+		if (!characterClass) return;
 
 		const currentData = characterClass.system.abilityScoreData?.[level];
-		console.log('[Nimble|StatConfig] currentData for level', level, ':', currentData);
-		if (!currentData) {
-			console.log('[Nimble|StatConfig] no currentData, returning');
-			return;
-		}
+		if (!currentData) return;
 
 		const { value, statIncreaseType } = currentData;
 
@@ -196,16 +177,6 @@
 		const isSelected = currentValues.includes(key);
 		const baseValue = characterAbilityScores[key]?.baseValue ?? 0;
 		const asiCount = allAssignedASI[key] ?? 0;
-		console.log('[Nimble|StatConfig] toggle check:', {
-			key,
-			value,
-			currentValues,
-			isSelected,
-			baseValue,
-			asiCount,
-			wouldExceedCap: !isSelected && baseValue + asiCount >= 5,
-			statIncreaseType,
-		});
 		if (!isSelected && baseValue + asiCount >= 5) return;
 
 		// For capstone, toggle between adding/removing from the selection (max 2)
