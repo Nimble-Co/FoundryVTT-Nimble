@@ -72,6 +72,130 @@ function createItemDocument({
 	} as unknown as Item;
 }
 
+describe('CharacterCreationDialog.submitCharacterCreation saving throw resolution', () => {
+	function setupActorMock() {
+		const actor = {
+			createEmbeddedDocuments: vi.fn().mockResolvedValue([]),
+			update: vi.fn().mockResolvedValue(undefined),
+		};
+		(Actor as unknown as { create: ReturnType<typeof vi.fn> }).create = vi
+			.fn()
+			.mockResolvedValue(actor);
+		return actor;
+	}
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		(
+			foundry.applications.api.ApplicationV2.prototype as unknown as {
+				close: ReturnType<typeof vi.fn>;
+			}
+		).close = vi.fn().mockResolvedValue(undefined);
+	});
+
+	it('neutralizes the class disadvantaged save when ancestry has a savingThrowRollMode rule targeting disadvantaged', async () => {
+		const actor = setupActorMock();
+
+		const classDocument = createItemDocument({
+			uuid: 'Compendium.nimble.nimble-classes.Item.warrior',
+			name: 'Warrior',
+			system: {
+				identifier: 'warrior',
+				savingThrows: { advantage: 'strength', disadvantage: 'dexterity' },
+			},
+		});
+		const ancestryDocument = createItemDocument({
+			uuid: 'Compendium.nimble.nimble-ancestries.Item.celestial',
+			name: 'Celestial',
+			system: {
+				rules: [
+					{
+						type: 'savingThrowRollMode',
+						label: 'Highborn',
+						value: 0,
+						target: 'disadvantaged',
+						mode: 'set',
+					},
+				],
+			},
+		});
+
+		vi.stubGlobal(
+			'fromUuid',
+			vi.fn(async (uuid: string) => {
+				if (uuid === classDocument.uuid) return classDocument;
+				if (uuid === ancestryDocument.uuid) return ancestryDocument;
+				return null;
+			}),
+		);
+
+		const dialog = new CharacterCreationDialog();
+		await dialog.submitCharacterCreation({
+			name: 'Test Character',
+			origins: {
+				characterClass: { uuid: classDocument.uuid },
+				ancestry: { uuid: ancestryDocument.uuid },
+			},
+			languages: [],
+			classFeatures: { autoGrant: [], selected: new Map() },
+			spells: { autoGrant: [], selectedSchools: new Map(), selectedSpells: new Map() },
+		});
+
+		const updateCall = actor.update.mock.calls[0][0] as {
+			system: { savingThrows: Record<string, number> };
+		};
+		const savingThrows = updateCall.system.savingThrows;
+		expect(savingThrows['dexterity.defaultRollMode']).toBe(0);
+		expect(savingThrows['strength.defaultRollMode']).toBe(1);
+	});
+
+	it('preserves class disadvantaged save when ancestry has no savingThrowRollMode rule', async () => {
+		const actor = setupActorMock();
+
+		const classDocument = createItemDocument({
+			uuid: 'Compendium.nimble.nimble-classes.Item.warrior',
+			name: 'Warrior',
+			system: {
+				identifier: 'warrior',
+				savingThrows: { advantage: 'strength', disadvantage: 'dexterity' },
+			},
+		});
+		const ancestryDocument = createItemDocument({
+			uuid: 'Compendium.nimble.nimble-ancestries.Item.human',
+			name: 'Human',
+			system: { rules: [] },
+		});
+
+		vi.stubGlobal(
+			'fromUuid',
+			vi.fn(async (uuid: string) => {
+				if (uuid === classDocument.uuid) return classDocument;
+				if (uuid === ancestryDocument.uuid) return ancestryDocument;
+				return null;
+			}),
+		);
+
+		const dialog = new CharacterCreationDialog();
+		await dialog.submitCharacterCreation({
+			name: 'Test Character',
+			origins: {
+				characterClass: { uuid: classDocument.uuid },
+				ancestry: { uuid: ancestryDocument.uuid },
+			},
+			languages: [],
+			classFeatures: { autoGrant: [], selected: new Map() },
+			spells: { autoGrant: [], selectedSchools: new Map(), selectedSpells: new Map() },
+		});
+
+		const updateCall = actor.update.mock.calls[0][0] as {
+			system: { savingThrows: Record<string, number> };
+		};
+		const savingThrows = updateCall.system.savingThrows;
+		expect(savingThrows['dexterity.defaultRollMode']).toBe(-1);
+		expect(savingThrows['strength.defaultRollMode']).toBe(1);
+	});
+});
+
 describe('CharacterCreationDialog.submitCharacterCreation spell grants', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();

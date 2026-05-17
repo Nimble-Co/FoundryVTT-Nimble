@@ -19,3 +19,4 @@ export { Migration018LastStandHp } from './Migration018LastStandHp.js';
 export { Migration019SearingLightDisposition } from './Migration019SearingLightDisposition.js';
 export { Migration020DicePoolBackfill } from './Migration020DicePoolBackfill.js';
 export { Migration021RagePoolActivation } from './Migration021RagePoolActivation.js';
+export { Migration022CelestialSavingThrow } from './Migration022CelestialSavingThrow.js';
