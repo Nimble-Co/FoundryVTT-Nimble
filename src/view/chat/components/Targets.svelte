@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
 	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokenHoverHighlight.js';

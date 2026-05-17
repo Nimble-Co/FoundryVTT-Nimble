@@ -36,18 +36,6 @@ function removeAllRings(): void {
 
 function addRingToToken(token: TokenWithHover): void {
 	if (typeof token.addChild !== 'function') return;
-	const PIXI = (
-		globalThis as unknown as {
-			PIXI?: {
-				Graphics: new () => {
-					name: string;
-					lineStyle(width: number, color: number, alpha: number): void;
-					drawCircle(x: number, y: number, radius: number): void;
-				};
-			};
-		}
-	).PIXI;
-	if (!PIXI?.Graphics) return;
 	const g = new PIXI.Graphics();
 	g.name = HOVER_RING_NAME;
 	const w = (token.w as number | undefined) ?? 100;
