@@ -68,7 +68,10 @@
 				{@const isSelected = Array.isArray(selectedAbilityScores)
 					? selectedAbilityScores.includes(abilityKey)
 					: selectedAbilityScores === abilityKey}
-				{@const isAtMax = (characterClass?.ASI?.[abilityKey] ?? 0) >= 5}
+				{@const isAtMax =
+					(document.system.abilities[abilityKey]?.baseValue ?? 0) +
+						(characterClass?.ASI?.[abilityKey] ?? 0) >=
+					5}
 				<label
 					class="nimble-stat-selection__option"
 					class:nimble-stat-selection__option--selected={isSelected}

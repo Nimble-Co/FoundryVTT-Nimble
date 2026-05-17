@@ -1,6 +1,6 @@
 import {
-	ClassResourceManager,
 	type ClassResourceItem,
+	ClassResourceManager,
 } from '../../managers/ClassResourceManager.js';
 import type { NimbleClassData } from '../../models/item/ClassDataModel.js';
 import type { NimbleCharacter } from '../actor/character.js';
@@ -8,6 +8,8 @@ import { NimbleBaseItem } from './base.svelte.js';
 
 export class NimbleClassItem extends NimbleBaseItem {
 	declare ASI: Record<string, number>;
+
+	declare totalASI: Record<string, number>;
 
 	declare hitDice: { size: number; total: number };
 
@@ -36,24 +38,28 @@ export class NimbleClassItem extends NimbleBaseItem {
 
 		this.resources = new ClassResourceManager(this as unknown as ClassResourceItem);
 
-		this.ASI = Object.entries(this.system.abilityScoreData ?? {}).reduce(
-			(acc, [level, data]) => {
-				if (data.type !== 'statIncrease') return acc;
-				if (Number.parseInt(level, 10) > this.system.classLevel) return acc;
-				if (data.value.length === 0) return acc;
+		const asiAccumulator = (filterByLevel: boolean) =>
+			Object.entries(this.system.abilityScoreData ?? {}).reduce(
+				(acc, [level, data]) => {
+					if (data.type !== 'statIncrease') return acc;
+					if (filterByLevel && Number.parseInt(level, 10) > this.system.classLevel) return acc;
+					if (data.value.length === 0) return acc;
 
-				// Handle both single ability scores and arrays (for capstone)
-				const values = Array.isArray(data.value) ? data.value : [data.value];
+					// Handle both single ability scores and arrays (for capstone)
+					const values = Array.isArray(data.value) ? data.value : [data.value];
 
-				for (const abilityKey of values) {
-					acc[abilityKey] ??= 0;
-					acc[abilityKey] += 1;
-				}
+					for (const abilityKey of values) {
+						acc[abilityKey] ??= 0;
+						acc[abilityKey] += 1;
+					}
 
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
+					return acc;
+				},
+				{} as Record<string, number>,
+			);
+
+		this.ASI = asiAccumulator(true);
+		this.totalASI = asiAccumulator(false);
 
 		this.maxHp =
 			CONFIG.NIMBLE.startingHpByHitDieSize[this.system.hitDieSize] +
