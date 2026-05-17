@@ -1,6 +1,7 @@
 <script>
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
+	import { tokenHoverIn, tokenHoverOut } from '../../../utils/tokenHoverHighlight.js';
 
 	function addSelectedTokensAsTargets() {
 		messageDocument.addSelectedTokensAsTargets();
@@ -41,20 +42,6 @@
 
         ${armorEffect}
     `;
-	}
-
-	async function handleTokenHighlight(event, tokenDocument, mode) {
-		event.preventDefault();
-
-		const token = tokenDocument.object;
-
-		if (!token || !token.isVisible || token.controlled) return;
-
-		if (mode === 'enter') {
-			token._onHoverIn(event, { hoverOutOthers: true });
-		} else {
-			token._onHoverOut(event);
-		}
 	}
 
 	async function prepareTargets(targetIDs) {
@@ -107,8 +94,8 @@
 			{#each tokens as token}
 				<li
 					class="nimble-card"
-					onmouseenter={(event) => handleTokenHighlight(event, token, 'enter')}
-					onmouseleave={(event) => handleTokenHighlight(event, token, 'leave')}
+					onmouseenter={(event) => tokenHoverIn(token.object, event)}
+					onmouseleave={(event) => tokenHoverOut(token.object, event)}
 				>
 					<img
 						class="nimble-card__img"

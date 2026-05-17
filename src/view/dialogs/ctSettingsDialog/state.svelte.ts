@@ -5,6 +5,7 @@ import {
 	getCombatTrackerCtCardSizeLevel,
 	getCombatTrackerCtLeftToRightOrdering,
 	getCombatTrackerCtWidthLevel,
+	getCombatTrackerHoverColor,
 	getCombatTrackerNonPlayerHpBarEnabled,
 	getCombatTrackerNonPlayerHpBarTextMode,
 	getCombatTrackerPlayerHpBarTextMode,
@@ -12,6 +13,7 @@ import {
 	getCombatTrackerResourceDrawerHoverEnabled,
 	isCombatTrackerActionDiceColorSettingKey,
 	isCombatTrackerCardSizeLevelSettingKey,
+	isCombatTrackerHoverColorSettingKey,
 	isCombatTrackerLeftToRightOrderingSettingKey,
 	isCombatTrackerNonPlayerHpBarEnabledSettingKey,
 	isCombatTrackerNonPlayerHpBarTextModeSettingKey,
@@ -24,6 +26,7 @@ import {
 	setCombatTrackerCtCardSizeLevel,
 	setCombatTrackerCtLeftToRightOrdering,
 	setCombatTrackerCtWidthLevel,
+	setCombatTrackerHoverColor,
 	setCombatTrackerNonPlayerHpBarEnabled,
 	setCombatTrackerNonPlayerHpBarTextMode,
 	setCombatTrackerPlayerHpBarTextMode,
@@ -92,6 +95,8 @@ export class CtSettingsDialogState {
 	actionColor = $state(getCombatTrackerActionDiceColor());
 
 	reactionColor = $state(getCombatTrackerReactionColor());
+
+	hoverColor = $state(getCombatTrackerHoverColor());
 
 	leftToRightOrdering = $state(getCombatTrackerCtLeftToRightOrdering());
 
@@ -262,6 +267,12 @@ export class CtSettingsDialogState {
 		this.persistCtSetting('reaction color', setCombatTrackerReactionColor(normalizedColor));
 	};
 
+	applyHoverColor = (color: string): void => {
+		const normalizedColor = normalizeHexColor(color);
+		this.hoverColor = normalizedColor;
+		this.persistCtSetting('hover color', setCombatTrackerHoverColor(normalizedColor));
+	};
+
 	mount(): void {
 		this.refreshCombatPermissionState();
 		this.sliderPreviewGlobalPointerUpListener = () => {
@@ -318,6 +329,9 @@ export class CtSettingsDialogState {
 			}
 			if (isCombatTrackerReactionColorSettingKey(settingKey)) {
 				this.reactionColor = getCombatTrackerReactionColor();
+			}
+			if (isCombatTrackerHoverColorSettingKey(settingKey)) {
+				this.hoverColor = getCombatTrackerHoverColor();
 			}
 			if (isCombatTrackerLeftToRightOrderingSettingKey(settingKey)) {
 				this.leftToRightOrdering = getCombatTrackerCtLeftToRightOrdering();

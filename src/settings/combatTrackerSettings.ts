@@ -15,6 +15,7 @@ export const COMBAT_TRACKER_WIDTH_LEVEL_SETTING_KEY = 'combatTrackerCtWidthLevel
 export const COMBAT_TRACKER_CARD_SIZE_LEVEL_SETTING_KEY = 'combatTrackerCtCardSizeLevel';
 export const COMBAT_TRACKER_ACTION_DICE_COLOR_SETTING_KEY = 'combatTrackerCtActionDiceColor';
 export const COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY = 'combatTrackerCtReactionColor';
+export const COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY = 'combatTrackerCtHoverColor';
 export const COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY =
 	'combatTrackerCtLeftToRightOrdering';
 export const COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME = 'nimble:ct-client-setting-updated';
@@ -53,6 +54,7 @@ const DEFAULT_CT_WIDTH_LEVEL_SETTING = 5;
 const DEFAULT_CT_CARD_SIZE_LEVEL_SETTING = 5;
 const DEFAULT_CT_ACTION_DICE_COLOR_SETTING = '#ffffff';
 const DEFAULT_CT_REACTION_COLOR_SETTING = '#4fc3f7';
+const DEFAULT_CT_HOVER_COLOR_SETTING = '#33bc4e';
 const DEFAULT_CT_LEFT_TO_RIGHT_ORDERING_SETTING = false;
 const DEFAULT_CURRENT_TURN_ANIMATION_SETTINGS: CurrentTurnAnimationSettings = {
 	pulseAnimation: true,
@@ -74,6 +76,7 @@ const ANIMATION_SLIDER_MIN = 0;
 const ANIMATION_SLIDER_MAX = 100;
 const CT_ACTION_DICE_COLOR_CSS_VAR = '--nimble-ct-action-die-color';
 const CT_REACTION_COLOR_CSS_VAR = '--nimble-ct-reaction-color';
+const CT_HOVER_COLOR_CSS_VAR = '--nimble-ct-hover-color';
 type CurrentTurnAnimationSettingKey =
 	(typeof CURRENT_TURN_ANIMATION_SETTING_KEYS)[keyof typeof CURRENT_TURN_ANIMATION_SETTING_KEYS];
 const CURRENT_TURN_ANIMATION_SETTING_KEY_SET = new Set<CurrentTurnAnimationSettingKey>(
@@ -169,6 +172,12 @@ function applyCtReactionColorCssVariable(value: unknown): void {
 	if (typeof document === 'undefined') return;
 	const normalizedColor = normalizeHexColor(value);
 	document.documentElement.style.setProperty(CT_REACTION_COLOR_CSS_VAR, normalizedColor);
+}
+
+function applyCtHoverColorCssVariable(value: unknown): void {
+	if (typeof document === 'undefined') return;
+	const normalizedColor = normalizeHexColor(value);
+	document.documentElement.style.setProperty(CT_HOVER_COLOR_CSS_VAR, normalizedColor);
 }
 
 function dispatchCtClientSettingUpdated(settingKey: string): void {
@@ -304,6 +313,19 @@ export function registerCombatTrackerSettings(): void {
 		},
 	});
 
+	registerWorldSetting(COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY, {
+		name: 'Combat Tracker Hover Color',
+		hint: 'Choose your personal token hover highlight color',
+		scope: 'client',
+		config: false,
+		type: String,
+		default: DEFAULT_CT_HOVER_COLOR_SETTING,
+		onChange: (value) => {
+			applyCtHoverColorCssVariable(value);
+			dispatchCtClientSettingUpdated(COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY);
+		},
+	});
+
 	registerWorldSetting(COMBAT_TRACKER_LEFT_TO_RIGHT_ORDERING_SETTING_KEY, {
 		name: 'Combat Tracker Left-to-Right Ordering',
 		hint: 'Display combatants in fixed left-to-right order instead of centering the active combatant',
@@ -392,6 +414,7 @@ export function registerCombatTrackerSettings(): void {
 
 	applyCtActionDiceColorCssVariable(getCombatTrackerActionDiceColor());
 	applyCtReactionColorCssVariable(getCombatTrackerReactionColor());
+	applyCtHoverColorCssVariable(getCombatTrackerHoverColor());
 }
 
 export function getCombatTrackerPlayersCanExpandMonsterCards(): boolean {
@@ -548,6 +571,18 @@ export function isCombatTrackerReactionColorSettingKey(settingKey: unknown): boo
 	if (typeof settingKey !== 'string') return false;
 	if (settingKey === COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY) return true;
 	return settingKey === `nimble.${COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY}`;
+}
+
+export function getCombatTrackerHoverColor(): string {
+	return normalizeHexColor(
+		game.settings.get('nimble' as 'core', COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY as 'rollMode'),
+	);
+}
+
+export function isCombatTrackerHoverColorSettingKey(settingKey: unknown): boolean {
+	if (typeof settingKey !== 'string') return false;
+	if (settingKey === COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY) return true;
+	return settingKey === `nimble.${COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY}`;
 }
 
 export function getCurrentTurnAnimationSettings(): CurrentTurnAnimationSettings {
@@ -709,6 +744,16 @@ export async function setCombatTrackerReactionColor(value: string): Promise<void
 	await game.settings.set(
 		SYSTEM_ID as 'core',
 		COMBAT_TRACKER_REACTION_COLOR_SETTING_KEY as 'rollMode',
+		normalizedColor as never,
+	);
+}
+
+export async function setCombatTrackerHoverColor(value: string): Promise<void> {
+	const normalizedColor = normalizeHexColor(value);
+	applyCtHoverColorCssVariable(normalizedColor);
+	await game.settings.set(
+		'nimble' as 'core',
+		COMBAT_TRACKER_HOVER_COLOR_SETTING_KEY as 'rollMode',
 		normalizedColor as never,
 	);
 }

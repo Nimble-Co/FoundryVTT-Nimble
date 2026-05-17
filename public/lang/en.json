@@ -1144,6 +1144,7 @@
 				"colorsSection": "Colors",
 				"actionColor": "Action Color",
 				"reactionColor": "Reaction Color",
+				"hoverColor": "Hover Color",
 				"colorWhite": "White",
 				"colorGreen": "Green",
 				"colorRed": "Red",

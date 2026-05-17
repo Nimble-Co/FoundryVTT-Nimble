@@ -14,6 +14,7 @@ import { isCombatantDead } from '#utils/isCombatantDead.js';
 import { isCombatStarted } from '#utils/isCombatStarted.js';
 import localize from '#utils/localize.js';
 import { queueCombatantMutationWithFreshDocument } from '#utils/queueCombatantMutationWithFreshDocument.js';
+import { tokenHoverIn, tokenHoverOut } from '#utils/tokenHoverHighlight.js';
 import CtSettingsDialogComponent from '#view/dialogs/CtSettingsDialog.svelte';
 import { COMBAT_TRACKER_CLIENT_SETTING_UPDATED_EVENT_NAME } from '../../settings/combatTrackerSettings.js';
 import {
@@ -517,41 +518,16 @@ export function createCtTopTrackerState() {
 		event: MouseEvent,
 		combatant: Combatant.Implementation,
 	): void {
-		console.log('[Nimble][CT] mouseenter', {
-			combatantId: getCombatantId(combatant),
-			canvasReady: canvas?.ready,
-		});
-		if (!canvas?.ready) {
-			console.log('[Nimble][CT] mouseenter: canvas not ready');
-			return;
-		}
-		const token = getCombatantToken(combatant);
-		console.log('[Nimble][CT] mouseenter token', {
-			token,
-			isVisible: token?.isVisible,
-			controlled: token?.controlled,
-			hasHoverIn: typeof (token as unknown as { _onHoverIn?: unknown })._onHoverIn,
-		});
-		if (!token || token.isVisible === false || token.controlled) {
-			console.log('[Nimble][CT] mouseenter: skipped (no token / not visible / controlled)');
-			return;
-		}
-		(
-			token as unknown as {
-				_onHoverIn?: (e: MouseEvent, opts?: { hoverOutOthers?: boolean }) => void;
-			}
-		)._onHoverIn?.(event, { hoverOutOthers: true });
+		if (!canvas?.ready) return;
+		tokenHoverIn(getCombatantToken(combatant), event);
 	}
 
 	function handleCombatantCardMouseLeave(
 		event: MouseEvent,
 		combatant: Combatant.Implementation,
 	): void {
-		console.log('[Nimble][CT] mouseleave', { combatantId: getCombatantId(combatant) });
 		if (!canvas?.ready) return;
-		const token = getCombatantToken(combatant);
-		if (!token || token.isVisible === false || token.controlled) return;
-		(token as unknown as { _onHoverOut?: (e: MouseEvent) => void })._onHoverOut?.(event);
+		tokenHoverOut(getCombatantToken(combatant), event);
 	}
 
 	function canRemoveCombatant(): boolean {
