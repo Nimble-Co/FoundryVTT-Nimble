@@ -216,6 +216,26 @@
 	--nimble-dice-pool-tracker-badge-background: #fff;
 	--nimble-dice-pool-tracker-total-border-color: hsl(220, 10%, 78%);
 
+	/** POOL NODE (chat card) **/
+	--nimble-pool-node-face-background: hsl(210, 65%, 92%);
+	--nimble-pool-node-face-border-color: hsl(210, 65%, 46%);
+	--nimble-pool-node-face-text-color: hsl(210, 65%, 30%);
+	--nimble-pool-node-delta-color: hsl(150, 50%, 35%);
+
+	/** POOL SPEND (activation dialog) **/
+	--nimble-pool-spend-icon-color: hsl(210, 65%, 56%);
+	--nimble-pool-spend-die-border-color: hsl(210, 65%, 46%);
+	--nimble-pool-spend-die-text-color: hsl(210, 65%, 30%);
+	--nimble-pool-spend-die-selected-background: hsl(0, 60%, 50%);
+	--nimble-pool-spend-die-selected-border-color: hsl(0, 60%, 38%);
+	--nimble-pool-spend-die-selected-text-color: white;
+	--nimble-pool-spend-auto-icon-color: hsl(45, 75%, 40%);
+	--nimble-pool-spend-auto-face-background: color-mix(in srgb, hsl(45, 80%, 50%) 18%, transparent);
+	--nimble-pool-spend-auto-face-border-color: hsl(45, 80%, 50%);
+	--nimble-pool-spend-auto-face-text-color: hsl(45, 70%, 30%);
+	--nimble-pool-spend-auto-total-color: hsl(45, 80%, 35%);
+	--nimble-pool-spend-total-color: hsl(150, 55%, 35%);
+
 	/** ANIMATION **/
 	--nimble-standard-transition: all 0.15s ease-in-out;
 	--nimble-slow-transition: all 0.25s ease-in-out;

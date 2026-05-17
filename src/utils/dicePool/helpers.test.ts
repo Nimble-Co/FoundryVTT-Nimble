@@ -345,6 +345,8 @@ describe('applyModifiersToDefinition', () => {
 		max: 3,
 		initial: 'zero',
 		refills: [],
+		consumption: 'manual',
+		bonusOnAttackDelivery: null,
 	};
 
 	it('returns definition unchanged when no modifiers', () => {
@@ -422,6 +424,8 @@ describe('reconcileDicePoolState', () => {
 		max: 3,
 		initial: 'zero',
 		refills: [],
+		consumption: 'manual',
+		bonusOnAttackDelivery: null,
 	};
 
 	it('produces fresh state with empty faces when no existing state', () => {
@@ -605,6 +609,8 @@ describe('areDicePoolMapsEqual', () => {
 		max: 3,
 		faces: [2, 4],
 		refills: [],
+		consumption: 'manual',
+		bonusOnAttackDelivery: null,
 	};
 
 	it('returns true for matching maps', () => {
