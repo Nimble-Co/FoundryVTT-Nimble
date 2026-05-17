@@ -513,6 +513,34 @@ export function createCtTopTrackerState() {
 		void pingCombatantToken(combatant);
 	}
 
+	function handleCombatantCardMouseEnter(
+		event: MouseEvent,
+		combatant: Combatant.Implementation,
+	): void {
+		if (!canvas?.ready) return;
+		const token = getCombatantToken(combatant) as {
+			isVisible?: boolean;
+			controlled?: boolean;
+			_onHoverIn?: (event: MouseEvent, options?: { hoverOutOthers?: boolean }) => void;
+		} | null;
+		if (!token || token.isVisible === false || token.controlled) return;
+		token._onHoverIn?.(event, { hoverOutOthers: true });
+	}
+
+	function handleCombatantCardMouseLeave(
+		event: MouseEvent,
+		combatant: Combatant.Implementation,
+	): void {
+		if (!canvas?.ready) return;
+		const token = getCombatantToken(combatant) as {
+			isVisible?: boolean;
+			controlled?: boolean;
+			_onHoverOut?: (event: MouseEvent) => void;
+		} | null;
+		if (!token || token.isVisible === false || token.controlled) return;
+		token._onHoverOut?.(event);
+	}
+
 	function canRemoveCombatant(): boolean {
 		return Boolean(game.user?.isGM);
 	}
@@ -1589,6 +1617,8 @@ export function createCtTopTrackerState() {
 		handleCombatantCardClick,
 		handleCombatantCardContextMenu,
 		handleCombatantCardKeyDown,
+		handleCombatantCardMouseEnter,
+		handleCombatantCardMouseLeave,
 		canRemoveCombatant,
 		handleRemoveCombatant,
 		handleMonsterStackClick,

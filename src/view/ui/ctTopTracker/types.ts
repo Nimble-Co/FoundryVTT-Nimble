@@ -47,6 +47,8 @@ export interface CtWidthPreviewEventDetail {
 export interface CanvasTokenLike {
 	center?: { x: number; y: number } | null;
 	document?: { id?: string | null } | null;
+	isVisible?: boolean;
+	controlled?: boolean;
 }
 
 export type CombatWithDrop = Combat & {
