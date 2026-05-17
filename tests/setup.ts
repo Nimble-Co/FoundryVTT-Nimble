@@ -13,6 +13,22 @@ import {
 	uiMock,
 } from './mocks/foundry.js';
 
+// Mock Foundry's String.prototype.slugify extension.
+// Foundry VTT adds this to String.prototype at runtime; the test environment
+// does not load Foundry, so any source code that calls .slugify() will throw
+// without this polyfill.
+(String.prototype as unknown as { slugify(opts?: { strict?: boolean }): string }).slugify =
+	function slugify(this: string, { strict = false }: { strict?: boolean } = {}): string {
+		const clean = this.normalize('NFD')
+			.replace(/\p{M}/gu, '')
+			.toLowerCase()
+			.replace(/'/g, '')
+			.replace(/[^a-zA-Z0-9\s-]/g, ' ')
+			.trim()
+			.replace(/[\s-]+/g, '-');
+		return strict ? clean.replace(/[^a-zA-Z0-9-]/g, '') : clean;
+	};
+
 // Mock Foundry global object required setup before importing config
 // CRITICAL: These document classes must be mocked BEFORE any code tries to extend them
 // They are global Foundry classes, not part of the foundry object
