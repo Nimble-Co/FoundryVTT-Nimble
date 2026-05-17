@@ -121,7 +121,7 @@
 		--nimble-card-title-justification: start;
 		--nimble-heading-justification: start;
 
-		--nimble-document-list-columns: repeat(3, 1fr);
+		--nimble-document-list-columns: repeat(auto-fill, minmax(260px, 1fr));
 		--nimble-document-list-gap: 0.375rem;
 
 		// Image stretches flush to card top/bottom; text rows get vertical breathing room
