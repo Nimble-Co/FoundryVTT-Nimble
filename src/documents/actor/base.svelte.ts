@@ -149,12 +149,19 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	): Promise<Actor.Stored | null | undefined> {
 		const { parent, pack, types } = context ?? {};
 
+		// Use folder from Foundry data if provided, otherwise fall back to the active folder in the sidebar
+		const folderId =
+			(data?.folder as string | null | undefined) ??
+			(ui.actors as unknown as { folder?: { id?: string } | null })?.folder?.id ??
+			null;
+
 		const { default: ActorCreationDialog } = await import(
 			'../dialogs/ActorCreationDialog.svelte.js'
 		);
 		const dialog = new ActorCreationDialog(
 			{
 				...data,
+				folder: folderId,
 				parent,
 				pack,
 				types,
