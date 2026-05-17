@@ -10,14 +10,12 @@
 
 	let { actor, dialog, item, rollMode }: ItemActivationConfigDialogProps = $props();
 
-	const state = createItemActivationConfigDialogState(
-		untrack(() => ({
-			actor,
-			item,
-			initialRollMode: rollMode,
-			hideRollsDefault: !!game.settings.get('nimble', 'hideRolls'),
-		})),
-	);
+	const state = createItemActivationConfigDialogState({
+		actor: () => actor,
+		item: () => item,
+		initialRollMode: untrack(() => rollMode),
+		hideRollsDefault: !!game.settings.get('nimble', 'hideRolls'),
+	});
 
 	function onSubmit() {
 		if (state.situationalModifiers !== '') {
