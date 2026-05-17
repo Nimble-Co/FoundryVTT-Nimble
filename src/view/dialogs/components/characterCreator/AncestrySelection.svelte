@@ -85,7 +85,6 @@
 
 						<li class="u-semantic-only">
 							<DocumentCard
-								style={metadata ? '' : '--nimble-card-content-grid: "img title";'}
 								document={ancestry}
 								handler={handleAncestrySelection}
 								{metadata}
@@ -119,9 +118,25 @@
 		--nimble-card-column-dimensions: 2.5rem 1fr;
 		--nimble-card-row-dimensions: repeat(2, max-content);
 		--nimble-card-width: 100%;
+		--nimble-card-title-justification: start;
+		--nimble-heading-justification: start;
 
 		--nimble-document-list-columns: repeat(3, 1fr);
 		--nimble-document-list-gap: 0.375rem;
+
+		// Image stretches flush to card top/bottom; text gets vertical breathing room
+		:global(.nimble-card__img) {
+			height: auto;
+			align-self: stretch;
+		}
+
+		:global(.nimble-card__title) {
+			padding-top: 0.375rem;
+		}
+
+		:global(.nimble-card__meta) {
+			padding-bottom: 0.375rem;
+		}
 	}
 
 	.nimble-ancestries-header-icon {

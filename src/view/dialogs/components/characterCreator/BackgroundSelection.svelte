@@ -2,7 +2,6 @@
 	import { getContext } from 'svelte';
 	import Hint from '../../../components/Hint.svelte';
 	import prepareBackgroundTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareBackgroundTooltip.js';
-	import getDocumentSourceLabel from '../../../../utils/getDocumentSourceLabel.js';
 	import DocumentCard from './DocumentCard.svelte';
 
 	let { active, backgrounds, selectedBackground = $bindable() } = $props();
@@ -41,12 +40,10 @@
 
 		<ul class="nimble-document-list">
 			{#each backgrounds as background}
-				{@const sourceLabel = getDocumentSourceLabel(background.uuid)}
 				<li class="u-semantic-only">
 					<DocumentCard
 						document={background}
 						handler={async (background) => (selectedBackground = await fromUuid(background.uuid))}
-						{sourceLabel}
 						getTooltip={prepareBackgroundTooltip}
 					/>
 				</li>

@@ -45,9 +45,9 @@
 				{:else}
 					Unknown
 				{/if}
-			</div>
 
-			<span class="nimble-card__source-label">{sourceLabel}</span>
+				<span class="nimble-card__source-label">{sourceLabel}</span>
+			</div>
 		</button>
 	</li>
 {/snippet}
@@ -109,34 +109,27 @@
 		--nimble-heading-margin: 0.5rem 0 0.25rem 0;
 
 		overflow-y: hidden;
-
-		.nimble-card {
-			position: relative;
-		}
-
-		.nimble-card__source-label {
-			position: absolute;
-			top: 0.1875rem;
-			right: 0.25rem;
-			padding: 0.0625rem 0.25rem;
-			font-size: var(--nimble-xxs-text);
-			font-weight: 600;
-			line-height: 1.4;
-			color: var(--nimble-medium-text-color);
-			background: var(--nimble-card-background-color);
-			border: 1px solid var(--nimble-card-border-color);
-			border-radius: 2px;
-			pointer-events: none;
-		}
 	}
 
 	.nimble-card__complexity {
 		display: flex;
 		justify-content: center;
+		align-items: center;
 		gap: 0.5rem;
 		width: 100%;
 		margin-block: 0.5rem;
 		font-weight: 900;
+
+		.nimble-card__source-label {
+			margin-inline-start: auto;
+			padding: 0.0625rem 0.25rem;
+			font-size: var(--nimble-xxs-text);
+			font-weight: 600;
+			line-height: 1.4;
+			color: var(--nimble-medium-text-color);
+			border: 1px solid var(--nimble-card-border-color);
+			border-radius: 2px;
+		}
 	}
 
 	.nimble-list-option {
