@@ -101,7 +101,10 @@
 			]
 		},
 		"school": "wind",
-		"tier": 0
+		"tier": 0,
+		"classes": [
+			"songweaver"
+		]
 	},
 	"effects": [],
 	"folder": null,
