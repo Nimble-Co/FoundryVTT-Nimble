@@ -72,9 +72,50 @@
 		return bonusesByType;
 	});
 
+	// Collect movement grants from grantMovement rules, grouped by movement type
+	let movementGrantsByType = $derived.by(() => {
+		const grantsByType = {};
+		const rollData = document.getRollData?.() ?? {};
+		const grantMaxByType = {};
+
+		for (const item of document.items ?? []) {
+			if (!item.rules) continue;
+
+			for (const rule of item.rules.values()) {
+				if (rule.type !== 'grantMovement') continue;
+				if (rule.disabled) continue;
+				if (rule.test && !rule.test()) continue;
+
+				const value = getDeterministicBonus(rule.speed, rollData) ?? 0;
+				if (value <= 0) continue;
+
+				const mode = rule.mode;
+				const bestGrant = grantMaxByType[mode] ?? 0;
+
+				// Only show the highest grant per mode
+				if (value > bestGrant) {
+					grantMaxByType[mode] = value;
+					grantsByType[mode] = [
+						{
+							itemName: rule.label || item.name,
+							value,
+						},
+					];
+				}
+			}
+		}
+
+		return grantsByType;
+	});
+
 	// Get bonuses for a specific movement type
 	function getBonusesForType(type) {
 		return speedBonusesByType[type] ?? [];
+	}
+
+	// Get grants for a specific movement type
+	function getGrantsForType(type) {
+		return movementGrantsByType[type] ?? [];
 	}
 
 	// Get total bonus for a specific movement type
@@ -102,10 +143,11 @@
 			{@const baseValue = baseMovement[key] ?? 0}
 			{@const currentValue = currentMovement[key] ?? 0}
 			{@const bonuses = getBonusesForType(key)}
+			{@const grants = getGrantsForType(key)}
 			{@const totalBonus = getTotalBonusForType(key)}
-			{@const hasBonus = totalBonus !== 0}
+			{@const hasModifiers = totalBonus !== 0 || grants.length > 0}
 
-			<div class="movement-card" class:movement-card--has-bonus={hasBonus}>
+			<div class="movement-card" class:movement-card--has-bonus={hasModifiers}>
 				<div class="movement-card__header">
 					<i class="movement-card__icon {icon}"></i>
 					<span class="movement-card__label">{label}</span>
@@ -123,8 +165,16 @@
 						<span class="movement-card__unit">{localize('NIMBLE.movementConfig.spaces')}</span>
 					</div>
 
-					{#if hasBonus}
+					{#if hasModifiers}
 						<div class="movement-card__bonus-list">
+							{#each grants as grant}
+								<div class="movement-card__bonus-item">
+									<span class="movement-card__bonus-item-name">{grant.itemName}</span>
+									<span class="movement-card__bonus-value">
+										= {grant.value}
+									</span>
+								</div>
+							{/each}
 							{#each bonuses as bonus}
 								<div class="movement-card__bonus-item">
 									<span class="movement-card__bonus-item-name">{bonus.itemName}</span>

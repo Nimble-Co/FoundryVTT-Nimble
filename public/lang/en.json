@@ -623,6 +623,7 @@
 			"combatMana": "Combat Mana",
 			"conditionImmunity": "Condition Immunity",
 			"damageBonus": "Damage Bonus",
+			"grantMovement": "Grant Movement",
 			"dicePool": "Dice Pool",
 			"grantItem": "Item",
 			"grantProficiency": "Proficiency",
@@ -779,6 +780,17 @@
 						"label": "Value",
 						"hint": "Amount used by the mode. Flat or formula. Ignored when mode is \"refresh\"."
 					}
+				}
+			},
+			"grantMovement": {
+				"description": "Grant a base movement mode (fly, climb, swim, or burrow). Multiple grants of the same mode take the highest base; speed bonuses stack on top.",
+				"mode": {
+					"label": "Movement mode",
+					"hint": "Which movement mode to grant."
+				},
+				"speed": {
+					"label": "Speed",
+					"hint": "Base speed for this mode. Use a formula like @attributes.movement.walk to match walk speed, or a number like 12."
 				}
 			},
 			"grantItem": {
