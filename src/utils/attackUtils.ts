@@ -93,7 +93,7 @@ function matchesBonus(
 	if (bonus.delivery !== 'any' && bonus.delivery !== delivery) return false;
 	if (bonus.source !== 'any' && bonus.source !== source) return false;
 	if (bonus.damageType !== '' && damageType && bonus.damageType !== damageType) return false;
-	if (bonus.targetCondition) {
+	if (bonus.targetCondition && Object.keys(bonus.targetCondition).length > 0) {
 		if (!targetDomain) return false;
 		// Predicate is reconstructed per call. At typical bonus counts (1–5) this
 		// is negligible; caching on the entry is an option if profiling shows need.

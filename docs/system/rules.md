@@ -41,6 +41,91 @@ Additional event hooks (combat, save, rest, item-used, etc.) are dispatched from
 - **Forward declarations**: Use local interfaces for `NimbleBaseActor` / `NimbleBaseItem` to avoid circular imports — see the pattern in `base.ts`.
 - **Mutate via `foundry.utils.setProperty()`**: e.g., `foundry.utils.setProperty(actor.system, 'abilities.str.bonus', newValue)`.
 
+## Predicates & Domain Tags
+
+Every rule has a `predicate` field (a `PredicateField`) that gates whether the rule applies. When `this.test()` is called, the predicate is evaluated against the actor's **domain** — a `Set<string>` of tags describing the actor's current state.
+
+### Predicate syntax
+
+Three forms are supported:
+
+```jsonc
+// Atomic — key:value must exist in domain
+{ "armor": "unarmored" }           // domain.has("armor:unarmored")
+
+// Array OR — at least one value must match
+{ "armor": ["unarmored", "light"] } // domain.has("armor:unarmored") || domain.has("armor:light")
+
+// Presence-check (AND composition) — full tag must exist in domain
+{ "self:bloodied": true, "self:concentrating": true }  // both must be present
+```
+
+All entries in a predicate are AND'd together. The presence-check form (`true`) enables AND composition for tags under the same namespace (e.g. multiple `self:*` conditions). Only `true` is valid — `false` is rejected (there is no "not-present" semantics).
+
+### Domain tags
+
+Tags are populated during `_populateDerivedTags()` in actor data prep, before rules run.
+
+#### Tags on all actors
+
+| Tag | Source | When |
+|-----|--------|------|
+| `size:<category>` | `sizeCategory` attribute | Always |
+| `disposition:<type>` | Token disposition | Always |
+| `enemiesAdjacent:<count>` | Adjacency sync | In combat |
+| `enemiesAdjacent:most` | Adjacency sync | Has most adjacent enemies |
+| `self:bloodied` | `actor.statuses` | Bloodied status active |
+| `self:dying` | `actor.statuses` (dying) | PC/Hero at 0 HP with wounds remaining |
+| `self:lastStand` | `actor.statuses` (lastStand) | Solo/Legendary monster phase change at 0 HP |
+| `self:fullHp` | HP value/max | HP equals max |
+| `self:concentrating` | `actor.statuses` | Concentration status active |
+| `target:bloodied` | `actor.statuses` | Bloodied status active (for `targetCondition`) |
+| `target:concentrating` | `actor.statuses` | Concentration status active (for `targetCondition`) |
+
+#### Character-only tags
+
+| Tag | Source | When |
+|-----|--------|------|
+| `level:<n>` | Class data | Always |
+| `class:<identifier>` | Class items | Per class |
+| `ancestry:<identifier>` | Ancestry item | If present |
+| `background:<identifier>` | Background item | If present |
+| `armor:equipped` / `armor:unarmored` | Equipment scan | Has armor with armorClass rules |
+| `self:shield` / `self:noShield` | Equipment scan | Has shield item equipped |
+| `proficiency:armor:<type>` | Proficiencies | Per armor proficiency |
+| `proficiency:weapon:<type>` | Proficiencies | Per weapon proficiency |
+| `proficiency:language:<type>` | Proficiencies | Per language |
+| `<ability>:<mod>` | Ability scores | After ability mods computed |
+
+#### Actor type tags
+
+| Tag | Actor type |
+|-----|-----------|
+| `solo-monster` | Solo Monster |
+| `minion` | Minion |
+
+### `targetCondition` on `damageBonus`
+
+The `damageBonus` rule has an optional `targetCondition` field — a predicate evaluated against the **target's** domain at activation time (not the rule owner's domain). This enables bonuses that gate on target state:
+
+```jsonc
+{
+  "type": "damageBonus",
+  "value": "@level",
+  "delivery": "any",
+  "source": "any",
+  "targetCondition": { "target": "bloodied" }
+}
+```
+
+`targetCondition` is evaluated via `getTargetDomain()`, which returns only `target:*` tags. This prevents `self:*` tags from the target actor leaking into the evaluation.
+
+When no target is selected, bonuses with `targetCondition` are excluded. Bonuses without `targetCondition` (or with `targetCondition: {}`) always apply regardless of target.
+
+::: tip
+`targetCondition` is only available on `damageBonus`. Other rule types use the standard `predicate` field which evaluates against the rule owner's domain.
+:::
+
 ## RulesManager API
 
 `RulesManager` extends `Map<string, NimbleBaseRule>`:

@@ -283,14 +283,25 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 		// and the system's condition toggle (registerConditionsConfig) round-trips through it.
 		const statuses = this.statuses as Set<string> | undefined;
 		if (statuses) {
-			if (statuses.has(STATUS_EFFECT_IDS.bloodied)) {
+			// Bloodied: check status (canonical) OR HP threshold (failsafe if status
+			// and HP get out of sync, e.g. a code path modifies HP without toggling)
+			const sysData = this.system as unknown as BaseActorSystemData;
+			const hpVal = sysData.attributes.hp.value;
+			const hpMax = sysData.attributes.hp.max;
+			if (
+				statuses.has(STATUS_EFFECT_IDS.bloodied) ||
+				(hpMax > 0 && hpVal > 0 && hpVal <= hpMax / 2)
+			) {
 				this.tags.add('self:bloodied');
 				this.tags.add('target:bloodied');
 			}
-			// self:dying maps to the lastStand status (HP at 0 with wounds remaining).
-			// Named after the fiction term per issue #579, not the implementation.
-			if (statuses.has(STATUS_EFFECT_IDS.lastStand)) {
+			// self:dying = PC/Hero at 0 HP with wounds remaining (the dying condition)
+			if (statuses.has(STATUS_EFFECT_IDS.dying)) {
 				this.tags.add('self:dying');
+			}
+			// self:lastStand = Solo/Legendary monster at 0 HP, triggers phase change
+			if (statuses.has(STATUS_EFFECT_IDS.lastStand)) {
+				this.tags.add('self:lastStand');
 			}
 			if (statuses.has(STATUS_EFFECT_IDS.concentration)) {
 				this.tags.add('self:concentrating');
@@ -298,12 +309,9 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 			}
 		}
 
-		// self:fullHp — HP at maximum
-		const systemData = this.system as unknown as BaseActorSystemData;
-		const { value: hpValue, max: hpMax } = systemData.attributes.hp;
-		if (hpMax > 0 && hpValue >= hpMax) {
-			this.tags.add('self:fullHp');
-		}
+		// self:fullHp is NOT set here — hp.max is derived (not stored) for characters,
+		// so it would be stale at this point. Each actor subclass adds it in their
+		// prepareDerivedData() after HP is finalized.
 
 		if (getAdjacencySyncEnabled()) {
 			const adjacency = this.getFlag(SYSTEM_ID, 'adjacency') as

@@ -893,4 +893,51 @@ describe('targetCondition filtering', () => {
 			getDamageBonusTotal(actor, 'melee', 'weapon', undefined, new Set(['target:fullHp'])),
 		).toBe(0);
 	});
+
+	it('should treat empty targetCondition {} same as null (no target required)', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: {},
+					},
+				],
+			},
+		};
+
+		// Empty {} should not require a target — matches unconditionally
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon')).toBe(5);
+	});
+
+	it('should not match self:* tags through targetCondition (namespace isolation)', () => {
+		const actor = {
+			system: {
+				damageBonuses: [
+					{
+						value: 5,
+						formula: null,
+						damageType: '',
+						delivery: 'any' as const,
+						source: 'any' as const,
+						targetCondition: { self: 'bloodied' },
+					},
+				],
+			},
+		};
+
+		// A target domain with only target:* tags should NOT match a predicate
+		// checking for self:bloodied — that's the attacker's namespace
+		const targetDomain = new Set(['target:bloodied']);
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon', undefined, targetDomain)).toBe(0);
+
+		// Only matches if the domain actually contains self:bloodied
+		// (which getTargetDomain() would never include)
+		const leakyDomain = new Set(['target:bloodied', 'self:bloodied']);
+		expect(getDamageBonusTotal(actor, 'melee', 'weapon', undefined, leakyDomain)).toBe(5);
+	});
 });

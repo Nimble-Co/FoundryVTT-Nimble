@@ -220,10 +220,8 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		// Prepare Class Data
 		this.prepareClassData(actorData);
 
-		// Re-evaluate self:fullHp now that hp.max is computed. Character hp.max is
-		// derived (not stored), so the base _populateDerivedTags check may be stale.
-		// Delete first so the check here is authoritative.
-		this.tags.delete('self:fullHp');
+		// self:fullHp — computed here (not in base _populateDerivedTags) because
+		// character hp.max is derived from class data, not stored.
 		if (
 			actorData.attributes.hp.max > 0 &&
 			actorData.attributes.hp.value >= actorData.attributes.hp.max
