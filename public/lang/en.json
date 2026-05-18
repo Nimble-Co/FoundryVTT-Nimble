@@ -1306,12 +1306,13 @@
 		},
 		"skillsConfig": {
 			"skill": "Skill",
-			"abilityModifier": "Ability Modifier",
-			"skillBonus": "Skill Bonus",
-			"skillPoints": "Skill Points",
+			"abilityModifier": "Abil. Mod",
+			"skillBonus": "Bonus",
+			"skillPoints": "Points",
 			"total": "Total",
-			"decrementSkillPoints": "Decrement Skill Points",
-			"incrementSkillPoints": "Increment Skill Points"
+			"levelUpHistory": "Level-Up History",
+			"levelUpHistorySubtitle": "Points allocated through leveling",
+			"levelLabel": "Level {level}"
 		},
 		"movementConfig": {
 			"gridSpacesNote": "All measurements are in grid spaces.",

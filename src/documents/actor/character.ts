@@ -521,7 +521,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 			`${this.name}: Configure Skills`,
 			CharacterSkillsConfigDialog,
 			{ document: this },
-			{ icon: 'fa-solid fa-wrench', width: 600 },
+			{ icon: 'fa-solid fa-wrench', width: 600, height: 600 },
 		);
 
 		this.#dialogs.configureSkills.setTitle(`${this.name}: Configure Skills`);
