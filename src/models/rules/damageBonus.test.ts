@@ -260,6 +260,80 @@ describe('DamageBonusRule', () => {
 		});
 	});
 
+	describe('targetCondition integration', () => {
+		it('should handle a rule without explicit targetCondition in source data', () => {
+			const actor = createMockActor({ level: 5 });
+			const item = createMockItem(actor);
+
+			// No targetCondition key — ObjectField initializes to {} which
+			// PredicateField converts to an empty Predicate (size: 0).
+			// The getter guard (tc && tc.size > 0) also handles the truly
+			// undefined case defensively, though that path is unreachable
+			// through normal schema initialization.
+			const sourceData = {
+				value: '3',
+				damageType: '',
+				delivery: 'melee',
+				source: 'weapon',
+				disabled: false,
+				label: 'Legacy Rule',
+				id: 'legacy-rule-id',
+				identifier: '',
+				priority: 1,
+				predicate: {},
+				type: 'damageBonus',
+			};
+
+			const rule = new DamageBonusRule(
+				sourceData as foundry.data.fields.SchemaField.CreateData<
+					DamageBonusRule['schema']['fields']
+				>,
+				{ parent: item as unknown as foundry.abstract.DataModel.Any, strict: false },
+			);
+
+			(rule as any).value = '3';
+			(rule as any).damageType = '';
+			(rule as any).delivery = 'melee';
+			(rule as any).source = 'weapon';
+			(rule as any).disabled = false;
+
+			Object.defineProperty(rule, 'item', {
+				get: () => item,
+				configurable: true,
+			});
+
+			Object.defineProperty(rule, '_predicate', {
+				get: () => ({ size: 0 }),
+				configurable: true,
+			});
+
+			// _targetCondition is NOT stubbed — exercises the real getter with missing field
+			expect(() => rule.afterPrepareData()).not.toThrow();
+			expect(actor.system.damageBonuses?.[0]?.targetCondition).toBeNull();
+		});
+
+		it('should serialize a non-empty targetCondition as RawPredicate on the bonus entry', () => {
+			const actor = createMockActor({ level: 5 });
+			const rule = createDamageBonusRule({ value: '3', delivery: 'any', source: 'any' }, actor);
+
+			// Override _targetCondition with a real Predicate-like object
+			const mockPredicate = {
+				size: 1,
+				toObject: () => ({ target: 'bloodied' }),
+			};
+			Object.defineProperty(rule, '_targetCondition', {
+				get: () => mockPredicate,
+				configurable: true,
+			});
+
+			rule.afterPrepareData();
+
+			expect(actor.system.damageBonuses?.[0]?.targetCondition).toEqual({
+				target: 'bloodied',
+			});
+		});
+	});
+
 	describe('schema', () => {
 		it('should define the correct schema fields', () => {
 			const schema = DamageBonusRule.defineSchema();

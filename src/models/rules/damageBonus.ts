@@ -66,6 +66,9 @@ function schema() {
 			hint: 'NIMBLE.rules.damageBonus.source.hint',
 			choices: ['weapon', 'spell', 'any'],
 		}),
+		// Cast: PredicateField extends ObjectField whose constructor typing doesn't
+		// accept label/hint. The renderer reads them off the instance correctly.
+		// Fix the PredicateField constructor typing to remove this cast.
 		targetCondition: new PredicateField({
 			label: 'NIMBLE.rules.damageBonus.targetCondition.label',
 			hint: 'NIMBLE.rules.damageBonus.targetCondition.hint',
@@ -112,8 +115,8 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 	declare delivery: DamageBonusDelivery;
 	declare source: DamageBonusSource;
 
-	private get _targetCondition(): Predicate {
-		return (this as object as { targetCondition: Predicate }).targetCondition;
+	private get _targetCondition(): Predicate | undefined {
+		return (this as object as { targetCondition?: Predicate }).targetCondition;
 	}
 
 	static override defineSchema(): DamageBonusRule.Schema {
@@ -165,8 +168,8 @@ class DamageBonusRule extends NimbleBaseRule<DamageBonusRule.Schema> {
 		if (!item.isEmbedded) return;
 		if (!this.test()) return;
 
-		const targetConditionRaw =
-			this._targetCondition.size > 0 ? this._targetCondition.toObject() : null;
+		const tc = this._targetCondition;
+		const targetConditionRaw = tc && tc.size > 0 ? tc.toObject() : null;
 
 		if (this.isDiceFormula()) {
 			// Dice expression — store raw formula, don't resolve to a number

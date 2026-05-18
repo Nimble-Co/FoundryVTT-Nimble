@@ -278,13 +278,17 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	}
 
 	_populateDerivedTags(): void {
-		// Self-state tags — derived from status effects
+		// Self-state and target-state tags — derived from status effects.
+		// actor.statuses is the canonical source: Foundry syncs it with ActiveEffects,
+		// and the system's condition toggle (registerConditionsConfig) round-trips through it.
 		const statuses = this.statuses as Set<string> | undefined;
 		if (statuses) {
 			if (statuses.has(STATUS_EFFECT_IDS.bloodied)) {
 				this.tags.add('self:bloodied');
 				this.tags.add('target:bloodied');
 			}
+			// self:dying maps to the lastStand status (HP at 0 with wounds remaining).
+			// Named after the fiction term per issue #579, not the implementation.
 			if (statuses.has(STATUS_EFFECT_IDS.lastStand)) {
 				this.tags.add('self:dying');
 			}
@@ -535,6 +539,19 @@ class NimbleBaseActor<ActorType extends SystemActorTypes = SystemActorTypes> ext
 	getDomain(): Set<string> {
 		const domain = this.tags;
 		return domain;
+	}
+
+	/**
+	 * Returns only `target:*` tags from this actor's domain. Used when evaluating
+	 * a `targetCondition` predicate against this actor as a target — prevents
+	 * `self:*` tags from leaking into the target evaluation namespace.
+	 */
+	getTargetDomain(): Set<string> {
+		const targetTags = new Set<string>();
+		for (const tag of this.tags) {
+			if (tag.startsWith('target:')) targetTags.add(tag);
+		}
+		return targetTags;
 	}
 
 	async configureItem(id: string): Promise<void> {

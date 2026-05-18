@@ -672,16 +672,24 @@ class ItemActivationManager {
 	}
 
 	/**
-	 * Resolves the first targeted token's actor domain for targetCondition evaluation.
-	 * Returns undefined if no targets are selected or the target has no domain.
+	 * Resolves the first targeted token's target-namespace domain for targetCondition
+	 * evaluation. Returns only `target:*` tags to prevent `self:*` tags from leaking
+	 * into target predicate evaluation.
+	 *
+	 * Note: multi-target / AoE bonuses gated by targetCondition are not supported —
+	 * insertion-order first target is used. Single-target features (Hunter's Mark,
+	 * Hexbinder) are the intended use case per #579.
 	 */
 	#getFirstTargetDomain(): Set<string> | undefined {
 		const targets = game.user?.targets;
 		if (!targets || targets.size === 0) return undefined;
 
 		const firstTarget = targets.values().next().value as Token | undefined;
-		const targetActor = firstTarget?.actor as { getDomain?: () => Set<string> } | null | undefined;
-		return targetActor?.getDomain?.();
+		const targetActor = firstTarget?.actor as
+			| { getTargetDomain?: () => Set<string> }
+			| null
+			| undefined;
+		return targetActor?.getTargetDomain?.();
 	}
 
 	/**

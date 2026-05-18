@@ -157,6 +157,8 @@ class Predicate extends Map<string, Statement> {
 	/** Validators                                     */
 	/** ---------------------------------------------- */
 	static isStatement(statement: unknown): statement is PredicateStatement {
+		// Only `true` is valid (presence-check for AND composition). `false` is
+		// intentionally rejected — there is no "not-present" semantics.
 		if (statement === true) return true;
 		if (isPlainObject(statement)) return Predicate.isBinaryOperation(statement);
 		if (Array.isArray(statement)) return Predicate.isArrayOperation(statement);

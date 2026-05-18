@@ -176,7 +176,9 @@ export function createAttackPanelState(
 		let rollFormula = getUnarmedDamageFormula(actor);
 		const canCrit = hasUnarmedProficiency(actor); // Only characters proficient with unarmed (e.g., Zephyr with Swift Fists) can crit
 
-		// Apply damage bonuses (unarmed strikes are melee + weapon + bludgeoning)
+		// Apply damage bonuses (unarmed strikes are melee + weapon + bludgeoning).
+		// Note: targetDomain is not passed — bonuses with targetCondition are excluded.
+		// Unarmed strikes bypass ItemActivationManager, so target resolution isn't available here.
 		const meleeDamageBonus = getDamageBonusTotal(actor, 'melee', 'weapon', 'bludgeoning');
 		if (meleeDamageBonus > 0) {
 			rollFormula = `${rollFormula} + ${meleeDamageBonus}`;

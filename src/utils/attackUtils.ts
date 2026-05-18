@@ -95,6 +95,8 @@ function matchesBonus(
 	if (bonus.damageType !== '' && damageType && bonus.damageType !== damageType) return false;
 	if (bonus.targetCondition) {
 		if (!targetDomain) return false;
+		// Predicate is reconstructed per call. At typical bonus counts (1–5) this
+		// is negligible; caching on the entry is an option if profiling shows need.
 		const predicate = new Predicate(bonus.targetCondition);
 		if (!predicate.test(targetDomain)) return false;
 	}
