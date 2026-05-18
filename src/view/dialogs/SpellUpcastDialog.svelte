@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import type { ScalingDelta } from '#types/spellScaling.js';
+	import { SYSTEM_ID } from '#system';
 	import { NimbleRoll } from '../../dice/NimbleRoll';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 	import RangeSlider from 'svelte-range-slider-pips';
@@ -13,7 +14,7 @@
 	let primaryDieValue = $state();
 	let primaryDieModifier = $state();
 	// @ts-expect-error - nimble isn't included in the type
-	let shouldRollBeHidden = $state(!!game.settings.get('nimble', 'hideRolls'));
+	let shouldRollBeHidden = $state(!!game.settings.get(SYSTEM_ID, 'hideRolls'));
 
 	// I18n helpers
 	const {

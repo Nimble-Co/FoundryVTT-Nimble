@@ -1445,6 +1445,7 @@ export const myStore = writable<MyStoreState>(initialState);
 
 | Utility | Location | Purpose |
 |---------|----------|---------|
+| `SYSTEM_ID`, `SYSTEM_PATH` | `src/utils/systemId.ts` (alias: `#system`) | Build-time-baked system id from `public/system.json` and `systems/<id>` path prefix. Use for every flag scope, settings namespace, sheet/keybinding registration, and asset path — never hardcode `'nimble'`. The dev rolling release rebuilds under a different id |
 | `localize()` | `src/utils/localize.ts` | Format i18n strings with optional interpolation |
 | `isCombatStarted()` | `src/utils/isCombatStarted.ts` | Determine whether a combat encounter has started |
 | `isCombatantDead()` | `src/utils/isCombatantDead.ts` | Check if a combatant is dead based on HP/wounds |

@@ -4,6 +4,7 @@ import type { NimbleBoonItem } from '#documents/item/boon.js';
 import type { NimbleClassItem } from '#documents/item/class.js';
 import type { NimbleFeatureItem } from '#documents/item/feature.js';
 import type { NimbleSubclassItem } from '#documents/item/subclass.js';
+import { SYSTEM_ID } from '#system';
 import type { SkillKeyType } from '#types/skillKey.js';
 import { getHighestSpellTier } from '#utils/spell/getHighestSpellTier.ts';
 import CharacterMetaConfigDialog from '#view/dialogs/CharacterMetaConfigDialog.svelte';
@@ -330,7 +331,7 @@ export class NimbleCharacter extends NimbleBaseActor<'character'> {
 		// add one slots for all small stuff
 		if (smallObjectsCarried) slotsRequiredSum += 1;
 		// account for coinage
-		if (this.getFlag('nimble', 'includeCurrencyBulk') ?? true) {
+		if (this.getFlag(SYSTEM_ID, 'includeCurrencyBulk') ?? true) {
 			const totalCoinage = Object.values(this.system.currency).reduce(
 				(totalCurrencyBulk, { value }) => totalCurrencyBulk + value,
 				0,

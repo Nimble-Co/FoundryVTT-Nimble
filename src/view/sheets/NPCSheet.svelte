@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { setContext, untrack } from 'svelte';
+	import { SYSTEM_ID } from '#system';
 	import { PORTRAIT_FALLBACK_IMAGE } from '../ui/ctTopTracker/constants.js';
 	import PrimaryNavigation from '../components/PrimaryNavigation.svelte';
 	import updateDocumentImage from '../handlers/updateDocumentImage.js';
@@ -96,7 +97,7 @@
 	});
 
 	// Flags
-	let flags = $derived(actor.reactive.flags.nimble);
+	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	let actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);

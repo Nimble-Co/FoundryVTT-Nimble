@@ -1,10 +1,12 @@
+import { SYSTEM_ID } from '#system';
+
 interface InitiativeRollLockData {
 	requestId: string;
 	userId: string | null;
 	startedAt: number;
 }
 
-const INITIATIVE_ROLL_LOCK_PATH = 'flags.nimble.initiativeRollLock';
+const INITIATIVE_ROLL_LOCK_PATH = `flags.${SYSTEM_ID}.initiativeRollLock`;
 const INITIATIVE_ROLL_LOCK_TIMEOUT_MS = 15_000;
 
 function normalizeInitiativeRollLockData(value: unknown): InitiativeRollLockData | null {

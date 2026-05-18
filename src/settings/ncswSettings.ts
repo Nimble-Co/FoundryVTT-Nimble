@@ -1,3 +1,5 @@
+import { SYSTEM_ID } from '#system';
+
 export const NCSW_SIDEBAR_VIEW_MODE_SETTING_KEY = 'ncswSidebarViewMode';
 export const NCSW_ENABLED_SETTING_KEY = 'ncswEnabled';
 export const NCSW_ENABLED_SETTING_CHANGED_EVENT_NAME = 'nimble:ncsw-enabled-changed';
@@ -19,7 +21,7 @@ export function normalizeNcswSidebarViewMode(value: unknown): NcswSidebarViewMod
 
 export function registerNcswSettings(): void {
 	game.settings.register(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		NCSW_SIDEBAR_VIEW_MODE_SETTING_KEY as 'rollMode',
 		{
 			name: 'NCSW Sidebar View Mode',
@@ -32,7 +34,7 @@ export function registerNcswSettings(): void {
 	);
 
 	game.settings.register(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		NCSW_ENABLED_SETTING_KEY as 'rollMode',
 		{
 			name: 'NIMBLE.settings.ncswEnabled.name',
@@ -59,7 +61,7 @@ export function getPersistedNcswSidebarViewMode(): NcswSidebarViewMode {
 	if (!isNcswSidebarViewModeSettingRegistered()) return DEFAULT_NCSW_SIDEBAR_VIEW_MODE;
 
 	return normalizeNcswSidebarViewMode(
-		game.settings.get('nimble' as 'core', NCSW_SIDEBAR_VIEW_MODE_SETTING_KEY as 'rollMode'),
+		game.settings.get(SYSTEM_ID as 'core', NCSW_SIDEBAR_VIEW_MODE_SETTING_KEY as 'rollMode'),
 	);
 }
 
@@ -67,7 +69,7 @@ export async function setPersistedNcswSidebarViewMode(mode: NcswSidebarViewMode)
 	if (!isNcswSidebarViewModeSettingRegistered()) return;
 
 	await game.settings.set(
-		'nimble' as 'core',
+		SYSTEM_ID as 'core',
 		NCSW_SIDEBAR_VIEW_MODE_SETTING_KEY as 'rollMode',
 		normalizeNcswSidebarViewMode(mode) as never,
 	);
@@ -80,5 +82,5 @@ export function isNcswEnabledSettingRegistered(): boolean {
 
 export function getNcswEnabled(): boolean {
 	if (!isNcswEnabledSettingRegistered()) return true;
-	return Boolean(game.settings.get('nimble' as 'core', NCSW_ENABLED_SETTING_KEY as 'rollMode'));
+	return Boolean(game.settings.get(SYSTEM_ID as 'core', NCSW_ENABLED_SETTING_KEY as 'rollMode'));
 }

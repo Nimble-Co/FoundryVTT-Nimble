@@ -1,6 +1,7 @@
 <script>
 	import { getContext } from 'svelte';
 	import localize from '../../../utils/localize.js';
+	import { SYSTEM_ID } from '#system';
 	import replaceHyphenWithMinusSign from '../../dataPreparationHelpers/replaceHyphenWithMinusSign.js';
 
 	function formatModifier(value) {
@@ -15,7 +16,7 @@
 
 	const { saves, savingThrows, savingThrowAbbreviations } = CONFIG.NIMBLE;
 	const actor = getContext('actor');
-	let flags = $derived(actor.reactive.flags.nimble);
+	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	let editingEnabledFromFlags = $derived(flags?.editingEnabled ?? false);
 	let editingEnabled = $derived(editingEnabledProp ?? editingEnabledFromFlags);
 </script>

@@ -1,7 +1,8 @@
+import { SYSTEM_ID } from '#system';
 import { getAdjacencyIncludesDiagonals } from '../../settings/adjacencySettings.js';
 import { countAdjacentEnemies, type PositionOverrides } from '../../utils/tokenAdjacency.js';
 
-const ADJACENCY_FLAG_PATH = 'flags.nimble.adjacency';
+const ADJACENCY_FLAG_PATH = `flags.${SYSTEM_ID}.adjacency`;
 
 interface AdjacencyFlagData {
 	enemiesAdjacentCount: number;
@@ -42,7 +43,7 @@ async function syncAdjacency(overrides?: PositionOverrides): Promise<void> {
 			const count = counts[i];
 			const hasMost = count > 0 && count === maxCount;
 
-			const currentFlag = actor.getFlag('nimble', 'adjacency') as AdjacencyFlagData | undefined;
+			const currentFlag = actor.getFlag(SYSTEM_ID, 'adjacency') as AdjacencyFlagData | undefined;
 			if (
 				currentFlag?.enemiesAdjacentCount === count &&
 				currentFlag?.hasMostAdjacentEnemies === hasMost
@@ -75,7 +76,7 @@ async function clearAdjacencyForCombat(combat: Combat.Implementation): Promise<v
 		.map((c) => c.actor)
 		.filter((actor): actor is Actor.Implementation => {
 			if (!actor) return false;
-			const flag = actor.getFlag('nimble', 'adjacency') as AdjacencyFlagData | undefined;
+			const flag = actor.getFlag(SYSTEM_ID, 'adjacency') as AdjacencyFlagData | undefined;
 			return (flag?.enemiesAdjacentCount ?? 0) > 0 || (flag?.hasMostAdjacentEnemies ?? false);
 		});
 

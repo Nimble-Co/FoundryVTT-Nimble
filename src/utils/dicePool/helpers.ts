@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import type { NimbleRollData } from '#types/rollData.d.ts';
 import getDeterministicBonus from '../../dice/getDeterministicBonus.js';
 import { DicePoolRuleConfig } from './dicePoolRuleConfig.js';
@@ -519,10 +520,10 @@ async function persistDicePoolMap(actor: CharacterActorLike, pools: DicePoolMap)
 		updates.push(
 			item.update(
 				{
-					'flags.nimble.dicePools': itemPoolUpdatePayload,
+					[DicePoolRuleConfig.flagPath]: itemPoolUpdatePayload,
 				} as Record<string, unknown>,
 				{
-					nimble: {
+					[SYSTEM_ID]: {
 						skipDicePoolSync: true,
 					},
 				} as Record<string, unknown>,

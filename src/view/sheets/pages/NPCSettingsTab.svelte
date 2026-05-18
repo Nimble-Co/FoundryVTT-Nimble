@@ -1,8 +1,10 @@
 <script>
 	import { getContext } from 'svelte';
 
+	import { SYSTEM_ID } from '#system';
+
 	let actor = getContext('actor');
-	let flags = $derived(actor.reactive.flags.nimble);
+	let flags = $derived(actor.reactive.flags[SYSTEM_ID]);
 	let actorImageXOffset = $derived(flags?.actorImageXOffset ?? 0);
 	let actorImageYOffset = $derived(flags?.actorImageYOffset ?? 0);
 	let actorImageScale = $derived(flags?.actorImageScale ?? 100);
@@ -23,7 +25,7 @@
 				<input
 					type="number"
 					value={actorImageXOffset}
-					onchange={({ target }) => actor.setFlag('nimble', 'actorImageXOffset', target.value)}
+					onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'actorImageXOffset', target.value)}
 				/>
 			</label>
 
@@ -35,7 +37,7 @@
 				<input
 					type="number"
 					value={actorImageYOffset}
-					onchange={({ target }) => actor.setFlag('nimble', 'actorImageYOffset', target.value)}
+					onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'actorImageYOffset', target.value)}
 				/>
 			</label>
 
@@ -47,7 +49,7 @@
 				<input
 					type="number"
 					value={actorImageScale}
-					onchange={({ target }) => actor.setFlag('nimble', 'actorImageScale', target.value)}
+					onchange={({ target }) => actor.setFlag(SYSTEM_ID, 'actorImageScale', target.value)}
 				/>
 			</label>
 		</div>

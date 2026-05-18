@@ -41,6 +41,7 @@
 		"#lib/*": "./lib/*",
 		"#managers/*": "./src/managers/*",
 		"#stores/*": "./src/stores/*",
+		"#system": "./src/utils/systemId.ts",
 		"#types/*": "./types/*",
 		"#utils/*": "./src/utils/*",
 		"#view/*": "./src/view/*"

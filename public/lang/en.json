@@ -2240,6 +2240,21 @@
 				"finished": "Finished migrating compendium: {packName}."
 			}
 		},
+		"devRebrand": {
+			"dialog": {
+				"title": "Nimble (Dev) — One-time Migration",
+				"intro": "This world was originally created under the stable Nimble system. The Dev build installs under a separate system id (\"nimble-dev\"), so Foundry stores its flags and settings in a different namespace from the stable install.",
+				"body": "Click <strong>Continue</strong> to copy all existing Nimble flags and settings on this world into the Dev namespace so your characters, items, and settings work in the Dev build. This runs once per world.",
+				"warning": "After this runs, the original Nimble data is removed from this world. If you want to keep using the stable Nimble system with this world, cancel now and use a separate world for the Dev build instead.",
+				"confirm": "Continue",
+				"cancel": "Cancel"
+			},
+			"notifications": {
+				"starting": "Nimble (Dev): rebranding world data from nimble → nimble-dev...",
+				"completed": "Nimble (Dev): world data rebrand complete.",
+				"failed": "Nimble (Dev): world data rebrand failed. Check the browser console (F12) for details."
+			}
+		},
 		"actorImport": {
 			"buttonLabel": "Import Actor",
 			"dialogTitle": "Import from Nimble Nexus",

@@ -1,3 +1,4 @@
+import { SYSTEM_ID } from '#system';
 import {
 	consumeOnResolvedItemUse,
 	validateItemChargeConsumption,
@@ -141,7 +142,7 @@ function registerItemUseHooks(): void {
 		void consumeOnResolvedItemUse(characterItem, itemUseContext).then(async (validation) => {
 			if (validation.consumption && validation.consumption.length > 0 && typedChatMessage?.update) {
 				await typedChatMessage.update({
-					'flags.nimble.chargeConsumption': validation.consumption,
+					[`flags.${SYSTEM_ID}.chargeConsumption`]: validation.consumption,
 				} as Record<string, unknown>);
 			}
 

@@ -3,6 +3,7 @@
 
 	import { untrack } from 'svelte';
 
+	import { SYSTEM_ID } from '#system';
 	import getRollFormula from '../../utils/getRollFormula.js';
 	import RollModeConfig from './components/RollModeConfig.svelte';
 
@@ -10,7 +11,7 @@
 
 	let { actor, dialog, type = 'abilityCheck', ...data }: CheckRollDialogProps = $props();
 	let selectedRollMode = $state(untrack(() => Math.clamp(Number(data.rollMode ?? 0), -6, 6)));
-	let shouldRollBeHidden = $state(Boolean(game.settings.get('nimble', 'hideRolls')));
+	let shouldRollBeHidden = $state(Boolean(game.settings.get(SYSTEM_ID, 'hideRolls')));
 
 	let rollFormula = $derived.by(() => {
 		if (type === 'initiative') {

@@ -1,3 +1,5 @@
+import { SYSTEM_ID } from '#system';
+
 /** Foundry core: humanoid silhouette — default portrait for characters when missing or failed to load. */
 export const PORTRAIT_FALLBACK_IMAGE = 'icons/svg/mystery-man.svg';
 
@@ -29,6 +31,6 @@ export const CT_ESTIMATED_ENTRY_WIDTH_REM = 6.53;
 export const CT_SETTINGS_DIALOG_UNIQUE_ID = 'nimble-ct-settings-dialog';
 export const CT_WIDTH_PREVIEW_EVENT_NAME = 'nimble:ct-width-preview';
 export const CT_CARD_SIZE_PREVIEW_EVENT_NAME = 'nimble:ct-card-size-preview';
-export const CT_MONSTER_CARDS_EXPANDED_FLAG_PATH = 'flags.nimble.ctMonsterCardsExpanded';
-export const CT_PLAYERS_CAN_VIEW_EXPANDED_MONSTERS_FLAG_PATH =
-	'flags.nimble.ctPlayersCanViewExpandedMonsters';
+
+export const CT_MONSTER_CARDS_EXPANDED_FLAG_PATH = `flags.${SYSTEM_ID}.ctMonsterCardsExpanded`;
+export const CT_PLAYERS_CAN_VIEW_EXPANDED_MONSTERS_FLAG_PATH = `flags.${SYSTEM_ID}.ctPlayersCanViewExpandedMonsters`;
