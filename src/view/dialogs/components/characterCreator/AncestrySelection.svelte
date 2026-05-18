@@ -3,6 +3,7 @@
 	import Hint from '../../../components/Hint.svelte';
 	import prepareAncestryTooltip from '../../../dataPreparationHelpers/documentTooltips/prepareAncestryTooltip.js';
 	import prepareAncestryMetadata from '../../../dataPreparationHelpers/metaData/prepareAncestryMetadata.js';
+	import getDocumentSourceLabel from '../../../../utils/getDocumentSourceLabel.js';
 	import DocumentCard from './DocumentCard.svelte';
 
 	async function handleAncestrySelection(ancestry) {
@@ -80,13 +81,14 @@
 				<ul class="nimble-document-list">
 					{#each options as ancestry}
 						{@const metadata = prepareAncestryMetadata(ancestry)}
+						{@const sourceLabel = getDocumentSourceLabel(ancestry.uuid)}
 
 						<li class="u-semantic-only">
 							<DocumentCard
-								style={metadata ? '' : '--nimble-card-content-grid: "img title";'}
 								document={ancestry}
 								handler={handleAncestrySelection}
 								{metadata}
+								{sourceLabel}
 								getTooltip={prepareAncestryTooltip}
 							/>
 						</li>
@@ -116,9 +118,29 @@
 		--nimble-card-column-dimensions: 2.5rem 1fr;
 		--nimble-card-row-dimensions: repeat(2, max-content);
 		--nimble-card-width: 100%;
+		--nimble-card-title-justification: start;
+		--nimble-heading-justification: start;
 
-		--nimble-document-list-columns: repeat(3, 1fr);
+		--nimble-document-list-columns: repeat(auto-fill, minmax(260px, 1fr));
 		--nimble-document-list-gap: 0.375rem;
+
+		// Image stretches flush to card top/bottom; text rows get vertical breathing room
+		:global(.nimble-card__img) {
+			height: auto;
+			align-self: stretch;
+		}
+
+		:global(.nimble-card__title) {
+			align-self: end;
+			padding-top: 0.375rem;
+			padding-bottom: 0.125rem;
+		}
+
+		:global(.nimble-card__meta) {
+			align-self: start;
+			padding-top: 0.125rem;
+			padding-bottom: 0.375rem;
+		}
 	}
 
 	.nimble-ancestries-header-icon {
